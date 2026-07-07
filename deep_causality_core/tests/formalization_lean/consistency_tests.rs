@@ -17,14 +17,22 @@ use deep_causality_core::{
     CausalEffect, CausalEffectPropagationProcess, CausalEffectPropagationProcessWitness,
     CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
 };
-use deep_causality_haft::Functor;
+use deep_causality_haft::{Applicative, Functor};
 
 type Witness = CausalEffectPropagationProcessWitness<(), (), CausalityError, EffectLog>;
+type FnI64 = fn(i64) -> i64;
 
 /// A stateless carrier with the given outcome.
 fn carrier(
     outcome: Result<CausalEffect<i64>, CausalityError>,
 ) -> CausalEffectPropagationProcess<i64, (), (), CausalityError, EffectLog> {
+    CausalEffectPropagationProcess::new(outcome, (), None, EffectLog::new())
+}
+
+/// A stateless function-carrying operand for `apply`.
+fn fn_carrier(
+    outcome: Result<CausalEffect<FnI64>, CausalityError>,
+) -> CausalEffectPropagationProcess<FnI64, (), (), CausalityError, EffectLog> {
     CausalEffectPropagationProcess::new(outcome, (), None, EffectLog::new())
 }
 
@@ -100,4 +108,49 @@ fn test_witness_agrees_on_command() {
         .and_then(|(_, sub)| sub.into_value());
     assert_eq!(w_leaf, i_leaf);
     assert_eq!(w_leaf, Some(6));
+}
+
+// ---- Applicative `apply`: total over the success channel (Consistency.lean apply_* theorems) ----
+
+/// THEOREM_MAP: core.witness.agree
+///
+/// Mirrors `apply_none_yields_none`: a value-less function operand yields absence (`none()`), never
+/// an `InternalLogicError`.
+#[test]
+fn test_apply_none_operand_yields_none() {
+    let f_none = fn_carrier(Ok(CausalEffect::none()));
+    let a = carrier(Ok(CausalEffect::value(5)));
+
+    let out = <Witness as Applicative<Witness>>::apply(f_none, a);
+
+    assert!(out.is_ok(), "value-less operand must not error");
+    assert!(out.value().is_none());
+}
+
+/// THEOREM_MAP: core.witness.agree
+///
+/// Mirrors `apply_command_yields_none`: a command operand yields absence, never an error (commands
+/// are folded by `CausalEffect::fold`, not applied).
+#[test]
+fn test_apply_command_operand_yields_none() {
+    let inc: fn(i64) -> i64 = |x| x + 1;
+    let f_ok = fn_carrier(Ok(CausalEffect::value(inc)));
+    let a_cmd = carrier(Ok(CausalEffect::relay_to(3, CausalEffect::value(5))));
+
+    let out = <Witness as Applicative<Witness>>::apply(f_ok, a_cmd);
+
+    assert!(out.is_ok(), "a command operand must not error");
+    assert!(out.value().is_none());
+}
+
+/// Both operands carrying a value: the applicative computes it (the `Pure(Some _)` fragment).
+#[test]
+fn test_apply_values_computes() {
+    let inc: fn(i64) -> i64 = |x| x + 1;
+    let f_ok = fn_carrier(Ok(CausalEffect::value(inc)));
+    let a = carrier(Ok(CausalEffect::value(5)));
+
+    let out = <Witness as Applicative<Witness>>::apply(f_ok, a);
+
+    assert_eq!(out.value(), Some(&6));
 }

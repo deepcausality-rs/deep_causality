@@ -77,7 +77,7 @@ cargo kani --tests -p deep_causality_core
 | `CausalFlow` (facade `≅ Process`; total `map`; `map = and_then(pure∘f)`) | Moggi 1991 | `flow_iso`/`map_id`/`map_comp`/`map_eq_andThen` (holds on `None` too — D14) |
 | `CausalFlow` extensions — `recover`, `iterate_*`, `finish` | — | documented extensions with their own contracts (catch law; `MaxStepsExceeded`; terminal projection) |
 | `Csv` IO codec (round-trip under no-`','`/`'\n'` precondition) | — (cites `haft.io.laws`) | conditional round-trip; precondition is a theorem hypothesis (D16) |
-| Witness/inherent `fmap` **agreement** (`core.witness.agree`) | — | witness `fmap` = inherent `fmap` on every carrier; no `Ok(Value _)` restriction, no reachable panic (D15 retired) |
+| Witness/inherent functor+applicative **agreement** (`core.witness.agree`) | — | all three witnesses + inherent `fmap` compute the same total success-channel functor; `apply` total too (value-less/command ↦ `None`, never `InternalLogicError`); no `Ok(Value _)` restriction, no reachable panic (D15 fully retired) |
 
 ## Outstanding issues
 

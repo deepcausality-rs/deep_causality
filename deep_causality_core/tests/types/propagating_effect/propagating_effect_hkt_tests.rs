@@ -62,16 +62,15 @@ fn test_functor_fmap_with_error() {
 }
 
 #[test]
-fn test_functor_fmap_with_none_value() {
+fn test_functor_fmap_with_none_value_passes_through() {
+    // Totality invariant: `fmap` is total — a `None` effect passes through unchanged (no value, no
+    // fabricated error). The continuation is not invoked.
     let m_a = setup_effect_with_none_value::<i32>();
     let f = |a: i32| a * 2;
     let m_b = TestWitness::fmap(m_a, f);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
@@ -167,7 +166,8 @@ fn test_applicative_apply_with_both_errors() {
 }
 
 #[test]
-fn test_applicative_apply_with_f_ab_none_value() {
+fn test_applicative_apply_with_f_ab_none_value_yields_none() {
+    // Totality invariant: a value-less function operand yields absence (`none()`), not an error.
     let f_ab: PropagatingEffect<fn(i32) -> i32> = PropagatingEffect::new(
         Ok(CausalEffect::none()), // Explicitly type None for the function
         (),
@@ -176,16 +176,14 @@ fn test_applicative_apply_with_f_ab_none_value() {
     );
     let f_a = setup_effect_with_value(10);
     let m_b = TestWitness::apply(f_ab, f_a);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
-fn test_applicative_apply_with_f_a_none_value() {
+fn test_applicative_apply_with_f_a_none_value_yields_none() {
+    // Totality invariant: a value-less argument operand yields absence (`none()`), not an error.
     let f_ab_func = |a: i32| a + 1;
     let f_ab = PropagatingEffect::new(
         Ok(CausalEffect::value(f_ab_func)),
@@ -195,12 +193,9 @@ fn test_applicative_apply_with_f_a_none_value() {
     );
     let f_a = setup_effect_with_none_value::<i32>();
     let m_b = TestWitness::apply(f_ab, f_a);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]
@@ -255,16 +250,15 @@ fn test_monad_bind_with_error_in_f_result() {
 }
 
 #[test]
-fn test_monad_bind_with_none_value_in_m_a() {
+fn test_monad_bind_with_none_value_in_m_a_passes_through() {
+    // Lawful `Maybe`/free-monad short-circuit: `None >>= f = None` (right identity). The continuation
+    // is not invoked and no error is fabricated.
     let m_a = setup_effect_with_none_value::<i32>();
     let f = |a: i32| setup_effect_with_value(a * 2);
     let m_b = TestWitness::bind(m_a, f);
-    assert!(m_b.is_err());
-    assert_eq!(
-        m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
-    );
+    assert!(m_b.is_ok());
     assert!(m_b.value().is_none());
+    assert!(m_b.effect().unwrap().is_none());
 }
 
 #[test]

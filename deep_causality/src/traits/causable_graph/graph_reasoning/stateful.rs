@@ -160,10 +160,13 @@ where
 
                     visited[target_idx] = true;
 
-                    // The relayed input is the command's sub-program itself: a value/`None` is fed to
-                    // the target as-is, and a NESTED command is preserved (not collapsed to `None`) so
-                    // the engine's next iteration relays it in turn — recursion via the BFS loop. The
-                    // relaying node's state, context, and logs are carried forward.
+                    // The relayed input is the command's sub-program, fed to the target as its
+                    // incoming effect, carrying the relaying node's state, context, and logs forward.
+                    // A value/`None` is evaluated by the target as-is. This inlines a SINGLE-level
+                    // `RelayTo` jump: a nested command is passed through to the target as input, where
+                    // a singleton rejects it with a clear error (see `evaluate_stateful`) — the engine
+                    // does not re-dispatch nested commands across nodes. Multi-level command folding is
+                    // the algebra of `CausalEffect::fold`, not this BFS loop.
                     let relayed_effect = result
                         .into_parts()
                         .0

@@ -130,6 +130,23 @@ fn test_evaluate_singleton() {
 }
 
 #[test]
+fn test_evaluate_singleton_errors_on_a_relay_command_input() {
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
+
+    // A command (`RelayTo`) on the input channel cannot be consumed by a singleton: it carries no
+    // input value and cannot be retyped `I -> O`. The stateless path surfaces a clear,
+    // command-specific error (mirroring `evaluate_stateful`) rather than reporting a generic
+    // "input value is None", which would conflate a dropped command with absence of evidence.
+    let effect: PropagatingEffect<NumericalValue> =
+        PropagatingEffect::from_effect(CausalEffect::relay_to(5, CausalEffect::value(0.78)));
+    let res = causaloid.evaluate(&effect);
+
+    assert!(res.is_err());
+    let err = res.error().expect("a command input errors");
+    assert!(format!("{err:?}").contains("received a command"));
+}
+
+#[test]
 fn test_evaluate_singleton_with_context() {
     let id: IdentificationValue = 1;
     let description = "tests a causaloid with a context";

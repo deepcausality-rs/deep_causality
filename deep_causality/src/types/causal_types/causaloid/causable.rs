@@ -73,6 +73,29 @@ where
     fn evaluate(&self, incoming_effect: &PropagatingEffect<I>) -> PropagatingEffect<O> {
         match self.causal_type {
             CausaloidType::Singleton => {
+                // A command input (`RelayTo`) cannot be consumed by a singleton: it carries no `I`
+                // value to evaluate and cannot be retyped `I -> O`. The reasoning engine relays a
+                // command's sub-program, so a singleton never receives a live command on its input
+                // channel in normal operation. Surface a clear, command-specific error rather than
+                // letting the `bind_or_error` step below report it as a generic "input value is None"
+                // — which would conflate a dropped command with absence of evidence. This mirrors the
+                // stateful `StatefulMonadicCausable::evaluate_stateful` path exactly.
+                if incoming_effect.command_target().is_some() {
+                    return PropagatingEffect::new(
+                        Err(CausalityError(
+                            deep_causality_core::CausalityErrorEnum::Custom(
+                                "Causaloid::evaluate: singleton received a command (RelayTo) on its \
+                                 input channel; commands are relayed by the reasoning engine, not \
+                                 consumed by a singleton"
+                                    .into(),
+                            ),
+                        )),
+                        (),
+                        None,
+                        incoming_effect.logs().clone(),
+                    );
+                }
+
                 // For a Singleton, the evaluation is a monadic chain of operations:
                 // 1. Log the input.
                 // 2. Execute the causal logic.

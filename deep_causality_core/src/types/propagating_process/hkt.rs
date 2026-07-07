@@ -3,11 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CausalEffect, CausalityError, CausalityErrorEnum, EffectLog, PropagatingProcess};
+use crate::{CausalEffect, EffectLog, PropagatingProcess};
 use core::marker::PhantomData;
 use deep_causality_haft::{
     Applicative, Functor, HKT, LogAppend, NoConstraint, Placeholder, Pure, Satisfies,
 };
+
+// Totality invariant (success channel): `fmap` and `apply` are total and never fabricate an error —
+// `fmap` maps the value leaf through the `RelayTo` tree via the total `CausalEffect::map` (value maps,
+// `None` passes through, command preserved); `apply` yields a value iff both operands carry one, else
+// `none()`. Errors arise only from the `Err` channel. This is the same function the sibling witnesses
+// (`PropagatingEffectWitness`, `CausalEffectPropagationProcessWitness`) and the inherent `fmap`
+// compute — see `Core/Consistency.lean`.
 
 pub struct PropagatingProcessWitness<S, C>(Placeholder, PhantomData<S>, PhantomData<C>);
 
@@ -27,13 +34,12 @@ where
         B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
-        // Error short-circuits: `f` is not invoked (left zero); state/context/logs preserved.
+        // Total value functor. `Err` short-circuits (left zero; state/context/logs preserved).
+        // Otherwise the total `CausalEffect::map` maps the value leaf through the `RelayTo` tree — a
+        // value maps, a `None` passes through, a command is preserved — never fabricating an error.
         let outcome = match m_a.outcome {
             Err(error) => Err(error),
-            Ok(value) => match value.into_value() {
-                Some(a) => Ok(CausalEffect::value(f(a))),
-                None => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
-            },
+            Ok(effect) => Ok(effect.map(f)),
         };
 
         PropagatingProcess::new(outcome, m_a.state, m_a.context, m_a.logs)
@@ -76,12 +82,15 @@ where
         combined_logs.append(&mut f_a.logs);
         let context = f_ab.context.or(f_a.context);
 
-        // Error short-circuits: the function is not invoked; the first error propagates.
+        // `Err` short-circuits (first error wins). On the success channel the applicative is total:
+        // a value results iff both operands carry values, else absence (`none()`) — the lawful
+        // `Maybe` applicative on the `Pure(Option V)` fragment. A value-less operand never fabricates
+        // an error.
         let outcome = match (f_ab.outcome, f_a.outcome) {
             (Err(error), _) | (_, Err(error)) => Err(error),
             (Ok(func), Ok(arg)) => match (func.into_value(), arg.into_value()) {
                 (Some(mut f), Some(a)) => Ok(CausalEffect::value(f(a))),
-                _ => Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+                _ => Ok(CausalEffect::none()),
             },
         };
 
