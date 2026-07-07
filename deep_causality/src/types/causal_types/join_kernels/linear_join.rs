@@ -95,7 +95,7 @@ pub fn linear_join<R: Scalar + Default + Debug>(
         }
         // A `Pure(None)` value and a fired parent with no weight both contribute nothing.
         if let (Some(weight), Some(value)) = (config.weights.get(&parent_index), effect.value()) {
-            acc = acc + (*weight * *value);
+            acc += *weight * *value;
         }
     }
 

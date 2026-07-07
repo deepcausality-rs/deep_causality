@@ -13,10 +13,10 @@
 
 ## 3. Engine: wire-slot evaluation (stateless)
 
-- [ ] 3.1 Replace the BFS `visited` array in `evaluate_subgraph_from_cause` with per-node wire slots (`Fired(effect) | Inactive` engine-local enum), reachability pre-pass from `start_index`, and a `BTreeSet` ready set processed in ascending node index.
-- [ ] 3.2 Firing rule: all wires resolved ∧ ≥1 `Fired` → evaluate; all `Inactive` → resolve node `Inactive` and propagate. Single fired parent = identity pass-through; ≥2 fired = engine channel rules (error left-zero, log concat, ascending key order) then the declared join, or `CausalityError` if undeclared.
-- [ ] 3.3 `RelayTo` as sequential composition: command ends the round (abandoned cone resolves `Inactive`), fresh round starts at the target with the sub-program; preserve single-level relay semantics and state/log threading.
-- [ ] 3.4 Golden-check: linear/tree graphs bit-identical vs the previous engine (record expected outputs before rewriting).
+- [x] 3.1 Replace the BFS `visited` array in `evaluate_subgraph_from_cause` with per-node wire slots (`Fired(effect) | Inactive` engine-local enum), reachability pre-pass from `start_index`, and a `BTreeSet` ready set processed in ascending node index.
+- [x] 3.2 Firing rule: all wires resolved ∧ ≥1 `Fired` → evaluate; all `Inactive` → resolve node `Inactive` and propagate. Single fired parent = identity pass-through; ≥2 fired = engine channel rules (error left-zero, log concat, ascending key order) then the declared join, or `CausalityError` if undeclared.
+- [x] 3.3 `RelayTo` as sequential composition: command ends the round (abandoned cone resolves `Inactive`), fresh round starts at the target with the sub-program; preserve single-level relay semantics and state/log threading.
+- [x] 3.4 Golden-check: linear/tree graphs bit-identical vs the previous engine (record expected outputs before rewriting).
 
 ## 4. Engine: stateful path
 
