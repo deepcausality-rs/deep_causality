@@ -30,5 +30,5 @@
 
 ## 6. Verify
 
-- [ ] 6.1 `bazel test //...` green; `make format && make fix` clean; bare-`lean` on the remaining core files exit 0.
-- [ ] 6.2 Prepare a commit message; do not commit (await user).
+- [x] 6.1 `bazel test //...` green; `make format && make fix` clean; bare-`lean` on the remaining core files exit 0.
+- [x] 6.2 Prepare a commit message; do not commit (await user).
