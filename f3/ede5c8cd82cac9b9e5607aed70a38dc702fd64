@@ -1,0 +1,75 @@
+deep_causality/tests/types/causal_types/parent_effects/mod.rs
+  s_81989c6ac315d4::t_e28bc24d823178 1-7
+deep_causality/tests/mod.rs
+  s_81989c6ac315d4::t_81f619b2d36f4c 8
+deep_causality/tests/BUILD.bazel
+  s_81989c6ac315d4::t_9882a497483894 608-622
+  s_81989c6ac315d4::t_db79101b72abab 575-607
+openspec/changes/formalize-main-crate/design.md
+  s_81989c6ac315d4::t_ba053b6412babf 23
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_join_tests.rs
+  s_81989c6ac315d4::t_9599026de57e10 1-165
+  s_81989c6ac315d4::t_3ca243be9c2330 166-168
+  s_81989c6ac315d4::t_d81211a2b2f725 169-178
+deep_causality/tests/traits/causable_graph/graph_reasoning/stateful_tests.rs
+  s_81989c6ac315d4::t_1eae2222b800e3 381-412
+lean/DeepCausalityFormal.lean
+  s_81989c6ac315d4::t_02a0211077b6b0 41
+deep_causality/tests/types/causal_types/causaloid_graph/mod.rs
+  s_81989c6ac315d4::t_e6b6fda43e5ced 15-16
+lean/DeepCausalityFormal/Core/GraphJoin.lean
+  s_81989c6ac315d4::t_89622ee6894a44 1-136,148
+  s_81989c6ac315d4::t_8fbcbfc549760d 137-147
+deep_causality/tests/formalization_lean/mod.rs
+  s_81989c6ac315d4::t_740322fae41605 1-7
+openspec/changes/comonoid-graph-join/tasks.md
+  s_81989c6ac315d4::t_2f9ef94bfae4fa 35-37
+  s_81989c6ac315d4::t_58801aee631801 41-43
+  s_81989c6ac315d4::t_0a7375da53572f 23-24,28-31
+lean/THEOREM_MAP.md
+  s_81989c6ac315d4::t_e80bca1089b37d 58-62
+deep_causality/tests/types/causal_types/join_kernels/linear_join_tests.rs
+  s_81989c6ac315d4::t_11e1efa9af737c 9-10
+  s_81989c6ac315d4::t_35e7f9d9a0100a 1-8,11-156
+  s_81989c6ac315d4::t_89dee237c958eb 157-159
+  s_81989c6ac315d4::t_86581f46feed1d 160-162
+deep_causality/src/traits/causable_graph/graph_reasoning/stateful.rs
+  s_81989c6ac315d4::t_ef836dfc48a47e 182-190
+  s_81989c6ac315d4::t_14bc77fd81e911 117-147,149,151-154,156-162,165-166,168-181,191-217,220,225,227-231,233-236,238-240,244-278,284-285
+  s_81989c6ac315d4::t_4b5b56ee399da0 21,23
+deep_causality/tests/types/causal_types/mod.rs
+  s_81989c6ac315d4::t_dda30e2a7111cb 10
+  s_81989c6ac315d4::t_89ec90b948cf06 11
+deep_causality/tests/types/causal_types/parent_effects/parent_effects_tests.rs
+  s_81989c6ac315d4::t_ef1a4ceb782146 1-49
+openspec/changes/comonoid-graph-join/specs/comonoid-graph-join/spec.md
+  s_81989c6ac315d4::t_b450e7bcfc0f6f 5
+  s_81989c6ac315d4::t_c354daf2ba2bb5 22,24-25
+deep_causality/tests/formalization_lean/graph_join_tests.rs
+  s_81989c6ac315d4::t_a277c57d9cc099 1-45,49-63,69-77,88-115,119-151
+  s_81989c6ac315d4::t_bdd13db18407e0 46-48,64-68,78-87,116-118
+deep_causality/tests/types/causal_types/join_kernels/mod.rs
+  s_81989c6ac315d4::t_9237971c4afa7b 1-7
+deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs
+  s_81989c6ac315d4::t_9da850064cdbd4 177-187
+deep_causality/src/alias/alias_function.rs
+  s_81989c6ac315d4::t_d9532bcc9f14f2 110
+deep_causality/src/types/causal_types/causaloid/mod.rs
+  s_81989c6ac315d4::t_5e2cf74abd8d7f 18-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f3ede5c8cd82cac9b9e5607aed70a38dc702fd64",
+  "prompts": {},
+  "sessions": {
+    "s_81989c6ac315d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacebabe-fc1b-4795-8ec4-bd890e96a629",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
