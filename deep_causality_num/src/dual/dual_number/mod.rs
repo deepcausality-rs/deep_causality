@@ -8,6 +8,7 @@ use crate::Real;
 mod algebra;
 mod arithmetic;
 mod convert;
+mod default;
 mod display;
 mod from_primitive;
 mod identity;

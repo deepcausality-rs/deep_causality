@@ -5,6 +5,7 @@
 
 mod arithmetic_tests;
 mod convert_tests;
+mod default_tests;
 mod display_tests;
 mod dual_number_tests;
 mod from_primitive_tests;

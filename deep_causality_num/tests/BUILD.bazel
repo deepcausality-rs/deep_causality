@@ -50,6 +50,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "dual",
+    srcs = glob([
+        "dual/dual_number/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "float",
     srcs = glob([
         "float/*_tests.rs",
