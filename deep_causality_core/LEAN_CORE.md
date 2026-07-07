@@ -28,8 +28,8 @@ Rust implementation by a per-theorem witness test:
 - **Bounded model checking (L3):** [`tests/kani_proofs.rs`](tests/kani_proofs.rs) carries Kani
   harnesses for the load-bearing monad laws (`left_id`/`right_id`/`assoc`/`left_zero`, log
   monotonicity) and the arrow right-identity — first-order bounded checks over all carrier shapes
-  with fixed continuations. Gated on `#![cfg(kani)]`; run by CI (`cargo kani --tests`) on a 24 h
-  schedule.
+  with fixed continuations. Gated on `#![cfg(kani)]`; **not run in CI** (a full run took ~2h and is
+  too costly to schedule) — run locally on demand (`cargo kani --tests -p deep_causality_core`).
 - **The bridge:** each theorem carries a shared id (e.g. `core.causal_monad.lawful`) recorded in
   [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **26 core ids, all proved and witnessed**. CI
   (`.github/workflows/formalization.yml`) runs `lake build`, the witness tests, and a consistency
@@ -59,7 +59,7 @@ lean DeepCausalityFormal/Core/CausalMonad.lean
 # Rust witnesses (one #[test] per theorem id)
 cargo test -p deep_causality_core --test mod formalization_lean
 
-# Bounded model checking (CI, 24 h schedule)
+# Bounded model checking (local / on demand — not run in CI)
 cargo kani --tests -p deep_causality_core
 ```
 
