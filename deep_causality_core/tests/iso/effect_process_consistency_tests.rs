@@ -100,7 +100,20 @@ fn fmap_on_command_agrees_across_witnesses() {
     let via_process = <ProcessW as Functor<ProcessW>>::fmap(proc, |x| x + 1);
 
     // The command survives with its target intact and its leaf mapped: RelayTo(2, value(8)).
-    assert_eq!(via_effect.command_target(), Some(2));
+    // Assert the mapped leaf independently: if `map` were silently skipped on command carriers,
+    // both witnesses would produce `RelayTo(2, value(7))` and the cross-witness equality below
+    // would still pass. Pin the leaf value so that regression is caught.
+    let (target, inner) = via_effect
+        .effect()
+        .cloned()
+        .and_then(CausalEffect::into_command)
+        .expect("fmap dropped the command carrier");
+    assert_eq!(target, 2);
+    assert_eq!(
+        inner.into_value(),
+        Some(8),
+        "fmap did not map the command's value leaf from 7 to 8"
+    );
     assert_eq!(
         via_effect, via_process,
         "fmap on a command carrier diverges between the two witnesses"
