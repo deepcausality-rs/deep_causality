@@ -7,5 +7,3 @@ mod aggregate_logic;
 mod causal_type;
 mod causaloid;
 mod causaloid_graph;
-mod join_kernels;
-mod parent_effects;

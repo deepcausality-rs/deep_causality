@@ -1,8 +1,8 @@
 ## ADDED Requirements
 
-### Requirement: Reasoning engine formalized as a Free::fold catamorphism with keyed-valuation sharing
+### Requirement: Reasoning engine formalized as a Free::fold catamorphism over single-input arrows
 
-The formalization SHALL model the graph-reasoning engine as a catamorphism (`Free::fold`) over the canonical topological linearization of the frozen graph — a sequential, single-hole program of the form "run node `nᵢ`'s mechanism against the valuation restricted to `Pa(nᵢ)`, extend the valuation, continue" — with reconvergent sharing carried by the keyed valuation (the let-environment), never by duplicated subterms (a tree-shaped `Free` cannot carry reconvergence: `bind` threads the continuation through every hole). The adaptive-jump semantics is the recursive equation `fold(Suspend(RelayTo(t, k))) = jump(t, fold(k))`. `Core/GraphReasoning.lean` SHALL reduce engine correctness to (i) the free-monad fold laws already in `Haft/FreeMonad.lean`, (ii) the `unique_valuation`/`schedule_invariance` theorems from the prerequisite `comonoid-graph-join` change, and (iii) the local correctness of the single `jump` algebra step (thread state, context, logs). Each theorem MUST carry a `THEOREM_MAP.md` row and a Rust witness, and the file MUST typecheck standalone with bare `lean`.
+The formalization SHALL model the graph-reasoning engine as a catamorphism (`Free::fold`) over the canonical topological linearization of the frozen graph, composing **single-input** causaloid arrows (`I → CausalEffect<O>`, `Core/CausalArrow.lean`) in sequence. The adaptive-jump semantics is the recursive equation `fold(Suspend(RelayTo(t, k))) = jump(t, fold(k))`. `Core/GraphReasoning.lean` SHALL reduce engine correctness to (i) the free-monad fold laws already in `Haft/FreeMonad.lean` and (ii) the local correctness of the single `jump` algebra step (thread state, context, logs). Each theorem MUST carry a `THEOREM_MAP.md` row and a Rust witness, and the file MUST typecheck standalone with bare `lean`.
 
 #### Scenario: Adaptive relay is a fold step
 
@@ -14,26 +14,21 @@ The formalization SHALL model the graph-reasoning engine as a catamorphism (`Fre
 - **WHEN** a nested `RelayTo` program is folded
 - **THEN** the catamorphism resolves it structurally (`CausalEffect::fold`), consistent with the engine inlining a single-level jump and feeding the sub-program as the next node's input
 
-#### Scenario: Sharing lives in the environment
+#### Scenario: Linear/tree sequencing is deterministic
 
-- **WHEN** a diamond (branch then reconverge) subgraph is modeled
-- **THEN** the shared ancestor appears once in the linearized program and its output is read from the keyed valuation by each dependent, with no duplicated sub-program
+- **WHEN** a single-input (in-degree ≤ 1) graph is folded
+- **THEN** the wire-slot topological schedule from the prerequisite `comonoid-graph-join` change computes it deterministically, and the bound Rust witness confirms it on the real engine
 
-### Requirement: Fan-in composed from the prerequisite; copy/discard scoped to the classical interpreter
+### Requirement: Reconvergence merge (∇) is out of scope — deferred to the symmetric-monoidal extension
 
-The formalization SHALL compose the fold with the labeled fan-in delivered by the prerequisite `comonoid-graph-join` change — wire-slot resolution (`Fired`/`Inactive`), per-node join mechanisms over parent-indexed effects, and the proved `unique_valuation` + `schedule_invariance` (command-free) theorems — rather than re-deriving a join. The copy law (every out-wire of `n` carries `σ(n)`) and the discard law (all-`Inactive` parents resolve the node `Inactive`) SHALL be stated as laws of the **classical interpreter's algebra**, not of the substrate, so that the quantum instantiation — where fan-out is commuting access to a shared parent output (`PairwiseCommute`), per the verified `ctx/papers/` sources — folds the same structure without violating any substrate law. No commutativity, associativity, or symmetry obligation SHALL be imposed on join mechanisms by the model.
+This change SHALL model only the single-input composition of causaloids. The **reconvergence merge `∇`** — combining two or more converging effects at a multi-parent node — is a symmetric-monoidal generator (copy/discard comonoid Δ + merge ∇) over the effect monad, an extension of the single-input causaloid, and is **not formalized here**. Its semantics is a load-bearing OPEN question (`algebraic-causaloid-assumptions.md` #2) deferred to a dedicated symmetric-monoidal (PROP / free-Markov) extension change, where per-connection asymmetry (weighted influence, Hardy's Λ) will live on the edges. The engine this change formalizes fails loudly at a multi-parent reconvergence (per `comonoid-graph-join`), so there is no merge behaviour to model.
 
-#### Scenario: Engine fan-in is supplied by the prerequisite
+#### Scenario: Multi-parent merge is not claimed
 
-- **WHEN** the fold reaches a node with multiple fired parents
-- **THEN** it consumes the `comonoid-graph-join` labeled join (parent-indexed effects into the node's declared mechanism), and the model cites that change's theorems for determinism, so the formalization describes real engine behaviour
+- **WHEN** the graph-reasoning formalization is reviewed
+- **THEN** it states no reconvergence-merge theorem (no `∇`, no labeled join, no fan-in commutative-monoid), and references the deferred symmetric-monoidal extension as the home for `∇`
 
-#### Scenario: Copy law is classical-scoped
+#### Scenario: The engine's loud reconvergence failure is consistent with the model
 
-- **WHEN** the fan-out law is stated in `Core/GraphReasoning.lean`
-- **THEN** it is a theorem about the classical evaluation algebra, and the substrate carries no duplication law — the linearization-invariance role is played by `schedule_invariance` classically and by the `PairwiseCommute` predicate quantumly (same theorem shape, stated in the file as a remark linking the two capabilities)
-
-#### Scenario: Asymmetric mechanisms are admitted by the model
-
-- **WHEN** a join mechanism is an arbitrary non-commutative function of its labeled parents
-- **THEN** the fold's determinism theorems apply unchanged, because they carry no algebraic hypotheses on mechanisms
+- **WHEN** a diamond fires two parents into a node at run time
+- **THEN** the real engine returns a `CausalityError` (merge undefined), matching the model's scope of single-input composition only

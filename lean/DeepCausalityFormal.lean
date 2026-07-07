@@ -38,7 +38,6 @@ import DeepCausalityFormal.Core.Alternatable
 import DeepCausalityFormal.Core.CausalFlow
 import DeepCausalityFormal.Core.Csv
 import DeepCausalityFormal.Core.Consistency
-import DeepCausalityFormal.Core.GraphJoin
 import DeepCausalityFormal.Haft.Hkt
 import DeepCausalityFormal.Haft.Functor
 import DeepCausalityFormal.Haft.Pure

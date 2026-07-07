@@ -194,16 +194,19 @@ where
                             parents.into_values().next().expect("len == 1")
                         }
                         _ => {
-                            // A stateful reconvergence join (combining ≥2 full carriers) is deferred:
-                            // no stateful multi-parent graph exists in the suite, and the join
-                            // mechanisms produce the stateless carrier. Fail loudly rather than pick a
-                            // silent state/context combine (D5 / blast-radius scan).
+                            // Reconvergence: the merge (∇) of converging effects is a symmetric-
+                            // monoidal generator over the effect monad, an extension of the single-
+                            // input causaloid that is not yet defined (see
+                            // `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2).
+                            // Fail loudly rather than silently pick one parent or guess a combine.
                             let keys: Vec<usize> = parents.keys().copied().collect();
                             return raise_from(
                                 CausalityError(CausalityErrorEnum::Custom(format!(
-                                    "Node {node} is a stateful reconvergence with {} fired parents \
-                                     {keys:?}; stateful fan-in joins are not yet supported (deferred \
-                                     — see comonoid-graph-join D5)",
+                                    "Node {node} is a reconvergence reached by {} fired parents \
+                                     (graph indices {keys:?}); the reconvergence merge (∇) is not \
+                                     yet defined and multi-parent fan-in is unsupported. Restructure \
+                                     to a single-parent path, or await the symmetric-monoidal merge \
+                                     extension.",
                                     keys.len()
                                 ))),
                                 &last_propagated,

@@ -102,8 +102,6 @@ pub use crate::types::causal_types::aggregate_logic::AggregateLogic;
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
-pub use crate::types::causal_types::join_kernels::linear_join::{LinearJoin, linear_join};
-pub use crate::types::causal_types::parent_effects::ParentEffects;
 pub use crate::types::causal_types::*;
 // Default context node types.
 pub use crate::types::context_node_types::data::Data;

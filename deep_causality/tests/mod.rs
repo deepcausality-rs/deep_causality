@@ -5,7 +5,6 @@
 
 mod errors;
 mod extensions;
-mod formalization_lean;
 mod traits;
 mod types;
 mod utils;

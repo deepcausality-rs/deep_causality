@@ -191,40 +191,24 @@ where
                             parents.into_values().next().expect("len == 1")
                         }
                         _ => {
-                            // Two or more fired parents: reduce them with the node's declared join
-                            // over the labeled parent effects. (Errored parents never reach here — a
-                            // node error short-circuits the whole traversal below.)
-                            let causaloid = match self.get_causaloid(node) {
-                                Some(c) => c,
-                                None => {
-                                    return PropagatingEffect::from_error(CausalityError(
-                                        CausalityErrorEnum::Custom(format!(
-                                            "Failed to get causaloid at index {node}"
-                                        )),
-                                    ));
-                                }
-                            };
-                            let parent_effects = ParentEffects::new(parents);
-                            let joined = if let Some(join_fn) = causaloid.context_join_fn() {
-                                join_fn(&parent_effects, causaloid.context())
-                            } else if let Some(join_fn) = causaloid.join_fn() {
-                                join_fn(&parent_effects)
-                            } else {
-                                let keys: Vec<usize> = parent_effects.parent_indices().collect();
-                                return PropagatingEffect::from_error(CausalityError(
-                                    CausalityErrorEnum::Custom(format!(
-                                        "Node {node} is a reconvergence with {} fired parents \
-                                         {keys:?} but declares no join mechanism; use \
-                                         Causaloid::new_join / new_with_context_join",
-                                        keys.len()
-                                    )),
-                                ));
-                            };
-                            // The join is a left-zero for errors: a failed combine short-circuits.
-                            if joined.is_err() {
-                                return joined;
-                            }
-                            joined
+                            // Reconvergence: two or more parents fire into one node. The merge (∇) of
+                            // converging effects is a symmetric-monoidal generator over the effect
+                            // monad (copy/discard comonoid + merge), an extension of the single-input
+                            // causaloid that is not yet defined (see
+                            // `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2).
+                            // Fail loudly rather than silently pick one parent (the previous
+                            // first-parent-wins bug) or guess a combine in the wrong layer.
+                            let keys: Vec<usize> = parents.keys().copied().collect();
+                            return PropagatingEffect::from_error(CausalityError(
+                                CausalityErrorEnum::Custom(format!(
+                                    "Node {node} is a reconvergence reached by {} fired parents \
+                                     (graph indices {keys:?}); the reconvergence merge (∇) is not \
+                                     yet defined and multi-parent fan-in is unsupported. Restructure \
+                                     to a single-parent path, or await the symmetric-monoidal merge \
+                                     extension.",
+                                    keys.len()
+                                )),
+                            ));
                         }
                     }
                 };

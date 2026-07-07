@@ -6,5 +6,3 @@ pub mod aggregate_logic;
 pub mod causal_type;
 pub mod causaloid;
 pub mod causaloid_graph;
-pub mod join_kernels;
-pub mod parent_effects;

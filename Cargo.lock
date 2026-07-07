@@ -524,7 +524,6 @@ dependencies = [
  "deep_causality_core",
  "deep_causality_data_structures",
  "deep_causality_haft",
- "deep_causality_num",
  "deep_causality_uncertain",
  "ultragraph",
 ]

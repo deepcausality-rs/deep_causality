@@ -12,11 +12,11 @@ mod causality_graph_nodes_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_imbalanced_tests;
 #[cfg(test)]
-mod causality_graph_reasoning_join_tests;
-#[cfg(test)]
 mod causality_graph_reasoning_linear_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_multi_tests;
+#[cfg(test)]
+mod causality_graph_reasoning_reconvergence_tests;
 #[cfg(test)]
 mod causality_graph_reasoning_shortest_tests;
 #[cfg(test)]

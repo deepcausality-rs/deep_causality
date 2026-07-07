@@ -380,11 +380,10 @@ fn evaluate_shortest_path_stateful_returns_on_a_relay() {
 }
 
 #[test]
-fn evaluate_subgraph_stateful_multi_fired_reconvergence_is_deferred_error() {
+fn evaluate_subgraph_stateful_multi_fired_reconvergence_errors_loudly() {
     // Stateful diamond: root(0) -> A(1), B(2); A,B -> C(3). Starting at the root fires both
-    // A and B into C, a multi-fired reconvergence. Stateful fan-in joins are deferred (D5 /
-    // blast-radius scan: no stateful multi-parent graph exists), so this must fail loudly
-    // rather than pick a silent state/context combine.
+    // A and B into C, a multi-fired reconvergence. The merge (∇) is undefined (assumption #2),
+    // so this must fail loudly rather than silently pick one parent.
     let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
         CausaloidGraph::new(0u64);
     let n0 = Causaloid::new_with_context(0, node_increment, ConfigCtx {}, "root");
@@ -407,6 +406,6 @@ fn evaluate_subgraph_stateful_multi_fired_reconvergence_is_deferred_error() {
         out.error()
             .unwrap()
             .to_string()
-            .contains("stateful fan-in joins are not yet supported")
+            .contains("reconvergence merge (∇) is not")
     );
 }
