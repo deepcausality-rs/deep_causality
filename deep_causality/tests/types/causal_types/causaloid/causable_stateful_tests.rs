@@ -249,7 +249,7 @@ fn evaluate_stateful_errors_on_a_none_input_value() {
 }
 
 #[test]
-fn evaluate_stateful_passes_a_relay_input_through_unchanged() {
+fn evaluate_stateful_errors_on_a_relay_command_input() {
     let causaloid: Causaloid<u64, u64, CounterState, ConfigCtx> =
         Causaloid::new_with_context(32, stateful_increment, ConfigCtx { multiplier: 1 }, "n");
     let incoming = PropagatingProcess::new(
@@ -260,10 +260,13 @@ fn evaluate_stateful_passes_a_relay_input_through_unchanged() {
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    assert!(out.is_ok(), "structural input flows through");
-    // `cast_effect_value` collapses structural input variants to `None` on the output channel.
-    assert_eq!(out.effect(), Some(&CausalEffect::none()));
-    assert_eq!(*out.state(), CounterState { count: 4 }, "state untouched");
+    // A command (`RelayTo`) on the input channel cannot be consumed by a singleton: it carries no
+    // `I` value and cannot be retyped `I -> O`. It surfaces a clear error rather than being
+    // silently collapsed to `None`, which would drop the relay target and sub-effect so downstream
+    // reasoning would see absence of evidence instead of a dropped command.
+    let err = out.error().expect("a command input errors");
+    assert!(format!("{err:?}").contains("received a command"));
+    assert_eq!(*out.state(), CounterState { count: 4 }, "state preserved");
 }
 
 #[test]

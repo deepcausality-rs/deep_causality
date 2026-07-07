@@ -15,7 +15,7 @@
 
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{Causaloid, CausaloidType, StatefulMonadicCausable};
-use deep_causality_core::{CausalEffect, CausalityError, CausalityErrorEnum, PropagatingProcess};
+use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingProcess};
 use std::fmt::Debug;
 
 impl<I, O, PS, C> StatefulMonadicCausable<I, O, PS, C> for Causaloid<I, O, PS, C>
@@ -52,14 +52,22 @@ where
                 let id = self.id;
 
                 // Step 1: log the input. Threads incoming state, context, and logs.
-                // A command input cannot be retyped `I -> O` (its sub-program carries `Option<I>`
-                // leaves and no `I -> O` map exists before evaluation), so `cast_effect_value`
-                // collapses it to the conservative `none()` signal; a `None` input is an error.
-                // Not reached in normal engine operation — the reasoning engine relays the command's
-                // sub-value, so a singleton never receives a live command on its input channel.
+                // A command input (`RelayTo`) cannot be consumed by a singleton: it carries no `I`
+                // value to evaluate, and it cannot be retyped `I -> O` (its sub-program has
+                // `Option<I>` leaves and no `I -> O` map exists before evaluation). The reasoning
+                // engine relays a command's sub-value, so a singleton never receives a live command
+                // on its input channel in normal operation; surfacing it as a clear error preserves
+                // the signal (target + sub-effect) instead of silently manufacturing `None` — which
+                // would read downstream as absence of evidence rather than a dropped command. This
+                // mirrors the stateless `Causable::evaluate` path, where a command input errors.
                 if incoming_value.is_command() {
                     return PropagatingProcess::new(
-                        Ok(cast_effect_value(incoming_value)),
+                        Err(CausalityError(CausalityErrorEnum::Custom(
+                            "Causaloid::evaluate_stateful: singleton received a command (RelayTo) \
+                             on its input channel; commands are relayed by the reasoning engine, \
+                             not consumed by a singleton"
+                                .into(),
+                        ))),
                         incoming.state().clone(),
                         incoming.context().clone(),
                         incoming.logs().clone(),
@@ -186,16 +194,4 @@ where
             ),
         }
     }
-}
-
-/// Pass through structural [`CausalEffect`] variants from input to output type.
-///
-/// The `RelayTo` command carries no payload of type `I` that
-/// would need transformation to `O`; it is a control-flow marker. Returning
-/// `CausalEffect::none()` here is the conservative choice that surfaces a clear
-/// signal at the next reasoning step (the caller can detect the change of
-/// kind). For singleton evaluation these variants are not expected on the
-/// input channel; the branch exists for completeness.
-fn cast_effect_value<I, O>(_v: CausalEffect<I>) -> CausalEffect<O> {
-    CausalEffect::none()
 }
