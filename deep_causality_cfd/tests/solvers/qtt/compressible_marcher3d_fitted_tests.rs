@@ -182,12 +182,14 @@ fn front_k(density: &[f64], n: usize) -> usize {
 
 #[test]
 fn repin_engages_and_pins_the_radial_front_to_the_target_band() {
-    // A radial density front at ζ-band k0 = 4, off the target band k = 8. The re-pin must roll it back to
+    // A radial density front at ζ-band k0 = 2, off the target band k = 5. The re-pin must roll it back to
     // the target (a rank-preserving relabel) and slide the shell; without re-pin the front stays put.
-    let l = 4usize;
+    // Bands are sized for the 8³ ζ grid (the front locator scans k ∈ 2..Nz-2 = {2,3,4,5}); the full 16³
+    // sweep is the example/verification job.
+    let l = 3usize;
     let n = 1usize << l;
     let tot = n * n * n;
-    let (k0, target) = (4.0f64, 8usize);
+    let (k0, target) = (2.0f64, 5usize);
     let (w, p) = (0.05, 1.0);
     let (mut rho, mut mx, mut my, mut mz, mut e) = (
         Vec::with_capacity(tot),
