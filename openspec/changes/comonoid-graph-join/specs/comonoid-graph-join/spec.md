@@ -2,7 +2,7 @@
 
 ### Requirement: Every in-wire resolves; a node fires on resolved wires, never on arrival order
 
-The engine SHALL associate one slot per in-wire (parent → node edge) and resolve every slot to either `Fired(effect)` or `Inactive`. A node SHALL fire only when all of its in-wire slots are resolved and at least one is `Fired`; a node whose slots are all `Inactive` SHALL resolve `Inactive` without firing. The engine SHALL resolve wires from non-descendants of the start node as `Inactive` at initialization (reachability pre-pass), and SHALL resolve the abandoned cone as `Inactive` when a `RelayTo` command redirects evaluation. Ready nodes SHALL be processed in ascending node index (canonical schedule). The classical run REQUIRES a frozen acyclic graph (`ultragraph::has_cycle`); a cyclic graph is rejected.
+The engine SHALL associate one slot per in-wire (parent → node edge) and resolve every slot to either `Fired(effect)` or `Inactive`. A node SHALL fire when all of its in-wire slots are resolved (with at least one `Fired`). The engine SHALL resolve wires from non-descendants of the start node as `Inactive` at initialization (reachability pre-pass) and SHALL NOT count them toward a node's readiness; the abandoned cone of a `RelayTo` is likewise dropped by starting a fresh round at the target. Because every reachable ancestor of a node fires, a reachable non-start node always has at least one `Fired` parent (a zero-`Fired` resolution is an unreachable internal-invariant guard). Ready nodes SHALL be processed in ascending node index (canonical schedule). The classical run REQUIRES a frozen acyclic graph (`ultragraph::has_cycle`); a cyclic graph is rejected.
 
 #### Scenario: Reconvergence node waits for both parents
 
@@ -19,10 +19,10 @@ The engine SHALL associate one slot per in-wire (parent → node edge) and resol
 - **WHEN** a `RelayTo` command redirects evaluation away from a pending branch feeding a reconvergence node
 - **THEN** the abandoned wires resolve `Inactive`, the current round ends, and evaluation continues at the relay target with the command's sub-program (sequential composition of rounds)
 
-#### Scenario: Dead paths propagate
+#### Scenario: Dead paths are pruned at the wire level
 
-- **WHEN** all parents of a node resolve `Inactive`
-- **THEN** the node resolves `Inactive` without evaluating, and its own out-wires resolve `Inactive`
+- **WHEN** a node has an in-wire from a parent that is not a descendant of the start node
+- **THEN** that wire is resolved `Inactive` by the reachability pre-pass and is never counted toward the node's readiness, so a reachable node always fires from its reachable (firing) ancestors (a non-start node never resolves to a zero-parent join)
 
 #### Scenario: Linear and tree graphs are unaffected
 

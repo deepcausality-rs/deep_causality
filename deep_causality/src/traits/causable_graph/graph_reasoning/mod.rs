@@ -174,19 +174,17 @@ where
                     let parents = std::mem::take(&mut fired[node]);
                     match parents.len() {
                         0 => {
-                            // Every parent resolved `Inactive`: this node is `Inactive`. It does not
-                            // evaluate, and its out-wires resolve `Inactive` too (discard / dead path).
-                            if let Ok(children) = self.get_graph().outbound_edges(node) {
-                                for c in children {
-                                    if reachable[c] && !processed[c] {
-                                        pending[c] = pending[c].saturating_sub(1);
-                                        if pending[c] == 0 {
-                                            ready.insert(c);
-                                        }
-                                    }
-                                }
-                            }
-                            continue;
+                            // Unreachable invariant guard. The reachability pre-pass prunes dead paths
+                            // at the wire level: an in-wire from a non-descendant of the start is never
+                            // counted in `pending`, and every *reachable* ancestor of a node fires
+                            // (induction from the seeded start over the acyclic reachable sub-DAG). So a
+                            // non-start node that becomes ready always has at least one fired parent;
+                            // it never resolves to a zero-parent join.
+                            return PropagatingEffect::from_error(CausalityError(
+                                CausalityErrorEnum::Custom(format!(
+                                    "internal invariant: node {node} became ready with no fired parents"
+                                )),
+                            ));
                         }
                         1 => {
                             // Join of one fired parent is the identity: pass its effect through.

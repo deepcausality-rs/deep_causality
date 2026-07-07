@@ -20,7 +20,7 @@ Source basis: `openspec/notes/causal-algebra/{Formalization.md, Causaloid-Formal
 **Non-Goals:**
 - Implementing quantum causal models in Rust (deferred to a subsequent change).
 - Proving the hard Layer-D proposition (`traceOut_preserves_commute`) or the `Markov → Compatible` converse — these are stated as obligations/open hypotheses.
-- Re-implementing the Rust graph engine's `∇_G` join in this change unless the witness for the comonoid-join theorem strictly requires it (see Decisions → engine gap).
+- Re-implementing the Rust graph engine's fan-in — the labeled wire-slot join is delivered by the prerequisite `comonoid-graph-join` change (now implemented); this change consumes its `unique_valuation`/`schedule_invariance` results and does not re-derive them.
 - Formalizing CSM, generative types, or the model layer (out of scope; separate future work).
 
 ## Decisions

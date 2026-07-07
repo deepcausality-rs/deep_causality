@@ -20,24 +20,24 @@
 
 ## 4. Engine: stateful path
 
-- [ ] 4.1 Mirror the wire-slot evaluation in `graph_reasoning/stateful.rs`; the join mechanism returns a full carrier, so state/context combine is the mechanism's decision (per D5). Apply the 1.3 scan outcome (implement or document deferral).
-- [ ] 4.2 Preserve state/context/log threading from the relaying node across rounds.
+- [x] 4.1 Mirror the wire-slot evaluation in `graph_reasoning/stateful.rs`; the join mechanism returns a full carrier, so state/context combine is the mechanism's decision (per D5). Apply the 1.3 scan outcome (implement or document deferral).
+- [x] 4.2 Preserve state/context/log threading from the relaying node across rounds.
 
 ## 5. Tests updated to declared-join semantics
 
-- [ ] 5.1 Update the `logic_graph` diamond and every multi-fired graph from 1.1: declare a join mechanism, assert the mechanism-derived result. Confirm single-fired reconvergent graphs pass unchanged.
-- [ ] 5.2 New tests (the MISSING diamond multi-fired coverage, per scan): **root-start diamond** — `evaluate_subgraph_from_cause(0)` on `build_multi_cause_graph` with a declared join on C(3), asserting the joined result (both A and B fire); asymmetric join distinguishes parents; join-of-one identity; undeclared multi-fired error (root-start diamond, no join → `CausalityError`); parent-error short-circuit (canonical order); log canonical-order concat; mid-graph start with out-of-cone parent (no deadlock, single-fired); relay mid-diamond liveness; all-`Inactive` discard propagation.
-- [ ] 5.4 Kernel tests: `LinearJoin` weighted diamond (`b + w1·x1 + w2·x4`); surgery locality (cut wire / `Inactive` parent drops exactly that term); `Dual<S>` sensitivity (`ε` channel = seeded parent's weight); degenerate-parent policy (command → error; `Pure(None)` and missing weight → no contribution; missing config → error).
-- [ ] 5.3 Determinism test: same diamond model under two node-index assignments agrees modulo relabeling.
+- [x] 5.1 Update the `logic_graph` diamond and every multi-fired graph from 1.1: declare a join mechanism, assert the mechanism-derived result. Confirm single-fired reconvergent graphs pass unchanged.
+- [x] 5.2 New tests (the MISSING diamond multi-fired coverage, per scan): **root-start diamond** — `evaluate_subgraph_from_cause(0)` on `build_multi_cause_graph` with a declared join on C(3), asserting the joined result (both A and B fire); asymmetric join distinguishes parents; join-of-one identity; undeclared multi-fired error (root-start diamond, no join → `CausalityError`); parent-error short-circuit (canonical order); log canonical-order concat; mid-graph start with out-of-cone parent (no deadlock, single-fired); relay mid-diamond liveness; all-`Inactive` discard propagation.
+- [x] 5.4 Kernel tests: `LinearJoin` weighted diamond (`b + w1·x1 + w2·x4`); surgery locality (cut wire / `Inactive` parent drops exactly that term); `Dual<S>` sensitivity (`ε` channel = seeded parent's weight); degenerate-parent policy (command → error; `Pure(None)` and missing weight → no contribution; missing config → error).
+- [x] 5.3 Determinism test: same diamond model under two node-index assignments agrees modulo relabeling.
 
 ## 6. Lean model + witness
 
-- [ ] 6.1 `Core/GraphJoin.lean` (bare-`lean`, self-contained): `unique_valuation` (well-founded induction over the acyclic labeled system, no algebraic hypotheses on mechanisms); `schedule_invariance` (command-free); disjoint-key union lemmas; `inactive_discard`; `classical_copy` stated as a law of the classical interpreter; relay composition definitional with determinism as a separate scoped result. Register in `DeepCausalityFormal.lean`.
-- [ ] 6.2 Rust witnesses under `deep_causality/tests/formalization_lean/`: permuted-layout agreement on the real engine (6.1a/b), inactive-discard, and copy-law witnesses; `THEOREM_MAP.md` rows (state the command-free scope) + `LEAN_CORE.md` rows (advance `Formalization.md` #2/#11).
-- [ ] 6.3 Per-kernel lemmas (scoped to the kernel, not the engine): `LinearJoin` key-order invariance via the proved num-layer monoid laws; surgery locality (`join over Pa∖{p}` = `join over Pa` minus `weights[p]·v_p` — the kernel-level shadow of mechanism opening), each with a Rust witness and `THEOREM_MAP.md` row.
+- [x] 6.1 `Core/GraphJoin.lean` (bare-`lean`, self-contained): `unique_valuation` (well-founded induction over the acyclic labeled system, no algebraic hypotheses on mechanisms); `schedule_invariance` (command-free); disjoint-key union lemmas; `inactive_discard`; `classical_copy` stated as a law of the classical interpreter; relay composition definitional with determinism as a separate scoped result. Register in `DeepCausalityFormal.lean`.
+- [x] 6.2 Rust witnesses under `deep_causality/tests/formalization_lean/`: permuted-layout agreement on the real engine (6.1a/b), inactive-discard, and copy-law witnesses; `THEOREM_MAP.md` rows (state the command-free scope) + `LEAN_CORE.md` rows (advance `Formalization.md` #2/#11).
+- [x] 6.3 Per-kernel lemmas (scoped to the kernel, not the engine): `LinearJoin` key-order invariance via the proved num-layer monoid laws; surgery locality (`join over Pa∖{p}` = `join over Pa` minus `weights[p]·v_p` — the kernel-level shadow of mechanism opening), each with a Rust witness and `THEOREM_MAP.md` row.
 
 ## 7. Verify & hand off
 
-- [ ] 7.1 `bazel test //...` green; `make format && make fix` clean; bare-`lean` on `Core/GraphJoin.lean` exit 0.
-- [ ] 7.2 Re-scope `formalize-main-crate`: D2 narrowed (copy law classical-only; QCM predicates attach to labeled wires; cyclic admissibility = `ValidProcess`); its intervention capability references the D10 surgery attachment point; drop the "engine gap / gated follow-up" wording.
-- [ ] 7.3 Prepare a commit message per completed task group; do not commit (await user).
+- [x] 7.1 `bazel test //...` green; `make format && make fix` clean; bare-`lean` on `Core/GraphJoin.lean` exit 0.
+- [x] 7.2 Re-scope `formalize-main-crate`: D2 narrowed (copy law classical-only; QCM predicates attach to labeled wires; cyclic admissibility = `ValidProcess`); its intervention capability references the D10 surgery attachment point; drop the "engine gap / gated follow-up" wording.
+- [x] 7.3 Prepare a commit message per completed task group; do not commit (await user).

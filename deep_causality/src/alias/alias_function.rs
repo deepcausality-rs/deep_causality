@@ -107,5 +107,4 @@ pub type JoinFn<I> = fn(&ParentEffects<I>) -> PropagatingEffect<I>;
 /// # Returns
 ///
 /// The single `PropagatingEffect<I>` fed to the node as its incoming effect.
-pub type ContextualJoinFn<I, CTX> =
-    fn(&ParentEffects<I>, Option<&CTX>) -> PropagatingEffect<I>;
+pub type ContextualJoinFn<I, CTX> = fn(&ParentEffects<I>, Option<&CTX>) -> PropagatingEffect<I>;

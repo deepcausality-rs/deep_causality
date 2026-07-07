@@ -15,8 +15,8 @@
 //! different types of `Causaloid` instances, tailored to specific causal modeling needs.
 use crate::MonadicCausable;
 use crate::{
-    AggregateLogic, CausalFn, CausaloidGraph, CausaloidType, ContextualCausalFn,
-    ContextualJoinFn, IdentificationValue, JoinFn, NumericalValue,
+    AggregateLogic, CausalFn, CausaloidGraph, CausaloidType, ContextualCausalFn, ContextualJoinFn,
+    IdentificationValue, JoinFn, NumericalValue,
 };
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
