@@ -4,8 +4,8 @@
  */
 use crate::{OIL_PRICE_ID, SHIPPING_ACTIVITY_ID, TIME_ID};
 use deep_causality::{
-    BaseContext, CausalityError, CausalityErrorEnum, Causaloid, Contextoid, ContextoidType,
-    ContextuableGraph, Data, Datable, EffectValue, Identifiable, IdentificationValue,
+    BaseContext, CausalEffect, CausalityError, CausalityErrorEnum, Causaloid, Contextoid,
+    ContextoidType, ContextuableGraph, Data, Datable, Identifiable, IdentificationValue,
     PropagatingProcess,
 };
 use std::sync::{Arc, RwLock};
@@ -42,9 +42,9 @@ pub(crate) fn get_counterfactual_causaloid(predictor_id: IdentificationValue) ->
 
 /// The main logic for the predictive causaloid.
 /// This function has access to the context and performs a prediction based on its contents.
-/// New API signature: fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
+/// New API signature: fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
 fn shipping_predictor_logic(
-    _effect: EffectValue<f64>,
+    _effect: CausalEffect<f64>,
     _state: (),
     context: Option<Arc<RwLock<BaseContext>>>,
 ) -> PropagatingProcess<f64, (), Arc<RwLock<BaseContext>>> {

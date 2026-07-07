@@ -3,14 +3,19 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_core::{CausalEffect, EffectLog};
 use deep_causality_core::{CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum};
-use deep_causality_core::{EffectLog, EffectValue};
 use deep_causality_haft::LogAddEntry;
 
 #[test]
 fn test_explain_value_only() {
     let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
-        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(42)), (), None, EffectLog::new());
+        CausalEffectPropagationProcess::new(
+            Ok(CausalEffect::value(42)),
+            (),
+            None,
+            EffectLog::new(),
+        );
 
     let explanation = process.explain();
 
@@ -42,7 +47,7 @@ fn test_explain_with_logs() {
     logs.add_entry("Step 2: Computing result");
 
     let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
-        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(100)), (), None, logs);
+        CausalEffectPropagationProcess::new(Ok(CausalEffect::value(100)), (), None, logs);
 
     let explanation = process.explain();
 
@@ -78,7 +83,7 @@ fn test_explain_with_error_and_logs() {
 #[test]
 fn test_explain_with_effect_value_none() {
     let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
-        CausalEffectPropagationProcess::new(Ok(EffectValue::None), (), None, EffectLog::new());
+        CausalEffectPropagationProcess::new(Ok(CausalEffect::none()), (), None, EffectLog::new());
 
     let explanation = process.explain();
 
@@ -92,7 +97,7 @@ fn test_explain_empty_logs_no_section() {
     let logs = EffectLog::new();
 
     let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
-        CausalEffectPropagationProcess::new(Ok(EffectValue::Value(1)), (), None, logs);
+        CausalEffectPropagationProcess::new(Ok(CausalEffect::value(1)), (), None, logs);
 
     let explanation = process.explain();
 

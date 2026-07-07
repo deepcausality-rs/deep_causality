@@ -13,7 +13,6 @@ use crate::types::causal_types::causaloid::causable_utils;
 use crate::{
     Causable, CausalityError, Causaloid, CausaloidType, MonadicCausable, PropagatingEffect,
 };
-use deep_causality_core::EffectValue;
 use std::fmt::Debug;
 
 /// Implements the `Causable` trait for `Causaloid`.
@@ -74,6 +73,29 @@ where
     fn evaluate(&self, incoming_effect: &PropagatingEffect<I>) -> PropagatingEffect<O> {
         match self.causal_type {
             CausaloidType::Singleton => {
+                // A command input (`RelayTo`) cannot be consumed by a singleton: it carries no `I`
+                // value to evaluate and cannot be retyped `I -> O`. The reasoning engine relays a
+                // command's sub-program, so a singleton never receives a live command on its input
+                // channel in normal operation. Surface a clear, command-specific error rather than
+                // letting the `bind_or_error` step below report it as a generic "input value is None"
+                // — which would conflate a dropped command with absence of evidence. This mirrors the
+                // stateful `StatefulMonadicCausable::evaluate_stateful` path exactly.
+                if incoming_effect.command_target().is_some() {
+                    return PropagatingEffect::new(
+                        Err(CausalityError(
+                            deep_causality_core::CausalityErrorEnum::Custom(
+                                "Causaloid::evaluate: singleton received a command (RelayTo) on its \
+                                 input channel; commands are relayed by the reasoning engine, not \
+                                 consumed by a singleton"
+                                    .into(),
+                            ),
+                        )),
+                        (),
+                        None,
+                        incoming_effect.logs().clone(),
+                    );
+                }
+
                 // For a Singleton, the evaluation is a monadic chain of operations:
                 // 1. Log the input.
                 // 2. Execute the causal logic.
@@ -89,14 +111,19 @@ where
                         |input, _, _| causable_utils::execute_causal_logic(input, self),
                         "Cannot evaluate: input value after logging is None",
                     )
-                    .bind(|output_effect_val, _, _| match output_effect_val {
-                        EffectValue::Value(v) => causable_utils::log_output(v, self.id),
-                        EffectValue::None => PropagatingEffect::from_error(CausalityError(
-                            deep_causality_core::CausalityErrorEnum::Custom(
-                                "Causaloid::evaluate: causal_fn returned None output".into(),
-                            ),
-                        )),
-                        _ => PropagatingEffect::from_effect_value(output_effect_val),
+                    .bind(|output_effect_val, _, _| {
+                        // A command output passes through unchanged for the reasoning engine to fold.
+                        if output_effect_val.is_command() {
+                            return PropagatingEffect::from_effect(output_effect_val);
+                        }
+                        match output_effect_val.into_value() {
+                            Some(v) => causable_utils::log_output(v, self.id),
+                            None => PropagatingEffect::from_error(CausalityError(
+                                deep_causality_core::CausalityErrorEnum::Custom(
+                                    "Causaloid::evaluate: causal_fn returned None output".into(),
+                                ),
+                            )),
+                        }
                     })
             }
 

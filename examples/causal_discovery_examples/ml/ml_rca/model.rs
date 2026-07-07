@@ -8,7 +8,7 @@
 
 use candle_core::{DType, Device, Tensor, Var};
 use deep_causality_core::{
-    CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingProcess,
+    CausalEffect, CausalityError, CausalityErrorEnum, EffectLog, PropagatingProcess,
 };
 use deep_causality_discovery::{BrcdConfig, CdlBuilder, CdlConfigBuilder};
 use deep_causality_haft::LogAddEntry;
@@ -206,7 +206,7 @@ fn brcd_top_culprit(cfg: &RcaConfig) -> Result<(usize, f64), String> {
 /// explainer, compares the culprit against the shipped ground truth, and carries a `RootCause`
 /// verdict, recording the escalation in the `EffectLog`.
 fn gate_stage(
-    value: EffectValue<RcaSignal>,
+    value: CausalEffect<RcaSignal>,
     state: RcaState,
     ctx: Option<RcaConfig>,
 ) -> RcaProcess {
@@ -224,7 +224,7 @@ fn gate_stage(
             state.window_label, score, threshold
         ));
         return RcaProcess::new(
-            Ok(EffectValue::Value(RcaSignal::Healthy { score })),
+            Ok(CausalEffect::value(RcaSignal::Healthy { score })),
             state,
             ctx,
             logs,
@@ -249,7 +249,7 @@ fn gate_stage(
                 state.window_label, metric, index, posterior, matches_truth
             ));
             RcaProcess::new(
-                Ok(EffectValue::Value(RcaSignal::RootCause {
+                Ok(CausalEffect::value(RcaSignal::RootCause {
                     metric,
                     index,
                     posterior,
@@ -284,7 +284,7 @@ fn gate_stage(
 /// `bind` the gate (which escalates to the explainer or short-circuits to healthy).
 pub fn run_window(label: &str, score: f64, cfg: &RcaConfig) -> RcaProcess {
     let start = RcaProcess::new(
-        Ok(EffectValue::Value(RcaSignal::Score(score))),
+        Ok(CausalEffect::value(RcaSignal::Score(score))),
         RcaState {
             window_label: label.to_string(),
         },

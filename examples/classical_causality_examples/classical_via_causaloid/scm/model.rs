@@ -7,7 +7,7 @@ use deep_causality::{
     ContextoidType, ContextuableGraph, Datable, Identifiable, IdentificationValue,
     PropagatingEffect, PropagatingProcess,
 };
-use deep_causality_core::EffectValue;
+use deep_causality_core::CausalEffect;
 use std::sync::{Arc, RwLock};
 
 // Contextoid IDs
@@ -97,7 +97,7 @@ pub type ContextualScmCausaloid = Causaloid<f64, bool, (), Arc<RwLock<BaseContex
 /// A contextual causal function that determines cancer risk.
 /// It prioritizes checking for tar, then for smoking.
 pub(crate) fn contextual_cancer_risk_logic(
-    _effect: EffectValue<f64>,
+    _effect: CausalEffect<f64>,
     _state: (),
     context: Option<Arc<RwLock<BaseContext>>>,
 ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {

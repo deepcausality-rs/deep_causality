@@ -4,7 +4,7 @@
  */
 
 use crate::{CausalityError, Causaloid};
-use deep_causality_core::{EffectLog, EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{CausalEffect, EffectLog, PropagatingEffect, PropagatingProcess};
 use deep_causality_haft::LogAddEntry;
 use std::fmt::Debug;
 
@@ -32,12 +32,12 @@ where
 {
     if let Some(context_fn) = &causaloid.context_causal_fn {
         if let Some(context) = causaloid.context.as_ref() {
-            // context_fn signature: fn(EffectValue<I>, PS, Option<C>) -> PropagatingProcess<O, PS, C>
+            // context_fn signature: fn(CausalEffect<I>, PS, Option<C>) -> PropagatingProcess<O, PS, C>
             // We invoke it with default state and the context.
             // The result is PropagatingProcess<O, PS, C>.
             // We need to convert it to PropagatingEffect<O>, preserving logs.
 
-            let ev = EffectValue::from(input);
+            let ev = CausalEffect::value(input);
             let process = context_fn(ev, PS::default(), Some(context.clone()));
 
             let (outcome, _state, _context, logs) = process.into_parts();
@@ -84,7 +84,7 @@ where
     I: Debug + Clone + Default,
 {
     // Format must match expectation: "Causaloid {}: Incoming effect: {:?}"
-    let ev = EffectValue::from(input.clone());
+    let ev = CausalEffect::value(input.clone());
     let mut logs = EffectLog::new();
     logs.add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
     PropagatingEffect::from_value_with_log(input, logs)
@@ -100,7 +100,7 @@ where
 ///
 /// Behaviour:
 /// * If `causaloid.context_causal_fn` is set, the closure is invoked with
-///   `(EffectValue::from(input), state, context)` and its returned process is
+///   `(CausalEffect::value(input), state, context)` and its returned process is
 ///   returned to the caller intact (logs preserved, state preserved).
 /// * Otherwise, if the stateless `causaloid.causal_fn` is set, it is invoked on
 ///   the value and the resulting `PropagatingEffect<O>` is lifted into a
@@ -121,7 +121,7 @@ where
     C: Clone,
 {
     if let Some(context_fn) = &causaloid.context_causal_fn {
-        let ev = EffectValue::from(input);
+        let ev = CausalEffect::value(input);
         // Prefer the caller-supplied context; fall back to the causaloid's own
         // stored context only if the caller passed `None`. This mirrors the
         // existing context-discovery behaviour of `execute_causal_logic` while
@@ -163,10 +163,10 @@ where
     PS: Clone,
     C: Clone,
 {
-    let ev = EffectValue::from(input.clone());
+    let ev = CausalEffect::value(input.clone());
     let mut logs = EffectLog::new();
     logs.add_entry(&format!("Causaloid {}: Incoming effect: {:?}", id, ev));
-    PropagatingProcess::new(Ok(EffectValue::Value(input)), state, context, logs)
+    PropagatingProcess::new(Ok(CausalEffect::value(input)), state, context, logs)
 }
 
 /// Stateful sibling of [`log_output`]. Records the output on the process log
@@ -182,10 +182,10 @@ where
     PS: Clone,
     C: Clone,
 {
-    let ev = EffectValue::from(output.clone());
+    let ev = CausalEffect::value(output.clone());
     let mut logs = EffectLog::new();
     logs.add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
-    PropagatingProcess::new(Ok(EffectValue::Value(output)), state, context, logs)
+    PropagatingProcess::new(Ok(CausalEffect::value(output)), state, context, logs)
 }
 
 /// Logs the output from a causaloid.
@@ -201,7 +201,7 @@ where
     O: Debug + Clone + Default,
 {
     // Format must match expectation: "Causaloid {}: Outgoing effect: {:?}"
-    let ev = EffectValue::from(output.clone());
+    let ev = CausalEffect::value(output.clone());
     let mut logs = EffectLog::new();
     logs.add_entry(&format!("Causaloid {}: Outgoing effect: {:?}", id, ev));
     PropagatingEffect::from_value_with_log(output, logs)

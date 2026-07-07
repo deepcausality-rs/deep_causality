@@ -10,7 +10,7 @@
 //! pipeline that threads the complex beam parameter q and fails the flow if the beam
 //! becomes unphysical (Im(q) <= 0).
 
-use deep_causality_core::{CausalFlow, EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
 use deep_causality_num::{Complex, DivisionAlgebra};
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, PhysicsError, Wavelength, beam_spot_size,
@@ -71,7 +71,7 @@ fn main() -> Result<(), PhysicsError> {
 
 /// Step 1: drift through free space L1. ABCD = [1, L; 0, 1].
 fn stage_drift_l1(
-    value: EffectValue<ComplexBeamParameter<FloatType>>,
+    value: CausalEffect<ComplexBeamParameter<FloatType>>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
@@ -92,7 +92,7 @@ fn stage_drift_l1(
 
 /// Step 2: thermal lens. Focal length from the lens-maker equation; ABCD = [1, 0; -1/f, 1].
 fn stage_thermal_lens(
-    value: EffectValue<ComplexBeamParameter<FloatType>>,
+    value: CausalEffect<ComplexBeamParameter<FloatType>>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
@@ -119,7 +119,7 @@ fn stage_thermal_lens(
 
 /// Step 3: drift through free space L2. ABCD = [1, L; 0, 1].
 fn stage_drift_l2(
-    value: EffectValue<ComplexBeamParameter<FloatType>>,
+    value: CausalEffect<ComplexBeamParameter<FloatType>>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
@@ -141,7 +141,7 @@ fn stage_drift_l2(
 /// Step 4: reflection off a flat mirror. The beam is confined iff Im(q) > 0; otherwise the
 /// flow enters the error channel as an unstable resonator.
 fn stage_mirror(
-    value: EffectValue<ComplexBeamParameter<FloatType>>,
+    value: CausalEffect<ComplexBeamParameter<FloatType>>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {

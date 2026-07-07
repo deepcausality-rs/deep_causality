@@ -5,17 +5,17 @@
 
 use crate::{AGE_ID, DRUG_ADMINISTERED_ID, INITIAL_BP_ID};
 use deep_causality::{
-    BaseContext, CausalityError, CausalityErrorEnum, Contextoid, ContextoidType, ContextuableGraph,
-    Data, Datable, EffectValue, Identifiable, NumericalValue, PropagatingProcess,
+    BaseContext, CausalEffect, CausalityError, CausalityErrorEnum, Contextoid, ContextoidType,
+    ContextuableGraph, Data, Datable, Identifiable, NumericalValue, PropagatingProcess,
 };
 use std::sync::{Arc, RwLock};
 
 /// The causal logic for the drug's effect.
 /// This function checks the context to see if the drug was administered and returns the effect on blood pressure.
 ///
-/// New API Signature: fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
+/// New API Signature: fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
 pub(crate) fn drug_effect_logic(
-    _effect: EffectValue<NumericalValue>,
+    _effect: CausalEffect<NumericalValue>,
     _state: (),
     context: Option<Arc<RwLock<BaseContext>>>,
 ) -> PropagatingProcess<NumericalValue, (), Arc<RwLock<BaseContext>>> {

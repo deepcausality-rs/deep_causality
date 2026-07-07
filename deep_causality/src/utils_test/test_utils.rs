@@ -165,7 +165,7 @@ pub fn get_test_causaloid_deterministic_with_context(
     let description = "Inverts any input";
 
     fn causal_fn_deterministic_with_context(
-        obs: EffectValue<bool>,
+        obs: CausalEffect<bool>,
         _state: (),
         context: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
@@ -193,7 +193,7 @@ pub fn get_test_causaloid_deterministic_with_context(
         id,
         causal_fn_deterministic_with_context
             as fn(
-                EffectValue<bool>,
+                CausalEffect<bool>,
                 (),
                 Option<Arc<RwLock<BaseContext>>>,
             ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>>,

@@ -1,6 +1,6 @@
 # High-Stakes Decentralized Structural Health Monitoring
 
-A demonstration of **Autonomous Safety Interventions** using DeepCausality's `Intervenable` trait for critical infrastructure.
+A demonstration of **Autonomous Safety Interventions** using DeepCausality's `AlternatableValue` trait for critical infrastructure.
 
 ## Overview
 
@@ -8,7 +8,7 @@ In extreme environments (Space Stations, Deep-Sea Habitats), structural failures
 
 1.  Each hull plate is an **autonomous agent** (node in a `Graph`).
 2.  Local sensors detect stress levels.
-3.  When stress exceeds a threshold, the plate **locally intervenes** using the `Intervenable` trait.
+3.  When stress exceeds a threshold, the plate **locally intervenes** using the `AlternatableValue` trait.
 4.  The intervention is recorded in a formal **Causal Audit Trail** (Blackbox).
 
 ## The Physics
@@ -29,7 +29,7 @@ let mut hull = Graph::new(num_plates, tensor, 0)?;
 hull.add_edge(0, 1)?; // Plate 0 connected to Plate 1
 ```
 
-### `PropagatingEffect<T>` & `Intervenable`
+### `PropagatingEffect<T>` & `AlternatableValue`
 The stress state is wrapped in a monadic effect. This allows:
 1.  **Observation** (Layer 1): Reading the current stress.
 2.  **Intervention** (Layer 2): Overriding the stress value to a safe level.
@@ -40,7 +40,7 @@ The stress state is wrapped in a monadic effect. This allows:
 let stress_effect = PropagatingEffect::pure(Some(current_stress));
 
 // INTERVENE: Override the dangerous value
-let healed_effect = stress_effect.intervene(Some(SAFE_STRESS_LIMIT));
+let healed_effect = stress_effect.alternate_value(Some(SAFE_STRESS_LIMIT));
 ```
 
 ### Decentralized Decision Making

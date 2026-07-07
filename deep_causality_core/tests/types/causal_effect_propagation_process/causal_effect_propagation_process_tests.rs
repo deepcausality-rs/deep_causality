@@ -9,8 +9,8 @@ use deep_causality_core::{CausalityError, CausalityErrorEnum};
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_core::CausalEffect;
 use deep_causality_core::CausalEffectPropagationProcess;
-use deep_causality_core::EffectValue;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 struct TestLog(Vec<String>);
@@ -21,19 +21,15 @@ impl deep_causality_haft::LogAppend for TestLog {
     }
 }
 
-fn unwrap_value<T: Copy>(val: EffectValue<T>) -> T {
-    if let EffectValue::Value(v) = val {
-        v
-    } else {
-        panic!("Expected EffectValue::Value")
-    }
+fn unwrap_value<T: Copy>(val: CausalEffect<T>) -> T {
+    val.into_value().expect("expected a value effect")
 }
 
 #[test]
 fn test_bind_propagation() {
     let initial_process: CausalEffectPropagationProcess<i32, i32, (), String, TestLog> =
         CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(10)),
+            Ok(CausalEffect::value(10)),
             0,
             None,
             TestLog::default(),
@@ -43,7 +39,7 @@ fn test_bind_propagation() {
         let new_val = unwrap_value(val) + 1;
         let new_state = state + 1;
         CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(new_val)),
+            Ok(CausalEffect::value(new_val)),
             new_state,
             None,
             TestLog(vec!["step1".to_string()]),
@@ -71,7 +67,7 @@ fn test_bind_error_propagation() {
     let next_process = error_process.bind(|val, state, _ctx| {
         // This closure should not be executed
         CausalEffectPropagationProcess::new(
-            Ok(EffectValue::from(unwrap_value(val) + 1)),
+            Ok(CausalEffect::value(unwrap_value(val) + 1)),
             state + 1,
             None,
             TestLog::default(),
@@ -90,7 +86,7 @@ fn test_bind_error_propagation() {
 fn test_with_state() {
     let stateless_effect: CausalEffectPropagationProcess<i32, (), (), String, TestLog> =
         CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(42)),
+            Ok(CausalEffect::value(42)),
             (),
             None,
             TestLog(vec!["init".to_string()]),
@@ -140,7 +136,7 @@ fn test_none() {
         deep_causality_core::EffectLog,
     >::none();
 
-    assert!(matches!(process.effect(), Some(EffectValue::None)));
+    assert!(process.effect().is_some_and(CausalEffect::is_none));
     assert_eq!(*process.state(), 0);
     assert!(process.context().is_none());
     assert!(process.error().is_none());
@@ -163,15 +159,15 @@ fn test_pure() {
 }
 
 #[test]
-fn test_from_effect_value() {
-    let val = EffectValue::Value(123);
+fn test_from_effect() {
+    let val = CausalEffect::value(123);
     let process = CausalEffectPropagationProcess::<
         i32,
         i32,
         (),
         CausalityError,
         deep_causality_core::EffectLog,
-    >::from_effect_value(val);
+    >::from_effect(val);
 
     assert!(matches!(process.value(), Some(&123)));
     assert_eq!(*process.state(), 0);
@@ -180,8 +176,8 @@ fn test_from_effect_value() {
 }
 
 #[test]
-fn test_from_effect_value_with_log() {
-    let val = EffectValue::Value(456);
+fn test_from_effect_with_log() {
+    let val = CausalEffect::value(456);
     let logs = deep_causality_core::EffectLog::new();
     let process = CausalEffectPropagationProcess::<
         i32,
@@ -189,7 +185,7 @@ fn test_from_effect_value_with_log() {
         (),
         CausalityError,
         deep_causality_core::EffectLog,
-    >::from_effect_value_with_log(val, logs);
+    >::from_effect_with_log(val, logs);
 
     assert!(matches!(process.value(), Some(&456)));
     assert_eq!(*process.state(), 0);

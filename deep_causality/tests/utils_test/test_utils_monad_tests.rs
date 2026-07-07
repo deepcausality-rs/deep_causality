@@ -4,27 +4,27 @@
  */
 
 use deep_causality::utils_test::test_utils_monad;
-use deep_causality_core::EffectValue;
+use deep_causality_core::CausalEffect;
 use deep_causality_haft::LogSize;
 
 #[test]
 fn test_smoking_logic() {
     // Case 1: Below threshold
-    let input_low = EffectValue::from(0.1);
+    let input_low = CausalEffect::value(0.1);
     let res_low = test_utils_monad::smoking_logic(input_low, (), None);
     assert!(res_low.is_ok());
     assert!(!res_low.value_cloned().unwrap()); // Expect false
     assert!(!res_low.logs().is_empty());
 
     // Case 2: Above threshold (0.6)
-    let input_high = EffectValue::from(0.7);
+    let input_high = CausalEffect::value(0.7);
     let res_high = test_utils_monad::smoking_logic(input_high, (), None);
     assert!(res_high.is_ok());
     assert!(res_high.value_cloned().unwrap()); // Expect true
     assert!(!res_high.logs().is_empty());
 
     // Case 3: Error/None input defaults to 0.0 -> false
-    let input_none = EffectValue::None;
+    let input_none = CausalEffect::none();
     let res_none = test_utils_monad::smoking_logic(input_none, (), None);
     assert!(res_none.is_ok());
     assert!(!res_none.value_cloned().unwrap());
@@ -33,20 +33,20 @@ fn test_smoking_logic() {
 #[test]
 fn test_tar_logic() {
     // Case 1: True input
-    let input_true = EffectValue::from(true);
+    let input_true = CausalEffect::value(true);
     let res_true = test_utils_monad::tar_logic(input_true, (), None);
     assert!(res_true.is_ok());
     assert!(res_true.value_cloned().unwrap());
     assert!(!res_true.logs().is_empty());
 
     // Case 2: False input
-    let input_false = EffectValue::from(false);
+    let input_false = CausalEffect::value(false);
     let res_false = test_utils_monad::tar_logic(input_false, (), None);
     assert!(res_false.is_ok());
     assert!(!res_false.value_cloned().unwrap());
 
     // Case 3: None input defaults to false
-    let input_none = EffectValue::None;
+    let input_none = CausalEffect::none();
     let res_none = test_utils_monad::tar_logic(input_none, (), None);
     assert!(res_none.is_ok());
     assert!(!res_none.value_cloned().unwrap());
@@ -54,7 +54,7 @@ fn test_tar_logic() {
 
 #[test]
 fn test_error_logic() {
-    let input = EffectValue::from(true);
+    let input = CausalEffect::value(true);
     let res = test_utils_monad::error_logic(input, (), None);
     assert!(res.is_err());
     assert!(res.error().unwrap().to_string().contains("Simulated error"));

@@ -18,7 +18,7 @@ use crate::solvers::dec::uncertain_inflow::{InflowContext, InflowMarchState, inf
 use crate::types::CfdScalar;
 use crate::types::flow::Report;
 use crate::types::flow_config::UncertainMarchConfig;
-use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
+use deep_causality_core::{CausalEffect, EffectLog, PropagatingProcess};
 use deep_causality_haft::LogSize;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensor;
@@ -102,7 +102,7 @@ impl<'c, 'm, const D: usize, R: CfdScalar + ProbabilisticType> UncertainMarchRun
         let context = InflowContext::new(*zone, config.stream.clone());
         let mut process: PropagatingProcess<R, InflowMarchState<'m, D, R>, InflowContext<R>> =
             PropagatingProcess::new(
-                Ok(EffectValue::Value(zone.default_inflow())),
+                Ok(CausalEffect::value(zone.default_inflow())),
                 initial,
                 Some(context),
                 EffectLog::new(),

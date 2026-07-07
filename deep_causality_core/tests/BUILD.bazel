@@ -1,6 +1,27 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_core",
+        # Internal dependencies
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
     name = "errors",
     srcs = glob([
         "errors/*_tests.rs",
@@ -41,9 +62,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_effect_value",
+    name = "types_causal_effect",
     srcs = glob([
-        "types/effect_value/*_tests.rs",
+        "types/causal_effect/*_tests.rs",
     ]),
     crate_features = [
         "std",

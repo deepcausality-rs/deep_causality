@@ -10,7 +10,7 @@ use crate::model_types::{
     NetworkState,
 };
 use causal_counterfactual_examples::math_utils;
-use deep_causality_core::{AlternatableValue, EffectLog, EffectValue};
+use deep_causality_core::{AlternatableValue, CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
 use std::collections::HashSet;
 
@@ -76,7 +76,7 @@ pub fn solve_flow(cfg: &NetworkConfig, failed: &HashSet<u32>) -> FlowSolution {
 /// of failed edge ids (as a `Vec<u32>`, because `PropagatingProcess`
 /// requires `Default + Clone`); the stage produces a fresh `FlowSolution`.
 pub fn resolve_stage(
-    value: EffectValue<Vec<u32>>,
+    value: CausalEffect<Vec<u32>>,
     mut state: NetworkState,
     ctx: Option<NetworkConfig>,
 ) -> NetworkProcess<FlowSolution> {
@@ -100,7 +100,7 @@ pub fn resolve_stage(
         solution.overloaded,
     ));
 
-    NetworkProcess::<FlowSolution>::new(Ok(EffectValue::Value(solution)), state, ctx, logs)
+    NetworkProcess::<FlowSolution>::new(Ok(CausalEffect::value(solution)), state, ctx, logs)
 }
 
 /// Run a cascade starting from the given trigger pipe.
@@ -112,7 +112,7 @@ pub fn resolve_stage(
 /// decides what to intervene on next.
 pub fn run_cascade(trigger_edge: u32, cfg: NetworkConfig) -> NetworkProcess<FlowSolution> {
     let process: NetworkProcess<Vec<u32>> = NetworkProcess::<Vec<u32>>::new(
-        Ok(EffectValue::Value(vec![trigger_edge])),
+        Ok(CausalEffect::value(vec![trigger_edge])),
         NetworkState::default(),
         Some(cfg),
         EffectLog::new(),
@@ -140,7 +140,7 @@ pub fn run_cascade(trigger_edge: u32, cfg: NetworkConfig) -> NetworkProcess<Flow
         state.cascade_step += 1;
 
         let process = NetworkProcess::<Vec<u32>>::new(
-            Ok(EffectValue::Value(Vec::new())),
+            Ok(CausalEffect::value(Vec::new())),
             state,
             context,
             logs,

@@ -44,7 +44,7 @@ fn bench_monad_alternate_value(criterion: &mut Criterion) {
     criterion.bench_function("monad_alternate_value_replacement", |bencher| {
         bencher.iter(|| {
             let effect = black_box(initial_effect.clone());
-            effect.alternate_value(0.1) // alternate_value takes T, not EffectValue<T>
+            effect.alternate_value(0.1) // alternate_value takes T, not CausalEffect<T>
         })
     });
 }

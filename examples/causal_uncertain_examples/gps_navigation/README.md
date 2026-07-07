@@ -13,7 +13,7 @@ PropagatingEffect::pure(start)
     .bind(fuel_stage)       // Stage 4: distance + efficiency noise → fuel (gal)
 ```
 
-Each stage takes the previous stage's value out of `EffectValue::Value`,
+Each stage takes the previous stage's value out of `CausalEffect::Value`,
 computes the next `Uncertain<f64>` quantity, and re-lifts it with
 `PropagatingEffect::pure`. The chain short-circuits if any stage receives a
 non-`Value` variant.
@@ -29,7 +29,7 @@ non-`Value` variant.
 - **Conditional reasoning:** `Uncertain::conditional`,
   `implicit_conditional`, `probability_exceeds`.
 - **Monadic chaining:** four `bind` calls on `PropagatingEffect`; each stage
-  is a stateless `EffectValue<T> -> PropagatingEffect<U>` function.
+  is a stateless `CausalEffect<T> -> PropagatingEffect<U>` function.
 
 ## How to run
 

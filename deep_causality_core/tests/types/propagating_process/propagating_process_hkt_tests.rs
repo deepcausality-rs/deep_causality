@@ -11,7 +11,7 @@ extern crate alloc;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use deep_causality_core::{
-    CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog, EffectValue,
+    CausalEffect, CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog,
     PropagatingProcessWitness,
 };
 use deep_causality_haft::{
@@ -84,7 +84,7 @@ fn test_fmap_success() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(1),
         Some(TestContext("initial".to_string())),
         {
@@ -151,7 +151,7 @@ fn test_fmap_on_error() {
 }
 
 #[test]
-fn test_fmap_on_none_value_produces_internal_logic_error() {
+fn test_fmap_on_none_value_passes_through() {
     let initial_process: CausalEffectPropagationProcess<
         i32,
         TestState,
@@ -159,7 +159,7 @@ fn test_fmap_on_none_value_produces_internal_logic_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None), // No value, no error
+        Ok(CausalEffect::none()), // No value, no error
         TestState(1),
         Some(TestContext("initial".to_string())),
         {
@@ -174,18 +174,17 @@ fn test_fmap_on_none_value_produces_internal_logic_error() {
         |x| x * 2,
     );
 
-    // Expecting an InternalLogicError because fmap tried to unwrap a None value
-    assert!(fmapped_process.is_err());
+    // Totality invariant: a `None` effect passes through unchanged — no value, no fabricated error.
+    // State, context, and logs are preserved.
+    assert!(fmapped_process.is_ok());
     assert_eq!(fmapped_process.value(), None);
+    assert!(fmapped_process.effect().unwrap().is_none());
     assert_eq!(*fmapped_process.state(), TestState(1));
     assert_eq!(
         *fmapped_process.context(),
         Some(TestContext("initial".to_string()))
     );
-    assert_eq!(
-        fmapped_process.error(),
-        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
-    );
+    assert!(fmapped_process.error().is_none());
     assert_eq!(fmapped_process.logs().len(), 1);
     assert!(format!("{}", fmapped_process.logs()).contains("None value log"));
 }
@@ -218,7 +217,7 @@ fn test_applicative_apply_success() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(|x| x + 1)),
+        Ok(CausalEffect::value(|x| x + 1)),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -235,7 +234,7 @@ fn test_applicative_apply_success() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(20), // Should be ignored, f_ab's state takes precedence
         Some(TestContext("val_ctx".to_string())),
         {
@@ -288,7 +287,7 @@ fn test_applicative_apply_with_func_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(20),
         Some(TestContext("val_ctx".to_string())),
         {
@@ -331,7 +330,7 @@ fn test_applicative_apply_with_value_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(|x| x + 1)),
+        Ok(CausalEffect::value(|x| x + 1)),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -441,7 +440,7 @@ fn test_applicative_apply_with_both_errors() {
 }
 
 #[test]
-fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
+fn test_applicative_apply_with_func_none_value_yields_none() {
     let f_process: CausalEffectPropagationProcess<
         fn(i32) -> i32,
         TestState,
@@ -449,7 +448,7 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None), // No function
+        Ok(CausalEffect::none()), // No function
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -466,7 +465,7 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(5)),
+        Ok(CausalEffect::value(5)),
         TestState(20),
         Some(TestContext("val_ctx".to_string())),
         {
@@ -481,22 +480,21 @@ fn test_applicative_apply_with_func_none_value_produces_internal_logic_error() {
             f_process, a_process,
         );
 
-    assert!(result_process.is_err());
+    // Totality invariant: a value-less function operand yields absence (`none()`), not an error.
+    assert!(result_process.is_ok());
     assert_eq!(result_process.value(), None);
+    assert!(result_process.effect().unwrap().is_none());
     assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
         *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
-    assert_eq!(
-        result_process.error(),
-        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
-    );
+    assert!(result_process.error().is_none());
     assert_eq!(result_process.logs().len(), 2);
 }
 
 #[test]
-fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() {
+fn test_applicative_apply_with_value_none_value_yields_none() {
     let f_process: CausalEffectPropagationProcess<
         fn(i32) -> i32,
         TestState,
@@ -504,7 +502,7 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::Value(|x| x + 1)),
+        Ok(CausalEffect::value(|x| x + 1)),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -521,7 +519,7 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Ok(EffectValue::None), // No value
+        Ok(CausalEffect::none()), // No value
         TestState(20),
         Some(TestContext("val_ctx".to_string())),
         {
@@ -536,16 +534,15 @@ fn test_applicative_apply_with_value_none_value_produces_internal_logic_error() 
             f_process, a_process,
         );
 
-    assert!(result_process.is_err());
+    // Totality invariant: a value-less argument operand yields absence (`none()`), not an error.
+    assert!(result_process.is_ok());
     assert_eq!(result_process.value(), None);
+    assert!(result_process.effect().unwrap().is_none());
     assert_eq!(*result_process.state(), TestState(10));
     assert_eq!(
         *result_process.context(),
         Some(TestContext("func_ctx".to_string()))
     );
-    assert_eq!(
-        result_process.error(),
-        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
-    );
+    assert!(result_process.error().is_none());
     assert_eq!(result_process.logs().len(), 2);
 }

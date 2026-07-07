@@ -18,7 +18,7 @@ cargo run -p mathematics_examples --example effect_kalman_predict_correct_exampl
 
 Tensor and Clifford algebra share a single monadic spine. The intermediate state has type `Process<CausalTensor<f64>>`; the closures swap between tensor-style and multivector-style computation without unwrapping anything by hand.
 
-The error channel is handled by the monad. If `predict` returned `fail(...)`, the rest of the chain would short-circuit and `after_verify.error` would carry the cause. The step log accumulates across all `bind` calls; that is how the trace is produced.
+The error channel is handled by the monad. If `predict` returned `fail(...)`, the rest of the chain would short-circuit and `after_verify.error()` would carry the cause. The step log accumulates across all `bind` calls; that is how the trace is produced.
 
 ## Mathematical Content
 

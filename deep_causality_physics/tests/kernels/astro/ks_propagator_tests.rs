@@ -194,6 +194,7 @@ fn strang_error_shrinks_with_perturbation() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // Miri's soft-float emulation drifts the two propagation paths past the 1e-9/1e-12 tolerance; test is correct under normal CI.
 fn zero_perturbation_equals_exact_core() {
     let (r0, v0) = state_3d();
     let dt = 400.0;

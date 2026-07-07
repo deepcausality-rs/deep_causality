@@ -9,7 +9,7 @@ use crate::model_types::{
     DiveConfig, DiveProcess, DiveState, FloatType, ambient_pressure, inspired_n2_pp,
     nominal_dive_config,
 };
-use deep_causality_core::{EffectLog, EffectValue};
+use deep_causality_core::{CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
 
 /// One simulation tick. The value channel carries the *ascent command*
@@ -19,7 +19,7 @@ use deep_causality_haft::LogAddEntry;
 /// By default the carrier value is reset to the normal ascent rate at
 /// the end of the stage. Interventions overwrite this to insert a stop.
 pub fn simulate_step(
-    value: EffectValue<FloatType>,
+    value: CausalEffect<FloatType>,
     mut state: DiveState,
     ctx: Option<DiveConfig>,
 ) -> DiveProcess<FloatType> {
@@ -61,7 +61,7 @@ pub fn simulate_step(
     DiveProcess::<FloatType>::new(
         // Carry the normal ascent rate forward. The closed-loop driver
         // overwrites this with 0.0 whenever a stop is needed.
-        Ok(EffectValue::Value(cfg.normal_ascent_m_per_tick)),
+        Ok(CausalEffect::value(cfg.normal_ascent_m_per_tick)),
         state,
         ctx,
         logs,
@@ -76,7 +76,7 @@ pub fn initial_process() -> DiveProcess<FloatType> {
         ..Default::default()
     };
     DiveProcess::<FloatType>::new(
-        Ok(EffectValue::Value(cfg.normal_ascent_m_per_tick)),
+        Ok(CausalEffect::value(cfg.normal_ascent_m_per_tick)),
         state,
         Some(cfg),
         EffectLog::new(),

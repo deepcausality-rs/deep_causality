@@ -7,7 +7,7 @@
 //!
 //! Each stage takes the previous stage's `Uncertain<f64>` directly, propagates uncertainty through
 //! one physical transformation, prints the resulting statistics, and returns the next
-//! `Uncertain<f64>`. `CausalFlow` supplies the chain's plumbing, so no stage touches `EffectValue`
+//! `Uncertain<f64>`. `CausalFlow` supplies the chain's plumbing, so no stage touches `CausalEffect`
 //! or re-lifts with `PropagatingEffect::pure`; the stages read as plain transforms.
 
 use deep_causality_uncertain::Uncertain;

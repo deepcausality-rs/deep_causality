@@ -8,14 +8,14 @@
 // =============================================================================
 
 use crate::types::causal_flow::{err_leaf, ok_leaf};
-use crate::{CausalEffectPropagationProcess, CausalFlow, CausalityError, EffectLog, EffectValue};
+use crate::{CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError, EffectLog};
 
 impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// Build a flow from explicit channels — the general constructor beneath [`value`](CausalFlow::value)
     /// and [`process`](CausalFlow::process), and the causal arrow's unit `η`:
-    /// `η(a, s, c) = from_parts(Ok(EffectValue::Value(a)), s, c, EffectLog::new())`.
+    /// `η(a, s, c) = from_parts(Ok(CausalEffect::value(a)), s, c, EffectLog::new())`.
     pub fn from_parts(
-        outcome: Result<EffectValue<Value>, CausalityError>,
+        outcome: Result<CausalEffect<Value>, CausalityError>,
         state: State,
         context: Option<Context>,
         logs: EffectLog,

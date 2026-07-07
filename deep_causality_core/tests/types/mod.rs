@@ -4,11 +4,11 @@
  */
 
 pub mod causal_arrow;
+pub mod causal_effect;
 pub mod causal_effect_propagation_process;
 pub mod causal_flow;
 pub mod causal_monad;
 pub mod effect_log;
-pub mod effect_value;
 pub mod io;
 pub mod propagating_effect;
 pub mod propagating_process;

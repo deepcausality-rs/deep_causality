@@ -26,7 +26,7 @@ Patient data has two independent uncertainty sources:
   Modelled by the `Uncertain<f64>` arm.
 
 `MaybeUncertain` already propagates `None` through arithmetic. Mapping that
-onto `EffectValue::None` at the `lift_to_uncertain` boundary makes the chain
+onto `CausalEffect::none()` at the `lift_to_uncertain` boundary makes the chain
 short-circuit gracefully: failed lifts drop out of the arm, empty arms drop
 out of the verdict — no `if let Err(_) = ... { return; }` ladders.
 
@@ -44,7 +44,7 @@ out of the verdict — no `if let Err(_) = ... { return; }` ladders.
 - **Comparative verdict:** `greater_than` + `probability_exceeds` for
   evidence-based recommendation.
 - **Monadic chaining:** five `bind` calls on `PropagatingEffect`; each stage
-  is a stateless `EffectValue<T> -> PropagatingEffect<U>` function.
+  is a stateless `CausalEffect<T> -> PropagatingEffect<U>` function.
 
 ## How to run
 

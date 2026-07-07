@@ -12,7 +12,7 @@
 //!
 //! Every public stage primitive in this module has the bind-callback
 //! signature
-//! `fn(EffectValue<I>, FlightState, Option<AircraftConfig>) -> FlightProcess<O>`
+//! `fn(CausalEffect<I>, FlightState, Option<AircraftConfig>) -> FlightProcess<O>`
 //! so that the whole pipeline can be expressed in `main.rs` as one
 //! `PropagatingProcess::pure(...).bind(stage1).bind(stage2_1).bind(...)`
 //! chain.
@@ -144,7 +144,7 @@ fn build_sensor_causaloids(
 
 /// **Stage 1** — sensor collection evaluation.
 ///
-/// Bind-callback shape: takes `(EffectValue<SensorReading>, FlightState,
+/// Bind-callback shape: takes `(CausalEffect<SensorReading>, FlightState,
 /// Option<AircraftConfig>)`, reconstructs the incoming process, and evaluates
 /// the per-sensor collection via
 /// `StatefulMonadicCausableCollection::evaluate_collection_stateful` with
@@ -152,7 +152,7 @@ fn build_sensor_causaloids(
 /// `FlightProcess<f64>` whose value channel carries the joint health
 /// probability.
 pub fn run_sensor_collection(
-    value: EffectValue<SensorReading>,
+    value: CausalEffect<SensorReading>,
     state: FlightState,
     ctx: Option<AircraftConfig>,
     failing_airspeed: bool,
@@ -174,7 +174,7 @@ pub fn run_sensor_collection(
 /// `seed_estimate` (because the original `SensorReading` is no longer on the
 /// value channel — Stage 1 reduced it to a scalar health probability).
 pub fn health_fold(
-    value: EffectValue<f64>,
+    value: CausalEffect<f64>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
     seed_estimate: FlightStateEstimate,
@@ -201,13 +201,13 @@ pub fn health_fold(
         (1.0 - health) * RISK_HEALTH_WEIGHT,
         health
     ));
-    PropagatingProcess::new(Ok(EffectValue::Value(seed_estimate)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(seed_estimate)), state, ctx, log)
 }
 
 /// **Stage 2.2** — one-iteration scalar Kalman update on each diagonal element
 /// of `state.covariance`. Illustrative only.
 pub fn kalman_step(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -236,13 +236,13 @@ pub fn kalman_step(
 
     let mut log = EffectLog::new();
     log.add_entry("stage2.kalman: covariance updated (one-iteration scalar)");
-    PropagatingProcess::new(Ok(EffectValue::Value(estimate)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(estimate)), state, ctx, log)
 }
 
 /// **Stage 2.3** — write the four `FlightStateEstimate` fields into
 /// `state.estimate`.
 pub fn estimate_step(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -277,7 +277,7 @@ pub fn estimate_step(
 // ---------------------------------------------------------------------------
 
 fn stall_risk(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -289,11 +289,11 @@ fn stall_risk(
     state.risk += increment;
     let mut log = EffectLog::new();
     log.add_entry(&format!("envelope.stall: risk += {:.3}", increment));
-    PropagatingProcess::new(Ok(EffectValue::Value(est)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(est)), state, ctx, log)
 }
 
 fn overspeed_risk(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -304,11 +304,11 @@ fn overspeed_risk(
     state.risk += increment;
     let mut log = EffectLog::new();
     log.add_entry(&format!("envelope.overspeed: risk += {:.3}", increment));
-    PropagatingProcess::new(Ok(EffectValue::Value(est)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(est)), state, ctx, log)
 }
 
 fn terrain_proximity(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -319,11 +319,11 @@ fn terrain_proximity(
     state.risk += increment;
     let mut log = EffectLog::new();
     log.add_entry(&format!("envelope.terrain: risk += {:.3}", increment));
-    PropagatingProcess::new(Ok(EffectValue::Value(est)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(est)), state, ctx, log)
 }
 
 fn traffic_conflict(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -343,11 +343,11 @@ fn traffic_conflict(
     state.risk += increment;
     let mut log = EffectLog::new();
     log.add_entry(&format!("envelope.traffic: risk += {:.3}", increment));
-    PropagatingProcess::new(Ok(EffectValue::Value(est)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(est)), state, ctx, log)
 }
 
 fn icing_risk(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -361,11 +361,11 @@ fn icing_risk(
     state.risk += increment;
     let mut log = EffectLog::new();
     log.add_entry(&format!("envelope.icing: risk += {:.3}", increment));
-    PropagatingProcess::new(Ok(EffectValue::Value(est)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(est)), state, ctx, log)
 }
 
 fn cg_out_of_limits(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     mut state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {
@@ -376,7 +376,7 @@ fn cg_out_of_limits(
     state.risk += increment;
     let mut log = EffectLog::new();
     log.add_entry(&format!("envelope.cg: risk += {:.3}", increment));
-    PropagatingProcess::new(Ok(EffectValue::Value(est)), state, ctx, log)
+    PropagatingProcess::new(Ok(CausalEffect::value(est)), state, ctx, log)
 }
 
 /// Build the envelope hypergraph.
@@ -433,7 +433,7 @@ fn build_envelope_graph(
 /// to a benign config if `None`), and evaluates from index 0 via
 /// `StatefulMonadicCausableGraphReasoning::evaluate_subgraph_from_cause_stateful`.
 pub fn run_envelope_graph(
-    value: EffectValue<FlightStateEstimate>,
+    value: CausalEffect<FlightStateEstimate>,
     state: FlightState,
     ctx: Option<AircraftConfig>,
 ) -> FlightProcess<FlightStateEstimate> {

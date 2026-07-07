@@ -20,7 +20,7 @@ struct ConfigCtx {
 }
 
 fn item_true_increment(
-    obs: EffectValue<u64>,
+    obs: CausalEffect<u64>,
     mut state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<bool, CounterState, ConfigCtx> {
@@ -28,22 +28,22 @@ fn item_true_increment(
     state.count += 1;
     let mut logs = EffectLog::new();
     logs.add_entry("item_true_increment");
-    PropagatingProcess::new(Ok(EffectValue::Value(val > 0)), state, ctx, logs)
+    PropagatingProcess::new(Ok(CausalEffect::value(val > 0)), state, ctx, logs)
 }
 
 fn item_false_increment(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     mut state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<bool, CounterState, ConfigCtx> {
     state.count += 1;
     let mut logs = EffectLog::new();
     logs.add_entry("item_false_increment");
-    PropagatingProcess::new(Ok(EffectValue::Value(false)), state, ctx, logs)
+    PropagatingProcess::new(Ok(CausalEffect::value(false)), state, ctx, logs)
 }
 
 fn item_failing(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<bool, CounterState, ConfigCtx> {
@@ -61,7 +61,7 @@ fn item_failing(
 
 fn build_incoming() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
     PropagatingProcess::new(
-        Ok(EffectValue::Value(7)),
+        Ok(CausalEffect::value(7)),
         CounterState::default(),
         Some(ConfigCtx { threshold: 1 }),
         EffectLog::new(),
@@ -69,14 +69,14 @@ fn build_incoming() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
 }
 
 fn item_uncertain_float(
-    _obs: EffectValue<u64>,
+    _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
 ) -> PropagatingProcess<deep_causality_uncertain::UncertainF64, CounterState, ConfigCtx> {
     PropagatingProcess::new(
-        Ok(EffectValue::Value(
-            deep_causality_uncertain::Uncertain::<f64>::point(1.0),
-        )),
+        Ok(CausalEffect::value(deep_causality_uncertain::Uncertain::<
+            f64,
+        >::point(1.0))),
         state,
         ctx,
         EffectLog::new(),
@@ -144,7 +144,7 @@ fn evaluate_collection_stateful_aggregation_error() {
     ];
 
     let incoming = PropagatingProcess::new(
-        Ok(EffectValue::Value(7u64)),
+        Ok(CausalEffect::value(7u64)),
         CounterState::default(),
         Some(ConfigCtx { threshold: 1 }),
         EffectLog::new(),

@@ -14,9 +14,7 @@
 // the step bound is reached without meeting their condition, keeping one short-circuit mechanism
 // across the flow DSL and the monad.
 
-use crate::{
-    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum, EffectValue,
-};
+use crate::{CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum};
 
 impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// Apply the flow endomorphism `step` exactly `n` times. An error mid-way short-circuits and
@@ -94,10 +92,7 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
     /// A reference to the carried value, if the flow holds one.
     #[inline]
     fn peek_value(&self) -> Option<&Value> {
-        match &self.inner.outcome {
-            Ok(EffectValue::Value(v)) => Some(v),
-            _ => None,
-        }
+        self.inner.outcome.as_ref().ok()?.as_value()
     }
 
     /// Whether the carried value satisfies `pred` (false when there is no value).

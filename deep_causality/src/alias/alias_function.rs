@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::AssumptionError;
-use deep_causality_core::{EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{CausalEffect, PropagatingEffect, PropagatingProcess};
 
 // Fn aliases for assumable, assumption, & assumption collection
 /// Function type for evaluating numerical values and returning a boolean result.
@@ -25,19 +25,20 @@ pub type CausalFn<I, O> = fn(I) -> PropagatingEffect<O>;
 
 /// The unified function signature for all singleton causaloids that require access to a shared, external context.
 ///
-/// It evaluates runtime evidence against its own static configuration and the shared context
-/// to produce a causal effect.
+/// It evaluates the incoming `CausalEffect<I>` against its own static configuration and the shared
+/// context to produce a `PropagatingProcess<O, S, C>`.
 ///
 /// # Arguments
 ///
-/// * `effect` - A reference to the `PropagatingEffect` flowing through the graph during reasoning.
-/// * `context` - A reference to the shared `Context` object.
+/// * `effect` - The `CausalEffect<I>` flowing through the graph during reasoning.
+/// * `state`  - The state `S` carried by the incoming process (preserved across evaluation).
+/// * `context` - The optional `Option<C>` context carried by the incoming process.
 ///
 /// # Returns
 ///
-/// A `PropagatingEffect`.
+/// A `PropagatingProcess<O, S, C>` whose `state` and `context` are returned to the caller.
 pub type ContextualCausalFn<I, O, S, C> =
-    fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;
+    fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;
 
 /// The unified function signature for singleton causaloids authored on the
 /// stateful evaluation path.
@@ -55,7 +56,7 @@ pub type ContextualCausalFn<I, O, S, C> =
 ///
 /// # Arguments
 ///
-/// * `effect` - A reference to the `EffectValue` flowing through the graph during reasoning.
+/// * `effect` - A reference to the `CausalEffect` flowing through the graph during reasoning.
 /// * `state`  - The state carried by the incoming process (preserved across evaluation).
 /// * `context` - The optional context carried by the incoming process.
 ///
@@ -64,4 +65,4 @@ pub type ContextualCausalFn<I, O, S, C> =
 /// A `PropagatingProcess<O, S, C>` whose `state` and `context` are returned to
 /// the caller intact (no defaulting, no discarding).
 pub type StatefulContextualCausalFn<I, O, S, C> =
-    fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;
+    fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>;

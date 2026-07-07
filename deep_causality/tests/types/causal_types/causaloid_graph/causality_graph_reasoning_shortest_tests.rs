@@ -57,10 +57,7 @@ fn test_shortest_path_short_circuits_on_a_failing_node() {
 }
 
 fn relay_to_9(_obs: bool) -> PropagatingEffect<bool> {
-    PropagatingEffect::from_effect_value(EffectValue::RelayTo(
-        9,
-        Box::new(PropagatingEffect::from_value(true)),
-    ))
+    PropagatingEffect::from_effect(CausalEffect::relay_to(9, CausalEffect::value(true)))
 }
 
 #[test]
@@ -82,7 +79,7 @@ fn test_shortest_path_returns_on_a_relay() {
 
     let res = g.evaluate_shortest_path_between_causes(i0, i2, &PropagatingEffect::from_value(true));
     assert!(res.is_ok(), "got {:?}", res.error());
-    assert!(matches!(res.effect(), Some(EffectValue::RelayTo(9, _))));
+    assert!(res.command_target() == Some(9));
 }
 
 #[test]

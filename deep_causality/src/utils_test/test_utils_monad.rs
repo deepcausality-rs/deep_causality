@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, CausalityErrorEnum, EffectLog, EffectValue, PropagatingEffect};
+use crate::{CausalEffect, CausalityError, CausalityErrorEnum, EffectLog, PropagatingEffect};
 use deep_causality_haft::LogAddEntry;
 
 // f(U_smoking) -> Smoking
 // Input: Nicotine level (f64)
 // Output: High Nicotine (bool)
 pub fn smoking_logic(
-    nicotine_obs: EffectValue<f64>,
+    nicotine_obs: CausalEffect<f64>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingEffect<bool> {
@@ -29,7 +29,7 @@ pub fn smoking_logic(
 // Input: Is Smoking (bool)
 // Output: Has Tar (bool)
 pub fn tar_logic(
-    is_smoking: EffectValue<bool>,
+    is_smoking: CausalEffect<bool>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingEffect<bool> {
@@ -41,7 +41,7 @@ pub fn tar_logic(
 }
 
 pub fn error_logic(
-    _val: EffectValue<bool>,
+    _val: CausalEffect<bool>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingEffect<bool> {

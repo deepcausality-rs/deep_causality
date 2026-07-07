@@ -8,7 +8,7 @@
 //! The infallible stages (`cohort`, `presence`, `aggregate`, `verdict`) are plain transforms driven
 //! by `CausalFlow::map`. The lift stage is the one place the analysis can short-circuit: if no
 //! patient clears the data-presence gate in either arm it returns `Err`, which `try_step` propagates
-//! to the flow's error channel exactly as the original chain returned `EffectValue::None`.
+//! to the flow's error channel exactly as the original chain returned `CausalEffect::none()`.
 
 use deep_causality_core::{CausalityError, CausalityErrorEnum};
 use deep_causality_uncertain::{MaybeUncertain, Uncertain};

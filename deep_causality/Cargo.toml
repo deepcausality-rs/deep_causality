@@ -19,7 +19,6 @@ categories = [
     "data-structures",
     "science",
     "aerospace",
-    "finance",
     "mathematics",
 ]
 exclude = [

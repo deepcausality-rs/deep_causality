@@ -10,7 +10,7 @@
  */
 
 use deep_causality_calculus::{EndoArrow, Euler};
-use deep_causality_core::{CausalFlow, EffectValue, PropagatingEffect};
+use deep_causality_core::{CausalFlow, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::Metric;
 use deep_causality_multivector::MultiVector;
@@ -89,10 +89,7 @@ impl GeometricTCAS {
         // We use PropagatingEffect to represent the "Safety Interlock"
         // If parameters are safe, effect is "Clear". If not, "Advisory".
         let assessment = PropagatingEffect::pure((d_cpa, t_cpa)).bind(|params_ref, _, _| {
-            let (d, t) = match params_ref {
-                EffectValue::Value(v) => v,
-                _ => (f64::INFINITY, 0.0),
-            };
+            let (d, t) = params_ref.into_value().unwrap_or((f64::INFINITY, 0.0));
 
             let level = if t < 0.0 {
                 AdvisoryLevel::None // Passed

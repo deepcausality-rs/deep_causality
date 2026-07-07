@@ -12,17 +12,11 @@ use deep_causality::utils_test::test_utils;
 use deep_causality::*;
 
 fn relay_to_2(_obs: bool) -> PropagatingEffect<bool> {
-    PropagatingEffect::from_effect_value(EffectValue::RelayTo(
-        2,
-        Box::new(PropagatingEffect::from_value(true)),
-    ))
+    PropagatingEffect::from_effect(CausalEffect::relay_to(2, CausalEffect::value(true)))
 }
 
 fn relay_to_5(_obs: bool) -> PropagatingEffect<bool> {
-    PropagatingEffect::from_effect_value(EffectValue::RelayTo(
-        5,
-        Box::new(PropagatingEffect::from_value(true)),
-    ))
+    PropagatingEffect::from_effect(CausalEffect::relay_to(5, CausalEffect::value(true)))
 }
 
 #[test]

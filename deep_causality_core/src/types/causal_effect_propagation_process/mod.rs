@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalMonad, CausalityError, CausalityErrorEnum, EffectLog, EffectValue};
+use crate::{CausalEffect, CausalMonad, CausalityError, EffectLog};
 use core::fmt::Debug;
 use deep_causality_haft::LogAppend;
 
@@ -23,9 +23,10 @@ mod predicates;
 ///
 /// # Concepts
 ///
-/// *   **Outcome**: The value-XOR-error channel — `Result<EffectValue<Value>, Error>`, the
-///     `Either E (Maybe T)` encoding. A process either carries an effect value (possibly
-///     `EffectValue::None`) or an error, never both: the W-invariant
+/// *   **Outcome**: The value/control-XOR-error channel — `Result<CausalEffect<Value>, Error>`,
+///     the `Except E (Free CausalCommand (Maybe T))` encoding. On the success side a process
+///     carries a `CausalEffect<Value>` — a value, `None`, or a control command (`RelayTo`); on
+///     the failure side it carries an error, never both: the W-invariant
 ///     (`error present ⇒ no value`) holds **by construction**, not by discipline.
 /// *   **State**: Persistent data that evolves as the process moves through the graph (Markovian state).
 /// *   **Context**: Read-only configuration or environment data available to all steps.
@@ -53,7 +54,7 @@ mod predicates;
 #[derive(Debug, PartialEq, Clone)]
 pub struct CausalEffectPropagationProcess<Value, State, Context, Error, Log> {
     /// The value-XOR-error channel: an effect value, or the error that ended the computation.
-    pub(crate) outcome: Result<EffectValue<Value>, Error>,
+    pub(crate) outcome: Result<CausalEffect<Value>, Error>,
     /// The current state of the process (e.g., accumulated risk, counters).
     pub(crate) state: State,
     /// The optional execution context (e.g., global config, reference data).
@@ -71,7 +72,7 @@ impl<Value, State, Context, Error, Log>
     /// valid process — there is nothing to validate and no way to construct the formerly
     /// representable invalid state (value AND error).
     pub const fn new(
-        outcome: Result<EffectValue<Value>, Error>,
+        outcome: Result<CausalEffect<Value>, Error>,
         state: State,
         context: Option<Context>,
         logs: Log,
@@ -90,7 +91,7 @@ impl<Value, State, Context, Error, Log>
     pub fn into_parts(
         self,
     ) -> (
-        Result<EffectValue<Value>, Error>,
+        Result<CausalEffect<Value>, Error>,
         State,
         Option<Context>,
         Log,
@@ -101,13 +102,12 @@ impl<Value, State, Context, Error, Log>
     /// Consumes the process and returns the carried scalar, if any.
     ///
     /// This is the terminal "give me the result value" accessor: it yields `Some(v)` only when
-    /// the process carries `Ok(EffectValue::Value(v))`, and `None` for an errored process or any
-    /// non-`Value` effect (`None`, `ContextualLink`, `RelayTo`, `Map`). It is the by-value
-    /// counterpart to [`value`](Self::value) (which lends `Option<&EffectValue<Value>>`), and
-    /// mirrors [`EffectValue::into_value`]. Use it at the end of a chain when you want the plain
-    /// value out for display or comparison rather than a reference into the channel.
+    /// the process carries a value effect, and `None` for an errored process, a `None` effect, or a
+    /// command. It is the by-value counterpart to [`value`](Self::value), and mirrors
+    /// [`CausalEffect::into_value`](crate::CausalEffect::into_value). Use it at the end of a chain
+    /// when you want the plain value out for display or comparison rather than a reference.
     pub fn into_value(self) -> Option<Value> {
-        self.outcome.ok().and_then(EffectValue::into_value)
+        self.outcome.ok().and_then(CausalEffect::into_value)
     }
 }
 
@@ -131,7 +131,7 @@ where
     ) -> CausalEffectPropagationProcess<NewValue, State, Context, Error, Log>
     where
         F: FnOnce(
-            EffectValue<Value>,
+            CausalEffect<Value>,
             State,
             Option<Context>,
         ) -> CausalEffectPropagationProcess<NewValue, State, Context, Error, Log>,
@@ -143,8 +143,8 @@ where
                 context: self.context,
                 logs: self.logs,
             },
-            Ok(value) => {
-                let mut next_process = f(value, self.state, self.context);
+            Ok(effect) => {
+                let mut next_process = f(effect, self.state, self.context);
 
                 let mut combined_logs = self.logs;
                 combined_logs.append(&mut next_process.logs);
@@ -207,10 +207,10 @@ where
         }
     }
 
-    /// Creates a new process with `EffectValue::None`, default state, and no error.
+    /// Creates a new process carrying the `None` effect (absence of evidence), default state, no error.
     pub fn none() -> Self {
         Self {
-            outcome: Ok(EffectValue::None),
+            outcome: Ok(CausalEffect::none()),
             state: State::default(),
             context: None,
             logs: EffectLog::new(),
@@ -224,14 +224,18 @@ where
 
     /// Maps the carried value with `f`, preserving state, context, and logs.
     ///
-    /// This is the fluent `Functor` operation on the carrier, the value-only counterpart to
-    /// [`bind`](Self::bind). It never panics. An error carrier short-circuits: the error and
-    /// logs are preserved and `f` is not invoked. A `None` or `ContextualLink` carrier passes
-    /// through unchanged. The dispatch variants `RelayTo` and `Map` embed a `PropagatingEffect`
-    /// whose value type cannot be retyped by a value-level map, so `fmap` over them surfaces a
-    /// `ValueNotAvailable` error rather than silently dropping the routing command; reach for
-    /// [`bind`](Self::bind) when you need to act on those variants.
-    /// (P1 seam: when `RelayTo`/`Map` leave `EffectValue`, only that match arm disappears.)
+    /// The fluent `Functor` operation on the carrier. It is **total**: it delegates to the total
+    /// [`CausalEffect::map`], so a value maps its leaf (`Some(v) → Some(f(v))`), a `None` passes
+    /// through, and a **command is preserved** — its sub-program's value leaf is mapped through the
+    /// `RelayTo` tree, so the command survives with its target intact. It never panics and never
+    /// manufactures an error; an errored carrier short-circuits (`f` not invoked, error + logs
+    /// preserved).
+    ///
+    /// This is the functor, not the monad: [`bind`](Self::bind) is a value-level Kleisli step whose
+    /// continuation needs a *value*, so — unlike `fmap` — it cannot run under a command and the
+    /// reasoning engine folds commands (via [`CausalEffect::fold`]) before `bind` sees them. Hence
+    /// `fmap f` and `bind(pure ∘ f)` coincide on the value fragment but diverge on a command (`fmap`
+    /// preserves it; `bind` defers it).
     pub fn fmap<NewValue, F>(
         self,
         f: F,
@@ -242,12 +246,8 @@ where
         let outcome = match self.outcome {
             // Error short-circuits: `f` is not invoked; the error is preserved.
             Err(error) => Err(error),
-            Ok(EffectValue::Value(v)) => Ok(EffectValue::Value(f(v))),
-            Ok(EffectValue::None) => Ok(EffectValue::None),
-            Ok(EffectValue::ContextualLink(a, b)) => Ok(EffectValue::ContextualLink(a, b)),
-            // RelayTo / Map carry a `PropagatingEffect<Value>` that a value-level `fmap` cannot
-            // retype to `NewValue`. Surface this instead of dropping the dispatch command.
-            Ok(_) => Err(CausalityError::new(CausalityErrorEnum::ValueNotAvailable)),
+            // Total functor: value/none/command are all handled by `CausalEffect::map`.
+            Ok(effect) => Ok(effect.map(f)),
         };
 
         CausalEffectPropagationProcess {
@@ -258,11 +258,10 @@ where
         }
     }
 
-    /// Creates a new process from a given `EffectValue`.
-    /// The state is set to default.
-    pub fn from_effect_value(effect_value: EffectValue<Value>) -> Self {
+    /// Creates a new process from a given [`CausalEffect`]. The state is set to default.
+    pub fn from_effect(effect: CausalEffect<Value>) -> Self {
         Self {
-            outcome: Ok(effect_value),
+            outcome: Ok(effect),
             state: State::default(),
             context: None,
             logs: EffectLog::new(),
@@ -271,18 +270,17 @@ where
 
     pub fn from_value(value: Value) -> Self {
         Self {
-            outcome: Ok(EffectValue::Value(value)),
+            outcome: Ok(CausalEffect::value(value)),
             state: State::default(),
             context: None,
             logs: EffectLog::new(),
         }
     }
 
-    /// Creates a new process from a given `EffectValue` and `EffectLog`.
-    /// The state is set to default.
-    pub fn from_effect_value_with_log(value: EffectValue<Value>, logs: EffectLog) -> Self {
+    /// Creates a new process from a given [`CausalEffect`] and `EffectLog`. State set to default.
+    pub fn from_effect_with_log(effect: CausalEffect<Value>, logs: EffectLog) -> Self {
         Self {
-            outcome: Ok(value),
+            outcome: Ok(effect),
             state: State::default(),
             context: None,
             logs,
@@ -291,10 +289,21 @@ where
 
     pub fn from_value_with_log(value: Value, logs: EffectLog) -> Self {
         Self {
-            outcome: Ok(EffectValue::Value(value)),
+            outcome: Ok(CausalEffect::value(value)),
             state: State::default(),
             context: None,
             logs,
+        }
+    }
+
+    /// Creates a control-carrier process: a `RelayTo(target, input)` adaptive-reasoning jump.
+    /// Default state, no context, empty log.
+    pub fn relay_to(target: usize, input: CausalEffect<Value>) -> Self {
+        Self {
+            outcome: Ok(CausalEffect::relay_to(target, input)),
+            state: State::default(),
+            context: None,
+            logs: EffectLog::new(),
         }
     }
 }
@@ -304,9 +313,9 @@ impl<Value, State, Context, Log>
 where
     Log: LogAppend + Default,
 {
-    /// Chains a computation while automatically unwrapping the inner `EffectValue`.
+    /// Chains a computation while automatically unwrapping the inner value effect.
     ///
-    /// If the `EffectValue` is `None`, this method short-circuits with a `CausalityError`
+    /// If the effect is `None`, this method short-circuits with a `CausalityError`
     /// containing the provided `err_msg`. This simplifies the common pattern of:
     /// `bind -> match effect_value { Some(v) => f(v), None => Error }`
     ///

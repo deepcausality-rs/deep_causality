@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{
-    CausalityError, CausalityErrorEnum, EffectValue, PropagatingEffect, PropagatingProcess,
+    CausalEffect, CausalityError, CausalityErrorEnum, PropagatingEffect, PropagatingProcess,
 };
 
 #[test]
@@ -38,11 +38,11 @@ fn test_bind_with_state() {
     let initial = PropagatingProcess::with_state(effect, 0, None::<String>);
 
     let next = initial.bind(|val, state, _ctx| {
-        if let EffectValue::Value(v) = val {
+        if let Some(v) = val.into_value() {
             let new_val = v + 1;
             let new_state = state + 1;
             PropagatingProcess::new(
-                Ok(EffectValue::Value(new_val)),
+                Ok(CausalEffect::value(new_val)),
                 new_state,
                 None,
                 Default::default(),
@@ -72,7 +72,7 @@ fn test_error_propagation() {
 
     // The continuation is not invoked on an errored process (left zero).
     let next = process.bind(|val, state, _ctx| {
-        let effect = PropagatingEffect::pure(if let EffectValue::Value(v) = val {
+        let effect = PropagatingEffect::pure(if let Some(v) = val.into_value() {
             v + 1
         } else {
             0

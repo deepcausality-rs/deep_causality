@@ -9,7 +9,7 @@
 //! and calculating work/efficiency. Each stroke is a named stage; the four strokes
 //! compose into one `CausalFlow` pipeline that threads the engine state.
 
-use deep_causality_core::{CausalFlow, EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
 use deep_causality_physics::{
     AmountOfSubstance, PhysicsError, Pressure, Temperature, Volume, carnot_efficiency,
     ideal_gas_law,
@@ -93,7 +93,7 @@ fn main() -> Result<(), PhysicsError> {
 /// Step 1: Isothermal Expansion (A -> B). Temperature constant (Th), volume increases,
 /// heat absorbed, entropy increases.
 fn stage_isothermal_expansion(
-    value: EffectValue<EngineState>,
+    value: CausalEffect<EngineState>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<EngineState, (), ()> {
@@ -125,7 +125,7 @@ fn stage_isothermal_expansion(
 
 /// Step 2: Adiabatic Expansion (B -> C). Q = 0, entropy constant, temperature drops to Tc.
 fn stage_adiabatic_expansion(
-    value: EffectValue<EngineState>,
+    value: CausalEffect<EngineState>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<EngineState, (), ()> {
@@ -159,7 +159,7 @@ fn stage_adiabatic_expansion(
 /// Step 3: Isothermal Compression (C -> D). Temperature constant (Tc), volume decreases,
 /// heat rejected, entropy decreases.
 fn stage_isothermal_compression(
-    value: EffectValue<EngineState>,
+    value: CausalEffect<EngineState>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<EngineState, (), ()> {
@@ -190,7 +190,7 @@ fn stage_isothermal_compression(
 
 /// Step 4: Adiabatic Compression (D -> A). Temperature rises back to Th, closing the cycle.
 fn stage_adiabatic_compression(
-    value: EffectValue<EngineState>,
+    value: CausalEffect<EngineState>,
     _state: (),
     _ctx: Option<()>,
 ) -> PropagatingProcess<EngineState, (), ()> {

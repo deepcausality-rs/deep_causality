@@ -15,7 +15,7 @@
 //!   *withholds* it during the blackout — the chain runs open-loop (drift) through the dark.
 use crate::FloatType;
 use chrono::NaiveDateTime;
-use deep_causality_core::{EffectLog, EffectValue, PropagatingProcess};
+use deep_causality_core::{CausalEffect, EffectLog, PropagatingProcess};
 use deep_causality_file::{ClockData, OrbitData};
 use deep_causality_haft::LogAddEntry;
 use deep_causality_physics::{EARTH_GM, relativistic_clock_drift_rate_kernel};
@@ -161,7 +161,7 @@ pub fn build_stream(
 /// One tick: advance the INS error and carry both clocks one epoch. The value channel carries the INS
 /// position error; the clocks and bookkeeping ride in `State`. Pure (no IO).
 pub fn advance(
-    value: EffectValue<FloatType>,
+    value: CausalEffect<FloatType>,
     mut state: NavState,
     ctx: Option<NavConfig>,
 ) -> NavProcess {
@@ -190,13 +190,13 @@ pub fn advance(
     ));
 
     state.idx += 1;
-    NavProcess::new(Ok(EffectValue::Value(pos_err)), state, ctx, logs)
+    NavProcess::new(Ok(CausalEffect::value(pos_err)), state, ctx, logs)
 }
 
 /// The grmhd `select_metric` pattern: compute the regime from a state indicator (the GNSS-denial
 /// level) vs a config threshold, set `state.gnss_denied`, and log the two regime changes (entry / exit).
 pub fn detect_regime(
-    value: EffectValue<FloatType>,
+    value: CausalEffect<FloatType>,
     mut state: NavState,
     ctx: Option<NavConfig>,
 ) -> NavProcess {
@@ -290,7 +290,7 @@ pub fn initial_process(cfg: NavConfig, true_bias: FloatType) -> NavProcess {
         .map(|e| e.relativistic_rate * 1.0e9)
         .unwrap_or(0.0);
     NavProcess::new(
-        Ok(EffectValue::Value(0.0)),
+        Ok(CausalEffect::value(0.0)),
         NavState {
             ins_residual_bias: true_bias,
             carried_clock_ns: first_clock,

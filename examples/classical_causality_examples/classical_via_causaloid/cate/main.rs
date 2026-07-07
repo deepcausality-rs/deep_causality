@@ -69,7 +69,7 @@ fn main() {
         control_context.add_node(no_drug_datoid).unwrap();
 
         // --- Instantiate Causaloids for each scenario ---
-        // New API: ContextualCausalFn = fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
+        // New API: ContextualCausalFn = fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
         let treatment_causaloid = Causaloid::new_with_context(
             DRUG_EFFECT_CAUSALOID_ID,
             model::drug_effect_logic,

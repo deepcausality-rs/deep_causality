@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{EffectValue, PropagatingEffect, PropagatingProcess};
+use deep_causality_core::{CausalEffect, PropagatingEffect, PropagatingProcess};
 
 // Define a custom state for our process
 #[derive(Debug, Clone, Default)]
@@ -66,7 +66,7 @@ fn main() {
 
         // Return new process with updated value and state
         deep_causality_core::CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(v * mult)),
+            Ok(CausalEffect::value(v * mult)),
             state,
             ctx, // Pass context along
             Default::default(),
@@ -87,7 +87,7 @@ fn main() {
         state.last_op = "Add".into();
 
         deep_causality_core::CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(v + 5)),
+            Ok(CausalEffect::value(v + 5)),
             state,
             ctx,
             Default::default(),
