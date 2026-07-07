@@ -1,0 +1,64 @@
+openspec/changes/formalize-main-crate/specs/context-hypergraph-formalization/spec.md
+  s_81989c6ac315d4::t_2a0ecfc8732482 5
+  s_81989c6ac315d4::t_39dc07031b505e 14
+openspec/changes/formalize-main-crate/specs/quantum-causal-model-support/spec.md
+  s_81989c6ac315d4::t_1f962cc6ec1344 28
+openspec/changes/comonoid-graph-join/specs/comonoid-graph-join/spec.md
+  s_81989c6ac315d4::t_f994dd97c55fe7 56-79
+  s_81989c6ac315d4::t_0a8d8173959988 3,5,7,9-25,30-32,36,38-39,41-49,53-55,80-96,98,100-101,103,105-106,108,110,112,114-115,117,119-120
+  s_81989c6ac315d4::t_2d08842e3945f8 34
+openspec/changes/formalize-main-crate/tasks.md
+  s_81989c6ac315d4::t_7945f2e91eac64 17-18
+  s_81989c6ac315d4::t_e258c6ecd9caa5 31
+  s_81989c6ac315d4::t_2369ad25096393 25
+openspec/changes/comonoid-graph-join/tasks.md
+  s_81989c6ac315d4::t_ec784dd82762b0 10
+  s_81989c6ac315d4::t_6451d43039674b 3-4,7,9,14,16-19,21,23-24,26,28-29,31,33,35-36,38-43
+  s_81989c6ac315d4::t_e19ad2a441c5f3 37
+  s_81989c6ac315d4::t_6704d6c3f987da 5
+  s_81989c6ac315d4::t_0a26762e33ae66 30
+  s_81989c6ac315d4::t_7e2c9e3dadbbd3 11-12
+openspec/changes/formalize-main-crate/specs/intervention-do-operator/spec.md
+  s_81989c6ac315d4::t_f2d8b8270ef3a6 12-15
+  s_81989c6ac315d4::t_a1471de5c5e0e3 5
+  s_81989c6ac315d4::t_620c0cead57c14 16
+openspec/changes/comonoid-graph-join/design.md
+  s_81989c6ac315d4::t_2b28968eed86fe 51
+  s_81989c6ac315d4::t_c9331e1cc00606 3-11,16-19,22-25,29-34,37-41,43,56,60-64,68,72,74
+  s_81989c6ac315d4::t_d1624d9ad58339 35
+  s_81989c6ac315d4::t_e24be6b48824e4 73
+  s_81989c6ac315d4::t_670b7e02e20d4b 45,47-50,52,54
+  s_81989c6ac315d4::t_7612c5532552bb 36
+openspec/changes/comonoid-graph-join/proposal.md
+  s_81989c6ac315d4::t_33af4381ed3d93 3,5-14,18-24,29,36-37,39-41
+openspec/changes/formalize-main-crate/design.md
+  s_81989c6ac315d4::t_e6f7f0c1809a5f 30
+  s_81989c6ac315d4::t_0cab3cad7cd77b 44
+  s_81989c6ac315d4::t_b6a30daf593b3e 9
+  s_81989c6ac315d4::t_9aebf2b89eaeaf 32
+  s_81989c6ac315d4::t_a1e65719f6b975 36
+openspec/changes/formalize-main-crate/proposal.md
+  s_81989c6ac315d4::t_6e9b5f06cfa241 13
+  s_81989c6ac315d4::t_ba9a80bd519ea6 21
+  s_81989c6ac315d4::t_185da2d33af266 11
+  s_81989c6ac315d4::t_10514e5a7fdf50 35
+  s_81989c6ac315d4::t_56e12a600b0a56 31
+openspec/changes/formalize-main-crate/specs/graph-reasoning-formalization/spec.md
+  s_81989c6ac315d4::t_25320e791a2df7 3,5,17,19-20,22,24,26,28-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "80a1d9568a8f2cf29a388c715b06ae5ad08bbaf9",
+  "prompts": {},
+  "sessions": {
+    "s_81989c6ac315d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacebabe-fc1b-4795-8ec4-bd890e96a629",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
