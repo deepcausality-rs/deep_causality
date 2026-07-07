@@ -4,7 +4,7 @@
  */
 
 //! Law-tests (witnesses) for the generic `Monoid` — left identity, right identity, associativity —
-//! over the aggregation carriers. Mirrors `DeepCausalityFormal/Num/MonoidGeneric.lean`.
+//! over the aggregation carriers. Mirrors `DeepCausalityFormal/Algebra/MonoidGeneric.lean`.
 
 use deep_causality_algebra::{Conjunction, Count, Disjunction, Monoid, Prob};
 
@@ -20,7 +20,9 @@ fn assert_monoid_laws<M: Monoid + Clone + PartialEq + core::fmt::Debug>(x: M, y:
     );
 }
 
-/// THEOREM_MAP: num.monoid.left_id / num.monoid.right_id / num.monoid.assoc
+/// THEOREM_MAP: algebra.monoid.left_id
+/// THEOREM_MAP: algebra.monoid.right_id
+/// THEOREM_MAP: algebra.monoid.assoc
 #[test]
 fn test_num_monoid_laws() {
     assert_monoid_laws(Conjunction(true), Conjunction(false), Conjunction(true));

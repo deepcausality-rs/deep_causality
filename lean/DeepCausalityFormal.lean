@@ -5,7 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Root module of the DeepCausality formalization (Lean 4 + Mathlib).
 
 Layered to mirror the Rust crate tiers:
-  * `Num`      — foundational algebraic laws (monoid/group/ring/field), mirroring `deep_causality_num`.
+  * `Algebra`  — foundational algebraic laws (monoid/group/ring/field), mirroring `deep_causality_algebra`.
   * `Haft`     — HKT / functor / monad / arrow laws, mirroring `deep_causality_haft`.
   * `Core`     — the Causal Monad `pure`/`bind` laws, mirroring `deep_causality_core`.
   * `Topology` — curvature-tensor laws at the concrete carriers, mirroring `deep_causality_topology`.
@@ -13,7 +13,7 @@ Layered to mirror the Rust crate tiers:
 Each theorem is bound to a Rust witness via `lean/THEOREM_MAP.md`. See `lean/README.md`.
 
 Scope (what is proved end-to-end here, each bound to a Rust witness):
-  * `Num`      — the add-monoid laws (associativity, identity).
+  * `Algebra`  — the add-monoid laws (associativity, identity).
   * `Core`     — the causal-monad laws over the single-channel carrier: bind left identity,
                  bind right identity (unconditional, including errored carriers), associativity,
                  and the error left-zero.
@@ -28,10 +28,10 @@ Deviations from accepted category theory are recorded in
 remaining layers are described in `openspec/notes/causal-algebra/Formalization.md`.
 -/
 
-import DeepCausalityFormal.Num.Monoid
-import DeepCausalityFormal.Num.MonoidGeneric
-import DeepCausalityFormal.Num.CommutativeMonoid
-import DeepCausalityFormal.Num.Verdict
+import DeepCausalityFormal.Algebra.Monoid
+import DeepCausalityFormal.Algebra.MonoidGeneric
+import DeepCausalityFormal.Algebra.CommutativeMonoid
+import DeepCausalityFormal.Algebra.Verdict
 import DeepCausalityFormal.Core.EffectLog
 import DeepCausalityFormal.Core.CausalEffect
 import DeepCausalityFormal.Core.CausalCommand

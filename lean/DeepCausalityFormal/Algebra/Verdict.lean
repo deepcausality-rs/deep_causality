@@ -14,33 +14,33 @@ complement.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_num/tests/algebra/verdict_tests.rs`.
+Rust witness: `deep_causality_algebra/tests/algebra/verdict_tests.rs`.
 -/
 
-namespace DeepCausalityFormal.Num
+namespace DeepCausalityFormal.Algebra
 
 /-- Meet commutativity of the boolean verdict lattice.
 
-    THEOREM_MAP: `num.verdict.lattice_laws` -/
+    THEOREM_MAP: `algebra.verdict.lattice_laws` -/
 theorem verdict_meet_comm (x y : Bool) : (x && y) = (y && x) := by
   cases x <;> cases y <;> rfl
 
 /-- Absorption of the boolean verdict lattice: `x ⊓ (x ⊔ y) = x`.
 
-    THEOREM_MAP: `num.verdict.lattice_laws` -/
+    THEOREM_MAP: `algebra.verdict.lattice_laws` -/
 theorem verdict_absorption (x y : Bool) : (x && (x || y)) = x := by
   cases x <;> cases y <;> rfl
 
 /-- Complement is an involution: `complement (complement x) = x`.
 
-    THEOREM_MAP: `num.verdict.complement` -/
+    THEOREM_MAP: `algebra.verdict.complement` -/
 theorem verdict_compl_compl (x : Bool) : (!(!x)) = x := by
   cases x <;> rfl
 
 /-- De Morgan: `complement (x ⊓ y) = complement x ⊔ complement y`.
 
-    THEOREM_MAP: `num.verdict.complement` -/
+    THEOREM_MAP: `algebra.verdict.complement` -/
 theorem verdict_de_morgan (x y : Bool) : (!(x && y)) = ((!x) || (!y)) := by
   cases x <;> cases y <;> rfl
 
-end DeepCausalityFormal.Num
+end DeepCausalityFormal.Algebra

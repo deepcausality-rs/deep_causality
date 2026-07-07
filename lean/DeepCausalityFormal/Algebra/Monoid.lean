@@ -9,16 +9,16 @@ Mirrors the Rust trait `deep_causality_num::AddMonoid`, a blanket impl over
 These laws are near-inherited from Mathlib's `AddMonoid` class; the value of stating them
 here is that they become the pinned property statements bound to a Rust witness.
 
-Rust witness: `deep_causality_num/tests/algebra/monoid_tests.rs`.
+Rust witness: `deep_causality_algebra/tests/algebra/monoid_tests.rs`.
 -/
 
 import Mathlib.Algebra.Group.Defs
 
-namespace DeepCausalityFormal.Num
+namespace DeepCausalityFormal.Algebra
 
 /-- Associativity of the additive monoid operation: `(a + b) + c = a + (b + c)`.
 
-    THEOREM_MAP: `num.add_monoid.assoc` -/
+    THEOREM_MAP: `algebra.add_monoid.assoc` -/
 theorem add_monoid_assoc {M : Type*} [AddMonoid M] (a b c : M) :
     (a + b) + c = a + (b + c) :=
   add_assoc a b c
@@ -26,9 +26,9 @@ theorem add_monoid_assoc {M : Type*} [AddMonoid M] (a b c : M) :
 /-- Two-sided identity of the additive monoid: `a + 0 = a` and `0 + a = a`.
     The identity element `0` corresponds to the Rust `Zero` trait.
 
-    THEOREM_MAP: `num.add_monoid.identity` -/
+    THEOREM_MAP: `algebra.add_monoid.identity` -/
 theorem add_monoid_identity {M : Type*} [AddMonoid M] (a : M) :
     a + 0 = a ∧ 0 + a = a :=
   ⟨add_zero a, zero_add a⟩
 
-end DeepCausalityFormal.Num
+end DeepCausalityFormal.Algebra

@@ -20,13 +20,13 @@ lean/
   lakefile.toml                        # project + Mathlib dependency
   DeepCausalityFormal.lean             # root import aggregator
   DeepCausalityFormal/
-    Num/Monoid.lean                    # Exemplar 1: AddMonoid assoc + identity
+    Algebra/Monoid.lean                    # Exemplar 1: AddMonoid assoc + identity
     Core/CausalMonad.lean              # Exemplar 2: bind left-identity
   THEOREM_MAP.md                       # Lean theorem id  ↔  Rust witness
   README.md
 ```
 
-The module tree mirrors the Rust crate tiers: `Num` → `Haft` → `Core` → `Topology`.
+The module tree mirrors the Rust crate tiers: `Algebra` → `Haft` → `Core` → `Topology`.
 
 ## Build
 
@@ -53,7 +53,7 @@ in Rust (checked), sharing an **id** recorded in [`THEOREM_MAP.md`](THEOREM_MAP.
 
 ## Scope of this skeleton
 
-Exactly two exemplar theorems are proved end-to-end (`num.add_monoid.*`, `core.causal_monad.left_id`)
+Exactly two exemplar theorems are proved end-to-end (`algebra.add_monoid.*`, `core.causal_monad.left_id`)
 to establish the Lean → Rust → CI pipeline on real theorems. The exemplars are chosen to be
 **independent of preconditions P1/P2**. The right-identity / associativity / `LawfulMonad` theorems
 depend on the W-invariant (P2) and control-free (P1) fixes and come next — see the work plan in

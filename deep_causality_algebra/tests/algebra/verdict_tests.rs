@@ -4,11 +4,11 @@
  */
 
 //! Law-tests for the `Verdict` bounded-lattice/complement carrier. Mirrors
-//! `DeepCausalityFormal/Num/Verdict.lean`.
+//! `DeepCausalityFormal/Algebra/Verdict.lean`.
 
 use deep_causality_algebra::{Prob, Verdict};
 
-/// THEOREM_MAP: num.verdict.lattice_laws / num.verdict.complement (Boolean class, bool)
+/// THEOREM_MAP: algebra.verdict.lattice_laws / algebra.verdict.complement (Boolean class, bool)
 #[test]
 fn test_bool_boolean_algebra() {
     // lattice identities
@@ -34,7 +34,7 @@ fn test_bool_boolean_algebra() {
     assert!(any.complement()); // no child fires -> None holds
 }
 
-/// THEOREM_MAP: num.verdict.complement (MV class, Prob) — complement is 1 - p, involutive.
+/// THEOREM_MAP: algebra.verdict.complement (MV class, Prob) — complement is 1 - p, involutive.
 /// Involution holds up to floating-point rounding, so `Prob` values are compared with a tolerance.
 #[test]
 fn test_prob_mv_algebra() {
