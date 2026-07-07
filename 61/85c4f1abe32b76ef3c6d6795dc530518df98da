@@ -1,0 +1,137 @@
+website/docs/src/content/docs/getting-started/hello-context.md
+  s_cefbd789296ae8::t_0d4ea252044f37 55,59
+  s_cefbd789296ae8::t_51198c69dec5ac 111
+  s_cefbd789296ae8::t_d36937a2a02a7e 105
+website/web/src/content/examples/en/biomedical-tumor-treatment.mdx
+  s_cefbd789296ae8::t_ae5b0b4e7a05b8 38,40
+website/web/src/content/examples/en/capstone-spinor-minkowski.mdx
+  s_cefbd789296ae8::t_8629d7b71f14df 44
+website/docs/src/content/docs/getting-started/hello-causal-monad.md
+  s_cefbd789296ae8::t_1e782cb36954be 58,62,64
+  s_cefbd789296ae8::t_fa521b34b73456 96,102-106
+  s_cefbd789296ae8::t_a7c77d87c76a50 124
+  s_cefbd789296ae8::t_0a41f46e2917f5 35,40
+  s_cefbd789296ae8::t_326e54ec1990ca 70,75-77,84-85,89
+website/docs/src/content/docs/concepts/counterfactuals.md
+  s_cefbd789296ae8::t_6a11c9515910c9 54
+  s_cefbd789296ae8::t_41efa7be9f2663 44
+  s_cefbd789296ae8::t_64ae697aaa53ce 17,20,24
+  s_cefbd789296ae8::t_8fa2c0ba109ebf 70
+  s_cefbd789296ae8::t_10169c69954c16 83
+  s_cefbd789296ae8::t_3dad39e5da51e5 105
+  s_cefbd789296ae8::t_f6fe2d712f0167 8
+  s_cefbd789296ae8::t_094dab40929d45 90-91
+  s_cefbd789296ae8::t_a8f3e0df8969f4 99
+  s_cefbd789296ae8::t_983bab1f5b6466 3
+website/docs/src/content/docs/concepts/causal-flow.md
+  s_cefbd789296ae8::t_4fe21e6bcbd1db 78
+  s_cefbd789296ae8::t_91404b78fa95b0 8
+  s_cefbd789296ae8::t_f889849a5cba60 41
+website/web/src/content/examples/en/cate-treatment-effect.mdx
+  s_cefbd789296ae8::t_a3b3f463aea628 42
+  s_cefbd789296ae8::t_ec8de4e177b1ab 44,48,50
+  s_cefbd789296ae8::t_cb3e1e662543cd 70
+  s_cefbd789296ae8::t_7984bb6380c1e7 30
+website/docs/src/content/docs/getting-started/hello-causal-flow.md
+  s_cefbd789296ae8::t_a25a3706b648ce 25
+  s_cefbd789296ae8::t_11a64892039c17 95,97,103,110
+website/web/src/content/examples/en/diffusion-on-manifold.mdx
+  s_cefbd789296ae8::t_d9de986a71579d 41
+website/web/src/content/examples/en/active-standby-failover.mdx
+  s_cefbd789296ae8::t_ebab0c003eb28a 47
+  s_cefbd789296ae8::t_f86823c1d59bfc 18
+  s_cefbd789296ae8::t_17d07bb28f7730 64
+  s_cefbd789296ae8::t_c111d8feb51615 2,4
+  s_cefbd789296ae8::t_e0430569f8657f 56
+website/web/src/content/examples/en/async-event-inference.mdx
+  s_cefbd789296ae8::t_43686dc0963003 163
+  s_cefbd789296ae8::t_e68f319e5fd2e1 153-154,156-157
+website/docs/src/content/docs/getting-started/hello-causaloid.md
+  s_cefbd789296ae8::t_75b693618e3add 86,88-90,92,95-102,106
+  s_cefbd789296ae8::t_6087ed123fcb54 40
+  s_cefbd789296ae8::t_b606e702d4b5fd 112
+  s_cefbd789296ae8::t_8365e0c6c8433d 30
+  s_cefbd789296ae8::t_4de60b118543d0 74
+website/web/src/content/examples/en/closed-loop-insulin-pump.mdx
+  s_cefbd789296ae8::t_a55710e29ece78 46
+  s_cefbd789296ae8::t_99efedcd3d905b 18,20
+  s_cefbd789296ae8::t_4a7e9833d6d824 63
+  s_cefbd789296ae8::t_17bff84375769d 55
+  s_cefbd789296ae8::t_c1944b7c103ff6 81
+website/docs/src/content/docs/overview/innovations.md
+  s_cefbd789296ae8::t_956b6ddc1ba2de 58
+website/web/src/content/examples/en/counterfactual-envelope-fault.mdx
+  s_cefbd789296ae8::t_dbf83a147e2060 44
+  s_cefbd789296ae8::t_424271e3f95e39 48
+  s_cefbd789296ae8::t_c6dda5e6d68ff9 35
+  s_cefbd789296ae8::t_d71038794cc58a 42
+website/web/src/content/examples/en/event-horizon-probe.mdx
+  s_cefbd789296ae8::t_aba420aec73754 57
+  s_cefbd789296ae8::t_99a7bfdaaff58f 33
+  s_cefbd789296ae8::t_1975abbbe0b3db 43
+website/docs/src/content/docs/concepts/glossary.md
+  s_cefbd789296ae8::t_e98ccfe9746657 40
+website/docs/src/content/docs/getting-started/install.md
+  s_cefbd789296ae8::t_e95e5562cb11a6 52
+website/docs/src/content/docs/concepts/effect-propagation-process.md
+  s_cefbd789296ae8::t_7873acfcd05532 93,97,100-107,111
+  s_cefbd789296ae8::t_406a1a7563a05c 82,85
+  s_cefbd789296ae8::t_31f18b67c8586c 12-16,20
+  s_cefbd789296ae8::t_9bddbd9397f8b0 113,115,117,122
+  s_cefbd789296ae8::t_bc841a1eb37ebe 34-36,38-40,43-49,52,58
+  s_cefbd789296ae8::t_89f6b630b3d67d 3
+  s_cefbd789296ae8::t_c3b6490071ba7e 21
+website/docs/src/content/docs/concepts/csm.md
+  s_cefbd789296ae8::t_8e8cbb4120dd44 59-60,63-64
+website/web/src/content/examples/en/physics-maxwell.mdx
+  s_cefbd789296ae8::t_6ea7c0cda23b9f 42
+website/web/src/content/examples/en/aerospace-flight-envelope.mdx
+  s_cefbd789296ae8::t_50897b71fa8513 29
+  s_cefbd789296ae8::t_bd444748b64772 32-39
+website/web/src/content/examples/en/protein-folding.mdx
+  s_cefbd789296ae8::t_1131250a7cddd8 98,106
+website/web/src/content/examples/en/virtual-resection.mdx
+  s_cefbd789296ae8::t_432eb10c62b99e 20
+  s_cefbd789296ae8::t_95978711d96a9f 52
+  s_cefbd789296ae8::t_dfb622983f4314 46
+  s_cefbd789296ae8::t_2ad8fbd0d8d5f9 36,42
+  s_cefbd789296ae8::t_6ad0018a8725b9 74
+website/web/src/content/examples/en/pearl-counterfactual.mdx
+  s_cefbd789296ae8::t_0ee657f7b918e0 113,124
+  s_cefbd789296ae8::t_cc293410887756 94,101,103,105,107
+  s_cefbd789296ae8::t_360061b0bb994a 128
+  s_cefbd789296ae8::t_881b20134e52e0 64,68
+  s_cefbd789296ae8::t_42f95b95fe6aff 30
+  s_cefbd789296ae8::t_5d1c4f45a2dbd5 169
+  s_cefbd789296ae8::t_3e6938e60ab0ec 173
+website/docs/src/content/docs/concepts/causal-monad.md
+  s_cefbd789296ae8::t_391f41f40c1e54 57
+  s_cefbd789296ae8::t_125b9504f4eb2e 77
+  s_cefbd789296ae8::t_cc09d833d4f393 97,102-104,107-108
+  s_cefbd789296ae8::t_3ec5efa5bc4431 42
+  s_cefbd789296ae8::t_d12baaaaae3a42 66
+website/docs/src/content/docs/concepts/axiom.md
+  s_cefbd789296ae8::t_7401ec3b92c3cb 141
+  s_cefbd789296ae8::t_3d3d954d111e3d 51,54,58-61,65
+  s_cefbd789296ae8::t_2b131879eb8643 154
+  s_cefbd789296ae8::t_d5e43eea0e5e7d 129
+  s_cefbd789296ae8::t_22515e95e8fec2 121,126
+  s_cefbd789296ae8::t_c9e90035f850c3 34
+  s_cefbd789296ae8::t_ce31e76737401e 111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6185c4f1abe32b76ef3c6d6795dc530518df98da",
+  "prompts": {},
+  "sessions": {
+    "s_cefbd789296ae8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6297cf86-81df-4bea-afd8-c82a768dbf7b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
