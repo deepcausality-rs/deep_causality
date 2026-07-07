@@ -1,0 +1,62 @@
+openspec/changes/haft-categorical-machinery/.openspec.yaml
+  s_81989c6ac315d4::t_044b77527946fc 1-2
+openspec/changes/haft-categorical-machinery/proposal.md
+  s_81989c6ac315d4::t_acef0035119211 1-40
+openspec/changes/num-generic-monoid-tower/tasks.md
+  s_81989c6ac315d4::t_b6535123a41e4f 1-36
+openspec/changes/num-generic-monoid-tower/specs/num-generic-monoid/spec.md
+  s_81989c6ac315d4::t_954cbb8cab5d1d 1-24
+openspec/changes/haft-categorical-machinery/design.md
+  s_81989c6ac315d4::t_b368f6755c6504 1-48
+openspec/changes/haft-categorical-machinery/specs/haft-arrow-interpreter/spec.md
+  s_81989c6ac315d4::t_65f9baa801dec5 1-24
+openspec/changes/archive/2026-07-07-comonoid-graph-join/tasks.md
+  s_81989c6ac315d4::t_32c6a7797bc3e6 33-34
+openspec/changes/num-generic-monoid-tower/design.md
+  s_81989c6ac315d4::t_c2c1071ffe6a1e 1-48
+openspec/changes/haft-categorical-machinery/specs/haft-category-kleisli/spec.md
+  s_81989c6ac315d4::t_5f6e71101c0783 1-24
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_81989c6ac315d4::t_cbcfcdf43df4dd 203-223
+  s_81989c6ac315d4::t_05b64cb6f4cb02 151,154
+  s_81989c6ac315d4::t_bc6cc836419467 71-72
+  s_81989c6ac315d4::t_a205486eb826be 36-38
+  s_81989c6ac315d4::t_f74d0e6839f33a 131,135
+  s_81989c6ac315d4::t_d640cb9da2d465 180,182-183
+  s_81989c6ac315d4::t_6abaeca91c0b3a 235-238
+  s_81989c6ac315d4::t_cf947fbf109d48 141,143-145
+openspec/changes/haft-categorical-machinery/tasks.md
+  s_81989c6ac315d4::t_e7dad11b406a80 1-40
+openspec/changes/haft-categorical-machinery/specs/haft-foldable-foldmap/spec.md
+  s_81989c6ac315d4::t_6fcce9efc498f9 1-24
+openspec/changes/num-generic-monoid-tower/specs/num-verdict-algebra/spec.md
+  s_81989c6ac315d4::t_00b0fd8edaf3d6 1-29
+openspec/changes/num-generic-monoid-tower/proposal.md
+  s_81989c6ac315d4::t_304891a613811d 1-34
+openspec/changes/haft-categorical-machinery/specs/haft-free-arrow/spec.md
+  s_81989c6ac315d4::t_37fbd90de18fa9 1-24
+openspec/specs/comonoid-graph-join/spec.md
+  s_81989c6ac315d4::t_32c6a7797bc3e6 1-56
+openspec/changes/num-generic-monoid-tower/.openspec.yaml
+  s_81989c6ac315d4::t_1523a971cf464f 1-2
+openspec/changes/haft-categorical-machinery/specs/haft-symmetric-monoidal-prop/spec.md
+  s_81989c6ac315d4::t_6d794abb3f0838 1-24
+openspec/changes/num-generic-monoid-tower/specs/num-commutative-semilattice/spec.md
+  s_81989c6ac315d4::t_d9e66bcace0f4e 1-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "17b6432b9265a8aa0961221cdc0267d622678dc4",
+  "prompts": {},
+  "sessions": {
+    "s_81989c6ac315d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bacebabe-fc1b-4795-8ec4-bd890e96a629",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
