@@ -1,0 +1,52 @@
+openspec/changes/formalize-main-crate/proposal.md
+  s_20d5509e212cf5::t_1dbd106213e924 35
+  s_20d5509e212cf5::t_5806f92cb1ddb8 11
+  s_20d5509e212cf5::t_7a38bcb96afa0e 1-10,12-30,32-34,36-37
+  s_20d5509e212cf5::t_546215bc302dd9 31
+openspec/changes/formalize-main-crate/.openspec.yaml
+  s_20d5509e212cf5::t_41aa7d9cd44ac8 1-2
+openspec/changes/formalize-main-crate/specs/graph-reasoning-formalization/spec.md
+  s_20d5509e212cf5::t_07ccfebfab6289 1-25,27
+  s_20d5509e212cf5::t_fb92c9105dc669 26,28-29
+openspec/changes/comonoid-graph-join/design.md
+  s_20d5509e212cf5::t_6b70a017d15d15 1-46
+openspec/changes/formalize-main-crate/tasks.md
+  s_20d5509e212cf5::t_e2bdb36b0870cc 18,21
+  s_20d5509e212cf5::t_f3cdc49acfd769 1-17,19-20,22-54
+openspec/changes/formalize-main-crate/specs/quantum-causal-model-support/spec.md
+  s_20d5509e212cf5::t_d4d974b5860083 1-70
+openspec/changes/comonoid-graph-join/tasks.md
+  s_20d5509e212cf5::t_766267fabccc3f 1-34
+openspec/changes/formalize-main-crate/specs/context-hypergraph-formalization/spec.md
+  s_20d5509e212cf5::t_bd84f4c9c593eb 1-24
+openspec/changes/formalize-main-crate/specs/causaloid-formalization/spec.md
+  s_20d5509e212cf5::t_46540263d992b1 1-38
+openspec/changes/comonoid-graph-join/.openspec.yaml
+  s_20d5509e212cf5::t_b2b3eee2370420 1-2
+openspec/changes/comonoid-graph-join/specs/comonoid-graph-join/spec.md
+  s_20d5509e212cf5::t_f0e1d38a883f9f 1-52
+openspec/changes/comonoid-graph-join/proposal.md
+  s_20d5509e212cf5::t_712e9ede846abb 1-31
+openspec/changes/formalize-main-crate/design.md
+  s_20d5509e212cf5::t_f109f864df54be 44
+  s_20d5509e212cf5::t_d2b1aa3ab0939a 56
+  s_20d5509e212cf5::t_bc4de15566cb16 1-43,45-55,57-58
+openspec/changes/formalize-main-crate/specs/intervention-do-operator/spec.md
+  s_20d5509e212cf5::t_0ab2bb078425e9 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "019d1ac25c941b231031ceea96ca4502aba55f52",
+  "prompts": {},
+  "sessions": {
+    "s_20d5509e212cf5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4f746af3-d910-4267-b785-b5bb44447a22",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
