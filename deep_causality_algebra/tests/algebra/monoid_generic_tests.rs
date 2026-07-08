@@ -20,9 +20,6 @@ fn assert_monoid_laws<M: Monoid + Clone + PartialEq + core::fmt::Debug>(x: M, y:
     );
 }
 
-/// THEOREM_MAP: algebra.monoid.left_id
-/// THEOREM_MAP: algebra.monoid.right_id
-/// THEOREM_MAP: algebra.monoid.assoc
 #[test]
 fn test_num_monoid_laws() {
     assert_monoid_laws(Conjunction(true), Conjunction(false), Conjunction(true));

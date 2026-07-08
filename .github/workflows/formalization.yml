@@ -57,8 +57,9 @@ jobs:
           fail=0
           for id in $ids; do
             rust_hit=$(grep -Frl "THEOREM_MAP: $id" \
-                       deep_causality_algebra deep_causality_num deep_causality_core \
-                       deep_causality_haft deep_causality_topology \
+                       deep_causality_algebra deep_causality_num deep_causality_num_complex \
+                       deep_causality_num_dual deep_causality_core deep_causality_haft \
+                       deep_causality_topology \
                        --include='*.rs' || true)
             map_hit=$(grep -Fl "$id" lean/THEOREM_MAP.md || true)
             if [ -z "$rust_hit" ]; then echo "MISSING Rust witness for id: $id"; fail=1; fi

@@ -8,7 +8,6 @@
 
 use deep_causality_algebra::{Prob, Verdict};
 
-/// THEOREM_MAP: algebra.verdict.lattice_laws / algebra.verdict.complement (Boolean class, bool)
 #[test]
 fn test_bool_boolean_algebra() {
     // lattice identities
@@ -34,7 +33,6 @@ fn test_bool_boolean_algebra() {
     assert!(any.complement()); // no child fires -> None holds
 }
 
-/// THEOREM_MAP: algebra.verdict.complement (MV class, Prob) — complement is 1 - p, involutive.
 /// Involution holds up to floating-point rounding, so `Prob` values are compared with a tolerance.
 #[test]
 fn test_prob_mv_algebra() {

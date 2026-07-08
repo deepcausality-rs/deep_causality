@@ -6,6 +6,7 @@ mod casts;
 mod float;
 mod float_double;
 mod float_option;
+mod formalization_lean;
 mod identity;
 mod integer;
 mod num;

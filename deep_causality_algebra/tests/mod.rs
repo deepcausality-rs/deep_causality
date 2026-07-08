@@ -4,4 +4,5 @@
  */
 mod algebra;
 mod float106;
+mod formalization_lean;
 mod iso;

@@ -19,6 +19,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "lean-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num_complex",
+    ],
+)
+
+rust_test_suite(
     name = "algebra_impls",
     srcs = glob([
         "algebra_impls/*_tests.rs",

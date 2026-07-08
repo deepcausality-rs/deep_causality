@@ -4,3 +4,4 @@
  */
 mod algebra_impls;
 mod dual;
+mod formalization_lean;

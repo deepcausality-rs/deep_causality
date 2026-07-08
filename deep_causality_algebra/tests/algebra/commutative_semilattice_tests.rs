@@ -17,7 +17,6 @@ fn assert_idempotent<M: BoundedSemilattice + Clone + PartialEq + core::fmt::Debu
     assert_eq!(x.clone().combine(x.clone()), x);
 }
 
-/// THEOREM_MAP: algebra.commutative_monoid.comm
 #[test]
 fn test_commutativity() {
     assert_commutative(Conjunction(true), Conjunction(false));
@@ -26,7 +25,6 @@ fn test_commutativity() {
     assert_commutative(Prob(0.3), Prob(0.9));
 }
 
-/// THEOREM_MAP: algebra.semilattice.idempotent
 #[test]
 fn test_idempotence_of_semilattices() {
     assert_idempotent(Conjunction(true));
@@ -45,8 +43,6 @@ fn test_count_is_commutative_but_not_idempotent() {
 /// Order-independence of a bounded-semilattice fold over a multiset (assumption #1's algebra):
 /// follows from commutativity + associativity + idempotence.
 ///
-/// THEOREM_MAP: algebra.semilattice.assoc
-/// THEOREM_MAP: algebra.semilattice.comm
 #[test]
 fn test_semilattice_fold_order_independent() {
     let items = [Conjunction(true), Conjunction(true), Conjunction(false)];
