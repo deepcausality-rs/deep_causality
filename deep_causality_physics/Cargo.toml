@@ -20,6 +20,7 @@ exclude = [
     ".bazelignore",
     ".bazelrc",
     "tests/**/*",
+    "papers/*",
 ]
 
 [features]

@@ -11,6 +11,18 @@ documentation = "https://docs.rs/deep_causality_topology"
 readme = "README.md"
 keywords = ["causality", "topology", "complex", "differential", "geometry"]
 categories = ["science", "mathematics"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+    "papers/*",
+]
 
 [lib]
 name = "deep_causality_topology"

@@ -22,7 +22,9 @@ exclude = [
     ".bazelignore",
     ".bazelrc",
     "tests/**/*",
+    "papers/*",
 ]
+
 [dependencies.deep_causality_ast]
 path = "../deep_causality_ast"
 version = "0.1"
