@@ -155,6 +155,8 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.adjunction.triangles` | triangle identities (currying adjunction) | proved | `Haft/Adjunction.lean` | ✓ | n/a | — |
 | `haft.adjunction.adjunct_inverse` | adjuncts are the Hom-bijection | proved | `Haft/Adjunction.lean` | ✓ | n/a | — |
 | `haft.foldable.pure_compat` | `fold (pure x) init f = f init x` | proved | `Haft/Foldable.lean` | ✓ | n/a | — |
+| `haft.foldable.fold_map_pure` | `fold_map(pure a, f) = f a` (singleton law) | proved | `Haft/Foldable.lean` | ✓ | n/a | — |
+| `haft.foldable.fold_map_monoid_coherence` | `fold_map(xs ++ ys, f) = fold_map(xs,f).combine(fold_map(ys,f))` (monoid homomorphism) | proved | `Haft/Foldable.lean` | ✓ | n/a | — |
 | `haft.traversable.identity` | `sequence` at Identity applicative = id | proved | `Haft/Traversable.lean` | ✓ | n/a | — |
 | `haft.traversable.naturality` | applicative morphisms commute with `sequence` | proved | `Haft/Traversable.lean` | ✓ | n/a | — |
 | `haft.natural_iso.laws` | round-trip + naturality (`Option ≅ Unit ⊕ ·`) | proved | `Haft/NaturalIso.lean` | ✓ | n/a | — |

@@ -1,12 +1,12 @@
 ## 0. Prerequisite
 
-- [ ] 0.1 `num-generic-monoid-tower` has landed (the generic `Monoid` that `fold_map` folds into). Confirm before H1.
+- [x] 0.1 `num-generic-monoid-tower` has landed (the generic `Monoid` that `fold_map` folds into). Confirm before H1. — `deep_causality_algebra::Monoid` (`empty`/`combine`) is present and a path dependency of `deep_causality_haft`.
 
 ## 1. Foldable::fold_map (H1)
 
-- [ ] 1.1 Add `fn fold_map<A, M: Monoid>(fa, f) -> M` to `Foldable` (default via `fold` + `Monoid::combine`); export.
-- [ ] 1.2 Rust law-tests: `fold_map(pure a, f) = f a`; monoid-homomorphism coherence (respects `empty`/`combine`); order-independence when `M: CommutativeMonoid`.
-- [ ] 1.3 Lean: `DeepCausalityFormal/Haft/Foldable.lean` (extend) proving `haft.foldable.fold_map_pure`, `haft.foldable.fold_map_monoid_coherence`; THEOREM_MAP rows; witnesses; bare-`lean`.
+- [x] 1.1 Add `fn fold_map<A, M: Monoid>(fa, f) -> M` to `Foldable` (default via `fold` + `Monoid::combine`); export. — provided default on the exported `Foldable` trait.
+- [x] 1.2 Rust law-tests: `fold_map(pure a, f) = f a`; monoid-homomorphism coherence (respects `empty`/`combine`); order-independence when `M: CommutativeMonoid`. — `tests/formalization_lean/foldable_tests.rs` (`test_fold_map_pure`, `test_fold_map_monoid_coherence` incl. the `Count` commutative order-independence check); Bazel dep on `//deep_causality_algebra` added.
+- [x] 1.3 Lean: `DeepCausalityFormal/Haft/Foldable.lean` (extend) proving `haft.foldable.fold_map_pure`, `haft.foldable.fold_map_monoid_coherence`; THEOREM_MAP rows; witnesses; bare-`lean`. — extended with `foldMap` over the free monoid `List`, textbook citation + deviation notes in the header; `lake build` green; THEOREM_MAP rows added; traceability passes.
 
 ## 2. Category + Kleisli (H2)
 

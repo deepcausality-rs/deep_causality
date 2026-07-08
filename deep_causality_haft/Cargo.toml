@@ -31,6 +31,10 @@ default = ["std"]
 std = ["alloc"]
 alloc = []
 
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+
 [[example]]
 name = "haft_applicative"
 path = "examples/applicative.rs"

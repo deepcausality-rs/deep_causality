@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{HKT, Satisfies};
+use deep_causality_algebra::Monoid;
 
 /// The `Foldable` trait abstracts over data structures that can be reduced to a single summary value.
 ///
@@ -63,4 +64,40 @@ pub trait Foldable<F: HKT> {
     where
         A: Satisfies<F::Constraint>,
         Func: FnMut(B, A) -> B;
+
+    /// Folds the structure into a monoid: maps each element into a `Monoid` `M` and combines the
+    /// results, seeded with `M::empty()`.
+    ///
+    /// This is the monoidal fold (`foldMap` in the Haskell `Data.Foldable` tradition). It expresses a
+    /// `Collection` as a fold-map into its aggregation monoid, and — because the accumulation is the
+    /// monoid's associative `combine` from its `empty` identity — order-independence over a
+    /// `CommutativeMonoid` reduces to the monoid laws.
+    ///
+    /// # Default
+    ///
+    /// Provided in terms of the seeded [`fold`](Foldable::fold) and the `Monoid` (`empty`/`combine`)
+    /// from `deep_causality_algebra`:
+    /// `fold_map(fa, f) = fold(fa, M::empty(), |acc, a| acc.combine(f(a)))`.
+    ///
+    /// # Laws
+    ///
+    /// 1. **Singleton**: `fold_map(pure(a), f) == f(a)` (via the monoid identity).
+    /// 2. **Monoid-homomorphism coherence**: `fold_map` respects `empty`/`combine` — folding the empty
+    ///    structure yields `M::empty()`, and concatenation maps to `combine`.
+    ///
+    /// Machine-checked in `lean/DeepCausalityFormal/Haft/Foldable.lean`.
+    ///
+    /// # Type Parameters
+    ///
+    /// *   `A`: the element type of the foldable structure.
+    /// *   `M`: the target `Monoid`.
+    /// *   `Func`: the element-to-monoid map `Fn(A) -> M`.
+    fn fold_map<A, M, Func>(fa: F::Type<A>, f: Func) -> M
+    where
+        A: Satisfies<F::Constraint>,
+        M: Monoid,
+        Func: Fn(A) -> M,
+    {
+        Self::fold(fa, M::empty(), |acc, a| acc.combine(f(a)))
+    }
 }
