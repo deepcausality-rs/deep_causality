@@ -1,0 +1,146 @@
+deep_causality_algebra/tests/formalization_lean/commutative_monoid_tests.rs
+  s_543ee5cdecd2c1::t_dd9d6f01268297 1-51
+deep_causality_num_complex/tests/formalization_lean/quaternion_tests.rs
+  s_543ee5cdecd2c1::t_eb0c71413c8e2b 1-22,24-37,39-85
+  s_543ee5cdecd2c1::t_7dc3105bdb2b24 23
+  s_543ee5cdecd2c1::t_7dd051aa83891b 38
+deep_causality_algebra/tests/formalization_lean/module_tests.rs
+  s_543ee5cdecd2c1::t_7e915d95682e4c 1-64
+deep_causality_algebra/tests/formalization_lean/verdict_tests.rs
+  s_543ee5cdecd2c1::t_601dc5ade38342 1-36
+lean/DeepCausalityFormal/Algebra/Scalar.lean
+  s_543ee5cdecd2c1::t_3674c2d14b8943 42
+  s_543ee5cdecd2c1::t_a0f11b70795488 34
+  s_543ee5cdecd2c1::t_9e3622a43c0d48 26
+  s_543ee5cdecd2c1::t_2ce8603211951e 1-25,27-33,35-41,43-62
+lean/DeepCausalityFormal/Complex/Complex.lean
+  s_543ee5cdecd2c1::t_7dd051aa83891b 46
+  s_543ee5cdecd2c1::t_d03a3a4fed414e 1-45,47-58
+deep_causality_algebra/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_efeed00b90f96d 1-36
+deep_causality_num_complex/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_692bfbd0540234 22-35
+  s_543ee5cdecd2c1::t_514aa35370afde 21
+deep_causality_num_dual/tests/mod.rs
+  s_543ee5cdecd2c1::t_ff2050fd51a03f 7
+deep_causality_algebra/tests/formalization_lean/group_tests.rs
+  s_543ee5cdecd2c1::t_9f1e0cb199dee9 1-33
+deep_causality_num/tests/formalization_lean/float106_tests.rs
+  s_543ee5cdecd2c1::t_cd50a81d9c43ba 1-56
+deep_causality_algebra/tests/formalization_lean/division_algebra_tests.rs
+  s_543ee5cdecd2c1::t_6dd1e10f867f90 1-19
+.github/workflows/formalization.yml
+  s_543ee5cdecd2c1::t_e7f93cdc6ee034 60-62
+deep_causality_num/tests/identity/zero_tests.rs
+  s_543ee5cdecd2c1::t_1162fc6e972ed0 5
+lean/DeepCausalityFormal/Algebra/Ring.lean
+  s_543ee5cdecd2c1::t_ddeaa891df152a 1-52
+deep_causality_algebra/tests/formalization_lean/monoid_tests.rs
+  s_543ee5cdecd2c1::t_3ae38140ae991d 6,8,10-11,16,19,21-22
+deep_causality_algebra/tests/formalization_lean/field_tests.rs
+  s_543ee5cdecd2c1::t_c01098eb79ea16 1-37
+deep_causality_algebra/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_4536d8660c7526 48-62
+deep_causality_algebra/tests/formalization_lean/ring_tests.rs
+  s_543ee5cdecd2c1::t_e083412a3e3c45 1-39
+deep_causality_algebra/tests/formalization_lean/scalar_tests.rs
+  s_543ee5cdecd2c1::t_c777f4c7a88e5d 1-62
+lean/DeepCausalityFormal/Algebra/DivisionAlgebra.lean
+  s_543ee5cdecd2c1::t_e68c8f7ea0a993 1-27
+deep_causality_num_dual/tests/formalization_lean/dual_tests.rs
+  s_543ee5cdecd2c1::t_3593b8fcaf3289 1-76
+lean/DeepCausalityFormal/Num/Integer.lean
+  s_543ee5cdecd2c1::t_f9f56634848e7e 1-22,24-28,30-38
+  s_543ee5cdecd2c1::t_74ee5d3de04715 23
+  s_543ee5cdecd2c1::t_f96c4beb686dc1 29
+lean/DeepCausalityFormal/Num/Cast.lean
+  s_543ee5cdecd2c1::t_0ba27c01a8b99c 1-32
+lean/DeepCausalityFormal/Num/Identity.lean
+  s_543ee5cdecd2c1::t_306f1d2b1fb3f3 1-35
+lean/DeepCausalityFormal/Algebra/Group.lean
+  s_543ee5cdecd2c1::t_55ce524ac2a19c 1-41
+lean/DeepCausalityFormal/Complex/Quaternion.lean
+  s_543ee5cdecd2c1::t_7dd051aa83891b 34
+  s_543ee5cdecd2c1::t_d333070a747b81 1-33,35-59
+deep_causality_num/tests/identity/one_tests.rs
+  s_543ee5cdecd2c1::t_1162fc6e972ed0 5
+deep_causality_num_complex/tests/formalization_lean/complex_tests.rs
+  s_543ee5cdecd2c1::t_7dd051aa83891b 68
+  s_543ee5cdecd2c1::t_3f812a5d7dc039 58-59
+  s_543ee5cdecd2c1::t_20c4ce209f09c0 23,41
+  s_543ee5cdecd2c1::t_86e30b66809081 1-22,24-40,42-57,60-67,69-72,75-86,89-94
+  s_543ee5cdecd2c1::t_25dcec049a7c53 73-74
+  s_543ee5cdecd2c1::t_64c43685f9e13b 87-88
+deep_causality_num_complex/tests/mod.rs
+  s_543ee5cdecd2c1::t_67c5606b006d8d 7
+deep_causality_num/tests/formalization_lean/identity_tests.rs
+  s_543ee5cdecd2c1::t_54451cadfcb134 1-34
+deep_causality_algebra/tests/formalization_lean/monoid_generic_tests.rs
+  s_543ee5cdecd2c1::t_1326c9c590f869 1-29
+lean/DeepCausalityFormal/Num/Float106.lean
+  s_543ee5cdecd2c1::t_e17bbd2771b6b8 1-19,21-42
+  s_543ee5cdecd2c1::t_353f3ba98fcddb 20
+lean/DeepCausalityFormal/Algebra/Module.lean
+  s_543ee5cdecd2c1::t_5f499a91964fbd 1-70
+lean/DeepCausalityFormal.lean
+  s_543ee5cdecd2c1::t_a2ea0fb5ac0ea0 48-51,56-64
+  s_543ee5cdecd2c1::t_544b30cbdf1522 8-15,23-33
+deep_causality_algebra/tests/algebra/field_real_f64_tests.rs
+  s_543ee5cdecd2c1::t_1162fc6e972ed0 5
+deep_causality_num/tests/formalization_lean/integer_tests.rs
+  s_543ee5cdecd2c1::t_5bb7b474b56993 38-40,42,44-48
+  s_543ee5cdecd2c1::t_126b1221148038 1-37,41,43,49
+deep_causality_num_dual/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_1c591c9062acdb 1-15
+deep_causality_num/tests/formalization_lean/cast_tests.rs
+  s_543ee5cdecd2c1::t_232d5b267d8f25 1-41
+deep_causality_num_complex/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_3251d53701f2f3 1-19
+deep_causality_num/tests/mod.rs
+  s_543ee5cdecd2c1::t_869320bec45583 9
+lean/DeepCausalityFormal/Algebra/Field.lean
+  s_543ee5cdecd2c1::t_850676f617899a 1-45
+deep_causality_num/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_b8c111a1a7ff52 113-127
+lean/README.md
+  s_543ee5cdecd2c1::t_7fa209a96897f1 54,56-72
+deep_causality_num_dual/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_99e3cd9376e8a8 20-33
+  s_543ee5cdecd2c1::t_3faf318d3ded50 19
+deep_causality_num/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_c472dd46a9814c 1-22
+deep_causality_algebra/tests/mod.rs
+  s_543ee5cdecd2c1::t_feb3f906602a21 7
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_cc5580629e65de 30-40,73-107,109-110,112-119
+  s_543ee5cdecd2c1::t_2b78a46af91f8b 108,111
+  s_543ee5cdecd2c1::t_7f3692fd160471 68-72,120
+lean/DeepCausalityFormal/Dual/Dual.lean
+  s_543ee5cdecd2c1::t_d4d583a7b198ad 1-91
+deep_causality_num_dual/papers/j_EC1.pdf
+  s_7d9e03a5f927db::t_cb095f6cfab5ed 1-2102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4bd18ad41b199030ee83e9a2f109c3ec82a82185",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_7d9e03a5f927db": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ad4cd2ae80fa0ccd5",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
