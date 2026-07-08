@@ -15,8 +15,18 @@ documentation = "https://docs.rs/ultragraph"
 homepage = "https://github.com/deepcausality/deep_causality/tree/main/ultragraph"
 categories = ["data-structures"]
 keywords = ["data-structures"]
-exclude = ["*.bazel", "*/*.bazel", "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore", ".bazelrc", "tests/**/*"]
-
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+    "papers/*",
+]
 
 [dev-dependencies]
 criterion = {  version = "0.8" }
