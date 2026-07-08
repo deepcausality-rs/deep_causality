@@ -1,0 +1,41 @@
+deep_causality_haft/tests/formalization_lean/monoidal_tests.rs
+  s_543ee5cdecd2c1::t_8904d7865eceff 1-19,21-40,45-103
+  s_543ee5cdecd2c1::t_83c99843da9d9f 41-44
+  s_543ee5cdecd2c1::t_0a4e9dd07eaabb 20
+openspec/changes/haft-categorical-machinery/tasks.md
+  s_543ee5cdecd2c1::t_76d684ae7a2068 39-40
+  s_543ee5cdecd2c1::t_df129bf61177c7 32-35
+lean/DeepCausalityFormal.lean
+  s_543ee5cdecd2c1::t_377f44e367b6f0 99
+deep_causality_haft/src/lib.rs
+  s_543ee5cdecd2c1::t_3f629e84ebdc84 90-92
+  s_543ee5cdecd2c1::t_ee1aa3a32831f1 61
+deep_causality_haft/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_b5ca1358f942c5 53-54
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_428b3f5e4c5dc3 86
+deep_causality_haft/src/monoidal/mod.rs
+  s_543ee5cdecd2c1::t_8f2f61b76be9d1 1-71
+lean/DeepCausalityFormal/Haft/SymmetricMonoidal.lean
+  s_543ee5cdecd2c1::t_65f6ed56936298 1-98
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_f7cc396074365b 159-161
+deep_causality_haft/src/arrow/interpreter.rs
+  s_543ee5cdecd2c1::t_724bd1eb90e836 46-50,66-70,72-73,75-76,80-81,83-84,90,92,100-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5743ba8e2af9e04f1446938e591eeb8ccaef04a4",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
