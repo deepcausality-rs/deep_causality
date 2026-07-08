@@ -61,29 +61,43 @@ where
         causaloid.evaluate(effect)
     }
 
-    /// Reasons over a subgraph by traversing all nodes reachable from a given start index,
-    /// using a monadic approach.
+    /// Reasons over the acyclic sub-DAG reachable from a start index using a monadic approach.
     ///
-    /// This method performs a Breadth-First Search (BFS) traversal of all descendants
-    /// of the `start_index`. The `PropagatingEffect` is passed sequentially:
-    /// the output effect of a parent node becomes the input effect for its child node.
-    /// The traversal continues as long as no `CausalityError` is returned within the `PropagatingEffect`.
+    /// The frozen graph must be acyclic. Evaluation runs a Kahn-style topological schedule rather
+    /// than a breadth-first walk. A ready-set (a `BTreeSet` ordered by ascending node index) holds
+    /// the nodes whose reachable parents have all resolved. The scheduler pops the lowest-index
+    /// ready node, evaluates it once, and publishes its output effect to the wire slot of every
+    /// reachable child. A child becomes ready when its last pending wire resolves.
     ///
-    /// ## Adaptive Reasoning
+    /// A reachability pre-pass first marks the start node and its descendants. A wire from a
+    /// non-descendant is therefore resolved `Inactive` up front and never counted as pending, which
+    /// keeps mid-graph starts and abandoned relay cones free of deadlock. A node reached by a single
+    /// fired parent passes that parent's effect through, because the join of one input is the
+    /// identity. A node reached by two or more fired parents is a reconvergence; the merge (∇) of
+    /// converging effects is not yet defined, so the evaluator fails loudly instead of silently
+    /// picking one parent.
     ///
-    /// If a `Causaloid` returns a `RelayTo` command effect, the BFS traversal dynamically jumps to
-    /// its `target` index, and the command's sub-program becomes the new input for the relayed path.
-    /// This enables *adaptive reasoning* conditional to the deciding causaloid.
+    /// ## Acyclicity requirement
+    ///
+    /// A directed cycle is rejected with an error before any node runs. A Kahn-style ready-set would
+    /// otherwise silently skip the nodes trapped inside the cycle, so the frozen graph must be a DAG.
+    ///
+    /// ## Adaptive reasoning
+    ///
+    /// A `RelayTo(target, sub)` result ends the current round and starts a fresh round at `target`,
+    /// seeded with the command's sub-program. Rounds compose sequentially. The abandoned cone of the
+    /// relaying round simply stops and resolves `Inactive` implicitly. The relay is single-level.
     ///
     /// # Arguments
     ///
-    /// * `start_index` - The index of the node to start the traversal from.
-    /// * `initial_effect` - The initial runtime effect to be passed to the starting node's evaluation function.
+    /// * `start_index` - The index of the node to start evaluation from.
+    /// * `initial_effect` - The initial runtime effect passed to the starting node's evaluation function.
     ///
     /// # Returns
     ///
-    /// A `PropagatingEffect` representing the final aggregated monadic effect of the traversal.
-    /// If an error occurs during evaluation, the returned `PropagatingEffect` will contain the error.
+    /// A `PropagatingEffect` carrying the effect of the last node processed under the ascending-index
+    /// schedule. The first node error short-circuits the whole traversal and is returned with its
+    /// logs intact.
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,

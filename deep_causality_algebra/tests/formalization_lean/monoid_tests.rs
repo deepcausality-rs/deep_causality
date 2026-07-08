@@ -5,6 +5,8 @@
 
 //! Witness for `lean/DeepCausalityFormal/Algebra/Monoid.lean` (Mathlib `AddMonoid`).
 
+use deep_causality_num::Zero;
+
 /// THEOREM_MAP: algebra.add_monoid.assoc
 #[test]
 fn test_add_monoid_assoc() {
@@ -16,8 +18,8 @@ fn test_add_monoid_assoc() {
 /// THEOREM_MAP: algebra.add_monoid.identity
 #[test]
 fn test_add_monoid_identity() {
-    // a + 0 = a and 0 + a = a
+    // a + 0 = a and 0 + a = a, with the identity `0` obtained from the `Zero` trait.
     let a = 42i64;
-    assert_eq!(a + 0i64, a);
-    assert_eq!(0i64 + a, a);
+    assert_eq!(a + i64::zero(), a);
+    assert_eq!(i64::zero() + a, a);
 }

@@ -55,7 +55,7 @@ let any_of: BaseCausaloid<f64> = Causaloid::from_causal_collection(
 );
 
 // 4. Graph. Edges encode dependencies between rules.
-let mut g = CausaloidGraph::new();
+let mut g = CausaloidGraph::new(4);
 let root = g.add_root_causaloid(stage_one);
 let next = g.add_causaloid(stage_two);
 g.add_edge(root, next)?;
