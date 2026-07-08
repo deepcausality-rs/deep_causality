@@ -22,6 +22,8 @@ mod arrow_tests;
 #[cfg(test)]
 mod bifunctor_tests;
 #[cfg(test)]
+mod category_tests;
+#[cfg(test)]
 mod comonad_tests;
 #[cfg(test)]
 mod effect_system_tests;
@@ -37,6 +39,8 @@ mod free_monad_tests;
 mod functor_tests;
 #[cfg(test)]
 mod io_tests;
+#[cfg(test)]
+mod kleisli_tests;
 #[cfg(test)]
 mod monad_tests;
 #[cfg(test)]

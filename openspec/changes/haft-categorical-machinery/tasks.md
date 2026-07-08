@@ -10,9 +10,9 @@
 
 ## 2. Category + Kleisli (H2)
 
-- [ ] 2.1 `src/category/`: `Category` trait (`id`, `compose`); `Kleisli<M: Monad>` newtype (`compose = bind`) implementing it; make `Arrow` satisfy `Category`. Export.
-- [ ] 2.2 Rust law-tests: category left/right identity + associativity for `Kleisli<M>` (and `Arrow`).
-- [ ] 2.3 Lean: `Haft/Category.lean` + `Haft/Kleisli.lean` proving `haft.category.laws`, `haft.kleisli.category_laws` (citing `core.causal_arrow.category_laws`'s shape / `haft.arrow.category_laws`); THEOREM_MAP rows; witnesses; bare-`lean`. Retire the informal Kleisli language in `io/mod.rs`.
+- [x] 2.1 `src/category/`: `Category` trait (`id`, `compose`); `Kleisli<M: Monad>` newtype (`compose = bind`) implementing it; make `Arrow` satisfy `Category`. Export. — witness-based encoding (design choice, user-approved): `trait Category { type Hom<B>; fn id; fn compose }` (RPITIT closures); `Kleisli<M>` (`Hom=M::Type`, `id=pure`, `compose=bind`, scoped to `Constraint = NoConstraint` monads) + `Fun` (the function category the value-level `Arrow` runs in — `Arrow`'s `run` IS the `Fun` morphism). Exported from `lib.rs`.
+- [x] 2.2 Rust law-tests: category left/right identity + associativity for `Kleisli<M>` (and `Arrow`). — `formalization_lean/{category_tests,kleisli_tests}.rs` (`test_fun_category_laws`, `test_kleisli_category_laws` incl. `compose = bind` / `id = pure`).
+- [x] 2.3 Lean: `Haft/Category.lean` + `Haft/Kleisli.lean` proving `haft.category.laws`, `haft.kleisli.category_laws` (citing `core.causal_arrow.category_laws`'s shape / `haft.arrow.category_laws`); THEOREM_MAP rows; witnesses; bare-`lean`. Retire the informal Kleisli language in `io/mod.rs`. — both Lean files typecheck (textbook citations: Mac Lane §I.1 / §VI.5, Moggi 1991; deviation notes); THEOREM_MAP rows added; the three `io/mod.rs` "Kleisli" mentions now link the named `Kleisli` type.
 
 ## 3. Reified free Arrow — ArrowTerm (H3)
 

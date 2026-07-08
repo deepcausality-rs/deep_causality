@@ -47,6 +47,7 @@ pub(crate) mod adjunction;
 mod alias;
 pub(crate) mod applicative;
 mod arrow;
+pub(crate) mod category;
 pub(crate) mod cybernetic_loop;
 pub(crate) mod effect_system;
 pub(crate) mod either;
@@ -77,6 +78,9 @@ pub use alias::alias_profunctor::AliasProfunctor;
 pub use crate::arrow::{
     Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
 };
+
+// Category (named identity + composition; the Kleisli category of a monad, and the function category)
+pub use crate::category::{Category, Fun, Kleisli};
 
 // Either (the choice sum)
 pub use crate::either::Either;

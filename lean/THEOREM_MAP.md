@@ -146,6 +146,8 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.free_monad.lift_bind` | `bind (lift op) k` runs `k` under the operation node | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
 | `haft.free_monad.map_id` | `map id = id` (functor identity via right id) | proved | `Haft/FreeMonad.lean` | ✓ | n/a | — |
 | `haft.arrow.category_laws` | `id>>>f = f`; `f>>>id = f`; `>>>` associative | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
+| `haft.category.laws` | function category `Fun`: left/right identity + associativity of `compose` | proved | `Haft/Category.lean` | ✓ | n/a | — |
+| `haft.kleisli.category_laws` | Kleisli category (`id=pure`, `compose=bind`): left/right identity + associativity, reducing to the monad laws | proved | `Haft/Kleisli.lean` | ✓ | n/a | — |
 | `haft.arrow.arr_functor` | `arr id = id`; `arr (g∘f) = arr f >>> arr g` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.strength_laws` | Hughes' five `first` laws | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.derived_combinators` | `second`/`***`/`&&&` from `first` + `arr` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
