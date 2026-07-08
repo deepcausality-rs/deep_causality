@@ -26,6 +26,7 @@ exclude = [
     ".bazelignore",
     ".bazelrc",
     "tests/**/*",
+    "papers/*",
 ]
 
 [package.metadata.docs.rs]

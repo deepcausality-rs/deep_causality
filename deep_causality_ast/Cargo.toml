@@ -12,8 +12,18 @@ documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
 keywords = ["data-structures", "ast"]
 # Exclude all bazel files as these conflict with Bazel workspace when vendored.
-exclude = ["*.bazel", "*/*.bazel",  "*.bazel.*", "BUILD", "BUILD.bazel", "MODULE.bazel", ".bazelignore",".bazelrc", "tests/**/*"]
-
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+    "papers/*",
+]
 
 [lints]
 workspace = true
