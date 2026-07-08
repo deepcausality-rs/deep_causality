@@ -50,6 +50,8 @@ mod monad_tests;
 #[cfg(test)]
 mod monoidal_merge_tests;
 #[cfg(test)]
+mod monoidal_tests;
+#[cfg(test)]
 mod morphism_tests;
 #[cfg(test)]
 mod natural_iso_tests;

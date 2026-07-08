@@ -43,7 +43,11 @@ impl<G> ArrowCore<G> {
     /// `M` is scoped to the unconstrained (`NoConstraint`) universe, matching
     /// [`Kleisli<M>`](crate::Kleisli); `V: Clone` supports the copying `Fanout` and the
     /// `FnMut`-captured pass-through halves of `First`/`Second`/`Split`.
-    pub fn interpret_kleisli<M, V, Phi>(&self, phi: &Phi, input: ArrowVal<V>) -> M::Type<ArrowVal<V>>
+    pub fn interpret_kleisli<M, V, Phi>(
+        &self,
+        phi: &Phi,
+        input: ArrowVal<V>,
+    ) -> M::Type<ArrowVal<V>>
     where
         M: Monad<M> + HKT<Constraint = NoConstraint>,
         Phi: Fn(&G, V) -> M::Type<V>,
@@ -59,55 +63,33 @@ impl<G> ArrowCore<G> {
                 other => <M as Pure<M>>::pure(other),
             },
             // Compose ↦ Kleisli composition (bind): run `f`, then `h` on its (effectful) output.
-            ArrowCore::Compose(f, h) => <M as Monad<M>>::bind(
-                f.interpret_kleisli::<M, V, Phi>(phi, input),
-                move |mid| h.interpret_kleisli::<M, V, Phi>(phi, mid),
-            ),
+            ArrowCore::Compose(f, h) => {
+                <M as Monad<M>>::bind(f.interpret_kleisli::<M, V, Phi>(phi, input), move |mid| {
+                    h.interpret_kleisli::<M, V, Phi>(phi, mid)
+                })
+            }
             ArrowCore::First(f) => match input {
-                ArrowVal::Pair(a, b) => <M as Monad<M>>::bind(
-                    f.interpret_kleisli::<M, V, Phi>(phi, *a),
-                    move |a2| {
+                ArrowVal::Pair(a, b) => {
+                    <M as Monad<M>>::bind(f.interpret_kleisli::<M, V, Phi>(phi, *a), move |a2| {
                         <M as Pure<M>>::pure(ArrowVal::Pair(Box::new(a2), b.clone()))
-                    },
-                ),
+                    })
+                }
                 other => <M as Pure<M>>::pure(other),
             },
             ArrowCore::Second(h) => match input {
-                ArrowVal::Pair(a, b) => <M as Monad<M>>::bind(
-                    h.interpret_kleisli::<M, V, Phi>(phi, *b),
-                    move |b2| {
+                ArrowVal::Pair(a, b) => {
+                    <M as Monad<M>>::bind(h.interpret_kleisli::<M, V, Phi>(phi, *b), move |b2| {
                         <M as Pure<M>>::pure(ArrowVal::Pair(a.clone(), Box::new(b2)))
-                    },
-                ),
+                    })
+                }
                 other => <M as Pure<M>>::pure(other),
             },
             ArrowCore::Split(f, h) => match input {
                 ArrowVal::Pair(a, b) => {
                     let b = *b;
-                    <M as Monad<M>>::bind(
-                        f.interpret_kleisli::<M, V, Phi>(phi, *a),
-                        move |a2| {
-                            <M as Monad<M>>::bind(
-                                h.interpret_kleisli::<M, V, Phi>(phi, b.clone()),
-                                move |b2| {
-                                    <M as Pure<M>>::pure(ArrowVal::Pair(
-                                        Box::new(a2.clone()),
-                                        Box::new(b2),
-                                    ))
-                                },
-                            )
-                        },
-                    )
-                }
-                other => <M as Pure<M>>::pure(other),
-            },
-            ArrowCore::Fanout(f, h) => {
-                let copy = input.clone();
-                <M as Monad<M>>::bind(
-                    f.interpret_kleisli::<M, V, Phi>(phi, input),
-                    move |a2| {
+                    <M as Monad<M>>::bind(f.interpret_kleisli::<M, V, Phi>(phi, *a), move |a2| {
                         <M as Monad<M>>::bind(
-                            h.interpret_kleisli::<M, V, Phi>(phi, copy.clone()),
+                            h.interpret_kleisli::<M, V, Phi>(phi, b.clone()),
                             move |b2| {
                                 <M as Pure<M>>::pure(ArrowVal::Pair(
                                     Box::new(a2.clone()),
@@ -115,8 +97,20 @@ impl<G> ArrowCore<G> {
                                 ))
                             },
                         )
-                    },
-                )
+                    })
+                }
+                other => <M as Pure<M>>::pure(other),
+            },
+            ArrowCore::Fanout(f, h) => {
+                let copy = input.clone();
+                <M as Monad<M>>::bind(f.interpret_kleisli::<M, V, Phi>(phi, input), move |a2| {
+                    <M as Monad<M>>::bind(
+                        h.interpret_kleisli::<M, V, Phi>(phi, copy.clone()),
+                        move |b2| {
+                            <M as Pure<M>>::pure(ArrowVal::Pair(Box::new(a2.clone()), Box::new(b2)))
+                        },
+                    )
+                })
             }
         }
     }

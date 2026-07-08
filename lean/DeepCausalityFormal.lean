@@ -96,5 +96,6 @@ import DeepCausalityFormal.Haft.Either
 import DeepCausalityFormal.Haft.EffectSystem
 import DeepCausalityFormal.Haft.Io
 import DeepCausalityFormal.Haft.Signatures
+import DeepCausalityFormal.Haft.SymmetricMonoidal
 import DeepCausalityFormal.Haft.FreeMonad
 import DeepCausalityFormal.Topology.RiemannCurvature

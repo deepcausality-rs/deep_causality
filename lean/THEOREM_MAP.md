@@ -156,6 +156,9 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.interpreter.preserves_id` | interpreter `ArrowTerm → Kleisli<M>` is functorial: `id ↦` target identity (`pure`) | proved | `Haft/Interpreter.lean` | ✓ | n/a | — |
 | `haft.interpreter.preserves_compose` | interpreter is functorial: `compose f g ↦` target composition (`bind`) | proved | `Haft/Interpreter.lean` | ✓ | n/a | — |
 | `haft.interpreter.naturality` | `Option ⇒ List` component (`OptionToVec`) commutes with `map` (naturality square) | proved | `Haft/Interpreter.lean` | ✓ | n/a | — |
+| `haft.monoidal.comonoid_laws` | copy comonoid `(Δ, ε)`: coassociativity, counit, cocommutativity of the diagonal | proved | `Haft/SymmetricMonoidal.lean` | ✓ | n/a | — |
+| `haft.monoidal.merge_monoid_laws` | merge monoid `(∇, η)`: associativity + left/right unit (the monoid laws) | proved | `Haft/SymmetricMonoidal.lean` | ✓ | n/a | — |
+| `haft.monoidal.symmetry` | symmetry `σ` is its own inverse (`σ ∘ σ = id`) | proved | `Haft/SymmetricMonoidal.lean` | ✓ | n/a | — |
 | `haft.endo.monoid` | `End(T)` monoid (unit + associativity) | proved | `Haft/Endomorphism.lean` | ✓ | n/a | — |
 | `haft.endo.iterate_add` | `f^(m+n) = f^n ∘ f^m` | proved | `Haft/Endomorphism.lean` | ✓ | n/a | — |
 | `haft.morphism.identity` | `apply identity a = a` | proved | `Haft/Morphism.lean` | ✓ | n/a | — |

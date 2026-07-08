@@ -58,6 +58,7 @@ pub(crate) mod hkt;
 pub(crate) mod io;
 pub mod iso;
 pub(crate) mod monad;
+pub(crate) mod monoidal;
 pub(crate) mod morphism;
 pub(crate) mod natural_transformation;
 pub(crate) mod pure;
@@ -85,6 +86,9 @@ pub use crate::arrow::{ArrowCore, ArrowTerm, ArrowVal};
 
 // Category (named identity + composition; the Kleisli category of a monad, and the function category)
 pub use crate::category::{Category, Fun, Kleisli};
+
+// Symmetric-monoidal PROP (copy comonoid Δ/ε, merge monoid ∇/η, symmetry σ)
+pub use crate::monoidal::SymMonoidal;
 
 // Natural transformations (the morphism between functors; the naturality square)
 pub use crate::natural_transformation::NaturalTransformation;
