@@ -9,6 +9,7 @@ set -o pipefail
 
 CRATES=(
     "deep_causality"
+    "deep_causality_algebra"
     "deep_causality_algorithms"
     "deep_causality_ast"
     "deep_causality_calculus"
@@ -24,6 +25,8 @@ CRATES=(
     "deep_causality_metric"
     "deep_causality_multivector"
     "deep_causality_num"
+    "deep_causality_num_complex"
+    "deep_causality_num_dual"
     "deep_causality_par"
     "deep_causality_rand"
     "deep_causality_physics"
