@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.14.0...deep_causality-v0.14.1) - 2026-07-08
+
+### Fixed
+
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
 ## [0.14.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.10...deep_causality-v0.14.0) - 2026-07-08
 
 ### Added
