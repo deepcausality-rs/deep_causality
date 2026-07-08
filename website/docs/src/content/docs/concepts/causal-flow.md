@@ -5,7 +5,7 @@ sidebar:
   order: 7
 ---
 
-`CausalFlow` is the fluent API over the [Causal Monad](/concepts/causal-monad/). The monad is the algebra: `pure` and `bind` over the [carrier effect](/concepts/effect-propagation-process/). Written out by hand, a monadic pipeline exhibits real complexity. You wrap values in `EffectValue`, call `pure` and `with_state`, unwrap with `into_value().unwrap_or_default()`, and check the error channel between steps. `CausalFlow` hides all of that behind a much simplified fluent API.
+`CausalFlow` is the fluent API over the [Causal Monad](/concepts/causal-monad/). The monad is the algebra: `pure` and `bind` over the [carrier effect](/concepts/effect-propagation-process/). Written out by hand, a monadic pipeline exhibits real complexity. You wrap values in `CausalEffect`, call `pure` and `with_state`, unwrap with `into_value().unwrap_or_default()`, and check the error channel between steps. `CausalFlow` hides all of that behind a much simplified fluent API.
 
 ```rust
 use deep_causality::CausalFlow;
@@ -38,7 +38,7 @@ The surface groups into six families.
 
 **Loop.** `iterate_n(n, step)` runs a step a fixed number of times. `iterate_until(pred, max, step)` runs until a predicate holds. `iterate_to_fixpoint(max, step)` runs until the value stops changing. The two open-ended forms take a step bound and fail with a `MaxStepsExceeded` error rather than spinning forever.
 
-**Intervene.** `intervene(v)` force-substitutes the value, Pearl's `do(v)`, and records the override in the audit log. `intervene_if(cond, f)` does it only when a test holds.
+**Alternate.** `alternate_value(v)` force-substitutes the value — the value-level form of Pearl's `do(v)` — and records the override in the audit log. `alternate_value_if(cond, f)` does it only when a test holds. (The full `do()` operator, graph surgery over the causal hypergraph, lives at the graph layer.)
 
 **Finish.** `finish()` returns `Result<Value, CausalityError>`. `run(on_ok, on_err)` dispatches to handlers. `is_err()` peeks at the error channel. `into_process()` / `into_effect()` return the concrete carrier.
 
@@ -75,7 +75,7 @@ let factual = CausalFlow::value(8_i64).map(|x| x * 2).finish();
 
 // counterfactual: what if the reading had been clamped to 0?
 let counterfactual = CausalFlow::value(8_i64)
-    .intervene(0) // do(reading = 0)
+    .alternate_value(0) // substitute reading = 0
     .map(|x| x * 2)
     .finish();
 
