@@ -20,7 +20,7 @@
 //!    - APE Smearing
 //!    - Wilson Gradient Flow (computing t0 scale)
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{
     CubicalComplex, FlowParams, GaugeGroup, LatticeGaugeField, SU3, SmearingParams,

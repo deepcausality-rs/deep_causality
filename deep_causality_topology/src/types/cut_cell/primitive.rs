@@ -6,8 +6,7 @@
 //! Analytic immersed-surface primitives a cut-cell registry can be built from.
 
 use super::source_geometry::SourceGeometry;
-use deep_causality_num::RealField;
-
+use deep_causality_algebra::RealField;
 /// An analytic immersed surface bounding a **solid** region; the fluid is the complement.
 ///
 /// Group A ships the closed-form analytic primitives (STL / triangle meshes are postponed —

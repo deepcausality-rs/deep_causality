@@ -19,7 +19,8 @@
 //! Both propagation paths exist defensively and are documented here per the
 //! AGENTS.md unreachable-code exemption.
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

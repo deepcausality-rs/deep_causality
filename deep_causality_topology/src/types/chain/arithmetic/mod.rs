@@ -5,7 +5,7 @@
 
 use crate::types::chain::Chain;
 use core::ops::{Add, Mul, Neg, Sub};
-use deep_causality_num::{AbelianGroup, Module, Ring};
+use deep_causality_algebra::{AbelianGroup, Module, Ring};
 
 // ============================================================================
 // Add

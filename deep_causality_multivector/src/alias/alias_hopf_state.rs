@@ -4,7 +4,9 @@
  */
 
 use crate::{CausalMultiVector, CausalMultiVectorError, HilbertState, Metric, MultiVector};
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use std::fmt::{Display, Formatter};
 
 /// A point on the 3-Sphere ($S^3$), representing a unit spinor or rotor in 3D Euclidean space.

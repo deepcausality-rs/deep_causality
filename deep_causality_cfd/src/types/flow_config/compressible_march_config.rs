@@ -17,7 +17,7 @@
 
 use crate::types::CfdScalar;
 use crate::types::flow_config::{MarchStop, QttObserve};
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::{EARTH_RADIUS, PhysicsError};
 use deep_causality_tensor::{CausalTensor, Truncation};
 

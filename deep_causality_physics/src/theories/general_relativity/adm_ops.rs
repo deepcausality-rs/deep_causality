@@ -8,7 +8,7 @@
 //! Provides the 3+1 decomposition of spacetime for numerical relativity.
 //! Spacetime is sliced into spatial hypersurfaces Σ_t evolved by a time coordinate t.
 use crate::PhysicsError;
-use deep_causality_num::Field;
+use deep_causality_algebra::Field;
 use deep_causality_tensor::CausalTensor;
 
 /// ADM Formalism operations, generic over scalar type `S`.

@@ -12,7 +12,7 @@ mod round_rand;
 
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 
 /// A tensor-train (matrix-product-state) factorization of a rank-`order` tensor.
 ///

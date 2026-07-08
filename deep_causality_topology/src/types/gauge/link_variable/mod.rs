@@ -11,9 +11,8 @@
 
 use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LinkVariableError};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
@@ -278,7 +277,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// ```ignore
     /// use deep_causality_topology::{LinkVariable, SU2_U1};
-    /// use deep_causality_num::Complex;
+    /// use deep_causality_num_complex::Complex;
     ///
     /// let phase = 0.001;  // Small phase for weak gravitational field
     /// let link: LinkVariable<SU2_U1, Complex<f64>, f64> =

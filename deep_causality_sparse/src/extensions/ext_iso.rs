@@ -41,8 +41,8 @@
 
 use crate::CsrMatrix;
 use core::fmt;
+use deep_causality_algebra::iso::witness::Iso;
 use deep_causality_num::Zero;
-use deep_causality_num::iso::witness::Iso;
 use deep_causality_tensor::CausalTensor;
 
 /// Error returned by [`CsrMatrix::try_from`] when the input

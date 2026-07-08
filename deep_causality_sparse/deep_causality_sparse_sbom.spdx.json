@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:55Z",
+    "created": "2026-07-07T22:29:38Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_sparse-1d1ad530-deef-4197-a685-821dddb51cfc",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_sparse-ce2bb036-41a1-4001-be04-97467d90c69e",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_sparse",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,6 +26,24 @@
   ],
   "name": "deep_causality_sparse",
   "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
+      "description": "Complex, quaternion, and octonion number types for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num_complex",
+      "versionInfo": "0.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "description": "Dual number type (forward-mode automatic differentiation) for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num_dual",
+      "versionInfo": "0.1.0"
+    },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.16",
       "description": "libm in pure Rust",
@@ -43,13 +61,13 @@
       "versionInfo": "0.2.16"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.7",
-      "description": "AST data structure for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_ast",
-      "versionInfo": "0.1.7"
+      "name": "deep_causality_num",
+      "versionInfo": "0.3.3"
     },
     {
       "SPDXID": "SPDXRef-Package-deep--causality--sparse-0.2.0",
@@ -70,6 +88,15 @@
       "versionInfo": "0.3.3"
     },
     {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.1.0"
+    },
+    {
       "SPDXID": "SPDXRef-Package-deep--causality--tensor-0.4.4",
       "description": "Tensor data structure for for deep_causality crate.",
       "downloadLocation": "NONE",
@@ -79,20 +106,30 @@
       "versionInfo": "0.4.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "description": "Number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "description": "AST data structure for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.3.3"
+      "name": "deep_causality_ast",
+      "versionInfo": "0.1.7"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--sparse-0.2.0",
@@ -100,29 +137,9 @@
       "spdxElementId": "SPDXRef-File-deep_causality_sparse"
     },
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_sparse",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
@@ -130,9 +147,64 @@
       "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.0",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--dual-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--dual-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_sparse",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--dual-0.1.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--tensor-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--tensor-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--sparse-0.2.0"
     }
   ],
   "spdxVersion": "SPDX-2.3"

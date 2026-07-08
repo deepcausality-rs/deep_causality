@@ -10,7 +10,8 @@
 //! residual exactness of the spectral solution, the gauge convention,
 //! and the dispatch boundary (mixed/open/per-edge stay on CG).
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_sparse::cg_solve;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{

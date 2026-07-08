@@ -17,7 +17,8 @@
 //! * `factorial[k]` — factorials `0! ..= n!`,
 //! * `rho` — the rho recurrence keyed by its forbidden-size argument vector.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use std::collections::HashMap;
 
 /// Memoization state for one `count_amos` invocation, parameterized by the count

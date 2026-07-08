@@ -5,7 +5,7 @@
 
 use crate::PhysicsError;
 use crate::constants::FERMI_CONSTANT;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::f64::consts::PI;
 
 /// Container for computed radiative corrections

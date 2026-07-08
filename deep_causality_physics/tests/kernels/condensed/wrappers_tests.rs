@@ -4,7 +4,7 @@
  */
 use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     ChemicalPotentialGradient, Concentration, Displacement, Energy, Length, Mobility, Momentum,
     OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, Ratio, Speed, Stiffness,

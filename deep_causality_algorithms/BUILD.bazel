@@ -15,6 +15,7 @@ rust_library(
         "//deep_causality_data_structures",
         "//deep_causality_tensor",
         "//deep_causality_num",
+        "//deep_causality_algebra",
         "//deep_causality_topology",
         "//deep_causality_rand",
         "//deep_causality_par",

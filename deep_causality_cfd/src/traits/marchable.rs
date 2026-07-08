@@ -20,7 +20,7 @@ use crate::types::flow::{
     CompressibleMarchRun, DuctMarchRun, MarchPipeline, PhysicsStage, QttMarchRun, Report,
 };
 use crate::types::flow_config::{CompressibleMarchConfig, DuctConfig, MarchConfig, QttMarchConfig};
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 
 /// A configuration [`CfdFlow::march`](crate::CfdFlow::march) accepts: it opens the family's

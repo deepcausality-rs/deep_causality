@@ -6,7 +6,7 @@
 use crate::CausalTensor;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::truncation::Truncation;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 
 impl<T: ConjugateScalar> CausalTensorTrainOperator<T> {
     /// The cores, in order; core `k` has shape `[r_k, n_out_k, n_in_k, r_{k+1}]`.

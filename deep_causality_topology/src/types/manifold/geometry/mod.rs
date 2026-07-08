@@ -9,7 +9,8 @@
 //! `ReggeGeometry<D>` and volumes/determinants return `D`. The coordinate type `C` is
 //! treated as an opaque identifier and is no longer bounded numerically here.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};

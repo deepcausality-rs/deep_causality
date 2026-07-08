@@ -177,3 +177,20 @@ rust_test_suite(
         # Internal dependencies
     ],
 )
+
+rust_test_suite(
+    name = "utils_test",
+    srcs = glob([
+        "utils_test/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        "//deep_causality_ethos",
+        "//ultragraph",
+    ],
+)

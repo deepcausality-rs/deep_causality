@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::types::chain::Chain;
-use deep_causality_num::{Module, Ring};
+use deep_causality_algebra::{Module, Ring};
 use std::sync::Arc;
 
 impl<T> Chain<T> {

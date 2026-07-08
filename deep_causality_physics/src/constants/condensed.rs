@@ -5,7 +5,8 @@
 
 pub const GRAPHENE_LATTICE_CONST: f64 = 0.246e-9; // Approximate experimental value for graphene's lattice constant (in meters)
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Returns [`GRAPHENE_LATTICE_CONST`] at the target real-field precision `R`.
 ///

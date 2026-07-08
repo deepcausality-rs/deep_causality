@@ -9,8 +9,8 @@
 use crate::types::loaders::read_clk::read_clock_data;
 use crate::types::loaders::read_sp3::read_orbit_data;
 use crate::{ClockData, DataLoadingError, GnssDataResult, OrbitData};
+use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
-use deep_causality_num::RealField;
 use std::path::Path;
 
 /// Describe (but do not perform) reading one satellite's clock **and** orbit series. The two file

@@ -6,7 +6,7 @@
 use crate::{AbcdMatrix, OpticalPower, RayAngle, RayHeight};
 
 use crate::{IndexOfRefraction, PhysicsError};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Applies an ABCD matrix to a ray vector.

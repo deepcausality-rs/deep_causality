@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 mod display;
 mod getters;
 
-use deep_causality_num::{Field, RealField};
+use deep_causality_algebra::{Field, RealField};
 
 /// A gauge field over a base manifold.
 ///

@@ -6,8 +6,9 @@
 //! Causal-monad wrapper tests: success lifts to `pure`, failure converts
 //! to a `CausalityError` carrier.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::{DecNsSolver, dec_ns_step};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

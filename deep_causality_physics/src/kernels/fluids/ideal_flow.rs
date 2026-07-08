@@ -15,7 +15,8 @@ use crate::PhysicsError;
 use crate::{Density, G};
 use crate::{Length, Speed};
 use crate::{Pressure, Velocity3};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Dynamic pressure `q = 0.5 · ρ · u²` (Pa).
 ///

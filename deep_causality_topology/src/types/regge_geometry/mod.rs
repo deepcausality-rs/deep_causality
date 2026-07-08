@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::RealField;
 use deep_causality_metric::Metric;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 use crate::{Simplex, SimplicialComplex};
@@ -284,8 +285,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deep_causality_num::Real;
-
+    use deep_causality_algebra::Real;
     #[test]
     fn test_compute_signature_equilateral_triangle() {
         // Equilateral triangle with side length 1: should be Euclidean (2, 0, 0)

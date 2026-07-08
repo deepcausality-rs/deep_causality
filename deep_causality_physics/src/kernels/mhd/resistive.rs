@@ -6,7 +6,8 @@
 use crate::{AlfvenSpeed, Diffusivity};
 use crate::{PhysicsError, Speed};
 use core::fmt::Debug;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;

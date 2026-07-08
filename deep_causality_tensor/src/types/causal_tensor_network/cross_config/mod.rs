@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensorError;
-use deep_causality_num::Real;
+use deep_causality_algebra::Real;
 
 /// Controls for TT-cross construction of a tensor train from an oracle.
 ///

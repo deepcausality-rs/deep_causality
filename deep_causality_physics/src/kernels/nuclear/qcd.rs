@@ -18,7 +18,8 @@
 
 use crate::PhysicsError;
 use crate::real_from_f64;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 // ============================================================================
 // Constants: Gell-Mann Matrices

@@ -8,7 +8,8 @@
 //! ionize) and the Tier-A recovery-temperature reconstruction.
 
 use crate::{PhysicsError, Temperature};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Post-shock temperature from the **Rankine–Hugoniot normal-shock relations**
 ///

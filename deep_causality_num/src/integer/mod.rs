@@ -19,15 +19,12 @@ mod unsigned_impl;
 pub use signed::SignedInt;
 pub use unsigned::UnsignedInt;
 
-use crate::Ring;
 use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
 
 /// A trait for primitive integer types.
 ///
 /// This trait abstracts over both signed and unsigned integers, providing
-/// common operations and constants. It extends `Ring` from the algebraic
-/// hierarchy, reflecting that integers form a ring under addition and
-/// multiplication.
+/// common operations and constants.
 ///
 /// # Mathematical Background
 ///
@@ -39,8 +36,7 @@ use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
 /// Fixed-width integers in computers are technically $\mathbb{Z}/2^n\mathbb{Z}$
 /// (integers modulo $2^n$), but overflow behavior varies by build configuration.
 pub trait Integer:
-    Ring
-    + Ord
+    Ord
     + Copy
     + Sized
     + BitAnd<Output = Self>

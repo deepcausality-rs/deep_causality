@@ -5,7 +5,8 @@
 
 use crate::CausalMultiVectorError;
 use crate::Metric;
-use deep_causality_num::{Field, Zero};
+use deep_causality_algebra::Field;
+use deep_causality_num::Zero;
 
 mod algebra;
 mod api;

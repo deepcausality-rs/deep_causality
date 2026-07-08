@@ -28,9 +28,9 @@ use crate::types::CfdScalar;
 use crate::types::flow::Report;
 use crate::types::flow_config::{MarchStop, QttMarchConfig, QttObserve};
 use alloc::vec::Vec;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
 use deep_causality_haft::{LogAddEntry, LogAppend, LogSize};
-use deep_causality_num::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, Truncation};
 

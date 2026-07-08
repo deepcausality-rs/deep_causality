@@ -5,7 +5,8 @@
 use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul};
-use deep_causality_num::{One, RealField, Ring, Zero};
+use deep_causality_algebra::{RealField, Ring};
+use deep_causality_num::{One, Zero};
 
 impl<T> Tensor<T> for CausalTensor<T> {
     /// Public API for Einstein summation.

@@ -20,13 +20,13 @@ lean/
   lakefile.toml                        # project + Mathlib dependency
   DeepCausalityFormal.lean             # root import aggregator
   DeepCausalityFormal/
-    Num/Monoid.lean                    # Exemplar 1: AddMonoid assoc + identity
+    Algebra/Monoid.lean                    # Exemplar 1: AddMonoid assoc + identity
     Core/CausalMonad.lean              # Exemplar 2: bind left-identity
   THEOREM_MAP.md                       # Lean theorem id  ↔  Rust witness
   README.md
 ```
 
-The module tree mirrors the Rust crate tiers: `Num` → `Haft` → `Core` → `Topology`.
+The module tree mirrors the Rust crate tiers: `Algebra` → `Haft` → `Core` → `Topology`.
 
 ## Build
 
@@ -51,11 +51,24 @@ in Rust (checked), sharing an **id** recorded in [`THEOREM_MAP.md`](THEOREM_MAP.
 - `num` / `haft`: law-tests (`cargo test -p <crate>`) and the law-carrying traits themselves.
 - `core`: Kani harnesses — `cargo kani --tests -p deep_causality_core`.
 
-## Scope of this skeleton
+## Scope
 
-Exactly two exemplar theorems are proved end-to-end (`num.add_monoid.*`, `core.causal_monad.left_id`)
-to establish the Lean → Rust → CI pipeline on real theorems. The exemplars are chosen to be
-**independent of preconditions P1/P2**. The right-identity / associativity / `LawfulMonad` theorems
-depend on the W-invariant (P2) and control-free (P1) fixes and come next — see the work plan in
+The numeric layers are formalized in full against Mathlib carriers, each theorem bound to a Rust
+witness (see `THEOREM_MAP.md`):
+
+- `Num` — identity (`Zero`/`One`), integer ring laws, cast round-trips, and the `Float106`
+  real-field model. The bit-exact double-double error bounds are **[open]** (out of L1 scope; the
+  Rust double-double tests cover them empirically).
+- `Algebra` — the trait tower: monoid / commutative-monoid / semilattice, group / abelian-group,
+  ring / commutative-ring, field / real-field, module / algebra, division algebra, conjugation
+  (`star`), and norm multiplicativity.
+- `Complex` — `ℂ` is a field with involutive conjugation and multiplicative norm; `ℍ` is a division
+  ring with multiplicative norm and a non-commutativity witness. Octonions are out of L1 scope (not
+  in Mathlib) and remain covered by the Rust tests.
+- `Dual` — `R[ε]` is a commutative ring, `ε² = 0`, the real projection is a ring map, and the
+  tangent part satisfies the Leibniz product rule (forward-mode AD).
+
+The `Core` layer proves the causal-monad laws under preconditions P1/P2 (`core.causal_monad.*`); the
+remaining `LawfulMonad` / parity work is tracked in
 `../openspec/notes/causal-algebra/Formalization.md` and the "Not yet on the map" section of
 `THEOREM_MAP.md`.

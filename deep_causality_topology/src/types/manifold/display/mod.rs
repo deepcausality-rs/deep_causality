@@ -11,7 +11,7 @@ use crate::{Manifold, SimplicialComplex};
 use core::fmt;
 use std::fmt::Formatter;
 
-impl<C: deep_causality_num::RealField, D> fmt::Display for Manifold<SimplicialComplex<C>, D> {
+impl<C: deep_causality_algebra::RealField, D> fmt::Display for Manifold<SimplicialComplex<C>, D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
             f,

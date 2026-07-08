@@ -4,7 +4,7 @@
  */
 
 use crate::PhysicsError;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Entropy (J/K).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]

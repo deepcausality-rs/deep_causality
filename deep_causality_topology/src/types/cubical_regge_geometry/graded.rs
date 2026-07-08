@@ -20,7 +20,8 @@
 
 use super::{CubicalReggeGeometry, Euclidean};
 use crate::types::lattice_complex::LatticeComplex;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 impl<const D: usize, R: RealField + FromPrimitive> CubicalReggeGeometry<D, R, Euclidean> {
     /// Geometric (constant growth-ratio) graded metric.

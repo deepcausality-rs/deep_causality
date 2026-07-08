@@ -4,7 +4,7 @@
  */
 use core::fmt::Debug;
 use core::ops::Div;
-use deep_causality_num::Real;
+use deep_causality_algebra::Real;
 
 use crate::{CentralBody, PhysicsError, SPEED_OF_LIGHT, SpaceTimeCoordinate};
 

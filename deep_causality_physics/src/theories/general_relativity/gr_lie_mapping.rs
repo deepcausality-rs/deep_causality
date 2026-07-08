@@ -23,7 +23,8 @@
 //! | 4         | (1, 3)                   | J₂ (rotation)|
 //! | 5         | (2, 3)                   | J₁ (rotation)|
 use crate::PhysicsError;
-use deep_causality_num::{Field, Float};
+use deep_causality_algebra::Field;
+use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensor;
 
 /// Maps antisymmetric pair (μ, ν) to Lie algebra index.

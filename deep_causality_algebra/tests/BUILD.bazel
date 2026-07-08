@@ -1,0 +1,62 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "algebra",
+    srcs = glob([
+        "algebra/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "iso",
+    srcs = glob([
+        "iso/*_tests.rs",
+        "iso/witness/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "float106",
+    srcs = glob([
+        "float106/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "lean-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algebra",
+    ],
+)

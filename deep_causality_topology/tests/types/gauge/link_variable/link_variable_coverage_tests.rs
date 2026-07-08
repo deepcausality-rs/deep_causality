@@ -6,7 +6,7 @@
 //! Additional coverage for LinkVariable phase construction and SU(N) projection
 //! paths that require matrix dimensions other than 1, 2 or 3.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_topology::{LinkVariable, LinkVariableError, SE3, SO3_1};
 
 // ============================================================================

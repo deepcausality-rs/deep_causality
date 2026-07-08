@@ -29,7 +29,8 @@
 //! Edge orientation matches `exterior_derivative` (low corner → high corner
 //! along the edge's axis), pinned by the fundamental-theorem-of-calculus test.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;

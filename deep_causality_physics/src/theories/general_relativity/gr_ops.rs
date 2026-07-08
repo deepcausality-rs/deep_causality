@@ -12,7 +12,8 @@
 // =============================================================================
 
 use crate::{NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError, SPEED_OF_LIGHT};
-use deep_causality_num::{Field, Float};
+use deep_causality_algebra::Field;
+use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensor;
 
 /// Represents (Position, Velocity) state vector

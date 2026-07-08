@@ -19,7 +19,8 @@
 //! The solver is generic over any [`RealField`] precision (`f32`, `f64`,
 //! `Float106`, …) and adds no external numeric dependency.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Reason a CG solve failed to converge.
 ///

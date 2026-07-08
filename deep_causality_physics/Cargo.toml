@@ -28,6 +28,9 @@ std = [
     "alloc",
     "deep_causality_core/std",
     "deep_causality_num/std",
+    "deep_causality_algebra/std",
+    "deep_causality_num_complex/std",
+    "deep_causality_num_dual/std",
 ]
 alloc = []
 # Enables random number generator from the host OS for secure random numbers.
@@ -66,6 +69,18 @@ version = "0.5"
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.3"
+
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+
+[dependencies.deep_causality_num_complex]
+path = "../deep_causality_num_complex"
+version = "0.1"
+
+[dependencies.deep_causality_num_dual]
+path = "../deep_causality_num_dual"
+version = "0.1"
 
 [dependencies.deep_causality_rand]
 path = "../deep_causality_rand"

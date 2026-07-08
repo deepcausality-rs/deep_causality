@@ -7,7 +7,8 @@
 //! and produces the same (precision-tolerant) result. This is the Tier A
 //! "no hardwired f64" guard — the generic body is instantiated once per type.
 
-use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField, ToPrimitive};
+use deep_causality_algebra::{ConjugateScalar, RealField};
+use deep_causality_num::{Float106, FromPrimitive, ToPrimitive};
 use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 use std::f64::consts::PI;
 

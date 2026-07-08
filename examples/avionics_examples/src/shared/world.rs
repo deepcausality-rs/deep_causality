@@ -18,6 +18,7 @@ use super::stages::{
     CommandedBank, FreestreamFeeds, SuttonGravesLoads, TruthGnss, WeatherTelemetry,
 };
 use super::utils;
+use deep_causality_algebra::Real;
 use deep_causality_cfd::{
     Ambient, AtmosphereRow, BankSteeredLift, CompressibleMarchConfig,
     CompressibleMarchConfigBuilder, CoupledField, Coupling, CyberneticCorrect, DescentSchedule,
@@ -25,7 +26,6 @@ use deep_causality_cfd::{
     PhysicsStage, QttObserve, ReentryNavEngine, ReferenceScales, RegimeClassify, SafetyEnvelope,
     TrajectoryNav, VibrationalLagStage,
 };
-use deep_causality_num::Real;
 use deep_causality_physics::{EARTH_GM, EARTH_RADIUS};
 
 /// The baseline atmosphere as typed rows.

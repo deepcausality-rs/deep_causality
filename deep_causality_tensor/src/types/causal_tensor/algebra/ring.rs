@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensor;
-use deep_causality_num::{Associative, Distributive, Ring};
+use deep_causality_algebra::{Associative, Distributive, Ring};
 
 // Implement Associative marker trait
 impl<T> Associative for CausalTensor<T> where T: Associative + Copy {}

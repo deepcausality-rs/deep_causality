@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use deep_causality_num::{ConstOne, One};
 
 // Macro to generate tests for a specific numeric type

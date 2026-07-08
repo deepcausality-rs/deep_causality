@@ -7,8 +7,8 @@
 
 use crate::{DataLoadingError, OrbitData, SatId};
 use chrono::{NaiveDate, NaiveDateTime};
+use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
-use deep_causality_num::RealField;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;

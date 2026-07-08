@@ -9,7 +9,7 @@
 //! lookups beyond the precompiled `u32` indices and no per-cell index
 //! arithmetic.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_par::MaybeParallel;
 
 #[cfg(feature = "parallel")]

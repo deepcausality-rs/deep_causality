@@ -4,7 +4,7 @@
  */
 use crate::types::chain::Chain;
 use crate::types::simplicial_complex::SimplicialComplex;
-use deep_causality_num::AbelianGroup;
+use deep_causality_algebra::AbelianGroup;
 use deep_causality_sparse::CsrMatrix;
 use std::sync::Arc;
 

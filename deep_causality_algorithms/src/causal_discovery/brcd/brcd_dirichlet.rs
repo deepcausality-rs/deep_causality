@@ -21,7 +21,8 @@
 //! discrete counterpart of [`super::brcd_gaussian::gaussian_family_logdensity`].
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use std::collections::BTreeMap;
 
 /// Default Dirichlet concentration `α*` (matches `brcd.py`).

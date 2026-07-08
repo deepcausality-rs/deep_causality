@@ -4,7 +4,8 @@
  */
 
 use deep_causality_fft::{FftError, FftPlan, naive_dft};
-use deep_causality_num::{Complex, Float106};
+use deep_causality_num::Float106;
+use deep_causality_num_complex::Complex;
 
 fn buf_f64(n: usize) -> Vec<Complex<f64>> {
     (0..n)
@@ -130,8 +131,8 @@ fn test_float106_accuracy_exceeds_f64() {
             let a = Float106::from_f64(0.37);
             let b = Float106::from_f64(0.11);
             Complex::new(
-                deep_causality_num::Real::sin(x * a),
-                deep_causality_num::Real::cos(x * b),
+                deep_causality_algebra::Real::sin(x * a),
+                deep_causality_algebra::Real::cos(x * b),
             )
         })
         .collect();

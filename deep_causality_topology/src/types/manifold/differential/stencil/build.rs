@@ -10,7 +10,8 @@
 //! stored coefficients. The generic operators remain the equivalence
 //! oracle in the test suite.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_sparse::CsrMatrix;
 

@@ -1,0 +1,47 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+rust_test_suite(
+    name = "dual",
+    srcs = glob([
+        "dual/dual_number/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num",
+        "//deep_causality_num_dual",
+    ],
+)
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "lean-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num_dual",
+    ],
+)
+
+rust_test_suite(
+    name = "algebra_impls",
+    srcs = glob([
+        "algebra_impls/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_num_dual",
+    ],
+)

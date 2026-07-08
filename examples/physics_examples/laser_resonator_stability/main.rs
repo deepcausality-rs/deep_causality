@@ -10,8 +10,9 @@
 //! pipeline that threads the complex beam parameter q and fails the flow if the beam
 //! becomes unphysical (Im(q) <= 0).
 
+use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
-use deep_causality_num::{Complex, DivisionAlgebra};
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, PhysicsError, Wavelength, beam_spot_size,
     gaussian_q_propagation, lens_maker,

@@ -20,7 +20,8 @@ use crate::{
     KinematicViscosity, ReynoldsStress, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
 };
 use crate::{Length, Speed};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Turbulent kinetic energy `k = 0.5 · ⟨u' · u'⟩`.
 ///

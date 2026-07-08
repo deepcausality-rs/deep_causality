@@ -6,8 +6,9 @@
 use crate::kernels::nuclear::physics;
 use crate::{AmountOfSubstance, Energy, HalfLife, Mass, Time};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 
 /// Causal wrapper for [`physics::radioactive_decay_kernel`].
 pub fn radioactive_decay<R>(

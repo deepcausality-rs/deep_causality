@@ -4,7 +4,7 @@
  */
 
 use deep_causality_calculus::{EndoArrow, Euler, Rk4};
-use deep_causality_num::Dual;
+use deep_causality_num_dual::Dual;
 
 const E: f64 = std::f64::consts::E;
 

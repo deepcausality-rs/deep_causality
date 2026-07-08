@@ -7,8 +7,9 @@
 //! zero-state fixed point, CG short-circuit, both CFL violations with
 //! their messages, and the residual-consistency contract.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::{DecNsSolver, dec_divergence_residual};
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,

@@ -5,7 +5,8 @@
 
 //! Public covariance analysis API for Manifold.
 use crate::{Manifold, SimplicialComplex, TopologyError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
 where

@@ -5,7 +5,8 @@
 
 use crate::{Length, Mass, PhysicsError, Speed};
 use crate::{NEWTONIAN_CONSTANT_OF_GRAVITATION, SPEED_OF_LIGHT};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Calculates orbital velocity: $v = \sqrt{\frac{GM}{r}}$.
 pub fn orbital_velocity_kernel<R>(

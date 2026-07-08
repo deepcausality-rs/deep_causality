@@ -12,9 +12,11 @@ use crate::{
     Speed, Stiffness, TwistAngle, VectorPotential,
 };
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;

@@ -57,7 +57,9 @@
 use super::{CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker};
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
-use deep_causality_num::{Complex, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 
 impl<const D: usize, R: RealField + FromPrimitive, S: SignatureMarker>
     CubicalReggeGeometry<D, R, S>

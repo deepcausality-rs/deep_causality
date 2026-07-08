@@ -6,7 +6,7 @@
 pub mod standard_normal;
 
 use crate::{Distribution, NormalDistributionError, Rng, StandardNormal};
-use deep_causality_num::Real;
+use deep_causality_algebra::Real;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Normal<F>

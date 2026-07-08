@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_multivector::{HilbertState, HopfState, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use std::f64::consts::PI;
 
 const F64_EPSILON: f64 = 1.0e-12; // Custom epsilon for floating-point comparisons

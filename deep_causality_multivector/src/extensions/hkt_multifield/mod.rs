@@ -40,11 +40,11 @@
 //!    solver stabilizes, enabling proper generic constraints.
 
 use crate::CausalMultiField;
+use deep_causality_algebra::Field;
 use deep_causality_haft::{
     Applicative, CoMonad, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_metric::Metric;
-use deep_causality_num::Field;
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 

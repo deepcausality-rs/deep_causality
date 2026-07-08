@@ -88,7 +88,8 @@ fn test_derived_traits() {
 // so its standard-normal draw is exercised by hand here.
 mod f106_tests {
     use super::*;
-    use deep_causality_num::{Float106, Real};
+    use deep_causality_algebra::Real;
+    use deep_causality_num::Float106;
     use deep_causality_rand::rng;
 
     #[test]

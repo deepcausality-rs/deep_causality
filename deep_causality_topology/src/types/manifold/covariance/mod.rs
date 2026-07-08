@@ -6,7 +6,8 @@
 //! CPU implementation of covariance analysis for Manifold fields.
 
 use crate::{Manifold, SimplicialComplex, TopologyError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>

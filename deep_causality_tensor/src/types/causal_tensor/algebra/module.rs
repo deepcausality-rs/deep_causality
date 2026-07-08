@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensor;
-use deep_causality_num::{Module, Ring};
+use deep_causality_algebra::{Module, Ring};
 
 impl<T> CausalTensor<T> {
     /// Scales the tensor by a scalar value.

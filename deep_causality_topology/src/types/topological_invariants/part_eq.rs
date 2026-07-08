@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::RealField;
-
 use crate::types::topological_invariants::TopologicalInvariants;
+use deep_causality_algebra::RealField;
 
 impl<R: RealField> PartialEq for TopologicalInvariants<R> {
     fn eq(&self, other: &Self) -> bool {

@@ -18,7 +18,8 @@
 
 use super::{CubicalReggeGeometry, SignatureMarker};
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 impl<const D: usize, R, S> CubicalReggeGeometry<D, R, S>

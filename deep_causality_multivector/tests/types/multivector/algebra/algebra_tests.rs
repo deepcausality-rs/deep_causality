@@ -3,8 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::Real;
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric, MultiVector};
-use deep_causality_num::{Complex, Real, Zero};
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 
 // Helper for approximate float comparison
 const EPSILON: f64 = 1e-9;

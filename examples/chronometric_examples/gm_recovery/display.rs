@@ -7,7 +7,7 @@
 
 use core::fmt::{Display, LowerExp};
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 use crate::pipeline::GmReport;
 

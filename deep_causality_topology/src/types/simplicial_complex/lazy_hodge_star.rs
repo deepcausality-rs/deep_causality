@@ -19,7 +19,8 @@
 //! tolerance"` error at the point of access.
 
 use crate::{Simplex, Skeleton, TopologyError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_sparse::CsrMatrix;
 
 fn euclidean_distance<T>(p1: &[T], p2: &[T]) -> T

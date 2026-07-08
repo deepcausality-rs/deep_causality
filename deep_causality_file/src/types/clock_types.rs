@@ -5,7 +5,7 @@
 
 use crate::types::satelite_types::SatId;
 use chrono::NaiveDateTime;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]

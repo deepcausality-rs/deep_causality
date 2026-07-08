@@ -4,8 +4,8 @@
  */
 use core::fmt::Debug;
 
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::RealField;
 
 use crate::{CentralBody, SpaceTimeCoordinate, solve_gm_analytical_kernel};
 

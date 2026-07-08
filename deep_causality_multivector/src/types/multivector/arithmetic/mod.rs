@@ -4,7 +4,8 @@
  */
 use crate::{CausalMultiVector, MultiVector};
 use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
-use deep_causality_num::{Field, Zero};
+use deep_causality_algebra::Field;
+use deep_causality_num::Zero;
 
 /// Implements component-wise addition of multivectors.
 /// $$ A + B = \sum_{I} (a_I + b_I) e_I $$

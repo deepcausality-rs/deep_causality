@@ -17,7 +17,8 @@ use super::flavor::{
 use super::kinematics::sample_z;
 use super::string::LundString;
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_rand::Rng;
 
 /// Lund string fragmentation kernel.
@@ -194,7 +195,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deep_causality_num::Real;
+    use deep_causality_algebra::Real;
 
     #[test]
     fn test_lund_basic_fragmentation() {

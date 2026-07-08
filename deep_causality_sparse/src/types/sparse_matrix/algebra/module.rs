@@ -4,7 +4,7 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_num::{Module, Ring};
+use deep_causality_algebra::{Module, Ring};
 
 impl<T> CsrMatrix<T> {
     /// Scalar multiplication.

@@ -11,9 +11,8 @@
 use crate::{
     ChainComplex, GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError,
 };
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 // use deep_causality_tensor::TensorData; // Removed
 use std::fmt::Debug;
 

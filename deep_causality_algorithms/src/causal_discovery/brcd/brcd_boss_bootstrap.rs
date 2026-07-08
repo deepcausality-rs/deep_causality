@@ -38,7 +38,8 @@ use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensit
 use crate::brcd::brcd_result::BrcdResult;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
 use crate::dag_sampling::sample_dag;
-use deep_causality_num::{FromPrimitive, RealField, ToPrimitive};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 use deep_causality_par::MaybeParallel;
 use deep_causality_rand::{Rng, Xoshiro256};
 use deep_causality_tensor::CausalTensor;

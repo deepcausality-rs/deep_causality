@@ -7,7 +7,8 @@
 
 use super::CausalMultiField;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
-use deep_causality_num::{Field, Ring, Zero};
+use deep_causality_algebra::{Field, Ring};
+use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 use std::ops::{Add, Mul, Neg, Sub};
 

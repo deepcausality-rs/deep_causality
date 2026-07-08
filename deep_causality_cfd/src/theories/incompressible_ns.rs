@@ -20,7 +20,7 @@
 //! positive `g_z` accelerates the fluid in `+z`. Errors propagate from
 //! [`pressure_gradient_force_kernel`] when `ρ = 0`.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_physics::PhysicsError;
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,

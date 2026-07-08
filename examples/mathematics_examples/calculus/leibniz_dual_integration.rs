@@ -13,8 +13,9 @@
 //! Take `I(θ) = ∫₀¹ sin(θ·x) dx`. Seed `θ` as a `Dual::variable` and integrate over `Dual`. The
 //! real part of the result is the integral `I(θ)`; the infinitesimal (`ε`) part is `dI/dθ`.
 
+use deep_causality_algebra::Real;
 use deep_causality_calculus::quadrature;
-use deep_causality_num::{Dual, Real};
+use deep_causality_num_dual::Dual;
 
 fn main() {
     println!("=== Differentiate Under the Integral (the Leibniz bridge) ===\n");

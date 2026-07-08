@@ -16,7 +16,7 @@
 //! from the reference. Pivoting on the largest available element matches `numpy`
 //! and stays accurate without any flooring.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Solves the dense linear system `A x = b` for `x`, in place, by Gaussian
 /// elimination with partial pivoting.

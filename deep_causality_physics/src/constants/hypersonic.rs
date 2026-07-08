@@ -200,7 +200,8 @@ pub const AIR_O2_MOLE_FRACTION: f64 = 0.21;
 // has a companion function returning it at the target precision `R`.
 // ─────────────────────────────────────────────────────────────────────────
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Returns [`RP1232_NO_DR_PREFACTOR`] at the target real-field precision `R`.
 #[inline]

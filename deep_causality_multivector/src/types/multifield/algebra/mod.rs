@@ -22,7 +22,7 @@
 use crate::CausalMultiField;
 use crate::MultiVector;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
-use deep_causality_num::{Field, RealField, Ring};
+use deep_causality_algebra::{Field, RealField, Ring};
 use deep_causality_tensor::CausalTensor;
 
 // ============================================================================

@@ -5,7 +5,14 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Root module of the DeepCausality formalization (Lean 4 + Mathlib).
 
 Layered to mirror the Rust crate tiers:
-  * `Num`      — foundational algebraic laws (monoid/group/ring/field), mirroring `deep_causality_num`.
+  * `Num`      — numeric-core laws (identity, integer ring, cast round-trips, and the
+                 real-field model of the `Float106` double-double), mirroring `deep_causality_num`.
+  * `Algebra`  — the algebra trait tower (monoid/group/ring/field/module/algebra, division algebra,
+                 conjugation, norm), mirroring `deep_causality_algebra`.
+  * `Complex`  — `Complex` (field, conjugation, norm) and `Quaternion` (division ring, norm,
+                 non-commutativity), mirroring `deep_causality_num_complex`.
+  * `Dual`     — the dual number `R[ε]` (commutative ring, ε² = 0, real projection, product rule),
+                 mirroring `deep_causality_num_dual`.
   * `Haft`     — HKT / functor / monad / arrow laws, mirroring `deep_causality_haft`.
   * `Core`     — the Causal Monad `pure`/`bind` laws, mirroring `deep_causality_core`.
   * `Topology` — curvature-tensor laws at the concrete carriers, mirroring `deep_causality_topology`.
@@ -13,7 +20,17 @@ Layered to mirror the Rust crate tiers:
 Each theorem is bound to a Rust witness via `lean/THEOREM_MAP.md`. See `lean/README.md`.
 
 Scope (what is proved end-to-end here, each bound to a Rust witness):
-  * `Num`      — the add-monoid laws (associativity, identity).
+  * `Num`      — identity (`Zero`/`One`), integer ring laws (commutativity, distributivity,
+                 Euclidean division), cast round-trips, and the `Float106` real-field model.
+                 The bit-exact double-double error bounds remain [open] (out of L1 scope).
+  * `Algebra`  — the trait-tower laws over Mathlib carriers: monoid/commutative-monoid/semilattice,
+                 group/abelian-group, ring/commutative-ring, field/real-field, module/algebra,
+                 division algebra, conjugation (star), and norm multiplicativity.
+  * `Complex`  — `ℂ` is a field with involutive conjugation and multiplicative norm; `ℍ` is a
+                 division ring with multiplicative norm and a non-commutativity witness. (Octonions
+                 are out of L1 scope — not in Mathlib — and remain covered by the Rust tests.)
+  * `Dual`     — `R[ε]` is a commutative ring, `ε² = 0`, the real projection is a ring map, and the
+                 tangent part satisfies the Leibniz product rule (forward-mode AD).
   * `Core`     — the causal-monad laws over the single-channel carrier: bind left identity,
                  bind right identity (unconditional, including errored carriers), associativity,
                  and the error left-zero.
@@ -28,7 +45,23 @@ Deviations from accepted category theory are recorded in
 remaining layers are described in `openspec/notes/causal-algebra/Formalization.md`.
 -/
 
-import DeepCausalityFormal.Num.Monoid
+import DeepCausalityFormal.Num.Identity
+import DeepCausalityFormal.Num.Integer
+import DeepCausalityFormal.Num.Cast
+import DeepCausalityFormal.Num.Float106
+import DeepCausalityFormal.Algebra.Monoid
+import DeepCausalityFormal.Algebra.MonoidGeneric
+import DeepCausalityFormal.Algebra.CommutativeMonoid
+import DeepCausalityFormal.Algebra.Verdict
+import DeepCausalityFormal.Algebra.Group
+import DeepCausalityFormal.Algebra.Ring
+import DeepCausalityFormal.Algebra.Field
+import DeepCausalityFormal.Algebra.Module
+import DeepCausalityFormal.Algebra.DivisionAlgebra
+import DeepCausalityFormal.Algebra.Scalar
+import DeepCausalityFormal.Complex.Complex
+import DeepCausalityFormal.Complex.Quaternion
+import DeepCausalityFormal.Dual.Dual
 import DeepCausalityFormal.Core.EffectLog
 import DeepCausalityFormal.Core.CausalEffect
 import DeepCausalityFormal.Core.CausalCommand

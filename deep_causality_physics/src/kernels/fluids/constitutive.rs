@@ -20,7 +20,8 @@
 
 use crate::PhysicsError;
 use crate::{StrainRateTensor, Viscosity, ViscousStress};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Newtonian viscous stress with Stokes hypothesis (bulk viscosity ζ = 0):
 /// `τ = 2μ S − (2/3) μ (∇·u) I`.

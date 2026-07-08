@@ -98,6 +98,44 @@ fn test_evaluate_subgraph_rejects_a_relay_to_a_missing_target() {
     assert!(res.error().unwrap().to_string().contains("RelayTo target"));
 }
 
+fn add_one(x: bool) -> PropagatingEffect<bool> {
+    // Distinct, index-independent effect: always resolves to true.
+    let _ = x;
+    PropagatingEffect::from_value(true)
+}
+fn add_ten(x: bool) -> PropagatingEffect<bool> {
+    // Distinct, index-independent effect: always resolves to false.
+    let _ = x;
+    PropagatingEffect::from_value(false)
+}
+
+#[test]
+fn test_evaluate_subgraph_branching_tree_returns_highest_index_leaf() {
+    // Characterization test pinning the ascending-index schedule for a branching tree.
+    //
+    // The tree is root(0) -> A(1) and root(0) -> B(2). A and B are independent sibling leaves with
+    // different effects (A -> true, B -> false); there is no reconvergence. The engine schedules
+    // ready nodes by ascending node index (`BTreeSet::pop_first`), so B(2) is the last node
+    // processed and `evaluate_subgraph_from_cause` returns B's effect. The edges are added in
+    // non-ascending index order (root -> B before root -> A) to show the schedule follows the node
+    // index rather than edge-insertion or discovery order: the result is the same either way.
+    let mut g: BaseCausalGraph = CausaloidGraph::new(0);
+    let root = g
+        .add_causaloid(Causaloid::new(0, add_one, "root"))
+        .expect("root");
+    let a = g.add_causaloid(Causaloid::new(1, add_one, "A")).expect("A");
+    let b = g.add_causaloid(Causaloid::new(2, add_ten, "B")).expect("B");
+    // Edges added with the higher-index child first.
+    g.add_edge(root, b).expect("edge root->B");
+    g.add_edge(root, a).expect("edge root->A");
+    g.freeze();
+
+    let res = g.evaluate_subgraph_from_cause(root, &PropagatingEffect::from_value(true));
+    assert!(res.is_ok(), "got {:?}", res.error());
+    // B(2) is the highest-index leaf, so its effect (false) is the returned last effect.
+    assert_eq!(res.value(), Some(&false));
+}
+
 #[test]
 fn test_evaluate_subgraph_from_cause() {
     let mut g = CausaloidGraph::new(0);

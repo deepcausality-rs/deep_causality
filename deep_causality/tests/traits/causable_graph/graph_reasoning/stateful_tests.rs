@@ -378,3 +378,34 @@ fn evaluate_shortest_path_stateful_returns_on_a_relay() {
         "the walk returns the relaying node's process"
     );
 }
+
+#[test]
+fn evaluate_subgraph_stateful_multi_fired_reconvergence_errors_loudly() {
+    // Stateful diamond: root(0) -> A(1), B(2); A,B -> C(3). Starting at the root fires both
+    // A and B into C, a multi-fired reconvergence. The merge (∇) is undefined (assumption #2),
+    // so this must fail loudly rather than silently pick one parent.
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_increment, ConfigCtx {}, "root");
+    let n1 = Causaloid::new_with_context(1, node_increment, ConfigCtx {}, "A");
+    let n2 = Causaloid::new_with_context(2, node_increment, ConfigCtx {}, "B");
+    let n3 = Causaloid::new_with_context(3, node_increment, ConfigCtx {}, "C");
+    let i0 = g.add_root_causaloid(n0).expect("root");
+    let i1 = g.add_causaloid(n1).expect("A");
+    let i2 = g.add_causaloid(n2).expect("B");
+    let i3 = g.add_causaloid(n3).expect("C");
+    g.add_edge(i0, i1).expect("edge 0->1");
+    g.add_edge(i0, i2).expect("edge 0->2");
+    g.add_edge(i1, i3).expect("edge 1->3");
+    g.add_edge(i2, i3).expect("edge 2->3");
+    g.freeze();
+
+    let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial());
+    assert!(out.is_err());
+    assert!(
+        out.error()
+            .unwrap()
+            .to_string()
+            .contains("reconvergence merge (∇) is not")
+    );
+}

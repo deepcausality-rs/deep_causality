@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{GaugeField, GaugeGroup, TopologyError};
+use deep_causality_algebra::Field;
+use deep_causality_algebra::RealField;
 use deep_causality_haft::{HKT3Unbound, MonoidalMerge, NoConstraint, ParametricMonad, Satisfies};
-use deep_causality_num::Field;
-use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
@@ -564,7 +564,7 @@ where
     where
         G: GaugeGroup,
         T: Field + Copy + PartialOrd,
-        R: deep_causality_num::RealField,
+        R: deep_causality_algebra::RealField,
     {
         let connection = field.connection();
         let dim = G::SPACETIME_DIM;

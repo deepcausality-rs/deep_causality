@@ -7,7 +7,7 @@
 //! a component swap, not a full complex multiply, which is what the radix-4
 //! butterflies rely on.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 

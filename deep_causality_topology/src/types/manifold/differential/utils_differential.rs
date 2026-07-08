@@ -6,7 +6,7 @@
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::manifold::Manifold;
 use core::ops::Mul;
-use deep_causality_num::{Field, RealField};
+use deep_causality_algebra::{Field, RealField};
 use deep_causality_par::MaybeParallel;
 
 #[cfg(feature = "parallel")]

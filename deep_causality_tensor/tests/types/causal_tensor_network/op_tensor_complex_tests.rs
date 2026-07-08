@@ -7,7 +7,9 @@
 //! Hermitian SVD (unitary `U`/`V`, real singular values, `U·diag(S)·Vᴴ = A`) and the complex
 //! Householder QR (unitary `Q`, `Q·R = A`).
 
-use deep_causality_num::{Complex, ConjugateScalar, Zero};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 type C = Complex<f64>;

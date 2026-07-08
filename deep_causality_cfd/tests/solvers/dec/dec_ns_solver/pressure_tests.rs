@@ -7,8 +7,9 @@
 //! Taylor–Green pressure up to gauge over the refinement ladder, the exact
 //! Bernoulli/static identity, and the CG failure path.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::DecNsSolver;
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,

@@ -4,7 +4,8 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_num::{One, Ring};
+use deep_causality_algebra::Ring;
+use deep_causality_num::One;
 
 impl<T> CsrMatrix<T>
 where

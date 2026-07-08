@@ -17,8 +17,9 @@
 //! - Action: S = Σ |C_μν|^2
 //! - Optimization: Simple gradient descent to minimize action.
 
+use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_multivector::{HilbertState, Metric};
-use deep_causality_num::{Complex, DivisionAlgebra};
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{Operator, commutator_kernel};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,

@@ -5,8 +5,6 @@
 
 //! Test module for DoubleFloat high-precision type.
 #[cfg(test)]
-mod double_algebra_tests;
-#[cfg(test)]
 mod double_arithmetic_tests;
 #[cfg(test)]
 mod double_attributes_tests;
@@ -28,8 +26,6 @@ mod double_from_tests;
 mod double_num_traits_tests;
 #[cfg(test)]
 mod double_ops_tests;
-#[cfg(test)]
-mod double_traits_tests;
 // Disabled under Miri: software-emulated floats produce different last-bit
 // results for transcendental ops, so exact equality cannot hold. The test
 // itself is correct and runs under normal CI.

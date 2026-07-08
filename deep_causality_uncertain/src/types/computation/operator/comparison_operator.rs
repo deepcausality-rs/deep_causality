@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::Real;
+use deep_causality_algebra::Real;
 
 /// Defines binary comparison operations on a real scalar, returning a bool.
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]

@@ -457,3 +457,118 @@ rust_test_suite(
         "//deep_causality_uncertain",
     ],
 )
+
+rust_test_suite(
+    name = "traits_adjustable",
+    srcs = glob([
+        "traits/adjustable/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        "//deep_causality_ast",
+        "//deep_causality_core",
+        "//deep_causality_data_structures",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_uncertain",
+        "//ultragraph",
+    ],
+)
+
+rust_test_suite(
+    name = "traits_collection_reasoning",
+    srcs = glob([
+        "traits/causable_collection/collection_reasoning/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        "//deep_causality_ast",
+        "//deep_causality_core",
+        "//deep_causality_data_structures",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_uncertain",
+        "//ultragraph",
+    ],
+)
+
+rust_test_suite(
+    name = "traits_graph_reasoning",
+    srcs = glob([
+        "traits/causable_graph/graph_reasoning/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        "//deep_causality_ast",
+        "//deep_causality_core",
+        "//deep_causality_data_structures",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_uncertain",
+        "//ultragraph",
+    ],
+)
+
+rust_test_suite(
+    name = "causal_types_aggregate_logic",
+    srcs = glob([
+        "types/causal_types/aggregate_logic/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        "//deep_causality_ast",
+        "//deep_causality_core",
+        "//deep_causality_data_structures",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_uncertain",
+        "//ultragraph",
+    ],
+)
+
+rust_test_suite(
+    name = "csm_types_csm_parameter",
+    srcs = glob([
+        "types/csm_types/csm_parameter/*/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        "//deep_causality_ast",
+        "//deep_causality_core",
+        "//deep_causality_data_structures",
+        "//deep_causality_haft",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_uncertain",
+        "//ultragraph",
+    ],
+)

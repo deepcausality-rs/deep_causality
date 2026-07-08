@@ -12,7 +12,8 @@
 //! known cut geometries, across `f64` and `Float106`. The constrained projector consuming the rows
 //! and driving the fragment velocity to zero is the Group B single-cut-cell gate.
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_topology::{
     ChainComplex, CutCell, CutCellRegistry, CutConstraintKind, CutFaceFragment, LatticeCell,
     LatticeComplex, SourceGeometry,

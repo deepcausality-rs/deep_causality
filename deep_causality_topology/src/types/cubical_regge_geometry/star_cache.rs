@@ -29,7 +29,7 @@
 
 use std::sync::OnceLock;
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_sparse::CsrMatrix;
 
 /// Per-grade diagonal Hodge ⋆ memo, fingerprint-guarded on the lattice the

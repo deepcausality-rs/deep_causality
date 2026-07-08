@@ -6,8 +6,8 @@ use crate::{
     EM, ElectroweakField, ElectroweakOps, ElectroweakParams, PhysicsError, SIN2_THETA_W, W_MASS,
     Z_MASS,
 };
+use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
-use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, SimplicialManifold, U1,

@@ -5,7 +5,7 @@
 
 //! Per-step and per-run results of the DEC Navier–Stokes march.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 use deep_causality_physics::SolenoidalField;
 

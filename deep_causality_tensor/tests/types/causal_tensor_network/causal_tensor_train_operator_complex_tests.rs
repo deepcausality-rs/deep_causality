@@ -6,7 +6,9 @@
 //! Stage-4 complex matrix-product operators: the MPO surface over `Complex<f64>` — operator TT-SVD
 //! round-trip, `apply` (MPO·MPS) against a dense complex matrix–vector product, and `compose`.
 
-use deep_causality_num::{Complex, ConjugateScalar, Zero};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrain, CausalTensorTrainOperator, TensorTrain, TensorTrainOperator,
     Truncation,

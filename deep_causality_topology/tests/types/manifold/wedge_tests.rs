@@ -19,7 +19,8 @@
 //! The wedge is metric-free by design; there is no missing-metric error path
 //! to cover (geometry enters only through the Hodge star elsewhere).
 
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

@@ -16,9 +16,10 @@
 use crate::TensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain, Identity};
 use core::ops::{Add, Mul, MulAssign, Neg, Sub};
-use deep_causality_num::{
-    AbelianGroup, Associative, Commutative, ConjugateScalar, Distributive, One, Scalar, Zero,
+use deep_causality_algebra::{
+    AbelianGroup, Associative, Commutative, ConjugateScalar, Distributive, Scalar,
 };
+use deep_causality_num::{One, Zero};
 
 // ============================================================================
 // Additive group: Add, Sub, Neg

@@ -18,7 +18,8 @@
 //! - **Rectangle ∩ disk** (2D): the exact area via the four-corner decomposition of the
 //!   circular-quadrant area `∫∫_{u≤x, v≤y} 1_{u²+v²≤r²}`, whose antiderivative is elementary.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// `max(a, b)` for a `RealField` (which carries `PartialOrd` but no inherent `max`).
 pub(super) fn rmax<R: RealField>(a: R, b: R) -> R {

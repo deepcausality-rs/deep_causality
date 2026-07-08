@@ -7,7 +7,9 @@
 //! linear solve, ALS fit, two-site TDVP (norm-conserving under a skew-Hermitian generator), and
 //! DMRG3S ground state via a complex **Hermitian** eigensolver.
 
-use deep_causality_num::{Complex, ConjugateScalar, Zero};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrain, CausalTensorTrainOperator, SolveConfig, TensorTrain,
     TensorTrainOperator, Truncation, solve,

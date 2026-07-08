@@ -12,7 +12,7 @@
 //! - **Quantum Metric** (real part): "distance" between quantum states
 //! - **Berry Curvature** (imaginary part): "magnetic field" in momentum space
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric, QuantumVelocity,
     effective_band_drude_weight, quantum_geometric_tensor,

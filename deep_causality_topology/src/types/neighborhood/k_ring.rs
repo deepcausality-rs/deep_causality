@@ -30,7 +30,7 @@ impl Iterator for KRingIter {
     }
 }
 
-impl<const K: usize, const D: usize, R: deep_causality_num::RealField>
+impl<const K: usize, const D: usize, R: deep_causality_algebra::RealField>
     Neighborhood<LatticeComplex<D, R>> for KRing<K>
 {
     type Iter<'a>

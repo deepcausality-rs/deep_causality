@@ -12,7 +12,8 @@
 //! grade-0 Poisson solve is degenerate by exactly one dimension; subtracting the
 //! mean fixes the gauge and makes the result unique.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Subtract the mean of `v` from every entry, in place.
 ///

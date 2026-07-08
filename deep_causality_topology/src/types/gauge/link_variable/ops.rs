@@ -4,7 +4,8 @@
  */
 
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
-use deep_causality_num::{ComplexField, Field, FromPrimitive, RealField};
+use deep_causality_algebra::{ComplexField, Field, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use std::fmt::Debug;
 use std::marker::PhantomData;

@@ -9,9 +9,8 @@
 //! towards the stationary points of the action. Used for scale setting and renormalization.
 
 use crate::{ChainComplex, GaugeGroup, LatticeGaugeField, TopologyError};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 // use deep_causality_tensor::TensorData; // Removed
 use std::collections::HashMap;
 use std::fmt::Debug;

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     apply_gate_kernel, born_probability_kernel, commutator_kernel, expectation_value_kernel,
     fidelity_kernel, haruna_cz_gate_kernel, haruna_hadamard_gate_kernel, haruna_s_gate_kernel,

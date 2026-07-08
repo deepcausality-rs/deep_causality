@@ -18,9 +18,9 @@
 //! [`crate::Causaloid::from_causal_graph_with_context`].
 
 use crate::*;
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
-use ultragraph::GraphTraversal;
+use ultragraph::{GraphTraversal, TopologicalGraphAlgorithms};
 
 /// Builds an errored process from borrowed channels (clone-and-raise helper).
 fn raise_from<V, S, C>(
@@ -114,95 +114,178 @@ where
             );
         }
 
-        let mut queue =
-            VecDeque::<(usize, PropagatingProcess<V, S, C>)>::with_capacity(self.number_nodes());
-        let mut visited = vec![false; self.number_nodes()];
+        // The stateful evaluator mirrors the stateless wire-slot engine (reachability pre-pass,
+        // ascending-index canonical schedule, `RelayTo` as sequential round composition), so it too
+        // requires a frozen acyclic graph.
+        if self.get_graph().has_cycle().unwrap_or(true) {
+            return raise_from(
+                CausalityError(CausalityErrorEnum::Custom(
+                    "Graph contains a directed cycle; the reconvergence-join evaluator requires an \
+                     acyclic (frozen DAG) graph"
+                        .into(),
+                )),
+                initial_effect,
+            );
+        }
 
-        queue.push_back((start_index, initial_effect.clone()));
-        visited[start_index] = true;
+        let n_nodes = self.number_nodes();
+        let mut round_start = start_index;
+        let mut round_input = initial_effect.clone();
 
-        let mut last_propagated = initial_effect.clone();
-
-        while let Some((current_index, incoming)) = queue.pop_front() {
-            let causaloid = match self.get_causaloid(current_index) {
-                Some(c) => c,
-                None => {
-                    return raise_from(
-                        CausalityError(CausalityErrorEnum::Custom(format!(
-                            "Failed to get causaloid at index {current_index}"
-                        ))),
-                        &last_propagated,
-                    );
+        'rounds: loop {
+            // Reachability pre-pass: only `round_start` and its descendants can fire.
+            let mut reachable = vec![false; n_nodes];
+            reachable[round_start] = true;
+            let mut stack = vec![round_start];
+            while let Some(node) = stack.pop() {
+                if let Ok(children) = self.get_graph().outbound_edges(node) {
+                    for c in children {
+                        if !reachable[c] {
+                            reachable[c] = true;
+                            stack.push(c);
+                        }
+                    }
                 }
-            };
-
-            let result = causaloid.evaluate_stateful(&incoming);
-            last_propagated = result.clone();
-
-            if result.is_err() {
-                return result;
             }
 
-            // Interpret the output effect (the `Free::fold` handler, inlined for `RelayTo`).
-            match result.command_target() {
-                Some(target_idx) => {
-                    visited.fill(false);
-                    queue.clear();
+            let mut pending = vec![0usize; n_nodes];
+            let mut fired: Vec<BTreeMap<usize, PropagatingProcess<V, S, C>>> =
+                (0..n_nodes).map(|_| BTreeMap::new()).collect();
+            let mut processed = vec![false; n_nodes];
 
-                    if !self.contains_causaloid(target_idx) {
+            for node in 0..n_nodes {
+                if !reachable[node] || node == round_start {
+                    continue;
+                }
+                if let Ok(parents) = self.get_graph().inbound_edges(node) {
+                    pending[node] = parents.filter(|p| reachable[*p]).count();
+                }
+            }
+
+            let mut ready: BTreeSet<usize> = BTreeSet::new();
+            ready.insert(round_start);
+
+            let mut last_propagated = round_input.clone();
+
+            while let Some(node) = ready.pop_first() {
+                if processed[node] {
+                    continue;
+                }
+                processed[node] = true;
+
+                let incoming = if node == round_start {
+                    round_input.clone()
+                } else {
+                    let parents = std::mem::take(&mut fired[node]);
+                    match parents.len() {
+                        0 => {
+                            // Unreachable invariant guard (see the stateless engine): the reachability
+                            // pre-pass prunes dead paths at the wire level, so a non-start node that
+                            // becomes ready always has at least one fired parent.
+                            return raise_from(
+                                CausalityError(CausalityErrorEnum::Custom(format!(
+                                    "internal invariant: node {node} became ready with no fired parents"
+                                ))),
+                                &last_propagated,
+                            );
+                        }
+                        1 => {
+                            // Join of one fired parent is the identity: thread its process through.
+                            parents.into_values().next().expect("len == 1")
+                        }
+                        _ => {
+                            // Reconvergence: the merge (∇) of converging effects is a symmetric-
+                            // monoidal generator over the effect monad, an extension of the single-
+                            // input causaloid that is not yet defined (see
+                            // `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2).
+                            // Fail loudly rather than silently pick one parent or guess a combine.
+                            let keys: Vec<usize> = parents.keys().copied().collect();
+                            return raise_from(
+                                CausalityError(CausalityErrorEnum::Custom(format!(
+                                    "Node {node} is a reconvergence reached by {} fired parents \
+                                     (graph indices {keys:?}); the reconvergence merge (∇) is not \
+                                     yet defined and multi-parent fan-in is unsupported. Restructure \
+                                     to a single-parent path, or await the symmetric-monoidal merge \
+                                     extension.",
+                                    keys.len()
+                                ))),
+                                &last_propagated,
+                            );
+                        }
+                    }
+                };
+
+                let causaloid = match self.get_causaloid(node) {
+                    Some(c) => c,
+                    None => {
                         return raise_from(
                             CausalityError(CausalityErrorEnum::Custom(format!(
-                                "RelayTo target causaloid with index {target_idx} not found in graph."
+                                "Failed to get causaloid at index {node}"
                             ))),
                             &last_propagated,
                         );
                     }
+                };
 
-                    visited[target_idx] = true;
+                let result = causaloid.evaluate_stateful(&incoming);
+                last_propagated = result.clone();
 
-                    // The relayed input is the command's sub-program, fed to the target as its
-                    // incoming effect, carrying the relaying node's state, context, and logs forward.
-                    // A value/`None` is evaluated by the target as-is. This inlines a SINGLE-level
-                    // `RelayTo` jump: a nested command is passed through to the target as input, where
-                    // a singleton rejects it with a clear error (see `evaluate_stateful`) — the engine
-                    // does not re-dispatch nested commands across nodes. Multi-level command folding is
-                    // the algebra of `CausalEffect::fold`, not this BFS loop.
-                    let relayed_effect = result
-                        .into_parts()
-                        .0
-                        .ok()
-                        .and_then(CausalEffect::into_command)
-                        .map(|(_, sub)| sub)
-                        .unwrap_or_else(CausalEffect::none);
-                    let relayed: PropagatingProcess<V, S, C> = PropagatingProcess::new(
-                        Ok(relayed_effect),
-                        last_propagated.state().clone(),
-                        last_propagated.context().clone(),
-                        last_propagated.logs().clone(),
-                    );
-                    queue.push_back((target_idx, relayed));
+                if result.is_err() {
+                    return result;
                 }
-                None => {
-                    let children = match self.get_graph().outbound_edges(current_index) {
-                        Ok(c) => c,
-                        Err(e) => {
+
+                match result.command_target() {
+                    Some(target_idx) => {
+                        if !self.contains_causaloid(target_idx) {
                             return raise_from(
-                                CausalityError(CausalityErrorEnum::Custom(format!("{e}"))),
+                                CausalityError(CausalityErrorEnum::Custom(format!(
+                                    "RelayTo target causaloid with index {target_idx} not found in graph."
+                                ))),
                                 &last_propagated,
                             );
                         }
-                    };
-                    for child_index in children {
-                        if !visited[child_index] {
-                            visited[child_index] = true;
-                            queue.push_back((child_index, result.clone()));
+                        // Carry the relaying node's state, context, and logs forward into the new round.
+                        let relayed: PropagatingProcess<V, S, C> = PropagatingProcess::new(
+                            Ok(result
+                                .into_parts()
+                                .0
+                                .ok()
+                                .and_then(CausalEffect::into_command)
+                                .map(|(_, sub)| sub)
+                                .unwrap_or_else(CausalEffect::none)),
+                            last_propagated.state().clone(),
+                            last_propagated.context().clone(),
+                            last_propagated.logs().clone(),
+                        );
+                        round_start = target_idx;
+                        round_input = relayed;
+                        continue 'rounds;
+                    }
+                    None => {
+                        let children = match self.get_graph().outbound_edges(node) {
+                            Ok(c) => c,
+                            Err(e) => {
+                                return raise_from(
+                                    CausalityError(CausalityErrorEnum::Custom(format!("{e}"))),
+                                    &last_propagated,
+                                );
+                            }
+                        };
+                        for c in children {
+                            if reachable[c] && !processed[c] {
+                                fired[c].insert(node, result.clone());
+                                pending[c] = pending[c].saturating_sub(1);
+                                if pending[c] == 0 {
+                                    ready.insert(c);
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
-        last_propagated
+            return last_propagated;
+        }
     }
 
     /// Stateful counterpart to

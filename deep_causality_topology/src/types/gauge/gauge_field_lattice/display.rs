@@ -5,8 +5,13 @@
 use crate::{GaugeGroup, LatticeGaugeField};
 use std::fmt::{Debug, Display};
 
-impl<G: GaugeGroup, const D: usize, M: Debug, R: deep_causality_num::RealField + Debug, S: Debug>
-    Display for LatticeGaugeField<G, D, M, R, S>
+impl<
+    G: GaugeGroup,
+    const D: usize,
+    M: Debug,
+    R: deep_causality_algebra::RealField + Debug,
+    S: Debug,
+> Display for LatticeGaugeField<G, D, M, R, S>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

@@ -7,8 +7,9 @@
 
 use super::FloatType;
 use super::constants::{CAP, COMMS_BAND_RAD_S};
+use deep_causality_algebra::Real;
 use deep_causality_cfd::{BlackoutTrigger, CfdScalar, CoupledField};
-use deep_causality_num::{FromPrimitive, Real};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::Truncation;
 use std::process::exit;
 

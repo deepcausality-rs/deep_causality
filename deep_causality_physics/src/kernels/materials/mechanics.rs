@@ -4,7 +4,8 @@
  */
 
 use crate::{PhysicsError, StiffnessTensor, Strain, Stress, StressTensor, Temperature};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Calculates generalized Hooke's Law: $\sigma_{ij} = C_{ijkl} \epsilon_{kl}$.
@@ -123,7 +124,7 @@ pub fn thermal_expansion_kernel<R>(
     delta_temp: Temperature<R>,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: deep_causality_num::RealField + Default + PartialOrd,
+    R: deep_causality_algebra::RealField + Default + PartialOrd,
 {
     // epsilon_ij = alpha * dT * delta_ij
     let val = coeff * delta_temp.value();

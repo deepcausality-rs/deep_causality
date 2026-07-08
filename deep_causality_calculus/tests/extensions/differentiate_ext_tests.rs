@@ -4,11 +4,12 @@
  */
 
 use core::ops::{Add, Mul};
+use deep_causality_algebra::Real;
 use deep_causality_calculus::{
     DifferentiableArrow, DifferentiableField, DifferentiateExt, DifferentiateFieldExt, EndoArrow,
     Rk4, Scalar,
 };
-use deep_causality_num::{Float106, Real};
+use deep_causality_num::Float106;
 
 // f(x) = x·sin(x) → f'(x) = sin x + x·cos x, f''(x) = 2·cos x − x·sin x
 struct XSinX;

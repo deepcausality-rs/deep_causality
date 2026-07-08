@@ -8,7 +8,7 @@
 //! triples carry the cup-shuffle signs and the ½ antisymmetrization
 //! factor, so the apply is a pure gather–multiply–accumulate.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_par::MaybeParallel;
 
 #[cfg(feature = "parallel")]

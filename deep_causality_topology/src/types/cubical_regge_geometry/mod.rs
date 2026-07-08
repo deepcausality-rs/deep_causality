@@ -86,9 +86,8 @@ pub use metropolis::{AcceptReject, RejectReason};
 pub use signature::{Euclidean, Lorentzian, SignatureMarker};
 
 use core::marker::PhantomData;
+use deep_causality_algebra::RealField;
 use deep_causality_metric::Metric;
-use deep_causality_num::RealField;
-
 /// Cubical Regge geometry: discrete metric data on a D-dimensional cubical complex.
 ///
 /// Parallels `ReggeGeometry<R>` for the simplicial case. See the module-level doc for

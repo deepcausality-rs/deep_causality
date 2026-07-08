@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_num::{Complex, RealField};
+use deep_causality_num_complex::Complex;
 
 /// Standard Quantum Gates interface.
 pub trait QuantumGates {

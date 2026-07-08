@@ -9,7 +9,7 @@ mod alias_pga3d;
 mod alias_real;
 
 use crate::CausalMultiVector;
-use deep_causality_num::Complex64;
+use deep_causality_num_complex::Complex64;
 
 pub type ComplexMultiVector = CausalMultiVector<Complex64>;
 

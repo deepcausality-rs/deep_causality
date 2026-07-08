@@ -5,7 +5,8 @@
 
 //! The immutable configuration of a sensor-fed inflow boundary patch.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_uncertain::ProbabilisticType;
 
 use super::dropout_verbosity::DropoutVerbosity;

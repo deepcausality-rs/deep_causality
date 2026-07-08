@@ -9,9 +9,9 @@ use crate::kernels::dynamics::kinematics;
 use crate::kernels::dynamics::kinematics::PhysicalVector;
 use crate::{Frequency, Mass, MomentOfInertia, Probability};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::RealField;
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`estimation::kalman_filter_linear_kernel`].

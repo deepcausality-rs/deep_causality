@@ -10,9 +10,8 @@
 
 use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, Real, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, Real, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 use std::fmt::Debug;
 
 // ============================================================================

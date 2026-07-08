@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::RealField;
 use deep_causality_core::CausalityError;
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::RealField;
 
 /// Electric Potential (Volts or J/C).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]

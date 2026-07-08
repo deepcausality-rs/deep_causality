@@ -3,7 +3,7 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{CausalTensor, CausalTensorError, EinSumOp};
-use deep_causality_num::Ring;
+use deep_causality_algebra::Ring;
 use std::ops::Mul;
 
 impl<T> CausalTensor<T>

@@ -10,8 +10,8 @@
 
 use crate::theories::{compressible_ns, euler, incompressible_ns, stokes};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::RealField;
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, Velocity3, VelocityGradient,
 };

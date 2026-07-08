@@ -9,7 +9,7 @@
 
 use crate::CausalMultiField;
 use crate::types::multifield::ops::gamma;
-use deep_causality_num::{Field, Ring};
+use deep_causality_algebra::{Field, Ring};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Axis enumeration for differential operators.

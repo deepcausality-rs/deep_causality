@@ -6,9 +6,9 @@
 pub mod stateful;
 
 use crate::*;
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
-use ultragraph::GraphTraversal;
+use ultragraph::{GraphTraversal, TopologicalGraphAlgorithms};
 
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
 ///
@@ -61,29 +61,43 @@ where
         causaloid.evaluate(effect)
     }
 
-    /// Reasons over a subgraph by traversing all nodes reachable from a given start index,
-    /// using a monadic approach.
+    /// Reasons over the acyclic sub-DAG reachable from a start index using a monadic approach.
     ///
-    /// This method performs a Breadth-First Search (BFS) traversal of all descendants
-    /// of the `start_index`. The `PropagatingEffect` is passed sequentially:
-    /// the output effect of a parent node becomes the input effect for its child node.
-    /// The traversal continues as long as no `CausalityError` is returned within the `PropagatingEffect`.
+    /// The frozen graph must be acyclic. Evaluation runs a Kahn-style topological schedule rather
+    /// than a breadth-first walk. A ready-set (a `BTreeSet` ordered by ascending node index) holds
+    /// the nodes whose reachable parents have all resolved. The scheduler pops the lowest-index
+    /// ready node, evaluates it once, and publishes its output effect to the wire slot of every
+    /// reachable child. A child becomes ready when its last pending wire resolves.
     ///
-    /// ## Adaptive Reasoning
+    /// A reachability pre-pass first marks the start node and its descendants. A wire from a
+    /// non-descendant is therefore resolved `Inactive` up front and never counted as pending, which
+    /// keeps mid-graph starts and abandoned relay cones free of deadlock. A node reached by a single
+    /// fired parent passes that parent's effect through, because the join of one input is the
+    /// identity. A node reached by two or more fired parents is a reconvergence; the merge (∇) of
+    /// converging effects is not yet defined, so the evaluator fails loudly instead of silently
+    /// picking one parent.
     ///
-    /// If a `Causaloid` returns a `RelayTo` command effect, the BFS traversal dynamically jumps to
-    /// its `target` index, and the command's sub-program becomes the new input for the relayed path.
-    /// This enables *adaptive reasoning* conditional to the deciding causaloid.
+    /// ## Acyclicity requirement
+    ///
+    /// A directed cycle is rejected with an error before any node runs. A Kahn-style ready-set would
+    /// otherwise silently skip the nodes trapped inside the cycle, so the frozen graph must be a DAG.
+    ///
+    /// ## Adaptive reasoning
+    ///
+    /// A `RelayTo(target, sub)` result ends the current round and starts a fresh round at `target`,
+    /// seeded with the command's sub-program. Rounds compose sequentially. The abandoned cone of the
+    /// relaying round simply stops and resolves `Inactive` implicitly. The relay is single-level.
     ///
     /// # Arguments
     ///
-    /// * `start_index` - The index of the node to start the traversal from.
-    /// * `initial_effect` - The initial runtime effect to be passed to the starting node's evaluation function.
+    /// * `start_index` - The index of the node to start evaluation from.
+    /// * `initial_effect` - The initial runtime effect passed to the starting node's evaluation function.
     ///
     /// # Returns
     ///
-    /// A `PropagatingEffect` representing the final aggregated monadic effect of the traversal.
-    /// If an error occurs during evaluation, the returned `PropagatingEffect` will contain the error.
+    /// A `PropagatingEffect` carrying the effect of the last node processed under the ascending-index
+    /// schedule. The first node error short-circuits the whole traversal and is returned with its
+    /// logs intact.
     fn evaluate_subgraph_from_cause(
         &self,
         start_index: usize,
@@ -101,114 +115,195 @@ where
             )));
         }
 
-        // Queue stores (node_index, incoming_effect_for_this_node)
-        let mut queue =
-            VecDeque::<(usize, PropagatingEffect<V>)>::with_capacity(self.number_nodes());
-        let mut visited = vec![false; self.number_nodes()];
+        // The classical fan-in evaluator requires a topological order, so the frozen graph must be
+        // acyclic. A Kahn-style ready-set would otherwise silently skip nodes inside a cycle.
+        if self.get_graph().has_cycle().unwrap_or(true) {
+            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Graph contains a directed cycle; the reconvergence-join evaluator requires an \
+                 acyclic (frozen DAG) graph"
+                    .into(),
+            )));
+        }
 
-        // Initialize the queue with the starting node and the initial effect
-        queue.push_back((start_index, initial_effect.clone()));
-        visited[start_index] = true;
+        let n_nodes = self.number_nodes();
 
-        // This will hold the effect of the last successfully processed node.
-        let mut last_propagated_effect = initial_effect.clone();
+        // Evaluation composes rounds sequentially: a round folds the reachable acyclic sub-DAG with
+        // labeled fan-in; a `RelayTo` ends the round and starts a fresh one at the relay target with
+        // the command's sub-program as the new seed (sequential composition of rounds).
+        let mut round_start = start_index;
+        let mut round_input = initial_effect.clone();
 
-        while let Some((current_index, incoming_effect)) = queue.pop_front() {
-            let causaloid = match self.get_causaloid(current_index) {
-                Some(c) => c,
-                None => {
-                    return PropagatingEffect::from_error(CausalityError(
-                        CausalityErrorEnum::Custom(format!(
-                            "Failed to get causaloid at index {current_index}"
-                        )),
-                    ));
+        'rounds: loop {
+            // Reachability pre-pass: only `round_start` and its descendants can fire. Every in-wire
+            // from a non-descendant is thereby resolved `Inactive` up front (it is never counted in
+            // `pending`), which is what keeps mid-graph starts and abandoned relay cones deadlock-free.
+            let mut reachable = vec![false; n_nodes];
+            reachable[round_start] = true;
+            let mut stack = vec![round_start];
+            while let Some(node) = stack.pop() {
+                if let Ok(children) = self.get_graph().outbound_edges(node) {
+                    for c in children {
+                        if !reachable[c] {
+                            reachable[c] = true;
+                            stack.push(c);
+                        }
+                    }
                 }
-            };
-
-            // Evaluate the current cause using the incoming_effect.
-            let result_effect = causaloid.evaluate(&incoming_effect);
-
-            // Update the last_propagated_effect with the result of the current node's evaluation.
-            last_propagated_effect = result_effect.clone();
-
-            // If an error occurred, propagate it and stop further processing for this path.
-            if result_effect.is_err() {
-                return result_effect;
             }
 
-            // Interpret the causaloid's output effect (the `Free::fold` handler, inlined for the
-            // single `RelayTo` command): a command jumps; a value/none follows the graph edges.
-            match result_effect.command_target() {
-                // Adaptive reasoning: `RelayTo(target, sub)`.
-                Some(target_idx) => {
-                    // Reset traversal state to follow the relayed path exclusively.
-                    visited.fill(false);
-                    queue.clear();
+            // Wire-slot bookkeeping. `pending[n]` counts the *reachable* parents of `n` not yet
+            // resolved; a wire from an unreachable parent is pre-resolved `Inactive` (not counted).
+            // `fired[n]` accumulates the effects of parents that fired, keyed by parent node index.
+            let mut pending = vec![0usize; n_nodes];
+            let mut fired: Vec<BTreeMap<usize, PropagatingEffect<V>>> =
+                (0..n_nodes).map(|_| BTreeMap::new()).collect();
+            let mut processed = vec![false; n_nodes];
 
-                    if !self.contains_causaloid(target_idx) {
-                        // Raising discards the value channel: value and error are one channel.
-                        let (_, state, context, logs) = last_propagated_effect.into_parts();
-                        return PropagatingEffect::new(
-                            Err(CausalityError(CausalityErrorEnum::Custom(format!(
-                                "RelayTo target causaloid with index {target_idx} not found in graph."
-                            )))),
-                            state,
-                            context,
-                            logs,
-                        );
-                    }
-
-                    visited[target_idx] = true;
-
-                    // The relayed input is the command's sub-program, fed to the target as its
-                    // incoming effect. A value/`None` is evaluated by the target as-is. This inlines a
-                    // SINGLE-level `RelayTo` jump: a nested command is passed through to the target as
-                    // input, where a singleton rejects it with a clear error (see `Causable::evaluate`)
-                    // — the engine does not re-dispatch nested commands across nodes. Multi-level
-                    // command folding is the algebra of `CausalEffect::fold`, not this BFS loop.
-                    let relayed_effect = result_effect
-                        .into_parts()
-                        .0
-                        .ok()
-                        .and_then(CausalEffect::into_command)
-                        .map(|(_, sub)| sub)
-                        .unwrap_or_else(CausalEffect::none);
-                    // The stateless engine's carrier has unit state and no context.
-                    let relayed = PropagatingEffect::new(
-                        Ok(relayed_effect),
-                        (),
-                        None,
-                        last_propagated_effect.logs().clone(),
-                    );
-                    queue.push_back((target_idx, relayed));
+            for node in 0..n_nodes {
+                // The start node is seeded, so its parents are ignored (pending stays 0).
+                if !reachable[node] || node == round_start {
+                    continue;
                 }
-                None => {
-                    let children = match self.get_graph().outbound_edges(current_index) {
-                        Ok(c) => c,
-                        Err(e) => {
-                            // Raising discards the value channel: value and error are one channel.
-                            let (_, state, context, logs) = last_propagated_effect.into_parts();
+                if let Ok(parents) = self.get_graph().inbound_edges(node) {
+                    pending[node] = parents.filter(|p| reachable[*p]).count();
+                }
+            }
+
+            // Ready set ordered by ascending node index — the canonical schedule.
+            let mut ready: BTreeSet<usize> = BTreeSet::new();
+            ready.insert(round_start);
+
+            let mut last_effect = round_input.clone();
+
+            while let Some(node) = ready.pop_first() {
+                if processed[node] {
+                    continue;
+                }
+                processed[node] = true;
+
+                // Resolve this node's incoming effect from its wire slots.
+                let incoming = if node == round_start {
+                    round_input.clone()
+                } else {
+                    let parents = std::mem::take(&mut fired[node]);
+                    match parents.len() {
+                        0 => {
+                            // Unreachable invariant guard. The reachability pre-pass prunes dead paths
+                            // at the wire level: an in-wire from a non-descendant of the start is never
+                            // counted in `pending`, and every *reachable* ancestor of a node fires
+                            // (induction from the seeded start over the acyclic reachable sub-DAG). So a
+                            // non-start node that becomes ready always has at least one fired parent;
+                            // it never resolves to a zero-parent join.
+                            return PropagatingEffect::from_error(CausalityError(
+                                CausalityErrorEnum::Custom(format!(
+                                    "internal invariant: node {node} became ready with no fired parents"
+                                )),
+                            ));
+                        }
+                        1 => {
+                            // Join of one fired parent is the identity: pass its effect through.
+                            parents.into_values().next().expect("len == 1")
+                        }
+                        _ => {
+                            // Reconvergence: two or more parents fire into one node. The merge (∇) of
+                            // converging effects is a symmetric-monoidal generator over the effect
+                            // monad (copy/discard comonoid + merge), an extension of the single-input
+                            // causaloid that is not yet defined (see
+                            // `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2).
+                            // Fail loudly rather than silently pick one parent (the previous
+                            // first-parent-wins bug) or guess a combine in the wrong layer.
+                            let keys: Vec<usize> = parents.keys().copied().collect();
+                            return PropagatingEffect::from_error(CausalityError(
+                                CausalityErrorEnum::Custom(format!(
+                                    "Node {node} is a reconvergence reached by {} fired parents \
+                                     (graph indices {keys:?}); the reconvergence merge (∇) is not \
+                                     yet defined and multi-parent fan-in is unsupported. Restructure \
+                                     to a single-parent path, or await the symmetric-monoidal merge \
+                                     extension.",
+                                    keys.len()
+                                )),
+                            ));
+                        }
+                    }
+                };
+
+                let causaloid = match self.get_causaloid(node) {
+                    Some(c) => c,
+                    None => {
+                        return PropagatingEffect::from_error(CausalityError(
+                            CausalityErrorEnum::Custom(format!(
+                                "Failed to get causaloid at index {node}"
+                            )),
+                        ));
+                    }
+                };
+
+                let result_effect = causaloid.evaluate(&incoming);
+                last_effect = result_effect.clone();
+
+                // A node error short-circuits the whole traversal (left-zero), preserving logs.
+                if result_effect.is_err() {
+                    return result_effect;
+                }
+
+                match result_effect.command_target() {
+                    // Adaptive reasoning: `RelayTo(target, sub)` ends this round and starts a fresh
+                    // one at the target with the command's sub-program (single-level relay). The
+                    // abandoned cone resolves `Inactive` implicitly — the round simply stops here.
+                    Some(target_idx) => {
+                        if !self.contains_causaloid(target_idx) {
+                            let (_, state, context, logs) = last_effect.into_parts();
                             return PropagatingEffect::new(
-                                Err(CausalityError(CausalityErrorEnum::Custom(format!("{e}")))),
+                                Err(CausalityError(CausalityErrorEnum::Custom(format!(
+                                    "RelayTo target causaloid with index {target_idx} not found in graph."
+                                )))),
                                 state,
                                 context,
                                 logs,
                             );
                         }
-                    };
-                    for child_index in children {
-                        if !visited[child_index] {
-                            visited[child_index] = true;
-                            // Pass the result_effect of the current node to its children.
-                            queue.push_back((child_index, result_effect.clone()));
+                        let logs = last_effect.logs().clone();
+                        let relayed_effect = result_effect
+                            .into_parts()
+                            .0
+                            .ok()
+                            .and_then(CausalEffect::into_command)
+                            .map(|(_, sub)| sub)
+                            .unwrap_or_else(CausalEffect::none);
+                        round_start = target_idx;
+                        round_input = PropagatingEffect::new(Ok(relayed_effect), (), None, logs);
+                        continue 'rounds;
+                    }
+                    // A value/`None` result fires: publish it to each child's wire slot.
+                    None => {
+                        let children = match self.get_graph().outbound_edges(node) {
+                            Ok(c) => c,
+                            Err(e) => {
+                                let (_, state, context, logs) = last_effect.into_parts();
+                                return PropagatingEffect::new(
+                                    Err(CausalityError(CausalityErrorEnum::Custom(format!("{e}")))),
+                                    state,
+                                    context,
+                                    logs,
+                                );
+                            }
+                        };
+                        for c in children {
+                            if reachable[c] && !processed[c] {
+                                fired[c].insert(node, result_effect.clone());
+                                pending[c] = pending[c].saturating_sub(1);
+                                if pending[c] == 0 {
+                                    ready.insert(c);
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // If the loop completes, return the effect of the last node processed.
-        last_propagated_effect
+            // Round complete: return the effect of the last node processed.
+            return last_effect;
+        }
     }
     /// Reasons over the shortest path between a start and stop cause using a monadic approach.
     ///

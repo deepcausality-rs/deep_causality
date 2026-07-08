@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_topology::FlowMethod;
 use deep_causality_topology::FlowParams;
 use deep_causality_topology::GaugeGroup;

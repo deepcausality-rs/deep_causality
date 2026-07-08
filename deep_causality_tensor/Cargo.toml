@@ -35,6 +35,18 @@ version = "0.3"
 path = "../deep_causality_num"
 version = "0.3"
 
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+
+[dependencies.deep_causality_num_complex]
+path = "../deep_causality_num_complex"
+version = "0.1"
+
+[dependencies.deep_causality_num_dual]
+path = "../deep_causality_num_dual"
+version = "0.1"
+
 [dev-dependencies]
 criterion = { version = "0.8" }
 deep_causality_rand = { path = "../deep_causality_rand" }

@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:55Z",
+    "created": "2026-07-07T22:29:39Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-db3b67ab-26d1-4dd7-95a5-e3a513f4d1c6",
+  "documentNamespace": "https://spdx.org/spdxdocs/ultragraph-a62ccfbd-720a-4423-973a-e7ce6dece7e9",
   "files": [
     {
       "SPDXID": "SPDXRef-File-ultragraph",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",

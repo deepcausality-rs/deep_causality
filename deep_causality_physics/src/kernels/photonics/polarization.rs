@@ -4,7 +4,9 @@
  */
 
 use crate::{JonesVector, PhysicsError, Ratio, RayAngle, StokesVector};
-use deep_causality_num::{Complex, DivisionAlgebra, FromPrimitive, RealField};
+use deep_causality_algebra::{DivisionAlgebra, RealField};
+use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
 /// Rotates a Jones Matrix (operator) by an angle $\phi$.

@@ -17,7 +17,7 @@
 //! Normalization matches the complex plans: forward unnormalized,
 //! inverse scaled by `1/n`.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::errors::fft_error::FftError;
 use crate::traits::fft_scalar::FftScalar;

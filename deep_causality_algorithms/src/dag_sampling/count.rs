@@ -36,7 +36,8 @@ use crate::dag_sampling::graph::Graph;
 use crate::dag_sampling::index_set::IndexSet;
 use crate::dag_sampling::lazy_tokens::LazyTokens;
 use crate::dag_sampling::memoization::Memoization;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Converts a `usize` into the count type `T`.
 #[inline]

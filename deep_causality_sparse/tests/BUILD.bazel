@@ -65,6 +65,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_sparse",
         # Deps
+        "//deep_causality_algebra",
         "//deep_causality_num",
         "//deep_causality_haft",
         # tensor-iso feature dep

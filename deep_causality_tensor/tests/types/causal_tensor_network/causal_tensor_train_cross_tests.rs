@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{ConjugateScalar, Float106, FromPrimitive, RealField};
+use deep_causality_algebra::{ConjugateScalar, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorError, CausalTensorTrain, CrossConfig, TensorTrain,
 };

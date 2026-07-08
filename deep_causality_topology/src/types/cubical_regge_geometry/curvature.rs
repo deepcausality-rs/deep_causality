@@ -36,7 +36,8 @@
 use super::{CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker};
 use crate::traits::neighborhood::CellId;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
-use deep_causality_num::{Complex, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num_complex::Complex;
 
 /// Signature-independent geometric methods: dihedral angles, deficit angles.
 /// Available on every signature variant since the axis-aligned cubical

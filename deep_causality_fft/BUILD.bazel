@@ -15,7 +15,9 @@ rust_library(
     visibility = ["//visibility:public"],
     deps = [
         # Internal crates
+        "//deep_causality_algebra",
         "//deep_causality_num",
+        "//deep_causality_num_complex",
         "//deep_causality_par",
     ],
 )

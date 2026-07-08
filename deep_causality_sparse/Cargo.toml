@@ -25,7 +25,7 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["deep_causality_num/default"]
+std = ["deep_causality_num/default", "deep_causality_algebra/default"]
 # Opt-in: enables CausalTensor <-> CsrMatrix iso (forward `From`,
 # reverse Tier 2 `Iso`, inherent `to_dense()` alias). Pulls in
 # `deep_causality_tensor` as a transitive dependency. Off by default
@@ -36,6 +36,11 @@ tensor-iso = ["dep:deep_causality_tensor"]
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.3"
+default-features = false
+
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
 default-features = false
 
 [dependencies.deep_causality_haft]

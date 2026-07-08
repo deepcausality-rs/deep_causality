@@ -3,7 +3,7 @@
 //! These types are generic over `R: RealField` to support both `f64` and
 //! `DoubleFloat` precision.
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Structure to hold GM result and associated altitude for correlation analysis
 #[derive(Debug, Clone, Copy)]

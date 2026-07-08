@@ -8,7 +8,8 @@
 //! more than one domain kernel lives here rather than in a domain-specific file.
 
 use crate::PhysicsError;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Length (m).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]

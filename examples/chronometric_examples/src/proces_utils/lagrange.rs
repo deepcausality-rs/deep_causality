@@ -4,7 +4,8 @@
  */
 use crate::{ClockData, OrbitData};
 use chrono::NaiveDateTime;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_physics::{EARTH_ROTATION_RATE, SpaceTimeCoordinate};
 
 /// Maximum time gap (seconds) for centered finite difference in clock drift rate.

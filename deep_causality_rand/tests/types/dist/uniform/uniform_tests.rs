@@ -187,7 +187,8 @@ uniform_float_tests!(f64, f64_tests, 0.05);
 // float macro above relies on `as f64` and f64 literals, so it is exercised by hand.
 mod f106_tests {
     use super::*;
-    use deep_causality_num::{Float106, Real};
+    use deep_causality_algebra::Real;
+    use deep_causality_num::Float106;
     use deep_causality_rand::rng;
 
     #[test]

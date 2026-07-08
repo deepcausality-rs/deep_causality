@@ -4,8 +4,9 @@
  */
 
 use crate::PhysicsError;
+use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::{Complex, DivisionAlgebra};
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
 // ============================================================================
@@ -19,15 +20,15 @@ use deep_causality_tensor::CausalTensor;
 ///
 /// *   **Dimensions**: Usually dimensionless (if $k$ is dimensionless) or $L^2$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct QuantumMetric<R: deep_causality_num::RealField>(R);
+pub struct QuantumMetric<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for QuantumMetric<R> {
+impl<R: deep_causality_algebra::RealField> Default for QuantumMetric<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> QuantumMetric<R> {
+impl<R: deep_causality_algebra::RealField> QuantumMetric<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         // Metric components can be negative (off-diagonal), so no invariant check here.
         Ok(Self(val))
@@ -37,7 +38,7 @@ impl<R: deep_causality_num::RealField> QuantumMetric<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<QuantumMetric<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<QuantumMetric<R>> for f64 {
     fn from(val: QuantumMetric<R>) -> Self {
         val.0.into()
     }
@@ -50,15 +51,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<QuantumMetric<R>> for f6
 ///
 /// *   **Dimensions**: Area ($L^2$) or dimensionless depending on $k$-space normalization.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct BerryCurvature<R: deep_causality_num::RealField>(R);
+pub struct BerryCurvature<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for BerryCurvature<R> {
+impl<R: deep_causality_algebra::RealField> Default for BerryCurvature<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> BerryCurvature<R> {
+impl<R: deep_causality_algebra::RealField> BerryCurvature<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -67,7 +68,7 @@ impl<R: deep_causality_num::RealField> BerryCurvature<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<BerryCurvature<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<BerryCurvature<R>> for f64 {
     fn from(val: BerryCurvature<R>) -> Self {
         val.0.into()
     }
@@ -78,15 +79,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<BerryCurvature<R>> for f
 /// A measure of coherent electron transport (conductivity weight) in a band.
 /// Includes both conventional (kinetic) and geometric contributions.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct BandDrudeWeight<R: deep_causality_num::RealField>(R);
+pub struct BandDrudeWeight<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for BandDrudeWeight<R> {
+impl<R: deep_causality_algebra::RealField> Default for BandDrudeWeight<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> BandDrudeWeight<R> {
+impl<R: deep_causality_algebra::RealField> BandDrudeWeight<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -95,7 +96,7 @@ impl<R: deep_causality_num::RealField> BandDrudeWeight<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<BandDrudeWeight<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<BandDrudeWeight<R>> for f64 {
     fn from(val: BandDrudeWeight<R>) -> Self {
         val.0.into()
     }
@@ -105,15 +106,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<BandDrudeWeight<R>> for 
 ///
 /// Intrinsic orbital moment of the Bloch packet.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct OrbitalAngularMomentum<R: deep_causality_num::RealField>(R);
+pub struct OrbitalAngularMomentum<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for OrbitalAngularMomentum<R> {
+impl<R: deep_causality_algebra::RealField> Default for OrbitalAngularMomentum<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> OrbitalAngularMomentum<R> {
+impl<R: deep_causality_algebra::RealField> OrbitalAngularMomentum<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -122,7 +123,7 @@ impl<R: deep_causality_num::RealField> OrbitalAngularMomentum<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<OrbitalAngularMomentum<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<OrbitalAngularMomentum<R>> for f64 {
     fn from(val: OrbitalAngularMomentum<R>) -> Self {
         val.0.into()
     }
@@ -132,15 +133,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<OrbitalAngularMomentum<R
 ///
 /// Units: Siemens ($S = Ω^{-1}$).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Conductance<R: deep_causality_num::RealField>(R);
+pub struct Conductance<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Conductance<R> {
+impl<R: deep_causality_algebra::RealField> Default for Conductance<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Conductance<R> {
+impl<R: deep_causality_algebra::RealField> Conductance<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -157,7 +158,7 @@ impl<R: deep_causality_num::RealField> Conductance<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Conductance<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Conductance<R>> for f64 {
     fn from(val: Conductance<R>) -> Self {
         val.0.into()
     }
@@ -167,15 +168,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Conductance<R>> for f64 
 ///
 /// Units: $m^2 / (V · s)$.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Mobility<R: deep_causality_num::RealField>(R);
+pub struct Mobility<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Mobility<R> {
+impl<R: deep_causality_algebra::RealField> Default for Mobility<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Mobility<R> {
+impl<R: deep_causality_algebra::RealField> Mobility<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val < R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -192,7 +193,7 @@ impl<R: deep_causality_num::RealField> Mobility<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Mobility<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Mobility<R>> for f64 {
     fn from(val: Mobility<R>) -> Self {
         val.0.into()
     }
@@ -202,15 +203,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Mobility<R>> for f64 {
 ///
 /// Units: Radians.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct TwistAngle<R: deep_causality_num::RealField>(R);
+pub struct TwistAngle<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for TwistAngle<R> {
+impl<R: deep_causality_algebra::RealField> Default for TwistAngle<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> TwistAngle<R> {
+impl<R: deep_causality_algebra::RealField> TwistAngle<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -219,7 +220,7 @@ impl<R: deep_causality_num::RealField> TwistAngle<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> TwistAngle<R> {
+impl<R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive> TwistAngle<R> {
     pub fn as_degrees(&self) -> R {
         let factor =
             R::from_f64(180.0 / core::f64::consts::PI).expect("R::from_f64(180/PI) failed");
@@ -232,7 +233,7 @@ impl<R: deep_causality_num::RealField + deep_causality_num::FromPrimitive> Twist
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<TwistAngle<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<TwistAngle<R>> for f64 {
     fn from(val: TwistAngle<R>) -> Self {
         val.0.into()
     }
@@ -243,9 +244,9 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<TwistAngle<R>> for f64 {
 /// A complex scalar field describing the macroscopic condensate wavefunction.
 /// *   $|ψ|^2 ≠ n_s$ (superfluid density).
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct OrderParameter<R: deep_causality_num::RealField>(Complex<R>);
+pub struct OrderParameter<R: deep_causality_algebra::RealField>(Complex<R>);
 
-impl<R: deep_causality_num::RealField> OrderParameter<R> {
+impl<R: deep_causality_algebra::RealField> OrderParameter<R> {
     pub fn new(val: Complex<R>) -> Self {
         Self(val)
     }
@@ -267,9 +268,9 @@ impl<R: deep_causality_num::RealField> OrderParameter<R> {
 /// *   **Rank 2 Tensor**: [basis_size, num_states].
 /// *   Columns correspond to different bands $n$.
 #[derive(Debug, Clone, PartialEq)]
-pub struct QuantumEigenvector<R: deep_causality_num::RealField>(CausalTensor<Complex<R>>);
+pub struct QuantumEigenvector<R: deep_causality_algebra::RealField>(CausalTensor<Complex<R>>);
 
-impl<R: deep_causality_num::RealField> QuantumEigenvector<R> {
+impl<R: deep_causality_algebra::RealField> QuantumEigenvector<R> {
     pub fn new(tensor: CausalTensor<Complex<R>>) -> Self {
         Self(tensor)
     }
@@ -284,9 +285,9 @@ impl<R: deep_causality_num::RealField> QuantumEigenvector<R> {
 /// like the QGT or Kub-Greenwood conductivity.
 /// *   **Rank 2 Tensor**: [basis_size, num_states].
 #[derive(Debug, Clone, PartialEq)]
-pub struct QuantumVelocity<R: deep_causality_num::RealField>(CausalTensor<Complex<R>>);
+pub struct QuantumVelocity<R: deep_causality_algebra::RealField>(CausalTensor<Complex<R>>);
 
-impl<R: deep_causality_num::RealField> QuantumVelocity<R> {
+impl<R: deep_causality_algebra::RealField> QuantumVelocity<R> {
     pub fn new(tensor: CausalTensor<Complex<R>>) -> Self {
         Self(tensor)
     }
@@ -299,15 +300,15 @@ impl<R: deep_causality_num::RealField> QuantumVelocity<R> {
 ///
 /// Represents a point in the Brillouin Zone.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Momentum<R: deep_causality_num::RealField>(CausalMultiVector<R>);
+pub struct Momentum<R: deep_causality_algebra::RealField>(CausalMultiVector<R>);
 
-impl<R: deep_causality_num::RealField> Default for Momentum<R> {
+impl<R: deep_causality_algebra::RealField> Default for Momentum<R> {
     fn default() -> Self {
         Self(CausalMultiVector::new(vec![R::zero()], Metric::Euclidean(0)).unwrap())
     }
 }
 
-impl<R: deep_causality_num::RealField> Momentum<R> {
+impl<R: deep_causality_algebra::RealField> Momentum<R> {
     pub fn new(mv: CausalMultiVector<R>) -> Self {
         Self(mv)
     }
@@ -320,9 +321,9 @@ impl<R: deep_causality_num::RealField> Momentum<R> {
 ///
 /// Represents the mechanical displacement vector field or strain tensor components.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Displacement<R: deep_causality_num::RealField>(CausalTensor<R>);
+pub struct Displacement<R: deep_causality_algebra::RealField>(CausalTensor<R>);
 
-impl<R: deep_causality_num::RealField> Displacement<R> {
+impl<R: deep_causality_algebra::RealField> Displacement<R> {
     pub fn new(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
@@ -336,9 +337,9 @@ impl<R: deep_causality_num::RealField> Displacement<R> {
 /// Represents the local concentration (mole fraction) of a species.
 /// *   **Values**: Must be non-negative.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Concentration<R: deep_causality_num::RealField>(CausalTensor<R>);
+pub struct Concentration<R: deep_causality_algebra::RealField>(CausalTensor<R>);
 
-impl<R: deep_causality_num::RealField> Concentration<R> {
+impl<R: deep_causality_algebra::RealField> Concentration<R> {
     pub fn new(tensor: CausalTensor<R>) -> Result<Self, PhysicsError> {
         // Concentration cannot be negative
         for &val in tensor.as_slice() {
@@ -364,9 +365,9 @@ impl<R: deep_causality_num::RealField> Concentration<R> {
 ///
 /// Driving force for diffusion.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ChemicalPotentialGradient<R: deep_causality_num::RealField>(CausalTensor<R>);
+pub struct ChemicalPotentialGradient<R: deep_causality_algebra::RealField>(CausalTensor<R>);
 
-impl<R: deep_causality_num::RealField> ChemicalPotentialGradient<R> {
+impl<R: deep_causality_algebra::RealField> ChemicalPotentialGradient<R> {
     pub fn new(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
@@ -379,15 +380,15 @@ impl<R: deep_causality_num::RealField> ChemicalPotentialGradient<R> {
 ///
 /// Used in the covariant derivative $\nabla - i\mathbf{A}$.
 #[derive(Debug, Clone, PartialEq)]
-pub struct VectorPotential<R: deep_causality_num::RealField>(CausalMultiVector<R>);
+pub struct VectorPotential<R: deep_causality_algebra::RealField>(CausalMultiVector<R>);
 
-impl<R: deep_causality_num::RealField> Default for VectorPotential<R> {
+impl<R: deep_causality_algebra::RealField> Default for VectorPotential<R> {
     fn default() -> Self {
         Self(CausalMultiVector::new(vec![R::zero()], Metric::Euclidean(0)).unwrap())
     }
 }
 
-impl<R: deep_causality_num::RealField> VectorPotential<R> {
+impl<R: deep_causality_algebra::RealField> VectorPotential<R> {
     pub fn new(mv: CausalMultiVector<R>) -> Self {
         Self(mv)
     }

@@ -4,7 +4,8 @@
  */
 
 use crate::error::PhysicsError;
-use deep_causality_num::{Field, Float};
+use deep_causality_algebra::Field;
+use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensor;
 
 // Kernels

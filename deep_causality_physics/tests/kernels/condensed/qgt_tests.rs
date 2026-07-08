@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     Energy, Length, QuantumEigenvector, QuantumMetric, QuantumVelocity,
     effective_band_drude_weight_kernel, quantum_geometric_tensor_kernel, quasi_qgt_kernel,

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{ComplexMultiVector, Metric};
-use deep_causality_num::Complex64;
+use deep_causality_num_complex::Complex64;
 
 impl ComplexMultiVector {
     /// Cl_C(2): Complex Quaternions / Pauli Algebra over C

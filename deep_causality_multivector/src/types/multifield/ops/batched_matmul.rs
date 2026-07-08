@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{Field, Ring};
+use deep_causality_algebra::{Field, Ring};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Trait to support batched matrix multiplication.

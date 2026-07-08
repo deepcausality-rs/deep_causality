@@ -4,7 +4,7 @@
  */
 use deep_causality_multivector::MultiVectorL2Norm;
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 #[test]
 fn test_real_norm_l2() {

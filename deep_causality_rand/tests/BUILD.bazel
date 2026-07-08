@@ -29,6 +29,7 @@ rust_test_suite(
         "//deep_causality_rand",
         # Float106 + Real/RealField precision targets
         "//deep_causality_num",
+        "//deep_causality_algebra",
     ],
 )
 
@@ -75,6 +76,38 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_rand",
         # Float106 precision target
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_rand",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "traits",
+    srcs = glob([
+        "traits/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_rand",
         "//deep_causality_num",
     ],
 )

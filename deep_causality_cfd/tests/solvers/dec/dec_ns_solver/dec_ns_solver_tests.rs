@@ -6,8 +6,9 @@
 //! Solver construction and configuration tests: delegated rate rejections,
 //! `dt` validation, CFL-factor validation, getters.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::DecNsSolver;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

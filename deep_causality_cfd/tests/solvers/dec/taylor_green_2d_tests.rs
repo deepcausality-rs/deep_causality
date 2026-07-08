@@ -18,8 +18,9 @@
 //! (per-grid tolerance 8%, error must shrink by ≥ 2×) because its CG
 //! tolerance floor (≈ 1.2e-5) sits within reach of the n = 32 signal.
 
+use deep_causality_algebra::RealField;
 use deep_causality_cfd::{DecNsSolver, dec_kinetic_energy};
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 

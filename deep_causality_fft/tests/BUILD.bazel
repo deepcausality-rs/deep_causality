@@ -28,6 +28,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_fft",
         "//deep_causality_num",
+        "//deep_causality_num_complex",
     ],
 )
 
@@ -42,8 +43,10 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
+        "//deep_causality_algebra",
         "//deep_causality_fft",
         "//deep_causality_num",
+        "//deep_causality_num_complex",
     ],
 )
 
@@ -60,6 +63,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_fft",
         "//deep_causality_num",
+        "//deep_causality_num_complex",
     ],
 )
 
@@ -76,6 +80,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_fft",
         "//deep_causality_num",
+        "//deep_causality_num_complex",
     ],
 )
 
@@ -92,5 +97,24 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_fft",
         "//deep_causality_num",
+        "//deep_causality_num_complex",
+    ],
+)
+
+rust_test_suite(
+    name = "types_dct_plan",
+    srcs = glob([
+        "types/dct_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_algebra",
+        "//deep_causality_fft",
+        "//deep_causality_num",
+        "//deep_causality_num_complex",
     ],
 )

@@ -6,7 +6,8 @@
 use crate::constants::universal::speed_of_light;
 use crate::real_from_f64;
 use crate::{AmountOfSubstance, Energy, HalfLife, Mass, PhysicsError, Time};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 // Kernels
 

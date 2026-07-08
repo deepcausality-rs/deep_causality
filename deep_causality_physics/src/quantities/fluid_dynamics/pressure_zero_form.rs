@@ -5,7 +5,7 @@
 
 //! Pressure as a vertex 0-form (grade-0 cochain).
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
 

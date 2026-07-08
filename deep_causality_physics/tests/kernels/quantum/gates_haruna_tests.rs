@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     logical_cz, logical_hadamard, logical_s, logical_t, logical_x, logical_z,
 };

@@ -10,7 +10,7 @@
 //! them back to that target. This is a round-trip identity test — the only way an
 //! analytical inversion can be verified without external truth data.
 
-use deep_causality_num::Dual;
+use deep_causality_num_dual::Dual;
 use deep_causality_physics::{
     CentralBody, EARTH_GM, PhysicsErrorEnum, SPEED_OF_LIGHT, SpaceTimeCoordinate,
     solve_gm_analytical_kernel,

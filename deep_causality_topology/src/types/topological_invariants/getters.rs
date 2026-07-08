@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::RealField;
-
 use crate::types::topological_invariants::TopologicalInvariants;
+use deep_causality_algebra::RealField;
 
 impl<R: RealField> TopologicalInvariants<R> {
     /// Returns the four Betti numbers `[β_0, β_1, β_2, β_3]`.

@@ -10,8 +10,9 @@ use crate::{
 };
 use crate::{Density, Mass, PhysicalField, Speed, Temperature};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::SimplicialManifold;

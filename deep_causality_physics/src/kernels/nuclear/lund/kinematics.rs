@@ -20,7 +20,8 @@
 
 use crate::FourMomentum;
 use crate::real_from_f64;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// A string endpoint in lightcone coordinates.
 #[derive(Debug, Clone, Copy)]

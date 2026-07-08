@@ -12,7 +12,7 @@ pub use lattice_cell::LatticeCell;
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::neighborhood::CellId;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 use std::collections::HashMap;

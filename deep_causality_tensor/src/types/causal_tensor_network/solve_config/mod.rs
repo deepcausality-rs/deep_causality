@@ -4,7 +4,7 @@
  */
 
 use crate::CausalTensorError;
-use deep_causality_num::Real;
+use deep_causality_algebra::Real;
 
 /// Controls for the alternating-sweep (ALS) tensor-train solvers.
 ///

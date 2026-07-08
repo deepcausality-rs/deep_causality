@@ -12,7 +12,7 @@
 //! decimation-in-time split over the next-smaller kernel with a
 //! precomputed twiddle row.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 use crate::utils::complex_ops::{czero, mul_i, mul_neg_i};

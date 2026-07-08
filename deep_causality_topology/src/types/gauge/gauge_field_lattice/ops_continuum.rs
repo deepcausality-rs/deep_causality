@@ -8,9 +8,8 @@
 //! These methods extract continuum field theory quantities from lattice configurations.
 
 use crate::{ChainComplex, GaugeGroup, LatticeGaugeField, LinkVariable, TopologyError};
-use deep_causality_num::{
-    ComplexField, DivisionAlgebra, Field, FromPrimitive, RealField, ToPrimitive,
-};
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 
 use std::fmt::Debug;
 

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 // Helper function to create a basic CausalMultiVector for testing
 fn create_test_multivector(dim: usize, metric: Metric) -> CausalMultiVector<Complex<f64>> {

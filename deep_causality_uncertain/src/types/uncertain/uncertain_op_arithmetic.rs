@@ -4,7 +4,7 @@
  */
 
 use crate::{ArithmeticOperator, ProbabilisticType, Uncertain, UncertainNodeContent};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // Arithmetic operator overloading for the real-scalar instantiations (`f64`, `Float106`).

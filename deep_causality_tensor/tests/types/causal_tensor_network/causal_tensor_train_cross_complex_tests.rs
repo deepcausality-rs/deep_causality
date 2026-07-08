@@ -6,7 +6,9 @@
 //! Stage-4 complex TT-cross: building a `Complex<f64>` tensor train from a complex oracle without
 //! materializing the dense tensor, with modulus-based pivoting and a real residual estimate.
 
-use deep_causality_num::{Complex, ConjugateScalar, Zero};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensorTrain, CrossConfig, TensorTrain};
 
 type C = Complex<f64>;

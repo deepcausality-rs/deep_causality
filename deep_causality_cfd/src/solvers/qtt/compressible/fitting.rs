@@ -16,7 +16,7 @@
 use crate::tensor_bridge::quantize;
 use crate::types::CfdScalar;
 use alloc::vec;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, ElectronDensity, PARK_NO_IONIZATION_ACTIVATION_TEMP,
     PARK_NO_IONIZATION_EXPONENT, PARK_NO_IONIZATION_PREFACTOR, PhysicsError, Temperature,

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use std::iter::Sum;
 
 // This trait abstracts the differences between Real (f64) and Complex (Complex<f64>)

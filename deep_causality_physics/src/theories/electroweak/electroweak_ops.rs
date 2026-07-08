@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{EM, ElectroweakParams, PhysicsError};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, SimplicialManifold, U1};
 

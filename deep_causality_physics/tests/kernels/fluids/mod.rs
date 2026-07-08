@@ -10,6 +10,7 @@ pub mod coherent_structures_coverage_tests;
 #[cfg(test)]
 pub mod coherent_structures_tests;
 #[cfg(test)]
+#[cfg_attr(miri, ignore)]
 pub mod compressible_tests;
 #[cfg(test)]
 pub mod constitutive_tests;

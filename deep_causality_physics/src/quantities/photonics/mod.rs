@@ -4,21 +4,22 @@
  */
 
 use crate::PhysicsError;
-use deep_causality_num::{Complex, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
 /// Focal Length ($f$).
 /// Unit: Meters. Constraint: None (can be negative for diverging lens).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct FocalLength<R: deep_causality_num::RealField>(R);
+pub struct FocalLength<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for FocalLength<R> {
+impl<R: deep_causality_algebra::RealField> Default for FocalLength<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> FocalLength<R> {
+impl<R: deep_causality_algebra::RealField> FocalLength<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -27,7 +28,7 @@ impl<R: deep_causality_num::RealField> FocalLength<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<FocalLength<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<FocalLength<R>> for f64 {
     fn from(val: FocalLength<R>) -> Self {
         val.0.into()
     }
@@ -36,15 +37,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<FocalLength<R>> for f64 
 /// Optical Power ($D = 1/f$).
 /// Unit: Diopters ($m^{-1}$). Constraint: None.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct OpticalPower<R: deep_causality_num::RealField>(R);
+pub struct OpticalPower<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for OpticalPower<R> {
+impl<R: deep_causality_algebra::RealField> Default for OpticalPower<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> OpticalPower<R> {
+impl<R: deep_causality_algebra::RealField> OpticalPower<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -53,7 +54,7 @@ impl<R: deep_causality_num::RealField> OpticalPower<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<OpticalPower<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<OpticalPower<R>> for f64 {
     fn from(val: OpticalPower<R>) -> Self {
         val.0.into()
     }
@@ -62,15 +63,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<OpticalPower<R>> for f64
 /// Wavelength ($\lambda$).
 /// Unit: Meters. Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Wavelength<R: deep_causality_num::RealField>(R);
+pub struct Wavelength<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Wavelength<R> {
+impl<R: deep_causality_algebra::RealField> Default for Wavelength<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Wavelength<R> {
+impl<R: deep_causality_algebra::RealField> Wavelength<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -87,7 +88,7 @@ impl<R: deep_causality_num::RealField> Wavelength<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Wavelength<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Wavelength<R>> for f64 {
     fn from(val: Wavelength<R>) -> Self {
         val.0.into()
     }
@@ -96,15 +97,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Wavelength<R>> for f64 {
 /// Numerical Aperture ($NA = n \sin \theta$).
 /// Unit: Dimensionless. Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct NumericalAperture<R: deep_causality_num::RealField>(R);
+pub struct NumericalAperture<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for NumericalAperture<R> {
+impl<R: deep_causality_algebra::RealField> Default for NumericalAperture<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> NumericalAperture<R> {
+impl<R: deep_causality_algebra::RealField> NumericalAperture<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -121,7 +122,7 @@ impl<R: deep_causality_num::RealField> NumericalAperture<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<NumericalAperture<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<NumericalAperture<R>> for f64 {
     fn from(val: NumericalAperture<R>) -> Self {
         val.0.into()
     }
@@ -130,15 +131,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<NumericalAperture<R>> fo
 /// Beam Waist ($w_0$). Minimum radius of Gaussian beam.
 /// Unit: Meters. Constraint: > 0.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct BeamWaist<R: deep_causality_num::RealField>(R);
+pub struct BeamWaist<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for BeamWaist<R> {
+impl<R: deep_causality_algebra::RealField> Default for BeamWaist<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> BeamWaist<R> {
+impl<R: deep_causality_algebra::RealField> BeamWaist<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if val <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -155,7 +156,7 @@ impl<R: deep_causality_num::RealField> BeamWaist<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<BeamWaist<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<BeamWaist<R>> for f64 {
     fn from(val: BeamWaist<R>) -> Self {
         val.0.into()
     }
@@ -164,15 +165,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<BeamWaist<R>> for f64 {
 /// Ray Height ($y$). Distance from optical axis.
 /// Unit: Meters.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct RayHeight<R: deep_causality_num::RealField>(R);
+pub struct RayHeight<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for RayHeight<R> {
+impl<R: deep_causality_algebra::RealField> Default for RayHeight<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> RayHeight<R> {
+impl<R: deep_causality_algebra::RealField> RayHeight<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -181,7 +182,7 @@ impl<R: deep_causality_num::RealField> RayHeight<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<RayHeight<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<RayHeight<R>> for f64 {
     fn from(val: RayHeight<R>) -> Self {
         val.0.into()
     }
@@ -190,15 +191,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<RayHeight<R>> for f64 {
 /// Ray Angle ($\theta$). Angle relative to optical axis.
 /// Unit: Radians.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct RayAngle<R: deep_causality_num::RealField>(R);
+pub struct RayAngle<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for RayAngle<R> {
+impl<R: deep_causality_algebra::RealField> Default for RayAngle<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> RayAngle<R> {
+impl<R: deep_causality_algebra::RealField> RayAngle<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         Ok(Self(val))
     }
@@ -207,7 +208,7 @@ impl<R: deep_causality_num::RealField> RayAngle<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<RayAngle<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<RayAngle<R>> for f64 {
     fn from(val: RayAngle<R>) -> Self {
         val.0.into()
     }
@@ -215,9 +216,9 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<RayAngle<R>> for f64 {
 
 /// ABCD Matrix. $2 \times 2$ Ray Transfer Matrix.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct AbcdMatrix<R: deep_causality_num::RealField>(CausalTensor<R>);
+pub struct AbcdMatrix<R: deep_causality_algebra::RealField>(CausalTensor<R>);
 
-impl<R: deep_causality_num::RealField> AbcdMatrix<R> {
+impl<R: deep_causality_algebra::RealField> AbcdMatrix<R> {
     pub fn new(tensor: CausalTensor<R>) -> Self {
         Self(tensor)
     }
@@ -228,9 +229,9 @@ impl<R: deep_causality_num::RealField> AbcdMatrix<R> {
 
 /// Jones Vector. Polarized Electric Field. Rank 1, Dim 2 Complex Tensor.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct JonesVector<R: deep_causality_num::RealField>(CausalTensor<Complex<R>>);
+pub struct JonesVector<R: deep_causality_algebra::RealField>(CausalTensor<Complex<R>>);
 
-impl<R: deep_causality_num::RealField> JonesVector<R> {
+impl<R: deep_causality_algebra::RealField> JonesVector<R> {
     pub fn new(tensor: CausalTensor<Complex<R>>) -> Self {
         Self(tensor)
     }
@@ -242,9 +243,9 @@ impl<R: deep_causality_num::RealField> JonesVector<R> {
 /// Stokes Vector. Intensity vector $(S_0, S_1, S_2, S_3)$. Rank 1, Dim 4 Tensor.
 /// Constraint: $S_0^2 \ge S_1^2 + S_2^2 + S_3^2$.
 #[derive(Debug, Clone, PartialEq, Default)]
-pub struct StokesVector<R: deep_causality_num::RealField>(CausalTensor<R>);
+pub struct StokesVector<R: deep_causality_algebra::RealField>(CausalTensor<R>);
 
-impl<R: deep_causality_num::RealField> StokesVector<R> {
+impl<R: deep_causality_algebra::RealField> StokesVector<R> {
     pub fn new(tensor: CausalTensor<R>) -> Result<Self, PhysicsError> {
         if tensor.shape() != [4] {
             return Err(PhysicsError::DimensionMismatch(
@@ -272,9 +273,9 @@ impl<R: deep_causality_num::RealField> StokesVector<R> {
 /// Complex Beam Parameter ($q(z) = z + i z_R$).
 /// Constraint: $\text{Im}(q) > 0$.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct ComplexBeamParameter<R: deep_causality_num::RealField>(Complex<R>);
+pub struct ComplexBeamParameter<R: deep_causality_algebra::RealField>(Complex<R>);
 
-impl<R: deep_causality_num::RealField> ComplexBeamParameter<R> {
+impl<R: deep_causality_algebra::RealField> ComplexBeamParameter<R> {
     pub fn new(val: Complex<R>) -> Result<Self, PhysicsError> {
         if val.im <= R::zero() {
             return Err(PhysicsError::PhysicalInvariantBroken(

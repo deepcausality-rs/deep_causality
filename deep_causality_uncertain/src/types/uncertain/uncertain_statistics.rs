@@ -4,7 +4,8 @@
  */
 
 use crate::{ProbabilisticType, QmcSampler, Uncertain, UncertainError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 // Precision-generic Monte-Carlo statistics. Unlike the sampling surface (which needs only
 // `ProbabilisticType`), these reduce many samples into one scalar, so they require the value

@@ -12,7 +12,8 @@
 //! definitions into the target precision via `real_from_f64`. Tolerances are
 //! loose so a single generic body is valid at both precisions.
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_physics::{
     AmountOfSubstance, Energy, HalfLife, LundParameters, Mass, SPEED_OF_LIGHT, Time,
     all_structure_constants, binding_energy_kernel, confinement_potential_kernel,

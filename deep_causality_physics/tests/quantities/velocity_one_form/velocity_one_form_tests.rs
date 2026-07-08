@@ -6,9 +6,10 @@
 //! Constructor, rejection-branch, arithmetic, and Rk4-arrow tests for
 //! `VelocityOneForm` — the DEC solver's marching state.
 
+use deep_causality_algebra::RealField;
 use deep_causality_calculus::Rk4;
 use deep_causality_haft::Arrow;
-use deep_causality_num::{Float106, FromPrimitive, RealField};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_physics::VelocityOneForm;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};

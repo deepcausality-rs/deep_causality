@@ -25,8 +25,7 @@
 //! dimension, which simplifies downstream consumers (rolling history,
 //! SURD-input assembly) at the cost of carrying two zeros for 2D inputs.
 
-use deep_causality_num::RealField;
-
+use deep_causality_algebra::RealField;
 mod display;
 mod from_hodge_decomposition;
 mod getters;

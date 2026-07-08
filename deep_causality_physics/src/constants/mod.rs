@@ -30,7 +30,8 @@ pub use particle::*;
 pub use thermodynamics::*;
 pub use universal::*;
 
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Casts an `f64` physical constant to a target real-field precision `R`.
 ///

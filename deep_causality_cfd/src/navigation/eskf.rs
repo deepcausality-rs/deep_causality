@@ -19,7 +19,7 @@
 //!   2nd ed., Artech House (2013), §14 (error-state / sequential Kalman update).
 
 use super::ins_error_state::InsErrorState;
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// The error-state dimension (17 = INS 15-state + clock bias/drift).
 pub const NAV_STATES: usize = 17;

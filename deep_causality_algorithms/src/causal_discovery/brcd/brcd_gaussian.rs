@@ -30,7 +30,8 @@
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::causal_discovery::brcd::brcd_gate::{GateConfig, fit_logistic_gate};
 use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use std::borrow::Cow;
 
 /// Default ridge `λ` for the conditional-mean fit (matches `brcd.py`'s `1e-4`).

@@ -7,7 +7,9 @@
 //! the Hermitian inner product `⟨x|y⟩ = Σ x̄ᵢ yᵢ` (with a real, non-negative `⟨x|x⟩`), the real
 //! Frobenius norm, exact `add`/`scale`, and lossless `round`/canonicalization.
 
-use deep_causality_num::{Complex, ConjugateScalar, Zero};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Zero;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
 type C = Complex<f64>;

@@ -22,6 +22,9 @@ deep_causality_multivector = { path = "../../deep_causality_multivector" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 deep_causality_topology = { path = "../../deep_causality_topology" }
 deep_causality_num = { path = "../../deep_causality_num" }
+deep_causality_num_complex = { path = "../../deep_causality_num_complex" }
+deep_causality_num_dual = { path = "../../deep_causality_num_dual" }
+deep_causality_algebra = { path = "../../deep_causality_algebra" }
 deep_causality_sparse = { path = "../../deep_causality_sparse" }
 deep_causality_rand = { path = "../../deep_causality_rand", features = [
     "os-random",

@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_num::{
-    ConjugateScalar, Float106, FromPrimitive, Module, One, RealField, Ring, Zero,
-};
+use deep_causality_algebra::{ConjugateScalar, Module, RealField, Ring};
+use deep_causality_num::{Float106, FromPrimitive, One, Zero};
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
 fn v<T: FromPrimitive>(x: f64) -> T {

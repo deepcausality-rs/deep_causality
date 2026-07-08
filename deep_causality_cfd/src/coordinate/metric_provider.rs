@@ -17,7 +17,7 @@
 //! expose. The blend itself is already validated numerically (`studies/qtt_blend_metric`).
 
 use crate::types::CfdScalar;
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensorTrain;
 

@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-18T02:06:54Z",
+    "created": "2026-07-07T22:29:38Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-95fa7a3e-6156-4131-bfd8-cd17b2c15f5d",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num-a7e85cdd-a779-43e1-b200-e5b90332080a",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_num",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f7392f65d6a746809c1b6aa004c46d8a28b1299b"
+          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,15 +26,6 @@
   ],
   "name": "deep_causality_num",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.3.3"
-    },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.16",
       "description": "libm in pure Rust",
@@ -50,18 +41,27 @@
       "licenseDeclared": "MIT",
       "name": "libm",
       "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.3.3"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_num"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_num",

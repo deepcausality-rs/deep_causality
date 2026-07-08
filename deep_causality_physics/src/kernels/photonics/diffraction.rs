@@ -6,7 +6,8 @@
 use crate::Length;
 use crate::PhysicsError;
 use crate::{RayAngle, Wavelength};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Calculates the Single Slit Diffraction Irradiance.
 ///

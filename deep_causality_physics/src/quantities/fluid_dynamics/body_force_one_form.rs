@@ -5,7 +5,7 @@
 
 //! Body force (e.g. gravity) as an edge 1-form (grade-1 cochain).
 
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
 

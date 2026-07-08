@@ -8,9 +8,10 @@ use crate::SpacetimeVector;
 use crate::kernels::relativity::gravity;
 use crate::kernels::relativity::spacetime;
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`gravity::einstein_tensor_kernel`].

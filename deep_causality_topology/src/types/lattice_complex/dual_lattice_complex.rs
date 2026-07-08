@@ -12,11 +12,11 @@ use std::sync::Arc;
 ///
 /// For a D-dimensional lattice, a primal k-cell corresponds to a dual (D-k)-cell.
 /// This structure is essential for discrete exterior calculus (Hodge star).
-pub struct DualLatticeComplex<const D: usize, R: deep_causality_num::RealField> {
+pub struct DualLatticeComplex<const D: usize, R: deep_causality_algebra::RealField> {
     primal: Arc<LatticeComplex<D, R>>,
 }
 
-impl<const D: usize, R: deep_causality_num::RealField> DualLatticeComplex<D, R> {
+impl<const D: usize, R: deep_causality_algebra::RealField> DualLatticeComplex<D, R> {
     /// Create the dual of a primal lattice.
     pub fn new(primal: LatticeComplex<D, R>) -> Self {
         Self {

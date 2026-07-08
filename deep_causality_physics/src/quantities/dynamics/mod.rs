@@ -10,15 +10,15 @@ pub use crate::quantities::si_primitives::{Area, Frequency, Length, Mass, Speed,
 
 /// Linear acceleration (m/s²).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Acceleration<R: deep_causality_num::RealField>(R);
+pub struct Acceleration<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Acceleration<R> {
+impl<R: deep_causality_algebra::RealField> Default for Acceleration<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Acceleration<R> {
+impl<R: deep_causality_algebra::RealField> Acceleration<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -35,7 +35,7 @@ impl<R: deep_causality_num::RealField> Acceleration<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Acceleration<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Acceleration<R>> for f64 {
     fn from(val: Acceleration<R>) -> Self {
         val.0.into()
     }
@@ -43,15 +43,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Acceleration<R>> for f64
 
 /// Force (N).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Force<R: deep_causality_num::RealField>(R);
+pub struct Force<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Force<R> {
+impl<R: deep_causality_algebra::RealField> Default for Force<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Force<R> {
+impl<R: deep_causality_algebra::RealField> Force<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -68,7 +68,7 @@ impl<R: deep_causality_num::RealField> Force<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Force<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Force<R>> for f64 {
     fn from(val: Force<R>) -> Self {
         val.0.into()
     }
@@ -76,15 +76,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Force<R>> for f64 {
 
 /// Torque (N·m).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Torque<R: deep_causality_num::RealField>(R);
+pub struct Torque<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for Torque<R> {
+impl<R: deep_causality_algebra::RealField> Default for Torque<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> Torque<R> {
+impl<R: deep_causality_algebra::RealField> Torque<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -101,7 +101,7 @@ impl<R: deep_causality_num::RealField> Torque<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<Torque<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<Torque<R>> for f64 {
     fn from(val: Torque<R>) -> Self {
         val.0.into()
     }
@@ -109,15 +109,15 @@ impl<R: deep_causality_num::RealField + Into<f64>> From<Torque<R>> for f64 {
 
 /// Moment of Inertia (kg·m²).
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct MomentOfInertia<R: deep_causality_num::RealField>(R);
+pub struct MomentOfInertia<R: deep_causality_algebra::RealField>(R);
 
-impl<R: deep_causality_num::RealField> Default for MomentOfInertia<R> {
+impl<R: deep_causality_algebra::RealField> Default for MomentOfInertia<R> {
     fn default() -> Self {
         Self(R::zero())
     }
 }
 
-impl<R: deep_causality_num::RealField> MomentOfInertia<R> {
+impl<R: deep_causality_algebra::RealField> MomentOfInertia<R> {
     pub fn new(val: R) -> Result<Self, PhysicsError> {
         if !val.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(
@@ -139,7 +139,7 @@ impl<R: deep_causality_num::RealField> MomentOfInertia<R> {
     }
 }
 
-impl<R: deep_causality_num::RealField + Into<f64>> From<MomentOfInertia<R>> for f64 {
+impl<R: deep_causality_algebra::RealField + Into<f64>> From<MomentOfInertia<R>> for f64 {
     fn from(val: MomentOfInertia<R>) -> Self {
         val.0.into()
     }

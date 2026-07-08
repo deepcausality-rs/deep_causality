@@ -6,7 +6,8 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 

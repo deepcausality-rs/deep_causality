@@ -17,7 +17,7 @@ use deep_causality_topology::{
 use std::sync::Arc;
 
 // Define a test gauge group
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 struct TestGroup;
 impl GaugeGroup for TestGroup {

@@ -8,7 +8,7 @@
 //! The operator methods live on the manifold
 //! (`Manifold::{de_rham, de_rham_from_integrals, sharp}` in
 //! `types::manifold::differential::de_rham`); this extension provides the
-//! witness-pattern encoding against `deep_causality_num::iso::witness::Iso`,
+//! witness-pattern encoding against `deep_causality_algebra::iso::witness::Iso`,
 //! per the crate convention that type extensions and witness implementations
 //! live under `extensions/`.
 //!
@@ -20,8 +20,9 @@
 //! metric) are programming errors at this level and panic; use the fallible
 //! `Manifold::{de_rham, sharp}` methods directly where errors must propagate.
 
-use deep_causality_num::iso::witness::Iso;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_algebra::iso::witness::Iso;
+use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 

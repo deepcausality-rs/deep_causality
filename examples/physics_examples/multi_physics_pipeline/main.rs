@@ -30,7 +30,7 @@ use deep_causality_core::{
     CausalEffectPropagationProcess, CausalFlow, CausalityError, PropagatingEffect,
 };
 use deep_causality_multivector::{HilbertState, Metric};
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     FourMomentum, Hadron, LundParameters, born_probability, heat_diffusion, klein_gordon,
     lund_string_fragmentation_kernel,

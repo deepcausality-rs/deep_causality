@@ -74,6 +74,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "deep_causality",
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_cfd",
  "deep_causality_core",
@@ -132,9 +133,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "bytes"
-version = "1.11.1"
+version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
+checksum = "8ae3f5d315924270530207e2a68396c3cc547f6dca3fbdca317cfb1a51edb593"
 
 [[package]]
 name = "candle-core"
@@ -219,9 +220,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.64"
+version = "1.2.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dad887fd958be91b5098c0248def011f4523ab786cd411be668777e55063501f"
+checksum = "f5d6cac793997bd970000024b2934968efe83b382de4fdcf4fcb46b6ee4ad996"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -251,6 +252,7 @@ name = "chronometric_examples"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "deep_causality_algebra",
  "deep_causality_core",
  "deep_causality_file",
  "deep_causality_num",
@@ -413,9 +415,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-deque"
-version = "0.8.6"
+version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
+checksum = "5181e0de7b61eb03a81e347d6dd8797bae9da5146707b51077e2d71a54ec0ceb"
 dependencies = [
  "crossbeam-epoch",
  "crossbeam-utils",
@@ -423,18 +425,18 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-epoch"
-version = "0.9.18"
+version = "0.9.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+checksum = "2d6914041f254d6e9176c01941b21115dcfb7089e55135a35411081bd106ef3f"
 dependencies = [
  "crossbeam-utils",
 ]
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.21"
+version = "0.8.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+checksum = "61803da095bee82a81bb1a452ecc25d3b2f1416d1897eb86430c6159ef717c17"
 
 [[package]]
 name = "crunchy"
@@ -529,10 +531,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "deep_causality_algebra"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_num",
+]
+
+[[package]]
 name = "deep_causality_algorithms"
 version = "0.3.0"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_num",
  "deep_causality_par",
  "deep_causality_rand",
@@ -549,8 +559,10 @@ version = "0.1.7"
 name = "deep_causality_calculus"
 version = "0.1.1"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_num_dual",
 ]
 
 [[package]]
@@ -558,12 +570,15 @@ name = "deep_causality_cfd"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_fft",
  "deep_causality_file",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_num_complex",
+ "deep_causality_num_dual",
  "deep_causality_par",
  "deep_causality_physics",
  "deep_causality_tensor",
@@ -592,6 +607,7 @@ name = "deep_causality_discovery"
 version = "0.4.1"
 dependencies = [
  "csv",
+ "deep_causality_algebra",
  "deep_causality_algorithms",
  "deep_causality_haft",
  "deep_causality_num",
@@ -615,7 +631,9 @@ name = "deep_causality_fft"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_num",
+ "deep_causality_num_complex",
  "deep_causality_par",
  "rayon",
 ]
@@ -625,6 +643,7 @@ name = "deep_causality_file"
 version = "0.1.1"
 dependencies = [
  "chrono",
+ "deep_causality_algebra",
  "deep_causality_haft",
  "deep_causality_num",
  "tempfile",
@@ -647,9 +666,11 @@ name = "deep_causality_multivector"
 version = "0.5.2"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_haft",
  "deep_causality_metric",
  "deep_causality_num",
+ "deep_causality_num_complex",
  "deep_causality_tensor",
 ]
 
@@ -661,6 +682,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "deep_causality_num_complex"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_algebra",
+ "deep_causality_num",
+]
+
+[[package]]
+name = "deep_causality_num_dual"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_algebra",
+ "deep_causality_num",
+]
+
+[[package]]
 name = "deep_causality_par"
 version = "0.1.0"
 
@@ -668,12 +705,15 @@ version = "0.1.0"
 name = "deep_causality_physics"
 version = "0.6.3"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_num_complex",
+ "deep_causality_num_dual",
  "deep_causality_par",
  "deep_causality_rand",
  "deep_causality_sparse",
@@ -685,6 +725,7 @@ dependencies = [
 name = "deep_causality_rand"
 version = "0.1.16"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_num",
  "getrandom 0.4.3",
 ]
@@ -694,6 +735,7 @@ name = "deep_causality_sparse"
 version = "0.2.0"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_haft",
  "deep_causality_num",
  "deep_causality_rand",
@@ -705,9 +747,12 @@ name = "deep_causality_tensor"
 version = "0.4.4"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_ast",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_num_complex",
+ "deep_causality_num_dual",
  "deep_causality_rand",
 ]
 
@@ -715,11 +760,13 @@ dependencies = [
 name = "deep_causality_topology"
 version = "0.6.1"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_fft",
  "deep_causality_haft",
  "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_num_complex",
  "deep_causality_par",
  "deep_causality_rand",
  "deep_causality_sparse",
@@ -732,6 +779,7 @@ name = "deep_causality_uncertain"
 version = "0.3.16"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_ast",
  "deep_causality_num",
  "deep_causality_rand",
@@ -1150,9 +1198,9 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "js-sys"
-version = "0.3.102"
+version = "0.3.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03d04c30968dffe80775bd4d7fb676131cd04a1fb46d2686dbffbaec2d9dfd31"
+checksum = "53b44bfcdb3f8d5837a46dae1ca9660a837176eee74a28b229bc626816589102"
 dependencies = [
  "cfg-if",
  "futures-util",
@@ -1188,9 +1236,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.32"
+version = "0.4.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
+checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "macro_rules_attribute"
@@ -1222,12 +1270,15 @@ dependencies = [
 name = "mathematics_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_num_complex",
+ "deep_causality_num_dual",
  "deep_causality_rand",
  "deep_causality_sparse",
  "deep_causality_tensor",
@@ -1254,9 +1305,9 @@ checksum = "88904434abc2901f197fe8cc55f0445e7ded921dba5911dad2e2b39b48e663c4"
 
 [[package]]
 name = "memmap2"
-version = "0.9.10"
+version = "0.9.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "714098028fe011992e1c3962653c96b2d578c4b4bce9036e15ff220319b1e0e3"
+checksum = "d1219ed1b7f229ee7104d281dd01d6802fe28bb6e95d292942c4daacdeb798c0"
 dependencies = [
  "libc",
  "stable_deref_trait",
@@ -1313,9 +1364,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.6"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -1429,9 +1480,9 @@ dependencies = [
 
 [[package]]
 name = "parquet"
-version = "59.0.0"
+version = "59.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "970dff83e97d953c827ae8176f6bf4e9f77bf62daacc01ec5df348ec5eacd913"
+checksum = "5302d4da74d6596a1f11f9928767995b53bca657cbeea1e4e8c5074f8a1157dd"
 dependencies = [
  "ahash",
  "bytes",
@@ -1457,10 +1508,13 @@ name = "physics_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_num_complex",
+ "deep_causality_num_dual",
  "deep_causality_physics",
  "deep_causality_rand",
  "deep_causality_sparse",
@@ -1528,9 +1582,9 @@ dependencies = [
 
 [[package]]
 name = "pulp"
-version = "0.22.2"
+version = "0.22.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e205bb30d5b916c55e584c22201771bcf2bad9aabd5d4127f38387140c38632"
+checksum = "046aa45b989642ec2e4717c8e72d677b13edd831a4d3b6cf37d9a3e54912496a"
 dependencies = [
  "bytemuck",
  "cfg-if",
@@ -1545,18 +1599,20 @@ dependencies = [
 
 [[package]]
 name = "pulp-wasm-simd-flag"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40e24eee682d89fb193496edf918a7f407d30175b2e785fe057e4392dfd182e0"
+checksum = "1d8f70e07b9c3962945a74e59ca1c511bba65b6419468acc217c457d93f3c740"
 
 [[package]]
 name = "quantum_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_multivector",
  "deep_causality_num",
+ "deep_causality_num_complex",
  "deep_causality_physics",
  "deep_causality_tensor",
 ]
@@ -1569,9 +1625,9 @@ checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "dfbc457d0c7a0759a614551b11a6409e5951f6c7537be1f1b7682b9ae9230368"
 dependencies = [
  "proc-macro2",
 ]
@@ -1726,9 +1782,9 @@ dependencies = [
 
 [[package]]
 name = "rustversion"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "rusty-fork"
@@ -2166,9 +2222,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.125"
+version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ddb3f79143bced6de84270411622a2699cee572fc0875aeaf1e7867cf9fca1a"
+checksum = "4b067c0c11094aef6b7a801c1e34a26affafdf3d051dba08456b868789aaf9a4"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -2179,9 +2235,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.125"
+version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e21a184b13fb19e157296e2c46056aec9092264fab83e4ba59e68c61b323c3d"
+checksum = "167ce5e579f6bcf889c4f7175a8a5a585de84e8ff93976ce393efa5f2837aab1"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -2189,9 +2245,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.125"
+version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fecefd9c35bd935a20fc3fc344b5f29138961e4f47fb03297d88f2587afb5ebd"
+checksum = "f3997c7839262f4ef12cf90b818d6340c18e80f263f1a94bf157d0ec4420380e"
 dependencies = [
  "bumpalo",
  "proc-macro2",
@@ -2202,18 +2258,18 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.125"
+version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23939e44bb9a5d7576fa2b563dc2e136628f1224e88a8deed09e04858b77871f"
+checksum = "dc1b4cb0cc549fcf58d7dfc081778139b3d283a081644e833e84682ad71cea24"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "web-sys"
-version = "0.3.102"
+version = "0.3.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6430a72df5eb332242960fe84b3002a241163998241eb596d4f739b9757061d"
+checksum = "8622dcb61c0bcc9fffa6938bed81210af2da9a7e4a1a834b2e37a59b6dfb6141"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -2349,18 +2405,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.52"
+version = "0.8.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce1022995ff5ff5d841ad7d994facc23098cd40152f2c1d11cd607c6f530653f"
+checksum = "75726053136156d419e285b9b7eddaaea9e3fea6ce32eed44a89901f0bd98de1"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.52"
+version = "0.8.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ae7f38b72ec2a254e2b87ef277cf2cd4fb97cbebf944faa6f33354da0867930"
+checksum = "4714fd92cf900833d49538023a9b3915155210801d1c1169eba513b2addefd71"
 dependencies = [
  "proc-macro2",
  "quote",

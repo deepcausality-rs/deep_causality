@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable};
-use deep_causality_num::Field;
-use deep_causality_num::{ComplexField, DivisionAlgebra, FromPrimitive, RealField, ToPrimitive};
+use deep_causality_algebra::Field;
+use deep_causality_algebra::{ComplexField, DivisionAlgebra, RealField};
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 use std::fmt::Debug;
 
 impl<

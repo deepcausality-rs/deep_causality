@@ -27,7 +27,7 @@ use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_num::{ConjugateScalar, RealField};
+use deep_causality_algebra::{ConjugateScalar, RealField};
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 

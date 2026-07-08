@@ -8,7 +8,8 @@
 // =============================================================================
 
 use crate::PhysicsError;
-use deep_causality_num::{RealField, ToPrimitive};
+use deep_causality_algebra::RealField;
+use deep_causality_num::ToPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// Operations for the Weak Force — SU(2)_L gauge theory.

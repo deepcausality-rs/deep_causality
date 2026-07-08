@@ -7,7 +7,8 @@ use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::rng::gaussian_vec;
 use crate::types::causal_tensor_network::truncation::{RoundStrategy, Truncation};
 use crate::{CausalTensor, CausalTensorError};
-use deep_causality_num::{ConjugateScalar, One, Real, Zero};
+use deep_causality_algebra::{ConjugateScalar, Real};
+use deep_causality_num::{One, Zero};
 
 /// The real magnitude type of a conjugate scalar (`Self` for reals, the underlying real for complex).
 type Re<T> = <T as ConjugateScalar>::Real;

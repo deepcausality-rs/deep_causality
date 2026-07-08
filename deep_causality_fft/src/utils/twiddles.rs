@@ -11,7 +11,7 @@
 //! Tables are built once at plan construction; the per-call cost is
 //! irrelevant on the execution hot path.
 
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
 

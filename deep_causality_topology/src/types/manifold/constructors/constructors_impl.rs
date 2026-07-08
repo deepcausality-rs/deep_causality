@@ -6,7 +6,8 @@
 //! CPU implementation of Manifold constructors.
 
 use crate::{ReggeGeometry, SimplicialComplex, TopologyError};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 use super::super::{Manifold, utils};

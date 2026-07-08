@@ -1,0 +1,40 @@
+## 0. Prerequisite
+
+- [ ] 0.1 `num-generic-monoid-tower` has landed (the generic `Monoid` that `fold_map` folds into). Confirm before H1.
+
+## 1. Foldable::fold_map (H1)
+
+- [ ] 1.1 Add `fn fold_map<A, M: Monoid>(fa, f) -> M` to `Foldable` (default via `fold` + `Monoid::combine`); export.
+- [ ] 1.2 Rust law-tests: `fold_map(pure a, f) = f a`; monoid-homomorphism coherence (respects `empty`/`combine`); order-independence when `M: CommutativeMonoid`.
+- [ ] 1.3 Lean: `DeepCausalityFormal/Haft/Foldable.lean` (extend) proving `haft.foldable.fold_map_pure`, `haft.foldable.fold_map_monoid_coherence`; THEOREM_MAP rows; witnesses; bare-`lean`.
+
+## 2. Category + Kleisli (H2)
+
+- [ ] 2.1 `src/category/`: `Category` trait (`id`, `compose`); `Kleisli<M: Monad>` newtype (`compose = bind`) implementing it; make `Arrow` satisfy `Category`. Export.
+- [ ] 2.2 Rust law-tests: category left/right identity + associativity for `Kleisli<M>` (and `Arrow`).
+- [ ] 2.3 Lean: `Haft/Category.lean` + `Haft/Kleisli.lean` proving `haft.category.laws`, `haft.kleisli.category_laws` (citing `core.causal_arrow.category_laws`'s shape / `haft.arrow.category_laws`); THEOREM_MAP rows; witnesses; bare-`lean`. Retire the informal Kleisli language in `io/mod.rs`.
+
+## 3. Reified free Arrow — ArrowTerm (H3)
+
+- [ ] 3.1 `src/arrow/arrow_term.rs`: a typed builder API (well-typed `In`/`Out` by construction) lowering into an erased core enum reifying `id/lift/compose/split/fanout/first/second` (no `dyn`, no `unsafe`). Export.
+- [ ] 3.2 Rust tests: the builder rejects mistyped wiring at compile time (trybuild or type-level tests); the erased core round-trips a representative term; interpretation (`run`) agrees with the eager combinators.
+- [ ] 3.3 Lean: `Haft/ArrowTerm.lean` proving `haft.arrow_term.interpret_sound` (interpreting a term equals composing its combinators) and the free-object statement (interpretation determined by the generators); THEOREM_MAP rows; witnesses; bare-`lean`.
+- [ ] 3.4 Reword the "type system rejects every nonsensical graph" claim to "well-typed by construction at build time, executed from an erased core" (assumption #3 Q3).
+
+## 4. One-way interpreter (H4)
+
+- [ ] 4.1 `src/natural_transformation/` and/or `src/arrow/interpreter.rs`: `NaturalTransformation<F, G>` (naturality) and/or `ArrowInterpreter<A, M: Monad>` mapping `ArrowTerm` → `Kleisli<M>`. Export.
+- [ ] 4.2 Rust law-tests: functoriality — `preserves id`, `preserves compose`; naturality (commutes with `fmap`).
+- [ ] 4.3 Lean: `Haft/Interpreter.lean` proving `haft.interpreter.{preserves_id, preserves_compose, naturality}` (citing `haft.arrow.*`); THEOREM_MAP rows; witnesses; bare-`lean`.
+
+## 5. Symmetric-monoidal PROP with Δ / ∇ (H5)
+
+- [ ] 5.1 `src/monoidal/`: a symmetric-monoidal structure over the effect monad with copy comonoid (`Δ`, discard `ε`), merge (`∇`), and symmetry (swap) generators. Built on `CoMonad`/`MonoidalMerge` where they help; no `dyn`/`unsafe`. Export.
+- [ ] 5.2 Rust law-tests: comonoid laws (coassociativity, counit), merge monoid laws (associativity, unit), symmetry/naturality, and copy–merge coherence (bialgebra/Frobenius as scoped).
+- [ ] 5.3 Lean: `Haft/SymmetricMonoidal.lean` proving `haft.monoidal.{comonoid_laws, merge_monoid_laws, symmetry}` (transcribed self-contained, no heavy Mathlib); THEOREM_MAP rows; witnesses; bare-`lean`.
+- [ ] 5.4 Record that this is the substrate the deferred reconvergence-merge (∇) extension consumes (assumption #2 Q2); the graph wiring is NOT in scope here.
+
+## 6. Verify & hand off
+
+- [ ] 6.1 `bazel test //deep_causality_haft/...` green; `make format && make fix` clean (fix clippy, do not suppress); bare-`lean` on every new `Haft/*.lean` exit 0; `unsafe_code = "forbid"` + no-`dyn` + macro-free `/src` intact.
+- [ ] 6.2 Note the unblock: `formalize-main-crate` (causaloid = free-Arrow → Kleisli; `evaluate` as catamorphism) and the deferred ∇-merge extension can now proceed. Prepare a commit message per task group; do not commit (await user).

@@ -25,7 +25,11 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["deep_causality_num/default"]
+std = [
+    "deep_causality_num/default",
+    "deep_causality_algebra/default",
+    "deep_causality_num_complex/default",
+]
 # Opt-in Rayon parallelism for the batched 1-D transforms inside
 # N-dimensional plans (the SURD pattern used across the workspace).
 # Serial behavior and results are unchanged; small transforms stay
@@ -36,6 +40,16 @@ parallel = ["dep:rayon", "deep_causality_par/parallel"]
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.3"
+default-features = false
+
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+default-features = false
+
+[dependencies.deep_causality_num_complex]
+path = "../deep_causality_num_complex"
+version = "0.1"
 default-features = false
 
 [dependencies.deep_causality_par]

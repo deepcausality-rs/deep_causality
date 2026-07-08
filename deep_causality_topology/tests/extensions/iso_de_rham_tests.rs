@@ -9,7 +9,7 @@
 //! smooth fields live with the operator tests in
 //! `tests/types/manifold/de_rham_tests.rs`.
 
-use deep_causality_num::iso::witness::test_support::assert_witness_iso_round_trip;
+use deep_causality_algebra::iso::witness::test_support::assert_witness_iso_round_trip;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, DeRhamSharpIso, LatticeComplex, Manifold,

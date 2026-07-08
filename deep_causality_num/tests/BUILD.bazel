@@ -1,43 +1,14 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
-    name = "algebra",
-    srcs = glob([
-        "algebra/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_num",
-    ],
-)
-
-rust_test_suite(
     name = "casts",
     srcs = glob([
         "casts/as_primitive/*_tests.rs",
         "casts/from_primitive/*_tests.rs",
+        "casts/as_scalar/*_tests.rs",
         "casts/num_cast/*_tests.rs",
+        "casts/to_float/*_tests.rs",
         "casts/to_primitive/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_num",
-    ],
-)
-
-rust_test_suite(
-    name = "complex",
-    srcs = glob([
-        "complex/complex_number/*_tests.rs",
-        "complex/quaternion_number/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -117,6 +88,36 @@ rust_test_suite(
     ]),
     tags = [
         "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "integer",
+    srcs = glob([
+        "integer/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "lean-test",
     ],
     visibility = ["//visibility:public"],
     deps = [

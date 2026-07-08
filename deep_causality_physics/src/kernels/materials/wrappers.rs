@@ -6,8 +6,9 @@
 use crate::kernels::materials::mechanics;
 use crate::{StiffnessTensor, Strain, Stress, StressTensor, Temperature};
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`mechanics::hookes_law_kernel`].
@@ -41,7 +42,7 @@ pub fn thermal_expansion<R>(
     delta_temp: Temperature<R>,
 ) -> PropagatingEffect<CausalTensor<R>>
 where
-    R: deep_causality_num::RealField + Default + PartialOrd + core::fmt::Debug,
+    R: deep_causality_algebra::RealField + Default + PartialOrd + core::fmt::Debug,
 {
     match mechanics::thermal_expansion_kernel(coeff, delta_temp) {
         Ok(t) => PropagatingEffect::pure(t),

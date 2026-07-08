@@ -4,7 +4,8 @@
  */
 use crate::CausalTensor;
 use crate::CausalTensorError;
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Descriptive-statistics extension for a two-dimensional [`CausalTensor`].
 ///

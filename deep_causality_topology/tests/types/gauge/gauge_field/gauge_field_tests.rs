@@ -4,7 +4,7 @@
  */
 
 use deep_causality_metric::Metric;
-use deep_causality_num::Complex;
+use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, Manifold, PointCloud, SO3_1, Simplex, SimplicialComplexBuilder,

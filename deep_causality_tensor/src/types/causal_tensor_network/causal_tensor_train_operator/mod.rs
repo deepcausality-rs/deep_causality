@@ -11,7 +11,7 @@ use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor, TensorTrain};
-use deep_causality_num::ConjugateScalar;
+use deep_causality_algebra::ConjugateScalar;
 
 /// A matrix-product operator (MPO) over the same site structure as a
 /// [`CausalTensorTrain`](crate::CausalTensorTrain).

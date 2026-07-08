@@ -14,7 +14,8 @@
 
 use crate::PhysicsError;
 use crate::{RotationRateTensor, StrainRateTensor, Velocity3, VelocityGradient, VorticityVector};
-use deep_causality_num::{FromPrimitive, RealField};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// Strain-rate tensor `S = 0.5 · (∇u + ∇uᵀ)`.
 ///

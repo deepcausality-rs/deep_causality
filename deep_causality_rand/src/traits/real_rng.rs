@@ -5,7 +5,7 @@
 
 use crate::types::distr::uniform::RandFloat;
 use crate::{Distribution, Rng, SampleUniform, StandardNormal};
-use deep_causality_num::RealField;
+use deep_causality_algebra::RealField;
 
 /// Capability bound bundling the standard random draws for a real scalar.
 ///

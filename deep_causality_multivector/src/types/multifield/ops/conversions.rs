@@ -11,8 +11,8 @@
 
 use crate::types::multifield::ops::gamma;
 use crate::{CausalMultiField, CausalMultiVector};
+use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
-use deep_causality_num::Field;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 impl<T> CausalMultiField<T>

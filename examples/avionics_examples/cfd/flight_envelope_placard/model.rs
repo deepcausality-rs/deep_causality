@@ -10,10 +10,10 @@
 use crate::FloatType;
 use crate::constants;
 use avionics_examples::shared::utils::ft;
+use deep_causality_algebra::Real;
 use deep_causality_cfd::{
     FittedNormalShock, FromTableRow, GateSeq, PhysicsError, StudyView, TableRow,
 };
-use deep_causality_num::Real;
 
 /// One Mach-altitude test point: the case axis, read from the matrix by column name.
 #[derive(Debug, Clone)]
