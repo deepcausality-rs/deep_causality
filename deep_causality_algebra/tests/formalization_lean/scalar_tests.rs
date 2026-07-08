@@ -25,8 +25,7 @@ fn test_conjugate_star_mul() {
     // conjugate (a * b) = conjugate b * conjugate a (on reals both sides equal a * b)
     let (a, b) = (2.0f64, -3.5f64);
     let lhs = <f64 as ConjugateScalar>::conjugate(&(a * b));
-    let rhs =
-        <f64 as ConjugateScalar>::conjugate(&b) * <f64 as ConjugateScalar>::conjugate(&a);
+    let rhs = <f64 as ConjugateScalar>::conjugate(&b) * <f64 as ConjugateScalar>::conjugate(&a);
     assert_eq!(lhs, rhs);
 }
 
@@ -36,8 +35,7 @@ fn test_conjugate_star_add() {
     // conjugate (a + b) = conjugate a + conjugate b
     let (a, b) = (2.0f64, -3.5f64);
     let lhs = <f64 as ConjugateScalar>::conjugate(&(a + b));
-    let rhs =
-        <f64 as ConjugateScalar>::conjugate(&a) + <f64 as ConjugateScalar>::conjugate(&b);
+    let rhs = <f64 as ConjugateScalar>::conjugate(&a) + <f64 as ConjugateScalar>::conjugate(&b);
     assert_eq!(lhs, rhs);
 }
 

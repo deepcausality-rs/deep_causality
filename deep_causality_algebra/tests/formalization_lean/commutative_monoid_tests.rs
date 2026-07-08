@@ -42,10 +42,7 @@ fn test_semilattice_idempotent() {
 fn test_semilattice_assoc_and_comm() {
     // Associativity: (x ∧ y) ∧ z = x ∧ (y ∧ z)
     let (x, y, z) = (Conjunction(true), Conjunction(false), Conjunction(true));
-    assert_eq!(
-        x.combine(y).combine(z),
-        x.combine(y.combine(z))
-    );
+    assert_eq!(x.combine(y).combine(z), x.combine(y.combine(z)));
     // Commutativity: x ∧ y = y ∧ x (boolean ∧-semilattice)
     assert_eq!(x.combine(y), y.combine(x));
 }
