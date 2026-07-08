@@ -1,0 +1,26 @@
+openspec/notes/causal-algebra/Causaloid-structure.md
+  s_543ee5cdecd2c1::t_d0e4268ad61177 58
+deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs
+  s_543ee5cdecd2c1::t_0911be167e8ac2 64,66-70,72-78,80-89,93-94,98-100
+deep_causality_algebra/tests/formalization_lean/monoid_tests.rs
+  s_543ee5cdecd2c1::t_53565d9ac35af9 8-9,21,23-24
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_sub_tests.rs
+  s_543ee5cdecd2c1::t_f5f4d680061322 122
+  s_543ee5cdecd2c1::t_d5fa3f737108ea 101-121,123-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ee2fbad6edc01b9d16093364241f3ff046c928ec",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
