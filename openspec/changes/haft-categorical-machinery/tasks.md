@@ -23,9 +23,9 @@
 
 ## 4. One-way interpreter (H4)
 
-- [ ] 4.1 `src/natural_transformation/` and/or `src/arrow/interpreter.rs`: `NaturalTransformation<F, G>` (naturality) and/or `ArrowInterpreter<A, M: Monad>` mapping `ArrowTerm` → `Kleisli<M>`. Export.
-- [ ] 4.2 Rust law-tests: functoriality — `preserves id`, `preserves compose`; naturality (commutes with `fmap`).
-- [ ] 4.3 Lean: `Haft/Interpreter.lean` proving `haft.interpreter.{preserves_id, preserves_compose, naturality}` (citing `haft.arrow.*`); THEOREM_MAP rows; witnesses; bare-`lean`.
+- [x] 4.1 `src/natural_transformation/` and/or `src/arrow/interpreter.rs`: `NaturalTransformation<F, G>` (naturality) and/or `ArrowInterpreter<A, M: Monad>` mapping `ArrowTerm` → `Kleisli<M>`. Export. — both: `ArrowCore::interpret_kleisli<M, V, Phi>` (`src/arrow/interpreter.rs`) is the ArrowTerm→Kleisli<M> functor (`Id ↦ pure`, `Compose ↦ bind`, strength threads `M` over pairs); `NaturalTransformation<F, G>` trait + `OptionToVec` component (`src/natural_transformation/mod.rs`). Both exported (alloc-gated where they touch the erased core / `Vec`).
+- [x] 4.2 Rust law-tests: functoriality — `preserves id`, `preserves compose`; naturality (commutes with `fmap`). — `formalization_lean/interpreter_tests.rs`: `interpret_kleisli(Id) = pure = Kleisli::id`; `interpret_kleisli(Compose f g) = Kleisli::compose(interpret f, interpret g)` (over a partial `Option` generator, so `bind` short-circuit is on-path); `OptionToVec::transform ∘ fmap = fmap ∘ transform`.
+- [x] 4.3 Lean: `Haft/Interpreter.lean` proving `haft.interpreter.{preserves_id, preserves_compose, naturality}` (citing `haft.arrow.*`); THEOREM_MAP rows; witnesses; bare-`lean`. — interpreter modelled as the unique fold into an `ArrowAlg` target (Kleisli = `aid:=pure`, `acompose:=bind`); `preserves_id`/`preserves_compose` definitional, `naturality` by cases on `optionToList`; textbook citations (Hughes 2000; Awodey §1.4/§5; Mac Lane §VI.5/§I.4; Moggi 1991) + deviations; `lake build` green; THEOREM_MAP rows added; traceability passes.
 
 ## 5. Symmetric-monoidal PROP with Δ / ∇ (H5)
 

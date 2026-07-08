@@ -59,6 +59,7 @@ pub(crate) mod io;
 pub mod iso;
 pub(crate) mod monad;
 pub(crate) mod morphism;
+pub(crate) mod natural_transformation;
 pub(crate) mod pure;
 pub(crate) mod riemann_map;
 pub(crate) mod traversable;
@@ -84,6 +85,11 @@ pub use crate::arrow::{ArrowCore, ArrowTerm, ArrowVal};
 
 // Category (named identity + composition; the Kleisli category of a monad, and the function category)
 pub use crate::category::{Category, Fun, Kleisli};
+
+// Natural transformations (the morphism between functors; the naturality square)
+pub use crate::natural_transformation::NaturalTransformation;
+#[cfg(feature = "alloc")]
+pub use crate::natural_transformation::OptionToVec;
 
 // Either (the choice sum)
 pub use crate::either::Either;

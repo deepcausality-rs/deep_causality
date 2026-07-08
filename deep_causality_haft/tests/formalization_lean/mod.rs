@@ -39,6 +39,8 @@ mod foldable_tests;
 mod free_monad_tests;
 #[cfg(test)]
 mod functor_tests;
+#[cfg(all(test, feature = "alloc"))]
+mod interpreter_tests;
 #[cfg(test)]
 mod io_tests;
 #[cfg(test)]

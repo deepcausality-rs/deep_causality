@@ -70,6 +70,8 @@ mod compose;
 mod fanout;
 mod first;
 mod id;
+#[cfg(feature = "alloc")]
+mod interpreter;
 mod lift;
 mod second;
 mod split;

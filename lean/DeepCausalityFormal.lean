@@ -89,6 +89,7 @@ import DeepCausalityFormal.Haft.Morphism
 import DeepCausalityFormal.Haft.Endomorphism
 import DeepCausalityFormal.Haft.Adjunction
 import DeepCausalityFormal.Haft.Foldable
+import DeepCausalityFormal.Haft.Interpreter
 import DeepCausalityFormal.Haft.Traversable
 import DeepCausalityFormal.Haft.NaturalIso
 import DeepCausalityFormal.Haft.Either
