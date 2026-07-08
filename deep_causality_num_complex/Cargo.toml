@@ -21,10 +21,12 @@ no-std = ["deep_causality_num/no-std", "deep_causality_algebra/no-std"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
+version = "0.3"
 default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
+version = "0.1"
 default-features = false
 
 [lints]

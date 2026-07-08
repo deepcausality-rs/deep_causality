@@ -15,6 +15,7 @@ cargo outdated --workspace
 
 # Scan for unused dependencies
 cargo machete deep_causality/
+cargo machete deep_causality_algebra/
 cargo machete deep_causality_algorithms/
 cargo machete deep_causality_ast/
 cargo machete deep_causality_calculus/
@@ -30,6 +31,8 @@ cargo machete deep_causality_macros/
 cargo machete deep_causality_metric/
 cargo machete deep_causality_multivector/
 cargo machete deep_causality_num/
+cargo machete deep_causality_num_complex/
+cargo machete deep_causality_num_dual/
 cargo machete deep_causality_par/
 cargo machete deep_causality_physics/
 cargo machete deep_causality_rand/

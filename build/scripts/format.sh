@@ -10,6 +10,7 @@ set -o pipefail
 # https://github.com/bazelbuild/buildtools
 buildifier -r MODULE.bazel BUILD.bazel thirdparty/BUILD.bazel
 buildifier -r deep_causality/
+buildifier -r deep_causality_algebra/
 buildifier -r deep_causality_algorithms/
 buildifier -r deep_causality_ast/
 buildifier -r deep_causality_calculus/
@@ -25,6 +26,8 @@ buildifier -r deep_causality_macros/
 buildifier -r deep_causality_metric/
 buildifier -r deep_causality_multivector/
 buildifier -r deep_causality_num/
+buildifier -r deep_causality_num_complex/
+buildifier -r deep_causality_num_dual/
 buildifier -r deep_causality_par/
 buildifier -r deep_causality_physics/
 buildifier -r deep_causality_rand/
