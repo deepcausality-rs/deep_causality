@@ -1,0 +1,32 @@
+openspec/specs/haft-foldable-foldmap/spec.md
+  s_543ee5cdecd2c1::t_1a6582fa0809d3 1-28
+openspec/specs/haft-symmetric-monoidal-prop/spec.md
+  s_543ee5cdecd2c1::t_1a6582fa0809d3 1-28
+openspec/specs/haft-category-kleisli/spec.md
+  s_543ee5cdecd2c1::t_1a6582fa0809d3 1-28
+openspec/specs/haft-free-arrow/spec.md
+  s_543ee5cdecd2c1::t_1a6582fa0809d3 1-28
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_a75532dd1c6904 213-223,225
+  s_543ee5cdecd2c1::t_1b0b7687c11719 241-244
+  s_543ee5cdecd2c1::t_854ef6ceb32f1e 33,36,38
+  s_543ee5cdecd2c1::t_e09ad12505918b 95,97-100
+openspec/specs/haft-arrow-interpreter/spec.md
+  s_543ee5cdecd2c1::t_1a6582fa0809d3 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0bd4025a6d7063b9f11a87ba7e08f59ec2a4f15e",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
