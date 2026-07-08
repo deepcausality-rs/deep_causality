@@ -16,10 +16,10 @@
 
 ## 3. Reified free Arrow — ArrowTerm (H3)
 
-- [ ] 3.1 `src/arrow/arrow_term.rs`: a typed builder API (well-typed `In`/`Out` by construction) lowering into an erased core enum reifying `id/lift/compose/split/fanout/first/second` (no `dyn`, no `unsafe`). Export.
-- [ ] 3.2 Rust tests: the builder rejects mistyped wiring at compile time (trybuild or type-level tests); the erased core round-trips a representative term; interpretation (`run`) agrees with the eager combinators.
-- [ ] 3.3 Lean: `Haft/ArrowTerm.lean` proving `haft.arrow_term.interpret_sound` (interpreting a term equals composing its combinators) and the free-object statement (interpretation determined by the generators); THEOREM_MAP rows; witnesses; bare-`lean`.
-- [ ] 3.4 Reword the "type system rejects every nonsensical graph" claim to "well-typed by construction at build time, executed from an erased core" (assumption #3 Q3).
+- [x] 3.1 `src/arrow/arrow_term.rs`: a typed builder API (well-typed `In`/`Out` by construction) lowering into an erased core enum reifying `id/lift/compose/split/fanout/first/second` (no `dyn`, no `unsafe`). Export. — `ArrowTerm<In, Out, G>` (phantom `fn(In)->Out` façade) lowers to the erased `ArrowCore<G>` (heap recursion via `alloc::boxed::Box`, gated on `feature = "alloc"` like `Free`); `ArrowVal<V>` is the uniform interpretation universe. Exported from `lib.rs`.
+- [x] 3.2 Rust tests: the builder rejects mistyped wiring at compile time (trybuild or type-level tests); the erased core round-trips a representative term; interpretation (`run`) agrees with the eager combinators. — `compile_fail` doctest on `ArrowTerm` (no `trybuild` dependency); `formalization_lean/arrow_term_tests.rs` checks structural round-trip (`into_core` = expected `ArrowCore`) and that `ArrowCore::interpret` matches the eager `Lift`/`Compose`/`Split`/… pipeline of identical shape.
+- [x] 3.3 Lean: `Haft/ArrowTerm.lean` proving `haft.arrow_term.interpret_sound` (interpreting a term equals composing its combinators) and the free-object statement (interpretation determined by the generators); THEOREM_MAP rows; witnesses; bare-`lean`. — `interpret_sound` (homomorphism equations, definitional) + `free` (structural induction); textbook citations (Hughes 2000; Awodey §5; Goguen et al. 1977 initial-algebra semantics; Reynolds 1972) + 3 deviation notes; `lake build` green; THEOREM_MAP rows added; traceability passes.
+- [x] 3.4 Reword the "type system rejects every nonsensical graph" claim to "well-typed by construction at build time, executed from an erased core" (assumption #3 Q3). — reworded in `openspec/notes/causal-algebra/algebraic-causaloid.md` Part 3.8.
 
 ## 4. One-way interpreter (H4)
 

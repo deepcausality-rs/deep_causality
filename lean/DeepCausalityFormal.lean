@@ -82,6 +82,7 @@ import DeepCausalityFormal.Haft.Profunctor
 import DeepCausalityFormal.Haft.MonoidalMerge
 import DeepCausalityFormal.Haft.ParametricMonad
 import DeepCausalityFormal.Haft.Arrow
+import DeepCausalityFormal.Haft.ArrowTerm
 import DeepCausalityFormal.Haft.Category
 import DeepCausalityFormal.Haft.Kleisli
 import DeepCausalityFormal.Haft.Morphism

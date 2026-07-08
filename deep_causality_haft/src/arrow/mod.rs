@@ -63,6 +63,8 @@
 //! `openspec/notes/arrow/causal-process-builder.md`.
 
 mod arrow_endo;
+#[cfg(feature = "alloc")]
+mod arrow_term;
 mod builder;
 mod compose;
 mod fanout;
@@ -73,6 +75,8 @@ mod second;
 mod split;
 
 pub use arrow_endo::EndoArrow;
+#[cfg(feature = "alloc")]
+pub use arrow_term::{ArrowCore, ArrowTerm, ArrowVal};
 pub use builder::{ArrowBuilder, arrow};
 pub use compose::Compose;
 pub use fanout::Fanout;

@@ -78,6 +78,9 @@ pub use alias::alias_profunctor::AliasProfunctor;
 pub use crate::arrow::{
     Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
 };
+// Reified free Arrow: the typed-builder façade over the erased core (needs `alloc`, like `Free`)
+#[cfg(feature = "alloc")]
+pub use crate::arrow::{ArrowCore, ArrowTerm, ArrowVal};
 
 // Category (named identity + composition; the Kleisli category of a monad, and the function category)
 pub use crate::category::{Category, Fun, Kleisli};

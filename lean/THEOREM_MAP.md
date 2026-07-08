@@ -151,6 +151,8 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.arrow.arr_functor` | `arr id = id`; `arr (g∘f) = arr f >>> arr g` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.strength_laws` | Hughes' five `first` laws | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
 | `haft.arrow.derived_combinators` | `second`/`***`/`&&&` from `first` + `arr` | proved | `Haft/Arrow.lean` | ✓ | n/a | — |
+| `haft.arrow_term.interpret_sound` | reified free arrow: `interpret` is a homomorphism — commutes with `compose`/`first`/`second`/`split`/`fanout` (interpreting a term = composing its combinators) | proved | `Haft/ArrowTerm.lean` | ✓ | n/a | — |
+| `haft.arrow_term.free` | free arrow universal property: interpretation is determined by the generators (agree on generators ⇒ agree on every term) | proved | `Haft/ArrowTerm.lean` | ✓ | n/a | — |
 | `haft.endo.monoid` | `End(T)` monoid (unit + associativity) | proved | `Haft/Endomorphism.lean` | ✓ | n/a | — |
 | `haft.endo.iterate_add` | `f^(m+n) = f^n ∘ f^m` | proved | `Haft/Endomorphism.lean` | ✓ | n/a | — |
 | `haft.morphism.identity` | `apply identity a = a` | proved | `Haft/Morphism.lean` | ✓ | n/a | — |
