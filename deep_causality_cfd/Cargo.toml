@@ -55,7 +55,7 @@ parallel = [
 
 [dependencies.deep_causality_physics]
 path = "../deep_causality_physics"
-version = "0.6"
+version = "0.7"
 default-features = false
 
 [dependencies.deep_causality_calculus]
@@ -64,7 +64,7 @@ version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.10"
+version = "0.11"
 
 [dependencies.deep_causality_file]
 path = "../deep_causality_file"
@@ -72,11 +72,11 @@ version = "0.1"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
@@ -92,18 +92,18 @@ version = "0.1"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.4"
+version = "0.5"
 
 # Std-only: the uncertain-inflow zone consumes `MaybeUncertain<R>` and its global
 # sample cache. Gated behind `std` so the `alloc`-only build stays uncertain-free.
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"
-version = "0.3"
+version = "0.4"
 optional = true
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
-version = "0.6"
+version = "0.7"
 
 [dependencies.deep_causality_par]
 path = "../deep_causality_par"

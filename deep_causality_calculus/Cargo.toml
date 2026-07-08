@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_calculus"
-version = "0.1.1"
+version = "0.1.2"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -33,12 +33,12 @@ alloc = ["deep_causality_haft/alloc"]
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
-version = "0.3"
+version = "0.4"
 
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
