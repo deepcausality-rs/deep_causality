@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.4.1...deep_causality_discovery-v0.5.0) - 2026-07-08
+
+### Added
+
+- *(deep_causality_discovery)* learn-once, rank-many CPDAG cache for BRCD
+
+### Fixed
+
+- *(deep_causality_discovery)* version-tag CPDAG cache key; correct Precision doc
+- *(brcd,discovery)* address QA findings (32-bit shift, DRY, Precision bound)
+- fixed sone doctest warnings
+- *(deep_causality_discovery)* fixed bazel test config.
+
+### Other
+
+- *(num)* split deep_causality_num into num-core + algebra + complex + dual
+- *(bazel)* register all missing test suites; add Dual Default; move iso test utils to src/utils_tests
+- *(deep_causality_algorithms)* parallelize BRCD across candidates; add BRCD eval harnesses + companion papers
+- raise test coverage across 8 crates.
+- Generated new SBOM for all crates.
+- Merge branch 'deepcausality-rs:main' into main
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.4.0...deep_causality_discovery-v0.4.1) - 2026-06-12
 
 ### Other

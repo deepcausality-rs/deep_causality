@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.10...deep_causality-v0.14.0) - 2026-07-08
+
+### Added
+
+- *(deep_causality)* labeled fan-in wire-slot engine + join API (comonoid-graph-join 1-4)
+- *(deep_causality)* labeled fan-in wire-slot engine + join API (comonoid-graph-join 1-3)
+- *(deep_causality)* labeled fan-in wire-slot engine + join API (comonoid-graph-join 1-3)
+- *(deep_causality)* add opt-in freeze_dag() to enforce DAG structure
+- *(examples)* add example_ml_rca
+
+### Fixed
+
+- address code-review findings (graph-reasoning docs/test, stale doc example, clippy)
+- *(deep_causality)* principled graph sequencing + loud reconvergence; defer merge ∇
+- *(deep_causality_core)* make success-channel functor/applicative total across all witnesses
+- *(deep_causality)* error on command input to stateful singleton instead of silently dropping it
+- *(core)* make the value-level functor total over commands; address refactor review
+
+### Other
+
+- *(num)* split deep_causality_num into num-core + algebra + complex + dual
+- *(bazel)* register all missing test suites; add Dual Default; move iso test utils to src/utils_tests
+- *(deep_causality)* [**breaking**] reasoning engine as a Free::fold handler over CausalEffect
+- *(readme)* use absolute raw URLs for logo images
+- Code formatting and linting.
+- *(deep_causality)* adapt monad bench to intervene → alternate_value
+- *(formalization)* [**breaking**] close out enforce-w-invariant — proofs, witnesses, CI
+- *(core)* [**breaking**] enforce the W-invariant — value-XOR-error as one channel
+- Restructured the avionics example folder.
+- *(deep_causality)* close coverage gaps in core crate (tests only)
+- raise test coverage across 8 crates.
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+
 ## [0.13.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.9...deep_causality-v0.13.10) - 2026-06-12
 
 ### Other

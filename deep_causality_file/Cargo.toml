@@ -28,11 +28,11 @@ publish = false
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
