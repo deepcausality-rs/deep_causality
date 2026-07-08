@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.10.0...deep_causality_core-v0.11.0) - 2026-07-08
+
+### Added
+
+- *(file,cfd)* CFD file IO seams — typed tables, sensor traces, snapshot/resume
+- *(deep_causality_core)* file IO actions + CausalFlow read/write bridge
+
+### Fixed
+
+- *(deep_causality_core)* make success-channel functor/applicative total across all witnesses
+- *(core)* make the value-level functor total over commands; address refactor review
+- fixed sone doctest warnings
+
+### Other
+
+- *(num)* split deep_causality_num into num-core + algebra + complex + dual
+- *(deep_causality_core)* assert command leaf value in fmap consistency test
+- code formatting and linting
+- *(Formalization)* Removed Kani run
+- *(core)* formalize deep_causality_core in Lean 4 (all 26 core.* ids proved + witnessed)
+- Code lintint and formatting.
+- *(core)* [**breaking**] replace EffectValue with the CausalEffect free monad; one Kleisli bind + state-threading arrow
+- *(core)* [**breaking**] thread state through the causal arrow (D2, one bind)
+- *(core)* [**breaking**] causal-arrow lawfulness + replace Intervenable with alternate_value
+- *(formalization)* [**breaking**] close out enforce-w-invariant — proofs, witnesses, CI
+- *(core)* [**breaking**] enforce the W-invariant — value-XOR-error as one channel
+- *(formalization)* scaffold Lean proof project + Rust witness bridge
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ### Changed
 
 - **[BREAKING]** *(deep_causality_core)* `CausalEffectPropagationProcess` now encodes value-XOR-error

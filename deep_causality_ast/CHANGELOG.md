@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ast-v0.1.7...deep_causality_ast-v0.1.8) - 2026-07-08
+
+### Other
+
+- *(num)* split deep_causality_num into num-core + algebra + complex + dual
+- Generated new SBOM for all crates.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ast-v0.1.6...deep_causality_ast-v0.1.7) - 2026-06-09
 
 ### Other

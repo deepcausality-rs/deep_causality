@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.7...deep_causality_ethos-v0.2.8) - 2026-07-08
+
+### Other
+
+- *(num)* split deep_causality_num into num-core + algebra + complex + dual
+- *(bazel)* register all missing test suites; add Dual Default; move iso test utils to src/utils_tests
+- *(readme)* use absolute raw URLs for logo images
+- Restructured the avionics example folder.
+- Generated new SBOM for all crates.
+- *(papers)* Reorganized publication by moving each paper into the crate where it is actually implemented.
+- Updated README file across multiple crates to meet project standard.
+
 ## [0.2.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.6...deep_causality_ethos-v0.2.7) - 2026-06-09
 
 ### Other

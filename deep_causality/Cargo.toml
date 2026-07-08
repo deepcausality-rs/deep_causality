@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality"
-version = "0.13.10"
+version = "0.14.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -42,7 +42,7 @@ os-random = ["deep_causality_uncertain/os-random"]
 
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_ast]
 path = "../deep_causality_ast"
@@ -50,7 +50,7 @@ version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.10"
+version = "0.11"
 default-features = true
 
 
@@ -60,7 +60,7 @@ version = "0.10"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
-version = "0.3"
+version = "0.4"
 
 [dependencies.ultragraph]
 path = "../ultragraph"
