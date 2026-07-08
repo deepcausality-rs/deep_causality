@@ -1,0 +1,43 @@
+deep_causality_haft/src/arrow/interpreter.rs
+  s_543ee5cdecd2c1::t_45ebdc5ad1d495 1-123
+lean/DeepCausalityFormal.lean
+  s_543ee5cdecd2c1::t_9764b59bc2dbf9 92
+lean/DeepCausalityFormal/Haft/Interpreter.lean
+  s_543ee5cdecd2c1::t_0cc16e8ce20952 1-108
+deep_causality_haft/src/natural_transformation/mod.rs
+  s_543ee5cdecd2c1::t_6b54899e26e917 19
+  s_543ee5cdecd2c1::t_08026833603e8f 1-18,20-33,35-46,53,55-58
+  s_543ee5cdecd2c1::t_5f2a26e390eafc 54
+  s_543ee5cdecd2c1::t_3e3fe0530c2887 47-52
+  s_543ee5cdecd2c1::t_a8879b2c042c7e 34
+deep_causality_haft/src/lib.rs
+  s_543ee5cdecd2c1::t_2c0ba2e4ad5355 89-93
+  s_543ee5cdecd2c1::t_c9ba3f3f91123f 62
+deep_causality_haft/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_a9e5c3d3954d20 42-43
+deep_causality_haft/src/arrow/mod.rs
+  s_543ee5cdecd2c1::t_422ad0a3f77696 73-74
+deep_causality_haft/tests/formalization_lean/interpreter_tests.rs
+  s_543ee5cdecd2c1::t_b433426de92bdf 109-118
+  s_543ee5cdecd2c1::t_4e13852a11c896 1-108,119-135
+openspec/changes/haft-categorical-machinery/tasks.md
+  s_543ee5cdecd2c1::t_3ee92bf75f6cab 26-28
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_3f4334e3dfb649 156-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c69cbc9e4d8366efc76a4bc9a09edd1aebb7d2a5",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
