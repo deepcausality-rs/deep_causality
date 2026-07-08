@@ -1,0 +1,19 @@
+deep_causality_physics/tests/kernels/fluids/mod.rs
+  s_543ee5cdecd2c1::t_54a23a53e8a023 13,22,29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b0657729ce62b3c75949262930b5f6e66f099664",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
