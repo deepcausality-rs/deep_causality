@@ -683,7 +683,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num_complex"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_num",
@@ -691,7 +691,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num_dual"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_num",
