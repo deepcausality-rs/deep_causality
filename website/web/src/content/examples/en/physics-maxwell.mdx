@@ -39,7 +39,7 @@ let result: PropagatingEffect<MaxwellState> = CausalFlow::value(initial_state)
     .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
     .into_effect();
 
-let final_state = result.value.into_value().unwrap_or_default();
+let final_state = result.into_value().unwrap_or_default();
 ```
 
 Each `bind` receives the upstream `MaxwellState` and returns a new `PropagatingEffect<MaxwellState>` with a populated downstream field. The Lorenz-gauge check fails into the chain's `error` slot if the divergence is non-zero; the Poynting-flux step still adds its log entry on top of whatever ran before it.

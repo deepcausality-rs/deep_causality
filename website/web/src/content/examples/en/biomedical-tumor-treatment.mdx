@@ -35,9 +35,9 @@ let pipeline = CausalFlow::value(start)
     })
     .into_effect();
 
-match pipeline.value.into_value() {
+match pipeline.value() {
     Some(r) => println!("θ={:.3}, φ={:.3} over {} steps", r.theta, r.phi, r.steps),
-    None => eprintln!("Optimization failed: {:?}", pipeline.error),
+    None => eprintln!("Optimization failed: {:?}", pipeline.error()),
 }
 ```
 

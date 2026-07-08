@@ -37,7 +37,7 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Effect Propagation Process (EPP)**: Both a concept and a literal type in code. The concept: the directed flow of effects through a Causaloid chain. The type: `CausalEffectPropagationProcess<Value, State, Context, Error, Log>` in [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). See [Effect Propagation Process](/concepts/effect-propagation-process/).
 
-**Effect Value**: The enum that holds the payload of a propagating effect: `None`, `Value(T)`, `ContextualLink`, `RelayTo`, or `Map`.
+**Causal Effect (`CausalEffect`)**: The success channel of a propagating effect — a value, an absence (none), or a control command (`RelayTo`). An opaque newtype over the free monad on the control-operation functor. (Replaces the earlier `EffectValue` enum; its unused `ContextualLink` and `Map` variants were removed.)
 
 **Evidence**: A unit of factual data in the monograph's ontology. In code, evidence enters the system as Contextoids of type `Datoid`.
 

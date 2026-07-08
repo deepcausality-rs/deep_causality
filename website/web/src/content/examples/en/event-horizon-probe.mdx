@@ -30,7 +30,7 @@ use deep_causality_physics::{Length, Mass, escape_velocity, schwarzschild_radius
 
 let black_hole_mass = Mass::new(4.0e6 * 1.989e30)?; // 4 million solar masses
 let rs_effect = schwarzschild_radius(&black_hole_mass);
-let r_s = rs_effect.value().clone().into_value().unwrap().value();
+let r_s = rs_effect.into_value().unwrap().value();
 
 let initial_state = ProbeState {
     distance: r_s * 100.0,
@@ -40,7 +40,7 @@ let initial_state = ProbeState {
 };
 ```
 
-[`main.rs:41`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/event_horizon_probe/main.rs#L41). `schwarzschild_radius` returns a `PropagatingEffect`; the `.value().into_value()` pattern unwraps it. The probe starts at 100 Schwarzschild radii out.
+[`main.rs:41`](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/physics_examples/event_horizon_probe/main.rs#L41). `schwarzschild_radius` returns a `PropagatingEffect`; the `.into_value()` pattern unwraps it. The probe starts at 100 Schwarzschild radii out.
 
 ## The regime gate
 
@@ -54,7 +54,7 @@ let next = CausalFlow::process(current_state.clone())
         let r = Length::new(state.distance).unwrap();
 
         let v_esc_effect = escape_velocity(&bh_mass, &r);
-        let v_esc = v_esc_effect.value().clone().into_value().unwrap().value();
+        let v_esc = v_esc_effect.into_value().unwrap().value();
 
         if state.distance / r_s > 10.0 {
             // Newtonian regime: v = sqrt(2GM/r), falling

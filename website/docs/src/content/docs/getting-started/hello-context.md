@@ -52,11 +52,11 @@ use deep_causality::{
     BaseCausaloid, BaseContext, Causaloid, ContextoidType, Contextuable, MonadicCausable,
     PropagatingEffect, PropagatingProcess,
 };
-use deep_causality_core::EffectValue;
+use deep_causality_core::CausalEffect;
 use std::sync::{Arc, RwLock};
 
 fn volume_above_threshold(
-    obs: EffectValue<f64>,
+    obs: CausalEffect<f64>,
     _state: (),
     ctx: Option<Arc<RwLock<BaseContext>>>,
 ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
@@ -102,13 +102,13 @@ fn main() {
 
     let effect = PropagatingEffect::pure(2_400.0_f64);
     let result = causaloid.evaluate(&effect);
-    println!("{:?}", result.value);
+    println!("{:?}", result.value());
 }
 ```
 
 Three things changed compared to the stateless Causaloid:
 
-- The function signature is `fn(EffectValue<I>, S, Option<C>) -> PropagatingProcess<O, S, C>`. The first argument is an `EffectValue`, not a bare `I`, because the upstream `PropagatingEffect` can carry richer variants like `RelayTo` or `None`. The second is the threaded state, ignored here because `BaseCausaloid` pins it to `()`. The third is the optional context.
+- The function signature is `fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>`. The first argument is a `CausalEffect`, not a bare `I`, because the upstream `PropagatingEffect` can carry a `None` or a `RelayTo` command as well as a value. The second is the threaded state, ignored here because `BaseCausaloid` pins it to `()`. The third is the optional context.
 - The return type is a `PropagatingProcess`, the stateful sibling of `PropagatingEffect`. For a stateless context-aware rule like this one the state stays `()`, but the type is shared with truly stateful reasoning so the trait machinery composes uniformly.
 - The Context is wrapped in `Arc<RwLock<...>>` so it can be shared across Causaloids and mutated in place. Read access uses `ctx_lock.get_node(...)`; mutation uses `ctx_lock.update_node(...)`.
 

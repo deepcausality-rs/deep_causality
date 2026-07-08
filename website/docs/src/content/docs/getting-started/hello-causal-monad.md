@@ -32,12 +32,12 @@ fn main() {
             PropagatingEffect::pure(n * 2)
         });
 
-    let final_value = result.value.into_value().unwrap_or_default();
+    let final_value = result.into_value().unwrap_or_default();
     println!("result = {}", final_value); // prints: result = 22
 }
 ```
 
-Three lines of substance. `pure(10)` lifts the integer into a `PropagatingEffect<i32>`. The first `bind` unwraps the value, increments it, and re-wraps. The second `bind` unwraps again, doubles, re-wraps. The final value is read off `result.value`.
+Three lines of substance. `pure(10)` lifts the integer into a `PropagatingEffect<i32>`. The first `bind` unwraps the value, increments it, and re-wraps. The second `bind` unwraps again, doubles, re-wraps. The final value is read off `result` with `into_value()`.
 
 `PropagatingEffect<T>` is the everyday alias for the carrier effect, exported from both [`deep_causality`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality) and [`deep_causality_core`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core). The full name is `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`: five type parameters, three of them pinned to defaults. The defaults are sane for almost every starting program, which is why the alias is what most code reaches for.
 
@@ -55,57 +55,55 @@ You should see `result = 22`.
 
 ## What just happened
 
-Each `bind` closure takes three arguments. The first is the wrapped `EffectValue` from the upstream link. The second is the threaded `state`. The third is the threaded `context`. The example ignores state and context because both are `()` at this scale. They become useful when the chain has a reason to carry them, and the type system makes that promotion explicit.
+Each `bind` closure takes three arguments. The first is the wrapped `CausalEffect` from the upstream link. The second is the threaded `state`. The third is the threaded `context`. The example ignores state and context because both are `()` at this scale. They become useful when the chain has a reason to carry them, and the type system makes that promotion explicit.
 
 The closures return *new* `PropagatingEffect`s rather than bare values. That is the whole point. Returning a `PropagatingEffect` means a step can also signal:
 
-- *I produced no value.* Return `PropagatingEffect` carrying `EffectValue::None`.
+- *I produced no value.* Return `PropagatingEffect::none()`, the absence-of-evidence effect.
 - *I failed.* Return `PropagatingEffect::from_error(err)`. The chain short-circuits; downstream binds are no-ops.
-- *I want to relay to a different rule.* Return `EffectValue::RelayTo(idx, sub)`. The chain reroutes.
+- *I want to relay to a different rule.* Return `PropagatingEffect::relay_to(idx, sub)`, a control command carrying a sub-`CausalEffect`. The chain reroutes.
 
 The bare `Result` your everyday Rust code uses gives you the failure branch alone. The Causal Monad gives you all three branches plus a structured log that survives across every link.
 
 ## Look at the log
 
-Add one line to the first closure:
+Have the first step attach a log entry — build the step's log and lift it with the value (`EffectLog` and `LogAddEntry` come from `deep_causality`):
 
 ```rust
 .bind(|v, _state, _ctx| {
     let n = v.into_value().unwrap_or_default();
-    let mut next = PropagatingEffect::pure(n + 1);
-    next.logs.add_entry("incremented");
-    next
+    let mut logs = EffectLog::new();
+    logs.add_entry("incremented");
+    PropagatingEffect::from_value_with_log(n + 1, logs)
 })
 ```
 
 Now read the log out at the end:
 
 ```rust
-for entry in &result.logs {
-    println!("log: {:?}", entry);
+for msg in result.logs().messages() {
+    println!("log: {msg}");
 }
 ```
 
-Every step's log entries accumulate in `result.logs`. The chain has an audit trail by construction; you did not write a logger. The trail survives errors. If a later bind fails, the log of every step that ran before the failure is still there.
+Every step's log entries accumulate in `result`'s log (`result.logs()`). The chain has an audit trail by construction; you did not write a logger. The trail survives errors. If a later bind fails, the log of every step that ran before the failure is still there.
 
 ## Carrying state and context
 
 The example above ignored the second and third arguments because a `PropagatingEffect` pins both to `()`. When the chain needs real state or a real context, reach for `PropagatingProcess<T, S, C>`. It is the same carrier and the same `bind`; the only change is that `State` and `Context` now carry information, so the closure can read the running state and return an evolved one.
 
 ```rust
-use deep_causality::{EffectLog, EffectValue, PropagatingProcess};
+use deep_causality::{PropagatingEffect, PropagatingProcess};
 
 // value: i32, Markovian state: i32, context: String
 let process = PropagatingProcess::<i32, i32, String>::pure(10)
     .bind(|value, state, context| {
         let n = value.into_value().unwrap_or_default();
-        PropagatingProcess {
-            value: EffectValue::Value(n + 1),
-            state: state + 1, // the state evolves and carries forward
-            context,          // the context threads through
-            error: None,
-            logs: EffectLog::new(),
-        }
+        PropagatingProcess::with_state(
+            PropagatingEffect::pure(n + 1),
+            state + 1, // the state evolves and carries forward
+            context,   // the context threads through
+        )
     });
 ```
 
@@ -123,6 +121,6 @@ In practice this means you can freely refactor a chain. Pull a step out into a h
 
 ## Where this goes next
 
-The [next page](/getting-started/hello-causaloid/) wraps a function in a [Causaloid](/concepts/causaloid/) and evaluates it. A Causaloid is a named, identified, composable causal function whose evaluation returns a `PropagatingEffect`. Wrapping the kind of closure you wrote above as a Causaloid is one constructor call. For a complete, runnable end-to-end version that walks Pearl's Ladder of Causation through `pure`, `bind`, and `intervene`, see [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example).
+The [next page](/getting-started/hello-causaloid/) wraps a function in a [Causaloid](/concepts/causaloid/) and evaluates it. A Causaloid is a named, identified, composable causal function whose evaluation returns a `PropagatingEffect`. Wrapping the kind of closure you wrote above as a Causaloid is one constructor call. For a complete, runnable end-to-end version that walks Pearl's Ladder of Causation through `pure`, `bind`, and `alternate_value` (value substitution), see [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example).
 
 The page after that adds a [Context](/concepts/context/). The Context is the third argument the bind closure has been ignoring on this page. When the rule needs to read from the world, the Context is where the world lives.

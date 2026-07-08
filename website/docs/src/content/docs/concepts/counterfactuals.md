@@ -1,11 +1,11 @@
 ---
 title: Counterfactuals
-description: Pearl's Ladder of Causation in the Effect Propagation Process. The Alternatable trait family substitutes value, context, or state mid-chain, preserves the audit trail, and dissolves Pearl's abduction step.
+description: Pearl's Ladder of Causation in the Effect Propagation Process. The Alternatable trait family substitutes value, context, or state mid-chain, preserves the audit trail, and dissolves Pearl's abduction step. Value substitution (alternate_value) is the value-level form of Pearl's do(); structural surgery is its model-level counterpart.
 sidebar:
   order: 13
 ---
 
-Counterfactual reasoning is first-class in DeepCausality. The same machinery that runs factual evaluation runs counterfactual evaluation. The mechanism is the [`Alternatable`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core/src/traits) family of traits: one trait per substitutable channel on the carrier, plus a marker super-trait that bundles all three. The classic causal-inference operator `intervene` survives as a thin vocabulary alias atop value alternation.
+Counterfactual reasoning is first-class in DeepCausality. The same machinery that runs factual evaluation runs counterfactual evaluation. The mechanism is the [`Alternatable`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core/src/traits) family of traits: one trait per substitutable channel on the carrier, plus a marker super-trait that bundles all three. Value substitution — `alternate_value` — is the value-level form of Pearl's `do(...)`; the full `do()` operator (graph surgery over the causal hypergraph) lives at the graph layer.
 
 ## Pearl's Ladder of Causation
 
@@ -14,14 +14,14 @@ Pearl distinguishes three rungs of causal reasoning, each strictly stronger than
 | Rung | Question | Operator | EPP expression |
 |---|---|---|---|
 | 1. Association | "If I see X, what do I expect about Y?" | `P(Y \| X)` | `pure(x).bind(f)`; read-only composition |
-| 2. Intervention | "If I *do* X, what happens to Y?" | `P(Y \| do(X))` | `pure(x).bind(f).intervene(new)`; overrides a value mid-chain |
+| 2. Intervention | "If I *do* X, what happens to Y?" | `P(Y \| do(X))` | `pure(x).bind(f).alternate_value(new)`; overrides a value mid-chain |
 | 3. Counterfactual | "Given the world as it is, what *would* have happened if X had been different?" | `P(Y_x \| X', Y')` | the same chain run twice, factually and with an alternation, then compared |
 
-The first rung is a `bind`. The second adds value alternation (`intervene` / `alternate_value`). The third rung runs rung two against a held factual reference and compares the two outcomes. The architecture is the same in every case: a chain whose value, state, context, error, and log are the only thing being threaded.
+The first rung is a `bind`. The second adds value alternation (`alternate_value`). The third rung runs rung two against a held factual reference and compares the two outcomes. The architecture is the same in every case: a chain whose outcome (value-or-error), state, context, and log are the only thing being threaded.
 
 ## The Alternatable family: three channels, three traits
 
-The carrier struct (`CausalEffectPropagationProcess`) has five fields: `value`, `state`, `context`, `error`, `logs`. Three are legitimately substitutable mid-chain; two are not. Substituting `error` would silently paper over a failure upstream, and `logs` is append-only by design. That leaves three alternable channels.
+The carrier struct (`CausalEffectPropagationProcess`) has four fields: `outcome`, `state`, `context`, `logs`. The `outcome` merges value and error into one value-XOR-error channel. Of these, the value inside `outcome`, the state, and the context are legitimately substitutable mid-chain; the error side of `outcome` and the append-only `logs` are not. Substituting the error would silently paper over a failure upstream, and the log is audit history by design. That leaves three alternable channels.
 
 DeepCausality exposes one single-method trait per channel:
 
@@ -41,18 +41,7 @@ impl<T, V, C, S> Alternatable<V, C, S> for T
 where T: AlternatableValue<V> + AlternatableContext<C> + AlternatableState<S> {}
 ```
 
-The familiar `Intervenable<V>` trait survives as a thin vocabulary alias atop `AlternatableValue<V>`, so existing code that calls `effect.intervene(x)` keeps working unchanged:
-
-```rust
-pub trait Intervenable<V>: AlternatableValue<V> {
-    fn intervene(self, new_value: V) -> Self where Self: Sized {
-        self.alternate_value(new_value)
-    }
-}
-impl<T, V> Intervenable<V> for T where T: AlternatableValue<V> {}
-```
-
-`intervene` is the causal-inference word for value substitution (Pearl's `do(...)`). `alternate_value` is the same operation under the EPP's substitution vocabulary. Same method body, two surfaces.
+`alternate_value` is the value-substitution method — the value-level form of Pearl's `do(...)`. The name `do()`/`intervene` is reserved for the graph layer, where the full operator (variable isolation, graph surgery) lives; on a single chain, substituting the carried value is its scalar form.
 
 ### The shared contract
 
@@ -62,7 +51,7 @@ Every method in the family follows the same three rules:
 - **Channel isolation.** Only the named channel is rewritten; the other two alternable channels, plus the error and log, continue unchanged.
 - **Automatic audit entry.** A distinctive marker is appended to the log: `!!ValueAlternation!!: <old> replaced with <new>`, `!!ContextAlternation!!: context replaced`, or `!!StateAlternation!!: state replaced`.
 
-The three operators compose freely. On a `PropagatingProcess` you can intervene on the value, alternate the context, and reset the state in any order within the same chain; each emits its own audit entry, and downstream `bind` steps see the substituted channels.
+The three operators compose freely. On a `PropagatingProcess` you can alternate the value, alternate the context, and reset the state in any order within the same chain; each emits its own audit entry, and downstream `bind` steps see the substituted channels.
 
 ### Which channels carry real information
 
@@ -78,7 +67,7 @@ Use `PropagatingEffect` for Pearl-style stateless chains. Use `PropagatingProces
 The intervention example from the project [README](https://github.com/deepcausality-rs/deep_causality) walks all three rungs in roughly a dozen lines on a stateless `PropagatingEffect`:
 
 ```rust
-use deep_causality_core::{Intervenable, PropagatingEffect};
+use deep_causality_core::{AlternatableValue, PropagatingEffect};
 
 // Causal chain: Dose -> Absorption -> Metabolism -> Response (numeric outcome).
 
@@ -91,15 +80,15 @@ let observed = PropagatingEffect::pure(10.0_f64)
 // Rung 2: Intervention. do(BloodLevel := 3.0) mid-chain.
 let intervened = PropagatingEffect::pure(10.0_f64)
     .bind(|dose, _, _| PropagatingEffect::pure(dose.into_value().unwrap_or_default() * 0.8))   // Absorption: 8.0
-    .intervene(3.0)                                                                              // do(BloodLevel := 3.0)
+    .alternate_value(3.0)                                                                        // do(BloodLevel := 3.0)
     .bind(|level, _, _| PropagatingEffect::pure(level.into_value().unwrap_or_default() - 2.0)) // Metabolism: 1.0
     .bind(|level, _, _| PropagatingEffect::pure(level.into_value().unwrap_or_default()));      // Response:   1.0
 
 // Rung 3: Counterfactual. The causal-effect estimate is the difference between
 // the intervened outcome and the observed outcome (individual treatment effect):
 //     ITE = Y(do(X)) - Y(X_observed)
-let y_obs = observed.value.into_value().unwrap_or_default();
-let y_int = intervened.value.into_value().unwrap_or_default();
+let y_obs = observed.into_value().unwrap_or_default();
+let y_int = intervened.into_value().unwrap_or_default();
 let causal_effect = y_int - y_obs;
 
 println!("Observed Y      = {y_obs:.2}");
@@ -107,13 +96,13 @@ println!("Intervened Y    = {y_int:.2}");
 println!("Causal effect Δ = {causal_effect:+.2}"); // -5.00: the intervention lowered the response by five units.
 ```
 
-The two runs share their structure and their composition law. The only difference is the `.intervene(3.0)` call. The causal-effect estimate is the **difference** `Y(do(X)) − Y(X_observed)`; in this run that is `1.00 − 6.00 = −5.00`. The log on `intervened` records the original blood level, the substituted value, and the marker that an intervention occurred; the run stays replayable and auditable.
+The two runs share their structure and their composition law. The only difference is the `.alternate_value(3.0)` call. The causal-effect estimate is the **difference** `Y(do(X)) − Y(X_observed)`; in this run that is `1.00 − 6.00 = −5.00`. The log on `intervened` records the original blood level, the substituted value, and the marker that an intervention occurred; the run stays replayable and auditable.
 
 ## Beyond the value channel
 
 Pearl's `do(...)` operator only swaps **one** thing: the value of a single endogenous variable, with the exogenous noise held fixed by the abduced posterior. The `Alternatable` family widens the substitution surface to three independent channels and removes the inference step entirely:
 
-- **Value alternation** (`alternate_value` / `intervene`): Pearl's `do(...)`, expressed as one method call.
+- **Value alternation** (`alternate_value`): the value-level form of Pearl's `do(...)`, expressed as one method call.
 - **Context alternation** (`alternate_context`): swap the entire world (or any structured piece of it) without rebuilding the chain. The classical [SCM example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/classical_via_causal_monad/scm) uses this for Pearl's rung 3; the [RCM example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/classical_via_causal_monad/rcm) uses it to compute potential outcomes across treatment and control.
 - **State alternation** (`alternate_state`): force the running Markov state to a new value. Useful for simulator resets, regime changes that touch accumulated counters, and test fixtures. The [DBN example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples/classical_via_causal_monad/dbn) shows context alternation alongside state threading: a mid-stream climate-regime change leaves the day counter and umbrella count intact.
 

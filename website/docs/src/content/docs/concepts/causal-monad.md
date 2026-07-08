@@ -39,7 +39,7 @@ pub trait CausalMonad: Sized {
         -> CausalEffectPropagationProcess<NewValue, Self::State, Self::Context, CausalityError, EffectLog>
     where
         F: FnOnce(
-            EffectValue<Self::Value>,
+            CausalEffect<Self::Value>,
             Self::State,
             Option<Self::Context>,
         ) -> CausalEffectPropagationProcess<NewValue, Self::State, Self::Context, CausalityError, EffectLog>;
@@ -54,17 +54,16 @@ The same two operations are also exposed as inherent methods on the carrier, so 
 
 `pure` lifts a plain value into the carrier. The returned process has:
 
-- `value = EffectValue::Value(value)`
+- `outcome = Ok(CausalEffect::value(value))`
 - `state = State::default()`
 - `context = None`
-- `error = None`
 - `logs = EffectLog::default()`
 
 This is the seed for a chain. Most chains start with `PropagatingEffect::pure(input)` and immediately bind.
 
 ## `bind`
 
-`bind` chains the next step. Its continuation receives three things: the upstream value wrapped in `EffectValue`, the threaded state, and the optional context. It returns the next process, and that process's state and context carry forward.
+`bind` chains the next step. Its continuation receives three things: the upstream value wrapped in `CausalEffect`, the threaded state, and the optional context. It returns the next process, and that process's state and context carry forward.
 
 ```rust
 let next = effect.bind(|value, state, context| {
@@ -75,7 +74,7 @@ let next = effect.bind(|value, state, context| {
 
 `bind` does these things, in order:
 
-1. If the upstream `error` is `Some`, short-circuit. Return a process with the same error, the carried state and context, and the existing logs; the value becomes `EffectValue::None`. No fabricated default value is invented.
+1. If the upstream `outcome` is `Err`, short-circuit. Return a process with the same error in `outcome`, the carried state and context, and the existing logs. No fabricated default value is invented.
 2. Otherwise call the continuation with the value, state, and context.
 3. Merge the upstream logs into the next process's logs via `LogAppend::append`. The audit trail grows; entries do not vanish across binds.
 4. Keep the state and context of the process the continuation returned. This is what makes the chain Markovian when it needs to be: a step can read the running state, update it, and the update survives into the next step.
@@ -95,18 +94,18 @@ let doubled = effect.fmap(|x| x * 2);
 ## A minimal example
 
 ```rust
-use deep_causality::PropagatingEffect;
+use deep_causality::{EffectLog, LogAddEntry, LogSize, PropagatingEffect};
 
 let final_process = PropagatingEffect::pure(10)
     .bind(|value, _state, _context| {
         let n = value.into_value().unwrap_or_default();
-        let mut next = PropagatingEffect::pure(n + 1);
-        next.logs.add_entry("step 1");
-        next
+        let mut logs = EffectLog::new();
+        logs.add_entry("step 1");
+        PropagatingEffect::from_value_with_log(n + 1, logs)
     });
 
-assert_eq!(final_process.value.into_value(), Some(11));
-assert_eq!(final_process.logs.len(), 1);
+assert_eq!(final_process.value(), Some(&11));
+assert_eq!(final_process.logs().len(), 1);
 ```
 
 Two binds and you have a chain. Five binds and you have a pipeline. Five hundred and you have a system.

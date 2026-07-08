@@ -22,7 +22,7 @@ fn main() {
 }
 ```
 
-Four lines tell the whole story. `value(2)` seeds the flow with a starting value. `try_step` runs a fallible step. `map` transforms the value. `finish` ends the flow and hands back a `Result`. No `EffectValue` to unwrap, no `pure`/`with_state` constructors, no manual error checks between steps.
+Four lines tell the whole story. `value(2)` seeds the flow with a starting value. `try_step` runs a fallible step. `map` transforms the value. `finish` ends the flow and hands back a `Result`. No `CausalEffect` to unwrap, no `pure`/`with_state` constructors, no manual error checks between steps.
 
 Run it:
 
@@ -92,22 +92,22 @@ assert_eq!(total, Ok(50)); // the value stays even, so +10 runs five times
 
 Two more loop verbs handle open-ended iteration: `iterate_until(pred, max, step)` runs until a predicate holds, and `iterate_to_fixpoint(max, step)` runs until the value stops changing. Both take a step bound and fail with a `MaxStepsExceeded` error rather than looping forever.
 
-## Intervention: the `do()` operator
+## Value substitution: `alternate_value`
 
-`intervene(v)` force-substitutes the value, the same `do(v)` operation from Pearl's Ladder of Causation, and records the override in the audit log. Factual and counterfactual reasoning run in the same flow, on the same engine.
+`alternate_value(v)` force-substitutes the carried value and records the override in the audit log. It is the value-level substitution counterfactual reasoning is built from: factual and counterfactual runs share the same flow and the same engine, differing only in a substituted value. Pearl's full `do()` operator — graph surgery over the causal hypergraph — lives at the `deep_causality` graph layer; `alternate_value` is the value-level substitution it builds on.
 
 ```rust
 use deep_causality::CausalFlow;
 
 let counterfactual = CausalFlow::value(8_i64)
-    .intervene(0)     // do(value = 0)
+    .alternate_value(0) // substitute value = 0
     .map(|n| n + 1)
     .finish();
 
 assert_eq!(counterfactual, Ok(1)); // the 8 is gone; the flow continues from 0
 ```
 
-`intervene_if(cond, f)` is the conditional form: it overrides the value only when a test holds, which is how a closed-loop controller fires a correction only when a monitor trips.
+`alternate_value_if(cond, f)` is the conditional form: it overrides the value only when a test holds, which is how a closed-loop controller fires a correction only when a monitor trips.
 
 ## State when you need it
 

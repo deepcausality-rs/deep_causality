@@ -27,7 +27,7 @@ fn main() {
         Causaloid::new(1, above_zero, "value is greater than zero");
 
     let effect = causaloid.evaluate(&PropagatingEffect::pure(3.5_f64));
-    println!("effect = {:?}", effect.value);
+    println!("effect = {:?}", effect.value());
 }
 ```
 
@@ -37,7 +37,7 @@ The causal function has signature `fn(I) -> PropagatingEffect<O>`. It takes a pl
 
 `Causaloid::new(id, causal_fn, description)` takes an integer id, the causal function, and a description string. The id and description show up in the [`EffectLog`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) when the Causaloid fires, which is what makes a chain auditable later.
 
-`evaluate` takes a reference to an incoming `PropagatingEffect`, not a bare input. To pass a plain value, lift it with `PropagatingEffect::pure(...)` first. The return is another `PropagatingEffect`, which you read through `effect.value.into_value()` when you need the inner type back.
+`evaluate` takes a reference to an incoming `PropagatingEffect`, not a bare input. To pass a plain value, lift it with `PropagatingEffect::pure(...)` first. The return is another `PropagatingEffect`, which you read through `effect.into_value()` when you need the inner type back.
 
 ## Compose two Causaloids in a graph
 
@@ -71,7 +71,7 @@ fn main() {
     graph.freeze();
 
     let effect = graph.evaluate_single_cause(root, &PropagatingEffect::pure(true));
-    println!("{:?}", effect.value);
+    println!("{:?}", effect.value());
 }
 ```
 
@@ -83,28 +83,30 @@ Three things changed compared to a singleton:
 
 ## Reading the effect
 
-A `PropagatingEffect`'s `value` field is an [`EffectValue<T>`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) enum:
+A `PropagatingEffect` carries either an error or a [`CausalEffect<T>`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_core) — its success channel. A `CausalEffect<T>` is one of three things:
 
-- `Value(T)`: the everyday case. A concrete output of type `T`.
-- `None`: the explicit absence of a value.
-- `ContextualLink(id1, id2)`: a deferred reference into the Context.
-- `RelayTo(idx, effect)`: a dispatch command that routes the effect to a different node in the graph. This is what powers adaptive reasoning.
-- `Map(parts)`: a labeled bundle of sub-effects for fan-out.
+- a **value** of type `T`: the everyday case.
+- **none**: the explicit absence of a value.
+- a **command** (`RelayTo(idx, sub)`): routes a sub-effect to a different node in the graph. This is what powers adaptive reasoning.
 
-You typically pattern-match on the variant you expect:
+You read it through accessors on the effect rather than matching an enum:
 
 ```rust
-match effect.value {
-    deep_causality_core::EffectValue::Value(v) => println!("got {v}"),
-    deep_causality_core::EffectValue::None => println!("no effect"),
-    other => println!("unexpected: {other:?}"),
+if let Some(v) = effect.value() {
+    println!("got {v}");
+} else if let Some(idx) = effect.command_target() {
+    println!("relay to node {idx}");
+} else if effect.error().is_some() {
+    println!("error");
+} else {
+    println!("no value");
 }
 ```
 
-For the common case where you just want the inner value, `effect.value.into_value()` returns an `Option<T>`.
+For the common case where you just want the inner value, `effect.into_value()` returns an `Option<T>`.
 
 ## What's next
 
 The single-input shape is enough to model many real workflows. When rules need to read an environment beyond their input, you move to a context-aware Causaloid via [`Causaloid::new_with_context`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality), which threads a [`Context`](/concepts/context/) into every evaluation. The [next page](/getting-started/hello-context/) sets that up.
 
-For a complete, runnable end-to-end example that walks Pearl's Ladder of Causation through `pure`, `bind`, and `intervene`, see [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example).
+For a complete, runnable end-to-end example that walks Pearl's Ladder of Causation through `pure`, `bind`, and `alternate_value` (value substitution), see [`examples/starter_example`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/starter_example).

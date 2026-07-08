@@ -38,7 +38,7 @@ let mut process: Process<SimplicialManifold<f64, FloatType>> =
 
 for step in 1..=N_STEPS {
     process = ProcessWitness::bind(process, diffuse_one_step);
-    if process.error.is_some() {
+    if process.error().is_some() {
         break;
     }
     // Peek at the current value without consuming the chain.

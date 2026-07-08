@@ -56,12 +56,12 @@ Two entry points are exposed:
 In both cases the effect returned by the Causaloid is inspected:
 
 ```rust
-let is_active = match &effect.value {
-    EffectValue::Value(val) => val
+let is_active = match effect.value() {
+    Some(val) => val
         .is_active(state.uncertain_parameter().as_ref())
         .map_err(CsmError::Causal)?,
-    // Other variants (RelayTo, Error, etc.) are inactive for action firing.
-    _ => false,
+    // No value (a None effect, a command, or an error) is inactive for action firing.
+    None => false,
 };
 
 if is_active {
