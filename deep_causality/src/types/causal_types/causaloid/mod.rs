@@ -50,7 +50,7 @@ pub type CausalGraph<I, O, STATE, CTX> = CausaloidGraph<Causaloid<I, O, STATE, C
 /// - A single, stateless causal function (`CausaloidType::Singleton`).
 /// - A single, context-aware causal function (`CausaloidType::Singleton` with `context`).
 /// - A collection of other `Causaloid`s (`CausaloidType::Collection`).
-/// - A directed acyclic graph (DAG) of other `Causaloid`s (`CausaloidType::Graph`).
+/// - A hypergraph of other `Causaloid`s (`CausaloidType::Graph`).
 ///
 /// `Causaloid`s are generic over their input (`I`), output (`O`), state (`STATE`), and context (`CTX`).
 ///

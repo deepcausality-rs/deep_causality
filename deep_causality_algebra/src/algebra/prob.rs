@@ -6,7 +6,7 @@
 //! `Prob(f64)` — a probability in `[0, 1]`: a product `CommutativeMonoid` (the `All` reducer) and
 //! an MV-algebra [`Verdict`](crate::Verdict) (`meet = min`, `join = max`, `complement = 1 − p`).
 
-use crate::{CommutativeMonoid, Monoid, Verdict};
+use crate::{Commutative, CommutativeMonoid, Monoid, Verdict};
 
 /// A probability in `[0, 1]`. The `Monoid` is the product t-norm (identity `1`), giving the
 /// `AggregateLogic::All` reducer `∏ pᵢ`; commutative, not idempotent.
@@ -23,6 +23,8 @@ impl Monoid for Prob {
         Prob(self.0 * other.0)
     }
 }
+// `p · q = q · p` — the marker `CommutativeMonoid` requires.
+impl Commutative for Prob {}
 impl CommutativeMonoid for Prob {}
 
 // MV-algebra (not Boolean): complement is `1 − p`, meet/join are the [0,1] bounded lattice.
