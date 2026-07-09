@@ -1,0 +1,34 @@
+deep_causality_algebra/src/algebra/commutative_monoid.rs
+  s_543ee5cdecd2c1::t_f14c6d9d084cca 14-16,20
+  s_543ee5cdecd2c1::t_8f3589a0238dea 8
+deep_causality_algebra/src/algebra/prob.rs
+  s_543ee5cdecd2c1::t_48f1f88f887978 9
+  s_543ee5cdecd2c1::t_377e58681312fa 26-27
+deep_causality_algebra/src/algebra/disjunction.rs
+  s_543ee5cdecd2c1::t_3b68543a4e51d5 24-25
+  s_543ee5cdecd2c1::t_13faa2457b103d 8
+deep_causality_algebra/src/algebra/conjunction.rs
+  s_543ee5cdecd2c1::t_b8740f6ae13ac9 24-25
+  s_543ee5cdecd2c1::t_da38d7059b6167 8
+deep_causality_algebra/src/algebra/count.rs
+  s_543ee5cdecd2c1::t_3e671f5ed146a9 9
+  s_543ee5cdecd2c1::t_1e17f459a5c527 25-26
+deep_causality/src/types/causal_types/causaloid/mod.rs
+  s_543ee5cdecd2c1::t_c28c6b0f9f4062 53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c89e3093793a7b5578e612a3afe5e3512daa3930",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
