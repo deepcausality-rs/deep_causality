@@ -85,7 +85,7 @@ CQM corner. This bounds what "native" quantum means here (§6). **[holds]**
 | **1. Pearl DAG** | DAG ⊂ hypergraph | none (topological) | classical verdict | hypergraph names parent sets directly; classical Kleisli corner; sequencing + fan-in | probabilistic **verdict carrier** (bounded-lattice/MV, assumption #5); Markov factorization + **do-intervention**/counterfactual as first-class checked ops |
 | **2. Relativistic** | hypergraph | Minkowski metric as **channel data** (state or context) | classical verdict + frame data | geometry is monad-channel data, not an external embedding: the metric (`Metric::Minkowski`) is applied **coordinate-free** (geometric algebra) inside `f` on the state's own 4-vectors — **`event_horizon_probe` is a working example**; **timelike → `bind`, spacelike → commutative `∇`** (relativity of simultaneity = the commutative fan-in) | **invariant → causal-order derivation** (Minkowski interval from state 4-positions → timelike/spacelike → `bind` vs `∇`); **frame-covariance** + no-signalling as freeze checks |
 | **3. Hardy / ICO** | orderless hypergraph | indefinite / dynamical (contextual) | classical mixture, or oracle | order-neutral base = "no presupposed order"; contextual metric = dynamical causal structure; `∇` = classical order-indifference; inner `f` can **encapsulate** a process matrix | *classical* ICO (convex mixture over orders, order-as-random-variable) via `Uncertain`/`continue_with`; *quantum* ICO (superposition-of-orders + interference) needs the linear carrier — shared with 4b |
-| **4a. QCM / Lorenz (hosted)** | hypergraph, incl. **cyclic** | operator-level structure | **operator-valued** CJ state (Float106 complex matrices) | `QCM-on-EPP.md`: CJ operators as arity-5 **monad-state**; encapsulation = flat = **monad law-3** (proven, inherited); immutable context for `ρ_A`; cyclic-QCM aligns with native non-DAG | **Layer D — operator commutativity `[ρ_j, ρ_k] = 0`** (Lorenz Def 3.3, load-bearing at ≥3 factors); the **partial-trace-preserves-commutativity** theorem; freeze-time commutator walk; depth-aware `Float106` tolerance |
+| **4a. QCM / Lorenz (hosted)** | hypergraph, incl. **cyclic** | operator-level structure | **operator-valued** CJ state (Float106 complex matrices) | `QCM-on-EPP.md`: CJ operators as arity-5 **monad-state**; encapsulation = flat = **monad law-3** (proven, inherited); immutable context for `ρ_A`; cyclic-QCM aligns with native non-DAG | **Layer D — operator commutativity `[ρ_j, ρ_k] = 0`** (Lorenz Def 3.3, load-bearing at ≥3 factors); the **partial-trace-preserves-commutativity** theorem; freeze-time commutator walk; depth-aware `Float106` tolerance; the **coproduct/direct-sum generator `⊕`** for causally faithful reification (Lorenz–Barrett 2021 §3: sequential+tensor is insufficient; roadmap Stage 2b) |
 | **4b. Native CQM** | — | — | linear / dagger-compact | (not a goal) | drop the **copy comonoid** (no-cloning), compact-closed carrier, coherence *across* nodes — **bounded out** by the Kleisli / measurement cut |
 
 ### 3.1 Reference definitions (level 4, Lorenz 2022)
@@ -203,8 +203,11 @@ without either crate knowing about the other. **[holds — substrate; planned �
   atop the formalized core: operator-valued **CJ-operator state**, quantum nodes and process
   operators, the **quantum Markov condition** with the Layer-D operator-commutativity check at freeze
   (`Float106`, depth-aware tolerance), cyclic-QCM support, and ICO / quantum-switch representations.
-  Its carrier requirement is the operator-valued (complex-matrix) tier; its one open theorem is
-  partial-trace preservation (§4, invariant 6). **[planned]**
+  Its wiring language requires the **coproduct/direct-sum generator `⊕`** (Lorenz–Barrett 2021:
+  causally faithful decomposition needs direct sums beyond sequential+tensor; formalized at the haft
+  layer per roadmap Stage 2b, instantiated here as the Hilbert direct sum). Its carrier requirement
+  is the operator-valued (complex-matrix) tier; its one open theorem is partial-trace preservation
+  (§4, invariant 6). **[planned]**
 
 - **Relativistic (level 2)** needs no dedicated substrate: the metric is **channel data** applied
   coordinate-free inside the causal function (geometric algebra on the state's 4-vectors — the

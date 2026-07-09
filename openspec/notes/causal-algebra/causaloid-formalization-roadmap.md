@@ -140,6 +140,47 @@ Rust refactor: the read-only context constructor (if absent); relay fuel. **[pla
 
 Rust refactor: per-edge Λ decoration slots on hyperedges (identity-keyed, order-free). **[planned]**
 
+### Stage 2b — The choice fragment: a coproduct/direct-sum generator `⊕` (ArrowChoice)
+
+**Requirement.** The reified wiring language MUST carry a coproduct/direct-sum generator beyond
+`compose`/`split`. Two independent forcings:
+
+- **Quantum faithfulness (Lorenz & Barrett 2021, §3–4).** Sequential + tensor composition cannot
+  make all no-influence relations of a unitary simultaneously evident; causally faithful
+  decomposition requires **direct-sum** structure (their extended circuit diagrams). A quantum term
+  language without `⊕` is provably unable to reify the causal structure of general unitaries.
+- **Classical case-splitting.** Contextual switches, regime selection, and counterfactual branching
+  are coproduct eliminations; do-calculus models with context-dependent mechanisms want the same
+  generator. The classical shadow is Hughes' **ArrowChoice** (Hughes 2000, §5) over the proven
+  coproduct `Either` (`haft.either.coproduct_universal`).
+
+**Deliverables (haft change, `haft-arrow-choice`-shaped, mirroring `haft-categorical-machinery`):**
+
+- Eager combinators: `Left`/`Right`/`Choice` (`+++`)/`Fanin` (`|||`) as defunctionalized `Arrow`
+  structs over `Either` (the value-level ArrowChoice fragment).
+- Reified term: extend `ArrowCore<G>` with `Left(f)`, `Right(f)`, `Choice(f, h)`, `Fanin(f, h)`;
+  extend `ArrowVal<V>` with a sum node (`InL`/`InR`) alongside `Leaf`/`Pair`; extend the
+  `ArrowTerm<In, Out, G>` typed façade with `left::<C>`, `right::<C>`, `choice`, `fanin` typed over
+  `Either<_, _>` (mistyped branch wiring fails to compile, `compile_fail` doctest as in H3).
+- Interpreters: extend `ArrowCore::interpret` and `ArrowCore::interpret_kleisli` — `InL`/`InR`
+  dispatch; `Fanin` merges the branches into one output.
+- Distributivity note: state the `⊗`-over-`⊕` interaction (pairs distribute over sums — the rig-
+  category coherence faithful decompositions lean on); prove the equations used, defer full
+  coherence-diagram machinery.
+
+| Proposed id | Statement |
+|---|---|
+| `haft.arrow_choice.laws` | the ArrowChoice equations on the eager fragment (`left (arr f) = arr (f ⊕ id)`, composition/exchange laws, `fanin` as the coproduct elimination) |
+| `haft.arrow_term.choice_interpret_sound` | interpreting the choice generators agrees with the eager combinators (extends `haft.arrow_term.interpret_sound`) |
+| `haft.arrow_term.choice_free` | the free/universal property extends to the enlarged generator set (agree on generators ⇒ agree on every term) |
+| `haft.interpreter.choice_preserved` | `interpret_kleisli` preserves the choice generators (extends `preserves_id`/`preserves_compose`) |
+
+Lean: `Haft/ArrowChoice.lean` (+ extensions to `ArrowTerm.lean`/`Interpreter.lean` scope), citing
+Hughes 2000 §5 and Lorenz & Barrett 2021 §4, deviation notes as usual. Downstream:
+`deep_causality_quantum` instantiates `⊕` as the Hilbert-space direct sum (sectorized wires);
+`deep_causality_do_calculus` uses it for context-dependent mechanisms. `⊕` is the **second
+confirmed generator extension** after `∇` (assumption #11a). **[planned]**
+
 ### Stage 3 — Verdict carrier + Collection closure
 
 | Proposed id | Statement | Closes |
@@ -223,14 +264,14 @@ per [`../quantum/QCM-on-EPP.md`](../quantum/QCM-on-EPP.md). Primary sources: Lor
 | `quantum.classical_embedding` | classical causal models are the diagonal-`σ` special case — the point where this crate and `deep_causality_do_calculus` provably meet | Lorenz 2022, §4.1 |
 | `quantum.cyclic_support` | cyclic QCM rides the native non-DAG hypergraph | Barrett–Lorenz–Oreshkov 2021 (2002.12157) |
 
-**Faithful reification caveat (from Lorenz & Barrett 2021, §3).** Sequential + tensor composition
-alone cannot make all no-influence relations of a unitary simultaneously evident; causally faithful
-decomposition requires **direct-sum** structure (their extended circuit diagrams), and the general
-faithfulness claim is their open hypothesis. Consequence for the term language: the quantum wiring
-fragment needs a **coproduct/direct-sum generator** beyond `compose`/`split` — whose classical
-shadow, `Either` with `haft.either.coproduct_universal`, is already proven. Plan the reified quantum
-term with `⊕` from the start; do not expect `compose`+`split` alone to be causally faithful.
-**[holds as a design constraint]**
+**Faithful reification (from Lorenz & Barrett 2021, §3).** Sequential + tensor composition alone
+cannot make all no-influence relations of a unitary simultaneously evident; causally faithful
+decomposition requires **direct-sum** structure (their extended circuit diagrams). The required
+**coproduct/direct-sum generator `⊕`** is a first-class requirement of this roadmap — **Stage 2b**
+formalizes and implements it at the haft layer (ArrowChoice over `Either`, reified `Left`/`Right`/
+`Choice`/`Fanin`, extended interpreters); this crate instantiates it as the Hilbert-space direct
+sum. The *general* faithfulness claim remains Lorenz & Barrett's open hypothesis, so the crate
+scopes its faithfulness claims to their proven classes (§8). **[planned — Stage 2b]**
 
 Plus the **logical/physical bridge**: cloud-QPU adapters (real quantum sampling as a monadic
 effect) in the **emergent / unverifiable** modality, kept type-distinct from the verifiable
@@ -246,10 +287,10 @@ frame-covariance freeze checks are a module over the core (`full-stack.md` §7).
    possibly conditional. **[open]**
 2. **`core.causaloid.hardy_correspondence`** — the ⊗^Λ reconstruction; publication-grade, blocks
    neither crate. **[open — target]**
-3. **Causally faithful quantum reification in general** — inherits Lorenz & Barrett's own open
-   hypothesis (every finite-dimensional unitary has a causally faithful extended circuit
-   decomposition); scope the crate's claims to the proven (n≤3 / k≤3 and listed (4,4)) classes.
-   **[open — upstream]**
+3. **Causally faithful quantum reification in general** — the `⊕` generator itself is planned work
+   (Stage 2b); what stays open is Lorenz & Barrett's own hypothesis (every finite-dimensional
+   unitary has a causally faithful extended circuit decomposition); scope the crate's claims to the
+   proven (n≤3 / k≤3 and listed (4,4)) classes. **[open — upstream]**
 4. **The #10 behaviour-preservation gate** for the Stage-4 engine rewrite — engineering discipline
    (characterization corpus), not mathematics. **[planned]**
 
@@ -261,17 +302,20 @@ per stage.
 ```
 Stage 1 (carrier stack)
    → Stage 2 (fixpoint + inversion + Λ-edges)
+      ∥  Stage 2b (choice fragment ⊕ — haft-level, parallelizable from now)
       → Stage 3 (Verdict closure)            [level-1 carrier]
          → Stage 4 (graph algebra, ∇∘(Λ⊗Λ))  [gated on #10 corpus]
-            → Stage 5 (catamorphism_unique)   [the keystone]
+            → Stage 5 (catamorphism_unique)   [the keystone; arrow_fragment
+                                               covers the ⊕-enlarged term]
                → Stage 6 (extensibility contract)
                   → deep_causality_do_calculus  ∥  deep_causality_quantum
-                     (independent of each other; meet at quantum.classical_embedding)
+                     (independent of each other; meet at quantum.classical_embedding;
+                      quantum's faithful reification requires Stage 2b)
 ```
 
-Assumption-tracker closure map: Stage 1 → #2-Q3, #11b · Stage 2 → #9 (+ Hardy target) · Stage 3 →
-#5 · Stage 4 → #2-Q1 (+ #1 applied) · Stage 5 → #6 (scoped), #8, B2 · already closed by prior work:
-#1, #3, #7. Remaining open in the tracker after this program: #4 (generation/atom registry — out of
+Assumption-tracker closure map: Stage 1 → #2-Q3, #11b · Stage 2 → #9 (+ Hardy target) · Stage 2b →
+#11a's second confirmed generator (`⊕`, after `∇`) · Stage 3 → #5 · Stage 4 → #2-Q1 (+ #1 applied)
+· Stage 5 → #6 (scoped), #8, B2 · already closed by prior work: #1, #3, #7. Remaining open in the tracker after this program: #4 (generation/atom registry — out of
 scope here), #10 (closed by its corpus gate), #11a (closed *by* this roadmap's carrier tower being
 the extensible `F`).
 
