@@ -1,0 +1,29 @@
+openspec/notes/causal-algebra/causaloid-formalization-roadmap.md
+  s_543ee5cdecd2c1::t_4d6640cf3db9da 305,308-309,312-313
+  s_543ee5cdecd2c1::t_c31918901bf3b6 267-274
+  s_543ee5cdecd2c1::t_7ef56771a02e50 290-293
+  s_543ee5cdecd2c1::t_3dee80318849dd 143-183
+  s_543ee5cdecd2c1::t_0a9af8d6fa5484 316-318
+openspec/notes/quantum/full-stack.md
+  s_543ee5cdecd2c1::t_ab64bed6228132 206-210
+  s_543ee5cdecd2c1::t_71f4fcc3ce024c 88
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_136194d23870f9 245-246
+  s_543ee5cdecd2c1::t_0cc5d3993cdb0d 182-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "66354d8749b62182a0dafddb8b40791014494fbd",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
