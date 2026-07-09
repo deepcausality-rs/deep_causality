@@ -1,0 +1,37 @@
+openspec/notes/quantum/full-stack.md
+  s_543ee5cdecd2c1::t_632e848836464d 185-208,216-249
+  s_543ee5cdecd2c1::t_f064663070525d 28-32
+  s_543ee5cdecd2c1::t_38c53cbc7d286a 260-265
+  s_543ee5cdecd2c1::t_9275a421e3ffa7 266
+  s_543ee5cdecd2c1::t_582775bda5a161 175-179
+  s_543ee5cdecd2c1::t_4202d5c1c34e28 44-56
+  s_543ee5cdecd2c1::t_1fb8ecf80cffbf 117-125
+  s_543ee5cdecd2c1::t_69fefcc382a0c7 86
+  s_543ee5cdecd2c1::t_8543ba8e5d65c1 1-27,33-43,57-85,87-116,126-174,180-184,250-259,267-274,276-286,296-297
+  s_543ee5cdecd2c1::t_f28841907292f1 209-215
+  s_543ee5cdecd2c1::t_7f0584868b78a5 275
+  s_543ee5cdecd2c1::t_a2ab2aea3632d3 298-301
+  s_543ee5cdecd2c1::t_3a8c12e95aa609 287-295
+openspec/notes/causal-algebra/Causaloid-structure.md
+  s_543ee5cdecd2c1::t_20f4a0737891c1 68-82
+  s_543ee5cdecd2c1::t_dc430571298143 1
+openspec/notes/causal-algebra/causaloid-formalization-roadmap.md
+  s_543ee5cdecd2c1::t_34ac6783b3c6d1 1-149,157-298
+  s_543ee5cdecd2c1::t_1573d255b09219 150-156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "231a9f32672a66aa01e56f2821013c5bf5dc68d1",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
