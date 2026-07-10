@@ -6,6 +6,8 @@
 #[cfg(test)]
 mod alias_complex_tests;
 #[cfg(test)]
+mod alias_hilbert_ket_bridge_tests;
+#[cfg(test)]
 mod alias_hilbert_state_tests;
 mod alias_hopf_state_tests;
 #[cfg(test)]

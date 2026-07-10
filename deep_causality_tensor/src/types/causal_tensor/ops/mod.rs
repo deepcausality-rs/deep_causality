@@ -4,7 +4,13 @@
  */
 pub mod tensor_broadcast;
 pub mod tensor_ein_sum;
+/// Conjugate transpose (Hermitian adjoint) for 2-D tensors.
+mod tensor_dagger;
+/// Dense Hermitian eigendecomposition (cyclic Jacobi; complex Givens for complex scalars).
+pub(crate) mod tensor_eigen;
 mod tensor_inverse;
+/// Kronecker (tensor) product for 2-D tensors.
+mod tensor_kronecker;
 mod tensor_product;
 /// Householder QR decomposition (tensor-network canonicalization primitive).
 mod tensor_qr;

@@ -61,28 +61,28 @@ Rust witness, THEOREM_MAP row, clippy -D warnings, `bazel test //...` green.
 
 ## 2. Phase 2 — The operator / channel layer (net-new foundation, bottom-up)
 
-- [ ] 2.0 L0 primitives: reuse `deep_causality_tensor` matmul/`svd_truncated`/`qr`/`trace`/einsum
+- [x] 2.0 L0 primitives: reuse `deep_causality_tensor` matmul/`svd_truncated`/`qr`/`trace`/einsum
       (complex support confirmed in 0.5); add the missing GENERIC ops to the tensor crate —
       conjugate-transpose (`dagger`), Kronecker product `⊗`, reshape/index-permute — and promote the
       private `sym_eig` (cyclic-Jacobi, complex Givens) to a public dense Hermitian eigensolver on
       `CausalTensor`
-- [ ] 2.1 L1 ket↔matrix bridge (R1): `to_ket` = column `KET_COLUMN=0` of `to_matrix()`, `from_ket`
+- [x] 2.1 L1 ket↔matrix bridge (R1): `to_ket` = column `KET_COLUMN=0` of `to_matrix()`, `from_ket`
       embeds as column 0 + `from_matrix` (even-n metrics only; `Metric` from `deep_causality_metric`).
       Inner product agrees with `QuantumOps::bracket` (Dirac ⟨φ|ψ⟩), adjoint with `QuantumOps::dag`;
       FIRST numerically verify `to_matrix(ψ.dag()) == dagger(to_matrix(ψ))` for Cl(0,10) — if it fails,
       use the metric-correct Clifford conjugation. Ratify `KET_COLUMN=0`; confirm `from_matrix` 1/D gain
-- [ ] 2.2 L1 `DensityMatrix<R>` newtype with enforced invariants (Hermitian, PSD via `eigen`, unit
+- [x] 2.2 L1 `DensityMatrix<R>` newtype with enforced invariants (Hermitian, PSD via `eigen`, unit
       trace → `QuantumError`); constructors from a ket, an ensemble, and a Choi
-- [ ] 2.3 L2 partial trace `Tr_B` (reshape-to-rank-4 + `b=b'` einsum contraction; named-subset
+- [x] 2.3 L2 partial trace `Tr_B` (reshape-to-rank-4 + `b=b'` einsum contraction; named-subset
       generalization) with linearity, `Tr_B(X⊗Y)=X·Tr(Y)`, and the bimodule law
       `Tr_B((1_B⊗Z)M)=Z·Tr_B(M)` as tested properties (the Q-PTP boundary identity)
-- [ ] 2.4 L3 Choi–Jamiołkowski operator + Kraus: CP ⟺ Choi PSD (`eigen`), TP ⟺ `Tr_out(J)=I`,
+- [x] 2.4 L3 Choi–Jamiołkowski operator + Kraus: CP ⟺ Choi PSD (`eigen`), TP ⟺ `Tr_out(J)=I`,
       Kraus↔Choi via the PSD-Choi `eigen` decomposition; Choi→Kraus→Choi round-trip test
-- [ ] 2.5 L4 commutator `[A,B]` + shared-support detection used by the freeze check
-- [ ] 2.6 Property tests incl. monad law 3 (`encapsulation = flat`) exercised over the arity-5 STATE
+- [x] 2.5 L4 commutator `[A,B]` + shared-support detection used by the freeze check
+- [x] 2.6 Property tests incl. monad law 3 (`encapsulation = flat`) exercised over the arity-5 STATE
       channel with complex-MATRIX payloads (not only scalar state); all freeze-critical paths at
       `Complex<Float106>`
-- [ ] 2.7 `bazel test //...` green; clippy clean; phase commit message
+- [x] 2.7 `bazel test //...` green; clippy clean; phase commit message
 
 ## 3. Phase 3 — The verifiable QCM slice (simulated CJ + freeze check)
 

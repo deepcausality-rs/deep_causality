@@ -21,7 +21,9 @@
 
 pub(crate) mod error;
 pub(crate) mod kernels;
+pub(crate) mod types;
 
 pub use crate::error::quantum_error::{QuantumError, QuantumErrorEnum};
 
 pub use crate::kernels::*;
+pub use crate::types::*;

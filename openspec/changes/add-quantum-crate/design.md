@@ -294,10 +294,28 @@ native geometric-product gates AND a d-column for density matrices / `CausalTens
   into this crate). `QuantumOps::bracket` IS the Dirac inner product `⟨φ|ψ⟩` (the ket law's RHS), and
   `QuantumOps::dag` = `reversion()` + coefficient-conjugation is the adjoint convention. The inner
   product uses `QuantumOps::bracket`, never the unrelated multifield Lie-commutator.
-- Open sub-questions: (i) ratify `KET_COLUMN = 0` as the fixed convention; (ii) numerically verify
-  `to_matrix(ψ.dag()) == dagger(to_matrix(ψ))` for the Cl(0,10) Brauer–Weyl gammas (anti-Hermitian
-  generators) — if it fails, use the metric-correct Clifford conjugation; (iii) confirm `from_matrix`'s
-  `1/D` factor gives unit round-trip gain.
+- Sub-questions — **all resolved numerically (2.1, 2026-07-10):**
+  - (i) `KET_COLUMN = 0` **ratified** (exported as a named constant; round-trips exact to ≤ 5.6e-16
+    for every even-n metric probed, incl. Cl(0,10)).
+  - (ii) The `dag` verification **failed for Cl(0,10)`** as anticipated — and the finding is sharper:
+    on the minimal left ideal, the reversion+conjugation product (`QuantumOps::bracket`) matches the
+    matrix-column inner product for **positive (Euclidean) signatures**, but is **identically zero**
+    on **negative (`Cl(0,n)`) signatures**, where the **Clifford conjugation** (grade involution ∘
+    reversion, + coefficient conjugation) is the metric-correct adjoint (column/Dirac ratio exactly
+    `D` = 2, 4, 32 across probes). Implemented as `dirac_bracket_kernel` (metric-dispatch:
+    dag for uniform-positive, Clifford conjugation for uniform-negative, error for mixed signature)
+    plus a public `clifford_conjugation`, both in `deep_causality_quantum::kernels::bridge`.
+  - (iii) `from_matrix`'s `1/D` **confirmed** unit round-trip gain. `to_ket` additionally scales by
+    `1/√D` (and `from_ket` by `√D`) so the raw column inner product equals the Dirac product exactly
+    and a Dirac-normalized ket yields a unit-trace `ρ = k·kᴴ`.
+- **Discovered boundary (2.1):** `to_matrix` is an algebra **homomorphism only for Euclidean
+  metrics** — the gamma basis squares to `+1` regardless of signature, so for `Cl(0,n)` it is a
+  linear (trace-orthogonal) isomorphism, *not* a representation (`e_i² = −1` in the algebra vs
+  `γ_i² = +1` in matrix land). Consequence: a multivector gate on a `Cl(0,n)` ket must be applied as
+  a geometric product (native) or built directly as a matrix — never converted via `to_matrix` and
+  matmul'd. Pinned by tests on both sides of the boundary
+  (`test_operator_action_commutes_with_bridge_euclidean`,
+  `test_matrix_rep_is_linear_only_for_negative_signature`).
 
 ### R2 — QpuSampler (emergent seam) — separation by CONDITION + reify-tool-as-DATA
 

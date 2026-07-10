@@ -45,7 +45,32 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_quantum",
         # Internal dependencies
+        "//deep_causality_core",
         "//deep_causality_multivector",
+        "//deep_causality_num",
         "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
+
+# =============================================================================
+# types/* test suites
+# =============================================================================
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
     ],
 )

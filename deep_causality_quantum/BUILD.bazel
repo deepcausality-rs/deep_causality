@@ -18,6 +18,7 @@ rust_library(
         "//deep_causality_multivector",
         "//deep_causality_num",
         "//deep_causality_num_complex",
+        "//deep_causality_tensor",
     ],
 )
 

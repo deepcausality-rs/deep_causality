@@ -30,16 +30,19 @@ column (`KET_COLUMN = 0`, the primitive idempotent `E = e₀e₀ᵀ`) of `to_mat
 embed a d-vector as that column and apply `from_matrix`. The bridge SHALL be defined only for
 even-dimensional metrics (where `to_matrix` is a bijection, `d² = 2ⁿ`), including `Cl(0,10)` (d = 32),
 using the metric-signature type from `deep_causality_metric` (the SSOT), and SHALL error otherwise. The
-ket inner product SHALL agree with the existing `QuantumOps::bracket` (the Dirac product `⟨φ|ψ⟩`) and the
-adjoint with `QuantumOps::dag` (`reversion` + coefficient-conjugation); it SHALL NOT reuse the unrelated
-multifield Lie-commutator.
+ket inner product SHALL agree with the **metric-correct Dirac product** `⟨φ|ψ⟩` — `QuantumOps::bracket`
+(`reversion` + coefficient-conjugation) on uniform-positive (Euclidean) signatures, and the Clifford
+conjugation form on uniform-negative (`Cl(0,n)`) signatures, where the reversion form is numerically
+established to be degenerate (identically zero) on the minimal left ideal; mixed signatures SHALL be
+rejected. It SHALL NOT reuse the unrelated multifield Lie-commutator.
 
 #### Scenario: Ket embedding round-trips and agrees with the Dirac product
 
 - **WHEN** a d-vector `v` is embedded via `from_ket` and read back via `to_ket`, and two states are
   combined as `to_ket(φ)† · to_ket(ψ)`
 - **THEN** `to_ket(from_ket(v)) == v` up to tolerance, `from_ket(to_ket(ψ)) == ψ` up to the MLI (column-0)
-  embedding, and the column product equals `QuantumOps::bracket(φ, ψ)` up to tolerance
+  embedding, and the column product equals the metric-correct Dirac product (`QuantumOps::bracket` on a
+  Euclidean signature; the Clifford-conjugation form on `Cl(0,n)`) up to tolerance
 
 #### Scenario: Density matrix from a ket is a valid state
 

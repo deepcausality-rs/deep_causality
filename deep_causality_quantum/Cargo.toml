@@ -51,5 +51,9 @@ version = "0.4"
 path = "../deep_causality_num_complex"
 version = "0.1"
 
+[dependencies.deep_causality_tensor]
+path = "../deep_causality_tensor"
+version = "0.5"
+
 [lints]
 workspace = true
