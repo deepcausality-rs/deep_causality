@@ -46,7 +46,7 @@ faithfulness SHALL be out of scope, recorded as an upstream-open target.
 The formalization SHALL NOT state `partial_trace_preservation` unconditionally. It SHALL prove
 `quantum.partial_trace_nonpreservation` — the refuting counterexample
 (`X = σx ⊗ |0⟩⟨0| + σz ⊗ |1⟩⟨1|`, `Y = σx ⊗ |0⟩⟨0| − σz ⊗ |1⟩⟨1|`: `[X,Y] = 0` but
-`[Tr₂X, Tr₂Y] = −4i·σy ≠ 0`) — and `quantum.partial_trace_preservation_boundary` — the conditional
+`[Tr₂X, Tr₂Y] = +4i·σy ≠ 0`) — and `quantum.partial_trace_preservation_boundary` — the conditional
 sufficient theorem (boundary-only / single-node interface ⇒ preservation, via
 `Tr_B((1_B ⊗ Z) · M) = Z · Tr_B(M)`). The exact necessary-and-sufficient "valid encapsulation"
 condition SHALL remain an explicit open target, to be narrowed empirically via the instrumented

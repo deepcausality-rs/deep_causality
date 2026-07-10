@@ -16,7 +16,7 @@ headline theorem is **false as stated**:
 
 - **`quantum.partial_trace_preservation` is not true unconditionally.** Concrete counterexample:
   `X = σ_x ⊗ |0⟩⟨0| + σ_z ⊗ |1⟩⟨1|` and `Y = σ_x ⊗ |0⟩⟨0| − σ_z ⊗ |1⟩⟨1|` commute (`[X,Y]=0`), yet
-  their partial traces do not (`[Tr₂X, Tr₂Y] = −4i·σ_y ≠ 0`) — partial trace is positive-linear but
+  their partial traces do not (`[Tr₂X, Tr₂Y] = +4i·σ_y ≠ 0`) — partial trace is positive-linear but
   not an algebra homomorphism. The roadmap already anticipated this; the proof obligation must be
   stated **conditionally** (boundary-only / single-node interface), never unconditionally.
 - **The pinned Mathlib (v4.15.0) has no partial trace and no Choi–Jamiołkowski / channel layer.**

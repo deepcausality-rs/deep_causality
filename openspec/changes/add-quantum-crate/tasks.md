@@ -7,60 +7,65 @@ Rust witness, THEOREM_MAP row, clippy -D warnings, `bazel test //...` green.
 
 ## 0. Phase 0 — Resolve blockers and open questions FIRST (gate)
 
-- [ ] 0.1 (B1) Witness the partial-trace counterexample in a standalone test/notebook:
+- [x] 0.1 (B1) Witness the partial-trace counterexample in a standalone test/notebook:
       `X = σx⊗|0><0| + σz⊗|1><1|`, `Y = σx⊗|0><0| − σz⊗|1><1|`; confirm `[X,Y]=0` and
-      `[Tr₂X,Tr₂Y] = −4i·σy ≠ 0`. Record it as the refuting witness for `quantum.partial_trace_nonpreservation`
-- [ ] 0.2 (B1/Q-PTP) Fix the CONDITIONAL statement to prove: `partial_trace_preservation_boundary`
+      `[Tr₂X,Tr₂Y] = +4i·σy ≠ 0`. Record it as the refuting witness for `quantum.partial_trace_nonpreservation`
+- [x] 0.2 (B1/Q-PTP) Fix the CONDITIONAL statement to prove: `partial_trace_preservation_boundary`
       (single-node interface / boundary-only shared support ⇒ preservation via `Tr_B((1⊗Z)M)=Z·Tr_B(M)`).
       (DECIDED, Q-PTP: prove at BOUNDARY-ONLY shared support — the `1_B ⊗ Z` bimodule case — with
       single-node interface as a checkable sufficient predicate). Record the general necessary-and-
       sufficient condition as an explicit OPEN target. Note: quantum-causaloid nesting is itself
       unestablished, so this stays OFF the critical path — flat QCM models are the supported path and
       the counterexample/boundary theorem only document the boundary
-- [ ] 0.3 (B2) Confirm the in-scope `quantum.*` id set for this change and that the partial-trace + CJ
+- [x] 0.3 (B2) Confirm the in-scope `quantum.*` id set for this change and that the partial-trace + CJ
       Lean foundation is Phase 5's first deliverable (gates all quantum ids); record the deferred ids
-- [ ] 0.4 (B3) Write the faithfulness scope guard: claims limited to the proven classes; the general
+- [x] 0.4 (B3) Write the faithfulness scope guard: claims limited to the proven classes; the general
       Lorenz–Barrett hypothesis and the operator-level `⊕` are explicitly deferred
-- [ ] 0.5 (B4/Q-ERR) Fix the operator representation (`CausalTensor<Complex<R>>`) and define the
+- [x] 0.5 (B4/Q-ERR) Fix the operator representation (`CausalTensor<Complex<R>>`) and define the
       crate-local `QuantumError` (outer newtype over `QuantumErrorEnum` of exact variants) replacing
       `PhysicsError`; confirm `deep_causality_tensor` provides the needed complex matmul/SVD/QR
-- [ ] 0.6 (B5/Q-KG) Fix the migration scope: the quantum-information kernels move; `klein_gordon`
+- [x] 0.6 (B5/Q-KG) Fix the migration scope: the quantum-information kernels move; `klein_gordon`
       STAYS in `deep_causality_physics` (Q-KG decided) — the `kernels/quantum` module splits; list the
       exact 5-file breakage set and the update plan (direct call-site updates, no long-lived shim)
-- [ ] 0.7 (B6/Q-QPU) Fix the verifiable/emergent modality boundary and the crate feature layout
+- [x] 0.7 (B6/Q-QPU) Fix the verifiable/emergent modality boundary and the crate feature layout
       (verifiable default; `qpu` seam off by default, no network/async dep here); lock the `QpuSampler`
       seam shape: generic (`no dyn`), `sample(circuit, shots) -> Result<Shots, QuantumError>` with
       classical `Shots`, an `Uncertain` bridge, and a feature-gated `PropagatingEffect` wrapper
-- [ ] 0.8 (B7) Fix the orthomodular `Verdict` newtype design (commuting projection family; no blanket
+- [x] 0.8 (B7) Fix the orthomodular `Verdict` newtype design (commuting projection family; no blanket
       operator `Verdict`; Born-rule extraction boundary)
-- [ ] 0.9 (B8/Q-TOL) Fix the `Float106` commutator-tolerance policy: condition-driven forward-error
+- [x] 0.9 (B8/Q-TOL) Fix the `Float106` commutator-tolerance policy: condition-driven forward-error
       bound (NOT linear-in-depth); error-propagation analysis through iterated partial trace;
       configurable + instrumented per-check margin capture (shared telemetry with B1(c))
-- [ ] 0.10 (B9) Fix crate policy + dependency set (workspace member, `[lints] workspace = true`,
+- [x] 0.10 (B9) Fix crate policy + dependency set (workspace member, `[lints] workspace = true`,
       `unsafe_code = "forbid"`, MSRV 1.93.0, no `dyn`/macros, std; deps listed in the proposal)
-- [ ] 0.11 Phase-0 gate: all decisions recorded in `design.md` (update in place if any decision
+- [x] 0.11 Phase-0 gate: all decisions recorded in `design.md` (update in place if any decision
       changes); prepare the Phase-0 commit message. No Phase-1+ task starts before this is done
 
 ## 1. Phase 1 — Crate scaffold + kernel migration
 
-- [ ] 1.1 Create `deep_causality_quantum/` (`Cargo.toml` with `[lints] workspace = true`, MSRV,
+- [x] 1.1 Create `deep_causality_quantum/` (`Cargo.toml` with `[lints] workspace = true`, MSRV,
       `unsafe_code = "forbid"`, the Phase-0 dependency set incl. `deep_causality_metric` for the metric
       SSOT — no locally-defined metric type); add it to the workspace `members`
-- [ ] 1.2 Move `deep_causality_physics/src/kernels/quantum/{gates,gates_haruna,mechanics,wrappers}.rs`
+- [x] 1.2 Move `deep_causality_physics/src/kernels/quantum/{gates,gates_haruna,mechanics,wrappers}.rs`
       into the new crate (`klein_gordon*` STAYS in physics per 0.6); replace `PhysicsError` with
       `QuantumError`; keep `QuantumGates`/`QuantumOps`/`Operator`/`Gate` and the Haruna gates
-- [ ] 1.3 `HilbertState` stays in `deep_causality_multivector` (unchanged); the new crate depends on it
-- [ ] 1.4 Update `deep_causality_physics/src/lib.rs` (drop the moved re-exports; keep `klein_gordon` if
+- [x] 1.3 `HilbertState` stays in `deep_causality_multivector` (unchanged); the new crate depends on it
+- [x] 1.4 Update `deep_causality_physics/src/lib.rs` (drop the moved re-exports; keep `klein_gordon` if
       it stays) and confirm physics still builds
-- [ ] 1.5 Re-point the four dependents: `examples/quantum_examples/{quantum_counterfactual,ikkt_matrix_model}`
-      and `examples/physics_examples/multi_physics_pipeline/{main,model}.rs`
-- [ ] 1.6 `bazel test //...` green; clippy `-D warnings`; prepare the phase commit message
+- [x] 1.5 Re-point the verified dependents (per 0.6): `examples/quantum_examples/ikkt_matrix_model/main.rs`
+      (`Operator`, `commutator_kernel`) and `examples/physics_examples/multi_physics_pipeline/main.rs`
+      (`born_probability` moves; the `klein_gordon` import stays on physics); move the physics quantum
+      kernel tests with the kernels (`quantum_counterfactual` and `multi_physics_pipeline/model.rs`
+      are verified NOT dependents)
+- [x] 1.6 `bazel test //...` green; clippy `-D warnings`; prepare the phase commit message
 
 ## 2. Phase 2 — The operator / channel layer (net-new foundation, bottom-up)
 
-- [ ] 2.0 L0 primitives: reuse `deep_causality_tensor` matmul/`eigen`/`svd_truncated`/`qr`/`trace`/
-      einsum; add the missing GENERIC ops to the tensor crate — conjugate-transpose (`dagger`),
-      Kronecker product `⊗`, reshape/index-permute
+- [ ] 2.0 L0 primitives: reuse `deep_causality_tensor` matmul/`svd_truncated`/`qr`/`trace`/einsum
+      (complex support confirmed in 0.5); add the missing GENERIC ops to the tensor crate —
+      conjugate-transpose (`dagger`), Kronecker product `⊗`, reshape/index-permute — and promote the
+      private `sym_eig` (cyclic-Jacobi, complex Givens) to a public dense Hermitian eigensolver on
+      `CausalTensor`
 - [ ] 2.1 L1 ket↔matrix bridge (R1): `to_ket` = column `KET_COLUMN=0` of `to_matrix()`, `from_ket`
       embeds as column 0 + `from_matrix` (even-n metrics only; `Metric` from `deep_causality_metric`).
       Inner product agrees with `QuantumOps::bracket` (Dirac ⟨φ|ψ⟩), adjoint with `QuantumOps::dag`;

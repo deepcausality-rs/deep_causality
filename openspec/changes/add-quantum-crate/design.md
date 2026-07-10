@@ -21,9 +21,15 @@ Two quantum senses share this crate but are kept strictly apart by **modality**:
 Counterexample (finite, 2-qubit, explicit): on `H ⊗ ℂ²`,
 `X = σ_x ⊗ |0⟩⟨0| + σ_z ⊗ |1⟩⟨1|`, `Y = σ_x ⊗ |0⟩⟨0| − σ_z ⊗ |1⟩⟨1|`. Both Hermitian,
 `[X, Y] = 0` (block-diagonal, commuting blocks), but `Tr₂X = σ_x + σ_z`, `Tr₂Y = σ_x − σ_z` and
-`[Tr₂X, Tr₂Y] = −4i·σ_y ≠ 0`. Root cause: partial trace is positive-linear but not an algebra
+`[Tr₂X, Tr₂Y] = +4i·σ_y ≠ 0`. Root cause: partial trace is positive-linear but not an algebra
 homomorphism (`Tr_B(XY) ≠ Tr_B(X)·Tr_B(Y)`), so it has no general reason to send commutators to
 commutators.
+
+**Witnessed (0.1, 2026-07-10).** Numerically confirmed: `‖[X,Y]‖ = 0` exactly,
+`[Tr₂X, Tr₂Y] = [[0, 4], [−4, 0]] = +4i·σ_y` (Frobenius norm `√32`), both operators Hermitian. The
+witness run corrected the sign originally recorded here (the hand-check agrees:
+`[σ_x+σ_z, σ_x−σ_z] = 2[σ_z, σ_x] = +4i·σ_y`). The permanent in-repo Rust witness lands with task
+5.4 (`quantum.partial_trace_nonpreservation`).
 
 **Decision.** The theorem ships in three parts: (a) `quantum.partial_trace_nonpreservation` — the
 refuting counterexample, proved and witnessed; (b) `quantum.partial_trace_preservation_boundary` —
@@ -56,7 +62,12 @@ every `quantum.*` id. In-scope theorem ids for this change: `no_influence`, `mar
 `unitary_factorization`, `classical_embedding`, `cyclic_support`, and the conditional
 `partial_trace_preservation_boundary` + counterexample. Difficulty grades (1 easy … 5 research):
 `no_influence` 3, `markov_commutativity` 3, `unitary_factorization` 4, others 2–3; the cost is the
-foundation, not the individual proofs.
+foundation, not the individual proofs. `quantum.verdict.orthomodular` is additionally in scope via
+Phase 4 / task 5.6. **Deferred ids (recorded, 0.3):** `quantum.faithfulness_general` (the
+routed/direct-sum Lorenz–Barrett hypothesis, open upstream per B3), the operator-level `⊕`
+(deferred with it), and the exact necessary-and-sufficient "valid encapsulation" condition of B1(c)
+(an open target off the critical path, narrowed empirically via the instrumented freeze — nesting
+itself is unestablished).
 
 ### B3. General direct-sum faithfulness is open upstream — scope it out, but adopt the decidable traditional-circuit criterion
 
@@ -103,6 +114,16 @@ Kronecker product `⊗`, reshape/index-permute), keeping quantum semantics in th
 PSD Choi** (`K_i = √λ_i · reshape(v_i)`); round-trip tested. (L4) The process operator σ = product of
 per-node CJ factors as a static freeze-time `ProcessFactors` store (R3), feeding the Layer-D freeze check.
 
+**Confirmed (0.5, 2026-07-10) — the tensor crate carries the complex load.** `matmul` (bound
+`T: Ring + Copy + Default + PartialOrd`) is satisfied by `Complex<R: RealField>` (derived
+`Copy/PartialEq/Default`, manual `PartialOrd`, `Ring` via the algebra blanket impl);
+`svd_truncated` and `qr` are generic over `ConjugateScalar`, which is implemented for
+`Complex<T: RealField>` (so `Complex<Float106>` qualifies); einsum `trace`/`transpose` exist. One
+gap: the dense Hermitian eigensolver exists in-tree (`sym_eig`, cyclic-Jacobi with complex Givens,
+`deep_causality_tensor/src/types/causal_tensor_network/solve/local.rs`) but is **private** to the
+DMRG solver — task 2.0 promotes it to a public dense `CausalTensor` op alongside the missing
+`dagger` / Kronecker / reshape-permute generics.
+
 **Design seam — ket ↔ matrix (settle in Phase 0/2).** `HilbertState<R>` is a Clifford minimal-left-
 ideal element (a multivector), not a column vector; forming `|ψ⟩⟨ψ|` and applying operators needs a
 clean `HilbertState → column-vector CausalTensor` bridge (`to_ket`/`from_ket`, alongside the existing
@@ -116,9 +137,18 @@ the Q-TOL condition-driven budget.
 traits), `gates_haruna.rs` (logical gates), `mechanics.rs` (`Operator`/`Gate` aliases;
 `klein_gordon_kernel`, `born_probability_kernel`, `expectation_value_kernel`, `apply_gate_kernel`,
 `commutator_kernel`, `fidelity_kernel`, `haruna_*_gate_kernel`), and `wrappers.rs` (the
-`PropagatingEffect` wrappers). Dependents: `deep_causality_physics/src/lib.rs`,
-`examples/quantum_examples/{quantum_counterfactual,ikkt_matrix_model}`, and
-`examples/physics_examples/multi_physics_pipeline/{main,model}`.
+`PropagatingEffect` wrappers).
+
+**Dependents (verified 0.6, 2026-07-10).** The breakage set is: (1)
+`deep_causality_physics/src/lib.rs` — `pub use crate::kernels::quantum::*` splits; (2) the physics
+quantum test files `deep_causality_physics/tests/kernels/quantum/{gates,mechanics,wrappers}_tests.rs`
+— they move with the kernels (the `klein_gordon` tests stay); (3)
+`examples/quantum_examples/ikkt_matrix_model/main.rs` — imports `Operator`, `commutator_kernel`; (4)
+`examples/physics_examples/multi_physics_pipeline/main.rs` — imports `born_probability` (moves) and
+`klein_gordon` (stays), so the import splits. Verified **not** dependents (contrary to the earlier
+estimate): `examples/quantum_examples/quantum_counterfactual` (multivector/core-only imports) and
+`examples/physics_examples/multi_physics_pipeline/model.rs` (comment-only mention). No other crate
+(incl. `deep_causality_cfd`) references the moving kernels.
 
 **Decision.** Move the quantum-information layer (gates, Haruna gates, the gate/born/expectation/
 commutator/fidelity kernels + wrappers, `QuantumGates`/`QuantumOps`, `Operator`/`Gate`) into
@@ -169,7 +199,19 @@ error budget that grows with the norms/conditioning encountered at each partial-
 bound misclassifies in the instrumented battery), and compare `‖[ρ_j, ρ_k]‖_F` against `C · budget`
 with a small safety factor `C` over the `Float106` machine-epsilon base. Keep the policy configurable
 and instrumented (record the per-check margin `‖[ρ_j,ρ_k]‖ / ε`) so Q-TOL tuning and the B1(c)
-empirical discovery share one telemetry stream. Confirm the exact bound form in Phase 0.
+empirical discovery share one telemetry stream.
+
+**Confirmed bound form (0.9, 2026-07-10).** A first-order incremental forward-error budget over the
+`Float106` unit roundoff `u`: every operator carries `(‖·‖_F, budget)`. Construction seeds
+`budget_A = u·‖A‖_F`; a product `C = A·B` propagates
+`budget_C = ‖A‖_F·budget_B + ‖B‖_F·budget_A + γ_n·‖A‖_F·‖B‖_F` (Higham's matmul bound,
+`γ_n = n·u/(1−n·u)`); a partial trace `T = Tr_B(M)` propagates `budget_T = budget_M + d_B·u·‖M‖_F`.
+The pair test accepts `[ρ_j, ρ_k] = 0` iff
+`‖[ρ_j,ρ_k]‖_F ≤ C_safety · (‖ρ_j‖_F·budget_k + ‖ρ_k‖_F·budget_j + 2·γ_n·‖ρ_j‖_F·‖ρ_k‖_F)`, with
+`C_safety = 8` by default and configurable. The per-check margin `‖[ρ_j,ρ_k]‖_F / threshold` is
+recorded (the shared B1(c) telemetry stream). Escalation path: only where the instrumented battery
+shows the norm bound misclassifying, replace the `‖·‖_F` factors at the offending step with
+SVD-based `σ_max` / condition estimates — never globally.
 
 ### B9. Crate policy + dependency set
 
