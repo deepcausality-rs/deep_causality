@@ -9,7 +9,7 @@ use core::ops::Div;
 ///
 /// `Scalar` sits in the real tower between [`Real`](crate::Real) and
 /// [`RealField`](crate::RealField): it adds division to `Real` but, unlike a field, does **not**
-/// require a total inverse. That is deliberate, so that [`Dual`](crate::Dual) qualifies — its `ε`
+/// require a total inverse. That is deliberate, so that `Dual` qualifies — its `ε`
 /// component is a zero divisor, so it has division yet is not a field. The
 /// `deep_causality_calculus` crate writes its differentiation and integration operators against
 /// `Scalar`, so a single model evaluates at `f64` (the value) and at `Dual` (the derivative).

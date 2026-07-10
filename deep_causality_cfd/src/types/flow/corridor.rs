@@ -194,7 +194,7 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
 // [4] Trajectory / navigation stage
 // ---------------------------------------------------------------------------
 
-/// The trajectory/navigation stage ([4]): one [`ReentryNavEngine`](crate::ReentryNavEngine) step per coupling step — KS
+/// The trajectory/navigation stage (\[4\]): one [`ReentryNavEngine`](crate::ReentryNavEngine) step per coupling step — KS
 /// predict with the ④ aero-force channel as the perturbation kick, then the ESKF measurement fold.
 ///
 /// The nav *state* threads through the [`CoupledField`] (the stage takes the engine out, advances

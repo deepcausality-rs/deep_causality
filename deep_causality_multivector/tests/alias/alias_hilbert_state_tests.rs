@@ -187,7 +187,7 @@ fn test_display() {
     let actual = state.to_string();
     let expected = format!(
         "CausalMultiVector {{ data: {:?}, metric: {} }}",
-        &data, metric
+        data, metric
     );
     assert_eq!(actual, expected);
 }

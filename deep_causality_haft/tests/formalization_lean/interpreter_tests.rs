@@ -210,3 +210,143 @@ fn test_interpreter_choice_preserved() {
         via_bind // 5 -> double -> 10 -> inc -> 11
     );
 }
+
+/// THEOREM_MAP: haft.interpreter.preserves_compose
+///
+/// The strength combinators thread the effect over the two halves of a [`ArrowVal::Pair`]:
+/// `First`/`Second`/`Split` act componentwise, `Fanout` copies the input first. A failing half
+/// short-circuits the whole pair (`bind`), and a mis-shaped (non-pair) input passes through purely.
+#[test]
+fn test_interpreter_strength_preserved() {
+    // First(Double) acts on the left half of a pair, passing the right through.
+    let first_double: ArrowCore<Op> = ArrowCore::First(Box::new(ArrowCore::Gen(Op::Double)));
+    assert_eq!(
+        first_double.interpret_kleisli::<OptionWitness, i64, _>(
+            &phi,
+            ArrowVal::pair(ArrowVal::Leaf(5), ArrowVal::Leaf(9)),
+        ),
+        Some(ArrowVal::pair(ArrowVal::Leaf(10), ArrowVal::Leaf(9)))
+    );
+    // First on a non-pair (Leaf) passes through unchanged — the effect never fires.
+    assert_eq!(
+        first_double.interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::Leaf(5)),
+        Some(ArrowVal::Leaf(5))
+    );
+
+    // Second(Inc) acts on the right half of a pair, passing the left through.
+    let second_inc: ArrowCore<Op> = ArrowCore::Second(Box::new(ArrowCore::Gen(Op::Inc)));
+    assert_eq!(
+        second_inc.interpret_kleisli::<OptionWitness, i64, _>(
+            &phi,
+            ArrowVal::pair(ArrowVal::Leaf(5), ArrowVal::Leaf(9)),
+        ),
+        Some(ArrowVal::pair(ArrowVal::Leaf(5), ArrowVal::Leaf(10)))
+    );
+    // Second on a non-pair (Leaf) passes through unchanged.
+    assert_eq!(
+        second_inc.interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::Leaf(9)),
+        Some(ArrowVal::Leaf(9))
+    );
+
+    // Split(Inc, Double) acts on both halves independently.
+    let split_term: ArrowCore<Op> = ArrowCore::Split(
+        Box::new(ArrowCore::Gen(Op::Inc)),
+        Box::new(ArrowCore::Gen(Op::Double)),
+    );
+    assert_eq!(
+        split_term.interpret_kleisli::<OptionWitness, i64, _>(
+            &phi,
+            ArrowVal::pair(ArrowVal::Leaf(5), ArrowVal::Leaf(9)),
+        ),
+        Some(ArrowVal::pair(ArrowVal::Leaf(6), ArrowVal::Leaf(18)))
+    );
+    // Split on a non-pair (Leaf) passes through unchanged.
+    assert_eq!(
+        split_term.interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::Leaf(5)),
+        Some(ArrowVal::Leaf(5))
+    );
+
+    // Fanout(Inc, Double) copies the input, feeds both arms, and pairs the results.
+    let fanout_term: ArrowCore<Op> = ArrowCore::Fanout(
+        Box::new(ArrowCore::Gen(Op::Inc)),
+        Box::new(ArrowCore::Gen(Op::Double)),
+    );
+    assert_eq!(
+        fanout_term.interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::Leaf(7)),
+        Some(ArrowVal::pair(ArrowVal::Leaf(8), ArrowVal::Leaf(14)))
+    );
+
+    // A failing half short-circuits the whole pair: First(Halve) on an odd left half -> None.
+    let first_halve: ArrowCore<Op> = ArrowCore::First(Box::new(ArrowCore::Gen(Op::Halve)));
+    assert_eq!(
+        first_halve.interpret_kleisli::<OptionWitness, i64, _>(
+            &phi,
+            ArrowVal::pair(ArrowVal::Leaf(7), ArrowVal::Leaf(2)),
+        ),
+        None
+    );
+    // ... but succeeds on an even left half.
+    assert_eq!(
+        first_halve.interpret_kleisli::<OptionWitness, i64, _>(
+            &phi,
+            ArrowVal::pair(ArrowVal::Leaf(8), ArrowVal::Leaf(2)),
+        ),
+        Some(ArrowVal::pair(ArrowVal::Leaf(4), ArrowVal::Leaf(2)))
+    );
+}
+
+/// THEOREM_MAP: haft.interpreter.preserves_id
+///
+/// A combinator fed a value of the wrong shape passes it through purely (`pure`), never firing the
+/// effect: `Gen` on a non-leaf, `Right` on a non-`InR`, and `Choice`/`Fanin` on a non-sum.
+#[test]
+fn test_interpreter_shape_mismatch_passthrough() {
+    // Gen on a Pair (non-leaf) passes through unchanged — the generator never fires.
+    let gen_inc: ArrowCore<Op> = ArrowCore::Gen(Op::Inc);
+    let pair = ArrowVal::pair(ArrowVal::Leaf(3), ArrowVal::Leaf(4));
+    assert_eq!(
+        gen_inc.interpret_kleisli::<OptionWitness, i64, _>(&phi, pair.clone()),
+        Some(pair)
+    );
+    // A Gen(Halve) that WOULD fail on a leaf still passes an InL through untouched (no effect).
+    let gen_halve: ArrowCore<Op> = ArrowCore::Gen(Op::Halve);
+    assert_eq!(
+        gen_halve
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inl(ArrowVal::Leaf(7))),
+        Some(ArrowVal::inl(ArrowVal::Leaf(7)))
+    );
+
+    // Right(Inc) acts on InR only; an InL injection passes through unchanged.
+    let right_inc: ArrowCore<Op> = ArrowCore::Right(Box::new(ArrowCore::Gen(Op::Inc)));
+    assert_eq!(
+        right_inc
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inr(ArrowVal::Leaf(9))),
+        Some(ArrowVal::inr(ArrowVal::Leaf(10)))
+    );
+    assert_eq!(
+        right_inc
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inl(ArrowVal::Leaf(9))),
+        Some(ArrowVal::inl(ArrowVal::Leaf(9)))
+    );
+
+    // Choice on a non-sum (Leaf) passes through — neither branch is taken.
+    let choice_term: ArrowCore<Op> = ArrowCore::Choice(
+        Box::new(ArrowCore::Gen(Op::Halve)),
+        Box::new(ArrowCore::Gen(Op::Inc)),
+    );
+    assert_eq!(
+        choice_term.interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::Leaf(11)),
+        Some(ArrowVal::Leaf(11))
+    );
+
+    // Fanin on a non-sum (Pair) passes through — no injection to eliminate.
+    let fanin_term: ArrowCore<Op> = ArrowCore::Fanin(
+        Box::new(ArrowCore::Gen(Op::Halve)),
+        Box::new(ArrowCore::Gen(Op::Double)),
+    );
+    let pair2 = ArrowVal::pair(ArrowVal::Leaf(1), ArrowVal::Leaf(2));
+    assert_eq!(
+        fanin_term.interpret_kleisli::<OptionWitness, i64, _>(&phi, pair2.clone()),
+        Some(pair2)
+    );
+}

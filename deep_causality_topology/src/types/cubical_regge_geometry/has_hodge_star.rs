@@ -214,7 +214,7 @@ where
     /// Cut-cell-aware Hodge ⋆ at grade `k`: identical to
     /// [`HasHodgeStar::hodge_star_matrix`] except the per-cell dual clip is the **continuous
     /// wetted fraction** ([`CutCellRegistry::dual_fluid_fraction`]) instead of the integer
-    /// `2^{-b}` wall clip ([`axis_boundary_clip`]).
+    /// `2^{-b}` wall clip (`axis_boundary_clip`).
     ///
     /// With an **empty** registry on the same lattice this returns the standard star to
     /// rounding — the cut clip reduces to the boundary clip — which is the Stage-3

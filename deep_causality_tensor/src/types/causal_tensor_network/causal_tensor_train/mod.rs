@@ -160,7 +160,7 @@ where
     ///
     /// Uses a self-contained `splitmix64` stream so the constructor needs no external RNG crate and
     /// produces reproducible data for tests, benchmarks, and iterative-solver initialization. Entries
-    /// are sampled at the **working precision** of `T` (see [`crate::types::causal_tensor_network::rng`]),
+    /// are sampled at the **working precision** of `T` (see `crate::types::causal_tensor_network::rng`),
     /// so a `Float106` train carries full double-double precision rather than `f64`-pinned values.
     pub fn random_seeded(phys_dims: &[usize], bond: usize, seed: u64) -> Self {
         use crate::types::causal_tensor_network::rng::uniform_signed;

@@ -109,10 +109,7 @@ fn main() {
 fn sequence_option<T>(opts: Vec<Option<T>>) -> Option<Vec<T>> {
     let mut result = Vec::with_capacity(opts.len());
     for opt in opts {
-        match opt {
-            Some(v) => result.push(v),
-            None => return None,
-        }
+        result.push(opt?);
     }
     Some(result)
 }
@@ -121,10 +118,7 @@ fn sequence_option<T>(opts: Vec<Option<T>>) -> Option<Vec<T>> {
 fn sequence_result<T, E>(results: Vec<Result<T, E>>) -> Result<Vec<T>, E> {
     let mut collected = Vec::with_capacity(results.len());
     for result in results {
-        match result {
-            Ok(v) => collected.push(v),
-            Err(e) => return Err(e),
-        }
+        collected.push(result?);
     }
     Ok(collected)
 }

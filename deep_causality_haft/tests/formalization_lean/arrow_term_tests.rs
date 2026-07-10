@@ -281,3 +281,57 @@ fn test_arrow_term_choice_free() {
             .interpret(&interp_diff, ArrowVal::inr(ArrowVal::Leaf(5)))
     );
 }
+
+/// THEOREM_MAP: haft.arrow_term.interpret_sound
+///
+/// A combinator applied to a value of the wrong shape passes it through unchanged — the mismatch the
+/// typed [`ArrowTerm`] façade makes unreachable for well-wired terms: `Gen` on a non-leaf,
+/// `First`/`Second`/`Split` on a non-pair, `Choice`/`Fanin` on a non-sum.
+#[test]
+fn test_arrow_term_shape_mismatch_passthrough() {
+    // Gen on a Pair (non-leaf) passes through unchanged — the generator never fires.
+    let gen_term: ArrowCore<Op> = ArrowCore::Gen(Op::Inc);
+    let pair = ArrowVal::pair(ArrowVal::Leaf(3), ArrowVal::Leaf(4));
+    assert_eq!(gen_term.interpret(&interp, pair.clone()), pair);
+
+    // First / Second / Split on a Leaf (non-pair) pass through unchanged.
+    let first: ArrowCore<Op> = ArrowCore::First(Box::new(ArrowCore::Gen(Op::Inc)));
+    assert_eq!(
+        first.interpret(&interp, ArrowVal::Leaf(5)),
+        ArrowVal::Leaf(5)
+    );
+
+    let second: ArrowCore<Op> = ArrowCore::Second(Box::new(ArrowCore::Gen(Op::Inc)));
+    assert_eq!(
+        second.interpret(&interp, ArrowVal::Leaf(5)),
+        ArrowVal::Leaf(5)
+    );
+
+    let split: ArrowCore<Op> = ArrowCore::Split(
+        Box::new(ArrowCore::Gen(Op::Inc)),
+        Box::new(ArrowCore::Gen(Op::Double)),
+    );
+    assert_eq!(
+        split.interpret(&interp, ArrowVal::Leaf(5)),
+        ArrowVal::Leaf(5)
+    );
+
+    // Choice / Fanin on a Leaf (non-sum) pass through unchanged.
+    let choice: ArrowCore<Op> = ArrowCore::Choice(
+        Box::new(ArrowCore::Gen(Op::Inc)),
+        Box::new(ArrowCore::Gen(Op::Double)),
+    );
+    assert_eq!(
+        choice.interpret(&interp, ArrowVal::Leaf(5)),
+        ArrowVal::Leaf(5)
+    );
+
+    let fanin: ArrowCore<Op> = ArrowCore::Fanin(
+        Box::new(ArrowCore::Gen(Op::Neg)),
+        Box::new(ArrowCore::Gen(Op::Double)),
+    );
+    assert_eq!(
+        fanin.interpret(&interp, ArrowVal::Leaf(5)),
+        ArrowVal::Leaf(5)
+    );
+}

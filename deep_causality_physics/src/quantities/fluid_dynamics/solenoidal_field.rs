@@ -116,7 +116,7 @@ where
     /// warm-starts the projection's grade-0 CG.
     ///
     /// # Errors
-    /// As [`Self::from_open_leray_projection_opts`].
+    /// As [`Self::from_leray_projection`].
     #[allow(clippy::too_many_arguments)]
     pub fn from_open_leray_projection_weighted_opts<const D: usize>(
         velocity: &VelocityOneForm<R>,

@@ -432,7 +432,7 @@ where
 
     /// March the coupled loop **until a predicate pauses it** (or the stop horizon is exhausted),
     /// yielding a resumable [`MarchPause`] instead of a final report — the mid-march attach point of
-    /// the counterfactual study (corridor [5]: fork the pause once per candidate world, alternate,
+    /// the counterfactual study (corridor \[5\]: fork the pause once per candidate world, alternate,
     /// and continue each branch from the *same* shared onset state).
     ///
     /// The predicate is checked after each coupled step against the mutated field (e.g. "blackout

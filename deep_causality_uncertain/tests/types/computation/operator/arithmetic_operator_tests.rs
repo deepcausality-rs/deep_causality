@@ -54,11 +54,35 @@ fn test_arithmetic_operator_div() {
 }
 
 #[test]
+fn test_arithmetic_operator_min() {
+    let op = ArithmeticOperator::Min;
+    assert_eq!(op.apply(2.0, 3.0), 2.0); // a < b -> a
+    assert_eq!(op.apply(3.0, 2.0), 2.0); // a > b -> b
+    assert_eq!(op.apply(2.0, 2.0), 2.0); // a == b -> a
+    assert_eq!(op.apply(-5.0, 3.0), -5.0);
+    assert_eq!(op.apply(3.0, -5.0), -5.0);
+    assert_eq!(op.apply(0.0, 0.0), 0.0);
+}
+
+#[test]
+fn test_arithmetic_operator_max() {
+    let op = ArithmeticOperator::Max;
+    assert_eq!(op.apply(3.0, 2.0), 3.0); // a > b -> a
+    assert_eq!(op.apply(2.0, 3.0), 3.0); // a < b -> b
+    assert_eq!(op.apply(2.0, 2.0), 2.0); // a == b -> a
+    assert_eq!(op.apply(-5.0, 3.0), 3.0);
+    assert_eq!(op.apply(3.0, -5.0), 3.0);
+    assert_eq!(op.apply(0.0, 0.0), 0.0);
+}
+
+#[test]
 fn test_arithmetic_operator_display() {
     assert_eq!(format!("{}", ArithmeticOperator::Add), "Add");
     assert_eq!(format!("{}", ArithmeticOperator::Sub), "Sub");
     assert_eq!(format!("{}", ArithmeticOperator::Mul), "Mul");
     assert_eq!(format!("{}", ArithmeticOperator::Div), "Div");
+    assert_eq!(format!("{}", ArithmeticOperator::Min), "Min");
+    assert_eq!(format!("{}", ArithmeticOperator::Max), "Max");
 }
 
 #[test]

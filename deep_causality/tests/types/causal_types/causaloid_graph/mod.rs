@@ -29,3 +29,5 @@ mod causality_graph_reasoning_tests;
 mod causality_graph_shortest_path_tests;
 #[cfg(test)]
 mod causality_graph_tests;
+#[cfg(test)]
+mod lambda_edges_tests;
