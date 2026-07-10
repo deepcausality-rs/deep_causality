@@ -1,0 +1,41 @@
+openspec/changes/causaloid-formalization-stages-2-5/specs/haft-arrow-choice/spec.md
+  s_543ee5cdecd2c1::t_1373334f8e0708 1-48
+openspec/changes/causaloid-formalization-stages-2-5/specs/haft-arrow-interpreter/spec.md
+  s_543ee5cdecd2c1::t_1519445eda3ef1 1-29
+openspec/changes/causaloid-formalization-stages-2-5/specs/causaloid-verdict-closure/spec.md
+  s_543ee5cdecd2c1::t_e2f33c49719cd4 1-57
+openspec/changes/causaloid-formalization-stages-2-5/design.md
+  s_543ee5cdecd2c1::t_9612fdb5e25f85 1-142
+openspec/changes/causaloid-formalization-stages-2-5/specs/causaloid-catamorphism/spec.md
+  s_543ee5cdecd2c1::t_1e4266319254d1 1-71
+openspec/changes/causaloid-formalization-stages-2-5/proposal.md
+  s_543ee5cdecd2c1::t_4e19513d34bfdc 1-95
+openspec/changes/causaloid-formalization-stages-2-5/specs/haft-free-arrow/spec.md
+  s_543ee5cdecd2c1::t_fb3a9876650e71 1-30
+openspec/changes/causaloid-formalization-stages-2-5/specs/causaloid-fixpoint/spec.md
+  s_543ee5cdecd2c1::t_d647c46854ce9a 1-74
+openspec/changes/causaloid-formalization-stages-2-5/specs/causaloid-graph-algebra/spec.md
+  s_543ee5cdecd2c1::t_c601561d93e05a 1-82
+openspec/changes/causaloid-formalization-stages-2-5/tasks.md
+  s_543ee5cdecd2c1::t_feaf651b1ec29f 1-107
+openspec/changes/causaloid-formalization-stages-2-5/.openspec.yaml
+  s_543ee5cdecd2c1::t_578d3caf2683c3 1-2
+openspec/changes/causaloid-formalization-stages-2-5/specs/core-formalization/spec.md
+  s_543ee5cdecd2c1::t_5e1382ed296d47 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "825d70dfcfafb76ae02bd270b96bde407a81376d",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
