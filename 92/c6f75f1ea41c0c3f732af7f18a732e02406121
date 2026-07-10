@@ -1,0 +1,34 @@
+lean/DeepCausalityFormal/Core/CausalEffect.lean
+  s_543ee5cdecd2c1::t_8f0c2b2f0e1a69 388
+  s_543ee5cdecd2c1::t_faec309766cc4d 313-387,389-405
+deep_causality/tests/formalization_lean/relay_round_composition_tests.rs
+  s_543ee5cdecd2c1::t_177c383285b116 1-118
+  s_543ee5cdecd2c1::t_3dab603cf242fc 119-121
+  s_543ee5cdecd2c1::t_76a008f58ca428 122-124
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_b6f4f37a991c00 56
+openspec/changes/formalize-main-crate/tasks.md
+  s_543ee5cdecd2c1::t_d832d7601322bb 34
+deep_causality/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_f356f301508503 22
+deep_causality/tests/formalization_lean/command_input_tests.rs
+  s_543ee5cdecd2c1::t_97b0277a4bda76 32-35,52-55,106-109
+deep_causality/tests/formalization_lean/verdict_closure_tests.rs
+  s_543ee5cdecd2c1::t_dc590f81b9355b 171-174,179-182,203-207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "92c6f75f1ea41c0c3f732af7f18a732e02406121",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
