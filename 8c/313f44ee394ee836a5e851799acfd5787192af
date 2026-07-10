@@ -1,0 +1,68 @@
+deep_causality/src/traits/causable/sealed.rs
+  s_543ee5cdecd2c1::t_38cfcc741e1593 1-26
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_b4d57786e4c7a1 249-250
+  s_543ee5cdecd2c1::t_c550cc9f3f4699 87
+  s_543ee5cdecd2c1::t_8c35c5f28b4cce 42
+  s_543ee5cdecd2c1::t_642520118f3864 189,191-193
+  s_543ee5cdecd2c1::t_6dd4434db483ca 247-248
+  s_543ee5cdecd2c1::t_df800170b83323 180,182-183
+  s_543ee5cdecd2c1::t_0a107a4d2eb622 41
+deep_causality/src/types/causal_types/causaloid/causable.rs
+  s_543ee5cdecd2c1::t_0379c0ad206043 20-27
+  s_543ee5cdecd2c1::t_8c7deae70813c6 18-19,28
+deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs
+  s_543ee5cdecd2c1::t_048fbdb92dc73a 148-150
+  s_543ee5cdecd2c1::t_20e035d8038603 13-25
+  s_543ee5cdecd2c1::t_b3a8f7519adfdd 270-286
+deep_causality/src/traits/causable/stateful.rs
+  s_543ee5cdecd2c1::t_7f1ed06c59e39e 38-39
+  s_543ee5cdecd2c1::t_6bf55f25b2c469 36-37
+deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_reasoning_sub_tests.rs
+  s_543ee5cdecd2c1::t_820f35e9f408f9 83-115
+deep_causality/src/traits/causable_graph/graph_reasoning/stateful.rs
+  s_543ee5cdecd2c1::t_ea61697f53b129 134-136
+  s_543ee5cdecd2c1::t_d3ee9cc729a565 242-256
+lean/DeepCausalityFormal/Core/CausalEffect.lean
+  s_543ee5cdecd2c1::t_eac5afb99262ab 253
+  s_543ee5cdecd2c1::t_ffa5a52564b0f0 208,210-211
+  s_543ee5cdecd2c1::t_35c04f0311732d 116-207,209,212-252,254-310,312
+  s_543ee5cdecd2c1::t_1f79b47e23221e 311
+deep_causality_core/tests/formalization_lean/causal_effect_tests.rs
+  s_543ee5cdecd2c1::t_00ac47b528d843 181-185
+  s_543ee5cdecd2c1::t_59a93628fd7e4d 63-120,122-139,144-150,153-180,186-210,216-252
+  s_543ee5cdecd2c1::t_fe8fc2790aa6f2 211-215
+  s_543ee5cdecd2c1::t_e9dc041a07a0a5 121,140-143,151-152
+  s_543ee5cdecd2c1::t_b1a203ce90ff73 14-23
+openspec/notes/causal-algebra/causaloid-formalization-roadmap.md
+  s_543ee5cdecd2c1::t_4978dda9c49462 323-328
+  s_543ee5cdecd2c1::t_af09f6fe8c0ae8 129-136
+deep_causality/src/traits/causable/mod.rs
+  s_543ee5cdecd2c1::t_861158906b5b4e 13-14
+  s_543ee5cdecd2c1::t_58022a41248100 28-30
+  s_543ee5cdecd2c1::t_cd58cc98ba30b4 5,15-16
+deep_causality_core/src/types/causal_effect/mod.rs
+  s_543ee5cdecd2c1::t_ea11655520ef58 192,224-256
+  s_543ee5cdecd2c1::t_ff67a64a706f8a 147-151,159-191
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_aefcc60f981e64 53-55
+deep_causality/tests/traits/causable_graph/graph_reasoning/stateful_tests.rs
+  s_543ee5cdecd2c1::t_e9dc041a07a0a5 345-347
+  s_543ee5cdecd2c1::t_5bab7d2739e8e7 304-344,348-350
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8c313f44ee394ee836a5e851799acfd5787192af",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
