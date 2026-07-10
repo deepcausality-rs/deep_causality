@@ -1,0 +1,82 @@
+deep_causality_quantum/src/lib.rs
+  s_543ee5cdecd2c1::t_0f5fd18c8d6977 1-26
+  s_543ee5cdecd2c1::t_5d28eb6126f302 27
+deep_causality_quantum/src/kernels/gates.rs
+  s_543ee5cdecd2c1::t_b90fe9eeabb1f9 1-76
+deep_causality_quantum/tests/kernels/mechanics_tests.rs
+  s_543ee5cdecd2c1::t_8ee3f5d9315f59 1-288
+deep_causality_quantum/src/kernels/mechanics.rs
+  s_543ee5cdecd2c1::t_f71695e6e9fac0 1-237
+deep_causality_quantum/README.md
+  s_543ee5cdecd2c1::t_af27fc1501d34c 1-36
+deep_causality_quantum/src/kernels/mod.rs
+  s_543ee5cdecd2c1::t_13464c12b030bd 1-14
+examples/quantum_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_4169374f2650c9 20
+deep_causality_physics/tests/kernels/quantum/mechanics_tests.rs
+  s_543ee5cdecd2c1::t_4fdff12d2889dc 6,99,109-110,112,120,124-136
+examples/physics_examples/multi_physics_pipeline/main.rs
+  s_543ee5cdecd2c1::t_4169374f2650c9 35,38,260
+deep_causality_quantum/tests/kernels/gates_haruna_tests.rs
+  s_543ee5cdecd2c1::t_769858c427aa20 1-184
+deep_causality_quantum/BUILD.bazel
+  s_543ee5cdecd2c1::t_a833d6610e0c19 1-36
+deep_causality_physics/src/kernels/quantum/mod.rs
+  s_543ee5cdecd2c1::t_cd32c775c02146 6-10
+deep_causality_quantum/src/error/quantum_error.rs
+  s_543ee5cdecd2c1::t_2bf746ad583104 1-171
+deep_causality_quantum/src/kernels/gates_haruna.rs
+  s_543ee5cdecd2c1::t_b90fe9eeabb1f9 1-197
+deep_causality_quantum/tests/error/quantum_error_tests.rs
+  s_543ee5cdecd2c1::t_73e77d77145486 7
+  s_543ee5cdecd2c1::t_5b8c2aa441d4d2 1-6,8-94,104-116
+  s_543ee5cdecd2c1::t_a3605003d5dec5 95-103
+deep_causality_quantum/tests/kernels/mod.rs
+  s_543ee5cdecd2c1::t_fd817eb6f5072e 1-12
+deep_causality_quantum/tests/mod.rs
+  s_543ee5cdecd2c1::t_ef6e26d2e8d693 1-6
+deep_causality_quantum/src/error/mod.rs
+  s_543ee5cdecd2c1::t_1eb9cb22254230 1-6
+Cargo.toml
+  s_543ee5cdecd2c1::t_e97be2a5691e62 28
+deep_causality_quantum/src/kernels/wrappers.rs
+  s_543ee5cdecd2c1::t_15a43adda3d7d6 1-20,22-139,141-146
+  s_543ee5cdecd2c1::t_74d8a4c4d663c1 21
+  s_543ee5cdecd2c1::t_875ae9d13b18ce 140
+examples/quantum_examples/ikkt_matrix_model/main.rs
+  s_543ee5cdecd2c1::t_1442074194254e 23
+deep_causality_quantum/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_0326b7bb86c11b 1-51
+deep_causality_quantum/tests/kernels/gates_tests.rs
+  s_543ee5cdecd2c1::t_769858c427aa20 1-86
+deep_causality_physics/tests/kernels/quantum/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_6b5d0addd36a98 6,53
+deep_causality_quantum/tests/kernels/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_336a337eca8ede 1-217
+deep_causality_quantum/Cargo.toml
+  s_543ee5cdecd2c1::t_7a191d619a9f09 1-55
+examples/physics_examples/Cargo.toml
+  s_543ee5cdecd2c1::t_4169374f2650c9 21
+deep_causality_quantum/tests/error/mod.rs
+  s_543ee5cdecd2c1::t_9a40ff38b8a923 1-6
+Cargo.lock
+  s_543ee5cdecd2c1::t_4df90267a1dd9b 728-740,1536,1635
+deep_causality_quantum/LICENSE
+  s_543ee5cdecd2c1::t_74244591a1761d 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "76b03cdb5b18dcf6f99d009d09dc5b13f022d410",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
