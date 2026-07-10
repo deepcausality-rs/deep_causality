@@ -53,7 +53,7 @@ where
     pub fn eval_all_states(&self) -> Result<(), CsmError> {
         let binding = self.state_actions.read().unwrap();
 
-        for (_id, (state, action)) in binding.iter() {
+        for (state, action) in binding.values() {
             let effect = state.eval()?;
             if let Err(err) = effect.outcome() {
                 return Err(CsmError::Causal(err.clone()));
