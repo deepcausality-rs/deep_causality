@@ -1,0 +1,22 @@
+deep_causality_haft/tests/formalization_lean/arrow_choice_tests.rs
+  s_543ee5cdecd2c1::t_83a8c08cfc6a64 74-83
+  s_543ee5cdecd2c1::t_7c82ac4bc38019 164-169
+deep_causality_haft/Cargo.toml
+  s_543ee5cdecd2c1::t_c9563293b8cbc4 31,33,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "92ced4885631aeb372f2d69cf224a05358520234",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
