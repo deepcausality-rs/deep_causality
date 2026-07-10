@@ -1,0 +1,59 @@
+openspec/changes/add-quantum-crate/proposal.md
+  s_543ee5cdecd2c1::t_da09630c9c9a0e 1-111
+openspec/changes/add-quantum-crate/specs/quantum-verdict-orthomodular/spec.md
+  s_543ee5cdecd2c1::t_cb906b8c0279e4 1-23
+openspec/changes/add-quantum-crate/tasks.md
+  s_543ee5cdecd2c1::t_9e71a5bd136b2c 15
+  s_543ee5cdecd2c1::t_12cb7caf22a0c0 24-33
+  s_543ee5cdecd2c1::t_92dfed18ae1c09 1-14,20-23,34-35,39-48,51-57,59,77-84,90,92,94-130
+  s_543ee5cdecd2c1::t_c3d5c0954dc274 58,60-76
+  s_543ee5cdecd2c1::t_2b36f4eb77fd41 36-38
+  s_543ee5cdecd2c1::t_28bb25a7804761 49-50
+  s_543ee5cdecd2c1::t_e5c596de738941 85-89,91,93
+  s_543ee5cdecd2c1::t_8549eb44f1dda6 16-19
+openspec/changes/add-quantum-crate/specs/quantum-crate-scaffold/spec.md
+  s_543ee5cdecd2c1::t_c0f720e8bfcfdb 1-21,38-79
+  s_543ee5cdecd2c1::t_ca2c9ae3d5d4a4 22-37
+openspec/changes/add-quantum-crate/specs/quantum-markov-freeze/spec.md
+  s_543ee5cdecd2c1::t_8e996b271115ae 1-38,55-64
+  s_543ee5cdecd2c1::t_e5536d48dedc3e 39-54
+openspec/changes/add-quantum-crate/.openspec.yaml
+  s_543ee5cdecd2c1::t_d5c5d7967cc8f0 1-2
+openspec/changes/add-quantum-crate/specs/quantum-operator-layer/spec.md
+  s_543ee5cdecd2c1::t_280058be38d9b4 1-33
+openspec/changes/add-quantum-crate/specs/quantum-formalization/spec.md
+  s_543ee5cdecd2c1::t_76e9ac31c308b2 40-42
+  s_543ee5cdecd2c1::t_d7183e5927ddd4 53-56
+  s_543ee5cdecd2c1::t_21a5b06b1c0e04 1-39,43-52,57-75
+openspec/changes/add-quantum-crate/design.md
+  s_543ee5cdecd2c1::t_26efb0174cb882 213-215
+  s_543ee5cdecd2c1::t_bbdd05edd86433 166-172
+  s_543ee5cdecd2c1::t_b80101f9e28b91 190-196,200,202
+  s_543ee5cdecd2c1::t_45b4b033284ec0 30-34
+  s_543ee5cdecd2c1::t_f6a3e2000e0c65 38-46
+  s_543ee5cdecd2c1::t_e9ad41c8fbdd6f 61,63-67,69-82
+  s_543ee5cdecd2c1::t_6122d0011b3ebc 90-111
+  s_543ee5cdecd2c1::t_b62b4178871552 164-165
+  s_543ee5cdecd2c1::t_77cd280576a0aa 197-199,201,203-204
+  s_543ee5cdecd2c1::t_bf8ba414152d0b 125-128
+  s_543ee5cdecd2c1::t_514f57b396e3ad 216-230
+  s_543ee5cdecd2c1::t_4484cfa7d7ec1c 138-148
+  s_543ee5cdecd2c1::t_2ca14d9b74a069 1-29,35-37,47-60,62,68,83-89,112-124,129-137,149-163,173-179,189,205-212
+  s_543ee5cdecd2c1::t_96503312e17f1f 180-188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "6423923a5f879c0d0b03392d159287398ff9b564",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
