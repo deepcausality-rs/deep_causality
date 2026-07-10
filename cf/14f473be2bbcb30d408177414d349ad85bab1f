@@ -1,0 +1,28 @@
+openspec/changes/formalize-main-crate/specs/context-hypergraph-formalization/spec.md
+  s_543ee5cdecd2c1::t_0955b7228bb454 5,14
+openspec/changes/formalize-main-crate/tasks.md
+  s_543ee5cdecd2c1::t_3c07598e6b3d13 1-4,9-13,16,19,21,23-27,29,31-36,38,40-41,51,53-56
+  s_543ee5cdecd2c1::t_6cbd606af16852 5-8,44,46-49
+openspec/changes/formalize-main-crate/specs/graph-reasoning-formalization/spec.md
+  s_543ee5cdecd2c1::t_0955b7228bb454 1-10,12,14,16-23,25,27-31,33,35-37
+openspec/changes/formalize-main-crate/specs/causaloid-formalization/spec.md
+  s_543ee5cdecd2c1::t_0955b7228bb454 1-10,12,14,16-21,23,25-27,29,31-38,42-45,47,49-51
+openspec/changes/formalize-main-crate/proposal.md
+  s_543ee5cdecd2c1::t_6cbd606af16852 1-10,23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "cf14f473be2bbcb30d408177414d349ad85bab1f",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
