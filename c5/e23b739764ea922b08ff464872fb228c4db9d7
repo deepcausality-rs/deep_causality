@@ -1,0 +1,35 @@
+openspec/changes/add-quantum-crate/design.md
+  s_543ee5cdecd2c1::t_96c127d4d08f00 140-151
+  s_543ee5cdecd2c1::t_4c17d00654d9bd 117-126
+  s_543ee5cdecd2c1::t_0df1adfbf4ccd6 65-70
+  s_543ee5cdecd2c1::t_04fef2d743fa56 202-214
+  s_543ee5cdecd2c1::t_0d8c7b070533ca 24,28-32
+  s_543ee5cdecd2c1::t_b3914d519da2b3 33
+openspec/changes/add-quantum-crate/tasks.md
+  s_543ee5cdecd2c1::t_f1a2b5ac6de3ab 12
+  s_543ee5cdecd2c1::t_262ec603c9c551 56-59
+  s_543ee5cdecd2c1::t_0bfab9df5273a4 10,13,20,22,24,27,30,34,36,39,41
+  s_543ee5cdecd2c1::t_23c6e8688cabd4 46,49,52-53,55
+  s_543ee5cdecd2c1::t_9954e067d4280e 60
+  s_543ee5cdecd2c1::t_ca6fdad39ea6d4 64-68
+openspec/changes/add-quantum-crate/proposal.md
+  s_543ee5cdecd2c1::t_b1ecaeb04f27db 19
+openspec/changes/add-quantum-crate/specs/quantum-formalization/spec.md
+  s_543ee5cdecd2c1::t_100ad85b02fda6 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "c5e23b739764ea922b08ff464872fb228c4db9d7",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
