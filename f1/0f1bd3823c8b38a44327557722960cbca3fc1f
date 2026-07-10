@@ -1,0 +1,29 @@
+openspec/changes/formalize-main-crate/tasks.md
+  s_543ee5cdecd2c1::t_ee4e98d7f2054d 19
+  s_543ee5cdecd2c1::t_ed856c3f3a3a41 17-18
+openspec/changes/formalize-main-crate/specs/causaloid-formalization/spec.md
+  s_543ee5cdecd2c1::t_960b64c805128a 31-32
+.github/workflows/formalization.yml
+  s_543ee5cdecd2c1::t_771faa099eb047 44-66
+openspec/notes/causal-algebra/Causaloid-Formalization.md
+  s_543ee5cdecd2c1::t_77952864c4f1a7 22-53
+  s_543ee5cdecd2c1::t_4393c41a0028af 275-290
+openspec/notes/causal-algebra/CausalMonadProptest.md
+  s_543ee5cdecd2c1::t_2f99a818be9ac7 9-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "f10f1bd3823c8b38a44327557722960cbca3fc1f",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
