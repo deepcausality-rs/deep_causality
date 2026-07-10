@@ -84,7 +84,7 @@ Why the two-API split:
 - The trait-based `Monad::bind` from `deep_causality_haft` is the idiomatic clean-closure API: `Func: FnOnce(A) -> Self::Type<B>`, the closure receives raw `A`, no `EffectValue` pattern matching, no `Default` bound on `B` (both witnesses set `Constraint = NoConstraint`). Stage 1 is context-free, so this is the natural fit.
 - The inherent `bind` on `CausalEffectPropagationProcess` is the API that gives the closure read access to `State` and `Option<Context>`. Stage 2 needs that — the rolling-history push and the SURD-context lookup both happen inside the closure body — so the heavier closure shape `(EffectValue<Value>, State, Option<Context>) -> CausalEffectPropagationProcess<NewValue, …>` is the correct ergonomic cost for what state accumulation actually does.
 
-The consistency tests at [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin the iso between the two witnesses on the shared carrier `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The same operation produces bit-identical output through either dispatch path; this guarantees that the trait-based stage 1 and the inherent-bind stage 2 compose without semantic surprises.
+The consistency tests at [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin the iso between the two witnesses on the shared carrier `CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The same operation produces bit-identical output through either dispatch path; this guarantees that the trait-based stage 1 and the inherent-bind stage 2 compose without semantic surprises.
 
 The lift from `PropagatingEffect` to `PropagatingProcess` happens at a scientifically meaningful boundary: spatial decomposition (non-Markovian, parallelisable per timestep) gives way to temporal accumulation (Markovian, sequential). The state channel carries the rolling history of signatures; the context channel carries the lattice geometry and runtime physical invariants.
 
@@ -362,7 +362,7 @@ let process = PropagatingProcess::<FluidSignature<R>, RollingHistory<N, R>, Flui
 );
 ```
 
-No changes to `deep_causality_core`. `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` are confirmed type aliases of the same `CausalEffectPropagationProcess<...>` carrier; the iso tests in [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin that consistency.
+No changes to `deep_causality_core`. `PropagatingEffect<T>` and `PropagatingProcess<T, S, C>` are confirmed type aliases of the same `CausalEffectPropagationProcess<...>` carrier; the iso tests in [`deep_causality_core/tests/iso/effect_process_consistency_tests.rs`](../../../../deep_causality_core/tests/iso/effect_process_consistency_tests.rs) pin that consistency.
 
 **Property tests:**
 
@@ -412,7 +412,7 @@ No changes to `deep_causality_core`. `PropagatingEffect<T>` and `PropagatingProc
   ```
   Internally builds a `CausalTensor<Option<f64>>` joint distribution by casting `R → f64` once at the tensor-build step (the documented lossy boundary). Calls existing `surd_states_cdl(tensor, MaxOrder::Max)` unchanged.
 
-The `SurdResult<f64>` returned by `fluid_surd_decompose` is consumed by the existing `SurdResultAnalyzer` ([`deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs`](../../../deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs)) via `analyzer.analyze(&surd, &AnalyzeConfig::default())`, which produces a `ProcessAnalysis(Vec<String>)` of human-readable categorisations against the configured synergy / unique / redundancy / info-leak thresholds. No new analyzer is built in this note.
+The `SurdResult<f64>` returned by `fluid_surd_decompose` is consumed by the existing `SurdResultAnalyzer` ([`deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs`](../../../../deep_causality_discovery/src/types/analysis/surd_result_analyzer.rs)) via `analyzer.analyze(&surd, &AnalyzeConfig::default())`, which produces a `ProcessAnalysis(Vec<String>)` of human-readable categorisations against the configured synergy / unique / redundancy / info-leak thresholds. No new analyzer is built in this note.
 
 The joint-distribution feature selection — *which* fields of `FluidSignature<R>` and `RollingHistory<N, R>` are projected into the `CausalTensor<Option<f64>>` and with what discretisation buckets — is the load-bearing design decision of B3 and is documented in this block's preflight notes when it opens. The shape of the joint is not fixed by the surrounding pipeline; it is the feature engineering that B3 commits to and that B3's synthetic ground-truth test validates.
 
