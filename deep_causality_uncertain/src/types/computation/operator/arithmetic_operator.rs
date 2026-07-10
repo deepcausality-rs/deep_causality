@@ -22,6 +22,12 @@ impl ArithmeticOperator {
     /// Apply the operation at the operands' precision. Generic over `R: RealField`
     /// (`Add`/`Sub`/`Mul` from the ring, `Div` from the field, `Min`/`Max` from the order),
     /// so the same code path serves `f64` (bit-identically) and `Float106`.
+    ///
+    /// `Min`/`Max` select by the operands' `<=`/`>=` order and are right-biased on an incomparable
+    /// pair (e.g. a `NaN` operand), so they need not agree with `f64::min`/`f64::max` there — the
+    /// `RealField` bound exposes the order but no NaN-aware `min`/`max`. The MV `Verdict` carrier is
+    /// `[0, 1]` (`core.verdict.closure`), where every value is comparable and `NaN` does not occur,
+    /// so on in-contract inputs `Min`/`Max` are the lattice meet/join.
     pub fn apply<R: RealField>(&self, a: R, b: R) -> R {
         match self {
             ArithmeticOperator::Add => a + b,

@@ -138,7 +138,15 @@ theorem encapsulation_flat (bind : M → (V → M) → M)
     strictly decreases along every hyperedge. This is the well-foundedness the frozen DAG carries
     (`ultragraph::has_cycle` / `freeze_dag` / `freeze_verified`; the `Dag.wf` device of
     `Core/GraphAlgebra.lean`). It is a SEPARATE predicate on `Pa` — the threading / encapsulation
-    definitions above never mention it. -/
+    definitions above never mention it.
+
+    Scope of the rank certificate. On the finite frozen node set (the `freeze_dag` domain, where
+    the Rust witness `test_context_acyclicity_freeze_gate` runs) a `Nat` rank exists exactly when
+    the parent-set graph is cycle-free, so there `Acyclic` and cycle-freeness agree. Over the full
+    (infinite) `Id` space the certificate is a sufficient condition and is what the freeze gate
+    enforces: `self_parent_not_acyclic` uses it only in the direction "a self-parent has no
+    certificate", and no theorem here reads it as a characterization of cycle-freeness for an
+    arbitrary infinite parent map. -/
 def Acyclic (Pa : Id → List Id) : Prop :=
   ∃ rank : Id → Nat, ∀ n p, p ∈ Pa n → rank p < rank n
 

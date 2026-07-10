@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Machine-checked proofs of the DeepCausality core laws, plus the traceability bridge that links
 each proof to a Rust witness. This is the **L1** layer of the four-layer verification architecture
-in [`../openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
+in [`../openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
 
 **Separate toolchain.** This is a Lean/`lake` project, *not* part of the Rust workspace. It does
 not affect `cargo build`/`cargo test`. Keep it self-contained here under `lean/`.

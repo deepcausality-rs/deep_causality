@@ -30,7 +30,7 @@ identity and never a spacetime position or a before/after, while sequencing (`bi
 order-free merge (`∇`) live entirely in the composition layer (`core.causaloid.inversion`). The
 proof header SHALL cite Hardy (arXiv:gr-qc/0509120, Eq. 2 p. 4) and state the factorization as the
 formal content of the inversion thesis in
-`openspec/notes/causal-algebra/Causaloid-structure.md`. The Hardy correspondence target
+`openspec/notes/archive/causal-algebra/Causaloid-structure.md`. The Hardy correspondence target
 (`{bind, ∇ ∘ (Λ ⊗ Λ)}` reconstructs the ⊗^Λ regimes) SHALL remain out of scope, recorded as an open
 target.
 

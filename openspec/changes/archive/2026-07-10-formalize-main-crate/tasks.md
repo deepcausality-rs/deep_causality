@@ -14,8 +14,8 @@ context hypergraph.
 ## 1. Groundwork & reconciliation
 
 - [x] 1.1 Verify the F-1 caveat is closed: confirm `error ⇒ value=None` holds by construction on the `Result<CausalEffect<V>, E>` carrier; record the finding. *(delivered: tracker #7 DECIDED 2026-07-07 — `core.causal_monad.right_id` unconditional, machine-checked; recorded in `algebraic-causaloid-assumptions.md` §7)*
-- [x] 1.2 Reconcile `openspec/notes/causal-algebra/Causaloid-Formalization.md` from `EffectValue`/`ContextualLink`/`Map` to the current `CausalEffect` model; flag each changed claim (F-3 = command-input-errors). *(reconciliation banner + per-claim table keyed to F-0…F-5 + updated Status block; F-1 CLOSED, F-3 = stated theorem)*
-- [x] 1.3 Reconcile `openspec/notes/causal-algebra/CausalMonadProptest.md` to the `CausalEffect` model and note the timestamp-equality fix already landed. *(reconciliation banner: right identity now unconditional, hand-built-invalid test dropped, §7 invariant CLOSED; §3 timestamp fix unchanged)*
+- [x] 1.2 Reconcile `openspec/notes/archive/causal-algebra/Causaloid-Formalization.md` from `EffectValue`/`ContextualLink`/`Map` to the current `CausalEffect` model; flag each changed claim (F-3 = command-input-errors). *(reconciliation banner + per-claim table keyed to F-0…F-5 + updated Status block; F-1 CLOSED, F-3 = stated theorem)*
+- [x] 1.3 Reconcile `openspec/notes/archive/causal-algebra/CausalMonadProptest.md` to the `CausalEffect` model and note the timestamp-equality fix already landed. *(reconciliation banner: right identity now unconditional, hand-built-invalid test dropped, §7 invariant CLOSED; §3 timestamp fix unchanged)*
 - [x] 1.4 Add a `sorry`/obligation CI guard: fail if a `sorry` appears outside the whitelisted `Quantum/*` obligation slots. *(added `sorry-guard` job to `.github/workflows/formalization.yml`: word-boundaried token scoped to `lean/DeepCausalityFormal/` minus `Quantum/`; passes now (zero-`sorry`), trips on a real bare `sorry`, ignores `sorryAx`/`isSyntheticSorry`)*
 
 ## 2. Causaloid layer

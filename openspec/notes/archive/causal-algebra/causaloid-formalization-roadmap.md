@@ -397,18 +397,18 @@ extensibility contract) and the two crates (`deep_causality_do_calculus`,
   arXiv:gr-qc/0509120 — [`deep_causality/papers/causaloid.pdf`](../../../../deep_causality/papers/causaloid.pdf)
   (⊗^Λ Eq. 2 p. 4; Λ matrices p. 4; product unification §2 p. 3; `|v|/|u|` Eq. 3 p. 4).
 - Lorenz, *Quantum causal models: the merits of the spirit of Reichenbach's principle…*, Synthese
-  200:424 (2022) — `../quantum/Quantum causal models-lorenz2022.pdf` (QCCP; process operator;
+  200:424 (2022) — `../../quantum/Quantum causal models-lorenz2022.pdf` (QCCP; process operator;
   quantum node; Def 3.3 quantum Markov — pairwise-commuting factorization; Def 3.4 QCM; causal
   relation via unitary influence §4.3; classical containment §4.1).
 - Lorenz & Barrett, *Causal and compositional structure of unitary transformations*, Quantum 5, 511
   (2021), arXiv:2001.07774 —
-  `../quantum/Causal and compositional structure of unitary transformations-2001.07774v2.pdf`
+  `../../quantum/Causal and compositional structure of unitary transformations-2001.07774v2.pdf`
   (Def 1 no-influence; Thm 1 unitary commuting factorization; Def 2 causal structure = parent sets;
   §3 sequential+tensor insufficiency; extended circuit diagrams / direct sums; the causal-
   faithfulness hypothesis).
 - Barrett, Lorenz & Oreshkov, *Cyclic Quantum Causal Models*, arXiv:2002.12157 —
-  `../quantum/Cyclic Quantum Causal Models-2002.12157v3.pdf`.
-- Pearl, *Introduction to Do-Calculus* and *The Do-Calculus Revisited* — `../causal-do/`.
+  `../../quantum/Cyclic Quantum Causal Models-2002.12157v3.pdf`.
+- Pearl, *Introduction to Do-Calculus* and *The Do-Calculus Revisited* — `../../causal-do/`.
 - [`../quantum/full-stack.md`](../../quantum/full-stack.md) · [`../quantum/QCM-on-EPP.md`](../../quantum/QCM-on-EPP.md)
   · [`../quantum/quantum-epp.md`](../../quantum/quantum-epp.md) · [`Causaloid-structure.md`](Causaloid-structure.md)
   · [`algebraic-causaloid-assumptions.md`](algebraic-causaloid-assumptions.md).

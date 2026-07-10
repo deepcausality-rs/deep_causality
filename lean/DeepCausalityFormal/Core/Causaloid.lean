@@ -32,7 +32,10 @@ Deviations:
    is structural in bare Lean) taken up to the `Perm` relation — Bag = CList/Perm.
  * D-fix-3: Λ-edges are a keyed function `Nat → Nat → Option Λ` — intrinsically
    enumeration-order-free (a function has no entry order). The Rust realization is the
-   identity-keyed `LambdaEdges` map; its order-freeness is witnessed in Rust.
+   identity-keyed `LambdaEdges` map; its order-freeness is witnessed in Rust. No theorem in this
+   file folds or enumerates this function: `roll`/`unroll`/`mapC`/`eval_factors` carry it unchanged
+   and `size`/`eval`/`wiring` ignore it (D-fix-4). A finite-support map — the Rust `LambdaEdges`
+   `BTreeMap` — is therefore a special case of this function, and every theorem here holds for it.
  * D-fix-4: Stage-2 evaluation gives `graph` the undecorated wiring — the Λ data is carried but not
    yet applied, exactly matching the Rust engine at this stage. The decorated join `∇ ∘ (Λ ⊗ Λ)`
    is Stage 4 (`Core/GraphAlgebra.lean`).
