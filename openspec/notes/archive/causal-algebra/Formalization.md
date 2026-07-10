@@ -89,9 +89,6 @@ The program is layered by *what each tool can actually prove*. No layer claims a
   ├───────────────────────────────────────────────────────────────┤
   │ L3  RUST BEHAVIOR (concrete) — Kani (bounded model checking)   │  first‑order, bounded‑exhaustive
   │     evaluate: no‑panic, W‑invariant, error short‑circuit, …    │  → "implementation behaves"
-  ├───────────────────────────────────────────────────────────────┤
-  │ L4  RUST ↔ MODEL (deductive, stretch) — Aeneas (Rust→Lean)     │  the gold standard, subset‑gated
-  │     prove the laws about the *extracted* Rust bind in Lean     │  → "code IS the model"
   └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -131,17 +128,16 @@ first‑order and Kani‑able on bounded inputs:
 - log is monotone (output log ⊇ input log).
 Bound the log length and fix concrete `T`. **[holds, bounded]**
 
-### L4 — Aeneas (close the gap deductively) — **stretch, subset‑gated**
-Aeneas translates safe Rust → a pure functional model with a **Lean 4 backend**; you then prove the
-laws about the *extracted model of the actual Rust `bind`*, not a side‑model. The repo being
-`unsafe`‑free helps; generics/traits/closures/HKT‑witnesses and `CausalFn` function pointers are the
-risk. **Run a feasibility spike before committing** (extract one cleaned causal function, prove one
-trivial property). If it works, this is the strongest possible claim; if not, L1+L2+L3 stand. **[open
-— feasibility unknown]**
+### L4 — deductive Rust↔Lean extraction — **non‑goal**
+Extracting the actual Rust into a proof assistant and proving the laws about the *extracted* code
+would be the strongest possible claim, but it is **out of scope for this program**: the ladder ends at
+L1+L2+L3. The honest claim is that the laws are machine‑checked in Lean and the implementation is
+pinned to them by property testing and bounded model checking — not that the shipped Rust is proved
+correct.
 
 > No tool converts a Lean *proof* into a Kani test (or any Rust proof): proofs are not portable across
 > logics/objects. What is shared is the **property statement**, transcribed once; each layer is an
-> independent witness. Aeneas is the exception only because it re‑expresses the Rust *as* a Lean model.
+> independent witness.
 
 ---
 
@@ -152,7 +148,6 @@ trivial property). If it works, this is the strongest possible claim; if not, L1
   This lifts the project's "compile‑time law enforcement" ethos up to the proofs.
 - **proptest** runs in the existing Rust test suite (already CI‑gated).
 - **Kani** runs as a separate CI job (`cargo kani`) over the `evaluate` harnesses; bounded, minutes.
-- **Aeneas** (if adopted) is a periodic/extraction job, not per‑commit.
 
 ---
 
@@ -169,12 +164,11 @@ trivial property). If it works, this is the strongest possible claim; if not, L1
 | 7 | Write out the **parity proof** (free monad of theory ≅ `M`) | L1 | open |
 | 8 | proptest: extend to effect equations + singleton pipeline | L2 | partial (monad laws exist) |
 | 9 | Kani harnesses for `evaluate` (no‑panic, W, short‑circuit, log‑monotone) | L3 | not started |
-| 10 | Aeneas feasibility spike (extract `bind`, prove one law) | L4 | not started |
-| 11 | **Graph join `∇_G`** decision (#2) → then graph algebra + its Lean proof | math → L1 | open (blocked) |
-| 12 | `RelayTo` handler semantics (control layer) | math | open (future work) |
+| 10 | **Graph join `∇_G`** decision (#2) → then graph algebra + its Lean proof | math → L1 | open (blocked) |
+| 11 | `RelayTo` handler semantics (control layer) | math | open (future work) |
 
-Items 1–10 deliver a **sound, Lean‑checked, Rust‑linked Causal Algebra for singleton + collection**.
-Items 11–12 are the frontier (graph join + control), gated on decided math, and should be presented
+Items 1–9 deliver a **sound, Lean‑checked, Rust‑linked Causal Algebra for singleton + collection**.
+Items 10–11 are the frontier (graph join + control), gated on decided math, and should be presented
 in the monograph as precisely‑posed open problems, not as solved.
 
 ---
@@ -184,13 +178,11 @@ in the monograph as precisely‑posed open problems, not as solved.
 **Defensible once 1–8 land:** "DeepCausality's core is a Causal Algebra — an algebraic theory over an
 arity‑5 effect monad, with Kleisli composition as the propagation operator and a dedicated effect
 system as generators — whose laws are machine‑checked in Lean (CI‑enforced) and whose Rust
-implementation is checked against them by property testing and bounded model checking, with deductive
-Rust↔Lean extraction (Aeneas) as ongoing work."
+implementation is checked against them by property testing and bounded model checking."
 
 **Never claim:** that Kani proves the monad laws (it cannot — they are higher‑order); that the graph
-form has an algebra before the join is defined; that the implementation is *proved* correct unless L4
-(Aeneas) succeeds — until then it is *property‑tested and bounded‑model‑checked*, which is a weaker,
-honest, still‑strong statement.
+form has an algebra before the join is defined; that the implementation is *proved* correct — it is
+*property‑tested and bounded‑model‑checked*, which is a weaker, honest, still‑strong statement.
 
 ---
 

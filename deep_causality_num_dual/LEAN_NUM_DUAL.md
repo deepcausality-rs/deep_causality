@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-07-10. This note summarizes the machine-checked formalization of the dual-number
 crate — `R[ε]` with `ε² = 0`, the carrier for forward-mode automatic differentiation. It is the
 crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/causal-algebra/Formalization.md),
+[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md) and
 [`deep_causality_haft/LEAN_HAFT.md`](../deep_causality_haft/LEAN_HAFT.md).
 
@@ -77,5 +77,3 @@ bazel test //...
    forward-mode differentiation in one tangent direction. Higher-order (truncated jets, `εⁿ⁺¹ = 0`)
    and multivariate (several independent duals `εᵢ`) automatic differentiation are outside the scope
    of this file.
-3. **Aeneas extraction (L4) not started.** Per `Formalization.md`, no L3 (bounded model checking)
-   harnesses or L4 (translation-validated extraction) are applied to this crate; the claim is L1 + L2.

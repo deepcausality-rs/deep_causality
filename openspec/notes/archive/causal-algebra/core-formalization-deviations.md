@@ -13,7 +13,7 @@ This document is the **resolved audit** (graduated from the review plan once the
 it records (1) the layered approach, (2) the per-mechanism plan as executed, and (3) every deviation
 found during the survey, each with a **terminal disposition**. All 9 Core Lean files typecheck
 standalone and are witnessed; the crate-local status view is
-[`deep_causality_core/LEAN_CORE.md`](../../../deep_causality_core/LEAN_CORE.md). Every D1–D17 below is
+[`deep_causality_core/LEAN_CORE.md`](../../../../deep_causality_core/LEAN_CORE.md). Every D1–D17 below is
 settled — no item remains **Fix-planned**.
 
 ## 0. Layered approach — base (Haft, proven) → causal extension (Core, the delta)

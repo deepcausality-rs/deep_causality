@@ -1,4 +1,4 @@
-Hardy's causaloid composition (the causaloid product ⊗^Λ, Eq. 2 on p.4 of [`deep_causality/papers/causaloid.pdf`](../../../deep_causality/papers/causaloid.pdf), arXiv:gr-qc/0509120) is symmetric; causal asymmetry lives entirely in the Λ matrices (the connection data between a region-pair), not in either region and not in an ordering imposed by the product.
+Hardy's causaloid composition (the causaloid product ⊗^Λ, Eq. 2 on p.4 of [`deep_causality/papers/causaloid.pdf`](../../../../deep_causality/papers/causaloid.pdf), arXiv:gr-qc/0509120) is symmetric; causal asymmetry lives entirely in the Λ matrices (the connection data between a region-pair), not in either region and not in an ordering imposed by the product.
 
 The causaloid implementation in this project is fundamentally an inversion of Hardy's causaloid because it puts the asymmetry in the outer encapsulation of the causal monad and the symmetry into the inner representation as a causal function.
 
@@ -69,7 +69,7 @@ Each constructor returns the same `Causaloid` type. They differ only in which of
 ## References
 
 - Lucien Hardy, *Probability Theories with Dynamic Causal Structure: A New Framework for Quantum
-  Gravity*, arXiv:gr-qc/0509120 (2005) — [`deep_causality/papers/causaloid.pdf`](../../../deep_causality/papers/causaloid.pdf).
+  Gravity*, arXiv:gr-qc/0509120 (2005) — [`deep_causality/papers/causaloid.pdf`](../../../../deep_causality/papers/causaloid.pdf).
   Anchors used above: the causaloid product ⊗^Λ (Eq. 2, p. 4) composes regions by **union** —
   symmetric, all elementary regions on an equal footing; the theory-specific **Λ matrices** are the
   data that "break the symmetry between elementary regions" (p. 4; in QT, adjacent-pair Λ ≠
@@ -79,4 +79,4 @@ Each constructor returns the same `Causaloid` type. They differ only in which of
   framework has no fundamental state-evolving-in-time (p. 5).
 - The formalization program that operationalizes the inversion described here:
   [`causaloid-formalization-roadmap.md`](causaloid-formalization-roadmap.md).
-- The four-level stack this structure carries: [`../quantum/full-stack.md`](../quantum/full-stack.md).
+- The four-level stack this structure carries: [`../quantum/full-stack.md`](../../quantum/full-stack.md).

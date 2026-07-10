@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Causaloid Formalization Roadmap
 
 **What this is.** The staged program that formalizes the causaloid in `deep_causality` so that the
-four-level causal stack of [`../quantum/full-stack.md`](../quantum/full-stack.md) rests on one proven
+four-level causal stack of [`../quantum/full-stack.md`](../../quantum/full-stack.md) rests on one proven
 foundation, and the two downstream crates — **`deep_causality_do_calculus`** (Pearl / do-calculus)
 and **`deep_causality_quantum`** (QCM / Lorenz, ICO / Hardy) — can be implemented *and formalized*
 against that foundation instead of re-establishing it.
@@ -19,10 +19,10 @@ against that foundation instead of re-establishing it.
 - **Bonus.** Express indefinite causal structure (ICO / Hardy) through the formalism.
 
 **Companions.** [`Causaloid-structure.md`](Causaloid-structure.md) (the structure and the Hardy
-inversion) · [`../quantum/full-stack.md`](../quantum/full-stack.md) (the four levels, HAVE/GAP) ·
+inversion) · [`../quantum/full-stack.md`](../../quantum/full-stack.md) (the four levels, HAVE/GAP) ·
 [`algebraic-causaloid-assumptions.md`](algebraic-causaloid-assumptions.md) (the assumption tracker
-this roadmap closes against) · [`../quantum/QCM-on-EPP.md`](../quantum/QCM-on-EPP.md) (the level-4
-reconstruction) · [`../quantum/quantum-epp.md`](../quantum/quantum-epp.md) (the QPU-as-effect
+this roadmap closes against) · [`../quantum/QCM-on-EPP.md`](../../quantum/QCM-on-EPP.md) (the level-4
+reconstruction) · [`../quantum/quantum-epp.md`](../../quantum/quantum-epp.md) (the QPU-as-effect
 corollary).
 
 Honesty convention: **[holds]**, **[holds under precondition]**, **[open]**, **[planned]**,
@@ -83,7 +83,7 @@ monoid, an order source, a freeze check — and never touches the core again. Th
 ## 4. The Hardy inversion, precisely (the physics anchor)
 
 Primary source: Hardy, *Probability Theories with Dynamic Causal Structure* (arXiv:gr-qc/0509120)
-— [`deep_causality/papers/causaloid.pdf`](../../../deep_causality/papers/causaloid.pdf).
+— [`deep_causality/papers/causaloid.pdf`](../../../../deep_causality/papers/causaloid.pdf).
 
 - Hardy's causaloid product (Eq. 2, p. 4) composes regions by **union**:
   `r(R₁ ∪ R₂) = r(R₁) ⊗^Λ r(R₂)` — symmetric, all elementary regions on an equal footing. The
@@ -302,7 +302,7 @@ work. **[planned]**
 ## 7. `deep_causality_quantum` (Goal C + bonus)
 
 Carrier: operator-valued CJ state on the arity-5 **state channel** (`Float106` complex matrices),
-per [`../quantum/QCM-on-EPP.md`](../quantum/QCM-on-EPP.md). Primary sources: Lorenz 2022 (Synthese
+per [`../quantum/QCM-on-EPP.md`](../../quantum/QCM-on-EPP.md). Primary sources: Lorenz 2022 (Synthese
 200:424) and Lorenz & Barrett 2021 (arXiv:2001.07774), both in `openspec/notes/quantum/`.
 
 | Proposed id | Statement | Source |
@@ -394,7 +394,7 @@ extensibility contract) and the two crates (`deep_causality_do_calculus`,
 ## 10. References
 
 - Hardy, *Probability Theories with Dynamic Causal Structure: A New Framework for Quantum Gravity*,
-  arXiv:gr-qc/0509120 — [`deep_causality/papers/causaloid.pdf`](../../../deep_causality/papers/causaloid.pdf)
+  arXiv:gr-qc/0509120 — [`deep_causality/papers/causaloid.pdf`](../../../../deep_causality/papers/causaloid.pdf)
   (⊗^Λ Eq. 2 p. 4; Λ matrices p. 4; product unification §2 p. 3; `|v|/|u|` Eq. 3 p. 4).
 - Lorenz, *Quantum causal models: the merits of the spirit of Reichenbach's principle…*, Synthese
   200:424 (2022) — `../quantum/Quantum causal models-lorenz2022.pdf` (QCCP; process operator;
@@ -409,6 +409,6 @@ extensibility contract) and the two crates (`deep_causality_do_calculus`,
 - Barrett, Lorenz & Oreshkov, *Cyclic Quantum Causal Models*, arXiv:2002.12157 —
   `../quantum/Cyclic Quantum Causal Models-2002.12157v3.pdf`.
 - Pearl, *Introduction to Do-Calculus* and *The Do-Calculus Revisited* — `../causal-do/`.
-- [`../quantum/full-stack.md`](../quantum/full-stack.md) · [`../quantum/QCM-on-EPP.md`](../quantum/QCM-on-EPP.md)
-  · [`../quantum/quantum-epp.md`](../quantum/quantum-epp.md) · [`Causaloid-structure.md`](Causaloid-structure.md)
+- [`../quantum/full-stack.md`](../../quantum/full-stack.md) · [`../quantum/QCM-on-EPP.md`](../../quantum/QCM-on-EPP.md)
+  · [`../quantum/quantum-epp.md`](../../quantum/quantum-epp.md) · [`Causaloid-structure.md`](Causaloid-structure.md)
   · [`algebraic-causaloid-assumptions.md`](algebraic-causaloid-assumptions.md).

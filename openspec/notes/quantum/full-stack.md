@@ -290,13 +290,13 @@ hypergraph. It also depends on #5 (the verdict-carrier closure is level 1's gap)
 - `deep_causality/papers/causaloid.pdf` — Hardy 2005 (arXiv:gr-qc/0509120), the level-3 primary
   source: the symmetric causaloid product ⊗^Λ (Eq. 2, p. 4), Λ matrices as the symmetry-breaking
   connection data (p. 4), and the ⊗-vs-sequential-product unification (§2, p. 3).
-- [`../causal-algebra/Causaloid-structure.md`](../causal-algebra/Causaloid-structure.md) — the
+- [`../causal-algebra/Causaloid-structure.md`](../archive/causal-algebra/Causaloid-structure.md) — the
   Hardy-inversion thesis (symmetric element, asymmetric composition) and the three-shape
   isomorphic-recursive structure.
-- [`../causal-algebra/causaloid-formalization-roadmap.md`](../causal-algebra/causaloid-formalization-roadmap.md)
+- [`../causal-algebra/causaloid-formalization-roadmap.md`](../archive/causal-algebra/causaloid-formalization-roadmap.md)
   — the staged formalization program that closes this note's gaps and establishes the foundation for
   `deep_causality_do_calculus` and `deep_causality_quantum`.
-- [`../causal-algebra/algebraic-causaloid-assumptions.md`](../causal-algebra/algebraic-causaloid-assumptions.md)
+- [`../causal-algebra/algebraic-causaloid-assumptions.md`](../archive/causal-algebra/algebraic-causaloid-assumptions.md)
   — assumptions #2 (fan-in `∇`), #5 (verdict closure), #11a (extensible `F`).
 - `examples/physics_examples/event_horizon_probe/` — the working level-2 demonstration: Newtonian↔
   relativistic regime switching through the causal monad, with `Metric::Minkowski(4)` rapidity/time-
