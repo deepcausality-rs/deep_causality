@@ -1,0 +1,55 @@
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_3f33e790e20682 23
+  s_543ee5cdecd2c1::t_3e48b14e37b387 27-81,86-134,145-195,206-210
+deep_causality_core/LEAN_CORE.md
+  s_543ee5cdecd2c1::t_46ea641a628e79 107-109
+  s_543ee5cdecd2c1::t_fd52d5e3a59518 10,60
+deep_causality/LEAN_DeepCausality.md
+  s_543ee5cdecd2c1::t_e668f898ef462c 96
+  s_543ee5cdecd2c1::t_1c19e6b957b35e 11
+MODULE.bazel
+  s_543ee5cdecd2c1::t_2cc77b83aa7161 18
+deep_causality_haft/LEAN_HAFT.md
+  s_543ee5cdecd2c1::t_ad3196bd8fcb9a 102-105
+  s_543ee5cdecd2c1::t_42f3add4e86168 10,42
+deep_causality_num/LEAN_NUM.md
+  s_543ee5cdecd2c1::t_cd92feb2fd0438 11
+deep_causality_num_complex/LEAN_NUM_COMPLEX.md
+  s_543ee5cdecd2c1::t_1eadea887d0e29 11
+deep_causality_num_dual/LEAN_NUM_DUAL.md
+  s_543ee5cdecd2c1::t_7ddca53c9b2c26 11
+lean/README.md
+  s_543ee5cdecd2c1::t_f068ddc921efbd 10
+openspec/notes/archive/causal-algebra/Causaloid-structure.md
+  s_543ee5cdecd2c1::t_624f3f6c1907c6 1,72,82
+openspec/notes/archive/causal-algebra/Formalization.md
+  s_543ee5cdecd2c1::t_311d857e48b6e3 131-136,140,167-168,170-171,181,184-185
+openspec/notes/archive/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_ef8a50fce50fb8 87
+openspec/notes/archive/causal-algebra/causaloid-formalization-roadmap.md
+  s_543ee5cdecd2c1::t_86ae9e44f9bc3d 9,22,24-25,86,305,397,412-413
+openspec/notes/archive/causal-algebra/core-formalization-deviations.md
+  s_543ee5cdecd2c1::t_d5f465cb2d5fce 16
+openspec/notes/archive/freeze-dag-optin.md
+  s_543ee5cdecd2c1::t_837524a029ac75 9
+openspec/notes/quantum/full-stack.md
+  s_543ee5cdecd2c1::t_61cfaf2a844bea 293,296,299
+openspec/notes/quantum/quantum-epp.md
+  s_543ee5cdecd2c1::t_23e31ce57579ee 32-33,146,148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "a2519dd488cc58093289c7a50ba4793b960f3f0f",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
