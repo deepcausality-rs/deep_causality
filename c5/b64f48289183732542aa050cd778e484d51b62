@@ -1,0 +1,37 @@
+openspec/changes/add-quantum-crate/specs/quantum-operator-layer/spec.md
+  s_543ee5cdecd2c1::t_4bdc276fde3544 23-49
+openspec/changes/add-quantum-crate/tasks.md
+  s_543ee5cdecd2c1::t_0fd17aa3f3751b 84-90
+  s_543ee5cdecd2c1::t_fa13a8ead9faab 98-101
+  s_543ee5cdecd2c1::t_0ca6869fd4b1a6 64-68
+  s_543ee5cdecd2c1::t_ab3e5fade4a548 47-48
+openspec/changes/add-quantum-crate/design.md
+  s_543ee5cdecd2c1::t_e5ea3aa5dd494c 201-205
+  s_543ee5cdecd2c1::t_8cd5c519e1a93f 179
+  s_543ee5cdecd2c1::t_c19de374f9b5ea 277-278
+  s_543ee5cdecd2c1::t_d2faabe9c8e278 232-276,279-317
+  s_543ee5cdecd2c1::t_e6c8a419964748 104
+openspec/changes/add-quantum-crate/specs/quantum-markov-freeze/spec.md
+  s_543ee5cdecd2c1::t_d1f6430544771a 5-8
+  s_543ee5cdecd2c1::t_c4114b2bdf1121 27-61
+  s_543ee5cdecd2c1::t_b58a8793f580fe 62
+openspec/changes/add-quantum-crate/specs/quantum-crate-scaffold/spec.md
+  s_543ee5cdecd2c1::t_fbb81874cddbf5 9-12
+  s_543ee5cdecd2c1::t_f595e229cf10ac 82-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "c5b64f48289183732542aa050cd778e484d51b62",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
