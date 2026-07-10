@@ -1,0 +1,30 @@
+deep_causality/LEAN_DeepCausality.md
+  s_543ee5cdecd2c1::t_3c3fed04578324 1-101
+openspec/specs/graph-reasoning-formalization/spec.md
+  s_543ee5cdecd2c1::t_a6da5cfc7d241f 1-30
+deep_causality_core/LEAN_CORE.md
+  s_543ee5cdecd2c1::t_05e354962c6b5c 8
+  s_543ee5cdecd2c1::t_a8fb7d70a932ef 42-51
+openspec/specs/causaloid-formalization/spec.md
+  s_543ee5cdecd2c1::t_a6da5cfc7d241f 1-44
+openspec/specs/context-hypergraph-formalization/spec.md
+  s_543ee5cdecd2c1::t_a6da5cfc7d241f 1-28
+openspec/changes/archive/2026-07-10-formalize-main-crate/tasks.md
+  s_543ee5cdecd2c1::t_ce7098ee484ff5 53-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "ce69bfeefab96b00b445a6b9f11cb345321c3c06",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
