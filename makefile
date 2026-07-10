@@ -10,6 +10,7 @@ help:
 	@echo '    make fix   		Fixes linting issues as reported by clippy.'
 	@echo '    make format   	Formats call code according to cargo fmt style.'
 	@echo '    make install   	Tests and installs all make script dependencies.'
+	@echo '    make lean       	Runs all LEAN proofs'
 	@echo '    make miri   	Runs the test suite under the Miri interpreter for undefined-behavior detection.'
 	@echo '    make start   	Starts the dev day with updating rust, pulling from git remote, and build the project.'
 	@echo '    make test   	Runs all tests across all crates.'
@@ -47,6 +48,11 @@ format:
 .PHONY: install
 install:
 	@source build/scripts/install_deps.sh
+
+
+.PHONY: lean
+lean:
+	@source build/scripts/lean.sh
 
 
 .PHONY: miri
