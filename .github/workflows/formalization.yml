@@ -41,6 +41,29 @@ jobs:
       - name: lake build
         run: lake build
 
+  # No unproven placeholders. Our proof files must be zero-sorry; the only whitelisted slots are the
+  # QCM obligation stubs under DeepCausalityFormal/Quantum/ (which land with deep_causality_quantum).
+  # The guard is scoped to our own proofs — never the vendored Mathlib under lean/.lake/.
+  sorry-guard:
+    name: no sorry outside Quantum obligations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fail if a bare sorry appears outside the whitelisted Quantum/ obligation slots
+        run: |
+          set -euo pipefail
+          # Word-boundaried, lowercase `sorry` token: `sorryAx` / `isSyntheticSorry` do NOT match.
+          # Whitelist: DeepCausalityFormal/Quantum/ (deferred QCM obligations). Proof prose must not
+          # use the bare token — write "unproven placeholder" instead — or the guard trips.
+          hits=$(grep -rnw 'sorry' lean/DeepCausalityFormal --include='*.lean' \
+                 | grep -v '/Quantum/' || true)
+          if [ -n "$hits" ]; then
+            echo "Found a bare sorry outside the whitelisted Quantum/ obligation slots:"
+            echo "$hits"
+            exit 1
+          fi
+          echo "OK: zero sorry outside the Quantum/ obligation slots."
+
   # The bridge — every THEOREM_MAP id must appear in both a Lean file and a Rust file.
   theorem-map:
     name: theorem-map consistency

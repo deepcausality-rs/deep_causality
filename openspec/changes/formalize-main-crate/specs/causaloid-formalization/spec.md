@@ -28,8 +28,8 @@ standalone with bare `lean`.
 
 ### Requirement: Collection aggregation is permutation-invariant over the Verdict carrier
 
-Extending `Core/VerdictClosure.lean` (the landed closure theorem `core.verdict.closure`), the
-formalization SHALL prove the #1 scoped order-invariance theorem on the collection path: for each
+The formalization SHALL prove — extending `Core/VerdictClosure.lean` (the landed closure theorem
+`core.verdict.closure`) — the #1 scoped order-invariance theorem on the collection path: for each
 `AggregateLogic` mode, the aggregate **value** is invariant under permutation of the member bag —
 `All`/`Any` as commutative-monoid folds (the `fuse_perm` device of `Core/GraphAlgebra.lean`
 applies), `None` via the `Any` result, `Some(k)` via permutation-invariance of the firing count.

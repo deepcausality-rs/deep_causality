@@ -6,6 +6,30 @@ Status: **design / test-spec.** Specifies how to property-test the monad laws of
 existing suite tests *behavior*, not laws). Grounded in source as of this writing — verify
 file:line before relying on a citation.
 
+> **Reconciliation (2026-07-10) — the `CausalEffect` model.** This note predates the single-channel
+> refactor. The value channel is no longer `EffectValue<Value>` (the 5-arm sum) but
+> `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>` (`Pure(None)`, `Pure(Some v)`,
+> `Suspend(RelayTo)`; `ContextualLink`/`Map` removed), and value **and** error now share one channel:
+> `CausalEffectPropagationProcess { outcome: Result<CausalEffect<V>, E>, .. }` with **private** fields
+> and a **total** `new`. Three claims below change:
+>
+> - **§2 Law 2 (right identity) — now unconditional.** "Holds *iff* the invariant
+>   `error.is_some() ⇒ value == None`" is superseded: value-XOR-error is one `Result`, so an errored
+>   process *cannot* also carry a value. Right identity `m.bind(eta) ≡ m` holds on **all** carriers,
+>   machine-checked as `core.causal_monad.right_id` (tracker #7).
+> - **The "hand-built invariant-violating `m`" test — now impossible, hence dropped.** With private
+>   fields and a single `Result` channel there is no representable value-AND-error state to construct;
+>   the "generate one explicit invariant-violating `m` and document that it fails" step (§2, §6
+>   `prop_right_identity`) is obsolete.
+> - **§7 "the `error ⇒ value None` invariant, still open" — CLOSED.** The design recommendation
+>   ("private fields + smart constructors, or normalize in one place") is exactly what landed: the
+>   single-channel `Result` makes the invariant structural.
+>
+> Unchanged: §3 (the timestamp-agnostic `EffectLog` equality — already landed, still the correct law
+> equality) and §1/§2 Laws 1 and 3 (left identity, associativity hold as stated). The generator
+> restriction to the *data* variants (§4) now reads "`Pure(Some v)`/`Pure(None)` leaves; `RelayTo`
+> commands out of the first suite's scope."
+
 ## 0. Why this note, and the two things that make it non-trivial
 
 The monad/arrow laws are universally-quantified equations over programs; Rust (like Haskell)

@@ -19,6 +19,38 @@ Sources: `deep_causality_core/src/types/causal_effect_propagation_process/mod.rs
 
 ---
 
+## Reconciliation (2026-07-10) — the `CausalEffect` model
+
+> This note was written against the pre-refactor **`EffectValue`** model: a 5-arm value sum
+> (`None + Value + ContextualLink + RelayTo + Map`) carried alongside a *separate* `error` field on
+> the arity-5 carrier. That model is gone. The body below is preserved as the historical derivation;
+> the current model, and every claim it changes, is enumerated here. Sources for the current model:
+> `deep_causality_core/src/types/{causal_effect/mod.rs, causal_command/mod.rs,
+> causal_effect_propagation_process/mod.rs, propagating_effect/mod.rs}`.
+>
+> **Model now.** The success channel is
+> `CausalEffect<V> = Free<CausalCommandWitness, Option<V>>` — the free monad on the single control
+> operation `CausalCommand::RelayTo(target, sub)` over `Maybe` value leaves:
+> `Pure(None)` (no evidence), `Pure(Some v)` (a value), `Suspend(RelayTo(t, k))` (a command). The
+> carrier is `CausalEffectPropagationProcess { outcome: Result<CausalEffect<V>, E>, state, context,
+> logs }` — value **and** error share one channel (`outcome`), and the full outcome is the transformer
+> stack `Except E (Free CausalCommand (Maybe V))`. `ContextualLink` and `Map` no longer exist.
+>
+> Each changed claim, keyed to the flags in the body:
+>
+> | Body claim | Current status |
+> |---|---|
+> | Carrier `M(T) = EffectValue(T) × S × Option(C) × Option(E) × L` (I.1) | **Changed.** Value-XOR-error is one channel: `outcome: Result<CausalEffect<V>, E>`, fields `(outcome, state, context, logs)`. |
+> | `EffectValue` = 5-arm sum with `ContextualLink`, `Map` (I.1) | **Changed.** `CausalEffect<V> = Free<CausalCommand, Option<V>>`; arms are `Pure(None)`, `Pure(Some v)`, `Suspend(RelayTo)`. `ContextualLink`/`Map` **removed**; `RelayTo` is the sole command. |
+> | **F-0** — `EffectValue` is a fixpoint over `PE(T)` via `RelayTo`/`Map`, not a plain functor | **Superseded.** `CausalEffect` *is* the free monad `Free<CausalCommand, Option<V>>` — an honest functor with `Option<V>` leaves; the recursion is the `Free` structure with `RelayTo` its one operation (`Map`, the arm that made it a `PE`-fixpoint, is gone). Value functor is lawful; `fold` is the unique handler (`core.causal_effect.fold_universal`, `.transformer_stack`). |
+> | **F-1** — well-formedness `error ⇒ value=None` not type-enforced; right identity conditional | **CLOSED.** One `Result` channel makes "value AND error" unrepresentable; `new` is total; right identity holds **unconditionally**, machine-checked (`core.causal_monad.right_id`, tracker #7). This dissolves the F-1 caveat inherited by F-6 and the "conditional right identity" note in I.5. |
+> | **F-2** — log monoid is free (non-commutative) | **Unchanged.** Still a `Vec`-append monoid; order-sensitivity is on the log channel only. |
+> | **F-3** — input/output asymmetry (command inputs, structured outputs) | **Now a stated theorem** (`causaloid-formalization` spec; task 2.5). The singleton detects a command on the input channel (`incoming_effect.command_target().is_some()`) and returns the *command-specific* error — never a silent `None`; command **outputs** still pass through for the engine to fold. Behaviour unchanged; the flag becomes a named, witnessed law. |
+> | **F-4** — representable invalid singletons (missing/both closures) | **Unchanged.** The `causal_fn`/`context_causal_fn` `Option` fields still admit "missing both"/"both set"; still well-formed only by construction. A causaloid-construction concern, not a monad-carrier one. |
+> | **F-5** — dual stateless/stateful semantics; context as constant | **Unchanged.** Two interpreters; context read-only (#11b). |
+
+---
+
 ## Part I — The Causal Monad
 
 ### I.1 Carrier
@@ -240,8 +272,19 @@ but that is a (justifiable) change, recorded here, not made.
 
 ## Status
 
-- **Part I — Causal Monad:** formalized; matches code; one structural gap (F‑1, unenforced invariant) + F‑2 (log non‑commutative, by design).
-- **Part II — Singleton:** formalized; matches code on the constructor‑reachable subset; gaps F‑3…F‑6 flagged.
-- **Collection:** pending (commutative‑monoid fold over a verdict carrier; see tracker #1, #5).
-- **Graph:** pending and gated on a decided join semantics (tracker #2).
-- **Meta‑signature:** pending all three local algebras.
+Reconciled to the `CausalEffect` model 2026-07-10 (see the Reconciliation banner above); the
+per-form status below reflects the current model.
+
+- **Part I — Causal Monad:** formalized; matches code. **F‑1 CLOSED** (single value-XOR-error
+  channel; right identity unconditional, `core.causal_monad.right_id`). Only F‑2 remains (log
+  non‑commutative, by design).
+- **Part II — Singleton:** formalized; matches code on the constructor‑reachable subset. **F‑3 is
+  now a stated theorem** (`causaloid-formalization` spec; task 2.5 — command input on the value
+  channel yields the command‑specific error). F‑4/F‑5 unchanged (by construction; dual semantics).
+  F‑6 dissolved with F‑1.
+- **Collection:** closure landed (`core.verdict.closure`, `causaloid-verdict-closure`); the #1
+  permutation‑invariance theorem is the residual task 2.3 (`causaloid-formalization` spec).
+- **Graph:** join semantics decided and landed — the defined merge `∇ ∘ (Λ₁ ⊗ Λ₂)` with
+  `∇ = Verdict::join` (`core.causaloid.graph_fold_order_invariant`, tracker #2); relay-round
+  composition is the residual task 3.6 (`graph-reasoning-formalization` spec).
+- **Meta‑signature:** landed as the catamorphism keystone (`core.causaloid.catamorphism_unique`).
