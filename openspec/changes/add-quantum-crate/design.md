@@ -101,7 +101,7 @@ Kronecker product `⊗`, reshape/index-permute), keeping quantum semantics in th
 `Tr_B((1_B⊗Z)M)=Z·Tr_B(M)` (the Q-PTP boundary identity). (L3) Choi operator + Kraus, with
 **CP ⟺ Choi PSD** and **TP ⟺ `Tr_out(J)=I`**, and Kraus↔Choi via the **`eigen` decomposition of the
 PSD Choi** (`K_i = √λ_i · reshape(v_i)`); round-trip tested. (L4) The process operator σ = product of
-per-node CJ factors on the STATE channel, feeding the Layer-D freeze check.
+per-node CJ factors as a static freeze-time `ProcessFactors` store (R3), feeding the Layer-D freeze check.
 
 **Design seam — ket ↔ matrix (settle in Phase 0/2).** `HilbertState<R>` is a Clifford minimal-left-
 ideal element (a multivector), not a column vector; forming `|ψ⟩⟨ψ|` and applying operators needs a
@@ -176,7 +176,7 @@ empirical discovery share one telemetry stream. Confirm the exact bound form in 
 **Decision.** `deep_causality_quantum` is a new workspace member with `[lints] workspace = true`,
 `unsafe_code = "forbid"`, MSRV `rust-version = 1.93.0`, no `dyn`, no crate-defined macros, std (it
 depends on `CausalTensor`). Dependencies: core, haft, algebra, num, num_complex, multivector, tensor,
-uncertain (as in Impact). It depends on nothing that would create a cycle (physics does **not** become
+uncertain, and **`deep_causality_metric`** (the metric-signature SSOT — see cross-cutting constraints). It depends on nothing that would create a cycle (physics does **not** become
 a dependency; the migrated kernels have no physics-only deps beyond `PhysicsError`, replaced per Q-ERR).
 
 **DECIDED (Q-ERR).** The migrated wrappers return a crate-local **`QuantumError`**: an outer newtype
@@ -198,10 +198,11 @@ variant fits.
   support**, single-node interface a checkable special case; general condition stays open (B1).
 - **Q-TOL — RESOLVED.** Condition-driven incremental forward-error bound, not linear-in-depth (B8).
 
-**Recommended (confirm to promote to a decision).**
-
-- **Q-QPU → generic (`no dyn`) `QpuSampler` returning classical shots** (B6). The only unconfirmed
-  item; a seam shape, no adapter built.
+- **Q-QPU — RESOLVED.** Generic (`no dyn`) `QpuSampler` returning classical shots (B6, R2), with
+  `Shots` an associated type bounded by `ShotHistogram`, the `Uncertain` bridge, and the full-arity
+  `CausalEffectPropagationProcess` `qpu_effect` wrapper. Seam only; no adapter built. All Phase-0
+  cross-cutting decisions are now made; the residual items are numeric checks / micro-conventions
+  inside R1 and R3 (ket-column ratification, `dag`=conj-transpose verification, multi-qubit leg ids).
 
 ## Non-goals
 
@@ -228,3 +229,89 @@ variant fits.
   not built in this one.
 - **Unitary causal decompositions — van der Lugt & Lorenz, arXiv:2508.11762 (Aug 2025, PDF in
   `openspec/notes/quantum/`).** The C₃-exclusion faithfulness criterion adopted in B3.
+
+## Gap resolutions (ARIZ, Phase 0)
+
+Three implementation-readiness gaps were resolved from first principles (TRIZ/ARIZ); each dissolved a
+contradiction using only existing resources. These are Phase-0 decisions.
+
+### R1 — Ket ↔ matrix bridge (operator-layer seam) — separation in SPACE
+
+The "one datum, two representations" contradiction (a pure state must be a Clifford multivector for
+native geometric-product gates AND a d-column for density matrices / `CausalTensor` operators) is
+**false**: `CausalMultiVector::to_matrix()` is already a bijection onto `Mat(D,ℂ)` for **even** n
+(Cl(0,10): D=32, D²=2¹⁰), and a **minimal left ideal ≅ a matrix column**.
+
+- `HilbertState::to_ket(&self) -> Result<CausalTensor<Complex<R>>, _>` = column `KET_COLUMN = 0` (the
+  primitive idempotent `E = e₀e₀ᵀ`) of `to_matrix()`; `from_ket(v, metric) -> Result<Self, _>` embeds
+  `v` as column 0 then `from_matrix`. Even-n metrics only (else error). Pure reuse of
+  `to_matrix`/`from_matrix`; no new numeric substrate. Lives on `HilbertState` in `deep_causality_multivector`.
+- `ρ = |ψ⟩⟨ψ| = to_ket(ψ).matmul(dagger(to_ket(ψ)))`; `A|ψ⟩ = A.matmul(to_ket(ψ))` on `CausalTensor`.
+- **Correction (repo owner):** the quantum ops ARE implemented — `QuantumGates` / `QuantumOps<R>` for
+  `CausalMultiVector<Complex<R>>` in `deep_causality_physics/src/kernels/quantum/gates.rs` (migrating
+  into this crate). `QuantumOps::bracket` IS the Dirac inner product `⟨φ|ψ⟩` (the ket law's RHS), and
+  `QuantumOps::dag` = `reversion()` + coefficient-conjugation is the adjoint convention. The inner
+  product uses `QuantumOps::bracket`, never the unrelated multifield Lie-commutator.
+- Open sub-questions: (i) ratify `KET_COLUMN = 0` as the fixed convention; (ii) numerically verify
+  `to_matrix(ψ.dag()) == dagger(to_matrix(ψ))` for the Cl(0,10) Brauer–Weyl gammas (anti-Hermitian
+  generators) — if it fails, use the metric-correct Clifford conjugation; (iii) confirm `from_matrix`'s
+  `1/D` factor gives unit round-trip gain.
+
+### R2 — QpuSampler (emergent seam) — separation by CONDITION + reify-tool-as-DATA
+
+Support a physical-QPU effect without depending on the adapter or losing the verifiable/deterministic
+default: off-by-default `qpu` feature (condition) + generic `S: QpuSampler` bound (no `dyn`; impurity
+lives in a future out-of-crate impl) + a reified `QuantumCircuit` (inert data).
+
+- `QuantumCircuit { num_qubits, ops: Vec<GateOp>, measure }` — reified gate program over the migrated
+  gate alphabet (pure data; `Clone+Debug+PartialEq`; no amplitudes); validating `new` rejects
+  out-of-range qubits with `QuantumError`.
+- `trait QpuSampler { type Shots: ShotHistogram; type Calibration; fn sample(&self, &QuantumCircuit,
+  shots) -> Result<Self::Shots, QuantumError>; fn calibration(&self); }` — generic bound; `Shots` =
+  classical histogram (never amplitudes → pins the Kleisli boundary at the type level).
+- Shots→`Uncertain` bridges (per-qubit `bernoulli`; observable expectation via `from_samples`);
+  `#[cfg(feature="qpu")] qpu_effect(...) -> CausalEffectPropagationProcess<...>` routing shots→value,
+  params→state, calibration→context, failure→error, provenance→log. In-process deterministic `SimQpu`
+  (migrated kernels + seeded `QmcSampler`) for hardware-free tests. No network/async dep; concrete
+  vendor adapter out of scope.
+- **DECIDED (Q-QPU):** `Shots` is an associated type bounded by `ShotHistogram` (not a fixed struct),
+  with the `Uncertain` bridge and the full-arity `CausalEffectPropagationProcess` wrapper confirmed.
+
+### R3 — Process-operator ↔ freeze — separation in TIME (σ is STATIC decoration, not runtime STATE)
+
+σ = ∏ᵢ ρ_{Aᵢ|Pa(Aᵢ)} IS the process's quantum state, yet must not ride the runtime single-writer,
+per-branch, never-merged PS channel (it is a whole-graph, cross-branch, checked-once object). Resolved
+by separation in time: σ is **static freeze-time decoration**, absent from the runtime flow; its Markov
+validity is decided once, at freeze.
+
+**Spec correction:** σ is NOT "carried on the arity-5 STATE channel." It is an external node-keyed
+store — the operator analogue of `LambdaEdges` — consulted only at the freeze boundary. PS stays the
+model's ordinary runtime state.
+
+- **M1** `ProcessFactors<R> { factors: BTreeMap<usize, CjFactor<R>> }` (node index → `CjFactor<R> =
+  CausalTensor<Complex<R>>`), external parameter, mirrors `LambdaEdges`; `get` returns a borrow
+  (`CausalTensor` is not `Copy`).
+- **M2** `FactorSupports { supports: BTreeMap<usize, BTreeSet<usize>> }` built from `inbound_edges`:
+  `support(Aᵢ) = {Aᵢ} ∪ Pa(Aᵢ)` — the parent index IS the Hilbert leg id (one system per node;
+  multi-qubit nodes via an optional `NodeLegs` map — open).
+- **M3** freeze wiring reuses the existing hook:
+  `graph.freeze_verified_with_check(writers, |g| quantum_markov_check(g, &factors, &supports).map_err(CausalityGraphError::from))`
+  — the closure CAPTURES the external store. Error bridge: `impl From<QuantumError> for
+  CausalityGraphError` (orphan-legal; `QuantumError` is crate-local) + a `freeze_quantum(...) ->
+  Result<(), QuantumError>` public wrapper (RefCell stash to preserve the structured error on
+  rollback). The same store feeds the C₃-exclusion check.
+- Open: (i) error-recovery fidelity (variant-match via the RefCell stash vs. Display message);
+  (ii) multi-qubit node leg ids; (iii) commutator leg-alignment (Kronecker-with-identity on the union
+  support — an operator-layer op); (iv) Q-TOL threading (per-pair, no cross-pair budget — compatible
+  with the `Fn` hook).
+
+### Cross-cutting Phase-0 constraints (repo owner)
+
+- **Metric single source of truth.** Any metric SIGNATURE (`Metric` Cl(p,q,r), Minkowski, sign
+  conventions) MUST come from `deep_causality_metric` — the zero-dependency SSOT, already re-exported
+  through multivector. The quantum crate depends on `deep_causality_metric` and defines no metric type
+  of its own. (Distinct from the computed "quantum metric" / QGT tensor, which is not a signature.)
+- **README.** `deep_causality_multivector/README.md`'s Quantum Operations section is outdated — it
+  imports `QuantumGates`/`QuantumOps` from multivector, but they live in physics and are impl'd for
+  `CausalMultiVector` (not `HilbertState`). Fixed as a migration dependent (task 1.5): re-point to
+  `deep_causality_quantum` (their post-migration home) and correct the impl target/example.

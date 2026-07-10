@@ -44,7 +44,8 @@ Rust witness, THEOREM_MAP row, clippy -D warnings, `bazel test //...` green.
 ## 1. Phase 1 — Crate scaffold + kernel migration
 
 - [ ] 1.1 Create `deep_causality_quantum/` (`Cargo.toml` with `[lints] workspace = true`, MSRV,
-      `unsafe_code = "forbid"`, the Phase-0 dependency set); add it to the workspace `members`
+      `unsafe_code = "forbid"`, the Phase-0 dependency set incl. `deep_causality_metric` for the metric
+      SSOT — no locally-defined metric type); add it to the workspace `members`
 - [ ] 1.2 Move `deep_causality_physics/src/kernels/quantum/{gates,gates_haruna,mechanics,wrappers}.rs`
       into the new crate (`klein_gordon*` STAYS in physics per 0.6); replace `PhysicsError` with
       `QuantumError`; keep `QuantumGates`/`QuantumOps`/`Operator`/`Gate` and the Haruna gates
@@ -60,8 +61,11 @@ Rust witness, THEOREM_MAP row, clippy -D warnings, `bazel test //...` green.
 - [ ] 2.0 L0 primitives: reuse `deep_causality_tensor` matmul/`eigen`/`svd_truncated`/`qr`/`trace`/
       einsum; add the missing GENERIC ops to the tensor crate — conjugate-transpose (`dagger`),
       Kronecker product `⊗`, reshape/index-permute
-- [ ] 2.1 L1 ket↔matrix bridge: `HilbertState → column-vector CausalTensor` (`to_ket`/`from_ket`
-      alongside `to_matrix()`), so the layer works in the tensor rep and converts at the boundary
+- [ ] 2.1 L1 ket↔matrix bridge (R1): `to_ket` = column `KET_COLUMN=0` of `to_matrix()`, `from_ket`
+      embeds as column 0 + `from_matrix` (even-n metrics only; `Metric` from `deep_causality_metric`).
+      Inner product agrees with `QuantumOps::bracket` (Dirac ⟨φ|ψ⟩), adjoint with `QuantumOps::dag`;
+      FIRST numerically verify `to_matrix(ψ.dag()) == dagger(to_matrix(ψ))` for Cl(0,10) — if it fails,
+      use the metric-correct Clifford conjugation. Ratify `KET_COLUMN=0`; confirm `from_matrix` 1/D gain
 - [ ] 2.2 L1 `DensityMatrix<R>` newtype with enforced invariants (Hermitian, PSD via `eigen`, unit
       trace → `QuantumError`); constructors from a ket, an ensemble, and a Choi
 - [ ] 2.3 L2 partial trace `Tr_B` (reshape-to-rank-4 + `b=b'` einsum contraction; named-subset
@@ -77,10 +81,13 @@ Rust witness, THEOREM_MAP row, clippy -D warnings, `bazel test //...` green.
 
 ## 3. Phase 3 — The verifiable QCM slice (simulated CJ + freeze check)
 
-- [ ] 3.1 Operator-valued process (CJ) state carried on the arity-5 STATE channel; the factorization
-      `σ = ∏ ρ_{Ai|Pa(Ai)}` as hyperedge parent-set data
-- [ ] 3.2 The Layer-D freeze commutativity check: recursive walk computing `[ρ_j, ρ_k]` on shared
-      Hilbert supports over hyperedges sharing a source node; sound hard-pass / abort
+- [ ] 3.1 (R3) `ProcessFactors<R>` node-keyed store (`BTreeMap<usize, CjFactor<R>>`, mirrors
+      `LambdaEdges`, external param) + `FactorSupports` built from `inbound_edges` (`support(Aᵢ)={Aᵢ}∪Pa(Aᵢ)`).
+      σ is STATIC freeze-time decoration, NOT the runtime STATE channel
+- [ ] 3.2 The Layer-D freeze commutativity check via `freeze_verified_with_check(writers, |g| …)` with
+      the closure CAPTURING `ProcessFactors`/`FactorSupports`; commutator only on intersecting supports;
+      `impl From<QuantumError> for CausalityGraphError` + public `freeze_quantum -> Result<(),QuantumError>`
+      wrapper; sound hard-pass / abort naming the offending pair; rollback via the hook's `unfreeze`
 - [ ] 3.3 Depth-aware `Float106` tolerance (per 0.9) + instrumented-freeze failure capture
 - [ ] 3.4 C₃-exclusion faithfulness freeze check (B3, van der Lugt & Lorenz 2508.11762): reject a
       declared causal structure `G` that contains a `C₃` sub-relation (three inputs / three outputs)
@@ -88,8 +95,10 @@ Rust witness, THEOREM_MAP row, clippy -D warnings, `bazel test //...` green.
       `C₃` detection now; the full concept-lattice `L_G` construction may follow later
 - [ ] 3.5 Immutable-context handle for the environmental Bell-prep `ρ_A` (write methods unreachable),
       keeping the simulated model in the verifiable region
-- [ ] 3.6 The `QpuSampler` seam trait (emergent modality) behind the off-by-default `qpu` feature —
-      trait only, no adapter
+- [ ] 3.6 (R2) Emergent seam: reified `QuantumCircuit`/`GateOp` (pure data); generic `QpuSampler`
+      (`Shots: ShotHistogram`, no `dyn`); shots→`Uncertain` bridges; feature-gated `qpu_effect` wrapper
+      (5-channel routing); in-process deterministic `SimQpu` over the migrated kernels for tests. Off by
+      default; no network/async dep; no vendor adapter
 - [ ] 3.7 `bazel test //...` green; clippy clean; phase commit message
 
 ## 4. Phase 4 — The orthomodular Verdict carrier

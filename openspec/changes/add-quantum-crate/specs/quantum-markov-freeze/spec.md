@@ -2,9 +2,10 @@
 
 ### Requirement: The quantum Markov condition as a freeze-time commutativity check
 
-The crate SHALL carry the operator-valued process (Choi–Jamiołkowski) state on the arity-5 STATE
-channel as hyperedge parent-set factors `σ = ∏ ρ_{Aᵢ|Pa(Aᵢ)}`, and SHALL enforce the quantum Markov
-condition (Lorenz 2022, Def 3.3) at the freeze boundary as a pairwise-commutativity check
+The crate SHALL carry the operator-valued process (Choi–Jamiołkowski) factorization
+`σ = ∏ ρ_{Aᵢ|Pa(Aᵢ)}` as an external node-keyed `ProcessFactors` store (consulted at the freeze
+boundary, NOT on the runtime STATE channel — see the dedicated requirement below), and SHALL enforce
+the quantum Markov condition (Lorenz 2022, Def 3.3) at the freeze boundary as a pairwise-commutativity check
 `[ρ_j, ρ_k] = 0` over the operators sharing a Hilbert support, aborting the freeze when a required
 commutator is non-zero. The check SHALL be sound (it never accepts a non-commuting model) and MAY be
 incomplete (it may reject a valid model whose nesting and commutation conflict — see the conditional
@@ -22,6 +23,42 @@ incomplete (it may reject a valid model whose nesting and commutation conflict �
 - **WHEN** forward evaluation runs
 - **THEN** no commutativity check runs during the directional `bind` (the global Markov property is
   a whole-graph fact checked only at freeze), matching the existing `freeze_dag` model
+
+### Requirement: σ is external node-keyed freeze-time decoration, not runtime state
+
+The crate SHALL represent `σ = ∏ᵢ ρ_{Aᵢ|Pa(Aᵢ)}` as an external, node-index-keyed store
+`ProcessFactors<R>` of factors `CjFactor<R> = CausalTensor<Complex<R>>` — the node-keyed operator
+analogue of the edge-keyed `LambdaEdges<V>` — passed as a parameter to the freeze, and SHALL NOT carry
+σ on the runtime arity-5 STATE channel. Keys SHALL be intrinsic graph node indices (never
+enumeration/insertion order); an absent key SHALL denote a node with no operator factor. Each factor's
+Hilbert support SHALL be derived from the frozen graph as `{Aᵢ} ∪ Pa(Aᵢ)` via `inbound_edges(Aᵢ)`.
+
+#### Scenario: σ never rides the runtime state channel
+
+- **WHEN** a quantum-Markov model is evaluated after a successful freeze
+- **THEN** forward evaluation reads no operator factor from the STATE channel (PS remains the model's
+  ordinary runtime state) and the factors are consulted only by the freeze-boundary check
+
+### Requirement: The Markov check runs as the existing freeze hook, surfacing QuantumError
+
+The crate SHALL enforce `[ρ_j, ρ_k] = 0` by invoking `freeze_verified_with_check(state_writers, hook)`
+where `hook` is a closure that CAPTURES the external `ProcessFactors<R>` / support registry, computing
+commutators only for factor pairs whose supports intersect. Because the hook returns
+`Result<(), CausalityGraphError>`, the crate SHALL bridge its `QuantumError` through that channel via
+`impl From<QuantumError> for CausalityGraphError` (orphan-rule-legal; `QuantumError` is crate-local),
+preserving the offending operator pair in the message, and SHALL expose a public `freeze_quantum`
+wrapper returning `Result<(), QuantumError>` so callers receive the structured error. A hook failure
+SHALL roll the graph back to the dynamic state (the built-in `unfreeze` on error).
+
+#### Scenario: A non-commuting pair aborts the freeze and is named
+
+- **WHEN** two shared-support factors have `‖[ρ_j, ρ_k]‖ > ε` and the model is frozen via `freeze_quantum`
+- **THEN** it returns `Err(QuantumError)` naming `j` and `k`, and `is_frozen()` is false afterward
+
+#### Scenario: Disjoint-support factors impose no obligation
+
+- **WHEN** two factors have non-intersecting Hilbert supports
+- **THEN** no commutator is computed for that pair and it never blocks the freeze
 
 ### Requirement: Depth-aware numerical tolerance for the commutator test
 
