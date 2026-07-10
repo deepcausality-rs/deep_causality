@@ -154,3 +154,21 @@ fn test_two_writer_diamond_rejected_at_freeze() {
     assert!(err.to_string().contains("level check rejected"));
     assert!(!g.is_frozen());
 }
+
+/// A declared writer index that names no node (`>= number_nodes`) is caller error: the cone scan
+/// only queries indices in `0..number_nodes`, so an out-of-range index would be silently dropped.
+/// The freeze rejects it (naming the index) and rolls back, rather than appearing to satisfy a
+/// writer declaration it never applied.
+#[test]
+fn test_out_of_range_state_writer_rejected() {
+    let (mut g, _) = build_diamond(true); // 4 nodes: valid writer indices are 0..4.
+    g.unfreeze();
+    let err = g
+        .freeze_verified(&[99])
+        .expect_err("an out-of-range writer index must be rejected");
+    assert!(
+        err.to_string().contains("Invalid state-writer index 99"),
+        "unexpected error: {err}"
+    );
+    assert!(!g.is_frozen(), "a failed check must roll the freeze back");
+}

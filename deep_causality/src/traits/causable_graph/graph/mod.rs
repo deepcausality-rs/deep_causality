@@ -73,7 +73,9 @@ where
     ///
     /// State is never merged at a join (the per-channel ruling): at most one incoming branch of a
     /// join may write state. Because a stored causal function is opaque, writers are **declared**:
-    /// `state_writers` lists the node indices whose causal functions write the state channel. For
+    /// `state_writers` lists the node indices whose causal functions write the state channel. Each
+    /// index must name an existing node (`< number_nodes`); an out-of-range declaration fails the
+    /// freeze rather than being silently ignored. For
     /// every join (a node with two or more incoming edges), a writer counts against an incoming
     /// branch when it lies in that branch's ancestor cone but not in every branch's cone — a
     /// writer *above the fork* is seen identically by all branches and cannot conflict. Two or
@@ -133,6 +135,18 @@ where
         }
 
         let n_nodes = self.number_nodes();
+
+        // `state_writers` is caller-supplied. An index at or beyond the node count names no node in
+        // the graph, so it can never match any `w` in `0..n_nodes` below and would be silently
+        // dropped — letting the freeze appear to satisfy a writer declaration it never applied.
+        // Reject the malformed input instead of ignoring it.
+        if let Some(&bad) = state_writers.iter().find(|&&w| w >= n_nodes) {
+            return Err(CausalityGraphError(format!(
+                "Invalid state-writer index {bad}: the graph has {n_nodes} node(s), so valid \
+                 writer indices are 0..{n_nodes}. Declared writers: {state_writers:?}."
+            )));
+        }
+
         let is_writer = |idx: usize| state_writers.contains(&idx);
 
         // The ancestor cone of `start`, inclusive.
