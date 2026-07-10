@@ -1,0 +1,20 @@
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_a1269a148f2dfd 263
+  s_543ee5cdecd2c1::t_1e3bd018a0a938 34,106,108-111,262
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "f0090f6cb53d259a55f49b82ee39b223d245805f",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
