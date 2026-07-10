@@ -1,0 +1,26 @@
+deep_causality_num_dual/LEAN_NUM_DUAL.md
+  s_543ee5cdecd2c1::t_c63b4300326d9c 1-81
+deep_causality_num_complex/LEAN_NUM_COMPLEX.md
+  s_543ee5cdecd2c1::t_c68c8fa9758622 58
+  s_543ee5cdecd2c1::t_14ac8979d4bc6a 1-57,59-87
+deep_causality_num/LEAN_NUM.md
+  s_543ee5cdecd2c1::t_d5dae38dfd58b1 1-83
+deep_causality/LEAN_DeepCausality.md
+  s_543ee5cdecd2c1::t_4a22d5dcfd29ec 94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "ca36831306388d26acde820d64434dbbff9f3479",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
