@@ -37,9 +37,9 @@ context hypergraph.
 
 ## 4. Context hypergraph (`Core/ContextGraph.lean`) — **the main remaining Lean surface**
 
-- [ ] 4.1 Model the contextoid hypergraph with parent-set map `Pa` keyed by parent identity (the identity-keyed wire surface the Stage-4 engine exposes — `fired[child][parent]`, `LambdaEdges` `(source, target)` keys) and the hyperedge-threading = `bind` correspondence; encapsulation-equals-flat via `core.causal_monad.assoc` (the graph-side counterpart of `core.causaloid.encapsulation_flat`).
-- [ ] 4.2 Model acyclicity as a separable constraint; map the acyclic case to `ultragraph::has_cycle`/`freeze_dag`/`freeze_verified`; show the cyclic case reuses the same definitions (per-interpretation admissibility, unchanged apparatus).
-- [ ] 4.3 Rust witnesses (parent-set threading; freeze acyclicity gate); `THEOREM_MAP.md` rows.
+- [x] 4.1 Model the contextoid hypergraph with parent-set map `Pa` keyed by parent identity (the identity-keyed wire surface the Stage-4 engine exposes — `fired[child][parent]`, `LambdaEdges` `(source, target)` keys) and the hyperedge-threading = `bind` correspondence; encapsulation-equals-flat via `core.causal_monad.assoc` (the graph-side counterpart of `core.causaloid.encapsulation_flat`). *(delivered: `Core/ContextGraph.lean`, id `core.context_graph.threading_bind` — `thread`/`evalParents` (Pa keyed by identity), `thread_is_bind`, `thread_append`/`evalParents_split`, `encapsulation_flat` (the assoc form, hypothesis discharged by `core.causal_monad.assoc`))*
+- [x] 4.2 Model acyclicity as a separable constraint; map the acyclic case to `ultragraph::has_cycle`/`freeze_dag`/`freeze_verified`; show the cyclic case reuses the same definitions (per-interpretation admissibility, unchanged apparatus). *(delivered: id `core.context_graph.acyclicity_separable` — `Acyclic` = rank certificate, `acyclic_iff_rank`, `self_parent_not_acyclic` (cycle has no certificate → rejected at freeze), `apparatus_acyclicity_agnostic` (threading holds for every `Pa`, cyclic case reuses the same definitions))*
+- [x] 4.3 Rust witnesses (parent-set threading; freeze acyclicity gate); `THEOREM_MAP.md` rows. *(delivered: `context_graph_tests.rs` — `test_context_parent_set_keyed_by_identity` (real `Context` overlapping parent sets), `test_context_encapsulation_is_bind_assoc` (real `bind` associativity = encapsulation-flat), `test_context_acyclicity_freeze_gate` (real `freeze_dag` rejects a cycle, plain `freeze` accepts the same graph); two THEOREM_MAP rows)*
 
 ## 5. Removed from scope (2026-07-10, user ruling)
 

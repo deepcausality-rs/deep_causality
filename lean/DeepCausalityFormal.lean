@@ -76,6 +76,7 @@ import DeepCausalityFormal.Core.VerdictClosure
 import DeepCausalityFormal.Core.GraphAlgebra
 import DeepCausalityFormal.Core.Catamorphism
 import DeepCausalityFormal.Core.CommandInput
+import DeepCausalityFormal.Core.ContextGraph
 import DeepCausalityFormal.Haft.Hkt
 import DeepCausalityFormal.Haft.Functor
 import DeepCausalityFormal.Haft.Pure
