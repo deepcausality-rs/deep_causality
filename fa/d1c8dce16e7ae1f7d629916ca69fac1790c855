@@ -1,0 +1,22 @@
+deep_causality/tests/formalization_lean/graph_algebra_tests.rs
+  s_543ee5cdecd2c1::t_a96a0f1fbca538 157-174
+deep_causality/src/traits/causable_graph/graph/mod.rs
+  s_543ee5cdecd2c1::t_a3e93eb62379eb 76-78
+  s_543ee5cdecd2c1::t_7795fbc598ec71 138-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "fad1c8dce16e7ae1f7d629916ca69fac1790c855",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
