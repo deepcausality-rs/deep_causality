@@ -80,6 +80,39 @@ fn test_evaluate_subgraph_follows_a_relay_to_a_valid_target() {
     let _ = i2;
 }
 
+fn relay_to_1(_obs: bool) -> PropagatingEffect<bool> {
+    PropagatingEffect::from_effect(CausalEffect::relay_to(1, CausalEffect::value(true)))
+}
+
+fn relay_to_0(_obs: bool) -> PropagatingEffect<bool> {
+    PropagatingEffect::from_effect(CausalEffect::relay_to(0, CausalEffect::value(true)))
+}
+
+#[test]
+fn test_evaluate_subgraph_cuts_a_relay_cycle_with_the_fuel_bound() {
+    // 0 relays to 1 and 1 relays back to 0 — an unbounded adaptive-reasoning loop that no
+    // structural (edge-level) acyclicity check can see. The relay fuel (`MAX_RELAY_ROUNDS`) makes
+    // the handler total: evaluation terminates with a loud budget error
+    // (`core.causal_effect.relay_termination`) instead of hanging.
+    let mut g: BaseCausalGraph = CausaloidGraph::new(0);
+    let i0 = g
+        .add_root_causaloid(Causaloid::new(0, relay_to_1, "ping"))
+        .expect("root");
+    let _i1 = g
+        .add_causaloid(Causaloid::new(1, relay_to_0, "pong"))
+        .expect("n1");
+    g.freeze();
+
+    let res = g.evaluate_subgraph_from_cause(i0, &PropagatingEffect::from_value(true));
+    assert!(res.is_err());
+    assert!(
+        res.error()
+            .unwrap()
+            .to_string()
+            .contains("Relay budget exhausted")
+    );
+}
+
 #[test]
 fn test_evaluate_subgraph_rejects_a_relay_to_a_missing_target() {
     // The root relays to index 5, which the graph does not contain.

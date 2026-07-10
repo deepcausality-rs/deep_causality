@@ -10,6 +10,19 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
 use ultragraph::{GraphTraversal, TopologicalGraphAlgorithms};
 
+/// The relay-termination bound: the maximum number of adaptive-reasoning (`RelayTo`) rounds one
+/// graph evaluation may compose.
+///
+/// Each relay re-enters the graph with a **runtime-produced** program, so no structural measure on
+/// the graph bounds the loop — two causaloids relaying to each other would otherwise run forever.
+/// The fuel bound makes the relay handler **total**: exhaustion is reported as a loud error
+/// (preserving state, context, and logs), never looped. Fuel only cuts divergence — an evaluation
+/// that finishes within the bound is unaffected (fuel monotonicity). Machine-checked model:
+/// `core.causal_effect.relay_termination` in `lean/DeepCausalityFormal/Core/CausalEffect.lean`;
+/// closes the relay-termination item of
+/// `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2 Q3.
+pub const MAX_RELAY_ROUNDS: usize = 1024;
+
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.
 ///
 /// Any graph type that implements `CausableGraph<T>` where `T` is `MonadicCausable<I, O>`
@@ -132,6 +145,9 @@ where
         // the command's sub-program as the new seed (sequential composition of rounds).
         let mut round_start = start_index;
         let mut round_input = initial_effect.clone();
+        // Relay fuel: bounds the number of relay rounds so the handler is total (see
+        // `MAX_RELAY_ROUNDS` / `core.causal_effect.relay_termination`).
+        let mut relay_rounds_left: usize = MAX_RELAY_ROUNDS;
 
         'rounds: loop {
             // Reachability pre-pass: only `round_start` and its descendants can fire. Every in-wire
@@ -251,6 +267,23 @@ where
                     // one at the target with the command's sub-program (single-level relay). The
                     // abandoned cone resolves `Inactive` implicitly — the round simply stops here.
                     Some(target_idx) => {
+                        // Fuel check: a relay chain longer than the bound is cut with a loud error
+                        // (a relay cycle is the likely cause) instead of looping forever.
+                        if relay_rounds_left == 0 {
+                            let (_, state, context, logs) = last_effect.into_parts();
+                            return PropagatingEffect::new(
+                                Err(CausalityError(CausalityErrorEnum::Custom(format!(
+                                    "Relay budget exhausted: the adaptive-reasoning chain exceeded \
+                                     MAX_RELAY_ROUNDS = {MAX_RELAY_ROUNDS} rounds (a relay cycle is \
+                                     likely). The relay handler is fuel-bounded so evaluation \
+                                     terminates (core.causal_effect.relay_termination)."
+                                )))),
+                                state,
+                                context,
+                                logs,
+                            );
+                        }
+                        relay_rounds_left -= 1;
                         if !self.contains_causaloid(target_idx) {
                             let (_, state, context, logs) = last_effect.into_parts();
                             return PropagatingEffect::new(

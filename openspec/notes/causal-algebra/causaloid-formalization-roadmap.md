@@ -126,7 +126,14 @@ Formalize the full `CausalEffectPropagationProcess`, channel by channel.
 | `core.causal_effect.relay_termination` | the fuel-bounded handler is total (relay bound) | **#2 Q3** (RelayTo status + termination) |
 | channel laws | W-invariant by construction (already); log = non-commutative Writer monoid (order-significant, per #1); state Markovian threading; context = Reader, **optional** (state channel can carry spacetime — `event_horizon_probe`) | #11b via the immutable-context constructor (write methods unreachable) |
 
-Rust refactor: the read-only context constructor (if absent); relay fuel. **[planned]**
+**Status: LANDED 2026-07-09.** All three theorem groups proved in `Core/CausalEffect.lean`
+(bare-`lean`), witnessed in `deep_causality_core/tests/formalization_lean/causal_effect_tests.rs`,
+THEOREM_MAP rows added. Rust: `CausalEffect::{and_then, try_and_then}` realize the stack bind;
+relay fuel (`MAX_RELAY_ROUNDS`) added to both graph-reasoning loops with classical + stateful
+relay-cycle regression tests — **#2 Q3's termination item closed**. The "immutable-context
+constructor" resolved by **verification instead of new code**: no context type carries interior
+mutability and `Arc` forbids `&mut`, so the referent is immutable within a pass while the slot is
+per-branch threaded data — **#11b DECIDED** by scoping (see the tracker). **[holds]**
 
 ### Stage 2 — The element and the inversion
 
@@ -313,9 +320,12 @@ Stage 1 (carrier stack)
                       quantum's faithful reification requires Stage 2b)
 ```
 
-Assumption-tracker closure map: Stage 1 → #2-Q3, #11b · Stage 2 → #9 (+ Hardy target) · Stage 2b →
-#11a's second confirmed generator (`⊕`, after `∇`) · Stage 3 → #5 · Stage 4 → #2-Q1 (+ #1 applied)
-· Stage 5 → #6 (scoped), #8, B2 · already closed by prior work: #1, #3, #7. Remaining open in the tracker after this program: #4 (generation/atom registry — out of
+Assumption-tracker closure map: Stage 1 → #2-Q3, #11b (**landed 2026-07-09**) · Stage 2 → #9
+(+ Hardy target) · Stage 2b → the `⊕` wiring generator (consumed by the quantum crate) · Stage 3 →
+#5 · Stage 4 → #2-Q1 (+ #1 applied) · Stage 5 → #6 (scoped), #8, B2 · already closed by prior
+work: #1, #3, #7, and **#11a (DECIDED 2026-07-10: three forms, sealed trait —
+`traits/causable/sealed.rs`; ∇/⊕ are wiring generators over the fixed `F`, not new forms — the
+closed-world premise Stage 5's uniqueness argument needs)**. Remaining open in the tracker after this program: #4 (generation/atom registry — out of
 scope here), #10 (closed by its corpus gate), #11a (closed *by* this roadmap's carrier tower being
 the extensible `F`).
 

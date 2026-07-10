@@ -301,6 +301,53 @@ fn evaluate_subgraph_stateful_rejects_a_start_index_not_in_the_graph() {
     assert!(format!("{err:?}").contains("does not contain"));
 }
 
+fn node_relay_to_one(
+    _obs: CausalEffect<u64>,
+    state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    PropagatingProcess::new(
+        Ok(CausalEffect::relay_to(1, CausalEffect::value(1u64))),
+        state,
+        ctx,
+        EffectLog::new(),
+    )
+}
+
+fn node_relay_to_zero(
+    _obs: CausalEffect<u64>,
+    state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    PropagatingProcess::new(
+        Ok(CausalEffect::relay_to(0, CausalEffect::value(0u64))),
+        state,
+        ctx,
+        EffectLog::new(),
+    )
+}
+
+#[test]
+fn evaluate_subgraph_stateful_cuts_a_relay_cycle_with_the_fuel_bound() {
+    // 0 relays to 1 and 1 relays back to 0 — an unbounded adaptive-reasoning loop that no
+    // edge-level acyclicity check can see. The relay fuel (`MAX_RELAY_ROUNDS`) makes the handler
+    // total: evaluation terminates with a loud budget error
+    // (`core.causal_effect.relay_termination`) instead of hanging.
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let n0 = Causaloid::new_with_context(0, node_relay_to_one, ConfigCtx {}, "ping");
+    let n1 = Causaloid::new_with_context(1, node_relay_to_zero, ConfigCtx {}, "pong");
+    let i0 = g.add_root_causaloid(n0).expect("root");
+    let _i1 = g.add_causaloid(n1).expect("n1");
+    g.freeze();
+
+    let out = g.evaluate_subgraph_from_cause_stateful(i0, &build_initial());
+    let err = out
+        .error()
+        .expect("the relay cycle errors instead of hanging");
+    assert!(format!("{err:?}").contains("Relay budget exhausted"));
+}
+
 #[test]
 fn evaluate_subgraph_stateful_rejects_a_relay_to_a_missing_target() {
     // A two-node graph whose root relays to index 2, which does not exist.
