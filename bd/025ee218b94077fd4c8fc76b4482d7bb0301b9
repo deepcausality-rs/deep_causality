@@ -1,0 +1,33 @@
+.github/workflows/formalization.yml
+  s_543ee5cdecd2c1::t_7454ef01fe943e 62
+build/scripts/lean.sh
+  s_f3dc6e25c9fddf::t_417e0743fa2f80 1,4,9-29
+  s_f3dc6e25c9fddf::t_8993f1285cddb2 2-3
+  s_f3dc6e25c9fddf::t_5933338f5e2dd0 5-8
+makefile
+  s_543ee5cdecd2c1::t_7c3c78eaa4ed02 13,53-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "bd025ee218b94077fd4c8fc76b4482d7bb0301b9",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f3dc6e25c9fddf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc4f7ed-3850-4fdd-811c-768bc2cda808",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
