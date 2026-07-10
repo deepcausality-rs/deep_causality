@@ -1,0 +1,43 @@
+openspec/specs/haft-arrow-choice/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 1-51
+openspec/specs/causaloid-fixpoint/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 1-77
+openspec/specs/causaloid-verdict-closure/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 1-79
+openspec/specs/causaloid-graph-algebra/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 1-85
+openspec/specs/causaloid-catamorphism/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 1-74
+openspec/specs/core-formalization/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 15-22,37-42
+openspec/specs/haft-free-arrow/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 8,20-25,28,33
+openspec/notes/causal-algebra/causaloid-formalization-roadmap.md
+  s_543ee5cdecd2c1::t_5049b1021593be 148-156,197-205,220-229,241-251,261-269,382-392
+openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md
+  s_543ee5cdecd2c1::t_cb2762b8f957ad 252-261
+  s_543ee5cdecd2c1::t_5cfd05f1bbc7a9 77,85,89
+  s_543ee5cdecd2c1::t_bb6a8fa107217f 121,123-125,131,133-135,151,153-154,160,162-164
+  s_543ee5cdecd2c1::t_dc3699db003f29 32,35-36,38-40
+  s_543ee5cdecd2c1::t_ba400d7dc7557b 170,172-174
+openspec/specs/haft-arrow-interpreter/spec.md
+  s_543ee5cdecd2c1::t_5bfabb0fdd5dd5 8,20-24,27,32
+openspec/changes/archive/2026-07-10-causaloid-formalization-stages-2-5/tasks.md
+  s_543ee5cdecd2c1::t_bbfddbc167f288 102,105,107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "968d876995f9d90f4e550860671f1508d11fa119",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
