@@ -1,0 +1,78 @@
+deep_causality/tests/traits/causable_graph/graph_reasoning/monadic_reasoning_join_tests.rs
+  s_543ee5cdecd2c1::t_9b30443f54760a 1-58,60-135
+  s_543ee5cdecd2c1::t_b50b9f50bbba34 59
+deep_causality/tests/types/causal_types/causaloid_graph/lambda_edges_tests.rs
+  s_543ee5cdecd2c1::t_abdf215aa973cb 1-66
+deep_causality_haft/tests/formalization_lean/arrow_term_tests.rs
+  s_543ee5cdecd2c1::t_3f43f4d6eabd8c 284-292,294,296-321
+  s_543ee5cdecd2c1::t_6de153ca3054fd 293,295
+  s_543ee5cdecd2c1::t_0d7f93d086dda9 322-324
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_c9a2085c09965c::t_f1df221099aafd 435
+deep_causality/tests/types/causal_types/causaloid_graph/mod.rs
+  s_543ee5cdecd2c1::t_61775fd734f34d 32-33
+deep_causality_core/tests/types/causal_effect/causal_effect_tests.rs
+  s_543ee5cdecd2c1::t_726ca21a8af47e 136-146,169
+  s_543ee5cdecd2c1::t_a89537106265dc 170-179
+deep_causality_topology/src/types/cubical_regge_geometry/has_hodge_star.rs
+  s_c9a2085c09965c::t_410ee45b42e0ef 217
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_c9a2085c09965c::t_3debbf9c7f89d7 197
+deep_causality_algebra/tests/algebra/verdict_tests.rs
+  s_543ee5cdecd2c1::t_31c9388373d8e3 52-71
+deep_causality/tests/traits/causable_graph/graph_reasoning/mod.rs
+  s_543ee5cdecd2c1::t_e9efa786f10a8e 9-10
+deep_causality_algorithms/src/causal_discovery/brcd/brcd_mapconfig.rs
+  s_c9a2085c09965c::t_3963c3ffe8f169 171
+deep_causality_algebra/src/algebra/scalar.rs
+  s_c9a2085c09965c::t_6c59dbab294096 12
+deep_causality_cfd/src/types/flow/study/mod.rs
+  s_c9a2085c09965c::t_246d6c231afe09 434
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/mod.rs
+  s_c9a2085c09965c::t_41996586c99f43 163
+deep_causality_tensor/src/types/causal_tensor_network/causal_tensor_train/construct/mod.rs
+  s_c9a2085c09965c::t_fb6943a3d67f18 92
+deep_causality_haft/tests/formalization_lean/interpreter_tests.rs
+  s_543ee5cdecd2c1::t_8dfcac9388c1a9 213-349
+  s_543ee5cdecd2c1::t_f3cb6ed515e195 350-352
+deep_causality_haft/examples/traversable.rs
+  s_c9a2085c09965c::t_bb9bd2db214e07 121
+  s_c9a2085c09965c::t_599e034a08441a 112
+deep_causality_algorithms/src/dag_sampling/mod.rs
+  s_c9a2085c09965c::t_bedd2464641b52 48
+deep_causality_file/src/errors/data_loading_error.rs
+  s_c9a2085c09965c::t_86cb2ea27a7180 9
+deep_causality_algebra/src/algebra/scalar_conjugate.rs
+  s_c9a2085c09965c::t_7847eb0871b23c 13-14
+  s_c9a2085c09965c::t_7d514613a68297 22
+deep_causality_physics/src/quantities/fluid_dynamics/solenoidal_field.rs
+  s_c9a2085c09965c::t_0769a15ab6248b 119
+deep_causality_uncertain/tests/types/computation/operator/arithmetic_operator_tests.rs
+  s_543ee5cdecd2c1::t_06ee7aae099399 56-77,84-85
+deep_causality_multivector/tests/alias/alias_hilbert_state_tests.rs
+  s_543ee5cdecd2c1::t_8024de917730d6 190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "4fe39dbe96d6750440645100b010fefd34087ee4",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_c9a2085c09965c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1946eb79-b9de-46c5-92f4-50b248394668",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
