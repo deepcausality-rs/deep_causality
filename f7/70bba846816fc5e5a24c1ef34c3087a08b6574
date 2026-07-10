@@ -1,0 +1,19 @@
+deep_causality_num/src/float/float_106_impl.rs
+  s_543ee5cdecd2c1::t_4f38cc7ec95610 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "f770bba846816fc5e5a24c1ef34c3087a08b6574",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
