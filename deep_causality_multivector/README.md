@@ -101,7 +101,7 @@ Type: PGA3DMultiVector
 
 ## Custom Algebras
 
-1) Define a matrix
+1) Define a custom metric
 2) Instantiate either a real, complex, or custom typed MultiVector with the metric
 3) Done
 
@@ -211,50 +211,6 @@ fn main() {
     // 3. Monad: Tensor Product via Bind    
     //...
     // See examples/hkt_usage.rs for full demonstration
-}
-```
-
-### Quantum Operations
-
-This crate provides `QuantumGates` (for creating common unitary operators) and `QuantumOps` (for fundamental quantum
-mechanical operations) via the `HilbertState` type.
-
-```rust
-use deep_causality_multivector::{HilbertState, QuantumGates, QuantumOps};
-use deep_causality_num::Complex64;
-
-fn main() {
-    println!("--- Quantum Operations Example ---");
-
-    // 1. Create an initial state (analogous to |0>)
-    let zero_state = HilbertState::gate_identity();
-    println!("Initial state (scalar part): {:.4?}", zero_state.mv().data()[0]);
-
-    // 2. Apply a Hadamard Gate to create a superposition state
-    let h_gate = HilbertState::gate_hadamard();
-    let plus_state = HilbertState::from(
-        h_gate.into_inner().geometric_product(zero_state.as_inner())
-    );
-    println!("Superposition state (scalar part): {:.4?}", plus_state.mv().data()[0]);
-    // Note: Due to the Cl(0,10) mapping, this scalar might be 0,
-    // actual components will be in e1 and e12 terms of the multivector.
-
-    // 3. Calculate inner product (e.g., <+|+>)
-    let norm_squared = plus_state.bracket(&plus_state);
-    println!("Inner product <+|+>: {:.4?} (Should ideally be 1.0 for normalized state)", norm_squared);
-    // Note: For certain GA mappings, this might not be 1.0 directly
-    // for states that are not minimal left ideals.
-
-    // 4. Normalize the initial state
-    let unnormalized_scalar = Complex64::new(2.0, 0.0);
-    let mut unnormalized_data = vec![Complex64::zero(); 1024]; // Size for Cl(0,10)
-    unnormalized_data[0] = unnormalized_scalar;
-    let unnormalized_state = HilbertState::new_spin10(unnormalized_data).unwrap();
-    println!("Unnormalized state (scalar part): {:.4?}", unnormalized_state.mv().data()[0]);
-
-    let normalized_state = unnormalized_state.normalize();
-    println!("Normalized state (scalar part): {:.4?}", normalized_state.mv().data()[0]);
-    println!("Inner product of normalized state with itself: {:.4?}", normalized_state.bracket(&normalized_state));
 }
 ```
 
