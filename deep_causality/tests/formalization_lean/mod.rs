@@ -15,6 +15,7 @@
 //! implementation at representative inputs (Lean proves ∀; these tests pin the Rust code to the
 //! same statements).
 
+mod catamorphism_tests;
 mod causaloid_tests;
 mod graph_algebra_tests;
 mod verdict_closure_tests;

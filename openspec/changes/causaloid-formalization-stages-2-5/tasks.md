@@ -83,18 +83,18 @@
 
 ## 5. Stage 5 — The keystone (`causaloid-catamorphism`)
 
-- [ ] 5.1 Write `lean/DeepCausalityFormal/Core/Catamorphism.lean`: prove
+- [x] 5.1 Write `lean/DeepCausalityFormal/Core/Catamorphism.lean`: prove
       `core.causaloid.catamorphism_unique` — hypothesis interpreter + three case equations ⇒
       equals `evaluate`, by induction on the fixpoint; carrier an explicit fixed parameter,
       cross-carrier non-claim in the header (D9)
-- [ ] 5.2 Prove `core.causaloid.encapsulation_flat` (nested fold = flat fold, catamorphism fusion)
-- [ ] 5.3 Prove `core.causaloid.arrow_fragment`: the `Atom`/`compose`/`split` fragment (including
+- [x] 5.2 Prove `core.causaloid.encapsulation_flat` (nested fold = flat fold, catamorphism fusion)
+- [x] 5.3 Prove `core.causaloid.arrow_fragment`: the `Atom`/`compose`/`split` fragment (including
       the ⊕-enlarged generators) ≅ `ArrowTerm`; `evaluate = interpret_kleisli` on it; the `T` vs
       `T/≈` quotient factoring as its own lemma
-- [ ] 5.4 Witnesses in `deep_causality/tests/formalization_lean/catamorphism_tests.rs`: a by-hand
+- [x] 5.4 Witnesses in `deep_causality/tests/formalization_lean/catamorphism_tests.rs`: a by-hand
       algebra-respecting interpreter equals `evaluate` (spot-check), wrapped-subgraph vs flattened
       equality, arrow-fragment agreement incl. a `choice`/`fanin` term
-- [ ] 5.5 THEOREM_MAP rows for the three keystone ids; all gates green; prepare the stage commit
+- [x] 5.5 THEOREM_MAP rows for the three keystone ids; all gates green; prepare the stage commit
       message
 
 ## 6. Close-out
