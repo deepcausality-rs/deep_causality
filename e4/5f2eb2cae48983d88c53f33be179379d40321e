@@ -1,0 +1,35 @@
+deep_causality_uncertain/src/types/computation/operator/arithmetic_operator.rs
+  s_543ee5cdecd2c1::t_5a2b6b901f507b 25-30
+lean/README.md
+  s_543ee5cdecd2c1::t_5c214011333993 10
+openspec/changes/archive/2026-07-10-causaloid-formalization-stages-2-5/specs/causaloid-fixpoint/spec.md
+  s_543ee5cdecd2c1::t_6e7bc848ec6ac1 33
+openspec/notes/archive/causal-algebra/causaloid-formalization-roadmap.md
+  s_543ee5cdecd2c1::t_bf4a0036473317 410
+  s_543ee5cdecd2c1::t_9ec8053f5b4e3d 411
+  s_543ee5cdecd2c1::t_d63660a40f46fb 405
+  s_543ee5cdecd2c1::t_5cd8a4ad8cac54 400
+lean/DeepCausalityFormal/Core/ContextGraph.lean
+  s_543ee5cdecd2c1::t_877f4a499d04b1 141-149
+openspec/changes/archive/2026-07-10-formalize-main-crate/tasks.md
+  s_543ee5cdecd2c1::t_bbe64fd1cda38d 17
+  s_543ee5cdecd2c1::t_ea612654ed6738 18
+lean/DeepCausalityFormal/Core/Causaloid.lean
+  s_543ee5cdecd2c1::t_1ef6e22902971f 35-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "e45f2eb2cae48983d88c53f33be179379d40321e",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
