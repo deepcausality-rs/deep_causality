@@ -17,6 +17,7 @@ deep_causality_num = { path = "../../deep_causality_num" }
 deep_causality_num_complex = { path = "../../deep_causality_num_complex" }
 deep_causality_algebra = { path = "../../deep_causality_algebra" }
 deep_causality_physics = { path = "../../deep_causality_physics" }
+deep_causality_quantum = { path = "../../deep_causality_quantum" }
 deep_causality_tensor = { path = "../../deep_causality_tensor" }
 
 [[example]]

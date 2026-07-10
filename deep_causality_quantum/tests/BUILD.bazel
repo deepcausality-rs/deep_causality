@@ -1,0 +1,51 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+# =============================================================================
+# error/* test suites
+#
+# The src tree is organized as src/error/, so the tests mirror it
+# at tests/error/.
+# =============================================================================
+
+rust_test_suite(
+    name = "error",
+    srcs = glob([
+        "error/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_metric",
+    ],
+)
+
+# =============================================================================
+# kernels/* test suites
+#
+# The src tree is organized as src/kernels/, so the tests mirror it
+# at tests/kernels/.
+# =============================================================================
+
+rust_test_suite(
+    name = "kernels",
+    srcs = glob([
+        "kernels/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_multivector",
+        "//deep_causality_num_complex",
+    ],
+)

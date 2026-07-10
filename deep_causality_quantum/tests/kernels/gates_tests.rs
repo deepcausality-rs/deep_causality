@@ -5,7 +5,7 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num_complex::Complex;
-use deep_causality_physics::QuantumOps;
+use deep_causality_quantum::QuantumOps;
 
 fn create_complex_mv() -> CausalMultiVector<Complex<f64>> {
     // [1+i, 0, 0, 0, ...]
@@ -76,7 +76,7 @@ fn test_normalize() {
     assert!((mag - 1.0).abs() < 1e-10);
 }
 
-// NOTE on gates.rs:47-49, 51-52 — the `unwrap_or_else` fallback closure of
+// NOTE on gates.rs (dag fallback) — the `unwrap_or_else` fallback closure of
 // `QuantumOps::dag` for `CausalMultiVector<Complex<R>>`. `dag` reverses and
 // conjugates the multivector, then calls
 // `CausalMultiVector::new(conjugated_data, reverted.metric())`. The conjugated
