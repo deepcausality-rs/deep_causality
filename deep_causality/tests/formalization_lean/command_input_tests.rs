@@ -29,7 +29,10 @@ fn test_command_input_yields_command_error() {
     // A command (`RelayTo`) on the INPUT channel — carries no `I` value to evaluate.
     let command_input: PropagatingEffect<bool> =
         PropagatingEffect::from_effect(CausalEffect::relay_to(2, CausalEffect::value(true)));
-    assert!(command_input.value().is_none(), "a command carries no input value");
+    assert!(
+        command_input.value().is_none(),
+        "a command carries no input value"
+    );
 
     let out = causaloid.evaluate(&command_input);
 
@@ -46,7 +49,10 @@ fn test_command_input_yields_command_error() {
         !msg.contains("input value is None"),
         "command conflated with absence-of-evidence: {msg}"
     );
-    assert!(out.value().is_none(), "a command input must not yield a value");
+    assert!(
+        out.value().is_none(),
+        "a command input must not yield a value"
+    );
 
     // Distinct from the absence path: a `None` input gives the GENERIC error, not the command one.
     let none_input: PropagatingEffect<bool> =
@@ -97,5 +103,8 @@ fn test_command_input_yields_command_error_stateful() {
         "not the command-specific error: {msg}"
     );
     assert!(!msg.contains("input value is None"));
-    assert!(out.value().is_none(), "a command input must not yield a value");
+    assert!(
+        out.value().is_none(),
+        "a command input must not yield a value"
+    );
 }

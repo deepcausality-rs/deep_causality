@@ -310,4 +310,97 @@ theorem run_self_relay_none (g : Nat → CEffect V → CEffect V)
       rw [hg t sub]
       exact ih
 
+-- ------------------------------------------------------------------
+-- Relay-round composition: multi-round adaptive evaluation is the sequential (Kleisli) composition
+-- of its rounds (graph-reasoning-formalization, task 3.6).
+--
+-- The graph engine's adaptive loop (`deep_causality/.../graph_reasoning/mod.rs`, the `'rounds` loop)
+-- evaluates one reachable acyclic sub-DAG per round; a `RelayTo(target, sub)` ends the round and
+-- seeds the next round at `target` with `sub` — "sequential composition of rounds" (its own comment,
+-- l.174–176). Abstracting a round to the step `g : target ↦ sub ↦ next-program`, one round is
+-- `nextRound` and the whole run is the fuel-bounded `run` (above). This section proves the rounds
+-- COMPOSE: iterating the round step is additive over round counts (`rounds_add` — round `m` seeds
+-- round `m+1`), a reached answer is stable under further rounds (`run_monotone_add`), and the
+-- fuel-bounded run splits at any round boundary (`run_rounds_compose` — `m` rounds then `n` rounds
+-- IS the `m + n`-round run; `run_relay_peel` is the single two-round step). The fuel bound composes
+-- with NO new termination argument: it is inherited from `core.causal_effect.relay_termination`
+-- (`run` is fuel-total by construction; `run_self_relay_none` cuts a relay cycle).
+-- ------------------------------------------------------------------
+
+/-- One adaptive round as a program step: a value is a fixpoint (an answered run stays answered); a
+    command advances to the target's next program `g t sub` (the `RelayTo` seeding round `m+1`). -/
+def nextRound (g : Nat → CEffect V → CEffect V) : CEffect V → CEffect V
+  | .pure o      => .pure o
+  | .relay t sub => g t sub
+
+/-- `m` adaptive rounds — the round step iterated. -/
+def rounds (g : Nat → CEffect V → CEffect V) : Nat → CEffect V → CEffect V
+  | 0,     prog => prog
+  | m + 1, prog => rounds g m (nextRound g prog)
+
+/-- One more round peels from the right: `rounds (m+1) = nextRound ∘ rounds m`. -/
+theorem rounds_succ_right (g : Nat → CEffect V → CEffect V) :
+    ∀ (m : Nat) (prog : CEffect V), rounds g (m + 1) prog = nextRound g (rounds g m prog) := by
+  intro m
+  induction m with
+  | zero => intro prog; rfl
+  | succ m ih => intro prog; exact ih (nextRound g prog)
+
+/-- **Rounds compose** — the sequential (Kleisli) composition of adaptive rounds: `m + n` rounds is
+    `n` rounds after `m` rounds. Round `m`'s program seeds round `m+1`, so an adaptive run is the
+    composite of its per-round steps.
+
+    THEOREM_MAP: `core.causal_effect.relay_round_composition` -/
+theorem rounds_add (g : Nat → CEffect V → CEffect V) (m : Nat) :
+    ∀ (n : Nat) (prog : CEffect V), rounds g (m + n) prog = rounds g n (rounds g m prog) := by
+  intro n
+  induction n with
+  | zero => intro prog; rfl
+  | succ n ih =>
+      intro prog
+      show rounds g ((m + n) + 1) prog = rounds g (n + 1) (rounds g m prog)
+      rw [rounds_succ_right g (m + n) prog, ih prog, ← rounds_succ_right g n (rounds g m prog)]
+
+/-- A reached answer is stable under further rounds: an `m`-round answer persists to `m + n` rounds,
+    so the composition is well-defined (generalizes `run_fuel_monotone` from `+1` to `+n`).
+
+    THEOREM_MAP: `core.causal_effect.relay_round_composition` -/
+theorem run_monotone_add (g : Nat → CEffect V → CEffect V) (m : Nat) (prog : CEffect V)
+    (o : Option V) (h : run m prog g = Option.some o) :
+    ∀ n, run (m + n) prog g = Option.some o := by
+  intro n
+  induction n with
+  | zero => exact h
+  | succ n ih => exact run_fuel_monotone (m + n) g prog o ih
+
+/-- **The fuel-bounded run splits at a round boundary**: if the first `m` rounds do not answer, the
+    `m + n`-round run is the `n`-round run continued from the `m`-round program — sequential
+    composition on the real fuel-bounded loop. With `run_monotone_add` (answered runs persist) and
+    `rounds_add` (rounds compose), the whole adaptive run is the Kleisli composition of its rounds;
+    totality is inherited from `core.causal_effect.relay_termination` (no new termination argument).
+
+    THEOREM_MAP: `core.causal_effect.relay_round_composition` -/
+theorem run_rounds_compose (g : Nat → CEffect V → CEffect V) (n : Nat) :
+    ∀ (m : Nat) (prog : CEffect V), run m prog g = Option.none →
+      run (m + n) prog g = run n (rounds g m prog) g := by
+  intro m
+  induction m with
+  | zero => intro prog _; rw [Nat.zero_add]; rfl
+  | succ m ih =>
+      intro prog h
+      cases prog with
+      | pure o => simp [run] at h
+      | relay t sub =>
+          simp only [run] at h
+          rw [Nat.succ_add]
+          exact ih (g t sub) h
+
+/-- **Two rounds compose as one arrow** (the spec scenario): round 1 ends in `RelayTo(t, sub)`; the
+    single peeling step feeds the target `t` its next program `g t sub`, and rounds 2… run from
+    there — exactly the engine's `round_start := target; round_input := sub; continue 'rounds`.
+
+    THEOREM_MAP: `core.causal_effect.relay_round_composition` -/
+theorem run_relay_peel (g : Nat → CEffect V → CEffect V) (n t : Nat) (sub : CEffect V) :
+    run (n + 1) (.relay t sub) g = run n (g t sub) g := rfl
+
 end DeepCausalityFormal.Core.CausalEffect

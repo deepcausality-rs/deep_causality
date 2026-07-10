@@ -168,12 +168,18 @@ fn test_verdict_perm_invariance() {
 
     // Each row: a base ordering and permutations of the SAME multiset (same members, reordered).
     let cases: [(&[bool], &[&[bool]]); 3] = [
-        (&[true, false, true], &[&[true, true, false], &[false, true, true]]),
+        (
+            &[true, false, true],
+            &[&[true, true, false], &[false, true, true]],
+        ),
         (
             &[true, false, false, true],
             &[&[false, true, true, false], &[true, true, false, false]],
         ),
-        (&[false, false, true], &[&[true, false, false], &[false, true, false]]),
+        (
+            &[false, false, true],
+            &[&[true, false, false], &[false, true, false]],
+        ),
     ];
 
     let eval = |bag: &[bool], logic: &AggregateLogic| -> bool {
@@ -194,7 +200,11 @@ fn test_verdict_perm_invariance() {
             );
 
             // All / Any / None: value invariant under permutation.
-            for logic in [AggregateLogic::All, AggregateLogic::Any, AggregateLogic::None] {
+            for logic in [
+                AggregateLogic::All,
+                AggregateLogic::Any,
+                AggregateLogic::None,
+            ] {
                 assert_eq!(
                     eval(base, &logic),
                     eval(perm, &logic),

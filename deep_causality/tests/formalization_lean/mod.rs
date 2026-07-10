@@ -19,4 +19,5 @@ mod catamorphism_tests;
 mod causaloid_tests;
 mod command_input_tests;
 mod graph_algebra_tests;
+mod relay_round_composition_tests;
 mod verdict_closure_tests;
