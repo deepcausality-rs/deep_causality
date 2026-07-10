@@ -50,7 +50,7 @@ this change's git history). No tasks remain here. -->
 
 ## 7. Registration & verification (applies to the residue: 1.2–1.4, 2.3, 2.5, 3.6, group 4)
 
-- [ ] 7.1 Register new Lean files in `lean/DeepCausalityFormal.lean`; update `lean/THEOREM_MAP.md` and `deep_causality_core/LEAN_CORE.md`. *(partial, done in Group 2: root now imports `Core/{VerdictClosure,GraphAlgebra,Catamorphism,CommandInput}` — the first three were landed by Stages 3–5 but never registered, so `lake build` was silently skipping them; `THEOREM_MAP.md` rows added for the two new ids. Remaining: `LEAN_CORE.md` + any Group-3/Group-4 files.)*
-- [ ] 7.2 Bare-`lean` typecheck every new file standalone (exit 0, zero `sorry`).
-- [ ] 7.3 `bazel test //...` green; `make format && make fix` clean; clippy clean.
-- [ ] 7.4 Confirm no new runtime dependency, `unsafe_code = "forbid"` intact, and every deferred proof is an explicit obligation.
+- [x] 7.1 Register new Lean files in `lean/DeepCausalityFormal.lean`; update `lean/THEOREM_MAP.md` and `deep_causality_core/LEAN_CORE.md`. *(root imports `Core/{VerdictClosure,GraphAlgebra,Catamorphism,CommandInput,ContextGraph}` — the Stage 3–5 files were landed but never registered, so `lake build` was silently skipping them; 5 new THEOREM_MAP rows; `LEAN_CORE.md` notes the `CausalEffect.lean` relay-round addition (main-crate witnessed) + the causaloid-layer files hosted under `Core/`)*
+- [x] 7.2 Bare-`lean` typecheck every new file standalone (exit 0, zero `sorry`). *(CausalEffect / VerdictClosure / CommandInput / ContextGraph / GraphAlgebra / Catamorphism all exit 0, zero `sorry`; sorry-guard CI job passes)*
+- [x] 7.3 `bazel test //...` green; `make format && make fix` clean; clippy clean. *(bazel 1102/1102 pass; `make format && make fix` = zero code changes; clippy `-D warnings` clean workspace-wide; `lake build` green)*
+- [x] 7.4 Confirm no new runtime dependency, `unsafe_code = "forbid"` intact, and every deferred proof is an explicit obligation. *(no `Cargo.toml` touched across the change; zero production-code `.rs` changes — only Lean + test witnesses + docs, so `unsafe_code = "forbid"` is untouched; zero `sorry` = no deferred proofs)*
