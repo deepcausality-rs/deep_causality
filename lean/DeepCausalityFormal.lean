@@ -72,6 +72,10 @@ import DeepCausalityFormal.Core.CausalFlow
 import DeepCausalityFormal.Core.Csv
 import DeepCausalityFormal.Core.Consistency
 import DeepCausalityFormal.Core.Causaloid
+import DeepCausalityFormal.Core.VerdictClosure
+import DeepCausalityFormal.Core.GraphAlgebra
+import DeepCausalityFormal.Core.Catamorphism
+import DeepCausalityFormal.Core.CommandInput
 import DeepCausalityFormal.Haft.Hkt
 import DeepCausalityFormal.Haft.Functor
 import DeepCausalityFormal.Haft.Pure

@@ -153,3 +153,63 @@ fn test_verdict_carriers() {
     assert_eq!(UncertainF64::bottom().sample().expect("sample"), 0.0);
     assert_eq!(UncertainF64::top().sample().expect("sample"), 1.0);
 }
+
+/// THEOREM_MAP: core.verdict.perm_invariance
+///
+/// Lean: `aggregate_perm`, `coll_perm` (`Core/VerdictClosure.lean`). The #1 scoped order-invariance
+/// theorem on the collection path: for every `AggregateLogic` mode, permuting the member bag leaves
+/// the aggregate **value** unchanged — `All`/`Any` are the commutative-associative meet-/join-folds,
+/// `None` inherits from `Any`, `Some(k)` from the permutation-invariant firing count. Scope (#1
+/// ruling): the value channel, on the stateless all-success path. Here the real `evaluate_collection`
+/// is run on a base bag and on permutations of the SAME multiset, asserting equal values per mode.
+#[test]
+fn test_verdict_perm_invariance() {
+    let effect = PropagatingEffect::from_value(true);
+
+    // Each row: a base ordering and permutations of the SAME multiset (same members, reordered).
+    let cases: [(&[bool], &[&[bool]]); 3] = [
+        (&[true, false, true], &[&[true, true, false], &[false, true, true]]),
+        (
+            &[true, false, false, true],
+            &[&[false, true, true, false], &[true, true, false, false]],
+        ),
+        (&[false, false, true], &[&[true, false, false], &[false, true, false]]),
+    ];
+
+    let eval = |bag: &[bool], logic: &AggregateLogic| -> bool {
+        bool_bag(bag)
+            .evaluate_collection(&effect, logic, Some(0.5))
+            .value_cloned()
+            .expect("aggregate lands in the carrier")
+    };
+
+    for (base, perms) in cases {
+        let n = base.len();
+        for perm in perms {
+            // Sanity: a genuine permutation — same multiset (fired count equal), possibly reordered.
+            assert_eq!(
+                base.iter().filter(|&&b| b).count(),
+                perm.iter().filter(|&&b| b).count(),
+                "test bug: {perm:?} is not a permutation of {base:?}"
+            );
+
+            // All / Any / None: value invariant under permutation.
+            for logic in [AggregateLogic::All, AggregateLogic::Any, AggregateLogic::None] {
+                assert_eq!(
+                    eval(base, &logic),
+                    eval(perm, &logic),
+                    "{logic:?} not permutation-invariant: {base:?} vs {perm:?}"
+                );
+            }
+
+            // Some(k) for every threshold: value invariant (the firing count is a bag invariant).
+            for k in 0..=n {
+                assert_eq!(
+                    eval(base, &AggregateLogic::Some(k)),
+                    eval(perm, &AggregateLogic::Some(k)),
+                    "Some({k}) not permutation-invariant: {base:?} vs {perm:?}"
+                );
+            }
+        }
+    }
+}

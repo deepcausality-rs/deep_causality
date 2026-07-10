@@ -173,6 +173,134 @@ theorem coll_closure (A : VerdictAlg V) (fires : V → Bool) (cs : VCList V) (lg
   ⟨.coll cs lgc, fun _ => rfl⟩
 
 -- ------------------------------------------------------------------
+-- `core.verdict.perm_invariance`: aggregation is a BAG operation — the #1 scoped order-invariance
+-- theorem on the collection path (roadmap #1). Extends the closure above: for every mode the
+-- aggregate VALUE is invariant under permutation of the member bag. `All`/`Any` are the
+-- commutative-associative meet-/join-folds (the `fuse_perm` device of `Core/GraphAlgebra.lean`,
+-- here for the lattice reducts); `None` inherits from `Any`; `Some(k)` from the permutation-
+-- invariant firing count. Commutativity + associativity of `meet`/`join` are the lattice-law
+-- HYPOTHESES (the `algebra.verdict.{lattice_laws}` theorems supply them per carrier; deviation
+-- note 1), exactly as `fuse_perm` takes `∇`'s laws as hypotheses.
+--
+-- SCOPE (the #1 ruling, stated honestly): the VALUE channel, on the stateless, all-success path;
+-- the log channel is a multiset (invariant only up to permutation) and the stateful path are
+-- OUTSIDE this statement.
+-- ------------------------------------------------------------------
+
+/-- Swap-generated permutation of a member list (self-contained, as in `Core/GraphAlgebra.lean`). -/
+inductive Perm : List V → List V → Prop where
+  | nil   : Perm [] []
+  | cons  (v : V) {l l' : List V} : Perm l l' → Perm (v :: l) (v :: l')
+  | swap  (a b : V) (l : List V) : Perm (a :: b :: l) (b :: a :: l)
+  | trans {l₁ l₂ l₃ : List V} : Perm l₁ l₂ → Perm l₂ l₃ → Perm l₁ l₃
+
+/-- `All` — the meet-fold — is permutation-invariant when `meet` is commutative + associative. -/
+theorem aggAll_perm (A : VerdictAlg V)
+    (hcomm : ∀ a b, A.meet a b = A.meet b a)
+    (hassoc : ∀ a b c, A.meet (A.meet a b) c = A.meet a (A.meet b c))
+    {l l' : List V} (h : Perm l l') : aggAll A l = aggAll A l' := by
+  induction h with
+  | nil => rfl
+  | cons v _ ih => exact congrArg (A.meet v) ih
+  | swap a b l =>
+      show A.meet a (A.meet b (aggAll A l)) = A.meet b (A.meet a (aggAll A l))
+      rw [← hassoc a b (aggAll A l), hcomm a b, hassoc b a (aggAll A l)]
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
+
+/-- `Any` — the join-fold — is permutation-invariant when `join` is commutative + associative. -/
+theorem aggAny_perm (A : VerdictAlg V)
+    (hcomm : ∀ a b, A.join a b = A.join b a)
+    (hassoc : ∀ a b c, A.join (A.join a b) c = A.join a (A.join b c))
+    {l l' : List V} (h : Perm l l') : aggAny A l = aggAny A l' := by
+  induction h with
+  | nil => rfl
+  | cons v _ ih => exact congrArg (A.join v) ih
+  | swap a b l =>
+      show A.join a (A.join b (aggAny A l)) = A.join b (A.join a (aggAny A l))
+      rw [← hassoc a b (aggAny A l), hcomm a b, hassoc b a (aggAny A l)]
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
+
+/-- The firing count is permutation-invariant (`Nat` addition is commutative + associative). -/
+theorem countFires_perm (fires : V → Bool) {l l' : List V} (h : Perm l l') :
+    countFires fires l = countFires fires l' := by
+  induction h with
+  | nil => rfl
+  | cons v _ ih => exact congrArg (fun n => (if fires v then 1 else 0) + n) ih
+  | swap a b l =>
+      show (if fires a then 1 else 0) + ((if fires b then 1 else 0) + countFires fires l)
+          = (if fires b then 1 else 0) + ((if fires a then 1 else 0) + countFires fires l)
+      omega
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
+
+/-- `None` (= `Any` ∘ `complement`) is permutation-invariant, inheriting from `Any`. -/
+theorem aggNone_perm (A : VerdictAlg V)
+    (hcomm : ∀ a b, A.join a b = A.join b a)
+    (hassoc : ∀ a b c, A.join (A.join a b) c = A.join a (A.join b c))
+    {l l' : List V} (h : Perm l l') : aggNone A l = aggNone A l' := by
+  show A.compl (aggAny A l) = A.compl (aggAny A l')
+  rw [aggAny_perm A hcomm hassoc h]
+
+/-- `Some(k)` is permutation-invariant, inheriting from the firing count. -/
+theorem aggSome_perm (A : VerdictAlg V) (fires : V → Bool) (k : Nat)
+    {l l' : List V} (h : Perm l l') : aggSome A fires k l = aggSome A fires k l' := by
+  show (if k ≤ countFires fires l then A.top else A.bottom)
+      = (if k ≤ countFires fires l' then A.top else A.bottom)
+  rw [countFires_perm fires h]
+
+/-- **Permutation-invariance for every mode**: on a permuted member bag the aggregate VALUE is
+    unchanged — the #1 scoped order-invariance theorem on the aggregation itself. Requires the
+    meet/join lattice laws (comm + assoc), supplied per carrier by `algebra.verdict.lattice_laws`.
+
+    THEOREM_MAP: `core.verdict.perm_invariance` -/
+theorem aggregate_perm (A : VerdictAlg V) (fires : V → Bool)
+    (hmc : ∀ a b, A.meet a b = A.meet b a)
+    (hma : ∀ a b c, A.meet (A.meet a b) c = A.meet a (A.meet b c))
+    (hjc : ∀ a b, A.join a b = A.join b a)
+    (hja : ∀ a b c, A.join (A.join a b) c = A.join a (A.join b c))
+    (lgc : AggLogic) {l l' : List V} (h : Perm l l') :
+    aggregate A fires lgc l = aggregate A fires lgc l' := by
+  cases lgc with
+  | all    => exact aggAll_perm A hmc hma h
+  | any    => exact aggAny_perm A hjc hja h
+  | none   => exact aggNone_perm A hjc hja h
+  | someK k => exact aggSome_perm A fires k h
+
+/-- Swap-generated permutation of a member bag at the fixpoint (`VCList`). -/
+inductive PermC : VCList V → VCList V → Prop where
+  | nil   : PermC .nil .nil
+  | cons  (c : VCausaloid V) {cs cs' : VCList V} : PermC cs cs' → PermC (.cons c cs) (.cons c cs')
+  | swap  (a b : VCausaloid V) (cs : VCList V) :
+      PermC (.cons a (.cons b cs)) (.cons b (.cons a cs))
+  | trans {cs₁ cs₂ cs₃ : VCList V} : PermC cs₁ cs₂ → PermC cs₂ cs₃ → PermC cs₁ cs₃
+
+/-- Permuting the member bag permutes the evaluated verdict list (the element layer is pointwise). -/
+theorem evalList_permC (A : VerdictAlg V) (fires : V → Bool) (v : V)
+    {cs cs' : VCList V} (h : PermC cs cs') :
+    Perm (evalList A fires cs v) (evalList A fires cs' v) := by
+  induction h with
+  | nil => exact .nil
+  | cons c _ ih => exact .cons (eval A fires c v) ih
+  | swap a b cs => exact .swap (eval A fires a v) (eval A fires b v) (evalList A fires cs v)
+  | trans _ _ ih₁ ih₂ => exact .trans ih₁ ih₂
+
+/-- **Collection aggregation is a bag operation at the fixpoint** (`Coll : Causaloid → Causaloid`):
+    permuting the members of a collection causaloid leaves its verdict unchanged. The order-
+    invariance of the aggregate (`aggregate_perm`) composed with the pointwise element layer
+    (`evalList_permC`) — the #1 scoped order-invariance theorem, lifted to the `coll` node.
+
+    THEOREM_MAP: `core.verdict.perm_invariance` -/
+theorem coll_perm (A : VerdictAlg V) (fires : V → Bool)
+    (hmc : ∀ a b, A.meet a b = A.meet b a)
+    (hma : ∀ a b c, A.meet (A.meet a b) c = A.meet a (A.meet b c))
+    (hjc : ∀ a b, A.join a b = A.join b a)
+    (hja : ∀ a b c, A.join (A.join a b) c = A.join a (A.join b c))
+    (lgc : AggLogic) {cs cs' : VCList V} (h : PermC cs cs') (v : V) :
+    eval A fires (.coll cs lgc) v = eval A fires (.coll cs' lgc) v := by
+  show aggregate A fires lgc (evalList A fires cs v)
+      = aggregate A fires lgc (evalList A fires cs' v)
+  exact aggregate_perm A fires hmc hma hjc hja lgc (evalList_permC A fires v h)
+
+-- ------------------------------------------------------------------
 -- `core.verdict.carriers`: the named carriers behind the one trait.
 -- ------------------------------------------------------------------
 
