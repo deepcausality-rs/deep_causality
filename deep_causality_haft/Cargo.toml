@@ -28,12 +28,14 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc"]
+std = ["alloc", "deep_causality_algebra/std"]
 alloc = []
+no-std = ["alloc", "deep_causality_algebra/no-std"]
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
 version = "0.1"
+default-features = false
 
 [[example]]
 name = "haft_applicative"

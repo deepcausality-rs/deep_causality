@@ -71,6 +71,16 @@ fn test_arrow_choice_left_laws() {
             Lift::new(inc).left::<i64>().run(Either::Left(x)),
             Either::<i64, i64>::Left(inc(x))
         );
+        // Both composites of the injection unit law agree, not just the `Left`-arm value:
+        // f >>> arr Left = arr Left >>> left f, built through the arrow API on each side.
+        assert_eq!(
+            Lift::new(inc)
+                .compose(Lift::new(Either::<i64, i64>::Left))
+                .run(x),
+            Lift::new(Either::<i64, i64>::Left)
+                .compose(Lift::new(inc).left::<i64>())
+                .run(x)
+        );
 
         // `right` mirrors `left` on the other summand.
         assert_eq!(
@@ -151,6 +161,12 @@ fn test_arrow_choice_distributivity() {
                 // Round trips: undistl ∘ distl = id and distl ∘ undistl = id.
                 assert_eq!(undistl(distl((a, s))), (a, s));
                 assert_eq!(distl(undistl(distl((a, s)))), distl((a, s)));
+                // Full `distl ∘ undistl = id`, on independent sum values (not just the image
+                // of `distl`): both injections of `(α × β) ⊕ (α × γ)` round-trip to themselves.
+                let y_left = Either::<(i64, i64), (i64, i64)>::Left((a, x));
+                assert_eq!(distl(undistl(y_left)), y_left);
+                let y_right = Either::<(i64, i64), (i64, i64)>::Right((a, x));
+                assert_eq!(distl(undistl(y_right)), y_right);
 
                 // Naturality: distl ∘ (f ⊗ (g ⊕ h)) = ((f ⊗ g) ⊕ (f ⊗ h)) ∘ distl.
                 let lhs = distl((inc(a), Lift::new(double).choice(Lift::new(neg)).run(s)));
