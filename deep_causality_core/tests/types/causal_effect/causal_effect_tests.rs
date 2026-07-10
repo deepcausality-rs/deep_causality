@@ -133,6 +133,17 @@ fn fold_interprets_a_command_via_the_algebra() {
     assert_eq!(out, 9 + 4 + 1);
 }
 
+// ---- Monad bind: `and_then` (the `Free ∘ Maybe` layer) -------------------------------------------
+
+#[test]
+fn and_then_none_is_a_local_zero() {
+    // Binding a continuation onto an absent (`None`) effect: the continuation that *would* fire on
+    // a value must NOT run, and the result stays `None`.
+    let out = CausalEffect::<i32>::none().and_then(|v| CausalEffect::value(v + 1));
+    assert_eq!(out, CausalEffect::none());
+    assert!(out.is_none());
+}
+
 // ---- Congruent equality + clone + debug ----------------------------------------------------------
 
 #[test]
@@ -153,6 +164,17 @@ fn eq_compares_the_command_payload_recursively() {
     assert_ne!(a, diff_target);
     // The former `Map` PER ignored the payload; the new congruence compares it.
     assert_ne!(a, diff_payload);
+}
+
+#[test]
+fn eq_is_false_for_structurally_different_shapes() {
+    // A command (`Suspend`) vs a plain value/none leaf (`Pure`): the two programs have different
+    // shapes, so `program_eq` falls to its `_ => false` arm.
+    let cmd = CausalEffect::relay_to(2, CausalEffect::value(1_i32));
+    let val = CausalEffect::value(1_i32);
+    let n: CausalEffect<i32> = CausalEffect::none();
+    assert_ne!(cmd, val);
+    assert_ne!(cmd, n);
 }
 
 #[test]

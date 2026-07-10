@@ -21,6 +21,7 @@ exclude = [
     ".bazelignore",
     ".bazelrc",
     "tests/**/*",
+    "papers/*",
 ]
 
 [dependencies.deep_causality_haft]

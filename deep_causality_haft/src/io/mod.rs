@@ -18,8 +18,8 @@
 //! which this workspace forbids. So IO is realized exactly the way the [`Arrow`](crate::Arrow)
 //! algebra is realized: an [`IoAction`] trait whose combinators return **new concrete types**
 //! ([`IoMap`], [`IoAndThen`], [`IoMapErr`]). Composition is total and monomorphized, with **no
-//! `dyn`, no trait objects, no macros**. An `IoAction` is a nullary Kleisli arrow `() ⇝ A` over
-//! `Result`.
+//! `dyn`, no trait objects, no macros**. An `IoAction` is a nullary arrow `() ⇝ A` in the
+//! [`Kleisli`](crate::Kleisli) category of `Result`.
 //!
 //! The whole module is `no_std`-safe: it uses only `core` (`Result`, closures, `PhantomData`).
 //! Concrete file actions (and the filesystem effect itself) live in `deep_causality_core` behind its
@@ -27,7 +27,8 @@
 //!
 //! # Laws
 //!
-//! `IoAction` is a monad (Kleisli composition over `Result`). With `pure`/`and_then`/`map`:
+//! `IoAction` is a monad; its `and_then` is composition in the [`Kleisli`](crate::Kleisli) category
+//! of `Result`. With `pure`/`and_then`/`map`:
 //!
 //! 1. **Left identity:** `pure(a).and_then(f)` ≡ `f(a)`
 //! 2. **Right identity:** `m.and_then(pure)` ≡ `m`
@@ -80,8 +81,9 @@ pub trait IoAction {
         IoMap::new(self, f)
     }
 
-    /// Monadic bind (Kleisli composition over `Result`): run `self`, feed its output to `f`, then run
-    /// the action `f` returns. Short-circuits on the first error. Returns a new concrete `IoAction`.
+    /// Monadic bind — composition in the [`Kleisli`](crate::Kleisli) category of `Result`: run
+    /// `self`, feed its output to `f`, then run the action `f` returns. Short-circuits on the first
+    /// error. Returns a new concrete `IoAction`.
     #[inline]
     fn and_then<P, F>(self, f: F) -> IoAndThen<Self, F>
     where

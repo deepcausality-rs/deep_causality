@@ -168,7 +168,7 @@ where
 ///
 /// # Errors
 /// * [`BrcdErrorEnum::NodeOutOfBounds`] if a target is not a vertex of `cpdag`.
-/// * [`BrcdErrorEnum::ConfigSpaceTooLarge`] if more than [`MAX_MAPPRUNE_EDGES`]
+/// * [`BrcdErrorEnum::ConfigSpaceTooLarge`] if more than `MAX_MAPPRUNE_EDGES`
 ///   undirected edges are incident on the candidate set — the `usize`
 ///   orientation-label width, not a tractability bound (the finder is `O(du)`),
 ///   so far above the full path's `2^{du}` cap.

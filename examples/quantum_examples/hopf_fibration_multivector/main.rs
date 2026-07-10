@@ -29,7 +29,7 @@ fn main() {
     let beta = Complex::new(consts::FRAC_1_SQRT_2, 0.0);
 
     let state = HopfState::from_spinor(alpha, beta);
-    println!("Initial  HopfState: {:?}", &state);
+    println!("Initial  HopfState: {:?}", state);
 
     // 2. Project to S2 (The Bloch Sphere)
     let bloch_vector = state.project();

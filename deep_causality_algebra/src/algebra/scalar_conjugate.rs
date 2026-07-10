@@ -10,8 +10,8 @@ use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 /// numerical linear algebra cares about: real fields, dual numbers (forward-mode AD), and complex.
 ///
 /// `deep_causality_num` splits its scalar tower along orderability: [`Real`](crate::Real) /
-/// [`Scalar`] cover ordered analytic scalars (`f32`/`f64`/`Float106`, and [`Dual`] for AD), while
-/// complex numbers are unordered and live under [`Normed`](crate::Normed) / [`ComplexField`]. Those
+/// [`Scalar`] cover ordered analytic scalars (`f32`/`f64`/`Float106`, and `Dual` for AD), while
+/// complex numbers are unordered and live under [`Normed`](crate::Normed) / [`ComplexField`](crate::ComplexField). Those
 /// worlds are incomparable, so no single stock bound covers them. `ConjugateScalar` is the bridge: it
 /// names exactly the capabilities a Hermitian SVD / QR / inner-product / norm kernel needs —
 /// conjugation (the identity for reals), a real squared modulus, the real part, and injection of a
@@ -19,7 +19,7 @@ use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 /// arithmetic when `conjugate` is the identity and `modulus_squared` is `x²`.
 ///
 /// # Why not a supertrait of [`NormedScalar`](crate::NormedScalar)
-/// [`NormedScalar`] (= [`Field`](crate::Field) + [`Normed`](crate::Normed)) is the cleaner
+/// [`NormedScalar`](crate::NormedScalar) (= [`Field`](crate::Field) + [`Normed`](crate::Normed)) is the cleaner
 /// composition but its real type is a [`RealField`](crate::RealField). `ConjugateScalar` instead ties
 /// its associated [`Real`](Self::Real) to the weaker [`Scalar`], because `Dual` is **not** a field or
 /// `Normed` and its magnitude must remain a `Dual` for derivatives to flow through singular values.

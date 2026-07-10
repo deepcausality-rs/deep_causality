@@ -22,6 +22,7 @@ mod uncertain_part_eq;
 mod uncertain_real;
 mod uncertain_sampling;
 mod uncertain_statistics;
+mod uncertain_verdict;
 
 // A single static counter for all Uncertain instances to generate unique IDs.
 static NEXT_UNCERTAIN_ID: AtomicUsize = AtomicUsize::new(0);

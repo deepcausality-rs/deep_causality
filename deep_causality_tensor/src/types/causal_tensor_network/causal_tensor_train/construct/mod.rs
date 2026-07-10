@@ -89,7 +89,7 @@ where
     ///
     /// # Errors
     /// - [`CausalTensorError::EmptyTensor`] if `shape` is empty or has a zero dimension.
-    /// - [`CausalTensorError::RankExceeded`] if the dense tensor would exceed [`MAX_DENSE_ELEMS`].
+    /// - [`CausalTensorError::RankExceeded`] if the dense tensor would exceed `MAX_DENSE_ELEMS`.
     pub fn from_fn<F>(
         shape: &[usize],
         f: F,

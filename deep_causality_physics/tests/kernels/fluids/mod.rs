@@ -10,7 +10,7 @@ pub mod coherent_structures_coverage_tests;
 #[cfg(test)]
 pub mod coherent_structures_tests;
 #[cfg(test)]
-#[cfg_attr(miri, ignore)]
+#[cfg(not(miri))]
 pub mod compressible_tests;
 #[cfg(test)]
 pub mod constitutive_tests;
@@ -19,12 +19,14 @@ pub mod dimensionless_tests;
 #[cfg(test)]
 pub mod governing_tests;
 #[cfg(test)]
+#[cfg(not(miri))]
 pub mod ideal_flow_tests;
 #[cfg(test)]
 pub mod kinematics_tests;
 #[cfg(test)]
 pub mod mechanics_tests;
 #[cfg(test)]
+#[cfg(not(miri))]
 pub mod turbulence_tests;
 #[cfg(test)]
 pub mod wrappers_coverage_tests;

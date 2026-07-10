@@ -1,5 +1,0 @@
-filegroup(
-    name = "sysroot",
-    srcs = glob(["**"], exclude = ["BUILD.bazel"]),
-    visibility = ["//visibility:public"],
-)

@@ -63,17 +63,25 @@
 //! `openspec/notes/arrow/causal-process-builder.md`.
 
 mod arrow_endo;
+#[cfg(feature = "alloc")]
+mod arrow_term;
 mod builder;
+mod choice;
 mod compose;
 mod fanout;
 mod first;
 mod id;
+#[cfg(feature = "alloc")]
+mod interpreter;
 mod lift;
 mod second;
 mod split;
 
 pub use arrow_endo::EndoArrow;
+#[cfg(feature = "alloc")]
+pub use arrow_term::{ArrowCore, ArrowTerm, ArrowVal};
 pub use builder::{ArrowBuilder, arrow};
+pub use choice::{Choice, Fanin, Left, Right};
 pub use compose::Compose;
 pub use fanout::Fanout;
 pub use first::First;
@@ -157,5 +165,48 @@ pub trait Arrow {
         Self::In: Clone,
     {
         Fanout::new(self, g)
+    }
+
+    /// `left`: lift `A → B` to `Either<A, C> → Either<B, C>`, passing a `Right` value through
+    /// (the `⊕` twin of [`first`](Arrow::first); Hughes 2000 §5).
+    #[inline]
+    fn left<C>(self) -> Left<Self, C>
+    where
+        Self: Sized,
+    {
+        Left::new(self)
+    }
+
+    /// `right`: lift `A → B` to `Either<C, A> → Either<C, B>`, passing a `Left` value through
+    /// (the `⊕` twin of [`second`](Arrow::second)).
+    #[inline]
+    fn right<C>(self) -> Right<Self, C>
+    where
+        Self: Sized,
+    {
+        Right::new(self)
+    }
+
+    /// The coproduct sum `+++`: route each summand to its own arrow —
+    /// `Either<A, C> → Either<B, D>` (the `⊕` twin of [`split`](Arrow::split)).
+    #[inline]
+    fn choice<G>(self, g: G) -> Choice<Self, G>
+    where
+        Self: Sized,
+        G: Arrow,
+    {
+        Choice::new(self, g)
+    }
+
+    /// Fanin `|||`: the coproduct elimination — both branches converge on one output type,
+    /// `Either<A, C> → B` (the `⊕` twin of [`fanout`](Arrow::fanout), with no `Clone` needed:
+    /// a sum routes, it never copies).
+    #[inline]
+    fn fanin<G>(self, g: G) -> Fanin<Self, G>
+    where
+        Self: Sized,
+        G: Arrow<Out = Self::Out>,
+    {
+        Fanin::new(self, g)
     }
 }

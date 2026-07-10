@@ -131,6 +131,9 @@ where
         let n_nodes = self.number_nodes();
         let mut round_start = start_index;
         let mut round_input = initial_effect.clone();
+        // Relay fuel: bounds the number of relay rounds so the handler is total (see
+        // `super::MAX_RELAY_ROUNDS` / `core.causal_effect.relay_termination`).
+        let mut relay_rounds_left: usize = super::MAX_RELAY_ROUNDS;
 
         'rounds: loop {
             // Reachability pre-pass: only `round_start` and its descendants can fire.
@@ -236,6 +239,21 @@ where
 
                 match result.command_target() {
                     Some(target_idx) => {
+                        // Fuel check: a relay chain longer than the bound is cut with a loud error
+                        // (a relay cycle is the likely cause) instead of looping forever.
+                        if relay_rounds_left == 0 {
+                            return raise_from(
+                                CausalityError(CausalityErrorEnum::Custom(format!(
+                                    "Relay budget exhausted: the adaptive-reasoning chain exceeded \
+                                     MAX_RELAY_ROUNDS = {} rounds (a relay cycle is likely). The \
+                                     relay handler is fuel-bounded so evaluation terminates \
+                                     (core.causal_effect.relay_termination).",
+                                    super::MAX_RELAY_ROUNDS
+                                ))),
+                                &last_propagated,
+                            );
+                        }
+                        relay_rounds_left -= 1;
                         if !self.contains_causaloid(target_idx) {
                             return raise_from(
                                 CausalityError(CausalityErrorEnum::Custom(format!(

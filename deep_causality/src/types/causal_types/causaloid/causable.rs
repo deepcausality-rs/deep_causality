@@ -15,6 +15,17 @@ use crate::{
 };
 use std::fmt::Debug;
 
+/// The seal: `Causaloid` is the ONLY carrier of the causal trait surface — the three
+/// `CausaloidType` forms are closed (`algebraic-causaloid-assumptions.md` #11a, DECIDED).
+impl<I, O, PS, C> crate::traits::causable::sealed::Sealed for Causaloid<I, O, PS, C>
+where
+    I: Default,
+    O: Default + Debug,
+    PS: Default + Clone,
+    C: Clone,
+{
+}
+
 /// Implements the `Causable` trait for `Causaloid`.
 ///
 /// This trait provides fundamental properties and methods for any entity that can

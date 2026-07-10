@@ -5,7 +5,7 @@
 
 //! `Disjunction(bool)` — the boolean `∨` bounded semilattice (the `AggregateLogic::Any` carrier).
 
-use crate::{BoundedSemilattice, CommutativeMonoid, Idempotent, Monoid};
+use crate::{BoundedSemilattice, Commutative, CommutativeMonoid, Idempotent, Monoid};
 
 /// The boolean disjunction (`∨`) monoid: identity `false`, `combine = ||`. A bounded semilattice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,6 +21,8 @@ impl Monoid for Disjunction {
         Disjunction(self.0 || other.0)
     }
 }
+// `a ∨ b = b ∨ a` — the marker `CommutativeMonoid` requires.
+impl Commutative for Disjunction {}
 impl CommutativeMonoid for Disjunction {}
 impl Idempotent for Disjunction {}
 impl BoundedSemilattice for Disjunction {}

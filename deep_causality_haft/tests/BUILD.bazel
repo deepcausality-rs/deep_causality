@@ -62,6 +62,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         # Crate to test
+        "//deep_causality_algebra",
         "//deep_causality_haft",
     ],
 )

@@ -14,7 +14,7 @@ use std::fmt::Debug;
 // Marker trait to add default impl from MonadicCausableGraphReasoning
 impl<V, PS, C> MonadicCausableGraphReasoning<V, PS, C> for CausaloidGraph<Causaloid<V, V, PS, C>>
 where
-    V: Default + Clone + Send + Sync + 'static + Debug,
+    V: deep_causality_algebra::Verdict + Default + Clone + Send + Sync + 'static + Debug,
     PS: Default + Clone + Send + Sync + 'static,
     C: Clone + Send + Sync + 'static,
     Causaloid<V, V, PS, C>: MonadicCausable<V, V>,

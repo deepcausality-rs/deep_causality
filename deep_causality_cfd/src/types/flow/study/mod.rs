@@ -431,7 +431,7 @@ where
 {
     /// Fly every branch from the shared fork for `steps` coupled steps, concurrently under the
     /// `parallel` feature and inline otherwise, reports in case order. Lowers onto
-    /// [`CompressiblePause::continue_branches`]; each branch takes its single copy-on-write clone
+    /// `CompressiblePause::continue_branches`; each branch takes its single copy-on-write clone
     /// at its first write. The result is a [`Marched`] exactly like the march path, so `reduce`
     /// reads each branch through a [`CaseRun`] — the branch world is the case's config.
     pub fn continue_for(

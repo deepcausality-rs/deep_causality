@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Status as of 2026-07-05. This note summarizes the machine-checked formalization of the haft
 crate; it is the crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/causal-algebra/Formalization.md).
+[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
 
 ## Summary
 
@@ -39,7 +39,7 @@ docs, one misnamed trait, one unlawful reference implementation, two structural 
 `MonoidalMerge`, `fuse` removed), P-2 (`U: Default` dropped from `MonadEffect3/4/5::bind`),
 and P-3 (curvature laws stated at the concrete `CurvatureTensor` in
 `deep_causality_topology`). The full audit trail with per-deviation resolution status lives in
-[`openspec/notes/causal-algebra/haft-formalization-deviations.md`](../openspec/notes/causal-algebra/haft-formalization-deviations.md).
+[`openspec/notes/causal-algebra/haft-formalization-deviations.md`](../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md).
 
 ## How to check
 
@@ -99,11 +99,10 @@ cargo test -p deep_causality_haft --test '*' formalization_lean
 4. **Purity is a precondition, not a guarantee.** All law-bearing signatures accept `FnMut`;
    the laws hold only for pure closures. This is documented on every trait but cannot be
    enforced by Rust's type system.
-5. **Verification layers L3/L4 not yet applied to haft.** Kani harnesses (bounded model
-   checking) currently exist only for `deep_causality_core`; Aeneas extraction (L4) is an
-   unstarted feasibility spike for the whole program. Per `Formalization.md`, L1 + L2 is the
-   claim currently made for haft: *laws machine-checked in Lean; implementation pinned to the
-   same statements by tests* — not "proved correct."
+5. **Bounded model checking (L3) is not applied to haft.** Kani harnesses currently exist only
+   for `deep_causality_core`. Per `Formalization.md`, L1 + L2 is the claim made for haft:
+   *laws machine-checked in Lean; implementation pinned to the same statements by tests* — not
+   "proved correct."
 6. **Self-contained Lean files duplicate tiny model definitions** (e.g. `optFmap` appears in
    several files). Deliberate — it keeps every proof file standalone-checkable with bare
    `lean` — but a shared prelude module is worth revisiting once the lake build is the only

@@ -5,7 +5,7 @@
 use deep_causality::{
     BaseContext, CausableGraph, CausalityError, CausalityErrorEnum, Causaloid, CausaloidGraph,
     ContextoidType, ContextuableGraph, Datable, Identifiable, IdentificationValue,
-    PropagatingEffect, PropagatingProcess,
+    PropagatingEffect, PropagatingProcess, Verdict,
 };
 use deep_causality_core::CausalEffect;
 use std::sync::{Arc, RwLock};
@@ -21,6 +21,56 @@ pub struct ScmState {
     pub has_high_nicotine: bool,
     pub has_tar: bool,
     pub cancer_risk: bool,
+}
+
+/// Graph reasoning requires the wire carrier to be a `Verdict` (the Stage-4 join bound:
+/// reconvergent values fuse with the commutative `∇ = Verdict::join`). `ScmState` is the
+/// **product lattice** of its fields — the `bool` fields are the Boolean carrier; the
+/// unconstrained real field uses the extended-real min/max lattice (bounds `±∞`, complement
+/// `1 − x`), which is lawful for arbitrary values, unlike the `[0, 1]` MV bounds. This
+/// chain-shaped SCM has no reconvergent join, so the instance is a carrier bound, never
+/// exercised as a merge.
+impl Verdict for ScmState {
+    fn bottom() -> Self {
+        ScmState {
+            nicotine_level: f64::NEG_INFINITY,
+            has_high_nicotine: bool::bottom(),
+            has_tar: bool::bottom(),
+            cancer_risk: bool::bottom(),
+        }
+    }
+    fn top() -> Self {
+        ScmState {
+            nicotine_level: f64::INFINITY,
+            has_high_nicotine: bool::top(),
+            has_tar: bool::top(),
+            cancer_risk: bool::top(),
+        }
+    }
+    fn meet(self, other: Self) -> Self {
+        ScmState {
+            nicotine_level: self.nicotine_level.meet(other.nicotine_level),
+            has_high_nicotine: self.has_high_nicotine.meet(other.has_high_nicotine),
+            has_tar: self.has_tar.meet(other.has_tar),
+            cancer_risk: self.cancer_risk.meet(other.cancer_risk),
+        }
+    }
+    fn join(self, other: Self) -> Self {
+        ScmState {
+            nicotine_level: self.nicotine_level.join(other.nicotine_level),
+            has_high_nicotine: self.has_high_nicotine.join(other.has_high_nicotine),
+            has_tar: self.has_tar.join(other.has_tar),
+            cancer_risk: self.cancer_risk.join(other.cancer_risk),
+        }
+    }
+    fn complement(self) -> Self {
+        ScmState {
+            nicotine_level: self.nicotine_level.complement(),
+            has_high_nicotine: self.has_high_nicotine.complement(),
+            has_tar: self.has_tar.complement(),
+            cancer_risk: self.cancer_risk.complement(),
+        }
+    }
 }
 
 pub type ScmCausaloid = Causaloid<ScmState, ScmState, (), ()>;

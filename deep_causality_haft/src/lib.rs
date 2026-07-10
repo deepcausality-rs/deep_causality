@@ -47,6 +47,7 @@ pub(crate) mod adjunction;
 mod alias;
 pub(crate) mod applicative;
 mod arrow;
+pub(crate) mod category;
 pub(crate) mod cybernetic_loop;
 pub(crate) mod effect_system;
 pub(crate) mod either;
@@ -57,7 +58,9 @@ pub(crate) mod hkt;
 pub(crate) mod io;
 pub mod iso;
 pub(crate) mod monad;
+pub(crate) mod monoidal;
 pub(crate) mod morphism;
+pub(crate) mod natural_transformation;
 pub(crate) mod pure;
 pub(crate) mod riemann_map;
 pub(crate) mod traversable;
@@ -73,10 +76,26 @@ pub use alias::alias_foldable::AliasFoldable;
 pub use alias::alias_functor::AliasFunctor;
 pub use alias::alias_monad::AliasMonad;
 pub use alias::alias_profunctor::AliasProfunctor;
-// Arrow algebra (value-level strong category: composition + the monoidal product, + builder)
+// Arrow algebra (value-level strong category: composition + the monoidal product `⊗`, the
+// coproduct/choice fragment `⊕` (ArrowChoice), + builder)
 pub use crate::arrow::{
-    Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
+    Arrow, ArrowBuilder, Choice, Compose, EndoArrow, Fanin, Fanout, First, Id, Left, Lift, Right,
+    Second, Split, arrow,
 };
+// Reified free Arrow: the typed-builder façade over the erased core (needs `alloc`, like `Free`)
+#[cfg(feature = "alloc")]
+pub use crate::arrow::{ArrowCore, ArrowTerm, ArrowVal};
+
+// Category (named identity + composition; the Kleisli category of a monad, and the function category)
+pub use crate::category::{Category, Fun, Kleisli};
+
+// Symmetric-monoidal PROP (copy comonoid Δ/ε, merge monoid ∇/η, symmetry σ)
+pub use crate::monoidal::SymMonoidal;
+
+// Natural transformations (the morphism between functors; the naturality square)
+pub use crate::natural_transformation::NaturalTransformation;
+#[cfg(feature = "alloc")]
+pub use crate::natural_transformation::OptionToVec;
 
 // Either (the choice sum)
 pub use crate::either::Either;

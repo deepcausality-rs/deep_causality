@@ -58,5 +58,6 @@ rust_test_suite(
     deps = [
         # Crate to test
         "//deep_causality_algebra",
+        "//deep_causality_num",
     ],
 )

@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Proposal: `freeze_dag()` — opt-in DAG enforcement for the causal graph
 
 **Status:** implemented. Additive, non-breaking.
-**Relates to** [`algebraic-causaloid-assumptions.md`](../causal-algebra/algebraic-causaloid-assumptions.md) assumption #2 (Q3, structural hygiene).
+**Relates to** [`algebraic-causaloid-assumptions.md`](causal-algebra/algebraic-causaloid-assumptions.md) assumption #2 (Q3, structural hygiene).
 
 **Implemented as** a default method `freeze_dag()` on the `CausableGraph<T>` trait (`deep_causality/src/traits/causable_graph/graph/mod.rs`), using the confirmed "freeze → check → unwind on cycle" ordering: `ultragraph`'s `has_cycle()` is available only on the static (frozen) state, and the static check (Kahn's algorithm) is total (`Ok(true)`/`Ok(false)`), so the only reachable error is "cycle." Tests: `deep_causality/tests/types/causal_types/causaloid_graph/causality_graph_freeze_tests.rs`.
 

@@ -41,6 +41,10 @@ exclude = [
 # Disabled by default to use native Rust rng instead.
 os-random = ["deep_causality_uncertain/os-random"]
 
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.1"
+
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"
 version = "0.4"

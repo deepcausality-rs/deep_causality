@@ -45,7 +45,7 @@
 //!
 //! The count is carried in a floating-point `T`, so it is **exact only up to the
 //! mantissa width of `T`**: `2^53` for `f64`, `~2^106` for `Float106`. Beyond
-//! that, the inclusion–exclusion (which subtracts, see [`combinatorics::rho`])
+//! that, the inclusion–exclusion (which subtracts, see `combinatorics::rho`)
 //! rounds and may cancel, and the returned integer can be off by one or more with
 //! no error or saturation signal. Classes large enough to exceed `2^53` are far
 //! larger than `MEC_ENUM_BOUND`, so the enumerator cannot cross-check them either.

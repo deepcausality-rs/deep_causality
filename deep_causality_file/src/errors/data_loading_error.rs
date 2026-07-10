@@ -6,7 +6,7 @@
 //! The crate's stable public error type for all data loading.
 //!
 //! Design: a **public opaque struct** [`DataLoadingError`] wrapping a **private** representation enum
-//! [`DataLoadingErrorKind`]. The public type is the invariant API surface (its `Display` /
+//! `DataLoadingErrorKind`. The public type is the invariant API surface (its `Display` /
 //! [`std::error::Error`] behaviour); the private enum can grow new variants — a CSV parser, a parquet
 //! reader, a schema-mismatch case — **without a breaking change** to any consumer. New failure modes
 //! evolve behind the curtain; the public error stays the same.

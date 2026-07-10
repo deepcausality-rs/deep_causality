@@ -10,6 +10,7 @@ use crate::{CausalGraph, IdentificationValue};
 mod causable_graph;
 mod default;
 mod identifiable;
+pub mod lambda_edges;
 
 /// A specialized graph structure for representing and reasoning about causal relationships.
 ///

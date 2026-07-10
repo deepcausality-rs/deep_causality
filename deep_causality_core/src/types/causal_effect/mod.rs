@@ -144,12 +144,51 @@ impl<V> CausalEffect<V> {
     /// The catamorphism / algebraic-effect handler: interpret the program. `pure_case` gives meaning
     /// to a value leaf; `algebra` interprets a `RelayTo(target, folded_sub)` command node. This is
     /// the `Free::fold` the reasoning engine specializes.
+    ///
+    /// `fold` satisfies the two handler equations definitionally and is the **unique** function
+    /// that does — the interpreter is determined by its value case and its command algebra
+    /// (initiality of the free monad). Machine-checked as `core.causal_effect.fold_universal` in
+    /// `lean/DeepCausalityFormal/Core/CausalEffect.lean`.
     pub fn fold<X, P, A>(self, pure_case: &P, algebra: &A) -> X
     where
         P: Fn(Option<V>) -> X,
         A: Fn(usize, X) -> X,
     {
         fold_program(self.0, pure_case, algebra)
+    }
+
+    // -- Monad structure (the success channel of the transformer stack) --------------------------
+
+    /// The success-channel monad bind (the `Free ∘ Maybe` layer): dispatch on the effect —
+    /// a `None` leaf is a **local zero** (preserved where it is), a value leaf runs the
+    /// continuation, and a `RelayTo` node threads the bind under the command. The operation is
+    /// single-hole, so the continuation is applied at most once and `FnOnce` suffices.
+    ///
+    /// Together with the carrier's error channel (`Result`, the outermost `Except` layer;
+    /// see [`try_and_then`](Self::try_and_then)) this is the lawful monad of the outcome
+    /// `Except E (Free CausalCommand (Maybe V))` — machine-checked as
+    /// `core.causal_effect.transformer_stack` in `lean/DeepCausalityFormal/Core/CausalEffect.lean`.
+    pub fn and_then<W, F>(self, k: F) -> CausalEffect<W>
+    where
+        F: FnOnce(V) -> CausalEffect<W>,
+    {
+        CausalEffect(and_then_program(self.0, k))
+    }
+
+    /// The full transformer-stack bind: like [`and_then`](Self::and_then), but the continuation may
+    /// fail, and an error produced **inside a relayed sub-program is hoisted outward** — the
+    /// `Except` layer is outermost, so an inner failure aborts the whole outcome (exactly the
+    /// engine's node-error short-circuit). `Ok`-side structure is preserved: `None` stays a local
+    /// zero, a relay node keeps its target.
+    ///
+    /// This is the Rust realization of the composite `obind` proved lawful as
+    /// `core.causal_effect.transformer_stack` (left/right identity, associativity, the error
+    /// left-zero, and the `None` local zero).
+    pub fn try_and_then<W, E, F>(self, k: F) -> Result<CausalEffect<W>, E>
+    where
+        F: FnOnce(V) -> Result<CausalEffect<W>, E>,
+    {
+        try_and_then_program(self.0, k).map(CausalEffect)
     }
 }
 
@@ -178,6 +217,39 @@ where
         Free::Pure(opt) => pure_case(opt),
         Free::Suspend(CausalCommand::RelayTo(t, sub)) => {
             algebra(t, fold_program(*sub, pure_case, algebra))
+        }
+    }
+}
+
+/// Bind the single value leaf of a program (`Free ∘ Maybe`): `Pure(None)` is a local zero,
+/// `Pure(Some v)` runs the continuation, a `RelayTo` node threads the bind under the command.
+/// Single-hole, so `k` is applied at most once (`FnOnce`).
+fn and_then_program<V, W, F>(p: Program<V>, k: F) -> Program<W>
+where
+    F: FnOnce(V) -> CausalEffect<W>,
+{
+    match p {
+        Free::Pure(None) => Free::Pure(None),
+        Free::Pure(Some(v)) => k(v).0,
+        Free::Suspend(CausalCommand::RelayTo(t, sub)) => Free::Suspend(CausalCommand::RelayTo(
+            t,
+            Box::new(and_then_program(*sub, k)),
+        )),
+    }
+}
+
+/// The full-stack bind (`Except` outermost): an error from the continuation — even under a relay
+/// node — aborts the whole outcome; `Ok`-side structure is preserved.
+fn try_and_then_program<V, W, E, F>(p: Program<V>, k: F) -> Result<Program<W>, E>
+where
+    F: FnOnce(V) -> Result<CausalEffect<W>, E>,
+{
+    match p {
+        Free::Pure(None) => Ok(Free::Pure(None)),
+        Free::Pure(Some(v)) => k(v).map(|e| e.0),
+        Free::Suspend(CausalCommand::RelayTo(t, sub)) => {
+            let w = try_and_then_program(*sub, k)?;
+            Ok(Free::Suspend(CausalCommand::RelayTo(t, Box::new(w))))
         }
     }
 }

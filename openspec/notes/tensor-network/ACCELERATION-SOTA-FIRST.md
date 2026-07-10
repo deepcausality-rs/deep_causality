@@ -29,7 +29,7 @@ contraction." That is probably the *wrong* first target:
   contraction path is often a larger lever than the per-contraction kernel — a hypergraph
   optimization problem with a mature toolchain. The right path can change the asymptotic cost; no
   amount of GPU saves a bad order.
-- **The project's own finding tempers the goal.** Per [`../cfd/tensor_network_cfd.md`](../cfd/tensor_network_cfd.md)
+- **The project's own finding tempers the goal.** Per [`../cfd/tensor_network_cfd.md`](../archive/cfd/tensor_network_cfd.md)
   §0, at the project's Reynolds numbers TN compression buys *accuracy affordability*, not raw speed,
   and any wall-clock advantage appears only above Re ≈ 9.5×10³. So "make the tensor backend fast"
   must be aimed at the regimes/operations where speed actually matters, which the survey defines.
@@ -136,7 +136,7 @@ Cross-reference:
 - [`../archive/tensor-network/Tensor-Network-Spec.md`](../archive/tensor-network/Tensor-Network-Spec.md)
   — the build history and design of the MPS/MPO/AMEn stack being accelerated (start here for *what
   the kernels are*).
-- [`../cfd/tensor_network_cfd.md`](../cfd/tensor_network_cfd.md) — where TN actually helps the CFD
+- [`../cfd/tensor_network_cfd.md`](../archive/cfd/tensor_network_cfd.md) — where TN actually helps the CFD
   axis (accuracy affordability vs raw speed; the Re crossover that should aim the optimization).
 - The tensor-train specs under `openspec/specs/tensor-train*` (the live contracts the optimization
   must not break).

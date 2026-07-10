@@ -18,9 +18,15 @@ mod adjunction_tests;
 #[cfg(test)]
 mod applicative_tests;
 #[cfg(test)]
+mod arrow_choice_tests;
+#[cfg(all(test, feature = "alloc"))]
+mod arrow_term_tests;
+#[cfg(test)]
 mod arrow_tests;
 #[cfg(test)]
 mod bifunctor_tests;
+#[cfg(test)]
+mod category_tests;
 #[cfg(test)]
 mod comonad_tests;
 #[cfg(test)]
@@ -35,12 +41,18 @@ mod foldable_tests;
 mod free_monad_tests;
 #[cfg(test)]
 mod functor_tests;
+#[cfg(all(test, feature = "alloc"))]
+mod interpreter_tests;
 #[cfg(test)]
 mod io_tests;
+#[cfg(test)]
+mod kleisli_tests;
 #[cfg(test)]
 mod monad_tests;
 #[cfg(test)]
 mod monoidal_merge_tests;
+#[cfg(test)]
+mod monoidal_tests;
 #[cfg(test)]
 mod morphism_tests;
 #[cfg(test)]

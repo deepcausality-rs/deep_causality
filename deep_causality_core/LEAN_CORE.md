@@ -5,9 +5,9 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Lean Verification Status — `deep_causality_core`
 
-Status as of 2026-07-07. This note summarizes the machine-checked formalization of the core
+Status as of 2026-07-10. This note summarizes the machine-checked formalization of the core
 crate; it is the crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/causal-algebra/Formalization.md),
+[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_haft/LEAN_HAFT.md`](../deep_causality_haft/LEAN_HAFT.md).
 
 ## Summary
@@ -39,6 +39,16 @@ Rust implementation by a per-theorem witness test:
   `bind'`), `CausalEffect = Free CausalCommand (Option V)`, the `List Λ` log abstraction (timestamps
   quotiented exactly as `EffectLog`'s `PartialEq`), and the char-level CSV codec — with each
   `bind`/`fmap`/`map`/`render` body transcribed literally from the Rust source.
+- **Cross-crate additions (2026-07-10, `formalize-main-crate`):** `Core/CausalEffect.lean`
+  additionally carries `core.causal_effect.relay_round_composition` — multi-round adaptive
+  evaluation is the sequential (Kleisli) composition of its rounds — witnessed by the **main-crate**
+  graph engine (`run`'s realization is the `deep_causality` `'rounds` loop), so its witness lives in
+  `deep_causality/tests/`, not this crate. The `Core/` Lean directory also hosts the `deep_causality`
+  main crate's causaloid-layer formalization —
+  `Core/{Causaloid, VerdictClosure, GraphAlgebra, Catamorphism, CommandInput, ContextGraph}.lean` —
+  whose witnesses live in `deep_causality/tests/formalization_lean/` and whose ids are recorded in
+  `THEOREM_MAP.md` and the causaloid-formalization roadmap; those are outside this core-crate
+  summary's 26-id count.
 
 The audit against the accepted literature found 17 deviations between the code and its accepted
 definition. **All are resolved** — the two structural corrections (`separate-control-channel`,
@@ -47,7 +57,7 @@ implementation, and the long-blocked `core.causal_monad.lawful` claim is now clo
 control is separated into `CausalCommand`/`CausalEffect`; the carrier is the transformer stack
 `Except ∘ Free ∘ Maybe` of already-proven monads). The full audit trail with per-deviation
 resolution status lives in
-[`openspec/notes/causal-algebra/core-formalization-deviations.md`](../openspec/notes/causal-algebra/core-formalization-deviations.md).
+[`openspec/notes/causal-algebra/core-formalization-deviations.md`](../openspec/notes/archive/causal-algebra/core-formalization-deviations.md).
 
 ## How to check
 
@@ -94,6 +104,6 @@ cargo kani --tests -p deep_causality_core
    the load-bearing monad/arrow laws).
 4. **Purity is a precondition, not a guarantee.** Law-bearing signatures accept `FnMut`/`FnOnce`;
    the laws hold only for pure closures — documented, but not enforceable by Rust's type system.
-5. **Aeneas extraction (L4) not started.** Per `Formalization.md`, the claim for core is L1 + L2
-   (+ L3 on the load-bearing laws): *laws machine-checked in Lean; implementation pinned to the same
-   statements by tests and bounded model checking* — not "proved correct."
+5. **The claim is L1 + L2 (+ L3 on the load-bearing laws), not "proved correct."** Per
+   `Formalization.md`: *laws machine-checked in Lean; implementation pinned to the same statements by
+   tests and bounded model checking (Kani)* — not a proof that the shipped Rust code is correct.

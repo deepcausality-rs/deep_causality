@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::{CausableGraph, Causaloid, CausaloidGraph, PropagatingEffect};
+use deep_causality::{CausableGraph, Causaloid, CausaloidGraph, PropagatingEffect, Verdict};
 
 /// State struct to pass between causaloids in the RCM graph
 #[derive(Debug, Clone, Copy, Default)]
@@ -11,6 +11,55 @@ pub struct RcmState {
     pub drug_administered: bool,
     pub drug_effect: f64,
     pub final_bp: f64,
+}
+
+/// Graph reasoning requires the wire carrier to be a `Verdict` (the Stage-4 join bound:
+/// reconvergent values fuse with the commutative `∇ = Verdict::join`). `RcmState` is the
+/// **product lattice** of its fields — the `bool` field is the Boolean carrier; the blood-
+/// pressure reals use the extended-real min/max lattice (bounds `±∞`, complement `1 − x`),
+/// lawful for arbitrary values. This chain-shaped RCM has no reconvergent join, so the instance
+/// is a carrier bound, never exercised as a merge.
+impl Verdict for RcmState {
+    fn bottom() -> Self {
+        RcmState {
+            initial_bp: f64::NEG_INFINITY,
+            drug_administered: bool::bottom(),
+            drug_effect: f64::NEG_INFINITY,
+            final_bp: f64::NEG_INFINITY,
+        }
+    }
+    fn top() -> Self {
+        RcmState {
+            initial_bp: f64::INFINITY,
+            drug_administered: bool::top(),
+            drug_effect: f64::INFINITY,
+            final_bp: f64::INFINITY,
+        }
+    }
+    fn meet(self, other: Self) -> Self {
+        RcmState {
+            initial_bp: self.initial_bp.min(other.initial_bp),
+            drug_administered: self.drug_administered.meet(other.drug_administered),
+            drug_effect: self.drug_effect.min(other.drug_effect),
+            final_bp: self.final_bp.min(other.final_bp),
+        }
+    }
+    fn join(self, other: Self) -> Self {
+        RcmState {
+            initial_bp: self.initial_bp.max(other.initial_bp),
+            drug_administered: self.drug_administered.join(other.drug_administered),
+            drug_effect: self.drug_effect.max(other.drug_effect),
+            final_bp: self.final_bp.max(other.final_bp),
+        }
+    }
+    fn complement(self) -> Self {
+        RcmState {
+            initial_bp: 1.0 - self.initial_bp,
+            drug_administered: self.drug_administered.complement(),
+            drug_effect: 1.0 - self.drug_effect,
+            final_bp: 1.0 - self.final_bp,
+        }
+    }
 }
 
 pub type RCMCausaloid = Causaloid<RcmState, RcmState, (), ()>;

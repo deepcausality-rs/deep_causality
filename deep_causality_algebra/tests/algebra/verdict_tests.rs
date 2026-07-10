@@ -49,3 +49,23 @@ fn test_prob_mv_algebra() {
     assert_eq!(<Prob as Verdict>::bottom(), Prob(0.0));
     assert_eq!(<Prob as Verdict>::top(), Prob(1.0));
 }
+
+/// The raw `f64` MV-algebra carrier: `bottom = 0.0`, `top = 1.0`, `meet = min`, `join = max`,
+/// `complement = 1 − p`. `bottom`/`top`/`meet`/`join` are exact for these operands; complement is
+/// exact for values representable without rounding (`0.3` is not, so it is compared with tolerance).
+#[test]
+fn test_f64_mv_algebra() {
+    // lattice bounds
+    assert_eq!(<f64 as Verdict>::bottom(), 0.0);
+    assert_eq!(<f64 as Verdict>::top(), 1.0);
+    // meet = min, join = max (exact for these operands)
+    assert_eq!(0.3_f64.meet(0.8), 0.3);
+    assert_eq!(0.3_f64.join(0.8), 0.8);
+    // bottom is the join identity, top is the meet identity
+    assert_eq!(0.4_f64.join(<f64 as Verdict>::bottom()), 0.4);
+    assert_eq!(0.4_f64.meet(<f64 as Verdict>::top()), 0.4);
+    // complement = 1 − p
+    assert!((0.3_f64.complement() - 0.7).abs() < 1e-12);
+    // complement involution up to rounding
+    assert!((Verdict::complement(Verdict::complement(0.3_f64)) - 0.3).abs() < 1e-12);
+}

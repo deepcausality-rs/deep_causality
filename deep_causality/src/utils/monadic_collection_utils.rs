@@ -3,11 +3,41 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{AggregateLogic, CausalityError, CausalityErrorEnum};
+use deep_causality_algebra::Verdict;
 use deep_causality_core::CausalEffect;
 use deep_causality_uncertain::{Uncertain, UncertainBool, UncertainF64};
 
 /// Defines how to aggregate a collection of effects of type T.
-pub trait Aggregatable: Sized {
+///
+/// **Carrier bound (`Verdict`).** Aggregation is only defined over a lawful verdict algebra — a
+/// bounded lattice with complement — so `Verdict` is a supertrait: `All`/`Any`/`None`/`Some(k)`
+/// are closed operations in that algebra, which is what makes a collection of causaloids again a
+/// causaloid (`core.verdict.closure`, `lean/DeepCausalityFormal/Core/VerdictClosure.lean`;
+/// assumption #5). Implementing `Aggregatable` for a carrier with no `Verdict` instance is a
+/// compile error:
+///
+/// ```compile_fail
+/// use deep_causality::{Aggregatable, AggregateLogic, CausalityError};
+/// use deep_causality_core::CausalEffect;
+///
+/// struct NotAVerdict(u8);
+///
+/// // error[E0277]: the trait bound `NotAVerdict: Verdict` is not satisfied
+/// impl Aggregatable for NotAVerdict {
+///     fn aggregate(
+///         _effects: &[CausalEffect<Self>],
+///         _logic: &AggregateLogic,
+///         _threshold: Option<f64>,
+///     ) -> Result<CausalEffect<Self>, CausalityError> {
+///         unimplemented!()
+///     }
+/// }
+/// ```
+///
+/// Migration: implement [`Verdict`] for your carrier (`bottom`/`top`/`meet`/`join`/`complement`,
+/// lawful per `num.verdict.*`), or aggregate into a shipped carrier (`bool`, `f64`,
+/// `UncertainBool`, `UncertainF64`).
+pub trait Aggregatable: Verdict + Sized {
     fn aggregate(
         effects: &[CausalEffect<Self>],
         logic: &AggregateLogic,

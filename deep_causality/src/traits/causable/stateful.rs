@@ -33,7 +33,10 @@ use deep_causality_core::PropagatingProcess;
 /// The same `Causaloid` value can be evaluated via
 /// [`crate::MonadicCausable::evaluate`] (stateless, drops state) or via
 /// [`StatefulMonadicCausable::evaluate_stateful`] (preserves state).
-pub trait StatefulMonadicCausable<I, O, S, C> {
+///
+/// **Sealed:** implementable only inside `deep_causality` — the causal form set is closed at the
+/// three `CausaloidType` shapes (the crate-private `sealed` module; tracker #11a).
+pub trait StatefulMonadicCausable<I, O, S, C>: super::sealed::Sealed {
     /// Evaluate the causaloid in stateful form.
     ///
     /// # State and context threading

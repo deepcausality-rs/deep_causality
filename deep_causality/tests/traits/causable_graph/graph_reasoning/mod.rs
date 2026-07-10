@@ -4,4 +4,8 @@
  */
 
 #[cfg(test)]
+mod characterization_corpus_tests;
+#[cfg(test)]
+mod monadic_reasoning_join_tests;
+#[cfg(test)]
 mod stateful_tests;
