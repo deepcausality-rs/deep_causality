@@ -522,6 +522,7 @@ name = "deep_causality"
 version = "0.14.0"
 dependencies = [
  "criterion",
+ "deep_causality_algebra",
  "deep_causality_ast",
  "deep_causality_core",
  "deep_causality_data_structures",

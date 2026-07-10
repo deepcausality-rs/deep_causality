@@ -4,4 +4,6 @@
  */
 
 #[cfg(test)]
+mod characterization_corpus_tests;
+#[cfg(test)]
 mod stateful_tests;

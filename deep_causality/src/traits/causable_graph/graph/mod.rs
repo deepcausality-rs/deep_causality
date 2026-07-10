@@ -64,6 +64,127 @@ where
         Ok(())
     }
 
+    /// Freezes the graph with the full Stage-4 precondition checks: acyclicity
+    /// ([`freeze_dag`](Self::freeze_dag)) plus the **single-writer invariant** at reconvergent
+    /// joins — the structural preconditions the schedule-invariance theorem
+    /// (`core.causaloid.graph_fold_order_invariant`) assumes.
+    ///
+    /// # Single-writer invariant
+    ///
+    /// State is never merged at a join (the per-channel ruling): at most one incoming branch of a
+    /// join may write state. Because a stored causal function is opaque, writers are **declared**:
+    /// `state_writers` lists the node indices whose causal functions write the state channel. For
+    /// every join (a node with two or more incoming edges), a writer counts against an incoming
+    /// branch when it lies in that branch's ancestor cone but not in every branch's cone — a
+    /// writer *above the fork* is seen identically by all branches and cannot conflict. Two or
+    /// more branches with exclusive writers is a violation: the freeze fails, naming the join,
+    /// and the graph is rolled back to the dynamic state.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` — the graph is frozen, acyclic, and single-writer clean.
+    /// * `Err(CausalityGraphError)` — a check failed; the graph is left unfrozen.
+    fn freeze_verified(&mut self, state_writers: &[usize]) -> Result<(), CausalityGraphError>
+    where
+        Self: Sized,
+    {
+        self.freeze_verified_with_check(state_writers, |_| Ok(()))
+    }
+
+    /// [`freeze_verified`](Self::freeze_verified) with a **level-specific hook** — the extension
+    /// point for stack-level structural checks (e.g. the quantum layer's commuting-factorization
+    /// check; the QCM-on-EPP freeze model). The hook runs after the built-in checks pass, on the
+    /// frozen graph; a hook error rolls the graph back to the dynamic state.
+    fn freeze_verified_with_check<F>(
+        &mut self,
+        state_writers: &[usize],
+        level_check: F,
+    ) -> Result<(), CausalityGraphError>
+    where
+        F: Fn(&Self) -> Result<(), CausalityGraphError>,
+        Self: Sized,
+    {
+        // Check 1: acyclicity (freezes on success, rolls back on failure).
+        self.freeze_dag()?;
+
+        // Check 2: single-writer at every reconvergent join.
+        if let Err(e) = self.check_single_writer(state_writers) {
+            self.unfreeze();
+            return Err(e);
+        }
+
+        // Check 3: the level-specific hook.
+        if let Err(e) = level_check(self) {
+            self.unfreeze();
+            return Err(e);
+        }
+
+        Ok(())
+    }
+
+    /// The single-writer check on the frozen graph (see
+    /// [`freeze_verified`](Self::freeze_verified)). Split out so hooks and tests can run it
+    /// directly.
+    fn check_single_writer(&self, state_writers: &[usize]) -> Result<(), CausalityGraphError> {
+        use ultragraph::GraphTraversal;
+
+        if state_writers.is_empty() {
+            return Ok(());
+        }
+
+        let n_nodes = self.number_nodes();
+        let is_writer = |idx: usize| state_writers.contains(&idx);
+
+        // The ancestor cone of `start`, inclusive.
+        let cone = |start: usize| -> Vec<bool> {
+            let mut seen = vec![false; n_nodes];
+            seen[start] = true;
+            let mut stack = vec![start];
+            while let Some(node) = stack.pop() {
+                if let Ok(parents) = self.get_graph().inbound_edges(node) {
+                    for p in parents {
+                        if !seen[p] {
+                            seen[p] = true;
+                            stack.push(p);
+                        }
+                    }
+                }
+            }
+            seen
+        };
+
+        for join in 0..n_nodes {
+            let parents: Vec<usize> = match self.get_graph().inbound_edges(join) {
+                Ok(it) => it.collect(),
+                Err(_) => continue,
+            };
+            if parents.len() < 2 {
+                continue;
+            }
+
+            let cones: Vec<Vec<bool>> = parents.iter().map(|&p| cone(p)).collect();
+            // A writer above the fork (in every branch cone) cannot conflict; a branch counts
+            // as writing when it has a writer exclusive to it.
+            let writing_branches = cones
+                .iter()
+                .filter(|c| {
+                    (0..n_nodes)
+                        .any(|w| c[w] && is_writer(w) && !cones.iter().all(|other| other[w]))
+                })
+                .count();
+            if writing_branches >= 2 {
+                return Err(CausalityGraphError(format!(
+                    "Single-writer violation at join node {join}: {writing_branches} incoming \
+                     branches carry exclusive state-writers (declared writers: {state_writers:?}). \
+                     State is never merged at a reconvergent join — restructure so at most one \
+                     branch writes state (core.causaloid.graph_fold_order_invariant precondition)."
+                )));
+            }
+        }
+
+        Ok(())
+    }
+
     /// Returns a reference to the underlying `CausalGraph`.
     ///
     /// This method is primarily used to enable default implementations for

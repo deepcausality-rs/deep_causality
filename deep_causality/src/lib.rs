@@ -102,6 +102,7 @@ pub use crate::types::causal_types::aggregate_logic::AggregateLogic;
 pub use crate::types::causal_types::causal_type::CausaloidType;
 pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
+pub use crate::types::causal_types::causaloid_graph::lambda_edges::{EdgeLambdaFn, LambdaEdges};
 pub use crate::types::causal_types::*;
 // Default context node types.
 pub use crate::types::context_node_types::data::Data;
@@ -176,7 +177,11 @@ pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 //
 pub use crate::utils::math_utils;
 pub use crate::utils::monadic_collection_utils;
+pub use crate::utils::monadic_collection_utils::Aggregatable;
+// The collection-aggregation carrier algebra (the `Aggregatable: Verdict` bound;
+// `core.verdict.closure`).
 pub use crate::utils::time_utils;
+pub use deep_causality_algebra::Verdict;
 // Causable Collection Traits
 pub use traits::causable_collection::collection_accessor::CausableCollectionAccessor;
 pub use traits::causable_collection::collection_reasoning::monadic_collection::MonadicCausableCollection;

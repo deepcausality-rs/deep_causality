@@ -52,3 +52,36 @@ impl Verdict for bool {
         !self
     }
 }
+
+/// The raw probability carrier on `[0, 1]` — the same MV-algebra as [`crate::Prob`]
+/// (`meet = min`, `join = max`, `complement = 1 − p`; **not** Boolean: excluded middle fails).
+/// Provided so that `f64`-valued collection aggregation satisfies the `Verdict` carrier bound
+/// (`core.verdict.closure`); the caller is responsible for keeping values in `[0, 1]`, as with
+/// `Prob`.
+///
+/// Carrier-class note: the trait admits exactly the lawful lattice classes — Boolean (`bool`),
+/// MV (`Prob`/`f64`), and (planned, quantum) the orthomodular projection lattice. General
+/// effects/operators (`0 ≤ E ≤ I`) form only an effect algebra with *partial* meet/join, so no
+/// blanket tensor/operator instance is lawful (Stage-3 scope guard).
+impl Verdict for f64 {
+    #[inline]
+    fn bottom() -> Self {
+        0.0
+    }
+    #[inline]
+    fn top() -> Self {
+        1.0
+    }
+    #[inline]
+    fn meet(self, other: Self) -> Self {
+        self.min(other)
+    }
+    #[inline]
+    fn join(self, other: Self) -> Self {
+        self.max(other)
+    }
+    #[inline]
+    fn complement(self) -> Self {
+        1.0 - self
+    }
+}

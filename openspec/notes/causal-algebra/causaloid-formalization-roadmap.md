@@ -284,6 +284,21 @@ Plus the **logical/physical bridge**: cloud-QPU adapters (real quantum sampling 
 effect) in the **emergent / unverifiable** modality, kept type-distinct from the verifiable
 simulated-CJ modality (`full-stack.md` §7.1). **[planned]**
 
+**Verdict carriers at the quantum level (2026-07-10).** The `Verdict` trait (bounded lattice +
+complement) admits a third algebra class here: the **projection lattice** of a Hilbert space
+(Birkhoff–von Neumann quantum logic — `bottom = 0`, `top = I`, orthocomplement `I − P`, meet/join
+on ranges), an **orthomodular** lattice that fails distributivity the way `Prob` fails excluded
+middle. If this crate wants quantum propositions as first-class aggregation outputs, the instance
+is a dedicated newtype over a commuting projection family, with an orthomodular law note —
+Boolean → MV → orthomodular behind the one trait. Two guards: (1) general effects (`0 ≤ E ≤ I`)
+form an **effect algebra** whose meet/join are *partial* (undefined for non-commuting pairs), so
+no lawful blanket `Verdict` impl for a general tensor/operator type exists; (2) a **process
+matrix / process operator** is not a verdict at all — it is state-channel data whose causal
+content is its commuting factorization (checked at freeze), and verdicts are *extracted* from it
+at the measurement boundary: generalized Born rule → `Prob`, propositions → the projection
+lattice. Collection aggregation over quantum causaloids therefore aggregates extracted verdicts,
+never the operators themselves. **[planned — scope guard in the Stage-3 spec]**
+
 **Relativistic (level 2)** needs no crate: the metric is channel data applied coordinate-free
 inside `f` (working: `event_horizon_probe`); the optional invariant→order scheduler and
 frame-covariance freeze checks are a module over the core (`full-stack.md` §7). **[partially holds]**

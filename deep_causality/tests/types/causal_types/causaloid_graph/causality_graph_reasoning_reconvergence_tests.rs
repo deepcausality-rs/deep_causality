@@ -5,13 +5,14 @@
 
 //! Reconvergence (multi-parent fan-in) behaviour of `evaluate_subgraph_from_cause`.
 //!
-//! The reconvergence **merge (∇)** — combining two or more converging effects into one — is a
-//! symmetric-monoidal generator over the effect monad and an extension of the single-input
-//! causaloid that is not yet defined (see
-//! `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2). Until it lands, the
-//! engine fails **loudly** at a multi-fired reconvergence rather than silently picking one parent
-//! (the previous first-parent-wins bug). A reconvergence reached by a *single* fired parent is not
-//! a merge — it is the identity, and evaluates normally.
+//! The reconvergence **merge (∇)** landed with the Stage-4 graph algebra (the documented
+//! behavior change of `causaloid-formalization-stages-2-5`; previously the engine failed loudly
+//! here): converging values fuse as `join = ∇ ∘ (Λ₁ ⊗ Λ₂)` — each incoming edge's Λ decoration
+//! applied by intrinsic edge identity, then the commutative `∇ = Verdict::join` (f64: max) — so
+//! the result is invariant under every schedule consistent with the causal order
+//! (`core.causaloid.graph_fold_order_invariant`, `lean/DeepCausalityFormal/Core/GraphAlgebra.lean`;
+//! closes tracker #2 Q1). A reconvergence reached by a *single* fired parent is not a merge — it
+//! is the identity, and evaluates normally.
 
 use deep_causality::{
     CausableGraph, Causaloid, CausaloidGraph, MonadicCausableGraphReasoning, PropagatingEffect,
@@ -45,17 +46,15 @@ fn build_diamond() -> CausaloidGraph<Causaloid<f64, f64, (), ()>> {
 }
 
 #[test]
-fn reconvergence_multi_fired_errors_loudly() {
-    // Start at the root: both A and B fire into C -> multi-parent merge, which is undefined.
-    // The engine must error loudly, not silently drop a parent.
+fn reconvergence_multi_fired_merges_with_nabla_join() {
+    // Start at the root: both A and B fire into C. Stage-4 behavior change (documented): the
+    // former loud error ("the reconvergence merge (∇) is not yet defined") is now the defined
+    // merge — with no Λ decorations, C receives ∇(A, B) = Verdict::join = max(1.0, 10.0) = 10.0,
+    // and C (identity) returns it.
     let g = build_diamond();
     let res = g.evaluate_subgraph_from_cause(0, &PropagatingEffect::from_value(0.0));
-    assert!(res.is_err());
-    let msg = res.error().unwrap().to_string();
-    assert!(
-        msg.contains("reconvergence merge (∇) is not") && msg.contains("Node 3"),
-        "unexpected message: {msg}"
-    );
+    assert!(res.is_ok(), "got {:?}", res.error());
+    assert_eq!(res.value(), Some(&10.0));
 }
 
 #[test]

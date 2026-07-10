@@ -32,6 +32,25 @@ aggregation over an output type with no `Verdict` instance no longer compiles. T
 carriers SHALL remain `bool` (Boolean algebra) and the probability carrier (MV algebra,
 `complement = 1 − p`), named by `core.verdict.carriers` behind the one trait.
 
+**Quantum carrier note (scope guard).** The trait admits a third algebra class for
+`deep_causality_quantum`: the **projection lattice** of a Hilbert space (Birkhoff–von Neumann
+quantum logic — `bottom = 0`, `top = I`, `complement = I − P` orthocomplement, meet/join on
+ranges), an **orthomodular** lattice that fails distributivity the way `Prob` fails excluded
+middle; a future instance SHALL be a dedicated newtype (e.g. over a commuting projection family)
+with an orthomodular law note. A blanket `Verdict` impl for a general tensor/operator/process-
+matrix type SHALL NOT be added: general effects (`0 ≤ E ≤ I`) form an effect algebra whose
+meet/join are **partial** (undefined for non-commuting pairs), so the total `meet`/`join` contract
+cannot hold — and a process matrix is state-channel data (its causal content is its factorization,
+checked at freeze), not a truth value; verdicts are extracted from it at the measurement boundary
+(generalized Born rule → `Prob`, or propositions → the projection lattice).
+
+#### Scenario: No blanket tensor Verdict instance
+
+- **WHEN** the `Verdict` implementations are surveyed after this change
+- **THEN** no general tensor/operator/process-matrix type implements `Verdict`; the shipped
+  instances are the named carriers, and any quantum-proposition instance is a dedicated newtype
+  over a commuting family with its algebra class documented
+
 #### Scenario: Aggregation compiles for Verdict carriers
 
 - **WHEN** a collection causaloid aggregates over `bool` or the probability carrier

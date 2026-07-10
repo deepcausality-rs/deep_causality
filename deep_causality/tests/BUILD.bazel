@@ -1,6 +1,29 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 ###############################################################################
+# FORMALIZATION WITNESS TESTS (Lean bridge — see lean/THEOREM_MAP.md)
+###############################################################################
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality",
+        # Internal deps
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_uncertain",
+        "//ultragraph",
+    ],
+)
+
+###############################################################################
 # ERROR TESTS
 ###############################################################################
 rust_test_suite(

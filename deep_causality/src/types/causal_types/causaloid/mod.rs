@@ -16,7 +16,7 @@
 use crate::MonadicCausable;
 use crate::{
     AggregateLogic, CausalFn, CausaloidGraph, CausaloidType, ContextualCausalFn,
-    IdentificationValue, NumericalValue,
+    IdentificationValue, LambdaEdges, NumericalValue,
 };
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
@@ -84,6 +84,11 @@ where
     causal_coll: Option<Arc<Vec<Self>>>,
     /// An optional causal graph of child `Causaloid`s, used when `causal_type` is `Graph`.
     causal_graph: Option<Arc<CausaloidGraph<Self>>>,
+    /// Optional per-edge Λ decoration slots for the causal graph, keyed by intrinsic edge
+    /// identity (`(source, target)` node indices). An absent store or an absent slot is the
+    /// identity Λ. Used when `causal_type` is `Graph`; applied at reconvergent joins as
+    /// `join = ∇ ∘ (Λ₁ ⊗ Λ₂)` (`core.causaloid.inversion`).
+    graph_lambda_edges: Option<Arc<LambdaEdges<O>>>,
     /// A human-readable description of the `Causaloid`.
     description: String,
     /// PhantomData to mark the usage of `I`, `O`, `STATE`, and `C` type parameters.
@@ -122,6 +127,7 @@ where
             coll_threshold_value: None,
             causal_coll: None,
             causal_graph: None,
+            graph_lambda_edges: None,
             description: description.to_string(),
             _phantom: PhantomData,
         }
@@ -157,6 +163,7 @@ where
             coll_threshold_value: None,
             causal_coll: None,
             causal_graph: None,
+            graph_lambda_edges: None,
             description: description.to_string(),
             _phantom: PhantomData,
         }
@@ -215,6 +222,7 @@ where
             coll_threshold_value: Some(threshold_value),
             causal_coll: Some(causal_coll),
             causal_graph: None,
+            graph_lambda_edges: None,
             description: description.to_string(),
             _phantom: PhantomData,
         }
@@ -265,6 +273,7 @@ where
             coll_threshold_value: Some(threshold_value),
             causal_coll: Some(causal_coll),
             causal_graph: None,
+            graph_lambda_edges: None,
             description: description.to_string(),
             context: Some(context),
             context_causal_fn: None,
@@ -299,6 +308,7 @@ where
             coll_aggregate_logic: None,
             coll_threshold_value: None,
             causal_graph: Some(causal_graph),
+            graph_lambda_edges: None,
             description: description.to_string(),
             context: None,
             context_causal_fn: None,
@@ -336,8 +346,51 @@ where
             coll_aggregate_logic: None,
             coll_threshold_value: None,
             causal_graph: Some(causal_graph),
+            graph_lambda_edges: None,
             description: description.to_string(),
             context: Some(context),
+            context_causal_fn: None,
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Creates a new `Causaloid` encapsulating a causal graph whose edges carry per-edge Λ
+    /// decoration slots.
+    ///
+    /// Λ is connection data (Hardy, arXiv:gr-qc/0509120): an optional transform attached to one
+    /// identified edge, applied to the value flowing along that edge before the commutative merge
+    /// `∇` at a reconvergent join — `join = ∇ ∘ (Λ₁ ⊗ Λ₂)`. Slots are keyed by intrinsic edge
+    /// identity (`(source, target)` node indices), never by order; an absent slot is the identity
+    /// Λ, so a graph built with an empty [`LambdaEdges`] evaluates exactly like one built with
+    /// [`Causaloid::from_causal_graph`]. Machine-checked model: `core.causaloid.inversion`
+    /// (`lean/DeepCausalityFormal/Core/Causaloid.lean`).
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - A unique identifier for the causaloid.
+    /// * `description` - A human-readable description of the causaloid.
+    /// * `causal_graph` - An `Arc` to a `CausaloidGraph` containing the child `Causaloid`s.
+    /// * `lambda_edges` - The identity-keyed per-edge Λ decoration slots for that graph.
+    ///
+    /// # Returns
+    /// A new `Causaloid` instance of `CausaloidType::Graph` carrying the Λ decorations.
+    pub fn from_causal_graph_with_lambda_edges(
+        id: IdentificationValue,
+        description: &str,
+        causal_graph: Arc<CausaloidGraph<Self>>,
+        lambda_edges: Arc<LambdaEdges<O>>,
+    ) -> Self {
+        Causaloid {
+            id,
+            causal_type: CausaloidType::Graph,
+            causal_fn: None,
+            causal_coll: None,
+            coll_aggregate_logic: None,
+            coll_threshold_value: None,
+            causal_graph: Some(causal_graph),
+            graph_lambda_edges: Some(lambda_edges),
+            description: description.to_string(),
+            context: None,
             context_causal_fn: None,
             _phantom: PhantomData,
         }
@@ -362,6 +415,7 @@ where
             context: self.context.clone(),
             causal_coll: self.causal_coll.clone(),
             causal_graph: self.causal_graph.clone(),
+            graph_lambda_edges: self.graph_lambda_edges.clone(),
             description: self.description.clone(),
             _phantom: PhantomData,
         }

@@ -92,6 +92,21 @@ reconvergent join is undefined by ruling (the per-channel policy). The freeze st
 verifies at most one incoming branch writes state; violation is a freeze error naming the join.
 This keeps `core.causaloid.graph_fold_order_invariant`'s state clause trivial (only one writer
 exists) instead of requiring a state-merge algebra nobody has semantics for.
+*Implementation rulings (2026-07-10):* (a) a stored causal function is opaque, so writers are
+**declared** — `freeze_verified(state_writers: &[usize])` — and a writer above the fork (in every
+branch's ancestor cone) does not count: only branch-exclusive writers can conflict;
+`freeze_verified_with_check` carries the level-specific hook. (b) The **stateful** engine keeps
+its loud reconvergence failure: with `S` opaque (no `Eq`/merge), no lawful runtime state policy
+exists — the freeze check is its guard, and the defined value merge lands in the classical engine
+(state = `()`, single-writer trivially satisfied).
+
+**D8b — The default `∇` is `Verdict::join`.** Stage 3's carrier bound supplies Stage 4's merge:
+the `(V, join, bottom)` reduct of a `Verdict` is a commutative monoid (join-semilattice), so
+`MonadicCausableGraphReasoning` gains the bound `V: Verdict` (breaking in the same family as
+Stage 3; every in-repo carrier has an instance) and the reconvergence arm fuses Λ-transformed
+present values with `join`, absence propagating when no parent carries a value. Λ decorations
+enter through the new `evaluate_subgraph_from_cause_with_lambda_edges`; the undecorated method
+delegates with an empty store, keeping chains/trees bit-identical (corpus-verified).
 
 **D9 — Uniqueness follows Stage 1's `fold_unique` pattern, lifted to the causaloid.**
 `core.causaloid.catamorphism_unique` takes a hypothesis interpreter `h` plus the three
@@ -137,6 +152,8 @@ Rollback per stage = revert the stage's commit; no stage leaves the workspace re
 
 ## Open Questions
 
-- Whether the Λ decoration should also be permitted on `Collection` members (per-member Λ before
-  the fold) or stay graph-only in this change. Default: graph-only; the collection fold is already
-  order-free, and per-member transforms are expressible inside the member causaloids.
+- None. Λ decorations are **graph-only** (decided in review, 2026-07-10): Λ is connection data and
+  needs an identity-bearing edge to attach to; `Coll` is a structureless bag, and a per-member Λ
+  would turn it into a star graph — duplicating `Graph` and reopening the #1 and Stage-3 proofs.
+  Per-member transforms remain expressible inside the member causaloid or as an explicit
+  star-topology graph.

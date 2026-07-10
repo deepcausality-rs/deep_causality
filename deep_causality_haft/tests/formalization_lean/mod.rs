@@ -17,6 +17,8 @@
 mod adjunction_tests;
 #[cfg(test)]
 mod applicative_tests;
+#[cfg(test)]
+mod arrow_choice_tests;
 #[cfg(all(test, feature = "alloc"))]
 mod arrow_term_tests;
 #[cfg(test)]

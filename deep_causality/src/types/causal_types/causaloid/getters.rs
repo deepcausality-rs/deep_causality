@@ -41,6 +41,12 @@ where
         self.causal_graph.as_ref()
     }
 
+    /// The per-edge Λ decoration slots of a `Graph` causaloid, if any were attached.
+    /// `None` (or an absent slot within the store) means the identity Λ on every edge.
+    pub fn graph_lambda_edges(&self) -> Option<&Arc<LambdaEdges<O>>> {
+        self.graph_lambda_edges.as_ref()
+    }
+
     pub fn description(&self) -> &str {
         &self.description
     }

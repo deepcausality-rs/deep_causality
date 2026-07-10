@@ -12,18 +12,36 @@ pub enum ArithmeticOperator {
     Sub,
     Mul,
     Div,
+    /// The lesser operand — the `[0, 1]` lattice meet of the MV `Verdict` carrier.
+    Min,
+    /// The greater operand — the `[0, 1]` lattice join of the MV `Verdict` carrier.
+    Max,
 }
 
 impl ArithmeticOperator {
     /// Apply the operation at the operands' precision. Generic over `R: RealField`
-    /// (`Add`/`Sub`/`Mul` from the ring, `Div` from the field), so the same code path
-    /// serves `f64` (bit-identically) and `Float106`.
+    /// (`Add`/`Sub`/`Mul` from the ring, `Div` from the field, `Min`/`Max` from the order),
+    /// so the same code path serves `f64` (bit-identically) and `Float106`.
     pub fn apply<R: RealField>(&self, a: R, b: R) -> R {
         match self {
             ArithmeticOperator::Add => a + b,
             ArithmeticOperator::Sub => a - b,
             ArithmeticOperator::Mul => a * b,
             ArithmeticOperator::Div => a / b,
+            ArithmeticOperator::Min => {
+                if a <= b {
+                    a
+                } else {
+                    b
+                }
+            }
+            ArithmeticOperator::Max => {
+                if a >= b {
+                    a
+                } else {
+                    b
+                }
+            }
         }
     }
 }
@@ -37,6 +55,8 @@ impl fmt::Display for ArithmeticOperator {
             ArithmeticOperator::Sub => write!(f, "Sub"),
             ArithmeticOperator::Mul => write!(f, "Mul"),
             ArithmeticOperator::Div => write!(f, "Div"),
+            ArithmeticOperator::Min => write!(f, "Min"),
+            ArithmeticOperator::Max => write!(f, "Max"),
         }
     }
 }

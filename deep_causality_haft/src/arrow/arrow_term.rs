@@ -97,6 +97,11 @@ pub enum ArrowVal<V> {
     Leaf(V),
     /// A product node — the pair the strength combinators operate on.
     Pair(Box<ArrowVal<V>>, Box<ArrowVal<V>>),
+    /// A left injection — the sum node the choice combinators route on (`⊕`, the coproduct
+    /// counterpart of `Pair`).
+    InL(Box<ArrowVal<V>>),
+    /// A right injection — the other summand of the sum node.
+    InR(Box<ArrowVal<V>>),
 }
 
 impl<V> ArrowVal<V> {
@@ -104,6 +109,18 @@ impl<V> ArrowVal<V> {
     #[inline]
     pub fn pair(left: ArrowVal<V>, right: ArrowVal<V>) -> Self {
         ArrowVal::Pair(Box::new(left), Box::new(right))
+    }
+
+    /// Builds a [`ArrowVal::InL`] (left injection) without writing the `Box`.
+    #[inline]
+    pub fn inl(value: ArrowVal<V>) -> Self {
+        ArrowVal::InL(Box::new(value))
+    }
+
+    /// Builds a [`ArrowVal::InR`] (right injection) without writing the `Box`.
+    #[inline]
+    pub fn inr(value: ArrowVal<V>) -> Self {
+        ArrowVal::InR(Box::new(value))
     }
 }
 
@@ -129,6 +146,15 @@ pub enum ArrowCore<G> {
     Split(Box<ArrowCore<G>>, Box<ArrowCore<G>>),
     /// `f &&& g` — copy the input and feed it to both.
     Fanout(Box<ArrowCore<G>>, Box<ArrowCore<G>>),
+    /// `left f` — act on the left summand of a sum, pass a right injection through (`⊕`).
+    Left(Box<ArrowCore<G>>),
+    /// `right g` — act on the right summand of a sum, pass a left injection through.
+    Right(Box<ArrowCore<G>>),
+    /// `f +++ g` — route each summand of a sum to its own arm.
+    Choice(Box<ArrowCore<G>>, Box<ArrowCore<G>>),
+    /// `f ||| g` — the coproduct elimination: route each summand to its arm and **unwrap** the
+    /// injection (both arms converge on one output).
+    Fanin(Box<ArrowCore<G>>, Box<ArrowCore<G>>),
 }
 
 impl<G> ArrowCore<G> {
@@ -154,28 +180,49 @@ impl<G> ArrowCore<G> {
             ArrowCore::Id => input,
             ArrowCore::Gen(g) => match input {
                 ArrowVal::Leaf(v) => ArrowVal::Leaf(interp(g, v)),
-                other => other,
+                other @ (ArrowVal::Pair(..) | ArrowVal::InL(_) | ArrowVal::InR(_)) => other,
             },
             ArrowCore::Compose(f, g) => g.interpret(interp, f.interpret(interp, input)),
             ArrowCore::First(f) => match input {
                 ArrowVal::Pair(a, b) => ArrowVal::Pair(Box::new(f.interpret(interp, *a)), b),
-                other => other,
+                other @ (ArrowVal::Leaf(_) | ArrowVal::InL(_) | ArrowVal::InR(_)) => other,
             },
             ArrowCore::Second(g) => match input {
                 ArrowVal::Pair(a, b) => ArrowVal::Pair(a, Box::new(g.interpret(interp, *b))),
-                other => other,
+                other @ (ArrowVal::Leaf(_) | ArrowVal::InL(_) | ArrowVal::InR(_)) => other,
             },
             ArrowCore::Split(f, g) => match input {
                 ArrowVal::Pair(a, b) => ArrowVal::Pair(
                     Box::new(f.interpret(interp, *a)),
                     Box::new(g.interpret(interp, *b)),
                 ),
-                other => other,
+                other @ (ArrowVal::Leaf(_) | ArrowVal::InL(_) | ArrowVal::InR(_)) => other,
             },
             ArrowCore::Fanout(f, g) => ArrowVal::Pair(
                 Box::new(f.interpret(interp, input.clone())),
                 Box::new(g.interpret(interp, input)),
             ),
+            // The choice fragment (⊕): route on the sum node. `Left`/`Right` act on their summand
+            // and pass the other injection through; `Choice` routes both; `Fanin` routes and
+            // UNWRAPS the injection (the coproduct elimination — both arms converge).
+            ArrowCore::Left(f) => match input {
+                ArrowVal::InL(a) => ArrowVal::InL(Box::new(f.interpret(interp, *a))),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..) | ArrowVal::InR(_)) => other,
+            },
+            ArrowCore::Right(g) => match input {
+                ArrowVal::InR(b) => ArrowVal::InR(Box::new(g.interpret(interp, *b))),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..) | ArrowVal::InL(_)) => other,
+            },
+            ArrowCore::Choice(f, g) => match input {
+                ArrowVal::InL(a) => ArrowVal::InL(Box::new(f.interpret(interp, *a))),
+                ArrowVal::InR(b) => ArrowVal::InR(Box::new(g.interpret(interp, *b))),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..)) => other,
+            },
+            ArrowCore::Fanin(f, g) => match input {
+                ArrowVal::InL(a) => f.interpret(interp, *a),
+                ArrowVal::InR(b) => g.interpret(interp, *b),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..)) => other,
+            },
         }
     }
 }
@@ -261,5 +308,46 @@ impl<In, Out, G> ArrowTerm<In, Out, G> {
     #[inline]
     pub fn fanout<O2>(self, g: ArrowTerm<In, O2, G>) -> ArrowTerm<In, (Out, O2), G> {
         ArrowTerm::wrap(ArrowCore::Fanout(Box::new(self.core), Box::new(g.core)))
+    }
+
+    /// `left`: lift `In → Out` to `Either<In, C> → Either<Out, C>`, passing a right injection
+    /// through (the choice fragment `⊕`; Hughes 2000 §5).
+    #[inline]
+    pub fn left<C>(self) -> ArrowTerm<crate::Either<In, C>, crate::Either<Out, C>, G> {
+        ArrowTerm::wrap(ArrowCore::Left(Box::new(self.core)))
+    }
+
+    /// `right`: lift `In → Out` to `Either<C, In> → Either<C, Out>`, passing a left injection
+    /// through.
+    #[inline]
+    pub fn right<C>(self) -> ArrowTerm<crate::Either<C, In>, crate::Either<C, Out>, G> {
+        ArrowTerm::wrap(ArrowCore::Right(Box::new(self.core)))
+    }
+
+    /// The coproduct sum `self +++ g`: `Either<In, I2> → Either<Out, O2>`.
+    #[inline]
+    pub fn choice<I2, O2>(
+        self,
+        g: ArrowTerm<I2, O2, G>,
+    ) -> ArrowTerm<crate::Either<In, I2>, crate::Either<Out, O2>, G> {
+        ArrowTerm::wrap(ArrowCore::Choice(Box::new(self.core), Box::new(g.core)))
+    }
+
+    /// Fanin `self ||| g`: the coproduct elimination — both branches converge on `Out`, so the
+    /// branch outputs must agree: `Either<In, I2> → Out`. Mistyped branch wiring fails to compile:
+    ///
+    /// ```compile_fail
+    /// use deep_causality_haft::ArrowTerm;
+    /// #[derive(Clone)]
+    /// struct Op;
+    /// let int_branch = ArrowTerm::<i64, i64, Op>::generator(Op);   // Out = i64
+    /// let pair_branch = ArrowTerm::<u8, u8, Op>::generator(Op)
+    ///     .first::<u8>();                                          // Out = (u8, u8)
+    /// // i64 ≠ (u8, u8) — the branch outputs do not converge.
+    /// let _bad = int_branch.fanin(pair_branch);
+    /// ```
+    #[inline]
+    pub fn fanin<I2>(self, g: ArrowTerm<I2, Out, G>) -> ArrowTerm<crate::Either<In, I2>, Out, G> {
+        ArrowTerm::wrap(ArrowCore::Fanin(Box::new(self.core), Box::new(g.core)))
     }
 }

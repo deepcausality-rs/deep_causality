@@ -112,6 +112,44 @@ impl<G> ArrowCore<G> {
                     )
                 })
             }
+            // The choice fragment (⊕): route on the sum node — the effect runs only on the taken
+            // branch (a sum routes, it never copies, so no `Clone` of the payload is needed).
+            ArrowCore::Left(f) => match input {
+                ArrowVal::InL(a) => <M as Functor<M>>::fmap(
+                    f.interpret_kleisli::<M, V, Phi>(phi, *a),
+                    ArrowVal::inl,
+                ),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..) | ArrowVal::InR(_)) => {
+                    <M as Pure<M>>::pure(other)
+                }
+            },
+            ArrowCore::Right(h) => match input {
+                ArrowVal::InR(b) => <M as Functor<M>>::fmap(
+                    h.interpret_kleisli::<M, V, Phi>(phi, *b),
+                    ArrowVal::inr,
+                ),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..) | ArrowVal::InL(_)) => {
+                    <M as Pure<M>>::pure(other)
+                }
+            },
+            ArrowCore::Choice(f, h) => match input {
+                ArrowVal::InL(a) => <M as Functor<M>>::fmap(
+                    f.interpret_kleisli::<M, V, Phi>(phi, *a),
+                    ArrowVal::inl,
+                ),
+                ArrowVal::InR(b) => <M as Functor<M>>::fmap(
+                    h.interpret_kleisli::<M, V, Phi>(phi, *b),
+                    ArrowVal::inr,
+                ),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..)) => <M as Pure<M>>::pure(other),
+            },
+            // Fanin eliminates the sum: the taken branch's effectful result IS the output — no
+            // re-injection (the coproduct elimination, `haft.either.coproduct_universal`).
+            ArrowCore::Fanin(f, h) => match input {
+                ArrowVal::InL(a) => f.interpret_kleisli::<M, V, Phi>(phi, *a),
+                ArrowVal::InR(b) => h.interpret_kleisli::<M, V, Phi>(phi, *b),
+                other @ (ArrowVal::Leaf(_) | ArrowVal::Pair(..)) => <M as Pure<M>>::pure(other),
+            },
         }
     }
 }

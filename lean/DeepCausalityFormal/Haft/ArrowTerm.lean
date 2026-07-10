@@ -48,7 +48,8 @@ Rust witness: `deep_causality_haft/tests/formalization_lean/arrow_term_tests.rs`
 namespace DeepCausalityFormal.Haft.ArrowTerm
 
 /-- The erased core: the free arrow over a generator set `G`, as first-order data. Mirrors the Rust
-    `ArrowCore<G>` enum. -/
+    `ArrowCore<G>` enum — including the choice generators `left`/`right`/`choice`/`fanin` of the
+    `⊕` fragment (Stage 2b; Hughes 2000 §5). -/
 inductive ArrowCore (G : Type) : Type where
   | id
   | gen (g : G)
@@ -57,27 +58,60 @@ inductive ArrowCore (G : Type) : Type where
   | second (f : ArrowCore G)
   | split (f h : ArrowCore G)
   | fanout (f h : ArrowCore G)
+  | left (f : ArrowCore G)
+  | right (f : ArrowCore G)
+  | choice (f h : ArrowCore G)
+  | fanin (f h : ArrowCore G)
 
-/-- The value universe interpreted terms flow through — a binary tree with payload leaves. Mirrors
-    the Rust `ArrowVal<V>`. -/
+/-- The value universe interpreted terms flow through — a binary tree with payload leaves, product
+    (`pair`) nodes, and the sum (`inl`/`inr`) nodes the choice generators route on. Mirrors the
+    Rust `ArrowVal<V>`. -/
 inductive ArrowVal (V : Type) : Type where
   | leaf (v : V)
   | pair (a b : ArrowVal V)
+  | inl (a : ArrowVal V)
+  | inr (b : ArrowVal V)
 
 /-- The interpreter: extend a generator interpretation `φ` homomorphically over the whole term.
-    Mirrors `ArrowCore::interpret` line for line. -/
+    Mirrors `ArrowCore::interpret` line for line — the choice generators route on the sum node,
+    with `fanin` UNWRAPPING the injection (the coproduct elimination). A combinator applied to a
+    value of the wrong shape passes it through (deviation note 3). -/
 def interpret {G V : Type} (φ : G → V → V) : ArrowCore G → ArrowVal V → ArrowVal V
   | .id,          x           => x
   | .gen g,       .leaf v     => .leaf (φ g v)
   | .gen _,       .pair a b   => .pair a b
+  | .gen _,       .inl a      => .inl a
+  | .gen _,       .inr b      => .inr b
   | .compose f h, x           => interpret φ h (interpret φ f x)
   | .first _,     .leaf v     => .leaf v
   | .first f,     .pair a b   => .pair (interpret φ f a) b
+  | .first _,     .inl a      => .inl a
+  | .first _,     .inr b      => .inr b
   | .second _,    .leaf v     => .leaf v
   | .second f,    .pair a b   => .pair a (interpret φ f b)
+  | .second _,    .inl a      => .inl a
+  | .second _,    .inr b      => .inr b
   | .split _ _,   .leaf v     => .leaf v
   | .split f h,   .pair a b   => .pair (interpret φ f a) (interpret φ h b)
+  | .split _ _,   .inl a      => .inl a
+  | .split _ _,   .inr b      => .inr b
   | .fanout f h,  x           => .pair (interpret φ f x) (interpret φ h x)
+  | .left f,      .inl a      => .inl (interpret φ f a)
+  | .left _,      .leaf v     => .leaf v
+  | .left _,      .pair a b   => .pair a b
+  | .left _,      .inr b      => .inr b
+  | .right f,     .inr b      => .inr (interpret φ f b)
+  | .right _,     .leaf v     => .leaf v
+  | .right _,     .pair a b   => .pair a b
+  | .right _,     .inl a      => .inl a
+  | .choice f _,  .inl a      => .inl (interpret φ f a)
+  | .choice _ h,  .inr b      => .inr (interpret φ h b)
+  | .choice _ _,  .leaf v     => .leaf v
+  | .choice _ _,  .pair a b   => .pair a b
+  | .fanin f _,   .inl a      => interpret φ f a
+  | .fanin _ h,   .inr b      => interpret φ h b
+  | .fanin _ _,   .leaf v     => .leaf v
+  | .fanin _ _,   .pair a b   => .pair a b
 
 variable {G V : Type}
 
@@ -96,9 +130,26 @@ theorem interpret_sound (φ : G → V → V) :
     ∧ (∀ f h x, interpret φ (.fanout f h) x = .pair (interpret φ f x) (interpret φ h x)) := by
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intros <;> rfl
 
+/-- Interpreting the choice generators agrees with the eager ArrowChoice combinators
+    (`Haft/ArrowChoice.lean`): `left`/`right`/`choice` route on the sum node component-wise, and
+    `fanin` eliminates it — each equation is definitional, extending `interpret_sound` to the
+    `⊕`-enlarged generator set.
+
+    THEOREM_MAP: `haft.arrow_term.choice_interpret_sound` -/
+theorem choice_interpret_sound (φ : G → V → V) :
+    (∀ f a, interpret φ (.left f) (.inl a) = .inl (interpret φ f a))
+    ∧ (∀ f b, interpret φ (.left f) (.inr b) = .inr b)
+    ∧ (∀ f b, interpret φ (.right f) (.inr b) = .inr (interpret φ f b))
+    ∧ (∀ f a, interpret φ (.right f) (.inl a) = .inl a)
+    ∧ (∀ f h a, interpret φ (.choice f h) (.inl a) = .inl (interpret φ f a))
+    ∧ (∀ f h b, interpret φ (.choice f h) (.inr b) = .inr (interpret φ h b))
+    ∧ (∀ f h a, interpret φ (.fanin f h) (.inl a) = interpret φ f a)
+    ∧ (∀ f h b, interpret φ (.fanin f h) (.inr b) = interpret φ h b) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> intros <;> rfl
+
 /-- The free arrow's universal property: interpretation is **determined by the generators**. If two
-    generator-interpretations agree everywhere, they induce equal interpretations on every term.
-    Proved by structural induction on the term.
+    generator-interpretations agree everywhere, they induce equal interpretations on every term —
+    including every term of the `⊕`-enlarged set. Proved by structural induction on the term.
 
     THEOREM_MAP: `haft.arrow_term.free` -/
 theorem free (φ ψ : G → V → V) (hgen : ∀ g v, φ g v = ψ g v) :
@@ -111,6 +162,8 @@ theorem free (φ ψ : G → V → V) (hgen : ∀ g v, φ g v = ψ g v) :
       cases x with
       | leaf v => show ArrowVal.leaf (φ g v) = ArrowVal.leaf (ψ g v); rw [hgen g v]
       | pair a b => rfl
+      | inl a => rfl
+      | inr b => rfl
   | compose f h ihf ihh =>
       intro x
       show interpret φ h (interpret φ f x) = interpret ψ h (interpret ψ f x)
@@ -122,6 +175,8 @@ theorem free (φ ψ : G → V → V) (hgen : ∀ g v, φ g v = ψ g v) :
       | pair a b =>
           show ArrowVal.pair (interpret φ f a) b = ArrowVal.pair (interpret ψ f a) b
           rw [ihf a]
+      | inl a => rfl
+      | inr b => rfl
   | second f ihf =>
       intro x
       cases x with
@@ -129,6 +184,8 @@ theorem free (φ ψ : G → V → V) (hgen : ∀ g v, φ g v = ψ g v) :
       | pair a b =>
           show ArrowVal.pair a (interpret φ f b) = ArrowVal.pair a (interpret ψ f b)
           rw [ihf b]
+      | inl a => rfl
+      | inr b => rfl
   | split f h ihf ihh =>
       intro x
       cases x with
@@ -137,10 +194,64 @@ theorem free (φ ψ : G → V → V) (hgen : ∀ g v, φ g v = ψ g v) :
           show ArrowVal.pair (interpret φ f a) (interpret φ h b)
               = ArrowVal.pair (interpret ψ f a) (interpret ψ h b)
           rw [ihf a, ihh b]
+      | inl a => rfl
+      | inr b => rfl
   | fanout f h ihf ihh =>
       intro x
       show ArrowVal.pair (interpret φ f x) (interpret φ h x)
           = ArrowVal.pair (interpret ψ f x) (interpret ψ h x)
       rw [ihf x, ihh x]
+  | left f ihf =>
+      intro x
+      cases x with
+      | leaf v => rfl
+      | pair a b => rfl
+      | inl a =>
+          show ArrowVal.inl (interpret φ f a) = ArrowVal.inl (interpret ψ f a)
+          rw [ihf a]
+      | inr b => rfl
+  | right f ihf =>
+      intro x
+      cases x with
+      | leaf v => rfl
+      | pair a b => rfl
+      | inl a => rfl
+      | inr b =>
+          show ArrowVal.inr (interpret φ f b) = ArrowVal.inr (interpret ψ f b)
+          rw [ihf b]
+  | choice f h ihf ihh =>
+      intro x
+      cases x with
+      | leaf v => rfl
+      | pair a b => rfl
+      | inl a =>
+          show ArrowVal.inl (interpret φ f a) = ArrowVal.inl (interpret ψ f a)
+          rw [ihf a]
+      | inr b =>
+          show ArrowVal.inr (interpret φ h b) = ArrowVal.inr (interpret ψ h b)
+          rw [ihh b]
+  | fanin f h ihf ihh =>
+      intro x
+      cases x with
+      | leaf v => rfl
+      | pair a b => rfl
+      | inl a => exact ihf a
+      | inr b => exact ihh b
+
+/-- The universal property, restated for the choice fragment: two generator-interpretations that
+    agree induce equal interpretations on every `left`/`right`/`choice`/`fanin` term — the freeness
+    of the `⊕`-enlarged free arrow (a direct corollary of `free`, stated with its own id so the
+    enlargement is separately pinned).
+
+    THEOREM_MAP: `haft.arrow_term.choice_free` -/
+theorem choice_free (φ ψ : G → V → V) (hgen : ∀ g v, φ g v = ψ g v) (f h : ArrowCore G) :
+    (∀ x, interpret φ (.left f) x = interpret ψ (.left f) x)
+    ∧ (∀ x, interpret φ (.right f) x = interpret ψ (.right f) x)
+    ∧ (∀ x, interpret φ (.choice f h) x = interpret ψ (.choice f h) x)
+    ∧ (∀ x, interpret φ (.fanin f h) x = interpret ψ (.fanin f h) x) :=
+  ⟨fun x => free φ ψ hgen (.left f) x,
+   fun x => free φ ψ hgen (.right f) x,
+   fun x => free φ ψ hgen (.choice f h) x,
+   fun x => free φ ψ hgen (.fanin f h) x⟩
 
 end DeepCausalityFormal.Haft.ArrowTerm

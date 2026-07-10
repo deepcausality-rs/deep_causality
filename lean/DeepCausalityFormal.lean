@@ -71,6 +71,7 @@ import DeepCausalityFormal.Core.Alternatable
 import DeepCausalityFormal.Core.CausalFlow
 import DeepCausalityFormal.Core.Csv
 import DeepCausalityFormal.Core.Consistency
+import DeepCausalityFormal.Core.Causaloid
 import DeepCausalityFormal.Haft.Hkt
 import DeepCausalityFormal.Haft.Functor
 import DeepCausalityFormal.Haft.Pure
@@ -82,6 +83,7 @@ import DeepCausalityFormal.Haft.Profunctor
 import DeepCausalityFormal.Haft.MonoidalMerge
 import DeepCausalityFormal.Haft.ParametricMonad
 import DeepCausalityFormal.Haft.Arrow
+import DeepCausalityFormal.Haft.ArrowChoice
 import DeepCausalityFormal.Haft.ArrowTerm
 import DeepCausalityFormal.Haft.Category
 import DeepCausalityFormal.Haft.Kleisli

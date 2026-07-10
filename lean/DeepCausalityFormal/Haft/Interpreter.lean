@@ -43,7 +43,9 @@ Rust witness: `deep_causality_haft/tests/formalization_lean/interpreter_tests.rs
 
 namespace DeepCausalityFormal.Haft.Interpreter
 
-/-- The erased free-arrow core (re-declared self-contained; mirrors `Haft/ArrowTerm.lean`). -/
+/-- The erased free-arrow core (re-declared self-contained; mirrors `Haft/ArrowTerm.lean`) —
+    including the choice generators `left`/`right`/`choice`/`fanin` of the `⊕` fragment
+    (Stage 2b). -/
 inductive ArrowCore (G : Type) : Type where
   | id
   | gen (g : G)
@@ -52,9 +54,15 @@ inductive ArrowCore (G : Type) : Type where
   | second (f : ArrowCore G)
   | split (f h : ArrowCore G)
   | fanout (f h : ArrowCore G)
+  | left (f : ArrowCore G)
+  | right (f : ArrowCore G)
+  | choice (f h : ArrowCore G)
+  | fanin (f h : ArrowCore G)
 
-/-- A target **arrow algebra**: a carrier `T` with the seven strong-category operations. The Kleisli
-    category of a monad is one such algebra (`aid = pure`, `acompose = bind`). -/
+/-- A target **arrow algebra**: a carrier `T` with the strong-category operations plus the four
+    choice operations of the `⊕` fragment. The Kleisli category of a monad is one such algebra
+    (`aid = pure`, `acompose = bind`; the choice operations route the effect to the taken
+    branch — the Rust `interpret_kleisli` arms). -/
 structure ArrowAlg (G T : Type) where
   gen : G → T
   aid : T
@@ -63,6 +71,10 @@ structure ArrowAlg (G T : Type) where
   asecond : T → T
   asplit : T → T → T
   afanout : T → T → T
+  aleft : T → T
+  aright : T → T
+  achoice : T → T → T
+  afanin : T → T → T
 
 /-- The interpreter: the unique arrow-homomorphism (fold) from the free arrow into a target algebra.
     Mirrors `ArrowCore::interpret_kleisli` with the target specialised to Kleisli arrows. -/
@@ -74,6 +86,10 @@ def interp {G T : Type} (alg : ArrowAlg G T) : ArrowCore G → T
   | .second f    => alg.asecond (interp alg f)
   | .split f h   => alg.asplit (interp alg f) (interp alg h)
   | .fanout f h  => alg.afanout (interp alg f) (interp alg h)
+  | .left f      => alg.aleft (interp alg f)
+  | .right f     => alg.aright (interp alg f)
+  | .choice f h  => alg.achoice (interp alg f) (interp alg h)
+  | .fanin f h   => alg.afanin (interp alg f) (interp alg h)
 
 variable {G T : Type}
 
@@ -89,6 +105,20 @@ theorem preserves_id (alg : ArrowAlg G T) : interp alg .id = alg.aid := rfl
     THEOREM_MAP: `haft.interpreter.preserves_compose` -/
 theorem preserves_compose (alg : ArrowAlg G T) (f h : ArrowCore G) :
     interp alg (.compose f h) = alg.acompose (interp alg f) (interp alg h) := rfl
+
+/-- Functoriality extends to the choice generators: the interpreter sends `left`/`right`/
+    `choice`/`fanin` to the target algebra's choice operations — in the Kleisli target, the arms
+    that route the effect to the taken branch (`ArrowCore::interpret_kleisli`). Each equation is
+    definitional for the fold, extending `preserves_id`/`preserves_compose` to the `⊕`-enlarged
+    generator set.
+
+    THEOREM_MAP: `haft.interpreter.choice_preserved` -/
+theorem choice_preserved (alg : ArrowAlg G T) (f h : ArrowCore G) :
+    interp alg (.left f) = alg.aleft (interp alg f)
+    ∧ interp alg (.right f) = alg.aright (interp alg f)
+    ∧ interp alg (.choice f h) = alg.achoice (interp alg f) (interp alg h)
+    ∧ interp alg (.fanin f h) = alg.afanin (interp alg f) (interp alg h) :=
+  ⟨rfl, rfl, rfl, rfl⟩
 
 /-- The `Option ⇒ List` component of the `OptionToVec` natural transformation. -/
 def optionToList {α : Type} : Option α → List α

@@ -76,9 +76,11 @@ pub use alias::alias_foldable::AliasFoldable;
 pub use alias::alias_functor::AliasFunctor;
 pub use alias::alias_monad::AliasMonad;
 pub use alias::alias_profunctor::AliasProfunctor;
-// Arrow algebra (value-level strong category: composition + the monoidal product, + builder)
+// Arrow algebra (value-level strong category: composition + the monoidal product `⊗`, the
+// coproduct/choice fragment `⊕` (ArrowChoice), + builder)
 pub use crate::arrow::{
-    Arrow, ArrowBuilder, Compose, EndoArrow, Fanout, First, Id, Lift, Second, Split, arrow,
+    Arrow, ArrowBuilder, Choice, Compose, EndoArrow, Fanin, Fanout, First, Id, Left, Lift, Right,
+    Second, Split, arrow,
 };
 // Reified free Arrow: the typed-builder façade over the erased core (needs `alloc`, like `Free`)
 #[cfg(feature = "alloc")]

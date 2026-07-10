@@ -57,7 +57,7 @@ fn as_pair(v: ArrowVal<i64>) -> (i64, i64) {
             (ArrowVal::Leaf(x), ArrowVal::Leaf(y)) => (x, y),
             _ => panic!("expected a pair of leaves"),
         },
-        ArrowVal::Leaf(_) => panic!("expected a pair"),
+        ArrowVal::Leaf(_) | ArrowVal::InL(_) | ArrowVal::InR(_) => panic!("expected a pair"),
     }
 }
 
@@ -172,4 +172,112 @@ fn test_arrow_term_core_round_trip() {
         )),
     );
     assert_eq!(term.into_core(), expected);
+}
+
+/// THEOREM_MAP: haft.arrow_term.choice_interpret_sound
+///
+/// Interpreting the choice generators agrees with the eager ArrowChoice combinators: `left`/
+/// `right`/`choice` route the sum node component-wise and `fanin` eliminates it — for a
+/// representative term, the erased core reproduces the eager `Either` pipeline of the same shape.
+#[test]
+fn test_arrow_term_choice_interpret_sound() {
+    use deep_causality_haft::{Arrow, Either, Lift};
+
+    // Term: choice(inc, double) >>> fanin(neg, id) : Either<i64, i64> -> i64.
+    let term = ArrowTerm::<i64, i64, Op>::generator(Op::Inc)
+        .choice(ArrowTerm::<i64, i64, Op>::generator(Op::Double))
+        .compose(
+            ArrowTerm::<i64, i64, Op>::generator(Op::Neg).fanin(ArrowTerm::<i64, i64, Op>::id()),
+        );
+    let eager = Lift::new(inc)
+        .choice(Lift::new(double))
+        .compose(Lift::new(neg).fanin(Lift::new(|x: i64| x)));
+
+    for x in [0, 5, -7] {
+        for (val, eff) in [
+            (
+                ArrowVal::inl(ArrowVal::Leaf(x)),
+                Either::<i64, i64>::Left(x),
+            ),
+            (ArrowVal::inr(ArrowVal::Leaf(x)), Either::Right(x)),
+        ] {
+            let interpreted = term.core().interpret(&interp, val);
+            assert_eq!(interpreted, ArrowVal::Leaf(eager.run(eff)));
+        }
+    }
+
+    // left(inc) acts on InL only; the right injection passes through untouched.
+    let left_term = ArrowTerm::<i64, i64, Op>::generator(Op::Inc).left::<i64>();
+    assert_eq!(
+        left_term
+            .core()
+            .interpret(&interp, ArrowVal::inl(ArrowVal::Leaf(4))),
+        ArrowVal::inl(ArrowVal::Leaf(5))
+    );
+    assert_eq!(
+        left_term
+            .core()
+            .interpret(&interp, ArrowVal::inr(ArrowVal::Leaf(4))),
+        ArrowVal::inr(ArrowVal::Leaf(4))
+    );
+
+    // right(inc) is the mirror.
+    let right_term = ArrowTerm::<i64, i64, Op>::generator(Op::Inc).right::<i64>();
+    assert_eq!(
+        right_term
+            .core()
+            .interpret(&interp, ArrowVal::inr(ArrowVal::Leaf(4))),
+        ArrowVal::inr(ArrowVal::Leaf(5))
+    );
+    assert_eq!(
+        right_term
+            .core()
+            .interpret(&interp, ArrowVal::inl(ArrowVal::Leaf(4))),
+        ArrowVal::inl(ArrowVal::Leaf(4))
+    );
+}
+
+/// THEOREM_MAP: haft.arrow_term.choice_free
+///
+/// The universal property extends to the enlarged generator set: interpretations agreeing on the
+/// generators agree on every choice term, and changing a generator's action changes the routed
+/// result.
+#[test]
+fn test_arrow_term_choice_free() {
+    let term = ArrowTerm::<i64, i64, Op>::generator(Op::Inc)
+        .choice(ArrowTerm::<i64, i64, Op>::generator(Op::Double))
+        .compose(
+            ArrowTerm::<i64, i64, Op>::generator(Op::Neg).fanin(ArrowTerm::<i64, i64, Op>::id()),
+        );
+
+    // An extensionally equal generator interpretation gives equal results on every injection.
+    let interp_same = |op: &Op, x: i64| match op {
+        Op::Inc => x + 1,
+        Op::Double => x + x,
+        Op::Neg => -x,
+    };
+    // A different action on `Double` changes the result reached through the right injection.
+    let interp_diff = |op: &Op, x: i64| match op {
+        Op::Inc => x + 1,
+        Op::Double => x * 3,
+        Op::Neg => -x,
+    };
+
+    for x in [0, 5, -7] {
+        for val in [
+            ArrowVal::inl(ArrowVal::Leaf(x)),
+            ArrowVal::inr(ArrowVal::Leaf(x)),
+        ] {
+            assert_eq!(
+                term.core().interpret(&interp, val.clone()),
+                term.core().interpret(&interp_same, val)
+            );
+        }
+    }
+    assert_ne!(
+        term.core()
+            .interpret(&interp, ArrowVal::inr(ArrowVal::Leaf(5))),
+        term.core()
+            .interpret(&interp_diff, ArrowVal::inr(ArrowVal::Leaf(5)))
+    );
 }

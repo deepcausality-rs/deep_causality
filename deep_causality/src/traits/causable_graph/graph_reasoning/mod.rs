@@ -33,7 +33,7 @@ pub const MAX_RELAY_ROUNDS: usize = 1024;
 /// will automatically gain a suite of useful default methods for monadic evaluation.
 pub trait MonadicCausableGraphReasoning<V, PS, C>: CausableGraph<Causaloid<V, V, PS, C>>
 where
-    V: Default + Clone + Send + Sync + 'static + Debug,
+    V: Verdict + Default + Clone + Send + Sync + 'static + Debug,
     PS: Default + Clone + Send + Sync + 'static,
     C: Clone + Send + Sync + 'static,
     Causaloid<V, V, PS, C>: MonadicCausable<V, V>,
@@ -86,9 +86,12 @@ where
     /// non-descendant is therefore resolved `Inactive` up front and never counted as pending, which
     /// keeps mid-graph starts and abandoned relay cones free of deadlock. A node reached by a single
     /// fired parent passes that parent's effect through, because the join of one input is the
-    /// identity. A node reached by two or more fired parents is a reconvergence; the merge (∇) of
-    /// converging effects is not yet defined, so the evaluator fails loudly instead of silently
-    /// picking one parent.
+    /// identity. A node reached by two or more fired parents is a reconvergence; converging values
+    /// merge as `∇ ∘ (Λ₁ ⊗ Λ₂)` — the commutative `∇ = Verdict::join` with the identity Λ on every
+    /// edge (this method takes no decorations; see
+    /// [`evaluate_subgraph_from_cause_with_lambda_edges`](Self::evaluate_subgraph_from_cause_with_lambda_edges)).
+    /// Machine-checked schedule invariance: `core.causaloid.graph_fold_order_invariant`
+    /// (`lean/DeepCausalityFormal/Core/GraphAlgebra.lean`).
     ///
     /// ## Acyclicity requirement
     ///
@@ -115,6 +118,34 @@ where
         &self,
         start_index: usize,
         initial_effect: &PropagatingEffect<V>,
+    ) -> PropagatingEffect<V> {
+        // No decorations: every edge is the identity Λ, so the join is the plain ∇-merge.
+        self.evaluate_subgraph_from_cause_with_lambda_edges(
+            start_index,
+            initial_effect,
+            &LambdaEdges::new(),
+        )
+    }
+
+    /// [`evaluate_subgraph_from_cause`](Self::evaluate_subgraph_from_cause) with per-edge Λ
+    /// decoration slots: the value flowing along a decorated edge is transformed by that edge's Λ
+    /// (keyed by intrinsic `(source, target)` identity, never by order; absent slot = identity)
+    /// before any join, so a reconvergent join computes `∇(Λ₁(a), Λ₂(b))` — Hardy's connection
+    /// data on the edges, the commutative fuse at the node (`core.causaloid.inversion`,
+    /// `core.causaloid.graph_fold_order_invariant`).
+    ///
+    /// Per-channel join policy (the reconvergence merge): the **value** channel folds
+    /// `∇ = Verdict::join` over the Λ-transformed present values of the fired parents (all-absent
+    /// ⇒ absence propagates); the **log** channel concatenates the fired parents' logs in
+    /// ascending parent-index order (a canonical representative of the multiset-at-join ruling);
+    /// the **state** channel never merges (single-writer invariant, checked at freeze —
+    /// [`freeze_verified`](crate::CausableGraph::freeze_verified)). An erroring parent
+    /// short-circuits before any join is reached.
+    fn evaluate_subgraph_from_cause_with_lambda_edges(
+        &self,
+        start_index: usize,
+        initial_effect: &PropagatingEffect<V>,
+        lambda_edges: &LambdaEdges<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
             return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
@@ -217,28 +248,56 @@ where
                             ));
                         }
                         1 => {
-                            // Join of one fired parent is the identity: pass its effect through.
-                            parents.into_values().next().expect("len == 1")
+                            // Join of one fired parent is the identity fuse; the edge's Λ (if
+                            // decorated) still applies — Λ is connection data, independent of
+                            // fan-in. With no decoration the effect passes through unchanged.
+                            let (parent_idx, effect) =
+                                parents.into_iter().next().expect("len == 1");
+                            match lambda_edges.get(parent_idx, node) {
+                                None => effect,
+                                Some(lambda) => {
+                                    let (outcome, state, context, logs) = effect.into_parts();
+                                    let transformed = match outcome {
+                                        Ok(ce) => Ok(match ce.into_value() {
+                                            Some(v) => CausalEffect::value(lambda(v)),
+                                            None => CausalEffect::none(),
+                                        }),
+                                        Err(e) => Err(e),
+                                    };
+                                    PropagatingEffect::new(transformed, state, context, logs)
+                                }
+                            }
                         }
                         _ => {
-                            // Reconvergence: two or more parents fire into one node. The merge (∇) of
-                            // converging effects is a symmetric-monoidal generator over the effect
-                            // monad (copy/discard comonoid + merge), an extension of the single-input
-                            // causaloid that is not yet defined (see
-                            // `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2).
-                            // Fail loudly rather than silently pick one parent (the previous
-                            // first-parent-wins bug) or guess a combine in the wrong layer.
-                            let keys: Vec<usize> = parents.keys().copied().collect();
-                            return PropagatingEffect::from_error(CausalityError(
-                                CausalityErrorEnum::Custom(format!(
-                                    "Node {node} is a reconvergence reached by {} fired parents \
-                                     (graph indices {keys:?}); the reconvergence merge (∇) is not \
-                                     yet defined and multi-parent fan-in is unsupported. Restructure \
-                                     to a single-parent path, or await the symmetric-monoidal merge \
-                                     extension.",
-                                    keys.len()
-                                )),
-                            ));
+                            // Reconvergence: `join = ∇ ∘ (Λ₁ ⊗ Λ₂)`. Each fired parent's value is
+                            // transformed by its edge's Λ (keyed by intrinsic edge identity), then
+                            // fused by the commutative `∇ = Verdict::join` — so the result is
+                            // invariant under every schedule consistent with the causal order
+                            // (`core.causaloid.graph_fold_order_invariant`; closes tracker #2 Q1).
+                            // Logs concatenate in ascending parent-index order (the canonical
+                            // representative of the multiset-at-join ruling); parents carrying no
+                            // value (absence of evidence) contribute nothing to the fuse, and if
+                            // no parent carries a value the absence propagates. Errors cannot
+                            // reach a join (an erroring node short-circuits the traversal), and
+                            // state never merges (single-writer, checked at freeze).
+                            let mut merged_logs = EffectLog::new();
+                            let mut merged_value: Option<V> = None;
+                            for (parent_idx, effect) in parents {
+                                let (outcome, _state, _context, mut logs) = effect.into_parts();
+                                merged_logs.append(&mut logs);
+                                if let Some(v) = outcome.ok().and_then(CausalEffect::into_value) {
+                                    let v = lambda_edges.apply(parent_idx, node, v);
+                                    merged_value = Some(match merged_value {
+                                        None => v,
+                                        Some(acc) => acc.join(v),
+                                    });
+                                }
+                            }
+                            let merged = match merged_value {
+                                Some(v) => CausalEffect::value(v),
+                                None => CausalEffect::none(),
+                            };
+                            PropagatingEffect::new(Ok(merged), (), None, merged_logs)
                         }
                     }
                 };

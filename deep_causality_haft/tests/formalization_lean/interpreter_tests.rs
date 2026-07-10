@@ -133,3 +133,80 @@ fn test_interpreter_naturality() {
         assert_eq!(lhs, rhs);
     }
 }
+
+/// THEOREM_MAP: haft.interpreter.choice_preserved
+///
+/// `interpret_kleisli` preserves the choice generators: the effect runs only on the taken branch
+/// (`Left`/`Right`/`Choice` re-inject, `Fanin` eliminates), the untaken branch's effect never
+/// fires, and a failing branch short-circuits exactly when taken.
+#[test]
+fn test_interpreter_choice_preserved() {
+    use deep_causality_haft::Monad;
+
+    // choice(halve, inc): the partial branch fails only when routed to.
+    let choice_term: ArrowCore<Op> = ArrowCore::Choice(
+        Box::new(ArrowCore::Gen(Op::Halve)),
+        Box::new(ArrowCore::Gen(Op::Inc)),
+    );
+    // InL(even) takes the halve branch and succeeds.
+    assert_eq!(
+        choice_term
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inl(ArrowVal::Leaf(6))),
+        Some(ArrowVal::inl(ArrowVal::Leaf(3)))
+    );
+    // InL(odd) takes the halve branch and short-circuits.
+    assert_eq!(
+        choice_term
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inl(ArrowVal::Leaf(7))),
+        None
+    );
+    // InR(odd) never touches the failing branch: the untaken effect does not fire.
+    assert_eq!(
+        choice_term
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inr(ArrowVal::Leaf(7))),
+        Some(ArrowVal::inr(ArrowVal::Leaf(8)))
+    );
+
+    // left/right agree with choice(f, id)/choice(id, f) — the preservation equations.
+    let left_term: ArrowCore<Op> = ArrowCore::Left(Box::new(ArrowCore::Gen(Op::Halve)));
+    let left_as_choice: ArrowCore<Op> =
+        ArrowCore::Choice(Box::new(ArrowCore::Gen(Op::Halve)), Box::new(ArrowCore::Id));
+    for val in [
+        ArrowVal::inl(ArrowVal::Leaf(6)),
+        ArrowVal::inl(ArrowVal::Leaf(7)),
+        ArrowVal::inr(ArrowVal::Leaf(7)),
+    ] {
+        assert_eq!(
+            left_term.interpret_kleisli::<OptionWitness, i64, _>(&phi, val.clone()),
+            left_as_choice.interpret_kleisli::<OptionWitness, i64, _>(&phi, val)
+        );
+    }
+
+    // Fanin eliminates: the branch result IS the output (no re-injection), and composing after a
+    // fanin equals binding the branch result — Kleisli composition through the elimination.
+    let fanin_then_inc: ArrowCore<Op> = ArrowCore::Compose(
+        Box::new(ArrowCore::Fanin(
+            Box::new(ArrowCore::Gen(Op::Halve)),
+            Box::new(ArrowCore::Gen(Op::Double)),
+        )),
+        Box::new(ArrowCore::Gen(Op::Inc)),
+    );
+    assert_eq!(
+        fanin_then_inc
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inl(ArrowVal::Leaf(6))),
+        Some(ArrowVal::Leaf(4)) // 6 -> halve -> 3 -> inc -> 4
+    );
+    let via_bind = <OptionWitness as Monad<OptionWitness>>::bind(
+        ArrowCore::<Op>::Fanin(
+            Box::new(ArrowCore::Gen(Op::Halve)),
+            Box::new(ArrowCore::Gen(Op::Double)),
+        )
+        .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inr(ArrowVal::Leaf(5))),
+        |mid| ArrowCore::<Op>::Gen(Op::Inc).interpret_kleisli::<OptionWitness, i64, _>(&phi, mid),
+    );
+    assert_eq!(
+        fanin_then_inc
+            .interpret_kleisli::<OptionWitness, i64, _>(&phi, ArrowVal::inr(ArrowVal::Leaf(5))),
+        via_bind // 5 -> double -> 10 -> inc -> 11
+    );
+}
