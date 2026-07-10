@@ -1,0 +1,116 @@
+deep_causality_quantum/tests/mod.rs
+  s_543ee5cdecd2c1::t_0139657ddfc80d 7
+deep_causality_tensor/tests/types/causal_tensor/op_tensor_kronecker_tests.rs
+  s_543ee5cdecd2c1::t_8389cce8d30019 7
+  s_543ee5cdecd2c1::t_df95f7d765e733 1-6,8-53,55-87
+  s_543ee5cdecd2c1::t_a1067d3c97ea8d 54
+openspec/changes/add-quantum-crate/specs/quantum-operator-layer/spec.md
+  s_543ee5cdecd2c1::t_2467377af36009 33-37
+  s_543ee5cdecd2c1::t_8a0a7b6e7e89ae 44-45
+deep_causality_quantum/src/kernels/channel.rs
+  s_543ee5cdecd2c1::t_e57b69e5105748 94,219,245
+  s_543ee5cdecd2c1::t_5965a4c5fae4cf 1-93,95-218,220-244,246-274
+deep_causality_quantum/tests/types/density_matrix_tests.rs
+  s_543ee5cdecd2c1::t_f3a10ea801f46c 1-129
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_eigen/mod.rs
+  s_543ee5cdecd2c1::t_65424c17904480 1-8,10,12-137
+  s_543ee5cdecd2c1::t_8fab86d410ab39 9,11
+deep_causality_quantum/tests/kernels/bridge_tests.rs
+  s_543ee5cdecd2c1::t_d937c8b36cb59d 1-128
+openspec/changes/add-quantum-crate/tasks.md
+  s_543ee5cdecd2c1::t_784cff16467ed2 74,76,79,81-82,85
+  s_543ee5cdecd2c1::t_8a0a7b6e7e89ae 64,69
+deep_causality_tensor/tests/types/causal_tensor/mod.rs
+  s_543ee5cdecd2c1::t_6efb385a458988 25-28,34-35
+deep_causality_multivector/tests/alias/alias_hilbert_ket_bridge_tests.rs
+  s_543ee5cdecd2c1::t_6fcce6640cf2db 1-5,7-82,88-105,129-197
+  s_543ee5cdecd2c1::t_c6926872693520 6
+  s_543ee5cdecd2c1::t_762c29d48c99fa 83-87,106-117,119-128
+  s_543ee5cdecd2c1::t_21043cd2f7413b 118
+deep_causality_quantum/tests/kernels/mod.rs
+  s_543ee5cdecd2c1::t_21993b7acc3363 16-17,19
+  s_543ee5cdecd2c1::t_0139657ddfc80d 8-9,18
+  s_543ee5cdecd2c1::t_8c0ae143b0801c 6-7
+deep_causality_tensor/tests/types/causal_tensor/op_tensor_eigen_tests.rs
+  s_543ee5cdecd2c1::t_8389cce8d30019 7
+  s_543ee5cdecd2c1::t_2d314cc18376be 1-6,8-108
+deep_causality_multivector/src/alias/alias_hilbert_state.rs
+  s_543ee5cdecd2c1::t_cf5b70357bb5d4 90,99,128,142
+  s_543ee5cdecd2c1::t_8df10838fe009d 72-74
+  s_543ee5cdecd2c1::t_eb025f6afc79eb 75-89,91-98,100-127,129-141,143-154
+  s_543ee5cdecd2c1::t_7519f4b604e40d 9,12-16
+  s_543ee5cdecd2c1::t_c09ed9477e3727 17,155-156
+deep_causality_quantum/tests/kernels/operator_linalg_tests.rs
+  s_543ee5cdecd2c1::t_b64a62eeb35210 6,281-325
+  s_543ee5cdecd2c1::t_14d10fd7da7ee4 1-5,7-280,326
+deep_causality_quantum/Cargo.toml
+  s_543ee5cdecd2c1::t_2648687dd75b08 54-57
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_kronecker/mod.rs
+  s_543ee5cdecd2c1::t_0611be41342811 1-56
+deep_causality_tensor/src/types/causal_tensor_network/solve/local.rs
+  s_543ee5cdecd2c1::t_98167d4f64a8e2 14
+openspec/changes/add-quantum-crate/design.md
+  s_543ee5cdecd2c1::t_5c7d9a5e3ff670 297-318
+deep_causality_tensor/tests/types/causal_tensor/op_tensor_dagger_tests.rs
+  s_543ee5cdecd2c1::t_4fcdc97081d1d0 1-62
+deep_causality_quantum/src/lib.rs
+  s_543ee5cdecd2c1::t_b3df495efabcd4 24,29
+deep_causality_tensor/src/types/causal_tensor/ops/mod.rs
+  s_543ee5cdecd2c1::t_78823500f61c09 7-10,12-13
+deep_causality_quantum/tests/BUILD.bazel
+  s_543ee5cdecd2c1::t_221d7f193b026e 48,50
+  s_543ee5cdecd2c1::t_0139657ddfc80d 53,55-72,74
+  s_543ee5cdecd2c1::t_2648687dd75b08 52
+  s_543ee5cdecd2c1::t_b614737c326091 51,54
+deep_causality_quantum/BUILD.bazel
+  s_543ee5cdecd2c1::t_2648687dd75b08 21
+deep_causality_quantum/src/types/mod.rs
+  s_543ee5cdecd2c1::t_0b8c48e50900d7 1-8
+deep_causality_quantum/tests/types/mod.rs
+  s_543ee5cdecd2c1::t_32d47a5084ce5a 1-6
+deep_causality_quantum/src/types/density_matrix.rs
+  s_543ee5cdecd2c1::t_a42e27bee93c9b 1-15,17-32,34-254
+  s_543ee5cdecd2c1::t_e57b69e5105748 16,33
+deep_causality_quantum/src/kernels/bridge.rs
+  s_543ee5cdecd2c1::t_9b2adab7bc9f5c 1-99
+deep_causality_quantum/tests/kernels/monad_matrix_state_tests.rs
+  s_543ee5cdecd2c1::t_87fb79c3b39ea0 143-146,148,167-168,177-180,182
+  s_543ee5cdecd2c1::t_96a6a42fa3e452 1-142,147,149-166,169-176,181,183-198
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_dagger/mod.rs
+  s_543ee5cdecd2c1::t_158d0fab44384b 1-39
+deep_causality_multivector/tests/alias/mod.rs
+  s_543ee5cdecd2c1::t_897bb787fd2fa0 9-10
+deep_causality_quantum/tests/kernels/channel_tests.rs
+  s_543ee5cdecd2c1::t_cea0d8fa7fac22 33
+  s_543ee5cdecd2c1::t_215cf821618a2a 1-32,34-150
+deep_causality_multivector/src/lib.rs
+  s_543ee5cdecd2c1::t_73e31d7368b365 14-15
+deep_causality_tensor/src/types/causal_tensor/mod.rs
+  s_543ee5cdecd2c1::t_78823500f61c09 15-16
+deep_causality_multivector/src/alias/mod.rs
+  s_543ee5cdecd2c1::t_caba3f122db57e 22
+deep_causality_quantum/src/kernels/operator_linalg.rs
+  s_543ee5cdecd2c1::t_31961fe34204ff 1-158,160-293
+  s_543ee5cdecd2c1::t_ad69bff0712ff8 159
+deep_causality_quantum/src/kernels/mod.rs
+  s_543ee5cdecd2c1::t_13ecc6e98ac506 6,14
+  s_543ee5cdecd2c1::t_b3df495efabcd4 7,11,15,19
+Cargo.lock
+  s_543ee5cdecd2c1::t_a1fc10611515c8 739
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "895e501b04bc40578b003cdd9dfd58fadfd7593b",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
