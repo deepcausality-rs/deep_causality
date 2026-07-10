@@ -91,11 +91,7 @@ bazel test //...
    state-merge semantics at a reconvergent join to prove (single-writer, checked at freeze); the
    value-channel model is what is formalized. The stateful engine is exercised by regression tests,
    not by a Lean theorem.
-4. **Pearl's do-operator and quantum causal models are out of scope here.** `deep_causality_do_calculus`
-   (do-surgery over the context hypergraph — the substrate `core.context_graph.*` provides) and
-   `deep_causality_quantum` (the orthomodular Verdict carrier + process-matrix reification) are
-   spec'd as **separate changes**; the roadmap §6–§7 tracks them.
-5. **The claim is L1 + L2, not "proved correct."** Laws are machine-checked in Lean and the
+4.  **The claim is L1 + L2, not "proved correct."** Laws are machine-checked in Lean and the
    implementation is pinned to the same statements by witness tests over representative (and pinned-
    corpus) inputs. Purity of caller closures is a precondition, not a type-enforced guarantee;
    Aeneas extraction (L4) is not started.
