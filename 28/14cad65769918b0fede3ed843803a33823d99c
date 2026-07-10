@@ -1,0 +1,29 @@
+lean/DeepCausalityFormal/Core/Catamorphism.lean
+  s_543ee5cdecd2c1::t_72a00190be2434 143-147,149-153,155-164,167-236
+  s_543ee5cdecd2c1::t_aaf780fc92dc61 1-142,148,154,165-166,237-238
+deep_causality/tests/formalization_lean/mod.rs
+  s_543ee5cdecd2c1::t_0eab81b83d2d8b 18
+deep_causality/tests/formalization_lean/catamorphism_tests.rs
+  s_543ee5cdecd2c1::t_fc51298e8888ca 1-14,17-164,168-215
+  s_543ee5cdecd2c1::t_8373bf5fe017bb 15-16,165-167
+lean/THEOREM_MAP.md
+  s_543ee5cdecd2c1::t_293ae7d702f3f3 61-63
+openspec/changes/causaloid-formalization-stages-2-5/tasks.md
+  s_543ee5cdecd2c1::t_9a22f3a923bd05 86,90-91,94,97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "2814cad65769918b0fede3ed843803a33823d99c",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
