@@ -145,7 +145,15 @@ per-branch threaded data — **#11b DECIDED** by scoping (see the tracker). **[h
 | `core.causaloid.inversion` | the element carries no ordering asymmetry: `evaluate` factors as (symmetric local data) ∘ (asymmetric wiring) | the Hardy-inversion thesis, formal |
 | `core.causaloid.hardy_correspondence` | `{bind, ∇ ∘ (Λ ⊗ Λ)}` reconstructs the ⊗^Λ regimes (§4) | bonus goal **[open — target]** |
 
-Rust refactor: per-edge Λ decoration slots on hyperedges (identity-keyed, order-free). **[planned]**
+Rust refactor: per-edge Λ decoration slots on hyperedges (identity-keyed, order-free).
+
+**Status: LANDED 2026-07-10** (change `causaloid-formalization-stages-2-5`). `Core/Causaloid.lean`
+proves `core.causaloid.fixpoint` (the `roll`/`unroll` Lambek isomorphism, `size` as the μ-witness,
+three summands ↔ the three sealed forms — closes **#9**) and `core.causaloid.inversion`
+(`eval = wiring ∘ element-map`, element bag-symmetric via `mapL_perm`). Rust: `LambdaEdges`
+(identity-keyed fn-pointer slots, absent = identity) + `from_causal_graph_with_lambda_edges`;
+main-crate witness mirror `deep_causality/tests/formalization_lean/` created; CI theorem-map gate
+scope extended to `deep_causality`. `hardy_correspondence` remains **[open — target]**. **[holds]**
 
 ### Stage 2b — The choice fragment: a coproduct/direct-sum generator `⊕` (ArrowChoice)
 
@@ -186,7 +194,15 @@ Lean: `Haft/ArrowChoice.lean` (+ extensions to `ArrowTerm.lean`/`Interpreter.lea
 Hughes 2000 §5 and Lorenz & Barrett 2021 §4, deviation notes as usual. Downstream:
 `deep_causality_quantum` instantiates `⊕` as the Hilbert-space direct sum (sectorized wires);
 `deep_causality_do_calculus` uses it for context-dependent mechanisms. `⊕` is the **second
-confirmed generator extension** after `∇` (assumption #11a). **[planned]**
+confirmed generator extension** after `∇` (assumption #11a).
+
+**Status: LANDED 2026-07-10** (change `causaloid-formalization-stages-2-5`, Stage 2b). All four
+deliverables shipped exactly as specified: eager `Left`/`Right`/`Choice`/`Fanin` over `Either`
+with `Arrow::{left, right, choice, fanin}`; `ArrowCore`/`ArrowVal` (sum node `InL`/`InR`) and the
+typed `ArrowTerm` façade extended (`compile_fail` guard for mistyped branch wiring); both
+interpreters dispatch the sum (effect only on the taken branch; `Fanin` eliminates);
+`Haft/ArrowChoice.lean` + `ArrowTerm`/`Interpreter` extensions prove all four id groups, with the
+used `⊗`-over-`⊕` distributivity (full rig coherence deferred, noted). **[holds]**
 
 ### Stage 3 — Verdict carrier + Collection closure
 
@@ -201,7 +217,16 @@ with the `bool` (Boolean) and `Prob` (MV, `[0,1]`) instances, `Algebra/Verdict.l
 `CommutativeMonoid: Monoid + Commutative` enforced as a type bound. **[holds]**
 
 Remaining Rust refactor: `Collection` requires `O: Verdict` instead of "any `O`", plus the closure
-theorem itself. This is the level-1 carrier prerequisite. **[planned]**
+theorem itself. This is the level-1 carrier prerequisite.
+
+**Status: LANDED 2026-07-10** (change `causaloid-formalization-stages-2-5`, Stage 3).
+`Core/VerdictClosure.lean` proves `core.verdict.closure` (all four modes closed; `None` = `Any` ∘
+`complement`; `Some(k)` = Count + boundary decision; `coll_closure` at the fixpoint — closes
+**#5**) and `core.verdict.carriers` (Boolean proved, MV Rust-witnessed; orthomodular projection
+lattice planned for quantum, general effects excluded — the scope guard in the Stage-3 spec).
+Rust: `Aggregatable: Verdict` (BREAKING, `compile_fail`-pinned); new instances `f64` (algebra
+crate, MV), `UncertainBool`/`UncertainF64` (uncertain crate, pointwise; `ArithmeticOperator`
+gained `Min`/`Max`). **[holds]**
 
 ### Stage 4 — The graph algebra (the last load-bearing gap)
 
@@ -213,7 +238,17 @@ theorem itself. This is the level-1 carrier prerequisite. **[planned]**
 
 Gate: the **#10 characterization-test corpus first** — the fold must reproduce current behaviour
 bit-identically on chains/trees; the loud-fail diamond becomes the defined-merge diamond as a
-documented change. **[planned; gated]**
+documented change.
+
+**Status: LANDED 2026-07-10** (change `causaloid-formalization-stages-2-5`, Stage 4). Corpus
+committed against the pre-change engine, then the reconvergence arm became the defined join
+`∇ ∘ (Λ₁ ⊗ Λ₂)` with `∇ = Verdict::join` (`V: Verdict` on the reasoning trait; new
+`evaluate_subgraph_from_cause_with_lambda_edges` consumes the Stage-2 Λ slots). Per-channel policy
+as specified; single-writer checked at freeze (`freeze_verified` with declared writers +
+level-specific hook; pre-fork writers cannot conflict); stateful engine keeps its loud failure
+behind the guard. `Core/GraphAlgebra.lean` proves `core.causaloid.graph_fold_order_invariant`
+(fuse is a bag; consistent schedules compute the schedule-free denotation and agree) — closes
+**#2 Q1** (+ #1 applied, #10 applied). **[holds]**
 
 ### Stage 5 — The keystone
 
@@ -223,7 +258,15 @@ documented change. **[planned; gated]**
 | `core.causaloid.encapsulation_flat` | nested fold = flat fold (catamorphism fusion; inherited from monad law-3) | QCM-on-EPP Layer B, generalized to the whole causaloid |
 | `core.causaloid.arrow_fragment` | the `Atom`/`compose`/`split` fragment ≅ `ArrowTerm`, and `evaluate` = `interpret_kleisli` on it | **#8** — `T` (free term) vs `T/≈` (quotient by the proven Arrow laws); the interpreter factors through `T/≈` |
 
-This is the theorem the downstream crates inherit. **[planned]**
+This is the theorem the downstream crates inherit.
+
+**Status: LANDED 2026-07-10** (change `causaloid-formalization-stages-2-5`, Stage 5).
+`Core/Catamorphism.lean` proves all three: `catamorphism_unique` (initiality per fixed carrier —
+closes **B2** and **#6**, correctly scoped), `encapsulation_flat` (wrapper transparency +
+continuation fusion), `arrow_fragment` + `interp_respects_category_laws` (fragment ≅ `ArrowTerm`,
+⊕-enlarged set covered; interpretation factors through `T/≈` — closes **#8**). Witnessed on the
+real engine (by-hand interpreter agreement, one-pass vs two-stage chains, `Choice`/`Fanin` term).
+**[holds]**
 
 ### Stage 6 — The extensibility contract
 
@@ -336,13 +379,17 @@ Stage 1 (carrier stack)
 ```
 
 Assumption-tracker closure map: Stage 1 → #2-Q3, #11b (**landed 2026-07-09**) · Stage 2 → #9
-(+ Hardy target) · Stage 2b → the `⊕` wiring generator (consumed by the quantum crate) · Stage 3 →
-#5 · Stage 4 → #2-Q1 (+ #1 applied) · Stage 5 → #6 (scoped), #8, B2 · already closed by prior
-work: #1, #3, #7, and **#11a (DECIDED 2026-07-10: three forms, sealed trait —
-`traits/causable/sealed.rs`; ∇/⊕ are wiring generators over the fixed `F`, not new forms — the
-closed-world premise Stage 5's uniqueness argument needs)**. Remaining open in the tracker after this program: #4 (generation/atom registry — out of
-scope here), #10 (closed by its corpus gate), #11a (closed *by* this roadmap's carrier tower being
-the extensible `F`).
+(**landed 2026-07-10**; Hardy correspondence stays [open — target]) · Stage 2b → the `⊕` wiring
+generator (**landed 2026-07-10**; consumed by the quantum crate) · Stage 3 → #5 (**landed
+2026-07-10**) · Stage 4 → #2-Q1 + #1 applied + #10 via the corpus gate (**landed 2026-07-10**) ·
+Stage 5 → #6 (scoped), #8, B2 (**landed 2026-07-10**) · already closed by prior work: #1, #3, #7,
+and **#11a (DECIDED 2026-07-10: three forms, sealed trait — `traits/causable/sealed.rs`; ∇/⊕ are
+wiring generators over the fixed `F`, not new forms — the closed-world premise Stage 5's
+uniqueness argument needs)**. **Stages 2–5 all landed with change
+`causaloid-formalization-stages-2-5` (2026-07-10). Remaining open in the tracker: #4
+(generation/atom registry — out of scope) and the open targets of §8. Next: Stage 6 (the
+extensibility contract) and the two crates (`deep_causality_do_calculus`,
+`deep_causality_quantum`) as a dedicated follow-up change set.**
 
 ## 10. References
 

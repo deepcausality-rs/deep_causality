@@ -99,11 +99,11 @@
 
 ## 6. Close-out
 
-- [ ] 6.1 Update `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md`: close #9, #5,
+- [x] 6.1 Update `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md`: close #9, #5,
       #2 Q1 (+ #1 applied), #6 (scoped), #8, B2 with resolution-log entries; update the status
       board
-- [ ] 6.2 Update `causaloid-formalization-roadmap.md`: Stages 2–5 → LANDED; refresh the closure
+- [x] 6.2 Update `causaloid-formalization-roadmap.md`: Stages 2–5 → LANDED; refresh the closure
       map and dependency spine; note Stages 6–7 as the next change set
-- [ ] 6.3 Final full gates: traceability (all ids, fail=0), clippy `-D warnings` (workspace),
+- [x] 6.3 Final full gates: traceability (all ids, fail=0), clippy `-D warnings` (workspace),
       bare-`lean` on every new file + `lake build`, `bazel test //...`; prepare the final commit
       message set for user review

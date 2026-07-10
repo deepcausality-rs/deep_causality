@@ -12,6 +12,14 @@ with no Mathlib import), carry the SPDX header, use `namespace DeepCausalityForm
 literature reference and the Rust source, and cite the base haft theorem it extends rather than
 re-proving it. Every Lean theorem SHALL be closed with **zero `sorry`**.
 
+**Causaloid-layer extension.** Core Lean files whose Rust realization lives in the main
+`deep_causality` crate (the causaloid fixpoint, Verdict closure, graph algebra, and catamorphism
+layers) SHALL place their witnesses under `deep_causality/tests/formalization_lean/` — a witness
+mirror in the main crate following the same conventions (one `<mechanism>_tests.rs` per Lean file,
+registered in its `mod.rs` and `BUILD.bazel`, one `#[test]` per id). The CI consistency gate
+(`.github/workflows/formalization.yml`) SHALL include `deep_causality` in its Rust-witness search
+scope so these ids are enforced identically.
+
 #### Scenario: Each Lean file typechecks standalone
 - **WHEN** `lean lean/DeepCausalityFormal/Core/<File>.lean` is run for any Core file
 - **THEN** it typechecks with no errors and no `sorry`
@@ -25,6 +33,12 @@ re-proving it. Every Lean theorem SHALL be closed with **zero `sorry`**.
 - **WHEN** the directory `deep_causality_core/tests/formalization_lean/` is inspected
 - **THEN** it contains one `<mechanism>_tests.rs` per Core Lean file with theorems (registered in its
   `mod.rs` and `deep_causality_core/tests/BUILD.bazel`), and each `core.*` id has one `#[test]`
+
+#### Scenario: The main-crate witness mirror is enforced by the gate
+- **WHEN** a causaloid-layer `core.*` id is tagged in a Core Lean file and its witness exists only
+  under `deep_causality/tests/formalization_lean/`
+- **THEN** the consistency gate finds the witness (its search scope includes `deep_causality`) and
+  passes; removing the witness makes the gate fail
 
 ### Requirement: The causal monad is verified as a lawful monad
 The `CausalEffectPropagationProcess` carrier SHALL be proven a lawful monad: left identity, right
@@ -179,4 +193,3 @@ audit.
 - **WHEN** `deep_causality_core/LEAN_CORE.md` is reviewed
 - **THEN** it lists every Core mechanism with its reference and `laws stated & hold` status, the check
   commands run green, and the counts match `THEOREM_MAP.md`
-
