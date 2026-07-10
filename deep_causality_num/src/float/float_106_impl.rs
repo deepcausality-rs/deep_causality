@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Float, Float106};
-use std::num::FpCategory;
+use core::num::FpCategory;
 
 impl Float for Float106 {
     #[inline]
