@@ -9,7 +9,7 @@ use deep_causality_quantum::{
     embed_on_legs, frobenius_norm, hermiticity_defect, identity_matrix, matrix_commutator,
     matrix_trace, partial_trace, supports_intersect,
 };
-use deep_causality_tensor::{CausalTensor, Tensor};
+use deep_causality_tensor::CausalTensor;
 use std::collections::{BTreeMap, BTreeSet};
 
 type C = Complex<f64>;
@@ -61,51 +61,12 @@ fn scale(a: &CausalTensor<C>, s: C) -> CausalTensor<C> {
 
 // =============================================================================
 // Partial trace: defining identities (the Q-PTP properties, task 2.3)
+//
+// The Lean-proved identities (linearity, the ⊗ product rule, the bimodule law,
+// the B1 counterexample, and the boundary preservation case) have moved to
+// tests/formalization_lean/partial_trace_tests.rs as THEOREM_MAP witnesses.
+// The engineering-coverage tests below stay with the operator kernels.
 // =============================================================================
-
-// THEOREM_MAP: quantum.partial_trace.kronecker
-#[test]
-fn test_partial_trace_product_identity() {
-    // Tr_B(X ⊗ Y) = X · Tr(Y)
-    let x = sigma_x();
-    let y = mat(vec![c(2., 0.), c(0., 1.), c(0., -1.), c(3., 0.)], 2); // Tr = 5
-    let xy = x.kronecker(&y).unwrap();
-    let tr_b = partial_trace(&xy, &[2, 2], &[1]).unwrap();
-    let expected = scale(&x, c(5., 0.));
-    assert!(max_abs_diff(&tr_b, &expected) < 1e-12);
-}
-
-// THEOREM_MAP: quantum.partial_trace.add
-// THEOREM_MAP: quantum.partial_trace.smul
-#[test]
-fn test_partial_trace_linearity() {
-    // Tr_B(αM + N) = α·Tr_B(M) + Tr_B(N)
-    let m = sigma_x().kronecker(&sigma_z()).unwrap();
-    let n = sigma_z().kronecker(&sigma_x()).unwrap();
-    let alpha = c(0.5, -1.5);
-
-    let lhs = partial_trace(&(scale(&m, alpha) + n.clone()), &[2, 2], &[1]).unwrap();
-    let rhs = scale(&partial_trace(&m, &[2, 2], &[1]).unwrap(), alpha)
-        + partial_trace(&n, &[2, 2], &[1]).unwrap();
-    assert!(max_abs_diff(&lhs, &rhs) < 1e-12);
-}
-
-// THEOREM_MAP: quantum.partial_trace.bimodule
-// THEOREM_MAP: quantum.partial_trace.bimodule_right
-#[test]
-fn test_partial_trace_bimodule_law() {
-    // Tr_B((1_B ⊗ Z)·M) = Z·Tr_B(M) — the Q-PTP boundary identity, stated on
-    // H_A ⊗ H_B with A the kept (first) leg: Tr_B((Z ⊗ 1_B)·M) = Z·Tr_B(M).
-    let z = mat(vec![c(1., 0.), c(2., 1.), c(0., -1.), c(-1., 0.)], 2);
-    let m = sigma_x().kronecker(&sigma_y()).unwrap() + sigma_z().kronecker(&proj0()).unwrap();
-
-    let z_full = z.kronecker(&identity_matrix::<f64>(2)).unwrap();
-    let lhs = partial_trace(&z_full.matmul(&m).unwrap(), &[2, 2], &[1]).unwrap();
-    let rhs = z
-        .matmul(&partial_trace(&m, &[2, 2], &[1]).unwrap())
-        .unwrap();
-    assert!(max_abs_diff(&lhs, &rhs) < 1e-12);
-}
 
 #[test]
 fn test_partial_trace_preserves_trace_and_hermiticity() {
@@ -154,59 +115,6 @@ fn test_partial_trace_rejects_bad_shapes() {
     assert!(partial_trace(&m4, &[2, 2], &[2]).is_err()); // leg out of range
     assert!(partial_trace(&m4, &[2, 2], &[0, 0]).is_err()); // duplicate
     assert!(partial_trace(&m4, &[3, 2], &[0]).is_err()); // wrong factorization
-}
-
-// =============================================================================
-// The B1 counterexample — partial trace does not preserve commutation.
-// Rust witness for `quantum.partial_trace_nonpreservation` (task 5.4):
-// X = σx⊗|0><0| + σz⊗|1><1|, Y = σx⊗|0><0| − σz⊗|1><1|:
-// [X, Y] = 0 but [Tr₂X, Tr₂Y] = +4i·σy ≠ 0.
-// =============================================================================
-
-// THEOREM_MAP: quantum.partial_trace_nonpreservation
-// THEOREM_MAP: quantum.partial_trace_nonpreservation.value
-#[test]
-fn test_partial_trace_nonpreservation_counterexample() {
-    let x = sigma_x().kronecker(&proj0()).unwrap() + sigma_z().kronecker(&proj1()).unwrap();
-    let y = sigma_x().kronecker(&proj0()).unwrap() - sigma_z().kronecker(&proj1()).unwrap();
-
-    // Both Hermitian, and they commute.
-    assert!(hermiticity_defect(&x).unwrap() < 1e-12);
-    assert!(hermiticity_defect(&y).unwrap() < 1e-12);
-    let comm_full = matrix_commutator(&x, &y).unwrap();
-    assert!(frobenius_norm(&comm_full) < 1e-12, "[X,Y] must vanish");
-
-    // Their partial traces do NOT commute: [Tr₂X, Tr₂Y] = +4i·σy.
-    let tx = partial_trace(&x, &[2, 2], &[1]).unwrap();
-    let ty = partial_trace(&y, &[2, 2], &[1]).unwrap();
-    let comm = matrix_commutator(&tx, &ty).unwrap();
-    let expected = scale(&sigma_y(), c(0., 4.)); // +4i·σy
-    assert!(
-        max_abs_diff(&comm, &expected) < 1e-12,
-        "[Tr₂X, Tr₂Y] must equal +4i·σy"
-    );
-    assert!((frobenius_norm(&comm) - 32.0_f64.sqrt()).abs() < 1e-12);
-}
-
-// THEOREM_MAP: quantum.partial_trace_preservation_boundary
-#[test]
-fn test_partial_trace_preservation_boundary_case() {
-    // The conditional theorem's hypothesis (Q-PTP): if Y = Z ⊗ 1_B acts only
-    // on the boundary (kept) factor and [X, Y] = 0, then the partial traces
-    // commute. Witness for `quantum.partial_trace_preservation_boundary`.
-    let z = sigma_z();
-    let y = z.kronecker(&identity_matrix::<f64>(2)).unwrap();
-    // X commuting with Z ⊗ 1: X = σz ⊗ W for any W.
-    let w = mat(vec![c(1., 0.), c(0., 2.), c(0., -2.), c(4., 0.)], 2);
-    let x = sigma_z().kronecker(&w).unwrap();
-
-    assert!(frobenius_norm(&matrix_commutator(&x, &y).unwrap()) < 1e-12);
-    let tx = partial_trace(&x, &[2, 2], &[1]).unwrap();
-    let ty = partial_trace(&y, &[2, 2], &[1]).unwrap();
-    assert!(
-        frobenius_norm(&matrix_commutator(&tx, &ty).unwrap()) < 1e-12,
-        "boundary-only support must preserve commutation"
-    );
 }
 
 // =============================================================================

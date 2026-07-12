@@ -5,7 +5,7 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    apply_choi, apply_kraus, check_completely_positive, check_trace_preserving, choi_from_kraus,
+    apply_kraus, check_completely_positive, check_trace_preserving, choi_from_kraus,
     frobenius_norm, identity_matrix, kraus_from_choi, matrix_trace,
 };
 use deep_causality_tensor::CausalTensor;
@@ -101,28 +101,9 @@ fn test_choi_kraus_choi_round_trip() {
     );
 }
 
-// THEOREM_MAP: quantum.choi.apply_add
-// THEOREM_MAP: quantum.choi.apply_smul
-#[test]
-fn test_apply_kraus_and_apply_choi_agree() {
-    // The two application routes compute the same channel action.
-    let kraus = depolarizing_kraus(0.5);
-    let j = choi_from_kraus(&kraus).unwrap();
-
-    // An arbitrary qubit state |+⟩⟨+| mixed with |0⟩⟨0|.
-    let rho = mat(
-        vec![c(0.75, 0.), c(0.25, 0.1), c(0.25, -0.1), c(0.25, 0.)],
-        2,
-        2,
-    );
-    let via_kraus = apply_kraus(&kraus, &rho).unwrap();
-    let via_choi = apply_choi(&j, &rho, 2, 2).unwrap();
-    assert!(max_abs_diff(&via_kraus, &via_choi) < 1e-12);
-
-    // Trace preservation in action.
-    let tr = matrix_trace(&via_kraus).unwrap();
-    assert!((tr.re - 1.0).abs() < 1e-12);
-}
+// The Kraus↔Choi application-agreement and the ℂ-linearity of apply_choi are
+// the THEOREM_MAP witnesses for Quantum/Choi.lean; they live in
+// tests/formalization_lean/choi_tests.rs.
 
 #[test]
 fn test_depolarizing_contracts_toward_maximally_mixed() {

@@ -145,3 +145,27 @@ rust_test_suite(
         "//deep_causality_tensor",
     ],
 )
+
+# =============================================================================
+# formalization_lean/* test suites — the Lean↔Rust traceability witnesses.
+# Each test carries a `// THEOREM_MAP: <id>` tag consumed by the `theorem-map`
+# job in .github/workflows/formalization.yml.
+# =============================================================================
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
