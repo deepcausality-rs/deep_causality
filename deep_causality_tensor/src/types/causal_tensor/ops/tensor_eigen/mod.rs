@@ -35,7 +35,15 @@ pub(crate) fn sym_eig<T: ConjugateScalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T
     let norm_sq = a
         .iter()
         .fold(Re::<T>::zero(), |acc, x| acc + x.modulus_squared());
-    let threshold = eps2 * norm_sq;
+    // If ‖A‖²_F overflowed to a non-finite value (a pathologically large but
+    // finite matrix), fall back to the absolute ε² threshold. Otherwise the
+    // `off <= threshold` test could become `∞ <= ∞` and break before any Jacobi
+    // rotation, returning the undiagonalized input as its own eigendecomposition.
+    let threshold = if norm_sq.is_finite() {
+        eps2 * norm_sq
+    } else {
+        eps2
+    };
     for _ in 0..100 {
         // Off-diagonal magnitude (real): Σ_{p<q} |a[p,q]|².
         let mut off = Re::<T>::zero();

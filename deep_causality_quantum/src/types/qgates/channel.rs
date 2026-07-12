@@ -34,6 +34,18 @@ fn conj<R: RealField>(a: Complex<R>) -> Complex<R> {
     Complex::new(a.re, -a.im)
 }
 
+/// Rejects a non-finite or negative validation tolerance. A NaN/∞ `tol` makes
+/// every `defect > tol` and `eigenvalue < -tol` comparison vacuously false, which
+/// would silently certify a non-Hermitian / non-PSD / non-TP Choi operator.
+fn validate_tolerance<R: RealField>(tol: R) -> Result<(), QuantumError> {
+    if !tol.is_finite() || tol < R::zero() {
+        return Err(QuantumError::CalculationError(
+            "validation tolerance must be finite and non-negative".into(),
+        ));
+    }
+    Ok(())
+}
+
 /// Builds the Choi operator `J(E)` from a Kraus family `{K_κ}` of `d_out×d_in`
 /// matrices: `J[(i,j),(k,l)] = Σ_κ K_κ[j,i]·conj(K_κ[l,k])`.
 pub fn choi_from_kraus<R>(
@@ -93,6 +105,7 @@ pub fn kraus_from_choi<R>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
+    validate_tolerance(tol)?;
     let d = square_dim(choi)?;
     if d != d_in * d_out {
         return Err(QuantumError::DimensionMismatch(format!(
@@ -242,6 +255,7 @@ pub fn check_completely_positive<R>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
+    validate_tolerance(tol)?;
     square_dim(choi)?;
     // PSD (hence CP) requires a finite Hermitian operator; eigen_hermitian would
     // otherwise silently certify the Hermitian part of a non-Hermitian input.
@@ -286,6 +300,7 @@ pub fn check_trace_preserving<R>(
 where
     R: RealField + core::fmt::Debug,
 {
+    validate_tolerance(tol)?;
     let d = square_dim(choi)?;
     if d != d_in * d_out {
         return Err(QuantumError::DimensionMismatch(format!(
