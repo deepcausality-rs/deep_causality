@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_calculus"
-version = "0.1.2"
+version = "0.1.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -42,7 +42,7 @@ version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.1"
+version = "0.2"
 
 [dependencies.deep_causality_num_dual]
 path = "../deep_causality_num_dual"

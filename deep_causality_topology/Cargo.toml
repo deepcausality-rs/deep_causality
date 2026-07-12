@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_topology"
-version = "0.7.0"
+version = "0.7.1"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -62,7 +62,7 @@ default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.1"
+version = "0.2"
 default-features = false
 
 [dependencies.deep_causality_par]
