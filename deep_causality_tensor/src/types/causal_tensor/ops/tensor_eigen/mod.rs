@@ -27,7 +27,15 @@ pub(crate) fn sym_eig<T: ConjugateScalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T
     }
     let one = Re::<T>::one();
     let two = one + one;
+    // Relative stopping threshold: scale the ε² off-diagonal budget by ‖A‖²_F,
+    // which is invariant under the (orthogonal) Jacobi rotations, so it is
+    // computed once from the input. An absolute ε² test never terminates for
+    // large-magnitude matrices and burns the full sweep budget every time.
     let eps2 = Re::<T>::epsilon() * Re::<T>::epsilon();
+    let norm_sq = a
+        .iter()
+        .fold(Re::<T>::zero(), |acc, x| acc + x.modulus_squared());
+    let threshold = eps2 * norm_sq;
     for _ in 0..100 {
         // Off-diagonal magnitude (real): Σ_{p<q} |a[p,q]|².
         let mut off = Re::<T>::zero();
@@ -36,7 +44,7 @@ pub(crate) fn sym_eig<T: ConjugateScalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T
                 off += a[p * n + q].modulus_squared();
             }
         }
-        if off <= eps2 {
+        if off <= threshold {
             break;
         }
         for p in 0..n {
@@ -108,8 +116,10 @@ where
     /// the columns of the `n×n` tensor `V` are the corresponding orthonormal eigenvectors, so
     /// `A = V · diag(λ) · Vᴴ`.
     ///
-    /// The input is **assumed** (numerically) Hermitian; only its Hermitian part determines the
-    /// result. Callers that need the guarantee should validate `A == Aᴴ` first.
+    /// The input is **assumed** (numerically) Hermitian: only the strict upper triangle and the
+    /// real part of the diagonal are read, so a non-Hermitian input yields an unspecified
+    /// decomposition (it is not silently symmetrized). Callers that need the guarantee should
+    /// validate `A == Aᴴ` first.
     ///
     /// # Reference
     /// G. H. Golub and C. F. Van Loan, *Matrix Computations*, 4th ed. (Johns Hopkins Univ.
@@ -123,12 +133,12 @@ where
         if self.shape().len() != 2 {
             return Err(CausalTensorError::DimensionMismatch);
         }
+        if self.shape()[0] == 0 || self.shape()[1] == 0 {
+            return Err(CausalTensorError::EmptyTensor);
+        }
         let n = self.shape()[0];
         if n != self.shape()[1] {
             return Err(CausalTensorError::ShapeMismatch);
-        }
-        if n == 0 {
-            return Err(CausalTensorError::EmptyTensor);
         }
         let (vals, vecs) = sym_eig(self.as_slice(), n);
         let v = CausalTensor::new(vecs, vec![n, n])?;
