@@ -1,0 +1,15 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+# pnpm settings live here, not in package.json.
+#
+# pnpm 11 no longer reads the `pnpm` field from package.json (it warns
+# "The 'pnpm' field in package.json is no longer read by pnpm"). The
+# build-script allowlist that lets these native deps run their install
+# scripts must therefore be declared here. Without it, `pnpm install`
+# aborts on Cloudflare with ERR_PNPM_IGNORED_BUILDS.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
