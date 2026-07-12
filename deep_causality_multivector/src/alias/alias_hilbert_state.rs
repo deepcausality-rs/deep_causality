@@ -90,7 +90,17 @@ impl<R: RealField + Default> HilbertState<R> {
         if !n.is_multiple_of(2) {
             return Err(CausalMultiVectorError::dimension_mismatch(n + 1, n));
         }
-        let d = 1usize << (n / 2);
+        // The D×D matrix bridge (D = 2^(n/2)) must be addressable: reject
+        // dimensions where the shift or D² would overflow usize (a debug panic,
+        // or a masked and invalid D in release) instead of computing a bad width.
+        let half = n / 2;
+        if half >= usize::BITS as usize {
+            return Err(CausalMultiVectorError::dimension_mismatch(n, n));
+        }
+        let d = 1usize << half;
+        if d.checked_mul(d).is_none() {
+            return Err(CausalMultiVectorError::dimension_mismatch(n, n));
+        }
         let m = self.mv.to_matrix();
         let slice = m.as_slice();
 
@@ -128,7 +138,15 @@ impl<R: RealField + Default> HilbertState<R> {
         if !n.is_multiple_of(2) {
             return Err(CausalMultiVectorError::dimension_mismatch(n + 1, n));
         }
-        let d = 1usize << (n / 2);
+        // See `to_ket`: guard the D×D bridge against shift / D² overflow.
+        let half = n / 2;
+        if half >= usize::BITS as usize {
+            return Err(CausalMultiVectorError::dimension_mismatch(n, n));
+        }
+        let d = 1usize << half;
+        if d.checked_mul(d).is_none() {
+            return Err(CausalMultiVectorError::dimension_mismatch(n, n));
+        }
         let shape = ket.shape();
         if !(shape == [d] || shape == [d, 1]) {
             return Err(CausalMultiVectorError::data_length_mismatch(
