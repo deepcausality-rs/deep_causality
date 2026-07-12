@@ -55,8 +55,14 @@ fn test_dagger_involution() {
 #[test]
 fn test_dagger_rejects_non_matrix() {
     let a = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
-    assert_eq!(a.dagger().unwrap_err(), CausalTensorError::DimensionMismatch);
+    assert_eq!(
+        a.dagger().unwrap_err(),
+        CausalTensorError::DimensionMismatch
+    );
 
     let b = CausalTensor::new(vec![1.0; 8], vec![2, 2, 2]).unwrap();
-    assert_eq!(b.dagger().unwrap_err(), CausalTensorError::DimensionMismatch);
+    assert_eq!(
+        b.dagger().unwrap_err(),
+        CausalTensorError::DimensionMismatch
+    );
 }

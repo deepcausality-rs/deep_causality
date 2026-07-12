@@ -5,13 +5,13 @@
 
 use crate::TensorTrain;
 use crate::traits::tensor_train_operator::TensorTrainOperator;
+use crate::types::causal_tensor::sym_eig;
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::solve_config::SolveConfig;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor};
-use crate::types::causal_tensor::sym_eig;
 use deep_causality_algebra::{ConjugateScalar, Real};
 use deep_causality_num::{One, Zero};
 
@@ -766,7 +766,6 @@ fn symmetrize<T: ConjugateScalar>(h: &mut [T], n: usize) {
         h[i * n + i] = T::from_real(h[i * n + i].real_part());
     }
 }
-
 
 // ============================================================================
 // tdvp internals (two-site TDVP2)
