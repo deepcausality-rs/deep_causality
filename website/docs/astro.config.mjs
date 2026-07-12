@@ -89,6 +89,10 @@ export default defineConfig({
           items: [{ autogenerate: { directory: 'concepts' } }],
         },
         {
+          label: 'Formalization',
+          items: [{ autogenerate: { directory: 'formalization' } }],
+        },
+        {
           label: 'Download PDF',
           link: '/deepcausality-docs.pdf',
           attrs: { target: '_blank', rel: 'noopener' },
