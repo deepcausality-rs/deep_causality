@@ -1,0 +1,31 @@
+deep_causality_quantum/src/types/qgates/gates_haruna.rs
+  s_543ee5cdecd2c1::t_24e8b29fddcb16 34-40
+  s_543ee5cdecd2c1::t_e654f28d1494dd 113-119,124-129
+  s_543ee5cdecd2c1::t_dc3e854b227864 135-136,152-153,169-170,225-226,244-245
+  s_543ee5cdecd2c1::t_d45075d81f5484 210-219
+  s_543ee5cdecd2c1::t_d51406427e825c 187-189
+  s_543ee5cdecd2c1::t_abce6929a4d1fa 18-27
+  s_543ee5cdecd2c1::t_c279aa5211e015 86
+deep_causality_quantum/tests/types/qgates/gates_haruna_tests.rs
+  s_543ee5cdecd2c1::t_d6b0e927cf131c 60-66,71-77,82,85-90,95,98,103-109
+  s_543ee5cdecd2c1::t_133a05c54144e5 28-46,49-55
+  s_543ee5cdecd2c1::t_355b55c610975e 145-158
+  s_543ee5cdecd2c1::t_8f62336df61d1e 9,11
+  s_543ee5cdecd2c1::t_0f29e440e166db 144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "536257365069919ac77648fcd8c065ac836d6d42",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
