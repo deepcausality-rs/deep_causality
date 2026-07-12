@@ -5,8 +5,8 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    apply_kraus, check_completely_positive, check_trace_preserving, choi_from_kraus,
-    frobenius_norm, identity_matrix, kraus_from_choi, matrix_trace,
+    QuantumErrorEnum, apply_choi, apply_kraus, check_completely_positive, check_trace_preserving,
+    choi_from_kraus, frobenius_norm, identity_matrix, kraus_from_choi, matrix_trace,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -130,4 +130,70 @@ fn test_kraus_rejections() {
     let zero = CausalTensor::new(vec![c(0., 0.); 16], vec![4, 4]).unwrap();
     assert!(kraus_from_choi(&zero, 2, 2, 1e-12).is_err()); // zero channel
     assert!(frobenius_norm(&j) > 0.0);
+}
+
+// =============================================================================
+// Error-path coverage (llvm-cov gap closure).
+// =============================================================================
+
+#[test]
+fn test_choi_from_kraus_rejects_non_matrix_operator() {
+    // A rank-1 tensor is not a Kraus matrix.
+    let bad = CausalTensor::new(vec![c(1., 0.), c(0., 0.)], vec![2]).unwrap();
+    assert!(matches!(
+        choi_from_kraus(&[bad]).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+}
+
+#[test]
+fn test_kraus_from_choi_rejects_negative_eigenvalue() {
+    // The swap operator (the transpose map's Choi) has a −1 eigenvalue, so it is
+    // not a CP channel and no Kraus family can be recovered from it.
+    let mut data = vec![c(0., 0.); 16];
+    for i in 0..2 {
+        for j in 0..2 {
+            for k in 0..2 {
+                for l in 0..2 {
+                    if i == l && j == k {
+                        data[(i * 2 + j) * 4 + (k * 2 + l)] = c(1., 0.);
+                    }
+                }
+            }
+        }
+    }
+    let swap = CausalTensor::new(data, vec![4, 4]).unwrap();
+    assert!(matches!(
+        kraus_from_choi(&swap, 2, 2, 1e-12).unwrap_err().0,
+        QuantumErrorEnum::NonCptpChannel(_)
+    ));
+}
+
+#[test]
+fn test_apply_kraus_rejects_empty_family() {
+    let rho = mat(vec![c(1., 0.), c(0., 0.), c(0., 0.), c(0., 0.)], 2, 2);
+    assert!(matches!(
+        apply_kraus(&[], &rho).unwrap_err().0,
+        QuantumErrorEnum::NonCptpChannel(_)
+    ));
+}
+
+#[test]
+fn test_apply_choi_rejects_dimension_mismatch() {
+    // A (2,2) channel's Choi is 4×4; asking it to act as a (3,2) channel fails.
+    let j = choi_from_kraus(&[identity_matrix::<f64>(2)]).unwrap();
+    let rho = mat(vec![c(1., 0.), c(0., 0.), c(0., 0.), c(0., 0.)], 2, 2);
+    assert!(matches!(
+        apply_choi(&j, &rho, 3, 2).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+}
+
+#[test]
+fn test_check_trace_preserving_rejects_dimension_mismatch() {
+    let j = choi_from_kraus(&[identity_matrix::<f64>(2)]).unwrap(); // 4×4
+    assert!(matches!(
+        check_trace_preserving(&j, 3, 2, 1e-12).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
 }

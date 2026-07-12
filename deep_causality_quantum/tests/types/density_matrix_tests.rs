@@ -124,3 +124,49 @@ fn test_from_choi_rejects_non_psd() {
     let m = mat(vec![c(2., 0.), c(0., 0.), c(0., 0.), c(-0.5, 0.)], 2);
     assert!(DensityMatrix::from_choi(&m).is_err());
 }
+
+// =============================================================================
+// Error-path coverage (llvm-cov gap closure).
+// =============================================================================
+
+#[test]
+fn test_from_ket_rejects_non_column_shape() {
+    // A square matrix is not a ket column.
+    let m = mat(vec![c(1., 0.), c(0., 0.), c(0., 0.), c(1., 0.)], 2);
+    assert!(matches!(
+        DensityMatrix::from_ket(&m).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+}
+
+#[test]
+fn test_from_ket_rejects_empty_column() {
+    let empty = CausalTensor::new(Vec::<C>::new(), vec![0, 1]).unwrap();
+    assert!(matches!(
+        DensityMatrix::from_ket(&empty).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+}
+
+#[test]
+fn test_from_ensemble_rejects_dimension_mismatch() {
+    // Kets of different dimension cannot be mixed (weights still sum to one).
+    let k2 = CausalTensor::new(vec![c(1., 0.), c(0., 0.)], vec![2, 1]).unwrap();
+    let k3 = CausalTensor::new(vec![c(1., 0.), c(0., 0.), c(0., 0.)], vec![3, 1]).unwrap();
+    assert!(matches!(
+        DensityMatrix::from_ensemble(&[(0.5, k2), (0.5, k3)])
+            .unwrap_err()
+            .0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+}
+
+#[test]
+fn test_from_choi_rejects_non_positive_trace() {
+    // The zero operator has trace 0, so it cannot be normalized into a Choi state.
+    let zero = CausalTensor::new(vec![c(0., 0.); 16], vec![4, 4]).unwrap();
+    assert!(matches!(
+        DensityMatrix::from_choi(&zero).unwrap_err().0,
+        QuantumErrorEnum::NonUnitTrace(_)
+    ));
+}

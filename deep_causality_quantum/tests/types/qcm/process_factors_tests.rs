@@ -6,7 +6,7 @@
 use deep_causality::utils_test::test_utils;
 use deep_causality::{CausableGraph, CausaloidGraph};
 use deep_causality_num_complex::Complex;
-use deep_causality_quantum::{FactorSupports, ProcessFactors};
+use deep_causality_quantum::{FactorSupports, ProcessFactors, QuantumErrorEnum};
 use deep_causality_tensor::CausalTensor;
 
 type C = Complex<f64>;
@@ -96,4 +96,32 @@ fn test_from_graph_builds_collider_supports() {
     assert_eq!(fs.support(n2), Some([0, 1, 2].as_slice()));
     assert_eq!(fs.support_dim(n2), Some(8));
     assert!(fs.validate(&pf).is_ok());
+}
+
+#[test]
+fn test_validate_rejects_non_square_factor() {
+    // A 2×3 factor is not a square operator.
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(
+        0,
+        CausalTensor::new(vec![c(1., 0.); 6], vec![2, 3]).unwrap(),
+    );
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    assert!(matches!(
+        fs.validate(&pf).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+}
+
+#[test]
+fn test_validate_rejects_factor_without_declared_support() {
+    // A factor exists at node 0 but its support was never declared.
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    let fs = FactorSupports::new();
+    assert!(matches!(
+        fs.validate(&pf).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
 }

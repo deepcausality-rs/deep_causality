@@ -112,3 +112,11 @@ fn test_from_graph_reachability() {
     // A chain of 3 nodes cannot contain a C₃ (needs 3 inputs × 3 outputs).
     assert!(cs.check_c3_exclusion().is_ok());
 }
+
+#[test]
+fn test_inputs_and_outputs_accessors() {
+    // The constructor deduplicates and sorts both id lists.
+    let cs = CausalStructure::new(&[3, 1, 1], &[5, 2, 2]);
+    assert_eq!(cs.inputs(), &[1, 3]);
+    assert_eq!(cs.outputs(), &[2, 5]);
+}

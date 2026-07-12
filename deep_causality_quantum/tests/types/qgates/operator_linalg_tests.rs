@@ -138,6 +138,16 @@ fn test_matrix_commutator_pauli_algebra() {
 }
 
 #[test]
+fn test_matrix_trace_rejects_non_matrix_and_empty() {
+    // square_dim (via matrix_trace) rejects a rank-1 tensor …
+    let vec1 = CausalTensor::new(vec![c(1., 0.), c(2., 0.)], vec![2]).unwrap();
+    assert!(matrix_trace(&vec1).is_err());
+    // … and an empty square matrix.
+    let empty = CausalTensor::new(Vec::<C>::new(), vec![0, 0]).unwrap();
+    assert!(matrix_trace(&empty).is_err());
+}
+
+#[test]
 fn test_supports_intersect() {
     let a: BTreeSet<usize> = [0, 1].into_iter().collect();
     let b: BTreeSet<usize> = [1, 2].into_iter().collect();

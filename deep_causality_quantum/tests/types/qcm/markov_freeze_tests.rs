@@ -215,3 +215,85 @@ fn test_tolerance_admits_tiny_numerical_noise() {
     assert!(report.checks[0].commutes);
     assert!(report.checks[0].margin <= 1.0);
 }
+
+// =============================================================================
+// Tolerance builders and zero-threshold margin branches (llvm-cov gap closure).
+// =============================================================================
+
+#[test]
+fn test_commutator_tolerance_builder_chain_admits_with_generous_budget() {
+    // A 0.05 off-diagonal is far above machine noise, so the default policy
+    // rejects the pair; an explicit forward-error budget on both nodes admits it.
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(
+        0,
+        mat(vec![c(1., 0.), c(0.05, 0.), c(0.05, 0.), c(-1., 0.)], 2),
+    );
+    pf.insert(1, diag(3.0, -2.0));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    assert!(quantum_markov_check(&pf, &fs, &CommutatorTolerance::default()).is_err());
+
+    let tol = CommutatorTolerance::new()
+        .with_safety_factor(8.0)
+        .with_unit_roundoff(1e-12)
+        .with_budget(0, 10.0)
+        .with_budget(1, 10.0);
+    let report = quantum_markov_check(&pf, &fs, &tol).unwrap();
+    assert!(report.checks[0].commutes);
+}
+
+#[test]
+fn test_zero_threshold_admits_exactly_commuting_pair() {
+    // Two diagonal factors commute exactly (‖[·,·]‖_F = 0), so even a
+    // zero-threshold policy admits them, recording a zero margin.
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    pf.insert(1, diag(3.0, -1.0));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    let tol = CommutatorTolerance::default().with_safety_factor(0.0);
+    let report = quantum_markov_check(&pf, &fs, &tol).unwrap();
+    assert_eq!(report.tested_pairs(), 1);
+    assert!(report.checks[0].commutes);
+    assert_eq!(report.checks[0].margin, 0.0);
+}
+
+#[test]
+fn test_zero_threshold_rejects_any_nonzero_commutator() {
+    // With a zero threshold, any non-zero commutator (margin = ‖·‖_F > 0) fails.
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_x());
+    pf.insert(1, sigma_z());
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    let tol = CommutatorTolerance::default().with_safety_factor(0.0);
+    let err = quantum_markov_check(&pf, &fs, &tol).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::CommutatorNonZero { .. }));
+}
+
+#[test]
+fn test_freeze_builtin_check_failure_is_calculation_error() {
+    // A valid, commuting quantum layout — but an invalid state-writer index makes
+    // the engine's built-in single-writer check fail *before* the quantum hook
+    // runs. freeze_quantum must surface that as a CalculationError (no structured
+    // quantum error was stashed) and leave the graph unfrozen.
+    let mut g = two_node_graph();
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    pf.insert(1, diag(2.0, 5.0));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    // Node index 99 names no node (the graph has 2) → single-writer check errors.
+    let err = freeze_quantum(&mut g, &[99], &pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
+    assert!(!g.is_frozen());
+}

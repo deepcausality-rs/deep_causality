@@ -216,3 +216,18 @@ fn test_distributivity_holds_within_a_commuting_family() {
     let rhs = a.clone().meet(b.clone()).join(a.clone().meet(cc.clone()));
     assert!(approx_eq(&lhs, &rhs));
 }
+
+#[test]
+fn test_from_ket_rejects_non_column_shape() {
+    // A 2×2 matrix is not a ket column.
+    let m =
+        CausalTensor::new(vec![c(1., 0.), c(0., 0.), c(0., 0.), c(1., 0.)], vec![2, 2]).unwrap();
+    assert!(P2::from_ket(&m).is_err());
+}
+
+#[test]
+fn test_from_ket_rejects_zero_ket() {
+    // A (near-)zero ket has no ray to project onto.
+    let zero = ket(vec![c(0., 0.), c(0., 0.)]);
+    assert!(P2::from_ket(&zero).is_err());
+}
