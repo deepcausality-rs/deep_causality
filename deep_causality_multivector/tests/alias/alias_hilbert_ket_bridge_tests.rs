@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::{CausalMultiVector, HilbertState, KET_COLUMN, Metric, MultiVector};
+use deep_causality_multivector::{
+    CausalMultiVector, HilbertState, KET_COLUMN, Metric, MultiVector,
+};
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
@@ -76,7 +78,11 @@ fn test_from_ket_to_ket_idempotent_on_mli() {
         .zip(psi2.mv().data())
         .map(|(a, b)| ((a.re - b.re).powi(2) + (a.im - b.im).powi(2)).sqrt())
         .fold(0.0, f64::max);
-    assert!(d < 1e-12, "from_ket∘to_ket not idempotent on the MLI: {}", d);
+    assert!(
+        d < 1e-12,
+        "from_ket∘to_ket not idempotent on the MLI: {}",
+        d
+    );
 }
 
 #[test]
