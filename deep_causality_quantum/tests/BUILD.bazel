@@ -25,33 +25,6 @@ rust_test_suite(
     ],
 )
 
-# =============================================================================
-# kernels/* test suites
-#
-# The src tree is organized as src/kernels/, so the tests mirror it
-# at tests/kernels/.
-# =============================================================================
-
-rust_test_suite(
-    name = "kernels",
-    srcs = glob([
-        "kernels/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_quantum",
-        # Internal dependencies
-        "//deep_causality_core",
-        "//deep_causality_multivector",
-        "//deep_causality_num",
-        "//deep_causality_num_complex",
-        "//deep_causality_tensor",
-    ],
-)
 
 # =============================================================================
 # types/* test suites
@@ -76,14 +49,40 @@ rust_test_suite(
 )
 
 # =============================================================================
-# qcm/* test suites — the verifiable QCM slice (freeze-integration + C₃).
+# types/qgates/* test suites — the verifiable qgates tests
+# =============================================================================
+
+rust_test_suite(
+    name = "qgates",
+    srcs = glob([
+        "types/qgates/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
+
+
+# =============================================================================
+# types/qcm/* test suites — the verifiable QCM slice (freeze-integration + C₃).
 # These exercise the engine freeze hook, so they depend on `deep_causality`.
 # =============================================================================
 
 rust_test_suite(
     name = "qcm",
     srcs = glob([
-        "qcm/*_tests.rs",
+        "types/qcm/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -101,13 +100,13 @@ rust_test_suite(
 )
 
 # =============================================================================
-# qpu/* test suites — the emergent seam behind the `qpu` feature.
+# types/qpu/* test suites — the emergent seam behind the `qpu` feature.
 # =============================================================================
 
 rust_test_suite(
     name = "qpu",
     srcs = glob([
-        "qpu/*_tests.rs",
+        "types/qpu/*_tests.rs",
     ]),
     crate_features = [
         "qpu",
@@ -125,13 +124,13 @@ rust_test_suite(
 )
 
 # =============================================================================
-# verdict/* test suites — the orthomodular projection-lattice Verdict carrier.
+# types/verdict/* test suites — the orthomodular projection-lattice Verdict carrier.
 # =============================================================================
 
 rust_test_suite(
     name = "verdict",
     srcs = glob([
-        "verdict/*_tests.rs",
+        "types/verdict/*_tests.rs",
     ]),
     tags = [
         "unit-test",

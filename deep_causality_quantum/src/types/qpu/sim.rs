@@ -9,8 +9,8 @@
 //! dependency. Given a fixed seed it reproduces the same histogram exactly.
 
 use crate::QuantumError;
-use crate::qpu::circuit::{GateOp, QuantumCircuit};
-use crate::qpu::sampler::{CountHistogram, QpuSampler};
+use crate::types::qpu::circuit::{GateOp, QuantumCircuit};
+use crate::types::qpu::sampler::{CountHistogram, QpuSampler};
 
 /// The calibration surfaced to the context channel by `qpu_effect`.
 #[derive(Debug, Clone, PartialEq, Eq)]

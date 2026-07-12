@@ -18,7 +18,7 @@
 //! maps on complex matrices", Linear Algebra Appl. 10 (1975) 285–290.
 
 use crate::QuantumError;
-use crate::kernels::operator_linalg::{identity_matrix, partial_trace, square_dim};
+use crate::types::qgates::operator_linalg::{identity_matrix, partial_trace, square_dim};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;

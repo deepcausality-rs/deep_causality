@@ -4,3 +4,8 @@
  */
 #[cfg(test)]
 mod density_matrix_tests;
+mod qcm;
+mod qgates;
+#[cfg(feature = "qpu")]
+mod qpu;
+mod verdict;

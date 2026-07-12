@@ -5,7 +5,7 @@
 
 use crate::QuantumError;
 use crate::QuantumOps;
-use crate::kernels::gates_haruna;
+use crate::types::qgates::gates_haruna;
 use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_algebra::RealField;
 use deep_causality_haft::Functor;

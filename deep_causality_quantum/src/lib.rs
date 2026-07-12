@@ -20,19 +20,14 @@
 //! of truth; this crate defines no metric type of its own.
 
 pub(crate) mod error;
-pub(crate) mod kernels;
-pub(crate) mod qcm;
-#[cfg(feature = "qpu")]
-pub(crate) mod qpu;
 pub(crate) mod types;
-pub(crate) mod verdict;
 
 pub use crate::error::quantum_error::{QuantumError, QuantumErrorEnum};
 
-pub use crate::kernels::*;
-pub use crate::qcm::*;
+pub use crate::types::qgates::*;
+pub use crate::types::qcm::*;
 pub use crate::types::*;
-pub use crate::verdict::*;
+pub use crate::types::verdict::*;
 
 #[cfg(feature = "qpu")]
-pub use crate::qpu::*;
+pub use crate::types::qpu::*;

@@ -10,8 +10,8 @@
 //! the error channel with the value absent.
 
 use crate::QuantumError;
-use crate::qpu::circuit::QuantumCircuit;
-use crate::qpu::sampler::{QpuSampler, ShotHistogram};
+use crate::types::qpu::circuit::QuantumCircuit;
+use crate::types::qpu::sampler::{QpuSampler, ShotHistogram};
 use core::fmt::Debug;
 use deep_causality_core::{
     CausalEffectPropagationProcess, CausalityError, EffectLog, PropagatingEffect,

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::kernels::mechanics;
+use crate::types::qgates::mechanics;
 use crate::{Gate, Operator};
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;

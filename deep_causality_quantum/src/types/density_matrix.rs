@@ -7,7 +7,7 @@
 //! operator build ladder, design B4).
 
 use crate::QuantumError;
-use crate::kernels::operator_linalg::{
+use crate::types::qgates::operator_linalg::{
     frobenius_norm, hermiticity_defect, matrix_trace, square_dim,
 };
 use deep_causality_algebra::RealField;

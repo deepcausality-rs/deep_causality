@@ -9,7 +9,7 @@
 //! amplitudes — pinning the Kleisli/coherence boundary at the type level.
 
 use crate::QuantumError;
-use crate::qpu::circuit::QuantumCircuit;
+use crate::types::qpu::circuit::QuantumCircuit;
 use std::collections::BTreeMap;
 
 /// A classical measurement histogram: outcome bitstrings (packed LSB-first over

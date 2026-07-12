@@ -12,7 +12,7 @@
 
 use crate::QuantumError;
 use crate::types::density_matrix::DensityMatrix;
-use crate::verdict::projection::Projection;
+use crate::types::verdict::projection::Projection;
 use deep_causality_algebra::{Prob, RealField};
 use deep_causality_num::FromPrimitive;
 
