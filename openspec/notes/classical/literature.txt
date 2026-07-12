@@ -1,0 +1,56 @@
+RCM — Rubin Causal Model
+
+Neyman, J. (1923). "On the Application of Probability Theory to Agricultural Experiments. Essay on Principles. Section 9." (trans. Dabrowska & Speed, Statistical Science, 1990, 5(4), 465–472). — potential outcomes for randomized experiments.
+Rubin, D.B. (1974). "Estimating Causal Effects of Treatments in Randomized and Nonrandomized Studies." Journal of Educational Psychology, 66(5), 688–701. — the canonical RCM formalism.
+Rubin, D.B. (1978). "Bayesian Inference for Causal Effects: The Role of Randomization." Annals of Statistics, 6(1), 34–58. — assignment mechanism / Bayesian formulation.
+Holland, P.W. (1986). "Statistics and Causal Inference." JASA, 81(396), 945–960. — the "fundamental problem of causal inference," names the model.
+Imbens, G.W. & Rubin, D.B. (2015). Causal Inference for Statistics, Social, and Biomedical Sciences. Cambridge UP. — modern book-length reference.
+
+DBN — Dynamic Bayesian Network
+
+Dean, T. & Kanazawa, K. (1989). "A Model for Reasoning about Persistence and Causation." Computational Intelligence, 5(3), 142–150. — the originating formalism.
+Murphy, K.P. (2002). Dynamic Bayesian Networks: Representation, Inference and Learning. PhD thesis, UC Berkeley. — the standard comprehensive reference.
+Ghahramani, Z. (1998). "Learning Dynamic Bayesian Networks." In Adaptive Processing of Sequences and Data Structures, LNCS 1387, 168–197.
+Koller, D. & Friedman, N. (2009). Probabilistic Graphical Models, Ch. 6. MIT Press.
+
+CATE — Conditional Average Treatment Effect
+
+Heckman, J.J., Smith, J. & Clements, N. (1997). "Making the Most Out of Programme Evaluations and Social Experiments." Review of Economic Studies, 64(4), 487–535. — heterogeneous treatment effects.
+Abadie, D., Angrist, J. & Imbens, G. (2002). "Instrumental Variables Estimates of the Effect of Subsidized Training on the Quantiles of Trainee Earnings." Econometrica, 70(1), 91–117.
+Athey, S. & Imbens, G. (2016). "Recursive Partitioning for Heterogeneous Causal Effects." PNAS, 113(27), 7353–7360. — causal trees.
+Wager, S. & Athey, S. (2018). "Estimation and Inference of Heterogeneous Treatment Effects using Random Forests." JASA, 113(523), 1228–1242. — causal forests.
+Künzel, S., Sekhon, J., Bickel, P. & Yu, B. (2019). "Metalearners for Estimating Heterogeneous Treatment Effects using Machine Learning." PNAS, 116(10), 4156–4165. — S/T/X-learners.
+Chernozhukov, V. et al. (2018). "Double/Debiased Machine Learning for Treatment and Structural Parameters." Econometrics Journal, 21(1), C1–C68.
+
+Granger predictive causality
+
+Wiener, N. (1956). "The Theory of Prediction." In Beckenbach (ed.), Modern Mathematics for Engineers. — the predictive-improvement idea.
+Granger, C.W.J. (1969). "Investigating Causal Relations by Econometric Models and Cross-spectral Methods." Econometrica, 37(3), 424–438. — the canonical formalism.
+Granger, C.W.J. (1980). "Testing for Causality: A Personal Viewpoint." Journal of Economic Dynamics and Control, 2, 329–352. — general (non-linear, conditional) definition.
+Geweke, J. (1982). "Measurement of Linear Dependence and Feedback Between Multiple Time Series." JASA, 77(378), 304–313. — the multivariate/spectral decomposition.
+Barnett, L., Barrett, A.B. & Seth, A.K. (2009). "Granger Causality and Transfer Entropy Are Equivalent for Gaussian Variables." PRL, 103, 238701. — information-theoretic equivalence.
+
+
+SCM
+Core formalism:
+
+Pearl, J. & Verma, T. (1991). "A Theory of Inferred Causation." In KR '91, 441–452.
+Spirtes, P., Glymour, C. & Scheines, R. (1993/2000). Causation, Prediction, and Search. Springer / MIT Press. — causal Markov + faithfulness, discovery.
+Pearl, J. (1995). "Causal Diagrams for Empirical Research." Biometrika, 82(4), 669–710. — do-operator, back-door and front-door criteria.
+Galles, D. & Pearl, J. (1998). "An Axiomatic Characterization of Causal Counterfactuals." Foundations of Science, 3(1), 151–182. — composition/effectiveness/reversibility axioms.
+Halpern, J.Y. (2000). "Axiomatizing Causal Reasoning." JAIR, 12, 317–337. — axiomatization including non-recursive models.
+Pearl, J. (2000/2009). Causality: Models, Reasoning, and Inference. Cambridge UP. — canonical reference; three-layer hierarchy, twin networks, counterfactual semantics.
+Pearl, J. (2001). "Direct and Indirect Effects." In UAI '01, 411–420. — mediation formalism.
+
+Identification completeness:
+
+Tian, J. & Pearl, J. (2002). "A General Identification Condition for Causal Effects." In AAAI '02, 567–573.
+Shpitser, I. & Pearl, J. (2006). "Identification of Joint Interventional Distributions in Recursive Semi-Markovian Causal Models." In AAAI '06. — the ID algorithm.
+Huang, Y. & Valtorta, M. (2006). "Pearl's Calculus of Intervention Is Complete." In UAI '06, 217–224.
+
+Modern treatments / extensions:
+
+Bareinboim, E. & Pearl, J. (2016). "Causal Inference and the Data-Fusion Problem." PNAS, 113(27), 7345–7352. — selection diagrams, transportability.
+Bareinboim, E., Correa, J., Ibeling, D. & Icard, T. (2022). "On Pearl's Hierarchy and the Foundations of Causal Inference." In Probabilistic and Causal Inference: The Works of Judea Pearl, ACM, 507–556. — the Causal Hierarchy Theorem.
+Peters, J., Janzing, D. & Schölkopf, B. (2017). Elements of Causal Inference. MIT Press. — SCM with independent-mechanisms/ANM emphasis.
+Bongers, S., Forré, P., Peters, J. & Mooij, J.M. (2021). "Foundations of Structural Causal Models with Cycles and Latent Variables." Annals of Statistics, 49(5), 2885–2915. — measure-theoretic treatment of cyclic SCMs.

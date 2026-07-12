@@ -5,7 +5,8 @@ TBD - created by archiving change add-quantum-crate. Update Purpose after archiv
 ## Requirements
 ### Requirement: An orthomodular projection-lattice Verdict carrier
 
-The crate SHALL provide a `Verdict` carrier as a newtype over a commuting projection family — the
+The crate SHALL provide a `Verdict` carrier as a newtype over projections on a fixed
+finite-dimensional Hilbert space (the full subspace/projection lattice) — the
 Birkhoff–von Neumann quantum logic — with `bottom = 0`, `top = I`, `complement = I − P`
 (orthocomplement), and meet/join on ranges, extending `core.verdict.carriers` (today Boolean-proved,
 MV witness-only) with the orthomodular class that fails distributivity the way the MV carrier fails
@@ -14,7 +15,7 @@ matrix type, because general effects `0 ≤ E ≤ I` form only an effect algebra
 
 #### Scenario: The orthomodular laws hold and distributivity fails
 
-- **WHEN** the orthomodular carrier is exercised on a commuting projection family
+- **WHEN** the orthomodular carrier is exercised on projections in general position (including non-commuting projections)
 - **THEN** it satisfies the bounded-lattice + orthocomplement laws and the orthomodular law, and a
   witnessing triple shows distributivity failing (as documented on the carrier)
 
