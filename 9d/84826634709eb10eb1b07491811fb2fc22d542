@@ -1,0 +1,33 @@
+deep_causality_quantum/src/types/qgates/mechanics.rs
+  s_543ee5cdecd2c1::t_22d72612541dd5 195
+  s_543ee5cdecd2c1::t_81ce08180e71f5 217
+  s_543ee5cdecd2c1::t_bbf1b8fd5fd632 240
+  s_543ee5cdecd2c1::t_6a96a3aef38e76 206
+  s_543ee5cdecd2c1::t_817c05ccda8f37 276
+  s_543ee5cdecd2c1::t_f6c6118eaf2f58 265
+deep_causality_quantum/tests/types/qgates/wrappers_tests.rs
+  s_543ee5cdecd2c1::t_f6a5051a17aa4f 210-237
+deep_causality_quantum/tests/types/qgates/gates_haruna_tests.rs
+  s_543ee5cdecd2c1::t_4a3d249c3f5516 12,29-30,36,42,50,58,64,68,74-77,86-90,94-98
+deep_causality_quantum/src/types/qgates/gates_haruna.rs
+  s_543ee5cdecd2c1::t_5c7a9eec4dd896 6,20-30,38,44,54,62-66,80-82,97-99,102,106,112-114,116,120-125,136-141,152-157,169-172,176,184,189,193,197-199,203,215-220
+deep_causality_quantum/tests/types/qgates/mechanics_tests.rs
+  s_543ee5cdecd2c1::t_7d6ad1d3b27b44 295-306
+  s_543ee5cdecd2c1::t_5a0030d361863c 294
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "9d84826634709eb10eb1b07491811fb2fc22d542",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
