@@ -119,7 +119,11 @@ fn test_eigen_hermitian_large_finite_norm_still_diagonalizes() {
     let s = sorted_reals(&vals);
     // Absolute tolerance ~ε·2x so the near-zero eigenvalue and 2x both check out.
     let atol = 1e140;
-    assert!(s[0].abs() < atol, "smallest eigenvalue should be ~0, got {}", s[0]);
+    assert!(
+        s[0].abs() < atol,
+        "smallest eigenvalue should be ~0, got {}",
+        s[0]
+    );
     assert!(
         (s[1] - 2.0 * x).abs() < atol,
         "largest eigenvalue should be 2e154, got {}",

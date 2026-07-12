@@ -25,9 +25,7 @@ use deep_causality_num_complex::Complex;
 /// has no finite `exp`, so the failure is surfaced rather than masked as the
 /// identity operator — a real identity gate (`exp(0)`) is indistinguishable from
 /// such a fallback, which is exactly the ambiguity callers must not face.
-fn exp<R>(
-    mv: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
+fn exp<R>(mv: &CausalMultiVector<Complex<R>>) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
