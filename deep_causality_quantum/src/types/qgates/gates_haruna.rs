@@ -15,16 +15,29 @@ use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{FromPrimitive, One};
 use deep_causality_num_complex::Complex;
 
+/// Whether any component of `mv` has a non-finite real or imaginary part. Shared
+/// by the finiteness guards in `exp` and `logical_hadamard` (mirroring the checks
+/// in `apply_gate_kernel` / `commutator_kernel`) so a new post-product path cannot
+/// silently forget the guard.
+fn has_non_finite<R: RealField>(mv: &CausalMultiVector<Complex<R>>) -> bool {
+    mv.data()
+        .iter()
+        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+}
+
 /// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
 /// Uses Taylor series expansion.
 ///
 /// # Errors
 /// Returns [`QuantumError::NonFiniteValue`] when the exponent's norm is
 /// non-finite or exceeds the overflow bound, or when the Taylor series overflows
-/// to a non-finite value during (or after) accumulation. An overflowing exponent
-/// has no finite `exp`, so the failure is surfaced rather than masked as the
-/// identity operator — a real identity gate (`exp(0)`) is indistinguishable from
-/// such a fallback, which is exactly the ambiguity callers must not face.
+/// to a non-finite value during (or after) accumulation; returns
+/// [`QuantumError::CalculationError`] when the 64-term series does not converge to
+/// tolerance within the budget (the truncated sum would be silently inaccurate).
+/// An overflowing or non-convergent exponent has no reliable finite `exp`, so the
+/// failure is surfaced rather than masked as the identity operator — a real
+/// identity gate (`exp(0)`) is indistinguishable from such a fallback, which is
+/// exactly the ambiguity callers must not face.
 fn exp<R>(mv: &CausalMultiVector<Complex<R>>) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
@@ -70,11 +83,7 @@ where
         term = &term * mv;
         term *= n_inv;
 
-        if term
-            .data()
-            .iter()
-            .any(|c| !c.re.is_finite() || !c.im.is_finite())
-        {
+        if has_non_finite(&term) {
             return Err(QuantumError::NonFiniteValue(
                 "Haruna gate exp Taylor term overflowed to a non-finite value".into(),
             ));
@@ -101,23 +110,30 @@ where
         }
     }
 
-    // Exhausted the iteration budget: succeed only if the result is finite.
-    if sum
-        .data()
-        .iter()
-        .any(|c| !c.re.is_finite() || !c.im.is_finite())
-    {
+    // Reaching here means the 64-term budget was exhausted WITHOUT `delta < tol`
+    // (convergence returns `Ok` inside the loop). The truncated partial sum is a
+    // non-converged Taylor series — for an exponent norm above ~16 it can be many
+    // orders of magnitude off — so surface it as a failure rather than a
+    // silently-wrong gate. A `sum` can also overflow to a non-finite value purely
+    // by accumulating finite terms; report that case distinctly.
+    if has_non_finite(&sum) {
         return Err(QuantumError::NonFiniteValue(
             "Haruna gate exp result is non-finite".into(),
         ));
     }
-    Ok(sum)
+    Err(QuantumError::CalculationError(
+        "Haruna gate exp Taylor series did not converge within the 64-term budget \
+         to tolerance 1e-12; the exponent norm is too large (the field is outside \
+         the reliably-computable domain)"
+            .into(),
+    ))
 }
 
 /// Calculates the Logical Z gate: $Z(\gamma) = \exp(i \pi a(\gamma))$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_z<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
 ) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
@@ -133,7 +149,8 @@ where
 /// Calculates the Logical X gate: $X(\tilde{\gamma}) = \exp(i \pi b(\tilde{\gamma}))$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_x<R>(
     b_gamma_tilde: &CausalMultiVector<Complex<R>>,
 ) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
@@ -149,7 +166,8 @@ where
 /// Calculates the Logical S gate: $S(\gamma) = \exp(i \frac{\pi}{2} a(\gamma)^2)$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_s<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
 ) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
@@ -166,8 +184,9 @@ where
 /// Calculates the Logical Hadamard gate.
 ///
 /// # Errors
-/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] (via `logical_s` and the
-/// mid-factor) for an overflowing field.
+/// Propagates [`exp`]'s errors (via `logical_s` and the mid-factor), and returns
+/// [`QuantumError::NonFiniteValue`] if the post-exponential products overflow to a
+/// non-finite value.
 pub fn logical_hadamard<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
     b_gamma_tilde: &CausalMultiVector<Complex<R>>,
@@ -188,13 +207,23 @@ where
 
     let step1 = &s_a * &mid;
     let step2 = &step1 * &s_a;
-    Ok(step2 * phase_scalar)
+    // The post-exp geometric products can overflow to a non-finite value even when
+    // both exp factors are finite; backstop them (consistent with exp,
+    // apply_gate_kernel, and commutator_kernel).
+    let result = step2 * phase_scalar;
+    if has_non_finite(&result) {
+        return Err(QuantumError::NonFiniteValue(
+            "Haruna Hadamard gate produced a non-finite value".into(),
+        ));
+    }
+    Ok(result)
 }
 
 /// Calculates the Logical CZ gate: $CZ(\gamma_1, \gamma_2) = \exp(i \pi a(\gamma_1) a(\gamma_2))$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_cz<R>(
     a_gamma1: &CausalMultiVector<Complex<R>>,
     a_gamma2: &CausalMultiVector<Complex<R>>,
@@ -212,7 +241,8 @@ where
 /// Calculates the Logical T gate.
 ///
 /// # Errors
-/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_t<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
 ) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
