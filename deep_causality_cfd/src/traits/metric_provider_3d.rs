@@ -14,8 +14,8 @@
 //! (`χ ~ O(10)`, resolution-flat) — the mandatory rank lever measured in `studies/qtt_rank_3d`. Static
 //! dispatch only (used as a generic bound; no `dyn`).
 
-use crate::alias::physical_gradient_3_d::PhysicalGradient3d;
 use crate::CfdScalar;
+use crate::alias::physical_gradient_3_d::PhysicalGradient3d;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensorTrain;
