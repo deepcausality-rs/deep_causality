@@ -10,6 +10,7 @@ publish = false
 path = "no_lib.rs"
 
 [dependencies]
+deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_calculus = { path = "../../deep_causality_calculus" }
 deep_causality_multivector = { path = "../../deep_causality_multivector" }
@@ -46,3 +47,7 @@ path = "ikkt_matrix_model/main.rs"
 
 [lints]
 workspace = true
+
+[[example]]
+name = "qcm_freeze_check"
+path = "qcm_freeze_check/main.rs"

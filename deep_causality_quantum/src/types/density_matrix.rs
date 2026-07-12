@@ -6,10 +6,10 @@
 //! The mixed-state density matrix with enforced invariants (L1 of the
 //! operator build ladder, design B4).
 
+use crate::QuantumError;
 use crate::kernels::operator_linalg::{
     frobenius_norm, hermiticity_defect, matrix_trace, square_dim,
 };
-use crate::QuantumError;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
@@ -46,10 +46,7 @@ where
     /// Validates `matrix` as a density matrix: square, finite, Hermitian,
     /// PSD (spectrum ≥ −tol·scale), and unit trace (|Tr − 1| ≤ tol·scale),
     /// with `scale = max(1, ‖M‖_F)`.
-    pub fn with_tolerance(
-        matrix: CausalTensor<Complex<R>>,
-        tol: R,
-    ) -> Result<Self, QuantumError> {
+    pub fn with_tolerance(matrix: CausalTensor<Complex<R>>, tol: R) -> Result<Self, QuantumError> {
         let dim = square_dim(&matrix)?;
 
         if matrix
@@ -148,9 +145,7 @@ where
     /// The mixed state `ρ = Σ p_κ |ψ_κ⟩⟨ψ_κ|` of an ensemble of weighted kets;
     /// weights must be non-negative and sum to one (within the default
     /// tolerance). Each ket is ray-normalized.
-    pub fn from_ensemble(
-        ensemble: &[(R, CausalTensor<Complex<R>>)],
-    ) -> Result<Self, QuantumError> {
+    pub fn from_ensemble(ensemble: &[(R, CausalTensor<Complex<R>>)]) -> Result<Self, QuantumError> {
         if ensemble.is_empty() {
             return Err(QuantumError::NormalizationError("empty ensemble".into()));
         }
@@ -224,7 +219,12 @@ where
             .collect();
         Self::new(CausalTensor::from_slice(&data, &[d, d]))
     }
+}
 
+// Read-only accessors need no numeric-conversion bounds, so a validated
+// `DensityMatrix` (e.g. inside an immutable `EnvironmentalPrep`) can be read
+// under the plain `RealField` bound.
+impl<R: RealField> DensityMatrix<R> {
     /// The validated matrix.
     pub fn matrix(&self) -> &CausalTensor<Complex<R>> {
         &self.matrix
@@ -248,7 +248,11 @@ where
     /// Whether the state is pure within `tol`: `|Tr(ρ²) − 1| ≤ tol`.
     pub fn is_pure(&self, tol: R) -> bool {
         let p = self.purity();
-        let defect = if p > R::one() { p - R::one() } else { R::one() - p };
+        let defect = if p > R::one() {
+            p - R::one()
+        } else {
+            R::one() - p
+        };
         defect <= tol
     }
 }

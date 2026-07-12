@@ -176,8 +176,8 @@ fn test_two_stage_encapsulation_matches_one_pass() {
 
     let (o_out, o_state, _, _) = one_pass.into_parts();
     let (s_out, s_state, _, _) = suffix.into_parts();
-    let dv: f64 = (o_out.unwrap().into_value().unwrap() - s_out.unwrap().into_value().unwrap())
-        .into();
+    let dv: f64 =
+        (o_out.unwrap().into_value().unwrap() - s_out.unwrap().into_value().unwrap()).into();
     assert!(dv.abs() < 1e-30);
     assert!(max_abs_diff(&o_state, &s_state) < 1e-30);
 }

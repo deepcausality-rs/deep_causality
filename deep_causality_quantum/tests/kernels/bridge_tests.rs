@@ -114,10 +114,9 @@ fn test_dirac_bracket_unit_ket_normalization() {
 
 #[test]
 fn test_dirac_bracket_rejects_metric_mismatch_and_mixed_signature() {
-    let a = HilbertState::<f64>::from_ket(&pseudo_random_ket(2, 1), Metric::NonEuclidean(2))
-        .unwrap();
-    let b =
-        HilbertState::<f64>::from_ket(&pseudo_random_ket(2, 1), Metric::Euclidean(2)).unwrap();
+    let a =
+        HilbertState::<f64>::from_ket(&pseudo_random_ket(2, 1), Metric::NonEuclidean(2)).unwrap();
+    let b = HilbertState::<f64>::from_ket(&pseudo_random_ket(2, 1), Metric::Euclidean(2)).unwrap();
     assert!(dirac_bracket_kernel(&a, &b).is_err());
 
     // Mixed signature (Minkowski) is not supported by the ket bridge product.

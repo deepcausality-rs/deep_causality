@@ -5,12 +5,19 @@ rust_library(
     srcs = glob([
         "src/**",
     ]),
+    # The Bazel build enables the emergent `qpu` seam so the whole crate is
+    # compiled and tested; the default *cargo* build stays verifiable-only
+    # (`default = []`), which is the modality guarantee the spec states.
+    crate_features = [
+        "qpu",
+    ],
     crate_root = "src/lib.rs",
     tags = [
         "quantum",
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//deep_causality",
         "//deep_causality_algebra",
         "//deep_causality_core",
         "//deep_causality_haft",
@@ -19,12 +26,17 @@ rust_library(
         "//deep_causality_num",
         "//deep_causality_num_complex",
         "//deep_causality_tensor",
+        # qpu feature dep
+        "//deep_causality_uncertain",
     ],
 )
 
 rust_doc(
     name = "doc",
     crate = ":deep_causality_quantum",
+    crate_features = [
+        "qpu",
+    ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -32,6 +44,9 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_quantum",
+    crate_features = [
+        "qpu",
+    ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

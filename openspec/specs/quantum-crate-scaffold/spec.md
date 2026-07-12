@@ -1,12 +1,19 @@
-## ADDED Requirements
+# quantum-crate-scaffold Specification
 
+## Purpose
+TBD - created by archiving change add-quantum-crate. Update Purpose after archive.
+## Requirements
 ### Requirement: A dedicated `deep_causality_quantum` crate under workspace policy
 
 The change SHALL add a new crate `deep_causality_quantum` as a workspace member that adopts the
 repo-wide policy: `[lints] workspace = true`, `unsafe_code = "forbid"`, MSRV `rust-version = 1.93.0`,
-no `dyn`, and no crate-defined macros. The crate SHALL depend only on `deep_causality_core`,
-`deep_causality_haft`, `deep_causality_algebra`, `deep_causality_num`, `deep_causality_num_complex`,
-`deep_causality_multivector`, `deep_causality_tensor`, `deep_causality_uncertain`, and
+no `dyn`, and no crate-defined macros. The crate SHALL depend only on `deep_causality` (the engine
+crate — required by the freeze-hook integration: `CausableGraph::freeze_verified_with_check` and
+`CausalityGraphError` live there, and the orphan-legal `impl From<QuantumError> for
+CausalityGraphError` must therefore sit in this crate; the engine does not and must not depend back),
+`deep_causality_core`, `deep_causality_haft`, `deep_causality_algebra`, `deep_causality_num`,
+`deep_causality_num_complex`, `deep_causality_multivector`, `deep_causality_tensor`,
+`deep_causality_uncertain` (optional, activated by the `qpu` feature), and
 `deep_causality_metric` (the metric-signature single source of truth), and SHALL NOT depend on
 `deep_causality_physics` (no dependency cycle). It SHALL define no metric-signature type of its own,
 using `deep_causality_metric::Metric` for all Clifford/physics signatures.
@@ -114,3 +121,4 @@ the default build SHALL compile without it and pull in no network/async dependen
   a `QuantumError`
 - **THEN** the success carries the shot summary on the value channel with params/calibration/log
   populated, and the failure carries the error on the error channel with the value absent
+

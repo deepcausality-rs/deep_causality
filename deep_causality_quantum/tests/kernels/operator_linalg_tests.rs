@@ -63,6 +63,7 @@ fn scale(a: &CausalTensor<C>, s: C) -> CausalTensor<C> {
 // Partial trace: defining identities (the Q-PTP properties, task 2.3)
 // =============================================================================
 
+// THEOREM_MAP: quantum.partial_trace.kronecker
 #[test]
 fn test_partial_trace_product_identity() {
     // Tr_B(X ⊗ Y) = X · Tr(Y)
@@ -74,6 +75,8 @@ fn test_partial_trace_product_identity() {
     assert!(max_abs_diff(&tr_b, &expected) < 1e-12);
 }
 
+// THEOREM_MAP: quantum.partial_trace.add
+// THEOREM_MAP: quantum.partial_trace.smul
 #[test]
 fn test_partial_trace_linearity() {
     // Tr_B(αM + N) = α·Tr_B(M) + Tr_B(N)
@@ -87,6 +90,8 @@ fn test_partial_trace_linearity() {
     assert!(max_abs_diff(&lhs, &rhs) < 1e-12);
 }
 
+// THEOREM_MAP: quantum.partial_trace.bimodule
+// THEOREM_MAP: quantum.partial_trace.bimodule_right
 #[test]
 fn test_partial_trace_bimodule_law() {
     // Tr_B((1_B ⊗ Z)·M) = Z·Tr_B(M) — the Q-PTP boundary identity, stated on
@@ -96,7 +101,9 @@ fn test_partial_trace_bimodule_law() {
 
     let z_full = z.kronecker(&identity_matrix::<f64>(2)).unwrap();
     let lhs = partial_trace(&z_full.matmul(&m).unwrap(), &[2, 2], &[1]).unwrap();
-    let rhs = z.matmul(&partial_trace(&m, &[2, 2], &[1]).unwrap()).unwrap();
+    let rhs = z
+        .matmul(&partial_trace(&m, &[2, 2], &[1]).unwrap())
+        .unwrap();
     assert!(max_abs_diff(&lhs, &rhs) < 1e-12);
 }
 
@@ -156,6 +163,8 @@ fn test_partial_trace_rejects_bad_shapes() {
 // [X, Y] = 0 but [Tr₂X, Tr₂Y] = +4i·σy ≠ 0.
 // =============================================================================
 
+// THEOREM_MAP: quantum.partial_trace_nonpreservation
+// THEOREM_MAP: quantum.partial_trace_nonpreservation.value
 #[test]
 fn test_partial_trace_nonpreservation_counterexample() {
     let x = sigma_x().kronecker(&proj0()).unwrap() + sigma_z().kronecker(&proj1()).unwrap();
@@ -179,6 +188,7 @@ fn test_partial_trace_nonpreservation_counterexample() {
     assert!((frobenius_norm(&comm) - 32.0_f64.sqrt()).abs() < 1e-12);
 }
 
+// THEOREM_MAP: quantum.partial_trace_preservation_boundary
 #[test]
 fn test_partial_trace_preservation_boundary_case() {
     // The conditional theorem's hypothesis (Q-PTP): if Y = Z ⊗ 1_B acts only

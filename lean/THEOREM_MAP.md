@@ -215,3 +215,32 @@ Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
 |---|---|---|
 | `haft.traversable.composition` | `sequence` at a composite applicative `M ∘ N` | needs lawful-applicative hypotheses for `M`, `N` (scaling) |
 | `haft.effect_unbound.laws` | indexed-monad laws for `MonadEffect3/4/5Unbound` | same shape as `haft.parametric_monad.laws`; a dedicated carrier model is scaling work |
+
+## Quantum — the partial-trace / Choi foundation and the B1 witness
+
+The `add-quantum-crate` change (`openspec/changes/add-quantum-crate`). The pinned Mathlib v4.15.0 has
+no partial trace and no Choi–Jamiołkowski layer, so both are built from first principles on the
+pair-indexed matrix model in `DeepCausalityFormal/Quantum/`. The headline is the B1 result: the
+unconditional `partial_trace_preservation` is **false** (`partial_trace_nonpreservation`, a witnessed
+counterexample), while the *conditional* boundary version holds (`partial_trace_preservation_boundary`).
+Rust witnesses in `deep_causality_quantum/tests/kernels/{operator_linalg_tests,channel_tests}.rs`.
+
+| id | statement | Lean | Lean location | Rust witness | Test |
+|---|---|---|---|---|---|
+| `quantum.partial_trace.add` | `Tr_B(M+N) = Tr_B M + Tr_B N` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_add` | `operator_linalg_tests.rs :: test_partial_trace_linearity` | ✓ |
+| `quantum.partial_trace.smul` | `Tr_B(c•M) = c•Tr_B M` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_smul` | `operator_linalg_tests.rs :: test_partial_trace_linearity` | ✓ |
+| `quantum.partial_trace.kronecker` | `Tr_B(X⊗Y) = Tr(Y)•X` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_kron` | `operator_linalg_tests.rs :: test_partial_trace_product_identity` | ✓ |
+| `quantum.partial_trace.bimodule` | `Tr_B((Z⊗1)·M) = Z·Tr_B M` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_bimodule` | `operator_linalg_tests.rs :: test_partial_trace_bimodule_law` | ✓ |
+| `quantum.partial_trace.bimodule_right` | `Tr_B(M·(Z⊗1)) = Tr_B M·Z` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_bimodule_right` | `operator_linalg_tests.rs :: test_partial_trace_bimodule_law` | ✓ |
+| `quantum.partial_trace_preservation_boundary` | boundary op commutes ⇒ its A-part commutes with `Tr_B M` (Q-PTP) | proved | `Quantum/PartialTrace.lean :: partial_trace_preservation_boundary` | `operator_linalg_tests.rs :: test_partial_trace_preservation_boundary_case` | ✓ |
+| `quantum.partial_trace_nonpreservation` | `[X,Y]=0` but `[Tr_B X, Tr_B Y] ≠ 0` (B1 counterexample) | proved | `Quantum/PartialTraceCounterexample.lean :: partial_trace_nonpreservation` | `operator_linalg_tests.rs :: test_partial_trace_nonpreservation_counterexample` | ✓ |
+| `quantum.partial_trace_nonpreservation.value` | `[Tr_B X, Tr_B Y] = [[0,4],[−4,0]]` (`= +4i·σy`) | proved | `Quantum/PartialTraceCounterexample.lean :: partial_trace_nonpreservation_value` | `operator_linalg_tests.rs :: test_partial_trace_nonpreservation_counterexample` | ✓ |
+| `quantum.choi.apply_add` | `applyChoi J` is additive in the state | proved | `Quantum/Choi.lean :: applyChoi_add` | `channel_tests.rs :: test_apply_kraus_and_apply_choi_agree` | ✓ |
+| `quantum.choi.apply_smul` | `applyChoi J (c•A) = c•applyChoi J A` | proved | `Quantum/Choi.lean :: applyChoi_smul` | `channel_tests.rs :: test_apply_kraus_and_apply_choi_agree` | ✓ |
+
+The **CJ reconstruction isomorphism** `applyChoi (choiOf E) = E` and the QCM theorems
+(`quantum.no_influence`, `quantum.markov_commutativity`, `quantum.unitary_factorization`,
+`quantum.classical_embedding`, `quantum.cyclic_support`, `quantum.verdict.orthomodular`) are stated
+as deferred targets in `openspec/changes/add-quantum-crate`; the crate carries their numerical /
+property-test witnesses today. The `/Quantum/` tree is exempt from the CI `sorry` gate while this
+foundation is extended.

@@ -171,7 +171,9 @@ where
         )));
     }
 
-    let kept: Vec<usize> = (0..dims.len()).filter(|i| !traced_set.contains(i)).collect();
+    let kept: Vec<usize> = (0..dims.len())
+        .filter(|i| !traced_set.contains(i))
+        .collect();
     let d_keep: usize = kept.iter().map(|&i| dims[i]).product();
     let d_tr: usize = traced_set.iter().map(|&i| dims[i]).product();
 

@@ -17,8 +17,8 @@
 //! Reichenbach's principle" (2022); M.-D. Choi, "Completely positive linear
 //! maps on complex matrices", Linear Algebra Appl. 10 (1975) 285–290.
 
-use crate::kernels::operator_linalg::{identity_matrix, partial_trace, square_dim};
 use crate::QuantumError;
+use crate::kernels::operator_linalg::{identity_matrix, partial_trace, square_dim};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
@@ -41,9 +41,7 @@ where
     R: RealField,
 {
     if kraus.is_empty() {
-        return Err(QuantumError::NonCptpChannel(
-            "empty Kraus family".into(),
-        ));
+        return Err(QuantumError::NonCptpChannel("empty Kraus family".into()));
     }
     let shape = kraus[0].shape();
     if shape.len() != 2 || shape[0] == 0 || shape[1] == 0 {

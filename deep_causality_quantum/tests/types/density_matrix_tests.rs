@@ -20,10 +20,7 @@ fn mat(data: Vec<C>, d: usize) -> CausalTensor<C> {
 #[test]
 fn test_valid_pure_state_accepted() {
     // |+⟩⟨+|
-    let rho = mat(
-        vec![c(0.5, 0.), c(0.5, 0.), c(0.5, 0.), c(0.5, 0.)],
-        2,
-    );
+    let rho = mat(vec![c(0.5, 0.), c(0.5, 0.), c(0.5, 0.), c(0.5, 0.)], 2);
     let dm = DensityMatrix::new(rho).unwrap();
     assert_eq!(dm.dim(), 2);
     assert!((dm.purity() - 1.0).abs() < 1e-12);

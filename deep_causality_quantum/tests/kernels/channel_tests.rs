@@ -101,6 +101,8 @@ fn test_choi_kraus_choi_round_trip() {
     );
 }
 
+// THEOREM_MAP: quantum.choi.apply_add
+// THEOREM_MAP: quantum.choi.apply_smul
 #[test]
 fn test_apply_kraus_and_apply_choi_agree() {
     // The two application routes compute the same channel action.

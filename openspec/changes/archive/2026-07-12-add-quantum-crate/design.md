@@ -92,6 +92,31 @@ combinatorial, so it needs neither the open direct-sum theory nor the missing Ma
 theorem to run. (Note the resonance: `C₃` is the ≥3-factor overlapping-support commutativity
 phenomenon — the same content as the Layer-D Markov check, B8.)
 
+**Corrected (3.4, adversarial review) — the `from_graph` builders require a frozen graph.** An
+adversarial review of the Phase-3 code confirmed one soundness bug: `FactorSupports::from_graph` and
+`CausalStructure::from_graph_reachability` used `number_nodes()` as the node-id upper bound, which is
+only valid for a **frozen** graph. On a dynamic `CausaloidGraph`, `remove_node` tombstones a slot
+without compacting, so a live node can have an id `≥ number_nodes()` — its edges would be silently
+dropped, an unsound false negative in the faithfulness gate. Verified directly: after
+`remove_causaloid(0)`, a dynamic graph keeps sparse ids (`contains_edge(1,3)` still true with
+`number_nodes()==3`), whereas `freeze()` **compacts and renumbers** to a dense `0..n-1`. Both builders
+now **reject an unfrozen graph** with `QuantumError::CalculationError` and are documented as requiring
+the frozen (static) representation — which is the domain-correct contract, since the causal structure
+is only defined on the frozen DAG. (The manual-`declare` path and the `freeze_quantum` freeze-boundary
+check were never affected.)
+
+**Implemented (3.4, 2026-07-10) — the exact `C₃` characterization.** Up to relabelling there is a
+single obstruction: a `C₃` sub-relation is the bipartite **6-cycle** `K_{3,3}` minus a perfect
+matching (the complement of a 3×3 permutation matrix). All three "cyclic" and "≠" patterns are
+isomorphic to `C_6` because the only 2-regular bipartite graph on 3+3 vertices is the 6-cycle. So
+detection reduces to a simple degree test: a 3×3 induced block on three inputs × three outputs is a
+`C₃` **iff every row has exactly two edges and every column has exactly two edges** (which forces the
+three non-edges to form a perfect matching). `CausalStructure::find_c3` enumerates input/output
+triples with that test and returns the witness; `check_c3_exclusion` rejects at freeze with
+`QuantumError::NotFaithfullyRepresentable`. A `from_graph_reachability` helper derives the influence
+relation from a causaloid graph's forward reachability (via the public `contains_edge`), so no direct
+`ultragraph` dependency is needed.
+
 ### B4. The Rust operator/channel layer is absent — fix the representation
 
 `HilbertState<R> = CausalMultiVector<Complex<R>>` is a pure-state ket; there is no density matrix,
@@ -218,8 +243,19 @@ SVD-based `σ_max` / condition estimates — never globally.
 **Decision.** `deep_causality_quantum` is a new workspace member with `[lints] workspace = true`,
 `unsafe_code = "forbid"`, MSRV `rust-version = 1.93.0`, no `dyn`, no crate-defined macros, std (it
 depends on `CausalTensor`). Dependencies: core, haft, algebra, num, num_complex, multivector, tensor,
-uncertain, and **`deep_causality_metric`** (the metric-signature SSOT — see cross-cutting constraints). It depends on nothing that would create a cycle (physics does **not** become
-a dependency; the migrated kernels have no physics-only deps beyond `PhysicsError`, replaced per Q-ERR).
+uncertain (optional, behind the `qpu` feature), and **`deep_causality_metric`** (the metric-signature
+SSOT — see cross-cutting constraints). It depends on nothing that would create a cycle (physics does
+**not** become a dependency; the migrated kernels have no physics-only deps beyond `PhysicsError`,
+replaced per Q-ERR).
+
+**Amended (3.2, 2026-07-10): `deep_causality` (the engine crate) joins the dependency set.** The
+Phase-3 freeze integration cannot exist without it: `CausableGraph::freeze_verified_with_check` and
+`CausalityGraphError` are defined in `deep_causality`, and the orphan-rule-legal
+`impl From<QuantumError> for CausalityGraphError` that the quantum-markov-freeze requirement
+mandates can only live in the crate that owns `QuantumError` — this one. The R3 wiring
+(`freeze_quantum`, the closure capturing `ProcessFactors`) therefore depends on the engine crate.
+No cycle: `deep_causality` does not and must not depend on `deep_causality_quantum`. The original
+nine-crate list simply omitted what the freeze requirement's own orphan-rule argument presupposed.
 
 **DECIDED (Q-ERR).** The migrated wrappers return a crate-local **`QuantumError`**: an outer newtype
 struct wrapping a `QuantumErrorEnum` of exact variants — mirroring the repo convention
@@ -336,6 +372,17 @@ lives in a future out-of-crate impl) + a reified `QuantumCircuit` (inert data).
   vendor adapter out of scope.
 - **DECIDED (Q-QPU):** `Shots` is an associated type bounded by `ShotHistogram` (not a fixed struct),
   with the `Uncertain` bridge and the full-arity `CausalEffectPropagationProcess` wrapper confirmed.
+- **Implemented (3.6, 2026-07-10).** `SimQpu` is a **standard dense state-vector simulator**, not the
+  migrated geometric-algebra kernels: a computational-basis circuit needs computational-basis gates,
+  so `SimQpu` applies `[[a,b],[c,d]]` single-qubit gates and CNOT/CZ directly to a `2ⁿ` amplitude
+  vector, computes the marginal over the measured qubits, and inverse-CDF-samples `shots` outcomes
+  with a seeded `splitmix64` PRNG (deterministic → identical histogram per seed; hand-rolled, so no
+  `deep_causality_rand` dependency and no `unsafe`). The `GateOp` alphabet is `{H,X,Y,Z,S,T,CNOT,CZ}`.
+  `QuantumCircuit`/`GateOp`/`ShotHistogram`/`CountHistogram`/`QpuSampler`/`SimQpu`/the bridges/`qpu_effect`
+  all live behind the `qpu` feature; the default cargo build compiles none of them and pulls in no
+  `deep_causality_uncertain`. The Bazel build enables `qpu` (matching the `deep_causality_sparse`
+  optional-feature precedent) so the seam is compiled and tested under `bazel test //...`, while the
+  default-features cargo build remains the verifiable-only modality guarantee.
 
 ### R3 — Process-operator ↔ freeze — separation in TIME (σ is STATIC decoration, not runtime STATE)
 

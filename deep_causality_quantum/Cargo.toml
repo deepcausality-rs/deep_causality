@@ -22,6 +22,22 @@ exclude = [
     "tests/**/*",
     "papers/*",
 ]
+[package.metadata.docs.rs]
+all-features = true
+
+# Do not publish to crates.io
+publish = false
+
+[features]
+default = []
+# The emergent QPU seam: QpuSampler / ShotHistogram / the shots→Uncertain
+# bridges / qpu_effect / the in-process SimQpu. Off by default; adds no
+# network or async dependency.
+qpu = ["dep:deep_causality_uncertain"]
+
+[dependencies.deep_causality]
+path = "../deep_causality"
+version = "0.14"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
@@ -54,6 +70,11 @@ version = "0.1"
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
 version = "0.5"
+
+[dependencies.deep_causality_uncertain]
+path = "../deep_causality_uncertain"
+version = "0.4"
+optional = true
 
 [lints]
 workspace = true
