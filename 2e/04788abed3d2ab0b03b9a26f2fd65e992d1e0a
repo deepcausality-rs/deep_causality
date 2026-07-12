@@ -1,0 +1,38 @@
+deep_causality_quantum/tests/types/qgates/channel_tests.rs
+  s_543ee5cdecd2c1::t_7d2b197c0a9624 8-9
+  s_543ee5cdecd2c1::t_4e44b82b23be85 134-199
+deep_causality_quantum/tests/types/qgates/operator_linalg_tests.rs
+  s_543ee5cdecd2c1::t_f6d171ebf35ed5 141-149
+  s_543ee5cdecd2c1::t_107d6e7abcb678 140
+deep_causality_quantum/tests/types/qcm/faithfulness_tests.rs
+  s_543ee5cdecd2c1::t_a050b63c25e0fd 115-122
+deep_causality_quantum/tests/types/qcm/process_factors_tests.rs
+  s_543ee5cdecd2c1::t_df028ff430d9b2 9
+  s_543ee5cdecd2c1::t_b4c1db0ebc204d 100-124
+  s_543ee5cdecd2c1::t_f82dc7d731c20b 125-127
+deep_causality_quantum/tests/types/qcm/markov_freeze_tests.rs
+  s_543ee5cdecd2c1::t_b0ebecf68bed5c 218-299
+deep_causality_quantum/tests/types/density_matrix_tests.rs
+  s_543ee5cdecd2c1::t_de3354de0257d8 127-172
+deep_causality_quantum/tests/types/verdict/projection_tests.rs
+  s_543ee5cdecd2c1::t_17b92093910a0d 219-232
+  s_543ee5cdecd2c1::t_2886d89c1d154e 233
+openspec/notes/quantum/dynamic-qcm.md
+  s_543ee5cdecd2c1::t_ccbc19ead1e3ea 1-239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "2e04788abed3d2ab0b03b9a26f2fd65e992d1e0a",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
