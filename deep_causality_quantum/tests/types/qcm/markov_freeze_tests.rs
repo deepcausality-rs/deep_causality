@@ -380,3 +380,30 @@ fn test_freeze_admits_faithful_structure() {
     assert!(g.is_frozen());
     assert_eq!(report.tested_pairs(), 1);
 }
+
+#[test]
+fn test_freeze_rejects_out_of_range_faithfulness_id() {
+    // An out-of-range declared output id must abort the freeze (CalculationError)
+    // and roll the graph back — the faithfulness derivation cannot be trusted.
+    let mut g = two_node_graph();
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    pf.insert(1, diag(2.0, 5.0));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    let inputs = [0usize];
+    let outputs = [99usize]; // out of range: the graph has 2 nodes
+    let err = freeze_quantum(
+        &mut g,
+        &[],
+        &pf,
+        &fs,
+        &CommutatorTolerance::default(),
+        Some((&inputs, &outputs)),
+    )
+    .unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
+    assert!(!g.is_frozen());
+}

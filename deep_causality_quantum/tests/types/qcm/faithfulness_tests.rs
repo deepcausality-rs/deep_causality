@@ -120,3 +120,22 @@ fn test_inputs_and_outputs_accessors() {
     assert_eq!(cs.inputs(), &[1, 3]);
     assert_eq!(cs.outputs(), &[2, 5]);
 }
+
+#[test]
+fn test_from_graph_reachability_rejects_out_of_range_id() {
+    // A declared system id outside 0..number_nodes() would be silently treated as
+    // an isolated node, detaching the derived structure from the graph; reject it.
+    let mut g = CausaloidGraph::new(0);
+    let n0 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(0))
+        .unwrap();
+    let n1 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(1))
+        .unwrap();
+    g.add_edge(n0, n1).unwrap();
+    g.freeze();
+
+    // Node id 99 does not exist (the graph has 2 nodes).
+    let err = CausalStructure::from_graph_reachability(&g, &[n0, 99], &[n1]).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
+}

@@ -99,6 +99,16 @@ impl CausalStructure {
             ));
         }
         let n = graph.number_nodes();
+        // A declared system id outside `0..n` names no node; its reachability would
+        // be silently empty, detaching the derived structure from the graph (and
+        // hiding a real C₃). Reject it so the freeze hook rolls back.
+        if let Some(&bad) = inputs.iter().chain(outputs).find(|&&id| id >= n) {
+            return Err(QuantumError::CalculationError(format!(
+                "declared system id {} is out of range for a frozen graph with {} node(s) \
+                 (valid ids are 0..{})",
+                bad, n, n
+            )));
+        }
         let mut me = Self::new(inputs, outputs);
         let out_set: BTreeSet<usize> = outputs.iter().copied().collect();
         for &i in &me.inputs.clone() {

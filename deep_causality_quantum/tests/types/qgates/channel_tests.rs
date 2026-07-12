@@ -204,3 +204,24 @@ fn test_check_trace_preserving_rejects_dimension_mismatch() {
         QuantumErrorEnum::DimensionMismatch(_)
     ));
 }
+
+#[test]
+fn test_tolerance_validation_rejects_nonfinite_and_negative() {
+    // A NaN/∞/negative tolerance makes every `defect > tol` / `λ < -tol` check
+    // vacuously false, silently certifying an invalid operator; reject it.
+    let j = choi_from_kraus(&[identity_matrix::<f64>(2)]).unwrap();
+    for bad in [f64::NAN, f64::INFINITY, -1e-9] {
+        assert!(matches!(
+            kraus_from_choi(&j, 2, 2, bad).unwrap_err().0,
+            QuantumErrorEnum::CalculationError(_)
+        ));
+        assert!(matches!(
+            check_completely_positive(&j, bad).unwrap_err().0,
+            QuantumErrorEnum::CalculationError(_)
+        ));
+        assert!(matches!(
+            check_trace_preserving(&j, 2, 2, bad).unwrap_err().0,
+            QuantumErrorEnum::CalculationError(_)
+        ));
+    }
+}

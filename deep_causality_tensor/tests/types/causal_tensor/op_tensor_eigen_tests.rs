@@ -106,3 +106,23 @@ fn test_eigen_hermitian_rejects_bad_shapes() {
         CausalTensorError::ShapeMismatch
     );
 }
+
+#[test]
+fn test_eigen_hermitian_large_finite_norm_still_diagonalizes() {
+    // A = x·[[1,1],[1,1]] with x = 1e154: ‖A‖²_F = 4·(1e154)² overflows f64 to
+    // +inf, yet A is finite Hermitian with eigenvalues {0, 2x}. The convergence
+    // threshold must not become ∞ and break before any rotation — that would
+    // return the input diagonal {x, x} unchanged as the "eigenvalues".
+    let x = 1e154_f64;
+    let a = CausalTensor::new(vec![x, x, x, x], vec![2, 2]).unwrap();
+    let (vals, _v) = a.eigen_hermitian().unwrap();
+    let s = sorted_reals(&vals);
+    // Absolute tolerance ~ε·2x so the near-zero eigenvalue and 2x both check out.
+    let atol = 1e140;
+    assert!(s[0].abs() < atol, "smallest eigenvalue should be ~0, got {}", s[0]);
+    assert!(
+        (s[1] - 2.0 * x).abs() < atol,
+        "largest eigenvalue should be 2e154, got {}",
+        s[1]
+    );
+}
