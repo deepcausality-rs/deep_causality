@@ -1,0 +1,22 @@
+openspec/specs/quantum-verdict-orthomodular/spec.md
+  s_543ee5cdecd2c1::t_53cfdb2a64cfa4 8-9
+  s_543ee5cdecd2c1::t_577c8ebed9c95b 18
+openspec/notes/classical/literature.txt
+  s_543ee5cdecd2c1::t_89a22a9821948b 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "f044697d6ddfae5cab62e30d142ac9b7d9be3e81",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
