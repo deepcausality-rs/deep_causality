@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 
 /// An immersed cut-cell body. The mesh clips the lattice against this primitive
 /// (exact clipped volumes + wetted-face apertures) and merges sliver cut cells whose

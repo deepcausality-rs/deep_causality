@@ -22,10 +22,16 @@ mod misc_coverage_tests;
 #[cfg(test)]
 mod op_scalar_tensor_tests;
 #[cfg(test)]
+mod op_tensor_dagger_tests;
+#[cfg(test)]
+mod op_tensor_eigen_tests;
+#[cfg(test)]
 mod op_tensor_ein_sum_ast_tests;
 mod op_tensor_ein_sum_tests;
 #[cfg(test)]
 mod op_tensor_inverse_tests;
+#[cfg(test)]
+mod op_tensor_kronecker_tests;
 #[cfg(test)]
 mod op_tensor_product_tests;
 #[cfg(test)]

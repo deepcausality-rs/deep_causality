@@ -24,6 +24,7 @@
 
 extern crate alloc;
 
+mod alias;
 mod coordinate;
 mod navigation;
 mod solvers;
@@ -32,6 +33,8 @@ mod theories;
 mod traits;
 mod types;
 
+// The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
+pub use crate::alias::physical_gradient_3_d::PhysicalGradient3d;
 // Physics types this crate's public API exposes — the typed DEC forms and
 // physics-quantity newtypes (which stay in `deep_causality_physics`) plus
 // `PhysicsError` — re-exported so CFD code can import them from one crate.
@@ -39,13 +42,16 @@ pub use deep_causality_physics::PhysicsError;
 pub use deep_causality_physics::quantities::*;
 
 // Core CFD trait seams and value types.
-pub use crate::traits::{FluidTheory, MarchDispatch, Marchable, Marcher, Solver};
-pub use crate::types::{Ambient, CfdScalar};
+pub use crate::traits::{
+    CfdScalar, FluidTheory, MarchDispatch, Marchable, Marcher, MetricProvider, MetricProvider3d,
+    Solver,
+};
+pub use crate::types::Ambient;
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::coordinate::{
     BlendedMap, BlendedMapConfig, BodyFittedCoordinate, BodyFittedCoordinate3d, CartesianIdentity,
-    CartesianIdentity3d, MetricProvider, MetricProvider3d, PhysicalGradient3d,
+    CartesianIdentity3d,
 };
 pub use crate::tensor_bridge::{
     AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d, QttProjector2d,

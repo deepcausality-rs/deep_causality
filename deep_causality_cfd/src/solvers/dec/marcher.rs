@@ -6,10 +6,11 @@
 //! [`Marcher`] realization for the DEC solver: one projected RK4 step under the
 //! per-step [`Ambient`].
 
+use crate::CfdScalar;
 use crate::solvers::dec::DecNsSolver;
 use crate::solvers::dec::step_output::StepOutput;
 use crate::traits::Marcher;
-use crate::types::{Ambient, CfdScalar};
+use crate::types::Ambient;
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 
 impl<'m, const D: usize, R: CfdScalar> Marcher<R> for DecNsSolver<'m, D, R> {

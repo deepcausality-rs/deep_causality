@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 
 /// The set of diagnostics a march collects into its `Report`. Built fluently;
 /// the scalar diagnostics (`kinetic_energy`, `divergence`, `max_speed`) sample one

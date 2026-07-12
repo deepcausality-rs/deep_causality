@@ -10,8 +10,8 @@
 //! the [`CfdFlow`](crate::CfdFlow) DSL composes those configs onto a geometry and runs (the "how").
 //! Mirrors the Discovery `CdlConfigBuilder` → `CdlBuilder` split.
 
+use crate::CfdScalar;
 use crate::solvers::{DecNs, DecNsConfigNeedsViscosity};
-use crate::types::CfdScalar;
 use crate::types::flow_config::MarchConfigBuilder;
 use crate::types::flow_config::manufactured::{Manufactured, VerifyConfigBuilder};
 

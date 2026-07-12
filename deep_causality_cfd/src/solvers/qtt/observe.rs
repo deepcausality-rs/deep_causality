@@ -11,8 +11,8 @@
 //! pointwise field, so it dequantizes. The functions are free functions over the trains, usable
 //! without the CfdFlow DSL.
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{QttProjector2d, dequantize_2d};
-use crate::types::CfdScalar;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensorTrain, TensorTrain};

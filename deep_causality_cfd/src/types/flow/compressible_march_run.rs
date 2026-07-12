@@ -26,11 +26,11 @@ use super::carrier::{
     run_until_driver,
 };
 use super::coupling::{CoupledField, PhysicsStage};
+use crate::CfdScalar;
 use crate::coordinate::CartesianIdentity;
 use crate::solvers::{CompressibleMarcher2d, EulerStateTt2d, FittedNormalShock};
 use crate::tensor_bridge::{dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use crate::types::flow::{BlackoutTrigger, Report};
 use crate::types::flow_config::{
     CompressibleMarchConfig, DescentSchedule, MarchStop, QttObserve, ReferenceScales,

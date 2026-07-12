@@ -24,8 +24,8 @@ pub use verdict::{GateOutcome, Verdict};
 pub use view::StudyView;
 
 use crate::CfdFlow;
+use crate::CfdScalar;
 use crate::traits::Marchable;
-use crate::types::CfdScalar;
 use crate::types::flow::CompressiblePause;
 use crate::types::flow::Report;
 use crate::types::flow::coupling::{CoupledField, PhysicsStage};

@@ -10,10 +10,10 @@
 //! for any geometry (a captured shock is high rank, but representable), and is the control the fitted
 //! coordinate is measured against.
 
-use super::metric_provider::MetricProvider;
 use super::sample_grid;
+use crate::CfdScalar;
 use crate::tensor_bridge::{gradient_x, gradient_y, quantize_2d};
-use crate::types::CfdScalar;
+use crate::traits::MetricProvider;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{

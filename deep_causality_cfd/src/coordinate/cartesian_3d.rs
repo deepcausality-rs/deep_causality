@@ -10,10 +10,11 @@
 //! `Δx·Δy·Δz`. It represents any geometry (a captured curved shock is high rank — `χ ~ √side` — but
 //! representable), and is the control the fitted 3-D coordinate is measured against.
 
-use super::metric_provider_3d::{MetricProvider3d, PhysicalGradient3d};
 use super::sample_grid_3d;
+use crate::CfdScalar;
+use crate::alias::physical_gradient_3_d::PhysicalGradient3d;
 use crate::tensor_bridge::{gradient_x_3d, gradient_y_3d, gradient_z_3d, quantize_3d};
-use crate::types::CfdScalar;
+use crate::traits::MetricProvider3d;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{

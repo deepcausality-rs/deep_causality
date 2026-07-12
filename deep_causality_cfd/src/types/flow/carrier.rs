@@ -17,7 +17,7 @@
 
 use super::blackout::BlackoutTrigger;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use crate::types::flow::{MarchState, Report};
 use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;

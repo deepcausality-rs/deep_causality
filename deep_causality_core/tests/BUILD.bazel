@@ -1,6 +1,26 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "errors/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_core",
+        # Internal dependencies
+    ],
+)
+
+rust_test_suite(
     name = "formalization_lean",
     srcs = glob([
         "formalization_lean/*_tests.rs",
@@ -22,9 +42,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "errors",
+    name = "iso",
     srcs = glob([
-        "errors/*_tests.rs",
+        "iso/*_tests.rs",
     ]),
     crate_features = [
         "std",
@@ -35,9 +55,8 @@ rust_test_suite(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # Crate to test
         "//deep_causality_core",
-        # Internal dependencies
+        "//deep_causality_haft",
     ],
 )
 
@@ -62,6 +81,25 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types_causal_arrow",
+    srcs = glob([
+        "types/causal_arrow/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
     name = "types_causal_effect",
     srcs = glob([
         "types/causal_effect/*_tests.rs",
@@ -80,66 +118,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_effect_log",
-    srcs = glob([
-        "types/effect_log/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_haft",
-    ],
-)
-
-rust_test_suite(
-    name = "types_causal_effect_system",
-    srcs = glob([
-        "types/causal_effect_system/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_haft",
-    ],
-)
-
-rust_test_suite(
     name = "types_causal_effect_propagation_process",
     srcs = glob([
         "types/causal_effect_propagation_process/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_haft",
-    ],
-)
-
-rust_test_suite(
-    name = "types_causal_arrow",
-    srcs = glob([
-        "types/causal_arrow/*_tests.rs",
     ]),
     crate_features = [
         "std",
@@ -175,9 +156,9 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_io",
+    name = "types_causal_monad",
     srcs = glob([
-        "types/io/*_tests.rs",
+        "types/causal_monad/*_tests.rs",
     ]),
     crate_features = [
         "std",
@@ -194,9 +175,28 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types_causal_monad",
+    name = "types_effect_log",
     srcs = glob([
-        "types/causal_monad/*_tests.rs",
+        "types/effect_log/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_test_suite(
+    name = "types_io",
+    srcs = glob([
+        "types/io/*_tests.rs",
     ]),
     crate_features = [
         "std",
@@ -235,25 +235,6 @@ rust_test_suite(
     name = "types_propagating_process",
     srcs = glob([
         "types/propagating_process/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_haft",
-    ],
-)
-
-rust_test_suite(
-    name = "iso",
-    srcs = glob([
-        "iso/*_tests.rs",
     ]),
     crate_features = [
         "std",

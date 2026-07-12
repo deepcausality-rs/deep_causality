@@ -13,7 +13,6 @@ description = "Computational fluid dynamics solvers and the Flow DSL for DeepCau
 documentation = "https://docs.rs/deep_causality"
 categories = ["science", "simulation"]
 keywords = ["cfd", "fluid-dynamics", "causality", "simulation"]
-publish = false
 # Benches are declared explicitly (one per solver), so they are not auto-discovered.
 autobenches = false
 exclude = [
@@ -28,6 +27,9 @@ exclude = [
     "tests/**/*",
     "papers/*",
 ]
+
+# Do not publish to crates.io
+publish = false
 
 [package.metadata.docs.rs]
 all-features = true

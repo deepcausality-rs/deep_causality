@@ -9,7 +9,7 @@
 //! lowers it onto the duct driver and returns the standard
 //! [`Report`](crate::Report) (design D4).
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use deep_causality_physics::PhysicsError;
 
 /// The duct's cross-sectional area as a function of axial position.

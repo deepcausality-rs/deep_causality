@@ -106,3 +106,6 @@ import DeepCausalityFormal.Haft.Signatures
 import DeepCausalityFormal.Haft.SymmetricMonoidal
 import DeepCausalityFormal.Haft.FreeMonad
 import DeepCausalityFormal.Topology.RiemannCurvature
+import DeepCausalityFormal.Quantum.PartialTrace
+import DeepCausalityFormal.Quantum.PartialTraceCounterexample
+import DeepCausalityFormal.Quantum.Choi

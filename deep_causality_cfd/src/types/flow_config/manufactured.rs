@@ -16,7 +16,7 @@
 //! - [`TaylorGreen`] is the corpus solution for the canonical Taylor–Green vortex (a standard CFD
 //!   verification benchmark), built on the autodiff bridge.
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_num_dual::Dual;
 use deep_causality_physics::PhysicsError;

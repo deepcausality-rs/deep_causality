@@ -8,8 +8,8 @@
 //! optionally run a kernel-in-the-loop amplitude march against the analytic decay. Pointwise — no
 //! geometry, no DEC march.
 
+use crate::CfdScalar;
 use crate::theories::incompressible_ns_rhs;
-use crate::types::CfdScalar;
 use crate::types::flow::{CfdFlow, Report};
 use crate::types::flow_config::{Manufactured, VerifyConfig};
 use deep_causality_calculus::{EndoArrow, Rk4};

@@ -22,7 +22,7 @@
 //!   ambient effect is deliberately limited (the marcher does not consume it).
 
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, BOLTZMANN_CONSTANT, ElectronDensity, PARK_NO_IONIZATION_ACTIVATION_TEMP,

@@ -20,7 +20,7 @@
 //! never-fire / zero defaults; `from` is required, so a coupled march always has an explicit
 //! initial field (a fresh one the caller built, or one a pause exported).
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use crate::types::flow::{
     BlackoutTrigger, CompressibleMarchRun, CompressiblePause, CoupledField, MarchState,
     PhysicsStage, Report,

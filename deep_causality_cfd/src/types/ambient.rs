@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use deep_causality_physics::BodyForceOneForm;
 
 /// The per-step ambient a marcher reads each step: kinematic viscosity, the

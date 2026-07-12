@@ -24,9 +24,10 @@
 //! example hashes its constants); the strict loader refuses a package whose fingerprint does
 //! not match the current world.
 
+use crate::CfdScalar;
 use crate::navigation::{NAV_STATES, NavFilter, ReentryNavEngine};
+use crate::types::Ambient;
 use crate::types::flow::coupling::CoupledField;
-use crate::types::{Ambient, CfdScalar};
 use deep_causality_core::EffectLog;
 use deep_causality_file::{
     BitCodec, SnapshotPackage, SnapshotSection, SnapshotTier, fingerprint64,

@@ -19,5 +19,5 @@ pub type PGA3DMultiVector = CausalMultiVector<f64>;
 
 pub type RealMultiVector = CausalMultiVector<f64>;
 
-pub use alias_hilbert_state::HilbertState;
+pub use alias_hilbert_state::{HilbertState, KET_COLUMN};
 pub use alias_hopf_state::HopfState;

@@ -11,7 +11,8 @@ mod types;
 
 // Aliases
 pub use crate::alias::{
-    ComplexMultiVector, DixonAlgebra, HilbertState, HopfState, PGA3DMultiVector, RealMultiVector,
+    ComplexMultiVector, DixonAlgebra, HilbertState, HopfState, KET_COLUMN, PGA3DMultiVector,
+    RealMultiVector,
 };
 
 // Errors

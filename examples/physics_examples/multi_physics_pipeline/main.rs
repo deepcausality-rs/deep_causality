@@ -32,9 +32,10 @@ use deep_causality_core::{
 use deep_causality_multivector::{HilbertState, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
-    FourMomentum, Hadron, LundParameters, born_probability, heat_diffusion, klein_gordon,
+    FourMomentum, Hadron, LundParameters, heat_diffusion, klein_gordon,
     lund_string_fragmentation_kernel,
 };
+use deep_causality_quantum::born_probability;
 use deep_causality_tensor::CausalTensor;
 mod model;
 
@@ -256,7 +257,7 @@ fn stage_quantum_detection(
 
     let detection = born_probability(&state, &basis);
     let prob = match detection.value() {
-        Some(p) => p.value(),
+        Some(p) => *p,
         _ => 0.0,
     };
 

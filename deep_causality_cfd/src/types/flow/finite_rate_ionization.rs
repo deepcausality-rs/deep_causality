@@ -29,7 +29,7 @@
 
 use super::blackout::ler_step;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use alloc::vec::Vec;
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, ElectronTemperature, PhysicsError, Temperature, air_n2_mole_fraction,

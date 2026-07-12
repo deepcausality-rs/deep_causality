@@ -12,6 +12,8 @@ mod display;
 mod from;
 mod getters;
 mod ops;
+
+pub(crate) use ops::tensor_eigen::sym_eig;
 mod to;
 
 pub use ops::tensor_ein_sum::ein_sum_op::{EinSumAST, EinSumOp};

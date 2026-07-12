@@ -16,11 +16,11 @@
 //! body-fitted 3-D coordinate that bounds the forebody bond (§1 generalized to 3-D) rides the same
 //! `MetricProvider` seam and is the remaining Stage-6 piece; the **wake** is out of scope (turbulence).
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{
     AcousticCoreInverse3d, dequantize_3d, gradient_x_3d, gradient_y_3d, gradient_z_3d, quantize_3d,
 };
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;

@@ -25,10 +25,11 @@
 //! (the `1/sinθ` singularity of the azimuthal metric). Interior gradients are correct to scheme order;
 //! the periodic radial/polar boundary stencils are the same Stage-2 refinement noted for the 2-D chart.
 
-use super::metric_provider_3d::{MetricProvider3d, PhysicalGradient3d};
 use super::sample_grid_3d;
+use crate::CfdScalar;
+use crate::alias::physical_gradient_3_d::PhysicalGradient3d;
 use crate::tensor_bridge::{gradient_x_3d, gradient_y_3d, gradient_z_3d, quantize_3d};
-use crate::types::CfdScalar;
+use crate::traits::MetricProvider3d;
 use deep_causality_algebra::{ConjugateScalar, RealField};
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{

@@ -1,6 +1,33 @@
 load("@rules_rust//rust:defs.bzl", "rust_test_suite")
 
 # =============================================================================
+# constants/* test suites
+#
+# The src tree is organized as src/constants/<type>/, so the tests mirror it
+# at tests/constants/<type>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "constants",
+    srcs = glob([
+        "constants/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+    ],
+)
+
+# =============================================================================
 # error/* test suites
 #
 # The src tree is organized as src/error/<type>/, so the tests mirror it
@@ -304,9 +331,6 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_multivector",
-        "//deep_causality_num",
-        "//deep_causality_num_complex",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
@@ -377,60 +401,11 @@ rust_test_suite(
 )
 
 # =============================================================================
-# Top-level (non-kernel) test suites
+# quantities/* test suites
+#
+# The src tree is organized as src/quantities/<type>/, so the tests mirror it
+# at tests/quantities/<type>/.
 # =============================================================================
-
-rust_test_suite(
-    name = "constants",
-    srcs = glob([
-        "constants/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_physics",
-        # Internal dependencies
-    ],
-)
-
-rust_test_suite(
-    name = "theories",
-    srcs = glob([
-        "theories/*/*_tests.rs",
-        "theories/*/*/*_tests.rs",
-        "theories/*/*/*/*_tests.rs",
-    ]),
-    crate_features = [
-        "std",
-        "alloc",
-    ],
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_physics",
-        # Internal dependencies
-        "//deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_metric",
-        "//deep_causality_multivector",
-        "//deep_causality_par",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
-        "//deep_causality_uncertain",
-    ],
-)
 
 rust_test_suite(
     name = "quantities",
@@ -460,5 +435,132 @@ rust_test_suite(
         "//deep_causality_algebra",
         "//deep_causality_tensor",
         "//deep_causality_topology",
+    ],
+)
+
+# =============================================================================
+# theories/* test suites
+#
+# The src tree is organized as src/theories/<type>/, so the tests mirror it
+# at tests/theories/<type>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "theories_electromagnetism",
+    srcs = glob([
+        "theories/electromagnetism/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_par",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_test_suite(
+    name = "theories_electroweak",
+    srcs = glob([
+        "theories/electroweak/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_par",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_test_suite(
+    name = "theories_general_relativity",
+    srcs = glob([
+        "theories/general_relativity/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_par",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_test_suite(
+    name = "theories_weak_force",
+    srcs = glob([
+        "theories/weak_force/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_par",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
     ],
 )

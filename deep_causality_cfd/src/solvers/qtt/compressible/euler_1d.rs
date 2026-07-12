@@ -21,8 +21,8 @@
 //! compute → requantize) — exact for the Sod gate; the rank-preserving TT-cross (`apply_nonlinear`)
 //! form is the large-`L` upgrade.
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{dequantize, gradient, laplacian, quantize};
-use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;

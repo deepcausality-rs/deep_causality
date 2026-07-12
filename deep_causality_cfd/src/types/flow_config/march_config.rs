@@ -10,9 +10,9 @@
 //! [`CfdFlow`](crate::CfdFlow) DSL, which borrows a caller-owned geometry (B1) — see
 //! [`MarchConfig::materialize`].
 
+use crate::CfdScalar;
 use crate::solvers::DecNsConfig;
 use crate::solvers::dec::BoundaryZone;
-use crate::types::CfdScalar;
 use crate::types::flow::PhysicsStage;
 use crate::types::flow_config::{Mesh, Observe, Seed};
 use deep_causality_physics::PhysicsError;

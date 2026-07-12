@@ -9,26 +9,24 @@
 ## Build configuration
 ###############################################################################
 
-# Run the workspace status command to generate a git hash used for OCI image tagging.
-build --workspace_status_command=build/tools/workspace_status.sh
-
 # Don't create bazel-* symlinks in the project root directory.
 # Instead, set a prefix and put it in .gitignore
 build --symlink_prefix=target-bzl/
-
-# Non-empty glob test is disabled because some Bazels deps fail the test.
-build --incompatible_disallow_empty_glob=false
-
-# This flag improves local execution throughput by executing more actions in parallel.
-build --jobs=18
 
 ###############################################################################
 ## Test configuration
 ###############################################################################
 
-# Reduce test output to just error cases and report timeout warnings.
+# Reduce test output to just error cases and report failures verbose.
 test --test_output=errors
 test --verbose_failures
+
+###############################################################################
+## Rust configuration
+###############################################################################
+
+# Enable pipelined build
+common --@rules_rust//rust/settings:pipelined_compilation=true
 
 ###############################################################################
 ## Common configuration
@@ -37,9 +35,6 @@ test --verbose_failures
 # Write build outputs in a platform-specific directory;
 # avoid outputs being wiped and rewritten when switching between platforms.
 common --experimental_platform_in_output_dir
-
-# Enable proto toolchain resolution.
-common --incompatible_enable_proto_toolchain_resolution
 
 # Enable misc. performance optimizations.
 # https://www.buildbuddy.io/blog/debugging-slow-bazel-builds/
@@ -50,9 +45,9 @@ common --noexperimental_merged_skyframe_analysis_execution
 common --reuse_sandbox_directories
 
 # Enable a more detailed performance profile
-common --noslim_profile
-common --experimental_profile_include_target_label
-common --experimental_profile_include_primary_output
+# common --noslim_profile
+# common --experimental_profile_include_target_label
+# common --experimental_profile_include_primary_output
 
 ###############################################################################
 ## Cross compilation configuration
@@ -60,10 +55,6 @@ common --experimental_profile_include_primary_output
 
 # Debug toolchain resolution
 # build --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type
-
-# Required to resolve C/C++ toolchain.
-# https://github.com/bazel-contrib/musl-toolchain?tab=readme-ov-file#setup
-build --incompatible_enable_cc_toolchain_resolution
 
 # Required to support cross compilation from different host systems i.e Mac and Linux
 # https://bazel.build/reference/command-line-reference#flag--enable_platform_specific_config

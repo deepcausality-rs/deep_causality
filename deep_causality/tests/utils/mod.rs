@@ -4,6 +4,7 @@
  */
 #[cfg(test)]
 mod math_utils_tests;
+#[cfg(test)]
 mod monadic_collection_utils_tests;
 #[cfg(test)]
 mod time_utils_tests;
