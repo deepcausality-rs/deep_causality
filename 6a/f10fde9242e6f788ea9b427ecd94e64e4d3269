@@ -1,0 +1,24 @@
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_eigen/mod.rs
+  s_543ee5cdecd2c1::t_8a3ea5c9edd5d4 38-46
+deep_causality_quantum/src/types/qgates/channel.rs
+  s_543ee5cdecd2c1::t_3c1bed2b3b60b2 303
+  s_543ee5cdecd2c1::t_8687ac4562e532 108
+  s_543ee5cdecd2c1::t_7b9c56fdc9db87 258
+  s_543ee5cdecd2c1::t_b1d3976f73ecbc 37-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "6af10fde9242e6f788ea9b427ecd94e64e4d3269",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
