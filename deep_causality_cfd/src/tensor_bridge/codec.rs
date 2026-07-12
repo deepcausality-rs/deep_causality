@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use alloc::format;
 use alloc::vec;
 use deep_causality_algebra::ConjugateScalar;

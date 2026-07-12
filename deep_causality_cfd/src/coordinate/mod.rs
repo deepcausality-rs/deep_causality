@@ -28,18 +28,16 @@ mod blended;
 mod body_fitted_3d;
 mod cartesian;
 mod cartesian_3d;
-mod metric_provider;
-mod metric_provider_3d;
 
+pub use crate::traits::MetricProvider;
+pub use crate::traits::MetricProvider3d;
 pub use blended::{BlendedMap, BlendedMapConfig};
 pub use body_fitted_3d::BodyFittedCoordinate3d;
 pub use cartesian::CartesianIdentity;
 pub use cartesian_3d::CartesianIdentity3d;
-pub use metric_provider::MetricProvider;
-pub use metric_provider_3d::{MetricProvider3d, PhysicalGradient3d};
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{gradient_x, gradient_y, quantize_2d};
-use crate::types::CfdScalar;
 use alloc::vec;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;

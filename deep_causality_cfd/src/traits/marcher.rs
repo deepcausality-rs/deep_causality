@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use deep_causality_physics::PhysicsError;
 
 /// One projected step of a CFD solver: the theory's integration (RK4) followed by

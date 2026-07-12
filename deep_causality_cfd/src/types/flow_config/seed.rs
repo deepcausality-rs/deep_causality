@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::CfdScalar;
 use crate::solvers::dec::DecNsSolver;
-use crate::types::CfdScalar;
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{ChainComplex, LatticeComplex, Manifold};

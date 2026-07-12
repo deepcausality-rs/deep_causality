@@ -23,8 +23,8 @@
 //! *first*, before the full system coupling in the marcher. The model equation is
 //! `u_t = −a·u_x + κ·c²(x)·u_xx`: explicit advection, split-implicit acoustic/diffusion.
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{AcousticCoreInverse, dequantize, gradient, laplacian, quantize};
-use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec;
 use deep_causality_algebra::ConjugateScalar;

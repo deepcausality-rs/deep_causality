@@ -3,9 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::CfdScalar;
 use crate::solvers::dec::DecNsRate;
 use crate::traits::FluidTheory;
-use crate::types::{Ambient, CfdScalar};
+use crate::types::Ambient;
 use deep_causality_physics::{PhysicsError, VelocityOneForm};
 use deep_causality_topology::HodgeDecomposeOptions;
 

@@ -35,8 +35,8 @@
 //! static back pressure while the exit is subsonic and extrapolates
 //! everything once it is supersonic.
 
+use crate::CfdScalar;
 use crate::solvers::ideal_gas_pressure;
-use crate::types::CfdScalar;
 use crate::types::flow::Report;
 use crate::types::flow_config::DuctConfig;
 use deep_causality_physics::PhysicsError;

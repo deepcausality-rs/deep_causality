@@ -14,7 +14,7 @@
 
 use super::codec::{dequantize_2d, quantize_2d};
 use super::operators::{gradient_x, gradient_y};
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;

@@ -13,8 +13,8 @@
 //! Tier-A ionization kernels: Saha/Park-2T ionization → electron density → plasma frequency → blackout.
 //! The gate is the peak electron density / blackout onset against the RAM-C II flight data.
 
+use crate::CfdScalar;
 use crate::tensor_bridge::quantize;
-use crate::types::CfdScalar;
 use alloc::vec;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::{

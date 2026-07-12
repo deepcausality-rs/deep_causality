@@ -8,7 +8,7 @@
 //!
 //! A marcher written over `M: MetricProvider<R>` consumes only "there is a computational lattice, a way
 //! to sample a field onto it, a physical gradient, and a Jacobian volume factor". `CartesianIdentity` is
-//! the capture limit (any geometry, high rank); [`BodyFittedCoordinate`](super::BodyFittedCoordinate) is
+//! the capture limit (any geometry, high rank); [`BodyFittedCoordinate`](BodyFittedCoordinate) is
 //! the fitted limit (this geometry, `O(10)` rank). Body-fittedness becomes a choice of impl, recovering
 //! generality at zero asymptotic rank cost — the result the `qtt_blend_metric` study measured.
 //!
@@ -16,7 +16,7 @@
 //! correct blended metric needs the *forward* Jacobians of both charts, which the present impls do not
 //! expose. The blend itself is already validated numerically (`studies/qtt_blend_metric`).
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensorTrain;

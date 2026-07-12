@@ -24,9 +24,9 @@ pub use observe::{
     divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, wall_heat_flux,
 };
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{dequantize, gradient, laplacian, quantize};
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use alloc::format;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;

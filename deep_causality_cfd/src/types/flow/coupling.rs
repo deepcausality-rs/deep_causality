@@ -16,10 +16,11 @@
 //! whole holistic coupling via `?`). Adding a coupled physics is a small `PhysicsStage` impl, not a
 //! change to the DSL core.
 
+use crate::CfdScalar;
 use crate::navigation::ReentryNavEngine;
 use crate::solvers::dec::diagnostics::dec_sample_velocity;
+use crate::types::Ambient;
 use crate::types::flow::corridor::RegimeClass;
-use crate::types::{Ambient, CfdScalar};
 use deep_causality_core::EffectLog;
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 use deep_causality_topology::{LatticeComplex, Manifold};

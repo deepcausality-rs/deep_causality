@@ -22,10 +22,10 @@
 //! what lets the implicit step land on a captured curved field. Nonlinear flux / EOS are evaluated
 //! pointwise (dequantize → compute → requantize), recompressed each step.
 
+use crate::CfdScalar;
 use crate::coordinate::MetricProvider;
 use crate::tensor_bridge::{AcousticCoreInverse2d, dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;

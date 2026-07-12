@@ -12,7 +12,7 @@
 //! data, not an analytic tag), the march-stop, and the observe set. Built by
 //! [`QttMarchConfigBuilder`]; composed and run by [`CfdFlow::march`](crate::CfdFlow).
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use crate::types::flow_config::MarchStop;
 use alloc::format;
 use deep_causality_algebra::ConjugateScalar;

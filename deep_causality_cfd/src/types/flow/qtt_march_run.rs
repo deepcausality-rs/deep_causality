@@ -18,13 +18,13 @@ use super::blackout::BlackoutTrigger;
 use super::carrier::{CoupledCarrier, CoupledLoopSpec, run_coupled_driver, run_until_driver};
 use super::coupling::{CoupledField, PhysicsStage};
 use super::qtt_march_pause::MarchPause;
+use crate::CfdScalar;
 use crate::solvers::{
     QttImmersed2d, QttIncompressible2d, divergence_residual, drag_lift, kinetic_energy, max_bond,
     max_speed, wall_heat_flux,
 };
 use crate::tensor_bridge::{QttProjector2d, dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use crate::types::flow::Report;
 use crate::types::flow_config::{MarchStop, QttMarchConfig, QttObserve};
 use alloc::vec::Vec;

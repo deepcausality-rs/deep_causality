@@ -26,8 +26,8 @@
 //!   Deterministic (identical inputs → identical action), no Effect-monad allocation on the hot path.
 
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
+use crate::CfdScalar;
 use crate::navigation::ImuModel;
-use crate::types::CfdScalar;
 use crate::types::flow::BlackoutTrigger;
 use alloc::format;
 use deep_causality_haft::{CyberneticLoop, HKT5Unbound, LogAddEntry, NoConstraint, Satisfies};

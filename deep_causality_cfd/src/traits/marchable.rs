@@ -14,8 +14,8 @@
 //! `Coupled` wrapper (which carries the stack), so `.couple(stack).march()` composes onto this
 //! same trait. See `openspec/notes/cfd-dsl/04-dsl-feasibility.md` (F2).
 
+use crate::CfdScalar;
 use crate::solvers::dec::BoundaryZone;
-use crate::types::CfdScalar;
 use crate::types::flow::{
     CompressibleMarchRun, DuctMarchRun, MarchPipeline, PhysicsStage, QttMarchRun, Report,
 };

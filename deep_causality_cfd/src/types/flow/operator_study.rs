@@ -14,8 +14,8 @@
 //! (the vector Laplacian `∇²u = −2u`, and `Δ = −∇²` on the flat torus). The diagonal-Hodge DEC
 //! `δd` reproduces the eigenvalue to `O(h²)`, so the study reports second order.
 
+use crate::CfdScalar;
 use crate::traits::Solver;
-use crate::types::CfdScalar;
 use crate::types::flow::{CfdFlow, Report};
 use crate::types::flow_config::Mesh;
 use deep_causality_physics::PhysicsError;
