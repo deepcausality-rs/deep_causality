@@ -12,8 +12,8 @@
 //! MAY be incomplete.
 
 use crate::QuantumError;
-use crate::types::qgates::operator_linalg::{embed_on_legs, frobenius_norm, matrix_commutator};
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
+use crate::types::qgates::operator_linalg::{embed_on_legs, frobenius_norm, matrix_commutator};
 use deep_causality::{CausableGraph, CausalityGraphError};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;

@@ -24,10 +24,10 @@ pub(crate) mod types;
 
 pub use crate::error::quantum_error::{QuantumError, QuantumErrorEnum};
 
-pub use crate::types::qgates::*;
 pub use crate::types::qcm::*;
-pub use crate::types::*;
+pub use crate::types::qgates::*;
 pub use crate::types::verdict::*;
+pub use crate::types::*;
 
 #[cfg(feature = "qpu")]
 pub use crate::types::qpu::*;
