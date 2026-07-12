@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::QuantumError;
 use core::f64::consts::PI;
 use deep_causality_algebra::{DivisionAlgebra, RealField};
 /// Haruna's Gauge Field Formalism for Logical Quantum Gates.
@@ -16,7 +17,17 @@ use deep_causality_num_complex::Complex;
 
 /// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
 /// Uses Taylor series expansion.
-fn exp<R>(mv: &CausalMultiVector<Complex<R>>) -> CausalMultiVector<Complex<R>>
+///
+/// # Errors
+/// Returns [`QuantumError::NonFiniteValue`] when the exponent's norm is
+/// non-finite or exceeds the overflow bound, or when the Taylor series overflows
+/// to a non-finite value during (or after) accumulation. An overflowing exponent
+/// has no finite `exp`, so the failure is surfaced rather than masked as the
+/// identity operator — a real identity gate (`exp(0)`) is indistinguishable from
+/// such a fallback, which is exactly the ambiguity callers must not face.
+fn exp<R>(
+    mv: &CausalMultiVector<Complex<R>>,
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
@@ -24,13 +35,13 @@ where
     let tol = R::from_f64(1e-12).expect("R::from_f64(1e-12)");
     let max_norm = R::from_f64(1e6).expect("R::from_f64(1e6)");
 
-    // Fast path: exp(0) = I
+    // Fast path: exp(0) = I. This is a genuine identity result, not a fallback.
     if mv
         .data()
         .iter()
         .all(|c| c.re.abs() < small && c.im.abs() < small)
     {
-        return CausalMultiVector::scalar(Complex::one(), mv.metric());
+        return Ok(CausalMultiVector::scalar(Complex::one(), mv.metric()));
     }
 
     let metric = mv.metric();
@@ -40,7 +51,7 @@ where
 
     let max_iters = 64;
 
-    // Simple bound to detect pathological exponents; if ||mv|| is huge, series may overflow
+    // A huge exponent has no finite exp; reject it instead of masking as identity.
     let mv_norm_sq: R = mv
         .data()
         .iter()
@@ -48,8 +59,11 @@ where
         .fold(R::zero(), |acc, x| acc + x);
     let mv_norm = mv_norm_sq.sqrt();
     if !mv_norm.is_finite() || mv_norm > max_norm {
-        // Return zero-order approximation to avoid producing NaNs downstream
-        return CausalMultiVector::scalar(Complex::one(), metric);
+        return Err(QuantumError::NonFiniteValue(
+            "Haruna gate exponent norm is non-finite or exceeds the overflow bound; \
+             the gate has no finite value"
+                .into(),
+        ));
     }
 
     for n in 1..=max_iters {
@@ -63,7 +77,9 @@ where
             .iter()
             .any(|c| !c.re.is_finite() || !c.im.is_finite())
         {
-            return sum;
+            return Err(QuantumError::NonFiniteValue(
+                "Haruna gate exp Taylor term overflowed to a non-finite value".into(),
+            ));
         }
 
         let prev = sum.clone();
@@ -78,26 +94,35 @@ where
         let delta = delta_sq.sqrt();
 
         if !delta.is_finite() {
-            return prev;
+            return Err(QuantumError::NonFiniteValue(
+                "Haruna gate exp Taylor series overflowed to a non-finite value".into(),
+            ));
         }
         if delta < tol {
-            return sum;
+            return Ok(sum);
         }
     }
 
-    // Ensure finiteness of result
+    // Exhausted the iteration budget: succeed only if the result is finite.
     if sum
         .data()
         .iter()
         .any(|c| !c.re.is_finite() || !c.im.is_finite())
     {
-        return CausalMultiVector::scalar(Complex::one(), metric);
+        return Err(QuantumError::NonFiniteValue(
+            "Haruna gate exp result is non-finite".into(),
+        ));
     }
-    sum
+    Ok(sum)
 }
 
 /// Calculates the Logical Z gate: $Z(\gamma) = \exp(i \pi a(\gamma))$.
-pub fn logical_z<R>(a_gamma: &CausalMultiVector<Complex<R>>) -> CausalMultiVector<Complex<R>>
+///
+/// # Errors
+/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+pub fn logical_z<R>(
+    a_gamma: &CausalMultiVector<Complex<R>>,
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
@@ -108,7 +133,12 @@ where
 }
 
 /// Calculates the Logical X gate: $X(\tilde{\gamma}) = \exp(i \pi b(\tilde{\gamma}))$.
-pub fn logical_x<R>(b_gamma_tilde: &CausalMultiVector<Complex<R>>) -> CausalMultiVector<Complex<R>>
+///
+/// # Errors
+/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+pub fn logical_x<R>(
+    b_gamma_tilde: &CausalMultiVector<Complex<R>>,
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
@@ -119,7 +149,12 @@ where
 }
 
 /// Calculates the Logical S gate: $S(\gamma) = \exp(i \frac{\pi}{2} a(\gamma)^2)$.
-pub fn logical_s<R>(a_gamma: &CausalMultiVector<Complex<R>>) -> CausalMultiVector<Complex<R>>
+///
+/// # Errors
+/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+pub fn logical_s<R>(
+    a_gamma: &CausalMultiVector<Complex<R>>,
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
@@ -131,10 +166,14 @@ where
 }
 
 /// Calculates the Logical Hadamard gate.
+///
+/// # Errors
+/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] (via `logical_s` and the
+/// mid-factor) for an overflowing field.
 pub fn logical_hadamard<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
     b_gamma_tilde: &CausalMultiVector<Complex<R>>,
-) -> CausalMultiVector<Complex<R>>
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
@@ -142,23 +181,26 @@ where
     let neg_pi_4 = R::from_f64(-PI / 4.0).expect("R::from_f64(-PI/4)");
     let phase_scalar = Complex::new(neg_pi_4.cos(), neg_pi_4.sin());
 
-    let s_a = logical_s(a_gamma);
+    let s_a = logical_s(a_gamma)?;
 
     let pi_2 = R::from_f64(PI / 2.0).expect("R::from_f64(PI/2)");
     let i_pi_2 = Complex::new(R::zero(), pi_2);
     let b_sq = b_gamma_tilde.clone() * b_gamma_tilde.clone();
-    let mid = exp(&(b_sq * i_pi_2));
+    let mid = exp(&(b_sq * i_pi_2))?;
 
     let step1 = &s_a * &mid;
     let step2 = &step1 * &s_a;
-    step2 * phase_scalar
+    Ok(step2 * phase_scalar)
 }
 
 /// Calculates the Logical CZ gate: $CZ(\gamma_1, \gamma_2) = \exp(i \pi a(\gamma_1) a(\gamma_2))$.
+///
+/// # Errors
+/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
 pub fn logical_cz<R>(
     a_gamma1: &CausalMultiVector<Complex<R>>,
     a_gamma2: &CausalMultiVector<Complex<R>>,
-) -> CausalMultiVector<Complex<R>>
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {
@@ -170,7 +212,12 @@ where
 }
 
 /// Calculates the Logical T gate.
-pub fn logical_t<R>(a_gamma: &CausalMultiVector<Complex<R>>) -> CausalMultiVector<Complex<R>>
+///
+/// # Errors
+/// Propagates [`exp`]'s [`QuantumError::NonFiniteValue`] for an overflowing field.
+pub fn logical_t<R>(
+    a_gamma: &CausalMultiVector<Complex<R>>,
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
     R: RealField + FromPrimitive,
 {

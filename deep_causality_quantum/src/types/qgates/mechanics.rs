@@ -192,7 +192,7 @@ where
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_s(&field_complex);
+    let result = gates_haruna::logical_s(&field_complex)?;
     Ok(HilbertState::<R>::from_multivector(result))
 }
 
@@ -203,7 +203,7 @@ where
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_z(&field_complex);
+    let result = gates_haruna::logical_z(&field_complex)?;
     Ok(HilbertState::<R>::from_multivector(result))
 }
 
@@ -214,7 +214,7 @@ where
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_x(&field_complex);
+    let result = gates_haruna::logical_x(&field_complex)?;
     Ok(HilbertState::<R>::from_multivector(result))
 }
 
@@ -237,7 +237,7 @@ where
         )));
     }
 
-    let result = gates_haruna::logical_hadamard(&a_complex, &b_complex);
+    let result = gates_haruna::logical_hadamard(&a_complex, &b_complex)?;
     Ok(HilbertState::<R>::from_multivector(result))
 }
 
@@ -262,7 +262,7 @@ where
         )));
     }
 
-    let result = gates_haruna::logical_cz(&a1_complex, &a2_complex);
+    let result = gates_haruna::logical_cz(&a1_complex, &a2_complex)?;
     Ok(HilbertState::<R>::from_multivector(result))
 }
 
@@ -273,6 +273,6 @@ where
 {
     let field_complex =
         CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_t(&field_complex);
+    let result = gates_haruna::logical_t(&field_complex)?;
     Ok(HilbertState::<R>::from_multivector(result))
 }

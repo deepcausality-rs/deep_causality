@@ -292,6 +292,19 @@ fn test_haruna_cz_gate_kernel_valid() {
 }
 
 #[test]
+fn test_haruna_gate_kernels_error_on_overflowing_field() {
+    // An overflowing field has no finite logical gate; the kernels now surface a
+    // QuantumError instead of silently masking the failure as the identity gate.
+    let mut data = vec![0.0; 8];
+    data[1] = 1e8;
+    let field = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
+    assert!(haruna_s_gate_kernel(&field).is_err());
+    assert!(haruna_z_gate_kernel(&field).is_err());
+    assert!(haruna_x_gate_kernel(&field).is_err());
+    assert!(haruna_t_gate_kernel(&field).is_err());
+}
+
+#[test]
 fn test_haruna_t_gate_kernel_valid() {
     let field = create_real_field();
     let result = haruna_t_gate_kernel(&field);

@@ -207,11 +207,31 @@ fn test_haruna_t_gate_wrapper_success() {
     assert!(effect.is_ok());
 }
 
-// NOTE on the defensively-unreachable error arms in `kernels::wrappers`:
-//
-//   * The `Err(e)` arms of `haruna_s_gate`, `haruna_z_gate`, `haruna_x_gate`,
-//     and `haruna_t_gate`. Each wrapped kernel (`haruna_{s,z,x,t}_gate_kernel`)
-//     only `fmap`s the field into complex form and applies a fixed gate; it
-//     unconditionally returns `Ok` (it has no `Err` path), so the wrapper's
-//     error arm can never run. The happy paths are covered by the
-//     `*_wrapper_success` tests above.
+/// A real field whose logical-gate exponent overflows the 1e6 norm bound, so the
+/// wrapped kernel returns an error — exercising the wrapper error arms that used
+/// to be unreachable when the logical gates masked overflow as the identity.
+fn overflowing_field() -> CausalMultiVector<f64> {
+    let mut data = vec![0.0; 8];
+    data[1] = 1e8;
+    CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap()
+}
+
+#[test]
+fn test_haruna_s_gate_wrapper_error() {
+    assert!(haruna_s_gate(&overflowing_field()).is_err());
+}
+
+#[test]
+fn test_haruna_z_gate_wrapper_error() {
+    assert!(haruna_z_gate(&overflowing_field()).is_err());
+}
+
+#[test]
+fn test_haruna_x_gate_wrapper_error() {
+    assert!(haruna_x_gate(&overflowing_field()).is_err());
+}
+
+#[test]
+fn test_haruna_t_gate_wrapper_error() {
+    assert!(haruna_t_gate(&overflowing_field()).is_err());
+}
