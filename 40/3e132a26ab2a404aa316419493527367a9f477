@@ -1,0 +1,38 @@
+openspec/README_SDD.md
+  s_abeffbefe18930::t_8c871fa62e5385 27
+  s_abeffbefe18930::t_7911e00eeedcc9 50
+  s_abeffbefe18930::t_10a0a65a3befd6 8-23,28-46,54-71,79-106
+  s_abeffbefe18930::t_b5484deedd24ae 77
+  s_abeffbefe18930::t_111d6d0d2d1bee 5-7
+  s_abeffbefe18930::t_edd0ec474a8778 24-26
+  s_abeffbefe18930::t_1987d35a1a4c76 47-49
+  s_abeffbefe18930::t_1f0c5285305faf 51-53
+  s_abeffbefe18930::t_e5c9a9bf5b267b 72-76
+  s_abeffbefe18930::t_99fe35e1b1501f 78
+openspec/prompts/pr-review-prompt.md
+  s_543ee5cdecd2c1::t_8c76f1a916028f 1-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "403e132a26ab2a404aa316419493527367a9f477",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_abeffbefe18930": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dbb35cb3-b235-4c35-9204-67c9e2597dba",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
