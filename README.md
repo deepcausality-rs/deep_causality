@@ -75,6 +75,8 @@ Dynamic causality can be daunting at first, and if you need more support for a l
 
 ## Getting Started
 
+For LLM-assisted project-building guidance, see [SKILLS.md](./SKILLS.md).
+
 ```bash
 cargo add deep_causality_core
 ```
