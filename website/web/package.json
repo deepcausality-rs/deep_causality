@@ -24,12 +24,5 @@
     "typescript": "^7.0.2",
     "wrangler": "4.110.0"
   },
-  "packageManager": "pnpm@11.9.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "workerd"
-    ]
-  }
+  "packageManager": "pnpm@11.9.0"
 }
