@@ -40,7 +40,7 @@ fn commuting_model_freezes() {
     let (factors, supports) = factors_on_shared_leg(sigma_z(), diagonal(3.0, -1.0));
     let tolerance = CommutatorTolerance::<FloatType>::default();
 
-    match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance) {
+    match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance, None) {
         Ok(report) => {
             println!(
                 "    ✓ froze cleanly; {} commuting pair(s) checked, worst margin {:.3e}",
@@ -61,7 +61,7 @@ fn non_commuting_model_aborts() {
     let (factors, supports) = factors_on_shared_leg(sigma_x(), sigma_z());
     let tolerance = CommutatorTolerance::<FloatType>::default();
 
-    match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance) {
+    match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance, None) {
         Ok(_) => println!("    unexpected: a non-commuting model should not freeze"),
         Err(e) => match e.0 {
             QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => {

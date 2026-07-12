@@ -54,6 +54,8 @@ fn test_born_probability_kernel_normalized() {
         "Probability must be in [0,1], got {}",
         p
     );
+    // Identical states ⇒ P = |⟨ψ|ψ⟩|² = 1 (pins the canonical value, not just the range).
+    assert!((p - 1.0).abs() < 1e-9, "identical states ⇒ P = 1, got {}", p);
 }
 
 #[test]
@@ -202,12 +204,11 @@ fn test_commutator_kernel_self_is_zero() {
     // [A, A] = 0
     let result = commutator_kernel(&op_a, &op_a).unwrap();
 
-    // Scalar part should be close to zero
-    let scalar = result.mv().data()[0];
+    // [A, A] = 0 identically — check ALL components, not just the scalar part,
+    // so a non-scalar leak cannot hide.
     assert!(
-        scalar.norm() < 1e-10,
-        "Commutator [A,A] should be zero, got norm {}",
-        scalar.norm()
+        result.mv().data().iter().all(|c| c.norm() < 1e-10),
+        "Commutator [A,A] must vanish across all components"
     );
 }
 
@@ -229,6 +230,8 @@ fn test_fidelity_kernel_identical_states() {
         "Fidelity must be in [0,1], got {}",
         f
     );
+    // Identical states ⇒ F = 1.
+    assert!((f - 1.0).abs() < 1e-9, "identical states ⇒ F = 1, got {}", f);
 }
 
 // =============================================================================

@@ -147,7 +147,7 @@ fn test_freeze_commuting_model_freezes() {
     fs.declare(0, &[0]);
     fs.declare(1, &[0]);
 
-    let report = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default()).unwrap();
+    let report = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap();
     assert!(g.is_frozen());
     assert_eq!(report.tested_pairs(), 1);
 }
@@ -162,7 +162,7 @@ fn test_freeze_noncommuting_model_aborts_and_rolls_back() {
     fs.declare(0, &[0]);
     fs.declare(1, &[0]);
 
-    let err = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    let err = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
     // The structured error survives the CausalityGraphError bridge and names the pair.
     match err.0 {
         QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => {
@@ -191,7 +191,7 @@ fn test_freeze_shape_mismatch_reported_as_itself() {
     pf.insert(0, sigma_x()); // 2x2
     let mut fs = FactorSupports::new();
     fs.declare(0, &[0, 1]); // implies dim 4
-    let err = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    let err = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
     assert!(!g.is_frozen());
 }
@@ -293,7 +293,80 @@ fn test_freeze_builtin_check_failure_is_calculation_error() {
     fs.declare(1, &[0]);
 
     // Node index 99 names no node (the graph has 2) → single-writer check errors.
-    let err = freeze_quantum(&mut g, &[99], &pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    let err =
+        freeze_quantum(&mut g, &[99], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
     assert!(!g.is_frozen());
+}
+
+// =============================================================================
+// C₃-exclusion faithfulness enforced at freeze (spec quantum-markov-freeze).
+// =============================================================================
+
+#[test]
+fn test_freeze_rejects_c3_structure() {
+    // A graph whose input→output reachability is the canonical C₃ (K_{3,3} minus
+    // a perfect matching) must be rejected at freeze once the declared structure
+    // is supplied. Empty factors make the commutativity check trivially pass, so
+    // the abort is attributable to the C₃ faithfulness check.
+    let mut g = CausaloidGraph::new(0);
+    let nodes: Vec<usize> = (0..6)
+        .map(|i| {
+            g.add_causaloid(test_utils::get_test_causaloid_deterministic(i))
+                .unwrap()
+        })
+        .collect();
+    // inputs {0,1,2} → outputs {3,4,5}; the non-edges form the diagonal matching.
+    for (i, o) in [(0, 4), (0, 5), (1, 3), (1, 5), (2, 3), (2, 4)] {
+        g.add_edge(nodes[i], nodes[o]).unwrap();
+    }
+
+    let pf = ProcessFactors::<f64>::new();
+    let fs = FactorSupports::new();
+    let inputs = [nodes[0], nodes[1], nodes[2]];
+    let outputs = [nodes[3], nodes[4], nodes[5]];
+
+    let err = freeze_quantum(
+        &mut g,
+        &[],
+        &pf,
+        &fs,
+        &CommutatorTolerance::default(),
+        Some((&inputs, &outputs)),
+    )
+    .unwrap_err();
+    assert!(matches!(
+        err.0,
+        QuantumErrorEnum::NotFaithfullyRepresentable(_)
+    ));
+    // The structured error survived the CausalityGraphError bridge, and the graph
+    // rolled back to the dynamic state.
+    assert!(!g.is_frozen());
+}
+
+#[test]
+fn test_freeze_admits_faithful_structure() {
+    // A 2-node chain 0 → 1 cannot contain a C₃; with the structure declared, the
+    // commuting model still freezes cleanly.
+    let mut g = two_node_graph();
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    pf.insert(1, diag(2.0, 5.0));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+    let inputs = [0usize];
+    let outputs = [1usize];
+
+    let report = freeze_quantum(
+        &mut g,
+        &[],
+        &pf,
+        &fs,
+        &CommutatorTolerance::default(),
+        Some((&inputs, &outputs)),
+    )
+    .unwrap();
+    assert!(g.is_frozen());
+    assert_eq!(report.tested_pairs(), 1);
 }

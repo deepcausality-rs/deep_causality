@@ -50,6 +50,38 @@ where
     CausalMultiVector::new(data, mv.metric()).expect("blade count is preserved")
 }
 
+/// The metric-correct Dirac *adjoint* (bra) involution on a ket's multivector:
+/// [`QuantumOps::dag`] (reversion + conjugation) for a positive-signature
+/// metric, [`clifford_conjugation`] for a negative-signature metric. Unlike
+/// [`dirac_bracket_kernel`], this selects only the involution and is therefore
+/// defined for any dimension (not just the even-dimensional column bridge), so
+/// it is the shared source of truth for the Born/expectation kernels.
+///
+/// # Errors
+/// `UnsupportedMetric` for a mixed-signature metric, where neither involution
+/// realizes the Dirac adjoint on the minimal left ideal.
+pub(crate) fn metric_adjoint<R>(
+    mv: &CausalMultiVector<Complex<R>>,
+) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
+where
+    R: RealField + core::iter::Sum,
+{
+    let metric = mv.metric();
+    let n = metric.dimension();
+    let uniform_positive = (0..n).all(|i| metric.sign_of_sq(i) == 1);
+    let uniform_negative = (0..n).all(|i| metric.sign_of_sq(i) == -1);
+    if n == 0 || uniform_positive {
+        Ok(mv.dag())
+    } else if uniform_negative {
+        Ok(clifford_conjugation(mv))
+    } else {
+        Err(QuantumError::UnsupportedMetric(format!(
+            "the Dirac adjoint requires a uniform-signature metric, got {:?}",
+            metric
+        )))
+    }
+}
+
 /// The metric-correct Dirac inner product `⟨φ|ψ⟩` on kets: the scalar part of
 /// `adj(φ)·ψ`, where `adj` is `QuantumOps::dag` (reversion + conjugation) for
 /// a positive-signature metric and [`clifford_conjugation`] for a
@@ -76,21 +108,19 @@ where
         )));
     }
 
+    // The column bridge (to_ket/from_ket) is defined only for even dimensions
+    // (D = 2^(n/2)); the promised column-inner-product equivalence is otherwise
+    // unverifiable, so reject odd dimensions rather than return a bracket that
+    // cannot be a column inner product.
     let n = metric.dimension();
-    let uniform_positive = (0..n).all(|i| metric.sign_of_sq(i) == 1);
-    let uniform_negative = (0..n).all(|i| metric.sign_of_sq(i) == -1);
-
-    let adj = if n == 0 || uniform_positive {
-        phi.mv().dag()
-    } else if uniform_negative {
-        clifford_conjugation(phi.mv())
-    } else {
+    if n != 0 && !n.is_multiple_of(2) {
         return Err(QuantumError::UnsupportedMetric(format!(
-            "Dirac bracket requires a uniform-signature metric, got {:?}",
-            metric
+            "the Dirac ket bridge is defined only for even-dimensional metrics, got dimension {}",
+            n
         )));
-    };
+    }
 
+    let adj = metric_adjoint(phi.mv())?;
     let prod = adj.geometric_product(psi.mv());
     Ok(prod
         .get(0)

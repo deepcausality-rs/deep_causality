@@ -118,9 +118,12 @@ impl FactorSupports {
     /// The product of the leg dimensions on `node`'s support — the expected
     /// matrix dimension of that node's factor.
     pub fn support_dim(&self, node: usize) -> Option<usize> {
-        self.supports
-            .get(&node)
-            .map(|legs| legs.iter().map(|&l| self.leg_dim(l)).product())
+        // Checked product: an oversized `set_leg_dim` must not overflow (debug
+        // panic / release wrap). `None` here means "undeclared or overflowing".
+        self.supports.get(&node).and_then(|legs| {
+            legs.iter()
+                .try_fold(1usize, |acc, &l| acc.checked_mul(self.leg_dim(l)))
+        })
     }
 
     /// The leg → dimension map restricted to the given legs (the space passed
@@ -160,6 +163,14 @@ impl FactorSupports {
         let n = graph.number_nodes();
         let mut me = Self::new();
         for node in factors.nodes() {
+            // A factor keyed outside the graph's node range would otherwise be
+            // declared as a lone qubit, detaching the factorization from `G`.
+            if node >= n {
+                return Err(QuantumError::CalculationError(format!(
+                    "factor keyed by node {} but the frozen graph has {} nodes (valid ids 0..{})",
+                    node, n, n
+                )));
+            }
             let mut legs: Vec<usize> = (0..n).filter(|&p| graph.contains_edge(p, node)).collect();
             legs.push(node);
             me.declare(node, &legs);
@@ -179,12 +190,27 @@ impl FactorSupports {
                     node, shape
                 )));
             }
-            let expected = self.support_dim(node).ok_or_else(|| {
+            if shape[0] == 0 {
+                return Err(QuantumError::DimensionMismatch(format!(
+                    "factor at node {} is an empty (0×0) matrix",
+                    node
+                )));
+            }
+            let legs = self.supports.get(&node).ok_or_else(|| {
                 QuantumError::DimensionMismatch(format!(
                     "node {} has a factor but no declared support",
                     node
                 ))
             })?;
+            let expected = legs
+                .iter()
+                .try_fold(1usize, |acc, &l| acc.checked_mul(self.leg_dim(l)))
+                .ok_or_else(|| {
+                    QuantumError::DimensionMismatch(format!(
+                        "node {} support leg dimensions overflow usize",
+                        node
+                    ))
+                })?;
             if shape[0] != expected {
                 return Err(QuantumError::DimensionMismatch(format!(
                     "factor at node {} has dim {} but its support implies {}",

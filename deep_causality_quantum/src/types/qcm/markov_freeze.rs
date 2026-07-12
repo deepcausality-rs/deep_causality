@@ -12,6 +12,7 @@
 //! MAY be incomplete.
 
 use crate::QuantumError;
+use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
 use crate::types::qgates::operator_linalg::{embed_on_legs, frobenius_norm, matrix_commutator};
 use deep_causality::{CausableGraph, CausalityGraphError};
@@ -232,12 +233,20 @@ where
 /// is recovered via an internal stash — not merely its `Display` message. A
 /// failure in the built-in checks (acyclicity / single-writer) surfaces as a
 /// [`QuantumError::CalculationError`] carrying the graph error's message.
+///
+/// When `faithfulness` is `Some((inputs, outputs))`, the declared causal
+/// structure is additionally derived from the frozen graph's reachability and
+/// checked for C₃-exclusion (spec quantum-markov-freeze): a model whose
+/// structure contains a `C₃` is **rejected at freeze** with
+/// [`QuantumError::NotFaithfullyRepresentable`] and rolled back. Pass `None` to
+/// run the commutativity check alone.
 pub fn freeze_quantum<T, G, R>(
     graph: &mut G,
     state_writers: &[usize],
     factors: &ProcessFactors<R>,
     supports: &FactorSupports,
     tolerance: &CommutatorTolerance<R>,
+    faithfulness: Option<(&[usize], &[usize])>,
 ) -> Result<QuantumMarkovReport<R>, QuantumError>
 where
     T: Clone,
@@ -254,20 +263,29 @@ where
     let stash: RefCell<Option<QuantumError>> = RefCell::new(None);
     let report: RefCell<Option<QuantumMarkovReport<R>>> = RefCell::new(None);
 
-    let outcome =
-        graph.freeze_verified_with_check(state_writers, |_g| {
-            match quantum_markov_check(factors, supports, tolerance) {
-                Ok(rep) => {
-                    *report.borrow_mut() = Some(rep);
-                    Ok(())
-                }
-                Err(e) => {
-                    let bridged = CausalityGraphError::from(e.clone());
-                    *stash.borrow_mut() = Some(e);
-                    Err(bridged)
-                }
+    let outcome = graph.freeze_verified_with_check(state_writers, |g| {
+        // Level check 1: the quantum Markov commutativity check.
+        let rep = match quantum_markov_check(factors, supports, tolerance) {
+            Ok(rep) => rep,
+            Err(e) => {
+                let bridged = CausalityGraphError::from(e.clone());
+                *stash.borrow_mut() = Some(e);
+                return Err(bridged);
             }
-        });
+        };
+        // Level check 2: C₃-exclusion faithfulness over the declared input/output
+        // systems, derived from the (now-frozen) graph's reachability.
+        if let Some((inputs, outputs)) = faithfulness
+            && let Err(e) = CausalStructure::from_graph_reachability::<T, G>(g, inputs, outputs)
+                .and_then(|cs| cs.check_c3_exclusion())
+        {
+            let bridged = CausalityGraphError::from(e.clone());
+            *stash.borrow_mut() = Some(e);
+            return Err(bridged);
+        }
+        *report.borrow_mut() = Some(rep);
+        Ok(())
+    });
 
     match outcome {
         Ok(()) => Ok(report

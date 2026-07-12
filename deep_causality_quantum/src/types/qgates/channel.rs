@@ -18,7 +18,9 @@
 //! maps on complex matrices", Linear Algebra Appl. 10 (1975) 285–290.
 
 use crate::QuantumError;
-use crate::types::qgates::operator_linalg::{identity_matrix, partial_trace, square_dim};
+use crate::types::qgates::operator_linalg::{
+    hermiticity_defect, identity_matrix, partial_trace, square_dim,
+};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
@@ -99,6 +101,25 @@ where
             d_in * d_out
         )));
     }
+    // eigen_hermitian silently decomposes only the Hermitian part of its input,
+    // so a non-Hermitian (or non-finite) Choi would be reconstructed from the
+    // wrong operator. Reject both up front — PSD requires Hermiticity.
+    if choi
+        .as_slice()
+        .iter()
+        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+    {
+        return Err(QuantumError::NonFiniteValue(
+            "Choi operator contains a non-finite entry".into(),
+        ));
+    }
+    let defect = hermiticity_defect(choi)?;
+    if defect > tol {
+        return Err(QuantumError::NonPositiveOperator(format!(
+            "Choi operator is not Hermitian: defect {:?} > {:?}",
+            defect, tol
+        )));
+    }
     let (vals, vecs) = choi
         .eigen_hermitian()
         .map_err(|e| QuantumError::CalculationError(format!("eigen: {:?}", e)))?;
@@ -155,6 +176,11 @@ where
         )));
     }
     let d_out = shape[0];
+    if kraus.iter().any(|k| k.shape() != shape) {
+        return Err(QuantumError::DimensionMismatch(
+            "Kraus operators disagree on shape".into(),
+        ));
+    }
     let mut out = vec![Complex::new(R::zero(), R::zero()); d_out * d_out];
     for k in kraus {
         let t = k
@@ -217,6 +243,24 @@ where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
     square_dim(choi)?;
+    // PSD (hence CP) requires a finite Hermitian operator; eigen_hermitian would
+    // otherwise silently certify the Hermitian part of a non-Hermitian input.
+    if choi
+        .as_slice()
+        .iter()
+        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+    {
+        return Err(QuantumError::NonFiniteValue(
+            "Choi operator contains a non-finite entry".into(),
+        ));
+    }
+    let defect = hermiticity_defect(choi)?;
+    if defect > tol {
+        return Err(QuantumError::NonPositiveOperator(format!(
+            "not completely positive: Choi is not Hermitian, defect {:?} > {:?}",
+            defect, tol
+        )));
+    }
     let (vals, _) = choi
         .eigen_hermitian()
         .map_err(|e| QuantumError::CalculationError(format!("eigen: {:?}", e)))?;

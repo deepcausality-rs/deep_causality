@@ -91,11 +91,21 @@ impl QuantumCircuit {
                 )));
             }
         }
-        for &m in &measure {
+        for (idx, &m) in measure.iter().enumerate() {
             if m >= num_qubits {
                 return Err(QuantumError::DimensionMismatch(format!(
                     "measurement references qubit {} ≥ num_qubits {}",
                     m, num_qubits
+                )));
+            }
+            // Each measured qubit maps to exactly one outcome bit; a repeat both
+            // inflates the outcome table (2^len) beyond the register and makes the
+            // bit order ambiguous. Reject duplicates here so the sampler is safe
+            // by construction.
+            if measure[..idx].contains(&m) {
+                return Err(QuantumError::DimensionMismatch(format!(
+                    "measurement qubit {} is measured more than once",
+                    m
                 )));
             }
         }

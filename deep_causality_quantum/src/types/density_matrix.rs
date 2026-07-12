@@ -47,6 +47,11 @@ where
     /// PSD (spectrum ≥ −tol·scale), and unit trace (|Tr − 1| ≤ tol·scale),
     /// with `scale = max(1, ‖M‖_F)`.
     pub fn with_tolerance(matrix: CausalTensor<Complex<R>>, tol: R) -> Result<Self, QuantumError> {
+        if !tol.is_finite() || tol < R::zero() {
+            return Err(QuantumError::CalculationError(
+                "validation tolerance must be finite and non-negative".into(),
+            ));
+        }
         let dim = square_dim(&matrix)?;
 
         if matrix
@@ -60,6 +65,11 @@ where
         }
 
         let norm = frobenius_norm(&matrix);
+        if !norm.is_finite() {
+            return Err(QuantumError::NonFiniteValue(
+                "density matrix Frobenius norm overflowed to a non-finite value".into(),
+            ));
+        }
         let scale = if norm > R::one() { norm } else { R::one() };
         let eps = tol * scale;
 
@@ -152,7 +162,9 @@ where
         let tol = Self::default_tolerance();
         let mut weight_sum = R::zero();
         for (p, _) in ensemble {
-            if *p < -tol {
+            // The contract requires non-negative weights: check the sign exactly
+            // (the `tol` slack is reserved for the sum-to-one check below).
+            if *p < R::zero() {
                 return Err(QuantumError::NormalizationError(format!(
                     "negative ensemble weight {:?}",
                     p

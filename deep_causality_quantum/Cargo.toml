@@ -22,11 +22,12 @@ exclude = [
     "tests/**/*",
     "papers/*",
 ]
-[package.metadata.docs.rs]
-all-features = true
 
 # Do not publish to crates.io
 publish = false
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = []

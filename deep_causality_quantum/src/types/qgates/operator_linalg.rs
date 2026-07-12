@@ -155,8 +155,10 @@ where
     R: RealField,
 {
     let d = square_dim(op)?;
-    let prod: usize = dims.iter().product();
-    if prod != d || dims.contains(&0) {
+    // Checked product: a caller-supplied `dims` can overflow usize (debug panic /
+    // release wrap) before this shape gate would otherwise fire.
+    let prod = dims.iter().try_fold(1usize, |acc, &x| acc.checked_mul(x));
+    if prod != Some(d) || dims.contains(&0) {
         return Err(QuantumError::PartialTraceShape(format!(
             "dims {:?} do not factor the {}x{} operator",
             dims, d, d
@@ -237,7 +239,15 @@ where
             space.keys().collect::<Vec<_>>()
         )));
     }
-    let expect: usize = op_legs.iter().map(|l| space[l]).product();
+    let expect = op_legs
+        .iter()
+        .try_fold(1usize, |acc, l| acc.checked_mul(space[l]))
+        .ok_or_else(|| {
+            QuantumError::DimensionMismatch(format!(
+                "operator legs {:?} dimension product overflows usize",
+                op_legs
+            ))
+        })?;
     if expect != d_op {
         return Err(QuantumError::DimensionMismatch(format!(
             "operator dim {} does not match its legs' product {}",
@@ -247,7 +257,15 @@ where
 
     let legs: Vec<usize> = space.keys().copied().collect();
     let dims: Vec<usize> = legs.iter().map(|l| space[l]).collect();
-    let d_full: usize = dims.iter().product();
+    let d_full = dims
+        .iter()
+        .try_fold(1usize, |acc, &x| acc.checked_mul(x))
+        .ok_or_else(|| {
+            QuantumError::DimensionMismatch(format!(
+                "space dimension product {:?} overflows usize",
+                dims
+            ))
+        })?;
 
     // Row-major strides per position in the full space.
     let mut strides = vec![1usize; dims.len()];
@@ -279,7 +297,13 @@ where
     };
 
     let s = op.as_slice();
-    let mut out = vec![Complex::new(R::zero(), R::zero()); d_full * d_full];
+    let alloc = d_full.checked_mul(d_full).ok_or_else(|| {
+        QuantumError::DimensionMismatch(format!(
+            "embedded operator size {}² overflows usize",
+            d_full
+        ))
+    })?;
+    let mut out = vec![Complex::new(R::zero(), R::zero()); alloc];
     for r_op in 0..d_op {
         let row_op = offset(&op_pos, r_op);
         for c_op in 0..d_op {

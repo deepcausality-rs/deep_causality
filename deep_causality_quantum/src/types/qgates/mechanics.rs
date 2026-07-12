@@ -4,7 +4,7 @@
  */
 
 use crate::QuantumError;
-use crate::QuantumOps;
+use crate::types::qgates::bridge::metric_adjoint;
 use crate::types::qgates::gates_haruna;
 use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_algebra::RealField;
@@ -33,7 +33,15 @@ where
         )));
     }
 
-    let amplitude = state.mv().bracket(basis.mv());
+    // Use the metric-correct Dirac adjoint: the reversion bracket is degenerate
+    // (identically zero) on the minimal left ideal of a negative-signature metric,
+    // which would report a normalized Cl(0,n) ket's Born probability as 0.
+    let bra = metric_adjoint(state.mv())?;
+    let amplitude = bra
+        .geometric_product(basis.mv())
+        .get(0)
+        .cloned()
+        .unwrap_or(Complex::new(R::zero(), R::zero()));
     let p = amplitude.norm_sqr();
 
     if !p.is_finite() {
@@ -71,7 +79,29 @@ where
         )));
     }
 
-    let val = state.mv().expectation_value(operator.mv());
+    // Metric-correct bra (see born_probability_kernel): ⟨ψ|A|ψ⟩ = scalar of
+    // adj(ψ)·A·ψ, with adj the signature-appropriate Dirac adjoint.
+    let bra = metric_adjoint(state.mv())?;
+    let a_psi = operator.mv().geometric_product(state.mv());
+    let val = bra
+        .geometric_product(&a_psi)
+        .get(0)
+        .cloned()
+        .unwrap_or(Complex::new(R::zero(), R::zero()));
+
+    if !val.re.is_finite() || !val.im.is_finite() {
+        return Err(QuantumError::NonFiniteValue(
+            "expectation value is not finite".into(),
+        ));
+    }
+    // ⟨ψ|A|ψ⟩ is real for a Hermitian A; a non-negligible imaginary part means a
+    // non-Hermitian operator, whose real projection would be a silently different
+    // observable — reject rather than discard the imaginary component.
+    if val.im.abs() > R::epsilon().sqrt() {
+        return Err(QuantumError::NonPositiveOperator(
+            "expectation value has a non-negligible imaginary part; operator is not Hermitian".into(),
+        ));
+    }
     Ok(val.re)
 }
 
@@ -129,6 +159,16 @@ where
     let ba = b_mv.geometric_product(a_mv);
 
     let commutator = ab - ba;
+
+    if commutator
+        .data()
+        .iter()
+        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+    {
+        return Err(QuantumError::NonFiniteValue(
+            "Non-finite component in commutator result".into(),
+        ));
+    }
 
     Ok(HilbertState::<R>::from_multivector(commutator))
 }

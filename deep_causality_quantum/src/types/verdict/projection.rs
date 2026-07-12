@@ -57,6 +57,15 @@ where
                 dim, D
             )));
         }
+        if p
+            .as_slice()
+            .iter()
+            .any(|c| !c.re.is_finite() || !c.im.is_finite())
+        {
+            return Err(QuantumError::NonFiniteValue(
+                "projection contains a non-finite entry".into(),
+            ));
+        }
         let tol = Self::default_tolerance();
         if hermiticity_defect(&p)? > tol {
             return Err(QuantumError::NonPositiveOperator(
@@ -216,7 +225,14 @@ where
             .iter()
             .map(|v| v.re)
             .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
-        let tol = Self::default_tolerance() * (if max_ev > R::one() { max_ev } else { R::one() });
+        // A numerical-rank (support) cutoff, NOT the √ε validation tolerance:
+        // keep genuine range directions down to ~D·ε·‖·‖. Using √ε here would
+        // drop the second eigenvector of P+Q whenever two distinct subspaces are
+        // closer than ~1.7e-4 rad, so the join would silently fail to be an upper
+        // bound of its arguments.
+        let scale = if max_ev > R::one() { max_ev } else { R::one() };
+        let d_real = R::from_usize(D).unwrap_or_else(R::one);
+        let tol = R::epsilon() * d_real * scale;
 
         let mut proj = vec![c_zero::<R>(); D * D];
         for (idx, lam) in vals.iter().enumerate() {

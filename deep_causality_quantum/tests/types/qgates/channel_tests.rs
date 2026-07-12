@@ -21,6 +21,13 @@ fn mat(data: Vec<C>, rows: usize, cols: usize) -> CausalTensor<C> {
 }
 
 fn max_abs_diff(a: &CausalTensor<C>, b: &CausalTensor<C>) -> f64 {
+    assert_eq!(
+        a.shape(),
+        b.shape(),
+        "max_abs_diff shape mismatch: {:?} vs {:?}",
+        a.shape(),
+        b.shape()
+    );
     a.as_slice()
         .iter()
         .zip(b.as_slice())

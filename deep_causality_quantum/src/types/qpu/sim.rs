@@ -72,57 +72,6 @@ impl C {
     }
 }
 
-/// The 2×2 matrix `[[a, b], [c, d]]` of a single-qubit gate.
-fn gate_matrix(op: &GateOp) -> [C; 4] {
-    let s = 1.0 / std::f64::consts::SQRT_2;
-    let pi4 = std::f64::consts::FRAC_PI_4;
-    match op {
-        GateOp::H(_) => [
-            C::new(s, 0.0),
-            C::new(s, 0.0),
-            C::new(s, 0.0),
-            C::new(-s, 0.0),
-        ],
-        GateOp::X(_) => [
-            C::new(0.0, 0.0),
-            C::new(1.0, 0.0),
-            C::new(1.0, 0.0),
-            C::new(0.0, 0.0),
-        ],
-        GateOp::Y(_) => [
-            C::new(0.0, 0.0),
-            C::new(0.0, -1.0),
-            C::new(0.0, 1.0),
-            C::new(0.0, 0.0),
-        ],
-        GateOp::Z(_) => [
-            C::new(1.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(-1.0, 0.0),
-        ],
-        GateOp::S(_) => [
-            C::new(1.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(0.0, 1.0),
-        ],
-        GateOp::T(_) => [
-            C::new(1.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(pi4.cos(), pi4.sin()),
-        ],
-        // Two-qubit gates are handled separately.
-        GateOp::Cnot { .. } | GateOp::Cz { .. } => [
-            C::new(1.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(0.0, 0.0),
-            C::new(1.0, 0.0),
-        ],
-    }
-}
-
 fn apply_single(state: &mut [C], q: usize, m: [C; 4]) {
     let bit = 1usize << q;
     let n = state.len();
@@ -200,14 +149,49 @@ impl QpuSampler for SimQpu {
         let mut state = vec![C::new(0.0, 0.0); dim];
         state[0] = C::new(1.0, 0.0);
 
+        let s = 1.0 / std::f64::consts::SQRT_2;
+        let pi4 = std::f64::consts::FRAC_PI_4;
         for op in circuit.ops() {
-            match op {
-                GateOp::Cnot { control, target } => apply_cnot(&mut state, *control, *target),
-                GateOp::Cz { control, target } => apply_cz(&mut state, *control, *target),
-                single => {
-                    let q = single.qubits()[0];
-                    apply_single(&mut state, q, gate_matrix(single));
-                }
+            // Exhaustive over all GateOp variants — no catch-all, so a new gate
+            // must be handled explicitly rather than silently mis-applied.
+            match *op {
+                GateOp::H(q) => apply_single(
+                    &mut state,
+                    q,
+                    [C::new(s, 0.0), C::new(s, 0.0), C::new(s, 0.0), C::new(-s, 0.0)],
+                ),
+                GateOp::X(q) => apply_single(
+                    &mut state,
+                    q,
+                    [C::new(0.0, 0.0), C::new(1.0, 0.0), C::new(1.0, 0.0), C::new(0.0, 0.0)],
+                ),
+                GateOp::Y(q) => apply_single(
+                    &mut state,
+                    q,
+                    [C::new(0.0, 0.0), C::new(0.0, -1.0), C::new(0.0, 1.0), C::new(0.0, 0.0)],
+                ),
+                GateOp::Z(q) => apply_single(
+                    &mut state,
+                    q,
+                    [C::new(1.0, 0.0), C::new(0.0, 0.0), C::new(0.0, 0.0), C::new(-1.0, 0.0)],
+                ),
+                GateOp::S(q) => apply_single(
+                    &mut state,
+                    q,
+                    [C::new(1.0, 0.0), C::new(0.0, 0.0), C::new(0.0, 0.0), C::new(0.0, 1.0)],
+                ),
+                GateOp::T(q) => apply_single(
+                    &mut state,
+                    q,
+                    [
+                        C::new(1.0, 0.0),
+                        C::new(0.0, 0.0),
+                        C::new(0.0, 0.0),
+                        C::new(pi4.cos(), pi4.sin()),
+                    ],
+                ),
+                GateOp::Cnot { control, target } => apply_cnot(&mut state, control, target),
+                GateOp::Cz { control, target } => apply_cz(&mut state, control, target),
             }
         }
 
@@ -244,14 +228,10 @@ impl QpuSampler for SimQpu {
         let mut rng = SplitMix64::new(self.seed);
         for _ in 0..shots {
             let u = rng.next_f64() * total;
-            // First index whose cumulative mass ≥ u.
-            let mut outcome = num_outcomes - 1;
-            for (i, &c) in cum.iter().enumerate() {
-                if u < c {
-                    outcome = i;
-                    break;
-                }
-            }
+            // First index whose cumulative mass exceeds u. `cum` is non-decreasing,
+            // so binary-search it (same boundary as the old linear "first u < c"
+            // scan), clamping the degenerate all-mass-below-u case to the last bin.
+            let outcome = cum.partition_point(|&c| c <= u).min(num_outcomes - 1);
             hist.record(outcome);
         }
 

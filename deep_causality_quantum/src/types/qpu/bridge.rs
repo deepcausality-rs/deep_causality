@@ -64,8 +64,10 @@ pub fn shots_to_qubit_bernoulli<H: ShotHistogram>(
 }
 
 /// An observable `Uncertain<f64>` from the histogram: each outcome is mapped to
-/// a real value by `value_of`, and the empirical distribution over the shots is
-/// summarized via `Uncertain::from_samples`. `O(total shots)` in the expansion.
+/// a real value by `value_of`, and the empirical mean and unbiased (n−1) sample
+/// variance are summarized as a normal `Uncertain`. `O(distinct outcomes)` — the
+/// statistics are accumulated directly from the `(outcome, count)` entries,
+/// never by materializing one sample per shot.
 ///
 /// # Errors
 /// Returns a typed [`QuantumError`] on an empty histogram.
@@ -80,14 +82,29 @@ where
             "cannot bridge an empty shot histogram".into(),
         ));
     }
-    let mut samples: Vec<f64> = Vec::with_capacity(total as usize);
-    for (outcome, count) in hist.entries() {
-        let v = value_of(outcome);
-        for _ in 0..count {
-            samples.push(v);
-        }
-    }
-    Ok(Uncertain::from_samples(&samples))
+    // Compute the same summary statistics `Uncertain::from_samples` would (mean
+    // and unbiased n−1 variance) directly from the (outcome, count) entries,
+    // without allocating one sample per shot.
+    let entries = hist.entries();
+    let total_f = total as f64;
+    let mean = entries
+        .iter()
+        .map(|(outcome, count)| value_of(*outcome) * *count as f64)
+        .sum::<f64>()
+        / total_f;
+    let variance = if total > 1 {
+        let ss: f64 = entries
+            .iter()
+            .map(|(outcome, count)| {
+                let d = value_of(*outcome) - mean;
+                d * d * *count as f64
+            })
+            .sum();
+        ss / (total_f - 1.0)
+    } else {
+        0.0
+    };
+    Ok(Uncertain::normal(mean, variance.sqrt()))
 }
 
 /// Lifts a physical-QPU call into a causaloid `f` at the Kleisli boundary: on
@@ -126,6 +143,12 @@ where
                 PropagatingEffect::from_value_with_log(hist, provenance);
             CausalEffectPropagationProcess::with_state(effect, params, Some(calibration))
         }
-        Err(e) => CausalEffectPropagationProcess::from_error(CausalityError::from(e)),
+        Err(e) => {
+            // Preserve the requested params on the STATE channel so a caller can
+            // audit which circuit/shot-count failed (from_error would default it).
+            let errored: PropagatingEffect<S::Shots> =
+                PropagatingEffect::from_error(CausalityError::from(e));
+            CausalEffectPropagationProcess::with_state(errored, params, None)
+        }
     }
 }
