@@ -1,0 +1,25 @@
+website/web/pnpm-workspace.yaml
+  s_abeffbefe18930::t_16cd1b517555bb 5-15
+  s_abeffbefe18930::t_ff9e2bc3d4f243 2-4
+  s_abeffbefe18930::t_42505408d9387d 1
+website/web/package.json
+  s_abeffbefe18930::t_084242ee376110 27
+website/web/pnpm-lock.yaml
+  s_abeffbefe18930::t_62434b52d39cb3 1-6166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "8f2e92a739ea7132c8df56bfdeb959bc229271f7",
+  "prompts": {},
+  "sessions": {
+    "s_abeffbefe18930": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dbb35cb3-b235-4c35-9204-67c9e2597dba",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
