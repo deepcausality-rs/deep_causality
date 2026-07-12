@@ -4,9 +4,12 @@
  */
 
 mod errors;
+#[cfg(not(miri))]
 mod extensions;
 mod formalization_lean;
+#[cfg(not(miri))]
 mod traits;
 mod types;
 mod utils;
+#[cfg(not(miri))]
 mod utils_test;
