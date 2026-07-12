@@ -8,9 +8,9 @@
 //! [`CfdConfigBuilder::march`](crate::CfdConfigBuilder); the built config is composed and run by
 //! the [`CfdFlow`](crate::CfdFlow) DSL.
 
+use crate::CfdScalar;
 use crate::solvers::DecNsConfig;
 use crate::solvers::dec::BoundaryZone;
-use crate::types::CfdScalar;
 use crate::types::flow::PhysicsStage;
 use crate::types::flow_config::march_config::{MarchConfig, MarchStop};
 use crate::types::flow_config::{Mesh, Observe, Seed};

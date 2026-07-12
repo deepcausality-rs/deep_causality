@@ -1,0 +1,171 @@
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
+# =============================================================================
+# error/* test suites
+#
+# The src tree is organized as src/error/, so the tests mirror it
+# at tests/error/.
+# =============================================================================
+
+rust_test_suite(
+    name = "error",
+    srcs = glob([
+        "error/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_metric",
+    ],
+)
+
+
+# =============================================================================
+# types/* test suites
+# =============================================================================
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
+
+# =============================================================================
+# types/qgates/* test suites — the verifiable qgates tests
+# =============================================================================
+
+rust_test_suite(
+    name = "qgates",
+    srcs = glob([
+        "types/qgates/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
+
+
+# =============================================================================
+# types/qcm/* test suites — the verifiable QCM slice (freeze-integration + C₃).
+# These exercise the engine freeze hook, so they depend on `deep_causality`.
+# =============================================================================
+
+rust_test_suite(
+    name = "qcm",
+    srcs = glob([
+        "types/qcm/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality",
+        "//deep_causality_core",
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
+
+# =============================================================================
+# types/qpu/* test suites — the emergent seam behind the `qpu` feature.
+# =============================================================================
+
+rust_test_suite(
+    name = "qpu",
+    srcs = glob([
+        "types/qpu/*_tests.rs",
+    ]),
+    crate_features = [
+        "qpu",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_uncertain",
+    ],
+)
+
+# =============================================================================
+# types/verdict/* test suites — the orthomodular projection-lattice Verdict carrier.
+# =============================================================================
+
+rust_test_suite(
+    name = "verdict",
+    srcs = glob([
+        "types/verdict/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_algebra",
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)
+
+# =============================================================================
+# formalization_lean/* test suites — the Lean↔Rust traceability witnesses.
+# Each test carries a `// THEOREM_MAP: <id>` tag consumed by the `theorem-map`
+# job in .github/workflows/formalization.yml.
+# =============================================================================
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_num_complex",
+        "//deep_causality_tensor",
+    ],
+)

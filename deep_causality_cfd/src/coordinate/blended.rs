@@ -28,8 +28,8 @@
 //! At `λ = 1` this reproduces the `BodyFittedCoordinate` metric identically.
 
 use super::{MetricProvider, sample_grid};
+use crate::CfdScalar;
 use crate::tensor_bridge::{gradient_x, gradient_y, quantize_2d};
-use crate::types::CfdScalar;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{

@@ -20,10 +20,10 @@
 //! per flux instead of three) are the perf follow-on.
 
 use super::marcher_3d::{EulerState3d, EulerStateTt3d};
+use crate::CfdScalar;
 use crate::coordinate::{BodyFittedCoordinate3d, MetricProvider3d};
 use crate::tensor_bridge::{AcousticCoreInverse3d, dequantize_3d, quantize_3d};
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;

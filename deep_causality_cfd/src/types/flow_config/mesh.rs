@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use crate::types::flow_config::Body;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensor;

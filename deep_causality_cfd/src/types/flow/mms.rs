@@ -20,12 +20,12 @@
 //! - **Compressible** — the Taylor–Green field in its incompressible limit (`∇·τ = ρν∇²u`,
 //!   divergence-free): momentum `∂u/∂t = −2ν u`, continuity `∂ρ/∂t = 0`.
 
+use crate::CfdScalar;
 use crate::theories::{
     compressible_ns_continuity_rhs, compressible_ns_momentum_rhs, euler_momentum_rhs,
     incompressible_ns_rhs, stokes_momentum_rhs,
 };
 use crate::traits::Solver;
-use crate::types::CfdScalar;
 use crate::types::flow::{CfdFlow, Report};
 use deep_causality_physics::{
     AccelerationVector, Density, KinematicViscosity, PhysicsError, Velocity3, VelocityGradient,

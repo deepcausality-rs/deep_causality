@@ -9,9 +9,9 @@
 //! lends it at run time via `.on(&manifold)` (B1), exactly like [`MarchConfig`](crate::MarchConfig).
 //! Run by [`CfdFlow::march`](crate::CfdFlow).
 
+use crate::CfdScalar;
 use crate::solvers::DecNsConfig;
 use crate::solvers::dec::uncertain_inflow::UncertainInflowZone;
-use crate::types::CfdScalar;
 use crate::types::flow_config::Seed;
 use deep_causality_physics::PhysicsError;
 use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType};

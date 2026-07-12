@@ -10,7 +10,7 @@
 //! (B1), and runs — returning an owned [`Report`](crate::Report). Mirrors the Discovery
 //! `CdlConfigBuilder` → `CdlBuilder` split (`CfdConfigBuilder` builds, `CfdFlow` composes/runs).
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 
 /// The CfdFlow DSL entry point.
 pub struct CfdFlow;

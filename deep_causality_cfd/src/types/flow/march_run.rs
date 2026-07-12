@@ -21,16 +21,17 @@ use crate::solvers::dec::surface_force::{
 };
 use crate::solvers::dec::{BoundaryZone, DecNsSolver};
 use crate::traits::Marcher;
+use crate::types::Ambient;
 use crate::types::flow::{CoupledField, PhysicsStage, Report, StepContext};
 use crate::types::flow_config::march_config::MarchStop;
 use crate::types::flow_config::{MarchConfig, Observe, Seed};
-use crate::types::{Ambient, CfdScalar};
 use deep_causality_physics::{PhysicsError, SolenoidalField};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CutCellRegistry, LatticeCell, LatticeComplex, Manifold,
 };
 
+use crate::CfdScalar;
 use alloc::collections::BTreeMap;
 
 /// The injected pipeline before a geometry is bound. `.on(&manifold)` lends the caller-owned

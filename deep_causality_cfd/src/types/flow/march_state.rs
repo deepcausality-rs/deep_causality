@@ -17,7 +17,7 @@
 //! or from disk days later — bit-identically, because the disk transport round-trips the same
 //! `(field, step)` the in-memory transport carries.
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use crate::types::flow::CoupledField;
 use crate::types::flow::state_snapshot::{load_resume_state, save_resume_state};
 use deep_causality_file::BitCodec;

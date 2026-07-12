@@ -36,9 +36,9 @@
 //! its residual tolerance — which is why it was rank-fragile on a captured curved field. The whole
 //! construction is verified end-to-end by the `A₀·A₀⁻¹ = I` round-off gate (Resolution 6, gate 1).
 
+use crate::CfdScalar;
 use crate::tensor_bridge::operators::{lift_block, lift_leading, lift_trailing};
 use crate::tensor_bridge::{shift_minus, shift_plus};
-use crate::types::CfdScalar;
 use alloc::format;
 use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;

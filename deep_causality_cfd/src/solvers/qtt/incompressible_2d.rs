@@ -5,11 +5,11 @@
 
 //! Periodic 2-D incompressible Navier–Stokes in quantized-tensor-train form.
 
+use crate::CfdScalar;
 use crate::tensor_bridge::{
     QttProjector2d, dequantize_2d, gradient_x, gradient_y, laplacian_2d, quantize_2d,
 };
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use alloc::format;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;

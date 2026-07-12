@@ -15,7 +15,7 @@
 //! layer. `dt_flight` is the corridor's one compressed-time constant: the seconds of flight each
 //! coupled step represents.
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 use crate::types::flow_config::{MarchStop, QttObserve};
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::{EARTH_RADIUS, PhysicsError};

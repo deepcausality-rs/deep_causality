@@ -13,10 +13,10 @@
 //! divergence-free projection are reused unchanged from [`QttIncompressible2d`]; the penalization is
 //! applied **before** the projection so the projection cleans the divergence the forcing introduces.
 
+use crate::CfdScalar;
 use crate::solvers::qtt::QttIncompressible2d;
 use crate::tensor_bridge::{dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
-use crate::types::CfdScalar;
 use alloc::format;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;

@@ -18,9 +18,9 @@
 //! scales live in the case-solver layer, which computes `ν` and `dt` and populates
 //! this config.
 
+use crate::CfdScalar;
 use crate::solvers::dec::DecNsSolver;
 use crate::solvers::dec::boundary::BoundaryZone;
-use crate::types::CfdScalar;
 use deep_causality_physics::PhysicsError;
 use deep_causality_topology::{HodgeDecomposeOptions, LatticeComplex, Manifold};
 

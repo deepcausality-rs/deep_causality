@@ -11,11 +11,11 @@
 //! [`march_inflow`](crate::march_inflow) packages) — surfacing an [`UncertainStepView`] per step for
 //! a streamed probe — and return an owned [`Report`] (final field + the `EffectLog` dropout count).
 
+use crate::CfdScalar;
 use crate::solvers::dec::diagnostics::{
     dec_divergence_residual, dec_kinetic_energy, dec_max_speed,
 };
 use crate::solvers::dec::uncertain_inflow::{InflowContext, InflowMarchState, inflow_march_step};
-use crate::types::CfdScalar;
 use crate::types::flow::Report;
 use crate::types::flow_config::UncertainMarchConfig;
 use deep_causality_core::{CausalEffect, EffectLog, PropagatingProcess};

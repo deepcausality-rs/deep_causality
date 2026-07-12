@@ -11,7 +11,7 @@
 //! the short, evenly-sampled series a march produces. The Strouhal number then follows as
 //! `St = f·L / U`.
 
-use crate::types::CfdScalar;
+use crate::CfdScalar;
 
 /// The dominant frequency of an evenly-sampled signal by **mean-crossing counting**:
 /// each pair of consecutive crossings of the signal mean spans one half-period, so
