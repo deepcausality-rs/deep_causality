@@ -55,7 +55,11 @@ fn test_born_probability_kernel_normalized() {
         p
     );
     // Identical states ⇒ P = |⟨ψ|ψ⟩|² = 1 (pins the canonical value, not just the range).
-    assert!((p - 1.0).abs() < 1e-9, "identical states ⇒ P = 1, got {}", p);
+    assert!(
+        (p - 1.0).abs() < 1e-9,
+        "identical states ⇒ P = 1, got {}",
+        p
+    );
 }
 
 #[test]
@@ -231,7 +235,11 @@ fn test_fidelity_kernel_identical_states() {
         f
     );
     // Identical states ⇒ F = 1.
-    assert!((f - 1.0).abs() < 1e-9, "identical states ⇒ F = 1, got {}", f);
+    assert!(
+        (f - 1.0).abs() < 1e-9,
+        "identical states ⇒ F = 1, got {}",
+        f
+    );
 }
 
 // =============================================================================

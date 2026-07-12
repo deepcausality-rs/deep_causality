@@ -158,27 +158,52 @@ impl QpuSampler for SimQpu {
                 GateOp::H(q) => apply_single(
                     &mut state,
                     q,
-                    [C::new(s, 0.0), C::new(s, 0.0), C::new(s, 0.0), C::new(-s, 0.0)],
+                    [
+                        C::new(s, 0.0),
+                        C::new(s, 0.0),
+                        C::new(s, 0.0),
+                        C::new(-s, 0.0),
+                    ],
                 ),
                 GateOp::X(q) => apply_single(
                     &mut state,
                     q,
-                    [C::new(0.0, 0.0), C::new(1.0, 0.0), C::new(1.0, 0.0), C::new(0.0, 0.0)],
+                    [
+                        C::new(0.0, 0.0),
+                        C::new(1.0, 0.0),
+                        C::new(1.0, 0.0),
+                        C::new(0.0, 0.0),
+                    ],
                 ),
                 GateOp::Y(q) => apply_single(
                     &mut state,
                     q,
-                    [C::new(0.0, 0.0), C::new(0.0, -1.0), C::new(0.0, 1.0), C::new(0.0, 0.0)],
+                    [
+                        C::new(0.0, 0.0),
+                        C::new(0.0, -1.0),
+                        C::new(0.0, 1.0),
+                        C::new(0.0, 0.0),
+                    ],
                 ),
                 GateOp::Z(q) => apply_single(
                     &mut state,
                     q,
-                    [C::new(1.0, 0.0), C::new(0.0, 0.0), C::new(0.0, 0.0), C::new(-1.0, 0.0)],
+                    [
+                        C::new(1.0, 0.0),
+                        C::new(0.0, 0.0),
+                        C::new(0.0, 0.0),
+                        C::new(-1.0, 0.0),
+                    ],
                 ),
                 GateOp::S(q) => apply_single(
                     &mut state,
                     q,
-                    [C::new(1.0, 0.0), C::new(0.0, 0.0), C::new(0.0, 0.0), C::new(0.0, 1.0)],
+                    [
+                        C::new(1.0, 0.0),
+                        C::new(0.0, 0.0),
+                        C::new(0.0, 0.0),
+                        C::new(0.0, 1.0),
+                    ],
                 ),
                 GateOp::T(q) => apply_single(
                     &mut state,

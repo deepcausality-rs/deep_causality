@@ -147,7 +147,8 @@ fn test_freeze_commuting_model_freezes() {
     fs.declare(0, &[0]);
     fs.declare(1, &[0]);
 
-    let report = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap();
+    let report =
+        freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap();
     assert!(g.is_frozen());
     assert_eq!(report.tested_pairs(), 1);
 }
@@ -162,7 +163,8 @@ fn test_freeze_noncommuting_model_aborts_and_rolls_back() {
     fs.declare(0, &[0]);
     fs.declare(1, &[0]);
 
-    let err = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
+    let err =
+        freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
     // The structured error survives the CausalityGraphError bridge and names the pair.
     match err.0 {
         QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => {
@@ -191,7 +193,8 @@ fn test_freeze_shape_mismatch_reported_as_itself() {
     pf.insert(0, sigma_x()); // 2x2
     let mut fs = FactorSupports::new();
     fs.declare(0, &[0, 1]); // implies dim 4
-    let err = freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
+    let err =
+        freeze_quantum(&mut g, &[], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
     assert!(!g.is_frozen());
 }
@@ -293,8 +296,15 @@ fn test_freeze_builtin_check_failure_is_calculation_error() {
     fs.declare(1, &[0]);
 
     // Node index 99 names no node (the graph has 2) → single-writer check errors.
-    let err =
-        freeze_quantum(&mut g, &[99], &pf, &fs, &CommutatorTolerance::default(), None).unwrap_err();
+    let err = freeze_quantum(
+        &mut g,
+        &[99],
+        &pf,
+        &fs,
+        &CommutatorTolerance::default(),
+        None,
+    )
+    .unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
     assert!(!g.is_frozen());
 }

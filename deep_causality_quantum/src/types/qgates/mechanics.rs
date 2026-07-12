@@ -99,7 +99,8 @@ where
     // observable — reject rather than discard the imaginary component.
     if val.im.abs() > R::epsilon().sqrt() {
         return Err(QuantumError::NonPositiveOperator(
-            "expectation value has a non-negligible imaginary part; operator is not Hermitian".into(),
+            "expectation value has a non-negligible imaginary part; operator is not Hermitian"
+                .into(),
         ));
     }
     Ok(val.re)

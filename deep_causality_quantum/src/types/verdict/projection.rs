@@ -57,8 +57,7 @@ where
                 dim, D
             )));
         }
-        if p
-            .as_slice()
+        if p.as_slice()
             .iter()
             .any(|c| !c.re.is_finite() || !c.im.is_finite())
         {
