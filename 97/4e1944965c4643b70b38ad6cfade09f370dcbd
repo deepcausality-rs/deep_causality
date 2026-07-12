@@ -1,0 +1,21 @@
+deep_causality_tensor/src/types/causal_tensor/ops/tensor_eigen/mod.rs
+  s_543ee5cdecd2c1::t_5ed7a76b5a8e10 136-138
+  s_543ee5cdecd2c1::t_21ead33396c486 30-33,35-38,47
+  s_543ee5cdecd2c1::t_27720a10e27a59 119-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "974e1944965c4643b70b38ad6cfade09f370dcbd",
+  "prompts": {},
+  "sessions": {
+    "s_543ee5cdecd2c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7a1aa644-5f95-4e1d-91d2-a206ea16f08d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
