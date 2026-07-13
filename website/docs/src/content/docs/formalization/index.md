@@ -32,10 +32,12 @@ Each row is one property.
 ## The layers
 
 - **[Num](/formalization/num/)**: identity, integer ring laws, cast round-trips, and the `Float106` real-field model.
+- **[Algebra](/formalization/algebra/)**: the trait-tower laws from monoid through group, ring, field, module, and division algebra, plus conjugation, norm, and the verdict lattice.
+- **[Haft](/formalization/haft/)**: the higher-kinded functional laws — functor, applicative, monad, arrow, free monad, monoidal, traversable — behind [Higher-Kinded Types](/concepts/hkt/).
 - **[Core](/formalization/core/)**: the causal-monad, causal-arrow, causaloid-fixpoint, verdict, and graph-fold laws behind the [Effect Propagation Process](/concepts/effect-propagation-process/).
+- **[Complex & Dual](/formalization/complex-dual/)**: `ℂ` field/conjugation/norm laws, `ℍ` division-ring laws with a non-commutativity witness, and the dual numbers with the forward-mode Leibniz rule.
 - **[Topology](/formalization/topology/)**: Riemann curvature symmetries.
-
-The Algebra, Complex & Dual, Haft, and Quantum layers are being documented. Filling them in is a [good first issue](https://github.com/deepcausality-rs/deep_causality/issues) for new contributors.
+- **[Quantum](/formalization/quantum/)**: the partial-trace / Choi foundation, headlined by the B1 counterexample — unconditional partial-trace preservation is proved false, the conditional boundary version holds.
 
 ## Scope
 
