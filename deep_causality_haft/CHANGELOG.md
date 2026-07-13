@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.4.0...deep_causality_haft-v0.4.1) - 2026-07-13
+
+### Added
+
+- *(deep_causality)* the graph algebra — schedule-invariant ∇∘(Λ⊗Λ) joins + freeze checks (roadmap Stage 4)
+- *(deep_causality_haft)* symmetric-monoidal PROP — Δ/ε, ∇/η, σ (H5)
+- *(deep_causality_haft)* one-way interpreter ArrowTerm → Kleisli<M> (H4)
+- *(deep_causality_haft)* reified free Arrow — ArrowTerm (H3)
+- *(deep_causality_haft)* add Category + Kleisli (named category, compose = bind) — H2
+- *(haft)* add Foldable::fold_map (monoidal fold) — H1 of haft-categorical-machinery
+
+### Fixed
+
+- *(deep_causality_haft)* Signed-off-by: Marvin Hansen <marvin.hansen@gmail.com>
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
+### Other
+
+- Improved test coverage.
+- drop Aeneas / L4 from the verification program (non-goal)
+
 ## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.3.3...deep_causality_haft-v0.4.0) - 2026-07-08
 
 ### Added

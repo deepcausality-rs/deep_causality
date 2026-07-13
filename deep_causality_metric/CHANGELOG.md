@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_metric-v0.2.3...deep_causality_metric-v0.2.4) - 2026-07-13
+
+### Added
+
+- *(deep_causality_haft)* add Category + Kleisli (named category, compose = bind) — H2
+
 ## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_metric-v0.2.2...deep_causality_metric-v0.2.3) - 2026-07-08
 
 ### Other
