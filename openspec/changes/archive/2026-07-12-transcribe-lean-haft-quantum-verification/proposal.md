@@ -2,7 +2,7 @@
 
 ## Why
 
-The last two formalization pages are still `draft: true` stubs: Haft (49 proved higher-kinded laws, the largest layer) and Quantum (10 proved partial-trace/Choi laws, including the headline B1 counterexample). Publishing them completes the formalization section — every verification layer on the public site. Additionally, exploration for this change found the `## Quantum` section of `lean/THEOREM_MAP.md` is stale against the Rust tree (wrong witness directory and filenames in all 10 rows, one wrong test name), which must be corrected first so the page transcribes truth. The originating note is `openspec/notes/transcribe-lean-haft-quantum-verification.md`.
+The last two formalization pages are still `draft: true` stubs: Haft (49 proved higher-kinded laws, the largest layer) and Quantum (10 proved partial-trace/Choi laws, including the headline B1 counterexample). Publishing them completes the formalization section — every verification layer on the public site. Additionally, exploration for this change found the `## Quantum` section of `lean/THEOREM_MAP.md` is stale against the Rust tree (wrong witness directory and filenames in all 10 rows, one wrong test name), which must be corrected first so the page transcribes truth. The originating note is `openspec/notes/archive/transcribe-lean-haft-quantum-verification.md`.
 
 ## What Changes
 
