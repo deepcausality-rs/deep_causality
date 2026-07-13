@@ -2,7 +2,7 @@
 
 ## Why
 
-The website's formalization section still hides the Complex & Dual layer: `website/docs/src/content/docs/formalization/complex-dual.md` is a `draft: true` template stub with an empty table, while the 15 `complex.*`, `quaternion.*`, and `dual.*` laws are already proved in Lean and witnessed by Rust law-tests in `deep_causality_num_complex` and `deep_causality_num_dual`. This is the direct follow-up to the completed `transcribe-lean-algebra-verification` change (archived 2026-07-12), continuing the same documentation effort; the originating note is `openspec/notes/transcribe-lean-num-complex-dual-verification.md`.
+The website's formalization section still hides the Complex & Dual layer: `website/docs/src/content/docs/formalization/complex-dual.md` is a `draft: true` template stub with an empty table, while the 15 `complex.*`, `quaternion.*`, and `dual.*` laws are already proved in Lean and witnessed by Rust law-tests in `deep_causality_num_complex` and `deep_causality_num_dual`. This is the direct follow-up to the completed `transcribe-lean-algebra-verification` change (archived 2026-07-12), continuing the same documentation effort; the originating note is `openspec/notes/archive/transcribe-lean-num-complex-dual-verification.md`.
 
 ## What Changes
 
