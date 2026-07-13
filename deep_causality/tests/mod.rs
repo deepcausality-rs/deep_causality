@@ -6,6 +6,7 @@
 mod errors;
 #[cfg(not(miri))]
 mod extensions;
+#[cfg(not(miri))]
 mod formalization_lean;
 #[cfg(not(miri))]
 mod traits;
