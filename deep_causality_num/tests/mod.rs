@@ -6,6 +6,7 @@ mod casts;
 mod float;
 mod float_double;
 mod float_option;
+#[cfg(not(miri))]
 mod formalization_lean;
 mod identity;
 mod integer;

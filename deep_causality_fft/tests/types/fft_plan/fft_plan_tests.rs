@@ -45,6 +45,10 @@ fn test_small_kernels_match_naive() {
 }
 
 #[test]
+// Ignored under Miri: the O(n^2) naive-DFT reference at n up to 1024 is
+// interpreter-pathological (>6 min). The Stockham kernel's UB is covered under
+// Miri by the O(n log n) round-trip test; full correctness runs in normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_stockham_powers_of_two_match_naive() {
     for n in [64usize, 128, 256, 512, 1024] {
         assert_matches_naive_f64(n, 1e-9);
@@ -52,6 +56,10 @@ fn test_stockham_powers_of_two_match_naive() {
 }
 
 #[test]
+// Ignored under Miri: the O(n^2) naive-DFT reference at n up to 1009 is
+// interpreter-pathological (>6 min). The Bluestein kernel's UB is covered under
+// Miri by the O(n log n) round-trip test; full correctness runs in normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_bluestein_lengths_match_naive() {
     // Primes and composites that are not powers of two, including ones
     // below the small-kernel cutoff.

@@ -9,7 +9,7 @@
 # stays slow for `terminate-after` consecutive periods is KILLED and NAMED --
 # turning a multi-hour binary hang into "test X terminated after 6 minutes".
 # Tune `period` up if a legitimately slow Miri test is falsely terminated.
-slow-timeout = { period = "180s", terminate-after = 2 }
+slow-timeout = { period = "360s", terminate-after = 2 }
 # Miri shadow-memory is heavy; cap parallel test processes so a crate like
 # deep_causality_multivector cannot exhaust runner RAM.
 test-threads = 2

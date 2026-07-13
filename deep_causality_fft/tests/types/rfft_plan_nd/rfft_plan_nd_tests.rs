@@ -72,6 +72,10 @@ fn test_1d_shape() {
 }
 
 #[test]
+// Ignored under Miri: the 32x32x32 = 32768-point real N-D round-trip is ~72 s
+// under Miri (large buffer + allocation churn). The real N-D walk's UB is
+// covered under Miri by the smaller-shape tests; full correctness runs in normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_round_trip_3d() {
     for shape in [[16usize, 16, 16], [8, 4, 32], [32, 32, 32]] {
         let n: usize = shape.iter().product();

@@ -51,6 +51,10 @@ fn test_to_ket_from_ket_round_trip_cl02() {
 }
 
 #[test]
+// Ignored under Miri: Cl(0,10) has 2^10 = 1024 blades and the D=32 matrix-rep
+// round-trip is ~9 s natively -> hours under Miri. The from_ket/to_ket UB path
+// is covered under Miri by the small Cl(0,2) case; full check runs in normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_to_ket_from_ket_round_trip_cl010() {
     let metric = Metric::NonEuclidean(10); // Cl(0,10), D = 32
     let v = pseudo_random_ket(32);

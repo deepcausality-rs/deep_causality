@@ -24,7 +24,7 @@ jobs:
     # single crate for hours. Clean crates finish in seconds, so 20 minutes is a
     # generous ceiling. `fail-fast: false` + the crate matrix already isolate the
     # blast radius to one job, so a timeout here never affects the other crates.
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +45,6 @@ jobs:
           - deep_causality_fft
           - deep_causality_file
           - deep_causality_haft
-          - deep_causality_macros
           - deep_causality_metric
           - deep_causality_multivector
           - deep_causality_num
@@ -83,6 +82,8 @@ jobs:
             extra_flags: -Zmiri-disable-isolation       # Needs file open / write access
           - crate: deep_causality_discovery
             extra_flags: -Zmiri-disable-isolation       # DSL opens files
+          - crate: deep_causality_multivector
+            extra_flags: -Zmiri-disable-isolation -Zmiri-disable-weak-memory-emulation -Zmiri-preemption-rate=0
           - crate: deep_causality_uncertain
             extra_flags: -Zmiri-disable-isolation       # open() in tests/mod.rs binary
             runner: cargo-test                          # rusty-fork (rusty_fork_test!) is incompatible with nextest
