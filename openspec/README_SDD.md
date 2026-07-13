@@ -86,7 +86,7 @@ After your review concluded that the spec has been implemented, please archive i
 /opsx:archive add-verification-to-haft-crate
 ```
 
-This moves the entire folder into the archive. Note, you have to move the correpdong note yourself
+This moves the entire folder into the archive. Note, you have to move the corresponding note yourself
 into the note archive in 'openspec/notes/archive'. Also, please use the refactoring of your IDE to do the move
 to ensure all refernces to the note are updated to the new location.
 
