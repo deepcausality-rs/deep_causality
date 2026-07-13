@@ -85,6 +85,7 @@ jobs:
             extra_flags: -Zmiri-disable-isolation       # DSL opens files
           - crate: deep_causality_uncertain
             extra_flags: -Zmiri-disable-isolation       # open() in tests/mod.rs binary
+            runner: cargo-test                          # rusty-fork (rusty_fork_test!) is incompatible with nextest
     steps:
       - uses: actions/checkout@v7
 
@@ -93,6 +94,12 @@ jobs:
           rustup toolchain install nightly --component miri --profile minimal
           rustup override set nightly
           cargo miri setup
+
+      # nextest runs each test in its own process, so a single hanging test can
+      # be terminated and NAMED via the `ci` profile's slow-timeout
+      # (.config/nextest.toml) instead of wedging the whole test binary.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -109,5 +116,17 @@ jobs:
         # binaries don't reliably honor the `cfg(miri)` flag cargo-miri sets,
         # so doctest-level skip shims (e.g. `# if cfg!(miri) { return; }`) do
         # not fire. Doctests verify documentation correctness, not UB —
-        # normal CI runs them, so coverage is preserved.
-        run: cargo miri test -p ${{ matrix.crate }} --lib --tests
+        # normal CI runs them, so coverage is preserved. (nextest never runs
+        # doctests, so `--lib --tests` is a no-op there but kept for parity.)
+        #
+        # Default runner is `cargo miri nextest run --profile ci`: one process
+        # per test, so a hang is terminated and named by the slow-timeout in
+        # .config/nextest.toml. deep_causality_uncertain opts out (runner:
+        # cargo-test) because rusty-fork's `rusty_fork_test!` re-execs the test
+        # binary and collides with nextest's process-per-test protocol.
+        run: |
+          if [ "${{ matrix.runner }}" = "cargo-test" ]; then
+            cargo miri test -p ${{ matrix.crate }} --lib --tests
+          else
+            cargo miri nextest run --profile ci -p ${{ matrix.crate }} --lib --tests
+          fi
