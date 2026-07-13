@@ -111,6 +111,10 @@ fn test_round_trip_16_cubed() {
 }
 
 #[test]
+// Ignored under Miri: a 32x32x32 = 32768-point 3-D FFT round-trip is ~117 s
+// under Miri (large buffer + allocation churn). The N-D walk's UB is covered
+// under Miri by the smaller-shape tests; full correctness runs in normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_round_trip_32_cubed() {
     let shape = [32usize, 32, 32];
     let n = 32 * 32 * 32;
