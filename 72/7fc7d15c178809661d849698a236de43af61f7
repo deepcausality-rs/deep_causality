@@ -1,0 +1,21 @@
+deep_causality_fft/tests/types/rfft_plan_nd/rfft_plan_nd_tests.rs
+  s_8a8483174d6acd::t_64ecd7e23e85a7 75-78
+deep_causality_fft/tests/types/fft_plan_nd/fft_plan_nd_tests.rs
+  s_8a8483174d6acd::t_3074f3316f3f27 114-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "727fc7d15c178809661d849698a236de43af61f7",
+  "prompts": {},
+  "sessions": {
+    "s_8a8483174d6acd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8d905126-e7f4-4f00-a3b5-aa7a2d552b44",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
