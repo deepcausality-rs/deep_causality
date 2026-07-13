@@ -1,0 +1,19 @@
+openspec/README_SDD.md
+  s_abeffbefe18930::t_a2390e26c95580 96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "a8c382eaf6d726e3d4d64de58f65a7d1eaad95ae",
+  "prompts": {},
+  "sessions": {
+    "s_abeffbefe18930": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dbb35cb3-b235-4c35-9204-67c9e2597dba",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
