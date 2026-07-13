@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.4.0...deep_causality_uncertain-v0.5.0) - 2026-07-13
+
+### Added
+
+- *(deep_causality)* the graph algebra — schedule-invariant ∇∘(Λ⊗Λ) joins + freeze checks (roadmap Stage 4)
+
+### Fixed
+
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
+### Other
+
+- strengthen arrow_choice witnesses; fix archived-note paths; clarify Lean scope —
+- Improved test coverage.
+
 ## [0.4.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.3.16...deep_causality_uncertain-v0.4.0) - 2026-07-08
 
 ### Added

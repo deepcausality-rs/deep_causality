@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.11.0...deep_causality_core-v0.11.1) - 2026-07-13
+
+### Added
+
+- *(deep_causality_core)* formalize the carrier stack — transformer stack, fold universality, relay termination (roadmap Stage 1)
+
+### Fixed
+
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
+### Other
+
+- *(miri)* ignore compute-heavy FFT/multivector tests; fix nextest period
+- build(bazel)P: Updated Bazel config
+- Improved test coverage.
+- drop Aeneas / L4 from the verification program (non-goal)
+- *(openspec)* close out formalize-main-crate — main-crate Lean status note, sync + archive
+
 ## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.10.0...deep_causality_core-v0.11.0) - 2026-07-08
 
 ### Added

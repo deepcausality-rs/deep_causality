@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.3...deep_causality_multivector-v0.5.4) - 2026-07-13
+
+### Added
+
+- *(deep_causality_quantum)* the operator/channel layer on CausalTensor<Complex<R>> (Phase 2)
+
+### Fixed
+
+- *(deep_causality_multivector)* Minor fix
+- *(deep_causality_multivector)* Code formatting
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
+### Other
+
+- *(miri)* ignore compute-heavy FFT/multivector tests; fix nextest period
+- *(deep_causality_multivector)* updated README
+- Improved test coverage.
+
 ## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.2...deep_causality_multivector-v0.5.3) - 2026-07-08
 
 ### Added
