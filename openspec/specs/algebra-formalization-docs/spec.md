@@ -22,7 +22,7 @@ The page SHALL follow the conventions of the completed `num.md` page: intro pros
 
 #### Scenario: Draft scaffolding removed
 - **WHEN** the finished page is inspected
-- **THEN** the frontmatter contains no `draft: true` and the body contains no `:::caution` "good first issue" block
+- **THEN** the frontmatter contains no `draft: true` (keeping `sidebar: order: 2`) and the body contains no `:::caution` "good first issue" block
 
 #### Scenario: Table shape matches num.md
 - **WHEN** the table header is inspected
