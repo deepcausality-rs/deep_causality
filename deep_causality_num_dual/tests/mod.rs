@@ -4,4 +4,5 @@
  */
 mod algebra_impls;
 mod dual;
+#[cfg(not(miri))]
 mod formalization_lean;

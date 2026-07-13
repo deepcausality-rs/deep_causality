@@ -4,4 +4,5 @@
  */
 mod algebra_impls;
 mod complex;
+#[cfg(not(miri))]
 mod formalization_lean;

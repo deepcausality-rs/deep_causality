@@ -73,6 +73,10 @@ fn test_3d_matches_naive() {
 }
 
 #[test]
+// Ignored under Miri: the N-D naive-DFT reference over a 16x32x8 grid is
+// O(N^2) in the 4096-point volume (~56 s under Miri). The N-D FFT walk's UB is
+// covered under Miri by the round-trip tests; full correctness runs in normal CI.
+#[cfg_attr(miri, ignore)]
 fn test_anisotropic_shape_matches_naive() {
     // Unequal axis lengths, including a non-power-of-two axis
     // (Bluestein inside the N-D walk).
