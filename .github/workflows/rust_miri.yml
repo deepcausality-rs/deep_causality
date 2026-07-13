@@ -19,6 +19,12 @@ jobs:
   miri:
     name: cargo miri test
     runs-on: ubuntu-latest
+    # Cap runaway jobs. Miri is nondeterministic across runs (thread scheduling,
+    # ASLR/HashMap seeding, shadow-memory pressure); an unlucky run can wedge a
+    # single crate for hours. Clean crates finish in seconds, so 20 minutes is a
+    # generous ceiling. `fail-fast: false` + the crate matrix already isolate the
+    # blast radius to one job, so a timeout here never affects the other crates.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +67,16 @@ jobs:
         # real time / files.
         include:
           - crate: deep_causality
-            extra_flags: -Zmiri-disable-isolation       # clock_gettime in test setup
+            # -Zmiri-disable-isolation: clock_gettime in test setup.
+            # The weak-memory + preemption flags tame the one genuine concurrency
+            # test (test_evolve_error_on_poisoned_context_lock spawns a thread that
+            # panics under a write lock, then joins). Under Miri's weak-memory
+            # emulation an unlucky scheduling seed can spin that RwLock/join path
+            # for hours. Disabling weak-memory emulation and pinning preemption to 0
+            # removes that nondeterminism. This disables *detection* of weak-memory
+            # ordering bugs only — no memory-safety check is weakened, and the test
+            # is a lock-poisoning assertion, not a lock-free algorithm.
+            extra_flags: -Zmiri-disable-isolation -Zmiri-disable-weak-memory-emulation -Zmiri-preemption-rate=0
           - crate: deep_causality_core
             extra_flags: -Zmiri-disable-isolation       # EffectLog::add_entry -> SystemTime::now (log_effect.rs:57)
           - crate: deep_causality_file
@@ -70,6 +85,7 @@ jobs:
             extra_flags: -Zmiri-disable-isolation       # DSL opens files
           - crate: deep_causality_uncertain
             extra_flags: -Zmiri-disable-isolation       # open() in tests/mod.rs binary
+            runner: cargo-test                          # rusty-fork (rusty_fork_test!) is incompatible with nextest
     steps:
       - uses: actions/checkout@v7
 
@@ -79,6 +95,12 @@ jobs:
           rustup override set nightly
           cargo miri setup
 
+      # nextest runs each test in its own process, so a single hanging test can
+      # be terminated and NAMED via the `ci` profile's slow-timeout
+      # (.config/nextest.toml) instead of wedging the whole test binary.
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
+
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: miri
@@ -86,10 +108,25 @@ jobs:
 
       - name: Run Miri
         env:
-          MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-symbolic-alignment-check ${{ matrix.extra_flags }}
+          # -Zmiri-seed=0 pins Miri's per-run nondeterminism (thread interleaving,
+          # ASLR, HashMap seeding) so runs are reproducible. If a crate still times
+          # out at a fixed seed, the cause is the runner environment, not the code.
+          MIRIFLAGS: -Zmiri-seed=0 -Zmiri-strict-provenance -Zmiri-symbolic-alignment-check ${{ matrix.extra_flags }}
         # `--lib --tests` excludes doctests: rustdoc-synthesized doctest
         # binaries don't reliably honor the `cfg(miri)` flag cargo-miri sets,
         # so doctest-level skip shims (e.g. `# if cfg!(miri) { return; }`) do
         # not fire. Doctests verify documentation correctness, not UB —
-        # normal CI runs them, so coverage is preserved.
-        run: cargo miri test -p ${{ matrix.crate }} --lib --tests
+        # normal CI runs them, so coverage is preserved. (nextest never runs
+        # doctests, so `--lib --tests` is a no-op there but kept for parity.)
+        #
+        # Default runner is `cargo miri nextest run --profile ci`: one process
+        # per test, so a hang is terminated and named by the slow-timeout in
+        # .config/nextest.toml. deep_causality_uncertain opts out (runner:
+        # cargo-test) because rusty-fork's `rusty_fork_test!` re-execs the test
+        # binary and collides with nextest's process-per-test protocol.
+        run: |
+          if [ "${{ matrix.runner }}" = "cargo-test" ]; then
+            cargo miri test -p ${{ matrix.crate }} --lib --tests
+          else
+            cargo miri nextest run --profile ci -p ${{ matrix.crate }} --lib --tests
+          fi

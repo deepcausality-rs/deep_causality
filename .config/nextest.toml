@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# CI-only profile for the Miri workflow (.github/workflows/rust_miri.yml).
+# Local `cargo nextest run` uses the default profile and is unaffected; this
+# profile only activates when invoked with `--profile ci`.
+[profile.ci]
+# Under Miri tests run 100-1000x slower, so `period` is generous. A test that
+# stays slow for `terminate-after` consecutive periods is KILLED and NAMED --
+# turning a multi-hour binary hang into "test X terminated after 6 minutes".
+# Tune `period` up if a legitimately slow Miri test is falsely terminated.
+slow-timeout = { period = "180s", terminate-after = 2 }
+# Miri shadow-memory is heavy; cap parallel test processes so a crate like
+# deep_causality_multivector cannot exhaust runner RAM.
+test-threads = 2
+# A hung-then-killed test is a real failure, not a flake: do not retry it.
+retries = 0
