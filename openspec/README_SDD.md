@@ -16,11 +16,16 @@ The first task is always to build context.
 Mandatory context files the agent must read before doing anything are:
 
 @AGENTS.md
+@docs/writing_guides/AiStyleguide.md
 @AffectedCrate
 @RelevantDocumentation
 
-Affected crate refers to the primary crate you want to work on. The dependency and repo conventions are documented
-in AGENTS.md so the agent will find sub-dependencies on its own and use all applicable coding conventions.
+All crate dependencies and repo conventions are documented in AGENTS.md so the agent will find sub-dependencies 
+on its own and use all applicable coding conventions. Always load the  AGENTS.md at the beginning of an Ai coding session. 
+
+The AiStyleguide is a document that tells the Agent to write in a sensible style that is more readable.
+
+Affected crate refers to the primary crate you want to work on.
 
 Relevant documentation refers to all documents or publications that help the agent to understand the problem.
 
@@ -88,7 +93,7 @@ After your review concluded that the spec has been implemented, please archive i
 
 This moves the entire folder into the archive. Note, you have to move the corresponding note yourself
 into the note archive in 'openspec/notes/archive'. Also, please use the refactoring of your IDE to do the move
-to ensure all refernces to the note are updated to the new location.
+to ensure all references to the note are updated to the new location.
 
 ### Prepare for PR
 
