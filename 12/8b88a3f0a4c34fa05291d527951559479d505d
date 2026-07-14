@@ -1,0 +1,19 @@
+deep_causality_haft/tests/formalization_lean/cofree_tests.rs
+  s_aa25658c99fcf5::t_5527091b298210 109-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "128b88a3f0a4c34fa05291d527951559479d505d",
+  "prompts": {},
+  "sessions": {
+    "s_aa25658c99fcf5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4d4fe6e5-bed3-4fdf-8ae7-28bd77540d0b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
