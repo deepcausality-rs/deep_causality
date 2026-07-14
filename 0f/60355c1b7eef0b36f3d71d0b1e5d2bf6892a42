@@ -1,0 +1,32 @@
+openspec/changes/haft-cofree-and-eq-debug/.openspec.yaml
+  s_aa25658c99fcf5::t_d2f5573ade0a05 1-2
+openspec/notes/haft-cofree-eq-debug.md
+  s_aa25658c99fcf5::t_902e0b2247f38d 1-78
+openspec/changes/haft-cofree-and-eq-debug/tasks.md
+  s_aa25658c99fcf5::t_071132a5379bd1 1-36
+openspec/changes/haft-cofree-and-eq-debug/proposal.md
+  s_aa25658c99fcf5::t_99cc0d9e4908d2 1-87
+openspec/changes/haft-cofree-and-eq-debug/design.md
+  s_aa25658c99fcf5::t_4f1ed330dc8892 1-177
+openspec/changes/haft-cofree-and-eq-debug/specs/haft-eq-debug-functor/spec.md
+  s_aa25658c99fcf5::t_ed68771da08b8f 1-81
+openspec/changes/haft-cofree-and-eq-debug/specs/haft-cofree-comonad/spec.md
+  s_aa25658c99fcf5::t_36d1367e71c127 74-79
+  s_aa25658c99fcf5::t_d758be4f8e71b7 1-73,80-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0f60355c1b7eef0b36f3d71d0b1e5d2bf6892a42",
+  "prompts": {},
+  "sessions": {
+    "s_aa25658c99fcf5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4d4fe6e5-bed3-4fdf-8ae7-28bd77540d0b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
