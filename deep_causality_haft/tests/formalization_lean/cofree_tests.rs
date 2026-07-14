@@ -106,6 +106,29 @@ fn test_cofree_extract_reads_head() {
     assert_eq!(build().extract(), 1);
 }
 
+// The "Cofree is the dual product of Free" scenario: new(head, tail) is inspected by
+// head()/tail() and decomposed by into_parts() into the same (head, tail).
+#[test]
+fn test_cofree_new_accessors_and_into_parts() {
+    let child = Box::new(Cofree::<VecWitness, i32>::new(8, vec![]));
+    let w = Cofree::<VecWitness, i32>::new(7, vec![child]);
+
+    // inspection
+    assert_eq!(*w.head(), 7);
+    assert_eq!(w.tail().len(), 1);
+    assert_eq!(*w.tail()[0].head(), 8);
+
+    // decomposition returns (head, tail) in that order — reconstructing via new round-trips.
+    let (head, tail) = w.into_parts();
+    assert_eq!(head, 7);
+    assert_eq!(tail.len(), 1);
+    let rebuilt = Cofree::<VecWitness, i32>::new(head, tail);
+    assert_eq!(
+        rebuilt,
+        Cofree::new(7, vec![Box::new(Cofree::new(8, vec![]))])
+    );
+}
+
 #[test]
 fn test_cofree_map_relabels_preserving_shape() {
     let mapped = build().map(|x| x + 100);
