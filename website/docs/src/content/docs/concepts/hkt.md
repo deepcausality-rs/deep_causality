@@ -61,7 +61,7 @@ A second witness, `PropagatingEffectWitness<E, L>`, fixes the state and context 
 
 ## What you actually write
 
-Almost nothing. The witnesses live behind aliases and are not part of the day-to-day API surface. Most code looks like:
+The witnesses live behind aliases and are not part of the day-to-day API surface. Most code looks like:
 
 ```rust
 use deep_causality::PropagatingEffect;
@@ -73,7 +73,7 @@ let n = m.bind(|value, _state, _context| {
 });
 ```
 
-There is no `HKT5::Type<…>` in sight. The compiler resolves it. The encoding earns its keep because the *library author* could write the monad's `bind` once, generically over the witness, and have it work for every concrete instantiation.
+There is no `HKT5::Type<…>` in sight. The compiler resolves it. The *library author* writes the monad's `bind` once, generically over the witness, and have it work for every concrete instantiation.
 
 ## Why this matters
 
