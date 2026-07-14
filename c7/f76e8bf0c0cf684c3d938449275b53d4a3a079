@@ -1,0 +1,23 @@
+website/docs/src/content/docs/concepts/uniform-math.md
+  s_15a5b554d2dd70::t_8a8e1d26f59940 157-158,160-162,164
+  s_15a5b554d2dd70::t_afa2aabf08c50f 163
+  s_15a5b554d2dd70::t_858b67453ad853 159
+website/docs/src/content/docs/concepts/hkt.md
+  s_15a5b554d2dd70::t_4789e868345efb 64,76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c7f76e8bf0c0cf684c3d938449275b53d4a3a079",
+  "prompts": {},
+  "sessions": {
+    "s_15a5b554d2dd70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "92dc0a04-2d65-4fce-bfcb-c1d1693c4a29",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
