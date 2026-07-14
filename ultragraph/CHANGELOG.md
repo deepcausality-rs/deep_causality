@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.2...ultragraph-v0.9.3) - 2026-07-14
+
+### Fixed
+
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
 ## [0.9.2](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.1...ultragraph-v0.9.2) - 2026-07-08
 
 ### Other

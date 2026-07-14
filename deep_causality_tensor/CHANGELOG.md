@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.5.0...deep_causality_tensor-v0.5.1) - 2026-07-14
+
+### Added
+
+- *(deep_causality_quantum)* the operator/channel layer on CausalTensor<Complex<R>> (Phase 2)
+
+### Fixed
+
+- *(deep_causality)* code formatting
+- *(deep_causality_quantum)* Added NaN/overflow/bounds check to Haruna gates
+- *(deep_causality_quantum)* Added NaN/overflow/bounds check to Haruna gates
+- *(deep_causality)* Minor fix
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
+### Other
+
+- *(deep_causality_tensor)* Improved testing
+- Improved test coverage.
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.4.4...deep_causality_tensor-v0.5.0) - 2026-07-08
 
 ### Added

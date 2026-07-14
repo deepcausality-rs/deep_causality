@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.14.0...deep_causality-v0.15.0) - 2026-07-14
+
+### Added
+
+- *(deep_causality)* the Context hypergraph — parent-set threading = bind, acyclicity a separable freeze gate
+- *(deep_causality)* relay-round composition — multi-round adaptive evaluation is sequential Kleisli composition of rounds
+- *(deep_causality)* causaloid-layer theorems — collection permutation-invariance + the F-3 command-input theorem
+- *(deep_causality)* the keystone — evaluate is the unique catamorphism, per fixed carrier (roadmap Stage 5)
+- *(deep_causality)* the graph algebra — schedule-invariant ∇∘(Λ⊗Λ) joins + freeze checks (roadmap Stage 4)
+- *(deep_causality_core)* formalize the carrier stack — transformer stack, fold universality, relay termination (roadmap Stage 1)
+
+### Fixed
+
+- *(deep_causality)* Miri config
+- *(deep_causality)* reject out-of-range state_writers in freeze_verified
+- *(deep_causality)* satisfy clippy::for_kv_map in eval_all_states
+- *(deep_causality_algebra)* CommutativeMonoid requires the Commutative marker
+- *(deep_causality_physics)* Fixing 10MB max upload limit on crates.io
+
+### Other
+
+- *(miri)* ignore compute-heavy FFT/multivector tests; fix nextest period
+- Merge remote-tracking branch 'origin/main'
+- Improved test coverage.
+- drop Aeneas / L4 from the verification program (non-goal)
+- *(num)* add crate-local Lean verification status notes for the numeric tower
+- *(openspec)* close out formalize-main-crate — main-crate Lean status note, sync + archive
+
 ## [0.14.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.13.10...deep_causality-v0.14.0) - 2026-07-08
 
 ### Added

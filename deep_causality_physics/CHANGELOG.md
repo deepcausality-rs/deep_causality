@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.7.0...deep_causality_physics-v0.8.0) - 2026-07-14
+
+### Added
+
+- *(deep_causality_quantum)* new crate — quantum-information kernels move out of physics (Phase 1)
+
+### Other
+
+- build(bazel)P: Updated Bazel config
+- Improved test coverage.
+
 ## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.6.3...deep_causality_physics-v0.7.0) - 2026-07-08
 
 ### Added
