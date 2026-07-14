@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
+use crate::{
+    Applicative, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint, Pure,
+    Satisfies,
+};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -103,6 +106,23 @@ impl Monad<VecWitness> for VecWitness {
         Func: FnMut(A) -> <VecWitness as HKT>::Type<B>,
     {
         m_a.into_iter().flat_map(f).collect()
+    }
+}
+
+// Implementation of EqFunctor for VecWitness (element-wise structural equality of `Vec<T>`).
+impl EqFunctor for VecWitness {
+    fn eq_type<T: PartialEq>(a: &Vec<T>, b: &Vec<T>) -> bool {
+        a == b
+    }
+}
+
+// Implementation of DebugFunctor for VecWitness (delegates to `Vec`'s own `Debug`).
+impl DebugFunctor for VecWitness {
+    fn fmt_type<T: core::fmt::Debug>(
+        fa: &Vec<T>,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        core::fmt::Debug::fmt(fa, f)
     }
 }
 
