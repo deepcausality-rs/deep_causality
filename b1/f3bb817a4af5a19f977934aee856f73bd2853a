@@ -1,0 +1,74 @@
+deep_causality_haft/src/monad/cofree_comonad.rs
+  s_aa25658c99fcf5::t_97b61875b49906 1-205
+deep_causality_haft/tests/formalization_lean/mod.rs
+  s_aa25658c99fcf5::t_959167ab506778 30-32
+deep_causality_haft/src/extensions/hkt_box_ext.rs
+  s_aa25658c99fcf5::t_e433983f5171e6 125,128,130-136,138-143
+  s_aa25658c99fcf5::t_fa435a061ad063 6-9
+  s_aa25658c99fcf5::t_7512dcbfb74767 126-127,137
+  s_aa25658c99fcf5::t_7b0273754235cb 129
+deep_causality_haft/tests/algebra/eq_debug_functor_tests.rs
+  s_aa25658c99fcf5::t_4bd2140ca66ddf 1-160,172-181
+  s_aa25658c99fcf5::t_49df496641c869 161-171
+deep_causality_haft/tests/formalization_lean/cofree_tests.rs
+  s_aa25658c99fcf5::t_e951e24093f480 1-120
+deep_causality_haft/src/extensions/hkt_option_ext.rs
+  s_aa25658c99fcf5::t_383c8892211c59 7-8
+  s_aa25658c99fcf5::t_288b1922ce3901 165-181
+deep_causality_haft/src/monad/mod.rs
+  s_aa25658c99fcf5::t_42de1806460f41 14-19
+deep_causality_haft/src/lib.rs
+  s_aa25658c99fcf5::t_fe68ee599552b7 128
+  s_aa25658c99fcf5::t_48d46d97dbd14c 122-123
+  s_aa25658c99fcf5::t_162e72c83d46fc 127
+lean/DeepCausalityFormal.lean
+  s_aa25658c99fcf5::t_0fc5d99299975e 108
+deep_causality_haft/src/monad/free_instances.rs
+  s_aa25658c99fcf5::t_e8343816074584 1-70
+lean/DeepCausalityFormal/Haft/Cofree.lean
+  s_aa25658c99fcf5::t_b04c138687f7a8 1-139
+deep_causality_haft/src/monad/free_monad.rs
+  s_aa25658c99fcf5::t_a6468e1cb8496f 115-122
+openspec/changes/haft-cofree-and-eq-debug/tasks.md
+  s_aa25658c99fcf5::t_5ef1946841a842 35-36
+  s_aa25658c99fcf5::t_a5728c5bd58c1c 3,7-9,13-15,19-21,25
+  s_aa25658c99fcf5::t_c53cfd13634d23 30-31
+  s_aa25658c99fcf5::t_8c05f9d9c402b0 26
+deep_causality_haft/tests/algebra/mod.rs
+  s_aa25658c99fcf5::t_d74cc28051c306 20-22
+deep_causality_haft/src/functor/mod.rs
+  s_aa25658c99fcf5::t_121d4641f319c4 7-8
+deep_causality_haft/src/functor/eq_functor.rs
+  s_aa25658c99fcf5::t_b2e68c56192616 51-67
+  s_aa25658c99fcf5::t_cb58d6221d1ca7 1-50,68-71
+deep_causality_haft/src/functor/debug_functor.rs
+  s_aa25658c99fcf5::t_f48e6248b9247a 31-33
+  s_aa25658c99fcf5::t_1da0c9f63fb241 1-30,34-38
+lean/THEOREM_MAP.md
+  s_aa25658c99fcf5::t_77ca87969317a7 163-164
+deep_causality_haft/src/extensions/func_fold_vec_deque_ext.rs
+  s_aa25658c99fcf5::t_c07bf7658ca0a1 78-94
+  s_aa25658c99fcf5::t_54ed01eeaa2349 6
+deep_causality_haft/src/extensions/hkt_vec_ext.rs
+  s_aa25658c99fcf5::t_9755644eeebb83 112-128
+  s_aa25658c99fcf5::t_b974344fb294c4 6-9
+deep_causality_haft/src/extensions/hkt_linked_list_ext.rs
+  s_aa25658c99fcf5::t_d776c9e253bc47 96-112
+  s_aa25658c99fcf5::t_b6a663fabe693b 6-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b1f3bb817a4af5a19f977934aee856f73bd2853a",
+  "prompts": {},
+  "sessions": {
+    "s_aa25658c99fcf5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4d4fe6e5-bed3-4fdf-8ae7-28bd77540d0b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
