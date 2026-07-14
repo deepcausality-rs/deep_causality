@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, Functor, HKT, NoConstraint, Satisfies};
+use crate::{DebugFunctor, EqFunctor, Foldable, Functor, HKT, NoConstraint, Satisfies};
 use alloc::collections::VecDeque;
 
 /// `VecDequeWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -73,5 +73,22 @@ impl Foldable<VecDequeWitness> for VecDequeWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.into_iter().fold(init, f)
+    }
+}
+
+// Implementation of EqFunctor for VecDequeWitness (structural equality of `VecDeque<T>`).
+impl EqFunctor for VecDequeWitness {
+    fn eq_type<T: PartialEq>(a: &VecDeque<T>, b: &VecDeque<T>) -> bool {
+        a == b
+    }
+}
+
+// Implementation of DebugFunctor for VecDequeWitness (delegates to `VecDeque`'s own `Debug`).
+impl DebugFunctor for VecDequeWitness {
+    fn fmt_type<T: core::fmt::Debug>(
+        fa: &VecDeque<T>,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        core::fmt::Debug::fmt(fa, f)
     }
 }

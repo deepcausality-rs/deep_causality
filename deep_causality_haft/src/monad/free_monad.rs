@@ -112,10 +112,14 @@ where
     }
 }
 
-// NOTE: no `PartialEq`/`Clone`/`Debug` impls for `Free`. A bound on the GAT field
-// `F::Type<Box<Free<F,A>>>: Trait` sends the trait solver into an unbounded recursion (it cannot
-// see through the projection that the recursion terminates). Programs are compared by folding them
-// to a canonical value with `fold` (see the witness tests) — the faithful, cycle-free approach.
+// NOTE: `Free` has no *derived* `PartialEq`/`Eq`/`Debug`/`Clone`. `#[derive]`, or any hand impl
+// gated on the GAT-projection field bound `F::Type<Box<Free<F,A>>>: Trait`, makes the instance
+// conditional on that projection, so discharging it at a concrete witness re-enters the trait
+// solver and overflows (`error[E0275]`). Instead, opt-in `PartialEq`/`Eq`/`Debug` are provided in
+// `free_instances.rs` for any operation functor whose witness implements `EqFunctor`/`DebugFunctor`
+// — the recursion runs through those witness methods, not a projection bound, so it terminates.
+// Programs can still be compared by folding them to a canonical value with `fold` (see the witness
+// tests); the two agree. (`Clone` is still absent — add a `CloneFunctor` the same way if needed.)
 
 /// The [`HKT`] witness for the free monad over the operation functor `F`.
 pub struct FreeWitness<F>(PhantomData<F>);

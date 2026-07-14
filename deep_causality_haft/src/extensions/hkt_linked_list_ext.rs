@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
+use crate::{
+    Applicative, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint, Pure,
+    Satisfies,
+};
 use alloc::collections::LinkedList;
 
 /// `LinkedListWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -88,5 +91,22 @@ impl Monad<LinkedListWitness> for LinkedListWitness {
         Func: FnMut(A) -> LinkedList<B>,
     {
         m_a.into_iter().flat_map(f).collect()
+    }
+}
+
+// Implementation of EqFunctor for LinkedListWitness (structural equality of `LinkedList<T>`).
+impl EqFunctor for LinkedListWitness {
+    fn eq_type<T: PartialEq>(a: &LinkedList<T>, b: &LinkedList<T>) -> bool {
+        a == b
+    }
+}
+
+// Implementation of DebugFunctor for LinkedListWitness (delegates to `LinkedList`'s own `Debug`).
+impl DebugFunctor for LinkedListWitness {
+    fn fmt_type<T: core::fmt::Debug>(
+        fa: &LinkedList<T>,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        core::fmt::Debug::fmt(fa, f)
     }
 }
