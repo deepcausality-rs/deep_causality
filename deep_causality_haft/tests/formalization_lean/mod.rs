@@ -27,6 +27,9 @@ mod arrow_tests;
 mod bifunctor_tests;
 #[cfg(test)]
 mod category_tests;
+// `Cofree` is alloc-only, like `Free`.
+#[cfg(all(test, feature = "alloc"))]
+mod cofree_tests;
 #[cfg(test)]
 mod comonad_tests;
 #[cfg(test)]

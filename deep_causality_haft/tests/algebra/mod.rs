@@ -17,6 +17,9 @@ mod comonad_tests;
 mod cybernetic_loop_tests;
 #[cfg(test)]
 mod endomorphism_tests;
+// `Free`/`Cofree` are alloc-only; gate like `formalization_lean/free_monad_tests`.
+#[cfg(all(test, feature = "alloc"))]
+mod eq_debug_functor_tests;
 #[cfg(test)]
 mod foldable_tests;
 #[cfg(test)]

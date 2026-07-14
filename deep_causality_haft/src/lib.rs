@@ -119,9 +119,13 @@ pub use crate::applicative::Applicative;
 pub use crate::cybernetic_loop::CyberneticLoop;
 pub use crate::foldable::Foldable;
 pub use crate::functor::bifunctor::Bifunctor;
+pub use crate::functor::debug_functor::DebugFunctor;
+pub use crate::functor::eq_functor::EqFunctor;
 pub use crate::functor::functor_base::Functor;
 pub use crate::functor::profunctor::Profunctor;
 pub use crate::monad::Monad;
+#[cfg(feature = "alloc")]
+pub use crate::monad::cofree_comonad::{Cofree, CofreeWitness};
 pub use crate::monad::comonad::CoMonad;
 #[cfg(feature = "alloc")]
 pub use crate::monad::free_monad::{Free, FreeWitness};

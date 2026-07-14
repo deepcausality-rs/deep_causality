@@ -11,6 +11,12 @@ pub(crate) mod parametric_monad;
 // — gated exactly like `BoxWitness` / the `Vec` extensions.
 #[cfg(feature = "alloc")]
 pub(crate) mod free_monad;
+// The cofree comonad — the categorical dual of `free_monad` — same heap-recursive shape, same gate.
+#[cfg(feature = "alloc")]
+pub(crate) mod cofree_comonad;
+// Opt-in `PartialEq`/`Eq`/`Debug` for `Free` via the `EqFunctor`/`DebugFunctor` capability.
+#[cfg(feature = "alloc")]
+pub(crate) mod free_instances;
 
 /// The `Monad` trait extends `Functor` and `Pure` by providing the `bind` operation
 /// for sequencing computations that produce effectful values.

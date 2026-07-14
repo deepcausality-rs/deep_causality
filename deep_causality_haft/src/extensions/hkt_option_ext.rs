@@ -4,7 +4,8 @@
  */
 
 use crate::{
-    Applicative, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies, Traversable,
+    Applicative, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint, Pure,
+    Satisfies, Traversable,
 };
 
 /// `OptionWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -158,6 +159,23 @@ impl Monad<OptionWitness> for OptionWitness {
             Some(a) => f(a),
             None => None,
         }
+    }
+}
+
+// Implementation of EqFunctor for OptionWitness (structural equality of `Option<T>`).
+impl EqFunctor for OptionWitness {
+    fn eq_type<T: PartialEq>(a: &Option<T>, b: &Option<T>) -> bool {
+        a == b
+    }
+}
+
+// Implementation of DebugFunctor for OptionWitness (delegates to `Option`'s own `Debug`).
+impl DebugFunctor for OptionWitness {
+    fn fmt_type<T: core::fmt::Debug>(
+        fa: &Option<T>,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        core::fmt::Debug::fmt(fa, f)
     }
 }
 

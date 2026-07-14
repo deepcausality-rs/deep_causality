@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies};
+use crate::{
+    Applicative, CoMonad, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint,
+    Pure, Satisfies,
+};
 use alloc::boxed::Box;
 
 /// `BoxWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -116,6 +119,25 @@ impl Monad<BoxWitness> for BoxWitness {
         Func: FnMut(A) -> <BoxWitness as HKT>::Type<B>,
     {
         f(*m_a)
+    }
+}
+
+// Implementation of EqFunctor for BoxWitness (structural equality through the `Box`).
+// The parameters are spelled through the HKT projection (not `&Box<T>`) to avoid
+// `clippy::borrowed_box`, matching `CoMonad::extract` above.
+impl EqFunctor for BoxWitness {
+    fn eq_type<T: PartialEq>(a: &<Self as HKT>::Type<T>, b: &<Self as HKT>::Type<T>) -> bool {
+        a == b
+    }
+}
+
+// Implementation of DebugFunctor for BoxWitness (delegates to `Box`'s own `Debug`).
+impl DebugFunctor for BoxWitness {
+    fn fmt_type<T: core::fmt::Debug>(
+        fa: &<Self as HKT>::Type<T>,
+        f: &mut core::fmt::Formatter<'_>,
+    ) -> core::fmt::Result {
+        core::fmt::Debug::fmt(fa, f)
     }
 }
 
