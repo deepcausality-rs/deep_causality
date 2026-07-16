@@ -15,6 +15,7 @@ Rust witness: `deep_causality_algebra/tests/algebra/`.
 
 import Mathlib.Algebra.Field.Basic
 import Mathlib.Algebra.Order.Field.Defs
+import Mathlib.Algebra.Order.Ring.Defs
 
 namespace DeepCausalityFormal.Algebra
 
@@ -38,8 +39,8 @@ theorem field_inv_mul_cancel {F : Type*} [Field F] (a : F) (h : a ≠ 0) :
     Mirrors the ordered `RealField` sign rule.
 
     THEOREM_MAP: `algebra.real_field.mul_pos` -/
-theorem real_field_mul_pos {F : Type*} [LinearOrderedField F] {a b : F}
-    (ha : 0 < a) (hb : 0 < b) : 0 < a * b :=
+theorem real_field_mul_pos {F : Type*} [Field F] [LinearOrder F] [IsStrictOrderedRing F]
+    {a b : F} (ha : 0 < a) (hb : 0 < b) : 0 < a * b :=
   mul_pos ha hb
 
 end DeepCausalityFormal.Algebra

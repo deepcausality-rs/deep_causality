@@ -1,0 +1,17 @@
+bazel-*
+.bazelrc.user
+.DS_Store
+reservoir-manifest.json
+
+# Lake build artifacts under lean/lib/
+.lake/
+
+# Editor + notebook scratch (the ecosystem-overview notebook lives on
+# the `ecosystem-crawler` branch and the .ipynb_checkpoints + the
+# interesting_packages.csv it generates should never land on main).
+.vscode/
+__pycache__/
+.ipynb_checkpoints/
+notebooks/interesting_packages.csv
+.claude/
+MODULE.bazel.lock

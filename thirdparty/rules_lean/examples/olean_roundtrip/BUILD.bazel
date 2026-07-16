@@ -1,0 +1,38 @@
+load("@rules_lean//lean:lean.bzl", "lean_library", "lean_olean_archive", "lean_test")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+# Round-trip for the 0.4.0 cross-repo compiled-olean seam:
+#
+#   lean_library  → compile Lib/Thing.lean to a persistent Lib/Thing.olean tree
+#   lean_test     → Consumer.lean type-checks against the PREBUILT olean (dep),
+#                   with no source re-share and no recompile of the library
+#   lean_olean_archive → bundle the library's .olean tree into a tarball
+#   sh_test       → assert the tarball carries Lib/Thing.olean
+#
+# (The full http_archive → lean_imported_library hop is exercised where a
+# release artifact is actually fetched; lean_imported_library shares its
+# implementation with the lake-tested lean_prebuilt_library.)
+
+lean_library(
+    name = "lib",
+    srcs = ["Lib/Thing.lean"],
+)
+
+lean_test(
+    name = "consume_test",
+    srcs = ["Consumer.lean"],
+    entry = "Consumer.lean",
+    deps = [":lib"],
+)
+
+lean_olean_archive(
+    name = "lib_archive",
+    library = ":lib",
+)
+
+sh_test(
+    name = "archive_has_olean_test",
+    srcs = ["archive_check.sh"],
+    args = ["$(location :lib_archive)"],
+    data = [":lib_archive"],
+)

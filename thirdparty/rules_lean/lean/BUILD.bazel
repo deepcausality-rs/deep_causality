@@ -1,0 +1,26 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+toolchain_type(name = "toolchain_type")
+
+exports_files([
+    "lean.bzl",
+    "lake.bzl",
+])
+
+bzl_library(
+    name = "lean_bzl",
+    srcs = ["lean.bzl"],
+    visibility = ["//docs:__pkg__"],
+    # lean.bzl loads @bazel_skylib//rules:diff_test.bzl; stardoc (with skylib
+    # 1.8.2) requires its bzl_library be declared for doc extraction.
+    deps = ["@bazel_skylib//rules:diff_test"],
+)
+
+bzl_library(
+    name = "lake_bzl",
+    srcs = ["lake.bzl"],
+    visibility = ["//docs:__pkg__"],
+    deps = ["//lean/private:known_lean_versions_bzl"],
+)

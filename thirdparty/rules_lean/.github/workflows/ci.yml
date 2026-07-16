@@ -1,0 +1,102 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Fast PR gate: rule-graph loads, stardoc-generated reference docs match
+  # the .bzl docstrings (diff_test), build is green on both Linux and macOS.
+  # Does *not* exercise `lake_workspace` — that's deferred to the slow job
+  # so we don't pull mathlib on every push.
+  test:
+    name: bazel test //docs/...
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.10.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}-${{ matrix.os }}
+          repository-cache: true
+      - run: bazel test //docs/... --test_output=errors
+
+  buildifier:
+    name: buildifier lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install buildifier
+        run: |
+          curl -fsSL -o /usr/local/bin/buildifier \
+            https://github.com/bazelbuild/buildtools/releases/download/v7.3.1/buildifier-linux-amd64
+          chmod +x /usr/local/bin/buildifier
+      - run: buildifier --mode=check --lint=warn -r .
+
+  # End-to-end smoke: actually runs `lake_workspace` against a Batteries-only
+  # Lake workspace (no Mathlib → no multi-GB Reservoir cache download), then
+  # typechecks a Lean file that imports Batteries. This exercises the full
+  # chain: Lean toolchain download → lake update → lake build batteries →
+  # lean_prebuilt_library → lean_test. Push-only (not a PR gate) because
+  # building Batteries from source is ~1-2 min cold.
+  lake_integration:
+    name: lake_workspace end-to-end (batteries)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bazel-contrib/setup-bazel@0.10.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}-lake
+          repository-cache: true
+      - run: bazel test //examples/batteries_smoke:smoke_test --test_output=errors
+
+  # RulesLean Lean library version compatibility. Builds lean/lib/ against
+  # multiple Lean toolchains via elan (auto-installs the version pinned in
+  # `lean-toolchain`). When this fails on a new Lean release, we know to
+  # gate the library's source on a Lean-version conditional (or bump our
+  # default toolchain).
+  #
+  # Matrix kept narrow until we have signal — expand as new stable Lean
+  # versions land.
+  ruleslean_library:
+    name: lake build lean/lib/ (Lean ${{ matrix.lean_version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        lean_version: ["4.29.1", "4.30.0-rc2"]
+        # v4.30.0-rc2 matches the cslib pin; we want compat in case
+        # downstream consumers depend on both rules_lean and cslib.
+    steps:
+      - uses: actions/checkout@v4
+      - name: install elan
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            -sSf -o elan-init.sh
+          sh elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: pin toolchain
+        working-directory: lean/lib
+        run: |
+          echo "leanprover/lean4:v${{ matrix.lean_version }}" > lean-toolchain
+          lake --version
+      - name: lake build
+        working-directory: lean/lib
+        run: lake build
+      - name: smoke the CLIs
+        working-directory: lean/lib
+        run: |
+          # Sanity: each lean_exe target's --help-style empty invocation
+          # exits with the documented 2 (usage) rather than crashing.
+          lake exe oleanImports 2>/dev/null; test $? -eq 2
+          lake exe leanClosure   2>/dev/null; test $? -eq 2

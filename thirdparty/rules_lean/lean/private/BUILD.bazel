@@ -1,0 +1,20 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//lean:__pkg__"])
+
+exports_files(["known_lean_versions.bzl"])
+
+# The topo-compile driver: a self-contained Lean program (Lean core only) the
+# rule impls invoke as `lean --run topo_compile.lean <manifest>` to compile a
+# library's modules in import order — no run_shell. Public so lean_library (and
+# the other rules) can reference it as an implicit `_driver` source from any
+# consuming package.
+exports_files(
+    ["topo_compile.lean"],
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "known_lean_versions_bzl",
+    srcs = ["known_lean_versions.bzl"],
+)

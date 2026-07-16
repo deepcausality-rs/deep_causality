@@ -33,6 +33,6 @@ theorem integer_left_distrib (a b c : ℤ) : a * (b + c) = a * b + a * c :=
 
     THEOREM_MAP: `num.integer.euclidean` -/
 theorem integer_euclidean (a b : ℤ) : b * (a / b) + a % b = a :=
-  Int.ediv_add_emod a b
+  Int.mul_ediv_add_emod a b
 
 end DeepCausalityFormal.Num

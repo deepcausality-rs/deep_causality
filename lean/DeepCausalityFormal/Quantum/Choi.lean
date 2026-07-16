@@ -34,7 +34,7 @@ def applyChoi (J : Matrix (α × β) (α × β) R) (A : Matrix α α R) : Matrix
 /-- The Choi matrix of a linear channel `E : Mat_A → Mat_B`:
     `J(E) (i, k) (j, l) = E(|i⟩⟨j|) (k, l)`, where `|i⟩⟨j|` is the matrix unit. -/
 def choiOf (E : Matrix α α R →ₗ[R] Matrix β β R) : Matrix (α × β) (α × β) R :=
-  fun p q => E (stdBasisMatrix p.1 q.1 1) p.2 q.2
+  fun p q => E (Matrix.single p.1 q.1 1) p.2 q.2
 
 /-- `applyChoi J` is additive in the state.
 
