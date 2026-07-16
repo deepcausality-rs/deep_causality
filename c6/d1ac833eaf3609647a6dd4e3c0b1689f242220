@@ -1,0 +1,19 @@
+deep_causality_quantum/src/lib.rs
+  s_3fb7e465c6b193::t_4f4853bd20bfd2 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c6d1ac833eaf3609647a6dd4e3c0b1689f242220",
+  "prompts": {},
+  "sessions": {
+    "s_3fb7e465c6b193": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f3419d89-9a38-4556-9a46-c74dc44d1ca9",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
