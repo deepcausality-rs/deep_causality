@@ -1,0 +1,164 @@
+examples/avionics_examples/cfd/plasma_blackout/weather/constants.rs
+  s_daf432b4e5443c::t_14c63a27aac6e9 9
+examples/avionics_examples/cfd/plasma_blackout/corridor/README.md
+  s_daf432b4e5443c::t_a2bfb9967f265b 227
+  s_daf432b4e5443c::t_3519f9d738e661 239-240
+examples/avionics_examples/cfd/plasma_blackout/corridor/constants.rs
+  s_daf432b4e5443c::t_ce7aa981b7e610 9
+openspec/changes/reorg-plasma-blackout-examples/proposal.md
+  s_daf432b4e5443c::t_bec048ca2eba18 23-26
+  s_daf432b4e5443c::t_647e0195ac4f74 59-61
+examples/avionics_examples/cfd/plasma_blackout/weather/README.md
+  s_daf432b4e5443c::t_8cfdc10fefb2e4 123
+  s_daf432b4e5443c::t_ef70f5b9101a52 12
+openspec/changes/reorg-plasma-blackout-examples/design.md
+  s_daf432b4e5443c::t_a10d868f3ad273 74-78
+  s_daf432b4e5443c::t_dda4ef85e0d6b9 22
+openspec/changes/reorg-plasma-blackout-examples/tasks.md
+  s_daf432b4e5443c::t_ce4a7cbfeea1b2 49-51,55-68
+  s_daf432b4e5443c::t_5502a3c5344d12 52-54
+  s_daf432b4e5443c::t_21e6d64b53ebd8 48
+  s_daf432b4e5443c::t_6a696c054dda0e 3,5-6,10,13,15,20,22,25-26,35-36,39,42-46
+openspec/changes/reorg-plasma-blackout-examples/specs/blackout-example-layout/spec.md
+  s_daf432b4e5443c::t_8cbbed97980871 81,83-88
+  s_daf432b4e5443c::t_0f2eaa751398a2 20-22,70-72,77-78
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-descent.md
+  s_daf432b4e5443c::t_6954d1283c1bfd 25
+  s_daf432b4e5443c::t_fba2f6984aff5c 231-236
+  s_daf432b4e5443c::t_32ffed44facc8e 379
+  s_daf432b4e5443c::t_9a56e4e2ae2139 180
+  s_daf432b4e5443c::t_9b8b614193f711 438-440
+  s_daf432b4e5443c::t_c0b8cac8caf06b 539-540
+  s_daf432b4e5443c::t_a8826a65147978 538
+  s_daf432b4e5443c::t_9a9ee39d83877a 415-416
+deep_causality_cfd/README.md
+  s_daf432b4e5443c::t_052d94a0250a20 144
+examples/avionics_examples/Cargo.toml
+  s_daf432b4e5443c::t_7bcf4bd4395b4c 38,42
+examples/avionics_examples/README.md
+  s_daf432b4e5443c::t_a2679293501728 24-25
+examples/avionics_examples/cfd/plasma_blackout/corridor/main.rs
+  s_daf432b4e5443c::t_c8385148702883 65
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.main.log
+  s_daf432b4e5443c::t_3f99a5dcd80557 1-98
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-0.log
+  s_daf432b4e5443c::t_3470bcf2059d07 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-1.log
+  s_daf432b4e5443c::t_51c907dd3a83f1 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-2.log
+  s_daf432b4e5443c::t_daa99dc20aa10f 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-3.log
+  s_daf432b4e5443c::t_93fd2d627bb5cb 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-4.log
+  s_daf432b4e5443c::t_a7c40ba28b18f1 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-5.log
+  s_daf432b4e5443c::t_aa931dc2132b12 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-6.log
+  s_daf432b4e5443c::t_65a69abbe47d23 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-7.log
+  s_daf432b4e5443c::t_f7e69f1c2d00b1 1-7
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-0.log
+  s_daf432b4e5443c::t_ffd07cd9f95163 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-1.log
+  s_daf432b4e5443c::t_f0c566f18c131f 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-2.log
+  s_daf432b4e5443c::t_2b0a81c574e0e3 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-3.log
+  s_daf432b4e5443c::t_0a9f1fc6623ec4 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-4.log
+  s_daf432b4e5443c::t_d2c1c31789f278 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-5.log
+  s_daf432b4e5443c::t_301a2b3cbbb42c 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-6.log
+  s_daf432b4e5443c::t_c0ea706b22294b 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-7.log
+  s_daf432b4e5443c::t_20d7103aae9fcd 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-0.log
+  s_daf432b4e5443c::t_e99d6747ddf9d2 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-1.log
+  s_daf432b4e5443c::t_da315459dd53dc 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-2.log
+  s_daf432b4e5443c::t_cea6f8a11d3e96 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-3.log
+  s_daf432b4e5443c::t_8b11cf159de28f 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-4.log
+  s_daf432b4e5443c::t_ebfb6b31f94c91 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-5.log
+  s_daf432b4e5443c::t_4109442c790533 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-6.log
+  s_daf432b4e5443c::t_0a237dc23c6ba3 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-7.log
+  s_daf432b4e5443c::t_0c998b017bcce4 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-0.log
+  s_daf432b4e5443c::t_0384ffcac92780 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-1.log
+  s_daf432b4e5443c::t_bc1996f6a1f81c 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-2.log
+  s_daf432b4e5443c::t_689395e1ac432a 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-3.log
+  s_daf432b4e5443c::t_799aa1f6c2bce1 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-4.log
+  s_daf432b4e5443c::t_2a8dc548a5635d 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-5.log
+  s_daf432b4e5443c::t_f7e4c8aaa51044 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-6.log
+  s_daf432b4e5443c::t_42aa6a8804a317 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-7.log
+  s_daf432b4e5443c::t_c279398c0db25d 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-0.log
+  s_daf432b4e5443c::t_f353a504e2b041 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-1.log
+  s_daf432b4e5443c::t_794a8f951de3a3 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-2.log
+  s_daf432b4e5443c::t_620976a4553c65 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-3.log
+  s_daf432b4e5443c::t_a2226527ce7282 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-4.log
+  s_daf432b4e5443c::t_1314142c3de8a4 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-5.log
+  s_daf432b4e5443c::t_6536c7342e5836 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-6.log
+  s_daf432b4e5443c::t_0b96ee6cbbf879 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-7.log
+  s_daf432b4e5443c::t_fce1e1c7b512b4 1-9
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-0.log
+  s_daf432b4e5443c::t_66729371be48cf 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-1.log
+  s_daf432b4e5443c::t_e4fc8284d61d39 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-2.log
+  s_daf432b4e5443c::t_e4f60bc25b605a 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-3.log
+  s_daf432b4e5443c::t_5860489b018250 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-4.log
+  s_daf432b4e5443c::t_28d49fce3899f0 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-5.log
+  s_daf432b4e5443c::t_fe0f25c0d497cd 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-6.log
+  s_daf432b4e5443c::t_c6383344571cbd 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-7.log
+  s_daf432b4e5443c::t_f36ba6860c0cf5 1-8
+examples/avionics_examples/cfd/plasma_blackout/weather/model.rs
+  s_daf432b4e5443c::t_128ac39cffd238 401,406
+examples/avionics_examples/cfd/plasma_blackout/weather/output.txt
+  s_daf432b4e5443c::t_3004193f8a9d99 7
+openspec/notes/cfd-plasma-blackout/finite-rate-cfd-chemistry.md
+  s_daf432b4e5443c::t_77f96e7183b1f1 182
+openspec/notes/cfd-plasma-blackout/gap-analysis.md
+  s_daf432b4e5443c::t_95bd91223eadbb 295
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "be1329df751006ac876885dcb51d286cd1c463f2",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
