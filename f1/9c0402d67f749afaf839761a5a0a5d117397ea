@@ -1,0 +1,22 @@
+openspec/specs/blackout-example-layout/spec.md
+  s_daf432b4e5443c::t_5a726562a72ad1 4-8
+  s_daf432b4e5443c::t_a14961777248e4 1-3,9-96
+openspec/changes/archive/2026-07-16-reorg-plasma-blackout-examples/specs/blackout-example-layout/spec.md
+  s_daf432b4e5443c::t_c04f6693fd216b 66,68-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f19c0402d67f749afaf839761a5a0a5d117397ea",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
