@@ -6,7 +6,7 @@
 //! The weather-dispersion knobs. Everything the study shares with the corridor (the carrier,
 //! the anchors, the baseline atmosphere, the flight physics, the finite-rate ionization
 //! network, the navigation budget, the envelope) lives in
-//! `avionics_examples::blackout::constants`, with its model labels; this file adds only what
+//! `avionics_examples::shared::constants`, with its model labels; this file adds only what
 //! the dispersion table itself varies and gates.
 //!
 //! **Model labels:**

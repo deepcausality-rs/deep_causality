@@ -1,0 +1,9 @@
+!!ContextAlternation!!: world 'standard_day' replaced with 'thin_day'
+regime -> transitional (GNSS-available), Kn=0.10438813131553633
+nav: aided (position fix folded)
+regime -> slip (GNSS-available), Kn=0.09876341828600987
+regime -> slip (GNSS-denied), Kn=0.017636723730104317
+nav: dead reckoning (no usable fix)
+regime -> continuum (GNSS-denied), Kn=0.009919569612426127
+regime -> continuum (GNSS-available), Kn=0.00033177009438998926
+nav: aided (position fix folded)

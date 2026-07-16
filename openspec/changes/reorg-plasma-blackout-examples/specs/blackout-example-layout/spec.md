@@ -17,8 +17,9 @@ join as a new subfolder of the same parent rather than as a flat folder under `c
 
 #### Scenario: Git history survives the move
 
-- **WHEN** `git log --follow --oneline` is run on a moved file (e.g.
-  `cfd/plasma_blackout/corridor/main.rs`)
+- **WHEN** the move is staged (pre-commit), `git status` shows every moved file as a rename (R);
+  and **WHEN** `git log --follow --oneline` is run on a moved file (e.g.
+  `cfd/plasma_blackout/corridor/main.rs`) after the move commit lands
 - **THEN** the pre-move history of that file is listed
 
 ### Requirement: Example binary names are stable across the move
@@ -66,18 +67,22 @@ table to `cfd/plasma_blackout/weather/weather_table.csv` and its audit logs unde
 
 All live references to the example folders (Cargo.toml paths, embedded
 `CARGO_MANIFEST_DIR`-relative path constants, README links, live openspec notes) SHALL point at
-the new layout. Archived changes and archived notes MUST NOT be edited.
+the new layout. Change artifacts under `openspec/changes/` are exempt: they describe the move
+itself and legitimately name the old paths as sources. Archived changes and archived notes MUST
+NOT be edited.
 
 #### Scenario: No stale live path references remain
 
 - **WHEN** the repository is searched for `cfd/plasma_blackout_corridor` or
-  `cfd/plasma_blackout_weather`, excluding `openspec/changes/archive/`,
-  `openspec/notes/archive/`, and `target/`
+  `cfd/plasma_blackout_weather`, excluding `openspec/changes/`, `openspec/notes/archive/`,
+  `target/`, and `.git/`
 - **THEN** zero matches remain
 
-#### Scenario: README cross-links resolve
+#### Scenario: README links resolve
 
-- **WHEN** the links in `examples/avionics_examples/README.md` and the corridor↔weather README
-  cross-links are followed
-- **THEN** each linked file exists at its target path, and the corridor README names the shared
-  library module as `avionics_examples::shared`
+- **WHEN** every relative markdown link in `examples/avionics_examples/README.md`, the two moved
+  example READMEs, and `deep_causality_cfd/README.md` is resolved against its containing file's
+  directory (including depth-relative links such as the corridor README's companion-note link
+  into `openspec/`, which gains one `../` level with the move)
+- **THEN** every target file exists, and both example READMEs name the shared library module as
+  `avionics_examples::shared`

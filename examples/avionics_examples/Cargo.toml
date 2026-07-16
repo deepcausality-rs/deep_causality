@@ -35,11 +35,11 @@ path = "navigation/ins_gnss_blackout/main.rs"
 
 [[example]]
 name = "plasma_blackout_corridor"
-path = "cfd/plasma_blackout_corridor/main.rs"
+path = "cfd/plasma_blackout/corridor/main.rs"
 
 [[example]]
 name = "plasma_blackout_weather"
-path = "cfd/plasma_blackout_weather/main.rs"
+path = "cfd/plasma_blackout/weather/main.rs"
 
 [[example]]
 name = "flight_envelope_placard"

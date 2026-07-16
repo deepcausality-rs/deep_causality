@@ -22,7 +22,7 @@ Honesty convention (as elsewhere): **[holds]**, **[holds under precondition]**, 
 
 ## 1. Where the corridor stops, and what sits just below it
 
-The measured terminal state of the corridor run (`plasma_blackout_corridor/output.txt`):
+The measured terminal state of the corridor run (`plasma_blackout/corridor/output.txt`):
 
 | Witness | Value |
 |---|---|
@@ -177,7 +177,7 @@ cascade:
   sound speed dominates and the rebuild-on-drift mechanism will fire. Rebuilds are logged, gated
   and capped today; the terminal legs re-tune `S_REF` and inherit the same cap. **[holds]**
 - The atmosphere table floors at 30 km and clamps constant below it
-  (`compressible_march_config.rs:125-150`), so every quantity below 30 km is currently frozen at
+  (`DescentSchedule::sample` in `compressible_march_config.rs`), so every quantity below 30 km is currently frozen at
   the 30 km values. The table must be extended to ~0 km (US-1976 shape, same four-column rows).
   Rows are appended below the existing five, so all corridor-altitude sampling is untouched.
   **[holds]**
@@ -228,7 +228,12 @@ adjustment needs: per condition, the blackout `onset`/`exit`/`dwell`, and `drift
 in the dark. The retropulsion example loads that file (a ~20-line std parser in the example's
 `model.rs`; the schema is pinned by `WorldRow::SCHEMA`), takes the **measured temperature
 departure dT of the day** as its input, interpolates the rows at dT, and lets the interpolated row
-do three jobs:
+do three jobs. The loader's contract is pinned, because the recorded rows arrive in run order,
+not temperature order (0, +20, −25, −40, −5, +5 K): sort ascending by `d_temp` after load,
+reject duplicate keys, select the bracketing pair by value, and clamp a dT outside the tabulated
+range to the nearest row, stamping the clamp into the provenance log. Bracketing by file order
+instead of value would select non-adjacent temperatures for most dT inputs, and the row feeds
+load-bearing margins. The three jobs:
 
 1. **Trajectory adjustment (the "low-orbit" leg).** The deorbit/entry targeting shifts with the
    predicted window: a colder, denser day ionizes earlier, dwells longer, and drifts further
@@ -371,7 +376,7 @@ Continue every branch from the shared forked state. Then read two measurements:
 
 | Item | Where | Note |
 |---|---|---|
-| Propulsion kernel family: mass flow (Isp), C_T, momentum-flux ratio, Cordell–Braun plume boundary, drag-decrement correlation, stopping distance | `deep_causality_physics/kernels/propulsion/` + `papers/` | greenfield; cite-and-validate pointwise, the crate's convention |
+| Propulsion kernel family: mass flow (Isp), C_T, momentum-flux ratio, Cordell–Braun plume boundary, drag-decrement correlation, stopping distance | `deep_causality_physics/src/kernels/propulsion/` + `papers/` | greenfield; cite-and-validate pointwise, the crate's convention |
 | `RetroThrust` + mass-depletion stage | `deep_causality_cfd` corridor stages | read-modify-write on the force channel, after the lift stage |
 | `PlumeObstruction` stage: analytic boundary → forcing region on the compressible layer → contracted drag decrement | `deep_causality_cfd` | the incompressible Brinkman mask + force contraction is the template |
 | Mach/thrust/touchdown axes on the regime classifier | `deep_causality_cfd` | new keys in the transition log |
@@ -407,8 +412,8 @@ The blackout family becomes one folder with three siblings:
 
 ```text
 examples/avionics_examples/cfd/plasma_blackout/
-  corridor/        ← git mv from cfd/plasma_blackout_corridor/   (history-preserving)
-  weather/         ← git mv from cfd/plasma_blackout_weather/
+  corridor/        ← moved from the flat corridor folder (git mv, history-preserving;
+  weather/           done: reorg-plasma-blackout-examples)
   retropulsion/    ← new (this note)
 ```
 
@@ -430,8 +435,9 @@ Mechanics, in order:
    cargo-run artifacts), so no Bazel change is expected. Verify at reorg time. **[holds under
    precondition: verified during the mv]**
 6. The shared library (`avionics_examples::shared` under `src/shared/`) does not move; all three
-   examples import it as before. (The corridor README calls it `avionics_examples::blackout`;
-   the code says `shared` — fix the README line while touching it.)
+   examples import it as before. (Both example READMEs and both `constants.rs` doc headers used
+   a stale `blackout` module name for it; all four were corrected to `shared` during the reorg
+   change.)
 
 ---
 
@@ -529,9 +535,9 @@ measured run, then gate regressions.
   physically live in the dense-atmosphere legs and can be wired opportunistically.
 - [`../cfd-plasma-blackout/build-order.md`](../cfd-plasma-blackout/build-order.md) — the
   contract-first principle §9 reuses.
-- `examples/avionics_examples/cfd/plasma_blackout_corridor/README.md` and
-  `../plasma_blackout_weather/README.md` — the flown corridor and the table factory (paths as of
-  this note; §8 moves them).
+- `examples/avionics_examples/cfd/plasma_blackout/corridor/README.md` and
+  `examples/avionics_examples/cfd/plasma_blackout/weather/README.md` — the flown corridor and
+  the table factory (the §8 layout, applied by the `reorg-plasma-blackout-examples` change).
 - `deep_causality_cfd/studies/` — the self-verifying study pattern Stage 2 instantiates
   (`qtt_rank_study` lineage; `qtt_blend_metric` is the coordinate dial the plume study reuses).
 - `deep_causality_cfd/verification/qtt_ramc_stagline` — the pattern for the Jarvinen–Adams

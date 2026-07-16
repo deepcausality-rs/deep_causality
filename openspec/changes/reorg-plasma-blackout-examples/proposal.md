@@ -20,8 +20,10 @@ change.
   `corridor_branches.csv` record path (`main.rs`), the weather example's audit directory and
   `weather_table.csv` paths (`model.rs`).
 - README link sweep: `examples/avionics_examples/README.md` example links, the two example
-  READMEs' cross-links to each other; the corridor README's stale module name
-  `avionics_examples::blackout` is corrected to `avionics_examples::shared`.
+  READMEs' cross-links to each other, the corridor README's companion-note link into
+  `openspec/` (one `../` level deeper after the move), and the `deep_causality_cfd` README's
+  output.txt link; the stale module name `avionics_examples::blackout` is corrected to
+  `avionics_examples::shared` in both example READMEs.
 - Live openspec notes that point at the old paths are repointed
   (`cfd-plasma-blackout/finite-rate-cfd-chemistry.md`, `cfd-plasma-blackout/gap-analysis.md`,
   `cfd-plasma-retropulsion/plasma-retropulsion-descent.md` §12). Archived changes and archived
@@ -54,8 +56,9 @@ before and after the move.
 - **Build systems**: cargo only. The examples have no Bazel wiring (verified: no `BUILD.bazel`
   under `examples/avionics_examples/`), and all documented run commands use example binary
   names, which do not change.
-- **Docs**: three live openspec notes repointed; `deep_causality_cfd/README.md` and
-  `CFD_MDAO_PRESENTATION.md` reference binary names only and need no edit.
+- **Docs**: three live openspec notes repointed; `deep_causality_cfd/README.md` needs its
+  output.txt path link updated (line 144); `CFD_MDAO_PRESENTATION.md` references binary names
+  only and needs no edit.
 - **Verification**: `cargo build -p avionics_examples`, then both self-verifying examples run
   green (`plasma_blackout_corridor` ≈ 42 s; `plasma_blackout_weather` ≈ 4 min, 48 descents) and
   write their recorded artifacts into the new subfolders.

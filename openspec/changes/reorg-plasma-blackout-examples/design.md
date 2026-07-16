@@ -19,6 +19,7 @@ excluding `openspec/changes/archive/` and `target/`):
 | weather `README.md:12` — link `../plasma_blackout_corridor/README.md` | docs |
 | `openspec/notes/cfd-plasma-blackout/finite-rate-cfd-chemistry.md:182`, `gap-analysis.md:295`, `cfd-plasma-retropulsion/plasma-retropulsion-descent.md:532-533` — path mentions in live notes | docs |
 | `deep_causality_cfd/README.md:34`, both `main.rs` doc headers, `CFD_MDAO_PRESENTATION.md:200`, `src/shared/mod.rs:6-7` — binary names only, no paths | none needed |
+| **found during apply/review** — `deep_causality_cfd/README.md:144` output.txt path link (the proposal-time grep dropped lines containing "output.txt"); corridor `README.md:227` depth-relative `../../../../openspec/…` companion-note link (carries no folder name, so a folder-name grep cannot see it; the folder is one level deeper after the move); weather `README.md:123` stale `avionics_examples::blackout` module name; weather `output.txt:7` transcript audit-path line | docs — all fixed |
 | archives (`openspec/changes/archive/…`, `openspec/notes/archive/…`) | historical, untouched |
 
 No `BUILD.bazel` exists under `examples/avionics_examples/`; the examples are cargo-run
@@ -70,7 +71,11 @@ does not move.
 
 - [Missed embedded path → example writes artifacts to a dead location or errors] → The grep
   inventory above is exhaustive at proposal time; the tasks re-run the same grep after the move
-  as a gate, and both examples are executed end to end.
+  as a gate, and both examples are executed end to end. (Outcome: the gates and the review
+  earned their keep — the apply-time grep caught the `deep_causality_cfd` README output.txt
+  link, and the review-driven link audit caught the corridor README's depth-relative
+  `openspec/` link, the one class a folder-name grep cannot see. 26 links audited, all
+  resolve.)
 - [Weather example wall-clock (~4 min, 48 descents) tempts skipping its run] → Run it anyway;
   it is the only proof that `get_table_path()`/`get_audit_dir()` write into the new folder and
   that all eight gates still pass.

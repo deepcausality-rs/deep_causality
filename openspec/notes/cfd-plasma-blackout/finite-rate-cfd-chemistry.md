@@ -179,5 +179,5 @@ runtime.
   the LER `(target, tau)` pattern the network extends.
 - `openspec/changes/archive/2026-07-02-add-compressible-blackout-carrier/`: the evolved-state
   carrier this work rides on, including the sheath-renewal A/B that recombination re-opens.
-- `examples/avionics_examples/cfd/plasma_blackout_corridor/`: the corridor example whose gates get
+- `examples/avionics_examples/cfd/plasma_blackout/corridor/`: the corridor example whose gates get
   re-pinned, and whose `constants.rs` labels the forward-only limitation this removes.

@@ -6,7 +6,7 @@
 //! The corridor's own knobs: the descent horizon, the counterfactual bank sweep, and the gate
 //! thresholds. Everything the corridor shares with the weather-dispersion example (the carrier,
 //! the anchors, the atmosphere, the flight physics, the finite-rate ionization network, the
-//! navigation budget, the envelope) lives in `avionics_examples::blackout::constants`, with
+//! navigation budget, the envelope) lives in `avionics_examples::shared::constants`, with
 //! its model labels and the precision notes.
 
 /// Horizon (coupled steps) of any single leg; predicates pause earlier.

@@ -62,7 +62,7 @@ fn main() -> ExitCode {
     // Where the fine-round branch table is recorded (the campaign's `record` seam).
     let table_path = || {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("cfd/plasma_blackout_corridor/corridor_branches.csv")
+            .join("cfd/plasma_blackout/corridor/corridor_branches.csv")
     };
     // Lift a leg's solver error into the study error channel, so the whole corridor resolves to
     // one `Result<Verdict, StudyError>` — the trajectory legs and the campaign share an error type.

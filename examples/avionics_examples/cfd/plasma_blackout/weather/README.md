@@ -9,7 +9,7 @@
 When a new flight vehicle is built, the lookup tables its flight computer flies are sourced from
 somewhere: Contemporary engineering uses a digital twin to create those tables in simulation. 
 This example is the digital-twin table generator for the
-[plasma-blackout corridor](../plasma_blackout_corridor/README.md): six weather conditions, each
+[plasma-blackout corridor](../corridor/README.md): six weather conditions, each
 a **counterfactual world alternated from one validated baseline description**, flown
 concurrently through the full coupled physics and reduced to one dispersion table. Every
 dispersion row carries the `!!ContextAlternation!!` audit marker naming exactly what it is a
@@ -120,7 +120,7 @@ budget. `exit(1)` on regression, `exit(2)` on setup failure.
 ## Where Things Live
 
 The physics, constants, stages, and coupling stack are shared with the corridor through
-`avionics_examples::blackout` (the crate's `src/` library). This example adds only its own
+`avionics_examples::shared` (the crate's `src/` library). This example adds only its own
 knobs ([`constants.rs`](constants.rs): the six conditions, the IMU thermal coefficient, the gate
 thresholds), the world and row logic ([`model.rs`](model.rs)), and the study itself
 ([`main.rs`](main.rs)).
