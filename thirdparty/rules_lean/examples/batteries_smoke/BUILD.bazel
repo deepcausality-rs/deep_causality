@@ -1,0 +1,25 @@
+load("@rules_lean//lean:lean.bzl", "lean_test")
+load("@lake_deps_smoke//:packages.bzl", "LAKE_PACKAGES")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "lakefile.lean",
+    "lake-manifest.json",
+    "lean-toolchain",
+])
+
+# End-to-end smoke: validates that lake_workspace materialized Batteries
+# and exposed it as a per-package lean_prebuilt_library that lean_test
+# can consume. No mathlib in deps -> no Reservoir cache get -> the
+# `allow_source_build = True` source-build path is what's under test.
+#
+# Also validates the generated `packages.bzl`: instead of hand-listing
+# `@lake_deps_smoke//:batteries`, consume the derived `LAKE_PACKAGES`
+# label set (here, exactly [batteries]).
+lean_test(
+    name = "smoke_test",
+    srcs = ["Smoke.lean"],
+    entry = "Smoke.lean",
+    deps = LAKE_PACKAGES,
+)

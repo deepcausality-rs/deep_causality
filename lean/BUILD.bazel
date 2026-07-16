@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+#
+# Bazel build for the Lean 4 + Mathlib formalization (the L1 verification layer).
+#
+# A Lean type-check IS the proof check, so `bazel build //lean/...` compiles the
+# whole proof tree and fails on any broken law — the same gate as `lake build`
+# in the standalone Lake toolchain (see README.md), now inside Bazel.
+#
+# The Lean toolchain and the resolved Lake/Mathlib packages come from @lake_deps,
+# materialized by rules_lean's `lake.workspace` extension (see //MODULE.bazel).
+#
+# One `lean_test` PER top-level namespace instead of a single whole-tree target:
+# the namespaces are mutually independent (the only intra-project imports are
+# within Quantum), so Bazel type-checks all of them in parallel — each Lean
+# process loads Mathlib once for its own subtree. `bazel build //lean/...` builds
+# every namespace; `bazel test //lean:proofs` runs them all as a suite.
+
+load("@rules_lean//lean:lean.bzl", "lean_test")
+load("@lake_deps//:packages.bzl", "LAKE_PACKAGES")
+
+# Read as labels by the `lake.workspace` extension in //MODULE.bazel.
+exports_files([
+    "lakefile.toml",
+    "lake-manifest.json",
+    "lean-toolchain",
+])
+
+# namespace -> a stable anchor file in it. `lean_test` requires an `entry` that
+# is one of its `srcs`; it does not change what gets compiled (every src is
+# type-checked), it is just the required anchor label.
+_NAMESPACES = {
+    "Num": "DeepCausalityFormal/Num/Identity.lean",
+    "Algebra": "DeepCausalityFormal/Algebra/Monoid.lean",
+    "Complex": "DeepCausalityFormal/Complex/Complex.lean",
+    "Dual": "DeepCausalityFormal/Dual/Dual.lean",
+    "Core": "DeepCausalityFormal/Core/CausalMonad.lean",
+    "Haft": "DeepCausalityFormal/Haft/Hkt.lean",
+    "Topology": "DeepCausalityFormal/Topology/RiemannCurvature.lean",
+    "Quantum": "DeepCausalityFormal/Quantum/PartialTrace.lean",
+}
+
+[
+    lean_test(
+        name = ns,
+        srcs = glob(["DeepCausalityFormal/{}/**/*.lean".format(ns)]),
+        entry = entry,
+        deps = LAKE_PACKAGES,
+    )
+    for ns, entry in _NAMESPACES.items()
+]
+
+# `//lean:proofs` still means "all proofs" — now a suite over the parallel targets.
+test_suite(
+    name = "proofs",
+    tests = [":" + ns for ns in _NAMESPACES],
+)

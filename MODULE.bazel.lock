@@ -1,5 +1,5 @@
 {
-  "lockFileVersion": 26,
+  "lockFileVersion": 28,
   "registryFileHashes": {
     "https://bcr.bazel.build/bazel_registry.json": "8a28e4aff06ee60aed2a8c281907fb8bcbf3b753c91fb5a5c57da3215d5b3497",
     "https://bcr.bazel.build/modules/abseil-cpp/20210324.2/MODULE.bazel": "7cd0312e064fde87c8d1cd79ba06c876bd23630c83466e9500321be55c96ace2",
@@ -228,7 +228,7 @@
   "moduleExtensions": {
     "@@rules_kotlin+//src/main/starlark/core/repositories:bzlmod_setup.bzl%rules_kotlin_extensions": {
       "general": {
-        "bzlTransitiveDigest": "Ga4z8lQy1YQ5rAMy+dOl0dqcCEBnYNCXku8x3YQmDZI=",
+        "bzlTransitiveDigest": "+Kp6j204mBZ3mxlIDDR0gBoP45BZ4jYRhRAcB8sU0qc=",
         "usagesDigest": "QI2z8ZUR+mqtbwsf2fLqYdJAkPOHdOV+tF2yVAUgRzw=",
         "recordedInputs": [
           "REPO_MAPPING:rules_kotlin+,bazel_tools bazel_tools"
@@ -283,9 +283,40 @@
         }
       }
     },
+    "@@rules_lean+//lean:lake.bzl%lake": {
+      "general": {
+        "bzlTransitiveDigest": "mbjeflN4VxZL2C8xRAeEUj0cDbsUmHTP2kqrocM8dLM=",
+        "usagesDigest": "eEDldCI2cfGNohxIv4EyC2Cf3Puho7+nCkgzc6twXSI=",
+        "recordedInputs": [
+          "FILE:@@//lean/lean-toolchain 2773c517aa90b66ea8a2c52bddddf84393157797f8341be0df45294fff7fd32e"
+        ],
+        "generatedRepoSpecs": {
+          "lean_dist_4_32_0": {
+            "repoRuleId": "@@rules_lean+//lean:lake.bzl%lean_dist",
+            "attributes": {
+              "version": "v4.32.0"
+            }
+          },
+          "lake_deps": {
+            "repoRuleId": "@@rules_lean+//lean:lake.bzl%lake_workspace",
+            "attributes": {
+              "lean_toolchain": "@@//lean:lean-toolchain",
+              "lakefile": "@@//lean:lakefile.toml",
+              "lake_manifest": "@@//lean:lake-manifest.json",
+              "allow_source_build": false,
+              "cache_roots": [],
+              "olean_cache": "",
+              "olean_cache_packages": [],
+              "lean_dist_lake": "@@rules_lean++lake+lean_dist_4_32_0//:lean_toolchain/bin/lake",
+              "lean_dist_toolchain": "@@rules_lean++lake+lean_dist_4_32_0//:lean_toolchain"
+            }
+          }
+        }
+      }
+    },
     "@@rules_python+//python/extensions:config.bzl%config": {
       "general": {
-        "bzlTransitiveDigest": "iibnRYgg8LpcfmH7EAnVwYePC3jsVaJ6Id8XxUjSZps=",
+        "bzlTransitiveDigest": "dzD8Q2YmrP3fz8saWLHPmlwPLO91ImtTmP/c9JKTStM=",
         "usagesDigest": "ZVSXMAGpD+xzVNPuvF1IoLBkty7TROO0+akMapt1pAg=",
         "recordedInputs": [
           "REPO_MAPPING:rules_python+,bazel_tools bazel_tools",
@@ -533,5 +564,6 @@
       }
     }
   },
-  "facts": {}
+  "facts": {},
+  "factsVersions": {}
 }

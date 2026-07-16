@@ -1,0 +1,32 @@
+# Exports for the RulesLean Lean library. The library is built with
+# Lake (see lakefile.lean alongside) for local development + CI; the
+# Bazel rules side just needs to reference the source files so
+# `lake_workspace` can stage them at materialization time.
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(
+    [
+        "RulesLean.lean",
+        "lakefile.lean",
+        "lake-manifest.json",
+        "lean-toolchain",
+    ],
+)
+
+filegroup(
+    name = "library_sources",
+    srcs = glob([
+        "RulesLean.lean",
+        "RulesLean/**/*.lean",
+    ]),
+)
+
+filegroup(
+    name = "lake_config",
+    srcs = [
+        "lake-manifest.json",
+        "lakefile.lean",
+        "lean-toolchain",
+    ],
+)

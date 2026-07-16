@@ -10,6 +10,16 @@ bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "rules_rust", version = "0.71.2")
 
 ###############################################################################
+# Vendored locally (thirdparty/rules_lean) rather than pulled from a third-party
+# registry, and patched to pin the Lean v4.32.0 toolchain sha256. See lean/.
+###############################################################################
+bazel_dep(name = "rules_lean", version = "0.5.4")
+local_path_override(
+    module_name = "rules_lean",
+    path = "thirdparty/rules_lean",
+)
+
+###############################################################################
 # Rust toolchain
 # https://github.com/bazelbuild/rules_rust/releases
 ###############################################################################
@@ -25,3 +35,29 @@ rust.toolchain(
 use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")
+
+###############################################################################
+# Lean 4 toolchain + Lake/Mathlib workspace
+# https://github.com/tomato-bazel/rules_lean  (vendored: thirdparty/rules_lean)
+#
+# Lean 4 toolchain version is pinned in
+# lean/lakefile.toml
+# lean/lean-toolchain
+#
+# Both files are loaded via lean/BUILD.bazel
+#
+# Downloads the pinned Lean toolchain (lean/lean-toolchain) and resolves the
+# Lake/Mathlib dependency graph (lean/lakefile.toml + lean/lake-manifest.json)
+# into @lake_deps, pulling prebuilt Mathlib oleans from the Reservoir cache.
+# `bazel build //lean/...` then type-checks every proof.
+###############################################################################
+lake = use_extension("@rules_lean//lean:lake.bzl", "lake")
+lake.workspace(
+    name = "lake_deps",
+    lake_manifest = "//lean:lake-manifest.json",
+    lakefile = "//lean:lakefile.toml",
+    lean_toolchain = "//lean:lean-toolchain",
+)
+use_repo(lake, "lake_deps")
+
+register_toolchains("@lake_deps//:lean_toolchain_def")

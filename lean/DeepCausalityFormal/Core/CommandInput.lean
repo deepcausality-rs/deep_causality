@@ -79,7 +79,7 @@ theorem command_yields_cmd_err (cmdErr noneErr : E) (elem : V → Outcome E W)
 theorem command_never_ok (cmdErr noneErr : E) (elem : V → Outcome E W)
     (t : Nat) (sub : InEffect V) :
     ∀ o : Option W, evalIn cmdErr noneErr elem (.command t sub) ≠ .ok o := by
-  intro o h; exact Outcome.noConfusion h
+  intro o h; nomatch h
 
 /-- The command error is **distinct from** the absence error whenever the two error tokens differ:
     a dropped command is not conflated with absence of evidence (the precise F-3 point — the old

@@ -159,7 +159,7 @@ theorem map_congr {α β : Type} {f g : α → β} :
   | [], _ => rfl
   | a :: l, h => by
       show f a :: l.map f = g a :: l.map g
-      rw [h a (List.mem_cons_self a l), map_congr l (fun b hb => h b (List.mem_cons_of_mem a hb))]
+      rw [h a (List.mem_cons_self), map_congr l (fun b hb => h b (List.mem_cons_of_mem a hb))]
 
 /-- Fuel stability: any two sufficient fuels compute the same value — the denotation is
     well-defined (rank-founded, μ not ν). -/
@@ -336,7 +336,7 @@ theorem schedule_invariant (s₁ s₂ : List Nat)
     (exec G elem lam nabla seed (fun _ => none) s₁) n
       = (exec G elem lam nabla seed (fun _ => none) s₂) n := by
   have hempty : Agrees G elem lam nabla seed (fun _ => none) := by
-    intro m v h; exact Option.noConfusion h
+    intro m v h; nomatch h
   rw [exec_computes_val G elem lam nabla seed s₁ _ hempty h₁ n hn₁,
       exec_computes_val G elem lam nabla seed s₂ _ hempty h₂ n hn₂]
 

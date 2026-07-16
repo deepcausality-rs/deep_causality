@@ -1,0 +1,48 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@stardoc//stardoc:stardoc.bzl", "stardoc")
+
+package(default_visibility = ["//visibility:public"])
+
+# Reference docs are stardoc-generated *and* committed to source. The
+# diff_test gates below assert the committed file matches what stardoc
+# produces from the .bzl docstrings; CI fails if someone changes a rule
+# without running `bazel run //docs:update`. Pattern borrowed from
+# rules_rust/rules_python.
+
+stardoc(
+    name = "lean_doc",
+    out = "lean.md.generated",
+    input = "//lean:lean.bzl",
+    deps = ["//lean:lean_bzl"],
+)
+
+stardoc(
+    name = "lake_doc",
+    out = "lake.md.generated",
+    input = "//lean:lake.bzl",
+    deps = ["//lean:lake_bzl"],
+)
+
+diff_test(
+    name = "lean_doc_up_to_date",
+    file1 = "lean.md",
+    file2 = ":lean_doc",
+)
+
+diff_test(
+    name = "lake_doc_up_to_date",
+    file1 = "lake.md",
+    file2 = ":lake_doc",
+)
+
+# `bazel run //docs:update` regenerates lean.md + lake.md in the source
+# tree. Run after changing any rule docstring.
+sh_binary(
+    name = "update",
+    srcs = ["update.sh"],
+    data = [
+        ":lake_doc",
+        ":lean_doc",
+    ],
+)

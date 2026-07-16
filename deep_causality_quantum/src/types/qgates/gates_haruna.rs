@@ -132,7 +132,7 @@ where
 /// Calculates the Logical Z gate: $Z(\gamma) = \exp(i \pi a(\gamma))$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
 /// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_z<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
@@ -149,7 +149,7 @@ where
 /// Calculates the Logical X gate: $X(\tilde{\gamma}) = \exp(i \pi b(\tilde{\gamma}))$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
 /// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_x<R>(
     b_gamma_tilde: &CausalMultiVector<Complex<R>>,
@@ -166,7 +166,7 @@ where
 /// Calculates the Logical S gate: $S(\gamma) = \exp(i \frac{\pi}{2} a(\gamma)^2)$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
 /// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_s<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,
@@ -184,7 +184,7 @@ where
 /// Calculates the Logical Hadamard gate.
 ///
 /// # Errors
-/// Propagates [`exp`]'s errors (via `logical_s` and the mid-factor), and returns
+/// Propagates `exp`'s errors (via `logical_s` and the mid-factor), and returns
 /// [`QuantumError::NonFiniteValue`] if the post-exponential products overflow to a
 /// non-finite value.
 pub fn logical_hadamard<R>(
@@ -222,7 +222,7 @@ where
 /// Calculates the Logical CZ gate: $CZ(\gamma_1, \gamma_2) = \exp(i \pi a(\gamma_1) a(\gamma_2))$.
 ///
 /// # Errors
-/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
 /// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_cz<R>(
     a_gamma1: &CausalMultiVector<Complex<R>>,
@@ -241,7 +241,7 @@ where
 /// Calculates the Logical T gate.
 ///
 /// # Errors
-/// Propagates [`exp`]'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
+/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
 /// [`QuantumError::CalculationError`] if the Taylor series does not converge.
 pub fn logical_t<R>(
     a_gamma: &CausalMultiVector<Complex<R>>,

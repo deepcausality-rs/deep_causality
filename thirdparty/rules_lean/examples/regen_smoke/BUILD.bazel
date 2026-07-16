@@ -1,0 +1,36 @@
+load("@rules_lean//lean:lean.bzl", "lean_main_test", "lean_regen_test")
+
+# Smoke for `lean_regen_test`. Validates the full pipeline:
+#   1. lean_emit runs Hello.lean via the registered Lean toolchain.
+#   2. Captures `IO.println "hello from lean_regen_test"` to stdout.
+#   3. diff_test compares the captured stdout (with trailing newline)
+#      against the committed expected.txt.
+# Fails if the committed expected drifts from what Hello.lean emits.
+lean_regen_test(
+    name = "regen_smoke",
+    srcs = ["Hello.lean"],
+    entry = "Hello.lean",
+    expected = "expected.txt",
+)
+
+# Smoke for the `data` attr (v0.3.3). EchoFixture.lean does
+# `IO.FS.readFile "fixture.txt"` and echoes the content; lean_regen_test
+# diff_tests the captured stdout against the same `fixture.txt`.
+# Passing proves the data file is staged in the action's work dir
+# and reachable via package-relative path from the Lean entry.
+lean_regen_test(
+    name = "regen_smoke_data",
+    srcs = ["EchoFixture.lean"],
+    entry = "EchoFixture.lean",
+    data = ["fixture.txt"],
+    expected = "fixture.txt",
+)
+
+# Smoke for `lean_main_test` (v0.3.5). Compiles + runs ExitZero.lean
+# whose `main : IO UInt32` returns 0. Test passes iff the Lean program
+# exits 0; non-zero exit (or compile failure) fails the test.
+lean_main_test(
+    name = "regen_smoke_exit",
+    srcs = ["ExitZero.lean"],
+    entry = "ExitZero.lean",
+)

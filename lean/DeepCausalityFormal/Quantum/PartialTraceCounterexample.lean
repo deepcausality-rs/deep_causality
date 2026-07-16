@@ -19,7 +19,7 @@ test_partial_trace_nonpreservation_counterexample`.
 -/
 
 import DeepCausalityFormal.Quantum.PartialTrace
-import Mathlib.Data.Matrix.Notation
+import Mathlib.LinearAlgebra.Matrix.Notation
 
 -- The pair-indexed matrix model leaves some section instances unused per-lemma; this is
 -- the standard Mathlib idiom for that situation and keeps the proofs uncluttered.
