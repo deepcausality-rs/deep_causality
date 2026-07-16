@@ -1,0 +1,21 @@
+openspec/specs/haft-cofree-comonad/spec.md
+  s_ef49fcb14372a2::t_0d25b34bb07a19 1-96
+openspec/specs/haft-eq-debug-functor/spec.md
+  s_ef49fcb14372a2::t_3775a38c669867 1-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "92ec06a7be590109f021737e02b19ed93ffc7acc",
+  "prompts": {},
+  "sessions": {
+    "s_ef49fcb14372a2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "69417798-ac23-4b8e-85dc-f0147800c77a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
