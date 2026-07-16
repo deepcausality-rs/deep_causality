@@ -1,0 +1,22 @@
+deep_causality_quantum/src/types/qgates/gates_haruna.rs
+  s_a663cdbb756555::t_a4a4f5ab19013a 187
+  s_a663cdbb756555::t_c6b2a4c5ff2675 135,152,169,225,244
+deep_causality_quantum/src/lib.rs
+  s_a663cdbb756555::t_c5f912704511f8 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a7d386066df444395d20e2f4badb76c4bee79416",
+  "prompts": {},
+  "sessions": {
+    "s_a663cdbb756555": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0bc3070e-ea68-40b7-8382-61376e369b1e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
