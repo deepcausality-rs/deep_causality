@@ -1,0 +1,42 @@
+openspec/changes/reorg-plasma-blackout-examples/specs/blackout-example-layout/spec.md
+  s_daf432b4e5443c::t_25d5ba758d35b6 1-83
+openspec/changes/reorg-plasma-blackout-examples/.openspec.yaml
+  s_daf432b4e5443c::t_88ca9080f0e9f8 1-2
+openspec/changes/reorg-plasma-blackout-examples/tasks.md
+  s_daf432b4e5443c::t_561794fac03908 1-47
+openspec/changes/reorg-plasma-blackout-examples/proposal.md
+  s_daf432b4e5443c::t_b7fb2a31743ea2 1-61
+openspec/changes/reorg-plasma-blackout-examples/design.md
+  s_daf432b4e5443c::t_d6f44e7c14b990 1-97
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-descent.md
+  s_daf432b4e5443c::t_d9e675f4c9c1ff 304-305
+  s_daf432b4e5443c::t_34f7ee3520171a 71
+  s_daf432b4e5443c::t_502d6b6843a12b 15-16
+  s_daf432b4e5443c::t_d0eafdd9bd9fa5 50-51
+  s_daf432b4e5443c::t_f5febc263a7e4a 342
+  s_daf432b4e5443c::t_f4ee6a64052d10 332
+  s_daf432b4e5443c::t_28c0d7fa61de97 1-14,17-38,42-49,52-70,72-159,161-195,197,200-240,242-248,250-303,306-315,318-331,333-337,339-341,343-538
+  s_daf432b4e5443c::t_72d8df055e8e78 249
+  s_daf432b4e5443c::t_d2f811476c8db7 338
+  s_daf432b4e5443c::t_8390ccef42bff8 316-317
+  s_daf432b4e5443c::t_ea9928072e24ff 160
+  s_daf432b4e5443c::t_287afd23fd896f 241
+  s_daf432b4e5443c::t_da85602740bfb5 196,198-199
+  s_daf432b4e5443c::t_0ad4eacdbe0831 39-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e94dae0b4e84a4e33abeb989473a90dd75f727b4",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
