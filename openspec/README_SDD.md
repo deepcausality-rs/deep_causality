@@ -4,9 +4,9 @@ The DeepCausality project makes extensive use of agentic spec-driven development
 and a handful of conventions. For web design, the taste skills are used. Ensure you have these installed.
 
 ## Installation
-
-OpenSpec: https://github.com/Fission-AI/openspec
-Taste Skills: https://www.tasteskill.dev
+ 
+* OpenSpec: https://github.com/Fission-AI/openspec
+* Taste Skills: https://www.tasteskill.dev
 
 ## Convention
 
@@ -97,13 +97,14 @@ to ensure all references to the note are updated to the new location.
 
 ### Prepare for PR
 
-Before filing a PR, please ensure the following checks are green:
+Before filing a PR, please ensure the following checks pass:
 
-make test
-make check
-make format && make fix
+* make test
+* make check
+* make format && make fix
 
 Then file a PR and tag some of the team for review.
+
 Notice, CI runs a large number of tests and also conducts an AI code review, so it's normal
 that multiple code fixes need to be applied before CI turns green.
 
