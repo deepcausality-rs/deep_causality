@@ -292,7 +292,7 @@ provenance log are composition work — not missing primitives. **[holds under p
 > `openspec/changes/archive/2026-07-02-add-plasma-blackout-corridor/` (the contract-first, reordered
 > plan: Stage 0 contracts → 3-D metric/marcher → nav engine in `deep_causality_cfd` → composition
 > stages → the Flow-DSL alternation/fork machinery → the flagship
-> `examples/avionics_examples/cfd/plasma_blackout_corridor`). The flagship's peak electron density
+> `examples/avionics_examples/cfd/plasma_blackout/corridor`). The flagship's peak electron density
 > lands at `1.03e19 m⁻³` against the RAM-C II `1e19` anchor via the marched Park two-temperature
 > controller with sheath renewal; its coupled gates (blackout window, INS drift → reacquisition,
 > regime change, counterfactual branches, tensor compression) self-verify and exit nonzero on

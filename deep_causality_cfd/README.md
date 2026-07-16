@@ -141,7 +141,7 @@ let exit = CfdFlow::march(&nominal)
 ```
 
 Every transition lands in the provenance log. From an actual corridor run
-([output.txt](../examples/avionics_examples/cfd/plasma_blackout_corridor/output.txt)):
+([output.txt](../examples/avionics_examples/cfd/plasma_blackout/corridor/output.txt)):
 
 ```text
 regime -> slip (GNSS-available), Kn=0.07829109848665225
