@@ -63,13 +63,13 @@ table to `cfd/plasma_blackout/weather/weather_table.csv` and its audit logs unde
   `examples/avionics_examples/cfd/plasma_blackout/weather/weather_table.csv` and the per-branch
   audit files land under `examples/avionics_examples/cfd/plasma_blackout/weather/audit/`
 
-### Requirement: Live references resolve; archives stay untouched
+### Requirement: Live references resolve and archives stay untouched
 
-All live references to the example folders (Cargo.toml paths, embedded
-`CARGO_MANIFEST_DIR`-relative path constants, README links, live openspec notes) SHALL point at
-the new layout. Change artifacts under `openspec/changes/` are exempt: they describe the move
-itself and legitimately name the old paths as sources. Archived changes and archived notes MUST
-NOT be edited.
+All live references to the example folders SHALL point at the new layout: Cargo.toml paths,
+embedded `CARGO_MANIFEST_DIR`-relative path constants, README links, and live openspec notes.
+Change artifacts under `openspec/changes/` are exempt: they describe the move itself and
+legitimately name the old paths as sources. Archived changes and archived notes MUST NOT be
+edited.
 
 #### Scenario: No stale live path references remain
 
