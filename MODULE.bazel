@@ -54,8 +54,8 @@ register_toolchains("@rust_toolchains//:all")
 lake = use_extension("@rules_lean//lean:lake.bzl", "lake")
 lake.workspace(
     name = "lake_deps",
-    lakefile = "//lean:lakefile.toml",
     lake_manifest = "//lean:lake-manifest.json",
+    lakefile = "//lean:lakefile.toml",
     lean_toolchain = "//lean:lean-toolchain",
 )
 use_repo(lake, "lake_deps")
