@@ -1,0 +1,42 @@
+openspec/changes/plasma-retropulsion-de-risk/proposal.md
+  s_daf432b4e5443c::t_ed031d005c5af6 1-78
+openspec/changes/plasma-retropulsion-de-risk/specs/srp-drag-decrement-verification/spec.md
+  s_daf432b4e5443c::t_1af89c3ad1d348 1-61
+openspec/changes/plasma-retropulsion-de-risk/tasks.md
+  s_daf432b4e5443c::t_fa688d755b028e 1-84
+openspec/changes/plasma-retropulsion-de-risk/design.md
+  s_daf432b4e5443c::t_34b9b20767eb13 1-155
+openspec/changes/plasma-retropulsion-de-risk/specs/compressible-forcing-region/spec.md
+  s_daf432b4e5443c::t_14b725bb5bafc4 1-59
+openspec/changes/plasma-retropulsion-cfd-contracts/proposal.md
+  s_daf432b4e5443c::t_0a470dd0c22085 74-75
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_daf432b4e5443c::t_a4b46bdfc1be52 127
+  s_daf432b4e5443c::t_3d80f582f818c9 159
+openspec/changes/plasma-retropulsion-de-risk/specs/plume-rank-fork-study/spec.md
+  s_daf432b4e5443c::t_3af600af236588 1-64
+openspec/changes/plasma-retropulsion-de-risk/.openspec.yaml
+  s_daf432b4e5443c::t_85029fdfc90fc1 1-2
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/corridor-inheritance-guard/spec.md
+  s_daf432b4e5443c::t_915dddc4e4e4d5 10-14
+openspec/changes/plasma-retropulsion-de-risk/specs/compressible-drag-contraction/spec.md
+  s_daf432b4e5443c::t_29a77c6cff2fd0 1-33
+openspec/changes/plasma-retropulsion-de-risk/specs/srp-derisk-verdict/spec.md
+  s_daf432b4e5443c::t_043fe24b540e99 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bec7f37e209a3dea7d5a0e9eaba3d9993e7da570",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
