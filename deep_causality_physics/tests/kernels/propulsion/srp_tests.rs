@@ -40,6 +40,27 @@ fn test_thrust_coefficient_rejects_degenerate() {
         )
         .is_err()
     );
+    // Zero reference area is a singularity.
+    assert!(
+        srp_thrust_coefficient_kernel(
+            Force::new(1000.0_f64).unwrap(),
+            Pressure::new(500.0).unwrap(),
+            Area::new(0.0).unwrap()
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn test_preserved_drag_interpolates_between_knots_and_rejects_nan() {
+    // A C_T strictly between two digitized abscissae exercises the
+    // interpolation arm (not an exact knot): between 0.46 (0.22) and 0.72
+    // (0.17) the value lies strictly inside (0.17, 0.22).
+    let mid = srp_preserved_drag_fraction_kernel(0.6_f64).unwrap();
+    assert!(mid < 0.22 && mid > 0.17, "interpolated fraction {mid}");
+    // A non-finite C_T reaches the interpolator's finiteness guard (it passes
+    // the c_t < 0 check because NaN comparisons are false).
+    assert!(srp_preserved_drag_fraction_kernel(f64::NAN).is_err());
 }
 
 #[test]

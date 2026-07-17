@@ -116,4 +116,16 @@ fn test_nozzle_exit_state_rejects_bad_chamber() {
         )
         .is_err()
     );
+    // Zero chamber temperature is a singularity (0 K passes Temperature::new
+    // but the kernel rejects a non-positive stagnation temperature).
+    assert!(
+        nozzle_exit_state_kernel(
+            Pressure::new(2.0e6_f64).unwrap(),
+            Temperature::new(0.0).unwrap(),
+            4.0,
+            1.4,
+            287.0
+        )
+        .is_err()
+    );
 }

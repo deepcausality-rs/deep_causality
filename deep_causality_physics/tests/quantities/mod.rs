@@ -25,6 +25,8 @@ mod nuclear_quantities;
 #[cfg(test)]
 mod photonics_quantities;
 #[cfg(test)]
+mod propulsion_quantities;
+#[cfg(test)]
 mod quantum_quantities;
 #[cfg(test)]
 mod relativity_quantities;
