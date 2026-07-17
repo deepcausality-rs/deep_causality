@@ -1,0 +1,132 @@
+deep_causality_cfd/tests/solvers/qtt/mod.rs
+  s_daf432b4e5443c::t_5671ff54100b23 9-10
+openspec/changes/plasma-retropulsion-de-risk/specs/srp-drag-decrement-verification/spec.md
+  s_daf432b4e5443c::t_036ca0da425ec7 8-9,13-14,16,19-20,24
+  s_daf432b4e5443c::t_00da3185d7a334 27,29-40,42,44-46,48,50-52
+deep_causality_cfd/tests/solvers/qtt/observe_tests.rs
+  s_daf432b4e5443c::t_c664f560a89089 233,235
+  s_daf432b4e5443c::t_46a920b39305a0 186,192
+  s_daf432b4e5443c::t_c8f5bd589548e9 173-185,187-191,193-196,200-232,234,236-239
+  s_daf432b4e5443c::t_543d889dc10873 197-199
+deep_causality_cfd/tests/solvers/qtt/compressible_forcing_tests.rs
+  s_daf432b4e5443c::t_aa1a25128fa24c 106,108
+  s_daf432b4e5443c::t_8ee19325bcd3f6 75,79,88
+  s_daf432b4e5443c::t_8e81750f83602f 32-33,37
+  s_daf432b4e5443c::t_8091f0fd0dce7d 1-31,34-36,38-74,76-78,80-87,89-105,107,109-128
+deep_causality_cfd/studies/qtt_rank_plume/main.rs
+  s_daf432b4e5443c::t_0d5c912810e95d 52
+  s_daf432b4e5443c::t_1834223b5aabcc 1-51,53-87,92-113,115-151,153-186,197-251,253,255-261,264-284,288-450,456-458,460-488,491-498,500-508,512-524,528-529,533-549,552-617
+  s_daf432b4e5443c::t_b4e7b0a6a987a1 88-91,252,254
+  s_daf432b4e5443c::t_543d889dc10873 114,152,262-263,285-287,451-455,489-490,509-511,525-527,530-532,550-551
+  s_daf432b4e5443c::t_f074264c130e92 187,189,191,193
+  s_daf432b4e5443c::t_082803ff3ba042 188,190,192,194-196,499
+  s_daf432b4e5443c::t_2f1d2c31ecb5eb 459
+deep_causality_cfd/tests/tensor_bridge/mask_tests.rs
+  s_daf432b4e5443c::t_5cb3eac1e9b962 6
+  s_daf432b4e5443c::t_6bd4a70fb92d1a 87-94,96-97,111-128,131-140,143-152
+  s_daf432b4e5443c::t_b9768e6cfed5cb 129-130
+  s_daf432b4e5443c::t_9144ece0a59e47 95
+  s_daf432b4e5443c::t_543d889dc10873 98-110,141-142
+deep_causality_cfd/src/tensor_bridge/mask.rs
+  s_daf432b4e5443c::t_29d167bc7b6f0a 58-107
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/corridor-inheritance-guard/spec.md
+  s_daf432b4e5443c::t_09a5c2a922fe07 27-32
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_daf432b4e5443c::t_6f18de92e04f2b 40
+  s_daf432b4e5443c::t_b7103a498ac2ad 159
+  s_daf432b4e5443c::t_cc055f7e79d581 420-421
+openspec/changes/plasma-retropulsion-cfd-contracts/proposal.md
+  s_daf432b4e5443c::t_9f7b56012bc1a4 78-81
+  s_daf432b4e5443c::t_90faacc56b49cf 23-27
+deep_causality_cfd/verification/srp_drag_decrement/main.rs
+  s_daf432b4e5443c::t_543d889dc10873 60,68,87-89,129,155,158,169,171,210,267-276,289-291,342-347,349-351,376-377,381
+  s_daf432b4e5443c::t_8c22146b2f742a 98-104,107-108,117-120,122-126,135,138,140,143,146,156-157,159-163,165-166
+  s_daf432b4e5443c::t_0191ab33bc8343 105-106,132-134,141-142,147-154
+  s_daf432b4e5443c::t_55996f40ef517a 62
+  s_daf432b4e5443c::t_ed3cb1cfcb1d4c 52,187,195-197,201,203-204,209,218-220,222,225-226,231-234,238,296,299,318-319,334,337,341,375,383-387
+  s_daf432b4e5443c::t_557b05fe184bd5 1-51,53-59,61,63-67,69-86,90-97,116,121,127-128,130-131,136-137,139,144-145,164,167-168,172-186,188-194,198-200,202,205-208,211-217,221,223-224,227-230,235-237,239-266,277-288,292-295,297-298,300-309,311-317,320-333,335-336,338-340,348,352-374,378-380,382,388-394
+  s_daf432b4e5443c::t_88906ebc778f34 109-115
+  s_daf432b4e5443c::t_082803ff3ba042 310
+  s_daf432b4e5443c::t_50ab1ead268a72 170
+deep_causality_cfd/Cargo.toml
+  s_daf432b4e5443c::t_4b45fbff4cdaf5 236-240
+  s_daf432b4e5443c::t_dd9fa9b9945a8c 192-196
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_daf432b4e5443c::t_b92f4d5ce68f06 18-20
+  s_daf432b4e5443c::t_f3f2bd7218cb38 25-26
+deep_causality_cfd/src/tensor_bridge/mod.rs
+  s_daf432b4e5443c::t_eca8bbd0199385 23
+deep_causality_cfd/verification/srp_drag_decrement/config.rs
+  s_daf432b4e5443c::t_7c0542fbb7cdbf 44-49,53,55
+  s_daf432b4e5443c::t_271ac488c3be2d 66-72,74-76
+  s_daf432b4e5443c::t_984353af0b44ea 1-43,50-52,54,56-65,73,77-120
+deep_causality_cfd/verification/srp_drag_decrement/output.txt
+  s_daf432b4e5443c::t_0191ab33bc8343 1-13
+  s_daf432b4e5443c::t_68ab45a7b29f6e 14-16
+  s_daf432b4e5443c::t_bc9d2f6d041a2a 17-32
+deep_causality_cfd/src/solvers/qtt/compressible/forcing.rs
+  s_daf432b4e5443c::t_4a7f122ba134b1 1-54,56-102,113-121
+  s_daf432b4e5443c::t_543d889dc10873 55,103-112
+deep_causality_cfd/studies/qtt_rank_plume/output.txt
+  s_daf432b4e5443c::t_33e5384df5382f 1-11
+  s_daf432b4e5443c::t_28499c1cb049f4 26-28
+  s_daf432b4e5443c::t_c06df4175ae603 12-14,23-25
+  s_daf432b4e5443c::t_6ee5e96882c575 29-31
+  s_daf432b4e5443c::t_a48c4d07d86c27 15-22,32-47
+deep_causality_cfd/src/lib.rs
+  s_daf432b4e5443c::t_42a44f0bef70bd 145-146
+  s_daf432b4e5443c::t_835eeb0cac1500 138-140
+  s_daf432b4e5443c::t_428925cd15e358 60
+openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md
+  s_daf432b4e5443c::t_d28dd8822ad163 1-76
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_daf432b4e5443c::t_40d5f7cb677f21 756-796,800-857,863-888,894-971
+  s_daf432b4e5443c::t_543d889dc10873 797-799,858-862,889-893
+openspec/changes/plasma-retropulsion-de-risk/tasks.md
+  s_daf432b4e5443c::t_1e73b85248b8cd 42,44,61,79,81-83
+  s_daf432b4e5443c::t_9fe47bae8fdb1c 66,69-70,76
+  s_daf432b4e5443c::t_cbf8827c8fc9ce 3,6,11,15,17,20,25,28-29,35,39,49,52,55,59
+deep_causality_cfd/src/types/flow_config/compressible_march_config.rs
+  s_daf432b4e5443c::t_e2528f858dc6b7 269
+  s_daf432b4e5443c::t_36185e72fb4bd0 209-211
+  s_daf432b4e5443c::t_d35dffb0d7cdc9 445
+  s_daf432b4e5443c::t_5db2090e3785ce 19
+  s_daf432b4e5443c::t_73bfa3104b43fb 247-251
+  s_daf432b4e5443c::t_a8476843c81c18 297
+  s_daf432b4e5443c::t_72d46a18be7287 410-418
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_daf432b4e5443c::t_8c78cdc1f55ca7 153-163,178
+  s_daf432b4e5443c::t_18b7e3b533ca81 73-75
+  s_daf432b4e5443c::t_d8e9ef8217961c 31
+  s_daf432b4e5443c::t_c5a9c7ade4cb41 277-283
+deep_causality_cfd/src/solvers/mod.rs
+  s_daf432b4e5443c::t_543d889dc10873 26,29
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/blackout-coupling-interface/spec.md
+  s_daf432b4e5443c::t_02458a7587f6c3 82-86
+deep_causality_cfd/src/solvers/qtt/observe.rs
+  s_daf432b4e5443c::t_d6280fbb20a1f3 97-167
+  s_daf432b4e5443c::t_9fa4c286d5d0e8 15-17,20
+openspec/changes/plasma-retropulsion-cfd-contracts/design.md
+  s_daf432b4e5443c::t_31d828f4de8d53 25-43
+  s_daf432b4e5443c::t_96aba34a07b3d1 100-103
+  s_daf432b4e5443c::t_fef1eeb3d0600c 147-152
+  s_daf432b4e5443c::t_0af5b660a72b09 184-189
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_daf432b4e5443c::t_8acbcdbfba4466 12,20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4c2a470eceee08260a2b2d8d3d9306d76f4935d6",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
