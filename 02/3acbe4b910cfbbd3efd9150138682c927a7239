@@ -1,0 +1,40 @@
+deep_causality_physics/tests/kernels/propulsion/nozzle_tests.rs
+  s_daf432b4e5443c::t_0829fd198d517f 119-130
+deep_causality_physics/tests/quantities/propulsion_quantities/mod.rs
+  s_daf432b4e5443c::t_2aa8514d66aab1 1-9
+deep_causality_physics/tests/quantities/propulsion_quantities/plume_geometry_tests.rs
+  s_daf432b4e5443c::t_5d193fc9a93aa1 1-37
+deep_causality_physics/tests/constants/propulsion_tests.rs
+  s_daf432b4e5443c::t_2869eb4ad23876 1-40
+deep_causality_physics/tests/quantities/mod.rs
+  s_daf432b4e5443c::t_de0ffb81c1b153 28-29
+deep_causality_physics/tests/quantities/propulsion_quantities/nozzle_exit_state_tests.rs
+  s_daf432b4e5443c::t_b37373be179f1c 1-43
+deep_causality_physics/tests/kernels/propulsion/srp_tests.rs
+  s_daf432b4e5443c::t_ea06d184fe3b7c 43-63
+deep_causality_physics/tests/quantities/propulsion_quantities/flow_branch_tests.rs
+  s_daf432b4e5443c::t_eda9e87be8281e 1-20
+deep_causality_physics/tests/constants/mod.rs
+  s_daf432b4e5443c::t_24045a0ce3ff29 10-11
+deep_causality_physics/tests/kernels/propulsion/plume_tests.rs
+  s_daf432b4e5443c::t_d5c5a04b6f7c0e 14-17
+  s_daf432b4e5443c::t_59338359504ce8 184-279
+deep_causality_physics/tests/quantities/propulsion_quantities/mass_flow_rate_tests.rs
+  s_daf432b4e5443c::t_84a0ce90c40fb3 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "023acbe4b910cfbbd3efd9150138682c927a7239",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
