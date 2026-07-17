@@ -17,6 +17,7 @@ pub(crate) mod hypersonic;
 /// * Other values are experimental measurements with associated uncertainties (ignored here for standard f64 precision).
 pub(crate) mod nuclear;
 pub(crate) mod particle;
+pub(crate) mod propulsion;
 pub(crate) mod thermodynamics;
 pub(crate) mod universal;
 
@@ -27,6 +28,7 @@ pub use electromagnetic::*;
 pub use hypersonic::*;
 pub use nuclear::*;
 pub use particle::*;
+pub use propulsion::*;
 pub use thermodynamics::*;
 pub use universal::*;
 

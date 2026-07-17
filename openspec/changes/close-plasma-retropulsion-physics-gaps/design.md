@@ -30,8 +30,8 @@ thrust/rocket/nozzle kernels NO, flight kinematics in `dynamics/` NO.
 | 7 | `srp_preserved_drag_fraction_kernel` | digitized central-nozzle preserved-drag vs C_T, validity Mach 0.4–2.0; carries the low-C_T drag-collapse structure ("collapses almost entirely by C_T ≈ 1") | Jarvinen & Adams (1970), digitized at build time |
 | 8 | `jarvinen_adams_baseline_axial_coefficient_kernel` | unpowered C_A0(M) of the large-angle cone, digitized from the same report | Jarvinen & Adams (1970) |
 | 9 | `srp_total_axial_force_coefficient_kernel` | C_A,total = C_T + preserved(C_T)·C_A0 | composition of #5/#7/#8 |
-| 10 | `srp_stability_margin_kernel` | margin to the published C_T ≈ 3 bow-shock-instability onset | Jarvinen–Adams; Keyes–Hefner via the Korzun–Braun–Cruz survey |
-| 11 | `cordell_braun_plume_boundary_kernel` | analytic effective-obstruction geometry (max plume radius, penetration length, terminal-shock standoff) from exit state + freestream, on-axis | Cordell & Braun (2013); Jarvinen–Adams flowfield construction (shadowgraphs within ~10%) |
+| 10 | `srp_flow_regime_margin_kernel` | `C_T − C_T,transition`; central-nozzle jet-penetration → blunt-flow transition near C_T ≈ 1 (the digitized sources corrected the original "C_T ≈ 3 stability" assumption — that onset is *peripheral*, exported separately) | Jarvinen–Adams §3.1; Korzun survey p. 6 |
+| 11 | `cordell_braun_plume_boundary_kernel` + sub-kernels (`prandtl_meyer`, `choked_mass_flow`, `srp_post_bow_shock_total_pressure`, `srp_terminal_shock_mach`, `srp_jet_edge_mach`) | analytic effective-obstruction geometry (max plume radius, penetration length, terminal-shock standoff) from exit state + freestream, on-axis; bow-shock construction omitted (CFD layer forms it) | Cordell dissertation, GT (2013), Ch. III; jet-edge Mach = printed Table 13, terminal Mach = Fig. 54, standoff/body-dia = Fig. 55 |
 | 12 | `stopping_distance_kernel` / `ignition_altitude_kernel` | d = v²/(2a_net), h_ign = v²/(2(a_T − g)) + margin; rejects a_net ≤ 0 (T/W ≤ 1 cannot stop) | closed-form kinematics; Klumpp (1974) / Açıkmeşe–Ploen (2007) cited as the guidance upgrade path |
 | 13 | `suicide_burn_deceleration_kernel` | a_cmd = v²/(2h) + g; rejects h ≤ 0 | same |
 
@@ -88,12 +88,14 @@ thrust/rocket/nozzle kernels NO, flight kinematics in `dynamics/` NO.
   #5/#7/#8. No formula appears twice in the crate.
 - **`g₀` (standard gravity, 9.80665 m/s²)** is checked against `src/constants/` first; added
   there with a typed accessor only if absent.
-- **Paper PDFs**: NTRS and Georgia Tech repository documents (Jarvinen–Adams CR;
-  Korzun–Braun–Cruz survey) are public and land in `papers/`. The Cordell–Braun JSR paper may
-  be paywalled; the accessible fallback with the same model content is Cordell's Georgia Tech
-  dissertation (SMARTech, public) — commit whichever is public, cite both in the docstring.
-  Textbook relations (Sutton & Biblarz, Anderson) are cited by edition and equation number in
-  the docstring without a PDF.
+- **Paper PDFs** (resolved during build; SDD copyright rule — public/open-access only): all
+  three landed in `papers/` from public repositories — Jarvinen–Adams CR (NTRS 19720005324),
+  the Korzun–Cruz–Braun survey (Georgia Tech repository), and Cordell's Georgia Tech
+  dissertation (repository.gatech.edu DSpace bitstream, 355 pp.). The paywalled Cordell–Braun
+  JSR article was *not* downloaded; the dissertation carries the same model at full derivation
+  and is the primary citation, the JSR article a secondary cross-reference. Textbook relations
+  (Sutton & Biblarz, Anderson, NACA 1135) are cited by edition/table in the docstring without a
+  PDF.
 
 ## Risks / Trade-offs
 

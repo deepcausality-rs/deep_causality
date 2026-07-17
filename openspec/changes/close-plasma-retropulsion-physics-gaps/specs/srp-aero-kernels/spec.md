@@ -82,46 +82,88 @@ The composition MUST call the sibling kernels rather than restating the correlat
   (thrust replacing destroyed drag), matching the report's central-nozzle behavior, with the
   band edges recorded by the test
 
-### Requirement: SRP stability margin
+### Requirement: SRP flow-regime margin
 
-The crate SHALL provide `srp_stability_margin_kernel` returning the margin between a given
-`C_T` and the published bow-shock instability onset (`C_T ≈ 3`, Jarvinen–Adams and
-Keyes–Hefner observations as surveyed by Korzun–Braun–Cruz), with the onset exported as a cited
-constant so the future envelope and classifier stages read the same bound.
+The crate SHALL provide `srp_flow_regime_margin_kernel` returning the margin `C_T −
+C_T,transition` between a given central-nozzle `C_T` and a caller-supplied transition
+coefficient, positive in the steady blunt-flow regime and negative in the unsteady
+jet-penetration regime. The digitized sources overturned the original assumption that a
+`C_T ≈ 3` bow-shock instability governs the central nozzle: the Jarvinen–Adams report shows the
+*central*-nozzle transition is the jet-penetration → blunt-flow change near `C_T ≈ 1` at
+M∞ = 2.0 (fixed in jet-exit pressure ratio across conditions), while the `C_T ≈ 3` rippling
+onset is a *peripheral*-configuration phenomenon (Keyes–Hefner via the Korzun survey). Both the
+central transition and the peripheral onset MUST be exported as cited constants so the future
+envelope and classifier stages read the same bounds.
 
-#### Scenario: Margin and bound agree
+#### Scenario: Margin sign tracks the flow regime
 
-- **WHEN** the kernel evaluates `C_T` below, at, and above the onset constant
-- **THEN** the margin is positive, zero, and negative respectively, and the onset constant
-  carries its citation in the constants source block
+- **WHEN** the kernel evaluates `C_T` below, at, and above the supplied transition coefficient
+- **THEN** the margin is negative, zero, and positive respectively, and both the central
+  transition and the peripheral rippling onset carry their citations in the constants source
+  block
 
-### Requirement: Cordell–Braun plume-boundary geometry
+#### Scenario: Degenerate inputs rejected
 
-The crate SHALL provide `cordell_braun_plume_boundary_kernel` computing the analytic
-plume-as-effective-obstruction geometry — maximum plume radius, penetration length, and
-terminal-shock standoff, returned as a typed `PlumeGeometry` of `Length`s — from the nozzle
-exit state and freestream conditions, on-axis, per Cordell & Braun (JSR 50(4), 2013). The
-kernel MUST enforce the model's on-axis validity envelope by rejecting out-of-envelope inputs
-(the note's §6 discipline pin), MUST NOT discretize space or produce a mask (the CFD stage's
-job), and MUST validate against the paper's published comparison cases.
+- **WHEN** `C_T` is negative or the transition coefficient is non-positive
+- **THEN** the kernel returns a typed `PhysicsError`
 
-#### Scenario: Published comparison cases reproduced
+### Requirement: Cordell plume sub-relations
 
-- **WHEN** the kernel evaluates the paper's tabulated/plotted comparison conditions (pinpoints
-  recorded beside the digitized values)
-- **THEN** the returned geometry matches the published analytic values within the pinned
-  tolerance
+The plume model SHALL be decomposed into independently testable pointwise sub-kernels, each
+citing the dissertation equation it implements: a Prandtl–Meyer function
+(`prandtl_meyer_kernel`, Eq. 9), a choked throat mass flow (`choked_mass_flow_kernel`), the
+freestream post-bow-shock stagnation pressure (`srp_post_bow_shock_total_pressure_kernel`,
+Eqs. 13–14), the terminal (Mach-disk) shock Mach number
+(`srp_terminal_shock_mach_kernel`, Eqs. 13–15), and the barrel-shock jet-edge Mach number
+(`srp_jet_edge_mach_kernel`, Eq. 19). The jet-edge and terminal-shock relations MUST reproduce
+the dissertation's printed Table 13 and Fig. 54 values, which depend only on stagnation-pressure
+ratios and are therefore exact anchors.
+
+#### Scenario: Jet-edge Mach reproduces Table 13
+
+- **WHEN** `srp_jet_edge_mach_kernel` is evaluated at the single-nozzle wind-tunnel conditions
+  for the tabulated thrust coefficients
+- **THEN** the returned jet-edge Mach matches the printed Table 13 values (C_T 0.47 → 3.86,
+  4.04 → 5.63, 10.0 → 6.53) within the pinned tolerance
+
+#### Scenario: Terminal-shock Mach matches Fig. 54
+
+- **WHEN** `srp_terminal_shock_mach_kernel` is evaluated at C_T = 10
+- **THEN** the terminal Mach matches the Fig. 54 analytic value (≈ 15.5), and a lower thrust
+  yields a weaker terminal shock; a jet stagnation pressure below the post-bow-shock stagnation
+  pressure is rejected as the no-terminal-shock low-thrust regime
+
+### Requirement: Cordell plume-boundary geometry
+
+The crate SHALL provide `cordell_braun_plume_boundary_kernel` composing the sub-relations into
+the analytic plume-as-effective-obstruction geometry — maximum plume radius, penetration
+length, and terminal-shock standoff, returned as a typed `PlumeGeometry` of `Length`s — from
+the nozzle exit state and freestream conditions, on-axis, per Cordell's Georgia Tech
+dissertation (2013), Ch. III. The kernel MUST enforce the model's validity envelope by
+rejecting out-of-envelope inputs (freestream Mach outside [2, 4], jet γ outside [1.2, 1.4], and
+the jet-penetration regime below the blunt-flow pressure-ratio transition — the note's §6
+discipline pin), and MUST NOT discretize space or produce a mask. The bow-shock construction
+(dissertation §3.4) is deliberately excluded: the marched CFD layer forms its own bow shock
+around the obstruction this kernel returns.
+
+#### Scenario: Terminal-shock standoff matches the published anchor
+
+- **WHEN** the kernel is evaluated at the single-nozzle C_T = 4.04 wind-tunnel condition
+- **THEN** the terminal-shock standoff normalized by body diameter matches the Fig. 55 analytic
+  anchor (≈ 1.28, consistently slightly underpredicted) within the pinned tolerance, and the
+  penetration length is at least the standoff
 
 #### Scenario: Geometry responds to throttle
 
-- **WHEN** the same freestream is evaluated at two different exit states (two throttle
-  settings mapped through the nozzle exit-state kernel)
-- **THEN** the two geometries differ — the dynamic-by-construction invariant: two different
-  states return two different outputs
+- **WHEN** the same freestream is evaluated at two different jet stagnation pressures (two
+  throttle settings)
+- **THEN** the two geometries differ and the larger jet drives a larger plume (radius,
+  penetration, and standoff all grow) — the dynamic-by-construction invariant
 
 #### Scenario: Validity envelope enforced
 
-- **WHEN** inputs leave the model's validated envelope
+- **WHEN** inputs leave the model's validated envelope (freestream Mach, jet γ, or the
+  jet-penetration pressure-ratio regime)
 - **THEN** the kernel returns a typed `PhysicsError` instead of extrapolating
 
 ### Requirement: Family conventions hold
