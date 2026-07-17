@@ -1,0 +1,28 @@
+openspec/specs/powered-descent-kernels/spec.md
+  s_daf432b4e5443c::t_f53067425e2ba8 4-8
+  s_daf432b4e5443c::t_528874b8aa26fe 1-3,9-61
+openspec/specs/propulsion-performance-kernels/spec.md
+  s_daf432b4e5443c::t_528874b8aa26fe 1-3,10-107
+  s_daf432b4e5443c::t_0f721e148dccd0 4-9
+openspec/specs/srp-aero-kernels/spec.md
+  s_daf432b4e5443c::t_528874b8aa26fe 1-3,10-189
+  s_daf432b4e5443c::t_663cdd867c6ea1 4-9
+openspec/changes/archive/2026-07-17-close-plasma-retropulsion-physics-gaps/tasks.md
+  s_daf432b4e5443c::t_61a3bf7b6ccf1b 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "49f5ead7973578790dcc04fa5421999b8e599d20",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
