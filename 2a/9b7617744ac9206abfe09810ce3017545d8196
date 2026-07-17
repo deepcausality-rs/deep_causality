@@ -1,0 +1,41 @@
+openspec/changes/plasma-retropulsion-cfd-contracts/proposal.md
+  s_daf432b4e5443c::t_7af806b56239c2 1-75
+openspec/changes/plasma-retropulsion-cfd-contracts/design.md
+  s_daf432b4e5443c::t_06a3c996108313 1-162
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/corridor-inheritance-guard/spec.md
+  s_daf432b4e5443c::t_408a1e7ffeac6b 1-37
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/full-descent-atmosphere/spec.md
+  s_daf432b4e5443c::t_a598119b4084eb 1-37
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/weather-table-consumption/spec.md
+  s_daf432b4e5443c::t_a090099b25f12b 1-55
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/blackout-coupling-interface/spec.md
+  s_daf432b4e5443c::t_3578bf23b2d3de 1-102
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_daf432b4e5443c::t_129f984a20aa9b 131
+  s_daf432b4e5443c::t_dd6e54ff31e25e 1-28,34-36,38-130,132-209,211-426
+  s_daf432b4e5443c::t_f63a55fa152e66 29-33,37
+  s_daf432b4e5443c::t_c3672b3b48a881 210
+openspec/changes/plasma-retropulsion-cfd-contracts/tasks.md
+  s_daf432b4e5443c::t_42e10eb80cfe25 1-100
+openspec/changes/plasma-retropulsion-cfd-contracts/.openspec.yaml
+  s_daf432b4e5443c::t_0b60e771fdcc19 1-2
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/powered-descent-envelope/spec.md
+  s_daf432b4e5443c::t_8f352fa83bbcb4 56-59
+  s_daf432b4e5443c::t_0200ff565944a3 1-55,60-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "2a9b7617744ac9206abfe09810ce3017545d8196",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
