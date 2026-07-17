@@ -80,4 +80,4 @@
       checked against the dissertation PDF (Eq. 38, p. 92), confirmed a faithful verbatim
       transcription of the published model, kept with a comment pinning it to Eq. 38 (removing
       it would deviate from the cited source). Re-ran: clippy clean, 184 physics tests pass.
-- [ ] 4.6 Prepare the commit message and hand it to the user (never commit; golden rule)
+- [x] 4.6 Prepare the commit message and hand it to the user (never commit; golden rule)
