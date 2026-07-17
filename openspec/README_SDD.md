@@ -48,7 +48,7 @@ Iterate over the note. Inquire the AI agent for:
 * Make or break requirements
 * Important gaps
 
-Once you and the agent agree that the note is reasonably complete, proceed to derive the full specification.
+Once you and the agent agree that the note is reasonably complete, proceed to derive the full specification. Please do not delete any notes that were used to derice a specification. Ensure all notes, specs and relavant information are tracked in Git within the openspec folder. 
 
 ### Derive the full specification from the note
 
@@ -70,6 +70,17 @@ It is common to iterate 2 to 3 times over the specification to hammer out the de
 ### Commit the final specification
 
 For provenance reasons, it is important to commit the final specification before implementing it.
+
+### Defer the implemention when deemeded temporary infeasible 
+
+In rare cases, it can happen that the full specication cannot be implemented 
+for some reason. In that case, move the derived specs into folder:
+
+openspec/changes/deferred
+
+and document why the implementation is defered. Sometimes, there are valid reasons e.g. missnig feature in the Rust compiler. If that is the case, please document 
+the exact requiremnt that would unblock the deferred specifcation. 
+
 
 ### Implement the specification
 
@@ -110,3 +121,16 @@ that multiple code fixes need to be applied before CI turns green.
 
 You can always use the PR review prompt from the prompt folder to prepare a PR review yourself
 while waiting for the assigned reviewer to begin the review process. This may catch things the review bot on CI could miss.
+
+### Reverting an implementation 
+
+In rare cases, it may become neccesary to revert a fully implemented specification. 
+For that, please draft a specification, complete the refactoring to revert the change, and importanlty, move the specs that were revered AND the specs of the removal into folder:
+
+openspec/changes/reverted
+
+Please document why it became necessary to revert the implemented specs and if anything would trigger a re-evaluation. If it was a fundamental dead-end, please document why its not possible. 
+
+### Apply improvements
+
+When you encounter valuable lessons learned, please update this and related documents of the development process so that subsequent implementations benefit from those improvements. 
