@@ -7,8 +7,11 @@ the atmosphere extended below 30 km and the propulsion contracts present in the 
 `cargo run --release -p avionics_examples --example plasma_blackout_corridor` MUST complete with
 exit code 0, every gate passing, and the gate witnesses (blackout window onset/exit/dwell, the
 RAM-C II anchor band values, drift and reacquisition figures) equal to the committed
-`output.txt`. This guard is standing: every later retropulsion milestone (M3–M5) MUST re-run it
-before archive, because the extension's claim is that it only appends.
+`output.txt`. This guard is standing: every subsequent retropulsion change that touches the
+shared marcher path, the coupling stack, or the shared example constants — the de-risking
+change (`plasma-retropulsion-de-risk`, whose forcing seam rides the marcher the corridor flies)
+as much as M3–M5 — MUST re-run it before archive, because the extension's claim is that it only
+appends.
 
 #### Scenario: The corridor is bit-identical after the contracts land
 

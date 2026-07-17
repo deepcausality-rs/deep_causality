@@ -124,7 +124,7 @@ the plume coupling changes). This is the experiment paying for itself in both ou
         [done] Stage R reorg ─┐
         [done] Stage 1 kernels┤
                               ▼
-  M1  derisk-srp-plume-coupling      ◀ FRONT-LOADED COMBINED RISK SPEC (go/no-go)
+  M1  plasma-retropulsion-de-risk    ◀ FRONT-LOADED COMBINED RISK SPEC (go/no-go)
         │  compressible forcing seam + drag contraction (harness form)
         │  verification/srp_drag_decrement · studies/qtt_rank_plume + fork economics
         │
@@ -156,7 +156,7 @@ Each milestone states: the OpenSpec change name; its objective; concrete deliver
 seams (`file:line`); entry preconditions; the verifiable exit gate; and the risk tags the derived
 spec must carry. Gate numbers in parentheses reference the note's §10 gate set.
 
-### M1 — `derisk-srp-plume-coupling`  *(combined preceding risk spec)*
+### M1 — `plasma-retropulsion-de-risk`  *(combined preceding risk spec; proposed 2026-07-17)*
 
 **Objective.** Resolve the three §2 risks on a bare marched layer, before committing the downstream
 design. Build the smallest compressible forcing region that can carry a Cordell–Braun plume, verify

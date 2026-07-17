@@ -71,5 +71,6 @@ unaffected by construction.
   `src/shared/weather_table.rs` loader module + `shared/mod.rs` registration; the corridor and
   weather examples themselves are untouched except for re-verification.
 - Downstream: M3 (`RetroThrust`/`PlumeObstruction`), M4 (`ThrottleGuidance`), M5 (example wiring)
-  build against these seams unchanged; M1 (`derisk-srp-plume-coupling`) is independent and decides
+  build against these seams unchanged; M1 (`plasma-retropulsion-de-risk`) is independent — no
+  file overlap, the shared `"commanded_throttle"` name pinned identically in both — and decides
   only the *depth* behind the stub seam.
