@@ -37,7 +37,7 @@ M1–M5.
 | **Stage R** | Example-code refactoring — reorg into `cfd/plasma_blackout/{corridor,weather}/` | **done** — `reorg-plasma-blackout-examples`, archived 2026-07-16 | — |
 | **Stage 1** | Propulsion kernel family + papers in `deep_causality_physics` | **done** — `close-plasma-retropulsion-physics-gaps`, archived 2026-07-17 | — |
 | **Stage 0** | cfd contracts + inheritance guard | **open** | **M2** |
-| **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **open** | **M1** (front-loaded) |
+| **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **measured 2026-07-17** — verdict **AMBER** ([`derisk-verdict.md`](derisk-verdict.md)): imprint fidelity amber, fork economics + rank green | **M1** (front-loaded) |
 | **Stage 3** | Coupled stages (thrust, plume, classifier, guidance, envelope) | **open** | **M3 + M4** |
 | **Stage 4** | Example wiring, counterfactuals, gates | **open** | **M5** |
 
@@ -156,7 +156,7 @@ Each milestone states: the OpenSpec change name; its objective; concrete deliver
 seams (`file:line`); entry preconditions; the verifiable exit gate; and the risk tags the derived
 spec must carry. Gate numbers in parentheses reference the note's §10 gate set.
 
-### M1 — `plasma-retropulsion-de-risk`  *(combined preceding risk spec; proposed 2026-07-17)*
+### M1 — `plasma-retropulsion-de-risk`  *(combined preceding risk spec; measured 2026-07-17 — verdict **AMBER**, see [`derisk-verdict.md`](derisk-verdict.md): M3 carries the A0 drag authority, M5's centerpiece pivots to the parameter-fork design; fork economics and rank measured green)*
 
 **Objective.** Resolve the three §2 risks on a bare marched layer, before committing the downstream
 design. Build the smallest compressible forcing region that can carry a Cordell–Braun plume, verify
@@ -417,6 +417,8 @@ a milestone.
 
 - [`plasma-retropulsion-descent.md`](plasma-retropulsion-descent.md) — the design note this roadmap
   sequences; §6 (fork the state), §9 (build order), §10 (gates), §11 (anchors).
+- [`derisk-verdict.md`](derisk-verdict.md) — the M1 measured go/no-go (AMBER, 2026-07-17): the
+  authority M3 and M5 cite for coupling depth and centerpiece design.
 - `openspec/changes/archive/2026-07-16-reorg-plasma-blackout-examples/` — Stage R, done.
 - `openspec/changes/archive/2026-07-17-close-plasma-retropulsion-physics-gaps/` — Stage 1, done.
 - `deep_causality_cfd/verification/qtt_ramc_stagline/` — the verification template M1 instantiates.

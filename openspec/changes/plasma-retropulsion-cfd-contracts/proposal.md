@@ -20,7 +20,11 @@ corridor example must not change by one bit.
   future `PlumeObstruction`/`RetroThrust` seam: at zero throttle it contributes nothing (no force,
   no scalars mutated, no log entries); at nonzero throttle it exercises thrust-RMW, mass depletion,
   and the Jarvinen–Adams force-channel (A0) drag decrement via existing physics kernels. Swapping it
-  for the M3 production stages changes no consumer.
+  for the M3 production stages changes no consumer. The M1 verdict
+  (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, measured 2026-07-17, AMBER) pins
+  **A0 as the drag authority** — the stub's correlation channel is not a placeholder but the
+  committed closure — and the marched-layer imprint seam it fronts already exists in the library
+  (`ForcingRegion`, landed by `plasma-retropulsion-de-risk`) for M3's state-realism use.
 - `SafetyEnvelope` gains optional, inactive-by-default burn axes (throttle floor/ceiling, dynamic
   C_T cap, ignition dynamic-pressure window, propellant floor, descent-rate bound) enforced by the
   same `CyberneticCorrect` sense → clamp → `Err` pattern; with the axes inactive the gate is
@@ -71,6 +75,7 @@ unaffected by construction.
   `src/shared/weather_table.rs` loader module + `shared/mod.rs` registration; the corridor and
   weather examples themselves are untouched except for re-verification.
 - Downstream: M3 (`RetroThrust`/`PlumeObstruction`), M4 (`ThrottleGuidance`), M5 (example wiring)
-  build against these seams unchanged; M1 (`plasma-retropulsion-de-risk`) is independent — no
-  file overlap, the shared `"commanded_throttle"` name pinned identically in both — and decides
-  only the *depth* behind the stub seam.
+  build against these seams unchanged; M1 (`plasma-retropulsion-de-risk`, implemented and
+  measured 2026-07-17) had no file overlap, pinned the shared `"commanded_throttle"` name
+  identically, and decided the depth behind the stub seam: **A0** (verdict AMBER on imprint
+  fidelity; fork economics and rank green — see `derisk-verdict.md`).

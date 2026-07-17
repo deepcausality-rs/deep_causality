@@ -28,7 +28,7 @@ use super::carrier::{
 use super::coupling::{CoupledField, PhysicsStage};
 use crate::CfdScalar;
 use crate::coordinate::CartesianIdentity;
-use crate::solvers::{CompressibleMarcher2d, EulerStateTt2d, FittedNormalShock};
+use crate::solvers::{CompressibleMarcher2d, EulerStateTt2d, FittedNormalShock, ForcingRegion};
 use crate::tensor_bridge::{dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
 use crate::types::flow::{BlackoutTrigger, Report};
@@ -70,6 +70,9 @@ where
     /// World-published constants written into the field each step (a counterfactual world's
     /// commanded inputs, e.g. `"commanded_bank"`).
     constants: Vec<(&'static str, R)>,
+    /// The world's optional masked forcing region, applied after each marcher step (the de-risk
+    /// plume imprint seam). `None` leaves the march path exactly as it was.
+    forcing: Option<ForcingRegion<R>>,
     /// The current nondimensional conserved inflow `[ρ̂, m̂x, m̂y, Ê]` the strip enforces.
     inflow: Option<[R; 4]>,
     /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).
@@ -147,6 +150,17 @@ where
         let metric = CartesianIdentity::new(cfg.lx, cfg.ly, cfg.dx, cfg.dy, cfg.trunc)?;
         let marcher =
             CompressibleMarcher2d::new(metric, cfg.gamma, cfg.dt_solver, cfg.s_ref, cfg.trunc)?;
+        // A forcing mask must live on this world's quantized grid (lx + ly cores), or every
+        // Hadamard against the state would fail one step in.
+        if let Some(region) = &cfg.forcing {
+            let want = cfg.lx + cfg.ly;
+            let got = region.mask().cores().len();
+            if got != want {
+                return Err(PhysicsError::DimensionMismatch(alloc::format!(
+                    "forcing-region mask has {got} cores but the grid quantizes to {want}"
+                )));
+            }
+        }
         Ok(Self {
             marcher,
             lx: cfg.lx,
@@ -161,6 +175,7 @@ where
             reference: cfg.reference,
             schedule: cfg.schedule.clone(),
             constants: cfg.constants.clone(),
+            forcing: cfg.forcing.clone(),
             inflow: None,
             rebuilds: 0,
         })
@@ -259,7 +274,13 @@ where
 
     fn advance(&self, state: &Self::State) -> Result<Self::State, PhysicsError> {
         let held = self.enforce_inflow(state)?;
-        self.marcher.advance(&held, &())
+        let next = self.marcher.advance(&held, &())?;
+        // The optional forcing region relaxes the stepped state toward its target inside the
+        // mask; with no region configured this arm is never taken and the path is unchanged.
+        match &self.forcing {
+            None => Ok(next),
+            Some(region) => region.apply(&next, self.dt_solver, &self.trunc),
+        }
     }
 
     /// Publish the evolved physical projections: `"speed"` (m/s), `"T_tr"` (K) and

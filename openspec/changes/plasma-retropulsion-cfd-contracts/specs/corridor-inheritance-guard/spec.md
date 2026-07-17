@@ -24,9 +24,12 @@ appends.
 A harness test in `deep_causality_cfd` SHALL march a corridor-class coupled world twice — once
 with the plain coupling stack, once with the propulsion stub composed at zero commanded
 throttle — and MUST assert the two runs' reports, final coupled fields (scalars, force channel,
-command channels, regime), and provenance logs are bit-identical. This is the tested meaning of
-"strictly inert at zero throttle": the burn-phase stack can contain the propulsion stages from
-the start, and ignition remains a published-command event rather than a stack swap.
+command channels, regime), and provenance logs are bit-identical, extending the landed
+marcher-path bit-identity pattern (`unforced_carrier_matches_the_bare_marcher_bit_for_bit`,
+`tests/types/flow/compressible_march_run_tests.rs`, from `plasma-retropulsion-de-risk`) to the
+stage layer. This is the tested meaning of "strictly inert at zero throttle": the burn-phase
+stack can contain the propulsion stages from the start, and ignition remains a
+published-command event rather than a stack swap.
 
 #### Scenario: Stub presence is invisible at zero throttle
 

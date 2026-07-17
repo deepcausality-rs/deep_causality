@@ -79,7 +79,11 @@ step with the stub composed is bit-identical to one without it. At commanded thr
 stub SHALL exercise every seam: deplete `"propellant"` via the propellant-mass-flow kernel,
 reduce `"mass"` accordingly, set `"ignited"`, add `−T/m·v̂` into the force channel via
 `add_aero_force`, and apply the A0 force-channel drag decrement through the existing
-Jarvinen–Adams kernels (`srp_thrust_coefficient`, `srp_preserved_drag_fraction`). Swapping the
+Jarvinen–Adams kernels (`srp_thrust_coefficient`, `srp_preserved_drag_fraction`). The A0
+correlation is the **drag authority** per the measured de-risk verdict
+(`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER on imprint fidelity): a
+marched-layer imprint (the landed `ForcingRegion` seam), when M3 composes one for state
+realism, MUST NOT replace the correlation as the force channel's drag closure. Swapping the
 stub for the production stages SHALL require no change to any consumer stage.
 
 #### Scenario: Zero throttle is bit-identical inertness

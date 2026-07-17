@@ -12,10 +12,12 @@
 //! without the CfdFlow DSL.
 
 use crate::CfdScalar;
-use crate::tensor_bridge::{QttProjector2d, dequantize_2d};
+use crate::solvers::qtt::compressible::{EulerStateTt2d, ideal_gas_pressure_2d};
+use crate::tensor_bridge::{QttProjector2d, dequantize_2d, quantize_2d};
+use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::PhysicsError;
-use deep_causality_tensor::{CausalTensorTrain, TensorTrain};
+use deep_causality_tensor::{CausalTensor, CausalTensorTrain, TensorTrain, Truncation};
 
 /// The penalization-force integral `(1/η) ∫ χ_body ⊙ (a − a_body) dV` over the grid — a single
 /// tensor-train contraction (`inner` of the mask with the field deficit), no surface reconstruction.
@@ -90,6 +92,77 @@ where
     // Q = (1/η) ∫ χ_body (T_w − T) dV = −[(1/η) ∫ χ_body (T − T_w) dV].
     let q = penalization_integral(mask, temp, t_wall, eta, dx * dy)?;
     Ok(R::zero() - q)
+}
+
+/// The forebody-strip **pressure** contraction of an evolved compressible state: the pressure is
+/// recovered pointwise from the conserved components (`p = (γ−1)(E − ½|m|²/ρ)`, the ideal-gas
+/// closure), re-quantized, and contracted against the strip mask via the train `inner` product
+/// and the cell volume — `F = ∫ χ_strip · p dV`, no cut-cell surface or boundary-fiber
+/// reconstruction. This is the *compressible* sibling of the incompressible penalization-force
+/// contraction: the integrand is the field's own pressure (the preserved aerodynamic drag the
+/// Jarvinen–Adams dataset measured), **not** the forcing deficit.
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] if the density leaves the positive cone; propagates
+/// codec / contraction errors.
+#[allow(clippy::too_many_arguments)]
+pub fn strip_pressure_force<R>(
+    strip: &CausalTensorTrain<R>,
+    state: &EulerStateTt2d<R>,
+    gamma: R,
+    lx: usize,
+    ly: usize,
+    dx: R,
+    dy: R,
+    trunc: &Truncation<R>,
+) -> Result<R, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let rho = dequantize_2d(&state[0], lx, ly)?;
+    let mx = dequantize_2d(&state[1], lx, ly)?;
+    let my = dequantize_2d(&state[2], lx, ly)?;
+    let e = dequantize_2d(&state[3], lx, ly)?;
+    let n = rho.as_slice().len();
+    let mut p = Vec::with_capacity(n);
+    for (((&r, &a), &b), &en) in rho
+        .as_slice()
+        .iter()
+        .zip(mx.as_slice())
+        .zip(my.as_slice())
+        .zip(e.as_slice())
+    {
+        if r <= R::zero() || !r.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "strip_pressure_force: density must stay positive".into(),
+            ));
+        }
+        p.push(ideal_gas_pressure_2d(r, a, b, en, gamma));
+    }
+    let (nx, ny) = (1usize << lx, 1usize << ly);
+    let p_tt = quantize_2d(&CausalTensor::new(p, alloc::vec![nx, ny])?, trunc)?;
+    Ok(strip.inner(&p_tt)? * dx * dy)
+}
+
+/// The **preserved-drag fraction**: the powered (plume-imprinted) run's contracted forebody
+/// force over the unpowered baseline's, from the same configuration — the dimensionless
+/// quantity the Jarvinen–Adams correlation tabulates (`C_A,F / C_A0`). A same-configuration
+/// ratio, so the harness's common geometry biases cancel.
+///
+/// # Errors
+/// [`PhysicsError::Singularity`] if the unpowered baseline force is not finite or vanishes
+/// (there is no drag to preserve a fraction of).
+pub fn preserved_drag_fraction<R>(powered: R, unpowered: R) -> Result<R, PhysicsError>
+where
+    R: CfdScalar,
+{
+    if !unpowered.is_finite() || unpowered == R::zero() {
+        return Err(PhysicsError::Singularity(
+            "preserved_drag_fraction: the unpowered baseline force must be finite and nonzero"
+                .into(),
+        ));
+    }
+    Ok(powered / unpowered)
 }
 
 /// Kinetic energy `½(‖u‖² + ‖v‖²)` from the train norms — the `‖·‖` is the Frobenius/L2 norm over the

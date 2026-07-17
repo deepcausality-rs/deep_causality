@@ -22,6 +22,25 @@ and example (M5). Everything here is seam work against verified anchors in the c
   (0, +20, −25, −40, −5, +5 K), not temperature order. `avionics_examples` already depends on
   `deep_causality_file`, whose `read_rows::<T: FromTableRow>` delivers cells in schema order.
 
+Since this design was drafted, the de-risk milestone (`plasma-retropulsion-de-risk`) landed and
+measured; its findings bind here:
+
+- The imprint seam **exists**: `ForcingRegion` (post-step masked relaxation on the compressible
+  march path, `solvers/qtt/compressible/forcing.rs`), `plume_mask_2d`, the
+  `CompressibleMarchConfigBuilder::forcing_region()` verb, and the mask-grid build validation
+  are library code with tests; `publish_constant("commanded_throttle", …)` is exercised by a
+  landed test.
+- The **verdict is AMBER** (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`): the
+  imprinted layer shields monotonically but does not reproduce the Jarvinen–Adams collapse, so
+  the **A0 correlation channel is the drag authority** — exactly the closure this change's stub
+  carries. Fork economics (83 ns O(1) fork, ≈1× branch cost) and rank (bond 16 under the 32
+  ceiling) measured green.
+- The guard's mechanics are proven: the corridor re-ran **bit-identically** after the de-risk
+  seams landed (prong A exercised), and the marcher-path bit-identity harness pattern
+  (`unforced_carrier_matches_the_bare_marcher_bit_for_bit`,
+  `tests/types/flow/compressible_march_run_tests.rs`) is the template prong B extends to the
+  stub.
+
 Constraint that shapes everything: the corridor example is a flown, gated artifact with a
 committed `output.txt`. This change must leave it **bit-identical**.
 
@@ -78,8 +97,10 @@ throttle channel's default when no guidance stage wrote one; at throttle ≤ 0 i
 (no force write, no scalar mutation, no log entry — inertness is the contract); at throttle > 0
 it depletes propellant via `propellant_mass_flow`, adds `−T/m·v̂` via `add_aero_force`, and
 applies the A0 drag decrement through the existing `srp_thrust_coefficient` /
-`srp_preserved_drag_fraction` kernels. It exists to *validate the seams*, not to fly: M3 replaces
-it behind the same contract.
+`srp_preserved_drag_fraction` kernels — which the M1 verdict has since pinned as the **drag
+authority**, not a placeholder (a marched-layer imprint, when M3 adds one for state realism via
+the now-existing `ForcingRegion` seam, never overrides the correlation). The stub exists to
+*validate the seams*, not to fly: M3 replaces it behind the same contract.
 
 **D5 — Burn axes are an optional sub-struct, not six new required fields.**
 `SafetyEnvelope` gains `burn: Option<BurnEnvelope<R>>`; the existing 3-arg `new()` yields
@@ -123,10 +144,12 @@ out-of-range dT to the nearest row with the marker set.
 
 **D9 — The inheritance guard has two prongs.**
 Prong A (example-level): re-run `plasma_blackout_corridor` after the atmosphere append; its gate
-witnesses must equal the committed `output.txt` values. Prong B (harness-level): a
-`deep_causality_cfd` test marches a corridor-class coupled world twice — plain stack vs. stack
-with `PropulsionStub` composed at zero throttle — and asserts the reports, final fields, and
-logs are bit-identical. Rationale: the full Acts-0/1 inheritance gate belongs to the
+witnesses must equal the committed `output.txt` values (the de-risk change exercised exactly
+this on 2026-07-17 and passed bit-identically — the guard mechanics are proven). Prong B
+(harness-level): a `deep_causality_cfd` test marches a corridor-class coupled world twice —
+plain stack vs. stack with `PropulsionStub` composed at zero throttle — and asserts the
+reports, final fields, and logs are bit-identical, extending the landed
+`unforced_carrier_matches_the_bare_marcher_bit_for_bit` pattern. Rationale: the full Acts-0/1 inheritance gate belongs to the
 retropulsion example (M5, gate 1); M2 can and must prove the two things it changes globally
 (atmosphere data, stub availability) are invisible. Prong B is what makes "strictly inert at
 zero throttle" a tested contract instead of a comment.
@@ -158,5 +181,9 @@ the change; nothing downstream depends on it until M3.
 
 ## Open Questions
 
-- None blocking. The A0-vs-A depth behind the stub seam is deliberately open pending M1's
-  verdict; this change is shaped identically either way (roadmap §2).
+- None blocking. The A0-vs-A depth behind the stub seam was deliberately left open pending
+  M1's verdict; this change is shaped identically either way (roadmap §2). **Resolved
+  2026-07-17:** M1 (`plasma-retropulsion-de-risk`) measured AMBER on imprint fidelity — the A0
+  correlation channel is the drag authority (see
+  `openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`), which is exactly the depth this
+  change's stub implements. No reshaping needed.
