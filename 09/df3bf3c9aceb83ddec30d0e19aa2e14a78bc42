@@ -1,0 +1,113 @@
+deep_causality_physics/tests/BUILD.bazel
+  s_daf432b4e5443c::t_66a7898d064108 318-337
+  s_daf432b4e5443c::t_fdc7b139fb5a22 317
+deep_causality_physics/tests/kernels/propulsion/plume_tests.rs
+  s_daf432b4e5443c::t_0bfc5f8f351ccd 1-50,54-60,63-72,83,87-93,97-100,106-182
+  s_daf432b4e5443c::t_f01719917d74b6 51-53,61-62,73-82,84-86,94-96
+  s_daf432b4e5443c::t_2a2744dad0db7e 101-105
+deep_causality_physics/src/quantities/propulsion/mod.rs
+  s_daf432b4e5443c::t_939f6d33505451 76-87
+  s_daf432b4e5443c::t_fb5388927be0fa 138-147
+  s_daf432b4e5443c::t_b610771048d328 1-75,88-137,148-172
+openspec/changes/close-plasma-retropulsion-physics-gaps/specs/srp-aero-kernels/spec.md
+  s_daf432b4e5443c::t_b916253541b2ce 85,87-96,98,100-103,105,107-108
+  s_daf432b4e5443c::t_878ff3921f7ac2 110-147,149,151-154,158-161,165-166
+  s_daf432b4e5443c::t_c1239dba445f55 109
+deep_causality_physics/src/kernels/propulsion/srp.rs
+  s_daf432b4e5443c::t_0724ab2de0c891 1-12,14-15,17-38,40-249
+  s_daf432b4e5443c::t_90fdbffd2618ff 39
+  s_daf432b4e5443c::t_53756081eeb8e6 16
+  s_daf432b4e5443c::t_2b01a432d52ed7 13
+deep_causality_physics/src/kernels/mod.rs
+  s_daf432b4e5443c::t_e1f5103853b699 16
+deep_causality_physics/tests/kernels/propulsion/descent_tests.rs
+  s_daf432b4e5443c::t_592832f1eae825 1-15,21-79,85,89,91-100,104-105,117-149
+  s_daf432b4e5443c::t_80f4997bb25f0b 80-84,86-88,90,101-103,106-116
+  s_daf432b4e5443c::t_f01719917d74b6 16-20
+deep_causality_physics/tests/kernels/propulsion/nozzle_tests.rs
+  s_daf432b4e5443c::t_da18a896e0be22 57-59
+  s_daf432b4e5443c::t_9c59a244a98cf5 1-14,17-42,44-46,48-53,56,60-66,68-69,78-82,85-90,92-100,102-110,112-119
+  s_daf432b4e5443c::t_f01719917d74b6 70-77,83-84
+  s_daf432b4e5443c::t_6b5f38ef1d2a2d 15-16,43,47,54-55,67,91,101,111
+deep_causality_physics/src/constants/mod.rs
+  s_daf432b4e5443c::t_8fb57be3c62c70 31
+  s_daf432b4e5443c::t_468c9f2a7e82b2 20
+deep_causality_physics/tests/kernels/propulsion/wrappers_tests.rs
+  s_daf432b4e5443c::t_3756a12e619e01 1-11,18-28,35-36,43-73,75-181,183,187-201,203-206,210-247
+  s_daf432b4e5443c::t_422f37ea8aab39 185
+  s_daf432b4e5443c::t_f01719917d74b6 12-17,29-34,37-42,74,182,184,186,207-209
+  s_daf432b4e5443c::t_2086bed8d745c8 202
+deep_causality_physics/src/kernels/propulsion/performance.rs
+  s_daf432b4e5443c::t_65053f22380af9 1-96
+deep_causality_physics/src/lib.rs
+  s_daf432b4e5443c::t_07afe083be1ce2 34
+deep_causality_physics/src/kernels/propulsion/nozzle.rs
+  s_daf432b4e5443c::t_777c2d193f405f 83-84
+  s_daf432b4e5443c::t_9415849a3cf0ec 77-82,85-86
+  s_daf432b4e5443c::t_9865a659e05b53 1-76,87-97,99-186
+  s_daf432b4e5443c::t_dbe396a6f3a701 98
+deep_causality_physics/src/kernels/propulsion/descent.rs
+  s_daf432b4e5443c::t_053ac0d4fc0afd 1-136
+deep_causality_physics/tests/kernels/propulsion/mod.rs
+  s_daf432b4e5443c::t_82405808b5e866 11-14
+  s_daf432b4e5443c::t_657e881fbb798f 1-10
+  s_daf432b4e5443c::t_c65657fc3b6654 15-16
+deep_causality_physics/tests/kernels/propulsion/performance_tests.rs
+  s_daf432b4e5443c::t_6b5f38ef1d2a2d 29,35,42
+  s_daf432b4e5443c::t_5caaf61120f7ae 23
+  s_daf432b4e5443c::t_f01719917d74b6 6-8,50-51,57-62,69-74,81-86,93-98
+  s_daf432b4e5443c::t_0ee94818e20c85 1-5,9-22,24-28,30-34,36-41,43-49,52-56,63-68,75-80,87-92,99-100
+deep_causality_physics/src/kernels/propulsion/wrappers.rs
+  s_daf432b4e5443c::t_ae0d4ee87d253f 1-9,11,14-46,48-62,64-117
+  s_daf432b4e5443c::t_b19b49bb2795b5 118-307
+  s_daf432b4e5443c::t_f273a9a1865d07 47
+  s_daf432b4e5443c::t_fdd2cd6d00c2db 10,12-13
+  s_daf432b4e5443c::t_f01719917d74b6 63
+deep_causality_physics/src/constants/propulsion.rs
+  s_daf432b4e5443c::t_0bbc6ae56a7123 1-138
+deep_causality_physics/tests/kernels/propulsion/srp_tests.rs
+  s_daf432b4e5443c::t_b7cd59d9329947 1-164,171-177
+  s_daf432b4e5443c::t_f01719917d74b6 165-170
+openspec/changes/close-plasma-retropulsion-physics-gaps/design.md
+  s_daf432b4e5443c::t_0145112a7c06ee 91-98
+  s_daf432b4e5443c::t_8f2901d7499b9d 33-34
+openspec/changes/close-plasma-retropulsion-physics-gaps/tasks.md
+  s_daf432b4e5443c::t_9aaa674879b59f 3,6,9-16,21-40,44-49,51,53-62,66-74,83
+  s_daf432b4e5443c::t_aec554a27d89d6 75-82
+deep_causality_physics/src/kernels/propulsion/plume.rs
+  s_daf432b4e5443c::t_093f8fe1b24435 560-568,570
+  s_daf432b4e5443c::t_0d29dc3fe4764a 138,152,198,284-285,347-348,407,417,457,465,478,485,510
+  s_daf432b4e5443c::t_6b9b4439e59778 178-182
+  s_daf432b4e5443c::t_b4c4f32ddfed90 481
+  s_daf432b4e5443c::t_5b1b0fe82beffe 1-137,139-151,153-177,183-197,199-283,286-346,349-406,408-416,418-456,458-464,466-477,479-480,482,484,486-509,511,516,518-520,524-526,528-531,535-559,569,571-607
+  s_daf432b4e5443c::t_19f93bb1ee03f2 512-515,522-523,527,532-534
+  s_daf432b4e5443c::t_35e4969d7a56cb 483
+  s_daf432b4e5443c::t_c6d992784a32d7 517,521
+deep_causality_physics/src/kernels/propulsion/mod.rs
+  s_daf432b4e5443c::t_06907a09c0661f 19,27
+  s_daf432b4e5443c::t_3abb839b1c87e4 1-16,20-24
+  s_daf432b4e5443c::t_7de82f883243e9 17-18,25-26
+deep_causality_physics/src/quantities/mod.rs
+  s_daf432b4e5443c::t_28e1dfe9e53ad8 28
+  s_daf432b4e5443c::t_8a90c1a9743547 51
+deep_causality_physics/tests/kernels/mod.rs
+  s_daf432b4e5443c::t_e4b659c13c8bde 16
+MODULE.bazel.lock
+  s_daf432b4e5443c::t_77e6657da0bad7 289
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "09df3bf3c9aceb83ddec30d0e19aa2e14a78bc42",
+  "prompts": {},
+  "sessions": {
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
