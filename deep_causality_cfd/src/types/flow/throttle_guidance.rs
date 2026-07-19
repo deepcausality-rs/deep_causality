@@ -57,11 +57,20 @@ use crate::CfdScalar;
 use alloc::vec::Vec;
 use deep_causality_haft::LogAddEntry;
 use deep_causality_physics::{
-    Acceleration, Length, PhysicsError, Speed, suicide_burn_deceleration_kernel,
+    Acceleration, Length, PhysicsError, Speed, ignition_altitude_kernel,
+    suicide_burn_deceleration_kernel,
 };
 
 /// The field scalar carrying the one-way ignition latch across steps and leg boundaries.
 pub const IGNITION_LATCH_FIELD: &str = "ignition_committed";
+
+/// The field scalar latching the start of a stopping burn, published by a guidance configured with
+/// [`with_stopping_burn`](ThrottleGuidance::with_stopping_burn). Absent or zero while coasting.
+pub const STOPPING_BURN_FIELD: &str = "stopping_burn";
+
+/// The world-published throttle command. When a committed world publishes it, it overrides the
+/// guidance law — the counterfactual intervention seam, mirroring `"commanded_bank"`.
+const COMMANDED_THROTTLE_FIELD: &str = "commanded_throttle";
 
 /// The four-condition ignition corridor a [`ThrottleGuidance`] commits through.
 ///
@@ -125,6 +134,9 @@ pub struct ThrottleGuidance<R: CfdScalar> {
     thrust: R,
     gravity: R,
     corridor: Option<IgnitionCorridor<R>>,
+    stopping_burn_margin: Option<R>,
+    target_altitude: R,
+    contact_speed: R,
     speed_field: &'static str,
     altitude_field: &'static str,
     mass_field: &'static str,
@@ -143,6 +155,9 @@ impl<R: CfdScalar> ThrottleGuidance<R> {
             thrust,
             gravity,
             corridor: None,
+            stopping_burn_margin: None,
+            target_altitude: R::zero(),
+            contact_speed: R::zero(),
             speed_field: "flight_speed",
             altitude_field: "flight_altitude",
             mass_field: "mass",
@@ -157,6 +172,83 @@ impl<R: CfdScalar> ThrottleGuidance<R> {
     pub fn with_corridor(mut self, corridor: IgnitionCorridor<R>) -> Self {
         self.corridor = Some(corridor);
         self
+    }
+
+    /// Fly the committed burn as a **stopping burn**: coast at zero throttle until the altitude
+    /// falls to the ignition altitude, then burn. `margin` (m) is added to the stopping distance,
+    /// sized by the caller the same way [`IgnitionCorridor::margin_m`] is.
+    ///
+    /// Without this, a guidance that commits high commands `a_cmd = v²/2h + g`, which for large `h`
+    /// degenerates to `a_cmd ≈ g` — thrust balancing weight. The vehicle nulls its descent rate at
+    /// altitude and then **hovers**, spending propellant to hold station instead of to land.
+    ///
+    /// Coast-then-burn is not a workaround for that but the *optimal* structure: Meditch (1964)
+    /// showed the fuel-optimal control for the soft-landing problem is bang-bang — null thrust, then
+    /// maximum thrust — so any sustained intermediate throttle is wasteful by construction. It is
+    /// also what a real lander's minimum throttle forces: an engine whose floor thrust exceeds the
+    /// landed weight *cannot* hover, and must arrive at zero velocity at zero altitude.
+    ///
+    /// Two admissions the caller should know about. The hold-off is evaluated against
+    /// [`speed_field`](Self::new)'s **total** flight speed rather than the vertical component, so it
+    /// ignites conservatively early while the flight path is still slanted. And when thrust-to-weight
+    /// has fallen to one or below there is no coast to hold — no ignition altitude exists — so the
+    /// stage burns rather than refusing, leaving the descent-rate axis to catch it.
+    pub fn with_stopping_burn(mut self, margin: R) -> Self {
+        self.stopping_burn_margin = Some(margin);
+        self
+    }
+
+    /// Null the descent velocity at `target_altitude` (m) rather than at zero altitude.
+    ///
+    /// The stopping law targets the altitude where the vehicle should arrive stopped. Left at zero
+    /// that is the geometric surface — but a lander arrives stopped at its **gear contact plane**,
+    /// and a run that declares touchdown at a positive altitude floor samples the descent rate
+    /// there. Aiming at zero while sampling at the floor reports the speed the vehicle still had one
+    /// floor-height of braking short of the target, which is a formulation mismatch rather than a
+    /// property of the vehicle: with a net deceleration of `a`, the ideal profile still carries
+    /// `sqrt(2·a·h_floor)` at the floor.
+    ///
+    /// Below the target the law has arrived: the stage commands weight-balancing thrust and lets the
+    /// vehicle settle at constant velocity rather than pushing the closed form through its
+    /// singularity.
+    pub fn with_target_altitude(mut self, target_altitude: R) -> Self {
+        self.target_altitude = target_altitude;
+        self
+    }
+
+    /// Arrive at the target plane still descending at `contact_speed` (m/s) instead of stopped.
+    ///
+    /// Landers do not null their velocity at the gear plane. Falcon 9 touches down near 2 m/s, and
+    /// that is a requirement rather than a residual: its single landing engine at minimum throttle
+    /// out-thrusts the nearly empty stage, so it **cannot** hover and must be flown to arrive
+    /// moving. Deep-throttling vehicles that *can* hover still command a positive contact speed, to
+    /// make firm contact and to stop station-keeping over a landing site they are not standing on.
+    ///
+    /// Realized through the same closed form rather than beside it: the burn must remove the kinetic
+    /// energy down to the contact speed rather than to rest, so the kernel is asked to stop an
+    /// effective speed `sqrt(v² − v_c²)`, which is zero exactly when the vehicle is already at or
+    /// below the commanded contact condition.
+    pub fn with_contact_speed(mut self, contact_speed: R) -> Self {
+        self.contact_speed = contact_speed;
+        self
+    }
+
+    /// The speed the stopping law must actually remove: everything above the contact speed.
+    fn excess_speed(&self, speed: R) -> R {
+        let excess = speed * speed - self.contact_speed * self.contact_speed;
+        if excess <= R::zero() {
+            R::zero()
+        } else {
+            excess.sqrt()
+        }
+    }
+
+    /// True once the stopping burn has started and latched.
+    fn burning(&self, field: &CoupledField<R>) -> bool {
+        field
+            .scalar(STOPPING_BURN_FIELD)
+            .and_then(|s| s.first().copied())
+            .is_some_and(|v| v > R::zero())
     }
 
     /// Rename the sensed dynamic-pressure field, matching a world that configured the gate's
@@ -241,7 +333,30 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for ThrottleGuidance<R> {
         }
 
         // ── The command: zero until committed, then the stopping-distance law. ──
+        //
+        // A world-published `"commanded_throttle"` **overrides** the law once committed. This is the
+        // counterfactual command seam every other channel in the crate uses — the corridor's bank
+        // guidance is nothing but a read of the published `"commanded_bank"` — and without it a
+        // forked branch could not express an intervention: the guidance writes the throttle channel
+        // every step, and the channel outranks the published scalar in the propulsion stages'
+        // precedence, so the law would silently overwrite each branch's own command. The commit
+        // still gates *whether* thrust is commanded, so branches differ in burn magnitude rather
+        // than in whether they ignite.
         let throttle = if committed {
+            if let Some(published) = field
+                .scalar(COMMANDED_THROTTLE_FIELD)
+                .and_then(|s| s.first().copied())
+            {
+                let bounded = if published < R::zero() {
+                    R::zero()
+                } else if published > R::one() {
+                    R::one()
+                } else {
+                    published
+                };
+                field.set_throttle_action(bounded);
+                return Ok(());
+            }
             let speed = field
                 .scalar(self.speed_field)
                 .and_then(|s| s.first().copied())
@@ -260,14 +375,79 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for ThrottleGuidance<R> {
                     )
                 })?;
 
+            // ── The coast leg of the stopping burn: null thrust until the ignition altitude. ──
+            //
+            // Latched on its own scalar rather than recomputed as a live predicate: the ignition
+            // altitude falls as propellant burns off (a_T = T/m rises), so a burn that started at
+            // h_ign would find itself above the *new*, lower h_ign on the very next step and shut
+            // down. The decision to start stopping is made once, like the corridor commit above.
+            if let Some(margin) = self.stopping_burn_margin
+                && !self.burning(field)
+            {
+                let a_t = self.thrust / mass;
+                // Thrust-to-weight at or below one admits no coast: there is no altitude from which
+                // this vehicle could still stop, so it burns and the descent-rate axis judges it.
+                let hold_until = if a_t > self.gravity {
+                    Some(
+                        ignition_altitude_kernel(
+                            Speed::new(self.excess_speed(speed))?,
+                            Acceleration::new(a_t)?,
+                            Acceleration::new(self.gravity)?,
+                            Length::new(margin)?,
+                        )?
+                        .value(),
+                    )
+                } else {
+                    None
+                };
+
+                // Measured above the target plane, for the same reason the law is.
+                if let Some(h_ign) = hold_until
+                    && altitude - self.target_altitude > h_ign
+                {
+                    field.set_throttle_action(R::zero());
+                    return Ok(());
+                }
+
+                field.set_scalar(STOPPING_BURN_FIELD, Vec::from([R::one()]));
+                field.log_mut().add_entry(&alloc::format!(
+                    "stopping burn started at step {}: altitude {:?} m, speed {:?} m/s, thrust-to-weight {:?}",
+                    ctx.step(),
+                    altitude,
+                    speed,
+                    a_t / self.gravity,
+                ));
+            }
+
             // Ground contact and a non-positive gravity are the kernel's singularities; they
             // propagate rather than producing a throttle from an inadmissible state.
-            let a_cmd = suicide_burn_deceleration_kernel(
-                Speed::new(speed)?,
-                Length::new(altitude)?,
-                Acceleration::new(self.gravity)?,
-            )?
-            .value();
+            // Height above the *target* plane: the law nulls the velocity where the vehicle is meant
+            // to arrive stopped, not at the geometric surface below it.
+            let height = altitude - self.target_altitude;
+            let a_cmd = if height > R::zero() {
+                suicide_burn_deceleration_kernel(
+                    Speed::new(self.excess_speed(speed))?,
+                    Length::new(height)?,
+                    Acceleration::new(self.gravity)?,
+                )?
+                .value()
+            } else if altitude > R::zero() {
+                // At or below the commanded target plane but still above the surface: the burn has
+                // arrived. Balance weight and settle rather than driving the closed form through a
+                // singularity that is not physically present here.
+                self.gravity
+            } else {
+                // Ground contact is a different situation entirely, and stays the kernel's
+                // singularity: a guidance asked to command a burn from at or below the surface has
+                // been asked for something inadmissible, and says so rather than inventing a
+                // throttle. Re-entered through the kernel so the diagnosis stays the kernel's.
+                suicide_burn_deceleration_kernel(
+                    Speed::new(self.excess_speed(speed))?,
+                    Length::new(altitude)?,
+                    Acceleration::new(self.gravity)?,
+                )?
+                .value()
+            };
 
             if self.thrust <= R::zero() {
                 return Err(PhysicsError::PhysicalInvariantBroken(

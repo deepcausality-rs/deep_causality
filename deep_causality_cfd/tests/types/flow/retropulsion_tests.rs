@@ -47,6 +47,9 @@ fn powered_field() -> CoupledField<f64> {
     field.set_scalar("mass", vec![1_000.0]);
     field.set_scalar("propellant", vec![200.0]);
     field.set_aero_force([-5.0, 1.0, 0.0]); // axial drag −5, lateral lift +1
+    // Retro thrust is aimed against the carried flight velocity, so the fixture states one. Purely
+    // +x here, which is what makes the axial assertions below meaningful.
+    field.set_scalar("truth_state", vec![6.4e6, 0.0, 0.0, 500.0, 0.0, 0.0]);
     field
 }
 
@@ -436,4 +439,67 @@ fn propulsion_scalars_survive_a_pause_snapshot() {
     assert_eq!(restored.scalar("propellant"), Some([180.0].as_slice()));
     assert_eq!(restored.scalar("ignited"), Some([1.0].as_slice()));
     assert_eq!(restored.throttle_action(), Some(0.4));
+}
+
+#[test]
+fn retro_thrust_opposes_the_flight_velocity_not_a_fixed_axis() {
+    // The regression: a corridor-class trajectory is mostly tangential with a radial descent, so a
+    // hardcoded axis points along the flight path almost nowhere — and on the radial axis it
+    // accelerates the descent instead of arresting it.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let mut field = powered_field();
+    // Descending on −x at 1300 m/s while flying tangentially on +y at 7860 m/s: the corridor's own
+    // initial truth velocity.
+    field.set_scalar("truth_state", vec![6.4e6, 0.0, 0.0, -1_300.0, 7_860.0, 0.0]);
+    field.set_throttle_action(0.5);
+    let before = field.aero_force().unwrap();
+
+    PhysicsStage::<2, f64>::apply(&RetroThrust::new(THRUST, ISP), &ctx, &mut field).unwrap();
+
+    let after = field.aero_force().unwrap();
+    let delta = [
+        after[0] - before[0],
+        after[1] - before[1],
+        after[2] - before[2],
+    ];
+    // The thrust must oppose the velocity: its dot product with v is negative, and it is very
+    // nearly anti-parallel to v.
+    let v = [-1_300.0_f64, 7_860.0, 0.0];
+    let dot = delta[0] * v[0] + delta[1] * v[1] + delta[2] * v[2];
+    assert!(
+        dot < 0.0,
+        "retro thrust must oppose the velocity, got {delta:?}"
+    );
+    let mag_d = (delta[0] * delta[0] + delta[1] * delta[1]).sqrt();
+    let mag_v = (v[0] * v[0] + v[1] * v[1]).sqrt();
+    let cos = dot / (mag_d * mag_v);
+    assert!(
+        (cos + 1.0).abs() < 1e-9,
+        "thrust is anti-parallel to the velocity (cos {cos})"
+    );
+    // And specifically: the tangential component dominates, which a fixed −x axis would have missed
+    // entirely while pushing the vehicle down.
+    assert!(
+        delta[1].abs() > delta[0].abs(),
+        "the tangential term dominates for this trajectory: {delta:?}"
+    );
+    assert!(delta[1] < 0.0, "tangential thrust opposes +y motion");
+    assert!(
+        delta[0] > 0.0,
+        "radial thrust arrests the descent rather than adding to it"
+    );
+}
+
+#[test]
+fn an_active_burn_without_a_truth_state_cannot_be_aimed() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let mut field = powered_field();
+    field.take_scalar("truth_state");
+    field.set_throttle_action(0.5);
+
+    let err = PhysicsStage::<2, f64>::apply(&RetroThrust::new(THRUST, ISP), &ctx, &mut field)
+        .unwrap_err();
+    assert!(format!("{err:?}").contains("resolve the flight direction"));
 }

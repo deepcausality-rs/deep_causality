@@ -162,6 +162,8 @@ fn burn_field(mach: f64, altitude: f64) -> CoupledField<f64> {
     f.set_scalar("flight_mach", vec![mach]);
     f.set_scalar("flight_altitude", vec![altitude]);
     f.set_aero_force([-5.0, 0.0, 0.0]);
+    // Retro thrust is aimed against the carried flight velocity.
+    f.set_scalar("truth_state", vec![6.4e6, 0.0, 0.0, 800.0, 0.0, 0.0]);
     f
 }
 

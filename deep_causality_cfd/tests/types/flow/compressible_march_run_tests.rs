@@ -80,6 +80,17 @@ fn field_at_61km() -> CoupledField<f64> {
     f
 }
 
+/// A bare field carrying a flight velocity, so the plume stage can resolve a direction for its
+/// along-velocity drag decrement.
+fn imprint_field() -> CoupledField<f64> {
+    let mut f = CoupledField::new(Ambient::new(0.01, 0.0, None));
+    f.set_scalar(
+        "truth_state",
+        vec![EARTH_RADIUS + 30_000.0, 0.0, 0.0, -400.0, 0.0, 0.0],
+    );
+    f
+}
+
 #[test]
 fn coupled_run_publishes_evolved_projections() {
     let cfg = world("evolved", 3.0, 3);
@@ -1037,12 +1048,7 @@ fn the_plume_imprint_follows_the_throttle_through_the_carrier() {
     let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
-        .run_coupled(
-            stage,
-            CoupledField::new(Ambient::new(0.01, 0.0, None)),
-            BlackoutTrigger::new(1.0e9),
-            0.0,
-        )
+        .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
     let logged = report
         .effect_log()
@@ -1063,12 +1069,7 @@ fn without_the_opt_in_the_carrier_never_re_imprints() {
     let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
-        .run_coupled(
-            stage,
-            CoupledField::new(Ambient::new(0.01, 0.0, None)),
-            BlackoutTrigger::new(1.0e9),
-            0.0,
-        )
+        .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
     assert!(
         report
@@ -1086,12 +1087,7 @@ fn a_steady_throttle_re_imprints_once_not_every_step() {
     let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
-        .run_coupled(
-            stage,
-            CoupledField::new(Ambient::new(0.01, 0.0, None)),
-            BlackoutTrigger::new(1.0e9),
-            0.0,
-        )
+        .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
     let count = report
         .effect_log()
@@ -1109,12 +1105,7 @@ fn the_refresh_cap_bounds_re_imprints() {
     let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
-        .run_coupled(
-            stage,
-            CoupledField::new(Ambient::new(0.01, 0.0, None)),
-            BlackoutTrigger::new(1.0e9),
-            0.0,
-        )
+        .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
         .unwrap();
     assert!(
         report

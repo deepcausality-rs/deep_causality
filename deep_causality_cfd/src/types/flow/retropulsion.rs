@@ -100,6 +100,42 @@ fn active_throttle<R: CfdScalar>(field: &CoupledField<R>) -> Option<R> {
     }
 }
 
+/// The unit vector along the vehicle's flight velocity, from the carried `"truth_state"`
+/// (6 cells: position, then velocity).
+///
+/// Retro thrust opposes the **velocity**, so its direction cannot be a fixed axis: the corridor's
+/// motion is overwhelmingly tangential while its radial component is a descent, and the two swap
+/// dominance over a descent. A stage that assumed one axis would, for most of a real trajectory,
+/// point somewhere other than along the flight path — and on the radial axis it would push the
+/// vehicle *toward* the planet rather than arresting it.
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] if the truth state is absent, short, or carries a
+/// zero-magnitude velocity — thrust cannot be aimed without a direction to aim it against.
+fn flight_velocity_unit<R: CfdScalar>(
+    field: &CoupledField<R>,
+    stage: &str,
+) -> Result<[R; 3], PhysicsError> {
+    let truth = field.scalar("truth_state").ok_or_else(|| {
+        PhysicsError::PhysicalInvariantBroken(alloc::format!(
+            "{stage}: active throttle requires a carried \"truth_state\" to resolve the flight direction"
+        ))
+    })?;
+    if truth.len() < 6 {
+        return Err(PhysicsError::PhysicalInvariantBroken(alloc::format!(
+            "{stage}: \"truth_state\" must carry position and velocity (6 cells) to resolve the flight direction"
+        )));
+    }
+    let v = [truth[3], truth[4], truth[5]];
+    let mag = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+    if mag <= R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(alloc::format!(
+            "{stage}: cannot resolve a flight direction from a zero-magnitude velocity"
+        )));
+    }
+    Ok([v[0] / mag, v[1] / mag, v[2] / mag])
+}
+
 /// The carried vehicle mass under an active throttle.
 ///
 /// # Errors
@@ -193,6 +229,12 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PropulsionStub<R> {
 /// `"ignited"`. The thrust normalization uses the start-of-step mass, so it is consistent within the
 /// step and grows as propellant burns off.
 ///
+/// The thrust direction is the **carried flight velocity**, not a fixed axis: the acceleration is
+/// `−(T/m)·v̂` with `v̂` read from the `"truth_state"` velocity each step. This is load-bearing
+/// rather than cosmetic — a corridor-class trajectory is mostly tangential with a radial descent
+/// component, so a hardcoded axis points along the flight path almost nowhere, and on the radial
+/// axis it accelerates the descent instead of arresting it.
+///
 /// The stage is **strictly inert at throttle ≤ 0** (or absent): no force write, no scalar mutation,
 /// no log entry — the [`PropulsionStub`] contract, so a burn-phase stack carries it from the start
 /// and ignition stays a published-command event rather than a stack swap.
@@ -242,9 +284,16 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RetroThrust<R> {
         }
         field.set_scalar("ignited", Vec::from([R::one()]));
 
-        // Retro-thrust acceleration along −v̂, composed onto (never over) the lift vector.
+        // Retro-thrust acceleration along −v̂, composed onto (never over) the lift vector. The
+        // direction comes from the carried flight velocity, not from a fixed axis: a retro burn
+        // that does not oppose the velocity is not a retro burn.
+        let v_hat = flight_velocity_unit(field, "RetroThrust")?;
         let a_thrust = thrust / mass;
-        field.add_aero_force([R::zero() - a_thrust, R::zero(), R::zero()]);
+        field.add_aero_force([
+            R::zero() - a_thrust * v_hat[0],
+            R::zero() - a_thrust * v_hat[1],
+            R::zero() - a_thrust * v_hat[2],
+        ]);
         Ok(())
     }
 }
@@ -354,8 +403,20 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PlumeObstruction<R> {
             Area::new(self.s_ref)?,
         )?;
         let fraction = srp_preserved_drag_fraction_kernel(c_t)?;
-        let axial_drag = field.aero_force().unwrap_or([R::zero(); 3])[0];
-        field.add_aero_force([(fraction - R::one()) * axial_drag, R::zero(), R::zero()]);
+
+        // The plume destroys *aerodynamic drag*, which acts along −v̂ — so the decrement scales the
+        // along-velocity component of the force channel and leaves the lateral (lift) components
+        // alone. Reading a fixed axis instead would scale whatever happened to sit on x, which for a
+        // corridor-class trajectory is mostly the radial term rather than the drag.
+        //
+        // This stage must therefore compose **before** the thrust stage: both write along −v̂, and a
+        // decrement applied after thrust would scale the thrust term too, which the correlation says
+        // nothing about.
+        let v_hat = flight_velocity_unit(field, "PlumeObstruction")?;
+        let force = field.aero_force().unwrap_or([R::zero(); 3]);
+        let axial_drag = force[0] * v_hat[0] + force[1] * v_hat[1] + force[2] * v_hat[2];
+        let scale = (fraction - R::one()) * axial_drag;
+        field.add_aero_force([scale * v_hat[0], scale * v_hat[1], scale * v_hat[2]]);
         field.set_scalar("preserved_drag_fraction", Vec::from([fraction]));
 
         // ── Optional state-realism geometry for the carrier's re-imprint reader. ──

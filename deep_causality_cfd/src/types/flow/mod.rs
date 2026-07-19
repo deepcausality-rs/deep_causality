@@ -86,7 +86,9 @@ pub use study_effect::{StudyEffect, StudyEffectWitness};
 pub use study_error::StudyError;
 pub use study_warning::{StudyWarning, StudyWarningLog};
 pub use sweep::sweep;
-pub use throttle_guidance::{IGNITION_LATCH_FIELD, IgnitionCorridor, ThrottleGuidance};
+pub use throttle_guidance::{
+    IGNITION_LATCH_FIELD, IgnitionCorridor, STOPPING_BURN_FIELD, ThrottleGuidance,
+};
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;
