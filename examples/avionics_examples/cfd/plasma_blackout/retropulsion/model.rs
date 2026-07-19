@@ -243,6 +243,12 @@ pub struct BranchRow {
     /// The frozen-drag foil: the same thrust schedule with drag held at the fork value.
     pub frozen_drag_deceleration: FloatType,
     pub has_alternation_marker: bool,
+    /// Whether the carrier recorded this branch as an O(1) fork: both halves of the paused state
+    /// entered by reference and were genuinely shared. Read from the typed record the carrier
+    /// attaches to every continued branch, not inferred from the log.
+    pub o1_fork: bool,
+    /// Live references to the shared marched tensor when this branch was set up.
+    pub fluid_refs: FloatType,
 }
 
 impl TableRow for BranchRow {
@@ -254,6 +260,7 @@ impl TableRow for BranchRow {
         ("net_deceleration", "m/s2"),
         ("propellant_used", "kg"),
         ("frozen_drag_deceleration", "m/s2"),
+        ("fluid_refs", "-"),
     ];
     fn cells(&self) -> Vec<FloatType> {
         vec![
@@ -263,6 +270,7 @@ impl TableRow for BranchRow {
             self.net_deceleration,
             self.propellant_used,
             self.frozen_drag_deceleration,
+            self.fluid_refs,
         ]
     }
 }
@@ -321,6 +329,10 @@ pub fn score_branch(
         .map(|l| format!("{l}").contains("!!ContextAlternation!!"))
         .unwrap_or(false);
 
+    // The fork-economics record the carrier attaches to every continued branch. Absent means the
+    // report did not come from a fork at all, which fails the gate rather than defaulting true.
+    let economics = report.fork_economics();
+
     Ok(BranchRow {
         name: case.name.to_string(),
         throttle: case.throttle,
@@ -330,6 +342,10 @@ pub fn score_branch(
         propellant_used,
         frozen_drag_deceleration,
         has_alternation_marker,
+        o1_fork: economics.map(|e| e.is_o1()).unwrap_or(false),
+        fluid_refs: economics
+            .map(|e| utils::ft(e.fluid_refs() as f64))
+            .unwrap_or_else(|| utils::ft(0.0)),
     })
 }
 
@@ -415,7 +431,40 @@ pub fn branch_gates() -> GateSeq<BranchRow> {
         .gate("(4a) flow spread", gate_flow_spread)
         .gate("(4b) drag collapse", gate_drag_collapse)
         .gate("(4c) coupling load-bearing", gate_coupling)
+        .gate("(4d) fork economics", gate_fork_economics)
         .gate("(4e) audit trail", gate_markers)
+}
+
+/// (4d) The state-fork's O(1) claim, regressed rather than trusted.
+///
+/// M1's de-risk measured the fork structure directly on a `CarrierFork`; the study grammar lowers
+/// `branch` onto `continue_with`, which never builds one, so the carrier now records the same facts
+/// onto every continued branch's report and this reads them typed.
+///
+/// What it asserts: every branch entered by reference (no tensor copied at fork time), and each
+/// share was genuinely shared — a reference count above one. The count is the positive evidence.
+/// `shares_*` alone would still hold if a branch somehow owned the only copy; a roster of N
+/// branches off one pause must show the pause's state referenced more than once.
+fn gate_fork_economics(v: &StudyView<'_, BranchRow>) -> (bool, String) {
+    let rows = v.rows();
+    let forked = rows.iter().filter(|r| r.o1_fork).count();
+    let min_refs = rows
+        .iter()
+        .map(|r| r.fluid_refs)
+        .fold(FloatType::INFINITY, FloatType::min);
+    (
+        forked == rows.len() && rows.len() > 1,
+        format!(
+            "{}/{} branches forked O(1) — paused fluid and field entered each branch by reference, \
+             shared at {:.0}+ live references, one copy-on-write clone at first write (a roster of \
+             {} costs one paused state, not {} copies)",
+            forked,
+            rows.len(),
+            if min_refs.is_finite() { min_refs } else { 0.0 },
+            rows.len(),
+            rows.len()
+        ),
+    )
 }
 
 fn gate_flow_spread(v: &StudyView<'_, BranchRow>) -> (bool, String) {

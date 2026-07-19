@@ -183,8 +183,28 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 | geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `AlternatableValue` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
 | hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
 | flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
-| turbulence_flow | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz / Rayleigh–Bénard truncation); the same `Rk4` march at f32/f64/Float106 shows precision setting how far ahead a turbulent flow can be trusted | `cargo run -p avionics_examples --example turbulence_flow` |
 | ins_gnss_blackout | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector + the `alternate_value` corrective loop (withheld through the dark) + a carried relativistic clock kernel, in one auditable `CausalFlow` — the navigation/timing core of any GPS-denied flight | `cargo run -p avionics_examples --example ins_gnss_blackout` |
+
+### CFD Examples
+
+**Location:** `examples/avionics_examples/cfd`
+
+Computational fluid dynamics driving real engineering decisions, each ending in a self-verifying
+gate set that exits nonzero on regression. Run these with `--release`.
+
+| Example | Domain | Description | Command |
+|---------|--------|-------------|---------|
+| plasma_blackout_corridor | Multiphysics / GNC | One continuous Mach-25 descent through plasma blackout: a tensor-train compressed compressible carrier with a shock-fitted Rankine–Hugoniot inflow strip, evolved-state Park-2T ionization gated against the RAM-C II flight anchor, flow-resolved GNSS denial driving a 17-state ESKF, O(1) counterfactual bank branches, and a cybernetic envelope gate whose clamped command actually steers the 3-DOF lift | `cargo run --release -p avionics_examples --example plasma_blackout_corridor` |
+| plasma_blackout_weather | Digital Twin / Dispersion | The table factory for the corridor: six weather conditions as counterfactual worlds alternated from one validated baseline, flown concurrently, reduced to a dispersion table tracking navigation precision against weather | `cargo run --release -p avionics_examples --example plasma_blackout_weather` |
+| plasma_blackout_retropulsion | Multiphysics / GNC | Closes the family loop: consumes the weather table **in flight**, commits an ignition inside the Jarvinen–Adams band, and forks the marched plume-coupled state mid-burn — a *state* fork a parameter sweep cannot express — then coasts to the ignition altitude and lands at 2.0 m/s | `cargo run --release -p avionics_examples --example plasma_blackout_retropulsion` |
+| flight_envelope_placard | Certification / Placards | A Mach-altitude matrix in, one placard table out: US-1976 freestream, dynamic pressure, exact Rankine–Hugoniot stagnation temperature, Sutton–Graves heating, every point gated and any out-of-envelope point named | `cargo run --release -p avionics_examples --example flight_envelope_placard` |
+| nozzle_operating_map | Propulsion | A back-pressure sweep over a converging–diverging duct: shock position and thrust across the operating regimes, gated against gas-dynamics closed forms | `cargo run --release -p avionics_examples --example nozzle_operating_map` |
+| viv_resonance_margin | Structures / Aeroelasticity | Vortex-induced-vibration margin as a computed study: one validated cylinder-wake case marched per airspeed, shedding frequency extracted from each wake probe, margin to the structural mode tabled | `cargo run --release -p avionics_examples --example viv_resonance_margin` |
+| turbulence_flow | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz / Rayleigh–Bénard truncation); the same `Rk4` march at f32/f64/Float106 shows precision setting how far ahead a turbulent flow can be trusted | `cargo run -p avionics_examples --example turbulence_flow` |
+
+The three plasma-blackout examples are one story, not three variants — see
+[cfd/plasma_blackout/README.md](avionics_examples/cfd/plasma_blackout/README.md) for the family
+overview.
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 

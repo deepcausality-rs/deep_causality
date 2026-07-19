@@ -25,13 +25,18 @@ their own acceptance text.
 
 ## 1. Status ledger — done vs remaining
 
-The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Every stage but the last is now
-complete and archived — **Stage R** (the example-code refactoring), **Stage 1** (the physics-crate
-foundation), **Stage 2** (the front-loaded de-risk measurement, M1), **Stage 0** (the cfd contract
-layer, M2), and both halves of **Stage 3** (M3's coupled physics stages and M4's guidance, ignition
-commit, live envelope enforcement, and leg-re-seed visibility). Only **Stage 4** (M5) remains: the
-example that flies all of it. Its specs are derived and its preconditions are met. This roadmap keeps
-the note's stage names as an index and maps them onto milestones M1–M5.
+The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Every stage is now
+complete — **Stage R** (the example-code refactoring), **Stage 1** (the physics-crate foundation),
+**Stage 2** (the front-loaded de-risk measurement, M1), **Stage 0** (the cfd contract layer, M2),
+both halves of **Stage 3** (M3's coupled physics stages and M4's guidance, ignition commit, live
+envelope enforcement, and leg-re-seed visibility), and **Stage 4** (M5's example, which flies all of
+it to touchdown). This roadmap keeps the note's stage names as an index and maps them onto
+milestones M1–M5.
+
+**The roadmap is closed.** The plasma-retropulsion descent runs end to end: blackout exit, an
+ignition commit inside the Jarvinen–Adams band, a state-fork counterfactual on the marched
+plume-coupled state, and a landing at 2.0 m/s with 1372 kg of propellant remaining. Fourteen gates
+green in 256 s.
 
 | Note stage | Content | State | Roadmap |
 |---|---|---|---|
@@ -41,7 +46,7 @@ the note's stage names as an index and maps them onto milestones M1–M5.
 | **Stage 0** | cfd contracts + inheritance guard | **done** — `plasma-retropulsion-cfd-contracts`, archived 2026-07-19 (M5 glue task 6.4 carried forward) | **M2** |
 | **Stage 3** (physics half) | `RetroThrust`, `PlumeObstruction`, plume-imprint refresh, classifier axes | **done** — `add-retropulsion-coupled-stages`, archived 2026-07-19 | **M3** |
 | **Stage 3** (guidance half) | `ThrottleGuidance`, ignition commit, live envelope enforcement, leg re-seed visibility | **done** — `add-retropulsion-terminal-descent`, archived 2026-07-19 | **M4** |
-| **Stage 4** | Example wiring, counterfactuals, gates | **specs derived 2026-07-19 — unblocked, next to apply** | **M5** |
+| **Stage 4** | Example wiring, counterfactuals, gates | **done** — `wire-plasma-retropulsion-example`, applied and verified 2026-07-20 (all fourteen gates green; M2's carried-forward loader glue task 6.4 closed here) | **M5** |
 
 **Done and directly reusable (survey-verified):**
 
@@ -348,7 +353,7 @@ throttle, and the cutoff → transonic → subsonic terminal leg to a touchdown 
 
 ---
 
-### M5 — `wire-plasma-retropulsion-example`  *(Stage 4: example, counterfactuals, gates; **specs derived 2026-07-19**, unblocked — the terminal milestone)*
+### M5 — `wire-plasma-retropulsion-example`  *(Stage 4: example, counterfactuals, gates; **applied and verified 2026-07-20** — the terminal milestone, and the one that closed the roadmap)*
 
 **Objective.** Assemble the example, run the two counterfactual studies that are the reason the
 example exists, and pass the full gate set — the point at which the Plasma-Retropulsion Descent

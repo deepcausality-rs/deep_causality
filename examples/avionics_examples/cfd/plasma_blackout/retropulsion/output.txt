@@ -775,6 +775,7 @@
   [PASS] (4a) flow spread: branch flow observables spread 0.012 across the roster (threshold 0.010); the corridor's bank branches agreed to three digits
   [PASS] (4b) drag collapse: preserved drag falls 1.000 -> 0.217 across the roster (collapse 0.783, threshold 0.500), monotone in throttle — the cited Jarvinen-Adams central-nozzle collapse, carried per branch through a forked flight. Net deceleration stays monotone at this vehicle's thrust-to-drag ratio, so the trajectory-level sign flip is not asserted
   [PASS] (4c) coupling load-bearing: branch divergence departs the frozen-drag prediction by up to 4.2327 m/s2 (threshold 0.5000) — thrust-only kinematics does not predict the outcome
+  [PASS] (4d) fork economics: 5/5 branches forked O(1) — paused fluid and field entered each branch by reference, shared at 2+ live references, one copy-on-write clone at first write (a roster of 5 costs one paused state, not 5 copies)
   [PASS] (4e) audit trail: 5/5 forked branches carry !!ContextAlternation!! naming the world they replace (read from each report's effect log — the event-fork path writes no branch file)
   [PASS] (0) integrity: 2538 coupled steps flown; step errors captured: none
   [PASS] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and the throttle at zero; 3 leg re-seed(s) recorded in provenance (the marched layer is re-seeded at each leg boundary — the quasi-steady defense, now visible)
@@ -784,5 +785,5 @@
   [PASS] (6) touchdown: altitude floor reached at 0.015 km with descent rate 2.0 m/s (limit 5) and 1371.6 kg propellant remaining (floor 40)
   [PASS] (7) compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16)
   [PASS] (8) bounded rebuilds: 1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally
-  [PASS] (9) wall-clock budget: 256.1 s elapsed for the whole descent (budget 1800 s)
+  [PASS] (9) wall-clock budget: 245.7 s elapsed for the whole descent (budget 1800 s)
 === All gates passed: retropulsion counterfactuals + retropulsion descent. ===

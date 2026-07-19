@@ -63,9 +63,9 @@ post-fix navigation state within the table-sized margin.
 **The fork.** The marched, plume-coupled state is forked in O(1) through copy-on-write, once per
 candidate throttle: a coast branch, two straddling the drag sign-flip band, a nominal branch, and
 an engine-degraded contingency. The preserved-drag fraction collapses 1.000 → 0.217 across the
-roster — the cited A0 correlation, carried per branch through a genuinely forked flight. Four
+roster — the cited A0 correlation, carried per branch through a genuinely forked flight. Five
 gates read the fork: flow spread (4a), the drag collapse (4b), departure from a frozen-drag
-prediction (4c), and the audit trail (4e).
+prediction (4c), fork economics (4d), and the audit trail (4e).
 
 **Act 3b — BURN.** The supersonic retropulsion leg proper, flown under the SRP envelope until the
 vehicle drops to Mach 0.6 at 18.9 km — which is where those axes stop describing the physics.
@@ -115,6 +115,14 @@ branches spread with the intervention. So the fork here is a genuine fork of the
 carrying flow-realism and fork-economics witnesses that a parameter sweep cannot express at all.
 Gate (4c) is the one that earns it: the branches depart a frozen-drag prediction by up to
 4.23 m/s², so thrust-only kinematics does not predict the outcome.
+
+Gate (4d) regresses the O(1) claim rather than trusting it. The carrier records what each fork
+actually cost — whether the paused marched tensor and coupled field entered the branch by
+reference, and how many live references shared them — onto every continued branch's report, and
+the gate reads that typed record. A roster of five costs one paused state, not five copies. If
+that path ever deep-copies, the recorded economics say so and the gate fails; the reference count
+above one is the positive evidence, since sharing flags alone would still hold for a branch that
+owned the only copy.
 
 ## Limitations
 

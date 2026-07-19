@@ -72,7 +72,7 @@
       tests the correlation's non-monotonicity **surviving trajectory integration**, not an
       independent flowfield reproducing Jarvinen–Adams — and **(4c) coupling load-bearing** against
       a frozen-drag prediction (same thrust schedule, drag held at the fork value)
-- [ ] 3.7 **Gate (4d) fork economics** regressing M1's bands: `shares_fluid_with`/`shares_field_with`
+- [x] 3.7 **Gate (4d) fork economics** regressing M1's bands: `shares_fluid_with`/`shares_field_with`
       true; per-branch continuation ratio inside the 2.0× band (M1's committed
       `studies/qtt_rank_plume/output.txt` records 0.67–1.04, setup 42 ns — **not** the 83 ns /
       0.68–1.05 the verdict prose carries; see design Open Questions); post-fork
@@ -129,7 +129,7 @@
       bit-identical
 - [x] 7.2 `make format && make fix` — clippy clean without suppressions
 - [ ] 7.3 `make test` and `make check` (full-repo SDD pre-PR gate)
-- [ ] 7.4 Update `openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md` — close the
+- [x] 7.4 Update `openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md` — close the
       ledger, and move the note to the notes archive per the SDD workflow
 - [x] 7.5 Prepare the commit message(s) per task group and hand to the user (never commit); draft the
       PR summary referencing this change and roadmap milestone M5
