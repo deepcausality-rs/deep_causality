@@ -1,0 +1,68 @@
+openspec/changes/add-retropulsion-terminal-descent/specs/flight-sensor-scalars/spec.md
+  s_03a25bcd8e11c3::t_cde13bb40e3ba4 6-26
+  s_03a25bcd8e11c3::t_2e35497a89639c 1-5,27-61
+openspec/changes/add-retropulsion-terminal-descent/specs/throttle-guidance-stage/spec.md
+  s_03a25bcd8e11c3::t_7bbd508f98193c 1-73
+openspec/changes/add-retropulsion-terminal-descent/design.md
+  s_03a25bcd8e11c3::t_c5e0a8fc42fadb 11-13
+  s_03a25bcd8e11c3::t_34db6539a2b7d3 147-164
+  s_03a25bcd8e11c3::t_3f5ff523b8bd55 180-188
+  s_03a25bcd8e11c3::t_dcbea0ea368924 113-126
+  s_03a25bcd8e11c3::t_43aa8c852f3ab7 208-214
+  s_03a25bcd8e11c3::t_597b5fd52fe3a5 1-10,14-17,27,40-112,127,129,138-141,146,165-179,189-207,215-244
+  s_03a25bcd8e11c3::t_69528928307ca5 18-26,28-39
+  s_03a25bcd8e11c3::t_f0231c932e6b9d 128,130-137,142-145
+openspec/changes/add-retropulsion-terminal-descent/specs/powered-descent-envelope/spec.md
+  s_03a25bcd8e11c3::t_42f97dbedc066a 29-37,39-52,54-56,70-72,75,77,82-86,94-110,117-124,126,130-146,156-161
+  s_03a25bcd8e11c3::t_daf98757186351 38
+  s_03a25bcd8e11c3::t_1a08406225d116 1-28,53,57-69,73-74,76,78-81,87-93,111-116,125,127-129,147-155
+openspec/changes/wire-plasma-retropulsion-example/design.md
+  s_03a25bcd8e11c3::t_d320bdf8dd341d 115-121
+  s_03a25bcd8e11c3::t_e595125aa6725d 191-195
+openspec/changes/add-retropulsion-terminal-descent/proposal.md
+  s_03a25bcd8e11c3::t_c14d0f326b3b2e 10-22
+  s_03a25bcd8e11c3::t_50fc8e8d5a1773 75-80,83,85-89
+  s_03a25bcd8e11c3::t_e60db53eaa4379 62-69
+  s_03a25bcd8e11c3::t_27c609c43491a6 1-9,23-25,33-34,43-61,70-74,81-82,84,90-105,111-114,120-124
+  s_03a25bcd8e11c3::t_91f42fef1e1a4f 26-32,35-42
+  s_03a25bcd8e11c3::t_cd5567f245c8b7 106-110
+  s_03a25bcd8e11c3::t_60e52d2251bcae 115-119
+openspec/changes/add-retropulsion-terminal-descent/specs/ignition-corridor-commit/spec.md
+  s_03a25bcd8e11c3::t_ba76ca55f102c0 69-76
+  s_03a25bcd8e11c3::t_c89fa64ca735ba 1-68,77-85,94-99
+  s_03a25bcd8e11c3::t_e3d34b36c5d2fe 86-93
+openspec/changes/add-retropulsion-terminal-descent/.openspec.yaml
+  s_03a25bcd8e11c3::t_52fac2a9a4da2e 1-2
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_03a25bcd8e11c3::t_c34a78fae5679f 305-318
+  s_03a25bcd8e11c3::t_2662d901e66930 43
+openspec/changes/add-retropulsion-terminal-descent/specs/terminal-descent-leg/spec.md
+  s_03a25bcd8e11c3::t_55ccec70a4da7e 26-51,58-82
+  s_03a25bcd8e11c3::t_c6003729493ae0 1-25,52-57,83-124
+openspec/changes/add-retropulsion-terminal-descent/tasks.md
+  s_03a25bcd8e11c3::t_8e5f3a3a2ca8bd 119-123
+  s_03a25bcd8e11c3::t_287b94d4c8f654 63-66,68-73
+  s_03a25bcd8e11c3::t_8af5756fa3cfda 93-101
+  s_03a25bcd8e11c3::t_90e30d7fc433bd 1-55,62,67,74-92,102-118,124-141
+  s_03a25bcd8e11c3::t_96f370e2afce80 56-61
+openspec/changes/wire-plasma-retropulsion-example/specs/retropulsion-example-wiring/spec.md
+  s_03a25bcd8e11c3::t_c566fbb052f801 131-138
+openspec/changes/wire-plasma-retropulsion-example/tasks.md
+  s_03a25bcd8e11c3::t_587625fcccaa60 32-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "fcbc59eda6f91b2064c7dc6b96fecaf909fbda4b",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
