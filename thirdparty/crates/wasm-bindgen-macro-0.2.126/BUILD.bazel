@@ -108,7 +108,7 @@ rust_proc_macro(
     }),
     version = "0.2.126",
     deps = [
-        "//thirdparty/crates/quote-1.0.46:quote",
+        "//thirdparty/crates/quote-1.0.47:quote",
         "//thirdparty/crates/wasm-bindgen-macro-support-0.2.126:wasm_bindgen_macro_support",
     ],
 )

@@ -10,3 +10,6 @@ set -o pipefail
 
 # Updates all vendored crates
 command bazel run //thirdparty:crates_vendor
+
+# Build all vendored deps
+command bazel build //thirdparty/crates/...
