@@ -1,0 +1,92 @@
+website/cfd/src/components/home/ValidationSnapshot.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 23,25-27,68-70
+website/cfd/src/content/examples/en/plasma-blackout-weather.mdx
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,15,18
+  s_f0a6cfc98ba452::t_7528a77ce917e9 3,46
+  s_f0a6cfc98ba452::t_d2a3e5e80f4257 23-25,27-29,56-60,69-70,72,74-76,78-79,83-87,89-90,92-93,95
+website/cfd/src/pages/404.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 15,17
+website/cfd/src/content/examples/en/viv-resonance-margin.mdx
+  s_f0a6cfc98ba452::t_7528a77ce917e9 37,52
+  s_f0a6cfc98ba452::t_fd50da2e9bd745 22-23,25-26,34-35,49-50,60-64,66-71,73,75-77,79-80
+website/cfd/src/components/home/Hero.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 18,20-22,25-27
+website/cfd/src/content/cookbook/en/install.mdx
+  s_f0a6cfc98ba452::t_7528a77ce917e9 2-3,36
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,20-21,32-34,42-44,46-47,58-60,62-63,68-70
+website/cfd/src/pages/roadmap/index.astro
+  s_f0a6cfc98ba452::t_8a7ca9da00bf12 61-62,106-110
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 59
+website/cfd/src/pages/boundaries/index.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 20
+  s_f0a6cfc98ba452::t_d7781cfef7736e 117
+  s_f0a6cfc98ba452::t_8a7ca9da00bf12 22-24,27-29,120-124,128-129,132-133
+website/cfd/src/pages/validation/index.astro
+  s_f0a6cfc98ba452::t_8a7ca9da00bf12 25-27,30-31,47-51,118,121-122,125-126,128-130,133-136,139-142
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 23
+website/cfd/src/content/examples/en/plasma-blackout-corridor.mdx
+  s_f0a6cfc98ba452::t_d2a3e5e80f4257 26-28,37-39,66-68,75-77,97-98,107-110,120-129,131-132,134-137
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,10-11,17,21
+  s_f0a6cfc98ba452::t_7528a77ce917e9 3,41,70,100,112
+website/cfd/src/content/cookbook/en/couple-multiphysics.mdx
+  s_f0a6cfc98ba452::t_1f1f6f8d17fd8f 3-4,136-137,161-163
+  s_f0a6cfc98ba452::t_592c2ba87326be 23-25,27,29,31,33,68,70-74,76-112,145-160,164-168,177-179,188-192
+  s_f0a6cfc98ba452::t_ff1d2c8d197b68 1-2,5-22,26,28,30,32,34-67,69,75,113-135,138-144,169-176,180-187,193-220
+website/cfd/src/content/examples/en/nozzle-operating-map.mdx
+  s_f0a6cfc98ba452::t_2c55843f88d044 4
+  s_f0a6cfc98ba452::t_fd50da2e9bd745 23-24,41-43,45-49,57-60,62-63,71,73-74,76-81
+  s_f0a6cfc98ba452::t_7528a77ce917e9 29,51
+website/cfd/src/content/cookbook/en/handle-regime-change.mdx
+  s_f0a6cfc98ba452::t_96cd4f25b98629 1-104
+website/cfd/src/content/examples/en/turbulence-flow.mdx
+  s_f0a6cfc98ba452::t_d2a3e5e80f4257 21-22,35,37-40,42,58-62,64-65,76-78,80-83,99,101-102,104-108,110-111
+  s_f0a6cfc98ba452::t_7528a77ce917e9 85,87
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,16
+website/cfd/src/content/examples/en/flight-envelope-placard.mdx
+  s_f0a6cfc98ba452::t_fd50da2e9bd745 22-23,25-27,53-54,58,69-71,73,75-76,78-85
+  s_f0a6cfc98ba452::t_7528a77ce917e9 39,56
+  s_f0a6cfc98ba452::t_2c55843f88d044 4
+website/cfd/src/content/cookbook/en/fork-a-running-simulation.mdx
+  s_f0a6cfc98ba452::t_7528a77ce917e9 64,131
+  s_f0a6cfc98ba452::t_dec030754abc81 3-4,12,20-21,23-25,35-39,41,44-56,60-63,65-87,89-93,95-97,99,101-103,105-112,114-115,117-118,120,122-125,127-129,133-135,137-139,141-143
+website/cfd/src/content/cookbook/en/couple-navigation-to-physics.mdx
+  s_f0a6cfc98ba452::t_88f47f71acc37e 1-108
+website/cfd/src/components/home/SolverStack.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 53,55-56
+website/cfd/src/pages/cookbook/index.astro
+  s_f0a6cfc98ba452::t_8a7ca9da00bf12 23-25
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 21
+website/cfd/src/content/cookbook/en/pick-a-solver.mdx
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,43-47,56-58,69-77
+  s_f0a6cfc98ba452::t_6217d62ade10f6 5
+  s_f0a6cfc98ba452::t_7528a77ce917e9 3,41,60
+website/cfd/src/components/home/ExampleLadder.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 17,19-20
+website/cfd/src/pages/examples/index.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 21
+  s_f0a6cfc98ba452::t_8a7ca9da00bf12 23-25
+website/cfd/src/content/cookbook/en/sweep-a-parameter.mdx
+  s_f0a6cfc98ba452::t_7528a77ce917e9 53
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,35,37-40,42,49-51,55-56,58-60,64-66
+website/cfd/src/content/cookbook/en/gate-against-a-placard.mdx
+  s_f0a6cfc98ba452::t_7528a77ce917e9 3,50,69
+  s_f0a6cfc98ba452::t_2c55843f88d044 4,33-35,46-48,53-55,57-58,62-64,66-67,72-76
+website/cfd/src/components/home/BoundaryTeaser.astro
+  s_f0a6cfc98ba452::t_23bea10cbfb0e0 16,18-19,26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f2f369abccf4e8587f48e6d44b5b07e4e6e9c95b",
+  "prompts": {},
+  "sessions": {
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
