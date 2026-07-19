@@ -1,55 +1,56 @@
 ## ADDED Requirements
 
-### Requirement: The weather table loads through the typed reader
+### Requirement: Value-bracketed keyed interpolation is a reusable library type
 
-The shared library (`avionics_examples::shared`) SHALL provide a weather-table loader that reads
-the recorded dispersion table (`cfd/plasma_blackout/weather/weather_table.csv`) through the
-existing `deep_causality_file` typed reader (`read_rows` with a `FromTableRow` consumption row
-type bound to the `WorldRow::SCHEMA` column names), not a hand-rolled parser. A missing required
-column MUST surface as the reader's named-column error, and a malformed cell as a loading error
-— never a default value.
+`deep_causality_cfd` SHALL provide a schema-agnostic `KeyedTable<R>` lookup type — the N-column
+generalization of `DescentSchedule::sample` — carrying value-bracketed linear interpolation with
+end clamping, so the measured-parameter lookup the weather example needs is a tested library
+primitive rather than example code. (House rule: examples are example code only; general-purpose
+logic lives in a lib crate and is tested there. This supersedes the original placement of the
+loader in `avionics_examples::shared` — design D7/D8 — for the reusable core.) `KeyedTable::new`
+MUST sort rows ascending by key, reject duplicate keys as an error, and reject ragged column
+counts; `KeyedTable::interpolate` MUST bracket the query **by key value** (never by insertion
+order), interpolate every column linearly, and clamp a query outside the tabulated range to the
+nearest end row. The type MUST perform no logging (it is a pure config-time consumer).
 
-#### Scenario: The committed table loads typed
+#### Scenario: A mid-range key interpolates its true value neighbors
 
-- **WHEN** the loader reads the committed `weather_table.csv`
-- **THEN** it returns six typed rows whose `d_temp`, `onset`, `exit`, `dwell`, `drift_mean`,
-  and `drift_sd` values equal the recorded cells
+- **WHEN** a table built from unsorted keys (the committed weather run order 0, +20, −25, −40, −5,
+  +5 K) is interpolated at `dT = −15`
+- **THEN** the result brackets the −25 K and −5 K rows (not insertion-order neighbors), and every
+  interpolated column lies between its bracketing values
+
+#### Scenario: Duplicate keys and ragged rows are rejected
+
+- **WHEN** a table is built with two rows sharing a key, or with rows of differing column counts
+- **THEN** construction returns an error and no table is produced
+
+### Requirement: The clamp is a marker carried, not logged
+
+`KeyedTable::interpolate` SHALL report a query outside the tabulated key range through a `clamped`
+marker on its result (alongside the interpolated values and the bracketing row indices), and SHALL
+itself perform no logging — the `EffectLog` lives on the coupled field, which this config-time type
+never sees. Stamping a clamped result into flight provenance is the consuming stage's
+responsibility (the M5 example), so a day flown outside the tabulated dispersion range is auditable
+without coupling the lookup to the flight stack.
+
+#### Scenario: An out-of-range key clamps with the marker set
+
+- **WHEN** the committed table is interpolated at `dT = −60` (below the −40 K row)
+- **THEN** the result equals the −40 K row with `clamped` set, and the lookup writes no log entry
+
+### Requirement: The M5 example binds the reusable lookup to the weather CSV
+
+The M5 retropulsion example SHALL load the recorded dispersion table
+(`cfd/plasma_blackout/weather/weather_table.csv`) through the existing `deep_causality_file` typed
+reader (`read_rows` with a `FromTableRow` consumption row type bound to the `WorldRow::SCHEMA`
+column names), feed the parsed rows into `KeyedTable`, and stamp a clamped interpolation into the
+flight `EffectLog`. A missing required column MUST surface as the reader's named-column error, and
+a malformed cell as a loading error — never a default value. This binding is example glue (example
+code only, no example-crate tests) and is deferred to M5, which owns the retropulsion example
+folder; M2 delivers and tests the reusable `KeyedTable` core it stands on.
 
 #### Scenario: Schema drift is a named error
 
-- **WHEN** a table missing the `drift_sd` column is loaded
-- **THEN** the loader returns an error naming `drift_sd`, and no partial result is returned
-
-### Requirement: Interpolation is value-bracketed over sorted unique keys
-
-The loader SHALL sort the loaded rows ascending by `d_temp` after load (the recorded rows arrive
-in run order, not temperature order), MUST reject duplicate `d_temp` keys as an error, and SHALL
-interpolate at the measured temperature departure `dT` by selecting the bracketing pair **by
-value** and interpolating every numeric column linearly between them. A `dT` outside the
-tabulated range SHALL clamp to the nearest row. Bracketing by file order is prohibited: it would
-select non-adjacent temperatures for most inputs, and the row feeds load-bearing margins.
-
-#### Scenario: A mid-range dT interpolates its true neighbors
-
-- **WHEN** the committed table (run order 0, +20, −25, −40, −5, +5 K) is loaded and interpolated
-  at `dT = −15`
-- **THEN** the result interpolates between the −25 K and −5 K rows, and every interpolated
-  column lies between its bracketing values
-
-#### Scenario: Duplicate keys are rejected
-
-- **WHEN** a table containing two rows with the same `d_temp` is loaded
-- **THEN** the loader returns an error identifying the duplicate key
-
-### Requirement: The clamp is a marker the flight side stamps into provenance
-
-The interpolation result SHALL carry the interpolated row, the bracketing pair (or the single
-clamped row), and a `clamped` marker; the loader itself SHALL perform no logging. When the
-flight side consumes a clamped result, the clamp MUST be stamped into the `EffectLog`
-provenance, so a day flown outside the tabulated dispersion range is auditable.
-
-#### Scenario: An out-of-range dT clamps with the marker set
-
-- **WHEN** the committed table is interpolated at `dT = −60` (below the −40 K row)
-- **THEN** the result equals the −40 K row with `clamped` set, and a consumer stamping the
-  result produces a provenance entry recording the clamp and the requested dT
+- **WHEN** the M5 loader reads a table missing the `drift_sd` column
+- **THEN** `read_rows` returns an error naming `drift_sd`, and no partial result is produced

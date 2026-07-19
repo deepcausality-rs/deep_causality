@@ -528,9 +528,62 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for BankSteeredLift<R> {
 // [6] Cybernetic bounded-correction gate
 // ---------------------------------------------------------------------------
 
+/// The optional powered-descent axes of a [`SafetyEnvelope`] (change
+/// `plasma-retropulsion-cfd-contracts`, capability `powered-descent-envelope`). Present only for a
+/// burn-phase world; absent (`SafetyEnvelope::burn == None`) for the corridor, where the gate
+/// behaves exactly as before. Carries the throttle floor/ceiling, the maximum thrust coefficient
+/// `max_ct` (the *dynamic* throttle cap — the admissible ceiling is the static ceiling min'd with
+/// the throttle at which `C_T = T/(q∞·S_ref)` reaches `max_ct`), the ignition dynamic-pressure
+/// window `[q_min, q_max]` (stored for M4's ignition-corridor commit, not enforced by the gate),
+/// the propellant floor, and the maximum descent rate.
+#[derive(Debug, Clone, Copy)]
+pub struct BurnEnvelope<R: CfdScalar> {
+    /// Minimum admissible throttle command.
+    pub throttle_floor: R,
+    /// Maximum admissible throttle command (the static ceiling).
+    pub throttle_ceiling: R,
+    /// Maximum admissible thrust coefficient `C_T` (the dynamic, q-dependent throttle cap).
+    pub max_ct: R,
+    /// Ignition dynamic-pressure window lower bound (Pa) — stored for M4, not gated here.
+    pub q_min: R,
+    /// Ignition dynamic-pressure window upper bound (Pa) — stored for M4, not gated here.
+    pub q_max: R,
+    /// Minimum admissible propellant mass (kg); a positive throttle at or below it is a breach.
+    pub propellant_floor: R,
+    /// Maximum admissible descent rate (m/s).
+    pub max_descent_rate: R,
+}
+
+impl<R: CfdScalar> BurnEnvelope<R> {
+    /// A burn envelope with all six powered-descent axes.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        throttle_floor: R,
+        throttle_ceiling: R,
+        max_ct: R,
+        q_min: R,
+        q_max: R,
+        propellant_floor: R,
+        max_descent_rate: R,
+    ) -> Self {
+        Self {
+            throttle_floor,
+            throttle_ceiling,
+            max_ct,
+            q_min,
+            q_max,
+            propellant_floor,
+            max_descent_rate,
+        }
+    }
+}
+
 /// The verified safety envelope — the cybernetic loop's Context `C`. A bank-angle correction is
 /// admissible only inside it; the gate clamps into `[−max_bank, max_bank]` and refuses (yields
 /// [`BankCorrection::NoSafeAction`]) once the sensed heat flux or g-load exceeds its ceiling.
+///
+/// The optional [`burn`](Self::burn) axes carry the powered-descent limits; they are `None` for the
+/// corridor, so the gate stays bit-identical until a burn-phase world attaches them.
 #[derive(Debug, Clone, Copy)]
 pub struct SafetyEnvelope<R: CfdScalar> {
     /// Maximum admissible wall heat flux (W·m⁻²).
@@ -539,16 +592,27 @@ pub struct SafetyEnvelope<R: CfdScalar> {
     pub max_g_load: R,
     /// Maximum admissible bank-angle magnitude (rad).
     pub max_bank_rad: R,
+    /// The optional powered-descent axes; `None` for the corridor (gate unchanged).
+    pub burn: Option<BurnEnvelope<R>>,
 }
 
 impl<R: CfdScalar> SafetyEnvelope<R> {
     /// An envelope bounded by a heat-flux ceiling, a g-load ceiling, and a bank-angle magnitude.
+    /// The powered-descent axes are absent (`burn: None`); attach them with [`with_burn`](Self::with_burn).
     pub fn new(max_heat_flux: R, max_g_load: R, max_bank_rad: R) -> Self {
         Self {
             max_heat_flux,
             max_g_load,
             max_bank_rad,
+            burn: None,
         }
+    }
+
+    /// Attach the powered-descent axes, returning the extended envelope (the corridor never calls
+    /// this, so its gate is untouched).
+    pub fn with_burn(mut self, burn: BurnEnvelope<R>) -> Self {
+        self.burn = Some(burn);
+        self
     }
 }
 
@@ -620,17 +684,51 @@ impl CyberneticLoop<GuidanceWitness> for GuidanceWitness {
 pub struct CyberneticCorrect<R: CfdScalar> {
     heat_flux_field: &'static str,
     g_load_field: &'static str,
+    q_field: &'static str,
+    propellant_field: &'static str,
+    descent_rate_field: &'static str,
+    thrust_ref: R,
+    s_ref: R,
     envelope: SafetyEnvelope<R>,
 }
 
 impl<R: CfdScalar> CyberneticCorrect<R> {
     /// A gate enforcing `envelope`, reading `"heat_flux"` and `"g_load"` from the coupled field.
+    /// The powered-descent sensing carries inert defaults; enforcement of the burn axes runs only
+    /// when the envelope's `burn` axes and a throttle command are both present (see
+    /// [`with_burn_sensing`](Self::with_burn_sensing)).
     pub fn new(envelope: SafetyEnvelope<R>) -> Self {
         Self {
             heat_flux_field: "heat_flux",
             g_load_field: "g_load",
+            q_field: "q_inf",
+            propellant_field: "propellant",
+            descent_rate_field: "descent_rate",
+            thrust_ref: R::zero(),
+            s_ref: R::zero(),
             envelope,
         }
+    }
+
+    /// Configure the powered-descent sensing: the scalar-field names carrying the freestream
+    /// dynamic pressure, the carried propellant, and the descent rate, plus the full-throttle
+    /// thrust reference and aerodynamic reference area the dynamic `C_T` cap is computed from
+    /// (`C_T = throttle·thrust_ref / (q∞·s_ref)`). Only read when the envelope's burn axes are
+    /// active, so the corridor gate is unaffected.
+    pub fn with_burn_sensing(
+        mut self,
+        q_field: &'static str,
+        propellant_field: &'static str,
+        descent_rate_field: &'static str,
+        thrust_ref: R,
+        s_ref: R,
+    ) -> Self {
+        self.q_field = q_field;
+        self.propellant_field = propellant_field;
+        self.descent_rate_field = descent_rate_field;
+        self.thrust_ref = thrust_ref;
+        self.s_ref = s_ref;
+        self
     }
 }
 
@@ -696,18 +794,77 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for CyberneticCorrect<R> {
                     ));
                 }
                 field.set_control_action(theta);
-                Ok(())
             }
             BankCorrection::NoSafeAction => {
                 field
                     .log_mut()
                     .add_entry("safety-envelope breach: no recoverable bank correction");
-                Err(PhysicsError::PhysicalInvariantBroken(
+                return Err(PhysicsError::PhysicalInvariantBroken(
                     "cybernetic gate: safety envelope breached, no recoverable bank correction"
                         .into(),
-                ))
+                ));
             }
         }
+
+        // ── Powered-descent enforcement — inert unless the envelope's burn axes AND a throttle
+        //    command are both present, so the corridor gate is bit-identical without them. ──
+        if let Some(burn) = self.envelope.burn
+            && let Some(commanded) = field.throttle_action()
+        {
+            // Propellant floor: a positive throttle at or below the floor is an unrecoverable breach.
+            let propellant = field
+                .scalar(self.propellant_field)
+                .map(peak)
+                .unwrap_or_else(R::zero);
+            if commanded > R::zero() && propellant <= burn.propellant_floor {
+                field.log_mut().add_entry(&format!(
+                    "safety-envelope breach: propellant {} at/below floor {} under commanded thrust",
+                    propellant, burn.propellant_floor,
+                ));
+                return Err(PhysicsError::PhysicalInvariantBroken(
+                    "cybernetic gate: propellant floor breached under commanded thrust".into(),
+                ));
+            }
+            // Descent rate: above the bound with no admissible throttle correction is a breach.
+            let descent_rate = field
+                .scalar(self.descent_rate_field)
+                .map(peak)
+                .unwrap_or_else(R::zero);
+            if descent_rate > burn.max_descent_rate {
+                field.log_mut().add_entry(&format!(
+                    "safety-envelope breach: descent rate {} exceeds bound {}",
+                    descent_rate, burn.max_descent_rate,
+                ));
+                return Err(PhysicsError::PhysicalInvariantBroken(
+                    "cybernetic gate: descent-rate bound breached, no recoverable throttle".into(),
+                ));
+            }
+            // Throttle clamp into `[floor, min(ceiling, dynamic C_T cap)]`. The dynamic cap is the
+            // throttle at which `C_T = throttle·thrust_ref/(q∞·s_ref)` reaches `max_ct`; it moves
+            // with the sensed dynamic pressure. Absent a usable thrust reference or sensed q∞, only
+            // the static ceiling binds.
+            let q_inf = field.scalar(self.q_field).map(peak).unwrap_or_else(R::zero);
+            let ceiling = if self.thrust_ref > R::zero() && q_inf > R::zero() {
+                let ct_ceiling = burn.max_ct * q_inf * self.s_ref / self.thrust_ref;
+                if ct_ceiling < burn.throttle_ceiling {
+                    ct_ceiling
+                } else {
+                    burn.throttle_ceiling
+                }
+            } else {
+                burn.throttle_ceiling
+            };
+            let bounded = clamp(commanded, burn.throttle_floor, ceiling);
+            if bounded != commanded {
+                field.log_mut().add_entry(&format!(
+                    "throttle command bounded to envelope: {} -> {}",
+                    commanded, bounded,
+                ));
+            }
+            field.set_throttle_action(bounded);
+        }
+
+        Ok(())
     }
 }
 

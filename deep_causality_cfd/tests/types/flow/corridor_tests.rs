@@ -8,9 +8,9 @@
 //! [`CyberneticCorrect`] bounded-correction gate.
 
 use deep_causality_cfd::{
-    Ambient, BankCorrection, BankSteeredLift, BlackoutTrigger, BranchAccumulator, CoupledField,
-    CyberneticCorrect, GoverningModel, InsErrorState, NavFilter, PhysicsStage, ReentryNavEngine,
-    RegimeClass, RegimeClassify, SafetyEnvelope, StepContext, TrajectoryNav,
+    Ambient, BankCorrection, BankSteeredLift, BlackoutTrigger, BranchAccumulator, BurnEnvelope,
+    CoupledField, CyberneticCorrect, GoverningModel, InsErrorState, NavFilter, PhysicsStage,
+    ReentryNavEngine, RegimeClass, RegimeClassify, SafetyEnvelope, StepContext, TrajectoryNav,
 };
 use deep_causality_haft::LogSize;
 use deep_causality_physics::EARTH_GM;
@@ -230,6 +230,119 @@ fn g_load_breach_returns_entropy() {
     f.set_scalar("g_load", vec![20.0]); // above the 12 g ceiling
     f.set_control_action(0.1);
     assert!(gate().apply(&ctx(0), &mut f).is_err());
+}
+
+// ---------------------------------------------------------------------------
+// CyberneticCorrect — powered-descent burn axes (powered-descent-envelope)
+// ---------------------------------------------------------------------------
+
+// Burn envelope: throttle ∈ [0.1, 0.9], max_ct 2.0, ignition q window [1000, 5000],
+// propellant floor 10 kg, max descent rate 100 m/s. Sensing: thrust_ref 2000 N, S_ref 0.785 m².
+// The dynamic cap is ct_ceiling = max_ct·q·S_ref/thrust_ref = q·7.85e-4.
+fn burn_gate() -> CyberneticCorrect<f64> {
+    let envelope = SafetyEnvelope::new(1.0e6, 12.0, 0.5).with_burn(BurnEnvelope::new(
+        0.1, 0.9, 2.0, 1000.0, 5000.0, 10.0, 100.0,
+    ));
+    CyberneticCorrect::new(envelope).with_burn_sensing(
+        "q_inf",
+        "propellant",
+        "descent_rate",
+        2000.0,
+        0.785,
+    )
+}
+
+#[test]
+fn dynamic_ct_cap_binds_below_the_static_ceiling() {
+    let mut f = field();
+    f.set_scalar("q_inf", vec![1_000.0]); // ct_ceiling = 0.785 < static 0.9
+    f.set_scalar("propellant", vec![100.0]);
+    f.set_throttle_action(0.85); // inside the static ceiling, above the dynamic cap
+    burn_gate().apply(&ctx(0), &mut f).expect("gate applies");
+    assert_eq!(
+        f.throttle_action(),
+        Some(0.785),
+        "throttle capped by the C_T ceiling"
+    );
+    assert_eq!(f.log().len(), 1, "the dynamic cap is logged");
+}
+
+#[test]
+fn static_ceiling_binds_when_dynamic_pressure_is_high() {
+    let mut f = field();
+    f.set_scalar("q_inf", vec![2_000.0]); // ct_ceiling = 1.57 > static 0.9
+    f.set_scalar("propellant", vec![100.0]);
+    f.set_throttle_action(1.2); // above the static ceiling
+    burn_gate().apply(&ctx(0), &mut f).expect("gate applies");
+    assert_eq!(
+        f.throttle_action(),
+        Some(0.9),
+        "throttle capped by the static ceiling"
+    );
+}
+
+#[test]
+fn throttle_below_the_floor_clamps_up() {
+    let mut f = field();
+    f.set_scalar("q_inf", vec![2_000.0]);
+    f.set_scalar("propellant", vec![100.0]);
+    f.set_throttle_action(0.05); // below the 0.1 floor
+    burn_gate().apply(&ctx(0), &mut f).expect("gate applies");
+    assert_eq!(f.throttle_action(), Some(0.1));
+}
+
+#[test]
+fn propellant_floor_breach_refuses_not_clamps() {
+    let mut f = field();
+    f.set_scalar("q_inf", vec![2_000.0]);
+    f.set_scalar("propellant", vec![5.0]); // at/below the 10 kg floor
+    f.set_throttle_action(0.5); // positive throttle commanded
+    let result = burn_gate().apply(&ctx(0), &mut f);
+    assert!(result.is_err(), "a propellant-floor breach short-circuits");
+    assert!(!f.log().is_empty(), "the breach is logged");
+}
+
+#[test]
+fn descent_rate_bound_breach_returns_entropy() {
+    let mut f = field();
+    f.set_scalar("q_inf", vec![2_000.0]);
+    f.set_scalar("propellant", vec![100.0]);
+    f.set_scalar("descent_rate", vec![150.0]); // above the 100 m/s bound
+    f.set_throttle_action(0.5);
+    assert!(burn_gate().apply(&ctx(0), &mut f).is_err());
+}
+
+#[test]
+fn burn_none_leaves_the_throttle_channel_untouched() {
+    // With `burn: None` the gate never reads or writes the throttle channel: a throttle written
+    // upstream survives verbatim and no burn-related provenance appears (the corridor gate path).
+    let mut f = field();
+    f.set_throttle_action(5.0); // an absurd command the burn gate would clamp — but burn is None
+    f.set_control_action(0.2); // inside the bank envelope
+    gate().apply(&ctx(0), &mut f).expect("gate applies");
+    assert_eq!(
+        f.throttle_action(),
+        Some(5.0),
+        "throttle untouched with burn: None"
+    );
+    assert_eq!(f.control_action(), Some(0.2));
+    assert!(f.log().is_empty(), "no burn log traffic");
+}
+
+#[test]
+fn burn_axes_without_a_throttle_command_are_inert() {
+    // Burn axes present, but no throttle write: the throttle channel stays absent and no
+    // burn-related log appears (only the ordinary bank path runs).
+    let mut f = field();
+    f.set_scalar("q_inf", vec![2_000.0]);
+    f.set_control_action(0.2);
+    burn_gate().apply(&ctx(0), &mut f).expect("gate applies");
+    assert_eq!(
+        f.throttle_action(),
+        None,
+        "no throttle command ⇒ no throttle write"
+    );
+    assert!(f.log().is_empty(), "no burn log traffic without a command");
 }
 
 #[test]

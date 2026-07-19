@@ -232,13 +232,32 @@ rust_test(
 
 rust_test(
     name = "types",
-    srcs = glob([
-        "types/*_tests.rs",
-    ]),
+    srcs = [
+        "types/ambient_tests.rs",
+    ],
     crate_features = [
         "std",
     ],
     crate_root = "types/ambient_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+    ],
+)
+
+rust_test(
+    name = "types_keyed_table",
+    srcs = [
+        "types/keyed_table_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "types/keyed_table_tests.rs",
     tags = [
         "unit-test",
     ],

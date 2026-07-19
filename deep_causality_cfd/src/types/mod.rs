@@ -9,5 +9,7 @@
 mod ambient;
 pub mod flow;
 pub mod flow_config;
+mod keyed_table;
 
 pub use ambient::Ambient;
+pub use keyed_table::{KeyedInterpolation, KeyedTable};

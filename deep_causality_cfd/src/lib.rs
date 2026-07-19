@@ -46,7 +46,7 @@ pub use crate::traits::{
     CfdScalar, FluidTheory, MarchDispatch, Marchable, Marcher, MetricProvider, MetricProvider3d,
     Solver,
 };
-pub use crate::types::Ambient;
+pub use crate::types::{Ambient, KeyedInterpolation, KeyedTable};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::coordinate::{
@@ -89,7 +89,7 @@ pub use deep_causality_file::{
 
 pub use crate::types::flow::{
     AeroBlackoutStub, AeroForceCoupling, BankCorrection, BankSteeredLift, BlackoutState,
-    BlackoutTrigger, BranchAccumulator, BranchOutcome, CfdFlow, CompressibleFork,
+    BlackoutTrigger, BranchAccumulator, BranchOutcome, BurnEnvelope, CfdFlow, CompressibleFork,
     CompressibleMarchRun, CompressiblePause, CoupledField, CoupledMarch, Coupling,
     CyberneticCorrect, DuctMarchRun, EosStage, FiniteRateIonizationStage, Gates, GoverningModel,
     IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder,

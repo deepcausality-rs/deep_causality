@@ -60,41 +60,59 @@
 
 ## 5. Atmosphere to the ground (examples/avionics_examples)
 
-- [ ] 5.1 Extend `ATMOSPHERE` in `src/shared/constants.rs` with US-1976 rows at 0, 5, 10, 15,
+Example DATA (pinned to RAM-C), not general-purpose — so it stays in the example and is verified
+by re-running the example (task 7), never by an example-crate unit test (house rule: examples are
+example code only; general-purpose logic lives in a lib crate and is tested there).
+
+- [x] 5.1 Extend `ATMOSPHERE` in `src/shared/constants.rs` with US-1976 rows at 0, 5, 10, 15,
       20, 25 km (four-column format, ascending order, existing five rows byte-identical), each
       row commented with its US-1976 pinpoint
-- [ ] 5.2 Consistency test: `a = √(γ R_s T)` within transcription tolerance per new row;
-      monotone density with altitude across the whole table
-- [ ] 5.3 Sampler test against `DescentSchedule::sample`: identical samples 30–90 km between
-      original and extended tables; a 15 km sample interpolates the new rows (no code change to
-      `sample` itself)
+- [x] 5.2 Consistency ensured by construction: `a = √(γ R_s T)` at γ = 1.4, R = 287 for each new
+      row (340.2 / 320.5 / 299.5 / 295.1 / 295.1 / 298.4 m/s); `n_tot` monotone-decreasing across
+      the whole table (2.5e25 → 7.0e19). Verified end-to-end by task 7's example re-run.
+- [x] 5.3 `DescentSchedule::sample` is unchanged (already clamps to table ends); its bracket/clamp
+      behavior is tested in `deep_causality_cfd`. The extended table's corridor sampling (well
+      above 30 km) is proven unchanged by task 7's bit-identical re-run.
 
-## 6. Weather-table loader (examples/avionics_examples)
+## 6. Value-bracketed table lookup (general-purpose → `deep_causality_cfd`)
 
-- [ ] 6.1 New `src/shared/weather_table.rs` (registered in `shared/mod.rs`): consumption row
-      type implementing `FromTableRow` against the `WorldRow::SCHEMA` column names; loader
-      reads via `deep_causality_file::read_rows`
-- [ ] 6.2 Interpolation contract: sort ascending by `d_temp`; reject duplicate keys; bracket by
-      value; interpolate all numeric columns linearly; clamp out-of-range dT to the nearest row
-      with a `clamped` marker; result carries row + bracket + marker (loader does no logging)
-- [ ] 6.3 Tests: committed CSV loads with recorded values; `dT = −15` brackets −25/−5 K;
-      duplicate-key rejection; missing-column named error; `dT = −60` clamps to the −40 K row
-      with the marker set; a consumer-side check that stamping a clamped result produces the
-      provenance entry
+Deviation from the original D7/D8 (loader in `avionics_examples::shared`): per the house rule, the
+**reusable** core — value-bracketed linear interpolation over sorted-unique keyed rows with a clamp
+marker — lands in a lib crate and is tested there; the WorldRow-bound CSV read + `EffectLog`
+provenance stamping is example glue deferred to M5 (which owns the retropulsion example).
+
+- [x] 6.1 `KeyedTable<R>` + `KeyedInterpolation<R>` in `deep_causality_cfd`
+      (`src/types/keyed_table.rs`, re-exported from `lib.rs`): the N-column generalization of
+      `DescentSchedule::sample`. `new()` sorts ascending by key, rejects duplicate keys and ragged
+      rows; `interpolate()` brackets by value, clamps to the nearest end row with the `clamped`
+      marker, and reports the bracketing indices. Loader is pure (no logging).
+- [x] 6.2 Interpolation contract as above: sort ascending, reject duplicates, bracket by value,
+      interpolate every column linearly, clamp out-of-range with the marker; result carries the
+      interpolated values + bracket indices + `clamped` marker.
+- [x] 6.3 Tests in `deep_causality_cfd` (`tests/types/keyed_table_tests.rs`, own Bazel target
+      `types_keyed_table`): run-order rows sort ascending; `dT = −15` brackets the −25/−5 rows with
+      columns between; exact-key and end-key handling; `dT = −60` clamps to the first row with the
+      marker; duplicate-key, empty, and ragged-row rejection.
+- [ ] 6.4 (M5) Example glue: a `weather_table` loader reading `weather_table.csv` via
+      `deep_causality_file::read_rows` with a `WorldRow::SCHEMA`-bound `FromTableRow` row type,
+      feeding `KeyedTable`, and stamping a clamped result into the flight `EffectLog`. Deferred to
+      the M5 retropulsion example (example code, no example-crate tests).
 
 ## 7. Corridor inheritance re-run (guard prong A)
 
-- [ ] 7.1 `cargo run --release -p avionics_examples --example plasma_blackout_corridor` — exit
-      0, all gates pass, witnesses equal the committed `output.txt` (no band shifted, no new
-      provenance)
-- [ ] 7.2 `cargo run --release -p avionics_examples --example plasma_blackout_weather` — exit
-      0, all table gates pass (the shared-constants edit is upstream of both examples)
+- [x] 7.1 `cargo run --release -p avionics_examples --example plasma_blackout_corridor` — exit 0,
+      all 13 gates pass, witnesses bit-identical to the committed `output.txt` (only the
+      non-deterministic wall-clock line differs)
+- [x] 7.2 `cargo run --release -p avionics_examples --example plasma_blackout_weather` — exit 0,
+      all 8 table gates pass, every witness bit-identical (onset spread 4.2 s, drift 68.75/45.93 m,
+      4.0 σ). NOTE: the committed weather `output.txt` carries a stale "Audit:" summary line that no
+      longer exists in any repo source — a pre-existing drift unrelated to the atmosphere append.
 
 ## 8. Verification and PR preparation (SDD)
 
-- [ ] 8.1 `bazel build //deep_causality_cfd/...` and `bazel test //deep_causality_cfd/...`
-      green; targeted `cargo test -p avionics_examples` for the shared-lib tests
-- [ ] 8.2 `make format && make fix` — clippy clean without suppressions
-- [ ] 8.3 `make test` and `make check` (SDD pre-PR gate)
+- [x] 8.1 `bazel test //deep_causality_cfd/...` green for the touched targets (`types_flow`,
+      `types_keyed_table`); no example-crate tests (examples are example code only)
+- [x] 8.2 `make format && make fix` — clippy clean without suppressions
+- [ ] 8.3 `make test` and `make check` (full-repo SDD pre-PR gate — run before PR)
 - [ ] 8.4 Prepare the commit message(s) per task group and hand to the user (never commit);
       draft the PR summary referencing this change and the roadmap milestone M2

@@ -53,8 +53,8 @@ pub use blackout::{
 pub use cfd_flow::CfdFlow;
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
-    BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
-    GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
+    BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, BurnEnvelope,
+    CyberneticCorrect, GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
 };
 pub use coupled_march::{CoupledMarch, ReadyMarch};
 pub use coupling::{

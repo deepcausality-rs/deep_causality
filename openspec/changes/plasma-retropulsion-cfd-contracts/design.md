@@ -129,23 +129,26 @@ well above 30 km (terminal state 47.6 km), so its sampling is untouched; the gua
 Row values are transcribed from the published US Standard Atmosphere 1976 (n_tot, T, a
 consistent: a = √(γRT) at γ = 1.4), each row commented with its table pinpoint.
 
-**D7 — The loader uses `typed-table-io`, not the note's "~20-line std parser".**
-Deviation from design-note §7, documented here: `avionics_examples` already depends on
-`deep_causality_file`, and the table was *written* by `write_rows` with `WorldRow::SCHEMA` —
-reading it back through `read_rows` with a `FromTableRow` consumption row type reuses the
-schema-order, missing-column-by-name machinery the repo already verifies. Hand-rolling a parser
-would duplicate a tested seam (AGENTS.md: land at the right abstraction level). The loader lives
-in `avionics_examples::shared` (new `shared/weather_table.rs`) because the retropulsion example
-folder only arrives in M5 and the guard/tests need the loader now.
+**D7 — The reusable interpolation core is a lib type (`KeyedTable`), not example code.**
+Revised during implementation (2026-07-19) from the original "loader in `avionics_examples::shared`",
+per the house rule *examples are example code only; general-purpose logic lives in a lib crate and
+is tested there*. The value-bracketed, clamp-marked, sorted-unique keyed interpolation is
+general-purpose — it is the N-column generalization of the already-shipped `DescentSchedule::sample`
+— so it lands as `KeyedTable<R>` / `KeyedInterpolation<R>` in `deep_causality_cfd`
+(`src/types/keyed_table.rs`) and is unit-tested there (`tests/types/keyed_table_tests.rs`, own
+Bazel target). The **example glue** — reading `weather_table.csv` through `read_rows` with a
+`WorldRow::SCHEMA`-bound `FromTableRow` row type, and stamping a clamped result into the flight
+`EffectLog` — stays example code and defers to M5, which owns the retropulsion example folder. M2's
+inheritance guard needs the reusable core (now a tested lib type), not the CSV binding.
 
-**D8 — The loader is pure; provenance stamping stays with the flight side.**
-The loader returns an interpolation result carrying the interpolated row, the bracketing pair,
-and a `clamped` marker; it performs no logging. Rationale: `EffectLog` lives on the coupled
-field, which the loader (a config-time artifact consumer) never sees; returning the marker keeps
-the "clamp stamped into provenance" requirement testable at both layers without coupling the
-loader to the flight stack. Contract (from the note §4, verified against the real CSV): sort
-ascending by `d_temp` after load; reject duplicate keys; bracket **by value**; clamp
-out-of-range dT to the nearest row with the marker set.
+**D8 — The lookup is pure; provenance stamping stays with the flight side.**
+`KeyedTable::interpolate` returns a result carrying the interpolated values, the bracketing row
+indices, and a `clamped` marker; it performs no logging. Rationale: `EffectLog` lives on the coupled
+field, which this config-time type never sees; returning the marker keeps the "clamp stamped into
+provenance" requirement testable at the lib layer (the marker) and the flight layer (the stamping,
+M5) without coupling the two. Contract (verified against the real CSV's run order): sort ascending
+by key after load; reject duplicate keys and ragged rows; bracket **by value**; clamp out-of-range
+queries to the nearest end row with the marker set.
 
 **D9 — The inheritance guard has two prongs.**
 Prong A (example-level): re-run `plasma_blackout_corridor` after the atmosphere append; its gate

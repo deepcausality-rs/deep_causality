@@ -75,7 +75,19 @@ pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
 // ── Baseline atmosphere: `(altitude m, n_tot m⁻³, T K, a m/s)` rows, ascending altitude.
 // US-1976 shape pinned to the RAM-C II 61 km freestream (`n_∞ = 1.3e21`), so the calibrated
 // peak-station recipe is reproduced exactly as the descent sweeps that altitude.
-pub const ATMOSPHERE: [(f64, f64, f64, f64); 5] = [
+pub const ATMOSPHERE: [(f64, f64, f64, f64); 11] = [
+    // ── Powered-descent extension to the ground (`plasma-retropulsion-cfd-contracts`, capability
+    //    `full-descent-atmosphere`): US Standard Atmosphere 1976 rows below 30 km. Sound speed
+    //    a = √(γ·R·T) at γ = 1.4, R = 287 J/(kg·K); number density decreases monotonically into
+    //    the 30 km row. `DescentSchedule::sample` clamps to the table ends, so appending here
+    //    relocates the low clamp from 30 km to 0 km by data alone. ──
+    (0.0, 2.5e25, 288.0, 340.2), // US-1976 sea level: T 288.15 K, ρ 1.225 kg/m³ (n = ρ/m̄)
+    (5_000.0, 1.5e25, 255.7, 320.5), // US-1976 5 km: T 255.68 K, p 54.02 kPa
+    (10_000.0, 8.6e24, 223.3, 299.5), // US-1976 10 km: T 223.25 K, p 26.44 kPa
+    (15_000.0, 4.0e24, 216.7, 295.1), // US-1976 15 km: lower-stratosphere isotherm 216.65 K
+    (20_000.0, 1.8e24, 216.7, 295.1), // US-1976 20 km: isotherm 216.65 K, p 5.475 kPa
+    (25_000.0, 8.2e23, 221.6, 298.4), // US-1976 25 km: T 221.65 K, p 2.511 kPa
+    // ── Original rows (byte-identical): US-1976 shape pinned to the RAM-C II 61 km freestream. ──
     (30_000.0, 3.0e23, 226.0, 302.0),
     (45_000.0, 2.4e22, 264.0, 326.0),
     (61_000.0, 1.3e21, 250.0, 317.0),
