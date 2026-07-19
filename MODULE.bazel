@@ -20,6 +20,19 @@ local_path_override(
 )
 
 ###############################################################################
+# Vendored locally (thirdparty/rules_astro) rather than pulled from a
+# third-party registry, matching the rules_lean vendoring pattern. Provides
+# astro_site / astro_dev — hermetic `astro build` under Bazel via
+# aspect_rules_js. See website/ and the Astro/Node toolchain section below.
+# https://github.com/tomato-bazel/rules_astro
+###############################################################################
+bazel_dep(name = "rules_astro", version = "0.0.1")
+local_path_override(
+    module_name = "rules_astro",
+    path = "thirdparty/rules_astro",
+)
+
+###############################################################################
 # Rust toolchain
 # https://github.com/bazelbuild/rules_rust/releases
 ###############################################################################
@@ -61,3 +74,65 @@ lake.workspace(
 use_repo(lake, "lake_deps")
 
 register_toolchains("@lake_deps//:lean_toolchain_def")
+
+###############################################################################
+# Astro / Node.js web toolchain
+# rules_astro (vendored) -> aspect_rules_js -> rules_nodejs
+#
+# `bazel build //website/...` builds both Astro projects hermetically:
+#   //website/web  — pnpm (pnpm-lock.yaml) -> @npm_web
+#   //website/docs — pnpm (pnpm-lock.yaml) -> @npm_docs
+#
+# Each project's node_modules is materialized from its own lockfile by
+# npm_translate_lock; the astro CLI then runs as a cacheable Bazel action.
+###############################################################################
+# rules_astro pins aspect_rules_js 2.1.3, but this project's web site uses the
+# pnpm 11 convention where `onlyBuiltDependencies` / `allowBuilds` live in
+# pnpm-workspace.yaml (not package.json). aspect_rules_js only learned to read
+# those from pnpm-workspace.yaml after 2.1.3, so the root pins 2.9.2 (still the
+# 2.x API line rules_astro is built against; MVS uses this higher version).
+bazel_dep(name = "aspect_rules_js", version = "2.9.2")
+
+# rules_nodejs >= 6.7.3 loads `CcInfo` from @rules_cc (Bazel 9 removed the
+# top-level CcInfo global); 6.3.3 (aspect's floor) fails to compile its
+# nodejs/toolchain.bzl on Bazel 9.2.0. Pin the latest 6.7.x for the fix.
+bazel_dep(name = "rules_nodejs", version = "6.7.5")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+
+# Astro 7 requires node >=22.12.0 (both sites' package.json engines). Pin
+# 26.4.0 to match the local/CI dev node (node -v) for build parity.
+node.toolchain(node_version = "26.4.0")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm_web",
+    npmrc = "//website/web:.npmrc",
+    pnpm_lock = "//website/web:pnpm-lock.yaml",
+    # @astrojs/mdx reaches the (native) satteri markdown processor through its
+    # optional peer @astrojs/markdown-satteri, which pnpm hoists on the host but
+    # aspect's strict store does not link. Hoist them (and satteri's native
+    # binding) to the root node_modules so the bare `import 'satteri'` resolves.
+    public_hoist_packages = {
+        "satteri": ["website/web"],
+        "@astrojs/markdown-satteri": ["website/web"],
+    },
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm_web")
+
+npm.npm_translate_lock(
+    name = "npm_docs",
+    npmrc = "//website/docs:.npmrc",
+    pnpm_lock = "//website/docs:pnpm-lock.yaml",
+    # Starlight renders .mdx content through @astrojs/mdx, which reaches the
+    # native satteri markdown processor via its optional peer @astrojs/markdown-
+    # satteri — hoisted on the host by pnpm but not by aspect's strict store.
+    # Hoist them into docs' root node_modules so the bare import resolves.
+    public_hoist_packages = {
+        "satteri": ["website/docs"],
+        "@astrojs/markdown-satteri": ["website/docs"],
+    },
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm_docs")

@@ -1,11 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import sitemap from '@astrojs/sitemap';
-// Graph view (task 2.2): use starlight-site-graph directly rather than via
-// starlight-theme-obsidian@0.4.1, whose `removeDefault().default({})` pattern
-// breaks site-graph's nested `z.map()` defaults ("expected map, received
-// object"). Used directly, site-graph applies its own valid defaults.
-import starlightSiteGraph from 'starlight-site-graph';
 
 // Standalone Starlight documentation site for DeepCausality.
 // Served at https://docs.deepcausality.com by its own Cloudflare Worker,
@@ -14,18 +9,6 @@ import starlightSiteGraph from 'starlight-site-graph';
 export default defineConfig({
   site: 'https://docs.deepcausality.com',
   output: 'static',
-  vite: {
-    // starlight-site-graph bundles a glob matcher (picomatch) for its
-    // visibilityRules, and picomatch reads process.platform / process.version
-    // at module init. Those are undefined in the browser, which threw
-    // "process is not defined" and left the graph stuck on its skeleton.
-    // Shim the two exact reads for the client bundle (non-Windows, modern
-    // version => default glob behavior, lookbehind supported).
-    define: {
-      'process.platform': JSON.stringify('browser'),
-      'process.version': JSON.stringify('v20.0.0'),
-    },
-  },
   integrations: [
     starlight({
       title: 'DeepCausality',
@@ -64,8 +47,7 @@ export default defineConfig({
       // A link back to the marketing site (SEO cross-origin link, task 6.4).
       // Starlight renders editLink/social; the explicit www link lives in the
       // sidebar config below and in the index page.
-      // The starlight-site-graph plugin auto-injects its own stylesheets
-      // (layers/common/starlight.css), so we only add our identity + splash layers.
+      // Identity + splash style layers.
       customCss: ['./src/styles/fonts.css', './src/styles/theme.css', './src/styles/splash.css'],
       // Code highlighting (task 2.1): dual light/dark, matching the marketing
       // site's Shiki themes in website/web/astro.config.mjs.
@@ -73,8 +55,6 @@ export default defineConfig({
         themes: ['github-dark', 'github-light'],
         styleOverrides: { borderRadius: '0.25rem' },
       },
-      // Graph view (task 2.2): backlinks graph in the page sidebar.
-      plugins: [starlightSiteGraph()],
       sidebar: [
         {
           label: 'Overview',
