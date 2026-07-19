@@ -189,12 +189,7 @@ path = "verification/qtt_blunt_body_2d/main.rs"
 name = "qtt_reentry_3d"
 path = "verification/qtt_reentry_3d/main.rs"
 
-# SRP drag decrement: the plasma-retropulsion de-risk imprint-fidelity gate (roadmap M1 risk 1).
-[[example]]
-name = "srp_drag_decrement"
-path = "verification/srp_drag_decrement/main.rs"
-
-# Tier-B rank studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
+# Studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
 [[example]]
 name = "qtt_rank_study"
 path = "studies/qtt_rank_study/main.rs"
@@ -237,6 +232,12 @@ path = "studies/qtt_repin_marcher/main.rs"
 [[example]]
 name = "qtt_rank_plume"
 path = "studies/qtt_rank_plume/main.rs"
+
+# Momentum-jet follow-up: does a momentum-carrying jet (formed plume)
+# recover the Jarvinen-Adams collapse the pinned-envelope imprint could not?
+[[example]]
+name = "srp_momentum_jet"
+path = "studies/srp_momentum_jet/main.rs"
 
 # Gap-3 trajectory-axis feasibility studies: de-risk Resolution-1's perturbed-conformal split (the
 # generator, the aero-coupling law, the relativistic clock) before specifying the trajectory propagator.

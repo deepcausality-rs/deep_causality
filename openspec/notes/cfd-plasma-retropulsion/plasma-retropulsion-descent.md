@@ -351,6 +351,16 @@ Continue every branch from the shared forked state. Then read two measurements:
   consumed, peak loads; committed rule pinned in `constants.rs`. The knowledge-floor argument
   returns unchanged: commit no finer than the navigated state supports, and the weather row's
   drift number *is* that floor.
+- Branch continuations run **in parallel** through the `deep_causality_par` seam: `scoped_map`
+  over the branch roster (order-preserving fork-join; one thread per branch under the crate's
+  existing `parallel` feature, serial fallback unchanged). The work is heavy — each continuation
+  is a full march at 0.68–1.05× the trunk's step cost (the measured fork-economics band) — and
+  the branches are independent by construction: after the O(1) fork they share the trunk
+  read-only (`Arc`) and never write to each other, and each branch's march remains its own
+  serial op-sequence, so per-branch determinism and the earned bands are untouched. Wall time
+  for the roster drops from the sum of the branches to roughly the slowest branch. Memory grows
+  with the roster only at first divergent write, which the fork-economics measurement already
+  bounds. **[plan; independence holds by construction, speedup measured at M5]**
 
 ---
 
@@ -459,8 +469,9 @@ Stage 0  Contracts + inheritance guard
   └─ weather-table loader seam             dT → interpolated row, provenance-stamped
 Stage 1  Physics kernels + papers          propulsion/ family, pointwise-validated
 Stage 2  Measured de-risking (the waters test)
-  ├─ verification/srp_drag_decrement       plume-imprinted layer vs Jarvinen–Adams
-  │                                        correlation, contracted force cross-check
+  ├─ studies/srp_momentum_jet              formed-plume jet vs Jarvinen–Adams correlation,
+  │                                        tail-averaged force (supersedes the reverted
+  │                                        verification/srp_drag_decrement pinned imprint)
   └─ studies/qtt_rank_plume                rank of the plume-imprinted layer (Cartesian
                                            vs blend-metric) + FORK ECONOMICS on the
                                            plume-coupled state (§6 measurement 2)

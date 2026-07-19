@@ -363,6 +363,31 @@ witnesses, regime cascade, and both counterfactuals are present and material. **
 terminal milestone — its archive means the Plasma-Retropulsion Descent works and simulates
 correctly.**
 
+### M-later — field-channel fidelity and acceleration *(unscheduled, measurement-gated)*
+
+Not a milestone; the recorded path by which the field channel could ever take drag authority
+back from the A0 correlation, per the M1 verdict addendum
+([`derisk-verdict.md`](derisk-verdict.md), "What would upgrade this to green (revised)").
+The 2⁶ probe measured the mechanism's *direction* (the jet penetrates once the dissipation
+floor halves; the outer strip band crossed below 1); the magnitude needs, in dependency
+order: (1) front-respecting transport (locally wave-speed-scaled dissipation and/or the
+Stage-4 tracked Rankine–Hugoniot interface), (2) a domain that holds the displaced bow shock,
+(3) an axisymmetric or 3-D formulation.
+
+That bar is compute-bound — steps double per L while per-step cost rises; the domain-widened
+2⁷–2⁸ runs it implies sit near a hundred single-core hours today — so the **acceleration
+ladder is part of the path**, each rung behind a timing gate (the
+`compressible_carrier_timing` pattern), in expected-leverage order: TT cross-interpolation
+for the nonlinear flux (removes the per-step dense dequantize→flux→requantize round-trip at
+the rounding tolerance); fused rounding (once per component per step, not per operation);
+component- and roster-level `deep_causality_par::scoped_map` (four independent component
+chains per step; independent sweep points and counterfactual branches — the descent note's
+§6 pin); locally scaled dissipation (also upgrade item 1 — it lowers the required L
+outright). Tensor-crate kernels (randomized/sketched rounding and below) stay gated behind
+[`../tensor-network/ACCELERATION-SOTA-FIRST.md`](../tensor-network/ACCELERATION-SOTA-FIRST.md);
+GPU work is **deferred** (user decision 2026-07-17 — single-train bond-≤64 work is
+latency-bound; revisit only for batched branch rosters, at the survey stage).
+
 ---
 
 ## 5. Cross-cutting constraints every derived spec inherits

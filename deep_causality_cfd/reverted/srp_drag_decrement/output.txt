@@ -29,4 +29,4 @@
   The correlation was the gate, not a fit target: the structural miss above is the
   measured de-risk answer, and the A0 correlation channel keeps the drag authority.
 
-ALL GATES PASSED — the imprinted layer reproduces the J-A drag-decrement structure.
+GATES PASSED — the measured shielding structure holds. The J-A collapse miss above is the recorded amber finding, not a regression.
