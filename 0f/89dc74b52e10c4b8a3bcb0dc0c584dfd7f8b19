@@ -1,0 +1,81 @@
+deep_causality_cfd/src/types/flow/retropulsion.rs
+  s_03a25bcd8e11c3::t_b5e27117efb147 45-46
+  s_03a25bcd8e11c3::t_cd2bbc78c27c17 183-250
+  s_03a25bcd8e11c3::t_ed21f1f4a03f86 78,82-122
+  s_03a25bcd8e11c3::t_ec8567f0eb336e 123,251-388
+  s_03a25bcd8e11c3::t_8493bc826d0311 124
+openspec/changes/add-retropulsion-coupled-stages/tasks.md
+  s_03a25bcd8e11c3::t_87adadbdfa6de2 3,8,11,17,21,25
+  s_03a25bcd8e11c3::t_7f337180be180f 31,35,37,43,48,53,55,57
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.main.log
+  s_03a25bcd8e11c3::t_7cb9b55f758c0d 1-196
+deep_causality_cfd/tests/types/flow/retropulsion_tests.rs
+  s_03a25bcd8e11c3::t_8705d1b48712e8 278-321,326-421
+  s_03a25bcd8e11c3::t_b5e27117efb147 192-196,271-274,322-325
+  s_03a25bcd8e11c3::t_97c1f50844bf12 176-191,197-270,275-277
+  s_03a25bcd8e11c3::t_071446389cdcfd 11-12
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_03a25bcd8e11c3::t_c540d439d1522a 972-1047,1050-1051,1056-1073,1077-1096,1099-1119,1123-1125
+  s_03a25bcd8e11c3::t_ac55bec568036b 1052-1055
+  s_03a25bcd8e11c3::t_6dd8c66473f539 1074,1076,1120,1122
+  s_03a25bcd8e11c3::t_7f8689a078bc2a 1048-1049,1075,1097-1098,1121
+openspec/changes/add-retropulsion-coupled-stages/specs/plume-obstruction-stage/spec.md
+  s_03a25bcd8e11c3::t_1476da81428a8a 31-42,51-82
+  s_03a25bcd8e11c3::t_a5165ac07391d2 83
+deep_causality_cfd/src/lib.rs
+  s_03a25bcd8e11c3::t_3113b16d25334b 95
+  s_03a25bcd8e11c3::t_fc5169e1eefd7d 96-100
+  s_03a25bcd8e11c3::t_b5e27117efb147 114
+  s_03a25bcd8e11c3::t_2de91959f89f92 113
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_03a25bcd8e11c3::t_c9f96b97103ed9 81-87
+  s_03a25bcd8e11c3::t_535f1b772134ed 265-267
+  s_03a25bcd8e11c3::t_d2b1ede32edf35 131-206
+  s_03a25bcd8e11c3::t_3fa2c16b2051cf 32,303-304
+  s_03a25bcd8e11c3::t_b5e27117efb147 35
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_03a25bcd8e11c3::t_adacd7c52439e6 206,218-224,231-235,241-243,250,252,261-263,276-278,282
+  s_03a25bcd8e11c3::t_01588aae615941 326-328,331,339-353,355,359
+  s_03a25bcd8e11c3::t_ec6b02250cb5d9 172-174,185-187
+  s_03a25bcd8e11c3::t_0375ddf9b9f04f 68-118,120-121,132-137,141-154
+  s_03a25bcd8e11c3::t_899a29f3057aaf 203-205,225-230,236-240,244-249,251,253-260,264-275,279-281,283
+  s_03a25bcd8e11c3::t_3113b16d25334b 33
+  s_03a25bcd8e11c3::t_1a36e54b4f3110 175-184
+  s_03a25bcd8e11c3::t_136e70cf041609 284
+deep_causality_cfd/src/types/flow_config/compressible_march_config.rs
+  s_03a25bcd8e11c3::t_e8803c424307cd 212-214,255-259,313,464-468,470
+  s_03a25bcd8e11c3::t_b1e7f6efce54b7 262-294
+  s_03a25bcd8e11c3::t_fe83894b3188c4 342,499
+  s_03a25bcd8e11c3::t_6048ed13f0a277 260-261,469,471
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_03a25bcd8e11c3::t_fc5169e1eefd7d 13-14,743-766,866-870
+  s_03a25bcd8e11c3::t_f9d777893993d8 12,730-742,767-782,788-790,797-865,871
+  s_03a25bcd8e11c3::t_75c11620953d70 409-412
+  s_03a25bcd8e11c3::t_10c003a59b2ca7 783-787,791-796
+deep_causality_cfd/tests/types/flow/inheritance_guard_tests.rs
+  s_03a25bcd8e11c3::t_fc5169e1eefd7d 150-152,180-184,206,208-222,249-252
+  s_03a25bcd8e11c3::t_f4821a716f853f 131-149,153-179,185-205,207,223-248,253
+deep_causality_cfd/src/types/flow_config/mod.rs
+  s_03a25bcd8e11c3::t_b5e27117efb147 31
+deep_causality_cfd/src/types/flow/mod.rs
+  s_03a25bcd8e11c3::t_3113b16d25334b 57-58
+  s_03a25bcd8e11c3::t_f6deb8c65b3610 76
+openspec/changes/add-retropulsion-coupled-stages/specs/flight-regime-classifier/spec.md
+  s_03a25bcd8e11c3::t_0a1e0eb9b4df1e 3,9-12,14,16-17,21,23-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0f89dc74b52e10c4b8a3bcb0dc0c584dfd7f8b19",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
