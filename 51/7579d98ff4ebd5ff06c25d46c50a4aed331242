@@ -1,0 +1,74 @@
+openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md
+  s_03a25bcd8e11c3::t_6ef83c18093d52 58-59
+  s_03a25bcd8e11c3::t_dfb4399d289f28 193-219
+  s_03a25bcd8e11c3::t_5f6cf265865022 190-192
+  s_03a25bcd8e11c3::t_f10276832e0406 79-189
+  s_03a25bcd8e11c3::t_f6a6dad4b2b899 16-19
+openspec/notes/tensor-network/ACCELERATION-SOTA-FIRST.md
+  s_03a25bcd8e11c3::t_530d9067652411 37-72
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_03a25bcd8e11c3::t_b7f33faf5c9410 366-390
+deep_causality_cfd/studies/srp_momentum_jet/config.rs
+  s_03a25bcd8e11c3::t_a176c08bdc4502 57-80
+  s_03a25bcd8e11c3::t_eebc3bff91dacf 154-162,164-165
+  s_03a25bcd8e11c3::t_2b57222458a817 1-7,24-56,81,94-110,113-126,132-153,166-171
+  s_03a25bcd8e11c3::t_9761f4cd1bb3cf 8-23,82-93,111-112,127-131,163
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-descent.md
+  s_03a25bcd8e11c3::t_7ed6c6c7556fb9 472-474
+  s_03a25bcd8e11c3::t_b33ec7fe5d988a 354-363
+deep_causality_cfd/Cargo.toml
+  s_03a25bcd8e11c3::t_df5e8d5f39149f 236-240
+  s_03a25bcd8e11c3::t_eaa0b982920a80 241
+  s_03a25bcd8e11c3::t_edfc71597583d4 192
+deep_causality_cfd/reverted/README.md
+  s_03a25bcd8e11c3::t_532707ad51f4cb 1-16
+openspec/changes/plasma-retropulsion-de-risk/specs/srp-drag-decrement-verification/spec.md
+  s_03a25bcd8e11c3::t_804b1bd1cbd39b 3-22,26,28-29,38-39,43-55,63,65-66,71,74-76
+deep_causality_cfd/studies/srp_momentum_jet/main.rs
+  s_03a25bcd8e11c3::t_a434d28c83afb3 14-19,22-35,40-41,46,60-86,88-93,96-116,121-124,153,161-162,164-165,168-171,173-184,187,198-199,201,203-205,207-211,214-218,220-243,282,285,289-298,301,303-304,315,319,330,345-348,350-351,353-356,358-359,365,368-377,392-393,406,410-411,423,427-428,430,432-433,435-446,448-450,465,486,488-489,491-493,496,499,503,512-521,524-527,531-533,537,539-555,557-564,566,569-570,572,574,576-600
+  s_03a25bcd8e11c3::t_63cb55832e2058 425-426,429,431,434,447,451-464
+  s_03a25bcd8e11c3::t_3b95e1e7a25dba 202
+  s_03a25bcd8e11c3::t_b8055290b4b4ec 192-197,310-314,322-324,326-328,466-485,487
+  s_03a25bcd8e11c3::t_e6a42ef572cec4 151-152
+  s_03a25bcd8e11c3::t_61c98692d1ae5e 299-300,302,305-309,316-318,320-321,325,329,333-335
+  s_03a25bcd8e11c3::t_a93880d69fac21 200
+  s_03a25bcd8e11c3::t_3d6546ed35447c 53-54,59
+  s_03a25bcd8e11c3::t_cb0c2ec796a8e7 1-13,20-21,36-39,42-45,47-52,55-58,87,94-95,117-120,125,139,143-150,154-160,163,166-167,172,185-186,188-191,206,212-213,219,280-281,283-284,286-288,331-332,336-344,349,352,357,360-364,366-367,378-391,394-405,407-409,412-422,424,490,494-495,497-498,500-502,504-511,522-523,528-530,534-536,538,556,601-612
+  s_03a25bcd8e11c3::t_bbc9c99ab35130 126-138,140-142
+  s_03a25bcd8e11c3::t_4022cc36a9de6b 244-279
+  s_03a25bcd8e11c3::t_6ff29bb6e2910f 565,567-568,571,573,575
+deep_causality_cfd/studies/README.md
+  s_03a25bcd8e11c3::t_6e0079332c13bd 49-59
+deep_causality_cfd/reverted/srp_drag_decrement/output.txt
+  s_daf432b4e5443c::t_9618893fd9f98e 32
+deep_causality_cfd/studies/srp_momentum_jet/output.txt
+  s_03a25bcd8e11c3::t_b1ccfe6688af81 1-49
+openspec/notes/archive/cfd-dsl/01-dsl-review.md
+  s_03a25bcd8e11c3::t_d773426ef7e306 7
+openspec/notes/archive/cfd-examples/common-examples.md
+  s_03a25bcd8e11c3::t_091a7f565c90b3 6,137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "517579d98ff4ebd5ff06c25d46c50a4aed331242",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_daf432b4e5443c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f1504c0-b204-4eca-ad22-d48e2f50f517",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
