@@ -3,12 +3,25 @@
 Where the shipped site and `website/web/DESIGN.md` disagree, and where the site
 disagrees with itself. Ranked by consequence, not by count.
 
-Nothing here is a change request. Each entry records a fact and names the two
+## Status
+
+DESIGN.md was reconciled against the implementation on 2026-07-20. Every entry
+below is now tagged:
+
+| Tag | Meaning |
+|---|---|
+| **SPEC RECONCILED** | DESIGN.md updated to match reality. No code change pending. |
+| **SPEC RECORDS, CODE OPEN** | DESIGN.md now documents the defect and names the fix. Code unchanged. |
+| **OPEN** | Needs a decision before anything can be written down as settled. |
+
+Nothing here is a change request. Each entry records a fact and names the
 options.
 
 ---
 
 ## 1. Every contrast ratio in DESIGN.md is wrong, and two are real failures
+
+> **SPEC RECORDS, CODE OPEN** — DESIGN.md §2 and §2.1 now carry measured ratios and flag both AA failures; §10 no longer claims AA is met. The light-accent colour decision is still open.
 
 `DESIGN.md` §2 and §2.1 publish a contrast column. Recomputed from the shipped
 hex values under WCAG 2.1, not one of the fourteen rows matches. Twelve are
@@ -42,6 +55,8 @@ Correct measurements are in [01-foundations.md](01-foundations.md).
 
 ## 2. Four home components hardcode their frame width
 
+> **SPEC RECORDS, CODE OPEN** — DESIGN.md §12.7 names `--w-panel` as the fix.
+
 `--w-prose`, `--w-doc`, `--w-page`, and `--w-wide` exist. These four ignore them:
 
 | Component | Value |
@@ -63,6 +78,8 @@ neither.
 
 ## 3. `--measure` is bypassed almost everywhere
 
+> **SPEC RECORDS, CODE OPEN** — DESIGN.md §12.7.
+
 `--measure: 68ch` is used by `.static-page` and nothing else. Components write
 literal `ch` values instead: `44ch`, `52ch` (×2), `56ch` (×3), `60ch` (×5).
 
@@ -72,6 +89,8 @@ prose measure and a shorter lede measure — would cover every current use.
 ---
 
 ## 4. One gesture, three treatments
+
+> **SPEC RECONCILED** — DESIGN.md §12.11 declares the canonical lift and press.
 
 The hover lift is written three ways:
 
@@ -95,6 +114,8 @@ The component is currently orphaned, so nothing renders the bug.
 
 ## 5. `.eyebrow` is redeclared in nine files
 
+> **SPEC RECONCILED** — DESIGN.md §12.1 declares the global class canonical.
+
 `global.css:104` defines it. Hero, WhyDeepCausality, ExampleGrid, ExampleDetail,
 CategoryList, `blog/index`, `blog/[...slug]`, `examples/index`, and `404` each
 redeclare it locally. Only three re-apply `font-mono`, so the remaining six lose
@@ -115,6 +136,8 @@ global rule authoritative.
 
 ## 6. The L-bracket motif has three implementations
 
+> **SPEC RECONCILED** — DESIGN.md §12.5 declares the 10px pseudo-element form canonical.
+
 Same visual, three code paths, two sizes:
 
 - `ExampleGrid.astro:330-347` — pseudo-elements, 10×10, two corners
@@ -130,6 +153,8 @@ collapse all three.
 
 ## 7. The 80px header offset does not match the header
 
+> **SPEC RECORDS, CODE OPEN** — DESIGN.md §9.4 and §12.7 name `--header-h` as the fix. Anchor links still land 16px low.
+
 `blog/index.astro` uses `80px` four times (`:172`, `:180`, `:219`, `:222`) for
 `scroll-margin-top` and sticky offsets. The header is `min-height: 56px` base and
 `64px` at ≥900px (`SiteHeader.astro:141,150`).
@@ -144,6 +169,8 @@ The same file duplicates the 900px breakpoint as a JS string (`:123`).
 
 ## 8. Glassmorphism is banned, and shipped
 
+> **SPEC RECONCILED** — DESIGN.md §13 item 9 now sanctions the scrim exception explicitly.
+
 `DESIGN.md` §12 item 9 bans `backdrop-filter: blur(...)`. `SiteHeader.astro:298-299`
 applies `blur(2px)` to the mobile menu scrim.
 
@@ -155,6 +182,8 @@ goes.
 ---
 
 ## 9. The reduced-motion contract is inverted, and the code is right
+
+> **SPEC RECONCILED** — DESIGN.md §6 rewritten to specify the token-level contract.
 
 `DESIGN.md` §6 requires every transition to sit inside
 `@media (prefers-reduced-motion: no-preference)`. The shipped system instead
@@ -172,6 +201,8 @@ SiteHeader value must track `--dur-med` by hand.
 ---
 
 ## 10. Components DESIGN.md specifies that do not exist
+
+> **SPEC RECONCILED**, except search. DESIGN.md §7.1, §8.3, §8.4, §8.6, §9.2 and §9.5 now match the built site. Search remains **OPEN**: §8.9 records that Pagefind indexes on every build and nothing consumes it.
 
 `DESIGN.md` §7.1 lists a file layout largely unbuilt. Absent: `DocsLayout.astro`,
 `ProseLayout.astro`, `MobileMenu.astro` (folded into SiteHeader), `Callout.astro`,
@@ -196,6 +227,8 @@ without the spec recording it.
 
 ## 11. The docs site hand-copies the palette
 
+> **SPEC RECONCILED** — DESIGN.md §9.2 and §14 record the coupling and require same-commit updates.
+
 `website/docs/src/styles/theme.css` maps this design system onto Starlight by
 duplicating literal hex values, with the source token named in a trailing
 comment:
@@ -216,6 +249,8 @@ tints are needed, they belong in `tokens.css` where both sites can read them.
 ---
 
 ## 12. Smaller items
+
+> **SPEC RECONCILED** — the conventions are settled in DESIGN.md §12; the code cleanups remain open.
 
 - **Five breakpoints for a two-breakpoint system.** 600px exists only in the
   orphaned `Explainer.astro`; 480px only in `blog/index.astro`; 1024px only in
@@ -245,11 +280,19 @@ tints are needed, they belong in `tokens.css` where both sites can read them.
 
 ## Suggested order
 
-If any of this gets addressed, consequence ordering runs:
+Spec reconciliation is done. What remains is code work, in this order:
 
-1. §1 contrast, because it is an accessibility failure on shipped pages.
-2. §7 header offset, because anchor links are visibly wrong.
-3. §9 and §10, because updating the spec to match reality is cheap and stops the
-   drift being re-litigated.
-4. §2, §3, §5, §6, consolidation work with no user-visible risk.
-5. The rest as they are touched.
+1. **§1 contrast** — an accessibility failure on shipped pages. Needs a colour
+   decision before code.
+2. **§7 header offset** — anchor links land 16px low. Add `--header-h`.
+3. **§10 search** — decide whether Pagefind gets finished or removed. Every
+   deploy currently ships an unused index.
+4. **§5 eyebrow, §12 focus ring** — pure deletions of local overrides. No
+   intended pixel changes, and they close the largest divergence surface.
+5. **§2 frame widths, §3 measure, §6 brackets, §4 lift** — consolidation behind
+   new tokens and shared utilities.
+6. **§7.1 orphans** — decide on `ExampleCard` and `Explainer` before their
+   vocabulary rots further.
+
+Items 4 and 5 are mechanical and low-risk. Items 1, 3, and 6 need a decision
+first and should not be started without one.
