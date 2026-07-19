@@ -1,0 +1,73 @@
+website/docs/package.json
+  s_2aff6d2cef7a37::t_b7f61c0e5e508e 18
+  s_2aff6d2cef7a37::t_5869e266034c07 19-20
+website/docs/pnpm-workspace.yaml
+  s_2aff6d2cef7a37::t_2676af8830309d 1-15
+.bazelignore
+  s_2aff6d2cef7a37::t_bff6ccc6a2a086 19
+  s_2aff6d2cef7a37::t_7ea81036887baa 20-21
+website/docs/astro.config.mjs
+  s_2aff6d2cef7a37::t_cb4145aab6a94d 50
+website/docs/BUILD.bazel
+  s_2aff6d2cef7a37::t_dd7a1c534d114a 1-27
+MODULE.bazel
+  s_2aff6d2cef7a37::t_de64509dc78a1c 95-99
+  s_2aff6d2cef7a37::t_405580533c3e7d 103-105
+  s_2aff6d2cef7a37::t_63b25ec4a7a3e8 123-125,132-138
+  s_2aff6d2cef7a37::t_bdcba49ec97535 128-131
+  s_2aff6d2cef7a37::t_37167bed7b4b42 22,77-82,85-88,100-101,106-109,111,120-122
+  s_2aff6d2cef7a37::t_445115c7e097cf 23-34
+  s_2aff6d2cef7a37::t_18d1a3661b79f2 112-116,119
+  s_2aff6d2cef7a37::t_6b111ded9ee128 117-118
+  s_2aff6d2cef7a37::t_87121f358153c8 89-94,110
+  s_2aff6d2cef7a37::t_cda93af2ce067f 126-127
+  s_2aff6d2cef7a37::t_bd34b6297ce49a 102
+  s_2aff6d2cef7a37::t_fece45ca077546 83-84
+website/docs/.npmrc
+  s_2aff6d2cef7a37::t_ad3b4f73b01c73 1-2
+website/docs/README.md
+  s_2aff6d2cef7a37::t_b8ccd5e3eb9534 11-15,17-18,22
+website/web/BUILD.bazel
+  s_2aff6d2cef7a37::t_b8f3f2d83e9cdc 23
+  s_2aff6d2cef7a37::t_6e46eeb6355c51 2
+  s_2aff6d2cef7a37::t_f59067d6a1dc78 1
+  s_2aff6d2cef7a37::t_05a0a6783ca25f 3-22,24-27
+website/README.md
+  s_2aff6d2cef7a37::t_d36b11ddd27759 25-26
+  s_2aff6d2cef7a37::t_d7fa6b6733a530 37,40,43-47
+  s_2aff6d2cef7a37::t_607b7220eff740 13
+thirdparty/rules_astro/.gitignore
+  s_2aff6d2cef7a37::t_1bd494dec012ce 1-2
+thirdparty/rules_astro/BUILD.bazel
+  s_2aff6d2cef7a37::t_26c22c5e95836d 1-3
+thirdparty/rules_astro/MODULE.bazel
+  s_2aff6d2cef7a37::t_fb08374462de5c 1-18
+thirdparty/rules_astro/README.md
+  s_2aff6d2cef7a37::t_848037fc896231 1-58
+thirdparty/rules_astro/astro/BUILD.bazel
+  s_2aff6d2cef7a37::t_77dc52307d0ed8 1-13
+thirdparty/rules_astro/astro/defs.bzl
+  s_2aff6d2cef7a37::t_c53b9a13dd8fac 1-85
+thirdparty/rules_astro/examples/README.md
+  s_2aff6d2cef7a37::t_dea8b5e73d30e7 1-4
+website/docs/pnpm-lock.yaml
+  s_2aff6d2cef7a37::t_1e41a2de495d25 1-4351
+MODULE.bazel.lock
+  s_2aff6d2cef7a37::t_ba9dbc34cb4156 25,30-34,49,142,180-183,233-234,242-352,639-738,789-905
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ce72902c55fb58ec6692b29191358d52ee4cfd61",
+  "prompts": {},
+  "sessions": {
+    "s_2aff6d2cef7a37": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "194cc356-1270-467a-afb6-1d48ebe2a44b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
