@@ -1,0 +1,64 @@
+deep_causality_cfd/tests/types/mod.rs
+  s_03a25bcd8e11c3::t_d2b6656838442a 11-12
+deep_causality_cfd/src/types/flow/mod.rs
+  s_03a25bcd8e11c3::t_d55b2c053f1d24 56-57
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/weather-table-consumption/spec.md
+  s_03a25bcd8e11c3::t_e00fec58e3b8d2 3,5-14,16,18-21,23,25-26,28,30-35,37,39-40,42,44-51,53,55-56
+deep_causality_cfd/src/lib.rs
+  s_03a25bcd8e11c3::t_516fd920b94201 49
+  s_03a25bcd8e11c3::t_0a78e594c7ed5a 92
+deep_causality_cfd/tests/types/keyed_table_tests.rs
+  s_03a25bcd8e11c3::t_f2cef8635a6b05 87-90,101-104,115-118
+  s_03a25bcd8e11c3::t_ee9d1828d7a18f 1-86,91-100,105-114,119-126
+deep_causality_cfd/tests/types/flow/mod.rs
+  s_03a25bcd8e11c3::t_a68a0221d71752 42-43
+openspec/changes/plasma-retropulsion-cfd-contracts/design.md
+  s_03a25bcd8e11c3::t_4a10c761d25121 132-151
+deep_causality_cfd/tests/BUILD.bazel
+  s_03a25bcd8e11c3::t_bd8dc43d5ebad4 235-237,252-260,263,268
+  s_03a25bcd8e11c3::t_0457877cb05257 261-262
+  s_03a25bcd8e11c3::t_383dda9c9597f8 264-267
+  s_03a25bcd8e11c3::t_5ec6993c691631 269-270
+deep_causality_cfd/src/types/keyed_table.rs
+  s_03a25bcd8e11c3::t_667bebe767fff9 1-152,158-165
+  s_03a25bcd8e11c3::t_f2cef8635a6b05 153-157
+examples/avionics_examples/src/shared/constants.rs
+  s_03a25bcd8e11c3::t_27a27ad5c95ecd 78-90
+deep_causality_cfd/tests/types/flow/corridor_tests.rs
+  s_03a25bcd8e11c3::t_55cc4c1df74156 11-13
+  s_03a25bcd8e11c3::t_500f5eff05bb90 235-331,333,336,338,340
+  s_03a25bcd8e11c3::t_5e83e485966571 332
+  s_03a25bcd8e11c3::t_2d4f2a7b3f6cc6 334-335
+  s_03a25bcd8e11c3::t_0e03c6acd6dcfa 337
+  s_03a25bcd8e11c3::t_38cdb87f742ee5 339
+  s_03a25bcd8e11c3::t_62206d7cbede05 341-343
+  s_03a25bcd8e11c3::t_03a479ae0b7bde 344-347
+deep_causality_cfd/src/types/flow/corridor.rs
+  s_03a25bcd8e11c3::t_ef5829bb1d5a8d 531-580,584-586,595-596,601,607,610-616,732
+  s_03a25bcd8e11c3::t_e28145f5ad0da4 802,805,808-867
+  s_03a25bcd8e11c3::t_97d323897f6772 687-691,697-699,704-708,712-731
+openspec/changes/plasma-retropulsion-cfd-contracts/tasks.md
+  s_03a25bcd8e11c3::t_90812237e55d63 63-67,70-99,103-109,113-116
+deep_causality_cfd/src/types/mod.rs
+  s_03a25bcd8e11c3::t_97fc9cf6b17adb 12,15
+deep_causality_cfd/tests/types/flow/inheritance_guard_tests.rs
+  s_03a25bcd8e11c3::t_6dbbaabba16629 1-124
+  s_03a25bcd8e11c3::t_7c688ae887b743 125-127
+  s_03a25bcd8e11c3::t_a5fdd18751d123 128-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0c4e55d11d665c1c41acc00c475d30a5f32cb389",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
