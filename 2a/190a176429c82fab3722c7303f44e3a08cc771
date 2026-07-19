@@ -1,0 +1,29 @@
+openspec/specs/blackout-coupling-interface/spec.md
+  s_03a25bcd8e11c3::t_c0abe797ee5e20 78-189
+openspec/specs/corridor-inheritance-guard/spec.md
+  s_03a25bcd8e11c3::t_c0abe797ee5e20 1-47
+openspec/changes/archive/2026-07-19-plasma-retropulsion-cfd-contracts/tasks.md
+  s_03a25bcd8e11c3::t_c0abe797ee5e20 16,20,26,54,58,117
+openspec/specs/powered-descent-envelope/spec.md
+  s_03a25bcd8e11c3::t_c0abe797ee5e20 1-70
+openspec/specs/weather-table-consumption/spec.md
+  s_03a25bcd8e11c3::t_c0abe797ee5e20 1-60
+openspec/specs/full-descent-atmosphere/spec.md
+  s_03a25bcd8e11c3::t_c0abe797ee5e20 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "2a190a176429c82fab3722c7303f44e3a08cc771",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
