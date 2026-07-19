@@ -13,17 +13,17 @@
 
 ## 2. Envelope extension (deep_causality_cfd)
 
-- [ ] 2.1 Add `BurnEnvelope<R>` (throttle floor/ceiling, `max_ct`, ignition q window
+- [x] 2.1 Add `BurnEnvelope<R>` (throttle floor/ceiling, `max_ct`, ignition q window
       `[q_min, q_max]`, propellant floor, max descent rate) and `burn: Option<BurnEnvelope<R>>`
       on `SafetyEnvelope`; keep the 3-arg `new()` signature yielding `burn: None`; add the
       explicit burn-axis builder step (`with_burn_envelope`-style)
-- [ ] 2.2 Extend `CyberneticCorrect` to enforce active burn axes with the existing
+- [x] 2.2 Extend `CyberneticCorrect` to enforce active burn axes with the existing
       sense → clamp → `Err` pattern: throttle clamp into `[floor, min(ceiling, ct_ceiling(q∞))]`
       (dynamic C_T cap from the configured thrust reference + reference area), logged when it
       changes the command; propellant-floor and descent-rate breaches log + return the same
       `Err(PhysicalInvariantBroken)`; sensing via configurable field names (the
       `heat_flux_field` pattern)
-- [ ] 2.3 Tests with synthetic scalar fields: dynamic cap binds below the static ceiling;
+- [x] 2.3 Tests with synthetic scalar fields: dynamic cap binds below the static ceiling;
       static ceiling binds when q is high; floor clamp; propellant-floor refusal (`Err`, no
       command emitted); descent-rate refusal; clamp logged; **`burn: None` and
       no-throttle-written paths produce bit-identical behavior and log traffic to the
@@ -51,11 +51,11 @@
 
 ## 4. Inheritance-guard harness (deep_causality_cfd)
 
-- [ ] 4.1 Harness test: march a corridor-class coupled world N steps twice — plain stack vs.
+- [x] 4.1 Harness test: march a corridor-class coupled world N steps twice — plain stack vs.
       stack + `PropulsionStub` at zero throttle — assert reports, final fields (scalars, force,
       command channels, regime), and logs bit-identical; failure names the first diverging
       artifact
-- [ ] 4.2 Negative control: a deliberately non-inert stub configuration (test-local) makes the
+- [x] 4.2 Negative control: a deliberately non-inert stub configuration (test-local) makes the
       harness fail, proving the guard detects regressions
 
 ## 5. Atmosphere to the ground (examples/avionics_examples)
@@ -114,5 +114,5 @@ provenance stamping is example glue deferred to M5 (which owns the retropulsion 
       `types_keyed_table`); no example-crate tests (examples are example code only)
 - [x] 8.2 `make format && make fix` — clippy clean without suppressions
 - [ ] 8.3 `make test` and `make check` (full-repo SDD pre-PR gate — run before PR)
-- [ ] 8.4 Prepare the commit message(s) per task group and hand to the user (never commit);
+- [x] 8.4 Prepare the commit message(s) per task group and hand to the user (never commit);
       draft the PR summary referencing this change and the roadmap milestone M2
