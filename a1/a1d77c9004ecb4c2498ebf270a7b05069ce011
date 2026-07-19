@@ -1,0 +1,31 @@
+openspec/specs/flight-sensor-scalars/spec.md
+  s_03a25bcd8e11c3::t_75f879cec3faf8 1-65
+openspec/specs/ignition-corridor-commit/spec.md
+  s_03a25bcd8e11c3::t_75f879cec3faf8 1-103
+openspec/specs/terminal-descent-leg/spec.md
+  s_03a25bcd8e11c3::t_75f879cec3faf8 1-128
+openspec/specs/powered-descent-envelope/spec.md
+  s_03a25bcd8e11c3::t_75f879cec3faf8 60-68,77-213
+  s_03a25bcd8e11c3::t_c2b4440f5d27b2 214
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_03a25bcd8e11c3::t_28084bddf694ab 43-44,306,351,389-392
+  s_03a25bcd8e11c3::t_c15f8a5680fa87 28-34,77-82
+openspec/specs/throttle-guidance-stage/spec.md
+  s_03a25bcd8e11c3::t_75f879cec3faf8 1-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a1a1d77c9004ecb4c2498ebf270a7b05069ce011",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
