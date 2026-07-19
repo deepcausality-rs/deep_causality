@@ -1,0 +1,27 @@
+openspec/specs/compressible-drag-contraction/spec.md
+  s_03a25bcd8e11c3::t_4ff54dacdbf77a 1-37
+openspec/specs/compressible-forcing-region/spec.md
+  s_03a25bcd8e11c3::t_84b6718cee710a 1-63
+openspec/specs/plume-rank-fork-study/spec.md
+  s_03a25bcd8e11c3::t_a6b4b1b8daafb2 1-68
+openspec/specs/srp-derisk-verdict/spec.md
+  s_03a25bcd8e11c3::t_0923a33bd96310 1-32
+openspec/specs/srp-drag-decrement-verification/spec.md
+  s_03a25bcd8e11c3::t_d8279fc67e4841 1-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0d4b3fe3a65d98d3525dd485a846a2866a348cc5",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
