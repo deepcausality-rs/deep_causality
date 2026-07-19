@@ -28,9 +28,10 @@ their own acceptance text.
 The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Four of those stages are now
 complete — **Stage R** (the example-code refactoring), **Stage 1** (the physics-crate foundation),
 **Stage 2** (the front-loaded de-risk measurement, M1), and **Stage 0** (the cfd contract layer,
-M2) — all archived. The next work is **Stage 3** (M3 + M4), the coupled burn stages, which builds
-on the seams M2 landed. This roadmap keeps the note's stage names as an index and maps them onto
-milestones M1–M5.
+M2) — all archived, and **Stage 3's physics half** (M3: `RetroThrust`, `PlumeObstruction`, the
+plume-imprint refresh channel, and the flight-regime axes) archived with them. The next work is
+**Stage 3's guidance half** (M4), then **Stage 4** (M5), whose specs are derived and waiting on M4.
+This roadmap keeps the note's stage names as an index and maps them onto milestones M1–M5.
 
 | Note stage | Content | State | Roadmap |
 |---|---|---|---|
@@ -38,8 +39,9 @@ milestones M1–M5.
 | **Stage 1** | Propulsion kernel family + papers in `deep_causality_physics` | **done** — `close-plasma-retropulsion-physics-gaps`, archived 2026-07-17 | — |
 | **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **done** — `plasma-retropulsion-de-risk`, measured 2026-07-17, verdict **AMBER** ([`derisk-verdict.md`](derisk-verdict.md): imprint fidelity amber, fork economics + rank green), archived 2026-07-19 | **M1** (front-loaded) |
 | **Stage 0** | cfd contracts + inheritance guard | **done** — `plasma-retropulsion-cfd-contracts`, archived 2026-07-19 (M5 glue task 6.4 carried forward) | **M2** |
-| **Stage 3** | Coupled stages (thrust, plume, classifier, guidance, envelope) | **open — next** | **M3 + M4** |
-| **Stage 4** | Example wiring, counterfactuals, gates | **open** | **M5** |
+| **Stage 3** (physics half) | `RetroThrust`, `PlumeObstruction`, plume-imprint refresh, classifier axes | **done** — `add-retropulsion-coupled-stages`, archived 2026-07-19 | **M3** |
+| **Stage 3** (guidance half) | `ThrottleGuidance`, live envelope enforcement, terminal-leg re-seed | **open — next** | **M4** |
+| **Stage 4** | Example wiring, counterfactuals, gates | **specs derived 2026-07-19**, blocked on M4 | **M5** |
 
 **Done and directly reusable (survey-verified):**
 
@@ -257,7 +259,7 @@ finalized after M1's verdict (a one-line depth switch), so hold that sub-item un
 
 ---
 
-### M3 — `add-retropulsion-coupled-stages`  *(Stage 3: physics half; **next**)*
+### M3 — `add-retropulsion-coupled-stages`  *(Stage 3: physics half; **archived 2026-07-19** — `RetroThrust`, `PlumeObstruction` carrying the A0 correlation as the drag authority, the plume-imprint refresh riding the carrier's existing field-reading reconfiguration channel, and the opt-in Mach/thrust/touchdown classifier axes all landed; the opt-in is load-bearing, since the carrier publishes `"flight_mach"` every step)*
 
 **Objective.** Make the burn physically couple: thrust felt in the force channel and the IMU, the
 plume imprinted on the marched layer in flight, and the new regimes detected and logged.
@@ -300,7 +302,7 @@ scalars, force-RMW idiom, A0 stub seam).
 
 ---
 
-### M4 — `add-retropulsion-terminal-descent`  *(Stage 3: guidance half)*
+### M4 — `add-retropulsion-terminal-descent`  *(Stage 3: guidance half; **next**)*
 
 **Objective.** Guide the burn and land it: the ignition-corridor commit, envelope enforcement of the
 throttle, and the cutoff → transonic → subsonic terminal leg to a touchdown gate.
@@ -332,7 +334,7 @@ throttle, and the cutoff → transonic → subsonic terminal leg to a touchdown 
 
 ---
 
-### M5 — `wire-plasma-retropulsion-example`  *(Stage 4: example, counterfactuals, gates)*
+### M5 — `wire-plasma-retropulsion-example`  *(Stage 4: example, counterfactuals, gates; **specs derived 2026-07-19**, blocked on M4)*
 
 **Objective.** Assemble the example, run the two counterfactual studies that are the reason the
 example exists, and pass the full gate set — the point at which the Plasma-Retropulsion Descent
@@ -346,12 +348,18 @@ delivers a correct end-to-end simulation.
    `plasma_blackout_retropulsion` in `Cargo.toml`, and the burn-phase coupling stack (§5) assembled
    in `shared/world.rs` alongside `corridor_coupling` (`world.rs:121-181`). The five acts
    (PLAN/CORRIDOR/COAST/BURN/TERMINAL) run as the leg structure the note pins in §5. **[holds]**
-2. **State-fork counterfactual centerpiece (§6).** March into the burn, pause, `fork` the marched
-   plume-imprinted field copy-on-write, apply the small throttle roster (coast, sign-flip
-   straddlers, nominal, engine-degraded) each `publish_constant`-injected so every branch's
+2. **State-fork counterfactual centerpiece (§6), at the hybrid depth.** March into the burn, pause,
+   `fork` the marched plume-imprinted field copy-on-write, apply the small throttle roster (coast,
+   sign-flip straddlers, nominal, engine-degraded) each `publish_constant`-injected so every branch's
    intervention feeds its own plume and drag, `continue`, and score. On-axis, inside the
    Cordell–Braun envelope — **no angle of attack** (§6 discipline pin). Reuses M1's fork-economics
-   harness. **[holds under precondition: M1 green; else parameter-fork per §6 shallow version]**
+   harness. The derived specs fly the **hybrid** the M1 verdict named as measurement-consistent and
+   left for M5 to propose: the A0 correlation is the in-flight drag authority (risk 1 amber) while
+   the state fork carries the flow-realism and fork-economics witnesses (risks 2 and 3 green, so
+   gates 4a and 4d exist at all — a parameter fork cannot express either). Gate 4b states its own
+   authority: under A0 it tests that the correlation's non-monotonicity survives trajectory
+   integration, not that an independent flowfield reproduced Jarvinen–Adams. **[measured basis;
+   depth decided at M5 design time per the verdict's decision table]**
 3. **Belief counterfactual (§4).** Informed (table-interpolated at the measured dT) vs uninformed
    (standard-day row) worlds on the same measured cold day, both `!!ContextAlternation!!`-marked;
    the gate requires a material separation. **[holds under precondition: separation band earned from
