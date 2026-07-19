@@ -1,0 +1,37 @@
+openspec/changes/add-retropulsion-coupled-stages/design.md
+  s_03a25bcd8e11c3::t_eddaf3da2db8ea 1-131
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_03a25bcd8e11c3::t_dbe6b5344f8b13 28-33,39-41
+  s_03a25bcd8e11c3::t_8cddc6b04756da 260,265-271
+  s_03a25bcd8e11c3::t_8b4707c01ed478 210
+  s_03a25bcd8e11c3::t_10614e54e4e7ef 272
+openspec/changes/add-retropulsion-coupled-stages/proposal.md
+  s_03a25bcd8e11c3::t_fc123bae2bb1e0 1-79
+openspec/changes/add-retropulsion-coupled-stages/tasks.md
+  s_03a25bcd8e11c3::t_08a0cf3c25ed65 1-58
+openspec/changes/add-retropulsion-coupled-stages/specs/retro-thrust-stage/spec.md
+  s_03a25bcd8e11c3::t_764f8f4303fd93 1-57
+openspec/changes/add-retropulsion-coupled-stages/.openspec.yaml
+  s_03a25bcd8e11c3::t_8faafa320740ec 1-2
+openspec/changes/add-retropulsion-coupled-stages/specs/plume-obstruction-stage/spec.md
+  s_03a25bcd8e11c3::t_f75c126d68e4f7 1-29,37-57
+  s_03a25bcd8e11c3::t_283d4d92a89069 30-36
+openspec/changes/add-retropulsion-coupled-stages/specs/flight-regime-classifier/spec.md
+  s_03a25bcd8e11c3::t_0bae95bdb25212 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3b95368df9c6dc2627516c684fe2d88635ce6cd8",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
