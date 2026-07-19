@@ -1,8 +1,8 @@
 ---
 title: Pick a solver family
-task: You have a flow problem and need to know which of the three families to point at it.
-summary: Dispatch happens at compile time, so choosing is a matter of handing march a different config type. The harder question is which family your problem actually belongs to.
-order: 4
+task: You need to select one of the three solver families for a given problem.
+summary: Dispatch is resolved at compile time from the config type. The selection criterion is the problem class, listed below with the evidence for each.
+order: 7
 verbs:
   - march
   - MarchDispatch
@@ -38,13 +38,13 @@ no runtime solver registry and no dynamic dispatch.
 | Incompressible, fixed mesh, wall-bounded | DEC Navier–Stokes | [Ghia Re 1000](/validation/#dec-cavity) |
 | Compressible layer where a 2^L grid must stay cheap | QTT marcher | [Sod, L1 ≤ 0.027](/validation/#qtt-sod) |
 | Stagnation line, relaxation, no grid needed | Fitted closures | [RAM-C II anchor](/validation/#qtt-ramc) |
-| Curved shock on Cartesian axes at high resolution | None — see boundaries | [χ ~ √side](/boundaries/#sqrt-side) |
+| Curved shock on Cartesian axes at high resolution | Not supported | [χ ~ √side](/boundaries/#sqrt-side) |
 
-The last row is the one to read carefully. QTT compression is conditional on
-coordinate alignment, not on smoothness. A curved shock captured on Cartesian axes
-costs *more* than a dense grid, and in 3-D the bond dimension grows as roughly the
-square root of the side length. If that describes your problem, the answer is to
-align the coordinate — or to use a different family.
+QTT compression is conditional on coordinate alignment rather than on
+smoothness. A curved shock captured on Cartesian axes costs more than a dense
+grid, and in 3-D the bond dimension grows as roughly the square root of the side
+length. The available responses are to align the coordinate or to select a
+different family.
 
 ## The DEC type-state
 
@@ -53,11 +53,11 @@ the field is divergence-free at every step. The `SolenoidalField` type-state mak
 time-stepping an unprojected field a compile error rather than a slowly diverging
 run.
 
-Measured divergence residual on the wake case: **3.33e-15**, against a 1e-6
-tolerance. That is not a solve converging; it is the discretization being exact by
-construction and the number reporting round-off.
+Measured divergence residual on the wake case is 3.33e-15 against a 1e-6
+tolerance. The discretization is exact by construction, so the figure reports
+round-off rather than solver convergence.
 
-## Precision is a parameter, not a rebuild
+## Precision as a type parameter
 
 Every example carries one alias:
 
@@ -66,11 +66,12 @@ pub type FloatType = f64;
 ```
 
 The physics is written against the scalar bound, so changing that line
-re-instantiates the whole computation. `f32`, `f64` and `Float106` all work — with
-the caveat that `f32` is not merely less accurate. In the corridor it fails at step
-one, because a term in the ionization kernel evaluates to 4.4e-67 and underflows the
-exponent range.
+re-instantiates the computation. `f32`, `f64` and `Float106` are all supported.
 
-See [forecast horizon under precision](/examples/turbulence-flow/) for what the
-choice actually buys: roughly a doubling of usable forecast horizon per nine orders
-of magnitude of epsilon.
+`f32` carries a representability limit in addition to reduced accuracy: in the
+corridor it fails at step one, because a term in the ionization kernel evaluates
+to 4.4e-67 and underflows the exponent range.
+
+[Forecast horizon under precision](/examples/turbulence-flow/) measures the
+effect: roughly a factor of two in usable forecast horizon per nine orders of
+magnitude of epsilon.

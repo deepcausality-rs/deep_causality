@@ -20,11 +20,11 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
     <p class="eyebrow eyebrow-coord">
       <span class="ix">02 / 04</span><span class="lb">Evidence</span>
     </p>
-    <h2>What is validated, against what, to what number.</h2>
+    <h2>Validation status</h2>
     <p class="lede">
-      Thirteen verification targets, each self-verifying and each exiting
-      nonzero the moment its check fails — so the suite gates rather than
-      demonstrates.
+      Thirteen verification targets. Each checks a run against a published
+      reference or a discretization invariant, and exits nonzero when the check
+      fails.
     </p>
   </header>
 
@@ -65,9 +65,9 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
   </div>
 
   <p class="caveat-note">
-    Structural targets gate <em>rank and cost</em>, never physical accuracy.
-    The distinction is kept on every row because conflating the two is the
-    easiest way to over-claim.
+    Structural targets gate rank and cost. They do not gate physical
+    accuracy. The status column records which of the two applies to each
+    target.
   </p>
 </section>
 

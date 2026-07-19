@@ -17,16 +17,16 @@ const limits = boundaries.filter((b) => !b.refuted);
   <article class="page bpage">
     <header class="bhead">
       <p class="eyebrow">Capability boundaries</p>
-      <h1>Where it stops working.</h1>
+      <h1>Measured capability boundaries</h1>
       <p class="lede">
-        Every limit below was measured, not estimated. Each says where you hit
-        it rather than which feature is missing, because the useful question is
-        whether your problem crosses the line.
+        Each limit below was measured. Each entry states the condition under
+        which it applies, so a reader can determine whether a given problem
+        crosses it.
       </p>
       <p class="lede">
-        Four of these refuted something the project believed. Those are first,
-        because a toolbox that publishes its disproofs is easier to evaluate
-        than one that publishes only results.
+        Four entries record hypotheses that measurement refuted. They appear
+        first. The remaining entries are standing limits of the current
+        design.
       </p>
 
       <div class="callout callout-warn">
@@ -114,26 +114,23 @@ const limits = boundaries.filter((b) => !b.refuted);
     </section>
 
     <section class="bsection">
-      <h2 class="bsection-head">What this adds up to</h2>
+      <h2 class="bsection-head">Summary</h2>
       <div class="prose">
         <p>
-          The compression thesis holds, and its condition is expensive.
-          Alignment drives rank, not sharpness. Holding alignment while marching
-          needs re-pinning <em>and</em> an exact Rankine–Hugoniot interface, and
-          the 3-D fitted marcher that makes the whole approach work is itself
-          over its wall-clock budget at the smallest grid measured. The shipped
-          corridor runs a 2-D layer for exactly that reason.
+          The compression result holds under one condition: coordinate
+          alignment. Holding alignment through a march requires both re-pinning
+          and an exact Rankine–Hugoniot interface. The 3-D fitted marcher that
+          the approach depends on exceeds its wall-clock budget at the smallest
+          grid measured, so the shipped corridor marches a 2-D layer.
         </p>
         <p>
           Every rank measurement uses scalar Burgers with explicit Euler and
-          central differences rather than compressible Euler or Navier–Stokes,
-          and every one is stated as a lower bound on a live solver's rank. That
-          caveat is repeated in each study and is repeated here.
+          central differences rather than compressible Euler or Navier–Stokes.
+          Each is stated as a lower bound on a live solver's rank.
         </p>
         <p>
-          Turbulence is staged work, not an exclusion. The validated
-          incompressible cases sit at Re 100–1600, and the wake is reported
-          rather than gated.
+          Turbulence is staged work. The validated incompressible cases cover
+          Re 100 to 1600. Wake rank is reported and not gated.
         </p>
         <p>
           Source for every measurement:

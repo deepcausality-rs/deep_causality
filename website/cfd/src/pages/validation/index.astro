@@ -20,17 +20,15 @@ const groups = [
   <article class="page vpage">
     <header class="vhead">
       <p class="eyebrow">Validation status</p>
-      <h1>What is validated, against what, to what number.</h1>
+      <h1>Validation status by solver and reference</h1>
       <p class="lede">
-        The evidence for this crate lives in thirteen self-verifying targets.
-        Each checks a run against a published reference or an invariant the
-        discretization must preserve, and each exits nonzero when its check
-        fails — so the suite is usable as a gate in CI, not only as a demo.
+        Thirteen self-verifying targets. Each checks a run against a published
+        reference or against an invariant the discretization must preserve. Each
+        exits nonzero when its check fails, so the suite runs as a CI gate.
       </p>
       <p class="lede">
-        This page exists so a result can be defended without reading thirteen
-        READMEs. Every number is copied from a committed run artifact. All
-        figures are <code>f64</code> on an Apple M3 Max, release build.
+        Every number below is copied from a committed run artifact. All figures
+        are <code>f64</code> on an Apple M3 Max, release build.
       </p>
 
       <div class="callout">
@@ -46,11 +44,11 @@ const groups = [
       <div class="callout callout-warn">
         <p class="callout-title">Global caveat, from the verification README</p>
         <p>
-          Divergence figures are single-machine measurements at the affordable
-          default configuration and are dominated by spatial resolution rather
-          than the discretization's asymptotic accuracy. Reference-grid runs
-          tighten every figure. Re-measure on your target hardware before
-          quoting anything here in an analysis of record.
+          Divergence figures are single-machine measurements at the default
+          configuration. They are dominated by spatial resolution rather than by
+          the discretization's asymptotic accuracy. Reference-grid runs tighten
+          every figure. Re-measure on the target hardware before citing these
+          values in an analysis of record.
         </p>
       </div>
     </header>
@@ -117,32 +115,31 @@ const groups = [
     ))}
 
     <section class="vgroup">
-      <h2 class="vgroup-head">Reading these results</h2>
+      <h2 class="vgroup-head">Records where the headline number is not the claim</h2>
       <div class="prose">
         <p>
-          Three of the records above are worth reading twice, because the
-          headline number is not the claim.
+          Three records report a figure that does not correspond to the quantity
+          a reader may expect. Each states its actual claim below.
         </p>
         <p>
-          <strong>The QTT cylinder reports <span class="num">C_d ≈ 23.8</span>.</strong>
-          That is not an isolated-cylinder drag coefficient and is not offered as
-          one. The domain has roughly 30% blockage, the force is a penalization
+          <strong>QTT cylinder, <span class="num">C_d ≈ 23.8</span>.</strong>
+          The domain carries roughly 30% blockage, the force is a penalization
           integral over a smoothed skirt, and the value is read at a fixed
-          horizon rather than a steady state. The claim is the convergence
-          trend, the no-slip interior, and positivity.
+          horizon rather than at steady state. The target claims the convergence
+          trend, the no-slip interior, and positivity. It does not claim an
+          isolated-cylinder drag coefficient.
         </p>
         <p>
-          <strong>The 3-D Taylor–Green peak dissipation sits 80% below DNS.</strong>
-          The default grid is 16³, which cannot represent the small-scale
-          dissipation peak. Only energy monotonicity is gated; the DNS
-          comparison is informational. Reporting resolutions of 64³–128³ close
-          the gap.
+          <strong>3-D Taylor–Green, peak dissipation 80% below DNS.</strong>
+          The default grid is 16³ and cannot resolve the small-scale dissipation
+          peak. The gate covers energy monotonicity; the DNS comparison is
+          informational. Reporting resolutions of 64³ to 128³ close the gap.
         </p>
         <p>
-          <strong>The Tier-A blackout closure over-predicts by three decades.</strong>
-          It is kept in the suite as the superseded closure it is, with the
-          Tier-B compressible marcher (<code>qtt_ramc_stagline</code>) landing at
-          the flight anchor instead. Use the latter.
+          <strong>Tier-A blackout closure, three decades above the flight anchor.</strong>
+          The closure rides an incompressible rollout with a recovery-temperature
+          reconstruction. It is superseded by the Tier-B compressible marcher,
+          <code>qtt_ramc_stagline</code>, which lands at the anchor.
         </p>
         <p>
           Source for every target:

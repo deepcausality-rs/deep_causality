@@ -1,7 +1,7 @@
 ---
 title: Weather dispersion table
-question: Vary the weather across six atmospheres and get one dispersion table for the digital twin.
-summary: Forty-eight full descents — six counterfactual atmospheres times eight deterministic noise draws — reduced to one table with error bars, and a cold-day effect resolved at four sigma.
+question: Vary the atmosphere across six conditions and produce one dispersion table with error bars.
+summary: Forty-eight full descents, six counterfactual atmospheres by eight deterministic noise draws, reduced to one table with error bars. The cold-day effect is resolved at four sigma.
 order: 6
 command: cargo run --release -p avionics_examples --example plasma_blackout_weather
 uses:
@@ -12,22 +12,21 @@ uses:
 runtime: 312.5 s against a 600 s budget
 results:
   - polar-winter blackout drift 68.75 ± 5.19 m against standard-day 45.93 ± 2.35 m (1.50×)
-  - separation 22.81 m against combined σ 5.69 m — 4.0 σ, statistically resolved
+  - separation 22.81 m against combined σ 5.69 m, 4.0 σ
   - onset spread 4.2 s across the table, dwell spread 3.1 s
   - 48 full descents (6 conditions × 8 deterministic noise draws)
-limitation: The physics is validated at one flight anchor (RAM-C II), so off-anchor rows are single-anchor extrapolation. The parameter set is temperature and density, not the full DO-160-style list. This table is one artifact in a certification chain, not the chain.
+limitation: Validated at one flight anchor (RAM-C II), so the five off-anchor rows are single-anchor extrapolation. The parameter set covers temperature and density only. The table is one artifact in a certification chain.
 recorded: true
 source: examples/avionics_examples/cfd/plasma_blackout/weather
 ---
 
-The [corridor](/examples/plasma-blackout-corridor/) flies one descent. This example
-is the table factory: it flies the same descent across six atmospheres and reduces
-the result to a lookup table with error bars.
+The [corridor](/examples/plasma-blackout-corridor/) flies one descent. This
+example flies the same descent across six atmospheres and reduces the result to a
+lookup table with error bars.
 
-The counterfactual axis is different here. The corridor forks a *paused state* and
-varies a command. This varies the *world* — six atmospheres alternated from one
-validated baseline, each a whole-world alternation carrying its own
-`!!ContextAlternation!!` provenance.
+The counterfactual axis differs. The corridor forks a paused state and varies a
+command. This example varies the world: six atmospheres alternated from one
+validated baseline, each carrying its own `!!ContextAlternation!!` provenance.
 
 ## The table
 
@@ -44,7 +43,7 @@ validated baseline, each a whole-world alternation carrying its own
 Each row is eight full descents with deterministic receiver-noise draws, so the
 `±` is a real ensemble spread rather than a guess. Forty-eight descents total.
 
-## The finding
+## Measured result
 
 ```text
 [PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean
@@ -54,10 +53,11 @@ Each row is eight full descents with deterministic receiver-noise draws, so the
        22.81 m vs combined sigma 5.69 m (4.0 sigma; gate requires 2)
 ```
 
-A cold, dense atmosphere ionizes earlier, holds the sheath longer, and the vehicle
-spends more time dead-reckoning. Drift grows by half. Gate 4b is the one that makes
-the result usable: with per-row error bars you can say the effect is resolved at four
-sigma rather than asserting a ratio between two single runs.
+A cold, dense atmosphere ionizes earlier and holds the sheath longer, so the
+vehicle spends more time dead-reckoning. Drift increases by 50%.
+
+Gate 4b establishes that the separation exceeds the ensemble spread. Without the
+per-row error bars, the 1.50× ratio would rest on two single runs.
 
 The example also cross-checks the mechanism against a closed form:
 
@@ -66,33 +66,30 @@ predicted = 45.93 * departure * (dwell/58.2)^2
           = 68.3   vs measured 68.75 +- 5.19
 ```
 
-Drift going as dwell squared is what free inertial propagation does. The measured
-means land within about 5% of that, which says the coupling is behaving like inertial
-navigation over a longer window and not like a numerical artifact.
+Free inertial propagation gives drift proportional to elapsed time squared. The
+measured means agree with that form to within about 5%.
 
-## Why this shape matters
+## Intended use
 
-The output is a lookup table an onboard system can carry: given the measured
-temperature departure on the day, interpolate the expected blackout window and the
-navigation dispersion, and size the margins accordingly.
+The output is a lookup table for onboard use. Given a measured temperature
+departure, it returns the expected blackout window and navigation dispersion for
+margin sizing.
 
-That is the descent counterpart of an operational practice with real precedent — the
-Shuttle programme regenerated ascent guidance loads on the day of launch from measured
-balloon soundings, because tables tuned to a standard day are wrong on the flown day.
+The Shuttle programme applied the same pattern on the ascent side, regenerating
+guidance I-loads on the day of launch from measured balloon soundings.
 
 ## Audit trail
 
-Forty-eight per-branch audit logs plus one main log are written to `weather/audit/`.
-Each names the baseline its world was alternated from. For a table that is meant to
-feed a certification argument, being able to point at which run produced which row is
-not optional.
+Forty-eight per-branch audit logs and one main log are written to
+`weather/audit/`. Each names the baseline its world was alternated from, so every
+table row is traceable to the run that produced it.
 
-## Where this stops being enough
+## Applicability limits
 
-The physics is validated at exactly one flight anchor, RAM-C II. Every off-anchor row
-is single-anchor extrapolation, and the example says so rather than presenting six
-rows as six validations.
+The physics is validated at one flight anchor, RAM-C II. The five off-anchor rows
+are single-anchor extrapolation and are not independent validations.
 
-The parameter set is temperature and density. A real environmental qualification
-covers humidity, winds and statistical coverage — the DO-160-style list — and this is
-not that. It is one artifact in a certification chain, not the chain.
+The parameter set covers temperature and density. Environmental qualification of
+the DO-160 type additionally covers humidity, winds and statistical coverage.
+
+The table is one artifact in a certification chain.

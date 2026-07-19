@@ -1,32 +1,31 @@
 ---
 title: Plasma blackout corridor
-question: Fly one Mach-25 reentry, find the blackout window from the physics, and pick the bank command that minimises miss distance.
-summary: The whole crate end to end — compressible march, plasma chemistry, Kalman navigation through GNSS denial, and a seventeen-branch counterfactual sweep forked from the running simulation.
+question: Fly one Mach-25 reentry, locate the blackout window from the chemistry, and select the bank command that minimises miss distance.
+summary: Compressible march, plasma chemistry, Kalman navigation through GNSS denial, and a seventeen-branch counterfactual sweep forked from the paused marched state.
 order: 5
 command: cargo run --release -p avionics_examples --example plasma_blackout_corridor
 uses:
   - march ... until
   - fork
-  - alternate_context
-  - continue_march
+  - fork / branch
+  - continue_for
   - 13 Gates
   - ESKF navigation
 runtime: 40.9 s against a 600 s budget
 results:
   - peak n_e = 3.349e19 m⁻³ at the 60.9 km passage, in band around the RAM-C II anchor
-  - onset at 74.7 km, exit at 47.0 km, 58.4 s dwell — flow-resolved, not scheduled
+  - onset 74.7 km, exit 47.0 km, 58.4 s dwell, located by the chemistry
   - committed 13.5° lands 2.39 m off the aim against a 20.00 m ballistic baseline (8.4×)
   - INS drift 0.3467 → 2.5448 m dead-reckoning, 0.2775 m after reacquisition
   - committed branch re-quantizes at peak bond 16 against a dense 1024-cell grid
-limitation: A single-point sheath closure with T_e = T_ve lumped, and no spatially resolved reacting layer. Time is compressed — each coupled step represents 0.1 s of flight. The marched layer is 2-D; a timing study put the 3-D fitted marcher 3.6× over budget. No winds, aero dispersions, or density perturbations.
+limitation: Single-point sheath closure with T_e = T_ve lumped and no spatially resolved reacting layer. Each coupled step represents 0.1 s of flight. The marched layer is 2-D; a timing study measured the 3-D fitted marcher at 3.6x over budget. No winds, aero dispersions or density perturbations.
 recorded: true
 source: examples/avionics_examples/cfd/plasma_blackout/corridor
 ---
 
-This is the example the crate exists to make possible, and the one to run first if
-you only run one. In about forty seconds it marches a compressible flow, reacts its
-plasma chemistry, gates a Kalman filter on the result, forks the running simulation
-into seventeen counterfactual worlds, and prints thirteen gate verdicts.
+In about forty seconds this example marches a compressible flow, reacts its
+plasma chemistry, gates a Kalman filter on the result, forks the marched state
+into seventeen counterfactual worlds, and reports thirteen gate verdicts.
 
 ## The problem
 
@@ -35,14 +34,11 @@ past the GPS L1 cutoff, and the vehicle loses GNSS — radio blackout. It flies 
 on inertial navigation until recombination drains the sheath. Then it reacquires,
 with whatever navigation error accumulated in the dark.
 
-The guidance question: which bank angle should it commit to, given that the
-navigation state it will have at the decision point is degraded by an amount that
-depends on how long the blackout lasts, which depends on the flow?
+The guidance problem is to select a bank angle at the decision point. The
+navigation state available at that point is degraded by an amount that depends on
+the blackout duration, which depends on the flow.
 
-Every part of that sentence is coupled to every other part. That coupling is the
-point.
-
-## Blackout is found, not scheduled
+## Blackout window located by the chemistry
 
 The window is not a config parameter. The run marches until the evolved sheath's
 electron density crosses the L1 cutoff:
@@ -67,20 +63,18 @@ The chemistry is anchored against flight data:
        passage, in [2.0e18, 5.0e19] around the flight anchor 1e19 m^-3
 ```
 
-One honest wrinkle the example states itself: exit at 47.0 km sits above the RAM-C II
-flight window of 25–30 km. The attribution is the probe's deliberately light
-ballistic bundle, not the chemistry — this vehicle decelerates higher. The offset is
-ballistics.
+Exit at 47.0 km sits above the RAM-C II flight window of 25 to 30 km. The example
+attributes the offset to the probe's light ballistic bundle, which decelerates at
+higher altitude, rather than to the chemistry.
 
-## Forking the running simulation
+## Counterfactual branches from the paused state
 
 At onset the march pauses. That pause is forked once per candidate bank angle, and
 each branch continues from the shared state in its own alternated world.
 
-The fork is O(1) copy-on-write — tensor fields, navigation engine and provenance log
-included — and each branch pays for its clone at its first write. Every branch carries
-an `!!ContextAlternation!!` marker naming the baseline it came from, so the audit
-trail survives the fan-out.
+The fork is O(1) copy-on-write, covering tensor fields, navigation engine and
+provenance log. Each branch takes its clone at its first write. Every branch
+carries an `!!ContextAlternation!!` marker naming its baseline.
 
 Six coarse branches, then eleven refined:
 
@@ -100,22 +94,22 @@ fine winner: 13.5deg  2.393 m
        off the aim vs the ballistic 20.00 m (8.4x better; gate requires 3x)
 ```
 
-The landscape is not monotone — 40° is worse than doing nothing. That is the useful
-part. A sweep that only confirmed "more bank is better" would not have needed to run.
+The response is not monotone: 40° lands 22.018 m from the aim point, worse than
+the 20.000 m zero-bank case.
 
-## Navigation through the dark
+## Navigation through the denial window
 
 ```text
 [PASS] (3) real INS drift -> reacquisition: err 0.3467 m -> 2.5448 m
        dead-reckoning to the peak passage, 0.2775 m after reacquisition
 ```
 
-A 17-state error-state Kalman filter dead-reckons through the denial window. Error
-grows roughly sevenfold in the dark, then collapses below its starting value once
-fixes return. The commit decision is made with the degraded number, not the recovered
-one, which is the whole reason the flow solve has to be in the loop.
+A 17-state error-state Kalman filter dead-reckons through the denial window.
+Error grows by a factor of about seven, then falls below its starting value once
+fixes return. The commit decision uses the degraded value, which is why the
+blackout duration produced by the flow solve enters the guidance result.
 
-## Precision, again
+## Precision
 
 | Type | Result |
 |---|---|
@@ -123,17 +117,21 @@ one, which is the whole reason the flow solve has to be in the loop.
 | `Float106` | identical events, 15–16 significant digits, ~11× wall-clock |
 | `f32` | crashes at step 1 |
 
-The `f32` failure is specific and worth knowing: `h²` in the then-flown Saha kernel
-evaluates to 4.4e-67, which underflows the `f32` exponent range. Not a precision
-problem — a representability one.
+The `f32` failure is a representability limit rather than an accuracy limit: `h²`
+in the then-flown Saha kernel evaluates to 4.4e-67, below the `f32` exponent
+range.
 
-## Where this stops being enough
+## Applicability limits
 
-The sheath closure is single-point with `T_e = T_ve` lumped; there is no spatially
-resolved reacting layer. Time is compressed, with each coupled step standing for
-0.1 s of flight. The marched layer is 2-D because a
-[timing study](/boundaries/#timing-3d) put the 3-D fitted marcher 3.6× over the
-budget. There are no winds, no aero-coefficient dispersions and no density
-perturbations — for those, see the
-[weather dispersion table](/examples/plasma-blackout-weather/), which is the
-example built to supply them.
+The sheath closure is single-point with `T_e = T_ve` lumped. There is no
+spatially resolved reacting layer.
+
+Time is compressed: each coupled step represents 0.1 s of flight.
+
+The marched layer is 2-D. A [timing study](/boundaries/#timing-3d) measured the
+3-D fitted marcher at 3.6× over the wall-clock budget.
+
+The run carries no winds, no aero-coefficient dispersions and no density
+perturbations. The
+[weather dispersion table](/examples/plasma-blackout-weather/) supplies the
+temperature and density axes.

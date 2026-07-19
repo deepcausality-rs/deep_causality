@@ -1,7 +1,7 @@
 ---
 title: Sweep a parameter and get a table
 task: You have a parameter and need a table of outcomes across it.
-summary: The most common job in the toolbox. A study is a family of cases run to a verdict; the table is written before judgment, so it survives a failed gate.
+summary: A study is a family of cases run to a verdict. The table is written before judgment, so it survives a failed gate.
 order: 1
 verbs:
   - cases
@@ -32,39 +32,35 @@ let verdict = CfdFlow::study("nozzle operating map")
     .verdict()?;
 ```
 
-## The ordering is enforced by the compiler
+## Ordering is enforced at compile time
 
-Each verb is defined only on the phase where it means something. There is no
-`record` or `gates` before rows exist, and no `verdict` before a gating sequence is
-applied. Four `compile_fail` doctests pin this, including a `GateSeq<i32>` that
-refuses to judge `f64` rows.
+Each verb is defined only on the phase where it applies. There is no `record` or
+`gates` before rows exist, and no `verdict` before a gating sequence is applied.
+Four `compile_fail` doctests pin this, including a `GateSeq<i32>` applied to
+`f64` rows.
 
-That means a mis-ordered study does not compile. You do not need to remember the
-order — try one and the type error tells you.
+A mis-ordered study does not compile.
 
 ## reduce versus reduce_all
 
 `reduce` maps one run to one row and runs per case. `reduce_all` receives the whole
 slice at once and therefore runs sequentially.
 
-Use `reduce_all` when a row depends on the other rows: a normalisation, a ranking,
-a "which case won" column. Use `reduce` otherwise, because it does not serialise the
-fan-out.
+`reduce_all` applies when a row depends on the other rows, such as a
+normalisation, a ranking, or a column identifying the selected case. `reduce`
+does not serialise the fan-out.
 
-## Record before judge
+## Record precedes judgment
 
-`record` deliberately precedes `gates`. When a gate fails you still want the table —
-it is the evidence for *why* it failed. A pipeline that wrote the artifact only on
-success would throw away the diagnostic exactly when you need it.
+`record` precedes `gates`, so a failed gate still leaves the table that shows why
+it failed.
 
-The one place this is inverted is the negative path of the
-[envelope placard](/examples/flight-envelope-placard/), where a failing run exits
-nonzero and writes no table on purpose, so a bad artifact cannot be picked up later
-and mistaken for a good one.
+The [envelope placard](/examples/flight-envelope-placard/) inverts this on its
+negative path: a failing run exits nonzero and writes no table, so no artifact
+remains that could be mistaken for a valid one.
 
 ## Concurrency
 
-`sweep` runs cases concurrently under the `parallel` feature and inline otherwise,
-reporting in case order either way. The VIV example notes that its concurrent result
-is bit-identical to the sequential one; if that is not true of your cases, they are
-sharing state they should not be.
+`sweep` runs cases concurrently under the `parallel` feature and inline
+otherwise, reporting in case order in both modes. The VIV example records a
+concurrent result bit-identical to its sequential run.

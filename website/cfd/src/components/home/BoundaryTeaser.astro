@@ -13,17 +13,17 @@ const refuted = boundaries.filter((b) => b.refuted).slice(0, 3);
     <p class="eyebrow eyebrow-coord">
       <span class="ix">04 / 04</span><span class="lb">Boundaries</span>
     </p>
-    <h2>Where it stops working, and how we know.</h2>
+    <h2>Capability boundaries</h2>
     <p class="lede">
-      Four hypotheses this project held were refuted by running them. The
-      measurements are committed alongside the ones that worked.
+      Four working hypotheses were refuted by measurement. The studies and
+      their output files are committed alongside the confirming results.
     </p>
   </header>
 
   <div class="grid">
     {refuted.map((b, i) => (
       <article class="panel corner-brackets bcard rise" style={`--i:${i}`}>
-        <p class="bkind">Refuted by measurement</p>
+        <p class="bkind">Refuted</p>
         <h3>{b.title}</h3>
         <p class="bhit"><span class="k">Hit when</span> {b.hitWhen}</p>
         <ul class="bnums">
