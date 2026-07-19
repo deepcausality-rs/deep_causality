@@ -273,6 +273,8 @@ rust_test(
     srcs = glob([
         "types/flow/**/*_tests.rs",
     ]) + [
+        "types/flow/compressible_march_run/mod.rs",
+        "types/flow/corridor/mod.rs",
         "types/flow/mod.rs",
     ],
     crate_features = [
