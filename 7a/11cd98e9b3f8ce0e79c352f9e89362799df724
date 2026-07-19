@@ -1,0 +1,22 @@
+openspec/changes/plasma-retropulsion-cfd-contracts/specs/blackout-coupling-interface/spec.md
+  s_03a25bcd8e11c3::t_0cdd34e5282ed3 84-93
+openspec/changes/plasma-retropulsion-cfd-contracts/design.md
+  s_03a25bcd8e11c3::t_6d4b02fd3f8f13 33-42
+  s_03a25bcd8e11c3::t_b2b2d6833a8cba 194-197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7a11cd98e9b3f8ce0e79c352f9e89362799df724",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
