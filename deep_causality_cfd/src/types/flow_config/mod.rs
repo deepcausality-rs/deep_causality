@@ -28,7 +28,7 @@ pub use body::Body;
 pub use cfd_config_builder::CfdConfigBuilder;
 pub use compressible_march_config::{
     AtmosphereRow, CompressibleMarchConfig, CompressibleMarchConfigBuilder, DescentSchedule,
-    ReferenceScales,
+    PlumeImprint, ReferenceScales,
 };
 pub use duct_config::{DuctAreaProfile, DuctConfig, DuctInlet, DuctStop};
 pub use manufactured::{

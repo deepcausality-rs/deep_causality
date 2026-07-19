@@ -1,28 +1,29 @@
 ## ADDED Requirements
 
-### Requirement: The classifier gains Mach, thrust, and touchdown axes
+### Requirement: The classifier gains opt-in Mach, thrust, and touchdown axes
 
 `RegimeClass` and `RegimeClassify` SHALL gain three flight-phase axes read from the carrier's
 published scalars: a **Mach regime** (supersonic / transonic / subsonic, banded from `"flight_mach"`
 with configurable thresholds), a **thrust state** (coast / burn from the `"ignited"` flag), and a
 **touchdown** flag (from `"flight_altitude"` against a configured altitude floor). These axes MUST be
-additive on `RegimeClass` and MUST default to neutral values when their scalars are absent, so a
-world publishing none of them classifies exactly as before (the corridor's rarefaction / comms-denial
-result is unchanged).
+additive on `RegimeClass` and MUST be **opt-in** on `RegimeClassify`: absent the opt-in they stay
+neutral *even when the scalars are published*, because the compressible carrier publishes
+`"flight_mach"` on every step — so neutrality cannot be conditioned on the scalar being missing. A
+corridor world (which never opts in) therefore classifies, keys, and logs exactly as before.
 
-#### Scenario: Each axis reads its published scalar
+#### Scenario: Each axis reads its published scalar once opted in
 
-- **WHEN** the classifier runs on a field carrying `"flight_mach"`, `"ignited"`, and
-  `"flight_altitude"`
+- **WHEN** a classifier built with the flight-axis opt-in runs on a field carrying `"flight_mach"`,
+  `"ignited"`, and `"flight_altitude"`
 - **THEN** the recorded `RegimeClass` reports the Mach band, the thrust state, and the touchdown flag
   consistent with those scalars
 
-#### Scenario: The corridor classification is unchanged when the burn scalars are absent
+#### Scenario: Without the opt-in the corridor classification is unchanged
 
-- **WHEN** the classifier runs on a corridor-class field with no `"flight_mach"`, `"ignited"`, or
-  `"flight_altitude"` scalar
-- **THEN** the selected model, comms-denial, and logged transitions are identical to the pre-change
-  classifier's
+- **WHEN** a classifier built **without** the flight-axis opt-in runs on a field that *does* publish
+  `"flight_mach"`, `"ignited"`, and `"flight_altitude"` (as the compressible carrier always does)
+- **THEN** all three axes are neutral, and the selected model, comms-denial, regime key, and logged
+  message text are identical to the pre-change classifier's
 
 ### Requirement: A band, thrust, or touchdown transition is a logged regime change
 

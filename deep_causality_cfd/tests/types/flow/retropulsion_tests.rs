@@ -8,7 +8,8 @@
 //! propulsion scalars surviving a pause snapshot.
 
 use deep_causality_cfd::{
-    Ambient, CoupledField, PhysicsStage, PropulsionStub, StepContext, pack_resume, unpack_resume,
+    Ambient, CoupledField, PhysicsStage, PlumeNozzle, PlumeObstruction, PropulsionStub,
+    RetroThrust, StepContext, pack_resume, unpack_resume,
 };
 use deep_causality_physics::{
     Area, Force, Pressure, SolenoidalField, VelocityOneForm, propellant_mass_flow_kernel,
@@ -170,6 +171,252 @@ fn active_throttle_without_carried_mass_is_an_error() {
     let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
     field.set_throttle_action(0.5); // active, but no "mass" scalar rides the field
     assert!(stub.apply(&ctx, &mut field).is_err());
+}
+
+// ── RetroThrust: the production thrust stage (retro-thrust-stage) ──
+
+#[test]
+fn retro_thrust_composes_onto_the_lift_vector() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = RetroThrust::new(THRUST, ISP);
+
+    let throttle = 0.5;
+    let mut field = powered_field(); // lift [-5, 1, 0], mass 1000, propellant 200
+    field.set_throttle_action(throttle);
+    stage.apply(&ctx, &mut field).expect("active apply");
+
+    // a_thrust = T/m = (0.5·2000)/1000 = 1.0, along −x; lateral lift untouched.
+    let f = field.aero_force().expect("force written");
+    let approx = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    assert!(
+        approx(f[0], -6.0),
+        "axial = lift −5 plus thrust −1, got {}",
+        f[0]
+    );
+    assert!(approx(f[1], 1.0), "lateral lift preserved");
+    assert!(approx(f[2], 0.0));
+}
+
+#[test]
+fn retro_thrust_depletes_propellant_and_sets_ignition() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = RetroThrust::new(THRUST, ISP);
+
+    let throttle = 0.5;
+    let mut field = powered_field();
+    field.set_throttle_action(throttle);
+    stage.apply(&ctx, &mut field).expect("active apply");
+
+    let thrust = throttle * THRUST;
+    let mdot = propellant_mass_flow_kernel(Force::new(thrust).unwrap(), ISP)
+        .unwrap()
+        .value();
+    let dm = mdot * DT;
+    let approx = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    assert!(approx(field.scalar("propellant").unwrap()[0], 200.0 - dm));
+    assert!(approx(field.scalar("mass").unwrap()[0], 1_000.0 - dm));
+    assert_eq!(field.scalar("ignited"), Some([1.0].as_slice()));
+}
+
+#[test]
+fn retro_thrust_is_strictly_inert_without_an_active_throttle() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = RetroThrust::new(THRUST, ISP);
+
+    for throttle in [None, Some(0.0), Some(-0.4)] {
+        let before = powered_field();
+        let mut field = powered_field();
+        if let Some(t) = throttle {
+            field.set_throttle_action(t);
+        }
+        stage.apply(&ctx, &mut field).expect("inert apply");
+        assert_eq!(field.aero_force(), before.aero_force());
+        assert_eq!(field.scalar("mass"), before.scalar("mass"));
+        assert_eq!(field.scalar("propellant"), before.scalar("propellant"));
+        assert_eq!(field.scalar("ignited"), None);
+        assert_eq!(field.log().messages().count(), 0);
+    }
+}
+
+#[test]
+fn retro_thrust_without_carried_mass_is_an_error() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = RetroThrust::new(THRUST, ISP);
+
+    let mut field = CoupledField::new(Ambient::new(0.01_f64, 0.0, None));
+    field.set_throttle_action(0.5);
+    assert!(stage.apply(&ctx, &mut field).is_err());
+}
+
+#[test]
+fn the_summed_force_a_navigation_stage_reads_includes_thrust() {
+    // Composition order: the lift stage writes the ④ vector, RetroThrust adds onto it, and every
+    // downstream force consumer (loads, truth, nav) reads the one summed vector — no navigation
+    // change is needed for the IMU to feel the burn.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let mut field = powered_field();
+    field.set_throttle_action(0.5);
+    let lift_before = field.aero_force().expect("lift on the channel");
+
+    RetroThrust::new(THRUST, ISP)
+        .apply(&ctx, &mut field)
+        .expect("thrust applies");
+
+    let summed = field.aero_force().expect("summed force");
+    assert!(
+        summed[0] < lift_before[0],
+        "thrust made the axial force more negative"
+    );
+    assert_eq!(summed[1], lift_before[1], "lift is not clobbered");
+}
+
+// ── PlumeObstruction: the production plume stage (plume-obstruction-stage) ──
+
+/// A nozzle inside the Cordell validity envelope (M∞ = 2, γ_jet = 1.3, and a chamber pressure high
+/// enough that p_exit/p∞ clears the model's ≥ 7 floor at the swept throttles).
+fn nozzle() -> PlumeNozzle<f64> {
+    PlumeNozzle {
+        chamber_pressure_max: 2.0e6,
+        chamber_temperature: 1_500.0,
+        r_specific: 300.0,
+        gamma_jet: 1.3,
+        exit_mach: 3.0,
+        nozzle_half_angle_rad: 15.0 * std::f64::consts::PI / 180.0,
+        throat_diameter: 0.03,
+        exit_radius: 0.03407,
+        cone_length: 0.0712,
+        p_inf: 1_000.0,
+        mach_inf: 2.0,
+        gamma_inf: 1.4,
+    }
+}
+
+#[test]
+fn plume_applies_the_a0_decrement_from_the_correlation() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = PlumeObstruction::new(THRUST, Q_INF, S_REF);
+
+    let throttle = 0.5;
+    let mut field = powered_field(); // lift [-5, 1, 0]
+    field.set_throttle_action(throttle);
+    stage.apply(&ctx, &mut field).expect("active apply");
+
+    let thrust = throttle * THRUST;
+    let c_t = srp_thrust_coefficient_kernel(
+        Force::new(thrust).unwrap(),
+        Pressure::new(Q_INF).unwrap(),
+        Area::new(S_REF).unwrap(),
+    )
+    .unwrap();
+    let fraction = srp_preserved_drag_fraction_kernel(c_t).unwrap();
+
+    let approx = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let f = field.aero_force().expect("force");
+    // The axial drag is scaled by the preserved fraction; lateral lift untouched.
+    assert!(
+        approx(f[0], fraction * -5.0),
+        "axial scaled by the A0 fraction"
+    );
+    assert!(approx(f[1], 1.0), "lateral lift preserved");
+    // The applied fraction is published for the M1 band cross-check.
+    assert!(approx(
+        field.scalar("preserved_drag_fraction").unwrap()[0],
+        fraction
+    ));
+}
+
+#[test]
+fn plume_is_strictly_inert_without_an_active_throttle() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = PlumeObstruction::new(THRUST, Q_INF, S_REF).with_plume_geometry(nozzle());
+
+    let before = powered_field();
+    let mut field = powered_field();
+    stage.apply(&ctx, &mut field).expect("inert apply");
+    assert_eq!(field.aero_force(), before.aero_force());
+    assert_eq!(field.scalar("preserved_drag_fraction"), None);
+    assert_eq!(field.scalar("plume_max_radius"), None);
+    assert_eq!(field.log().messages().count(), 0);
+}
+
+#[test]
+fn the_published_geometry_does_not_change_the_force_channel_decrement() {
+    // The AMBER contract: the imprint (and the geometry that drives it) is state realism only —
+    // the correlation is the drag authority with or without it.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let throttle = 0.5;
+
+    let mut plain_field = powered_field();
+    plain_field.set_throttle_action(throttle);
+    PlumeObstruction::new(THRUST, Q_INF, S_REF)
+        .apply(&ctx, &mut plain_field)
+        .expect("applies");
+
+    let mut geom_field = powered_field();
+    geom_field.set_throttle_action(throttle);
+    PlumeObstruction::new(THRUST, Q_INF, S_REF)
+        .with_plume_geometry(nozzle())
+        .apply(&ctx, &mut geom_field)
+        .expect("applies");
+
+    assert_eq!(
+        plain_field.aero_force(),
+        geom_field.aero_force(),
+        "the decrement is identical with and without the published geometry"
+    );
+}
+
+#[test]
+fn the_stage_publishes_plume_geometry_when_opted_in() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let mut field = powered_field();
+    field.set_throttle_action(0.5);
+
+    PlumeObstruction::new(THRUST, Q_INF, S_REF)
+        .with_plume_geometry(nozzle())
+        .apply(&ctx, &mut field)
+        .expect("geometry published");
+
+    let r_max = field.scalar("plume_max_radius").expect("max radius")[0];
+    let pen = field.scalar("plume_penetration").expect("penetration")[0];
+    assert!(r_max > 0.0, "a real plume has positive radius");
+    assert!(pen > 0.0, "a real plume has positive penetration");
+}
+
+#[test]
+fn the_applied_fraction_matches_the_correlation_across_a_sweep() {
+    // The M1 band cross-check: the flight-time authority is the same cited curve M1 gated against.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 0);
+    let stage = PlumeObstruction::new(THRUST, Q_INF, S_REF);
+
+    for throttle in [0.25_f64, 0.5, 1.0] {
+        let mut field = powered_field();
+        field.set_throttle_action(throttle);
+        stage.apply(&ctx, &mut field).expect("applies");
+
+        let c_t = srp_thrust_coefficient_kernel(
+            Force::new(throttle * THRUST).unwrap(),
+            Pressure::new(Q_INF).unwrap(),
+            Area::new(S_REF).unwrap(),
+        )
+        .unwrap();
+        let expected = srp_preserved_drag_fraction_kernel(c_t).unwrap();
+        let applied = field.scalar("preserved_drag_fraction").unwrap()[0];
+        assert!(
+            (applied - expected).abs() < 1e-12,
+            "throttle {throttle}: applied {applied} vs correlation {expected}"
+        );
+    }
 }
 
 #[test]

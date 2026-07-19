@@ -54,7 +54,8 @@ pub use cfd_flow::CfdFlow;
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
     BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, BurnEnvelope,
-    CyberneticCorrect, GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
+    CyberneticCorrect, GoverningModel, MachRegime, RegimeClass, RegimeClassify, SafetyEnvelope,
+    ThrustState, TrajectoryNav,
 };
 pub use coupled_march::{CoupledMarch, ReadyMarch};
 pub use coupling::{
@@ -72,7 +73,7 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
-pub use retropulsion::PropulsionStub;
+pub use retropulsion::{PlumeNozzle, PlumeObstruction, PropulsionStub, RetroThrust};
 pub use study::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
     EnsembleMarched, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared,

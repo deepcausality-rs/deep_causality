@@ -9,8 +9,9 @@
 
 use deep_causality_cfd::{
     Ambient, BankCorrection, BankSteeredLift, BlackoutTrigger, BranchAccumulator, BurnEnvelope,
-    CoupledField, CyberneticCorrect, GoverningModel, InsErrorState, NavFilter, PhysicsStage,
-    ReentryNavEngine, RegimeClass, RegimeClassify, SafetyEnvelope, StepContext, TrajectoryNav,
+    CoupledField, CyberneticCorrect, GoverningModel, InsErrorState, MachRegime, NavFilter,
+    PhysicsStage, ReentryNavEngine, RegimeClass, RegimeClassify, SafetyEnvelope, StepContext,
+    ThrustState, TrajectoryNav,
 };
 use deep_causality_haft::LogSize;
 use deep_causality_physics::EARTH_GM;
@@ -405,6 +406,10 @@ fn denied_regime() -> RegimeClass<f64> {
         knudsen: 1.0e-3,
         plasma_frequency: 1.0e10,
         gnss_denied: true,
+        // A corridor-class regime carries the powered-descent axes neutral.
+        mach_regime: MachRegime::Unknown,
+        thrust_state: ThrustState::Unknown,
+        touchdown: false,
     }
 }
 
@@ -721,4 +726,146 @@ fn finish_at_derives_the_miss_from_the_terminal_state() {
     assert_eq!(short.miss_distance, 5.0e3);
     assert_eq!(wide.miss_distance, 1.5e4);
     assert!(short.miss_distance != wide.miss_distance);
+}
+
+// ---------------------------------------------------------------------------
+// RegimeClassify — powered-descent flight axes (flight-regime-classifier)
+// ---------------------------------------------------------------------------
+
+/// A classifier with explicit flight bands: subsonic ≤ 0.8, supersonic ≥ 1.2, touchdown ≤ 10 m.
+fn flight_classifier() -> RegimeClassify<f64> {
+    RegimeClassify::new(1.0, denying_trigger()).with_flight_axes(0.8, 1.2, 10.0)
+}
+
+#[test]
+fn each_flight_axis_reads_its_published_scalar() {
+    let cases = [
+        (
+            2.5_f64,
+            1.0_f64,
+            50_000.0_f64,
+            MachRegime::Supersonic,
+            ThrustState::Burn,
+            false,
+        ),
+        (
+            1.0,
+            0.0,
+            50_000.0,
+            MachRegime::Transonic,
+            ThrustState::Coast,
+            false,
+        ),
+        (
+            0.5,
+            0.0,
+            5.0,
+            MachRegime::Subsonic,
+            ThrustState::Coast,
+            true,
+        ),
+    ];
+    for (mach, ignited, alt, want_mach, want_thrust, want_touchdown) in cases {
+        let mut f = field();
+        f.set_scalar("mean_free_path", vec![0.005]);
+        f.set_scalar("flight_mach", vec![mach]);
+        f.set_scalar("ignited", vec![ignited]);
+        f.set_scalar("flight_altitude", vec![alt]);
+        flight_classifier().apply(&ctx(0), &mut f).expect("applies");
+        let c = f.regime().expect("classified");
+        assert_eq!(c.mach_regime, want_mach, "mach {mach}");
+        assert_eq!(c.thrust_state, want_thrust, "ignited {ignited}");
+        assert_eq!(c.touchdown, want_touchdown, "altitude {alt}");
+    }
+}
+
+#[test]
+fn the_corridor_classification_is_unchanged_without_the_opt_in() {
+    // The compressible carrier publishes "flight_mach" every step, so neutrality cannot depend on
+    // the scalar being absent: the flight axes are **opt-in**. A classifier built without
+    // `with_flight_axes` ignores the published flight scalars entirely, so the regime key reduces
+    // to today's (model, gnss_denied) pair and the logged message is exactly the pre-change text.
+    let mut f = field();
+    f.set_scalar("mean_free_path", vec![0.005]);
+    f.set_scalar("n_e", vec![0.0]);
+    f.set_scalar("flight_mach", vec![2.5]); // published, as the carrier really does
+    f.set_scalar("ignited", vec![1.0]);
+    f.set_scalar("flight_altitude", vec![5.0]);
+    RegimeClassify::new(1.0, denying_trigger())
+        .apply(&ctx(0), &mut f)
+        .expect("applies");
+
+    let c = f.regime().expect("classified");
+    assert_eq!(c.mach_regime, MachRegime::Unknown);
+    assert_eq!(c.thrust_state, ThrustState::Unknown);
+    assert!(!c.touchdown);
+    assert_eq!(f.log().len(), 1);
+    let msg: Vec<&str> = f.log().messages().collect();
+    assert!(
+        msg[0].starts_with("regime -> continuum (GNSS-available), Kn="),
+        "pre-change message text preserved: {}",
+        msg[0]
+    );
+    assert!(
+        !msg[0].contains("mach-unknown"),
+        "no flight-phase suffix when the axes are neutral: {}",
+        msg[0]
+    );
+}
+
+#[test]
+fn a_mach_crossing_under_thrust_logs_once() {
+    let stage = flight_classifier();
+    let mut f = field();
+    f.set_scalar("mean_free_path", vec![0.005]);
+    f.set_scalar("ignited", vec![1.0]);
+    f.set_scalar("flight_mach", vec![2.5]); // supersonic
+    stage.apply(&ctx(0), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 1);
+
+    // Same band on the next step: nothing new.
+    stage.apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 1, "an unchanged band is not re-logged");
+
+    // Cross into transonic: one new entry.
+    f.set_scalar("flight_mach", vec![1.0]);
+    stage.apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 2, "a Mach crossing is a regime change");
+}
+
+#[test]
+fn a_burn_to_coast_transition_logs() {
+    let stage = flight_classifier();
+    let mut f = field();
+    f.set_scalar("mean_free_path", vec![0.005]);
+    f.set_scalar("flight_mach", vec![2.5]);
+    f.set_scalar("ignited", vec![1.0]); // burn
+    stage.apply(&ctx(0), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 1);
+
+    f.set_scalar("ignited", vec![0.0]); // cutoff → coast, same Mach band
+    stage.apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 2, "burn↔coast is a regime change");
+}
+
+#[test]
+fn a_touchdown_logs_and_appears_in_the_message() {
+    let stage = flight_classifier();
+    let mut f = field();
+    f.set_scalar("mean_free_path", vec![0.005]);
+    f.set_scalar("flight_mach", vec![0.5]);
+    f.set_scalar("ignited", vec![0.0]);
+    f.set_scalar("flight_altitude", vec![100.0]); // above the floor
+    stage.apply(&ctx(0), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 1);
+
+    f.set_scalar("flight_altitude", vec![5.0]); // at/below the 10 m floor
+    stage.apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(f.log().len(), 2, "touchdown is a regime change");
+    let msg: Vec<&str> = f.log().messages().collect();
+    assert!(
+        msg[1].contains("touchdown"),
+        "the phase suffix names it: {}",
+        msg[1]
+    );
 }

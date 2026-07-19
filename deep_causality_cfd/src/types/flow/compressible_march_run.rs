@@ -29,9 +29,10 @@ use super::coupling::{CoupledField, PhysicsStage};
 use crate::CfdScalar;
 use crate::coordinate::CartesianIdentity;
 use crate::solvers::{CompressibleMarcher2d, EulerStateTt2d, FittedNormalShock, ForcingRegion};
-use crate::tensor_bridge::{dequantize_2d, quantize_2d};
+use crate::tensor_bridge::{dequantize_2d, plume_mask_2d, quantize_2d};
 use crate::traits::Marcher;
 use crate::types::flow::{BlackoutTrigger, Report};
+use crate::types::flow_config::PlumeImprint;
 use crate::types::flow_config::{
     CompressibleMarchConfig, DescentSchedule, MarchStop, QttObserve, ReferenceScales,
 };
@@ -77,6 +78,13 @@ where
     inflow: Option<[R; 4]>,
     /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).
     rebuilds: usize,
+    /// The optional plume re-imprint spec: refresh `forcing` from stage-published plume geometry
+    /// when the commanded throttle drifts. `None` leaves `forcing` exactly as configured.
+    imprint: Option<PlumeImprint<R>>,
+    /// The throttle the current forcing region was imprinted at (the drift reference).
+    imprinted_throttle: Option<R>,
+    /// Plume re-imprints performed (logged; the spec's `max_refreshes` caps it).
+    imprints: usize,
 }
 
 impl<R> CompressibleCarrier<R>
@@ -118,6 +126,82 @@ where
             enc(&dense[2])?,
             enc(&dense[3])?,
         ])
+    }
+
+    /// Refresh the masked forcing region from the plume geometry a `PlumeObstruction` stage
+    /// published, so a marched imprint follows a **varying** throttle.
+    ///
+    /// A `PhysicsStage` cannot reach the marched layer, so the imprint rides this — the carrier's
+    /// existing field-reading reconfiguration channel, the same `pre_step` path that already reads
+    /// the stage-written `"truth_state"` to set the inflow strip and rebuild the marcher. The
+    /// refresh reuses the solver-rebuild discipline: it fires only when the commanded throttle
+    /// drifts past the spec's tolerance, it is logged, and the spec's `max_refreshes` caps it so a
+    /// noisy throttle cannot rebuild the mask every step. Absent the spec this never runs and the
+    /// forcing region stays exactly as configured at world build.
+    ///
+    /// The imprint is **state realism only** — the drag authority is the A0 correlation the
+    /// `PlumeObstruction` stage applies to the force channel, never this mask.
+    fn refresh_plume_imprint(
+        &mut self,
+        field: &mut CoupledField<R>,
+        step: usize,
+    ) -> Result<(), PhysicsError> {
+        let Some(spec) = self.imprint else {
+            return Ok(());
+        };
+        if self.imprints >= spec.max_refreshes {
+            return Ok(());
+        }
+        let throttle = field
+            .scalar("commanded_throttle")
+            .and_then(|s| s.first().copied())
+            .unwrap_or_else(R::zero);
+        let drifted = match self.imprinted_throttle {
+            None => throttle > R::zero(),
+            Some(prev) => (throttle - prev).abs() > spec.throttle_tolerance,
+        };
+        if !drifted {
+            return Ok(());
+        }
+        // The geometry the stage published last coupling (metres) → the unit square.
+        let (Some(r_max_m), Some(pen_m)) = (
+            field
+                .scalar("plume_max_radius")
+                .and_then(|s| s.first().copied()),
+            field
+                .scalar("plume_penetration")
+                .and_then(|s| s.first().copied()),
+        ) else {
+            return Ok(());
+        };
+        let two = Self::lift(2.0)?;
+        let max_radius = r_max_m / spec.domain_m;
+        let half_length = (pen_m / spec.domain_m) / two;
+        // The plume hugs the body face and extends upstream.
+        let cx = spec.face_x - half_length;
+        let mask = plume_mask_2d(
+            self.lx,
+            self.ly,
+            self.dx,
+            self.dy,
+            cx,
+            spec.axis_y,
+            half_length,
+            max_radius,
+            spec.smoothing_cells * self.dx,
+            &self.trunc,
+        )?;
+        self.forcing = Some(ForcingRegion::new(mask, spec.target, spec.eta)?);
+        self.imprinted_throttle = Some(throttle);
+        self.imprints += 1;
+        field.log_mut().add_entry(&alloc::format!(
+            "plume re-imprint at step {step}: throttle {}, R_max {} m, L_pen {} m (imprint {})",
+            throttle,
+            r_max_m,
+            pen_m,
+            self.imprints,
+        ));
+        Ok(())
     }
 
     /// Enforce the shock-fitted inflow strip (Dirichlet over the first `strip_cols` columns).
@@ -178,6 +262,9 @@ where
             forcing: cfg.forcing.clone(),
             inflow: None,
             rebuilds: 0,
+            imprint: cfg.imprint,
+            imprinted_throttle: None,
+            imprints: 0,
         })
     }
 
@@ -213,6 +300,8 @@ where
         for &(name, value) in &self.constants {
             field.set_scalar(name, Vec::from([value]));
         }
+        // The plume imprint follows the (now-published) throttle through this same channel.
+        self.refresh_plume_imprint(field, step)?;
         let Some(schedule) = self.schedule.as_ref() else {
             return Ok(());
         };

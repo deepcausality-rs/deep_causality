@@ -92,11 +92,12 @@ pub use crate::types::flow::{
     BlackoutTrigger, BranchAccumulator, BranchOutcome, BurnEnvelope, CfdFlow, CompressibleFork,
     CompressibleMarchRun, CompressiblePause, CoupledField, CoupledMarch, Coupling,
     CyberneticCorrect, DuctMarchRun, EosStage, FiniteRateIonizationStage, Gates, GoverningModel,
-    IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder,
-    Operator, OperatorStudyBuilder, PhysicsStage, PropulsionStub, QttMarchRun, QttStepView,
-    ReadyMarch, RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report,
-    SafetyEnvelope, StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError,
-    StudyWarning, StudyWarningLog, ThermalRelax, TrajectoryNav,
+    IonizationStage, MachRegime, MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState,
+    MmsBuilder, Operator, OperatorStudyBuilder, PhysicsStage, PlumeNozzle, PlumeObstruction,
+    PropulsionStub, QttMarchRun, QttStepView, ReadyMarch, RecoveryTemperatureStage, Regime,
+    RegimeClass, RegimeClassify, Report, RetroThrust, SafetyEnvelope, StepContext, StepView,
+    StudyEffect, StudyEffectWitness, StudyError, StudyWarning, StudyWarningLog, ThermalRelax,
+    ThrustState, TrajectoryNav,
 };
 pub use crate::types::flow::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
@@ -109,8 +110,8 @@ pub use crate::types::flow::{
 pub use crate::types::flow_config::{
     AtmosphereRow, Body, CfdConfigBuilder, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
     DescentSchedule, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, Grading, Manufactured,
-    ManufacturedSample, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe, QttBody,
-    QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
+    ManufacturedSample, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe, PlumeImprint,
+    QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
     VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), so a `CfdFlow` program can describe and run file
