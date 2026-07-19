@@ -1,0 +1,46 @@
+openspec/specs/plume-obstruction-stage/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 19-28,36-40
+  s_03a25bcd8e11c3::t_1345f2a0f14115 41
+openspec/specs/cfd-counterfactual/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 66-107
+openspec/specs/retropulsion-descent-gates/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 1-132
+openspec/specs/retropulsion-belief-counterfactual/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 1-82
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/design.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 45,146-180,199
+openspec/specs/retropulsion-example-wiring/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 1-167
+openspec/specs/retropulsion-state-fork-study/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 1-170
+openspec/specs/throttle-guidance-stage/spec.md
+  s_03a25bcd8e11c3::t_f28496f9cbb690 78-163
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/proposal.md
+  s_03a25bcd8e11c3::t_cf89253fd0b8fb 52-53
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/specs/cfd-counterfactual/spec.md
+  s_03a25bcd8e11c3::t_33d04289e30bf2 1-43
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/specs/plume-obstruction-stage/spec.md
+  s_03a25bcd8e11c3::t_7166f66bad365b 1-42
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/specs/throttle-guidance-stage/spec.md
+  s_03a25bcd8e11c3::t_603c81ed31316c 1-87
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/specs/retropulsion-descent-gates/spec.md
+  s_03a25bcd8e11c3::t_aa577a357b35af 88-93
+openspec/changes/archive/2026-07-19-wire-plasma-retropulsion-example/specs/retropulsion-state-fork-study/spec.md
+  s_03a25bcd8e11c3::t_0b8f9cbe8e47df 88-113,117-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ab5d5161ee2ce591cafadbb91810dc6cceaab3e2",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
