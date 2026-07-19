@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+---
+<BaseLayout
+  title="Not found — DeepCausality CFD"
+  description="That page does not exist."
+  path="/404"
+>
+  <SiteHeader slot="header" />
+
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">404</p>
+      <h1>No solution at that station.</h1>
+      <p class="lede">
+        The page you asked for is not part of this site. These are the ones that are.
+      </p>
+    </header>
+
+    <ul class="hairline-list">
+      <li><a href="/">Overview</a></li>
+      <li><a href="/cookbook/">Cookbook</a></li>
+      <li><a href="/validation/">Validation status</a></li>
+      <li><a href="/examples/">Worked examples</a></li>
+      <li><a href="/boundaries/">Capability boundaries</a></li>
+      <li><a href="/roadmap/">Roadmap</a></li>
+    </ul>
+  </article>
+</BaseLayout>

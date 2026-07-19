@@ -1,0 +1,97 @@
+---
+title: Fork a running simulation into counterfactual worlds
+task: You need to compare decisions taken from the same physical state.
+summary: March until the physics fires an event, pause, then fly the alternatives from that shared state. The fork is O(1) copy-on-write and each branch is alternated into its own audited world.
+order: 3
+verbs:
+  - march ... until
+  - fork
+  - branch
+  - continue_for
+  - refine
+  - reduce
+worked:
+  - label: Plasma blackout corridor
+    href: /examples/plasma-blackout-corridor/
+  - label: Weather dispersion table
+    href: /examples/plasma-blackout-weather/
+---
+
+This is the capability the rest of the toolbox exists to serve. Two levels: march to
+an event, then fan out from it.
+
+## Trajectory level — march until the physics decides
+
+```rust
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .trigger(trigger)
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
+```
+
+`until` returns a resumable pause. The predicate reads the evolved field, so the
+event is *found* rather than scheduled — in the corridor the blackout window is not
+a config value, it is where the electron density actually crossed the cutoff.
+
+## Campaign level — fork the pause
+
+```rust
+let verdict = CfdFlow::study("bank command sweep")
+    .cases(candidate_banks)
+    .fork(&onset)                      // shares tensors, nav engine, provenance log
+    .branch(|bank| config_for(*bank))  // each branch gets its own alternated world
+    .continue_for(REMAINING_STEPS)     // concurrent under `parallel`
+    .reduce(|run| score(run))?
+    .record("corridor_branches.csv")
+    .gates(corridor_gates())
+    .verdict()?;
+```
+
+## What the fork actually costs
+
+Sharing is O(1) by construction — the branches share the trunk read-only through
+`Arc` and each takes its single copy-on-write clone at its first divergent write.
+Measured on a plume-coupled state: fork setup **42 ns**, and per-branch continuation
+at **0.67–1.04×** the trunk's step cost.
+
+The 0.67 is a coast branch doing less work than the trunk, not a speedup.
+
+`fork` itself never fails. A broken pause is carried through and surfaces as each
+branch's error at `continue_for`, which keeps the failure attributable to the branch
+rather than to the fan-out.
+
+## Every branch names its baseline
+
+Branches are alternated into their own worlds, each carrying an
+`!!ContextAlternation!!` audit marker naming the baseline it diverged from. World
+construction runs sequentially, first-error-wins; the marches then run concurrently.
+
+For a study whose output feeds a decision, being able to point at which world
+produced which row is the difference between an artifact and an anecdote.
+
+## Coarse then fine
+
+`refine` takes the swept rows and a fresh pause, and fans out a second round. The
+corridor uses six coarse branches to find the region, then eleven fine ones around
+the winner — 3.120 m at 15° coarse, 2.393 m at 13.5° fine.
+
+Refine only when the coarse landscape justifies it. The corridor's does, because it
+is not monotone: 40° of bank is worse than no bank at all.
+
+## Fork state, not parameters
+
+Worth being precise about, because the two look similar and are not.
+
+Forking **parameters** re-runs a model from different inputs. Each branch is an
+independent world; that is the shape of the
+[weather table](/examples/plasma-blackout-weather/), and it is legitimate.
+
+Forking **state** pauses one marched, coupled field and continues every branch from
+that shared physical state, so each intervention feeds back into the flow it
+inherited. That is the corridor's shape, and it is the stronger claim — it tests
+whether the coupling is load-bearing rather than along for the ride.
+
+If you fork state, prove the coupling matters: compare each branch against a
+frozen-field prediction of the same intervention. If simple kinematics predicts the
+divergence, the flow was not doing any work.

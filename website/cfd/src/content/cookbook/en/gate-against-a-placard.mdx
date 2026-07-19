@@ -1,0 +1,78 @@
+---
+title: Gate a run against a placard
+task: You need the run to fail loudly when a limit is exceeded.
+summary: Gates turn a run into a check. Every verification target and every example exits nonzero when a gate fails, which is what makes the suite usable in CI rather than only as a demo.
+order: 2
+verbs:
+  - GateSeq
+  - GateOutcome
+  - gates
+  - verdict
+worked:
+  - label: Flight envelope placard
+    href: /examples/flight-envelope-placard/
+  - label: Nozzle operating map
+    href: /examples/nozzle-operating-map/
+---
+
+A gate is a named predicate over the recorded rows. It reports; it does not print
+and does not exit.
+
+```rust
+let gates = GateSeq::new()
+    .add("q-max placard", |rows| {
+        let peak = rows.iter().map(|r| r.q_kpa).fold(f64::MIN, f64::max);
+        if peak <= Q_PLACARD_KPA {
+            GateOutcome::pass(format!("max q = {peak:.1} kPa, inside the {Q_PLACARD_KPA} kPa placard"))
+        } else {
+            GateOutcome::fail(format!("q = {peak:.1} kPa exceeds the {Q_PLACARD_KPA} kPa placard"))
+        }
+    });
+```
+
+`verdict()` resolves the study to a `Verdict`. Mapping that to an exit code is the
+caller's job, which is why the same study can be a CI gate in one binary and a
+report in another.
+
+## Write the number into the message
+
+Every gate message in this crate carries the measured value and the limit:
+
+```text
+[PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+[FAIL] q-max placard: q = 85.1 kPa at M 1.50 / 5.0 km exceeds the 60 kPa placard
+```
+
+A gate that says `[PASS]` and nothing else is nearly useless six months later. One
+that says how much margin was left tells you whether the run was comfortable or
+scraping through, and a `[PASS]` at 58 of 60 kPa deserves attention that a bare
+`[PASS]` would hide.
+
+## Gate the band you validated, not the band you wish for
+
+The [VIV example](/examples/viv-resonance-margin/) checks Strouhal against
+`[0.16, 0.21]` described as "validated band for this grid" — not against the
+textbook value. Coarse grids bias Strouhal high. Gating against the literature would
+either fail correct runs or force a grid nobody can afford inside a sweep.
+
+Pin the band from a measured run, then let it gate regressions. That convention runs
+through the whole crate.
+
+## A passing gate is not a passing physics target
+
+This is the misreading the study text explicitly guards against. In the
+retropulsion studies "GATES PASSED" sits directly above a recorded miss against the
+Jarvinen–Adams reference. The gate is protecting a *negative finding* from
+regressing: the measured structure is reproducible, and that is all the gate claims.
+
+If you inherit a gate suite, read what each gate asserts before treating a green run
+as validation. See [capability boundaries](/boundaries/#srp).
+
+## Gate for the failure you can actually detect
+
+A wake march that decays to steady produces a finite signal, and a frequency
+extractor will happily report noise as a frequency. The VIV example therefore gates
+"four sweeps returned a finite, **oscillating** wake" rather than just finite. The
+[cylinder verification](/validation/#dec-cylinder) shows why: with a staircase
+boundary the wake dies and the detector reports `St ≈ 0.244` from seventh-decimal
+noise.

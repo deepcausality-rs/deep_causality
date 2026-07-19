@@ -1,0 +1,82 @@
+---
+title: Nozzle operating map
+question: Sweep back-pressure over a converging–diverging nozzle and get the operating map.
+summary: Six back-pressure ratios through a 1-D compressible duct march, producing exit Mach, shock station and thrust coefficient per row — checked against the analytic critical ratios.
+order: 2
+command: cargo run --release -p avionics_examples --example nozzle_operating_map
+uses:
+  - duct_march
+  - sweep
+  - Gates
+  - parallel fan-out
+runtime: under a second
+results:
+  - shock station walks 0.656 → 0.930 m as p_back/p0 falls 0.90 → 0.60
+  - exit Mach 2.123 once the shock leaves the duct, against a design 2.197
+  - 'analytic references: first critical p/p0 = 0.9372, exit-plane shock at 0.5134'
+  - all four gates PASS
+limitation: A first-order quasi-1-D scheme, so shocks smear over a few cells. Perfect gas at γ = 1.4 with no wall friction, heat transfer, or real-gas effects. The unchoked window above the first critical ratio is not swept.
+recorded: true
+source: examples/avionics_examples/cfd/nozzle_operating_map
+---
+
+The first example with an actual solver behind the sweep. Each row runs a 1-D
+compressible duct march over 128 cells; the sweep collects them into one table.
+
+Geometry is a converging–diverging nozzle: inlet 2 m², throat 1 m², exit 2 m² over
+1 m of length, fed from a 300 kPa / 500 K reservoir.
+
+## The output
+
+```text
+  p_back/p0   M_exit   shock x [m]      Cf
+      0.90    0.325       0.6562    0.242
+      0.80    0.368       0.7656    0.277
+      0.70    0.420       0.8516    0.316
+      0.60    0.493       0.9297    0.365
+      0.30    2.123         none    0.857
+      0.10    2.123         none    1.254
+```
+
+Read the shock column downward. As back-pressure falls, the normal shock walks
+downstream — 0.656 m, 0.766 m, 0.852 m, 0.930 m — and then leaves the duct entirely.
+The last two rows are shock-free supersonic exits.
+
+The exit Mach freezing at 2.123 across the last two rows is the physically correct
+answer, and it is worth pausing on: once the nozzle is fully supersonic, the exit
+Mach is fixed by the *area ratio* alone. Lowering back-pressure further changes the
+plume outside the nozzle, not the flow inside it. The thrust coefficient keeps
+climbing (0.857 → 1.254) because it depends on the pressure difference, which does
+keep changing.
+
+## Checked against the analytic values
+
+```text
+analytic references: first critical p/p0 = 0.9372, exit-plane shock at p/p0 = 0.5134
+```
+
+Those two numbers bracket the interesting regime and come from closed-form
+quasi-1-D relations, not from the march. The gates use them: the choking gate
+requires the throat to be choked below the first critical ratio, and the
+shock-position gate requires the computed shock stations to fall between the throat
+and the exit plane, walking monotonically downstream.
+
+Measured exit Mach is 2.123 against a design 2.197 — about 3.4% low, which is the
+signature of a first-order scheme smearing the expansion.
+
+## Concurrency
+
+Six marches run concurrently under the `parallel` feature, through
+`deep_causality_par`. The rows are independent by construction, so the result is
+order-preserving and identical to the serial run.
+
+## Where this stops being enough
+
+The duct march is first-order and quasi-1-D. Shocks smear over a few cells, which is
+why the shock station is a cell-resolution estimate rather than a sharp location. The
+gas is perfect at γ = 1.4 with no wall friction, no heat transfer and no real-gas
+effects — all three matter in a real nozzle.
+
+The sweep also stays inside the choked regimes. The unchoked window above the first
+critical ratio is not covered, so this is an operating map for the design envelope,
+not for startup transients.

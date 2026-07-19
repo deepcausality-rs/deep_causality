@@ -79,9 +79,10 @@ register_toolchains("@lake_deps//:lean_toolchain_def")
 # Astro / Node.js web toolchain
 # rules_astro (vendored) -> aspect_rules_js -> rules_nodejs
 #
-# `bazel build //website/...` builds both Astro projects hermetically:
+# `bazel build //website/...` builds all three Astro projects hermetically:
 #   //website/web  — pnpm (pnpm-lock.yaml) -> @npm_web
 #   //website/docs — pnpm (pnpm-lock.yaml) -> @npm_docs
+#   //website/cfd  — pnpm (pnpm-lock.yaml) -> @npm_cfd
 #
 # Each project's node_modules is materialized from its own lockfile by
 # npm_translate_lock; the astro CLI then runs as a cacheable Bazel action.
@@ -120,6 +121,20 @@ npm.npm_translate_lock(
     verify_node_modules_ignored = "//:.bazelignore",
 )
 use_repo(npm, "npm_web")
+
+npm.npm_translate_lock(
+    name = "npm_cfd",
+    npmrc = "//website/cfd:.npmrc",
+    pnpm_lock = "//website/cfd:pnpm-lock.yaml",
+    # Same @astrojs/mdx -> satteri hoist as the other two sites: the CFD site
+    # renders its cookbook and worked examples from .mdx content collections.
+    public_hoist_packages = {
+        "satteri": ["website/cfd"],
+        "@astrojs/markdown-satteri": ["website/cfd"],
+    },
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm_cfd")
 
 npm.npm_translate_lock(
     name = "npm_docs",

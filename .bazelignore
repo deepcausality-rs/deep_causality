@@ -18,5 +18,6 @@ target-bzl/testlogs
 thirdparty/rules_lean
 thirdparty/rules_astro
 website/web/node_modules
+website/cfd/node_modules
 website/docs/node_modules
 yanked/

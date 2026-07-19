@@ -1,0 +1,86 @@
+---
+title: VIV resonance margin
+question: Sweep airspeed over a circular member and get the shedding-frequency margin table.
+summary: Four concurrent Navier–Stokes wake marches, Strouhal extracted from a wake probe, and a resonance margin gated against a structural mode.
+order: 3
+command: cargo run --release -p avionics_examples --example viv_resonance_margin
+uses:
+  - DEC march
+  - sweep
+  - Gates
+  - Strouhal extraction
+runtime: about two and a half minutes
+results:
+  - extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
+  - min |f_struct − f_shed| / f_struct = 0.236 against a 0.15 placard minimum
+  - four sweeps returned a finite, oscillating wake
+limitation: Re 100 to 160. Nothing here claims turbulent shedding; a flight-Reynolds strut sits far above this range and waits on the staged turbulence work. The structural frequency and margin placard are stated demonstration values, not measured properties of a real member.
+recorded: true
+source: examples/avionics_examples/cfd/viv_resonance_margin
+---
+
+Vortex-induced vibration is a resonance problem: a cylindrical member sheds vortices
+at a frequency set by flow speed, and if that frequency approaches a structural mode
+the member is driven at resonance. The engineering question is not "what is the
+shedding frequency" but "how much margin do I have".
+
+This example answers the second question, which means the flow solve is a step in
+the middle rather than the deliverable.
+
+## What runs per row
+
+Each airspeed gets a full DEC incompressible Navier–Stokes march past a circular
+member. A probe in the wake records transverse velocity; the shedding frequency
+comes from that signal, and the Strouhal number follows as `St = f·D/U`.
+
+Four marches run concurrently under the `parallel` feature. The example notes that
+the concurrent result is bit-identical to the sequential one — worth stating, because
+a wake solve that changed answers under threading would invalidate the whole table.
+
+## The output
+
+```text
+airspeed [m/s]   Re      St      f_shed [Hz]   margin
+      0.75       100  0.1818        68.2     0.545
+      0.90       120  0.1818        81.8     0.455
+      1.05       140  0.1909       100.2     0.332
+      1.20       160  0.1909       114.5     0.236
+```
+
+Member `D = 2.0 mm`, structural mode `f_struct = 150 Hz`.
+
+The margin column is what the run exists to produce, and it falls monotonically:
+0.545 → 0.236. Extrapolate one more step and you cross the 0.15 placard. The
+table's job is to show where the envelope ends, which it does without ever
+reaching a failure.
+
+## The gates
+
+```text
+[PASS] strouhal band: extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
+[PASS] resonance margin: min |f_struct - f_shed| / f_struct = 0.236, placard minimum 0.15
+[PASS] finite wake: 4 sweeps returned a finite, oscillating wake
+```
+
+The first gate is the interesting one. It does not check St against the textbook
+0.164–0.21 range for a smooth cylinder; it checks against a band **validated for
+this grid**. That distinction is deliberate. A coarse grid biases Strouhal high,
+which is visible here — the extracted values sit at the upper end. Gating against
+the literature value would either fail a correct run or force a grid nobody can
+afford in a sweep.
+
+The third gate looks trivial and is not. A wake march that decays to a steady
+solution produces a *finite* signal with no oscillation, and the frequency
+extractor will happily report noise as a frequency. See the
+[cylinder verification](/validation/#dec-cylinder), where a staircase boundary
+does exactly that and reports a Strouhal of 0.244 from seventh-decimal noise.
+
+## Where this stops being enough
+
+The sweep covers Re 100 to 160. That is laminar shedding, and nothing here claims
+otherwise. A flight-Reynolds strut sits orders of magnitude above this range and
+waits on the [staged turbulence work](/boundaries/#turbulence).
+
+The structural frequency and the 0.15 placard are stated demonstration values, not
+measured properties of a real member. Substitute your own before reading anything
+into the margin column.

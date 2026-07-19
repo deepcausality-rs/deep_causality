@@ -1,0 +1,98 @@
+---
+title: Weather dispersion table
+question: Vary the weather across six atmospheres and get one dispersion table for the digital twin.
+summary: Forty-eight full descents — six counterfactual atmospheres times eight deterministic noise draws — reduced to one table with error bars, and a cold-day effect resolved at four sigma.
+order: 6
+command: cargo run --release -p avionics_examples --example plasma_blackout_weather
+uses:
+  - counterfactual worlds
+  - ensemble draws
+  - 8 Gates
+  - per-branch audit logs
+runtime: 312.5 s against a 600 s budget
+results:
+  - polar-winter blackout drift 68.75 ± 5.19 m against standard-day 45.93 ± 2.35 m (1.50×)
+  - separation 22.81 m against combined σ 5.69 m — 4.0 σ, statistically resolved
+  - onset spread 4.2 s across the table, dwell spread 3.1 s
+  - 48 full descents (6 conditions × 8 deterministic noise draws)
+limitation: The physics is validated at one flight anchor (RAM-C II), so off-anchor rows are single-anchor extrapolation. The parameter set is temperature and density, not the full DO-160-style list. This table is one artifact in a certification chain, not the chain.
+recorded: true
+source: examples/avionics_examples/cfd/plasma_blackout/weather
+---
+
+The [corridor](/examples/plasma-blackout-corridor/) flies one descent. This example
+is the table factory: it flies the same descent across six atmospheres and reduces
+the result to a lookup table with error bars.
+
+The counterfactual axis is different here. The corridor forks a *paused state* and
+varies a command. This varies the *world* — six atmospheres alternated from one
+validated baseline, each a whole-world alternation carrying its own
+`!!ContextAlternation!!` provenance.
+
+## The table
+
+```text
+  world          dT K   rho    IMU dep  onset s  exit s  dwell s   drift(dark) m
+  standard_day      0   1.00     1.00     11.9    70.0     58.2    45.93 +- 2.35
+  polar_winter    -40   1.20     1.40      9.9    69.8     60.0    68.75 +- 5.19
+  dense_day         5   1.30     1.05      8.7    69.7     61.1    52.03 +- 5.73
+  hot_day          ...                                            53.16 +- 2.38
+  cold_day         ...                                            57.72 +- 2.05
+  thin_day         ...                                            45.72 +- 1.96
+```
+
+Each row is eight full descents with deterministic receiver-noise draws, so the
+`±` is a real ensemble spread rather than a guess. Forty-eight descents total.
+
+## The finding
+
+```text
+[PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean
+       blackout drift 68.75 m vs standard-day 45.93 m (1.50x; gate requires 1.2x)
+
+[PASS] (4b) the cold effect is statistically resolved: polar-standard separation
+       22.81 m vs combined sigma 5.69 m (4.0 sigma; gate requires 2)
+```
+
+A cold, dense atmosphere ionizes earlier, holds the sheath longer, and the vehicle
+spends more time dead-reckoning. Drift grows by half. Gate 4b is the one that makes
+the result usable: with per-row error bars you can say the effect is resolved at four
+sigma rather than asserting a ratio between two single runs.
+
+The example also cross-checks the mechanism against a closed form:
+
+```text
+predicted = 45.93 * departure * (dwell/58.2)^2
+          = 68.3   vs measured 68.75 +- 5.19
+```
+
+Drift going as dwell squared is what free inertial propagation does. The measured
+means land within about 5% of that, which says the coupling is behaving like inertial
+navigation over a longer window and not like a numerical artifact.
+
+## Why this shape matters
+
+The output is a lookup table an onboard system can carry: given the measured
+temperature departure on the day, interpolate the expected blackout window and the
+navigation dispersion, and size the margins accordingly.
+
+That is the descent counterpart of an operational practice with real precedent — the
+Shuttle programme regenerated ascent guidance loads on the day of launch from measured
+balloon soundings, because tables tuned to a standard day are wrong on the flown day.
+
+## Audit trail
+
+Forty-eight per-branch audit logs plus one main log are written to `weather/audit/`.
+Each names the baseline its world was alternated from. For a table that is meant to
+feed a certification argument, being able to point at which run produced which row is
+not optional.
+
+## Where this stops being enough
+
+The physics is validated at exactly one flight anchor, RAM-C II. Every off-anchor row
+is single-anchor extrapolation, and the example says so rather than presenting six
+rows as six validations.
+
+The parameter set is temperature and density. A real environmental qualification
+covers humidity, winds and statistical coverage — the DO-160-style list — and this is
+not that. It is one artifact in a certification chain, not the chain.

@@ -1,0 +1,172 @@
+---
+/**
+ * Shared detail shell for cookbook recipes and worked examples.
+ *
+ * Single column at --w-prose, with an optional meta rail above the body for
+ * the structured frontmatter facts. The prose rules come from global.css, so
+ * this component contributes layout only.
+ */
+interface MetaItem {
+  label: string;
+  value: string;
+  mono?: boolean;
+}
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  summary: string;
+  /** Structured facts rendered as a definition rail above the prose. */
+  meta?: MetaItem[];
+  /** Chips under the title, e.g. DSL verbs. */
+  tags?: string[];
+  /** Run command, rendered as a copyable block. */
+  command?: string;
+  /** Shown when no committed artifact backs the figures. */
+  unrecordedNote?: string;
+  backHref: string;
+  backLabel: string;
+  sourceHref?: string;
+  sourceLabel?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  summary,
+  meta = [],
+  tags = [],
+  command,
+  unrecordedNote,
+  backHref,
+  backLabel,
+  sourceHref,
+  sourceLabel,
+} = Astro.props;
+---
+<article class="detail">
+  <header class="d-head">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1>{title}</h1>
+    <p class="d-summary">{summary}</p>
+
+    {tags.length > 0 && (
+      <div class="d-tags">
+        {tags.map((t) => <span class="chip chip-mono">{t}</span>)}
+      </div>
+    )}
+
+    {command && (
+      <div class="d-cmd">
+        <p class="d-cmd-label">Run it</p>
+        <code>{command}</code>
+      </div>
+    )}
+
+    {unrecordedNote && (
+      <p class="d-unrecorded">
+        <span class="status status-partial">No committed output</span>
+        {unrecordedNote}
+      </p>
+    )}
+
+    {meta.length > 0 && (
+      <dl class="d-meta">
+        {meta.map((m) => (
+          <div>
+            <dt>{m.label}</dt>
+            <dd class={m.mono ? 'num' : undefined}>{m.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+  </header>
+
+  <div class="prose">
+    <slot />
+  </div>
+
+  <footer class="d-foot">
+    <a class="d-back" href={backHref}><span aria-hidden="true">←</span> {backLabel}</a>
+    {sourceHref && (
+      <a href={sourceHref}>{sourceLabel ?? 'Source'} <span aria-hidden="true">↗</span></a>
+    )}
+  </footer>
+</article>
+
+<style>
+  .detail {
+    max-width: var(--w-prose);
+    margin: 0 auto;
+    padding: var(--space-7) var(--space-4);
+  }
+  @media (min-width: 720px) { .detail { padding: var(--space-9) var(--space-5); } }
+
+  .d-head { margin-bottom: var(--space-7); }
+  .d-head h1 { margin: var(--space-3) 0 var(--space-4); }
+  .d-summary { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-5); }
+
+  .d-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+
+  .d-cmd { margin-bottom: var(--space-5); }
+  .d-cmd-label {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0 0 var(--space-2);
+  }
+  .d-cmd code {
+    display: block;
+    overflow-x: auto;
+    white-space: pre;
+    background: var(--bg-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: var(--t-mono-sm);
+    color: var(--fg-1);
+  }
+
+  .d-unrecorded {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: baseline;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    margin: 0 0 var(--space-5);
+  }
+
+  .d-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin: 0;
+    padding: var(--space-5) 0 0;
+    border-top: 1px solid var(--line-1);
+  }
+  @media (min-width: 600px) { .d-meta { grid-template-columns: 1fr 1fr; } }
+  .d-meta dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: var(--space-2);
+  }
+  .d-meta dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  .d-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    justify-content: space-between;
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+  .d-back { border-bottom: none; }
+  .d-back:hover { border-bottom: 1px solid currentColor; }
+</style>

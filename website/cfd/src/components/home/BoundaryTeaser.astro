@@ -1,0 +1,87 @@
+---
+/**
+ * Capability boundaries on the landing page. Leads with the refuted
+ * hypotheses, because a project that publishes what it disproved is easier to
+ * trust than one that publishes only wins.
+ */
+import { boundaries } from '../../data/boundaries';
+
+const refuted = boundaries.filter((b) => b.refuted).slice(0, 3);
+---
+<section class="bteaser page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">04 / 04</span><span class="lb">Boundaries</span>
+    </p>
+    <h2>Where it stops working, and how we know.</h2>
+    <p class="lede">
+      Four hypotheses this project held were refuted by running them. The
+      measurements are committed alongside the ones that worked.
+    </p>
+  </header>
+
+  <div class="grid">
+    {refuted.map((b, i) => (
+      <article class="panel corner-brackets bcard rise" style={`--i:${i}`}>
+        <p class="bkind">Refuted by measurement</p>
+        <h3>{b.title}</h3>
+        <p class="bhit"><span class="k">Hit when</span> {b.hitWhen}</p>
+        <ul class="bnums">
+          {b.numbers.slice(0, 2).map((n) => <li class="num">{n}</li>)}
+        </ul>
+        <p class="bstudy"><code>studies/{b.study}</code></p>
+      </article>
+    ))}
+  </div>
+
+  <a class="more" href="/boundaries/">
+    All measured boundaries <span aria-hidden="true">→</span>
+  </a>
+</section>
+
+<style>
+  .bteaser { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    align-items: start;
+  }
+  @media (min-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .bcard { padding: var(--space-5); }
+  .bkind {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--warn);
+    margin: 0 0 var(--space-3);
+  }
+  .bcard h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .bhit { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+  .bhit .k {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-right: var(--space-2);
+  }
+  .bnums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .bnums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+  }
+  .bstudy { margin: 0; }
+  .bstudy code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
+
+  .more { display: inline-block; margin-top: var(--space-6); font-size: var(--t-body-sm); border-bottom: none; }
+  .more:hover { border-bottom: 1px solid currentColor; }
+</style>

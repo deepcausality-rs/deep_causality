@@ -1,0 +1,113 @@
+---
+title: Forecast horizon under precision
+question: How far ahead can a chaotic flow be forecast before roundoff destroys it?
+summary: One Lorenz rate field written over the scalar bound, instantiated at f32, f64 and Float106, showing where each precision's forecast dies. Not a CFD solver — the point is precision as a parameter.
+order: 4
+command: cargo run -p avionics_examples --example turbulence_flow
+uses:
+  - Arrow calculus (Rk4)
+  - causal monad
+  - precision as a type parameter
+runtime: seconds
+results:
+  - f32 diverges at t ≈ 21.5, f64 at t ≈ 44.5, Float106 beyond T = 60
+  - the ε-law puts the same horizons near 17.6 / 39.8 / 81.3
+  - Lyapunov λ ≈ 0.906 on the Lorenz attractor
+limitation: For most CFD the precision floor is irrelevant — discretization and modelling error dwarf f64 roundoff. Chaotic flow is the exception. No output.txt is committed for this example; the figures come from its README.
+recorded: false
+source: examples/avionics_examples/cfd/turbulence_flow
+---
+
+This example runs no flow solver. It is here because it isolates a property the
+whole crate is built on, and chaotic dynamics is the one place that property becomes
+visible rather than theoretical.
+
+Every example carries a type alias:
+
+```rust
+pub type FloatType = f64;   // or f32, or Float106
+```
+
+The physics is written once against the scalar bound. Changing that one line
+re-instantiates the entire computation at a different precision. Here, the same
+Lorenz rate field is instantiated three times and each forecast is run until it
+diverges from a reference trajectory.
+
+## Why the answer is not "roundoff is negligible"
+
+A chaotic system amplifies any perturbation exponentially, at a rate set by the
+leading Lyapunov exponent — here `λ ≈ 0.906`. Roundoff at the machine epsilon is a
+perturbation. So the forecast horizon is not a matter of accumulating error slowly;
+it is a matter of an initial error of size ε growing as `e^{λt}` until it is the
+size of the attractor.
+
+That gives a law: the horizon scales with `ln(1/ε)/λ`. Three precisions, three
+horizons:
+
+```text
+f32       (ε ≈ 1.2e-7)    t ≈ 17.6
+f64       (ε ≈ 2.2e-16)   t ≈ 39.8
+Float106  (ε ≈ 1.0e-32)   t ≈ 81.3
+```
+
+And the measured horizons:
+
+```text
+f32        t ≈ 21.5
+f64        t ≈ 44.5
+Float106   beyond T = 60 here; the law puts it near t ≈ 81
+```
+
+The two sets differ by roughly four time units. The README attributes that to bursty
+local stretching — the local expansion rate is not the global average, so the actual
+crossing wanders around the law's prediction. **Quote one set or the other, not a
+mixture.** They are measuring slightly different things.
+
+The practical reading: nine orders of magnitude of extra precision bought roughly a
+doubling of forecast horizon. That is what logarithmic scaling costs.
+
+## Divergence over time
+
+```text
+  t        f32 vs f64      f64 vs Float106
+  5.0        2.69e-5            2.31e-14
+ 25.0        1.99e1             4.01e-8
+ 45.0        1.71e1             2.00e0
+```
+
+At t = 25 the f32 trajectory has already left the building — divergence 19.9 on an
+attractor of that scale means no shared information. Meanwhile f64 is still tracking
+Float106 to eight decimal places. By t = 45 f64 has gone too.
+
+The f32 column at t = 45 being *smaller* than at t = 25 is not recovery. Two
+uncorrelated trajectories on a bounded attractor sit at a typical separation and
+fluctuate. Past its own horizon a forecast's error number stops meaning anything;
+only the first crossing of the threshold is meaningful.
+
+## The composition
+
+The run is a causal chain, not a loop:
+
+```rust
+CausalFlow::effect()
+    .next(simulate)
+    .next(analyse)
+    .run(...)
+```
+
+`PropagatingEffect` short-circuits if a trajectory goes non-finite, so a diverged
+forecast stops the chain rather than feeding NaN into the analysis stage.
+
+## Where this matters, and where it does not
+
+For most CFD the precision floor is irrelevant. Discretization error and modelling
+error dwarf `f64` roundoff by many orders of magnitude — a first-order scheme
+smearing a shock over three cells is not limited by the fifteenth decimal place.
+
+Chaotic flow is the exception, and so is a long marched trajectory that feeds a
+decision. The [blackout corridor](/examples/plasma-blackout-corridor/) records the
+other end of this: at `f32` it does not run at all, because a term in the ionization
+kernel underflows the exponent range at step 1.
+
+No `output.txt` is committed for this example, so the figures above come from its
+README. It is also the only example whose documented command omits `--release`.

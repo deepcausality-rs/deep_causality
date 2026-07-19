@@ -1,0 +1,24 @@
+load("@npm_cfd//:defs.bzl", "npm_link_all_packages")
+load("@npm_cfd//website/cfd:astro/package_json.bzl", astro_bin = "bin")
+load("@rules_astro//astro:defs.bzl", "astro_site")
+
+# Materialize node_modules for the CFD site (pnpm-lock.yaml) as a Bazel-managed
+# tree. website/cfd is its own pnpm workspace root, mirroring website/web.
+npm_link_all_packages(name = "node_modules")
+
+astro_bin.astro_binary(name = "astro_tool")
+
+# `bazel build //website/cfd:build` -> bazel-bin/website/cfd/dist (static site).
+astro_site(
+    name = "build",
+    srcs = glob([
+        "src/**",
+        "public/**",
+    ]) + [
+        "package.json",
+        "tsconfig.json",
+    ],
+    astro_bin = ":astro_tool",
+    node_modules = ":node_modules",
+    visibility = ["//visibility:public"],
+)

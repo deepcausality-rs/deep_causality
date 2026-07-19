@@ -1,0 +1,86 @@
+---
+title: Flight envelope placard
+question: Feed a Mach–altitude test matrix in, get a gated placard table out.
+summary: The simplest shape in the toolbox — a parameter sweep over a closed-form body, gated against stated limits. No grid, no march, no solver state.
+order: 1
+command: cargo run --release -p avionics_examples --example flight_envelope_placard
+uses:
+  - sweep
+  - Gates
+  - read_table / write_table
+  - FittedNormalShock
+runtime: well under a second
+results:
+  - max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+  - max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
+  - 16 of 16 matrix rows computed
+limitation: The placards are demonstration values, not certification data. The gas is calorically perfect, and Sutton–Graves is an entry-speed correlation, so low-Mach heating is a trend rather than a thermal-protection input.
+recorded: true
+source: examples/avionics_examples/cfd/flight_envelope_placard
+---
+
+This is the smallest complete thing the toolbox does, and the right place to start
+reading. There is no grid and no time stepping. A CSV of Mach–altitude points goes
+in, each point is evaluated through closed-form relations, and a table comes out
+with two placard gates applied to it.
+
+It matters because the *shape* is identical to the expensive examples. The same
+`sweep` combinator that drives sixteen closed-form evaluations here drives four
+concurrent Navier–Stokes marches in the [VIV example](/examples/viv-resonance-margin/).
+Learn the shape once.
+
+## What runs per row
+
+Each matrix row is a flight condition. For each one the example computes dynamic
+pressure, takes the exact Rankine–Hugoniot jump through `FittedNormalShock` to get
+the post-shock stagnation temperature, and applies the Sutton–Graves correlation
+for stagnation-point heating.
+
+Nothing here is iterative. Every quantity is a closed-form function of Mach,
+altitude and the atmosphere table.
+
+## The output
+
+```text
+   M   alt[km]  q[kPa]   T0[K]   qdot
+ 0.50      5.0     9.5   268.5   0.09
+ ...
+ 5.00     40.0     5.0  1502.1   6.21
+ 5.00     36.0    11.8  1444.9   9.15   <- hottest heating
+
+[PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+[PASS] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
+[PASS] matrix integrity: 16 of 16 matrix rows computed
+```
+
+Note that the peak dynamic pressure and the peak temperature occur at different
+points in the matrix, and the hottest heating occurs at a third. That is the whole
+reason a placard needs a sweep rather than a spot check.
+
+## The negative path
+
+The gates are the point, so the example ships a matrix that fails one:
+
+```bash
+cargo run --release -p avionics_examples --example flight_envelope_placard \
+  examples/avionics_examples/cfd/flight_envelope_placard/mach_alt_matrix_exceeds.csv
+```
+
+```text
+[FAIL] q-max placard: q = 85.1 kPa at M 1.50 / 5.0 km exceeds the 60 kPa placard
+```
+
+The process exits 1 and writes no table. That is deliberate: a failed run should
+not leave a plausible-looking artifact behind for someone to pick up later. The
+same convention holds across every example and every verification target.
+
+## Where this stops being enough
+
+The gas is calorically perfect at γ = 1.4. That assumption is crudest exactly where
+a blunt body at low supersonic speed lives, which is inside this matrix. Sutton–Graves
+is an entry-speed correlation, so the heating column at M 0.5 is a trend and not a
+number to size a thermal protection system with. The atmosphere interpolates linearly
+between US-1976 rows spaced 5 to 10 km apart, which overstates density between rows.
+
+The placards themselves — 60 kPa and 1700 K — are demonstration values chosen to make
+the gates interesting. They are not certification data and should not be quoted as any.

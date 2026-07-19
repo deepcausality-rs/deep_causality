@@ -1,23 +1,21 @@
 {
-  "name": "deepcausality-web",
+  "name": "deepcausality-cfd-web",
   "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "astro check"
+    "check": "astro check",
+    "check:tokens": "diff -u ../web/src/styles/tokens.css src/styles/tokens.css && echo 'tokens in sync'"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.2",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.0.7",
-    "astro-mermaid": "^2.1.0",
-    "mermaid": "^11.16.0",
-    "pagefind": "^1.5.2"
+    "astro": "^7.0.7"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

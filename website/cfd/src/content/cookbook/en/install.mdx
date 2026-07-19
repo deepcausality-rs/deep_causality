@@ -1,0 +1,71 @@
+---
+title: Install and run something
+task: You want the crate in your project, or you want to see it work first.
+summary: An unpublished git dependency, and one command that exercises the whole toolbox in about forty seconds.
+order: 0
+verbs:
+  - cargo
+worked:
+  - label: Plasma blackout corridor
+    href: /examples/plasma-blackout-corridor/
+---
+
+The crate is unpublished and versioned with the monorepo, so it is a git dependency.
+
+```toml
+[dependencies]
+deep_causality_cfd = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main" }
+```
+
+Pin by `branch`, `tag`, or `rev`. For anything you intend to keep, pin `rev` — the
+crate moves with the monorepo and has no release cadence of its own.
+
+## Features
+
+```toml
+deep_causality_cfd = { git = "...", features = ["parallel"] }
+```
+
+`std` is on by default. `parallel` opts into CPU parallelism through
+`deep_causality_par`, which is what makes sweeps and branch fan-outs concurrent.
+
+One caveat measured on the DEC solver: `parallel` **slows down** small and medium
+grids, where the per-operator work does not cover the coordination cost. Benchmark
+before enabling it for your grid size.
+
+## See it work first
+
+```bash
+cargo run --release -p avionics_examples --example plasma_blackout_corridor
+```
+
+About forty-one seconds. It marches a compressible flow, reacts its plasma chemistry,
+gates a Kalman filter on the result, forks the running simulation into seventeen
+counterfactual worlds, and prints thirteen gate verdicts.
+
+Use `--release`. The debug build of a marching solver is not merely slower; several
+examples have wall-clock budgets that a debug build blows through.
+
+## Run the verification suite
+
+Every verification target is an example on the crate itself:
+
+```bash
+cargo run --release -p deep_causality_cfd --example qtt_sod
+cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification trend
+```
+
+Each self-verifies and exits nonzero when its check fails, so they work as CI gates.
+What each one asserts, and to what number, is on the
+[validation status](/validation/) page.
+
+Note that several target READMEs still document an older `-p avionics_examples`
+invocation. The authoritative names are the `[[example]]` entries in
+`deep_causality_cfd/Cargo.toml`.
+
+## Where to go next
+
+Start with the [capability ladder](/examples/) and pick the rung that matches your
+problem rather than starting at the top. Before committing to an approach, read the
+[capability boundaries](/boundaries/) — several plausible-sounding uses of the QTT
+marcher are measured dead ends, and it is cheaper to find that out here.

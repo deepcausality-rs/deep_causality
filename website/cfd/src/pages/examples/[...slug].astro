@@ -1,0 +1,86 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocDetail from '../../components/docs/DocDetail.astro';
+import { GITHUB_URL } from '../../consts';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('examples');
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/^en\//, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+const meta = [
+  { label: 'Runtime', value: d.runtime, mono: true },
+  { label: 'Exercises', value: d.uses.join(' · ') },
+];
+---
+<BaseLayout
+  title={`${d.title} — DeepCausality CFD`}
+  description={d.summary}
+  path={`/examples/${entry.id.replace(/^en\//, '')}/`}
+>
+  <SiteHeader slot="header" />
+
+  <DocDetail
+    eyebrow="Worked example"
+    title={d.title}
+    summary={d.question}
+    tags={d.uses}
+    command={d.command}
+    meta={meta}
+    unrecordedNote={d.recorded ? undefined : 'figures come from the example README'}
+    backHref="/examples/"
+    backLabel="All examples"
+    sourceHref={`${GITHUB_URL}/tree/main/${d.source}`}
+    sourceLabel="Source"
+  >
+    <section class="measured">
+      <p class="mk">Measured</p>
+      <ul>
+        {d.results.map((r) => <li class="num">{r}</li>)}
+      </ul>
+    </section>
+
+    <Content />
+
+    <section class="limit">
+      <p class="mk">Stated limitation</p>
+      <p>{d.limitation}</p>
+    </section>
+  </DocDetail>
+</BaseLayout>
+
+<style>
+  .measured { margin: 0 0 var(--space-6); }
+  .mk {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0 0 var(--space-3);
+  }
+  .measured ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  .measured li {
+    color: var(--fg-1);
+    font-size: var(--t-mono-sm);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--accent);
+  }
+  .limit {
+    margin: var(--space-7) 0 0;
+    padding: var(--space-4);
+    background: var(--bg-2);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--warn);
+  }
+  .limit p:last-child { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; }
+</style>

@@ -1,0 +1,271 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { boundaries, gateSemantics } from '../../data/boundaries';
+import { STUDIES_URL } from '../../consts';
+
+const title = 'Capability boundaries — DeepCausality CFD';
+const description =
+  'Where this toolbox stops working, stated where you will hit it, with the measurements behind each limit. Includes four hypotheses the project refuted by running them.';
+
+const refuted = boundaries.filter((b) => b.refuted);
+const limits = boundaries.filter((b) => !b.refuted);
+---
+<BaseLayout title={title} description={description} path="/boundaries/">
+  <SiteHeader slot="header" />
+
+  <article class="page bpage">
+    <header class="bhead">
+      <p class="eyebrow">Capability boundaries</p>
+      <h1>Where it stops working.</h1>
+      <p class="lede">
+        Every limit below was measured, not estimated. Each says where you hit
+        it rather than which feature is missing, because the useful question is
+        whether your problem crosses the line.
+      </p>
+      <p class="lede">
+        Four of these refuted something the project believed. Those are first,
+        because a toolbox that publishes its disproofs is easier to evaluate
+        than one that publishes only results.
+      </p>
+
+      <div class="callout callout-warn">
+        <p class="callout-title">A passing gate is not a passing physics target</p>
+        <p>{gateSemantics}</p>
+      </div>
+    </header>
+
+    <section class="bsection">
+      <h2 class="bsection-head">
+        <span class="status status-partial">Refuted</span>
+        Hypotheses overturned by measurement
+      </h2>
+
+      {refuted.map((b) => (
+        <section class="bcard panel corner-brackets" id={b.id}>
+          <h3>{b.title}</h3>
+          <p class="hit"><span class="k">You hit this when</span> {b.hitWhen}</p>
+
+          {b.question && (
+            <div class="qa">
+              <p class="k">The question asked</p>
+              <p class="qtext">{b.question}</p>
+            </div>
+          )}
+
+          <p class="finding">{b.finding}</p>
+
+          <ul class="nums">
+            {b.numbers.map((n) => <li class="num">{n}</li>)}
+          </ul>
+
+          {b.attribution && (
+            <div class="block">
+              <p class="k">Attributed to</p>
+              <p>{b.attribution}</p>
+            </div>
+          )}
+
+          {b.ruledOut && (
+            <div class="block block-ruled">
+              <p class="k">Ruled out by the measurement</p>
+              <ul class="ruled">
+                {b.ruledOut.map((r) => <li>{r}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {b.consequence && (
+            <div class="block block-consequence">
+              <p class="k">What this means for your code</p>
+              <p>{b.consequence}</p>
+            </div>
+          )}
+
+          {b.history && (
+            <details class="history">
+              <summary>Earlier attempt, and why it was superseded</summary>
+              <p>{b.history}</p>
+            </details>
+          )}
+
+          <p class="src"><code>studies/{b.study}</code></p>
+        </section>
+      ))}
+    </section>
+
+    <section class="bsection">
+      <h2 class="bsection-head">
+        <span class="status status-roadmap">Standing</span>
+        Limits of the current design
+      </h2>
+
+      {limits.map((b) => (
+        <section class="bcard panel corner-brackets" id={b.id}>
+          <h3>{b.title}</h3>
+          <p class="hit"><span class="k">You hit this when</span> {b.hitWhen}</p>
+          <p class="finding">{b.finding}</p>
+          <ul class="nums">
+            {b.numbers.map((n) => <li class="num">{n}</li>)}
+          </ul>
+          <p class="src"><code>studies/{b.study}</code></p>
+        </section>
+      ))}
+    </section>
+
+    <section class="bsection">
+      <h2 class="bsection-head">What this adds up to</h2>
+      <div class="prose">
+        <p>
+          The compression thesis holds, and its condition is expensive.
+          Alignment drives rank, not sharpness. Holding alignment while marching
+          needs re-pinning <em>and</em> an exact Rankine–Hugoniot interface, and
+          the 3-D fitted marcher that makes the whole approach work is itself
+          over its wall-clock budget at the smallest grid measured. The shipped
+          corridor runs a 2-D layer for exactly that reason.
+        </p>
+        <p>
+          Every rank measurement uses scalar Burgers with explicit Euler and
+          central differences rather than compressible Euler or Navier–Stokes,
+          and every one is stated as a lower bound on a live solver's rank. That
+          caveat is repeated in each study and is repeated here.
+        </p>
+        <p>
+          Turbulence is staged work, not an exclusion. The validated
+          incompressible cases sit at Re 100–1600, and the wake is reported
+          rather than gated.
+        </p>
+        <p>
+          Source for every measurement:
+          <a href={STUDIES_URL}>deep_causality_cfd/studies/ <span aria-hidden="true">↗</span></a>
+        </p>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .bpage { max-width: var(--w-panel); }
+  .bhead { margin-bottom: var(--space-8); }
+  .bhead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .bhead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .callout p { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; }
+
+  .bsection { margin-bottom: var(--space-8); }
+  .bsection-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: baseline;
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-5);
+  }
+
+  .bcard {
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+    scroll-margin-top: calc(var(--header-h) + var(--space-4));
+  }
+  .bcard h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .k {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-right: var(--space-2);
+  }
+  .hit { color: var(--fg-0); font-size: var(--t-body-sm); margin: 0 0 var(--space-3); max-width: var(--measure); }
+  .finding { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); max-width: var(--measure); }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+  }
+  .src { margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--line-1); }
+  .src code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
+
+  /* --- Worked negative result --- */
+
+  .qa { margin: 0 0 var(--space-4); }
+  .qtext {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    margin: 0;
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--line-2);
+    max-width: var(--measure);
+  }
+
+  .block { margin: 0 0 var(--space-4); }
+  .block p:last-child {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    margin: 0;
+    max-width: var(--measure);
+  }
+
+  /* Ruled-out causes get the affirmative colour on purpose: eliminating a
+     candidate is a positive result, and it is what separates a measured limit
+     from an unexplained one. */
+  .block-ruled { padding: var(--space-4); background: var(--bg-2); border-radius: var(--radius-sm); }
+  .ruled { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+  .ruled li {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    padding-left: var(--space-5);
+    position: relative;
+    max-width: var(--measure);
+  }
+  .ruled li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 10px;
+    height: 1px;
+    background: var(--ok);
+  }
+
+  .block-consequence {
+    padding: var(--space-4);
+    border-left: 3px solid var(--accent);
+    background: var(--bg-1);
+    border-radius: var(--radius-sm);
+  }
+
+  .history {
+    margin: 0 0 var(--space-4);
+    border-top: 1px solid var(--line-1);
+    padding-top: var(--space-3);
+  }
+  .history summary {
+    cursor: pointer;
+    font-size: var(--t-body-sm);
+    color: var(--fg-1);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .history summary::-webkit-details-marker { display: none; }
+  .history summary::before {
+    content: '▸';
+    color: var(--fg-2);
+    transition: transform var(--dur-fast) var(--ease-out);
+    display: inline-block;
+  }
+  .history[open] summary::before { transform: rotate(90deg); }
+  .history summary:hover { color: var(--fg-0); }
+  .history p {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    margin: var(--space-3) 0 0;
+    max-width: var(--measure);
+  }
+</style>

@@ -1,0 +1,58 @@
+/*
+ * Site-local token extension.
+ *
+ * `tokens.css` is a byte-identical mirror of website/web/src/styles/tokens.css
+ * and MUST stay that way — `pnpm check:tokens` diffs the two. Anything this
+ * site needs beyond the shared set lives here instead, so the mirror stays
+ * verifiable and the marketing site's hand-copy problem (DESIGN.md §9.2) is
+ * not repeated.
+ *
+ * The first block implements the four tokens DESIGN.md §12.7 and §14 name as
+ * missing from the shared set. They are defined here first; if they are later
+ * promoted into tokens.css, delete them from this file in the same commit.
+ */
+
+:root {
+  /* --- DESIGN.md §12.7: the named-but-missing tokens --- */
+
+  /* Heading weight. The deliberate 540 appears as a literal six times on the
+     marketing site. Declared once here. */
+  --fw-heading: 540;
+
+  /* Header height, consumed by the header itself and by every scroll offset.
+     The marketing site hardcodes an 80px offset that matches nothing, so its
+     anchor links land 16px low. */
+  --header-h: 56px;
+
+  /* Panel frame width. The marketing site has three (880/900/980) and its
+     section edges do not line up. One value here. */
+  --w-panel: 980px;
+
+  /* Two measures, not five literal `ch` values. */
+  --measure: 68ch;      /* re-stated: long-form prose */
+  --measure-lede: 56ch; /* ledes, summaries, card copy */
+
+  /* --- CFD-site additions --- */
+
+  /* Draw-in durations for the SVG hairline idiom (§12.10). Tokenized so
+     §13.20 holds with no exceptions; the reduce branch zeroes them. */
+  --dur-draw: 700ms;
+  --dur-node: 280ms;
+
+  /* Stagger step for sequenced entrances. Tokenized so it inherits the
+     reduced-motion contract (DESIGN.md §6); the marketing site's literal
+     110ms silently opts out. */
+  --stagger: 90ms;
+
+  /* Fixed label column for label-plus-content rows. The marketing site uses
+     184px, 200px and 220px for the same idiom. */
+  --w-label: 200px;
+}
+
+@media (min-width: 900px) {
+  :root { --header-h: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --stagger: 0ms; --dur-draw: 0ms; --dur-node: 0ms; }
+}
