@@ -1,0 +1,135 @@
+deep_causality_cfd/tests/types/flow/inheritance_guard_tests.rs
+  s_03a25bcd8e11c3::t_b54ebd504076aa 165-166
+deep_causality_cfd/src/types/flow/throttle_guidance.rs
+  s_03a25bcd8e11c3::t_10f4759fc3a5a6 160
+  s_03a25bcd8e11c3::t_3d75501f81452d 336-344,346-359
+  s_03a25bcd8e11c3::t_7905acc348b332 137
+  s_03a25bcd8e11c3::t_6e76e5b8abbcdd 378-392,394-403,405,407-420
+  s_03a25bcd8e11c3::t_054514a0fa9361 159
+  s_03a25bcd8e11c3::t_d1398b9334b083 393,429
+  s_03a25bcd8e11c3::t_1cc206121d9b29 404,406
+  s_03a25bcd8e11c3::t_1ad8a79b8ef507 424-428,430-433,438,450
+  s_03a25bcd8e11c3::t_bbb8fa1289701b 201-218
+  s_03a25bcd8e11c3::t_2381ceae29b6da 177-197,199,246-253
+  s_03a25bcd8e11c3::t_97bf2bc20e8597 138
+  s_03a25bcd8e11c3::t_19d19126d15e89 139
+  s_03a25bcd8e11c3::t_fa7acbff26ae7f 158
+  s_03a25bcd8e11c3::t_67de6b6a8e8064 60-61
+  s_03a25bcd8e11c3::t_028cdb9bf466e0 434-437,439-449
+  s_03a25bcd8e11c3::t_18138e65aaf3d1 67-70
+  s_03a25bcd8e11c3::t_b6f56903de59b3 71-74
+  s_03a25bcd8e11c3::t_ec9192f55d77c5 198,219-245
+  s_f0a6cfc98ba452::t_f8e61b2a9ee7c4 200,421
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branches.csv
+  s_03a25bcd8e11c3::t_2637294ce3c367 1-2
+  s_03a25bcd8e11c3::t_e5fba78aad04e9 3-7
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/README.md
+  s_03a25bcd8e11c3::t_b23b2ce2c365b4 1-170
+examples/avionics_examples/src/shared/constants.rs
+  s_03a25bcd8e11c3::t_e82a4cc89d6d72 309,317,326-334
+  s_03a25bcd8e11c3::t_8eb1a605f47d82 394-400
+  s_03a25bcd8e11c3::t_d50291c01d1aba 202-207,209-215,223-256,265-277
+  s_03a25bcd8e11c3::t_28bb40494870e9 278-304
+  s_03a25bcd8e11c3::t_3823595ea1b186 216-221
+  s_03a25bcd8e11c3::t_9d3e20ffe7abdb 305-308,310-316,318-325,335-356
+  s_03a25bcd8e11c3::t_2637294ce3c367 257-264
+  s_03a25bcd8e11c3::t_2b02b7f72c87b2 375-387
+  s_03a25bcd8e11c3::t_e407849476b338 208
+  s_03a25bcd8e11c3::t_9d24f4cd842afa 357-374,388-393
+  s_03a25bcd8e11c3::t_9d2676878ec334 222
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/utils_print.rs
+  s_03a25bcd8e11c3::t_f18e6e2cfa2f76 49-52
+  s_03a25bcd8e11c3::t_2a2194e8393171 13-14
+  s_03a25bcd8e11c3::t_9f5d38e12edb63 10
+  s_03a25bcd8e11c3::t_c8efbc319163b0 1-9,11-12,15-48,53-128
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/main.rs
+  s_03a25bcd8e11c3::t_c07c25e82c68fc 142-164,169,184
+  s_03a25bcd8e11c3::t_4c871843b64405 74-75,93-94,128,165-168,209-212
+  s_03a25bcd8e11c3::t_cb7df327602c62 1-73,76-82,86-92,95-107,111-127,129-141,170-175,182-183,185-208,213-214,219-242
+  s_03a25bcd8e11c3::t_2637294ce3c367 83-85,108-110
+  s_03a25bcd8e11c3::t_9d24f4cd842afa 176-181
+  s_03a25bcd8e11c3::t_10334cb0afbd4d 215-218
+deep_causality_cfd/src/lib.rs
+  s_03a25bcd8e11c3::t_4c871843b64405 99-101
+examples/avionics_examples/Cargo.toml
+  s_03a25bcd8e11c3::t_00e381b179cc3b 45-47
+  s_03a25bcd8e11c3::t_7b99d64574d246 44
+examples/avionics_examples/src/shared/world.rs
+  s_03a25bcd8e11c3::t_4c871843b64405 11-15,18-26,29-30,38,41-43
+  s_03a25bcd8e11c3::t_28bb40494870e9 16,27-28,81,442-488
+  s_03a25bcd8e11c3::t_457a0856b2ab6a 373-375,392-395
+  s_03a25bcd8e11c3::t_9d3e20ffe7abdb 82-91,131-133,380-391,489-529
+  s_03a25bcd8e11c3::t_3b60f129001e0d 17,40,244-276,288-292,340-372,396-406,408-440
+  s_03a25bcd8e11c3::t_ed23548e49130e 312
+  s_03a25bcd8e11c3::t_9d24f4cd842afa 277-287,317-339
+  s_03a25bcd8e11c3::t_a8e4e3b0bd7e7a 307-311
+  s_03a25bcd8e11c3::t_97f2c14272ee3a 376-379
+  s_03a25bcd8e11c3::t_a99296e4eeea77 407
+  s_03a25bcd8e11c3::t_4a9652aa843b87 293-306,313-316
+  s_03a25bcd8e11c3::t_aeecba15b42b5a 441
+deep_causality_cfd/src/types/flow/mod.rs
+  s_03a25bcd8e11c3::t_76231ea680cb68 89-91
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/model.rs
+  s_03a25bcd8e11c3::t_60adf9470c8a9e 271-278,282-283,285-286,298-305,416,442-452,455,457-460,462,464-468
+  s_03a25bcd8e11c3::t_9cc56ed60e2b9e 1-14,16-170,183-185,191-216,221-270,279-281,284,287-297,306-353,356-415,417-441,453-454,456,461,463,469-519,523-589,592-634
+  s_03a25bcd8e11c3::t_e753fbe25395b9 171-182,186-190,220
+  s_03a25bcd8e11c3::t_28bb40494870e9 635-670
+  s_03a25bcd8e11c3::t_2a2194e8393171 15
+  s_03a25bcd8e11c3::t_4c871843b64405 217-219,590-591
+  s_03a25bcd8e11c3::t_10334cb0afbd4d 354-355,520-522
+openspec/changes/wire-plasma-retropulsion-example/tasks.md
+  s_03a25bcd8e11c3::t_d58310930937b0 3,7,14,19,23,28,32,37,44,46,48,55,58,61,65,69,71,82,88,90,92,97,103,105,107,112,115,118,120,124,128,130,134
+deep_causality_cfd/tests/types/flow/retropulsion_tests.rs
+  s_03a25bcd8e11c3::t_ddcb69f1e81168 455
+  s_03a25bcd8e11c3::t_4c871843b64405 470-473,488-491
+  s_03a25bcd8e11c3::t_8eed0ff1fd39c4 504
+  s_03a25bcd8e11c3::t_b54ebd504076aa 50-52,443-454,456-469,474-487,492-503,505
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt
+  s_03a25bcd8e11c3::t_5c0b00c112a83c 33-788
+  s_f0a6cfc98ba452::t_bf496643cf2854 9-13
+  s_03a25bcd8e11c3::t_66e3945ebd6a8f 1-8,14-32
+deep_causality_cfd/tests/types/flow/compressible_march_run_tests.rs
+  s_03a25bcd8e11c3::t_4c871843b64405 83-93,1051,1072,1090,1108
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/constants.rs
+  s_03a25bcd8e11c3::t_e5fba78aad04e9 88
+  s_03a25bcd8e11c3::t_e55bebd483a76f 1-21,23,32,40,42-59,67,73-78,102-104
+  s_03a25bcd8e11c3::t_3957b6462a33d2 83-87
+  s_03a25bcd8e11c3::t_e371a2be4328ca 22,24-31,41
+  s_03a25bcd8e11c3::t_03406bc5b69252 97-101
+  s_03a25bcd8e11c3::t_60adf9470c8a9e 70-72
+  s_03a25bcd8e11c3::t_dbbc1fbae6f652 60-61,68-69,82
+  s_03a25bcd8e11c3::t_d4771d07b9eb42 79-81,89-96
+  s_03a25bcd8e11c3::t_e407849476b338 62-66
+  s_03a25bcd8e11c3::t_c07c25e82c68fc 34-39
+  s_03a25bcd8e11c3::t_e753fbe25395b9 33,105-110
+deep_causality_cfd/src/types/flow/retropulsion.rs
+  s_03a25bcd8e11c3::t_dbdd996c7428b8 103-120,122-125,127-132,134-138,232-237,287-290,292-296
+  s_03a25bcd8e11c3::t_8eed0ff1fd39c4 121,126,133
+  s_03a25bcd8e11c3::t_97f2c14272ee3a 406-419
+deep_causality_cfd/tests/types/flow/throttle_guidance_tests.rs
+  s_03a25bcd8e11c3::t_616ca9178b4b23 312-435
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d724fb88eb3025c82625e2e60f803fcc8ed5e5a2",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
