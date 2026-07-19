@@ -422,7 +422,7 @@ component- and roster-level `deep_causality_par::scoped_map` (four independent c
 chains per step; independent sweep points and counterfactual branches — the descent note's
 §6 pin); locally scaled dissipation (also upgrade item 1 — it lowers the required L
 outright). Tensor-crate kernels (randomized/sketched rounding and below) stay gated behind
-[`../tensor-network/ACCELERATION-SOTA-FIRST.md`](../tensor-network/ACCELERATION-SOTA-FIRST.md);
+[`../tensor-network/ACCELERATION-SOTA-FIRST.md`](../../tensor-network/ACCELERATION-SOTA-FIRST.md);
 GPU work is **deferred** (user decision 2026-07-17 — single-train bond-≤64 work is
 latency-bound; revisit only for batched branch rosters, at the survey stage).
 

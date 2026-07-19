@@ -111,5 +111,5 @@ revision at Stage 4 is expected.
   design / tasks / seven capability specs).
 - [`gap-analysis.md`](gap-analysis.md) — the gap tracker (Gap 2 closed; Gaps 3/4 sequenced here).
 - [`gap-3/`](gap-3/) — the trajectory/timing resolutions + the three passed feasibility studies (FS-1/2/3).
-- [`tensor-network/ACCELERATION-SOTA-FIRST.md`](../tensor-network/ACCELERATION-SOTA-FIRST.md) — GPU/parallel
+- [`tensor-network/ACCELERATION-SOTA-FIRST.md`](../../tensor-network/ACCELERATION-SOTA-FIRST.md) — GPU/parallel
   acceleration is gated behind that survey, out of this build order.

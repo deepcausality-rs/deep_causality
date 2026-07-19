@@ -289,7 +289,7 @@ in one bind.
 
 ## 10. Related
 
-- [`quantum-epp.md`](../quantum/quantum-epp.md) §9 — the Quantum × CFD value ranking and industry map this example
+- [`quantum-epp.md`](../../quantum/quantum-epp.md) §9 — the Quantum × CFD value ranking and industry map this example
   instantiates (fusion/aerospace/reentry); the macroscope-not-microscope boundary.
 - `examples/avionics_examples/hypersonic_2t/` — the Two-Time (Bars) trajectory accelerator, in
   proof-of-concept form; the foundation for the trajectory axis (§3.1, seam §6).
