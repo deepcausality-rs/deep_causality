@@ -117,11 +117,15 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
 /// (e.g. a temperature field over cells) and the per-step [`Ambient`] a stage writes back to the
 /// solver (e.g. `ν(T)`).
 ///
-/// Two typed navigation channels ride alongside the scalar fields, carrying the ④ physics→navigation
-/// coupling (design: the plasma-blackout `blackout-coupling-interface`): the **aero force** (the
-/// integrated Cartesian force a trajectory stage reads as its perturbation kick) and the **control
-/// action** (the bounded command a corrective stage writes, e.g. a bank-angle correction). Both are
-/// `None` until a producing stage sets them, so existing couplings are unaffected.
+/// Three typed command/navigation channels ride alongside the scalar fields, carrying the ④
+/// physics→navigation coupling (design: the plasma-blackout `blackout-coupling-interface`): the
+/// **aero force** (the integrated Cartesian force a trajectory stage reads as its perturbation kick;
+/// a thrust term composes onto it additively through [`add_aero_force`](Self::add_aero_force), never
+/// clobbering the lift stage's vector), the **control action** (the bounded bank command a corrective
+/// stage writes), and the **throttle action** (the second command axis the powered-descent stack
+/// writes, beside the bank channel). All three are `None` until a producing stage sets them, so
+/// existing couplings are unaffected; no Tier-A step ever drives both command axes at once (the burn
+/// flies on-axis with the bank idle).
 ///
 /// Three further composition channels ride alongside, carrying the corridor state: the last
 /// [`RegimeClass`] the classifier selected (the governing-model + GNSS-denial decision downstream
@@ -136,6 +140,7 @@ pub struct CoupledField<R: CfdScalar> {
     scalars: Vec<(String, Vec<R>)>,
     aero_force: Option<[R; 3]>,
     control_action: Option<R>,
+    throttle_action: Option<R>,
     regime: Option<RegimeClass<R>>,
     nav: Option<ReentryNavEngine<R>>,
     log: EffectLog,
@@ -149,6 +154,7 @@ impl<R: CfdScalar> CoupledField<R> {
             scalars: Vec::new(),
             aero_force: None,
             control_action: None,
+            throttle_action: None,
             regime: None,
             nav: None,
             log: EffectLog::new(),
@@ -216,6 +222,17 @@ impl<R: CfdScalar> CoupledField<R> {
         self.aero_force = Some(force);
     }
 
+    /// Additively compose a force `delta` onto the aero-force channel, treating an unset channel as
+    /// zero: `aero_force ← aero_force.unwrap_or(0) + delta` component-wise. A thrust term composes
+    /// with the lift stage's ④ vector through this helper instead of clobbering it via
+    /// [`set_aero_force`](Self::set_aero_force). Additive force producers compose **after** the
+    /// ④-writing lift stage and **before** the force consumers (`SuttonGravesLoads`-class loads, the
+    /// truth propagator, the navigation kick), so every consumer reads one summed vector.
+    pub fn add_aero_force(&mut self, delta: [R; 3]) {
+        let base = self.aero_force.unwrap_or([R::zero(); 3]);
+        self.aero_force = Some([base[0] + delta[0], base[1] + delta[1], base[2] + delta[2]]);
+    }
+
     /// The bounded control action a corrective stage has written (e.g. a bank-angle command), if any.
     pub fn control_action(&self) -> Option<R> {
         self.control_action
@@ -224,6 +241,18 @@ impl<R: CfdScalar> CoupledField<R> {
     /// Write the bounded control action (a corrective stage writes its clamped command here).
     pub fn set_control_action(&mut self, action: R) {
         self.control_action = Some(action);
+    }
+
+    /// The throttle command a powered-descent stage has written (the second command axis beside the
+    /// bank channel), if any.
+    pub fn throttle_action(&self) -> Option<R> {
+        self.throttle_action
+    }
+
+    /// Write the throttle command (a guidance stage writes its clamped throttle here; mirrors
+    /// [`set_control_action`](Self::set_control_action)).
+    pub fn set_throttle_action(&mut self, action: R) {
+        self.throttle_action = Some(action);
     }
 
     /// The onboard navigation engine threaded through the coupling, if a nav stage has seeded it.

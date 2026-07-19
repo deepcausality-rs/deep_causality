@@ -93,10 +93,10 @@ pub use crate::types::flow::{
     CompressibleMarchRun, CompressiblePause, CoupledField, CoupledMarch, Coupling,
     CyberneticCorrect, DuctMarchRun, EosStage, FiniteRateIonizationStage, Gates, GoverningModel,
     IonizationStage, MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder,
-    Operator, OperatorStudyBuilder, PhysicsStage, QttMarchRun, QttStepView, ReadyMarch,
-    RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, SafetyEnvelope,
-    StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError, StudyWarning,
-    StudyWarningLog, ThermalRelax, TrajectoryNav,
+    Operator, OperatorStudyBuilder, PhysicsStage, PropulsionStub, QttMarchRun, QttStepView,
+    ReadyMarch, RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report,
+    SafetyEnvelope, StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError,
+    StudyWarning, StudyWarningLog, ThermalRelax, TrajectoryNav,
 };
 pub use crate::types::flow::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,

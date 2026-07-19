@@ -62,6 +62,8 @@ pub mod qtt_march_run_tests;
 #[cfg(test)]
 pub mod report_tests;
 #[cfg(test)]
+pub mod retropulsion_tests;
+#[cfg(test)]
 pub mod study_effect_tests;
 #[cfg(test)]
 pub mod study_error_tests;

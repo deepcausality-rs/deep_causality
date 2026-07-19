@@ -1,12 +1,12 @@
 ## 1. Coupling seam: throttle channel + additive force (deep_causality_cfd)
 
-- [ ] 1.1 Add `throttle_action: Option<R>` to `CoupledField` with `throttle_action()` /
+- [x] 1.1 Add `throttle_action: Option<R>` to `CoupledField` with `throttle_action()` /
       `set_throttle_action()` accessors mirroring `control_action` (`types/flow/coupling.rs`);
       initialize to `None` in `new()`; extend the struct docstring's channel inventory
-- [ ] 1.2 Add `add_aero_force(delta: [R; 3])` (read-modify-write, `None` treated as zero) beside
+- [x] 1.2 Add `add_aero_force(delta: [R; 3])` (read-modify-write, `None` treated as zero) beside
       `set_aero_force`, docstring naming the composition order contract (after the ④-writing
       lift stage, before loads/truth/nav)
-- [ ] 1.3 Tests in the mirrored tree (`tests/types/flow/coupling_tests.rs` or sibling):
+- [x] 1.3 Tests in the mirrored tree (`tests/types/flow/coupling_tests.rs` or sibling):
       throttle round-trip + `None` default + independence from the bank channel;
       `add_aero_force` over a set force and over `None`; both channels through a
       pause-snapshot round trip
@@ -31,22 +31,22 @@
 
 ## 3. Propulsion contract + inert A0 stub (deep_causality_cfd)
 
-- [ ] 3.1 New module `types/flow/retropulsion.rs` (registered in `types/flow/mod.rs`, flat
+- [x] 3.1 New module `types/flow/retropulsion.rs` (registered in `types/flow/mod.rs`, flat
       re-exports from `lib.rs`): `PropulsionStub` reading `"commanded_throttle"` (published
       constant) or the throttle channel; docstring pins the contract names `"mass"`,
       `"propellant"`, `"ignited"` and cites this change as the seam M3 fills
-- [ ] 3.2 Stub semantics — inert path: at throttle ≤ 0 (or absent), return `Ok` having touched
+- [x] 3.2 Stub semantics — inert path: at throttle ≤ 0 (or absent), return `Ok` having touched
       nothing (no force write, no scalar mutation, no log entry)
-- [ ] 3.3 Stub semantics — active path: deplete `"propellant"`/`"mass"` via
+- [x] 3.3 Stub semantics — active path: deplete `"propellant"`/`"mass"` via
       `propellant_mass_flow` (existing physics kernel), set `"ignited"`, add `−T/m·v̂` via
       `add_aero_force`, apply the A0 drag decrement via `srp_thrust_coefficient` +
       `srp_preserved_drag_fraction`; pre-ignition carried mass equals the `CDA_OVER_M`-implied
       constant
-- [ ] 3.4 Tests: active-path seam checks (depletion consistent with the kernel, force =
+- [x] 3.4 Tests: active-path seam checks (depletion consistent with the kernel, force =
       lift + thrust + decrement, `"ignited"` set); published `"commanded_throttle"` lands on
       the field each step (mirroring the `commanded_bank` test); propulsion scalars survive a
       pause snapshot
-- [ ] 3.5 Register any new test files in their `mod.rs` chain and verify the
+- [x] 3.5 Register any new test files in their `mod.rs` chain and verify the
       `tests/BUILD.bazel` suite globs pick them up (`bazel test //deep_causality_cfd/...`)
 
 ## 4. Inheritance-guard harness (deep_causality_cfd)

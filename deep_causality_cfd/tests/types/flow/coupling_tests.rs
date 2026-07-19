@@ -425,3 +425,36 @@ fn real_reacting_plus_aero_stack_fills_the_coupling_contract() {
         "reacting flow ionizes"
     );
 }
+
+// ── The powered-descent command/force channels (blackout-coupling-interface) ──
+
+#[test]
+fn throttle_channel_round_trips_independent_of_the_bank_channel() {
+    let mut field = CoupledField::<f64>::new(Ambient::new(0.01, 0.0, None));
+    // Default is absent, so every existing coupling is unaffected.
+    assert_eq!(field.throttle_action(), None);
+    // The two command axes are independent: a bank write does not disturb the throttle read.
+    field.set_control_action(0.3);
+    field.set_throttle_action(0.7);
+    assert_eq!(field.throttle_action(), Some(0.7));
+    assert_eq!(field.control_action(), Some(0.3));
+}
+
+#[test]
+fn a_field_without_a_throttle_write_reports_none() {
+    let mut field = CoupledField::<f64>::new(Ambient::new(0.01, 0.0, None));
+    field.set_control_action(0.2);
+    assert_eq!(field.throttle_action(), None);
+}
+
+#[test]
+fn add_aero_force_sums_onto_the_channel_and_treats_none_as_zero() {
+    let mut field = CoupledField::<f64>::new(Ambient::new(0.01, 0.0, None));
+    // Over an unset channel the result is exactly the delta.
+    field.add_aero_force([1.0, 2.0, 3.0]);
+    assert_eq!(field.aero_force(), Some([1.0, 2.0, 3.0]));
+    // Over a set force it composes component-wise — thrust adds to lift instead of clobbering it.
+    field.set_aero_force([0.5, -0.5, 0.0]);
+    field.add_aero_force([0.25, 0.25, -1.0]);
+    assert_eq!(field.aero_force(), Some([0.75, -0.25, -1.0]));
+}

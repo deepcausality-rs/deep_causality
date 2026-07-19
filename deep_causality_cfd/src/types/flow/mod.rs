@@ -32,6 +32,7 @@ mod operator_study;
 mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
+mod retropulsion;
 pub mod state_snapshot;
 mod study;
 mod study_effect;
@@ -71,6 +72,7 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::Report;
+pub use retropulsion::PropulsionStub;
 pub use study::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
     EnsembleMarched, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared,
