@@ -10,7 +10,7 @@ cadence to its own Cloudflare Worker and hostname.
 | Directory | Purpose                                                                             | Framework | Cloudflare Worker | Domain |
 | --- |-------------------------------------------------------------------------------------| --- | --- | --- |
 | [`web/`](./web) | website (home, blog, examples, short getting-started/overview)                      | Astro (custom) | `deepcausality-prod` | https://www.deepcausality.com |
-| [`docs/`](./docs) | Reference documentation (concepts, guides, overview, single-PDF export, graph view) | [Starlight](https://starlight.astro.build) on Astro | `deepcausality-docs` | https://docs.deepcausality.com |
+| [`docs/`](./docs) | Reference documentation (concepts, guides, overview, single-PDF export) | [Starlight](https://starlight.astro.build) on Astro | `deepcausality-docs` | https://docs.deepcausality.com |
 
 The Rust API reference is generated separately and hosted on
 [docs.rs/deep_causality](https://docs.rs/deep_causality).
@@ -22,10 +22,8 @@ The Rust API reference is generated separately and hosted on
   that link out to the full docs.
 - **`docs/` — the documentation.** The long-form documentation (concepts,
   getting-started walkthroughs, the in-depth overview) on Starlight, with
-  full-text search, a backlinks graph view, code highlighting, and a build-time
-  single-PDF export. See [`docs/README.md`](./docs/README.md) for its
-  commands and the few Starlight-specific notes (e.g. the graph view only
-  renders in `build`/`preview`, not `dev`).
+  full-text search, code highlighting, and a build-time single-PDF export.
+  See [`docs/README.md`](./docs/README.md) for its commands.
 
 Each project is standalone: its own `package.json`, lockfile, Astro version,
 and `wrangler.toml`. A change under `web/` rebuilds and deploys only the
@@ -36,14 +34,17 @@ Worker.
 
 ```bash
 # Project website
-cd web  && npm install && npm run dev      # http://localhost:4321
+cd web  && pnpm install && pnpm dev      # http://localhost:4321
 
 # Documentation
-cd docs && npm install && npm run dev      # http://localhost:4321
-# (use `npm run preview` to see the graph view; it needs a production build)
+cd docs && pnpm install && pnpm dev      # http://localhost:4321
 ```
 
-Each project builds to its own `dist/` (`npm run build`).
+Each project builds to its own `dist/` (`pnpm build`).
+
+Both sites also build hermetically under Bazel — `bazel build //website/...`
+builds `web` and `docs` together (see the repo `MODULE.bazel` Astro/Node
+toolchain section and each project's `BUILD.bazel`).
 
 ## Deployment
 

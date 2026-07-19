@@ -13,6 +13,7 @@ mod materials;
 mod mhd;
 mod nuclear;
 mod photonics;
+mod propulsion;
 mod quantum;
 mod relativity;
 mod thermodynamics;

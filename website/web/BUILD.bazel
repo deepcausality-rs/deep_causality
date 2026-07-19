@@ -1,0 +1,27 @@
+load("@npm_web//:defs.bzl", "npm_link_all_packages")
+load("@npm_web//website/web:astro/package_json.bzl", astro_bin = "bin")
+load("@rules_astro//astro:defs.bzl", "astro_site")
+
+# Materialize node_modules for the project website (pnpm-lock.yaml) as a
+# Bazel-managed tree. website/web is the pnpm workspace root, so this links the
+# root importer's dependency closure.
+npm_link_all_packages(name = "node_modules")
+
+# The astro CLI, materialized as a js_binary from the npm `bin` struct.
+astro_bin.astro_binary(name = "astro_tool")
+
+# `bazel build //website/web:build` -> bazel-bin/website/web/dist (static site).
+astro_site(
+    name = "build",
+    srcs = glob([
+        "src/**",
+        "public/**",
+    ]) + [
+        "package.json",
+        "tsconfig.json",
+    ],
+    # config defaults to astro.config.mjs (added to inputs by astro_site).
+    astro_bin = ":astro_tool",
+    node_modules = ":node_modules",
+    visibility = ["//visibility:public"],
+)

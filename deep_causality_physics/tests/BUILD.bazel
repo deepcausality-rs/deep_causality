@@ -315,6 +315,27 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "kernels_propulsion",
+    srcs = glob([
+        "kernels/propulsion/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_physics",
+        # Internal dependencies
+        "//deep_causality_core",
+    ],
+)
+
+rust_test_suite(
     name = "kernels_quantum",
     srcs = glob([
         "kernels/quantum/*_tests.rs",

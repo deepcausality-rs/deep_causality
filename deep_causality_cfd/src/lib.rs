@@ -57,7 +57,7 @@ pub use crate::tensor_bridge::{
     AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d, QttProjector2d,
     body_mask_2d, dequantize, dequantize_2d, dequantize_3d, divergence_3d, gradient, gradient_x,
     gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d, laplacian, laplacian_2d, laplacian_3d,
-    mask_from_fn, quantize, quantize_2d, quantize_3d, shift_minus, shift_plus,
+    mask_from_fn, plume_mask_2d, quantize, quantize_2d, quantize_3d, shift_minus, shift_plus,
 };
 
 // GNSS-denial navigation (aerospace-engineering estimation layer composing the physics kernels):
@@ -135,14 +135,15 @@ pub use crate::solvers::{
     AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
     CompressibleMarcher3dFitted, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep,
     DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState, EulerState2d, EulerState3d,
-    EulerStateTt2d, EulerStateTt3d, FittedNormalShock, Park2tClosure, PostShockState,
-    QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round,
-    ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor,
+    EulerStateTt2d, EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure,
+    PostShockState, QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome,
+    conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).
 pub use crate::solvers::{
-    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, wall_heat_flux,
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, preserved_drag_fraction,
+    strip_pressure_force, wall_heat_flux,
 };
 
 // Public API of the Navier–Stokes solver.

@@ -13,6 +13,7 @@ pub(crate) mod materials;
 pub(crate) mod mhd;
 pub(crate) mod nuclear;
 pub(crate) mod photonics;
+pub(crate) mod propulsion;
 pub(crate) mod quantum;
 pub(crate) mod relativity;
 pub(crate) mod thermodynamics;

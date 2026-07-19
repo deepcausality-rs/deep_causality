@@ -34,6 +34,42 @@ contraction." That is probably the *wrong* first target:
   and any wall-clock advantage appears only above Re ≈ 9.5×10³. So "make the tensor backend fast"
   must be aimed at the regimes/operations where speed actually matters, which the survey defines.
 
+## Measured corroboration — the SRP compressible marcher (2026-07-17)
+
+The SRP momentum-jet de-risk (`deep_causality_cfd/studies/srp_momentum_jet/`;
+[`../cfd-plasma-retropulsion/derisk-verdict.md`](../cfd-plasma-retropulsion/derisk-verdict.md)
+addendum) produced a first **measured** profile of the 2-D compressible QTT marcher, and it
+confirms this note's central thesis (truncation-dominated, contraction is not the target).
+Directly answers Deliverable #1 for one real marcher, though a profiler run still owes the
+exact percentages:
+
+- **Where the step's time goes.** Each `CompressibleMarcher2d` step (`marcher_2d.rs`):
+  dequantizes all four conserved components to dense, evaluates the flux/EOS pointwise, then
+  **re-quantizes eight flux fields — a TT-SVD each** — and passes the result through the
+  gradient + closed-form acoustic-inverse chain, which carries **~20 cap-limited rounding
+  passes** per step (each an SVD-truncation).
+- **Two consequences.** (a) The **nonlinear round-trip defeats the TT asymptotics**: the
+  dequantize→dense→requantize path is dense `O(n²)` every step, so the compression buys no
+  step-time asymptotic at this scale (consistent with the Re-crossover finding above — QTT is
+  accuracy-affordability here, not raw speed). (b) **Rounding dominates the TT side** — exactly
+  the "truncation, not contraction, is the hot spot" claim, now with a marcher behind it.
+- **Compression is not the accuracy limit either.** Bond cap 24 → 32 (exact at 2⁵ — truncation
+  off) left every drag observable unchanged to displayed precision. So on this workload the
+  rounding is a *cost* concern, not a *correctness* one.
+- **The scaling wall.** Going up one `L` doubles the steps (convective CFL) and raises per-step
+  cost; the domain-widened 2⁷–2⁸ runs the SRP collapse needs sit near **a hundred single-core
+  hours** today — the concrete number the acceleration work exists to attack.
+
+The two levers this most directly motivates are already anchored in the seed bibliography:
+TT **cross-interpolation** for the nonlinear flux (removes the dense round-trip — cf. the
+TT-cross entry, [arXiv:2407.11290](https://arxiv.org/abs/2407.11290)) and **randomized/sketched
+TT rounding** for the dominant truncation cost (cf. the randomized-SVD entries). Both stay
+behind the survey rule below; the CFD-*solver*-level levers that need no tensor-crate change
+(fused rounding, component/roster `scoped_map`, local dissipation scaling) are recorded in the
+CFD roadmap and are not gated by this note. Full ladder, with expected magnitudes and the
+CFD-vs-tensor-crate split:
+[`../cfd-roadmap/cfd-industry-scaling.md`](../cfd-roadmap/cfd-industry-scaling.md) §4.
+
 ## What the survey should cover (candidate starting points — to be verified, not assumed)
 
 Anchor the search here; treat every claim as unverified until checked against the source:

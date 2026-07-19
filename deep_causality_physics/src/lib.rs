@@ -31,6 +31,7 @@ pub use crate::kernels::materials::*;
 pub use crate::kernels::mhd::*;
 pub use crate::kernels::nuclear::*;
 pub use crate::kernels::photonics::*;
+pub use crate::kernels::propulsion::*;
 pub use crate::kernels::quantum::*;
 pub use crate::kernels::relativity::*;
 pub use crate::kernels::thermodynamics::*;

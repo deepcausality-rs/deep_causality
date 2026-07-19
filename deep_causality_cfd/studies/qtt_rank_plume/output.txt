@@ -1,0 +1,47 @@
+=== QTT plume rank + fork economics (plasma-retropulsion de-risk, M1) ===
+
+  grid 2^5 x 2^5, dt 0.0004, tol 0.000001 (rank floats free), rank ceiling 32
+
+  A1 marched rank (sponge + body + plume, Cartesian):
+    C_T  | peak bond
+  -------+----------
+   0.50 |     16
+   1.00 |     16
+   2.00 |     16
+   4.00 |     16
+   none |     16  (no plume; the body/shock baseline)
+
+  A2 static plume+shock proxy on the blended lattice:
+    C_T  | bond λ=0 (Cartesian) | bond λ=1 (fitted)
+  -------+----------------------+------------------
+   0.50 |          32          |         10
+   1.00 |          32          |         10
+   2.00 |          32          |         11
+   4.00 |          32          |         12
+
+  B fork economics (carrier pause at step 20, 20-step continuations):
+    fork: shares fluid+field = true, setup 42 ns
+    throttle | cont. time (s) | ratio vs trunk | final-field L2 vs coast
+    ---------+----------------+----------------+------------------------
+       0.00  |       0.896    |       0.67     |        0.000e0
+       0.50  |       1.336    |       1.00     |        1.806e-1
+       1.00  |       1.347    |       1.01     |        2.770e-1
+       1.50  |       1.344    |       1.00     |        3.528e-1
+       4.00  |       1.395    |       1.04     |        6.083e-1
+
+    mirrored post-fork bond (bare marcher, same seed/steps/round policy):
+    throttle | peak bond through continuation
+    ---------+-------------------------------
+       0.00  |             16
+       0.50  |             16
+       1.00  |             16
+       1.50  |             16
+       4.00  |             16
+
+--- reading ---
+  Rank: the plume-imprinted layer's bond is measured, per C_T, dynamic and static;
+  the blend-metric dial is probed on the analytic proxy (A2).
+  Fork: sharing is structural, the continuation cost is a ratio, and the bond growth
+  is read on the deterministic mirror — the three §6 measurement-2 quantities.
+
+ALL HARD GATES PASSED — measurements recorded for the de-risk verdict.

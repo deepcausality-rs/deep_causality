@@ -46,7 +46,17 @@ either; the rank driver is carrying Cartesian fluxes *through* a curved front. T
 re-pinning **plus** treating the front as an exact Rankine–Hugoniot interface, so fluxes are never marched
 across it and each side stays smooth.
 
-## Gap-3 trajectory axis — de-risking the perturbed-conformal split
+## Plasma-retropulsion de-risk — the SRP coupling measurements
+
+The front-loaded risk milestone of the plasma-retropulsion descent
+(`openspec/notes/cfd-plasma-retropulsion/`; verdict in `derisk-verdict.md`). `qtt_rank_plume`
+measured fork economics and plume rank (roadmap M1 risks 2 + 3, both green).
+`srp_momentum_jet` is the imprint-fidelity follow-up (risk 1): it supersedes the reverted
+`verification/srp_drag_decrement/` pinned-envelope harness (see `reverted/README.md`).
+
+| Study | Question | Finding |
+|---|---|---|
+| `srp_momentum_jet` | Does a **momentum-carrying jet** (formed plume through the same `ForcingRegion` seam) recover the Jarvinen–Adams collapse the pinned-envelope imprint could not? | **No — and the attribution moves from the model class to the harness.** With the plume formed dynamically, tail-averaged reads (drift ≤ 0.02%) show monotone drag **augmentation** (annulus fraction 1.03 → 3.61 across C_T 0.25 → 8), no collapse, no dip: the dissipation floor (ν = ½·s_ref·Δx, jet cell Péclet ≈ 1.3–1.8) freezes the stagnation interface at the face (x = 0.469–0.531 across a 32× thrust range), so injected momentum reads as face pressure — the inverse of the J–A blanketing reorganization. Bond cap 24 → 32 (exact at 2⁵) leaves every observable unchanged at displayed precision: **compression is innocent**; the discretization is the limit. The domain is too: the upstream probe leaves freestream from C_T ≈ 0.25 (+6.5%) to +285% at C_T 8, so the correlation's own transition variable (p_e/p∞ ≈ 7) is unreachable. Neither coupling model can host the collapse on this harness; the A0 correlation channel keeps the drag authority (literature fidelity bar recorded in the verdict addendum). |
 
 A third batch de-risks the **trajectory/timing** axis (Resolution 1's B1 perturbed-conformal split) before
 specifying the propagator. See `openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
