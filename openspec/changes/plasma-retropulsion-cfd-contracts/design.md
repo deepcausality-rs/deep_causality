@@ -30,11 +30,16 @@ measured; its findings bind here:
   `CompressibleMarchConfigBuilder::forcing_region()` verb, and the mask-grid build validation
   are library code with tests; `publish_constant("commanded_throttle", …)` is exercised by a
   landed test.
-- The **verdict is AMBER** (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`): the
-  imprinted layer shields monotonically but does not reproduce the Jarvinen–Adams collapse, so
-  the **A0 correlation channel is the drag authority** — exactly the closure this change's stub
-  carries. Fork economics (83 ns O(1) fork, ≈1× branch cost) and rank (bond 16 under the 32
-  ceiling) measured green.
+- The **verdict is AMBER** (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, with the
+  2026-07-17 addendum): **neither** coupling model reproduces the Jarvinen–Adams collapse on
+  this harness — the pinned-envelope imprint shields monotonically, and the superseding
+  momentum-carrying jet (`studies/srp_momentum_jet`) reads as drag *augmentation* — because the
+  dissipation floor and domain, not the coupling-model class, cap it (a 2⁶ probe recovers the
+  mechanism's direction). So the **A0 correlation channel is the drag authority** — exactly the
+  closure this change's stub carries, and a *committed* closure, not a placeholder awaiting a
+  stronger imprint. Fork economics (83 ns O(1) fork, ≈1× branch cost) and rank (bond 16 under
+  the 32 ceiling) measured green; tensor-train compression measured innocent of the accuracy
+  limit (cap 24→32 observable-identical).
 - The guard's mechanics are proven: the corridor re-ran **bit-identically** after the de-risk
   seams landed (prong A exercised), and the marcher-path bit-identity harness pattern
   (`unforced_carrier_matches_the_bare_marcher_bit_for_bit`,
@@ -186,4 +191,7 @@ the change; nothing downstream depends on it until M3.
   2026-07-17:** M1 (`plasma-retropulsion-de-risk`) measured AMBER on imprint fidelity — the A0
   correlation channel is the drag authority (see
   `openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`), which is exactly the depth this
-  change's stub implements. No reshaping needed.
+  change's stub implements. The same-day addendum measured the momentum-carrying-jet variant too
+  and pinned the cause to the harness (dissipation floor + domain), not the coupling-model class,
+  so A0 stays the committed authority until the M-later field-fidelity bar is met — no reshaping
+  needed either way.
