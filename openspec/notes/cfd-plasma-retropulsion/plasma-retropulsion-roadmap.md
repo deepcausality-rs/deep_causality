@@ -25,13 +25,13 @@ their own acceptance text.
 
 ## 1. Status ledger — done vs remaining
 
-The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Four of those stages are now
-complete — **Stage R** (the example-code refactoring), **Stage 1** (the physics-crate foundation),
-**Stage 2** (the front-loaded de-risk measurement, M1), and **Stage 0** (the cfd contract layer,
-M2) — all archived, and **Stage 3's physics half** (M3: `RetroThrust`, `PlumeObstruction`, the
-plume-imprint refresh channel, and the flight-regime axes) archived with them. The next work is
-**Stage 3's guidance half** (M4), then **Stage 4** (M5), whose specs are derived and waiting on M4.
-This roadmap keeps the note's stage names as an index and maps them onto milestones M1–M5.
+The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Every stage but the last is now
+complete and archived — **Stage R** (the example-code refactoring), **Stage 1** (the physics-crate
+foundation), **Stage 2** (the front-loaded de-risk measurement, M1), **Stage 0** (the cfd contract
+layer, M2), and both halves of **Stage 3** (M3's coupled physics stages and M4's guidance, ignition
+commit, live envelope enforcement, and leg-re-seed visibility). Only **Stage 4** (M5) remains: the
+example that flies all of it. Its specs are derived and its preconditions are met. This roadmap keeps
+the note's stage names as an index and maps them onto milestones M1–M5.
 
 | Note stage | Content | State | Roadmap |
 |---|---|---|---|
@@ -40,8 +40,8 @@ This roadmap keeps the note's stage names as an index and maps them onto milesto
 | **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **done** — `plasma-retropulsion-de-risk`, measured 2026-07-17, verdict **AMBER** ([`derisk-verdict.md`](derisk-verdict.md): imprint fidelity amber, fork economics + rank green), archived 2026-07-19 | **M1** (front-loaded) |
 | **Stage 0** | cfd contracts + inheritance guard | **done** — `plasma-retropulsion-cfd-contracts`, archived 2026-07-19 (M5 glue task 6.4 carried forward) | **M2** |
 | **Stage 3** (physics half) | `RetroThrust`, `PlumeObstruction`, plume-imprint refresh, classifier axes | **done** — `add-retropulsion-coupled-stages`, archived 2026-07-19 | **M3** |
-| **Stage 3** (guidance half) | `ThrottleGuidance`, live envelope enforcement, terminal-leg re-seed | **specs derived 2026-07-19 — next to apply** | **M4** |
-| **Stage 4** | Example wiring, counterfactuals, gates | **specs derived 2026-07-19**, blocked on M4 | **M5** |
+| **Stage 3** (guidance half) | `ThrottleGuidance`, ignition commit, live envelope enforcement, leg re-seed visibility | **done** — `add-retropulsion-terminal-descent`, archived 2026-07-19 | **M4** |
+| **Stage 4** | Example wiring, counterfactuals, gates | **specs derived 2026-07-19 — unblocked, next to apply** | **M5** |
 
 **Done and directly reusable (survey-verified):**
 
@@ -74,11 +74,12 @@ This roadmap keeps the note's stage names as an index and maps them onto milesto
   `mach > 1.05` and enforces raw freestream below it (`compressible_march_run.rs:217-224`), so the
   supersonic→subsonic passage degrades gracefully by construction. **[holds]**
 
-**Not built anywhere yet (confirmed by grep):** `RetroThrust`, `PlumeObstruction`,
-`ThrottleGuidance`, `commanded_throttle`, cfd-side `propellant`/`throttle`/`mass` state,
-`srp_drag_decrement`, `qtt_rank_plume`. `RetroThrust`/`PlumeObstruction` appear only as
-forward-looking names in a doc comment (`kernels/propulsion/mod.rs:11`). Everything in M1–M5 is
-net-new cfd or example code.
+**Built since (the July-2026 survey's "not built anywhere yet" list, now closed):** `RetroThrust`,
+`PlumeObstruction`, and the flight-regime axes landed with M3; `ThrottleGuidance`, `IgnitionCorridor`,
+`FlightSensors`, the enforced ignition `q`-window, and the leg-re-seed entry landed with M4; the
+`commanded_throttle` channel and the `mass`/`propellant`/`ignited` scalars landed with M2;
+`srp_drag_decrement` was measured and superseded at M1 (see `deep_causality_cfd/reverted/`), and
+`qtt_rank_plume` is its surviving study. What remains net-new is **M5's example code**.
 
 ---
 
@@ -302,7 +303,7 @@ scalars, force-RMW idiom, A0 stub seam).
 
 ---
 
-### M4 — `add-retropulsion-terminal-descent`  *(Stage 3: guidance half; **specs derived 2026-07-19**, next to apply)*
+### M4 — `add-retropulsion-terminal-descent`  *(Stage 3: guidance half; **archived 2026-07-19**)*
 
 **Scope grew at spec time.** The survey behind the derived specs found M4 is not three additions but
 three additions plus four repairs, because the M2 gate has never been reachable in a composed world:
@@ -347,7 +348,7 @@ throttle, and the cutoff → transonic → subsonic terminal leg to a touchdown 
 
 ---
 
-### M5 — `wire-plasma-retropulsion-example`  *(Stage 4: example, counterfactuals, gates; **specs derived 2026-07-19**, blocked on M4)*
+### M5 — `wire-plasma-retropulsion-example`  *(Stage 4: example, counterfactuals, gates; **specs derived 2026-07-19**, unblocked — the terminal milestone)*
 
 **Objective.** Assemble the example, run the two counterfactual studies that are the reason the
 example exists, and pass the full gate set — the point at which the Plasma-Retropulsion Descent
@@ -385,7 +386,10 @@ delivers a correct end-to-end simulation.
 5. **README + `output.txt`.** The three-example loop closed — generate the table (weather), fly the
    table (retropulsion), with cross-links swept.
 
-**Preconditions.** M1–M4 all archived.
+**Preconditions.** M1–M4 all archived (M4 archived 2026-07-19 — the last one). Two M5 items were
+reconciled by M4: the `"q_inf"`/`"descent_rate"` producers moved from example-local to the library
+(`FlightSensors`), and the ignition `q`-window enforcement question is answered — `CyberneticCorrect`
+refuses an ignition outside the window and does not re-apply it to a burn under way.
 
 **Exit gate.** The full example runs inside the 600 s budget; every §10 gate passes; the touchdown
 witnesses, regime cascade, and both counterfactuals are present and material. **This is the
