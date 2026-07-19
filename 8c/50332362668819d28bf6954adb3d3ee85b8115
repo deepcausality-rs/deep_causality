@@ -1,0 +1,42 @@
+openspec/changes/wire-plasma-retropulsion-example/tasks.md
+  s_03a25bcd8e11c3::t_f2d79e73db9dc7 75,132
+examples/README.md
+  s_03a25bcd8e11c3::t_cf032389937d85 188-208
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_03a25bcd8e11c3::t_7dc45006fc7b3e 28-39,49,356
+examples/avionics_examples/README.md
+  s_03a25bcd8e11c3::t_18fdcf3ee3a880 26-29
+  s_03a25bcd8e11c3::t_89a936a30fcf7e 32-37
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/README.md
+  s_03a25bcd8e11c3::t_72373d462f4067 119-125
+  s_03a25bcd8e11c3::t_6d33216958f2bf 66,68
+  s_03a25bcd8e11c3::t_81b10b649971c8 126
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/model.rs
+  s_03a25bcd8e11c3::t_b530ab5135a3eb 246-251,332-335,345-348,434,438-467
+  s_03a25bcd8e11c3::t_a334b3dff07cfc 263,273
+  s_03a25bcd8e11c3::t_99981998010f18 468-469
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt
+  s_03a25bcd8e11c3::t_6e0544913683bb 778,788
+examples/avionics_examples/cfd/plasma_blackout/README.md
+  s_03a25bcd8e11c3::t_16376fb9e60c47 9-11,13-14,28,33-35,37-39,41-42,44-45,47,51,54-55,58-59,65-67,75-76,82-83,98-99,102
+  s_03a25bcd8e11c3::t_27333bbd69116e 1-8,12,15-27,29-32,36,40,43,46,48-50,52-53,56-57,60-64,68-74,77-81,84-97,100-101,103-104
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branches.csv
+  s_03a25bcd8e11c3::t_6e0544913683bb 3-4
+  s_03a25bcd8e11c3::t_87079a6e07f587 1-2,5-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8c50332362668819d28bf6954adb3d3ee85b8115",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
