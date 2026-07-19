@@ -1,0 +1,158 @@
+website/cfd/astro.config.mjs
+  s_f0a6cfc98ba452::t_bb2b2c46de3b37 1-53
+website/cfd/BUILD.bazel
+  s_f0a6cfc98ba452::t_9018a785649ddb 1-24
+website/cfd/wrangler.toml
+  s_f0a6cfc98ba452::t_9018a785649ddb 1-17
+website/cfd/src/styles/tokens-cfd.css
+  s_f0a6cfc98ba452::t_f7186304690875 1-36,42-56,58
+  s_f0a6cfc98ba452::t_8b9f9b0bafe7cc 37-41,57
+website/cfd/src/pages/cookbook/index.astro
+  s_f0a6cfc98ba452::t_2d4ed71a2afadd 1,3-4,6-10,14-22,26-28,52-56,58,74,78,86-87,90,97
+  s_f0a6cfc98ba452::t_8591d91491f4f5 2,5,11-13,23-25,29-51,57,59-73,75-77,79-85,88-89,91-96
+website/cfd/src/content/examples/en/turbulence-flow.mdx
+  s_f0a6cfc98ba452::t_599e6d0e272810 1-113
+website/cfd/public/favicon.svg
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-29
+website/cfd/src/consts.ts
+  s_f0a6cfc98ba452::t_f928f089ed4136 1-21
+website/cfd/src/styles/fonts.css
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-44
+website/cfd/src/components/home/ExampleLadder.astro
+  s_f0a6cfc98ba452::t_a88c4111f4c2f4 52-54,63-64,71
+  s_f0a6cfc98ba452::t_23208212972915 6-10,27,30-31,33,36
+  s_f0a6cfc98ba452::t_aa2d887ae205c0 1-5,11-26,28-29,32,34-35,37-51,55-62,65-70,72-90
+website/cfd/src/pages/validation/index.astro
+  s_f0a6cfc98ba452::t_9e11127473a879 1-242
+website/cfd/src/content.config.ts
+  s_f0a6cfc98ba452::t_0aec7f0c53e2be 1-53
+website/cfd/public/fonts/README.md
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-14
+website/cfd/src/pages/examples/index.astro
+  s_f0a6cfc98ba452::t_72b764eea11bf5 2,9-13,24-25,29-60,75,77-86,88-90,92-98,100-104,106,109-110,113-115,118,120-121,123
+  s_f0a6cfc98ba452::t_5816db90224c09 1,3-8,14-23,26-28,61-74,76,87,91,99,105,107-108,111-112,116-117,119,122,124-126
+website/cfd/README.md
+  s_f0a6cfc98ba452::t_20c52457083a99 16,18-25,96-99
+  s_f0a6cfc98ba452::t_ce77beb88fcbe1 79-88
+  s_f0a6cfc98ba452::t_8944abd420eadf 1-15,17,26-78,89-95,100-108
+website/cfd/src/content/examples/en/nozzle-operating-map.mdx
+  s_f0a6cfc98ba452::t_b441be0f2ce8cd 1-82
+website/cfd/src/content/cookbook/en/fork-a-running-simulation.mdx
+  s_f0a6cfc98ba452::t_f70b9b9c0e4e71 1-97
+website/cfd/src/styles/global.css
+  s_f0a6cfc98ba452::t_5c1463a497abd6 1-251,253-255,257-258,262-342
+  s_f0a6cfc98ba452::t_8b9f9b0bafe7cc 252,256,259-261
+website/cfd/src/components/home/BoundaryTeaser.astro
+  s_f0a6cfc98ba452::t_8067c99637d45f 1-87
+website/cfd/src/pages/404.astro
+  s_f0a6cfc98ba452::t_fff67d7ea81be3 1-30
+website/cfd/src/components/nav/SiteHeader.astro
+  s_f0a6cfc98ba452::t_c1f562b9dbbe0d 1-256
+website/cfd/pnpm-workspace.yaml
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-15
+website/cfd/src/components/home/SolverStack.astro
+  s_f0a6cfc98ba452::t_1bdab26764e0be 105-107,115-116,119,123
+  s_f0a6cfc98ba452::t_cc6e1589c097a7 1-104,108-114,117-118,120-122,124-143
+MODULE.bazel
+  s_f0a6cfc98ba452::t_29231fc7d8bb0c 126-138
+  s_f0a6cfc98ba452::t_d9331b3679d36a 82,85
+  s_f0a6cfc98ba452::t_2b4e5fb7964f72 125
+.bazelignore
+  s_f0a6cfc98ba452::t_806ded00786574 21
+website/cfd/.gitignore
+  s_f0a6cfc98ba452::t_9018a785649ddb 1-4
+website/cfd/src/content/examples/en/flight-envelope-placard.mdx
+  s_f0a6cfc98ba452::t_f14288b0df1fc4 1-86
+website/cfd/.npmrc
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-2
+website/cfd/src/pages/index.astro
+  s_f0a6cfc98ba452::t_9a75b074d32177 1-40
+website/cfd/src/pages/cookbook/[...slug].astro
+  s_f0a6cfc98ba452::t_981b35fcfbe3da 1-57
+website/cfd/src/styles/tokens.css
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-141
+website/cfd/src/components/docs/DocDetail.astro
+  s_f0a6cfc98ba452::t_4bd1e321dfd7d1 1-172
+website/docs/package.json
+  s_f0a6cfc98ba452::t_5b1df98c5bd841 20-23
+website/cfd/src/data/boundaries.ts
+  s_f0a6cfc98ba452::t_e60f843feec8b5 19-37
+  s_f0a6cfc98ba452::t_af40df561e1580 117-120,122,125-128,130-140
+  s_f0a6cfc98ba452::t_b29e63cf6c612a 1-18,38-116,121,123-124,129,141-177
+openspec/notes/cfd-website/cfd-docs-website.md
+  s_03a25bcd8e11c3::t_ff1dc140aa5034 1-13
+website/cfd/src/components/home/SectionDivider.astro
+  s_f0a6cfc98ba452::t_2ef618efa92b0f 1-17
+website/cfd/src/pages/roadmap/index.astro
+  s_f0a6cfc98ba452::t_5e21577b599076 1-20,23-147
+  s_f0a6cfc98ba452::t_3707ecb8481856 21-22
+website/cfd/src/content/examples/en/viv-resonance-margin.mdx
+  s_f0a6cfc98ba452::t_f2d8bc8543e3b8 1-86
+website/cfd/src/content/examples/en/plasma-blackout-corridor.mdx
+  s_f0a6cfc98ba452::t_7af73ab1ebfced 1-139
+website/cfd/src/content/cookbook/en/pick-a-solver.mdx
+  s_f0a6cfc98ba452::t_abace7fa270c9c 1-76
+website/cfd/tsconfig.json
+  s_f0a6cfc98ba452::t_e6087b92b915f4 1-5
+website/cfd/package.json
+  s_f0a6cfc98ba452::t_84350af27dc3e6 22
+  s_f0a6cfc98ba452::t_9e6a1a88145316 1-21,23-26
+website/cfd/src/content/cookbook/en/sweep-a-parameter.mdx
+  s_f0a6cfc98ba452::t_be0c6189087d4c 1-70
+website/cfd/src/components/home/ValidationSnapshot.astro
+  s_f0a6cfc98ba452::t_699925cd07d43a 1-119
+website/cfd/src/pages/boundaries/index.astro
+  s_f0a6cfc98ba452::t_508ec2417e5739 1-47,56,58-60,92-191,271
+  s_f0a6cfc98ba452::t_1850f949bcdf1f 192-270
+  s_f0a6cfc98ba452::t_0dade613825029 48-55,57,61-91
+website/cfd/src/pages/examples/[...slug].astro
+  s_f0a6cfc98ba452::t_30cfc0d00e16b6 1-86
+website/cfd/src/components/home/Hero.astro
+  s_f0a6cfc98ba452::t_d1023b9f2c6374 1-249
+website/cfd/src/layouts/BaseLayout.astro
+  s_f0a6cfc98ba452::t_2181f72460707c 1-188
+website/cfd/src/components/nav/ThemeToggle.astro
+  s_f0a6cfc98ba452::t_99cb80368c7cd6 1-67
+website/cfd/src/content/cookbook/en/install.mdx
+  s_f0a6cfc98ba452::t_0c58288e87a237 1-71
+website/web/package.json
+  s_f0a6cfc98ba452::t_4535398d8cf17e 24
+website/cfd/src/data/validation.ts
+  s_f0a6cfc98ba452::t_4f5b85a6089807 1-284
+website/cfd/src/content/cookbook/en/gate-against-a-placard.mdx
+  s_f0a6cfc98ba452::t_bf811e14e331db 1-78
+website/cfd/src/content/examples/en/plasma-blackout-weather.mdx
+  s_f0a6cfc98ba452::t_78aa14f8180133 1-98
+.gitignore
+  s_03a25bcd8e11c3::t_2d24f7000c9f95 38-55
+website/cfd/pnpm-lock.yaml
+  s_f0a6cfc98ba452::t_793c65cef17773 1-5130
+website/docs/pnpm-lock.yaml
+  s_f0a6cfc98ba452::t_0923123a831f29 16,19-26,30-35,101-103,107-118,155-157,240-260,842-867,878-893,898-905,973-976,985-988,996-1002,1108-1113,1136-1139,1177-1179,1186-1188,1217-1220,1331-1334,1346-1351,1355-1358,1632-1634,1704-1706,1735-1739,1754-1757,1828-1841,1913-1916,1920-1923,1959-1969,2147-2248,2252-2255,2259-2280,2285-2288,2301-2311,2366-2367,2379-2403,2433,2439,2465,2468,2474-2475,2481,2510-2513,2576-2598,3047-3096,3103-3117,3122-3127,3143,3145,3149,3199-3200,3266-3269,3276-3281,3286-3291,3380-3386,3436-3437,3486-3487,3494-3495,3517-3518,3734-3736,3753-3754,3763-3766,3769-3770,4305-4306,4389-4390,4415-4416,4425-4426,4567-4574,4708-4713,4719-4722,4759-4766,4867,4878-4882,4884-4929,4931-4988,4992-4997,5000-5022,5025-5034
+website/web/pnpm-lock.yaml
+  s_f0a6cfc98ba452::t_cb670973155548 32,34-35,2455-2457,2823,2825,2828,2901,2906,3757,3762,5658
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a78b9a5fb4b21df5ae6a8697327f34fcfe0bccff",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
