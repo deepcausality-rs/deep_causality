@@ -1,0 +1,49 @@
+website/design_board/01-foundations.md
+  s_f0a6cfc98ba452::t_a246971263defa 1-157
+website/design_board/04-surface.md
+  s_f0a6cfc98ba452::t_30c4c49d2cbc62 86-105
+  s_f0a6cfc98ba452::t_3f68f05a326989 110-111
+  s_f0a6cfc98ba452::t_a53a6649a4c9e9 1-85,106-109,112-126
+website/design_board/05-motion.md
+  s_f0a6cfc98ba452::t_4327c010f429d9 1-107
+website/design_board/06-idioms.md
+  s_f0a6cfc98ba452::t_4bba9f700cb958 1-191
+website/design_board/07-components.md
+  s_f0a6cfc98ba452::t_9c28cc9fd0cb9b 1-215
+website/design_board/02-typography.md
+  s_f0a6cfc98ba452::t_dd45302005e3f3 1-94
+website/design_board/03-space-layout.md
+  s_f0a6cfc98ba452::t_fb27917e87a4d1 1-126
+website/design_board/README.md
+  s_f0a6cfc98ba452::t_ae7d9e9bfd5b83 1-55
+website/design_board/08-drift.md
+  s_f0a6cfc98ba452::t_64238f9ec3632c 1-255
+website/design_board/design_logo/logo_black.svg
+  s_03a25bcd8e11c3::t_f8c3b2ea6a4686 1-47
+website/design_board/design_logo/logo_white.svg
+  s_03a25bcd8e11c3::t_51b905e64482d9 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3d6501709c347e9dd6394d28ef7bdb2fe046d12d",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
