@@ -1,0 +1,23 @@
+openspec/specs/flight-regime-classifier/spec.md
+  s_03a25bcd8e11c3::t_13170dfd7db84f 1-61
+openspec/specs/plume-obstruction-stage/spec.md
+  s_03a25bcd8e11c3::t_13170dfd7db84f 1-100
+openspec/specs/retro-thrust-stage/spec.md
+  s_03a25bcd8e11c3::t_13170dfd7db84f 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d0f7ea4a1145bd3fa11585a9701467bcc17856a9",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
