@@ -28,6 +28,13 @@ const examples = defineCollection({
     order: z.number().default(0),
     /** Top-level grouping used by the Examples dropdown and the per-category pages. */
     category: z.enum(['foundations', 'aerospace', 'physics', 'medicine', 'mathematics']),
+    /**
+     * Repo-relative path to the example source, e.g. `examples/starter_example`.
+     * `ExampleDetail` renders a "Source:" link when present and omits it when
+     * absent. No content sets it yet, so the link does not currently render —
+     * the field exists because `[...slug].astro` already reads it.
+     */
+    source: z.string().optional(),
     further: z
       .array(z.object({ label: z.string(), href: z.string() }))
       .default([]),
