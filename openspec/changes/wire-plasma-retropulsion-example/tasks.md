@@ -29,11 +29,11 @@
       **once via `set_scalar`**, never via `publish_constant` — `pre_step` re-writes every published
       constant at the head of each step, which would silently restore the seed after each step's
       depletion. Pre-ignition mass equals the mass implied by `CDA_OVER_M`
-- [ ] 1.5 `src/shared/stages.rs`: an example-local stage publishing `"q_inf"` and `"descent_rate"`
-      from the evolved truth state (nothing in `deep_causality_cfd` produces either; `peak` of an
-      absent scalar is 0, so their absence silently disables the dynamic C_T cap and the
-      descent-rate breach); and a `CommandedThrottle`-class stage beside `CommandedBank` that writes
-      **both** `set_throttle_action` **and** the published `"commanded_throttle"`
+- [ ] 1.5 Compose M4's library flight-sensor stage so `"q_inf"` and `"descent_rate"` are produced
+      (`peak` of an absent scalar is 0, so their absence silently disables the dynamic C_T cap and
+      the descent-rate breach). Do **not** author a second example-local producer — M4's
+      `flight-sensor-scalars` owns it. Ensure M4's `ThrottleGuidance` drives **both**
+      `set_throttle_action` **and** the published `"commanded_throttle"` for this world
 - [ ] 1.6 Enable the opt-in axes: `RegimeClassify::with_flight_axes(...)` and
       `CyberneticCorrect::with_burn_sensing(...)` on the powered stack, plus
       `SafetyEnvelope::with_burn(BurnEnvelope::new(...))`. Without these the regime cascade never

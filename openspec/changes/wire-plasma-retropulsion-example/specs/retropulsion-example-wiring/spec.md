@@ -128,15 +128,14 @@ re-imprint but no envelope clamping at all.
 ### Requirement: The opt-in library axes are enabled and the scalars they sense are produced
 
 The powered-descent stack SHALL call `RegimeClassify::with_flight_axes` and
-`CyberneticCorrect::with_burn_sensing`, and MUST publish the `"q_inf"` and `"descent_rate"` scalars
-from an example-local stage. All four are inert by default in ways that produce a plausible-looking
-run rather than an error: without `with_flight_axes` the Mach, thrust-state, and touchdown axes stay
-`Unknown` even when `"flight_mach"`, `"ignited"`, and `"flight_altitude"` all ride the field, so the
-regime cascade never logs; without `with_burn_sensing` the gate's `thrust_ref` stays 0 and the
-dynamic C_T cap never binds; and because `peak` over an absent scalar is 0, a missing
-`"descent_rate"` means the descent-rate breach can never fire while a missing `"q_inf"` silently
-degrades the dynamic C_T cap to the static ceiling. Nothing in `deep_causality_cfd` produces either
-scalar.
+`CyberneticCorrect::with_burn_sensing`, and MUST compose M4's flight-sensor stage so the `"q_inf"`
+and `"descent_rate"` scalars the gate senses are produced. All four are inert by default in ways
+that produce a plausible-looking run rather than an error: without `with_flight_axes` the Mach,
+thrust-state, and touchdown axes stay `Unknown` even when `"flight_mach"`, `"ignited"`, and
+`"flight_altitude"` all ride the field, so the regime cascade never logs; without
+`with_burn_sensing` the gate's `thrust_ref` stays 0 and the dynamic C_T cap never binds; and because
+`peak` over an absent scalar is 0, a missing `"descent_rate"` means the descent-rate breach can
+never fire while a missing `"q_inf"` silently degrades the dynamic C_T cap to the static ceiling.
 
 #### Scenario: The regime cascade logs under thrust
 

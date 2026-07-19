@@ -40,7 +40,7 @@ This roadmap keeps the note's stage names as an index and maps them onto milesto
 | **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **done** — `plasma-retropulsion-de-risk`, measured 2026-07-17, verdict **AMBER** ([`derisk-verdict.md`](derisk-verdict.md): imprint fidelity amber, fork economics + rank green), archived 2026-07-19 | **M1** (front-loaded) |
 | **Stage 0** | cfd contracts + inheritance guard | **done** — `plasma-retropulsion-cfd-contracts`, archived 2026-07-19 (M5 glue task 6.4 carried forward) | **M2** |
 | **Stage 3** (physics half) | `RetroThrust`, `PlumeObstruction`, plume-imprint refresh, classifier axes | **done** — `add-retropulsion-coupled-stages`, archived 2026-07-19 | **M3** |
-| **Stage 3** (guidance half) | `ThrottleGuidance`, live envelope enforcement, terminal-leg re-seed | **open — next** | **M4** |
+| **Stage 3** (guidance half) | `ThrottleGuidance`, live envelope enforcement, terminal-leg re-seed | **specs derived 2026-07-19 — next to apply** | **M4** |
 | **Stage 4** | Example wiring, counterfactuals, gates | **specs derived 2026-07-19**, blocked on M4 | **M5** |
 
 **Done and directly reusable (survey-verified):**
@@ -302,7 +302,20 @@ scalars, force-RMW idiom, A0 stub seam).
 
 ---
 
-### M4 — `add-retropulsion-terminal-descent`  *(Stage 3: guidance half; **next**)*
+### M4 — `add-retropulsion-terminal-descent`  *(Stage 3: guidance half; **specs derived 2026-07-19**, next to apply)*
+
+**Scope grew at spec time.** The survey behind the derived specs found M4 is not three additions but
+three additions plus four repairs, because the M2 gate has never been reachable in a composed world:
+nothing outside tests writes the throttle channel, no world attaches a `BurnEnvelope`, and
+`"q_inf"`/`"descent_rate"` are written only by the gate's own unit tests — so two axes work under
+test with no path to work in flight. On top of that, a crossed clamp window (dynamic `C_T` ceiling
+below the throttle floor) emits an out-of-envelope throttle in *either* direction; a heat/g breach
+masks a simultaneous burn breach (a diagnostic loss, not a safety hole — the `Err` short-circuits
+later stages); the rebuild budget has no statable bound and no reader, only an example log-grep; and
+a leg boundary discards the marched fluid state with no provenance entry at all. The derived change
+also **modifies** `powered-descent-envelope`'s "Inactive axes change nothing" requirement, whose
+"no throttle channel was written" wording conflicts with the crate's channel-or-scalar definition of
+a commanded throttle. **[measured against the tree 2026-07-19]**
 
 **Objective.** Guide the burn and land it: the ignition-corridor commit, envelope enforcement of the
 throttle, and the cutoff → transonic → subsonic terminal leg to a touchdown gate.

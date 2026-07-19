@@ -112,12 +112,13 @@ beside the M3 production stages applies the thrust term and the propellant/mass 
 applications give `f²·D`. Nothing in the type system prevents the combination, so the example
 composes the production pair and the spec forbids the pairing explicitly.
 
-**D6 — `"q_inf"` and `"descent_rate"` get example-local producers.** They are read by
-`CyberneticCorrect` but produced nowhere in the crate, and their absence is silent (a `peak` over an
-absent scalar is 0). A `FlightDynamicPressure`-class stage in `src/shared/stages.rs` publishes both
-from the evolved truth state, beside the existing `FreestreamFeeds`/`SuttonGravesLoads` example
-stages. Rationale: they are derived flight quantities the example already has in hand, and putting
-them in the library would mean a crate change M5 does not own.
+**D6 — `"q_inf"` and `"descent_rate"` come from M4's library stage, not an example-local one.** They
+are read by `CyberneticCorrect` but produced nowhere, and their absence is silent (a `peak` over an
+absent scalar is 0), so a safety axis that cannot fire reports as enforcing. M4
+(`add-retropulsion-terminal-descent`, capability `flight-sensor-scalars`) lands the producer in
+`deep_causality_cfd`, taking the mean molecular mass by construction, because the envelope axes that
+consume the scalars are library and a decorative safety axis is a correctness problem rather than a
+wiring preference. M5 composes that stage; it does not author a second producer.
 
 **D7 — Propulsion constants are named for what they are.** The reference **area** the plume stage
 consumes is `PLUME_S_REF_M2`, never the shared `S_REF` (an acoustic wave speed). The new shared
@@ -187,10 +188,11 @@ signature, so both existing examples keep compiling unchanged.
   re-pinned against a committed artifact, or corrected as a transcription error — a decision for the
   note's owner, not for M5 to make silently, since `derisk-verdict.md` is the authority M3 already
   archived against.
-- The ignition-window `q` bounds live on `BurnEnvelope` as `q_min`/`q_max` but are **stored and
-  never read** by any code path — the library defers enforcement to M4. Whether M4 enforces them in
-  `CyberneticCorrect` or M5 enforces them in the commit gate decides where gate (2) reads from. M5
-  assumes M4 enforces; if it does not, the commit gate carries the check and the spec is amended.
+- ~~Where the ignition-window `q` bounds are enforced.~~ **Resolved by M4**
+  (`add-retropulsion-terminal-descent`): `CyberneticCorrect` enforces `[q_min, q_max]` as a refusal
+  on a throttle rising from zero outside the window, and does not re-apply it as a running
+  constraint once the burn is under way. Gate (2) reads the commit event M4's
+  `ignition-corridor-commit` capability logs.
 - The branch roster size is pinned at five (coast, two sign-flip straddlers, nominal,
   engine-degraded) on the design note's guidance. Whether a refinement round around the committed
   throttle is warranted is a first-measured-landscape decision, exactly as the corridor's
