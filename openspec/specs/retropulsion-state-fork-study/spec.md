@@ -1,5 +1,8 @@
-## ADDED Requirements
+# retropulsion-state-fork-study Specification
 
+## Purpose
+TBD - created by archiving change wire-plasma-retropulsion-example. Update Purpose after archive.
+## Requirements
 ### Requirement: The centerpiece forks the marched, plume-coupled state
 
 The counterfactual centerpiece SHALL be the event form of the study grammar — `fork(&pause)` →
@@ -85,20 +88,43 @@ whether the throttle-to-drag coupling is load-bearing or the flow was along for 
 
 ### Requirement: Fork economics regress the M1 measured bands
 
-Gate **(4d) fork economics** SHALL regress the bands M1 measured on the plume-coupled state rather
-than re-deriving them: the fork is O(1) and MUST be witnessed as sharing the paused fluid and field
-by pointer (`shares_fluid_with` and `shares_field_with`), the per-branch continuation cost ratio
-MUST stay inside the pinned band (M1's committed artifact records 0.67–1.04× the unforked trunk
-against a 2.0× band),
-and the post-fork peak bond dimension MUST stay under the cap through every branch continuation (M1
-measured 16, flat, under a 32 ceiling). A regression in any of the three is a measured finding to
-report, not a band to widen.
+Gate **(4d) fork economics** SHALL regress M1's O(1) finding on the plume-coupled state rather than
+re-deriving it: every forked branch MUST be witnessed as having entered by reference, sharing the
+paused fluid state and coupled field, and each share MUST be witnessed as genuinely shared rather
+than solely owned. The post-fork peak bond dimension MUST stay under the cap through every branch
+continuation (M1 measured 16, flat, under a 32 ceiling), which gate (7) carries. A regression is a
+measured finding to report, not a band to widen.
+
+The witness is a **typed record on the branch report**, not a call on a fork handle. M1 measured the
+structure directly on a `CarrierFork`, but the study grammar lowers `branch` onto
+`CarrierPause::continue_with`, which never builds one — so `shares_fluid_with` / `shares_field_with`
+are unreachable from a study, and gating through them would be impossible rather than merely
+awkward. The carrier therefore records the facts off the shares actually handed to each branch and
+attaches them to the `Report`; a report from an unforked march carries no record, which fails the
+gate rather than defaulting true.
+
+A live reference count above one is the load-bearing half of the witness. Sharing flags alone would
+still hold for a branch that owned the only copy, so the count is what distinguishes a share from a
+handoff.
+
+**Not carried here: the per-branch continuation cost ratio.** M1's committed artifact records
+0.67–1.04× the unforked trunk against a 2.0× band, and that band stays with M1's study, which times
+each continuation at the caller. This example cannot: the study runs its branches internally and
+`reduce` sees a `Report`, which carries no timing, and the carrier crate is `no_std` and cannot time
+internally. Gate (9) bounds the whole descent's wall clock instead. Regressing the ratio would need
+per-branch timing plumbed through the study grammar — a design change, recorded here rather than
+silently dropped.
 
 #### Scenario: The fork shares rather than copies
 
-- **WHEN** the burn pause is forked
-- **THEN** the fork shares the paused fluid state and coupled field by pointer, and the marched
-  tensor train is not deep-copied
+- **WHEN** the burn pause is forked across the roster
+- **THEN** every branch report records that the paused fluid state and coupled field entered by
+  reference at a live reference count above one, and the marched tensor train is not deep-copied
+
+#### Scenario: An unforked report cannot pass the gate
+
+- **WHEN** a report that did not come from a fork is scored as a branch
+- **THEN** it carries no fork-economics record and fails gate (4d) rather than defaulting to true
 
 #### Scenario: Post-fork rank stays under the cap
 
@@ -141,3 +167,4 @@ and the continued-segment driver never flushes to a sink — so branches produce
 - **WHEN** the audit-trail gate runs
 - **THEN** it inspects the effect log carried on each report and does not require any branch log file
   to exist
+

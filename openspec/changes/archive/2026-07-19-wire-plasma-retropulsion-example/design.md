@@ -42,7 +42,7 @@ that proposal.
 **Goals.**
 
 - A three-act-plus-two example that flies the corridor unchanged, commits to an ignition, burns
-  on-axis with the plume coupled, and lands — inside the 600 s budget with every gate green.
+  on-axis with the plume coupled, and lands — inside the wall-clock budget with every gate green.
 - Both counterfactuals present and material: the mid-burn state fork and the belief counterfactual.
 - Every silent seam above turned into a normative requirement, so the failure mode is a spec
   violation rather than a plausible-looking run with a frozen mass or an unclamped throttle.
@@ -143,6 +143,41 @@ the caller through `StudyView::of(&[elapsed])` because the DSL cannot see it. Ga
 all: `run_continued_segment` never flushes to a sink, so `fork → branch → continue_for` branches
 produce no on-disk log today.
 
+## As Built
+
+Four things were decided at apply time that this design did not anticipate. All four are recorded
+in the deltas; they are collected here because each began as a plausible-looking result.
+
+**The SRP envelope does not apply below the SRP regime.** The terminal leg first flew under the
+supersonic axes, and landed at 160 m/s. That looked like a finding about how hard supersonic
+retropropulsion is. It was not. The `C_T ≤ 3` cap is the Jarvinen–Adams **bow-shock instability**
+bound and the dataset behind it spans Mach 0.4–2.0; carried to the deck it collapses the admissible
+throttle with dynamic pressure and forbids the engine outright around 3.7 km. There is no bow shock
+at Mach 0.13 for a plume to destabilize. The terminal leg now flies its own subsonic envelope, and
+the 160 m/s figure is recorded as a constraint applied outside its validity envelope.
+
+**The guidance had to become a stopping burn.** With the envelope corrected the vehicle nulled its
+descent rate at 10.5 km and then hovered until the propellant ran out, because `a_cmd = v²/2h + g`
+degenerates to `a_cmd ≈ g` at large `h`. Meditch (1964) settles the shape: the fuel-optimal
+soft-landing control is bang-bang. `ThrottleGuidance` gained a coast-to-ignition-altitude hold-off,
+a target plane, and a commanded contact speed — a delta on `throttle-guidance-stage`, which M4
+archived.
+
+**Gate (4d) needed an API change, not a workaround.** The design assumed `shares_fluid_with` /
+`shares_field_with` would witness the fork, as they did for M1. They cannot: the study grammar
+lowers `branch` onto `CarrierPause::continue_with`, which never builds a `CarrierFork`. The carrier
+now records a typed `ForkEconomics` onto every continued branch's report — a delta on
+`cfd-counterfactual`. The per-branch cost-ratio half of M1's band is *not* carried here, and the
+reason is recorded rather than the gate quietly narrowed.
+
+**Two fixed-axis force bugs.** `RetroThrust` and `PlumeObstruction` both wrote along a hardcoded
+axis while the flight velocity was slanted, so thrust never opposed velocity. `retro-thrust-stage`
+already specified `−(T/m)·v̂`, so that was a bug against an existing spec and needed no delta.
+`plume-obstruction-stage` said "axial" without pinning it to an axis, which is how the bug survived
+review — that requirement is modified to define axial as along `v̂` and to fix the stage ordering.
+The existing `RetroThrust` test passed throughout because its fixture used purely radial velocity: a
+component validated inside a fixture that shared its blind spot.
+
 ## Risks / Trade-offs
 
 - [The hybrid centerpiece could be read as claiming a field-contracted drag decrement] → every
@@ -161,7 +196,7 @@ produce no on-disk log today.
 - [Bands cannot be pinned before the first run] → the earned-then-regressed convention, unchanged
   from the corridor and from `srp-derisk-verdict`: the first measured run pins, later runs gate
   regressions, and a re-pin is recorded with its reason rather than quietly edited.
-- [The 600 s budget] → the corridor spends 42 s; this example adds roughly 1200–1800 further coupled
+- [The wall-clock budget] → the corridor spends 42 s; this example adds roughly 1200–1800 further coupled
   steps plus one branch fan-out that runs concurrently through the existing `scoped_map` seam. The
   estimate is low minutes, but it is an estimate: gate (9) is the one that decides, and if it fails
   the finding is a resolution or roster decision, not a band relaxation.

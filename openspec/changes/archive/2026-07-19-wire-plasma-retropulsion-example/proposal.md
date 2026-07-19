@@ -49,7 +49,8 @@ inert until called; nothing in the crate produces `"q_inf"` or `"descent_rate"`;
   the existing `weather-table-consumption` requirement that defers the CSV binding to M5.
 - The **full numbered gate set** (0–9): integrity, corridor inheritance bit-identical, ignition
   corridor, regime cascade, the four counterfactual gates plus the audit trail, the table earning
-  its place, touchdown, compression, bounded rebuilds, and the 600 s wall-clock budget — evaluated
+  its place, touchdown, compression, bounded rebuilds, and the wall-clock budget (**1800 s**,
+  sized for this flight rather than inherited from the corridor's shorter one) — evaluated
   in full and rendered as one merged `Verdict`, with bands earned on the first measured run and
   regressed thereafter.
 

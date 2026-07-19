@@ -1,5 +1,8 @@
-## ADDED Requirements
+# retropulsion-descent-gates Specification
 
+## Purpose
+TBD - created by archiving change wire-plasma-retropulsion-example. Update Purpose after archive.
+## Requirements
 ### Requirement: The descent runs a numbered gate set evaluated in full
 
 The example SHALL gate the descent with the numbered set (0) integrity, (1) corridor inheritance,
@@ -85,9 +88,12 @@ change.
 
 ### Requirement: Wall-clock is gated at the caller and compression at the report
 
-Gate **(9) wall-clock budget** SHALL be evaluated at the caller against the 600 s budget, because
-the study grammar cannot observe the wall clock — it times the whole program, which the study is
-only part of. Gate **(7) compression** SHALL read the committed branch's final evolved state from
+Gate **(9) wall-clock budget** SHALL be evaluated at the caller against a budget sized for the
+flight actually flown, because the study grammar cannot observe the wall clock — it times the whole
+program, which the study is only part of. The budget is **1800 s**, not the corridor's 600 s: that
+figure was sized for a descent that stops at 47 km after roughly 476 coupled steps, and this example
+carries the same vehicle to the ground under a burn and forks a roster mid-way, which is several
+thousand steps more. A budget inherited from a shorter flight measures nothing about this one. Gate **(7) compression** SHALL read the committed branch's final evolved state from
 its report and re-quantize it under the run's truncation to observe the peak bond against the cap,
 and gate **(8) bounded rebuilds** SHALL count the carrier's rebuild entries in the rendered
 provenance log against the cap. A witness that cannot be computed MUST fail its gate rather than
@@ -123,3 +129,4 @@ three family siblings and the crate's examples table MUST be swept so every refe
 
 - **WHEN** a reader reaches the README's description of the counterfactual centerpiece
 - **THEN** it names the A0 correlation as the drag authority and the imprint as state realism
+
