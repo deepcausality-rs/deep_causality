@@ -109,9 +109,9 @@ rust_library(
     version = "0.2.126",
     deps = [
         "//thirdparty/crates/bumpalo-3.20.3:bumpalo",
-        "//thirdparty/crates/proc-macro2-1.0.106:proc_macro2",
-        "//thirdparty/crates/quote-1.0.46:quote",
-        "//thirdparty/crates/syn-2.0.118:syn",
+        "//thirdparty/crates/proc-macro2-1.0.107:proc_macro2",
+        "//thirdparty/crates/quote-1.0.47:quote",
+        "//thirdparty/crates/syn-2.0.119:syn",
         "//thirdparty/crates/wasm-bindgen-shared-0.2.126:wasm_bindgen_shared",
     ],
 )
