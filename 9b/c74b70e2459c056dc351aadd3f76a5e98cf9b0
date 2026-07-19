@@ -1,0 +1,19 @@
+website/web/src/content.config.ts
+  s_f0a6cfc98ba452::t_94a6a001740ae2 31-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9bc74b70e2459c056dc351aadd3f76a5e98cf9b0",
+  "prompts": {},
+  "sessions": {
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
