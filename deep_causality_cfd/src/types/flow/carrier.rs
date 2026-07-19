@@ -18,7 +18,7 @@
 use super::blackout::BlackoutTrigger;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::CfdScalar;
-use crate::types::flow::{MarchState, Report};
+use crate::types::flow::{ForkEconomics, MarchState, Report};
 use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
@@ -541,15 +541,28 @@ where
             M::config_name(world),
             self.step,
         ));
-        run_continued_segment(
+        // The O(1) fork, and the record of it. Taken from the clones actually handed to the branch,
+        // not asserted about them: if this path ever deep-copies instead of sharing, the recorded
+        // economics say so and a study gating on `is_o1` fails rather than passing on a stale claim.
+        let branch_state = Arc::clone(&self.state);
+        let branch_field = Arc::clone(&self.field);
+        let economics = ForkEconomics::new(
+            Arc::ptr_eq(&branch_state, &self.state),
+            Arc::ptr_eq(&branch_field, &self.field),
+            Arc::strong_count(&self.state),
+            Arc::strong_count(&self.field),
+        );
+        let mut report = run_continued_segment(
             self,
             world,
             None,
-            Arc::clone(&self.state),
-            Arc::clone(&self.field),
+            branch_state,
+            branch_field,
             branch_log,
             steps,
-        )
+        )?;
+        report.set_fork_economics(economics);
+        Ok(report)
     }
 }
 
@@ -682,7 +695,14 @@ where
         // unifies cleanly; the borrowed-world `continue_with` path relaxes that lifetime by calling
         // `run_continued_segment` with a short-lived world directly.
         let cfg = self.context_ov.unwrap_or(self.pause.config);
-        run_continued_segment(
+        // Same record as the `continue_with` path, read off this fork's own shares.
+        let economics = ForkEconomics::new(
+            Arc::ptr_eq(&self.state, &self.pause.state),
+            Arc::ptr_eq(&self.field, &self.pause.field),
+            Arc::strong_count(&self.state),
+            Arc::strong_count(&self.field),
+        );
+        let mut report = run_continued_segment(
             self.pause,
             cfg,
             self.seed_ov,
@@ -690,7 +710,9 @@ where
             self.field,
             self.log,
             steps,
-        )
+        )?;
+        report.set_fork_economics(economics);
+        Ok(report)
     }
 }
 

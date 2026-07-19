@@ -1284,3 +1284,79 @@ fn the_re_seed_entry_leaves_the_existing_message_texts_alone() {
     let log = format!("{}", first.field().log());
     assert!(log.contains("carrier rebuilt at step"), "log: {log}");
 }
+
+#[test]
+fn every_continued_branch_records_what_its_fork_cost() {
+    let nominal = world("nominal_descent", 3.0, 6);
+    let steep = world("steep_descent", 3.0, 6);
+
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    // The `continue_with` path — what the study grammar's `branch` lowers onto, and the one that
+    // never builds a `CarrierFork`, so the record is the only way a study can see the economics.
+    let branch = pause.continue_with(&steep, 2).unwrap();
+    let e = branch
+        .fork_economics()
+        .expect("a continued branch must record what its fork cost");
+    assert!(e.shares_fluid(), "the branch must enter by reference");
+    assert!(e.shares_field(), "the coupled field too");
+    assert!(
+        e.fluid_refs() > 1,
+        "a share, not sole ownership: the pause still holds its own reference"
+    );
+    assert!(e.is_o1());
+
+    // The manual fork chain records the same facts.
+    let forked = pause
+        .fork()
+        .alternate_context(&steep)
+        .continue_march(2)
+        .unwrap();
+    assert_eq!(forked.fork_economics().map(|e| e.is_o1()), Some(true));
+
+    // A plain march forked nothing and must not claim it did.
+    let plain = CfdFlow::march(&nominal)
+        .run_coupled((), field_at_61km(), BlackoutTrigger::new(1.0e9), 0.0)
+        .unwrap();
+    assert!(plain.fork_economics().is_none());
+}
+
+#[test]
+fn a_fan_out_shares_one_paused_state_across_every_branch() {
+    let nominal = world("nominal_descent", 3.0, 6);
+    let a = world("branch_a", 3.0, 6);
+    let b = world("branch_b", 3.0, 6);
+    let c = world("branch_c", 3.0, 6);
+
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    let reports = pause.continue_branches(&[&a, &b, &c], 2).unwrap();
+
+    assert_eq!(reports.len(), 3);
+    for r in &reports {
+        let e = r
+            .fork_economics()
+            .expect("fan-out branches record economics");
+        assert!(
+            e.is_o1(),
+            "a roster of N must cost one paused state, not N copies: {} was not an O(1) fork",
+            r.name()
+        );
+    }
+}
