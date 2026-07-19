@@ -1,0 +1,54 @@
+openspec/changes/wire-plasma-retropulsion-example/proposal.md
+  s_03a25bcd8e11c3::t_bb6bcc700e85e1 1-37,43-92
+  s_03a25bcd8e11c3::t_2b65b0555b9fb3 38-42
+openspec/changes/wire-plasma-retropulsion-example/design.md
+  s_03a25bcd8e11c3::t_8ab7e90c7d8a1e 183
+  s_03a25bcd8e11c3::t_73e826e535deb3 1-67,71-107,114-126,138-178,190-200
+  s_03a25bcd8e11c3::t_2eb9d82f4931bc 69-70
+  s_03a25bcd8e11c3::t_a5e416363c6d57 68
+  s_03a25bcd8e11c3::t_b2fc8c7c4d7e4c 108-113
+  s_03a25bcd8e11c3::t_bf239bd1a0f90e 127-137
+  s_03a25bcd8e11c3::t_a169aaa99adda6 179-182,184-189
+openspec/changes/wire-plasma-retropulsion-example/specs/retropulsion-example-wiring/spec.md
+  s_03a25bcd8e11c3::t_8f9769fcb95298 7-13
+  s_03a25bcd8e11c3::t_915cbdddeb9e2f 1-6,14-65,70-164
+  s_03a25bcd8e11c3::t_49b949c90d8fe9 66-69
+openspec/changes/wire-plasma-retropulsion-example/specs/retropulsion-state-fork-study/spec.md
+  s_03a25bcd8e11c3::t_ae5c0ee539dc92 1-90,93-143
+  s_03a25bcd8e11c3::t_b6a77686ea7a41 91-92
+openspec/changes/wire-plasma-retropulsion-example/.openspec.yaml
+  s_03a25bcd8e11c3::t_3282381c65b83c 1-2
+openspec/changes/wire-plasma-retropulsion-example/specs/retropulsion-belief-counterfactual/spec.md
+  s_03a25bcd8e11c3::t_51e135d3c71381 1-78
+openspec/notes/cfd-plasma-retropulsion/plasma-retropulsion-roadmap.md
+  s_03a25bcd8e11c3::t_c044a03bcc8f8f 42-44
+  s_03a25bcd8e11c3::t_2a12e5545ac557 262
+  s_03a25bcd8e11c3::t_c96a5046886510 305
+  s_03a25bcd8e11c3::t_88e4149f56cf3e 31-34
+  s_03a25bcd8e11c3::t_8f54a7117eeda5 337
+  s_03a25bcd8e11c3::t_2fad05a00668b8 351-353,356-362
+openspec/changes/wire-plasma-retropulsion-example/specs/retropulsion-descent-gates/spec.md
+  s_03a25bcd8e11c3::t_b5cde6132a6c28 26,28-35,37,42-46
+  s_03a25bcd8e11c3::t_a460dbdabfa7d7 1-25,27,36,38-41,47-125
+openspec/changes/wire-plasma-retropulsion-example/tasks.md
+  s_03a25bcd8e11c3::t_efe9ea0cfdd73d 15
+  s_03a25bcd8e11c3::t_cf3e4d123d2eae 76-78
+  s_03a25bcd8e11c3::t_84cc6f4a35b0e4 1-14,16-75,79-100,103-135
+  s_03a25bcd8e11c3::t_515a6789027901 101-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "438a5486bb80737ee80de88d7289dfc7f68e85f0",
+  "prompts": {},
+  "sessions": {
+    "s_03a25bcd8e11c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "652d3191-c449-4657-876b-f8610e4821d8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
