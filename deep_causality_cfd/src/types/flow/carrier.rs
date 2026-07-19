@@ -58,6 +58,15 @@ pub trait CoupledCarrier<const D: usize, R: CfdScalar>: Sized {
     /// The fixed step size.
     fn dt(&self) -> R;
 
+    /// Solver rebuilds this carrier has performed. Carriers that never rebuild report zero.
+    ///
+    /// Exposed so a harness or gate reads a number rather than tallying `"carrier rebuilt at step"`
+    /// substrings in a rendered provenance string — an accounting that silently stops working if the
+    /// message is ever reworded, and that sees only the logs a caller happens to render.
+    fn rebuilds(&self) -> usize {
+        0
+    }
+
     /// Advance the marched state one step.
     ///
     /// # Errors
@@ -353,6 +362,7 @@ where
             break;
         }
     }
+    let rebuilds = carrier.rebuilds();
     Ok(CarrierPause {
         config: cfg,
         coupling: spec.coupling,
@@ -361,6 +371,7 @@ where
         state: Arc::new(state),
         field: Arc::new(field),
         step: paused_at,
+        rebuilds,
         error,
     })
 }
@@ -379,6 +390,7 @@ where
     state: Arc<M::State>,
     field: Arc<CoupledField<R>>,
     step: usize,
+    rebuilds: usize,
     error: Option<PhysicsError>,
 }
 
@@ -419,6 +431,15 @@ where
     }
 
     /// The captured step error, if the march broke before the predicate fired.
+    /// Solver rebuilds the carrier performed over this leg.
+    ///
+    /// Read this rather than tallying `"carrier rebuilt at step"` substrings in a rendered log: the
+    /// count is per-carrier, so it is a **per-leg** number, and a carrier is rebuilt at every leg
+    /// boundary.
+    pub fn rebuilds(&self) -> usize {
+        self.rebuilds
+    }
+
     pub fn error(&self) -> Option<&PhysicsError> {
         self.error.as_ref()
     }

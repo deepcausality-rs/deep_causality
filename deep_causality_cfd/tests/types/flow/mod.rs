@@ -35,6 +35,7 @@ pub mod coupling_tests;
 pub mod duct_march_tests;
 #[cfg(not(miri))]
 mod finite_rate_ionization_tests;
+mod flight_sensors_tests;
 #[cfg(test)]
 pub mod frequency_tests;
 #[cfg(test)]
@@ -75,6 +76,8 @@ pub mod study_grammar_tests;
 pub mod study_warning_tests;
 #[cfg(test)]
 pub mod sweep_tests;
+mod terminal_descent_tests;
+mod throttle_guidance_tests;
 // Filesystem round trips are unsupported under MIRI.
 #[cfg(test)]
 #[cfg(not(miri))]

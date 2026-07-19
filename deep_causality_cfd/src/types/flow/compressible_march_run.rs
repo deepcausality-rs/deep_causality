@@ -76,7 +76,9 @@ where
     forcing: Option<ForcingRegion<R>>,
     /// The current nondimensional conserved inflow `[ρ̂, m̂x, m̂y, Ê]` the strip enforces.
     inflow: Option<[R; 4]>,
-    /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).
+    /// Solver rebuilds performed while following the schedule. The `1.2x` re-pin against the
+    /// `(1 + rebuild_tol)` gate is a hysteresis ratchet bounding the rate; the schedule    /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).apos;s optional
+    /// `max_rebuilds` bounds the count. Exposed through `CoupledCarrier::rebuilds`.
     rebuilds: usize,
     /// The optional plume re-imprint spec: refresh `forcing` from stage-published plume geometry
     /// when the commanded throttle drifts. `None` leaves `forcing` exactly as configured.
@@ -286,6 +288,10 @@ where
         ])
     }
 
+    fn rebuilds(&self) -> usize {
+        self.rebuilds
+    }
+
     fn dt(&self) -> R {
         self.dt_flight
     }
@@ -343,8 +349,30 @@ where
         field.set_scalar("freestream_n", Vec::from([row.n_tot]));
 
         // Rebuild when the inflow's wave speed outgrows the built acoustic envelope.
+        //
+        // The trigger is **one-sided and wave-speed-keyed**, and the re-pin to `1.2·s_needed`
+        // against a `(1 + tol)` gate makes it a hysteresis ratchet: each successive rebuild needs
+        // roughly `1.44×` further growth at the default tolerance. The nondimensional **density
+        // never enters** `s_needed`, so a configuration whose density anchor is wrong is never
+        // corrected here; and because a leg builds a fresh carrier, the envelope resets to the
+        // world's configured value at every boundary and the trigger re-arms at that baseline.
         let s_needed = u_hat + (self.gamma * t_hat).sqrt();
         if s_needed > self.s_ref * (R::one() + schedule.rebuild_tol) {
+            // The ratchet bounds the *rate* of rebuilds but states no budget. A leg that needs more
+            // than the configured count is not converging on an envelope, and its numbers should
+            // not be reported as results — so the bound refuses rather than silently declining to
+            // rebuild (which would march on knowingly undersized acoustics).
+            if let Some(max) = schedule.max_rebuilds
+                && self.rebuilds >= max
+            {
+                field.log_mut().add_entry(&alloc::format!(
+                    "carrier rebuild budget exhausted at step {step}: {} rebuilds at the cap {max}",
+                    self.rebuilds,
+                ));
+                return Err(PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                    "compressible carrier: rebuild budget of {max} exhausted at step {step}"
+                )));
+            }
             let s_new = s_needed * Self::lift(1.2)?;
             let metric = CartesianIdentity::new(self.lx, self.ly, self.dx, self.dy, self.trunc)?;
             self.marcher =
@@ -543,7 +571,7 @@ where
 
     /// The world this run marches in: the alternated context if one was swapped in, else the
     /// injected config.
-    fn effective_config(&self) -> &'c CompressibleMarchConfig<R> {
+    pub(crate) fn effective_config(&self) -> &'c CompressibleMarchConfig<R> {
         self.context_ov.unwrap_or(self.config)
     }
 

@@ -49,6 +49,13 @@ pub struct DescentSchedule<R: CfdScalar> {
     /// Relative drift of the required wave speed beyond the built `s_ref` that triggers a solver
     /// rebuild (each rebuild is logged to provenance).
     pub(crate) rebuild_tol: R,
+    /// The rebuild budget for one leg. `None` — the default — leaves the pre-M4 behavior: the
+    /// hysteresis ratchet (`1.2×` re-pin against the `(1 + tol)` gate) still bounds the *rate* of
+    /// rebuilds, but no count is refused. `Some(n)` refuses the `n+1`-th, so a leg that is not
+    /// converging on an acoustic envelope fails loudly instead of reporting numbers marched on a
+    /// knowingly undersized one. The count is per-carrier, and a carrier is rebuilt at every leg
+    /// boundary, so this is a per-leg budget; a descent-wide tally is the caller's own accounting.
+    pub(crate) max_rebuilds: Option<usize>,
 }
 
 impl<R: CfdScalar> DescentSchedule<R> {
@@ -101,6 +108,7 @@ impl<R: CfdScalar> DescentSchedule<R> {
             reference_radius: radius,
             strip_cols: 2,
             rebuild_tol: tol,
+            max_rebuilds: None,
         })
     }
 
@@ -120,6 +128,20 @@ impl<R: CfdScalar> DescentSchedule<R> {
     pub fn with_rebuild_tolerance(mut self, tol: R) -> Self {
         self.rebuild_tol = tol;
         self
+    }
+
+    /// Bound the rebuilds one leg may perform, refusing the step that would exceed it.
+    ///
+    /// Unbounded by default, which is the pre-M4 behavior. Set this when a leg's conditioning
+    /// matters enough that repeated re-pinning should be a failure rather than a log line.
+    pub fn with_rebuild_budget(mut self, max_rebuilds: usize) -> Self {
+        self.max_rebuilds = Some(max_rebuilds);
+        self
+    }
+
+    /// The configured rebuild budget for one leg, if any.
+    pub fn rebuild_budget(&self) -> Option<usize> {
+        self.max_rebuilds
     }
 
     /// The freestream at `altitude_m`, linearly interpolated and clamped to the table ends.

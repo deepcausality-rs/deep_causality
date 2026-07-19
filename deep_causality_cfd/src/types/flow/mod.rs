@@ -23,6 +23,7 @@ mod coupled_march;
 mod coupling;
 mod duct_march_run;
 mod finite_rate_ionization;
+mod flight_sensors;
 mod frequency;
 mod gates;
 mod march_run;
@@ -39,6 +40,7 @@ mod study_effect;
 mod study_error;
 mod study_warning;
 mod sweep;
+mod throttle_guidance;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
 mod verify;
@@ -64,6 +66,7 @@ pub use coupling::{
 };
 pub use duct_march_run::DuctMarchRun;
 pub use finite_rate_ionization::FiniteRateIonizationStage;
+pub use flight_sensors::FlightSensors;
 pub use frequency::{dominant_frequency, strouhal_number};
 pub use gates::Gates;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
@@ -83,6 +86,7 @@ pub use study_effect::{StudyEffect, StudyEffectWitness};
 pub use study_error::StudyError;
 pub use study_warning::{StudyWarning, StudyWarningLog};
 pub use sweep::sweep;
+pub use throttle_guidance::{IGNITION_LATCH_FIELD, IgnitionCorridor, ThrottleGuidance};
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;

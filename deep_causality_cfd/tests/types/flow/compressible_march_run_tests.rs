@@ -1123,3 +1123,173 @@ fn the_refresh_cap_bounds_re_imprints() {
         "the cap bounds refreshes"
     );
 }
+
+// ---------------------------------------------------------------------------
+// M4 — leg re-seed visibility and the rebuild budget (terminal-descent-leg)
+// ---------------------------------------------------------------------------
+
+/// The `world()` helper with a rebuild budget attached to its schedule.
+fn budgeted_world(
+    name: &str,
+    s_ref: f64,
+    steps: usize,
+    budget: usize,
+) -> CompressibleMarchConfig<f64> {
+    let trunc = Truncation::<f64>::by_bond(16).unwrap();
+    CompressibleMarchConfigBuilder::<f64>::new()
+        .name(name)
+        .grid(3, 3, 0.125, 0.125)
+        .solver(0.002, s_ref, GAMMA_EFF, trunc)
+        .flight_dt(0.05)
+        .seed_fn(|_, _| (1.0, 1.0, 0.0, 1.0))
+        .unwrap()
+        .stop(MarchStop::Fixed(steps))
+        .schedule(
+            DescentSchedule::new(rows(), GAMMA_EFF)
+                .unwrap()
+                .with_rebuild_budget(budget),
+        )
+        .reference(reference())
+        .build()
+        .unwrap()
+}
+
+#[test]
+fn the_rebuild_count_is_readable_without_parsing_the_log() {
+    // An undersized s_ref forces a rebuild; the count is a number, not a substring tally.
+    let cfg = world("rebuild-count", 1.0, 2);
+    let pause = CfdFlow::march(&cfg)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, _| false,
+        )
+        .unwrap();
+
+    assert!(pause.rebuilds() >= 1, "the accessor reports the rebuild");
+    // And it agrees with what the log says happened.
+    let logged = format!("{}", pause.field().log())
+        .lines()
+        .filter(|l| l.contains("carrier rebuilt at step"))
+        .count();
+    assert_eq!(pause.rebuilds(), logged);
+}
+
+#[test]
+fn a_roomy_envelope_reports_no_rebuilds() {
+    let cfg = world("no-rebuild", 3.0, 4);
+    let pause = CfdFlow::march(&cfg)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, _| false,
+        )
+        .unwrap();
+    assert_eq!(pause.rebuilds(), 0);
+}
+
+#[test]
+fn the_rebuild_budget_is_unbounded_by_default() {
+    // The pre-M4 behavior: the hysteresis ratchet bounds the rate, nothing bounds the count.
+    let cfg = world("unbounded", 1.0, 4);
+    let pause = CfdFlow::march(&cfg)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, _| false,
+        )
+        .unwrap();
+    assert!(pause.error().is_none(), "no budget ⇒ no refusal");
+}
+
+#[test]
+fn exceeding_the_rebuild_budget_refuses() {
+    // Budget zero: the very first rebuild the drift demands is refused rather than marched past on
+    // a knowingly undersized acoustic envelope.
+    let cfg = budgeted_world("budget-zero", 1.0, 4, 0);
+    let pause = CfdFlow::march(&cfg)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, _| false,
+        )
+        .unwrap();
+
+    let err = pause.error().expect("the budget refuses");
+    assert!(format!("{err:?}").contains("rebuild budget"));
+    let log = format!("{}", pause.field().log());
+    assert!(log.contains("rebuild budget exhausted"), "log: {log}");
+}
+
+#[test]
+fn a_budget_above_the_demand_never_fires() {
+    let cfg = budgeted_world("budget-roomy", 1.0, 2, 8);
+    let pause = CfdFlow::march(&cfg)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, _| false,
+        )
+        .unwrap();
+    assert!(pause.error().is_none());
+    assert!(pause.rebuilds() <= 8);
+}
+
+#[test]
+fn a_leg_boundary_records_the_re_seed_in_provenance() {
+    // The first leg runs from a fresh field; the second resumes from its MarchState. The re-seed of
+    // the marched fluid layer at that boundary must be visible, since the fork path logs its resume
+    // and this path previously logged nothing at all.
+    let cfg = world("leg-one", 3.0, 2);
+    let first = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .until(|_, _| false)
+        .unwrap();
+
+    let before = format!("{}", first.field().log());
+    assert!(
+        !before.contains("leg re-seeded"),
+        "a fresh march is not a re-seed: {before}"
+    );
+
+    let next = world("leg-two", 3.0, 2);
+    let second = CfdFlow::march(&next)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from(first.state())
+        .until(|_, _| false)
+        .unwrap();
+
+    let log = format!("{}", second.field().log());
+    assert!(log.contains("leg re-seeded"), "log: {log}");
+    assert!(
+        log.contains("leg-two"),
+        "the entry names the incoming world: {log}"
+    );
+}
+
+#[test]
+fn the_re_seed_entry_leaves_the_existing_message_texts_alone() {
+    // Downstream gates match on these exact substrings; the new entry must not perturb them.
+    let cfg = world("texts-one", 1.0, 2);
+    let first = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .until(|_, _| false)
+        .unwrap();
+    let log = format!("{}", first.field().log());
+    assert!(log.contains("carrier rebuilt at step"), "log: {log}");
+}

@@ -27,6 +27,7 @@ use crate::types::flow::{
 };
 use crate::types::flow_config::MarchStop;
 use deep_causality_algebra::ConjugateScalar;
+use deep_causality_haft::LogAddEntry;
 use deep_causality_num::FromPrimitive;
 use deep_causality_physics::PhysicsError;
 
@@ -76,11 +77,27 @@ where
 
     /// Provide the initial field to march from — a fresh field the caller built, or one a pause
     /// exported through [`MarchState`]. Required before a terminal stage.
+    ///
+    /// **A leg boundary carries the coupled field, not the marched fluid layer.** `MarchState` is
+    /// the field plus a step index; the incoming leg rebuilds its carrier and re-quantizes the
+    /// world's uniform seed, so the evolved conserved state, the inflow strip, any acoustic-envelope
+    /// drift the previous leg earned, its rebuild count, and its plume-imprint budget are all
+    /// discarded. That is the design's accepted quasi-steady defense — the layer re-converges within
+    /// a few steps — but it was previously **invisible**: the fork path logs its resume while this
+    /// path logged nothing at all, leaving the most consequential event at a leg seam absent from
+    /// provenance. It is recorded here.
     pub fn from(self, state: MarchState<R>) -> ReadyMarch<'c, R, S> {
+        let resumed_at = state.step();
+        let mut field = state.into_field();
+        field.log_mut().add_entry(&alloc::format!(
+            "leg re-seeded from step {} in world '{}': coupled field carried, marched fluid state re-seeded from the world seed",
+            resumed_at,
+            self.run.effective_config().name(),
+        ));
         ReadyMarch {
             run: self.run,
             coupling: self.coupling,
-            field: state.into_field(),
+            field,
             trigger: self.trigger,
             kappa: self.kappa,
         }
