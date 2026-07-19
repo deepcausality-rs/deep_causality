@@ -25,20 +25,20 @@ their own acceptance text.
 
 ## 1. Status ledger — done vs remaining
 
-The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Two of those stages are
-complete — **Stage R** (the example-code refactoring, implemented in preparation) and **Stage 1**
-(the physics-crate foundation). The note's **Stage 0** is a distinct, **cfd-side** contract effort
-and is *not* yet implemented; it is the first of the remaining milestones (M2), not something
-already closed. This roadmap keeps the note's stage names as an index and maps them onto milestones
-M1–M5.
+The design note numbers its build order Stage R, 0, 1, 2, 3, 4 (§9). Four of those stages are now
+complete — **Stage R** (the example-code refactoring), **Stage 1** (the physics-crate foundation),
+**Stage 2** (the front-loaded de-risk measurement, M1), and **Stage 0** (the cfd contract layer,
+M2) — all archived. The next work is **Stage 3** (M3 + M4), the coupled burn stages, which builds
+on the seams M2 landed. This roadmap keeps the note's stage names as an index and maps them onto
+milestones M1–M5.
 
 | Note stage | Content | State | Roadmap |
 |---|---|---|---|
 | **Stage R** | Example-code refactoring — reorg into `cfd/plasma_blackout/{corridor,weather}/` | **done** — `reorg-plasma-blackout-examples`, archived 2026-07-16 | — |
 | **Stage 1** | Propulsion kernel family + papers in `deep_causality_physics` | **done** — `close-plasma-retropulsion-physics-gaps`, archived 2026-07-17 | — |
-| **Stage 0** | cfd contracts + inheritance guard | **open** | **M2** |
-| **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **measured 2026-07-17** — verdict **AMBER** ([`derisk-verdict.md`](derisk-verdict.md)): imprint fidelity amber, fork economics + rank green | **M1** (front-loaded) |
-| **Stage 3** | Coupled stages (thrust, plume, classifier, guidance, envelope) | **open** | **M3 + M4** |
+| **Stage 2** | Measured de-risking (plume imprint fidelity + fork economics) | **done** — `plasma-retropulsion-de-risk`, measured 2026-07-17, verdict **AMBER** ([`derisk-verdict.md`](derisk-verdict.md): imprint fidelity amber, fork economics + rank green), archived 2026-07-19 | **M1** (front-loaded) |
+| **Stage 0** | cfd contracts + inheritance guard | **done** — `plasma-retropulsion-cfd-contracts`, archived 2026-07-19 (M5 glue task 6.4 carried forward) | **M2** |
+| **Stage 3** | Coupled stages (thrust, plume, classifier, guidance, envelope) | **open — next** | **M3 + M4** |
 | **Stage 4** | Example wiring, counterfactuals, gates | **open** | **M5** |
 
 **Done and directly reusable (survey-verified):**
@@ -207,7 +207,7 @@ downstream can change* based on its result — hence its position.
 
 ---
 
-### M2 — `plasma-retropulsion-cfd-contracts`  *(Stage 0: contracts + inheritance guard; proposed 2026-07-17)*
+### M2 — `plasma-retropulsion-cfd-contracts`  *(Stage 0: contracts + inheritance guard; **archived 2026-07-19** — throttle channel + additive force, `BurnEnvelope` + gate enforcement, inert `PropulsionStub`, atmosphere to 0 km, and the reusable `KeyedTable` lookup all landed; the WorldRow CSV loader glue (task 6.4) carries to M5)*
 
 **Objective.** Extend the coupled-field, command-bus, atmosphere, and weather-loader seams so the
 burn-phase stack can be assembled and run **inert**, and prove that doing so leaves the corridor
@@ -257,10 +257,18 @@ finalized after M1's verdict (a one-line depth switch), so hold that sub-item un
 
 ---
 
-### M3 — `add-retropulsion-coupled-stages`  *(Stage 3: physics half)*
+### M3 — `add-retropulsion-coupled-stages`  *(Stage 3: physics half; **next**)*
 
 **Objective.** Make the burn physically couple: thrust felt in the force channel and the IMU, the
 plume imprinted on the marched layer in flight, and the new regimes detected and logged.
+
+**Preconditions met (2026-07-19).** M1 (validated forcing seam + AMBER verdict) and M2 (throttle
+channel, mass/propellant/ignited scalars, force-RMW idiom, `BurnEnvelope` + gate enforcement, the
+inert `PropulsionStub` seam) are both archived. The M1 verdict is **AMBER**, so — per the design
+note §3.1 and the verdict's decision table — `PlumeObstruction` carries the **A0 correlation as the
+drag authority**; a marched-layer imprint via the landed `ForcingRegion` seam is optional
+*state-realism only*, never the force-channel drag closure. This is a resolved precondition, not an
+open branch.
 
 **Deliverables.**
 
