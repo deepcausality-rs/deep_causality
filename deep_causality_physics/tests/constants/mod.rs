@@ -7,6 +7,8 @@ pub mod atomic_tests;
 #[cfg(test)]
 pub mod electromagnetic_tests;
 #[cfg(test)]
+pub mod propulsion_tests;
+#[cfg(test)]
 pub mod thermodynamics_tests;
 #[cfg(test)]
 pub mod universal_tests;

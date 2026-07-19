@@ -16,6 +16,7 @@
 //! coupled step represents.
 
 use crate::CfdScalar;
+use crate::solvers::ForcingRegion;
 use crate::types::flow_config::{MarchStop, QttObserve};
 use deep_causality_algebra::ConjugateScalar;
 use deep_causality_physics::{EARTH_RADIUS, PhysicsError};
@@ -205,6 +206,9 @@ where
     /// world carries its own commanded inputs (e.g. a candidate bank command) that the shared
     /// coupling stack reads.
     pub(crate) constants: Vec<(&'static str, R)>,
+    /// An optional masked forcing region applied after each marcher step (the de-risk plume
+    /// imprint seam). `None` — the default — leaves the march path exactly as it was.
+    pub(crate) forcing: Option<ForcingRegion<R>>,
 }
 
 impl<R> CompressibleMarchConfig<R>
@@ -240,6 +244,11 @@ where
     pub fn published_constants(&self) -> &[(&'static str, R)] {
         &self.constants
     }
+
+    /// The optional masked forcing region, if this world imprints one.
+    pub fn forcing(&self) -> Option<&ForcingRegion<R>> {
+        self.forcing.as_ref()
+    }
 }
 
 /// A fluent builder for [`CompressibleMarchConfig`].
@@ -257,6 +266,7 @@ where
     schedule: Option<DescentSchedule<R>>,
     reference: Option<ReferenceScales<R>>,
     constants: Vec<(&'static str, R)>,
+    forcing: Option<ForcingRegion<R>>,
 }
 
 impl<R> Default for CompressibleMarchConfigBuilder<R>
@@ -284,6 +294,7 @@ where
             schedule: None,
             reference: None,
             constants: Vec::new(),
+            forcing: None,
         }
     }
 
@@ -396,6 +407,15 @@ where
         self
     }
 
+    /// Imprint a masked [`ForcingRegion`] on this world's march path: after each marcher step the
+    /// conserved state is relaxed toward the region's target inside its mask (the de-risk plume
+    /// seam; the analytic retro-plume enters the marched layer through this). Without it the
+    /// march path is exactly the unforced marcher.
+    pub fn forcing_region(mut self, region: ForcingRegion<R>) -> Self {
+        self.forcing = Some(region);
+        self
+    }
+
     /// Finish the builder.
     ///
     /// # Errors
@@ -422,6 +442,7 @@ where
             schedule: self.schedule,
             reference: self.reference.ok_or_else(|| missing("reference"))?,
             constants: self.constants,
+            forcing: self.forcing,
         })
     }
 }

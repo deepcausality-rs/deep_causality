@@ -4,7 +4,7 @@ Date: 2026-07-03. Status: **shipped**; S1 to S5 landed with examples 1 to 3 thro
 `openspec/changes/add-cfd-study-dsl-and-examples/` (one scope correction recorded in that
 change's design D3: `run_owned` is MarchPipeline-only, because the uncertain config carries no
 mesh). Related:
-[common-examples](../cfd-examples/common-examples.md), [cfd-roadmap](../../cfd-roadmap/cfd-roadmap.md).
+[common-examples](../cfd-examples/common-examples.md), [cfd-roadmap](../../cfd-plasma-retropulsion/cfd-roadmap.md).
 
 Method, per the review brief: draft all five everyday examples in the **current** DSL first,
 mark the friction each draft exposes, then derive the smallest syntax program that removes it.

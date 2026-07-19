@@ -20,7 +20,7 @@ mod projection;
 
 pub use acoustic_inverse::{AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d};
 pub use codec::{dequantize, dequantize_2d, dequantize_3d, quantize, quantize_2d, quantize_3d};
-pub use mask::{body_mask_2d, mask_from_fn};
+pub use mask::{body_mask_2d, mask_from_fn, plume_mask_2d};
 pub use operators::{
     divergence_3d, gradient, gradient_x, gradient_x_3d, gradient_y, gradient_y_3d, gradient_z_3d,
     laplacian, laplacian_2d, laplacian_3d, shift_minus, shift_plus,

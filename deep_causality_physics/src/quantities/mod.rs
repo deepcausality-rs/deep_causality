@@ -25,6 +25,7 @@ pub mod materials;
 pub mod mhd;
 pub mod nuclear;
 pub mod photonics;
+pub mod propulsion;
 pub mod relativity;
 pub mod thermodynamics;
 
@@ -47,6 +48,7 @@ pub use materials::*;
 pub use mhd::*;
 pub use nuclear::*;
 pub use photonics::*;
+pub use propulsion::*;
 pub use relativity::*;
 pub use thermodynamics::*;
 

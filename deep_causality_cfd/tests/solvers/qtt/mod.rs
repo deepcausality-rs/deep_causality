@@ -6,6 +6,8 @@
 #[cfg(test)]
 pub mod compressible_fitting_tests;
 #[cfg(test)]
+pub mod compressible_forcing_tests;
+#[cfg(test)]
 pub mod compressible_imex_tests;
 #[cfg(test)]
 pub mod compressible_marcher2d_tests;

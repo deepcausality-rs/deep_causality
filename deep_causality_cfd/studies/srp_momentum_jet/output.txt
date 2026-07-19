@@ -1,0 +1,49 @@
+=== SRP momentum jet: formed plume vs Jarvinen-Adams (M2, central) ===
+
+  freestream M 2, gamma 1.4, p_inf 1000 Pa; jet exit M 3, gamma_jet 1.3, u_hat_e -5.08
+  grid 2^5 x 2^5 over 4 m, dt 8.0e-4, 2000 steps (tail mean over last 500), bond cap 24
+  jet patch: 1 node-column(s) x 3 node-rows at the body face -> realized exit height 0.375 m, r_jet/R_body = 0.375
+
+  caveats: 2-D plane (not axisymmetric), smoothed-mask body, periodic + sponge
+  blockage, single marched gamma; C_T is the 2-D per-depth definition; J-A
+  (axisymmetric) is the structural reference, not a quantitative fit target
+
+  baseline (no jet): tail gauge force 1.622368e-2 (full) / 1.125601e-2 (annulus) / 7.698909e-3 (outer), peak bond 24
+  baseline terminal TT contract 1.622514e-2; tail std 1.2e-6, drift +0.01%
+  (committed-baseline identity holds at L=5/cap24/500 steps: measured delta 4.1e-9 on the first run)
+
+    C_T   | p_e/p_inf | frac full | frac annulus | frac outer | J-A    | drift%  | iface x | bond
+  --------+-----------+-----------+--------------+------------+--------+---------+---------+-----
+    0.25  |    0.23   |    1.055  |     1.031    |    1.021   |  0.576 |  +0.01  |  0.500  |  24
+         ! upstream probe off freestream by +6.5% at C_T 0.25 (sponge/blockage interaction)
+    0.50  |    0.37   |    1.233  |     1.156    |    1.125   |  0.212 |  +0.01  |  0.500  |  24
+         ! upstream probe off freestream by +7.7% at C_T 0.5 (sponge/blockage interaction)
+    1.00  |    0.67   |    1.588  |     1.413    |    1.339   |  0.124 |  +0.02  |  0.500  |  24
+         ! upstream probe off freestream by +10.8% at C_T 1 (sponge/blockage interaction)
+    1.50  |    0.96   |    1.940  |     1.672    |    1.557   | -0.004 |  +0.02  |  0.531  |  24
+         ! upstream probe off freestream by +15.1% at C_T 1.5 (sponge/blockage interaction)
+    2.00  |    1.25   |    2.282  |     1.928    |    1.774   | -0.031 |  +0.02  |  0.531  |  24
+         ! upstream probe off freestream by +20.9% at C_T 2 (sponge/blockage interaction)
+    3.00  |    1.84   |    2.917  |     2.410    |    2.184   | -0.061 |  +0.01  |  0.531  |  24
+         ! upstream probe off freestream by +39.3% at C_T 3 (sponge/blockage interaction)
+    4.00  |    2.43   |    3.456  |     2.819    |    2.531   | -0.093 |  -0.03  |  0.500  |  24
+         ! upstream probe off freestream by +69.4% at C_T 4 (sponge/blockage interaction)
+    5.00  |    3.02   |    3.881  |     3.136    |    2.794   | -0.106 |  -0.09  |  0.500  |  24
+         ! upstream probe off freestream by +112.5% at C_T 5 (sponge/blockage interaction)
+    6.00  |    3.61   |    4.197  |     3.362    |    2.974   | -0.113 |  -0.14  |  0.500  |  24
+         ! upstream probe off freestream by +165.9% at C_T 6 (sponge/blockage interaction)
+    8.00  |    4.78   |    4.592  |     3.614    |    3.150   | -0.125 |  -0.14  |  0.469  |  24
+         ! upstream probe off freestream by +285.3% at C_T 8 (sponge/blockage interaction)
+
+  FINDING (recorded; structural bands gate the default configuration only —
+  derisk-verdict.md and its addendum are the authority):
+    J-A collapse NOT reproduced by the momentum-carrying jet either: monotone drag
+    AUGMENTATION, annulus fraction 1.413 at C_T 1.00 (J-A 0.124), sweep minimum 1.031;
+    total-axial-force dip ABSENT (monotone) (argmin C_T 0.25); the dissipation floor
+    (nu = s_ref*dx/2) freezes the stagnation interface at the face across the full
+    throttle range, so injected momentum reads as face pressure, the inverse of the
+    J-A blanketing reorganization. Pinned-envelope amber for reference: 0.895 at
+    C_T 1, floor 0.647, dip absent. Neither coupling model can host the collapse
+    on this harness; the A0 correlation channel keeps the drag authority.
+
+GATES PASSED — the measured augmentation structure and witnesses hold. The J-A miss is the recorded finding, not a regression.

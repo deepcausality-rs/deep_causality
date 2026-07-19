@@ -55,6 +55,56 @@ where
     quantize_2d(&field, trunc)
 }
 
+/// A **smoothed plume-region** volume-fraction mask: an axis-aligned ellipse with semi-axes
+/// `half_length` (along `x`, the retro-jet axis) and `max_radius` (along `y`), centered at
+/// `(cx, cy)`, smoothed with the same `χ = ½(1 − tanh(d/δ))` skirt as [`body_mask_2d`]. The
+/// distance proxy is the normalized-ellipse level set rescaled to length units by the smaller
+/// semi-axis, `d ≈ (‖((x−cx)/a, (y−cy)/b)‖ − 1)·min(a, b)` — not a true signed distance, but
+/// monotone through the boundary, which is all the smoothed skirt needs.
+///
+/// The semi-axes are the CFD-side shaping of an analytic retro-plume boundary (Cordell's
+/// obstruction geometry: maximum plume radius and penetration length); deriving them from the
+/// propulsion kernels is the caller's job — this constructor is pure geometry.
+///
+/// # Errors
+/// Propagates codec errors.
+#[allow(clippy::too_many_arguments)]
+pub fn plume_mask_2d<R>(
+    lx: usize,
+    ly: usize,
+    dx: R,
+    dy: R,
+    cx: R,
+    cy: R,
+    half_length: R,
+    max_radius: R,
+    smoothing: R,
+    trunc: &Truncation<R>,
+) -> Result<CausalTensorTrain<R>, PhysicsError>
+where
+    R: CfdScalar + ConjugateScalar<Real = R>,
+{
+    let half = R::from_f64(0.5).expect("0.5 lifts into every real field");
+    let scale = if half_length < max_radius {
+        half_length
+    } else {
+        max_radius
+    };
+    mask_from_fn(
+        lx,
+        ly,
+        dx,
+        dy,
+        |x, y| {
+            let ex = (x - cx) / half_length;
+            let ey = (y - cy) / max_radius;
+            let dist = ((ex * ex + ey * ey).sqrt() - R::one()) * scale;
+            half * (R::one() - (dist / smoothing).tanh())
+        },
+        trunc,
+    )
+}
+
 /// A **smoothed cylinder** volume-fraction mask: `χ = ½(1 − tanh(d/δ))` over the signed distance
 /// `d = ‖(x, y) − (cx, cy)‖ − radius` to the cylinder surface, smeared over `smoothing` (= `δ`). Inside
 /// the body (`d < 0`) `χ → 1`; outside `χ → 0`; on the surface `χ = ½`. Larger `smoothing` → lower bond.
