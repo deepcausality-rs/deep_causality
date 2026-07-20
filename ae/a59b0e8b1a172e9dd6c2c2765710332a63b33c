@@ -1,0 +1,115 @@
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/constants.rs
+  s_8af8f36689e424::t_1546e7bffa5040 17-20
+  s_8af8f36689e424::t_888bb78635f2e7 141-153
+  s_8af8f36689e424::t_eab398214bff87 84-94
+  s_8af8f36689e424::t_a7d0d0f91ead13 48-51,53-57,60-63
+  s_8af8f36689e424::t_acd283cc7f044a 99-112
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/model.rs
+  s_8af8f36689e424::t_cb9371e8971464 494-495,551,555,557-562,567,569,571,646-647,820,943-958
+  s_8af8f36689e424::t_a1db29861563e5 552-554,556,563-566,568,570,572-573,961
+  s_8af8f36689e424::t_1546e7bffa5040 16
+  s_8af8f36689e424::t_70fee5adf45bfe 164-169,177,180,190,193,197-206,210-219,254,259,960,1099-1103
+  s_8af8f36689e424::t_ea38e8ff3c57f6 496-497,510-550,963-973,978-979,981,983-988,990-992
+  s_8af8f36689e424::t_0f5bab8459b14c 959,962
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/utils_print.rs
+  s_8af8f36689e424::t_b74364b8210cee 11,134-153
+  s_8af8f36689e424::t_fa036572cfb490 154
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/design.md
+  s_8af8f36689e424::t_f7804e39b8ff61 303-326,400-409
+  s_8af8f36689e424::t_80f8b407ab2a5b 327-358
+  s_8af8f36689e424::t_2881bb4c29af0e 410-421
+  s_8af8f36689e424::t_380ecf5967d0f8 359-399
+examples/avionics_examples/README.md
+  s_7e918ee2800194::t_e968e62a074134 34
+  s_7e918ee2800194::t_93dd146e269c11 26
+  s_7e918ee2800194::t_40a3a9fae03a63 30
+  s_7e918ee2800194::t_48c348b4b2f758 25
+  s_7e918ee2800194::t_fa1a81d77906bb 24
+  s_7e918ee2800194::t_a6470fbcd4b0c7 27
+  s_7e918ee2800194::t_715b088bc38f90 59
+deep_causality_cfd/src/lib.rs
+  s_8af8f36689e424::t_309951adc6fb0e 102
+  s_8af8f36689e424::t_1546e7bffa5040 103-104
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/main.rs
+  s_8af8f36689e424::t_1546e7bffa5040 14-20,26-30,96-97,116-117
+  s_8af8f36689e424::t_f18f4ddf28a805 218-229,231,233-236,240,252-269,322
+  s_8af8f36689e424::t_eab398214bff87 137-138
+  s_8af8f36689e424::t_cb9371e8971464 155,180,316-321
+  s_8af8f36689e424::t_3af388b446f442 58
+  s_8af8f36689e424::t_b74364b8210cee 83-93,99-103,106,121-125,159,195,198-202
+  s_8af8f36689e424::t_2d306b9ad5cdaa 118-119
+  s_8af8f36689e424::t_fed699ea5706e0 270
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branches.csv
+  s_8af8f36689e424::t_40dd7b9b619b33 2
+  s_8af8f36689e424::t_4284eb6f2f002e 3-5
+  s_8af8f36689e424::t_76dc6ddc8cdf37 6-7
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/tasks.md
+  s_8af8f36689e424::t_80f8b407ab2a5b 136,170
+  s_8af8f36689e424::t_f7804e39b8ff61 151,153-154,156-157,159,161,174
+  s_8af8f36689e424::t_5893177f00510d 42-44
+  s_8af8f36689e424::t_c961ac8f68b768 162-164
+  s_8af8f36689e424::t_2881bb4c29af0e 185,188,190
+examples/avionics_examples/cfd/plasma_blackout/weather/README.md
+  s_7e918ee2800194::t_3e073afdedbca0 10
+  s_7e918ee2800194::t_68a327d5ef1793 24-28
+  s_7e918ee2800194::t_27ec54011c45fb 36-38
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/README.md
+  s_7e918ee2800194::t_6f7b879c5fc753 70-71,73
+  s_7e918ee2800194::t_ca58ba86112d3b 106
+  s_7e918ee2800194::t_68ffe8e8377bbd 185
+  s_7e918ee2800194::t_49acd06213eff4 66
+  s_7e918ee2800194::t_852415532fe1bc 166-167
+  s_8af8f36689e424::t_a6ffdb4118c3e3 46-48,74,134-135,138-146,148-150,152-158,160
+  s_7e918ee2800194::t_326975e6497c6e 15
+  s_8af8f36689e424::t_dbc2b512c76bcf 181-184,186-190,193,197
+  s_7e918ee2800194::t_1d0399c3f99d4b 56
+  s_7e918ee2800194::t_412feffcf47325 211
+  s_8af8f36689e424::t_45daeb9718281e 23
+  s_8af8f36689e424::t_10f7eaa381b4e0 22,79-80,84,161-165,168-170
+  s_7e918ee2800194::t_b2b6f3beb072de 49,51
+  s_7e918ee2800194::t_91b4d9a1ebc961 42-43,45
+  s_7e918ee2800194::t_6d072a7406b0f2 60
+  s_7e918ee2800194::t_9c9b413ef814e8 111
+  s_7e918ee2800194::t_0546380829bd3e 159
+  s_8af8f36689e424::t_c52bc99e847235 75,77-78,81-82,85-92,94-95
+  s_7e918ee2800194::t_dae8fab5eae174 93
+  s_7e918ee2800194::t_2a143854323c6f 122
+  s_7e918ee2800194::t_0e42c79b662cfb 133
+  s_7e918ee2800194::t_5d6402c5888bce 136-137
+  s_7e918ee2800194::t_5ab15a6d924822 147
+  s_7e918ee2800194::t_2cd7d02d642e78 83
+  s_7e918ee2800194::t_ef1ae7694244ae 151
+  s_8af8f36689e424::t_8f3357b8779b35 96-97,126
+deep_causality_cfd/src/types/flow/mod.rs
+  s_8af8f36689e424::t_1546e7bffa5040 94-95
+deep_causality_cfd/src/types/flow/throttle_guidance.rs
+  s_8af8f36689e424::t_f7b7b3f2a2ff2f 71-79,452-453
+examples/avionics_examples/src/shared/constants.rs
+  s_8af8f36689e424::t_626946ccdd6458 223-230,233-247
+examples/avionics_examples/cfd/plasma_blackout/corridor/README.md
+  s_7e918ee2800194::t_1cef444cf1e164 212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "aea59b0e8b1a172e9dd6c2c2765710332a63b33c",
+  "prompts": {},
+  "sessions": {
+    "s_7e918ee2800194": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a94e8a3-1d06-4730-9efc-6f261ea1b529",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_8af8f36689e424": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "000f2b92-a02d-47bc-8861-a40cf6549457",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
