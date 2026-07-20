@@ -1,0 +1,88 @@
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/specs/retropulsion-typed-witnesses/spec.md
+  s_8af8f36689e424::t_0bc8f5a8494f22 1-77
+openspec/openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/.openspec.yaml
+  s_8af8f36689e424::t_af2ee6024af6c8 1-2
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/design.md
+  s_8af8f36689e424::t_0804c631848291 181-226
+  s_8af8f36689e424::t_8a1f84254ab3ca 1-180,227-243
+deep_causality_cfd/src/types/flow/corridor/mod.rs
+  s_8af8f36689e424::t_a07673a4bea11e 41-43
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/specs/srp-closure-validity/spec.md
+  s_8af8f36689e424::t_558cf8e43dd714 1-56
+deep_causality_cfd/src/types/flow/coupled_march.rs
+  s_8af8f36689e424::t_226b01f43ca02f 34-40
+  s_8af8f36689e424::t_0667f929cca8f1 99-109
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/specs/retropulsion-gate-integrity/spec.md
+  s_8af8f36689e424::t_f963b03fc7dff1 1-96
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/proposal.md
+  s_8af8f36689e424::t_b39c25db2c0f06 1-135
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/tasks.md
+  s_8af8f36689e424::t_b0d6e01eb715cd 8,10,13,15,17
+  s_8af8f36689e424::t_585ea75bdf1177 22,25,27,29,31
+  s_8af8f36689e424::t_a727480df3f033 1-7,9,11-12,14,16,18-21,23-24,26,28,30,32-171
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/specs/retropulsion-branch-scoring/spec.md
+  s_8af8f36689e424::t_da4de129f33d6d 1-74
+deep_causality_cfd/src/types/flow/compressible_march_run.rs
+  s_8af8f36689e424::t_ee9903c704f081 450-455
+deep_causality_cfd/verification/qtt_blunt_body_2d/README.md
+  s_277e3f4bd3dd1f::t_48512efee22e30 3-7,15-20,23-24,28-31,33-34,44-45,50-53
+deep_causality_cfd/src/types/flow/carrier.rs
+  s_8af8f36689e424::t_902a09d0c60953 464-470,475-482,484,486-487
+  s_8af8f36689e424::t_b23bae79b1e49d 630-632
+  s_8af8f36689e424::t_4ada6a845f0d5c 512,608-610,647-650,653,770-772
+  s_8af8f36689e424::t_2cc4c130bc1fa7 459-463,471-474,483,485
+  s_8af8f36689e424::t_d738933711b860 94-102,250-252
+  s_8af8f36689e424::t_64b9331e540d95 752
+  s_8af8f36689e424::t_1cf0b327388ca1 488
+deep_causality_cfd/src/types/flow/corridor/regime.rs
+  s_8af8f36689e424::t_b24eb7dc0695f0 312-315,318-326
+  s_8af8f36689e424::t_92662582051f03 17-20
+deep_causality_cfd/src/lib.rs
+  s_8af8f36689e424::t_94b2b8a16c3524 95-97
+  s_8af8f36689e424::t_a46e72a657b32b 98-100
+  s_277e3f4bd3dd1f::t_e18e2a89487350 101-103
+deep_causality_cfd/src/types/flow/report.rs
+  s_8af8f36689e424::t_5fb9843d6d2b57 116-117,143-169
+  s_8af8f36689e424::t_a655fb3734f93b 99-104
+  s_8af8f36689e424::t_fcbe721c02ed56 170
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/specs/retropulsion-belief-counterfactual/spec.md
+  s_8af8f36689e424::t_fe8b0abeef007c 1-60
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/specs/retropulsion-scoring-robustness/spec.md
+  s_8af8f36689e424::t_4b6bc02a423060 1-53
+deep_causality_cfd/src/types/flow/throttle_guidance.rs
+  s_8af8f36689e424::t_5ae2f227c8f813 71-86
+  s_8af8f36689e424::t_f4aa5dae2aacdb 341-354
+deep_causality_cfd/verification/dec_cylinder_wake_verification/README.md
+  s_277e3f4bd3dd1f::t_a1778c99704211 33-34,36,45-47,52-56,58-59
+  s_277e3f4bd3dd1f::t_265f8803258094 4-5,8-11,14-17,23-25,31-32,63-65,68-69,71,73,75-78,81-82,87-89,91-93,95-98,102-103,105-112,114-115
+deep_causality_cfd/verification/qtt_reentry_3d/README.md
+  s_277e3f4bd3dd1f::t_9c14f66a691046 5-9,17-18,20-22,27-30,34-37,39,49,53-56
+deep_causality_cfd/src/types/flow/mod.rs
+  s_8af8f36689e424::t_a07673a4bea11e 59-60
+  s_8af8f36689e424::t_94b2b8a16c3524 90-92
+  s_8af8f36689e424::t_1ece99ea4aa92e 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7821d6ebe064058de7a8ed216de4d319f0868b86",
+  "prompts": {},
+  "sessions": {
+    "s_277e3f4bd3dd1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f282d8c6-e5ea-4ac9-bd01-ccaaad236f24",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_8af8f36689e424": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "000f2b92-a02d-47bc-8861-a40cf6549457",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
