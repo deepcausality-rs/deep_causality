@@ -1,0 +1,76 @@
+deep_causality_cfd/src/types/flow/retropulsion.rs
+  s_8af8f36689e424::t_4ec92f8c076d7a 486-494
+  s_8af8f36689e424::t_2dbb3ed1b297e3 375,397,436-464,555-564
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt
+  s_8af8f36689e424::t_9f6227996174db 1
+  s_8af8f36689e424::t_2e31fcd7f6b8a1 25-31,34-35,39-40,43,58-294,297-308,310-311
+  s_8af8f36689e424::t_84599e00f55d91 2-3
+examples/avionics_examples/src/shared/world.rs
+  s_8af8f36689e424::t_2dbb3ed1b297e3 18
+  s_8af8f36689e424::t_e45ea321527940 19-26,389
+  s_8af8f36689e424::t_d2c4013365c0a8 33,396-401
+  s_8af8f36689e424::t_5b7b4baed4ed2f 402
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/model.rs
+  s_8af8f36689e424::t_4ec92f8c076d7a 256-260,302,395-399
+  s_8af8f36689e424::t_4560c1aca3fcb0 287-290
+  s_8af8f36689e424::t_e45ea321527940 15-16,625,654,743-746,911-913
+  s_8af8f36689e424::t_d88cd84e0044f2 12,245-248,252-255,263,267-271,274,276-277,285-286,294-296,300-301,306-308
+  s_8af8f36689e424::t_4cab7ff263e0a0 278-279,428
+  s_8af8f36689e424::t_1204e13ae9e3fd 370-378,381-386,389,393-394,401-407,412-413,418-419,421-422,424-427
+  s_8af8f36689e424::t_0f558f72fba92f 597,631-653,655-660,662,674,678
+  s_8af8f36689e424::t_aba79333bf80c8 435-438,442-443,445,448-453,459-460,464-465,472-476
+  s_8af8f36689e424::t_a3961e5ac63ca3 368,486,494,497,499-537,539-543,547,549-551,553,555-556,559-564,579-583,587,595-596,611,614-615,628,667-668,670-671,673,675-677,682-688,693,698-699,705-709,713,715-716
+  s_8af8f36689e424::t_a0cac400f2b3b0 598-601,603-610,612-613,616-624,626-627,629-630,664-666,669,672
+  s_8af8f36689e424::t_46de81b1361426 224-228,231,239
+  s_8af8f36689e424::t_aeb492f05fd92b 111-114,148-149,461-463,466-468,760-771,773-778,783-785,787,789-801
+  s_8af8f36689e424::t_f84baf46cc6ee5 313-350,357-359,361-367
+  s_8af8f36689e424::t_7780ae9c03957f 737-739,741-742,747-756,772,780-782,806-811,813-816,818,820-822,824-830,838-840,842,844-846,852-854,856,858-867,872-876,878-883,885,887-895,900-903,905-910,915-919,923-925,930,937-939,943-944
+  s_8af8f36689e424::t_6d7a768402777b 369
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/utils_print.rs
+  s_8af8f36689e424::t_a0cac400f2b3b0 101,105-107
+  s_8af8f36689e424::t_fabb6bcbfb4276 96-97,103-104,109-111,115-117
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/design.md
+  s_8af8f36689e424::t_c1d331a6e22399 257-302
+  s_8af8f36689e424::t_2019978d529dd8 210,212-256,319-323
+  s_8af8f36689e424::t_3013b80cae6ed3 303-318
+examples/avionics_examples/src/shared/stages.rs
+  s_8af8f36689e424::t_5faef5f707926e 8-9,207-301
+  s_8af8f36689e424::t_56c2d2e1ce4692 302-305
+examples/avionics_examples/src/shared/constants.rs
+  s_8af8f36689e424::t_2dbb3ed1b297e3 322-342
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/main.rs
+  s_8af8f36689e424::t_aeb492f05fd92b 42,237-239,242-243
+  s_8af8f36689e424::t_4f3de9d4bddfec 122-123,148,200-216,218-220,222-230,235-236,240-241,246-247
+  s_8af8f36689e424::t_6d08af8717f916 110-118,127,129
+  s_8af8f36689e424::t_fe2e5d27572220 149-150
+  s_8af8f36689e424::t_4cab7ff263e0a0 45-47,132-135,138,140-141
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branches.csv
+  s_8af8f36689e424::t_d7872a39ac6245 1-7
+examples/avionics_examples/cfd/plasma_blackout/retropulsion/constants.rs
+  s_8af8f36689e424::t_fabb6bcbfb4276 43-55,58-61,64-74,80
+  s_8af8f36689e424::t_aeb492f05fd92b 134,136-137,139-141,143-147
+  s_8af8f36689e424::t_8cc7b02ee9ba17 135,148-152
+  s_8af8f36689e424::t_1a9dd648247733 75-79,86-108
+  s_8af8f36689e424::t_9a91b15ecc5c0a 109-127
+openspec/changes/2026-07-20-fix-retropulsion-measurement-integrity/tasks.md
+  s_8af8f36689e424::t_3013b80cae6ed3 185
+  s_8af8f36689e424::t_545b6ace1f1be3 96,112,122-126,130-132,134-137,145,170,176
+  s_8af8f36689e424::t_63d68ffde88fab 177,183
+  s_8af8f36689e424::t_930643205459b3 82,85,88,90,92,94,104,107-108,110,120,127,133,138-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7c2655ce81f0f31939367174a61a2a0045f60364",
+  "prompts": {},
+  "sessions": {
+    "s_8af8f36689e424": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "000f2b92-a02d-47bc-8861-a40cf6549457",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
