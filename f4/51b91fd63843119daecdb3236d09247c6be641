@@ -1,0 +1,85 @@
+deep_causality_cfd/studies/traj_fs3_clock/README.md
+  s_277e3f4bd3dd1f::t_98c5ab667c9aac 15-20,23,26-27,31-32,35-37,40-43,46-49
+  s_277e3f4bd3dd1f::t_bec94d167cd786 1-14,21-22,24-25,28-30,33-34,38-39,44-45,50-51
+deep_causality_cfd/studies/traj_fs1_generator/README.md
+  s_277e3f4bd3dd1f::t_1700f265417809 14,17-23,29,34,40-41,44-46,49-52
+  s_277e3f4bd3dd1f::t_766aa062f25aa6 1-13,15-16,24-28,30-33,35-39,42-43,47-48,53-54
+deep_causality_cfd/studies/qtt_rank_nonlinear/README.md
+  s_277e3f4bd3dd1f::t_ec73564e5d1c02 12-16,20-43
+deep_causality_cfd/studies/qtt_rank_3d/README.md
+  s_277e3f4bd3dd1f::t_b124340fa7a3c4 12-22,28-29,31-60
+deep_causality_cfd/studies/qtt_rank_plume/README.md
+  s_277e3f4bd3dd1f::t_2970f84b5161b2 1-14,26-27,29,32,34-41,44-45,55-56,63-64
+  s_277e3f4bd3dd1f::t_beb0ccf2c4753a 15-25,28,30-31,33,42-43,46-54,57-62
+deep_causality_cfd/studies/traj_fs2_coupling/README.md
+  s_277e3f4bd3dd1f::t_73d2a57592edb3 1-11,19,25-35,41-44,48-49,56-57
+  s_277e3f4bd3dd1f::t_0732abf1b3ff5e 12-18,20-24,36-40,45-47,50-55
+deep_causality_cfd/studies/qtt_blend_metric/README.md
+  s_277e3f4bd3dd1f::t_8f94e95590ee2a 1-11,18-28,36-37,39-41,45-47
+  s_277e3f4bd3dd1f::t_0478d358b77451 12-17,29-35,38,42-44
+deep_causality_cfd/studies/srp_momentum_jet/README.md
+  s_277e3f4bd3dd1f::t_8db80a6dbca46d 1-13,15-17,26-28,41-49,61-64,68-69,73-76
+  s_277e3f4bd3dd1f::t_cbaeeaa9c211b7 14,18-25,29-40,50-60,65-67,70-72
+deep_causality_cfd/studies/qtt_rank_fitted_dynamic/README.md
+  s_277e3f4bd3dd1f::t_f6185704a84365 12-17,24-25,27,32-34,36,38-39,42,44
+  s_277e3f4bd3dd1f::t_8fc583f50dff57 1-11,18-23,26,28-31,35,37,40-41,43,45-46
+deep_causality_cfd/studies/qtt_acoustic_precond/README.md
+  s_277e3f4bd3dd1f::t_2afb620d72a5a6 13-19,29,34,37-40,42-45
+  s_277e3f4bd3dd1f::t_b9e1b07c95cecc 1-12,20-28,30-33,35-36,41,46-47
+deep_causality_cfd/studies/README.md
+  s_277e3f4bd3dd1f::t_5f8b0945634866 8-12,18-22,25-28,31,36-37,41-52,58-59,64-85,87-88,92
+deep_causality_cfd/studies/qtt_repin_marcher/README.md
+  s_277e3f4bd3dd1f::t_e7fbcdef53f185 12-16,19-21,25,29,32,36,39-40,43-44,47-49
+  s_277e3f4bd3dd1f::t_ffbafd6cda4315 1-11,17-18,22-24,26-28,30-31,33-35,37-38,41-42,45-46,50-51
+deep_causality_cfd/studies/qtt_rank_study/README.md
+  s_277e3f4bd3dd1f::t_1277aa1c98287f 12-15,19-36,39-45
+deep_causality_cfd/studies/qtt_rank_dynamic/README.md
+  s_277e3f4bd3dd1f::t_0d3d85ffde6da3 12-42
+deep_causality_cfd/studies/compressible_carrier_timing/README.md
+  s_277e3f4bd3dd1f::t_58c1f846cfb9bf 1-12,15-16,23,27-40,44,48-50,55-56
+  s_277e3f4bd3dd1f::t_3e10e3759acf72 13-14,17-22,24-26,41-43,45-47,51-54
+deep_causality_cfd/Cargo.toml
+  s_ae8aca4a36ea13::t_935f1931fe5869 190-195
+deep_causality_cfd/studies/qtt_rank_3d/output.txt
+  s_8af8f36689e424::t_ea72a211511622 1-56
+deep_causality_cfd/studies/qtt_rank_study/output.txt
+  s_8af8f36689e424::t_37628e9b717973 1-19
+deep_causality_cfd/studies/qtt_repin_marcher/output.txt
+  s_8af8f36689e424::t_1fabf30c990f25 1-19
+deep_causality_cfd/studies/traj_fs1_generator/output.txt
+  s_8af8f36689e424::t_790f6f89df1da2 1-19
+deep_causality_cfd/studies/traj_fs3_clock/output.txt
+  s_8af8f36689e424::t_d9cbbc9e88c98f 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f451b91fd63843119daecdb3236d09247c6be641",
+  "prompts": {},
+  "sessions": {
+    "s_277e3f4bd3dd1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f282d8c6-e5ea-4ac9-bd01-ccaaad236f24",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_8af8f36689e424": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "000f2b92-a02d-47bc-8861-a40cf6549457",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_ae8aca4a36ea13": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ae49eb0fd281a320d",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
