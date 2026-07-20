@@ -2,8 +2,10 @@
  * Validation records — the adoption document's data.
  *
  * Every number here is copied from a committed artifact in
- * `deep_causality_cfd/verification/<target>/baseline.txt` or that target's
- * README. Nothing is rounded for presentation and nothing is estimated.
+ * `deep_causality_cfd/verification/<target>/` — usually `baseline.txt`, but for
+ * `dec_cylinder_verification` the recorded run output `re100_16_resolved.txt` —
+ * or that target's README. Nothing is rounded for presentation and nothing is
+ * estimated.
  *
  * All figures measured at `f64` on an Apple M3 Max, release build.
  *
@@ -30,7 +32,8 @@ export interface ValidationRecord {
   command: string;
   /** The caveat a chief engineer would ask about. Never omitted. */
   caveat: string;
-  /** True when the repo has a committed baseline.txt for this target. */
+  /** True when the repo has a committed run artifact (baseline.txt, or an
+   * equivalently committed recorded run output) carrying these figures. */
   hasArtifact: boolean;
 }
 
@@ -109,7 +112,7 @@ export const validation: ValidationRecord[] = [
     command:
       'CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 cargo run --release -p deep_causality_cfd --example dec_cylinder_verification',
     caveat:
-      'Acceptable but not DNS-grade at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb.',
+      'Acceptable but not DNS-grade at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. This target has no baseline.txt; the figures are the committed run output re100_16_resolved.txt. Its staircase companion at the same 16 cells/D does not shed at all — the wake decays to a steady residual, so that run\'s printed St 0.2444 is the crossing detector firing on 7th-decimal noise and its C_d 1.356 is a steady-flow value, not a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
     hasArtifact: true,
   },
   {
@@ -180,7 +183,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example dec_taylor_green_re1600_verification',
     caveat:
-      'Only the energy-monotonicity invariant is gated; the DNS comparison is informational. 16³ is grossly under-resolved and cannot represent the small-scale dissipation peak — hence the −80%. Reporting resolutions of 64³–128³ close this gap. Do not read the −80% as a solver error.',
+      'Only the energy-monotonicity invariant is gated; the DNS comparison is informational. 16³ is grossly under-resolved and cannot represent the small-scale dissipation peak — hence the −80%. Strictly the curve never peaks at this grid: the reported maximum falls at the final sample, t* = 10.05, so it is a monotone-rising tail rather than a resolved peak, where the DNS peak sits near t* ≈ 9. Reporting resolutions of 64³–128³ close this gap. Do not read the −80% as a solver error.',
     hasArtifact: true,
   },
   {
@@ -192,7 +195,7 @@ export const validation: ValidationRecord[] = [
     reference:
       'Angot, Bruneau & Fabrie (1999), Numer. Math. 81, 497–520. Cross-reference: the DEC cylinder target at C_d ≈ 1.345.',
     measured: [
-      { quantity: 'C_d convergence, bond 16 → 24', computed: 'Δ = 1.89e-11', expected: '0 (converged)', delta: 'bound 0.10' },
+      { quantity: 'C_d convergence |ΔC_d|, bond 16 → 24', computed: '1.89e-11', expected: '0 (converged)', delta: 'gate: relative ≤ 0.10' },
       { quantity: 'Interior max |u| (no-slip)', computed: '4.22e-2', expected: '0', delta: '4% of free stream' },
       { quantity: 'Divergence at bond 24', computed: '5.47e-14', expected: '0', delta: '≈ machine ε' },
       { quantity: 'Absolute C_d', computed: '23.7577', expected: 'not the isolated value', delta: 'see caveat' },
@@ -210,13 +213,13 @@ export const validation: ValidationRecord[] = [
     problem: 'Cylinder in a confined periodic-x channel driven by an uncertain sensor stream through the causal monad.',
     reference: 'None quantitative — an internal-consistency exercise.',
     measured: [
-      { quantity: 'Max divergence residual', computed: '3.33e-15', expected: '0', delta: 'tol 1e-6' },
+      { quantity: 'Max divergence residual', computed: '3.334e-15', expected: '0', delta: 'tol 1e-6' },
       { quantity: 'EffectLog entries under dropout', computed: '80', expected: '80 (2 × 40)', delta: 'exact' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example dec_cylinder_wake_verification',
     caveat:
-      'The DEC solver has no inflow/outflow surface here; the sensor drives a prescribed moving wall in a confined periodic-x channel. The printed Strouhal is a qualitative shedding check for that confined case, not a reference comparison, and no isolated-cylinder Reynolds ladder is claimed. No committed baseline.txt exists for this target.',
-    hasArtifact: false,
+      'The DEC solver has no inflow/outflow surface here; the sensor drives a prescribed moving wall in a confined periodic-x channel. At 25% blockage the run reports no clear shedding in the developed signal, so the printed Strouhal is a qualitative check for that confined case, never gated, and no isolated-cylinder Reynolds ladder is claimed. The committed baseline.txt is the 200-row probe stream — the divergence figure is the maximum over its residual column; the pass/fail summary lines are in cli_output.txt.',
+    hasArtifact: true,
   },
   {
     id: 'qtt-blunt-2d',
@@ -231,8 +234,8 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_blunt_body_2d',
     caveat:
-      'This gates rank, not physical accuracy. The marched peak bond is reported and explicitly not asserted: a plain flux-through-front marcher injects angular structure and grows rank even in the fitted coordinate. No README and no committed baseline.txt exist for this target; the figures come from the crate README summary table.',
-    hasArtifact: false,
+      'This gates rank, not physical accuracy — the quantitative accuracy gate for the compressible solver is qtt_sod, against the exact Riemann solution. The marched peak bond is reported and explicitly not asserted: a plain flux-through-front marcher injects angular structure and grows the bond to 64 over 6 steps even in the fitted coordinate. Bounding that is design D9 and the qtt_repin_marcher study.',
+    hasArtifact: true,
   },
   {
     id: 'qtt-reentry-3d',
@@ -248,8 +251,8 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_reentry_3d',
     caveat:
-      'Forebody only. The wake is explicitly out of scope — a separated unsteady wake needs turbulence and is a multi-feature structure no single fitted coordinate aligns; its bond is reported, never gated. The dynamic marched forebody rank is likewise reported, not gated. No README and no committed baseline.txt exist for this target.',
-    hasArtifact: false,
+      'Forebody only, and structural: it bounds rank, not physical accuracy. The wake is explicitly out of scope — a separated unsteady wake needs turbulence and is a multi-feature structure no single fitted coordinate aligns; its bond is reported, never gated. The dynamic marched forebody rank is likewise reported, not gated: there is no 3-D body-fit metric yet, so the marcher runs Cartesian and grows the bond to 16 over 6 steps. A 3-D body-fit metric plus re-pinning is the open remainder.',
+    hasArtifact: true,
   },
   {
     id: 'qtt-park2t',

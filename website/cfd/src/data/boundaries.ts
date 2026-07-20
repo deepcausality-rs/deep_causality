@@ -50,7 +50,9 @@ export const boundaries: Boundary[] = [
       'curved bow shock: χ ≈ 151',
       'straight 45° oblique shock: χ ≈ 394 — worse than the curve',
       'body-fitted, both cases: χ ≈ 5',
-      'captured curved shock costs 3.1× dense storage; captured oblique, 21×',
+      'captured curved shock costs 3.1× dense storage; captured oblique, 21.3×',
+      'aligning the same curved shock is ~291× smaller than capturing it',
+      'misalignment costs twice: across a captured 5× sound-speed jump the implicit acoustic solve degrades from ρ(A₀⁻¹A₁) = 0.590 to 0.872, toward the divergence threshold at 1 (qtt_acoustic_precond)',
     ],
     study: 'qtt_rank_study',
     refuted: false,
@@ -65,7 +67,7 @@ export const boundaries: Boundary[] = [
       'χ ≈ 45 / 56 / 89 / 135 at 16³ / 32³ / 64³ / 128³',
       'χ ~ side^0.53',
       'flat and body-fitted stay at χ ≈ 5–6 across the same ladder',
-      'dense/QTT storage ratio crosses 1.0 near 64³ and reaches 2.74× at 128³',
+      'dense/QTT storage ratio — above 1.0 means QTT is the smaller of the two — crosses 1.0 near 64³ and reaches 2.74× at 128³; the break-even grid is a small-grid artifact, not the finding',
     ],
     study: 'qtt_rank_3d',
     refuted: false,
@@ -132,7 +134,7 @@ export const boundaries: Boundary[] = [
     ruledOut: [
       'Compression is innocent — raising the bond cap 24 → 32 (exact at 2⁵) leaves every observable unchanged at displayed precision.',
       'Model class is not the cause — both the pinned-envelope and momentum-jet couplings fail, which is what moved the attribution to the discretization.',
-      'Convergence drift is not the cause — measured drift is ≤ 0.02% over the tail-averaging window.',
+      'Convergence drift is not the cause — tail-averaged drift is ≤ 0.02% through C_T 2 and at worst 0.14% at the top of the sweep, orders too small to mask a collapse.',
     ],
     consequence:
       'In-flight drag authority stays with the cited A0 correlation rather than a decrement contracted from the field. Any retropulsion work on this crate should read drag from the correlation and treat the marched plume as flow structure only.',
