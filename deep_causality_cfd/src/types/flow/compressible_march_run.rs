@@ -447,6 +447,12 @@ where
 
     /// Final fields: the evolved translational temperature as the primary field, plus the final
     /// density and speed series.
+    /// The largest bond dimension across the four conserved tensor trains — the rank this state
+    /// actually reached, which sits at or below the configured truncation cap.
+    fn peak_bond(&self, state: &Self::State) -> Option<usize> {
+        state.iter().map(|t| t.max_bond()).max()
+    }
+
     fn finish(&self, state: &Self::State, report: &mut Report<R>) -> Result<(), PhysicsError> {
         let dense = self.decode(state)?;
         let n = dense[0].len();

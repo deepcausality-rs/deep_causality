@@ -96,6 +96,12 @@ pub struct Report<R: CfdScalar> {
     /// What the fork cost, for a report produced by continuing a counterfactual branch. `None` for
     /// a plain march: nothing was forked.
     fork_economics: Option<ForkEconomics>,
+    /// Whether a context alternation was **applied** to this branch. `None` for a report that was
+    /// never alternated.
+    alternation_applied: Option<bool>,
+    /// The peak bond dimension of the final marched state, measured at report time. `None` for a run
+    /// whose carrier exposes no rank.
+    peak_bond: Option<usize>,
 }
 
 impl<R: CfdScalar> Report<R> {
@@ -107,6 +113,8 @@ impl<R: CfdScalar> Report<R> {
             log_entries: None,
             effect_log: None,
             fork_economics: None,
+            alternation_applied: None,
+            peak_bond: None,
         }
     }
 
@@ -130,6 +138,34 @@ impl<R: CfdScalar> Report<R> {
 
     pub(crate) fn set_fork_economics(&mut self, economics: ForkEconomics) {
         self.fork_economics = Some(economics);
+    }
+
+    pub(crate) fn set_alternation_applied(&mut self, applied: bool) {
+        self.alternation_applied = Some(applied);
+    }
+
+    pub(crate) fn set_peak_bond(&mut self, bond: usize) {
+        self.peak_bond = Some(bond);
+    }
+
+    /// Whether a context alternation was **applied** to this branch: `Some(true)` when the branch
+    /// genuinely flew an alternated world, `Some(false)` when the carrier recorded that it refused to
+    /// apply one, `None` when the report was never alternated.
+    ///
+    /// Read this rather than searching the log for the `!!ContextAlternation!!` marker. The refusal
+    /// entry carries the same marker, so a substring match reports an applied alternation for a
+    /// branch that flew none.
+    pub fn alternation_applied(&self) -> Option<bool> {
+        self.alternation_applied
+    }
+
+    /// The peak bond dimension of the run's final marched state, measured at report time.
+    ///
+    /// This is the rank the state actually reached, so it can sit anywhere at or below the
+    /// configured truncation cap. A compression gate reading the cap instead compares a constant
+    /// against itself.
+    pub fn peak_bond(&self) -> Option<usize> {
+        self.peak_bond
     }
 
     /// What this branch's fork cost, if this report came from continuing a forked branch. `None`

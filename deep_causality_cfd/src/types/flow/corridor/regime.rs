@@ -14,6 +14,10 @@ use alloc::string::String;
 use deep_causality_haft::LogAddEntry;
 use deep_causality_physics::{ElectronDensity, Length, PhysicsError, knudsen_number_kernel};
 
+/// The field scalar counting logged regime transitions, incremented once per genuine regime change.
+/// Cumulative across legs, because the coupled field carries it.
+pub const REGIME_TRANSITIONS_FIELD: &str = "regime_transitions";
+
 /// The governing continuum/rarefaction model selected from the Knudsen number. The classic bands:
 /// continuum Navier–Stokes below `Kn ≈ 0.01`, slip-corrected continuum to `≈ 0.1`, transitional to
 /// `≈ 10`, free-molecular above. (Thresholds are configurable on [`RegimeClassify`].)
@@ -305,8 +309,21 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
         };
 
         // Log only genuine regime transitions (model band, comms-denial, or a flight-phase change).
+        //
+        // The decision is also published as a monotone counter. It was previously computed here and
+        // discarded after logging, which left a consumer counting `"regime ->"` substrings in a
+        // rendered log for a number this stage already knows.
         let changed = field.regime().map(|prev| prev.key()) != Some(class.key());
         if changed {
+            let transitions = field
+                .scalar(REGIME_TRANSITIONS_FIELD)
+                .and_then(|s| s.first().copied())
+                .unwrap_or_else(R::zero)
+                + R::one();
+            field.set_scalar(
+                REGIME_TRANSITIONS_FIELD,
+                alloc::vec::Vec::from([transitions]),
+            );
             let denial = if class.gnss_denied {
                 "GNSS-denied"
             } else {

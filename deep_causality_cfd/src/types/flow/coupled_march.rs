@@ -31,6 +31,13 @@ use deep_causality_haft::LogAddEntry;
 use deep_causality_num::FromPrimitive;
 use deep_causality_physics::PhysicsError;
 
+/// The field scalar counting leg re-seeds, incremented every time a march resumes from a
+/// [`MarchState`]. Cumulative across legs, because the coupled field carries it.
+///
+/// Read this rather than counting `"leg re-seeded"` substrings in a rendered log: the substring
+/// count depends on the message's wording, and a reworded message silently reports zero re-seeds.
+pub const LEG_RE_SEEDS_FIELD: &str = "leg_re_seeds";
+
 /// A never-firing blackout trigger: a comms threshold so high the plasma sheath never denies the
 /// link, the default when a leg does not model blackout.
 fn never_fire<R: CfdScalar + FromPrimitive>() -> BlackoutTrigger<R> {
@@ -89,6 +96,17 @@ where
     pub fn from(self, state: MarchState<R>) -> ReadyMarch<'c, R, S> {
         let resumed_at = state.step();
         let mut field = state.into_field();
+        // The typed counter beside the prose. The count is cumulative across legs because the
+        // coupled field carries it, which is what a consumer asking "how many leg boundaries did
+        // this descent cross" wants; a per-leg number would answer a different question. Counting
+        // rendered log lines instead answers neither reliably, since the count then depends on the
+        // message's wording.
+        let seeds = field
+            .scalar(LEG_RE_SEEDS_FIELD)
+            .and_then(|s| s.first().copied())
+            .unwrap_or_else(R::zero)
+            + R::one();
+        field.set_scalar(LEG_RE_SEEDS_FIELD, alloc::vec::Vec::from([seeds]));
         field.log_mut().add_entry(&alloc::format!(
             "leg re-seeded from step {} in world '{}': coupled field carried, marched fluid state re-seeded from the world seed",
             resumed_at,

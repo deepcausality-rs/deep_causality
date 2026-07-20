@@ -91,6 +91,15 @@ pub trait CoupledCarrier<const D: usize, R: CfdScalar>: Sized {
     /// Codec failures.
     fn finish(&self, state: &Self::State, report: &mut Report<R>) -> Result<(), PhysicsError>;
 
+    /// The peak bond dimension of `state`, for a carrier whose state is a tensor train.
+    ///
+    /// The default is `None`: a carrier whose state carries no rank has nothing to report, and a
+    /// compression gate must fail on the absence rather than substitute the configured cap. Reading
+    /// the cap back is a comparison of a constant against itself.
+    fn peak_bond(&self, _state: &Self::State) -> Option<usize> {
+        None
+    }
+
     /// The case name carried by a config.
     fn config_name(cfg: &Self::Config) -> &str;
 
@@ -238,6 +247,9 @@ where
     let mut report = Report::new(M::config_name(cfg));
     sampler.into_report(observe, carrier.dt(), &mut report)?;
     carrier.finish(state, &mut report)?;
+    if let Some(bond) = carrier.peak_bond(state) {
+        report.set_peak_bond(bond);
+    }
     // Expose the final field's scalars as `final_<name>` so a reduction reads any carried quantity
     // off the report — the terminal trajectory witnesses (the carried truth state and the last
     // published navigation solution, so a branch's miss is trajectory-derived, not modeled) and the
@@ -444,6 +456,36 @@ where
         self.error.as_ref()
     }
 
+    /// Leg re-seeds accumulated on the carried field up to this pause.
+    ///
+    /// Cumulative across every leg the coupled field has crossed, since the field carries the
+    /// counter. Read this rather than counting `"leg re-seeded"` substrings in a rendered log — a
+    /// reworded message makes that count report zero.
+    ///
+    /// Counted in `R` rather than `usize` on purpose. `CfdScalar` requires `FromPrimitive` but not
+    /// its converse, so a `usize` return would need a `ToPrimitive` bound that `Float106` does not
+    /// satisfy — and the precision alias is a parameter this crate's callers are invited to change.
+    /// A count compares against a threshold either way.
+    pub fn re_seeds(&self) -> R {
+        self.counter(crate::types::flow::LEG_RE_SEEDS_FIELD)
+    }
+
+    /// Regime transitions logged on the carried field up to this pause.
+    ///
+    /// Cumulative across legs, and counted in `R`, for the same reasons as
+    /// [`re_seeds`](Self::re_seeds).
+    pub fn regime_transitions(&self) -> R {
+        self.counter(crate::types::flow::REGIME_TRANSITIONS_FIELD)
+    }
+
+    /// A carried monotone counter, zero when the field has never published it.
+    fn counter(&self, name: &str) -> R {
+        self.field
+            .scalar(name)
+            .and_then(|s| s.first().copied())
+            .unwrap_or_else(R::zero)
+    }
+
     /// The coupled field at the pause (carried scalars, nav state, regime, provenance log).
     pub fn field(&self) -> &CoupledField<R> {
         &self.field
@@ -467,6 +509,7 @@ where
             field: Arc::clone(&self.field),
             log: EffectLog::new(),
             error: self.error.clone(),
+            alternation_applied: None,
         }
     }
 }
@@ -562,6 +605,9 @@ where
             steps,
         )?;
         report.set_fork_economics(economics);
+        // This path always applies the alternation: it returns early on an errored pause above, so
+        // reaching here means the branch flew `world`.
+        report.set_alternation_applied(true);
         Ok(report)
     }
 }
@@ -581,6 +627,9 @@ where
     field: Arc<CoupledField<R>>,
     log: EffectLog,
     error: Option<PhysicsError>,
+    /// Whether a context alternation was applied to this fork, recorded typed beside the log entry
+    /// so a consumer never has to distinguish the applied and refused entries by their wording.
+    alternation_applied: Option<bool>,
 }
 
 /// `!!ContextAlternation!!` — resume this branch in a different **world** (a whole checked-in
@@ -595,8 +644,13 @@ where
         if self.error.is_some() {
             self.log
                 .add_entry("!!ContextAlternation!!: not applied (errored run cannot be repaired)");
+            // Recorded as a typed refusal beside the prose. The refusal entry carries the same
+            // `!!ContextAlternation!!` marker as an applied alternation, so a consumer matching the
+            // marker as a substring reads a refused branch as an alternated one.
+            self.alternation_applied = Some(false);
             return self;
         }
+        self.alternation_applied = Some(true);
         self.log.add_entry(&alloc::format!(
             "!!ContextAlternation!!: world '{}' replaced with '{}' at step {}",
             M::config_name(self.pause.config),
@@ -695,6 +749,7 @@ where
         // unifies cleanly; the borrowed-world `continue_with` path relaxes that lifetime by calling
         // `run_continued_segment` with a short-lived world directly.
         let cfg = self.context_ov.unwrap_or(self.pause.config);
+        let alternation_applied = self.alternation_applied;
         // Same record as the `continue_with` path, read off this fork's own shares.
         let economics = ForkEconomics::new(
             Arc::ptr_eq(&self.state, &self.pause.state),
@@ -712,6 +767,9 @@ where
             steps,
         )?;
         report.set_fork_economics(economics);
+        if let Some(applied) = alternation_applied {
+            report.set_alternation_applied(applied);
+        }
         Ok(report)
     }
 }

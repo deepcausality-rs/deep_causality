@@ -38,7 +38,9 @@ mod trajectory_nav;
 pub use branch::{BankSteeredLift, BranchAccumulator, BranchOutcome};
 pub use envelope::{BankCorrection, BurnEnvelope, SafetyEnvelope};
 pub use gate::CyberneticCorrect;
-pub use regime::{GoverningModel, MachRegime, RegimeClass, RegimeClassify, ThrustState};
+pub use regime::{
+    GoverningModel, MachRegime, REGIME_TRANSITIONS_FIELD, RegimeClass, RegimeClassify, ThrustState,
+};
 pub use trajectory_nav::TrajectoryNav;
 
 use crate::CfdScalar;

@@ -56,10 +56,10 @@ pub use cfd_flow::CfdFlow;
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
     BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, BurnEnvelope,
-    CyberneticCorrect, GoverningModel, MachRegime, RegimeClass, RegimeClassify, SafetyEnvelope,
-    ThrustState, TrajectoryNav,
+    CyberneticCorrect, GoverningModel, MachRegime, REGIME_TRANSITIONS_FIELD, RegimeClass,
+    RegimeClassify, SafetyEnvelope, ThrustState, TrajectoryNav,
 };
-pub use coupled_march::{CoupledMarch, ReadyMarch};
+pub use coupled_march::{CoupledMarch, LEG_RE_SEEDS_FIELD, ReadyMarch};
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,
@@ -87,7 +87,9 @@ pub use study_error::StudyError;
 pub use study_warning::{StudyWarning, StudyWarningLog};
 pub use sweep::sweep;
 pub use throttle_guidance::{
-    IGNITION_LATCH_FIELD, IgnitionCorridor, STOPPING_BURN_FIELD, ThrottleGuidance,
+    IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD, IGNITION_COMMIT_Q_FIELD,
+    IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD, IGNITION_LATCH_FIELD,
+    IgnitionCorridor, STOPPING_BURN_FIELD, ThrottleGuidance,
 };
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};

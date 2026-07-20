@@ -68,6 +68,22 @@ pub const IGNITION_LATCH_FIELD: &str = "ignition_committed";
 /// [`with_stopping_burn`](ThrottleGuidance::with_stopping_burn). Absent or zero while coasting.
 pub const STOPPING_BURN_FIELD: &str = "stopping_burn";
 
+/// The step the ignition corridor committed on, published at the latching step.
+///
+/// The commit's sensed values are recorded twice: once as prose in the provenance log, and once as
+/// these scalars. The prose is for a reader; the scalars are for a consumer. A gate that recovers a
+/// commit witness by rendering the log and splitting the message depends on the message's wording and
+/// on a scalar's `Debug` formatting, and reports a zero — an absent commit — when either changes.
+pub const IGNITION_COMMIT_STEP_FIELD: &str = "ignition_commit_step";
+/// The flight Mach the corridor sensed at the commit.
+pub const IGNITION_COMMIT_MACH_FIELD: &str = "ignition_commit_mach";
+/// The freestream dynamic pressure (Pa) the corridor sensed at the commit.
+pub const IGNITION_COMMIT_Q_FIELD: &str = "ignition_commit_q";
+/// Whether the navigation was aided at the commit (`1` aided, `0` dead-reckoning).
+pub const IGNITION_COMMIT_AIDED_FIELD: &str = "ignition_commit_aided";
+/// The navigated position uncertainty (m, one sigma) at the commit.
+pub const IGNITION_COMMIT_SIGMA_FIELD: &str = "ignition_commit_sigma";
+
 /// The world-published throttle command. When a committed world publishes it, it overrides the
 /// guidance law — the counterfactual intervention seam, mirroring `"commanded_bank"`.
 const COMMANDED_THROTTLE_FIELD: &str = "commanded_throttle";
@@ -322,6 +338,20 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for ThrottleGuidance<R> {
         if !committed && let Some(sense) = self.corridor_holds(field) {
             committed = true;
             field.set_scalar(IGNITION_LATCH_FIELD, Vec::from([R::one()]));
+            // The typed witnesses, published once at the latching step and carried across leg
+            // boundaries on the coupled field like every other scalar. A consumer reads the commit
+            // without rendering the log.
+            field.set_scalar(
+                IGNITION_COMMIT_STEP_FIELD,
+                Vec::from([R::from_f64(ctx.step() as f64).unwrap_or_else(R::zero)]),
+            );
+            field.set_scalar(IGNITION_COMMIT_MACH_FIELD, Vec::from([sense.mach]));
+            field.set_scalar(IGNITION_COMMIT_Q_FIELD, Vec::from([sense.q_inf]));
+            field.set_scalar(
+                IGNITION_COMMIT_AIDED_FIELD,
+                Vec::from([if sense.aided { R::one() } else { R::zero() }]),
+            );
+            field.set_scalar(IGNITION_COMMIT_SIGMA_FIELD, Vec::from([sense.sigma_m]));
             field.log_mut().add_entry(&alloc::format!(
                 "ignition corridor committed at step {}: Mach {:?}, q {:?} Pa, nav {}, sigma {:?} m",
                 ctx.step(),
