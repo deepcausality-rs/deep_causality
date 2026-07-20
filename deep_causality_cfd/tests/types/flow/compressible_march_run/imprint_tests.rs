@@ -27,8 +27,6 @@ fn imprint_nozzle() -> deep_causality_cfd::PlumeNozzle<f64> {
         throat_diameter: 0.03,
         exit_radius: 0.03407,
         cone_length: 0.0712,
-        p_inf: 1_000.0,
-        mach_inf: 2.0,
         gamma_inf: 1.4,
     }
 }
@@ -64,7 +62,13 @@ fn imprint_world(
         .stop(MarchStop::Fixed(steps))
         .observe(QttObserve::default())
         .reference(reference())
-        .publish_constant("commanded_throttle", throttle);
+        .publish_constant("commanded_throttle", throttle)
+        // The plume stage senses its freestream each step rather than carrying a constant. This
+        // world composes no `FlightSensors`, so it publishes the sensed values directly.
+        .publish_constant("q_inf", 2_800.0)
+        .publish_constant("p_inf", 1_000.0)
+        // No descent schedule here, so the carrier publishes no flight Mach of its own.
+        .publish_constant("flight_mach", 2.0);
     if let Some(s) = spec {
         builder = builder.plume_imprint(s);
     }
@@ -77,7 +81,7 @@ fn the_plume_imprint_follows_the_throttle_through_the_carrier() {
     // pre_step reads it and refreshes the forcing region — the same channel that already carries
     // "truth_state" into the inflow strip. A PhysicsStage never touches the marched layer.
     let cfg = imprint_world("imprint_on", 4, 0.5, Some(imprint_spec(0.01, 8)));
-    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
+    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
         .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
@@ -98,7 +102,7 @@ fn without_the_opt_in_the_carrier_never_re_imprints() {
     // No plume_imprint spec: the forcing region stays exactly as configured at world build, so the
     // march path is untouched and no re-imprint provenance appears.
     let cfg = imprint_world("imprint_off", 4, 0.5, None);
-    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
+    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
         .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
@@ -116,7 +120,7 @@ fn a_steady_throttle_re_imprints_once_not_every_step() {
     // The solver-rebuild discipline: with a constant throttle the drift gate fires once and then
     // stays quiet, so a mask rebuild does not happen every step.
     let cfg = imprint_world("imprint_steady", 6, 0.5, Some(imprint_spec(0.01, 8)));
-    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
+    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
         .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)
@@ -134,7 +138,7 @@ fn a_steady_throttle_re_imprints_once_not_every_step() {
 fn the_refresh_cap_bounds_re_imprints() {
     // max_refreshes = 0 forbids any refresh, even with a live throttle and published geometry.
     let cfg = imprint_world("imprint_capped", 4, 0.5, Some(imprint_spec(0.01, 0)));
-    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 2_800.0, 0.785)
+    let stage = deep_causality_cfd::PlumeObstruction::new(2_000.0, 0.785)
         .with_plume_geometry(imprint_nozzle());
     let report = CfdFlow::march(&cfg)
         .run_coupled(stage, imprint_field(), BlackoutTrigger::new(1.0e9), 0.0)

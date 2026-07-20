@@ -245,13 +245,6 @@ pub const MAX_CT: f64 = 3.0;
 pub const IGNITION_Q_MIN: f64 = 1_200.0;
 /// Upper edge of the ignition dynamic-pressure window, Pa.
 pub const IGNITION_Q_MAX: f64 = 26_000.0;
-/// Representative freestream dynamic pressure through the burn corridor, Pa.
-///
-/// `PlumeObstruction` normalizes its thrust coefficient against a q∞ fixed at construction rather
-/// than the sensed `"q_inf"`, so the world must supply one. It is load-bearing: the A0
-/// preserved-drag correlation is digitized over a bounded `C_T` domain and **errors** outside it, so
-/// a placeholder value does not bias the decrement — it fails the step.
-pub const BURN_CORRIDOR_Q_INF: f64 = 12_000.0;
 /// Propellant reserve floor, kg. Thrust commanded at or below it is an unrecoverable breach.
 pub const PROPELLANT_FLOOR_KG: f64 = 40.0;
 /// Descent-rate bound over the whole flown profile, m·s⁻¹.
@@ -323,17 +316,6 @@ pub const NOZZLE_THROAT_D: f64 = 0.19;
 pub const NOZZLE_EXIT_R: f64 = 0.42;
 /// Cone length, m.
 pub const NOZZLE_CONE_L: f64 = 0.86;
-/// Freestream static pressure the plume model expands against, Pa — the ~30 km band where the burn
-/// actually happens.
-///
-/// Load-bearing with the chamber pressure and exit Mach: the Cordell model is defined only in the
-/// steady blunt-flow regime and **refuses** below a jet exit-pressure ratio of 7, because under it
-/// the jet penetrates and the flow is unsteady. That refusal is the same physics as the throttle
-/// floor. The three constants are sized together so the whole roster — down to the envelope's
-/// throttle floor — stays above the transition.
-pub const PLUME_P_INF: f64 = 1_500.0;
-/// Freestream Mach the plume model sees. Inside the Cordell envelope [2, 4].
-pub const PLUME_MACH_INF: f64 = 2.2;
 /// Freestream ratio of specific heats.
 pub const PLUME_GAMMA_INF: f64 = 1.4;
 

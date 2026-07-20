@@ -7,7 +7,9 @@
 //! opt-in powered-descent flight axes.
 
 use super::{ctx, denying_trigger, field};
-use deep_causality_cfd::{GoverningModel, MachRegime, PhysicsStage, RegimeClassify, ThrustState};
+use deep_causality_cfd::{
+    GoverningModel, MachRegime, PhysicsStage, REGIME_TRANSITIONS_FIELD, RegimeClassify, ThrustState,
+};
 use deep_causality_haft::LogSize;
 
 #[test]
@@ -259,4 +261,68 @@ fn a_touchdown_logs_and_appears_in_the_message() {
         "the phase suffix names it: {}",
         msg[1]
     );
+}
+
+// ── The typed transition counter (change `fix-retropulsion-measurement-integrity`) ────────────
+
+#[test]
+fn the_transition_counter_increments_once_per_genuine_change() {
+    // The classifier already decides whether the regime key changed, in order to log it. That
+    // decision is now also published, so a consumer reads a number instead of counting "regime ->"
+    // substrings in a rendered log.
+    let stage = RegimeClassify::new(1.0, denying_trigger());
+    let mut f = field();
+    let count = |f: &deep_causality_cfd::CoupledField<f64>| {
+        f.scalar(REGIME_TRANSITIONS_FIELD)
+            .and_then(|s| s.first().copied())
+    };
+
+    assert_eq!(
+        count(&f),
+        None,
+        "nothing published before the first classify"
+    );
+
+    // First classification is a change from "no regime".
+    f.set_scalar("mean_free_path", vec![0.005]);
+    stage.apply(&ctx(0), &mut f).expect("applies");
+    assert_eq!(count(&f), Some(1.0));
+
+    // Same band again: not a transition.
+    stage.apply(&ctx(1), &mut f).expect("applies");
+    assert_eq!(
+        count(&f),
+        Some(1.0),
+        "an unchanged regime is not a transition"
+    );
+
+    // A band crossing.
+    f.set_scalar("mean_free_path", vec![0.05]);
+    stage.apply(&ctx(2), &mut f).expect("applies");
+    assert_eq!(count(&f), Some(2.0));
+
+    // And holding in the new band adds nothing.
+    stage.apply(&ctx(3), &mut f).expect("applies");
+    assert_eq!(count(&f), Some(2.0));
+}
+
+#[test]
+fn the_transition_counter_matches_the_logged_entries() {
+    // The counter and the prose must agree, since the counter exists to replace counting the prose.
+    let stage = RegimeClassify::new(1.0, denying_trigger());
+    let mut f = field();
+    for (step, mfp) in [(0, 0.005_f64), (1, 0.005), (2, 0.05), (3, 1.0), (4, 1.0)] {
+        f.set_scalar("mean_free_path", vec![mfp]);
+        stage.apply(&ctx(step), &mut f).expect("applies");
+    }
+    let logged = f
+        .log()
+        .messages()
+        .filter(|m| m.contains("regime ->"))
+        .count();
+    let counted = f
+        .scalar(REGIME_TRANSITIONS_FIELD)
+        .and_then(|s| s.first().copied())
+        .expect("published");
+    assert_eq!(counted, logged as f64);
 }

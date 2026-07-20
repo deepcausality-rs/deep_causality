@@ -28,21 +28,24 @@ pub struct ForkEconomics {
     shares_field: bool,
     fluid_refs: usize,
     field_refs: usize,
+    fork_peak_bond: Option<usize>,
 }
 
 impl ForkEconomics {
-    pub(crate) fn new(
-        shares_fluid: bool,
-        shares_field: bool,
-        fluid_refs: usize,
-        field_refs: usize,
-    ) -> Self {
+    pub(crate) fn new(shares_fluid: bool, shares_field: bool, sample: ForkSample) -> Self {
         Self {
             shares_fluid,
             shares_field,
-            fluid_refs,
-            field_refs,
+            fluid_refs: sample.fluid_refs,
+            field_refs: sample.field_refs,
+            fork_peak_bond: sample.fork_peak_bond,
         }
+    }
+
+    /// The peak bond of the paused state at the fork, the baseline a branch's bond growth is
+    /// measured against.
+    pub fn fork_peak_bond(&self) -> Option<usize> {
+        self.fork_peak_bond
     }
 
     /// Whether the branch started from the pause's marched tensor **by reference** — no tensor data
@@ -56,23 +59,48 @@ impl ForkEconomics {
         self.shares_field
     }
 
-    /// Live references to the shared marched tensor when this branch was set up. Greater than one
-    /// is the positive evidence: the branch holds a *share* of the paused state rather than owning
-    /// a copy of it.
+    /// Holders of the paused marched tensor at the fork, **before** any branch was set up.
+    ///
+    /// A baseline, not evidence. The count this used to carry was read immediately after the branch's
+    /// own `Arc::clone`, so it was at least two by construction and could not distinguish a shared
+    /// fork from any other outcome; under the `parallel` feature it also varied between runs, because
+    /// sibling branches were changing it concurrently. It is sampled once before the fan-out now, so
+    /// it is reproducible and says what it means.
     pub fn fluid_refs(&self) -> usize {
         self.fluid_refs
     }
 
-    /// Live references to the shared coupled field when this branch was set up.
+    /// Holders of the paused coupled field at the fork, before any branch was set up.
     pub fn field_refs(&self) -> usize {
         self.field_refs
     }
 
-    /// The O(1)-fork claim in one call: both halves of the paused state entered this branch by
-    /// reference, and each was genuinely shared rather than solely owned.
+    /// The O(1)-fork claim: both halves of the paused state entered this branch **by reference**,
+    /// with no tensor data copied at fork time.
+    ///
+    /// This is a guard against a source change, not a run-time measurement. Both conjuncts compare a
+    /// clone against the `Arc` it was cloned from, so no input can falsify them — but a future edit
+    /// that materializes the state instead of sharing it flips them, and a study gating on this then
+    /// fails rather than carrying a stale claim. The measurements that *can* vary with the run are the
+    /// fork's rank baseline ([`fork_peak_bond`](Self::fork_peak_bond)) and the branch's growth past it
+    /// ([`Report::bond_growth`](crate::Report::bond_growth)).
     pub fn is_o1(&self) -> bool {
-        self.shares_fluid && self.shares_field && self.fluid_refs > 1 && self.field_refs > 1
+        self.shares_fluid && self.shares_field
     }
+}
+
+/// The reference counts and rank a fork is measured against, sampled **once** by the caller before
+/// any fan-out begins.
+///
+/// Sampling `Arc::strong_count` inside each branch reads a count that sibling branches are
+/// concurrently changing, so the recorded number varies between runs and a study that writes it to a
+/// regression artifact writes something undiffable. One sample taken before the branches exist
+/// describes the fork itself, which is what the measurement is about.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ForkSample {
+    pub(crate) fluid_refs: usize,
+    pub(crate) field_refs: usize,
+    pub(crate) fork_peak_bond: Option<usize>,
 }
 
 /// The owned result of a CfdFlow solver run: labeled observation series. The borrows
@@ -166,6 +194,16 @@ impl<R: CfdScalar> Report<R> {
     /// against itself.
     pub fn peak_bond(&self) -> Option<usize> {
         self.peak_bond
+    }
+
+    /// How far this branch's rank grew past the rank the paused state carried at the fork.
+    ///
+    /// `None` when either rank is unavailable. The second half of the fork-economics question: a
+    /// fork that is cheap to take is only cheap overall if the branch's state does not then blow
+    /// past the trunk's compression.
+    pub fn bond_growth(&self) -> Option<usize> {
+        let fork = self.fork_economics?.fork_peak_bond()?;
+        Some(self.peak_bond?.saturating_sub(fork))
     }
 
     /// What this branch's fork cost, if this report came from continuing a forked branch. `None`

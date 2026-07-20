@@ -56,7 +56,7 @@ fn powered_stack() -> impl PhysicsStage<2, f64> {
             RegimeClassify::new(1.0, BlackoutTrigger::new(1.0e9)).with_flight_axes(0.8, 1.2, 500.0),
         )
         .then(RetroThrust::new(THRUST, ISP))
-        .then(PlumeObstruction::new(THRUST, Q_INF, S_REF_AREA))
+        .then(PlumeObstruction::new(THRUST, S_REF_AREA))
         .then(ThrottleGuidance::new(THRUST, GRAVITY).with_corridor(corridor()))
         .then(CyberneticCorrect::new(envelope()).with_burn_sensing(
             "q_inf",

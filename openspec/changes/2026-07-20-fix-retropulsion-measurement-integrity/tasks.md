@@ -30,33 +30,49 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
       carrier's refusal path (`carrier.rs:537-543`, `carrier.rs:596-598`)
 - [x] 1.5 `Report::peak_bond()` — the measured rank of the final marched state, recorded at
       `finish_report`
-- [ ] 1.6 `ForkEconomics` samples `Arc::strong_count` once before the `scoped_map` fan-out so the value
-      is reproducible under the `parallel` feature; add the trunk-relative step-cost ratio and the
-      post-fork bond growth that design note §10(4d) requires. If a deterministic sample is not
-      reachable at that seam, drop `fluid_refs` from the recorded artifact and keep it in the gate
-      message only
-- [ ] 1.7 Tests in `deep_causality_cfd/tests/types/flow/`: each witness is published, each counter
+- [x] 1.6 `ForkEconomics` samples `Arc::strong_count` once before the `scoped_map` fan-out so the value
+      is reproducible under the `parallel` feature; add the post-fork bond growth that design note
+      §10(4d) requires (`ForkEconomics::fork_peak_bond` + `Report::bond_growth`)
+- [x] 1.6a **`is_o1()` narrowed.** Moving the sample before the fan-out made the pre-existing
+      `fluid_refs > 1` conjunct fail, which is the audit's G2 finding realized: the count was only
+      above one because it was read on the line after the branch's own `Arc::clone`. The conjunct is
+      removed and `is_o1()` is now `shares_fluid && shares_field`, documented as a source-change guard
+      rather than a run-time measurement. Two tests in `fork_tests.rs` asserted the old tautology and
+      were rewritten to the corrected semantics — the API changed, so the tests follow it
+- [ ] 1.6b **Deferred to group 5:** the trunk-relative step-cost ratio. It needs wall-clock timing,
+      which does not belong in the solver crate; the example times its own trunk leg and fan-out
+      instead. Tracked as task 5.6
+- [x] 1.7 Tests in `deep_causality_cfd/tests/types/flow/`: each witness is published, each counter
       increments once per event, `alternation_applied` is false on the refusal path, `peak_bond`
       reports a rank below the cap for a low-rank state, and two fork runs record identical economics
-- [ ] 1.8 **Verify:** `cargo test -p deep_causality_cfd`
+- [x] 1.8 **Verify:** `cargo test -p deep_causality_cfd`
 
 > Commit: `feat(deep_causality_cfd): typed witnesses for commit, re-seeds, transitions, bond, fork economics`
 
 ## 2. Library: SRP closure validity (P1, P2, P3)
 
-- [ ] 2.1 **BREAKING** — `PlumeObstruction::new(thrust, s_ref)` drops the `q_inf` parameter; the stage
+- [x] 2.1 **BREAKING** — `PlumeObstruction::new(thrust, s_ref)` drops the `q_inf` parameter; the stage
       reads the sensed dynamic-pressure scalar each step with a configurable field name matching
       `CyberneticCorrect::with_burn_sensing`. An absent or non-positive value is an `Err`
       (`retropulsion.rs:371-404`)
-- [ ] 2.2 Add the Jarvinen–Adams Mach applicability bound: outside the band the stage applies no
+- [x] 2.1a **`p_inf` needed a producer.** The carrier published `freestream_n` but no freestream
+      temperature, so no stage could form the ambient static pressure. `CompressibleMarchRun` now
+      publishes `"freestream_temperature"` from the schedule row it already holds, and `FlightSensors`
+      derives `"p_inf" = n∞·k_B·T∞` beside the `q∞` it already produced
+- [x] 2.1b **`PlumeNozzle` narrowed.** `p_inf` and `mach_inf` are removed from the record: they are
+      sensed per step now, and leaving them as fields would let a caller re-freeze them. Only
+      `gamma_inf`, a property of the ambient gas rather than of the flight, remains
+- [x] 2.1c **`PRESERVED_DRAG_FRACTION_FIELD` exported**, and the stand-down path *takes* the scalar
+      off the field rather than leaving a stale value that reads as a live measurement
+- [x] 2.2 Add the Jarvinen–Adams Mach applicability bound: outside the band the stage applies no
       decrement, publishes no geometry, and logs once per crossing (`retropulsion.rs:394`)
-- [ ] 2.3 The Cordell–Braun call takes the sensed freestream Mach and static pressure instead of
+- [x] 2.3 The Cordell–Braun call takes the sensed freestream Mach and static pressure instead of
       `PLUME_MACH_INF` and `PLUME_P_INF`, so the kernel's own envelope check tests the flight
       (`retropulsion.rs:423-437`)
-- [ ] 2.4 Tests: closure and gate produce the same `C_T` on one step; an absent `q_inf` errors; the
+- [x] 2.4 Tests: closure and gate produce the same `C_T` on one step; an absent `q_inf` errors; the
       stage stands down below the Mach floor and resumes above it; geometry differs between two
       altitudes at one throttle; the kernel's envelope rejection surfaces as a step error
-- [ ] 2.5 **Verify:** `cargo test -p deep_causality_cfd`, and confirm the only workspace caller of
+- [x] 2.5 **Verify:** `cargo test -p deep_causality_cfd`, and confirm the only workspace caller of
       `PlumeObstruction::new` is `examples/avionics_examples/src/shared/world.rs`
 
 > Commit: `fix(deep_causality_cfd)!: PlumeObstruction reads sensed q-infinity and bounds the A0 correlation by Mach`
@@ -112,8 +128,9 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
       corrected run shows a flip, gate its location against the correlation; if it does not, record
       that as a measured finding in the gate message (`model.rs:491`)
 - [ ] 5.5 Gate (4c): compare `dv_actual` against `dv_frozen` (`model.rs:522`)
-- [ ] 5.6 Gate (4d): keep `is_o1` as a source-change guard and add the step-cost-ratio and bond-growth
-      bands (`model.rs:448`)
+- [ ] 5.6 Gate (4d): keep `is_o1` as a source-change guard, read `Report::bond_growth()`, and measure
+      the trunk-relative step-cost ratio in the example (timing the trunk leg and the branch fan-out),
+      since the solver crate carries no clock. Band both (`model.rs:448`)
 - [ ] 5.7 Gate (4e): read `Report::alternation_applied()` (`model.rs:538`)
 - [ ] 5.8 Gate (4f) **new**: roster non-degeneracy on realized throttle
 - [ ] 5.9 Gate (6): bound the descent rate on both sides of `CONTACT_SPEED_MS` (`model.rs:637`)

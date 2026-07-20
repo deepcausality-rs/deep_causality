@@ -35,7 +35,7 @@
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::CfdScalar;
 use alloc::vec::Vec;
-use deep_causality_physics::PhysicsError;
+use deep_causality_physics::{BOLTZMANN_CONSTANT, PhysicsError};
 
 /// Publishes the two powered-descent sensor scalars the safety envelope reads but nothing else
 /// produces: freestream dynamic pressure and descent rate.
@@ -48,8 +48,10 @@ pub struct FlightSensors<R: CfdScalar> {
     density_field: &'static str,
     speed_field: &'static str,
     truth_field: &'static str,
+    temperature_field: &'static str,
     q_field: &'static str,
     descent_rate_field: &'static str,
+    pressure_field: &'static str,
 }
 
 impl<R: CfdScalar> FlightSensors<R> {
@@ -65,8 +67,10 @@ impl<R: CfdScalar> FlightSensors<R> {
             density_field: "freestream_n",
             speed_field: "flight_speed",
             truth_field: "truth_state",
+            temperature_field: "freestream_temperature",
             q_field: "q_inf",
             descent_rate_field: "descent_rate",
+            pressure_field: "p_inf",
         }
     }
 
@@ -82,6 +86,12 @@ impl<R: CfdScalar> FlightSensors<R> {
         self
     }
 
+    /// Rename the published ambient static pressure.
+    pub fn with_pressure_field(mut self, pressure_field: &'static str) -> Self {
+        self.pressure_field = pressure_field;
+        self
+    }
+
     /// Rename the three inputs read from the carrier and the truth propagator.
     pub fn with_input_names(
         mut self,
@@ -92,6 +102,12 @@ impl<R: CfdScalar> FlightSensors<R> {
         self.density_field = density_field;
         self.speed_field = speed_field;
         self.truth_field = truth_field;
+        self
+    }
+
+    /// Rename the freestream static temperature this stage reads to form `p∞`.
+    pub fn with_temperature_field(mut self, temperature_field: &'static str) -> Self {
+        self.temperature_field = temperature_field;
         self
     }
 }
@@ -113,6 +129,25 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for FlightSensors<R> {
             let two = R::one() + R::one();
             let q_inf = (n_inf * self.mean_molecular_mass * speed * speed) / two;
             field.set_scalar(self.q_field, Vec::from([q_inf]));
+        }
+
+        // ── p∞ = n∞·k_B·T∞, the ambient static pressure. ──
+        //
+        // A plume model expands its jet against this. Handed a constant instead, the model is right
+        // at one altitude of the descent and wrong everywhere else — and its own validity check then
+        // tests the constant rather than the flight.
+        if let (Some(n_inf), Some(t_inf)) = (
+            n_inf,
+            field
+                .scalar(self.temperature_field)
+                .and_then(|s| s.first().copied()),
+        ) {
+            let k_b = R::from_f64(BOLTZMANN_CONSTANT).ok_or_else(|| {
+                PhysicsError::NumericalInstability(
+                    "FlightSensors: R::from_f64(BOLTZMANN_CONSTANT) failed".into(),
+                )
+            })?;
+            field.set_scalar(self.pressure_field, Vec::from([n_inf * k_b * t_inf]));
         }
 
         // ── ḣ = −(r·v)/|r|, positive downward. ──

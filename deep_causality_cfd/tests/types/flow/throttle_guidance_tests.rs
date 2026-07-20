@@ -9,8 +9,9 @@
 //! the published-scalar navigation read.
 
 use deep_causality_cfd::{
-    Ambient, CoupledField, IGNITION_LATCH_FIELD, IgnitionCorridor, PhysicsStage, StepContext,
-    ThrottleGuidance,
+    Ambient, CoupledField, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
+    IGNITION_COMMIT_Q_FIELD, IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD,
+    IGNITION_LATCH_FIELD, IgnitionCorridor, PhysicsStage, StepContext, ThrottleGuidance,
 };
 use deep_causality_physics::{PhysicsErrorEnum, SolenoidalField, VelocityOneForm};
 use deep_causality_tensor::CausalTensor;
@@ -432,4 +433,84 @@ fn a_stopping_burn_that_cannot_stop_burns_rather_than_coasting() {
 
     assert!(field.throttle_action().unwrap() > 0.0);
     assert!(log_has(&field, "stopping burn started"));
+}
+
+// ── The typed commit witnesses (change `fix-retropulsion-measurement-integrity`) ─────────────
+
+#[test]
+fn the_commit_publishes_its_sensed_values_as_typed_scalars() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 42);
+    let mut field = committed_field();
+
+    PhysicsStage::<2, f64>::apply(&guidance(), &ctx, &mut field).unwrap();
+
+    let first = |name: &str| field.scalar(name).and_then(|s| s.first().copied());
+    assert_eq!(first(IGNITION_COMMIT_STEP_FIELD), Some(42.0));
+    assert_eq!(first(IGNITION_COMMIT_MACH_FIELD), Some(2.0));
+    assert_eq!(first(IGNITION_COMMIT_Q_FIELD), Some(3_000.0));
+    assert_eq!(first(IGNITION_COMMIT_AIDED_FIELD), Some(1.0));
+    // The published variance is a covariance trace in m^2, so the witness is its square root.
+    assert_eq!(first(IGNITION_COMMIT_SIGMA_FIELD), Some(20.0));
+}
+
+#[test]
+fn the_commit_witnesses_survive_a_reworded_log_entry() {
+    // The point of the typed witnesses: a consumer reads them without the message. Recovering the
+    // same facts by splitting the rendered entry ties a gate to the wording and to the scalar's
+    // `Debug` formatting.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 7);
+    let mut field = committed_field();
+
+    PhysicsStage::<2, f64>::apply(&guidance(), &ctx, &mut field).unwrap();
+
+    let rendered = format!("{}", field.log());
+    assert!(rendered.contains("ignition corridor committed"));
+    // Every witness is readable without touching that string.
+    for name in [
+        IGNITION_COMMIT_STEP_FIELD,
+        IGNITION_COMMIT_MACH_FIELD,
+        IGNITION_COMMIT_Q_FIELD,
+        IGNITION_COMMIT_AIDED_FIELD,
+        IGNITION_COMMIT_SIGMA_FIELD,
+    ] {
+        assert!(field.scalar(name).is_some(), "{name} must be published");
+    }
+}
+
+#[test]
+fn an_uncommitted_step_publishes_no_commit_witnesses() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let mut field = committed_field();
+    // Outside the Mach band: the corridor does not hold, so nothing commits.
+    field.set_scalar("flight_mach", vec![9.0]);
+
+    PhysicsStage::<2, f64>::apply(&guidance(), &ctx, &mut field).unwrap();
+
+    assert!(field.scalar(IGNITION_LATCH_FIELD).is_none());
+    assert!(field.scalar(IGNITION_COMMIT_STEP_FIELD).is_none());
+    assert!(field.scalar(IGNITION_COMMIT_MACH_FIELD).is_none());
+}
+
+#[test]
+fn the_witnesses_record_the_committing_step_not_a_later_one() {
+    // The latch is one-way, so the witnesses must describe the step that fired rather than being
+    // refreshed by every step after it.
+    let (manifold, state) = empty_context();
+    let mut field = committed_field();
+    let g = guidance();
+
+    let ctx = StepContext::new(&manifold, &state, DT, 11);
+    PhysicsStage::<2, f64>::apply(&g, &ctx, &mut field).unwrap();
+
+    // A later step, inside the corridor but at a different Mach.
+    field.set_scalar("flight_mach", vec![2.5]);
+    let ctx = StepContext::new(&manifold, &state, DT, 12);
+    PhysicsStage::<2, f64>::apply(&g, &ctx, &mut field).unwrap();
+
+    let first = |name: &str| field.scalar(name).and_then(|s| s.first().copied());
+    assert_eq!(first(IGNITION_COMMIT_STEP_FIELD), Some(11.0));
+    assert_eq!(first(IGNITION_COMMIT_MACH_FIELD), Some(2.0));
 }

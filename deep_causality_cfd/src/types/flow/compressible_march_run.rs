@@ -347,6 +347,10 @@ where
         field.set_scalar("flight_speed", Vec::from([speed]));
         field.set_scalar("flight_mach", Vec::from([mach]));
         field.set_scalar("freestream_n", Vec::from([row.n_tot]));
+        // The freestream static temperature completes the freestream state. Without it a consumer
+        // needing the ambient static pressure has to be handed a constant, which is then correct at
+        // exactly one altitude of the descent.
+        field.set_scalar("freestream_temperature", Vec::from([row.temperature]));
 
         // Rebuild when the inflow's wave speed outgrows the built acoustic envelope.
         //
@@ -449,7 +453,7 @@ where
     /// density and speed series.
     /// The largest bond dimension across the four conserved tensor trains — the rank this state
     /// actually reached, which sits at or below the configured truncation cap.
-    fn peak_bond(&self, state: &Self::State) -> Option<usize> {
+    fn state_peak_bond(state: &Self::State) -> Option<usize> {
         state.iter().map(|t| t.max_bond()).max()
     }
 

@@ -15,15 +15,14 @@ use super::constants::{
     T_REF, T_VE_INITIAL, THETA_VIB, TRUTH_ALTITUDE_0, TRUTH_V0, U_REF,
 };
 use super::constants::{
-    BURN_CORRIDOR_Q_INF, CHAMBER_PRESSURE_MAX, CHAMBER_TEMPERATURE, CONTACT_SPEED_MS, G0,
-    IGNITION_MACH_MAX, IGNITION_MACH_MIN, IGNITION_Q_MAX, IGNITION_Q_MIN, IMPRINT_AXIS_Y,
-    IMPRINT_DOMAIN_M, IMPRINT_ETA, IMPRINT_FACE_X, IMPRINT_MAX_REFRESHES, IMPRINT_SMOOTHING_CELLS,
-    IMPRINT_TARGET, IMPRINT_THROTTLE_TOL, JET_GAMMA, JET_R_SPECIFIC, MAX_CT, MAX_DESCENT_RATE,
-    NOZZLE_CONE_L, NOZZLE_EXIT_MACH, NOZZLE_EXIT_R, NOZZLE_HALF_ANGLE_RAD, NOZZLE_THROAT_D,
-    PLUME_GAMMA_INF, PLUME_MACH_INF, PLUME_P_INF, PLUME_S_REF_M2, PROPELLANT_FLOOR_KG,
-    PROPELLANT_KG, RETRO_ISP_S, RETRO_THRUST_N, TERMINAL_MAX_CT, TERMINAL_MAX_DESCENT_RATE,
-    TERMINAL_THROTTLE_FLOOR, THROTTLE_CEILING, THROTTLE_FLOOR, TOUCHDOWN_ALTITUDE_M,
-    VEHICLE_MASS_KG,
+    CHAMBER_PRESSURE_MAX, CHAMBER_TEMPERATURE, CONTACT_SPEED_MS, G0, IGNITION_MACH_MAX,
+    IGNITION_MACH_MIN, IGNITION_Q_MAX, IGNITION_Q_MIN, IMPRINT_AXIS_Y, IMPRINT_DOMAIN_M,
+    IMPRINT_ETA, IMPRINT_FACE_X, IMPRINT_MAX_REFRESHES, IMPRINT_SMOOTHING_CELLS, IMPRINT_TARGET,
+    IMPRINT_THROTTLE_TOL, JET_GAMMA, JET_R_SPECIFIC, MAX_CT, MAX_DESCENT_RATE, NOZZLE_CONE_L,
+    NOZZLE_EXIT_MACH, NOZZLE_EXIT_R, NOZZLE_HALF_ANGLE_RAD, NOZZLE_THROAT_D, PLUME_GAMMA_INF,
+    PLUME_S_REF_M2, PROPELLANT_FLOOR_KG, PROPELLANT_KG, RETRO_ISP_S, RETRO_THRUST_N,
+    TERMINAL_MAX_CT, TERMINAL_MAX_DESCENT_RATE, TERMINAL_THROTTLE_FLOOR, THROTTLE_CEILING,
+    THROTTLE_FLOOR, TOUCHDOWN_ALTITUDE_M, VEHICLE_MASS_KG,
 };
 use super::constants::{
     GAMMA_TERMINAL, N_REF_TERMINAL, S_REF_TERMINAL, SEED_P_HAT_TERMINAL, SEED_RHO_HAT_TERMINAL,
@@ -373,21 +372,20 @@ pub fn powered_descent_coupling_with(
         // Order is load-bearing: the plume decrement scales the along-velocity component of
         // the force channel, and the thrust term is also along −v̂ — so the decrement must be
         // applied to the aerodynamic drag alone, before the thrust is added to the channel.
-        // `PlumeObstruction` takes its dynamic pressure at CONSTRUCTION, not from the sensed
-        // `"q_inf"` the gate reads — so the world supplies a representative burn-corridor value.
-        // The A0 correlation is digitized over a bounded `C_T` domain and errors outside it, so a
-        // placeholder normalization here does not merely bias the decrement, it fails the step.
+        //
+        // The stage senses `"q_inf"`, `"flight_mach"` and `"p_inf"` from the flown state — the same
+        // dynamic pressure the gate's `C_T` cap reads, so the closure and the envelope describe one
+        // physical state. It also carries the Jarvinen–Adams Mach band, so the correlation stands
+        // down where its bow-shock mechanism has nothing to act on.
+        //
         // The optional geometry publication is what lets the marched layer learn the plume: the
         // carrier's re-imprint reader consumes `"plume_max_radius"`/`"plume_penetration"` from here.
         // It is **state realism only** — the force-channel drag decrement is the A0 correlation with
         // or without it (the AMBER verdict).
         .then(
-            PlumeObstruction::new(
-                utils::ft(RETRO_THRUST_N),
-                utils::ft(BURN_CORRIDOR_Q_INF),
-                utils::ft(PLUME_S_REF_M2),
-            )
-            .with_plume_geometry(plume_nozzle()),
+            PlumeObstruction::new(utils::ft(RETRO_THRUST_N), utils::ft(PLUME_S_REF_M2))
+                .with_mach_band(utils::ft(IGNITION_MACH_MIN), utils::ft(IGNITION_MACH_MAX))
+                .with_plume_geometry(plume_nozzle()),
         )
         .then(RetroThrust::new(
             utils::ft(RETRO_THRUST_N),
@@ -502,8 +500,6 @@ pub fn plume_nozzle() -> PlumeNozzle<FloatType> {
         throat_diameter: utils::ft(NOZZLE_THROAT_D),
         exit_radius: utils::ft(NOZZLE_EXIT_R),
         cone_length: utils::ft(NOZZLE_CONE_L),
-        p_inf: utils::ft(PLUME_P_INF),
-        mach_inf: utils::ft(PLUME_MACH_INF),
         gamma_inf: utils::ft(PLUME_GAMMA_INF),
     }
 }

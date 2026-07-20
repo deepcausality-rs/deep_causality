@@ -41,6 +41,7 @@
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::CfdScalar;
 use alloc::vec::Vec;
+use deep_causality_haft::LogAddEntry;
 use deep_causality_physics::{
     Area, Force, Length, PhysicsError, Pressure, Temperature, cordell_braun_plume_boundary_kernel,
     propellant_mass_flow_kernel, srp_preserved_drag_fraction_kernel, srp_thrust_coefficient_kernel,
@@ -78,6 +79,13 @@ impl<R: CfdScalar> PropulsionStub<R> {
         commanded_throttle(field)
     }
 }
+
+/// The preserved-drag fraction the A0 correlation applied this step.
+///
+/// Absent when the closure stood down — outside its Mach band, or at zero throttle — so a consumer
+/// distinguishes "no decrement applied" from "a decrement of this size applied" without inspecting a
+/// log. A stale value left on the field would read as a live measurement.
+pub const PRESERVED_DRAG_FRACTION_FIELD: &str = "preserved_drag_fraction";
 
 /// The commanded throttle a propulsion stage acts on: the guidance-written throttle channel if set,
 /// else the world-published `"commanded_throttle"` scalar's first cell, else `None`. Shared by every
@@ -324,11 +332,11 @@ pub struct PlumeNozzle<R: CfdScalar> {
     pub exit_radius: R,
     /// Cone length, m.
     pub cone_length: R,
-    /// Freestream static pressure, Pa.
-    pub p_inf: R,
-    /// Freestream Mach number (the Cordell envelope is [2, 4]).
-    pub mach_inf: R,
     /// Freestream ratio of specific heats.
+    ///
+    /// The freestream **static pressure** and **Mach number** are deliberately absent: they are
+    /// sensed from the flown state each step, so the kernel's validity envelope tests the flight.
+    /// Only the composition of the ambient gas is a fixed property of the world.
     pub gamma_inf: R,
 }
 
@@ -359,22 +367,61 @@ pub struct PlumeNozzle<R: CfdScalar> {
 #[derive(Debug, Clone, Copy)]
 pub struct PlumeObstruction<R: CfdScalar> {
     thrust: R,
-    q_inf: R,
     s_ref: R,
+    q_field: &'static str,
+    mach_field: &'static str,
+    pressure_field: &'static str,
+    mach_band: Option<(R, R)>,
     nozzle: Option<PlumeNozzle<R>>,
 }
 
 impl<R: CfdScalar> PlumeObstruction<R> {
-    /// A plume stage with full-throttle thrust `thrust` (N) and the A0 normalization pair `q_inf`
-    /// (Pa) and `s_ref` (m²). No plume geometry is published until
-    /// [`with_plume_geometry`](Self::with_plume_geometry) opts in.
-    pub fn new(thrust: R, q_inf: R, s_ref: R) -> Self {
+    /// A plume stage with full-throttle thrust `thrust` (N) and the A0 reference area `s_ref` (m²).
+    ///
+    /// The dynamic pressure is **sensed**, not supplied: it is read from `"q_inf"` each step, the
+    /// same scalar [`CyberneticCorrect`](super::CyberneticCorrect)'s burn sensing reads, so the
+    /// closure and the envelope's dynamic `C_T` cap describe one physical state.
+    ///
+    /// No plume geometry is published until [`with_plume_geometry`](Self::with_plume_geometry) opts
+    /// in, and the correlation applies at every Mach until
+    /// [`with_mach_band`](Self::with_mach_band) bounds it.
+    pub fn new(thrust: R, s_ref: R) -> Self {
         Self {
             thrust,
-            q_inf,
             s_ref,
+            q_field: "q_inf",
+            mach_field: "flight_mach",
+            pressure_field: "p_inf",
+            mach_band: None,
             nozzle: None,
         }
+    }
+
+    /// Rename the sensed scalars, matching a world that configured the gate's sensing away from the
+    /// defaults so producer and both consumers stay in step.
+    pub fn with_sensing(
+        mut self,
+        q_field: &'static str,
+        mach_field: &'static str,
+        pressure_field: &'static str,
+    ) -> Self {
+        self.q_field = q_field;
+        self.mach_field = mach_field;
+        self.pressure_field = pressure_field;
+        self
+    }
+
+    /// Bound the correlation to the flight Mach band it was measured over.
+    ///
+    /// The Jarvinen–Adams dataset spans Mach 0.4–2.0 and its mechanism is **bow-shock displacement**:
+    /// the plume pushes the standoff shock away and the high post-shock pressure that was
+    /// decelerating the forebody is replaced by low-pressure recirculating plume gas. Below the
+    /// dataset's Mach floor there is no bow shock to displace, so the correlation describes nothing
+    /// there — carrying it down deletes most of a subsonic vehicle's aerodynamic drag on the strength
+    /// of a supersonic interaction. Outside the band the stage stands down and records that it did.
+    pub fn with_mach_band(mut self, mach_min: R, mach_max: R) -> Self {
+        self.mach_band = Some((mach_min, mach_max));
+        self
     }
 
     /// Opt into publishing the analytic plume geometry each active step (state realism only — the
@@ -382,6 +429,19 @@ impl<R: CfdScalar> PlumeObstruction<R> {
     pub fn with_plume_geometry(mut self, nozzle: PlumeNozzle<R>) -> Self {
         self.nozzle = Some(nozzle);
         self
+    }
+
+    /// Whether the sensed flight Mach lies inside the configured applicability band. An unbounded
+    /// stage applies everywhere; an absent Mach scalar under a configured band is outside it, because
+    /// an absent sensor is a condition unmet rather than a condition waived.
+    fn within_band(&self, field: &CoupledField<R>) -> bool {
+        let Some((lo, hi)) = self.mach_band else {
+            return true;
+        };
+        field
+            .scalar(self.mach_field)
+            .and_then(|s| s.first().copied())
+            .is_some_and(|m| m >= lo && m <= hi)
     }
 }
 
@@ -394,12 +454,44 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PlumeObstruction<R> {
         let Some(throttle) = active_throttle(field) else {
             return Ok(());
         };
+
+        // ── Applicability first: outside the band the correlation describes nothing. ──
+        //
+        // Logged on the crossing rather than every step, so a leg spent outside the band leaves one
+        // entry rather than one per step. The marker is the published fraction's presence: a step
+        // that stood down clears it, so a consumer cannot read a stale fraction as a live one.
+        if !self.within_band(field) {
+            if field.take_scalar(PRESERVED_DRAG_FRACTION_FIELD).is_some() {
+                field.log_mut().add_entry(
+                    "SRP drag closure stood down: flight Mach outside the Jarvinen-Adams band, \
+                     no decrement applied",
+                );
+            }
+            return Ok(());
+        }
+
         let thrust = throttle * self.thrust;
 
         // ── The A0 drag decrement: the committed drag authority. ──
+        //
+        // The dynamic pressure is the sensed one. Taking it at construction let this closure and the
+        // safety gate's dynamic `C_T` cap normalize the same coefficient against two different
+        // pressures in the same step, so the closure could evaluate the correlation deep in its
+        // shallow range while the gate simultaneously judged the vehicle to be at its stability
+        // limit. An absent or non-positive sensor is an error rather than a fallback: a fallback is
+        // how a second normalization survives unnoticed.
+        let q_inf = field
+            .scalar(self.q_field)
+            .and_then(|s| s.first().copied())
+            .ok_or_else(|| {
+                PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                    "PlumeObstruction: active throttle requires a sensed \"{}\" to normalize C_T",
+                    self.q_field
+                ))
+            })?;
         let c_t = srp_thrust_coefficient_kernel(
             Force::new(thrust)?,
-            Pressure::new(self.q_inf)?,
+            Pressure::new(q_inf)?,
             Area::new(self.s_ref)?,
         )?;
         let fraction = srp_preserved_drag_fraction_kernel(c_t)?;
@@ -417,10 +509,31 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PlumeObstruction<R> {
         let axial_drag = force[0] * v_hat[0] + force[1] * v_hat[1] + force[2] * v_hat[2];
         let scale = (fraction - R::one()) * axial_drag;
         field.add_aero_force([scale * v_hat[0], scale * v_hat[1], scale * v_hat[2]]);
-        field.set_scalar("preserved_drag_fraction", Vec::from([fraction]));
+        field.set_scalar(PRESERVED_DRAG_FRACTION_FIELD, Vec::from([fraction]));
 
         // ── Optional state-realism geometry for the carrier's re-imprint reader. ──
         if let Some(n) = self.nozzle {
+            // The freestream the jet expands against is the **sensed** one. Frozen constants make
+            // the kernel's own validity envelope test the constant rather than the flight, so a leg
+            // that leaves the envelope still receives geometry.
+            let p_inf = field
+                .scalar(self.pressure_field)
+                .and_then(|s| s.first().copied())
+                .ok_or_else(|| {
+                    PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                        "PlumeObstruction: plume geometry requires a sensed \"{}\"",
+                        self.pressure_field
+                    ))
+                })?;
+            let mach_inf = field
+                .scalar(self.mach_field)
+                .and_then(|s| s.first().copied())
+                .ok_or_else(|| {
+                    PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                        "PlumeObstruction: plume geometry requires a sensed \"{}\"",
+                        self.mach_field
+                    ))
+                })?;
             let geometry = cordell_braun_plume_boundary_kernel(
                 Pressure::new(throttle * n.chamber_pressure_max)?,
                 Temperature::new(n.chamber_temperature)?,
@@ -431,8 +544,8 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PlumeObstruction<R> {
                 Length::new(n.throat_diameter)?,
                 Length::new(n.exit_radius)?,
                 Length::new(n.cone_length)?,
-                Pressure::new(n.p_inf)?,
-                n.mach_inf,
+                Pressure::new(p_inf)?,
+                mach_inf,
                 n.gamma_inf,
             )?;
             field.set_scalar(

@@ -76,7 +76,9 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::{ForkEconomics, Report};
-pub use retropulsion::{PlumeNozzle, PlumeObstruction, PropulsionStub, RetroThrust};
+pub use retropulsion::{
+    PRESERVED_DRAG_FRACTION_FIELD, PlumeNozzle, PlumeObstruction, PropulsionStub, RetroThrust,
+};
 pub use study::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
     EnsembleMarched, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared,

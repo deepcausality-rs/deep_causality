@@ -18,6 +18,7 @@
 use super::blackout::BlackoutTrigger;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::CfdScalar;
+use crate::types::flow::report::ForkSample;
 use crate::types::flow::{ForkEconomics, MarchState, Report};
 use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;
@@ -93,10 +94,14 @@ pub trait CoupledCarrier<const D: usize, R: CfdScalar>: Sized {
 
     /// The peak bond dimension of `state`, for a carrier whose state is a tensor train.
     ///
+    /// An associated function rather than a method: a paused march samples its own rank at fork time
+    /// to give the branch's bond growth a baseline, and it holds a state without holding a built
+    /// carrier.
+    ///
     /// The default is `None`: a carrier whose state carries no rank has nothing to report, and a
     /// compression gate must fail on the absence rather than substitute the configured cap. Reading
     /// the cap back is a comparison of a constant against itself.
-    fn peak_bond(&self, _state: &Self::State) -> Option<usize> {
+    fn state_peak_bond(_state: &Self::State) -> Option<usize> {
         None
     }
 
@@ -247,7 +252,7 @@ where
     let mut report = Report::new(M::config_name(cfg));
     sampler.into_report(observe, carrier.dt(), &mut report)?;
     carrier.finish(state, &mut report)?;
-    if let Some(bond) = carrier.peak_bond(state) {
+    if let Some(bond) = M::state_peak_bond(state) {
         report.set_peak_bond(bond);
     }
     // Expose the final field's scalars as `final_<name>` so a reduction reads any carried quantity
@@ -498,6 +503,20 @@ where
         MarchState::at((*self.field).clone(), self.step)
     }
 
+    /// Sample what this fork costs, **once**, before any branch exists.
+    ///
+    /// Both reference counts and the paused rank describe the fork itself, so they are read here
+    /// rather than inside each branch: a count read inside a branch is a count sibling branches are
+    /// concurrently changing under the `parallel` feature, and it lands in a study's recorded
+    /// artifact as a different number on every run.
+    fn fork_sample(&self) -> ForkSample {
+        ForkSample {
+            fluid_refs: Arc::strong_count(&self.state),
+            field_refs: Arc::strong_count(&self.field),
+            fork_peak_bond: M::state_peak_bond(&self.state),
+        }
+    }
+
     /// Fork the pause: an **O(1)** branch sharing the paused state and field by `Arc` — no tensor
     /// data is copied until (and unless) the branch writes.
     pub fn fork(&self) -> CarrierFork<'_, 'c, R, S, M, D> {
@@ -545,9 +564,13 @@ where
         M::Config: MaybeParallel,
         Report<R>: MaybeParallel,
     {
-        scoped_map(worlds, |world| self.continue_with(*world, steps))
-            .into_iter()
-            .collect()
+        // One sample for the whole fan-out, taken before any branch is spawned.
+        let sample = self.fork_sample();
+        scoped_map(worlds, |world| {
+            self.continue_with_sampled(*world, steps, sample)
+        })
+        .into_iter()
+        .collect()
     }
 
     /// Fly **one** branch world from this pause: fork (O(1), copy-on-write), alternate into the
@@ -569,6 +592,18 @@ where
         &self,
         world: &M::Config,
         steps: usize,
+    ) -> Result<Report<R>, PhysicsError> {
+        let sample = self.fork_sample();
+        self.continue_with_sampled(world, steps, sample)
+    }
+
+    /// [`continue_with`](Self::continue_with) against a fork sample the caller already took, so a
+    /// fan-out records one sample rather than one per concurrently running branch.
+    fn continue_with_sampled(
+        &self,
+        world: &M::Config,
+        steps: usize,
+        sample: ForkSample,
     ) -> Result<Report<R>, PhysicsError> {
         // Mirror `fork().alternate_context(world).continue_march(steps)` exactly, but with `world`
         // as a short-lived borrow: an errored pause returns its captured error untouched, and a
@@ -592,8 +627,7 @@ where
         let economics = ForkEconomics::new(
             Arc::ptr_eq(&branch_state, &self.state),
             Arc::ptr_eq(&branch_field, &self.field),
-            Arc::strong_count(&self.state),
-            Arc::strong_count(&self.field),
+            sample,
         );
         let mut report = run_continued_segment(
             self,
@@ -754,8 +788,7 @@ where
         let economics = ForkEconomics::new(
             Arc::ptr_eq(&self.state, &self.pause.state),
             Arc::ptr_eq(&self.field, &self.pause.field),
-            Arc::strong_count(&self.state),
-            Arc::strong_count(&self.field),
+            self.pause.fork_sample(),
         );
         let mut report = run_continued_segment(
             self.pause,

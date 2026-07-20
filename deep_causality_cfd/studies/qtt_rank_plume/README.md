@@ -35,7 +35,7 @@ the no-plume body/shock baseline. The plume imprint costs nothing in rank over t
 | C_T | bond λ=0 (Cartesian) | bond λ=1 (fitted) |
 |---|---|---|
 | 0.50 | 32 | 10 |
-| 1.00 | 32 | 11 |
+| 1.00 | 32 | 10 |
 | 2.00 | 32 | 11 |
 | 4.00 | 32 | 12 |
 

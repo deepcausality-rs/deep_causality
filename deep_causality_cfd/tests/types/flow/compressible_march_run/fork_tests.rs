@@ -174,11 +174,22 @@ fn every_continued_branch_records_what_its_fork_cost() {
         .expect("a continued branch must record what its fork cost");
     assert!(e.shares_fluid(), "the branch must enter by reference");
     assert!(e.shares_field(), "the coupled field too");
-    assert!(
-        e.fluid_refs() > 1,
-        "a share, not sole ownership: the pause still holds its own reference"
-    );
     assert!(e.is_o1());
+    // The reference counts are a *baseline* sampled before any branch exists, so the pause is the
+    // only holder. They used to be read after the branch's own `Arc::clone` and asserted to exceed
+    // one, which was true by construction and — under the parallel feature — varied between runs.
+    assert_eq!(
+        e.fluid_refs(),
+        1,
+        "the fork baseline counts holders before the fan-out, not after the branch cloned"
+    );
+    assert_eq!(e.field_refs(), 1);
+    // The rank baseline is what a branch's bond growth is measured against.
+    assert!(e.fork_peak_bond().is_some());
+    assert!(
+        branch.bond_growth().is_some(),
+        "a continued branch reports how far its rank grew past the fork"
+    );
 
     // The manual fork chain records the same facts.
     let forked = pause
@@ -225,4 +236,112 @@ fn a_fan_out_shares_one_paused_state_across_every_branch() {
             r.name()
         );
     }
+}
+
+// ── Typed alternation, measured rank, reproducible economics ─────────────────────────────────
+// (change `fix-retropulsion-measurement-integrity`)
+
+#[test]
+fn an_applied_alternation_is_distinguishable_from_a_refused_one() {
+    // The refusal entry carries the same `!!ContextAlternation!!` marker as an applied alternation,
+    // so a consumer matching the marker as a substring reads a refused branch as an alternated one.
+    // The typed flag separates them.
+    let nominal = world("nominal_descent", 3.0, 6);
+    let steep = world("steep_descent", 3.0, 6);
+
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    let applied = pause
+        .fork()
+        .alternate_context(&steep)
+        .continue_march(2)
+        .unwrap();
+    assert_eq!(applied.alternation_applied(), Some(true));
+
+    // The `continue_with` path applies by construction: it returns early on an errored pause.
+    let via_continue_with = pause.continue_with(&steep, 2).unwrap();
+    assert_eq!(via_continue_with.alternation_applied(), Some(true));
+
+    // A plain march was never alternated and must not claim either way.
+    let plain = CfdFlow::march(&nominal)
+        .run_coupled((), field_at_61km(), BlackoutTrigger::new(1.0e9), 0.0)
+        .unwrap();
+    assert_eq!(plain.alternation_applied(), None);
+}
+
+#[test]
+fn a_branch_reports_the_rank_its_state_reached() {
+    // A compression gate must read a measured rank. The configured truncation cap compared against
+    // itself is a truth about integer ranges, not about the state.
+    let nominal = world("nominal_descent", 3.0, 6);
+    let steep = world("steep_descent", 3.0, 6);
+
+    let pause = CfdFlow::march(&nominal)
+        .run_until(
+            (),
+            field_at_61km(),
+            BlackoutTrigger::new(1.0e9),
+            0.0,
+            |_, s| s >= 2,
+        )
+        .unwrap();
+
+    let branch = pause.continue_with(&steep, 2).unwrap();
+    let bond = branch.peak_bond().expect("a marched state carries a rank");
+    assert!(bond >= 1, "a rank is at least one");
+
+    let economics = branch.fork_economics().unwrap();
+    let fork_bond = economics
+        .fork_peak_bond()
+        .expect("the fork's rank baseline");
+    assert_eq!(
+        branch.bond_growth(),
+        Some(bond.saturating_sub(fork_bond)),
+        "growth is measured against the rank the paused state carried"
+    );
+}
+
+#[test]
+fn fork_economics_are_reproducible_across_runs() {
+    // The reference counts used to be sampled inside each branch, which under the parallel feature
+    // meant sibling branches were changing them concurrently — so a study recording them wrote a
+    // different number on every run and its committed artifact could not be diffed.
+    let run_once = || {
+        let nominal = world("nominal_descent", 3.0, 6);
+        let a = world("branch_a", 3.0, 6);
+        let b = world("branch_b", 3.0, 6);
+        let c = world("branch_c", 3.0, 6);
+        let pause = CfdFlow::march(&nominal)
+            .run_until(
+                (),
+                field_at_61km(),
+                BlackoutTrigger::new(1.0e9),
+                0.0,
+                |_, s| s >= 2,
+            )
+            .unwrap();
+        pause
+            .continue_branches(&[&a, &b, &c], 2)
+            .unwrap()
+            .iter()
+            .map(|r| r.fork_economics().unwrap())
+            .collect::<Vec<_>>()
+    };
+
+    let first = run_once();
+    let second = run_once();
+    assert_eq!(first, second, "the recorded economics must be reproducible");
+    // Every branch of one fan-out sees the same fork, so every branch records the same sample.
+    assert!(
+        first.windows(2).all(|w| w[0] == w[1]),
+        "one fork, one sample: {first:?}"
+    );
 }

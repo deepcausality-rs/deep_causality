@@ -146,7 +146,7 @@ const BURN_S_REF: f64 = 0.785;
 fn burn_stack() -> impl PhysicsStage<2, f64> {
     Coupling::between_steps()
         .then(RetroThrust::new(BURN_THRUST, BURN_ISP))
-        .then(PlumeObstruction::new(BURN_THRUST, BURN_Q_INF, BURN_S_REF))
+        .then(PlumeObstruction::new(BURN_THRUST, BURN_S_REF))
         .then(
             RegimeClassify::new(1.0, BlackoutTrigger::new(1.0e9)).with_flight_axes(0.8, 1.2, 10.0),
         )
@@ -164,6 +164,9 @@ fn burn_field(mach: f64, altitude: f64) -> CoupledField<f64> {
     f.set_aero_force([-5.0, 0.0, 0.0]);
     // Retro thrust is aimed against the carried flight velocity.
     f.set_scalar("truth_state", vec![6.4e6, 0.0, 0.0, 800.0, 0.0, 0.0]);
+    // The plume stage senses its freestream each step rather than carrying a constant.
+    f.set_scalar("q_inf", vec![BURN_Q_INF]);
+    f.set_scalar("p_inf", vec![1_000.0]);
     f
 }
 

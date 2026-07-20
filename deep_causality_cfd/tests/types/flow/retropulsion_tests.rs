@@ -8,8 +8,8 @@
 //! propulsion scalars surviving a pause snapshot.
 
 use deep_causality_cfd::{
-    Ambient, CoupledField, PhysicsStage, PlumeNozzle, PlumeObstruction, PropulsionStub,
-    RetroThrust, StepContext, pack_resume, unpack_resume,
+    Ambient, CoupledField, PRESERVED_DRAG_FRACTION_FIELD, PhysicsStage, PlumeNozzle,
+    PlumeObstruction, PropulsionStub, RetroThrust, StepContext, pack_resume, unpack_resume,
 };
 use deep_causality_physics::{
     Area, Force, Pressure, SolenoidalField, VelocityOneForm, propellant_mass_flow_kernel,
@@ -50,6 +50,11 @@ fn powered_field() -> CoupledField<f64> {
     // Retro thrust is aimed against the carried flight velocity, so the fixture states one. Purely
     // +x here, which is what makes the axial assertions below meaningful.
     field.set_scalar("truth_state", vec![6.4e6, 0.0, 0.0, 500.0, 0.0, 0.0]);
+    // The plume stage normalizes its thrust coefficient against the **sensed** freestream, so the
+    // fixture states one. Q_INF is the value the stage used to take at construction.
+    field.set_scalar("q_inf", vec![Q_INF]);
+    field.set_scalar("flight_mach", vec![2.0]);
+    field.set_scalar("p_inf", vec![1_000.0]);
     field
 }
 
@@ -293,8 +298,6 @@ fn nozzle() -> PlumeNozzle<f64> {
         throat_diameter: 0.03,
         exit_radius: 0.03407,
         cone_length: 0.0712,
-        p_inf: 1_000.0,
-        mach_inf: 2.0,
         gamma_inf: 1.4,
     }
 }
@@ -303,7 +306,7 @@ fn nozzle() -> PlumeNozzle<f64> {
 fn plume_applies_the_a0_decrement_from_the_correlation() {
     let (manifold, state) = empty_context();
     let ctx = StepContext::new(&manifold, &state, DT, 0);
-    let stage = PlumeObstruction::new(THRUST, Q_INF, S_REF);
+    let stage = PlumeObstruction::new(THRUST, S_REF);
 
     let throttle = 0.5;
     let mut field = powered_field(); // lift [-5, 1, 0]
@@ -338,7 +341,7 @@ fn plume_applies_the_a0_decrement_from_the_correlation() {
 fn plume_is_strictly_inert_without_an_active_throttle() {
     let (manifold, state) = empty_context();
     let ctx = StepContext::new(&manifold, &state, DT, 0);
-    let stage = PlumeObstruction::new(THRUST, Q_INF, S_REF).with_plume_geometry(nozzle());
+    let stage = PlumeObstruction::new(THRUST, S_REF).with_plume_geometry(nozzle());
 
     let before = powered_field();
     let mut field = powered_field();
@@ -359,13 +362,13 @@ fn the_published_geometry_does_not_change_the_force_channel_decrement() {
 
     let mut plain_field = powered_field();
     plain_field.set_throttle_action(throttle);
-    PlumeObstruction::new(THRUST, Q_INF, S_REF)
+    PlumeObstruction::new(THRUST, S_REF)
         .apply(&ctx, &mut plain_field)
         .expect("applies");
 
     let mut geom_field = powered_field();
     geom_field.set_throttle_action(throttle);
-    PlumeObstruction::new(THRUST, Q_INF, S_REF)
+    PlumeObstruction::new(THRUST, S_REF)
         .with_plume_geometry(nozzle())
         .apply(&ctx, &mut geom_field)
         .expect("applies");
@@ -384,7 +387,7 @@ fn the_stage_publishes_plume_geometry_when_opted_in() {
     let mut field = powered_field();
     field.set_throttle_action(0.5);
 
-    PlumeObstruction::new(THRUST, Q_INF, S_REF)
+    PlumeObstruction::new(THRUST, S_REF)
         .with_plume_geometry(nozzle())
         .apply(&ctx, &mut field)
         .expect("geometry published");
@@ -400,7 +403,7 @@ fn the_applied_fraction_matches_the_correlation_across_a_sweep() {
     // The M1 band cross-check: the flight-time authority is the same cited curve M1 gated against.
     let (manifold, state) = empty_context();
     let ctx = StepContext::new(&manifold, &state, DT, 0);
-    let stage = PlumeObstruction::new(THRUST, Q_INF, S_REF);
+    let stage = PlumeObstruction::new(THRUST, S_REF);
 
     for throttle in [0.25_f64, 0.5, 1.0] {
         let mut field = powered_field();
@@ -502,4 +505,166 @@ fn an_active_burn_without_a_truth_state_cannot_be_aimed() {
     let err = PhysicsStage::<2, f64>::apply(&RetroThrust::new(THRUST, ISP), &ctx, &mut field)
         .unwrap_err();
     assert!(format!("{err:?}").contains("resolve the flight direction"));
+}
+
+// ── SRP closure validity (change `fix-retropulsion-measurement-integrity`) ───────────────────
+
+#[test]
+fn the_closure_normalizes_against_the_sensed_dynamic_pressure() {
+    // The dynamic pressure used to be taken at construction, which let this closure and the safety
+    // gate's dynamic C_T cap normalize the same coefficient against two different pressures in one
+    // step. The stage senses it now, so changing the sensed value changes the applied fraction.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let stage = PlumeObstruction::new(THRUST, S_REF);
+
+    let read = |q: f64| {
+        let mut field = powered_field();
+        field.set_scalar("commanded_throttle", vec![0.5]);
+        field.set_scalar("q_inf", vec![q]);
+        PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap();
+        field
+            .scalar(PRESERVED_DRAG_FRACTION_FIELD)
+            .and_then(|s| s.first().copied())
+            .unwrap()
+    };
+
+    // A higher q at the same thrust is a lower C_T, hence a larger preserved fraction.
+    let low_q = read(Q_INF);
+    let high_q = read(Q_INF * 4.0);
+    assert!(
+        high_q > low_q,
+        "the sensed pressure must reach the correlation: {low_q} vs {high_q}"
+    );
+}
+
+#[test]
+fn an_absent_dynamic_pressure_fails_the_step() {
+    // A fallback is how a second normalization survives unnoticed, so an absent sensor is an error.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let mut field = powered_field();
+    field.set_scalar("commanded_throttle", vec![0.5]);
+    let _ = field.take_scalar("q_inf");
+
+    let err =
+        PhysicsStage::<2, f64>::apply(&PlumeObstruction::new(THRUST, S_REF), &ctx, &mut field)
+            .unwrap_err();
+    assert!(format!("{err:?}").contains("q_inf"), "{err:?}");
+}
+
+#[test]
+fn the_closure_stands_down_outside_its_mach_band() {
+    // The Jarvinen-Adams mechanism is bow-shock displacement, and there is no bow shock to displace
+    // below the dataset's Mach floor. Carrying the correlation down deletes most of a subsonic
+    // vehicle's drag on the strength of a supersonic interaction.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let stage = PlumeObstruction::new(THRUST, S_REF).with_mach_band(0.4, 2.0);
+
+    let mut field = powered_field();
+    field.set_scalar("commanded_throttle", vec![0.5]);
+    field.set_scalar("flight_mach", vec![0.01]); // deep subsonic, far below the floor
+    let before = field.aero_force().unwrap();
+
+    PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap();
+
+    assert_eq!(
+        field.aero_force().unwrap(),
+        before,
+        "no decrement outside the band"
+    );
+    assert!(
+        field.scalar(PRESERVED_DRAG_FRACTION_FIELD).is_none(),
+        "a stand-down must not leave a fraction that reads as a live measurement"
+    );
+}
+
+#[test]
+fn re_entering_the_band_resumes_the_closure() {
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let stage = PlumeObstruction::new(THRUST, S_REF).with_mach_band(0.4, 2.0);
+    let mut field = powered_field();
+    field.set_scalar("commanded_throttle", vec![0.5]);
+
+    // Inside: a fraction is published.
+    field.set_scalar("flight_mach", vec![1.5]);
+    PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap();
+    assert!(field.scalar(PRESERVED_DRAG_FRACTION_FIELD).is_some());
+
+    // Outside: it is cleared, and the crossing is recorded once.
+    field.set_scalar("flight_mach", vec![0.1]);
+    PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap();
+    assert!(field.scalar(PRESERVED_DRAG_FRACTION_FIELD).is_none());
+    assert!(
+        field
+            .log()
+            .messages()
+            .any(|m| m.contains("SRP drag closure stood down"))
+    );
+
+    // Back inside: it resumes.
+    field.set_scalar("flight_mach", vec![1.5]);
+    PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap();
+    assert!(field.scalar(PRESERVED_DRAG_FRACTION_FIELD).is_some());
+}
+
+#[test]
+fn an_unbounded_stage_applies_at_every_mach() {
+    // The band is opt-in, so a world that never configures one behaves as before.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let mut field = powered_field();
+    field.set_scalar("commanded_throttle", vec![0.5]);
+    field.set_scalar("flight_mach", vec![0.01]);
+
+    PhysicsStage::<2, f64>::apply(&PlumeObstruction::new(THRUST, S_REF), &ctx, &mut field).unwrap();
+    assert!(field.scalar(PRESERVED_DRAG_FRACTION_FIELD).is_some());
+}
+
+#[test]
+fn the_plume_geometry_tracks_the_sensed_freestream() {
+    // Frozen freestream constants make the kernel's own validity envelope test the constant rather
+    // than the flight, so a leg that leaves the envelope still receives geometry.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let stage = PlumeObstruction::new(THRUST, S_REF).with_plume_geometry(nozzle());
+
+    let radius_at = |p_inf: f64| {
+        let mut field = powered_field();
+        field.set_scalar("commanded_throttle", vec![0.5]);
+        field.set_scalar("p_inf", vec![p_inf]);
+        PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap();
+        field
+            .scalar("plume_max_radius")
+            .and_then(|s| s.first().copied())
+            .unwrap()
+    };
+
+    // A jet expanding against thinner ambient air spreads further. Both pressures stay above the
+    // model's own blunt-flow transition, so this measures the geometry rather than the refusal.
+    assert!(
+        radius_at(400.0) > radius_at(1_200.0),
+        "the geometry must follow the ambient pressure"
+    );
+}
+
+#[test]
+fn the_geometry_kernel_rejects_a_freestream_outside_its_envelope() {
+    // The Cordell envelope is a documented Mach range. Fed the flown Mach, the kernel's refusal
+    // reaches the caller instead of being masked by a constant that sits inside the envelope.
+    let (manifold, state) = empty_context();
+    let ctx = StepContext::new(&manifold, &state, DT, 1);
+    let stage = PlumeObstruction::new(THRUST, S_REF).with_plume_geometry(nozzle());
+    let mut field = powered_field();
+    field.set_scalar("commanded_throttle", vec![0.5]);
+    field.set_scalar("flight_mach", vec![9.0]); // far above the envelope
+
+    let err = PhysicsStage::<2, f64>::apply(&stage, &ctx, &mut field).unwrap_err();
+    let text = format!("{err:?}");
+    assert!(
+        text.to_lowercase().contains("mach"),
+        "the kernel's envelope refusal must reach the caller: {text}"
+    );
 }
