@@ -93,23 +93,28 @@ pub fn print_act<S>(title: &str, pause: &CompressiblePause<'_, FloatType, S>) {
 pub fn print_branches(rows: &[BranchRow]) {
     println!("\n--- Mid-burn throttle roster (forked from the marched, plume-coupled state) ---");
     println!(
-        "  {:<16} {:>8} {:>10} {:>13} {:>12} {:>12}",
-        "branch", "throttle", "preserved", "net decel", "frozen-drag", "propellant"
+        "  {:<10} {:>7} {:>8} {:>10} {:>11} {:>10} {:>10} {:>10}",
+        "branch", "cmd", "flown", "preserved", "axial m/s2", "prop kg", "dv m/s", "dv frozen"
     );
     for r in rows {
         println!(
-            "  {:<16} {:>8.2} {:>10.3} {:>13.4} {:>12.4} {:>12.2}",
+            "  {:<10} {:>7.2} {:>8.4} {:>10} {:>11.4} {:>10.2} {:>10.3} {:>10.3}",
             r.name,
-            r.throttle,
-            r.preserved_fraction,
+            r.commanded_throttle,
+            r.realized_throttle,
+            r.preserved_fraction
+                .map(|f| format!("{f:.4}"))
+                .unwrap_or_else(|| "     —".into()),
             r.net_deceleration,
-            r.frozen_drag_deceleration,
-            r.propellant_used
+            r.propellant_used,
+            r.dv_actual,
+            r.dv_frozen
         );
     }
     println!(
-        "  the preserved fraction is the cited A0 correlation at each branch's C_T, not a decrement \
-         contracted from the field"
+        "  cmd is what each world published; flown is what the envelope admitted. Every other column \
+         is read off the branch's own report — the axial deceleration from the summed force channel, \
+         the two velocity increments accumulated step by step."
     );
 }
 

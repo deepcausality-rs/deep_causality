@@ -39,9 +39,12 @@ mod constants;
 mod model;
 mod utils_print;
 
+use avionics_examples::shared::constants::DT_FLIGHT;
 use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{
-    CfdFlow, CompressibleMarchConfig, MarchStop, PhysicsError, StudyError, StudyView, Verdict,
+    CfdFlow, CompressibleMarchConfig, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
+    IGNITION_COMMIT_Q_FIELD, IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD,
+    IGNITION_LATCH_FIELD, MarchStop, PhysicsError, StudyError, StudyView, Verdict,
 };
 use std::cell::RefCell;
 use std::process::ExitCode;
@@ -80,9 +83,6 @@ fn main() -> ExitCode {
             .from_field(world::powered_initial_field())
             .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))
             .map_err(leg_err("act 1: corridor to blackout onset"))?;
-        if let Some(e) = onset.error() {
-            return Err(leg_err("act 1: corridor to blackout onset")(e.clone()));
-        }
         utils_print::print_act("CORRIDOR — descent to blackout onset", &onset);
 
         // ── Acts 2+3: COAST, COMMIT, BURN — one march call. ────────────────────────────────────
@@ -105,35 +105,49 @@ fn main() -> ExitCode {
                     .is_some_and(|v| v > 0.0)
             })
             .map_err(leg_err("act 2-3: coast, commit, burn"))?;
-        if let Some(e) = burn.error() {
-            return Err(leg_err("act 2-3: coast, commit, burn")(e.clone()));
-        }
         utils_print::print_act("COAST + BURN — ignition corridor committed", &burn);
 
-        let fork_fraction = model::scalar0(burn.field(), "preserved_drag_fraction");
-        let fork_propellant = model::scalar0(burn.field(), "propellant");
+        // The trunk's state at the fork. Each branch is scored on what it changed from here, so the
+        // descent it inherited is not counted as its own doing, and the frozen-drag foil knows the
+        // fraction to hold the closure at.
+        let fork = model::ForkState {
+            fraction: model::scalar0(burn.field(), "preserved_drag_fraction"),
+            propellant: model::scalar0(burn.field(), "propellant"),
+            dv_actual: model::scalar0(burn.field(), "dv_actual"),
+            dv_frozen: model::scalar0(burn.field(), "dv_frozen"),
+        };
 
         // ── The centerpiece: fork the marched, plume-coupled state. ────────────────────────────
         let committed_capture: RefCell<Option<model::BranchRow>> = RefCell::new(None);
+        // The committed branch's measured rank, captured where the reports are still in hand.
+        let bond_capture: RefCell<Option<usize>> = RefCell::new(None);
         let branches = CfdFlow::study("mid-burn throttle roster")
             .cases(model::throttle_roster())
             .fork(&burn)
-            .branch(model::branch_world)
+            .branch(|case| model::branch_world(case, fork.fraction))
             .continue_for(constants::BRANCH_STEPS)
-            .reduce(move |run| model::score_branch(run, fork_fraction, fork_propellant))
+            .reduce(move |run| model::score_branch(run, fork))
             .inspect(|rows| {
                 utils_print::print_branches(rows);
+                // Commit the branch that shed the most velocity over the continuation — a trajectory
+                // outcome, not an instantaneous force reading. `total_cmp` rather than an unwrapping
+                // `partial_cmp`: the witnesses are checked finite where they are read, and a total
+                // order removes the panic entirely rather than relying on that check holding.
                 let committed = rows
                     .iter()
-                    .max_by(|a, b| a.net_deceleration.partial_cmp(&b.net_deceleration).unwrap())
+                    .max_by(|a, b| a.dv_actual.total_cmp(&b.dv_actual))
                     .cloned();
+                *bond_capture.borrow_mut() =
+                    committed.as_ref().map(|c| c.peak_bond).unwrap_or(None);
                 *committed_capture.borrow_mut() = committed;
             })
             .record(model::branch_table_path())
             .gates(model::branch_gates())
             .verdict()?;
 
-        let committed = committed_capture.into_inner().ok_or_else(|| {
+        let committed_bond = bond_capture.into_inner();
+        // Read for its side condition: a roster that captured no branch is a study failure.
+        let _committed = committed_capture.into_inner().ok_or_else(|| {
             leg_err("study: committed branch")(PhysicsError::CalculationError(
                 "no branch captured".into(),
             ))
@@ -159,9 +173,6 @@ fn main() -> ExitCode {
                     .is_some_and(|m| m < constants::SUBSONIC_HANDOVER_MACH)
             })
             .map_err(leg_err("act 3b: supersonic burn"))?;
-        if let Some(e) = burn_out.error() {
-            return Err(leg_err("act 3b: supersonic burn")(e.clone()));
-        }
         utils_print::print_act(
             "BURN — supersonic retropulsion under the SRP envelope",
             &burn_out,
@@ -186,39 +197,54 @@ fn main() -> ExitCode {
             .map_err(leg_err("act 4: terminal descent"))?;
         utils_print::print_act("TERMINAL — cutoff, subsonic re-seed, touchdown", &terminal);
 
-        // ── The witnesses the trajectory gates read. ────────────────────────────────────────────
-        let rendered = format!("{}", terminal.field().log());
-        let (steps, errored, re_seeds) = model::leg_witnesses(&terminal);
-        let (commit_step, commit_mach, commit_q) =
-            model::commit_witness(&rendered).unwrap_or((0, 0.0, 0.0));
+        // ── The witnesses the trajectory gates read, every one a typed accessor. ──────────────
+        //
+        // A captured step error is carried into the integrity gate rather than returned here. An
+        // early return exits as a *setup* failure and the gates never run, so three of the four legs
+        // used to be outside the one gate whose job is to notice them.
+        let leg_errors: Vec<(String, String)> = [
+            ("act 1: corridor", onset.error()),
+            ("act 2-3: coast, commit, burn", burn.error()),
+            ("act 3b: supersonic burn", burn_out.error()),
+            ("act 4: terminal descent", terminal.error()),
+        ]
+        .into_iter()
+        .filter_map(|(name, e)| e.map(|e| (name.to_string(), format!("{e}"))))
+        .collect();
+
+        let f = terminal.field();
+        let commit_step = model::scalar0(f, IGNITION_COMMIT_STEP_FIELD);
         let legs = [model::LegSet {
-            steps,
-            errored: errored || onset.error().is_some() || burn.error().is_some(),
-            committed: commit_step > 0,
+            steps: terminal.step(),
+            leg_errors,
+            committed: model::scalar0(f, IGNITION_LATCH_FIELD) > 0.0,
             commit_step,
-            commit_mach,
-            commit_q,
-            altitude_km: model::scalar0(terminal.field(), "flight_altitude") / 1000.0,
-            descent_rate: model::scalar0(terminal.field(), "descent_rate"),
-            propellant: model::scalar0(terminal.field(), "propellant"),
-            touchdown: terminal
-                .field()
-                .regime()
-                .map(|r| r.touchdown)
-                .unwrap_or(false),
+            commit_mach: model::scalar0(f, IGNITION_COMMIT_MACH_FIELD),
+            commit_q: model::scalar0(f, IGNITION_COMMIT_Q_FIELD),
+            commit_aided: model::scalar0(f, IGNITION_COMMIT_AIDED_FIELD) > 0.0,
+            commit_sigma_m: model::scalar0(f, IGNITION_COMMIT_SIGMA_FIELD),
+            commit_margin_m: informed.margin_m,
+            altitude_km: model::scalar0(f, "flight_altitude") / 1000.0,
+            descent_rate: model::scalar0(f, "descent_rate"),
+            propellant: model::scalar0(f, "propellant"),
+            touchdown: f.regime().map(|r| r.touchdown).unwrap_or(false),
             rebuilds: onset.rebuilds()
                 + burn.rebuilds()
                 + burn_out.rebuilds()
                 + terminal.rebuilds(),
-            re_seeds,
-            regime_log: rendered.clone(),
-            error_text: terminal
-                .error()
-                .map(|e| format!("{e:?}"))
-                .unwrap_or_default(),
+            re_seeds: terminal.re_seeds(),
+            regime_transitions: terminal.regime_transitions(),
+            // The onset is recorded as a step index; the table records seconds, so the compressed
+            // flight step converts it.
+            onset_s: model::scalar0(f, "wx_onset_step") * utils::ft(DT_FLIGHT),
+            dwell_s: model::scalar0(f, "wx_dwell_s"),
+            drift_denied_max_m: model::scalar0(f, "wx_drift_denied_max"),
+            predicted_onset_s: informed.onset_s,
+            predicted_dwell_s: informed.dwell_s,
             elapsed_s: utils::ft(clock.elapsed().as_secs_f64()),
             belief_separation_m,
-            peak_bond: model::committed_bond(&committed),
+            belief_clamped: informed.clamped,
+            peak_bond: committed_bond,
         }];
         utils_print::print_provenance(terminal.field().log());
 

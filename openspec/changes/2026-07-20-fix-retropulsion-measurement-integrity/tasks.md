@@ -79,21 +79,21 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 
 ## 3. Example: score from the flown state (R1, R2, R3, R7, R8, P5)
 
-- [ ] 3.1 Add a witness stage to `examples/avionics_examples/src/shared/stages.rs` publishing
+- [x] 3.1 Add a witness stage to `examples/avionics_examples/src/shared/stages.rs` publishing
       `"realized_throttle"`, `"axial_accel"` (positive for deceleration), `"dv_actual"` and
       `"dv_frozen"`; compose it after `RetroThrust` in both coupling builders (`world.rs:392`)
-- [ ] 3.2 `score_branch` reads `final_realized_throttle`, `final_axial_accel`, `final_dv_actual`,
+- [x] 3.2 `score_branch` reads `final_realized_throttle`, `final_axial_accel`, `final_dv_actual`,
       `final_dv_frozen` from the report; delete the `case.throttle · RETRO_THRUST_N` term
       (`model.rs:320`)
-- [ ] 3.3 Delete `BASE_AXIAL_DRAG_N` (`constants.rs:56`) and `BURN_CORRIDOR_Q_INF`
+- [x] 3.3 Delete `BASE_AXIAL_DRAG_N` (`constants.rs:56`) and `BURN_CORRIDOR_Q_INF`
       (`shared/constants.rs:254`)
-- [ ] 3.4 Remove the hardcoded coast fraction and its false justifying comment (`model.rs:307-313`);
+- [x] 3.4 Remove the hardcoded coast fraction and its false justifying comment (`model.rs:307-313`);
       every branch reads its published fraction
-- [ ] 3.5 `BranchRow` and its `SCHEMA` carry the realized throttle beside the commanded one, so the
+- [x] 3.5 `BranchRow` and its `SCHEMA` carry the realized throttle beside the commanded one, so the
       recorded table and the printed table both show what flew
-- [ ] 3.6 `utils_print::print_branches` prints both throttles and labels the deceleration column as
+- [x] 3.6 `utils_print::print_branches` prints both throttles and labels the deceleration column as
       read off the force channel
-- [ ] 3.7 **Verify:** run the example; confirm the coast branch reports a positive deceleration, that
+- [x] 3.7 **Verify:** run the example; confirm the coast branch reports a positive deceleration, that
       any two branches with equal realized throttle have equal scored rows, and that the recorded
       propellant is consistent with the recorded realized throttle
 
@@ -101,15 +101,15 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 
 ## 4. Example: fail loudly (S3, S4, S5, S6)
 
-- [ ] 4.1 Split `final_scalar` into a sign-preserving single-cell read and a peak-over-cells read;
+- [x] 4.1 Split `final_scalar` into a sign-preserving single-cell read and a peak-over-cells read;
       neither defaults, both return `Err` on an absent series through `reduce`'s existing closure
       bound (`model.rs:287-296`)
-- [ ] 4.2 Delete the `mass.max(1.0)` floor; a missing or non-positive mass is an `Err` (`model.rs:316`)
-- [ ] 4.3 Reject non-finite witnesses at the read, so `main.rs:128`'s ordering cannot see a
+- [x] 4.2 Delete the `mass.max(1.0)` floor; a missing or non-positive mass is an `Err` (`model.rs:316`)
+- [x] 4.3 Reject non-finite witnesses at the read, so `main.rs:128`'s ordering cannot see a
       not-a-number
-- [ ] 4.4 Replace `v.rows()[0]` with a checked first-element read in all nine leg gates
+- [x] 4.4 Replace `v.rows()[0]` with a checked first-element read in all nine leg gates
       (`model.rs:565-675`)
-- [ ] 4.5 **Verify:** falsification tests — a branch report missing `preserved_drag_fraction` errors
+- [x] 4.5 **Verify:** falsification tests — a branch report missing `preserved_drag_fraction` errors
       rather than passing gate (4b); a missing `mass` errors rather than inflating gate (4c); a
       negative preserved-drag fraction survives the read with its sign
 
@@ -117,28 +117,32 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 
 ## 5. Example: gates that can fail (G1, G4, G5, G6, G7, G8, G9, R1, S10, S11)
 
-- [ ] 5.1 Gate (0): carry each leg's error into `LegSet` instead of returning early on three of four;
+- [x] 5.1 Gate (0): carry each leg's error into `LegSet` instead of returning early on three of four;
       name the failing leg (`main.rs:83,108,162,196`)
-- [ ] 5.2 Gate (1): compare Acts 0–1 witnesses against the corridor example's recorded onset, exit,
-      dwell, drift and reacquisition values (`model.rs:576`)
-- [ ] 5.3 Gate (2): check the aided navigation mode and the sigma against the margin; remove the
+- [x] 5.2 Gate (1): **reformulated — see `design.md` §5 N5.** Comparing against the *corridor's*
+      recorded window is incompatible with §4: this example flies the measured cold day, which
+      ionizes earlier and dwells longer by construction. The gate compares the flown window against
+      what the dispersion table predicts **for this temperature departure** (onset error 0.04 s,
+      dwell error 0.19 s), which also puts the table's window columns under test
+- [x] 5.3 Gate (2): check the aided navigation mode and the sigma against the margin; remove the
       re-check of the four constants the commit predicate guarantees; correct the message
       (`model.rs:589`)
-- [ ] 5.4 Gate (4b): evaluate the sign flip from `dv_actual` against realized throttle. If the
-      corrected run shows a flip, gate its location against the correlation; if it does not, record
-      that as a measured finding in the gate message (`model.rs:491`)
-- [ ] 5.5 Gate (4c): compare `dv_actual` against `dv_frozen` (`model.rs:522`)
-- [ ] 5.6 Gate (4d): keep `is_o1` as a source-change guard, read `Report::bond_growth()`, and measure
-      the trunk-relative step-cost ratio in the example (timing the trunk leg and the branch fan-out),
-      since the solver crate carries no clock. Band both (`model.rs:448`)
-- [ ] 5.7 Gate (4e): read `Report::alternation_applied()` (`model.rs:538`)
-- [ ] 5.8 Gate (4f) **new**: roster non-degeneracy on realized throttle
-- [ ] 5.9 Gate (6): bound the descent rate on both sides of `CONTACT_SPEED_MS` (`model.rs:637`)
-- [ ] 5.10 Gate (7): read `Report::peak_bond()`; delete `committed_bond` (`model.rs:711`)
-- [ ] 5.11 Gates (8) and (9): relabel the messages as runaway detectors; thresholds unchanged
-- [ ] 5.12 Delete every rendered-log recovery from the example — `commit_witness`, `leg_witnesses`,
+- [x] 5.4 Gate (4b): asserts **both** the monotone preserved-drag collapse and the **sign flip** —
+      net deceleration is non-monotone in realized throttle, minimum at the 0.24 branch (5.031 m/s2
+      against 10.644 coasting). The design note's stated (4b) is met rather than substituted
+- [x] 5.5 Gate (4c): compare `dv_actual` against `dv_frozen` (`model.rs:522`)
+- [x] 5.6 Gate (4d): keeps `is_o1` as a source-change guard and reads `Report::bond_growth()`,
+      banded at `MAX_BOND_GROWTH` (measured 0)
+- [ ] 5.6a **Still open:** the trunk-relative step-cost ratio. Bond growth and sharing are gated;
+      the wall-clock ratio design note §10(4d) also asks for is not
+- [x] 5.7 Gate (4e): read `Report::alternation_applied()` (`model.rs:538`)
+- [x] 5.8 Gate (4f) **new**: roster non-degeneracy on realized throttle
+- [x] 5.9 Gate (6): bound the descent rate on both sides of `CONTACT_SPEED_MS` (`model.rs:637`)
+- [x] 5.10 Gate (7): read `Report::peak_bond()`; delete `committed_bond` (`model.rs:711`)
+- [x] 5.11 Gates (8) and (9): relabel the messages as runaway detectors; thresholds unchanged
+- [x] 5.12 Delete every rendered-log recovery from the example — `commit_witness`, `leg_witnesses`,
       the `"regime ->"` count, the marker search — replacing each with its typed accessor from group 1
-- [ ] 5.13 **Verify:** every gate has a test supplying an input on which it fails
+- [x] 5.13 **Verify:** every gate has a test supplying an input on which it fails
 
 > Commit: `fix(examples): rebuild retropulsion gates on typed measurements that can fail`
 
@@ -163,22 +167,22 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 ## 7. Constants coherence and prose (P4, S11, S8)
 
 - [ ] 7.1 Apply the **D1** decision on `CDA_OVER_M` / `PLUME_S_REF_M2`
-- [ ] 7.2 Re-earn every band from the corrected run; each docstring records the measured value and
+- [x] 7.2 Re-earn every band from the corrected run; each docstring records the measured value and
       states whether the band binds; remove the superseded figure in `FROZEN_DRAG_SEPARATION_MIN`
       (`constants.rs:69`)
 - [ ] 7.3 Correct `README.md` and the `main.rs` module doc where they state a measurement the code no
       longer makes — in particular the claim that branches "spread with the intervention"
       (`README.md:113`, `main.rs:27`)
-- [ ] 7.4 Regenerate `output.txt` and `retropulsion_branches.csv`
-- [ ] 7.5 **Verify:** run twice and diff both artifacts; they must be identical
+- [x] 7.4 Regenerate `output.txt` and `retropulsion_branches.csv`
+- [x] 7.5 **Verify:** run twice and diff both artifacts; they must be identical
 
 > Commit: `docs(examples): re-earn retropulsion bands and correct the claims the run no longer supports`
 
 ## 8. Close-out
 
-- [ ] 8.1 `make format && make fix`
+- [x] 8.1 `make format && make fix`
 - [ ] 8.2 `bazel test //...`
-- [ ] 8.3 Re-run the corridor and weather examples; confirm their recorded outputs are unchanged, or
+- [x] 8.3 Re-run the corridor and weather examples; confirm their recorded outputs are unchanged, or
       re-earn their bands if **D1** option (b) was chosen
 - [ ] 8.4 Record in `design.md` which gates failed on the first corrected run and what each failure
       revealed. A gate that failed is a finding, not a threshold to loosen

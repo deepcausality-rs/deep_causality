@@ -372,6 +372,7 @@ pub struct PlumeObstruction<R: CfdScalar> {
     mach_field: &'static str,
     pressure_field: &'static str,
     mach_band: Option<(R, R)>,
+    geometry_mach_band: Option<(R, R)>,
     nozzle: Option<PlumeNozzle<R>>,
 }
 
@@ -393,6 +394,7 @@ impl<R: CfdScalar> PlumeObstruction<R> {
             mach_field: "flight_mach",
             pressure_field: "p_inf",
             mach_band: None,
+            geometry_mach_band: None,
             nozzle: None,
         }
     }
@@ -431,6 +433,35 @@ impl<R: CfdScalar> PlumeObstruction<R> {
         self
     }
 
+    /// Bound the **geometry** publication to the plume model's own validated Mach range, separately
+    /// from the drag correlation's band.
+    ///
+    /// The two bands are separate because the two models are: the drag correlation is measured over
+    /// Mach 0.4–2.0 and the plume-boundary model is validated over Mach 2–4, so a descent that flies
+    /// the correlation's band is outside the geometry model's for almost all of it. Declaring both at
+    /// the call site makes that disjointness legible instead of leaving it to be discovered when the
+    /// kernel refuses mid-flight — or, worse, hidden by handing the kernel a constant that sits
+    /// inside its envelope while the vehicle does not.
+    ///
+    /// Outside the band the stage publishes no geometry and records the crossing once. Inside it, a
+    /// kernel refusal still propagates: the band says where the model is asked to apply, and the
+    /// kernel remains the authority on whether it can.
+    pub fn with_geometry_mach_band(mut self, mach_min: R, mach_max: R) -> Self {
+        self.geometry_mach_band = Some((mach_min, mach_max));
+        self
+    }
+
+    /// Whether the sensed flight Mach lies inside the geometry model's declared band.
+    fn geometry_applies(&self, field: &CoupledField<R>) -> bool {
+        let Some((lo, hi)) = self.geometry_mach_band else {
+            return true;
+        };
+        field
+            .scalar(self.mach_field)
+            .and_then(|s| s.first().copied())
+            .is_some_and(|m| m >= lo && m <= hi)
+    }
+
     /// Whether the sensed flight Mach lies inside the configured applicability band. An unbounded
     /// stage applies everywhere; an absent Mach scalar under a configured band is outside it, because
     /// an absent sensor is a condition unmet rather than a condition waived.
@@ -452,6 +483,15 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PlumeObstruction<R> {
         field: &mut CoupledField<R>,
     ) -> Result<(), PhysicsError> {
         let Some(throttle) = active_throttle(field) else {
+            // Inert at zero throttle — but a *stale* fraction is not inertness. A world that was
+            // burning and then shut down would otherwise carry its last decrement forward, and a
+            // consumer reading it would report a plume that is no longer there. Taking the scalar is
+            // a no-op for a world that never published one, so the bit-identity contract holds.
+            if field.take_scalar(PRESERVED_DRAG_FRACTION_FIELD).is_some() {
+                field.log_mut().add_entry(
+                    "SRP drag closure inert: no throttle commanded, no decrement applied",
+                );
+            }
             return Ok(());
         };
 
@@ -512,6 +552,16 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for PlumeObstruction<R> {
         field.set_scalar(PRESERVED_DRAG_FRACTION_FIELD, Vec::from([fraction]));
 
         // ── Optional state-realism geometry for the carrier's re-imprint reader. ──
+        if !self.geometry_applies(field) {
+            if field.take_scalar("plume_max_radius").is_some() {
+                let _ = field.take_scalar("plume_penetration");
+                field.log_mut().add_entry(
+                    "plume geometry stood down: flight Mach outside the Cordell-Braun validated \
+                     envelope, no boundary published",
+                );
+            }
+            return Ok(());
+        }
         if let Some(n) = self.nozzle {
             // The freestream the jet expands against is the **sensed** one. Frozen constants make
             // the kernel's own validity envelope test the constant rather than the flight, so a leg

@@ -319,6 +319,27 @@ pub const NOZZLE_CONE_L: f64 = 0.86;
 /// Freestream ratio of specific heats.
 pub const PLUME_GAMMA_INF: f64 = 1.4;
 
+// ── The two SRP models' validity envelopes, and the fact that they barely overlap
+//
+// The drag correlation and the plume-boundary model come from different work and are validated over
+// different flight regimes:
+//
+//   * Jarvinen-Adams measured drag preservation over **Mach 0.4-2.0**, which is why the ignition
+//     corridor commits inside that band.
+//   * Cordell-Braun validated the analytic plume boundary over **Mach 2-4**.
+//
+// They meet at a single point. A descent flying the correlation's band is therefore outside the
+// geometry model's for essentially all of the burn, and the marched-layer imprint the geometry drives
+// can only be live in the instant around Mach 2. This was previously invisible: the geometry model
+// was handed a frozen freestream Mach of 2.2 while the vehicle flew the Jarvinen-Adams band, so its
+// own envelope check tested the constant and always passed. Both bands are now declared at the call
+// site and both stand down where they do not apply.
+
+/// Lower edge of the Cordell-Braun plume-boundary model's validated freestream Mach range.
+pub const CORDELL_MACH_MIN: f64 = 2.0;
+/// Upper edge of the Cordell-Braun plume-boundary model's validated freestream Mach range.
+pub const CORDELL_MACH_MAX: f64 = 4.0;
+
 /// Throttle move required before the carrier re-imprints the plume mask.
 pub const IMPRINT_THROTTLE_TOL: f64 = 0.05;
 /// Cap on plume re-imprints per leg, so a noisy throttle cannot rebuild the mask every step.

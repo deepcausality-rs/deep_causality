@@ -9,10 +9,11 @@
 
 use crate::FloatType;
 use crate::constants::*;
+use avionics_examples::shared::stages::FROZEN_DRAG_FRACTION_FIELD;
 use avionics_examples::shared::{constants::*, utils, world};
 use deep_causality_cfd::{
-    AtmosphereRow, CaseRun, CompressibleMarchConfig, CompressiblePause, CoupledField, FromTableRow,
-    GateSeq, IoAction, KeyedTable, PhysicsError, Report, StudyView, TableRow, read_rows,
+    AtmosphereRow, CaseRun, CompressibleMarchConfig, CoupledField, FromTableRow, GateSeq, IoAction,
+    KeyedTable, PhysicsError, Report, StudyView, TableRow, read_rows,
 };
 use std::path::PathBuf;
 
@@ -107,6 +108,10 @@ pub struct DayBelief {
     pub bias_departure: FloatType,
     pub drift_mean_m: FloatType,
     pub drift_sd_m: FloatType,
+    /// Blackout onset the table predicts for this day, s after the descent start.
+    pub onset_s: FloatType,
+    /// Blackout dwell the table predicts for this day, s.
+    pub dwell_s: FloatType,
     /// The ignition margin the commit demands: `drift_mean + k·drift_sd`.
     pub margin_m: FloatType,
     pub clamped: bool,
@@ -140,6 +145,8 @@ pub fn day_belief(table: &KeyedTable<FloatType>, d_temp: FloatType) -> DayBelief
         bias_departure: v[2],
         drift_mean_m,
         drift_sd_m,
+        onset_s: v[3],
+        dwell_s: v[5],
         margin_m: drift_mean_m + utils::ft(IGNITION_MARGIN_K) * drift_sd_m,
         clamped: interp.clamped(),
     }
@@ -214,8 +221,14 @@ pub fn throttle_roster() -> Vec<ThrottleCase> {
 }
 
 /// A branch world: the trunk, differing by exactly one published intervention.
+///
+/// `fork_fraction` is the preserved-drag fraction the trunk carried at the fork. It is published
+/// rather than baked into the coupling because the coupling stack is built for the burn leg, which
+/// runs *before* the fork exists — so the fork's drag state can only reach the witness stage as a
+/// world constant.
 pub fn branch_world(
     case: &ThrottleCase,
+    fork_fraction: FloatType,
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
     imprinted_world(
         case.name,
@@ -223,199 +236,244 @@ pub fn branch_world(
         &[
             ("commanded_bank", utils::ft(0.0)),
             ("commanded_throttle", case.throttle),
+            (FROZEN_DRAG_FRACTION_FIELD, fork_fraction),
         ],
     )
 }
 
 /// One scored branch outcome.
+///
+/// Every field is read out of the branch's own report. The commanded throttle is carried alongside
+/// the realized one because the safety envelope clamps commands, so the two differ whenever an axis
+/// binds — and a table showing only the command presents one flight as several.
 #[derive(Debug, Clone)]
 pub struct BranchRow {
     pub name: String,
-    pub throttle: FloatType,
-    /// Preserved-drag fraction the A0 correlation applied at this branch's `C_T`.
-    pub preserved_fraction: FloatType,
+    /// The throttle this branch's world published — an input, not an outcome.
+    pub commanded_throttle: FloatType,
+    /// The throttle the propulsion stages actually flew, after the envelope clamped the command.
+    pub realized_throttle: FloatType,
+    /// Preserved-drag fraction the A0 correlation applied at this branch's `C_T`, or `None` when the
+    /// closure applied no decrement at all — a coasting branch has no plume, and an absent fraction
+    /// is the honest record of that. Substituting a literal `1.0` here would put a number the run
+    /// never produced into the middle of two gates.
+    pub preserved_fraction: Option<FloatType>,
     /// Final marched density, the flow observable the spread gate reads.
     pub final_density: FloatType,
-    /// Net axial deceleration realized on the force channel, m·s⁻².
+    /// Axial deceleration read off the summed force channel at the end of the continuation, m·s⁻².
     pub net_deceleration: FloatType,
     /// Propellant consumed over the continuation, kg.
     pub propellant_used: FloatType,
-    /// The frozen-drag foil: the same thrust schedule with drag held at the fork value.
-    pub frozen_drag_deceleration: FloatType,
+    /// Velocity the branch actually shed along its flight path over the continuation, m·s⁻¹.
+    pub dv_actual: FloatType,
+    /// The frozen-drag foil over the same continuation: the branch's own thrust schedule with the
+    /// preserved-drag fraction held at its value at the fork, m·s⁻¹.
+    pub dv_frozen: FloatType,
     pub has_alternation_marker: bool,
     /// Whether the carrier recorded this branch as an O(1) fork: both halves of the paused state
-    /// entered by reference and were genuinely shared. Read from the typed record the carrier
-    /// attaches to every continued branch, not inferred from the log.
+    /// entered by reference. A guard against a source change rather than a run-time measurement.
     pub o1_fork: bool,
-    /// Live references to the shared marched tensor when this branch was set up.
-    pub fluid_refs: FloatType,
+    /// How far this branch's rank grew past the rank the paused state carried at the fork.
+    pub bond_growth: FloatType,
+    /// The rank this branch's final marched state actually reached, as the carrier measured it.
+    pub peak_bond: Option<usize>,
 }
 
 impl TableRow for BranchRow {
     type Scalar = FloatType;
     const SCHEMA: &'static [(&'static str, &'static str)] = &[
-        ("throttle", "-"),
-        ("preserved_fraction", "-"),
+        ("commanded_throttle", "-"),
+        ("realized_throttle", "-"),
+        // NaN is the honest record for a branch whose closure applied no decrement: a
+        // coasting branch has no plume, and any numeric sentinel here would be a magic value in the
+        // middle of the gate that reads this column.
+        ("preserved_fraction", "- (NaN: no decrement applied)"),
         ("final_density", "m^-3"),
         ("net_deceleration", "m/s2"),
         ("propellant_used", "kg"),
-        ("frozen_drag_deceleration", "m/s2"),
-        ("fluid_refs", "-"),
+        ("dv_actual", "m/s"),
+        ("dv_frozen", "m/s"),
+        ("bond_growth", "-"),
     ];
     fn cells(&self) -> Vec<FloatType> {
         vec![
-            self.throttle,
-            self.preserved_fraction,
+            self.commanded_throttle,
+            self.realized_throttle,
+            self.preserved_fraction.unwrap_or(FloatType::NAN),
             self.final_density,
             self.net_deceleration,
             self.propellant_used,
-            self.frozen_drag_deceleration,
-            self.fluid_refs,
+            self.dv_actual,
+            self.dv_frozen,
+            self.bond_growth,
         ]
     }
 }
 
-/// Read a report's terminal value of a field scalar (the carrier republishes every field scalar as
-/// `final_<name>`), reduced by **peak over cells**.
+/// The missing-series error a witness read returns.
+///
+/// A default would be worse than an error here, and measurably so: a missing preserved-drag fraction
+/// read as zero makes the drag-collapse gate *pass* with a full collapse, and a missing mass floored
+/// to one kilogram inflates every deceleration and makes the coupling gate pass harder. Both failures
+/// are silent, and both produce a plausible-looking row.
+fn missing(name: &str) -> PhysicsError {
+    PhysicsError::CalculationError(format!(
+        "branch report carries no \"final_{name}\" series; scoring cannot substitute a value for it"
+    ))
+}
+
+/// A finite check at the point of read, so no comparison downstream can see a not-a-number.
+fn finite(name: &str, v: FloatType) -> Result<FloatType, PhysicsError> {
+    if v.is_finite() {
+        Ok(v)
+    } else {
+        Err(PhysicsError::CalculationError(format!(
+            "branch witness \"final_{name}\" is not finite ({v})"
+        )))
+    }
+}
+
+/// Read a **single-cell** field scalar off a report, preserving its sign.
+///
+/// A peak folded from zero cannot represent a negative value, and the preserved-drag fraction has a
+/// negative branch: the SRP correlation reports a wake-type forebody force past a thrust coefficient
+/// near two, which is exactly the sign-flip physics the counterfactual exists to find. Folding it to
+/// zero would erase the effect and report the erasure as a measurement.
+fn final_cell0(report: &Report<FloatType>, name: &str) -> Result<FloatType, PhysicsError> {
+    let v = report
+        .series(&format!("final_{name}"))
+        .and_then(|s| s.first().copied())
+        .ok_or_else(|| missing(name))?;
+    finite(name, v)
+}
+
+/// Read a **per-cell marched** quantity off a report, reduced by peak over cells.
 ///
 /// The reduction is load-bearing for the flow witnesses, not a convenience. Cell 0 of a marched
 /// projection lies in the **inflow strip**, which the carrier holds Dirichlet-enforced at the
 /// Rankine–Hugoniot post-shock state the descent schedule dictates — identical across branches by
 /// construction, whatever the plume does. Reading it would report zero spread no matter how the
 /// interior evolved. The peak sees the evolved interior, which is where the imprint's forcing region
-/// sits. Single-cell scalars (mass, propellant, the preserved fraction) are unaffected.
-fn final_scalar(report: &Report<FloatType>, name: &str) -> FloatType {
-    report
+/// sits.
+fn final_peak(report: &Report<FloatType>, name: &str) -> Result<FloatType, PhysicsError> {
+    let series = report
         .series(&format!("final_{name}"))
-        .map(|s| {
-            s.iter()
-                .copied()
-                .fold(utils::ft(0.0), |a: FloatType, b| if b > a { b } else { a })
-        })
-        .unwrap_or_else(|| utils::ft(0.0))
+        .ok_or_else(|| missing(name))?;
+    let v = series
+        .iter()
+        .copied()
+        .reduce(|a, b| if b > a { b } else { a })
+        .ok_or_else(|| missing(name))?;
+    finite(name, v)
 }
 
-/// Score one branch of the roster.
+/// The trunk's state at the fork, so each branch is scored on what *it* changed rather than on the
+/// descent it inherited.
+#[derive(Debug, Clone, Copy)]
+pub struct ForkState {
+    /// Preserved-drag fraction the trunk carried at the fork — the value the foil freezes at.
+    pub fraction: FloatType,
+    pub propellant: FloatType,
+    pub dv_actual: FloatType,
+    pub dv_frozen: FloatType,
+}
+
+/// Score one branch of the roster, entirely from what the branch flew.
+///
+/// Nothing here re-derives an outcome from the roster's commanded throttle. The safety envelope
+/// clamps commands against a dynamic thrust-coefficient ceiling, so several roster entries can fly
+/// one identical trajectory; scoring the command would then report one flight as several, with a
+/// spread that is the command's arithmetic rather than the flight's.
 pub fn score_branch(
     run: &CaseRun<'_, ThrottleCase, CompressibleMarchConfig<FloatType>, FloatType>,
-    fork_fraction: FloatType,
-    fork_propellant: FloatType,
+    fork: ForkState,
 ) -> Result<BranchRow, PhysicsError> {
     let report = run.report();
     let case = run.case();
-    // At zero throttle there is no plume, so the full aerodynamic drag is preserved by definition.
-    // The plume stage is inert there and never publishes, so the field would otherwise retain the
-    // trunk's last value — a stale number that reads as a coast measurement and is not one.
-    let preserved_fraction = if case.throttle > utils::ft(0.0) {
-        final_scalar(report, "preserved_drag_fraction")
-    } else {
-        utils::ft(1.0)
+
+    let realized_throttle = final_cell0(report, "realized_throttle")?;
+    // Absent means the closure applied nothing this branch — no throttle, or outside its Mach band.
+    // That is a state, not a missing measurement, so it is carried rather than defaulted or errored.
+    let preserved_fraction = match report.series("final_preserved_drag_fraction") {
+        Some(_) => Some(final_cell0(report, "preserved_drag_fraction")?),
+        None => None,
     };
-    let final_density = final_scalar(report, "n_tot");
-    let propellant_used = fork_propellant - final_scalar(report, "propellant");
-    let mass = final_scalar(report, "mass").max(utils::ft(1.0));
+    let final_density = final_peak(report, "n_tot")?;
+    let net_deceleration = final_cell0(report, "axial_accel")?;
+    let propellant_used = fork.propellant - final_cell0(report, "propellant")?;
+    let dv_actual = final_cell0(report, "dv_actual")? - fork.dv_actual;
+    let dv_frozen = final_cell0(report, "dv_frozen")? - fork.dv_frozen;
 
-    // Net axial deceleration the coupling actually realized: the thrust term plus the preserved
-    // aerodynamic drag.
-    let thrust = case.throttle * utils::ft(RETRO_THRUST_N);
-    let drag = utils::ft(BASE_AXIAL_DRAG_N);
-    let net_deceleration = (thrust + preserved_fraction * drag) / mass;
-    // The foil: the same thrust with drag frozen at the fork's fraction. If thrust-only kinematics
-    // predicts the divergence, the flow was along for the ride.
-    let frozen_drag_deceleration = (thrust + fork_fraction * drag) / mass;
-
-    let has_alternation_marker = report
-        .effect_log()
-        .map(|l| format!("{l}").contains("!!ContextAlternation!!"))
-        .unwrap_or(false);
-
-    // The fork-economics record the carrier attaches to every continued branch. Absent means the
-    // report did not come from a fork at all, which fails the gate rather than defaulting true.
+    let has_alternation_marker = report.alternation_applied().unwrap_or(false);
     let economics = report.fork_economics();
 
     Ok(BranchRow {
         name: case.name.to_string(),
-        throttle: case.throttle,
+        commanded_throttle: case.throttle,
+        realized_throttle,
         preserved_fraction,
         final_density,
         net_deceleration,
         propellant_used,
-        frozen_drag_deceleration,
+        dv_actual,
+        dv_frozen,
         has_alternation_marker,
+        // Absent economics means the report did not come from a fork at all, which fails the gate
+        // rather than defaulting true.
         o1_fork: economics.map(|e| e.is_o1()).unwrap_or(false),
-        fluid_refs: economics
-            .map(|e| utils::ft(e.fluid_refs() as f64))
-            .unwrap_or_else(|| utils::ft(0.0)),
+        bond_growth: report
+            .bond_growth()
+            .map(|g| utils::ft(g as f64))
+            .unwrap_or_else(|| utils::ft(-1.0)),
+        peak_bond: report.peak_bond(),
     })
 }
 
 // ── Leg and belief witnesses ────────────────────────────────────────────────────────────────
 
 /// A flown leg reduced to the witnesses the trajectory gates read.
+///
+/// Every field is a typed read. Nothing here is recovered by rendering the provenance log and
+/// splitting strings: a reworded message would make such a read report zero, and a gate would then
+/// fail for a reason that has nothing to do with the flight.
 #[derive(Debug, Clone)]
 pub struct LegSet {
     pub steps: usize,
-    pub errored: bool,
+    /// Each leg's captured step error, named. Empty when every leg flew clean.
+    pub leg_errors: Vec<(String, String)>,
     pub committed: bool,
-    pub commit_step: usize,
+    pub commit_step: FloatType,
     pub commit_mach: FloatType,
     pub commit_q: FloatType,
+    /// Whether the navigation was aided on the committing step.
+    pub commit_aided: bool,
+    /// Navigated position uncertainty at the commit, m (one sigma).
+    pub commit_sigma_m: FloatType,
+    /// The margin the commit was required to satisfy, from the day's interpolated row.
+    pub commit_margin_m: FloatType,
     pub altitude_km: FloatType,
     pub descent_rate: FloatType,
     pub propellant: FloatType,
     pub touchdown: bool,
     pub rebuilds: usize,
-    pub re_seeds: usize,
-    pub regime_log: String,
-    /// The captured step error, when a leg recorded one.
-    pub error_text: String,
+    pub re_seeds: FloatType,
+    pub regime_transitions: FloatType,
+    /// Acts 0-1 blackout witnesses, compared against what the dispersion table predicts for the
+    /// measured day.
+    pub onset_s: FloatType,
+    pub dwell_s: FloatType,
+    pub drift_denied_max_m: FloatType,
+    /// The window the table predicted for this day, in the same units.
+    pub predicted_onset_s: FloatType,
+    pub predicted_dwell_s: FloatType,
     pub elapsed_s: FloatType,
     /// The informed-vs-uninformed separation, m (gate 5).
     pub belief_separation_m: FloatType,
-    /// Peak bond of the committed branch's re-quantized final state (gate 7).
-    pub peak_bond: usize,
-}
-
-/// Reduce a pause to its leg witnesses.
-pub fn leg_witnesses<S>(pause: &CompressiblePause<'_, FloatType, S>) -> (usize, bool, usize) {
-    let rendered = format!("{}", pause.field().log());
-    let re_seeds = rendered
-        .lines()
-        .filter(|l| l.contains("leg re-seeded"))
-        .count();
-    (pause.step(), pause.error().is_some(), re_seeds)
-}
-
-/// Read the ignition commit out of a rendered provenance log: step, sensed Mach, sensed q.
-pub fn commit_witness(rendered: &str) -> Option<(usize, FloatType, FloatType)> {
-    let line = rendered
-        .lines()
-        .find(|l| l.contains("ignition corridor committed at step"))?;
-    let step = line
-        .split("at step ")
-        .nth(1)?
-        .split(':')
-        .next()?
-        .trim()
-        .parse::<usize>()
-        .ok()?;
-    let mach = line
-        .split("Mach ")
-        .nth(1)?
-        .split(',')
-        .next()?
-        .trim()
-        .parse::<f64>()
-        .ok()?;
-    let q = line
-        .split("q ")
-        .nth(1)?
-        .split(" Pa")
-        .next()?
-        .trim()
-        .parse::<f64>()
-        .ok()?;
-    Some((step, utils::ft(mach), utils::ft(q)))
+    /// Whether the day's dispersion row clamped to the nearest tabulated key.
+    pub belief_clamped: bool,
+    /// Peak bond of the committed branch's re-quantized final state (gate 7), or `None` when the
+    /// branch reported no rank.
+    pub peak_bond: Option<usize>,
 }
 
 /// Read a single-cell scalar off a field.
@@ -425,7 +483,7 @@ pub fn scalar0(field: &CoupledField<FloatType>, name: &str) -> FloatType {
 
 // ── Gates ───────────────────────────────────────────────────────────────────────────────────
 
-/// The counterfactual gates over the branch roster (4a-4e).
+/// The counterfactual gates over the branch roster (4a-4f).
 pub fn branch_gates() -> GateSeq<BranchRow> {
     GateSeq::new("retropulsion counterfactuals")
         .gate("(4a) flow spread", gate_flow_spread)
@@ -433,36 +491,77 @@ pub fn branch_gates() -> GateSeq<BranchRow> {
         .gate("(4c) coupling load-bearing", gate_coupling)
         .gate("(4d) fork economics", gate_fork_economics)
         .gate("(4e) audit trail", gate_markers)
+        .gate("(4f) roster non-degeneracy", gate_roster_distinct)
 }
 
-/// (4d) The state-fork's O(1) claim, regressed rather than trusted.
+/// (4f) The roster must fly distinct throttles.
 ///
-/// M1's de-risk measured the fork structure directly on a `CarrierFork`; the study grammar lowers
-/// `branch` onto `continue_with`, which never builds one, so the carrier now records the same facts
-/// onto every continued branch's report and this reads them typed.
+/// The safety envelope clamps every command against a dynamic thrust-coefficient ceiling that moves
+/// with the sensed dynamic pressure, so a roster written in commanded throttles can collapse onto one
+/// realized throttle without anything saying so. Every downstream witness then agrees to full
+/// precision across the collapsed branches while the recorded table still shows the distinct commands,
+/// which reads as a spread that was never flown. This gate makes that collapse a run failure.
+fn gate_roster_distinct(v: &StudyView<'_, BranchRow>) -> (bool, String) {
+    let rows = v.rows();
+    let mut collisions: Vec<String> = Vec::new();
+    for (i, a) in rows.iter().enumerate() {
+        for b in rows.iter().skip(i + 1) {
+            if (a.realized_throttle - b.realized_throttle).abs() < ROSTER_THROTTLE_MIN_GAP {
+                collisions.push(format!(
+                    "{} and {} both flew {:.4}",
+                    a.name, b.name, a.realized_throttle
+                ));
+            }
+        }
+    }
+    (
+        collisions.is_empty() && rows.len() > 1,
+        if collisions.is_empty() {
+            format!(
+                "{} branches flew {} distinct throttles (minimum gap {:.3}) — the envelope admitted \
+                 every commanded value, so each row describes its own flight",
+                rows.len(),
+                rows.len(),
+                ROSTER_THROTTLE_MIN_GAP
+            )
+        } else {
+            format!(
+                "roster collapsed: {} — the envelope clamped distinct commands onto one flight, so \
+                 the rows below it are one trajectory reported several times",
+                collisions.join("; ")
+            )
+        },
+    )
+}
+
+/// (4d) The state-fork's cost, regressed rather than trusted.
 ///
-/// What it asserts: every branch entered by reference (no tensor copied at fork time), and each
-/// share was genuinely shared — a reference count above one. The count is the positive evidence.
-/// `shares_*` alone would still hold if a branch somehow owned the only copy; a roster of N
-/// branches off one pause must show the pause's state referenced more than once.
+/// Two claims, of different kinds. `is_o1` is a **source-change guard**: both of its conjuncts
+/// compare a clone against the `Arc` it was cloned from, so no input falsifies them, but an edit that
+/// materializes the paused state instead of sharing it flips them and this fails. Bond growth is a
+/// genuine **measurement**: it varies with the run, and it answers the half of the fork-economics
+/// question that sharing cannot — whether a state that forks cheaply then stays cheap.
 fn gate_fork_economics(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     let rows = v.rows();
     let forked = rows.iter().filter(|r| r.o1_fork).count();
-    let min_refs = rows
+    let worst_growth = rows
         .iter()
-        .map(|r| r.fluid_refs)
-        .fold(FloatType::INFINITY, FloatType::min);
+        .map(|r| r.bond_growth)
+        .fold(FloatType::NEG_INFINITY, FloatType::max);
+    let measured = rows.iter().all(|r| r.bond_growth >= 0.0);
     (
-        forked == rows.len() && rows.len() > 1,
+        forked == rows.len() && rows.len() > 1 && measured && worst_growth <= MAX_BOND_GROWTH,
         format!(
-            "{}/{} branches forked O(1) — paused fluid and field entered each branch by reference, \
-             shared at {:.0}+ live references, one copy-on-write clone at first write (a roster of \
-             {} costs one paused state, not {} copies)",
+            "{}/{} branches entered by reference (no tensor copied at fork time), and the worst \
+             post-fork bond growth is {:.0} against a cap of {:.0}",
             forked,
             rows.len(),
-            if min_refs.is_finite() { min_refs } else { 0.0 },
-            rows.len(),
-            rows.len()
+            if worst_growth.is_finite() {
+                worst_growth
+            } else {
+                -1.0
+            },
+            MAX_BOND_GROWTH
         ),
     )
 }
@@ -477,11 +576,15 @@ fn gate_flow_spread(v: &StudyView<'_, BranchRow>) -> (bool, String) {
         .iter()
         .map(|r| r.final_density)
         .fold(FloatType::NEG_INFINITY, FloatType::max);
-    let spread = if hi.abs() > 0.0 { (hi - lo) / hi } else { 0.0 };
+    let spread = if hi.is_finite() && hi.abs() > 0.0 {
+        (hi - lo) / hi.abs()
+    } else {
+        0.0
+    };
     (
         spread >= FLOW_SPREAD_MIN,
         format!(
-            "branch flow observables spread {:.3} across the roster (threshold {:.3}); the corridor's \
+            "branch flow observables spread {:.4} across the roster (threshold {:.4}); the corridor's \
              bank branches agreed to three digits",
             spread, FLOW_SPREAD_MIN
         ),
@@ -489,59 +592,128 @@ fn gate_flow_spread(v: &StudyView<'_, BranchRow>) -> (bool, String) {
 }
 
 fn gate_drag_collapse(v: &StudyView<'_, BranchRow>) -> (bool, String) {
-    // The Jarvinen-Adams central-nozzle drag collapse, per branch: lighting the engine destroys
-    // preserved aerodynamic drag, and harder throttle destroys more of it.
+    // The Jarvinen-Adams central-nozzle drag collapse, carried per branch through a forked flight:
+    // lighting the engine destroys preserved aerodynamic drag, and harder throttle destroys more.
     //
-    // This gate deliberately does **not** assert a non-monotone *net deceleration*. That effect —
-    // marginal throttle buying negative net deceleration — needs the drag loss to outpace the thrust
-    // gain, and this vehicle carries roughly 56 kN of thrust against 18 kN of drag, so thrust
-    // dominates at every throttle in the roster. The measured landscape says so: net deceleration
-    // rises monotonically. Asserting the dip anyway would be a gate the physics cannot satisfy,
-    // which regresses nothing. What the roster *does* measure is the collapse the correlation is
-    // cited for, carried per branch through a real forked flight.
-    let mut rows: Vec<&BranchRow> = v.rows().iter().collect();
-    rows.sort_by(|a, b| a.throttle.partial_cmp(&b.throttle).unwrap());
-    let monotone = rows
-        .windows(2)
-        .all(|w| w[1].preserved_fraction <= w[0].preserved_fraction + 1.0e-9);
-    let coast = rows.first().map(|r| r.preserved_fraction).unwrap_or(0.0);
-    let hardest = rows.last().map(|r| r.preserved_fraction).unwrap_or(0.0);
-    let collapse = coast - hardest;
-    (
-        monotone && collapse >= DRAG_COLLAPSE_MIN,
-        format!(
-            "preserved drag falls {:.3} -> {:.3} across the roster (collapse {:.3}, threshold {:.3}), \
-             monotone in throttle — the cited Jarvinen-Adams central-nozzle collapse, carried per \
-             branch through a forked flight. Net deceleration stays monotone at this vehicle's \
-             thrust-to-drag ratio, so the trajectory-level sign flip is not asserted",
-            coast, hardest, collapse, DRAG_COLLAPSE_MIN
+    // Ordered by **realized** throttle, since that is what set each branch's thrust coefficient. Only
+    // branches whose closure actually applied a decrement take part: a coasting branch has no plume,
+    // so it has no fraction to compare, and inventing one for it would decide the gate on a number
+    // the run never produced.
+    //
+    // The fractions are read sign-preserving, so the correlation's negative branch survives to be
+    // measured. That branch is the wake-type forebody force past a thrust coefficient near two, and
+    // it is the sign-flip the design note asks this gate to find.
+    let mut rows: Vec<(&BranchRow, FloatType)> = v
+        .rows()
+        .iter()
+        .filter_map(|r| r.preserved_fraction.map(|f| (r, f)))
+        .collect();
+    rows.sort_by(|a, b| {
+        a.0.realized_throttle
+            .partial_cmp(&b.0.realized_throttle)
+            .unwrap_or(core::cmp::Ordering::Equal)
+    });
+    if rows.len() < 2 {
+        return (
+            false,
+            format!(
+                "only {} branch(es) applied a drag decrement — a collapse needs at least two points",
+                rows.len()
+            ),
+        );
+    }
+    let monotone = rows.windows(2).all(|w| w[1].1 <= w[0].1 + 1.0e-9);
+    let softest = rows.first().map(|r| r.1).unwrap_or(0.0);
+    let hardest = rows.last().map(|r| r.1).unwrap_or(0.0);
+    let collapse = softest - hardest;
+    let reversed = rows.iter().any(|r| r.1 < 0.0);
+    let coasting = v.rows().len() - rows.len();
+
+    // ── The sign flip §3.2 asks this gate to find. ──
+    //
+    // Ordered by realized throttle over the **whole** roster including the coast branch, since the
+    // effect is precisely that lighting the engine can buy *less* net deceleration than coasting: in
+    // the low-thrust-coefficient band the plume destroys preserved drag about as fast as thrust
+    // replaces it. Measured from the trajectory-derived deceleration each branch actually realized,
+    // not predicted from the correlation — the correlation is the cross-check.
+    let mut by_throttle: Vec<&BranchRow> = v.rows().iter().collect();
+    by_throttle.sort_by(|a, b| a.realized_throttle.total_cmp(&b.realized_throttle));
+    let decel: Vec<FloatType> = by_throttle.iter().map(|r| r.net_deceleration).collect();
+    let dip = decel
+        .iter()
+        .enumerate()
+        .skip(1)
+        .take(decel.len().saturating_sub(2))
+        .filter(|(i, d)| **d < decel[i - 1] && **d < decel[i + 1])
+        .map(|(i, _)| i)
+        .next();
+    let sign_flip = match dip {
+        Some(i) => format!(
+            "; net deceleration is non-monotone in throttle with its minimum at the {} branch \
+             (throttle {:.2}, {:.3} m/s2 against {:.3} m/s2 coasting) — the drag sign flip",
+            by_throttle[i].name, by_throttle[i].realized_throttle, decel[i], decel[0]
         ),
+        None => "; net deceleration is monotone in throttle, so no sign flip is present in this \
+                 roster's band"
+            .to_string(),
+    };
+
+    (
+        monotone && collapse >= DRAG_COLLAPSE_MIN && dip.is_some(),
+        format!(
+            "preserved drag falls {:.4} -> {:.4} across the {} burning branches' realized throttles \
+             (collapse {:.4}, threshold {:.4}), monotone in throttle; {} coasting branch(es) applied \
+             no decrement{}",
+            softest,
+            hardest,
+            rows.len(),
+            collapse,
+            DRAG_COLLAPSE_MIN,
+            coasting,
+            if reversed {
+                " — and the harder branches reach the correlation's negative, wake-type branch"
+            } else {
+                ""
+            }
+        ) + &sign_flip,
     )
 }
 
+/// (4c) The coupling is load-bearing, measured on trajectories.
+///
+/// Both quantities are velocity increments accumulated step by step over the same continuation: the
+/// one the branch actually shed, and the one it would have shed under its own thrust schedule with
+/// the drag closure frozen at the fork's fraction. They differ only through the closure, so their
+/// separation is what the coupling contributed. Comparing two closed forms that share a thrust term
+/// would instead cancel that term identically and restate the drag gate.
 fn gate_coupling(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     let worst = v
         .rows()
         .iter()
-        .map(|r| (r.net_deceleration - r.frozen_drag_deceleration).abs())
+        .map(|r| (r.dv_actual - r.dv_frozen).abs())
         .fold(0.0_f64, f64::max);
     (
         worst >= FROZEN_DRAG_SEPARATION_MIN,
         format!(
-            "branch divergence departs the frozen-drag prediction by up to {:.4} m/s2 (threshold \
-             {:.4}) — thrust-only kinematics does not predict the outcome",
+            "branch trajectories depart the frozen-drag prediction by up to {:.4} m/s over the \
+             continuation (threshold {:.4}) — thrust-only kinematics does not predict the outcome",
             worst, FROZEN_DRAG_SEPARATION_MIN
         ),
     )
 }
 
+/// (4e) Every branch flew a world alternation that was actually applied.
+///
+/// Read from the typed flag, not from a marker search: the carrier writes the same
+/// `!!ContextAlternation!!` marker on the path where it *refuses* to apply an alternation, so a
+/// substring match reports a refused branch as an alternated one.
 fn gate_markers(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     let marked = v.rows().iter().filter(|r| r.has_alternation_marker).count();
     (
-        marked == v.rows().len(),
+        marked == v.rows().len() && !v.rows().is_empty(),
         format!(
-            "{marked}/{} forked branches carry !!ContextAlternation!! naming the world they replace \
-             (read from each report's effect log — the event-fork path writes no branch file)",
+            "{marked}/{} branches record an applied context alternation naming the world they \
+             replace (the typed flag, which the carrier's refusal path sets false)",
             v.rows().len()
         ),
     )
@@ -562,121 +734,214 @@ pub fn leg_gates() -> GateSeq<LegSet> {
 }
 
 fn gate_integrity(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
     (
-        !l.errored,
-        format!(
-            "{} coupled steps flown; step errors captured: {}",
-            l.steps,
-            if l.errored { &l.error_text } else { "none" }
-        ),
+        l.leg_errors.is_empty(),
+        if l.leg_errors.is_empty() {
+            format!(
+                "{} coupled steps flown across four legs; no leg captured a step error",
+                l.steps
+            )
+        } else {
+            format!(
+                "step errors captured: {}",
+                l.leg_errors
+                    .iter()
+                    .map(|(leg, e)| format!("{leg}: {e}"))
+                    .collect::<Vec<_>>()
+                    .join("; ")
+            )
+        },
     )
 }
 
+/// (1) Acts 0-1 fly the blackout window the day's dispersion row predicts.
+///
+/// The design note asks this gate for *bit-identical* reproduction of the corridor's window. That
+/// requirement and this example's own §4 premise are incompatible, and the incompatibility is real
+/// physics rather than a wiring mistake: the example flies the **measured cold day**, and a colder,
+/// denser atmosphere ionizes earlier and dwells longer. Its window therefore cannot match the
+/// corridor's standard-day window, and a gate demanding that it does would be asking the descent to
+/// ignore the weather it was built to consume.
+///
+/// What inheritance means here is that Acts 0-1 fly the corridor *stack* — burn stages composed and
+/// contractually inert at zero throttle — over the day actually flown. That is checked two ways, and
+/// both can fail:
+///
+/// * the flown blackout window matches the `onset` and `dwell` the dispersion table records for this
+///   temperature departure. The table was generated by the sibling weather example from the same
+///   coupling stack, so agreement is a statement that the stack still behaves as it did — and it puts
+///   the table's own columns under test rather than only its drift row;
+/// * no propellant was consumed and no ignition latched before the corridor leg ended, which is the
+///   zero-throttle inertness contract the burn stack rests on.
 fn gate_inheritance(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
+    let onset_err = (l.onset_s - l.predicted_onset_s).abs();
+    let dwell_err = (l.dwell_s - l.predicted_dwell_s).abs();
+    let ok = onset_err <= WINDOW_PREDICTION_TOL_S && dwell_err <= WINDOW_PREDICTION_TOL_S;
     (
-        l.re_seeds >= 1,
+        ok,
         format!(
-            "Acts 0-1 fly the corridor stack with the burn stages composed and the throttle at zero; \
-             {} leg re-seed(s) recorded in provenance (the marched layer is re-seeded at each leg \
-             boundary — the quasi-steady defense, now visible)",
-            l.re_seeds
+            "Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset \
+             at {:.2} s against the table's {:.2} s for this day (error {:.3} s) and dwell {:.2} s \
+             against {:.2} s (error {:.3} s), tolerance {:.2} s; {:.0} leg re-seed(s), peak \
+             dead-reckoning drift {:.2} m",
+            l.onset_s,
+            l.predicted_onset_s,
+            onset_err,
+            l.dwell_s,
+            l.predicted_dwell_s,
+            dwell_err,
+            WINDOW_PREDICTION_TOL_S,
+            l.re_seeds,
+            l.drift_denied_max_m
         ),
     )
 }
 
+/// (2) The ignition commit satisfied the conditions its own predicate does **not** guarantee.
+///
+/// The Mach band and the dynamic-pressure window are the corridor predicate's own preconditions, so
+/// a commit witness can only exist for values inside them — re-asserting those reduces the gate to
+/// "a commit happened". What the predicate's existence does not tell a reader is whether the state it
+/// committed on was aided and inside the day's margin, so that is what this checks.
 fn gate_ignition(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
-    let in_band = l.commit_mach >= IGNITION_MACH_MIN && l.commit_mach <= IGNITION_MACH_MAX;
-    let in_window = l.commit_q >= IGNITION_Q_MIN && l.commit_q <= IGNITION_Q_MAX;
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
+    let inside_margin = l.commit_sigma_m <= l.commit_margin_m;
     (
-        l.committed && in_band && in_window,
+        l.committed && l.commit_aided && inside_margin,
         format!(
-            "commit fired at step {} inside the Mach band [{}, {}] at M {:.2}, inside the q window \
-             [{:.0}, {:.0}] Pa at {:.0} Pa, on a post-fix nav state within the table-sized margin",
+            "commit fired at step {:.0} on {} navigation at sigma {:.3} m against the day's \
+             table-sized margin of {:.2} m (Mach {:.2}, q {:.0} Pa — the corridor predicate's own \
+             preconditions, not re-asserted here)",
             l.commit_step,
-            IGNITION_MACH_MIN,
-            IGNITION_MACH_MAX,
+            if l.commit_aided {
+                "aided"
+            } else {
+                "dead-reckoning"
+            },
+            l.commit_sigma_m,
+            l.commit_margin_m,
             l.commit_mach,
-            IGNITION_Q_MIN,
-            IGNITION_Q_MAX,
             l.commit_q
         ),
     )
 }
 
 fn gate_cascade(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
-    let transitions = l
-        .regime_log
-        .lines()
-        .filter(|m| m.contains("regime ->"))
-        .count();
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
     (
-        transitions >= MIN_REGIME_TRANSITIONS,
+        l.regime_transitions >= utils::ft(MIN_REGIME_TRANSITIONS as f64),
         format!(
-            "{transitions} regime transitions logged across the descent (at least \
-             {MIN_REGIME_TRANSITIONS}), each flow- or trajectory-resolved"
+            "{:.0} regime transitions logged across the descent (at least {MIN_REGIME_TRANSITIONS}), \
+             counted by the classifier rather than tallied from a rendered log",
+            l.regime_transitions
         ),
     )
 }
 
 fn gate_table(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
     (
-        l.belief_separation_m >= BELIEF_SEPARATION_MIN_M,
+        l.belief_separation_m >= BELIEF_SEPARATION_MIN_M && !l.belief_clamped,
         format!(
-            "informed and uninformed guidance separate by {:.2} m of demanded ignition margin on the \
-             measured cold day (threshold {:.2} m) — the table changed the flight",
-            l.belief_separation_m, BELIEF_SEPARATION_MIN_M
+            "informed and uninformed guidance demand ignition margins {:.2} m apart on the measured \
+             cold day (threshold {:.2} m){}",
+            l.belief_separation_m,
+            BELIEF_SEPARATION_MIN_M,
+            if l.belief_clamped {
+                " — but the measured departure fell outside the tabulated range and clamped, so the \
+                 row is an extrapolation rather than an interpolation"
+            } else {
+                ""
+            }
         ),
     )
 }
 
+/// (6) The vehicle arrives at its commanded contact condition.
+///
+/// Bounded on **both** sides. A one-sided ceiling admits an undershoot and admits a hover, which are
+/// the outcomes this gate's tracking claim says it detects — a guidance that nulls its velocity above
+/// the deck passes an upper bound while failing to land the way it was commanded to.
 fn gate_touchdown(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
-    let ok =
-        l.touchdown && l.descent_rate <= TOUCHDOWN_SINK_MAX && l.propellant > PROPELLANT_FLOOR_KG;
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
+    let lo = utils::ft(CONTACT_SPEED_MS) - utils::ft(TOUCHDOWN_SINK_TOL);
+    let hi = utils::ft(CONTACT_SPEED_MS) + utils::ft(TOUCHDOWN_SINK_TOL);
+    let tracked = l.descent_rate >= lo && l.descent_rate <= hi;
     (
-        ok,
+        l.touchdown && tracked && l.propellant > PROPELLANT_FLOOR_KG,
         format!(
-            "altitude floor reached at {:.3} km with descent rate {:.1} m/s (limit {:.0}) and {:.1} kg \
-             propellant remaining (floor {:.0})",
-            l.altitude_km, l.descent_rate, TOUCHDOWN_SINK_MAX, l.propellant, PROPELLANT_FLOOR_KG
+            "altitude floor reached at {:.3} km at {:.2} m/s against a commanded contact speed of \
+             {:.1} m/s (admissible [{:.2}, {:.2}]), with {:.1} kg propellant remaining (floor {:.0})",
+            l.altitude_km,
+            l.descent_rate,
+            CONTACT_SPEED_MS,
+            lo,
+            hi,
+            l.propellant,
+            PROPELLANT_FLOOR_KG
         ),
     )
 }
 
+/// (7) The committed branch's final state re-quantizes inside the bond cap.
+///
+/// Reads the rank the carrier measured. A branch that reports none fails rather than passing on a
+/// substituted cap, which would be a comparison of a constant against itself.
 fn gate_compression(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
-    (
-        (1..=CAP).contains(&l.peak_bond),
-        format!(
-            "the committed branch's final evolved state re-quantizes at peak bond {} (cap {CAP})",
-            l.peak_bond
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
+    match l.peak_bond {
+        Some(bond) => (
+            (1..=CAP).contains(&bond),
+            format!(
+                "the committed branch's final evolved state re-quantizes at peak bond {bond} (cap {CAP})"
+            ),
         ),
-    )
+        None => (
+            false,
+            "the committed branch reported no rank, so its compression is unmeasured".into(),
+        ),
+    }
 }
 
 fn gate_rebuilds(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
     (
         l.rebuilds <= MAX_REBUILDS,
         format!(
             "{} carrier rebuild(s) across all legs (cap {MAX_REBUILDS}), read from the pause \
-             accessor rather than a log tally",
+             accessor rather than a log tally. A runaway detector, not a regression band",
             l.rebuilds
         ),
     )
 }
 
 fn gate_wall_clock(v: &StudyView<'_, LegSet>) -> (bool, String) {
-    let l = &v.rows()[0];
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
     (
         l.elapsed_s <= WALL_CLOCK_BUDGET_S,
         format!(
-            "{:.1} s elapsed for the whole descent (budget {:.0} s)",
+            "{:.1} s elapsed for the whole descent (budget {:.0} s). A runaway detector, not a \
+             regression band",
             l.elapsed_s, WALL_CLOCK_BUDGET_S
         ),
     )
@@ -702,18 +967,4 @@ pub fn branch_table_path() -> PathBuf {
 /// trajectory, navigation, and propulsion state ride across on the coupled field.
 pub fn terminal_world(steps: usize) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
     world::terminal_descent_world("terminal_descent", measured_atmosphere(), steps)
-}
-
-/// The committed branch's compression witness: the peak bond of its re-quantized final state.
-///
-/// The branch reports carry dense final fields; a bond that cannot be formed reports `usize::MAX`
-/// so the gate fails rather than passing on a missing value.
-pub fn committed_bond(row: &BranchRow) -> usize {
-    if row.final_density.is_finite() && row.final_density != 0.0 {
-        // The marched state stayed inside the configured truncation, which is the cap the run
-        // enforces on every step.
-        CAP
-    } else {
-        usize::MAX
-    }
 }

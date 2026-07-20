@@ -15,21 +15,22 @@ use super::constants::{
     T_REF, T_VE_INITIAL, THETA_VIB, TRUTH_ALTITUDE_0, TRUTH_V0, U_REF,
 };
 use super::constants::{
-    CHAMBER_PRESSURE_MAX, CHAMBER_TEMPERATURE, CONTACT_SPEED_MS, G0, IGNITION_MACH_MAX,
-    IGNITION_MACH_MIN, IGNITION_Q_MAX, IGNITION_Q_MIN, IMPRINT_AXIS_Y, IMPRINT_DOMAIN_M,
-    IMPRINT_ETA, IMPRINT_FACE_X, IMPRINT_MAX_REFRESHES, IMPRINT_SMOOTHING_CELLS, IMPRINT_TARGET,
-    IMPRINT_THROTTLE_TOL, JET_GAMMA, JET_R_SPECIFIC, MAX_CT, MAX_DESCENT_RATE, NOZZLE_CONE_L,
-    NOZZLE_EXIT_MACH, NOZZLE_EXIT_R, NOZZLE_HALF_ANGLE_RAD, NOZZLE_THROAT_D, PLUME_GAMMA_INF,
-    PLUME_S_REF_M2, PROPELLANT_FLOOR_KG, PROPELLANT_KG, RETRO_ISP_S, RETRO_THRUST_N,
-    TERMINAL_MAX_CT, TERMINAL_MAX_DESCENT_RATE, TERMINAL_THROTTLE_FLOOR, THROTTLE_CEILING,
-    THROTTLE_FLOOR, TOUCHDOWN_ALTITUDE_M, VEHICLE_MASS_KG,
+    CHAMBER_PRESSURE_MAX, CHAMBER_TEMPERATURE, CONTACT_SPEED_MS, CORDELL_MACH_MAX,
+    CORDELL_MACH_MIN, G0, IGNITION_MACH_MAX, IGNITION_MACH_MIN, IGNITION_Q_MAX, IGNITION_Q_MIN,
+    IMPRINT_AXIS_Y, IMPRINT_DOMAIN_M, IMPRINT_ETA, IMPRINT_FACE_X, IMPRINT_MAX_REFRESHES,
+    IMPRINT_SMOOTHING_CELLS, IMPRINT_TARGET, IMPRINT_THROTTLE_TOL, JET_GAMMA, JET_R_SPECIFIC,
+    MAX_CT, MAX_DESCENT_RATE, NOZZLE_CONE_L, NOZZLE_EXIT_MACH, NOZZLE_EXIT_R,
+    NOZZLE_HALF_ANGLE_RAD, NOZZLE_THROAT_D, PLUME_GAMMA_INF, PLUME_S_REF_M2, PROPELLANT_FLOOR_KG,
+    PROPELLANT_KG, RETRO_ISP_S, RETRO_THRUST_N, TERMINAL_MAX_CT, TERMINAL_MAX_DESCENT_RATE,
+    TERMINAL_THROTTLE_FLOOR, THROTTLE_CEILING, THROTTLE_FLOOR, TOUCHDOWN_ALTITUDE_M,
+    VEHICLE_MASS_KG,
 };
 use super::constants::{
     GAMMA_TERMINAL, N_REF_TERMINAL, S_REF_TERMINAL, SEED_P_HAT_TERMINAL, SEED_RHO_HAT_TERMINAL,
     SEED_U_HAT_TERMINAL, T_REF_TERMINAL, TERMINAL_REBUILD_BUDGET, U_REF_TERMINAL,
 };
 use super::stages::{
-    CommandedBank, FreestreamFeeds, SuttonGravesLoads, TruthGnss, WeatherTelemetry,
+    AxialWitness, CommandedBank, FreestreamFeeds, SuttonGravesLoads, TruthGnss, WeatherTelemetry,
 };
 use super::utils;
 use deep_causality_algebra::Real;
@@ -385,11 +386,19 @@ pub fn powered_descent_coupling_with(
         .then(
             PlumeObstruction::new(utils::ft(RETRO_THRUST_N), utils::ft(PLUME_S_REF_M2))
                 .with_mach_band(utils::ft(IGNITION_MACH_MIN), utils::ft(IGNITION_MACH_MAX))
+                .with_geometry_mach_band(utils::ft(CORDELL_MACH_MIN), utils::ft(CORDELL_MACH_MAX))
                 .with_plume_geometry(plume_nozzle()),
         )
         .then(RetroThrust::new(
             utils::ft(RETRO_THRUST_N),
             utils::ft(RETRO_ISP_S),
+        ))
+        // Composed here on purpose: the force channel is summed (lift, the plume decrement, thrust)
+        // and the guidance has not yet written the next step's command, so the witness records the
+        // throttle the propulsion stages just flew rather than the one they will fly.
+        .then(AxialWitness::new(
+            utils::ft(RETRO_THRUST_N),
+            utils::ft(CDA_OVER_M),
         ))
         .then(SuttonGravesLoads)
         .then(TruthGnss { noise_draw })

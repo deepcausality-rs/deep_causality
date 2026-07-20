@@ -5,7 +5,8 @@
 
 //! The example-local physics stages both blackout examples compose: the freestream feeds, the
 //! Sutton-Graves loads, the truth vehicle with its GNSS constellation, the commanded-bank
-//! guidance, and the weather telemetry accumulator. These are corridor wiring, not library
+//! guidance, the weather telemetry accumulator, and the along-velocity witness a branch score
+//! reads. These are corridor wiring, not library
 //! physics; the library stages (chemistry, classifier, lift, navigation, the cybernetic gate)
 //! live in `deep_causality_cfd`.
 
@@ -199,6 +200,105 @@ impl PhysicsStage<2, FloatType> for WeatherTelemetry {
         let q = utils::scalar0(field, "heat_flux");
         if q > utils::scalar0(field, "wx_q_max") {
             field.set_scalar("wx_q_max", Vec::from([q]));
+        }
+        Ok(())
+    }
+}
+
+/// The world-published fraction a frozen-drag foil holds the preserved-drag closure at.
+///
+/// A branch world publishes the fraction its trunk carried at the fork; absent, no foil is
+/// accumulated. This is how the fork's drag state reaches a stage built before the fork existed.
+pub const FROZEN_DRAG_FRACTION_FIELD: &str = "frozen_drag_fraction";
+
+/// Publishes the along-velocity witnesses a branch score reads: the throttle the propulsion stages
+/// actually flew, the axial deceleration the force channel actually carried, and two trajectory
+/// velocity increments.
+///
+/// Composed **after** [`RetroThrust`](deep_causality_cfd::RetroThrust), so the force channel is the
+/// summed one, and before the guidance, so `"realized_throttle"` is the value the propulsion stages
+/// read this step rather than the command the guidance is about to write for the next.
+///
+/// Four scalars, all along `−v̂` and positive for deceleration:
+///
+/// * `"realized_throttle"` — the throttle channel the thrust and plume stages consumed. The
+///   *commanded* throttle a world publishes is an input; the safety gate clamps it, so the two differ
+///   whenever an axis binds and only the realized value describes the flight.
+/// * `"axial_accel"` — `−(a · v̂)` from the summed force channel. This is the quantity a branch score
+///   means by "the deceleration this branch realized", read where it is produced.
+/// * `"dv_actual"` — `Σ axial_accel · Δt`, the velocity the descent actually shed.
+/// * `"dv_frozen"` — the same thrust schedule with the preserved-drag fraction held at the fork's
+///   value: `Σ (a_thrust + f_fork · a_drag) · Δt`. A foil that differs from `dv_actual` only through
+///   the drag closure, so their separation isolates the coupling. Accumulated only while a world
+///   publishes [`FROZEN_DRAG_FRACTION_FIELD`].
+///
+/// The drag term is formed from the flown dynamic pressure and the vehicle's own ballistic bundle
+/// (`a_drag = q∞ · C_d·A/m`), which is what the lift stage put on the channel — not from a separate
+/// drag constant, which would be a second source of truth for a quantity the run already computes.
+#[derive(Debug, Clone, Copy)]
+pub struct AxialWitness {
+    thrust: FloatType,
+    cd_area_over_mass: FloatType,
+}
+
+impl AxialWitness {
+    /// A witness over a vehicle with full-throttle thrust `thrust` (N) and ballistic bundle
+    /// `cd_area_over_mass` (m²·kg⁻¹) — the same bundle the lift stage flies.
+    pub fn new(thrust: FloatType, cd_area_over_mass: FloatType) -> Self {
+        Self {
+            thrust,
+            cd_area_over_mass,
+        }
+    }
+}
+
+impl PhysicsStage<2, FloatType> for AxialWitness {
+    fn apply(
+        &self,
+        ctx: &StepContext<'_, 2, FloatType>,
+        field: &mut CoupledField<FloatType>,
+    ) -> Result<(), PhysicsError> {
+        let Some(truth) = field.scalar("truth_state") else {
+            return Ok(());
+        };
+        if truth.len() < 6 {
+            return Ok(());
+        }
+        let v = [truth[3], truth[4], truth[5]];
+        let speed = utils::norm3(v);
+        if speed <= utils::ft(0.0) {
+            return Ok(());
+        }
+        let v_hat: [FloatType; 3] = core::array::from_fn(|i| v[i] / speed);
+
+        // The realized throttle: what the propulsion stages consumed, not what a world commanded.
+        let throttle = field.throttle_action().unwrap_or_else(|| utils::ft(0.0));
+        field.set_scalar("realized_throttle", Vec::from([throttle]));
+
+        // The realized axial deceleration, read off the summed force channel.
+        let a = field.aero_force().unwrap_or([utils::ft(0.0); 3]);
+        let along = a[0] * v_hat[0] + a[1] * v_hat[1] + a[2] * v_hat[2];
+        let axial = utils::ft(0.0) - along;
+        field.set_scalar("axial_accel", Vec::from([axial]));
+
+        let dv_actual = utils::scalar0(field, "dv_actual") + axial * ctx.dt();
+        field.set_scalar("dv_actual", Vec::from([dv_actual]));
+
+        // The frozen-drag foil, accumulated only where a world names the fraction to freeze at.
+        if let Some(f_fork) = field
+            .scalar(FROZEN_DRAG_FRACTION_FIELD)
+            .and_then(|s| s.first().copied())
+        {
+            let mass = utils::scalar0(field, "mass");
+            let q_inf = utils::scalar0(field, "q_inf");
+            if mass > utils::ft(0.0) {
+                // The aerodynamic drag the lift stage produced, before the plume closure scaled it.
+                let a_drag = q_inf * self.cd_area_over_mass;
+                let a_thrust = throttle * self.thrust / mass;
+                let frozen = a_thrust + f_fork * a_drag;
+                let dv_frozen = utils::scalar0(field, "dv_frozen") + frozen * ctx.dt();
+                field.set_scalar("dv_frozen", Vec::from([dv_frozen]));
+            }
         }
         Ok(())
     }
