@@ -1,0 +1,35 @@
+openspec/specs/plume-obstruction-stage/spec.md
+  s_8af8f36689e424::t_4a92f1e2808fcb 10-12,18-32,36,42,46-52,54,56-63,67-68,141-203
+openspec/specs/retropulsion-typed-witnesses/spec.md
+  s_8af8f36689e424::t_4a92f1e2808fcb 1-82
+openspec/specs/retropulsion-gate-integrity/spec.md
+  s_8af8f36689e424::t_4a92f1e2808fcb 1-101
+openspec/specs/retropulsion-belief-counterfactual/spec.md
+  s_8af8f36689e424::t_4a92f1e2808fcb 11-22,27-28,73-75,77-81,83-94,100-148,150-152
+openspec/specs/retropulsion-scoring-robustness/spec.md
+  s_8af8f36689e424::t_4a92f1e2808fcb 1-58
+openspec/specs/retropulsion-branch-scoring/spec.md
+  s_8af8f36689e424::t_4a92f1e2808fcb 1-79
+openspec/changes/archive/2026-07-20-fix-retropulsion-measurement-integrity/proposal.md
+  s_8af8f36689e424::t_42d2f2668bfc1d 96-103
+openspec/changes/archive/2026-07-20-fix-retropulsion-measurement-integrity/specs/plume-obstruction-stage/spec.md
+  s_8af8f36689e424::t_57fa342981a8ac 3-44,53-68,72-78,80,82-84,93-97,102-103,105-110,112-114,121-132
+openspec/changes/archive/2026-07-20-fix-retropulsion-measurement-integrity/specs/retropulsion-belief-counterfactual/spec.md
+  s_8af8f36689e424::t_3bea08ebda151c 1,3,5-10,12-19,21,23-25,27,29-31,33-46,48-50,52-58,64-68,73-78,83-87,98-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "78718f5966dfea23f7f0ad846ddce013e144abbe",
+  "prompts": {},
+  "sessions": {
+    "s_8af8f36689e424": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "000f2b92-a02d-47bc-8861-a40cf6549457",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
