@@ -1,0 +1,31 @@
+deep_causality_cfd/verification/dec_graded_mms_verification/README.md
+  s_2aff6d2cef7a37::t_02584d3d962171 9
+deep_causality_cfd/verification/mms_taylor_green_verification/README.md
+  s_2aff6d2cef7a37::t_43f83f16aa4263 57
+deep_causality_cfd/verification/dec_taylor_green_re1600_verification/README.md
+  s_2aff6d2cef7a37::t_fd12e34f0b764e 74-76
+  s_2aff6d2cef7a37::t_ae7cdea39731a3 7
+  s_2aff6d2cef7a37::t_c973894dffad7f 59,63-64
+deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/README.md
+  s_2aff6d2cef7a37::t_c0ac192caf16f7 32-33
+deep_causality_cfd/verification/README.md
+  s_2aff6d2cef7a37::t_86479a633c916d 41
+deep_causality_cfd/verification/dec_cylinder_verification/README.md
+  s_2aff6d2cef7a37::t_a48a693093b884 41,93,106,110,151,155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9bace68ce14f6223e2377a1c0165a96265c0ec4d",
+  "prompts": {},
+  "sessions": {
+    "s_2aff6d2cef7a37": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "194cc356-1270-467a-afb6-1d48ebe2a44b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
