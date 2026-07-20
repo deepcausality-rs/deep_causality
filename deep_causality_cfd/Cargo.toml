@@ -187,6 +187,12 @@ name = "qtt_reentry_3d"
 path = "verification/qtt_reentry_3d/main.rs"
 
 # Studies: empirical tests of the "flowfield is low tensor-train rank" thesis.
+
+# Compressible-carrier timing: Task 0 of add-compressible-blackout-carrier (go/no-go grid pick).
+[[example]]
+name = "compressible_carrier_timing"
+path = "studies/compressible_carrier_timing/main.rs"
+
 [[example]]
 name = "qtt_rank_study"
 path = "studies/qtt_rank_study/main.rs"
@@ -202,11 +208,6 @@ path = "studies/qtt_rank_nonlinear/main.rs"
 [[example]]
 name = "qtt_rank_3d"
 path = "studies/qtt_rank_3d/main.rs"
-
-# Compressible-carrier timing: Task 0 of add-compressible-blackout-carrier (go/no-go grid pick).
-[[example]]
-name = "compressible_carrier_timing"
-path = "studies/compressible_carrier_timing/main.rs"
 
 # Round-2 studies: de-risk the resolution-4/5/6 design nodes before the compressible build.
 [[example]]

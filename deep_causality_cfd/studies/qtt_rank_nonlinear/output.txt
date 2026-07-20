@@ -1,0 +1,43 @@
+=== 1-D Burgers (L=10, N=1024, dt=4.88e-4, steps=1228, tol=1e-8) ===
+    u0 = 0.5 + 0.4 sin(2 pi x); shock forms near t* ~ 0.40; nu = 0.5 dx (stable)
+
+    step |     max_bond
+       0 |            3
+     153 |            7
+     306 |            7
+     459 |            7
+     612 |            7
+     765 |            8
+     918 |            8
+    1071 |            7
+    1224 |            7
+  PEAK bond: 8
+
+=== 2-D Burgers (Lx=Ly=6, 64x64, dt=3.13e-3, steps=250, tol=1e-8) ===
+    smooth radial bump self-advects into a CURVED shock — the decisive rank test
+
+    step | max_bond (stable, nu=1dx)
+       0 |                        7
+      31 |                       20
+      62 |                       20
+      93 |                       19
+     124 |                       19
+     155 |                       18
+     186 |                       17
+     217 |                       16
+     248 |                       15
+  smooth-bump init bond: 7
+  STABLE peak bond: 20   (grid-saturation cap = 64)
+  CFL-TRAP peak bond: 64   (nu=6dx violates the diffusion CFL -> blows up to full rank)
+
+--- reading ---
+  1-D: forming shock peak 8 — nonlinear steepening stays CHEAP in 1-D, as predicted.
+  2-D: a forming CURVED shock drives bond 7 -> 20 (stable) — the nonlinear 2-D rank
+       threat is REAL and DYNAMIC (and grows with resolution; this is only 64x64).
+  Thickening is NOT the curved-shock lever: the rank is set by CURVATURE/mis-alignment,
+  which thickening cannot remove — and naive over-thickening is diffusion-CFL-unstable
+  (peak 64 = full rank). The lever is COORDINATE ALIGNMENT (static study) + an implicit/
+  IMEX step for stable dissipation (gap C3) — neither exercised here. The shock-aligned
+  confinement test is the next study and the Tier-B design choice.
+
+ALL GATES PASSED.

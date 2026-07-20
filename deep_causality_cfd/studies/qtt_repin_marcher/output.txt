@@ -1,0 +1,19 @@
+=== QTT re-pinning marcher (Res 5 / D9, Stage-4 core): what actually bounds the marched rank? ===
+
+  Part 1 — Cartesian fluxes marched THROUGH the curved front:
+    STATIC body-fitted    :    25      35    (+10 with resolution)
+    RE-PINNED (D9)        :    25      35    (+10; 8 re-pins at L6, 18 at L7)
+  Part 2 — coordinate-ALIGNED radial transport on a re-pinned tracked interface:
+    FITTED + tracked      :     8       8    (the front as an aligned interface)
+
+--- reading ---
+  Part 1: a STATIC body-fitted chart grows +10 from 64^2 to 128^2, and re-pinning the
+  coordinate to the live front (+10, 18 re-pins at L7) does NOT curb it. So the rank driver
+  is not the front's drift; it is the angular structure a Cartesian-flux march injects by carrying
+  fluxes THROUGH a curved front. Re-pinning is necessary but not sufficient.
+  Part 2: align the transport with the coordinate (radial flux, the front as a tracked interface)
+  and the same re-pinned marcher holds bond 8/8, flat in resolution. THAT is the Res-5
+  lever working dynamically. The Stage-4 mechanism is therefore re-pin AND treat the front as an
+  exact Rankine-Hugoniot interface (smooth each side), not march Cartesian fluxes across it.
+
+ALL GATES PASSED — re-pin is necessary; aligning the flux to the coordinate is what bounds the rank.

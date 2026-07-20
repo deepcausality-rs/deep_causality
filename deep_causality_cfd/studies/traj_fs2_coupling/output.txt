@@ -1,0 +1,24 @@
+=== FS-2: non-conformal aero as a between-step kick on an untouched inverse-square core ===
+
+Orbit period 5876.0 s; mock drag k = 1.0e-6/s ⇒ ε = |a_aero|/|a_grav| = 9.301e-4
+
+Strang-split convergence (vs RK4 reference):
+  N =   50  H =   117.5 s   |error| = 4.4075e1 m
+  N =  100  H =    58.8 s   |error| = 1.1017e1 m
+  N =  200  H =    29.4 s   |error| = 2.7542e0 m
+  N =  400  H =    14.7 s   |error| = 6.8855e-1 m
+  N =  800  H =     7.3 s   |error| = 1.7215e-1 m
+  observed order (finest pair) = 2.000
+
+Perturbation scaling at N = 200:  ε → ε/10 drops the split error 2.754e0 → 2.756e-1  (10.0×)
+Relative accuracy at N = 200: |error|/a = 3.913e-7  (a = 7038.0 km)
+
+--- FS-2 gates ---
+  [PASS] Strang split is 2nd-order (observed order in [1.7, 2.3])
+  [PASS] split error vanishes with the perturbation (ε/10 ⇒ ≳5× drop)
+  [PASS] moderate macro-step tracks the reference (rel error < 1e-4·a)
+
+=== FINDING: non-conformal aero rides a between-step Cartesian kick at 2nd order, with the
+inverse-square core left an untouched exact matrix exponential. The corridor's 'coupling Bars 2T
+to non-conformal forcing [open]' concern DISSOLVES: you split in physical space (Encke/Strang),
+you do not express aero in the conformal algebra. B1's perturbation factoring HOLDS. ===

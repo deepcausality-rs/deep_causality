@@ -1,0 +1,19 @@
+=== QTT dynamic rank lever (Res 5): does a MARCHED shock stay low-rank when aligned? ===
+
+  case                              L=6     L=7   (peak max_bond over the march)
+  Cartesian CURVED  (misaligned) :    20      25   <- the threat: grows with resolution
+  Axis-ALIGNED planar            :     7       7   <- alignment: low & flat (the lever)
+  STATIC body-fitted polar march :    25      35   <- set once: grows -> needs D9 re-pin
+
+--- reading ---
+  Three measurements, one conclusion about what bounds the rank under marching.
+  The misaligned curved shock grows 20 -> 25 with resolution. The captured threat is
+  real and dynamic, closing the cell qtt_rank_nonlinear left open.
+  The axis-aligned front holds 7 / 7, flat in resolution. When the feature stays on a
+  grid axis throughout, the marcher bounds the bond by construction. That is the Res-5 lever.
+  The STATIC body-fitted coordinate grows 25 -> 35, no better than the capture. A one-time
+  fitted coordinate does not stay aligned once Cartesian fluxes evolve the front, so the rank
+  climbs. This is the empirical case for D9: the coordinate must be re-pinned to the live front
+  each step (feedback), not set once. Alignment is the lever; maintaining it is the mechanism.
+
+ALL GATES PASSED — alignment bounds the bond dynamically; a static fit needs D9 re-pinning.

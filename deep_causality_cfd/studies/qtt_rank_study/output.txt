@@ -1,0 +1,19 @@
+=== 1-D QTT rank study  (L=12, N=4096, tol=1e-8) ===
+  smooth sine .............. 2
+  sharp step, dyadic ....... 1
+  sharp step, NON-dyadic ... 2
+  captured stagnation line . 3  (1-D is cheap either way -> fitting unneeded in 1-D)
+
+=== 2-D QTT rank study  (Lx=Ly=9, 512x512, delta=2 cells, tol=1e-8) ===
+  Cartesian, FLAT (axis-aligned) .. 5
+  Cartesian, OBLIQUE (45 deg) ..... 394  (straight, yet worse than the curve)
+  Cartesian, CURVED bow ........... 151
+  body-fitted, bow as fn(r) ....... 5  (was 151)
+  shock-aligned, oblique .......... 5  (was 394)
+
+  cost proxy (dense = 262144 values):
+    flat/fitted        chi=5    ~     900 params  -> 291x smaller than dense
+    curved Cartesian   chi=151  ~  820836 params  -> 3.1x LARGER than dense
+    oblique Cartesian  chi=394  ~ 5588496 params  -> 21.3x LARGER than dense
+
+ALL GATES PASSED — discontinuity != high rank; alignment is the lever; the fix collapses it.
