@@ -1,0 +1,31 @@
+website/cfd/src/pages/roadmap/index.astro
+  s_f0a6cfc98ba452::t_2d2718878aab77 16-19
+website/cfd/src/pages/examples/index.astro
+  s_f0a6cfc98ba452::t_2d2718878aab77 9,21
+website/cfd/src/content/cookbook/en/couple-multiphysics.mdx
+  s_f0a6cfc98ba452::t_0cfa98f3babc74 181-186
+website/cfd/src/components/home/ExampleLadder.astro
+  s_f0a6cfc98ba452::t_2d2718878aab77 19
+website/cfd/src/data/boundaries.ts
+  s_f0a6cfc98ba452::t_0cfa98f3babc74 140
+website/cfd/src/content/examples/en/plasma-blackout-retropulsion.mdx
+  s_f0a6cfc98ba452::t_0167898491eafe 1-210
+website/cfd/src/content/cookbook/en/fork-a-running-simulation.mdx
+  s_f0a6cfc98ba452::t_0cfa98f3babc74 14-15,144-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "07474af7add12a0130416052c039eba5cb1fff99",
+  "prompts": {},
+  "sessions": {
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
