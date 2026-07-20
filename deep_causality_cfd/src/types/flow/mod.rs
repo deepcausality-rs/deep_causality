@@ -91,7 +91,8 @@ pub use sweep::sweep;
 pub use throttle_guidance::{
     IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD, IGNITION_COMMIT_Q_FIELD,
     IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD, IGNITION_LATCH_FIELD,
-    IgnitionCorridor, STOPPING_BURN_FIELD, ThrottleGuidance,
+    IgnitionCorridor, STOPPING_BURN_ALTITUDE_FIELD, STOPPING_BURN_FIELD, STOPPING_BURN_SPEED_FIELD,
+    ThrottleGuidance,
 };
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};

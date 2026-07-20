@@ -68,6 +68,15 @@ pub const IGNITION_LATCH_FIELD: &str = "ignition_committed";
 /// [`with_stopping_burn`](ThrottleGuidance::with_stopping_burn). Absent or zero while coasting.
 pub const STOPPING_BURN_FIELD: &str = "stopping_burn";
 
+/// The altitude (m) the stopping burn lit at, published when it latches.
+///
+/// Published for the same reason as the commit witnesses: a consumer comparing two beliefs' landing
+/// decisions needs the altitude each one chose, and recovering it by splitting the prose entry ties
+/// that comparison to the message's wording.
+pub const STOPPING_BURN_ALTITUDE_FIELD: &str = "stopping_burn_altitude";
+/// The flight speed (m/s) at which the stopping burn lit.
+pub const STOPPING_BURN_SPEED_FIELD: &str = "stopping_burn_speed";
+
 /// The step the ignition corridor committed on, published at the latching step.
 ///
 /// The commit's sensed values are recorded twice: once as prose in the provenance log, and once as
@@ -440,6 +449,8 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for ThrottleGuidance<R> {
                 }
 
                 field.set_scalar(STOPPING_BURN_FIELD, Vec::from([R::one()]));
+                field.set_scalar(STOPPING_BURN_ALTITUDE_FIELD, Vec::from([altitude]));
+                field.set_scalar(STOPPING_BURN_SPEED_FIELD, Vec::from([speed]));
                 field.log_mut().add_entry(&alloc::format!(
                     "stopping burn started at step {}: altitude {:?} m, speed {:?} m/s, thrust-to-weight {:?}",
                     ctx.step(),

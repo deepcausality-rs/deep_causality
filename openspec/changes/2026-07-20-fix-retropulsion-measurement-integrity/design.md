@@ -300,6 +300,125 @@ counter-intuitive result §3.2 names as the analog of the corridor's clamped 40�
 asserts the dip's presence and reports its location, so the note's stated (4b) is met rather than
 substituted. **[measured]**
 
+### N8 — The belief counterfactual separates, through the stopping burn **[measured]**
+
+Flown, not derived. Both terminal legs descend from the same baseline on the same measured cold
+atmosphere, differing only in the margin their guidance was sized with:
+
+| world | margin | lights landing burn at | contact | propellant |
+|---|---|---|---|---|
+| informed | 73.41 m | **149.35 m** | 1.77 m/s | +12.94 kg |
+| uninformed | 52.98 m | **125.91 m** | 1.94 m/s | — |
+
+The margin binds through `ignition_altitude_kernel`, which adds it to the stopping distance — so a
+guidance that believes the day is more dispersed lights higher. It never bound through the *commit*,
+where the navigated sigma of 0.38 m sits two orders of magnitude inside either margin; that is why
+the old gate could report a separation while both worlds flew identically.
+
+The flown separation is **23.44 m** against an arithmetic margin difference of 20.43 m. They differ
+because the kernel solves a stopping distance rather than applying an offset: the extra margin also
+changes the mass and speed the burn starts from. One number is arithmetic; the other is a flight.
+
+**This also resolves §4's third job.** The dispersion-sized propellant reserve is not a separate
+quantity to configure — the margin already buys it, and the 12.94 kg is what it cost, measured. §4's
+first job (deorbit/entry targeting) remains unimplemented and the claim is struck from the module doc
+rather than left standing.
+
+### N11 — Correcting the reference area moved the whole flight **[measured]**
+
+Decision **D1** derived `PLUME_S_REF_M2` from the flown ballistic bundle:
+`S_ref = CDA_OVER_M · VEHICLE_MASS_KG / C_d` = 19.72 / 1.4 = **14.09 m²**, against a stated 4.6 m².
+The check that it is right: this yields a ballistic coefficient of 172 kg/m², which is the
+`β ≈ 170` the bundle is separately documented as.
+
+The correction is not cosmetic. `S_ref` sets the thrust coefficient, which sets both the
+preserved-drag fraction and the envelope's dynamic throttle ceiling:
+
+| | before (S_ref = 4.6) | after (S_ref = 14.09) |
+|---|---|---|
+| dynamic `C_T` ceiling at the fork | 0.44 — bound every step | **1.35 — never binds** |
+| roster range it admitted | 0.16 – 0.38 | 0.20 – 0.85 |
+| preserved-drag collapse | 0.178 | **0.312** |
+| flow spread (4a) | 0.0474 | 0.0202 |
+
+Two consequences worth naming. The roster had been pinned *to the wrong ceiling* — the admissible
+band was an artefact of the area error, and correcting it freed the roster to span the range where
+the correlation actually resolves. And gate (4a)'s band was **loosened** from 0.03 to 0.015: that is
+a band re-earned against a corrected vehicle rather than a threshold relaxed to pass, and the
+docstring says so at the point of definition.
+
+The sign flip survives the correction and is sharper: net deceleration dips to 7.47 m/s² at the 0.20
+branch against 10.60 m/s² coasting.
+
+A residual inconsistency stays, disclosed rather than fixed: `NOSE_RADIUS_M` (0.1524 m) and `L_CHAR`
+(0.3 m) are RAM-C II anchors, used for the stagnation-heating correlation and the Knudsen number.
+They describe a much smaller body than the 4.23 m aeroshell the ballistic bundle implies. The example
+is a hybrid — RAM-C chemistry anchors on a lander-class vehicle — and the chemistry anchors are
+correct for what they anchor. **[open]**
+
+### N10 — Day-of-entry targeting has no signal to act on in this table **[measured]**
+
+Design note §4's first job — shift the deorbit/entry targeting with the predicted blackout window —
+is **not implemented**, and the reason is a measurement rather than a scoping call.
+
+The job's premise is that a colder day ionizes earlier and dwells longer, so the aim point must move
+to protect the exit-to-ignition gap. Both halves of that premise hold. They also cancel:
+
+| dT (K) | onset (s) | dwell (s) | **exit (s)** | drift + 3σ (m) |
+|---:|---:|---:|---:|---:|
+| −40 | 9.90 | 60.00 | **69.90** | 84.30 |
+| −25 | 11.10 | 58.90 | **70.00** | 63.87 |
+| −5 | 12.90 | 58.00 | **70.90** | 51.61 |
+| 0 | 11.90 | 58.20 | **70.10** | 52.98 |
+| +5 | 8.70 | 61.10 | **69.80** | 69.24 |
+| +20 | 12.20 | 58.10 | **70.30** | 60.30 |
+
+Across the whole tabulated range onset swings **4.2 s** and dwell swings **3.1 s**, while blackout
+**exit lands within 1.1 s on every day**. The quantity §4's first job exists to protect is flat. The
+quantity its second job acts on — the navigation drift — swings **32.7 m**, a 63% change. The table's
+information is in the drift column, and the ignition margin already consumes it.
+
+The gap is not tight either. Exit occurs at ≈ 70 s of flight; the corridor commits at
+`(105 + 2138) × 0.1 s = 224.3 s`. A **154 s** gap perturbed by **1.1 s** — a ratio of 140:1.
+
+Two further reasons not to build it as specified:
+
+- §4 states an *objective* ("keep the exit-to-ignition gap inside margins"), not a law. Implementing
+  one means choosing a gain, and an unjustified gain is the defect class this whole change removes.
+  The honest form is a config-time solve placing predicted exit a fixed distance above the ignition
+  band, which needs a predictor whose own fidelity then becomes a question.
+- `weather_table.csv` was generated by this same coupling stack. Using it to re-aim that stack and
+  then gating on the two agreeing is close to self-confirmation.
+
+**The condition under which the job would earn its place:** a vehicle whose gap is tight. A heavier
+ballistic bundle reaches the ignition band lower and later, squeezing the gap from the ignition end
+while the exit stays put. The measurement above is what a future build should re-take before deciding.
+
+The claim is struck from `main.rs` and the README rather than left standing, and this record replaces
+it. **[measured; job not implemented, and the measurement is why]**
+
+### N9 — Two beliefs cannot be a forked study **[constraint]**
+
+Design note §4 asks for both belief worlds to be `!!ContextAlternation!!`-marked like every other
+counterfactual in the family. They are not, and cannot be at this seam: the marker comes from the
+carrier's fork path, which varies a **world config**, while the belief varies a **guidance parameter**
+that lives in the coupling — and a coupling stack is fixed per march call, the same constraint §5
+pins. The two beliefs are therefore two march calls from one shared baseline. Recorded rather than
+worked around, because the alternative is publishing the margin as a world constant purely to earn a
+marker. **[open]**
+
+### N12 — What is and is not reproducible in the recorded artifacts
+
+`retropulsion_branches.csv` is **byte-identical across runs** — defect G3 closed and verified.
+
+`output.txt` is not, and cannot be: gates (4g) and (9) report wall-clock, which varies (the step-cost
+ratio measured 1.13 and 1.34 on two consecutive runs of identical code). That is a property of timing
+gates rather than a defect, and it is why (4g)'s cap sits at 3.0 rather than near the measurement —
+it detects a fork that stops being cheap, not a run that was 20% busier.
+
+Also corrected: `output.txt` had captured cargo's own compile banner, including an absolute build
+path. It is now generated from the built binary directly.
+
 ### N7 — A false performance alarm, and a real artifact defect **[new]**
 
 Verifying the sibling examples reported the weather example failing its wall-clock gate at 739.6 s

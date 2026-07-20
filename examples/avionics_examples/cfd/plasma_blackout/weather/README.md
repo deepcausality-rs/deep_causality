@@ -7,7 +7,7 @@
 # The Weather-Dispersion Table
 
 When a new flight vehicle is built, the lookup tables its flight computer flies are sourced from
-somewhere: Contemporary engineering uses a digital twin to create those tables in simulation. 
+somewhere: contemporary engineering uses a digital twin to create those tables in simulation.
 This example is the digital-twin table generator for the
 [plasma-blackout corridor](../corridor/README.md): six weather conditions, each
 a **counterfactual world alternated from one validated baseline description**, flown
@@ -21,11 +21,11 @@ The example is the environmental-envelope characterization behind an operational
 Hold the vehicle description constant, vary one declared environmental parameter, measure the
 operational consequences, record pass/fail against pinned acceptance criteria, and keep
 traceability from every result back to its condition. That activity normally runs as a campaign
-of independent simulation jobs whose "everything else was identical". 
-Here it is one program, and every dispersion world shares the validated baseline bit-identically 
-except for its declared difference, the difference is stamped into the audit log, 
-the acceptance criteria are executable gates, and the
-whole campaign reruns deterministically (parallel and sequential runs produce identical bits).
+of independent simulation jobs whose "everything else was identical" is a claim in a report
+rather than a property of the run. Here it is one program: every dispersion world shares the
+validated baseline bit-identically except for its declared difference, that difference is
+stamped into the audit log, the acceptance criteria are executable gates, and the whole
+campaign reruns deterministically (parallel and sequential runs produce identical bits).
 Those are precisely the properties a certification-by-analysis evidence chain needs and batch
 campaigns reconstruct by hand.
 
@@ -33,9 +33,9 @@ The honest distance to certification-grade evidence is also short to state: the 
 validated at one flight anchor (RAM-C II), now through the uncalibrated finite-rate ionization
 network rather than a calibrated surrogate, but off-anchor rows remain single-anchor
 extrapolation; the parameter set here is temperature and density, not the full
-DO-160-style list (humidity, winds, statistical coverage,etc); and this table is one artifact in a
-certification chain. However, updating the example to a more complete, say sixty-condition
-version, follows the same blueprint.  
+DO-160-style list (humidity, winds, statistical coverage, and so on); and this table is one
+artifact in a certification chain. Extending the example to a fuller sixty-condition version
+follows the same blueprint.
 
 ## How to Run
 

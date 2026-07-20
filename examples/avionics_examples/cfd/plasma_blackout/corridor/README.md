@@ -209,7 +209,7 @@ The conclusion is recorded in `constants.rs`: this corridor's error budget is se
 closures and the grid, not by floating-point round-off. `f64` is load-bearing at the bottom
 (exponent range for SI-unit plasma constants) while wasting nothing at the top.
 
-##  Limitations
+## Limitations
 
 Every simplification is documented in [`constants.rs`](constants.rs).
 

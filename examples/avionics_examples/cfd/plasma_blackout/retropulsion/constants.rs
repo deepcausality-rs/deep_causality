@@ -14,8 +14,10 @@
 /// The measured day's temperature departure, K. A cold day: the atmosphere the vehicle actually
 /// flies, and the day whose dispersion row an informed guidance interpolates.
 pub const MEASURED_D_TEMP: f64 = -32.0;
-/// The measured day's density scale, matching the departure.
-pub const MEASURED_RHO_SCALE: f64 = 1.15;
+// The measured day's density scale is deliberately **not** a constant here. It is read from the
+// day's interpolated dispersion row, so the atmosphere flown and the belief printed cannot disagree.
+// The hand-set 1.15 that used to live here differed from the table's 1.1467 at this departure, and a
+// two-decimal print format made the two look identical.
 
 /// Steps for the Act-1 corridor leg (to blackout onset).
 pub const ONSET_STEPS: usize = 400;
@@ -43,22 +45,22 @@ pub const TERMINAL_STEPS: usize = 3000;
 /// The mid-burn throttle roster. On-axis magnitudes only — no angle of attack, the design note's §6
 /// discipline pin.
 ///
-/// **Pinned inside the band the envelope admits.** The safety gate caps the throttle at the value
-/// where `C_T` reaches its stability limit against the *sensed* dynamic pressure, which at the fork
-/// is about 0.44 and falls with `q∞` through the continuation. A roster reaching above that ceiling
-/// does not fly the values it names: every entry above it clamps to the same admissible throttle and
-/// produces one identical trajectory, reported several times. Gate (4f) now fails a roster that does
-/// this, so the values here are chosen to stay under the ceiling with margin.
+/// **Spanning the band the A0 correlation resolves.** With the reference area derived from the flown
+/// ballistic bundle (see `PLUME_S_REF_M2`), `C_T` at the fork runs from 0.45 at the 0.20 branch to
+/// 1.90 at 0.85 — across the range where preserved drag actually collapses, rather than bunched in
+/// its shallow end or saturated on its plateau.
 ///
-/// The upper values are also kept where the A0 correlation still *resolves*: it flattens above a
-/// thrust coefficient near 0.46, so branches spaced across the saturated plateau would differ in
-/// command and agree in every measured quantity.
+/// The roster was previously capped near 0.44 because the envelope's dynamic `C_T` ceiling bound
+/// there. That ceiling was computed against a reference area three times too small; corrected, it
+/// sits at 1.35 and never binds, so the admissible band is the engine's own throttle range. Gate (4f)
+/// still fails a roster whose branches collapse onto one realized throttle, so a future envelope
+/// change that re-introduces clamping is a run failure rather than a silent one.
 pub const ROSTER: [(&str, f64); 5] = [
     ("coast", 0.0),
-    ("floor", 0.16),
-    ("low", 0.24),
-    ("mid", 0.31),
-    ("high", 0.38),
+    ("low", 0.20),
+    ("mid", 0.40),
+    ("high", 0.60),
+    ("hard", 0.85),
 ];
 
 /// (4f) Minimum separation between any two branches' **realized** throttles.
@@ -79,24 +81,35 @@ pub const ROSTER_THROTTLE_MIN_GAP: f64 = 0.02;
 /// fires when a branch's rank runs away, not when the measurement drifts.
 pub const MAX_BOND_GROWTH: f64 = 8.0;
 
+/// (4d) Cap on the fan-out's per-step wall-clock relative to the trunk's.
+///
+/// The other half of design note §10(4d), which asks for the per-branch step cost against the trunk
+/// alongside the sharing and bond witnesses. Branches run concurrently, so a roster of N costs about
+/// one branch's time rather than N — the ratio reads as "how much longer one branch step took than
+/// one trunk step" and should land near one while the fork stays cheap. A ratio that climbs means the
+/// copy-on-write share is being paid for after all, at first write or in rank.
+///
+/// Timed by the example rather than the solver crate: a clock belongs to whoever owns the run.
+pub const MAX_STEP_COST_RATIO: f64 = 3.0;
+
 // ── Earned bands (pinned from the first measured run, then regressed) ───────────────────────
 
 /// (4a) Minimum relative spread of the branch flow observables, over the evolved interior. The
 /// corridor's bank branches agreed to three digits — that invariance is the explicit foil this
-/// clears.
+/// clears, and 0.02 is roughly twenty times it.
 ///
-/// **Re-earned 2026-07-20: measured 0.0474**, pinned here with margin. Two corrections moved it, and
-/// both raised it: the roster now flies five distinct throttles rather than collapsing three of them
-/// onto one clamped value, and the closure normalizes on the sensed dynamic pressure so each branch
-/// reaches a genuinely different drag state. The superseded 0.01 was earned when three of five
-/// branches produced a bit-identical density and the whole measured spread was the coast branch.
+/// **Re-earned 2026-07-20 (third time): measured 0.0202**, pinned here with margin. This is a
+/// *loosening* from 0.03 and the reason is a physics correction rather than a run that came in
+/// under: the reference area `PLUME_S_REF_M2` was three times too small, so every branch's thrust
+/// coefficient — and therefore its drag state and its trajectory — was wrong, and the roster was
+/// pinned to an envelope ceiling computed from that same wrong area. Correcting both changed what
+/// the branches fly. The 0.03 measured a different vehicle.
 ///
-/// What this measures is honest about its own mechanism: with the plume geometry outside the
-/// Cordell-Braun envelope for the burn (see `CORDELL_MACH_MIN`), the marched layer carries no plume
-/// imprint, so the spread is throttle -> trajectory -> post-shock density rather than a plume
-/// footprint. It is still a flow observable that branch interventions move, and it is still the
-/// corridor's branch-invariance that it clears.
-pub const FLOW_SPREAD_MIN: f64 = 0.03;
+/// The band's own limitation is unchanged and documented at `CORDELL_MACH_MIN`: with the plume
+/// geometry outside the Cordell-Braun envelope through the burn, the marched layer carries no plume
+/// imprint, so this spread is throttle -> trajectory -> post-shock density rather than a plume
+/// footprint.
+pub const FLOW_SPREAD_MIN: f64 = 0.015;
 /// (4c) Minimum departure of the realized trajectory from the frozen-drag prediction, m·s⁻¹.
 ///
 /// **Re-earned 2026-07-20: measured 147.3 m/s**, pinned here with margin. The quantity changed units
@@ -125,9 +138,19 @@ pub const FROZEN_DRAG_SEPARATION_MIN: f64 = 100.0;
 /// force past `C_T ≈ 2`, which is the drag reversal the design note's §3.2 sign-flip study exists to
 /// find. A peak reduction folded from zero used to rectify it to zero.
 pub const DRAG_COLLAPSE_MIN: f64 = 0.10;
-/// (5) Minimum separation in demanded ignition margin between the informed and uninformed
-/// guidance, m. **Earned.**
-pub const BELIEF_SEPARATION_MIN_M: f64 = 1.0;
+/// (5) Minimum separation between the informed and uninformed guidances' **flown** landing
+/// decisions — the altitude each lights its stopping burn at, m.
+///
+/// **Re-earned 2026-07-20: measured 23.44 m** (149.35 m informed against 125.91 m uninformed),
+/// pinned here with margin. The quantity changed, so the superseded 1.0 does not carry over: it
+/// bounded the difference between two interpolations of one CSV, computed before any march and
+/// invariant to the entire descent.
+///
+/// The flown separation is close to but not equal to the 20.43 m difference in demanded margin,
+/// because `ignition_altitude_kernel` solves a stopping distance rather than adding an offset — the
+/// extra margin also changes the mass and speed the burn starts from. That the two numbers differ is
+/// the point: one is arithmetic, the other is a flight.
+pub const BELIEF_SEPARATION_MIN_M: f64 = 10.0;
 /// (3) Minimum regime transitions across the whole descent: the rarefaction and comms cascade of
 /// Acts 0-1 plus the Mach, thrust, and touchdown transitions of Acts 2-4.
 pub const MIN_REGIME_TRANSITIONS: usize = 6;

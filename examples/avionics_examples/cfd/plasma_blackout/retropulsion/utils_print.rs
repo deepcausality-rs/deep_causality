@@ -8,7 +8,7 @@
 
 use crate::FloatType;
 
-use crate::model::{BranchRow, DayBelief};
+use crate::model::{BeliefOutcome, BranchRow, DayBelief};
 use avionics_examples::shared::constants::*;
 use deep_causality_cfd::CompressiblePause;
 use deep_causality_core::EffectLog;
@@ -130,4 +130,25 @@ pub fn print_provenance(log: &EffectLog) {
         let msg = line.split_once("] ").map(|(_, m)| m).unwrap_or(line);
         println!("    {msg}");
     }
+}
+
+pub fn print_belief(informed: &DayBelief, uninformed: &DayBelief, b: &BeliefOutcome) {
+    println!("\n--- The belief counterfactual: two guidances, one measured atmosphere ---");
+    println!(
+        "  {:<12} {:>10} {:>14} {:>12} {:>12}",
+        "world", "margin m", "burn light m", "contact m/s", "prop kg"
+    );
+    println!(
+        "  {:<12} {:>10.2} {:>14.2} {:>12.2} {:>12.2}",
+        "informed", informed.margin_m, b.informed_ignition_m, b.informed_contact_ms, b.reserve_kg
+    );
+    println!(
+        "  {:<12} {:>10.2} {:>14.2} {:>12.2} {:>12.2}",
+        "uninformed", uninformed.margin_m, b.uninformed_ignition_m, b.uninformed_contact_ms, 0.0
+    );
+    println!(
+        "  both descend from the same baseline on the same measured atmosphere, differing only in \
+         the margin their guidance was sized with. The propellant column is what the informed world \
+         spent above the uninformed one — the dispersion-sized reserve, measured."
+    );
 }

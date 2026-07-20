@@ -99,9 +99,9 @@ pub use crate::types::flow::{
     OperatorStudyBuilder, PRESERVED_DRAG_FRACTION_FIELD, PhysicsStage, PlumeNozzle,
     PlumeObstruction, PropulsionStub, QttMarchRun, QttStepView, REGIME_TRANSITIONS_FIELD,
     ReadyMarch, RecoveryTemperatureStage, Regime, RegimeClass, RegimeClassify, Report, RetroThrust,
-    STOPPING_BURN_FIELD, SafetyEnvelope, StepContext, StepView, StudyEffect, StudyEffectWitness,
-    StudyError, StudyWarning, StudyWarningLog, ThermalRelax, ThrottleGuidance, ThrustState,
-    TrajectoryNav,
+    STOPPING_BURN_ALTITUDE_FIELD, STOPPING_BURN_FIELD, STOPPING_BURN_SPEED_FIELD, SafetyEnvelope,
+    StepContext, StepView, StudyEffect, StudyEffectWitness, StudyError, StudyWarning,
+    StudyWarningLog, ThermalRelax, ThrottleGuidance, ThrustState, TrajectoryNav,
 };
 pub use crate::types::flow::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,

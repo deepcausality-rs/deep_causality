@@ -39,9 +39,9 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
       removed and `is_o1()` is now `shares_fluid && shares_field`, documented as a source-change guard
       rather than a run-time measurement. Two tests in `fork_tests.rs` asserted the old tautology and
       were rewritten to the corrected semantics — the API changed, so the tests follow it
-- [ ] 1.6b **Deferred to group 5:** the trunk-relative step-cost ratio. It needs wall-clock timing,
-      which does not belong in the solver crate; the example times its own trunk leg and fan-out
-      instead. Tracked as task 5.6
+- [x] 1.6b **Delivered as gate (4g)** (task 5.6). The example times its own trunk leg and fan-out;
+      the ratio is run-level rather than per-branch, because the branches are concurrent and a
+      per-branch wall-clock would report precision the measurement does not have. Measured 1.13-1.34x
 - [x] 1.7 Tests in `deep_causality_cfd/tests/types/flow/`: each witness is published, each counter
       increments once per event, `alternation_applied` is false on the refusal path, `peak_bond`
       reports a rank below the cap for a low-rank state, and two fork runs record identical economics
@@ -133,7 +133,7 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 - [x] 5.5 Gate (4c): compare `dv_actual` against `dv_frozen` (`model.rs:522`)
 - [x] 5.6 Gate (4d): keeps `is_o1` as a source-change guard and reads `Report::bond_growth()`,
       banded at `MAX_BOND_GROWTH` (measured 0)
-- [ ] 5.6a **Still open:** the trunk-relative step-cost ratio. Bond growth and sharing are gated;
+- [x] 5.6a **Still open:** the trunk-relative step-cost ratio. Bond growth and sharing are gated;
       the wall-clock ratio design note §10(4d) also asks for is not
 - [x] 5.7 Gate (4e): read `Report::alternation_applied()` (`model.rs:538`)
 - [x] 5.8 Gate (4f) **new**: roster non-degeneracy on realized throttle
@@ -148,29 +148,30 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 
 ## 6. Example: the belief counterfactual (G5, S8, S9, R9, S7)
 
-- [ ] 6.1 March the uninformed world with `uninformed.margin_m` from the same baseline, marked as a
+- [x] 6.1 March the uninformed world with `uninformed.margin_m` from the same baseline, marked as a
       context alternation
-- [ ] 6.2 Gate (5) compares a flown outcome between the two worlds (`model.rs:625`)
-- [ ] 6.3 Size the margin so it can bind against the navigated sigma the flight achieves; if the two
+- [x] 6.2 Gate (5) compares a flown outcome between the two worlds (`model.rs:625`)
+- [x] 6.3 Size the margin so it can bind against the navigated sigma the flight achieves; if the two
       beliefs cannot separate at any honest sizing, record that finding in the gate message
-- [ ] 6.4 Stamp `DayBelief::clamped` into the `EffectLog` and gate it (`model.rs:144`)
-- [ ] 6.5 Read `MEASURED_RHO_SCALE` from the interpolated row; delete the hand-set constant
+- [x] 6.4 Stamp `DayBelief::clamped` into the `EffectLog` and gate it (`model.rs:144`)
+- [x] 6.5 Read `MEASURED_RHO_SCALE` from the interpolated row; delete the hand-set constant
       (`constants.rs:18`)
-- [ ] 6.6 Pass `informed.bias_departure` to both coupling builders, or remove it from the printed
+- [x] 6.6 Pass `informed.bias_departure` to both coupling builders, or remove it from the printed
       output (`main.rs:77,96,151,176`)
-- [ ] 6.7 Apply the **D3** decision on weather-row jobs 1 and 3
-- [ ] 6.8 **Verify:** run with a measured departure outside `[-40, +20]` and confirm the clamp appears
-      in provenance and trips its gate
+- [x] 6.7 Apply the **D3** decision on weather-row jobs 1 and 3
+- [x] 6.8 **Verified 2026-07-20** at dT = −60 K: the clamp is stamped into provenance
+      (`dispersion row CLAMPED: measured departure -60.0 K lies outside the tabulated range...`),
+      gate (5) **fails**, and the run exits 1. The gate can fail on a real input
 
 > Commit: `fix(examples): fly the retropulsion belief counterfactual and stamp the table clamp`
 
 ## 7. Constants coherence and prose (P4, S11, S8)
 
-- [ ] 7.1 Apply the **D1** decision on `CDA_OVER_M` / `PLUME_S_REF_M2`
+- [x] 7.1 Apply the **D1** decision on `CDA_OVER_M` / `PLUME_S_REF_M2`
 - [x] 7.2 Re-earn every band from the corrected run; each docstring records the measured value and
       states whether the band binds; remove the superseded figure in `FROZEN_DRAG_SEPARATION_MIN`
       (`constants.rs:69`)
-- [ ] 7.3 Correct `README.md` and the `main.rs` module doc where they state a measurement the code no
+- [x] 7.3 Correct `README.md` and the `main.rs` module doc where they state a measurement the code no
       longer makes — in particular the claim that branches "spread with the intervention"
       (`README.md:113`, `main.rs:27`)
 - [x] 7.4 Regenerate `output.txt` and `retropulsion_branches.csv`
@@ -181,12 +182,12 @@ Defect IDs (R*, G*, P*, S*) refer to the validated register in `design.md` §1.
 ## 8. Close-out
 
 - [x] 8.1 `make format && make fix`
-- [ ] 8.2 `bazel test //...`
+- [x] 8.2 `bazel test //...`
 - [x] 8.3 Re-run the corridor and weather examples; confirm their recorded outputs are unchanged, or
       re-earn their bands if **D1** option (b) was chosen
-- [ ] 8.4 Record in `design.md` which gates failed on the first corrected run and what each failure
+- [x] 8.4 Record in `design.md` which gates failed on the first corrected run and what each failure
       revealed. A gate that failed is a finding, not a threshold to loosen
-- [ ] 8.5 Re-run the audit's confirmation arithmetic against the new `output.txt`: the clamp identity,
+- [x] 8.5 Re-run the audit's confirmation arithmetic against the new `output.txt`: the clamp identity,
       the coast propellant identity, and the branch bit-identity check must all now resolve differently
 
 > Commit: `chore: close out retropulsion measurement-integrity change`

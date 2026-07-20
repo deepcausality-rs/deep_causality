@@ -13,7 +13,7 @@ use avionics_examples::shared::stages::FROZEN_DRAG_FRACTION_FIELD;
 use avionics_examples::shared::{constants::*, utils, world};
 use deep_causality_cfd::{
     AtmosphereRow, CaseRun, CompressibleMarchConfig, CoupledField, FromTableRow, GateSeq, IoAction,
-    KeyedTable, PhysicsError, Report, StudyView, TableRow, read_rows,
+    KeyedTable, PhysicsError, Report, STOPPING_BURN_ALTITUDE_FIELD, StudyView, TableRow, read_rows,
 };
 use std::path::PathBuf;
 
@@ -161,8 +161,12 @@ pub fn standard_day_belief(table: &KeyedTable<FloatType>) -> DayBelief {
 // ── Worlds ──────────────────────────────────────────────────────────────────────────────────
 
 /// The atmosphere actually flown on the measured day.
-pub fn measured_atmosphere() -> Vec<AtmosphereRow<FloatType>> {
-    world::weather_atmosphere(MEASURED_D_TEMP, MEASURED_RHO_SCALE)
+///
+/// `rho_scale` is read from the day's interpolated dispersion row rather than hand-set beside it.
+/// Two sources of truth for one physical quantity is how a printed belief and a flown atmosphere
+/// drift apart while a two-decimal format hides the difference.
+pub fn measured_atmosphere(rho_scale: FloatType) -> Vec<AtmosphereRow<FloatType>> {
+    world::weather_atmosphere(MEASURED_D_TEMP, rho_scale)
 }
 
 /// A powered-descent world on the measured atmosphere, carrying `constants` as its published
@@ -170,9 +174,10 @@ pub fn measured_atmosphere() -> Vec<AtmosphereRow<FloatType>> {
 pub fn powered_world(
     name: &'static str,
     steps: usize,
+    rho_scale: FloatType,
     constants: &[(&'static str, FloatType)],
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    world::descent_world(name, measured_atmosphere(), steps, constants)
+    world::descent_world(name, measured_atmosphere(rho_scale), steps, constants)
 }
 
 /// A powered-descent world with the **marched-layer plume imprint** enabled: the burn leg and every
@@ -182,19 +187,36 @@ pub fn powered_world(
 pub fn imprinted_world(
     name: &'static str,
     steps: usize,
+    rho_scale: FloatType,
     constants: &[(&'static str, FloatType)],
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    world::descent_world_with(name, measured_atmosphere(), steps, constants, true)
+    world::descent_world_with(name, measured_atmosphere(rho_scale), steps, constants, true)
 }
 
 /// The trunk world: the guidance law flies unintervened.
-pub fn trunk_world(steps: usize) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    powered_world("measured_day", steps, &[("commanded_bank", utils::ft(0.0))])
+pub fn trunk_world(
+    steps: usize,
+    rho_scale: FloatType,
+) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
+    powered_world(
+        "measured_day",
+        steps,
+        rho_scale,
+        &[("commanded_bank", utils::ft(0.0))],
+    )
 }
 
 /// The burn leg's trunk: the world the fork pauses in, with the imprint live.
-pub fn burn_trunk_world(steps: usize) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    imprinted_world("measured_day", steps, &[("commanded_bank", utils::ft(0.0))])
+pub fn burn_trunk_world(
+    steps: usize,
+    rho_scale: FloatType,
+) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
+    imprinted_world(
+        "measured_day",
+        steps,
+        rho_scale,
+        &[("commanded_bank", utils::ft(0.0))],
+    )
 }
 
 // ── The mid-burn throttle roster (the state-fork centerpiece) ────────────────────────────────
@@ -229,10 +251,12 @@ pub fn throttle_roster() -> Vec<ThrottleCase> {
 pub fn branch_world(
     case: &ThrottleCase,
     fork_fraction: FloatType,
+    rho_scale: FloatType,
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
     imprinted_world(
         case.name,
         BRANCH_STEPS,
+        rho_scale,
         &[
             ("commanded_bank", utils::ft(0.0)),
             ("commanded_throttle", case.throttle),
@@ -467,8 +491,10 @@ pub struct LegSet {
     pub predicted_onset_s: FloatType,
     pub predicted_dwell_s: FloatType,
     pub elapsed_s: FloatType,
-    /// The informed-vs-uninformed separation, m (gate 5).
-    pub belief_separation_m: FloatType,
+    /// The fan-out's per-step wall-clock against the trunk's (gate 4g).
+    pub step_cost_ratio: FloatType,
+    /// What the two beliefs flew (gate 5).
+    pub belief: BeliefOutcome,
     /// Whether the day's dispersion row clamped to the nearest tabulated key.
     pub belief_clamped: bool,
     /// Peak bond of the committed branch's re-quantized final state (gate 7), or `None` when the
@@ -479,6 +505,70 @@ pub struct LegSet {
 /// Read a single-cell scalar off a field.
 pub fn scalar0(field: &CoupledField<FloatType>, name: &str) -> FloatType {
     utils::scalar0(field, name)
+}
+
+/// What the two beliefs actually flew, compared on outcomes rather than on the table arithmetic that
+/// produced their margins.
+///
+/// The margin reaches the flight through the stopping burn's ignition altitude, so a guidance that
+/// believes the day is more dispersed lights its landing burn higher and spends more propellant
+/// arriving. Both numbers here are read off flown fields.
+#[derive(Debug, Clone, Copy)]
+pub struct BeliefOutcome {
+    /// Altitude the informed world lit its stopping burn at, m.
+    pub informed_ignition_m: FloatType,
+    /// Altitude the uninformed world lit its stopping burn at, m.
+    pub uninformed_ignition_m: FloatType,
+    /// Separation between the two landing decisions, m.
+    pub ignition_separation_m: FloatType,
+    /// Propellant the informed world spent above what the uninformed one did, kg.
+    ///
+    /// This **is** the dispersion-sized reserve of design note §4's third job, measured rather than
+    /// configured: the margin already buys it by starting the burn higher on a more-dispersed day.
+    pub reserve_kg: FloatType,
+    /// Descent rate each world arrived at, m/s.
+    pub informed_contact_ms: FloatType,
+    pub uninformed_contact_ms: FloatType,
+}
+
+/// Reduce the two flown terminal legs to their belief witnesses.
+pub fn belief_outcome(
+    informed: &CoupledField<FloatType>,
+    uninformed: &CoupledField<FloatType>,
+) -> BeliefOutcome {
+    let informed_ignition_m = scalar0(informed, STOPPING_BURN_ALTITUDE_FIELD);
+    let uninformed_ignition_m = scalar0(uninformed, STOPPING_BURN_ALTITUDE_FIELD);
+    BeliefOutcome {
+        informed_ignition_m,
+        uninformed_ignition_m,
+        ignition_separation_m: (informed_ignition_m - uninformed_ignition_m).abs(),
+        reserve_kg: scalar0(uninformed, "propellant") - scalar0(informed, "propellant"),
+        informed_contact_ms: scalar0(informed, "descent_rate"),
+        uninformed_contact_ms: scalar0(uninformed, "descent_rate"),
+    }
+}
+
+/// The fan-out's per-step wall-clock relative to the trunk's.
+///
+/// The fork's second economics question — a fork that is O(1) to take is only cheap if the branches
+/// then march at the trunk's rate. The solver crate carries no clock and should not: timing belongs
+/// to whoever owns the run, so the example times the leg it forked from and the fan-out it spawned.
+///
+/// Deliberately a **run-level** number rather than a per-branch column. Branches run concurrently
+/// under the `parallel` feature, so a per-branch wall-clock would be an attribution of shared time
+/// and would read as precision the measurement does not have. What the fan-out's own clock supports
+/// is "one branch step cost this much more than one trunk step", which is the quantity design note
+/// §10(4d) asks for.
+pub fn step_cost_ratio(
+    trunk_s: FloatType,
+    trunk_steps: usize,
+    fan_out_s: FloatType,
+    branch_steps: usize,
+) -> FloatType {
+    if trunk_steps == 0 || branch_steps == 0 || trunk_s <= 0.0 {
+        return utils::ft(0.0);
+    }
+    (fan_out_s / utils::ft(branch_steps as f64)) / (trunk_s / utils::ft(trunk_steps as f64))
 }
 
 // ── Gates ───────────────────────────────────────────────────────────────────────────────────
@@ -553,7 +643,8 @@ fn gate_fork_economics(v: &StudyView<'_, BranchRow>) -> (bool, String) {
         forked == rows.len() && rows.len() > 1 && measured && worst_growth <= MAX_BOND_GROWTH,
         format!(
             "{}/{} branches entered by reference (no tensor copied at fork time), and the worst \
-             post-fork bond growth is {:.0} against a cap of {:.0}",
+             post-fork bond growth is {:.0} against a cap of {:.0}. The fan-out's step cost is \
+             gate (4g), which is run-level because the branches are concurrent",
             forked,
             rows.len(),
             if worst_growth.is_finite() {
@@ -726,6 +817,7 @@ pub fn leg_gates() -> GateSeq<LegSet> {
         .gate("(1) corridor inheritance", gate_inheritance)
         .gate("(2) ignition corridor", gate_ignition)
         .gate("(3) regime cascade", gate_cascade)
+        .gate("(4g) fork step cost", gate_step_cost)
         .gate("(5) table earns its place", gate_table)
         .gate("(6) touchdown", gate_touchdown)
         .gate("(7) compression", gate_compression)
@@ -848,17 +940,56 @@ fn gate_cascade(v: &StudyView<'_, LegSet>) -> (bool, String) {
     )
 }
 
-fn gate_table(v: &StudyView<'_, LegSet>) -> (bool, String) {
+/// (4g) The forked branches march at the trunk's rate.
+///
+/// Run-level rather than per-branch: the branches are concurrent, so their wall-clock is shared and a
+/// per-branch column would report precision the measurement does not have. Completes design note
+/// §10(4d), whose sharing and bond-growth halves gate (4d) carries.
+fn gate_step_cost(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let Some(l) = v.rows().first() else {
         return (false, "no leg witnesses were recorded".into());
     };
     (
-        l.belief_separation_m >= BELIEF_SEPARATION_MIN_M && !l.belief_clamped,
+        l.step_cost_ratio > 0.0 && l.step_cost_ratio <= MAX_STEP_COST_RATIO,
         format!(
-            "informed and uninformed guidance demand ignition margins {:.2} m apart on the measured \
-             cold day (threshold {:.2} m){}",
-            l.belief_separation_m,
+            "the branch fan-out marched at {:.2}x the trunk's per-step cost (cap {:.2}) — the roster \
+             costs about one branch's time rather than the sum, which is what an O(1) fork onto \
+             concurrent branches is for",
+            l.step_cost_ratio, MAX_STEP_COST_RATIO
+        ),
+    )
+}
+
+/// (5) The table changed the flight.
+///
+/// Compares two **flown** worlds, not two lookups. The previous form subtracted two interpolations of
+/// one CSV before any march and reported the difference as evidence that the table changed something;
+/// that number is invariant to the entire descent, and the margin it described never bound, because
+/// the navigated sigma was two orders of magnitude inside it.
+///
+/// Where the margin does bind is the stopping burn: `ignition_altitude_kernel` adds it to the
+/// stopping distance, so a guidance that believes the day is more dispersed lights its landing burn
+/// higher. The separation of those two landing decisions, and the propellant the informed world spent
+/// to buy it, are the flown consequence.
+fn gate_table(v: &StudyView<'_, LegSet>) -> (bool, String) {
+    let Some(l) = v.rows().first() else {
+        return (false, "no leg witnesses were recorded".into());
+    };
+    let b = l.belief;
+    let separated = b.ignition_separation_m >= BELIEF_SEPARATION_MIN_M;
+    (
+        separated && !l.belief_clamped,
+        format!(
+            "informed and uninformed guidance lit the landing burn {:.2} m apart ({:.2} m vs {:.2} m, \
+             threshold {:.2} m) and arrived at {:.2} vs {:.2} m/s; the informed world spent {:.2} kg \
+             more propellant, which is the dispersion-sized reserve measured rather than configured{}",
+            b.ignition_separation_m,
+            b.informed_ignition_m,
+            b.uninformed_ignition_m,
             BELIEF_SEPARATION_MIN_M,
+            b.informed_contact_ms,
+            b.uninformed_contact_ms,
+            b.reserve_kg,
             if l.belief_clamped {
                 " — but the measured departure fell outside the tabulated range and clamped, so the \
                  row is an extrapolation rather than an interpolation"
@@ -965,6 +1096,9 @@ pub fn branch_table_path() -> PathBuf {
 ///
 /// A leg boundary re-seeds the marched fluid layer from the world's seed and logs that it did; the
 /// trajectory, navigation, and propulsion state ride across on the coupled field.
-pub fn terminal_world(steps: usize) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    world::terminal_descent_world("terminal_descent", measured_atmosphere(), steps)
+pub fn terminal_world(
+    steps: usize,
+    rho_scale: FloatType,
+) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
+    world::terminal_descent_world("terminal_descent", measured_atmosphere(rho_scale), steps)
 }

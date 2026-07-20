@@ -220,14 +220,31 @@ pub const VEHICLE_MASS_KG: f64 = 3_400.0;
 /// the atmosphere would otherwise supply free. A tank sized for a late suicide burn runs dry around
 /// 13 km.
 pub const PROPELLANT_KG: f64 = 2_200.0;
+/// Forebody drag coefficient of the aeroshell.
+///
+/// Blunt-capsule class in hypersonic continuum flow (Apollo-command-module lineage, ~1.35-1.4). It
+/// exists so the reference area below is *derived* rather than stated: the ballistic bundle
+/// `CDA_OVER_M` and an aerodynamic reference area describe the same vehicle, and stating both
+/// independently lets them describe two.
+pub const VEHICLE_CD: f64 = 1.4;
+
 /// Aerodynamic **reference area** for the thrust coefficient `C_T = T/(q∞·S_ref)`, m².
 ///
-/// Named apart from the shared `S_REF` on purpose: that constant is the reference **wave speed**
-/// of the implicit acoustic envelope, not an area. The two are the same scalar type and a
-/// plausible-looking name apart, so passing the wrong one compiles, runs, and silently computes a
-/// wrong `C_T` — which then propagates into the preserved-drag fraction, the dynamic `C_T` cap, and
-/// every counterfactual witness downstream of them.
-pub const PLUME_S_REF_M2: f64 = 4.6;
+/// Derived from the flown ballistic bundle, not stated beside it:
+/// `S_ref = (C_d·A/m)·m / C_d = CDA_OVER_M · VEHICLE_MASS_KG / VEHICLE_CD`.
+///
+/// Stated independently the two disagreed. `CDA_OVER_M · VEHICLE_MASS_KG` is 19.72 m² of `C_d·A`, so
+/// a 4.6 m² reference area implied a drag coefficient of **4.29** — roughly three times any capsule.
+/// `C_T` sets the preserved-drag fraction and the envelope's dynamic throttle ceiling, while
+/// `CDA_OVER_M` sets the drag that fraction multiplies, so the two fed one expression chain while
+/// describing different vehicles. Derived, they cannot drift: this yields 14.09 m² (a 4.23 m
+/// aeroshell) at a ballistic coefficient of 172 kg/m², which is the `β ≈ 170` the bundle is
+/// documented as.
+///
+/// Named apart from the shared `S_REF` on purpose: that constant is the reference **wave speed** of
+/// the implicit acoustic envelope. The two are the same scalar type and a plausible-looking name
+/// apart, so passing the wrong one compiles and runs.
+pub const PLUME_S_REF_M2: f64 = CDA_OVER_M * VEHICLE_MASS_KG / VEHICLE_CD;
 
 // ── Powered-descent safety envelope (the burn axes)
 
