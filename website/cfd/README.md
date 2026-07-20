@@ -26,7 +26,7 @@ in `.bazelignore`.
 ## Design
 
 The binding spec is [`../web/DESIGN.md`](../web/DESIGN.md); the descriptive
-companion is [`../design_board/`](../design_board/). This site follows both. Two
+companion is [`../design_board/`](../web_design/). This site follows both. Two
 deliberate differences, both of which implement recommendations the spec makes
 but the marketing site has not yet applied:
 

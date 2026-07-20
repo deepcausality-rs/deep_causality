@@ -15,12 +15,48 @@ full Stage-4 stack end to end:
   inflow; a **dropout** falls back to the last-good value via a Pearl `do(...)` intervention,
   recorded in the `EffectLog`.
 
-```text
-cargo run --release -p avionics_examples --example dec_cylinder_wake
+```bash
+cargo run --release -p deep_causality_cfd --example dec_cylinder_wake_verification
 ```
 
 It streams a CSV to stdout (`step, t, kinetic_energy, max_speed, div_residual, v_probe`) and
 prints the case setup, the `EffectLog` dropout count, and a shedding-Strouhal estimate to stderr.
+The full per-step wake-probe series is written to `cylinder_wake.csv` through the IO effect.
+
+## What it verifies (exit nonzero on break)
+
+Two **internal-consistency** gates, checked in `main.rs` after the march:
+
+- **incompressibility** — the sampled max divergence residual stays below `1e-6`, i.e. the
+  constrained Leray projector holds the field divergence-free through the cut cells;
+- **effect accounting** — the `EffectLog` holds exactly `2 × dropouts` entries (a fallback and
+  an intervention per sensor dropout).
+
+Neither gate is a published-reference comparison; see the section below for why.
+
+## Measured (f64, 2000 steps, 93×32, ~155 s)
+
+| Quantity | Measured | Expected | Verdict |
+|---|---|---|---|
+| max divergence residual | 3.334e-15 | < 1e-6 | PASS (machine precision) |
+| `EffectLog` entries | 80 | 80 = 2 × 40 dropouts | PASS (exact) |
+
+The probe settles to a steady `v ≈ 2.70e-2` and the run reports **no clear shedding** in the
+developed signal at this configuration — the confined periodic-x channel at 25 % blockage
+damps the street the isolated case sheds. Strouhal is therefore reported, never gated; the
+isolated-cylinder Strouhal and drag live in `dec_cylinder_verification`.
+
+## Files
+
+- `main.rs` — the `CfdFlow::march` drive loop, diagnostics, and the two gates;
+- `config.rs` — case + sensor parameters, the cut-cell geometry, and the `UncertainMarchConfig`;
+- `print_utils.rs` — diagnostic rendering, the Strouhal estimate, and the CSV write;
+- `baseline.txt` / `cli_output.txt` — recorded stdout stream and stderr report;
+- `cylinder_wake.csv` — recorded wake-probe series.
+
+The run is **bit-identical across invocations**: the SPRT presence gate is seeded, the QMC
+collapse is deterministic by construction, and the cut-cell registry is built with
+deterministic ordering.
 
 ## The causal-monad march (Group C)
 

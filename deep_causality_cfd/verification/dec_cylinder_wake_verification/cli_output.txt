@@ -1,0 +1,7 @@
+# cut-cell cylinder wake: grid 93×32, D/H=0.25, Re_D=100, nu=2.500e-3, dt=2.081e-2
+# cells: 33 solid, 32 cut; fluid area 2.9509; merge floor 0.25
+# sensor-fed top wall: U≈1 (1σ 0.03), dropout every 50 steps (40 total)
+# EffectLog: 80 entries recorded (40 dropouts × (fallback + intervention))
+# Strouhal: no clear shedding detected in the developed signal
+# wrote 2000 wake-probe samples to cylinder_wake.csv
+verified: incompressibility held (max div 3.334e-15) and the dropout/intervention log accounting is exact
