@@ -1,0 +1,33 @@
+deep_causality_cfd/verification/qtt_blunt_body_2d/README.md
+  s_277e3f4bd3dd1f::t_bcc5d757d9c03f 1-57
+deep_causality_cfd/verification/qtt_reentry_3d/README.md
+  s_277e3f4bd3dd1f::t_608791a6df8c40 1-57
+deep_causality_cfd/verification/dec_cylinder_wake_verification/README.md
+  s_277e3f4bd3dd1f::t_5d6289b3622696 18-19,24-59
+website/cfd/README.md
+  s_2ac55ce71d037c::t_1f7548c9b5f35a 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "de53e18514f5e3093ed36ae30d4afa12b816628d",
+  "prompts": {},
+  "sessions": {
+    "s_277e3f4bd3dd1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f282d8c6-e5ea-4ac9-bd01-ccaaad236f24",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_2ac55ce71d037c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a7b4c5b90bc1baf1d",
+        "model": "unknown"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
