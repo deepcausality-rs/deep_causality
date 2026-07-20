@@ -6,7 +6,7 @@ meshes — the **convective** `i_X ω` (interior product) and the **viscous** `�
 gate, per tests-fast / examples-verify.
 
 ```text
-cargo run --release -p avionics_examples --example dec_graded_mms
+cargo run --release -p deep_causality_cfd --example dec_graded_mms_verification
 ```
 
 ## Method
