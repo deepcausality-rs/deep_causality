@@ -137,7 +137,7 @@ export const boundaries: Boundary[] = [
       'Convergence drift is not the cause — tail-averaged drift is ≤ 0.02% through C_T 2 and at worst 0.14% at the top of the sweep, orders too small to mask a collapse.',
     ],
     consequence:
-      'In-flight drag authority stays with the cited A0 correlation rather than a decrement contracted from the field. Any retropulsion work on this crate should read drag from the correlation and treat the marched plume as flow structure only.',
+      'In-flight drag authority stays with the cited A0 correlation rather than a decrement contracted from the field. The shipped retropulsion descent applies exactly this: it evaluates the correlation per branch and treats the marched plume as state realism only. A further consequence measured there is that the two SRP models barely overlap (Jarvinen-Adams covers Mach 0.4-2.0, Cordell-Braun Mach 2-4), so the plume geometry sits outside its own envelope for most of the burn.',
     history:
       'The first harness pinned the entire plume envelope to a uniform ambient-pressure state and appeared to show monotone drag reduction (1.208 → 0.647). That was a measurement artifact: the force strip was largely reading the pin itself, which overlapped 20–72% of the strip height. Correcting the model class inverted the sign. The superseded harness is kept under reverted/ with its original output as provenance.',
     study: 'srp_momentum_jet',

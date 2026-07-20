@@ -11,6 +11,8 @@ verbs:
   - refine
   - reduce_all
 worked:
+  - label: Plasma retropulsion descent
+    href: /examples/plasma-blackout-retropulsion/
   - label: Plasma blackout corridor
     href: /examples/plasma-blackout-corridor/
   - label: Weather dispersion table
@@ -139,5 +141,11 @@ it, so each intervention feeds back into the flow it inherited. The corridor has
 that shape.
 
 For a state fork, compare each branch against a frozen-field prediction of the
-same intervention. If thrust-only kinematics reproduces the divergence, the flow
-did not contribute to it.
+same intervention: the same command schedule with the flow closure held at the
+fork's value. If simple kinematics reproduces the divergence, the flow did not
+contribute to it.
+
+The [retropulsion descent](/examples/plasma-blackout-retropulsion/) runs that
+comparison as gate 4c. Its branches depart the frozen-drag prediction by up to
+139.4 m/s against a 100 m/s threshold, and its flow observables spread 0.0202
+across the roster where the corridor's bank branches agreed to three digits.
