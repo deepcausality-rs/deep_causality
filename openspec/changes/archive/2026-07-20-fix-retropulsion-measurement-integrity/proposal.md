@@ -82,8 +82,6 @@ newton-valued scoring, not inside the coupling.
 
 - `retropulsion-branch-scoring`: branch rows scored from the flown state — realized throttle, realized
   axial specific force, trajectory Δv, and the frozen-drag Δv foil.
-- `srp-closure-validity`: one dynamic-pressure source for the thrust coefficient, and Mach-bounded
-  applicability for the A0 correlation and the Cordell–Braun geometry.
 - `retropulsion-gate-integrity`: every gate reads a measurement that can differ from its threshold,
   every gate message describes what the gate checks, and every band is re-earned.
 - `retropulsion-typed-witnesses`: typed accessors for the commit, leg re-seeds, regime transitions,
@@ -95,9 +93,14 @@ newton-valued scoring, not inside the coupling.
 
 ### Modified Capabilities
 
-- `plume-obstruction-stage` (`openspec/changes/archive/2026-07-19-add-retropulsion-coupled-stages/`):
-  the construction-time `q_inf` parameter is replaced by sensed-field reads, and the stage gains a
-  Mach applicability bound. **BREAKING** for `PlumeObstruction::new`.
+- `plume-obstruction-stage`: the construction-time `q_inf` parameter is replaced by sensed-field
+  reads; inertness clears the published fraction rather than merely skipping; and the stage gains two
+  independent Mach applicability bands — one for the drag correlation, one for the plume geometry,
+  because the two models' validated envelopes meet at a single point. **BREAKING** for
+  `PlumeObstruction::new`.
+- `retropulsion-belief-counterfactual`: the separation is measured on a flown outcome rather than on
+  two table lookups, and the `!!ContextAlternation!!` marker requirement is withdrawn on a measured
+  architectural constraint (a coupling stack is fixed per march call).
 - `throttle-guidance-stage`: `ThrottleGuidance` publishes the commit witnesses as field scalars in
   addition to the log entry.
 - `flight-regime-classifier`: `RegimeClassify` publishes a monotone regime-transition counter.
