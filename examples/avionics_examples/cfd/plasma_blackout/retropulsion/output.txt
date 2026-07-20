@@ -1,6 +1,3 @@
-   Compiling avionics_examples v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples)
-    Finished `release` profile [optimized] target(s) in 6.13s
-     Running `target/release/examples/plasma_blackout_retropulsion`
 === Plasma-retropulsion descent: blackout exit through ignition to touchdown ===
   Vehicle: 3400 kg wet, 2200 kg propellant, 70 kN central nozzle at Isp 282 s
   Drag authority: the cited Jarvinen-Adams A0 correlation (the M1 de-risk verdict is AMBER on imprint fidelity); the marched fork carries flow realism and fork economics.
@@ -13,300 +10,82 @@
 
 --- Act: CORRIDOR — descent to blackout onset ---
   steps  105 | altitude    76.52 km | Mach 30.15 | rebuilds 0
-  mass  3400.0 kg | propellant 2200.0 kg | throttle 0.00 | q     485.6 Pa | sink  1291.6 m/s
+  mass  3400.0 kg | propellant 2200.0 kg | throttle 0.00 | q     484.2 Pa | sink  1291.6 m/s
   regime: slip / supersonic / thrust-unknown
 
 --- Act: COAST + BURN — ignition corridor committed ---
-  steps 2138 | altitude    32.71 km | Mach  2.00 | rebuilds 0
-  mass  3398.9 kg | propellant 2198.9 kg | throttle 0.44 | q    2230.3 Pa | sink   191.9 m/s
+  steps 2139 | altitude    32.68 km | Mach  1.99 | rebuilds 0
+  mass  3398.2 kg | propellant 2198.2 kg | throttle 0.72 | q    2224.9 Pa | sink   192.2 m/s
   regime: continuum / supersonic / thrust-unknown
 
 --- Mid-burn throttle roster (forked from the marched, plume-coupled state) ---
   branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
-  coast         0.00   0.0000          —     10.6441       1.11    139.695     -7.613
-  floor         0.16   0.1600     0.1310      5.2852      49.31     55.909     30.280
-  low           0.24   0.2400    -0.0014      5.0311      73.40     59.229     50.379
-  mid           0.31   0.3100    -0.0292      6.1585      94.49     72.798     68.221
-  high          0.38   0.3800    -0.0472      7.4790     115.57     88.156     86.201
+  coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
+  low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
+  mid           0.40   0.4000     0.1238      9.9667     122.30    120.335     99.984
+  high          0.60   0.6000    -0.0161     12.8932     182.54    151.991    151.413
+  hard          0.85   0.7931    -0.0611     17.1977     256.80    212.085    216.209
   cmd is what each world published; flown is what the envelope admitted. Every other column is read off the branch's own report — the axial deceleration from the summed force channel, the two velocity increments accumulated step by step.
 
 --- Act: BURN — supersonic retropulsion under the SRP envelope ---
-  steps  874 | altitude    15.95 km | Mach  0.60 | rebuilds 0
-  mass  2378.0 kg | propellant 1178.0 kg | throttle 0.36 | q    2644.7 Pa | sink   132.4 m/s
+  steps  731 | altitude    18.50 km | Mach  0.60 | rebuilds 0
+  mass  2484.2 kg | propellant 1284.2 kg | throttle 0.37 | q    1812.2 Pa | sink   147.3 m/s
   regime: continuum / subsonic / burn
 
 --- Act: TERMINAL — cutoff, subsonic re-seed, touchdown ---
-  steps 2350 | altitude     0.01 km | Mach  0.01 | rebuilds 1
-  mass  2285.3 kg | propellant 1085.3 kg | throttle 0.32 | q       2.4 Pa | sink     1.9 m/s
+  steps 2524 | altitude     0.01 km | Mach  0.01 | rebuilds 1
+  mass  2384.2 kg | propellant 1184.2 kg | throttle 0.33 | q       2.2 Pa | sink     1.8 m/s
   regime: continuum / subsonic / burn / touchdown
 
---- Provenance (251 entries) ---
-    regime -> slip (GNSS-available), Kn=0.06807921607534977, supersonic / thrust-unknown
+--- The belief counterfactual: two guidances, one measured atmosphere ---
+  world          margin m   burn light m  contact m/s      prop kg
+  informed          73.41         153.19         1.78        13.45
+  uninformed        52.98         129.75         1.85         0.00
+  both descend from the same baseline on the same measured atmosphere, differing only in the margin their guidance was sized with. The propellant column is what the informed world spent above the uninformed one — the dispersion-sized reserve, measured.
+
+--- Provenance (26 entries) ---
+    regime -> slip (GNSS-available), Kn=0.06827712077324323, supersonic / thrust-unknown
     nav: aided (position fix folded)
-    regime -> slip (GNSS-denied), Kn=0.0172188467289352, supersonic / thrust-unknown
+    regime -> slip (GNSS-denied), Kn=0.017268806476166042, supersonic / thrust-unknown
     nav: dead reckoning (no usable fix)
     march paused at step 105
     leg re-seeded from step 105 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
-    regime -> continuum (GNSS-denied), Kn=0.009985514916933242, supersonic / thrust-unknown
-    regime -> continuum (GNSS-available), Kn=0.0002348090454485624, supersonic / thrust-unknown
+    regime -> slip (GNSS-available), Kn=0.017146121819188242, supersonic / thrust-unknown
     nav: aided (position fix folded)
-    ignition corridor committed at step 2137: Mach 1.9993493463438083, q 2234.8040939256775 Pa, nav aided, sigma 0.38159182534497615 m
-    throttle command bounded to envelope: 0.7163886835343202 -> 0.44057566423106215
-    throttle command bounded to envelope: 0.7154776134654995 -> 0.4396975665524148
-    march paused at step 2138
-    leg re-seeded from step 2138 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
-    regime -> continuum (GNSS-available), Kn=0.00001902872543722636, supersonic / burn
-    throttle command bounded to envelope: 0.7149627774277091 -> 0.43954433326212594
-    throttle command bounded to envelope: 0.7144502806881626 -> 0.4393939459511062
-    throttle command bounded to envelope: 0.7139390239585602 -> 0.4392443903357847
-    throttle command bounded to envelope: 0.7134290003928646 -> 0.43909565690979263
-    throttle command bounded to envelope: 0.7129202062009953 -> 0.43894774177220286
-    throttle command bounded to envelope: 0.712412637616261 -> 0.43880064105604494
-    throttle command bounded to envelope: 0.7119062908868268 -> 0.4386543509126239
-    throttle command bounded to envelope: 0.7114011622756368 -> 0.43850886751146123
-    throttle command bounded to envelope: 0.7108972480603264 -> 0.4383641870401322
-    throttle command bounded to envelope: 0.7103945445331487 -> 0.4382203057041594
-    throttle command bounded to envelope: 0.7098930480008621 -> 0.43807721972673397
-    throttle command bounded to envelope: 0.7093927547846762 -> 0.4379349253486999
-    throttle command bounded to envelope: 0.7088936612202497 -> 0.4377934188287478
-    throttle command bounded to envelope: 0.7083957636574694 -> 0.43765269644266436
-    throttle command bounded to envelope: 0.7078990584605215 -> 0.43751275448384624
-    throttle command bounded to envelope: 0.7074035420076927 -> 0.43737358926264325
-    throttle command bounded to envelope: 0.7069092106914227 -> 0.4372351971067836
-    throttle command bounded to envelope: 0.7064160609181462 -> 0.43709757436089325
-    throttle command bounded to envelope: 0.7059240891082253 -> 0.4369607173863942
-    throttle command bounded to envelope: 0.7054332916958801 -> 0.43682462256140636
-    throttle command bounded to envelope: 0.7049436651291958 -> 0.4366892862809694
-    throttle command bounded to envelope: 0.7044552058699676 -> 0.43655470495656185
-    throttle command bounded to envelope: 0.7039679103936005 -> 0.43642087501586013
-    throttle command bounded to envelope: 0.7034817751891642 -> 0.43628779290316244
-    throttle command bounded to envelope: 0.7029967967592324 -> 0.43615545507888376
-    throttle command bounded to envelope: 0.7025129716198318 -> 0.4360238580195163
-    throttle command bounded to envelope: 0.7020302963003233 -> 0.4358929982173035
-    throttle command bounded to envelope: 0.7015487673434583 -> 0.4357628721806605
-    throttle command bounded to envelope: 0.7010683813052347 -> 0.43563347643373446
-    throttle command bounded to envelope: 0.7005891347548197 -> 0.43550480751624854
-    throttle command bounded to envelope: 0.7001110242745068 -> 0.43537686198349346
-    throttle command bounded to envelope: 0.6996340464596543 -> 0.43524963640623365
-    throttle command bounded to envelope: 0.6991581979185886 -> 0.43512312737046815
-    throttle command bounded to envelope: 0.6986834752725835 -> 0.4349973314775089
-    throttle command bounded to envelope: 0.6982098751557528 -> 0.43487224534368746
-    throttle command bounded to envelope: 0.6977373942150689 -> 0.4347478656006016
-    throttle command bounded to envelope: 0.697266029110156 -> 0.4346241888943987
-    throttle command bounded to envelope: 0.6967957765133508 -> 0.43450121188619245
-    throttle command bounded to envelope: 0.6963266331096107 -> 0.43437893125183275
-    throttle command bounded to envelope: 0.6958585955963931 -> 0.43425734368155455
-    throttle command bounded to envelope: 0.6953916606837046 -> 0.4341364458803416
-    throttle command bounded to envelope: 0.6949258250939313 -> 0.43401623456735605
-    throttle command bounded to envelope: 0.6944610855618586 -> 0.43389670647618417
-    throttle command bounded to envelope: 0.6939974388345299 -> 0.4337778583543828
-    throttle command bounded to envelope: 0.6935348816712751 -> 0.43365968696375295
-    throttle command bounded to envelope: 0.693073410843615 -> 0.43354218908008396
-    throttle command bounded to envelope: 0.6926130231351402 -> 0.43342536149278466
-    throttle command bounded to envelope: 0.692153715341566 -> 0.4333092010052689
-    throttle command bounded to envelope: 0.6916954842706077 -> 0.43319370443456146
-    throttle command bounded to envelope: 0.6912383267418846 -> 0.433078868611045
-    throttle command bounded to envelope: 0.6907822395869655 -> 0.4329646903787885
-    throttle command bounded to envelope: 0.6903272196492629 -> 0.4328511665952384
-    throttle command bounded to envelope: 0.6898732637839196 -> 0.432738294130884
-    throttle command bounded to envelope: 0.6894203688578155 -> 0.432626069869421
-    throttle command bounded to envelope: 0.6889685317495424 -> 0.4325144907077757
-    throttle command bounded to envelope: 0.6885177493492722 -> 0.43240355355569043
-    throttle command bounded to envelope: 0.6880680185587383 -> 0.43229325533577523
-    throttle command bounded to envelope: 0.6876193362911982 -> 0.43218359298348047
-    throttle command bounded to envelope: 0.6871716994713494 -> 0.43207456344687456
-    throttle command bounded to envelope: 0.6867251050352858 -> 0.4319661636865893
-    throttle command bounded to envelope: 0.6862795499304418 -> 0.4318583906757108
-    throttle command bounded to envelope: 0.6858350311155814 -> 0.43175124139985827
-    throttle command bounded to envelope: 0.6853915455606512 -> 0.4316447128566956
-    throttle command bounded to envelope: 0.6849490902468423 -> 0.43153880205631223
-    throttle command bounded to envelope: 0.684507662166432 -> 0.4314335060206799
-    throttle command bounded to envelope: 0.6840672583228136 -> 0.4313288217838987
-    throttle command bounded to envelope: 0.6836278757304031 -> 0.4312247463919266
-    throttle command bounded to envelope: 0.6831895114145924 -> 0.4311212769025011
-    throttle command bounded to envelope: 0.6827521624117543 -> 0.431018410385274
-    throttle command bounded to envelope: 0.6823158257690857 -> 0.43091614392127675
-    throttle command bounded to envelope: 0.6818804985446201 -> 0.4308144746030836
-    throttle command bounded to envelope: 0.6814461778072658 -> 0.43071339953508164
-    throttle command bounded to envelope: 0.681012860636561 -> 0.43061291583256545
-    throttle command bounded to envelope: 0.680580544122789 -> 0.4305130206223253
-    throttle command bounded to envelope: 0.6801492253668834 -> 0.4304137110423611
-    throttle command bounded to envelope: 0.6797189014803316 -> 0.43031498424158976
-    throttle command bounded to envelope: 0.6792895695851956 -> 0.43021683738003813
-    throttle command bounded to envelope: 0.6788612268140556 -> 0.43011926762871316
-    throttle command bounded to envelope: 0.6784338703098963 -> 0.43002227216923644
-    throttle command bounded to envelope: 0.678007497226142 -> 0.42992584819408886
-    throttle command bounded to envelope: 0.6775821047265808 -> 0.4298299929064027
-    throttle command bounded to envelope: 0.6771576899853043 -> 0.42973470351981086
-    throttle command bounded to envelope: 0.6767342501866979 -> 0.4296399772585041
-    throttle command bounded to envelope: 0.6763117825253547 -> 0.4295458113569775
-    throttle command bounded to envelope: 0.6758902842060724 -> 0.42945220306011167
-    throttle command bounded to envelope: 0.6754697524437753 -> 0.42935914962294824
-    throttle command bounded to envelope: 0.6750501844634924 -> 0.4292666483106953
-    throttle command bounded to envelope: 0.6746315775002796 -> 0.4291746963985004
-    throttle command bounded to envelope: 0.6742139287992314 -> 0.42908329117159094
-    throttle command bounded to envelope: 0.6737972356154227 -> 0.42899242992512354
-    throttle command bounded to envelope: 0.6733814952138237 -> 0.42890210996393435
-    throttle command bounded to envelope: 0.6729667048692959 -> 0.4288123286026012
-    throttle command bounded to envelope: 0.6725528618665517 -> 0.42872308316537366
-    throttle command bounded to envelope: 0.6721399635001113 -> 0.42863437098608065
-    throttle command bounded to envelope: 0.6717280070742141 -> 0.42854618940785694
-    throttle command bounded to envelope: 0.671316989902883 -> 0.42845853578348725
-    throttle command bounded to envelope: 0.6709069093097864 -> 0.42837140747492924
-    throttle command bounded to envelope: 0.6704977626282264 -> 0.4282848018533507
-    throttle command bounded to envelope: 0.6700895472011343 -> 0.42819871629919104
-    throttle command bounded to envelope: 0.669682260380973 -> 0.42811314820184176
-    throttle command bounded to envelope: 0.6692758995297621 -> 0.42802809495983707
-    throttle command bounded to envelope: 0.6688704620189365 -> 0.4279435539803557
-    throttle command bounded to envelope: 0.6684659452294452 -> 0.4278595226796939
-    throttle command bounded to envelope: 0.6680623465516334 -> 0.4277759984828705
-    throttle command bounded to envelope: 0.6676596633852272 -> 0.4276929788236403
-    throttle command bounded to envelope: 0.6672578931392171 -> 0.42761046114410234
-    throttle command bounded to envelope: 0.666857033231971 -> 0.42752844289522096
-    throttle command bounded to envelope: 0.6664570810910925 -> 0.42744692153633634
-    throttle command bounded to envelope: 0.6660580341533746 -> 0.4273658945350496
-    throttle command bounded to envelope: 0.6656598898648322 -> 0.427285359367419
-    throttle command bounded to envelope: 0.6652626456806423 -> 0.4272053135177962
-    throttle command bounded to envelope: 0.6648662990650501 -> 0.42712575447851775
-    throttle command bounded to envelope: 0.6644708474914497 -> 0.42704667975029587
-    throttle command bounded to envelope: 0.6640762884422339 -> 0.42696808684168597
-    throttle command bounded to envelope: 0.6636826194087934 -> 0.4268899732691529
-    throttle command bounded to envelope: 0.6632898378915242 -> 0.42681233655716466
-    throttle command bounded to envelope: 0.6628979413997532 -> 0.42673517423795976
-    throttle command bounded to envelope: 0.6625069274517582 -> 0.4266584838516899
-    throttle command bounded to envelope: 0.6621167935746113 -> 0.42658226294586843
-    throttle command bounded to envelope: 0.6617275373042938 -> 0.42650650907588294
-    throttle command bounded to envelope: 0.66133915618558 -> 0.4264312198045959
-    throttle command bounded to envelope: 0.660951647772032 -> 0.4263563927023883
-    throttle command bounded to envelope: 0.6605650096259331 -> 0.42628202534695714
-    throttle command bounded to envelope: 0.660179239318266 -> 0.42620811532328634
-    throttle command bounded to envelope: 0.6597943344287597 -> 0.42613466022388946
-    throttle command bounded to envelope: 0.6594102925457359 -> 0.42606165764826603
-    throttle command bounded to envelope: 0.6590271112661558 -> 0.4259891052031425
-    throttle command bounded to envelope: 0.658644788195588 -> 0.4259170005023973
-    throttle command bounded to envelope: 0.6582633209481227 -> 0.4275786896948899
-    throttle command bounded to envelope: 0.6578817005648063 -> 0.43028722511909817
-    throttle command bounded to envelope: 0.657496731432673 -> 0.4329845455947165
-    throttle command bounded to envelope: 0.6571068536036387 -> 0.4356670835882386
-    throttle command bounded to envelope: 0.6567120856744277 -> 0.43833460689199233
-    throttle command bounded to envelope: 0.6563124518379917 -> 0.4409868968290916
-    throttle command bounded to envelope: 0.6559079769060111 -> 0.4436237377211555
-    throttle command bounded to envelope: 0.6554986862864711 -> 0.4462449168980849
-    throttle command bounded to envelope: 0.6550846059768718 -> 0.44885022474078695
-    throttle command bounded to envelope: 0.6546657625573449 -> 0.4514394547230619
-    throttle command bounded to envelope: 0.6542421831835525 -> 0.45401240345089366
-    throttle command bounded to envelope: 0.6538138955794762 -> 0.4565688707013197
-    throttle command bounded to envelope: 0.6533809280301214 -> 0.459108659461393
-    throttle command bounded to envelope: 0.6529433093739978 -> 0.46163157596411925
-    throttle command bounded to envelope: 0.6525010689954611 -> 0.46413742972312405
-    throttle command bounded to envelope: 0.6520542368170423 -> 0.4666260335687198
-    throttle command bounded to envelope: 0.6516028432914677 -> 0.46909720367878793
-    throttle command bounded to envelope: 0.6511469193937263 -> 0.47155075961224296
-    throttle command bounded to envelope: 0.6506864966129052 -> 0.47398652433877786
-    throttle command bounded to envelope: 0.6502216069439023 -> 0.47640432426729923
-    throttle command bounded to envelope: 0.6497522828791266 -> 0.47880398927530415
-    throttle command bounded to envelope: 0.6492785573999347 -> 0.4811853527336109
-    throttle command bounded to envelope: 0.6488004639681835 -> 0.4835482515346647
-    throttle command bounded to envelope: 0.6483180365174144 -> 0.4858925261138111
-    throttle command bounded to envelope: 0.6478313094441316 -> 0.48821802047347157
-    throttle command bounded to envelope: 0.6473403175989245 -> 0.4905245822046557
-    throttle command bounded to envelope: 0.6468450962774774 -> 0.49281206250674076
-    throttle command bounded to envelope: 0.6463456812114902 -> 0.4950803162059153
-    throttle command bounded to envelope: 0.6458421085596389 -> 0.49732920177490003
-    throttle command bounded to envelope: 0.6453344148982453 -> 0.49955858134687803
-    throttle command bounded to envelope: 0.6448226372120474 -> 0.50176832073188
-    throttle command bounded to envelope: 0.6443068128848575 -> 0.5039582894309168
-    throttle command bounded to envelope: 0.6437869796900558 -> 0.5061283606468281
-    throttle command bounded to envelope: 0.6432631757811713 -> 0.5082784112969227
-    throttle command bounded to envelope: 0.6427354396823028 -> 0.5104083220222191
-    throttle command bounded to envelope: 0.6422038102785514 -> 0.5125179771967807
-    throttle command bounded to envelope: 0.6416683268063228 -> 0.5146072649340667
-    throttle command bounded to envelope: 0.6411290288436657 -> 0.5166760770937727
-    throttle command bounded to envelope: 0.6405859563005089 -> 0.5187243092860879
-    throttle command bounded to envelope: 0.6400391494089483 -> 0.5207518608765755
-    throttle command bounded to envelope: 0.6394886487133051 -> 0.5227586349856804
-    throttle command bounded to envelope: 0.6389344950604624 -> 0.5247445384934631
-    throttle command bounded to envelope: 0.6383767295898665 -> 0.5267094820365716
-    throttle command bounded to envelope: 0.6378153937237041 -> 0.5286533800081453
-    throttle command bounded to envelope: 0.637250529156989 -> 0.5305761505549548
-    throttle command bounded to envelope: 0.6366821778476521 -> 0.53247771557368
-    throttle command bounded to envelope: 0.6361103820066447 -> 0.534358000706458
-    throttle command bounded to envelope: 0.6355351840879373 -> 0.5362169353332182
-    throttle command bounded to envelope: 0.6349566267786616 -> 0.5380544525658214
-    throttle command bounded to envelope: 0.6343747529891761 -> 0.5398704892393807
-    throttle command bounded to envelope: 0.6337896058430919 -> 0.5416649859015364
-    throttle command bounded to envelope: 0.6332012286674469 -> 0.5434378868034329
-    throttle command bounded to envelope: 0.6326096649827789 -> 0.5451891398871813
-    throttle command bounded to envelope: 0.6320149584932188 -> 0.5469186967723192
-    throttle command bounded to envelope: 0.6314171530766276 -> 0.5486265127416539
-    throttle command bounded to envelope: 0.6308162927748273 -> 0.55031254672736
-    throttle command bounded to envelope: 0.6302124217837942 -> 0.5519767612947488
-    throttle command bounded to envelope: 0.6296055844437999 -> 0.5536191226232643
-    throttle command bounded to envelope: 0.628995825229814 -> 0.5552396004910699
-    throttle command bounded to envelope: 0.6283831887416832 -> 0.5568381682532364
-    throttle command bounded to envelope: 0.6277677196945622 -> 0.5584148028232921
-    throttle command bounded to envelope: 0.6271494629092804 -> 0.5599694846514676
-    throttle command bounded to envelope: 0.626528463302781 -> 0.5615021977025639
-    throttle command bounded to envelope: 0.6259047658786198 -> 0.5630129294329813
-    throttle command bounded to envelope: 0.625278415717565 -> 0.5645016707677634
-    throttle command bounded to envelope: 0.6246494579681161 -> 0.5659684160739535
-    throttle command bounded to envelope: 0.6240179378372425 -> 0.5674131631362883
-    throttle command bounded to envelope: 0.6233839005811277 -> 0.5688359131307995
-    throttle command bounded to envelope: 0.6227473914959013 -> 0.5702366705960099
-    throttle command bounded to envelope: 0.6221084559086328 -> 0.5716154434071941
-    throttle command bounded to envelope: 0.6214671391681698 -> 0.5729722427451948
-    throttle command bounded to envelope: 0.6208234866361869 -> 0.5743070830672743
-    throttle command bounded to envelope: 0.6201775436783519 -> 0.5756199820778812
-    throttle command bounded to envelope: 0.6195293556554439 -> 0.5769109606961822
-    throttle command bounded to envelope: 0.6188789679146233 -> 0.5781800430242591
-    throttle command bounded to envelope: 0.6182264257808172 -> 0.5794272563151669
-    throttle command bounded to envelope: 0.6175717745481549 -> 0.5806526309395839
-    throttle command bounded to envelope: 0.6169150594714672 -> 0.581856200351318
-    throttle command bounded to envelope: 0.6162563257579475 -> 0.5830380010535402
-    throttle command bounded to envelope: 0.6155956185588775 -> 0.5841980725637983
-    throttle command bounded to envelope: 0.6149329829613872 -> 0.5853364573772614
-    throttle command bounded to envelope: 0.6142684639804349 -> 0.5864532009317753
-    throttle command bounded to envelope: 0.6136021065507761 -> 0.5875483515701712
-    throttle command bounded to envelope: 0.612933955519147 -> 0.5886219605042844
-    throttle command bounded to envelope: 0.6122640556364018 -> 0.5896740817754934
-    throttle command bounded to envelope: 0.6115924515499009 -> 0.5907047722176851
-    throttle command bounded to envelope: 0.610919187795927 -> 0.5917140914181535
-    throttle command bounded to envelope: 0.6102443087922411 -> 0.5927021016786881
-    throttle command bounded to envelope: 0.6095678588307292 -> 0.5936688679758805
-    throttle command bounded to envelope: 0.6088898820701819 -> 0.5946144579214454
-    throttle command bounded to envelope: 0.6082104225291797 -> 0.595538941722016
-    throttle command bounded to envelope: 0.6075295240790554 -> 0.5964423921378856
-    throttle command bounded to envelope: 0.6068472304370671 -> 0.5973248844432606
-    throttle command bounded to envelope: 0.6061635851595996 -> 0.5981864963845009
-    throttle command bounded to envelope: 0.6054786316354877 -> 0.5990273081381426
-    throttle command bounded to envelope: 0.604792413079522 -> 0.5998474022699307
-    throttle command bounded to envelope: 0.6041049725259904 -> 0.6006468636919194
-    throttle command bounded to envelope: 0.6034163528224349 -> 0.6014257796212648
-    throttle command bounded to envelope: 0.6027265966234688 -> 0.60218423953756
-    regime -> continuum (GNSS-available), Kn=0.000004243922674599051, transonic / burn
-    regime -> continuum (GNSS-available), Kn=0.0000020419566657165402, subsonic / burn
-    march paused at step 874
-    leg re-seeded from step 874 in world 'terminal_descent': coupled field carried, marched fluid state re-seeded from the world seed
-    carrier rebuilt at step 1: s_ref 1.4 -> 2.769028113222198 (rebuild 1)
+    regime -> slip (GNSS-denied), Kn=0.017025179994609837, supersonic / thrust-unknown
+    nav: dead reckoning (no usable fix)
+    regime -> continuum (GNSS-denied), Kn=0.009825077357757745, supersonic / thrust-unknown
+    regime -> continuum (GNSS-available), Kn=0.0002354065723132084, supersonic / thrust-unknown
+    nav: aided (position fix folded)
+    ignition corridor committed at step 2138: Mach 1.997501570461523, q 2229.2800050958263 Pa, nav aided, sigma 0.3815652741178445 m
+    march paused at step 2139
+    leg re-seeded from step 2139 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
+    regime -> continuum (GNSS-available), Kn=0.000019032190686017852, supersonic / burn
+    regime -> continuum (GNSS-available), Kn=0.000007544601182537176, transonic / burn
+    regime -> continuum (GNSS-available), Kn=0.0000031835841432511187, subsonic / burn
+    march paused at step 731
+    leg re-seeded from step 731 in world 'terminal_descent': coupled field carried, marched fluid state re-seeded from the world seed
+    carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)
     SRP drag closure inert: no throttle commanded, no decrement applied
-    stopping burn started at step 2272: altitude 148.39052292797714 m, speed 48.941022609241 m/s, thrust-to-weight 3.0028280980332647
-    regime -> continuum (GNSS-available), Kn=0.00000019084944423708244, subsonic / burn, touchdown
-    march paused at step 2350
+    stopping burn started at step 2442: altitude 153.19347244873643 m, speed 49.02243858992238 m/s, thrust-to-weight 2.874449170180377
+    regime -> continuum (GNSS-available), Kn=0.0000001914029733234149, subsonic / burn, touchdown
+    march paused at step 2524
 
 --- retropulsion counterfactuals + retropulsion descent ---
-  [PASS] (4a) flow spread: branch flow observables spread 0.0474 across the roster (threshold 0.0300); the corridor's bank branches agreed to three digits
-  [PASS] (4b) drag collapse: preserved drag falls 0.1310 -> -0.0472 across the 4 burning branches' realized throttles (collapse 0.1783, threshold 0.1000), monotone in throttle; 1 coasting branch(es) applied no decrement — and the harder branches reach the correlation's negative, wake-type branch; net deceleration is non-monotone in throttle with its minimum at the low branch (throttle 0.24, 5.031 m/s2 against 10.644 m/s2 coasting) — the drag sign flip
-  [PASS] (4c) coupling load-bearing: branch trajectories depart the frozen-drag prediction by up to 147.3076 m/s over the continuation (threshold 100.0000) — thrust-only kinematics does not predict the outcome
-  [PASS] (4d) fork economics: 5/5 branches entered by reference (no tensor copied at fork time), and the worst post-fork bond growth is 0 against a cap of 8
+  [PASS] (4a) flow spread: branch flow observables spread 0.0202 across the roster (threshold 0.0150); the corridor's bank branches agreed to three digits
+  [PASS] (4b) drag collapse: preserved drag falls 0.2510 -> -0.0611 across the 4 burning branches' realized throttles (collapse 0.3121, threshold 0.1000), monotone in throttle; 1 coasting branch(es) applied no decrement — and the harder branches reach the correlation's negative, wake-type branch; net deceleration is non-monotone in throttle with its minimum at the low branch (throttle 0.20, 7.472 m/s2 against 10.595 m/s2 coasting) — the drag sign flip
+  [PASS] (4c) coupling load-bearing: branch trajectories depart the frozen-drag prediction by up to 139.3755 m/s over the continuation (threshold 100.0000) — thrust-only kinematics does not predict the outcome
+  [PASS] (4d) fork economics: 5/5 branches entered by reference (no tensor copied at fork time), and the worst post-fork bond growth is 0 against a cap of 8. The fan-out's step cost is gate (4g), which is run-level because the branches are concurrent
   [PASS] (4e) audit trail: 5/5 branches record an applied context alternation naming the world they replace (the typed flag, which the carrier's refusal path sets false)
   [PASS] (4f) roster non-degeneracy: 5 branches flew 5 distinct throttles (minimum gap 0.020) — the envelope admitted every commanded value, so each row describes its own flight
-  [PASS] (0) integrity: 2350 coupled steps flown across four legs; no leg captured a step error
-  [PASS] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 10.50 s against the table's 10.54 s for this day (error 0.040 s) and dwell 59.60 s against 59.41 s (error 0.187 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 47.19 m
-  [PASS] (2) ignition corridor: commit fired at step 2137 on aided navigation at sigma 0.382 m against the day's table-sized margin of 73.41 m (Mach 2.00, q 2235 Pa — the corridor predicate's own preconditions, not re-asserted here)
-  [PASS] (3) regime cascade: 8 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log
-  [PASS] (5) table earns its place: informed and uninformed guidance demand ignition margins 20.43 m apart on the measured cold day (threshold 1.00 m)
-  [PASS] (6) touchdown: altitude floor reached at 0.015 km at 1.88 m/s against a commanded contact speed of 2.0 m/s (admissible [1.50, 2.50]), with 1085.3 kg propellant remaining (floor 40)
+  [PASS] (0) integrity: 2524 coupled steps flown across four legs; no leg captured a step error
+  [PASS] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 10.50 s against the table's 10.54 s for this day (error 0.040 s) and dwell 59.50 s against 59.41 s (error 0.087 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 58.56 m
+  [PASS] (2) ignition corridor: commit fired at step 2138 on aided navigation at sigma 0.382 m against the day's table-sized margin of 73.41 m (Mach 2.00, q 2229 Pa — the corridor predicate's own preconditions, not re-asserted here)
+  [PASS] (3) regime cascade: 10 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log
+  [PASS] (4g) fork step cost: the branch fan-out marched at 1.11x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
+  [PASS] (5) table earns its place: informed and uninformed guidance lit the landing burn 23.45 m apart (153.19 m vs 129.75 m, threshold 10.00 m) and arrived at 1.78 vs 1.85 m/s; the informed world spent 13.45 kg more propellant, which is the dispersion-sized reserve measured rather than configured
+  [PASS] (6) touchdown: altitude floor reached at 0.015 km at 1.78 m/s against a commanded contact speed of 2.0 m/s (admissible [1.50, 2.50]), with 1184.2 kg propellant remaining (floor 40)
   [PASS] (7) compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16)
   [PASS] (8) bounded rebuilds: 1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally. A runaway detector, not a regression band
-  [PASS] (9) wall-clock budget: 254.3 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
+  [PASS] (9) wall-clock budget: 333.6 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
 === All gates passed: retropulsion counterfactuals + retropulsion descent. ===
