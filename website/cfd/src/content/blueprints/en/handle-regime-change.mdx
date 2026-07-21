@@ -59,7 +59,7 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
 ## Two independent axes
 
 The rarefaction axis takes the peak mean free path, forms `Kn = λ / L` through
-`knudsen_number_kernel`, and bands it into a `GoverningModel` — continuum, slip,
+`knudsen_number_kernel`, and bands it into a `GoverningModel`: continuum, slip,
 transitional, or free-molecular. `model_for` holds the band edges
 (`corridor.rs:286-296`).
 

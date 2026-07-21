@@ -73,7 +73,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline',
     caveat:
-      'Calibration and prediction are kept separate: the Park-2T controller path was tuned to the anchor and lands ~1.1×; the finite-rate network is the untuned prediction and lands ~3×. Still a two-temperature Saha surrogate — the T_e = T_ve lumping is worth roughly 2×, and the landing is sensitive to the Millikan–White τ_vt model within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure, not perfect gas.',
+      'Calibration and prediction are kept separate: the Park-2T controller path was tuned to the anchor and lands ~1.1×; the finite-rate network is the untuned prediction and lands ~3×. Still a two-temperature Saha surrogate; the T_e = T_ve lumping is worth roughly 2×, and the landing is sensitive to the Millikan–White τ_vt model within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure, not perfect gas.',
     hasArtifact: true,
   },
   {
@@ -92,7 +92,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification trend',
     caveat:
-      'The 6%-of-span vortex offset is at a coarse 33² grid. Reporting resolution is 129² with t_end ≥ 150 — Ghia\'s own grid — which takes hours. The committed baseline.txt for this target is a partial run log and records no RMSE; the figures above come from the target README.',
+      'The 6%-of-span vortex offset is at a coarse 33² grid. Reporting resolution is 129² with t_end ≥ 150, Ghia\'s own grid, which takes hours. The committed baseline.txt for this target is a partial run log and records no RMSE; the figures above come from the target README.',
     hasArtifact: false,
   },
   {
@@ -112,7 +112,7 @@ export const validation: ValidationRecord[] = [
     command:
       'CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 cargo run --release -p deep_causality_cfd --example dec_cylinder_verification',
     caveat:
-      'Acceptable but not DNS-grade at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. This target has no baseline.txt; the figures are the committed run output re100_16_resolved.txt. Its staircase companion at the same 16 cells/D does not shed at all — the wake decays to a steady residual, so that run\'s printed St 0.2444 is the crossing detector firing on 7th-decimal noise and its C_d 1.356 is a steady-flow value, not a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
+      'Acceptable but not DNS-grade at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. This target has no baseline.txt; the figures are the committed run output re100_16_resolved.txt. Its staircase companion at the same 16 cells/D does not shed at all: the wake decays to a steady residual. That run\'s printed St 0.2444 is therefore the crossing detector firing on 7th-decimal noise, and its C_d 1.356 is a steady-flow value rather than a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
     hasArtifact: true,
   },
   {
@@ -130,7 +130,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example dec_graded_mms_verification',
     caveat:
-      'At strong grading the coarse-pair order dips to ~1.7 and recovers to ~2.0 as the mesh refines. An earlier revision of this study mis-measured a convective order collapse; the cause was a measurement bug — pointwise 1-form values instead of edge integrals. The cochain convention is load-bearing.',
+      'At strong grading the coarse-pair order dips to ~1.7 and recovers to ~2.0 as the mesh refines. An earlier revision of this study mis-measured a convective order collapse; the cause was a measurement bug: pointwise 1-form values instead of edge integrals. The cochain convention is load-bearing.',
     hasArtifact: true,
   },
   {
@@ -166,7 +166,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_taylor_green_verification',
     caveat:
-      'Periodic, smooth, low-Reynolds and single-mode. It does not test immersed-body boundary conditions, turbulent rank growth, or multi-mode cascade. Gate 2 exists because single-mode Taylor–Green\'s convective term is a pure gradient the projection removes — a solver with a broken or zero u·∇u would still pass gate 1.',
+      'Periodic, smooth, low-Reynolds and single-mode. It does not test immersed-body boundary conditions, turbulent rank growth, or multi-mode cascade. Gate 2 exists because single-mode Taylor–Green\'s convective term is a pure gradient the projection removes; a solver with a broken or zero u·∇u would still pass gate 1.',
     hasArtifact: true,
   },
   {
@@ -183,7 +183,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example dec_taylor_green_re1600_verification',
     caveat:
-      'Only the energy-monotonicity invariant is gated; the DNS comparison is informational. 16³ is grossly under-resolved and cannot represent the small-scale dissipation peak — hence the −80%. Strictly the curve never peaks at this grid: the reported maximum falls at the final sample, t* = 10.05, so it is a monotone-rising tail rather than a resolved peak, where the DNS peak sits near t* ≈ 9. Reporting resolutions of 64³–128³ close this gap. Do not read the −80% as a solver error.',
+      'Only the energy-monotonicity invariant is gated; the DNS comparison is informational. 16³ is grossly under-resolved and cannot represent the small-scale dissipation peak, hence the −80%. Strictly the curve never peaks at this grid: the reported maximum falls at the final sample, t* = 10.05, so it is a monotone-rising tail rather than a resolved peak, where the DNS peak sits near t* ≈ 9. Reporting resolutions of 64³–128³ close this gap. Do not read the −80% as a solver error.',
     hasArtifact: true,
   },
   {
@@ -202,7 +202,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_cylinder_verification',
     caveat:
-      'The absolute C_d ≈ 23.8 is NOT an isolated-cylinder drag coefficient — roughly 30% blockage, a penalization-integral force over a smoothed 2-cell skirt, and a fixed-horizon read rather than a steady state. The verification claim is the convergence trend plus no-slip and positivity, never the absolute number. Reproducing an isolated C_d needs an inflow/outflow domain, out of scope for the periodic QTT solver.',
+      'The absolute C_d ≈ 23.8 is NOT an isolated-cylinder drag coefficient: roughly 30% blockage, a penalization-integral force over a smoothed 2-cell skirt, and a fixed-horizon read rather than a steady state. The verification claim is the convergence trend plus no-slip and positivity, never the absolute number. Reproducing an isolated C_d needs an inflow/outflow domain, out of scope for the periodic QTT solver.',
     hasArtifact: true,
   },
   {
@@ -211,14 +211,14 @@ export const validation: ValidationRecord[] = [
     family: 'DEC',
     status: 'invariant',
     problem: 'Cylinder in a confined periodic-x channel driven by an uncertain sensor stream through the causal monad.',
-    reference: 'None quantitative — an internal-consistency exercise.',
+    reference: 'None quantitative; an internal-consistency exercise.',
     measured: [
       { quantity: 'Max divergence residual', computed: '3.334e-15', expected: '0', delta: 'tol 1e-6' },
       { quantity: 'EffectLog entries under dropout', computed: '80', expected: '80 (2 × 40)', delta: 'exact' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example dec_cylinder_wake_verification',
     caveat:
-      'The DEC solver has no inflow/outflow surface here; the sensor drives a prescribed moving wall in a confined periodic-x channel. At 25% blockage the run reports no clear shedding in the developed signal, so the printed Strouhal is a qualitative check for that confined case, never gated, and no isolated-cylinder Reynolds ladder is claimed. The committed baseline.txt is the 200-row probe stream — the divergence figure is the maximum over its residual column; the pass/fail summary lines are in cli_output.txt.',
+      'The DEC solver has no inflow/outflow surface here; the sensor drives a prescribed moving wall in a confined periodic-x channel. At 25% blockage the run reports no clear shedding in the developed signal, so the printed Strouhal is a qualitative check for that confined case, never gated, and no isolated-cylinder Reynolds ladder is claimed. The committed baseline.txt is the 200-row probe stream; the divergence figure is the maximum over its residual column; the pass/fail summary lines are in cli_output.txt.',
     hasArtifact: true,
   },
   {
@@ -234,7 +234,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_blunt_body_2d',
     caveat:
-      'This gates rank, not physical accuracy — the quantitative accuracy gate for the compressible solver is qtt_sod, against the exact Riemann solution. The marched peak bond is reported and explicitly not asserted: a plain flux-through-front marcher injects angular structure and grows the bond to 64 over 6 steps even in the fitted coordinate. Bounding that is design D9 and the qtt_repin_marcher study.',
+      'This gates rank, not physical accuracy; the quantitative accuracy gate for the compressible solver is qtt_sod, against the exact Riemann solution. The marched peak bond is reported and explicitly not asserted: a plain flux-through-front marcher injects angular structure and grows the bond to 64 over 6 steps even in the fitted coordinate. Bounding that is design D9 and the qtt_repin_marcher study.',
     hasArtifact: true,
   },
   {
@@ -243,7 +243,7 @@ export const validation: ValidationRecord[] = [
     family: 'QTT',
     status: 'structural',
     problem: '3-D reentry forebody sheath, body-fitted spherical versus Cartesian sampling, ladder 2³–2⁵.',
-    reference: 'Structural — the qtt_rank_3d study bound, not a paper.',
+    reference: 'Structural: the qtt_rank_3d study bound, not a paper.',
     measured: [
       { quantity: 'Fitted forebody bond χ', computed: '2 → 4', expected: 'bounded, ≤ 8', delta: 'gate RE-A' },
       { quantity: 'Cartesian bond χ', computed: '10 → 59', expected: '≥ 2× fitted', delta: 'gate RE-B' },
@@ -251,7 +251,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_reentry_3d',
     caveat:
-      'Forebody only, and structural: it bounds rank, not physical accuracy. The wake is explicitly out of scope — a separated unsteady wake needs turbulence and is a multi-feature structure no single fitted coordinate aligns; its bond is reported, never gated. The dynamic marched forebody rank is likewise reported, not gated: there is no 3-D body-fit metric yet, so the marcher runs Cartesian and grows the bond to 16 over 6 steps. A 3-D body-fit metric plus re-pinning is the open remainder.',
+      'Forebody only, and structural: it bounds rank, not physical accuracy. The wake is explicitly out of scope: a separated unsteady wake needs turbulence and is a multi-feature structure no single fitted coordinate aligns; its bond is reported, never gated. The dynamic marched forebody rank is likewise reported, not gated: there is no 3-D body-fit metric yet, so the marcher runs Cartesian and grows the bond to 16 over 6 steps. A 3-D body-fit metric plus re-pinning is the open remainder.',
     hasArtifact: true,
   },
   {
@@ -267,7 +267,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_park2t_blackout',
     caveat:
-      'Superseded. This is the Tier-A closure and it over-predicts by three decades: it rides an incompressible rollout with a recovery-temperature reconstruction rather than a true post-shock thermodynamic path, and Saha equilibrium at the frozen RH temperature drives near-full ionization. No absolute coupled-CFD match is claimed. Retired by the Tier-B compressible marcher — use qtt_ramc_stagline instead.',
+      'Superseded. The Tier-A closure over-predicts by three decades: it rides an incompressible rollout with a recovery-temperature reconstruction rather than a true post-shock thermodynamic path, and Saha equilibrium at the frozen RH temperature drives near-full ionization. No absolute coupled-CFD match is claimed. Retired by the Tier-B compressible marcher; use qtt_ramc_stagline instead.',
     hasArtifact: true,
   },
 ];

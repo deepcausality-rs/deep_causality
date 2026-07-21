@@ -34,7 +34,7 @@ let verdict = CfdFlow::study("nozzle operating map")
 
 ## Ordering is enforced at compile time
 
-Each verb is defined only on the phase where it applies. There is no `record` or
+Each verb is defined only on the phase where it applies. No `record` or
 `gates` before rows exist, and no `verdict` before a gating sequence is applied.
 Four `compile_fail` doctests pin this, including a `GateSeq<i32>` applied to
 `f64` rows.

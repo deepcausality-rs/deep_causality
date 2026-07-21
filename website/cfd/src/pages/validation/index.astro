@@ -35,10 +35,10 @@ const groups = [
       <div class="callout">
         <p class="callout-title">How to read the status column</p>
         <ul>
-          <li><span class="status status-validated">Quantitative</span> — checked against a published reference to a stated tolerance.</li>
-          <li><span class="status status-measured">Flight-anchored</span> — checked against flight data at order of magnitude, not per point.</li>
-          <li><span class="status status-measured">Invariant</span> — checked against a property the discretization must preserve at any grid.</li>
-          <li><span class="status status-partial">Structural</span> — gates rank and cost. <strong>Not physical accuracy.</strong></li>
+          <li><span class="status status-validated">Quantitative</span>: checked against a published reference to a stated tolerance.</li>
+          <li><span class="status status-measured">Flight-anchored</span>: checked against flight data at order of magnitude, not per point.</li>
+          <li><span class="status status-measured">Invariant</span>: checked against a property the discretization must preserve at any grid.</li>
+          <li><span class="status status-partial">Structural</span>: gates rank and cost. <strong>Not physical accuracy.</strong></li>
         </ul>
       </div>
 
@@ -139,8 +139,8 @@ const groups = [
         <p>
           <strong>Tier-A blackout closure, three decades above the flight anchor.</strong>
           The closure rides an incompressible rollout with a recovery-temperature
-          reconstruction. It is superseded by the Tier-B compressible marcher,
-          <code>qtt_ramc_stagline</code>, which lands at the anchor.
+          reconstruction. The Tier-B compressible marcher
+          <code>qtt_ramc_stagline</code> supersedes it and lands at the anchor.
         </p>
         <p>
           Source for every target:

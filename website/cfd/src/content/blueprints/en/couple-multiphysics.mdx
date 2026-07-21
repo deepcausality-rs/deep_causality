@@ -88,7 +88,7 @@ previous step's value.
 
 ## The field registry is by convention
 
-There is no declared constant list for these keys. Each is a `&'static str`
+These keys have no declared constant list. Each is a `&'static str`
 struct field defaulted in the stage's `new()`, with an opt-in override such as
 `with_pressure_field` or `with_density_field`. The producer side is a bare
 literal in the carrier, `compressible_march_run.rs:441-444`:
@@ -146,8 +146,9 @@ between the calibrated and predicted paths.
 `advance` then `coupling.apply` (`carrier.rs:126-131`): `advance` produces the
 next conserved state from the conserved state alone, and the coupling runs
 afterwards and mutates only the `CoupledField`. Across the whole carrier the
-only scalar read back out of the field is `truth_state`. There is no chemical
-energy sink, no electron-pressure term, and no density or energy feedback.
+only scalar read back out of the field is `truth_state`. The coupling carries no
+chemical energy sink, no electron-pressure term, and no density or energy
+feedback.
 
 The `EosStage` doc states the same limit: the marcher does not consume the
 pressure closure it writes.
