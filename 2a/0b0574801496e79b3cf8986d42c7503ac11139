@@ -1,0 +1,27 @@
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_286d780ac1cfb6 14-15,88,500-507,654-660
+  s_f2afaa4ec55b4b::t_fd34651b5de3fc 89-113,393-394
+openspec/specs/surface-force-diagnostic/spec.md
+  s_f2afaa4ec55b4b::t_8669eff0cb8463 28-71
+openspec/specs/dec-scalar-transport/spec.md
+  s_f2afaa4ec55b4b::t_4c93b580df3f61 4-6,10-49
+  s_f2afaa4ec55b4b::t_8669eff0cb8463 1-3,7-9
+openspec/changes/archive/2026-07-22-add-dec-scalar-transport-wall-heat-flux/specs/surface-force-diagnostic/spec.md
+  s_f2afaa4ec55b4b::t_372eec25364cf3 6-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2a0b0574801496e79b3cf8986d42c7503ac11139",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
