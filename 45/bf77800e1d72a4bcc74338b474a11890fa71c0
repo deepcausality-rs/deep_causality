@@ -1,0 +1,23 @@
+website/cfd/src/components/home/BoundaryTeaser.astro
+  s_2dc68b59102c60::t_46a89ebed5c153 98-102
+  s_2dc68b59102c60::t_3ee558f0f07f98 83-91
+  s_2dc68b59102c60::t_14d4558c4c5278 52-54,58-64
+website/cfd/src/components/home/Hero.astro
+  s_2dc68b59102c60::t_9a274b7fc4aaee 7-18,57-60,70-112,115-117,119-121,123-129,133-134,227,239,246-249,259-281,285-322,337,341,345
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "45bf77800e1d72a4bcc74338b474a11890fa71c0",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
