@@ -292,3 +292,101 @@ rejoin sweep-1: branch outcomes
   rejoin dense_day.draw-5: complete (alternated)
   rejoin dense_day.draw-6: complete (alternated)
   rejoin dense_day.draw-7: complete (alternated)
+fan-out sweep-1: branches spawned
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-0.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-1.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-2.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-3.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-4.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-5.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-6.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-00-standard_day.draw-7.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-0.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-1.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-2.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-3.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-4.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-5.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-6.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-01-hot_day.draw-7.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-0.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-1.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-2.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-3.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-4.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-5.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-6.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-02-cold_day.draw-7.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-0.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-1.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-2.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-3.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-4.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-5.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-6.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-03-polar_winter.draw-7.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-0.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-1.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-2.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-3.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-4.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-5.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-6.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-04-thin_day.draw-7.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-0.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-1.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-2.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-3.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-4.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-5.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-6.log
+  spawn /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.sweep-1.case-05-dense_day.draw-7.log
+rejoin sweep-1: branch outcomes
+  rejoin standard_day.draw-0: complete (baseline)
+  rejoin standard_day.draw-1: complete (baseline)
+  rejoin standard_day.draw-2: complete (baseline)
+  rejoin standard_day.draw-3: complete (baseline)
+  rejoin standard_day.draw-4: complete (baseline)
+  rejoin standard_day.draw-5: complete (baseline)
+  rejoin standard_day.draw-6: complete (baseline)
+  rejoin standard_day.draw-7: complete (baseline)
+  rejoin hot_day.draw-0: complete (alternated)
+  rejoin hot_day.draw-1: complete (alternated)
+  rejoin hot_day.draw-2: complete (alternated)
+  rejoin hot_day.draw-3: complete (alternated)
+  rejoin hot_day.draw-4: complete (alternated)
+  rejoin hot_day.draw-5: complete (alternated)
+  rejoin hot_day.draw-6: complete (alternated)
+  rejoin hot_day.draw-7: complete (alternated)
+  rejoin cold_day.draw-0: complete (alternated)
+  rejoin cold_day.draw-1: complete (alternated)
+  rejoin cold_day.draw-2: complete (alternated)
+  rejoin cold_day.draw-3: complete (alternated)
+  rejoin cold_day.draw-4: complete (alternated)
+  rejoin cold_day.draw-5: complete (alternated)
+  rejoin cold_day.draw-6: complete (alternated)
+  rejoin cold_day.draw-7: complete (alternated)
+  rejoin polar_winter.draw-0: complete (alternated)
+  rejoin polar_winter.draw-1: complete (alternated)
+  rejoin polar_winter.draw-2: complete (alternated)
+  rejoin polar_winter.draw-3: complete (alternated)
+  rejoin polar_winter.draw-4: complete (alternated)
+  rejoin polar_winter.draw-5: complete (alternated)
+  rejoin polar_winter.draw-6: complete (alternated)
+  rejoin polar_winter.draw-7: complete (alternated)
+  rejoin thin_day.draw-0: complete (alternated)
+  rejoin thin_day.draw-1: complete (alternated)
+  rejoin thin_day.draw-2: complete (alternated)
+  rejoin thin_day.draw-3: complete (alternated)
+  rejoin thin_day.draw-4: complete (alternated)
+  rejoin thin_day.draw-5: complete (alternated)
+  rejoin thin_day.draw-6: complete (alternated)
+  rejoin thin_day.draw-7: complete (alternated)
+  rejoin dense_day.draw-0: complete (alternated)
+  rejoin dense_day.draw-1: complete (alternated)
+  rejoin dense_day.draw-2: complete (alternated)
+  rejoin dense_day.draw-3: complete (alternated)
+  rejoin dense_day.draw-4: complete (alternated)
+  rejoin dense_day.draw-5: complete (alternated)
+  rejoin dense_day.draw-6: complete (alternated)
+  rejoin dense_day.draw-7: complete (alternated)
