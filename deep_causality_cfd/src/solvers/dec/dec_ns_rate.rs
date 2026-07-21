@@ -88,9 +88,18 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     reference_vertices: alloc::vec::Vec<usize>,
     /// Constrained edges supplied by a boundary-zone set through
     /// `BoundaryZone::collect_constrained_edges`. Empty unless a zone implements that hook — no
-    /// shipped zone does, so every current case is bit-unchanged. The seam exists for
-    /// `aperture-resolved-noslip`, the fragment-accurate cut-cell wall treatment, which is a zone
-    /// that supplies its own constraints rather than accepting the structural set.
+    /// shipped zone does, so every current case is bit-unchanged.
+    ///
+    /// **The justification originally given for wiring this hook was wrong and is corrected here.**
+    /// It cited `aperture-resolved-noslip` as the capability that would supply zone constraints. That
+    /// capability is *already implemented and is the default* (`NoSlipConstraint::new(.., true)`),
+    /// and it supplies its constraints through `CutCellRegistry::cut_face_constraints` in
+    /// `no_slip.rs` — not through this hook. So the seam has no known consumer today.
+    ///
+    /// It is kept rather than removed because the composition is **union**, which is idempotent and
+    /// therefore cannot disagree with the structural set, and because the hook is behaviourally
+    /// covered by tests. But it is an extension point without a claimed user, and should be removed
+    /// if none appears — not defended by citing a capability that solved the problem elsewhere.
     zone_constrained: alloc::vec::Vec<usize>,
     /// The per-stage rate constraint set `no_slip ∪ inflow ∪ zone_constrained` (the rate is pinned
     /// to zero on all three). Equals `no_slip.edges()` on closed domains with no zone-supplied

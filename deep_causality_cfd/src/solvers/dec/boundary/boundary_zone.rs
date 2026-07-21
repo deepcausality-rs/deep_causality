@@ -52,9 +52,10 @@ pub trait BoundaryZone<const D: usize, R: DecNsScalar> {
     /// `collect_slip_edges` has un-pinned its edges, so a constraint supplied here outranks a
     /// free-slip relaxation.
     ///
-    /// No shipped zone implements this hook. Its intended consumer is the `aperture-resolved-noslip`
-    /// capability — fragment-accurate cut-cell no-slip is precisely a zone that supplies its own
-    /// constrained edges rather than accepting the staircase set derived from the lattice.
+    /// No shipped zone implements this hook, and it currently has **no known consumer**. An earlier
+    /// note here named `aperture-resolved-noslip` as its intended user; that was incorrect — that
+    /// capability is already implemented, is the default wall treatment, and derives its constraints
+    /// through `CutCellRegistry::cut_face_constraints` rather than through a zone.
     fn collect_constrained_edges(
         &self,
         _manifold: &Manifold<LatticeComplex<D, R>, R>,
