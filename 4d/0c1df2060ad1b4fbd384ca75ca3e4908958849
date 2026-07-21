@@ -1,0 +1,25 @@
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_d5bd27ebcfffe4 508-525
+openspec/changes/fix-ramc-vibrational-relaxation-pair/design.md
+  s_f2afaa4ec55b4b::t_b8f649f8d35e8a 198-209
+openspec/changes/fix-navigation-filter-correctness/tasks.md
+  s_f2afaa4ec55b4b::t_b8f649f8d35e8a 56-72,75-76
+openspec/changes/fix-navigation-filter-correctness/design.md
+  s_f2afaa4ec55b4b::t_9535c22b4fe64b 126-151,200-205
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4d0c1df2060ad1b4fbd384ca75ca3e4908958849",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
