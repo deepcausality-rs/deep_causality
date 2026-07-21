@@ -50,8 +50,8 @@ Landed last per design D5: it is the API break and should be an isolated commit 
 - [x] 5.6 No in-repo consumer reads a series key that no longer exists
 - [x] 5.7 `cargo test -p deep_causality_cfd --release` — no regression against the 828-pass baseline
 - [x] 5.8 `make format && make fix` clean, no new `#[allow]`
-- [ ] 5.9 The full verification suite runs; confirm **no harness result moved** — all three items are contract fixes, so a moved number means something unintended happened
-  - **Partially discharged; the full sweep was stopped by the owner and is still owed.** What ran:
+- [x] 5.9 ~~The full verification suite runs; confirm **no harness result moved**~~ — **SKIPPED by owner decision (2026-07-21).** Not discharged; recorded as skipped rather than done. Original text: — all three items are contract fixes, so a moved number means something unintended happened
+  - **What ran before the sweep was stopped:**
     `mms_taylor_green_verification` PASS, `dec_taylor_green_re1600_verification` PASS.
     `dec_lid_cavity_re1000_verification` was killed mid-run (exit 143 = SIGTERM) — **not** a harness
     failure. The remaining 24 were never started.
@@ -65,6 +65,7 @@ Landed last per design D5: it is the API break and should be an isolated commit 
     - **QTT observable path** — rename only; the formula body is unchanged by diff, `t_wall` defaults
       to the previous hardcoded zero, and `preserved_drag_fraction` is computed from `C_T` and never
       reads the observable.
-  - **Still owed:** the compressible/QTT verification harnesses (Sod, RAMC, cylinder, Park-2T,
-    Taylor-Green QTT, blunt-body sweeps) have not been re-run against this diff.
+  - **Not run, and accepted as such:** the compressible/QTT verification harnesses (Sod, RAMC,
+    cylinder, Park-2T, Taylor-Green QTT, blunt-body sweeps). The CI workflow added in Phase 1 runs
+    these, so the next PR exercises them; that is the mitigation the skip rests on.
 - [x] 5.10 Confirm the diff does not alter the blended-map Jacobian/metric algebra, the `no_slip.rs` constraint enumeration, or the heat integral's formula (Non-Goals)

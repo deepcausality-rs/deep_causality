@@ -20,17 +20,43 @@ the QTT observe set and `Report`.
 - **WHEN** a QTT march is composed with the drag observable and an immersed body, then run
 - **THEN** the report carries a drag (and lift) series, one sample per step
 
-### Requirement: Neutral wall heat flux from a penalized passive scalar
+### Requirement: Neutral penalization heat integral from a penalized passive scalar
 
 The `solvers/qtt` module SHALL optionally advect–diffuse a passive scalar `T` on the same rollout, with
-the body penalized to a wall temperature `T_w`, and SHALL expose the wall heat flux as the penalization
-heat integral `Q = (1/η) ∫ χ_body ⊙ (T_w − T) dV` (the same contraction shape as drag). This SHALL be
+the body penalized to a wall temperature `T_w`, and SHALL expose the penalization heat integral
+`Q = (1/η) ∫ χ_body ⊙ (T_w − T) dV` (the same contraction shape as drag). This SHALL be
 **neutral** (no chemistry) — the seam the Gap-2 reacting energy equation replaces.
 
-#### Scenario: Wall heat flux responds to the thermal field
+The observable's exposed name and its published series key SHALL describe the quantity actually
+computed. The integral above is a temperature-weighted **volumetric rate** with units `[T]·[L]²/[t]`;
+it carries no gradient, no conductivity and no surface normal, so it is not a heat flux — Fourier's law
+is `q = −k·∂T/∂n`, and no scaling converts a volume integral of a temperature deficit into a flux.
+The name `wall_heat_flux` SHALL be reserved for an actual Fourier-law implementation, since for a
+re-entry thermal-protection consumer that is the safety-critical quantity and it SHALL NOT be squatted
+by something that is not one.
+
+The wall temperature `T_w` the quantity is defined against SHALL be part of the case configuration and
+SHALL appear in the run's record, rather than being fixed at a call site — a difference from a
+reference the caller can neither set nor inspect is not interpretable.
+
+#### Scenario: The heat integral responds to the thermal field
 - **WHEN** the passive scalar is advected past a body held at a wall temperature different from the flow
-- **THEN** a non-zero wall heat-flux observable is produced, computed as the mask–temperature-deficit
+- **THEN** a non-zero penalization heat integral is produced, computed as the mask–temperature-deficit
   contraction
+
+#### Scenario: The name states the computed quantity
+- **WHEN** a consumer reads the observable's name or its published series key
+- **THEN** the name describes the penalization heat integral rather than a surface flux, so an absolute
+  reading is not invited
+
+#### Scenario: The wall temperature is set by the caller
+- **WHEN** a case is configured with a wall temperature and marched
+- **THEN** `T_w` is part of that configuration, appears in the run's record, and changing it moves the
+  reported integral
+
+#### Scenario: A consumer of the series moves with the rename
+- **WHEN** the published series key changes
+- **THEN** every in-repo consumer reads the new key, and no consumer silently observes an absent series
 
 ### Requirement: Self-verifying immersed validation (no-slip, accuracy-vs-bond, DEC cross-reference)
 
