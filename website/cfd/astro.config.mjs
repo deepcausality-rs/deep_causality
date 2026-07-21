@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { rustDark, rustLight } from './shiki-rust-themes.mjs';
 
 // Static output. Cloudflare Workers serves dist/ directly; no adapter needed.
 //
@@ -48,7 +49,8 @@ export default defineConfig({
   markdown: {
     shikiConfig: {
       // Dual themes; global.css toggles between them on [data-theme].
-      themes: { light: 'github-light', dark: 'github-dark' },
+      // Ayu-derived, contrast-corrected for --bg-2. See shiki-rust-themes.mjs.
+      themes: { light: rustLight, dark: rustDark },
       defaultColor: 'dark',
       wrap: true,
     },

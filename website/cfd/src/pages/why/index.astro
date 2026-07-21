@@ -1,7 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
 import { CRATE_URL, STUDIES_URL, VERIFICATION_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
 
 const title = 'Why — DeepCausality CFD';
 const description =
@@ -74,7 +78,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
         filter, downcasting to <code>f64</code> only at the display boundary.
       </p>
 
-      <pre><code>{precisionCode}</code></pre>
+      <Code code={precisionCode} lang="rust" themes={SHIKI} />
 
       <p class="body">
         That turns error attribution into an experiment you can run. The
@@ -142,7 +146,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
         transition lands in the provenance log. From a committed corridor run:
       </p>
 
-      <pre><code>{regimeLog}</code></pre>
+      <Code code={regimeLog} lang="text" themes={SHIKI} />
 
       <p class="body">
         One descent moves through orbit-like dynamics, slip flow, continuum flow,
@@ -184,7 +188,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
         because the disciplines were never in separate processes.
       </p>
 
-      <pre><code>{couplingCode}</code></pre>
+      <Code code={couplingCode} lang="rust" themes={SHIKI} />
 
       <p class="body">
         Vibrational relaxation, reacting plasma chemistry, regime classification,
@@ -237,7 +241,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
         field stays where it was computed.
       </p>
 
-      <pre><code>{studyCode}</code></pre>
+      <Code code={studyCode} lang="rust" themes={SHIKI} />
 
       <p class="body">
         <code>verdict()</code> returns data. The DSL never prints and never exits,
@@ -389,15 +393,6 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     margin: 0 0 var(--space-4);
     max-width: var(--measure);
   }
-
-  .wcard pre {
-    background: var(--bg-2);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    overflow-x: auto;
-    margin: 0 0 var(--space-4);
-  }
-  .wcard pre code { background: none; padding: 0; }
 
   .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
   .nums li {

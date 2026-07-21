@@ -6,7 +6,14 @@
  * Each panel states what the crate does, shows the code or run output that
  * does it, and gives the measured figure. Every figure is quoted from a
  * committed run.
+ *
+ * Code blocks use Astro's <Code> component so Shiki highlights them at build
+ * time, with the same dual themes astro.config.mjs sets for markdown.
  */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
 
 const config = `// The configuration layer: an owned description of the problem.
 let solver = CfdConfigBuilder::dec_ns()
@@ -43,6 +50,32 @@ let corridor = CfdFlow::study("bank-angle corridor")
     .reduce_all(model::score_branches)
     .gates(model::corridor_gates())
     .verdict()?;`;
+
+const regime = `// RegimeClassify sits in the coupling stack and re-runs every step.
+Coupling::between_steps()
+    .then(FiniteRateIonizationStage::new(n_tot))   // writes "n_e"
+    .then(RegimeClassify::new(l_char, trigger))    // reads it, classifies
+    .build()
+
+// field.regime() -> Option<&RegimeClass> {
+//     model,            // Continuum | Slip | Transitional | FreeMolecular
+//     knudsen,          // the Kn the model was selected from
+//     plasma_frequency, // omega_p at the peak electron density
+//     gnss_denied,      // omega_p above the configured comms band
+//     mach_regime, thrust_state, touchdown,
+// }
+
+// A transition is a leg boundary: march until the classification changes.
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .from_field(world::initial_field())
+    .until(|f, _| f.regime().map(|r| r.gnss_denied).unwrap_or(false))?;   // link lost
+
+let exit = CfdFlow::march(&nominal)
+    .alternate_context(&committed)
+    .couple(world::corridor_coupling(1.0, 0))
+    .from(peak.state())
+    .until(|f, _| f.regime().map(|r| !r.gnss_denied).unwrap_or(false))?;  // link back`;
 
 const regimeLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
 regime -> slip (GNSS-denied),    Kn=0.01705925949914955
@@ -105,7 +138,7 @@ const axes = [
       observables. Building one is separate from running it.
     </p>
 
-    <pre><code>{config}</code></pre>
+    <Code code={config} lang="rust" themes={SHIKI} />
 
     <p class="cap-body">
       The flow layer materializes runs from those descriptions.
@@ -114,7 +147,7 @@ const axes = [
       and continues each branch in its own alternated world.
     </p>
 
-    <pre><code>{flow}</code></pre>
+    <Code code={flow} lang="rust" themes={SHIKI} />
 
     <p class="cap-body">
       Because a description is a value, a counterfactual is the same flow handed
@@ -163,12 +196,18 @@ const axes = [
     </dl>
 
     <p class="cap-body">
-      Because the classification is read off the field, a regime change is an
-      event the run finds rather than a station it is told to switch at. Every
-      transition lands in the provenance log:
+      The classifier sits in the coupling stack and re-runs each step, writing
+      its result onto the evolved field. A predicate reads it back, so a
+      transition becomes a leg boundary the run locates:
     </p>
 
-    <pre><code>{regimeLog}</code></pre>
+    <Code code={regime} lang="rust" themes={SHIKI} />
+
+    <p class="cap-body">
+      Every transition lands in the provenance log:
+    </p>
+
+    <Code code={regimeLog} lang="text" themes={SHIKI} />
 
     <p class="cap-body">
       One descent moves through orbit-like dynamics, slip flow, continuum flow,
@@ -196,7 +235,7 @@ const axes = [
       shared field:
     </p>
 
-    <pre><code>{coupling}</code></pre>
+    <Code code={coupling} lang="rust" themes={SHIKI} />
 
     <p class="cap-body">
       Vibrational relaxation, reacting plasma chemistry, regime classification,
@@ -249,15 +288,6 @@ const axes = [
   .cap-claim { color: var(--accent); font-size: var(--t-body-sm); margin: 0; }
 
   .cap-body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
-
-  .cap pre {
-    background: var(--bg-2);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    overflow-x: auto;
-    margin: 0 0 var(--space-4);
-  }
-  .cap pre code { background: none; padding: 0; }
 
   .axes { margin: 0 0 var(--space-4); display: grid; gap: var(--space-3); }
   .axis { padding-left: var(--space-4); border-left: 1px solid var(--line-2); }

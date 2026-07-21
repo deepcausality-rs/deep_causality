@@ -2,7 +2,14 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
 import { GITHUB_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const cloneCmd = `git clone https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality`;
 
 const title = 'Tutorial — DeepCausality CFD';
 const description =
@@ -60,8 +67,7 @@ const FAMILY_URL = `${GITHUB_URL}/tree/main/examples/avionics_examples/cfd/plasm
           physics only where a design decision depends on it.
         </p>
       </div>
-      <pre class="cmd"><code>git clone https://github.com/deepcausality-rs/deep_causality.git
-cd deep_causality</code></pre>
+      <Code code={cloneCmd} lang="bash" themes={SHIKI} />
       <div class="prose">
         <p>
           Each walk opens by running its program. Run them in order the first
@@ -165,12 +171,4 @@ cd deep_causality</code></pre>
 
   .pnote { color: var(--fg-1); font-size: var(--t-body-sm); margin: var(--space-5) 0 0; max-width: var(--measure); }
 
-  .cmd {
-    background: var(--bg-2);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    overflow-x: auto;
-    margin: 0 0 var(--space-4);
-  }
-  .cmd code { background: none; padding: 0; }
 </style>

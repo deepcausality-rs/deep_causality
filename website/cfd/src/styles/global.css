@@ -72,8 +72,17 @@ code, pre { font-family: var(--font-mono); font-size: var(--t-mono-sm); }
   border-radius: var(--radius-sm);
 }
 
-/* Shiki: force the design-system surface, swap token colours by theme. */
-pre.astro-code { background-color: var(--bg-2) !important; }
+/* Shiki: force the design-system surface, swap token colours by theme.
+   Layout lives here too, because <Code> output carries no component scope id
+   and cannot be reached by a component's scoped `pre` rule. `.prose pre`
+   below overrides the padding for MDX bodies. */
+pre.astro-code {
+  background-color: var(--bg-2) !important;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: 0 0 var(--space-4);
+  overflow-x: auto;
+}
 [data-theme='dark'] pre.astro-code,
 [data-theme='dark'] pre.astro-code span { color: var(--shiki-dark); }
 [data-theme='light'] pre.astro-code,
