@@ -1,0 +1,28 @@
+openspec/specs/dec-ns-validation/spec.md
+  s_f2afaa4ec55b4b::t_f93d190fe57112 155-160
+  s_f2afaa4ec55b4b::t_92cb93416a21b3 173-182
+  s_f2afaa4ec55b4b::t_06b1480acb01af 192-226
+openspec/specs/verification-gate-integrity/spec.md
+  s_f2afaa4ec55b4b::t_8ef7911514b5a0 1-119
+openspec/specs/qtt-immersed-body/spec.md
+  s_f2afaa4ec55b4b::t_3e06828ef3e951 42-96
+openspec/specs/park2t-blackout-validation/spec.md
+  s_f2afaa4ec55b4b::t_9cc35dea51c41a 21-43,54-62
+  s_f2afaa4ec55b4b::t_89e1e906a44d58 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "cf171b139626522f8d5cbd72f924fe14f41f8572",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
