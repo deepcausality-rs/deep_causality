@@ -3,7 +3,13 @@
 ### Requirement: Fourier-law wall heat flux over cut-cell fragments
 
 The crate SHALL expose `wall_heat_flux` computing `q = −k ∮_S ∇T·n dA` over the immersed body's
-cut-cell fragments, where `n` is each fragment's outward unit normal, `dA` its area, and `k` the thermal
+cut-cell fragments. This extends the surface-integral diagnostic beyond forces: the capability's
+subject is a read-only quantity integrated over a body's `CutFaceFragment`s, and a heat flux is such
+a quantity even though it is not a force. It SHALL share the fragment iteration and the wall-normal
+reconstruction with the viscous traction rather than reimplementing them, so the two diagnostics
+cannot disagree about where the wall is.
+
+The flux is defined with `n` each fragment's outward unit normal, `dA` its area, and `k` the thermal
 conductivity. This is Fourier's law as an actual surface integral, and the name SHALL be used for no
 other quantity.
 

@@ -11,7 +11,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (1 of 4 changes landed).**
+> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (1 of 4 changes landed,
+> plus one follow-up capability).**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
@@ -84,6 +85,32 @@ computes.
 >   concealed — dropping *one* prescribed edge gives `Δ = 0` exactly (that edge is a corner already
 >   no-slip pinned), and a probe supplying edges without values pins edges already at zero, making
 >   every delta ~1e-18 round-off. **Standing rule adopted: no test may assert on source text.**
+>
+> **A follow-up change filled the name item 11 reserved.**
+> [`2026-07-22-add-dec-scalar-transport-wall-heat-flux`](../../changes/archive/2026-07-22-add-dec-scalar-transport-wall-heat-flux/),
+> 37/37 tasks, two capability specs synced. `wall_heat_flux` is now a genuine Fourier surface
+> integral `q = −k ∮_S ∇T·n dA` over cut-cell fragments, so the crate has an honest wall heat flux —
+> the quantity §4b calls safety-critical for a re-entry TPS consumer, and which it previously had
+> nowhere.
+>
+> - **Change 4's design named the wrong blocker, and this is worth generalising.** It deferred a real
+>   flux to "the Gap-2 reacting energy equation". The cut-cell surface was already shipped and in use:
+>   `CutFaceFragment` carries a `(D−1)`-area, an outward unit normal and a centroid, and
+>   `viscous_surface_force` already integrates `∮ μ(∇u+∇uᵀ)·n dA` over it. What was missing was a
+>   *temperature field* — the DEC solver marched velocity only. **A deferral is a claim, and this
+>   audit's own habit of accepting one unexamined is what left the name reserved and empty.** The
+>   remaining Phase 2 and 3 deferrals deserve the same check.
+> - **The flux is not computed on the QTT penalized path, deliberately.** Volume penalization has no
+>   wall surface, only a mask smoothed over `SMOOTH_CELLS·dx`; the interface gradient scales as
+>   `k·ΔT/w`, inversely with a purely numerical parameter. §5b measured the *drag* moving 6.1× across
+>   that sweep, and drag is a volume integral that averages where a wall-normal derivative amplifies.
+>   Computing the wall exchange from the penalization source — what `penalization_heat_integral` does
+>   — is the standard volume-penalization answer for exactly this reason, so that quantity is
+>   defensible as it stands. Only its old name was wrong.
+> - **The reference is exact, not tolerated.** A linear profile makes the one-sided reconstruction
+>   exact, so `q = −k·G·A` holds to the f64 floor at every rung of a spacing ladder
+>   (`|q − analytic| = 0.000e0` at h = 1, 0.5, 0.25, 0.125, 0.0625).
+>
 > - **Item 11's `preserved_drag_fraction` was never at risk.** The audit reasoned the rename was safe
 >   because the quantity is used comparatively; in fact it is computed from the thrust coefficient
 >   (`srp_preserved_drag_fraction_kernel(C_T)`) and never reads the heat observable at all.
@@ -363,6 +390,8 @@ conductivity or surface normal, and the production path hardcodes `t_wall = 0` w
 it. For a re-entry TPS consumer this is the safety-critical quantity. — ✅ **RESOLVED (2026-07-21):**
 renamed `penalization_heat_integral`, freeing `wall_heat_flux` for a genuine Fourier-law
 implementation; `T_w` moved into `QttBody` beside `ubx`/`uby` and recorded in the run output.
+**The reserved name was then filled (2026-07-22):** `wall_heat_flux` is a real surface integral
+`q = −k ∮_S ∇T·n dA` on the DEC cut-cell path, so the safety-critical quantity now exists.
 
 **The QTT convection gate tests a re-implementation, not the shipped solver.** The harness open-codes the
 convection assembly; the shipped `rate` path is never invoked by any gate, and the only tests touching it
@@ -467,6 +496,14 @@ coincidence. This is a distinct failure mode from the 72 tautologies catalogued 
 cannot fail, but a gate measuring **the wrong artifact**. The QTT convection gate flagged in §4b
 ("tests a re-implementation, not the shipped solver") is the same shape, which suggests auditing the
 remaining harnesses for it specifically.
+
+**4. A deferral is a claim, and this report accepted one unexamined.** Item 11's design deferred a
+real wall heat flux to "the Gap-2 reacting energy equation". That was wrong: the cut-cell surface —
+area, outward normal, centroid — was already shipped and already integrated by
+`viscous_surface_force`. The only missing piece was a temperature field on the DEC path. The cost of
+not checking was a safety-critical quantity left absent behind a plausible-sounding dependency. The
+remaining Phase 2 and Phase 3 items carry several deferrals of the same shape; each should be
+checked against what is actually in the tree before it is planned around.
 
 **And one caution about the remediation itself.** Change 4's first anti-drift test scraped source text
 with `include_str!` — a test that asserts on *code as text*, inside a change whose purpose was
@@ -614,8 +651,13 @@ test for the whole envelope group, and item 13's constructor validation is a pre
     constraint, and state that it is currently violated 48×. — §4b, §5b.
     **This is now the nightly red build** — `qtt_cylinder_verification` fails on exactly this condition,
     so the fix has a ready-made acceptance test: the η ladder must converge.
-11. ✅ **DONE** — Renamed `penalization_heat_integral`; `wall_heat_flux` reserved for a real
-    Fourier-law implementation; `T_w` configurable via `QttBody` and recorded in the run output. — §4b
+11. ✅ **DONE** — Renamed `penalization_heat_integral`; `T_w` configurable via `QttBody` and recorded
+    in the run output. — §4b
+    **And the reserved name is now filled** (`2026-07-22-add-dec-scalar-transport-wall-heat-flux`):
+    `wall_heat_flux` is a genuine Fourier surface integral `q = −k ∮_S ∇T·n dA` over cut-cell
+    fragments, exact on a linear profile at every spacing. Required adding passive scalar transport
+    to the DEC path, which the crate did not have; the cut-cell surface it differentiates against was
+    already shipped.
 12. Reject non-positive pressure in `marcher_2d` instead of flooring it only for the wave speed.
 13. Add numerical-envelope validation to the QTT constructors, matching the DEC family.
 14. Clamp the body mask to [0,1] after quantization, or validate in `QttImmersed2d::new`.
