@@ -5,7 +5,7 @@ import SiteHeader from '../../components/nav/SiteHeader.astro';
 import DocDetail from '../../components/docs/DocDetail.astro';
 
 export async function getStaticPaths() {
-  const entries = await getCollection('cookbook');
+  const entries = await getCollection('blueprints');
   return entries.map((entry) => ({
     params: { slug: entry.id.replace(/^en\//, '') },
     props: { entry },
@@ -19,17 +19,17 @@ const d = entry.data;
 <BaseLayout
   title={`${d.title} — DeepCausality CFD`}
   description={d.summary}
-  path={`/cookbook/${entry.id.replace(/^en\//, '')}/`}
+  path={`/blueprints/${entry.id.replace(/^en\//, '')}/`}
 >
   <SiteHeader slot="header" />
 
   <DocDetail
-    eyebrow="Cookbook"
+    eyebrow="Blueprints"
     title={d.title}
     summary={d.summary}
     tags={d.verbs}
-    backHref="/cookbook/"
-    backLabel="All recipes"
+    backHref="/blueprints/"
+    backLabel="All blueprints"
   >
     <Content />
 

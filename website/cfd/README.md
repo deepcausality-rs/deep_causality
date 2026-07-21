@@ -66,7 +66,7 @@ From `openspec/notes/cfd-website/cfd-docs-website.md`:
 - **A toolbox for a named problem class**, with an explicit line between what
   works today and what is aspirational. That line is the `/roadmap/` page's
   three-list structure, and no item moves up a list without a committed artifact.
-- **A cookbook, not rustdoc.** `/cookbook/` is task-shaped: sweep a parameter,
+- **Blueprints, not rustdoc.** `/blueprints/` is task-shaped: sweep a parameter,
   gate against a placard, fork a running simulation, pick a solver.
 - **One citable validation page.** `/validation/` is the adoption document —
   per target: what was validated, against which reference, to what number.
@@ -81,7 +81,7 @@ Each figure lives in exactly one place, split by shape:
 
 | Content | Home | Why |
 |---|---|---|
-| Cookbook recipes, worked examples | `src/content/**/en/*.mdx` | Prose with a walkthrough. Frontmatter carries the facts a listing needs, so index and detail cannot disagree. |
+| Blueprints, worked examples | `src/content/**/en/*.mdx` | Prose with a walkthrough. Frontmatter carries the facts a listing needs, so index and detail cannot disagree. |
 | Validation records, capability boundaries | `src/data/*.ts` | Matrices, not prose. Rendered as tables and typed at compile time. |
 
 The MDX collections are declared in `src/content.config.ts`, same `glob` +

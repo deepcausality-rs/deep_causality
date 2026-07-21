@@ -4,32 +4,32 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
 import { CRATE_URL } from '../../consts';
 
-const title = 'Cookbook — DeepCausality CFD';
+const title = 'Blueprints — DeepCausality CFD';
 const description =
-  'Task-shaped recipes: sweep a parameter and get a table, gate a run against a placard, fork a running simulation into counterfactual worlds, and pick a solver family.';
+  'Task-shaped blueprints: sweep a parameter and get a table, gate a run against a placard, fork a running simulation into counterfactual worlds, and pick a solver family.';
 
-const recipes = (await getCollection('cookbook')).sort(
+const blueprints = (await getCollection('blueprints')).sort(
   (a, b) => a.data.order - b.data.order
 );
 ---
-<BaseLayout title={title} description={description} path="/cookbook/">
+<BaseLayout title={title} description={description} path="/blueprints/">
   <SiteHeader slot="header" />
 
   <article class="page cpage">
     <header class="chead">
-      <p class="eyebrow">Cookbook</p>
-      <h1>Task-oriented recipes</h1>
+      <p class="eyebrow">Blueprints</p>
+      <h1>One task per blueprint</h1>
       <p class="lede">
-        Each recipe covers one task, with the DSL verbs it uses and the worked
-        examples that exercise it. Generated API documentation lives with the
-        crate.
+        Each entry covers a single task, with the DSL verbs it uses and the
+        worked examples that exercise it. Generated API documentation lives with
+        the crate.
       </p>
     </header>
 
     <ol class="rlist">
-      {recipes.map((r, i) => (
+      {blueprints.map((r, i) => (
         <li class="ritem">
-          <a href={`/cookbook/${r.id.replace(/^en\//, '')}/`}>
+          <a href={`/blueprints/${r.id.replace(/^en\//, '')}/`}>
             <span class="rix num">{String(i).padStart(2, '0')}</span>
             <span class="rmain">
               <span class="rtitle">{r.data.title}</span>

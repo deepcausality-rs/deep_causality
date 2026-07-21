@@ -15,7 +15,7 @@ Every verification harness, study and avionics example was built in `--release` 
 Gate columns count literal `[PASS]` / `[FAIL]` markers in each program's stdout+stderr.
 A harness with 0 gates emits no marker — see the audit report, blocker B-3.
 
-## Verification harnesses (12)
+## Verification harnesses (13)
 
 | Program | Exit | Wall-clock (s, contended) | README (s) | `[PASS]` | `[FAIL]` |
 |---|---|---|---|---|---|
@@ -31,12 +31,20 @@ A harness with 0 gates emits no marker — see the audit report, blocker B-3.
 | `qtt_reentry_3d` | 0 | 1 | ~3 | 0 | 0 |
 | `dec_lid_cavity_re1000_verification` | 0 | 1407 | ~28 (33²) | 0 | 0 |
 | `dec_cylinder_wake_verification` | 0 | 187 | ~155 | 0 | 0 |
+| `dec_cylinder_verification` | 0 | 578 | ~510 | 0 | 0 |
 
-**Totals:** 12 programs, 0 non-zero exits, 16 PASS markers, 0 FAIL markers.
+**Totals:** 13 programs, 0 non-zero exits, 16 PASS markers, 0 FAIL markers.
 
-## Studies (0)
+## Studies (4)
 
-_Not yet complete at time of writing._
+| Program | Exit | Wall-clock (s, contended) | `[PASS]` | `[FAIL]` |
+|---|---|---|---|---|
+| `qtt_rank_study` | 0 | 28 | 0 | 0 |
+| `qtt_rank_dynamic` | 0 | 9 | 0 | 0 |
+| `qtt_rank_nonlinear` | 0 | 84 | 0 | 0 |
+| `qtt_rank_3d` | 0 | 97 | 0 | 0 |
+
+**Totals:** 4 programs, 0 non-zero exits, 0 PASS markers, 0 FAIL markers.
 
 ## Avionics examples (7)
 
