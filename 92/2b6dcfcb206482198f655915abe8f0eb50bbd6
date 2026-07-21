@@ -1,0 +1,181 @@
+deep_causality_cfd/verification/dec_taylor_green_re1600_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_33a7b3057ccf8f 137-138
+deep_causality_cfd/tests/types/ladder_outcome_tests.rs
+  s_f2afaa4ec55b4b::t_cfe610f64e8908 39-44,51,59-82
+  s_f2afaa4ec55b4b::t_0ca455b492b512 1-38,45-50,52-58,83-184
+deep_causality_cfd/src/lib.rs
+  s_f2afaa4ec55b4b::t_90065e724a0157 49
+deep_causality_cfd/verification/README.md
+  s_f2afaa4ec55b4b::t_b23167b1da946a 51-74
+  s_f2afaa4ec55b4b::t_828cf81d227ac6 249-260
+  s_f2afaa4ec55b4b::t_bfdba5d44dc573 96-118
+  s_f2afaa4ec55b4b::t_06212fec03e64d 89
+  s_f2afaa4ec55b4b::t_b35d053169ad6e 19-45
+  s_f2afaa4ec55b4b::t_302ae91e0c4e55 85
+  s_f2afaa4ec55b4b::t_d2029389f556ba 205-215
+  s_f2afaa4ec55b4b::t_a99904cf021357 119
+deep_causality_cfd/tests/types/mod.rs
+  s_f2afaa4ec55b4b::t_ccfdc525fe89f4 12-13,15-16
+deep_causality_cfd/src/types/mod.rs
+  s_f2afaa4ec55b4b::t_1984274aa08e2a 10,14,17,19
+deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_3ad8671d2efe46 12-30
+  s_f2afaa4ec55b4b::t_6eff5d4ccd7580 31-40
+deep_causality_cfd/README.md
+  s_f2afaa4ec55b4b::t_5283dc5338277a 214-225
+deep_causality_cfd/verification/qtt_cylinder_verification/print_utils.rs
+  s_f2afaa4ec55b4b::t_28182e430449ad 13,151-160,162-169,171-173,175-176,180-188,191-197,205-210
+  s_f2afaa4ec55b4b::t_044ca2b7138dc4 16-19,21-34,36-41
+  s_f2afaa4ec55b4b::t_e7247a27547194 199-204
+  s_f2afaa4ec55b4b::t_c71dd4cb856b90 118-148
+  s_f2afaa4ec55b4b::t_440412687fa417 51-69
+  s_f2afaa4ec55b4b::t_2cac1c1d9199c9 198
+deep_causality_cfd/verification/qtt_sod/print_utils.rs
+  s_f2afaa4ec55b4b::t_e297f6374fc3ae 22-27,29-30
+  s_f2afaa4ec55b4b::t_bb7ccfce66be60 97-99,103
+  s_f2afaa4ec55b4b::t_97ce42ced50c7d 10
+deep_causality_cfd/verification/mms_taylor_green_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_33a7b3057ccf8f 17-20
+deep_causality_cfd/verification/dec_cylinder_wake_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_9b483e9336635f 1-3,205-209
+deep_causality_cfd/tests/types/flow/study_grammar_tests.rs
+  s_f2afaa4ec55b4b::t_051c573a2e1185 315-317,319-322,331-334,337-338,340-346
+  s_f2afaa4ec55b4b::t_da619ec5ff62c0 339
+  s_f2afaa4ec55b4b::t_18ec7fa198812a 12-13
+  s_f2afaa4ec55b4b::t_1ca79a27e8215e 347
+deep_causality_cfd/src/types/evidence_class.rs
+  s_f2afaa4ec55b4b::t_06248e3ff02dfc 1-60
+deep_causality_cfd/verification/mms_taylor_green_verification/main.rs
+  s_f2afaa4ec55b4b::t_039c3b550497e1 41-43
+deep_causality_cfd/verification/dec_cylinder_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_226725dab22fb7 1-227
+deep_causality_cfd/src/types/flow/study/verdict.rs
+  s_f2afaa4ec55b4b::t_6be419f408270b 122
+  s_f2afaa4ec55b4b::t_c4439c859ec2cb 13,23,27-32,37,55-59
+  s_f2afaa4ec55b4b::t_8a862ef2b2fc1f 60
+deep_causality_cfd/verification/dec_cylinder_wake_verification/main.rs
+  s_f2afaa4ec55b4b::t_a0d318f6f1ad60 111-117,120-127,130-138
+  s_f2afaa4ec55b4b::t_b422d076a00518 44
+deep_causality_cfd/verification/qtt_blunt_body_2d/main.rs
+  s_f2afaa4ec55b4b::t_bf67e95f062e42 125-130,133-139,146,149-155
+  s_f2afaa4ec55b4b::t_6e8418f96ed349 25
+deep_causality_cfd/verification/qtt_taylor_green_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_33a7b3057ccf8f 12,18-24
+  s_f2afaa4ec55b4b::t_057ab09d52f485 25
+deep_causality_cfd/tests/BUILD.bazel
+  s_f2afaa4ec55b4b::t_129e8ec7a27e7b 271-308
+deep_causality_cfd/verification/mms_taylor_green_verification/print_utils.rs
+  s_f2afaa4ec55b4b::t_039c3b550497e1 11
+  s_f2afaa4ec55b4b::t_c1e574832918b2 55
+  s_f2afaa4ec55b4b::t_62590ac3b2501d 45-54,58-70,72-92
+  s_f2afaa4ec55b4b::t_9a9fa94c941f32 56-57
+  s_f2afaa4ec55b4b::t_5e24c046b6db5a 71
+deep_causality_cfd/verification/dec_graded_mms_verification/main.rs
+  s_f2afaa4ec55b4b::t_dffb88f6237b8b 54-55,75,80-81,83-85,94-130
+deep_causality_cfd/verification/dec_graded_mms_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_33a7b3057ccf8f 23-32
+deep_causality_cfd/verification/qtt_taylor_green_verification/print_utils.rs
+  s_f2afaa4ec55b4b::t_2d6abb76f43256 208-216
+  s_f2afaa4ec55b4b::t_cf9ae576c274fc 155
+  s_f2afaa4ec55b4b::t_cfb7c31b376629 119,121-123
+  s_f2afaa4ec55b4b::t_c5bf09543ae59e 97
+  s_f2afaa4ec55b4b::t_0f032d0597a0da 23-28
+  s_f2afaa4ec55b4b::t_7811d3a6088321 15,157-163,166-183,185-193,195-196,199-204,217-231,233-244
+deep_causality_cfd/verification/qtt_ramc_stagline/print_utils.rs
+  s_f2afaa4ec55b4b::t_8ba0827a0a12f9 11,124-127,130-132
+  s_f2afaa4ec55b4b::t_d124159a28daa6 60,63,66-68,71,74-83,87-91
+  s_f2afaa4ec55b4b::t_6ff94e1edf42d4 174,178
+deep_causality_cfd/verification/qtt_cylinder_verification/main.rs
+  s_f2afaa4ec55b4b::t_def29a46501b92 82-93,95-96,103-124
+  s_2dc68b59102c60::t_3070b1afb65f30 35
+  s_f2afaa4ec55b4b::t_49572c2d5a2796 125-126
+deep_causality_cfd/studies/qtt_rank_dynamic/main.rs
+  s_f2afaa4ec55b4b::t_7e6d9c211a3103 106-117,119-120
+deep_causality_cfd/src/types/flow/study/gate_seq.rs
+  s_f2afaa4ec55b4b::t_66a28ab6a10fdb 66,68
+  s_f2afaa4ec55b4b::t_5f95f196d2d1af 16,26,38-42,44-51
+deep_causality_cfd/verification/qtt_cylinder_verification/baseline.txt
+  s_f2afaa4ec55b4b::t_73ba17fec1e2da 11-35
+.github/workflows/cfd_verification.yml
+  s_f2afaa4ec55b4b::t_28827a834f9159 1-10,12-13,32-57,60-63,65-219
+  s_f2afaa4ec55b4b::t_e7ef5060da9b50 58-59,64
+  s_f2afaa4ec55b4b::t_6bebf43023008f 11,14-31
+deep_causality_cfd/verification/dec_taylor_green_re1600_verification/print_utils.rs
+  s_f2afaa4ec55b4b::t_7ac72d01354333 14,80,88
+  s_f2afaa4ec55b4b::t_28085081e21a42 73-79,83-84,89-105
+deep_causality_cfd/verification/qtt_park2t_blackout/print_utils.rs
+  s_f2afaa4ec55b4b::t_cd063241bed607 11,146-149,152,156-157,162,166-167,172,177,183-187
+  s_f2afaa4ec55b4b::t_44edd86fab60c3 35-55,57-69
+  s_f2afaa4ec55b4b::t_a44191964af39d 115,117
+  s_f2afaa4ec55b4b::t_19eb167722ad29 84-92
+deep_causality_cfd/verification/dec_cylinder_verification/main.rs
+  s_f2afaa4ec55b4b::t_297a77ace4f9f1 391-392,395
+  s_f2afaa4ec55b4b::t_9c6e7078a1dad3 307-370,372-387
+  s_f2afaa4ec55b4b::t_f4b97998ad03c4 70-95
+  s_f2afaa4ec55b4b::t_9682aa168e7ae3 249-252,256-260
+  s_f2afaa4ec55b4b::t_7803503af5561a 407-410,412
+  s_f2afaa4ec55b4b::t_a5dcb46c299633 435,439-442
+  s_f2afaa4ec55b4b::t_9f5234e98a6d2e 371
+  s_f2afaa4ec55b4b::t_eecdfa2cc7a681 417-418,421
+deep_causality_cfd/verification/qtt_taylor_green_verification/main.rs
+  s_f2afaa4ec55b4b::t_2f7d8e1eeeea58 100-103,107
+  s_f2afaa4ec55b4b::t_4f2584c94bbbfe 136-142,144-145,148,150-152,155
+examples/avionics_examples/cfd/plasma_blackout/corridor/model.rs
+  s_f2afaa4ec55b4b::t_d262d39237e15a 463-475,481-503,505,507-508,513-516
+deep_causality_cfd/verification/qtt_reentry_3d/main.rs
+  s_f2afaa4ec55b4b::t_6e8418f96ed349 164-168,171-177,183-190
+  s_f2afaa4ec55b4b::t_ac9d41636aa969 27
+examples/avionics_examples/cfd/plasma_blackout/weather/model.rs
+  s_f2afaa4ec55b4b::t_e1b9d2cb0e2b4d 260-271,273-279,281-286
+deep_causality_cfd/tests/types/evidence_class_tests.rs
+  s_f2afaa4ec55b4b::t_59119053d658af 1-48
+deep_causality_cfd/src/types/ladder_outcome.rs
+  s_f2afaa4ec55b4b::t_2eedd0da482206 1-78,84-88,107-157
+  s_f2afaa4ec55b4b::t_5501b7a18a37b9 79-83,89-106
+deep_causality_cfd/src/types/flow/mms.rs
+  s_f2afaa4ec55b4b::t_3447f8f79b8b41 165-178
+  s_f2afaa4ec55b4b::t_630eaa24be02e7 179
+  s_f2afaa4ec55b4b::t_8032414dbf09c1 180
+deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/main.rs
+  s_f2afaa4ec55b4b::t_02c14ede549834 119-127,131-146,150-156,160-166,168-171
+  s_f2afaa4ec55b4b::t_ab9e71792bc01d 41
+deep_causality_cfd/verification/qtt_cylinder_verification/config.rs
+  s_f2afaa4ec55b4b::t_45dc0cce1b3a2c 105-118,121,128
+  s_f2afaa4ec55b4b::t_61627353c456e0 68-79,84,88-96
+  s_f2afaa4ec55b4b::t_5faec6531788ed 67
+  s_f2afaa4ec55b4b::t_e41a95c1a8ea53 97
+openspec/changes/make-cfd-evidence-enforceable/tasks.md
+  s_f2afaa4ec55b4b::t_48681da42b0159 61-62
+  s_f2afaa4ec55b4b::t_2e97d4b476d1d0 63
+  s_f2afaa4ec55b4b::t_29eba16eb6bea1 67-69,71-74
+  s_f2afaa4ec55b4b::t_5c8e3cbe6aea14 70
+  s_f2afaa4ec55b4b::t_f5381d2e5dea71 51-52,55
+  s_f2afaa4ec55b4b::t_b9b3ba51676bf3 56-57
+  s_f2afaa4ec55b4b::t_c853da2a3c388f 54
+deep_causality_cfd/verification/qtt_park2t_blackout/main.rs
+  s_f2afaa4ec55b4b::t_e1a08750d6c16c 15-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "922b6dcfcb206482198f655915abe8f0eb50bbd6",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
