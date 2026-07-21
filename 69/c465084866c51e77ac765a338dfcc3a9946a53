@@ -1,0 +1,37 @@
+website/cfd/shiki-rust-themes.mjs
+  s_2dc68b59102c60::t_b31cd146d35689 1-48,61-63,65-66,69-73
+  s_2dc68b59102c60::t_3070b1afb65f30 49-60,64,67-68
+website/cfd/src/pages/why/index.astro
+  s_2dc68b59102c60::t_c214cb3381e28a 5,8
+  s_2dc68b59102c60::t_20ce0038799dc4 4,9,81,149,191,244
+website/cfd/src/styles/global.css
+  s_2dc68b59102c60::t_20ce0038799dc4 75-85
+website/cfd/src/pages/tutorial/index.astro
+  s_2dc68b59102c60::t_c214cb3381e28a 6,9
+  s_2dc68b59102c60::t_ab0373a687e646 5,10-13,70
+website/cfd/astro.config.mjs
+  s_2dc68b59102c60::t_c214cb3381e28a 4,52-53
+website/cfd/package.json
+  s_2dc68b59102c60::t_b31cd146d35689 22
+website/cfd/src/components/home/Capabilities.astro
+  s_2dc68b59102c60::t_c214cb3381e28a 14-16
+  s_2dc68b59102c60::t_6ce861d77b07b5 9-11,13,54-79,141,150,199-201,204-210,238
+website/cfd/pnpm-lock.yaml
+  s_2dc68b59102c60::t_7e439645912d35 27-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "69c465084866c51e77ac765a338dfcc3a9946a53",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
