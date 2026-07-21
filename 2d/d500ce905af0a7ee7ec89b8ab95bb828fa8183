@@ -1,0 +1,40 @@
+openspec/specs/fft-dct/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-9
+openspec/specs/dec-stencil-operators/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-10
+openspec/specs/spectral-diffusion/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-8
+openspec/specs/neumann-poisson/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-9
+openspec/specs/wall-bounded-ns/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-8
+openspec/specs/no-slip-viscous/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-9
+openspec/specs/dec-ns-rate/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 3-4,13
+openspec/specs/haft-arrow-choice/spec.md
+  s_f2afaa4ec55b4b::t_67f152969b0231 42-47
+  s_f2afaa4ec55b4b::t_91b09c79afbf34 29-32
+openspec/specs/leray-projection/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-10
+openspec/specs/wall-hodge-star/spec.md
+  s_f2afaa4ec55b4b::t_2c27598fde3386 1,3-9
+openspec/specs/cfd-audit-log/spec.md
+  s_f2afaa4ec55b4b::t_fee8b14dae5d54 65-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2dd500ce905af0a7ee7ec89b8ab95bb828fa8183",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
