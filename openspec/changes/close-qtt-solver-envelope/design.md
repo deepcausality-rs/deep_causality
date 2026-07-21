@@ -100,6 +100,22 @@ truncation noise rather than a modelling error, and rejecting it would fail a bo
 purpose is to run at coarse caps. But the clamp must be **recorded** when it engages beyond a
 threshold, so a mask that is badly wrong is distinguishable from one that is slightly rounded.
 
+*The violation is one-sided, which the implementation should not assume away.* A probe over the
+shipped cylinder mask at every bond cap the ladder runs:
+
+| bond cap | min χ | max χ | cells < 0 | cells > 1 |
+|---|---|---|---|---|
+| 4 | −1.7800e-3 | 0.981896 | 188 | **0** |
+| 8 | −6.5151e-5 | 0.991258 | 84 | **0** |
+| 16 | +1.8099e-8 | 0.991837 | 0 | 0 |
+| 24 | +1.8099e-8 | 0.991837 | 0 | 0 |
+
+Only the lower bound is breached; `max χ` never reaches 1 at any cap, because the smoothed indicator
+peaks below 1 and truncation lowers it further. So the upper clamp is unexercised by the shipped
+configuration. Implement both bounds regardless — the invariant is `[0, 1]` and a future geometry or
+smoothing width can breach the top — but do not expect the upper half to fire, and do not treat a
+test that only exercises the lower bound as covering the clamp.
+
 ### D5 — Resolve `η` by stating the conflict, not by assuming it away
 
 `η` is chosen from a wall-error target, and the resolution constraint `η ≥ dx²/ν` is stated together
@@ -143,6 +159,31 @@ for this change.
 *Why:* the ladder was added in Phase 1, observed failing, and its bound (`LADDER_TOL_REL = 0.05`) was
 set before any fix was contemplated. Using it as the acceptance test means the target cannot be
 adjusted to fit whatever the fix produces — the same discipline as Phase 1's "measure before you gate".
+
+## Premise verification (2026-07-22, before implementation)
+
+Every falsifiable premise in this change was tested against the tree. **Fifteen of sixteen hold; one
+was wrong.** No premise that decides the approach failed, so the change is implementable as written.
+
+| Premise | Verdict | How checked |
+|---|---|---|
+| DEC `cfl_check` rejects with `PhysicalInvariantBroken` | ✅ | `step.rs:138-142` |
+| QTT constructors validate nothing | ✅ | both destructure straight into `Ok(Self{..})` |
+| Builder checks only structure | ✅ | only `DimensionMismatch` on grid/seed |
+| Unfloored `p` in `f[1]`/`f[3]`, floored only for `c` | ✅ | `marcher_2d.rs:135-140` — line-precise, all four sites |
+| `1e-300` floor is exactly `0.0` at `f32` | ✅ | **executed**: `f32::from_f64(1e-300) == Some(0.0)` |
+| `f32` is a reachable precision | ✅ | blanket `impl CfdScalar`, documented at `cfd_scalar.rs:11` |
+| Mask negatives: −1.78e-3/188 at bond 4, −6.5e-5/84 at bond 8 | ✅ | **probe reproduced exactly** |
+| `dt/η = 0.25`, `√(ην) = 0.144·dx`, `η ≥ dx²/ν` violated 48× | ✅ | recomputed: 0.2500, 0.1441·dx, 48.2× |
+| D5's whole L-ladder (η_min and slip, L = 5…9) | ✅ | every row reproduces to three digits |
+| η and smoothing ladders currently red | ✅ | committed baseline shows both `NOT CONVERGING` |
+| `LADDER_TOL_REL = 0.05` | ✅ | `print_utils.rs:41` — note: **not** `config.rs` |
+| `ΔC_d` bond-saturated | ✅ | design's 1.9e-11 absolute ≡ baseline's 7.936e-13 relative |
+| Constructors already return `Result` (no API break) | ✅ | both `-> Result<Self, PhysicsError>` |
+| `KNOWN-FAILING` is in `verification/README.md` | ❌ **FALSE** | it is in `.github/workflows/cfd_verification.yml`; corrected in the proposal and task 6.3 |
+
+Two notes for the implementer, both from this sweep: `LADDER_TOL_REL` lives in `print_utils.rs`, not
+the `config.rs` the Impact section lists; and the mask's `[0,1]` breach is one-sided (see D4).
 
 ## Risks / Trade-offs
 

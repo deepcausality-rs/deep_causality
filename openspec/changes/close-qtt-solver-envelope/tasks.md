@@ -63,7 +63,12 @@ Only once group 5 has actually converged the ladder — not before.
 
 - [ ] 6.1 Regenerate `qtt_cylinder_verification/baseline.txt` from a clean run (stdout+stderr per the baseline convention)
 - [ ] 6.2 If the harness now passes, move it from the nightly list back to the fast/PR list in `.github/workflows/cfd_verification.yml`, keeping the completeness check green
-- [ ] 6.3 Remove the `KNOWN-FAILING` block from `verification/README.md` and rewrite the harness's section against the resolved envelope
+- [ ] 6.3 Remove the `KNOWN-FAILING` block from `.github/workflows/cfd_verification.yml` (it is
+      there, not in `verification/README.md` — verified 2026-07-22), and move the harness back to the
+      per-PR list if its runtime allows
+- [ ] 6.3a Rewrite `verification/README.md`'s cylinder entries against the resolved envelope: the
+      "a failing baseline is committed as failing" note and the ⚠ row in the harness table, which is
+      where that README records the failure
 - [ ] 6.4 Update the summary-table row: runtime, measured values, and what the gates now constrain
 - [ ] 6.5 Update `openspec/notes/cfd_audit/AUDIT-REPORT.md` §5b and the remediation table to record the outcome
 - [ ] 6.6 If the ladder does **not** converge, leave the known-failing status in place and record what was measured — do not retire a status the evidence does not support

@@ -91,7 +91,10 @@ tensor-train codec, and the compressible marchers' flux scheme beyond the positi
 
 **Evidence**
 - `qtt_cylinder_verification`'s ladders, gates and `baseline.txt` — currently the one red harness.
-- `verification/README.md`'s `KNOWN-FAILING` block, which this change is expected to retire.
+- `.github/workflows/cfd_verification.yml`'s `KNOWN-FAILING` block, which this change is expected to
+  retire. (Corrected 2026-07-22: an earlier draft placed this block in `verification/README.md`; it
+  is not there. The README records the same fact differently — a "failing baseline is committed as
+  failing" note and a ⚠ row in the harness table — so both files need editing, for different text.)
 - Any harness whose configuration is now refused by the new envelope checks must be brought inside it
   or have its configuration justified.
 
