@@ -1,0 +1,268 @@
+---
+/**
+ * The three capabilities the crate README states first: counterfactual
+ * dynamics, native regime change, native multiphysics.
+ *
+ * Each panel states what the crate does, shows the code or run output that
+ * does it, and gives the measured figure. Every figure is quoted from a
+ * committed run.
+ */
+
+const fork = `// Trajectory level: march until the evolved sheath crosses the GPS L1 cutoff.
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
+
+// Campaign level: fork that paused state once per candidate command.
+let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())
+    .fork(&onset)                            // the shared flow-resolved fork point
+    .branch(model::bank_world)               // one alternated world per command
+    .continue_for(constants::BRANCH_STEPS)   // concurrent, copy-on-write
+    .reduce_all(model::score_branches)
+    .refine(&onset, model::fine_candidates)  // second round, same paused onset
+    .branch(model::bank_world)
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .gates(model::corridor_gates())
+    .verdict()?;`;
+
+const regimeLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+regime -> slip (GNSS-denied),    Kn=0.01705925949914955
+regime -> continuum (GNSS-denied), Kn=0.009938308574526865
+regime -> continuum (GNSS-available), Kn=0.00025839060489290773`;
+
+const coupling = `Coupling::between_steps()
+    .then(VibrationalLagStage::new(/* Millikan-White bath */))
+    .then(FiniteRateIonizationStage::new(n_tot).with_density_field("n_tot"))
+    .then(RegimeClassify::new(l_char, trigger))
+    .then(BankSteeredLift::new(rho_ref, cda_over_m, l_over_d))
+    .then(TrajectoryNav::new(q_diag, gnss_var, optical_var).with_imu(imu))
+    .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
+    .build()`;
+
+const axes = [
+  {
+    name: 'Flow regime',
+    on: 'freestream Knudsen number',
+    body: 'Selects the governing model: continuum Navier–Stokes, slip-corrected continuum, transitional, or free-molecular.',
+  },
+  {
+    name: 'Dynamics regime',
+    on: 'force ratio ε = a_aero/a_grav',
+    body: 'While gravity dominates, the trajectory advances on the exact KS-conformal core with aero as a between-step kick. Once aero dominates, it switches to direct Cowell integration.',
+  },
+  {
+    name: 'Link regime',
+    on: 'evolved electron density',
+    body: 'The electron density sets the plasma frequency, and the plasma frequency decides whether the GNSS link exists. The Kalman filter’s measurement gating follows it.',
+  },
+];
+---
+<section class="caps page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">01 / 04</span><span class="lb">Capabilities</span>
+    </p>
+    <h2>How a run is structured</h2>
+    <p class="lede">
+      Counterfactual dynamics, regime change, and multiphysics coupling are
+      reached through one <code>CfdFlow</code> language and one scalar type.
+      A runnable example with a committed output file demonstrates each.
+    </p>
+  </header>
+
+  <!-- 1 -->
+  <article class="cap panel corner-brackets rise" style="--i:0">
+    <div class="cap-head">
+      <p class="cap-ix num">01</p>
+      <div>
+        <h3>Counterfactual dynamics</h3>
+        <p class="cap-claim">A paused run forks into candidate worlds.</p>
+      </div>
+    </div>
+
+    <p class="cap-body">
+      <code>CfdFlow</code> is a two-level language. At the trajectory level,
+      <code>march</code> advances a coupled run until a predicate fires and
+      yields a resumable pause. At the campaign level, <code>study</code> forks
+      that pause once per candidate and continues each branch in its own
+      alternated world.
+    </p>
+
+    <pre><code>{fork}</code></pre>
+
+    <p class="cap-body">
+      A fork shares the paused state in O(1) through copy-on-write, covering
+      tensor fields, navigation engine, and provenance log. Every branch stamps
+      a <code>!!ContextAlternation!!</code> marker naming its baseline, and
+      fan-outs run on scoped threads that produce bits identical to the
+      sequential run.
+    </p>
+
+    <ul class="cap-nums">
+      <li>Fork setup measured at 42 ns; continuation costs 0.67–1.04× the trunk.</li>
+      <li>The corridor commits the best of seventeen worlds mid-descent.</li>
+      <li>A mid-burn fork of a marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s.</li>
+    </ul>
+
+    <p class="cap-more">
+      <a href="/tutorial/stage-1-corridor/">Walk 1: how the fork is built</a>
+      <a href="/blueprints/fork-a-running-simulation/">Blueprint: fork a running simulation</a>
+    </p>
+  </article>
+
+  <!-- 2 -->
+  <article class="cap panel corner-brackets rise" style="--i:1">
+    <div class="cap-head">
+      <p class="cap-ix num">02</p>
+      <div>
+        <h3>Native regime change</h3>
+        <p class="cap-claim">The governing model follows a measured quantity, step by step.</p>
+      </div>
+    </div>
+
+    <p class="cap-body">
+      The regime is a classified property of the evolved state rather than a
+      configured stage. A vehicle entering or leaving orbit crosses several
+      regimes, and three axes switch independently.
+    </p>
+
+    <dl class="axes">
+      {axes.map((a) => (
+        <div class="axis">
+          <dt>{a.name} <span class="axis-on">on {a.on}</span></dt>
+          <dd>{a.body}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <p class="cap-body">
+      Because the classification is read off the field, a regime change is an
+      event the run finds rather than a station it is told to switch at. Every
+      transition lands in the provenance log:
+    </p>
+
+    <pre><code>{regimeLog}</code></pre>
+
+    <p class="cap-body">
+      One descent moves through orbit-like dynamics, slip flow, continuum flow,
+      comms blackout, and reacquisition in one uninterrupted program.
+    </p>
+
+    <p class="cap-more">
+      <a href="/tutorial/stage-1-corridor/">Walk 1: the classifier in the stack</a>
+      <a href="/blueprints/handle-regime-change/">Blueprint: handle a regime change</a>
+    </p>
+  </article>
+
+  <!-- 3 -->
+  <article class="cap panel corner-brackets rise" style="--i:2">
+    <div class="cap-head">
+      <p class="cap-ix num">03</p>
+      <div>
+        <h3>Native multiphysics</h3>
+        <p class="cap-claim">Several disciplines step one shared field.</p>
+      </div>
+    </div>
+
+    <p class="cap-body">
+      A coupling stack is a static cons-tuple of physics stages stepping one
+      shared field:
+    </p>
+
+    <pre><code>{coupling}</code></pre>
+
+    <p class="cap-body">
+      Vibrational relaxation, reacting plasma chemistry, regime classification,
+      steered aerodynamic force, a 17-state error-state Kalman navigation
+      engine, and a bounded-correction safety gate, in one loop body. Stages
+      communicate through named fields on the evolved state, and an
+      <code>Err</code> from any stage short-circuits the whole step.
+    </p>
+
+    <p class="cap-body">
+      The evolved electron density gates which measurements the Kalman filter
+      may fold. The Knudsen number selects the governing model. The safety
+      gate’s clamped bank command is flown by the aero stage and steers the
+      trajectory that sets the next step’s freestream. Fluid dynamics,
+      estimation, and control close one loop.
+    </p>
+
+    <ul class="cap-nums">
+      <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 333.6 s.</li>
+      <li>Precision is a type parameter: f32, f64, or 106-bit, switched at one alias.</li>
+    </ul>
+
+    <p class="cap-more">
+      <a href="/tutorial/">The three-walk tutorial</a>
+      <a href="/blueprints/couple-multiphysics/">Blueprint: couple multiphysics</a>
+    </p>
+  </article>
+</section>
+
+<style>
+  .caps { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .cap { padding: var(--space-5); margin-bottom: var(--space-5); }
+  .cap:last-child { margin-bottom: 0; }
+
+  .cap-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-4);
+    align-items: baseline;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .cap-ix { color: var(--fg-2); }
+  .cap-head h3 { font-size: var(--t-h3); margin: 0 0 var(--space-2); }
+  .cap-claim { color: var(--accent); font-size: var(--t-body-sm); margin: 0; }
+
+  .cap-body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .cap pre {
+    background: var(--bg-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    overflow-x: auto;
+    margin: 0 0 var(--space-4);
+  }
+  .cap pre code { background: none; padding: 0; }
+
+  .axes { margin: 0 0 var(--space-4); display: grid; gap: var(--space-3); }
+  .axis { padding-left: var(--space-4); border-left: 1px solid var(--line-2); }
+  .axis dt { color: var(--fg-0); font-size: var(--t-body-sm); margin-bottom: var(--space-1); }
+  .axis-on {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-left: var(--space-2);
+  }
+  .axis dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); }
+
+  .cap-nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .cap-nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+  }
+
+  .cap-more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

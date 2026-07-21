@@ -89,15 +89,12 @@ Open `model.rs` and follow both calls. `standard_day` and `weather_world`
 funnel into the same private `world_cfg` builder; the baseline passes a zero
 temperature offset and a unit density scale.
 
-The alternative construction builds six independent `CompressibleMarchConfig`
-values, one per condition. Campaigns are normally assembled that way, and the
-resulting report contains the sentence "everything else was identical between
-runs." That sentence is an assertion by the author. Nothing enforces it, and a
-drifted constant in one of the six constructors stays invisible.
-
 Under `.baseline(..).alternate(..)` the six worlds are one validated
-description with one declared difference applied. The identity claim becomes a
-property of the program.
+description with one declared difference applied. A campaign built instead
+from six independent `CompressibleMarchConfig` values would rest on the claim
+that everything else matched between them, and a drifted constant in one of the
+six constructors would stay invisible. Here the compiler holds the shared
+description, so the match is a property of the program.
 
 Each alternated world also carries a `!!ContextAlternation!!` marker into its
 provenance log, naming the baseline it departs from. Gate 1 checks it:
