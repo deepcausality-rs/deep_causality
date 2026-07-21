@@ -72,13 +72,23 @@ where
     Ok((fx / denom, fy / denom))
 }
 
-/// Wall heat flux on the immersed body, from the penalization **heat** integral `Q = (1/η) ∫ χ_body ⊙
-/// (T_w − T) dV` (the heat the wall exchanges with the fluid to hold the body at `t_wall`). The same
-/// contraction shape as [`drag_lift`]. **Neutral** — the seam the Gap-2 reacting energy equation replaces.
+/// The penalization **heat** integral over the immersed body: `Q = (1/η) ∫ χ_body ⊙ (T_w − T) dV`,
+/// the volumetric rate at which the penalization term exchanges heat with the fluid to hold the body
+/// at `t_wall`. The same contraction shape as [`drag_lift`], with temperature in place of velocity.
+///
+/// **This is not a surface flux.** Its dimensions are `[T]·[L]²/[t]` — a temperature-weighted volume
+/// integral over the masked body, carrying no gradient, no conductivity and no wall normal. Fourier's
+/// law is `q = −k·∂T/∂n`, a per-area quantity on the wall surface, and no scaling converts a volume
+/// integral into one. The name says `integral` for that reason, and `wall_heat_flux` is deliberately
+/// left free for an actual Fourier-law implementation when the Gap-2 reacting energy equation lands.
+///
+/// The quantity is still useful as it stands: it is the thermal analogue of the penalization force
+/// integral, and same-configuration ratios built on it (as [`preserved_drag_fraction`] does for
+/// force) are meaningful. **Neutral** — the seam the Gap-2 reacting energy equation replaces.
 ///
 /// # Errors
 /// Propagates the train-contraction errors.
-pub fn wall_heat_flux<R>(
+pub fn penalization_heat_integral<R>(
     mask: &CausalTensorTrain<R>,
     temp: &CausalTensorTrain<R>,
     t_wall: R,

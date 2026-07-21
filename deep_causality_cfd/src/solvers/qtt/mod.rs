@@ -22,8 +22,8 @@ pub use compressible::{
 pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;
 pub use observe::{
-    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, preserved_drag_fraction,
-    strip_pressure_force, wall_heat_flux,
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed,
+    penalization_heat_integral, preserved_drag_fraction, strip_pressure_force,
 };
 
 use crate::CfdScalar;

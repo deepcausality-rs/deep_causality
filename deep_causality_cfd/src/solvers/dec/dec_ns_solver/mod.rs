@@ -155,6 +155,14 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsSolver<'m, D, R> {
         zones.collect_slip_edges(manifold, &mut slip);
         solver.rate.apply_slip(&slip);
 
+        // Fold the zone-supplied constrained edges. After the slip un-pin, so an explicitly
+        // supplied constraint is not removed by a free-slip zone (union, per `recompute_rate_constrained`).
+        let mut constrained = alloc::vec::Vec::new();
+        zones.collect_constrained_edges(manifold, &mut constrained);
+        if !constrained.is_empty() {
+            solver.rate.set_zone_constrained(constrained);
+        }
+
         let mut prescribed = alloc::vec::Vec::new();
         zones.collect_prescribed_edges(manifold, &mut prescribed);
         let mut reference = alloc::vec::Vec::new();

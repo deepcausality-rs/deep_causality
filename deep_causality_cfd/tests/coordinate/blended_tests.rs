@@ -179,3 +179,72 @@ fn metric_provider_physical_gradient_delegates_to_inherent() {
         assert!((p - q).abs() < 1e-12, "∂/∂y trait vs inherent: {p} vs {q}");
     }
 }
+
+// --- Enforced invertibility (item 8, blocker B-4) -------------------------------------------------
+//
+// The constructor's validity guarantee has to be falsifiable, so these pin the two ways `det J_λ`
+// can fail. All three share the same wide fan — `r0 = 0.1`, `dr = 5`, `dθ = 5` — and differ only in
+// `λ`, so a rejection is attributable to the blend and not to the geometry being exotic.
+//
+// The fold and the floor are reached at different `λ` and are checked separately: at `λ = 0.2` the
+// determinant changes sign while `min|det J|` is still ~10⁴× the floor, so only the sign test can
+// fire; the near-singular `λ` sits just under the fold threshold, where `det` is one-signed at 0.51×
+// the floor. Neither case can be passing for the other's reason.
+
+/// `λ` just below the fold threshold for the wide test fan, where `det J_λ` is still one-signed but
+/// has fallen under the floor. Obtained by bisecting the threshold on `max(det)` — `0.142856850670…`
+/// — and stepping back `1.1e-7` into the rejecting band. The band is ~2.2e-7 wide in `λ`, which is
+/// narrow against `λ ∈ [0, 1]` but nine orders above float noise, so the constant is stable.
+const LAMBDA_NEAR_SINGULAR: f64 = 0.142_856_740_671;
+
+#[test]
+fn a_folded_map_is_rejected_and_names_the_fold() {
+    // λ = 0.2 on the wide fan reverses the sign of det J_λ, so the chart is not invertible over the
+    // computational domain and the inverse metric would be meaningless rather than merely large.
+    let Err(err) = BlendedMap::new(cfg(5, 0.1, 5.0, 5.0, 0.2), tr()) else {
+        panic!("a folded map must not construct");
+    };
+    let msg = format!("{err}");
+    assert!(msg.contains("folds"), "the fold must be named, got: {msg}");
+}
+
+#[test]
+fn a_near_singular_map_is_rejected_and_names_the_floor() {
+    // One-signed but under the floor: the inverse metric (cofactor / det) would be unbounded.
+    let Err(err) = BlendedMap::new(cfg(5, 0.1, 5.0, 5.0, LAMBDA_NEAR_SINGULAR), tr()) else {
+        panic!("a near-singular map must not construct");
+    };
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("near-singular"),
+        "the floor must be named, got: {msg}"
+    );
+}
+
+#[test]
+fn the_same_fan_constructs_at_admissible_blends() {
+    // The control the two rejections need: the wide fan itself is fine, so the refusals above are
+    // about det J_λ and not about the constructor disliking a large dθ. Both ends of the sweep sit
+    // five or more orders above the floor.
+    for lambda in [0.0, 0.05, 0.9, 1.0] {
+        assert!(
+            BlendedMap::new(cfg(5, 0.1, 5.0, 5.0, lambda), tr()).is_ok(),
+            "the wide fan must construct at λ = {lambda}"
+        );
+    }
+}
+
+#[test]
+fn the_validity_scan_covers_the_closed_domain() {
+    // The near-singular map degenerates at the (ξ, η) = (1, 1) corner, which the metric trains never
+    // sample (`sample_grid` forms ξ = i/nx for i in 0..nx). If the scan tracked only the sampled
+    // lattice this map would construct, and the sampled minimum falls off only as ~1/nx, so refining
+    // would not save it — the rejection has to come from closing the domain. Same verdict at every
+    // level is the observable consequence.
+    for l in [4usize, 5, 6] {
+        assert!(
+            BlendedMap::new(cfg(l, 0.1, 5.0, 5.0, LAMBDA_NEAR_SINGULAR), tr()).is_err(),
+            "the near-singular map must be refused at lx = ly = {l}"
+        );
+    }
+}

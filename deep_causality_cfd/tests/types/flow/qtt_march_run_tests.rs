@@ -526,11 +526,11 @@ fn run_coupled_surfaces_the_provenance_log() {
 }
 
 #[test]
-fn coupled_body_march_publishes_the_wall_heat_flux() {
+fn coupled_body_march_publishes_the_penalization_heat_integral() {
     use deep_causality_cfd::{RecoveryTemperatureStage, body_mask_2d};
 
-    // An immersed body plus a coupling that writes "T_tr": the loop publishes the Brinkman wall
-    // heat-flux integral into the field each step.
+    // An immersed body plus a coupling that writes "T_tr": the loop publishes the Brinkman
+    // penalization heat integral into the field each step.
     let dx = TAU / N as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
     let c = TAU * 0.5;
@@ -560,7 +560,7 @@ fn coupled_body_march_publishes_the_wall_heat_flux() {
 
     let q = pause
         .field()
-        .scalar("wall_heat_flux")
+        .scalar("penalization_heat_integral")
         .expect("wall flux published");
     assert_eq!(q.len(), 1);
     assert!(q[0].is_finite());
@@ -668,4 +668,56 @@ fn composed_coupling_stack_equals_the_hand_written_tuple() {
         dsl.series("final_v").unwrap(),
         hand.series("final_v").unwrap()
     );
+}
+
+#[test]
+fn the_configured_wall_temperature_reaches_the_heat_integral() {
+    use deep_causality_cfd::{RecoveryTemperatureStage, body_mask_2d};
+
+    // `T_w` was hardcoded to zero and absent from the config. Now that it is configurable, the knob
+    // has to move the quantity it defines — the integral is `(1/η)∫χ(T_w − T)dV`, so raising `T_w`
+    // over a fixed field must raise it, by `(1/η)·ΔT_w·∫χ dV`. A setter that changed nothing would
+    // be the same defect as the hardcoded zero, only harder to see.
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(4096).unwrap();
+    let c = TAU * 0.5;
+
+    let run = |t_wall: f64| {
+        let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
+        let cfg = QttMarchConfigBuilder::<f64>::new()
+            .name("t_wall_knob")
+            .grid(L, L, dx, dx)
+            .solver(0.005, 0.05, trunc)
+            .seed_fn(|_, _| (1.0, 0.0))
+            .unwrap()
+            .body(mask, 0.0, 0.0, 0.02, 1.0, 2.0 * TAU * 0.18)
+            .wall_temperature(t_wall)
+            .stop(MarchStop::Fixed(4))
+            .observe(QttObserve::default())
+            .build()
+            .unwrap();
+        let recovery = RecoveryTemperatureStage::new(25.0_f64, 1.4, 250.0, 1004.0);
+        let pause = CfdFlow::march(&cfg)
+            .run_until(
+                recovery,
+                CoupledField::new(Ambient::new(0.01, 0.0, None)),
+                BlackoutTrigger::new(1.0e9),
+                0.01,
+                |_, _| false,
+            )
+            .unwrap();
+        pause
+            .field()
+            .scalar("penalization_heat_integral")
+            .expect("published")[0]
+    };
+
+    let cold = run(0.0);
+    let hot = run(500.0);
+    assert!(
+        hot > cold,
+        "raising T_w must raise the heat integral: T_w=0 gave {cold}, T_w=500 gave {hot}"
+    );
+    // Default stays zero, so every existing case is unmoved by the new knob.
+    assert_eq!(cold, run(0.0));
 }

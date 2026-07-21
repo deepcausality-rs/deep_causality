@@ -147,8 +147,8 @@ pub use crate::solvers::{
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).
 pub use crate::solvers::{
-    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, preserved_drag_fraction,
-    strip_pressure_force, wall_heat_flux,
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed,
+    penalization_heat_integral, preserved_drag_fraction, strip_pressure_force,
 };
 
 // Public API of the Navier–Stokes solver.

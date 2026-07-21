@@ -26,5 +26,5 @@ pub use qtt::{
     EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure, PostShockState, QttImmersed2d,
     QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round, divergence_residual,
     drag_lift, ideal_gas_pressure, ideal_gas_pressure_2d, kinetic_energy, max_bond, max_speed,
-    positivity_floor, preserved_drag_fraction, strip_pressure_force, wall_heat_flux,
+    penalization_heat_integral, positivity_floor, preserved_drag_fraction, strip_pressure_force,
 };

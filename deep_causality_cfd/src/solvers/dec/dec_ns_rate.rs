@@ -86,8 +86,15 @@ pub struct DecNsRate<'m, const D: usize, R: DecNsScalar> {
     /// Open-boundary outflow pressure-reference vertices for the velocity re-entry projection.
     /// Empty on closed domains.
     reference_vertices: alloc::vec::Vec<usize>,
-    /// The per-stage rate constraint set `no_slip ∪ inflow` (the rate is pinned to zero on both).
-    /// Equals `no_slip.edges()` on closed domains, so `project_raw` is bit-identical there.
+    /// Constrained edges supplied by a boundary-zone set through
+    /// `BoundaryZone::collect_constrained_edges`. Empty unless a zone implements that hook — no
+    /// shipped zone does, so every current case is bit-unchanged. The seam exists for
+    /// `aperture-resolved-noslip`, the fragment-accurate cut-cell wall treatment, which is a zone
+    /// that supplies its own constraints rather than accepting the structural set.
+    zone_constrained: alloc::vec::Vec<usize>,
+    /// The per-stage rate constraint set `no_slip ∪ inflow ∪ zone_constrained` (the rate is pinned
+    /// to zero on all three). Equals `no_slip.edges()` on closed domains with no zone-supplied
+    /// constraints, so `project_raw` is bit-identical there.
     rate_constrained: alloc::vec::Vec<usize>,
     /// Opt-in projection warm start. Off by default, so `project_raw` is bit-identical to the
     /// cold path; on, the previous solve's potential (cached in `proj_warm`) seeds the CG, which
@@ -286,6 +293,7 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             no_slip,
             inflow_edges: alloc::vec::Vec::new(),
             reference_vertices: alloc::vec::Vec::new(),
+            zone_constrained: alloc::vec::Vec::new(),
             rate_constrained,
             warm_start: false,
             proj_warm: RefCell::new(None),
@@ -346,10 +354,32 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         self.recompute_rate_constrained();
     }
 
-    /// Recompute the per-stage rate constraint `no_slip ∪ inflow`.
+    /// Attaches the constrained edges a boundary-zone set supplies through
+    /// [`BoundaryZone::collect_constrained_edges`](crate::solvers::dec::boundary::BoundaryZone::collect_constrained_edges).
+    ///
+    /// Held as its own set rather than merged into `no_slip`, so a later `apply_slip` or
+    /// `set_open_boundary` recompute cannot drop it.
+    pub(in crate::solvers::dec) fn set_zone_constrained(&mut self, edges: alloc::vec::Vec<usize>) {
+        let mut edges = edges;
+        edges.sort_unstable();
+        edges.dedup();
+        self.zone_constrained = edges;
+        self.recompute_rate_constrained();
+    }
+
+    /// Recompute the per-stage rate constraint `no_slip ∪ inflow ∪ zone_constrained`.
+    ///
+    /// **Union is the composition rule**, and it is the rule already in force between `no_slip` and
+    /// `inflow`: a constrained edge is one pinned to zero rate, so pinning it twice is idempotent and
+    /// there is no value for the two sources to disagree about. That makes the sets commutative here
+    /// — the only ordering that carries meaning is against `apply_slip`, which *removes* edges from
+    /// `no_slip`. Zone-supplied constraints are folded in after that removal and are not subject to
+    /// it, so an explicitly supplied constraint outranks a structural un-pin: a zone asserting an
+    /// edge is pinned is making a positive claim, where free-slip is a relaxation of a default.
     fn recompute_rate_constrained(&mut self) {
         let mut rate_constrained = self.no_slip.edges().to_vec();
         rate_constrained.extend_from_slice(&self.inflow_edges);
+        rate_constrained.extend_from_slice(&self.zone_constrained);
         rate_constrained.sort_unstable();
         rate_constrained.dedup();
         self.rate_constrained = rate_constrained;

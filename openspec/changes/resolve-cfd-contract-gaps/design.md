@@ -175,6 +175,43 @@ Each step is independently revertible.
   The decisive reason is second-order: it frees `wall_heat_flux` for a real Fourier-law implementation
   when the Gap-2 energy equation lands, rather than leaving the safety-critical name squatted by a
   quantity that is not a flux.
-- **What is the right determinant floor?** D1 requires it relative to the geometric scale; the specific
-  form should be derived and documented rather than chosen, and `qtt_blend_metric`'s measured
-  `min|det J| ≈ 1.5` gives a sense of the margin available.
+- **What is the right determinant floor?** ✅ **Resolved: `1e-6 × (dr · span_y)`.** `det` is an area
+  ratio — `−dr·span_y` in the Cartesian limit, `−r·dr·dθ` in the fitted limit — so the floor is a
+  fraction of that scale and is dimensionally meaningful at any geometry. The shipped sweep measures
+  `min|det J| = 1.506` against a scale of `2.121`, i.e. **5.9 orders of margin**, so no shipped
+  geometry is near it.
+
+  Two things were learned while implementing it that the design had not anticipated:
+
+  1. **A fold is reachable, so the sign check is falsifiable.** The module doc argued that
+     orientation-compatible charts keep `det J_λ` one-signed; that is false for a linear blend, and a
+     parameter sweep found 275 accepted configurations that fold. The doc's reasoning was replaced
+     with a statement of what is checked.
+  2. **The scan had to cover the *closed* domain.** `sample_grid` forms `ξ = i/nx` for `i` in
+     `0..nx`, so it never evaluates `ξ = 1` or `η = 1`. Scanning only the sampled points admitted a
+     map degenerating exactly on the fan's outer boundary — the sampled minimum falls off only as
+     `~1/nx`, so it would not have been caught until `lx ≈ 20`. This was found by trying to write the
+     falsifiability test for the near-singular case, which is the argument for writing it.
+
+- **Does the `qtt_blend_metric` gate agree with the constructor?** ✅ **Resolved: the duplication is
+  gone.** BM-A now constructs a real `BlendedMap` per sweep point and reads `det_margin()`, the
+  shipped scan's own measured `min|det J|` and floor. `jacobian_scan` — a line-for-line copy of the
+  constructor's Jacobian algebra — was deleted.
+
+  Two things were wrong here, one of them mine:
+
+  1. **My claim that collapsing would move BM-B was false.** BM-A went through `jacobian_scan`; BM-B
+     goes through a separate `position()`. They were never coupled. I asserted the coupling without
+     checking it, which is the failure mode this whole audit is about.
+  2. **The study's `span_y` was a different formula from `BlendedMap`'s.** The study used
+     `2·RSHOCK·sin(½dθ)` (fan width at the *standoff* radius); the crate uses `2·(r0+½dr)·sin(½dθ)`
+     (the chord at *mid* radius). They agree at 2.121320 **only because `r0+½dr = 1.5` coincides with
+     `RSHOCK = 1.5`**. The shock standoff is physically independent of the fan geometry, so moving it
+     to 1.6 would have silently pointed both gates at a chart the crate never builds, 6.7% wide of
+     it. This was a live trap, not a stylistic duplication.
+
+  Neither gate's number moved: `min|detJ| = 1.506` and bonds `114 → 107 → 92 → 54 → 5`, identical to
+  before. That is the evidence the copy *did* agree at the shipped geometry — and it can no longer
+  drift from it. BM-A is now falsifiable against the shipped code: inflating `DET_FLOOR_FRACTION`
+  to `1e6` makes it exit 1 naming the constructor's refusal, which was impossible while it measured
+  its own copy.

@@ -247,3 +247,46 @@ fn composed_zones_fold_every_stage_hook() {
     assert!(!refs.is_empty());
     assert!(!slip.is_empty());
 }
+
+#[test]
+fn no_shipped_zone_supplies_constrained_edges() {
+    // Why every existing harness is unmoved by wiring `collect_constrained_edges`: the hook is
+    // reachable but no shipped zone implements it, so the folded set is empty and
+    // `rate_constrained` is byte-identical to before the wiring.
+    //
+    // This is the cheap decisive form of "no harness result moved" for the DEC path — a marched
+    // endpoint from one harness would be weaker evidence and far more expensive. If a zone ever
+    // starts supplying constraints, this fails and the harness baselines genuinely need re-running.
+    let m = wall_manifold();
+    let mut out = Vec::new();
+
+    MovingWall::<2, f64>::new(1, true, [0.5, 0.0])
+        .unwrap()
+        .collect_constrained_edges(&m, &mut out);
+    Inflow::<2, f64>::new(0, false, 1.0)
+        .unwrap()
+        .collect_constrained_edges(&m, &mut out);
+    Outflow::<2>::new(0, true)
+        .unwrap()
+        .collect_constrained_edges(&m, &mut out);
+    SlipWall::<2>::new(1, false)
+        .unwrap()
+        .collect_constrained_edges(&m, &mut out);
+    BoundaryZone::<2, f64>::collect_constrained_edges(
+        &BodyForceZone::new(
+            CausalTensor::new(
+                vec![0.0; m.complex().num_cells(1)],
+                vec![m.complex().num_cells(1)],
+            )
+            .unwrap(),
+        ),
+        &m,
+        &mut out,
+    );
+
+    assert!(
+        out.is_empty(),
+        "a shipped zone now supplies constrained edges ({out:?}); the harness baselines must be \
+         re-derived, because the wiring is no longer inert"
+    );
+}

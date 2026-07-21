@@ -18,7 +18,7 @@
 //! nose (η ≈ radial / across the shock, ξ ≈ transverse). Self-verifying: gates exit non-zero on
 //! regression.
 
-use deep_causality_cfd::quantize_2d;
+use deep_causality_cfd::{BlendedMap, BlendedMapConfig, quantize_2d};
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const PI: f64 = std::f64::consts::PI;
@@ -34,7 +34,14 @@ fn main() {
     let tol = 1e-8;
     let l = 8usize;
     let side = 1usize << l;
-    let span_y = 2.0 * RSHOCK * (DTHETA / 2.0).sin(); // fan width at the standoff radius
+    // The Cartesian-capture chart's transverse width. This MUST be `BlendedMap`'s definition — the
+    // fan chord at *mid radius*, `2·(r0+½dr)·sin(½dθ)` — because both gates below measure the chart
+    // `BlendedMap` builds. It was previously written as `2·RSHOCK·sin(½dθ)`, the fan width at the
+    // *standoff* radius, which is a different quantity that happens to coincide here: `r0+½dr = 1.5`
+    // and `RSHOCK = 1.5`. The shock standoff is a physically independent parameter, so moving it
+    // (say to 1.6) would have silently pointed both gates at a chart the crate never constructs,
+    // 6.7% wide of it.
+    let span_y = 2.0 * (R0 + 0.5 * DR) * (DTHETA / 2.0).sin();
 
     println!(
         "=== QTT blend-metric (Res 4 / D8): body-fit as a valid low-rank free parameter ===\n"
@@ -46,33 +53,68 @@ fn main() {
     let lambdas = [0.0, 0.25, 0.5, 0.75, 1.0];
     let delta = 2.0 * DR / side as f64; // ~2 radial cells: a sharp front
 
-    println!("  lambda | min|detJ|  detJ sign |  shock-field bond");
-    println!("  -------+----------------------+------------------");
+    println!("  lambda | min|detJ|   floor      margin |  shock-field bond");
+    println!("  -------+-----------------------------+------------------");
     let mut min_det_overall = f64::INFINITY;
-    let mut sign_consistent = true;
-    let mut first_sign = 0i32;
+    let mut margin_overall = f64::INFINITY;
+    let mut rejected: Vec<String> = Vec::new();
     let mut bonds: Vec<usize> = Vec::new();
+    let trunc = Truncation::<f64>::by_tol(tol).expect("a positive tolerance is a valid truncation");
     for &lam in &lambdas {
-        let (min_abs_det, sign) = jacobian_scan(side, lam, span_y);
-        min_det_overall = min_det_overall.min(min_abs_det);
-        if first_sign == 0 {
-            first_sign = sign;
-        } else if sign != first_sign {
-            sign_consistent = false;
+        // BM-A runs through the **shipped** constructor. `BlendedMap::new` scans `det J_λ` over the
+        // closed domain and refuses a fold or a near-singular map, so a rejection here *is* the gate
+        // firing; `det_margin` then reports the number that scan measured. The study previously
+        // carried its own copy of the Jacobian algebra, which meant BM-A verified the copy — a green
+        // gate said nothing about the map the crate actually builds.
+        let cfg = BlendedMapConfig::new(l, l, R0, DR, -DTHETA / 2.0, DTHETA, lam);
+        match BlendedMap::new(cfg, trunc) {
+            Ok(map) => {
+                let (min_abs_det, floor) = map.det_margin();
+                min_det_overall = min_det_overall.min(min_abs_det);
+                margin_overall = margin_overall.min(min_abs_det / floor);
+                let bond = shock_field_bond(side, lam, span_y, delta, tol);
+                bonds.push(bond);
+                println!(
+                    "   {lam:>4.2} | {min_abs_det:>9.4}  {floor:>9.2e}  {:>8.1e} | {bond:>6}",
+                    min_abs_det / floor
+                );
+            }
+            Err(e) => {
+                rejected.push(format!("lambda={lam:.2}: {e}"));
+                println!(
+                    "   {lam:>4.2} |            REJECTED BY BlendedMap::new            |      -"
+                );
+            }
         }
-        let bond = shock_field_bond(side, lam, span_y, delta, tol);
-        bonds.push(bond);
-        let signs = if sign >= 0 { "+" } else { "-" };
-        println!("   {lam:>4.2} | {min_abs_det:>10.4}        {signs:>3}    | {bond:>6}");
     }
 
-    let bond_cart = bonds[0];
-    let bond_fit = *bonds.last().unwrap();
+    // BM-A rejections leave `bonds` short, so BM-B has nothing to read. Report the gate failures
+    // rather than indexing into an empty vector — a panic here would exit non-zero for the wrong
+    // reason and bury which gate actually fired.
+    let (bond_cart, bond_fit) = match (bonds.first(), bonds.last()) {
+        (Some(c), Some(f)) => (*c, *f),
+        _ => {
+            eprintln!("\nFAILED GATES:");
+            eprintln!(
+                "  - BM-A: BlendedMap::new refused every sweep point, so BM-B has no bond series \
+                 to judge — {}",
+                rejected.join("; ")
+            );
+            std::process::exit(1);
+        }
+    };
 
-    // Gate BM-A: the blend never folds — det J stays one sign and bounded away from zero across λ.
-    if !sign_consistent || min_det_overall <= 1e-6 {
+    // Gate BM-A: the blend never folds — `det J` stays one sign and bounded away from zero across λ.
+    //
+    // The sign and floor checks live in `BlendedMap::new`, so a rejection above is the failure. The
+    // floor is a fraction of the geometric scale `dr · span_y`, not an absolute constant: `det` is an
+    // area ratio, so an absolute bound would mean different things at different geometries.
+    if !rejected.is_empty() {
         failures.push(format!(
-            "BM-A: blend folds or det J vanishes (min|detJ|={min_det_overall:.2e}, sign_consistent={sign_consistent})"
+            "BM-A: BlendedMap::new refused the blend at {} of {} sweep points — {}",
+            rejected.len(),
+            lambdas.len(),
+            rejected.join("; ")
         ));
     }
 
@@ -87,14 +129,16 @@ fn main() {
 
     println!("\n--- reading ---");
     println!(
-        "  Validity: min|detJ| = {min_det_overall:.3} > 0 with one sign across the whole sweep — the"
+        "  Validity: min|detJ| = {min_det_overall:.3}, which is {margin_overall:.1e}x the floor that"
     );
     println!(
-        "  position-blend of two compatibly-oriented charts does NOT fold. The Res-4 residual holds"
+        "  BlendedMap::new accepts against — the position-blend of two compatibly-oriented charts"
     );
+    println!("  does NOT fold anywhere on this sweep.");
     println!(
-        "  (with a bounded-λ-gradient + positive-Jacobian guard, which here is satisfied by construction)."
+        "  Both numbers come from the shipped constructor's own scan, so the gate measures the map"
     );
+    println!("  the crate builds rather than a copy of its algebra.");
     println!(
         "  Rank dial: bond runs {bond_cart} (λ=0, Cartesian capture) -> {bond_fit} (λ=1, body-fitted),"
     );
@@ -124,38 +168,6 @@ fn position(xi: f64, eta: f64, lam: f64, span_y: f64) -> (f64, f64) {
     let xf = r * theta.cos();
     let yf = r * theta.sin();
     ((1.0 - lam) * xc + lam * xf, (1.0 - lam) * yc + lam * yf)
-}
-
-/// Scan `det J` of `T_λ` over the lattice; return `(min|det J|, sign)`.
-fn jacobian_scan(side: usize, lam: f64, span_y: f64) -> (f64, i32) {
-    let mut min_abs = f64::INFINITY;
-    let mut sign = 0i32;
-    for ix in 0..side {
-        for iy in 0..side {
-            let xi = ix as f64 / side as f64;
-            let eta = iy as f64 / side as f64;
-            let theta = -DTHETA / 2.0 + xi * DTHETA;
-            let r = R0 + eta * DR;
-            // ∂(x,y)/∂(ξ,η) for each chart, blended linearly in λ.
-            // Cartesian: ∂x/∂ξ=0, ∂x/∂η=DR, ∂y/∂ξ=span_y, ∂y/∂η=0.
-            // Fitted:    ∂x/∂ξ=-r·sinθ·Δθ, ∂x/∂η=cosθ·DR, ∂y/∂ξ=r·cosθ·Δθ, ∂y/∂η=sinθ·DR.
-            let dxdxi = (1.0 - lam) * 0.0 + lam * (-r * theta.sin() * DTHETA);
-            let dxdeta = (1.0 - lam) * DR + lam * (theta.cos() * DR);
-            let dydxi = (1.0 - lam) * span_y + lam * (r * theta.cos() * DTHETA);
-            let dydeta = (1.0 - lam) * 0.0 + lam * (theta.sin() * DR);
-            let det = dxdxi * dydeta - dxdeta * dydxi;
-            if det.abs() < min_abs {
-                min_abs = det.abs();
-            }
-            let s = if det >= 0.0 { 1 } else { -1 };
-            if sign == 0 {
-                sign = s;
-            } else if s != sign {
-                sign = 2; // mixed-sign marker (a fold)
-            }
-        }
-    }
-    (min_abs, sign)
 }
 
 /// QTT bond of a fixed physical shock (`tanh` at radius `RSHOCK`) sampled on the `λ`-blended lattice.

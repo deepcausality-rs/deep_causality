@@ -5,7 +5,7 @@
 
 use deep_causality_cfd::{
     QttProjector2d, body_mask_2d, dequantize_2d, divergence_residual, drag_lift, kinetic_energy,
-    max_bond, max_speed, quantize_2d, wall_heat_flux,
+    max_bond, max_speed, penalization_heat_integral, quantize_2d,
 };
 use deep_causality_tensor::{CausalTensor, TensorTrain, Truncation};
 
@@ -146,7 +146,7 @@ fn drag_lift_matches_the_dense_penalization_integral() {
 }
 
 #[test]
-fn wall_heat_flux_responds_to_a_hot_wall() {
+fn penalization_heat_integral_responds_to_a_hot_wall() {
     let dx = TAU / N as f64;
     let trunc = Truncation::<f64>::by_tol(1e-12).unwrap();
     let (cx, cy, r) = (TAU * 0.5, TAU * 0.5, TAU * 0.18);
@@ -155,11 +155,11 @@ fn wall_heat_flux_responds_to_a_hot_wall() {
 
     // Cold flow (T = 0), hot wall (T_w = 1): heat flows into the fluid → Q > 0.
     let temp = quantize_2d(&field(dx, |_, _| 0.0), &trunc).unwrap();
-    let q_hot = wall_heat_flux(&mask, &temp, 1.0, eta, dx, dx).unwrap();
+    let q_hot = penalization_heat_integral(&mask, &temp, 1.0, eta, dx, dx).unwrap();
     assert!(q_hot > 0.0, "hot wall should source heat, got {q_hot}");
 
     // Matched temperature (T_w = 0) → no flux.
-    let q_none = wall_heat_flux(&mask, &temp, 0.0, eta, dx, dx).unwrap();
+    let q_none = penalization_heat_integral(&mask, &temp, 0.0, eta, dx, dx).unwrap();
     assert!(
         q_none.abs() <= 1e-12,
         "no temperature gap should give ~0 flux, got {q_none}"

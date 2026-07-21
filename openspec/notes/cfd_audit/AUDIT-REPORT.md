@@ -32,7 +32,43 @@ computes.
 > | **B-1** Millikan–White reduced mass | **open** — Phase 2 |
 > | **B-2** No CI executes the verification suite | **RESOLVED** |
 > | **B-3** `dec_cylinder_verification` has no gate | **RESOLVED** |
-> | **B-4** `BlendedMap` documents an absent fold check | **open** — Phase 2 |
+> | **B-4** `BlendedMap` documents an absent fold check | **RESOLVED** — Phase 2 change 4 |
+>
+> **Phase 2, change 4 (`resolve-cfd-contract-gaps`) closes items 8, 11 and 15.** What it found
+> beyond this report:
+>
+> - **B-4 was worse than "an absent check".** The module doc argued a fold was impossible — two
+>   orientation-compatible charts, so `det J_λ` keeps one sign. That reasoning is false for a linear
+>   blend: a parameter sweep found **275 accepted configurations that fold**. The claim was not merely
+>   unenforced, it was wrong, and the audit had recorded it as the milder defect.
+> - **The first implementation of the check was insufficient, and the falsifiability test is what
+>   caught it.** Scanning `det` over the lattice the metric trains sample misses `ξ = 1` and `η = 1`;
+>   a map degenerating on the fan's outer boundary passed, and its sampled minimum falls off only as
+>   `~1/nx`, so refinement would not have caught it until `lx ≈ 20`. The scan now covers the closed
+>   domain. This is the concrete return on Phase 1's rule that a gate must be shown to bite.
+> - **Gate BM-A had the magic-number defect the audit catalogued, and a worse one underneath.** The
+>   gate tested `min|detJ| <= 1e-6` — an absolute bound on an area ratio. But it also ran its own
+>   `jacobian_scan`, a line-for-line copy of the constructor's Jacobian algebra, so BM-A verified the
+>   copy: a green gate said nothing about the map the crate builds. BM-A now constructs a real
+>   `BlendedMap` and reads the shipped scan's measured margin; the duplicate scan is deleted.
+>
+>   Underneath that sat a **live trap**. The study defined the chart's transverse width as
+>   `2·RSHOCK·sin(½dθ)` (fan width at the *standoff* radius) where `BlendedMap` uses
+>   `2·(r0+½dr)·sin(½dθ)` (the chord at *mid* radius). Both equal 2.121320 **only because
+>   `r0+½dr = 1.5` happens to coincide with `RSHOCK = 1.5`**. The shock standoff is physically
+>   independent of the fan geometry — moving it to 1.6 would have silently aimed both gates at a
+>   chart the crate never constructs, 6.7% wide of it, with nothing to flag it.
+>
+>   Neither gate's number moved (`min|detJ| = 1.506`; bonds `114 → 5`), which is the evidence the copy
+>   *did* agree at the shipped geometry. BM-A is now falsifiable against shipped code: inflating
+>   `DET_FLOOR_FRACTION` makes it exit 1 naming the constructor's refusal.
+> - **Item 15's hook was one of two documentation gaps, in opposite directions.** `BoundaryZone`
+>   documented five hooks and declared six — `collect_slip_edges` was wired but undocumented, while
+>   `collect_constrained_edges` was documented but unwired. Both are now correct, and a test compares
+>   the declared and folded sets so they cannot drift apart again.
+> - **Item 11's `preserved_drag_fraction` was never at risk.** The audit reasoned the rename was safe
+>   because the quantity is used comparatively; in fact it is computed from the thrust coefficient
+>   (`srp_preserved_drag_fraction_kernel(C_T)`) and never reads the heat observable at all.
 >
 > What Phase 1 changed, and what it found beyond this report:
 >
