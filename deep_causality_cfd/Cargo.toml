@@ -148,6 +148,10 @@ name = "dec_lid_cavity_re1000_verification"
 path = "verification/dec_lid_cavity_re1000_verification/main.rs"
 
 [[example]]
+name = "dec_wall_heat_flux_verification"
+path = "verification/dec_wall_heat_flux_verification/main.rs"
+
+[[example]]
 name = "dec_graded_mms_verification"
 path = "verification/dec_graded_mms_verification/main.rs"
 

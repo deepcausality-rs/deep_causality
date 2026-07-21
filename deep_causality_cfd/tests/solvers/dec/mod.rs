@@ -28,14 +28,15 @@ pub mod inviscid_invariants_tests;
 #[cfg(test)]
 pub mod poiseuille_tests;
 #[cfg(test)]
+pub mod scalar_transport_tests;
+#[cfg(test)]
 pub mod shear_layer_tests;
 #[cfg(test)]
 pub mod slip_wall_tests;
 pub mod spectral_diffusion_tests;
 #[cfg(test)]
 pub mod step_output_tests;
-#[cfg(test)]
-pub mod surface_force_tests;
+mod surface_force_tests;
 #[cfg(test)]
 pub mod taylor_green_2d_tests;
 #[cfg(test)]
@@ -44,5 +45,6 @@ pub mod taylor_green_3d_tests;
 pub mod uncertain_boundary_source_tests;
 #[cfg(all(test, feature = "std"))]
 pub mod uncertain_inflow_tests;
+pub mod wall_heat_flux_tests;
 #[cfg(test)]
 pub mod wrappers_tests;

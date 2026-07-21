@@ -48,6 +48,7 @@ env:
   FAST_HARNESSES: >-
     mms_taylor_green_verification
     dec_graded_mms_verification
+    dec_wall_heat_flux_verification
     dec_taylor_green_re1600_verification
     qtt_taylor_green_verification
     qtt_park2t_blackout

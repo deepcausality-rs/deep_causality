@@ -80,7 +80,32 @@ where
 /// integral over the masked body, carrying no gradient, no conductivity and no wall normal. Fourier's
 /// law is `q = −k·∂T/∂n`, a per-area quantity on the wall surface, and no scaling converts a volume
 /// integral into one. The name says `integral` for that reason, and `wall_heat_flux` is deliberately
-/// left free for an actual Fourier-law implementation when the Gap-2 reacting energy equation lands.
+/// left free for an actual Fourier-law implementation.
+///
+/// **What blocks that implementation is geometry, not machinery.** Gradient operators, a diffusivity
+/// and the mask are all present, so `−k ∫ ∇T·∇χ dV` (the smoothed-mask surface-delta form) could be
+/// written today. It would not mean anything: volume penalization has no wall surface, only a mask
+/// smoothed over `SMOOTH_CELLS·dx`. For the `tanh` mask this crate uses, `|∇χ|` peaks at `1/(2w)` and
+/// `T` relaxes across the same width, so the result scales as `k·ΔT/w` — inversely with a purely
+/// numerical parameter. The audit already measured the *drag* moving 6.1x across that sweep, and drag
+/// is a volume integral, which averages; a wall-normal derivative amplifies instead. The result would
+/// be more blur-governed than the drag while carrying a name that invites an absolute reading.
+///
+/// Spectral differentiation does not rescue it either: the mask transitions over ~2 grid points, near
+/// Nyquist, so an FFT-based gradient rings at the interface rather than sharpening it. Computing wall
+/// fluxes from the penalization source — what this function does — is the standard volume-penalization
+/// answer precisely because the interface gradient is unreliable on a smeared mask.
+///
+/// A genuine `wall_heat_flux` belongs on the **DEC cut-cell path**, where the surface is real:
+/// `CutFaceFragment` carries a `(D−1)`-area and an outward unit normal, and
+/// [`viscous_surface_force`](crate::solvers::dec::surface_force) already integrates
+/// `∮ μ(∇u+∇uᵀ)·n dA` over those fragments. `q = −k ∮ ∇T·n dA` is the same contraction with a scalar
+/// in place of the tensor, so the diagnostic is close to a transcription of that one.
+///
+/// **The one missing part is a temperature field on that path** — the DEC solver marches velocity
+/// only and has no scalar transport. Supplying it (advection–diffusion of `T`, with a Dirichlet wall
+/// temperature on the cut fragments) is the prerequisite, not Gap-2 and not the cut geometry. Gap-2
+/// supplies a *better* temperature field (real `k(T)`, chemistry); it is not what unblocks a flux.
 ///
 /// The quantity is still useful as it stands: it is the thermal analogue of the penalization force
 /// integral, and same-configuration ratios built on it (as [`preserved_drag_fraction`] does for
