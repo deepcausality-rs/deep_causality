@@ -1,0 +1,82 @@
+website/cfd/src/content/blueprints/en/sweep-a-parameter.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-66
+website/cfd/src/pages/why/index.astro
+  s_2dc68b59102c60::t_a228b976477072 313
+  s_2dc68b59102c60::t_0c8f6e3d4e5e03 49,53
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_a21a4a3e896ee3 185-186,188-189,191-199,201-205
+  s_f2afaa4ec55b4b::t_df2ff412e4e74c 10-12,15,17-21,28-30,33-35,41-42,53,55-57,59-98,113-114,116-117,128,145,156-158,162,164-166,170,181-183,207-209,211-216,220,229-241,249-250,252-253,255,257,265,280,283-285,287-314,321,323,325-326,331-342,350-351,355,371-374,383-387,393-394,396-402,411-414,416-418,420-421,424-428,430,433-436,438-439,442-443,449-450,454-456,465-467
+website/cfd/src/content/blueprints/en/couple-multiphysics.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-222
+website/cfd/src/pages/blueprints/index.astro
+  s_2dc68b59102c60::t_d0308d6de952fe 21-25
+  s_2dc68b59102c60::t_a228b976477072 7,15-20,32
+  s_2dc68b59102c60::t_d53633a6a9b808 9-11,30
+openspec/notes/cfd_audit/RUN-LEDGER.md
+  s_f2afaa4ec55b4b::t_07e3068a833e09 18,34,36,38,40-47
+website/cfd/src/components/nav/SiteHeader.astro
+  s_2dc68b59102c60::t_a228b976477072 16
+website/cfd/src/consts.ts
+  s_2dc68b59102c60::t_a228b976477072 10
+website/cfd/src/content/blueprints/en/gate-against-a-placard.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-76
+website/cfd/src/content.config.ts
+  s_2dc68b59102c60::t_d53633a6a9b808 23,25
+  s_2dc68b59102c60::t_a228b976477072 15-16,53
+website/cfd/src/layouts/BaseLayout.astro
+  s_2dc68b59102c60::t_a228b976477072 82
+MODULE.bazel
+  s_2dc68b59102c60::t_17b9c25f805ce0 130
+website/cfd/README.md
+  s_2dc68b59102c60::t_c4e12f917bf6fb 84
+  s_2dc68b59102c60::t_8e79ef4d8f0b18 69
+website/cfd/src/pages/404.astro
+  s_2dc68b59102c60::t_a228b976477072 23
+website/cfd/src/components/home/Hero.astro
+  s_2dc68b59102c60::t_a228b976477072 35-36
+website/cfd/src/content/blueprints/en/couple-navigation-to-physics.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-108
+website/cfd/src/content/blueprints/en/handle-regime-change.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-104
+website/cfd/src/content/blueprints/en/install.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-70
+website/README.md
+  s_2dc68b59102c60::t_17b9c25f805ce0 15,34
+website/cfd/src/content/blueprints/en/fork-a-running-simulation.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-151
+openspec/notes/cfd_audit/README.md
+  s_f2afaa4ec55b4b::t_f20d2b97df232e 1-61
+website/cfd/astro.config.mjs
+  s_2dc68b59102c60::t_a228b976477072 26
+website/cfd/src/pages/blueprints/[...slug].astro
+  s_2dc68b59102c60::t_a228b976477072 8-31
+  s_2dc68b59102c60::t_d53633a6a9b808 32
+website/cfd/src/components/docs/DocDetail.astro
+  s_2dc68b59102c60::t_d53633a6a9b808 3
+website/cfd/src/content/blueprints/en/pick-a-solver.mdx
+  s_2dc68b59102c60::t_a228b976477072 1-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2e3a617e4447b79e9afae415b2622b71cba1e8f0",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
