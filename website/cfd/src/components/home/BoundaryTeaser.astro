@@ -49,11 +49,19 @@ const refuted = boundaries.filter((b) => b.refuted).slice(0, 3);
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--space-4);
-    align-items: start;
+    /* Stretch, not start: the three cards share one bottom edge, and the
+       study-path footer pins to it, so the row reads as one instrument. */
+    align-items: stretch;
   }
   @media (min-width: 900px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
-  .bcard { padding: var(--space-5); }
+  .bcard {
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .bcard:hover { border-color: var(--line-2); }
   .bkind {
     font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
@@ -72,14 +80,26 @@ const refuted = boundaries.filter((b) => b.refuted).slice(0, 3);
     color: var(--fg-2);
     margin-right: var(--space-2);
   }
-  .bnums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .bnums {
+    list-style: none;
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    flex: 1 0 auto;
+  }
   .bnums li {
     color: var(--fg-1);
     padding-left: var(--space-3);
     border-left: 1px solid var(--line-2);
     font-size: var(--t-mono-sm);
   }
-  .bstudy { margin: 0; }
+  .bstudy {
+    margin: auto 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+  }
   .bstudy code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
 
   .more { display: inline-block; margin-top: var(--space-6); font-size: var(--t-body-sm); border-bottom: none; }
