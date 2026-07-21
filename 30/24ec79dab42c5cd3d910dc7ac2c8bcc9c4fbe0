@@ -1,0 +1,60 @@
+website/docs/pnpm-workspace.yaml
+  s_f0a6cfc98ba452::t_d9a643ffd933f9 5-6,9
+  s_f2afaa4ec55b4b::t_22d69df748d6e2 7-8
+  s_f0a6cfc98ba452::t_6661867f6e1893 21-33
+website/docs/package.json
+  s_f0a6cfc98ba452::t_87eb2b6b68292e 18
+website/web/package.json
+  s_f0a6cfc98ba452::t_87eb2b6b68292e 15,17,25
+website/cfd/package.json
+  s_f0a6cfc98ba452::t_87eb2b6b68292e 16,18,23
+website/cfd/pnpm-workspace.yaml
+  s_f0a6cfc98ba452::t_08d87b4d340c18 7-8
+  s_f0a6cfc98ba452::t_d9a643ffd933f9 5-6,9
+  s_f0a6cfc98ba452::t_fc392924e463df 21-33
+website/README.md
+  s_f0a6cfc98ba452::t_0159ad2333e819 17
+  s_f0a6cfc98ba452::t_81fdbaafe1b663 5-13,15,18-20,34-38,41-46,56-58,63-87,91
+  s_f0a6cfc98ba452::t_d0ba09fdb980f8 16
+README.md
+  s_f0a6cfc98ba452::t_1689e4690e1a4d 15
+  s_f0a6cfc98ba452::t_8e6d5dfde567f5 16
+website/cfd/README.md
+  s_f0a6cfc98ba452::t_0159ad2333e819 29
+  s_f0a6cfc98ba452::t_afb64caba3223f 96-97,99-101
+website/web/pnpm-workspace.yaml
+  s_f0a6cfc98ba452::t_d9a643ffd933f9 5-9
+  s_f0a6cfc98ba452::t_34f579563c9736 21-33
+website/cfd/src/styles/global.css
+  s_f0a6cfc98ba452::t_0159ad2333e819 8,13
+website/cfd/pnpm-lock.yaml
+  s_f2afaa4ec55b4b::t_65230da2a35d12 7-9,15-16,21-22,31-32,135,246-247,252-253,258-259,264-265,270-271,1086-1087,1172-1175,1723-1724,1743-1744,2340-2341,2345-2346,2350,2555,2561,2660,2664,2666,2669,2672,2675,2678,3318,3334,3351,3465-3466,4362,4367,4382,5053,5055-5059,5061,5064,5067,5070
+website/docs/pnpm-lock.yaml
+  s_f2afaa4ec55b4b::t_f5367fe5c817cd 7-9,19,21-22,39-40,45-46,51-52,58-59,65-66,72-73,79-80,84-85,90-91,96-97,100-101,125-126,132,935-936,1020-1022,1643-1644,2315,2318,2321,2324,2327,2330,2333,2341,2344,2347,2349-2357,2362,2364,2429,2434,2437,2443,2455,2469,2471-2472,2478-2479,3147,3149,3153,3155,3157,3169,3186,3304,4313
+website/web/pnpm-lock.yaml
+  s_f0a6cfc98ba452::t_4c64e784c3142f 7-9,15-16,21-22,25,40-41,54-55,60-61,66-67,73-74,80-81,87-88,94-95,99-100,105-106,111-112,115-116,140-141,143-144,147,264-265,270-271,276-277,282-283,288-289,1235-1236,1329-1332,2095-2096,2115-2116,2737-2738,2742-2743,2747,2835,2838,2841,2844,2847,2850,2853,2861,2864,2867,2869-2877,2882,2884,2949,2954,2957,2963,2975,3066,3070,3072,3075,3078,3081,3084,3439,3844,3846,3852,3854,3856,3868,3885,4003-4004,5154,5159,5174,5877,5879-5883,5885,5888,5891,5894
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3024ec79dab42c5cd3d910dc7ac2c8bcc9c4fbe0",
+  "prompts": {},
+  "sessions": {
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
