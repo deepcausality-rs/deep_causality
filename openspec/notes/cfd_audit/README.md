@@ -7,9 +7,36 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Audit of `deep_causality_cfd` for avionics **R&D** certification, 2026-07-21.
 
-**Verdict: not yet certifiable.** The numerical core is sound — Rankine–Hugoniot exact, Ghia cavity
-matched to four decimal places, Sod against the exact Riemann solution. What blocks certification is the
-assurance layer: many advertised gates cannot fail or cannot discriminate, and none of them run in CI.
+**Verdict: not yet certifiable. Phase 1 complete; Phase 2 is next.** The numerical core is sound —
+Rankine–Hugoniot exact, Ghia cavity matched to four decimal places, Sod against the exact Riemann
+solution. What blocked certification was the assurance layer: many advertised gates could not fail or
+could not discriminate, and none of them ran in CI.
+
+## Remediation status
+
+**Phase 1 is implemented and archived** as
+[`2026-07-21-make-cfd-evidence-enforceable`](../../changes/archive/2026-07-21-make-cfd-evidence-enforceable/),
+43/43 tasks, with its four capability specs synced into `openspec/specs/`.
+
+| Blocker | Status |
+|---|---|
+| B-1 Millikan–White reduced mass mislabelled | open — **Phase 2** |
+| B-2 No CI executes the verification suite | **resolved** |
+| B-3 `dec_cylinder_verification` has no gate | **resolved** |
+| B-4 `BlendedMap` documents an absent fold check | open — **Phase 2** |
+
+| | Before | After Phase 1 |
+|---|---|---|
+| CI executes the verification suite | no | 9 per PR, 4 nightly |
+| Harnesses with no gate at all | 3 | 0 |
+| Gate lines declaring an evidence class | 0 | 38 / 38 |
+| Baselines carrying a verdict | 6 / 12 | 13 / 13 |
+| Unit tests | 813 | 828 |
+
+Phase 1 also **found three things this report missed**, all recorded in the report itself: two further
+ungated harnesses beyond B-3, six baselines with no verdict rather than one truncated, and a new
+physics finding from a gate that did not previously exist (§5b). It also **refuted one finding** —
+the energy-budget gate is not a tautology (§5), and the correct action was to change nothing.
 
 ## Read in this order
 
@@ -72,5 +99,17 @@ recorded as overturned rather than quietly dropped.
 
 ## Next step
 
-`ACTION-LIST.md` plus `AUDIT-REPORT.md` §9 are intended to be converted into a follow-up OpenSpec change
-and implemented as a dedicated remediation project.
+**Phase 2 — close the physics defects** (`AUDIT-REPORT.md` §9, items 7–15). Propose it the same way
+Phase 1 was proposed, drawing its scope from §9 and its per-finding evidence from `ACTION-LIST.md`.
+
+Two things make Phase 2 easier than Phase 1 was:
+
+- **Item 10 already has a failing acceptance test.** `qtt_cylinder_verification` fails nightly on
+  exactly the Brinkman-envelope condition item 10 describes; the fix is done when its η ladder
+  converges. No new harness is needed.
+- **Every other item is now detectable.** Phase 1's job was to make the evidence layer capable of
+  catching these; a Phase-2 fix that regresses will be caught by a gate that can fail.
+
+Item 7 (`REDUCED_MASS_AMU`) is the one to sequence first and carefully: correcting it likely *removes*
+the headline RAM-C agreement rather than preserving it, and the report is explicit that the gates must
+be re-derived from the corrected physics rather than re-tuned to restore the old number.

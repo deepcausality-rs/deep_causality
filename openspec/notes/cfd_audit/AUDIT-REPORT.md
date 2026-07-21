@@ -11,15 +11,45 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: NOT YET CERTIFIABLE. Remediation required.**
+> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 outstanding.**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
 > decimal places, and Rankine–Hugoniot relations exact to displayed precision.
 >
-> What blocks certification is the **assurance layer**, not the mathematics: a large fraction of the
-> gates advertised as proving the mathematics cannot fail or cannot discriminate, and none of them run
-> in CI.
+> What blocked certification was the **assurance layer**, not the mathematics: a large fraction of the
+> gates advertised as proving the mathematics could not fail or could not discriminate, and none of them
+> ran in CI.
+
+> ### Remediation status — updated 2026-07-21
+>
+> **Phase 1 is implemented and archived** as
+> [`openspec/changes/archive/2026-07-21-make-cfd-evidence-enforceable/`](../../changes/archive/2026-07-21-make-cfd-evidence-enforceable/),
+> 43/43 tasks. Its four capability specs are synced into `openspec/specs/`.
+>
+> | Blocker | Status |
+> |---|---|
+> | **B-1** Millikan–White reduced mass | **open** — Phase 2 |
+> | **B-2** No CI executes the verification suite | **RESOLVED** |
+> | **B-3** `dec_cylinder_verification` has no gate | **RESOLVED** |
+> | **B-4** `BlendedMap` documents an absent fold check | **open** — Phase 2 |
+>
+> What Phase 1 changed, and what it found beyond this report:
+>
+> - CI now runs the suite: nine fast harnesses per PR (12.7 s), four nightly, with a completeness
+>   check so a new harness cannot escape both lists.
+> - **Two further instances of B-3 surfaced.** `mms_taylor_green_verification` had only a setup-error
+>   exit and never checked its measured residual; `dec_graded_mms_verification` had **zero**
+>   `process::exit` calls at all. Both were on the per-PR list — CI would have run them every PR and
+>   learned nothing. Both now gate against their analytic references.
+> - Seven unfalsifiable gates repaired, each demonstrated failing by fault injection rather than
+>   asserted. Every gate now carries a `[reference]` / `[tripwire]` evidence class: **38 gate lines,
+>   0 unlabelled.**
+> - **Baselines were worse than §3.2 reported.** Auditing for truncation found only the lid cavity
+>   broken; the stricter "carries a verdict" check found **6 of 12** baselines carried none. All 13
+>   harnesses now have a baseline and every one carries a verdict.
+> - **One new physics finding, from a gate that did not previously exist** — see §5b.
+> - **One finding in this report is refuted** — see §5.
 
 ---
 
@@ -289,6 +319,47 @@ same file); the `.expect` form is the minority. Reframe as crate-wide policy, no
 **The bond-convergence gate is "circular."** Misclassified — it can fail; the bond-4 row (24.05 vs 23.76)
 shows the quantity is genuinely bond-sensitive. It is a *weak* gate, not a tautological one.
 
+**The energy-budget gate is a tautology.** *(Overturned during Phase 1 implementation, 2026-07-21.)*
+**Refuted — no change made.** The finding claimed the skew-symmetrisation makes
+`tests/solvers/dec/energy_budget_tests.rs:141`'s asserted quantity algebraically zero for every input.
+It does not: `energy_budget` computes `convective = −⟨u, Cu⟩_M` from the **actual operator output**,
+not from a formula that is zero for any `C`. Tested by flipping the adjoint sign in
+`fill_convective_skew_fused` so the operator is no longer skew — the assert fails with convective power
+**0.0338** against ~0. The gate is a genuine guard that the shipped convective operator remains
+skew-symmetric, which is the discrete analogue of convection redistributing but not creating kinetic
+energy. The auditor conflated *"zero given the correct operator"* with *"zero regardless of the
+operator"*; only the latter would be a tautology. This was the only Phase-1 item where the correct
+action was to change nothing.
+
+---
+
+## 5b. New finding, from a gate that did not previously exist
+
+*Added 2026-07-21 during Phase 1 implementation.*
+
+Re-founding the `qtt_cylinder_verification` gate set (§4b) added an η ladder and a mask-smoothing
+ladder. **Both fail**, and the failure is a real measurement about the configuration:
+
+| Ladder | Measured `C_d` | Verdict |
+|---|---|---|
+| η: 0.128 → 0.008 | 17.39, 24.02, 26.25, 23.76, 21.40 | rises, peaks, falls — **no η→0 limit** |
+| smoothing: 0.5 → 4 cells | 7.70, 12.33, 23.76, 35.81, 47.27 | **6.1×** on a purely numerical parameter |
+
+The η→0 limit is what licenses calling the penalization integral a drag at all (Angot, Bruneau &
+Fabrie 1999, `O(η^{3/4})`). Without it, `C_d ≈ 23.8` is a property of this configuration's blur width,
+not of a cylinder. Root cause is this report's own §4b finding: the physical Brinkman layer
+`√(ην) = 0.144·dx` is ~7× thinner than a cell, and `η ≥ dx²/ν = 0.771` is violated 48×, so the grid
+resolves the smoothing skirt rather than the penalization layer.
+
+**No bound was widened.** Per owner decision the gate is kept and the harness moved to the nightly
+cadence, so a known-open physics finding does not block merges; its committed `baseline.txt` records
+`exit 1` with both `NOT CONVERGING` verdicts rather than a stale passing artifact. Documented under
+`KNOWN-FAILING` in `.github/workflows/cfd_verification.yml` and routed to §9 Phase 2 item 10.
+
+This is the clearest vindication of the audit's premise: the harness passed for years while gating
+three things — no-slip (provably invariant across the whole smoothing sweep), bond convergence (bound
+eleven orders above the measurement), and `0 < C_d < 100` — none of which constrained the drag.
+
 ---
 
 ## 6. Production readiness ranking
@@ -377,25 +448,48 @@ Three structural observations:
 
 ## 9. Path to certification
 
-**Phase 1 — Make the evidence bite (highest value, lowest effort)**
-1. Add CI execution of the verification suite (fast on PR, slow nightly). — **B-2**
-2. Add a real gate to `dec_cylinder_verification`. — **B-3**
-3. Remove or repair every gate that cannot fail: the `qtt_park2t_blackout` gates (ii) and (iv), the TG
-   convection-amplitude gate, the weather "table integrity" gate, the corridor "fine refines coarse"
-   gate, `qtt_rank_dynamic` G2, the MMS `continuity_error` gate, and the energy-budget CI gate.
-4. Re-found the QTT cylinder gate set so something constrains drag: add η and smoothing-width ladders as
-   first-class gates, and tighten `CONVERGENCE_BOUND` to the phenomenon's scale. — §4b
-5. Audit every gate bound for back-fitting; relabel any bound pinned from its own measurement as a
-   **regression test**, in code and in `verification/README.md`.
-6. Regenerate the truncated lid-cavity `baseline.txt`.
+**Phase 1 — Make the evidence bite (highest value, lowest effort) — ✅ COMPLETE (2026-07-21)**
 
-**Phase 2 — Close the physics defects**
+Implemented and archived as `2026-07-21-make-cfd-evidence-enforceable`, 43/43 tasks; four capability
+specs synced into `openspec/specs/`.
+
+1. ✅ Add CI execution of the verification suite (fast on PR, slow nightly). — **B-2 resolved.**
+   `.github/workflows/cfd_verification.yml`: 9 fast per PR (12.7 s), 4 nightly, plus a
+   `verification-suite-complete` job that fails if a declared harness is in neither list.
+2. ✅ Add a real gate to `dec_cylinder_verification`. — **B-3 resolved.** Four gates; a solver error
+   now exits 1 instead of reporting `St`/`C_d` from the truncated series.
+   **Two further instances found:** `mms_taylor_green_verification` (setup-error exit only, residual
+   never checked) and `dec_graded_mms_verification` (**zero** `process::exit` calls). Both now gate.
+3. ✅ Remove or repair every gate that cannot fail — seven repaired, each demonstrated failing by fault
+   injection. **Exception: the energy-budget gate was refuted, not repaired** (§5) — it genuinely
+   guards operator skew-symmetry.
+4. ✅ Re-found the QTT cylinder gate set. `CONVERGENCE_BOUND` tightened `0.10 → 1e-6`.
+   **Both new ladders fail** — a real finding, not a defect in the change; see §5b.
+5. ✅ Audit every gate bound for back-fitting; relabel pinned bounds. Implemented as a two-value
+   `EvidenceClass` (`reference` / `tripwire`) carried at the call site and rendered in output —
+   **38 gate lines, 0 unlabelled** — plus convention sections in `verification/README.md`.
+6. ✅ Regenerate the truncated lid-cavity `baseline.txt`. **Scope was larger than this item assumed:**
+   the stricter "carries a verdict" check found **6 of 12** baselines carried none (stdout-only capture,
+   or predating their gates). All 13 harnesses now have a baseline, all carrying a verdict.
+
+*Docs corrected in passing:* the crate README's "validate … against RAM-C II flight data" is now an
+order-of-magnitude framing naming the ±0.70-decade band as pinned; the lid-cavity summary row now
+reports the 65² default (RMSE **0.0617**, primary vortex matching Ghia to 1e-4) instead of the coarse
+33² trend rung that understated the solver by more than 2×.
+
+**Phase 2 — Close the physics defects — ⬅ NEXT**
+
+Phase 1 established that these are now *detectable*: item 10's condition is already failing a gate
+nightly. Nothing here is blocked on further analysis.
+
 7. Resolve `REDUCED_MASS_AMU` at both sites and re-baseline the RAM-C chain and the three examples. — **B-1**
 8. Implement the fold/singularity check `BlendedMap` documents; guard ÷det J. — **B-4**
 9. Scale ESKF `Q` by `dt`; guard the innovation covariance and validate measurement variance; add a
    horizon-invariance test; fix `correct_position` attitude handling. — §4b
 10. Resolve the Brinkman envelope: choose η from a wall-error target, document the `η ≥ dx²/ν` resolution
-    constraint, and state that it is currently violated 48×. — §4b
+    constraint, and state that it is currently violated 48×. — §4b, §5b.
+    **This is now the nightly red build** — `qtt_cylinder_verification` fails on exactly this condition,
+    so the fix has a ready-made acceptance test: the η ladder must converge.
 11. Rename or re-derive `wall_heat_flux`; make `t_wall` configurable. — §4b
 12. Reject non-positive pressure in `marcher_2d` instead of flooring it only for the wave speed.
 13. Add numerical-envelope validation to the QTT constructors, matching the DEC family.

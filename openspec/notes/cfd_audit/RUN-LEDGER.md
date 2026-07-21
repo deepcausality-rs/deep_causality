@@ -7,6 +7,29 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Every verification harness, study and avionics example was built in `--release` and executed.
 
+> **This ledger is the pre-remediation record (2026-07-21, before Phase 1).** It is kept as measured;
+> the post-Phase-1 state is summarised below and is materially different. In particular the gate
+> counts here are what made blocker B-3 visible — three harnesses emitted no gate marker at all.
+
+## Post-remediation state (after Phase 1)
+
+| | This ledger (before) | After Phase 1 |
+|---|---|---|
+| Harnesses executed by CI | **0** | 9 per PR, 4 nightly |
+| Harnesses with no gate at all | 3 (`dec_cylinder`, `mms_taylor_green`, `dec_graded_mms`) | 0 |
+| Gate lines across the PR suite | — | 38, all evidence-classed |
+| Harnesses exiting non-zero | 0 / 13 | 1 / 13 — `qtt_cylinder`, **known-failing by design** |
+| Baselines carrying a verdict | 6 / 12 | 13 / 13 |
+| PR-suite wall-clock (uncontended) | — | 12.7 s |
+
+The single non-zero exit is not a regression: `qtt_cylinder_verification` gained η and mask-smoothing
+ladders that measure a real non-convergence in the Brinkman configuration (audit report §5b). It runs
+nightly and is routed to Phase 2.
+
+**Every "exit 0" in the tables below should be read against that.** At the time of this ledger a
+zero exit meant only that the program ran — several came from gates that could not fail, and one
+harness exited 0 even after a solver error.
+
 > **Timings are not comparable to the README.** These runs executed while 16 audit agents were
 > running concurrently on the same machine. Contention inflates wall-clock substantially
 > (the lid cavity ran 1407 s against a documented ~28 s at a different grid). Exit codes and

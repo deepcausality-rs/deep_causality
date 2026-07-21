@@ -5,6 +5,13 @@ they remain visible in the per-module reports for traceability).
 
 Ordered by severity. `ref` links to the detailed entry in the module report.
 
+> **Status (2026-07-21): Phase 1 items are done.** This list is kept as generated, at
+> pre-remediation state, so it stays comparable to the module reports. For what has been closed see
+> the remediation table in [`AUDIT-REPORT.md`](AUDIT-REPORT.md) — blockers **B-2** and **B-3** are
+> resolved, the seven unfalsifiable gates are repaired, and every gate bound now declares an evidence
+> class. **B-1** and **B-4** and the Phase-2 majors remain open. One item here was later **refuted**
+> and correctly required no change: the energy-budget gate (audit report §5).
+
 ## CRITICAL (4)
 
 | ref | axis | location | action | verdict |

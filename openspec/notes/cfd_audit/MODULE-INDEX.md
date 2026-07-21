@@ -2,6 +2,13 @@
 
 Modules reported so far: **16**.
 
+> **Readiness below is pre-remediation (2026-07-21, before Phase 1).** Phase 1 addressed the
+> *evidence* layer, not the physics, so the two `not-ready` physics modules (plasma/blackout,
+> navigation) are unchanged pending Phase 2. The verification-harness and QTT-immersed rows have
+> materially better *gating* now, but QTT-immersed stays `not-ready`: its new ladders demonstrate the
+> reported drag has no limit under either parameter (audit report §5b). See the remediation table in
+> [`AUDIT-REPORT.md`](AUDIT-REPORT.md).
+
 | Module | Readiness | Raised | Surviving | Critical | Major | Report |
 |---|---|---|---|---|---|---|
 | deep_causality_cfd/verification/ — all 13 verification programs + veri | `needs-work` | 33 | 33 | 1 | 9 | [link](modules/deep-causality-cfd-verification-all-13-verification-programs.md) |
