@@ -1,0 +1,44 @@
+openspec/changes/make-cfd-evidence-enforceable/specs/park2t-blackout-validation/spec.md
+  s_f2afaa4ec55b4b::t_6da79be4ac8620 1-47
+openspec/changes/make-cfd-evidence-enforceable/tasks.md
+  s_f2afaa4ec55b4b::t_e188e2e92b840f 6-10
+  s_f2afaa4ec55b4b::t_d07641e037f9a9 51-52
+  s_f2afaa4ec55b4b::t_7d64b9d83d0a10 30
+  s_f2afaa4ec55b4b::t_7a9a1ee596415f 14-18
+  s_f2afaa4ec55b4b::t_7fd950915e8114 1-5,11-13,19-25,36-41,48-50,53-73
+  s_f2afaa4ec55b4b::t_93efd918e122c0 27-29
+  s_f2afaa4ec55b4b::t_fe403c625564d7 26
+  s_f2afaa4ec55b4b::t_dac9feb207bb92 31-35
+  s_f2afaa4ec55b4b::t_8a6171d7d15412 42-47
+openspec/changes/make-cfd-evidence-enforceable/design.md
+  s_f2afaa4ec55b4b::t_6d3e529462bcc0 1-191
+openspec/changes/make-cfd-evidence-enforceable/specs/verification-gate-integrity/spec.md
+  s_f2afaa4ec55b4b::t_e68501227dd5a2 1-4,11-111
+  s_f2afaa4ec55b4b::t_75d2241e2495d7 5-10
+openspec/changes/make-cfd-evidence-enforceable/baseline.md
+  s_f2afaa4ec55b4b::t_b6f6dbde35fdbe 1-55
+openspec/changes/make-cfd-evidence-enforceable/specs/qtt-immersed-body/spec.md
+  s_f2afaa4ec55b4b::t_9a19e296c75930 1-56
+openspec/changes/make-cfd-evidence-enforceable/specs/dec-ns-validation/spec.md
+  s_f2afaa4ec55b4b::t_4906e81f51c6d0 1-77
+openspec/changes/make-cfd-evidence-enforceable/proposal.md
+  s_f2afaa4ec55b4b::t_b751b212e60a4b 1-107
+openspec/changes/make-cfd-evidence-enforceable/.openspec.yaml
+  s_f2afaa4ec55b4b::t_170a4cbdf0c13d 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f701d6e0c078b40adacb1b2ea1fd926f1ed4767c",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
