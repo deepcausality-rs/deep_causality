@@ -6,8 +6,8 @@ Modules reported so far: **16**.
 |---|---|---|---|---|---|---|
 | deep_causality_cfd/verification/ — all 13 verification programs + veri | `needs-work` | 33 | 33 | 1 | 9 | [link](modules/deep-causality-cfd-verification-all-13-verification-programs.md) |
 | deep_causality_cfd/studies/ — all 14 study programs, the studies READM | `needs-work` | 30 | 29 | 0 | 12 | [link](modules/deep-causality-cfd-studies-all-14-study-programs-the-studies.md) |
-| deep_causality_cfd — breadth sweep across src/, verification/, studies | `needs-work` | 21 | 21 | 1 | 6 | [link](modules/deep-causality-cfd-breadth-sweep-across-src-verification-stu.md) |
-| deep_causality_cfd — QTT incompressible / immersed-body solvers and te | `not-ready` | 20 | 20 | 5 | 10 | [link](modules/deep-causality-cfd-qtt-incompressible-immersed-body-solvers-.md) |
+| deep_causality_cfd — breadth sweep across src/, verification/, studies | `needs-work` | 21 | 20 | 0 | 4 | [link](modules/deep-causality-cfd-breadth-sweep-across-src-verification-stu.md) |
+| deep_causality_cfd — QTT incompressible / immersed-body solvers and te | `not-ready` | 20 | 19 | 0 | 8 | [link](modules/deep-causality-cfd-qtt-incompressible-immersed-body-solvers-.md) |
 | examples/avionics_examples/cfd/ — engineer-facing CFD demonstrations ( | `needs-work` | 19 | 19 | 0 | 3 | [link](modules/examples-avionics-examples-cfd-engineer-facing-cfd-demonstra.md) |
 | deep_causality_cfd — GNSS-denial navigation and estimation layer (src/ | `not-ready` | 18 | 18 | 0 | 4 | [link](modules/deep-causality-cfd-gnss-denial-navigation-and-estimation-lay.md) |
 | deep_causality_cfd :: src/coordinate/* + src/tensor_bridge/* (coordina | `needs-work` | 17 | 17 | 1 | 4 | [link](modules/deep-causality-cfd-src-coordinate-src-tensor-bridge-coordina.md) |

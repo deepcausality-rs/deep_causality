@@ -35,7 +35,7 @@ A harness with 0 gates emits no marker — see the audit report, blocker B-3.
 
 **Totals:** 13 programs, 0 non-zero exits, 16 PASS markers, 0 FAIL markers.
 
-## Studies (4)
+## Studies (9)
 
 | Program | Exit | Wall-clock (s, contended) | `[PASS]` | `[FAIL]` |
 |---|---|---|---|---|
@@ -43,8 +43,13 @@ A harness with 0 gates emits no marker — see the audit report, blocker B-3.
 | `qtt_rank_dynamic` | 0 | 9 | 0 | 0 |
 | `qtt_rank_nonlinear` | 0 | 84 | 0 | 0 |
 | `qtt_rank_3d` | 0 | 97 | 0 | 0 |
+| `qtt_rank_fitted_dynamic` | 0 | 235 | 0 | 0 |
+| `qtt_acoustic_precond` | 0 | 6 | 0 | 0 |
+| `qtt_blend_metric` | 0 | 5 | 0 | 0 |
+| `qtt_repin_marcher` | 0 | 196 | 0 | 0 |
+| `qtt_rank_plume` | 0 | 149 | 0 | 0 |
 
-**Totals:** 4 programs, 0 non-zero exits, 0 PASS markers, 0 FAIL markers.
+**Totals:** 9 programs, 0 non-zero exits, 0 PASS markers, 0 FAIL markers.
 
 ## Avionics examples (7)
 

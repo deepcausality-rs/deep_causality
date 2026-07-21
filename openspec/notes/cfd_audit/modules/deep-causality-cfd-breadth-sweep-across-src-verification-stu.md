@@ -5,14 +5,9 @@
 The engineering discipline here is unusually high for research CFD: `verification/README.md` discloses its own worst numbers (C_d 23.8 vs a 1.345 cross-reference, −80 % dissipation at 16³, +4.3 % Strouhal), every gate constant carries a rustdoc, `#[allow]` is confined to 14 style lints with zero correctness suppressions, and spot-checked reference formulas (2-D Euler conservative flux, DEC advective/diffusive CFL limits, Joseph-form covariance update, quasi-1D area source) are correct against their textbook forms. What blocks certification is a small number of silent-wrong-number paths rather than pervasive sloppiness. The compressible QTT marcher floors pressure for the LLF wave speed while feeding the unfloored negative pressure into the flux (marcher_2d.rs:134–144), removing stabilizing dissipation exactly where hyperbolicity is lost; `CompressibleCarrier::finish` drops the density-positivity guard its sibling `publish_and_transport` has, so a diverged run reports NaN as a result instead of erroring; and the ESKF folds a measurement with no guard on the innovation covariance, a NaN-poisoning path on a public avionics API. Traceability has one hard gap: the committed `dec_lid_cavity` baseline is an aborted run containing no RMSE, no vortex table, and no verdict. One of the six Park-2T acceptance gates is a transcription tautology that re-types `ler_step`'s body and compares with `==`, so the printed verdict "All six LER gates passed" overstates what was independently checked. These are bounded, individually fixable defects in an otherwise well-documented stack.
 
 - Files read: **35**
-- Findings raised: **21** — surviving adversarial verification: **21** (refuted: 0)
-- Surviving by severity: critical 1, major 6, minor 12, info 2
+- Findings raised: **21** — surviving adversarial verification: **20** (refuted: 1)
+- Surviving by severity: major 4, minor 11, info 5
 - Independently confirmed-correct items: **10**
-
-> **⚠ NOT ADVERSARIALLY VERIFIED.** The verifier for this module terminated on a
-> session limit before returning. Every finding below is a **single-auditor claim that
-> has not been independently re-checked**. Treat as unconfirmed leads and verify at
-> source before acting.
 
 ## Verified correct against reference
 
@@ -33,14 +28,14 @@ These were positively confirmed, not merely un-flagged.
 
 ## Findings
 
-### 3.1 [CRITICAL] QTT compressible marcher feeds negative pressure into the flux while flooring it for the LLF wave speed
+### 3.1 [MAJOR] QTT compressible marcher feeds negative pressure into the flux while flooring it for the LLF wave speed
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** physics-math
 - **Location:** `deep_causality_cfd/src/solvers/qtt/compressible/marcher_2d.rs:135`
 - **Auditor confidence:** confirmed
 
-**Claim.** When the equation of state yields p ≤ 0, the code floors p to 1e-300 only for the sound-speed/wave-speed computation, but the unfloored (negative) p is what is written into every flux component. The result is a physically invalid flux combined with an under-estimated Rusanov dissipation coefficient, produced silently with no error.
+**Claim.** The compressible marcher writes an unfloored (possibly negative) pressure into every flux component with no rejection of p <= 0, while density positivity IS enforced eleven lines above. The consequence is a physically invalid flux, not a global loss of Rusanov dissipation - s_max is a global max, so only the offending cell's acoustic contribution vanishes.
 
 **Code evidence.**
 
@@ -65,11 +60,15 @@ These were positively confirmed, not merely un-flagged.
 
 **Recommended fix.** Treat p ≤ 0 the same way as rho ≤ 0: return PhysicsError::PhysicalInvariantBroken naming the offending cell. If a floor is genuinely wanted for robustness, apply the same floored value to the flux and the wave speed consistently, and record that the floor engaged in the report so the result is not read as a clean solve. Check the sibling sites carrying the identical 1e-300 literal (marcher_3d.rs:124, marcher_3d_fitted.rs:136, euler_1d.rs:100) for the same pattern.
 
+**Adversarial check.** The quoted code is present verbatim and the asymmetry is real: density is rejected with PhysicalInvariantBroken at 125-129, but pressure is only floored for `c` at 135-136 while the unfloored `p` (possibly negative) is pushed into f[1], f[3], g[2], g[3]. No positivity limiter or pressure guard exists in this function or in `run`/`advance`. However the stated impact is overstated: `s_max` at 121/148-150 is a GLOBAL maximum over all cells, so a single bad cell's c~0 does not remove Rusanov dissipation from the scheme - it only fails to raise s_max. Severity corrected from critical to major: the defect is a missing rejection of a non-hyperbolic state, not a collapse of the numerical viscosity.
+
+> Evidence re-read: src/solvers/qtt/compressible/marcher_2d.rs:121-152 - read the whole `flux_and_speed`; lines 133-146 match the citation exactly; s_max is accumulated across the cell loop and returned as one scalar.
+
 ---
 
-### 3.2 [MAJOR] Park-2T acceptance gate (ii) is a transcription tautology: it re-types ler_step's body and compares with ==
+### 3.2 [MINOR] Park-2T acceptance gate (ii) is a transcription tautology: it re-types ler_step's body and compares with ==
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** tautology-circular
 - **Location:** `deep_causality_cfd/verification/qtt_park2t_blackout/print_utils.rs:38`
 - **Auditor confidence:** confirmed
@@ -101,11 +100,15 @@ src/types/flow/blackout.rs (the function under test):
 
 **Recommended fix.** Either delete gate (ii) and renumber, or convert it into a real check: integrate dx/dt = (x_eq − x)/τ with a high-order adaptive ODE solver (or compare against a series expansion computed independently of ler_step) and assert agreement to a stated tolerance. Same for the τ→0 limb of gate (iv). Update the verdict text and verification/README.md line 39 to state the number of independent gates.
 
+**Adversarial check.** verification/qtt_park2t_blackout/print_utils.rs:36-39 is exactly as quoted, and src/types/flow/blackout.rs:41-47 shows `ler_step` returning `x_eq - (x_eq - x) * (-(dt / tau)).exp()` for tau > 0 - character-for-character the gate's comparison expression, at the same f64 monomorphization, so the two are bit-identical by construction and the gate cannot fail. The secondary claim about gate (iv) also holds: line 79 calls `ler_step(0.0, alpha_eq, 0.0, 1e-5)`, tau = 0 takes the early return at blackout.rs:42-44 returning x_eq exactly, and line 80 then checks `(saha - alpha_eq).abs() < 1e-12`, which is 0 < 1e-12. Severity corrected to minor: this is verification-harness evidence inflation (one of six gates carries no independent information), not a defect in shipped library code, and gate (iv) has three other real conjuncts.
+
+> Evidence re-read: verification/qtt_park2t_blackout/print_utils.rs:36-39 and :78-80; src/types/flow/blackout.rs:41-47.
+
 ---
 
-### 3.3 [MAJOR] CompressibleCarrier::finish drops the density-positivity guard that publish_and_transport enforces
+### 3.3 [INFO] CompressibleCarrier::finish drops the density-positivity guard that publish_and_transport enforces
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** REFUTED — not a defect
 - **Axis:** physics-math
 - **Location:** `deep_causality_cfd/src/types/flow/compressible_march_run.rs:470`
 - **Auditor confidence:** confirmed
@@ -138,11 +141,15 @@ finish (unguarded — same loop, no check):
 
 **Recommended fix.** Hoist the rho guard into a shared helper used by both loops (both already share the same `half`/`tiny` lift preamble), so the positivity check and the EOS evaluation cannot drift apart again.
 
+**Adversarial check.** The code is quoted correctly, but the defect is compensated at the call site - this is the classic false positive. `finish` is only ever reached through `finish_report` (src/types/flow/carrier.rs:240, 254), which is called at carrier.rs:332 and :866 only AFTER the loop of `coupled_step` calls has completed without error. `coupled_step` (carrier.rs:139-146) runs `publish_and_transport` on the very same state via `?`, so a non-positive or non-finite density in the final state returns PhysicsError::PhysicalInvariantBroken and `finish_report` is never reached. A diverged march therefore errors out rather than returning a NaN-filled Report - the opposite of the claimed impact. The only residual is a degenerate steps == 0 branch resume (carrier.rs:853) where an encoded seed reaches `finish` unpublished; that is not a diverged-march path and does not support the finding as written.
+
+> Evidence re-read: src/types/flow/carrier.rs:132-146 (coupled_step ordering), :310-333 (run_coupled_driver), :852-874 (branch resume), :240-254 (finish_report); src/types/flow/compressible_march_run.rs:427-433 vs :468-476.
+
 ---
 
 ### 3.4 [MAJOR] ESKF scalar update divides by an unguarded innovation covariance and never validates the measurement variance
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** physics-math
 - **Location:** `deep_causality_cfd/src/navigation/eskf.rs:122`
 - **Auditor confidence:** confirmed
@@ -172,11 +179,15 @@ reentry_nav.rs (public caller, r_var passed straight through):
 
 **Recommended fix.** Change the signature to return Result, validate `r.is_finite() && r >= 0`, and reject or no-op the fold when `s` is not strictly positive and finite, logging the skipped update. Apply the same validation at the `ReentryNav::correct_position` boundary so the constraint is visible to callers.
 
+**Adversarial check.** eskf.rs:117-142 matches the citation exactly: `s = dot(&h, &ph) + r` then `ph[i] / s` with no positivity test, and `update_scalar` returns () so it has no channel to reject. Reachability from the public API is established: `NavFilter::new` (eskf.rs:91-96) accepts an arbitrary cov_diag with zero validation, `NavFilter::restore` (eskf.rs:153) accepts an arbitrary matrix, both are re-exported from src/lib.rs:66, and `ReentryNav::correct_position` (reentry_nav.rs:89-95) passes `r_var` straight through unvalidated. With P[i][i] = 0 and r_var = 0, s = 0 and k = 0/0 = NaN, which is then written into both the state (line 123-124) and every entry of the Joseph-form covariance (lines 126-141). A negative r_var is likewise accepted. For an avionics navigation API this is a genuine unguarded-input defect.
+
+> Evidence re-read: src/navigation/eskf.rs:89-142 (new + full update_scalar); src/navigation/reentry_nav.rs:86-102 (correct_position); src/lib.rs:66 (public export).
+
 ---
 
 ### 3.5 [MAJOR] Committed lid-cavity baseline.txt is an aborted run containing no RMSE, no vortex table, and no verdict
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** doc-gap
 - **Location:** `deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/baseline.txt:11`
 - **Auditor confidence:** confirmed
@@ -206,11 +217,15 @@ Every other verification baseline is complete and ends in a verdict, e.g. verifi
 
 **Recommended fix.** Re-run `cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification` to completion, capturing both stdout and stderr, and commit the full output. Add the `trend` mode's gated output as a second artifact, since that is the mode README line 124-125 describes as the gate. Consider a CI check that every baseline.txt ends with its example's verdict line.
 
+**Adversarial check.** Read the full file: 11 lines, header for a 65x65 / t_end=100 / 14223-step run, last line '# t =    44.99 (6399/14223)'. No RMSE, no vortex table, no verdict. Compared every other baseline in verification/: all 11 others terminate in a summary or verdict line (qtt_sod, qtt_blunt_body_2d 'GATES PASSED', dec_taylor_green, qtt_cylinder, etc.) - this is the only truncated one. It is in fact weaker than the finding states: the committed run is a 65^2 job, while README.md's reported figures (RMSE 0.137, vortex (0.563, 0.594)) are labelled '33^2, t=40', so the artifact does not even correspond to the configuration whose numbers the README reports.
+
+> Evidence re-read: verification/dec_lid_cavity_re1000_verification/baseline.txt (all 11 lines); tail of all 12 verification/*/baseline.txt; verification/README.md summary table row for dec_lid_cavity_re1000_verification.
+
 ---
 
 ### 3.6 [MAJOR] Unjustified Mach 1.05 shock floor decides whether the Rankine-Hugoniot jump is applied to the inflow
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/types/flow/compressible_march_run.rs:327`
 - **Auditor confidence:** confirmed
@@ -238,16 +253,20 @@ Every other verification baseline is complete and ends in a verdict, e.g. verifi
 
 **Recommended fix.** Use 1.0 so the branch is continuous, or, if a small buffer above sonic is deliberate to avoid the M→1⁺ stiffness of the RH relations, state that reason in the comment, cite the stiffness bound it is protecting against, and expose it as a builder override alongside `with_rebuild_tolerance`. Fix the comment to match whatever value is chosen.
 
+**Adversarial check.** compressible_march_run.rs:326-334 matches verbatim, including the comment saying 'below Mach ~1' against a coded test of 1.05. I checked the branch it guards: FittedNormalShock::post_shock (src/solvers/qtt/compressible/fitting.rs:105-130) is continuous and exactly the identity at M = 1 (rho_ratio = (g+1)M^2/((g-1)M^2+2) = 1, p_ratio = 1 at M=1), so 1.05 is not needed as a numerical guard against a sonic singularity - the branch would be continuous at 1.0. At the configured gamma_eff = 1.1 the density ratio at M = 1.05 is ~1.10, so the inflow rho_hat/t_hat/u_hat step discontinuously by ~10% (larger than the finding's own 'few percent' estimate) as a trajectory crosses that Mach. I also confirmed there is no override: DescentSchedule exposes with_reference_radius, with_strip_cols, with_rebuild_tolerance and with_rebuild_budget, and nothing for the shock floor.
+
+> Evidence re-read: src/types/flow/compressible_march_run.rs:326-343; src/solvers/qtt/compressible/fitting.rs:105-130; src/types/flow_config/compressible_march_config.rs:115-145 (the with_* surface).
+
 ---
 
-### 3.7 [MAJOR] Absolute 1e-12 tolerance on the Hodge star diagonal silently zeroes real terms of the convective operator
+### 3.7 [MINOR] Absolute 1e-12 tolerance on the Hodge star diagonal silently zeroes real terms of the convective operator
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/solvers/dec/dec_ns_rate.rs:637`
 - **Auditor confidence:** confirmed
 
-**Claim.** `zero_tol = 1e-12` is an absolute threshold applied to the Hodge-star diagonal entry m1[j], a dimensional quantity that scales with mesh spacing and metric grading. Any edge whose diagonal falls below it has its adjoint contribution set to exactly zero, dropping a real term from the skew-symmetric convective operator. The accompanying comment justifies only that 1e-12 is representable, not that it is the right magnitude.
+**Claim.** An absolute 1e-12 degeneracy cutoff is applied to a dimensional Hodge-star diagonal, but only inside the opt-in `with_generic_assembly()` oracle/benchmark path, not the default compiled stencil pipeline. The unit-dependence critique stands as a code-quality point; the claimed production energy-conservation and mesh-refinement failures do not apply to the default solver.
 
 **Code evidence.**
 
@@ -269,11 +288,15 @@ Every other verification baseline is complete and ends in a verdict, e.g. verifi
 
 **Recommended fix.** Replace with a relative test against the diagonal's own scale, e.g. compute `m1_max = m1.iter().map(|v| v.abs()).fold(zero, max)` once and test `m1[j].abs() <= eps * m1_max` with eps tied to R::epsilon(). Record in the rate's diagnostics whenever any edge is zeroed, so a user can tell that the operator was truncated.
 
+**Adversarial check.** dec_ns_rate.rs:637-639 and :665-669 are exactly as quoted, and the dimensional-vs-absolute criticism is technically correct. But the finding misses the scope: `convective_skew_generic` is not the production operator. Its own doc block at :618-622 calls it 'the equivalence oracle ... quadratic cost; test-scale lattices only', and dec_ns_rate.rs:470-502 shows it is taken only when `self.engine` is None, which happens only via the explicit opt-in `with_generic_assembly()` (:396-402) documented as 'the equivalence oracle and the benchmark baseline. The default is the compiled stencil pipeline.' The default path calls DecStencilTables::apply_convective_vector_adjoint (deep_causality_topology .../stencil/mod.rs:263-296), which uses a precomputed inv_star1 and never sees this constant. Impact is further limited numerically: m1[j] is the Hodge diagonal of a unit cochain, scaling as h^(D-2k), so reaching 1e-12 would need physically absurd spacings.
+
+> Evidence re-read: src/solvers/dec/dec_ns_rate.rs:396-402, 465-502, 618-679; deep_causality_topology/src/types/manifold/differential/stencil/mod.rs:263-296.
+
 ---
 
 ### 3.8 [MINOR] The 1e-300 pressure floor evaluates to zero in the f32 precision mode the crate documents as supported
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/solvers/qtt/compressible/marcher_2d.rs:123`
 - **Auditor confidence:** confirmed
@@ -301,11 +324,15 @@ The f32 mode is a documented, supported configuration — src/traits/cfd_scalar.
 
 **Recommended fix.** Derive the floor from the scalar type — e.g. `R::min_positive_value()` or `R::epsilon() * reference_pressure` — so it is meaningful at every supported precision. Independently of this, see the critical finding above: the floor should not be applied asymmetrically between the flux and the wave speed in any precision.
 
+**Adversarial check.** marcher_2d.rs:123 is exactly `let tiny = R::from_f64(1e-300).unwrap_or_else(R::zero);`. I checked the num-traits 0.2.19 implementation directly: FromPrimitive for f32 is impl_from_primitive!(f32, to_f32) and f64::to_f32 goes through impl_to_primitive_float_to_float, which is `Some(*self as $DstT)` - an infallible cast, never None. So at R = f32 the lift returns Some(0.0), not None: the fallback never fires and `tiny` is exactly 0.0, making `p > tiny` a bare positivity test and p_floor = 0 for any p <= 0, hence c = 0. The floor genuinely disappears in the f32 instantiation the crate documents as supported, with no diagnostic.
+
+> Evidence re-read: src/solvers/qtt/compressible/marcher_2d.rs:123,135-136; num-traits-0.2.19/src/cast.rs:269-278 (impl_to_primitive_float_to_float) and :572 (impl_from_primitive!(f32, to_f32)).
+
 ---
 
 ### 3.9 [MINOR] Silent unwrap_or_else fallbacks substitute physically wrong constants instead of erroring, next to ok_or_else error handling in the same function
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/types/flow/blackout.rs:356`
 - **Auditor confidence:** confirmed
@@ -335,16 +362,20 @@ corridor/regime.rs (same pattern, three physical thresholds):
 
 **Recommended fix.** Use `ok_or_else(|| PhysicsError::NumericalInstability(...))?` uniformly at all four sites, matching the convention already used two lines above in blackout.rs. Where the constructor cannot return Result (RegimeClassify::new), either make it fallible or move the lift to a validated build step.
 
+**Adversarial check.** blackout.rs:349-357 matches verbatim: AVOGADRO_CONSTANT and 1e6 are lifted with ok_or_else -> NumericalInstability, then 1e30 four lines later with `unwrap_or_else(R::one)`, and frozen_tau = dt * huge. The substitute is not a degradation of the intended semantics - it turns a frozen-chemistry timescale into one relaxation constant per step, exactly the behaviour the comment above it says must not happen. The convention-inconsistency charge is grounded in the crate's own adjacent lines. The finding correctly concedes the branch is unreachable for f32/f64/Float106 (num-traits float lifts are infallible casts), so this is a latent-semantics defect rather than a live one; minor is the right severity.
+
+> Evidence re-read: src/types/flow/blackout.rs:349-357 (read in full); the num-traits cast semantics established under finding 8 confirm the fallbacks are dead for all currently supported scalars.
+
 ---
 
-### 3.10 [MINOR] DRAG_SANITY_MAX is documented as bounding an 'O(1) drag coefficient' but admits the measured value of 23.76
+### 3.10 [INFO] DRAG_SANITY_MAX is documented as bounding an 'O(1) drag coefficient' but admits the measured value of 23.76
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** doc-overclaim
 - **Location:** `deep_causality_cfd/verification/qtt_cylinder_verification/print_utils.rs:20`
 - **Auditor confidence:** confirmed
 
-**Claim.** The gate constant's rustdoc describes it as a 'Pinned upper bound on a physical O(1) drag coefficient (sanity)', but the harness's own committed baseline measures C_d = 23.7577 — 24× O(1) and well inside the bound of 100. As written the gate tests only positivity and finiteness; the stated 'O(1)' rationale is not what the number encodes.
+**Claim.** DRAG_SANITY_MAX's rustdoc characterises it as an 'O(1)' bound when the configuration produces C_d ~ 23.8; the constant is really a positivity/NaN/blow-up tripwire. A one-line doc correction, not a gate defect - the adjacent in-function comment already carries the correct framing.
 
 **Code evidence.**
 
@@ -369,16 +400,20 @@ config.rs (the cross-reference it is 17.7x away from):
 
 **Recommended fix.** Restate the constant's doc as what it is — a non-divergence guard, not an O(1) physicality claim — and, since the configuration's expected magnitude is known to ~1e-11 reproducibility, tighten the bound to bracket the expected 23.76 (e.g. 20.0 to 30.0) so it would actually catch a regression. Mirror the README's blockage/skirt explanation at the constant.
 
+**Adversarial check.** The doc-vs-code mismatch is real and quoted correctly: print_utils.rs:19-20 says 'Pinned upper bound on a physical O(1) drag coefficient (sanity)' while baseline.txt measures C_d = 23.7577, 24x O(1) and far inside the bound of 100. But two claims need correcting. First, the gate is not 'effectively unfailable' - `finest.drag > 0.0 && finest.drag < DRAG_SANITY_MAX` fails on a negative drag, on NaN (both comparisons false) and on inf, so it does catch sign and blow-up regressions. Second, the honest framing is not only in the README: the in-function comment at print_utils.rs:110-111 states 'the absolute magnitude is inflated by the smoothing skirt + blockage - the convergence trend is the result, not the number', immediately above the gate. The defect reduces to one stale word ('O(1)') in one rustdoc line.
+
+> Evidence re-read: verification/qtt_cylinder_verification/print_utils.rs:15-20, 78-115; verification/qtt_cylinder_verification/baseline.txt; verification/README.md dec_cylinder_wake section.
+
 ---
 
-### 3.11 [MINOR] NO_SLIP_FLOOR is an absolute constant while the Brinkman penalization error it gates scales as sqrt(eta)
+### 3.11 [INFO] NO_SLIP_FLOOR is an absolute constant while the Brinkman penalization error it gates scales as sqrt(eta)
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/verification/qtt_cylinder_verification/print_utils.rs:16`
 - **Auditor confidence:** confirmed
 
-**Claim.** The no-slip gate compares interior speed against a fixed 0.15·U_inf. The physical interior slip of a volume-penalized body scales with the penalization parameter as O(sqrt(eta)); with the configured ETA = 0.016, sqrt(eta) = 0.126, so the gate value tracks the theory only by coincidence at this one ETA. `ETA` is a plain const in config.rs, so changing it silently decouples the gate from the physics it is meant to test.
+**Claim.** The no-slip gate is an absolute pinned fraction where an ETA-scaled bound C*sqrt(ETA) would be the principled form. A harness robustness improvement, correctly self-labelled as 'Pinned' - not a misstated criterion.
 
 **Code evidence.**
 
@@ -403,16 +438,20 @@ baseline.txt measured: interior_max|u| = 4.22e-2 (against a gate of 0.15 — 3.5
 
 **Recommended fix.** Express the floor as a coefficient times `ETA.sqrt()`, cite the Angot et al. rate at the constant (the paper is already in the README reference list), and state the coefficient's origin. That makes the gate track ETA automatically and turns it into a test of the penalization convergence rate rather than of one tuned number.
 
+**Adversarial check.** All quoted facts check out: print_utils.rs:15-16 defines NO_SLIP_FLOOR = 0.15, line 84 compares against NO_SLIP_FLOOR * U_INF, config.rs:27-28 has ETA = 0.016 as a plain const, and the baseline measures 4.22e-2. The observation that a penalization slip gate ought to be written as C*sqrt(ETA) is a legitimate design improvement, and the coincidence with sqrt(0.016) = 0.126 is worth flagging. But the constant's own rustdoc calls it a 'Pinned no-slip floor', i.e. it is labelled as a pinned regression tripwire, not as a derived theoretical criterion, so there is no doc-vs-code misrepresentation. The failure mode described (raise ETA to 0.1 and the gate fails a correct solver) requires editing a const in the same harness, in which case the pinned gate would be re-pinned alongside it.
+
+> Evidence re-read: verification/qtt_cylinder_verification/print_utils.rs:15-16, 82-91; verification/qtt_cylinder_verification/config.rs:27-28; baseline.txt (interior_max|u| = 4.22e-2).
+
 ---
 
-### 3.12 [MINOR] Lid-cavity trend gates are back-fitted to the measured values with 25% headroom, under a header claiming validation against Ghia
+### 3.12 [INFO] Lid-cavity trend gates are back-fitted to the measured values with 25% headroom, under a header claiming validation against Ghia
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** tautology-circular
 - **Location:** `deep_causality_cfd/verification/dec_lid_cavity_re1000_verification/main.rs:117`
 - **Auditor confidence:** confirmed
 
-**Claim.** The two RMSE gates were chosen after seeing the measured values (0.252 and 0.133), as the code comment states outright. They therefore test non-regression against this code's own prior output, not agreement with Ghia. The run header printed one line above calls the mode 'refinement trend vs Ghia (1982)', which reads as an accuracy claim.
+**Claim.** The two RMSE bounds are non-regression tripwires pinned from prior output, not validation criteria against Ghia. Both the code comment and the constants' rustdoc already say 'pinned', and the header says 'refinement trend', so the labelling is largely correct; the residual gap is that the two gate classes are not distinguished in the printed output.
 
 **Code evidence.**
 
@@ -437,16 +476,20 @@ print_utils.rs:56-70 — the RMSE is an unnormalized absolute RMS deviation from
 
 **Recommended fix.** Rename the constants to say what they are (e.g. TREND_COARSE_REGRESSION_BOUND) and change the header to 'refinement trend, regression-gated; accuracy vs Ghia reported not gated'. If a genuine accuracy gate is wanted, run at 129² (Ghia's own grid, already noted as the reporting resolution) and pin the bound to the discretization error expected there.
 
+**Adversarial check.** The back-fitting is real and stated in the code itself: main.rs:117-118 says 'Gates from the pinning measurements (time-converged 0.252 / 0.133, ~25 % headroom)', and config.rs:83-87 holds 0.32 / 0.20 / 0.04, each rustdoc'd as 'Pinned'. The RMSE at print_utils.rs:56-70 is confirmed as an unnormalized pooled RMS deviation from the Ghia tables. The overclaim charge is however weak: the header at main.rs:103 reads 'refinement trend vs Ghia (1982)' - it advertises a refinement trend, which is exactly what the strongest gate (the strict-decrease check at :140-147) tests, and the constants are self-labelled as pinned rather than as accuracy targets. The finding also acknowledges the README carries the honest 6%-of-span framing.
+
+> Evidence re-read: verification/dec_lid_cavity_re1000_verification/main.rs:101-148; config.rs:78-88; print_utils.rs:54-70.
+
 ---
 
 ### 3.13 [MINOR] RAM-C blackout-onset gate is implied by the electron-density gate and cannot independently fail
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** tautology-circular
 - **Location:** `deep_causality_cfd/verification/qtt_ramc_stagline/print_utils.rs:68`
 - **Auditor confidence:** confirmed
 
-**Claim.** Gate g3 asserts omega_p > COMMS_BAND_RAD_S. Gate g2, evaluated four lines earlier, already requires n_e > 3e18 m⁻³. Since omega_p is a monotone function of n_e alone, g2 passing forces g3 to pass by a margin of about 19x in frequency. g3 contributes no independent verification but is presented as one of four gates.
+**Claim.** g3 is a deterministic consequence of g2, so the harness reports four gates on three independent checks. The frequency margin at NE_LO is ~10x, not ~19x.
 
 **Code evidence.**
 
@@ -471,11 +514,15 @@ print_utils.rs:
 
 **Recommended fix.** Either fold g3 into g2's label (noting that the n_e band implies blackout at this comms frequency by a stated margin), or make it independent by gating the blackout *margin* or the predicted onset *time* against a RAM-C flight value, which would test something the n_e gate does not.
 
+**Adversarial check.** The logical implication is correct and the code is quoted correctly (print_utils.rs:64-70, NE_LO = 3.0e18 at :20, COMMS_BAND_RAD_S = 9.4e9 at config.rs:27). omega_p depends only on n_e, and the n_e threshold at which omega_p = 9.4e9 is 2.8e16 m^-3, two decades below the NE_LO that g2 already enforces, so g2 passing forces g3 to pass. The stated margin is wrong, though: at n_e = 3e18 m^-3 = 3e12 cm^-3, omega_p = 5.64e4*sqrt(3e12) = 9.8e10 rad/s, a factor of ~10.4 above the band, not 19x. Severity stays minor; as the finding notes, the surrounding disclosure in this harness is otherwise strong.
+
+> Evidence re-read: verification/qtt_ramc_stagline/print_utils.rs:14-70 (all four gates and the constants); verification/qtt_ramc_stagline/config.rs:14-32.
+
 ---
 
 ### 3.14 [MINOR] Stability gate's second conjunct is a comparison between two compile-time constants
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** tautology-circular
 - **Location:** `deep_causality_cfd/verification/qtt_park2t_blackout/print_utils.rs:32`
 - **Auditor confidence:** confirmed
@@ -501,11 +548,15 @@ print_utils.rs:
 
 **Recommended fix.** Move the explicit-Euler divergence figure out of the boolean and into the printed output as context ('explicit Euler would reach 6.7e6 at this stiffness'), keeping the gate to the conditions that actually depend on ler_step.
 
+**Adversarial check.** print_utils.rs:20-33 matches exactly. `euler` at line 31 is built from dt, tau and the literal 300.0/7000.0 bound at lines 21-22 and calls no library code: 300 + (1.0/0.001)*(7000-300) = 6,700,300, compared against x_eq*100 = 700,000. No change to ler_step or any library code can alter this conjunct, so it is a constant `true` embedded in a boolean gate. The finding is also fair about the compensating context: the first conjunct and the in-loop monotonicity bounds at lines 26-28 do exercise ler_step across 50 stiff steps and are real checks.
+
+> Evidence re-read: verification/qtt_park2t_blackout/print_utils.rs:18-33 (whole function).
+
 ---
 
 ### 3.15 [MINOR] Undocumented pressure clamp means a reported T_tr can be a floor artifact rather than an EOS value
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** doc-gap
 - **Location:** `deep_causality_cfd/src/types/flow/compressible_march_run.rs:436`
 - **Auditor confidence:** confirmed
@@ -533,11 +584,15 @@ print_utils.rs:
 
 **Recommended fix.** Document the clamp and its trigger in the rustdoc for both `publish_and_transport` and `finish`. Better, count clamp activations and surface the count as a Report series so a consumer can distinguish a clean solve from one that was floored, in the same spirit as the existing carrier-rebuild logging at lines 385-390.
 
+**Adversarial check.** Verified verbatim: the rustdoc at compressible_march_run.rs:407-410 promises '"T_tr" (K) and "pressure_atm" from the equation of state', while the implementation at :426 lifts tiny = 1e-12 and :435-437 computes p_hat then clamps it before t_hat = p_hat / rho; the same clamp repeats at :467 and :471-473 in `finish`. Nothing in the Report records that the clamp engaged. The downstream reasoning is sound: a cell with E < 0.5*rho*|u|^2 reports a small positive T_tr that a Park ionization surrogate reads as a benign cold, un-ionized cell. This is a genuine documented-contract-vs-implementation gap; minor is the right severity since it needs an already-inconsistent energy budget to manifest.
+
+> Evidence re-read: src/types/flow/compressible_march_run.rs:407-450 (publish_and_transport in full) and :460-481 (finish).
+
 ---
 
 ### 3.16 [MINOR] Mean-crossing Strouhal estimator carries a +/-1-crossing bias that is largest on the short records its docs claim it suits
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** physics-math
 - **Location:** `deep_causality_cfd/src/types/flow/frequency.rs:47`
 - **Auditor confidence:** confirmed
@@ -562,16 +617,20 @@ print_utils.rs:
 
 **Recommended fix.** Record the sample index of the first and last crossing and divide (crossings - 1)/2 by their time separation. This removes the end effect at no extra cost. Then state the residual quantization error in the docstring so a consumer comparing St against Williamson knows the measurement floor.
 
+**Adversarial check.** frequency.rs:23-49 read in full; line 47 is exactly `let total_time = R::from_usize(n - 1)... * dt`, i.e. the full record length, not the span between the first and last counted crossing. A record of length T holds 2fT +/- 1 mean-crossings depending on start phase, so f_est = f +/- 1/(2T) - a relative error of 1/(2 * number of periods), 10% over 5 periods and 5% over 10. The docstring at lines 21-22 does advertise the method as 'Robust for the short, low-noise records a march yields', which is where the bias is largest. `strouhal_number` at :54-59 multiplies the frequency by length/u_ref, so the bias transfers one-for-one to the reported St, and the README's +4.3% Strouhal deviation is indeed the same order as the estimator's own bias at typical march record lengths.
+
+> Evidence re-read: src/types/flow/frequency.rs:16-59 (the whole module).
+
 ---
 
 ### 3.17 [MINOR] KeyedTable::interpolate panics on a NaN key; DescentSchedule::sample silently returns the first row
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** PARTIALLY CONFIRMED
 - **Axis:** physics-math
 - **Location:** `deep_causality_cfd/src/types/keyed_table.rs:148`
 - **Auditor confidence:** confirmed
 
-**Claim.** `interpolate` handles the below-range and above-range cases with `<=` and `>=` comparisons, both of which are false for NaN, so a NaN key falls through to a `position` search that returns None and an `.expect` that panics. The parallel hand-rolled lookup in DescentSchedule::sample has the same comparison structure but no expect, so it silently returns the lowest-altitude row instead.
+**Claim.** KeyedTable::interpolate panics on a NaN key from the public API (real, no in-crate production caller). DescentSchedule::sample silently returns the lowest-altitude row for a NaN altitude (real, no diagnostic) - but the NaN also poisons speed/mach/inflow, so the run surfaces NaN scalars and trips the density guard rather than reporting plausible numbers.
 
 **Code evidence.**
 
@@ -600,11 +659,15 @@ compressible_march_config.rs (silent):
 
 **Recommended fix.** Add an explicit `if !key.is_finite()` branch to both lookups. For `interpolate`, either return a Result or a clamped result with a flag; for `sample`, return a Result so a non-finite altitude surfaces as PhysicsError rather than as the first row. The KeyedInterpolation struct already carries a `clamped` flag, which is the natural place to signal an out-of-domain query.
 
+**Adversarial check.** Both code paths are quoted accurately. keyed_table.rs:123-149: `key <= *first_key` and `key >= *last_key` are both false for NaN, `position(|(k, _)| *k >= key)` finds nothing, and the `.expect` at :148 panics - a genuine reachable panic on a public method (`interpolate` takes an unconstrained R and KeyedTable::new only validates the stored keys, at :82). The DescentSchedule::sample path at flow_config/compressible_march_config.rs:148-173 does fall through to `lo` (= the first, i.e. lowest-altitude row, the table being ascending-sorted per the check at :77) with no diagnostic. But the downstream impact claim is overstated: with a NaN altitude the truth-derived `speed` at compressible_march_run.rs:321 is also NaN, so mach is NaN, `mach > shock_floor` is false, u_hat is NaN and the inflow momentum/energy at :341-343 are NaN - the published flight_speed and flight_mach are NaN, and the density guard at :429 fires once the NaN reaches the decoded state. The run does not go on 'reporting plausible-looking freestream numbers'.
+
+> Evidence re-read: src/types/keyed_table.rs:74-103 (new) and :120-159 (interpolate); src/types/flow_config/compressible_march_config.rs:61-99 (sort/finiteness validation) and :147-173 (sample); src/types/flow/compressible_march_run.rs:314-353.
+
 ---
 
 ### 3.18 [MINOR] Quasi-1D duct scheme's well-balanced claim holds only for a stagnant uniform state, not a uniform moving one
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** doc-overclaim
 - **Location:** `deep_causality_cfd/src/types/flow/duct_march_run.rs:183`
 - **Auditor confidence:** confirmed
@@ -629,11 +692,15 @@ compressible_march_config.rs (silent):
 
 **Recommended fix.** Amend the comment to 'for a stagnant uniform state (u = 0) the source cancels the flux difference exactly', and, if a stronger property is claimed elsewhere, add a unit test that marches a quiescent variable-area duct and asserts bit-level preservation.
 
+**Adversarial check.** The comment is present (at duct_march_run.rs:176-179, three lines above the cited 180-183 - the quoted text is verbatim, only the line numbers drifted) and the algebra checks out against the implementation. coeff = dt/(dx*a_centers[i]) at :184, src = prim[i].p * (a_faces[i+1] - a_faces[i]) / dx at :185, and the momentum row at :189. For a uniform state the momentum face flux is (rho*u^2 + p)*A, so the flux difference contributes (rho*u^2 + p)*dA while the source supplies only p*dA; the residual is rho*u^2*dA/(dx*A_i), which vanishes only at u = 0. The scheme is correct - the property it has is exact preservation of a stagnant state over a variable-area duct - and the comment overstates it.
+
+> Evidence re-read: src/types/flow/duct_march_run.rs:168-191 (fluxes, source, conservative update) and the comment at :176-179.
+
 ---
 
 ### 3.19 [MINOR] Duct march hardcodes CFL = 0.5 with no override, unlike every neighbouring solver
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/types/flow/duct_march_run.rs:96`
 - **Auditor confidence:** confirmed
@@ -663,11 +730,15 @@ and src/solvers/qtt/compressible/euler_1d.rs:71 takes `cfl: R` as a parameter.
 
 **Recommended fix.** Add a `cfl` field to the duct config with a validated builder setter defaulting to 0.5, matching the pattern in DecNsConfigReady::cfl_factors, and validate 0 < cfl <= 1 at build.
 
+**Adversarial check.** duct_march_run.rs:92-96 is verbatim (`let cfl = half;` with the 0.5-is-safe comment) and :166 uses it as `dt = cfl * dx / s_global`. I enumerated DuctConfig's public surface (src/types/flow_config/duct_config.rs): new, profile, p0, t0, gamma, back_pressure, cells, max_steps, residual_tol - no CFL setter anywhere, and no with_* builder for it. The contrast is accurate: dec_config exposes cfl_factors and euler_1d takes cfl as a parameter. The value itself is defensible and documented (CFL <= 1 for first-order Rusanov), so the defect is purely the missing override, which does foreclose a time-step-insensitivity study on the duct path.
+
+> Evidence re-read: src/types/flow/duct_march_run.rs:87-96, 161-166; src/types/flow_config/duct_config.rs (full public item list, lines 17-320).
+
 ---
 
 ### 3.20 [INFO] Stokes MMS residual is identically zero for any pressure gradient, making the g_press = 100.0 literal an arbitrary error-scale setter
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/types/flow/mms.rs:145`
 - **Auditor confidence:** confirmed
@@ -692,11 +763,15 @@ and src/solvers/qtt/compressible/euler_1d.rs:71 takes `cfl: R` as a parameter.
 
 **Recommended fix.** Either normalize the residual by G/rho so the reported error is relative and comparable across regimes, or document at the literal that the residual is a round-off measurement whose absolute scale is set by g_press and carries no accuracy information beyond machine epsilon.
 
+**Adversarial check.** mms.rs:141-151 matches verbatim. Working the substitution against the code: lap = -G/mu with mu = rho*nu, grad_p = -G, so the Stokes RHS -(1/rho)*grad_p + nu*lap = G/rho - nu*G/(rho*nu) = 0 for every G, nu and rho. The reported 'mms_error' is therefore pure round-off whose magnitude is set by the arbitrary 100.0, and is not comparable in scale to the other three regimes' residuals (which are compared against genuinely non-trivial references at :133, :139, :162). The finding's own framing is right that the check retains discriminating power against a sign error, a missing 1/rho, or a wrong viscosity coefficient - info severity is correct.
+
+> Evidence re-read: src/types/flow/mms.rs:116-169 (all four regime arms of Solver::run).
+
 ---
 
 ### 3.21 [INFO] Coverage census: 189 literal-bearing lines, 88 panic sites, 14 allow attributes — with the panic surface concentrated in unreachable constant lifts
 
-- **Verification verdict:** pending verification
+- **Verification verdict:** CONFIRMED
 - **Axis:** magic-number
 - **Location:** `deep_causality_cfd/src/lib.rs:1`
 - **Auditor confidence:** confirmed
@@ -723,5 +798,9 @@ All 14 allow attributes are clippy::too_many_arguments (11) or clippy::type_comp
 **Impact.** Positive finding overall. The panic surface is far smaller than the raw count suggests: the great majority are infallible lifts of compile-time constants into a RealField, which cannot fail for f32/f64/Float106, and most carry an explicit coverage-exemption comment. Only two reachable panic paths were identified in this sweep (KeyedTable::interpolate on NaN, reported separately; the two tensor_bridge unwraps are on fixed-shape allocations). No #[allow] suppresses a correctness lint, so the repo policy is being followed. This context should temper the severity of the individual findings above.
 
 **Recommended fix.** No action required for the census itself. Consider converting the two tensor_bridge unwraps to expects with the same coverage-exemption comment style used elsewhere in the crate, purely for consistency of the audit trail.
+
+**Adversarial check.** Reproduced every count independently over deep_causality_cfd/src: 140 .rs files, 24,854 lines, 85 `expect(`, 3 `unwrap()`, 0 panic!/unreachable!/todo!/unimplemented!, 14 #[allow] attributes. The allow breakdown is exactly 11 clippy::too_many_arguments and 3 clippy::type_complexity - style lints only, no correctness suppression, consistent with repo policy. The three unwraps are also as listed, and one (types/flow/cfd_flow.rs:46) is inside a doc-comment example, so the reachable-code unwrap count is 2, both on fixed-shape allocations in tensor_bridge. The census is accurate and its tempering conclusion is sound.
+
+> Evidence re-read: Counts run over deep_causality_cfd/src: find/grep for expect, unwrap, panic-family macros and #[allow]; full listing of the 3 unwrap sites.
 
 ---
