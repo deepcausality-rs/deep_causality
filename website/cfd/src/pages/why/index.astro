@@ -287,8 +287,9 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
       </p>
 
       <p class="body">
-        <code>CfdFlow</code> is a two-level language. A trajectory march runs
-        until a predicate fires and yields a resumable pause. A campaign forks
+        <code>CfdFlow</code> separates the description of a problem from its
+        execution. A march runs a description until a predicate fires and
+        yields a resumable pause. A campaign forks
         that pause once per candidate and continues each branch in its own
         alternated world. The fork shares the paused state in O(1) through
         copy-on-write, tensor fields, navigation engine and provenance log

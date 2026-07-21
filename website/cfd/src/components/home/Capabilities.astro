@@ -8,22 +8,38 @@
  * committed run.
  */
 
-const fork = `// Trajectory level: march until the evolved sheath crosses the GPS L1 cutoff.
+const config = `// The configuration layer: an owned description of the problem.
+let solver = CfdConfigBuilder::dec_ns()
+    .viscosity(nu)
+    .time_step(dt)
+    .warm_start()
+    .build()?;
+
+let config = CfdConfigBuilder::march::<2, FloatType>("viv-wake")
+    .mesh(Mesh::box_domain([nx, ny])
+        .spacing(ft(h_spec))
+        .immersed(Body::disk(center, ft(0.5))))
+    .solver(solver)
+    .zones(zones)                                  // inflow, outflow, slip walls
+    .seed(Seed::UniformX { speed: 1.0 })
+    .march_for(STEPS)
+    .observe(Observe::default().probe([center[0] + ft(1.5), center[1]]))
+    .build()?;`;
+
+const flow = `// The flow layer: materialize a run from that description.
+let report = CfdFlow::march(&config).run_owned()?;
+
+// Or march a coupled run until a predicate fires, then fork the pause.
 let onset = CfdFlow::march(&nominal)
     .couple(world::corridor_coupling(1.0, 0))
     .from_field(world::initial_field())
     .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
 
-// Campaign level: fork that paused state once per candidate command.
 let corridor = CfdFlow::study("bank-angle corridor")
     .cases(model::coarse_commands())
     .fork(&onset)                            // the shared flow-resolved fork point
-    .branch(model::bank_world)               // one alternated world per command
+    .branch(model::bank_world)               // one description per candidate
     .continue_for(constants::BRANCH_STEPS)   // concurrent, copy-on-write
-    .reduce_all(model::score_branches)
-    .refine(&onset, model::fine_candidates)  // second round, same paused onset
-    .branch(model::bank_world)
-    .continue_for(constants::BRANCH_STEPS)
     .reduce_all(model::score_branches)
     .gates(model::corridor_gates())
     .verdict()?;`;
@@ -84,21 +100,29 @@ const axes = [
     </div>
 
     <p class="cap-body">
-      <code>CfdFlow</code> is a two-level language. At the trajectory level,
-      <code>march</code> advances a coupled run until a predicate fires and
-      yields a resumable pause. At the campaign level, <code>study</code> forks
-      that pause once per candidate and continues each branch in its own
-      alternated world.
+      A program is written in two layers. The configuration layer holds owned
+      descriptions: mesh, solver, boundary zones, seed, stop condition, and
+      observables. Building one is separate from running it.
     </p>
 
-    <pre><code>{fork}</code></pre>
+    <pre><code>{config}</code></pre>
 
     <p class="cap-body">
-      A fork shares the paused state in O(1) through copy-on-write, covering
-      tensor fields, navigation engine, and provenance log. Every branch stamps
-      a <code>!!ContextAlternation!!</code> marker naming its baseline, and
-      fan-outs run on scoped threads that produce bits identical to the
-      sequential run.
+      The flow layer materializes runs from those descriptions.
+      <code>march</code> advances a run until a predicate fires and yields a
+      resumable pause; <code>study</code> forks that pause once per candidate
+      and continues each branch in its own alternated world.
+    </p>
+
+    <pre><code>{flow}</code></pre>
+
+    <p class="cap-body">
+      Because a description is a value, a counterfactual is the same flow handed
+      a different description. A fork shares the paused state in O(1) through
+      copy-on-write, covering tensor fields, navigation engine, and provenance
+      log. Every branch stamps a <code>!!ContextAlternation!!</code> marker
+      naming its baseline, and fan-outs run on scoped threads that produce bits
+      identical to the sequential run.
     </p>
 
     <ul class="cap-nums">
