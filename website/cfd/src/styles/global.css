@@ -83,10 +83,20 @@ pre.astro-code {
   margin: 0 0 var(--space-4);
   overflow-x: auto;
 }
+/* Shiki writes the LIGHT theme's colours into each span's inline `color` and
+   the dark theme's into `--shiki-dark`. It never emits `--shiki-light`, so
+   light mode must not override `color` at all: a `var(--shiki-light)` rule is
+   invalid at computed-value time, and with `!important` it beat the inline
+   colour and flattened every light-mode block to one colour. Font style ships
+   as its own pair of variables and needs wiring up separately. */
+[data-theme='light'] pre.astro-code span {
+  font-style: var(--shiki-light-font-style, normal);
+}
 [data-theme='dark'] pre.astro-code,
 [data-theme='dark'] pre.astro-code span { color: var(--shiki-dark); }
-[data-theme='light'] pre.astro-code,
-[data-theme='light'] pre.astro-code span { color: var(--shiki-light) !important; }
+[data-theme='dark'] pre.astro-code span {
+  font-style: var(--shiki-dark-font-style, normal);
+}
 
 main { display: block; }
 
