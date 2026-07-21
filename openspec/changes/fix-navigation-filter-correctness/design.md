@@ -123,10 +123,32 @@ distinction is the whole point, so (a) is where this ends. Three reasons it is t
 3. `ReentryNavEngine` is the crate's re-entry navigation engine. An engine that cannot correct attitude
    is not a high-fidelity navigation model, whatever its state count says.
 
-**But (a) is feature-sized** — a quaternion or DCM nominal, gyro integration into it, and a rotation
-correction in `correct_position` — and it should not hold this change hostage. So: land **(b) inside
-this change** to remove the overconfidence immediately, and propose (a) as a follow-up. That is honest
-now, correct soon, and keeps the three defects in this change independently reviewable.
+~~**But (a) is feature-sized**~~ — **this was checked against the tree on 2026-07-22 and is false.**
+
+`Quaternion`, `Quaternion32`, `Quaternion64` ship in `deep_causality_num_complex`, which
+`deep_causality_cfd` **already depends on**. The type carries exactly the ESKF operations (a) needs:
+
+| (a) needs | Already shipped |
+|---|---|
+| a nominal attitude representation | `Quaternion<F>` |
+| gyro integration into it | quaternion multiply + `normalize()` |
+| injecting the error state `δψ` | `from_axis_angle(axis, angle)` |
+| the DCM the `−[f]×` coupling wants | `to_rotation_matrix()` |
+| initialisation / interpolation | `from_euler_angles`, `slerp` |
+
+So (a) is a field on `ReentryNavEngine` (which today holds `position`, `velocity`, `filter`,
+`tau_offset`, `elapsed` and no attitude) plus two call sites: integrate the gyro into the nominal, and
+apply a rotation correction in `correct_position`. That is not a feature; it is the size of (b) plus a
+constructor call.
+
+**Therefore (a) lands in this change, and (b) is dropped.** (b) was only ever justified by (a)'s cost,
+and it carried a real price — retaining the attitude error means that block is no longer an error
+*about the current nominal* in the textbook ESKF sense, a departure that would have had to be
+documented and later undone. With (a) affordable there is no reason to pay it.
+
+(a) also fixes the original defect properly rather than working around it: `reset_navigation` may then
+zero the attitude block **because the correction was actually injected**, which is the invariant the
+spec states.
 
 (b)'s cost is real and must be documented: retaining the attitude error means that block is no longer
 an error *about the current nominal* in the textbook ESKF sense. That is a deliberate, recorded
@@ -175,11 +197,12 @@ Steps 1–3 are independently revertible. Step 6 may be deferred to its own chan
 
 ## Open Questions
 
-- **Which attitude resolution?** ✅ **Resolved: (b) in this change, (a) as a sequenced follow-up**, per
-  D4 under the high-fidelity goal. (a) is the correct destination — the filter already carries the
-  gyro-bias states and the `−[f]×` coupling that make attitude estimation meaningful, and the current
-  overconfidence is the dangerous failure direction. It is deferred only because it is feature-sized,
-  not because (b) is sufficient. The follow-up should be proposed when this change lands.
+- **Which attitude resolution?** ✅ **Resolved: (a), in this change.** Revised 2026-07-22 after
+  testing the deferral against the tree. The earlier answer was "(b) now, (a) as a follow-up, because
+  (a) is feature-sized" — and (a) is not feature-sized: `Quaternion` with `from_axis_angle`,
+  `to_rotation_matrix`, `normalize` and `slerp` already ships in `deep_causality_num_complex`, an
+  existing `deep_causality_cfd` dependency. (b) existed only to avoid (a)'s cost, and that cost was
+  overstated. Doing (a) also removes (b)'s documented departure from textbook ESKF bookkeeping.
 - **Do the examples' navigation gates survive re-derivation?** Unknown until step 4. The corridor gates
   on dead-reckoning drift and terminal reacquisition error; both are downstream of `Q`.
 - **Should `Q` be Van Loan rather than `Q_c·dt`?** D1 chose the simpler form deliberately. If the

@@ -195,6 +195,18 @@ No runtime migration: no public API change, `publish = false`, no downstream con
 
 Rollback is per-step; steps 1 and 2 are independently revertible.
 
+## Deferral check (2026-07-22)
+
+D2a defers the mixture-weighted relaxation time and states "the composition it needs is already
+computed". **Tested against the tree: true.** `air_n2_mole_fraction` and `air_o2_mole_fraction` are
+shipped kernels in `deep_causality_physics/src/constants/hypersonic.rs`, and
+`qtt_ramc_stagline/main.rs:197-198` already calls both to form the N and O concentrations.
+
+So the follow-up is a weighting over pairs whose composition is in hand, not a new physics module. The
+deferral stands — it keeps the constant fix reviewable, which is a real reason — but it is small, and
+the proposal should be raised as soon as this change lands rather than carried as a standing
+disclaimer.
+
 ## Open Questions
 
 - **Which collision pair?** ✅ **Resolved: N₂–N₂ (`μ = 14.00`)**, per D2's recommendation under the

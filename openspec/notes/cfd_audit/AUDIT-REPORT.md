@@ -505,6 +505,24 @@ not checking was a safety-critical quantity left absent behind a plausible-sound
 remaining Phase 2 and Phase 3 items carry several deferrals of the same shape; each should be
 checked against what is actually in the tree before it is planned around.
 
+**5. The deferral sweep (2026-07-22) — six tested, two false, one rationale wrong.** Acting on
+lesson 4, every deferral making a factual claim about the tree was checked against it:
+
+| Deferral | Verdict | Evidence |
+|---|---|---|
+| Nav attitude (a) is "feature-sized" | **FALSE** | `Quaternion` with `from_axis_angle`, `to_rotation_matrix`, `normalize`, `slerp` ships in `deep_causality_num_complex` — already a `deep_causality_cfd` dependency. (a) is a field plus two call sites. **(a) promoted into change 3; (b) dropped.** |
+| `collect_constrained_edges`' consumer is `aperture-resolved-noslip` | **FALSE** | That capability is implemented, is the **default** (`NoSlipConstraint::new(.., true)`), and derives constraints via `cut_face_constraints` in `no_slip.rs` — not via the hook. The hook has no known consumer. Corrected at both docstrings. |
+| RAMC: "the composition it needs is already computed" | **TRUE** | `air_n2_mole_fraction` / `air_o2_mole_fraction` are shipped kernels, already called at `qtt_ramc_stagline/main.rs:197-198`. The mixture follow-up is small. |
+| Item 12 — negative pressure reaches the flux | **TRUE** | `marcher_2d.rs:135` floors `p` only for the wave speed. |
+| Item 13 — QTT constructors validate nothing | **TRUE** | Zero `return Err` / `is_finite` checks in `QttImmersed2d::new`. |
+| Item 14 — mask not clamped to `[0,1]` | **TRUE** | No clamp on the quantized mask. |
+
+**Two of six were false, and both had been stated confidently.** The pattern in each is the same: a
+negative asserted from an incomplete search. The attitude one was found only because the owner named
+the crate I had not looked in — I had searched `algebra`, `num` and `cfd`, concluded "no concrete
+Quaternion type exists", and was wrong. **A deferral resting on "X does not exist" is only as good as
+the search behind it, and the search must be stated so it can be checked.**
+
 **And one caution about the remediation itself.** Change 4's first anti-drift test scraped source text
 with `include_str!` — a test that asserts on *code as text*, inside a change whose purpose was
 replacing "documented" with "demonstrated". It would have passed on a hook mentioned only in a

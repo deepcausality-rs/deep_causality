@@ -53,15 +53,27 @@ Do not edit a navigation gate before this group's measurements are written down.
 
 Last, because it needs an owner decision and the options differ greatly in size.
 
-Resolution settled in design D4 under the high-fidelity goal: **(b) here, (a) as a sequenced
-follow-up.** (b) removes the overconfidence now; (a) is the correct destination and is deferred only
-for size, not because (b) suffices.
+Resolution revised 2026-07-22 after testing the deferral against the tree: **(a) here; (b) dropped.**
+`Quaternion` with `from_axis_angle`, `to_rotation_matrix`, `normalize` and `slerp` already ships in
+`deep_causality_num_complex`, an existing `deep_causality_cfd` dependency, so (a) is a field plus two
+call sites rather than a feature. (b) was justified solely by (a)'s cost and carried a real price — an
+attitude block that is no longer an error about the current nominal.
 
-- [ ] 6.1 Stop `reset_navigation` clearing the attitude block, so no error-state component is zeroed unless it was injected
-- [ ] 6.2 Document the departure this creates: the attitude block is no longer an error *about the current nominal* in the textbook ESKF sense. Record it as a deliberate interim with (a) as its named successor — not as a resting place
+- [ ] 6.1 Add a nominal attitude `Quaternion<R>` to `ReentryNavEngine`, which today carries
+      `position`, `velocity`, `filter`, `tau_offset`, `elapsed` and no attitude at all
+- [ ] 6.1a Integrate the gyro into the nominal each step (`q ← normalize(q ⊗ from_axis_angle(ω̂, |ω|·dt))`)
+- [ ] 6.1b Inject the estimated `δψ` into the nominal in `correct_position`, then zero the attitude
+      error block — which is now legitimate **because it was injected**, satisfying the spec's
+      "reset only if injected" invariant rather than working around it
+- [ ] 6.1c Use `to_rotation_matrix()` where the transition matrix needs the DCM, so the `−[f]×`
+      coupling reads the nominal rather than an implied identity
+- [ ] 6.2 Confirm no departure needs documenting: with `δψ` injected, the attitude block *is* an error
+      about the current nominal, so the textbook ESKF bookkeeping holds and (b)'s interim caveat is
+      not incurred
 - [ ] 6.3 Add a test that many position-only fixes do not shrink the attitude covariance monotonically toward zero on the strength of corrections never applied
 - [ ] 6.4 Confirm the retained attitude error still couples into velocity error through `−[f]×` as the transition matrix intends, and that retaining it does not destabilise the propagation
-- [ ] 6.5 Propose the (a) follow-up: a nominal attitude representation (quaternion or DCM), gyro integration into it, and a rotation correction in `correct_position` — the filter already carries the gyro-bias states and the coupling that make attitude estimation meaningful, so the state vector currently promises an estimate the engine cannot use
+- [ ] 6.5 Verify the quaternion stays normalised across a long march (integration drift is the one
+      real hazard (a) introduces), and that a zero gyro input leaves the nominal exactly unchanged
 
 ## 7. Verify
 
