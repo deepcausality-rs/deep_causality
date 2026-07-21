@@ -5,12 +5,12 @@
  * DeepCausality CFD — global stylesheet.
  *
  * Spec: website/web/DESIGN.md (binding). Descriptive companion:
- * website/design_board/.
+ * website/web_design/.
  *
  * Difference from website/web/src/styles/global.css: every §12 convention is
  * declared ONCE here as a shared utility. The marketing site accumulated nine
  * local `.eyebrow` redeclarations and three L-bracket implementations; that
- * debt is listed in DESIGN.md §12 and design_board/08-drift.md. This site
+ * debt is listed in DESIGN.md §12 and web_design/08-drift.md. This site
  * starts with the utilities, so components never redeclare them.
  */
 

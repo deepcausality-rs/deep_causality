@@ -10,8 +10,9 @@
 [![CodeFactor][codefactor-badge]][codefactor-url]
 ![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
-[![Miri][miri-badge]][miri-url]
 [![codecov][codecov-badge]][codecov-url]
+
+[//]: # ([![Miri][miri-badge]][miri-url])
 
 [codefactor-badge]: https://www.codefactor.io/repository/github/deepcausality-rs/deep_causality/badge
 

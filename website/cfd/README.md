@@ -26,7 +26,7 @@ in `.bazelignore`.
 ## Design
 
 The binding spec is [`../web/DESIGN.md`](../web/DESIGN.md); the descriptive
-companion is [`../design_board/`](../web_design/). This site follows both. Two
+companion is [`../web_design/`](../web_design/). This site follows both. Two
 deliberate differences, both of which implement recommendations the spec makes
 but the marketing site has not yet applied:
 
@@ -93,10 +93,12 @@ Prose follows `docs/writing_guides/AiStyleguide.md` and `ElementsOfStyle.md`.
 
 `astro check` requires **TypeScript 6.x**. TypeScript 7.0 dropped the
 programmatic API the checker uses (withastro/roadmap#1321), so `typescript` is
-pinned to `^6.0.3` here.
+pinned to `^6.0.3` across all three sites. Do not let a routine upgrade move it
+to 7.x.
 
-`website/web` still pins `^7.0.2`, so its `pnpm check` currently fails the same
-way. The fix there is identical.
+`@astrojs/markdown-satteri` is also pinned, in `pnpm-workspace.yaml`, because
+two resolved copies break Bazel's `public_hoist_packages`. See
+[`../README.md`](../README.md) for both constraints.
 
 ## Deliberate omissions
 
