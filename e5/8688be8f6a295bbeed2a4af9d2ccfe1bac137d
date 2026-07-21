@@ -1,0 +1,82 @@
+openspec/changes/fix-navigation-filter-correctness/tasks.md
+  s_f2afaa4ec55b4b::t_5d457f32ef3ccc 1-55,65-76
+  s_f2afaa4ec55b4b::t_cda7a1e589a506 56-64
+openspec/changes/close-qtt-solver-envelope/tasks.md
+  s_f2afaa4ec55b4b::t_2c15f160d7c148 1-51,55-81
+  s_f2afaa4ec55b4b::t_3e988db9e5f346 52-54
+openspec/changes/resolve-cfd-contract-gaps/proposal.md
+  s_f2afaa4ec55b4b::t_d381691366a388 1-101
+openspec/changes/resolve-cfd-contract-gaps/specs/qtt-surface-observables/spec.md
+  s_f2afaa4ec55b4b::t_2fa86385466f5e 1-38
+openspec/changes/resolve-cfd-contract-gaps/specs/boundary-zone-abstraction/spec.md
+  s_f2afaa4ec55b4b::t_aa2018affb1c2e 1-39
+openspec/changes/fix-navigation-filter-correctness/design.md
+  s_f2afaa4ec55b4b::t_14921a5e18e81d 1-111,134-177,183-187
+  s_f2afaa4ec55b4b::t_ef016fdd8ce3c0 112-133
+  s_f2afaa4ec55b4b::t_66e118f7001e38 178-182
+openspec/changes/close-qtt-solver-envelope/design.md
+  s_f2afaa4ec55b4b::t_e5c88fd020547e 182-185
+  s_f2afaa4ec55b4b::t_a4b4b091aa34d8 1-107,137-181,186-191
+  s_f2afaa4ec55b4b::t_289c02b2984818 108-136
+openspec/changes/close-qtt-solver-envelope/specs/compressible-qtt-flux/spec.md
+  s_f2afaa4ec55b4b::t_27b77996afbfe4 1-42
+openspec/changes/resolve-cfd-contract-gaps/specs/body-fitted-qtt-coordinate/spec.md
+  s_f2afaa4ec55b4b::t_c03ec00c1b717c 1-48
+openspec/changes/fix-navigation-filter-correctness/proposal.md
+  s_f2afaa4ec55b4b::t_4032fa37f5846f 1-111
+openspec/changes/close-qtt-solver-envelope/specs/qtt-numerical-envelope/spec.md
+  s_f2afaa4ec55b4b::t_1496e7d94e69b3 1-64
+openspec/changes/fix-ramc-vibrational-relaxation-pair/specs/vibrational-relaxation-closure/spec.md
+  s_f2afaa4ec55b4b::t_d90e5eddaf8cdc 1-90
+openspec/changes/fix-ramc-vibrational-relaxation-pair/tasks.md
+  s_f2afaa4ec55b4b::t_874f1b406fba1c 6-9
+  s_f2afaa4ec55b4b::t_b32329ae07a52f 1-5,10-67
+openspec/changes/close-qtt-solver-envelope/proposal.md
+  s_f2afaa4ec55b4b::t_8dc660daa32402 1-103
+openspec/changes/resolve-cfd-contract-gaps/.openspec.yaml
+  s_f2afaa4ec55b4b::t_425aff6df37163 1-2
+openspec/changes/fix-navigation-filter-correctness/.openspec.yaml
+  s_f2afaa4ec55b4b::t_5e4435abc59b48 1-2
+openspec/changes/resolve-cfd-contract-gaps/design.md
+  s_f2afaa4ec55b4b::t_cb3bccd08998ad 82-90
+  s_f2afaa4ec55b4b::t_a3212aa5f3e147 1-81,91-101,126-167,178-180
+  s_f2afaa4ec55b4b::t_953fc0ceed1ce3 168-177
+  s_f2afaa4ec55b4b::t_bcb88132bcaea7 102-125
+openspec/changes/close-qtt-solver-envelope/specs/qtt-immersed-body/spec.md
+  s_f2afaa4ec55b4b::t_0f0988449aa1a9 1-86
+openspec/changes/fix-navigation-filter-correctness/specs/eskf-filter-correctness/spec.md
+  s_f2afaa4ec55b4b::t_274dad45c1a9dc 1-129
+openspec/changes/fix-ramc-vibrational-relaxation-pair/proposal.md
+  s_f2afaa4ec55b4b::t_c03af3839fd069 1-103
+openspec/changes/fix-ramc-vibrational-relaxation-pair/design.md
+  s_f2afaa4ec55b4b::t_7e21ff22f07362 1-48,53-81,124-199,203-204
+  s_f2afaa4ec55b4b::t_99d52546652962 200-202,205-211
+  s_f2afaa4ec55b4b::t_3b748f3e169ec4 49-52
+  s_f2afaa4ec55b4b::t_3db2b1139dd7ae 82-123
+openspec/changes/resolve-cfd-contract-gaps/tasks.md
+  s_f2afaa4ec55b4b::t_bda459becf1bc1 5-9
+  s_f2afaa4ec55b4b::t_72f88a545e8435 1-4,10-23,30-54
+  s_f2afaa4ec55b4b::t_2f0efaed9a414f 24-29
+openspec/changes/fix-ramc-vibrational-relaxation-pair/specs/compressible-qtt-validation/spec.md
+  s_f2afaa4ec55b4b::t_9c696608aefd7d 1-36
+openspec/changes/fix-ramc-vibrational-relaxation-pair/.openspec.yaml
+  s_f2afaa4ec55b4b::t_29b929018584e7 1-2
+openspec/changes/close-qtt-solver-envelope/.openspec.yaml
+  s_f2afaa4ec55b4b::t_2db85167995efc 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "e58688be8f6a295bbeed2a4af9d2ccfe1bac137d",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
