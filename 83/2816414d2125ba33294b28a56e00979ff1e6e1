@@ -1,0 +1,24 @@
+openspec/changes/close-qtt-solver-envelope/design.md
+  s_f2afaa4ec55b4b::t_e6c61752b37155 103-118,163-186
+  s_f2afaa4ec55b4b::t_67ffff50e1ac4e 187
+openspec/changes/close-qtt-solver-envelope/tasks.md
+  s_f2afaa4ec55b4b::t_ab2c97e958e267 66-71
+openspec/changes/close-qtt-solver-envelope/proposal.md
+  s_f2afaa4ec55b4b::t_ab2c97e958e267 94-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "832816414d2125ba33294b28a56e00979ff1e6e1",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
