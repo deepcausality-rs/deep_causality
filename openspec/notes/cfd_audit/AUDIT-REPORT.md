@@ -11,7 +11,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 outstanding.**
+> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (1 of 4 changes landed).**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
@@ -34,8 +34,11 @@ computes.
 > | **B-3** `dec_cylinder_verification` has no gate | **RESOLVED** |
 > | **B-4** `BlendedMap` documents an absent fold check | **RESOLVED** — Phase 2 change 4 |
 >
-> **Phase 2, change 4 (`resolve-cfd-contract-gaps`) closes items 8, 11 and 15.** What it found
-> beyond this report:
+> **Phase 2, change 4 is implemented and archived** as
+> [`openspec/changes/archive/2026-07-21-resolve-cfd-contract-gaps/`](../../changes/archive/2026-07-21-resolve-cfd-contract-gaps/),
+> closing items **8, 11 and 15**; its three capability specs are synced into `openspec/specs/`.
+> One task is recorded as **skipped, not done** — see the note at the end of this block. What the
+> change found beyond this report:
 >
 > - **B-4 was worse than "an absent check".** The module doc argued a fold was impossible — two
 >   orientation-compatible charts, so `det J_λ` keeps one sign. That reasoning is false for a linear
@@ -64,11 +67,36 @@ computes.
 >   `DET_FLOOR_FRACTION` makes it exit 1 naming the constructor's refusal.
 > - **Item 15's hook was one of two documentation gaps, in opposite directions.** `BoundaryZone`
 >   documented five hooks and declared six — `collect_slip_edges` was wired but undocumented, while
->   `collect_constrained_edges` was documented but unwired. Both are now correct, and a test compares
->   the declared and folded sets so they cannot drift apart again.
+>   `collect_constrained_edges` was documented but unwired. Both are now correct. Zone-supplied
+>   constrained edges compose by **union** with the structural set, folded after the free-slip un-pin
+>   so an explicit constraint outranks a structural relaxation.
+> - **The first attempt at the anti-drift test was itself an instance of this report's central
+>   defect, and was rejected by the owner.** It scraped the trait and solver sources with
+>   `include_str!` and compared the two lists of `collect_*` names. That is a test of *text*: it
+>   passes on a hook named only in a comment, fails on reformatting, and cannot detect a hook that is
+>   folded but ignored — in a change whose entire purpose was replacing "documented" with
+>   "demonstrated". It also broke `bazel test`, which sandboxes each target so a test crate cannot
+>   read `../../../src/**`; `cargo test` passed and hid it.
+>
+>   Replaced with behavioural coverage through the public API: a probe zone implements one hook at a
+>   time and each must **change a marched result**. All six fold sites were then demonstrated
+>   falsifiable by fault injection. Two flaws in the probe surfaced that a source scan would have
+>   concealed — dropping *one* prescribed edge gives `Δ = 0` exactly (that edge is a corner already
+>   no-slip pinned), and a probe supplying edges without values pins edges already at zero, making
+>   every delta ~1e-18 round-off. **Standing rule adopted: no test may assert on source text.**
 > - **Item 11's `preserved_drag_fraction` was never at risk.** The audit reasoned the rename was safe
 >   because the quantity is used comparatively; in fact it is computed from the thrust coefficient
 >   (`srp_preserved_drag_fraction_kernel(C_T)`) and never reads the heat observable at all.
+>>
+> **One task skipped, by owner decision.** Change 4's task 5.9 — re-run the full verification suite and
+> confirm no harness result moved — was **not discharged**. Two harnesses ran green
+> (`mms_taylor_green_verification`, `dec_taylor_green_re1600_verification`); the compressible set (Sod,
+> RAMC, cylinder, Park-2T, QTT Taylor-Green, blunt-body) was never run against the diff. It is recorded
+> as skipped rather than marked done. The mitigation it rests on is the Phase-1 CI workflow, which runs
+> those harnesses on the next PR — so **that CI run is now the only evidence behind "no result moved",
+> and is worth watching.** What *is* established without it: the DEC path is byte-identical by
+> construction (no shipped zone supplies constrained edges, asserted by test), all three `BlendedMap`
+> consumers pass with no geometry refused, and the observable rename left the formula untouched by diff.
 >
 > What Phase 1 changed, and what it found beyond this report:
 >
@@ -229,6 +257,12 @@ inconsistent basis that **understates** the solver. Fix the table, not the solve
 Four findings survived review at critical severity. All four are CONFIRMED and were additionally
 re-read at source by the lead auditor.
 
+> **Status 2026-07-21: three of four resolved.** B-2 and B-3 closed in Phase 1, B-4 in Phase 2
+> change 4. **B-1 (Millikan–White reduced mass) remains open and is the last certification blocker** —
+> it is item 7 of Phase 2, scheduled third in the implementation order (change
+> `fix-ramc-vibrational-relaxation-pair`). The entries below are kept at their as-found wording, with
+> resolution noted inline, so they stay comparable to the module reports.
+
 ### B-1 — Millikan–White reduced mass is wrong for the documented collision pair
 `verification/qtt_ramc_stagline/config.rs:35-37`, `src/solvers/qtt/compressible/fitting.rs:72-73`
 
@@ -283,8 +317,14 @@ expensive harness (~510 s) and its only isolated-cylinder validation.
 *Action:* gate St and C_d against the stated Williamson / Dröge–Verstappen bands; exit nonzero on solver
 error.
 
-### B-4 — `BlendedMap` documents a fold check it does not perform
+### B-4 — `BlendedMap` documents a fold check it does not perform — ✅ RESOLVED (2026-07-21)
 `src/coordinate/blended.rs:17,171`
+
+> **Resolved by change 4, and the finding understated the defect.** The doc did not merely fail to
+> enforce one-signedness — it argued the property followed from the two charts being
+> orientation-compatible, which is false for a linear blend: **275 accepted configurations fold**.
+> `BlendedMap::new` now scans the closed domain and refuses a non-finite, sign-changing or
+> near-singular determinant against a floor **relative** to `dr·span_y`. See the header block.
 
 The module doc states the constructor rejects a fold and that det J one-signedness holds "by
 construction". No such check exists in `BlendedMap::new`. The inverse metric divides by `det_at(ξ,η)`
@@ -320,7 +360,9 @@ function uses a correct Joseph-form update citing Groves (2013) §3.4.3.
 
 **`wall_heat_flux` is not a flux** — it is a temperature-weighted volumetric rate with no gradient,
 conductivity or surface normal, and the production path hardcodes `t_wall = 0` with no way to configure
-it. For a re-entry TPS consumer this is the safety-critical quantity.
+it. For a re-entry TPS consumer this is the safety-critical quantity. — ✅ **RESOLVED (2026-07-21):**
+renamed `penalization_heat_integral`, freeing `wall_heat_flux` for a genuine Fourier-law
+implementation; `T_w` moved into `QttBody` beside `ubx`/`uby` and recorded in the run output.
 
 **The QTT convection gate tests a re-implementation, not the shipped solver.** The harness open-codes the
 convection assembly; the shipped `rate` path is never invoked by any gate, and the only tests touching it
@@ -398,6 +440,44 @@ eleven orders above the measurement), and `0 < C_d < 100` — none of which cons
 
 ---
 
+## 5c. What remediation taught about the audit's own method
+
+*Added 2026-07-21 during Phase 2 change 4.*
+
+Three lessons, each earned by a mistake made while fixing this report's findings rather than by
+analysis. They are recorded because they change how the remaining Phase 2 items should be worked.
+
+**1. A "by construction" claim may be false, not merely unchecked.** This report classified B-4 as a
+documented guarantee that nothing enforced — the milder reading. The guarantee was also *wrong*: the
+doc's argument (orientation-compatible charts keep `det J` one-signed) fails for a linear blend, and
+275 accepted configurations fold. The other 86 doc-overclaims should be read the same way — **disprove
+the claim before enforcing it**, because enforcing a false claim produces a check that rejects valid
+input or, worse, one that cannot fire.
+
+**2. Writing the falsifiability test is what finds the hole in the fix.** Change 4's first
+determinant scan looked complete and passed everything. Constructing the near-singular case that was
+*supposed* to fail revealed the scan skipped the domain's closed boundary, where the sampled minimum
+decays only as `~1/nx` — undetectable below `lx ≈ 20`. Phase 1's rule was "show the gate bites"; the
+sharper form is **write the input that must fail before believing the check is complete**.
+
+**3. A gate can verify a copy of the code instead of the code.** Gate BM-A ran its own line-for-line
+duplicate of the constructor's Jacobian algebra, so it was green regardless of what `BlendedMap`
+actually did — and underneath sat a `span_y` definition that agreed with the crate's only by numerical
+coincidence. This is a distinct failure mode from the 72 tautologies catalogued in §7: not a gate that
+cannot fail, but a gate measuring **the wrong artifact**. The QTT convection gate flagged in §4b
+("tests a re-implementation, not the shipped solver") is the same shape, which suggests auditing the
+remaining harnesses for it specifically.
+
+**And one caution about the remediation itself.** Change 4's first anti-drift test scraped source text
+with `include_str!` — a test that asserts on *code as text*, inside a change whose purpose was
+replacing "documented" with "demonstrated". It would have passed on a hook mentioned only in a
+comment. It was rejected by the owner, and a standing rule adopted: **no test may assert on source
+text; behavioural coverage through the public API only.** It also broke `bazel test`, which sandboxes
+each target — `cargo test` passed and concealed it, so **`bazel test //...` is the check that
+matters** before claiming a change is verified.
+
+---
+
 ## 6. Production readiness ranking
 
 Ranking reflects **assurance**, not elegance. Critical counts are post-review.
@@ -410,12 +490,12 @@ Ranking reflects **assurance**, not elegance. Critical counts are post-review.
 | 4 | QTT compressible marchers | `needs-work` | 0 | RH exact (hand-verified); Sod matches exact Riemann; unfloored negative pressure can reach the flux |
 | 5 | CfdFlow DSL | `needs-work` | 0 | CoW fork and determinism largely as advertised; doc overclaims |
 | 6 | Docs-vs-code parity | `needs-work` | 0 | 87 doc-overclaim + 39 doc-gap findings crate-wide |
-| 7 | DEC boundary zones | `needs-work` | 0 | Documented `collect_constrained_edges` hook is never called |
+| 7 | DEC boundary zones | `needs-work` | 0 | ✅ hook wired (union composition) and all six fold sites now covered behaviourally; remaining items are doc parity |
 | 8 | Examples | `needs-work` | 0 | Reproducible and well-structured; two gates cannot fail |
 | 9 | Crate-wide constants sweep | `needs-work` | 0 | Negative-pressure flux, Mach-1.05 shock floor, f32 pressure-floor collapse |
 | 10 | Studies | `needs-work` | 0 | Several headline findings not supported by what the code measures |
 | 11 | Test suite & build health | `needs-work` | 0 | Change-detector tests; verification suite absent from CI (rolled into B-2) |
-| 12 | Coordinate + tensor bridge | `needs-work` | 1 | B-4 |
+| 12 | Coordinate + tensor bridge | `needs-work` | 0 | ✅ B-4 resolved — invertibility enforced over the closed domain, gate BM-A now measures the shipped constructor |
 | 13 | Verification harnesses | `needs-work` | 1 | B-3; the layer that must be strongest is among the weakest |
 | 14 | Plasma / blackout physics | **`not-ready`** | 1 | Headline result rests on B-1 |
 | 15 | Navigation / ESKF | **`not-ready`** | 0 | Two compounding filter defects (§4b); unguarded public API |
@@ -430,7 +510,7 @@ individually major but jointly remove the basis for trusting the module's headli
 
 | Axis | Count | Pattern |
 |---|---|---|
-| doc-overclaim | 87 | Prose describes intended design; code implements a subset. Recurring shape: a doc asserts a property holds "by construction" where no check exists (B-4 is the sharpest case). |
+| doc-overclaim | 87 | Prose describes intended design; code implements a subset. Recurring shape: a doc asserts a property holds "by construction" where no check exists. B-4 was the sharpest case and is now closed — instructively, its "by construction" argument was not merely unchecked but **false**, so the pattern is worth treating as a claim to disprove rather than a claim to enforce. |
 | tautology-circular | 72 | Gates restating the implementation, folding over hardcoded constants, or comparing a value to a bound pinned from that same value. |
 | physics-math | 50 | Genuine formula/constant defects — concentrated in plasma chemistry, navigation and penalization, **not** in the core DEC/QTT marchers. |
 | magic-number | 46 | Load-bearing literals without traceable provenance. |
@@ -513,24 +593,35 @@ order-of-magnitude framing naming the ±0.70-decade band as pinned; the lid-cavi
 reports the 65² default (RMSE **0.0617**, primary vortex matching Ghia to 1e-4) instead of the coarse
 33² trend rung that understated the solver by more than 2×.
 
-**Phase 2 — Close the physics defects — ⬅ NEXT**
+**Phase 2 — Close the physics defects — ⬅ IN PROGRESS**
 
 Phase 1 established that these are now *detectable*: item 10's condition is already failing a gate
 nightly. Nothing here is blocked on further analysis.
 
+Specified as four openspec changes. **Change 4 (`resolve-cfd-contract-gaps`, items 8 / 11 / 15) is
+implemented and archived**; the other three are specified and not started, in the order
+**2 → 1 → 3** (`close-qtt-solver-envelope` first, because item 10's nightly-red gate is the acceptance
+test for the whole envelope group, and item 13's constructor validation is a prerequisite for it).
+
 7. Resolve `REDUCED_MASS_AMU` at both sites and re-baseline the RAM-C chain and the three examples. — **B-1**
-8. Implement the fold/singularity check `BlendedMap` documents; guard ÷det J. — **B-4**
+8. ✅ **DONE** — Implement the fold/singularity check `BlendedMap` documents; guard ÷det J. — **B-4**
+   Scan covers the **closed** domain against a floor relative to `dr·span_y`; a fold is reachable
+   (275 configurations) so the sign check is falsifiable; gate BM-A rebuilt on the shipped constructor
+   and its duplicate `jacobian_scan` deleted, retiring a latent `span_y` mismatch.
 9. Scale ESKF `Q` by `dt`; guard the innovation covariance and validate measurement variance; add a
    horizon-invariance test; fix `correct_position` attitude handling. — §4b
 10. Resolve the Brinkman envelope: choose η from a wall-error target, document the `η ≥ dx²/ν` resolution
     constraint, and state that it is currently violated 48×. — §4b, §5b.
     **This is now the nightly red build** — `qtt_cylinder_verification` fails on exactly this condition,
     so the fix has a ready-made acceptance test: the η ladder must converge.
-11. Rename or re-derive `wall_heat_flux`; make `t_wall` configurable. — §4b
+11. ✅ **DONE** — Renamed `penalization_heat_integral`; `wall_heat_flux` reserved for a real
+    Fourier-law implementation; `T_w` configurable via `QttBody` and recorded in the run output. — §4b
 12. Reject non-positive pressure in `marcher_2d` instead of flooring it only for the wave speed.
 13. Add numerical-envelope validation to the QTT constructors, matching the DEC family.
 14. Clamp the body mask to [0,1] after quantization, or validate in `QttImmersed2d::new`.
-15. Wire or remove `BoundaryZone::collect_constrained_edges`.
+15. ✅ **DONE** — Wired into the constrained projection (union composition, applied after the
+    free-slip un-pin); the intended consumer `aperture-resolved-noslip` is recorded at the hook. All
+    six fold sites are covered behaviourally and demonstrated falsifiable by fault injection.
 
 **Phase 3 — Documentation truth-up (bidirectional)**
 16. Reconcile the 87 doc-overclaims. Where prose describes intent, mark it intent.
