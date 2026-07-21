@@ -6,7 +6,7 @@ import { EXAMPLES_URL } from '../../consts';
 
 const title = 'Worked examples — DeepCausality CFD';
 const description =
-  'Seven runnable examples ordered by what they demand of the solver, each with its committed output, its walkthrough, and its stated limitation.';
+  'Four runnable examples ordered by what they demand of the solver, each with its committed output, its walkthrough, and its stated limitation.';
 
 const examples = (await getCollection('examples')).sort(
   (a, b) => a.data.order - b.data.order
@@ -18,7 +18,7 @@ const examples = (await getCollection('examples')).sort(
   <article class="page epage">
     <header class="ehead">
       <p class="eyebrow">Worked examples</p>
-      <h1>Seven worked examples</h1>
+      <h1>Four worked examples</h1>
       <p class="lede">
         Ordered by the solver and DSL surface each example requires. Figures are
         quoted from committed <code>output.txt</code> files, except where an

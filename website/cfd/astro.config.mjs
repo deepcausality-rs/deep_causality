@@ -23,6 +23,9 @@ export default defineConfig({
           // The validation-status page is the adoption document; rank it high.
           item.priority = 0.9;
           item.changefreq = 'monthly';
+        } else if (path.startsWith('/tutorial/')) {
+          item.priority = 0.85;
+          item.changefreq = 'monthly';
         } else if (path.startsWith('/blueprints/')) {
           item.priority = 0.8;
           item.changefreq = 'monthly';

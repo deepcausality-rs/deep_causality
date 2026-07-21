@@ -12,11 +12,11 @@ verbs:
   - reduce_all
 worked:
   - label: Plasma retropulsion descent
-    href: /examples/plasma-blackout-retropulsion/
+    href: /tutorial/stage-3-retropulsion/
   - label: Plasma blackout corridor
-    href: /examples/plasma-blackout-corridor/
+    href: /tutorial/stage-1-corridor/
   - label: Weather dispersion table
-    href: /examples/plasma-blackout-weather/
+    href: /tutorial/stage-2-weather/
 ---
 
 Two levels. The trunk marches to an event; the study fans out from the pause it
@@ -133,7 +133,7 @@ branch.
 ## State forks compared with parameter forks
 
 A parameter fork re-runs a model from different inputs; each branch is an
-independent world. The [weather table](/examples/plasma-blackout-weather/) has
+independent world. The [weather table](/tutorial/stage-2-weather/) has
 that shape.
 
 A state fork pauses one marched coupled field and continues every branch from
@@ -145,7 +145,7 @@ same intervention: the same command schedule with the flow closure held at the
 fork's value. If simple kinematics reproduces the divergence, the flow did not
 contribute to it.
 
-The [retropulsion descent](/examples/plasma-blackout-retropulsion/) runs that
+The [retropulsion descent](/tutorial/stage-3-retropulsion/) runs that
 comparison as gate 4c. Its branches depart the frozen-drag prediction by up to
 139.4 m/s against a 100 m/s threshold, and its flow observables spread 0.0202
 across the roster where the corridor's bank branches agreed to three digits.

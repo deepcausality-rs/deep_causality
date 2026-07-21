@@ -1,0 +1,359 @@
+---
+title: 'Walk 3: How the loop was closed'
+stage: 3
+question: Why is coast, commit and burn a single march call, and why must the throttle counterfactual fork a marched state rather than a parameter?
+summary: A walk through the retropulsion descent, where the table is read in flight and the flow state itself is forked. Six stations, including the one design decision the program cannot express any other way and the three bands that were corrected after they looked like results.
+objective: Recognise when a leg boundary would destroy the state a counterfactual needs, and read a constants file as a record of what was learned.
+command: cargo run --release -p avionics_examples --example plasma_blackout_retropulsion
+runtime: 333.6 s against an 1800 s budget
+files:
+  - cfd/plasma_blackout/retropulsion/main.rs
+  - cfd/plasma_blackout/retropulsion/constants.rs
+uses:
+  - march ... until
+  - fork of a marched state
+  - continue_for
+  - reduce
+  - ThrottleGuidance
+consumes: The corridor descent and weather_table.csv, read in flight.
+produces: A landing at 1.78 m/s, and the family's closed loop.
+source: examples/avionics_examples/cfd/plasma_blackout/retropulsion
+---
+
+Walk 1 forked a paused state to choose a command. Walk 2 alternated worlds to
+build a table. This walk does something neither could: it forks a state whose
+*flow* is the thing under test.
+
+Run it before reading. About five and a half minutes.
+
+```bash
+cargo run --release -p avionics_examples --example plasma_blackout_retropulsion
+```
+
+One piece of physics has to land first, because three stations depend on it.
+Firing an engine forward into a supersonic freestream does not add thrust to a
+fixed drag. The plume displaces the bow shock and destroys the aerodynamic
+drag the vehicle was using. Jarvinen and Adams measured this in 1970. The
+consequence is that a vehicle which lights its engine too hard arrives
+*faster* than one that coasts.
+
+That is why the throttle decision cannot be a parameter sweep. Every candidate
+throttle changes the flow, and the flow is what determines whether the
+candidate was any good.
+
+## Station 1: Act 0, and where a flight fact belongs
+
+Open `retropulsion/main.rs`. The first act reads the artifact walk 2 produced:
+
+```rust
+let table = model::load_dispersion_table().map_err(leg_err("setup: weather table"))?;
+let informed = model::day_belief(&table, utils::ft(constants::MEASURED_D_TEMP));
+let uninformed = model::standard_day_belief(&table);
+```
+
+The measured day is 32 K below standard. Its row sizes the ignition margin,
+supplies the density scale, and scales the accelerometer bias.
+
+Now read the next block, and the comment on it:
+
+```rust
+let mut seed_field = world::powered_initial_field();
+if informed.clamped {
+    seed_field.log_mut().add_entry(&format!(
+        "dispersion row CLAMPED: measured departure {:+.1} K lies outside the tabulated \
+         range, so the row flown is the nearest end row rather than an interpolation",
+        constants::MEASURED_D_TEMP
+    ));
+}
+```
+
+**Why the clamp is written into the field's log.** If the measured day falls
+outside the tabulated range, the interpolation silently becomes an
+extrapolation clamped to an end row. That is a fact about the flight, and the
+comment in the source states the rule: flight facts are stamped where flight
+facts live. Printing it to the console instead would leave an extrapolated row
+invisible to every gate and absent from the recorded run.
+
+This is a small decision that generalizes. Anything a reviewer would need to
+know six months later goes into provenance, not into stdout.
+
+## Station 2: Act 1, and stages that are deliberately inert
+
+```rust
+let onset = CfdFlow::march(&corridor_world)
+    .couple(world::powered_descent_coupling(
+        informed.bias_departure, 0, informed.margin_m,
+    ))
+    // ...
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
+```
+
+This is walk 1's corridor leg, with one difference: the coupling is
+`powered_descent_coupling`, which has the thrust and plume stages already in
+the stack. The throttle is commanded to zero.
+
+**Why compose them early.** The stages are strictly inert at zero throttle, so
+composing them costs nothing. What it buys is that the safety envelope is live
+on every step from the beginning, rather than appearing at ignition. A gate
+that only exists once the engine lights cannot catch a violation before it.
+
+Gate 1 then checks this leg against walk 2's prediction for this day:
+
+```text
+[PASS] (1) corridor inheritance: blackout onset at 10.50 s against the
+       table's 10.54 s for this day (error 0.040 s) and dwell 59.50 s
+       against 59.41 s (error 0.087 s), tolerance 0.50 s
+```
+
+**Why compare against the table rather than against the corridor.** Read the
+doc comment on `WINDOW_PREDICTION_TOL_S` in `constants.rs`. It records that an
+earlier version compared this leg against the *corridor's* recorded window,
+and that this could not hold: the corridor flies the standard day and this
+example flies a cold one. Demanding equality there "would have asked the
+descent to ignore the weather it exists to consume."
+
+## Station 3: One march call, and why splitting it would be fatal
+
+This is the most important station in the walk. Acts 2 and 3 (coast, commit,
+and burn) are a single march call:
+
+```rust
+let burn = CfdFlow::march(&burn_world)
+    .couple(world::powered_descent_coupling(
+        informed.bias_departure, 0, informed.margin_m,
+    ))
+    .from(onset.state())
+    .until(|field, _| {
+        // Pause inside the burn: the engine is lit and the plume is on the layer.
+        field.scalar("ignited")
+            .and_then(|s| s.first().copied())
+            .is_some_and(|v| v > 0.0)
+    })?;
+```
+
+Structurally, coast and burn are two different flight phases. It would be
+natural to write them as two legs. The source explains why they are not, and
+the reason is worth reading in full:
+
+```text
+A coupling stack is fixed per march call and `MarchState` carries the coupled
+field but not the marched fluid tensor, so a leg boundary at ignition would
+re-seed the flow and the fork below would fork a state from which the plume
+had already been discarded.
+```
+
+**Unpack that.** A pause carries the coupled field across a leg boundary, but
+not the marched fluid tensor. Split at ignition and the next leg starts from a
+re-seeded flow. The fork at station 4 would then fork a state with no plume on
+the layer, and the plume is the entire subject of the experiment. The program
+would run, produce numbers, pass most gates, and measure nothing.
+
+So the leg boundary is placed *inside* the burn rather than at its start. The
+predicate waits for `ignited` to latch. That is the pause the fork needs.
+
+**The general rule.** Where you put a leg boundary is not a formatting
+decision. Ask what state the next step needs, and check whether the boundary
+survives it.
+
+## Station 4: Forking a marched state
+
+```rust
+let branches = CfdFlow::study("mid-burn throttle roster")
+    .cases(model::throttle_roster())
+    .fork(&burn)
+    .branch(|case| model::branch_world(case, fork.fraction, informed.rho_scale))
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce(move |run| model::score_branch(run, fork))
+    .record(model::branch_table_path())
+    .gates(model::branch_gates())
+    .verdict()?;
+```
+
+Syntactically this is walk 1's fork. Semantically it is doing something walk 1
+could not: the state being shared includes a marched flow field with a plume
+on it.
+
+Your output's branch table:
+
+```text
+branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
+coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
+low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
+mid           0.40   0.4000     0.1238      9.9667     122.30    120.335     99.984
+high          0.60   0.6000    -0.0161     12.8932     182.54    151.991    151.413
+hard          0.85   0.7931    -0.0611     17.1977     256.80    212.085    216.209
+```
+
+Read the `axial m/s2` column top to bottom. Coasting decelerates at
+10.595 m/s². Lighting the engine to 0.20 throttle decelerates at 7.472, which is
+*less*. The plume is destroying preserved drag about as fast as thrust
+replaces it. Preserved drag goes negative at the harder throttles, reaching
+the correlation's wake-type branch.
+
+Note also that `cmd` and `flown` differ on the hard branch only. The envelope
+admitted 0.7931 of a commanded 0.85, exactly as walk 1's 40° bank was clamped.
+
+**The gate that justifies the whole design.** Compare the last two columns.
+`dv frozen` is what each branch would have shed if the drag closure were held
+frozen at the fork's value; that is, if you treated this as a parameter sweep
+over thrust with the flow held fixed.
+
+```text
+[PASS] (4c) coupling load-bearing: branch trajectories depart the frozen-drag
+       prediction by up to 139.3755 m/s over the continuation (threshold 100)
+       — thrust-only kinematics does not predict the outcome
+```
+
+139.4 m/s is the measured difference between forking the state and forking a
+parameter. It is the number that says this machinery earned its place.
+
+**Fork economics are gated too**, with one honesty correction recorded in the
+source: the two sharing flags compare a clone against the `Arc` it was cloned
+from, so no *input* can falsify them. They guard against a future edit that
+materializes the state instead of sharing it. The quantity that genuinely
+varies with the run is post-fork bond growth, which the gate bands and which
+measured 0. An earlier README overclaimed a reference count as positive
+evidence; that claim was withdrawn.
+
+## Station 5: Act 4, and a place where the fork is the wrong tool
+
+The landing is flown twice, from the same baseline, differing only in the
+margin the guidance was sized with. That is a counterfactual. But look at how
+it is implemented:
+
+```rust
+let terminal = CfdFlow::march(&terminal_world)
+    .couple(world::powered_descent_coupling_with(
+        informed.bias_departure, 0, informed.margin_m, true,
+    ))
+    .from(burn_out.state())
+    .until(|field, _| field.regime().map(|r| r.touchdown).unwrap_or(false))?;
+
+let uninformed_terminal = CfdFlow::march(&uninformed_world)
+    .couple(world::powered_descent_coupling_with(
+        informed.bias_departure, 0, uninformed.margin_m, true,
+    ))
+    .from(burn_out.state())
+    .until(|field, _| field.regime().map(|r| r.touchdown).unwrap_or(false))?;
+```
+
+Two march calls, not a forked study. The source states why:
+
+```text
+Two march calls rather than a forked study, because the two beliefs differ in
+the **coupling** and a coupling stack is fixed per march call — the fork path
+varies the *world config*, which cannot carry a guidance parameter, so these
+worlds carry no `!!ContextAlternation!!` marker.
+```
+
+**Why this station is here.** A tutorial that only showed the DSL succeeding
+would be teaching you to reach for it everywhere. The fork path varies world
+configuration. The margin is a guidance parameter living in the coupling, so
+it is out of that path's reach. The program uses two plain marches and, being
+honest about it, does not stamp an alternation marker on worlds that were not
+alternated.
+
+The result:
+
+| world | margin | lights landing burn | contact | propellant |
+|---|---:|---:|---:|---:|
+| informed | 73.41 m | 153.19 m | 1.78 m/s | +13.45 kg |
+| uninformed | 52.98 m | 129.75 m | 1.85 m/s | — |
+
+<div class="callout">
+<p class="callout-title">Notice</p>
+<p>The flown separation is 23.45 m, but the two margins differ by 20.43 m. The
+gap is the point:
+<code>ignition_altitude_kernel</code> solves a stopping distance rather than
+adding an offset, so the extra margin also changes the mass and speed the burn
+starts from. One number is arithmetic; the other is a flight, and gate 5 reads
+the flight.</p>
+</div>
+
+The source is equally explicit about where the margin does *not* bind: at the
+ignition commit, navigated sigma is 0.38 m against margins of 73.41 and
+52.98 m. Both beliefs commit on the same step. A gate reading the commit would
+have called the two worlds identical.
+
+## Station 6: Reading a constants file as a lab notebook
+
+Open `retropulsion/constants.rs` and read the doc comment on
+`DRAG_COLLAPSE_MIN`. It does not just state a threshold. It records that the
+band was re-earned after two corrections:
+
+```text
+- the closure normalized its thrust coefficient against a construction-time
+  12 kPa while the safety gate used the sensed ~2.2 kPa, which kept `C_T` in
+  the correlation's shallow range and produced fractions of 1.000 -> 0.217. It
+  reads the sensed dynamic pressure now, so `C_T` reaches the range where the
+  correlation actually collapses;
+- the coast endpoint was a hardcoded `1.0`. A coasting branch has no plume and
+  now reports no fraction at all, so the collapse is measured across the
+  branches that actually applied a decrement.
+```
+
+Both bugs produced plausible output. Neither would have been caught by a test
+that only asked whether the program ran.
+
+Three more corrections are recorded the same way, and each one looked like a
+result before it was understood to be an error:
+
+**The SRP envelope does not apply subsonically.** The `C_T ≤ 3` cap comes from
+a dataset spanning Mach 0.4 to 2.0. Carried to the deck it forbade the engine
+around 3.7 km, and the vehicle landed at 160 m/s. That was not a finding about
+retropropulsion; it was a constraint applied outside its validity envelope.
+
+**Continuous throttle wastes propellant.** The closed form `a_cmd = v²/2h + g`
+degenerates to thrust balancing weight at large `h`, so the vehicle nulled its
+descent rate at altitude and hovered. It ran dry at 10.5 km. Meditch showed in
+1964 that fuel-optimal soft-landing control is bang-bang, so coast-then-burn
+is not a trick to save propellant; it is the optimal structure, and any
+sustained intermediate throttle is wasteful by construction.
+
+**A lander arrives moving.** The stopping law targets the gear contact plane
+at a commanded speed, not the geocenter at rest.
+
+**Why this is the last station.** A constants file that only holds numbers
+tells you what the program does. This one tells you what was tried, what
+broke, and what the failure looked like before it was understood, which is
+the difference between reading code and learning from it.
+
+## Try it yourself
+
+**1. Change the day.** Set `MEASURED_D_TEMP` in `constants.rs` to `+15.0`, a
+warm day. The interpolated row changes, the margin shrinks, and the informed
+guidance should light its landing burn lower. Gate 5 requires at least 10 m of
+separation between the two beliefs. Check whether a warm day still provides
+it.
+
+**2. Verify station 3's claim.** Change the coast-and-burn predicate to stop
+at ignition minus some steps, so the fork happens before the engine lights.
+Every branch will read a zero preserved-drag fraction, gate 4b will fail to
+find a collapse, and gate 4c's frozen-drag departure will vanish. This is the
+"forks a state from which the plume had already been discarded" failure, made
+visible.
+
+**3. Clamp the table.** Set `MEASURED_D_TEMP` to `-80.0`, outside the
+tabulated range. The row clamps, and station 1's provenance entry appears in
+the log. Confirm that it is stamped in the run rather than only printed.
+
+## What the three walks established
+
+Walk 1: a leg boundary is an event the run finds; a counterfactual forks a
+paused state so every branch inherits one past; gates are consts and the
+caller owns the exit code.
+
+Walk 2: alternate a world when branches must share a description and differ in
+one declared way; an ensemble is what separates a mechanism from a lucky draw;
+the output is an artifact with a provenance trail.
+
+Walk 3: a leg boundary can destroy the state the next step needs; forking a
+marched state buys something a parameter sweep cannot express, and here it is
+139.4 m/s; and when the DSL's fork path cannot carry the parameter you want to
+vary, the honest move is two plain marches and no alternation marker.
+
+From here, the [validation records](/validation/) give the reference case for
+every solver these programs use, and the [capability boundaries](/boundaries/)
+give the four hypotheses this project refuted by measurement, including the
+AMBER verdict on plume imprint fidelity that station 4's honesty correction
+comes from.

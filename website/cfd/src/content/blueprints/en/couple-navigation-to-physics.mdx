@@ -10,7 +10,7 @@ verbs:
   - CoupledField
 worked:
   - label: Plasma blackout corridor
-    href: /examples/plasma-blackout-corridor/
+    href: /tutorial/stage-1-corridor/
 ---
 
 `Coupling::between_steps()` builds a cons-tuple of `PhysicsStage` values that
@@ -94,7 +94,7 @@ field.set_nav(ReentryNavEngine::new(...))
 
 The `ImuModel` passed to `.with_imu(imu)` scales the accelerometer bias away
 from the filter's standard-day priors. The
-[weather example](/examples/plasma-blackout-weather/) varies that departure
+[weather example](/tutorial/stage-2-weather/) varies that departure
 across six atmospheres and measures the effect on dead-reckoning drift.
 
 ## Composition cost

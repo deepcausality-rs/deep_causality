@@ -102,7 +102,7 @@ For most CFD the precision floor is not the limiting term. Discretization and
 modelling error exceed `f64` roundoff by many orders of magnitude.
 
 Chaotic flow and long marched trajectories that feed a decision are the cases
-where it matters. The [blackout corridor](/examples/plasma-blackout-corridor/)
+where it matters. The [blackout corridor](/tutorial/stage-1-corridor/)
 records a separate failure mode: at `f32` it does not run, because a term in the
 ionization kernel evaluates to 4.4e-67 and underflows the exponent range at step
 1.

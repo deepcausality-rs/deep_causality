@@ -1,0 +1,338 @@
+---
+title: 'Walk 1: How the corridor was built'
+stage: 1
+question: Why does the blackout window come out of a predicate instead of a constant, and why is the counterfactual a fork rather than six re-runs?
+summary: A guided walk through the corridor program, station by station, in the order it makes its decisions. Six stations, each with the design rationale and the alternative that was rejected.
+objective: Read a CfdFlow program and explain why each of its four structural decisions is the way it is.
+command: cargo run --release -p avionics_examples --example plasma_blackout_corridor
+runtime: 40.9 s against a 600 s budget
+files:
+  - cfd/plasma_blackout/corridor/main.rs
+  - cfd/plasma_blackout/corridor/constants.rs
+  - src/shared/world.rs
+uses:
+  - march ... until
+  - fork / branch
+  - refine
+  - reduce_all
+  - gates / verdict
+consumes: Nothing. This walk starts the family.
+produces: The vocabulary walks 2 and 3 assume.
+source: examples/avionics_examples/cfd/plasma_blackout/corridor
+---
+
+In this walk we read the corridor program in the order it makes its decisions.
+There are six stations. At each one we look at the code that is actually
+committed, then at the reason it is written that way, and at what happens if
+it is written the other way.
+
+We are not going to explain reentry physics here. When a physical term matters
+for a design decision, it gets one sentence and a link.
+
+## Before we start
+
+Run the program once. It takes about forty seconds, and everything below
+refers to output you will have in front of you.
+
+```bash
+cargo run --release -p avionics_examples --example plasma_blackout_corridor
+```
+
+The last block you see should end like this:
+
+```text
+[PASS] (5b) wall-clock budget: 40.9 s elapsed (budget 600 s)
+```
+
+Now open the three files listed above. Two of them are small: `main.rs` is
+under 200 lines and `constants.rs` is 65. The program is not large. What makes
+it worth walking is that nearly every line had an alternative that was tried
+and rejected.
+
+<div class="callout">
+<p class="callout-title">Notice</p>
+<p>Scroll back through the output to the line reporting blackout onset. It
+says step 119, 74.7 km. Keep that number in mind: by station 2 you will know
+that nothing in the program configured it.</p>
+</div>
+
+## Station 1: The shape of the whole program
+
+Open `corridor/main.rs` and look at `fn main`. The entire corridor sits inside
+one closure that returns a single `Result`:
+
+```rust
+let outcome: Result<Verdict, StudyError> = (|| {
+    // ... every leg and the campaign live in here ...
+})();
+
+match outcome {
+    Ok(verdict) => {
+        println!("\n{verdict}");
+        if verdict.passed() { ExitCode::SUCCESS } else { ExitCode::from(1) }
+    }
+    Err(e) => {
+        eprintln!("plasma-blackout corridor failed: {e}");
+        ExitCode::from(2)
+    }
+}
+```
+
+**Why it is built this way.** Two reasons, and both are about who is allowed
+to make decisions.
+
+The closure exists so the trajectory legs and the counterfactual campaign
+share one `?` short-circuit and one error type. A leg failure and a campaign
+failure arrive at the same place, and there is exactly one exit path.
+
+The `match` exists because the DSL never prints and never exits. `verdict()`
+returns data. The caller decides what an exit code means, which is what makes
+the same study usable from a test, a CI job, or another program. A library
+that calls `exit()` inside a solve cannot be composed with anything.
+
+Notice the three exit codes are distinct: 0 all gates passed, 1 a gate
+regressed, 2 the run never got far enough to be judged. A CI system needs to
+tell "the physics changed" apart from "the build is broken."
+
+## Station 2: The trunk march, and the constant that does not exist
+
+Still in `main.rs`, the first leg:
+
+```rust
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .trigger(utils::trigger())
+    .kappa(utils::ft(0.0))
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))
+    .map_err(leg_err("leg: descent to blackout onset"))?;
+```
+
+Read the `.until` predicate closely. It asks the *field* what regime it is in,
+and the regime carries a `gnss_denied` flag. That flag was set by the
+classifier, which read the electron density, which the chemistry stage
+evolved on the previous step.
+
+**Why it is built this way.** Now open `constants.rs` and search it for an
+onset altitude. There isn't one. There is no onset constant anywhere in the
+corridor, and that is the point of the whole leg. The 74.7 km you saw in the
+output is a *prediction*, not a setting.
+
+**What the alternative costs.** Suppose this were `.run_for(119)` instead.
+The program would produce the same numbers today and be wrong tomorrow, for a
+specific reason: [walk 2](/tutorial/stage-2-weather/) flies this same descent
+through six different atmospheres. A colder, denser atmosphere ionizes
+earlier — measurably, 4.2 s earlier across the tabulated range. A hardcoded
+119 would silently fly the wrong window in five of the six worlds and no gate
+could catch it, because the number it should be compared against is the
+number that was hardcoded.
+
+This is the first structural idea of the family: **a boundary between legs is
+an event the run finds, not a station it is told to switch at.**
+
+## Station 3: The coupling stack, and why order is load-bearing
+
+Open `src/shared/world.rs` and find `corridor_coupling`. Stripped to its
+shape:
+
+```rust
+Coupling::between_steps()
+    .then(VibrationalLagStage::new(/* Millikan-White bath */)
+        .with_pressure_field("pressure_atm"))
+    .then(FiniteRateIonizationStage::new(n_tot)
+        .with_density_field("n_tot")
+        .with_sheath_renewal(sheath_peak_age))
+    .then(RegimeClassify::new(l_char, trigger))
+    .then(BankSteeredLift::new(rho_ref, cda_over_m, l_over_d))
+    .then(TrajectoryNav::new(q_diag, gnss_var, optical_var).with_imu(imu))
+    .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
+    .build()
+```
+
+Six stages, and the order is the physics. Vibrational relaxation sets the
+temperature the chemistry runs at. The chemistry writes the electron density.
+The classifier reads that density and decides whether the link exists. The
+aero stage flies the commanded bank. Navigation folds fixes, but only the ones
+the classifier permits. The safety gate clamps the next command.
+
+**Why it is built this way.** Three decisions are worth naming.
+
+*It is a static cons-tuple, not a list of trait objects.* The stack's type is
+known at compile time, so there is no dynamic dispatch in the innermost loop
+and the whole thing monomorphizes over the scalar type. That is what makes
+station 6's precision switch possible.
+
+*Stages communicate through named fields on the shared evolved state.* The
+classifier does not hold a reference to the chemistry stage; it reads
+`"n_e"`. This is why a stage can be inserted, removed, or reordered without
+touching its neighbours, and why walk 3 can compose thrust and plume stages
+into this same stack and leave them inert.
+
+*An `Err` from any stage short-circuits the whole step.* There is no partial
+step. A step either advanced every discipline or it advanced none, which is
+what lets a leg failure be reported as a leg failure rather than as a quietly
+corrupted field.
+
+<div class="callout">
+<p class="callout-title">Notice</p>
+<p>Find the regime-transition lines in your output. They read
+<code>regime -&gt; slip (GNSS-available)</code>, then
+<code>slip (GNSS-denied)</code>, then <code>continuum (GNSS-denied)</code>,
+then <code>continuum (GNSS-available)</code>. Two independent axes, Knudsen
+number and link state, switching at four different moments in one descent.
+Neither was scheduled.</p>
+</div>
+
+## Station 4: The fork, and why it is not six re-runs
+
+Back in `main.rs`, the campaign:
+
+```rust
+let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())
+    .fork(&onset)
+    .branch(model::bank_world)
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .inspect(|rows| utils_print::print_branches(COARSE_TITLE, rows))
+    .refine(&onset, model::fine_candidates)
+    .branch(model::bank_world)
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .record(table_path())
+    .gates(model::corridor_gates())
+    .verdict()?;
+```
+
+`onset` is the paused march from station 2. `.fork(&onset)` takes that one
+paused state and hands each candidate command its own continuation of it.
+
+**Why it is built this way.** The obvious alternative is to fly six complete
+descents, each with a different bank angle, and compare the ends. That is
+wrong here, and the reason is not performance.
+
+At the moment of the decision, the vehicle has a specific degraded navigation
+state: a Kalman filter with a particular covariance, an accumulated drift, a
+sheath at a particular electron density, a tensor field at a particular rank.
+The question being asked is *given this state, which command is best*. Six
+independent descents would each evolve their own navigation state before ever
+reaching the decision, so the comparison would be contaminated by six
+different histories. Forking guarantees every branch inherits exactly the same
+past, because it is literally the same object.
+
+The performance argument is real but secondary: the fork is O(1)
+copy-on-write over the tensor fields, the navigation engine, and the
+provenance log, so a branch pays only for what it writes.
+
+**Why `.refine` takes `&onset` again.** Look closely: the second round forks
+the *same* pause, not the winner of the first round. Both rounds start from
+identical state and score against the same aim point, so their misses are
+directly comparable. Refining from the coarse winner's *end* state would have
+made the two rounds measure different things.
+
+**Why `reduce_all` and not `reduce`.** The score is a miss distance against a
+shared aim point, and the aim point is derived from the ballistic (0°) branch.
+A per-branch reduction cannot see its siblings, so the reduction that needs
+cross-branch context takes the whole set.
+
+Now look at your output's coarse table:
+
+```text
+ 0.0 deg  20.000 m
+ 5.0 deg  12.812 m
+10.0 deg   5.807 m
+15.0 deg   3.120 m
+20.0 deg   9.612 m
+40.0 deg  22.018 m
+```
+
+The response is not monotone, and 40° is worse than not steering at all.
+
+## Station 5: The constants that explain themselves
+
+Open `constants.rs` and read the doc comment above `BANK_ANGLES_DEG`:
+
+```rust
+/// Candidate commanded bank angles (degrees). Zero is the ballistic reference; the fine sweep
+/// brackets the reachable optimum (the miss landscape bottoms out near 15 deg for the
+/// configured aim); 40 deg exceeds the envelope cap, flies clamped, and overshoots, showing
+/// that commanding more bank than the certified envelope allows buys a worse trajectory.
+pub const BANK_ANGLES_DEG: [f64; 6] = [0.0, 5.0, 10.0, 15.0, 20.0, 40.0];
+```
+
+The 40° candidate is in the roster *on purpose*, and it is there to fail. It
+exceeds the safety envelope's cap, so `CyberneticCorrect` clamps it on every
+step and `BankSteeredLift` flies the clamped value. The 22.018 m in your
+output is what that costs.
+
+**Why this matters for how you read the rest.** Every tuned number in this
+family carries the reason it holds that value, next to the value. Read the
+comment on `AIM_CROSS_RANGE_M` for the sharpest example; it records that the
+aim was re-pinned when the chemistry changed, because the new higher onset
+altitude meant the branches fork in thinner air and less cross-range is
+reachable.
+
+The sweep's resolution stops at 0.5° and 2.39 m, and the corridor's own README
+argues why going finer would be meaningless: the INS dead-reckoning error at
+the blackout peak is about 2.5 m *in this same run*. Steering more precisely
+than you can navigate buys nothing, because a real vehicle commands off the
+navigated state, not off truth.
+
+## Station 6: Gates, and a constraint you would not guess
+
+The campaign ends in `.gates(model::corridor_gates()).verdict()`. Thirteen
+gates check the run and the process exits nonzero if any fails.
+
+**Why gates rather than assertions.** An assertion stops the program at the
+first failure. A gate sequence evaluates all of them and reports one merged
+verdict, so a run tells you everything that regressed, not just the first
+thing.
+
+**The constraint.** A gate is a plain `fn` pointer that captures nothing.
+The sibling example states the consequence directly in its `constants.rs`:
+
+```text
+Every gated band is a `const` here because a gate is a plain `fn` pointer that
+captures nothing: a band held anywhere else cannot be reached from the gate
+that enforces it.
+```
+
+That single design choice is why every threshold in this family is a
+documented `const` rather than a value computed at run time. The type system
+makes the documentation structural instead of optional.
+
+## Try it yourself
+
+Make one change and re-run. Each of these takes about forty seconds.
+
+**1. Move the target.** In `constants.rs`, change `AIM_CROSS_RANGE_M` from
+`20.0` to `10.0` and re-run. The committed bank angle should drop, because a
+nearer aim point needs less cross-range. Gate 4e should still pass: the
+committed branch must beat ballistic by 3×, and that relationship does not
+depend on where the aim is.
+
+**2. Coarsen the sweep.** Change `FINE_STEP_DEG` from `0.5` to `2.0`. Gate 4f
+requires the fine round to improve on the coarse winner. Watch whether it
+still can at that resolution.
+
+**3. Break it on purpose.** Change the `.until` predicate at station 2 to
+`|_, step| step >= 119`. Everything will pass. Now change the atmosphere to
+the cold day by swapping `world::standard_atmosphere()` for
+`world::weather_atmosphere(-40.0, 1.2)` and re-run both versions. The
+predicate version finds the new window; the hardcoded version reports a
+window the vehicle did not fly. This is station 2's argument, as an
+experiment.
+
+## What this walk established
+
+Four structural ideas that walks 2 and 3 assume without re-explaining:
+
+1. A leg boundary is an event the run finds.
+2. The coupling stack is one ordered loop body, and stages talk through named
+   fields on a shared state.
+3. A counterfactual forks a paused state so every branch inherits the same
+   past.
+4. The DSL returns data; gates are consts; the caller owns the exit code.
+
+[Walk 2](/tutorial/stage-2-weather/) keeps all four and changes one thing:
+instead of forking a state and varying a command, it varies the world.

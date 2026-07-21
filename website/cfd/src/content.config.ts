@@ -50,4 +50,30 @@ const examples = defineCollection({
   }),
 });
 
-export const collections = { blueprints, examples };
+const tutorial = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/tutorial' }),
+  schema: z.object({
+    title: z.string(),
+    /** Position in the walkthrough: 1, 2, 3. */
+    stage: z.number(),
+    /** One-sentence engineering question the stage answers. */
+    question: z.string(),
+    summary: z.string(),
+    command: z.string(),
+    runtime: z.string(),
+    /** What the reader will be able to do after this walk. */
+    objective: z.string(),
+    /** Files to keep open while walking. Repo-relative, shown as a checklist. */
+    files: z.array(z.string()).default([]),
+    /** DSL surface exercised. */
+    uses: z.array(z.string()).default([]),
+    /** What this stage takes from the previous one. */
+    consumes: z.string(),
+    /** What this stage hands to the next one. */
+    produces: z.string(),
+    /** Repo-relative path to the example source. */
+    source: z.string(),
+  }),
+});
+
+export const collections = { blueprints, examples, tutorial };
