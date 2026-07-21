@@ -1,0 +1,47 @@
+website/cfd/src/content/blueprints/en/couple-multiphysics.mdx
+  s_2dc68b59102c60::t_d2c0f03d1a76d5 91
+  s_2dc68b59102c60::t_1c3c0ddf076146 149-151
+website/cfd/src/content/tutorial/en/stage-1-corridor.mdx
+  s_2dc68b59102c60::t_c8dd375518d4b8 5-6,24-26,28,30,32-33,39,45-47,51-53,58-59,78,80,82-85,87-89,91,93,105-107,109-111,113-119,121-122,124,126,142,145-146,148-149,151-154,157-160,162-164,168-172,175,177,196-197,199,204-207,209-211,213-216,218-219,221,232,234,236,246-248,250-253,255-259,261,263-264,266-268,270-272,280-282,286,288-291,293-295,297-301,305,307-311,313-314
+  s_2dc68b59102c60::t_fda7133c926d2f 200-203
+website/cfd/src/pages/why/index.astro
+  s_2dc68b59102c60::t_a2ccf0ada63022 60,117,171,183-184,223,300-303
+website/cfd/src/pages/tutorial/index.astro
+  s_2dc68b59102c60::t_b68de652528426 98-101
+  s_2dc68b59102c60::t_9909657c19b1ff 75
+  s_2dc68b59102c60::t_b3a6b0d012e456 166-167
+  s_2dc68b59102c60::t_9b78e88acde835 25-27,35,37-40,44-49,58-60,68-70
+website/cfd/src/content/blueprints/en/sweep-a-parameter.mdx
+  s_2dc68b59102c60::t_c3a6fbc17c9adc 37
+website/cfd/src/content/tutorial/en/stage-3-retropulsion.mdx
+  s_2dc68b59102c60::t_fda7133c926d2f 70-73,106-109,189-191,213,332-334
+  s_2dc68b59102c60::t_3441251b58d32b 5-6,23-25,27,33-37,39-40,42,52,55-56,69,75-76,78,89-91,93-95,97,105,111,113,129-130,139-142,144-146,148-150,166-167,169,181-184,186-187,199-200,202-208,210,212,231,240-242,254,257,261-264,266,268-269,282-283,285-286,288-291,296-298,300-301,303-304,308-311,313-316,318-320,324-326,329-331,335-340
+website/cfd/src/pages/validation/index.astro
+  s_2dc68b59102c60::t_a2ccf0ada63022 38-41
+  s_2dc68b59102c60::t_d2c0f03d1a76d5 142-143
+website/cfd/src/content/tutorial/en/stage-2-weather.mdx
+  s_2dc68b59102c60::t_d99c64e50b785e 5-6,25,28-31,33,35,41-42,46-48,51,53,72,74-77,79,81,88-90,92-96,98-100,102-103,110-111,113,119,129-133,135-137,139-140,142,148-149,151-153,155,163-167,171-174,177,179,188-189,191-194,196-198,202-205,207-211,213-216,220-224
+website/cfd/src/content/examples/en/turbulence-flow.mdx
+  s_2dc68b59102c60::t_c3a6fbc17c9adc 80
+website/cfd/src/content/blueprints/en/handle-regime-change.mdx
+  s_2dc68b59102c60::t_1c3c0ddf076146 62
+website/cfd/src/data/validation.ts
+  s_2dc68b59102c60::t_a0dc88cc25926d 76,95,133,169,186,205,214,221,237,246,254
+  s_2dc68b59102c60::t_c28c2c94667af2 115,270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6cb40ff1d224f70bab9610a51b8132134cc0f6de",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
