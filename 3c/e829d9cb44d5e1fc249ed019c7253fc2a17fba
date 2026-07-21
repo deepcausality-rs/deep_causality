@@ -1,0 +1,32 @@
+openspec/notes/cfd_audit/MODULE-INDEX.md
+  s_f2afaa4ec55b4b::t_7ea1cef93388ce 5-11
+openspec/notes/cfd_audit/ACTION-LIST.md
+  s_f2afaa4ec55b4b::t_7ea1cef93388ce 8-14
+openspec/notes/cfd_audit/RUN-LEDGER.md
+  s_f2afaa4ec55b4b::t_d59c8d4504d955 10-32
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_299b70f4c41b15 451-478
+  s_f2afaa4ec55b4b::t_a19058a861d096 480-484,490-492
+  s_f2afaa4ec55b4b::t_c428b460e12435 14,20-52
+  s_f2afaa4ec55b4b::t_351d249f14d1c8 322-362
+  s_f2afaa4ec55b4b::t_a9edafd5c9dacd 479
+openspec/notes/cfd_audit/README.md
+  s_f2afaa4ec55b4b::t_639a1546870c81 10-39
+  s_f2afaa4ec55b4b::t_e0d56e956e1832 102-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3ce829d9cb44d5e1fc249ed019c7253fc2a17fba",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
