@@ -1,5 +1,12 @@
-## ADDED Requirements
+# fft-dct
 
+## Purpose
+
+Plan-based real-to-real discrete cosine transforms (types I, II, III) in
+`deep_causality_fft`, generic over `R: RealField`, built on the power-of-two core via
+even-symmetric embeddings with a Bluestein fallback so every length runs in O(N log N).
+
+## Requirements
 ### Requirement: Plan-based discrete cosine transforms
 `deep_causality_fft` SHALL provide plan-based real-to-real DCT transforms
 of types I, II, and III, generic over `R: RealField`, built on the existing

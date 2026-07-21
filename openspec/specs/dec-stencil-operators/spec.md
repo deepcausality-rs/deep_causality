@@ -1,5 +1,13 @@
-## ADDED Requirements
+# dec-stencil-operators
 
+## Purpose
+
+Compiled stencil tables for the cubical-lattice DEC operators, and the fused
+allocation-free rate assembly built on them. The generic operator path stays as the
+equivalence oracle; this capability is the compiled fast path and the measured speedup
+that justifies it.
+
+## Requirements
 ### Requirement: Compiled stencil tables for cubical-lattice DEC operators
 `deep_causality_topology` SHALL provide a per-manifold compiled
 representation (`DecStencilTables<R>` or equivalent) of the DEC operator

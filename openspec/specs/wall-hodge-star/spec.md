@@ -1,5 +1,12 @@
-## ADDED Requirements
+# wall-hodge-star
 
+## Purpose
+
+Boundary-corrected dual volumes in the cubical Regge Hodge star: dual volumes are clipped at
+open (wall) boundaries so the star stays diagonal, positive and SPD-preserving on
+wall-bounded lattices, while fully periodic lattices are unchanged.
+
+## Requirements
 ### Requirement: Boundary-corrected dual volumes on open axes
 The cubical Regge geometry's Hodge star SHALL clip dual volumes at open
 (wall) boundaries: a cell's dual volume is scaled by `2^{-b}` where `b`

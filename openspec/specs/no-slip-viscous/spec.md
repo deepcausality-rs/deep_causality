@@ -1,5 +1,12 @@
-## ADDED Requirements
+# no-slip-viscous
 
+## Purpose
+
+No-slip enforcement on wall-tangential edges, and the symmetry the constrained viscous
+operator must retain under it — the property the CG solve and the energy argument both
+depend on.
+
+## Requirements
 ### Requirement: No-slip constraints on wall-tangential edges
 The solver stack SHALL enforce no-slip on wall-bounded lattices by
 constraining 1-form coefficients on wall-tangential edges to zero. Because
