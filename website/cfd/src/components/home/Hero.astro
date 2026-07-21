@@ -4,19 +4,18 @@
  *
  * Brand anchor note: the marketing site reads its mood from a raster
  * (frontpage-art.webp). No equivalent art exists for the CFD crate, so the
- * anchor here is a DRAWN flowfield of the crate's own flight anchor — a
- * RAM-C-style sphere-cone at hypersonic speed. Layers, back to front: a faint
- * Cartesian grid in the freestream, the plasma-sheath wash, the shock-fitted
- * coordinate fan (the crate's body-fitted story, drawn literally), the
- * detached bow shock, the capsule, and the sampled stagnation line.
+ * anchor here is a DRAWN flowfield in the shape every CFD reader expects:
+ * streamlines around an airfoil. The wake carries the crate's thesis — the
+ * trajectory reaches a fork node and splits into counterfactual worlds,
+ * ghost branches dashed, the committed branch solid accent.
  *
- * Streamlines kink where they cross the shock and their dash pattern
- * compresses and slows downstream of it — the Rankine–Hugoniot deflection and
- * the velocity drop, drawn rather than stated. The dash drift is this page's
- * single perpetual animation (web_design/05-motion.md budget); everything
- * structural enters through the existing draw-in idiom (§12.10). Built from
- * the same hairline/node vocabulary as the rest of the site (§12), costs no
- * raster bytes, and is theme-aware for free.
+ * The streamline dash drift is this page's single perpetual animation
+ * (web_design/05-motion.md budget). It lives in the @keyframes themselves
+ * (dasharray + dashoffset) so it wins over the global draw-in idiom by
+ * cascade rule, not by selector specificity. Open-curve groups carry
+ * fill="none" as a presentation attribute so a missed CSS rule can never
+ * render them as filled black shapes. Everything structural enters through
+ * the existing draw-in idiom (§12.10); no raster bytes; theme-aware for free.
  */
 ---
 <section class="hero">
@@ -68,75 +67,61 @@
       <span class="reticle reticle-br"></span>
 
       <svg viewBox="0 0 340 300" role="img" data-anim-draw
-           aria-label="Schematic of a reentry capsule in hypersonic flow: a detached bow shock stands off the spherical nose, freestream streamlines deflect where they cross it, a shock-fitted coordinate fan spans the plasma sheath, and the stagnation line is sampled with three nodes.">
-        <!-- Freestream Cartesian grid: the capture coordinate, deliberately
-             faint against the fitted fan inside the sheath. -->
-        <g class="cgrid">
+           aria-label="Schematic of airflow around an airfoil: streamlines bend over and under the body, and downstream of the trailing edge the wake trajectory forks at a node into counterfactual branches — ghost branches dashed, the committed branch solid.">
+        <!-- Computational-domain grid, faint. -->
+        <g class="cgrid" fill="none">
           <line x1="36"  y1="16" x2="36"  y2="284" pathLength="100" />
-          <line x1="76"  y1="16" x2="76"  y2="284" pathLength="100" />
           <line x1="116" y1="16" x2="116" y2="284" pathLength="100" />
+          <line x1="296" y1="16" x2="296" y2="284" pathLength="100" />
         </g>
 
-        <!-- Plasma sheath between shock and body. -->
-        <path class="sheath" d="M 204 12 C 158 64, 146 114, 146 150 C 146 186, 158 236, 204 288 L 210 186 A 36 36 0 0 1 210 114 Z" />
-
-        <!-- Shock-fitted coordinate fan: surface normals plus one shell,
-             the body-fitted grid the QTT marcher aligns to. -->
-        <g class="fan">
-          <line x1="179" y1="132" x2="149" y2="115" pathLength="100" />
-          <line x1="192" y1="119" x2="164" y2="75"  pathLength="100" />
-          <line x1="179" y1="168" x2="149" y2="185" pathLength="100" />
-          <line x1="192" y1="181" x2="164" y2="225" pathLength="100" />
-          <path class="shell" d="M 196 84 C 166 108, 156 128, 156 150 C 156 172, 166 192, 196 216" pathLength="100" />
+        <!-- Streamlines: dash drift in the flow direction, faster over the
+             suction side than under the pressure side. -->
+        <g class="stream" fill="none">
+          <path class="s-fast" d="M 6 40 C 90 40, 150 35, 210 35 C 260 35, 300 37, 334 38" />
+          <path class="s-fast" d="M 6 75 C 80 75, 120 66, 170 61 C 220 58, 280 66, 334 69" />
+          <path class="s-fast" d="M 6 110 C 64 110, 92 104, 124 99 C 168 93, 210 108, 244 120 C 274 129, 304 132, 334 131" />
+          <path class="s-slow" d="M 6 150 C 30 150, 50 150, 66 151" />
+          <path class="s-fast" d="M 6 143 C 44 143, 62 137, 76 129 C 92 121, 108 117, 130 117 C 170 116, 208 130, 238 143 C 262 152, 300 147, 334 144" />
+          <path class="s-slow" d="M 6 159 C 50 159, 72 161, 94 162 C 130 164, 168 163, 204 159 C 232 155, 250 154, 262 155 C 292 157, 316 156, 334 155" />
+          <path class="s-slow" d="M 6 190 C 64 190, 94 194, 126 198 C 168 203, 214 194, 250 182 C 284 172, 312 169, 334 168" />
+          <path class="s-slow" d="M 6 225 C 90 225, 160 229, 220 227 C 270 225, 306 221, 334 219" />
+          <path class="s-slow" d="M 6 260 C 100 260, 200 259, 334 256" />
         </g>
 
-        <!-- Freestream streamlines: straight, wide dashes, fast drift. -->
-        <g class="stream-pre">
-          <path d="M 6 30 H 190" />
-          <path d="M 6 70 H 165" />
-          <path d="M 6 110 H 151" />
-          <path d="M 6 150 H 146" />
-          <path d="M 6 190 H 151" />
-          <path d="M 6 230 H 165" />
-          <path d="M 6 270 H 190" />
+        <!-- The vehicle: a cambered airfoil at slight incidence. -->
+        <path class="foil" d="M 70 151 C 74 138, 96 128, 126 127 C 166 126, 204 136, 226 146 C 196 152, 150 156, 112 155 C 88 154, 74 156, 70 151 Z" pathLength="100" />
+
+        <!-- The marched trajectory: trailing edge to the fork point, then the
+             committed world, drawn solid. -->
+        <g class="commit" fill="none">
+          <path d="M 226 146 C 238 148, 248 150, 257 150" pathLength="100" />
+          <path d="M 258 150 C 282 148, 306 140, 330 132" pathLength="100" />
         </g>
 
-        <!-- Post-shock streamlines: deflected at the crossing, denser dashes,
-             slower drift — compression and deceleration across the shock. -->
-        <g class="stream-post">
-          <path d="M 190 30 C 230 26, 270 22, 334 20" />
-          <path d="M 165 70 C 200 62, 240 50, 334 42" />
-          <path d="M 151 110 C 176 102, 196 88, 216 78 C 248 64, 290 58, 334 55" />
-          <path d="M 151 190 C 176 198, 196 212, 216 222 C 248 236, 290 242, 334 245" />
-          <path d="M 165 230 C 200 238, 240 250, 334 258" />
-          <path d="M 190 270 C 230 274, 270 278, 334 280" />
+        <!-- Counterfactual worlds: same fork point, dashed ghosts. -->
+        <g class="ghosts" fill="none">
+          <path d="M 258 150 C 280 142, 304 122, 326 104" />
+          <path d="M 258 150 C 282 156, 306 164, 330 172" />
+          <path d="M 258 150 C 280 158, 302 182, 322 206" />
         </g>
 
-        <!-- The detached bow shock: a soft density band under a sharp line. -->
-        <path class="shock-under" d="M 204 12 C 158 64, 146 114, 146 150 C 146 186, 158 236, 204 288" pathLength="100" />
-        <path class="shock" d="M 204 12 C 158 64, 146 114, 146 150 C 146 186, 158 236, 204 288" pathLength="100" />
-
-        <!-- Sphere-cone forebody. No wake is drawn: the wake is out of scope
-             for the fitted marchers, and the figure keeps to what is claimed. -->
-        <path class="body" d="M 310 90 L 210 114 A 36 36 0 0 0 210 186 L 310 210 Z" pathLength="100" />
-
-        <!-- Marched stagnation line with sample nodes. -->
-        <line class="stagline" x1="146" y1="150" x2="174" y2="150" pathLength="100" />
+        <!-- Fork node and world endpoints. -->
         <g class="nodes">
-          <circle cx="146" cy="150" r="3" />
-          <circle cx="160" cy="150" r="3" />
-          <circle cx="174" cy="150" r="3" />
+          <circle class="n-fork" cx="258" cy="150" r="3" />
+          <circle class="n-commit" cx="330" cy="132" r="2.5" />
+          <circle class="n-ghost" cx="326" cy="104" r="2" />
+          <circle class="n-ghost" cx="330" cy="172" r="2" />
+          <circle class="n-ghost" cx="322" cy="206" r="2" />
         </g>
       </svg>
 
       <figcaption class="art-caption">
-        <span class="k">case</span> RAM-C II
+        <span class="k">fork</span> 42 ns
         <span class="sep" aria-hidden="true">·</span>
-        <span class="k">standoff</span> 7.6 mm
+        <span class="k">worlds</span> 17
         <span class="sep" aria-hidden="true">·</span>
-        <span class="k">T₂</span> 8044 K
-        <span class="sep" aria-hidden="true">·</span>
-        <span class="k">n_e</span> 1.085e19 m⁻³
+        <span class="k">Δv vs frozen drag</span> 139.4 m/s
       </figcaption>
     </div>
   </div>
@@ -158,9 +143,17 @@
     .hero-inner { grid-template-columns: 7fr 5fr; gap: var(--space-8); }
   }
 
-  /* Art above text on narrow screens; back to the right column at ≥900px. */
-  .hero-art { order: -1; }
-  @media (min-width: 900px) { .hero-art { order: 0; } }
+  /* Art above text on narrow screens, capped so it stays an emblem rather
+     than a full-bleed poster; back to the right column at ≥900px. */
+  .hero-art {
+    order: -1;
+    width: 100%;
+    max-width: 420px;
+    margin-inline: auto;
+  }
+  @media (min-width: 900px) {
+    .hero-art { order: 0; max-width: none; margin-inline: 0; }
+  }
 
   h1 {
     font-size: clamp(2.25rem, 5.5vw + 0.5rem, 3.75rem);
@@ -260,89 +253,64 @@
   .cgrid line {
     stroke: var(--line-1);
     stroke-width: 1;
-    opacity: 0.6;
+    opacity: 0.7;
     vector-effect: non-scaling-stroke;
   }
 
-  /* Streamlines opt OUT of the draw-in idiom (which would overwrite their
-     dash pattern) and carry the page's one perpetual animation instead:
-     a slow dash drift in the flow direction. Selector specificity beats
-     `[data-anim-draw].in-view path` on purpose. */
-  .hero-art [data-anim-draw] .stream-pre path {
-    fill: none;
+  /* Streamlines carry the page's one perpetual animation: a dash drift in
+     the flow direction. The dash pattern lives inside the keyframes so the
+     running animation overrides the global draw-in idiom's dasharray by
+     cascade rule. Suction side drifts faster than pressure side. */
+  .hero .hero-art .stream path {
     stroke: var(--fg-2);
     stroke-width: 1;
-    opacity: 0.45;
+    opacity: 0.55;
     vector-effect: non-scaling-stroke;
     stroke-dasharray: 7 6;
     stroke-dashoffset: 0;
-    animation: flow-pre 1500ms linear infinite;
   }
-  .hero-art [data-anim-draw] .stream-post path {
-    fill: none;
-    stroke: var(--fg-2);
-    stroke-width: 1;
-    opacity: 0.8;
-    vector-effect: non-scaling-stroke;
-    stroke-dasharray: 4 4;
-    stroke-dashoffset: 0;
-    animation: flow-post 2600ms linear infinite;
+  .hero .hero-art .stream .s-fast { animation: flow 1400ms linear infinite; }
+  .hero .hero-art .stream .s-slow { animation: flow 2100ms linear infinite; }
+  @keyframes flow {
+    from { stroke-dasharray: 7 6; stroke-dashoffset: 13; }
+    to   { stroke-dasharray: 7 6; stroke-dashoffset: 0; }
   }
-  /* One dash period per cycle keeps the loop seamless: 13 = 7+6, 8 = 4+4. */
-  @keyframes flow-pre  { to { stroke-dashoffset: -13; } }
-  @keyframes flow-post { to { stroke-dashoffset: -8; } }
   @media (prefers-reduced-motion: reduce) {
-    .hero-art [data-anim-draw] .stream-pre path,
-    .hero-art [data-anim-draw] .stream-post path { animation: none; }
+    .hero .hero-art .stream path { animation: none; }
   }
 
-  .sheath {
-    fill: color-mix(in srgb, var(--accent) 7%, transparent);
-    stroke: none;
-    opacity: 0;
-    transition: opacity var(--dur-draw) var(--ease-out);
-    transition-delay: calc(var(--dur-draw) * 0.4);
-  }
-  .hero-art svg.in-view .sheath { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { .sheath { opacity: 1; } }
-
-  .fan line, .fan .shell {
-    fill: none;
+  .foil {
+    fill: color-mix(in srgb, var(--bg-3) 85%, transparent);
     stroke: var(--line-2);
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
   }
-  .fan line { opacity: 0.8; }
-  .fan .shell { opacity: 0.5; }
 
-  .shock-under {
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 4;
-    opacity: 0.18;
-    vector-effect: non-scaling-stroke;
-  }
-  .shock {
-    fill: none;
+  .commit path {
     stroke: var(--accent);
     stroke-width: 1.5;
     vector-effect: non-scaling-stroke;
   }
-  .body {
-    fill: color-mix(in srgb, var(--bg-3) 80%, transparent);
-    stroke: var(--line-2);
+
+  /* Ghost worlds: dashed, entering on a fade rather than the draw-in, since
+     the draw-in would overwrite their dash pattern. */
+  .hero .hero-art .ghosts { opacity: 0; transition: opacity var(--dur-draw) var(--ease-out) calc(var(--dur-draw) * 0.6); }
+  .hero .hero-art svg.in-view .ghosts { opacity: 1; }
+  .hero .hero-art .ghosts path {
+    stroke: var(--fg-2);
     stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-  }
-  .hero-art [data-anim-draw] .stagline {
-    stroke: var(--accent);
-    stroke-width: 1;
-    stroke-dasharray: 3 3;
+    opacity: 0.65;
+    stroke-dasharray: 2 4;
     stroke-dashoffset: 0;
-    opacity: 0.8;
     vector-effect: non-scaling-stroke;
   }
-  .nodes circle { fill: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .hero .hero-art .ghosts { opacity: 1; }
+  }
+
+  .nodes .n-fork   { fill: var(--accent); }
+  .nodes .n-commit { fill: var(--accent); }
+  .nodes .n-ghost  { fill: var(--fg-2); }
 
   .art-caption {
     display: flex;
