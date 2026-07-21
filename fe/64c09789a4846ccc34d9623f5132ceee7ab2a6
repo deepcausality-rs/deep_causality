@@ -1,0 +1,24 @@
+deep_causality_cfd/tests/solvers/dec/surface_force_tests.rs
+  s_f2afaa4ec55b4b::t_2ee09aaff92ace 16,20-21
+  s_f2afaa4ec55b4b::t_9fceec9af01c46 217-411
+deep_causality_cfd/src/solvers/dec/dec_ns_rate.rs
+  s_f2afaa4ec55b4b::t_d2f29536388786 91-102
+deep_causality_cfd/src/solvers/dec/boundary/boundary_zone.rs
+  s_f2afaa4ec55b4b::t_d2f29536388786 55-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "fe64c09789a4846ccc34d9623f5132ceee7ab2a6",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
