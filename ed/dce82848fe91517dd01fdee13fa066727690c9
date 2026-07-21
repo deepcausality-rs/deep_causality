@@ -1,0 +1,35 @@
+openspec/notes/cfd_audit/RUN-LEDGER.md
+  s_f2afaa4ec55b4b::t_9173d0ee4874e4 38,46-50,52
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_e459205b75f537 21-22,28-31,34-38,56,59,64,68,70-72,78-81,83-87,92-97,115-116,161,163-164,178,180-181,186-188,190-193,195-198,221,228,230,232,234,236-247,249-253,255-257,259-261,263-264,266,268,270,272-279,281-283,285-287,289-290,294,296,300-301,303,308-312,314-315,317-318,322,336-344,348,353,355,358-362,366,368-372,378,381-387,390,393-403,406-410,412-415,418-422,426,428,433-435,444
+openspec/notes/cfd_audit/MODULE-INDEX.md
+  s_f2afaa4ec55b4b::t_9b14ff3b6943a0 9
+  s_f2afaa4ec55b4b::t_f8c0b3f01166b5 10
+openspec/notes/cfd_audit/modules/deep-causality-cfd-qtt-incompressible-immersed-body-solvers-.md
+  s_f2afaa4ec55b4b::t_f8c0b3f01166b5 8-9,29,31,36,69-72,75,77,82,112-115,118,120,125,154-157,160,162,167,195-198,201,203,238-241,246,274-277,280,282,287,313-316,321,360-363,366,368,373,404-407,410,412,417,446-449,452,454,459,486-489,494,523-526,529,531,536,560-563,568,603-606,611,616,647-650,655,685-688,693,721-724,727,729,734,755-758,763,791-794,799,823-825
+  s_f2afaa4ec55b4b::t_3d206f5b81be25 826
+openspec/notes/cfd_audit/README.md
+  s_f2afaa4ec55b4b::t_3e8341ddfea6df 12,18-19,30-31,42-43,47-66,69-71,75-76
+openspec/notes/cfd_audit/modules/deep-causality-cfd-breadth-sweep-across-src-verification-stu.md
+  s_f2afaa4ec55b4b::t_f8c0b3f01166b5 767,805
+  s_f2afaa4ec55b4b::t_9b14ff3b6943a0 8-9,31,33,38,63-66,69,71,103-106,109,111,144-147,152,182-185,190,220-223,228,256-259,262,264,269,291-294,299,327-330,335,365-368,371,373,378,403-406,409,411,416,441-444,447,449,454,479-482,487,492,517-520,525,551-554,559,587-590,595,620-623,628,633,662-665,670,695-698,703,733-736,741,766,768-769,774,802-804
+openspec/notes/cfd_audit/ACTION-LIST.md
+  s_f2afaa4ec55b4b::t_9b14ff3b6943a0 55-58,183-193,300-304
+  s_f2afaa4ec55b4b::t_f8c0b3f01166b5 8,17,47-54,94,173-182,278,299
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "eddce82848fe91517dd01fdee13fa066727690c9",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
