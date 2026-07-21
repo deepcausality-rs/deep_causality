@@ -183,6 +183,13 @@ where
         }
         None => channels.push(0),
     }
+    match field.throttle_action() {
+        Some(a) => {
+            channels.push(1);
+            write_value(&mut channels, &a);
+        }
+        None => channels.push(0),
+    }
 
     // "ambient": kinematic viscosity and freestream speed.
     let mut ambient = Vec::new();
@@ -303,6 +310,14 @@ where
     if control_present {
         let a: R = read_value(bytes, &mut o, "channels")?;
         field.set_control_action(a);
+    }
+    // Throttle channel — the second command axis, packed after the bank channel.
+    let throttle_present =
+        presence_flag(*bytes.get(o).ok_or_else(|| short("channels"))?, "channels")?;
+    o += 1;
+    if throttle_present {
+        let a: R = read_value(bytes, &mut o, "channels")?;
+        field.set_throttle_action(a);
     }
 
     // "nav".

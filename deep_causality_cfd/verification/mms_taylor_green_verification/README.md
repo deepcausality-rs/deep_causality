@@ -54,7 +54,7 @@ pipeline rather than a closed form. The marched amplitude is compared with `exp(
 ## Running it
 
 ```sh
-cargo run -p avionics_examples --example cfd_taylor_green
+cargo run --release -p deep_causality_cfd --example mms_taylor_green_verification
 ```
 
 ## File layout

@@ -1,0 +1,188 @@
+---
+/**
+ * Site shell: meta, theme guard, skip link, footer, and the one site-wide
+ * IntersectionObserver that drives every `.in-view` entrance.
+ *
+ * Spec: website/web/DESIGN.md. One observer for the whole site (§12.10); do
+ * not add a second.
+ */
+import '../styles/global.css';
+import '../styles/tokens-cfd.css';
+import { GITHUB_URL, DOCS_URL, SITE_URL, DISCORD_URL, CRATE_URL } from '../consts';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Absolute path for canonical/OG URLs, e.g. "/validation/". */
+  path?: string;
+}
+
+const { title, description, path = '/' } = Astro.props;
+const canonical = new URL(path, Astro.site ?? 'https://cfd.deepcausality.com').href;
+const year = 2026;
+---
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Preload the two font subsets actually used above the fold. -->
+    <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!--
+      Pre-paint theme resolution. The one inline <head> script on the site;
+      it exists to prevent the flash of wrong theme (DESIGN.md §8.8).
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var saved = localStorage.getItem('dc-theme');
+          var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', saved || (sysDark ? 'dark' : 'dark'));
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot name="header" />
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <p class="eyebrow">DeepCausality CFD</p>
+          <p class="footer-note">
+            Counterfactual fluid dynamics in Rust. Part of the
+            <a href={SITE_URL}>DeepCausality</a> project, hosted at the Linux Foundation
+            for Data &amp; AI.
+          </p>
+        </div>
+        <nav class="footer-col" aria-label="Documentation">
+          <p class="footer-head">Docs</p>
+          <ul>
+            <li><a href="/cookbook/">Cookbook</a></li>
+            <li><a href="/validation/">Validation status</a></li>
+            <li><a href="/boundaries/">Capability boundaries</a></li>
+            <li><a href="/roadmap/">Roadmap</a></li>
+          </ul>
+        </nav>
+        <nav class="footer-col" aria-label="Source">
+          <p class="footer-head">Source</p>
+          <ul>
+            <li><a href={CRATE_URL}>Crate <span aria-hidden="true">↗</span></a></li>
+            <li><a href={`${GITHUB_URL}/issues`}>Issues <span aria-hidden="true">↗</span></a></li>
+            <li><a href={DOCS_URL}>Core docs <span aria-hidden="true">↗</span></a></li>
+            <li><a href={DISCORD_URL}>Discord <span aria-hidden="true">↗</span></a></li>
+          </ul>
+        </nav>
+      </div>
+      <p class="footer-legal">
+        © {year} The DeepCausality Authors. MIT licensed. The CFD crate is
+        unpublished and versioned with the monorepo.
+      </p>
+    </footer>
+
+    <script>
+      // One observer, site-wide (DESIGN.md §12.10). Adds `.in-view` once and
+      // unobserves, so entrances never re-run on scroll-back.
+      const targets = document.querySelectorAll('[data-anim-draw], [data-rise]');
+      if (targets.length) {
+        if (!('IntersectionObserver' in window)) {
+          targets.forEach((el) => el.classList.add('in-view'));
+        } else {
+          const io = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('in-view');
+                io.unobserve(entry.target);
+              });
+            },
+            { rootMargin: '0px 0px -10% 0px', threshold: 0.15 }
+          );
+          targets.forEach((el) => io.observe(el));
+        }
+      }
+    </script>
+
+    <style is:global>
+      .skip-link {
+        position: absolute;
+        left: -10000px;
+        top: 0;
+        background: var(--bg-2);
+        color: var(--fg-0);
+        padding: var(--space-2) var(--space-3);
+        border: 1px solid var(--line-2);
+        border-radius: var(--radius-sm);
+      }
+      .skip-link:focus { left: var(--space-3); top: var(--space-3); z-index: 50; }
+
+      .site-footer {
+        border-top: 1px solid var(--line-1);
+        background: var(--bg-0);
+        padding: var(--space-7) var(--space-4) var(--space-6);
+      }
+      @media (min-width: 720px) {
+        .site-footer { padding: var(--space-8) var(--space-5) var(--space-6); }
+      }
+      .footer-inner {
+        max-width: var(--w-page);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--space-6);
+      }
+      @media (min-width: 720px) {
+        .footer-inner { grid-template-columns: 2fr 1fr 1fr; gap: var(--space-7); }
+      }
+      .footer-note {
+        color: var(--fg-1);
+        font-size: var(--t-body-sm);
+        max-width: var(--measure-lede);
+        margin: var(--space-3) 0 0 0;
+      }
+      .footer-head {
+        font-family: var(--font-mono);
+        font-size: var(--t-eyebrow);
+        letter-spacing: var(--ls-eyebrow);
+        text-transform: uppercase;
+        color: var(--fg-1);
+        margin: 0 0 var(--space-3) 0;
+      }
+      .footer-col ul { list-style: none; margin: 0; padding: 0; }
+      .footer-col li { margin: 0 0 var(--space-2) 0; }
+      .footer-col a,
+      .footer-note a { color: var(--fg-1); font-size: var(--t-body-sm); }
+      .footer-col a:hover,
+      .footer-note a:hover { color: var(--fg-0); }
+      .footer-legal {
+        max-width: var(--w-page);
+        margin: var(--space-7) auto 0;
+        color: var(--fg-1);
+        font-size: var(--t-body-sm);
+        border-top: 1px solid var(--line-1);
+        padding-top: var(--space-4);
+      }
+    </style>
+  </body>
+</html>

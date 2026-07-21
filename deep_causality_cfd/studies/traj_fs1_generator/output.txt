@@ -1,0 +1,19 @@
+=== FS-1: the inverse-square core as an exact constant-generator matrix exponential ===
+
+Orbit: a = 7038.0 km, e = 0.1323, period = 5876.0 s  (μ = EARTH_GM = 3.986004e14)
+
+G1 one-period closure ‖e^(Ω·2π) − I‖_max = 2.665e-15
+G2 matrix-exp vs closed-form  ‖·‖_max = 2.998e-15
+G4 semigroup law  ‖e^(Ωs1)e^(Ωs2) − e^(Ω(s1+s2))‖_max = 1.110e-16
+G3 max position error over a full orbit = 1.584e-8 m  (2.251e-15·a, matrix-exp vs element propagation)
+
+--- FS-1 gates ---
+  [PASS] e^(Ω·2π) = I to round-off (exact periodicity)
+  [PASS] generic matrix-exp matches the closed form
+  [PASS] matrix-exp trajectory matches independent Kepler to ~1e-9·a
+  [PASS] constant generator (semigroup law to round-off)
+
+=== FINDING: the bound inverse-square core IS an exact constant-generator matrix exponential.
+Resolution-1's B1 'exact conformal core' HOLDS, with the concrete generator Ω (eccentric-anomaly
+/ KS realisation). The production 3-D, singularity-free, perturbation-ready form is KS
+regularisation (Stiefel-Scheifele); the heavier Bars (4,2) packaging is optional, not required. ===

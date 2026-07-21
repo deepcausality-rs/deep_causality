@@ -4,7 +4,7 @@ The smooth 3D Taylor–Green vortex transitions toward turbulence, and the kinet
 dissipation-rate curve `−dE*/dt*` against the published DNS reference data is the standard
 structure-preservation test a new solver is judged by.
 
-Where the sibling [cfd_taylor_green](../mms_taylor_green/README.md) example *verifies the
+Where the sibling [mms_taylor_green_verification](../mms_taylor_green_verification/README.md) example *verifies the
 pointwise right-hand side* by manufactured solutions, this example *runs the actual solver*: the
 periodic DEC-native incompressible Navier–Stokes march from
 `deep_causality_physics::theories::fluid_dynamics::dec`. Three DeepCausality abstractions appear
@@ -56,12 +56,12 @@ step, all at the working precision.
 ## Running it
 
 ```sh
-cargo run --release -p avionics_examples --example dec_taylor_green_re1600 [grid] [t_star_max]
+cargo run --release -p deep_causality_cfd --example dec_taylor_green_re1600_verification [grid] [t_star_max]
 
 # Multi-core: enable the Rayon feature (forwarded through physics to the
 # topology crate's DEC operator loops and CG matvecs):
-cargo run --release -p avionics_examples --features parallel \
-    --example dec_taylor_green_re1600 [grid] [t_star_max]
+cargo run --release -p deep_causality_cfd --features parallel \
+    --example dec_taylor_green_re1600_verification [grid] [t_star_max]
 ```
 
 `grid` defaults to 16 — a smoke-scale run that completes in seconds. The reporting resolutions
@@ -71,8 +71,9 @@ on stdout:
 
 ```
 t_star,kinetic_energy_per_vol,dissipation_rate
-0.0000,0.10669417,0.00000000
-0.1571,0.10662775,0.00042287
+0.0000,0.12024247,0.00000000
+0.0785,0.12020751,0.00044514
+0.1571,0.12017253,0.00044534
 ...
 ```
 

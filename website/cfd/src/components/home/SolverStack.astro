@@ -1,0 +1,142 @@
+---
+/**
+ * The three solver families, as a label-plus-content band stack.
+ * Follows the CausalStack shape from DESIGN.md §8.4: fixed mono label column,
+ * accent tick on the left edge, staggered entrance gated on `.in-view`.
+ */
+const families = [
+  {
+    key: 'DEC',
+    label: 'Calculus',
+    title: 'DEC-native Navier–Stokes',
+    forWhat: 'Incompressible flow on a fixed mesh.',
+    body:
+      'Velocity lives as an edge 1-form on a discrete exterior calculus. Each step marches the Leray-projected rate, so the field is divergence-free at every step, and the SolenoidalField type-state rejects time-stepping an unprojected field at compile time.',
+    evidence: [
+      { text: 'Ghia cavity Re 1000', href: '/validation/#dec-cavity' },
+      { text: 'Cylinder Re 100', href: '/validation/#dec-cylinder' },
+      { text: 'Graded MMS, order 2.00', href: '/validation/#dec-graded-mms' },
+    ],
+  },
+  {
+    key: 'QTT',
+    label: 'Compression',
+    title: 'Quantized tensor-train marchers',
+    forWhat: 'Compressible Euler, 1-D through 3-D, where a 2^L grid must stay cheap.',
+    body:
+      'A 2^L grid costs order χ²·L — logarithmic in point count, with sharp structure paid for in bond dimension. The rank studies measured the decisive caveat, so the compressible carrier answers it with a shock-fitted inflow strip: the exact Rankine–Hugoniot state is the boundary of the marched layer, so the shock is never captured at all.',
+    evidence: [
+      { text: 'Sod, L1 ≤ 0.027', href: '/validation/#qtt-sod' },
+      { text: 'RAM-C II anchor', href: '/validation/#qtt-ramc' },
+      { text: 'Alignment is the rank driver', href: '/boundaries/#alignment' },
+    ],
+  },
+  {
+    key: 'Analytic',
+    label: 'Pointwise',
+    title: 'Fitted closures',
+    forWhat: 'Gridless stagnation-line and relaxation problems.',
+    body:
+      'Exact Rankine–Hugoniot jumps, Park two-temperature relaxation, the finite-rate ionization network, and pointwise Navier–Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a fitted shock runs entirely on these, with no grid.',
+    evidence: [
+      { text: 'MMS to machine ε', href: '/validation/#mms-tgv' },
+      { text: 'Envelope placard example', href: '/examples/#flight-envelope-placard' },
+    ],
+  },
+];
+---
+<section class="solvers page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">01 / 04</span><span class="lb">Solvers</span>
+    </p>
+    <h2>Solver families</h2>
+    <p class="lede">
+      All three are reached through <code>CfdFlow</code> and share one scalar
+      type. Dispatch is resolved at compile time from the config type.
+    </p>
+  </header>
+
+  <div class="stack">
+    {families.map((f, i) => (
+      <article class="layer rise" style={`--i:${i}`}>
+        <div class="layer-label">
+          <span class="lk">{f.label}</span>
+          <span class="lv">{f.key}</span>
+        </div>
+        <div class="layer-body">
+          <h3>{f.title}</h3>
+          <p class="for-what">{f.forWhat}</p>
+          <p class="detail">{f.body}</p>
+          <div class="ev-row">
+            {f.evidence.map((e) => (
+              <a class="chip chip-mono" href={e.href}>
+                {e.text}<span aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .solvers { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .stack { border-top: 1px solid var(--line-1); }
+
+  .layer {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-4);
+    border-bottom: 1px solid var(--line-1);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  @media (min-width: 720px) {
+    .layer { grid-template-columns: var(--w-label) 1fr; gap: var(--space-5); }
+  }
+  /* The tick grows 18px → 28px on hover (DESIGN.md §8.4). Implemented as
+     scaleY rather than an animated `height`, which §13.10 bans: 28/18 = 1.556
+     on a fixed 18px base gives the same result on the compositor. */
+  .layer::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 18px;
+    transform: translateY(-50%) scaleY(1);
+    transform-origin: center;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+    transition: transform var(--dur-med) var(--ease-out),
+                background-color var(--dur-med) var(--ease-out);
+  }
+  .layer:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .layer:hover::before { transform: translateY(-50%) scaleY(1.556); background: var(--accent); }
+
+  .layer-label { display: flex; flex-direction: column; gap: var(--space-1); }
+  .lk {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .lv {
+    font-family: var(--font-mono);
+    font-size: var(--t-mono-sm);
+    color: var(--accent);
+  }
+
+  .layer-body h3 { margin: 0 0 var(--space-2); }
+  .for-what { color: var(--fg-0); font-size: var(--t-body-sm); margin: 0 0 var(--space-3); }
+  .detail { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .ev-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+</style>

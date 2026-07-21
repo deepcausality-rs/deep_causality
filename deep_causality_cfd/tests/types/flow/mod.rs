@@ -24,9 +24,9 @@ where
 pub mod blackout_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
-pub mod compressible_march_run_tests;
+pub mod compressible_march_run;
 #[cfg(test)]
-pub mod corridor_tests;
+pub mod corridor;
 #[cfg(test)]
 pub mod coupled_march_tests;
 #[cfg(test)]
@@ -35,10 +35,13 @@ pub mod coupling_tests;
 pub mod duct_march_tests;
 #[cfg(not(miri))]
 mod finite_rate_ionization_tests;
+mod flight_sensors_tests;
 #[cfg(test)]
 pub mod frequency_tests;
 #[cfg(test)]
 pub mod gates_tests;
+#[cfg(test)]
+pub mod inheritance_guard_tests;
 // IO operations are unsupported under MIRI.
 #[cfg(test)]
 #[cfg(not(miri))]
@@ -62,6 +65,8 @@ pub mod qtt_march_run_tests;
 #[cfg(test)]
 pub mod report_tests;
 #[cfg(test)]
+pub mod retropulsion_tests;
+#[cfg(test)]
 pub mod study_effect_tests;
 #[cfg(test)]
 pub mod study_error_tests;
@@ -71,6 +76,8 @@ pub mod study_grammar_tests;
 pub mod study_warning_tests;
 #[cfg(test)]
 pub mod sweep_tests;
+mod terminal_descent_tests;
+mod throttle_guidance_tests;
 // Filesystem round trips are unsupported under MIRI.
 #[cfg(test)]
 #[cfg(not(miri))]

@@ -1,0 +1,90 @@
+---
+/**
+ * The capability ladder. Ordered by what the example demands of the DSL, so a
+ * reader can find the rung matching the job they have.
+ */
+import { getCollection } from 'astro:content';
+
+const examples = (await getCollection('examples')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+---
+<section class="ladder page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">03 / 04</span><span class="lb">Worked runs</span>
+    </p>
+    <h2>Worked examples</h2>
+    <p class="lede">
+      Seven executable examples, ordered by the solver and DSL surface each
+      requires. Every entry has a committed output file.
+    </p>
+  </header>
+
+  <ol class="rungs">
+    {examples.map((ex, i) => (
+      <li class="rung rise" style={`--i:${i}`}>
+        <a href={`/examples/${ex.id.replace(/^en\//, '')}/`}>
+          <span class="rung-ix num">{String(i + 1).padStart(2, '0')}</span>
+          <span class="rung-main">
+            <span class="rung-name">{ex.data.title}</span>
+            <span class="rung-q">{ex.data.question}</span>
+            <span class="rung-uses">
+              {ex.data.uses.map((u) => <code>{u}</code>)}
+            </span>
+          </span>
+          <span class="rung-time num">{ex.data.runtime}</span>
+          <span class="rung-go" aria-hidden="true">→</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .ladder { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .rungs { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+  .rung { border-bottom: 1px solid var(--line-1); }
+  /* The slide-on-hover is `transform`, not `padding-left`. §12.12 sanctions
+     the padding exception only for a single text link in a hairline row and
+     says explicitly not to generalize it to a grid item — this row is one. */
+  .rung a {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-3);
+    align-items: start;
+    padding: var(--space-4) var(--space-2);
+    color: var(--fg-0);
+    border-bottom: none;
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--dur-med) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out);
+  }
+  @media (min-width: 720px) {
+    .rung a { grid-template-columns: auto 1fr auto auto; gap: var(--space-5); align-items: center; }
+  }
+  .rung a:hover {
+    transform: translate3d(var(--space-2), 0, 0);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .rung-ix { color: var(--fg-2); }
+  .rung-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .rung-name { font-weight: var(--fw-heading); }
+  .rung-q { color: var(--fg-1); font-size: var(--t-body-sm); }
+  .rung-uses { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
+  .rung-uses code {
+    font-size: var(--t-eyebrow);
+    color: var(--fg-2);
+    background: none;
+    padding: 0;
+  }
+  .rung-uses code::after { content: '·'; margin-left: var(--space-2); color: var(--line-2); }
+  .rung-uses code:last-child::after { content: ''; }
+  .rung-time { color: var(--fg-2); font-size: var(--t-eyebrow); white-space: nowrap; }
+  .rung-go { color: var(--accent); transition: transform var(--dur-fast) var(--ease-out); }
+  .rung a:hover .rung-go { transform: translateX(2px); }
+</style>

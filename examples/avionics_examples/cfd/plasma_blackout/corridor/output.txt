@@ -39,32 +39,35 @@ Precision: f64
 --- Leg: peak passage 61 km (committed dwell) ---
   marched 108 steps to 60.9 km, Mach 24.9 | regime: continuum (Kn = 3.83e-3) | link: GNSS DENIED
   n_e peak = 3.349e19 m^-3 | w_p = 3.265e11 rad/s | q = 1.829e6 W/m^2 | 1.3 g
-  nav error vs truth = 2.5448 m | position variance = 3.8601e1 m^2 | log entries: 8
+  nav error vs truth = 2.5448 m | position variance = 3.8601e1 m^2 | log entries: 9
 
 --- Leg: flow-resolved exit ---
   marched 476 steps to 47.0 km, Mach 8.5 | regime: continuum (Kn = 2.58e-4) | link: GNSS available
   n_e peak = 2.781e16 m^-3 | w_p = 9.408e9 rad/s | q = 2.959e5 W/m^2 | 2.4 g
-  nav error vs truth = 2.3056 m | position variance = 2.9995e0 m^2 | log entries: 12
+  nav error vs truth = 2.3056 m | position variance = 2.9995e0 m^2 | log entries: 14
 
 --- Leg: reacquisition ---
   marched 30 steps to 47.6 km, Mach 8.3 | regime: continuum (Kn = 2.70e-4) | link: GNSS available
   n_e peak = 2.259e-3 m^-3 | w_p = 2.681e0 rad/s | q = 2.691e5 W/m^2 | 2.2 g
-  nav error vs truth = 0.2775 m | position variance = 3.1945e-1 m^2 | log entries: 13
+  nav error vs truth = 0.2775 m | position variance = 3.1945e-1 m^2 | log entries: 16
 
 --- Provenance (the carried EffectLog, the whole descent) ---
-  13 entries total (0 bank-correction boundings by the cybernetic gate, omitted below):
+  16 entries total (0 bank-correction boundings by the cybernetic gate, omitted below):
     regime -> slip (GNSS-available), Kn=0.07829109848665225
     nav: aided (position fix folded)
     regime -> slip (GNSS-denied), Kn=0.01705925949914955
     nav: dead reckoning (no usable fix)
     march paused at step 119
+    leg re-seeded from step 119 in world 'fine_bank_02': coupled field carried, marched fluid state re-seeded from the world seed
     !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_02'
     regime -> continuum (GNSS-denied), Kn=0.009938308574526865
     march paused at step 108
+    leg re-seeded from step 108 in world 'fine_bank_02': coupled field carried, marched fluid state re-seeded from the world seed
     !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_02'
     regime -> continuum (GNSS-available), Kn=0.00025839060489290773
     nav: aided (position fix folded)
     march paused at step 476
+    leg re-seeded from step 476 in world 'fine_bank_02': coupled field carried, marched fluid state re-seeded from the world seed
     !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_02'
 
 
@@ -81,5 +84,5 @@ Precision: f64
   [PASS] (4a) regime change: the descent crossed a Knudsen band (slip -> continuum), logged as provenance events
   [PASS] (4b) multiphysics chain: evolved flow -> reacting plasma -> steered aero force -> loads -> navigation all live in one coupling
   [PASS] (5a) bounded schedule rebuilds: 0 carrier rebuild(s) while following the descent (cap 3)
-  [PASS] (5b) wall-clock budget: 42.1 s elapsed (budget 600 s)
+  [PASS] (5b) wall-clock budget: 40.9 s elapsed (budget 600 s)
 === All gates passed: bank-angle corridor + corridor legs. ===

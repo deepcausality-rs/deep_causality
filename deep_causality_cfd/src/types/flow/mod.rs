@@ -23,6 +23,7 @@ mod coupled_march;
 mod coupling;
 mod duct_march_run;
 mod finite_rate_ionization;
+mod flight_sensors;
 mod frequency;
 mod gates;
 mod march_run;
@@ -32,12 +33,14 @@ mod operator_study;
 mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
+mod retropulsion;
 pub mod state_snapshot;
 mod study;
 mod study_effect;
 mod study_error;
 mod study_warning;
 mod sweep;
+mod throttle_guidance;
 #[cfg(feature = "std")]
 mod uncertain_march_run;
 mod verify;
@@ -52,16 +55,18 @@ pub use blackout::{
 pub use cfd_flow::CfdFlow;
 pub use compressible_march_run::{CompressibleFork, CompressibleMarchRun, CompressiblePause};
 pub use corridor::{
-    BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, CyberneticCorrect,
-    GoverningModel, RegimeClass, RegimeClassify, SafetyEnvelope, TrajectoryNav,
+    BankCorrection, BankSteeredLift, BranchAccumulator, BranchOutcome, BurnEnvelope,
+    CyberneticCorrect, GoverningModel, MachRegime, REGIME_TRANSITIONS_FIELD, RegimeClass,
+    RegimeClassify, SafetyEnvelope, ThrustState, TrajectoryNav,
 };
-pub use coupled_march::{CoupledMarch, ReadyMarch};
+pub use coupled_march::{CoupledMarch, LEG_RE_SEEDS_FIELD, ReadyMarch};
 pub use coupling::{
     AeroBlackoutStub, AeroForceCoupling, CoupledField, Coupling, PhysicsStage, StepContext,
     ThermalRelax, ViscosityArrhenius,
 };
 pub use duct_march_run::DuctMarchRun;
 pub use finite_rate_ionization::FiniteRateIonizationStage;
+pub use flight_sensors::FlightSensors;
 pub use frequency::{dominant_frequency, strouhal_number};
 pub use gates::Gates;
 pub use march_run::{MarchPipeline, MarchRun, StepView};
@@ -70,7 +75,10 @@ pub use mms::{MmsBuilder, Regime};
 pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
-pub use report::Report;
+pub use report::{ForkEconomics, Report};
+pub use retropulsion::{
+    PRESERVED_DRAG_FRACTION_FIELD, PlumeNozzle, PlumeObstruction, PropulsionStub, RetroThrust,
+};
 pub use study::{
     Alternated, Branched, CaseRun, Cases, Configured, Counterfactual, CoupledCampaign,
     EnsembleMarched, ForkStudy, GateFn, GateOutcome, GateSeq, Judged, Marched, Prepared,
@@ -80,6 +88,12 @@ pub use study_effect::{StudyEffect, StudyEffectWitness};
 pub use study_error::StudyError;
 pub use study_warning::{StudyWarning, StudyWarningLog};
 pub use sweep::sweep;
+pub use throttle_guidance::{
+    IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD, IGNITION_COMMIT_Q_FIELD,
+    IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD, IGNITION_LATCH_FIELD,
+    IgnitionCorridor, STOPPING_BURN_ALTITUDE_FIELD, STOPPING_BURN_FIELD, STOPPING_BURN_SPEED_FIELD,
+    ThrottleGuidance,
+};
 #[cfg(feature = "std")]
 pub use uncertain_march_run::{UncertainMarchPipeline, UncertainMarchRun, UncertainStepView};
 pub use verify::VerifyRun;

@@ -36,6 +36,24 @@ coverage
 ctx/next
 
 # Astro site (website/web)
+website/cfd/node_modules
+website/cfd/dist
+website/cfd/.astro
+website/cfd/.pagefind
+website/cfd/.cache
+website/cfd/.env
+website/cfd/.env.production
+
+# Astro site (website/web)
+website/docs/node_modules
+website/docs/dist
+website/docs/.astro
+website/docs/.pagefind
+website/docs/.cache
+website/docs/.env
+website/docs/.env.production
+
+# Astro site (website/web)
 website/web/node_modules
 website/web/dist
 website/web/.astro

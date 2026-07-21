@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+import Hero from '../components/home/Hero.astro';
+import SectionDivider from '../components/home/SectionDivider.astro';
+import SolverStack from '../components/home/SolverStack.astro';
+import ValidationSnapshot from '../components/home/ValidationSnapshot.astro';
+import ExampleLadder from '../components/home/ExampleLadder.astro';
+import BoundaryTeaser from '../components/home/BoundaryTeaser.astro';
+import { GITHUB_URL } from '../consts';
+
+const title = 'DeepCausality CFD — counterfactual fluid dynamics in Rust';
+const description =
+  'A Rust CFD toolbox that couples flow, chemistry, navigation and control in one typed process, then forks the running simulation into counterfactual worlds. Validated against Sod, Ghia, Williamson and RAM-C II, with measured capability boundaries.';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'deep_causality_cfd',
+  description,
+  programmingLanguage: 'Rust',
+  codeRepository: GITHUB_URL,
+  license: 'https://opensource.org/licenses/MIT',
+};
+---
+<BaseLayout title={title} description={description} path="/">
+  <SiteHeader slot="header" />
+
+  <Hero />
+  <SectionDivider />
+  <SolverStack />
+  <SectionDivider />
+  <ValidationSnapshot />
+  <SectionDivider />
+  <ExampleLadder />
+  <SectionDivider />
+  <BoundaryTeaser />
+
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+</BaseLayout>

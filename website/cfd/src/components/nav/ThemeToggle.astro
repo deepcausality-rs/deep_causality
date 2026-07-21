@@ -1,0 +1,67 @@
+---
+/**
+ * Theme toggle. Flips `data-theme` on the root and persists `dc-theme`.
+ * Same storage key as the marketing site, so the preference carries across
+ * both properties.
+ *
+ * No local `:focus-visible` rule — the global ring applies (DESIGN.md §12.9).
+ */
+---
+<button class="theme-toggle" type="button" aria-label="Switch to light theme">
+  <svg class="ico ico-sun" width="16" height="16" viewBox="0 0 16 16" fill="none"
+       stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+    <circle cx="8" cy="8" r="3.25" />
+    <path d="M8 1v1.75M8 13.25V15M15 8h-1.75M2.75 8H1M12.95 3.05l-1.24 1.24M4.29 11.71l-1.24 1.24M12.95 12.95l-1.24-1.24M4.29 4.29L3.05 3.05" stroke-linecap="round" />
+  </svg>
+  <svg class="ico ico-moon" width="16" height="16" viewBox="0 0 16 16" fill="none"
+       stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+    <path d="M13.5 9.6A5.8 5.8 0 0 1 6.4 2.5a5.8 5.8 0 1 0 7.1 7.1Z" stroke-linejoin="round" />
+  </svg>
+</button>
+
+<style>
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    display: inline-grid;
+    place-items: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--fg-1);
+    cursor: pointer;
+    padding: 0;
+    transition: border-color var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .theme-toggle:hover { color: var(--fg-0); border-color: var(--line-2); }
+
+  /* Show exactly one glyph. `:global` escapes the scope hash so the attribute
+     on <html> can reach these. */
+  .ico { display: none; }
+  :global([data-theme='dark']) .ico-sun { display: block; }
+  :global([data-theme='light']) .ico-moon { display: block; }
+</style>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.theme-toggle');
+  const root = document.documentElement;
+
+  function label(theme: string) {
+    return theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+
+  if (btn) {
+    btn.setAttribute('aria-label', label(root.getAttribute('data-theme') ?? 'dark'));
+    btn.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try {
+        localStorage.setItem('dc-theme', next);
+      } catch {
+        /* private mode: the flip still applies for this page view */
+      }
+      btn.setAttribute('aria-label', label(next));
+    });
+  }
+</script>

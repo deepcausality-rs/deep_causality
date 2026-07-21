@@ -1,0 +1,17 @@
+# Cloudflare Workers + Static Assets config for the DeepCausality CFD site.
+#
+# Fully static — no SSR, no API routes, no `main` worker entry. Wrangler
+# uploads dist/ as the Worker's static assets. Mirrors website/web/wrangler.toml.
+
+name = "deepcausality-cfd-prod"
+# Same account as the marketing site; pinned explicitly because this credential
+# is linked to two Cloudflare accounts.
+account_id = "222139bff18ce0390d15f59a78d3d6b2"
+compatibility_date = "2026-05-01"
+
+[assets]
+directory = "./dist"
+not_found_handling = "404-page"
+
+[observability]
+enabled = true

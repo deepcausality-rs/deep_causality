@@ -1,0 +1,27 @@
+=== QTT dynamic rank study  (L=12, N=4096, c=1, dt=3.66e-5, steps=3000, tol=1e-8) ===
+
+max_bond over time:
+   step |      A smooth (nu_low) |      B steep (nu_low=4e-5) |      C steep (nu_high=6e-4)
+      0 |                      8 |                          4 |                           4
+    300 |                      8 |                          8 |                           7
+    600 |                      8 |                          7 |                           7
+    900 |                      8 |                          7 |                           7
+   1200 |                      8 |                          7 |                           7
+   1500 |                      8 |                          7 |                           7
+   1800 |                      8 |                          7 |                           7
+   2100 |                      8 |                          7 |                           7
+   2400 |                      8 |                          7 |                           7
+   2700 |                      8 |                          7 |                           7
+   3000 |                      8 |                          7 |                           7
+
+  init / PEAK / final:
+    A smooth          : 8 / 8 / 8
+    B steep, low  nu  : 4 / 8 / 7
+    C steep, high nu  : 4 / 7 / 7
+
+ALL GATES PASSED.
+Finding: under fixed-tolerance rounding the linear marcher is RANK-SAFE — a transported
+feature settles near its static rank (8/8/7), no runaway; more diffusion
+does not increase rank (low-nu peak 8 >= high-nu peak 7).
+LIMIT: linear transport cannot STEEPEN a feature, so the nonlinear shock-steepening rank
+threat is NOT tested here — it needs a nonlinear marcher and remains OPEN for Tier-B.

@@ -1,0 +1,256 @@
+---
+/**
+ * Sticky header. Two-tier grid per DESIGN.md §8.1: `1fr auto` at 56px base,
+ * `auto 1fr auto` at 64px from 900px. Height comes from `--header-h` so scroll
+ * offsets can consume the same token (§12.7).
+ */
+import ThemeToggle from './ThemeToggle.astro';
+import { GITHUB_URL, SITE_URL } from '../../consts';
+
+const { pathname } = Astro.url;
+const isActive = (href: string) =>
+  href === '/' ? pathname === '/' : pathname.startsWith(href);
+
+const nav = [
+  { href: '/cookbook/', label: 'Cookbook' },
+  { href: '/validation/', label: 'Validation' },
+  { href: '/examples/', label: 'Examples' },
+  { href: '/boundaries/', label: 'Boundaries' },
+  { href: '/roadmap/', label: 'Roadmap' },
+];
+---
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="/">
+      <svg class="brand-mark" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <!-- Bow shock over a blunt body: the site's own motif, in miniature. -->
+        <path d="M16.5 2.5C11 5.2 8 8.4 8 11s3 5.8 8.5 8.5" stroke="var(--accent)" stroke-width="1.2" />
+        <path d="M20 6.5c-3 1.6-4.6 3.2-4.6 4.5s1.6 2.9 4.6 4.5" stroke="currentColor" stroke-width="1.1" opacity="0.65" />
+        <circle cx="4" cy="11" r="1.4" fill="var(--accent)" />
+      </svg>
+      <span class="brand-text">DeepCausality<span class="brand-sub">CFD</span></span>
+    </a>
+
+    <nav class="primary" aria-label="Primary">
+      {nav.map((item) => (
+        <a class:list={['nav-link', { 'is-active': isActive(item.href) }]} href={item.href}>
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="utility">
+      <ThemeToggle />
+      <a class="icon-link" href={SITE_URL} aria-label="DeepCausality project site">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.25" />
+          <path d="M1.75 8h12.5M8 1.75c1.7 1.9 2.5 4 2.5 6.25S9.7 12.35 8 14.25C6.3 12.35 5.5 10.25 5.5 8S6.3 3.65 8 1.75Z" />
+        </svg>
+      </a>
+      <a class="icon-link" href={GITHUB_URL} aria-label="GitHub repository">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+        </svg>
+      </a>
+      <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu" hidden>
+  <div class="mobile-scrim" data-close></div>
+  <div class="mobile-sheet" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="mobile-sheet-head">
+      <p class="eyebrow">Navigate</p>
+      <button class="mobile-close" type="button" aria-label="Close menu" data-close>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
+          <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+    <ul class="hairline-list">
+      {nav.map((item) => (
+        <li><a href={item.href}>{item.label}</a></li>
+      ))}
+    </ul>
+  </div>
+</div>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg-0) 92%, transparent);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .site-header-inner {
+    max-width: var(--w-page);
+    margin: 0 auto;
+    min-height: var(--header-h);
+    padding: 0 var(--space-4);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  @media (min-width: 900px) {
+    .site-header-inner {
+      padding: 0 var(--space-5);
+      grid-template-columns: auto 1fr auto;
+      gap: var(--space-6);
+    }
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--fg-0);
+    border-bottom: none;
+    font-weight: var(--fw-heading);
+    letter-spacing: -0.01em;
+  }
+  .brand-mark { flex: 0 0 auto; }
+  .brand-sub {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    color: var(--accent);
+    margin-left: 0.5em;
+    vertical-align: 0.15em;
+  }
+
+  .primary { display: none; }
+  @media (min-width: 900px) {
+    .primary { display: flex; align-items: center; gap: var(--space-5); }
+  }
+  .nav-link {
+    position: relative;
+    color: var(--fg-1);
+    border-bottom: none;
+    font-size: var(--t-body-sm);
+    padding: var(--space-2) 0;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-med) var(--ease-out);
+  }
+  .nav-link:hover { color: var(--fg-0); }
+  .nav-link.is-active { color: var(--fg-0); }
+  .nav-link.is-active::after { transform: scaleX(1); }
+
+  .utility { display: flex; align-items: center; gap: var(--space-2); justify-self: end; }
+  .icon-link {
+    width: 32px; height: 32px;
+    display: inline-grid;
+    place-items: center;
+    color: var(--fg-1);
+    border-bottom: none;
+    border-radius: var(--radius-sm);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .icon-link:hover { color: var(--fg-0); }
+
+  .burger {
+    width: 32px; height: 32px;
+    display: inline-grid;
+    place-content: center;
+    gap: 4px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--fg-1);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .burger:hover { color: var(--fg-0); border-color: var(--line-2); }
+  .burger-bar { display: block; width: 16px; height: 1px; background: currentColor; }
+  @media (min-width: 900px) { .burger { display: none; } }
+
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: 1fr min(86vw, 320px);
+  }
+  .mobile-menu[hidden] { display: none; }
+  .mobile-scrim {
+    background: color-mix(in srgb, var(--bg-0) 70%, transparent);
+    opacity: 0;
+    transition: opacity var(--dur-med) var(--ease-out);
+  }
+  .mobile-menu.is-open .mobile-scrim { opacity: 1; }
+  .mobile-sheet {
+    background: var(--bg-1);
+    border-left: 1px solid var(--line-1);
+    box-shadow: var(--shadow-3);
+    padding: var(--space-4);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform var(--dur-med) var(--ease-out);
+  }
+  .mobile-menu.is-open .mobile-sheet { transform: translateX(0); }
+  .mobile-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+  }
+  .mobile-close {
+    width: 32px; height: 32px;
+    display: inline-grid;
+    place-items: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--fg-1);
+    cursor: pointer;
+  }
+  .mobile-close:hover { color: var(--fg-0); border-color: var(--line-2); }
+</style>
+
+<script>
+  const menu = document.getElementById('mobile-menu');
+  const burger = document.querySelector<HTMLButtonElement>('.burger');
+
+  if (menu && burger) {
+    // Matches --dur-med. DESIGN.md §6 flags this JS/CSS duplication as
+    // unavoidable; keep the two in sync by hand if the token changes.
+    const DUR_MED = 220;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const open = () => {
+      menu.hidden = false;
+      requestAnimationFrame(() => menu.classList.add('is-open'));
+      burger.setAttribute('aria-expanded', 'true');
+      menu.querySelector<HTMLElement>('.mobile-close')?.focus();
+    };
+
+    const close = () => {
+      menu.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+      window.setTimeout(() => { menu.hidden = true; }, reduced ? 0 : DUR_MED);
+      burger.focus();
+    };
+
+    burger.addEventListener('click', open);
+    menu.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
+    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) close();
+    });
+  }
+</script>

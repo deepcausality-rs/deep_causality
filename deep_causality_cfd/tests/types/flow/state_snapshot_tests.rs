@@ -23,6 +23,7 @@ fn populated_field() -> CoupledField<f64> {
     field.set_scalar("alpha", vec![1.0e-4, 2.0e-5, 0.0]);
     field.set_aero_force([0.1, -0.2, 0.3]);
     field.set_control_action(0.25);
+    field.set_throttle_action(0.6);
     let filter = NavFilter::new(InsErrorState::<f64>::zero(), [2_500.0; 17]);
     field.set_nav(ReentryNavEngine::new(
         [6.45e6, 0.0, 0.0],
@@ -54,6 +55,7 @@ fn a_resume_package_round_trips_through_disk_bit_exact() {
     }
     assert_eq!(restored.aero_force(), field.aero_force());
     assert_eq!(restored.control_action(), field.control_action());
+    assert_eq!(restored.throttle_action(), field.throttle_action());
 
     let nav_a = field.nav().expect("nav");
     let nav_b = restored.nav().expect("nav restored");

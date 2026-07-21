@@ -1,0 +1,16 @@
+=== QTT acoustic-implicit preconditioner (Res 6 / D10), stiffness s = 8 ===
+
+  AC-A  A0^-1·b (smooth RHS): bond  L8=8 (res 2.0e-11)   L10=8 (res 1.1e-10)
+
+  AC-B  smooth interior  : rho(A0^-1 A1) = 0.590
+  AC-C  captured c-jump  : rho(A0^-1 A1) = 0.872
+
+--- reading ---
+  The constant-coefficient core inverts at bounded bond, resolution-stable (L8=8, L10=8),
+  so A0^-1 is a cheap preconditioner — no AMEn-convergence gamble on the core.
+  On a SMOOTH interior rho=0.59 < 1: the preconditioned operator I + A0^-1 A1 contracts,
+  i.e. the implicit step converges geometrically (the Res-6 claim, measured).
+  Across a CAPTURED jump rho=0.87 (1.5x worse): the jump is the hard part — which is
+  exactly why shock-FITTING (Res 5) keeps the interior smooth so the solve stays cheap.
+
+ALL GATES PASSED — the split + closed-form-core preconditioner de-risks the implicit acoustic step.

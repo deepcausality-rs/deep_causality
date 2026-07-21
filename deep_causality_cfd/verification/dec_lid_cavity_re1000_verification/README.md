@@ -29,8 +29,8 @@ The wall substrate of the DEC Navier–Stokes solver, working together:
 ## Usage
 
 ```text
-cargo run --release --example dec_lid_cavity_re1000 [grid] [t_end]
-cargo run --release --example dec_lid_cavity_re1000 trend
+cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification [grid] [t_end]
+cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification trend
 ```
 
 - `grid` defaults to **65** (minutes of runtime, clear vortex structure).

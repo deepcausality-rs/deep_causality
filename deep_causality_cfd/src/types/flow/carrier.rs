@@ -18,7 +18,8 @@
 use super::blackout::BlackoutTrigger;
 use super::coupling::{CoupledField, PhysicsStage, StepContext};
 use crate::CfdScalar;
-use crate::types::flow::{MarchState, Report};
+use crate::types::flow::report::ForkSample;
+use crate::types::flow::{ForkEconomics, MarchState, Report};
 use crate::types::flow_config::QttObserve;
 use alloc::sync::Arc;
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue, EffectLog};
@@ -58,6 +59,15 @@ pub trait CoupledCarrier<const D: usize, R: CfdScalar>: Sized {
     /// The fixed step size.
     fn dt(&self) -> R;
 
+    /// Solver rebuilds this carrier has performed. Carriers that never rebuild report zero.
+    ///
+    /// Exposed so a harness or gate reads a number rather than tallying `"carrier rebuilt at step"`
+    /// substrings in a rendered provenance string — an accounting that silently stops working if the
+    /// message is ever reworded, and that sees only the logs a caller happens to render.
+    fn rebuilds(&self) -> usize {
+        0
+    }
+
     /// Advance the marched state one step.
     ///
     /// # Errors
@@ -81,6 +91,19 @@ pub trait CoupledCarrier<const D: usize, R: CfdScalar>: Sized {
     /// # Errors
     /// Codec failures.
     fn finish(&self, state: &Self::State, report: &mut Report<R>) -> Result<(), PhysicsError>;
+
+    /// The peak bond dimension of `state`, for a carrier whose state is a tensor train.
+    ///
+    /// An associated function rather than a method: a paused march samples its own rank at fork time
+    /// to give the branch's bond growth a baseline, and it holds a state without holding a built
+    /// carrier.
+    ///
+    /// The default is `None`: a carrier whose state carries no rank has nothing to report, and a
+    /// compression gate must fail on the absence rather than substitute the configured cap. Reading
+    /// the cap back is a comparison of a constant against itself.
+    fn state_peak_bond(_state: &Self::State) -> Option<usize> {
+        None
+    }
 
     /// The case name carried by a config.
     fn config_name(cfg: &Self::Config) -> &str;
@@ -229,6 +252,9 @@ where
     let mut report = Report::new(M::config_name(cfg));
     sampler.into_report(observe, carrier.dt(), &mut report)?;
     carrier.finish(state, &mut report)?;
+    if let Some(bond) = M::state_peak_bond(state) {
+        report.set_peak_bond(bond);
+    }
     // Expose the final field's scalars as `final_<name>` so a reduction reads any carried quantity
     // off the report — the terminal trajectory witnesses (the carried truth state and the last
     // published navigation solution, so a branch's miss is trajectory-derived, not modeled) and the
@@ -353,6 +379,7 @@ where
             break;
         }
     }
+    let rebuilds = carrier.rebuilds();
     Ok(CarrierPause {
         config: cfg,
         coupling: spec.coupling,
@@ -361,6 +388,7 @@ where
         state: Arc::new(state),
         field: Arc::new(field),
         step: paused_at,
+        rebuilds,
         error,
     })
 }
@@ -379,6 +407,7 @@ where
     state: Arc<M::State>,
     field: Arc<CoupledField<R>>,
     step: usize,
+    rebuilds: usize,
     error: Option<PhysicsError>,
 }
 
@@ -419,8 +448,47 @@ where
     }
 
     /// The captured step error, if the march broke before the predicate fired.
+    /// Solver rebuilds the carrier performed over this leg.
+    ///
+    /// Read this rather than tallying `"carrier rebuilt at step"` substrings in a rendered log: the
+    /// count is per-carrier, so it is a **per-leg** number, and a carrier is rebuilt at every leg
+    /// boundary.
+    pub fn rebuilds(&self) -> usize {
+        self.rebuilds
+    }
+
     pub fn error(&self) -> Option<&PhysicsError> {
         self.error.as_ref()
+    }
+
+    /// Leg re-seeds accumulated on the carried field up to this pause.
+    ///
+    /// Cumulative across every leg the coupled field has crossed, since the field carries the
+    /// counter. Read this rather than counting `"leg re-seeded"` substrings in a rendered log — a
+    /// reworded message makes that count report zero.
+    ///
+    /// Counted in `R` rather than `usize` on purpose. `CfdScalar` requires `FromPrimitive` but not
+    /// its converse, so a `usize` return would need a `ToPrimitive` bound that `Float106` does not
+    /// satisfy — and the precision alias is a parameter this crate's callers are invited to change.
+    /// A count compares against a threshold either way.
+    pub fn re_seeds(&self) -> R {
+        self.counter(crate::types::flow::LEG_RE_SEEDS_FIELD)
+    }
+
+    /// Regime transitions logged on the carried field up to this pause.
+    ///
+    /// Cumulative across legs, and counted in `R`, for the same reasons as
+    /// [`re_seeds`](Self::re_seeds).
+    pub fn regime_transitions(&self) -> R {
+        self.counter(crate::types::flow::REGIME_TRANSITIONS_FIELD)
+    }
+
+    /// A carried monotone counter, zero when the field has never published it.
+    fn counter(&self, name: &str) -> R {
+        self.field
+            .scalar(name)
+            .and_then(|s| s.first().copied())
+            .unwrap_or_else(R::zero)
     }
 
     /// The coupled field at the pause (carried scalars, nav state, regime, provenance log).
@@ -435,6 +503,20 @@ where
         MarchState::at((*self.field).clone(), self.step)
     }
 
+    /// Sample what this fork costs, **once**, before any branch exists.
+    ///
+    /// Both reference counts and the paused rank describe the fork itself, so they are read here
+    /// rather than inside each branch: a count read inside a branch is a count sibling branches are
+    /// concurrently changing under the `parallel` feature, and it lands in a study's recorded
+    /// artifact as a different number on every run.
+    fn fork_sample(&self) -> ForkSample {
+        ForkSample {
+            fluid_refs: Arc::strong_count(&self.state),
+            field_refs: Arc::strong_count(&self.field),
+            fork_peak_bond: M::state_peak_bond(&self.state),
+        }
+    }
+
     /// Fork the pause: an **O(1)** branch sharing the paused state and field by `Arc` — no tensor
     /// data is copied until (and unless) the branch writes.
     pub fn fork(&self) -> CarrierFork<'_, 'c, R, S, M, D> {
@@ -446,6 +528,7 @@ where
             field: Arc::clone(&self.field),
             log: EffectLog::new(),
             error: self.error.clone(),
+            alternation_applied: None,
         }
     }
 }
@@ -481,9 +564,13 @@ where
         M::Config: MaybeParallel,
         Report<R>: MaybeParallel,
     {
-        scoped_map(worlds, |world| self.continue_with(*world, steps))
-            .into_iter()
-            .collect()
+        // One sample for the whole fan-out, taken before any branch is spawned.
+        let sample = self.fork_sample();
+        scoped_map(worlds, |world| {
+            self.continue_with_sampled(*world, steps, sample)
+        })
+        .into_iter()
+        .collect()
     }
 
     /// Fly **one** branch world from this pause: fork (O(1), copy-on-write), alternate into the
@@ -506,6 +593,18 @@ where
         world: &M::Config,
         steps: usize,
     ) -> Result<Report<R>, PhysicsError> {
+        let sample = self.fork_sample();
+        self.continue_with_sampled(world, steps, sample)
+    }
+
+    /// [`continue_with`](Self::continue_with) against a fork sample the caller already took, so a
+    /// fan-out records one sample rather than one per concurrently running branch.
+    fn continue_with_sampled(
+        &self,
+        world: &M::Config,
+        steps: usize,
+        sample: ForkSample,
+    ) -> Result<Report<R>, PhysicsError> {
         // Mirror `fork().alternate_context(world).continue_march(steps)` exactly, but with `world`
         // as a short-lived borrow: an errored pause returns its captured error untouched, and a
         // healthy one accumulates the same `!!ContextAlternation!!` marker into a fresh branch log
@@ -520,15 +619,30 @@ where
             M::config_name(world),
             self.step,
         ));
-        run_continued_segment(
+        // The O(1) fork, and the record of it. Taken from the clones actually handed to the branch,
+        // not asserted about them: if this path ever deep-copies instead of sharing, the recorded
+        // economics say so and a study gating on `is_o1` fails rather than passing on a stale claim.
+        let branch_state = Arc::clone(&self.state);
+        let branch_field = Arc::clone(&self.field);
+        let economics = ForkEconomics::new(
+            Arc::ptr_eq(&branch_state, &self.state),
+            Arc::ptr_eq(&branch_field, &self.field),
+            sample,
+        );
+        let mut report = run_continued_segment(
             self,
             world,
             None,
-            Arc::clone(&self.state),
-            Arc::clone(&self.field),
+            branch_state,
+            branch_field,
             branch_log,
             steps,
-        )
+        )?;
+        report.set_fork_economics(economics);
+        // This path always applies the alternation: it returns early on an errored pause above, so
+        // reaching here means the branch flew `world`.
+        report.set_alternation_applied(true);
+        Ok(report)
     }
 }
 
@@ -547,6 +661,9 @@ where
     field: Arc<CoupledField<R>>,
     log: EffectLog,
     error: Option<PhysicsError>,
+    /// Whether a context alternation was applied to this fork, recorded typed beside the log entry
+    /// so a consumer never has to distinguish the applied and refused entries by their wording.
+    alternation_applied: Option<bool>,
 }
 
 /// `!!ContextAlternation!!` — resume this branch in a different **world** (a whole checked-in
@@ -561,8 +678,13 @@ where
         if self.error.is_some() {
             self.log
                 .add_entry("!!ContextAlternation!!: not applied (errored run cannot be repaired)");
+            // Recorded as a typed refusal beside the prose. The refusal entry carries the same
+            // `!!ContextAlternation!!` marker as an applied alternation, so a consumer matching the
+            // marker as a substring reads a refused branch as an alternated one.
+            self.alternation_applied = Some(false);
             return self;
         }
+        self.alternation_applied = Some(true);
         self.log.add_entry(&alloc::format!(
             "!!ContextAlternation!!: world '{}' replaced with '{}' at step {}",
             M::config_name(self.pause.config),
@@ -661,7 +783,14 @@ where
         // unifies cleanly; the borrowed-world `continue_with` path relaxes that lifetime by calling
         // `run_continued_segment` with a short-lived world directly.
         let cfg = self.context_ov.unwrap_or(self.pause.config);
-        run_continued_segment(
+        let alternation_applied = self.alternation_applied;
+        // Same record as the `continue_with` path, read off this fork's own shares.
+        let economics = ForkEconomics::new(
+            Arc::ptr_eq(&self.state, &self.pause.state),
+            Arc::ptr_eq(&self.field, &self.pause.field),
+            self.pause.fork_sample(),
+        );
+        let mut report = run_continued_segment(
             self.pause,
             cfg,
             self.seed_ov,
@@ -669,7 +798,12 @@ where
             self.field,
             self.log,
             steps,
-        )
+        )?;
+        report.set_fork_economics(economics);
+        if let Some(applied) = alternation_applied {
+            report.set_alternation_applied(applied);
+        }
+        Ok(report)
     }
 }
 

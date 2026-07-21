@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocDetail from '../../components/docs/DocDetail.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('cookbook');
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/^en\//, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+<BaseLayout
+  title={`${d.title} — DeepCausality CFD`}
+  description={d.summary}
+  path={`/cookbook/${entry.id.replace(/^en\//, '')}/`}
+>
+  <SiteHeader slot="header" />
+
+  <DocDetail
+    eyebrow="Cookbook"
+    title={d.title}
+    summary={d.summary}
+    tags={d.verbs}
+    backHref="/cookbook/"
+    backLabel="All recipes"
+  >
+    <Content />
+
+    {d.worked.length > 0 && (
+      <section class="worked">
+        <p class="mk">Worked examples using this</p>
+        <ul class="hairline-list">
+          {d.worked.map((w) => <li><a href={w.href}>{w.label}</a></li>)}
+        </ul>
+      </section>
+    )}
+  </DocDetail>
+</BaseLayout>
+
+<style>
+  .worked { margin-top: var(--space-7); }
+  .mk {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0 0 var(--space-3);
+  }
+</style>

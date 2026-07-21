@@ -1,0 +1,18 @@
+=== QTT 3-D re-entry forebody sheath: the Stage-6 rank lever ===
+
+  resolution | fitted χ (fn ζ) | Cartesian χ
+  -----------+-----------------+------------
+     2^3    |         2       |      10
+     2^4    |         4       |      30
+     2^5    |         4       |      59
+
+--- reading ---
+  FOREBODY (gated): the bow-shock sheath is a constant-radius surface → a step in the radial
+  axis ζ (χ 2 → 4, flat), but a curved shell on Cartesian (χ 10 → 59, growing). Body-fitting
+  bounds the forebody rank — the Stage-6 lever (the `qtt_rank_3d` upper bound, in the codec).
+  WAKE (out of scope): a separated multi-lobe wake has χ = 41 at 2^5 — no single fitted
+  coordinate aligns it; reported for the standing `qtt_rank_3d` question, never gated (D9).
+  DYNAMIC marched forebody (open): the Cartesian 3-D marcher grows χ to 16 over 6 steps —
+  a 3-D body-fit metric + re-pinning is the open remainder, not gated here.
+
+GATES PASSED — body-fitting bounds the 3-D forebody sheath rank; Cartesian capture grows; wake out of scope.

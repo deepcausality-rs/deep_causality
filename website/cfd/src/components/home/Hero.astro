@@ -1,0 +1,251 @@
+---
+/**
+ * Hero. Asymmetric 7fr/5fr split at ≥900px per DESIGN.md §8.2.
+ *
+ * Brand anchor note: the marketing site reads its mood from a raster
+ * (frontpage-art.webp). No equivalent art exists for the CFD crate, so the
+ * anchor here is a DRAWN schlieren figure — a blunt body, its standing bow
+ * shock, streamlines deflecting through it, and node dots on the stagnation
+ * line. It is built from the same hairline/node vocabulary as the rest of the
+ * site (§12), animates with the existing draw-in idiom (§12.10), costs no
+ * raster bytes, and is theme-aware for free.
+ */
+---
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow">DeepCausality · CFD</p>
+      <h1>Counterfactual fluid dynamics</h1>
+      <p class="tagline">
+        A Rust crate that marches a compressible flow with plasma chemistry,
+        navigation and control in one typed process, then forks the marched
+        state to evaluate alternative commands.
+      </p>
+      <p class="sub">
+        Three solver families share one interface and one scalar type. Figures
+        on this site are quoted from committed run artifacts; capability limits
+        are quoted from the studies that measured them.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/validation/">
+          Validation status
+          <span class="btn-ico" aria-hidden="true">→</span>
+        </a>
+        <a class="btn btn-ghost" href="/cookbook/">
+          Cookbook
+        </a>
+      </div>
+
+      <dl class="hero-facts">
+        <div>
+          <dt>Reference case</dt>
+          <dd><span class="num">L1 ≤ 0.027</span> against the exact Riemann solution</dd>
+        </div>
+        <div>
+          <dt>Flight anchor</dt>
+          <dd><span class="num">+0.0 dec</span> vs RAM-C II peak electron density</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="hero-art reticle-host">
+      <span class="reticle reticle-tl"></span>
+      <span class="reticle reticle-tr"></span>
+      <span class="reticle reticle-bl"></span>
+      <span class="reticle reticle-br"></span>
+
+      <svg viewBox="0 0 320 260" role="img" data-anim-draw
+           aria-label="Schematic of a blunt body in hypersonic flow: a detached bow shock stands off the nose, oncoming streamlines deflect across it, and the stagnation streamline is marked with sample nodes.">
+        <!-- Freestream streamlines, deflecting across the shock. -->
+        <g class="stream">
+          <path d="M8 44 C 90 44, 128 52, 176 76"   pathLength="100" />
+          <path d="M8 86 C 96 86, 132 92, 186 112"  pathLength="100" />
+          <path d="M8 130 C 104 130, 150 130, 196 130" pathLength="100" />
+          <path d="M8 174 C 96 174, 132 168, 186 148" pathLength="100" />
+          <path d="M8 216 C 90 216, 128 208, 176 184" pathLength="100" />
+        </g>
+
+        <!-- The detached bow shock. -->
+        <path class="shock" d="M150 8 C 96 60, 96 200, 150 252" pathLength="100" />
+
+        <!-- Blunt forebody. -->
+        <path class="body" d="M246 62 C 200 84, 196 176, 246 198 L 300 198 L 300 62 Z" pathLength="100" />
+
+        <!-- Stagnation line with sample nodes. -->
+        <line class="stagline" x1="150" y1="130" x2="200" y2="130" pathLength="100" />
+        <circle cx="150" cy="130" r="3" />
+        <circle cx="175" cy="130" r="3" />
+        <circle cx="200" cy="130" r="3" />
+      </svg>
+
+      <figcaption class="art-caption">
+        <span class="k">standoff</span> 7.6 mm
+        <span class="sep" aria-hidden="true">·</span>
+        <span class="k">T₂</span> 8044 K
+        <span class="sep" aria-hidden="true">·</span>
+        <span class="k">n_e</span> 1.085e19 m⁻³
+      </figcaption>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero { padding: var(--space-7) var(--space-4) var(--space-8); }
+  @media (min-width: 720px) { .hero { padding: var(--space-8) var(--space-5) var(--space-9); } }
+
+  .hero-inner {
+    max-width: var(--w-wide);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .hero-inner { grid-template-columns: 7fr 5fr; gap: var(--space-8); }
+  }
+
+  /* Art above text on narrow screens; back to the right column at ≥900px. */
+  .hero-art { order: -1; }
+  @media (min-width: 900px) { .hero-art { order: 0; } }
+
+  h1 {
+    font-size: clamp(2.25rem, 5.5vw + 0.5rem, 3.75rem);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+    margin: var(--space-3) 0 var(--space-4);
+    max-width: 18ch;
+  }
+  .tagline {
+    font-size: var(--t-h3);
+    line-height: var(--lh-h3);
+    color: var(--fg-1);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-4);
+  }
+  .sub {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-6);
+  }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-7); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 44px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-size: var(--t-body-sm);
+    font-weight: var(--fw-heading);
+    border-bottom: 1px solid transparent;
+    transition: transform var(--dur-fast) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--accent) 90%, white);
+    border-color: transparent;
+    border-bottom-color: transparent;
+  }
+  .btn-ico { transition: transform var(--dur-fast) var(--ease-out); }
+  .btn-primary:hover .btn-ico { transform: translateX(2px); }
+  .btn-ghost { color: var(--fg-0); border-color: var(--line-2); }
+  .btn-ghost:hover {
+    border-color: var(--fg-2);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+    border-bottom-color: var(--fg-2);
+  }
+
+  .hero-facts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line-1);
+  }
+  @media (min-width: 600px) { .hero-facts { grid-template-columns: 1fr 1fr; } }
+  .hero-facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: var(--space-2);
+  }
+  .hero-facts dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+  .hero-facts .num { color: var(--accent); }
+
+  /* --- The drawn schlieren figure --- */
+  .hero-art {
+    background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+      var(--bg-1) 100%);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-2);
+    padding: var(--space-5);
+  }
+  /* The reticle radius must match its host (DESIGN.md §12.3). */
+  .hero-art > .reticle-tl { border-top-left-radius: var(--radius-lg); }
+  .hero-art > .reticle-tr { border-top-right-radius: var(--radius-lg); }
+  .hero-art > .reticle-bl { border-bottom-left-radius: var(--radius-lg); }
+  .hero-art > .reticle-br { border-bottom-right-radius: var(--radius-lg); }
+
+  .hero-art svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .stream path {
+    fill: none;
+    stroke: var(--fg-2);
+    stroke-width: 1;
+    opacity: 0.55;
+    vector-effect: non-scaling-stroke;
+  }
+  .shock {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  .body {
+    fill: color-mix(in srgb, var(--bg-3) 80%, transparent);
+    stroke: var(--line-2);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .stagline {
+    stroke: var(--accent);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    opacity: 0.8;
+    vector-effect: non-scaling-stroke;
+  }
+  .hero-art circle { fill: var(--accent); }
+
+  /* The dashed stagnation line opts out of the draw-in: overriding
+     stroke-dasharray would erase the dash pattern. */
+  .hero-art [data-anim-draw] .stagline,
+  .hero-art .stagline { stroke-dashoffset: 0; }
+
+  .art-caption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: baseline;
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-mono-sm);
+    color: var(--fg-1);
+  }
+  .art-caption .k { color: var(--fg-2); }
+  .art-caption .sep { color: var(--fg-2); }
+</style>

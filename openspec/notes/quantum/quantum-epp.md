@@ -248,4 +248,4 @@ Drop the GR metric, keep the MHD + coupling + safety, and GRMHD becomes **fusion
 
 The aerospace/reentry instantiation of this section — combining tensor-network compression,
 counterfactuals, multiphysics, and regime change in one demonstrator — is specified in
-[`plasma-blackout-corridor.md`](../cfd-plasma-blackout/plasma-blackout-corridor.md).
+[`plasma-blackout-corridor.md`](../archive/cfd-plasma-blackout/plasma-blackout-corridor.md).

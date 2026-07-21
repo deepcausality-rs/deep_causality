@@ -1,0 +1,28 @@
+=== FS-3: the relativistic clock — forward dτ/dt vs the textbook GPS split ===
+
+Conceptual: the FS-1 linearising parameter s (eccentric anomaly / KS, dt = (r/na)·ds) is a
+REGULARISING reparametrisation, not proper time. Proper time τ is the GR+SR integral below. The
+trajectory spec must carry BOTH: s (to make the gravity core a matrix exponential) and τ (the
+relativistic clock). Resolution-1's 'τ↔t is native' is true only for τ, not the linearising s.
+
+GPS satellite clock vs a geoid clock (forward dτ/dt kernel):
+  orbital speed v = 3874.0 m/s
+  gravitational (higher potential → faster) : +45.65 µs/day   [textbook +45.7]
+  velocity (time dilation → slower)         : -7.21 µs/day   [textbook  −7.2]
+  net                                       : +38.44 µs/day   [textbook +38.5]
+
+Reentry blackout carry (vehicle clock vs surface, 180 s denied window):
+  v = 7650 m/s, alt = 71 km
+  accumulated τ−t offset = -57.2 ns  ⇒  17.2 m ranging drift if uncorrected
+
+--- FS-3 gates ---
+  [PASS] GPS gravitational offset ≈ +45.7 µs/day
+  [PASS] GPS velocity offset ≈ −7.2 µs/day
+  [PASS] GPS net offset ≈ +38.5 µs/day
+  [PASS] reentry-blackout clock carry is finite and bounded (10–200 ns)
+
+=== FINDING: the forward dτ/dt kernel (the missing capability ⑤) reproduces the textbook GPS
+relativistic split to sub-µs/day, so ns-level onboard timing is feasible with the existing
+constants. The linearising s and the proper time τ are DISTINCT clocks — the spec must carry
+both. Over a 3-min reentry blackout the uncorrected clock drifts ~tens of metres, quantifying
+why the correction must be carried internally (B3). ===

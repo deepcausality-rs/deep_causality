@@ -1,0 +1,126 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { EXAMPLES_URL } from '../../consts';
+
+const title = 'Worked examples — DeepCausality CFD';
+const description =
+  'Seven runnable examples ordered by what they demand of the solver, each with its committed output, its walkthrough, and its stated limitation.';
+
+const examples = (await getCollection('examples')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+---
+<BaseLayout title={title} description={description} path="/examples/">
+  <SiteHeader slot="header" />
+
+  <article class="page epage">
+    <header class="ehead">
+      <p class="eyebrow">Worked examples</p>
+      <h1>Seven worked examples</h1>
+      <p class="lede">
+        Ordered by the solver and DSL surface each example requires. Figures are
+        quoted from committed <code>output.txt</code> files, except where an
+        entry states otherwise.
+      </p>
+    </header>
+
+    <ol class="elist">
+      {examples.map((ex) => {
+        const slug = ex.id.replace(/^en\//, '');
+        return (
+          <li class="ecard panel corner-brackets">
+            <a class="ecard-link" href={`/examples/${slug}/`}>
+              <header class="ecard-head">
+                <span class="eix num">{String(ex.data.order).padStart(2, '0')}</span>
+                <div>
+                  <h2>{ex.data.title}</h2>
+                  <p class="equestion">{ex.data.question}</p>
+                </div>
+                <span class="ego" aria-hidden="true">→</span>
+              </header>
+
+              <p class="esummary">{ex.data.summary}</p>
+
+              <div class="euses">
+                {ex.data.uses.map((u) => <span class="chip chip-mono">{u}</span>)}
+              </div>
+
+              <div class="efoot">
+                <span class="eruntime num">{ex.data.runtime}</span>
+                {!ex.data.recorded && (
+                  <span class="status status-partial">No committed output</span>
+                )}
+              </div>
+            </a>
+          </li>
+        );
+      })}
+    </ol>
+
+    <p class="src-note">
+      Source for all of these:
+      <a href={EXAMPLES_URL}>examples/avionics_examples/cfd/ <span aria-hidden="true">↗</span></a>
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .epage { max-width: var(--w-panel); }
+  .ehead { margin-bottom: var(--space-7); }
+  .ehead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .ehead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+
+  .elist { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+
+  .ecard { padding: 0; }
+  .ecard-link {
+    display: block;
+    padding: var(--space-5);
+    color: var(--fg-0);
+    border-bottom: none;
+    border-radius: var(--radius-md);
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--dur-med) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out);
+  }
+  .ecard-link:hover {
+    transform: translate3d(0, -2px, 0);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+
+  .ecard-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-4);
+    align-items: start;
+    margin-bottom: var(--space-3);
+  }
+  .eix { color: var(--fg-2); }
+  .ecard-head h2 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .equestion { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .ego { color: var(--accent); transition: transform var(--dur-fast) var(--ease-out); }
+  .ecard-link:hover .ego { transform: translateX(2px); }
+
+  .esummary {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    margin: 0 0 var(--space-4);
+    max-width: var(--measure);
+  }
+
+  .euses { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+  .efoot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: baseline;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+  }
+  .eruntime { color: var(--fg-2); font-size: var(--t-eyebrow); }
+
+  .src-note { color: var(--fg-2); font-size: var(--t-body-sm); margin-top: var(--space-6); }
+</style>

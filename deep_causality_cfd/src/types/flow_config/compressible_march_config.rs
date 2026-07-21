@@ -49,6 +49,13 @@ pub struct DescentSchedule<R: CfdScalar> {
     /// Relative drift of the required wave speed beyond the built `s_ref` that triggers a solver
     /// rebuild (each rebuild is logged to provenance).
     pub(crate) rebuild_tol: R,
+    /// The rebuild budget for one leg. `None` — the default — leaves the pre-M4 behavior: the
+    /// hysteresis ratchet (`1.2×` re-pin against the `(1 + tol)` gate) still bounds the *rate* of
+    /// rebuilds, but no count is refused. `Some(n)` refuses the `n+1`-th, so a leg that is not
+    /// converging on an acoustic envelope fails loudly instead of reporting numbers marched on a
+    /// knowingly undersized one. The count is per-carrier, and a carrier is rebuilt at every leg
+    /// boundary, so this is a per-leg budget; a descent-wide tally is the caller's own accounting.
+    pub(crate) max_rebuilds: Option<usize>,
 }
 
 impl<R: CfdScalar> DescentSchedule<R> {
@@ -101,6 +108,7 @@ impl<R: CfdScalar> DescentSchedule<R> {
             reference_radius: radius,
             strip_cols: 2,
             rebuild_tol: tol,
+            max_rebuilds: None,
         })
     }
 
@@ -120,6 +128,20 @@ impl<R: CfdScalar> DescentSchedule<R> {
     pub fn with_rebuild_tolerance(mut self, tol: R) -> Self {
         self.rebuild_tol = tol;
         self
+    }
+
+    /// Bound the rebuilds one leg may perform, refusing the step that would exceed it.
+    ///
+    /// Unbounded by default, which is the pre-M4 behavior. Set this when a leg's conditioning
+    /// matters enough that repeated re-pinning should be a failure rather than a log line.
+    pub fn with_rebuild_budget(mut self, max_rebuilds: usize) -> Self {
+        self.max_rebuilds = Some(max_rebuilds);
+        self
+    }
+
+    /// The configured rebuild budget for one leg, if any.
+    pub fn rebuild_budget(&self) -> Option<usize> {
+        self.max_rebuilds
     }
 
     /// The freestream at `altitude_m`, linearly interpolated and clamped to the table ends.
@@ -209,6 +231,9 @@ where
     /// An optional masked forcing region applied after each marcher step (the de-risk plume
     /// imprint seam). `None` — the default — leaves the march path exactly as it was.
     pub(crate) forcing: Option<ForcingRegion<R>>,
+    /// The optional plume re-imprint spec: refresh `forcing` from stage-published plume geometry
+    /// when the commanded throttle drifts. `None` leaves the forcing region as configured.
+    pub(crate) imprint: Option<PlumeImprint<R>>,
 }
 
 impl<R> CompressibleMarchConfig<R>
@@ -249,6 +274,46 @@ where
     pub fn forcing(&self) -> Option<&ForcingRegion<R>> {
         self.forcing.as_ref()
     }
+
+    /// The optional plume re-imprint spec, if this world follows a varying throttle.
+    pub fn plume_imprint(&self) -> Option<&PlumeImprint<R>> {
+        self.imprint.as_ref()
+    }
+}
+
+/// The opt-in **plume re-imprint** spec (change `add-retropulsion-coupled-stages`, capability
+/// `plume-obstruction-stage`): it lets a world's marched forcing region follow a *varying* throttle.
+///
+/// A `PhysicsStage` cannot reach the marched layer, so the imprint rides the carrier's existing
+/// field-reading reconfiguration channel — the same `pre_step` path that already reads the
+/// stage-written `"truth_state"` to set the inflow strip and rebuild the marcher. With this spec
+/// present, `pre_step` reads the `"plume_max_radius"` / `"plume_penetration"` scalars a
+/// `PlumeObstruction` stage published and rebuilds the forcing region from them — but only when the
+/// commanded throttle drifts past [`throttle_tolerance`](Self::throttle_tolerance), logged, and
+/// bounded by [`max_refreshes`](Self::max_refreshes), reusing the solver-rebuild discipline.
+///
+/// Without this spec the carrier's forcing region is exactly whatever
+/// [`forcing_region`](CompressibleMarchConfigBuilder::forcing_region) set at world build, so the
+/// march path is unchanged. The imprint is **state realism only** — the drag authority is the A0
+/// correlation the `PlumeObstruction` stage applies to the force channel.
+#[derive(Debug, Clone, Copy)]
+pub struct PlumeImprint<R: CfdScalar> {
+    /// Refresh only when the commanded throttle moves by more than this (absolute).
+    pub throttle_tolerance: R,
+    /// Cap on refreshes over the march, so a noisy throttle cannot rebuild the mask every step.
+    pub max_refreshes: usize,
+    /// Body-face `x̂` on the unit square; the plume hugs it and extends upstream.
+    pub face_x: R,
+    /// Plume axis `ŷ` on the unit square.
+    pub axis_y: R,
+    /// Mask smoothing skirt, in cell widths.
+    pub smoothing_cells: R,
+    /// Physical width of the domain (m) the published geometry is nondimensionalized by.
+    pub domain_m: R,
+    /// The pinned jet conserved state `[ρ̂, m̂x, m̂y, Ê]` the mask interior relaxes toward.
+    pub target: [R; 4],
+    /// Penalization strength `η` (solver time units); `η ≤ Δt` is a hard pin.
+    pub eta: R,
 }
 
 /// A fluent builder for [`CompressibleMarchConfig`].
@@ -267,6 +332,7 @@ where
     reference: Option<ReferenceScales<R>>,
     constants: Vec<(&'static str, R)>,
     forcing: Option<ForcingRegion<R>>,
+    imprint: Option<PlumeImprint<R>>,
 }
 
 impl<R> Default for CompressibleMarchConfigBuilder<R>
@@ -295,6 +361,7 @@ where
             reference: None,
             constants: Vec::new(),
             forcing: None,
+            imprint: None,
         }
     }
 
@@ -416,6 +483,14 @@ where
         self
     }
 
+    /// Opt into **plume re-imprint**: the carrier refreshes its forcing region from the
+    /// `PlumeObstruction`-published plume geometry whenever the commanded throttle drifts past the
+    /// spec's tolerance (logged, capped). Without it the forcing region stays as configured.
+    pub fn plume_imprint(mut self, spec: PlumeImprint<R>) -> Self {
+        self.imprint = Some(spec);
+        self
+    }
+
     /// Finish the builder.
     ///
     /// # Errors
@@ -443,6 +518,7 @@ where
             reference: self.reference.ok_or_else(|| missing("reference"))?,
             constants: self.constants,
             forcing: self.forcing,
+            imprint: self.imprint,
         })
     }
 }

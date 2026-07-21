@@ -1,0 +1,119 @@
+---
+/**
+ * Landing-page validation summary. Pulls the same records the full validation
+ * page renders, so the two can never disagree.
+ */
+import { validation, statusLabel, statusClass } from '../../data/validation';
+
+const featured = ['qtt-sod', 'qtt-ramc', 'dec-cavity', 'dec-cylinder'];
+const rows = featured
+  .map((id) => validation.find((v) => v.id === id))
+  .filter((v): v is NonNullable<typeof v> => Boolean(v));
+
+const counts = validation.reduce<Record<string, number>>((acc, v) => {
+  acc[v.status] = (acc[v.status] ?? 0) + 1;
+  return acc;
+}, {});
+---
+<section class="vsnap page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">02 / 04</span><span class="lb">Evidence</span>
+    </p>
+    <h2>Validation status</h2>
+    <p class="lede">
+      Thirteen verification targets. Each checks a run against a published
+      reference or a discretization invariant, and exits nonzero when the check
+      fails.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets vsnap-panel">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Target</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Measured</th>
+            <th scope="col">Against</th>
+            <th scope="col">Kind</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr>
+              <th scope="row"><a href={`/validation/#${r.id}`}><code>{r.target}</code></a></th>
+              <td>{r.reference.split('.')[0]}</td>
+              <td class="num">{r.measured[0].computed}</td>
+              <td class="num">{r.measured[0].expected}</td>
+              <td><span class:list={['status', statusClass[r.status]]}>{statusLabel[r.status]}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vsnap-foot">
+      <ul class="tally">
+        <li><span class="status status-validated">Quantitative</span> {counts.quantitative ?? 0}</li>
+        <li><span class="status status-measured">Anchored / invariant</span> {(counts.anchored ?? 0) + (counts.invariant ?? 0)}</li>
+        <li><span class="status status-partial">Structural</span> {counts.structural ?? 0}</li>
+      </ul>
+      <a class="more" href="/validation/">Full validation status <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+
+  <p class="caveat-note">
+    Structural targets gate rank and cost. They do not gate physical
+    accuracy. The status column records which of the two applies to each
+    target.
+  </p>
+</section>
+
+<style>
+  .vsnap { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .vsnap-panel { padding: var(--space-5); }
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  tbody th { font-weight: 400; }
+  tbody td { color: var(--fg-1); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background-color var(--dur-fast) var(--ease-out); }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+  .vsnap-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+  }
+  .tally { display: flex; flex-wrap: wrap; gap: var(--space-4); list-style: none; margin: 0; padding: 0; }
+  .tally li { font-size: var(--t-body-sm); color: var(--fg-1); display: inline-flex; gap: var(--space-2); align-items: baseline; }
+  .more { font-size: var(--t-body-sm); border-bottom: none; }
+  .more:hover { border-bottom: 1px solid currentColor; }
+
+  .caveat-note {
+    margin: var(--space-5) 0 0;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

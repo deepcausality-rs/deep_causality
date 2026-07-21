@@ -37,7 +37,7 @@ contraction." That is probably the *wrong* first target:
 ## Measured corroboration — the SRP compressible marcher (2026-07-17)
 
 The SRP momentum-jet de-risk (`deep_causality_cfd/studies/srp_momentum_jet/`;
-[`../cfd-plasma-retropulsion/derisk-verdict.md`](../cfd-plasma-retropulsion/derisk-verdict.md)
+[`../cfd-plasma-retropulsion/derisk-verdict.md`](../archive/cfd-plasma-retropulsion/derisk-verdict.md)
 addendum) produced a first **measured** profile of the 2-D compressible QTT marcher, and it
 confirms this note's central thesis (truncation-dominated, contraction is not the target).
 Directly answers Deliverable #1 for one real marcher, though a profiler run still owes the

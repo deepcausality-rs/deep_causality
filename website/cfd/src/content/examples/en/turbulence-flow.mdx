@@ -1,0 +1,111 @@
+---
+title: Forecast horizon under precision
+question: How far ahead can a chaotic flow be forecast before roundoff destroys it?
+summary: One Lorenz rate field written over the scalar bound and instantiated at f32, f64 and Float106, measuring the forecast horizon each precision supports. No flow solver is involved.
+order: 4
+command: cargo run -p avionics_examples --example turbulence_flow
+uses:
+  - Arrow calculus (Rk4)
+  - causal monad
+  - precision as a type parameter
+runtime: seconds
+results:
+  - f32 diverges at t ≈ 21.5, f64 at t ≈ 44.5, Float106 beyond T = 60
+  - the ε-law puts the same horizons near 17.6 / 39.8 / 81.3
+  - Lyapunov λ ≈ 0.906 on the Lorenz attractor
+limitation: For most CFD the precision floor is not the limiting term; discretization and modelling error exceed f64 roundoff. No output.txt is committed for this example; figures come from its README.
+recorded: false
+source: examples/avionics_examples/cfd/turbulence_flow
+---
+
+This example runs no flow solver. It measures the effect of scalar precision on
+forecast horizon in a chaotic system.
+
+Every example carries a type alias:
+
+```rust
+pub type FloatType = f64;   // or f32, or Float106
+```
+
+The physics is written once against the scalar bound. Changing that one line
+re-instantiates the entire computation at a different precision. Here, the same
+Lorenz rate field is instantiated three times and each forecast is run until it
+diverges from a reference trajectory.
+
+## Horizon scaling
+
+A chaotic system amplifies perturbations exponentially at a rate set by the
+leading Lyapunov exponent, here `λ ≈ 0.906`. Roundoff at machine epsilon is such
+a perturbation, and an initial error of size ε grows as `e^{λt}` until it reaches
+the scale of the attractor.
+
+The resulting horizon scales as `ln(1/ε)/λ`:
+
+```text
+f32       (ε ≈ 1.2e-7)    t ≈ 17.6
+f64       (ε ≈ 2.2e-16)   t ≈ 39.8
+Float106  (ε ≈ 1.0e-32)   t ≈ 81.3
+```
+
+And the measured horizons:
+
+```text
+f32        t ≈ 21.5
+f64        t ≈ 44.5
+Float106   beyond T = 60 here; the law puts it near t ≈ 81
+```
+
+The two sets differ by roughly four time units. The README attributes the
+difference to bursty local stretching: the local expansion rate departs from the
+global average, so the measured crossing varies around the law's prediction. The
+two sets measure different quantities and should not be mixed in a single
+citation.
+
+Nine orders of magnitude of additional precision extend the horizon by roughly a
+factor of two, consistent with logarithmic scaling.
+
+## Divergence over time
+
+```text
+  t        f32 vs f64      f64 vs Float106
+  5.0        2.69e-5            2.31e-14
+ 25.0        1.99e1             4.01e-8
+ 45.0        1.71e1             2.00e0
+```
+
+At t = 25 the f32 divergence of 19.9 is the scale of the attractor itself, so the
+two trajectories share no information. At the same time f64 tracks Float106 to
+eight decimal places. By t = 45 the f64 trajectory has also diverged.
+
+The f32 value at t = 45 is smaller than at t = 25. This is not recovery: two
+uncorrelated trajectories on a bounded attractor fluctuate around a typical
+separation. Past its horizon the error figure carries no information, and only
+the first threshold crossing is meaningful.
+
+## Chain composition
+
+The run is composed as a causal chain:
+
+```rust
+CausalFlow::effect()
+    .next(simulate)
+    .next(analyse)
+    .run(...)
+```
+
+`PropagatingEffect` short-circuits if a trajectory goes non-finite, so a diverged
+forecast stops the chain rather than feeding NaN into the analysis stage.
+
+## Applicability
+
+For most CFD the precision floor is not the limiting term. Discretization and
+modelling error exceed `f64` roundoff by many orders of magnitude.
+
+Chaotic flow and long marched trajectories that feed a decision are the cases
+where it matters. The [blackout corridor](/examples/plasma-blackout-corridor/)
+records a separate failure mode: at `f32` it does not run, because a term in the
+ionization kernel evaluates to 4.4e-67 and underflows the exponent range at step
+1.
+
+No `output.txt` is committed for this example; the figures above come from its
+README. Its documented command also omits `--release`.

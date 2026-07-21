@@ -1,0 +1,20 @@
+=== QTT blend-metric (Res 4 / D8): body-fit as a valid low-rank free parameter ===
+
+  T_lambda = (1-lambda)*Cartesian + lambda*BodyFitted, over a 256x256 (xi,eta) patch
+
+  lambda | min|detJ|  detJ sign |  shock-field bond
+  -------+----------------------+------------------
+   0.00 |     2.1213          -    |    114
+   0.25 |     1.7809          -    |    107
+   0.50 |     1.5757          -    |     92
+   0.75 |     1.5057          -    |     54
+   1.00 |     1.5708          -    |      5
+
+--- reading ---
+  Validity: min|detJ| = 1.506 > 0 with one sign across the whole sweep — the
+  position-blend of two compatibly-oriented charts does NOT fold. The Res-4 residual holds
+  (with a bounded-λ-gradient + positive-Jacobian guard, which here is satisfied by construction).
+  Rank dial: bond runs 114 (λ=0, Cartesian capture) -> 5 (λ=1, body-fitted),
+  monotonically — body-fittedness is a continuous low-rank free parameter, exactly as D8 claims.
+
+ALL GATES PASSED — the blend is valid and λ is a clean rank dial.

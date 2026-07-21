@@ -1,0 +1,144 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+
+const title = 'Roadmap — DeepCausality CFD';
+const description =
+  'The line between what works today and what is aspirational, stated per item with the measurement or open question behind it.';
+
+const now = [
+  { item: 'DEC incompressible solver on fixed meshes', note: 'Ghia cavity, cylinder Re 100, graded MMS at order 2.00.' },
+  { item: 'QTT compressible marchers, 1-D through 3-D', note: 'Sod to L1 ≤ 0.027 against the exact Riemann solution.' },
+  { item: 'Fitted closures and the reacting-air kernel suite', note: 'RAM-C II peak electron density at +0.0 decades.' },
+  { item: 'The CfdFlow study grammar with compile-time phase discipline', note: 'sweep, gates, record, verdict; four compile_fail doctests pin the ordering.' },
+  { item: 'O(1) copy-on-write forks of a paused marched state', note: 'Measured fork setup at 42 ns; continuation cost 0.67–1.04× the trunk.' },
+  { item: 'Precision as a type parameter', note: 'f32 / f64 / Float106 through the same physics, switched at one alias.' },
+  {
+    item: 'Plasma retropulsion descent, blackout exit to touchdown',
+    note: 'Sixteen gates in 333.6 s. The mid-burn fork of the marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s, which is what forking state rather than parameters buys.',
+  },
+];
+
+const building = [
+  {
+    item: 'Re-pinning plus exact Rankine–Hugoniot interface for marched rank',
+    note: 'The measured lever: radial flux with the front as a tracked interface holds bond 8 flat in resolution, where flux-through-front grows 25 → 35.',
+  },
+  {
+    item: 'Grid-convergence study for the cylinder',
+    note: '16 → 24 → 32 cells/D, Richardson-extrapolated, plus C_L,rms, θ_sep and C_pb. Required before any DNS-grade accuracy claim.',
+  },
+];
+
+const later = [
+  {
+    item: 'Turbulence, staged on the DEC solver',
+    note: 'LES after the spectra observables land. The wake is currently reported and never gated.',
+  },
+  {
+    item: 'A tractable 3-D fitted marcher',
+    note: 'Measured >3× over the ten-minute budget at 16³ with bond cap 16, which is why the shipped corridor runs a 2-D layer.',
+  },
+  {
+    item: 'Plume-resolved compressible SRP on tensor trains',
+    note: 'Rank behaviour of a colliding-shock system on a quantized tensor train is unmeasured. Open research, named as such.',
+  },
+  {
+    item: 'Off-axis SRP, thrust vectoring, 6-DOF',
+    note: 'Excluded by validity discipline: off-axis leaves the Cordell–Braun validated envelope, so a surprising result would be unattributable.',
+  },
+];
+---
+<BaseLayout title={title} description={description} path="/roadmap/">
+  <SiteHeader slot="header" />
+
+  <article class="page rpage">
+    <header class="rhead">
+      <p class="eyebrow">Roadmap</p>
+      <h1>Implementation status</h1>
+      <p class="lede">
+        Entries in the first list have a committed run artifact. Entries in the
+        third are open questions with no scheduled date.
+      </p>
+    </header>
+
+    <section class="rgroup">
+      <h2><span class="status status-validated">Works today</span></h2>
+      <ul class="rlist">
+        {now.map((r) => (
+          <li>
+            <span class="ritem">{r.item}</span>
+            <span class="rnote">{r.note}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="rgroup">
+      <h2><span class="status status-partial">Building</span></h2>
+      <ul class="rlist">
+        {building.map((r) => (
+          <li>
+            <span class="ritem">{r.item}</span>
+            <span class="rnote">{r.note}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="rgroup">
+      <h2><span class="status status-roadmap">Open</span></h2>
+      <ul class="rlist">
+        {later.map((r) => (
+          <li>
+            <span class="ritem">{r.item}</span>
+            <span class="rnote">{r.note}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="rgroup">
+      <h2>How this list is maintained</h2>
+      <div class="prose">
+        <p>
+          An item moves from <em>open</em> to <em>building</em> once a de-risk
+          study exists, and from <em>building</em> to <em>works today</em> once a
+          self-verifying target or a committed example output covers it. Four
+          items were removed after measurement refuted them; they are recorded on
+          the <a href="/boundaries/">boundaries</a> page.
+        </p>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .rpage { max-width: var(--w-panel); }
+  .rhead { margin-bottom: var(--space-8); }
+  .rhead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .rhead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+
+  .rgroup { margin-bottom: var(--space-8); }
+  .rgroup h2 {
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-4);
+  }
+
+  .rlist { list-style: none; margin: 0; padding: 0; }
+  .rlist li {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  @media (min-width: 720px) {
+    .rlist li { grid-template-columns: 1fr 1.3fr; gap: var(--space-5); align-items: baseline; }
+  }
+  .rlist li:last-child { border-bottom: none; }
+  .ritem { color: var(--fg-0); }
+  .rnote { color: var(--fg-1); font-size: var(--t-body-sm); }
+</style>

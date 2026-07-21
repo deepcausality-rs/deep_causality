@@ -38,7 +38,7 @@ divergence-free, and it tips the flow off the symmetric branch so the von-KÃ¡rmÃ
 ## Running
 
 ```text
-cargo run --release -p avionics_examples --example dec_cylinder_validation
+cargo run --release -p deep_causality_cfd --example dec_cylinder_verification
 ```
 
 The swept parameters are read from the environment, so the Re-ladder and grid-refinement runs need no
@@ -90,7 +90,7 @@ staircase shedding run:
 
 ```text
 STAIRCASE=1 CELLS_PER_D=24 LX_D=16 LY_D=12 STEPS=3500 CFL=0.4 CG_TOL=1e-6 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_24_staircase.csv
+  cargo run --release -p deep_causality_cfd --example dec_cylinder_verification > re100_24_staircase.csv
 ```
 
 ### Aperture-resolved 
@@ -103,11 +103,11 @@ at the same grid and compare `v_probe` (the aperture-resolved one is the default
 ```text
 # Aperture-resolved (default) at the target threshold:
 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_resolved.csv
+  cargo run --release -p deep_causality_cfd --example dec_cylinder_verification > re100_16_resolved.csv
 
 # Staircase at the same grid (should stay steady):
 STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100_16_staircase.csv
+  cargo run --release -p deep_causality_cfd --example dec_cylinder_verification > re100_16_staircase.csv
 ```
 
 **Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`, to a developed state
@@ -148,11 +148,11 @@ the coupled CG converges in fewer iterations; the marched result is unchanged (w
 ```text
 # Reference-quality Re=100 (resolves the boundary layer; long, so run it in a pinned terminal):
 CELLS_PER_D=32 LX_D=24 LY_D=12 STEPS=12000 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re100.csv
+  cargo run --release -p deep_causality_cfd --example dec_cylinder_verification > re100.csv
 
 # Re-ladder rung, e.g. Re=200:
 RE_D=200 CELLS_PER_D=32 LX_D=24 LY_D=12 STEPS=12000 \
-  cargo run --release -p avionics_examples --example dec_cylinder_validation > re200.csv
+  cargo run --release -p deep_causality_cfd --example dec_cylinder_verification > re200.csv
 ```
 
 ## A note on Resolution

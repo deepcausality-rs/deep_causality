@@ -9,8 +9,8 @@
 
 use deep_causality_cfd::{
     Ambient, AtmosphereRow, BlackoutTrigger, CfdFlow, CompressibleMarchConfig,
-    CompressibleMarchConfigBuilder, CoupledField, DescentSchedule, MarchState, MarchStop,
-    QttObserve, ReferenceScales,
+    CompressibleMarchConfigBuilder, CoupledField, DescentSchedule, LEG_RE_SEEDS_FIELD, MarchState,
+    MarchStop, QttObserve, ReferenceScales,
 };
 use deep_causality_physics::EARTH_RADIUS;
 use deep_causality_tensor::Truncation;
@@ -127,4 +127,70 @@ fn builder_until_pauses_at_the_event() {
     assert!(pause.field().scalar("truth_state").is_some());
     // And the exported state resumes exactly this pause.
     assert_eq!(pause.state().step(), 3);
+}
+
+// ── The typed leg re-seed counter (change `fix-retropulsion-measurement-integrity`) ───────────
+
+#[test]
+fn the_re_seed_counter_accumulates_across_chained_legs() {
+    // `from` re-seeds the marched layer from the world's seed and records it. The count is carried
+    // on the coupled field, so it accumulates across legs — which is what a consumer asking how many
+    // leg boundaries a descent crossed wants. Counting "leg re-seeded" substrings in a rendered log
+    // answers the same question only for as long as the message keeps its wording.
+    let cfg = world(8);
+
+    // `from_field` is a fresh march: nothing was re-seeded.
+    let first = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .until(|_, s| s >= 2)
+        .unwrap();
+    assert_eq!(first.re_seeds(), 0.0);
+    assert!(first.field().scalar(LEG_RE_SEEDS_FIELD).is_none());
+
+    // Each chained leg adds one.
+    let second = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from(first.state())
+        .until(|_, s| s >= 2)
+        .unwrap();
+    assert_eq!(second.re_seeds(), 1.0);
+
+    let third = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from(second.state())
+        .until(|_, s| s >= 2)
+        .unwrap();
+    assert_eq!(third.re_seeds(), 2.0);
+}
+
+#[test]
+fn the_re_seed_counter_matches_the_logged_entries() {
+    // The counter replaces counting the prose, so the two must agree.
+    let cfg = world(8);
+    let mut pause = CfdFlow::march(&cfg)
+        .couple(())
+        .trigger(BlackoutTrigger::new(1.0e9))
+        .from_field(field_at_61km())
+        .until(|_, s| s >= 2)
+        .unwrap();
+    for _ in 0..3 {
+        pause = CfdFlow::march(&cfg)
+            .couple(())
+            .trigger(BlackoutTrigger::new(1.0e9))
+            .from(pause.state())
+            .until(|_, s| s >= 2)
+            .unwrap();
+    }
+    let logged = pause
+        .field()
+        .log()
+        .messages()
+        .filter(|m| m.contains("leg re-seeded"))
+        .count();
+    assert_eq!(pause.re_seeds(), logged as f64);
+    assert_eq!(logged, 3);
 }

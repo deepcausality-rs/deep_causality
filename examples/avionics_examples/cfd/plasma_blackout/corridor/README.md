@@ -209,7 +209,7 @@ The conclusion is recorded in `constants.rs`: this corridor's error budget is se
 closures and the grid, not by floating-point round-off. `f64` is load-bearing at the bottom
 (exponent range for SI-unit plasma constants) while wasting nothing at the top.
 
-##  Limitations
+## Limitations
 
 Every simplification is documented in [`constants.rs`](constants.rs).
 
@@ -224,7 +224,7 @@ as transient; no spatially resolved reacting layer);
 4) The flight corridor is a deterministic point-mass 3-DOF world with a fixed atmosphere. There are no winds, no aero-coefficient dispersions, and no density perturbations
 
 The demonstrated counterfactual branches are exact because the world is deterministic partially
-because of those chosen limitations. For higher fidelity of the simulation, any step can be replaced with a different physics kernel, marcher, or coupling mechanism. For the ionized chemistry, the limitation has been [documented in a companion note](../../../../../openspec/notes/cfd-plasma-blackout/finite-rate-ionization-chemistry.md).
+because of those chosen limitations. For higher fidelity of the simulation, any step can be replaced with a different physics kernel, marcher, or coupling mechanism. For the ionized chemistry, the limitation has been [documented in a companion note](../../../../../openspec/notes/archive/cfd-plasma-blackout/finite-rate-ionization-chemistry.md).
 
 ## Where Things Live
 

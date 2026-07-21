@@ -1,0 +1,240 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { validation, statusLabel, statusClass } from '../../data/validation';
+import { VERIFICATION_URL } from '../../consts';
+
+const title = 'Validation status — DeepCausality CFD';
+const description =
+  'One page per solver: what was validated, against which published reference, to what number. Sod, Ghia, Williamson, RAM-C II, Taylor–Green, with every caveat stated.';
+
+const groups = [
+  { family: 'QTT' as const, label: 'QTT compressible marchers' },
+  { family: 'DEC' as const, label: 'DEC Navier–Stokes' },
+  { family: 'Analytic' as const, label: 'Analytic and pointwise closures' },
+];
+---
+<BaseLayout title={title} description={description} path="/validation/">
+  <SiteHeader slot="header" />
+
+  <article class="page vpage">
+    <header class="vhead">
+      <p class="eyebrow">Validation status</p>
+      <h1>Validation status by solver and reference</h1>
+      <p class="lede">
+        Thirteen self-verifying targets. Each checks a run against a published
+        reference or against an invariant the discretization must preserve. Each
+        exits nonzero when its check fails, so the suite runs as a CI gate.
+      </p>
+      <p class="lede">
+        Every number below is copied from a committed run artifact, except on the
+        one card flagged as sourced from its target README. All figures are
+        <code>f64</code> on an Apple M3 Max, release build.
+      </p>
+
+      <div class="callout">
+        <p class="callout-title">How to read the status column</p>
+        <ul>
+          <li><span class="status status-validated">Quantitative</span> — checked against a published reference to a stated tolerance.</li>
+          <li><span class="status status-measured">Flight-anchored</span> — checked against flight data at order of magnitude, not per point.</li>
+          <li><span class="status status-measured">Invariant</span> — checked against a property the discretization must preserve at any grid.</li>
+          <li><span class="status status-partial">Structural</span> — gates rank and cost. <strong>Not physical accuracy.</strong></li>
+        </ul>
+      </div>
+
+      <div class="callout callout-warn">
+        <p class="callout-title">Global caveat, from the verification README</p>
+        <p>
+          Divergence figures are single-machine measurements at the default
+          configuration. They are dominated by spatial resolution rather than by
+          the discretization's asymptotic accuracy. Reference-grid runs tighten
+          every figure. Re-measure on the target hardware before citing these
+          values in an analysis of record.
+        </p>
+      </div>
+    </header>
+
+    {groups.map((g) => (
+      <section class="vgroup">
+        <h2 class="vgroup-head">{g.label}</h2>
+
+        {validation.filter((v) => v.family === g.family).map((v) => (
+          <section class="vcard panel corner-brackets" id={v.id}>
+            <header class="vcard-head">
+              <div>
+                <h3><code>{v.target}</code></h3>
+                <p class="vproblem">{v.problem}</p>
+              </div>
+              <span class:list={['status', statusClass[v.status]]}>{statusLabel[v.status]}</span>
+            </header>
+
+            <div class="vref">
+              <p class="k">Reference</p>
+              <p>{v.reference}</p>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Computed</th>
+                    <th scope="col">Reference</th>
+                    <th scope="col">Δ / tolerance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {v.measured.map((m) => (
+                    <tr>
+                      <th scope="row">{m.quantity}</th>
+                      <td class="num">{m.computed}</td>
+                      <td class="num">{m.expected}</td>
+                      <td class="num">{m.delta}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="vcaveat">
+              <p class="k">Caveat</p>
+              <p>{v.caveat}</p>
+            </div>
+
+            <div class="vfoot">
+              <code class="cmd">{v.command}</code>
+              {!v.hasArtifact && (
+                <p class="noartifact">
+                  <span class="status status-partial">No committed baseline</span>
+                  figures come from the target README rather than a run artifact
+                </p>
+              )}
+            </div>
+          </section>
+        ))}
+      </section>
+    ))}
+
+    <section class="vgroup">
+      <h2 class="vgroup-head">Records where the headline number is not the claim</h2>
+      <div class="prose">
+        <p>
+          Three records report a figure that does not correspond to the quantity
+          a reader may expect. Each states its actual claim below.
+        </p>
+        <p>
+          <strong>QTT cylinder, <span class="num">C_d ≈ 23.8</span>.</strong>
+          The domain carries roughly 30% blockage, the force is a penalization
+          integral over a smoothed skirt, and the value is read at a fixed
+          horizon rather than at steady state. The target claims the convergence
+          trend, the no-slip interior, and positivity. It does not claim an
+          isolated-cylinder drag coefficient.
+        </p>
+        <p>
+          <strong>3-D Taylor–Green, peak dissipation 80% below DNS.</strong>
+          The default grid is 16³ and cannot resolve the small-scale dissipation
+          peak. The gate covers energy monotonicity; the DNS comparison is
+          informational. Reporting resolutions of 64³ to 128³ close the gap.
+        </p>
+        <p>
+          <strong>Tier-A blackout closure, three decades above the flight anchor.</strong>
+          The closure rides an incompressible rollout with a recovery-temperature
+          reconstruction. It is superseded by the Tier-B compressible marcher,
+          <code>qtt_ramc_stagline</code>, which lands at the anchor.
+        </p>
+        <p>
+          Source for every target:
+          <a href={VERIFICATION_URL}>deep_causality_cfd/verification/ <span aria-hidden="true">↗</span></a>
+        </p>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .vpage { max-width: var(--w-panel); }
+  .vhead { margin-bottom: var(--space-8); }
+  .vhead h1 { margin: var(--space-3) 0 var(--space-4); max-width: 20ch; }
+  .vhead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .callout ul { margin: 0; padding-left: var(--space-5); }
+  .callout li { color: var(--fg-1); font-size: var(--t-body-sm); margin: var(--space-2) 0; }
+  .callout p { color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  .vgroup { margin-bottom: var(--space-8); }
+  .vgroup-head {
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-5);
+  }
+
+  .vcard { padding: var(--space-5); margin-bottom: var(--space-5); scroll-margin-top: calc(var(--header-h) + var(--space-4)); }
+  .vcard-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: start;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+  }
+  .vcard-head h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .vcard-head code { background: none; padding: 0; color: var(--fg-0); }
+  .vproblem { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+
+  .k {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0 0 var(--space-2);
+  }
+  .vref { margin-bottom: var(--space-4); }
+  .vref p:last-child { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  tbody th { font-weight: 400; color: var(--fg-0); }
+  tbody td { color: var(--fg-1); white-space: nowrap; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+
+  .vcaveat {
+    margin: var(--space-4) 0 0;
+    padding: var(--space-4);
+    background: var(--bg-2);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--warn);
+  }
+  .vcaveat p:last-child { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+
+  .vfoot { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line-1); }
+  .cmd {
+    display: block;
+    overflow-x: auto;
+    white-space: pre;
+    background: var(--bg-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--t-mono-sm);
+    color: var(--fg-1);
+  }
+  .noartifact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: baseline;
+    margin: var(--space-3) 0 0;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

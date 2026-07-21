@@ -29,9 +29,10 @@ use super::coupling::{CoupledField, PhysicsStage};
 use crate::CfdScalar;
 use crate::coordinate::CartesianIdentity;
 use crate::solvers::{CompressibleMarcher2d, EulerStateTt2d, FittedNormalShock, ForcingRegion};
-use crate::tensor_bridge::{dequantize_2d, quantize_2d};
+use crate::tensor_bridge::{dequantize_2d, plume_mask_2d, quantize_2d};
 use crate::traits::Marcher;
 use crate::types::flow::{BlackoutTrigger, Report};
+use crate::types::flow_config::PlumeImprint;
 use crate::types::flow_config::{
     CompressibleMarchConfig, DescentSchedule, MarchStop, QttObserve, ReferenceScales,
 };
@@ -75,8 +76,17 @@ where
     forcing: Option<ForcingRegion<R>>,
     /// The current nondimensional conserved inflow `[ρ̂, m̂x, m̂y, Ê]` the strip enforces.
     inflow: Option<[R; 4]>,
-    /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).
+    /// Solver rebuilds performed while following the schedule. The `1.2x` re-pin against the
+    /// `(1 + rebuild_tol)` gate is a hysteresis ratchet bounding the rate; the schedule    /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).apos;s optional
+    /// `max_rebuilds` bounds the count. Exposed through `CoupledCarrier::rebuilds`.
     rebuilds: usize,
+    /// The optional plume re-imprint spec: refresh `forcing` from stage-published plume geometry
+    /// when the commanded throttle drifts. `None` leaves `forcing` exactly as configured.
+    imprint: Option<PlumeImprint<R>>,
+    /// The throttle the current forcing region was imprinted at (the drift reference).
+    imprinted_throttle: Option<R>,
+    /// Plume re-imprints performed (logged; the spec's `max_refreshes` caps it).
+    imprints: usize,
 }
 
 impl<R> CompressibleCarrier<R>
@@ -118,6 +128,82 @@ where
             enc(&dense[2])?,
             enc(&dense[3])?,
         ])
+    }
+
+    /// Refresh the masked forcing region from the plume geometry a `PlumeObstruction` stage
+    /// published, so a marched imprint follows a **varying** throttle.
+    ///
+    /// A `PhysicsStage` cannot reach the marched layer, so the imprint rides this — the carrier's
+    /// existing field-reading reconfiguration channel, the same `pre_step` path that already reads
+    /// the stage-written `"truth_state"` to set the inflow strip and rebuild the marcher. The
+    /// refresh reuses the solver-rebuild discipline: it fires only when the commanded throttle
+    /// drifts past the spec's tolerance, it is logged, and the spec's `max_refreshes` caps it so a
+    /// noisy throttle cannot rebuild the mask every step. Absent the spec this never runs and the
+    /// forcing region stays exactly as configured at world build.
+    ///
+    /// The imprint is **state realism only** — the drag authority is the A0 correlation the
+    /// `PlumeObstruction` stage applies to the force channel, never this mask.
+    fn refresh_plume_imprint(
+        &mut self,
+        field: &mut CoupledField<R>,
+        step: usize,
+    ) -> Result<(), PhysicsError> {
+        let Some(spec) = self.imprint else {
+            return Ok(());
+        };
+        if self.imprints >= spec.max_refreshes {
+            return Ok(());
+        }
+        let throttle = field
+            .scalar("commanded_throttle")
+            .and_then(|s| s.first().copied())
+            .unwrap_or_else(R::zero);
+        let drifted = match self.imprinted_throttle {
+            None => throttle > R::zero(),
+            Some(prev) => (throttle - prev).abs() > spec.throttle_tolerance,
+        };
+        if !drifted {
+            return Ok(());
+        }
+        // The geometry the stage published last coupling (metres) → the unit square.
+        let (Some(r_max_m), Some(pen_m)) = (
+            field
+                .scalar("plume_max_radius")
+                .and_then(|s| s.first().copied()),
+            field
+                .scalar("plume_penetration")
+                .and_then(|s| s.first().copied()),
+        ) else {
+            return Ok(());
+        };
+        let two = Self::lift(2.0)?;
+        let max_radius = r_max_m / spec.domain_m;
+        let half_length = (pen_m / spec.domain_m) / two;
+        // The plume hugs the body face and extends upstream.
+        let cx = spec.face_x - half_length;
+        let mask = plume_mask_2d(
+            self.lx,
+            self.ly,
+            self.dx,
+            self.dy,
+            cx,
+            spec.axis_y,
+            half_length,
+            max_radius,
+            spec.smoothing_cells * self.dx,
+            &self.trunc,
+        )?;
+        self.forcing = Some(ForcingRegion::new(mask, spec.target, spec.eta)?);
+        self.imprinted_throttle = Some(throttle);
+        self.imprints += 1;
+        field.log_mut().add_entry(&alloc::format!(
+            "plume re-imprint at step {step}: throttle {}, R_max {} m, L_pen {} m (imprint {})",
+            throttle,
+            r_max_m,
+            pen_m,
+            self.imprints,
+        ));
+        Ok(())
     }
 
     /// Enforce the shock-fitted inflow strip (Dirichlet over the first `strip_cols` columns).
@@ -178,6 +264,9 @@ where
             forcing: cfg.forcing.clone(),
             inflow: None,
             rebuilds: 0,
+            imprint: cfg.imprint,
+            imprinted_throttle: None,
+            imprints: 0,
         })
     }
 
@@ -199,6 +288,10 @@ where
         ])
     }
 
+    fn rebuilds(&self) -> usize {
+        self.rebuilds
+    }
+
     fn dt(&self) -> R {
         self.dt_flight
     }
@@ -213,6 +306,8 @@ where
         for &(name, value) in &self.constants {
             field.set_scalar(name, Vec::from([value]));
         }
+        // The plume imprint follows the (now-published) throttle through this same channel.
+        self.refresh_plume_imprint(field, step)?;
         let Some(schedule) = self.schedule.as_ref() else {
             return Ok(());
         };
@@ -252,10 +347,36 @@ where
         field.set_scalar("flight_speed", Vec::from([speed]));
         field.set_scalar("flight_mach", Vec::from([mach]));
         field.set_scalar("freestream_n", Vec::from([row.n_tot]));
+        // The freestream static temperature completes the freestream state. Without it a consumer
+        // needing the ambient static pressure has to be handed a constant, which is then correct at
+        // exactly one altitude of the descent.
+        field.set_scalar("freestream_temperature", Vec::from([row.temperature]));
 
         // Rebuild when the inflow's wave speed outgrows the built acoustic envelope.
+        //
+        // The trigger is **one-sided and wave-speed-keyed**, and the re-pin to `1.2·s_needed`
+        // against a `(1 + tol)` gate makes it a hysteresis ratchet: each successive rebuild needs
+        // roughly `1.44×` further growth at the default tolerance. The nondimensional **density
+        // never enters** `s_needed`, so a configuration whose density anchor is wrong is never
+        // corrected here; and because a leg builds a fresh carrier, the envelope resets to the
+        // world's configured value at every boundary and the trigger re-arms at that baseline.
         let s_needed = u_hat + (self.gamma * t_hat).sqrt();
         if s_needed > self.s_ref * (R::one() + schedule.rebuild_tol) {
+            // The ratchet bounds the *rate* of rebuilds but states no budget. A leg that needs more
+            // than the configured count is not converging on an envelope, and its numbers should
+            // not be reported as results — so the bound refuses rather than silently declining to
+            // rebuild (which would march on knowingly undersized acoustics).
+            if let Some(max) = schedule.max_rebuilds
+                && self.rebuilds >= max
+            {
+                field.log_mut().add_entry(&alloc::format!(
+                    "carrier rebuild budget exhausted at step {step}: {} rebuilds at the cap {max}",
+                    self.rebuilds,
+                ));
+                return Err(PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                    "compressible carrier: rebuild budget of {max} exhausted at step {step}"
+                )));
+            }
             let s_new = s_needed * Self::lift(1.2)?;
             let metric = CartesianIdentity::new(self.lx, self.ly, self.dx, self.dy, self.trunc)?;
             self.marcher =
@@ -330,6 +451,12 @@ where
 
     /// Final fields: the evolved translational temperature as the primary field, plus the final
     /// density and speed series.
+    /// The largest bond dimension across the four conserved tensor trains — the rank this state
+    /// actually reached, which sits at or below the configured truncation cap.
+    fn state_peak_bond(state: &Self::State) -> Option<usize> {
+        state.iter().map(|t| t.max_bond()).max()
+    }
+
     fn finish(&self, state: &Self::State, report: &mut Report<R>) -> Result<(), PhysicsError> {
         let dense = self.decode(state)?;
         let n = dense[0].len();
@@ -454,7 +581,7 @@ where
 
     /// The world this run marches in: the alternated context if one was swapped in, else the
     /// injected config.
-    fn effective_config(&self) -> &'c CompressibleMarchConfig<R> {
+    pub(crate) fn effective_config(&self) -> &'c CompressibleMarchConfig<R> {
         self.context_ov.unwrap_or(self.config)
     }
 

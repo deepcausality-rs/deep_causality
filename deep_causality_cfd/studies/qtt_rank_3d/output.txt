@@ -1,0 +1,56 @@
+=== 3-D QTT rank upper bound — realistic forming shock (explicit Euler + central diff) ===
+    3-D Burgers, dense march, QTT rank sampled over time; block bit-ordering, tol=1e-8
+
+  forming curved shock at 64^3  (max_bond over time):
+    step |  max_bond
+       0 |         8
+      12 |        62
+      24 |        80
+      36 |        85
+      48 |        87
+      60 |        89
+      72 |        87
+      74 |        87
+  smooth-bump init rank: 8;  PEAK rank (formed curved shock): 89
+
+  references at 64^3:
+   flat plane (axis-aligned, fn of x) ....... 5   (best case)
+   curved shell, body-fitted (fn of r) ...... 6   (alignment fix in 3-D)
+
+  upper-bound growth law (peak forming-shock rank vs resolution):
+      L |   side |  peak_bond | ratio vs prev
+      4 |     16 |         45 |             -
+      5 |     32 |         56 |         1.24x
+      6 |     64 |         89 |         1.59x
+      7 |    128 |        135 |         1.52x
+   => fitted growth: chi ~ side^0.53  (0.5 = sqrt(side), 1.0 = linear)
+
+  storage QTT-vs-dense across the sweep (dense = side^3; QTT ~ 6L·chi^2):
+     side |      chi |  QTT params |        dense/QTT
+       16 |       45 |       48600 |            0.08x
+       32 |       56 |       94080 |            0.35x
+       64 |       89 |      285156 |            0.92x
+      128 |      135 |      765450 |            2.74x
+
+--- reading ---
+  UPPER BOUND: a realistically-formed 3-D curved shock surface has bond chi ~ side^0.53
+  (measured 45 -> 135 over 16^3 -> 128^3), i.e. roughly sqrt(side) — UNBOUNDED in resolution,
+  vs the flat / body-fitted references which stay ~6 (constant).
+  This is a LOWER bound on a live solver: marching carries operator products *before* rounding,
+  and explicit central differencing adds dispersive-oscillation rank atop the curvature floor.
+
+  What this means for cost — two different things, do not conflate them:
+   1. QTT vs DENSE storage: in 3-D, dense ~ side^3 outruns chi^2 ~ side^1.1, so QTT storage
+      always wins ASYMPTOTICALLY (the 64^3 break-even in the table is a small-grid artifact;
+      by 128^3 QTT is already smaller again, and the margin grows with resolution).
+   2. SOLVE cost: tensor-train ops are O(chi^2)-O(chi^3) per core. chi ~ sqrt(side) means at a
+      flight-relevant micrometre grid (side ~ 1e6) a captured curved shock implies chi ~ thousands
+      — bounded, but expensive enough to erode the practical advantage. The body-fitted shell
+      holds chi ~ O(10) at ANY resolution. THAT gap — not storage-vs-dense — is the real result.
+
+  => 3-D Tier-B is tractable ONLY with a shock-aligned / body-fitted coordinate: it turns the
+     curved surface into an axis-aligned one, replacing chi ~ sqrt(side) with chi ~ O(10).
+     Capturing the curved shock on a Cartesian QTT grid keeps the solve affordable vs dense but
+     gives back most of the compression win exactly where it is needed.
+
+ALL GATES PASSED.

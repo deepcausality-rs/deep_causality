@@ -3,7 +3,7 @@
 Date: 2026-07-03. Status: **planning note, nothing proposed or built.** Related:
 [dsl-review](../cfd-dsl/01-dsl-review.md) (the five examples drafted in today's DSL, and the five additive
 syntax pieces S1 to S5 they justify; group 2/3 specs should reference it),
-[cfd-roadmap](../../cfd-plasma-retropulsion/cfd-roadmap.md),
+[cfd-roadmap](../cfd-plasma-retropulsion/cfd-roadmap.md),
 [qmc-presence-gate-followup](../cfd/qmc-presence-gate-followup.md).
 
 The examples directory currently spans canonical verifications (cylinder, cavity,
@@ -134,7 +134,7 @@ for the roadmap's dispersion-sweep combinator (item 3) and is best built alongsi
 
 ## Roadmap interactions: what to preload, what not to
 
-The rule: preload a [roadmap item](../../cfd-plasma-retropulsion/cfd-roadmap.md) only where it makes an
+The rule: preload a [roadmap item](../cfd-plasma-retropulsion/cfd-roadmap.md) only where it makes an
 everyday example simpler or keeps its output from being throwaway; never where it makes
 an example bigger, because this set's value is smallness.
 

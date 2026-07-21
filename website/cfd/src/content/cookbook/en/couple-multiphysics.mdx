@@ -1,0 +1,222 @@
+---
+title: Couple thermochemistry to a compressible flow
+task: You need chemistry, thermal nonequilibrium and an electromagnetic observable evaluated with the flow rather than after it.
+summary: The reentry sheath chain from gasdynamic jump through vibrational relaxation, finite-rate ionization and plasma frequency to comms cutoff, assembled as ordered stages over one marched field with a measured value at every link.
+order: 4
+verbs:
+  - VibrationalLagStage
+  - FiniteRateIonizationStage
+  - RegimeClassify
+  - BlackoutTrigger
+worked:
+  - label: Plasma blackout corridor
+    href: /examples/plasma-blackout-corridor/
+  - label: Weather dispersion table
+    href: /examples/plasma-blackout-weather/
+---
+
+The reentry sheath is the clearest multi-physics case in the crate. Five
+disciplines run over one marched field, each consuming the previous one's
+output through a named scalar.
+
+```text
+discipline              model                          publishes
+─────────────────────────────────────────────────────────────────
+compressible flow       Rankine–Hugoniot jump          T_tr, n_tot, pressure_atm
+      ↓
+vibrational relaxation  Landau–Teller, Millikan–White  T_ve, T_a
+      ↓
+finite-rate chemistry   RP-1232 three-channel network  alpha, n_e
+      ↓
+plasma electrodynamics  ω_p = √(n_e e² / ε₀ mₑ)        plasma_frequency
+      ↓
+link availability       ω_p > comms_band_rad_s         gnss_denied
+```
+
+Downstream of that, navigation degrades while `gnss_denied` holds, and the
+guidance decision is taken with the degraded state. Those two are covered in
+[couple navigation to the physics stack](/cookbook/couple-navigation-to-physics/).
+
+## The stages
+
+From the corridor coupling stack, `examples/avionics_examples/src/shared/world.rs:159-210`:
+
+```rust
+    Coupling::between_steps()
+        .then(
+            VibrationalLagStage::new(
+                utils::ft(T_VE_INITIAL),
+                utils::ft(FALLBACK_PRESSURE_ATM),
+                utils::ft(REDUCED_MASS_AMU),
+                utils::ft(THETA_VIB),
+                utils::ft(SHEATH_PEAK_AGE_S),
+            )
+            .with_pressure_field("pressure_atm"),
+        )
+        .then(
+            // The finite-rate network reads "T_tr" and "T_ve" directly and
+            // builds each channel's controlling temperature internally; there
+            // is no Saha calibration target anywhere in this stage.
+            FiniteRateIonizationStage::new(utils::ft(FALLBACK_N_TOT))
+                .with_density_field("n_tot")
+                .with_sheath_renewal(utils::ft(SHEATH_PEAK_AGE_S)),
+        )
+        .then(FreestreamFeeds)
+        .then(RegimeClassify::new(utils::ft(L_CHAR), utils::trigger()))
+```
+
+The handoff is by field name, through `CoupledField`.
+
+`VibrationalLagStage` reads `T_tr` and an optional per-cell pressure field, and
+writes two scalars: `T_ve`, the lagged bath, and `T_a = √(T_tr·T_ve)`, Park's
+rate-controlling temperature. It relaxes from the frozen free-stream value over
+one residence time rather than integrating the carried `T_ve` over `dt`, which is
+the parcel-renewal picture for a continuously refreshed sheath.
+
+`FiniteRateIonizationStage` reads `T_tr` and `T_ve` and builds each channel's
+controlling temperature internally: ionization at the geometric mean,
+dissociation at Park's `T_tr^0.7·T_ve^0.3`, electron channels at `T_e = T_ve`. It
+writes `alpha` and `n_e`. The network is reversible, carrying dissociative
+recombination as well as forward ionization, which is the mechanism that ends
+the blackout.
+
+`RegimeClassify` reads the peak of `n_e` and converts it to a plasma frequency
+and a denial flag.
+
+Ordering is load-bearing. A stage placed before its input exists reads the
+previous step's value.
+
+## The field registry is by convention
+
+There is no declared constant list for these keys. Each is a `&'static str`
+struct field defaulted in the stage's `new()`, with an opt-in override such as
+`with_pressure_field` or `with_density_field`. The producer side is a bare
+literal in the carrier, `compressible_march_run.rs:441-444`:
+
+```rust
+        field.set_scalar("speed", speed);
+        field.set_scalar("T_tr", t_tr);
+        field.set_scalar("n_tot", n_tot);
+        field.set_scalar("pressure_atm", p_atm);
+```
+
+The backing store is an association list, `Vec<(String, Vec<R>)>`, with linear
+scan. Two consequences matter in practice.
+
+A missing key is a silent no-op. Every stage opens with
+`let Some(x) = field.scalar(..) else { return Ok(()) }`, so a misspelled field
+name disables that stage without an error.
+
+A wrong-length key is a hard error. The shape contract is checked, so a field
+present at the wrong cell count fails the step.
+
+## A value at every link
+
+The stagnation-line target reports the whole chain in one artifact.
+`deep_causality_cfd/verification/qtt_ramc_stagline/baseline.txt`:
+
+```text
+Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
+  T_inf -> T2 ............ 250 K -> 8044 K
+  density ratio ρ2/ρ1 ... 20.349
+  velocity ratio u2/u1 .. 0.049
+  pressure ratio p2/p1 .. 6.547e2
+  post-shock n_tot ...... 2.645e22 m^-3
+
+Stagnation-line blackout (Saha/Park-2T at the post-shock state):
+  ionization fraction α .. 4.101e-4
+  peak electron density .. 1.085e19 m^-3
+  plasma frequency ω_p ... 1.858e11 rad/s
+  blackout (ω_p > comms) . true (comms band 9.40e9 rad/s)
+  relaxation-profile bond  2  (smooth post-shock zone, O(1) rank)
+```
+
+The chain closes. `α · n_tot` gives 1.085e19 m⁻³ against the reported n_e, and
+`√(n_e e²/ε₀mₑ)` gives 1.858e11 rad/s against the reported ω_p, both to better
+than 0.1%. The plasma frequency exceeds the configured threshold by a factor of
+19.8.
+
+Peak electron density lands at 1.085e19 m⁻³ against the RAM-C II flight anchor
+of ~1e19 m⁻³. See [validation status](/validation/#qtt-ramc) for the separation
+between the calibrated and predicted paths.
+
+## Coupling direction
+
+**Chemistry to flow is absent by construction.** The step order is
+`advance` then `coupling.apply` (`carrier.rs:126-131`): `advance` produces the
+next conserved state from the conserved state alone, and the coupling runs
+afterwards and mutates only the `CoupledField`. Across the whole carrier the
+only scalar read back out of the field is `truth_state`. There is no chemical
+energy sink, no electron-pressure term, and no density or energy feedback.
+
+The `EosStage` doc states the same limit: the marcher does not consume the
+pressure closure it writes.
+
+**Trajectory and flow do form a closed loop.** `BankSteeredLift` writes an aero
+force into the field's force channel; `TrajectoryNav` consumes it as the
+propagator kick and republishes the vehicle state; the descent schedule
+evaluates the atmosphere at that state and sets the inflow strip for the next
+step. Navigation feeds flow, and flow feeds navigation.
+
+Because the chemistry never modifies the flow, the plasma state has no influence
+on the vehicle's trajectory. `n_e` acts only on the GNSS-denial gate applied to
+the ESKF correction. **Blackout degrades the estimate, not the truth.**
+
+That path from bank command to flow exists through the trajectory, so the
+following is a magnitude result rather than a structural one. Across the
+corridor's seventeen bank branches the flow columns are invariant to three
+significant figures while the trajectory outcome varies by a factor of eight:
+
+| Column | Range across 17 branches |
+|---|---|
+| Peak heat flux | 1.703e6 to 1.704e6 |
+| Thermal load | 1.352e7 (single value) |
+| Peak n_e | 2.524e19 to 2.527e19 |
+| Miss distance | 20.000 m to 2.393 m |
+
+Over the branch continuation window the bank command does not move the sampled
+atmosphere enough to alter the shock-layer chemistry at three digits. The
+branches diverge by decision rather than by flow.
+
+The [retropulsion descent](/examples/plasma-blackout-retropulsion/) is the
+closest case to a two-way chemistry coupling, and it stops short of one. Its
+`PlumeImprint` seam gives the marched layer state realism, but in-flight drag
+authority is the cited A0 correlation rather than a decrement contracted from
+the evolved field. The de-risk measurement behind that choice is recorded on
+[capability boundaries](/boundaries/#srp).
+
+## Regime as a coupled observable
+
+`gnss_denied` is not a schedule. `BlackoutTrigger::evaluate` maps the peak
+electron density through the plasma-frequency kernel and applies a strict
+comparison against a single configured angular threshold, `comms_band_rad_s`.
+Both sides are in rad/s, so no 2π conversion appears. The blackout window is
+therefore an output of the chemistry. The corridor records the transitions:
+
+```text
+regime -> slip (GNSS-available), Kn=0.07829109848665225
+regime -> slip (GNSS-denied), Kn=0.01705925949914955
+regime -> continuum (GNSS-denied), Kn=0.009938308574526865
+regime -> continuum (GNSS-available), Kn=0.00025839060489290773
+```
+
+Two independent axes move here. The Knudsen number crosses the slip-continuum
+band as density rises; the comms state crosses in and out of denial as the
+sheath forms and recombines. They are not synchronised, and the classifier
+tracks them separately. See
+[detect and act on a regime change](/cookbook/handle-regime-change/).
+
+## Applicability limits
+
+The corridor closure is single-point with `T_e = T_ve` lumped, and there is no
+spatially resolved reacting layer. The stagnation-line target adds the fitted
+shock interface and the transit-age profile.
+
+Reported peak n_e is sensitive to the model choice. The calibrated Park-2T
+controller path lands at 1.1× the anchor; the uncalibrated finite-rate network
+lands at 3.0×, inside a ±0.70 decade band earned from the measurement. The
+`T_e = T_ve` lumping is worth roughly 2×, and the documented chemistry-model
+spread is 2× to 5×.
+
+γ = 1.1 is an effective-γ closure chosen so the post-shock temperature lands
+near 8000 K. Perfect gas at γ = 1.4 over-predicts T₂ at roughly 30 000 K.
