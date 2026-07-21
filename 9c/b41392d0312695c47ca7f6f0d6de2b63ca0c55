@@ -1,0 +1,82 @@
+openspec/notes/cfd_audit/modules/cfdflow-dsl-semantics-counterfactual-machinery-src-types-flo.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-769
+openspec/notes/cfd_audit/modules/deep-causality-cfd-dec-navier-stokes-solver-driver-and-diagn.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-466
+website/cfd/src/pages/why/index.astro
+  s_2dc68b59102c60::t_8bf1812706350e 1-18,22-432
+  s_2dc68b59102c60::t_9b69f68f05029c 19-21
+openspec/notes/cfd_audit/MODULE-INDEX.md
+  s_f2afaa4ec55b4b::t_37e56ce12bd026 1-2,4-6
+  s_f2afaa4ec55b4b::t_58eeb77e19081a 3
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 9-22
+  s_f2afaa4ec55b4b::t_9c6246f12342ab 7-8
+openspec/notes/cfd_audit/modules/deep-causality-cfd-theories-pointwise-governing-equation-eva.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-557
+openspec/notes/cfd_audit/modules/deep-causality-cfd-qtt-incompressible-immersed-body-solvers-.md
+  s_f2afaa4ec55b4b::t_9c6246f12342ab 12-16
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-11,17-752
+openspec/notes/cfd_audit/modules/dec-native-incompressible-navier-stokes-rate-kernel-solvers-.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-594
+openspec/notes/cfd_audit/ACTION-LIST.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 12-20,27-77,99-102,108-224,259-282,288-308,315-318
+  s_f2afaa4ec55b4b::t_37e56ce12bd026 1-7,9-11,22,24-26,103,105-107,283,285-287
+  s_f2afaa4ec55b4b::t_9c6246f12342ab 8,21,23,78-98,104,225-258,284,309-314
+openspec/notes/cfd_audit/modules/examples-avionics-examples-cfd-engineer-facing-cfd-demonstra.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-607
+openspec/notes/cfd_audit/modules/deep-causality-cfd-gnss-denial-navigation-and-estimation-lay.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-732
+openspec/notes/cfd_audit/modules/deep-causality-cfd-qtt-compressible-marchers-solvers-qtt-com.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-572
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_d233a6829a6d08 1-8,10-14,20-24,30,32,35-37,39,42-50,57-59,80-93,95-96,100-102,104-109,111-113,115-121,123-125,128,142-143,145,148-159,164,168-177,180,183,186-187,189,193,196-197,199-200,203-205,207-213,215,218-222,250,252-256,259-261,264-266,269,280-284,286-288,300-301,310-314,316-317,323,326-328,330-338,343-346,349-351,355-356,363-364,367-371,374-376,380-387,389-390
+  s_f2afaa4ec55b4b::t_81444863616c9e 9,15-19,25-29,31,33-34,38,40-41,51-56,60-79,94,97-99,103,110,114,122,126-127,129-141,144,146-147,160-163,165-167,178-179,181-182,184-185,188,190-192,194-195,198,201-202,206,214,216-217,223-249,251,257-258,262-263,267-268,270-279,285,289-299,302-309,315,318-322,324-325,329,339-342,347-348,352-354,357-362,365-366,372-373,377-379,388
+openspec/notes/cfd_audit/modules/deep-causality-cfd-dec-boundary-condition-zones-src-solvers-.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-688
+openspec/notes/cfd_audit/modules/deep-causality-cfd-src-coordinate-src-tensor-bridge-coordina.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-597
+openspec/notes/cfd_audit/modules/deep-causality-cfd-studies-all-14-study-programs-the-studies.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-7,10-31,33,35-57,62-63,65,67-70,72-89,92,95-96,98,100-119,122,125-126,128,130-133,135-151,154,157-160,162-181,184,187-190,192-211,214,217-220,222-242,245,248-251,253-273,276,279-280,282,284-304,309-311,313,315-318,320-336,341-344,346-364,369-373,375-396,401-402,404,406-426,431-435,437-458,463-464,466,468-488,493-497,499-520,525-526,528,530-533,535-550,553,556-559,561-581,584,587-588,590,592-595,597-611,614,617-618,620,622-625,627-641,644,647-650,652-671,674,677-680,682-702,705,708-709,711,713-716,718-733,736,739-742,744-764,769-773,775-796,801-804,806-826,831-835,837-858,863-866,868-871,873-888,893-897,899-920,925-928,930-949,954-955
+  s_f2afaa4ec55b4b::t_9c6246f12342ab 8-9,32,34,58-61,64,66,71,90-91,93-94,97,99,120-121,123-124,127,129,134,152-153,155-156,161,182-183,185-186,191,212-213,215-216,221,243-244,246-247,252,274-275,277-278,281,283,305-308,312,314,319,337-340,345,365-368,374,397-400,403,405,427-430,436,459-462,465,467,489-492,498,521-524,527,529,534,551-552,554-555,560,582-583,585-586,589,591,596,612-613,615-616,619,621,626,642-643,645-646,651,672-673,675-676,681,703-704,706-707,710,712,717,734-735,737-738,743,765-768,774,797-800,805,827-830,836,859-862,867,872,889-892,898,921-924,929,950-953
+website/cfd/src/components/nav/SiteHeader.astro
+  s_2dc68b59102c60::t_cfc1ca1f8b4c76 15
+openspec/notes/cfd_audit/modules/deep-causality-cfd-reacting-plasma-blackout-physics-blackout.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-543
+openspec/notes/cfd_audit/modules/deep-causality-cfd-documentation-vs-code-parity-crate-readme.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-785
+openspec/notes/cfd_audit/modules/deep-causality-cfd-test-suite-efficacy-coverage-mapping-and-.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-343
+openspec/notes/cfd_audit/modules/deep-causality-cfd-breadth-sweep-across-src-verification-stu.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-11,17-727
+  s_f2afaa4ec55b4b::t_9c6246f12342ab 12-16
+openspec/notes/cfd_audit/RUN-LEDGER.md
+  s_f2afaa4ec55b4b::t_855be4294574e5 1-69
+openspec/notes/cfd_audit/modules/deep-causality-cfd-verification-all-13-verification-programs.md
+  s_f2afaa4ec55b4b::t_dd1b00b471817f 1-8,10-34,36-69,74-75,77,79-82,84-103,108-110,112,114-117,119-141,146-147,149,151-154,156-177,182-186,188-216,221-224,226-252,257-261,263-287,292-293,295,297-300,302-324,329-331,333,335-338,340-361,366-367,369,371-374,376-396,401-403,405,407-410,412-436,441-442,444,446-468,473-477,479-506,511-512,514,516-544,549-553,555-586,591-594,596-599,601-626,631-632,634,636-639,641-664,667,670-673,675-678,680-702,705,708-711,713-745,748,751-754,756-783,786,789-790,792,794-797,799-822,825,828-829,831,833-836,838-860,863,866-869,871-895,898,901-904,906-909,911-932,935,938-941,943-972,975,978-981,983-1008,1011,1014-1017,1019-1022,1024-1048,1051,1054-1057,1059-1089,1092,1095-1098,1100-1126,1129,1132-1135,1137-1140,1142-1166,1169,1172-1175,1177-1207,1210,1213-1216,1218-1244,1247,1250-1253,1255-1280,1285-1286
+  s_f2afaa4ec55b4b::t_9c6246f12342ab 9,35,70-73,76,78,83,104-107,111,113,118,142-145,148,150,155,178-181,187,217-220,225,253-256,262,288-291,294,296,301,325-328,332,334,339,362-365,368,370,375,397-400,404,406,411,437-440,443,445,469-472,478,507-510,513,515,545-548,554,587-590,595,600,627-630,633,635,640,665-666,668-669,674,679,703-704,706-707,712,746-747,749-750,755,784-785,787-788,791,793,798,823-824,826-827,830,832,837,861-862,864-865,870,896-897,899-900,905,910,933-934,936-937,942,973-974,976-977,982,1009-1010,1012-1013,1018,1023,1049-1050,1052-1053,1058,1090-1091,1093-1094,1099,1127-1128,1130-1131,1136,1141,1167-1168,1170-1171,1176,1208-1209,1211-1212,1217,1245-1246,1248-1249,1254,1281-1284
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.main.log
+  s_f2afaa4ec55b4b::t_dd4d55a2d20dec 1-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "9cb41392d0312695c47ca7f6f0d6de2b63ca0c55",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
