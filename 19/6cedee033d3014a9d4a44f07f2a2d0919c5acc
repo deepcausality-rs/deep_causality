@@ -1,0 +1,100 @@
+deep_causality_cfd/tests/solvers/dec/boundary_construction_tests.rs
+  s_f2afaa4ec55b4b::t_d56f9c2aab191a 250-251
+  s_f2afaa4ec55b4b::t_e0cfc50dcd9f24 276-282
+  s_f2afaa4ec55b4b::t_b6b670f9f47e6d 252-275,283-292
+deep_causality_cfd/src/solvers/qtt/mod.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 25-26
+deep_causality_cfd/src/coordinate/blended.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 223-225
+  s_f2afaa4ec55b4b::t_34536fb59ad630 110-114
+  s_f2afaa4ec55b4b::t_fe60d2f9ebb66d 314-315,320-328
+  s_f2afaa4ec55b4b::t_ce3859bfcaffdc 195-207
+  s_f2afaa4ec55b4b::t_e296e7ad719116 186-194,208-217,219-221,226-262
+  s_f2afaa4ec55b4b::t_093139b9485ff3 218,222
+  s_f2afaa4ec55b4b::t_89d688f79723d2 263
+  s_f2afaa4ec55b4b::t_7f142cc408bcbd 16-26
+  s_f2afaa4ec55b4b::t_bb7823fe3bc746 47-56
+  s_f2afaa4ec55b4b::t_c8792ebd692b29 329-330
+openspec/changes/resolve-cfd-contract-gaps/tasks.md
+  s_f2afaa4ec55b4b::t_36ff2eb8fbbb07 54-69
+  s_f2afaa4ec55b4b::t_11083b4e95145d 35-40
+  s_f2afaa4ec55b4b::t_fb8359f4a99596 13-18
+  s_f2afaa4ec55b4b::t_2e417f1feb68fa 41,45-52,70
+  s_f2afaa4ec55b4b::t_fa77f09662261d 8,24-29
+deep_causality_cfd/tests/types/flow/qtt_march_run_tests.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 709-712
+  s_f2afaa4ec55b4b::t_39a3d07fd929bc 532-533,672-708,713-722
+  s_f2afaa4ec55b4b::t_35f927b84beb4d 529,563
+  s_f2afaa4ec55b4b::t_e47ea2eb91795a 723
+deep_causality_cfd/src/solvers/dec/dec_ns_rate.rs
+  s_f2afaa4ec55b4b::t_1f75e0c51901ef 296
+  s_f2afaa4ec55b4b::t_f6f13db9ef3194 357-378,382
+  s_f2afaa4ec55b4b::t_54f6e078acc417 89-97
+deep_causality_cfd/tests/solvers/dec/boundary_zone_tests.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 172-176,235-242,251-254
+  s_f2afaa4ec55b4b::t_1f3a575a31716f 262,290,443
+  s_f2afaa4ec55b4b::t_7b3485bf9f446a 458-461,475-478
+  s_f2afaa4ec55b4b::t_2fe5ff612047ef 444
+  s_f2afaa4ec55b4b::t_0f255afcb88f14 257,269-272,275-281,283-289,291-296,298-303,305-306,308,334-335,343-344,346,349,358-360,363-364,398,402-403,406-408
+  s_f2afaa4ec55b4b::t_f6f6b211350937 258-261,263-268,273-274,282,297,304,307,309-333,336-342,345,347-348,350-357,361-362,365-397,399-401,404-405
+  s_f2afaa4ec55b4b::t_92e19f28bc450d 451-453,455,463,468-470,472,480
+  s_f2afaa4ec55b4b::t_f7d82b02d1f73f 409-431,435-442,445-450,454,456-457,462,464-467,471,473-474,479,481-484
+  s_f2afaa4ec55b4b::t_2d687dce0940ba 432-434
+  s_f2afaa4ec55b4b::t_8ffeac50764156 140-171,177-234,243-250,255-256
+deep_causality_cfd/src/types/flow_config/qtt_march_config.rs
+  s_f2afaa4ec55b4b::t_8c13e4843dbffb 106-110,172,248,255-265
+  s_f2afaa4ec55b4b::t_262d82f53eb502 191
+  s_f2afaa4ec55b4b::t_e5899f6f181852 266-268
+deep_causality_cfd/tests/solvers/qtt/observe_tests.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 8
+  s_f2afaa4ec55b4b::t_35f927b84beb4d 149,158,162
+deep_causality_cfd/src/solvers/qtt/observe.rs
+  s_f2afaa4ec55b4b::t_35f927b84beb4d 75-87,91
+deep_causality_cfd/tests/coordinate/blended_tests.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 218-221
+  s_f2afaa4ec55b4b::t_2e60d991f974d2 182-203,207-213,217,222-250
+  s_f2afaa4ec55b4b::t_7c8ee488e056f3 204-206,214-216
+deep_causality_cfd/studies/qtt_blend_metric/main.rs
+  s_f2afaa4ec55b4b::t_453bb6ff8fbcd9 21,37-44,56-57,59-60,62,64-83,87,107,109-112,114-117
+  s_f2afaa4ec55b4b::t_e11702c3289196 108
+  s_f2afaa4ec55b4b::t_27a7b9652b31b5 91-105
+  s_f2afaa4ec55b4b::t_824eea6c6337eb 132,135,137,139,141
+  s_f2afaa4ec55b4b::t_e0cfc50dcd9f24 84-86
+  s_f2afaa4ec55b4b::t_d4bd1ae4d24d78 106
+deep_causality_cfd/src/lib.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 150-151
+deep_causality_cfd/src/solvers/mod.rs
+  s_f2afaa4ec55b4b::t_11083b4e95145d 29
+openspec/changes/resolve-cfd-contract-gaps/design.md
+  s_f2afaa4ec55b4b::t_72e5befe8159ce 196-217
+  s_f2afaa4ec55b4b::t_b61135c7d18516 178-195
+deep_causality_cfd/src/solvers/dec/dec_ns_solver/mod.rs
+  s_f2afaa4ec55b4b::t_bf382aa194ddda 162
+  s_f2afaa4ec55b4b::t_54f6e078acc417 158-161,163-165
+deep_causality_cfd/src/types/flow/qtt_march_run.rs
+  s_f2afaa4ec55b4b::t_35f927b84beb4d 24,216
+  s_f2afaa4ec55b4b::t_0dcb5cd7bc5456 226-231
+  s_f2afaa4ec55b4b::t_262d82f53eb502 215
+  s_f2afaa4ec55b4b::t_4303375a91e338 126-128,148,208
+deep_causality_cfd/src/solvers/dec/boundary/boundary_zone.rs
+  s_f2afaa4ec55b4b::t_ccd3e96fd7e575 22-23,30-35,49-57
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_5e38f24e697323 35-48,65-71
+  s_f2afaa4ec55b4b::t_88bfc392c719d1 49-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "196cedee033d3014a9d4a44f07f2a2d0919c5acc",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
