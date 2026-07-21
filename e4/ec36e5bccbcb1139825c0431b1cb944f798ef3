@@ -1,0 +1,36 @@
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_c6c2328740da77 260-265
+  s_f2afaa4ec55b4b::t_7f0715d543605f 37-41,70-86,90-99
+  s_f2afaa4ec55b4b::t_1d747b5f028d50 320,323-328,363-365,493,498
+  s_f2afaa4ec55b4b::t_b944bceda9900b 513,596,601-605,607-610,617-618,622-624
+  s_f2afaa4ec55b4b::t_4b6471fcbb998d 14,443-477
+  s_f2afaa4ec55b4b::t_ef5c523e73b5cc 478-480
+openspec/changes/add-dec-scalar-transport-wall-heat-flux/tasks.md
+  s_f2afaa4ec55b4b::t_a1dbff710cb841 1-79
+openspec/changes/add-dec-scalar-transport-wall-heat-flux/design.md
+  s_f2afaa4ec55b4b::t_c333d6524bce39 1-130
+openspec/changes/add-dec-scalar-transport-wall-heat-flux/proposal.md
+  s_f2afaa4ec55b4b::t_4ebd8a6f162bba 1-57
+openspec/changes/add-dec-scalar-transport-wall-heat-flux/specs/dec-scalar-transport/spec.md
+  s_f2afaa4ec55b4b::t_e659d5ed3e2231 1-42
+openspec/changes/add-dec-scalar-transport-wall-heat-flux/specs/dec-surface-diagnostics/spec.md
+  s_f2afaa4ec55b4b::t_e659d5ed3e2231 1-40
+openspec/changes/add-dec-scalar-transport-wall-heat-flux/.openspec.yaml
+  s_f2afaa4ec55b4b::t_4ebd8a6f162bba 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "e4ec36e5bccbcb1139825c0431b1cb944f798ef3",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
