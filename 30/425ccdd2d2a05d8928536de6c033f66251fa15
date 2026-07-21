@@ -1,0 +1,66 @@
+website/cfd/src/content/tutorial/en/stage-1-corridor.mdx
+  s_2dc68b59102c60::t_f20c24576dcebb 3,8,16-17,43,45,51,64,79,104,115,190-191,199-200,203-205,242-243,245,250,261-262,293-294,298,305,307,313
+  s_2dc68b59102c60::t_61dd909bc1ca02 2,59,97,133,181-182,186,227,251,270,281
+  s_2dc68b59102c60::t_b45dddf8c305f3 4-6,9-12,18-42,44,47-50,52-58,60-63,65-78,80-95,98-101,105-114,116-132,134-180,183-185,187-188,192-198,201-202,207-226,228-241,244,246-249,252-260,263-269,271-279,283-292,295-297,300-304,306,308-312,314-338
+  s_2dc68b59102c60::t_36e81483715a78 96,189,280,282
+website/cfd/src/pages/tutorial/index.astro
+  s_2dc68b59102c60::t_91bc338972af23 5,9,23,25-27,32,34-41,43-49,51-56,58-60,62-65,67-70,76,87,100,103-106,108-117,137-138
+  s_2dc68b59102c60::t_73b594f4653e75 1-4,6-8,10-22,24,28-31,33,42,50,57,61,66,71-75,77-86,88-99,101-102,107,118-136,139-191
+website/cfd/src/content/tutorial/en/stage-3-retropulsion.mdx
+  s_2dc68b59102c60::t_26b20e0844a81e 3,8,16-19,39,43,45,47-48,50-51,89,102-106,114,116,119-126,128-131,143,150,153,160-161,164-170,201-204,238,284,293,312-313
+  s_2dc68b59102c60::t_68cbd20462058e 4-6,9-11,23-38,40-42,46,49,52-79,81-88,91-100,108-113,127,132-142,145-147,149,151-152,154-157,159,162-163,172-187,189-197,199-200,205-217,219-237,240-277,279-282,285-292,294-309,311,314-317,319-325,327-356,358-359
+  s_2dc68b59102c60::t_61dd909bc1ca02 2,44,80,115,117-118,148,158,188,198,218,278,310,318,326,357
+  s_2dc68b59102c60::t_560c5660442001 107,144,171,283
+website/cfd/src/content.config.ts
+  s_2dc68b59102c60::t_e6010a0ccdcff7 53-63,68-79
+  s_2dc68b59102c60::t_7d8ec1a73c14f9 64-67
+website/cfd/src/layouts/BaseLayout.astro
+  s_2dc68b59102c60::t_77d01d578c35c3 82
+website/cfd/src/content/blueprints/en/handle-regime-change.mdx
+  s_2dc68b59102c60::t_77d01d578c35c3 13
+website/cfd/src/content/tutorial/en/stage-2-weather.mdx
+  s_2dc68b59102c60::t_13c57128cc4830 221
+  s_2dc68b59102c60::t_61dd909bc1ca02 2,50,79,89,116,149,175,187
+  s_2dc68b59102c60::t_9574cfa9f63e50 4-12,18,20-26,28-30,32,34-49,51-53,56-60,63-65,70-71,73-78,80-88,90-115,117-148,150-174,176-186,188-220,222-243
+  s_2dc68b59102c60::t_226fc83fc87f76 3,13-17,19,27,31,33,54-55,61-62,66-68,72
+website/cfd/src/pages/tutorial/[...slug].astro
+  s_2dc68b59102c60::t_ecde052a2c8894 1-40,42-50,66-85,105-140
+  s_2dc68b59102c60::t_308502d2bfe5e2 51-65
+  s_2dc68b59102c60::t_2887e5a2c74d42 41,86-104
+website/cfd/src/components/nav/SiteHeader.astro
+  s_2dc68b59102c60::t_77d01d578c35c3 16
+website/cfd/src/content/blueprints/en/fork-a-running-simulation.mdx
+  s_2dc68b59102c60::t_77d01d578c35c3 15,17,19,136,148
+website/cfd/src/content/blueprints/en/install.mdx
+  s_2dc68b59102c60::t_77d01d578c35c3 10
+website/cfd/src/content/examples/en/turbulence-flow.mdx
+  s_2dc68b59102c60::t_77d01d578c35c3 105
+website/cfd/src/pages/404.astro
+  s_2dc68b59102c60::t_77d01d578c35c3 23
+website/cfd/astro.config.mjs
+  s_2dc68b59102c60::t_77d01d578c35c3 26-28
+website/cfd/src/pages/examples/index.astro
+  s_2dc68b59102c60::t_77d01d578c35c3 9,21
+website/cfd/src/content/blueprints/en/couple-multiphysics.mdx
+  s_2dc68b59102c60::t_77d01d578c35c3 13,15,181
+website/cfd/src/content/blueprints/en/couple-navigation-to-physics.mdx
+  s_2dc68b59102c60::t_77d01d578c35c3 13,97
+website/cfd/src/components/home/ExampleLadder.astro
+  s_2dc68b59102c60::t_77d01d578c35c3 19-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "30425ccdd2d2a05d8928536de6c033f66251fa15",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
