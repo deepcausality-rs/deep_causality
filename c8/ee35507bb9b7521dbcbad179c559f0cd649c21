@@ -1,0 +1,28 @@
+openspec/specs/boundary-zone-abstraction/spec.md
+  s_f2afaa4ec55b4b::t_798cbd6680266a 15-30,43-60
+  s_f2afaa4ec55b4b::t_116bd3abb9e62e 61
+openspec/specs/body-fitted-qtt-coordinate/spec.md
+  s_f2afaa4ec55b4b::t_97c4442f3a19e7 14-31,42-60
+  s_f2afaa4ec55b4b::t_d33b46ef086cf8 61
+openspec/specs/qtt-surface-observables/spec.md
+  s_f2afaa4ec55b4b::t_247039d1165a81 23,26-27,30-42,44,47-59
+  s_f2afaa4ec55b4b::t_355a5f9a3ecc5d 60
+openspec/changes/archive/2026-07-21-resolve-cfd-contract-gaps/tasks.md
+  s_f2afaa4ec55b4b::t_7e530492877fd8 53-54,68-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "c8ee35507bb9b7521dbcbad179c559f0cd649c21",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
