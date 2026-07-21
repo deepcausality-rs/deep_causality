@@ -8,6 +8,28 @@ Accuracy vs bond: immersed cylinder, drag from the penalization contraction
   bond <=  16   C_d = 23.7577   |dC_d| = 7.22e-3   interior_max|u| = 4.22e-2   divergence = 3.01e-7
   bond <=  24   C_d = 23.7577   |dC_d| = 1.89e-11   interior_max|u| = 4.22e-2   divergence = 5.47e-14
 
-Immersed cylinder verified: no-slip enforced, drag converges with bond dimension, and the
-streamwise drag is positive and finite (its magnitude reflects the smoothing skirt + blockage,
-so the convergence trend is the result — cross-referenced to the DEC solver).
+finest bond 24: C_d = 23.7577, interior max|u| = 4.22e-2 (free-stream 1.0)
+DEC isolated-cylinder cross-reference (Re 100): C_d ~ 1.345 — disclaimed for periodic blockage
+
+Parameter ladders at bond cap 24 (the axes that move the reported drag)
+  eta ladder — the Brinkman eta -> 0 limit (Angot, Bruneau & Fabrie 1999):
+    eta = 0.1280   C_d =  17.3875   interior_max|u| = 5.59e-1
+    eta = 0.0640   C_d =  24.0175   interior_max|u| = 3.28e-1
+    eta = 0.0320   C_d =  26.2464   interior_max|u| = 1.35e-1
+    eta = 0.0160   C_d =  23.7577   interior_max|u| = 4.22e-2
+    eta = 0.0080   C_d =  21.4031   interior_max|u| = 1.45e-2
+    verdict: NOT CONVERGING — not settling: the sequence reverses direction (non-monotone) with |Δ| 2.355e0 > 1.312e0 — no limit is demonstrated, so a bound on the absolute value is not meaningful
+  mask smoothing ladder — a purely numerical width:
+    delta = 0.5   cells  C_d =   7.7032   interior_max|u| = 3.06e-2
+    delta = 1.0   cells  C_d =  12.3260   interior_max|u| = 3.47e-2
+    delta = 2.0   cells  C_d =  23.7577   interior_max|u| = 4.22e-2
+    delta = 3.0   cells  C_d =  35.8140   interior_max|u| = 4.80e-2
+    delta = 4.0   cells  C_d =  47.2697   interior_max|u| = 4.93e-2
+    verdict: NOT CONVERGING — shrinking but outside tolerance: |Δ| 1.146e1 > 2.363e0 (previous |Δ| 1.206e1) — refine further
+
+--- immersed-cylinder gates ---
+  [PASS] [tripwire] no-slip enforced in the body interior: interior max|u| 4.219e-2 vs floor 1.500e-1
+  [PASS] [tripwire] tensor-train compression saturated in bond: relative change 7.936e-13 between bond 16 and 24 vs bound 1.0e-6
+  [PASS] [tripwire] drag positive and finite: C_d 23.7577 in (0, 100)
+  [FAIL] [reference] eta ladder establishes a limit for C_d: NOT CONVERGING — not settling: the sequence reverses direction (non-monotone) with |Δ| 2.355e0 > 1.312e0 — no limit is demonstrated, so a bound on the absolute value is not meaningful
+  [FAIL] [reference] mask smoothing ladder establishes a limit for C_d: NOT CONVERGING — shrinking but outside tolerance: |Δ| 1.146e1 > 2.363e0 (previous |Δ| 1.206e1) — refine further

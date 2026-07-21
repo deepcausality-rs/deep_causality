@@ -9,4 +9,8 @@ mod flow_config;
 #[cfg(test)]
 pub mod ambient_tests;
 #[cfg(test)]
+pub mod evidence_class_tests;
+#[cfg(test)]
 pub mod keyed_table_tests;
+#[cfg(test)]
+pub mod ladder_outcome_tests;

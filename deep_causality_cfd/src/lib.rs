@@ -46,7 +46,7 @@ pub use crate::traits::{
     CfdScalar, FluidTheory, MarchDispatch, Marchable, Marcher, MetricProvider, MetricProvider3d,
     Solver,
 };
-pub use crate::types::{Ambient, KeyedInterpolation, KeyedTable};
+pub use crate::types::{Ambient, EvidenceClass, KeyedInterpolation, KeyedTable, LadderOutcome};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::coordinate::{

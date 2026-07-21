@@ -13,6 +13,7 @@
 //! row-typed, so a sequence built for one study's rows cannot be inserted into a study whose rows
 //! it does not understand — that mismatch is a compile error.
 
+use crate::types::EvidenceClass;
 use crate::types::flow::study::verdict::{GateOutcome, Verdict};
 use crate::types::flow::study::view::StudyView;
 
@@ -22,7 +23,7 @@ pub type GateFn<Row> = for<'a> fn(&StudyView<'a, Row>) -> (bool, String);
 /// A named, ordered sequence of gate checks over a study's `Row` type.
 pub struct GateSeq<Row> {
     title: String,
-    gates: Vec<(&'static str, GateFn<Row>)>,
+    gates: Vec<(&'static str, EvidenceClass, GateFn<Row>)>,
 }
 
 impl<Row> GateSeq<Row> {
@@ -34,10 +35,20 @@ impl<Row> GateSeq<Row> {
         }
     }
 
-    /// Append a labeled gate check. The check is a free function `fn(&StudyView<Row>) ->
-    /// (bool, String)`.
+    /// Append a labeled gate check whose bound is pinned from this code's own prior output — a
+    /// regression tripwire. The check is a free function `fn(&StudyView<Row>) -> (bool, String)`.
+    ///
+    /// This is the default because claiming agreement with an external reference requires positive
+    /// evidence; use [`reference_gate`](Self::reference_gate) when the bound has a citation.
     pub fn gate(mut self, label: &'static str, check: GateFn<Row>) -> Self {
-        self.gates.push((label, check));
+        self.gates.push((label, EvidenceClass::Tripwire, check));
+        self
+    }
+
+    /// Append a labeled gate check whose bound is an analytic solution or a published external
+    /// value. The citation belongs at the site where the bound is defined.
+    pub fn reference_gate(mut self, label: &'static str, check: GateFn<Row>) -> Self {
+        self.gates.push((label, EvidenceClass::Reference, check));
         self
     }
 
@@ -52,9 +63,9 @@ impl<Row> GateSeq<Row> {
         let outcomes = self
             .gates
             .iter()
-            .map(|(label, check)| {
+            .map(|(label, evidence, check)| {
                 let (passed, detail) = check(view);
-                GateOutcome::new(*label, passed, detail)
+                GateOutcome::new(*label, passed, detail, *evidence)
             })
             .collect();
         Verdict::new(self.title.clone(), outcomes)

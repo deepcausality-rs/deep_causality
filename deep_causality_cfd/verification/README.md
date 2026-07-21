@@ -16,10 +16,61 @@ Every example **self-verifies** and **exits with a nonzero status** the moment i
 reference check fails — so the suite is usable as a gate, not just a demo. What each one checks, and
 how it fails, is in the per-example sections below.
 
+**CI runs this suite.** `.github/workflows/cfd_verification.yml` executes the nine fast harnesses on
+every pull request and the four slow ones nightly, failing the build on a non-zero exit. A
+completeness check asserts that every `[[example]]` declared under `verification/` in `Cargo.toml`
+appears in one of the two lists, so a newly added harness cannot silently never run. Until this
+workflow existed, `cargo test` *compiled* these binaries and never ran them, which meant every
+quantitative claim on this page was unenforced.
+
+## Convention: every gate declares its evidence class
+
+Each gate line carries one of two labels, so a `[PASS]` can be read correctly:
+
+| Label | Meaning |
+|---|---|
+| `[reference]` | The bound comes from an analytic solution or a published external value, cited at the definition site. Clearing it is evidence **about the physics**. |
+| `[tripwire]` | The bound is pinned from this code's own prior output. Clearing it is evidence of **non-regression only**, and carries no claim of external accuracy. |
+
+```text
+  [PASS] [reference] density  L1 error = 0.0175          <- vs the exact Riemann solution
+  [PASS] [tripwire] St 0.1710 in [0.152, 0.19]           <- pinned from a prior run
+```
+
+Unlabelled defaults to `tripwire`: claiming agreement with an external reference requires positive
+evidence, so the weaker class is the safe one. A tripwire is never presented as validation against a
+reference — several bounds here are honestly pinned (the `qtt_ramc_stagline` ±0.70-decade band says
+so in its own gate text, and the lid-cavity RMSE bounds carry headroom from their pinning run), and
+the label makes that machine-visible rather than something a reader has to find in prose.
+
 Precision is a parameter: each example fixes a `FloatType` alias (`f32` / `f64` / `Float106`) and runs
 the whole computation at that precision, downcasting to `f64` only at the display boundary. All numbers
 below were measured at **`f64`** on an Apple M3 Max (release build). Runtimes are wall-clock at the
 stated configuration and scale strongly with grid size and step count.
+
+## Convention: `baseline.txt` is a complete run
+
+Each harness directory carries a `baseline.txt` — the captured output of a full run, **stdout and
+stderr together**, so it holds both the reported quantities and the gate block. A baseline must reach
+the harness's terminal summary; a truncated or aborted run is not committed, because it silently
+removes the reference a reader compares against.
+
+Regenerate with:
+
+```bash
+cargo run --release -p deep_causality_cfd --example <name> > <name>/baseline.txt 2>&1
+```
+
+Two properties are load-bearing:
+
+- **The header must describe the run.** The grid, horizon and step count in the baseline are the
+  configuration whose numbers this page reports for that harness.
+- **A failing baseline is committed as failing.** `qtt_cylinder_verification`'s baseline records
+  `exit 1` and its two `NOT CONVERGING` ladder verdicts. Replacing it with a stale passing artifact
+  would hide a real measurement — see its known-failing note above.
+
+Where a harness's default mode has no gates and its gated mode is a subcommand (the lid-driven
+cavity), the baseline carries both, under a labelled separator.
 
 ## Summary
 
@@ -31,16 +82,40 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `mms_taylor_green_verification` | RHS residual; amplitude error | 1.1e-16; 6.7e-16 | 0 (analytic) | ≈ machine-ε (~0 %) | default | ~1 s |
 | `dec_graded_mms_verification` | observed order (finest pair) | 1.98–2.00 | 2.00 | ≤ 0.02 (< 1 %) | 8²–64² | ~1 s |
 | `dec_taylor_green_re1600_verification` | peak dissipation ε; energy invariant | 0.0025 (E\*/E0 0.893, monotone) | ≈ 0.0124 (DNS) | **−80 %** (16³ under-resolved); invariant PASS | 16³, t\*=10 | <1 s |
-| `dec_lid_cavity_re1000_verification` | primary vortex (x, y); centerline RMSE | (0.563, 0.594); RMSE 0.137 | Ghia (0.531, 0.563) | Δ ≈ (0.031, 0.031) ≈ **6 % of span** | 33², t=40 | ~28 s |
+| `dec_lid_cavity_re1000_verification` | primary vortex (x, y); centerline RMSE | (0.5312, 0.5625); RMSE 0.0617 | Ghia (0.5313, 0.5625) | Δ ≈ (1e-4, 0) — **primary vortex matches to 1e-4 in x, exactly in y** | 65², t=100 (default) | ~20 min |
 | `dec_cylinder_wake_verification` | max divergence residual; log count | 3.3e-15; 80 | 0; 80 (= 2×40) | ≈ machine-ε; exact | 2000 steps, 93×32 | ~155 s |
 | `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.24–1.33 | **+4.3 %**; **+1.1 %** (over band top) | 96², Re=100, 1500 steps | ~510 s |
 | `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
-| `qtt_cylinder_verification` | drag convergence vs bond; no-slip interior | ΔC_d 1.9e-11; max\|u\| 4.2e-2 | 0 (converged); 0 (no-slip) | converges to machine-ε; **4 %** of free-stream | 32², 4 bond caps | ~1 s |
+| `qtt_cylinder_verification` ⚠ | drag convergence vs bond; no-slip interior; **η and mask-smoothing ladders** | ΔC_d 1.9e-11; max\|u\| 4.2e-2; **neither ladder converges** | 0 (converged); 0 (no-slip) | bond converges to machine-ε; **4 %** of free-stream; **C_d has no η→0 limit and moves 6.1× with smoothing width** | 32², 4 bond caps + 2 ladders | ~37 s |
 | `qtt_park2t_blackout` | 6 LER gates (stability, exactness, RH band, lag+Saha, path-dependence, n_e>0) | all 6 PASS; ω_p 5.6e12 ≫ band | all gates pass | Gap-2 Tier-A verified (cross-refs, Tier-A disclaimers) | 32², 40 steps | ~1 s |
 | `qtt_sod` | Sod shock tube vs exact Riemann (L1 of ρ/u/p) | 0.018 / 0.027 / 0.015 | < 0.03 (1st-order Rusanov) | p\*=0.303 (exact), fan+contact+shock correct | 512 cells, t=0.2 | ~1 s |
 | `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | 1.085e19 (calibrated Park-2T); 2.991e19 (uncalibrated network) | ~1e19 (RAM-C II, order-of-mag) | **+0.0 dec** calibrated; **+0.48 dec** prediction (earned band ±0.70) | stagnation line | ~1 s |
 | `qtt_blunt_body_2d` | rank lever: bow-shock χ, fitted vs Cartesian capture | fitted 3→5; capture 16→61 | structural (no √side growth, fitted) | fitted bounded; capture ~√side | 2^5–2^7 | ~2 s |
 | `qtt_reentry_3d` | rank lever: 3-D forebody χ (wake out-of-scope) | fitted 2→4; Cartesian 10→59; wake 41 | structural (`qtt_rank_3d` bound) | fitted plateau; capture grows | 2^3–2^5 | ~3 s |
+
+> ⚠ **`qtt_cylinder_verification` is known-failing and runs nightly, not per-PR.** Its two parameter
+> ladders gate and both report `NOT CONVERGING`. This is a correct measurement, not a regression:
+>
+> - **η ladder** (0.128 → 0.008): `C_d` = 17.39, 24.02, 26.25, 23.76, 21.40 — it rises, peaks, then
+>   falls. There is no `η → 0` limit, and that limit is what licenses calling the penalization
+>   integral a drag at all (Angot, Bruneau & Fabrie 1999, `O(η^{3/4})`).
+> - **Smoothing ladder** (0.5 → 4 cells): `C_d` = 7.70 … 47.27, a **6.1×** span driven by a purely
+>   numerical mask width.
+>
+> Root cause: the physical Brinkman layer `√(ην) = 0.144·dx` is ~7× thinner than one cell, and the
+> resolution criterion `η ≥ dx²/ν = 0.771` is violated 48× by the configured `η = 0.016`. The grid
+> therefore resolves the mask smoothing skirt, not the penalization layer — which is why the reported
+> force tracks the smoothing width rather than η.
+>
+> **What this retires.** The former headline for this harness — "the convergence trend is the
+> verification result" — refers to the *bond* ladder, i.e. saturation of the tensor-train compression.
+> That says nothing about whether the compressed quantity is a drag. Read the absolute `C_d ≈ 23.8`
+> as a property of this configuration's blur width, not of a cylinder.
+>
+> Resolution (choose η from a wall-error target; refine to resolve the layer) is a solver and cost
+> change tracked as Phase 2 item 10 of [`AUDIT-REPORT.md`](../../openspec/notes/cfd_audit/AUDIT-REPORT.md).
+> The gate is kept rather than silenced: widening the bound until it passes is exactly the
+> back-fitting this suite is being cleaned of.
 
 **Validation scope labels.** The QTT compressible gates verify at three distinct tiers — read each gate for
 what it actually proves: **analytic** (`qtt_sod` vs the exact Riemann solution — rigorous, the only
@@ -127,10 +202,17 @@ nonzero** unless the RMSE both clears a pinned bound and strictly decreases unde
 **Self-check.** `cargo run … --example dec_lid_cavity_re1000_verification trend` (exit nonzero on a
 broken refinement trend). The default single run reports the RMSE and vortex table.
 
-**Measured (f64, 33² grid, t=40, ~28 s).** Centerline **RMSE 0.137** vs Ghia; primary vortex at
-(0.563, 0.594) vs Ghia (0.531, 0.563) — a **≈ 6 %**-of-span offset at this coarse grid; both bottom
-corner eddies resolved. The default **65²** (minutes) and the reporting **129²/t≥150** (hours, Ghia's
-own grid) tighten both.
+**Measured (f64, default 65² grid, t=100, ~20 min — the configuration `baseline.txt` records).**
+Centerline **RMSE 0.0617** vs Ghia; primary vortex at **(0.5312, 0.5625)** vs Ghia **(0.5313, 0.5625)**
+— matching to **1e-4 in x and exactly in y**; bottom-right eddy at (0.8594, 0.1094), exactly Ghia's
+value; bottom-left at (0.0781, 0.0781) vs (0.0859, 0.0781), one cell out in x. The reporting
+**129²/t≥150** (hours, Ghia's own grid) tightens further.
+
+*This row previously reported the coarse `33²/t=40` trend rung (RMSE 0.137, vortex (0.563, 0.594), a
+"≈ 6 % of span" offset) while every other row reported its default — an inconsistent basis that
+**understated** the solver by more than a factor of two on the RMSE. Those coarse numbers are still
+what the `trend` subcommand's pinned bounds are set against; they are a refinement-trend rung, not
+this harness's headline result.*
 
 **Reference.** Ghia, Ghia & Shin (1982).
 
@@ -164,9 +246,18 @@ immersed cut cylinder) against published laminar benchmarks: the shedding **Stro
 (Dröge–Verstappen; Lehmkuhl lineage). Case parameters (`RE_D`, `CELLS_PER_D`, `LX_D`, `LY_D`, `STEPS`,
 `CFL`) are environment-overridable for the Reynolds ladder and grid refinement.
 
-**Self-check.** The march aborts (nonzero) if a physical invariant breaks (e.g. CFL violation, the
-solver returns an error). St and C_d are reported next to their reference values; the affordable
-default grid is below reference-grid quality (see below).
+**Self-check.** Four gates, exit nonzero on break: shedding was detected at all, the developed window
+produced a cycle-mean drag, and `St` and `C_d` each sit inside a pinned band. A solver error now
+**exits 1** rather than breaking the march and reporting `St`/`C_d` from the truncated series — the
+harness previously contained no assertion and no `process::exit` and returned 0 in that case,
+contradicting the suite convention above.
+
+All four bounds are `[tripwire]`, not `[reference]`, and deliberately so: at the affordable 8 cells/D
+default the measured values sit **outside** the published bands (below), so gating against Williamson
+and Dröge–Verstappen directly would fail a correctly-working solver. The published values print beside
+each measurement with the offset, so the gap stays visible and a `[PASS]` is never read as agreement.
+The `St`/`C_d` bands describe `Re = 100` only; a Reynolds-ladder run prints `[SKIP]` for them rather
+than passing against a band that does not describe it.
 
 **Measured (f64, default: Re=100, 96² @ 8 cells/D, 12×12 D domain, 1500 steps, ~510 s ≈ 8.5 min).**
 - **St ≈ 0.1710** vs Williamson Re=100 **≈ 0.164** → **+4.3 %**.

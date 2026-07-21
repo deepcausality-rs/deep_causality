@@ -269,6 +269,44 @@ rust_test(
 )
 
 rust_test(
+    name = "types_evidence_class",
+    srcs = [
+        "types/evidence_class_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "types/evidence_class_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+    ],
+)
+
+rust_test(
+    name = "types_ladder_outcome",
+    srcs = [
+        "types/ladder_outcome_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "types/ladder_outcome_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_cfd",
+    ],
+)
+
+rust_test(
     name = "types_flow",
     srcs = glob([
         "types/flow/**/*_tests.rs",

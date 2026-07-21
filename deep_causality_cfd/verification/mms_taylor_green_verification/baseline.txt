@@ -14,3 +14,7 @@ Stage 2: Rk4 march of the amplitude, kernel in the loop
 
 Manufactured solution reproduced: exact AD derivatives drive the kernel, Rk4 tracks
 the analytic decay, and the causal monad sequenced the two stages.
+
+--- manufactured-solution gates ---
+  [PASS] [reference] stage 1: kernel vs exact du/dt: 1.110e-16 vs bound 2.220e-12 (closed form)
+  [PASS] [reference] stage 2: Rk4 vs analytic decay: 6.661e-16 vs bound 2.220e-12 (closed form)

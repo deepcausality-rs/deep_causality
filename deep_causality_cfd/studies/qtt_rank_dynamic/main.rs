@@ -103,11 +103,21 @@ fn main() {
             "G1: rank ran away (smooth={a_peak}, steep_low={b_peak}, steep_high={c_peak}, cap={cap})"
         ));
     }
-    // Gate G2: a near-grid-scale steep feature does settle ABOVE its smooth-encode floor (some
-    // dynamic activity is real), i.e. it is not trivially constant.
-    if b_peak < b0 {
+    // Gate G2: a near-grid-scale steep feature GAINS rank while it is marched — the transport is
+    // doing real work, so the study is not reporting the rank of a field nothing happened to.
+    //
+    // The previous predicate was `b_peak < b0`. `march_ranks` initialises `peak = init` and only
+    // ever `max`es into it, so `peak >= init` holds identically and that comparison could never be
+    // true — it gated nothing. Requiring strict growth is the falsifiable form of the same intent.
+    //
+    // Measured: init 4 -> peak 8, so the margin is a factor of two.
+    //
+    // BREAKING CONDITION: make the marcher a no-op (or round hard enough to hold the initial
+    // encode) and `b_peak == b0`, failing this gate.
+    if b_peak <= b0 {
         failures.push(format!(
-            "G2: steep low-nu peak fell below its own start (init={b0}, peak={b_peak})"
+            "G2: steep low-nu feature gained no rank under marching (init={b0}, peak={b_peak}) — \
+             the transport is not exercising the representation"
         ));
     }
     // Gate G3 (the lever, stated conservatively): more diffusion must not INCREASE the peak rank.

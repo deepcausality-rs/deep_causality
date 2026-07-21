@@ -41,7 +41,7 @@ mod config;
 mod print_utils;
 
 use config::{DROPOUT_EVERY, STEPS, U_BULK, ft};
-use deep_causality_cfd::CfdFlow;
+use deep_causality_cfd::{CfdFlow, EvidenceClass};
 use deep_causality_uncertain::seed_sampler;
 
 /// The working precision for the whole computation (geometry, projection CG, DEC march, the uncertain
@@ -108,28 +108,37 @@ fn main() {
     // Self-verification (internal consistency): the constrained Leray projector must keep the field
     // divergence-free, and each sensor dropout must record exactly its fallback + intervention pair.
     // Exit nonzero on break.
+    // Evidence class: **tripwire** for both. Neither compares against an external reference — this
+    // harness makes no quantitative reference claim (the confined periodic-x configuration is not
+    // the isolated-cylinder case; see dec_cylinder_verification for that). Both are internal
+    // consistency invariants of the discretisation and the effect log.
+    //
+    // BREAKING CONDITIONS: disable the constrained projection and the divergence gate fails; drop
+    // the fallback or the intervention record on a dropout and the log-accounting gate fails.
     let mut failed = false;
     const DIV_TOL: f64 = 1e-6;
-    if max_div.is_nan() || max_div >= DIV_TOL {
-        eprintln!(
-            "FAIL: max divergence residual {max_div:.3e} exceeds {DIV_TOL:.0e} — incompressibility broken"
-        );
-        failed = true;
-    }
+    let div_ok = !max_div.is_nan() && max_div < DIV_TOL;
+    eprintln!(
+        "  [{}] [{}] incompressibility held: max divergence residual {max_div:.3e} vs {DIV_TOL:.0e}",
+        if div_ok { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+    );
+    failed |= !div_ok;
+
     let expected_log = 2 * n_dropouts;
     let got_log = report.log_entries().unwrap_or(0);
-    if got_log != expected_log {
-        eprintln!(
-            "FAIL: EffectLog has {got_log} entries, expected {expected_log} (fallback + intervention per dropout)"
-        );
-        failed = true;
-    }
+    let log_ok = got_log == expected_log;
+    eprintln!(
+        "  [{}] [{}] dropout/intervention log accounting exact: {got_log} entries vs expected \
+         {expected_log} (fallback + intervention per dropout, {n_dropouts} dropouts)",
+        if log_ok { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+    );
+    failed |= !log_ok;
+
     if failed {
         std::process::exit(1);
     }
-    eprintln!(
-        "verified: incompressibility held (max div {max_div:.3e}) and the dropout/intervention log accounting is exact"
-    );
 }
 
 /// Print a stage-failure context and its error on stderr, then exit the process non-zero.

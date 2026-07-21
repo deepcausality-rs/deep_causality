@@ -12,7 +12,7 @@
 
 use crate::FloatType;
 use crate::config;
-use deep_causality_cfd::Report;
+use deep_causality_cfd::{EvidenceClass, Report};
 
 /// Pinned finest-grid bound on the max-norm field error vs. the analytic decay.
 const FINEST_ERR_BOUND: f64 = 2.0e-4;
@@ -20,6 +20,12 @@ const FINEST_ERR_BOUND: f64 = 2.0e-4;
 const MIN_ORDER: f64 = 1.8;
 /// Pinned bound on the convection-operator error vs. the closed form `−½ sin(2x)`.
 const CONVECTION_BOUND: f64 = 1.0e-2;
+/// Bounds on the ratio of the **computed** convection amplitude to the analytic one. The analytic
+/// amplitude of `−½ sin(2x)` is exactly ½, so a correct operator lands near 1.0; a no-op term lands
+/// at 0. Wide enough to absorb the discretisation error the `CONVECTION_BOUND` gate already sizes,
+/// narrow enough that a missing or mis-scaled nonlinear term fails.
+const AMP_RATIO_LO: f64 = 0.9;
+const AMP_RATIO_HI: f64 = 1.1;
 /// Pinned bound on the post-projection divergence residual.
 const DIVERGENCE_BOUND: f64 = 1.0e-6;
 
@@ -88,7 +94,7 @@ fn measure_one(l: usize, report: &Report<FloatType>) -> LevelResult {
 /// Render the verification report as a labeled, human-readable summary on stdout (in the style of the
 /// other verification examples): the convergence ladder, the convection-operator check, and the MPS
 /// compression.
-pub fn render(results: &[LevelResult], convection: (f64, f64)) {
+pub fn render(results: &[LevelResult], convection: (f64, f64, f64)) {
     let finest = results.last().expect("at least one level");
 
     println!("Convergence: refinement ladder vs the analytic e^(-2 nu t) decay");
@@ -110,9 +116,11 @@ pub fn render(results: &[LevelResult], convection: (f64, f64)) {
         println!();
     }
 
-    let (conv_err, conv_amp) = convection;
+    let (conv_err, conv_amp, conv_amp_ref) = convection;
     println!("Convection: nonlinear u.grad(u), u-component vs the closed form -1/2 sin(2x)");
-    println!("  max abs error = {conv_err:.3e}   (signal amplitude {conv_amp:.3})");
+    println!(
+        "  max abs error = {conv_err:.3e}   (computed amplitude {conv_amp:.3} vs analytic {conv_amp_ref:.3})"
+    );
     println!(
         "  (single-mode TG's convective term is a pure gradient the projection removes -- checked directly)\n"
     );
@@ -144,61 +152,96 @@ pub fn summary() {
 /// 4. the post-projection divergence stays below [`DIVERGENCE_BOUND`] (incompressibility).
 ///
 /// Returns `false` on any violation; `main` exits nonzero.
-pub fn verify(results: &[LevelResult], convection: (f64, f64)) -> bool {
+pub fn verify(results: &[LevelResult], convection: (f64, f64, f64)) -> bool {
     let mut ok = true;
-
-    // 1. Monotone convergence + finest bound.
-    for pair in results.windows(2) {
-        let (a, b) = (&pair[0], &pair[1]);
-        if b.max_err >= a.max_err {
-            eprintln!(
-                "FAIL: error did not decrease under refinement (N={} {:.3e} -> N={} {:.3e})",
-                a.n, a.max_err, b.n, b.max_err,
-            );
+    println!("\n--- Taylor-Green gates ---");
+    let mut gate = |label: &str, evidence: EvidenceClass, pass: bool, detail: String| {
+        println!(
+            "  [{}] [{evidence}] {label}: {detail}",
+            if pass { "PASS" } else { "FAIL" }
+        );
+        if !pass {
             ok = false;
         }
-    }
-    let finest = results.last().expect("at least one level");
-    if finest.max_err > FINEST_ERR_BOUND {
-        eprintln!(
-            "FAIL: finest-grid error {:.3e} exceeds bound {:.3e}",
-            finest.max_err, FINEST_ERR_BOUND,
-        );
-        ok = false;
-    }
+    };
 
-    // 2. Observed order of the finest pair.
+    // 1. Monotone convergence + finest bound, against the closed-form e^(-2 nu t) decay.
+    //    Reference class: the comparison target is the analytic solution, so clearing it is
+    //    evidence about the discretisation's accuracy, not merely about drift.
+    let monotone = results
+        .windows(2)
+        .all(|pair| pair[1].max_err < pair[0].max_err);
+    gate(
+        "error decreases under refinement",
+        EvidenceClass::Reference,
+        monotone,
+        results
+            .iter()
+            .map(|r| format!("N={} {:.2e}", r.n, r.max_err))
+            .collect::<Vec<_>>()
+            .join(" -> "),
+    );
+    let finest = results.last().expect("at least one level");
+    gate(
+        "finest-grid error within bound",
+        EvidenceClass::Reference,
+        finest.max_err <= FINEST_ERR_BOUND,
+        format!(
+            "N={} error {:.3e} vs bound {:.3e} (vs the analytic decay)",
+            finest.n, finest.max_err, FINEST_ERR_BOUND
+        ),
+    );
+
+    // 2. Observed order of the finest pair, against the theoretical 2 for centered FD + spectral
+    //    projection. The expectation is theoretical, not a pinned measurement.
     if results.len() >= 2 {
         let order = observed_order(&results[results.len() - 2], finest);
-        if order < MIN_ORDER {
-            eprintln!(
-                "FAIL: finest-pair observed order {order:.3} below {MIN_ORDER} (expected ~2)"
-            );
-            ok = false;
-        }
+        gate(
+            "observed spatial order",
+            EvidenceClass::Reference,
+            order >= MIN_ORDER,
+            format!("{order:.3} >= {MIN_ORDER} (theoretical 2; 2nd order in space, 1st in time)"),
+        );
     }
 
     // 3. Convection operator vs closed form.
-    let (conv_err, conv_amp) = convection;
-    if conv_amp <= 0.0 {
-        eprintln!("FAIL: convection signal amplitude is zero — the nonlinear term is a no-op");
-        ok = false;
-    }
-    if conv_err > CONVECTION_BOUND {
-        eprintln!(
-            "FAIL: convection error {conv_err:.3e} exceeds bound {CONVECTION_BOUND:.3e} — nonlinear term is wrong"
-        );
-        ok = false;
-    }
+    //
+    // The amplitude check reads the COMPUTED field and compares it to the analytic amplitude. Taken
+    // from the closed form alone (as it was) `conv_amp` is identically 0.5 on any grid, so
+    // `conv_amp <= 0.0` admitted every possible solver output — including an all-zero convection
+    // term — and could never fail.
+    //
+    // BREAKING CONDITION: zero the convection field and the ratio goes to 0, failing this gate.
+    let (conv_err, conv_amp, conv_amp_ref) = convection;
+    let amp_ratio = conv_amp / conv_amp_ref;
+    gate(
+        "convection amplitude matches the closed form",
+        EvidenceClass::Reference,
+        amp_ratio > AMP_RATIO_LO && amp_ratio < AMP_RATIO_HI,
+        format!(
+            "computed {conv_amp:.3e} is {amp_ratio:.3}x the analytic {conv_amp_ref:.3e}, \
+             band [{AMP_RATIO_LO}, {AMP_RATIO_HI}]"
+        ),
+    );
+    gate(
+        "convection error within bound",
+        EvidenceClass::Reference,
+        conv_err <= CONVECTION_BOUND,
+        format!("{conv_err:.3e} vs bound {CONVECTION_BOUND:.3e} (closed form -1/2 sin 2x)"),
+    );
 
-    // 4. Incompressibility.
-    if finest.divergence > DIVERGENCE_BOUND {
-        eprintln!(
-            "FAIL: divergence {:.3e} exceeds bound {:.3e} — projection broken",
-            finest.divergence, DIVERGENCE_BOUND,
-        );
-        ok = false;
-    }
+    // 4. Incompressibility. Tripwire: div(project(u)) = 0 is an identity of the spectral projector
+    //    (projection.rs documents the eigenvalue chosen to make it exact), so this residual
+    //    measures tensor-train truncation fidelity rather than a physical property.
+    gate(
+        "post-projection divergence at the truncation floor",
+        EvidenceClass::Tripwire,
+        finest.divergence <= DIVERGENCE_BOUND,
+        format!(
+            "{:.3e} vs bound {:.3e} (projector identity; this measures TT truncation)",
+            finest.divergence, DIVERGENCE_BOUND
+        ),
+    );
 
     ok
 }

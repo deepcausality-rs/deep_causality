@@ -32,6 +32,7 @@ mod config;
 mod print_utils;
 
 use deep_causality_cfd::CfdFlow;
+use deep_causality_cfd::PhysicsError;
 use print_utils::BondRow;
 
 /// The working precision for the whole computation (the single alias to change).
@@ -78,12 +79,49 @@ fn main() {
         });
     }
 
+    // The parameter ladders. The bond ladder above says only that the *compression* has saturated;
+    // it cannot say whether the reported drag has a limit. These two sweep the parameters that
+    // actually move it: the penalization parameter (whose η → 0 limit is what would license calling
+    // the penalization integral a drag) and the mask smoothing width (a purely numerical choice).
+    let sweep_cap = *caps.last().expect("at least one bond cap");
+    let eta_rows = sweep("eta", &config::ETA_LADDER, |eta| {
+        config::build_config_with(L, sweep_cap, eta, config::SMOOTH_CELLS)
+    });
+    let smooth_rows = sweep("smoothing", &config::SMOOTH_LADDER, |s| {
+        config::build_config_with(L, sweep_cap, config::ETA, s)
+    });
+
     print_utils::render(&rows);
-    if print_utils::verify(&rows) {
+    print_utils::render_ladders(&eta_rows, &smooth_rows, sweep_cap);
+    if print_utils::verify(&rows, &eta_rows, &smooth_rows) {
         print_utils::summary();
     } else {
         std::process::exit(1);
     }
+}
+
+/// Run one parameter ladder, returning `(parameter value, C_d, interior max|u|)` per rung.
+fn sweep(
+    name: &str,
+    values: &[f64],
+    build: impl Fn(f64) -> Result<deep_causality_cfd::QttMarchConfig<FloatType>, PhysicsError>,
+) -> Vec<print_utils::LadderRow> {
+    values
+        .iter()
+        .map(|&v| {
+            let case = build(v).unwrap_or_else(|e| fail(&format!("QTT cylinder {name} config"), e));
+            let report = CfdFlow::march(&case)
+                .run()
+                .unwrap_or_else(|e| fail(&format!("QTT cylinder {name} march"), e));
+            let drag =
+                Into::<f64>::into(*report.series("drag").expect("drag series").last().unwrap());
+            print_utils::LadderRow {
+                value: v,
+                drag,
+                interior_max_speed: print_utils::interior_max_speed(&report, L),
+            }
+        })
+        .collect()
 }
 
 /// Print a stage-failure context and its error on stderr, then exit the process non-zero.

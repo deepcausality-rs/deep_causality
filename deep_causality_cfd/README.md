@@ -211,12 +211,18 @@ them, so a counterfactual is the same flow handed a different description.
 
 ## Everything Self-Verifies
 
-The crate ships its evidence. `verification/` holds thirteen runnable programs gated against
-analytic solutions, published references, or internal invariants. `studies/` holds the
-empirical probes that settled design questions before they were committed to specs, findings
-encoded as gates so the conclusions stay reproducible. `benches/` pins performance in
-`PERFORMANCE.md`. The plasma-blackout examples validate an uncalibrated finite-rate ionization network
-against RAM-C II flight data.
+The crate ships its evidence, and CI runs it. `verification/` holds thirteen runnable programs gated
+against analytic solutions, published references, or internal invariants;
+`.github/workflows/cfd_verification.yml` executes the fast nine on every pull request and the slow
+four nightly, failing the build on a non-zero exit. `studies/` holds the empirical probes that settled
+design questions before they were committed to specs, findings encoded as gates so the conclusions
+stay reproducible. `benches/` pins performance in `PERFORMANCE.md`.
+
+Every gate declares where its bound came from — `[reference]` for an analytic or published value,
+`[tripwire]` for one pinned from this code's own prior output — so a `[PASS]` says which of the two it
+is. The plasma-blackout examples compare an uncalibrated finite-rate ionization network against the
+RAM-C II flight anchor to **order of magnitude** (the earned band is ±0.70 decades, pinned from the
+measurement); that is a prediction landing in the right decade, not a per-point accuracy claim.
 
 ## Precision as a Parameter
 

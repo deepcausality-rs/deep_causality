@@ -51,6 +51,8 @@ fn main() {
     let resolutions = [8usize, 16, 32, 64];
     let amplitudes = [0.0, 0.1, 0.2, 0.3];
 
+    let mut finest_orders: Vec<(&str, f64, f64, f64)> = Vec::new();
+
     for (name, kernel) in [
         (
             "CONVECTIVE  i_X ω (interior product)",
@@ -70,13 +72,17 @@ fn main() {
         for &amp in &amplitudes {
             let (maxs, l2s): (Vec<f64>, Vec<f64>) =
                 resolutions.iter().map(|&n| kernel(n, amp)).unzip();
+            let (po, lo) = (observed_orders(&maxs), observed_orders(&l2s));
             println!(
                 "{amp:>5.2}  {:>10.2e} {:>10.2e}   {:>14}   {:>14}",
                 maxs.last().unwrap(),
                 l2s.last().unwrap(),
-                fmt_orders(&observed_orders(&maxs)),
-                fmt_orders(&observed_orders(&l2s)),
+                fmt_orders(&po),
+                fmt_orders(&lo),
             );
+            // The finest pair is what the second-order claim rests on; the coarse pairs dip at
+            // strong grading and recover, which the module doc describes.
+            finest_orders.push((name, amp, *po.last().unwrap(), *lo.last().unwrap()));
         }
     }
 
@@ -85,6 +91,43 @@ fn main() {
     println!("with grading; the order does not degrade. Structure (divergence-freeness) is exact");
     println!("at every amplitude regardless. (Cochains must be edge-integrals — see the module");
     println!("doc; omitting the ℓ factor mis-measures a false order-loss on graded meshes.)");
+
+    if !verify(&finest_orders) {
+        std::process::exit(1);
+    }
+}
+
+/// Minimum acceptable finest-pair observed order.
+///
+/// Evidence class: **reference**. Second order is the theoretical property of the discretisation
+/// under test (centered DEC stencils on a smoothly graded metric); the bound is a margin below that
+/// theoretical 2, not a value pinned from a measurement. Measured finest-pair orders are 1.98-2.00
+/// across every grading amplitude and both norms.
+const MIN_FINEST_ORDER: f64 = 1.9;
+
+/// Self-verification (exit nonzero on break): the finest-pair observed order holds at ~2 for both
+/// operators, in both norms, at every grading amplitude.
+///
+/// This harness previously had **no** `process::exit` at all — it tabulated the orders and always
+/// exited zero, so an operator that lost its second-order accuracy would have printed the loss and
+/// still passed. verification/README.md's stated "exits nonzero on break" convention did not hold.
+///
+/// BREAKING CONDITION: drop the `ℓ` edge-integral factor from the cochain construction (the exact
+/// inconsistency the module doc warns about) and the graded-mesh orders collapse below 1.9.
+fn verify(finest: &[(&str, f64, f64, f64)]) -> bool {
+    println!("\n--- graded-metric MMS gates (finest pair, theoretical order 2) ---");
+    let mut ok = true;
+    for &(name, amp, p_max, p_l2) in finest {
+        let pass = p_max >= MIN_FINEST_ORDER && p_l2 >= MIN_FINEST_ORDER;
+        println!(
+            "  [{}] [reference] {} @ grading {amp:.2}: max-norm p = {p_max:.3}, L2 p = {p_l2:.3} \
+             (>= {MIN_FINEST_ORDER})",
+            if pass { "PASS" } else { "FAIL" },
+            name.split_whitespace().next().unwrap_or(name),
+        );
+        ok &= pass;
+    }
+    ok
 }
 
 /// Relative max- and L2-norm errors of a discrete field against an analytic reference.

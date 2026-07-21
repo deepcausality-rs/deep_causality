@@ -10,6 +10,7 @@
 //! non-fatal warnings. [`merge`](Verdict::merge) composes two verdicts into one, so a mixed
 //! program (a campaign verdict plus a trajectory leg verdict) still ends in a single report.
 
+use crate::types::EvidenceClass;
 use crate::types::flow::study_warning::StudyWarning;
 use core::fmt;
 
@@ -19,14 +20,21 @@ pub struct GateOutcome {
     label: String,
     passed: bool,
     detail: String,
+    evidence: EvidenceClass,
 }
 
 impl GateOutcome {
-    pub(crate) fn new(label: impl Into<String>, passed: bool, detail: impl Into<String>) -> Self {
+    pub(crate) fn new(
+        label: impl Into<String>,
+        passed: bool,
+        detail: impl Into<String>,
+        evidence: EvidenceClass,
+    ) -> Self {
         Self {
             label: label.into(),
             passed,
             detail: detail.into(),
+            evidence,
         }
     }
 
@@ -43,6 +51,12 @@ impl GateOutcome {
     /// The gate's detail line.
     pub fn detail(&self) -> &str {
         &self.detail
+    }
+
+    /// Where this gate's bound came from — whether clearing it is evidence about the physics or
+    /// only evidence of non-regression.
+    pub fn evidence(&self) -> EvidenceClass {
+        self.evidence
     }
 }
 
@@ -105,7 +119,7 @@ impl fmt::Display for Verdict {
         writeln!(f, "--- {} ---", self.title)?;
         for o in &self.outcomes {
             let tag = if o.passed { "PASS" } else { "FAIL" };
-            writeln!(f, "  [{tag}] {}: {}", o.label, o.detail)?;
+            writeln!(f, "  [{tag}] [{}] {}: {}", o.evidence, o.label, o.detail)?;
         }
         for w in &self.warnings {
             writeln!(f, "  [WARN] {}", w.message())?;

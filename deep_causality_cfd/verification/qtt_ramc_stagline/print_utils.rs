@@ -8,7 +8,7 @@
 use crate::FloatType;
 use crate::config;
 use crate::config::{COMMS_BAND_RAD_S, RAMC_NE_REFERENCE, T_INF};
-use deep_causality_cfd::{PostShockState, StagnationOutcome};
+use deep_causality_cfd::{EvidenceClass, PostShockState, StagnationOutcome};
 
 /// Lower / upper bound of the post-shock "~10⁴ K" temperature band (K).
 const T2_MIN: f64 = 5_000.0;
@@ -57,21 +57,38 @@ pub fn verify(
     profile_bond: usize,
 ) -> bool {
     println!("\n--- RAM-C stagnation-line gates ---");
+    // T2_MIN/T2_MAX are a loose physical expectation, not a cited value -> tripwire.
     let g1 = gate(
         "T2 in the ~10^4 K post-shock band",
+        EvidenceClass::Tripwire,
         post.t2 > T2_MIN && post.t2 < T2_MAX,
     );
+    // Compared against RAMC_NE_REFERENCE, the RAM-C II flight anchor -> reference. The band WIDTH
+    // is a chosen chemistry-spread allowance, which is why the label sits on the comparison and the
+    // width is stated in the summary rather than implied by the PASS.
     let g2 = gate(
         "peak n_e within ~3× of RAM-C II (Park-2T controller)",
+        EvidenceClass::Reference,
         out.electron_density > NE_LO && out.electron_density < NE_HI,
     );
-    let g3 = gate("blackout onset (ω_p > comms band)", out.blackout);
-    let g4 = gate("relaxation profile O(1) rank", profile_bond <= BOND_CAP);
+    let g3 = gate(
+        "blackout onset (ω_p > comms band)",
+        EvidenceClass::Tripwire,
+        out.blackout,
+    );
+    let g4 = gate(
+        "relaxation profile O(1) rank",
+        EvidenceClass::Tripwire,
+        profile_bond <= BOND_CAP,
+    );
     g1 && g2 && g3 && g4
 }
 
-fn gate(label: &str, pass: bool) -> bool {
-    println!("  [{}] {label}", if pass { "PASS" } else { "FAIL" });
+fn gate(label: &str, evidence: EvidenceClass, pass: bool) -> bool {
+    println!(
+        "  [{}] [{evidence}] {label}",
+        if pass { "PASS" } else { "FAIL" }
+    );
     pass
 }
 
@@ -104,10 +121,15 @@ pub fn summary(out: &StagnationOutcome<f64>) {
 /// leaves its band, the two numbers say which channel moved.
 pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
     let mut ok = true;
+    // Every bound in this block is pinned from this harness's own measurement (see `baseline.txt`),
+    // so all of them are tripwires. The RAM-C II anchor they are *centred* on is external, but the
+    // band WIDTH is chosen — clearing it is evidence of non-regression, not of agreement with
+    // flight data. The gate text says so; the label makes it machine-visible.
     let mut gate = |label: &str, pass: bool, detail: String| {
         println!(
-            "  [{}] {label}: {detail}",
-            if pass { "PASS" } else { "FAIL" }
+            "  [{}] [{}] {label}: {detail}",
+            if pass { "PASS" } else { "FAIL" },
+            EvidenceClass::Tripwire
         );
         ok &= pass;
     };
@@ -149,10 +171,11 @@ pub fn verify_renewal_ab(ne_renewal: FloatType, ne_carried: FloatType) -> bool {
     let dec_carried = (ne_carried / RAMC_NE_REFERENCE).log10();
     let pass = ne_carried <= ne_renewal && dec_carried.abs() <= config::CARRIED_ARM_BAND_DECADES;
     println!(
-        "  [{}] carried mode self-limits inside the earned band: {dec_carried:+.2} dec vs the \
+        "  [{}] [{}] carried mode self-limits inside the earned band: {dec_carried:+.2} dec vs the \
          anchor, at or below the renewal arm (renewal kept: its fixed-point clock is the \
          network's Riccati timescale)",
         if pass { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
     );
     pass
 }

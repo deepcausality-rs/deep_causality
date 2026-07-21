@@ -9,7 +9,8 @@
 //! sequence merges into one verdict.
 
 use deep_causality_cfd::{
-    CaseRun, CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, GateSeq, StudyView,
+    CaseRun, CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, EvidenceClass, GateSeq,
+    StudyView,
 };
 use deep_causality_file::{FromTableRow, TableRow};
 use deep_causality_physics::PhysicsError;
@@ -311,8 +312,14 @@ fn verdict_renders_merges_and_exposes_outcomes_via_studyview_of() {
     assert!(pass.outcomes()[0].passed());
     assert!(pass.outcomes()[0].detail().contains("cf > 0"));
     assert!(pass.warnings().is_empty());
+    // `gate` records a tripwire: a bound with no declared provenance cannot claim to be a
+    // reference, so the rendered line carries the weaker class.
+    assert_eq!(pass.outcomes()[0].evidence(), EvidenceClass::Tripwire);
     let rendered = format!("{pass}");
-    assert!(rendered.contains("[PASS] physical thrust:"), "{rendered}");
+    assert!(
+        rendered.contains("[PASS] [tripwire] physical thrust:"),
+        "{rendered}"
+    );
     assert!(rendered.contains("=== All gates passed"), "{rendered}");
 
     // A failing verdict renders the FAIL line and the regression footer.
@@ -321,8 +328,22 @@ fn verdict_renders_merges_and_exposes_outcomes_via_studyview_of() {
         .check(&view);
     assert!(!fail.passed());
     let fr = format!("{fail}");
-    assert!(fr.contains("[FAIL] boom: forced regression"), "{fr}");
+    assert!(
+        fr.contains("[FAIL] [tripwire] boom: forced regression"),
+        "{fr}"
+    );
     assert!(fr.contains("REGRESSION"), "{fr}");
+
+    // `reference_gate` marks a bound backed by an analytic or published value.
+    let referenced = GateSeq::new("referenced")
+        .reference_gate("physical thrust", gate_positive_cf)
+        .check(&view);
+    assert_eq!(
+        referenced.outcomes()[0].evidence(),
+        EvidenceClass::Reference
+    );
+    let rr = format!("{referenced}");
+    assert!(rr.contains("[PASS] [reference] physical thrust:"), "{rr}");
 
     // merge: titles join, outcomes concatenate, passed is the conjunction.
     let merged = pass.merge(fail);
