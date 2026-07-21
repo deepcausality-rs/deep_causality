@@ -1,0 +1,35 @@
+website/cfd/src/content/tutorial/en/stage-2-weather.mdx
+  s_2dc68b59102c60::t_a6020c828cc1e3 93-97
+website/cfd/src/pages/why/index.astro
+  s_2dc68b59102c60::t_a6020c828cc1e3 284
+website/cfd/src/components/home/ExampleLadder.astro
+  s_2dc68b59102c60::t_9cc33ac187a4aa 15
+website/cfd/src/components/home/Hero.astro
+  s_2dc68b59102c60::t_74a52fd41f08bb 3,5-9,14-37,43-44,46,49,52,65
+  s_2dc68b59102c60::t_9cc33ac187a4aa 69
+website/cfd/src/components/home/ValidationSnapshot.astro
+  s_2dc68b59102c60::t_9cc33ac187a4aa 21
+website/cfd/src/pages/index.astro
+  s_2dc68b59102c60::t_6d33a9b87ec5e0 7,31-32
+website/cfd/src/components/home/Capabilities.astro
+  s_2dc68b59102c60::t_c0dedafa8ecb31 1-2,5,9-67,69,73-81,83-121,123-165,167-268
+  s_2dc68b59102c60::t_a6020c828cc1e3 3-4,6-8,68,70-72,82,122,166
+website/cfd/src/components/home/SolverStack.astro
+  s_2dc68b59102c60::t_9cc33ac187a4aa 51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "fa580763303e077e0917c403234edb2bb8727eb8",
+  "prompts": {},
+  "sessions": {
+    "s_2dc68b59102c60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "eb681f3f-dd62-45be-871a-9c70b08eb397",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
