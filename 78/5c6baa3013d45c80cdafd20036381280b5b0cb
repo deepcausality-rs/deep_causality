@@ -1,0 +1,19 @@
+website/cfd/src/styles/global.css
+  s_f0a6cfc98ba452::t_e8a49e0d3358a2 34-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "785c6baa3013d45c80cdafd20036381280b5b0cb",
+  "prompts": {},
+  "sessions": {
+    "s_f0a6cfc98ba452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3f6c795b-bdc3-49e9-81f7-6596da162c1a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
