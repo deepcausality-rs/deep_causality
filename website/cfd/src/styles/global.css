@@ -31,16 +31,16 @@ html, body {
   /* `clip` not `hidden`: hidden establishes a scroll container and kills
      position: sticky on descendants. */
   overflow-x: clip;
+  /* The one sanctioned animation of background-color on a large surface
+     (DESIGN.md §6). It fires only on an explicit theme toggle, never during
+     scroll or hover, so the repaint is paid once per user action. */
+  transition: background-color var(--dur-med) var(--ease-out),
+              color var(--dur-med) var(--ease-out);
 }
 
 :root { color-scheme: dark light; }
 [data-theme='light'] { color-scheme: light; }
 [data-theme='dark']  { color-scheme: dark; }
-
-html, body {
-  transition: background-color var(--dur-med) var(--ease-out),
-              color var(--dur-med) var(--ease-out);
-}
 
 a {
   color: var(--accent);
