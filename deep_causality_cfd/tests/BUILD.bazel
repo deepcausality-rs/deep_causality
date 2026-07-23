@@ -146,6 +146,7 @@ rust_test(
         # Crate to test
         "//deep_causality_cfd",
         # Internal dependencies
+        "//deep_causality_algebra",
         "//deep_causality_calculus",
         "//deep_causality_core",
         "//deep_causality_haft",

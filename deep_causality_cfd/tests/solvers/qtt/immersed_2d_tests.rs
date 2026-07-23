@@ -266,3 +266,68 @@ fn max_divergence(u: &CausalTensor<f64>, v: &CausalTensor<f64>, dx: f64) -> f64 
     }
     m
 }
+
+// --- Numerical-envelope validation (close-qtt-solver-envelope, item 13) ---------------------------
+//
+// The QTT constructors previously validated nothing — they destructured straight into Ok(Self{..}),
+// so η = 0 gave a −∞ forcing and marched. They now refuse an out-of-envelope configuration with the
+// same "name the limit and both values" quality the DEC family's cfl_check has.
+
+#[test]
+fn a_non_positive_eta_is_refused() {
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(64).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    // η = 0 (the −1/η = −inf case) and η < 0 both refused.
+    assert!(
+        QttImmersed2d::new(
+            L,
+            L,
+            dx,
+            dx,
+            0.005,
+            0.05,
+            mask.clone(),
+            0.0,
+            0.0,
+            0.0,
+            trunc
+        )
+        .is_err(),
+        "η = 0 must be refused (the forcing would be infinite)"
+    );
+    assert!(
+        QttImmersed2d::new(L, L, dx, dx, 0.005, 0.05, mask, 0.0, 0.0, -0.01, trunc).is_err(),
+        "η < 0 must be refused"
+    );
+}
+
+#[test]
+fn a_dt_beyond_the_penalization_limit_is_refused_and_names_it() {
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(64).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    // η = 0.02 ⇒ 2η = 0.04. dt = 0.05 > 0.04 trips the penalization limit; 0.05 < dx²/(4ν) = 0.771,
+    // so the diffusive limit is not the one firing.
+    let (dt, eta) = (0.05f64, 0.02f64);
+    let Err(err) = QttImmersed2d::new(L, L, dx, dx, dt, 0.05, mask, 0.0, 0.0, eta, trunc) else {
+        panic!("dt beyond 2η must be refused");
+    };
+    let msg = format!("{err:?}");
+    assert!(
+        msg.contains("penalization") && msg.contains("0.05") && msg.contains("0.04"),
+        "the diagnostic must name the limit and both values: {msg}"
+    );
+}
+
+#[test]
+fn an_in_envelope_configuration_constructs() {
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(64).unwrap();
+    let mask = cyl_mask(dx, &trunc);
+    // dt/η = 0.25 (well inside 2η), dt < dx²/(4ν): the shipped-style configuration.
+    assert!(
+        QttImmersed2d::new(L, L, dx, dx, 0.005, 0.05, mask, 0.0, 0.0, 0.02, trunc).is_ok(),
+        "an in-envelope configuration must construct"
+    );
+}

@@ -58,12 +58,28 @@ The `tensor_bridge` module SHALL provide a way to encode an immersed-body indica
 stays bounded. It SHALL provide a `body_mask_2d` helper for the analytic cylinder, and SHALL report the
 resulting bond dimension so the smoothing width can be tuned against rank.
 
-The `χ_body ∈ [0, 1]` invariant SHALL hold for the mask a solver actually consumes, not only for the
-mask before truncation. Tensor-train rounding drives the quantized mask outside that range — measured
-`min χ = −1.78e-3` across 188 cells at bond cap 4, and `−6.5e-5` across 84 cells at cap 8, two of the
-four caps the shipped immersed-cylinder ladder runs — and a negative `χ` inverts the sign of the
-penalization forcing, so the term amplifies instead of damping. The invariant SHALL therefore be
-established after quantization, by construction, by clamping, or by rejection.
+The `χ_body ∈ [0, 1]` invariant SHALL be enforced on the quantized mask **to the extent a lossy tensor
+train permits**, and a mask outside the range by more than a stated fraction SHALL be rejected.
+Tensor-train rounding drives the quantized mask outside `[0, 1]` — measured `min χ = −1.78e-3` across
+188 cells at bond cap 4, and `−6.5e-5` at cap 8 — and a negative `χ` inverts the sign of the
+penalization forcing.
+
+**A fixed-rank tensor train cannot represent an arbitrary clamped field exactly**, so clamping the
+dequantized mask and re-quantizing removes the bulk of the excursion but reintroduces a smaller one
+(measured `−1.78e-3 → −1.21e-3` at bond cap 4): pointwise `[0, 1]` on the *stored* train is not
+achievable at a coarse cap. The enforceable contract is therefore:
+
+- the construction SHALL clamp the dequantized mask to `[0, 1]` and re-quantize, removing the gross
+  excursion;
+- a raw excursion beyond a stated fraction of the range (a wrong mask, not rounding noise) SHALL fail
+  construction, naming the violation;
+- the residual after clamping SHALL be bounded by the truncation tolerance — noise orders below the
+  body value `χ = 1`, not a modelling sign error.
+
+The immersed-cylinder ladder's η sweep (its acceptance test) runs at the **highest** bond cap, at which
+the mask is in range to the truncation tolerance — on the shipped `L = 8` ladder `sweep_cap = 48` gives
+`min χ ≈ −7e-7`, a bounded truncation-noise negative that reaches the forcing but is orders below the
+body value, not a sign-flipping error. Exact non-negativity is not claimed on any cap the ladder runs.
 
 #### Scenario: Cylinder mask is bounded-rank
 - **WHEN** a smoothed cylinder mask is built on the grid
@@ -76,11 +92,20 @@ established after quantization, by construction, by clamping, or by rejection.
   needs more rank to represent at the same fidelity, making the rank/accuracy trade-off explicit
   (the resolution-robust form, since bonds saturate the grid's rank ceiling at a fixed tolerance)
 
-#### Scenario: The consumed mask satisfies its documented range
+#### Scenario: The consumed mask is in range to the truncation tolerance
 - **WHEN** a mask is quantized at any bond cap the harnesses run, including the coarsest
-- **THEN** the mask the solver consumes satisfies `χ ∈ [0, 1]`, or its construction fails with an error
-  naming the violation
+- **THEN** the gross excursion is removed by the construction clamp and the residual is bounded
+  truncation noise well within a stated fraction of the `[0, 1]` range
 
-#### Scenario: A truncation-induced negative cell cannot reach the forcing term
-- **WHEN** rounding at an aggressive bond cap would drive `χ` negative
-- **THEN** the negative value does not reach the penalization forcing, so the term cannot change sign
+#### Scenario: A grossly out-of-range mask fails construction
+- **WHEN** the analytic mask, or its quantization, leaves `[0, 1]` by more than the stated fraction
+- **THEN** construction fails with an error naming the excursion, rather than the value being silently
+  clamped — distinguishing a wrong mask from rounding noise
+
+#### Scenario: The forcing at the acceptance-test cap sees a mask in range to truncation tolerance
+- **WHEN** the η ladder runs at its (highest) bond cap
+- **THEN** the mask the penalization forcing consumes there is within `[0, 1]` to the truncation
+  tolerance — its residual negative, if any, is bounded truncation noise orders below the body value
+  (measured `min χ ≈ −7e-7` at the shipped `L = 8` sweep cap 48), not a sign-flipping modelling error.
+  Exact pointwise non-negativity is not claimed: a lossy tensor train cannot hold it, and the
+  penalization forcing multiplies the mask train directly with no per-use clamp

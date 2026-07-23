@@ -406,3 +406,30 @@ fn run_repinned_never_repins_on_a_thin_zeta_grid() {
         "a thin ζ grid (Nz < 5) can never locate a front, so no re-pin: {n_repin}"
     );
 }
+
+#[test]
+fn non_positive_pressure_is_rejected() {
+    // Item 12, fitted 3-D: the shared pressure guard refuses a non-hyperbolic cell here too.
+    let l = 3usize;
+    let n = 1usize << (3 * l);
+    let dx = 1.0 / (1usize << l) as f64;
+    let ident = CartesianIdentity3d::<f64>::new(l, l, l, dx, dx, dx, tr()).unwrap();
+    let fitted = CompressibleMarcher3dFitted::new(ident, dx, GAMMA, 0.002, 1.3, tr()).unwrap();
+    let mut state: EulerState3d<f64> = [
+        vec![1.0; n],
+        vec![0.0; n],
+        vec![0.0; n],
+        vec![0.0; n],
+        vec![2.5; n],
+    ];
+    state[1][n / 2] = 2.0;
+    state[4][n / 2] = 1.0;
+    let err = fitted.run(&state, 1).unwrap_err();
+    assert!(
+        matches!(
+            err.0,
+            deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(_)
+        ),
+        "a non-hyperbolic cell must be refused in fitted 3-D: {err:?}"
+    );
+}

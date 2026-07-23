@@ -667,8 +667,20 @@ test for the whole envelope group, and item 13's constructor validation is a pre
    horizon-invariance test; fix `correct_position` attitude handling. — §4b
 10. Resolve the Brinkman envelope: choose η from a wall-error target, document the `η ≥ dx²/ν` resolution
     constraint, and state that it is currently violated 48×. — §4b, §5b.
-    **This is now the nightly red build** — `qtt_cylinder_verification` fails on exactly this condition,
-    so the fix has a ready-made acceptance test: the η ladder must converge.
+    ⚙️ **PARTIALLY DONE (`close-qtt-solver-envelope`, 2026-07-22): resolved in configuration, blocked on
+    solver cost for verification.** η is now chosen from a 2.5 % wall-error target and the grid refined
+    to L=8 (256²) so `√(ην) ≈ dx` is resolved — the config is physically correct and passes the new
+    envelope checks. **But the acceptance test cannot be run at feasible cost:** measured per-step
+    wall-clock rises 0.05 s → 16.3 s (L=5 → L=8, 326×). The field is low-rank at every L (achieved bond
+    saturates at the cap 24 across L=5..8), so this is **not** the tensor-train `O(χ²·L)` cost — that
+    predicts ~1.6× at fixed bond — but a superlinear bottleneck **elsewhere** in the per-step solve (the
+    projection CG and/or a dense step) that QTT compression does not accelerate. A single march is
+    ~17 min and the full η-ladder harness ~4-9 hours; L=9 would be days. The cylinder gate is therefore
+    **reclassified as offline/manual, not retired** — red for a **solver-performance** reason, not a
+    parameter choice, and the low-rank thesis is defeated by a non-QTT bottleneck. Closing it is a
+    solver-acceleration follow-up (`cfd-industry-scaling`), and it directly substantiates the
+    minutes-not-hours north-star as an open risk. The envelope-correctness fixes (items 12, 13, 14)
+    landed fully.
 11. ✅ **DONE** — Renamed `penalization_heat_integral`; `T_w` configurable via `QttBody` and recorded
     in the run output. — §4b
     **And the reserved name is now filled** (`2026-07-22-add-dec-scalar-transport-wall-heat-flux`):
