@@ -274,3 +274,22 @@ fn peak_bond_tracks_growth_over_the_march() {
     );
     assert!(peak >= 1, "peak bond must be recorded: {peak}");
 }
+
+#[test]
+fn non_positive_pressure_is_rejected() {
+    // `close-qtt-solver-envelope` item 12: a cell with E < ½|m|²/ρ yields p < 0 with ρ > 0, so the
+    // density guard passes and the pressure guard must fire (uniform-across-the-family scenario).
+    let l = 4usize;
+    let n = (1usize << l) * (1usize << l);
+    let cart = CartesianIdentity::<f64>::new(l, l, 1.0 / 16.0, 1.0 / 16.0, tr()).unwrap();
+    let marcher = CompressibleMarcher2d::new(cart, GAMMA, 0.002, 1.3, tr()).unwrap();
+    // Valid everywhere (p = 0.4·2.5 = 1.0) except one non-hyperbolic cell (p = 0.4·(1−2) = −0.4).
+    let mut state: EulerState2d<f64> = [vec![1.0; n], vec![0.0; n], vec![0.0; n], vec![2.5; n]];
+    state[1][n / 2] = 2.0; // mx: u = 2, ½|m|²/ρ = 2
+    state[3][n / 2] = 1.0; // E = 1 < 2
+    let err = marcher.run(&state, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)),
+        "a non-hyperbolic cell must be refused: {err:?}"
+    );
+}

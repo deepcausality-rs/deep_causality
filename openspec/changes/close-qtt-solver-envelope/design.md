@@ -95,6 +95,18 @@ then rely on it.
 each use site would spread the same clamp across the penalization term, the drag contraction, the
 interior-speed diagnostic and the heat-flux observable — four places to forget.
 
+*Implementation finding (2026-07-22): clamp-at-construction cannot make the stored train exactly
+`[0, 1]`.* A fixed-rank tensor train cannot represent an arbitrary clamped field, so dequantize → clamp
+→ re-quantize only *reduces* the excursion (measured `−1.78e-3 → −1.21e-3` at bond cap 4), it does not
+remove it. D4's literal form — "establish `χ ∈ [0, 1]` after quantization by clamping" — is therefore
+not achievable on the stored train at a coarse cap. The enforceable contract, and what the spec now
+states, is: clamp to remove the bulk, **reject** a gross excursion (a wrong mask, not rounding noise),
+and accept a residual bounded by the truncation tolerance. The residual reaches the forcing but is
+truncation noise: on the shipped `L = 8` ladder the η sweep runs at `sweep_cap = 48`, where the mask
+measures `min χ ≈ −7e-7` — non-negative only *to truncation tolerance*, not exactly (the `sweep_cap`
+figures below are the `L = 5` values from when this note was first written; the table applies to the
+32² probe). The gross-excursion threshold `0.05` of the range is what keeps that residual small.
+
 *Clamp or reject:* clamping is the pragmatic choice, since a `−1.78e-3` excursion at bond 4 is
 truncation noise rather than a modelling error, and rejecting it would fail a bond ladder whose whole
 purpose is to run at coarse caps. But the clamp must be **recorded** when it engages beyond a
@@ -201,6 +213,105 @@ the `config.rs` the Impact section lists; and the mask's `[0,1]` breach is one-s
   are diagnostics, not headline results, and the audit already noted the geometry differs between rungs.
 - **Four near-identical edits across the marcher family invite drift.** → Prefer a shared guard the
   four call over four copies of the same check, so the next marcher inherits it.
+
+## Group 5 implementation findings (2026-07-22)
+
+Refining the grid (D5) is not a one-line `L` change: it interlocks with the guards groups 2–4 added,
+and with the η ladder's own resolution. Three findings, all forced by physics or by this change's own
+new checks — none by fitting to pass.
+
+**1. The η ladder resolves fully only at `L = 9`.** The ladder sweeps `η ∈ [0.128 … 0.008]`, but each
+point is physically meaningful only where the penalization layer is resolved, `η ≥ dx²/ν`:
+
+| L | grid | `dx²/ν` | resolved ladder η |
+|---|---|---|---|
+| 7 | 128² | 0.048 | 0.128, 0.064 (2/5) |
+| 8 | 256² | 0.012 | 0.128 … 0.016 (4/5) |
+| 9 | 512² | 0.003 | all five |
+
+D5 recommended `L = 7`/`L = 8`; D6 forbids editing the ladder. Those are in tension — below `L = 9` the
+ladder's smallest η values are under-resolved. **Resolution: refine to `L = 8`** (the largest grid that
+runs in reasonable wall-clock; 4/5 points resolved) and **keep the ladder unchanged**, reporting the
+`η = 0.008` tail as the documented under-resolved point rather than deleting it. Verifying the last
+point needs a separate `L = 9` run (its cost is the open question below).
+
+**2. `dt` is now forced by the group-4 envelope, not chosen.** At `L = 8`, `dx = 0.02454`, so the
+diffusive explicit-stability limit `dt ≤ dx²/(4ν) = 3.01e-3` binds — the old `dt = 0.004` is **refused
+by `QttImmersed2d::new`** (the check this change added). `dt` drops to `0.0025`, and `STEPS` rises
+`40 → 64` to hold the physical horizon `steps·dt = 0.16`. The envelope check governing the harness
+config is the intended coupling, not a coincidence.
+
+**3. The bond ladder's coarse caps are forced up by the group-3 mask guard.** A fixed bond cap
+represents a coarser mask on a finer grid: at `L = 8`, bond 4 gives `min χ = −0.15` (measured), which
+the mask `[0, 1]` guard rejects as a wrong mask (>5% of range). The bond ladder rises `[4, 8, 16, 24] →
+[24, 48]` — the rungs where the mask is valid (`min χ = −1.4e-3` at 24, `−7e-7` at 48) — still
+demonstrating rank convergence. This is the group-3 guard doing its job: bond 4 on 256² *is* a garbage
+mask.
+
+Every one of these is compelled: by the ladder's physics (1), by the envelope check this change added
+(2), or by the mask guard this change added (3).
+
+**4. The refined harness is not affordable — task 5.1a's finding, and it is a finding about the QTT
+thesis.** Measured per-step wall-clock for the immersed-cylinder march at a fixed bond cap 24:
+
+| grid | per-step | vs L=5 |
+|---|---|---|
+| L=5 (32²) | 0.05 s | 1× |
+| L=6 (64²) | 0.90 s | 18× |
+| L=7 (128²) | 6.51 s | 130× |
+| L=8 (256²) | 16.3 s | 326× |
+
+The field stays low-rank at every resolution: the marched velocity's achieved bond **saturates at the
+cap 24 at all of L=5, 6, 7, 8** (measured). So this is not rank growth — and, importantly, it is **not
+the tensor-train `O(χ²·L)` scaling either.** At a fixed bond, that model predicts only ~1.6× from L=5
+to L=8 (the core count rises 10 → 16; the χ factor cancels from the ratio, so a "large constant" cannot
+explain 326× — a constant cancels too). The measured 326× is therefore a **superlinear bottleneck
+outside the tensor-train arithmetic** — the divergence-free projection's CG (whose iteration count
+grows with resolution) and/or a dense `O(N²)` step in the per-march path — which QTT compression does
+not accelerate. Pinning the exact term is itself part of the follow-up; what is established here is that
+the low-rank *representation* is intact and the cost is elsewhere. A single 64-step march at L=8 is
+~17 min, and the acceptance harness (13 marches over the bond, η and smoothing ladders) is **~4–9 hours**;
+L=9 (which the η ladder needs and which forces `dt` down another ~4×) would be **days**.
+
+**Consequence:** the Brinkman envelope can be *resolved* (the L=8 config is physically correct and
+passes the envelope checks), but its acceptance test cannot be *run* at feasible cost with the current
+solver. This is exactly the risk `project_cfd_minutes_northstar` names — cylinder reference accuracy
+must run in minutes, and at the resolution that makes the drag physical it runs in hours. So group 5
+does not retire the known-failing status; it reclassifies it: the cylinder gate is red not because the
+physics is wrong but because a non-tensor-train part of the solver is too slow at the resolution the
+physics needs. Closing it is a **solver-performance** follow-up (the acceleration ladder in
+`cfd-industry-scaling`), whose first step is to profile which term (projection CG vs a dense step)
+carries the superlinear cost — not a
+parameter fix.
+ The `η`/`dt`/`STEPS`/`L`/bond-cap changes are all
+traceable to a stated constraint, per task 7.8.
+
+## Adversarial review (2026-07-23)
+
+A 6-dimension adversarial review (each finding independently verified) ran over the finished diff.
+It confirmed 8 findings, all in **documentation/spec accuracy** — the runtime was clean — and all
+traceable to one root: moving the harness `L = 5 → L = 8` in group 5 without updating claims written
+against the `L = 5` assumptions. Corrected:
+
+- **The cost explanation was wrong.** The design attributed the 326× slowdown to the tensor-train
+  `O(χ²·L)` cost "with a large constant". That is void — at a fixed bond a constant cancels from the
+  ratio, and `O(χ²·L)` predicts only ~1.6×. Measuring the achieved bond showed it saturates at the cap
+  24 at every L, so the superlinearity is a bottleneck *outside* the tensor-train arithmetic. The
+  finding is now stated correctly (see above).
+- **Two mask claims were stale.** `MASK_GROSS_EXCURSION`'s rationale cited `L = 5` "diagnostic rungs"
+  (bond 4/8) that the `L = 8` ladder no longer runs, and the clamp docstring plus a spec scenario
+  claimed the acceptance-cap mask is "non-negative" — measured `min χ ≈ −7e-7` at the shipped `L = 8`
+  cap 48, i.e. non-negative only to truncation tolerance. Both corrected; the spec scenario now states
+  the honest "in range to truncation tolerance" guarantee.
+- **A test did not guard what it named.** `the_clamp_removes_the_gross_mask_excursion` asserted only
+  `min > −0.05`, which the *un-clamped* raw mask already satisfies — so it passed with the clamp
+  removed. Replaced with `the_clamp_strictly_reduces_the_coarse_cap_excursion`, which compares the
+  clamped mask against the raw `quantize_2d` output and asserts the clamp strictly reduces the
+  excursion; verified to fail when the clamp is removed.
+
+The review earned its keep: every confirmed finding was a real overclaim, and the cost-explanation
+error was the kind of plausible-but-wrong reasoning this whole audit exists to catch — here in my own
+change.
 
 ## Migration Plan
 

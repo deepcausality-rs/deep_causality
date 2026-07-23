@@ -47,7 +47,12 @@ where
     /// explicit stepping needs `Δt ≲ η`).
     ///
     /// # Errors
-    /// Propagates operator-assembly errors.
+    /// [`PhysicsError::PhysicalInvariantBroken`] when the configuration is outside the numerical
+    /// envelope: a non-positive or non-finite `eta`, a `dt` beyond the penalization
+    /// explicit-stability limit `2η` (forward Euler on `du/dt = −u/η`), or any base-solver violation
+    /// from [`QttIncompressible2d::new`] (spacings, `dt`, `nu`, the diffusive limit). The diagnostic
+    /// names the limit and both the configured and the limiting value, as the DEC family's
+    /// `cfl_check` does. Propagates operator-assembly errors.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         lx: usize,
@@ -62,6 +67,22 @@ where
         eta: R,
         trunc: Truncation<R>,
     ) -> Result<Self, PhysicsError> {
+        // Penalization envelope, checked before the shared base envelope so an `eta` fault is named
+        // as one. With `η = 0` the forcing `−1/η` is infinite; explicit Euler on `du/dt = −u/η` is
+        // unstable for `dt > 2η`.
+        if !eta.is_finite() || eta <= R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                "QttImmersed2d: penalization parameter eta must be positive and finite, got {eta:?}"
+            )));
+        }
+        let two = R::one() + R::one();
+        let pen_limit = two * eta;
+        if dt > pen_limit {
+            return Err(PhysicsError::PhysicalInvariantBroken(alloc::format!(
+                "QttImmersed2d: dt {dt:?} exceeds the penalization explicit-stability limit 2·eta \
+                 = {pen_limit:?} (eta {eta:?}); forward Euler on du/dt = −u/eta is unstable beyond it"
+            )));
+        }
         let inner = QttIncompressible2d::new(lx, ly, dx, dy, dt, nu, trunc)?;
         Ok(Self {
             inner,

@@ -120,8 +120,9 @@ where
         ];
         let mut s_max = R::zero();
         let half = R::from_f64(0.5).unwrap_or_else(R::one);
-        let tiny = R::from_f64(1e-300).unwrap_or_else(R::zero);
-        for (((&rho, &mx), &my), &e) in u[0].iter().zip(&u[1]).zip(&u[2]).zip(&u[3]) {
+        for (cell, (((&rho, &mx), &my), &e)) in
+            u[0].iter().zip(&u[1]).zip(&u[2]).zip(&u[3]).enumerate()
+        {
             if rho <= R::zero() || !rho.is_finite() {
                 return Err(PhysicsError::PhysicalInvariantBroken(
                     "compressible marcher: density must stay positive".into(),
@@ -132,8 +133,10 @@ where
             // p = (γ−1)(E − ½(ρu²+ρv²)/ρ); reuse the 1-D EOS with the combined momentum magnitude.
             let mom2 = mx * mx + my * my;
             let p = (self.gamma - R::one()) * (e - half * mom2 / rho);
-            let p_floor = if p > tiny { p } else { tiny };
-            let c = (self.gamma * p_floor / rho).sqrt();
+            // Reject a non-hyperbolic state before it enters the flux (shared guard, all four
+            // marchers). `p` is positive below, so the acoustic speed needs no floor.
+            super::require_positive_pressure(p, cell)?;
+            let c = (self.gamma * p / rho).sqrt();
             f[0].push(mx);
             f[1].push(mx * vx + p);
             f[2].push(mx * vy);

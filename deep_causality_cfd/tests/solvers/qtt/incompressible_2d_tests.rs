@@ -146,3 +146,38 @@ fn stays_divergence_free_and_bounded_rank() {
         assert!(div <= 1e-5, "divergence grew: {div}");
     }
 }
+
+// --- Numerical-envelope validation (close-qtt-solver-envelope, item 13) ---------------------------
+
+#[test]
+fn a_negative_viscosity_is_refused() {
+    let dx = TAU / N as f64;
+    let trunc = Truncation::<f64>::by_bond(64).unwrap();
+    assert!(
+        QttIncompressible2d::new(L, L, dx, dx, 0.005, -0.1, trunc).is_err(),
+        "a negative kinematic viscosity must be refused"
+    );
+}
+
+#[test]
+fn a_non_positive_spacing_is_refused() {
+    let trunc = Truncation::<f64>::by_bond(64).unwrap();
+    assert!(
+        QttIncompressible2d::new(L, L, 0.0, 0.1, 0.005, 0.05, trunc).is_err(),
+        "dx = 0 must be refused"
+    );
+}
+
+#[test]
+fn a_dt_beyond_the_diffusive_limit_is_refused_and_names_it() {
+    let dx = TAU / N as f64; // 0.3927; dx²/(4·0.05) = 0.771
+    let trunc = Truncation::<f64>::by_bond(64).unwrap();
+    let Err(err) = QttIncompressible2d::new(L, L, dx, dx, 1.0, 0.05, trunc) else {
+        panic!("dt = 1.0 exceeds the diffusive limit 0.771");
+    };
+    let msg = format!("{err:?}");
+    assert!(
+        msg.contains("diffusive") && msg.contains('1'),
+        "the diagnostic must name the diffusive limit and the values: {msg}"
+    );
+}

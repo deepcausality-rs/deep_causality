@@ -19,13 +19,23 @@ use deep_causality_tensor::{CausalTensorTrain, Truncation};
 
 /// Kinematic viscosity.
 pub const NU: f64 = 0.05;
-/// Explicit-Euler time step (`dt/η = 0.25`, explicit-stable).
-pub const DT: f64 = 0.004;
-/// Marched steps (a transient measurement — a periodic box has no momentum source to hold the
-/// free-stream, so drag is read at a fixed horizon, not a true steady state).
-pub const STEPS: usize = 40;
-/// Brinkman penalization parameter (small → hard wall).
-pub const ETA: f64 = 0.016;
+/// Explicit-Euler time step. Chosen from the numerical envelope at `L = 8`, **not** from a `dt/η`
+/// ratio (`close-qtt-solver-envelope`). At `L = 8`, `dx = 2π/256 = 0.02454`, so the diffusive
+/// explicit-stability limit `dt ≤ dx²/(4ν) = 3.01e-3` binds — the previous `dt = 0.004` is now
+/// **refused** by `QttImmersed2d::new`. `dt = 0.0025` sits inside both that limit and the
+/// penalization limit `dt ≤ 2η = 0.024`.
+pub const DT: f64 = 0.0025;
+/// Marched steps. Raised from 40 so the physical horizon `steps·dt = 0.16` is unchanged after the
+/// `dt` reduction above (`0.16 / 0.0025 = 64`). A transient measurement — a periodic box has no
+/// momentum source to hold the free-stream, so drag is read at a fixed horizon, not a steady state.
+pub const STEPS: usize = 64;
+/// Brinkman penalization parameter, chosen from a **wall-error target** and the resolution constraint
+/// (`close-qtt-solver-envelope` item 10), not from an explicit-stability ratio. The penalization
+/// layer thickness is `√(ην)`; resolving it needs `η ≥ dx²/ν`. At `L = 8`, `dx²/ν = 0.01205`, and
+/// `η = 0.012` sits at that resolution floor, giving a layer `√(ην) = 0.0245 ≈ dx` and a slip error
+/// `√(ην)/U = 2.5 %` — the L=8 row of the design's wall-error table. The previous `η = 0.016` was
+/// pinned by `dt/η = 0.25` and left the layer 7× thinner than a cell at the old `L = 5`.
+pub const ETA: f64 = 0.012;
 /// Free-stream speed (the seed and the drag reference speed).
 pub const U_INF: f64 = 1.0;
 /// Cylinder radius as a fraction of the box length `2π`.

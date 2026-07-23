@@ -38,8 +38,13 @@ use print_utils::BondRow;
 /// The working precision for the whole computation (the single alias to change).
 pub type FloatType = f64;
 
-/// The grid: `2^L × 2^L` (32² — affordable, resolves the smoothed cylinder).
-const L: usize = 5;
+/// The grid: `2^L × 2^L`. Raised from `L = 5` (32²) to `L = 8` (256²) so the Brinkman penalization
+/// layer `√(ην)` is resolved by the grid (`close-qtt-solver-envelope` item 10): at `L = 5` the layer
+/// was 7× thinner than a cell and the reported `C_d` tracked the mask smoothing width, not the body.
+/// `L = 8` resolves four of the five η-ladder points (`η ≥ dx²/ν = 0.012`); the smallest, `η = 0.008`,
+/// is below that floor and is the under-resolved tail the ladder still carries (the full ladder is
+/// resolved only at `L = 9`). See the config `DT`/`ETA` derivations and `main`'s bond-cap note.
+const L: usize = 8;
 
 fn main() {
     println!("=== QTT immersed cylinder: Brinkman-penalized drag (tensor-train) ===\n");
@@ -54,8 +59,12 @@ fn main() {
         core::any::type_name::<FloatType>(),
     );
 
-    // Accuracy-vs-bond ladder: the same case at increasing round bond caps.
-    let caps = [4usize, 8, 16, 24];
+    // Accuracy-vs-bond ladder: the same case at increasing round bond caps. Raised from [4, 8, 16, 24]
+    // to [24, 48] for the finer L = 8 grid: a fixed low cap represents a coarser mask on a finer grid,
+    // and the mask [0, 1] guard (item 14) rejects bond 4/8/16 at L = 8 as a >5%-out-of-range mask
+    // (measured min χ = −0.15 at bond 4 on 256²). Bond 24 gives min χ = −1.4e-3, bond 48 gives −7e-7 —
+    // both valid — so these two rungs still demonstrate rank convergence on a mask the guard accepts.
+    let caps = [24usize, 48];
     let mut rows = Vec::new();
     for &cap in &caps {
         let case = config::build_config(L, cap).unwrap_or_else(|e| fail("QTT cylinder config", e));

@@ -169,3 +169,27 @@ fn run_rejects_non_positive_density() {
         "non-positive density must break the positivity invariant: {err:?}"
     );
 }
+
+#[test]
+fn non_positive_pressure_is_rejected() {
+    // Item 12, 3-D: a cell with E < ½|m|²/ρ is refused at the shared pressure guard.
+    let l = 3usize;
+    let n = 1usize << (3 * l);
+    let dx = 1.0 / (1usize << l) as f64;
+    let marcher =
+        CompressibleMarcher3d::<f64>::new((l, l, l), dx, GAMMA, 0.002, 1.3, tr()).unwrap();
+    let mut state: EulerState3d<f64> = [
+        vec![1.0; n],
+        vec![0.0; n],
+        vec![0.0; n],
+        vec![0.0; n],
+        vec![2.5; n],
+    ];
+    state[1][n / 2] = 2.0;
+    state[4][n / 2] = 1.0;
+    let err = marcher.run(&state, 1).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)),
+        "a non-hyperbolic cell must be refused in 3-D: {err:?}"
+    );
+}

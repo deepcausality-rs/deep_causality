@@ -65,9 +65,14 @@ Two properties are load-bearing:
 
 - **The header must describe the run.** The grid, horizon and step count in the baseline are the
   configuration whose numbers this page reports for that harness.
-- **A failing baseline is committed as failing.** `qtt_cylinder_verification`'s baseline records
-  `exit 1` and its two `NOT CONVERGING` ladder verdicts. Replacing it with a stale passing artifact
-  would hide a real measurement — see its known-failing note above.
+- **A failing baseline is committed as failing.** `qtt_cylinder_verification`'s committed baseline is
+  from its old `L = 5` configuration (`exit 1`, two `NOT CONVERGING` ladder verdicts). Since
+  `close-qtt-solver-envelope` the harness runs at `L = 8` with a wall-error-target `η` — physically
+  correct, but a single march is ~17 min and the full harness ~4-9 hours, so it is **offline / manual,
+  not in CI** (see the OFFLINE / MANUAL note in `.github/workflows/cfd_verification.yml`). The `L = 8`
+  baseline is therefore **pending an offline regeneration**; the `L = 5` artifact is retained as the
+  last completed run rather than replaced by a fabricated one. The gate stays red for a
+  solver-performance reason, not a parameter choice.
 
 Where a harness's default mode has no gates and its gated mode is a subcommand (the lid-driven
 cavity), the baseline carries both, under a labelled separator.
@@ -86,7 +91,7 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `dec_cylinder_wake_verification` | max divergence residual; log count | 3.3e-15; 80 | 0; 80 (= 2×40) | ≈ machine-ε; exact | 2000 steps, 93×32 | ~155 s |
 | `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.24–1.33 | **+4.3 %**; **+1.1 %** (over band top) | 96², Re=100, 1500 steps | ~510 s |
 | `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
-| `qtt_cylinder_verification` ⚠ | drag convergence vs bond; no-slip interior; **η and mask-smoothing ladders** | ΔC_d 1.9e-11; max\|u\| 4.2e-2; **neither ladder converges** | 0 (converged); 0 (no-slip) | bond converges to machine-ε; **4 %** of free-stream; **C_d has no η→0 limit and moves 6.1× with smoothing width** | 32², 4 bond caps + 2 ladders | ~37 s |
+| `qtt_cylinder_verification` ⚠ *(offline)* | drag convergence vs bond; no-slip interior; **η and mask-smoothing ladders** | env resolved at `L = 8` (η from 2.5 % wall-error target); acceptance run pending offline | — | penalization layer now resolved (`√(ην) ≈ dx`); gate red on **solver cost**, not parameters | 256², bond [24, 48] + 2 ladders | **~4-9 h (offline)** |
 | `qtt_park2t_blackout` | 6 LER gates (stability, exactness, RH band, lag+Saha, path-dependence, n_e>0) | all 6 PASS; ω_p 5.6e12 ≫ band | all gates pass | Gap-2 Tier-A verified (cross-refs, Tier-A disclaimers) | 32², 40 steps | ~1 s |
 | `qtt_sod` | Sod shock tube vs exact Riemann (L1 of ρ/u/p) | 0.018 / 0.027 / 0.015 | < 0.03 (1st-order Rusanov) | p\*=0.303 (exact), fan+contact+shock correct | 512 cells, t=0.2 | ~1 s |
 | `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | 1.085e19 (calibrated Park-2T); 2.991e19 (uncalibrated network) | ~1e19 (RAM-C II, order-of-mag) | **+0.0 dec** calibrated; **+0.48 dec** prediction (earned band ±0.70) | stagnation line | ~1 s |
