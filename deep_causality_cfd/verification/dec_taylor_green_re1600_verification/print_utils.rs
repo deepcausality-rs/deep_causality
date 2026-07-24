@@ -11,7 +11,7 @@
 
 use crate::FloatType;
 use crate::config;
-use deep_causality_cfd::Report;
+use deep_causality_cfd::{EvidenceClass, Report};
 use deep_causality_num::Zero;
 
 /// Render the dissipation curve: the CSV header + per-step rows on stdout, then the closing
@@ -70,31 +70,39 @@ pub fn verify(report: &Report<FloatType>, n: usize) -> bool {
     let tol = e0 * config::ft(1e-9);
     let mut ok = true;
     let mut prev = e0;
+    // Evidence class: **tripwire** for both. These are internal structure-preservation invariants
+    // of the discretisation (an unforced viscous flow cannot gain energy), not comparisons against
+    // an external reference. The DNS dissipation curve this run emits for comparison is NOT gated —
+    // at 16³ it is grossly under-resolved, which the README states.
+    //
+    // BREAKING CONDITIONS: break the viscous sign (or the projection) so energy grows, and gate 1
+    // fails; run with nu = 0 so nothing dissipates, and gate 2 fails.
+    let mut max_rise = config::ft(0.0);
     for &e_raw in &energy[1..] {
         let e = e_raw / volume;
-        if e > prev + tol {
-            eprintln!(
-                "FAIL: kinetic energy increased ({:.6e} -> {:.6e}) — spurious energy production",
-                Into::<f64>::into(prev),
-                Into::<f64>::into(e)
-            );
-            ok = false;
+        if e > prev + tol && e - prev > max_rise {
+            max_rise = e - prev;
         }
         prev = e;
     }
-    if prev >= e0 {
-        eprintln!(
-            "FAIL: final energy {:.6e} not below initial {:.6e} — no net dissipation",
-            Into::<f64>::into(prev),
-            Into::<f64>::into(e0)
-        );
-        ok = false;
-    }
-    if ok {
-        eprintln!(
-            "verified: kinetic energy is monotonically non-increasing and E*/E0 < 1 — DEC structure preservation holds"
-        );
-    }
+    let monotone = max_rise <= config::ft(0.0);
+    eprintln!(
+        "  [{}] [{}] kinetic energy monotonically non-increasing: max step-to-step rise {:.3e} (tol {:.1e})",
+        if monotone { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+        Into::<f64>::into(max_rise),
+        Into::<f64>::into(tol),
+    );
+    ok &= monotone;
+
+    let dissipated = prev < e0;
+    eprintln!(
+        "  [{}] [{}] net dissipation over the horizon: E*/E0 = {:.4}",
+        if dissipated { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+        Into::<f64>::into(prev / e0),
+    );
+    ok &= dissipated;
     ok
 }
 

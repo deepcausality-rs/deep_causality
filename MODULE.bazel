@@ -127,7 +127,7 @@ npm.npm_translate_lock(
     npmrc = "//website/cfd:.npmrc",
     pnpm_lock = "//website/cfd:pnpm-lock.yaml",
     # Same @astrojs/mdx -> satteri hoist as the other two sites: the CFD site
-    # renders its cookbook and worked examples from .mdx content collections.
+    # renders its blueprints and worked examples from .mdx content collections.
     public_hoist_packages = {
         "satteri": ["website/cfd"],
         "@astrojs/markdown-satteri": ["website/cfd"],

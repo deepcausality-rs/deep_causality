@@ -66,6 +66,7 @@ pub(crate) mod diagnostics;
 // cfd-native: the `Marcher` trait realization for `DecNsSolver`.
 pub(crate) mod energy_budget;
 mod marcher;
+pub(crate) mod scalar_transport;
 pub(crate) mod spectral_diffusion;
 pub(crate) mod step_output;
 pub(crate) mod surface_force;
@@ -85,9 +86,11 @@ pub use diagnostics::{
     dec_sample_velocity,
 };
 pub use energy_budget::EnergyBudget;
+pub use scalar_transport::DecScalarRate;
 pub use step_output::{RunOutput, StepOutput};
 pub use surface_force::{
     force_coefficient, fragment_area_vector, pressure_surface_force, viscous_surface_force,
+    wall_heat_flux,
 };
 #[cfg(feature = "std")]
 pub use uncertain_inflow::{

@@ -460,20 +460,60 @@ fn gate_guidance(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     )
 }
 
+/// (4f) The fine sweep is a genuine refinement of the coarse winner: it brackets that winner on both
+/// sides, and its branches flew distinct worlds.
+///
+/// The previous predicate was `min(fine miss) <= coarse-winner miss`. The fine candidate list always
+/// contains the coarse winner's exact bank angle (offset 0 at `k = FINE_SPAN_STEPS`), flown from the
+/// same paused onset with the same carried aim point, so the minimum is taken over a set that
+/// includes the value it is compared against — the inequality held identically and the gate could
+/// never fail. The improvement is still worth *printing*, so it stays in the detail line; what is
+/// now *gated* are the two properties that are not structurally guaranteed.
+///
+/// BREAKING CONDITIONS: mis-centre `fine_candidates` (drop the ± span, or clamp the winner to an
+/// envelope edge) and the bracketing check fails; collapse the fork so every branch returns the same
+/// outcome and the distinct-worlds check fails.
 fn gate_refinement(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     let fine = v.rows();
     let coarse = v.rounds().first().map(Vec::as_slice).unwrap_or(&[]);
     let coarse_committed = &coarse[pick_committed(coarse)];
     let committed = &fine[pick_committed(fine)];
+
+    // (a) The fine sweep brackets the coarse winner on both sides.
+    let lo = fine
+        .iter()
+        .map(|b| b.bank_deg)
+        .fold(ft(f64::MAX), FloatType::min);
+    let hi = fine
+        .iter()
+        .map(|b| b.bank_deg)
+        .fold(ft(f64::MIN), FloatType::max);
+    let brackets = lo < coarse_committed.bank_deg && hi > coarse_committed.bank_deg;
+
+    // (b) The branches flew distinct worlds: the fine misses are not all the same value.
+    let m_lo = fine
+        .iter()
+        .map(|b| b.outcome.miss_distance)
+        .fold(ft(f64::MAX), FloatType::min);
+    let m_hi = fine
+        .iter()
+        .map(|b| b.outcome.miss_distance)
+        .fold(ft(f64::MIN), FloatType::max);
+    let distinct = m_hi > m_lo;
+
     (
-        committed.outcome.miss_distance <= coarse_committed.outcome.miss_distance,
+        brackets && distinct,
         format!(
-            "fine {:.1} deg at {:.2} m vs coarse {:.0} deg at {:.2} m (0.5-deg resolution \
-             around the coarse winner, same onset fork, same aim)",
+            "fine {:.1} deg at {:.2} m vs coarse {:.0} deg at {:.2} m; sweep brackets \
+             [{:.1}, {:.1}] deg around the coarse winner, miss spread {:.3} m over {} branches",
             committed.bank_deg,
             committed.outcome.miss_distance,
             coarse_committed.bank_deg,
             coarse_committed.outcome.miss_distance,
+            lo,
+            hi,
+            m_hi - m_lo,
+            fine.len(),
         ),
     )
 }

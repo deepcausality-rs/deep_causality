@@ -9,11 +9,19 @@ Convergence: refinement ladder vs the analytic e^(-2 nu t) decay
   observed order = 2.18 (centered FD + spectral projection -> 2)
 
 Convection: nonlinear u.grad(u), u-component vs the closed form -1/2 sin(2x)
-  max abs error = 3.207e-3   (signal amplitude 0.500)
+  max abs error = 3.207e-3   (computed amplitude 0.497 vs analytic 0.500)
   (single-mode TG's convective term is a pure gradient the projection removes -- checked directly)
 
 Compression: MPS bond vs dense storage at the finest grid
   bond 32 vs 1024 dense elements = 32.0x
+
+--- Taylor-Green gates ---
+  [PASS] [reference] error decreases under refinement: N=8 9.79e-4 -> N=16 2.41e-4 -> N=32 5.32e-5
+  [PASS] [reference] finest-grid error within bound: N=32 error 5.316e-5 vs bound 2.000e-4 (vs the analytic decay)
+  [PASS] [reference] observed spatial order: 2.181 >= 1.8 (theoretical 2; 2nd order in space, 1st in time)
+  [PASS] [reference] convection amplitude matches the closed form: computed 4.968e-1 is 0.994x the analytic 5.000e-1, band [0.9, 1.1]
+  [PASS] [reference] convection error within bound: 3.207e-3 vs bound 1.000e-2 (closed form -1/2 sin 2x)
+  [PASS] [tripwire] post-projection divergence at the truncation floor: 4.140e-14 vs bound 1.000e-6 (projector identity; this measures TT truncation)
 
 Taylor-Green vortex reproduced: 2nd-order convergence to the analytic e^(-2 nu t) decay,
 correct nonlinear convection, and divergence-free to machine precision.

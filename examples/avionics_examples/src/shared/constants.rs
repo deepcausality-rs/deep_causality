@@ -24,7 +24,7 @@
 //!   Park's published `T_tr^0.7·T_ve^0.3`, electron channels at `T_e = T_ve` — with the
 //!   Millikan-White vibrational clock on the **evolved per-cell pressure** and the network on
 //!   the **evolved per-cell density**. The sheath is renewed each step: the stagnation-line A/B
-//!   under recombination measured renewal at +0.48 and carried at -0.33 decades of the flight
+//!   under recombination measured renewal at +0.35 and carried at -0.75 decades of the flight
 //!   anchor and kept renewal, whose fixed-point clock is the network's true Riccati timescale
 //!   (the old forward-only surrogate *needed* renewal against runaway, measured 268x; the
 //!   network self-limits either way).
@@ -124,8 +124,10 @@ pub const NOSE_RADIUS_M: f64 = 0.1524;
 
 // ── Park two-temperature closure (the calibrated RAM-C recipe)
 
-/// Reduced mass of the dominant relaxing collision pair, amu (N₂-N₂).
-pub const REDUCED_MASS_AMU: f64 = 7.0;
+/// Reduced mass of the dominant relaxing collision pair, amu. Defined once in `deep_causality_cfd`
+/// (next to the `Park2tClosure` it feeds) and re-exported here, so all three plasma-blackout examples
+/// and the `qtt_ramc_stagline` harness see the same value from a single source.
+pub use deep_causality_cfd::REDUCED_MASS_AMU;
 /// Characteristic vibrational temperature of N₂, K.
 pub const THETA_VIB: f64 = 3393.0;
 /// Sheath residence time `t_res = standoff/u₂` at the peak station, s. Held constant over the

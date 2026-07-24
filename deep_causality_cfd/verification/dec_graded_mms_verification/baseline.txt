@@ -20,3 +20,13 @@ amplitude — smooth grading retains second order. The error constant grows mild
 with grading; the order does not degrade. Structure (divergence-freeness) is exact
 at every amplitude regardless. (Cochains must be edge-integrals — see the module
 doc; omitting the ℓ factor mis-measures a false order-loss on graded meshes.)
+
+--- graded-metric MMS gates (finest pair, theoretical order 2) ---
+  [PASS] [reference] CONVECTIVE @ grading 0.00: max-norm p = 1.991, L2 p = 1.991 (>= 1.9)
+  [PASS] [reference] CONVECTIVE @ grading 0.10: max-norm p = 1.988, L2 p = 1.990 (>= 1.9)
+  [PASS] [reference] CONVECTIVE @ grading 0.20: max-norm p = 1.983, L2 p = 1.989 (>= 1.9)
+  [PASS] [reference] CONVECTIVE @ grading 0.30: max-norm p = 1.979, L2 p = 1.987 (>= 1.9)
+  [PASS] [reference] VISCOUS @ grading 0.00: max-norm p = 1.999, L2 p = 1.999 (>= 1.9)
+  [PASS] [reference] VISCOUS @ grading 0.10: max-norm p = 2.008, L2 p = 1.999 (>= 1.9)
+  [PASS] [reference] VISCOUS @ grading 0.20: max-norm p = 2.002, L2 p = 1.999 (>= 1.9)
+  [PASS] [reference] VISCOUS @ grading 0.30: max-norm p = 2.001, L2 p = 2.000 (>= 1.9)

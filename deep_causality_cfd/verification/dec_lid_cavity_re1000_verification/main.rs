@@ -38,7 +38,7 @@ mod config;
 mod print_utils;
 
 use config::RE;
-use deep_causality_cfd::{CfdFlow, StepView};
+use deep_causality_cfd::{CfdFlow, EvidenceClass, StepView};
 use std::env;
 
 /// The working precision for the whole CFD computation. **This is the single alias to change**: the
@@ -116,35 +116,59 @@ fn run_trend() {
     }
     // Gates from the pinning measurements (time-converged 0.252 / 0.133, ~25 % headroom) plus the
     // strict refinement-trend margin. Compared in native `FloatType` (the `f64` gates lift via `ft`).
+    //
+    // Evidence class: **tripwire** for all three. The two RMSE bounds carry headroom measured from
+    // their own pinning run, so clearing them is evidence of non-regression, not of agreement with
+    // Ghia — the Ghia table values are the reference the RMSE is *computed against*, and they are
+    // reported separately by the default (non-trend) mode. The trend margin is likewise a pinned
+    // strictness, not a published quantity.
+    //
+    // BREAKING CONDITIONS: a solver change that raises either RMSE past its bound fails gates 1-2;
+    // a refinement that stops improving (or reverses) fails gate 3.
     let coarse = results[0].1;
     let fine = results[1].1;
     let mut failed = false;
-    if coarse >= config::ft(config::TREND_COARSE_GATE) {
-        eprintln!(
-            "FAIL: {}² RMSE {:.4} above the pinned gate {}",
+    let mut gate = |label: &str, pass: bool, detail: String| {
+        println!(
+            "  [{}] [{}] {label}: {detail}",
+            if pass { "PASS" } else { "FAIL" },
+            EvidenceClass::Tripwire
+        );
+        if !pass {
+            failed = true;
+        }
+    };
+    println!("# refinement-trend gates (bounds pinned from this harness's own measurements)");
+    gate(
+        "coarse RMSE within its pinned bound",
+        coarse < config::ft(config::TREND_COARSE_GATE),
+        format!(
+            "{}² RMSE {:.4} vs pinned {}",
             config::TREND_GRIDS[0],
             Into::<f64>::into(coarse),
             config::TREND_COARSE_GATE
-        );
-        failed = true;
-    }
-    if fine >= config::ft(config::TREND_FINE_GATE) {
-        eprintln!(
-            "FAIL: {}² RMSE {:.4} above the pinned gate {}",
+        ),
+    );
+    gate(
+        "fine RMSE within its pinned bound",
+        fine < config::ft(config::TREND_FINE_GATE),
+        format!(
+            "{}² RMSE {:.4} vs pinned {}",
             config::TREND_GRIDS[1],
             Into::<f64>::into(fine),
             config::TREND_FINE_GATE
-        );
-        failed = true;
-    }
-    if fine >= coarse - config::ft(config::TREND_MARGIN) {
-        eprintln!(
-            "FAIL: refinement trend broken: {:.4} vs {:.4}",
+        ),
+    );
+    gate(
+        "RMSE strictly decreases under refinement",
+        fine < coarse - config::ft(config::TREND_MARGIN),
+        format!(
+            "fine {:.4} vs coarse {:.4} (margin {})",
             Into::<f64>::into(fine),
-            Into::<f64>::into(coarse)
-        );
-        failed = true;
-    }
+            Into::<f64>::into(coarse),
+            config::TREND_MARGIN
+        ),
+    );
     if failed {
         std::process::exit(1);
     }

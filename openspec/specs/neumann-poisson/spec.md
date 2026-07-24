@@ -1,5 +1,12 @@
-## ADDED Requirements
+# neumann-poisson
 
+## Purpose
+
+The pressure-Poisson solve under Neumann boundary conditions on wall-bounded boxes: a
+direct spectral solve where the geometry is uniform, and a Jacobi-preconditioned CG
+fallback everywhere else.
+
+## Requirements
 ### Requirement: Direct spectral Neumann solve on uniform wall-bounded boxes
 `deep_causality_topology` SHALL solve the gauge-fixed grade-0 Poisson
 problem with no-flux (Neumann) wall semantics directly on uniform Euclidean

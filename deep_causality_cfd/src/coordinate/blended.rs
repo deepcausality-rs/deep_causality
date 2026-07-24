@@ -13,9 +13,17 @@
 //! T_λ = (1−λ)·T_cart + λ·T_fit  ⇒  J_λ = ∂(x,y)/∂(ξ,η) = (1−λ)·J_cart + λ·J_fit.
 //! ```
 //!
-//! Both charts share the `(ξ, η)` patch with compatible orientation, so `det J_λ` keeps one sign across
-//! the sweep (the validity residual the `qtt_blend_metric` study measured — gate BM-A), and the constructor
-//! rejects a fold. The marcher consumes only the **inverse** metric `∂(ξ,η)/∂(x,y)` and the volume factor,
+//! Both charts share the `(ξ, η)` patch with compatible orientation. That is *not* on its own enough to
+//! keep `det J_λ` one-signed: a linear blend of two orientation-compatible Jacobians can still fold, and
+//! configurations this constructor accepts do — a wide fan at low blend (`r0 = 0.1`, `dr = 5`, `dθ = 5`,
+//! `λ = 0.2`) reverses the sign of `det`. One sign is therefore a property to be **checked**, not derived.
+//!
+//! So [`BlendedMap::new`] scans `det J_λ` over the closed `(ξ, η)` domain and refuses the map if it is
+//! non-finite, changes sign, or falls below [`DET_FLOOR_FRACTION`] of the geometric scale `dr × span_y`.
+//! The shipped blend sweep passes with margin: `qtt_blend_metric` (gate BM-A) measures `min|det J| ≈ 1.5`
+//! against a scale of the same order, about six orders above the floor.
+//!
+//! The marcher consumes only the **inverse** metric `∂(ξ,η)/∂(x,y)` and the volume factor,
 //! obtained by inverting the `2×2` forward Jacobian pointwise:
 //!
 //! ```text
@@ -35,6 +43,16 @@ use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{
     CausalTensorTrain, CausalTensorTrainOperator, TensorTrain, TensorTrainOperator, Truncation,
 };
+
+/// Floor on `|det J|` as a fraction of the geometric scale `dr x span_y`, below which the map is
+/// rejected as near-singular.
+///
+/// Relative, not absolute: `det` is an area ratio, `-dr*span_y` in the Cartesian limit and
+/// `-r*dr*dtheta` in the fitted limit, so an absolute floor would mean different things at different
+/// geometries. The value leaves wide margin against the shipped blend sweep, whose `qtt_blend_metric`
+/// measurement records `min|det J| ~ 1.5` against a scale of the same order — i.e. the sweep sits
+/// about six orders above this floor.
+const DET_FLOOR_FRACTION: f64 = 1.0e-6;
 
 /// Geometry + blend parameters for [`BlendedMap`]: the `2^lx × 2^ly` lattice, the polar fan
 /// `r ∈ [r0, r0+dr]`, `θ ∈ [theta0, theta0+dtheta]`, and the blend `lambda ∈ [0, 1]`.
@@ -89,6 +107,11 @@ where
     deta_dy: CausalTensorTrain<R>,
     // The Jacobian volume factor |det J_λ|.
     jacobian: CausalTensorTrain<R>,
+    // The validity scan's measured minimum |det J_λ| over the closed domain, and the floor it was
+    // accepted against. Retained so a consumer reads the shipped scan's number rather than
+    // recomputing the determinant algebra — see `min_abs_det`.
+    min_abs_det: R,
+    det_floor: R,
     trunc: Truncation<R>,
 }
 
@@ -160,10 +183,84 @@ where
             a * d - b * c
         };
 
-        // Validity (gate BM-A) holds **by construction**: the Cartesian-capture rectangle and the polar fan
-        // share orientation (the `span_y` chord is taken from the same geometry), so `det J_λ` keeps one
-        // sign and stays bounded away from zero across `λ ∈ [0,1]` — the `qtt_blend_metric` measurement. The
-        // blended inverse metric = cofactor / det, sampled analytically (both charts are analytic).
+        // Enforce invertibility before building anything from `1/det`.
+        //
+        // The marcher consumes the **inverse** metric, whose entries are `cofactor / det`, so a sign
+        // change or a near-zero determinant yields values no downstream consumer can distinguish
+        // from a valid map. This scan was previously absent: the module doc claimed the constructor
+        // "rejects a fold" and that one-signed `det J_λ` holds "by construction", but the support
+        // offered was the `qtt_blend_metric` measurement for one geometry — evidence for that case,
+        // not a property of the inputs this constructor accepts.
+        //
+        // The scan covers the **closed** domain `[0,1]²`, one row and column more than the metric
+        // trains sample. `sample_grid` forms `ξ = i / nx` for `i` in `0..nx`, so it never evaluates
+        // the far edges `ξ = 1` or `η = 1` — but the chart is claimed invertible over the whole
+        // computational domain, and the fan's outer boundary is part of it. Scanning only the
+        // sampled points admits maps that degenerate exactly on that boundary: for `r0 = 0.1`,
+        // `dr = 5`, `dθ = 5`, `λ` just under the fold threshold, `det` approaches zero at the
+        // `(ξ, η) = (1, 1)` corner and the sampled minimum falls off only as `~1/nx`, so the floor
+        // is not reached until `lx ≈ 20`. Closing the domain costs `nx + ny + 1` extra evaluations.
+        //
+        // This divides (`i / nxr`) the same way `sample_grid` does rather than multiplying by
+        // `dxi = 1/nx`. The two agree bit-for-bit only because `nx` is a power of two; relying on
+        // that would make the scan's agreement an accident of the lattice rather than a property of
+        // the code.
+        let nxr = R::from_usize(nx)
+            .ok_or_else(|| PhysicsError::NumericalInstability("from_usize(nx) failed".into()))?;
+        let nyr = R::from_usize(ny)
+            .ok_or_else(|| PhysicsError::NumericalInstability("from_usize(ny) failed".into()))?;
+        // `det` is an area ratio — `−dr·span_y` in the Cartesian limit, `−r·dr·dθ` in the fitted
+        // limit — so the floor is relative to that scale. An absolute floor would mean different
+        // things at different geometries.
+        let det_scale = dr * span_y;
+        let det_floor = R::from_f64(DET_FLOOR_FRACTION).unwrap_or_else(R::zero) * det_scale;
+        let (mut det_min_abs, mut det_sign_positive) = (None::<R>, None::<bool>);
+        for i in 0..=nx {
+            let xi = R::from_usize(i)
+                .ok_or_else(|| PhysicsError::NumericalInstability("from_usize(i) failed".into()))?
+                / nxr;
+            for j in 0..=ny {
+                let eta = R::from_usize(j).ok_or_else(|| {
+                    PhysicsError::NumericalInstability("from_usize(j) failed".into())
+                })? / nyr;
+                let det = det_at(xi, eta);
+                if !det.is_finite() {
+                    return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                        "BlendedMap: non-finite Jacobian determinant at the (xi, eta) sample \
+                         ({i}, {j})"
+                    )));
+                }
+                let positive = det > R::zero();
+                match det_sign_positive {
+                    None => det_sign_positive = Some(positive),
+                    Some(first) if first != positive => {
+                        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                            "BlendedMap: the map folds — the Jacobian determinant changes sign by \
+                             the (xi, eta) sample ({i}, {j}), so the chart is not invertible over \
+                             the computational domain"
+                        )));
+                    }
+                    Some(_) => {}
+                }
+                let mag = det.abs();
+                if det_min_abs.is_none_or(|m| mag < m) {
+                    det_min_abs = Some(mag);
+                }
+            }
+        }
+        if let Some(min_abs) = det_min_abs
+            && min_abs < det_floor
+        {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "BlendedMap: the map is near-singular — min |det J| is below {DET_FLOOR_FRACTION} \
+                 x the geometric scale (dr x span_y); the inverse metric (cofactor / det) would be \
+                 unbounded"
+            )));
+        }
+
+        // The blended inverse metric = cofactor / det, sampled analytically (both charts are
+        // analytic). Every division below is safe: the scan above established `|det| >= det_floor`
+        // with one sign over the closed domain, which contains every point sampled here.
         let neg = R::zero() - one;
         let dxi_dx = quantize_2d(
             &sample_grid(lx, ly, |xi, eta| {
@@ -214,8 +311,21 @@ where
             dxi_dy,
             deta_dy,
             jacobian,
+            min_abs_det: det_min_abs.unwrap_or_else(R::zero),
+            det_floor,
             trunc,
         })
+    }
+
+    /// The validity scan's measured `min |det J_λ|` over the closed `(ξ, η)` domain, and the floor
+    /// it was accepted against ([`DET_FLOOR_FRACTION`] of the geometric scale `dr × span_y`).
+    ///
+    /// Exposed so a study reporting the blend's validity margin reads the number the **shipped**
+    /// scan measured, rather than recomputing the determinant algebra alongside it. A study that
+    /// keeps its own copy of the Jacobian can agree with this one today and drift from it tomorrow,
+    /// which makes its gate a measurement of the copy.
+    pub fn det_margin(&self) -> (R, R) {
+        (self.min_abs_det, self.det_floor)
     }
 
     /// The blend parameter `λ ∈ [0, 1]` (0 = Cartesian capture, 1 = body-fitted).

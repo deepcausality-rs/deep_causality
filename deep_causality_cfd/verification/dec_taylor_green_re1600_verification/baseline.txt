@@ -134,3 +134,5 @@ t_star,kinetic_energy_per_vol,dissipation_rate
 
 marched to t* = 10.05: E*/E0 = 0.8929, peak dissipation 0.002468 at t* = 10.05
 compare the dissipation column against the published Re-1600 DNS curve (references.md).
+  [PASS] [tripwire] kinetic energy monotonically non-increasing: max step-to-step rise 0.000e0 (tol 1.2e-10)
+  [PASS] [tripwire] net dissipation over the horizon: E*/E0 = 0.8929

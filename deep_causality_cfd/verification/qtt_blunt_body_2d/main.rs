@@ -22,7 +22,7 @@
 //! ```
 
 use deep_causality_cfd::{
-    BlendedMap, BlendedMapConfig, CompressibleMarcher2d, EulerState2d, quantize_2d,
+    BlendedMap, BlendedMapConfig, CompressibleMarcher2d, EulerState2d, EvidenceClass, quantize_2d,
 };
 use deep_causality_tensor::{CausalTensor, Truncation};
 
@@ -122,18 +122,37 @@ fn main() {
     }
 
     // Gate BB-A: the fitted bond is O(10) and resolution-stable (does not grow like √side).
+    // Evidence class: **tripwire**. These are structural rank claims about this construction, not
+    // comparisons against a published value — verification/README.md classifies this harness as
+    // "structural / rank-lever", gating rank rather than physical accuracy.
+    //
+    // BREAKING CONDITION: make the fitted encode grow with resolution (e.g. misalign the chart) and
+    // BB-A fails.
     let fitted_max = *fitted.iter().max().unwrap();
     let fitted_stable = fitted.windows(2).all(|x| x[1] <= x[0] + 1);
-    if fitted_max > 12 || !fitted_stable {
+    let bb_a = fitted_max <= 12 && fitted_stable;
+    println!(
+        "  [{}] [{}] BB-A fitted χ bounded and resolution-stable: bonds {fitted:?} (max {fitted_max} <= 12)",
+        if bb_a { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+    );
+    if !bb_a {
         failures.push(format!(
             "BB-A: fitted χ not bounded/resolution-stable (bonds {fitted:?})"
         ));
     }
 
     // Gate BB-B: the Cartesian capture grows with resolution and overtakes the fitted bond.
+    // BREAKING CONDITION: flatten the captured field so its rank stops growing and BB-B fails.
     let capture_grows = capture[2] > capture[0];
     let capture_overtakes = capture[2] >= 2 * fitted[2];
-    if !capture_grows || !capture_overtakes {
+    let bb_b = capture_grows && capture_overtakes;
+    println!(
+        "  [{}] [{}] BB-B Cartesian capture is a growing rank cost: capture {capture:?} vs fitted {fitted:?}",
+        if bb_b { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+    );
+    if !bb_b {
         failures.push(format!(
             "BB-B: Cartesian capture is not a growing rank cost (capture {capture:?}, fitted {fitted:?})"
         ));

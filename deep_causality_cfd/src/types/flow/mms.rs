@@ -162,8 +162,22 @@ impl<R: CfdScalar> Solver<R> for MmsCase<R> {
                 report.add_series("mms_error", vec![l2_residual(&rhs, &reference)]);
 
                 // Divergence-free ⇒ continuity RHS = 0.
-                let continuity =
-                    compressible_ns_continuity_rhs(&rho, &u, &[R::zero(); 3], R::zero());
+                //
+                // `div_u` is the trace of the manufactured Jacobian, not a literal zero. Passed as
+                // `R::zero()` (as it was) the kernel receives zeros for both `∇ρ` and `∇·u`, so the
+                // residual is identically 0 for any implementation linear in those arguments and
+                // the gate on it carried no information about the continuity assembly. Deriving
+                // `∇·u` from `grad_u` makes the zero a *result*: the manufactured field being
+                // divergence-free is what produces it.
+                //
+                // `∇ρ` stays zero because constant density is part of the manufactured solution,
+                // not an assumption about the kernel.
+                //
+                // BREAKING CONDITION: perturb the manufactured Jacobian so its trace is non-zero,
+                // or break `continuity_rhs_kernel`'s `ρ ∇·u` term, and this residual leaves 0.
+                let j = grad_u.value();
+                let div_u = j[0][0] + j[1][1] + j[2][2];
+                let continuity = compressible_ns_continuity_rhs(&rho, &u, &[R::zero(); 3], div_u);
                 report.add_series("continuity_error", vec![continuity.abs()]);
             }
         }

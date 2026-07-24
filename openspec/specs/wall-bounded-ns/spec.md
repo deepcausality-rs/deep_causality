@@ -1,5 +1,11 @@
-## ADDED Requirements
+# wall-bounded-ns
 
+## Purpose
+
+The solver's acceptance of wall-bounded manifolds: which lattices the DEC Navier–Stokes
+solver admits once one or more axes are open rather than periodic, and what it must reject.
+
+## Requirements
 ### Requirement: Solver acceptance of wall-bounded manifolds
 `DecNsSolver` SHALL accept manifolds over mixed-periodicity and all-walls
 uniform lattices, wiring the constrained Leray projection, the no-slip

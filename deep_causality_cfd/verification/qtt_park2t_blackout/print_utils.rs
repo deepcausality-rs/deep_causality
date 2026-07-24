@@ -8,7 +8,7 @@
 
 use crate::FloatType;
 use crate::config;
-use deep_causality_cfd::{Report, ler_step};
+use deep_causality_cfd::{EvidenceClass, Report, ler_step};
 use deep_causality_physics::{
     PARK_NO_IONIZATION_ACTIVATION_TEMP, PARK_NO_IONIZATION_EXPONENT, PARK_NO_IONIZATION_PREFACTOR,
     Temperature, arrhenius_rate_kernel, park2t_ionization_surrogate_kernel,
@@ -32,10 +32,41 @@ fn gate_stability_at_stiffness() -> bool {
     (x - x_eq).abs() < 1.0 && euler > x_eq * 100.0
 }
 
-/// (ii) Exactness of the closed-form exponential on the linear relaxation (equality, not tolerance).
+/// Number of sub-steps in the independent reference integration of `dx/dt = (x_eq − x)/τ`.
+const REFERENCE_SUBSTEPS: usize = 1_000_000;
+/// Tolerance on `|ler_step − reference| / (x_eq − x₀)`.
+///
+/// Sized from the reference's own truncation error, not from the measurement. Forward Euler with
+/// `N` sub-steps gives `(1 − a/N)^N` against the exact `exp(−a)` with `a = Δt/τ`, a relative error
+/// of `a²/(2N)`. At `a = 0.3` and `N = 10⁶` that is `4.5e-8`, so `1e-6` clears the reference's own
+/// error by ~30× while still failing any real defect (a sign flip or a mis-scaled `τ` moves this
+/// by `O(1)`).
+const LER_REFERENCE_TOL: f64 = 1.0e-6;
+
+/// (ii) The closed-form relaxation kernel agrees with an **independently-derived** reference: a
+/// converged sub-stepped integration of `dx/dt = (x_eq − x)/τ`.
+///
+/// This gate previously compared `ler_step(..)` against a re-transcription of its own body
+/// (`x_eq − (x_eq − x)·exp(−Δt/τ)`) with `==`. Both sides were the same expression at the same
+/// monomorphization, so they were bit-identical by construction and no input could make the gate
+/// fail. Integrating the ODE numerically is a genuinely separate derivation of the same quantity.
+///
+/// BREAKING CONDITION: flip the sign of the exponent in `ler_step`, or scale `τ`, and the two
+/// disagree by `O(1)` relative — far outside `LER_REFERENCE_TOL`.
 fn gate_exponential_exactness() -> bool {
-    let (x, x_eq, tau, dt) = (300.0_f64, 7000.0_f64, 0.01_f64, 0.003_f64);
-    ler_step(x, x_eq, tau, dt) == x_eq - (x_eq - x) * (-(dt / tau)).exp()
+    let (x0, x_eq, tau, dt) = (300.0_f64, 7000.0_f64, 0.01_f64, 0.003_f64);
+
+    // Independent reference: sub-stepped forward Euler on the relaxation ODE. It never calls
+    // `ler_step`, and it converges to the same limit from a different algorithm.
+    let h = dt / REFERENCE_SUBSTEPS as f64;
+    let mut reference = x0;
+    for _ in 0..REFERENCE_SUBSTEPS {
+        reference += h * (x_eq - reference) / tau;
+    }
+
+    let closed_form = ler_step(x0, x_eq, tau, dt);
+    let rel = (closed_form - reference).abs() / (x_eq - x0).abs();
+    rel < LER_REFERENCE_TOL
 }
 
 /// (iii) The mandatory Rankine–Hugoniot jump lands peak `T_post` in the ~10⁴ K band at `M ≈ 25`.
@@ -50,8 +81,15 @@ fn gate_rh_temperature_band() -> bool {
     }
 }
 
-/// (iv) The ionization lag is real, `τ_ion` is grounded in the dominant rate (it varies with `T`),
-/// and the Saha limit is recovered as `τ → 0`.
+/// (iv) The ionization lag is real and `τ_ion` is grounded in the dominant rate (it varies with `T`).
+///
+/// The former "Saha limit recovered as `τ → 0`" conjunct has been removed. It called
+/// `ler_step(0, α_eq, 0, Δt)`, which takes an explicit early `return x_eq` when `τ <= 0`, then
+/// asserted the result equalled `α_eq` — a check of a hard-coded return statement, true for every
+/// input. The two surviving conjuncts are falsifiable:
+///
+/// BREAKING CONDITIONS: invert the sign of the Arrhenius activation exponent and `grounded` fails;
+/// make `ler_step` jump straight to equilibrium and `lagged < α_eq` fails.
 fn gate_lag_and_saha_limit() -> bool {
     let n = config::NUMBER_DENSITY;
     let t = match Temperature::new(8000.0_f64) {
@@ -74,10 +112,9 @@ fn gate_lag_and_saha_limit() -> bool {
         .value()
     };
     let grounded = rate(9000.0) > rate(6000.0);
-    // Lag: a fast ramp (small Δt) leaves α below equilibrium; Saha: τ → 0 jumps to α_eq.
+    // Lag: a fast ramp (small Δt) leaves α below equilibrium.
     let lagged = ler_step(0.0, alpha_eq, 0.01, 1.0e-5);
-    let saha = ler_step(0.0, alpha_eq, 0.0, 1.0e-5);
-    grounded && alpha_eq > 0.0 && lagged < alpha_eq && (saha - alpha_eq).abs() < 1e-12
+    grounded && alpha_eq > 0.0 && lagged < alpha_eq
 }
 
 /// (v) Counterfactual path-dependence: two temperature histories reaching the same final target carry
@@ -106,36 +143,48 @@ fn gate_electrons_produced(report: &Report<FloatType>) -> bool {
 
 /// Run all six gates, printing a labeled PASS/FAIL line for each; returns `true` only if all pass.
 pub fn verify(report: &Report<FloatType>) -> bool {
-    let gates: [(&str, bool); 6] = [
+    // Evidence class per gate. Only (ii) compares against a derivation independent of this
+    // codebase (a sub-stepped integration of the relaxation ODE); the rest are internal
+    // invariants or loosely-stated physical bands, so they detect regression only.
+    let gates: [(&str, EvidenceClass, bool); 6] = [
         (
             "(i)   stability at stiffness (τ=Δt/1000)",
+            EvidenceClass::Tripwire,
             gate_stability_at_stiffness(),
         ),
         (
-            "(ii)  closed-form exponential exactness",
+            "(ii)  relaxation kernel vs independent sub-stepped reference",
+            EvidenceClass::Reference,
             gate_exponential_exactness(),
         ),
         (
             "(iii) RH jump peak T_post in ~10⁴ K band",
+            EvidenceClass::Tripwire,
             gate_rh_temperature_band(),
         ),
         (
-            "(iv)  ionization lag real + Saha limit",
+            "(iv)  ionization lag real + rate grounded in T",
+            EvidenceClass::Tripwire,
             gate_lag_and_saha_limit(),
         ),
         (
             "(v)   counterfactual path-dependence",
+            EvidenceClass::Tripwire,
             gate_path_dependence(),
         ),
         (
             "(vi)  ionized species present (n_e>0)",
+            EvidenceClass::Tripwire,
             gate_electrons_produced(report),
         ),
     ];
     println!("\n--- LER acceptance gates ---");
     let mut all = true;
-    for (label, pass) in gates {
-        println!("  [{}] {}", if pass { "PASS" } else { "FAIL" }, label);
+    for (label, evidence, pass) in gates {
+        println!(
+            "  [{}] [{evidence}] {label}",
+            if pass { "PASS" } else { "FAIL" }
+        );
         all &= pass;
     }
     all

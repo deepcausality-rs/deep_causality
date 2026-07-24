@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Applicative, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint, Pure,
-    Satisfies, Traversable,
+    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
+    NoConstraint, Pure, Satisfies, Traversable,
 };
 
 /// `OptionWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -176,6 +176,13 @@ impl DebugFunctor for OptionWitness {
         f: &mut core::fmt::Formatter<'_>,
     ) -> core::fmt::Result {
         core::fmt::Debug::fmt(fa, f)
+    }
+}
+
+// Implementation of CloneFunctor for OptionWitness (delegates to `Option`'s own `Clone`).
+impl CloneFunctor for OptionWitness {
+    fn clone_type<T: Clone>(fa: &Option<T>) -> Option<T> {
+        fa.clone()
     }
 }
 

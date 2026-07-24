@@ -62,12 +62,13 @@ ending at its last entry, and the main file names which branch died.
 
 ### Requirement: The campaign and trajectory sinks are independent
 
-The campaign-level `save_log(base)` (on `StudyDef`) and the trajectory-level `save_log(path)` (on
-the march builder) apply to different runs and SHALL NOT compose on a single run: the campaign
-level owns the fan-out and derives every per-branch and main file path from its base, while the
-trajectory level names one file for a standalone march. A campaign's internal per-branch marches
-SHALL take their sink from the campaign base, not from any trajectory-level call. There is
-therefore no precedence to resolve — a single run is audited by exactly one of the two levels.
+The two `save_log` sinks SHALL NOT compose on a single run. The campaign-level `save_log(base)`
+(on `StudyDef`) and the trajectory-level `save_log(path)` (on the march builder) apply to
+different runs: the campaign level owns the fan-out and derives every per-branch and main file
+path from its base, while the trajectory level names one file for a standalone march. A
+campaign's internal per-branch marches SHALL take their sink from the campaign base, not from any
+trajectory-level call. There is therefore no precedence to resolve — a single run is audited by
+exactly one of the two levels.
 
 #### Scenario: A campaign audits every branch from its base
 

@@ -1,8 +1,8 @@
 !!ContextAlternation!!: world 'standard_day' replaced with 'polar_winter'
 regime -> slip (GNSS-available), Kn=0.0652425820722102
 nav: aided (position fix folded)
-regime -> slip (GNSS-denied), Kn=0.017243140408520995
+regime -> slip (GNSS-denied), Kn=0.012454206716770309
 nav: dead reckoning (no usable fix)
 regime -> continuum (GNSS-denied), Kn=0.009957116130496923
-regime -> continuum (GNSS-available), Kn=0.00022537855120232414
+regime -> continuum (GNSS-available), Kn=0.00022051919148431283
 nav: aided (position fix folded)

@@ -7,7 +7,7 @@
 //! solution over the boundary-clean window `|x| ≤ 0.5`.
 
 use crate::exact_riemann::{Prim, sample};
-use deep_causality_cfd::ideal_gas_pressure;
+use deep_causality_cfd::{EvidenceClass, ideal_gas_pressure};
 
 /// Mean-absolute (L1) errors of the marched primitives vs the exact Riemann solution.
 pub struct Errors {
@@ -19,7 +19,15 @@ pub struct Errors {
 /// The measurement window half-width (away from the periodic boundary waves).
 const WINDOW: f64 = 0.5;
 /// L1 tolerance — first-order Rusanov smears the contact, so the bound reflects mean accuracy.
+///
+/// Evidence class: **reference**. The comparison is against the exact Riemann solution of the Sod
+/// problem (Sod 1978; Toro, *Riemann Solvers and Numerical Methods for Fluid Dynamics*, ch. 4),
+/// computed independently of the solver, so clearing this bound is evidence about the physics —
+/// not merely evidence of non-regression. The tolerance itself is sized by the first-order scheme's
+/// known smearing of the contact, not pinned from a measured run.
 const TOL: f64 = 0.03;
+/// Evidence class of the Sod gates. See [`TOL`].
+const SOD_EVIDENCE: EvidenceClass = EvidenceClass::Reference;
 
 #[allow(clippy::too_many_arguments)]
 pub fn errors(
@@ -86,11 +94,13 @@ pub fn render(
 }
 
 pub fn verify(e: &Errors) -> bool {
-    println!("\n--- Sod gate (L1 error over |x| <= {WINDOW}, tol {TOL}) ---");
+    println!(
+        "\n--- Sod gate (L1 error over |x| <= {WINDOW}, tol {TOL}; reference: exact Riemann solution) ---"
+    );
     let ok = |label: &str, v: f64| {
         let pass = v < TOL;
         println!(
-            "  [{}] {label} L1 error = {v:.4}",
+            "  [{}] [{SOD_EVIDENCE}] {label} L1 error = {v:.4}",
             if pass { "PASS" } else { "FAIL" }
         );
         pass

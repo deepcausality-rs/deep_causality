@@ -38,6 +38,9 @@ fn main() {
         .unwrap_or_else(|e| fail("CFD MMS pipeline", e));
 
     print_utils::render(&report);
+    if !print_utils::verify(&report) {
+        std::process::exit(1);
+    }
 }
 
 /// Print a stage-failure context and its error on stderr, then exit the process non-zero.

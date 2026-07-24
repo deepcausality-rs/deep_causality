@@ -16,14 +16,14 @@ pub use compressible::{
     AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
     CompressibleMarcher3dFitted, EulerState, EulerState2d, EulerState3d, EulerStateTt2d,
     EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure, PostShockState,
-    StagnationOutcome, conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d,
-    positivity_floor,
+    REDUCED_MASS_AMU, StagnationOutcome, conservation_round, ideal_gas_pressure,
+    ideal_gas_pressure_2d, positivity_floor, reduced_mass_amu,
 };
 pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;
 pub use observe::{
-    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, preserved_drag_fraction,
-    strip_pressure_force, wall_heat_flux,
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed,
+    penalization_heat_integral, preserved_drag_fraction, strip_pressure_force,
 };
 
 use crate::CfdScalar;

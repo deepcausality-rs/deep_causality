@@ -77,7 +77,7 @@ At t = 25 the f32 divergence of 19.9 is the scale of the attractor itself, so th
 two trajectories share no information. At the same time f64 tracks Float106 to
 eight decimal places. By t = 45 the f64 trajectory has also diverged.
 
-The f32 value at t = 45 is smaller than at t = 25. This is not recovery: two
+The f32 value at t = 45 is smaller than at t = 25. That decline is not recovery: two
 uncorrelated trajectories on a bounded attractor fluctuate around a typical
 separation. Past its horizon the error figure carries no information, and only
 the first threshold crossing is meaningful.
@@ -102,7 +102,7 @@ For most CFD the precision floor is not the limiting term. Discretization and
 modelling error exceed `f64` roundoff by many orders of magnitude.
 
 Chaotic flow and long marched trajectories that feed a decision are the cases
-where it matters. The [blackout corridor](/examples/plasma-blackout-corridor/)
+where it matters. The [blackout corridor](/tutorial/stage-1-corridor/)
 records a separate failure mode: at `f32` it does not run, because a term in the
 ionization kernel evaluates to 4.4e-67 and underflows the exponent range at step
 1.

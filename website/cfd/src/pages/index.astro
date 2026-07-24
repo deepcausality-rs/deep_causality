@@ -4,9 +4,9 @@ import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import SectionDivider from '../components/home/SectionDivider.astro';
 import SolverStack from '../components/home/SolverStack.astro';
+import Capabilities from '../components/home/Capabilities.astro';
 import ValidationSnapshot from '../components/home/ValidationSnapshot.astro';
 import ExampleLadder from '../components/home/ExampleLadder.astro';
-import BoundaryTeaser from '../components/home/BoundaryTeaser.astro';
 import { GITHUB_URL } from '../consts';
 
 const title = 'DeepCausality CFD — counterfactual fluid dynamics in Rust';
@@ -28,13 +28,13 @@ const jsonLd = {
 
   <Hero />
   <SectionDivider />
+  <Capabilities />
+  <SectionDivider />
   <SolverStack />
   <SectionDivider />
   <ValidationSnapshot />
   <SectionDivider />
   <ExampleLadder />
-  <SectionDivider />
-  <BoundaryTeaser />
 
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>

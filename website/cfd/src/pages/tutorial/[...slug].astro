@@ -1,0 +1,140 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocDetail from '../../components/docs/DocDetail.astro';
+import { GITHUB_URL } from '../../consts';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('tutorial');
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/^en\//, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+// Prev/next stage navigation, ordered by the stage number.
+const all = (await getCollection('tutorial')).sort((a, b) => a.data.stage - b.data.stage);
+const ix = all.findIndex((e) => e.id === entry.id);
+const prev = ix > 0 ? all[ix - 1] : undefined;
+const next = ix < all.length - 1 ? all[ix + 1] : undefined;
+const hrefOf = (e: (typeof all)[number]) => `/tutorial/${e.id.replace(/^en\//, '')}/`;
+---
+<BaseLayout
+  title={`${d.title} — DeepCausality CFD`}
+  description={d.summary}
+  path={`/tutorial/${entry.id.replace(/^en\//, '')}/`}
+>
+  <SiteHeader slot="header" />
+
+  <DocDetail
+    eyebrow={`Tutorial · Stage ${d.stage} of ${all.length}`}
+    title={d.title}
+    summary={d.summary}
+    tags={d.uses}
+    command={d.command}
+    meta={[
+      { label: 'You will be able to', value: d.objective },
+      { label: 'Runtime', value: d.runtime, mono: true },
+      { label: 'Consumes', value: d.consumes },
+      { label: 'Produces', value: d.produces },
+    ]}
+    backHref="/tutorial/"
+    backLabel="Tutorial overview"
+    sourceHref={`${GITHUB_URL}/tree/main/${d.source}`}
+    sourceLabel={d.source.split('/').pop()}
+  >
+    {d.files.length > 0 && (
+      <section class="open-files">
+        <p class="of-title">Keep these open while you walk</p>
+        <ul>
+          {d.files.map((f) => (
+            <li>
+              <a href={`${GITHUB_URL}/tree/main/examples/avionics_examples/${f}`}>
+                <code>{f}</code> <span aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <Content />
+
+    <nav class="stage-nav" aria-label="Tutorial stages">
+      {prev ? (
+        <a class="sn sn-prev" href={hrefOf(prev)}>
+          <span class="sn-k">← Stage {prev.data.stage}</span>
+          <span class="sn-t">{prev.data.title}</span>
+        </a>
+      ) : <span />}
+      {next && (
+        <a class="sn sn-next" href={hrefOf(next)}>
+          <span class="sn-k">Stage {next.data.stage} →</span>
+          <span class="sn-t">{next.data.title}</span>
+        </a>
+      )}
+    </nav>
+  </DocDetail>
+</BaseLayout>
+
+<style>
+  .open-files {
+    margin: 0 0 var(--space-6);
+    padding: var(--space-4);
+    border: 1px solid var(--line-1);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--bg-1);
+  }
+  .of-title {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0 0 var(--space-3);
+  }
+  .open-files ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  .open-files code { background: none; padding: 0; font-size: var(--t-mono-sm); }
+
+  .stage-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line-1);
+  }
+  @media (min-width: 600px) { .stage-nav { grid-template-columns: 1fr 1fr; } }
+
+  .sn {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    color: var(--fg-0);
+    transition: border-color var(--dur-fast) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out);
+  }
+  .sn:hover {
+    border-color: var(--line-2);
+    border-bottom-color: var(--line-2);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .sn-next { text-align: right; }
+  .sn-k {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .sn-t { color: var(--fg-1); font-size: var(--t-body-sm); }
+</style>

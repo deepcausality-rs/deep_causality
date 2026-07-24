@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Applicative, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint, Pure,
-    Satisfies,
+    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
+    NoConstraint, Pure, Satisfies,
 };
 use alloc::vec;
 use alloc::vec::Vec;
@@ -123,6 +123,13 @@ impl DebugFunctor for VecWitness {
         f: &mut core::fmt::Formatter<'_>,
     ) -> core::fmt::Result {
         core::fmt::Debug::fmt(fa, f)
+    }
+}
+
+// Implementation of CloneFunctor for VecWitness (delegates to `Vec`'s own `Clone`).
+impl CloneFunctor for VecWitness {
+    fn clone_type<T: Clone>(fa: &Vec<T>) -> Vec<T> {
+        fa.clone()
     }
 }
 

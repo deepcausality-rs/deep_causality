@@ -1,0 +1,227 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Executes the `deep_causality_cfd/verification/` harnesses.
+#
+# `cargo test` COMPILES these binaries (they are `[[example]]` targets) but never runs them, so
+# until this workflow existed every quantitative accuracy claim in the crate README and in
+# verification/README.md was unenforced. Each harness self-verifies and exits non-zero on a broken
+# gate, so running it is the whole check — no extra assertions live here.
+#
+# Split by cost: the fast harnesses gate every pull request; the slow ones run nightly.
+# `verification-suite-complete` fails if a harness is declared in Cargo.toml but listed in neither
+# set, so a newly added harness cannot silently never run.
+#
+# OFFLINE / MANUAL (not run in CI): `qtt_cylinder_verification`. The `close-qtt-solver-envelope` change
+# resolved the Brinkman envelope: eta is now chosen from a wall-error target (2.5% slip) and the grid
+# refined to L=8 (256^2) so the penalization layer sqrt(eta*nu) ~ dx is resolved, not the mask skirt.
+# That configuration is physically correct and passes the new constructor envelope checks.
+#
+# It is NOT in the CI lists because at the resolution the physics needs, a single 64-step march is
+# ~17 min and the full acceptance harness (bond + eta + smoothing ladders, 13 marches) is ~4-9 hours.
+# Measured per-step wall-clock at a fixed bond cap 24, field still low-rank (bond 24 saturates):
+#
+#   L=5 (32^2)  0.05 s/step   L=7 (128^2)  6.51 s/step
+#   L=6 (64^2)  0.90 s/step   L=8 (256^2) 16.29 s/step   (326x the L=5 cost)
+#
+# So the gate is red for a SOLVER-PERFORMANCE reason, not a parameter choice. The field is low-rank at
+# every L (achieved bond saturates at the cap 24 at L=5..8), so the 326x is NOT the tensor-train
+# O(chi^2 * L) cost (that predicts ~1.6x at fixed bond) -- it is a superlinear bottleneck elsewhere in
+# the per-step solve (the divergence-free projection CG and/or a dense O(N^2) step) that QTT
+# compression does not accelerate. This is the "refinement is cheap because low-rank" thesis defeated
+# by a non-QTT bottleneck, and the minutes-not-hours north-star as an open risk. Closing it is a
+# solver-acceleration follow-up (first profile which term dominates)
+# (openspec/notes/cfd-roadmap/cfd-industry-scaling.md), tracked at AUDIT-REPORT.md section 9 item 10.
+# It is listed in OFFLINE_HARNESSES so the completeness check still accounts for it; it is run
+# manually (`cargo run --release -p deep_causality_cfd --example qtt_cylinder_verification`), not in CI.
+
+name: CFD Verification
+
+on:
+  pull_request:
+  schedule:
+    # 03:17 UTC daily. Off the hour to avoid the scheduler's peak-minute queue.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Fast: measured at <= ~5 s each on the reference machine.
+  FAST_HARNESSES: >-
+    mms_taylor_green_verification
+    dec_graded_mms_verification
+    dec_wall_heat_flux_verification
+    dec_taylor_green_re1600_verification
+    qtt_taylor_green_verification
+    qtt_park2t_blackout
+    qtt_sod
+    qtt_ramc_stagline
+    qtt_blunt_body_2d
+    qtt_reentry_3d
+  # Slow: dec_cylinder ~510 s, dec_cylinder_wake ~155 s, dec_lid_cavity minutes-to-hours by grid.
+  SLOW_HARNESSES: >-
+    dec_cylinder_verification
+    dec_cylinder_wake_verification
+    dec_lid_cavity_re1000_verification
+  # Offline / manual: too slow for CI at the resolution the physics needs. Not run by any job; listed
+  # only so the completeness check accounts for it. See the OFFLINE / MANUAL block at the top.
+  OFFLINE_HARNESSES: >-
+    qtt_cylinder_verification
+
+jobs:
+  # Guards the two lists above against drift from Cargo.toml. Cheap, so it runs on every trigger.
+  verification-suite-complete:
+    name: Every verification harness is scheduled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare declared harnesses against the fast + slow lists
+        run: |
+          set -euo pipefail
+          declared=$(python3 - <<'PY'
+          import re
+          t = open('deep_causality_cfd/Cargo.toml').read()
+          for b in re.findall(r'\[\[example\]\]\s*\n((?:[a-z_-]+\s*=.*\n)+)', t):
+              n = re.search(r'name\s*=\s*"([^"]+)"', b)
+              p = re.search(r'path\s*=\s*"([^"]+)"', b)
+              if n and p and p.group(1).startswith('verification/'):
+                  print(n.group(1))
+          PY
+          )
+          scheduled=$(printf '%s\n%s\n%s\n' "$FAST_HARNESSES" "$SLOW_HARNESSES" "$OFFLINE_HARNESSES" | tr ' ' '\n' | sed '/^$/d')
+
+          missing=$(comm -23 <(sort <<<"$declared") <(sort <<<"$scheduled") || true)
+          extra=$(comm -13 <(sort <<<"$declared") <(sort <<<"$scheduled") || true)
+
+          if [ -n "$missing" ]; then
+            echo "::error::Verification harness declared in Cargo.toml but in none of the fast, slow, or offline lists:"
+            echo "$missing"
+          fi
+          if [ -n "$extra" ]; then
+            echo "::error::Scheduled harness that is not a declared verification example (renamed or removed?):"
+            echo "$extra"
+          fi
+          if [ -n "$missing" ] || [ -n "$extra" ]; then
+            echo "Update FAST_HARNESSES / SLOW_HARNESSES / OFFLINE_HARNESSES in .github/workflows/cfd_verification.yml"
+            exit 1
+          fi
+          echo "All $(wc -l <<<"$declared") declared verification harnesses are scheduled."
+
+  fast:
+    name: Fast harnesses (pull request)
+    # Skipped on the nightly schedule: the PR run already covers these.
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo index
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache Cargo build
+        uses: actions/cache@v6
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-verification-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-verification-
+
+      - name: Build verification harnesses
+        run: cargo build --release -p deep_causality_cfd --examples
+
+      - name: Run fast verification harnesses
+        run: |
+          set -uo pipefail
+          failed=""
+          for h in $FAST_HARNESSES; do
+            echo "::group::$h"
+            start=$(date +%s)
+            if cargo run --release -q -p deep_causality_cfd --example "$h"; then
+              echo "PASS $h ($(( $(date +%s) - start ))s)"
+            else
+              rc=$?
+              echo "::error::verification harness '$h' exited $rc"
+              failed="$failed $h"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::Failing verification harnesses:$failed"
+            exit 1
+          fi
+          echo "All fast verification harnesses passed."
+
+  slow:
+    name: Slow harnesses (nightly)
+    # Nightly and manual only — ~12 min, dominated by dec_cylinder. Never gates a pull request.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo index
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache Cargo build
+        uses: actions/cache@v6
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-verification-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-verification-
+
+      - name: Build verification harnesses
+        run: cargo build --release -p deep_causality_cfd --examples
+
+      - name: Run slow verification harnesses
+        run: |
+          set -uo pipefail
+          failed=""
+          for h in $SLOW_HARNESSES; do
+            echo "::group::$h"
+            start=$(date +%s)
+            if cargo run --release -q -p deep_causality_cfd --example "$h"; then
+              echo "PASS $h ($(( $(date +%s) - start ))s)"
+            else
+              rc=$?
+              echo "::error::verification harness '$h' exited $rc"
+              failed="$failed $h"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::Failing verification harnesses:$failed"
+            exit 1
+          fi
+          echo "All slow verification harnesses passed."

@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { rustDark, rustLight } from './shiki-rust-themes.mjs';
 
 // Static output. Cloudflare Workers serves dist/ directly; no adapter needed.
 //
@@ -23,7 +24,10 @@ export default defineConfig({
           // The validation-status page is the adoption document; rank it high.
           item.priority = 0.9;
           item.changefreq = 'monthly';
-        } else if (path.startsWith('/cookbook/')) {
+        } else if (path.startsWith('/tutorial/')) {
+          item.priority = 0.85;
+          item.changefreq = 'monthly';
+        } else if (path.startsWith('/blueprints/')) {
           item.priority = 0.8;
           item.changefreq = 'monthly';
         } else if (path.startsWith('/examples/')) {
@@ -45,7 +49,8 @@ export default defineConfig({
   markdown: {
     shikiConfig: {
       // Dual themes; global.css toggles between them on [data-theme].
-      themes: { light: 'github-light', dark: 'github-dark' },
+      // Ayu-derived, contrast-corrected for --bg-2. See shiki-rust-themes.mjs.
+      themes: { light: rustLight, dark: rustDark },
       defaultColor: 'dark',
       wrap: true,
     },

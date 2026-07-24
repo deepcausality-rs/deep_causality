@@ -99,7 +99,6 @@ pub struct WorldRow {
     pub rho_scale: f64,
     /// The thermal-departure factor the IMU flew.
     pub bias_departure: f64,
-    pub errored: bool,
     pub has_alternation_marker: bool,
     /// Blackout onset and exit, seconds from the entry interface (0 when never denied).
     pub onset_s: FloatType,
@@ -220,7 +219,6 @@ pub fn world_row(
         d_temp: case.d_temp,
         rho_scale: case.rho_scale,
         bias_departure: bias_departure(case.d_temp),
-        errored: false, // a report that exists marched to completion; an error short-circuits march_for
         has_alternation_marker: reference
             .effect_log()
             .map(|l| format!("{l}").contains("!!ContextAlternation!!"))
@@ -259,10 +257,33 @@ pub fn weather_gates() -> GateSeq<WorldRow> {
         .gate("(5) every weather reacquires, in every draw", gate_reacq)
 }
 
+/// (0) Table integrity: every declared weather case produced exactly one row, and the rows carry
+/// finite observables.
+///
+/// The previous predicate folded `all(|r| !r.errored)` over rows whose `errored` field is the
+/// literal `false` at construction — an error short-circuits `march_for` before a row can exist, so
+/// the flag could never be true and the gate could never fail. The information it was reaching for
+/// is carried by the row's *existence*, so the falsifiable form counts rows against declared cases
+/// and checks the values are finite.
+///
+/// BREAKING CONDITIONS: drop or duplicate a case in the ensemble reduction and the count check
+/// fails; let a NaN reach `ne_max` / `dwell_s` (a diverged world reduced rather than short-circuited)
+/// and the finiteness check fails.
 fn gate_integrity(v: &StudyView<'_, WorldRow>) -> (bool, String) {
+    let rows = v.rows();
+    let complete = rows.len() == v.cases_len();
+    let finite = rows.iter().all(|r| {
+        !Into::<f64>::into(r.ne_max).is_nan()
+            && !Into::<f64>::into(r.dwell_s).is_nan()
+            && !Into::<f64>::into(r.q_max).is_nan()
+    });
     (
-        v.rows().iter().all(|r| !r.errored),
-        "all six worlds completed without a captured step error".into(),
+        complete && finite,
+        format!(
+            "{} rows for {} declared weather cases, all observables finite",
+            rows.len(),
+            v.cases_len()
+        ),
     )
 }
 

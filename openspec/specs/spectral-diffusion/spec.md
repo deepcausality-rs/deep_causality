@@ -1,5 +1,11 @@
-## ADDED Requirements
+# spectral-diffusion
 
+## Purpose
+
+An opt-in spectral treatment of the viscous term on fully periodic lattices, replacing the
+stencil Laplacian with an exact per-wavenumber factor where the geometry permits it.
+
+## Requirements
 ### Requirement: Opt-in spectral viscous term on fully periodic lattices
 On fully periodic uniform Euclidean lattices, the solver SHALL offer an
 opt-in evaluation of the viscous term `νΔ₁u♭` by per-edge-family real FFT:

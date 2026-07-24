@@ -24,7 +24,7 @@
 //! cargo run --release -p deep_causality_cfd --example qtt_reentry_3d
 //! ```
 
-use deep_causality_cfd::{CompressibleMarcher3d, EulerState3d, quantize_3d};
+use deep_causality_cfd::{CompressibleMarcher3d, EulerState3d, EvidenceClass, quantize_3d};
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const GAMMA: f64 = 1.4;
@@ -161,15 +161,33 @@ fn main() {
 
     // Gate RE-A: the body-fitted forebody bond is O(1), and resolution-independent *at scale* — the bond
     // plateaus (a flat high-resolution tail), not growing like the Cartesian capture.
+    // Evidence class: **tripwire** for both. Structural rank claims about this construction, not
+    // published values — verification/README.md classifies this harness as "structural /
+    // rank-lever", gating rank rather than physical accuracy.
+    //
+    // BREAKING CONDITION: make the fitted encode grow with resolution and RE-A fails.
     let fitted_max = *fitted.iter().max().unwrap();
     let tail_flat = fitted[2] <= fitted[1] + 1;
-    if fitted_max > 8 || !tail_flat {
+    let re_a = fitted_max <= 8 && tail_flat;
+    println!(
+        "  [{}] [{}] RE-A fitted forebody χ bounded and resolution-stable: bonds {fitted:?} (max {fitted_max} <= 8)",
+        if re_a { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+    );
+    if !re_a {
         failures.push(format!(
             "RE-A: fitted forebody χ not bounded/resolution-stable (bonds {fitted:?})"
         ));
     }
     // Gate RE-B: the Cartesian capture grows with resolution and overtakes the fitted bond.
-    if cart[2] <= cart[0] || cart[2] < 2 * fitted[2].max(1) {
+    // BREAKING CONDITION: flatten the captured field so its rank stops growing and RE-B fails.
+    let re_b = cart[2] > cart[0] && cart[2] >= 2 * fitted[2].max(1);
+    println!(
+        "  [{}] [{}] RE-B Cartesian forebody capture is a growing rank cost: cart {cart:?} vs fitted {fitted:?}",
+        if re_b { "PASS" } else { "FAIL" },
+        EvidenceClass::Tripwire,
+    );
+    if !re_b {
         failures.push(format!(
             "RE-B: Cartesian forebody capture is not a growing rank cost (cart {cart:?}, fitted {fitted:?})"
         ));

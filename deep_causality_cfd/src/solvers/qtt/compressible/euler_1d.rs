@@ -97,7 +97,6 @@ where
         let mut f2 = Vec::with_capacity(n);
         let mut f3 = Vec::with_capacity(n);
         let mut s_max = R::zero();
-        let tiny = R::from_f64(1e-300).unwrap_or_else(R::zero);
         for i in 0..n {
             let r = rho[i];
             if r <= R::zero() || !r.is_finite() {
@@ -107,9 +106,10 @@ where
             }
             let u = mom[i] / r;
             let p = ideal_gas_pressure(r, mom[i], energy[i], self.gamma);
-            // Wave speed uses a positive pressure floor for robustness; the flux carries the true p.
-            let p_floor = if p > tiny { p } else { tiny };
-            let c = (self.gamma * p_floor / r).sqrt();
+            // Reject a non-hyperbolic state before it enters the flux (shared guard, all four
+            // marchers). `p` is positive below, so the acoustic speed needs no floor.
+            super::require_positive_pressure(p, i)?;
+            let c = (self.gamma * p / r).sqrt();
             f1.push(mom[i]);
             f2.push(mom[i] * u + p);
             f3.push((energy[i] + p) * u);

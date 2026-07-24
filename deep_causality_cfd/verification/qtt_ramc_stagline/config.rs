@@ -32,9 +32,11 @@ pub const FREESTREAM_VELOCITY: f64 = 7650.0;
 pub const STANDOFF_M: f64 = 0.0076;
 
 // ── Park two-temperature ionization closure (the Gap-3 chemistry-fidelity controller) ──
-/// Reduced mass `μ_sr` of the dominant relaxing collision pair (N₂–N₂ ≈ 14·14/28 = 7), in amu — sets the
-/// Millikan–White vibrational relaxation time `τ_vt` that controls how far the lagging `T_ve` catches up.
-pub const REDUCED_MASS_AMU: f64 = 7.0;
+/// Reduced mass `μ_sr` of the dominant relaxing collision pair, in amu — sets the Millikan–White
+/// vibrational relaxation time `τ_vt` that controls how far the lagging `T_ve` catches up. Defined once
+/// in `deep_causality_cfd`, next to the `Park2tClosure` it feeds; re-exported here so this harness and
+/// the shared avionics world cannot drift to different values.
+pub use deep_causality_cfd::REDUCED_MASS_AMU;
 /// Standard atmosphere, Pa — converts the post-shock pressure to atm for the Millikan–White correlation.
 pub const STANDARD_ATMOSPHERE_PA: f64 = 101_325.0;
 
@@ -49,18 +51,12 @@ pub const RELAX_LENGTH: f64 = 0.2;
 pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
 
 /// Acceptance band of the uncalibrated finite-rate network prediction, in decades around the
-/// flight anchor. Pinned from the measurement recorded in baseline.txt; the production-code
-/// context (DPLR/LAURA/US3D at 2x to 3x, rate-set spread 2x to 5x) justifies the width.
+/// flight anchor. The width is a chemistry-model-spread allowance — production codes (DPLR/LAURA/US3D)
+/// sit at 2x to 3x, rate sets spread 2x to 5x — and is therefore independent of `μ_sr`. Re-confirmed
+/// under the corrected N₂–N₂ closure (`fix-ramc-vibrational-relaxation-pair`): the network **renewal**
+/// arm moved from +0.48 to **+0.35 dec** (the correction pulls the over-predicting network *toward* the
+/// anchor), still inside ±0.70. The width is not re-tuned; only its verdict is re-measured.
 pub const NETWORK_BAND_DECADES: f64 = 0.7;
-
-/// The sheath-renewal A/B record (measured, both modes over the transit-age profile): renewal
-/// peaks at +0.48 dec and carried at -0.33 dec versus the flight anchor. Renewal is kept: its
-/// fixed-point clock `1/(k_f[M] + beta*n_e*)` equals the true Riccati relaxation rate
-/// `sqrt(production*beta)` of `dn_e/dt = P - beta*n_e^2` near equilibrium, while the carried
-/// clock rates young parcels at their small carried population and under-relaxes them. The gate
-/// asserts what recombination earned over the forward-only surrogate: the carried march
-/// self-limits at or below the closed-form arm (no runaway) and inside the earned band.
-pub const CARRIED_ARM_BAND_DECADES: f64 = NETWORK_BAND_DECADES;
 
 /// Lift an exact `f64` specification into the working precision.
 pub fn ft(x: f64) -> FloatType {

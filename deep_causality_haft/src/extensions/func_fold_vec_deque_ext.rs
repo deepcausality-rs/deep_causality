@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DebugFunctor, EqFunctor, Foldable, Functor, HKT, NoConstraint, Satisfies};
+use crate::{
+    CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, NoConstraint, Satisfies,
+};
 use alloc::collections::VecDeque;
 
 /// `VecDequeWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -90,5 +92,12 @@ impl DebugFunctor for VecDequeWitness {
         f: &mut core::fmt::Formatter<'_>,
     ) -> core::fmt::Result {
         core::fmt::Debug::fmt(fa, f)
+    }
+}
+
+// Implementation of CloneFunctor for VecDequeWitness (delegates to `VecDeque`'s own `Clone`).
+impl CloneFunctor for VecDequeWitness {
+    fn clone_type<T: Clone>(fa: &VecDeque<T>) -> VecDeque<T> {
+        fa.clone()
     }
 }

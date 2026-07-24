@@ -1,5 +1,7 @@
 # dec-ns-rate
 
+## Purpose
+
 The DEC right-hand side of incompressible Navier–Stokes in rotational
 (Lamb) form under Leray projection: the marched rate is
 `P(−i_u(du♭) − ν Δ_dR u♭ + g♭)` (the projector inside the rate, per the
@@ -8,8 +10,7 @@ operators on a metric-bearing periodic `Manifold<LatticeComplex<D, R>, R>`.
 The unprojected assembly is exposed separately for cross-validation and
 the pressure diagnostic.
 
-## ADDED Requirements
-
+## Requirements
 ### Requirement: Rotational-form rate assembly
 
 The crate SHALL provide a rate evaluator in

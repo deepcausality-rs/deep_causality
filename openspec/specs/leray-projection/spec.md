@@ -1,5 +1,13 @@
-## ADDED Requirements
+# leray-projection
 
+## Purpose
+
+The Leray projection `P = I − ∇Δ⁻¹∇·` as a first-class entry point: the half-decomposition
+that returns the solenoidal part without paying for the full Hodge decomposition, the
+well-posedness of the full decomposition on periodic lattices, and the constrained variant
+that projects onto no-slip ∩ divergence-free on wall-bounded lattices.
+
+## Requirements
 ### Requirement: Leray projection as a first-class half-decomposition entry point
 `Manifold<K, R>` (for `K::Metric: HasHodgeStar<R>`) SHALL provide
 `leray_project(field)` for 1-forms, computing `P(ω) = ω − d(Δ₀⁻¹ δω)` via a single
@@ -53,8 +61,6 @@ consumes it).
 #### Scenario: No flux through walls
 - **WHEN** `leray_project` runs on a walled lattice
 - **THEN** the removed gradient component has vanishing wall-normal boundary trace to rounding
-
-## ADDED Requirements
 
 ### Requirement: Full hodge_decompose is well-posed on periodic lattices
 `hodge_decompose` SHALL converge on periodic lattices with `β_k > 0` and produce

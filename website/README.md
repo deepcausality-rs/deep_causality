@@ -12,7 +12,7 @@ hostname.
 | --- | --- | --- | --- | --- |
 | [`web/`](./web) | Website (home, blog, examples, short getting-started/overview) | Astro (custom) | `deepcausality-prod` | https://www.deepcausality.com |
 | [`docs/`](./docs) | Reference documentation (concepts, guides, overview, single-PDF export) | [Starlight](https://starlight.astro.build) on Astro | `deepcausality-docs` | https://docs.deepcausality.com |
-| [`cfd/`](./cfd) | `deep_causality_cfd`: cookbook, validation status, worked examples, capability boundaries | Astro (custom) | `deepcausality-cfd-prod` | https://cfd.deepcausality.com |
+| [`cfd/`](./cfd) | `deep_causality_cfd`: blueprints, validation status, worked examples, capability boundaries | Astro (custom) | `deepcausality-cfd-prod` | https://cfd.deepcausality.com |
 
 A fourth directory, [`web_design/`](./web_design), is documentation rather
 than a site: it describes the shipped visual system as implemented. The binding
@@ -31,7 +31,7 @@ The Rust API reference is generated separately and hosted on
   getting-started walkthroughs, the in-depth overview) on Starlight, with
   full-text search, code highlighting, and a build-time single-PDF export.
   See [`docs/README.md`](./docs/README.md) for its commands.
-- **`cfd/` — the CFD crate site.** Task-oriented cookbook recipes, one citable
+- **`cfd/` — the CFD crate site.** Task-oriented blueprints, one citable
   validation-status page, worked examples with committed run output, and a
   measured capability-boundaries page. Every figure is quoted from a committed
   artifact under `deep_causality_cfd/` or an example's `output.txt`.

@@ -19,14 +19,15 @@ cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline
 ## What it gates (self-verifying, exit nonzero on regression)
 
 1. **Post-shock temperature band** — `T₂` in the realistic ≈10⁴ K band.
-2. **Peak electron density vs RAM-C II** — the calibrated Park-2T controller within ~3x of the
-   `1e19 m⁻³` flight anchor.
+2. **Peak electron density vs RAM-C II** — the closed-form Park-2T controller, reported at −1.27
+   decades below the `1e19 m⁻³` flight anchor after the N₂–N₂ `μ = 14.007` correction. A tripwire on
+   the corrected value; the band is not widened to re-admit the old within-3x headline.
 3. **Blackout onset** — the plasma frequency exceeds the comms band.
 4. **`O(1)` rank** — the smooth post-shock relaxation profile stays low tensor-train rank.
 5. **The uncalibrated network inside its earned band** — the finite-rate prediction within
    ±0.7 decades of the anchor, with no Saha calibration target anywhere in the path.
 6. **Electron impact is a refinement** — the associative channel carries the prediction; the
-   thresholded impact channels add at most one decade (measured: +15 percent).
+   thresholded impact channels add at most one decade (measured: +19 percent).
 7. **The carried arm self-limits** — the sheath-renewal A/B under recombination (see below).
 
 ## The uncalibrated finite-rate network
@@ -40,12 +41,12 @@ geometric mean, dissociation at Park's published `T_tr^0.7 T_ve^0.3`, electron c
 `T_e = T_ve`. The parcel age on the stagnation line is the knob-free transit-age profile
 `age(ξ) = t_res·ln(1/(1−ξ))` from the linear stagnation-line deceleration, and the gate reads
 the profile's peak, which is what the flight reflectometers measured. Measured: channel 1 plus
-the pool `2.60e19` (+0.41 dec), full network `2.99e19` (+0.48 dec, 3.0x) against the `1e19`
+the pool `1.887e19` (+0.28 dec), full network `2.251e19` (+0.35 dec, ~2.25x) against the `1e19`
 anchor, inside the production-code context (DPLR, LAURA, and US3D land 2x to 3x on this peak).
 
 **Sheath-renewal A/B under recombination.** Both integration modes are measured over the same
-transit-age profile: the renewal arm peaks at `2.99e19` (+0.48 dec) and the carried arm at
-`4.70e18` (−0.33 dec). Renewal is kept. Its clock is evaluated at the network fixed point,
+transit-age profile: the renewal arm peaks at `2.251e19` (+0.35 dec) and the carried arm at
+`1.768e18` (−0.75 dec). Renewal is kept. Its clock is evaluated at the network fixed point,
 which equals the true Riccati relaxation rate `sqrt(production·β)` of the two-way balance near
 equilibrium, and it realizes the transit-age closure the anchor gate is pinned on. The carried
 arm rates its clock at the young carried population and under-relaxes young parcels, but it
@@ -64,11 +65,12 @@ surrogate diverged without it). This supersedes the first A/B's record.
   `t_res = standoff/u₂` is short against the ionization time `τ_ion = 1/(k_f·n₂)`, with `k_f` the **dominant
   associative-ionization rate** N + O → NO⁺ + e⁻ (Park / Gupta), grounded — not a free fit. The closed-form
   LER relaxation `α = α_eq·(1 − e^{−t_res/τ_ion})` pulls the peak below equilibrium toward the flight value.
-- **Calibration and prediction, kept separate.** The Park-2T controller path is the *calibrated*
-  closure (its geometric-mean controlling temperature was tuned to the anchor; it lands ~1.1x).
-  The finite-rate network path is the *prediction*: the same anchor, approached with no
-  calibration target, lands at 3.0x. Both numbers are printed and gated, so the distinction
-  stays measurable.
+- **The closed-form controller and the network prediction, kept separate.** The Park-2T controller
+  path is the closed-form Saha surrogate. Its former near-anchor landing was an artifact of an invalid
+  `μ = 7.0` (the N–N atomic pair, which has no vibrational mode). With the reduced mass corrected to the
+  N₂–N₂ `μ = 14.007` it lands 1.27 decades below the anchor, reported as an offset. The finite-rate
+  network path is the independent prediction: the same anchor, approached with no calibration target,
+  lands at +0.35 dec (~2.25x). Both numbers are printed and gated, so the distinction stays measurable.
 
 ## References
 

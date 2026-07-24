@@ -1,0 +1,223 @@
+---
+title: 'Walk 2: How one descent became a table'
+stage: 2
+question: Why is a weather world an alternation of a baseline rather than its own config, and why does every row need eight runs behind it?
+summary: A walk through the weather campaign, where the counterfactual axis moves from the command to the world. Five stations covering baseline alternation, ensembles, the coupling closure, and the gate that makes the error bars load-bearing.
+objective: State when to fork a state, when to alternate a world, and why a table row without an ensemble cannot separate a mechanism from a draw.
+command: cargo run --release -p avionics_examples --example plasma_blackout_weather
+runtime: 312.5 s against a 600 s budget
+files:
+  - cfd/plasma_blackout/weather/main.rs
+  - cfd/plasma_blackout/weather/model.rs
+  - cfd/plasma_blackout/weather/constants.rs
+uses:
+  - baseline / alternate
+  - ensemble
+  - march_for
+  - reduce_ensemble
+  - save_log / record
+consumes: The corridor's validated baseline descent.
+produces: weather_table.csv, the artifact walk 3 reads in flight.
+source: examples/avionics_examples/cfd/plasma_blackout/weather
+---
+
+[Walk 1](/tutorial/stage-1-corridor/) flew one descent and forked a paused
+state to select a command. This walk flies the same descent across six
+atmospheres and reduces the result to a table with error bars.
+
+The counterfactual axis differs. Walk 1 held the world fixed and varied a
+command; this campaign holds the command fixed and varies the world. The DSL
+carries a separate vocabulary for that case, and the five stations below cover
+the reasons for it.
+
+## Before you start
+
+This run takes about five minutes. Start it now and read while it proceeds.
+
+```bash
+cargo run --release -p avionics_examples --example plasma_blackout_weather
+```
+
+It flies 48 coupled descents concurrently and ends with a table and eight
+gates.
+
+<div class="callout">
+<p class="callout-title">Notice</p>
+<p>While the run proceeds, list <code>weather/audit/</code>. Files appear
+there during the run, one per (condition, draw), 48 in total plus a main log.
+Station 5 covers why they are flushed stepwise.</p>
+</div>
+
+## Station 1: The campaign as one expression
+
+Open `weather/main.rs`. Past the setup, the program is this:
+
+```rust
+let table = CfdFlow::study("weather-dispersion table")
+    .save_log(audit_dir.join("weather.audit"))
+    .cases(model::weather_cases())
+    .baseline(model::standard_day)
+    .alternate(model::weather_world)
+    .ensemble(constants::MC_DRAWS)
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)
+    .reduce_ensemble(model::world_row)
+    .inspect(utils_print::print_rows)
+    .record(&table_path)
+    .gates(model::weather_gates())
+    .verdict()?;
+```
+
+Forty-eight coupled descents, a reduction, a recorded artifact, and eight
+acceptance criteria appear in reading order.
+
+A type-state orders the phases, so the compiler rejects a campaign assembled
+out of order. Reduction cannot precede the march, and gating cannot precede
+reduction. The crate pins this with compile-fail doctests, which makes the
+ordering a property of the API rather than a convention.
+
+## Station 2: `baseline` and `alternate`
+
+Two lines carry the campaign's central claim:
+
+```rust
+.baseline(model::standard_day)     // the validated origin, built once
+.alternate(model::weather_world)   // six counterfactual atmospheres, each marked
+```
+
+Open `model.rs` and follow both calls. `standard_day` and `weather_world`
+funnel into the same private `world_cfg` builder; the baseline passes a zero
+temperature offset and a unit density scale.
+
+Under `.baseline(..).alternate(..)` the six worlds are one validated
+description with one declared difference applied. A campaign built instead
+from six independent `CompressibleMarchConfig` values would rest on the claim
+that everything else matched between them, and a drifted constant in one of the
+six constructors would stay invisible. Here the compiler holds the shared
+description, so the match is a property of the program.
+
+Each alternated world also carries a `!!ContextAlternation!!` marker into its
+provenance log, naming the baseline it departs from. Gate 1 checks it:
+
+```text
+[PASS] (1) counterfactual audit trail: every dispersion world carries the
+       !!ContextAlternation!! marker naming its baseline
+```
+
+Each table row can therefore name what it is a counterfactual of, rather than
+relying on a folder of filenames.
+
+## Station 3: `ensemble` and the diagnosis it corrected
+
+```rust
+.ensemble(constants::MC_DRAWS)   // 8 deterministic receiver-noise draws
+```
+
+Open `constants.rs` at `MC_DRAWS`:
+
+```rust
+/// Receiver-noise realizations flown per weather condition. Each draw is a deterministic
+/// phase-shifted low-discrepancy sequence (no RNG dependency; draw 0 is the corridor's
+/// sequence), so the whole campaign remains bit-reproducible while the drift cells gain error
+/// bars.
+pub const MC_DRAWS: usize = 8;
+```
+
+A campaign seeded from an RNG returns different numbers on every run, so any
+gate on its output must be loose enough to absorb the scatter, which leaves it
+too loose to catch a regression. Deterministic low-discrepancy draws produce a
+genuine spread across the ensemble and keep the campaign bit-reproducible,
+which yields error bars and a gate that still binds.
+
+The ensemble also corrected a diagnosis. An earlier single-draw version of
+this table showed the cold-day row 8 percent below its predicted value, which
+reads as a physics finding. The Monte Carlo mean identified it as one draw.
+
+A single run per condition cannot separate a mechanism from a draw. Gate 4b at
+station 5 rests on that.
+
+## Station 4: The coupling closure and the draw index
+
+```rust
+.couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+```
+
+This closure receives the case and the draw index and passes both into the
+physics stack.
+
+The draw index is not a wrapper that perturbs outputs after the fact. It
+reaches `corridor_coupling`, which hands it to the IMU model inside the coupled
+loop, so the noise applies at the sensor on the step the sensor is read.
+
+The temperature departure follows the same path. In `model.rs`:
+
+```rust
+pub fn bias_departure(d_temp: f64) -> f64 {
+    1.0 + IMU_THERMAL_COEFF_PER_K * d_temp.abs()
+}
+```
+
+The day's temperature scales the accelerometer bias the vehicle flies, while
+the navigation filter retains its standard-day priors in every world. That
+mismatch between the instrument flown and the instrument assumed is the
+quantity the table measures, and it enters as a parameter threading into the
+stack rather than as a post-processing correction.
+
+<div class="callout">
+<p class="callout-title">Notice</p>
+<p>In the finished table the onset and dwell columns carry no error bar while
+the drift column does. Receiver noise never touches the flow, the chemistry, or
+the truth trajectory, so those columns are draw-invariant by construction. An
+error bar there would imply a scatter that cannot exist.</p>
+</div>
+
+## Station 5: The gate that makes the error bars load-bearing
+
+Two gates sit at the centre of the run:
+
+```text
+[PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean
+       blackout drift 68.75 m vs standard-day 45.93 m (1.50x; gate requires 1.2x)
+[PASS] (4b) the cold effect is statistically resolved: polar-standard
+       separation 22.81 m vs combined sigma 5.69 m (4.0 sigma; gate requires 2)
+```
+
+Gate 4 measures the size of the effect. Gate 4b measures whether the effect is
+resolved.
+
+Without 4b, gate 4 compares two means and asserts a ratio. At an underlying
+scatter of 20 m a 22.81 m separation would carry no information, and the gate
+would pass regardless. Gate 4b requires the separation to clear two combined
+standard deviations; it clears four.
+
+The `save_log` phase flushes the audit files stepwise as the branches run
+rather than assembling them at the end. A campaign that dies at draw 40 of 48
+still leaves the evidence for the 40 that completed.
+
+## Try it yourself
+
+**1. Weaken the statistics.** Set `MC_DRAWS` to `2` in `constants.rs` and
+re-run. The means move slightly and the combined sigma moves considerably.
+Check whether gate 4b still clears its 2-sigma requirement. This reproduces
+station 3's single-draw failure.
+
+**2. Add a condition.** Add a row to the `WEATHER` table in `constants.rs`, for
+example a `very_cold_day` at −55 K and 1.30 density. Nothing else changes: the
+case axis drives the campaign, the alternation marker is automatic, and the
+table gains a row. Gate 3 requires weather to move the window, so watch the
+onset spread widen.
+
+**3. Trace one row to its evidence.** Take any drift cell in the final table,
+open the eight matching files in `weather/audit/`, and confirm that each names
+the baseline it was alternated from. That path from a published number back to
+its runs is what station 2 constructs.
+
+## What this walk established
+
+- Fork a state when the branches must share a past. Alternate a world when the
+  branches must share a description and differ in one declared way.
+- Determinism and error bars are compatible. Deterministic draws give both.
+- A table row without an ensemble cannot separate a mechanism from a draw.
+- The campaign's output is an artifact on disk with a provenance trail.
+
+[Walk 3](/tutorial/stage-3-retropulsion/) reads `weather_table.csv` in flight.

@@ -46,7 +46,7 @@ pub use crate::traits::{
     CfdScalar, FluidTheory, MarchDispatch, Marchable, Marcher, MetricProvider, MetricProvider3d,
     Solver,
 };
-pub use crate::types::{Ambient, KeyedInterpolation, KeyedTable};
+pub use crate::types::{Ambient, EvidenceClass, KeyedInterpolation, KeyedTable, LadderOutcome};
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::coordinate::{
@@ -141,14 +141,15 @@ pub use crate::solvers::{
     CompressibleMarcher3dFitted, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep,
     DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState, EulerState2d, EulerState3d,
     EulerStateTt2d, EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure,
-    PostShockState, QttImmersed2d, QttIncompressible2d, QttLinear1d, StagnationOutcome,
-    conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor,
+    PostShockState, QttImmersed2d, QttIncompressible2d, QttLinear1d, REDUCED_MASS_AMU,
+    StagnationOutcome, conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d,
+    positivity_floor, reduced_mass_amu,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).
 pub use crate::solvers::{
-    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed, preserved_drag_fraction,
-    strip_pressure_force, wall_heat_flux,
+    divergence_residual, drag_lift, kinetic_energy, max_bond, max_speed,
+    penalization_heat_integral, preserved_drag_fraction, strip_pressure_force,
 };
 
 // Public API of the Navier–Stokes solver.

@@ -9,3 +9,32 @@
 # t =    34.99 (4977/14223)
 # t =    39.99 (5688/14223)
 # t =    44.99 (6399/14223)
+# t =    49.99 (7110/14223)
+# t =    54.99 (7821/14223)
+# t =    59.99 (8532/14223)
+# t =    64.99 (9243/14223)
+# t =    69.99 (9954/14223)
+# t =    74.99 (10665/14223)
+# t =    79.99 (11376/14223)
+# t =    84.99 (12087/14223)
+# t =    89.99 (12798/14223)
+# t =    94.99 (13509/14223)
+# t =    99.98 (14220/14223)
+# wrote cavity_centerline_u.csv
+# wrote cavity_centerline_v.csv
+# centerline RMSE vs Ghia: 0.0617
+# vortex centers (streamfunction extrema) vs Ghia (1982):
+vortex,x,y,psi,ghia_x,ghia_y
+primary,0.5312,0.5625,-9.3944e-2,0.5313,0.5625
+bottom-left,0.0781,0.0781,+1.0018e-4,0.0859,0.0781
+bottom-right,0.8594,0.1094,+1.1598e-3,0.8594,0.1094
+
+# ─── gated mode: `dec_lid_cavity_re1000_verification trend` ───
+# DEC lid-driven cavity, Re = 1000: refinement trend vs Ghia (1982)
+grid  17², t_end 60: centerline RMSE = 0.2369
+grid  33², t_end 60: centerline RMSE = 0.1309
+# refinement-trend gates (bounds pinned from this harness's own measurements)
+  [PASS] [tripwire] coarse RMSE within its pinned bound: 17² RMSE 0.2369 vs pinned 0.32
+  [PASS] [tripwire] fine RMSE within its pinned bound: 33² RMSE 0.1309 vs pinned 0.2
+  [PASS] [tripwire] RMSE strictly decreases under refinement: fine 0.1309 vs coarse 0.2369 (margin 0.04)
+# trend holds: RMSE decreases under refinement

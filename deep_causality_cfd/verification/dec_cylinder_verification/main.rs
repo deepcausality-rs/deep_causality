@@ -67,6 +67,32 @@ const U: f64 = 1.0;
 const PERTURB_EPS: f64 = 0.3;
 const PERTURB_SIGMA: f64 = 0.75;
 
+// ── Acceptance bounds ─────────────────────────────────────────────────────────────────────────
+//
+// Evidence class: **tripwire**, not reference. The affordable default (8 cells/D) is below
+// reference-grid quality and the measured values sit *outside* the published bands — St 0.1710 vs
+// Williamson 0.164 (+4.3 %), C_d 1.345 vs the 1.24–1.33 band (+1.1 % over the top). Gating against
+// the published bands at this resolution would fail a correctly-working solver, so these bounds are
+// pinned around the measured default and detect regression only. The published values are printed
+// next to the measurement so the offset stays visible and is never read as agreement.
+//
+// Width is set by cross-platform floating-point sensitivity of a 1500-step nonlinear march, not by
+// measurement precision (the run is deterministic on one machine). Provisional: tighten once the
+// nightly CI job has established the x86_64-vs-arm64 spread.
+//
+// Reference condition only — the bands describe Re = 100. At any other `RE_D` the harness reports
+// the measurement and states the gate is not applicable rather than passing it silently.
+/// Reynolds number the published bands describe.
+const REFERENCE_RE_D: f64 = 100.0;
+/// Pinned Strouhal band (tripwire), ~±11 % around the measured 0.1710.
+const ST_TRIPWIRE: (f64, f64) = (0.152, 0.190);
+/// Pinned drag-coefficient band (tripwire), ~±10 % around the measured 1.345.
+const CD_TRIPWIRE: (f64, f64) = (1.21, 1.48);
+/// Published references, printed beside the measurement. Williamson (1996) for `St`;
+/// Dröge & Verstappen (2005) / Lehmkuhl et al. (2013) for `C_d`.
+const ST_REFERENCE: f64 = 0.164;
+const CD_REFERENCE_BAND: (f64, f64) = (1.24, 1.33);
+
 /// Read an `f64` case parameter from the environment, falling back to `default`.
 fn env_f64(key: &str, default: f64) -> f64 {
     std::env::var(key)
@@ -220,11 +246,18 @@ fn main() {
     let drag_every = (steps / 80).max(1);
     let mut drag_samples: Vec<[f64; 4]> = Vec::new();
     for step in 0..steps {
+        // A solver error is a hard failure, not a stopping condition. The previous `break` fell
+        // through to the reporting path, which then computed St and C_d from the *truncated*
+        // series and returned 0 — so a diverged march produced plausible-looking numbers and a
+        // success exit code, contradicting the suite convention in verification/README.md.
         let out = match solver.step(&state) {
             Ok(o) => o,
             Err(e) => {
-                eprintln!("# march stopped at step {step}: {e}");
-                break;
+                eprintln!("[FAIL] march diverged at step {step}: {e}");
+                eprintln!(
+                    "=== dec_cylinder_verification FAILED: solver error, no results reported. ==="
+                );
+                std::process::exit(1);
             }
         };
         let t = (step + 1) as f64 * dt;
@@ -271,15 +304,95 @@ fn main() {
         state = out.into_state();
     }
 
-    report_strouhal(&probe_series, diameter, U);
-    report_drag_mean(&drag_samples);
+    let st = report_strouhal(&probe_series, diameter, U);
+    let cd = report_drag_mean(&drag_samples);
+
+    if !verify(st, cd, re_d, cells_per_d) {
+        std::process::exit(1);
+    }
+}
+
+/// Self-verification (exit nonzero on break). Gates that the case actually shed and produced a
+/// developed-window drag, and — at the reference Reynolds number only — that `St` and `C_d` sit
+/// inside their pinned tripwire bands.
+///
+/// BREAKING CONDITIONS: a march that never sheds leaves `st = None` and fails gate 1; a march that
+/// diverges exits before reaching here (see the step loop); a solver change that moves `St` or
+/// `C_d` more than ~10 % fails gate 3 or 4.
+fn verify(st: Option<f64>, cd: Option<f64>, re_d: f64, cells_per_d: usize) -> bool {
+    let mut ok = true;
+    println!("\n--- isolated-cylinder gates (Re_D = {re_d}, {cells_per_d} cells/D) ---");
+
+    // 1. The case shed at all — without this the Strouhal is undefined and the run proved nothing.
+    match st {
+        Some(v) => println!("  [PASS] [tripwire] shedding detected: St = {v:.4}"),
+        None => {
+            println!("  [FAIL] [tripwire] no shedding detected — St undefined");
+            ok = false;
+        }
+    }
+
+    // 2. The developed window produced drag samples.
+    match cd {
+        Some(v) => println!("  [PASS] [tripwire] cycle-mean drag measured: C_d = {v:.3}"),
+        None => {
+            println!("  [FAIL] [tripwire] no developed-window drag samples");
+            ok = false;
+        }
+    }
+
+    // 3-4. Reference-condition bands. Applied only at Re = 100, which is what the published
+    // references describe; a Reynolds ladder run reports without gating rather than passing
+    // silently against a band that does not describe it.
+    if (re_d - REFERENCE_RE_D).abs() > f64::EPSILON {
+        println!(
+            "  [SKIP] St / C_d bands describe Re = {REFERENCE_RE_D}; not applicable at Re = {re_d}"
+        );
+        return ok;
+    }
+
+    if let Some(v) = st {
+        let pass = v > ST_TRIPWIRE.0 && v < ST_TRIPWIRE.1;
+        println!(
+            "  [{}] [tripwire] St {v:.4} in [{}, {}]  (reference: Williamson {ST_REFERENCE}, \
+             measured is {:+.1} % — this grid is below reference quality)",
+            if pass { "PASS" } else { "FAIL" },
+            ST_TRIPWIRE.0,
+            ST_TRIPWIRE.1,
+            100.0 * (v - ST_REFERENCE) / ST_REFERENCE,
+        );
+        ok &= pass;
+    }
+
+    if let Some(v) = cd {
+        let pass = v > CD_TRIPWIRE.0 && v < CD_TRIPWIRE.1;
+        println!(
+            "  [{}] [tripwire] C_d {v:.3} in [{}, {}]  (reference band: Dröge–Verstappen / \
+             Lehmkuhl {:.2}–{:.2}, measured is {:+.1} % relative to the band top)",
+            if pass { "PASS" } else { "FAIL" },
+            CD_TRIPWIRE.0,
+            CD_TRIPWIRE.1,
+            CD_REFERENCE_BAND.0,
+            CD_REFERENCE_BAND.1,
+            100.0 * (v - CD_REFERENCE_BAND.1) / CD_REFERENCE_BAND.1,
+        );
+        ok &= pass;
+    }
+
+    if ok {
+        println!("=== All isolated-cylinder gates passed. ===");
+    } else {
+        println!("=== Gate REGRESSION in dec_cylinder_verification: see the FAIL lines. ===");
+    }
+    ok
 }
 
 /// Report the cycle-mean drag/lift over the developed-window samples, with the C_d swing.
-fn report_drag_mean(samples: &[[f64; 4]]) {
+/// Returns the cycle-mean `C_d`, or `None` when the window produced no samples.
+fn report_drag_mean(samples: &[[f64; 4]]) -> Option<f64> {
     if samples.is_empty() {
         eprintln!("# drag: no developed-window samples");
-        return;
+        return None;
     }
     let n = samples.len() as f64;
     let mean = |k: usize| samples.iter().map(|s| s[k]).sum::<f64>() / n;
@@ -291,17 +404,21 @@ fn report_drag_mean(samples: &[[f64; 4]]) {
         .fold(f64::NEG_INFINITY, f64::max);
     eprintln!(
         "# drag (cycle mean over {} samples): C_d ≈ {cd:.3} (pressure {cd_p:.3} + friction {cd_f:.3}), \
-         C_l ≈ {cl:.3}, C_d swing [{cd_min:.3}, {cd_max:.3}]  (ref C_d ≈ 1.24–1.33, friction ≈ 25%)",
-        samples.len()
+         C_l ≈ {cl:.3}, C_d swing [{cd_min:.3}, {cd_max:.3}]  (ref C_d ≈ {:.2}–{:.2}, friction ≈ 25%)",
+        samples.len(),
+        CD_REFERENCE_BAND.0,
+        CD_REFERENCE_BAND.1,
     );
+    Some(cd)
 }
 
 /// Estimate `St = f·D/U` from the wake probe's mean-crossing rate over the developed (second-half)
 /// signal, and compare to the Williamson isolated-cylinder reference at Re = 100.
-fn report_strouhal(series: &[(f64, f64)], diameter: f64, u_ref: f64) {
+/// Returns the measured `St`, or `None` when no shedding was detected.
+fn report_strouhal(series: &[(f64, f64)], diameter: f64, u_ref: f64) -> Option<f64> {
     if series.len() < 16 {
         eprintln!("# Strouhal: insufficient samples");
-        return;
+        return None;
     }
     let tail = &series[series.len() / 2..];
     let mean = tail.iter().map(|(_, v)| *v).sum::<f64>() / tail.len() as f64;
@@ -315,11 +432,14 @@ fn report_strouhal(series: &[(f64, f64)], diameter: f64, u_ref: f64) {
     }
     if crossings.len() < 2 {
         eprintln!("# Strouhal: no clear shedding detected yet (run longer / refine the grid)");
-        return;
+        return None;
     }
     let period = (crossings.last().unwrap() - crossings[0]) / (crossings.len() - 1) as f64;
     let st = (1.0 / period) * diameter / u_ref;
-    eprintln!("# shedding: period {period:.4}, St = f·D/U ≈ {st:.4}  (Williamson Re=100 ≈ 0.164)");
+    eprintln!(
+        "# shedding: period {period:.4}, St = f·D/U ≈ {st:.4}  (Williamson Re=100 ≈ {ST_REFERENCE})"
+    );
+    Some(st)
 }
 
 /// Instantaneous drag/lift coefficients at one state: `[C_d, C_l, C_d_pressure, C_d_friction]`.

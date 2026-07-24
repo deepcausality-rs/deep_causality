@@ -12,8 +12,9 @@
 //! (`run_coupled`, design D5/D8).
 //!
 //! `main` runs the coupled march over a blunt forebody and self-verifies (exit nonzero on break) the six
-//! LER acceptance gates: (i) stability at stiffness, (ii) closed-form exponential exactness, (iii) the
-//! mandatory Rankine–Hugoniot temperature band, (iv) ionization lag + Saha limit, (v) counterfactual
+//! LER acceptance gates: (i) stability at stiffness, (ii) the relaxation kernel against an independent
+//! sub-stepped reference, (iii) the
+//! mandatory Rankine–Hugoniot temperature band, (iv) ionization lag + rate grounding, (v) counterfactual
 //! path-dependence, (vi) electrons produced. Published references are reported as cross-references with
 //! Tier-A disclaimers (incompressible rollout; `T_tr` is a recovery-temperature reconstruction).
 //!

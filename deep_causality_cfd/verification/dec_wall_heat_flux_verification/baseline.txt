@@ -1,0 +1,33 @@
+    Finished `release` profile [optimized] target(s) in 0.06s
+     Running `target/release/examples/dec_wall_heat_flux_verification`
+# DEC Fourier-law wall heat flux — q = -k ∮ ∇T·n dA over cut-cell fragments
+# reference: a linear profile makes the one-sided reconstruction exact, so
+#            q = -k·G·A analytically, at every resolution.
+
+  [PASS] [reference] WHF-1 linear profile reproduces Fourier's law: q = -6.000000000000 vs analytic -k·G·A = -6.000000000000
+
+# WHF-2 resolution ladder (analytic value is spacing-independent)
+         h |                  q | |q - analytic|
+    1.0000 |    -6.000000000000 |      0.000e0
+    0.5000 |    -6.000000000000 |      0.000e0
+    0.2500 |    -6.000000000000 |      0.000e0
+    0.1250 |    -6.000000000000 |      0.000e0
+    0.0625 |    -6.000000000000 |      0.000e0
+  [PASS] [reference] WHF-2 exact at every spacing: worst |q - analytic| over the ladder = 0.000e0
+  [PASS] [reference] WHF-3 sign convention (outward n; q > 0 leaves the wall): cold fluid q = 6.000000 > 0, hot fluid q = -6.000000 < 0
+
+# WHF-4 marched conduction from an isothermal body (kappa = 0.05)
+    step |          wall flux
+      10 |       87.431926457
+      20 |       73.960353703
+      30 |       66.853703742
+      40 |       62.251416691
+  [PASS] [tripwire] WHF-4 marched wall flux decays as the thermal layer thickens: |q| over the march: [87.43192645699219, 73.96035370345928, 66.8537037418575, 62.25141669074707] (monotone true, non-trivial true)
+
+--- reading ---
+  The flux is a genuine surface integral: a gradient, a conductivity and a wall normal
+  integrated over fragment area. It is exact on a linear profile at every spacing, so
+  the wall-normal step and the area weighting are both carried correctly — neither is
+  absorbed into a tolerance. This is the quantity `penalization_heat_integral` is not.
+
+ALL GATES PASSED — Fourier's law holds exactly on the reference profile.

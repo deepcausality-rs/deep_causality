@@ -1,0 +1,104 @@
+---
+title: Detect and act on a regime change
+task: You need the run to notice that the governing physics changed, and to record when.
+summary: A classifier reads the evolved field each step, bands the continuous quantities into a discrete key, and logs only key transitions. Downstream stages and march predicates read the class.
+order: 6
+verbs:
+  - RegimeClassify
+  - RegimeClass
+  - GoverningModel
+  - BlackoutTrigger
+worked:
+  - label: Plasma blackout corridor
+    href: /tutorial/stage-1-corridor/
+---
+
+`RegimeClassify` is a `PhysicsStage`. It reads the evolved field, derives the
+governing model and the comms state, and stores a `RegimeClass` on the field.
+
+From `deep_causality_cfd/src/types/flow/corridor.rs:299-336`:
+
+```rust
+impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RegimeClassify<R> {
+    fn apply(
+        &self,
+        _ctx: &StepContext<'_, D, R>,
+        field: &mut CoupledField<R>,
+    ) -> Result<(), PhysicsError> {
+        let Some(mfp) = field.scalar(self.mfp_field) else {
+            return Ok(());
+        };
+        // Rarefaction is worst where the mean free path is largest, so classify off its peak.
+        let mfp_peak = peak(mfp);
+        let length = Length::new(self.characteristic_length)?;
+        let kn = knudsen_number_kernel(mfp_peak, &length)?;
+        let model = self.model_for(kn);
+
+        // The comms side: peak electron density → plasma frequency → GNSS-denial decision.
+        let ne_peak = field
+            .scalar(self.ne_field)
+            .map(peak)
+            .unwrap_or_else(R::zero);
+        let blackout = self.trigger.evaluate(ElectronDensity::new(ne_peak)?)?;
+
+        let class = RegimeClass {
+            model,
+            knudsen: kn,
+            plasma_frequency: blackout.plasma_frequency,
+            gnss_denied: blackout.denied,
+            mach_regime: self.mach_regime_of(field),
+            thrust_state: self.thrust_state_of(field),
+            touchdown: self.touchdown_of(field),
+        };
+
+        // Log only genuine regime transitions (model band, comms-denial, or a flight-phase change).
+        let changed = field.regime().map(|prev| prev.key()) != Some(class.key());
+        if changed {
+```
+
+## Two independent axes
+
+The rarefaction axis takes the peak mean free path, forms `Kn = λ / L` through
+`knudsen_number_kernel`, and bands it into a `GoverningModel`: continuum, slip,
+transitional, or free-molecular. `model_for` holds the band edges
+(`corridor.rs:286-296`).
+
+The comms axis takes the peak electron density, maps it through the
+`BlackoutTrigger` to a plasma frequency, and compares against the receiver band
+to produce `gnss_denied`.
+
+Both are derived from the evolved field each step. Neither is scheduled.
+
+## Transition detection
+
+`RegimeClass::key()` (`corridor.rs:140-156`) returns the discrete 5-tuple
+`(model, gnss_denied, mach_regime, thrust_state, touchdown)`. It excludes the
+continuous `knudsen`, `plasma_frequency` and Mach values by design.
+
+Comparing the previous key against the new one means a provenance entry is
+emitted on band crossings only, not on every step where `Kn` moved slightly.
+The class is stored with `field.set_regime(class)` at `corridor.rs:362`.
+
+## Downstream reads
+
+`TrajectoryNav::apply` gates the GNSS fold on the class
+(`corridor.rs:463`):
+
+```rust
+        let denied = field.regime().map(|r| r.gnss_denied).unwrap_or(false);
+```
+
+The same field drives the trunk march predicate in the corridor example
+(`main.rs:86`):
+
+```rust
+            .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))
+```
+
+The blackout window is therefore located by the chemistry, and the pause the
+counterfactual study forks from is the step where the classifier first raised
+`gnss_denied`. The corridor run reports onset at 74.7 km and exit at 47.0 km
+with a 58.4 s dwell.
+
+The Mach, thrust and touchdown axes are opt-in through `FlightAxes`
+(`corridor.rs:163-188`).

@@ -6,7 +6,9 @@
 //! Tier-B Stage 4 gates: the fitted normal shock (`FittedNormalShock`) — exact Rankine–Hugoniot jump, the
 //! nonequilibrium ionization lag, and the `O(1)`-rank post-shock relaxation profile.
 
-use deep_causality_cfd::{FittedNormalShock, Park2tClosure, PostShockState};
+use deep_causality_cfd::{
+    FittedNormalShock, Park2tClosure, PostShockState, REDUCED_MASS_AMU, reduced_mass_amu,
+};
 use deep_causality_physics::PhysicsErrorEnum;
 use deep_causality_tensor::Truncation;
 
@@ -15,14 +17,14 @@ fn tr() -> Truncation<f64> {
 }
 
 /// The RAM-C Park-2T closure built from a post-shock state: free-stream `T_ve(0)`, post-shock pressure
-/// (atm), N₂–N₂ reduced mass, and `θ_v(N₂)`.
+/// (atm), the N₂–N₂ reduced mass (the single crate definition, not a restated literal), and `θ_v(N₂)`.
 fn ramc_closure(post: &PostShockState<f64>) -> Park2tClosure<f64> {
     const BOLTZMANN: f64 = 1.380_649e-23;
     const ATM: f64 = 101_325.0;
     Park2tClosure {
         t_ve_initial: 250.0,
         pressure_atm: post.n_tot2 * BOLTZMANN * post.t2 / ATM,
-        reduced_mass_amu: 7.0,
+        reduced_mass_amu: REDUCED_MASS_AMU,
         theta_vib: 3_393.0,
     }
 }
@@ -106,9 +108,13 @@ fn ramc_peak_ne_in_order_of_magnitude_band() {
 }
 
 #[test]
-fn park2t_controller_marches_ramc_within_3x() {
-    // Gap-3 chemistry-fidelity gate: driving ionization off Tₐ = √(T_tr·T_ve) (not the hot T₂) lands peak
-    // n_e within ~3× of the RAM-C II anchor 1e19 — down from the single-temperature surrogate's ~12×.
+fn park2t_controller_lands_below_ramc_after_the_mu_correction() {
+    // Re-derived under the corrected N₂–N₂ reduced mass (μ = 14.00,
+    // fix-ramc-vibrational-relaxation-pair). The Park-2T controller no longer agrees with the RAM-C II
+    // anchor to ~3x. That "+0.0 dec" headline was an artifact of the invalid μ = 7.0 (the N–N atomic
+    // pair). Correcting μ lengthens τ_vt about 1.9x, cools Tₐ, and drops peak n_e to ~5.3e17, which is
+    // 1.27 decades below the anchor. This is a regression pin on the corrected value, not a re-widened
+    // agreement band (audit D3): the offset is the result.
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
     let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
     let u2 = 7650.0 * post.u_ratio;
@@ -117,10 +123,16 @@ fn park2t_controller_marches_ramc_within_3x() {
     let out = shock
         .stagnation_line_blackout_2t(&post, residence_time, &closure, 9.4e9)
         .unwrap();
+    // ~5.3e17, pinned within about ±0.3 decade for regression. Not presented as agreement with RAM-C II.
     assert!(
-        out.electron_density > 3.0e18 && out.electron_density < 3.0e19,
-        "Park-2T peak n_e {:.3e} should be within ~3× of RAM-C II (1e19)",
+        out.electron_density > 3.0e17 && out.electron_density < 1.0e18,
+        "corrected Park-2T peak n_e {:.3e} should land ~5.3e17 (1.27 dec below RAM-C II 1e19)",
         out.electron_density
+    );
+    let decades = (out.electron_density / 1.0e19).log10();
+    assert!(
+        (-1.4..=-1.1).contains(&decades),
+        "the offset should be about -1.27 decades, got {decades:.2}"
     );
     assert!(
         out.blackout,
@@ -201,7 +213,7 @@ fn park2t_propagates_relaxation_kernel_error_on_non_positive_pressure() {
     let bad_closure = Park2tClosure {
         t_ve_initial: 250.0,
         pressure_atm: 0.0, // non-physical: trips the Millikan–White pressure guard
-        reduced_mass_amu: 7.0,
+        reduced_mass_amu: REDUCED_MASS_AMU,
         theta_vib: 3_393.0,
     };
     let err = shock
@@ -211,4 +223,59 @@ fn park2t_propagates_relaxation_kernel_error_on_non_positive_pressure() {
         matches!(err.0, PhysicsErrorEnum::Singularity(_)),
         "non-positive relaxation pressure must propagate a Singularity: {err:?}"
     );
+}
+
+// --- The reduced mass is derived from a named pair (fix-ramc-vibrational-relaxation-pair) -----------
+//
+// μ_sr was a bare literal 7.0 with a prose derivation nothing checked; 7.00 amu is the N–N pair — two
+// nitrogen *atoms*, which have no vibrational mode and cannot relax. These pin the value to its named
+// constituent masses and exercise the monatomic-rejection guard that would have caught the original slip.
+
+#[test]
+fn reduced_mass_is_derived_from_the_named_n2_n2_pair() {
+    // Pin μ_sr against the constituent masses stated independently here (N₂ = 28.014 amu, two nitrogen
+    // atoms at the 14.007 standard atomic weight). If the crate constant ever drifts from the named
+    // pair, the exact failure that let the N–N slip 7.0 survive, this fails: the expected value is
+    // recomputed from the pair, not copied from the constant.
+    const M_N2_AMU: f64 = 28.014; // the diatomic that relaxes: two nitrogen atoms
+    let expected = M_N2_AMU * M_N2_AMU / (M_N2_AMU + M_N2_AMU); // μ = m(N₂)/2 = 14.007
+    assert!(
+        (REDUCED_MASS_AMU - expected).abs() < 1e-9,
+        "μ must equal the N₂–N₂ reduced mass {expected}, got {REDUCED_MASS_AMU}"
+    );
+    // It must also equal the checked constructor fed the same diatomic pair.
+    let via_ctor = reduced_mass_amu(M_N2_AMU, M_N2_AMU, true).unwrap();
+    assert!(
+        (REDUCED_MASS_AMU - via_ctor).abs() < 1e-12,
+        "the constant and the constructor must agree: {REDUCED_MASS_AMU} vs {via_ctor}"
+    );
+    // Regression against the superseded slip: μ is not the meaningless 7.0.
+    assert!(
+        (REDUCED_MASS_AMU - 7.0).abs() > 1.0,
+        "μ must not be the N–N atomic slip 7.0, got {REDUCED_MASS_AMU}"
+    );
+}
+
+#[test]
+fn a_monatomic_relaxing_species_is_rejected() {
+    // The relaxing species must carry a vibrational mode. Atomic nitrogen (monatomic) does not, so the
+    // N–N pair, whose reduced mass is the meaningless ~7.0 amu the committed value carried, must be
+    // refused rather than assigned a μ. The masses would compute 14.007·14.007/28.014 = 7.0 if not
+    // rejected.
+    const M_N_AMU: f64 = 14.007; // atomic nitrogen, monatomic
+    let rejected = reduced_mass_amu(M_N_AMU, M_N_AMU, false);
+    assert!(
+        matches!(
+            rejected,
+            Err(ref e) if matches!(e.0, PhysicsErrorEnum::PhysicalInvariantBroken(_))
+        ),
+        "a monatomic relaxing species (would give μ = 7.0) must be rejected, got {rejected:?}"
+    );
+    // The guard is on molecularity, not mass: the same masses with a diatomic relaxing species compute.
+    assert!(
+        reduced_mass_amu(M_N_AMU, M_N_AMU, true).is_ok(),
+        "a diatomic relaxing species must be accepted"
+    );
+    // A non-positive mass is also refused.
+    assert!(reduced_mass_amu(-1.0, 28.0, true).is_err());
 }

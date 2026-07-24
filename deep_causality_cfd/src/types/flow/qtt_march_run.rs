@@ -21,7 +21,7 @@ use super::qtt_march_pause::MarchPause;
 use crate::CfdScalar;
 use crate::solvers::{
     QttImmersed2d, QttIncompressible2d, divergence_residual, drag_lift, kinetic_energy, max_bond,
-    max_speed, wall_heat_flux,
+    max_speed, penalization_heat_integral,
 };
 use crate::tensor_bridge::{QttProjector2d, dequantize_2d, quantize_2d};
 use crate::traits::Marcher;
@@ -123,8 +123,9 @@ where
     dy: R,
     dt: R,
     trunc: Truncation<R>,
-    /// The immersed body's mask + Brinkman `eta`, kept for the wall heat-flux integral.
-    wall: Option<(CausalTensorTrain<R>, R)>,
+    /// The immersed body's mask, Brinkman `eta` and wall temperature `T_w`, kept for the
+    /// penalization heat integral.
+    wall: Option<(CausalTensorTrain<R>, R, R)>,
 }
 
 impl<R> CoupledCarrier<2, R> for QttCarrier<R>
@@ -144,7 +145,7 @@ where
             dy: cfg.dy,
             dt: cfg.dt,
             trunc: cfg.trunc,
-            wall: cfg.body.as_ref().map(|b| (b.mask.clone(), b.eta)),
+            wall: cfg.body.as_ref().map(|b| (b.mask.clone(), b.eta, b.t_wall)),
         })
     }
 
@@ -204,15 +205,15 @@ where
             field.set_scalar("alpha", adv_ct.as_slice().to_vec());
         }
 
-        if let Some((mask, eta)) = &self.wall
+        if let Some((mask, eta, t_wall)) = &self.wall
             && let Some(t_tr) = field.scalar("T_tr")
         {
             let t_ct = CausalTensor::new(t_tr.to_vec(), shape.to_vec()).map_err(|e| {
                 PhysicsError::DimensionMismatch(alloc::format!("T_tr quantize: {e:?}"))
             })?;
             let t_tt = quantize_2d(&t_ct, &self.trunc)?;
-            let q = wall_heat_flux(mask, &t_tt, R::zero(), *eta, self.dx, self.dy)?;
-            field.set_scalar("wall_heat_flux", Vec::from([q]));
+            let q = penalization_heat_integral(mask, &t_tt, *t_wall, *eta, self.dx, self.dy)?;
+            field.set_scalar("penalization_heat_integral", Vec::from([q]));
         }
         Ok(())
     }
@@ -222,6 +223,12 @@ where
         let vf = dequantize_2d(&state.1, self.lx, self.ly)?;
         report.set_final_field(uf.as_slice().to_vec());
         report.add_series("final_v", vf.as_slice().to_vec());
+        // Record the reference the penalization heat integral is defined against. The quantity is a
+        // difference from `T_w`, so a series of it means nothing without the value it was taken
+        // against — and `T_w` was hardcoded to zero and invisible before it became configurable.
+        if let Some((_, _, t_wall)) = &self.wall {
+            report.add_series("t_wall", Vec::from([*t_wall]));
+        }
         Ok(())
     }
 

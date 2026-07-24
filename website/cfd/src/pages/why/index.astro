@@ -1,0 +1,426 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { CRATE_URL, STUDIES_URL, VERIFICATION_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Why — DeepCausality CFD';
+const description =
+  'Which of the six standing challenges in CFD this crate answers, and the measurement behind each answer.';
+
+const couplingCode = `Coupling::between_steps()
+    .then(VibrationalLagStage::new(/* Millikan-White bath */))
+    .then(FiniteRateIonizationStage::new(n_tot).with_density_field("n_tot"))
+    .then(RegimeClassify::new(l_char, trigger))
+    .then(BankSteeredLift::new(rho_ref, cda_over_m, l_over_d))
+    .then(TrajectoryNav::new(q_diag, gnss_var, optical_var).with_imu(imu))
+    .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
+    .build()`;
+
+const regimeLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+regime -> slip (GNSS-denied),    Kn=0.01705925949914955
+regime -> continuum (GNSS-denied), Kn=0.009938308574526865
+regime -> continuum (GNSS-available), Kn=0.00025839060489290773`;
+
+const precisionCode = `/// Working precision.
+pub type FloatType = f64; // or f32, or deep_causality_num::Float106
+
+/// Lift an exact \`f64\` specification into the working precision.
+pub fn ft(x: f64) -> FloatType {
+    FromPrimitive::from_f64(x).expect("specification lifts into FloatType")
+}`;
+
+const studyCode = `let table = CfdFlow::study("weather-dispersion table")
+    .cases(model::weather_cases())
+    .baseline(model::standard_day)
+    .alternate(model::weather_world)
+    .ensemble(constants::MC_DRAWS)
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)
+    .reduce_ensemble(model::world_row)
+    .gates(model::weather_gates())
+    .verdict()?;`;
+---
+<BaseLayout title={title} description={description} path="/why/">
+  <SiteHeader slot="header" />
+
+  <article class="page wpage">
+    <header class="whead">
+      <p class="eyebrow">Why</p>
+      <h1>Four grand challenges</h1>
+      <p class="lede">
+        Teschner's survey of the six biggest unsolved problems in CFD, drawn from
+        the NASA CFD Vision 2030 Study, names where the field is stuck. Four of
+        those six have informed the design of this CFD library. 
+      </p>
+    </header>
+
+    <!-- ---------------------------------------------------------------- -->
+
+    <section class="wcard panel corner-brackets" id="algorithms">
+      <p class="tag">Challenge 3: Numerical algorithms</p>
+      <h2>Error is attributed, and cost falls out of the representation</h2>
+
+      <p class="quote">
+        The survey records that uncertainty quantification is "unexplored in most
+        cases," that error estimation for time-dependent flows lacks robustness,
+        and that modelling error, boundary-condition error and numerical error
+        resist being quantified at the same time.
+      </p>
+
+      <p class="body">
+        Every theory, solver, stage and observable in the crate is generic over a
+        single real scalar. A program fixes one alias and the whole computation
+        runs at that precision, from the flux stencils through to the Kalman
+        filter, downcasting to <code>f64</code> only at the display boundary.
+      </p>
+
+      <Code code={precisionCode} lang="rust" themes={SHIKI} />
+
+      <p class="body">
+        That turns error attribution into an experiment you can run. The
+        plasma-blackout corridor was flown at <code>f64</code> and again at
+        106-bit precision. Every gate and every discrete event step came out
+        identical; the continuous witnesses agreed to 15 or 16 significant
+        digits. Round-off is therefore excluded, and the corridor's remaining
+        error budget sits in the model closures and the grid. One line changes,
+        and the question is answered by measurement rather than by argument.
+      </p>
+
+      <p class="body">
+        Cost is attacked at the representation. The compressible marchers run on
+        quantized tensor trains, where a <code>2^L</code> grid costs order
+        <code>χ² · L</code>: logarithmic in point count, with sharp structure
+        paid for in bond dimension. The rank studies located the driver as
+        coordinate alignment, and the compressible carrier answers it with a
+        shock-fitted inflow strip, so the exact Rankine–Hugoniot state bounds the
+        marched layer and the shock is never captured.
+      </p>
+
+      <ul class="nums">
+        <li>Graded-torus MMS, 8² → 64²: observed order 1.98–2.01 against 2.00; divergence-freeness exact by construction.</li>
+        <li>Taylor–Green RHS kernel against exact autodiff derivatives: max abs error 1.11e-16.</li>
+        <li>Precision ladder on the same program: 3e-8 (f32) / 1e-16 (f64) / 8e-33 (Float106).</li>
+        <li>Sod shock tube at 512 cells, t = 0.2: density L1 0.0175, velocity 0.0274, pressure 0.0151; star pressure p* = 0.3031 exact.</li>
+        <li>Taylor–Green on a tensor train at 32²: bond 32 against 1024 dense, a 32× compression, observed order 2.18.</li>
+        <li>Blunt-body bow shock, 2⁵ → 2⁷: fitted bond 3 → 5, Cartesian capture bond 16 → 61.</li>
+      </ul>
+
+      <p class="src">
+        <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
+        <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>
+      </p>
+    </section>
+
+    <!-- ---------------------------------------------------------------- -->
+
+    <section class="wcard panel corner-brackets" id="modelling">
+      <p class="tag">Challenge 2: Physical modelling</p>
+      <h2>A model's calibration range is a runtime predicate</h2>
+
+      <p class="quote">
+        The survey's charge against the standard closures is that they are
+        calibrated over a range of flows and then fail outside it, with the
+        failure invisible from inside the run.
+      </p>
+
+      <p class="body">
+        Here the regime is a classified property of the evolved state, decided
+        again on every step from a measured quantity. Three axes switch
+        independently. The freestream Knudsen number selects the governing model:
+        continuum Navier–Stokes, slip-corrected continuum, transitional, or
+        free-molecular. The force ratio <code>ε = a_aero/a_grav</code> selects the
+        integrator, so a trajectory advances on the exact KS-conformal core with
+        aero as a between-step kick while gravity dominates, then switches to
+        direct Cowell once aero does. The evolved electron density sets the plasma
+        frequency, and the plasma frequency decides whether the GNSS link exists
+        at all.
+      </p>
+
+      <p class="body">
+        Because the classification is read off the field, a regime change is an
+        event the run finds rather than a station it is told to switch at. Every
+        transition lands in the provenance log. From a committed corridor run:
+      </p>
+
+      <Code code={regimeLog} lang="text" themes={SHIKI} />
+
+      <p class="body">
+        One descent moves through orbit-like dynamics, slip flow, continuum flow,
+        comms blackout and reacquisition inside one uninterrupted program, with
+        the governing model changing underneath it four times. Turbulence
+        closures are staged on the DEC solver behind the spectra observables; the
+        <a href="/roadmap/">roadmap</a> carries the sequencing.
+      </p>
+
+      <ul class="nums">
+        <li>RAM-C II stagnation streamline, ~71 km, M = 25: the uncalibrated finite-rate network, run as prediction rather than fit, lands at 2.251e19 m⁻³ against the ~1e19 m⁻³ flight anchor, +0.35 decades inside a ±0.70 band.</li>
+        <li>The closed-form Park-2T controller lands at 5.31e17 m⁻³, 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction; the offset is reported, not tuned away.</li>
+        <li>Plasma frequency ω_p 4.111e10 rad/s against the 9.40e9 comms band; blackout classified true.</li>
+        <li>Validated incompressible envelope Re 100 to 1600; the wake is reported and never gated.</li>
+      </ul>
+
+      <p class="src">
+        <a href="/validation/">Validation records</a>
+        <a href="/boundaries/">Capability boundaries</a>
+      </p>
+    </section>
+
+    <!-- ---------------------------------------------------------------- -->
+
+    <section class="wcard panel corner-brackets" id="mdao">
+      <p class="tag">Challenge 6: Multidisciplinary analysis and optimization</p>
+      <h2>Nothing is exchanged, because nothing is separate</h2>
+
+      <p class="quote">
+        The survey observes that coupling several physics solvers needs a robust
+        framework, that uncertainty propagation across a solver chain is
+        unaddressed, and that no standardized multidisciplinary exchange format
+        exists in the way CGNS serves CFD alone.
+      </p>
+
+      <p class="body">
+        A coupling stack here is a static cons-tuple of physics stages stepping
+        one shared field. No file, no adapter, and no exchange format exist,
+        because the disciplines were never in separate processes.
+      </p>
+
+      <Code code={couplingCode} lang="rust" themes={SHIKI} />
+
+      <p class="body">
+        Vibrational relaxation, reacting plasma chemistry, regime classification,
+        steered aerodynamic force, a 17-state error-state Kalman navigation
+        engine, and a bounded-correction safety gate, in one loop body. Stages
+        communicate through named fields on the evolved state, and an
+        <code>Err</code> from any stage short-circuits the whole step.
+      </p>
+
+      <p class="body">
+        Uncertainty crosses the chain the same way. The ensemble index threads
+        into the stack, so a Monte-Carlo draw is a parameter of the coupled
+        physics rather than a wrapper around it. The evolved electron density
+        gates which measurements the Kalman filter is permitted to fold; the
+        Knudsen number selects the governing model; the safety gate's clamped
+        bank command is flown by the aero stage and steers the trajectory that
+        sets the next step's freestream. Fluid dynamics, estimation and control
+        close one loop.
+      </p>
+
+      <ul class="nums">
+        <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 333.6 s.</li>
+        <li>Weather-dispersion table: six atmospheres alternated from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
+        <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
+      </ul>
+
+      <p class="src">
+        <a href="/examples/">Worked examples</a>
+        <a href={CRATE_URL}>deep_causality_cfd/ <span aria-hidden="true">↗</span></a>
+      </p>
+    </section>
+
+    <!-- ---------------------------------------------------------------- -->
+
+    <section class="wcard panel corner-brackets" id="knowledge">
+      <p class="tag">Challenge 5: Knowledge extraction</p>
+      <h2>The run returns a verdict, not a field</h2>
+
+      <p class="quote">
+        The survey notes that pulling whole simulations onto a workstation stops
+        being possible at scale, and that extracting actionable information from
+        single runs and parameter sweeps needs better frameworks than the
+        post-processor.
+      </p>
+
+      <p class="body">
+        The study grammar reduces inside the process. A campaign names its cases,
+        marches or forks them, reduces each outcome to a scored row, and gates
+        the table. What crosses the boundary is the table and the verdict; the
+        field stays where it was computed.
+      </p>
+
+      <Code code={studyCode} lang="rust" themes={SHIKI} />
+
+      <p class="body">
+        <code>verdict()</code> returns data. The DSL never prints and never exits,
+        so the caller decides what an exit code means. The gating sequence is a
+        named value the study inserts whole, which makes an acceptance criterion
+        a reviewable object rather than a comment in a post-processing script.
+        Every branch stamps a <code>!!ContextAlternation!!</code> marker into its
+        provenance log naming its baseline, and an optional
+        <code>save_log(path)</code> flushes provenance to disk, one file per
+        branch under a fan-out.
+      </p>
+
+      <p class="body">
+        The same discipline covers the crate's own evidence.
+        <code>verification/</code> holds thirteen runnable programs gated against
+        analytic solutions, published references, or invariants the
+        discretization must preserve. <code>studies/</code> holds the empirical
+        probes that settled design questions, with each finding encoded as a gate
+        so the conclusion stays reproducible instead of surviving as folklore.
+        Four hypotheses were refuted this way and are recorded as refuted.
+      </p>
+
+      <ul class="nums">
+        <li>Thirteen gated verification programs, each with a committed run artifact and a stated caveat.</li>
+        <li>Findings encoded as gates: a study that stops reproducing fails, rather than quietly ageing.</li>
+        <li>Four refuted hypotheses kept on the record with the measurement that killed them.</li>
+      </ul>
+
+      <p class="src">
+        <a href="/validation/">Validation records</a>
+        <a href="/boundaries/">Capability boundaries</a>
+      </p>
+    </section>
+
+    <!-- ---------------------------------------------------------------- -->
+
+    <section class="wcard panel corner-brackets wcard-accent" id="counterfactual">
+      <p class="tag">Not on the list</p>
+      <h2>Forking a running simulation</h2>
+
+      <p class="body">
+        The survey's six entries are the problems the field has agreed to name.
+        Counterfactual dynamics is absent from them, and the reason is that a
+        simulation has been something you configure and then run
+        to completion. Changing a decision meant changing an input file and
+        paying for the whole trajectory again.
+      </p>
+
+      <p class="body">
+        <code>CfdFlow</code> separates the description of a problem from its
+        execution. A march runs a description until a predicate fires and
+        yields a resumable pause. A campaign forks
+        that pause once per candidate and continues each branch in its own
+        alternated world. The fork shares the paused state in O(1) through
+        copy-on-write, tensor fields, navigation engine and provenance log
+        included, so the branch point is a flow-resolved state rather than a
+        rerun from initial conditions.
+      </p>
+
+      <p class="body">
+        The distinction carries a practical consequence. Forking parameters
+        gives a sweep; forking state mid-flight gives the decision the vehicle
+        faces, with its plume, its sheath, and its filter as they stand at that
+        instant.
+      </p>
+
+      <ul class="nums">
+        <li>Fork setup measured at 42 ns; continuation cost 0.67–1.04× the trunk.</li>
+        <li>Bank-angle corridor: seventeen worlds, six coarse and eleven fine, with the best committed mid-descent.</li>
+        <li>Plasma retropulsion: the mid-burn fork of a marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s.</li>
+      </ul>
+
+      <p class="src">
+        <a href="/blueprints/fork-a-running-simulation/">Fork a running simulation</a>
+        <a href="/examples/">Worked examples</a>
+      </p>
+    </section>
+
+    <!-- ---------------------------------------------------------------- -->
+
+    <section class="wsection">
+      <h2 class="wsection-head">References</h2>
+      <ol class="refs">
+        <li>
+          Teschner, T.-R. <em>The 6 Biggest and Unsolved Challenges in CFD.</em>
+          CFD University, Cranfield University. Accessed 21 July 2026.
+          <a href="https://cfd.university/blog/the-6-biggest-and-unoslved-challenges-in-cfd/">
+            cfd.university <span aria-hidden="true">↗</span>
+          </a>
+        </li>
+        <li>
+          Slotnick, J., Khodadoust, A., Alonso, J., Darmofal, D., Gropp, W.,
+          Lurie, E., and Mavriplis, D. <em>CFD Vision 2030 Study: A Path to
+          Revolutionary Computational Aerosciences.</em> NASA/CR-2014-218178,
+          NASA Langley Research Center, March 2014.
+          <a href="https://ntrs.nasa.gov/citations/20140003093">
+            ntrs.nasa.gov/citations/20140003093 <span aria-hidden="true">↗</span>
+          </a>
+        </li>
+      </ol>
+      <p class="note">
+        The challenge numbering above follows Teschner's article. Every measured
+        figure is copied from a committed artifact under
+        <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
+        or <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>,
+        at <code>f64</code> on an Apple M3 Max, release build.
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .wpage { max-width: var(--w-panel); }
+  .whead { margin-bottom: var(--space-8); }
+  .whead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .whead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+
+  .wcard {
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+    scroll-margin-top: calc(var(--header-h) + var(--space-4));
+  }
+  .wcard-accent { border-left: 3px solid var(--accent); }
+
+  .tag {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0 0 var(--space-2);
+  }
+  .wcard h2 {
+    font-size: var(--t-h3);
+    margin: 0 0 var(--space-4);
+    max-width: var(--measure);
+  }
+
+  .quote {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    margin: 0 0 var(--space-4);
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--line-2);
+    max-width: var(--measure);
+  }
+  .body {
+    color: var(--fg-1);
+    margin: 0 0 var(--space-4);
+    max-width: var(--measure);
+  }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+    max-width: var(--measure);
+  }
+
+  .src {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+
+  .wsection { margin-bottom: var(--space-8); }
+  .wsection-head {
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-4);
+  }
+  .refs { margin: 0 0 var(--space-4); padding-left: var(--space-5); }
+  .refs li { color: var(--fg-1); margin: 0 0 var(--space-3); max-width: var(--measure); }
+  .note { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+</style>

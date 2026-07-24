@@ -228,3 +228,175 @@ pub fn force_coefficient<R: DecNsScalar>(force_component: R, u_ref: R, reference
     let half = R::from_f64(0.5).expect("0.5 lifts into every real field");
     force_component / (half * u_ref * u_ref * reference_area)
 }
+
+/// The **Fourier-law wall heat flux** on an immersed cut body:
+/// `q = −k ∮_S ∇T·n dA`, summed over every cut cell's fragments.
+///
+/// This is Fourier's law as an actual surface integral — a gradient, a conductivity and a wall
+/// normal, integrated over the wetted area. It is the thermal counterpart of
+/// [`viscous_surface_force`] and shares its geometry and its wall-normal reconstruction, so the two
+/// diagnostics agree about where the wall is and how far the first fluid sample sits from it; a
+/// discrepancy between friction and heat flux is then physics rather than two different wall models.
+///
+/// `scalar` is the temperature 0-cochain (one value per vertex) that
+/// [`DecScalarRate`](crate::solvers::dec::DecScalarRate) marches, `t_wall` the temperature the body
+/// is held at, and `k` the thermal conductivity. If the scalar is marched with diffusivity `κ`, the
+/// physically consistent conductivity is `k = ρ·c_p·κ`; the two are separate inputs because the
+/// crate carries no `c_p`, and a caller supplying both consistently gets the physical answer.
+///
+/// **Sign convention:** with `n` the body's **outward** normal, a positive `q` is heat flowing from
+/// the wall into the fluid. A body hotter than the surrounding fluid therefore reports `q > 0`.
+///
+/// The wall-normal derivative is reconstructed **one-sided to the true surface distance**
+/// (Kirkpatrick et al. 2003), exactly as the viscous force reconstructs the shear: the wall value
+/// `t_wall` is anchored at the fragment centroid `c`, the field is sampled by multilinear
+/// interpolation at `c + Δh·n` one cell out along the outward normal, and
+/// `∂T/∂n ≈ (T_sample − t_wall)/Δh`. A central difference straddling the cut is not used — it mixes
+/// fluid and solid-side nodes over a full cell, and the solid side is at the wall value by
+/// construction, so it would systematically halve the gradient.
+///
+/// This is **not** the QTT path's
+/// [`penalization_heat_integral`](crate::solvers::qtt::penalization_heat_integral), which is a
+/// volumetric penalization rate `(1/η)∫χ(T_w−T)dV` with no gradient, conductivity or normal. That
+/// quantity is not a flux and cannot be scaled into one; volume penalization has no wall surface,
+/// only a mask smoothed over a numerical width. The two are not interchangeable.
+///
+/// Like the viscous force this is a read-only diagnostic, resolution-bound at the body.
+///
+/// # Errors
+/// * [`PhysicsError::DimensionMismatch`] when `scalar` is not one value per vertex.
+/// * [`PhysicsError::NumericalInstability`] when `k` or `t_wall` is not finite.
+/// * [`PhysicsError::TopologyError`] when the manifold's geometry is not axis-aligned (per-edge
+///   graded geometry has no single per-axis spacing for the wall-normal step).
+pub fn wall_heat_flux<const D: usize, R: DecNsScalar>(
+    manifold: &Manifold<LatticeComplex<D, R>, R>,
+    registry: &CutCellRegistry<D, R>,
+    scalar: &CausalTensor<R>,
+    t_wall: R,
+    k: R,
+) -> Result<R, PhysicsError> {
+    use alloc::format;
+    use deep_causality_topology::ChainComplex;
+
+    if !k.is_finite() || !t_wall.is_finite() {
+        return Err(PhysicsError::NumericalInstability(
+            "wall_heat_flux: conductivity and wall temperature must be finite".into(),
+        ));
+    }
+    let complex = manifold.complex();
+    let n0 = complex.num_cells(0);
+    if scalar.len() != n0 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "wall_heat_flux: expected {} scalar values (one per vertex), got {}",
+            n0,
+            scalar.len()
+        )));
+    }
+
+    let dx = manifold
+        .metric()
+        .and_then(|g| g.axis_lengths())
+        .ok_or_else(|| {
+            PhysicsError::TopologyError(
+                "wall_heat_flux requires an axis-aligned geometry (per-axis spacing)".into(),
+            )
+        })?;
+
+    // Vertex temperatures keyed by lattice position, for the multilinear sample.
+    let temperature: BTreeMap<[usize; D], R> = complex
+        .iter_cells(0)
+        .zip(scalar.as_slice().iter())
+        .map(|(vertex, &t)| (*vertex.position(), t))
+        .collect();
+
+    let cells: Vec<LatticeCell<D>> = complex.iter_cells(D).collect();
+
+    let mut flux = R::zero();
+    for (&cell_id, cut) in registry.iter() {
+        let Some(cell) = cells.get(cell_id) else {
+            continue;
+        };
+        let base = *cell.position();
+        for fragment in cut.fragments() {
+            let area = fragment.area();
+            let centroid = fragment.centroid();
+            let raw_n = fragment.outward_normal();
+            let mut nn = R::zero();
+            for &c in raw_n.iter() {
+                nn += c * c;
+            }
+            if nn <= R::zero() {
+                continue;
+            }
+            let inv = R::one() / nn.sqrt();
+            let mut n = [R::zero(); D];
+            for (i, ni) in n.iter_mut().enumerate() {
+                *ni = raw_n[i] * inv;
+            }
+
+            // True wall-normal step Δh ≈ one cell projected on the normal.
+            let mut delta_h = R::zero();
+            for i in 0..D {
+                delta_h += n[i].abs() * dx[i];
+            }
+            if delta_h <= R::zero() {
+                continue;
+            }
+            let mut sample = [R::zero(); D];
+            for (i, s) in sample.iter_mut().enumerate() {
+                *s = centroid[i] + delta_h * n[i];
+            }
+            let t_sample = sample_scalar(&temperature, &base, &sample, &dx, t_wall);
+
+            // ∂T/∂n from the wall to the first fluid sample, then Fourier's law. With n outward,
+            // a fluid colder than the wall gives ∂T/∂n < 0 and hence q > 0 — heat leaving the wall.
+            let dt_dn = (t_sample - t_wall) / delta_h;
+            flux += (R::zero() - k) * dt_dn * area;
+        }
+    }
+    Ok(flux)
+}
+
+/// Multilinear interpolation of the vertex temperature field at the physical point `p`, by the same
+/// bounded floor search [`sample_velocity`] uses. Corners outside the domain contribute the wall
+/// value rather than zero — for a scalar, zero is a temperature, not a natural "absent" state, and
+/// using it would fabricate a gradient at a domain edge.
+fn sample_scalar<const D: usize, R: DecNsScalar>(
+    temperature: &BTreeMap<[usize; D], R>,
+    base: &[usize; D],
+    p: &[R; D],
+    dx: &[R; D],
+    fallback: R,
+) -> R {
+    let mut lo = [0usize; D];
+    let mut frac = [R::zero(); D];
+    for j in 0..D {
+        let g = p[j] / dx[j];
+        let mut k = base[j];
+        while R::from_usize(k + 1).unwrap_or_else(R::one) <= g {
+            k += 1;
+        }
+        while k > 0 && R::from_usize(k).unwrap_or_else(R::zero) > g {
+            k -= 1;
+        }
+        lo[j] = k;
+        frac[j] = g - R::from_usize(k).unwrap_or_else(R::zero);
+    }
+
+    let mut out = R::zero();
+    for corner in 0..(1usize << D) {
+        let mut pos = [0usize; D];
+        let mut weight = R::one();
+        for j in 0..D {
+            let bit = (corner >> j) & 1;
+            pos[j] = lo[j] + bit;
+            weight *= if bit == 1 {
+                frac[j]
+            } else {
+                R::one() - frac[j]
+            };
+        }
+        out += weight * temperature.get(&pos).copied().unwrap_or(fallback);
+    }
+    out
+}

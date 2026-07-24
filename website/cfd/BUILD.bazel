@@ -17,6 +17,9 @@ astro_site(
     ]) + [
         "package.json",
         "tsconfig.json",
+        # Imported by astro.config.mjs. Without it the sandboxed config load
+        # cannot resolve ./shiki-rust-themes.mjs and the build fails.
+        "shiki-rust-themes.mjs",
     ],
     astro_bin = ":astro_tool",
     node_modules = ":node_modules",

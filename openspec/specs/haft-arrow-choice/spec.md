@@ -26,9 +26,10 @@ docs: causally faithful quantum decomposition requires direct-sum structure (Lor
 
 ### Requirement: The distributivity equations used are stated and proved
 
-The `⊗`-over-`⊕` interaction (pairs distribute over sums — the rig-category coherence that faithful
-direct-sum decompositions rely on) SHALL be stated, and the specific equations the crate uses SHALL
-be proved; the full coherence-diagram machinery SHALL be explicitly deferred with a scope note.
+The `⊗`-over-`⊕` interaction SHALL be stated, and the specific equations the crate uses SHALL be
+proved — pairs distribute over sums, the rig-category coherence that faithful direct-sum
+decompositions rely on. The full coherence-diagram machinery SHALL be explicitly deferred with a
+scope note.
 
 #### Scenario: Used equations are closed, full coherence is deferred
 
@@ -38,11 +39,12 @@ be proved; the full coherence-diagram machinery SHALL be explicitly deferred wit
 
 ### Requirement: ArrowChoice laws are tested and proved in Lean
 
-The ArrowChoice equations on the eager fragment — `left (arr f) = arr (f ⊕ id)`, the
-composition/exchange laws, and `fanin` as the coproduct elimination — SHALL be exercised by Rust
-law-tests (Bazel-registered) and proved in Lean under `DeepCausalityFormal/Haft/ArrowChoice.lean`
-(bare-`lean`, zero `sorry`), citing Hughes 2000 §5 and Lorenz & Barrett 2021 §4 with deviation
-notes, bound by `THEOREM_MAP.md` ids (`haft.arrow_choice.laws`) with Rust witnesses.
+The ArrowChoice equations on the eager fragment SHALL be exercised by Rust law-tests
+(Bazel-registered) and proved in Lean under `DeepCausalityFormal/Haft/ArrowChoice.lean`
+(bare-`lean`, zero `sorry`). The equations are `left (arr f) = arr (f ⊕ id)`, the
+composition/exchange laws, and `fanin` as the coproduct elimination; the proofs cite Hughes 2000 §5
+and Lorenz & Barrett 2021 §4 with deviation notes, bound by `THEOREM_MAP.md` ids
+(`haft.arrow_choice.laws`) with Rust witnesses.
 
 #### Scenario: Both bridge sides exist for the choice fragment
 

@@ -19,13 +19,20 @@ use crate::solvers::dec::DecNsScalar;
 /// the matching stage:
 ///
 /// * `collect_rate_source` — adds a forcing term to the rate right-hand side (e.g. a body force).
-/// * `collect_constrained_edges` — edges pinned to zero in the constrained projection.
+/// * `collect_constrained_edges` — edges pinned to zero in the constrained projection, unioned with
+///   the structural no-slip set.
 /// * `collect_lift` — prescribed (inhomogeneous, possibly step-dependent) edge values, e.g. a
 ///   moving-wall tangential velocity.
 /// * `collect_prescribed_edges` — inflow edges fixed at their field value, their flux counted in
 ///   the open-boundary projection's divergence (`leray_project_open_opts`).
 /// * `collect_reference_vertices` — outflow pressure-reference vertices for the open-boundary
 ///   projection.
+/// * `collect_slip_edges` — edges *removed* from the structural no-slip set, freeing them for a
+///   free-slip wall.
+///
+/// The list above is the whole set, and every entry is folded by
+/// [`DecNsSolver::with_zones`](crate::solvers::dec::DecNsSolver::with_zones) — a hook documented
+/// here but never read would be a promise the solver does not keep.
 ///
 /// Each hook *collects into* an accumulator, so a composite zone simply sequences its members'
 /// calls — composition is **static** (a typed tuple, no `dyn`; see the `()` and `(A, B)` impls),
@@ -39,6 +46,16 @@ pub trait BoundaryZone<const D: usize, R: DecNsScalar> {
     fn collect_rate_source(&self, _manifold: &Manifold<LatticeComplex<D, R>, R>, _acc: &mut [R]) {}
 
     /// Add this zone's zero-constrained edges.
+    ///
+    /// Composed by **union** with the structural no-slip set and the inflow edges: a constrained
+    /// edge is one pinned to zero rate, so pinning it twice is idempotent. The union is taken after
+    /// `collect_slip_edges` has un-pinned its edges, so a constraint supplied here outranks a
+    /// free-slip relaxation.
+    ///
+    /// No shipped zone implements this hook, and it currently has **no known consumer**. An earlier
+    /// note here named `aperture-resolved-noslip` as its intended user; that was incorrect — that
+    /// capability is already implemented, is the default wall treatment, and derives its constraints
+    /// through `CutCellRegistry::cut_face_constraints` rather than through a zone.
     fn collect_constrained_edges(
         &self,
         _manifold: &Manifold<LatticeComplex<D, R>, R>,

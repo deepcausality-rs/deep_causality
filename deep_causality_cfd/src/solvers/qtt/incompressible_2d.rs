@@ -47,7 +47,11 @@ where
     /// kinematic viscosity `nu`, and per-step round policy `trunc`.
     ///
     /// # Errors
-    /// Propagates operator-assembly errors.
+    /// [`PhysicsError::PhysicalInvariantBroken`] when the configuration is outside the solver's
+    /// numerical envelope: non-finite or non-positive `dx`/`dy`/`dt`, negative or non-finite `nu`, or
+    /// a `dt` beyond the diffusive explicit-stability limit `min(dx, dy)² / (4ν)` (this solver
+    /// advances by explicit Euler). The diagnostic names the limit and both the configured and the
+    /// limiting value, matching the DEC family's `cfl_check`. Propagates operator-assembly errors.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         lx: usize,
@@ -58,6 +62,7 @@ where
         nu: R,
         trunc: Truncation<R>,
     ) -> Result<Self, PhysicsError> {
+        validate_qtt_envelope(dx, dy, dt, nu)?;
         Ok(Self {
             lx,
             ly,
@@ -214,4 +219,57 @@ where
     ) -> Result<Self::Output, PhysicsError> {
         self.step(&state.0, &state.1)
     }
+}
+
+/// Validate the QTT solver's shared numerical envelope: grid spacings, time step, viscosity, and the
+/// diffusive explicit-stability limit. Shared by [`QttIncompressible2d::new`] and, through it,
+/// [`QttImmersed2d::new`](super::QttImmersed2d) — the contract the DEC family enforces in
+/// `dec_ns_solver::cfl_check`, which this crate's QTT family previously lacked at any layer.
+///
+/// The diagnostic names the violated limit and reports both the configured value and the limiting
+/// value, so a caller can act without reading the solver source.
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] on any envelope violation.
+pub(crate) fn validate_qtt_envelope<R: CfdScalar>(
+    dx: R,
+    dy: R,
+    dt: R,
+    nu: R,
+) -> Result<(), PhysicsError> {
+    if !dx.is_finite() || dx <= R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "QTT solver: dx must be positive and finite, got {dx:?}"
+        )));
+    }
+    if !dy.is_finite() || dy <= R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "QTT solver: dy must be positive and finite, got {dy:?}"
+        )));
+    }
+    if !dt.is_finite() || dt <= R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "QTT solver: dt must be positive and finite, got {dt:?}"
+        )));
+    }
+    if !nu.is_finite() || nu < R::zero() {
+        return Err(PhysicsError::PhysicalInvariantBroken(format!(
+            "QTT solver: kinematic viscosity nu must be non-negative and finite, got {nu:?}"
+        )));
+    }
+    // Diffusive explicit-stability limit (FTCS, explicit Euler): dt ≤ min(dx, dy)² / (4ν). Only
+    // binds for a viscous flow; an inviscid solve (ν = 0) has no diffusive limit.
+    if nu > R::zero() {
+        let four = R::from_f64(4.0).expect("4 lifts into every real field");
+        let dmin = if dx < dy { dx } else { dy };
+        let diffusive_limit = dmin * dmin / (four * nu);
+        if dt > diffusive_limit {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "QTT solver: dt {dt:?} exceeds the diffusive explicit-stability limit {diffusive_limit:?} \
+                 (min(dx, dy)² {:?} / (4·ν {nu:?})); explicit Euler is unstable beyond it",
+                dmin * dmin
+            )));
+        }
+    }
+    Ok(())
 }

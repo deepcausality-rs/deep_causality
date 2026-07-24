@@ -103,6 +103,11 @@ where
     pub(crate) ubx: R,
     pub(crate) uby: R,
     pub(crate) eta: R,
+    /// The temperature the penalization holds the body at — the thermal analogue of `(ubx, uby)`,
+    /// and the `T_w` the penalization heat integral is defined against. Defaults to zero (set it
+    /// with [`QttMarchConfigBuilder::wall_temperature`]), which is what the observable used
+    /// unconditionally before it was configurable.
+    pub(crate) t_wall: R,
     pub(crate) u_ref: R,
     pub(crate) d_ref: R,
 }
@@ -164,6 +169,7 @@ where
     grid: Option<(usize, usize, R, R)>,
     solver: Option<(R, R, Truncation<R>)>,
     seed: Option<(CausalTensor<R>, CausalTensor<R>)>,
+    t_wall: Option<R>,
     stop: Option<MarchStop<R>>,
     observe: QttObserve,
     body: Option<QttBody<R>>,
@@ -182,6 +188,7 @@ where
             stop: None,
             observe: QttObserve::default(),
             body: None,
+            t_wall: None,
         }
     }
 }
@@ -238,9 +245,24 @@ where
             ubx,
             uby,
             eta,
+            t_wall: self.t_wall.unwrap_or_else(R::zero),
             u_ref,
             d_ref,
         });
+        self
+    }
+
+    /// Set the body's wall temperature `T_w` — the temperature the penalization holds the body at,
+    /// and the reference the penalization heat integral is defined against.
+    ///
+    /// Separate from [`body`](Self::body) rather than a seventh argument to it, so the existing
+    /// call sites are unchanged and the thermal property is named at the point it is set. Order
+    /// against `body` does not matter. Defaults to zero when never called.
+    pub fn wall_temperature(mut self, t_wall: R) -> Self {
+        self.t_wall = Some(t_wall);
+        if let Some(body) = self.body.as_mut() {
+            body.t_wall = t_wall;
+        }
         self
     }
 
