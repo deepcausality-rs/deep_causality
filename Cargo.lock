@@ -519,7 +519,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.15.0"
+version = "0.15.1"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -621,7 +621,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_ethos"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "deep_causality",
  "ultragraph",
@@ -652,7 +652,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_haft"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "deep_causality_algebra",
 ]
@@ -707,7 +707,7 @@ version = "0.1.2"
 
 [[package]]
 name = "deep_causality_physics"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
