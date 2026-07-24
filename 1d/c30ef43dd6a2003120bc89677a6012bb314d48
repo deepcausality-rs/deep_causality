@@ -1,0 +1,128 @@
+deep_causality_cfd/tests/navigation/reentry_nav_tests.rs
+  s_f2afaa4ec55b4b::t_5065517e7758be 28
+  s_f2afaa4ec55b4b::t_1e879a0113cb7a 66,94
+  s_f2afaa4ec55b4b::t_3e4711dc644f37 47,114
+  s_f2afaa4ec55b4b::t_6af7f6caff487e 213,229-230
+  s_f2afaa4ec55b4b::t_9c14a30336e9b5 126
+  s_f2afaa4ec55b4b::t_e7f4b3a949a1d3 144-212,214-228,231-259
+  s_f2afaa4ec55b4b::t_eb6e550549da01 11,14-20
+  s_f2afaa4ec55b4b::t_c81285e7c52a5c 21
+deep_causality_cfd/src/types/flow/corridor/trajectory_nav.rs
+  s_f2afaa4ec55b4b::t_9facb01a4c29dd 89-96,98
+  s_f2afaa4ec55b4b::t_f5076f87db8192 115-120,124-127
+deep_causality_cfd/src/types/flow/state_snapshot.rs
+  s_f2afaa4ec55b4b::t_c107345ee8274e 214-219
+  s_f2afaa4ec55b4b::t_6af7f6caff487e 37
+  s_f2afaa4ec55b4b::t_073f91886a6478 361
+  s_f2afaa4ec55b4b::t_8198d189ccce6f 341-346
+  s_f2afaa4ec55b4b::t_1d142220f32423 355
+deep_causality_cfd/src/navigation/reentry_nav.rs
+  s_f2afaa4ec55b4b::t_84634b8eb99639 119-132,137-140,156
+  s_f2afaa4ec55b4b::t_ceecaa6867892c 230-234
+  s_f2afaa4ec55b4b::t_913ca33e55fa51 186-189,195,204,215-217
+  s_f2afaa4ec55b4b::t_9a190c5558b854 71-81,89,92-97,103-106
+  s_f2afaa4ec55b4b::t_3ceb3411015593 56-58,65
+  s_f2afaa4ec55b4b::t_24bab030d14af1 27,39-47
+  s_f2afaa4ec55b4b::t_af3ac1021ebcf8 145,148-154
+  s_de9b22fc12c0e2::t_f8216dac048197 218-219,235
+deep_causality_cfd/tests/types/flow/state_snapshot_tests.rs
+  s_f2afaa4ec55b4b::t_85ff1789377615 27
+  s_f2afaa4ec55b4b::t_f04fd8d25fb97f 70-71
+deep_causality_cfd/src/navigation/eskf.rs
+  s_f2afaa4ec55b4b::t_5e0dcc880e343b 198-216,220-229
+  s_f2afaa4ec55b4b::t_06ad1217d1172d 163-178,184-186
+  s_f2afaa4ec55b4b::t_0353f67a7f01da 151-160
+  s_f2afaa4ec55b4b::t_b544fd41b7e480 22,24
+  s_f2afaa4ec55b4b::t_a077eb3aa22b5a 251
+  s_f2afaa4ec55b4b::t_5efd2545fec63c 84-113,116-125,128-141
+  s_f2afaa4ec55b4b::t_6a89f3139b6ac1 114-115,126-127
+  s_f2afaa4ec55b4b::t_f55541a6ec3a07 263-274
+deep_causality_cfd/tests/navigation/closed_loop_tests.rs
+  s_f2afaa4ec55b4b::t_3a707610581f0e 116
+  s_f2afaa4ec55b4b::t_8ec0459a0de990 18
+  s_f2afaa4ec55b4b::t_a4edb718e890e5 46
+  s_f2afaa4ec55b4b::t_f258a2216daa04 96
+  s_f2afaa4ec55b4b::t_cd57a2be3eee71 110
+  s_f2afaa4ec55b4b::t_6e5ee314982ac2 38-44,52-58,64-70
+  s_f2afaa4ec55b4b::t_bbfe6be8c09eac 72
+examples/avionics_examples/src/shared/world.rs
+  s_f2afaa4ec55b4b::t_dafd0cf2c37f4d 235-236
+openspec/changes/fix-navigation-filter-correctness/tasks.md
+  s_f2afaa4ec55b4b::t_3359da7710ba41 6-27
+  s_f2afaa4ec55b4b::t_eead03f45ac42c 150-152
+  s_f2afaa4ec55b4b::t_5aa7c419515712 173-188
+  s_f2afaa4ec55b4b::t_01a13a1cfc76eb 140-149,153-169
+  s_f2afaa4ec55b4b::t_fcbbd9a9f3ec4b 80-92
+  s_f2afaa4ec55b4b::t_c9e56bdc16376b 71-78
+  s_f2afaa4ec55b4b::t_120f73f8bd9a49 33-49
+  s_f2afaa4ec55b4b::t_344b4160668136 122-133
+  s_f2afaa4ec55b4b::t_a27a275fa03189 107-109
+  s_f2afaa4ec55b4b::t_e352738552d90e 98-106,110-116
+  s_f2afaa4ec55b4b::t_f0337d209ab7a9 53-67
+  s_f2afaa4ec55b4b::t_cee8f7cd35c806 79
+examples/avionics_examples/cfd/plasma_blackout/corridor/output.txt
+  s_f2afaa4ec55b4b::t_1e8ab7bc4df9ee 52
+  s_f2afaa4ec55b4b::t_4b5116736e94be 83
+  s_f2afaa4ec55b4b::t_c168cda5fcf645 42
+deep_causality_cfd/tests/types/flow/corridor/navigation_tests.rs
+  s_f2afaa4ec55b4b::t_2c96b0b3ca339b 20,210
+deep_causality_cfd/src/lib.rs
+  s_f2afaa4ec55b4b::t_5969457b8c4664 69-70
+deep_causality_cfd/src/navigation/nav_sensors.rs
+  s_f2afaa4ec55b4b::t_ecc3a54a001c6f 47-54
+deep_causality_cfd/tests/navigation/eskf_tests.rs
+  s_f2afaa4ec55b4b::t_255ed4c0339eb0 50
+  s_f2afaa4ec55b4b::t_1068e36695e413 124-217,219-223,229-233
+  s_f2afaa4ec55b4b::t_5f90e4f8982c53 74
+  s_f2afaa4ec55b4b::t_e026719d22a3ad 116
+  s_f2afaa4ec55b4b::t_92893f950f8dd3 33,102
+  s_f2afaa4ec55b4b::t_6af7f6caff487e 11,224-228,249-257
+  s_f2afaa4ec55b4b::t_c02fe535f20b46 218
+  s_f2afaa4ec55b4b::t_72d0af99490ab4 234-248,258-312
+  s_f2afaa4ec55b4b::t_494ba1ef3a602e 55
+  s_f2afaa4ec55b4b::t_433b6159939b25 313-376
+  s_f2afaa4ec55b4b::t_d13086458f60b4 377-384
+examples/avionics_examples/src/shared/constants.rs
+  s_f2afaa4ec55b4b::t_55f1ca675461ec 172-182,184-189
+openspec/changes/fix-navigation-filter-correctness/design.md
+  s_f2afaa4ec55b4b::t_e66b092c71910d 33-42
+  s_f2afaa4ec55b4b::t_52427f3ed0dc25 26-32
+  s_f2afaa4ec55b4b::t_6f66971c72a5ee 162-186
+  s_f2afaa4ec55b4b::t_a4edabd6469392 10-14
+  s_f2afaa4ec55b4b::t_0e5a520479f61a 61-67,70-73
+openspec/changes/fix-navigation-filter-correctness/proposal.md
+  s_f2afaa4ec55b4b::t_7c0361d39cc36e 94-101
+  s_f2afaa4ec55b4b::t_1824d81be286f8 116-117,121-123,127-140
+  s_f2afaa4ec55b4b::t_73b6b3f63bab97 124-126,141-150
+  s_f2afaa4ec55b4b::t_a4d119e88238de 55-58
+  s_f2afaa4ec55b4b::t_6f8fdf6cd4b3f4 62-65
+  s_f2afaa4ec55b4b::t_d4d25f3043187a 102-110
+examples/avionics_examples/cfd/plasma_blackout/weather/audit/weather.audit.main.log
+  s_f2afaa4ec55b4b::t_45d99198964e8e 442-637
+examples/avionics_examples/cfd/plasma_blackout/weather/weather_table.csv
+  s_f2afaa4ec55b4b::t_4174f77a3363e0 3-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1dc30ef43dd6a2003120bc89677a6012bb314d48",
+  "prompts": {},
+  "sessions": {
+    "s_de9b22fc12c0e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a002e60-3eab-4d3e-a54d-fd4c6abdf1f7",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    },
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
