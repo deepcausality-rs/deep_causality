@@ -176,10 +176,12 @@ pub const P0_DIAG: [f64; 17] = [
 ///
 /// These are the previous per-step values re-expressed as a spectral density by the
 /// `per-step → per-second` conversion `Q_c = Q_step / DT_FLIGHT` (i.e. ×10 at `DT_FLIGHT = 0.1 s`), so
-/// that `Q_c·dt` at the configured step reproduces the calibrated per-step process noise exactly while
-/// making the tuning independent of the step size. The magnitudes therefore read 10× the pre-2026-07-24
-/// per-step diagonal; the filter's behaviour at `DT_FLIGHT` is unchanged (see the discretisation note on
-/// `NavFilter::predict`).
+/// that `Q_c·dt` at the configured step reproduces the calibrated per-step process noise while making the
+/// tuning independent of the step size. The magnitudes therefore read 10× the pre-2026-07-24 per-step
+/// diagonal. The round-trip `Q_step × 10 × 0.1` is bit-exact for the position, velocity, attitude,
+/// accel-bias and clock-bias blocks; for the gyro-bias and clock-drift blocks (`1e-14`) it differs by
+/// ≤1 ULP (`1e-13 × 0.1 ≠ 1e-14` in `f64`), far below any observable effect, so the filter's behaviour at
+/// `DT_FLIGHT` is unchanged **at every displayed figure** (see the discretisation note on `NavFilter::predict`).
 pub const Q_DIAG: [f64; 17] = [
     1.0e-3, 1.0e-3, 1.0e-3, // position
     1.0e-3, 1.0e-3, 1.0e-3, // velocity

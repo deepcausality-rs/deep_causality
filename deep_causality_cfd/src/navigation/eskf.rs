@@ -197,8 +197,10 @@ impl<R: RealField> NavFilter<R> {
     /// PSD-preserving unconditionally (Groves 2013, §3.4.3).
     ///
     /// # Errors
-    /// Refuses a measurement it cannot fold, rather than dividing by a degenerate innovation covariance
-    /// and writing a `NaN` into the state and covariance:
+    /// Refuses a measurement it cannot fold, rather than writing a `NaN` into the state and covariance:
+    /// * a non-finite measurement `z` (a garbage sensor fix): `k·z` would poison every state component,
+    ///   including the zero-gain ones (`0·NaN = NaN`), while the covariance stays finite — an invisible
+    ///   corruption. `z` is not read until after this check, so the rejection stays atomic;
     /// * a negative or non-finite measurement variance `r` (a variance is non-negative by definition);
     /// * a non-positive or non-finite innovation covariance `s = h·P·hᵀ + r`, which the gain divides by.
     ///
@@ -207,6 +209,14 @@ impl<R: RealField> NavFilter<R> {
     /// [`ReentryNavEngine::correct_position`], where a rejection on one axis must not leave an earlier
     /// axis half-applied.
     pub fn update_scalar(&mut self, h: [R; NAV_STATES], z: R, r: R) -> Result<(), PhysicsError> {
+        // Guard the measurement itself: a non-finite `z` slips past the `r` and `s` guards (neither
+        // reads `z`) and, via `x_new[i] = x[i] + k[i]·(z − h·x)`, writes `NaN` into every state
+        // component while the Joseph covariance update stays finite — a silent, witness-invisible poison.
+        if !z.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "measurement z is non-finite".into(),
+            ));
+        }
         // Guard the measurement variance before it enters the innovation covariance.
         if r < R::zero() || !r.is_finite() {
             return Err(PhysicsError::PhysicalInvariantBroken(format!(

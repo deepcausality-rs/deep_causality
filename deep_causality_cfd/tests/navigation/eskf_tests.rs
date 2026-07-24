@@ -263,6 +263,34 @@ fn a_degenerate_update_is_refused_and_leaves_the_filter_untouched() {
 }
 
 #[test]
+fn a_non_finite_measurement_is_refused_and_leaves_the_filter_untouched() {
+    // A garbage sensor fix (NaN or ∞) passes the r and s guards (neither reads z) and would write NaN
+    // into every state component via k·(z − h·x) — including the zero-gain ones (0·NaN = NaN) — while
+    // the covariance stays finite, an invisible poison. It must be refused atomically instead.
+    for z in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [4.0; NAV_STATES]).unwrap();
+        let state_before = *filter.state();
+        let cov_before = *filter.covariance();
+        let mut h = [0.0f64; NAV_STATES];
+        h[0] = 1.0;
+        assert!(
+            filter.update_scalar(h, z, 1.0).is_err(),
+            "a non-finite measurement z = {z} must be refused"
+        );
+        assert_eq!(
+            filter.state(),
+            &state_before,
+            "state untouched after refusal (z = {z})"
+        );
+        assert_eq!(
+            filter.covariance(),
+            &cov_before,
+            "covariance untouched after refusal (z = {z})"
+        );
+    }
+}
+
+#[test]
 fn update_scalar_refuses_a_negative_variance() {
     let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; NAV_STATES]).unwrap();
     let state_before = *filter.state();

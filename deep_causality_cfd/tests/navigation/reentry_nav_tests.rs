@@ -257,3 +257,53 @@ fn a_nonzero_rate_integrates_and_stays_normalised_across_a_long_march() {
         quat_norm(eng.attitude())
     );
 }
+
+#[test]
+fn a_non_finite_fix_is_refused_and_rolls_the_engine_back() {
+    // A garbage sensor fix (a NaN axis) must be refused end-to-end: correct_position propagates the
+    // rejection and rolls the filter back, and the nominal position/velocity/attitude are left untouched
+    // — the caller learns the fix was not folded rather than being handed a NaN-poisoned state.
+    let mut eng = engine();
+    let dt = 1.0;
+    for _ in 0..20 {
+        eng.predict(dt, [0.0; 3], [0.0; 3], [1.0e-4; 17]).unwrap();
+    }
+    let pos_before = eng.position();
+    let vel_before = eng.velocity();
+    let att_before = eng.attitude();
+    let var_before = eng.position_variance();
+
+    let p = eng.position();
+    let bad = [f64::NAN, p[1], p[2]];
+    assert!(
+        eng.correct_position(bad, 4.0).is_err(),
+        "a non-finite fix must be refused"
+    );
+    assert_eq!(
+        eng.position(),
+        pos_before,
+        "position untouched after a refused fix"
+    );
+    assert_eq!(
+        eng.velocity(),
+        vel_before,
+        "velocity untouched after a refused fix"
+    );
+    assert_eq!(
+        eng.attitude(),
+        att_before,
+        "attitude untouched after a refused fix"
+    );
+    assert_eq!(
+        eng.position_variance(),
+        var_before,
+        "covariance rolled back after a refused fix"
+    );
+    // A subsequent valid fix still folds — the engine was not poisoned.
+    let p = eng.position();
+    eng.correct_position([p[0] + 2.0, p[1], p[2]], 4.0).unwrap();
+    assert!(
+        eng.position_variance() < var_before,
+        "a valid fix still collapses the variance"
+    );
+}

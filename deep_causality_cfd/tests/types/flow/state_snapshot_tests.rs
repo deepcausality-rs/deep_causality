@@ -25,12 +25,26 @@ fn populated_field() -> CoupledField<f64> {
     field.set_control_action(0.25);
     field.set_throttle_action(0.6);
     let filter = NavFilter::new(InsErrorState::<f64>::zero(), [2_500.0; 17]).unwrap();
-    field.set_nav(ReentryNavEngine::new(
+    let mut engine = ReentryNavEngine::new(
         [6.45e6, 0.0, 0.0],
         [-1_300.0, 7_860.0, 0.0],
         3.986e14,
         filter,
-    ));
+    );
+    // Evolve the engine to a NON-identity attitude and nonzero clock/elapsed before snapshotting, so the
+    // round-trip test bites on a pack/unpack ordering regression of the four attitude floats (an identity
+    // quaternion (1,0,0,0) and zero clock would mask a w/x/y/z or tau/elapsed swap).
+    let omega = [0.03, -0.02, 0.05];
+    for _ in 0..8 {
+        engine
+            .predict(0.5, [0.1, -0.2, 0.3], omega, [1.0e-6; 17])
+            .expect("predict");
+    }
+    let p = engine.position();
+    engine
+        .correct_position([p[0] + 3.0, p[1] - 1.0, p[2] + 2.0], 4.0)
+        .expect("fix");
+    field.set_nav(engine);
     field.log_mut().add_entry("regime -> slip (test)");
     field.log_mut().add_entry("nav: aided (test)");
     field

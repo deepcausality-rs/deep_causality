@@ -42,8 +42,10 @@ pub struct ReentryNavEngine<R: RealField + FromPrimitive> {
     /// [`correct_position`](Self::correct_position) may zero the attitude block precisely because the
     /// correction was injected here first. Its DCM `attitude.to_rotation_matrix()` rotates the body-frame
     /// specific force into the nav frame the filter's `−[f]×` coupling reads; the identity quaternion
-    /// reproduces the Tier-A `C ≈ I` model exactly (a non-rotating vehicle stays at identity, so the
-    /// numbers are unchanged).
+    /// reproduces the Tier-A `C ≈ I` model exactly. A non-rotating vehicle (`ω̂ = 0`) stays at identity
+    /// under *predict*, but a fix still injects the small `δψ` the position↔attitude cross-covariance
+    /// carries, so the nominal drifts a hair off identity and the numbers move slightly (measured: the
+    /// corridor's reacquisition error `0.2802 → 0.2804 m`) — the applied correction, not a no-op.
     attitude: Quaternion<R>,
     /// Carried proper-time offset `τ − t` (s) — the relativistic clock correction, **not** the KS
     /// fictitious time `s`.
@@ -78,7 +80,8 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
     /// rate plus bias. It integrates the nominal body→nav attitude; the resulting DCM `C(q)` rotates the
     /// body-frame specific force `aero_accel` into the nav frame the filter's `−[f]×` coupling reads,
     /// replacing the Tier-A `C ≈ I` assumption. For a non-rotating vehicle (`ω̂ = 0`, the point-mass
-    /// examples) the attitude stays exactly identity and `C(q)·f = f`, so the numbers are unchanged.
+    /// examples) *this* step keeps the attitude exactly at identity and `C(q)·f = f`; the nominal only
+    /// leaves identity when [`correct_position`](Self::correct_position) injects a fix's `δψ`.
     ///
     /// # Errors
     /// Propagates KS-propagation / clock-kernel failures (the half-kicked state must stay bound).
