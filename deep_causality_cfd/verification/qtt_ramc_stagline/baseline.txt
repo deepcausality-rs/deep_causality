@@ -1,4 +1,4 @@
-    Finished `release` profile [optimized] target(s) in 0.04s
+    Finished `release` profile [optimized] target(s) in 0.19s
      Running `target/release/examples/qtt_ramc_stagline`
 === RAM-C stagnation line: exact Rankine–Hugoniot fit + reused Tier-A ionization ===
 
@@ -8,13 +8,13 @@ Residence time t_res = standoff/u2 = 2.022e-5 s  (Saha-equilibrium upper bound n
 Single-T surrogate (ionizes at T₂, over-predicts): α = 4.628e-3, n_e = 1.224e20 m^-3 (+1.1 dec vs RAM-C)
 
 Uncalibrated finite-rate network (RP-1232 Table II pairs; no Saha target):
-  lagged atom pool: x_N = 4.617e-1, x_O = 6.364e-1
-  channel 1 + pool: n_e = 2.599e19 m^-3 (+0.41 dec vs RAM-C)
-  full network:     n_e = 2.991e19 m^-3 (+0.48 dec vs RAM-C)
+  lagged atom pool: x_N = 3.925e-1, x_O = 5.782e-1
+  channel 1 + pool: n_e = 1.887e19 m^-3 (+0.28 dec vs RAM-C)
+  full network:     n_e = 2.251e19 m^-3 (+0.35 dec vs RAM-C)
 
 Sheath-renewal A/B under recombination (peak over the transit-age profile):
-  renewal (kept):    n_e = 2.991e19 m^-3 (+0.48 dec vs RAM-C)
-  carried (marched): n_e = 4.699e18 m^-3 (-0.33 dec vs RAM-C)
+  renewal (kept):    n_e = 2.251e19 m^-3 (+0.35 dec vs RAM-C)
+  carried (marched): n_e = 1.768e18 m^-3 (-0.75 dec vs RAM-C)
 
 Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
   T_inf -> T2 ............ 250 K -> 8044 K
@@ -24,30 +24,36 @@ Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruc
   post-shock n_tot ...... 2.645e22 m^-3
 
 Stagnation-line blackout (Saha/Park-2T at the post-shock state):
-  ionization fraction α .. 4.101e-4
-  peak electron density .. 1.085e19 m^-3
-  plasma frequency ω_p ... 1.858e11 rad/s
+  ionization fraction α .. 2.007e-5
+  peak electron density .. 5.310e17 m^-3
+  plasma frequency ω_p ... 4.111e10 rad/s
   blackout (ω_p > comms) . true (comms band 9.40e9 rad/s)
   relaxation-profile bond  2  (smooth post-shock zone, O(1) rank)
 
 --- RAM-C stagnation-line gates ---
-  [PASS] T2 in the ~10^4 K post-shock band
-  [PASS] peak n_e within ~3× of RAM-C II (Park-2T controller)
-  [PASS] blackout onset (ω_p > comms band)
-  [PASS] relaxation profile O(1) rank
-  [PASS] network prediction inside the earned band: full network +0.48 dec vs the flight anchor (band +-0.70 dec, pinned from the measurement; production codes sit at 2x to 3x)
-  [PASS] electron impact is a refinement, not the driver: channel 1 + pool 2.599e19 vs full network 2.991e19 m^-3 (the associative channel carries the prediction at RAM-C speeds)
-  [PASS] carried mode self-limits inside the earned band: -0.33 dec vs the anchor, at or below the renewal arm (renewal kept: its fixed-point clock is the network's Riccati timescale)
+  [PASS] [tripwire] T2 in the ~10^4 K post-shock band
+  [PASS] [tripwire] peak n_e is the corrected Park-2T value (-1.27 dec vs RAM-C II; reported, not re-admitted to the old +0.0 headline)
+  [PASS] [tripwire] blackout onset (ω_p > comms band)
+  [PASS] [tripwire] relaxation profile O(1) rank
+  [PASS] [tripwire] network prediction inside the earned band: full network +0.35 dec vs the flight anchor (band +-0.70 dec, pinned from the measurement; production codes sit at 2x to 3x)
+  [PASS] [tripwire] electron impact is a refinement, not the driver: channel 1 + pool 1.887e19 vs full network 2.251e19 m^-3 (the associative channel carries the prediction at RAM-C speeds)
+  [PASS] [tripwire] carried mode self-limits at or below the renewal arm (no runaway): carried -0.75 dec vs the anchor, below the network's ±0.70-dec renewal band (reported, not re-admitted; the carried clock under-relaxes young sheath gas)
 
-=== RAM-C stagnation line: peak n_e = 1.08e19 m^-3, +0.0 decades vs the RAM-C II anchor 1e19. ===
-Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve), with the lagging
-vibrational-electron temperature T_ve relaxed from the free-stream value over the residence time by
-the closed-form Millikan–White LER kernel — not the hot translational T₂. This is the Gap-3
-chemistry-fidelity upgrade: it takes peak n_e from the single-temperature surrogate's ~12× over-
-prediction down to ~1.1× of the RAM-C II anchor.
-Disclaimer: still a two-temperature Saha surrogate. The T_e = T_ve lumping (a 3-T electron-energy
-separation is ~2×) and the single associative-ionization channel (vs a finite-rate associative +
-electron-impact + recombination network) remain open levers, and the exact landing is sensitive to
-the Millikan–White τ_vt model (the documented ~2–5× chemistry-model spread). The effective γ = 1.1
-lands T2 in the realistic ~8000 K reacting-air band. The post-shock T2 is the exact-RH transported
-energy, retiring the Tier-A recovery-temperature reconstruction.
+=== RAM-C stagnation line: Park-2T peak n_e = 5.31e17 m^-3, -1.3 decades vs the RAM-C II anchor 1e19. ===
+Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve). The lagging
+vibrational-electron temperature T_ve relaxes from the free-stream value over the residence time
+by the closed-form Millikan–White LER kernel, not the hot translational T₂.
+
+The reduced mass is the N₂–N₂ pair, μ = 14.007. The earlier +0.0-decade headline was an artifact
+of an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode). Correcting it
+lengthens τ_vt about 1.9x, cools Tₐ, and drops the Park-2T controller to 1.27 decades below the
+anchor. That offset is reported here as the result; the band was not widened to restore the old
+number. The uncalibrated finite-rate network's renewal arm still lands +0.35 decade, so its
+order-of-magnitude prediction survives the correction while the closed-form controller does not.
+Read the single-pair figure as a lower bound on n_e: the bath also holds lighter partners (N, O)
+whose shorter τ_vt a mixture-weighted closure would recover.
+
+Open levers, unchanged by this fix: the T_e = T_ve lumping (a 3-T separation is ~2x), the single
+associative-ionization channel, and the ~2-5x Millikan–White chemistry-model spread. The
+effective γ = 1.1 lands T2 in the realistic ~8000 K reacting-air band, and that T2 is the
+exact-RH transported energy.

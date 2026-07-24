@@ -1,20 +1,22 @@
+    Finished `release` profile [optimized] target(s) in 0.06s
+     Running `target/release/examples/plasma_blackout_retropulsion`
 === Plasma-retropulsion descent: blackout exit through ignition to touchdown ===
   Vehicle: 3400 kg wet, 2200 kg propellant, 70 kN central nozzle at Isp 282 s
   Drag authority: the cited Jarvinen-Adams A0 correlation (the M1 de-risk verdict is AMBER on imprint fidelity); the marched fork carries flow realism and fork economics.
   Precision: f64
 
 --- Act 0: PLAN — the measured day reads the dispersion table ---
-  measured dT = -32.0 K -> drift 62.87 +- 3.51 m, ignition margin 73.41 m (k = 3)
+  measured dT = -32.0 K -> drift 54.43 +- 2.62 m, ignition margin 62.30 m (k = 3)
   the day flown: density scale 1.15, IMU bias departure 1.32
-  standard-day belief (the uninformed world) -> margin 52.98 m; separation 20.43 m
+  standard-day belief (the uninformed world) -> margin 47.52 m; separation 14.78 m
 
 --- Act: CORRIDOR — descent to blackout onset ---
-  steps  105 | altitude    76.52 km | Mach 30.15 | rebuilds 0
-  mass  3400.0 kg | propellant 2200.0 kg | throttle 0.00 | q     484.2 Pa | sink  1291.6 m/s
+  steps  126 | altitude    73.81 km | Mach 29.66 | rebuilds 0
+  mass  3400.0 kg | propellant 2200.0 kg | throttle 0.00 | q     673.5 Pa | sink  1288.6 m/s
   regime: slip / supersonic / thrust-unknown
 
 --- Act: COAST + BURN — ignition corridor committed ---
-  steps 2139 | altitude    32.68 km | Mach  1.99 | rebuilds 0
+  steps 2118 | altitude    32.68 km | Mach  1.99 | rebuilds 0
   mass  3398.2 kg | propellant 2198.2 kg | throttle 0.72 | q    2224.9 Pa | sink   192.2 m/s
   regime: continuum / supersonic / thrust-unknown
 
@@ -33,33 +35,29 @@
   regime: continuum / subsonic / burn
 
 --- Act: TERMINAL — cutoff, subsonic re-seed, touchdown ---
-  steps 2524 | altitude     0.01 km | Mach  0.01 | rebuilds 1
-  mass  2384.2 kg | propellant 1184.2 kg | throttle 0.33 | q       2.2 Pa | sink     1.8 m/s
+  steps 2516 | altitude     0.01 km | Mach  0.01 | rebuilds 1
+  mass  2392.5 kg | propellant 1192.5 kg | throttle 0.34 | q       2.3 Pa | sink     1.8 m/s
   regime: continuum / subsonic / burn / touchdown
 
 --- The belief counterfactual: two guidances, one measured atmosphere ---
   world          margin m   burn light m  contact m/s      prop kg
-  informed          73.41         153.19         1.78        13.45
-  uninformed        52.98         129.75         1.85         0.00
+  informed          62.30         139.12         1.81         7.28
+  uninformed        47.52         125.06         1.72         0.00
   both descend from the same baseline on the same measured atmosphere, differing only in the margin their guidance was sized with. The propellant column is what the informed world spent above the uninformed one — the dispersion-sized reserve, measured.
 
---- Provenance (26 entries) ---
+--- Provenance (22 entries) ---
     regime -> slip (GNSS-available), Kn=0.06827712077324323, supersonic / thrust-unknown
     nav: aided (position fix folded)
-    regime -> slip (GNSS-denied), Kn=0.017268806476166042, supersonic / thrust-unknown
+    regime -> slip (GNSS-denied), Kn=0.012404829021639512, supersonic / thrust-unknown
     nav: dead reckoning (no usable fix)
-    march paused at step 105
-    leg re-seeded from step 105 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
-    regime -> slip (GNSS-available), Kn=0.017146121819188242, supersonic / thrust-unknown
-    nav: aided (position fix folded)
-    regime -> slip (GNSS-denied), Kn=0.017025179994609837, supersonic / thrust-unknown
-    nav: dead reckoning (no usable fix)
+    march paused at step 126
+    leg re-seeded from step 126 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
     regime -> continuum (GNSS-denied), Kn=0.009825077357757745, supersonic / thrust-unknown
-    regime -> continuum (GNSS-available), Kn=0.0002354065723132084, supersonic / thrust-unknown
+    regime -> continuum (GNSS-available), Kn=0.00023029462780754038, supersonic / thrust-unknown
     nav: aided (position fix folded)
-    ignition corridor committed at step 2138: Mach 1.997501570461523, q 2229.2800050958263 Pa, nav aided, sigma 0.3815652741178445 m
-    march paused at step 2139
-    leg re-seeded from step 2139 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
+    ignition corridor committed at step 2117: Mach 1.997501570461523, q 2229.2800050958263 Pa, nav aided, sigma 0.381314074996424 m
+    march paused at step 2118
+    leg re-seeded from step 2118 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
     regime -> continuum (GNSS-available), Kn=0.000019032190686017852, supersonic / burn
     regime -> continuum (GNSS-available), Kn=0.000007544601182537176, transonic / burn
     regime -> continuum (GNSS-available), Kn=0.0000031835841432511187, subsonic / burn
@@ -67,25 +65,25 @@
     leg re-seeded from step 731 in world 'terminal_descent': coupled field carried, marched fluid state re-seeded from the world seed
     carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)
     SRP drag closure inert: no throttle commanded, no decrement applied
-    stopping burn started at step 2442: altitude 153.19347244873643 m, speed 49.02243858992238 m/s, thrust-to-weight 2.874449170180377
-    regime -> continuum (GNSS-available), Kn=0.0000001914029733234149, subsonic / burn, touchdown
-    march paused at step 2524
+    stopping burn started at step 2445: altitude 139.12329023424536 m, speed 48.99411902636602 m/s, thrust-to-weight 2.874449170180377
+    regime -> continuum (GNSS-available), Kn=0.00000019140376239357123, subsonic / burn, touchdown
+    march paused at step 2516
 
 --- retropulsion counterfactuals + retropulsion descent ---
-  [PASS] (4a) flow spread: branch flow observables spread 0.0202 across the roster (threshold 0.0150); the corridor's bank branches agreed to three digits
-  [PASS] (4b) drag collapse: preserved drag falls 0.2510 -> -0.0611 across the 4 burning branches' realized throttles (collapse 0.3121, threshold 0.1000), monotone in throttle; 1 coasting branch(es) applied no decrement — and the harder branches reach the correlation's negative, wake-type branch; net deceleration is non-monotone in throttle with its minimum at the low branch (throttle 0.20, 7.472 m/s2 against 10.595 m/s2 coasting) — the drag sign flip
-  [PASS] (4c) coupling load-bearing: branch trajectories depart the frozen-drag prediction by up to 139.3755 m/s over the continuation (threshold 100.0000) — thrust-only kinematics does not predict the outcome
-  [PASS] (4d) fork economics: 5/5 branches entered by reference (no tensor copied at fork time), and the worst post-fork bond growth is 0 against a cap of 8. The fan-out's step cost is gate (4g), which is run-level because the branches are concurrent
-  [PASS] (4e) audit trail: 5/5 branches record an applied context alternation naming the world they replace (the typed flag, which the carrier's refusal path sets false)
-  [PASS] (4f) roster non-degeneracy: 5 branches flew 5 distinct throttles (minimum gap 0.020) — the envelope admitted every commanded value, so each row describes its own flight
-  [PASS] (0) integrity: 2524 coupled steps flown across four legs; no leg captured a step error
-  [PASS] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 10.50 s against the table's 10.54 s for this day (error 0.040 s) and dwell 59.50 s against 59.41 s (error 0.087 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 58.56 m
-  [PASS] (2) ignition corridor: commit fired at step 2138 on aided navigation at sigma 0.382 m against the day's table-sized margin of 73.41 m (Mach 2.00, q 2229 Pa — the corridor predicate's own preconditions, not re-asserted here)
-  [PASS] (3) regime cascade: 10 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log
-  [PASS] (4g) fork step cost: the branch fan-out marched at 1.11x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
-  [PASS] (5) table earns its place: informed and uninformed guidance lit the landing burn 23.45 m apart (153.19 m vs 129.75 m, threshold 10.00 m) and arrived at 1.78 vs 1.85 m/s; the informed world spent 13.45 kg more propellant, which is the dispersion-sized reserve measured rather than configured
-  [PASS] (6) touchdown: altitude floor reached at 0.015 km at 1.78 m/s against a commanded contact speed of 2.0 m/s (admissible [1.50, 2.50]), with 1184.2 kg propellant remaining (floor 40)
-  [PASS] (7) compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16)
-  [PASS] (8) bounded rebuilds: 1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally. A runaway detector, not a regression band
-  [PASS] (9) wall-clock budget: 333.6 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
+  [PASS] [tripwire] (4a) flow spread: branch flow observables spread 0.0202 across the roster (threshold 0.0150); the corridor's bank branches agreed to three digits
+  [PASS] [tripwire] (4b) drag collapse: preserved drag falls 0.2510 -> -0.0611 across the 4 burning branches' realized throttles (collapse 0.3121, threshold 0.1000), monotone in throttle; 1 coasting branch(es) applied no decrement — and the harder branches reach the correlation's negative, wake-type branch; net deceleration is non-monotone in throttle with its minimum at the low branch (throttle 0.20, 7.472 m/s2 against 10.595 m/s2 coasting) — the drag sign flip
+  [PASS] [tripwire] (4c) coupling load-bearing: branch trajectories depart the frozen-drag prediction by up to 139.3755 m/s over the continuation (threshold 100.0000) — thrust-only kinematics does not predict the outcome
+  [PASS] [tripwire] (4d) fork economics: 5/5 branches entered by reference (no tensor copied at fork time), and the worst post-fork bond growth is 0 against a cap of 8. The fan-out's step cost is gate (4g), which is run-level because the branches are concurrent
+  [PASS] [tripwire] (4e) audit trail: 5/5 branches record an applied context alternation naming the world they replace (the typed flag, which the carrier's refusal path sets false)
+  [PASS] [tripwire] (4f) roster non-degeneracy: 5 branches flew 5 distinct throttles (minimum gap 0.020) — the envelope admitted every commanded value, so each row describes its own flight
+  [PASS] [tripwire] (0) integrity: 2516 coupled steps flown across four legs; no leg captured a step error
+  [PASS] [tripwire] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 12.60 s against the table's 12.61 s for this day (error 0.013 s) and dwell 56.10 s against 55.99 s (error 0.107 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 51.70 m
+  [PASS] [tripwire] (2) ignition corridor: commit fired at step 2117 on aided navigation at sigma 0.381 m against the day's table-sized margin of 62.30 m (Mach 2.00, q 2229 Pa — the corridor predicate's own preconditions, not re-asserted here)
+  [PASS] [tripwire] (3) regime cascade: 8 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log
+  [PASS] [tripwire] (4g) fork step cost: the branch fan-out marched at 1.11x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
+  [PASS] [tripwire] (5) table earns its place: informed and uninformed guidance lit the landing burn 14.06 m apart (139.12 m vs 125.06 m, threshold 10.00 m) and arrived at 1.81 vs 1.72 m/s; the informed world spent 7.28 kg more propellant, which is the dispersion-sized reserve measured rather than configured
+  [PASS] [tripwire] (6) touchdown: altitude floor reached at 0.015 km at 1.81 m/s against a commanded contact speed of 2.0 m/s (admissible [1.50, 2.50]), with 1192.5 kg propellant remaining (floor 40)
+  [PASS] [tripwire] (7) compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16)
+  [PASS] [tripwire] (8) bounded rebuilds: 1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally. A runaway detector, not a regression band
+  [PASS] [tripwire] (9) wall-clock budget: 355.6 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
 === All gates passed: retropulsion counterfactuals + retropulsion descent. ===

@@ -1,8 +1,8 @@
 !!ContextAlternation!!: world 'standard_day' replaced with 'dense_day'
 regime -> slip (GNSS-available), Kn=0.06022392191280942
 nav: aided (position fix folded)
-regime -> slip (GNSS-denied), Kn=0.01748929909282608
+regime -> slip (GNSS-denied), Kn=0.012443576536928376
 nav: dead reckoning (no usable fix)
 regime -> continuum (GNSS-denied), Kn=0.009787548342605574
-regime -> continuum (GNSS-available), Kn=0.00020885671415731184
+regime -> continuum (GNSS-available), Kn=0.00020382109535529267
 nav: aided (position fix folded)

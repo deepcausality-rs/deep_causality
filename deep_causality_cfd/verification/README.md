@@ -94,7 +94,7 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `qtt_cylinder_verification` ⚠ *(offline)* | drag convergence vs bond; no-slip interior; **η and mask-smoothing ladders** | env resolved at `L = 8` (η from 2.5 % wall-error target); acceptance run pending offline | — | penalization layer now resolved (`√(ην) ≈ dx`); gate red on **solver cost**, not parameters | 256², bond [24, 48] + 2 ladders | **~4-9 h (offline)** |
 | `qtt_park2t_blackout` | 6 LER gates (stability, exactness, RH band, lag+Saha, path-dependence, n_e>0) | all 6 PASS; ω_p 5.6e12 ≫ band | all gates pass | Gap-2 Tier-A verified (cross-refs, Tier-A disclaimers) | 32², 40 steps | ~1 s |
 | `qtt_sod` | Sod shock tube vs exact Riemann (L1 of ρ/u/p) | 0.018 / 0.027 / 0.015 | < 0.03 (1st-order Rusanov) | p\*=0.303 (exact), fan+contact+shock correct | 512 cells, t=0.2 | ~1 s |
-| `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | 1.085e19 (calibrated Park-2T); 2.991e19 (uncalibrated network) | ~1e19 (RAM-C II, order-of-mag) | **+0.0 dec** calibrated; **+0.48 dec** prediction (earned band ±0.70) | stagnation line | ~1 s |
+| `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | 5.31e17 (Park-2T controller); 2.25e19 (uncalibrated network) | ~1e19 (RAM-C II, order-of-mag) | **−1.27 dec** Park-2T (reported, not re-admitted); **+0.35 dec** network (earned band ±0.70) | stagnation line | ~1 s |
 | `qtt_blunt_body_2d` | rank lever: bow-shock χ, fitted vs Cartesian capture | fitted 3→5; capture 16→61 | structural (no √side growth, fitted) | fitted bounded; capture ~√side | 2^5–2^7 | ~2 s |
 | `qtt_reentry_3d` | rank lever: 3-D forebody χ (wake out-of-scope) | fitted 2→4; Cartesian 10→59; wake 41 | structural (`qtt_rank_3d` bound) | fitted plateau; capture grows | 2^3–2^5 | ~3 s |
 
@@ -122,14 +122,17 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 > The gate is kept rather than silenced: widening the bound until it passes is exactly the
 > back-fitting this suite is being cleaned of.
 
-**Validation scope labels.** The QTT compressible gates verify at three distinct tiers — read each gate for
-what it actually proves: **analytic** (`qtt_sod` vs the exact Riemann solution — rigorous, the only
-quantitative-accuracy gate); **flight-data, order-of-magnitude** (`qtt_ramc_stagline` peak `n_e` vs RAM-C II;
-the Apollo re-entry dwell window is the corridor-time anchor, not a per-point accuracy claim); and
-**structural / rank-lever** (`qtt_blunt_body_2d`, `qtt_reentry_3d` — the body-fitted coordinate *bounds* χ
-where the Cartesian capture grows ~√side; these gate **rank**, not physical accuracy). The **dynamic marched**
-rank growth (flux-through-front) and the **wake** are *reported, never asserted* — bounding the marched χ
-needs re-pinning + an exact-RH interface (design D9), the named open remainder.
+**Validation scope labels.** The QTT compressible gates verify at three distinct tiers. Read each gate for
+what it actually proves. **Analytic** (`qtt_sod` vs the exact Riemann solution) is rigorous, the only
+quantitative-accuracy gate. **Flight-data, order-of-magnitude** is the `qtt_ramc_stagline` network
+prediction: its renewal arm lands +0.35 dec of the RAM-C II peak `n_e`, inside the ±0.70 chemistry-spread
+band. The Park-2T closed-form controller in the same harness lands −1.27 dec below the anchor after the
+`fix-ramc-vibrational-relaxation-pair` reduced-mass correction; that offset is **reported**, not presented
+as agreement (the former +0.0-dec headline was an artifact of an invalid `μ = 7.0`). **Structural /
+rank-lever** is `qtt_blunt_body_2d` and `qtt_reentry_3d`: the body-fitted coordinate *bounds* χ where the
+Cartesian capture grows ~√side, so these gate **rank**, not physical accuracy. The **dynamic marched** rank
+growth (flux-through-front) and the **wake** are *reported, never asserted*; bounding the marched χ needs
+re-pinning and an exact-RH interface (design D9), the named open remainder.
 
 Reference papers per example are in the sections below and the [References](#references). The cavity
 centerline RMSE (0.137) is itself a deviation-from-Ghia measure (no single reference value), so its

@@ -24,7 +24,8 @@ pub use qtt::{
     AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
     CompressibleMarcher3dFitted, EulerState, EulerState2d, EulerState3d, EulerStateTt2d,
     EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure, PostShockState, QttImmersed2d,
-    QttIncompressible2d, QttLinear1d, StagnationOutcome, conservation_round, divergence_residual,
-    drag_lift, ideal_gas_pressure, ideal_gas_pressure_2d, kinetic_energy, max_bond, max_speed,
-    penalization_heat_integral, positivity_floor, preserved_drag_fraction, strip_pressure_force,
+    QttIncompressible2d, QttLinear1d, REDUCED_MASS_AMU, StagnationOutcome, conservation_round,
+    divergence_residual, drag_lift, ideal_gas_pressure, ideal_gas_pressure_2d, kinetic_energy,
+    max_bond, max_speed, penalization_heat_integral, positivity_floor, preserved_drag_fraction,
+    reduced_mass_amu, strip_pressure_force,
 };

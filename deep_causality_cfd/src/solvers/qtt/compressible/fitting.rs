@@ -69,10 +69,99 @@ pub struct Park2tClosure<R> {
     pub t_ve_initial: R,
     /// Post-shock pressure `p₂` in **atm** — sets the Millikan–White relaxation time `τ_vt ∝ 1/p`.
     pub pressure_atm: R,
-    /// Reduced mass `μ_sr` of the dominant relaxing collision pair, in **amu** (N₂–N₂ ≈ 7).
+    /// Reduced mass `μ_sr` of the dominant relaxing collision pair, in **amu**. For the RAM-C closure
+    /// this is [`REDUCED_MASS_AMU`] for the N₂–N₂ pair (`μ = m(N₂)/2`). The value is not restated here;
+    /// see that constant for the derivation, the pair selection, and the citation.
     pub reduced_mass_amu: R,
     /// Characteristic vibrational temperature `θ_v` of the dominant species, in **K** (N₂ ≈ 3393).
     pub theta_vib: R,
+}
+
+/// Standard atomic weight of nitrogen, in amu (IUPAC 2021: 14.007).
+const N_ATOMIC_MASS_AMU: f64 = 14.007;
+/// Molecular mass of the diatomic N₂, in amu: two nitrogen atoms. This is the mass the reduced-mass
+/// formula needs. Substituting the *atomic* 14 here is the arithmetic slip that produced the meaningless
+/// 7.0 (`14·14/28`), which is the N–N pair of two atoms.
+const N2_MOLECULAR_MASS_AMU: f64 = 2.0 * N_ATOMIC_MASS_AMU;
+
+/// Millikan–White reduced mass `μ_sr` of the dominant relaxing collision pair, in **amu**.
+///
+/// **Derived, not asserted.** `μ_sr = m_s·m_r / (m_s + m_r)` for the chosen **N₂–N₂** pair. Both
+/// partners are the diatomic N₂ (`m = 28.014` amu), so `μ = m(N₂)/2 = 14.007` (14.0 to three figures,
+/// which is what the change documents it as). The value follows from the two named masses above; it is
+/// not a literal. A future edit to a mass without the value becomes a compile-time recomputation rather
+/// than a comment nobody re-derives. [`reduced_mass_amu`] is the checked constructor, and it rejects the
+/// monatomic species this pair's history motivates.
+///
+/// **The pair is a physical choice (design D2), not a default.** At the RAM-C II post-shock condition
+/// (`M = 25`, `T₂ ≈ 8044 K`) the air is partially dissociated: roughly `x_N₂ ≈ 0.46`, `x_O ≈ 0.31`,
+/// `x_N ≈ 0.23`. N₂–N₂ is therefore not automatically the dominant collision partner. The alternatives,
+/// and the `τ·p` they imply at 8044 K:
+///
+/// | Pair  | μ (amu) | τ·p (atm·s) |
+/// |-------|---------|-------------|
+/// | N₂–N  | 9.33    | 6.9e-7 (shortest) |
+/// | N₂–O  | 10.18   | 7.5e-7 |
+/// | **N₂–N₂** | **14.007** | **1.02e-6 (longest live partner)** |
+/// | N₂–O₂ | 14.93   | 1.08e-6 (O₂ fully dissociated at 8044 K, no population) |
+///
+/// The live partners at this condition are N₂, N and O; O₂ is fully dissociated by ~5000 K, so N₂–O₂,
+/// though heavier, carries no population and is listed only for the `μ`-sensitivity. Among the live
+/// partners N₂–N₂ is the largest `μ`. That gives the longest `τ_vt`, the coldest `T_ve`, and the lowest
+/// predicted `n_e` of them, so the choice cannot be accused of chasing a verdict. The lighter live
+/// partners (N₂–N) would shorten `τ_vt` and raise `n_e` toward the former headline; picking one would be
+/// indistinguishable from back-fitting. N₂–N₂ is also the conventional
+/// two-temperature-literature baseline.
+///
+/// **This single pair stands in for a mixed bath, and it biases `τ_vt` long (design D2a).** Lighter
+/// partners relax faster, so pure N₂–N₂ is the slowest relaxation and the lowest `n_e` of the live
+/// options. It therefore under-predicts electron density, which under-predicts blackout. That is the
+/// optimistic-about-comms direction, the wrong way to be wrong for an avionics consumer. The faithful
+/// form is the mixture-weighted `1/τ_mix = Σ_r x_r / τ_(s,r)` over the composition the harness already
+/// computes. Replacing this stand-in is the named next step, not a standing disclaimer.
+///
+/// **Millikan–White form and units (design D1 citation).** `μ` enters the relaxation time as
+/// `τ_vt·p = exp[A_sr·(T^{-1/3} − B_sr) − 18.42]`, with `A_sr = 1.16e-3·μ^{1/2}·θ_v^{4/3}` and
+/// `B_sr = 0.015·μ^{1/4}`. Units: `μ` in amu, `p` in atm, `τ` in s, `θ_v` and `T` in K. The correlation
+/// is implemented in [`deep_causality_physics::vibrational_relaxation_kernel`]; this constant is the
+/// RAM-C closure's `μ` input. (Millikan & White, J. Chem. Phys. 39:3209, 1963; Park 1990 for the
+/// natural-log constants.)
+pub const REDUCED_MASS_AMU: f64 =
+    N2_MOLECULAR_MASS_AMU * N2_MOLECULAR_MASS_AMU / (N2_MOLECULAR_MASS_AMU + N2_MOLECULAR_MASS_AMU);
+
+/// The Millikan–White reduced mass `μ_sr = m_s·m_r / (m_s + m_r)` (amu) for a named collision pair. This
+/// is the checked constructor behind [`REDUCED_MASS_AMU`].
+///
+/// The relaxing species `s` **must** be a diatomic (or polyatomic). A monatomic species has no
+/// vibrational mode and cannot be the relaxing partner, so `relaxing_is_diatomic = false` is rejected
+/// rather than assigned a `μ`. This is the guard the committed `7.0` lacked: 7.00 amu is the N–N pair,
+/// two nitrogen atoms, which this constructor refuses because atomic nitrogen cannot relax vibrationally.
+///
+/// # Errors
+/// [`PhysicsError::PhysicalInvariantBroken`] if the relaxing species is monatomic, or if either mass is
+/// not strictly positive and finite.
+pub fn reduced_mass_amu(
+    relaxing_mass_amu: f64,
+    partner_mass_amu: f64,
+    relaxing_is_diatomic: bool,
+) -> Result<f64, PhysicsError> {
+    if !relaxing_is_diatomic {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "the relaxing species is monatomic and has no vibrational mode; it cannot be the \
+             Millikan–White relaxing partner (this is why μ = 7.0, the N–N atomic pair, is invalid)"
+                .into(),
+        ));
+    }
+    if relaxing_mass_amu <= 0.0
+        || partner_mass_amu <= 0.0
+        || !relaxing_mass_amu.is_finite()
+        || !partner_mass_amu.is_finite()
+    {
+        return Err(PhysicsError::PhysicalInvariantBroken(
+            "collision-pair masses must be strictly positive and finite".into(),
+        ));
+    }
+    Ok(relaxing_mass_amu * partner_mass_amu / (relaxing_mass_amu + partner_mass_amu))
 }
 
 /// A fitted normal shock on the stagnation streamline: the exact Rankine–Hugoniot interface (task 4.1).
@@ -201,8 +290,10 @@ where
     /// vibrational-electron temperature `T_ve` is relaxed from the free-stream value toward `T₂` over the
     /// residence time by the closed-form Landau–Teller / Millikan–White LER kernel. Both the Saha
     /// equilibrium target and the associative-ionization rate use `Tₐ`, so the cold electron bath suppresses
-    /// the equilibrium the single-temperature surrogate over-counted (`α ≈ 4.6×10⁻³ → ~4×10⁻⁴`), marching the
-    /// RAM-C peak `n_e` from ~12× high down into the production chemistry-spread band.
+    /// the equilibrium the single-temperature surrogate over-counted. Under the corrected N₂–N₂ closure
+    /// ([`REDUCED_MASS_AMU`], `μ = 14.007`) the controller `α` falls `4.6×10⁻³ → ~2×10⁻⁵` and peak `n_e`
+    /// lands `5.31e17`, 1.27 decades below the RAM-C II anchor. That offset is reported, not re-admitted to
+    /// the retired `+0.0`-decade headline the invalid `μ = 7.0` produced.
     ///
     /// `residence_time` is `t_res = standoff/u₂` (s); `closure` carries the gas properties the relaxation
     /// needs (free-stream `T_ve(0)`, post-shock pressure, reduced mass, `θ_v`). Returns the same outcome

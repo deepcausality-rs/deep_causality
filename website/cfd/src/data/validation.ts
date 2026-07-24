@@ -65,15 +65,15 @@ export const validation: ValidationRecord[] = [
     reference:
       'RAM-C II flight experiment, NASA Langley (1970). Park, Nonequilibrium Hypersonic Aerothermodynamics (1990). Gupta–Yos–Thompson–Lee, NASA RP-1232 (1990).',
     measured: [
-      { quantity: 'Peak electron density n_e (calibrated Park-2T)', computed: '1.085e19 m⁻³', expected: '~1e19 m⁻³', delta: '+0.0 decades' },
-      { quantity: 'Peak n_e (uncalibrated finite-rate network)', computed: '2.991e19 m⁻³', expected: '~1e19 m⁻³', delta: '+0.48 dec (band ±0.70)' },
+      { quantity: 'Peak n_e (uncalibrated finite-rate network)', computed: '2.251e19 m⁻³', expected: '~1e19 m⁻³', delta: '+0.35 dec (band ±0.70)' },
+      { quantity: 'Peak n_e (closed-form Park-2T controller)', computed: '5.31e17 m⁻³', expected: '~1e19 m⁻³', delta: '−1.27 dec (reported, not re-admitted)' },
       { quantity: 'Post-shock temperature T₂', computed: '8044 K', expected: '~10⁴ K band', delta: 'in band' },
-      { quantity: 'Plasma frequency ω_p', computed: '1.858e11 rad/s', expected: '> 9.40e9 comms band', delta: 'blackout true' },
+      { quantity: 'Plasma frequency ω_p', computed: '4.111e10 rad/s', expected: '> 9.40e9 comms band', delta: 'blackout true' },
       { quantity: 'Relaxation-profile bond', computed: '2', expected: 'O(1)', delta: 'cap 4' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline',
     caveat:
-      'Calibration and prediction are kept separate: the Park-2T controller path was tuned to the anchor and lands ~1.1×; the finite-rate network is the untuned prediction and lands ~3×. Still a two-temperature Saha surrogate; the T_e = T_ve lumping is worth roughly 2×, and the landing is sensitive to the Millikan–White τ_vt model within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure, not perfect gas.',
+      'The uncalibrated finite-rate network lands +0.35 decade of the flight anchor, inside the ±0.70 chemistry-spread band. The closed-form Park-2T controller lands 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction (μ = 14.007); its former near-anchor landing was an artifact of an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode), and the offset is reported rather than re-admitted. Still a two-temperature Saha surrogate; the T_e = T_ve lumping is worth roughly 2×, and the landing is sensitive to the Millikan–White τ_vt model within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure, not perfect gas.',
     hasArtifact: true,
   },
   {

@@ -13,12 +13,15 @@ use deep_causality_cfd::{EvidenceClass, PostShockState, StagnationOutcome};
 /// Lower / upper bound of the post-shock "~10⁴ K" temperature band (K).
 const T2_MIN: f64 = 5_000.0;
 const T2_MAX: f64 = 60_000.0;
-/// Peak electron density gate. The Gap-3 Park two-temperature controller (ionization off
-/// `Tₐ = √(T_tr·T_ve)`, not the hot `T₂`) lands `n_e ≈ 1.1×10¹⁹` — within ~half a decade (~3×) of the
-/// RAM-C II anchor `1×10¹⁹`, the production chemistry-spread band. This replaces the old ~2-decade
-/// order-of-magnitude gate the single-temperature surrogate needed.
-const NE_LO: f64 = 3.0e18;
-const NE_HI: f64 = 3.0e19;
+/// Peak electron density regression pin. This is a tripwire on the corrected value, not an agreement
+/// claim. With the N₂–N₂ reduced mass corrected to `μ = 14.007` (`fix-ramc-vibrational-relaxation-pair`),
+/// the Park two-temperature controller lands `n_e ≈ 5.3×10¹⁷`. That is 1.27 decades below the RAM-C II
+/// anchor `1×10¹⁹`, not the `+0.0` the superseded `μ = 7.0` produced. The prediction no longer supports
+/// an order-of-magnitude agreement claim, so per the audit (design D3) the band is not widened to
+/// re-admit the old headline. It pins the corrected value for regression at roughly ±0.27 decade, and
+/// the summary reports the offset as the result.
+const NE_LO: f64 = 3.0e17;
+const NE_HI: f64 = 1.0e18;
 /// The smooth post-shock relaxation profile must stay `O(1)` rank.
 const BOND_CAP: usize = 4;
 
@@ -63,12 +66,17 @@ pub fn verify(
         EvidenceClass::Tripwire,
         post.t2 > T2_MIN && post.t2 < T2_MAX,
     );
-    // Compared against RAMC_NE_REFERENCE, the RAM-C II flight anchor -> reference. The band WIDTH
-    // is a chosen chemistry-spread allowance, which is why the label sits on the comparison and the
-    // width is stated in the summary rather than implied by the PASS.
+    // The corrected Park-2T controller lands 1.27 decades below the RAM-C II anchor. The bound now pins
+    // that corrected value for regression rather than asserting agreement, so the label is the weaker
+    // Tripwire class and the offset is reported, not absorbed (spec: a prediction outside the anchor
+    // band is reported, not re-admitted to the old headline).
+    let g2_decades = (out.electron_density / RAMC_NE_REFERENCE).log10();
     let g2 = gate(
-        "peak n_e within ~3× of RAM-C II (Park-2T controller)",
-        EvidenceClass::Reference,
+        &format!(
+            "peak n_e is the corrected Park-2T value ({g2_decades:+.2} dec vs RAM-C II; \
+             reported, not re-admitted to the old +0.0 headline)"
+        ),
+        EvidenceClass::Tripwire,
         out.electron_density > NE_LO && out.electron_density < NE_HI,
     );
     let g3 = gate(
@@ -95,21 +103,27 @@ fn gate(label: &str, evidence: EvidenceClass, pass: bool) -> bool {
 pub fn summary(out: &StagnationOutcome<f64>) {
     let decades = (out.electron_density / RAMC_NE_REFERENCE).log10();
     println!(
-        "\n=== RAM-C stagnation line: peak n_e = {:.2e} m^-3, {:+.1} decades vs the RAM-C II anchor {:.0e}. ===",
+        "\n=== RAM-C stagnation line: Park-2T peak n_e = {:.2e} m^-3, {:+.1} decades vs the RAM-C II anchor {:.0e}. ===",
         out.electron_density, decades, RAMC_NE_REFERENCE
     );
     println!(
-        "Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve), with the lagging\n\
-         vibrational-electron temperature T_ve relaxed from the free-stream value over the residence time by\n\
-         the closed-form Millikan–White LER kernel — not the hot translational T₂. This is the Gap-3\n\
-         chemistry-fidelity upgrade: it takes peak n_e from the single-temperature surrogate's ~12× over-\n\
-         prediction down to ~1.1× of the RAM-C II anchor.\n\
-         Disclaimer: still a two-temperature Saha surrogate. The T_e = T_ve lumping (a 3-T electron-energy\n\
-         separation is ~2×) and the single associative-ionization channel (vs a finite-rate associative +\n\
-         electron-impact + recombination network) remain open levers, and the exact landing is sensitive to\n\
-         the Millikan–White τ_vt model (the documented ~2–5× chemistry-model spread). The effective γ = 1.1\n\
-         lands T2 in the realistic ~8000 K reacting-air band. The post-shock T2 is the exact-RH transported\n\
-         energy, retiring the Tier-A recovery-temperature reconstruction."
+        "Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve). The lagging\n\
+         vibrational-electron temperature T_ve relaxes from the free-stream value over the residence time\n\
+         by the closed-form Millikan–White LER kernel, not the hot translational T₂.\n\
+         \n\
+         The reduced mass is the N₂–N₂ pair, μ = 14.007. The earlier +0.0-decade headline was an artifact\n\
+         of an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode). Correcting it\n\
+         lengthens τ_vt about 1.9x, cools Tₐ, and drops the Park-2T controller to 1.27 decades below the\n\
+         anchor. That offset is reported here as the result; the band was not widened to restore the old\n\
+         number. The uncalibrated finite-rate network's renewal arm still lands +0.35 decade, so its\n\
+         order-of-magnitude prediction survives the correction while the closed-form controller does not.\n\
+         Read the single-pair figure as a lower bound on n_e: the bath also holds lighter partners (N, O)\n\
+         whose shorter τ_vt a mixture-weighted closure would recover.\n\
+         \n\
+         Open levers, unchanged by this fix: the T_e = T_ve lumping (a 3-T separation is ~2x), the single\n\
+         associative-ionization channel, and the ~2-5x Millikan–White chemistry-model spread. The\n\
+         effective γ = 1.1 lands T2 in the realistic ~8000 K reacting-air band, and that T2 is the\n\
+         exact-RH transported energy."
     );
 }
 
@@ -165,17 +179,23 @@ pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
 /// arm rates its clock at the young carried population, so it approaches the
 /// same fixed point more slowly. The gate asserts the property the
 /// recombination channel was added for: the carried march self-limits at or
-/// below the closed-form arm (the forward-only surrogate ran away) and
-/// still lands inside the earned band.
+/// below the closed-form arm, where the forward-only surrogate ran away.
+/// Under the corrected μ = 14 the carried arm lands -0.75 dec, below the
+/// network's ±0.70 renewal band; that offset is reported, not gated (D3).
 pub fn verify_renewal_ab(ne_renewal: FloatType, ne_carried: FloatType) -> bool {
     let dec_carried = (ne_carried / RAMC_NE_REFERENCE).log10();
-    let pass = ne_carried <= ne_renewal && dec_carried.abs() <= config::CARRIED_ARM_BAND_DECADES;
+    // Runaway prevention is the property this A/B was added for: the carried march self-limits at or
+    // below the renewal arm, where the forward-only surrogate ran away. That is the PASS condition.
+    // Under the corrected μ the carried arm lands -0.75 dec, below the ±0.70 network band the renewal
+    // arm sits in, so the offset is reported rather than gated (design D3: not widened to re-admit).
+    let pass = ne_carried <= ne_renewal;
     println!(
-        "  [{}] [{}] carried mode self-limits inside the earned band: {dec_carried:+.2} dec vs the \
-         anchor, at or below the renewal arm (renewal kept: its fixed-point clock is the \
-         network's Riccati timescale)",
+        "  [{}] [{}] carried mode self-limits at or below the renewal arm (no runaway): carried \
+         {dec_carried:+.2} dec vs the anchor, below the network's ±{:.2}-dec renewal band (reported, \
+         not re-admitted; the carried clock under-relaxes young sheath gas)",
         if pass { "PASS" } else { "FAIL" },
         EvidenceClass::Tripwire,
+        config::NETWORK_BAND_DECADES,
     );
     pass
 }

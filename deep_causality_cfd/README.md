@@ -145,9 +145,9 @@ Every transition lands in the provenance log. From an actual corridor run
 
 ```text
 regime -> slip (GNSS-available), Kn=0.07829109848665225
-regime -> slip (GNSS-denied),    Kn=0.01705925949914955
-regime -> continuum (GNSS-denied), Kn=0.009938308574526865
-regime -> continuum (GNSS-available), Kn=0.00025839060489290773
+regime -> slip (GNSS-denied),    Kn=0.012690837165407727
+regime -> continuum (GNSS-denied), Kn=0.00993838892165156
+regime -> continuum (GNSS-available), Kn=0.0002551442196046344
 ```
 
 One descent moves through orbit-like dynamics, slip flow, continuum flow, comms blackout, and
@@ -220,9 +220,12 @@ stay reproducible. `benches/` pins performance in `PERFORMANCE.md`.
 
 Every gate declares where its bound came from — `[reference]` for an analytic or published value,
 `[tripwire]` for one pinned from this code's own prior output — so a `[PASS]` says which of the two it
-is. The plasma-blackout examples compare an uncalibrated finite-rate ionization network against the
-RAM-C II flight anchor to **order of magnitude** (the earned band is ±0.70 decades, pinned from the
-measurement); that is a prediction landing in the right decade, not a per-point accuracy claim.
+is. The plasma-blackout examples gate an uncalibrated finite-rate ionization network against the
+RAM-C II flight anchor to **order of magnitude**: the earned band is ±0.70 decades, pinned from the
+measurement. That is a prediction landing in the right decade, not a per-point accuracy claim, and it
+holds after the `fix-ramc-vibrational-relaxation-pair` reduced-mass correction, which moved the
+stagnation-line closed-form Park-2T controller to 1.27 decades below the anchor (reported as an offset,
+not re-admitted).
 
 ## Precision as a Parameter
 

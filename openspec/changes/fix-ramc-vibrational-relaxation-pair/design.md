@@ -102,7 +102,8 @@ high-fidelity goal the gap should be named rather than left as an unremarked def
 At the RAM-C post-shock condition the bath is not pure N₂. O₂ is fully dissociated by ~5000 K and N₂
 is partially dissociated at 8044 K, giving roughly `x_N₂ ≈ 0.46`, `x_O ≈ 0.31`, `x_N ≈ 0.23`. The
 faithful form is the mixture-averaged relaxation time `1/τ_mix = Σ_r x_r / τ_(s,r)`. The harness
-**already carries the composition it needs** — its own output prints `x_N = 4.617e-1, x_O = 6.364e-1`.
+**already carries the composition it needs**: its own output prints `x_N = 3.925e-1, x_O = 5.782e-1`
+(the corrected `μ = 14.007` composition; it was `4.617e-1 / 6.364e-1` under the superseded `μ = 7.0`).
 
 **The direction of the simplification's error matters.** Lighter partners have smaller `μ`, hence
 shorter `τ_vt`, hence a faster `T_ve` rise, a hotter `T_a`, and *more* ionization:
@@ -221,3 +222,61 @@ disclaimer.
   simplification errs toward under-predicting blackout — the unsafe direction. It stays out of *this*
   change to keep the constant fix reviewable, but it should be proposed as soon as this one lands
   rather than left as a standing disclaimer. The composition it needs is already computed.
+
+## Measurements (group 4, 2026-07-24, `μ` 7.0 → 14.007)
+
+Measured after correcting the pair, **before any band was touched** (design D5). `f64`, release, Apple
+M3 Max. These are the numbers group 5 re-derived the bands from; every group-5 bound edit traces here.
+The reduced mass is the N₂–N₂ pair at the 14.007 standard atomic weight (not rounded to 14).
+
+**`qtt_ramc_stagline`** (task 4.1). Everything downstream of `μ` moved; everything independent of it
+(the RH state, the single-`T` surrogate, the Saha upper bound) did not.
+
+| Quantity | `μ = 7.0` | `μ = 14.007` | note |
+|---|---|---|---|
+| Park-2T `α` | 4.101e-4 | **2.007e-5** | ionization off `Tₐ` collapses ~20× |
+| **Park-2T peak `n_e`** | **1.085e19 (+0.0 dec)** | **5.310e17 (−1.27 dec)** | the headline; **−1.27 dec matches the audit prediction exactly** |
+| Park-2T `ω_p` | 1.858e11 | 4.111e10 | still `> comms` 9.4e9 → **blackout still true** |
+| Single-`T` surrogate `n_e` | 1.224e20 (+1.1) | 1.224e20 (+1.1) | unchanged — ionizes at `T₂`, no `μ` |
+| Saha-eq upper bound | 9.620e21 | 9.620e21 | unchanged — Saha at `T₂` |
+| Network `x_N` / `x_O` | 0.462 / 0.636 | 0.393 / 0.578 | colder `Tₐ` shifts the atom pool |
+| Network full (renewal) | 2.991e19 (+0.48) | **2.251e19 (+0.35)** | over-predicting network moves *toward* the anchor |
+| Network carried | 4.699e18 (−0.33) | **1.768e18 (−0.75)** | already-below arm moves further below |
+| `T₂` / relaxation bond | 8044 K / 2 | 8044 K / 2 | unchanged |
+
+`T_ve`/`Tₐ` are not printed; from the MW closure at this `p ≈ 0.029 atm`, `T_ve` relaxes to ≈ 3660 K
+(from ≈ 5400 K at `μ = 7`) and `Tₐ = √(T₂·T_ve)` ≈ 5420 K (from ≈ 6590 K), colder as predicted.
+
+**τ_vt change (task 4.3):** `τ_vt·p` at 8044 K goes 5.42e-7 → 1.02e-6 atm·s, **1.88× longer**, the
+proposal's ~1.9×. The −1.27-dec `n_e` drop is the downstream confirmation of the direction.
+
+**Three examples** (task 4.2):
+- **corridor: all gates PASS, no edit.** Peak `n_e` (evolved finite-rate network, gate 2) moves
+  3.349e19 → **2.600e19**, still inside `[2.0e18, 5.0e19]`. Onset 74.7→73.2 km, exit 47.0→46.8 km, dwell
+  58.4→55.9 s, all inside their pinned bands. The evolved-state network is far less `μ`-sensitive than
+  the stagline's closed-form Park-2T controller.
+- **weather: all gates PASS, no edit.** Onset spread 4.2→2.5 s (gate needs ≥ 2 s), polar/standard drift
+  1.50×→1.41× (needs ≥ 1.2×), cold effect 4.0σ→5.7σ. Its `weather_table.csv` standard-day onset moved
+  11.9→13.1 s.
+- **retropulsion: gate (1) failed against the *stale* table, then passed against the current one.** At
+  `μ = 14` the flown corridor onset is 12.60 s. Gate (1) compares it to the interpolated
+  `weather_table.csv` "for this day"; against the committed **μ = 7** table (10.54 s) that is a 2.06-s
+  error, past the 0.50-s tolerance. This is a **self-consistency** check between two examples on the
+  same physics, not a band. Regenerating `weather_table.csv` at `μ = 14` first (group-6 order: weather
+  then retropulsion) makes the flown onset match the interpolated one again (12.60 s vs 12.61 s). No
+  band edit; a stale input.
+
+**Which gates fail, before deciding anything (task 4.4):** `qtt_ramc_stagline` g2 (Park-2T "within 3×")
+and the carried-arm ±0.70 clause (carried −0.75 dec now exceeds it); the crate unit test
+`park2t_controller_marches_ramc_within_3x` (group 5 re-derived and renamed it to
+`park2t_controller_lands_below_ramc_after_the_mu_correction`); and retropulsion gate (1) *only* against
+the stale table. The
+network **renewal** arm (+0.35) still lands inside the ±0.70 band, and blackout onset (`ω_p > comms`)
+still holds. The order-of-magnitude network result survives; the Park-2T closed-form headline does not.
+
+**Resolution of the Open Questions.** The corrected Park-2T controller lands **−1.27 decades** below the
+RAM-C II anchor. It does **not** support an order-of-magnitude agreement claim, so per D3 the harness
+reports the offset (group 5) rather than re-admitting it. The uncalibrated finite-rate **network** renewal
+arm (+0.35 dec) does still land in the right decade; that is the surviving order-of-magnitude result. Both
+readings are consistent with D2a: the single-pair `μ = 14` is a **lower bound** on `n_e`, and the mixture
+treatment is expected to recover part of the −1.27-dec gap legitimately (lighter partners give shorter `τ`).
