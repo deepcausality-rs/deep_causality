@@ -11,10 +11,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (3 of 4 changes landed,
-> plus one follow-up capability). All four certification blockers are resolved; B-1 closed with
-> `fix-ramc-vibrational-relaxation-pair`. The remaining Phase-2 change is
-> `fix-navigation-filter-correctness` (item 9).**
+> **Status: Phase 1 and Phase 2 complete (all four Phase-2 changes landed, plus one follow-up
+> capability); Phases 3–4 (documentation truth-up + traceability) remain. All four certification
+> blockers are resolved. Phase 2 closed 2026-07-24 with `fix-navigation-filter-correctness`
+> (item 9); §10's recommendation was to certify after Phases 1 and 2, which is now the owner's call.**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
@@ -190,6 +190,53 @@ computes.
 >   found and fixed, one class deferred", **not "clean"** — the same lesson as change 4 and
 >   `close-qtt-solver-envelope`: even the adversarial pass leaves a residue, and claiming otherwise is
 >   itself the overclaim the audit exists to catch.
+>
+> **Phase 2, change `fix-navigation-filter-correctness` is implemented and archived**, closing item
+> **9** — the last Phase-2 change, and with it the whole of Phase 2. It gave the GNSS-denial ESKF the
+> three things §4b found missing: the process noise is a stated first-order discretisation `Q_d = Q_c·dt`
+> (covariance grows with elapsed time, not step count); the scalar update returns a `Result` and refuses a
+> non-finite/negative variance or a non-positive innovation covariance *atomically*; and a covariance is
+> validated (symmetric, non-negative diagonal, finite) at construction and restoration. The attitude-error
+> lifecycle was closed by **option (a)** (owner decision): `ReentryNavEngine` now carries a nominal
+> `Quaternion`, integrates the sensed body rate, injects the estimated `δψ` on a fix, and only then resets —
+> so the reset is legitimate rather than a discarded estimate. The 17-state composition, `nav_transition_matrix`
+> and the Joseph update — confirmed correct by the audit — are byte-unchanged. What it found beyond this report:
+>
+> - **The examples' figures move a little, and that is the correction working — not the `Q` re-tune.** The
+>   `÷dt` re-tune is calibration-preserving at the examples' fixed `dt`, so group 4 alone leaves every
+>   displayed figure unchanged (bit-exact bar a ≤1-ULP gyro-bias/clock-drift residue). The visible movement is
+>   option (a): a position fix folds a small `δψ` through the position↔attitude cross-covariance the `−[f]×`
+>   block builds, and injecting it tilts the nominal off identity, so `C(q) ≠ I` on later steps. Measured,
+>   deterministic, isolated: corridor reacquisition `0.2802 → 0.2804 m`, dead-reckoning variance
+>   `2.6711e1 → 2.6710e1 m²`; every other figure unchanged; all gates hold. The design had called (a) "a
+>   covariance-legitimacy fix, not a visible change to the mean" — true for *predict*, but the fix-injection
+>   path makes it visible. `corridor/output.txt` regenerated.
+> - **`ins_gnss_blackout` is not a filter consumer.** The change's own artifacts named it (and `world.rs`) as
+>   `ReentryNavEngine::predict` call sites; against the tree neither is — `world.rs` only *builds* the engine,
+>   and `ins_gnss_blackout` is a standalone P-controller model that touches neither filter. The only in-crate
+>   `predict` caller is the `TrajectoryNav` stage. Corrected in the proposal, design and tasks.
+> - **The adversarial pass over the finished diff caught a real defect and a cluster of overclaims — all
+>   mine — the same pattern as every prior Phase-2 change.** A six-dimension review (each finding
+>   independently verified, refute-by-default) confirmed **13**. One was a genuine **correctness gap**, in the
+>   same class the change exists to close: `update_scalar` guarded the variance `r` and the innovation `s` but
+>   **not the measurement `z`**, so a non-finite `z` (a garbage GNSS/optical fix, reachable through
+>   `correct_position` ← `TrajectoryNav` with no finiteness check on the fix cells) passed both guards and
+>   wrote `NaN` into every state component while the covariance stayed finite — an invisible poison that also
+>   defeated `correct_position`'s advertised atomicity. Fixed (guard `!z.is_finite()` before any mutation) with
+>   a test that a NaN/±∞ measurement is refused and the filter left untouched, and that `correct_position`
+>   rolls back. The rest were documentation/spec overclaims: "reproduces the per-step `Q` bit-for-bit" (false
+>   for the gyro-bias/clock-drift blocks by ≤1 ULP); "validation makes the degenerate path unreachable rather
+>   than merely guarded" (the zero-variance boundary is admitted by design, so it stays reachable and
+>   D2-guarded); a spec requirement asserting construction rejects any non-PSD covariance where the code checks
+>   only the necessary conditions (the update guard is the operational PSD backstop); rustdoc still saying the
+>   non-rotating examples' "numbers are unchanged"; a stale `ins_gnss_blackout` call-site line left in
+>   `design.md` after the others were corrected; and "weather drift unchanged" where the committed
+>   `weather_table.csv` moved at `f64` precision. All fixed. One **info**-level item is left open and recorded:
+>   the attitude-injection tests assert the nominal moves and stays unit, but not the **sign/axis** of the
+>   rotation — the point-mass examples do not rotate, so a flipped convention would pass; verifying it needs a
+>   6-DOF known-answer reference, which the design lists as a Non-Goal (full attitude *observability*). So the
+>   honest tally is "one correctness gap found and fixed, a cluster of overclaims found and fixed, one info-level
+>   verification gap deferred" — **not "clean"**: the lesson holds a fourth time.
 >
 > What Phase 1 changed, and what it found beyond this report:
 >
@@ -461,7 +508,12 @@ findings compose:
 tracks step count rather than elapsed time; and `update_scalar` divides by an unguarded innovation
 covariance with no validation of the measurement variance, reachable from the public API
 (`P[i][i]=0, r_var=0` → `k = NaN` written into state and covariance). To the code's credit the same
-function uses a correct Joseph-form update citing Groves (2013) §3.4.3.
+function uses a correct Joseph-form update citing Groves (2013) §3.4.3. — ✅ **RESOLVED (2026-07-24,
+`fix-navigation-filter-correctness`, item 9):** `Q` is now the first-order discretisation `Q_d = Q_c·dt`;
+`update_scalar` returns `Result` and refuses a non-positive/non-finite `s`, a negative/non-finite `r`, **and**
+(caught by the adversarial pass) a non-finite measurement `z`, atomically; construction/restoration validate
+the covariance. The attitude-error lifecycle was closed by option (a) — a nominal `Quaternion` that `δψ` is
+injected into before the reset. The Joseph update the audit praised is byte-unchanged.
 
 **`wall_heat_flux` is not a flux** — it is a temperature-weighted volumetric rate with no gradient,
 conductivity or surface normal, and the production path hardcodes `t_wall = 0` with no way to configure
@@ -634,11 +686,13 @@ Ranking reflects **assurance**, not elegance. Critical counts are post-review.
 | 12 | Coordinate + tensor bridge | `needs-work` | 0 | ✅ B-4 resolved — invertibility enforced over the closed domain, gate BM-A now measures the shipped constructor |
 | 13 | Verification harnesses | `needs-work` | 1 | B-3; the layer that must be strongest is among the weakest |
 | 14 | Plasma / blackout physics | **`needs-work`** | 0 | B-1 resolved; headline retired and re-derived (Park-2T −1.27 dec reported, network +0.35 dec survives). Open levers remain (T_e=T_ve lumping, single-pair τ, mixture-weighting follow-up) |
-| 15 | Navigation / ESKF | **`not-ready`** | 0 | Two compounding filter defects (§4b); unguarded public API |
+| 15 | Navigation / ESKF | `needs-work` | 0 | ✅ Both filter defects resolved (§4b, item 9): `Q_d = Q_c·dt`, guarded+atomic `update_scalar` (incl. non-finite `z`), validated covariance, attitude lifecycle closed by option (a). Remaining is doc parity (Phase 3) |
 | 16 | QTT incompressible / immersed | **`not-ready`** | 0 | ✅ constructor envelope validated (item 13), mask `[0,1]` enforced (item 14), Brinkman envelope resolved in config (item 10); cylinder drag gate now offline (solver cost), so headline drag still unverified |
 
-Modules 15 and 16 carry **zero criticals** yet remain `not-ready`. That is deliberate: their defects are
-individually major but jointly remove the basis for trusting the module's headline output.
+Module 16 carries **zero criticals** yet remains `not-ready`. That is deliberate: its defects are
+individually major but jointly remove the basis for trusting the module's headline output. Module 15
+(Navigation / ESKF) was in the same position until item 9 resolved both filter defects; it is now
+`needs-work` (doc parity), leaving 16 as the sole `not-ready` module.
 
 ---
 
@@ -730,13 +784,15 @@ order-of-magnitude framing naming the ±0.70-decade band as pinned; the lid-cavi
 reports the 65² default (RMSE **0.0617**, primary vortex matching Ghia to 1e-4) instead of the coarse
 33² trend rung that understated the solver by more than 2×.
 
-**Phase 2 — Close the physics defects — ⬅ IN PROGRESS**
+**Phase 2 — Close the physics defects — ✅ COMPLETE (2026-07-24)**
 
-Specified as four openspec changes. **Three are implemented and archived:** change 4
+Specified as four openspec changes, **all four now implemented and archived:** change 4
 (`resolve-cfd-contract-gaps`, items 8 / 11 / 15), `close-qtt-solver-envelope` (items 12 / 13 / 14, and
-item 10 resolved in configuration), and `fix-ramc-vibrational-relaxation-pair` (item 7 / B-1, the last
-certification blocker). The remaining one is **`fix-navigation-filter-correctness` (item 9)**, specified
-and not started.
+item 10 resolved in configuration), `fix-ramc-vibrational-relaxation-pair` (item 7 / B-1, the last
+certification blocker), and `fix-navigation-filter-correctness` (item 9, the ESKF defects). One item
+carries a residual openly recorded at its entry: item 10's acceptance harness is offline/manual on
+solver cost (not a parameter fix). The remaining path to certification is Phases 3–4 (documentation
+truth-up + traceability).
 
 The `close-qtt-solver-envelope` group turned up the one place where "detectable" was not enough: item
 10's acceptance test — the η ladder converging — needs `L = 8`, at which the harness costs hours, so it
@@ -752,8 +808,15 @@ for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 1
    Scan covers the **closed** domain against a floor relative to `dr·span_y`; a fold is reachable
    (275 configurations) so the sign check is falsifiable; gate BM-A rebuilt on the shipped constructor
    and its duplicate `jacobian_scan` deleted, retiring a latent `span_y` mismatch.
-9. Scale ESKF `Q` by `dt`; guard the innovation covariance and validate measurement variance; add a
-   horizon-invariance test; fix `correct_position` attitude handling. — §4b
+9. ✅ **DONE** (`fix-navigation-filter-correctness`) — `Q_d = Q_c·dt` (first-order, cited), with a
+   leaf-state horizon-invariance test; `update_scalar` returns `Result` and refuses a non-positive/non-finite
+   `s`, a negative/non-finite `r`, and a non-finite measurement `z` (the last found by the adversarial pass),
+   atomically, with `correct_position` rolling back across its three folds; construction/restoration validate
+   the covariance (necessary conditions; the update guard is the operational PSD backstop). `correct_position`'s
+   attitude handling fixed by option (a): a nominal `Quaternion` that `δψ` is injected into before the reset.
+   897 cfd tests pass; the applied attitude correction shifts the corridor reacquisition figure `0.2802 → 0.2804 m`
+   (deterministic, gate-safe). Two artifact overclaims corrected against the tree (`ins_gnss_blackout` is not a
+   filter consumer; the `Q` re-tune is bit-exact bar ≤1 ULP on two blocks). — §4b
 10. Resolve the Brinkman envelope: choose η from a wall-error target, document the `η ≥ dx²/ν` resolution
     constraint, and state that it is currently violated 48×. — §4b, §5b.
     ⚙️ **PARTIALLY DONE (`close-qtt-solver-envelope`, implemented + archived): resolved in configuration,
@@ -813,8 +876,11 @@ for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 1
 
 ## 10. Recommendation
 
-**Do not certify yet.** Certify after Phases 1 and 2 — a bounded, mechanical workstream with no solver
-rewrites.
+**Certify after Phases 1 and 2 — a bounded, mechanical workstream with no solver rewrites.**
+**Update 2026-07-24: Phases 1 and 2 are now complete** (all four certification blockers and all four
+Phase-2 changes landed; item 10's acceptance harness is offline/manual on solver cost, recorded openly).
+The certify decision is now the owner's; Phases 3–4 (documentation truth-up + traceability) remain and
+do not gate correctness.
 
 The distinction that matters for an avionics R&D lab: this crate's **numerics** are in materially better
 shape than its **assurance case**. The risk is not that an engineer gets a wrong answer from the DEC or
