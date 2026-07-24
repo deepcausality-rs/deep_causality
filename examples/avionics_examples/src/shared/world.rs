@@ -232,7 +232,8 @@ pub fn initial_field() -> CoupledField<FloatType> {
     let filter = NavFilter::new(
         InsErrorState::<FloatType>::zero(),
         core::array::from_fn(|i| utils::ft(P0_DIAG[i])),
-    );
+    )
+    .expect("P0_DIAG is a valid covariance diagonal (finite, non-negative variances)");
     field.set_nav(ReentryNavEngine::new(
         nav_r0,
         nav_v0,

@@ -24,7 +24,7 @@ fn populated_field() -> CoupledField<f64> {
     field.set_aero_force([0.1, -0.2, 0.3]);
     field.set_control_action(0.25);
     field.set_throttle_action(0.6);
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [2_500.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [2_500.0; 17]).unwrap();
     field.set_nav(ReentryNavEngine::new(
         [6.45e6, 0.0, 0.0],
         [-1_300.0, 7_860.0, 0.0],
@@ -67,6 +67,8 @@ fn a_resume_package_round_trips_through_disk_bit_exact() {
     // state would then fail here rather than pass silently).
     assert_eq!(nav_a.carried_clock_offset(), nav_b.carried_clock_offset());
     assert_eq!(nav_a.elapsed_time(), nav_b.elapsed_time());
+    // The nominal attitude round-trips too (serialized by `pack_resume`, restored by `restore`).
+    assert_eq!(nav_a.attitude(), nav_b.attitude());
     assert_eq!(
         nav_a.filter().state().to_array(),
         nav_b.filter().state().to_array()

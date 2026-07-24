@@ -19,7 +19,9 @@
 //!   2nd ed., Artech House (2013), §14 (error-state / sequential Kalman update).
 
 use super::ins_error_state::InsErrorState;
+use alloc::format;
 use deep_causality_algebra::RealField;
+use deep_causality_physics::PhysicsError;
 
 /// The error-state dimension (17 = INS 15-state + clock bias/drift).
 pub const NAV_STATES: usize = 17;
@@ -79,6 +81,64 @@ pub fn nav_transition_matrix<R: RealField>(dt: R, f: [R; 3]) -> [[R; NAV_STATES]
     m
 }
 
+/// Validate that `cov` is a covariance before it enters a filter: every entry finite, the matrix
+/// symmetric to a `√ε` relative tolerance, and every diagonal entry (a variance) non-negative.
+///
+/// **Symmetry tolerance.** Exact equality `cov[i][j] == cov[j][i]` is the wrong test for a restored
+/// float covariance: a matrix that has round-tripped through serialisation, or been assembled outside
+/// the filter's own symmetrised Joseph update, carries float-level asymmetry that is not a defect. The
+/// admitted band is `|cov[i][j] − cov[j][i]| ≤ √ε · (1 + max(|cov[i][j]|, |cov[j][i]|))` — scale-relative
+/// (the diagonal spans `2500` down to `1e-14` across the 17 states), with the `1 +` an absolute floor so
+/// a near-zero off-diagonal is not held to a relative test against zero. `√ε` (≈ 1.5e-8 for `f64`,
+/// 3.4e-4 for `f32`) is the conventional "half the significant digits" tolerance and scales with the
+/// scalar's precision.
+///
+/// This is the necessary-condition covariance check at the construction/restoration chokepoint (design
+/// D3); the sufficient PSD guarantee against round-off drift during a run is maintained by the guarded
+/// measurement update ([`NavFilter::update_scalar`]), which refuses a non-positive innovation covariance.
+fn validate_covariance<R: RealField>(
+    cov: &[[R; NAV_STATES]; NAV_STATES],
+) -> Result<(), PhysicsError> {
+    // 1. Every entry finite (no NaN/∞ smuggled in through a diagonal or a restored matrix).
+    for (i, row) in cov.iter().enumerate() {
+        for (j, &c) in row.iter().enumerate() {
+            if !c.is_finite() {
+                return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                    "navigation covariance entry [{i}][{j}] is not finite"
+                )));
+            }
+        }
+    }
+    // 2. Symmetric to the √ε relative tolerance documented above.
+    let tol = R::epsilon().sqrt();
+    for (i, row) in cov.iter().enumerate() {
+        for (j, &a) in row.iter().enumerate().skip(i + 1) {
+            let b = cov[j][i];
+            let scale = R::one() + max_abs(a, b);
+            if (a - b).abs() > tol * scale {
+                return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                    "navigation covariance is not symmetric: [{i}][{j}] and [{j}][{i}] differ beyond tolerance"
+                )));
+            }
+        }
+    }
+    // 3. Every diagonal entry is a variance: non-negative.
+    for (i, row) in cov.iter().enumerate() {
+        if row[i] < R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "navigation covariance diagonal [{i}][{i}] is a negative variance"
+            )));
+        }
+    }
+    Ok(())
+}
+
+/// The larger of `|a|`, `|b|` — the scale a symmetry residual is measured relative to.
+fn max_abs<R: RealField>(a: R, b: R) -> R {
+    let (a, b) = (a.abs(), b.abs());
+    if a > b { a } else { b }
+}
+
 /// A 17-state error-state Kalman filter: the error-state estimate + its covariance.
 #[derive(Clone, Debug)]
 pub struct NavFilter<R: RealField> {
@@ -88,21 +148,42 @@ pub struct NavFilter<R: RealField> {
 
 impl<R: RealField> NavFilter<R> {
     /// Build the filter from an initial error-state estimate and an initial covariance diagonal.
-    pub fn new(state: InsErrorState<R>, cov_diag: [R; NAV_STATES]) -> Self {
-        Self {
-            state,
-            cov: diag(&cov_diag),
-        }
+    ///
+    /// # Errors
+    /// Rejects a `cov_diag` that is not a covariance diagonal: a non-finite entry, or a negative
+    /// variance. A diagonal is symmetric by construction, so only finiteness and non-negativity are
+    /// checked here (see [`validate_covariance`]). Admitting a zero or negative variance here is what
+    /// makes the degenerate measurement-update path reachable, so it is refused at the entry point.
+    pub fn new(state: InsErrorState<R>, cov_diag: [R; NAV_STATES]) -> Result<Self, PhysicsError> {
+        let cov = diag(&cov_diag);
+        validate_covariance(&cov)?;
+        Ok(Self { state, cov })
     }
 
-    /// Predict one step: propagate the error state and `P ← F·P·Fᵀ + Q` (`Q` = the process-noise
-    /// diagonal — IMU random walk + clock noise, inflated during buffet).
+    /// Predict one step: propagate the error state and `P ← F·P·Fᵀ + Q_d`, where the process noise is
+    /// the **first-order discretisation** `Q_d = Q_c·dt` of the caller's continuous-time input.
+    ///
+    /// `process_noise_diag` is a **continuous-time process-noise spectral density** (units: `state²/s` —
+    /// e.g. `m²/s` on the position block, `(m/s)²/s` on velocity), *not* an already-discretised
+    /// per-step covariance. Scaling it by `dt` is what makes the accumulated covariance a function of
+    /// **elapsed time** rather than step count: over a fixed horizon `T = N·dt`, the additive noise is
+    /// `N·(Q_c·dt) = T·Q_c`, independent of `dt`, so the filter's tuning survives a change of step size.
+    /// Without the `dt` factor (the pre-2026-07-24 behaviour) halving `dt` over a fixed horizon doubled
+    /// the accumulated process noise and silently re-tuned the filter.
+    ///
+    /// `Q_d = Q_c·dt` is the standard first-order (Euler–Maruyama) discretisation of the random-walk and
+    /// white-noise terms this filter carries — IMU bias random walk and clock noise (Groves 2013,
+    /// §14.2.4). The within-step cross-coupling the transition matrix induces (a Van Loan discretisation
+    /// would capture it) is deliberately not modelled here: it buys accuracy the filter's other Tier-A
+    /// approximations (`C ≈ I`, no Earth rotation) do not warrant.
     pub fn predict(&mut self, dt: R, specific_force: [R; 3], process_noise_diag: [R; NAV_STATES]) {
         self.state = self.state.propagate(dt, specific_force);
         let f = nav_transition_matrix(dt, specific_force);
         let fp = mat_mul(&f, &self.cov);
         let fpft = mat_mul(&fp, &mat_transpose(&f));
-        self.cov = mat_add(&fpft, &diag(&process_noise_diag));
+        // Q_d = Q_c · dt : discretise the continuous-time spectral density onto this step.
+        let q_d: [R; NAV_STATES] = core::array::from_fn(|i| process_noise_diag[i] * dt);
+        self.cov = mat_add(&fpft, &diag(&q_d));
     }
 
     /// Fold in one scalar measurement `z = h·δx + noise` with measurement variance `r` (a sequential
@@ -114,10 +195,38 @@ impl<R: RealField> NavFilter<R> {
     /// under long sequences of near-unity-gain folds (a precise receiver folded every step), after
     /// which the cross-term gains change sign and the injected corrections diverge; Joseph is
     /// PSD-preserving unconditionally (Groves 2013, §3.4.3).
-    pub fn update_scalar(&mut self, h: [R; NAV_STATES], z: R, r: R) {
+    ///
+    /// # Errors
+    /// Refuses a measurement it cannot fold, rather than dividing by a degenerate innovation covariance
+    /// and writing a `NaN` into the state and covariance:
+    /// * a negative or non-finite measurement variance `r` (a variance is non-negative by definition);
+    /// * a non-positive or non-finite innovation covariance `s = h·P·hᵀ + r`, which the gain divides by.
+    ///
+    /// Rejection is **atomic**: every check precedes any mutation, so a refused update leaves the state
+    /// and covariance exactly as they were. This matters for the sequential per-axis folds in
+    /// [`ReentryNavEngine::correct_position`], where a rejection on one axis must not leave an earlier
+    /// axis half-applied.
+    pub fn update_scalar(&mut self, h: [R; NAV_STATES], z: R, r: R) -> Result<(), PhysicsError> {
+        // Guard the measurement variance before it enters the innovation covariance.
+        if r < R::zero() || !r.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "measurement variance r is negative or non-finite (r.is_finite() = {})",
+                r.is_finite()
+            )));
+        }
         let x = self.state.to_array();
         let ph = mat_vec(&self.cov, &h); // P·hᵀ
         let s = dot(&h, &ph) + r; // innovation covariance (scalar)
+        // Guard the innovation covariance before dividing: `s ≤ 0` (reachable when a zero-variance
+        // state meets a zero-variance measurement) or `s` non-finite would make the gain `NaN`.
+        // Written as `s <= 0 || !finite` rather than `!(s > 0)` to keep `neg_cmp_op_on_partial_ord` clean.
+        if s <= R::zero() || !s.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "innovation covariance s = h·P·hᵀ + r is non-positive or non-finite (s.is_finite() = {})",
+                s.is_finite()
+            )));
+        }
+        // All guards passed — from here every write is committed, so the update is atomic.
         let innov = z - dot(&h, &x);
         let k: [R; NAV_STATES] = core::array::from_fn(|i| ph[i] / s); // Kalman gain
         let x_new: [R; NAV_STATES] = core::array::from_fn(|i| x[i] + k[i] * innov);
@@ -139,6 +248,7 @@ impl<R: RealField> NavFilter<R> {
                 (joseph + joseph_t) * half
             })
         });
+        Ok(())
     }
 
     /// The full error-state covariance matrix (snapshot access; diagnostics use
@@ -150,8 +260,18 @@ impl<R: RealField> NavFilter<R> {
     /// Rebuild a filter from snapshotted state and covariance: the exact inverse of reading
     /// [`state`](Self::state) and [`covariance`](Self::covariance). Exists for the
     /// state-snapshot resume path.
-    pub fn restore(state: InsErrorState<R>, cov: [[R; NAV_STATES]; NAV_STATES]) -> Self {
-        Self { state, cov }
+    ///
+    /// # Errors
+    /// Rejects a `cov` that is not a covariance: a non-finite entry, an asymmetry beyond the
+    /// [`validate_covariance`] tolerance, or a negative variance on the diagonal. A snapshot carrying
+    /// such a matrix was already broken; failing loudly at restore is better than continuing from it
+    /// (a non-symmetric or negative-variance covariance drives the measurement update to a `NaN`).
+    pub fn restore(
+        state: InsErrorState<R>,
+        cov: [[R; NAV_STATES]; NAV_STATES],
+    ) -> Result<Self, PhysicsError> {
+        validate_covariance(&cov)?;
+        Ok(Self { state, cov })
     }
 
     /// The current error-state estimate.

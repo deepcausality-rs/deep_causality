@@ -15,7 +15,7 @@ use deep_causality_physics::{EARTH_GM, KsPropagator};
 fn setup() -> (ReentryNavEngine<f64>, KsPropagator<f64>, ImuModel<f64>) {
     let (r0, v0) = ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3]);
     let truth = KsPropagator::from_state(r0, v0, EARTH_GM).unwrap();
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     let eng = ReentryNavEngine::new(r0, v0, EARTH_GM, filter);
     // ~2 cm/s² accelerometer bias — the drift source; nav-grade process noise.
     let imu = ImuModel::new([2.0e-2, 0.0, 0.0], [0.0; 3], [1.0e-6; 17]);
@@ -35,26 +35,41 @@ fn closed_loop_tracks_then_drifts_then_reacquires() {
 
     // Phase 1 — GNSS available (pre-blackout): a fix each step keeps the nominal on truth.
     for _ in 0..30 {
-        eng.predict(dt, imu.sense_specific_force(force), imu.process_noise())
-            .unwrap();
+        eng.predict(
+            dt,
+            imu.sense_specific_force(force),
+            imu.sense_angular_rate([0.0; 3]),
+            imu.process_noise(),
+        )
+        .unwrap();
         let (rt, _) = truth.propagate(eng.elapsed_time()).unwrap();
-        eng.correct_position(rt, 0.01); // GNSS: 0.1 m 1σ
+        eng.correct_position(rt, 0.01).unwrap(); // GNSS: 0.1 m 1σ
     }
     let err_pre = err(&eng, &truth);
 
     // Phase 2 — blackout: GNSS denied (physics-gated by the ④ flag), INS-only dead-reckoning.
     for _ in 0..60 {
-        eng.predict(dt, imu.sense_specific_force(force), imu.process_noise())
-            .unwrap();
+        eng.predict(
+            dt,
+            imu.sense_specific_force(force),
+            imu.sense_angular_rate([0.0; 3]),
+            imu.process_noise(),
+        )
+        .unwrap();
     }
     let err_blackout = err(&eng, &truth);
 
     // Phase 3 — GNSS reacquired.
     for _ in 0..30 {
-        eng.predict(dt, imu.sense_specific_force(force), imu.process_noise())
-            .unwrap();
+        eng.predict(
+            dt,
+            imu.sense_specific_force(force),
+            imu.sense_angular_rate([0.0; 3]),
+            imu.process_noise(),
+        )
+        .unwrap();
         let (rt, _) = truth.propagate(eng.elapsed_time()).unwrap();
-        eng.correct_position(rt, 0.01);
+        eng.correct_position(rt, 0.01).unwrap();
     }
     let err_post = err(&eng, &truth);
 
@@ -78,6 +93,7 @@ fn through_plasma_optical_aid_bounds_the_blackout_drift() {
         e1.predict(
             1.0,
             imu1.sense_specific_force([0.0; 3]),
+            imu1.sense_angular_rate([0.0; 3]),
             imu1.process_noise(),
         )
         .unwrap();
@@ -91,12 +107,13 @@ fn through_plasma_optical_aid_bounds_the_blackout_drift() {
         e2.predict(
             1.0,
             imu2.sense_specific_force([0.0; 3]),
+            imu2.sense_angular_rate([0.0; 3]),
             imu2.process_noise(),
         )
         .unwrap();
         if k % 20 == 0 {
             let (rt, _) = truth2.propagate(e2.elapsed_time()).unwrap();
-            e2.correct_position(rt, 2500.0); // optical: 50 m 1σ (variance 2500)
+            e2.correct_position(rt, 2500.0).unwrap(); // optical: 50 m 1σ (variance 2500)
         }
         max_aided = max_aided.max(err(&e2, &truth2));
     }

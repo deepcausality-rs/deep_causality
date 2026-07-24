@@ -66,6 +66,8 @@ pub use crate::navigation::{
     ImuModel, InsErrorState, IntegratorRegime, NAV_STATES, NavFilter, ReentryNavEngine,
     RegimeSwitch, aero_gravity_ratio, nav_transition_matrix,
 };
+// The nominal attitude representation `ReentryNavEngine` carries and returns (`attitude()` / `restore`).
+pub use deep_causality_num_complex::Quaternion;
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").

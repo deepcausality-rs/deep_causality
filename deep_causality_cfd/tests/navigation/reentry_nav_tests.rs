@@ -8,8 +8,16 @@
 //! accumulates a `τ`-offset distinct from coordinate time (the two-clock separation); and a returning
 //! position fix reacquires while the trajectory stays a valid bound orbit.
 
-use deep_causality_cfd::{InsErrorState, NavFilter, ReentryNavEngine};
+use deep_causality_cfd::{InsErrorState, NavFilter, Quaternion, ReentryNavEngine};
 use deep_causality_physics::{EARTH_GM, KsPropagator};
+
+fn quat_norm(q: Quaternion<f64>) -> f64 {
+    (q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z).sqrt()
+}
+
+fn vec_norm(v: [f64; 3]) -> f64 {
+    (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt()
+}
 
 fn state_3d() -> ([f64; 3], [f64; 3]) {
     ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3])
@@ -17,7 +25,7 @@ fn state_3d() -> ([f64; 3], [f64; 3]) {
 
 fn engine() -> ReentryNavEngine<f64> {
     let (r0, v0) = state_3d();
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     ReentryNavEngine::new(r0, v0, EARTH_GM, filter)
 }
 
@@ -36,7 +44,7 @@ fn coast_follows_kepler_and_stays_on_manifold() {
     let steps = 40usize;
     let q = [0.0; 17];
     for _ in 0..steps {
-        eng.predict(dt, [0.0; 3], q).unwrap();
+        eng.predict(dt, [0.0; 3], [0.0; 3], q).unwrap();
         assert!(
             eng.is_on_orbit_manifold(),
             "stays on the KS constraint manifold"
@@ -55,7 +63,7 @@ fn carried_clock_offset_is_relativistic_and_distinct_from_coordinate_time() {
     let mut eng = engine();
     let dt = 1.0;
     for _ in 0..300 {
-        eng.predict(dt, [0.0; 3], [0.0; 17]).unwrap();
+        eng.predict(dt, [0.0; 3], [0.0; 3], [0.0; 17]).unwrap();
     }
     let tau = eng.carried_clock_offset();
     let t = eng.elapsed_time();
@@ -83,7 +91,7 @@ fn velocity_and_filter_accessors_track_the_engine_state() {
 
     let dt = 2.0;
     for _ in 0..10 {
-        eng.predict(dt, [0.0; 3], [0.0; 17]).unwrap();
+        eng.predict(dt, [0.0; 3], [0.0; 3], [0.0; 17]).unwrap();
     }
     // Coasting on the KS orbit changes the velocity away from the seed.
     assert!(
@@ -103,7 +111,7 @@ fn position_fix_reacquires_and_stays_on_orbit() {
     let dt = 1.0;
     let q = [1.0e-2; 17]; // inflate uncertainty during the coast
     for _ in 0..120 {
-        eng.predict(dt, [0.0; 3], q).unwrap();
+        eng.predict(dt, [0.0; 3], [0.0; 3], q).unwrap();
     }
     let var_before = eng.position_variance();
     assert!(
@@ -115,7 +123,7 @@ fn position_fix_reacquires_and_stays_on_orbit() {
     // so the nominal snaps toward the fix and the variance collapses.
     let p = eng.position();
     let measured = [p[0] + 10.0, p[1], p[2]];
-    eng.correct_position(measured, 0.01);
+    eng.correct_position(measured, 0.01).unwrap();
 
     assert!(
         (eng.position()[0] - measured[0]).abs() < 1.0,
@@ -131,5 +139,121 @@ fn position_fix_reacquires_and_stays_on_orbit() {
     assert!(
         eng.is_on_orbit_manifold(),
         "the corrected state is still a valid bound orbit (B2 projection holds)"
+    );
+}
+
+// ── The attitude-error lifecycle (design D4, option a): estimate → inject → reset ─────────────────
+
+#[test]
+fn a_fix_injects_the_attitude_error_into_the_nominal_then_resets_it() {
+    // Seed a gyro bias so the coast grows a real attitude error while the nominal (sensed rate ω̂ = 0)
+    // stays at identity. A fix must inject that error into the nominal — the nominal rotates away from
+    // identity — and only then zero the attitude block. This is the invariant the spec states: the
+    // reset is legitimate because the estimate was transferred, not discarded.
+    let (r0, v0) = state_3d();
+    let seeded = InsErrorState::<f64>::from_biases([0.0; 3], [2.0e-3, -1.0e-3, 5.0e-4]);
+    let filter = NavFilter::new(seeded, [1.0; 17]).unwrap();
+    let mut eng = ReentryNavEngine::new(r0, v0, EARTH_GM, filter);
+    let dt = 1.0;
+    for _ in 0..50 {
+        eng.predict(dt, [0.0; 3], [0.0; 3], [1.0e-6; 17]).unwrap();
+    }
+    let dpsi = eng.filter().state().attitude_error();
+    assert!(
+        vec_norm(dpsi) > 1.0e-3,
+        "the coast grew a real attitude error: |δψ| = {}",
+        vec_norm(dpsi)
+    );
+    assert_eq!(
+        eng.attitude(),
+        Quaternion::<f64>::identity(),
+        "the nominal stayed at identity through the coast (ω̂ = 0)"
+    );
+
+    let p = eng.position();
+    eng.correct_position([p[0] + 5.0, p[1], p[2]], 1.0).unwrap();
+
+    assert_ne!(
+        eng.attitude(),
+        Quaternion::<f64>::identity(),
+        "the fix injected the attitude error into the nominal"
+    );
+    assert_eq!(
+        eng.filter().state().attitude_error(),
+        [0.0; 3],
+        "the attitude error was reset only after it was injected"
+    );
+}
+
+#[test]
+fn repeated_fixes_keep_correcting_the_nominal_rather_than_claiming_free_confidence() {
+    // With a standing gyro bias, every predict grows an attitude error and every fix injects it into the
+    // nominal before resetting. Over many cycles the nominal keeps being corrected (it rotates steadily
+    // away from identity), so the covariance reductions the fixes take are matched by applied
+    // corrections — not claimed for free, and the error never accumulates unbounded.
+    let (r0, v0) = state_3d();
+    let seeded = InsErrorState::<f64>::from_biases([0.0; 3], [1.0e-3, 0.0, 0.0]);
+    let filter = NavFilter::new(seeded, [1.0; 17]).unwrap();
+    let mut eng = ReentryNavEngine::new(r0, v0, EARTH_GM, filter);
+    let dt = 1.0;
+    let mut max_reset_error = 0.0f64;
+    for _ in 0..100 {
+        eng.predict(dt, [0.0; 3], [0.0; 3], [1.0e-6; 17]).unwrap();
+        let p = eng.position();
+        eng.correct_position([p[0], p[1], p[2]], 1.0).unwrap();
+        // The attitude error is reset (bounded, not accumulating) after each injected fix.
+        max_reset_error = max_reset_error.max(vec_norm(eng.filter().state().attitude_error()));
+    }
+    assert!(
+        max_reset_error < 1.0e-9,
+        "the attitude error is reset after each fix, never accumulating: max {max_reset_error}"
+    );
+    // The nominal has been steadily corrected — the injected corrections are real, not free confidence.
+    assert!(
+        quat_norm(eng.attitude()) > 0.0 && eng.attitude() != Quaternion::<f64>::identity(),
+        "the nominal attitude was corrected by the injected fixes"
+    );
+    assert!(
+        (quat_norm(eng.attitude()) - 1.0).abs() < 1.0e-12,
+        "the corrected nominal stays a unit quaternion"
+    );
+}
+
+#[test]
+fn a_zero_rate_leaves_the_nominal_exactly_at_identity() {
+    // No sensed rotation ⇒ the nominal attitude is exactly identity across the whole march, so C(q) = I
+    // and the numbers reduce to the Tier-A model (this is why the point-mass examples are unchanged).
+    let mut eng = engine();
+    let dt = 0.5;
+    for _ in 0..1000 {
+        eng.predict(dt, [1.0, -2.0, 0.5], [0.0; 3], [1.0e-6; 17])
+            .unwrap();
+    }
+    assert_eq!(
+        eng.attitude(),
+        Quaternion::<f64>::identity(),
+        "a zero gyro input leaves the nominal exactly unchanged"
+    );
+}
+
+#[test]
+fn a_nonzero_rate_integrates_and_stays_normalised_across_a_long_march() {
+    // A steady body rate rotates the nominal; over a long march the quaternion must stay unit — the one
+    // integration-drift hazard option (a) introduces, guarded by the per-step normalise.
+    let mut eng = engine();
+    let dt = 0.01;
+    let omega = [0.3, -0.1, 0.2];
+    for _ in 0..5000 {
+        eng.predict(dt, [0.0; 3], omega, [1.0e-9; 17]).unwrap();
+    }
+    assert_ne!(
+        eng.attitude(),
+        Quaternion::<f64>::identity(),
+        "a nonzero sensed rate rotated the nominal"
+    );
+    assert!(
+        (quat_norm(eng.attitude()) - 1.0).abs() < 1.0e-9,
+        "the quaternion stays normalised across a long rotating march: {}",
+        quat_norm(eng.attitude())
     );
 }

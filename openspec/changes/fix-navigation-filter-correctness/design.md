@@ -7,8 +7,11 @@ gate on.
 
 The audit confirmed the parts that are right, which bounds this change usefully:
 
-- the 17-state composition and `nav_transition_matrix`, including the skew-symmetric `−[ω]×` and
-  `−[f]×` coupling blocks, match the standard ESKF form;
+- the 17-state composition and `nav_transition_matrix` match the standard ESKF form: `δp ← δv`, the
+  `−[f]×` block coupling attitude error into velocity error, and the `−I·dt` accel-bias→velocity and
+  gyro-bias→attitude couplings. (The Tier-A model omits the transport/`−[ω]×` self-coupling on the
+  attitude block, consistent with its stated `C ≈ I`, no-Earth-rotation assumption — verified 2026-07-24;
+  an earlier draft of this note mentioned a `−[ω]×` block that the code does not carry.)
 - `update_scalar`'s covariance update is a correct **Joseph form** with re-symmetrisation, citing
   Groves (2013) §3.4.3 — PSD-preserving where the simple form is not.
 
@@ -20,10 +23,23 @@ Three things around that core are wrong, and they are independent:
 | 9b | `eskf.rs::update_scalar` | divides by unvalidated `s = h·P·hᵀ + r`; returns `()`, so cannot reject |
 | 9c | `reentry_nav.rs::correct_position` | zeroes the attitude error it never injected |
 
-9c is deeper than a missing line. `ReentryNavEngine` has fields `position`, `velocity`, `filter`,
-`tau_offset`, `elapsed` — **no nominal attitude** — and `attitude_error` is read nowhere in the crate.
-So the attitude error state is estimated, credited in the covariance through cross-covariance with the
-position update, and then discarded. There is currently nowhere to put it.
+9c is deeper than a missing line. `ReentryNavEngine` has fields `gm`, `position`, `velocity`, `filter`,
+`tau_offset`, `elapsed` — **no nominal attitude** — and `attitude_error` is read nowhere in the crate's
+`src` or examples (only one test reads it, asserting it is zero). So the attitude error state is
+estimated, credited in the covariance through cross-covariance with the position update, and then
+discarded. There is currently nowhere to put it.
+
+A subtlety that bounds what 9c *means for the shipped examples*: they are point-mass 3-DOF with no true
+angular rate, and the corridor's `IMU_GYRO_BIAS = [0,0,0]`, so the *predict* path leaves the nominal
+attitude exactly at identity. The defect is therefore **mostly** about the **covariance** — the position
+fix shrinks the attitude block through cross-covariance, leaving the filter overconfident about an
+attitude it never corrected. Option (a) fixes this by giving the reduction a real correction to attribute
+to (a nominal attitude that is injected into). But note the correction is **small, not zero**: the same
+`−[f]×` cross-covariance the fix rides on folds a small nonzero `δψ`, and injecting it nudges the nominal
+off identity, so `C(q) ≠ I` on later steps. Measured, this shifts the corridor's leg4 error
+`0.2802 → 0.2804 m` and leg2 variance `2.6711e1 → 2.6710e1 m²` (≲0.07%, deterministic, all gates hold) —
+the reduction is now not merely *justified* but *applied*, and the applied part is visible. This is the
+correction working, and it confirms the proposal's "figures move" via (a) rather than the `Q` re-tune.
 
 That the attitude block still *couples* is not a mistake: the transition matrix's `−[f]×` term is what
 lets an attitude error grow a velocity error, and removing it would change the position/velocity error
@@ -42,12 +58,19 @@ the loop that is missing.
 
 **Non-Goals:**
 
-- **The 17-state composition and the transition matrix.** Confirmed correct by the audit.
-- **The Joseph update.** Confirmed correct and cited.
+- **The structure of `nav_transition_matrix`, the 17-state composition, and the Joseph update.**
+  Confirmed correct by the audit; their code is not altered. **Documented exception (option a):** the
+  specific force fed to the `−[f]×` coupling changes from the Tier-A `C ≈ I` value to `C(q)·f_body`,
+  where `C(q)` is the nominal attitude's DCM. This changes the error-dynamics *behaviour*, not the
+  matrix's structure — `nav_transition_matrix` and `propagate` already take the specific force as an
+  argument, so the rotation happens in the caller (`ReentryNavEngine::predict`), not inside those
+  functions. Recorded here so the change is a deliberate departure from `C ≈ I`, not an accidental one.
 - **The Encke/Cowell integrator switch, the IMU noise model, the relativistic clock.** Separate
   concerns; the clock and the integrator were confirmed or are untouched by this change.
-- **Making the filter estimate attitude well.** This change closes an inconsistency; it does not set
-  out to add attitude observability the engine does not have.
+- **Full attitude *observability*.** Option (a) carries and corrects a nominal attitude so the ESKF
+  loop is closed and the reset is legitimate, but it does not add an attitude *measurement*. In the
+  point-mass examples the nominal stays ≈ identity; making the filter *estimate attitude well* under a
+  real rotational profile (6-DOF, an attitude sensor) is out of scope and would be its own work.
 
 ## Decisions
 
@@ -136,15 +159,31 @@ distinction is the whole point, so (a) is where this ends. Three reasons it is t
 | the DCM the `−[f]×` coupling wants | `to_rotation_matrix()` |
 | initialisation / interpolation | `from_euler_angles`, `slerp` |
 
-So (a) is a field on `ReentryNavEngine` (which today holds `position`, `velocity`, `filter`,
-`tau_offset`, `elapsed` and no attitude) plus two call sites: integrate the gyro into the nominal, and
-apply a rotation correction in `correct_position`. That is not a feature; it is the size of (b) plus a
-constructor call.
+So (a) is a field on `ReentryNavEngine` (which today holds `gm`, `position`, `velocity`, `filter`,
+`tau_offset`, `elapsed` and no attitude) plus the call sites to integrate the gyro into the nominal and
+apply a rotation correction in `correct_position`.
 
-**Therefore (a) lands in this change, and (b) is dropped.** (b) was only ever justified by (a)'s cost,
-and it carried a real price — retaining the attitude error means that block is no longer an error
-*about the current nominal* in the textbook ESKF sense, a departure that would have had to be
-documented and later undone. With (a) affordable there is no reason to pay it.
+**Correction, checked again against the tree on 2026-07-24.** The 2026-07-22 revision was right that the
+`Quaternion` *representation* ships, but it under-counted (a) a second time — the same failure mode this
+change's B-1 sibling recorded. Two things the representation does not supply:
+
+1. **There is no angular-rate input to integrate.** `ReentryNavEngine::predict(dt, aero_accel, Q)` and
+   `NavFilter::predict(dt, specific_force, Q)` carry no `ω̂`. Integrating a nominal attitude forces a
+   **`predict` signature change** and a new argument at every call site (the corridor, weather and
+   `ins_gnss_blackout` examples). So (a) is "a field plus call sites" *plus a new sensing argument
+   threaded through the engine and its callers".
+2. **The examples do not rotate.** Point-mass 3-DOF, and the corridor's `IMU_GYRO_BIAS = [0,0,0]`, so
+   the nominal attitude stays ≈ identity and `δψ ≈ 0`. In these examples (a) is a covariance-legitimacy
+   fix, not a visible attitude estimate (see Context).
+
+**(a) is still the decision (owner, 2026-07-24), and (b) is dropped.** (b) is not merely costly — it
+does not satisfy this change's own spec: retaining the attitude error while the position fix keeps
+shrinking the attitude covariance fails the "attitude confidence is not claimed without a correction"
+and "repeated fixes do not accumulate unjustified confidence" scenarios. Of the honest options only (a)
+(apply the correction) and (c) (reset the covariance so no reduction is retained) satisfy the spec; the
+owner chose (a) so the ESKF loop is genuinely closed. The cost above is accepted and documented, not
+waved away — that is the lesson of the two prior changes, applied to this one *before* implementation
+rather than after.
 
 (a) also fixes the original defect properly rather than working around it: `reset_navigation` may then
 zero the attitude block **because the correction was actually injected**, which is the invariant the

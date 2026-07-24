@@ -34,6 +34,7 @@ use deep_causality_file::{
 };
 use deep_causality_haft::{IoAction, LogAddEntry};
 use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Quaternion;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain};
 
@@ -210,6 +211,12 @@ where
             write_value(&mut nav, &engine.gm());
             write_value(&mut nav, &engine.carried_clock_offset());
             write_value(&mut nav, &engine.elapsed_time());
+            // The nominal body→nav attitude (w, x, y, z), so a resumed engine keeps its heading.
+            let q = engine.attitude();
+            write_value(&mut nav, &q.w);
+            write_value(&mut nav, &q.x);
+            write_value(&mut nav, &q.y);
+            write_value(&mut nav, &q.z);
             for v in &engine.filter().state().to_array() {
                 write_value(&mut nav, v);
             }
@@ -331,6 +338,12 @@ where
         let gm: R = read_value(bytes, &mut o, "nav")?;
         let tau: R = read_value(bytes, &mut o, "nav")?;
         let elapsed: R = read_value(bytes, &mut o, "nav")?;
+        // Nominal attitude (w, x, y, z), in the order `pack_resume` wrote it.
+        let qw: R = read_value(bytes, &mut o, "nav")?;
+        let qx: R = read_value(bytes, &mut o, "nav")?;
+        let qy: R = read_value(bytes, &mut o, "nav")?;
+        let qz: R = read_value(bytes, &mut o, "nav")?;
+        let attitude = Quaternion::new(qw, qx, qy, qz);
         let state_vec: Vec<R> = read_values(bytes, &mut o, NAV_STATES, "nav")?;
         let mut state = [R::zero(); NAV_STATES];
         state.copy_from_slice(&state_vec);
@@ -339,12 +352,13 @@ where
             let r: Vec<R> = read_values(bytes, &mut o, NAV_STATES, "nav")?;
             row.copy_from_slice(&r);
         }
-        let filter = NavFilter::restore(crate::navigation::InsErrorState::from_array(state), cov);
+        let filter = NavFilter::restore(crate::navigation::InsErrorState::from_array(state), cov)?;
         field.set_nav(ReentryNavEngine::restore(
             [p[0], p[1], p[2]],
             [v[0], v[1], v[2]],
             gm,
             filter,
+            attitude,
             tau,
             elapsed,
         ));

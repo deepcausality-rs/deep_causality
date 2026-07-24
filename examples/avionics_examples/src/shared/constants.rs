@@ -169,15 +169,24 @@ pub const P0_DIAG: [f64; 17] = [
     1.0e-8, 1.0e-8, 1.0e-8, // gyro bias
     1.0e-6, 1.0e-8, // clock bias, drift
 ];
-/// ESKF process-noise diagonal per coupled step, per block: modest position/velocity random
-/// walk (integrator and gravity-gradient mismatch), near-constant biases.
+/// ESKF process-noise **continuous-time spectral density** (units `state²/s`), per block: modest
+/// position/velocity random walk (integrator and gravity-gradient mismatch), near-constant biases.
+/// [`NavFilter::predict`](deep_causality_cfd::NavFilter::predict) discretises it onto each step as
+/// `Q_d = Q_c·dt`.
+///
+/// These are the previous per-step values re-expressed as a spectral density by the
+/// `per-step → per-second` conversion `Q_c = Q_step / DT_FLIGHT` (i.e. ×10 at `DT_FLIGHT = 0.1 s`), so
+/// that `Q_c·dt` at the configured step reproduces the calibrated per-step process noise exactly while
+/// making the tuning independent of the step size. The magnitudes therefore read 10× the pre-2026-07-24
+/// per-step diagonal; the filter's behaviour at `DT_FLIGHT` is unchanged (see the discretisation note on
+/// `NavFilter::predict`).
 pub const Q_DIAG: [f64; 17] = [
-    1.0e-4, 1.0e-4, 1.0e-4, // position
-    1.0e-4, 1.0e-4, 1.0e-4, // velocity
-    1.0e-12, 1.0e-12, 1.0e-12, // attitude
-    1.0e-12, 1.0e-12, 1.0e-12, // accelerometer bias
-    1.0e-14, 1.0e-14, 1.0e-14, // gyro bias
-    1.0e-12, 1.0e-14, // clock bias, drift
+    1.0e-3, 1.0e-3, 1.0e-3, // position
+    1.0e-3, 1.0e-3, 1.0e-3, // velocity
+    1.0e-11, 1.0e-11, 1.0e-11, // attitude
+    1.0e-11, 1.0e-11, 1.0e-11, // accelerometer bias
+    1.0e-13, 1.0e-13, 1.0e-13, // gyro bias
+    1.0e-11, 1.0e-13, // clock bias, drift
 ];
 /// GNSS fix variance, m²: a precise code-phase receiver at 1 m 1σ. The published fixes carry
 /// deterministic receiver noise with exactly this variance, so the filter's `R` matches the

@@ -17,7 +17,7 @@ use deep_causality_physics::EARTH_GM;
 fn nav_engine() -> ReentryNavEngine<f64> {
     // The bound LEO-ish state the nav module's own tests use.
     let (r0, v0) = ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3]);
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     ReentryNavEngine::new(r0, v0, EARTH_GM, filter)
 }
 
@@ -207,7 +207,7 @@ fn with_imu_senses_the_specific_force_through_the_bias() {
 #[test]
 fn nav_predict_failure_short_circuits_but_threads_the_engine_back() {
     // An unbound (hyperbolic) state cannot re-lift onto the KS manifold: predict fails.
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     let unbound = ReentryNavEngine::new([7.0e6, 0.0, 0.0], [1.0e5, 0.0, 0.0], EARTH_GM, filter);
 
     let mut f = field();
