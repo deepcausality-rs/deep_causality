@@ -1,0 +1,41 @@
+website/cfd/src/pages/roadmap/index.astro
+  s_f2afaa4ec55b4b::t_2574cd31bf9241 12
+openspec/specs/vibrational-relaxation-closure/spec.md
+  s_f2afaa4ec55b4b::t_3f701900e9376c 1-94
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_2561e0b9590224 746-750
+  s_f2afaa4ec55b4b::t_c3ec741773585d 391-399
+  s_f2afaa4ec55b4b::t_9ade806cf80993 177-192
+  s_f2afaa4ec55b4b::t_9cae8db41cf255 636
+  s_f2afaa4ec55b4b::t_e88d6bcaa92f40 353-355
+  s_f2afaa4ec55b4b::t_f48fbcd8d53568 14-17
+  s_f2afaa4ec55b4b::t_1a5fa4655fd002 735-739
+  s_f2afaa4ec55b4b::t_82c72541aa73d4 35
+  s_f2afaa4ec55b4b::t_83d388388d9bc9 158-176,193
+openspec/specs/compressible-qtt-validation/spec.md
+  s_f2afaa4ec55b4b::t_9f357c187da174 23-34,40-49
+  s_f2afaa4ec55b4b::t_9ce9e81a9e4a48 50
+website/cfd/src/data/validation.ts
+  s_f2afaa4ec55b4b::t_8f184188148af9 76
+website/cfd/src/content/blueprints/en/couple-multiphysics.mdx
+  s_f2afaa4ec55b4b::t_19d4f93e9e1363 143
+  s_f2afaa4ec55b4b::t_7a96f1faa0ebb7 171,175-178
+deep_causality_cfd/src/types/flow/blackout.rs
+  s_f2afaa4ec55b4b::t_ce6bcc29b8e695 135-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "852b36a9f4e8889a20d79a7778367929b12c39bc",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
