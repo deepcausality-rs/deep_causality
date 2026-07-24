@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Applicative, CoMonad, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint,
-    Pure, Satisfies,
+    Applicative, CloneFunctor, CoMonad, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
+    NoConstraint, Pure, Satisfies,
 };
 use alloc::boxed::Box;
 
@@ -138,6 +138,15 @@ impl DebugFunctor for BoxWitness {
         f: &mut core::fmt::Formatter<'_>,
     ) -> core::fmt::Result {
         core::fmt::Debug::fmt(fa, f)
+    }
+}
+
+// Implementation of CloneFunctor for BoxWitness (delegates to `Box`'s own `Clone`).
+// The parameter is spelled through the HKT projection (not `&Box<T>`) to avoid
+// `clippy::borrowed_box`, matching `EqFunctor`/`CoMonad::extract` above.
+impl CloneFunctor for BoxWitness {
+    fn clone_type<T: Clone>(fa: &<Self as HKT>::Type<T>) -> <Self as HKT>::Type<T> {
+        fa.clone()
     }
 }
 

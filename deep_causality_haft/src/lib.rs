@@ -119,6 +119,7 @@ pub use crate::applicative::Applicative;
 pub use crate::cybernetic_loop::CyberneticLoop;
 pub use crate::foldable::Foldable;
 pub use crate::functor::bifunctor::Bifunctor;
+pub use crate::functor::clone_functor::CloneFunctor;
 pub use crate::functor::debug_functor::DebugFunctor;
 pub use crate::functor::eq_functor::EqFunctor;
 pub use crate::functor::functor_base::Functor;

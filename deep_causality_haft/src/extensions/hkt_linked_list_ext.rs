@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Applicative, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, NoConstraint, Pure,
-    Satisfies,
+    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
+    NoConstraint, Pure, Satisfies,
 };
 use alloc::collections::LinkedList;
 
@@ -108,5 +108,12 @@ impl DebugFunctor for LinkedListWitness {
         f: &mut core::fmt::Formatter<'_>,
     ) -> core::fmt::Result {
         core::fmt::Debug::fmt(fa, f)
+    }
+}
+
+// Implementation of CloneFunctor for LinkedListWitness (delegates to `LinkedList`'s own `Clone`).
+impl CloneFunctor for LinkedListWitness {
+    fn clone_type<T: Clone>(fa: &LinkedList<T>) -> LinkedList<T> {
+        fa.clone()
     }
 }

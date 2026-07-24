@@ -4,6 +4,7 @@
  */
 
 pub(crate) mod bifunctor;
+pub(crate) mod clone_functor;
 pub(crate) mod debug_functor;
 pub(crate) mod eq_functor;
 pub(crate) mod functor_base;

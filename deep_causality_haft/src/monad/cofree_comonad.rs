@@ -37,15 +37,24 @@
 //!
 //! ## Rust encoding note (`Fn + Clone`)
 //!
-//! [`map`](Cofree::map) takes `Fn + Clone`, not the bare `FnMut` of the [`Functor`] trait, for the
-//! same reason [`Free::map`](crate::Free::map) does: the functor action is threaded through **every**
-//! hole of the node, and a multi-hole functor needs one copy of the closure per hole. The comonad
-//! surface is therefore provided as inherent methods; [`CofreeWitness`] implements [`HKT`] (mirroring
-//! [`FreeWitness`](crate::FreeWitness), which implements `HKT`/`Pure` but not the `Functor`/`Monad`
-//! traits). [`extend`](Cofree::extend) and [`unfold`](Cofree::unfold) borrow their function argument,
-//! so — unlike `Free::bind` — they need no `Clone` on it.
+//! The inherent [`map`](Cofree::map) takes `Fn + Clone`, not the bare `FnMut` of the [`Functor`]
+//! trait, for the same reason [`Free::map`](crate::Free::map) does: it threads the functor action
+//! through **every** hole of the node while owning and moving through the tree, and a multi-hole
+//! functor needs one copy of the closure per hole. This inherent surface is the ergonomic default.
+//! [`extend`](Cofree::extend) and [`unfold`](Cofree::unfold) borrow their function argument, so —
+//! unlike `Free::bind` — they need no `Clone` on it.
+//!
+//! [`CofreeWitness`] additionally implements the [`Functor`] and [`CoMonad`] **traits**: a
+//! `Functor::fmap` *can* carry the trait's `FnMut` by threading a single `&mut f` through a
+//! depth-first traversal (no per-hole clone is needed when the tree is owned and holes are visited in
+//! sequence), and it agrees with the inherent `map` for pure functions; `CoMonad` is the
+//! by-reference `extract`/`extend` twin, which needs [`CloneFunctor`] to rebuild a `Cofree` from a
+//! borrow. These trait instances are provided by the `haft-clone-functor` change alongside
+//! `Cofree`'s `Clone`.
 
-use crate::{DebugFunctor, EqFunctor, Functor, HKT, NoConstraint};
+use crate::{
+    CloneFunctor, CoMonad, DebugFunctor, EqFunctor, Functor, HKT, NoConstraint, Satisfies,
+};
 use alloc::boxed::Box;
 use core::fmt;
 use core::marker::PhantomData;
@@ -149,6 +158,21 @@ where
         let tail = F::fmap(fx, |x: X| Box::new(Cofree::unfold(x, coalg)));
         Cofree { head: a, tail }
     }
+
+    /// `duplicate`: replace every node's label with the whole sub-tree focused at that node —
+    /// `duplicate = extend (|w| w.clone())`, the comonadic `duplicate` (`extend id`).
+    ///
+    /// Requires the tree to be cloneable (`F: CloneFunctor`, `A: Clone`), which is why it is provided
+    /// only now that `Cofree<F, A>: Clone` exists — dual to `Free`'s `join` needing no cloning. The
+    /// result is `Cofree<F, Cofree<F, A>>`: the counit `extract` of each position recovers the
+    /// sub-tree it was focused on.
+    pub fn duplicate(self) -> Cofree<F, Cofree<F, A>>
+    where
+        F: CloneFunctor,
+        A: Clone,
+    {
+        self.extend(&|w| w.clone())
+    }
 }
 
 // Opt-in `PartialEq`/`Eq`/`Debug`, routed through the functor's `EqFunctor`/`DebugFunctor` — the
@@ -192,6 +216,22 @@ where
     }
 }
 
+/// Structural clone: clone the `head` label and the `F`-structure of sub-trees through the functor's
+/// `clone_type`. Terminates because the recursive obligation `Box<Cofree<F, A>>: Clone` discharges
+/// against this impl (the same cycle-free mechanism as `PartialEq`).
+impl<F, A> Clone for Cofree<F, A>
+where
+    F: CloneFunctor,
+    A: Clone,
+{
+    fn clone(&self) -> Self {
+        Cofree {
+            head: self.head.clone(),
+            tail: F::clone_type(&self.tail),
+        }
+    }
+}
+
 /// The [`HKT`] witness for the cofree comonad over the functor `F` (dual of
 /// [`FreeWitness`](crate::FreeWitness)).
 pub struct CofreeWitness<F>(PhantomData<F>);
@@ -202,4 +242,75 @@ where
 {
     type Constraint = NoConstraint;
     type Type<T> = Cofree<F, T>;
+}
+
+/// The functor action on `Cofree` as the `Functor` **trait** (the supertrait `CoMonad` requires),
+/// distinct from the inherent [`Cofree::map`]. It relabels every node by `f`, preserving tree shape.
+///
+/// The trait's `FnMut` — which the inherent `map`'s `Fn + Clone` was introduced to avoid — is
+/// carried here by consuming the tree and threading a single `&mut f` through a depth-first
+/// traversal: `Free`-style per-hole cloning of the closure is unnecessary when the tree is owned and
+/// the holes are visited in sequence. For a pure `f` the result is identical to the inherent `map`.
+impl<F> Functor<CofreeWitness<F>> for CofreeWitness<F>
+where
+    F: HKT<Constraint = NoConstraint> + Functor<F>,
+{
+    fn fmap<A, B, Func>(m_a: Cofree<F, A>, mut f: Func) -> Cofree<F, B>
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
+    {
+        fn go<F, A, B, Func>(c: Cofree<F, A>, f: &mut Func) -> Cofree<F, B>
+        where
+            F: HKT<Constraint = NoConstraint> + Functor<F>,
+            Func: FnMut(A) -> B,
+        {
+            let (head, tail) = c.into_parts();
+            let new_head = f(head);
+            let new_tail = F::fmap(tail, |boxed: Box<Cofree<F, A>>| Box::new(go(*boxed, f)));
+            Cofree::new(new_head, new_tail)
+        }
+        go(m_a, &mut f)
+    }
+}
+
+/// The cofree comonad's `CoMonad` **trait** instance, the by-reference twin of the inherent
+/// by-value [`Cofree::extract`] / [`Cofree::extend`]. `extend` rebuilds the tree from a borrow, which
+/// is why it requires `F: CloneFunctor` (to clone each node's `F`-structure of children before
+/// mapping into it) — exactly the capability [`Cofree::duplicate`] needs. `k` is threaded by
+/// `&mut` through the depth-first traversal, so no `Clone` on it is required.
+impl<F> CoMonad<CofreeWitness<F>> for CofreeWitness<F>
+where
+    F: HKT<Constraint = NoConstraint> + Functor<F> + CloneFunctor,
+{
+    fn extract<A>(fa: &Cofree<F, A>) -> A
+    where
+        A: Satisfies<NoConstraint> + Clone,
+    {
+        fa.head().clone()
+    }
+
+    fn extend<A, B, Func>(fa: &Cofree<F, A>, mut f: Func) -> Cofree<F, B>
+    where
+        A: Satisfies<NoConstraint> + Clone,
+        B: Satisfies<NoConstraint>,
+        Func: FnMut(&Cofree<F, A>) -> B,
+    {
+        fn go<F, A, B, Func>(fa: &Cofree<F, A>, f: &mut Func) -> Cofree<F, B>
+        where
+            F: HKT<Constraint = NoConstraint> + Functor<F> + CloneFunctor,
+            A: Clone,
+            Func: FnMut(&Cofree<F, A>) -> B,
+        {
+            let head = f(fa);
+            // Clone the children's `F`-structure so it can be consumed by `F::fmap`; the borrow
+            // `fa` cannot be moved. `clone_type` needs `Box<Cofree<F, A>>: Clone`, satisfied by
+            // `Cofree<F, A>: Clone` (`F: CloneFunctor`, `A: Clone`).
+            let owned: F::Type<Box<Cofree<F, A>>> = F::clone_type(fa.tail());
+            let tail = F::fmap(owned, |boxed: Box<Cofree<F, A>>| Box::new(go(&boxed, f)));
+            Cofree::new(head, tail)
+        }
+        go(fa, &mut f)
+    }
 }
