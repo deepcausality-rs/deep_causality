@@ -1,0 +1,68 @@
+deep_causality_haft/src/monad/free_instances.rs
+  s_de9b22fc12c0e2::t_37352e8b48d7e5 6-7,13-15,20
+  s_de9b22fc12c0e2::t_e21c75aff062a6 71-86
+deep_causality_haft/src/monad/cofree_comonad.rs
+  s_de9b22fc12c0e2::t_1108298e22abc1 55-57
+  s_de9b22fc12c0e2::t_20f1cf649bd38f 246-316
+  s_de9b22fc12c0e2::t_8227cb4dc4d26d 161-175
+  s_de9b22fc12c0e2::t_ca6b421e36e5dd 219-234
+  s_de9b22fc12c0e2::t_a0bf61479020e3 40-53
+  s_de9b22fc12c0e2::t_54538c85d5f74c 54
+openspec/changes/add-haft-clone-functor/.openspec.yaml
+  s_de9b22fc12c0e2::t_f08a33a903a759 1-2
+deep_causality_haft/src/functor/mod.rs
+  s_de9b22fc12c0e2::t_1f532ef8c9eaaa 7
+deep_causality_haft/src/functor/clone_functor.rs
+  s_de9b22fc12c0e2::t_735a4019a3669b 1-29,32-62
+  s_de9b22fc12c0e2::t_c5967ce237a1e8 30-31
+deep_causality_haft/src/extensions/func_fold_vec_deque_ext.rs
+  s_de9b22fc12c0e2::t_1108298e22abc1 6-8
+  s_de9b22fc12c0e2::t_e7dfe04a67684f 97-103
+deep_causality_haft/tests/algebra/clone_functor_tests.rs
+  s_de9b22fc12c0e2::t_ebe6a5d85416ed 1-82,84-131,133-157
+  s_de9b22fc12c0e2::t_1108298e22abc1 83,132
+deep_causality_haft/src/extensions/hkt_option_ext.rs
+  s_de9b22fc12c0e2::t_1108298e22abc1 7-8
+  s_de9b22fc12c0e2::t_aa4a2a7c4efefe 182-188
+deep_causality_haft/src/monad/free_monad.rs
+  s_de9b22fc12c0e2::t_56b8da5ce94f7d 118-122
+openspec/changes/add-haft-clone-functor/proposal.md
+  s_de9b22fc12c0e2::t_bc568a1c920fdb 1-87
+openspec/changes/add-haft-clone-functor/specs/haft-clone-functor/spec.md
+  s_de9b22fc12c0e2::t_b2061877b1d980 1-73
+deep_causality_haft/src/extensions/hkt_linked_list_ext.rs
+  s_de9b22fc12c0e2::t_58222b48666854 113-119
+  s_de9b22fc12c0e2::t_1108298e22abc1 7-8
+deep_causality_haft/tests/algebra/mod.rs
+  s_de9b22fc12c0e2::t_5847d4ec221022 18-20
+deep_causality_haft/src/extensions/hkt_vec_ext.rs
+  s_de9b22fc12c0e2::t_1108298e22abc1 7-8
+  s_de9b22fc12c0e2::t_eef12f0324d8be 129-135
+openspec/changes/add-haft-clone-functor/specs/haft-cofree-comonad/spec.md
+  s_de9b22fc12c0e2::t_951482e2b9e16f 1-65
+openspec/changes/add-haft-clone-functor/tasks.md
+  s_de9b22fc12c0e2::t_26597abb5f18ab 1-56
+openspec/changes/add-haft-clone-functor/design.md
+  s_de9b22fc12c0e2::t_86a2a1bdab8e13 1-158
+deep_causality_haft/src/extensions/hkt_box_ext.rs
+  s_de9b22fc12c0e2::t_d7ac8bfbb7bb58 7-8
+  s_de9b22fc12c0e2::t_d721427ea0e59c 144-152
+deep_causality_haft/src/lib.rs
+  s_de9b22fc12c0e2::t_14ea3f619a3605 122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "7799209de9ecc514425998f3471b38e35ef9ec44",
+  "prompts": {},
+  "sessions": {
+    "s_de9b22fc12c0e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a002e60-3eab-4d3e-a54d-fd4c6abdf1f7",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
