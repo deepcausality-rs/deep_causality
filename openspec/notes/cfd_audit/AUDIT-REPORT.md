@@ -11,8 +11,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (1 of 4 changes landed,
-> plus one follow-up capability).**
+> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (2 of 4 changes landed,
+> plus one follow-up capability). Of the four certification blockers, three are resolved; B-1 remains.**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
@@ -124,6 +124,34 @@ computes.
 > and is worth watching.** What *is* established without it: the DEC path is byte-identical by
 > construction (no shipped zone supplies constrained edges, asserted by test), all three `BlendedMap`
 > consumers pass with no geometry refused, and the observable rename left the formula untouched by diff.
+>
+> **Phase 2, change `close-qtt-solver-envelope` is implemented (commit `cbe5ccd28`) and archived**,
+> closing items **12, 13, 14** and resolving item **10** in configuration. It gave the QTT solver family
+> the envelope contract the DEC family already had (§7's last theme). What it found beyond this report:
+>
+> - **Item 12 was a precision trap, not just an unfloored pressure.** The `1e-300` wave-speed floor is
+>   exactly `0.0` at `f32` (`num-traits`' `f64→f32` is an infallible cast returning `Some(0.0)`, so the
+>   `unwrap_or_else` never fires). Rejecting non-positive pressure instead of flooring it removes the
+>   literal entirely, fixing the trap by construction and making the guard identical at every precision.
+> - **Item 14's stated fix was infeasible.** D4 said "establish `χ ∈ [0,1]` after quantization by
+>   clamping". A fixed-rank tensor train cannot hold pointwise `[0,1]`: clamp+re-quantize only *reduces*
+>   the excursion (`−1.78e-3 → −1.21e-3` at bond 4). The contract became clamp-the-bulk + reject-gross +
+>   accept a residual bounded by truncation tolerance; the spec was corrected to match.
+> - **Item 10 is resolvable but not runnable.** The envelope resolves at `L = 8` (η from a 2.5 %
+>   wall-error target), and every config change is forced by a guard this change added — the new
+>   diffusive limit refuses the old `dt`, the mask guard rejects bond 4 at `L = 8` as a `−0.15` mask. But
+>   a single march is ~17 min and the acceptance harness ~4-9 h. The field is low-rank at every `L`
+>   (achieved bond saturates at 24), so this is **not** the tensor-train `O(χ²·L)` cost — that predicts
+>   ~1.6× — but a superlinear bottleneck *elsewhere* (projection CG / a dense step) that QTT does not
+>   accelerate. The gate is reclassified offline/manual, red for a **solver-performance** reason; see §9
+>   item 10.
+> - **The adversarial review over the finished diff caught the change's own overclaims — all mine.** A
+>   6-dimension review (each finding independently verified) confirmed 8, every one a documentation or
+>   spec accuracy defect, the runtime clean: a cost explanation that was mathematically void (a "large
+>   constant" cancels from a ratio — corrected by measuring the achieved bond), three stale `L = 5`
+>   claims left after the `L = 8` move, and a mask test that passed on the *un-clamped* raw mask. This is
+>   the same pattern as change 4's own mistakes — **the remediation needs the same adversarial pass the
+>   audit applied to the code**, and running it is now standard for these changes.
 >
 > What Phase 1 changed, and what it found beyond this report:
 >
@@ -379,6 +407,11 @@ findings compose:
 - The bond-convergence gate — on which the README rests the entire verification claim — has a bound
   eleven orders of magnitude above the measured difference.
 
+  ✅ **Resolved in configuration (`close-qtt-solver-envelope`):** `ETA` is now from a 2.5 % wall-error
+  target and the grid is refined to `L = 8` so `√(ην) ≈ dx` is resolved, not the mask skirt. The gate
+  cannot be *run* in CI at that resolution (~4-9 h) and is reclassified offline/manual; the remaining
+  blocker is solver performance, not the parameter choice (§9 item 10).
+
 **Two ESKF defects compound.** `Q` is added with no `dt` scaling (`eskf.rs:105`), so covariance growth
 tracks step count rather than elapsed time; and `update_scalar` divides by an unguarded innovation
 covariance with no validation of the measurement variance, reachable from the public API
@@ -458,10 +491,13 @@ not of a cylinder. Root cause is this report's own §4b finding: the physical Br
 `√(ην) = 0.144·dx` is ~7× thinner than a cell, and `η ≥ dx²/ν = 0.771` is violated 48×, so the grid
 resolves the smoothing skirt rather than the penalization layer.
 
-**No bound was widened.** Per owner decision the gate is kept and the harness moved to the nightly
-cadence, so a known-open physics finding does not block merges; its committed `baseline.txt` records
-`exit 1` with both `NOT CONVERGING` verdicts rather than a stale passing artifact. Documented under
-`KNOWN-FAILING` in `.github/workflows/cfd_verification.yml` and routed to §9 Phase 2 item 10.
+**No bound was widened.** Per owner decision the gate is kept, so a known-open finding does not block
+merges. **Update (`close-qtt-solver-envelope`):** item 10 resolved the *configuration* (η from a
+wall-error target, `L = 8` resolving the layer), but the acceptance harness then cost ~4-9 h to run, so
+the harness was **reclassified from nightly `KNOWN-FAILING` to `OFFLINE_HARNESSES`** in
+`.github/workflows/cfd_verification.yml` — still accounted for by the completeness check, run manually,
+not in CI. The failure it recorded (`C_d` tracks blur width, no η→0 limit) was a *resolution* finding;
+the current blocker is *solver performance* at the resolution the physics needs (§9 item 10).
 
 This is the clearest vindication of the audit's premise: the harness passed for years while gating
 three things — no-slip (provably invariant across the whole smoothing sweep), bond convergence (bound
@@ -542,19 +578,19 @@ Ranking reflects **assurance**, not elegance. Critical counts are post-review.
 | 1 | Pointwise theories | `needs-work` | 0 | Governing equations check out; issues are doc parity and constant traceability |
 | 2 | DEC NS rate kernel | `needs-work` | 0 | RK4 tableau exact; Δ = dδ+δd correctly ordered; δ = M⁻¹BM is the true discrete adjoint, so −νΔ provably dissipates; Leray projection inside every RK4 stage. Docs describe a different convective operator than the code marches |
 | 3 | DEC solver driver | `needs-work` | 0 | Projection consistent; issues in diagnostics and tolerance justification |
-| 4 | QTT compressible marchers | `needs-work` | 0 | RH exact (hand-verified); Sod matches exact Riemann; unfloored negative pressure can reach the flux |
+| 4 | QTT compressible marchers | `needs-work` | 0 | RH exact (hand-verified); Sod matches exact Riemann; ✅ non-positive pressure now rejected before the flux across all four marchers (item 12) |
 | 5 | CfdFlow DSL | `needs-work` | 0 | CoW fork and determinism largely as advertised; doc overclaims |
 | 6 | Docs-vs-code parity | `needs-work` | 0 | 87 doc-overclaim + 39 doc-gap findings crate-wide |
 | 7 | DEC boundary zones | `needs-work` | 0 | ✅ hook wired (union composition) and all six fold sites now covered behaviourally; remaining items are doc parity |
 | 8 | Examples | `needs-work` | 0 | Reproducible and well-structured; two gates cannot fail |
-| 9 | Crate-wide constants sweep | `needs-work` | 0 | Negative-pressure flux, Mach-1.05 shock floor, f32 pressure-floor collapse |
+| 9 | Crate-wide constants sweep | `needs-work` | 0 | ✅ negative-pressure flux and the f32 pressure-floor collapse fixed (item 12/12b); Mach-1.05 shock floor remains |
 | 10 | Studies | `needs-work` | 0 | Several headline findings not supported by what the code measures |
 | 11 | Test suite & build health | `needs-work` | 0 | Change-detector tests; verification suite absent from CI (rolled into B-2) |
 | 12 | Coordinate + tensor bridge | `needs-work` | 0 | ✅ B-4 resolved — invertibility enforced over the closed domain, gate BM-A now measures the shipped constructor |
 | 13 | Verification harnesses | `needs-work` | 1 | B-3; the layer that must be strongest is among the weakest |
 | 14 | Plasma / blackout physics | **`not-ready`** | 1 | Headline result rests on B-1 |
 | 15 | Navigation / ESKF | **`not-ready`** | 0 | Two compounding filter defects (§4b); unguarded public API |
-| 16 | QTT incompressible / immersed | **`not-ready`** | 0 | No gate constrains drag correctness (§4b); Brinkman layer unresolved 48× |
+| 16 | QTT incompressible / immersed | **`not-ready`** | 0 | ✅ constructor envelope validated (item 13), mask `[0,1]` enforced (item 14), Brinkman envelope resolved in config (item 10); cylinder drag gate now offline (solver cost), so headline drag still unverified |
 
 Modules 15 and 16 carry **zero criticals** yet remain `not-ready`. That is deliberate: their defects are
 individually major but jointly remove the basis for trusting the module's headline output.
@@ -580,10 +616,11 @@ Three structural observations:
   block every self-verifying program prints" — yet **no** program uses it; every harness goes through
   `Verdict`'s `Display` impl. It holds the only 5 `println!` in `src/`, making it the sole violator of the
   README's "the DSL never exits or prints", and `Gates::finish()` returns `true` for an empty gate set.
-- **The DEC family validates its envelope; the QTT family does not.** `dec_ns_solver/step.rs` rejects
-  CFL and diffusive-limit violations with `PhysicalInvariantBroken`; `QttImmersed2d::new` and
-  `QttIncompressible2d::new` validate nothing, at any layer including the builder. One family refuses an
-  out-of-envelope configuration; its sibling returns numbers.
+- **The DEC family validates its envelope; the QTT family did not — ✅ now closed.** As found,
+  `dec_ns_solver/step.rs` rejected CFL and diffusive-limit violations while `QttImmersed2d::new` and
+  `QttIncompressible2d::new` validated nothing. `close-qtt-solver-envelope` gave the QTT constructors the
+  same contract (η, `dt` vs the penalization and diffusive limits, ν, spacings), with matching
+  diagnostics. The sibling no longer returns numbers for an out-of-envelope configuration.
 
 ---
 
@@ -650,13 +687,15 @@ reports the 65² default (RMSE **0.0617**, primary vortex matching Ghia to 1e-4)
 
 **Phase 2 — Close the physics defects — ⬅ IN PROGRESS**
 
-Phase 1 established that these are now *detectable*: item 10's condition is already failing a gate
-nightly. Nothing here is blocked on further analysis.
+Specified as four openspec changes. **Two are implemented and archived:** change 4
+(`resolve-cfd-contract-gaps`, items 8 / 11 / 15) and `close-qtt-solver-envelope` (items 12 / 13 / 14,
+and item 10 resolved in configuration). The remaining two are **`fix-ramc-vibrational-relaxation-pair`
+(item 7 / B-1)** and **`fix-navigation-filter-correctness` (item 9)**, specified and not started.
 
-Specified as four openspec changes. **Change 4 (`resolve-cfd-contract-gaps`, items 8 / 11 / 15) is
-implemented and archived**; the other three are specified and not started, in the order
-**2 → 1 → 3** (`close-qtt-solver-envelope` first, because item 10's nightly-red gate is the acceptance
-test for the whole envelope group, and item 13's constructor validation is a prerequisite for it).
+The `close-qtt-solver-envelope` group turned up the one place where "detectable" was not enough: item
+10's acceptance test — the η ladder converging — needs `L = 8`, at which the harness costs hours, so it
+cannot run in CI. The envelope is resolved in configuration and the gate is offline/manual; closing it
+for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 10).
 
 7. Resolve `REDUCED_MASS_AMU` at both sites and re-baseline the RAM-C chain and the three examples. — **B-1**
 8. ✅ **DONE** — Implement the fold/singularity check `BlendedMap` documents; guard ÷det J. — **B-4**
@@ -667,8 +706,8 @@ test for the whole envelope group, and item 13's constructor validation is a pre
    horizon-invariance test; fix `correct_position` attitude handling. — §4b
 10. Resolve the Brinkman envelope: choose η from a wall-error target, document the `η ≥ dx²/ν` resolution
     constraint, and state that it is currently violated 48×. — §4b, §5b.
-    ⚙️ **PARTIALLY DONE (`close-qtt-solver-envelope`, 2026-07-22): resolved in configuration, blocked on
-    solver cost for verification.** η is now chosen from a 2.5 % wall-error target and the grid refined
+    ⚙️ **PARTIALLY DONE (`close-qtt-solver-envelope`, implemented + archived): resolved in configuration,
+    blocked on solver cost for verification.** η is now chosen from a 2.5 % wall-error target and the grid refined
     to L=8 (256²) so `√(ην) ≈ dx` is resolved — the config is physically correct and passes the new
     envelope checks. **But the acceptance test cannot be run at feasible cost:** measured per-step
     wall-clock rises 0.05 s → 16.3 s (L=5 → L=8, 326×). The field is low-rank at every L (achieved bond
@@ -688,9 +727,15 @@ test for the whole envelope group, and item 13's constructor validation is a pre
     fragments, exact on a linear profile at every spacing. Required adding passive scalar transport
     to the DEC path, which the crate did not have; the cut-cell surface it differentiates against was
     already shipped.
-12. Reject non-positive pressure in `marcher_2d` instead of flooring it only for the wave speed.
-13. Add numerical-envelope validation to the QTT constructors, matching the DEC family.
-14. Clamp the body mask to [0,1] after quantization, or validate in `QttImmersed2d::new`.
+12. ✅ **DONE** (`close-qtt-solver-envelope`) — Reject non-positive pressure in all four marchers, not
+    just `marcher_2d`, and not by flooring: a shared guard refuses `p ≤ 0` before the flux, removing the
+    `1e-300` floor (and its `f32`-degeneracy) by construction. Precision parity proven at f32 and f64.
+13. ✅ **DONE** (`close-qtt-solver-envelope`) — Numerical-envelope validation added to
+    `QttIncompressible2d::new` and `QttImmersed2d::new` (η, `dt` vs the penalization and diffusive
+    limits, ν, spacings), with DEC-`cfl_check` diagnostic quality. No shipped config is refused.
+14. ✅ **DONE** (`close-qtt-solver-envelope`) — Body mask clamped after quantization at the
+    `mask_from_fn` chokepoint, with a gross-excursion rejection. Exact `[0,1]` on a lossy train proved
+    infeasible; the enforceable contract is "in range to truncation tolerance", stated in the spec.
 15. ✅ **DONE** — Wired into the constrained projection (union composition, applied after the
     free-slip un-pin); the intended consumer `aperture-resolved-noslip` is recorded at the hook. All
     six fold sites are covered behaviourally and demonstrated falsifiable by fault injection.
