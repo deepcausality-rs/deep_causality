@@ -49,8 +49,9 @@
 - [x] 4.1 `cargo build`/`test`/`clippy`/`fmt` green for `deep_causality_haft`; the pre-existing
   full suite stays green (additivity); feature matrix (`--all-features`, default) builds. Confirm
   `unsafe_code = "forbid"` + no-`dyn` + macro-free `/src` intact in the new modules.
-- [ ] 4.2 `bazel test //deep_causality_haft/...` green (the `algebra` glob picks up
-  `clone_functor_tests.rs`; no BUILD change). Run once the spec is approved.
-- [ ] 4.3 Confirm additivity: no existing type/trait signature/behaviour changed; the inherent
+- [x] 4.2 `bazel test //deep_causality_haft/...` green — 75 targets pass, including the new
+  `clone_functor_tests` (10 tests, confirmed via a forced `--nocache_test_results` re-run; the
+  `algebra` glob picks up `clone_functor_tests.rs`, no BUILD change).
+- [x] 4.3 Confirmed additivity: no existing type/trait signature/behaviour changed; the inherent
   `Cofree` surface and the `fold`/`eq_type` stories are unaffected; new instances opt-in per witness.
-  Prepare a commit message — do not commit (await user).
+  Commit message prepared — commit left to the user.
