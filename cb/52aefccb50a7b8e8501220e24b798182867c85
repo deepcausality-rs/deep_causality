@@ -1,0 +1,30 @@
+openspec/specs/qtt-numerical-envelope/spec.md
+  s_f2afaa4ec55b4b::t_04a3c11f93543d 1-71
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_9a384278c1c7e0 730-738
+  s_f2afaa4ec55b4b::t_9b0ca078508214 14-15
+  s_f2afaa4ec55b4b::t_fdfcc0a883215b 690-693,695-698
+  s_f2afaa4ec55b4b::t_39c15da773085e 128-155
+  s_f2afaa4ec55b4b::t_a9a6f41a217ac9 410-414,581,586,593
+  s_f2afaa4ec55b4b::t_ee1945ce709045 494-500,619-623,709-710
+openspec/specs/qtt-immersed-body/spec.md
+  s_f2afaa4ec55b4b::t_3e7d3c0108bab2 14-36,48-65,138-184
+openspec/specs/compressible-qtt-flux/spec.md
+  s_f2afaa4ec55b4b::t_04a3c11f93543d 44-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "cb52aefccb50a7b8e8501220e24b798182867c85",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
