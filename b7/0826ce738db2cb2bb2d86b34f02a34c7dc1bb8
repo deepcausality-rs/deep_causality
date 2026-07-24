@@ -1,0 +1,23 @@
+openspec/specs/haft-cofree-comonad/spec.md
+  s_de9b22fc12c0e2::t_1d4580cd153edd 67-74,81-86,109-147
+openspec/specs/haft-clone-functor/spec.md
+  s_de9b22fc12c0e2::t_1d4580cd153edd 1-77
+openspec/changes/archive/2026-07-24-add-haft-clone-functor/tasks.md
+  s_de9b22fc12c0e2::t_808f2298ab914f 52-55,57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b70826ce738db2cb2bb2d86b34f02a34c7dc1bb8",
+  "prompts": {},
+  "sessions": {
+    "s_de9b22fc12c0e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a002e60-3eab-4d3e-a54d-fd4c6abdf1f7",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
