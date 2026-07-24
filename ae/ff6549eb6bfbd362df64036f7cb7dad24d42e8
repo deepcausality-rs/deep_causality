@@ -1,0 +1,21 @@
+deep_causality_haft/Cargo.toml
+  s_de9b22fc12c0e2::t_fed2dc53fbea4c 3
+Cargo.lock
+  s_de9b22fc12c0e2::t_69f7c2d33ab332 655
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "aeff6549eb6bfbd362df64036f7cb7dad24d42e8",
+  "prompts": {},
+  "sessions": {
+    "s_de9b22fc12c0e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4a002e60-3eab-4d3e-a54d-fd4c6abdf1f7",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
