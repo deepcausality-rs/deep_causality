@@ -132,9 +132,10 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RecoveryTemperatureSta
 /// lagged `"T_ve"` and the controller `"T_a"`; feed the latter to
 /// [`IonizationStage::driven_by`]. A no-op if `"T_tr"` is absent.
 ///
-/// This is the marched form of the calibrated stagnation-line closure
-/// (`Park2tClosure`/`stagnation_line_blackout_2t`), which lands the RAM-C II peak within the
-/// production chemistry spread.
+/// This is the marched form of the stagnation-line closure
+/// (`Park2tClosure` / `stagnation_line_blackout_2t`). After the N₂–N₂ reduced-mass correction the
+/// closed-form controller lands 1.27 decades below the RAM-C II peak; the finite-rate network this
+/// stage feeds lands within the production chemistry spread (+0.35 dec).
 ///
 /// # References
 /// * Park, "Nonequilibrium Hypersonic Aerothermodynamics," Wiley (1990) — the two-temperature

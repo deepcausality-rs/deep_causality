@@ -73,7 +73,7 @@ export const validation: ValidationRecord[] = [
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline',
     caveat:
-      'The uncalibrated finite-rate network lands +0.35 decade of the flight anchor, inside the ±0.70 chemistry-spread band. The closed-form Park-2T controller lands 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction (μ = 14.007); its former near-anchor landing was an artifact of an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode), and the offset is reported rather than re-admitted. Still a two-temperature Saha surrogate; the T_e = T_ve lumping is worth roughly 2×, and the landing is sensitive to the Millikan–White τ_vt model within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure, not perfect gas.',
+      'The uncalibrated finite-rate network lands within +0.35 decade of the flight anchor, inside the ±0.70 chemistry-spread band. The closed-form Park-2T controller lands 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction (μ = 14.007); its former near-anchor landing was an artifact of an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode), and the offset is reported rather than re-admitted. Still a two-temperature Saha surrogate; the T_e = T_ve lumping is worth roughly 2×, and the landing is sensitive to the Millikan–White τ_vt model within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure, not perfect gas.',
     hasArtifact: true,
   },
   {

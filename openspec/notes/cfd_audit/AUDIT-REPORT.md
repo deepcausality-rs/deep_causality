@@ -11,8 +11,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (2 of 4 changes landed,
-> plus one follow-up capability). Of the four certification blockers, three are resolved; B-1 remains.**
+> **Status: NOT YET CERTIFIABLE. Phase 1 complete; Phase 2 in progress (3 of 4 changes landed,
+> plus one follow-up capability). All four certification blockers are resolved; B-1 closed with
+> `fix-ramc-vibrational-relaxation-pair`. The remaining Phase-2 change is
+> `fix-navigation-filter-correctness` (item 9).**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
@@ -30,7 +32,7 @@ computes.
 >
 > | Blocker | Status |
 > |---|---|
-> | **B-1** Millikan–White reduced mass | **open** — Phase 2 |
+> | **B-1** Millikan–White reduced mass | **RESOLVED** — Phase 2 change `fix-ramc-vibrational-relaxation-pair` |
 > | **B-2** No CI executes the verification suite | **RESOLVED** |
 > | **B-3** `dec_cylinder_verification` has no gate | **RESOLVED** |
 > | **B-4** `BlendedMap` documents an absent fold check | **RESOLVED** — Phase 2 change 4 |
@@ -152,6 +154,42 @@ computes.
 >   claims left after the `L = 8` move, and a mask test that passed on the *un-clamped* raw mask. This is
 >   the same pattern as change 4's own mistakes — **the remediation needs the same adversarial pass the
 >   audit applied to the code**, and running it is now standard for these changes.
+>
+> **Phase 2, change `fix-ramc-vibrational-relaxation-pair` is implemented and archived**, closing item
+> **7 / B-1**, the last certification blocker. It corrected `REDUCED_MASS_AMU` from the invalid `7.0`
+> (the N–N pair of two nitrogen *atoms*, which have no vibrational mode) to the N₂–N₂ value `14.007`,
+> derived from the constituent masses at a single definition, and added a checked constructor that
+> rejects a monatomic relaxing species. What it found beyond this report:
+>
+> - **The correction removed the headline, exactly as predicted.** Re-measured, not carried over: the
+>   Park-2T controller peak `n_e` moves `1.085e19 (+0.0 dec) → 5.310e17 (−1.27 dec)`, matching the
+>   −1.27-dec figure the module auditor projected. Per D3 the band was not widened to re-admit the old
+>   number; the gate now reports the offset as a tripwire on the corrected value.
+> - **What survives is the network, not the controller.** The uncalibrated finite-rate network's renewal
+>   arm lands `+0.35 dec`, inside the ±0.70 chemistry-spread band, so the order-of-magnitude flight-data
+>   result holds while the closed-form controller's `+0.0` headline is retired as an artifact of the
+>   invalid constant.
+> - **The examples needed no band edit; retropulsion needed the right order.** Corridor and weather pass
+>   unchanged (the evolved network is far less μ-sensitive than the closed-form controller). Retropulsion's
+>   onset gate is a self-consistency check against `weather_table.csv`; regenerating it first
+>   (weather → retropulsion) makes the flown onset match the interpolated one (12.60 s vs 12.61 s), no
+>   bound moved.
+> - **The adversarial pass over the finished diff caught the change's own overclaims, all mine — and
+>   two passes still left a tail.** The first pass (each finding independently verified) found seven
+>   stale-headline defects: the harness's own README still asserting the retired "within 3×" claim, a
+>   method docstring citing the μ = 7 α, and a contradiction where the pair table called N₂–N₂ the
+>   "longest" τ while listing the heavier N₂–O₂ above it (resolved by stating O₂ is dissociated out at
+>   8044 K), among others. All fixed. The second pass, extended to the project website, found three more —
+>   a **blocker** on the public roadmap still listing "+0.0 decades" as a works-today result, a stale
+>   corridor branch-table, and a grammar slip — plus a source doc claim ("the marched closure lands
+>   within the chemistry spread") that is false for the corrected controller. All fixed. **One class is
+>   left open and recorded:** the website *tutorial* walkthroughs (`stage-1-corridor`, `stage-2-weather`,
+>   `stage-3-retropulsion`, `handle-regime-change`) still quote the pre-baseline example outputs (onset
+>   74.7 km, the coarse-miss table, the 1.78 m/s landing) — a separate, larger figure-sync than the
+>   validation pages, deferred to a follow-up. So the honest tally is "seven found and fixed, three more
+>   found and fixed, one class deferred", **not "clean"** — the same lesson as change 4 and
+>   `close-qtt-solver-envelope`: even the adversarial pass leaves a residue, and claiming otherwise is
+>   itself the overclaim the audit exists to catch.
 >
 > What Phase 1 changed, and what it found beyond this report:
 >
@@ -312,11 +350,9 @@ inconsistent basis that **understates** the solver. Fix the table, not the solve
 Four findings survived review at critical severity. All four are CONFIRMED and were additionally
 re-read at source by the lead auditor.
 
-> **Status 2026-07-21: three of four resolved.** B-2 and B-3 closed in Phase 1, B-4 in Phase 2
-> change 4. **B-1 (Millikan–White reduced mass) remains open and is the last certification blocker** —
-> it is item 7 of Phase 2, scheduled third in the implementation order (change
-> `fix-ramc-vibrational-relaxation-pair`). The entries below are kept at their as-found wording, with
-> resolution noted inline, so they stay comparable to the module reports.
+> **Status 2026-07-24: all four resolved.** B-2 and B-3 closed in Phase 1, B-4 in Phase 2 change 4, and
+> B-1 in Phase 2 change `fix-ramc-vibrational-relaxation-pair`. The entries below are kept at their
+> as-found wording, with resolution noted inline, so they stay comparable to the module reports.
 
 ### B-1 — Millikan–White reduced mass is wrong for the documented collision pair
 `verification/qtt_ramc_stagline/config.rs:35-37`, `src/solvers/qtt/compressible/fitting.rs:72-73`
@@ -351,6 +387,15 @@ from the module auditor and was not independently re-computed; re-measuring it i
 re-baseline the RAM-C chain **and** the three plasma-blackout examples. If N–N was intended, correct the
 label and justify why atom–atom dominates. Derive the gates from the corrected physics — **do not re-tune
 the gates to restore the previous agreement.**
+
+**Resolved 2026-07-24** (`fix-ramc-vibrational-relaxation-pair`). The pair is N₂–N₂; `μ` is derived from
+its constituent masses (`m(N) = 14.007`, `m(N₂) = 28.014`, `μ = m(N₂)/2 = 14.007`) at a single definition in
+`deep_causality_cfd`, re-exported to the harness and the example world, with a checked constructor that
+rejects a monatomic relaxing species. The RAM-C chain and the three plasma-blackout examples were
+re-measured and re-baselined, and the gates were re-derived from the corrected physics, not re-tuned. The
+Park-2T controller now lands −1.27 decades below the anchor (5.310e17), measured, and that offset is reported
+rather than re-admitted; the finite-rate network's renewal arm survives at +0.35 dec. See the remediation
+block at the top of this report.
 
 ### B-2 — No CI or Bazel target executes the verification suite
 `.github/workflows/run_tests.yml` — no `cargo run --example` anywhere
@@ -588,7 +633,7 @@ Ranking reflects **assurance**, not elegance. Critical counts are post-review.
 | 11 | Test suite & build health | `needs-work` | 0 | Change-detector tests; verification suite absent from CI (rolled into B-2) |
 | 12 | Coordinate + tensor bridge | `needs-work` | 0 | ✅ B-4 resolved — invertibility enforced over the closed domain, gate BM-A now measures the shipped constructor |
 | 13 | Verification harnesses | `needs-work` | 1 | B-3; the layer that must be strongest is among the weakest |
-| 14 | Plasma / blackout physics | **`not-ready`** | 1 | Headline result rests on B-1 |
+| 14 | Plasma / blackout physics | **`needs-work`** | 0 | B-1 resolved; headline retired and re-derived (Park-2T −1.27 dec reported, network +0.35 dec survives). Open levers remain (T_e=T_ve lumping, single-pair τ, mixture-weighting follow-up) |
 | 15 | Navigation / ESKF | **`not-ready`** | 0 | Two compounding filter defects (§4b); unguarded public API |
 | 16 | QTT incompressible / immersed | **`not-ready`** | 0 | ✅ constructor envelope validated (item 13), mask `[0,1]` enforced (item 14), Brinkman envelope resolved in config (item 10); cylinder drag gate now offline (solver cost), so headline drag still unverified |
 
@@ -687,17 +732,22 @@ reports the 65² default (RMSE **0.0617**, primary vortex matching Ghia to 1e-4)
 
 **Phase 2 — Close the physics defects — ⬅ IN PROGRESS**
 
-Specified as four openspec changes. **Two are implemented and archived:** change 4
-(`resolve-cfd-contract-gaps`, items 8 / 11 / 15) and `close-qtt-solver-envelope` (items 12 / 13 / 14,
-and item 10 resolved in configuration). The remaining two are **`fix-ramc-vibrational-relaxation-pair`
-(item 7 / B-1)** and **`fix-navigation-filter-correctness` (item 9)**, specified and not started.
+Specified as four openspec changes. **Three are implemented and archived:** change 4
+(`resolve-cfd-contract-gaps`, items 8 / 11 / 15), `close-qtt-solver-envelope` (items 12 / 13 / 14, and
+item 10 resolved in configuration), and `fix-ramc-vibrational-relaxation-pair` (item 7 / B-1, the last
+certification blocker). The remaining one is **`fix-navigation-filter-correctness` (item 9)**, specified
+and not started.
 
 The `close-qtt-solver-envelope` group turned up the one place where "detectable" was not enough: item
 10's acceptance test — the η ladder converging — needs `L = 8`, at which the harness costs hours, so it
 cannot run in CI. The envelope is resolved in configuration and the gate is offline/manual; closing it
 for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 10).
 
-7. Resolve `REDUCED_MASS_AMU` at both sites and re-baseline the RAM-C chain and the three examples. — **B-1**
+7. ✅ **DONE** — Resolve `REDUCED_MASS_AMU` at both sites and re-baseline the RAM-C chain and the three
+   examples. — **B-1** Corrected to the N₂–N₂ value `14.007`, derived from the constituent masses at a
+   single definition, with a monatomic-species rejection guard. The chain and examples were re-measured
+   and re-baselined; gates re-derived, not re-tuned (Park-2T −1.27 dec reported; network +0.35 dec
+   survives). Two adversarial review passes; the website was updated as a downstream consumer.
 8. ✅ **DONE** — Implement the fold/singularity check `BlendedMap` documents; guard ÷det J. — **B-4**
    Scan covers the **closed** domain against a floor relative to `dr·span_y`; a fold is reachable
    (275 configurations) so the sign check is falsifiable; gate BM-A rebuilt on the shipped constructor

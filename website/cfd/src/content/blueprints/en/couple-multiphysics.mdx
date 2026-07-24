@@ -140,7 +140,7 @@ The closed-form Park-2T controller lands at 5.310e17 m⁻³, 1.27 decades below 
 RAM-C II flight anchor of ~1e19 m⁻³, after the N₂–N₂ reduced-mass correction
 (`μ = 14.007`; the former near-anchor landing came from an invalid `μ = 7.0`).
 See [validation status](/validation/#qtt-ramc) for that offset and for the
-uncalibrated finite-rate network, which lands +0.35 decade of the anchor.
+uncalibrated finite-rate network, which lands within +0.35 decade of the anchor.
 
 ## Coupling direction
 
@@ -168,14 +168,14 @@ the ESKF correction. **Blackout degrades the estimate, not the truth.**
 That path from bank command to flow exists through the trajectory, so the
 following is a magnitude result rather than a structural one. Across the
 corridor's seventeen bank branches the flow columns are invariant to three
-significant figures while the trajectory outcome varies by a factor of eight:
+significant figures while the trajectory outcome varies by nearly a factor of ten:
 
 | Column | Range across 17 branches |
 |---|---|
-| Peak heat flux | 1.703e6 to 1.704e6 |
-| Thermal load | 1.352e7 (single value) |
-| Peak n_e | 2.524e19 to 2.527e19 |
-| Miss distance | 20.000 m to 2.393 m |
+| Peak heat flux | 2.232e6 to 2.240e6 |
+| Thermal load | 1.459e7 to 1.460e7 |
+| Peak n_e | 6.224e19 to 6.309e19 |
+| Miss distance | 20.000 m to 2.070 m |
 
 Over the branch continuation window the bank command does not move the sampled
 atmosphere enough to alter the shock-layer chemistry at three digits. The
