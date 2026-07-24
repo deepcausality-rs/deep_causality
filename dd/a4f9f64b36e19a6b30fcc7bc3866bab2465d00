@@ -1,0 +1,107 @@
+deep_causality_cfd/src/solvers/qtt/immersed_2d.rs
+  s_f2afaa4ec55b4b::t_5e47c7bfa8145b 50-55,70-85
+deep_causality_cfd/verification/qtt_cylinder_verification/config.rs
+  s_f2afaa4ec55b4b::t_d67c6479bdd317 22-38
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d_fitted.rs
+  s_f2afaa4ec55b4b::t_eb1c9bd3b4a8ff 152-155
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 136-142
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_3d.rs
+  s_f2afaa4ec55b4b::t_b421217cba7122 142-145
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 124-130
+deep_causality_cfd/tests/BUILD.bazel
+  s_f2afaa4ec55b4b::t_8897073a719b16 149
+deep_causality_cfd/verification/qtt_cylinder_verification/main.rs
+  s_f2afaa4ec55b4b::t_c2f241efc0ac76 41-47
+  s_f2afaa4ec55b4b::t_09b3e4260fb75a 62-67
+.github/workflows/cfd_verification.yml
+  s_f2afaa4ec55b4b::t_c3b66e58dcefac 15-18,20-22,24-25,34-36
+  s_f2afaa4ec55b4b::t_246e033c2a472b 27-33
+  s_f2afaa4ec55b4b::t_b758778e85b591 64,69-71
+  s_f2afaa4ec55b4b::t_9c643ad7571ce2 95
+  s_f2afaa4ec55b4b::t_b48bff8a48aadc 101,109
+deep_causality_cfd/tests/tensor_bridge/mask_tests.rs
+  s_f2afaa4ec55b4b::t_0c1476f4739d38 159-166
+  s_f2afaa4ec55b4b::t_eecccdfdf04c41 169-175,180-199,204-217,222-223,228
+  s_f2afaa4ec55b4b::t_733f03b7b37a68 6
+  s_f2afaa4ec55b4b::t_2a958845122c51 153-158,167-168,176-179,229-231,236-242,252-268
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 200-203,243-251
+  s_f2afaa4ec55b4b::t_a3f005ac370e47 218-221,224-227
+  s_f2afaa4ec55b4b::t_51b7f50abbf1a6 232-235
+deep_causality_cfd/verification/README.md
+  s_f2afaa4ec55b4b::t_77de6e1dc870a8 68-75,94
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher3d_tests.rs
+  s_f2afaa4ec55b4b::t_2ec0c3c53147ce 172-178,188-189,191-195
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 179-187
+  s_f2afaa4ec55b4b::t_82a02290771b17 190
+deep_causality_cfd/src/solvers/qtt/compressible/marcher_2d.rs
+  s_f2afaa4ec55b4b::t_53a472be315c6e 123-125,136-139
+openspec/changes/close-qtt-solver-envelope/design.md
+  s_f2afaa4ec55b4b::t_d9597806c78f13 281-284
+  s_f2afaa4ec55b4b::t_a3f005ac370e47 289-315
+  s_f2afaa4ec55b4b::t_48e4b104b60830 98-103,109
+  s_f2afaa4ec55b4b::t_a44c6c2188a342 264-274
+  s_f2afaa4ec55b4b::t_0f92dd140b9d49 104-108
+  s_f2afaa4ec55b4b::t_f843f20eb14a5b 217-251,287-288
+  s_f2afaa4ec55b4b::t_0154e9f14a83a6 252-263,275-280,285-286
+deep_causality_cfd/tests/solvers/qtt/compressible_tests.rs
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 149,208-211
+  s_f2afaa4ec55b4b::t_fa3a1784ed23de 150-175,179-194,197-207,212-228
+  s_f2afaa4ec55b4b::t_a1099befe977c7 129-139,147-148
+  s_f2afaa4ec55b4b::t_00cb909f313180 176-178
+openspec/changes/close-qtt-solver-envelope/specs/qtt-immersed-body/spec.md
+  s_f2afaa4ec55b4b::t_72683c6ba34c54 61-79,95,97-104,106
+  s_f2afaa4ec55b4b::t_76c3467098bf06 105,107-111
+  s_f2afaa4ec55b4b::t_95e490f9add27c 80-82
+deep_causality_cfd/src/tensor_bridge/mask.rs
+  s_f2afaa4ec55b4b::t_10535c4a2fc6d6 28-33
+  s_f2afaa4ec55b4b::t_944ce3b48131a2 20,27,34-44,58-102,107
+  s_f2afaa4ec55b4b::t_9a7eab000bd1e6 45-57
+  s_f2afaa4ec55b4b::t_aca95caf159ff8 103-106
+  s_f2afaa4ec55b4b::t_7d1f8a04d1687f 108
+  s_f2afaa4ec55b4b::t_f55bb0627c39fb 137-141
+deep_causality_cfd/src/solvers/qtt/compressible/mod.rs
+  s_f2afaa4ec55b4b::t_18abd02729b31b 25-57
+deep_causality_cfd/src/solvers/qtt/compressible/euler_1d.rs
+  s_f2afaa4ec55b4b::t_fc0ede46e2a117 109-112
+deep_causality_cfd/tests/solvers/qtt/incompressible_2d_tests.rs
+  s_f2afaa4ec55b4b::t_3985ac18b37893 149-174,178-183
+  s_f2afaa4ec55b4b::t_9171ff14a22633 175-177
+deep_causality_cfd/tests/solvers/qtt/immersed_2d_tests.rs
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 283-296
+  s_f2afaa4ec55b4b::t_3985ac18b37893 269-282,297-312,316-333
+  s_f2afaa4ec55b4b::t_9171ff14a22633 313-315
+openspec/changes/close-qtt-solver-envelope/tasks.md
+  s_f2afaa4ec55b4b::t_c11cbffda8e5bb 6-8,14-22,28-32,38-45
+  s_f2afaa4ec55b4b::t_a3069e7a764c00 52,54-56
+  s_f2afaa4ec55b4b::t_14a7f0cd8b1f4e 82-92
+  s_f2afaa4ec55b4b::t_99f16693b685e7 53,57-60,66-69,72,75-78
+openspec/notes/cfd_audit/AUDIT-REPORT.md
+  s_f2afaa4ec55b4b::t_99f16693b685e7 670-673,681-683
+  s_f2afaa4ec55b4b::t_246e033c2a472b 674-680
+deep_causality_cfd/src/solvers/qtt/incompressible_2d.rs
+  s_f2afaa4ec55b4b::t_b80a4b35390097 223-275
+  s_f2afaa4ec55b4b::t_85317bf30ce251 50-54,65
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher3d_fitted_tests.rs
+  s_f2afaa4ec55b4b::t_ed46dc8d0a745d 409-417,425-426,428,433-435
+  s_f2afaa4ec55b4b::t_a491556c4df3fc 418-424,429-432
+  s_f2afaa4ec55b4b::t_82a02290771b17 427
+deep_causality_cfd/tests/solvers/qtt/compressible_marcher2d_tests.rs
+  s_f2afaa4ec55b4b::t_82a02290771b17 290
+  s_f2afaa4ec55b4b::t_2ec0c3c53147ce 277-289,291-295
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "dda4f9f64b36e19a6b30fcc7bc3866bab2465d00",
+  "prompts": {},
+  "sessions": {
+    "s_f2afaa4ec55b4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d37e4fb4-7aa3-4b81-9b07-55c9542bd8cc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Marvin Hansen <marvin.hansen@gmail.com>"
+    }
+  }
+}
