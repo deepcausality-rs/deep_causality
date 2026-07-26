@@ -1,3 +1,5 @@
+    Finished `release` profile [optimized] target(s) in 0.07s
+     Running `target/release/examples/qtt_reentry_3d`
 === QTT 3-D re-entry forebody sheath: the Stage-6 rank lever ===
 
   resolution | fitted χ (fn ζ) | Cartesian χ
@@ -5,6 +7,8 @@
      2^3    |         2       |      10
      2^4    |         4       |      30
      2^5    |         4       |      59
+  [PASS] [tripwire] RE-A fitted forebody χ bounded and resolution-stable: bonds [2, 4, 4] (max 4 <= 8)
+  [PASS] [tripwire] RE-B Cartesian forebody capture is a growing rank cost: cart [10, 30, 59] vs fitted [2, 4, 4]
 
 --- reading ---
   FOREBODY (gated): the bow-shock sheath is a constant-radius surface → a step in the radial

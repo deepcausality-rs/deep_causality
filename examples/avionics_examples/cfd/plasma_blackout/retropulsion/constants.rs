@@ -112,7 +112,7 @@ pub const MAX_STEP_COST_RATIO: f64 = 3.0;
 pub const FLOW_SPREAD_MIN: f64 = 0.015;
 /// (4c) Minimum departure of the realized trajectory from the frozen-drag prediction, m·s⁻¹.
 ///
-/// **Re-earned 2026-07-20: measured 147.3 m/s**, pinned here with margin. The quantity changed units
+/// **Re-earned 2026-07-20: measured 139.38 m/s** on the committed run, pinned here with margin. The quantity changed units
 /// and meaning, so the superseded 0.5 does not carry over: it bounded a difference of two closed
 /// forms in m·s⁻² whose thrust terms cancelled identically, which restated the drag gate. This bounds
 /// the separation of two **velocity increments** accumulated step by step over the same continuation
@@ -122,7 +122,8 @@ pub const FROZEN_DRAG_SEPARATION_MIN: f64 = 100.0;
 /// (4b) Minimum collapse of the preserved-drag fraction across the **burning** branches' realized
 /// throttles.
 ///
-/// **Re-earned 2026-07-20: measured 0.178** (0.1310 at the 0.16 branch down to −0.0472 at 0.38),
+/// **Re-earned 2026-07-20: measured 0.3121** on the committed run (preserved drag falls 0.2510 at the
+/// low branch to −0.0611 at the high one, across the four burning branches),
 /// pinned here with margin. The earlier 0.5 is superseded by a correction rather than relaxed, and
 /// two corrections moved it:
 ///
@@ -141,7 +142,8 @@ pub const DRAG_COLLAPSE_MIN: f64 = 0.10;
 /// (5) Minimum separation between the informed and uninformed guidances' **flown** landing
 /// decisions — the altitude each lights its stopping burn at, m.
 ///
-/// **Re-earned 2026-07-20: measured 23.44 m** (149.35 m informed against 125.91 m uninformed),
+/// **Re-earned 2026-07-20: measured 14.06 m** on the committed run (139.12 m informed against
+/// 125.06 m uninformed),
 /// pinned here with margin. The quantity changed, so the superseded 1.0 does not carry over: it
 /// bounded the difference between two interpolations of one CSV, computed before any march and
 /// invariant to the entire descent.

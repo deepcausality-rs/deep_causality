@@ -27,7 +27,7 @@ cargo run --release -p avionics_examples --example flight_envelope_placard
 ```
 
 The default matrix is `mach_alt_matrix.csv`, sixteen points along a supersonic climb corridor
-from Mach 0.5 at 5 km to Mach 5 at 40 km. All three gates pass and the process exits 0. The
+from Mach 0.5 at 5 km to Mach 5 at 40 km. Both gates pass and the process exits 0. The
 run completes in well under a second.
 
 The example accepts one optional argument, a path to a different matrix file. The recorded
@@ -60,10 +60,11 @@ matrix restores the recorded green table.
    re-stagnation of the post-shock state) above Mach 1 and through the shock-free isentropic
    form below it, and the Sutton-Graves correlation gives the stagnation-point heating for
    the stated nose radius. All arithmetic runs in the example's `FloatType` alias.
-3. **Gate.** Three gates: every point inside the q-max placard (detail names the max-q
-   point), every point inside the stagnation-temperature placard (detail names the hottest
-   point), and matrix integrity (every file row computed). Offending points are listed by
-   their Mach-altitude coordinates.
+3. **Gate.** Two gates: every point inside the q-max placard (detail names the max-q point)
+   and every point inside the stagnation-temperature placard (detail names the hottest
+   point). Offending points are listed by their Mach-altitude coordinates. Neither gate
+   counts computed rows against the input file. Each fails on an empty row set and nothing
+   more, so a matrix that loses rows between the reader and the sweep is not caught here.
 4. **Write.** The placard table lands in `placard_table.csv` through the group-1 writer, with
    named and unit-carrying columns: `mach(-)`, `alt(km)`, `q(kPa)`, `t0_post_shock(K)`,
    `qdot(W/cm2)`. The write is the one place the working precision downcasts to raw `f64`.
@@ -76,8 +77,7 @@ The recorded default run peaks at q = 23.7 kPa (M 1.20 / 11 km) and T0 = 1502.1 
 | Gate | Check | Recorded detail |
 |---|---|---|
 | q-max placard | every point's q at or below 60 kPa | max q = 23.7 kPa at M 1.20 / 11.0 km |
-| stagnation-temperature placard | every point's T0 at or below 1700 K | max T0 = 1502.1 K at M 5.00 / 40.0 km |
-| matrix integrity | one computed row per file row | 16 of 16 matrix rows computed |
+| stagnation temperature | every point's T0 at or below 1700 K | max T0 = 1502.1 K at M 5.00 / 40.0 km |
 
 A failing gate prints its `[FAIL]` line naming every out-of-envelope point and the example
 exits 1. Setup and usage failures (an unreadable matrix, a missing column, an altitude

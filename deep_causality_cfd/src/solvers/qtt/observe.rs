@@ -137,6 +137,16 @@ where
 /// contraction: the integrand is the field's own pressure (the preserved aerodynamic drag the
 /// Jarvinen–Adams dataset measured), **not** the forcing deficit.
 ///
+/// **Units, and why the name overstates the quantity.** This returns `∫ χ_strip · p dV`, an undirected
+/// volume integral of pressure: `Pa·m³` in 3-D, `Pa·m²` per unit depth as evaluated here. That is **not
+/// a force** (`N`). No outward normal is applied and no surface is integrated over, so the result
+/// carries no direction and cannot be compared against a force from another configuration. Only the
+/// **ratio** of two such integrals from the *same* geometry is meaningful, which is exactly how
+/// [`preserved_drag_fraction`] consumes it; the dimensional factor cancels there. A true axial force
+/// would project the pressure against the strip's outward normal and integrate over the interface.
+/// `strip_pressure_integral` would be the accurate name; renaming is a public-API change and is left
+/// as an owner decision, so the units are stated here instead.
+///
 /// # Errors
 /// [`PhysicsError::PhysicalInvariantBroken`] if the density leaves the positive cone; propagates
 /// codec / contraction errors.

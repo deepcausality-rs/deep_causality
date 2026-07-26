@@ -1,5 +1,8 @@
-## ADDED Requirements
+# documentation-code-parity Specification
 
+## Purpose
+TBD - created by archiving change reconcile-cfd-docs-and-traceability. Update Purpose after archive.
+## Requirements
 ### Requirement: A kernel docstring names the operator the kernel marches
 
 A kernel's public docstring SHALL describe the operator the code actually evaluates, not an earlier or
@@ -54,7 +57,7 @@ claim that a property holds "by construction" SHALL name the check that enforces
 where the property is both asserted and unenforced, the discrepancy SHALL be raised as a correctness
 finding rather than resolved by softening the prose.
 
-The audit catalogues ~86 actionable `doc-overclaim` rows in `openspec/notes/cfd_audit/ACTION-LIST.md`. A
+The audit catalogues ~86 actionable `doc-overclaim` rows in `../../audits/cfd_audit/ACTION-LIST.md`. A
 minority are already closed by Phases 1–2 (the `blended.rs` fold claim, the `boundary_zone` hook, the
 `penalization_heat_integral` rename); the remainder are reconciled here.
 
@@ -150,3 +153,4 @@ approval; the non-deleting corrections are unconditional.
 
 - **WHEN** a document describes how a self-verifying program reports its gates
 - **THEN** it names the type the program actually uses, not a parallel API no program constructs
+

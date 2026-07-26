@@ -62,7 +62,12 @@ pub struct RegimeSwitch<R> {
 
 impl<R: RealField> RegimeSwitch<R> {
     /// A switch with the lower (`exit_direct`) and upper (`enter_direct`) g-load thresholds and an initial
-    /// regime. Requires `exit_direct ≤ enter_direct` (the hysteresis band).
+    /// regime.
+    ///
+    /// **`exit_direct ≤ enter_direct` is a stated precondition, not an enforced one.** This constructor
+    /// is infallible and does not reject an inverted band. Supplying `exit_direct > enter_direct` inverts
+    /// the Schmitt trigger, so instead of suppressing chatter the switch flips on every step inside the
+    /// band. Nothing reports it. Order the thresholds at the call site.
     pub fn new(exit_direct: R, enter_direct: R, initial: IntegratorRegime) -> Self {
         Self {
             exit_direct,

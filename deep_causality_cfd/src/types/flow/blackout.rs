@@ -433,10 +433,18 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for IonizationStage<R> {
     }
 }
 
-/// A two-temperature ideal-gas pressure closure `p = n·k_B·T_tr` written into a
-/// per-cell `"pressure"` scalar — the interface the Tier-B compressible marcher
-/// reuses. On the incompressible Tier-A rollout the marcher does not read it, so the
-/// in-scope ambient effect is intentionally limited. Reads `"T_tr"`, writes `"pressure"`.
+/// A **single-temperature** ideal-gas pressure closure `p = n·k_B·T_tr` at the **configured** number
+/// density, written into a per-cell `"pressure"` scalar. Despite sitting in the two-temperature stack,
+/// the closure reads only the translational temperature `T_tr`; the vibrational temperature `T_ve` does
+/// not enter, so this is not a two-temperature pressure.
+///
+/// **No shipped consumer reads `"pressure"`.** It is written for the Tier-B compressible marcher
+/// interface, and on the incompressible Tier-A rollout nothing consumes it, so the stage is currently
+/// write-only. The number density is the one configured on the stage, not the evolved `"n_tot"` field
+/// that `IonizationStage` and `VibrationalLagStage` can be pointed at through their density-field
+/// accessors; add a matching accessor here if the evolved density is wanted.
+///
+/// Reads `"T_tr"`, writes `"pressure"`.
 #[derive(Debug, Clone, Copy)]
 pub struct EosStage<R: CfdScalar> {
     t_tr_field: &'static str,

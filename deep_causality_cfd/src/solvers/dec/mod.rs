@@ -3,7 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The periodic DEC-native incompressible Navier–Stokes solver.
+//! The DEC-native incompressible Navier–Stokes solver.
+//!
+//! **Supported boundary configurations.** Fully periodic (the default, and the
+//! only one the spectral viscous option supports); wall-bounded with no-slip and
+//! a prescribed moving-wall lift; free-slip walls; immersed cut-cell bodies
+//! (aperture-resolved by default, staircase as the fallback); and open
+//! inflow/outflow with a pressure reference on the outflow face. The zones live
+//! in [`boundary`] and are folded into the rate's constrained projection.
 //!
 //! Velocity is an edge 1-form for the entire solve. The governing
 //! formulation is the rotational (Lamb) form under Leray projection:
@@ -46,6 +53,17 @@
 //!   the diagnostics the step already computed.
 //! - [`diagnostics`]: DEC-native integral observables (energy, enstrophy,
 //!   helicity, max speed, divergence residual).
+//! - [`boundary`]: the zone types listed above (no-slip and moving wall,
+//!   free-slip, inflow, outflow, body force) and the `BoundaryZone` hooks the
+//!   solver folds.
+//! - [`surface_force`]: cut-cell surface observables (viscous and pressure
+//!   traction, wall heat flux).
+//! - [`energy_budget`]: the per-term energy budget used by the stability
+//!   diagnostic.
+//! - [`spectral_diffusion`]: the opt-in spectral viscous evaluation (fully
+//!   periodic lattices only).
+//! - [`scalar_transport`]: passive-scalar advection–diffusion on the same path.
+//! - [`dec_config`]: the owned configuration container and its builder.
 //! - [`wrappers`]: the `PropagatingEffect` surface in the crate's existing
 //!   kernel-wrapper tradition.
 //!

@@ -7,6 +7,17 @@
 //! specs and validates at `build()` (the required mesh + solver). Started by
 //! [`CfdConfigBuilder::march`](crate::CfdConfigBuilder); the built config is composed and run by
 //! the [`CfdFlow`](crate::CfdFlow) DSL.
+//!
+//! **Where the type-state is, and where it is not.** The composition axes carry real type-state:
+//! [`zones`](MarchConfigBuilder::zones) and [`couple`](MarchConfigBuilder::couple) each return a
+//! builder of a *different* type (`Z` and `C` change), so the boundary-zone tuple and the coupling
+//! stack are fixed in the type before the build. The required scalar sections are not. `mesh` and
+//! `solver` are `Option` fields checked inside [`build`](MarchConfigBuilder::build), which is why
+//! `build` returns a `Result`: a forgotten `.mesh(..)` is a runtime error, not a compile error.
+//! [`DecNs::config`](crate::DecNs::config) in `src/solvers/` is the contrasting pattern. Its
+//! `DecNsConfigNeedsViscosity` → `DecNsConfigNeedsTimeStep` → `DecNsConfigReady` chain makes the
+//! terminal `build` reachable only once every required field is set, leaving `build` to validate
+//! values rather than presence.
 
 use crate::CfdScalar;
 use crate::solvers::DecNsConfig;

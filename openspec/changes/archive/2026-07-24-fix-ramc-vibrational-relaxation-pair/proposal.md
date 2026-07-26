@@ -36,7 +36,7 @@ expected to **remove** the crate's headline agreement (`peak nₑ = 1.08e19`, "+
 II anchor"), not preserve it. The audit is explicit that the gates must be re-derived from the
 corrected physics rather than re-tuned to restore the previous number.
 
-Audit blocker **B-1**, `openspec/notes/cfd_audit/AUDIT-REPORT.md` §4 and §9 Phase 2 item 7.
+Audit blocker **B-1**, `../../../audits/cfd_audit/AUDIT-REPORT.md` §4 and §9 Phase 2 item 7.
 
 ## What Changes
 

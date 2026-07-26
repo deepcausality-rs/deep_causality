@@ -48,8 +48,11 @@ std = [
     "dep:deep_causality_uncertain",
 ]
 
-# Opt-in CPU parallelism. Forwards to the topology crate's Rayon-backed DEC
-# operator loops and the shared `MaybeParallel` marker. Serial by default;
+# CPU parallelism. Forwards to the topology crate's Rayon-backed DEC operator
+# loops and the shared `MaybeParallel` marker. On in the `default` set above;
+# build with `--no-default-features --features std` for the serial loops. The
+# Rayon fan-out costs more than it saves on small grids, so serial is the faster
+# choice below roughly 256^2 cells (measured in `benches/PERFORMANCE.md`).
 parallel = [
     "deep_causality_topology/parallel",
     "deep_causality_par/parallel",

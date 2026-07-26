@@ -11,8 +11,8 @@
 //!         across the whole sweep `λ ∈ [0,1]`. This is the one open residual Res 4 flagged.
 //!   BM-B  **rank dial** — a fixed *physical* curved shock, sampled on the `λ`-blended lattice, runs
 //!         monotonically from high rank (`λ=0`, the curved front on a square grid) to `O(10)` (`λ=1`,
-//!         the front aligned to the radial axis). So `λ` really is a rank knob, and intermediate `λ`
-//!         gives intermediate rank at zero asymptotic cost.
+//!         the front aligned to the radial axis). So `λ` really is a rank knob. It is not a linear
+//!         one: the measured reduction concentrates above `λ ≈ 0.75`, so a partial blend buys little.
 //!
 //! Here `T_cart` and `T_fit` are compatibly-oriented charts over the same `(ξ,η)` patch in front of the
 //! nose (η ≈ radial / across the shock, ξ ≈ transverse). Self-verifying: gates exit non-zero on
@@ -142,8 +142,27 @@ fn main() {
     println!(
         "  Rank dial: bond runs {bond_cart} (λ=0, Cartesian capture) -> {bond_fit} (λ=1, body-fitted),"
     );
+    println!("  monotonically, so λ is a usable rank knob.");
+    // The reduction's *shape* is the reading, not just its endpoints, so report the last sweep
+    // point before λ=1: the concentration near the fitted end is otherwise hidden behind a
+    // 114 -> 5 headline. Pairing λ with a bond is only meaningful when every sweep point produced
+    // one, so read the knee from a complete sweep or say nothing.
+    let knee = if bonds.len() == lambdas.len() && bonds.len() >= 2 {
+        Some((lambdas[lambdas.len() - 2], bonds[bonds.len() - 2]))
+    } else {
+        None
+    };
+    if let Some((knee_lam, knee_bond)) = knee {
+        println!(
+            "  The reduction is not spread evenly: it concentrates above λ ~ {knee_lam:.2}. The dial up to"
+        );
+        println!(
+            "  λ={knee_lam:.2} buys {bond_cart} -> {knee_bond}; the last step to λ=1 buys {knee_bond} -> {bond_fit}. A partial"
+        );
+        println!("  blend therefore delivers little rank benefit; the useful range sits near λ=1.");
+    }
     println!(
-        "  monotonically — body-fittedness is a continuous low-rank free parameter, exactly as D8 claims."
+        "  Body-fittedness is a continuous low-rank free parameter, as D8 claims, but not a linear one."
     );
 
     if failures.is_empty() {

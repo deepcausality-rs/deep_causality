@@ -29,15 +29,17 @@ but `O(ℓ)`-wrong on a graded one.
 
 | Operator | max-norm order (graded) | L2 order (graded) | Affected by grading? |
 |---|---|---|---|
-| **Convective** `i_X ω` | ≈ 2 (to amp 0.5 = 3:1 ratio) | **≈ 2** | only the error *constant* grows mildly |
+| **Convective** `i_X ω` | ≈ 2 (to amp 0.3 = 1.86:1 ratio) | **≈ 2** | only the error *constant* grows mildly |
 | **Viscous** `Δ₀ = δd` | ≈ 2 | **≈ 2** | only the error *constant* grows mildly |
 
 Two conclusions:
 
-1. **Smooth grading retains second order — for both operators.** Even at strong grading
-   (a 3:1 spacing ratio) the order holds at ≈ 2; only the error constant grows. The R1
-   promise — resolve walls cheaply *and* keep fast convergence — holds today, no follow-up
-   needed.
+1. **Smooth grading retains second order — for both operators.** The sweep is
+   `a ∈ {0.0, 0.1, 0.2, 0.3}`. At the strongest grading measured, `a = 0.3`, `ℓ` runs from
+   0.7 to 1.3: a **1.86:1 spacing ratio**, and the order holds at ≈ 2; only the error
+   constant grows. Amplitudes above 0.3 are not run, so a 3:1 ratio (`a = 0.5`) is untested.
+   The R1 promise — resolve walls cheaply *and* keep fast convergence — holds today, no
+   follow-up needed.
 2. **Structure is metric-free and exact at any grading** — divergence-freeness of the Leray
    projection is combinatorial, pinned independently by the topology exactness test.
 

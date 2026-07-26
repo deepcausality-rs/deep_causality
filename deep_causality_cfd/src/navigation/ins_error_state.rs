@@ -8,11 +8,19 @@
 //! matrix action; the covariance propagation and measurement update ride on top of it in later slices.
 //!
 //! 17 error states: position (3), velocity (3), attitude-error (3), accelerometer bias (3), gyro bias
-//! (3), plus the two carried clock states (bias, drift). The load-bearing property — and what the
-//! closed-loop navigation gate rests on — is the **inertial drift growth law through the blackout**: a
-//! constant accelerometer bias grows the position error as `t²`, a constant gyro bias as `t³` (the bias
-//! tilts the attitude, which mis-projects the specific force). Keeping the bias + clock states alive
-//! through the coast is what gives rapid reacquisition when GNSS returns.
+//! (3), plus the two carried clock states (bias, drift). The **inertial drift growth law through the
+//! blackout** is a property of this error-dynamics *model*: a constant accelerometer bias grows the
+//! position error as `t²`, and a constant gyro bias as `t³` (the bias tilts the attitude, which
+//! mis-projects the specific force). Keeping the bias + clock states alive through the coast is what
+//! gives rapid reacquisition when GNSS returns.
+//!
+//! **The `t³` arm is not exercised by the shipped translational engine.** `ReentryNavEngine` integrates
+//! translation, and the examples supply `ImuModel::sense_angular_rate` with a zero gyro bias, so the
+//! attitude tilt that drives the `t³` term never grows in a shipped run: the observed drift is the `t²`
+//! accelerometer arm. The `t³` law is the model's stated behaviour, not a measured result of this crate,
+//! and the closed-loop navigation gates rest on the `t²` arm. See also `nav_sensors.rs`: the carried
+//! `ImuModel::gyro_bias` is used to sense the angular rate, and it is not applied as a rotation of the
+//! sensed specific force.
 //!
 //! Representative-frame model (Tier-A): no Earth rotation / transport rate; the body→nav DCM is taken as
 //! identity over a step (`C ≈ I`), so the linearised error dynamics are

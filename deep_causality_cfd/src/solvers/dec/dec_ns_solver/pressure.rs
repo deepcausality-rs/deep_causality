@@ -11,8 +11,12 @@
 //! `∂u/∂t = rhs_unproj − ∇(p + ½|u|²)`, and `∂u/∂t = P(rhs_unproj)` —
 //! so the discarded gradient part satisfies `(I − P)rhs = +∇B`: the
 //! Bernoulli pressure **is** the grade-0 potential, and the static
-//! pressure subtracts the kinetic 0-form. Both come back mean-zero-gauged through the projection's gauge
-//! fixing; absolute pressure on a torus is defined only up to a constant.
+//! pressure subtracts the kinetic 0-form. Absolute pressure on a torus is defined only up to a
+//! constant, so a gauge must be picked, and the two forms do **not** share it: the **Bernoulli** form
+//! comes back **mean-zero** from the projection's gauge fixing, and the **static** form inherits that
+//! gauge shifted by `−mean(½|u|²)`, because it is the Bernoulli field minus the kinetic 0-form. So the
+//! static field is mean-zero only for a field at rest. Compare either against its own mean, or re-gauge
+//! before comparing with an external pressure.
 
 use alloc::format;
 use alloc::vec::Vec;

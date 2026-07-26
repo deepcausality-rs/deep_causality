@@ -2,7 +2,7 @@
 
 ## Why
 
-The pre-certification audit ([`openspec/notes/cfd_audit/AUDIT-REPORT.md`](../../notes/cfd_audit/AUDIT-REPORT.md))
+The pre-certification audit ([`../../../audits/cfd_audit/AUDIT-REPORT.md`](../../notes/cfd_audit/AUDIT-REPORT.md))
 found the `deep_causality_cfd` numerical core sound — Rankine–Hugoniot exact, the Ghia lid-cavity primary
 vortex matched to four decimal places, Sod against the exact Riemann solution — but the **assurance layer**
 unable to support it. Two facts decide this change:

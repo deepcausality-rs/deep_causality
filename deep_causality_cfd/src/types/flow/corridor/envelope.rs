@@ -32,6 +32,12 @@ pub struct BurnEnvelope<R: CfdScalar> {
     /// Minimum admissible propellant mass (kg); a positive throttle at or below it is a breach.
     pub propellant_floor: R,
     /// Maximum admissible descent rate (m/s).
+    ///
+    /// **Enforced only while a commanded-thrust channel is present.** Conceptually this is a
+    /// whole-profile state limit: descending too fast is a breach whether or not the engine is firing.
+    /// The gate evaluates it inside the commanded-thrust branch, so on a step with no commanded thrust
+    /// the limit is not checked. Read it as "descent-rate limit during commanded burn" until the check
+    /// is hoisted out of that branch.
     pub max_descent_rate: R,
 }
 

@@ -12,10 +12,20 @@ measured exactly this blackout in 1970. Through the dark the vehicle dead-reckon
 inertial navigation while a bounded-correction gate keeps the bank command inside the certified
 envelope. When the sheath clears, one position fix collapses the accumulated drift.
 
-This example flies that corridor as **one continuous descent** in a single composed coupling:
- compressible flow, nonequilibrium plasma chemistry, regime classification,
+This example flies that corridor as **one continuous coupled descent** in a single composed
+coupling: compressible flow, nonequilibrium plasma chemistry, regime classification,
 GNSS-denied navigation, counterfactual guidance, and a cybernetic safety gate, all stepping
 together and all writing into one auditable provenance log. Here they are one dynamic process.
+
+Continuous here means the *coupled field*. The navigation state, the truth trajectory, the
+evolved projections, and the provenance log cross every leg boundary intact. The marched fluid
+layer does not. Resuming a leg through `.from(pause.state())` rebuilds that leg's carrier and
+re-quantizes the world's uniform seed, so the evolved conserved state, the inflow strip, and any
+acoustic-envelope drift the previous leg earned are discarded, and the layer re-converges over
+the following steps. The descent crosses three such boundaries and logs each one: `leg re-seeded
+from step N in world 'W': coupled field carried, marched fluid state re-seeded from the world
+seed`. The quasi-steady closure (below) is what makes that acceptable at this fidelity. It is
+not fluid continuity.
 
 The run self-verifies against the RAM-C II flight anchor and exits nonzero on any regression.
 Wall-clock is about 40 seconds.
@@ -43,7 +53,8 @@ the sequential run.
 
 The vehicle starts at 90 km at Mach 29, on a steep compressed trajectory sized so the
 61 km passage is the calibrated Mach-25 station. Four legs and one branch
-study follow, every boundary an *event the run finds*, not a scripted station switch:
+study follow, every boundary an *event the run finds*, not a scripted station switch. Each of
+the three leg boundaries carries the coupled field and re-seeds the marched layer:
 
 1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air
    thickens; at 74.7 km it crosses the GPS L1 cutoff and the classifier flips the link to
@@ -221,7 +232,9 @@ as transient; no spatially resolved reacting layer);
 
 3) The marched layer is 2-D with the 3-D fitted marcher reserved for stagnation-line validation (a timing study showed it 3.6x over the minutes budget);
 
-4) The flight corridor is a deterministic point-mass 3-DOF world with a fixed atmosphere. There are no winds, no aero-coefficient dispersions, and no density perturbations
+4) The flight corridor is a deterministic point-mass 3-DOF world with a fixed atmosphere. There are no winds, no aero-coefficient dispersions, and no density perturbations;
+
+5) A leg boundary re-seeds the marched fluid layer. The coupled field is carried across it; the evolved conserved state, the inflow strip, the acoustic-envelope drift, and the leg's own rebuild count are not. The layer restarts from the world's uniform seed at each of the three boundaries and re-converges within a few steps, which the quasi-steady closure of (2) accepts
 
 The demonstrated counterfactual branches are exact because the world is deterministic partially
 because of those chosen limitations. For higher fidelity of the simulation, any step can be replaced with a different physics kernel, marcher, or coupling mechanism. For the ionized chemistry, the limitation has been [documented in a companion note](../../../../../openspec/notes/archive/cfd-plasma-blackout/finite-rate-ionization-chemistry.md).
@@ -231,9 +244,9 @@ because of those chosen limitations. For higher fidelity of the simulation, any 
 | File | Contents |
 |---|---|
 | [`main.rs`](main.rs) | The descent: four legs, the branch study, provenance, the gates |
-| [`model.rs`](model.rs) | The descent worlds, the coupling stack, example-local stages, branch scoring |
+| [`model.rs`](model.rs) | The descent worlds, the bank commands, branch scoring, the leg snapshots, and both gating sequences (4 campaign + 9 leg = thirteen gates) |
 | [`constants.rs`](constants.rs) | The corridor's own knobs: the horizon, the bank sweep, the gate thresholds |
-| [`utils_print.rs`](utils_print.rs) | Console rendering and the thirteen validation gates |
+| [`utils_print.rs`](utils_print.rs) | Console rendering: the intro, the legs, the branch tables, the provenance |
 
 The physics constants, the numeric helpers, the example-local stages, and the coupling stack are
 shared with the [weather-dispersion example](../weather/README.md) through the

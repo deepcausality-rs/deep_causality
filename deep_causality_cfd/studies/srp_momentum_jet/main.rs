@@ -343,8 +343,14 @@ fn main() {
 }
 
 /// The momentum-jet forcing region: one L5-cell-wide column flush against the body face,
-/// 0.25 m tall (grid-independent physical geometry), hard-pinned (η = Δt) to the nozzle-exit
-/// conserved state — a supersonic inflow patch; everything downstream forms in the march.
+/// hard-pinned (η = Δt) to the nozzle-exit conserved state — a supersonic inflow patch; everything
+/// downstream forms in the march.
+///
+/// The patch height is **not** grid-independent. The predicate spans `|ŷ − ŷ_c| ≤ h` with
+/// `h = Δx̂₅`, a nominal 0.25 m, but `mask_from_fn` samples at grid nodes, so the realized patch is
+/// the node-rows that fall inside it: 3 rows at L = 5, which is 0.375 m, and 5 rows at L = 6, which
+/// is 0.3125 m. `main` counts those rows and prints the realized height; `jet_exit_state` sizes the
+/// exit pressure to it. See `JET_HALF_HEIGHT_L5_CELLS` in `config.rs`.
 fn jet_region(cfg: Cfg, target: [f64; 4]) -> Result<ForcingRegion<f64>, String> {
     let face_x = BODY_CX - x_hat(R_BODY);
     let trunc = Truncation::<f64>::by_bond(cfg.cap).map_err(|e| format!("trunc: {e:?}"))?;

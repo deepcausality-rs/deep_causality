@@ -1,8 +1,8 @@
 # Isolated-cylinder validation — CFD Stage 4 (tasks D2/D3)
 
 Flow past an isolated circular cylinder, assembled from the full Stage-4 boundary-zone stack. It
-measures the shedding **Strouhal** number and the **drag coefficient** against the Williamson lineage
-and Lehmkuhl et al. (2013).
+measures the shedding **Strouhal** number against the Williamson lineage and the **drag
+coefficient** against the 2-D unconfined laminar consensus band (see "What it reports" below).
 
 The domain is external flow: **west `Inflow`** (uniform `U`), **east `Outflow`** (pressure-reference,
 zero-gradient), **far-field `SlipWall`** top and bottom (so the lateral boundaries do not confine the
@@ -23,9 +23,12 @@ to stderr.
 - **Drag** `C_d = F_x / (½ U² D)`, the **cycle mean** over the developed (second-half) window, split
   into the **pressure** force (`pressure_surface_force` over the static pressure from
   `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`); the lift
-  `C_l` and the `C_d` swing are reported alongside. Reference `C_d(Re=100) ≈ 1.24–1.33`
-  (Dröge–Verstappen 2005: 1.24 = 0.93 pressure + 0.31 friction; Lehmkuhl et al. 2013 lineage ≈ 1.33),
-  so friction is ≈ 25 % of `C_d`.
+  `C_l` and the `C_d` swing are reported alongside. Reference `C_d(Re=100) ≈ 1.32–1.36`, the 2-D
+  unconfined laminar consensus (Qu et al. 2013, Posdziech & Grundmann 2007, Williamson, as compiled
+  in arXiv:2303.09262); the gate-result section below quotes the same band. Dröge–Verstappen (2005),
+  Table II, is the secondary reference, for the pressure/friction split only: their cut-cell result
+  is `C_d = 1.24 = 0.93` pressure `+ 0.31` friction, so friction is ≈ 25 % of `C_d`. That `1.24` is
+  a single low-side cut-cell datum, not the lower edge of the band.
 
 ## Symmetry breaking
 

@@ -22,10 +22,20 @@ use super::*;
 
 impl<T> StudyEffect<Cases<T>> {
     /// Declare the shared fork point: a paused trajectory this study's branches continue from. The
-    /// case axis becomes the command that distinguishes the branches; every branch will resume
-    /// this pause's state bit-identically and O(1) copy-on-write. `fork` itself never fails — a
-    /// broken pause is carried through and surfaces as each branch's error at
+    /// case axis becomes the command that distinguishes the branches; every branch resumes this
+    /// pause's marched state bit-identically, shared in O(1), with the coupled field copy-on-write
+    /// (each branch takes its one clone at its first write). `fork` itself never fails — a broken
+    /// pause is carried through and surfaces as each branch's error at
     /// [`continue_for`](StudyEffect::continue_for).
+    ///
+    /// **The per-branch disk audit sink is not wired on this path.** A campaign-level
+    /// [`save_log`](crate::StudyDef::save_log) base path rides on [`Cases`] and is consumed only by
+    /// the coupled origin-fork `march_for` path, which lowers it onto a per-branch trajectory
+    /// `save_log`. This transition drops it: [`ForkStudy`] has no audit field, and
+    /// `CompressiblePause::continue_branches` runs its branches under the no-op sink. A
+    /// `save_log(..).cases(..).fork(..).branch(..).continue_for(..)` chain writes no files, and
+    /// reports no error for it. Each branch's provenance is still in its report's effect log; it is
+    /// only the disk flush that is missing.
     pub fn fork<'p, 'c, R, S>(
         self,
         pause: &'p CompressiblePause<'c, R, S>,

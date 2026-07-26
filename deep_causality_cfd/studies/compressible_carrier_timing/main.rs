@@ -21,6 +21,15 @@
 //! fit, and the recommended configuration (the largest one inside the budget) is printed as the
 //! go/no-go record. A regression (no configuration fits) exits nonzero, which is the documented
 //! trigger for the `CompressibleMarcher2d` fallback decision.
+//!
+//! **What the bond cap in the GO record does and does not mean.** The cap is swept as a *cost*
+//! parameter only. Every measurement here is wall-clock; nothing in this study compares a capped
+//! run against an uncapped (`Truncation::by_tol`) reference, or against any other cap, on an
+//! observable. So the cap the GO names is affordable and **not established as adequate**: no
+//! accuracy-versus-cap sweep was run, and the truncation error the cap admits is unmeasured. In
+//! the recorded run (`output.txt`) the recommended configuration reports a peak bond equal to its
+//! cap of 32, so the cap binds rather than sitting idle. Treat it as a cost figure carried
+//! forward, and establish adequacy separately before any accuracy claim rests on it.
 
 use deep_causality_cfd::{
     BodyFittedCoordinate3d, CartesianIdentity, CompressibleMarcher2d, CompressibleMarcher3dFitted,
@@ -57,7 +66,10 @@ fn main() {
     // decide the family (over budget by >3x), so larger grids are a foregone conclusion.
     report_case("3d-fitted", 4, 3, 16, measure_3d(4, 16), &mut results);
     // The 2-D compressible fallback: the corridor's stage stack is 2-D already, so this carrier
-    // is a like-for-like upgrade of the shipped incompressible corridor.
+    // is a like-for-like upgrade of the shipped incompressible corridor. The two bond caps are
+    // TIMED, not compared for accuracy: the observable at cap 16 is never differenced against the
+    // one at cap 32, nor against an uncapped by_tol run, so this sweep prices the cap and cannot
+    // qualify it.
     for (l, cap) in [(5usize, 16usize), (5, 32), (6, 16), (6, 32)] {
         report_case("2d", l, 2, cap, measure_2d(l, cap), &mut results);
     }
@@ -79,6 +91,8 @@ fn main() {
     println!();
 
     // The go/no-go record: the largest configuration inside the budget, 3-D preferred.
+    // "Largest" ranks by (dim, resolution, cap) on COST evidence alone. The cap that comes out of
+    // this ranking is affordable, not verified: see the caveat printed under the GO line.
     let pick = results
         .iter()
         .filter(|(_, _, _, _, _, fits)| *fits)
@@ -91,6 +105,29 @@ fn main() {
                 step = m.per_step_s,
                 bond = m.peak_bond,
             );
+            println!(
+                "    Caveat on the cap: bond cap {cap} is a COST parameter, carried forward untested for"
+            );
+            println!(
+                "    accuracy. This study measures wall-clock only. No capped run is compared against an"
+            );
+            println!(
+                "    uncapped (by_tol) reference or against another cap on any observable, so cap {cap} is"
+            );
+            println!("    affordable, not established as adequate.");
+            if m.peak_bond >= *cap {
+                println!(
+                    "    Peak bond {bond} reaches cap {cap}: the cap binds, so its truncation error is real",
+                    bond = m.peak_bond,
+                );
+                println!("    and unquantified.");
+            } else {
+                println!(
+                    "    Peak bond {bond} stays under cap {cap} on this smooth state, which says nothing about",
+                    bond = m.peak_bond,
+                );
+                println!("    a shocked one.");
+            }
         }
         None => {
             println!("=== NO-GO: no configuration fits the budget. ===");

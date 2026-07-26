@@ -45,8 +45,18 @@ pub const L: usize = 5;
 pub const CAP: usize = 16;
 /// Solver pseudo-time step (nondimensional; one per coupled step).
 pub const DT_SOLVER: f64 = 0.002;
-/// Reference wave speed of the implicit acoustic envelope. Deliberately snug: the peak-station
-/// inflow outgrows it once, so the rebuild-on-drift mechanism fires where the descent steepens.
+/// Reference wave speed of the implicit acoustic envelope.
+///
+/// The rebuild-on-drift mechanism does **not** fire on the corridor's current profile. The carrier
+/// re-pins its envelope when the marched state needs more than it has, `û + √(γ·T̂) > s_ref·(1 +
+/// tol)`; at 1.8 the descent never crosses that, so the corridor's gate (5a) reports 0 rebuilds and
+/// its provenance log carries no `carrier rebuilt at step` entry. The weather example flies the same
+/// value and also records none. Nothing here is out of tolerance; the envelope is simply wide enough
+/// for the profiles these examples fly.
+///
+/// The mechanism is exercised by the retropulsion example's terminal leg, which flies
+/// [`S_REF_TERMINAL`] (1.4) into sea-level air and logs `carrier rebuilt at step 1: s_ref 1.4 ->
+/// 2.7683613571273638 (rebuild 1)`. Read that example, not this constant, for the rebuild path.
 pub const S_REF: f64 = 1.8;
 /// Effective ratio of specific heats through the shock (reacting air, the calibrated recipe).
 pub const GAMMA_EFF: f64 = 1.1;

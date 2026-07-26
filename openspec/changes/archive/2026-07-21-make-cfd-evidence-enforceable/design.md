@@ -145,7 +145,7 @@ baseline artifact is internally consistent.
 ## Risks / Trade-offs
 
 - **Gates will fail on first wiring.** → Intended. Triage each failure against the per-finding evidence in
-  `openspec/notes/cfd_audit/ACTION-LIST.md` before moving any bound. Moving a bound to restore a pass,
+  `../../../audits/cfd_audit/ACTION-LIST.md` before moving any bound. Moving a bound to restore a pass,
   without evidence, reintroduces exactly the back-fitting this change exists to remove.
 - **Tightening `CONVERGENCE_BOUND` and adding ladders may show the QTT cylinder drag has no converged
   value.** → Accepted, and handled by D6: report non-convergence as the result. Do not widen the bound.

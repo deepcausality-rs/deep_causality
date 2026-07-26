@@ -17,9 +17,11 @@
 //! is dispersive and needs a little viscosity for stability; `ν` is kept inside the explicit diffusion
 //! CFL (the `qtt_rank_nonlinear` lesson).
 //!
-//! Resolution is swept (16³ → 128³) to read the curved-shock rank growth law. A flat axis-aligned
-//! shock and a body-fitted (function-of-r) shell are encoded as references: the best case and the
-//! alignment fix, in 3-D.
+//! Resolution is swept (16³ → 128³) to read the curved-shock rank growth law. Only the forming
+//! shock is swept. A flat axis-aligned shock and a body-fitted (function-of-r) shell are encoded
+//! once, at 64³, as **single-level references** for the best case and the alignment fix in 3-D.
+//! They are not part of the sweep, so this study does not measure how they scale with resolution;
+//! the growth law below is read from the forming shock alone.
 //!
 //! Codec note: block bit-ordering (all x bits, then y, then z) — the same mis-alignment-hostile
 //! ordering as `qtt_rank_study`.
@@ -159,18 +161,24 @@ fn main() {
     }
     println!("  smooth-bump init rank: {init};  PEAK rank (formed curved shock): {peak}");
 
-    // -- references: flat (best) and body-fitted (the fix) at 64^3 ---
+    // -- single-level references: flat (best) and body-fitted (the fix), at 64^3 only.
+    // These are encoded once, outside the resolution sweep below. They give the best-case and
+    // alignment-fix rank at one level; they are not swept, so nothing here measures their
+    // resolution scaling. The gates compare them against the 64^3 peak, same level.
     let d = 2.0 / side as f64;
     let flat = build_3d(side, &|x, _, _| smooth_step(x, 0.5, d));
     let shell_fitted = build_3d(side, &|r_axis, _, _| smooth_step(r_axis * 0.7, 0.3, d));
     let r_flat = rank_of_field(&flat, side, l, tol);
     let r_fit = rank_of_field(&shell_fitted, side, l, tol);
-    println!("\n  references at {side}^3:");
+    println!("\n  single-level references, encoded at {side}^3 only (NOT swept below):");
     println!("   flat plane (axis-aligned, fn of x) ....... {r_flat}   (best case)");
     println!("   curved shell, body-fitted (fn of r) ...... {r_fit}   (alignment fix in 3-D)");
 
     // -- scaling: peak forming-shock rank vs resolution --------------
-    println!("\n  upper-bound growth law (peak forming-shock rank vs resolution):");
+    println!(
+        "\n  upper-bound growth law (peak FORMING-SHOCK rank vs resolution; references above are"
+    );
+    println!("  a single 64^3 point and are not columns of this sweep):");
     println!(
         "   {:>4} | {:>6} | {:>10} | {:>13}",
         "L", "side", "peak_bond", "ratio vs prev"
@@ -222,9 +230,13 @@ fn main() {
         "  (measured {c0} -> {c1} over {s0}^3 -> {s1}^3), i.e. roughly sqrt(side) — UNBOUNDED in resolution,"
     );
     println!(
-        "  vs the flat / body-fitted references which stay ~{} (constant).",
+        "  vs the flat / body-fitted references, which read ~{} at 64^3. Those are ONE level, not a sweep:",
         r_flat.max(r_fit)
     );
+    println!(
+        "  their constancy in resolution is inferred from alignment, not measured here (the 2-D counterpart"
+    );
+    println!("  is measured in qtt_rank_fitted_dynamic, at 64^2 and 128^2).");
     println!(
         "  This is a LOWER bound on a live solver: marching carries operator products *before* rounding,"
     );
@@ -251,8 +263,9 @@ fn main() {
         "      — bounded, but expensive enough to erode the practical advantage. The body-fitted shell"
     );
     println!(
-        "      holds chi ~ O(10) at ANY resolution. THAT gap — not storage-vs-dense — is the real result."
+        "      reads chi ~ O(10) at the one level encoded here, 64^3. THAT gap — not storage-vs-dense —"
     );
+    println!("      is the real result.");
     println!();
     println!(
         "  => 3-D Tier-B is tractable ONLY with a shock-aligned / body-fitted coordinate: it turns the"

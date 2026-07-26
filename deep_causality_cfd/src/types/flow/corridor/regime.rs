@@ -138,8 +138,12 @@ impl<R: CfdScalar> RegimeClass<R> {
 /// The governing-model selector (\[2\]/\[3\]). Reads the peak mean free path from a `"mean_free_path"`
 /// field and forms `Kn = λ / L` against the configured characteristic length, reads the peak
 /// electron density from `"n_e"` and maps it through a [`BlackoutTrigger`] to the GNSS-denial flag,
-/// then records the [`RegimeClass`] on the field — logging a provenance entry whenever the regime
-/// (governing model or comms-denial) changes. A no-op if `"mean_free_path"` is absent.
+/// then records the [`RegimeClass`] on the field, logging a provenance entry whenever the regime
+/// changes. A regime here is the full tuple **(governing model, comms-denial, Mach band, thrust state,
+/// touchdown)**, not only the first two: a change in any component logs a transition. The last three
+/// stay neutral unless [`Self::with_flight_axes`] is attached, which is why a corridor without flight
+/// axes only ever logs model and comms-denial changes. The transition count is also published as a
+/// typed field (`REGIME_TRANSITIONS_FIELD`). A no-op if `"mean_free_path"` is absent.
 #[derive(Debug, Clone, Copy)]
 pub struct RegimeClassify<R: CfdScalar> {
     mfp_field: &'static str,
@@ -188,6 +192,11 @@ impl<R: CfdScalar> RegimeClassify<R> {
     }
 
     /// Override the Knudsen band thresholds (`slip ≤ transitional ≤ free_molecular`).
+    ///
+    /// **The ordering is a stated precondition, not an enforced one.** This builder is infallible and
+    /// does not reject out-of-order edges. Supplied out of order, the band comparisons still run, so the
+    /// classifier silently reports a band the caller did not intend rather than refusing the
+    /// configuration. Since these are set once in example config, order them at the call site.
     pub fn with_thresholds(mut self, slip: R, transitional: R, free_molecular: R) -> Self {
         self.slip_threshold = slip;
         self.transitional_threshold = transitional;
@@ -202,6 +211,10 @@ impl<R: CfdScalar> RegimeClassify<R> {
     /// Without this call the three axes stay neutral **even though the compressible carrier
     /// publishes `"flight_mach"` every step**, so a corridor world's classification, regime key, and
     /// logged messages are exactly the pre-change ones. Only a burn-phase world opts in.
+    ///
+    /// **The band ordering is a stated precondition, not an enforced one**, on the same terms as
+    /// [`Self::with_thresholds`]: this builder is infallible, and out-of-order Mach edges produce an
+    /// unintended band rather than a rejected configuration.
     pub fn with_flight_axes(
         mut self,
         subsonic_ceiling: R,

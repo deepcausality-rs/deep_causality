@@ -298,14 +298,6 @@ pub fn compression_witness(final_fields: &(Vec<FloatType>, Vec<FloatType>)) -> (
     (bond, n * n)
 }
 
-/// Count the carrier rebuilds recorded in a provenance log rendering.
-pub fn rebuild_count(rendered: &str) -> usize {
-    rendered
-        .lines()
-        .filter(|l| l.contains("carrier rebuilt at step"))
-        .count()
-}
-
 // ── The per-leg witness the trajectory gates read ─────────────────────────────────────────────
 
 /// The per-leg witness the leg gates read, taken from a paused march's carried field.
@@ -376,6 +368,9 @@ pub struct LegSet {
     pub leg2: LegSnapshot,
     pub leg3: LegSnapshot,
     pub leg4: LegSnapshot,
+    /// Carrier rebuilds over the whole descent. Filled today from [`rebuild_count`] on the final
+    /// leg's rendered log, which spans all four legs because the field carries the log; the typed
+    /// per-leg accessor summed over the four pauses is the sturdier source.
     pub rebuilds: usize,
     pub elapsed_s: FloatType,
     /// The rendered provenance log of the full descent (the regime-transition witness).

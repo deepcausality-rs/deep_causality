@@ -82,16 +82,20 @@ edit — escalate it.
       **(a)** 6.3's claim was false in the strong sense (no call site at all), fixed by restating the
       README, since wiring the switch is a feature, not a doc fix.
       **(b)** The audit's own item-21 estimate (~1e-5 temporal floor) was **not reproducible** — see 2.2.
-- [~] 3.4 **Honest count, enumerated by ref so it is checkable against `ACTION-LIST.md`.**
-      **Closed by this change — 22 of 125.** doc-overclaim (17): 6.3, 7.6, 7.9, 9.3, 9.4, 9.8, 11.3,
-      14.15, 15.1, 15.2, 15.5, 15.8, 15.10, 15.14, 15.15, 16.1, 16.9. doc-gap (5): 4.16, 4.19, 7.15,
-      10.13, 15.12.
+- [x] 3.4 **The catalogue is fully accounted for: 125 of 125 rows.** Counted mechanically against
+      `ACTION-LIST.md`, not from memory.
+      **Closed by this change — 116.** Worked in three passes: 22 by hand (the crate README, the DEC
+      kernel and spectral-projector docs, the `CfdFlow::march` naming); 40 by hand across the rest of
+      `src/`; 52 by a 13-agent fan-out over `verification/`, `studies/`, `examples/`, `tests/` and the
+      two sibling crates, each agent owning a disjoint file set; then 2 more (5.7, 5.16) that I had
+      listed while planning and **left out of the agent assignments** — a bookkeeping miss on my part,
+      caught by re-running the count rather than by review.
       **Confirmed already closed by Phases 1–2 — 9:** 1.1, 1.6, 4.14, 6.9, 6.18, 7.1, 8.1, 15.4, 15.9.
-      **Remaining — 94**, not individually triaged and **not** claimed as done.
-      *(Corrected during the D7 pass: an earlier draft recorded "24 of 125 closed / 101 open" here and
-      "24 of 86 + 6 of 39 closed / 101 of 125 open" in 9.3 — mutually inconsistent, since 24+6=30 implies
-      95 open, not 101. Both were written from memory in the very task meant to make the count checkable.
-      The figures above are enumerated instead.)*
+      **Remaining — 0.**
+      *(Two earlier drafts of this line were wrong and are recorded rather than quietly replaced. The
+      first claimed "24 of 125 closed / 101 open" here while 9.3 claimed "24 + 6 closed / 101 of 125
+      open", which cannot both hold; the D7 pass caught it and re-enumerated to 22. A later statement of
+      "54 remaining" was also an arithmetic slip: the true figure was 52.)*
       Most remaining rows are single-site docstring corrections in `src/solvers/qtt/compressible/`,
       `src/solvers/dec/boundary/`, `studies/`, and the example READMEs; a subset (13.9, 8.17, 6.14, 15.7,
       9.5) asks for **code** changes (constructor validation, `Result` returns, re-exports, visibility)
@@ -111,14 +115,13 @@ edit — escalate it.
       resting on "X does not exist" is only as good as the search behind it, and the search must be
       stated so it can be checked.* An earlier draft of this task recorded the section as added by this
       change; that was an overclaim and is corrected here.
-- [~] 4.2 **Partially worked; the tail is real.** Doc-gap rows closed this session: 4.16
-      (`projection.rs` eigenvalue comment), 10.13 (README `regime()` field list), 4.19 (TG file-layout
-      table), 7.15 (`tensor_bridge` full references + serial-per-axis mode layout), 15.12 (`Gates`, via
-      the retirement). That is **5 of 39** closed by this change, with 6.18 and 15.9 confirmed
-      already-closed by Phases 1–2. The remaining **32** are
-      individual docstring gaps (units on `BodyForceZone`, the boundary caveat on `marcher_3d_fitted`,
-      `relax_length` parameter docs, `coupling.rs` stage-ordering, and similar). They are **not** claimed
-      as done.
+- [x] 4.2 **All 39 doc-gap rows closed** (37 by this change, 2 already closed by Phases 1–2: 6.18 and
+      15.9). The work ran from units and conventions in `src/` (the `BodyForceZone` acceleration line
+      integral, the `relax_length` fraction, the `coupling.rs` stage-ordering and stale-read rule, the
+      `marcher_3d_fitted` periodic-`ζ` boundary caveat, the projection's Nyquist kernel) out to the
+      harness and study documentation (five missing per-example sections in `verification/README.md`
+      with their gate predicates read from source, corrected file-layout tables, the `papers/` index).
+      Counted against the catalogue, not asserted.
 
 ## 5. Give load-bearing constants provenance (item 23)
 
@@ -204,11 +207,11 @@ Confirm still-correct; captured in the spec so they cannot silently rot. No re-i
       excluded). The TG harness convection error is unchanged at `3.207e-3` (amp `0.497`) after the
       `rate_pair` re-route, so the re-route is behaviour-preserving; the only `baseline.txt` movement is
       the two Group-2 wording lines. All TG gates PASS.
-- [x] 9.3 Counts recorded and **enumerated by ref** in 3.4 and 4.2: **22 of 125 closed by this change**
-      (17 doc-overclaim + 5 doc-gap), **9 confirmed already closed** by Phases 1–2, **94 remaining and not
-      claimed**, with the reason each remaining class is deferred (single-site docstrings; or code changes
-      outside this change's scope). Listing the refs makes the count checkable against `ACTION-LIST.md`
-      instead of asserted from memory — which is how the first draft of this line went wrong (see 3.4).
+- [x] 9.3 Counts recorded and **enumerated by ref** in 3.4 and 4.2: **all 125 catalogued rows accounted
+      for — 116 closed by this change, 9 already closed by Phases 1–2, 0 remaining.** The code arms those
+      rows offered are recorded as deferred with their reasons. Listing the refs makes the count
+      recomputable from `ACTION-LIST.md` instead of asserted from memory, which is how three earlier
+      drafts of this line went wrong (see 3.4).
 - [x] 9.4 **Adversarial pass over the finished diff (D7) — run, refute-by-default, over six dimensions:
       (1) factual accuracy of every new prose claim, (2) code correctness of the changes, (3) doc–code
       parity of the rewritten docstrings, (4) overclaims in this change's own artifacts, (5) regression
@@ -233,7 +236,8 @@ Confirm still-correct; captured in the spec so they cannot silently rot. No re-i
       **(d) MODERATE — the count in 3.4/9.3 was internally inconsistent** ("24 of 125 / 101 open" vs
       "24 + 6 closed / 101 open", which cannot both hold) and was written from memory in the very task
       meant to make completeness checkable. Recounted and **enumerated by ref**: 22 closed, 9 already
-      closed, 94 remaining.
+      closed, 94 remaining at the time of that pass. (The tail was closed later in the same change; the
+      final figure is 116 closed, 9 already closed, 0 remaining.)
 
       Also checked and **refuted** (no change needed): the `src/` print-macro claim is stronger than
       stated (0 `println!`/`eprintln!`/`panic!`/`process::exit`); all four convective call sites do march

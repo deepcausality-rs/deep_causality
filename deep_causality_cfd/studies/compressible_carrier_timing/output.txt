@@ -1,19 +1,28 @@
+   Compiling deep_causality_cfd v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/deep_causality_cfd)
+    Finished `release` profile [optimized] target(s) in 5.98s
+     Running `target/release/examples/compressible_carrier_timing`
 === Compressible-carrier timing (Task 0): 3-D fitted shell vs the 2-D fallback ===
 
 Budget: 200 corridor steps inside 600 s (10 min); 5 timed steps per case.
 
   case          grid    bond cap   assembly    per-step     projected corridor   verdict
-  3d-fitted     16^3      16         0.004 s    10.805 s     2161.0 s ( 36.0 min)   over budget
-  2d            32^2      16         0.000 s     0.027 s        5.4 s (  0.1 min)   fits
-  2d            32^2      32         0.000 s     0.042 s        8.3 s (  0.1 min)   fits
-  2d            64^2      16         0.000 s     0.062 s       12.4 s (  0.2 min)   fits
-  2d            64^2      32         0.001 s     0.175 s       35.0 s (  0.6 min)   fits
+  3d-fitted     16^3      16         0.006 s    15.245 s     3049.0 s ( 50.8 min)   over budget
+  2d            32^2      16         0.000 s     0.037 s        7.4 s (  0.1 min)   fits
+  2d            32^2      32         0.000 s     0.060 s       12.0 s (  0.2 min)   fits
+  2d            64^2      16         0.001 s     0.088 s       17.6 s (  0.3 min)   fits
+  2d            64^2      32         0.001 s     0.248 s       49.6 s (  0.8 min)   fits
 
   Rebuild guidance (assembly cost in equivalent steps -> freestream-drift tolerance):
     3d-fitted  16^3 cap  16: one rebuild ~ 0.00 steps; ~10 rebuilds/run adds 0.00% to the march
-    2d         32^2 cap  16: one rebuild ~ 0.01 steps; ~10 rebuilds/run adds 0.03% to the march
-    2d         32^2 cap  32: one rebuild ~ 0.01 steps; ~10 rebuilds/run adds 0.03% to the march
-    2d         64^2 cap  16: one rebuild ~ 0.01 steps; ~10 rebuilds/run adds 0.04% to the march
+    2d         32^2 cap  16: one rebuild ~ 0.01 steps; ~10 rebuilds/run adds 0.04% to the march
+    2d         32^2 cap  32: one rebuild ~ 0.00 steps; ~10 rebuilds/run adds 0.02% to the march
+    2d         64^2 cap  16: one rebuild ~ 0.01 steps; ~10 rebuilds/run adds 0.03% to the march
     2d         64^2 cap  32: one rebuild ~ 0.00 steps; ~10 rebuilds/run adds 0.02% to the march
 
-=== GO: corridor carrier 2d at 64^2, bond cap 32 (0.175 s/step, peak bond 32). ===
+=== GO: corridor carrier 2d at 64^2, bond cap 32 (0.248 s/step, peak bond 32). ===
+    Caveat on the cap: bond cap 32 is a COST parameter, carried forward untested for
+    accuracy. This study measures wall-clock only. No capped run is compared against an
+    uncapped (by_tol) reference or against another cap on any observable, so cap 32 is
+    affordable, not established as adequate.
+    Peak bond 32 reaches cap 32: the cap binds, so its truncation error is real
+    and unquantified.

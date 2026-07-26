@@ -226,3 +226,53 @@ fn a_valid_state_is_unaffected_by_the_guard() {
     let (rf, _mf, ef) = solver.run(&state, 0.05).unwrap();
     assert!(rf.iter().all(|v| v.is_finite()) && ef.iter().all(|v| v.is_finite()));
 }
+
+// --- Numerical-envelope validation (reconcile-cfd-docs-and-traceability, item 13.9) --------------
+
+#[test]
+fn a_cfl_outside_the_unit_interval_is_refused_and_names_it() {
+    let dx = TAU / 64.0;
+    for bad in [0.0, -0.5, 1.5, f64::NAN, f64::INFINITY] {
+        let Err(err) = CompressibleEuler1d::new(6, dx, 1.4, bad, trunc()) else {
+            panic!("CFL {bad} is outside (0, 1] and must be refused");
+        };
+        let msg = format!("{err:?}");
+        assert!(
+            matches!(err.0, PhysicsErrorEnum::PhysicalInvariantBroken(_)) && msg.contains("CFL"),
+            "the diagnostic must name the CFL number: {msg}"
+        );
+    }
+}
+
+#[test]
+fn a_gamma_at_or_below_one_is_refused_and_names_it() {
+    let dx = TAU / 64.0;
+    for bad in [1.0, 0.5, -1.4, f64::NAN] {
+        let Err(err) = CompressibleEuler1d::new(6, dx, bad, 0.4, trunc()) else {
+            panic!("gamma {bad} is not > 1 and must be refused");
+        };
+        assert!(
+            format!("{err:?}").contains("gamma"),
+            "the diagnostic must name gamma: {err:?}"
+        );
+    }
+}
+
+#[test]
+fn a_non_positive_spacing_is_refused_and_names_it() {
+    for bad in [0.0, -0.1, f64::NAN] {
+        let Err(err) = CompressibleEuler1d::new(6, bad, 1.4, 0.4, trunc()) else {
+            panic!("dx {bad} is not finite and positive and must be refused");
+        };
+        assert!(
+            format!("{err:?}").contains("dx"),
+            "the diagnostic must name dx: {err:?}"
+        );
+    }
+}
+
+#[test]
+fn the_shipped_configuration_is_still_accepted() {
+    // The envelope check must not refuse what the qtt_sod harness runs.
+    assert!(CompressibleEuler1d::new(9, TAU / 512.0, 1.4, 0.4, trunc()).is_ok());
+}

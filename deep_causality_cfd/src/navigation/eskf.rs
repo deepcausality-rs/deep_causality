@@ -149,6 +149,10 @@ pub struct NavFilter<R: RealField> {
 impl<R: RealField> NavFilter<R> {
     /// Build the filter from an initial error-state estimate and an initial covariance diagonal.
     ///
+    /// `cov_diag` is indexed in the canonical 17-state order
+    /// `[pos(3), vel(3), att(3), accel_bias(3), gyro_bias(3), clock_bias, clock_drift]`, the order
+    /// [`InsErrorState::to_array`] packs. Entry `i` is the initial variance of state `i`.
+    ///
     /// # Errors
     /// Rejects a `cov_diag` that is not a covariance diagonal: a non-finite entry, or a negative
     /// variance. A diagonal is symmetric by construction, so only finiteness and non-negativity are
@@ -163,8 +167,12 @@ impl<R: RealField> NavFilter<R> {
     /// Predict one step: propagate the error state and `P ← F·P·Fᵀ + Q_d`, where the process noise is
     /// the **first-order discretisation** `Q_d = Q_c·dt` of the caller's continuous-time input.
     ///
-    /// `process_noise_diag` is a **continuous-time process-noise spectral density** (units: `state²/s` —
-    /// e.g. `m²/s` on the position block, `(m/s)²/s` on velocity), *not* an already-discretised
+    /// `process_noise_diag` is indexed in the canonical 17-state order
+    /// `[pos(3), vel(3), att(3), accel_bias(3), gyro_bias(3), clock_bias, clock_drift]`, the order
+    /// [`InsErrorState::to_array`] packs.
+    ///
+    /// It is a **continuous-time process-noise spectral density** (units: `state²/s`, e.g.
+    /// `m²/s` on the position block, `(m/s)²/s` on velocity), *not* an already-discretised
     /// per-step covariance. Scaling it by `dt` is what makes the accumulated covariance a function of
     /// **elapsed time** rather than step count: over a fixed horizon `T = N·dt`, the additive noise is
     /// `N·(Q_c·dt) = T·Q_c`, independent of `dt`, so the filter's tuning survives a change of step size.
@@ -190,11 +198,33 @@ impl<R: RealField> NavFilter<R> {
     /// scalar update; `S = h·P·hᵀ + r` is a scalar, so no inversion). Corrects the estimate and shrinks
     /// the covariance.
     ///
+    /// `h` is the measurement row in the canonical 17-state order
+    /// `[pos(3), vel(3), att(3), accel_bias(3), gyro_bias(3), clock_bias, clock_drift]`, the order
+    /// [`InsErrorState::to_array`] packs. One axis of a position fix sets `h[i] = 1` for `i` in `0..3`;
+    /// the clock bias is index `15` and the clock drift index `16`.
+    ///
     /// The covariance update is the **Joseph form** `P ← (I−K·h)·P·(I−K·h)ᵀ + r·K⊗K`, followed by a
     /// re-symmetrization. The simple form `P − K⊗(h·P)` loses symmetry and positive-definiteness
     /// under long sequences of near-unity-gain folds (a precise receiver folded every step), after
     /// which the cross-term gains change sign and the injected corrections diverge; Joseph is
     /// PSD-preserving unconditionally (Groves 2013, §3.4.3).
+    ///
+    /// **What the re-symmetrization guarantees, and what it does not.** Entries `[i][j]` and
+    /// `[j][i]` are written from the same two summands, so `P` is symmetric when this method
+    /// returns. That is a per-update property, not a running one: [`predict`](Self::predict) forms
+    /// `F·P·Fᵀ + Q_d` and does **not** re-symmetrize, and the two triple products accumulate their
+    /// sums in different orders, so float-level asymmetry re-enters at every predict step. Nothing
+    /// here bounds how far asymmetry or the positive-semi-definiteness margin drifts over a long
+    /// run, and Joseph's PSD preservation is an exact-arithmetic result. In floating point it is
+    /// the robust form, not a proof. The standing checks are the guards below (a refused update
+    /// mutates nothing) and the `validate_covariance` screen, which runs only at construction and
+    /// restore.
+    ///
+    /// No test pins the long-run behaviour. The longest sequence in the suite is 60 position fixes
+    /// (`closed_loop_tests`), and those tests assert position error and variance collapse; none reads
+    /// [`covariance`](Self::covariance) after a long near-unity-gain sequence to bound
+    /// `max|P[i][j] − P[j][i]|` or to check `vᵀPv ≥ 0`. A refactor back to the simple form would
+    /// pass CI.
     ///
     /// # Errors
     /// Refuses a measurement it cannot fold, rather than writing a `NaN` into the state and covariance:

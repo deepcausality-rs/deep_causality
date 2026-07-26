@@ -54,8 +54,13 @@ cap 24.
 - **The mechanism is the dissipation floor.** A jet-cell Péclet of roughly 1.3 to 1.8 freezes the
   stagnation interface at the face, x = 0.469 to 0.531 across a **32× thrust range**, so injected
   momentum reads as face pressure. That is the inverse of the J–A blanketing reorganization.
-- **Compression is innocent.** Raising the bond cap 24 to 32, exact at 2⁵, leaves every observable
-  unchanged at displayed precision. The discretization is the limit, not the tensor-train truncation.
+- **Compression is unmeasured here.** Every row above was marched at bond cap 24, the committed
+  `output.txt` configuration, and the peak bond reaches 24, so tensor-train truncation is active
+  throughout. The cap-32 companion, exact at 2⁵ because no bond exceeds its natural dimension, is a
+  separate `SRP_MJ_CAP=32` invocation. It was not run for this artifact and no cap-32 output is
+  committed, so the table supports no cross-cap comparison. Attributing the missing collapse to the
+  discretization rather than to the truncation rests on the frozen-interface and domain findings,
+  not on a two-cap sweep. Run the companion to close that gap.
 - **The domain is a limit too.** The upstream probe leaves freestream from C_T ≈ 0.25 at +6.5 % to
   +285 % at C_T 8, so the correlation's own transition variable, `p_e/p∞ ≈ 7`, is unreachable on
   this harness.

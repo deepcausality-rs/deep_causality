@@ -9,7 +9,10 @@
 //! coordinate (`BlendedMap` at `λ = 1`, the polar fan) that surface is a line `η = const` — a step in `η`,
 //! constant in `ξ` — so its quantized-tensor-train bond `χ` is `O(10)` and **resolution-independent**. In
 //! the Cartesian-capture coordinate (the same `BlendedMap` at `λ = 0`, a rectangle) the identical physical
-//! shock is curved on the grid, so `χ` grows with resolution (`χ ~ √side`, the measured capture cost).
+//! shock is curved on the grid, so `χ` grows with resolution. The measured capture cost over `2^5–2^7` is
+//! `χ = 16, 32, 61` at `side = 32, 64, 128`: roughly **linear in `side`**, `χ ≈ side/2`, well above `√side`
+//! (which would give 6, 8, 11). The 3-D `√side` law of `studies/qtt_rank_3d` does not describe this 2-D
+//! construction, and the ladder stops at `2^7`, so no exponent is fitted here.
 //!
 //! The marcher (`CompressibleMarcher2d`) runs the **same solver** over both coordinates through the
 //! `MetricProvider` seam (design D8), so this is a clean one-solver comparison: marching in the fitted
@@ -121,7 +124,8 @@ fn main() {
         println!("     2^{l}    |       {f:>3}       |      {c:>3}");
     }
 
-    // Gate BB-A: the fitted bond is O(10) and resolution-stable (does not grow like √side).
+    // Gate BB-A: the fitted bond is O(10) and resolution-stable (it does not grow with side the way the
+    // Cartesian capture's χ ≈ side/2 does; the gate allows at most +1 per refinement).
     // Evidence class: **tripwire**. These are structural rank claims about this construction, not
     // comparisons against a published value — verification/README.md classifies this harness as
     // "structural / rank-lever", gating rank rather than physical accuracy.
@@ -174,9 +178,10 @@ fn main() {
         fitted[0], fitted[2]
     );
     println!(
-        "  (χ {} → {}, growing ~√side). Body-fittedness buys the bond reduction — the Stage-5 lever.",
+        "  (χ {} → {}, growing ~linearly in side: χ ≈ side/2, not ~√side). Body-fittedness buys the",
         capture[0], capture[2]
     );
+    println!("  bond reduction — the Stage-5 lever.");
     println!(
         "  DYNAMIC marched rank (reported, OPEN): a plain flux-through-front marcher in the fitted"
     );

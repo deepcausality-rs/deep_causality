@@ -104,6 +104,13 @@ where
     /// Leray projection: returns `(u, v)` with `∇p` removed, so the result is discretely
     /// divergence-free. `u ← u* − ∂ₓp`, `v ← v* − ∂ᵧp`.
     ///
+    /// **The divergence operator's kernel includes the per-axis Nyquist mode**, not just the constant
+    /// mode. The centered difference has eigenvalue `sin(2πk/N)`, which vanishes at `k = N/2` as well as
+    /// `k = 0`, so a **collocated checkerboard** component is invisible to the divergence and passes
+    /// through this projection unchanged: `div(project(u)) = 0` holds while a checkerboard remains.
+    /// Nothing here removes it. The standard mitigations are a spectral filter on the Nyquist mode or a
+    /// staggered / Rhie–Chow formulation; neither is applied on this path.
+    ///
     /// # Errors
     /// Propagates divergence / Poisson / apply / round errors.
     pub fn project(

@@ -23,9 +23,18 @@
 //! ## What this harness is (and is not)
 //!
 //! The DEC solver has no inflow/outflow surface; the sensor drives a **prescribed moving wall** (a
-//! Dirichlet boundary), confined in a **periodic-x channel**. This sheds a von-Kármán street and is a
-//! faithful exercise of the cut-cell + uncertain-zone machinery. The quantitative isolated-cylinder
-//! Reynolds ladder (tasks D2/D3) needs that inflow/outflow surface; it is **not** claimed here.
+//! Dirichlet boundary), confined in a **periodic-x channel**. At the committed configuration the
+//! cylinder spans 25 % of the channel height (`config::BLOCKAGE = 0.25`), and that confinement
+//! **damps the von-Kármán street**: the wake probe settles to a steady `v ≈ 2.70e-2` and the run
+//! prints "no clear shedding detected in the developed signal". No street is shed here. What the
+//! case exercises is the cut-cell and uncertain-zone machinery, end to end. The quantitative
+//! isolated-cylinder Reynolds ladder (tasks D2/D3) needs the inflow/outflow surface; it is **not**
+//! claimed here, and the Strouhal estimate is printed but never gated. `dec_cylinder_verification`
+//! is the harness that sheds.
+//!
+//! The run is also not statistically stationary at 2000 steps: over the last recorded steps the
+//! kinetic energy is still rising (2.4127e2 at step 1940 to 2.4155e2 at step 2000) and the probe is
+//! still drifting. No gate checks stationarity.
 //!
 //! ## Reproducibility
 //!

@@ -11,6 +11,16 @@
 //! `BodyFittedCoordinate` (the fitted case, `χ ~ O(10)`), so the Stage-5 rank-lever gate is a clean
 //! comparison with one solver.
 //!
+//! **Conservation form, stated plainly.** The curvilinear flux divergence here is the **non-conservative
+//! chain-rule form**: it applies the metric's `physical_gradient` to the Cartesian fluxes, rather than
+//! differencing metric-weighted fluxes in strong-conservation form (`∂_ξ(J F·∇ξ) + …`). Discrete
+//! conservation therefore holds **only for the Cartesian identity chart**, where the chain-rule factors
+//! are unity. On a genuinely fitted chart the scheme is consistent but not discretely conservative, so a
+//! **captured** shock's speed is not guaranteed by a discrete Rankine–Hugoniot balance. That is acceptable
+//! here because the fitted use case puts the shock on a coordinate surface (fitted, not captured); it is
+//! not acceptable for a captured shock in a fitted chart. Strong-conservation form would need the
+//! currently-unused `jacobian()` and a discretely-satisfied geometric conservation law.
+//!
 //! The flux divergence `∂ₓF + ∂ᵧG` is assembled from the metric's chain-rule `physical_gradient` and
 //! advanced **IMEX**: the convective flux is explicit, while the stabilizing acoustic dissipation is taken
 //! **implicitly** through the closed-form 2-D constant-coefficient inverse

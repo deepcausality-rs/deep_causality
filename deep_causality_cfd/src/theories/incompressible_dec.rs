@@ -43,6 +43,10 @@ impl<'m, const D: usize, R: CfdScalar> FluidTheory<R> for DecIncompressible<'m, 
     /// skew-symmetrized convective term (see [`DecNsRate`]). The ambient is read
     /// once per call (between `Rk4` steps); with a constant ambient this is
     /// bit-identical to the construction-fixed rate.
+    ///
+    /// **Only `ν` is taken from the ambient.** `g♭` is the body force fixed on the rate kernel at
+    /// construction; `Ambient::set_body_force` is **not** consulted here, so a coupling stage that drives
+    /// the ambient body force will not change what this rate returns. See `Ambient::set_body_force`.
     fn rate(
         &self,
         state: &VelocityOneForm<R>,

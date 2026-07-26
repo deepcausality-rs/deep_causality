@@ -76,9 +76,10 @@ where
     forcing: Option<ForcingRegion<R>>,
     /// The current nondimensional conserved inflow `[ρ̂, m̂x, m̂y, Ê]` the strip enforces.
     inflow: Option<[R; 4]>,
-    /// Solver rebuilds performed while following the schedule. The `1.2x` re-pin against the
-    /// `(1 + rebuild_tol)` gate is a hysteresis ratchet bounding the rate; the schedule    /// Solver rebuilds performed while following the schedule (logged; a re-pin gate caps it).apos;s optional
-    /// `max_rebuilds` bounds the count. Exposed through `CoupledCarrier::rebuilds`.
+    /// Solver rebuilds performed while following the schedule (each one logged). The `1.2x` re-pin
+    /// against the `(1 + rebuild_tol)` gate is a hysteresis ratchet bounding the rate; the
+    /// schedule's optional `max_rebuilds` bounds the count. Exposed through
+    /// `CoupledCarrier::rebuilds`.
     rebuilds: usize,
     /// The optional plume re-imprint spec: refresh `forcing` from stage-published plume geometry
     /// when the commanded throttle drifts. `None` leaves `forcing` exactly as configured.
@@ -412,6 +413,22 @@ where
     /// `"pressure_atm"` from the equation of state, and `"n_tot"` (m⁻³) from the density. The
     /// carried scalar is relaxed in place by the coupling on this carrier (no train transport),
     /// so `kappa` is unused.
+    ///
+    /// **Two departures from the plain equation of state.** A non-positive or non-finite density is
+    /// **rejected**: the method returns `PhysicalInvariantBroken` rather than publishing a field
+    /// derived from it. The nondimensional pressure is **floored**, not rejected. The computed
+    /// `p̂ = (γ−1)·(Ê − ½·ρ̂·|û|²)` is replaced by `1e-12` whenever it does not exceed that value,
+    /// which happens exactly when a cell's internal energy has gone non-positive
+    /// (`Ê ≤ ½·ρ̂·|û|²`), and `T̂ = p̂/ρ̂` is taken from the floored value. Such a cell publishes
+    /// `T_tr = 1e-12·t_ref/ρ̂` and the matching `pressure_atm`: a small positive temperature that
+    /// reads downstream as a cold cell rather than an invalid one. A Park ionization surrogate fed
+    /// that temperature returns a near-zero ionization fraction, so a broken energy budget can
+    /// present as a benign "no plasma" result.
+    ///
+    /// The floor's activation count is **not** recorded: not in the log, not as a `Report` series.
+    /// A consumer cannot distinguish a clean solve from a floored one from the published fields.
+    /// `1e-12` is a bare literal on a nondimensional quantity, so what it means physically depends
+    /// on the caller's [`ReferenceScales`].
     fn publish_and_transport(
         &self,
         state: &Self::State,
@@ -453,14 +470,23 @@ where
         Ok(())
     }
 
-    /// Final fields: the evolved translational temperature as the primary field, plus the final
-    /// density and speed series.
     /// The largest bond dimension across the four conserved tensor trains — the rank this state
     /// actually reached, which sits at or below the configured truncation cap.
     fn state_peak_bond(state: &Self::State) -> Option<usize> {
         state.iter().map(|t| t.max_bond()).max()
     }
 
+    /// Final fields: the evolved translational temperature as the primary field, plus the final
+    /// density and speed series.
+    ///
+    /// The same `1e-12` nondimensional pressure floor as
+    /// [`publish_and_transport`](Self::publish_and_transport) applies here, with the same trigger
+    /// (`Ê ≤ ½·ρ̂·|û|²`, a non-positive internal energy) and the same consequence: `final_field`
+    /// then carries a floor artifact, not an equation-of-state temperature, and nothing in the
+    /// `Report` says which. Unlike the publish path, `finish` performs **no** density check. It
+    /// normally runs on a state the preceding step already published, which is where positivity is
+    /// enforced; a zero-step march is the exception, since no step ran and the seed reaches `finish`
+    /// unchecked.
     fn finish(&self, state: &Self::State, report: &mut Report<R>) -> Result<(), PhysicsError> {
         let dense = self.decode(state)?;
         let n = dense[0].len();

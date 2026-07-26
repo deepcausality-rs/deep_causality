@@ -44,7 +44,7 @@ zero exits come from gates that cannot fail, and `dec_cylinder_verification` has
 exits 0 even after a solver error. So a harness that starts failing during this change has not
 regressed; it has become capable of failing for the first time.
 
-Any such failure is triaged against `openspec/notes/cfd_audit/ACTION-LIST.md` before a bound is moved
+Any such failure is triaged against `../../../audits/cfd_audit/ACTION-LIST.md` before a bound is moved
 (task 7.8).
 
 ## Unit-test baseline

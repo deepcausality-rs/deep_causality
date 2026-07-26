@@ -38,8 +38,13 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor
 
 **Calculus-based: the DEC-native Navier-Stokes solver.** Velocity lives as an edge 1-form on a
 discrete exterior calculus. Each time step marches the Leray-projected rate, so the field stays
-divergence-free at every step, and the `SolenoidalField` type-state rejects time-stepping an
-unprojected field at compile time. Validated against Taylor-Green decay, exact Couette and
+divergence-free at every step. The `SolenoidalField` type-state encodes that: the carrier is a
+private field, so there is no public constructor, every constructing path is a projection, and the type
+implements no arithmetic, so two projected fields cannot be added into an unprojected one. Two
+wall-bounded escape hatches are public. `constrain_edges` and `with_lift` re-wrap a modified tensor
+without re-projecting; they exist because the DEC solver re-enters them at the end of each step, on
+the output of the constrained projection that already pinned those edges. Off that path the caller
+carries the invariant. Validated against Taylor-Green decay, exact Couette and
 Poiseuille states, the Ghia et al. (1982) lid-driven cavity tables, and cylinder wake
 references.
 
@@ -69,9 +74,11 @@ a reentry layer, a fitted closure for the stagnation line.
 `CfdFlow` is a two-level language. At the **trajectory** level, `CfdFlow::march` marches a coupled
 run until a predicate fires and yields a resumable pause; at the **campaign** level,
 `CfdFlow::study` runs a family of counterfactual cases forked from that pause to a `Verdict`. A
-fork shares the paused state in O(1) through copy-on-write (tensor fields, navigation engine, and
-provenance log included) and continues each branch in its own alternated world. From the
-plasma-blackout corridor, condensed:
+fork shares the marched tensor state in O(1) and never copies it. The `CoupledField` is
+copy-on-write: each branch takes its single clone at its first field write, which `continue_march`
+always performs, so the per-branch field cost is O(cells), not O(1). That clone covers the per-cell
+scalar vectors, the navigation engine, and the provenance log. Each branch then continues in its
+own alternated world. From the plasma-blackout corridor, condensed:
 
 ```rust
 // Trajectory level: march until the evolved sheath's n_e crosses the GPS L1 cutoff.
@@ -105,8 +112,12 @@ run. The sibling weather-dispersion table takes the other counterfactual form �
 `.baseline(standard_day).alternate(weather_world).ensemble(draws).couple(..).march_for(..)
 .reduce_ensemble(..)` — flying six atmospheres alternated from one baseline, each an ensemble of
 receiver-noise draws. The gating sequence is a named value the study inserts whole
-(`GateSeq<Row>`), the DSL never exits or prints (`verdict()` returns data), and an optional
-`save_log(path)` flushes each run's provenance to disk, one file per branch under a fan-out.
+(`GateSeq<Row>`), and the DSL never exits or prints (`verdict()` returns data). The optional
+campaign-level `save_log(path)` writes provenance to disk on that coupled `march_for` path: one
+file per branch under the fan-out, plus a `<base>.main.log` naming every spawn and rejoin. The
+`fork` / `branch` / `continue_for` chain shown above does not thread the audit sink, so it writes
+no files. Each of its branches still carries its full provenance in the returned report's effect
+log.
 
 ## Native Multi Regime
 
@@ -212,7 +223,8 @@ close one loop in one process.
 
 Two more design decisions carry this. `CfdFlow` composes the run itself: the trajectory march
 yields a resumable pause, the campaign study forks it (or alternates whole worlds from a
-baseline), continues each branch in copy-on-write O(1), and reduces the outcomes to gated rows —
+baseline), continues each branch copy-on-write from the shared state, and reduces the outcomes to
+gated rows —
 branch fan-outs run concurrently and bit-identically to the sequential run, and `verdict()`
 returns the result as data the caller maps to an exit code. And configuration is separate from
 execution: the `flow_config` layer holds owned descriptions (grids, schedules, seeds, stop
@@ -288,7 +300,7 @@ Each is part of the public API and is exercised by the tests and examples.
 | `src/theories/` | Fluid theories: the DEC-native `FluidTheory` realization and the pointwise Navier-Stokes regime evaluators with their causal-effect wrappers |
 | `src/solvers/` | The DEC Navier-Stokes solver, the QTT incompressible/immersed/linear solvers, the compressible Euler and 2-D/3-D marchers, shock fitting, the Park-2T closure |
 | `src/types/flow/` | The `CfdFlow` DSL: the trajectory march (runs, pauses, forks, the named-stage builder) and the campaign study grammar (phase family, `GateSeq`/`Verdict`, the `StudyEffect` carrier, the `save_log` audit sink), plus the coupling stack, physics stages, blackout stages, and reports |
-| `src/types/flow_config/` | The configuration layer: owned config containers and type-state builders |
+| `src/types/flow_config/` | The configuration layer: owned config containers, fluent builders validated at `build()`, and type-state phase transitions for the zone and coupling tuples |
 | `src/navigation/` | GNSS-denial navigation: the 17-state error-state Kalman engine, synthetic INS sensors, the integrator regime switch |
 | `src/coordinate/` | Body-fitted and blended coordinate maps with metric providers |
 | `src/tensor_bridge/` | The CFD to tensor-network bridge: QTT field codecs and finite-difference operator assembly |
@@ -298,8 +310,20 @@ Each is part of the public API and is exercised by the tests and examples.
 | `papers/` | Source PDFs behind constants and closures, indexed by [`papers/README.md`](papers/README.md), which maps each PDF to its citing code and lists the references cited in code whose PDF is not yet present |
 
 The end-to-end examples, the plasma-blackout corridor and its weather-dispersion
-table, live in [`examples/avionics_examples/cfd/`](../examples/avionics_examples/cfd/). They
-are built entirely from this crate's public API.
+table, live in [`examples/avionics_examples/cfd/`](../examples/avionics_examples/cfd/). Every
+run is driven through this crate's `CfdFlow` API. The examples also depend on five workspace
+crates directly, because this crate's signatures expose their types without re-exporting them:
+
+- `deep_causality_tensor` for `CausalTensor`, `CausalTensorTrain`, and `Truncation`, which
+  appear in the QTT configs and the field accessors.
+- `deep_causality_core` for `AlternatableContext` and `EffectLog`, the fork and provenance seams.
+- `deep_causality_haft` for `LogAddEntry` and `LogSize`, the traits that read that log.
+- `deep_causality_algebra` and `deep_causality_num` for `Real` and `FromPrimitive`, two of the
+  traits behind the `CfdScalar` bound, needed to call scalar methods in generic code.
+
+A downstream crate needs the same entries in its `Cargo.toml`. The plasma-blackout examples
+additionally use `deep_causality_physics` constants such as `EARTH_GM`, which sit outside the
+`quantities` module this crate re-exports.
 
 ## License
 

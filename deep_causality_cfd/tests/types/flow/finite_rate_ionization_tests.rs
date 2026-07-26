@@ -4,12 +4,14 @@
  */
 
 //! The finite-rate ionization network stage: two-way relaxation toward the
-//! uncalibrated network fixed point, the recombination exit mechanism, the
-//! frozen limit, per-cell evolved inputs, and the renewal toggle.
+//! uncalibrated network fixed point, the measured gap between that fixed
+//! point and Saha equilibrium, the recombination exit mechanism, the frozen
+//! limit, per-cell evolved inputs, and the renewal toggle.
 
 use deep_causality_cfd::{
     Ambient, CoupledField, FiniteRateIonizationStage, PhysicsStage, StepContext,
 };
+use deep_causality_physics::{Temperature, park2t_ionization_surrogate_kernel};
 
 fn ctx(step: usize) -> StepContext<'static, 2, f64> {
     StepContext::<2, f64>::qtt(2.0e-5, step)
@@ -55,6 +57,51 @@ fn the_fixed_point_is_approached_from_both_sides() {
     assert!(
         (a_low - a_high).abs() / a_low < 0.05,
         "both sides converge to one fixed point: {a_low} vs {a_high}"
+    );
+}
+
+#[test]
+fn the_fixed_point_sits_a_stated_gap_below_saha_equilibrium() {
+    // Where the fixed point of the previous test actually lands, measured
+    // against the Saha equation. The reference is
+    // `park2t_ionization_surrogate_kernel`, the same full-equilibrium target
+    // `FittedNormalShock::stagnation_blackout` uses.
+    //
+    // Saha is the pathway-independent equilibrium of every ionization
+    // channel. This stage carries three (associative ionization, its
+    // dissociative-recombination reverse, thresholded electron impact) on a
+    // lagged atom pool and calibrates against none of them, so its fixed
+    // point is a partial equilibrium that sits below Saha. The band pinned
+    // here is the size of that gap, not agreement.
+    let t = 8_000.0_f64;
+    let stage = FiniteRateIonizationStage::new(N_PEAK);
+    let mut f = field_at(t, t);
+    f.set_scalar("alpha", vec![0.0_f64]);
+    // The fixed point is reached well inside this ladder: alpha is unchanged
+    // to every printed digit between 5_000 and 80_000 steps of 2e-5 s.
+    for s in 0..5_000 {
+        stage.apply(&ctx(s + 1), &mut f).expect("applies");
+    }
+    let alpha_network = f.scalar("alpha").unwrap()[0];
+    let alpha_saha = park2t_ionization_surrogate_kernel(Temperature::new(t).unwrap(), N_PEAK)
+        .unwrap()
+        .value();
+
+    assert!(
+        alpha_network < alpha_saha,
+        "a three-channel network cannot reach full equilibrium: {alpha_network:e} vs {alpha_saha:e}"
+    );
+    // Measured at T_tr = T_ve = 8000 K, n_tot = 2.645e22 m^-3: the network
+    // fixed point is 2.08e-3 against Saha's 3.52e-1, so 0.59 % of full
+    // equilibrium. The band is one decade either side of that ratio, which
+    // also covers the sweep 6000-10000 K and 1e21-1e24 m^-3 (0.24 % to
+    // 2.7 %). It catches a rate-constant or unit regression that moves the
+    // fixed point by an order of magnitude; it does not certify the tier.
+    let ratio = alpha_network / alpha_saha;
+    assert!(
+        (1.0e-3..1.0e-1).contains(&ratio),
+        "the uncalibrated gap to Saha left its stated band: alpha {alpha_network:e}, \
+         Saha {alpha_saha:e}, ratio {ratio:e}"
     );
 }
 

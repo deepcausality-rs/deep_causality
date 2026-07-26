@@ -20,6 +20,11 @@ use super::boundary_zone::BoundaryZone;
 /// face's normal edges as the prescribed (inflow) set — held at their lifted value with their flux
 /// counted in the open-boundary projection — and the lift that sets that value. Requires a
 /// matching [`Outflow`](super::outflow::Outflow) reference to balance the net flux.
+///
+/// **The `Outflow` requirement is not checked at configuration time.** `with_zones` does not reject a
+/// zone set that prescribes inflow edges without supplying any reference vertex. Without a reference the
+/// open-boundary projection has no pressure gauge, so the failure surfaces later as a non-converging or
+/// meaningless solve rather than as a rejected configuration. Pair every `Inflow` with an `Outflow`.
 #[derive(Debug, Clone, Copy)]
 pub struct Inflow<const D: usize, R: DecNsScalar> {
     wall_axis: usize,

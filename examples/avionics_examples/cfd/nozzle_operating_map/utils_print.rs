@@ -15,13 +15,10 @@ pub fn print_intro(schedule_len: usize, schedule_path: &Path) {
     println!(
         "geometry: inlet {INLET_AREA_M2} / throat {THROAT_AREA_M2} / exit {EXIT_AREA_M2} m^2 over {LENGTH_M} m; reservoir {P0_PA} Pa, {T0_K} K"
     );
-    // The file name only, not the absolute manifest path, so the recorded reference output is
-    // portable across machines and checkouts.
-    let schedule_name = schedule_path
-        .file_name()
-        .map(|n| n.to_string_lossy())
-        .unwrap_or_default();
-    println!("schedule: {schedule_len} back pressures from {schedule_name}\n");
+    println!(
+        "schedule: {schedule_len} back pressures from {}\n",
+        file_name(schedule_path)
+    );
 }
 
 pub fn print_rows(rows: &[MapRow]) {
@@ -41,8 +38,16 @@ pub fn print_rows(rows: &[MapRow]) {
 pub fn print_footer(out_path: &Path) {
     let first_critical = model::subsonic_exit_pressure_ratio();
     let shock_at_exit = model::exit_shock_back_pressure_ratio();
-    println!("\noperating map written to {}", out_path.display());
+    println!("\noperating map written to {}", file_name(out_path));
     println!(
         "analytic references: first critical p/p0 = {first_critical:.4}, exit-plane shock at p/p0 = {shock_at_exit:.4}\n"
     );
+}
+
+/// The file name of a path (not the absolute manifest path), so the recorded reference output is
+/// portable across machines and checkouts.
+fn file_name(p: &Path) -> std::borrow::Cow<'_, str> {
+    p.file_name()
+        .map(|n| n.to_string_lossy())
+        .unwrap_or_default()
 }

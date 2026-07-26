@@ -73,6 +73,11 @@ pub fn decay() -> FloatType {
 }
 
 /// Taylor–Green `u`-velocity `u = −cos(x)sin(y)`.
+///
+/// This is one of two Taylor–Green conventions in the crate. The MMS sample in
+/// `src/types/flow/mms.rs` uses `u = sin(x)cos(y)`, `v = −cos(x)sin(y)` instead. The two are the same
+/// vortex shifted by π/2 in x and y, and the pressure sign follows the velocity convention, so figures
+/// are comparable across the two only after accounting for the shift.
 pub fn tg_u(x: f64, y: f64) -> f64 {
     -(x.cos() * y.sin())
 }

@@ -1,3 +1,5 @@
+    Finished `release` profile [optimized] target(s) in 0.07s
+     Running `target/release/examples/qtt_blunt_body_2d`
 === QTT blunt-body bow shock: the Stage-5 rank lever (fitted vs Cartesian capture) ===
 
   resolution |  fitted χ (λ=1) | capture χ (λ=0)
@@ -5,11 +7,14 @@
      2^5    |         3       |       16
      2^6    |         4       |       32
      2^7    |         5       |       61
+  [PASS] [tripwire] BB-A fitted χ bounded and resolution-stable: bonds [3, 4, 5] (max 5 <= 12)
+  [PASS] [tripwire] BB-B Cartesian capture is a growing rank cost: capture [16, 32, 61] vs fitted [3, 4, 5]
 
 --- reading ---
   STATIC rank lever (gated): the bow shock is a constant-physical-radius surface → a step in η
   in the fitted coordinate (χ 3 → 5, flat), but a curved front on the Cartesian capture
-  (χ 16 → 61, growing ~√side). Body-fittedness buys the bond reduction — the Stage-5 lever.
+  (χ 16 → 61, growing ~linearly in side: χ ≈ side/2, not ~√side). Body-fittedness buys the
+  bond reduction — the Stage-5 lever.
   DYNAMIC marched rank (reported, OPEN): a plain flux-through-front marcher in the fitted
   coordinate grows χ to 64 over 6 steps — re-pinning + an exact-RH interface (no flux marched
   across the front) is the open remainder (design D9 / `qtt_repin_marcher`), not gated here.

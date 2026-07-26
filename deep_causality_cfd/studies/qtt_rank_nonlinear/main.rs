@@ -20,11 +20,18 @@
 //!     misaligned 2-D structure the static study showed is expensive. Does the rank climb as the curved
 //!     shock forms?
 //!
-//! Finding (it refuted the naive "just thicken it" hypothesis): the forming 2-D curved shock DOES raise
-//! rank, and thickening is NOT the lever — the rank is set by curvature/mis-alignment (which thickening
-//! cannot remove), and naive over-thickening is diffusion-CFL-unstable (it blows up to full rank). The
-//! real levers are coordinate alignment (static study) and an implicit/IMEX step (gap C3), neither
-//! exercised here. So this study confirms the threat is real and dynamic, and scopes the fix.
+//! Finding: the forming 2-D curved shock DOES raise rank, from bond 7 on the smooth bump to a peak
+//! of 20 at 64x64.
+//!
+//! What this study does NOT establish. Thickening could not be tested as a lever here. The explicit
+//! 2-D diffusion limit `nu*dt/dx^2 <= 0.25` at `dt = 0.2*dx` confines stable `nu` below `1.25*dx`,
+//! leaving no room to sweep: the two viscosities run are `nu = 1*dx` (stable) and `nu = 6*dx`, which
+//! violates the limit and saturates to full rank. That is a statement about the explicit scheme's
+//! stable window, not about thickness as a rank lever. Curvature is not isolated either, because no
+//! flat forming shock at the same `nu`, `dt` and front width runs in this file. The controlled
+//! comparison that does hold thickness fixed (2 cells) and vary orientation is `qtt_rank_study`'s.
+//! The candidate levers, coordinate alignment and an implicit/IMEX step (gap C3), are exercised in
+//! neither study.
 //!
 //! Self-verifying: gates encode the findings; exit non-zero on regression. This is a *study*, so the
 //! headline is the measured magnitudes printed below, not a pass/fail number.
@@ -126,6 +133,10 @@ fn main() {
     for &(st, r) in &s2 {
         println!("  {st:>6} | {r:>24}");
     }
+    // Timing of the rise: for u0 = exp(-r^2/(2 sigma^2)) with sigma = 0.08, max|u_x| = e^(-1/2)/sigma,
+    // so inviscid steepening sets in near t* = sigma*e^(1/2) ~ 0.13. The peak equals the first sample
+    // (step 31, t = 0.097), so bond 20 is reached at or before t*, and the sampled series then falls
+    // monotonically to 15 by step 248. The 7 -> 20 rise is steepening, not the formed shock.
     println!("  smooth-bump init bond: {init_2d}");
     println!("  STABLE peak bond: {p2}   (grid-saturation cap = {side})");
     println!(
@@ -162,19 +173,20 @@ fn main() {
         "  2-D: a forming CURVED shock drives bond {init_2d} -> {p2} (stable) — the nonlinear 2-D rank"
     );
     println!("       threat is REAL and DYNAMIC (and grows with resolution; this is only 64x64).");
+    println!("  Thickening could NOT be tested as a lever here. The explicit 2-D diffusion limit");
     println!(
-        "  Thickening is NOT the curved-shock lever: the rank is set by CURVATURE/mis-alignment,"
+        "  nu*dt/dx^2 <= 0.25 at dt = 0.2 dx confines stable nu below 1.25 dx, so this scheme"
     );
     println!(
-        "  which thickening cannot remove — and naive over-thickening is diffusion-CFL-unstable"
+        "  has no room to thicken; nu = 6 dx already violates it and saturates (peak {p2_trap} ="
     );
+    println!("  full rank). Curvature is not isolated here either: this file runs no flat forming");
+    println!("  shock at the same nu, dt and front width. The controlled comparison that holds");
     println!(
-        "  (peak {p2_trap} = full rank). The lever is COORDINATE ALIGNMENT (static study) + an implicit/"
+        "  thickness fixed at 2 cells and varies orientation is qtt_rank_study's. The candidate"
     );
-    println!(
-        "  IMEX step for stable dissipation (gap C3) — neither exercised here. The shock-aligned"
-    );
-    println!("  confinement test is the next study and the Tier-B design choice.");
+    println!("  levers, COORDINATE ALIGNMENT and an implicit/IMEX step for stable dissipation");
+    println!("  (gap C3), are exercised in neither; the shock-aligned confinement test is next.");
 
     if failures.is_empty() {
         println!("\nALL GATES PASSED.");

@@ -16,7 +16,7 @@ could not discriminate, and none of them ran in CI.
 
 **Phase 1 is implemented and archived** as
 [`2026-07-21-make-cfd-evidence-enforceable`](../../changes/archive/2026-07-21-make-cfd-evidence-enforceable/),
-43/43 tasks, with its four capability specs synced into `openspec/specs/`.
+43/43 tasks, with its four capability specs synced into `../../specs`.
 
 | Blocker | Status |
 |---|---|
@@ -46,7 +46,7 @@ the energy-budget gate is not a tautology (§5), and the correct action was to c
 | [`ACTION-LIST.md`](ACTION-LIST.md) | Every surviving finding as a severity-ordered, actionable table. The input for the follow-up specification. |
 | [`MODULE-INDEX.md`](MODULE-INDEX.md) | Per-module readiness at a glance. |
 | [`RUN-LEDGER.md`](RUN-LEDGER.md) | What was executed, exit codes, gate counts, reproducibility check. |
-| [`modules/`](modules/) | 16 per-module reports: findings with quoted code evidence, reference forms, and adversarial verdicts. |
+| [`modules`](modules/) | 16 per-module reports: findings with quoted code evidence, reference forms, and adversarial verdicts. |
 
 ## Headline numbers
 
@@ -76,7 +76,7 @@ the energy-budget gate is not a tautology (§5), and the correct action was to c
 | | Finding | Location |
 |---|---|---|
 | B-1 | Millikan–White reduced mass is 7.0 amu for a pair documented as N₂–N₂ (correct: 14). Duplicated in two places; propagates into all three plasma-blackout examples. Correcting it likely removes the headline RAM-C agreement. | `fitting.rs:72`, `config.rs:37`, `constants.rs:128` |
-| B-2 | No CI or Bazel target executes the verification suite. | `.github/workflows/` |
+| B-2 | No CI or Bazel target executes the verification suite. | `../../../.github/workflows` |
 | B-3 | `dec_cylinder_verification` has zero gates and exits 0 after a solver error. | `dec_cylinder_verification/main.rs` |
 | B-4 | `BlendedMap` documents a fold check it does not perform; unguarded ÷det J. | `coordinate/blended.rs:17,171` |
 

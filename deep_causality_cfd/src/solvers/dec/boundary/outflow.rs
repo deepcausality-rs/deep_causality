@@ -18,8 +18,13 @@ use super::boundary_zone::BoundaryZone;
 /// An outflow boundary: the face perpendicular to `wall_axis` (the `max_side` face when true, the
 /// zero face otherwise) is the open-boundary **pressure reference**. Its vertices pin `φ = 0` in
 /// the projection, so the outflow velocity is free and adjusts to balance the inflow flux (mass
-/// conservation). It carries no prescribed velocity — the outflow is determined by incompressibility
-/// (a zero-gradient / convective outflow; the boundary time-update lands with the outflow group).
+/// conservation). It carries no prescribed velocity: the outflow velocity is whatever the projection
+/// produces, with the face's tangential edges left free.
+///
+/// This is a **pressure-reference** outflow, not a zero-gradient or convective one. No `∂u/∂n = 0`
+/// condition and no boundary time-update `∂u/∂t + U_c·∂u/∂n = 0` is applied; the only thing imposed is
+/// `φ = 0` on the face's vertices. That is sufficient to make the open-boundary Poisson problem
+/// well-posed and to let the net flux balance, and it is what the code does.
 #[derive(Debug, Clone, Copy)]
 pub struct Outflow<const D: usize> {
     wall_axis: usize,

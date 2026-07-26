@@ -26,14 +26,14 @@ is the only variable.
 ## What it verifies (exit nonzero on break)
 
 - **BB-A**: the fitted `χ` stays bounded at 12 or below and resolution-stable, growing by at most 1
-  per refinement, so no `√side` growth.
+  per refinement. It does not track the Cartesian capture's `χ ≈ side/2`.
 - **BB-B**: the Cartesian capture `χ` grows with resolution and overtakes the fitted bond by at
   least 2×.
 
 Both gates are **structural**. They bound *rank*, not physical accuracy. The quantitative accuracy
 gate for the compressible solver is `qtt_sod`, against the exact Riemann solution.
 
-## Measured (f64, 2^5–2^7, ~2 s)
+## Measured (f64, 2^5–2^7, <1 s)
 
 | resolution | fitted `χ` (λ=1) | capture `χ` (λ=0) |
 |---|---|---|
@@ -41,8 +41,8 @@ gate for the compressible solver is `qtt_sod`, against the exact Riemann solutio
 | 2^6 | 4 | 32 |
 | 2^7 | 5 | 61 |
 
-Fitted runs 3 to 5 and is flat; the capture cost runs 16 to 61, growing roughly as `√side`. Both
-gates **PASS**.
+Fitted runs 3 to 5 and is flat. The capture cost runs 16 to 61: a 3.8× rise for a 4× refinement,
+so `χ ≈ side/2`, roughly linear in `side`. A `√side` law would give 6, 8, 11. Both gates **PASS**.
 
 ## Reported, not gated
 

@@ -19,8 +19,11 @@
 //! scalar (`CfdScalar`). Composition is static (no `dyn`),
 //! built on the `deep_causality_haft` HKT/algebra foundation.
 //!
-//! CPU parallelism is opt-in via the `parallel` feature
-//! and rides the `MaybeParallel` bound.
+//! CPU parallelism ships on: `parallel` sits in the crate's `default` feature
+//! set and rides the `MaybeParallel` bound. Build with
+//! `--no-default-features --features std` for the serial operator loops, which
+//! are the faster choice below roughly 256² cells
+//! (see `benches/PERFORMANCE.md`).
 
 extern crate alloc;
 

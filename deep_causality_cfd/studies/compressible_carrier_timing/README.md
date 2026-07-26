@@ -51,6 +51,9 @@ decision.
 **Caveats.** Wall-clock on one machine (Apple M3 Max, release), so re-measure on the target
 hardware. The projection is `per_step × 200` and excludes coupling overhead, making it a floor
 rather than a forecast. Five timed steps per case after one untimed warmup is a small sample, and
-the 3-D verdict is extrapolated from a single grid by design.
+the 3-D verdict is extrapolated from a single grid by design. The bond cap is a **cost** parameter,
+not an accuracy one: it is timed at 16 and 32 and never compared against an uncapped (`by_tol`)
+reference, nor across caps on any observable. Cap 32 is therefore established as affordable, not as
+adequate.
 
 See `output.txt` for the recorded reference output.

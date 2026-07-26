@@ -440,6 +440,13 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
     /// periodic uniform lattices only). Off by default; the validation
     /// ladder gates any future default-on.
     ///
+    /// **Only the fused stencil path honours this.** The spectral Laplacian is
+    /// read inside the compiled-stencil assembly; the generic path evaluates
+    /// `manifold.laplacian_of` instead. So combining this with
+    /// [`Self::with_generic_assembly`] leaves the spectral choice **silently
+    /// unused** — the rate still evaluates, using the generic Hodge–de Rham
+    /// Laplacian. Pick one.
+    ///
     /// # Errors
     /// `PhysicsError::TopologyError` when the lattice is not fully
     /// periodic or the metric carries no per-axis Euclidean spacings.
@@ -451,6 +458,11 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
     /// Switch this rate to the generic compositional operator path — the
     /// equivalence oracle and the benchmark baseline. The default is the
     /// compiled stencil pipeline.
+    ///
+    /// **This discards any spectral viscous opt-in.** The generic path evaluates
+    /// the viscous term through `manifold.laplacian_of`, so a
+    /// [`Self::with_spectral_diffusion`] set earlier (or later) has no effect
+    /// here; see that method.
     pub fn with_generic_assembly(mut self) -> Self {
         self.engine = None;
         self

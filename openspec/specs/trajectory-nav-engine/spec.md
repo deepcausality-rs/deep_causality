@@ -8,11 +8,18 @@ TBD - created by archiving change add-plasma-blackout-corridor. Update Purpose a
 
 Stage 2 SHALL provide the onboard trajectory + navigation engine composed from the Stage-0 primitives: predict =
 the KS conformal propagator with the between-step aero kick taken **from the `blackout-coupling-interface` force
-channel**; correct = a **17-state tightly-coupled ESKF** (position 3, velocity 3, attitude-error 3, gyro bias 3,
-accel bias 3, clock bias + drift 2) followed by the Sp(2,R)/KS constraint projection; and a **two-clock** carry
+channel**; correct = a **17-state tightly-coupled ESKF** in the canonical ordering `[position 3, velocity 3,
+attitude-error 3, accelerometer bias 3, gyro bias 3, clock bias, clock drift]`, followed by the Sp(2,R)/KS
+constraint projection; and a **two-clock** carry
 (the KS fictitious time `s` distinct from proper time `τ`). Because the aero force arrives through the interface,
 there SHALL be **no mock/real split** in the engine — the Stage-0 stub and the Stage-1 marcher are interchangeable
 behind the contract. The ESKF is example-level; the reusable math is the Stage-0 library.
+
+That ordering is the interface contract for every `[R; 17]` the engine exchanges: the covariance and process-noise
+diagonals, the measurement row `h`, and the packed error state. Accelerometer bias sits at indices 9-11 and gyro
+bias at 12-14, as `InsErrorState::to_array` / `from_array` pack them. The blocks are not interchangeable: the
+shipped priors differ by six orders of magnitude (accel bias `1e-2`, gyro bias `1e-8`), and nothing validates the
+ordering of a caller-supplied `[R; 17]`, so a transposed diagonal is accepted and silently mis-tunes the filter.
 
 #### Scenario: Coast exactness and dynamic timing
 - **WHEN** the engine runs with a zero aero force and monopole gravity

@@ -30,13 +30,20 @@ are compatibly oriented over the same `(ξ, η)` patch in front of the nose, on 
   position-blend of two compatibly-oriented charts does not fold. That closes the one open
   residual Resolution 4 flagged; the guard it depends on, a bounded λ-gradient plus a positive
   Jacobian, is satisfied here by construction.
-- **BM-B: λ is a clean rank dial.** A fixed *physical* curved shock, sampled on the blended
-  lattice, runs **114 → 5** monotonically as `λ` goes 0 to 1. Intermediate `λ` buys intermediate
-  rank. Body-fittedness is therefore a continuous free parameter, not an all-or-nothing commitment.
+- **BM-B: λ moves the rank monotonically, but the reduction concentrates near λ = 1.** A fixed
+  *physical* curved shock, sampled on the blended lattice, falls **114 → 107 → 92 → 54 → 5** as `λ`
+  goes 0 to 1. No interval reverses, so the dial is monotone. The split across intervals is uneven:
+  three quarters of the dial buys a factor of 2.1 (114 → 54), and the last quarter buys the
+  remaining factor of 10.8 (54 → 5). A partial blend therefore delivers little rank benefit. At
+  `λ = 0.75` the bond is still about 11× the fitted value. Body-fittedness is a continuous free
+  parameter rather than an all-or-nothing commitment, but the operationally useful range sits above
+  `λ ≈ 0.75`. The knee is not located: only the five `λ` in the table were measured, and
+  intermediate points such as 0.85 and 0.95 were not run.
 
-**Conclusion.** The blend is valid and dialable, so D8 can treat the coordinate as a tunable
-`MetricProvider` rather than a fixed choice. The Res-4 residual is closed. Analysis:
-`openspec/notes/plasma-blackout/gap-2/`.
+**Conclusion.** The blend is valid and monotone in `λ`, so D8 can treat the coordinate as a tunable
+`MetricProvider` rather than a fixed choice. The Res-4 residual is closed. A partial blend is not a
+cheap middle ground, though: the rank payoff arrives above `λ ≈ 0.75`, so a tuner should expect to
+run near full fit. Analysis: `openspec/notes/plasma-blackout/gap-2/`.
 
 **Caveats.** This measures the **static** representability of a frozen analytic shock on the
 blended lattice. It says nothing about whether marching holds the alignment; that is the question

@@ -14,24 +14,38 @@ use deep_causality_cfd::{EvidenceClass, LadderOutcome, Report, dequantize_2d};
 
 /// Pinned no-slip floor: interior speed must fall below this fraction of the free-stream.
 ///
-/// Evidence class: **tripwire**. Note it is invariant across the whole smoothing ladder (measured:
-/// interior max|u| stays 4.19e-2–4.51e-2 while `C_d` moves 6.1×), so it constrains the wall
-/// treatment but says nothing about the reported drag. That is why the ladders below exist.
+/// Evidence class: **tripwire**. Note it is invariant across the whole smoothing ladder: at the
+/// superseded `L = 5` configuration the interior max|u| stayed 4.19e-2–4.51e-2 while `C_d` moved
+/// 6.1× (AUDIT-REPORT §5b). So it constrains the wall treatment and says nothing about the reported
+/// drag. That is why the ladders below exist.
 const NO_SLIP_FLOOR: f64 = 0.15;
 /// Pinned bond-convergence bound on the relative change between the two finest bond caps.
 ///
-/// Tightened from `0.10`. The measured successive change at the two finest caps is `~8e-13`
-/// relative, so the old bound sat eleven orders of magnitude above the phenomenon it gated and
-/// would have passed a solver that had not saturated in bond at all. `1e-6` is still ~6 orders
-/// above the measurement, which absorbs cross-platform floating-point differences while actually
-/// constraining saturation.
+/// Tightened from `0.10`. The successive change at the two finest caps measured `7.9e-13` relative
+/// (bond 16 vs 24, at the superseded `L = 5` configuration), so the old bound sat eleven orders of
+/// magnitude above the phenomenon it gated and would have passed a solver that had not saturated in
+/// bond at all. `1e-6` is still ~6 orders above that measurement, which absorbs cross-platform
+/// floating-point differences while actually constraining saturation. The shipped `L = 8` ladder
+/// (`[24, 48]`) has not been measured against this bound; that acceptance run is the pending offline
+/// item recorded in `verification/README.md`.
 const CONVERGENCE_BOUND: f64 = 1.0e-6;
-/// Pinned blow-up guard on the drag coefficient.
+/// Pinned blow-up guard on the drag coefficient. A **wide non-divergence bracket**, not a physicality
+/// bound.
 ///
-/// This is a positivity / NaN / divergence tripwire, **not** a claim that the quantity is `O(1)`:
-/// the configuration produces `C_d ≈ 23.8`, inflated by the smoothing skirt and blockage. The
-/// former doc comment described it as an "O(1) drag coefficient" bound, which contradicted both the
-/// value and the measurement.
+/// What it catches: a negative, NaN, or diverged `C_d`. What it does not catch: any regression that
+/// leaves the drag inside `(0, 100)`. The gap is wide on purpose and wide in fact. At the superseded
+/// `L = 5` configuration the harness reported `C_d = 23.7577`, and the smoothing ladder alone moved
+/// the reported value across `7.70 … 47.27` without ever leaving this bracket.
+///
+/// The magnitude is not an isolated-cylinder `C_d`. It is inflated by the ~30 % blockage of the
+/// periodic box and by the penalization integral counting the momentum sink over the whole smoothed
+/// mask skirt rather than pressure plus friction on a sharp surface. The README's "Honest reading of
+/// the absolute C_d" lists those causes plus the transient horizon and the Reynolds mismatch against
+/// the DEC cross-reference. An earlier doc comment called this an "O(1) drag coefficient" bound; that
+/// was wrong on both the value and the intent.
+///
+/// Tightening it to bracket a measured value (for example `[20, 30]`) would make it discriminating,
+/// and that is a gate-bound change, deliberately not made here.
 const DRAG_SANITY_MAX: f64 = 100.0;
 /// Relative bound for judging a parameter ladder as settled.
 ///

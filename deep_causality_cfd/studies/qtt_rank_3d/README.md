@@ -23,16 +23,21 @@ rank.
 
 **Findings (gated, exit nonzero on regression).** Measured on an Apple M3 Max (release):
 
-| side | formed-shock peak χ | flat / body-fitted χ |
-|---|---|---|
-| 16³ | 45 | |
-| 32³ | 56 | |
-| 64³ | 89 | flat 5, fitted 6 |
-| 128³ | 135 | |
+| side | formed-shock peak χ |
+|---|---|
+| 16³ | 45 |
+| 32³ | 56 |
+| 64³ | 89 |
+| 128³ | 135 |
+
+Only the forming shock is swept. The references are a **single 64³ measurement**: a flat
+axis-aligned plane reads χ = 5, a body-fitted shell reads χ = 6. No per-level reference sweep was
+run, so their behaviour under resolution is inferred from alignment, not measured here. The 2-D
+counterpart is measured in `qtt_rank_fitted_dynamic`, at 64² and 128².
 
 - **Upper bound: χ ~ side^0.53, roughly √side, and unbounded in resolution.** A captured 3-D curved
-  shock surface costs 45 → 135 over 16³ → 128³, while the flat and body-fitted references stay
-  **constant at 5 to 6**.
+  shock surface costs 45 → 135 over 16³ → 128³. The references sit at 5 and 6 at the one level where
+  they were encoded.
 - **QTT-versus-dense storage flips with resolution, a crossover rather than a wall.** The
   `dense/QTT` storage ratio runs 0.08× at 16³, then 0.35×, then 0.92× at the 64³ break-even, then
   2.74× at 128³. Because dense grows as `side³` while `χ² ~ side^1.1`, QTT storage **always wins
@@ -40,8 +45,8 @@ rank.
 - **The real result is the solve cost, not storage.** Tensor-train ops are `O(χ²)` to `O(χ³)` per
   core. `χ ~ √side` means that at a flight-relevant micrometre grid, `side ~ 10⁶`, a captured curved
   shock implies `χ ~ thousands`: bounded, but expensive enough to erode the practical advantage. The
-  **body-fitted shell holds χ ~ O(10) at any resolution**, and that gap is the Tier-B-deciding
-  result.
+  **body-fitted shell reads χ ~ O(10)** at the one level encoded, 64³, and that gap is the
+  Tier-B-deciding result.
 
 **Conclusion.** 3-D Tier-B is tractable **only** with a shock-aligned or body-fitted coordinate,
 which turns the curved surface into an axis-aligned one and replaces `χ ~ √side` with `χ ~ O(10)`.

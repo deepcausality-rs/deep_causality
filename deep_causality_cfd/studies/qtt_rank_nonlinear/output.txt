@@ -1,3 +1,6 @@
+   Compiling deep_causality_cfd v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/deep_causality_cfd)
+    Finished `release` profile [optimized] target(s) in 4.46s
+     Running `target/release/examples/qtt_rank_nonlinear`
 === 1-D Burgers (L=10, N=1024, dt=4.88e-4, steps=1228, tol=1e-8) ===
     u0 = 0.5 + 0.4 sin(2 pi x); shock forms near t* ~ 0.40; nu = 0.5 dx (stable)
 
@@ -34,10 +37,13 @@
   1-D: forming shock peak 8 — nonlinear steepening stays CHEAP in 1-D, as predicted.
   2-D: a forming CURVED shock drives bond 7 -> 20 (stable) — the nonlinear 2-D rank
        threat is REAL and DYNAMIC (and grows with resolution; this is only 64x64).
-  Thickening is NOT the curved-shock lever: the rank is set by CURVATURE/mis-alignment,
-  which thickening cannot remove — and naive over-thickening is diffusion-CFL-unstable
-  (peak 64 = full rank). The lever is COORDINATE ALIGNMENT (static study) + an implicit/
-  IMEX step for stable dissipation (gap C3) — neither exercised here. The shock-aligned
-  confinement test is the next study and the Tier-B design choice.
+  Thickening could NOT be tested as a lever here. The explicit 2-D diffusion limit
+  nu*dt/dx^2 <= 0.25 at dt = 0.2 dx confines stable nu below 1.25 dx, so this scheme
+  has no room to thicken; nu = 6 dx already violates it and saturates (peak 64 =
+  full rank). Curvature is not isolated here either: this file runs no flat forming
+  shock at the same nu, dt and front width. The controlled comparison that holds
+  thickness fixed at 2 cells and varies orientation is qtt_rank_study's. The candidate
+  levers, COORDINATE ALIGNMENT and an implicit/IMEX step for stable dissipation
+  (gap C3), are exercised in neither; the shock-aligned confinement test is next.
 
 ALL GATES PASSED.

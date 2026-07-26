@@ -88,9 +88,16 @@ where
     /// Opt into a **Quasi-Monte-Carlo collapse**: a present sample's mean is estimated with
     /// `Uncertain::expected_value_qmc` (low-discrepancy Sobol + inverse-CDF) instead of the default
     /// Monte-Carlo `expected_value`, cutting the estimator variance at equal sample count. The
-    /// per-sample Sobol digital shift is `base_seed ⊕ present.id()`, so every step is an independent,
+    /// per-sample Sobol shift is `base_seed.wrapping_add(present.id())` (wrapping addition mod
+    /// 2^64, **not** the conventional XOR digital shift), so every step is an independent,
     /// reproducible randomized-QMC realization. The presence gate is **unaffected** — it stays on the
     /// SPRT/Monte-Carlo path (QMC is invalid for the sequential test; see the QMC follow-up note).
+    ///
+    /// **Each stream element must be a distinct `Uncertain` node; do not clone one across steps.**
+    /// Sampling is memoized per node id, so a cloned node returns the *same* collapsed value at every
+    /// step it appears, silently freezing the boundary instead of drawing a fresh realization. The
+    /// per-sample shift above is keyed on `present.id()` for the same reason: distinct ids are what
+    /// make the per-step realizations independent.
     ///
     /// The sensor's value channel must be QMC-eligible (a statically-structured `Uncertain` of at
     /// most [`MAX_SOBOL_DIM`](deep_causality_uncertain) leaves); otherwise the collapse returns the
@@ -135,7 +142,9 @@ where
             self.max_samples,
         ) {
             Ok(present) => {
-                // Opt-in QMC collapse uses a per-sample reproducible Sobol shift (base ⊕ id), so
+                // Opt-in QMC collapse uses a per-sample reproducible Sobol shift, `base + id`
+                // with wrapping addition (not an XOR digital shift), so each step is an
+                // independent randomized-QMC realization; default is the MC mean.
                 // each step is an independent randomized-QMC realization; default is the MC mean.
                 let collapsed = match self.qmc_collapse_seed {
                     Some(base) => present.expected_value_qmc(

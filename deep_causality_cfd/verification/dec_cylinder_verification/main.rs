@@ -31,9 +31,13 @@
 //! - The **cycle-mean drag** `C_d = F_x / (½ U² D)`, averaged over the developed (second-half)
 //!   window and split into the **pressure** force (`pressure_surface_force` over the static pressure
 //!   from `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`),
-//!   with the lift `C_l` and the `C_d` swing. Reference: `C_d(Re=100) ≈ 1.24–1.33`
-//!   (Dröge–Verstappen 2005: 1.24 = 0.93 pressure + 0.31 friction; Lehmkuhl et al. 2013 lineage
-//!   ≈ 1.33), so friction is ≈ 25 % of `C_d`.
+//!   with the lift `C_l` and the `C_d` swing. Reference: `C_d(Re=100) ≈ 1.32–1.36`, the 2-D
+//!   unconfined laminar consensus (Qu et al. 2013, Posdziech & Grundmann 2007, Williamson, as
+//!   compiled in arXiv:2303.09262). The directory README's gate-result section quotes the same
+//!   band. Dröge & Verstappen (2005), Table II, is the secondary reference, for the
+//!   pressure/friction split only: their cut-cell result is `C_d = 1.24 = 0.93` pressure `+ 0.31`
+//!   friction, so friction is ≈ 25 % of `C_d`. That `1.24` is a single low-side cut-cell datum. It
+//!   is not the reference band and is no longer used as its lower edge.
 //!
 //! ## Scope
 //!
@@ -70,11 +74,14 @@ const PERTURB_SIGMA: f64 = 0.75;
 // ── Acceptance bounds ─────────────────────────────────────────────────────────────────────────
 //
 // Evidence class: **tripwire**, not reference. The affordable default (8 cells/D) is below
-// reference-grid quality and the measured values sit *outside* the published bands — St 0.1710 vs
-// Williamson 0.164 (+4.3 %), C_d 1.345 vs the 1.24–1.33 band (+1.1 % over the top). Gating against
-// the published bands at this resolution would fail a correctly-working solver, so these bounds are
-// pinned around the measured default and detect regression only. The published values are printed
-// next to the measurement so the offset stays visible and is never read as agreement.
+// reference-grid quality. `St` sits outside the published value: 0.1710 vs Williamson 0.164,
+// +4.3 %. `C_d` lands inside the published band, 1.345 in 1.32–1.36, but for the wrong reason: the
+// split is pressure 1.173 + friction 0.172, so friction is ≈ 13 % of `C_d` against the ≈ 25 % of
+// the reference, and the total agrees by cancellation. Gating against the published bands at this
+// resolution would fail a correctly-working solver on `St` and would reward that cancellation on
+// `C_d`, so these bounds are pinned around the measured default and detect regression only. The
+// published values are printed next to the measurement so the offset stays visible and is never
+// read as agreement.
 //
 // Width is set by cross-platform floating-point sensitivity of a 1500-step nonlinear march, not by
 // measurement precision (the run is deterministic on one machine). Provisional: tighten once the
@@ -88,10 +95,13 @@ const REFERENCE_RE_D: f64 = 100.0;
 const ST_TRIPWIRE: (f64, f64) = (0.152, 0.190);
 /// Pinned drag-coefficient band (tripwire), ~±10 % around the measured 1.345.
 const CD_TRIPWIRE: (f64, f64) = (1.21, 1.48);
-/// Published references, printed beside the measurement. Williamson (1996) for `St`;
-/// Dröge & Verstappen (2005) / Lehmkuhl et al. (2013) for `C_d`.
+/// Published references, printed beside the measurement. Williamson (1996) for `St`. For `C_d`, the
+/// 2-D unconfined laminar consensus band (Qu et al. 2013, Posdziech & Grundmann 2007, Williamson, as
+/// compiled in arXiv:2303.09262); the directory README's gate-result section quotes the same band.
+/// Dröge & Verstappen (2005), Table II, is the secondary reference for the pressure/friction split
+/// only: `C_d = 1.24 = 0.93 + 0.31`, i.e. friction ≈ 25 %.
 const ST_REFERENCE: f64 = 0.164;
-const CD_REFERENCE_BAND: (f64, f64) = (1.24, 1.33);
+const CD_REFERENCE_BAND: (f64, f64) = (1.32, 1.36);
 
 /// Read an `f64` case parameter from the environment, falling back to `default`.
 fn env_f64(key: &str, default: f64) -> f64 {
@@ -367,8 +377,8 @@ fn verify(st: Option<f64>, cd: Option<f64>, re_d: f64, cells_per_d: usize) -> bo
     if let Some(v) = cd {
         let pass = v > CD_TRIPWIRE.0 && v < CD_TRIPWIRE.1;
         println!(
-            "  [{}] [tripwire] C_d {v:.3} in [{}, {}]  (reference band: Dröge–Verstappen / \
-             Lehmkuhl {:.2}–{:.2}, measured is {:+.1} % relative to the band top)",
+            "  [{}] [tripwire] C_d {v:.3} in [{}, {}]  (reference band: 2-D laminar consensus \
+             {:.2}–{:.2}, measured is {:+.1} % relative to the band top)",
             if pass { "PASS" } else { "FAIL" },
             CD_TRIPWIRE.0,
             CD_TRIPWIRE.1,

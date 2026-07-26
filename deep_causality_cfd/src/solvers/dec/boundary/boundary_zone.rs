@@ -21,8 +21,8 @@ use crate::solvers::dec::DecNsScalar;
 /// * `collect_rate_source` — adds a forcing term to the rate right-hand side (e.g. a body force).
 /// * `collect_constrained_edges` — edges pinned to zero in the constrained projection, unioned with
 ///   the structural no-slip set.
-/// * `collect_lift` — prescribed (inhomogeneous, possibly step-dependent) edge values, e.g. a
-///   moving-wall tangential velocity.
+/// * `collect_lift` — prescribed (inhomogeneous) edge values, e.g. a moving-wall tangential
+///   velocity. Collected **once at construction** and static thereafter; see the method doc.
 /// * `collect_prescribed_edges` — inflow edges fixed at their field value, their flux counted in
 ///   the open-boundary projection's divergence (`leray_project_open_opts`).
 /// * `collect_reference_vertices` — outflow pressure-reference vertices for the open-boundary
@@ -64,6 +64,12 @@ pub trait BoundaryZone<const D: usize, R: DecNsScalar> {
     }
 
     /// Add this zone's prescribed (inhomogeneous) edge values for march step `step`.
+    ///
+    /// **`step` is always `0` in the shipped solver.** The lift is collected **once, at construction**
+    /// (`DecNsSolver::with_zones` calls `collect_lift(manifold, 0, ..)`) and reused for every march
+    /// step, so a zone that varies its lift with `step` will have only its step-0 value applied. The
+    /// parameter exists for a future per-step re-collection, which would need `&mut self` or interior
+    /// mutability on the solver. Treat the lift as **static** until then.
     fn collect_lift(
         &self,
         _manifold: &Manifold<LatticeComplex<D, R>, R>,

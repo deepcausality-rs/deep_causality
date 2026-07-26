@@ -6,15 +6,19 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # `deep_causality_cfd` — Pre-Certification Audit
 
 **Date:** 2026-07-21
-**Scope:** `deep_causality_cfd/` (src, tests, verification, studies, benches) and `examples/avionics_examples/cfd/`
+**Scope:** `../../../deep_causality_cfd` (src, tests, verification, studies, benches) and `../../../examples/avionics_examples/cfd`
 **Purpose:** Establish whether the crate can be certified for avionics **R&D** use — whether an engineer
 can trust that each marcher and kernel computes what the specification and the reference formula say it
 computes.
 
-> **Status: Phase 1 and Phase 2 complete (all four Phase-2 changes landed, plus one follow-up
-> capability); Phases 3–4 (documentation truth-up + traceability) remain. All four certification
-> blockers are resolved. Phase 2 closed 2026-07-24 with `fix-navigation-filter-correctness`
-> (item 9); §10's recommendation was to certify after Phases 1 and 2, which is now the owner's call.**
+> **Status: Phases 1–4 complete. All four certification blockers are resolved.** Phase 2 closed
+> 2026-07-24 with `fix-navigation-filter-correctness` (item 9). `reconcile-cfd-docs-and-traceability`
+> (2026-07-26) closed Phases 3 and 4: items 17 and 19–23 in full, item 24 bar its broadest sweep, and
+> **all 125 catalogued doc-overclaim and doc-gap rows** behind items 16 and 18 — 116 closed by that
+> change, 9 already closed by Phases 1–2, **0 remaining**. §10's recommendation was to certify after
+> Phases 1 and 2; every phase is now complete and the certify decision is the owner's. Two defects the
+> documentation work surfaced are recorded and *not* fixed: the Taylor–Green harness fails at its own
+> documented `max_level 7`, and the crate's public API leaks workspace types it does not re-export.**
 >
 > The crate is not broken. Its numerical core is, in every place checkable against a closed-form
 > reference, *exactly* right — including a lid-driven-cavity primary vortex matching Ghia (1982) to four
@@ -27,8 +31,8 @@ computes.
 > ### Remediation status — updated 2026-07-21
 >
 > **Phase 1 is implemented and archived** as
-> [`openspec/changes/archive/2026-07-21-make-cfd-evidence-enforceable/`](../../changes/archive/2026-07-21-make-cfd-evidence-enforceable/),
-> 43/43 tasks. Its four capability specs are synced into `openspec/specs/`.
+> [`../../changes/archive/2026-07-21-make-cfd-evidence-enforceable`](../../changes/archive/2026-07-21-make-cfd-evidence-enforceable/),
+> 43/43 tasks. Its four capability specs are synced into `../../specs`.
 >
 > | Blocker | Status |
 > |---|---|
@@ -38,8 +42,8 @@ computes.
 > | **B-4** `BlendedMap` documents an absent fold check | **RESOLVED** — Phase 2 change 4 |
 >
 > **Phase 2, change 4 is implemented and archived** as
-> [`openspec/changes/archive/2026-07-21-resolve-cfd-contract-gaps/`](../../changes/archive/2026-07-21-resolve-cfd-contract-gaps/),
-> closing items **8, 11 and 15**; its three capability specs are synced into `openspec/specs/`.
+> [`../../changes/archive/2026-07-21-resolve-cfd-contract-gaps`](../../changes/archive/2026-07-21-resolve-cfd-contract-gaps/),
+> closing items **8, 11 and 15**; its three capability specs are synced into `../../specs`.
 > One task is recorded as **skipped, not done** — see the note at the end of this block. What the
 > change found beyond this report:
 >
@@ -237,6 +241,53 @@ computes.
 >   6-DOF known-answer reference, which the design lists as a Non-Goal (full attitude *observability*). So the
 >   honest tally is "one correctness gap found and fixed, a cluster of overclaims found and fixed, one info-level
 >   verification gap deferred" — **not "clean"**: the lesson holds a fourth time.
+>
+> **Phases 3–4, change `reconcile-cfd-docs-and-traceability` is implemented (2026-07-26)**, closing items
+> **17 and 19–23** in full, **24** bar its broadest sweep, and **16/18 entirely**. It completes both
+> phases. What it found beyond this report:
+>
+> - **The tally, enumerated rather than asserted: all 125 catalogued rows are accounted for — 116 closed
+>   by this change, 9 already closed by Phases 1–2, 0 remaining.** The doc-overclaim (86) and doc-gap (39)
+>   rows were enumerated mechanically from `ACTION-LIST.md`, and each closed row is listed by ref in the
+>   change's `tasks.md`, so completeness is checkable against the catalogue rather than trusted. The rows
+>   whose action was a **code** change (13.9 aside, which was implemented with tests) had their
+>   documentation arm taken and the code arm recorded: constructor validation elsewhere, `Result`
+>   returns, re-exports, and cross-crate visibility all remain open and need their own plan.
+> - **Counting it correctly took three attempts, and the method is the lesson.** Two intermediate tallies
+>   were mutually inconsistent, and one batch of two rows was dropped from the work assignments
+>   altogether. None of that was caught by review; it was caught by re-running the count against the
+>   catalogue. A completeness claim that cannot be recomputed from the artifact is not evidence.
+> - **Item 21 produced a real, previously unrecorded defect: the Taylor–Green harness fails at its own
+>   documented `max_level 7`.** Holding `dt` fixed makes the first-order Euler error a floor *of opposite
+>   sign* to the spatial error. Re-derived in closed form, the signed error runs `+9.8e-4, +2.4e-4,
+>   +5.3e-5, +5.9e-6, −5.9e-6, −8.8e-6` for `N = 8…256`: the two cancel near `N = 64–128`, so the
+>   `N = 64` order of **3.16 is a cancellation artifact, not super-convergence**, and by `N = 128` the
+>   observed order collapses to **0.02**, below the `MIN_ORDER = 1.8` gate. The maximum usable ladder
+>   length is therefore `max_level = 5`, the committed default, and that is now documented. **A documented
+>   user action still produces a FAIL**; fixing it needs a two-sided order gate (`1.8 ≤ p ≤ 2.2`) or `dt`
+>   refined as `dt ∝ dx²`. Both are code changes, recorded and deferred.
+> - **A doc-overclaim was closed by correcting the code instead of softening the prose.** The README's
+>   "the DSL never exits or prints" was false only because the dead `Gates` type held the only five
+>   `println!` in `src/`. Retiring `Gates` (item 22, owner decision) made the claim true as written:
+>   `src/` now contains zero `println!`, `eprintln!`, `panic!` and `process::exit`. `Gates` was a parallel
+>   API no shipped program constructed — `Gates::new` appeared only in its own unit test.
+> - **Item 18 needed no work, and the report of it being open was itself the defect.** All four named
+>   capabilities were already documented in the crate README. The pre-implementation scan that reported
+>   them missing used a **malformed grep** (unescaped `|`, so the shell piped instead of matching), and the
+>   empty result was read as absence. This is §5c lesson 5 landing on the remediation's own reconnaissance:
+>   *a negative asserted from an unstated search is worth nothing.*
+> - **The adversarial pass over the finished diff found four defects, all mine, and the worst was a
+>   conclusion published without its confirming measurement.** I ran the ladder to `N = 64`, saw order
+>   3.16, and wrote into a source docstring and two READMEs that the temporal floor "is not observed" and
+>   the ladder was "still converging". The `N = 128` run that would have refuted it had **timed out**, and
+>   I wrote the conclusion anyway; I also read a super-convergent order as good news rather than as the
+>   classic cancellation signature. Also found: a Kazeev–Khoromskij citation whose year, venue, volume and
+>   pages I supplied **from recall** when the repository records only author and title — an unverifiable
+>   claim introduced by the change whose purpose is removing unverifiable claims; a row (16.9) recorded as
+>   closed when only half of it was done; and a catalogue count that contradicted itself across two tasks.
+>   All four fixed. So the honest tally at that point was "four defects found and fixed" — **not "clean"**: the lesson holds
+>   a **fifth** time, and this time the failure was treating an unfinished measurement as a finished one.
+>   The catalogue tail was closed afterwards, in the same change.
 >
 > What Phase 1 changed, and what it found beyond this report:
 >
@@ -445,7 +496,7 @@ rather than re-admitted; the finite-rate network's renewal arm survives at +0.35
 block at the top of this report.
 
 ### B-2 — No CI or Bazel target executes the verification suite
-`.github/workflows/run_tests.yml` — no `cargo run --example` anywhere
+`../../../.github/workflows/run_tests.yml` — no `cargo run --example` anywhere
 
 Every external-reference comparison in the crate (exact Riemann, Ghia cavity, Williamson cylinder, RAM-C
 flight nₑ) lives in `verification/` binaries that CI compiles and never runs.
@@ -592,7 +643,7 @@ resolves the smoothing skirt rather than the penalization layer.
 merges. **Update (`close-qtt-solver-envelope`):** item 10 resolved the *configuration* (η from a
 wall-error target, `L = 8` resolving the layer), but the acceptance harness then cost ~4-9 h to run, so
 the harness was **reclassified from nightly `KNOWN-FAILING` to `OFFLINE_HARNESSES`** in
-`.github/workflows/cfd_verification.yml` — still accounted for by the completeness check, run manually,
+`../../../.github/workflows/cfd_verification.yml` — still accounted for by the completeness check, run manually,
 not in CI. The failure it recorded (`C_d` tracks blur width, no η→0 limit) was a *resolution* finding;
 the current blocker is *solver performance* at the resolution the physics needs (§9 item 10).
 
@@ -670,29 +721,48 @@ matters** before claiming a change is verified.
 
 Ranking reflects **assurance**, not elegance. Critical counts are post-review.
 
-| Rank | Module | Readiness | Crit | Basis |
+**How to read this table after remediation (2026-07-26).** The ranking was produced by the 16 module
+auditors at as-found state. Re-ranking a module is a re-audit, and **no re-audit has been run**, so the
+readiness column keeps its as-found value and the Basis column records what has since closed, with the
+evidence. Two distinctions matter when reading it:
+
+- **The 24-item remediation plan (Phases 1–4) is complete.** That plan is what §9 tracks.
+- **The 290 raw findings are not all closed row-by-row.** The two documentation axes are: all **125**
+  `doc-overclaim` and `doc-gap` rows are closed individually and the count is recomputable from
+  `ACTION-LIST.md`. The other **165** (`tautology-circular` 72, `physics-math` 48, `magic-number` 45)
+  were addressed through the consolidated Phase-1/2 items — gates repaired and demonstrated falsifiable,
+  CI execution, the physics-constant corrections, the solver envelopes — **not** one row at a time. A
+  module whose remaining exposure sits in those axes therefore stays `needs-work` until someone re-audits
+  it, even where the phase items covering it are done.
+
+| Rank | Module | Readiness | Crit | Basis, and what has closed |
 |---|---|---|---|---|
-| 1 | Pointwise theories | `needs-work` | 0 | Governing equations check out; issues are doc parity and constant traceability |
-| 2 | DEC NS rate kernel | `needs-work` | 0 | RK4 tableau exact; Δ = dδ+δd correctly ordered; δ = M⁻¹BM is the true discrete adjoint, so −νΔ provably dissipates; Leray projection inside every RK4 stage. Docs describe a different convective operator than the code marches |
-| 3 | DEC solver driver | `needs-work` | 0 | Projection consistent; issues in diagnostics and tolerance justification |
-| 4 | QTT compressible marchers | `needs-work` | 0 | RH exact (hand-verified); Sod matches exact Riemann; ✅ non-positive pressure now rejected before the flux across all four marchers (item 12) |
-| 5 | CfdFlow DSL | `needs-work` | 0 | CoW fork and determinism largely as advertised; doc overclaims |
-| 6 | Docs-vs-code parity | `needs-work` | 0 | 87 doc-overclaim + 39 doc-gap findings crate-wide |
-| 7 | DEC boundary zones | `needs-work` | 0 | ✅ hook wired (union composition) and all six fold sites now covered behaviourally; remaining items are doc parity |
-| 8 | Examples | `needs-work` | 0 | Reproducible and well-structured; two gates cannot fail |
-| 9 | Crate-wide constants sweep | `needs-work` | 0 | ✅ negative-pressure flux and the f32 pressure-floor collapse fixed (item 12/12b); Mach-1.05 shock floor remains |
-| 10 | Studies | `needs-work` | 0 | Several headline findings not supported by what the code measures |
-| 11 | Test suite & build health | `needs-work` | 0 | Change-detector tests; verification suite absent from CI (rolled into B-2) |
-| 12 | Coordinate + tensor bridge | `needs-work` | 0 | ✅ B-4 resolved — invertibility enforced over the closed domain, gate BM-A now measures the shipped constructor |
-| 13 | Verification harnesses | `needs-work` | 1 | B-3; the layer that must be strongest is among the weakest |
-| 14 | Plasma / blackout physics | **`needs-work`** | 0 | B-1 resolved; headline retired and re-derived (Park-2T −1.27 dec reported, network +0.35 dec survives). Open levers remain (T_e=T_ve lumping, single-pair τ, mixture-weighting follow-up) |
-| 15 | Navigation / ESKF | `needs-work` | 0 | ✅ Both filter defects resolved (§4b, item 9): `Q_d = Q_c·dt`, guarded+atomic `update_scalar` (incl. non-finite `z`), validated covariance, attitude lifecycle closed by option (a). Remaining is doc parity (Phase 3) |
-| 16 | QTT incompressible / immersed | **`not-ready`** | 0 | ✅ constructor envelope validated (item 13), mask `[0,1]` enforced (item 14), Brinkman envelope resolved in config (item 10); cylinder drag gate now offline (solver cost), so headline drag still unverified |
+| 1 | Pointwise theories | `needs-work` | 0 | Governing equations check out. ✅ Doc parity closed (item 17 + the catalogue): `theories/mod.rs` now states which evaluators live here and which kernels stay in `deep_causality_physics`; `compressible_ns.rs` states that these are pointwise RHS contributions with the EOS closure left to the caller, and carries the `div_q` Fourier sign convention. ✅ Constant traceability closed (item 23) |
+| 2 | DEC NS rate kernel | `needs-work` | 0 | RK4 tableau exact; Δ = dδ+δd correctly ordered; δ = M⁻¹BM is the true discrete adjoint, so −νΔ provably dissipates; Leray projection inside every RK4 stage. ✅ The convective-operator doc defect is closed (item 17): every docstring now names the skew-symmetrised `½[G_ω u − G*_ω u]` the code marches, verified across all four assembly paths, and the module doc no longer describes a Chorin split |
+| 3 | DEC solver driver | `needs-work` | 0 | Projection consistent. ✅ Diagnostics doc closed: the pressure diagnostic now states its gauge (Bernoulli mean-zero, static shifted by −mean(½\|u\|²)), and the boundary-zone hooks state that the lift is collected once at construction. Tolerance justification remains open |
+| 4 | QTT compressible marchers | `needs-work` | 0 | RH exact (hand-verified); Sod matches exact Riemann; ✅ non-positive pressure rejected before the flux across all four marchers (item 12); ✅ `CompressibleEuler1d::new` now validates its envelope with falsifiability tests. ✅ The conservation-form limitation is now stated rather than implied: the curvilinear flux is the non-conservative chain-rule form, so discrete conservation holds only on the Cartesian identity chart. That limitation is documented, not removed |
+| 5 | CfdFlow DSL | `needs-work` | 0 | CoW fork and determinism largely as advertised. ✅ The doc overclaims are closed: the fork shares the marched tensor state in O(1) and never copies it, while the coupled field is copy-on-write at O(cells) per branch; a leg boundary carries the coupled field and re-seeds the marched fluid layer; the per-branch audit sink is not wired on the event-fork path; stage ordering and its stale-read rule are stated |
+| 6 | Docs-vs-code parity | ✅ `ready` | 0 | ✅ **All 125 catalogued rows closed** (116 by `reconcile-cfd-docs-and-traceability` 2026-07-26, 9 by Phases 1–2), each verified against the code before rewriting, with the count recomputable from `ACTION-LIST.md`. This is the one module whose entire finding set is closed row-by-row. What remains are the **code** arms those rows offered and this change deferred (constructor validation elsewhere, `Result` returns, re-exports, cross-crate visibility); they are recorded per row and need their own plan |
+| 7 | DEC boundary zones | `needs-work` | 0 | ✅ hook wired (union composition) and all six fold sites covered behaviourally; ✅ the remaining doc-parity items are closed: `BodyForceZone`'s cochain units (an acceleration line integral, ρ = 1), the outflow zone as a pressure reference rather than a zero-gradient condition, and the unchecked `Inflow`-needs-`Outflow` pairing |
+| 8 | Examples | `needs-work` | 0 | Reproducible and well-structured; ✅ the seven unfalsifiable gates were repaired and demonstrated failing by fault injection (Phase 1); ✅ the placard README no longer lists a third gate the model does not implement, and the corridor's "one continuous descent" is now stated as one continuous *coupled* descent with a re-seeded fluid layer |
+| 9 | Crate-wide constants sweep | `needs-work` | 0 | ✅ negative-pressure flux and the f32 pressure-floor collapse fixed (item 12/12b); ✅ the Mach-1.05 shock floor now carries its justification (a 5 % buffer above sonic, a modelling guard rather than a measured constant), and `SMOOTH_CELLS` / the park2t `ETA` carry source, units and sensitivity (item 23). The remaining exposure is the `magic-number` axis at large, not individually cleared |
+| 10 | Studies | `needs-work` | 0 | ✅ The headline claims are now scoped to what each study measured: the thickening lever was not testable inside the explicit scheme's stable window, the blend's rank reduction is concentrated above λ ≈ 0.75, the mirror march is no longer called bit-identical, and the bond cap is named as timed-but-not-accuracy-checked. The underlying experiments are unchanged |
+| 11 | Test suite & build health | `needs-work` | 0 | ✅ CI executes the suite (B-2); ✅ the shipped QTT convection path is now exercised with `u,v ≠ 0` against an analytic reference and demonstrated falsifiable, and the Taylor–Green harness gates the shipped `rate_pair` instead of a re-assembly (item 24). The broader change-detector→reference sweep across other load-bearing modules is not done |
+| 12 | Coordinate + tensor bridge | `needs-work` | 0 | ✅ B-4 resolved — invertibility enforced over the closed domain, gate BM-A measures the shipped constructor; ✅ the `BlendedMap` θ₀ frame precondition and the `MetricProvider` seam's scope are now stated, and the tensor-bridge construction references are given in full |
+| 13 | Verification harnesses | `needs-work` | **0** (was 1) | ✅ B-3 resolved in Phase 1 (the sole critical): `dec_cylinder_verification` gates St and C_d and exits nonzero on solver error, and two further ungated harnesses were found and gated. ✅ Every gate declares its evidence class; ✅ five harnesses that had no per-example section now have one, with their gate predicates read from source. **New, open:** the Taylor–Green harness fails at its own documented `max_level 7` (item 21) |
+| 14 | Plasma / blackout physics | **`needs-work`** | 0 | B-1 resolved; headline retired and re-derived (Park-2T −1.27 dec reported, network +0.35 dec survives). ✅ The `qtt_park2t_blackout` scope is now labelled internal-invariant with its +3.0-dec divergence and Saha saturation stated. Open levers remain (T_e=T_ve lumping, single-pair τ, mixture-weighting follow-up) |
+| 15 | Navigation / ESKF | `needs-work` | 0 | ✅ Both filter defects resolved (§4b, item 9): `Q_d = Q_c·dt`, guarded+atomic `update_scalar` (incl. non-finite `z`), validated covariance, attitude lifecycle closed by option (a). ✅ Doc parity closed: the canonical 17-state ordering is stated at each `[R; 17]` boundary, the `t³` gyro law is marked as a model property the translational engine does not exercise, and the trajectory-nav spec matches the implementation |
+| 16 | QTT incompressible / immersed | **`not-ready`** | 0 | ✅ constructor envelope validated (item 13), mask `[0,1]` enforced (item 14), Brinkman envelope resolved in config (item 10); ✅ the Reynolds mismatch and the absent grid-convergence study are now stated in the harness docs. **Unchanged:** the cylinder drag gate is offline on solver cost, so the headline drag is still unverified |
 
 Module 16 carries **zero criticals** yet remains `not-ready`. That is deliberate: its defects are
-individually major but jointly remove the basis for trusting the module's headline output. Module 15
-(Navigation / ESKF) was in the same position until item 9 resolved both filter defects; it is now
-`needs-work` (doc parity), leaving 16 as the sole `not-ready` module.
+individually major but jointly remove the basis for trusting the module's headline output, and the one
+thing that would settle it — the η-ladder acceptance run — costs 4–9 hours and cannot run in CI. Module 15
+(Navigation / ESKF) was in the same position until item 9 resolved both filter defects.
+
+Module 6 is the only entry moved to `ready`, and only because its finding set is the one that was closed
+**row-by-row with a recomputable count**. The other fifteen keep their as-found readiness: their
+documentation exposure is closed, but re-rating them would need a re-audit of the tautology, physics-math
+and magic-number axes that no one has run.
 
 ---
 
@@ -700,21 +770,23 @@ individually major but jointly remove the basis for trusting the module's headli
 
 | Axis | Count | Pattern |
 |---|---|---|
-| doc-overclaim | 87 | Prose describes intended design; code implements a subset. Recurring shape: a doc asserts a property holds "by construction" where no check exists. B-4 was the sharpest case and is now closed — instructively, its "by construction" argument was not merely unchecked but **false**, so the pattern is worth treating as a claim to disprove rather than a claim to enforce. |
+| doc-overclaim | 86 actionable, **all closed** (87 was an estimate; 91 raw) | Prose describes intended design; code implements a subset. Recurring shape: a doc asserts a property holds "by construction" where no check exists. B-4 was the sharpest case and is now closed — instructively, its "by construction" argument was not merely unchecked but **false**, so the pattern is worth treating as a claim to disprove rather than a claim to enforce. **All closed 2026-07-26**, which added a second shape to the pattern: prose naming an API that *does not exist* (`CfdFlow::qtt_march`, six sites), a wiring that was never done (`RegimeSwitch` has no call site), and a units error carried in a name (`strip_pressure_force` returns Pa·m³, not a force). |
 | tautology-circular | 72 | Gates restating the implementation, folding over hardcoded constants, or comparing a value to a bound pinned from that same value. |
 | physics-math | 50 | Genuine formula/constant defects — concentrated in plasma chemistry, navigation and penalization, **not** in the core DEC/QTT marchers. |
 | magic-number | 46 | Load-bearing literals without traceable provenance. |
-| doc-gap | 39 | Real capabilities (`DuctMarchRun`, `IgnitionCorridor`, snapshot/resume, `AcousticCoreInverse`) absent from docs. |
+| doc-gap | 39 | Scattered docstring gaps (units, boundary configs, non-conservative notes) plus a few README sections. **The four headline capabilities named here — `DuctMarchRun`, `IgnitionCorridor`, snapshot/resume, `AcousticCoreInverse` — were in fact already documented in the crate README;** the finding rested on an unstated search (§5c lesson 5). **All 39 closed** (37 in 2026-07-26, 2 by Phases 1–2). |
 
 Three structural observations:
 
 - **Back-fitted bounds are disclosed, not hidden.** `qtt_ramc_stagline` states in its own gate text that
   its ±0.70-decade band is "pinned from the measurement". Preserve that honesty — but such gates must be
   **labelled regression tests**, not presented as validation against flight data.
-- **`Gates` is dead, printing, duplicate API.** Exported from `lib.rs`, documented as "the `[PASS]`/`[FAIL]`
-  block every self-verifying program prints" — yet **no** program uses it; every harness goes through
-  `Verdict`'s `Display` impl. It holds the only 5 `println!` in `src/`, making it the sole violator of the
-  README's "the DSL never exits or prints", and `Gates::finish()` returns `true` for an empty gate set.
+- **`Gates` was a dead, printing, duplicate API — ✅ now retired** (item 22, owner decision 2026-07-26).
+  Exported from `lib.rs`, documented as "the `[PASS]`/`[FAIL]` block every self-verifying program prints",
+  yet **no** program used it; every harness goes through `GateSeq` or `Verdict`'s `Display` impl. It held
+  the only 5 `println!` in `src/`, making it the sole violator of the README's "the DSL never exits or
+  prints", and `Gates::finish()` returned `true` for an empty gate set. Removing it made the README claim
+  true rather than requiring the prose to be weakened; `src/` now has zero print, panic and exit calls.
 - **The DEC family validates its envelope; the QTT family did not — ✅ now closed.** As found,
   `dec_ns_solver/step.rs` rejected CFL and diffusive-limit violations while `QttImmersed2d::new` and
   `QttIncompressible2d::new` validated nothing. `close-qtt-solver-envelope` gave the QTT constructors the
@@ -758,10 +830,10 @@ Three structural observations:
 **Phase 1 — Make the evidence bite (highest value, lowest effort) — ✅ COMPLETE (2026-07-21)**
 
 Implemented and archived as `2026-07-21-make-cfd-evidence-enforceable`, 43/43 tasks; four capability
-specs synced into `openspec/specs/`.
+specs synced into `../../specs`.
 
 1. ✅ Add CI execution of the verification suite (fast on PR, slow nightly). — **B-2 resolved.**
-   `.github/workflows/cfd_verification.yml`: 9 fast per PR (12.7 s), 4 nightly, plus a
+   `../../../.github/workflows/cfd_verification.yml`: 9 fast per PR (12.7 s), 4 nightly, plus a
    `verification-suite-complete` job that fails if a declared harness is in neither list.
 2. ✅ Add a real gate to `dec_cylinder_verification`. — **B-3 resolved.** Four gates; a solver error
    now exits 1 instead of reporting `St`/`C_d` from the truncated series.
@@ -853,24 +925,64 @@ for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 1
     free-slip un-pin); the intended consumer `aperture-resolved-noslip` is recorded at the hook. All
     six fold sites are covered behaviourally and demonstrated falsifiable by fault injection.
 
-**Phase 3 — Documentation truth-up (bidirectional)**
-16. Reconcile the 87 doc-overclaims. Where prose describes intent, mark it intent.
-17. Correct the DEC kernel docs to describe the skew-symmetrized operator the code actually marches, and
-    the two spectral-projector comments that contradict correct code.
-18. Document the 39 undocumented capabilities.
-19. Restate the RAM-C claim consistently — the crate README says "validate against flight data"; the
-    verification README correctly says order-of-magnitude. Use the accurate phrasing in both.
-20. Fix the lid-cavity summary row to report the default configuration (§3.5).
-21. Qualify "clean 2nd-order convergence" as second-order in space, first-order in time, and document the
-    TG ladder's temporal-error floor and maximum usable length.
-22. Resolve `Gates`: adopt it everywhere, or retire it. *(Owner decision — no deletion without approval.)*
+**Phase 3 — Documentation truth-up (bidirectional) — ✅ COMPLETE (`reconcile-cfd-docs-and-traceability`,
+2026-07-26)**
 
-**Phase 4 — Traceability**
-23. Give every load-bearing constant a source, units, and a `papers/` entry — starting with
-    `SMOOTH_CELLS`, `ETA`, and the Mach-1.05 shock floor. Add an Angot/Kevlahan penalization reference to
-    `papers/`, which currently has none.
-24. Replace change-detector tests with independent-reference tests in load-bearing modules; add a test
-    that exercises the shipped QTT convection path with `u, v ≠ 0`.
+16. ✅ **DONE.** Reconcile the doc-overclaims. Where prose describes intent, mark it intent.
+    The catalogue is **86** actionable `doc-overclaim` rows in `ACTION-LIST.md` (the "87" here was a
+    category estimate; the raw module total is 91). **17 closed, enumerated by ref in the change's
+    `tasks.md`.** Highlights: `CfdFlow::qtt_march` was named at six documentation sites and **does not
+    exist**; `RegimeSwitch`/`aero_gravity_ratio` have **no call site**, so the README's claim that the
+    navigation engine switches integrators was false; `regime()` returns seven fields, not four; and
+    `chi^2*L` is *storage*, not runtime (item 10 measured runtime rising far faster at flat bond). The
+    remaining rows were closed by a 13-agent fan-out over `verification/`, `studies/`, `../../../examples` and
+    `tests/`, each agent verifying the claim against the code before rewriting; **86 of 86 closed**.
+17. ✅ **DONE.** DEC kernel docs now name the skew-symmetrized operator `conv' = ½[G_ω u − G*_ω u]` the
+    code marches, verified across all four assembly paths; the module prose describes the **in-stage**
+    projection (no Chorin split, no splitting error) the code performs; the governing equation writes the
+    viscous term with the same `Δ_dR` the solver evaluates; and both spectral-projector comments now give
+    the consistent `−sin²(2πk/N)/dx²` eigenvalue and the correct sign.
+18. ✅ **DONE, and the item was overstated as written.** The four named capabilities (`DuctMarchRun`,
+    `IgnitionCorridor`, snapshot/resume, `AcousticCoreInverse`) were **already documented** in the crate
+    README; the report that they were missing came from a malformed grep. The "39" is the `doc-gap`
+    category total, a mix of README sections and scattered docstring gaps: **all 39 closed** (37 here,
+    2 by Phases 1–2). The substantive additions were five missing per-example sections in
+    `verification/README.md`, each with its gate predicates read from the harness source.
+19. ✅ **DONE** (Phase 1, re-verified 2026-07-26). RAM-C is framed as order-of-magnitude with the
+    ±0.70-decade pinned band in both READMEs.
+20. ✅ **DONE** (Phase 1, re-verified 2026-07-26). The lid-cavity row reports the 65² default, RMSE 0.0617.
+21. ✅ **DONE, and it surfaced a live defect.** The claim is now "second-order in space, first-order in
+    time", and the temporal floor and maximum usable ladder length are documented with the measured
+    signed-error table. **The floor is real and the ladder cannot be extended:** the temporal error is
+    opposite in sign to the spatial error, the two cancel near `N = 64–128`, the `N = 64` order of 3.16 is
+    a **cancellation artifact**, and at the documented `max_level 7` the observed order collapses to 0.02
+    and the harness **fails its own gate**. `max_level = 5` is the maximum usable length. **Open:** add a
+    two-sided order gate (`1.8 ≤ p ≤ 2.2`) or refine `dt ∝ dx²`; both are code changes, deferred.
+22. ✅ **DONE — retired** (owner decision, 2026-07-26). `Gates` was a parallel gate-reporting API that no
+    shipped program constructed; every self-verifying program uses `GateSeq`/`Verdict`. Removing it closed
+    a doc-overclaim **by correcting the code rather than weakening the prose**: it held the only five
+    `println!` in `src/`, which made the README's "the DSL never exits or prints" false. `src/` now has
+    zero `println!`, `eprintln!`, `panic!` and `process::exit`.
+
+**Phase 4 — Traceability — ✅ COMPLETE; 23 done, 24 done bar its broadest sweep**
+
+23. ✅ **DONE.** `SMOOTH_CELLS`, the `qtt_park2t_blackout` `ETA` and the Mach-1.05 shock floor now carry a
+    source, units, and the reason for the value; each is recorded honestly as a numerical or modelling
+    parameter with **no external source**, which is what they are, and `SMOOTH_CELLS` carries its 6.1×
+    drag sensitivity. The cylinder `ETA` already had its wall-error-target derivation from
+    `close-qtt-solver-envelope`. Added `../../../papers/README.md` indexing every PDF to its citing code: the two
+    PDFs carried **uncited** were read, confirmed on topic and cited — Mohamed, Hirani & Samtaney (2016)
+    at the DEC solver, Mittal & Iaccarino (2005) at the immersed body. References cited in code whose PDF
+    is absent (Angot/Bruneau/Fabrie, Peddinti, Kazeev–Khoromskij) are listed as such rather than implied
+    to be present.
+24. ⚙️ **MOSTLY DONE.** The shipped QTT convection path `rate_pair` is now exercised with `u, v ≠ 0`
+    against a hand-derived reference, closing the gap where the only tests passed `u = v = 0` and the
+    solver test's convection was annihilated by the projection. It is demonstrated falsifiable: flipping
+    the shipped convection sign fails it at `max_err = 0.999` against a `3e-3` bound. The Taylor–Green
+    harness's convection check now runs **through `rate_pair`** instead of a `gradient_x`/`gradient_y`
+    re-assembly, so it gates the shipped operator rather than a copy (the gate-BM-A failure mode, §5c
+    lesson 3); its reported error is unchanged at `3.207e-3`. **Open:** the broader "replace change-detector
+    tests with independent-reference tests" sweep across other load-bearing modules.
 
 ---
 
@@ -879,8 +991,15 @@ for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 1
 **Certify after Phases 1 and 2 — a bounded, mechanical workstream with no solver rewrites.**
 **Update 2026-07-24: Phases 1 and 2 are now complete** (all four certification blockers and all four
 Phase-2 changes landed; item 10's acceptance harness is offline/manual on solver cost, recorded openly).
-The certify decision is now the owner's; Phases 3–4 (documentation truth-up + traceability) remain and
-do not gate correctness.
+The certify decision is now the owner's.
+
+**Update 2026-07-26: Phases 3 and 4 are complete** (`reconcile-cfd-docs-and-traceability`). Items 17 and
+19–23 are closed, item 24 bar its broadest sweep, and all 125 catalogued doc-overclaim/doc-gap rows
+behind items 16 and 18. Neither phase gated correctness, so neither blocked the certify decision; what
+they change is that the crate's prose can now be read as evidence rather than as intent. Two things from that work are worth the owner's attention: the
+Taylor–Green harness **fails at its own documented `max_level 7`** (a cancellation-driven order
+collapse, item 21), and the crate's public API surface leaks workspace types it does not re-export
+(row 15.7). Both are recorded rather than fixed, and both are small.
 
 The distinction that matters for an avionics R&D lab: this crate's **numerics** are in materially better
 shape than its **assurance case**. The risk is not that an engineer gets a wrong answer from the DEC or
@@ -897,4 +1016,4 @@ Phase 1 removes that risk directly.
 - [`MODULE-INDEX.md`](MODULE-INDEX.md) — per-module readiness table
 - [`ACTION-LIST.md`](ACTION-LIST.md) — all 290 surviving findings, severity-ordered and actionable
 - [`RUN-LEDGER.md`](RUN-LEDGER.md) — execution ledger with exit codes and gate counts
-- [`modules/`](modules/) — 16 per-module reports with code evidence and adversarial verdicts
+- [`modules`](modules/) — 16 per-module reports with code evidence and adversarial verdicts
