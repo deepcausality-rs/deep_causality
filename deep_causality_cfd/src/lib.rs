@@ -94,7 +94,7 @@ pub use crate::types::flow::{
     BlackoutTrigger, BranchAccumulator, BranchOutcome, BurnEnvelope, CfdFlow, CompressibleFork,
     CompressibleMarchRun, CompressiblePause, CoupledField, CoupledMarch, Coupling,
     CyberneticCorrect, DuctMarchRun, EosStage, FiniteRateIonizationStage, FlightSensors,
-    ForkEconomics, Gates, GoverningModel, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
+    ForkEconomics, GoverningModel, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
     IGNITION_COMMIT_Q_FIELD, IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD,
     IGNITION_LATCH_FIELD, IgnitionCorridor, IonizationStage, LEG_RE_SEEDS_FIELD, MachRegime,
     MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder, Operator,

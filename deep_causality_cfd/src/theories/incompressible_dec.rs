@@ -39,7 +39,8 @@ impl<'m, const D: usize, R: CfdScalar> FluidTheory<R> for DecIncompressible<'m, 
     type State = VelocityOneForm<R>;
     type Ambient = Ambient<R>;
 
-    /// `P(−i_u(du♭) − ν Δ_dR u♭ + g♭)` at the ambient `ν`. The ambient is read
+    /// `P(−½[i_u(du♭) − G*_ω u] − ν Δ_dR u♭ + g♭)` at the ambient `ν`, with the
+    /// skew-symmetrized convective term (see [`DecNsRate`]). The ambient is read
     /// once per call (between `Rk4` steps); with a constant ambient this is
     /// bit-identical to the construction-fixed rate.
     fn rate(

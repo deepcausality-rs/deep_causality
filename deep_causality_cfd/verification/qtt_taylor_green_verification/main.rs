@@ -36,9 +36,9 @@ mod config;
 mod print_utils;
 
 use deep_causality_cfd::{
-    CfdFlow, PhysicsError, Report, dequantize_2d, gradient_x, gradient_y, quantize_2d,
+    CfdFlow, PhysicsError, QttIncompressible2d, Report, dequantize_2d, quantize_2d,
 };
-use deep_causality_tensor::{CausalTensor, TensorTrain, TensorTrainOperator};
+use deep_causality_tensor::CausalTensor;
 
 /// The working precision for the whole computation. **This is the single alias to change** (`f32`,
 /// `f64`, or `Float106` with `use deep_causality_num::Float106;`). The configuration and display
@@ -95,9 +95,10 @@ fn main() {
     }
 }
 
-/// **Convection-operator computation.** Applies the solver's nonlinear convection `u·∇u = u⊙∂ₓu +
-/// v⊙∂ᵧu` (the fused Hadamard the marcher uses) to the analytic Taylor–Green field, and compares its
-/// `u`-component against the closed form `−½ sin(2x)`. Returns
+/// **Convection-operator computation.** Runs the shipped solver's `rate_pair` on the analytic
+/// Taylor–Green field and compares the `u`-component of its convection against the closed form
+/// `−½ sin(2x)`. A zero-viscosity instance is used so `rate_pair` returns the pure convection
+/// `−(u·∇)u`, isolating the same convection operator the `ν > 0` marcher runs. Returns
 /// `(max_abs_err, amp_computed, amp_analytic)` — a small error whose *computed* amplitude matches the
 /// analytic one proves the nonlinear term is real and correct. (Single-mode TG's convective term is a
 /// pure gradient the projection removes, so the marched decay cannot test it.)
@@ -122,15 +123,15 @@ fn convection_operator_error(l: usize) -> Result<(f64, f64, f64), PhysicsError> 
     let u = quantize_2d(&CausalTensor::new(ud, vec![n, n])?, &t)?;
     let v = quantize_2d(&CausalTensor::new(vd, vec![n, n])?, &t)?;
 
-    let gx = gradient_x::<FloatType>(l, l, dxf, &t)?;
-    let gy = gradient_y::<FloatType>(l, l, dxf, &t)?;
-    let dux = gx.apply(&u, &t)?;
-    let duy = gy.apply(&u, &t)?;
-    let conv_u = u
-        .hadamard_rounded(&dux, &t)?
-        .add(&v.hadamard_rounded(&duy, &t)?)?
-        .round(&t)?;
-    let cu = dequantize_2d(&conv_u, l, l)?;
+    // Route the convection through the shipped solver, not a `gradient_x`/`gradient_y` re-assembly: a
+    // re-assembly gates a copy of the operator rather than the one the marcher runs (the gate-BM-A
+    // lesson, AUDIT-REPORT §5c). A zero-viscosity instance makes `rate_pair` return the pure convection
+    // `−(u·∇)u` (the diffusion term vanishes), which is the same convection the ν > 0 marcher uses (ν
+    // only scales the diffusion). So `ru` holds `−(u·∇)u`; the loop below negates it to read `(u·∇)u`.
+    let solver =
+        QttIncompressible2d::new(l, l, dxf, dxf, config::ft(config::DT), config::ft(0.0), t)?;
+    let (ru, _rv) = solver.rate_pair(&u, &v)?;
+    let cu = dequantize_2d(&ru, l, l)?;
     let cs = cu.as_slice();
 
     // `amp` must be read off `cs` — the solver's convection field — not off `analytic`. Taken from
@@ -138,8 +139,9 @@ fn convection_operator_error(l: usize) -> Result<(f64, f64, f64), PhysicsError> 
     // output, including an all-zero convection term. Reading it from `cs` is what makes the
     // "the nonlinear term is not a no-op" check falsifiable.
     //
-    // BREAKING CONDITION: replace `conv_u` with a zero train (or drop the `hadamard_rounded` terms)
-    // and `amp_computed` collapses to 0, failing the amplitude-ratio gate.
+    // BREAKING CONDITION: a zeroed convection in the shipped `rate_pair` collapses `amp_computed` to 0,
+    // failing the amplitude-ratio gate; a sign flip is caught by the `incompressible_2d` `rate_pair`
+    // unit test.
     let mut max_err = 0.0f64;
     let mut amp_computed = 0.0f64;
     let mut amp_analytic = 0.0f64;
@@ -147,7 +149,8 @@ fn convection_operator_error(l: usize) -> Result<(f64, f64, f64), PhysicsError> 
         let analytic = -0.5 * (2.0 * (i as f64 * dx)).sin();
         amp_analytic = amp_analytic.max(analytic.abs());
         for j in 0..n {
-            let computed = Into::<f64>::into(cs[i * n + j]);
+            // `ru = −(u·∇)u`, so negate to read the convection `(u·∇)u` the summary reports.
+            let computed = -Into::<f64>::into(cs[i * n + j]);
             max_err = max_err.max((computed - analytic).abs());
             amp_computed = amp_computed.max(computed.abs());
         }

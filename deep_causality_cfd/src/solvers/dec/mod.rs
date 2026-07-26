@@ -9,8 +9,15 @@
 //! formulation is the rotational (Lamb) form under Leray projection:
 //!
 //! ```text
-//! ∂u♭/∂t = P( − i_u ω + ν Δ u♭ + g♭ ),   ω = d u♭,   Δ_dR = −∇²
+//! ∂u♭/∂t = P( − ½[i_u ω − G*_ω u] − ν Δ_dR u♭ + g♭ ),   ω = d u♭
 //! ```
+//!
+//! Every symbol here is the operator the code applies. The viscous term is
+//! written with the **same** `Δ_dR` the solver evaluates: on a flat torus the
+//! Hodge–de Rham Laplacian satisfies `Δ_dR = −∇²`, so `− ν Δ_dR u♭` *is* the
+//! physical diffusion `+ ν ∇² u♭`. The convective term is skew-symmetrized for
+//! stability (`G*_ω` is the M-adjoint of `x ↦ i_x ω`; the dec-ns-stability
+//! fix); see [`DecNsRate`].
 //!
 //! Pressure vanishes from the equations (the projector annihilates every
 //! gradient, including `∇(|u|²/2)` of the Lamb split), and
@@ -18,17 +25,21 @@
 //! discrete divergence is zero to the CG tolerance — the projector *is*
 //! the equation.
 //!
-//! The march uses the **Chorin placement**: an unprojected `Rk4` step over
-//! the whole-field state, then one gauge-fixed Leray projection back into
-//! the [`SolenoidalField`](deep_causality_physics::SolenoidalField) type-state, then the
-//! CFL guard. The splitting at the projection is first order in time
-//! regardless of the integrator's interior order; validation therefore
-//! gates on spatial refinement at fixed CFL.
+//! The march applies the Leray projector **inside each `Rk4` stage**: the
+//! stage rate is the projected rate `P∘rhs`, so every increment is
+//! divergence-free and the marched ODE is the projected dynamics with no
+//! operator-splitting error. A near-free type-state re-entry projection
+//! follows (its input is already divergence-free), restoring the
+//! [`SolenoidalField`](deep_causality_physics::SolenoidalField) construction
+//! contract; the CFL guard runs last. Time accuracy is the integrator's; the
+//! spatial discretisation dominates the error, so validation gates on spatial
+//! refinement at fixed CFL.
 //!
 //! Module layout:
-//! - [`DecNsRate`]: the right-hand side `−i_u(du♭) − ν Δ_dR u♭ + g♭`,
-//!   validated at construction so per-step evaluation is infallible and
-//!   composes directly with `deep_causality_calculus::Rk4`.
+//! - [`DecNsRate`]: the right-hand side `−½[i_u(du♭) − G*_ω u] − ν Δ_dR u♭ + g♭`,
+//!   with the skew-symmetrized convective term, validated at construction so
+//!   per-step evaluation is infallible and composes directly with
+//!   `deep_causality_calculus::Rk4`.
 //! - [`DecNsSolver`]: configuration, the projected step, run loops,
 //!   initial-condition seeding, and the opt-in pressure diagnostic.
 //! - [`StepOutput`] / [`RunOutput`]: per-step and per-run results carrying
@@ -37,6 +48,11 @@
 //!   helicity, max speed, divergence residual).
 //! - [`wrappers`]: the `PropagatingEffect` surface in the crate's existing
 //!   kernel-wrapper tradition.
+//!
+//! Method reference: Mohamed, Hirani & Samtaney, "Discrete exterior calculus discretization of
+//! incompressible Navier–Stokes equations over surface simplicial meshes", Journal of Computational
+//! Physics 312:175–191, 2016 (`deep_causality_cfd/papers/mohamed2016.pdf`). This solver follows that
+//! DEC formulation on a periodic lattice complex rather than a surface simplicial mesh.
 
 use core::fmt::{Debug, Display};
 use deep_causality_algebra::RealField;

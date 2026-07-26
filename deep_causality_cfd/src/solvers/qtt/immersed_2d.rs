@@ -12,6 +12,12 @@
 //! power-of-two lattice the codec and operators assume. The convection, diffusion, recompression, and
 //! divergence-free projection are reused unchanged from [`QttIncompressible2d`]; the penalization is
 //! applied **before** the projection so the projection cleans the divergence the forcing introduces.
+//!
+//! References. The penalization method and its `η → 0` convergence (`O(η^{3/4})`) are due to Angot,
+//! Bruneau & Fabrie, "A penalization method to take into account obstacles in incompressible viscous
+//! flows", Numerische Mathematik 81(4):497–520, 1999. For the wider immersed-boundary method class this
+//! belongs to, see Mittal & Iaccarino, "Immersed Boundary Methods", Annual Review of Fluid Mechanics
+//! 37:239–261, 2005 (`deep_causality_cfd/papers/mittal2005.pdf`).
 
 use crate::CfdScalar;
 use crate::solvers::qtt::QttIncompressible2d;

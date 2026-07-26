@@ -44,12 +44,16 @@ Poiseuille states, the Ghia et al. (1982) lid-driven cavity tables, and cylinder
 references.
 
 **Compression-based: the QTT marchers.** The compressible Euler marchers (1-D through 3-D,
-including a body-fitted variant) run on quantized tensor trains, where a `2^L` grid costs order
-`chi^2 * L`: logarithmic in point count, with sharp structure paid for in bond dimension. The
-rank studies in `studies/` measured the decisive caveat (the rank driver is coordinate
-alignment, not sharpness), and the compressible carrier answers it with a shock-fitted inflow
-strip: the exact Rankine-Hugoniot state is the boundary of the marched layer, so the shock is
-never captured at all.
+including a body-fitted variant) run on quantized tensor trains, where a `2^L` grid *stores* order
+`chi^2 * L`: logarithmic in point count for a bounded bond dimension `chi`, with sharp structure
+paid for in `chi`. Storage is not runtime: the incompressible immersed harness measured per-step
+wall-clock rising far faster than `chi^2 * L` while the achieved bond stayed flat, so a
+non-compression bottleneck dominates that path (see the QTT envelope note in
+[`verification/README.md`](verification/README.md)). Whether `chi` stays bounded is the design
+question the rank studies in `studies/` answered, and they measured the decisive caveat: the rank
+driver is coordinate alignment, not sharpness. For the descent-schedule case the compressible
+carrier answers it with a shock-fitted inflow strip, imposing the exact Rankine-Hugoniot state as
+the boundary of the marched layer, so that shock is never captured at all.
 
 **Analytic and pointwise: fitted closures.** Exact Rankine-Hugoniot jumps, the Park
 two-temperature relaxation closures, the finite-rate ionization network, and the pointwise
@@ -110,13 +114,17 @@ The regime is a classified property of the evolved state, re-decided every step.
 entering or leaving orbit transitions dynamically through several regimes, and this crate
 switches three regime axes independently, each on a measured quantity:
 
-- **Flow regime.** `RegimeClassify` turns the freestream Knudsen number into the governing
-  model: continuum Navier-Stokes, slip-corrected continuum, transitional, or free-molecular.
-- **Dynamics regime.** The navigation engine switches integrators on the force ratio
-  `ε = a_aero/a_grav`: while gravity dominates, the trajectory advances on the exact
-  KS-conformal core with aero as a between-step kick (Encke); once aero dominates, it switches
-  to direct Cowell integration. This handles orbit entry and exit, where the integrator that is
-  exact in orbit loses accuracy in the atmosphere.
+- **Flow regime.** `RegimeClassify` classifies the freestream Knudsen number into the governing
+  model — continuum Navier-Stokes, slip-corrected continuum, transitional, or free-molecular —
+  and logs each transition. The classification is a diagnostic carried on the evolved state: the
+  crate does not switch closures on it, and no slip, transitional, or free-molecular closure is
+  implemented.
+- **Dynamics regime.** `RegimeSwitch` and `aero_gravity_ratio` express the integrator switch on the
+  force ratio `ε = a_aero/a_grav`: while gravity dominates, a trajectory advances on the exact
+  KS-conformal core with aero as a between-step kick (Encke); once aero dominates, direct Cowell
+  integration is the appropriate choice. This is the criterion for orbit entry and exit, where the
+  integrator that is exact in orbit loses accuracy in the atmosphere. Both are public API; the
+  shipped navigation engine does not call them, so the switch is the caller's to apply.
 - **Link regime.** The evolved electron density sets the plasma frequency, and the plasma
   frequency decides whether the GNSS link exists. The Kalman filter's measurement gating
   follows it.
@@ -125,7 +133,9 @@ The regime is read straight off the evolved field, so the DSL turns a regime pro
 **event the run finds** rather than a station it is told to switch at:
 
 ```rust
-// `field.regime()` -> Option<&RegimeClass> { model, knudsen, plasma_frequency, gnss_denied }.
+// `field.regime()` -> Option<RegimeClass<R>> { model, knudsen, plasma_frequency, gnss_denied,
+// mach_regime, thrust_state, touchdown }. The last three are the powered-descent axes and stay
+// neutral unless `RegimeClassify::with_flight_axes` is called.
 // Blackout is therefore an interval the run discovers: march to the onset event, fly the
 // committed world through the dark, and continue to the recovery event.
 let onset = CfdFlow::march(&nominal)
@@ -145,7 +155,7 @@ Every transition lands in the provenance log. From an actual corridor run
 
 ```text
 regime -> slip (GNSS-available), Kn=0.07829109848665225
-regime -> slip (GNSS-denied),    Kn=0.012690837165407727
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
 regime -> continuum (GNSS-denied), Kn=0.00993838892165156
 regime -> continuum (GNSS-available), Kn=0.0002551442196046344
 ```
@@ -248,9 +258,28 @@ Specification constants stay exact `f64` literals; `ft` lifts each one into the 
 precision, and every derived number is computed in `FloatType`. Changing the alias reruns the
 whole program at another precision. The plasma-blackout corridor measured all three: at `f64`,
 all gates pass in about 40 seconds; at 106-bit `Float106`, every gate and every discrete event
-step is identical, with continuous witnesses agreeing to 15 or 16 significant digits, which
-places the corridor's error budget in the model closures and the grid rather than in round-off;
-One line change, three precison levels.
+step was identical, with continuous witnesses agreeing to 15 or 16 significant digits, which
+places the corridor's error budget in the model closures and the grid rather than in round-off.
+One line change, three precision levels. The `f64` figures are current; the `Float106` comparison
+was measured before the `fix-ramc-vibrational-relaxation-pair` re-baseline and has not been re-run
+against the corrected reduced mass, so treat it as a precision result rather than a current one.
+
+## Selected Capabilities
+
+Beyond the three solver families and the DSL, the public API carries capabilities a reader may not find
+from the solver headings alone:
+
+- **Suspend and resume a march.** `save_resume_state` / `load_resume_state` (with `pack_resume` /
+  `unpack_resume`) checkpoint a running `CoupledField` to disk and restore it. A world fingerprint guards
+  the seam, so a snapshot taken under different constants is refused rather than silently resumed.
+- **Duct marching.** `DuctMarchRun`, composed by `CfdFlow::march`, runs an internal-flow duct case over a
+  borrowed `DuctConfig` and returns an owned `Report`.
+- **Ignition corridor.** `IgnitionCorridor`, committed through by `ThrottleGuidance`, expresses the
+  four-condition corridor a powered-descent throttle must satisfy; the margin is supplied by the caller.
+- **Closed-form acoustic core inverse.** `AcousticCoreInverse` (with its 2-D and 3-D forms) inverts the
+  constant-coefficient acoustic core `A₀ = I − β·∂²` on a periodic grid, without an iterative solve.
+
+Each is part of the public API and is exercised by the tests and examples.
 
 ## Where Things Live
 
@@ -266,7 +295,7 @@ One line change, three precison levels.
 | `verification/` | Self-verifying reference checks (see its [README](verification/README.md)) |
 | `studies/` | Design-question probes with gated findings (see its [README](studies/README.md)) |
 | `benches/` | Criterion benches and the pinned `PERFORMANCE.md` |
-| `papers/` | The cited source PDFs behind constants and closures |
+| `papers/` | Source PDFs behind constants and closures, indexed by [`papers/README.md`](papers/README.md), which maps each PDF to its citing code and lists the references cited in code whose PDF is not yet present |
 
 The end-to-end examples, the plasma-blackout corridor and its weather-dispersion
 table, live in [`examples/avionics_examples/cfd/`](../examples/avionics_examples/cfd/). They

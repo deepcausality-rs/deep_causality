@@ -132,8 +132,8 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
 /// stages read, and against which a regime *change* is detected), the onboard
 /// [`ReentryNavEngine`] a trajectory stage threads through the field (the nav *state* lives here,
 /// not in the stage — stages stay immutable), and an [`EffectLog`] of provenance entries (regime
-/// transitions, bounded corrections, envelope breaches) — the auditable record the flagship
-/// surfaces. All start empty, so existing couplings are unaffected.
+/// transitions, bounded corrections, envelope breaches) — the auditable record the plasma-blackout
+/// example surfaces. All start empty, so existing couplings are unaffected.
 #[derive(Debug, Clone)]
 pub struct CoupledField<R: CfdScalar> {
     ambient: Ambient<R>,

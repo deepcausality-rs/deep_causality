@@ -323,7 +323,11 @@ where
         let row = schedule.sample(altitude);
         let mach = speed / row.sound_speed;
 
-        // The exact RH jump when a shock stands; the freestream itself below Mach ~1.
+        // Apply the exact RH normal-shock jump only for a genuinely supersonic freestream; pass the
+        // freestream through unchanged below. The 1.05 floor is a 5% buffer above sonic (M = 1): a 1-D
+        // normal shock is not the right model in the transonic sliver M ∈ (1, 1.05], where the jump is
+        // within a few percent of the identity anyway (post-shock ratios → 1 as M → 1). The buffer is
+        // a modeling guard, not a measured constant.
         let shock_floor = Self::lift(1.05)?;
         let (t_post, n_post, u_post) = if mach > shock_floor {
             let shock = FittedNormalShock::new(schedule.gamma_eff)?;

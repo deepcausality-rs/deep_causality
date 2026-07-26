@@ -110,6 +110,59 @@ fn scalar_rate_diffuses_a_sinusoid() {
 }
 
 #[test]
+fn rate_pair_convection_matches_the_analytic_reference_with_nonzero_velocity() {
+    // The shipped convection path `rate_pair` — the one the immersed-body marcher rides — carries
+    // `(−(u·∇)u + ν∇²u, −(u·∇)v + ν∇²v)` with no projection, so a nonzero-velocity convection term
+    // survives here. The full-solver Taylor–Green test cannot check it: there the convection is a
+    // pure gradient the projection annihilates, so a sign flip in the shipped convection is invisible.
+    //
+    // Independent reference: u = sin(x), v = sin(y) on [0, 2π]². Then
+    //   (u·∇)u = u·∂ₓu = ½sin(2x),  ∇²u = −sin(x)  ⇒  ru = −½sin(2x) − ν·sin(x);
+    //   (u·∇)v = v·∂ᵧv = ½sin(2y),  ∇²v = −sin(y)  ⇒  rv = −½sin(2y) − ν·sin(y).
+    // The bound covers the centered-FD truncation at 64² (dx ≈ 0.098; the sin(2·) term carries the
+    // largest truncation, ≈ 0.2 % of its 0.5 amplitude). A sign flip in the shipped convection changes
+    // each rate by up to 1.0, far outside the bound, so this test bites on one.
+    const LC: usize = 6;
+    const NC: usize = 1 << LC;
+    let dx = TAU / NC as f64;
+    let nu = 0.05f64;
+    let trunc = Truncation::<f64>::by_tol(1e-12).unwrap();
+    let solver = QttIncompressible2d::new(LC, LC, dx, dx, 0.001, nu, trunc).unwrap();
+
+    let mk = |f: fn(f64, f64) -> f64| {
+        let mut data = vec![0.0f64; NC * NC];
+        for i in 0..NC {
+            for j in 0..NC {
+                data[i * NC + j] = f(i as f64 * dx, j as f64 * dx);
+            }
+        }
+        quantize_2d(&CausalTensor::new(data, vec![NC, NC]).unwrap(), &trunc).unwrap()
+    };
+    let u = mk(|x, _y| x.sin());
+    let v = mk(|_x, y| y.sin());
+
+    let (ru, rv) = solver.rate_pair(&u, &v).unwrap();
+    let rud = dequantize_2d(&ru, LC, LC).unwrap();
+    let rvd = dequantize_2d(&rv, LC, LC).unwrap();
+
+    let mut max_err = 0.0f64;
+    for i in 0..NC {
+        for j in 0..NC {
+            let (x, y) = (i as f64 * dx, j as f64 * dx);
+            let ru_ref = -0.5 * (2.0 * x).sin() - nu * x.sin();
+            let rv_ref = -0.5 * (2.0 * y).sin() - nu * y.sin();
+            max_err = max_err
+                .max((rud.as_slice()[i * NC + j] - ru_ref).abs())
+                .max((rvd.as_slice()[i * NC + j] - rv_ref).abs());
+        }
+    }
+    assert!(
+        max_err < 3e-3,
+        "rate_pair convection+diffusion vs the analytic reference: {max_err}"
+    );
+}
+
+#[test]
 fn run_rejects_wrong_shape_fields() {
     let dx = TAU / N as f64;
     let (nu, dt) = (0.05f64, 0.02f64);

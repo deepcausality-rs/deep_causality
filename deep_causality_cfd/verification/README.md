@@ -288,13 +288,18 @@ vs. the analytic decay **strictly decreases under refinement** to a pinned bound
 (2) the nonlinear convection `u·∇u` matches the closed form `−½ sin 2x` — checked **directly**, because
 single-mode TG's convective term is a pure gradient the projection removes, so the marched decay alone
 cannot test it; (3) the post-projection divergence stays at the projection floor; (4) the MPS
-compression (bond vs. dense) is reported. Driven through `CfdFlow::qtt_march`.
+compression (bond vs. dense) is reported. Driven through `CfdFlow::march`.
 
 **Self-check.** `verify()` gates all four and **exits nonzero** on any break (error not converging,
 order < 1.8, convection wrong/zero, or divergence above 1e-6).
 
 **Measured (f64, 8²–32², t=0.2, <1 s).** Error `9.8e-4 → 2.4e-4 → 5.3e-5` (N=8→16→32), observed order
-**2.02 → 2.18** — clean 2nd-order convergence to the analytic decay; finest-grid error **5.3e-5**.
+**2.02 → 2.18**: 2nd-order in space (centered FD + spectral projection), first-order in time (explicit
+Euler at fixed `dt`), so the ladder measures the spatial order; finest default-grid error **5.3e-5**.
+The fixed-`dt` Euler error is a temporal floor of opposite sign, so extending the ladder is **not**
+free: the signed error crosses zero near N=64–128 (`+5.9e-6 → −5.9e-6`), making the N=64 order of 3.16
+a cancellation artifact and collapsing the order to 0.02 by N=128. **`max_level = 5` is the maximum
+usable length**; the documented `max_level 7` fails the order gate. See the harness README.
 Convection vs the closed form **3.2e-3** (≈ 0.6 % of the 0.5 signal) — the nonlinear term is real and
 correct. Divergence **~1e-14** (the spectral Leray projection is exact to machine precision). Bond `= N`
 on this smooth field → `N×` compression that grows with resolution.
@@ -309,7 +314,7 @@ on this smooth field → `N×` compression that grows with resolution.
 **Verifies.** The immersed-body QTT solver (`QttImmersed2d`): a cylinder in a periodic free-stream
 enforced by **Brinkman volume penalization** (a smoothed mask, no cut cells), with drag read as a
 **tensor-train contraction** of the mask with the velocity deficit. Closes Gap 1 of the plasma-blackout
-analysis (immersed body + surface observables). Driven through `CfdFlow::qtt_march`.
+analysis (immersed body + surface observables). Driven through `CfdFlow::march`.
 
 **Self-check.** Three gates, **exit nonzero** on break: (a) no-slip — interior `max|u|` at the
 penalization floor; (b) accuracy-vs-bond — the drag coefficient **converges** as the round bond cap rises;

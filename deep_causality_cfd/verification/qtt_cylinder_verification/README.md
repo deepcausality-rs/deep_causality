@@ -3,7 +3,7 @@
 Verifies the immersed-body QTT solver (`QttImmersed2d`): a cylinder in a periodic free-stream, enforced
 by **Brinkman volume penalization**, with drag read as a **tensor-train contraction** of the body mask
 with the velocity deficit. This is the last piece of **Gap 1** of the plasma-blackout analysis (the
-immersed body + surface observables). Driven through `CfdFlow::qtt_march`.
+immersed body + surface observables). Driven through `CfdFlow::march`.
 
 ## The method
 
@@ -68,7 +68,7 @@ are on stderr (exit nonzero on a broken gate).
 
 | File | Responsibility |
 | --- | --- |
-| `main.rs` | The `FloatType` alias, the accuracy-vs-bond ladder driven through `CfdFlow::qtt_march`, and the self-verify gate. |
+| `main.rs` | The `FloatType` alias, the accuracy-vs-bond ladder driven through `CfdFlow::march`, and the self-verify gate. |
 | `config.rs` | Case parameters, the cylinder mask, and the `QttMarchConfig` body case builder. |
 | `print_utils.rs` | The no-slip / drag measurement, the table, and the three gates. |
 | `baseline.txt` | A captured reference run (f64). |

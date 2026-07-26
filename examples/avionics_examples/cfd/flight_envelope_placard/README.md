@@ -17,7 +17,7 @@ This is the pointwise study path on purpose. The matrix rows go through
 the same `sweep` combinator a solver study would use: 
 the study shape (read a case table, compute per case,
 gate, write one result table) does not change when the per-case body is a closed form instead
-of a full march. Besides `sweep`, the only DSL pieces touched are `Gates` and the group-1
+of a full march. Besides `sweep`, the only DSL pieces touched are `GateSeq` and the group-1
 table reader and writer.
 
 ## How to Run
@@ -116,7 +116,7 @@ outside the atmosphere table) exit 2 with the file and the fix named.
 | `placard_table.csv` | The written placard table of the recorded default run |
 | `output.txt` | The recorded console output of the default run |
 
-The machinery used: `sweep` and `Gates` from `deep_causality_cfd`, `FittedNormalShock` from
+The machinery used: `sweep` and `GateSeq` from `deep_causality_cfd`, `FittedNormalShock` from
 the same crate's compressible solver, and `read_table`, `NumericTable::from_columns`, and
 `write_table` from `deep_causality_file`.
 

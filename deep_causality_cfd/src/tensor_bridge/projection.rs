@@ -154,7 +154,9 @@ where
     // (the *consistent* operator, not the compact 5-point Laplacian) so div(project(u)) = 0 exactly. It
     // is singular at k in {0, N/2} per axis (constant + collocated checkerboard/Nyquist), all zeroed.
     let (half_x, half_y) = (nx / 2, ny / 2);
-    // λ_k = −(2 − 2cos(2πk/N))/Δ²; the periodic Laplacian eigenvalue (separable in 2-D).
+    // λ_k = −sin²(2πk/N)/dx² per axis: the consistent grad-of-grad eigenvalue named above
+    // (separable in 2-D), not the compact 5-point −(2−2cos(2πk/N))/Δ². `lamx`/`lamy` below
+    // hold the positive per-axis magnitudes sin²/dx².
     for kx in 0..nx {
         let sx = (tau * from_usize::<R>(kx) / nxf).sin();
         let lamx = sx * sx / dx2;
@@ -166,7 +168,8 @@ where
             if is_null {
                 spec[idx] = zero;
             } else {
-                // ∇²p = rhs with λ = −(lamx+lamy): p̂ = rhŝ / (−λ).
+                // ∇²p = rhs with λ = −(lamx+lamy): p̂ = rhs / λ = −rhs/(lamx+lamy),
+                // which is `rhs * inv` with `inv = 1/λ` below.
                 let inv = R::zero() - R::one() / (lamx + lamy);
                 spec[idx] = Complex::new(spec[idx].re * inv, spec[idx].im * inv);
             }
