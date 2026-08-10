@@ -8,45 +8,46 @@
 # project's dependencies or the deploy; the generated PDF is committed and
 # served as a static asset from public/.
 #
+# The crawl target is the live site, not a local preview. starlight-to-pdf has
+# no base-URL rewrite: every link it writes into the PDF is the URL it crawled.
+# Crawling localhost therefore baked `http://localhost:<port>/...` into every
+# in-body cross-reference, which is dead in a published download. Reading the
+# deployed site makes those links resolve to https://docs.deepcausality.com.
+#
+# The consequence is that the PDF reflects what is DEPLOYED, not the working
+# tree. Deploy documentation changes first, then regenerate.
+#
 # Workflow:
-#   1. run `npm run pdf` locally
-#   2. commit the regenerated public/deepcausality-docs.pdf
-#   3. push (Cloudflare serves the committed PDF; it launches no browser)
+#   1. deploy the docs site
+#   2. run `pnpm pdf` locally
+#   3. commit the regenerated public/deepcausality-docs.pdf
 #
 # Output: public/deepcausality-docs.pdf
 #
 # Notes:
 #   - The table of contents uses `--contents-links internal`, so TOC entries
-#     navigate to headings within the PDF (not to the crawl origin).
-#   - In-body cross-references resolve to the crawl origin (the local preview).
-#     For the published PDF, regenerate against the live site once it is up so
-#     those links point to https://docs.deepcausality.com rather than localhost.
+#     navigate to headings within the PDF rather than back out to the site.
+#   - Set CHROME_PATH to use an installed browser instead of the one Puppeteer
+#     downloads on first run (e.g. when that download is unusable):
+#       CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm pdf
 set -euo pipefail
 
-PORT=4329
+SITE_URL="https://docs.deepcausality.com"
 DOCS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 OUT_DIR="$DOCS_DIR/public"
 
-echo "==> Building docs site..."
-npx astro build
+BROWSER_ARGS=()
+if [[ -n "${CHROME_PATH:-}" ]]; then
+  BROWSER_ARGS=(--browser-executable "$CHROME_PATH")
+fi
 
-echo "==> Starting preview server on :$PORT ..."
-npx astro preview --port "$PORT" >/dev/null 2>&1 &
-PREVIEW_PID=$!
-trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
-
-echo "==> Waiting for preview server ..."
-for _ in $(seq 1 30); do
-  if curl -sf "http://localhost:$PORT/" >/dev/null 2>&1; then break; fi
-  sleep 1
-done
-
-echo "==> Rendering single PDF (downloads Chromium via npx on first run) ..."
-npx --yes starlight-to-pdf "http://localhost:$PORT" \
+echo "==> Rendering single PDF from $SITE_URL (downloads Chromium via npx on first run) ..."
+npx --yes starlight-to-pdf "$SITE_URL" \
   --filename deepcausality-docs \
   --path "$OUT_DIR" \
   --contents-links internal \
-  --print-bg
+  --print-bg \
+  "${BROWSER_ARGS[@]}"
 
 echo "==> Done: $OUT_DIR/deepcausality-docs.pdf"
 echo "    Commit the regenerated PDF so docs and PDF stay consistent."
