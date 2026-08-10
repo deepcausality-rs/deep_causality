@@ -12,13 +12,14 @@ provenance.
 
 The mask-smoothing width `SMOOTH_CELLS = 2.0` moves the reported immersed-cylinder `C_d` by 6.1×
 (`AUDIT-REPORT.md` §4b) and carries only "Mask smoothing width in cells." at both definitions
-(`verification/qtt_cylinder_verification/config.rs:44`, `qtt_park2t_blackout/config.rs:37`). The
-`qtt_park2t_blackout` `ETA = 0.016` (`config.rs:31`) carries no source, while the cylinder site
-(`qtt_cylinder_verification/config.rs:32-38`) already carries a wall-error-target derivation from
-`close-qtt-solver-envelope`. The Mach-1.05 shock floor
-(`src/types/flow/compressible_march_run.rs:326-327`) explains its branch but not the 0.05 buffer above
+(the `SMOOTH_CELLS` constants in `verification/qtt_cylinder_verification/config.rs` and
+`verification/qtt_park2t_blackout/config.rs`). The `qtt_park2t_blackout` `ETA = 0.016` (the `ETA`
+constant in the same file) carries no source, while the cylinder site (`ETA` in
+`verification/qtt_cylinder_verification/config.rs`) already carries a wall-error-target derivation from
+`close-qtt-solver-envelope`. The Mach-1.05 shock floor (the `shock_floor` branch in
+`src/types/flow/compressible_march_run.rs`) explains its branch but not the 0.05 buffer above
 sonic. The `papers/` folder holds no penalization reference; Angot / Bruneau & Fabrie (1999) is cited in
-harness text only (`verification/qtt_cylinder_verification/print_utils.rs:122`).
+harness text only (`render_ladders` in `verification/qtt_cylinder_verification/print_utils.rs`).
 
 #### Scenario: A load-bearing constant states its source and units at the definition
 

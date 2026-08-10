@@ -34,7 +34,7 @@ fn predict_grows_position_uncertainty() {
     let before = filter.position_variance();
     let q = [1e-6; 17];
     for _ in 0..200 {
-        filter.predict(0.01, [9.81, 0.0, 0.0], q);
+        filter.predict(0.01, [9.81, 0.0, 0.0], q).unwrap();
     }
     assert!(
         filter.position_variance() > before,
@@ -81,7 +81,7 @@ fn covariance_trace_is_the_sum_of_the_diagonal_and_grows_under_predict() {
     let before = filter.covariance_trace();
     let q = [1e-3; 17];
     for _ in 0..50 {
-        filter.predict(0.01, [9.81, 0.0, 0.0], q);
+        filter.predict(0.01, [9.81, 0.0, 0.0], q).unwrap();
     }
     assert!(
         filter.covariance_trace() > before,
@@ -102,7 +102,7 @@ fn closed_loop_reacquires_after_a_blackout_coast() {
     let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     let q = [1e-6; 17];
     for _ in 0..500 {
-        filter.predict(0.01, [9.81, 0.0, 0.0], q);
+        filter.predict(0.01, [9.81, 0.0, 0.0], q).unwrap();
     }
     let var_blackout = filter.position_variance();
     assert!(
@@ -210,7 +210,7 @@ fn a_valid_filter_snapshots_and_restores_exactly() {
     let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [2500.0; NAV_STATES]).unwrap();
     let q = [1e-4; NAV_STATES];
     for _ in 0..25 {
-        filter.predict(0.1, [9.81, 0.1, -0.2], q);
+        filter.predict(0.1, [9.81, 0.1, -0.2], q).unwrap();
     }
     for i in 0..3 {
         let mut h = [0.0f64; NAV_STATES];
@@ -354,7 +354,7 @@ fn covariance_growth_is_invariant_under_step_refinement() {
         let n = (horizon / dt).round() as usize;
         let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [0.0; NAV_STATES]).unwrap();
         for _ in 0..n {
-            filter.predict(dt, [0.0, 0.0, 0.0], q);
+            filter.predict(dt, [0.0, 0.0, 0.0], q).unwrap();
         }
         filter.covariance()[9][9]
     };
@@ -385,7 +385,7 @@ fn changing_dt_alone_does_not_retune_the_filter() {
         let n = (horizon / dt).round() as usize;
         let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [0.0; NAV_STATES]).unwrap();
         for _ in 0..n {
-            filter.predict(dt, [0.0, 0.0, 0.0], q);
+            filter.predict(dt, [0.0, 0.0, 0.0], q).unwrap();
         }
         filter.covariance()[0][0]
     };
@@ -399,6 +399,107 @@ fn changing_dt_alone_does_not_retune_the_filter() {
         (coarse - horizon * qc).abs() < 1e-12,
         "and equals T·Q_c: {coarse} vs {}",
         horizon * qc
+    );
+}
+
+// ── The guarded predict: dt and the spectral density ──────────────────────────────────────────────
+
+#[test]
+fn predict_refuses_a_non_positive_or_non_finite_step_and_leaves_the_filter_untouched() {
+    // `dt` reaches both `F` and the `Q_c·dt` discretisation. A NaN step writes NaN through the whole
+    // covariance; a negative step subtracts `|dt|·Q_c` from the diagonal, leaving negative variances
+    // behind a `predict` that reported success. Both must be refused, atomically.
+    for dt in [f64::NAN, f64::INFINITY, -0.01, 0.0] {
+        let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [4.0; NAV_STATES]).unwrap();
+        let state_before = *filter.state();
+        let cov_before = *filter.covariance();
+        assert!(
+            filter
+                .predict(dt, [9.81, 0.0, 0.0], [1e-6; NAV_STATES])
+                .is_err(),
+            "dt = {dt} must be refused"
+        );
+        assert_eq!(filter.state(), &state_before, "state untouched (dt = {dt})");
+        assert_eq!(
+            filter.covariance(),
+            &cov_before,
+            "covariance untouched (dt = {dt})"
+        );
+    }
+}
+
+#[test]
+fn predict_refuses_a_negative_or_non_finite_spectral_density() {
+    // A variance rate is non-negative and finite. A negative one *shrinks* the covariance on a
+    // predict — uncertainty falling while dead-reckoning, the wrong direction to be wrong.
+    for bad in [f64::NAN, f64::INFINITY, -1e-6] {
+        let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [4.0; NAV_STATES]).unwrap();
+        let cov_before = *filter.covariance();
+        let mut q = [1e-6f64; NAV_STATES];
+        q[11] = bad;
+        assert!(
+            filter.predict(0.01, [9.81, 0.0, 0.0], q).is_err(),
+            "a spectral density of {bad} must be refused"
+        );
+        assert_eq!(
+            filter.covariance(),
+            &cov_before,
+            "covariance untouched (q = {bad})"
+        );
+    }
+    // A zero spectral density is a valid (noiseless) axis, not a rejection.
+    let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [4.0; NAV_STATES]).unwrap();
+    assert!(
+        filter
+            .predict(0.01, [9.81, 0.0, 0.0], [0.0; NAV_STATES])
+            .is_ok(),
+        "a zero spectral density is admissible"
+    );
+}
+
+#[test]
+fn a_refused_predict_leaves_the_run_able_to_continue() {
+    // After a refusal the filter is not poisoned: the next well-posed step still grows the variance.
+    let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [4.0; NAV_STATES]).unwrap();
+    let before = filter.position_variance();
+    assert!(filter.predict(-1.0, [0.0; 3], [1e-3; NAV_STATES]).is_err());
+    filter.predict(0.1, [0.0; 3], [1e-3; NAV_STATES]).unwrap();
+    assert!(
+        filter.position_variance() > before,
+        "a valid step after a refusal still propagates: {before} -> {}",
+        filter.position_variance()
+    );
+}
+
+#[test]
+fn a_long_predict_only_run_stays_symmetric_enough_to_restore() {
+    // `predict` forms `F·P·Fᵀ + Q_d` and does not re-symmetrize, so the two triple products sum in
+    // different orders and float-level asymmetry re-enters every step. This pins how far that drifts
+    // against the `√ε` scale-relative band `restore` admits: over a long dead-reckoning coast the
+    // residual stays orders of magnitude inside it, so snapshot/resume after a predict-only run is not
+    // a rejection hazard. A change that made the asymmetry grow with step count would fail here first.
+    let mut filter = NavFilter::new(InsErrorState::<f64>::zero(), [2500.0; NAV_STATES]).unwrap();
+    let q = [1e-4f64; NAV_STATES];
+    for _ in 0..5000 {
+        filter.predict(0.01, [9.81, 0.1, -0.2], q).unwrap();
+    }
+    let cov = *filter.covariance();
+    let tol = f64::EPSILON.sqrt();
+    let mut worst = 0.0f64;
+    for (i, row) in cov.iter().enumerate() {
+        for (j, &a) in row.iter().enumerate().skip(i + 1) {
+            let b = cov[j][i];
+            let band = tol * (1.0 + a.abs().max(b.abs()));
+            worst = worst.max((a - b).abs() / band);
+        }
+    }
+    assert!(
+        worst < 1.0e-2,
+        "predict-only asymmetry stays far inside the restore band: {worst} of the admitted residual"
+    );
+    assert!(
+        NavFilter::restore(*filter.state(), cov).is_ok(),
+        "a long predict-only run still restores"
     );
 }
 

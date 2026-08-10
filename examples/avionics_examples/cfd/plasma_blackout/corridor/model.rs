@@ -368,9 +368,9 @@ pub struct LegSet {
     pub leg2: LegSnapshot,
     pub leg3: LegSnapshot,
     pub leg4: LegSnapshot,
-    /// Carrier rebuilds over the whole descent. Filled today from [`rebuild_count`] on the final
-    /// leg's rendered log, which spans all four legs because the field carries the log; the typed
-    /// per-leg accessor summed over the four pauses is the sturdier source.
+    /// Carrier rebuilds over the whole descent: `CarrierPause::rebuilds()` summed over the four leg
+    /// pauses in `main`. The accessor counts per carrier, so each pause reports its own leg only and
+    /// the four have to be added; reading the last pause would report the final leg's rebuilds.
     pub rebuilds: usize,
     pub elapsed_s: FloatType,
     /// The rendered provenance log of the full descent (the regime-transition witness).

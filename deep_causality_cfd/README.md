@@ -34,41 +34,6 @@ The fastest way to see the whole crate work end to end:
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-## Three Solver Paradigms, One Language
-
-**Calculus-based: the DEC-native Navier-Stokes solver.** Velocity lives as an edge 1-form on a
-discrete exterior calculus. Each time step marches the Leray-projected rate, so the field stays
-divergence-free at every step. The `SolenoidalField` type-state encodes that: the carrier is a
-private field, so there is no public constructor, every constructing path is a projection, and the type
-implements no arithmetic, so two projected fields cannot be added into an unprojected one. Two
-wall-bounded escape hatches are public. `constrain_edges` and `with_lift` re-wrap a modified tensor
-without re-projecting; they exist because the DEC solver re-enters them at the end of each step, on
-the output of the constrained projection that already pinned those edges. Off that path the caller
-carries the invariant. Validated against Taylor-Green decay, exact Couette and
-Poiseuille states, the Ghia et al. (1982) lid-driven cavity tables, and cylinder wake
-references.
-
-**Compression-based: the QTT marchers.** The compressible Euler marchers (1-D through 3-D,
-including a body-fitted variant) run on quantized tensor trains, where a `2^L` grid *stores* order
-`chi^2 * L`: logarithmic in point count for a bounded bond dimension `chi`, with sharp structure
-paid for in `chi`. Storage is not runtime: the incompressible immersed harness measured per-step
-wall-clock rising far faster than `chi^2 * L` while the achieved bond stayed flat, so a
-non-compression bottleneck dominates that path (see the QTT envelope note in
-[`verification/README.md`](verification/README.md)). Whether `chi` stays bounded is the design
-question the rank studies in `studies/` answered, and they measured the decisive caveat: the rank
-driver is coordinate alignment, not sharpness. For the descent-schedule case the compressible
-carrier answers it with a shock-fitted inflow strip, imposing the exact Rankine-Hugoniot state as
-the boundary of the marched layer, so that shock is never captured at all.
-
-**Analytic and pointwise: fitted closures.** Exact Rankine-Hugoniot jumps, the Park
-two-temperature relaxation closures, the finite-rate ionization network, and the pointwise
-Navier-Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a
-fitted shock runs entirely on these, with no grid.
-
-All three families sit behind the same `CfdFlow` language and the same scalar type, so one
-program can pick per problem: the DEC solver for an incompressible cavity, the QTT marcher for
-a reentry layer, a fitted closure for the stagnation line.
-
 ## Counterfactual Dynamics
 
 `CfdFlow` is a two-level language. At the **trajectory** level, `CfdFlow::march` marches a coupled
@@ -119,7 +84,7 @@ file per branch under the fan-out, plus a `<base>.main.log` naming every spawn a
 no files. Each of its branches still carries its full provenance in the returned report's effect
 log.
 
-## Native Multi Regime
+## Dynamic Regime Change 
 
 The regime is a classified property of the evolved state, re-decided every step. A vehicle
 entering or leaving orbit transitions dynamically through several regimes, and this crate
@@ -174,7 +139,7 @@ regime -> continuum (GNSS-available), Kn=0.0002551442196046344
 One descent moves through orbit-like dynamics, slip flow, continuum flow, comms blackout, and
 reacquisition in one uninterrupted program.
 
-## Native Multiphysics
+## Multiphysics
 
 A coupling stack is a static cons-tuple of `PhysicsStage`s stepping one shared `CoupledField`:
 
@@ -231,7 +196,74 @@ execution: the `flow_config` layer holds owned descriptions (grids, schedules, s
 conditions, observables, world-published constants) while the `flow` layer materializes runs from
 them, so a counterfactual is the same flow handed a different description.
 
-## Everything Self-Verifies
+## Multiple Solver Paradigms
+
+**Calculus-based: the DEC-native Navier-Stokes solver.** Velocity lives as an edge 1-form on a
+discrete exterior calculus. Each time step marches the Leray-projected rate, so the field stays
+divergence-free at every step. The `SolenoidalField` type-state encodes that: the carrier is a
+private field, so there is no public constructor, every constructing path is a projection, and the type
+implements no arithmetic, so two projected fields cannot be added into an unprojected one. Two
+wall-bounded escape hatches are public. `constrain_edges` and `with_lift` re-wrap a modified tensor
+without re-projecting; they exist because the DEC solver re-enters them at the end of each step, on
+the output of the constrained projection that already pinned those edges. Off that path the caller
+carries the invariant. Validated against Taylor-Green decay, exact Couette and
+Poiseuille states, the Ghia et al. (1982) lid-driven cavity tables, and cylinder wake
+references.
+
+**Quantized Tensor Trains: the QTT marchers.** The compressible Euler marchers (1-D through 3-D,
+including a body-fitted variant) run on quantized tensor trains, where a `2^L` grid *stores* order
+`chi^2 * L`: logarithmic in point count for a bounded bond dimension `chi`, with sharp structure
+paid for in `chi`. Storage is not runtime: the incompressible immersed harness measured per-step
+wall-clock rising far faster than `chi^2 * L` while the achieved bond stayed flat, so a
+non-compression bottleneck dominates that path (see the QTT envelope note in
+[`verification/README.md`](verification/README.md)). Whether `chi` stays bounded is the design
+question the rank studies in `studies/` answered, and they measured the decisive caveat: the rank
+driver is coordinate alignment, not sharpness. For the descent-schedule case the compressible
+carrier answers it with a shock-fitted inflow strip, imposing the exact Rankine-Hugoniot state as
+the boundary of the marched layer, so that shock is never captured at all.
+
+**Analytic and pointwise: fitted closures.** Exact Rankine-Hugoniot jumps, the Park
+two-temperature relaxation closures, the finite-rate ionization network, and the pointwise
+Navier-Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a
+fitted shock runs entirely on these, with no grid.
+
+All three sover families sit behind the same `CfdFlow` language and the same scalar type so you can pick the best fit
+for your problem: the DEC solver for an incompressible cavity, the QTT marcher for a reentry layer,
+a fitted closure for the stagnation line.
+
+
+## Precision as a Parameter
+
+Every theory, solver, stage, and observable fixes a single alias and the entire computation runs at that selected
+precision: Selected f32 for speed, f64 for industry standard precision, or Float106 for high 
+fidelity reference numerical grade results with up to 30 significant digits.
+One line change, three precision levels. Precision as a Parameter makes every solver in this project 
+future proof for the upcomming IEEE f16 and f128 standard. 
+
+```rust
+/// Working precision.
+pub type FloatType = f64; // or f32, or deep_causality_num::Float106
+
+```
+
+Specification constants stay exact `f64` literals; `ft` lifts each one into the working
+precision, and every derived number is computed in `FloatType`. Changing the alias reruns the
+whole program at another precision. 
+
+
+## Selected Capabilities
+
+- **Suspend and resume a march.** `save_resume_state` / `load_resume_state` (with `pack_resume` /
+  `unpack_resume`) checkpoint a running `CoupledField` to disk and restore it. A world fingerprint guards
+  the seam, so a snapshot taken under different constants is refused rather than silently resumed.
+- **Duct marching.** `DuctMarchRun`, composed by `CfdFlow::march`, runs an internal-flow duct case over a
+  borrowed `DuctConfig` and returns an owned `Report`.
+- **Ignition corridor.** `IgnitionCorridor`, committed through by `ThrottleGuidance`, expresses the
+  four-condition corridor a powered-descent throttle must satisfy; the margin is supplied by the caller.
+- **Closed-form acoustic core inverse.** `AcousticCoreInverse` (with its 2-D and 3-D forms) inverts the
+  constant-coefficient acoustic core `A₀ = I − β·∂²` on a periodic grid, without an iterative solve.
+
+## Verifiation
 
 The crate ships its evidence, and CI runs it. `verification/` holds thirteen runnable programs gated
 against analytic solutions, published references, or internal invariants;
@@ -248,50 +280,6 @@ measurement. That is a prediction landing in the right decade, not a per-point a
 holds after the `fix-ramc-vibrational-relaxation-pair` reduced-mass correction, which moved the
 stagnation-line closed-form Park-2T controller to 1.27 decades below the anchor (reported as an offset,
 not re-admitted).
-
-## Precision as a Parameter
-
-Every theory, solver, stage, and observable is generic over one real scalar (`CfdScalar`,
-built on `RealField`). A program fixes a single alias and the entire computation runs at that
-precision, from the flux stencils to the Kalman filter, downcasting to `f64` only at the
-display boundary. From the `qtt_ramc_stagline` verification:
-
-```rust
-/// Working precision.
-pub type FloatType = f64; // or f32, or deep_causality_num::Float106
-
-/// Lift an exact `f64` specification into the working precision.
-pub fn ft(x: f64) -> FloatType {
-    FromPrimitive::from_f64(x).expect("specification lifts into FloatType")
-}
-```
-
-Specification constants stay exact `f64` literals; `ft` lifts each one into the working
-precision, and every derived number is computed in `FloatType`. Changing the alias reruns the
-whole program at another precision. The plasma-blackout corridor measured all three: at `f64`,
-all gates pass in about 40 seconds; at 106-bit `Float106`, every gate and every discrete event
-step was identical, with continuous witnesses agreeing to 15 or 16 significant digits, which
-places the corridor's error budget in the model closures and the grid rather than in round-off.
-One line change, three precision levels. The `f64` figures are current; the `Float106` comparison
-was measured before the `fix-ramc-vibrational-relaxation-pair` re-baseline and has not been re-run
-against the corrected reduced mass, so treat it as a precision result rather than a current one.
-
-## Selected Capabilities
-
-Beyond the three solver families and the DSL, the public API carries capabilities a reader may not find
-from the solver headings alone:
-
-- **Suspend and resume a march.** `save_resume_state` / `load_resume_state` (with `pack_resume` /
-  `unpack_resume`) checkpoint a running `CoupledField` to disk and restore it. A world fingerprint guards
-  the seam, so a snapshot taken under different constants is refused rather than silently resumed.
-- **Duct marching.** `DuctMarchRun`, composed by `CfdFlow::march`, runs an internal-flow duct case over a
-  borrowed `DuctConfig` and returns an owned `Report`.
-- **Ignition corridor.** `IgnitionCorridor`, committed through by `ThrottleGuidance`, expresses the
-  four-condition corridor a powered-descent throttle must satisfy; the margin is supplied by the caller.
-- **Closed-form acoustic core inverse.** `AcousticCoreInverse` (with its 2-D and 3-D forms) inverts the
-  constant-coefficient acoustic core `A₀ = I − β·∂²` on a periodic grid, without an iterative solve.
-
-Each is part of the public API and is exercised by the tests and examples.
 
 ## Where Things Live
 
@@ -321,9 +309,7 @@ crates directly, because this crate's signatures expose their types without re-e
 - `deep_causality_algebra` and `deep_causality_num` for `Real` and `FromPrimitive`, two of the
   traits behind the `CfdScalar` bound, needed to call scalar methods in generic code.
 
-A downstream crate needs the same entries in its `Cargo.toml`. The plasma-blackout examples
-additionally use `deep_causality_physics` constants such as `EARTH_GM`, which sit outside the
-`quantities` module this crate re-exports.
+The plasma-blackout examples additionally use `deep_causality_physics` for advanced physics.
 
 ## License
 

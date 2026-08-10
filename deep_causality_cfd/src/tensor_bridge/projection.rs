@@ -85,7 +85,17 @@ where
         Ok(du.add(&dv)?.round(&self.trunc)?)
     }
 
-    /// Solves the periodic pressure-Poisson equation `∇²p = rhs` spectrally (null mode zeroed).
+    /// Solves the periodic pressure-Poisson equation `∇²p = rhs` spectrally, inverting the
+    /// *consistent* grad-of-grad operator whose per-axis eigenvalue magnitude is `sin²(2πk/N)/Δ²`.
+    ///
+    /// **Four spectral modes are zeroed, not one.** `sin(2πk/N)` vanishes at `k = 0` and again at the
+    /// Nyquist wavenumber `k = N/2`, so the operator is singular wherever `kx ∈ {0, Nx/2}` *and*
+    /// `ky ∈ {0, Ny/2}`: the constant mode `(0, 0)`, the two axis-aligned checkerboards `(0, Ny/2)`
+    /// and `(Nx/2, 0)`, and the fully collocated checkerboard `(Nx/2, Ny/2)`. Those four components of
+    /// `rhs` are discarded and the returned pressure has no content in them. A checkerboard forcing
+    /// therefore produces no pressure response to cancel it; see [`Self::project`] for what that means
+    /// for the projected velocity. Every other mode is divided by `−(sin²(2πkx/Nx)/dx² +
+    /// sin²(2πky/Ny)/dy²)`.
     ///
     /// # Errors
     /// Propagates codec and FFT errors.
@@ -131,7 +141,8 @@ where
     }
 }
 
-/// Dense spectral Poisson solve on a `Nx × Ny` periodic grid: `∇²p = rhs`, the `k=0` mode zeroed.
+/// Dense spectral Poisson solve on a `Nx × Ny` periodic grid: `∇²p = rhs`, with the four singular
+/// modes (`kx ∈ {0, Nx/2}` and `ky ∈ {0, Ny/2}`) zeroed.
 fn spectral_poisson<R>(
     rhs: &[R],
     nx: usize,

@@ -1,6 +1,3 @@
-   Compiling deep_causality_cfd v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/deep_causality_cfd)
-    Finished `release` profile [optimized] target(s) in 4.46s
-     Running `target/release/examples/qtt_rank_nonlinear`
 === 1-D Burgers (L=10, N=1024, dt=4.88e-4, steps=1228, tol=1e-8) ===
     u0 = 0.5 + 0.4 sin(2 pi x); shock forms near t* ~ 0.40; nu = 0.5 dx (stable)
 

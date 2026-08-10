@@ -108,7 +108,6 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
         // covariance). A denied-step GNSS fix is consumed unread — the broadcast the receiver
         // could not use is gone, not latched for reacquisition.
         let gnss = field.take_scalar("gnss_fix");
-        let optical = field.take_scalar("optical_fix");
         let denied = field.regime().map(|r| r.gnss_denied).unwrap_or(false);
         let mut aided = false;
         if !denied && let Some(fix) = fix3(gnss.as_deref()) {
@@ -120,6 +119,12 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
             }
             aided = true;
         }
+        // The optical fix is taken **after** the GNSS fold, not alongside it. Consuming both up front
+        // means a GNSS refusal returns with the optical measurement already out of the field and only
+        // held in a local, so it is dropped on the error path — a fix the vehicle paid for through the
+        // plasma, discarded because a different sensor's fold failed. Taking it here leaves it in the
+        // field for the caller's retry whenever the step short-circuits above.
+        let optical = field.take_scalar("optical_fix");
         if let Some(fix) = fix3(optical.as_deref()) {
             if let Err(e) = engine.correct_position(fix, self.optical_variance) {
                 field.set_nav(engine);

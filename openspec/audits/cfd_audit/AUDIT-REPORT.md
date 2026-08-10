@@ -970,7 +970,7 @@ for real is a solver-acceleration follow-up, not a Phase-2 parameter fix (item 1
     source, units, and the reason for the value; each is recorded honestly as a numerical or modelling
     parameter with **no external source**, which is what they are, and `SMOOTH_CELLS` carries its 6.1×
     drag sensitivity. The cylinder `ETA` already had its wall-error-target derivation from
-    `close-qtt-solver-envelope`. Added `../../../papers/README.md` indexing every PDF to its citing code: the two
+    `close-qtt-solver-envelope`. Added `../../../deep_causality_cfd/papers/README.md` indexing every PDF to its citing code: the two
     PDFs carried **uncited** were read, confirmed on topic and cited — Mohamed, Hirani & Samtaney (2016)
     at the DEC solver, Mittal & Iaccarino (2005) at the immersed body. References cited in code whose PDF
     is absent (Angot/Bruneau/Fabrie, Peddinti, Kazeev–Khoromskij) are listed as such rather than implied

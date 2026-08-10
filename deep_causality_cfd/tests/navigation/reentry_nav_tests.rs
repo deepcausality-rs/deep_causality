@@ -258,6 +258,74 @@ fn a_nonzero_rate_integrates_and_stays_normalised_across_a_long_march() {
     );
 }
 
+// ── Predict atomicity: a failed step advances nothing ─────────────────────────────────────────────
+
+#[test]
+fn a_failed_predict_advances_no_part_of_the_engine_and_never_double_integrates() {
+    // An unbound state (energy ≥ 0) makes `ks_strang_step` refuse: only ellipses lift onto the KS
+    // manifold. The attitude integration runs before that refusal, so it is the field at risk — a
+    // caller that retries the step would integrate the same gyro sample twice, and the nominal heading
+    // would walk forward once per failed attempt while position, velocity, filter and clock stood
+    // still. Every field must be exactly where it started, however many times the step is retried.
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
+    let mut eng = ReentryNavEngine::new([7.0e6, 0.0, 0.0], [0.0, 2.0e4, 0.0], EARTH_GM, filter);
+    let pos_before = eng.position();
+    let vel_before = eng.velocity();
+    let var_before = eng.position_variance();
+    let omega = [0.4, -0.2, 0.1]; // a real body rate: a leaked integration is visible in the quaternion
+
+    for attempt in 0..5 {
+        assert!(
+            eng.predict(0.5, [0.0; 3], omega, [1.0e-6; 17]).is_err(),
+            "an unbound nominal cannot be propagated (attempt {attempt})"
+        );
+        assert_eq!(
+            eng.attitude(),
+            Quaternion::<f64>::identity(),
+            "the gyro was not integrated by the failed step (attempt {attempt})"
+        );
+        assert_eq!(eng.position(), pos_before, "position untouched");
+        assert_eq!(eng.velocity(), vel_before, "velocity untouched");
+        assert_eq!(eng.position_variance(), var_before, "covariance untouched");
+        assert_eq!(eng.elapsed_time(), 0.0, "no time elapsed on a failed step");
+        assert_eq!(eng.carried_clock_offset(), 0.0, "no clock accumulated");
+    }
+}
+
+#[test]
+fn a_predict_the_filter_refuses_leaves_the_nominal_untouched() {
+    // The other refusal on the predict path: a negative process-noise spectral density. The nominal
+    // and the clock must not advance behind a step the filter would not take.
+    let mut eng = engine();
+    eng.predict(1.0, [0.0; 3], [0.0; 3], [1.0e-6; 17]).unwrap();
+    let pos_before = eng.position();
+    let vel_before = eng.velocity();
+    let var_before = eng.position_variance();
+    let tau_before = eng.carried_clock_offset();
+    let elapsed_before = eng.elapsed_time();
+
+    let mut q = [1.0e-6f64; 17];
+    q[4] = -1.0;
+    assert!(
+        eng.predict(1.0, [0.0; 3], [0.1, 0.0, 0.0], q).is_err(),
+        "a negative spectral density must be refused"
+    );
+    assert_eq!(
+        eng.attitude(),
+        Quaternion::<f64>::identity(),
+        "the gyro was not integrated by the refused step"
+    );
+    assert_eq!(eng.position(), pos_before);
+    assert_eq!(eng.velocity(), vel_before);
+    assert_eq!(eng.position_variance(), var_before);
+    assert_eq!(eng.carried_clock_offset(), tau_before);
+    assert_eq!(eng.elapsed_time(), elapsed_before);
+
+    // And the engine still runs: the refusal was a rejection, not a corruption.
+    eng.predict(1.0, [0.0; 3], [0.0; 3], [1.0e-6; 17]).unwrap();
+    assert!(eng.elapsed_time() > elapsed_before);
+}
+
 #[test]
 fn a_non_finite_fix_is_refused_and_rolls_the_engine_back() {
     // A garbage sensor fix (a NaN axis) must be refused end-to-end: correct_position propagates the

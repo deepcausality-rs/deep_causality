@@ -132,20 +132,22 @@ where
 /// The forebody-strip **pressure** contraction of an evolved compressible state: the pressure is
 /// recovered pointwise from the conserved components (`p = (γ−1)(E − ½|m|²/ρ)`, the ideal-gas
 /// closure), re-quantized, and contracted against the strip mask via the train `inner` product
-/// and the cell volume — `F = ∫ χ_strip · p dV`, no cut-cell surface or boundary-fiber
+/// and the cell area — `∫ χ_strip · p dA`, no cut-cell surface or boundary-fiber
 /// reconstruction. This is the *compressible* sibling of the incompressible penalization-force
 /// contraction: the integrand is the field's own pressure (the preserved aerodynamic drag the
 /// Jarvinen–Adams dataset measured), **not** the forcing deficit.
 ///
-/// **Units, and why the name overstates the quantity.** This returns `∫ χ_strip · p dV`, an undirected
-/// volume integral of pressure: `Pa·m³` in 3-D, `Pa·m²` per unit depth as evaluated here. That is **not
-/// a force** (`N`). No outward normal is applied and no surface is integrated over, so the result
-/// carries no direction and cannot be compared against a force from another configuration. Only the
-/// **ratio** of two such integrals from the *same* geometry is meaningful, which is exactly how
-/// [`preserved_drag_fraction`] consumes it; the dimensional factor cancels there. A true axial force
-/// would project the pressure against the strip's outward normal and integrate over the interface.
-/// `strip_pressure_integral` would be the accurate name; renaming is a public-API change and is left
-/// as an owner decision, so the units are stated here instead.
+/// **Units, and why the name overstates the quantity.** The integrand is pressure (`Pa = N/m²`) and
+/// the measure is the 2-D cell area `dx·dy` (`m²`), so the return carries `Pa·m² = N`. The dimensions
+/// are those of a force; the quantity is not one. It is an isotropic scalar accumulated over a
+/// *region* of cells, where a force is a traction integrated over a *surface*. No outward normal
+/// enters, so the result has no direction, no axis to resolve along, and no meaning next to a force
+/// from another configuration. Only the **ratio** of two such integrals over the *same* geometry is
+/// meaningful, which is exactly how [`preserved_drag_fraction`] consumes it; the common area factor
+/// cancels there. A true axial force is `∮ p n dS` over the interface: the pressure projected on the
+/// strip's outward normal, integrated over the surface it acts on. `strip_pressure_integral` would be
+/// the accurate name; renaming is a public-API change and is left as an owner decision, so what the
+/// number is gets stated here instead.
 ///
 /// # Errors
 /// [`PhysicsError::PhysicalInvariantBroken`] if the density leaves the positive cone; propagates

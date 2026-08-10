@@ -1,6 +1,3 @@
-   Compiling deep_causality_cfd v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/deep_causality_cfd)
-    Finished `release` profile [optimized] target(s) in 3.92s
-     Running `target/release/examples/qtt_rank_3d`
 === 3-D QTT rank upper bound — realistic forming shock (explicit Euler + central diff) ===
     3-D Burgers, dense march, QTT rank sampled over time; block bit-ordering, tol=1e-8
 

@@ -84,7 +84,13 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
     /// leaves identity when [`correct_position`](Self::correct_position) injects a fix's `δψ`.
     ///
     /// # Errors
-    /// Propagates KS-propagation / clock-kernel failures (the half-kicked state must stay bound).
+    /// Propagates KS-propagation / clock-kernel failures (the half-kicked state must stay bound) and a
+    /// refusal from [`NavFilter::predict`] (a non-positive/non-finite `dt`, a negative process-noise
+    /// entry). The step is **atomic**: every fallible stage runs against locals and nothing is written
+    /// back until all of them have succeeded, so a refused predict leaves the attitude, the nominal
+    /// position/velocity, the filter, the carried clock and the elapsed time exactly as they were. A
+    /// caller may therefore retry the same step without double-integrating the gyro — the failure mode
+    /// an "integrate the attitude first, then propagate" ordering would produce.
     pub fn predict(
         &mut self,
         dt: R,
@@ -92,25 +98,29 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
         angular_rate: [R; 3],
         process_noise: [R; 17],
     ) -> Result<(), PhysicsError> {
-        // Integrate the nominal attitude: q ← normalize(q ⊗ Δq), Δq = from_axis_angle(ω̂, |ω̂|·dt). A zero
-        // rate yields the identity rotor (from_axis_angle returns identity for a zero-length axis), so a
-        // non-rotating vehicle leaves the nominal exactly at identity.
+        // Integrate the nominal attitude into a *local*: q ← normalize(q ⊗ Δq),
+        // Δq = from_axis_angle(ω̂, |ω̂|·dt). A zero rate yields the identity rotor (from_axis_angle
+        // returns identity for a zero-length axis), so a non-rotating vehicle leaves the nominal exactly
+        // at identity. It is committed to `self` only once every fallible stage below has succeeded.
         let delta = Quaternion::from_axis_angle(angular_rate, norm(angular_rate) * dt);
-        self.attitude = (self.attitude * delta).normalize();
+        let attitude = (self.attitude * delta).normalize();
 
         let (r1, v1) = ks_strang_step(self.position, self.velocity, self.gm, dt, |_r, _v| {
             aero_accel
         })?;
-        self.position = r1;
-        self.velocity = v1;
-        // The accelerometer senses the non-gravitational (aero) specific force in the *body* frame;
-        // rotate it into the nav frame via the nominal DCM before the filter's error-dynamics use it.
-        let f_nav = mat3_vec(&self.attitude.to_rotation_matrix(), aero_accel);
-        self.filter.predict(dt, f_nav, process_noise);
         // Carried clock: dτ/dt − 1 at the current geometry, integrated on proper time (s ≠ τ).
         let radius = norm(r1);
         let speed = norm(v1);
         let rate = relativistic_clock_drift_rate_kernel(radius, speed, self.gm)?;
+        // The accelerometer senses the non-gravitational (aero) specific force in the *body* frame;
+        // rotate it into the nav frame via the nominal DCM before the filter's error-dynamics use it.
+        let f_nav = mat3_vec(&attitude.to_rotation_matrix(), aero_accel);
+        // The last fallible stage, and itself atomic (it validates before it mutates), so it goes first
+        // among the commits: if it refuses, no field of the engine has been touched yet.
+        self.filter.predict(dt, f_nav, process_noise)?;
+        self.attitude = attitude;
+        self.position = r1;
+        self.velocity = v1;
         self.tau_offset += rate * dt;
         self.elapsed += dt;
         Ok(())

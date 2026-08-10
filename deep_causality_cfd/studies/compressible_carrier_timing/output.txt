@@ -1,6 +1,3 @@
-   Compiling deep_causality_cfd v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/deep_causality_cfd)
-    Finished `release` profile [optimized] target(s) in 5.98s
-     Running `target/release/examples/compressible_carrier_timing`
 === Compressible-carrier timing (Task 0): 3-D fitted shell vs the 2-D fallback ===
 
 Budget: 200 corridor steps inside 600 s (10 min); 5 timed steps per case.

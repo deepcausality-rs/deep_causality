@@ -184,7 +184,46 @@ impl<R: RealField> NavFilter<R> {
     /// §14.2.4). The within-step cross-coupling the transition matrix induces (a Van Loan discretisation
     /// would capture it) is deliberately not modelled here: it buys accuracy the filter's other Tier-A
     /// approximations (`C ≈ I`, no Earth rotation) do not warrant.
-    pub fn predict(&mut self, dt: R, specific_force: [R; 3], process_noise_diag: [R; NAV_STATES]) {
+    ///
+    /// # Errors
+    /// Refuses a step it cannot discretise, rather than reporting success while writing a `NaN` or a
+    /// negative variance into the covariance:
+    /// * a non-finite or non-positive `dt`. `dt = NaN` poisons every entry of `F` and therefore all of
+    ///   `P`; `dt < 0` runs the discretisation backwards and *subtracts* `|dt|·Q_c` from the diagonal,
+    ///   leaving negative variances that no later check inside the filter looks at; `dt = 0` is a step
+    ///   that does not advance and adds nothing, so it is refused as a caller error rather than
+    ///   silently absorbed.
+    /// * a negative or non-finite process-noise entry. A spectral density is non-negative by
+    ///   definition, and a negative one shrinks the covariance on a *predict* — uncertainty falling
+    ///   while dead-reckoning is the wrong direction to be wrong for a GNSS-denied estimate.
+    ///
+    /// Rejection is **atomic**: both checks precede any mutation, so a refused predict leaves the
+    /// state and covariance exactly as they were and the caller can retry the step. The
+    /// [`ReentryNavEngine::predict`](crate::ReentryNavEngine::predict) that drives this filter already
+    /// returns a `Result`, so the refusal reaches the marcher.
+    pub fn predict(
+        &mut self,
+        dt: R,
+        specific_force: [R; 3],
+        process_noise_diag: [R; NAV_STATES],
+    ) -> Result<(), PhysicsError> {
+        // Guard the step size before it enters `F` and the `Q_c·dt` discretisation.
+        if dt <= R::zero() || !dt.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "navigation predict step dt is non-positive or non-finite (dt.is_finite() = {})",
+                dt.is_finite()
+            )));
+        }
+        // Guard the spectral density: a variance rate is non-negative and finite.
+        for (i, &q) in process_noise_diag.iter().enumerate() {
+            if q < R::zero() || !q.is_finite() {
+                return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                    "process-noise spectral density [{i}] is negative or non-finite (is_finite() = {})",
+                    q.is_finite()
+                )));
+            }
+        }
+        // All guards passed — from here every write is committed, so the predict is atomic.
         self.state = self.state.propagate(dt, specific_force);
         let f = nav_transition_matrix(dt, specific_force);
         let fp = mat_mul(&f, &self.cov);
@@ -192,6 +231,7 @@ impl<R: RealField> NavFilter<R> {
         // Q_d = Q_c · dt : discretise the continuous-time spectral density onto this step.
         let q_d: [R; NAV_STATES] = core::array::from_fn(|i| process_noise_diag[i] * dt);
         self.cov = mat_add(&fpft, &diag(&q_d));
+        Ok(())
     }
 
     /// Fold in one scalar measurement `z = h·δx + noise` with measurement variance `r` (a sequential
@@ -220,10 +260,14 @@ impl<R: RealField> NavFilter<R> {
     /// mutates nothing) and the `validate_covariance` screen, which runs only at construction and
     /// restore.
     ///
-    /// No test pins the long-run behaviour. The longest sequence in the suite is 60 position fixes
-    /// (`closed_loop_tests`), and those tests assert position error and variance collapse; none reads
-    /// [`covariance`](Self::covariance) after a long near-unity-gain sequence to bound
-    /// `max|P[i][j] − P[j][i]|` or to check `vᵀPv ≥ 0`. A refactor back to the simple form would
+    /// **What is measured, and what is still unpinned.** The *predict* half now is: a 5000-step
+    /// predict-only coast is held against the `√ε` band `restore` admits, and the measured residual sits
+    /// around `3e-7` of it — sub-linear in step count (10× the steps moved it by 2.6×, the signature of a
+    /// random walk rather than amplification), so a snapshot taken after a long dead-reckoning coast is
+    /// not a rejection hazard. The *fold* half is not: the longest sequence in the suite is 60 position
+    /// fixes (`closed_loop_tests`), and those tests assert position error and variance collapse; none
+    /// reads [`covariance`](Self::covariance) after a long near-unity-gain sequence to bound
+    /// `max|P[i][j] − P[j][i]|` or to check `vᵀPv ≥ 0`. A refactor back to the simple form would still
     /// pass CI.
     ///
     /// # Errors

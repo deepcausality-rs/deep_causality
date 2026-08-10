@@ -96,10 +96,12 @@ it holds. A claim of "n-th order convergence" that is n-th order in space and a 
 state both, and SHALL document any error floor and the maximum problem size over which the order is
 observed.
 
-The QTT Taylor–Green harness reports "clean 2nd-order convergence"
-(`verification/qtt_taylor_green_verification/README.md:52`, `print_utils.rs:141`, `verification/README.md:297`)
-without qualifying it as second-order in space and first-order in time, and without documenting the
-temporal-error floor (~1e-5 at fixed `dt`) or the ladder's maximum usable length.
+The QTT Taylor–Green harness reports "clean 2nd-order convergence" (the "Measured" section of
+`verification/qtt_taylor_green_verification/README.md`, `summary()` in
+`verification/qtt_taylor_green_verification/print_utils.rs`, and the `qtt_taylor_green_verification`
+section of `verification/README.md`) without qualifying it as second-order in space and first-order in
+time, and without documenting the temporal-error floor (~1e-5 at fixed `dt`) or the ladder's maximum
+usable length.
 
 #### Scenario: The Taylor–Green order claim is qualified
 
@@ -138,11 +140,13 @@ be retired. A gate-reporting type documented as the block every self-verifying p
 constructed by none of them, SHALL be adopted across those programs or removed, and a gate harness SHALL
 NOT report success for an empty gate set.
 
-`Gates` is exported from `lib.rs` and documented as the `[PASS]`/`[FAIL]` block every self-verifying
-program prints, yet `Gates::new` is constructed only in its own unit test — the programs use `GateSeq` or
-`Verdict`'s `Display`. It holds the only five `println!` in `src/` (`src/types/flow/gates.rs:44-58`), and
-`Gates::finish()` returns success for an empty gate set. Retiring `Gates` is a deletion and requires owner
-approval; the non-deleting corrections are unconditional.
+`Gates` was exported from `lib.rs` and documented as the `[PASS]`/`[FAIL]` block every self-verifying
+program prints, yet `Gates::new` was constructed only in its own unit test — the programs used `GateSeq`
+or `Verdict`'s `Display`. It held the only five `println!` in `src/`, and `Gates::finish()` returned
+success for an empty gate set. `2026-07-26-reconcile-cfd-docs-and-traceability` retired the type on an
+owner decision: `src/types/flow/gates.rs` and its tests are gone, the `lib.rs` re-export with them, `src/`
+now holds no `println!`, and `GateSeq` is the mechanism the self-verifying programs use. The evidence is
+historical; the requirement stands as the contract that keeps the duplicate API from returning.
 
 #### Scenario: The empty gate set does not report success
 
