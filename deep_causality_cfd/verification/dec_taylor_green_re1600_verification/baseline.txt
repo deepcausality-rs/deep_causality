@@ -1,3 +1,5 @@
+    Finished `release` profile [optimized] target(s) in 0.07s
+     Running `target/release/examples/dec_taylor_green_re1600_verification`
 === DEC-native 3D Taylor-Green at Re 1600 ===
 grid 16^3, horizon t* = 10, precision f64
 
@@ -132,7 +134,8 @@ t_star,kinetic_energy_per_vol,dissipation_rate
 9.9746,0.10755346,0.00245426
 10.0531,0.10735962,0.00246801
 
-marched to t* = 10.05: E*/E0 = 0.8929, peak dissipation 0.002468 at t* = 10.05
+marched to t* = 10.05: E*/E0 = 0.8929, max sampled dissipation 0.002468 at t* = 10.05
+the maximum is the last sample: the curve is still rising at the horizon, so that is an endpoint value, not the dissipation peak. Extend t*_max (or refine the grid) to reach it.
 compare the dissipation column against the published Re-1600 DNS curve (references.md).
   [PASS] [tripwire] kinetic energy monotonically non-increasing: max step-to-step rise 0.000e0 (tol 1.2e-10)
   [PASS] [tripwire] net dissipation over the horizon: E*/E0 = 0.8929

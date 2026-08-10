@@ -10,17 +10,25 @@
 //! body — no cut cells), with drag read as a **tensor-train contraction** of the mask with the velocity
 //! deficit. This closes Gap 1 of the plasma-blackout analysis (the immersed body + surface observables).
 //!
-//! `main` runs the case through `CfdFlow::march` at a ladder of **bond caps** and self-verifies
-//! (exit nonzero on break):
+//! `main` runs the case through `CfdFlow::march` at a ladder of **bond caps**, then sweeps the
+//! penalization parameter and the mask smoothing width, and self-verifies on five gates (exit
+//! nonzero on break):
 //!
 //! 1. **No-slip** — the velocity inside the body falls to the penalization floor.
-//! 2. **Accuracy vs bond** — the drag coefficient converges as the tensor-train is allowed more rank
-//!    (the headline QTT-CFD metric).
-//! 3. **Physical drag** — the streamwise drag is positive and `O(1)`.
+//! 2. **Bond saturation** — the drag coefficient stops moving as the tensor-train is allowed more
+//!    rank. This gates the *compression*, not the compressed quantity.
+//! 3. **Physical drag** — the streamwise drag is positive and finite. A blow-up tripwire against a
+//!    wide guard (`DRAG_SANITY_MAX = 100`), not a claim that `C_d` is `O(1)`: the superseded `L = 5`
+//!    configuration reported `C_d ≈ 23.8`, inflated by the smoothing skirt and blockage.
+//! 4. **η ladder** and 5. **mask-smoothing ladder** — whether the reported `C_d` settles at all as
+//!    the penalization parameter and the mask skirt width are swept. These are the two gates that
+//!    constrain the number, and both are reference class.
 //!
 //! The committed DEC isolated-cylinder `C_d` is reported as a **cross-reference**, disclaimed for the
 //! periodic-blockage difference (the periodic penalized box is not the DEC inflow/outflow configuration,
-//! so an absolute match is not claimed).
+//! so an absolute match is not claimed). It is also at a different Reynolds number: the shipped
+//! `config.rs` constants give `Re_D = U·D/ν = 1.0 · 1.8850 / 0.05 = 37.7`, while the DEC harness
+//! measures its `C_d ≈ 1.345` at `Re = 100`. `Re` is not printed anywhere in this program.
 //!
 //! Usage:
 //!
@@ -44,6 +52,17 @@ pub type FloatType = f64;
 /// `L = 8` resolves four of the five η-ladder points (`η ≥ dx²/ν = 0.012`); the smallest, `η = 0.008`,
 /// is below that floor and is the under-resolved tail the ladder still carries (the full ladder is
 /// resolved only at `L = 9`). See the config `DT`/`ETA` derivations and `main`'s bond-cap note.
+///
+/// The body is resolved by `2·RADIUS_FRAC·2^L = 76.8` cells across the diameter, and the nominal disc
+/// covers `π·(D/2Δx)² ≈ 4.6e3` of the `65 536` cells (the `mask > 0.9` interior the no-slip
+/// diagnostic counts is smaller, since the `tanh` skirt spans 2 cells).
+///
+/// `L = 8` is a **cost** choice, stopped one level short of the `L = 9` the `η` ladder would need.
+/// Even at `L = 8` the harness runs for hours, which is why `verification/README.md` carries it as
+/// offline with a `~4-9 h` estimate. **No grid-convergence study was run.** The three ladders here
+/// sweep the bond cap, `η`, and the mask smoothing width, all at fixed `L`, so nothing measured in
+/// this harness shows the reported `C_d` to be grid-independent. That would need an `L` ladder, and
+/// there is none.
 const L: usize = 8;
 
 fn main() {

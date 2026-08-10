@@ -40,7 +40,8 @@ pub fn render(r: &Report<FloatType>) {
     println!("  abs error  = {:.2e}\n", (a_final - a_exact).abs());
 
     println!("Manufactured solution reproduced: exact AD derivatives drive the kernel, Rk4 tracks");
-    println!("the analytic decay, and the causal monad sequenced the two stages.");
+    println!("the analytic decay. CfdFlow::verify sequences the two stages directly; this is a");
+    println!("pointwise check and does not route through PropagatingEffect.");
 }
 
 /// Precision-scaled bound on the MMS residuals.

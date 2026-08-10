@@ -73,7 +73,7 @@ Only once group 5 has actually converged the ladder — not before.
       "a failing baseline is committed as failing" note and the ⚠ row in the harness table, which is
       where that README records the failure
 - [x] 6.4 Update the summary-table row: runtime, measured values, and what the gates now constrain
-- [x] 6.5 Update `openspec/notes/cfd_audit/AUDIT-REPORT.md` §5b and the remediation table to record the outcome
+- [x] 6.5 Update `../../../audits/cfd_audit/AUDIT-REPORT.md` §5b and the remediation table to record the outcome
 - [x] 6.6 The ladder did not converge (could not be run); the known-failing status is **left in place**
       and reclassified as offline/manual with the cost measurement recorded — not retired.
 

@@ -13,11 +13,12 @@
       74 |        87
   smooth-bump init rank: 8;  PEAK rank (formed curved shock): 89
 
-  references at 64^3:
+  single-level references, encoded at 64^3 only (NOT swept below):
    flat plane (axis-aligned, fn of x) ....... 5   (best case)
    curved shell, body-fitted (fn of r) ...... 6   (alignment fix in 3-D)
 
-  upper-bound growth law (peak forming-shock rank vs resolution):
+  upper-bound growth law (peak FORMING-SHOCK rank vs resolution; references above are
+  a single 64^3 point and are not columns of this sweep):
       L |   side |  peak_bond | ratio vs prev
       4 |     16 |         45 |             -
       5 |     32 |         56 |         1.24x
@@ -35,7 +36,9 @@
 --- reading ---
   UPPER BOUND: a realistically-formed 3-D curved shock surface has bond chi ~ side^0.53
   (measured 45 -> 135 over 16^3 -> 128^3), i.e. roughly sqrt(side) — UNBOUNDED in resolution,
-  vs the flat / body-fitted references which stay ~6 (constant).
+  vs the flat / body-fitted references, which read ~6 at 64^3. Those are ONE level, not a sweep:
+  their constancy in resolution is inferred from alignment, not measured here (the 2-D counterpart
+  is measured in qtt_rank_fitted_dynamic, at 64^2 and 128^2).
   This is a LOWER bound on a live solver: marching carries operator products *before* rounding,
   and explicit central differencing adds dispersive-oscillation rank atop the curvature floor.
 
@@ -46,7 +49,8 @@
    2. SOLVE cost: tensor-train ops are O(chi^2)-O(chi^3) per core. chi ~ sqrt(side) means at a
       flight-relevant micrometre grid (side ~ 1e6) a captured curved shock implies chi ~ thousands
       — bounded, but expensive enough to erode the practical advantage. The body-fitted shell
-      holds chi ~ O(10) at ANY resolution. THAT gap — not storage-vs-dense — is the real result.
+      reads chi ~ O(10) at the one level encoded here, 64^3. THAT gap — not storage-vs-dense —
+      is the real result.
 
   => 3-D Tier-B is tractable ONLY with a shock-aligned / body-fitted coordinate: it turns the
      curved surface into an axis-aligned one, replacing chi ~ sqrt(side) with chi ~ O(10).

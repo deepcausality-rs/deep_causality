@@ -10,12 +10,12 @@ schedule: 6 back pressures from back_pressures.csv
       0.30    2.123         none    0.857
       0.10    2.123         none    1.254
 
-operating map written to /Users/marvin/RustroverProjects/dcl/deep_causality/examples/avionics_examples/cfd/nozzle_operating_map/operating_map.csv
+operating map written to operating_map.csv
 analytic references: first critical p/p0 = 0.9372, exit-plane shock at p/p0 = 0.5134
 
 --- nozzle operating map ---
-  [PASS] choking: every choked row crosses Mach 1 at the throat
-  [PASS] shock position: every internal-shock row matches the closed form
-  [PASS] shock-free profiles: every shock-free row tracks the area-Mach relation
-  [PASS] physical thrust: thrust coefficient finite and positive on every row
+  [PASS] [tripwire] choking: every choked row crosses Mach 1 at the throat
+  [PASS] [tripwire] shock position: every internal-shock row matches the closed form
+  [PASS] [tripwire] shock-free profiles: every shock-free row tracks the area-Mach relation
+  [PASS] [tripwire] physical thrust: thrust coefficient finite and positive on every row
 === All gates passed: nozzle operating map. ===

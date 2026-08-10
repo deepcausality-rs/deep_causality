@@ -44,6 +44,14 @@ impl<R: RealField> ImuModel<R> {
         core::array::from_fn(|i| true_specific_force[i] + self.accel_bias[i])
     }
 
+    /// The measured body angular rate: the true rate plus the gyro bias — the `ω̂` the nominal attitude
+    /// integrates. For the point-mass corridor/weather (no true rotation, `IMU_GYRO_BIAS = 0`) this is
+    /// zero, so the nominal attitude stays at identity; a non-zero gyro bias would tilt the nominal, the
+    /// error the ESKF's gyro-bias and attitude states exist to track.
+    pub fn sense_angular_rate(&self, true_angular_rate: [R; 3]) -> [R; 3] {
+        core::array::from_fn(|i| true_angular_rate[i] + self.gyro_bias[i])
+    }
+
     /// The accelerometer bias (the drift driver).
     pub fn accel_bias(&self) -> [R; 3] {
         self.accel_bias

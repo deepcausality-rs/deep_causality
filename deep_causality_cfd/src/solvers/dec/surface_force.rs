@@ -67,9 +67,21 @@ pub fn fragment_area_vector<const D: usize, R: DecNsScalar>(
 /// The **viscous (friction)** surface force on an immersed cut body:
 /// `F_μ = ∮_S μ(∇u + ∇uᵀ)·n dA`, summed over every cut cell's fragments.
 ///
+/// Reference: Kirkpatrick, M. P., Armfield, S. W. & Kent, J. H., "A representation of curved
+/// boundaries for the solution of the Navier–Stokes equations on a staggered three-dimensional
+/// Cartesian grid", Journal of Computational Physics **184**(1):1–36, 2003
+/// (`deep_causality_cfd/papers/kirkpatrick2003.pdf`).
+///
+/// Two deliberate departures from that paper are worth stating. First, **`Δh` here is the cell
+/// support width along `n`** — `Δh = Σᵢ |nᵢ|·dxᵢ`, the projection of the cell onto the normal — not
+/// the paper's node-to-wall distance, so it is a grid-scale sampling offset rather than a measured
+/// surface distance. Second, the traction below **retains the wall-normal component** that the
+/// paper's shear-only form drops. Both are consistent choices for the cut-cell fragments this
+/// crate carries, and both change the number, so they are named rather than implied.
+///
 /// The velocity field is the edge 1-cochain `edge_form` (pass `state.as_one_form()`), `sharp`-
 /// reconstructed to vertex vectors. The wall shear is evaluated with a **one-sided wall-normal
-/// gradient to the true surface distance `Δh`** (Kirkpatrick et al. 2003): for each fragment the
+/// gradient over `Δh`**: for each fragment the
 /// velocity is zero at the wall (no-slip, anchored at the fragment centroid `c`) and sampled by
 /// multilinear interpolation at `c + Δh·n` one cell out along the outward normal `n`, so
 /// `∂u/∂n ≈ u_sample / Δh`. The Kirkpatrick wall traction `t = μ S·n` with the rank-one wall-normal

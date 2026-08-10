@@ -4,10 +4,21 @@
  */
 
 //! Fluid-dynamics theories: the Navier–Stokes regimes (incompressible,
-//! compressible, Euler, Stokes) and the DEC-native incompressible rate, each a
-//! `FluidTheory` realization reused across solvers. The pointwise regime
-//! evaluators stay in `deep_causality_physics` and are reached through this layer
-//! for verification solvers.
+//! compressible, Euler, Stokes) and the DEC-native incompressible rate.
+//!
+//! What lives where, precisely:
+//!
+//! * **The four pointwise regime evaluators live here**, as free functions
+//!   (`incompressible_ns_rhs`, `compressible_ns_*_rhs`, `euler_*_rhs`,
+//!   `stokes_rhs`), each with a causal `PropagatingEffect` wrapper
+//!   (`*_rhs_effect`) in [`wrappers`].
+//! * **The shared sub-kernels stay in `deep_causality_physics`**:
+//!   `convective_acceleration_kernel`, `pressure_gradient_force_kernel`,
+//!   `viscous_diffusion_kernel` and `continuity_rhs_kernel`. The evaluators here
+//!   compose those kernels rather than reimplementing them.
+//! * **`DecIncompressible` is the only `FluidTheory` realization in this module**;
+//!   it wraps the DEC rate kernel. The pointwise evaluators are free functions and
+//!   do not implement that trait.
 
 mod compressible_ns;
 mod euler;

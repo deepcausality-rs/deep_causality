@@ -5,8 +5,8 @@ The 3-D form of the `qtt_blunt_body_2d` rank lever, on the crate's serial `x`-`y
 nose at a constant *physical* radius `R`. In a body-fitted spherical coordinate, with radial axis
 `ζ` across the shock, that surface is a step in `ζ` and therefore a function of one axis, so its
 bond `χ` is `O(1)` and resolution-independent. Sampled on a Cartesian `2^l × 2^l × 2^l` lattice the
-identical physical shell is curved, so `χ` grows with resolution, following the `qtt_rank_3d` upper
-bound.
+identical physical shell is curved, so `χ` grows with resolution. How fast it grows is the standing
+`studies/qtt_rank_3d` question; this harness gates that it grows, not the exponent.
 
 ```bash
 cargo run --release -p deep_causality_cfd --example qtt_reentry_3d
@@ -38,7 +38,7 @@ body-fit metric yet and the marcher runs Cartesian.
 
 Both gates are **structural**. They bound *rank*, not physical accuracy.
 
-## Measured (f64, 2^3–2^5, ~3 s)
+## Measured (f64, 2^3–2^5, <1 s)
 
 | resolution | fitted `χ` (fn ζ) | Cartesian `χ` |
 |---|---|---|
@@ -46,7 +46,10 @@ Both gates are **structural**. They bound *rank*, not physical accuracy.
 | 2^4 | 4 | 30 |
 | 2^5 | 4 | 59 |
 
-Fitted runs 2 to 4 and plateaus; the capture cost runs 10 to 59. Both gates **PASS**.
+Fitted runs 2 to 4 and plateaus. The capture cost runs 10 to 59: a 5.9× rise for a 4× refinement,
+so `χ ~ side^1.3`, at or above linear in `side`. A `√side` law would give 3, 4, 6. The `side^0.53`
+exponent `studies/qtt_rank_3d` fits comes from a different shock construction over a wider `16³–128³`
+ladder; this ladder does not reproduce it. Both gates **PASS**.
 
 ## Reported, not gated
 

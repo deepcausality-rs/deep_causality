@@ -189,6 +189,13 @@ impl<R: CfdScalar> Solver<R> for MmsCase<R> {
 /// `u = (½, −½, 0)`, with the analytic Jacobian, Laplacian, and pressure gradient
 /// (`∇p = (ρ/2, ρ/2, 0)`). The single shared sample for the incompressible, Euler, and
 /// compressible references.
+///
+/// **Two Taylor–Green conventions ship in this crate, and they are the same solution.** This sample
+/// follows `u = sin(x)cos(y)`, `v = −cos(x)sin(y)`, giving `(½, −½)` here. The QTT harness
+/// (`verification/qtt_taylor_green_verification`) follows `u = −cos(x)sin(y)`, `v = sin(x)cos(y)`,
+/// which gives `(−½, ½)` at the same point. The two differ by a **π/2 shift in x and y**; neither is
+/// more correct, and the pressure sign follows whichever velocity convention is chosen, so the
+/// `∇p` above belongs with this form. Compare figures across the two only after accounting for it.
 fn taylor_green_sample<R: CfdScalar>(
     rho: R,
 ) -> (Velocity3<R>, VelocityGradient<R>, [R; 3], [R; 3]) {

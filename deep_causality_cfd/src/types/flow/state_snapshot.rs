@@ -34,11 +34,29 @@ use deep_causality_file::{
 };
 use deep_causality_haft::{IoAction, LogAddEntry};
 use deep_causality_num::FromPrimitive;
+use deep_causality_num_complex::Quaternion;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::{CausalTensor, CausalTensorTrain};
 
 /// Section layout version written by this build (bumped per section, not per container).
 const SECTION_V1: u8 = 1;
+
+/// The `"nav"` section's layout version written by this build.
+///
+/// **v1** packed `position(3), velocity(3), gm, tau, elapsed, state(17), cov(17×17)`. **v2** inserts
+/// the four nominal-attitude floats `(w, x, y, z)` after `elapsed` and before the filter state, so the
+/// resumed engine keeps its heading.
+///
+/// The version byte is what keeps the two layouts apart, and it has to be read in both directions.
+/// Without it a v1 package hits this build's reader four values short and fails as "truncated" at the
+/// end of the covariance, naming the wrong cause; worse, a v2 package handed to a build that predates
+/// the attitude reads the quaternion as the first four filter-state entries and shifts every value
+/// after it, restoring a plausible-looking engine from misaligned data. Bumping the section closes both
+/// directions: [`section`] already refuses a version it does not know, so an older build now rejects a
+/// v2 package loudly instead of misparsing it, and the reader below decodes a v1 package correctly with
+/// the identity attitude — which is exactly the attitude the writing build modelled (`C ≈ I`), so no
+/// resumable state is thrown away.
+const NAV_SECTION_V2: u8 = 2;
 
 /// Named tensor-train fields, as a field-tier snapshot stores them.
 pub type NamedTtFields<R> = Vec<(String, CausalTensorTrain<R>)>;
@@ -210,6 +228,12 @@ where
             write_value(&mut nav, &engine.gm());
             write_value(&mut nav, &engine.carried_clock_offset());
             write_value(&mut nav, &engine.elapsed_time());
+            // The nominal body→nav attitude (w, x, y, z), so a resumed engine keeps its heading.
+            let q = engine.attitude();
+            write_value(&mut nav, &q.w);
+            write_value(&mut nav, &q.x);
+            write_value(&mut nav, &q.y);
+            write_value(&mut nav, &q.z);
             for v in &engine.filter().state().to_array() {
                 write_value(&mut nav, v);
             }
@@ -242,24 +266,34 @@ where
             SnapshotSection::new("scalars", SECTION_V1, scalars),
             SnapshotSection::new("channels", SECTION_V1, channels),
             SnapshotSection::new("ambient", SECTION_V1, ambient),
-            SnapshotSection::new("nav", SECTION_V1, nav),
+            SnapshotSection::new("nav", NAV_SECTION_V2, nav),
             SnapshotSection::new("log", SECTION_V1, log),
             SnapshotSection::new("step", SECTION_V1, step_bytes),
         ],
     ))
 }
 
-fn section<'a>(package: &'a SnapshotPackage, name: &str) -> Result<&'a [u8], PhysicsError> {
+/// A named section's bytes together with its layout version, refusing a version this build does not
+/// know how to decode. `accepted` lists the versions the caller can read, oldest first.
+fn versioned_section<'a>(
+    package: &'a SnapshotPackage,
+    name: &str,
+    accepted: &[u8],
+) -> Result<(&'a [u8], u8), PhysicsError> {
     let s = package.section(name).ok_or_else(|| {
         PhysicsError::CalculationError(format!("snapshot: missing section '{name}'"))
     })?;
-    if s.version() != SECTION_V1 {
+    if !accepted.contains(&s.version()) {
         return Err(PhysicsError::CalculationError(format!(
             "snapshot: section '{name}' has unsupported layout version {}",
             s.version()
         )));
     }
-    Ok(s.bytes())
+    Ok((s.bytes(), s.version()))
+}
+
+fn section<'a>(package: &'a SnapshotPackage, name: &str) -> Result<&'a [u8], PhysicsError> {
+    versioned_section(package, name, &[SECTION_V1]).map(|(bytes, _)| bytes)
 }
 
 /// Unpack a full resume package into the coupled field and the suspended step index.
@@ -320,8 +354,8 @@ where
         field.set_throttle_action(a);
     }
 
-    // "nav".
-    let bytes = section(package, "nav")?;
+    // "nav" — v2 carries the nominal attitude, v1 predates it (see `NAV_SECTION_V2`).
+    let (bytes, nav_version) = versioned_section(package, "nav", &[SECTION_V1, NAV_SECTION_V2])?;
     let mut o = 0;
     let nav_present = presence_flag(*bytes.first().ok_or_else(|| short("nav"))?, "nav")?;
     o += 1;
@@ -331,6 +365,19 @@ where
         let gm: R = read_value(bytes, &mut o, "nav")?;
         let tau: R = read_value(bytes, &mut o, "nav")?;
         let elapsed: R = read_value(bytes, &mut o, "nav")?;
+        // Nominal attitude (w, x, y, z), in the order `pack_resume` wrote it. A v1 section has no
+        // attitude floats to read: the build that wrote it carried no nominal attitude and propagated
+        // the specific force under `C ≈ I`, which is the identity quaternion exactly, so resuming at
+        // identity reproduces the suspended engine rather than inventing a heading for it.
+        let attitude = if nav_version >= NAV_SECTION_V2 {
+            let qw: R = read_value(bytes, &mut o, "nav")?;
+            let qx: R = read_value(bytes, &mut o, "nav")?;
+            let qy: R = read_value(bytes, &mut o, "nav")?;
+            let qz: R = read_value(bytes, &mut o, "nav")?;
+            Quaternion::new(qw, qx, qy, qz)
+        } else {
+            Quaternion::identity()
+        };
         let state_vec: Vec<R> = read_values(bytes, &mut o, NAV_STATES, "nav")?;
         let mut state = [R::zero(); NAV_STATES];
         state.copy_from_slice(&state_vec);
@@ -339,12 +386,13 @@ where
             let r: Vec<R> = read_values(bytes, &mut o, NAV_STATES, "nav")?;
             row.copy_from_slice(&r);
         }
-        let filter = NavFilter::restore(crate::navigation::InsErrorState::from_array(state), cov);
+        let filter = NavFilter::restore(crate::navigation::InsErrorState::from_array(state), cov)?;
         field.set_nav(ReentryNavEngine::restore(
             [p[0], p[1], p[2]],
             [v[0], v[1], v[2]],
             gm,
             filter,
+            attitude,
             tau,
             elapsed,
         ));

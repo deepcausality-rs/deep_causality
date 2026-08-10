@@ -7,22 +7,22 @@ structure-preservation test a new solver is judged by.
 Where the sibling [mms_taylor_green_verification](../mms_taylor_green_verification/README.md) example *verifies the
 pointwise right-hand side* by manufactured solutions, this example *runs the actual solver*: the
 periodic DEC-native incompressible Navier–Stokes march from
-`deep_causality_physics::theories::fluid_dynamics::dec`. Three DeepCausality abstractions appear
-together:
+`deep_causality_cfd::solvers::dec`. Three DeepCausality abstractions appear together:
 
 - **The DEC solver.** Velocity is an edge 1-form on a cubical torus for the entire solve. Each
   `Rk4` stage evaluates the Leray-projected rate `P(−i_u ω − ν Δ_dR u♭)` — the projector *is* the
   incompressibility equation, so the march never approximates divergence-freeness; it enforces it
   to CG tolerance at every stage. The marching state is the `SolenoidalField` type-state, which
   only a projection can construct: an unprojected field cannot be time-stepped, by construction.
-- **The causal flow.** The program is a two-stage `CausalFlow` chain — seed, then march — where
-  each stage is a plain `Value -> Result<U, CausalityError>` composed with `try_step`. A CG
-  failure or CFL violation short-circuits the chain through the error channel with the failing
-  step in the message.
-- **Precision as a parameter.** Every model struct is generic over `R: RealField`; the single
-  `FloatType` alias in `main.rs` selects the precision for the lattice metric, the de Rham
-  seeding, every projection CG solve, the `Rk4` march, and the energy series alike. Values are
-  cast to `f64` only at the display boundary, for CSV presentation.
+- **The Flow DSL.** The case is declared as a `MarchConfig` through `CfdConfigBuilder` in
+  `config.rs`, then composed and run by `CfdFlow::march(&config).on(&manifold).run()`. Seeding and
+  marching happen inside that run, not as user-written stages. The run returns
+  `Result<Report<FloatType>, PhysicsError>`; any solver failure aborts the march and surfaces as
+  that error, which `main` prints with its stage context before exiting non-zero.
+- **Precision as a parameter.** The `deep_causality_cfd` config and flow types are generic over
+  `R: CfdScalar`; the single `FloatType` alias in `main.rs` picks the `R` for the lattice metric,
+  the de Rham seeding, every projection solve, the `Rk4` march, and the energy series alike.
+  Values are cast to `f64` only at the display boundary, for CSV presentation.
 
 ## The case
 
@@ -77,20 +77,25 @@ t_star,kinetic_energy_per_vol,dissipation_rate
 ...
 ```
 
-with a human-readable summary (final `E*/E0`, peak dissipation and its time) on stderr, so
-`> curve.csv` captures a clean plot input.
+with a human-readable summary on stderr, so `> curve.csv` captures a clean plot input. The summary
+reports the final `E*/E0` and the largest dissipation over the sampled horizon with its time. That
+maximum is only the curve's peak when the curve turned over before the horizon; the summary says
+which case it is. At the default 16³ / `t*_max = 10` it has not turned over, so the reported figure
+is the last sample, still rising.
 
-This is a code example, not a test host: CI never executes it, and correctness is gated by the
-solver's own validation ladder in `deep_causality_physics` (Taylor–Green convergence tables,
-inviscid invariants, the double shear layer).
+CI runs this harness as a fast one (`.github/workflows/cfd_verification.yml`), and it exits
+non-zero on a broken gate. The two gates are tripwires on the discretisation's own invariants:
+kinetic energy never rises step to step, and the horizon ends below `E0`. The dissipation curve
+itself is **not** gated. At the default 16³ it is grossly under-resolved, so the CSV is for
+plotting against the DNS reference by eye, not for a pass/fail claim.
 
 ## File layout
 
 | File | Responsibility |
 | --- | --- |
-| `main.rs` | The workflow: the `FloatType` alias, argument parsing, and the `CausalFlow` chain that sequences seed and march. |
-| `model.rs` | The precision-generic model: the lattice manifold, the solver configuration (`ν` from Re at `R`), the two flow stages, and the `Sample<R>`/`Report<R>` carriers. |
-| `print_utils.rs` | Presentation only: the CSV artifact and the stderr summary (the one place values are cast to `f64`). |
+| `main.rs` | The workflow: the `FloatType` alias, argument parsing, geometry materialization, and the `CfdFlow::march` run. |
+| `config.rs` | The case parameters (`RE`, `CFL_DT`, and the derived `wavenumber`/`viscosity`/`dt_star`/`volume`/`build_steps`), the `ft` precision lift, and `build_march_config`, which assembles the `MarchConfig` through `CfdConfigBuilder`. |
+| `print_utils.rs` | The CSV artifact and the stderr summary (the one place values are cast to `f64`), plus `verify`: the two structure-preservation gates `main` exits non-zero on. |
 
 ## Precision as a parameter
 
@@ -101,10 +106,10 @@ march, the energy series — re-runs at that precision:
 pub type FloatType = f64; // try f32, or Float106 (also add `use deep_causality_num::Float106;`)
 ```
 
-Exact `f64` specifications (`Re`, the CFL step, π) lift once into `R` through the `flt!` macro in
-`model.rs` and never come back down; every computed quantity stays at `R`. The macro routes
-through `FromPrimitive` rather than `From<f64>` so the same call sites serve `f32`, `f64`, and
-`Float106` alike (std has no `f32: From<f64>`).
+Exact `f64` specifications (`Re`, the CFL step, π) lift once into `FloatType` through the `ft`
+function in `config.rs` and never come back down; every computed quantity stays at that precision.
+`ft` routes through `FromPrimitive::from_f64` rather than `From<f64>`, so the same call sites serve
+`f32`, `f64`, and `Float106` alike (std has no `f32: From<f64>`).
 
 ## Performance
 

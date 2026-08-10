@@ -284,10 +284,15 @@ where
 /// boundary reconfiguration cannot fail on a valid, finite stream.
 ///
 /// # Errors
-/// * `PhysicsError::DimensionMismatch` when `wall_axis`/`flow_axis` are out of range, equal, or
-///   the stream is shorter than `steps`.
+/// * `PhysicsError::DimensionMismatch` when `flow_axis >= D`, or when the stream is shorter than
+///   `steps`. These two are checked here, up front.
 /// * Every rejection of [`DecNsSolver::with_moving_wall`] for the prescribed wall (periodic axis,
-///   non-finite or wall-normal velocity).
+///   non-finite or wall-normal velocity). `wall_axis` is range-checked there rather than here.
+///
+/// **Not rejected: `flow_axis == wall_axis`.** Nothing here refuses a zone whose inflow direction is
+/// the wall normal. Whether it is caught downstream depends on the probe value: the probe is built
+/// from `default_inflow()`, so when that is zero the wall-normal guard in `with_moving_wall` sees a
+/// zero velocity and passes, and the misconfiguration proceeds silently. Supply distinct axes.
 pub fn march_inflow<'m, const D: usize, R>(
     solver: DecNsSolver<'m, D, R>,
     field: SolenoidalField<R>,

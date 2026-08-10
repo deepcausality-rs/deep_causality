@@ -15,13 +15,13 @@ use deep_causality_haft::LogSize;
 /// roster of N branches costs one paused state rather than N copies. These fields are that claim
 /// made checkable from a branch report, so a study can regress it instead of trusting it.
 ///
-/// Recorded on every branch the carrier continues — [`CarrierPause::continue_with`], the fan-out
-/// [`CarrierPause::continue_branches`] lowers onto it, and [`CarrierFork::continue_march`]. A report
+/// Recorded on every branch the carrier continues: `CarrierPause::continue_with`, the fan-out
+/// `CarrierPause::continue_branches` that lowers onto it, and `CarrierFork::continue_march`. A report
 /// from a plain (unforked) march carries `None`: nothing was forked, so there is nothing to claim.
 ///
-/// [`CarrierPause::continue_with`]: crate::CarrierPause::continue_with
-/// [`CarrierPause::continue_branches`]: crate::CarrierPause::continue_branches
-/// [`CarrierFork::continue_march`]: crate::CarrierFork::continue_march
+/// Those three are named as prose rather than linked. `CarrierPause` and `CarrierFork` are declared
+/// `pub` inside the private `types::flow::carrier` module and are not re-exported, so they have no
+/// path reachable from the crate root for an intra-doc link to resolve against.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ForkEconomics {
     shares_fluid: bool,

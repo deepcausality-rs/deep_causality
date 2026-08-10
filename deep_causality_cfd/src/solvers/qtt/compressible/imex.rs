@@ -18,10 +18,13 @@
 //! so the implicit solve is always against the well-conditioned constant-coefficient core. That core is
 //! advanced by its **closed-form low-rank inverse** ([`AcousticCoreInverse`], design D10) — `A₀` factors
 //! exactly through the cyclic shift and its inverse is applied in `O(l)` shift-applies with no iterative
-//! solve, so the step is unconditionally robust and **free-stream-exact** (an AMEn-per-step solve loses
-//! free-stream to its residual tolerance). This is the isolated 1-D acoustic operator that task 3.1 gates
-//! *first*, before the full system coupling in the marcher. The model equation is
-//! `u_t = −a·u_x + κ·c²(x)·u_xx`: explicit advection, split-implicit acoustic/diffusion.
+//! solve, so **the implicit core** is advanced unconditionally stably and **free-stream-exactly** (an
+//! AMEn-per-step solve loses free-stream to its residual tolerance). The scheme as a whole is **not**
+//! unconditionally stable: the variable remainder `A₁` is lagged explicitly, so it retains an explicit
+//! diffusion-number bound of order `Δt·κ·max|c² − c̄²| / Δx²`, and the advection term `−a·u_x` retains its
+//! own explicit CFL bound. Neither is checked here; the caller owns the step size. This is the isolated
+//! 1-D acoustic operator that task 3.1 gates *first*, before the full system coupling in the marcher. The
+//! model equation is `u_t = −a·u_x + κ·c²(x)·u_xx`: explicit advection, split-implicit acoustic/diffusion.
 
 use crate::CfdScalar;
 use crate::tensor_bridge::{AcousticCoreInverse, dequantize, gradient, laplacian, quantize};
@@ -158,9 +161,17 @@ where
 /// Conservation-preserving rounding (design D4): `round` minimizes Frobenius error, not the integral, and
 /// the implicit solve carries its own residual, so a marched conservative field drifts its total. Carry the
 /// conserved `target` total (the invariant from `t = 0`) and, after rounding, restore it with a **rank-1
-/// uniform fixup** (`δ = (target − ∫after)/N` added as a constant field). For a single conserved scalar
-/// (mass on a periodic grid) this pins the total to `target` with no secular drift, projecting out both the
+/// uniform fixup** (`δ = (target − ∫after)/N` added as a constant field), which projects out both the
 /// rounding error and the solver residual each step.
+///
+/// **Accuracy of the fixup.** The uniform offset is added and the sum is then re-rounded, so the total is
+/// restored *to the truncation tolerance of that final round*, not pinned exactly. The offset is rank-1, so
+/// it raises the bond by at most one and the final round is close to a no-op; the residual drift is
+/// bounded by the round's own tolerance rather than accumulating secularly.
+///
+/// **Not on a shipped path.** No marcher calls this; `step_component` in the 1-D/2-D/3-D marchers does not
+/// use it. It is a building block exercised by `compressible_imex_tests.rs`, kept for the conservative
+/// variant of the marched step, and it is exported so a caller can apply it explicitly.
 ///
 /// # Errors
 /// Propagates codec / rounding errors.
@@ -186,6 +197,19 @@ where
 /// Positivity limiter (task 3.3): clamp a field to a small positive `floor` (dequantize → `max(·, floor)`
 /// → requantize). A pragmatic guard keeping `ρ, p > 0` through a strong rarefaction; the structural
 /// upgrade is entropy / log-variable evolution (deferred).
+///
+/// **This operation is not conservative.** Raising sub-floor cells to `floor` injects mass (or whatever the
+/// clamped variable measures); the injected total is `Σ max(floor − uᵢ, 0)` over the clamped cells and is
+/// **not** reported or compensated here. Pair it with [`conservation_round`] if the total must be held, or
+/// use a Zhang–Shu conservative rescaling if the local profile matters too.
+///
+/// **Choosing `floor`.** It is the caller's, and it should be tied to the initial state rather than picked
+/// as a bare literal: a fixed small fraction of the initial minimum density (or pressure) keeps the clamp
+/// inactive on a well-resolved solve and active only where the reconstruction would otherwise go negative.
+/// A floor at or above the physical minimum silently rewrites the solution.
+///
+/// **Not on a shipped path.** No marcher calls this; it is exported and exercised by
+/// `compressible_imex_tests.rs` as a building block.
 ///
 /// # Errors
 /// Propagates codec errors.

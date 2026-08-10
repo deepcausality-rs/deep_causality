@@ -40,8 +40,11 @@ use deep_causality_num::FromPrimitive;
 /// * Millikan & White, "Systematics of Vibrational Relaxation," J. Chem. Phys.
 ///   39, 3209 (1963).
 /// * Park, "Nonequilibrium Hypersonic Aerothermodynamics," Wiley (1990).
-///   (The `1.16e-3` / `18.42` natural-log constants are the base-10 `5.0e-4` /
-///   `8.00` originals scaled by `ln 10`.)
+///   (`A` and `C` are consumed here in natural-log form. Only `C` is a rescaling
+///   of a base-10 original: `8.00 · ln 10 = 18.4207`, which rounds to the shipped
+///   `18.42`. `A` is not: `5.0e-4 · ln 10 = 1.1513e-3`, while the shipped `A` is
+///   `1.16e-3`, a separately rounded natural-log coefficient. See the constant
+///   docs on `MILLIKAN_WHITE_A_COEFFICIENT` and `MILLIKAN_WHITE_LOG_OFFSET`.)
 pub fn vibrational_relaxation_kernel<R>(
     t_ve: VibrationalTemperature<R>,
     t_tr: Temperature<R>,

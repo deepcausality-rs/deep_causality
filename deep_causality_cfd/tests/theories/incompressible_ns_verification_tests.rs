@@ -17,8 +17,9 @@
 //!     (1937), pp. 499–521.
 //!   - S. B. Pope, "Turbulent Flows" (Cambridge UP, 2000), §6.1.5.
 //!   - Brachet et al., "Small-scale structure of the Taylor–Green vortex",
-//!     J. Fluid Mech. 130 (1983), pp. 411–452. [Standard reference for the
-//!     2D form of the velocity / pressure fields used below.]
+//!     J. Fluid Mech. 130 (1983), pp. 411–452. [Background on the
+//!     three-dimensional Taylor–Green vortex. It is not the source of the
+//!     two-dimensional decaying fields used below.]
 
 use deep_causality_cfd::incompressible_ns_rhs;
 use deep_causality_physics::{
@@ -28,10 +29,10 @@ use deep_causality_physics::{
 // =============================================================================
 // Verification: 2D Taylor-Green vortex at t = 0
 //
-// Source: Taylor (1923), Phil. Mag. 46(274); Taylor & Green (1937),
-//         Proc. Roy. Soc. A 158, pp. 499–521.
-//         Closed-form fields as quoted in Pope (2000) §6.1.5 and
-//         Brachet et al. (1983):
+// Source: Taylor (1923), Phil. Mag. 46(274), the decaying two-dimensional
+//         vortex; Taylor & Green (1937), Proc. Roy. Soc. A 158, pp. 499–521.
+//         Closed-form two-dimensional fields as quoted in Pope (2000)
+//         §6.1.5:
 //
 //   u(x,y,t) =   cos(x) sin(y) · exp(−2 ν t)
 //   v(x,y,t) = − sin(x) cos(y) · exp(−2 ν t)

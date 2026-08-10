@@ -8,8 +8,8 @@
 
 use super::{ctx, field};
 use deep_causality_cfd::{
-    GoverningModel, InsErrorState, MachRegime, NavFilter, PhysicsStage, ReentryNavEngine,
-    RegimeClass, ThrustState, TrajectoryNav,
+    GoverningModel, InsErrorState, MachRegime, NavFilter, PhysicsStage, Quaternion,
+    ReentryNavEngine, RegimeClass, ThrustState, TrajectoryNav,
 };
 use deep_causality_haft::LogSize;
 use deep_causality_physics::EARTH_GM;
@@ -17,7 +17,7 @@ use deep_causality_physics::EARTH_GM;
 fn nav_engine() -> ReentryNavEngine<f64> {
     // The bound LEO-ish state the nav module's own tests use.
     let (r0, v0) = ([7.0e6, 1.0e6, 2.0e6], [-1.0e3, 6.5e3, 3.0e3]);
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     ReentryNavEngine::new(r0, v0, EARTH_GM, filter)
 }
 
@@ -207,7 +207,7 @@ fn with_imu_senses_the_specific_force_through_the_bias() {
 #[test]
 fn nav_predict_failure_short_circuits_but_threads_the_engine_back() {
     // An unbound (hyperbolic) state cannot re-lift onto the KS manifold: predict fails.
-    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]);
+    let filter = NavFilter::new(InsErrorState::<f64>::zero(), [1.0; 17]).unwrap();
     let unbound = ReentryNavEngine::new([7.0e6, 0.0, 0.0], [1.0e5, 0.0, 0.0], EARTH_GM, filter);
 
     let mut f = field();
@@ -217,5 +217,55 @@ fn nav_predict_failure_short_circuits_but_threads_the_engine_back() {
     assert!(
         f.nav().is_some(),
         "the engine threads back so a pause captures a whole state"
+    );
+    // The engine that threads back is the *unadvanced* one. The stage senses a body rate through the
+    // IMU before the predict, so a partially applied step would leave the nominal attitude rotated
+    // while nothing else moved, and the retry would integrate the same sample twice.
+    let engine = f.nav().expect("nav");
+    assert_eq!(
+        engine.elapsed_time(),
+        0.0,
+        "no time elapsed on a failed step"
+    );
+    assert_eq!(
+        engine.attitude(),
+        Quaternion::<f64>::identity(),
+        "no attitude was integrated by the failed step"
+    );
+}
+
+#[test]
+fn a_refused_gnss_fold_does_not_discard_the_unread_optical_fix() {
+    // A garbage GNSS broadcast (a NaN axis) is refused by the filter, so the step short-circuits. The
+    // optical fix published on the same step was never read — it must still be on the field for the
+    // retry, not consumed up front and dropped with the error. Losing it costs the run the one
+    // measurement that rides through the plasma, and it is lost silently: the caller sees the GNSS
+    // error, not the optical fix that went with it.
+    let mut f = field();
+    f.set_nav(nav_engine());
+    let optical = vec![7.0e6, 1.0e6, 2.0e6];
+    f.set_scalar("gnss_fix", vec![f64::NAN, 1.0e6, 2.0e6]);
+    f.set_scalar("optical_fix", optical.clone());
+
+    let result = nav_stage().apply(&ctx(1), &mut f);
+    assert!(result.is_err(), "a NaN GNSS axis is refused");
+    assert_eq!(
+        f.scalar("optical_fix").map(<[f64]>::to_vec),
+        Some(optical),
+        "the unread optical fix survives the GNSS refusal"
+    );
+
+    // And it is still a usable measurement, not just a leftover: the next step folds it.
+    nav_stage()
+        .apply(&ctx(2), &mut f)
+        .expect("the retry applies");
+    assert_eq!(
+        f.scalar("nav_mode").unwrap()[0],
+        1.0,
+        "the surviving optical fix folds on the retry"
+    );
+    assert!(
+        f.scalar("optical_fix").is_none(),
+        "and is consumed once folded"
     );
 }

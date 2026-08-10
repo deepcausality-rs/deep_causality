@@ -18,6 +18,16 @@
 //! the Cartesian marcher); a metric-weighted acoustic operator and the geometric conservation law for exact
 //! free-stream preservation are the named Stage-2 refinements. Directional physical derivatives (one apply
 //! per flux instead of three) are the perf follow-on.
+//!
+//! **Boundary caveat — every axis is periodic, including `ζ`.** The QTT operators are periodic by
+//! construction, so the wall-normal `ζ` axis wraps: there is **no wall boundary condition** on the body
+//! surface and no far-field/outflow treatment at the outer boundary. The nose region is meaningful because
+//! the shock stands off inside the domain; the rows adjacent to the `ζ` seam are polluted by the wrap and
+//! should not be read as a wall solution. This mirrors the note at `body_fitted_3d.rs` and applies equally
+//! to `run_repinned`, which re-pins the chart but does not add a boundary condition.
+//!
+//! The same caveat governs the non-conservative chain-rule flux form used here; see
+//! [`marcher_2d`](super::marcher_2d) for the conservation discussion, which applies unchanged in 3-D.
 
 use super::marcher_3d::{EulerState3d, EulerStateTt3d};
 use crate::CfdScalar;
@@ -326,8 +336,14 @@ where
     Ok(kstar)
 }
 
-/// Cyclically roll a train by `shift` cells along `ζ` (a rank-preserving relabel) and re-encode — the
-/// move that keeps a tracked front coordinate-stationary.
+/// Cyclically roll a train by `shift` cells along `ζ` — the move that keeps a tracked front
+/// coordinate-stationary.
+///
+/// **A cyclic relabel, applied densely and recompressed.** The implementation dequantizes to a dense
+/// buffer, permutes the `ζ` index, and re-encodes. A cyclic shift is rank-preserving *in principle*
+/// (it composes from the bond-2 `shift_plus` powers), but that is not what runs here: the bond after
+/// this call is whatever `quantize_3d` produces for the rolled field, so it is not guaranteed to equal
+/// the bond before. Composing the existing binary shift operators would make the property structural.
 fn roll_zeta<R>(
     u: &CausalTensorTrain<R>,
     lx: usize,
@@ -359,8 +375,9 @@ where
     R: CfdScalar + ConjugateScalar<Real = R> + RealField,
 {
     /// March with **Res-5 / D9 re-pinning**: each step, track the radial (density) front and, if it has
-    /// drifted off the fixed computational band `target`, roll the state back to it (a rank-preserving
-    /// relabel that keeps the feature coordinate-stationary) and slide the shell's inner radius `r0` so
+    /// drifted off the fixed computational band `target`, roll the state back to it (a cyclic relabel
+    /// that keeps the feature coordinate-stationary, applied densely and recompressed — see
+    /// [`roll_zeta`]) and slide the shell's inner radius `r0` so
     /// the front's physical radius maps to that band — rebuilding the fitted metric while reusing the
     /// invariant acoustic inverse. Returns the final dense state, the peak `max_bond`, and the re-pin count.
     ///

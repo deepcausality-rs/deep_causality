@@ -34,7 +34,9 @@
 //! `Σ_{k<N} ρ^k = (1−ρ^N)/(1−ρ)`; the prefactor `ρ/s` cancels both gains exactly because `s·(1−ρ)² = ρ`
 //! (again the quadratic), giving `A₀⁻¹·const = const` to roundoff. An AMEn-per-step solve loses this to
 //! its residual tolerance — which is why it was rank-fragile on a captured curved field. The whole
-//! construction is verified end-to-end by the `A₀·A₀⁻¹ = I` round-off gate (Resolution 6, gate 1).
+//! construction is verified end-to-end by the `A₀·A₀⁻¹ = I` round-off gate
+//! (`tests/tensor_bridge/acoustic_inverse_tests.rs::closed_form_inverse_solves_to_roundoff_and_is_resolution_stable`,
+//! with `inverse_is_free_stream_exact` covering the uniform-field gain).
 
 use crate::CfdScalar;
 use crate::tensor_bridge::operators::{lift_block, lift_leading, lift_trailing};

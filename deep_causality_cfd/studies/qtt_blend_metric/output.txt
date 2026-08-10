@@ -1,20 +1,28 @@
+    Finished `release` profile [optimized] target(s) in 0.22s
+     Running `target/release/examples/qtt_blend_metric`
 === QTT blend-metric (Res 4 / D8): body-fit as a valid low-rank free parameter ===
 
   T_lambda = (1-lambda)*Cartesian + lambda*BodyFitted, over a 256x256 (xi,eta) patch
 
-  lambda | min|detJ|  detJ sign |  shock-field bond
-  -------+----------------------+------------------
-   0.00 |     2.1213          -    |    114
-   0.25 |     1.7809          -    |    107
-   0.50 |     1.5757          -    |     92
-   0.75 |     1.5057          -    |     54
-   1.00 |     1.5708          -    |      5
+  lambda | min|detJ|   floor      margin |  shock-field bond
+  -------+-----------------------------+------------------
+   0.00 |    2.1213    2.12e-6     1.0e6 |    114
+   0.25 |    1.7809    2.12e-6     8.4e5 |    107
+   0.50 |    1.5757    2.12e-6     7.4e5 |     92
+   0.75 |    1.5057    2.12e-6     7.1e5 |     54
+   1.00 |    1.5708    2.12e-6     7.4e5 |      5
 
 --- reading ---
-  Validity: min|detJ| = 1.506 > 0 with one sign across the whole sweep — the
-  position-blend of two compatibly-oriented charts does NOT fold. The Res-4 residual holds
-  (with a bounded-λ-gradient + positive-Jacobian guard, which here is satisfied by construction).
+  Validity: min|detJ| = 1.506, which is 7.1e5x the floor that
+  BlendedMap::new accepts against — the position-blend of two compatibly-oriented charts
+  does NOT fold anywhere on this sweep.
+  Both numbers come from the shipped constructor's own scan, so the gate measures the map
+  the crate builds rather than a copy of its algebra.
   Rank dial: bond runs 114 (λ=0, Cartesian capture) -> 5 (λ=1, body-fitted),
-  monotonically — body-fittedness is a continuous low-rank free parameter, exactly as D8 claims.
+  monotonically, so λ is a usable rank knob.
+  The reduction is not spread evenly: it concentrates above λ ~ 0.75. The dial up to
+  λ=0.75 buys 114 -> 54; the last step to λ=1 buys 54 -> 5. A partial
+  blend therefore delivers little rank benefit; the useful range sits near λ=1.
+  Body-fittedness is a continuous low-rank free parameter, as D8 claims, but not a linear one.
 
 ALL GATES PASSED — the blend is valid and λ is a clean rank dial.

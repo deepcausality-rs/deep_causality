@@ -20,24 +20,29 @@ numerical.
   checked against the textbook GPS relativistic split, the canonical falsifiable anchor.
 
 The forward clock rate offset has since been **promoted out of this study into a reusable physics
-kernel** (`relativistic_clock_offset_kernel`, capability ⑤). The study now consumes the shipped
-kernel rather than defining its own.
+kernel** (`relativistic_clock_offset_kernel`, capability ⑤, itself the difference of two
+`relativistic_clock_drift_rate_kernel` evaluations). The study consumes the shipped kernel for the
+**net** rate only. The kernel returns a combined offset, not a split, so the gravitational and
+velocity rows below are computed inline in `main.rs` from `EARTH_GM`, `SPEED_OF_LIGHT`, and the two
+radii. They sum to the kernel net by construction; each of the three numbers is gated separately
+against its textbook value, and no gate asserts the sum.
 
 **Findings (gated, exit nonzero on regression).** GPS satellite clock against a geoid clock, at an
 orbital speed of `v = 3874.0 m/s`:
 
-| effect | measured | textbook |
-|---|---|---|
-| gravitational (higher potential, so faster) | **+45.65 µs/day** | +45.7 |
-| velocity (time dilation, so slower) | **−7.21 µs/day** | −7.2 |
-| net | **+38.44 µs/day** | +38.5 |
+| effect | source | measured | textbook |
+|---|---|---|---|
+| gravitational (higher potential, so faster) | inline | **+45.65 µs/day** | +45.7 |
+| velocity (time dilation, so slower) | inline | **−7.21 µs/day** | −7.2 |
+| net | kernel | **+38.44 µs/day** | +38.5 |
 
 Reentry blackout carry, vehicle clock against surface over a 180 s denied window at `v = 7650 m/s`
 and 71 km altitude: the accumulated `τ − t` offset is **−57.2 ns**, which is **17.2 m** of ranging
 drift if uncorrected.
 
-**Conclusion.** The forward `dτ/dt` kernel reproduces the textbook GPS split to sub-µs/day, so
-ns-level onboard timing is feasible with the existing constants. The linearising `s` and the proper
+**Conclusion.** The forward `dτ/dt` expression reproduces the textbook GPS split to sub-µs/day, the
+kernel supplying the net and the two components computed inline, so ns-level onboard timing is
+feasible with the existing constants. The linearising `s` and the proper
 time `τ` are **distinct clocks** and the spec must carry both, which is a conceptual fix to
 Resolution 1 rather than an implementation detail. Over a 3-minute reentry blackout the uncorrected
 clock drifts tens of metres, quantifying why the correction must be carried internally (B3).

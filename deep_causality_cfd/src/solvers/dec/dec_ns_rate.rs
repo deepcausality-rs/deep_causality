@@ -4,7 +4,16 @@
  */
 
 //! The DEC right-hand side of incompressible Navier–Stokes in rotational
-//! (Lamb) form under Leray projection: `P(−i_u(du♭) − ν Δ_dR u♭ + g♭)`.
+//! (Lamb) form under Leray projection:
+//! `P(−½[i_u(du♭) − G*_ω u] − ν Δ_dR u♭ + g♭)`.
+//!
+//! The convective term is **skew-symmetrized** (the dec-ns-stability fix):
+//! `conv' = ½[G_ω u − G*_ω u]` with `G_ω : x ↦ i_x du♭` (so `G_ω u = i_u(du♭)`)
+//! and `G*_ω` its M-adjoint, giving `⟨u, conv'⟩_M = 0` identically. The
+//! uncorrected Lamb gather `i_u(du♭)` alone injects energy in under-resolved
+//! turbulent regimes (measured 2026-06-12; see the fix-dec-convective-instability
+//! change). Both the fused and generic assemblies march this skew form; the raw
+//! gather is not a marched or exposed surface.
 //!
 //! The projector sits **inside** the rate (the governing equation of
 //! `cfd-gap.md` §2), so the ODE the integrator marches is exactly the
@@ -32,17 +41,24 @@ use deep_causality_physics::BodyForceOneForm;
 use deep_causality_physics::PhysicsError;
 use deep_causality_physics::VelocityOneForm;
 
-/// The rate field `u♭ ↦ −i_u(du♭) − ν Δ_dR u♭ + g♭` on a metric-bearing
-/// periodic lattice manifold.
+/// The rate field `u♭ ↦ −½[i_u(du♭) − G*_ω u] − ν Δ_dR u♭ + g♭` on a
+/// metric-bearing periodic lattice manifold. The convective term is the
+/// skew-symmetrized `conv' = ½[G_ω u − G*_ω u]` (the dec-ns-stability fix;
+/// see the module doc), not the raw Lamb gather `i_u(du♭)`.
 ///
 /// Construction validates every operator precondition — metric present,
 /// lattice dimension at least 2 (the convective term needs grade-2 cells),
 /// body-force edge count matching the lattice, `ν` finite and
-/// non-negative — so that [`eval_projected`](Self::eval_projected) is **infallible**
-/// (`Fn(&S) -> S`) and composes directly with
-/// `deep_causality_calculus::Rk4`. Internal operator `Result`s are
+/// non-negative — so that [`eval_unprojected`](Self::eval_unprojected) is
+/// **infallible** (`Fn(&S) -> S`). Internal operator `Result`s are
 /// unwrapped against these construction-time invariants; each unwrap
 /// documents the invariant that makes it unreachable.
+///
+/// [`eval_projected`](Self::eval_projected) stays fallible: the Leray projection
+/// runs a CG solve that can exhaust its iteration budget. `DecNsSolver::step`
+/// adapts it to the `Fn(&S) -> S` shape `deep_causality_calculus::Rk4` requires by
+/// parking a stage failure in a deferred slot and short-circuiting at the step
+/// boundary.
 ///
 /// The viscous sign follows the Stage 0 pin: on a flat torus the
 /// Hodge–de Rham Laplacian satisfies `Δ_dR = −∇²`, so the physical
@@ -424,6 +440,13 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
     /// periodic uniform lattices only). Off by default; the validation
     /// ladder gates any future default-on.
     ///
+    /// **Only the fused stencil path honours this.** The spectral Laplacian is
+    /// read inside the compiled-stencil assembly; the generic path evaluates
+    /// `manifold.laplacian_of` instead. So combining this with
+    /// [`Self::with_generic_assembly`] leaves the spectral choice **silently
+    /// unused** — the rate still evaluates, using the generic Hodge–de Rham
+    /// Laplacian. Pick one.
+    ///
     /// # Errors
     /// `PhysicsError::TopologyError` when the lattice is not fully
     /// periodic or the metric carries no per-axis Euclidean spacings.
@@ -435,6 +458,11 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
     /// Switch this rate to the generic compositional operator path — the
     /// equivalence oracle and the benchmark baseline. The default is the
     /// compiled stencil pipeline.
+    ///
+    /// **This discards any spectral viscous opt-in.** The generic path evaluates
+    /// the viscous term through `manifold.laplacian_of`, so a
+    /// [`Self::with_spectral_diffusion`] set earlier (or later) has no effect
+    /// here; see that method.
     pub fn with_generic_assembly(mut self) -> Self {
         self.engine = None;
         self
@@ -454,8 +482,9 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
         self.nu.set(nu);
     }
 
-    /// Evaluates `P(−i_u(du♭) − ν Δ_dR u♭ + g♭)`: the projected rate the
-    /// integrator marches. One gauge-fixed CG solve per evaluation.
+    /// Evaluates `P(−½[i_u(du♭) − G*_ω u] − ν Δ_dR u♭ + g♭)`: the projected
+    /// rate the integrator marches, with the skew-symmetrized convective term
+    /// (see the type doc). One gauge-fixed CG solve per evaluation.
     ///
     /// # Errors
     /// `PhysicsError::TopologyError` when the projection CG does not
@@ -503,9 +532,9 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
     ) -> Result<super::energy_budget::EnergyBudget<R>, PhysicsError> {
         let u_slice = u.as_tensor().as_slice();
 
-        // Per-term vectors through the configured assembly. `conv` is
-        // `i_u(du♭)` and `lap` is `Δ_dR u♭`; the rate carries them as
-        // `−conv` and `−ν·lap`.
+        // Per-term vectors through the configured assembly. `conv` is the
+        // skew-symmetrized convective term `½[i_u(du♭) − G*_ω u]` and `lap`
+        // is `Δ_dR u♭`; the rate carries them as `−conv` and `−ν·lap`.
         let (conv, lap): (Vec<R>, Vec<R>) = if let Some(engine) = &self.engine {
             let t = &engine.tables;
             let mut ws = engine.ws.borrow_mut();
@@ -717,7 +746,10 @@ impl<'m, const D: usize, R: DecNsScalar> DecNsRate<'m, D, R> {
             .collect()
     }
 
-    /// Evaluates the **unprojected** assembly `−i_u(du♭) − ν Δ_dR u♭ + g♭`.
+    /// Evaluates the **unprojected** assembly
+    /// `−½[i_u(du♭) − G*_ω u] − ν Δ_dR u♭ + g♭`. The convective term is the
+    /// skew-symmetrized one the marching rate uses (see the type doc), here
+    /// without the projector.
     ///
     /// Infallible by the construction-time validation; see the type doc.
     /// This is the cross-validation surface (the pointwise oracle has no

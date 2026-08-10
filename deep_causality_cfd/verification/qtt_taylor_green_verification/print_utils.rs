@@ -111,7 +111,9 @@ pub fn render(results: &[LevelResult], convection: (f64, f64, f64)) {
     }
     if results.len() >= 2 {
         let order = observed_order(&results[results.len() - 2], finest);
-        println!("  observed order = {order:.2} (centered FD + spectral projection -> 2)\n");
+        println!(
+            "  observed order = {order:.2} (2nd-order in space: centered FD + spectral projection; 1st-order in time: explicit Euler at fixed dt)\n"
+        );
     } else {
         println!();
     }
@@ -138,7 +140,7 @@ pub fn render(results: &[LevelResult], convection: (f64, f64, f64)) {
 /// verification examples' summaries.
 pub fn summary() {
     println!(
-        "\nTaylor-Green vortex reproduced: 2nd-order convergence to the analytic e^(-2 nu t) decay,"
+        "\nTaylor-Green vortex reproduced: 2nd-order-in-space convergence (1st-order in time, explicit Euler) to the analytic e^(-2 nu t) decay,"
     );
     println!("correct nonlinear convection, and divergence-free to machine precision.");
 }

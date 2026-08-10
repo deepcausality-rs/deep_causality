@@ -1,8 +1,13 @@
 # `deep_causality_cfd` — Solver Benchmark Performance
 
-Sequential vs. parallel (`--features parallel`) timings for the three `CfdFlow` solver benchmarks.
-The `parallel` feature forwards to the Rayon-backed DEC operator loops in `deep_causality_topology`
-(via the shared `MaybeParallel` marker); without it the same loops run serially.
+Sequential vs. parallel timings for the three `CfdFlow` solver benchmarks. The `parallel` feature
+forwards to the Rayon-backed DEC operator loops in `deep_causality_topology` (via the shared
+`MaybeParallel` marker); without it the same loops run serially.
+
+`parallel` sits in the crate's `default` feature set. A plain `cargo bench` therefore reproduces the
+**parallel** column; the sequential column needs `--no-default-features --features std`. The numbers
+below were measured before `parallel` joined the default set; the commands are written for the
+feature set as it stands today.
 
 ## Methodology
 
@@ -14,12 +19,12 @@ The `parallel` feature forwards to the Rayon-backed DEC operator loops in `deep_
 - **Commands:**
 
   ```bash
-  # sequential (default features)
-  cargo bench -p deep_causality_cfd --bench bench_dec_ns_march    -- --warm-up-time 1 --measurement-time 2 --sample-size 30
-  cargo bench -p deep_causality_cfd --bench bench_mms_verify      -- --warm-up-time 1 --measurement-time 2 --sample-size 30
-  cargo bench -p deep_causality_cfd --bench bench_operator_study  -- --warm-up-time 1 --measurement-time 2 --sample-size 30
+  # sequential (parallel switched off; it is on in the default set)
+  cargo bench -p deep_causality_cfd --no-default-features --features std --bench bench_dec_ns_march    -- --warm-up-time 1 --measurement-time 2 --sample-size 30
+  cargo bench -p deep_causality_cfd --no-default-features --features std --bench bench_mms_verify      -- --warm-up-time 1 --measurement-time 2 --sample-size 30
+  cargo bench -p deep_causality_cfd --no-default-features --features std --bench bench_operator_study  -- --warm-up-time 1 --measurement-time 2 --sample-size 30
 
-  # parallel (Rayon-backed DEC loops)
+  # parallel (Rayon-backed DEC loops; also what a plain `cargo bench` runs)
   cargo bench -p deep_causality_cfd --features parallel --bench bench_dec_ns_march   -- ...
   cargo bench -p deep_causality_cfd --features parallel --bench bench_mms_verify     -- ...
   cargo bench -p deep_causality_cfd --features parallel --bench bench_operator_study -- ...
@@ -29,9 +34,9 @@ The `parallel` feature forwards to the Rayon-backed DEC operator loops in `deep_
   **slower** (overhead exceeds the work).
 
 > **Summary:** at the resolutions these benches use, the `parallel` feature does **not** help and
-> actively **hurts** the marching solver — the per-loop Rayon fan-out costs more than the DEC operator
-> work it parallelizes on small grids. It is a knob for large grids, not the default. See
-> [Interpretation](#interpretation).
+> actively **hurts** the marching solver. The per-loop Rayon fan-out costs more than the DEC operator
+> work it parallelizes on small grids. It ships on and earns its keep on large grids; switch it off
+> with `--no-default-features --features std` for small ones. See [Interpretation](#interpretation).
 
 ## 1. DEC Navier–Stokes marching (`bench_dec_ns_march`)
 
@@ -131,7 +136,7 @@ path, and there the fan-out overhead still slightly outweighs the gain (0.90×).
   always a net loss. The speedup stays well under the 16-core ideal because the per-step constrained
   projection and march orchestration are largely serial (Amdahl).
 - **Verification is unaffected** because it does no DEC-loop work.
-- **Guidance:** keep `parallel` **off** below ~256² (small/CI-scale workloads);
-  enable it for grids ≳ 384², where it is a real win (≥1.25×). Re-measure to confirm the crossover on
-  the target hardware.
+- **Guidance:** `parallel` is on by default. Below ~256² (small/CI-scale workloads) switch it **off**
+  with `--no-default-features --features std`; leave it on for grids ≳ 384², where it is a real win
+  (≥1.25×). Re-measure to confirm the crossover on the target hardware.
 - **Caveat:** these are single-machine medians at a short measurement window; verify at target configuration;

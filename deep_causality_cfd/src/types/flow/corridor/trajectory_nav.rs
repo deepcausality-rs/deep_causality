@@ -86,11 +86,16 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
         // Predict: KS drift + the ④ aero acceleration as the Strang kick (zero if no producer
         // ran), sensed through the IMU when one is configured.
         let aero = field.aero_force().unwrap_or([R::zero(); 3]);
-        let sensed = match &self.imu {
-            Some(imu) => imu.sense_specific_force(aero),
-            None => aero,
+        let (sensed, omega) = match &self.imu {
+            // The point-mass model carries no true body rotation, so the sensed rate is the gyro bias
+            // alone (zero for the corridor/weather IMU); the nominal attitude stays at identity.
+            Some(imu) => (
+                imu.sense_specific_force(aero),
+                imu.sense_angular_rate([R::zero(); 3]),
+            ),
+            None => (aero, [R::zero(); 3]),
         };
-        if let Err(e) = engine.predict(ctx.dt(), sensed, self.process_noise) {
+        if let Err(e) = engine.predict(ctx.dt(), sensed, omega, self.process_noise) {
             // Thread the engine back before short-circuiting, so the pause/fork state stays whole.
             field.set_nav(engine);
             return Err(e);
@@ -103,15 +108,28 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for TrajectoryNav<R> {
         // covariance). A denied-step GNSS fix is consumed unread — the broadcast the receiver
         // could not use is gone, not latched for reacquisition.
         let gnss = field.take_scalar("gnss_fix");
-        let optical = field.take_scalar("optical_fix");
         let denied = field.regime().map(|r| r.gnss_denied).unwrap_or(false);
         let mut aided = false;
         if !denied && let Some(fix) = fix3(gnss.as_deref()) {
-            engine.correct_position(fix, self.gnss_variance);
+            // A refused fix is a hard failure, not a silent no-op: thread the engine back (so the
+            // pause/fork state stays whole) and surface it, rather than continuing as if it folded.
+            if let Err(e) = engine.correct_position(fix, self.gnss_variance) {
+                field.set_nav(engine);
+                return Err(e);
+            }
             aided = true;
         }
+        // The optical fix is taken **after** the GNSS fold, not alongside it. Consuming both up front
+        // means a GNSS refusal returns with the optical measurement already out of the field and only
+        // held in a local, so it is dropped on the error path — a fix the vehicle paid for through the
+        // plasma, discarded because a different sensor's fold failed. Taking it here leaves it in the
+        // field for the caller's retry whenever the step short-circuits above.
+        let optical = field.take_scalar("optical_fix");
         if let Some(fix) = fix3(optical.as_deref()) {
-            engine.correct_position(fix, self.optical_variance);
+            if let Err(e) = engine.correct_position(fix, self.optical_variance) {
+                field.set_nav(engine);
+                return Err(e);
+            }
             aided = true;
         }
 

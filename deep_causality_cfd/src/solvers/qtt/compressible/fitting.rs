@@ -366,6 +366,13 @@ where
     /// as a 1-D QTT field (the smooth post-shock zone). Returns `(max_bond, peak n_e)` — the bond witnesses
     /// the "each side `O(1)` rank" of task 4.1.
     ///
+    /// # Parameters
+    /// * `relax_length` — the e-folding length `L`, expressed as a **fraction of the sampled streamwise
+    ///   extent**, not a physical length. The sample coordinate is `s = i / 2^l`, so `s` runs `0..1` over
+    ///   the whole profile and `relax_length` is dimensionless: `0.1` means the profile e-folds over a
+    ///   tenth of the sampled extent, whatever that extent is physically. `relax_fraction` would be the
+    ///   accurate name. To use a physical length, divide it by the physical extent before passing it.
+    ///
     /// # Errors
     /// Propagates the ionization kernel / codec; numeric-conversion failures.
     pub fn relaxation_profile_bond(

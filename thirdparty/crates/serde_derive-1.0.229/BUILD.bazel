@@ -110,6 +110,6 @@ rust_proc_macro(
     deps = [
         "//thirdparty/crates/proc-macro2-1.0.107:proc_macro2",
         "//thirdparty/crates/quote-1.0.47:quote",
-        "//thirdparty/crates/syn-3.0.0:syn",
+        "//thirdparty/crates/syn-3.0.3:syn",
     ],
 )

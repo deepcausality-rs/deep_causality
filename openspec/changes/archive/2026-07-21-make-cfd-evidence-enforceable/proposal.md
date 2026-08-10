@@ -2,7 +2,7 @@
 
 ## Why
 
-The pre-certification audit ([`openspec/notes/cfd_audit/AUDIT-REPORT.md`](../../notes/cfd_audit/AUDIT-REPORT.md))
+The pre-certification audit ([`../../../audits/cfd_audit/AUDIT-REPORT.md`](../../../audits/cfd_audit/AUDIT-REPORT.md))
 found the `deep_causality_cfd` numerical core sound — Rankine–Hugoniot exact, the Ghia lid-cavity primary
 vortex matched to four decimal places, Sod against the exact Riemann solution — but the **assurance layer**
 unable to support it. Two facts decide this change:
@@ -97,7 +97,7 @@ a tripwire rather than pre-empting the physics decision.
   dominated by `dec_cylinder`.
 - Some gates will fail on first wiring — that is the intended outcome, not a regression. Any harness whose
   measured value sits outside a corrected bound is triaged against the audit's per-finding evidence in
-  [`ACTION-LIST.md`](../../notes/cfd_audit/ACTION-LIST.md) before the bound is moved.
+  [`ACTION-LIST.md`](../../../audits/cfd_audit/ACTION-LIST.md) before the bound is moved.
 
 **Risk**
 - Tightening `CONVERGENCE_BOUND` and adding η/smoothing ladders may surface that the QTT cylinder drag has

@@ -6,7 +6,7 @@ Convergence: refinement ladder vs the analytic e^(-2 nu t) decay
   N =   8   max_err = 9.789e-4   l2_err = 4.894e-4   order =   --    bond =   8   divergence = 1.06e-14
   N =  16   max_err = 2.411e-4   l2_err = 1.206e-4   order = 2.02   bond =  16   divergence = 1.45e-14
   N =  32   max_err = 5.316e-5   l2_err = 2.658e-5   order = 2.18   bond =  32   divergence = 4.14e-14
-  observed order = 2.18 (centered FD + spectral projection -> 2)
+  observed order = 2.18 (2nd-order in space: centered FD + spectral projection; 1st-order in time: explicit Euler at fixed dt)
 
 Convection: nonlinear u.grad(u), u-component vs the closed form -1/2 sin(2x)
   max abs error = 3.207e-3   (computed amplitude 0.497 vs analytic 0.500)
@@ -23,5 +23,5 @@ Compression: MPS bond vs dense storage at the finest grid
   [PASS] [reference] convection error within bound: 3.207e-3 vs bound 1.000e-2 (closed form -1/2 sin 2x)
   [PASS] [tripwire] post-projection divergence at the truncation floor: 4.140e-14 vs bound 1.000e-6 (projector identity; this measures TT truncation)
 
-Taylor-Green vortex reproduced: 2nd-order convergence to the analytic e^(-2 nu t) decay,
+Taylor-Green vortex reproduced: 2nd-order-in-space convergence (1st-order in time, explicit Euler) to the analytic e^(-2 nu t) decay,
 correct nonlinear convection, and divergence-free to machine precision.

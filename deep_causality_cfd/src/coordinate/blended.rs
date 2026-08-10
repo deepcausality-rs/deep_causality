@@ -56,6 +56,15 @@ const DET_FLOOR_FRACTION: f64 = 1.0e-6;
 
 /// Geometry + blend parameters for [`BlendedMap`]: the `2^lx × 2^ly` lattice, the polar fan
 /// `r ∈ [r0, r0+dr]`, `θ ∈ [theta0, theta0+dtheta]`, and the blend `lambda ∈ [0, 1]`.
+///
+/// **Unenforced precondition: `theta0 = −dtheta/2`.** The Cartesian-capture partner is built as an
+/// axis-aligned rectangle `(0, dr, span_y, 0)`, which is the fan's own frame only when the fan is
+/// centred on `θ = 0`. For any other `theta0` the two charts being blended are relatively rotated by
+/// `theta0 + dtheta/2`, so the blend interpolates between a fitted chart and a *misaligned* rectangle
+/// and `lambda` no longer sweeps fitted → capture for the same geometry. The constructor does not
+/// reject this: it validates positivity, `lambda ∈ [0, 1]` and the determinant scan, not the frame.
+/// Either pass a fan centred on zero, or rotate the rectangle to the bisector `theta0 + dtheta/2`
+/// before comparing blends.
 pub struct BlendedMapConfig<R> {
     lx: usize,
     ly: usize,

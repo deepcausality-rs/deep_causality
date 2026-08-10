@@ -74,8 +74,9 @@ example drives the march one bind at a time so the wake probe can be streamed;
 
 The DEC solver has **no inflow/outflow surface**. The sensor drives a **prescribed moving wall**, a
 Dirichlet boundary the solver already supports, confined in a **periodic-x channel** (periodic-x,
-wall-y) containing the cylinder. This sheds a von-Kármán street and is a faithful exercise of the
-cut-cell and uncertain-zone machinery.
+wall-y) containing the cylinder. At 25 % blockage that confinement damps the von-Kármán street, so
+no street is shed here. The run is a faithful exercise of the cut-cell and uncertain-zone machinery;
+it is not a shedding case. `dec_cylinder_verification` is the harness that sheds.
 
 The quantitative **isolated-cylinder Reynolds ladder** against Lehmkuhl et al. (2013) and the
 Williamson lineage, tasks D2/D3 covering Strouhal and drag over Re 100–3900, needs a true

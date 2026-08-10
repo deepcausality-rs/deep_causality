@@ -1,3 +1,5 @@
+    Finished `release` profile [optimized] target(s) in 0.07s
+     Running `target/release/examples/mms_taylor_green_verification`
 === Avionics CFD verification: Taylor-Green via Manufactured Solutions ===
 
 Stage 1: differentiate -> kernel
@@ -13,7 +15,8 @@ Stage 2: Rk4 march of the amplitude, kernel in the loop
   abs error  = 6.66e-16
 
 Manufactured solution reproduced: exact AD derivatives drive the kernel, Rk4 tracks
-the analytic decay, and the causal monad sequenced the two stages.
+the analytic decay. CfdFlow::verify sequences the two stages directly; this is a
+pointwise check and does not route through PropagatingEffect.
 
 --- manufactured-solution gates ---
   [PASS] [reference] stage 1: kernel vs exact du/dt: 1.110e-16 vs bound 2.220e-12 (closed form)

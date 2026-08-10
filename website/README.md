@@ -67,7 +67,7 @@ its `node_modules` path is listed in `.bazelignore`.
 
 ## Toolchain constraints
 
-Two pins are deliberate and should not be "fixed" by a routine upgrade.
+Three pins are deliberate and should not be "fixed" by a routine upgrade.
 
 **TypeScript stays on the 6 line.** TypeScript 7.0 dropped the programmatic API
 that `@astrojs/check` uses, so `pnpm check` fails on 7.x
@@ -79,6 +79,12 @@ All three projects pin `typescript` to `^6.0.3`.
 pnpm resolves two copies. Bazel's `public_hoist_packages` cannot hoist an
 ambiguous name and fails the build. Each project therefore forces one version in
 its `pnpm-workspace.yaml`.
+
+**`shiki` is pinned in `cfd/`.** `cfd/shiki-rust-themes.mjs` derives the site's
+Rust themes from the `bundledThemes` of the project's own `shiki`, while astro
+highlights with whatever its `^4.0.2` dependency resolves to. Left free, pnpm
+keeps two copies and the derived themes cross a version boundary, so
+`cfd/pnpm-workspace.yaml` forces one.
 
 Note that pnpm 11 no longer reads the `pnpm` field from `package.json`, so
 `overrides` and `onlyBuiltDependencies` must live in `pnpm-workspace.yaml`. An

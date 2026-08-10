@@ -85,7 +85,17 @@ where
         Ok(du.add(&dv)?.round(&self.trunc)?)
     }
 
-    /// Solves the periodic pressure-Poisson equation `∇²p = rhs` spectrally (null mode zeroed).
+    /// Solves the periodic pressure-Poisson equation `∇²p = rhs` spectrally, inverting the
+    /// *consistent* grad-of-grad operator whose per-axis eigenvalue magnitude is `sin²(2πk/N)/Δ²`.
+    ///
+    /// **Four spectral modes are zeroed, not one.** `sin(2πk/N)` vanishes at `k = 0` and again at the
+    /// Nyquist wavenumber `k = N/2`, so the operator is singular wherever `kx ∈ {0, Nx/2}` *and*
+    /// `ky ∈ {0, Ny/2}`: the constant mode `(0, 0)`, the two axis-aligned checkerboards `(0, Ny/2)`
+    /// and `(Nx/2, 0)`, and the fully collocated checkerboard `(Nx/2, Ny/2)`. Those four components of
+    /// `rhs` are discarded and the returned pressure has no content in them. A checkerboard forcing
+    /// therefore produces no pressure response to cancel it; see [`Self::project`] for what that means
+    /// for the projected velocity. Every other mode is divided by `−(sin²(2πkx/Nx)/dx² +
+    /// sin²(2πky/Ny)/dy²)`.
     ///
     /// # Errors
     /// Propagates codec and FFT errors.
@@ -103,6 +113,13 @@ where
 
     /// Leray projection: returns `(u, v)` with `∇p` removed, so the result is discretely
     /// divergence-free. `u ← u* − ∂ₓp`, `v ← v* − ∂ᵧp`.
+    ///
+    /// **The divergence operator's kernel includes the per-axis Nyquist mode**, not just the constant
+    /// mode. The centered difference has eigenvalue `sin(2πk/N)`, which vanishes at `k = N/2` as well as
+    /// `k = 0`, so a **collocated checkerboard** component is invisible to the divergence and passes
+    /// through this projection unchanged: `div(project(u)) = 0` holds while a checkerboard remains.
+    /// Nothing here removes it. The standard mitigations are a spectral filter on the Nyquist mode or a
+    /// staggered / Rhie–Chow formulation; neither is applied on this path.
     ///
     /// # Errors
     /// Propagates divergence / Poisson / apply / round errors.
@@ -124,7 +141,8 @@ where
     }
 }
 
-/// Dense spectral Poisson solve on a `Nx × Ny` periodic grid: `∇²p = rhs`, the `k=0` mode zeroed.
+/// Dense spectral Poisson solve on a `Nx × Ny` periodic grid: `∇²p = rhs`, with the four singular
+/// modes (`kx ∈ {0, Nx/2}` and `ky ∈ {0, Ny/2}`) zeroed.
 fn spectral_poisson<R>(
     rhs: &[R],
     nx: usize,
@@ -154,7 +172,9 @@ where
     // (the *consistent* operator, not the compact 5-point Laplacian) so div(project(u)) = 0 exactly. It
     // is singular at k in {0, N/2} per axis (constant + collocated checkerboard/Nyquist), all zeroed.
     let (half_x, half_y) = (nx / 2, ny / 2);
-    // λ_k = −(2 − 2cos(2πk/N))/Δ²; the periodic Laplacian eigenvalue (separable in 2-D).
+    // λ_k = −sin²(2πk/N)/dx² per axis: the consistent grad-of-grad eigenvalue named above
+    // (separable in 2-D), not the compact 5-point −(2−2cos(2πk/N))/Δ². `lamx`/`lamy` below
+    // hold the positive per-axis magnitudes sin²/dx².
     for kx in 0..nx {
         let sx = (tau * from_usize::<R>(kx) / nxf).sin();
         let lamx = sx * sx / dx2;
@@ -166,7 +186,8 @@ where
             if is_null {
                 spec[idx] = zero;
             } else {
-                // ∇²p = rhs with λ = −(lamx+lamy): p̂ = rhŝ / (−λ).
+                // ∇²p = rhs with λ = −(lamx+lamy): p̂ = rhs / λ = −rhs/(lamx+lamy),
+                // which is `rhs * inv` with `inv = 1/λ` below.
                 let inv = R::zero() - R::one() / (lamx + lamy);
                 spec[idx] = Complex::new(spec[idx].re * inv, spec[idx].im * inv);
             }

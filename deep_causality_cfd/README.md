@@ -5,8 +5,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # DeepCausality CFD: Counterfactual Fluid Dynamics
 
-DeepCausality CFD provides Counterfactual Fluid Dynamics and Multidisciplinary analysis and optimization (MDAO) by coupling fluid dynamics, multiple physics, navigation, and control, in one typed dynamic process. 
-DeepCausality CFD couples several disciplines' analyses, optimizes over the coupled result, 
+DeepCausality CFD provides Counterfactual Fluid Dynamics and multidisciplinary analysis and optimization (MDAO) by coupling fluid dynamics, multiple physics, navigation, and control, in one typed dynamic process.
+DeepCausality CFD couples several disciplines' analyses, optimizes over the coupled result,
 and keeps track of the uncertainty along the way: the plasma-blackout
 example marches a compressible flow, reacts its plasma chemistry, gates a Kalman filter on the
 result, flies the control command it selects, and picks that command by forking the running
@@ -17,7 +17,7 @@ counterfactual dynamics, and precision as a parameter, in one crate.
 
 The crate is unpublished, but you can add it [as a git dependency](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories):
 
-you can pin the repo by:
+You can pin the repo by:
 * branch e.g. 'branch = "main"'
 * tag e.g. 'tag = "0.10.3"'
 * commit e.g. 'rev = "0c09903..."'
@@ -34,40 +34,16 @@ The fastest way to see the whole crate work end to end:
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-## Three Solver Paradigms, One Language
-
-**Calculus-based: the DEC-native Navier-Stokes solver.** Velocity lives as an edge 1-form on a
-discrete exterior calculus. Each time step marches the Leray-projected rate, so the field stays
-divergence-free at every step, and the `SolenoidalField` type-state rejects time-stepping an
-unprojected field at compile time. Validated against Taylor-Green decay, exact Couette and
-Poiseuille states, the Ghia et al. (1982) lid-driven cavity tables, and cylinder wake
-references.
-
-**Compression-based: the QTT marchers.** The compressible Euler marchers (1-D through 3-D,
-including a body-fitted variant) run on quantized tensor trains, where a `2^L` grid costs order
-`chi^2 * L`: logarithmic in point count, with sharp structure paid for in bond dimension. The
-rank studies in `studies/` measured the decisive caveat (the rank driver is coordinate
-alignment, not sharpness), and the compressible carrier answers it with a shock-fitted inflow
-strip: the exact Rankine-Hugoniot state is the boundary of the marched layer, so the shock is
-never captured at all.
-
-**Analytic and pointwise: fitted closures.** Exact Rankine-Hugoniot jumps, the Park
-two-temperature relaxation closures, the finite-rate ionization network, and the pointwise
-Navier-Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a
-fitted shock runs entirely on these, with no grid.
-
-All three families sit behind the same `CfdFlow` language and the same scalar type, so one
-program can pick per problem: the DEC solver for an incompressible cavity, the QTT marcher for
-a reentry layer, a fitted closure for the stagnation line.
-
-## Counterfactual Dynamics
+## Counterfactual Flow Dynamics
 
 `CfdFlow` is a two-level language. At the **trajectory** level, `CfdFlow::march` marches a coupled
 run until a predicate fires and yields a resumable pause; at the **campaign** level,
 `CfdFlow::study` runs a family of counterfactual cases forked from that pause to a `Verdict`. A
-fork shares the paused state in O(1) through copy-on-write (tensor fields, navigation engine, and
-provenance log included) and continues each branch in its own alternated world. From the
-plasma-blackout corridor, condensed:
+fork shares the marched tensor state in O(1) and never copies it. The `CoupledField` is
+copy-on-write: each branch takes its single clone at its first field write, which `continue_march`
+always performs, so the per-branch field cost is O(cells), not O(1). That clone covers the per-cell
+scalar vectors, the navigation engine, and the provenance log. Each branch then continues in its
+own alternated world. From the plasma-blackout corridor, condensed:
 
 ```rust
 // Trajectory level: march until the evolved sheath's n_e crosses the GPS L1 cutoff.
@@ -101,22 +77,30 @@ run. The sibling weather-dispersion table takes the other counterfactual form �
 `.baseline(standard_day).alternate(weather_world).ensemble(draws).couple(..).march_for(..)
 .reduce_ensemble(..)` — flying six atmospheres alternated from one baseline, each an ensemble of
 receiver-noise draws. The gating sequence is a named value the study inserts whole
-(`GateSeq<Row>`), the DSL never exits or prints (`verdict()` returns data), and an optional
-`save_log(path)` flushes each run's provenance to disk, one file per branch under a fan-out.
+(`GateSeq<Row>`), and the DSL never exits or prints (`verdict()` returns data). The optional
+campaign-level `save_log(path)` writes provenance to disk on that coupled `march_for` path: one
+file per branch under the fan-out, plus a `<base>.main.log` naming every spawn and rejoin. The
+`fork` / `branch` / `continue_for` chain shown above does not thread the audit sink, so it writes
+no files. Each of its branches still carries its full provenance in the returned report's effect
+log.
 
-## Native Multi Regime
+## Dynamic Regime Switch
 
-The regime is a classified property of the evolved state, re-decided every step. A vehicle
-entering or leaving orbit transitions dynamically through several regimes, and this crate
-switches three regime axes independently, each on a measured quantity:
+The regime is classified dynamically from the evolved state at each step. A vehicle entering or
+leaving orbit transitions through several regimes, and the governing regime switches on the
+physics:
 
-- **Flow regime.** `RegimeClassify` turns the freestream Knudsen number into the governing
-  model: continuum Navier-Stokes, slip-corrected continuum, transitional, or free-molecular.
-- **Dynamics regime.** The navigation engine switches integrators on the force ratio
-  `ε = a_aero/a_grav`: while gravity dominates, the trajectory advances on the exact
-  KS-conformal core with aero as a between-step kick (Encke); once aero dominates, it switches
-  to direct Cowell integration. This handles orbit entry and exit, where the integrator that is
-  exact in orbit loses accuracy in the atmosphere.
+- **Flow regime.** `RegimeClassify` classifies the freestream Knudsen number into the governing
+  model — continuum Navier-Stokes, slip-corrected continuum, transitional, or free-molecular —
+  and logs each transition. The classification is a diagnostic carried on the evolved state: the
+  crate does not switch closures on it, and no slip, transitional, or free-molecular closure is
+  implemented.
+- **Dynamics regime.** `RegimeSwitch` and `aero_gravity_ratio` express the integrator switch on the
+  force ratio `ε = a_aero/a_grav`: while gravity dominates, a trajectory advances on the exact
+  KS-conformal core with aero as a between-step kick (Encke); once aero dominates, direct Cowell
+  integration is the appropriate choice. This is the criterion for orbit entry and exit, where the
+  integrator that is exact in orbit loses accuracy in the atmosphere. Both are public API; the
+  shipped navigation engine does not call them, so the switch is the caller's to apply.
 - **Link regime.** The evolved electron density sets the plasma frequency, and the plasma
   frequency decides whether the GNSS link exists. The Kalman filter's measurement gating
   follows it.
@@ -125,7 +109,9 @@ The regime is read straight off the evolved field, so the DSL turns a regime pro
 **event the run finds** rather than a station it is told to switch at:
 
 ```rust
-// `field.regime()` -> Option<&RegimeClass> { model, knudsen, plasma_frequency, gnss_denied }.
+// `field.regime()` -> Option<RegimeClass<R>> { model, knudsen, plasma_frequency, gnss_denied,
+// mach_regime, thrust_state, touchdown }. The last three are the powered-descent axes and stay
+// neutral unless `RegimeClassify::with_flight_axes` is called.
 // Blackout is therefore an interval the run discovers: march to the onset event, fly the
 // committed world through the dark, and continue to the recovery event.
 let onset = CfdFlow::march(&nominal)
@@ -145,7 +131,7 @@ Every transition lands in the provenance log. From an actual corridor run
 
 ```text
 regime -> slip (GNSS-available), Kn=0.07829109848665225
-regime -> slip (GNSS-denied),    Kn=0.012690837165407727
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
 regime -> continuum (GNSS-denied), Kn=0.00993838892165156
 regime -> continuum (GNSS-available), Kn=0.0002551442196046344
 ```
@@ -153,7 +139,7 @@ regime -> continuum (GNSS-available), Kn=0.0002551442196046344
 One descent moves through orbit-like dynamics, slip flow, continuum flow, comms blackout, and
 reacquisition in one uninterrupted program.
 
-## Native Multiphysics
+## Dynamic Multiphysics
 
 A coupling stack is a static cons-tuple of `PhysicsStage`s stepping one shared `CoupledField`:
 
@@ -202,14 +188,102 @@ close one loop in one process.
 
 Two more design decisions carry this. `CfdFlow` composes the run itself: the trajectory march
 yields a resumable pause, the campaign study forks it (or alternates whole worlds from a
-baseline), continues each branch in copy-on-write O(1), and reduces the outcomes to gated rows —
+baseline), continues each branch copy-on-write from the shared state, and reduces the outcomes to
+gated rows —
 branch fan-outs run concurrently and bit-identically to the sequential run, and `verdict()`
 returns the result as data the caller maps to an exit code. And configuration is separate from
 execution: the `flow_config` layer holds owned descriptions (grids, schedules, seeds, stop
 conditions, observables, world-published constants) while the `flow` layer materializes runs from
 them, so a counterfactual is the same flow handed a different description.
 
-## Everything Self-Verifies
+## Multiple Solver Paradigms
+
+**Calculus-based: the DEC-native Navier-Stokes solver.** Velocity lives as an edge 1-form on a
+discrete exterior calculus. Each time step marches the Leray-projected rate, so the field stays
+divergence-free at every step. The `SolenoidalField` type-state encodes that: the carrier is a
+private field, so there is no public constructor, every constructing path is a projection, and the type
+implements no arithmetic, so two projected fields cannot be added into an unprojected one. Two
+wall-bounded escape hatches are public. `constrain_edges` and `with_lift` re-wrap a modified tensor
+without re-projecting; they exist because the DEC solver re-enters them at the end of each step, on
+the output of the constrained projection that already pinned those edges. Off that path the caller
+carries the invariant. Validated against Taylor-Green decay, exact Couette and
+Poiseuille states, the Ghia et al. (1982) lid-driven cavity tables, and cylinder wake
+references.
+
+**Quantized Tensor Trains: the QTT marchers.** The compressible Euler marchers (1-D through 3-D,
+including a body-fitted variant) run on quantized tensor trains, where a `2^L` grid *stores* order
+`chi^2 * L`: logarithmic in point count for a bounded bond dimension `chi`, with sharp structure
+paid for in `chi`. Storage is not runtime: the incompressible immersed harness measured per-step
+wall-clock rising far faster than `chi^2 * L` while the achieved bond stayed flat, so a
+non-compression bottleneck dominates that path (see the QTT envelope note in
+[`verification/README.md`](verification/README.md)). Whether `chi` stays bounded is the design
+question the rank studies in `studies/` answered, and they measured the decisive caveat: the rank
+driver is coordinate alignment, not sharpness. For the descent-schedule case the compressible
+carrier answers it with a shock-fitted inflow strip, imposing the exact Rankine-Hugoniot state as
+the boundary of the marched layer, so that shock is never captured at all.
+
+**Analytic and pointwise: fitted closures.** Exact Rankine-Hugoniot jumps, the Park
+two-temperature relaxation closures, the finite-rate ionization network, and the pointwise
+Navier-Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a
+fitted shock runs entirely on these, with no grid.
+
+All three solver families sit behind the same `CfdFlow` language and the same scalar type, so you
+can pick the best fit for your problem: the DEC solver for an incompressible cavity, the QTT
+marcher for a reentry layer, a fitted closure for the stagnation line.
+
+## Provenance for Comparison Across Boundaries
+
+The append-only effect log continues across regimes and physics. When a counterfactual fan-out
+occurs, each branch writes its own scenario effect log, so you can compare why one variant failed
+and others succeeded. Provenance is preserved under counterfactual intervention: when you inject a
+failure to stress-test a simulation, the effect log records the intervention, the replaced value,
+and every subsequent derived step, so you can read the causal chain from its inception to its
+completion.
+
+Because the log continues across boundaries and records regime changes, it allows precise
+comparative dissection across transitions. For example, you can compare flow parameters from the
+subsonic regime before and after the vehicle enters the transonic regime. This supports efficient
+structured diffs over causal event sequences, with precise attribution.
+
+Generate parameter tables, for example for weather conditions, from a single flow simulation where
+each scenario brings its own append-only effect log for end-to-end provenance.
+
+Ingest trajectory logs from an existing 6-DOF simulation generated with your own tooling, run
+counterfactuals across the parameter space to find the failure threshold at which the simulation
+breaks down, and use the provenance log to compare how the safety envelope evolves across regimes.
+
+## Precision as a Parameter
+
+Every theory, solver, stage, and observable is generic over one real scalar. A program fixes a
+single alias and the entire computation runs at that precision: `f32` for speed, `f64` for
+industry-standard precision, or `Float106` for high-fidelity, reference-grade results with up to 30
+significant digits. One line change, three precision levels. Precision as a parameter also makes
+every solver in this project future-proof for the upcoming IEEE f16 and f128 standards.
+
+```rust
+/// Working precision.
+pub type FloatType = f64; // or f32, or deep_causality_num::Float106
+
+```
+
+Specification constants stay exact `f64` literals; `ft` lifts each one into the working
+precision, and every derived number is computed in `FloatType`. Changing the alias reruns the
+whole program at another precision.
+
+
+## Selected Capabilities
+
+- **Suspend and resume a march.** `save_resume_state` / `load_resume_state` (with `pack_resume` /
+  `unpack_resume`) checkpoint a running `CoupledField` to disk and restore it. A world fingerprint guards
+  the seam, so a snapshot taken under different constants is refused rather than silently resumed.
+- **Duct marching.** `DuctMarchRun`, composed by `CfdFlow::march`, runs an internal-flow duct case over a
+  borrowed `DuctConfig` and returns an owned `Report`.
+- **Ignition corridor.** `IgnitionCorridor`, committed through by `ThrottleGuidance`, expresses the
+  four-condition corridor a powered-descent throttle must satisfy; the margin is supplied by the caller.
+- **Closed-form acoustic core inverse.** `AcousticCoreInverse` (with its 2-D and 3-D forms) inverts the
+  constant-coefficient acoustic core `A₀ = I − β·∂²` on a periodic grid, without an iterative solve.
+
+## Verification
 
 The crate ships its evidence, and CI runs it. `verification/` holds thirteen runnable programs gated
 against analytic solutions, published references, or internal invariants;
@@ -227,31 +301,6 @@ holds after the `fix-ramc-vibrational-relaxation-pair` reduced-mass correction, 
 stagnation-line closed-form Park-2T controller to 1.27 decades below the anchor (reported as an offset,
 not re-admitted).
 
-## Precision as a Parameter
-
-Every theory, solver, stage, and observable is generic over one real scalar (`CfdScalar`,
-built on `RealField`). A program fixes a single alias and the entire computation runs at that
-precision, from the flux stencils to the Kalman filter, downcasting to `f64` only at the
-display boundary. From the `qtt_ramc_stagline` verification:
-
-```rust
-/// Working precision.
-pub type FloatType = f64; // or f32, or deep_causality_num::Float106
-
-/// Lift an exact `f64` specification into the working precision.
-pub fn ft(x: f64) -> FloatType {
-    FromPrimitive::from_f64(x).expect("specification lifts into FloatType")
-}
-```
-
-Specification constants stay exact `f64` literals; `ft` lifts each one into the working
-precision, and every derived number is computed in `FloatType`. Changing the alias reruns the
-whole program at another precision. The plasma-blackout corridor measured all three: at `f64`,
-all gates pass in about 40 seconds; at 106-bit `Float106`, every gate and every discrete event
-step is identical, with continuous witnesses agreeing to 15 or 16 significant digits, which
-places the corridor's error budget in the model closures and the grid rather than in round-off;
-One line change, three precison levels.
-
 ## Where Things Live
 
 | Path | Contents |
@@ -259,18 +308,28 @@ One line change, three precison levels.
 | `src/theories/` | Fluid theories: the DEC-native `FluidTheory` realization and the pointwise Navier-Stokes regime evaluators with their causal-effect wrappers |
 | `src/solvers/` | The DEC Navier-Stokes solver, the QTT incompressible/immersed/linear solvers, the compressible Euler and 2-D/3-D marchers, shock fitting, the Park-2T closure |
 | `src/types/flow/` | The `CfdFlow` DSL: the trajectory march (runs, pauses, forks, the named-stage builder) and the campaign study grammar (phase family, `GateSeq`/`Verdict`, the `StudyEffect` carrier, the `save_log` audit sink), plus the coupling stack, physics stages, blackout stages, and reports |
-| `src/types/flow_config/` | The configuration layer: owned config containers and type-state builders |
+| `src/types/flow_config/` | The configuration layer: owned config containers, fluent builders validated at `build()`, and type-state phase transitions for the zone and coupling tuples |
 | `src/navigation/` | GNSS-denial navigation: the 17-state error-state Kalman engine, synthetic INS sensors, the integrator regime switch |
 | `src/coordinate/` | Body-fitted and blended coordinate maps with metric providers |
 | `src/tensor_bridge/` | The CFD to tensor-network bridge: QTT field codecs and finite-difference operator assembly |
 | `verification/` | Self-verifying reference checks (see its [README](verification/README.md)) |
 | `studies/` | Design-question probes with gated findings (see its [README](studies/README.md)) |
 | `benches/` | Criterion benches and the pinned `PERFORMANCE.md` |
-| `papers/` | The cited source PDFs behind constants and closures |
+| `papers/` | Source PDFs behind constants and closures, indexed by [`papers/README.md`](papers/README.md), which maps each PDF to its citing code and lists the references cited in code whose PDF is not yet present |
 
 The end-to-end examples, the plasma-blackout corridor and its weather-dispersion
-table, live in [`examples/avionics_examples/cfd/`](../examples/avionics_examples/cfd/). They
-are built entirely from this crate's public API.
+table, live in [`examples/avionics_examples/cfd/`](../examples/avionics_examples/cfd/). Every
+run is driven through this crate's `CfdFlow` API. The examples also depend on five workspace
+crates directly, because this crate's signatures expose their types without re-exporting them:
+
+- `deep_causality_tensor` for `CausalTensor`, `CausalTensorTrain`, and `Truncation`, which
+  appear in the QTT configs and the field accessors.
+- `deep_causality_core` for `AlternatableContext` and `EffectLog`, the fork and provenance seams.
+- `deep_causality_haft` for `LogAddEntry` and `LogSize`, the traits that read that log.
+- `deep_causality_algebra` and `deep_causality_num` for `Real` and `FromPrimitive`, two of the
+  traits behind the `CfdScalar` bound, needed to call scalar methods in generic code.
+
+The plasma-blackout examples additionally use `deep_causality_physics` for advanced physics.
 
 ## License
 

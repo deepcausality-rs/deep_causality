@@ -23,15 +23,19 @@ explicit Euler and per-step rounding, and measures the bond dimension as a shock
 - **A 2-D forming *curved* shock raises rank, so the threat is real and dynamic.** A smooth radial
   bump self-advects into a curved front and the bond climbs **7 → 20**, at only 64², and it grows
   with resolution. This is the dynamic confirmation of the static 2-D result.
-- **Thickening is NOT the curved-shock lever, and the hypothesis was refuted by running it.** The
-  rank of a curved shock is set by its curvature and mis-alignment with the grid axes, which adding
-  viscosity cannot remove. Worse, **naive over-thickening is diffusion-CFL-unstable**: at `ν = 6 dx`
-  the diffusion number `ν·dt/dx² = 1.2`, far above 0.25, and the run blows up to **full rank (64)**.
-  You cannot simply crank artificial viscosity in an explicit scheme.
+- **Thickening could NOT be tested as a lever here.** The explicit 2-D diffusion limit
+  `ν·dt/dx² ≤ 0.25` at `dt = 0.2 dx` confines stable `ν` below `1.25 dx`, so this scheme has no room
+  to thicken. The two viscosities run are `ν = 1 dx`, stable, and `ν = 6 dx`, whose diffusion number
+  is 1.2 and which saturates to **full rank (64)**. That is a statement about the explicit scheme's
+  stable window, not about thickness as a rank lever. You cannot simply crank artificial viscosity
+  in an explicit scheme.
+- **Curvature is not isolated here either.** No flat forming shock at the same `ν`, `dt` and front
+  width runs in this study. The controlled comparison that holds thickness fixed at 2 cells and
+  varies orientation is `qtt_rank_study`'s.
 
-**Conclusion.** The nonlinear 2-D rank threat is confirmed. The levers are **coordinate alignment**,
-meaning a shock-aligned or body-fitted coordinate, which is the `qtt_rank_study` result, and an
-**implicit / IMEX step** for stable dissipation within the diffusion CFL, which is gap **C3**.
+**Conclusion.** The nonlinear 2-D rank threat is confirmed. The candidate levers are **coordinate
+alignment**, meaning a shock-aligned or body-fitted coordinate, which is the `qtt_rank_study` result,
+and an **implicit / IMEX step** for stable dissipation within the diffusion CFL, which is gap **C3**.
 Neither is exercised here, because this study *captures on a fixed Cartesian grid on purpose*, to
 measure the cost of doing so. The shock-aligned confinement test is the next study, and both levers
 are Tier-B design commitments. Analysis: `openspec/notes/plasma-blackout/gap-2/`.

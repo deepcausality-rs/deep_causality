@@ -19,8 +19,11 @@
 //! scalar (`CfdScalar`). Composition is static (no `dyn`),
 //! built on the `deep_causality_haft` HKT/algebra foundation.
 //!
-//! CPU parallelism is opt-in via the `parallel` feature
-//! and rides the `MaybeParallel` bound.
+//! CPU parallelism ships on: `parallel` sits in the crate's `default` feature
+//! set and rides the `MaybeParallel` bound. Build with
+//! `--no-default-features --features std` for the serial operator loops, which
+//! are the faster choice below roughly 256² cells
+//! (see `benches/PERFORMANCE.md`).
 
 extern crate alloc;
 
@@ -66,6 +69,8 @@ pub use crate::navigation::{
     ImuModel, InsErrorState, IntegratorRegime, NAV_STATES, NavFilter, ReentryNavEngine,
     RegimeSwitch, aero_gravity_ratio, nav_transition_matrix,
 };
+// The nominal attitude representation `ReentryNavEngine` carries and returns (`attitude()` / `restore`).
+pub use deep_causality_num_complex::Quaternion;
 
 // The CfdFlow DSL facade (owned case descriptions materialized at run).
 // Workflow composition — the CfdFlow DSL (the "how").
@@ -92,7 +97,7 @@ pub use crate::types::flow::{
     BlackoutTrigger, BranchAccumulator, BranchOutcome, BurnEnvelope, CfdFlow, CompressibleFork,
     CompressibleMarchRun, CompressiblePause, CoupledField, CoupledMarch, Coupling,
     CyberneticCorrect, DuctMarchRun, EosStage, FiniteRateIonizationStage, FlightSensors,
-    ForkEconomics, Gates, GoverningModel, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
+    ForkEconomics, GoverningModel, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
     IGNITION_COMMIT_Q_FIELD, IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD,
     IGNITION_LATCH_FIELD, IgnitionCorridor, IonizationStage, LEG_RE_SEEDS_FIELD, MachRegime,
     MarchFork, MarchPause, MarchPipeline, MarchRun, MarchState, MmsBuilder, Operator,

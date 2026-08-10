@@ -12,9 +12,19 @@
 //! the fitted limit (this geometry, `O(10)` rank). Body-fittedness becomes a choice of impl, recovering
 //! generality at zero asymptotic rank cost — the result the `qtt_blend_metric` study measured.
 //!
-//! The continuous body-fit blend parameter `λ` (a `BlendedMap` over two providers) is a follow-on: a
-//! correct blended metric needs the *forward* Jacobians of both charts, which the present impls do not
-//! expose. The blend itself is already validated numerically (`studies/qtt_blend_metric`).
+//! The continuous body-fit blend parameter `λ` is supplied by
+//! [`BlendedMap`](crate::coordinate::BlendedMap), which computes both charts' **forward** Jacobians
+//! analytically and exposes the blended *inverse* metric through this trait. It carries a validity
+//! precondition this trait cannot express: the blended map must stay invertible, i.e. `det J` one-signed
+//! over the closed domain. `BlendedMap::new` scans for that and refuses a folding configuration, but a
+//! hand-written `MetricProvider` impl is **not** checked, so a caller supplying its own must respect it.
+//! The blend is validated numerically by `studies/qtt_blend_metric`.
+//!
+//! **Scope of the seam.** This trait carries the contravariant basis and the Jacobian volume factor, and
+//! nothing else. That is enough for the first-order chain-rule gradient the compressible marchers use.
+//! Second-order or genuinely covariant operators (a curvilinear Laplacian, covariant derivatives) need
+//! the metric tensor `g` and the Christoffel symbols as well, which would extend this trait; a consumer
+//! should not assume the present seam suffices for them.
 
 use crate::CfdScalar;
 use deep_causality_algebra::ConjugateScalar;

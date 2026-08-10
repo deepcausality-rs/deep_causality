@@ -4,8 +4,9 @@
  */
 
 //! Tier-B compressible shock-capturing QTT solver family. Stage 2 provides the 1-D conservative Euler
-//! flux (ideal gas + Rusanov), gated by the Sod exact-Riemann solution; later stages add the
-//! body-fitted coordinate coupling, IMEX time integration, and shock fitting.
+//! flux (ideal gas + global Lax–Friedrichs, i.e. Rusanov with a global wave-speed estimate), gated by
+//! the Sod exact-Riemann solution; later stages add the body-fitted coordinate coupling, IMEX time
+//! integration, and shock fitting.
 
 mod euler_1d;
 mod fitting;
@@ -32,8 +33,8 @@ use deep_causality_physics::PhysicsError;
 /// Reject a non-hyperbolic pressure before it enters the flux.
 ///
 /// The ideal-gas EOS is hyperbolic only for `p > 0`; a state with `E < ½ρ|u|²` yields `p ≤ 0`, at
-/// which the acoustic wave speed `c = √(γp/ρ)` has no real value and the Rusanov flux computed from
-/// `p` is not an approximation to the equations being solved. All four marchers
+/// which the acoustic wave speed `c = √(γp/ρ)` has no real value and the Lax–Friedrichs flux computed
+/// from `p` is not an approximation to the equations being solved. All four marchers
 /// (`euler_1d`, `marcher_2d`, `marcher_3d`, `marcher_3d_fitted`) call this so the check — and its
 /// diagnostic — stay identical across the family rather than drifting between four copies.
 ///

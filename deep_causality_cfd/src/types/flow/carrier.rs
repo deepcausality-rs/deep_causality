@@ -497,8 +497,23 @@ where
     }
 
     /// Export this pause as a resumable [`MarchState`]: the carried field plus the step reached.
-    /// The state resumes a continued march (in memory now, or from disk later after
-    /// [`save`](MarchState::save)) bit-identically to continuing this pause directly.
+    /// The state resumes a continued march in memory now, or from disk later after
+    /// [`save`](MarchState::save).
+    ///
+    /// **A leg boundary carries the coupled field, not the marched fluid layer.** What crosses the
+    /// seam is the [`CoupledField`] and a step index, nothing else. The incoming leg
+    /// ([`CoupledMarch::from`](crate::CoupledMarch::from)) rebuilds its carrier and re-quantizes
+    /// the world's uniform seed, so the evolved conserved state, the inflow strip, any
+    /// acoustic-envelope drift this leg earned, its rebuild count, and its plume-imprint budget are
+    /// all discarded. That is the design's accepted quasi-steady defense: the layer re-converges
+    /// within a few steps, and the seam is logged and counted on the field
+    /// ([`re_seeds`](Self::re_seeds)).
+    ///
+    /// A resumed leg is therefore **not** bit-identical to continuing this pause directly.
+    /// [`fork`](Self::fork) and [`continue_with`](Self::continue_with) are the paths that do
+    /// continue the marched trajectory: they share the evolved `Arc<M::State>`. Any quantity
+    /// integrated across a `MarchState` seam (heat load, blackout dwell, delta-v) carries the
+    /// re-convergence transient.
     pub fn state(&self) -> MarchState<R> {
         MarchState::at((*self.field).clone(), self.step)
     }
@@ -517,8 +532,16 @@ where
         }
     }
 
-    /// Fork the pause: an **O(1)** branch sharing the paused state and field by `Arc` — no tensor
-    /// data is copied until (and unless) the branch writes.
+    /// Fork the pause: an **O(1)** branch sharing the paused state and field by `Arc`. The fork
+    /// itself is two `Arc::clone`s and copies nothing.
+    ///
+    /// The two halves then diverge in cost. The marched tensor state is never cloned: the
+    /// continued loop reads the shared state and replaces the `Arc` with each freshly produced next
+    /// state. The [`CoupledField`] is copy-on-write, and the branch's single clone is taken at its
+    /// first write, which [`continue_march`](CarrierFork::continue_march) always performs (it
+    /// appends the resume-log entry before the first step). So per-branch field cost is O(cells),
+    /// not O(1): a clone of the per-cell scalar vectors, the navigation engine, and the provenance
+    /// log. Size a large fan-out on that number.
     pub fn fork(&self) -> CarrierFork<'_, 'c, R, S, M, D> {
         CarrierFork {
             pause: self,
@@ -836,7 +859,11 @@ where
         None => state,
     };
 
-    // Field: the branch's one CoW clone happens at the first write (merging the audit log).
+    // Field: the branch's one copy-on-write clone happens here, at the first write (merging the
+    // audit log and appending the resume entry). The pause still holds its own `Arc`, so the strong
+    // count is > 1 and `make_mut` always copies: the field clone is unavoidable in practice, and it
+    // is O(cells), covering the per-cell scalar vectors, the nav engine, and the log. Only the fork
+    // itself is O(1). The marched tensor state above is never cloned.
     let mut field_arc = field;
     {
         let field = Arc::make_mut(&mut field_arc);

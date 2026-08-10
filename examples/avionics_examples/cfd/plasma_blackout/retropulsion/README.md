@@ -18,7 +18,7 @@ collapse in 1970; past a thrust coefficient near 3 the interaction goes unsteady
 lights its engine too hard arrives faster than one that coasts.
 
 This example flies that trade as a **counterfactual on a marched flow state**. Mid-burn, the
-plume-coupled state is forked once per candidate throttle and each branch continues from the same
+marched, burn-coupled state is forked once per candidate throttle and each branch continues from the same
 instant in its own alternated world. The run self-verifies through sixteen gates and exits
 nonzero on any regression. Wall-clock is about six minutes.
 
@@ -60,7 +60,7 @@ vehicle coasts from 76 km down through the Jarvinen-Adams band and the ignition 
 at 32.7 km, Mach 2.00, 2235 Pa: inside the Mach band, inside the dynamic-pressure window, on a
 post-fix navigation state within the table-sized margin.
 
-**The fork.** The marched, plume-coupled state is forked in O(1) through copy-on-write, once per
+**The fork.** The marched, burn-coupled state is forked through copy-on-write, once per
 candidate throttle: a coast branch, two straddling the drag sign-flip band, a nominal branch, and
 an engine-degraded contingency. The preserved-drag fraction collapses 1.000 → 0.217 across the
 roster. That is the cited A0 correlation, carried per branch through a genuinely forked flight. Five

@@ -7,10 +7,24 @@
 //! assemble finite-difference operators as MPOs.
 //!
 //! This is the foundation that lets a flowfield live in, and evolve as, a tensor train (the
-//! compressed-flowfield lever of the Plasma Blackout Corridor flagship). It provides a quantized
+//! compressed-flowfield lever of the plasma-blackout corridor example). It provides a quantized
 //! field codec ([`quantize`] / [`dequantize`]) and periodic finite-difference MPO assembly
-//! ([`shift_plus`] / [`shift_minus`] / [`gradient`] / [`laplacian`]), following the Peddinti
-//! (MPS Navier–Stokes) and Kazeev–Khoromskij (QTT operators) constructions.
+//! ([`shift_plus`] / [`shift_minus`] / [`gradient`] / [`laplacian`]).
+//!
+//! The mode layout is serial-per-axis: each axis contributes its own `l` binary modes in sequence,
+//! rather than interleaving the axes' bits.
+//!
+//! References:
+//! - Peddinti, R. D., Pisoni, S., Marini, A., Lott, P., Argentieri, H., Tiunov, E. & Aolita, L.
+//!   (2024). *A quantum-inspired framework for computational fluid dynamics.* Communications
+//!   Physics **7**, 135 — the MPS Navier–Stokes construction this bridge follows.
+//! - Kazeev, V. A. & Khoromskij, B. N. *Low-Rank Explicit QTT Representation of the Laplace Operator
+//!   and Its Inverse* — the QTT finite-difference operator construction: finite-difference operators
+//!   as MPOs built from binary grid-shift operators at small bond dimension.
+//!
+//! Neither PDF is in `papers/` yet; both are listed there as cited-without-PDF. The Kazeev–Khoromskij
+//! entry carries author and title only, which is what this repository can confirm; complete its venue
+//! and year when the PDF is added rather than from recall.
 
 mod acoustic_inverse;
 mod codec;

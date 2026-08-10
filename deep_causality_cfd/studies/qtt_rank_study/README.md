@@ -25,7 +25,9 @@ plus TT-SVD) and settles whether that assumption holds.
   bit-ordering, is the cost; straight or curved makes little difference.
 - **The fix collapses it, by construction.** The same bow shock in a body-fitted polar coordinate,
   where it is a function of `r` only, is χ ≈ 5, down from 151. The oblique in an aligned coordinate
-  is χ ≈ 5, down from 394, and stays near 5 across tolerances 1e-4 to 1e-12.
+  is χ ≈ 5, down from 394. Every χ in this study, 1-D and 2-D alike, is measured at the single
+  truncation tolerance 1e-8, the only one the program runs. Rank under an SVD truncation threshold
+  is a function of that threshold by construction; no tolerance sweep is run here.
 - **Cost verdict.** For 512², meaning 262 144 dense values: aligned χ = 5 is roughly 900 parameters
   and **291× smaller**; captured curved χ = 151 is **3.1× larger** than dense; captured oblique
   χ = 394 is **21× larger**. Capturing a misaligned shock makes QTT net-negative. Aligning it makes

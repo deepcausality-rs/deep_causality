@@ -39,7 +39,7 @@ Precision: f64
 --- Leg: peak passage 61 km (committed dwell) ---
   marched 96 steps to 60.9 km, Mach 24.9 | regime: continuum (Kn = 3.83e-3) | link: GNSS DENIED
   n_e peak = 2.600e19 m^-3 | w_p = 2.876e11 rad/s | q = 1.828e6 W/m^2 | 1.3 g
-  nav error vs truth = 1.5637 m | position variance = 2.6711e1 m^2 | log entries: 9
+  nav error vs truth = 1.5637 m | position variance = 2.6710e1 m^2 | log entries: 9
 
 --- Leg: flow-resolved exit ---
   marched 463 steps to 46.8 km, Mach 8.6 | regime: continuum (Kn = 2.55e-4) | link: GNSS available
@@ -49,7 +49,7 @@ Precision: f64
 --- Leg: reacquisition ---
   marched 30 steps to 47.4 km, Mach 8.4 | regime: continuum (Kn = 2.67e-4) | link: GNSS available
   n_e peak = 6.972e-9 m^-3 | w_p = 4.711e-3 rad/s | q = 2.862e5 W/m^2 | 2.3 g
-  nav error vs truth = 0.2802 m | position variance = 3.1840e-1 m^2 | log entries: 16
+  nav error vs truth = 0.2804 m | position variance = 3.1840e-1 m^2 | log entries: 16
 
 --- Provenance (the carried EffectLog, the whole descent) ---
   16 entries total (0 bank-correction boundings by the cybernetic gate, omitted below):
@@ -80,7 +80,7 @@ Precision: f64
   [PASS] [tripwire] (1) flow-resolved blackout window: onset at step 131 (73.2 km), denied through the peak, exit at 46.8 km after a 55.9 s dwell
   [PASS] [tripwire] (2) peak n_e vs the RAM-C II anchor: n_e = 2.600e19 m^-3 at the 60.9 km passage, in [2.0e18, 5.0e19] around the flight anchor 1e19 m^-3 (evolved state, uncalibrated finite-rate network; the stagline-earned ±0.7-decade band)
   [PASS] [tripwire] (2b) blackout window altitudes: flow-resolved exit at 46.8 km (pinned band [40, 50] km) vs the RAM-C II 25-30 km flight window: the probe's light ballistic bundle decelerates it below the ionization threshold higher, so the offset is ballistics, not chemistry; onset predicted at 73.2 km
-  [PASS] [tripwire] (3) real INS drift -> reacquisition: err 0.1823 m -> 1.5637 m dead-reckoning to the peak passage, 0.2802 m after reacquisition; variance 2.290e-1 -> 2.671e1 -> 3.184e-1 m^2
+  [PASS] [tripwire] (3) real INS drift -> reacquisition: err 0.1823 m -> 1.5637 m dead-reckoning to the peak passage, 0.2804 m after reacquisition; variance 2.290e-1 -> 2.671e1 -> 3.184e-1 m^2
   [PASS] [tripwire] (4a) regime change: the descent crossed a Knudsen band (slip -> continuum), logged as provenance events
   [PASS] [tripwire] (4b) multiphysics chain: evolved flow -> reacting plasma -> steered aero force -> loads -> navigation all live in one coupling
   [PASS] [tripwire] (5a) bounded schedule rebuilds: 0 carrier rebuild(s) while following the descent (cap 3)

@@ -14,8 +14,9 @@
 //! * Millikan & White, "Systematics of Vibrational Relaxation," J. Chem. Phys.
 //!   39, 3209 (1963) — the τ_vt correlation.
 //! * Park, "Nonequilibrium Hypersonic Aerothermodynamics," Wiley (1990) — the
-//!   two-temperature model and the high-temperature vibrational limiting
-//!   correction.
+//!   two-temperature model, and the high-temperature vibrational limiting
+//!   correction that this module carries constants for but does not apply (see
+//!   the `PARK_LIMITING_*` block below).
 //! * Park, "Review of Chemical-Kinetic Problems of Future NASA Missions, I:
 //!   Earth Entries," J. Thermophys. Heat Transfer 7(3):385 (1993).
 //!
@@ -50,10 +51,19 @@ pub const NO_IONIZATION_ENERGY_EV: f64 = 9.26;
 // ─────────────────────────────────────────────────────────────────────────
 // Millikan–White vibrational relaxation correlation:
 //   τ_sr · P = exp[ A_sr · (T^(−1/3) − B · μ_sr^(1/4)) − C ]   (P in atm, τ in s)
-// with A_sr = MW_A_COEFFICIENT · μ_sr^(1/2) · θ_v^(4/3), μ_sr in amu, θ_v in K.
-// The natural-log constants below are the base-10 originals (5.0e-4, 0.015, 8.00)
-// converted via ×ln(10): 5.0e-4·ln10 = 1.16e-3 and 8.00·ln10 = 18.42.
-// Source: Millikan & White (1963); Park (1990) rearrangement.
+// with A_sr = MILLIKAN_WHITE_A_COEFFICIENT · μ_sr^(1/2) · θ_v^(4/3), μ_sr in
+// amu, θ_v in K.
+//
+// The three constants below are stated in the natural-log form the exponential
+// consumes. Only C is a clean rescaling of a base-10 original: 8.00 · ln 10 =
+// 18.4207, which rounds to the shipped 18.42. A is not. 5.0e-4 · ln 10 =
+// 1.1513e-3, while the shipped A is 1.16e-3; the base-10 equivalent of the
+// shipped value is 1.16e-3 / ln 10 = 5.038e-4. Read A and C as independently
+// rounded natural-log constants, not as one ×ln 10 conversion of a
+// (5.0e-4, 8.00) pair.
+// Source: Millikan & White (1963); Park (1990) rearrangement, both listed in
+// the module header. Neither is present in `deep_causality_physics/papers/`,
+// so no equation number is cited here.
 // ─────────────────────────────────────────────────────────────────────────
 
 /// Millikan–White `A_sr` prefactor coefficient (natural-log form). Combined with
@@ -67,15 +77,35 @@ pub const MILLIKAN_WHITE_MU_OFFSET: f64 = 0.015;
 pub const MILLIKAN_WHITE_LOG_OFFSET: f64 = 18.42;
 
 // ─────────────────────────────────────────────────────────────────────────
-// Park (1990) high-temperature limiting vibrational relaxation, applied as
-//   τ_park = 1 / (σ_v · c̄ · N),   σ_v = σ_ref · (T_ref / T)²
-// to correct the Millikan–White under-prediction above ~8000 K.
+// Park (1990) high-temperature limiting vibrational relaxation,
+//   τ_park = 1 / (σ_v · c̄ · N),   σ_v = σ_ref · (T_ref / T)²,
+// intended as the additive term τ_vt = τ_MW + τ_park that lifts the
+// Millikan–White under-prediction of the relaxation time above ~8000 K.
+//
+// NOT APPLIED. `vibrational_relaxation_kernel`
+// (`kernels/hypersonic/thermochemistry.rs`) computes `tau = exponent.exp() /
+// pressure_atm` and nothing further; neither constant below has a call site
+// anywhere in the workspace, and the mean thermal speed
+// c̄ = sqrt(8·k_B·T / (π·m)) the term requires is never formed. The shipped
+// τ_vt is the uncorrected Millikan–White value. Bias direction: τ_park is
+// additive and positive, so omitting it makes τ_vt too short above ~8000 K,
+// T_ve chases T_tr faster than the Park two-temperature model intends, and the
+// downstream T_a = sqrt(T_tr · T_ve) and n_e come out high. Magnitude at the
+// RAM-C post-shock state (T = 8044 K, n ≈ 2.6e22 m⁻³): σ_v ≈ 3.9e-20 m²,
+// c̄ ≈ 2.7e3 m/s, τ_park ≈ 3.6e-7 s against τ_MW ≈ 1.9e-5 s, about two
+// percent. The ratio grows with temperature, since τ_MW falls exponentially in
+// T^(−1/3) while τ_park rises with T at fixed number density.
+//
+// The two constants are retained as the reference values for the correction
+// when it is implemented; they are dead today.
 // ─────────────────────────────────────────────────────────────────────────
 
 /// Park limiting vibrational cross-section reference `σ_ref`. Unit: m².
+/// Unused: see the block comment above, the correction is not applied.
 pub const PARK_LIMITING_CROSS_SECTION: f64 = 1.0e-21;
 
 /// Park limiting-cross-section reference temperature `T_ref`. Unit: K.
+/// Unused: see the block comment above, the correction is not applied.
 pub const PARK_LIMITING_REFERENCE_TEMP: f64 = 50_000.0;
 
 // ─────────────────────────────────────────────────────────────────────────

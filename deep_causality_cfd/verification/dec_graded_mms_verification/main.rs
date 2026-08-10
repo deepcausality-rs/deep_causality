@@ -21,9 +21,13 @@
 //! ## Result: smooth grading retains second order — for both operators
 //!
 //! Measured outcome: **both the convective and viscous operators are second order in both
-//! norms at every grading amplitude**, even at strong grading (a 3:1 spacing ratio). The
-//! error *constant* grows mildly with grading; the *order* holds at ≈ 2. So the R1 promise
-//! ("graded meshes resolve walls cheaply and keep fast convergence") holds today.
+//! norms at every grading amplitude the sweep covers**. The sweep is `a ∈ {0.0, 0.1, 0.2,
+//! 0.3}`, so the strongest grading measured is `a = 0.3`, where `ℓ` runs from 0.7 to 1.3: a
+//! **1.86:1 spacing ratio**. Finest-pair orders there are 1.979 (convective, max-norm) and
+//! 2.001 (viscous, max-norm). The error *constant* grows mildly with grading; the *order*
+//! holds at ≈ 2. Amplitudes above 0.3 are not run, so a 3:1 ratio (`a = 0.5`) is untested.
+//! The R1 promise ("graded meshes resolve walls cheaply and keep fast convergence") holds
+//! over the measured range.
 //!
 //! ### A correctness caveat this example exists to enforce
 //!

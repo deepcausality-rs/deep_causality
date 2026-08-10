@@ -39,8 +39,6 @@ mod flight_sensors_tests;
 #[cfg(test)]
 pub mod frequency_tests;
 #[cfg(test)]
-pub mod gates_tests;
-#[cfg(test)]
 pub mod inheritance_guard_tests;
 // IO operations are unsupported under MIRI.
 #[cfg(test)]

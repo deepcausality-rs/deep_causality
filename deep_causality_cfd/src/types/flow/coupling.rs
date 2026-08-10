@@ -15,6 +15,14 @@
 //! marcher reads). A stage that returns `Err` short-circuits the chain (errors propagate across the
 //! whole holistic coupling via `?`). Adding a coupled physics is a small `PhysicsStage` impl, not a
 //! change to the DSL core.
+//!
+//! **Ordering, and the stale-read rule it implies.** Within one host step the stages run in the order
+//! written by `.then(...)`, left to right, over the same mutable [`CoupledField`]. So a stage sees the
+//! named fields written by stages **earlier in the same chain**, at their current-step values. A stage
+//! that reads a field written by a stage **later** in the chain reads the **previous step's** value,
+//! because `CoupledField` persists across steps rather than being cleared between them. That is a stale
+//! read, not an error, and nothing detects it. When a stage depends on another's output, order the chain
+//! so the producer precedes the consumer.
 
 use crate::CfdScalar;
 use crate::navigation::ReentryNavEngine;
@@ -132,8 +140,8 @@ impl<'a, const D: usize, R: CfdScalar> StepContext<'a, D, R> {
 /// stages read, and against which a regime *change* is detected), the onboard
 /// [`ReentryNavEngine`] a trajectory stage threads through the field (the nav *state* lives here,
 /// not in the stage — stages stay immutable), and an [`EffectLog`] of provenance entries (regime
-/// transitions, bounded corrections, envelope breaches) — the auditable record the flagship
-/// surfaces. All start empty, so existing couplings are unaffected.
+/// transitions, bounded corrections, envelope breaches) — the auditable record the plasma-blackout
+/// example surfaces. All start empty, so existing couplings are unaffected.
 #[derive(Debug, Clone)]
 pub struct CoupledField<R: CfdScalar> {
     ambient: Ambient<R>,

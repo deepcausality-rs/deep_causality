@@ -20,7 +20,8 @@
 //! a longer settle with a time-averaged tail read (the committed harness reads a single
 //! terminal snapshot), a cap-32 run (exact at L = 5 — no bond exceeds its natural dimension,
 //! so tensor-train truncation is off), and an L = 6 point (halved numerical dissipation,
-//! ν = ½·s_ref·Δx).
+//! ν = ½·s_ref·Δx; the node-sampled jet patch changes height there too, see
+//! [`JET_HALF_HEIGHT_L5_CELLS`]).
 
 /// Freestream static pressure, Pa (a supersonic-tunnel static condition).
 pub const P_INF: f64 = 1000.0;
@@ -80,9 +81,15 @@ pub const TOP_ANNULUS_FRACTION_BAND: (f64, f64) = (3.2, 4.0);
 pub const INTERFACE_X_BAND: (f64, f64) = (0.44, 0.56);
 
 /// Jet exit patch half-height in **cells of the L = 5 grid** (patch spans `|ŷ − ŷ_c| ≤ h·Δx̂₅`,
-/// one L-5 cell wide). Fixing the patch in physical units (0.25 m tall, r_jet/R_body = 0.25)
-/// keeps the injected momentum flux identical across grid levels, so an L = 6 companion run
-/// varies only the resolution, not the nozzle.
+/// one L-5 cell wide). The *nominal* span is 0.25 m tall, r_jet/R_body = 0.25. That is not what
+/// the marcher sees. The mask codec samples at grid nodes, so the realized patch is whatever
+/// node-rows the predicate captures: 3 rows at L = 5, which is **0.375 m tall and
+/// r_jet/R_body = 0.375** (the committed `output.txt` prints both), and 5 rows at L = 6, which is
+/// 0.3125 m. The nozzle height therefore changes with the grid. An L = 6 companion run varies the
+/// nozzle as well as the resolution; it is not a pure resolution comparison. Total injected thrust
+/// per unit depth stays at `C_T·q̂∞·D̂` at either level because `jet_exit_state` sizes the exit
+/// pressure to the realized height, so the two levels also sit at different exit-pressure ratios
+/// for the same `C_T`.
 pub const JET_HALF_HEIGHT_L5_CELLS: f64 = 1.0;
 /// The L = 5 cell width the patch geometry is anchored to.
 pub const DX_L5: f64 = 1.0 / 32.0;

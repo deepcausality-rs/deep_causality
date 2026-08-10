@@ -4,10 +4,10 @@
  */
 
 //! `DecNsRate` tests: the assembled RHS against the Stage 0 pointwise
-//! oracle at second order, the viscous-sign decay pin, exact body-force
-//! additivity, all three precision backends, and every construction
-//! rejection. The in-loop `expect`s of `eval` are documented coverage
-//! exemptions (their invariants are construction-validated here).
+//! oracle over a refinement ladder, the viscous-sign decay pin, exact
+//! body-force additivity, all three precision backends, and every
+//! construction rejection. The in-loop `expect`s of `eval` are documented
+//! coverage exemptions (their invariants are construction-validated here).
 
 use deep_causality_algebra::RealField;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
@@ -132,9 +132,17 @@ fn oracle_rhs_component(k: f64, x: f64, y: f64, axis: usize) -> f64 {
 // RHS agreement with the oracle (task 1.4)
 // ---------------------------------------------------------------------------
 
-/// The full assembled rate (`−i_u du − ν Δ u`) matches the pointwise
-/// oracle at second observed order over the refinement ladder — the
-/// Stage 0 capstone cross-check, now exercised through `DecNsRate::eval`.
+/// The full assembled rate (`−i_u du − ν Δ u`) converges to the pointwise
+/// oracle over the `n = 8, 16, 32` refinement ladder. This is the Stage 0
+/// capstone cross-check, exercised through `DecNsRate::eval_unprojected`.
+///
+/// What is asserted is an error ratio, not an order: each refinement must
+/// cut the relative error by more than a factor of 3, that is an observed
+/// order above `log2(3) = 1.585`. The measured orders are 1.66 on 8 → 16
+/// and 1.91 on 16 → 32, so a uniform bound of 1.8 would fail on the first
+/// pair. The n = 8 rung is pre-asymptotic: its relative error is 52 %, and
+/// the order rises toward 2 as the ladder refines. Both observed orders are
+/// reported in the failure message.
 #[test]
 fn rate_matches_pointwise_oracle_at_second_order() {
     let mut rel_errors = Vec::new();
@@ -165,13 +173,19 @@ fn rate_matches_pointwise_oracle_at_second_order() {
         rel_errors.push(max_err / max_ref);
     }
 
+    // Observed orders, reported so a failure says how far the convergence
+    // moved rather than only that a ratio was missed.
+    let p0 = (rel_errors[0] / rel_errors[1]).log2();
+    let p1 = (rel_errors[1] / rel_errors[2]).log2();
     assert!(
         rel_errors[1] < rel_errors[0] / 3.0,
-        "rate vs oracle not second order (first refinement): {rel_errors:?}"
+        "8 → 16 cut the error by less than 3x: observed order {p0} (expected > 1.585), \
+         errors {rel_errors:?}"
     );
     assert!(
         rel_errors[2] < rel_errors[1] / 3.0,
-        "rate vs oracle not second order (second refinement): {rel_errors:?}"
+        "16 → 32 cut the error by less than 3x: observed order {p1} (expected > 1.585), \
+         errors {rel_errors:?}"
     );
 }
 

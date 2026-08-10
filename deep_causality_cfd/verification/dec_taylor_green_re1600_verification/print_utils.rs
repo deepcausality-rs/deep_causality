@@ -15,8 +15,20 @@ use deep_causality_cfd::{EvidenceClass, Report};
 use deep_causality_num::Zero;
 
 /// Render the dissipation curve: the CSV header + per-step rows on stdout, then the closing
-/// summary (E\*/E0 and peak dissipation) on stderr. `n` pins the cell-volume normalization and the
-/// convective time step.
+/// summary on stderr. `n` pins the cell-volume normalization and the convective time step.
+///
+/// The summary's dissipation figure is the **maximum over the sampled horizon**, not necessarily an
+/// interior maximum of `−dE*/dt*`. Which of three cases holds is decided here from the first and the
+/// last sample attaining that maximum, and the summary says which one it is: the maximum falls
+/// strictly before the horizon (an interior peak), the last sample ties a maximum already reached
+/// earlier (a terminal plateau, which does not establish a turnover), or the last sample alone holds
+/// the maximum (an endpoint value on a still-rising curve).
+///
+/// At the shipped 16³ / `t*_max = 10` configuration it does not turn over: the maximum lands on the
+/// final sample at `t* ≈ 10.05` with the curve still rising, so that number is an endpoint value,
+/// not a peak. Extending the same 16³ run to `t*_max = 40` does turn it over, at `t* ≈ 14.06` —
+/// late against the `t* ≈ 9` the README quotes for the published DNS curve, because 16³ is grossly
+/// under-resolved. Neither figure is gated; the two gates in [`verify`] are internal invariants.
 pub fn render(report: &Report<FloatType>, n: usize) {
     let energy = report
         .series("kinetic_energy")
@@ -28,28 +40,56 @@ pub fn render(report: &Report<FloatType>, n: usize) {
     let mut t_star = FloatType::zero();
     let mut e_prev = energy[0] / volume;
     let mut peak = (FloatType::zero(), FloatType::zero()); // (t_star, dissipation)
+    // Indices into the dissipation samples (the `t* = 0` row carries no dissipation and is not a
+    // candidate): the first and the last sample attaining `peak.1`, plus the final sample of the
+    // horizon. The two peak indices differ when the maximum recurs, which is what separates a
+    // terminal plateau from an interior peak.
+    let mut peak_first_idx = 0usize;
+    let mut peak_last_idx = 0usize;
+    let mut last_idx = 0usize;
     let e0 = e_prev;
     emit(t_star, e_prev, FloatType::zero());
 
-    for &e_raw in &energy[1..] {
+    for (i, &e_raw) in energy[1..].iter().enumerate() {
         let e = e_raw / volume;
         t_star += dt_star;
         let dissipation = (e_prev - e) / dt_star;
         emit(t_star, e, dissipation);
-        if dissipation > peak.1 {
+        if i == 0 || dissipation > peak.1 {
+            // A strictly larger sample (or the first one, which seeds the maximum): the reported
+            // time is the earliest the maximum is reached.
             peak = (t_star, dissipation);
+            peak_first_idx = i;
+            peak_last_idx = i;
+        } else if dissipation >= peak.1 {
+            // A tie with the running maximum: keep the reported time, record the later occurrence.
+            peak_last_idx = i;
         }
+        last_idx = i;
         e_prev = e;
     }
 
     let e_t = e_prev;
     eprintln!(
-        "\nmarched to t* = {:.2}: E*/E0 = {:.4}, peak dissipation {:.6} at t* = {:.2}",
+        "\nmarched to t* = {:.2}: E*/E0 = {:.4}, max sampled dissipation {:.6} at t* = {:.2}",
         Into::<f64>::into(t_star),
         Into::<f64>::into(e_t / e0),
         Into::<f64>::into(peak.1),
         Into::<f64>::into(peak.0)
     );
+    if peak_last_idx < last_idx {
+        eprintln!("the curve turned over inside the horizon, so that maximum is an interior peak.");
+    } else if peak_first_idx < peak_last_idx {
+        eprintln!(
+            "the last sample ties that maximum: the curve is back at its maximum at the horizon, so \
+             the run does not establish a turnover. Extend t*_max (or refine the grid) to place the peak."
+        );
+    } else {
+        eprintln!(
+            "the maximum is the last sample: the curve is still rising at the horizon, so that is an \
+             endpoint value, not the dissipation peak. Extend t*_max (or refine the grid) to reach it."
+        );
+    }
     eprintln!(
         "compare the dissipation column against the published Re-1600 DNS curve (references.md)."
     );

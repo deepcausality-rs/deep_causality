@@ -31,16 +31,26 @@ configured comms band, raising the GNSS/comms-denied flag and accumulating the b
 
 ## What it verifies (exit nonzero on break)
 
-The six LER acceptance gates:
+The six LER acceptance gates, each printed with its evidence class (`verification/README.md`
+defines the convention):
 
-| Gate | Criterion |
-|---|---|
-| (i)   | **Stability at stiffness** — `τ = Δt/1000` stays bounded/monotone where explicit Euler diverges |
-| (ii)  | **Exponential exactness** — the closed form equals `x_eq − (x_eq − x)·e^{−Δt/τ}` to round-off |
-| (iii) | **Rankine–Hugoniot band** — peak `T_post` lands in the ~10⁴ K band at `M ≈ 25` (not the cold isentropic value) |
-| (iv)  | **Lag + Saha limit** — the ionization lag is real, `τ_ion` varies with `T` (grounded, not a constant), and `τ → 0` recovers Saha |
-| (v)   | **Counterfactual path-dependence** — two temperature histories reaching the same target carry different ionization (the LER memory) |
-| (vi)  | **Electrons produced** — the marched electron density is strictly positive |
+| Gate | Class | Criterion |
+|---|---|---|
+| (i)   | `[tripwire]` | **Stability at stiffness** — at `τ = Δt/1000` the relaxation stays monotone inside `[x, x_eq]` over 50 steps and settles to within 1.0 of `x_eq`, where a single explicit Euler rate step overshoots past `100·x_eq` |
+| (ii)  | `[reference]` | **Relaxation kernel vs an independent reference** — `ler_step` agrees with a 10⁶-substep forward-Euler integration of `dx/dt = (x_eq − x)/τ` to `1e-6` relative |
+| (iii) | `[tripwire]` | **Rankine–Hugoniot band** — `T_post` at `M = 25` lands inside `(1e4, 1e5) K`, not the cold isentropic value |
+| (iv)  | `[tripwire]` | **Ionization lag real, rate grounded in `T`** — the associative-ionization Arrhenius rate is higher at 9000 K than at 6000 K, and a short step leaves `α` strictly below `α_eq` |
+| (v)   | `[tripwire]` | **Counterfactual path-dependence** — two temperature histories reaching the same target carry different ionization (the LER memory) |
+| (vi)  | `[tripwire]` | **Ionized species present** — the marched electron density is strictly positive |
+
+Gate (ii) is the only `[reference]` gate here: the sub-stepped integration is a derivation separate
+from `ler_step`, and the `1e-6` tolerance is sized from that reference's own truncation error
+(`a²/2N ≈ 4.5e-8`), not from the measurement. It replaced an earlier "exponential exactness to
+round-off" check that compared `ler_step` against a re-transcription of its own body, which no input
+could make fail. Gate (iv) lost its former "`τ → 0` recovers Saha" conjunct for the same reason: that
+conjunct exercised an explicit `return x_eq` early exit and held for every input. The two surviving
+conjuncts are falsifiable — invert the Arrhenius activation exponent and the rate check fails; make
+`ler_step` jump straight to equilibrium and the lag check fails.
 
 ## Tier-A disclaimers (honest scope)
 

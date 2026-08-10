@@ -3,14 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # The plasma-blackout corridor: one continuous descent through flow, plasma, navigation, and control
+//! # The plasma-blackout corridor: one continuous coupled descent through flow, plasma, navigation, and control
 //!
 //! A reentry vehicle punches into the atmosphere at Mach 25. The shock layer ionizes, and past a
 //! critical electron density the plasma sheath cuts every GNSS link; RAM-C II measured exactly
 //! this blackout. Through the dark the vehicle dead-reckons on its INS while a bounded-correction
 //! gate keeps the bank command inside the certified envelope. When the sheath clears, one fix
-//! collapses the accumulated drift. This example flies that corridor as **one continuous
-//! descent** on the compressible carrier, expressed in the CfdFlow grammar at both levels:
+//! collapses the accumulated drift. This example flies that corridor as **one continuous coupled
+//! descent** on the compressible carrier. Every leg boundary carries the coupled field forward, so
+//! the navigation state, the truth trajectory, the evolved projections, and the provenance log
+//! cross intact. The marched fluid layer does not cross: each leg rebuilds its carrier and
+//! re-seeds that layer from the world's uniform seed, a quasi-steady restart the layer re-converges
+//! from within a few steps. The corridor is expressed in the CfdFlow grammar at both levels:
 //!
 //! * **The trunk** is trajectory level — `CfdFlow::march(&nominal).couple(..).from(..).until(..)` —
 //!   marching the coupled descent to the *flow-resolved* blackout onset, an event the run finds.
@@ -170,7 +174,7 @@ fn main() -> ExitCode {
             leg2,
             leg3,
             leg4,
-            rebuilds: model::rebuild_count(&rendered_log),
+            rebuilds: onset.rebuilds() + peak.rebuilds() + exit_pause.rebuilds() + reacq.rebuilds(),
             elapsed_s: utils::ft(clock.elapsed().as_secs_f64()),
             regime_log: rendered_log,
         }];

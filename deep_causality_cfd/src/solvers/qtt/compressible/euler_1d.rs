@@ -4,9 +4,9 @@
  */
 
 //! Tier-B Stage 2: a 1-D conservative compressible Euler marcher in quantized-tensor-train form, with
-//! an ideal-gas EOS and a Rusanov (local Lax–Friedrichs) approximate Riemann flux.
+//! an ideal-gas EOS and a global Lax–Friedrichs flux (Rusanov with a global wave-speed estimate).
 //!
-//! The conservative state `U = (ρ, ρu, ρE)` is carried as three tensor trains. The Rusanov update
+//! The conservative state `U = (ρ, ρu, ρE)` is carried as three tensor trains. The flux update
 //! `Uⁿ⁺¹ = Uⁿ − (Δt/Δx)(F_{i+½} − F_{i−½})` rearranges to a **conservative central flux difference plus
 //! a scalar artificial viscosity**,
 //!
@@ -16,8 +16,9 @@
 //! ```
 //!
 //! so it is assembled from the §0 `gradient` / `laplacian` MPOs (conservative, telescoping) applied to
-//! the flux and the state, recompressed each step. `s_max = max(|u| + c)` is the state-derived global
-//! wave speed (the LLF estimate). The nonlinear flux / EOS are evaluated pointwise (dequantize →
+//! the flux and the state, recompressed each step. `s_max = max(|u| + c)` is one maximum over the whole
+//! state, applied uniformly to every cell; it is not a per-interface estimate, so the dissipation is
+//! that of a global Lax–Friedrichs flux. The nonlinear flux / EOS are evaluated pointwise (dequantize →
 //! compute → requantize) — exact for the Sod gate; the rank-preserving TT-cross (`apply_nonlinear`)
 //! form is the large-`L` upgrade.
 
@@ -38,7 +39,8 @@ pub fn ideal_gas_pressure<R: CfdScalar>(rho: R, mom: R, energy: R, gamma: R) -> 
     (gamma - R::one()) * (energy - half * mom * mom / rho)
 }
 
-/// The 1-D conservative compressible Euler marcher (ideal gas + Rusanov flux) in QTT form.
+/// The 1-D conservative compressible Euler marcher (ideal gas + global Lax–Friedrichs flux) in QTT
+/// form.
 pub struct CompressibleEuler1d<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
@@ -62,8 +64,14 @@ where
     /// Build the marcher for a periodic `2^L`-point grid of spacing `dx`, ratio of specific heats
     /// `gamma`, and CFL number `cfl` (≤ 1).
     ///
+    /// The numerical envelope is validated here, matching the pattern the shock-fitting constructor
+    /// and the QTT incompressible/immersed constructors already use: an out-of-envelope configuration
+    /// is refused at construction rather than producing numbers that look like a solve.
+    ///
     /// # Errors
-    /// Propagates operator-assembly errors.
+    /// * [`PhysicsError::PhysicalInvariantBroken`] when `dx` is not finite and positive, `gamma` is not
+    ///   finite and greater than 1, or `cfl` is not finite and in `(0, 1]`.
+    /// * Propagates operator-assembly errors.
     pub fn new(
         l: usize,
         dx: R,
@@ -71,6 +79,21 @@ where
         cfl: R,
         trunc: Truncation<R>,
     ) -> Result<Self, PhysicsError> {
+        if !dx.is_finite() || dx <= R::zero() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "CompressibleEuler1d: grid spacing dx must be finite and positive, got {dx:?}"
+            )));
+        }
+        if !gamma.is_finite() || gamma <= R::one() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "CompressibleEuler1d: ratio of specific heats gamma must be finite and > 1, got {gamma:?}"
+            )));
+        }
+        if !cfl.is_finite() || cfl <= R::zero() || cfl > R::one() {
+            return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                "CompressibleEuler1d: CFL number must be finite and in (0, 1], got {cfl:?}"
+            )));
+        }
         let grad = gradient::<R>(l, dx, &trunc)?;
         let lap = laplacian::<R>(l, dx, &trunc)?;
         Ok(Self {
@@ -84,8 +107,8 @@ where
         })
     }
 
-    /// The pointwise flux components `(ρu, ρu²+p, (E+p)u)` and the global LLF wave speed
-    /// `s_max = max(|u| + c)`, from the dense conservative state.
+    /// The pointwise flux components `(ρu, ρu²+p, (E+p)u)` from the dense conservative state, and the
+    /// global wave speed `s_max = max(|u| + c)`: one maximum over the whole grid.
     fn flux_and_speed(
         &self,
         rho: &[R],
@@ -121,7 +144,7 @@ where
         Ok(((f1, f2, f3), s_max))
     }
 
-    /// One Rusanov component update `U ← round(U + Δt·(−∂ₓF + ½·s·Δx·∂²ₓU))`.
+    /// One Lax–Friedrichs component update `U ← round(U + Δt·(−∂ₓF + ½·s·Δx·∂²ₓU))`.
     fn update_component(
         &self,
         u: &CausalTensorTrain<R>,

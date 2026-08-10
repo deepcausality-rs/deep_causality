@@ -9,6 +9,10 @@
 //! A cylinder is immersed in a periodic free-stream by **Brinkman volume penalization** (a smoothed
 //! mask drives the velocity to zero inside the body). The drag falls out as a tensor-train contraction
 //! of the mask with the velocity deficit. The box is `[0, 2π]²`; precision enters once through [`ft`].
+//!
+//! The penalization method and its `η → 0` convergence rate (`O(η^{3/4})`) are due to Angot, Bruneau &
+//! Fabrie, "A penalization method to take into account obstacles in incompressible viscous flows",
+//! Numerische Mathematik 81(4):497–520, 1999 (see `deep_causality_cfd/papers/`).
 
 use crate::FloatType;
 use deep_causality_cfd::{
@@ -40,7 +44,13 @@ pub const ETA: f64 = 0.012;
 pub const U_INF: f64 = 1.0;
 /// Cylinder radius as a fraction of the box length `2π`.
 pub const RADIUS_FRAC: f64 = 0.15;
-/// Mask smoothing width in cells.
+/// Mask smoothing width in cells: the `tanh` body mask transitions over `SMOOTH_CELLS·dx`. This is a
+/// numerical regularization parameter, not a physical constant, and it has no external source. The
+/// value 2.0 spreads the transition over more than one cell; a one-cell step aliases on the grid.
+/// It is load-bearing where the penalization layer is under-resolved: §5b measured the reported `C_d`
+/// moving 6.1× across 0.5→4 cells at the old `L = 5`. At the resolved envelope (`L = 8`, `η` at the
+/// `dx²/ν` floor) the physical layer `√(ην) ≈ dx` sets the wall, so the 2-cell mask no longer
+/// dominates the drag. See `close-qtt-solver-envelope` and AUDIT-REPORT §4b, §5b.
 pub const SMOOTH_CELLS: f64 = 2.0;
 
 /// Committed DEC isolated-cylinder drag at Re 100 (`dec_cylinder_verification`) — the **cross-reference**

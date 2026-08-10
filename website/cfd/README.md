@@ -100,6 +100,11 @@ to 7.x.
 two resolved copies break Bazel's `public_hoist_packages`. See
 [`../README.md`](../README.md) for both constraints.
 
+`shiki` is pinned in the same file. `shiki-rust-themes.mjs` derives its themes
+from the `bundledThemes` of this project's own copy, while astro highlights with
+the copy its `^4.0.2` dependency resolves; a single override keeps those the
+same shiki.
+
 ## Deliberate omissions
 
 - **No Pagefind.** The marketing site ships an unread search index on every

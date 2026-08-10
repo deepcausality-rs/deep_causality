@@ -30,14 +30,21 @@ Run the same `Rk4` scheme at the same step `dt` at two precisions. The two compu
 identical discrete map and differ only by roundoff, of size machine epsilon `ε`. Because the scheme
 and step match, the truncation error is common to both and cancels in their difference, so the
 state-space distance between them is the roundoff growth alone. That seed of size `ε` grows like
-`e^{λ t}` and reaches the scale of the attractor (`L ≈ 10`) at
+`e^{λ t}` and reaches the separation `L` at which the forecast is declared lost at
 
 ```
 t_horizon ≈ ln(L / ε) / λ
 ```
 
-Past that time the forecast has lost every correct digit. It is still a plausible turbulent state,
-but no longer the one that follows from the initial condition. The horizon grows linearly in the
+This example sets `L = 1`, the unit separation threshold in `main.rs`, and `Report::horizon_law`
+evaluates the law at that value: `t ≈ −ln(ε)/λ`. The choice is conservative. The attractor is tens
+of state-space units across (the divergence table below reaches `3.3e1`), so a forecast that has
+drifted one unit is called dead while it still looks like the right flow. Declaring the loss at the
+attractor scale instead would raise every horizon by `ln(L)/λ`, about 2.5 time units per decade,
+and would not change their order.
+
+Past that time the forecast is no longer the trajectory that follows from the initial condition. It
+is still a plausible turbulent state on the same attractor. The horizon grows linearly in the
 number of correct digits, so each step up in precision extends the trustworthy window by a fixed
 amount.
 
@@ -47,31 +54,40 @@ amount.
 cargo run -p avionics_examples --example turbulence_flow
 ```
 
-Sample output (state-space distance to the Float106 forecast; truncation cancels, so this is
-roundoff growth):
+The divergence table and horizon summary from a run, verbatim (state-space distance to the Float106
+forecast; truncation cancels, so this is roundoff growth):
 
 ```
      t    |  f32 vs F106  |  f64 vs F106
   --------+---------------+--------------
      5.0  |     2.69e-5   |    2.31e-14
     10.0  |     1.48e-4   |    1.09e-13
+    15.0  |     4.49e-3   |    4.62e-12
     20.0  |     1.94e-1   |    1.96e-10
     25.0  |      1.99e1   |     4.01e-8
+    30.0  |      1.75e1   |     2.97e-6
+    35.0  |      2.49e1   |     2.21e-3
     40.0  |      2.69e0   |     4.84e-3
     45.0  |      1.71e1   |      2.00e0
+    50.0  |      1.17e1   |      1.55e1
+    55.0  |      3.31e1   |      1.67e1
 
-Forecast horizon (lead time before the state is off by one state-space unit):
+Forecast horizon (lead time before the flow state is off by one state-space unit):
   f32        t ≈ 21.5
   f64        t ≈ 44.5
-  Float106   beyond T=60 here; the law puts it near t ≈ 81
+  Float106   beyond T=60 here; the law below puts it near t ≈ 81
 ```
+
+There is no committed `output.txt` for this example, so the block above is the only reference
+record of what it prints; rerun it to diff.
 
 ## Reading it
 
 **An f64 forecast of this flow is trustworthy to about `t ≈ 44`,** then becomes fiction. Its
 divergence starts near `1e-14` (the `~2e-16` roundoff seed, already amplified a little) and climbs
-by roughly `e^{λ t}` until it saturates around the attractor diameter near `t ≈ 45`. No smaller
-`dt` helps; the wall is roundoff, not truncation.
+by roughly `e^{λ t}`. It crosses the unit threshold at `t = 44.5` and saturates at attractor scale,
+order ten units, a few time units after that (`1.55e1` at `t = 50`). No smaller `dt` helps; the
+wall is roundoff, not truncation.
 
 **f32 fails far sooner, at `t ≈ 21`,** because its seed (`~1e-7`) is nine orders larger.
 **Float106 reaches `t ≈ 81`** by the same law, roughly double f64. The measured spacing between the

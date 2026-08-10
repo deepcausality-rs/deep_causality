@@ -5,6 +5,14 @@
 
 //! Compressible Newtonian Navier-Stokes regime evaluators.
 //!
+//! **These are pointwise right-hand-side contributions only.** Each function evaluates the RHS of one
+//! conservation law at a single sample point from divergences the caller supplies. No thermodynamic
+//! closure is provided or checked here: the equation of state `p(ρ, e)` that ties pressure to the
+//! conserved variables is the **caller's responsibility**, and nothing in this module verifies that the
+//! `p` passed in is consistent with the `ρ` and `ρE` passed in. `deep_causality_physics` ships
+//! `speed_of_sound_ideal_gas_kernel` and the ideal-gas pressure kernels if an ideal-gas closure is
+//! wanted; a real-gas or reacting closure is the caller's to supply.
+//!
 //! Three pointwise RHS kernels for the compressible NS system:
 //!
 //! ```text
@@ -89,9 +97,13 @@ where
 /// `∂(ρE)/∂t = − ∇·(ρ u E) − ∇·(p u) + ∇·(τ·u) − ∇·q + ρ (u·g)`
 ///
 /// All four divergences are supplied by the caller at the sample point.
-/// Sign of the heat-flux term follows the convention that `q` points along
-/// `−∇T` (Fourier), so `−∇·q > 0` corresponds to net heat *deposited* at
-/// the point.
+///
+/// **`div_q` sign convention, which this function cannot check.** It takes `∇·q` where `q` is the
+/// Fourier heat flux `q = −k∇T`, pointing down-gradient. The term enters as `−∇·q`, so `−∇·q > 0` is
+/// net heat *deposited* at the point. The convention lives in this docstring rather than in the type:
+/// `div_q` is a bare scalar, so passing `∇·(k∇T)` (the opposite sign) compiles and silently flips the
+/// energy source. A `HeatFlux`/`HeatFluxDivergence` newtype would carry the convention in the type
+/// instead; that is a follow-up, and until then the caller owns the sign.
 pub fn compressible_ns_energy_rhs<R>(
     rho: &Density<R>,
     u: &Velocity3<R>,
