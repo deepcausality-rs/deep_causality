@@ -1,0 +1,129 @@
+---
+/**
+ * Section 03 — Dynamic multiphysics.
+ *
+ * Third of the five README arguments. The point the section has to land is
+ * that one stack is the loop body at both levels of the language, and that
+ * configuration is a separate layer from execution, which is what makes a
+ * counterfactual the same flow handed a different description.
+ *
+ * Figures come from the committed retropulsion run
+ * (examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt).
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const coupling = `Coupling::between_steps()
+    .then(VibrationalLagStage::new(/* Millikan-White bath */))
+    .then(FiniteRateIonizationStage::new(n_tot).with_density_field("n_tot"))
+    .then(RegimeClassify::new(l_char, trigger))
+    .then(BankSteeredLift::new(rho_ref, cda_over_m, l_over_d))
+    .then(TrajectoryNav::new(q_diag, gnss_var, optical_var).with_imu(imu))
+    .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
+    .build()`;
+
+const bothLevels = `// Trajectory: couple the stack, march a fixed horizon, get one report.
+let report = CfdFlow::march(&world).couple(stack).from_field(field0).run_for(steps)?;
+
+// Campaign: the same stack, coupled per case and per draw, flown concurrently.
+let table = CfdFlow::study("weather-dispersion table")
+    .cases(model::weather_cases())
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)
+    .reduce_ensemble(model::world_row)
+    .verdict()?;`;
+---
+<section class="cfd-sec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">03 / 07</span><span class="lb">Dynamic Multiphysics</span>
+    </p>
+    <h2>Dynamic Multiphysics</h2>
+    <p class="lede">
+      A coupling stack is a static cons-tuple of physics stages stepping one
+      shared field. No files, no adapters, no exchange format, because the
+      disciplines were never in separate processes.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets body-panel rise">
+    <Code code={coupling} lang="rust" themes={SHIKI} />
+
+    <p class="body">
+      Vibrational relaxation, reacting plasma chemistry, regime classification,
+      steered aerodynamic force, a 17-state error-state Kalman filter and a
+      bounded-correction safety gate, in one loop body. Stages talk to each
+      other through named fields on the evolved state. An <code>Err</code> from
+      any stage short-circuits the whole step.
+    </p>
+
+    <p class="body">
+      Read the loop once and the circuit is visible. The evolved electron
+      density gates which measurements the Kalman filter may fold. The Knudsen
+      number selects the governing model. The safety gate’s clamped bank
+      command is flown by the aero stage, which steers the trajectory that sets
+      the next step’s freestream. Fluid dynamics, estimation and control close
+      one loop, in one process.
+    </p>
+
+    <p class="body">
+      That one stack is the loop body at both levels of the language. A
+      trajectory march couples it directly. A campaign couples it per case and
+      per draw, threading the ensemble index into the stack, and flies the
+      whole matrix concurrently:
+    </p>
+
+    <Code code={bothLevels} lang="rust" themes={SHIKI} />
+
+    <p class="body">
+      Configuration is a separate layer from execution. The
+      <code>flow_config</code> layer holds owned descriptions: grids,
+      schedules, seeds, stop conditions, observables, world-published
+      constants. The <code>flow</code> layer materializes runs from them. A
+      counterfactual is then the same flow handed a different description.
+    </p>
+
+    <ul class="nums">
+      <li>Plasma-retropulsion descent, blackout exit to touchdown: 2516 coupled steps across 4 legs, 16 gates, 355.6 s wall clock.</li>
+      <li>Weather-dispersion table: 6 atmospheres × 8 receiver-noise draws, 48 descents, flown concurrently to one gated table in 184.0 s.</li>
+      <li>Precision is a parameter of the whole stack: f32, f64 or 106-bit, changed at one type alias.</li>
+    </ul>
+
+    <p class="more">
+      <a href="/tutorial/">The three-walk tutorial</a>
+      <a href="/blueprints/couple-multiphysics/">Blueprint: couple multiphysics</a>
+      <a href="/blueprints/couple-navigation-to-physics/">Blueprint: couple navigation to physics</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .cfd-sec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: var(--space-4) 0; }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+    max-width: var(--measure);
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

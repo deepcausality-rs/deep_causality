@@ -1,9 +1,19 @@
 ---
 /**
- * The three solver families, as a label-plus-content band stack.
+ * Section 04 — Multiple solver paradigms, as a label-plus-content band stack.
  * Follows the CausalStack shape from DESIGN.md §8.4: fixed mono label column,
  * accent tick on the left edge, staggered entrance gated on `.in-view`.
+ *
+ * The QTT band states storage and runtime separately on purpose. The crate
+ * README was truthed up against the immersed harness measurement, which found
+ * per-step wall clock rising far faster than the stored size, so a band that
+ * said "costs" would be claiming something the measurement contradicts.
  */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
 const families = [
   {
     key: 'DEC',
@@ -11,7 +21,9 @@ const families = [
     title: 'DEC-native Navier–Stokes',
     forWhat: 'Incompressible flow on a fixed mesh.',
     body:
-      'Velocity lives as an edge 1-form on a discrete exterior calculus. Each step marches the Leray-projected rate, so the field is divergence-free at every step, and the SolenoidalField type-state rejects time-stepping an unprojected field at compile time.',
+      'Velocity lives as an edge 1-form on a discrete exterior calculus. Each step marches the Leray-projected rate, so the field is divergence-free at every step. The SolenoidalField type-state carries that: there is no public constructor, every constructing path is a projection, and the type implements no arithmetic, so two projected fields cannot be added into an unprojected one.',
+    caveat:
+      'Two wall-bounded escape hatches are public. constrain_edges and with_lift re-wrap a modified tensor without re-projecting, because the solver re-enters them on the output of a projection that already pinned those edges. Off that path the caller carries the invariant.',
     evidence: [
       { text: 'Ghia cavity Re 1000', href: '/validation/#dec-cavity' },
       { text: 'Cylinder Re 100', href: '/validation/#dec-cylinder' },
@@ -22,9 +34,11 @@ const families = [
     key: 'QTT',
     label: 'Compression',
     title: 'Quantized tensor-train marchers',
-    forWhat: 'Compressible Euler, 1-D through 3-D, where a 2^L grid must stay cheap.',
+    forWhat: 'Compressible Euler, 1-D through 3-D, including a body-fitted variant.',
     body:
-      'A 2^L grid costs order χ²·L — logarithmic in point count, with sharp structure paid for in bond dimension. The rank studies measured the decisive caveat, so the compressible carrier answers it with a shock-fitted inflow strip: the exact Rankine–Hugoniot state is the boundary of the marched layer, so the shock is never captured at all.',
+      'A 2^L grid stores order χ²·L: logarithmic in point count for a bounded bond dimension χ, with sharp structure paid for in χ. Whether χ stays bounded is the question the rank studies answered, and they found the driver to be coordinate alignment rather than sharpness. The compressible carrier acts on that with a shock-fitted inflow strip, which imposes the exact Rankine–Hugoniot state as the boundary of the marched layer, so the shock is never captured at all.',
+    caveat:
+      'Storage is not runtime. On the incompressible immersed harness, per-step wall clock rose far faster than χ²·L while the achieved bond stayed flat, so a non-compression bottleneck dominates that path.',
     evidence: [
       { text: 'Sod, L1 ≤ 0.027', href: '/validation/#qtt-sod' },
       { text: 'RAM-C II anchor', href: '/validation/#qtt-ramc' },
@@ -38,22 +52,29 @@ const families = [
     forWhat: 'Gridless stagnation-line and relaxation problems.',
     body:
       'Exact Rankine–Hugoniot jumps, Park two-temperature relaxation, the finite-rate ionization network, and pointwise Navier–Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a fitted shock runs entirely on these, with no grid.',
+    caveat: null,
     evidence: [
       { text: 'MMS to machine ε', href: '/validation/#mms-tgv' },
       { text: 'Envelope placard example', href: '/examples/#flight-envelope-placard' },
     ],
   },
 ];
+
+const precision = `/// Working precision.
+pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
 ---
 <section class="solvers page" data-rise>
   <header class="sec-head">
     <p class="eyebrow eyebrow-coord">
-      <span class="ix">02 / 04</span><span class="lb">Solvers</span>
+      <span class="ix">04 / 07</span><span class="lb">Multiple Solver Paradigms</span>
     </p>
-    <h2>Solver families</h2>
+    <h2>Multiple Solver Paradigms</h2>
     <p class="lede">
-      All three are reached through <code>CfdFlow</code> and share one scalar
-      type. Dispatch is resolved at compile time from the config type.
+      Calculus-based, compression-based and analytic. All three sit behind the
+      same <code>CfdFlow</code> language and the same scalar type, so you pick
+      the best fit for your problem: the DEC solver for an incompressible
+      cavity, the QTT marcher for a reentry layer, a fitted closure for the
+      stagnation line. Dispatch resolves at compile time from the config type.
     </p>
   </header>
 
@@ -68,6 +89,7 @@ const families = [
           <h3>{f.title}</h3>
           <p class="for-what">{f.forWhat}</p>
           <p class="detail">{f.body}</p>
+          {f.caveat && <p class="caveat">{f.caveat}</p>}
           <div class="ev-row">
             {f.evidence.map((e) => (
               <a class="chip chip-mono" href={e.href}>
@@ -78,6 +100,34 @@ const families = [
         </div>
       </article>
     ))}
+  </div>
+
+  <div class="precision">
+    <h3>Precision as a Parameter</h3>
+    <p class="detail">
+      Every theory, solver, stage and observable is generic over one real
+      scalar. A program fixes a single alias and the whole computation runs at
+      that precision: <code>f32</code> for speed, <code>f64</code> for the
+      industry-standard choice, or <code>Float106</code> for reference-grade
+      results with up to 30 significant digits.
+    </p>
+    <Code code={precision} lang="rust" themes={SHIKI} />
+    <p class="detail">
+      Specification constants stay exact <code>f64</code> literals and are
+      lifted into the working precision, so changing the alias reruns the whole
+      program somewhere else on the ladder. That turns error attribution into
+      an experiment. The plasma-blackout corridor was flown at <code>f64</code>
+      and again at 106-bit: every gate and every discrete event step came out
+      identical, the continuous witnesses agreed to 15 or 16 significant
+      digits, and it cost about 11× the wall clock. Round-off is therefore not
+      what limits that corridor.
+    </p>
+    <p class="caveat">
+      The same experiment sets the floor. The corridor does not run at
+      <code>f32</code> at all: <code>h²</code> in the then-flown Saha kernel is
+      4.4e-67 and underflows the <code>f32</code> exponent range at step 1.
+      Precision is a parameter, not a free one.
+    </p>
   </div>
 </section>
 
@@ -138,5 +188,16 @@ const families = [
   .layer-body h3 { margin: 0 0 var(--space-2); }
   .for-what { color: var(--fg-0); font-size: var(--t-body-sm); margin: 0 0 var(--space-3); }
   .detail { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .caveat {
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+    margin: 0 0 var(--space-4);
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--line-2);
+  }
   .ev-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+  .precision { padding: var(--space-5) var(--space-4) 0; }
+  .precision h3 { margin: 0 0 var(--space-3); font-size: var(--t-h4); }
 </style>

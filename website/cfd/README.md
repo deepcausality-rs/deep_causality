@@ -63,6 +63,14 @@ project, not something this site should diverge on.
 
 From `openspec/notes/cfd-website/cfd-docs-website.md`:
 
+- **The landing page follows the crate README.** `src/pages/index.astro`
+  makes the same five arguments in the same order as
+  `deep_causality_cfd/README.md`: counterfactual dynamics, dynamic regime
+  change, dynamic multiphysics, multiple solver paradigms, provenance for
+  comparison across boundaries. Evidence follows the argument, not the other
+  way round, so validation and the worked examples come last. One component
+  per argument, under `src/components/home/`. When the crate README changes an
+  argument, this page changes with it.
 - **A toolbox for a named problem class**, with an explicit line between what
   works today and what is aspirational. That line is the `/roadmap/` page's
   three-list structure, and no item moves up a list without a committed artifact.

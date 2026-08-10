@@ -5,7 +5,7 @@ question: Why is coast, commit and burn a single march call, and why must the th
 summary: A walk through the retropulsion descent, where the table is read in flight and the flow state itself is forked. Six stations, including the leg boundary that would destroy the state under test and the bands that were corrected after they looked like results.
 objective: Identify a leg boundary that would discard the state a counterfactual needs, and read a constants file as a record of corrections.
 command: cargo run --release -p avionics_examples --example plasma_blackout_retropulsion
-runtime: 333.6 s against an 1800 s budget
+runtime: 355.6 s against an 1800 s budget
 files:
   - cfd/plasma_blackout/retropulsion/main.rs
   - cfd/plasma_blackout/retropulsion/constants.rs

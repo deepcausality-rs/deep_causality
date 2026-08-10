@@ -9,7 +9,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
-description = "Computational fluid dynamics solvers and the Flow DSL for DeepCausality."
+description = "Counterfactual Computational fluid dynamics solvers and the Flow DSL."
 documentation = "https://docs.rs/deep_causality"
 categories = ["science", "simulation"]
 keywords = ["cfd", "fluid-dynamics", "causality", "simulation"]
@@ -27,9 +27,6 @@ exclude = [
     "tests/**/*",
     "papers/*",
 ]
-
-# Put crates.io publication on hold until the internal validation has been completed.
-publish = false
 
 [package.metadata.docs.rs]
 all-features = true

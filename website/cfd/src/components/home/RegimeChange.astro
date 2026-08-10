@@ -1,0 +1,168 @@
+---
+/**
+ * Section 02 — Dynamic regime change.
+ *
+ * Second of the five README arguments. Each of the three axes carries the
+ * caveat the crate README states for it, because two of the three are
+ * diagnostics rather than switches today, and a landing page that hides that
+ * would be selling something the crate does not do.
+ *
+ * The log block is copied verbatim from the committed corridor run at
+ * examples/avionics_examples/cfd/plasma_blackout/corridor/output.txt.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const regime = `// RegimeClassify sits in the coupling stack and re-runs every step.
+Coupling::between_steps()
+    .then(FiniteRateIonizationStage::new(n_tot))   // writes "n_e"
+    .then(RegimeClassify::new(l_char, trigger))    // reads it, classifies
+    .build()
+
+// field.regime() -> Option<RegimeClass<R>> {
+//     model,            // Continuum | Slip | Transitional | FreeMolecular
+//     knudsen,          // the Kn the model was selected from
+//     plasma_frequency, // omega_p at the peak electron density
+//     gnss_denied,      // omega_p above the configured comms band
+//     mach_regime, thrust_state, touchdown,   // the powered-descent axes
+// }
+
+// A transition is a leg boundary: march until the classification changes.
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .from_field(world::initial_field())
+    .until(|f, _| f.regime().map(|r| r.gnss_denied).unwrap_or(false))?;   // link lost
+
+let exit = CfdFlow::march(&nominal)
+    .alternate_context(&committed)
+    .couple(world::corridor_coupling(1.0, 0))
+    .from(peak.state())
+    .until(|f, _| f.regime().map(|r| !r.gnss_denied).unwrap_or(false))?;  // link back`;
+
+const regimeLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
+regime -> continuum (GNSS-denied), Kn=0.00993838892165156
+regime -> continuum (GNSS-available), Kn=0.0002551442196046344`;
+
+const axes = [
+  {
+    name: 'Flow regime',
+    on: 'freestream Knudsen number',
+    body:
+      'RegimeClassify bands the Knudsen number into a governing model: continuum Navier–Stokes, slip-corrected continuum, transitional, or free-molecular. Every transition is logged.',
+    caveat:
+      'Today this is a diagnostic carried on the evolved state. The crate does not switch closures on it, and no slip, transitional or free-molecular closure is implemented.',
+  },
+  {
+    name: 'Dynamics regime',
+    on: 'force ratio ε = a_aero/a_grav',
+    body:
+      'While gravity dominates, a trajectory advances on the exact KS-conformal core with aero applied as a between-step kick. Once aero dominates, direct Cowell integration is the accurate choice. This ratio is the criterion for entering and leaving orbit.',
+    caveat:
+      'RegimeSwitch and aero_gravity_ratio are public API, but the shipped navigation engine does not call them. Applying the switch is the caller’s job.',
+  },
+  {
+    name: 'Link regime',
+    on: 'evolved electron density',
+    body:
+      'The electron density sets the plasma frequency, and the plasma frequency decides whether the GNSS link exists. The Kalman filter’s measurement gating follows it.',
+    caveat: null,
+  },
+];
+---
+<section class="cfd-sec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">02 / 07</span><span class="lb">Dynamic Regime Change</span>
+    </p>
+    <h2>Dynamic Regime Change</h2>
+    <p class="lede">
+      The regime is classified from the evolved state at every step. Nothing
+      schedules it in advance, and the governing regime switches on the
+      physics.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets body-panel rise">
+    <p class="body">
+      A vehicle entering or leaving orbit crosses several regimes on the way,
+      and they do not change together. Three axes are tracked independently.
+    </p>
+
+    <dl class="axes">
+      {axes.map((a) => (
+        <div class="axis">
+          <dt>{a.name} <span class="axis-on">on {a.on}</span></dt>
+          <dd>
+            {a.body}
+            {a.caveat && <span class="caveat">{a.caveat}</span>}
+          </dd>
+        </div>
+      ))}
+    </dl>
+
+    <p class="body">
+      The classifier is a stage in the coupling stack. It re-runs each step and
+      writes its result onto the evolved field, and a march predicate reads it
+      back. A transition is therefore an event the run finds, not a station it
+      was told to stop at:
+    </p>
+
+    <Code code={regime} lang="rust" themes={SHIKI} />
+
+    <p class="body">
+      Blackout becomes an interval the run discovers. March to the onset event,
+      fly the committed world through the dark, continue to the recovery event.
+      Every transition lands in the provenance log. From a committed corridor
+      run:
+    </p>
+
+    <Code code={regimeLog} lang="text" themes={SHIKI} />
+
+    <p class="body">
+      One descent moves through orbit-like dynamics, slip flow, continuum flow,
+      comms blackout and reacquisition, in one uninterrupted program.
+    </p>
+
+    <p class="more">
+      <a href="/tutorial/stage-1-corridor/">Walk 1: the classifier in the stack</a>
+      <a href="/blueprints/handle-regime-change/">Blueprint: handle a regime change</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .cfd-sec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .axes { margin: 0 0 var(--space-5); display: grid; gap: var(--space-4); }
+  .axis { padding-left: var(--space-4); border-left: 1px solid var(--line-2); }
+  .axis dt { color: var(--fg-0); font-size: var(--t-body-sm); margin-bottom: var(--space-1); }
+  .axis-on {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-left: var(--space-2);
+  }
+  .axis dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); }
+  .caveat { display: block; margin-top: var(--space-2); color: var(--fg-2); }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

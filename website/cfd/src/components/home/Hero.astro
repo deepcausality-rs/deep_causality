@@ -5,8 +5,11 @@
  * The page opens on a plain statement of what the crate is and what it does,
  * following the Katzoff introduction formula (docs/writing_guides/
  * ClarityTechnicalReporting.pdf, p. 9): background, contribution, scope. No
- * figure: the capabilities section below carries the code and the run output,
- * which is where a reader can check the claims.
+ * figure: the five sections below carry the code and the run output, which is
+ * where a reader can check the claims.
+ *
+ * The `.sub` list names those five in the order the crate README argues them,
+ * so the promise and the page agree.
  */
 ---
 <section class="hero">
@@ -15,16 +18,18 @@
     <h1>Counterfactual fluid dynamics</h1>
 
     <p class="tagline">
-      A Rust crate that marches a compressible flow with plasma chemistry,
-      navigation and control in one typed process, then forks the marched state
-      to evaluate alternative commands.
+      Counterfactual fluid dynamics and multidisciplinary analysis and
+      optimization, by coupling fluid dynamics, multiple physics, navigation
+      and control in one typed dynamic process.
     </p>
 
     <p class="sub">
-      Three solver families share one interface and one scalar type: a
-      DEC-native incompressible solver, quantized tensor-train compressible
-      marchers, and fitted analytic closures. A program selects per problem and
-      composes them into one coupled run.
+      The plasma-blackout example marches a compressible flow, reacts its
+      plasma chemistry, gates a Kalman filter on the result, flies the control
+      command it selects, and picks that command by forking the running
+      simulation into counterfactual worlds. Multiple solvers, multi-physics,
+      multi-regime, counterfactual dynamics, and precision as a parameter, in
+      one crate.
     </p>
 
     <div class="cta-row">

@@ -1,0 +1,194 @@
+---
+/**
+ * Section 05 — Provenance for comparison across boundaries.
+ *
+ * Fifth of the five README arguments, and the one the site did not carry
+ * before. The whole point is that the log does not restart at a boundary, so
+ * the section has to show a single log spanning several of them. The block is
+ * quoted verbatim from the committed corridor run at
+ * examples/avionics_examples/cfd/plasma_blackout/corridor/output.txt, which
+ * prints its 16 entries under "Provenance (the carried EffectLog)".
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { EXAMPLES_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const log = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+nav: aided (position fix folded)
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
+nav: dead reckoning (no usable fix)
+march paused at step 131
+leg re-seeded from step 131 in world 'fine_bank_08': coupled field carried, ...
+!!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_08'
+regime -> continuum (GNSS-denied), Kn=0.00993838892165156
+march paused at step 96
+leg re-seeded from step 96 in world 'fine_bank_08': coupled field carried, ...
+!!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_08'
+regime -> continuum (GNSS-available), Kn=0.0002551442196046344
+nav: aided (position fix folded)`;
+
+/** Read straight off the corridor's per-leg summary lines. */
+const legs = [
+  { leg: 'Onset, 73.2 km', link: 'GNSS denied', err: '0.1823 m', var: '2.290e-1 m²' },
+  { leg: 'Peak passage, 60.9 km', link: 'GNSS denied', err: '1.5637 m', var: '2.671e1 m²' },
+  { leg: 'Flow-resolved exit, 46.8 km', link: 'GNSS available', err: '2.2879 m', var: '2.999e0 m²' },
+  { leg: 'Reacquisition, 47.4 km', link: 'GNSS available', err: '0.2804 m', var: '3.184e-1 m²' },
+];
+---
+<section class="cfd-sec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">05 / 07</span><span class="lb">Provenance Across Boundaries</span>
+    </p>
+    <h2>Provenance for Comparison Across Boundaries</h2>
+    <p class="lede">
+      The append-only effect log continues across regimes, across physics, and
+      across a counterfactual fan-out. One log spanning the boundary is what
+      makes the two sides of it comparable.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets body-panel rise">
+    <p class="body">
+      Every stage that changes the story of a run appends an entry: a regime
+      transition, a navigation mode change, a pause, a re-seed, a world
+      replacement. The corridor descent carries sixteen of them. Here are
+      thirteen, in order, from the committed run:
+    </p>
+
+    <Code code={log} lang="text" themes={SHIKI} />
+
+    <p class="body">
+      Two things are worth reading closely. First, the
+      <code>regime -&gt;</code> entries and the <code>nav:</code> entries are
+      interleaved in one sequence. That is what "across boundaries" means: the
+      flow regime changed, the link died, the filter fell back to dead
+      reckoning, and it is one chain rather than four logs to correlate
+      afterwards. Second, the <code>!!ContextAlternation!!</code> entries name
+      both sides of the intervention, the world replaced and the world that
+      replaced it, so a counterfactual is auditable rather than implied.
+    </p>
+
+    <h3>Comparing across a transition</h3>
+
+    <p class="body">
+      Because the log spans the transition, the same quantity can be read on
+      both sides of it. The corridor's navigation error through the blackout,
+      as committed:
+    </p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Leg</th>
+            <th scope="col">Link</th>
+            <th scope="col">Error vs truth</th>
+            <th scope="col">Position variance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {legs.map((l) => (
+            <tr>
+              <th scope="row">{l.leg}</th>
+              <td>{l.link}</td>
+              <td class="num">{l.err}</td>
+              <td class="num">{l.var}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="body">
+      Variance grows by two orders of magnitude in the dark, then comes back
+      once fixes resume. The same structure supports the comparison you
+      usually want across a Mach boundary: the retropulsion descent logs
+      supersonic, transonic and subsonic entries in one sequence with the
+      thrust state on each line, so the flow parameters before and after the
+      transition sit in the same record.
+    </p>
+
+    <h3>Comparing across branches</h3>
+
+    <p class="body">
+      Each branch of a fan-out writes its own scenario log, so a variant that
+      failed can be diffed against one that passed rather than re-run under a
+      debugger. The weather table gates on exactly this: every dispersion world
+      must carry the marker naming its baseline. Where a campaign uses the
+      coupled <code>march_for</code> path, an optional
+      <code>save_log(path)</code> flushes provenance to disk, one file per
+      branch plus a <code>.main.log</code> naming every spawn and rejoin. The
+      <code>fork</code> / <code>branch</code> / <code>continue_for</code> chain
+      does not thread that sink and writes no files; those branches still carry
+      their full provenance in the returned report.
+    </p>
+
+    <ul class="nums">
+      <li>Corridor descent: 16 entries covering four legs, two regime bands and one committed counterfactual.</li>
+      <li>Retropulsion descent: 22 entries covering blackout, ignition commit, a carrier rebuild, the stopping burn and touchdown.</li>
+      <li>Weather table: 48 descents, each carrying its own log, gated on the alternation marker naming its baseline.</li>
+    </ul>
+
+    <p class="more">
+      <a href="/tutorial/stage-2-weather/">Walk 2: one baseline, six worlds</a>
+      <a href="/blueprints/fork-a-running-simulation/">Blueprint: fork a running simulation</a>
+      <a href={EXAMPLES_URL}>The committed run output <span aria-hidden="true">↗</span></a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .cfd-sec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .body-panel h3 {
+    font-size: var(--t-h4);
+    margin: var(--space-6) 0 var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); margin-bottom: var(--space-4); }
+  th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  tbody th { font-weight: 400; }
+  tbody td { color: var(--fg-1); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background-color var(--dur-fast) var(--ease-out); }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+    max-width: var(--measure);
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

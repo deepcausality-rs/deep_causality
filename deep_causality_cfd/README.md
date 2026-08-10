@@ -34,7 +34,7 @@ The fastest way to see the whole crate work end to end:
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-## Counterfactual Flow Dynamics
+## Counterfactual Dynamics
 
 `CfdFlow` is a two-level language. At the **trajectory** level, `CfdFlow::march` marches a coupled
 run until a predicate fires and yields a resumable pause; at the **campaign** level,
@@ -84,7 +84,7 @@ file per branch under the fan-out, plus a `<base>.main.log` naming every spawn a
 no files. Each of its branches still carries its full provenance in the returned report's effect
 log.
 
-## Dynamic Regime Switch
+## Dynamic Regime Change
 
 The regime is classified dynamically from the evolved state at each step. A vehicle entering or
 leaving orbit transitions through several regimes, and the governing regime switches on the

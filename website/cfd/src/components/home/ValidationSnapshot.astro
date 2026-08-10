@@ -18,7 +18,7 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
 <section class="vsnap page" data-rise>
   <header class="sec-head">
     <p class="eyebrow eyebrow-coord">
-      <span class="ix">03 / 04</span><span class="lb">Evidence</span>
+      <span class="ix">06 / 07</span><span class="lb">Evidence</span>
     </p>
     <h2>Validation status</h2>
     <p class="lede">
@@ -44,7 +44,10 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
           {rows.map((r) => (
             <tr>
               <th scope="row"><a href={`/validation/#${r.id}`}><code>{r.target}</code></a></th>
-              <td>{r.reference.split('.')[0]}</td>
+              {/* First sentence only. The period must not be a decimal point:
+                  splitting on a bare '.' truncated Sod's reference at
+                  "star pressure p* = 0", which states the wrong number. */}
+              <td>{r.reference.split(/\.(?!\d)/)[0]}</td>
               <td class="num">{r.measured[0].computed}</td>
               <td class="num">{r.measured[0].expected}</td>
               <td><span class:list={['status', statusClass[r.status]]}>{statusLabel[r.status]}</span></td>

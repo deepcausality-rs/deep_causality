@@ -3,8 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import SectionDivider from '../components/home/SectionDivider.astro';
+import CounterfactualDynamics from '../components/home/CounterfactualDynamics.astro';
+import RegimeChange from '../components/home/RegimeChange.astro';
+import Multiphysics from '../components/home/Multiphysics.astro';
 import SolverStack from '../components/home/SolverStack.astro';
-import Capabilities from '../components/home/Capabilities.astro';
+import Provenance from '../components/home/Provenance.astro';
 import ValidationSnapshot from '../components/home/ValidationSnapshot.astro';
 import ExampleLadder from '../components/home/ExampleLadder.astro';
 import { GITHUB_URL } from '../consts';
@@ -26,11 +29,19 @@ const jsonLd = {
 <BaseLayout title={title} description={description} path="/">
   <SiteHeader slot="header" />
 
+  <!-- The five arguments, in the order the crate README makes them, then the
+       evidence for all five. -->
   <Hero />
   <SectionDivider />
-  <Capabilities />
+  <CounterfactualDynamics />
+  <SectionDivider />
+  <RegimeChange />
+  <SectionDivider />
+  <Multiphysics />
   <SectionDivider />
   <SolverStack />
+  <SectionDivider />
+  <Provenance />
   <SectionDivider />
   <ValidationSnapshot />
   <SectionDivider />
