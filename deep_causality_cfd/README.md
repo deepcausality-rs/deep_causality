@@ -5,8 +5,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # DeepCausality CFD: Counterfactual Fluid Dynamics
 
-DeepCausality CFD provides Counterfactual Fluid Dynamics and Multidisciplinary analysis and optimization (MDAO) by coupling fluid dynamics, multiple physics, navigation, and control, in one typed dynamic process. 
-DeepCausality CFD couples several disciplines' analyses, optimizes over the coupled result, 
+DeepCausality CFD provides Counterfactual Fluid Dynamics and multidisciplinary analysis and optimization (MDAO) by coupling fluid dynamics, multiple physics, navigation, and control, in one typed dynamic process.
+DeepCausality CFD couples several disciplines' analyses, optimizes over the coupled result,
 and keeps track of the uncertainty along the way: the plasma-blackout
 example marches a compressible flow, reacts its plasma chemistry, gates a Kalman filter on the
 result, flies the control command it selects, and picks that command by forking the running
@@ -17,7 +17,7 @@ counterfactual dynamics, and precision as a parameter, in one crate.
 
 The crate is unpublished, but you can add it [as a git dependency](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories):
 
-you can pin the repo by:
+You can pin the repo by:
 * branch e.g. 'branch = "main"'
 * tag e.g. 'tag = "0.10.3"'
 * commit e.g. 'rev = "0c09903..."'
@@ -34,7 +34,7 @@ The fastest way to see the whole crate work end to end:
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-## Counterfactual Dynamics
+## Counterfactual Flow Dynamics
 
 `CfdFlow` is a two-level language. At the **trajectory** level, `CfdFlow::march` marches a coupled
 run until a predicate fires and yields a resumable pause; at the **campaign** level,
@@ -84,11 +84,11 @@ file per branch under the fan-out, plus a `<base>.main.log` naming every spawn a
 no files. Each of its branches still carries its full provenance in the returned report's effect
 log.
 
-## Dynamic Regime Change 
+## Dynamic Regime Switch
 
-The regime is a classified property of the evolved state, re-decided every step. A vehicle
-entering or leaving orbit transitions dynamically through several regimes, and this crate
-switches three regime axes independently, each on a measured quantity:
+The regime is classified dynamically from the evolved state at each step. A vehicle entering or
+leaving orbit transitions through several regimes, and the governing regime switches on the
+physics:
 
 - **Flow regime.** `RegimeClassify` classifies the freestream Knudsen number into the governing
   model — continuum Navier-Stokes, slip-corrected continuum, transitional, or free-molecular —
@@ -139,7 +139,7 @@ regime -> continuum (GNSS-available), Kn=0.0002551442196046344
 One descent moves through orbit-like dynamics, slip flow, continuum flow, comms blackout, and
 reacquisition in one uninterrupted program.
 
-## Multiphysics
+## Dynamic Multiphysics
 
 A coupling stack is a static cons-tuple of `PhysicsStage`s stepping one shared `CoupledField`:
 
@@ -227,18 +227,38 @@ two-temperature relaxation closures, the finite-rate ionization network, and the
 Navier-Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a
 fitted shock runs entirely on these, with no grid.
 
-All three sover families sit behind the same `CfdFlow` language and the same scalar type so you can pick the best fit
-for your problem: the DEC solver for an incompressible cavity, the QTT marcher for a reentry layer,
-a fitted closure for the stagnation line.
+All three solver families sit behind the same `CfdFlow` language and the same scalar type, so you
+can pick the best fit for your problem: the DEC solver for an incompressible cavity, the QTT
+marcher for a reentry layer, a fitted closure for the stagnation line.
 
+## Provenance for Comparison Across Boundaries
+
+The append-only effect log continues across regimes and physics. When a counterfactual fan-out
+occurs, each branch writes its own scenario effect log, so you can compare why one variant failed
+and others succeeded. Provenance is preserved under counterfactual intervention: when you inject a
+failure to stress-test a simulation, the effect log records the intervention, the replaced value,
+and every subsequent derived step, so you can read the causal chain from its inception to its
+completion.
+
+Because the log continues across boundaries and records regime changes, it allows precise
+comparative dissection across transitions. For example, you can compare flow parameters from the
+subsonic regime before and after the vehicle enters the transonic regime. This supports efficient
+structured diffs over causal event sequences, with precise attribution.
+
+Generate parameter tables, for example for weather conditions, from a single flow simulation where
+each scenario brings its own append-only effect log for end-to-end provenance.
+
+Ingest trajectory logs from an existing 6-DOF simulation generated with your own tooling, run
+counterfactuals across the parameter space to find the failure threshold at which the simulation
+breaks down, and use the provenance log to compare how the safety envelope evolves across regimes.
 
 ## Precision as a Parameter
 
-Every theory, solver, stage, and observable fixes a single alias and the entire computation runs at that selected
-precision: Selected f32 for speed, f64 for industry standard precision, or Float106 for high 
-fidelity reference numerical grade results with up to 30 significant digits.
-One line change, three precision levels. Precision as a Parameter makes every solver in this project 
-future proof for the upcomming IEEE f16 and f128 standard. 
+Every theory, solver, stage, and observable is generic over one real scalar. A program fixes a
+single alias and the entire computation runs at that precision: `f32` for speed, `f64` for
+industry-standard precision, or `Float106` for high-fidelity, reference-grade results with up to 30
+significant digits. One line change, three precision levels. Precision as a parameter also makes
+every solver in this project future-proof for the upcoming IEEE f16 and f128 standards.
 
 ```rust
 /// Working precision.
@@ -248,7 +268,7 @@ pub type FloatType = f64; // or f32, or deep_causality_num::Float106
 
 Specification constants stay exact `f64` literals; `ft` lifts each one into the working
 precision, and every derived number is computed in `FloatType`. Changing the alias reruns the
-whole program at another precision. 
+whole program at another precision.
 
 
 ## Selected Capabilities
@@ -263,7 +283,7 @@ whole program at another precision.
 - **Closed-form acoustic core inverse.** `AcousticCoreInverse` (with its 2-D and 3-D forms) inverts the
   constant-coefficient acoustic core `A₀ = I − β·∂²` on a periodic grid, without an iterative solve.
 
-## Verifiation
+## Verification
 
 The crate ships its evidence, and CI runs it. `verification/` holds thirteen runnable programs gated
 against analytic solutions, published references, or internal invariants;
