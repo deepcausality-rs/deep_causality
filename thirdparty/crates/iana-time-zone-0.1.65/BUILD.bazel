@@ -124,27 +124,27 @@ rust_library(
             "//thirdparty/crates/core-foundation-sys-0.8.7:core_foundation_sys",  # cfg(target_vendor = "apple")
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "//thirdparty/crates/android_system_properties-0.1.5:android_system_properties",  # cfg(target_os = "android")
+            "//thirdparty/crates/android_system_properties-0.1.6:android_system_properties",  # cfg(target_os = "android")
         ],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
             "//thirdparty/crates/windows-core-0.62.2:windows_core",  # cfg(target_os = "windows")
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "//thirdparty/crates/android_system_properties-0.1.5:android_system_properties",  # cfg(target_os = "android")
+            "//thirdparty/crates/android_system_properties-0.1.6:android_system_properties",  # cfg(target_os = "android")
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
             "//thirdparty/crates/core-foundation-sys-0.8.7:core_foundation_sys",  # cfg(target_vendor = "apple")
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "//thirdparty/crates/android_system_properties-0.1.5:android_system_properties",  # cfg(target_os = "android")
+            "//thirdparty/crates/android_system_properties-0.1.6:android_system_properties",  # cfg(target_os = "android")
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
             "//thirdparty/crates/windows-core-0.62.2:windows_core",  # cfg(target_os = "windows")
         ],
         "@rules_rust//rust/platform:wasm32-unknown-unknown": [
-            "//thirdparty/crates/js-sys-0.3.103:js_sys",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
+            "//thirdparty/crates/js-sys-0.3.104:js_sys",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
             "//thirdparty/crates/log-0.4.33:log",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
-            "//thirdparty/crates/wasm-bindgen-0.2.126:wasm_bindgen",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
+            "//thirdparty/crates/wasm-bindgen-0.2.127:wasm_bindgen",  # cfg(all(target_arch = "wasm32", target_os = "unknown"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
             "//thirdparty/crates/core-foundation-sys-0.8.7:core_foundation_sys",  # cfg(target_vendor = "apple")
@@ -156,7 +156,7 @@ rust_library(
             "//thirdparty/crates/core-foundation-sys-0.8.7:core_foundation_sys",  # cfg(target_vendor = "apple")
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "//thirdparty/crates/android_system_properties-0.1.5:android_system_properties",  # cfg(target_os = "android")
+            "//thirdparty/crates/android_system_properties-0.1.6:android_system_properties",  # cfg(target_os = "android")
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
             "//thirdparty/crates/windows-core-0.62.2:windows_core",  # cfg(target_os = "windows")
