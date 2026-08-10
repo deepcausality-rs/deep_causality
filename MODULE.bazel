@@ -5,13 +5,13 @@ module(name = "deep_causality")
 # https://registry.bazel.build/
 ###############################################################################
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
-bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "rules_rust", version = "0.71.2")
+bazel_dep(name = "rules_rust", version = "0.73.0")
 
 ###############################################################################
-# Vendored locally (thirdparty/rules_lean) rather than pulled from a third-party
-# registry, and patched to pin the Lean v4.32.0 toolchain sha256. See lean/.
+# Vendored locally (thirdparty/rules_lean) and patched to pin
+# the Lean v4.32.0 toolchain sha256. See lean/.
 ###############################################################################
 bazel_dep(name = "rules_lean", version = "0.5.4")
 local_path_override(
