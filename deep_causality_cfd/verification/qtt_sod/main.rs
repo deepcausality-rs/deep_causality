@@ -19,6 +19,14 @@
 //! ```text
 //! cargo run --release -p deep_causality_cfd --example qtt_sod
 //! ```
+//!
+//! ## Config-layer exemption
+//!
+//! This harness constructs `CompressibleEuler1d` directly rather than through a `CfdConfigBuilder`
+//! entry. Its subject is the 1-D compressible flux itself — the solver below the case layer — and
+//! no marching-case family exists for it: `CfdConfigBuilder::qtt_march` is 2-D incompressible and
+//! `compressible_march` is the 2-D coupled carrier. Its whole configuration is nine scalars, so a
+//! case container would wrap the thing under test without naming anything the constants do not.
 
 mod exact_riemann;
 mod print_utils;

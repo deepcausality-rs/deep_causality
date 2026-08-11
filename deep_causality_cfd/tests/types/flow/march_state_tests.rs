@@ -8,9 +8,8 @@
 //! state and from a saved-then-loaded state produce identical continued reports.
 
 use deep_causality_cfd::{
-    Ambient, AtmosphereRow, BlackoutTrigger, CfdFlow, CompressibleMarchConfig,
-    CompressibleMarchConfigBuilder, CoupledField, DescentSchedule, MarchState, MarchStop,
-    QttObserve, ReferenceScales,
+    Ambient, AtmosphereRow, BlackoutTrigger, CfdConfigBuilder, CfdFlow, CompressibleMarchConfig,
+    CoupledField, DescentSchedule, MarchState, MarchStop, QttObserve,
 };
 use deep_causality_physics::EARTH_RADIUS;
 use deep_causality_tensor::Truncation;
@@ -43,8 +42,7 @@ fn rows() -> Vec<AtmosphereRow<f64>> {
 
 fn world(name: &str, steps: usize) -> CompressibleMarchConfig<f64> {
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    CompressibleMarchConfigBuilder::<f64>::new()
-        .name(name)
+    CfdConfigBuilder::compressible_march::<f64>(name)
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, 3.0, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -53,11 +51,7 @@ fn world(name: &str, steps: usize) -> CompressibleMarchConfig<f64> {
         .stop(MarchStop::Fixed(steps))
         .observe(QttObserve::default().electron_density())
         .schedule(DescentSchedule::new(rows(), GAMMA_EFF).unwrap())
-        .reference(ReferenceScales {
-            t_ref: 8_044.0,
-            n_ref: 2.645e22,
-            u_ref: 376.0,
-        })
+        .reference(8_044.0, 2.645e22, 376.0)
         .build()
         .unwrap()
 }

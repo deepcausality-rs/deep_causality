@@ -4,8 +4,8 @@
  */
 
 use deep_causality_cfd::{
-    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdFlow, CoupledField, Coupling, MarchStop,
-    QttIncompressible2d, QttMarchConfigBuilder, QttObserve, ThermalRelax,
+    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdConfigBuilder, CfdFlow, CoupledField, Coupling,
+    MarchStop, QttIncompressible2d, QttObserve, ThermalRelax,
 };
 use deep_causality_core::{AlternatableContext, AlternatableState, AlternatableValue};
 use deep_causality_tensor::{CausalTensor, Truncation};
@@ -39,8 +39,7 @@ fn taylor_green_config(
 ) -> deep_causality_cfd::QttMarchConfig<f64> {
     let dx = TAU / N as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
-    QttMarchConfigBuilder::<f64>::new()
-        .name("taylor_green_qtt")
+    CfdConfigBuilder::qtt_march::<f64>("taylor_green_qtt")
         .grid(L, L, dx, dx)
         .solver(dt, nu, trunc)
         .seed_fn(|x, y| (tg_u(x, y), tg_v(x, y)))
@@ -126,7 +125,7 @@ fn steady_stop_terminates_on_the_plateau() {
     let nq = 8usize;
     let dx = TAU / nq as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
-    let cfg = QttMarchConfigBuilder::<f64>::new()
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("steady_plateau")
         .grid(lq, lq, dx, dx)
         .solver(0.02, 0.3, trunc)
         .seed_fn(|x, y| (tg_u(x, y), tg_v(x, y)))
@@ -199,8 +198,7 @@ fn pipeline_emits_a_drag_series_with_a_body() {
     let _ = mask.norm(); // touch the trait so the import is used
 
     let steps = 5usize;
-    let cfg = QttMarchConfigBuilder::<f64>::new()
-        .name("cyl")
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("cyl")
         .grid(L, L, dx, dx)
         .solver(0.005, 0.05, trunc)
         .seed_fn(|_, _| (1.0, 0.0))
@@ -265,8 +263,7 @@ fn run_with_hook_exposes_step_view_accessors() {
 fn coupled_free_config(steps: usize) -> deep_causality_cfd::QttMarchConfig<f64> {
     let dx = TAU / N as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
-    QttMarchConfigBuilder::<f64>::new()
-        .name("blackout_qtt")
+    CfdConfigBuilder::qtt_march::<f64>("blackout_qtt")
         .grid(L, L, dx, dx)
         .solver(0.005, 0.05, trunc)
         .seed_fn(|_, _| (1.0, 0.0))
@@ -337,8 +334,7 @@ fn run_coupled_body_solver_transports_alpha() {
     let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
 
     let steps = 4usize;
-    let cfg = QttMarchConfigBuilder::<f64>::new()
-        .name("blackout_body_qtt")
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("blackout_body_qtt")
         .grid(L, L, dx, dx)
         .solver(0.005, 0.05, trunc)
         .seed_fn(|_, _| (1.0, 0.0))
@@ -445,8 +441,7 @@ fn alternate_context_swaps_the_whole_world() {
     let dx = TAU / N as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
     let world = |name: &str, nu: f64| {
-        QttMarchConfigBuilder::<f64>::new()
-            .name(name)
+        CfdConfigBuilder::qtt_march::<f64>(name)
             .grid(L, L, dx, dx)
             .solver(0.02, nu, trunc)
             .seed_fn(|x, y| (tg_u(x, y), tg_v(x, y)))
@@ -535,8 +530,7 @@ fn coupled_body_march_publishes_the_penalization_heat_integral() {
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
     let c = TAU * 0.5;
     let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
-    let cfg = QttMarchConfigBuilder::<f64>::new()
-        .name("wall_flux")
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("wall_flux")
         .grid(L, L, dx, dx)
         .solver(0.005, 0.05, trunc)
         .seed_fn(|_, _| (1.0, 0.0))
@@ -684,8 +678,7 @@ fn the_configured_wall_temperature_reaches_the_heat_integral() {
 
     let run = |t_wall: f64| {
         let mask = body_mask_2d::<f64>(L, L, dx, dx, c, c, TAU * 0.18, 2.0 * dx, &trunc).unwrap();
-        let cfg = QttMarchConfigBuilder::<f64>::new()
-            .name("t_wall_knob")
+        let cfg = CfdConfigBuilder::qtt_march::<f64>("t_wall_knob")
             .grid(L, L, dx, dx)
             .solver(0.005, 0.05, trunc)
             .seed_fn(|_, _| (1.0, 0.0))

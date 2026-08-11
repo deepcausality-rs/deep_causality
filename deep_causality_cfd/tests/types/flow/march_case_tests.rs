@@ -437,3 +437,129 @@ fn drag_without_an_immersed_body_is_rejected() {
         "drag without an immersed body must be rejected"
     );
 }
+
+#[test]
+fn the_drag_split_sums_to_the_combined_coefficient() {
+    // The pressure and friction series come from the same two surface integrations the combined
+    // coefficient is summed from, so they must add to it at every step — there is no second force
+    // path that could disagree.
+    use deep_causality_cfd::{Inflow, Outflow, SlipWall};
+
+    let (nx, ny) = (24usize, 12usize);
+    let center = [6.0_f64, 6.0];
+    let radius = 2.0_f64;
+    let u_ref = 1.0_f64;
+
+    let zones = (
+        Inflow::<2, f64>::new(0, false, u_ref).expect("inflow west"),
+        (
+            Outflow::<2>::new(0, true).expect("outflow east"),
+            (
+                SlipWall::<2>::new(1, false).expect("slip bottom"),
+                SlipWall::<2>::new(1, true).expect("slip top"),
+            ),
+        ),
+    );
+
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cyl-drag-split")
+            .mesh(Mesh::box_domain([nx, ny]).immersed(Body::disk(center, radius).merge_floor(0.25)))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.02)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .zones(zones)
+            .seed(Seed::Rest)
+            .march_for(4)
+            .observe(Observe::default().drag(u_ref).drag_split())
+            .build()
+            .expect("config build"),
+    )
+    .expect("split-observed cylinder runs");
+
+    let drag = report.series("drag").expect("drag series");
+    let pressure = report.series("drag_pressure").expect("pressure series");
+    let friction = report.series("drag_friction").expect("friction series");
+    assert_eq!(pressure.len(), drag.len(), "one pressure sample per step");
+    assert_eq!(friction.len(), drag.len(), "one friction sample per step");
+    for (i, ((&cd, &cp), &cf)) in drag.iter().zip(pressure).zip(friction).enumerate() {
+        assert!(
+            (cd - (cp + cf)).abs() <= 1e-12 * cd.abs().max(1.0),
+            "step {i}: pressure {cp} + friction {cf} must sum to the combined drag {cd}"
+        );
+    }
+}
+
+#[test]
+fn the_drag_split_is_off_by_default() {
+    // An existing drag-observed report is unchanged: the split is opt-in.
+    use deep_causality_cfd::{Inflow, Outflow, SlipWall};
+
+    let (nx, ny) = (24usize, 12usize);
+    let zones = (
+        Inflow::<2, f64>::new(0, false, 1.0).expect("inflow west"),
+        (
+            Outflow::<2>::new(0, true).expect("outflow east"),
+            (
+                SlipWall::<2>::new(1, false).expect("slip bottom"),
+                SlipWall::<2>::new(1, true).expect("slip top"),
+            ),
+        ),
+    );
+
+    let report = super::run_march(
+        CfdConfigBuilder::march::<2, f64>("cyl-no-split")
+            .mesh(
+                Mesh::box_domain([nx, ny]).immersed(Body::disk([6.0, 6.0], 2.0).merge_floor(0.25)),
+            )
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.02)
+                    .time_step(0.05)
+                    .build()
+                    .expect("valid config"),
+            )
+            .zones(zones)
+            .seed(Seed::Rest)
+            .march_for(2)
+            .observe(Observe::default().drag(1.0))
+            .build()
+            .expect("config build"),
+    )
+    .expect("drag-observed cylinder runs");
+
+    assert!(
+        report.series("drag").is_some(),
+        "the combined drag is there"
+    );
+    assert!(
+        report.series("drag_pressure").is_none(),
+        "the split is absent without the opt-in"
+    );
+    assert!(report.series("drag_friction").is_none());
+}
+
+#[test]
+fn the_drag_split_needs_a_body() {
+    // The split rides the combined observable, so a bodyless mesh fails the same way.
+    let config = CfdConfigBuilder::march::<2, f64>("no-body-split")
+        .mesh(Mesh::box_domain([8, 8]))
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(0.05)
+                .time_step(0.01)
+                .build()
+                .expect("valid config"),
+        )
+        .march_for(1)
+        .observe(Observe::default().drag(1.0).drag_split())
+        .build()
+        .expect("config build");
+    assert!(
+        super::run_march(config).is_err(),
+        "drag on a bodyless mesh is an error, split or not"
+    );
+}

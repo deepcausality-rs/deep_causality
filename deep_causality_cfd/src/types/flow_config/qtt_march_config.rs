@@ -158,14 +158,16 @@ where
     }
 }
 
-/// Fluent builder for a [`QttMarchConfig`]. Set the grid and solver, supply a seed (a closure over the
-/// grid or pre-built fields), then `build`. The seed is **materialized at build-supply time** into
-/// owned fields, so `build` validates the grid is `2^Lx × 2^Ly` and the seed matches it.
+/// Fluent builder for a [`QttMarchConfig`]. Started by
+/// [`CfdConfigBuilder::qtt_march`](crate::CfdConfigBuilder), which takes the case name. Set the grid
+/// and solver, supply a seed (a closure over the grid or pre-built fields), then `build`. The seed
+/// is **materialized at build-supply time** into owned fields, so `build` validates the grid is
+/// `2^Lx × 2^Ly` and the seed matches it.
 pub struct QttMarchConfigBuilder<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
-    name: Option<String>,
+    name: String,
     grid: Option<(usize, usize, R, R)>,
     solver: Option<(R, R, Truncation<R>)>,
     seed: Option<(CausalTensor<R>, CausalTensor<R>)>,
@@ -175,13 +177,14 @@ where
     body: Option<QttBody<R>>,
 }
 
-impl<R> Default for QttMarchConfigBuilder<R>
+impl<R> QttMarchConfigBuilder<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
-    fn default() -> Self {
+    /// A fresh builder for the named case.
+    pub(crate) fn new(name: impl Into<String>) -> Self {
         Self {
-            name: None,
+            name: name.into(),
             grid: None,
             solver: None,
             seed: None,
@@ -190,22 +193,6 @@ where
             body: None,
             t_wall: None,
         }
-    }
-}
-
-impl<R> QttMarchConfigBuilder<R>
-where
-    R: CfdScalar + ConjugateScalar<Real = R>,
-{
-    /// A fresh builder.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Name the case (defaults to `"qtt_march"`).
-    pub fn name(mut self, name: impl Into<String>) -> Self {
-        self.name = Some(name.into());
-        self
     }
 
     /// Set the `2^Lx × 2^Ly` periodic grid of spacings `dx`/`dy`.
@@ -343,7 +330,7 @@ where
         }
 
         Ok(QttMarchConfig {
-            name: self.name.unwrap_or_else(|| "qtt_march".into()),
+            name: self.name,
             lx,
             ly,
             dx,

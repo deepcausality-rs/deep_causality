@@ -23,6 +23,30 @@ pub enum Seed {
     /// von Kármán street; the discrete cut pattern and round-off break the symmetry that
     /// triggers shedding.
     UniformX { speed: f64 },
+    /// [`UniformX`](Seed::UniformX) plus a single-signed **transverse Gaussian blob** — the
+    /// symmetry-breaking wake seed.
+    ///
+    /// A case whose discretisation, geometry and inflow are all top–bottom symmetric converges to
+    /// the steady symmetric wake and never sheds, even where the wake is linearly unstable. Relying
+    /// on the cut pattern and round-off to break that symmetry makes the onset of shedding a
+    /// property of the grid. This variant states the perturbation instead:
+    ///
+    /// ```text
+    /// u = speed,   v = amplitude · speed · exp(−‖x − center‖² / 2σ²).
+    /// ```
+    ///
+    /// The seed projection makes the result divergence-free, exactly as for every other variant.
+    UniformXPerturbed {
+        /// The streamwise free-stream speed.
+        speed: f64,
+        /// Blob centre in **physical** coordinates (the same convention as
+        /// [`Observe::probe`](crate::Observe::probe)); the first `D` entries are used.
+        center: [f64; 3],
+        /// Gaussian width `σ`, in physical units.
+        sigma: f64,
+        /// Blob amplitude as a fraction of `speed`.
+        amplitude: f64,
+    },
 }
 
 impl Seed {
@@ -51,6 +75,54 @@ impl Seed {
                 let mut v = vec![R::zero(); D * n0];
                 for chunk in v.chunks_exact_mut(D) {
                     chunk[0] = s;
+                }
+                v
+            }
+            Seed::UniformXPerturbed {
+                speed,
+                center,
+                sigma,
+                amplitude,
+            } => {
+                // The blob is stated in physical coordinates, so the vertex lattice indices are
+                // scaled by the per-axis spacing — the same convention `Observe::probe` uses.
+                if *sigma <= 0.0 {
+                    return Err(PhysicsError::PhysicalInvariantBroken(format!(
+                        "Seed::UniformXPerturbed requires a positive sigma, got {sigma}"
+                    )));
+                }
+                if D < 2 {
+                    return Err(PhysicsError::DimensionMismatch(format!(
+                        "Seed::UniformXPerturbed needs a transverse axis (D >= 2), got D == {D}"
+                    )));
+                }
+                let dx = manifold
+                    .metric()
+                    .and_then(|g| g.axis_lengths())
+                    .ok_or_else(|| {
+                        PhysicsError::TopologyError(
+                            "Seed::UniformXPerturbed requires an axis-aligned geometry \
+                             (per-axis spacing)"
+                                .into(),
+                        )
+                    })?;
+                let lift = |x: f64| R::from_f64(x).expect("a seed specification lifts into R");
+                let s = lift(*speed);
+                let peak = lift(*amplitude) * s;
+                let two_sigma_sq = lift(2.0 * sigma * sigma);
+                let mut v = vec![R::zero(); D * n0];
+                for (vi, cell) in manifold.complex().iter_cells(0).enumerate() {
+                    let p = cell.position();
+                    let mut r2 = R::zero();
+                    for j in 0..D {
+                        let x = R::from_usize(p[j])
+                            .expect("a lattice index lifts into every real field")
+                            * dx[j];
+                        let d = x - lift(center[j]);
+                        r2 += d * d;
+                    }
+                    v[D * vi] = s;
+                    v[D * vi + 1] = peak * (R::zero() - r2 / two_sigma_sq).exp();
                 }
                 v
             }

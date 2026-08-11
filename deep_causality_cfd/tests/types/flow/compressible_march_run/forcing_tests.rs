@@ -6,10 +6,10 @@
 //! The forcing-region seam measured at M1 and the plume re-imprint channel M3 rides on it: the
 //! unforced bit-identity guarantee, per-branch forcing, grid validation, and the refresh cap.
 
-use super::{GAMMA_EFF, reference};
+use super::{GAMMA_EFF, REFERENCE};
 use deep_causality_cfd::{
-    Ambient, BlackoutTrigger, CfdFlow, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
-    CoupledField, MarchStop, QttObserve,
+    Ambient, BlackoutTrigger, CfdConfigBuilder, CfdFlow, CompressibleMarchConfig, CoupledField,
+    MarchStop, QttObserve,
 };
 use deep_causality_tensor::Truncation;
 
@@ -22,8 +22,7 @@ fn plain_world(
     forcing: Option<deep_causality_cfd::ForcingRegion<f64>>,
 ) -> CompressibleMarchConfig<f64> {
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    let mut builder = CompressibleMarchConfigBuilder::<f64>::new()
-        .name(name)
+    let mut builder = CfdConfigBuilder::compressible_march::<f64>(name)
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, 3.0, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -31,7 +30,7 @@ fn plain_world(
         .unwrap()
         .stop(MarchStop::Fixed(steps))
         .observe(QttObserve::default())
-        .reference(reference());
+        .reference(REFERENCE.0, REFERENCE.1, REFERENCE.2);
     if let Some(region) = forcing {
         builder = builder.forcing_region(region);
     }
@@ -103,7 +102,7 @@ fn unforced_carrier_matches_the_bare_marcher_bit_for_bit() {
             let u2 = (a * a + b * b) / (r * r);
             let p_hat = (GAMMA_EFF - 1.0) * (en - 0.5 * r * u2);
             let p_hat = if p_hat > 1.0e-12 { p_hat } else { 1.0e-12 };
-            (p_hat / r) * reference().t_ref
+            (p_hat / r) * REFERENCE.0
         })
         .collect();
 
@@ -204,8 +203,7 @@ fn commanded_throttle_publishes_like_commanded_bank() {
     // The pinned counterfactual seam name for the retropulsion family: a branch world's throttle
     // intervention lands on the field each step through the same publish_constant mechanism.
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    let cfg = CompressibleMarchConfigBuilder::<f64>::new()
-        .name("throttled")
+    let cfg = CfdConfigBuilder::compressible_march::<f64>("throttled")
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, 3.0, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -213,7 +211,7 @@ fn commanded_throttle_publishes_like_commanded_bank() {
         .unwrap()
         .stop(MarchStop::Fixed(2))
         .observe(QttObserve::default())
-        .reference(reference())
+        .reference(REFERENCE.0, REFERENCE.1, REFERENCE.2)
         .publish_constant("commanded_throttle", 0.6)
         .build()
         .unwrap();

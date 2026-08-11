@@ -9,8 +9,8 @@
 
 use deep_causality_cfd::MarchStop;
 use deep_causality_cfd::{
-    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdFlow, CoupledField, CyberneticCorrect,
-    QttMarchConfig, QttMarchConfigBuilder, QttObserve, SafetyEnvelope,
+    AeroBlackoutStub, Ambient, BlackoutTrigger, CfdConfigBuilder, CfdFlow, CoupledField,
+    CyberneticCorrect, QttMarchConfig, QttObserve, SafetyEnvelope,
 };
 use deep_causality_core::{AlternatableContext, AlternatableState};
 use deep_causality_haft::LogSize;
@@ -25,8 +25,7 @@ const L: usize = 4;
 fn world(name: &str, nu: f64, steps: usize) -> QttMarchConfig<f64> {
     let dx = TAU / N as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
-    QttMarchConfigBuilder::<f64>::new()
-        .name(name)
+    CfdConfigBuilder::qtt_march::<f64>(name)
         .grid(L, L, dx, dx)
         .solver(0.005, nu, trunc)
         .seed_fn(|x, y| (-(x.cos() * y.sin()), x.sin() * y.cos()))

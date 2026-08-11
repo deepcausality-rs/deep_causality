@@ -45,6 +45,14 @@
 //! cargo run --release -p deep_causality_cfd --example srp_momentum_jet
 //! SRP_MJ_L=6 SRP_MJ_SWEEP=1.0,2.0,4.0 cargo run --release -p deep_causality_cfd --example srp_momentum_jet
 //! ```
+//!
+//! ## Config-layer note
+//!
+//! This study already honours the config/execution separation: every freestream, body, domain, and
+//! jet constant lives in `config.rs`, and `main.rs` executes. It constructs `CompressibleMarcher2d`
+//! directly rather than through `CfdConfigBuilder::compressible_march`, because its subject is the
+//! marched jet–freestream interaction under a per-step nozzle-exit pin, which the carrier's
+//! configured forcing region does not express.
 
 mod config;
 

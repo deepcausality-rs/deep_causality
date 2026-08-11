@@ -12,8 +12,11 @@
 
 use crate::CfdScalar;
 use crate::solvers::{DecNs, DecNsConfigNeedsViscosity};
-use crate::types::flow_config::MarchConfigBuilder;
 use crate::types::flow_config::manufactured::{Manufactured, VerifyConfigBuilder};
+use crate::types::flow_config::{
+    CompressibleMarchConfigBuilder, DuctConfigBuilder, MarchConfigBuilder, QttMarchConfigBuilder,
+};
+use deep_causality_algebra::ConjugateScalar;
 
 /// The configuration entry point. Each method starts a dedicated, validated config builder for one
 /// solver (and, later, one parameterized coupling) or a marching-case container.
@@ -33,6 +36,33 @@ impl CfdConfigBuilder {
         name: impl Into<String>,
     ) -> MarchConfigBuilder<D, R, (), ()> {
         MarchConfigBuilder::new(name)
+    }
+
+    /// Start a **QTT marching-case container** configuration (grid + solver + seed + stop +
+    /// observe + optional immersed body) on a `2^Lx × 2^Ly` periodic grid; `build()` →
+    /// `QttMarchConfig`, run by [`CfdFlow::march`](crate::CfdFlow). The tensor-train sibling of
+    /// [`march`](Self::march): the seed fields are owned, so no geometry is lent at run time.
+    pub fn qtt_march<R: CfdScalar + ConjugateScalar<Real = R>>(
+        name: impl Into<String>,
+    ) -> QttMarchConfigBuilder<R> {
+        QttMarchConfigBuilder::new(name)
+    }
+
+    /// Start a **compressible coupled marching-case container** configuration (the corridor's
+    /// evolved-state carrier: grid + solver + flight step + seed + stop + observe + descent
+    /// schedule + reference scales); `build()` → `CompressibleMarchConfig`, run by
+    /// [`CfdFlow::march`](crate::CfdFlow) with a coupling stack.
+    pub fn compressible_march<R: CfdScalar + ConjugateScalar<Real = R>>(
+        name: impl Into<String>,
+    ) -> CompressibleMarchConfigBuilder<R> {
+        CompressibleMarchConfigBuilder::new(name)
+    }
+
+    /// Start a **quasi-one-dimensional duct-case** configuration (area profile + inlet stagnation
+    /// state + gamma + back pressure + resolution + stop); `build()` → `DuctConfig`, run by
+    /// [`CfdFlow::march`](crate::CfdFlow). The case is self-contained: no geometry stage.
+    pub fn duct<R: CfdScalar>(name: impl Into<String>) -> DuctConfigBuilder<R> {
+        DuctConfigBuilder::new(name)
     }
 
     /// Start an **MMS-verification** configuration around a [`Manufactured`] solution (a corpus

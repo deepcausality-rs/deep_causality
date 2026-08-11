@@ -178,7 +178,14 @@ impl<const D: usize, R: CfdScalar> Mesh<D, R> {
     /// Rebuild the cut-cell registry alone (when an immersed body is present). The geometry the
     /// caller owns (B1) is borrowed read-only by the marcher and does not surrender its registry,
     /// so the surface-force diagnostics rebuild it from the body spec — deterministic and one-time.
-    pub(crate) fn cut_registry(&self) -> Result<Option<CutCellRegistry<D, R>>, PhysicsError> {
+    /// The mesh's cut-cell registry, or `None` for a body-free domain.
+    ///
+    /// Public because the crate's surface-force diagnostics (`pressure_surface_force`,
+    /// `viscous_surface_force`, `wall_heat_flux`) each take a `&CutCellRegistry`, and a consumer
+    /// configuring its geometry through `Mesh` otherwise has no way to obtain one. The returned
+    /// registry is an owned copy built from the same primitive and merge floor the run uses, so a
+    /// caller's diagnostics and the pipeline's observables describe the same body.
+    pub fn cut_registry(&self) -> Result<Option<CutCellRegistry<D, R>>, PhysicsError> {
         match &self.body {
             Some(body) => {
                 let lattice = LatticeComplex::<D, R>::new(self.shape, self.periodic);

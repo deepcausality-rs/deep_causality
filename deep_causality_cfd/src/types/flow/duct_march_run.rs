@@ -306,7 +306,7 @@ impl<'a, R: CfdScalar> DuctMarchRun<'a, R> {
         let a_star = cfg.profile.min_area();
         let cf = (exit.rho * exit.u * exit.u + (exit.p - pb)) * a_exit / a_star;
 
-        let mut report = Report::new("duct_march");
+        let mut report = Report::new(cfg.name());
         report.add_series("x", x_centers.to_vec());
         report.add_series("mach_profile", mach);
         report.add_series("pressure_profile", pressure);

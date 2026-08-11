@@ -53,8 +53,8 @@ pub use crate::types::{Ambient, EvidenceClass, KeyedInterpolation, KeyedTable, L
 
 // The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::coordinate::{
-    BlendedMap, BlendedMapConfig, BodyFittedCoordinate, BodyFittedCoordinate3d, CartesianIdentity,
-    CartesianIdentity3d,
+    BlendedMap, BlendedMapConfig, BlendedMapConfigBuilder, BodyFittedCoordinate,
+    BodyFittedCoordinate3d, CartesianIdentity, CartesianIdentity3d,
 };
 pub use crate::tensor_bridge::{
     AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d, QttProjector2d,
@@ -118,7 +118,7 @@ pub use crate::types::flow::{
 // Configuration — CfdConfigBuilder + the owned config containers / scenario types (the "what").
 pub use crate::types::flow_config::{
     AtmosphereRow, Body, CfdConfigBuilder, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
-    DescentSchedule, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, Grading, Manufactured,
+    DescentSchedule, DuctAreaProfile, DuctConfig, DuctConfigBuilder, Grading, Manufactured,
     ManufacturedSample, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe, PlumeImprint,
     QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
     VerifyConfig, VerifyConfigBuilder,
@@ -143,12 +143,11 @@ pub use crate::theories::*;
 // Solver configuration + type-state builder.
 pub use crate::solvers::{
     AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
-    CompressibleMarcher3dFitted, DecNs, DecNsConfig, DecNsConfigNeedsTimeStep,
-    DecNsConfigNeedsViscosity, DecNsConfigReady, EulerState, EulerState2d, EulerState3d,
-    EulerStateTt2d, EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure,
-    PostShockState, QttImmersed2d, QttIncompressible2d, QttLinear1d, REDUCED_MASS_AMU,
-    StagnationOutcome, conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d,
-    positivity_floor, reduced_mass_amu,
+    CompressibleMarcher3dFitted, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity,
+    DecNsConfigReady, EulerState, EulerState2d, EulerState3d, EulerStateTt2d, EulerStateTt3d,
+    FittedNormalShock, ForcingRegion, Park2tClosure, PostShockState, QttImmersed2d,
+    QttIncompressible2d, QttLinear1d, REDUCED_MASS_AMU, StagnationOutcome, conservation_round,
+    ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor, reduced_mass_amu,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).

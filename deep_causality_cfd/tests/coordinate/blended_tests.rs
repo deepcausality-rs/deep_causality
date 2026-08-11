@@ -20,7 +20,13 @@ fn tr() -> Truncation<f64> {
 
 /// A blend config over the standard test fan `r ∈ [r0, r0+dr]`, `θ ∈ [−dθ/2, +dθ/2]` at `lambda`.
 fn cfg(l: usize, r0: f64, dr: f64, dth: f64, lambda: f64) -> BlendedMapConfig<f64> {
-    BlendedMapConfig::new(l, l, r0, dr, -dth / 2.0, dth, lambda)
+    BlendedMapConfig::builder()
+        .lattice(l, l)
+        .radial_range(r0, dr)
+        .angular_range(-dth / 2.0, dth)
+        .lambda(lambda)
+        .build()
+        .expect("the standard test fan is a valid blend configuration")
 }
 
 fn smoothed_step(d: f64, w: f64) -> f64 {
@@ -128,7 +134,13 @@ fn lambda_is_a_rank_dial_for_a_fixed_physical_shock() {
 fn metric_provider_seam_exposes_dims_jacobian_and_sample() {
     // Exercise the trait methods (static-dispatch seam the marcher consumes).
     let blend = BlendedMap::new(
-        BlendedMapConfig::new(4, 5, 1.0, 1.0, 0.0, PI / 2.0, 0.6),
+        BlendedMapConfig::builder()
+            .lattice(4, 5)
+            .radial_range(1.0, 1.0)
+            .angular_range(0.0, PI / 2.0)
+            .lambda(0.6)
+            .build()
+            .unwrap(),
         tr(),
     )
     .unwrap();
@@ -148,14 +160,68 @@ fn metric_provider_seam_exposes_dims_jacobian_and_sample() {
 
 #[test]
 fn rejects_invalid_geometry_and_lambda() {
+    // The geometry gate sits at `build()`, before any metric field is assembled — so an invalid
+    // fan never reaches the map constructor at all.
     let bad = |r0, dr, dth, lam| {
-        BlendedMap::new(BlendedMapConfig::new(4, 4, r0, dr, 0.0, dth, lam), tr())
+        BlendedMapConfig::builder()
+            .lattice(4, 4)
+            .radial_range(r0, dr)
+            .angular_range(0.0, dth)
+            .lambda(lam)
+            .build()
     };
     assert!(bad(0.0, 1.0, PI / 2.0, 0.5).is_err(), "r0 = 0");
+    assert!(bad(-1.0, 1.0, PI / 2.0, 0.5).is_err(), "r0 < 0");
     assert!(bad(1.0, 0.0, PI / 2.0, 0.5).is_err(), "dr = 0");
+    assert!(bad(1.0, f64::NAN, PI / 2.0, 0.5).is_err(), "dr not finite");
     assert!(bad(1.0, 1.0, 0.0, 0.5).is_err(), "dtheta = 0");
     assert!(bad(1.0, 1.0, PI / 2.0, -0.1).is_err(), "lambda < 0");
     assert!(bad(1.0, 1.0, PI / 2.0, 1.1).is_err(), "lambda > 1");
+    assert!(bad(1.0, 1.0, PI / 2.0, f64::NAN).is_err(), "lambda NaN");
+    // The endpoints are inside the range.
+    assert!(bad(1.0, 1.0, PI / 2.0, 0.0).is_ok(), "lambda = 0");
+    assert!(bad(1.0, 1.0, PI / 2.0, 1.0).is_ok(), "lambda = 1");
+}
+
+#[test]
+fn builder_rejects_a_missing_section() {
+    // Every section is required; `build` names the first one missing.
+    assert!(
+        BlendedMapConfig::<f64>::builder()
+            .radial_range(1.0, 1.0)
+            .angular_range(0.0, PI / 2.0)
+            .lambda(0.5)
+            .build()
+            .is_err(),
+        "a missing lattice must be rejected"
+    );
+    assert!(
+        BlendedMapConfig::<f64>::builder()
+            .lattice(4, 4)
+            .angular_range(0.0, PI / 2.0)
+            .lambda(0.5)
+            .build()
+            .is_err(),
+        "a missing radial range must be rejected"
+    );
+    assert!(
+        BlendedMapConfig::<f64>::builder()
+            .lattice(4, 4)
+            .radial_range(1.0, 1.0)
+            .lambda(0.5)
+            .build()
+            .is_err(),
+        "a missing angular range must be rejected"
+    );
+    assert!(
+        BlendedMapConfig::<f64>::builder()
+            .lattice(4, 4)
+            .radial_range(1.0, 1.0)
+            .angular_range(0.0, PI / 2.0)
+            .build()
+            .is_err(),
+        "a missing blend parameter must be rejected"
+    );
 }
 
 #[test]

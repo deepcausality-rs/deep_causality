@@ -16,9 +16,7 @@
 //! lift) and the whole computation runs at the working precision [`FloatType`].
 
 use crate::FloatType;
-use deep_causality_cfd::{
-    MarchStop, PhysicsError, QttMarchConfig, QttMarchConfigBuilder, QttObserve,
-};
+use deep_causality_cfd::{CfdConfigBuilder, MarchStop, PhysicsError, QttMarchConfig, QttObserve};
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::Truncation;
 
@@ -99,8 +97,7 @@ pub fn trunc() -> Truncation<FloatType> {
 /// Any builder validation failure.
 pub fn build_config(l: usize) -> Result<QttMarchConfig<FloatType>, PhysicsError> {
     let dx = spacing(l);
-    QttMarchConfigBuilder::<FloatType>::new()
-        .name("qtt-taylor-green")
+    CfdConfigBuilder::qtt_march::<FloatType>("qtt-taylor-green")
         .grid(l, l, dx, dx)
         .solver(ft(DT), ft(NU), trunc())
         .taylor_green()?

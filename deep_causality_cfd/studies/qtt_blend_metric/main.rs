@@ -66,7 +66,13 @@ fn main() {
         // firing; `det_margin` then reports the number that scan measured. The study previously
         // carried its own copy of the Jacobian algebra, which meant BM-A verified the copy — a green
         // gate said nothing about the map the crate actually builds.
-        let cfg = BlendedMapConfig::new(l, l, R0, DR, -DTHETA / 2.0, DTHETA, lam);
+        let cfg = BlendedMapConfig::builder()
+            .lattice(l, l)
+            .radial_range(R0, DR)
+            .angular_range(-DTHETA / 2.0, DTHETA)
+            .lambda(lam)
+            .build()
+            .expect("the study's fan geometry is a valid blend configuration");
         match BlendedMap::new(cfg, trunc) {
             Ok(map) => {
                 let (min_abs_det, floor) = map.det_margin();

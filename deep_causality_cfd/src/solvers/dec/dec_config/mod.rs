@@ -24,13 +24,14 @@ use crate::solvers::dec::boundary::BoundaryZone;
 use deep_causality_physics::PhysicsError;
 use deep_causality_topology::{HodgeDecomposeOptions, LatticeComplex, Manifold};
 
-/// Entry point for the DEC incompressible Navier–Stokes solver configuration:
-/// `DecNs::config().viscosity(nu).time_step(dt)…build()`.
-pub struct DecNs;
+/// The crate-internal seed of the DEC incompressible Navier–Stokes solver configuration.
+/// [`CfdConfigBuilder::dec_ns`](crate::CfdConfigBuilder) is the public entry:
+/// `CfdConfigBuilder::dec_ns().viscosity(nu).time_step(dt)…build()`.
+pub(crate) struct DecNs;
 
 impl DecNs {
     /// Start a DEC NS configuration. The viscosity and time step are required next.
-    pub fn config() -> DecNsConfigNeedsViscosity {
+    pub(crate) fn config() -> DecNsConfigNeedsViscosity {
         DecNsConfigNeedsViscosity { _seal: () }
     }
 }

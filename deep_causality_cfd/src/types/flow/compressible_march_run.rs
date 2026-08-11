@@ -339,9 +339,9 @@ where
         };
 
         // Nondimensionalize with the fixed reference anchors (p̂ = ρ̂·T̂ by construction).
-        let rho_hat = n_post / self.reference.n_ref;
-        let t_hat = t_post / self.reference.t_ref;
-        let u_hat = u_post / self.reference.u_ref;
+        let rho_hat = n_post / self.reference.n_ref();
+        let t_hat = t_post / self.reference.t_ref();
+        let u_hat = u_post / self.reference.u_ref();
         let half = Self::lift(0.5)?;
         let p_hat = rho_hat * t_hat;
         let e_hat = p_hat / (self.gamma - R::one()) + half * rho_hat * u_hat * u_hat;
@@ -456,9 +456,9 @@ where
             let p_hat = (self.gamma - R::one()) * (e - half * rho * u2);
             let p_hat = if p_hat > tiny { p_hat } else { tiny };
             let t_hat = p_hat / rho;
-            let t_phys = t_hat * self.reference.t_ref;
-            let n_phys = rho * self.reference.n_ref;
-            speed.push(u2.sqrt() * self.reference.u_ref);
+            let t_phys = t_hat * self.reference.t_ref();
+            let n_phys = rho * self.reference.n_ref();
+            speed.push(u2.sqrt() * self.reference.u_ref());
             t_tr.push(t_phys);
             n_tot.push(n_phys);
             p_atm.push(n_phys * kb * t_phys / atm);
@@ -500,9 +500,9 @@ where
             let u2 = (mx * mx + my * my) / (rho * rho);
             let p_hat = (self.gamma - R::one()) * (e - half * rho * u2);
             let p_hat = if p_hat > tiny { p_hat } else { tiny };
-            t_tr.push((p_hat / rho) * self.reference.t_ref);
-            n_tot.push(rho * self.reference.n_ref);
-            speed.push(u2.sqrt() * self.reference.u_ref);
+            t_tr.push((p_hat / rho) * self.reference.t_ref());
+            n_tot.push(rho * self.reference.n_ref());
+            speed.push(u2.sqrt() * self.reference.u_ref());
         }
         report.set_final_field(t_tr);
         report.add_series("final_n_tot", n_tot);

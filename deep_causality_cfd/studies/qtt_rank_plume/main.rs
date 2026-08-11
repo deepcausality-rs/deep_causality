@@ -46,10 +46,9 @@
 //! ```
 
 use deep_causality_cfd::{
-    Ambient, BlackoutTrigger, BlendedMap, BlendedMapConfig, CartesianIdentity, CfdFlow,
-    CompressibleMarchConfig, CompressibleMarchConfigBuilder, CompressibleMarcher2d, CoupledField,
-    EulerStateTt2d, ForcingRegion, MarchStop, QttObserve, ReferenceScales, plume_mask_2d,
-    quantize_2d,
+    Ambient, BlackoutTrigger, BlendedMap, BlendedMapConfig, CartesianIdentity, CfdConfigBuilder,
+    CfdFlow, CompressibleMarchConfig, CompressibleMarcher2d, CoupledField, EulerStateTt2d,
+    ForcingRegion, MarchStop, QttObserve, plume_mask_2d, quantize_2d,
 };
 use deep_causality_physics::{
     Area, Force, Length, PlumeGeometry, Pressure, Temperature, area_mach_ratio_kernel,
@@ -432,8 +431,7 @@ fn branch_world(name: &'static str, ct: f64) -> Result<CompressibleMarchConfig<f
     let trunc = Truncation::<f64>::by_tol(TOL).map_err(|e| format!("trunc: {e:?}"))?;
     let dx = 1.0 / (1usize << L) as f64;
     let p_inf_hat = p_hat(P_INF);
-    let mut builder = CompressibleMarchConfigBuilder::<f64>::new()
-        .name(name)
+    let mut builder = CfdConfigBuilder::compressible_march::<f64>(name)
         .grid(L, L, dx, dx)
         .solver(DT, S_REF, GAMMA_INF, trunc)
         .flight_dt(0.05)
@@ -441,11 +439,7 @@ fn branch_world(name: &'static str, ct: f64) -> Result<CompressibleMarchConfig<f
         .map_err(|e| format!("seed: {e:?}"))?
         .stop(MarchStop::Fixed(K_PAUSE + CONT))
         .observe(QttObserve::default())
-        .reference(ReferenceScales {
-            t_ref: 1.0,
-            n_ref: 1.0,
-            u_ref: 1.0,
-        })
+        .reference(1.0, 1.0, 1.0)
         .publish_constant("commanded_throttle", ct);
     if ct > 0.0 {
         let (_, geometry, jet) = throttle_point(ct)?;
@@ -589,7 +583,13 @@ fn proxy_bond(geometry: &PlumeGeometry<f64>, lambda: f64) -> Result<usize, Strin
     const DTHETA: f64 = std::f64::consts::PI / 2.0;
     let l = 6usize;
     let side = 1usize << l;
-    let cfg = BlendedMapConfig::new(l, l, R0, DR, -DTHETA / 2.0, DTHETA, lambda);
+    let cfg = BlendedMapConfig::builder()
+        .lattice(l, l)
+        .radial_range(R0, DR)
+        .angular_range(-DTHETA / 2.0, DTHETA)
+        .lambda(lambda)
+        .build()
+        .map_err(|e| format!("blend config: {e:?}"))?;
     let trunc = Truncation::<f64>::by_tol(TOL).map_err(|e| format!("trunc: {e:?}"))?;
     let map = BlendedMap::new(cfg, trunc).map_err(|e| format!("map: {e:?}"))?;
 

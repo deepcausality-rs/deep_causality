@@ -8,8 +8,8 @@
 //! and the trajectory entry never diverge.
 
 use deep_causality_cfd::{
-    CfdConfigBuilder, CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, MarchStop,
-    Marchable, Mesh, Observe, QttMarchConfig, QttMarchConfigBuilder, QttObserve, Seed,
+    CfdConfigBuilder, CfdFlow, DuctAreaProfile, DuctConfig, MarchStop, Marchable, Mesh, Observe,
+    QttMarchConfig, QttObserve, Seed,
 };
 use deep_causality_tensor::Truncation;
 
@@ -17,23 +17,20 @@ const TAU: f64 = core::f64::consts::TAU;
 
 fn nozzle() -> DuctConfig<f64> {
     let p0 = 101_325.0;
-    DuctConfig::new(
-        DuctAreaProfile::ConvergingDiverging {
+    CfdConfigBuilder::duct::<f64>("marchable-nozzle")
+        .profile(DuctAreaProfile::ConvergingDiverging {
             inlet_area: 2.0,
             throat_area: 1.0,
             exit_area: 2.0,
             length: 1.0,
-        },
-        DuctInlet { p0, t0: 300.0 },
-        1.4,
-        p0 * 0.5,
-        64,
-        DuctStop {
-            max_steps: 2_000,
-            residual_tol: 1.0e-8,
-        },
-    )
-    .expect("valid nozzle config")
+        })
+        .inlet(p0, 300.0)
+        .gamma(1.4)
+        .back_pressure(p0 * 0.5)
+        .cells(64)
+        .stop(2_000, 1.0e-8)
+        .build()
+        .expect("valid nozzle config")
 }
 
 fn cavity() -> deep_causality_cfd::MarchConfig<2, f64, (), ()> {
@@ -57,8 +54,7 @@ fn taylor_green() -> QttMarchConfig<f64> {
     let n = 16usize;
     let dx = TAU / n as f64;
     let trunc = Truncation::<f64>::by_bond(4096).unwrap();
-    QttMarchConfigBuilder::<f64>::new()
-        .name("tg")
+    CfdConfigBuilder::qtt_march::<f64>("tg")
         .grid(4, 4, dx, dx)
         .solver(0.02, 0.05, trunc)
         .seed_fn(|x: f64, y: f64| (-(x.cos() * y.sin()), x.sin() * y.cos()))
