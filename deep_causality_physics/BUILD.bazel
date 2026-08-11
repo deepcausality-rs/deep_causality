@@ -1,5 +1,9 @@
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
+# `os-random` gates the Lund string-fragmentation kernels. A Cargo workspace build
+# already enables it (resolver-2 unification via `physics_examples` and
+# `chronometric_examples`), so Bazel carrying it keeps the two builds on the same
+# feature set and makes those kernels reachable from the example binaries.
 rust_library(
     name = "deep_causality_physics",
     srcs = glob([
@@ -8,6 +12,7 @@ rust_library(
     crate_features = [
         "std",
         "alloc",
+        "os-random",
     ],
     crate_root = "src/lib.rs",
     tags = [
@@ -26,6 +31,8 @@ rust_library(
         "//deep_causality_num_complex",
         "//deep_causality_num_dual",
         "//deep_causality_par",
+        # `os-random` feature dep
+        "//deep_causality_rand",
         "//deep_causality_sparse",
         "//deep_causality_tensor",
         "//deep_causality_topology",
@@ -39,6 +46,7 @@ rust_doc(
     crate_features = [
         "std",
         "alloc",
+        "os-random",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -50,6 +58,7 @@ rust_doc_test(
     crate_features = [
         "std",
         "alloc",
+        "os-random",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
