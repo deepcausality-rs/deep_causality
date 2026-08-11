@@ -110,17 +110,42 @@ unification would have triggered had the site named those builders.
 *Alternative considered:* trusting review. Rejected on evidence — four citations broke in one
 refactor and nobody noticed until asked.
 
-### D5 — Rustdoc output is a build artifact, not committed
+### D5 — Rustdoc output is a build artifact, and the deploy moves to CI to produce it
 
 `cargo doc --no-deps -p deep_causality_cfd` writes into `website/cfd/public/api/`, produced at deploy
-time and git-ignored. Committing generated HTML would put a large, churning artifact in review diffs
-and create a second way for the docs to be stale (a stale commit of them).
+time and git-ignored. Committing generated HTML — measured at **1,262 files, 28 MB** — would put a
+churning artifact into every review diff and create a second way for the reference to be stale (a
+checked-in build older than the code).
 
-### D6 — Versioning is by co-deployment
+That forces the deploy path. The site is deployed by Cloudflare Workers Builds today, and
+**Cloudflare's build image has no Rust toolchain** (Go, Node, Bun, Python, Ruby, PHP, Java, Elixir,
+Erlang, Clojure, Swift, .NET — no Rust, and no version override for a toolchain that is absent). A
+Cloudflare-side build cannot generate the reference, so the deploy moves to a GitHub Actions workflow
+that has `cargo doc`, builds the site, and calls `wrangler deploy`.
+
+The build itself stays defined in `wrangler.toml`: `wrangler deploy` runs its `[build] command`, so
+the site is built once by the same definition a local deploy uses, and CI adds no second place the
+build is described.
+
+*Alternatives considered.* **Commit the output** — works with no build change, but reverses the
+invariant above. **CI commits it** — automates the committing without removing the churn or the
+staleness path. **Host rustdoc separately** (GitHub Pages) — leaves the CFD deploy untouched but
+splits hosting across two origins for a reference that belongs to this site.
+
+*Operational consequence, not optional:* the Cloudflare-side build must be disabled when this lands.
+Two enabled paths race, and the Cloudflare one publishes a site with no `/api/` — which presents as
+the reference intermittently 404ing rather than as a misconfiguration.
+
+### D6 — Versioning is by co-deployment, and this is a stand-in for docs.rs
 
 The reference describes the code at the commit it was built from, because both ship together from
-this repo. No version selector, no historical builds. If that changes when the crate is published,
-docs.rs takes over the generated half.
+this repo. No version selector, no historical builds.
+
+This whole generated half exists only because the crate is `publish = false`. A published crate gets
+its rustdoc built and hosted by docs.rs automatically, per version, for free. When
+`deep_causality_cfd` publishes, docs.rs takes over: the `make docs` step and the `public/api/`
+deployment are dropped, and the reference links point at docs.rs instead. The curated pages are
+unaffected — they are this repo's own prose, and they are the half docs.rs never provides.
 
 ### D7 — The curated layer is built from the existing design system; generated output is not
 
@@ -162,8 +187,8 @@ existing CI. If it becomes an issue it can be cached on the crate's fingerprint.
 
 ## Migration Plan
 
-1. Rustdoc build + `/api/` deployment, nav link. Verifiable immediately: the full surface is
-   browsable.
+1. Rustdoc build (`make docs`), the CI deploy workflow, `/api/` link. Verifiable immediately: the
+   full surface is browsable. Requires disabling the Cloudflare-side build in the same window.
 2. The parity gate, run against existing content — it should immediately flag the known
    `compressible_march_run.rs:441-444` drift. Fix that, then turn the gate on as blocking.
 3. The `reference` collection, index page, and detail route, with two pages (Configuration, Trait
