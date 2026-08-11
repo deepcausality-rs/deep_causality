@@ -23,6 +23,14 @@ The Bazel target is wired: `@npm_cfd` is registered in the root `MODULE.bazel`
 alongside `@npm_web` and `@npm_docs`, and `website/cfd/node_modules` is listed
 in `.bazelignore`.
 
+## Deploy
+
+Cloudflare Workers Builds, configured in the dashboard: root directory
+`/website/cfd/`, build command `pnpm run build`, deploy command
+`npx wrangler deploy`. The Worker is `deepcausality-cfd`, which is the name
+`wrangler.toml` must carry. See [`../README.md`](../README.md) for why both of
+those settings fail quietly when they are wrong.
+
 ## Design
 
 The binding spec is [`../web/DESIGN.md`](../web/DESIGN.md); the descriptive

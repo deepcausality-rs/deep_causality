@@ -74,7 +74,7 @@ pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
       same <code>CfdFlow</code> language and the same scalar type, so you pick
       the best fit for your problem: the DEC solver for an incompressible
       cavity, the QTT marcher for a reentry layer, a fitted closure for the
-      stagnation line. Dispatch resolves at compile time from the config type.
+      stagnation line.
     </p>
   </header>
 
@@ -115,18 +115,10 @@ pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
     <p class="detail">
       Specification constants stay exact <code>f64</code> literals and are
       lifted into the working precision, so changing the alias reruns the whole
-      program somewhere else on the ladder. That turns error attribution into
-      an experiment. The plasma-blackout corridor was flown at <code>f64</code>
-      and again at 106-bit: every gate and every discrete event step came out
-      identical, the continuous witnesses agreed to 15 or 16 significant
-      digits, and it cost about 11× the wall clock. Round-off is therefore not
-      what limits that corridor.
-    </p>
-    <p class="caveat">
-      The same experiment sets the floor. The corridor does not run at
-      <code>f32</code> at all: <code>h²</code> in the then-flown Saha kernel is
-      4.4e-67 and underflows the <code>f32</code> exponent range at step 1.
-      Precision is a parameter, not a free one.
+      program somewhere else on the ladder. The plasma-blackout corridor was
+      flown at <code>f64</code> and again at 106-bit: every gate and every
+      discrete event step came out identical, the continuous witnesses agreed
+      to 15 or 16 significant digits, and it cost about 11× the wall clock.
     </p>
   </div>
 </section>

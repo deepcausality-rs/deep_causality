@@ -42,9 +42,8 @@ let table = CfdFlow::study("weather-dispersion table")
     </p>
     <h2>Dynamic Multiphysics</h2>
     <p class="lede">
-      A coupling stack is a static cons-tuple of physics stages stepping one
-      shared field. No files, no adapters, no exchange format, because the
-      disciplines were never in separate processes.
+      Physics is coupled between steps via a fluent API that exchanges effects
+      across steps over one shared field.
     </p>
   </header>
 
