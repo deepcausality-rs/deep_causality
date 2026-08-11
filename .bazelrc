@@ -73,34 +73,62 @@ build:linux --extra_execution_platforms=//build/platforms:linux-x86_64
 ###############################################################################
 
 # Flags shared across remote configs
-common:remote-shared --remote_timeout=600
-common:remote-shared --remote_download_minimal
+common:remote-shared --jobs=50
+common:remote-shared --remote_timeout=10m
 common:remote-shared --remote_cache_compression
 common:remote-shared --verbose_failures
 # Avoid inflating blobs smaller than 100 bytes with ZSTD compression.
 common:remote-shared --experimental_remote_cache_compression_threshold=100
 # Enable remote cache chunking
-common:remote-shared--experimental_remote_cache_chunking
+common:remote-shared --experimental_remote_cache_chunking
 
-# Metadata
+# Keep intermediate outputs in the CAS and download only what a top-level
+# target produces. Do NOT also set --remote_download_minimal: both expand to
+# --remote_download_outputs, so setting both makes the winner depend on rc
+# ordering rather than on intent.
+common:remote-shared --remote_download_toplevel
+
+# Metadata. Only what is true of every remote invocation belongs here; ROLE and
+# USER are set by the :ci config so BuildBuddy can tell CI runs from local ones.
 common:remote-shared --build_metadata=REPO_URL=https://github.com/deepcausality-rs/deep_causality.git
-common:remote-shared --build_metadata=BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-common:remote-shared --build_metadata=ROLE=CI
-common:remote-shared --build_metadata=USER=gh
 
-# Remote host platform
-# https://github.com/buildbuddy-io/buildbuddy/blob/8579ca30f1a1f401ed8279d99d9b47ec5637873f/.bazelrc#L30
+# Remote execution platform.
+#
+# This host is an arm64 Mac and the RBE workers are x86_64 Linux, so the
+# execution platform has to be pinned away from the host. --host_platform is
+# the one that matters most: it sets the platform for exec-configuration
+# actions (build tools such as rules_rust's process_wrapper). Left at the
+# auto-detected darwin host, Bazel picks the aarch64-apple-darwin rustc and
+# then ships it to a Linux worker, which fails as
+# `rustc: Syntax error: ")" unexpected`.
+#
+# The platform inherits @llvm//platforms:linux_x86_64, so it carries the libc
+# and cxxstdlib constraints the hermetic LLVM cc_toolchain resolves on.
 common:remote-shared --host_platform=//build/platforms:linux_x86_64_remote
+common:remote-shared --platforms=//build/platforms:linux_x86_64_remote
 common:remote-shared --extra_execution_platforms=//build/platforms:linux_x86_64_remote
 
-# Remote cross compilation
-common:remote-shared --extra_execution_platforms=//build/platforms:linux-aarch64
-common:remote-shared --extra_execution_platforms=//build/platforms:linux-x86_64
+# The Lean toolchain in @lake_deps is downloaded for the fetching host (macOS
+# here) and its toolchain() declares no exec constraints, so Lean actions must
+# not be sent to a Linux worker. no-remote-exec keeps them local while still
+# allowing remote caching: the macOS lean binary is part of the action key, so
+# a Linux CI host computes different keys and cannot pick up wrong artifacts.
+common:remote-shared --modify_execution_info=^Lean.*=+no-remote-exec
+
+# Endpoints. The org subdomain serves BES, CAS and execution alike.
+common:remote-shared --bes_results_url=https://deepcausality-rs.buildbuddy.io/invocation/
+common:remote-shared --bes_backend=grpcs://deepcausality-rs.buildbuddy.io
+common:remote-shared --remote_cache=grpcs://deepcausality-rs.buildbuddy.io
+common:remote-shared --remote_executor=grpcs://deepcausality-rs.buildbuddy.io
 
 # Build with --config=remote to enable Remote Build Execution (RBE)
 common:remote --config=remote-shared
-common:remote --remote_cache=grpcs://remote.buildbuddy.io
-common:remote --remote_executor=remote.buildbuddy.io
+# Build with --config=ci specifically for CI runs. Same execution setup as
+# --config=remote, tagged so the BuildBuddy dashboard can separate CI runs from
+# developer machines.
+common:ci --config=remote-shared
+common:ci --build_metadata=ROLE=CI
+common:ci --build_metadata=USER=gh
 
 ###############################################################################
 ## Custom user or remote flags

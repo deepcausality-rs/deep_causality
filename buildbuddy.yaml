@@ -1,0 +1,11 @@
+actions:
+  - name: "BazelCI"
+    triggers:
+      pr:
+        branches:
+          - "main"
+    steps:
+      # Build all targets
+      - run: "bazel build --config=ci //..."
+      # Run all tests
+      - run: "bazel test --config=remote //..."

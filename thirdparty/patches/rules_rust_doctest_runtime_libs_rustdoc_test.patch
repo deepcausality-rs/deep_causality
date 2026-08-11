@@ -1,0 +1,17 @@
+--- a/rust/private/rustdoc_test.bzl
++++ b/rust/private/rustdoc_test.bzl
+@@ -88,6 +88,14 @@
+             _collect_library_roots(roots, dep_dep_info.transitive_noncrates)
+         if dep_cc_info:
+             _collect_library_roots(roots, dep_cc_info.linking_context.linker_inputs)
++
++    # The cc_toolchain runtime libs (see rustdoc.bzl) are built in their own
++    # configuration, so their root differs from every crate root collected
++    # above. Without stripping it too, the `-Lnative=` search path rustc emits
++    # for them stays an execroot path that does not exist under runfiles, and
++    # the linker reports "unable to find library".
++    for lib in action.static_runtime_libs:
++        roots.append(lib.root.path)
+ 
+     writer_args.add_all(roots, format_each = "--strip_substring=%s/", uniquify = True)
+ 

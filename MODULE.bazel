@@ -8,8 +8,39 @@ bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "rules_rust", version = "0.73.0")
+bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
+bazel_dep(name = "llvm", version = "0.8.17")
+
+# Patch: make rust_doc_test link against the cc_toolchain's runtime libs.
+#
+# rustdoc drives the doctest link itself instead of running a Bazel C++ link
+# action, so the libc++/libunwind that the hermetic LLVM toolchain supplies
+# through cc_toolchain.static_runtime_lib never reach the command line. Bazel
+# emits their -Lnative= search path but gates the matching -lstatic= behind
+# include_link_flags, which rustdoc sets to False (PR #2467). PR #4080 added a
+# compensating -Clink-arg=-l loop for native deps but iterates only
+# dep_info.transitive_noncrates, which does not include the toolchain runtime
+# libs -- so every doc test fails to link with undefined `_Unwind_*`.
+#
+# Still present in 0.73.0 (#3741 landed in 0.68.0, #4080 in 0.71.0), unreported
+# upstream as of 2026-08-11. Drop this once a fix lands; the build fails loudly
+# if the patch stops applying on a rules_rust upgrade.
+#
+# One patch file per source file on purpose: Bazel's built-in patch
+# implementation mis-attributes hunks across file boundaries in a multi-file
+# unified diff (it applied rustdoc.bzl's hunks to rustdoc_test.bzl), even
+# though GNU patch accepts the same diff.
+single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 1,
+    patches = [
+        "//thirdparty/patches:rules_rust_doctest_runtime_libs_rustdoc.patch",
+        "//thirdparty/patches:rules_rust_doctest_runtime_libs_rustdoc_test.patch",
+    ],
+)
 
 ###############################################################################
+# Rules LEAN
 # Vendored locally (thirdparty/rules_lean) and patched to pin
 # the Lean v4.32.0 toolchain sha256. See lean/.
 ###############################################################################
@@ -20,6 +51,7 @@ local_path_override(
 )
 
 ###############################################################################
+# Rules Astro
 # Vendored locally (thirdparty/rules_astro) rather than pulled from a
 # third-party registry, matching the rules_lean vendoring pattern. Provides
 # astro_site / astro_dev — hermetic `astro build` under Bazel via
@@ -43,6 +75,10 @@ RUST_VERSION = "1.97.1"
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = RUST_EDITION,
+    extra_target_triples = [
+        "aarch64-unknown-linux-gnu",
+        "x86_64-unknown-linux-gnu",
+    ],
     versions = [RUST_VERSION],
 )
 use_repo(rust, "rust_toolchains")
@@ -50,13 +86,39 @@ use_repo(rust, "rust_toolchains")
 register_toolchains("@rust_toolchains//:all")
 
 ###############################################################################
+# Hermetic LLVM toolchain
+# https://github.com/hermeticbuild/hermetic-llvm
+###############################################################################
+toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
+
+#toolchain.version(llvm_version = "22.1.0")
+toolchain.exec(
+    arch = "x86_64",
+    os = "linux",
+)
+toolchain.exec(
+    arch = "aarch64",
+    os = "linux",
+)
+use_repo(toolchain, "llvm_toolchains")
+
+register_toolchains("@llvm_toolchains//:all")
+
+###############################################################################
+# BuildBuddy Rules for Remote build
+# https://github.com/buildbuddy-io/buildbuddy-toolchain
+###############################################################################
+buildbuddy = use_extension("@toolchains_buildbuddy//:extensions.bzl", "buildbuddy")
+use_repo(buildbuddy, "buildbuddy_toolchain")
+
+###############################################################################
 # Lean 4 toolchain + Lake/Mathlib workspace
 # https://github.com/tomato-bazel/rules_lean  (vendored: thirdparty/rules_lean)
+###############################################################################
 #
 # Lean 4 toolchain version is pinned in
 # lean/lakefile.toml
 # lean/lean-toolchain
-#
 # Both files are loaded via lean/BUILD.bazel
 #
 # Downloads the pinned Lean toolchain (lean/lean-toolchain) and resolves the
