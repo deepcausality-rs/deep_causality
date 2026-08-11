@@ -12,7 +12,7 @@ hostname.
 | --- | --- | --- | --- | --- |
 | [`web/`](./web) | Website (home, blog, examples, short getting-started/overview) | Astro (custom) | `deepcausality-prod` | https://www.deepcausality.com |
 | [`docs/`](./docs) | Reference documentation (concepts, guides, overview, single-PDF export) | [Starlight](https://starlight.astro.build) on Astro | `deepcausality-docs` | https://docs.deepcausality.com |
-| [`cfd/`](./cfd) | `deep_causality_cfd`: blueprints, validation status, worked examples, capability boundaries | Astro (custom) | `deepcausality-cfd` | https://cfd.deepcausality.com |
+| [`cfd/`](./cfd) | `deep_causality_cfd`: blueprints, validation status, worked examples, capability boundaries | Astro (custom) | `deep-causality-cfd-prod` | https://cfd.deepcausality.com |
 
 A fourth directory, [`web_design/`](./web_design), is documentation rather
 than a site: it describes the shipped visual system as implemented. The binding
@@ -99,8 +99,7 @@ All three sites are fully static and deployed as Cloudflare Workers Static Asset
 Custom domains are bound in the Cloudflare dashboard. Per-origin caching and
 security headers are configured via each project's `public/_headers` file.
 
-Each Worker's build configuration lives in the Cloudflare dashboard, not in
-this repo, and every project needs the same three settings:
+Each Worker's build configuration lives in the Cloudflare dashboard:
 
 | Setting | Value |
 | --- | --- |
@@ -108,16 +107,24 @@ this repo, and every project needs the same three settings:
 | Build command | `pnpm run build` |
 | Deploy command | `npx wrangler deploy` |
 
-The build command is the one that is easy to leave empty. Cloudflare installs
-dependencies on its own, so a missing build command does not fail the build
-step. It fails later, in the deploy, with `The directory specified by the
-"assets.directory" field in your configuration file does not exist` — because
-nothing ever produced `dist/`.
+Two of these fail quietly, and both cost a debugging session on `cfd/`.
 
-The Worker name in each `wrangler.toml` must match the Worker the build is
-attached to. `wrangler deploy` takes the name from the file, so a mismatch
-deploys to a second Worker that has no custom domain bound, and reports
-success while the live site stays unchanged.
+**An empty build command does not fail the build.** Cloudflare installs
+dependencies by itself, so the build step reports success, and the run dies
+later in the deploy with `The directory specified by the "assets.directory"
+field in your configuration file does not exist`, because nothing produced
+`dist/`. `cfd/wrangler.toml` therefore carries its own `[build]` command;
+wrangler runs it before reading `assets.directory`, so the dashboard field is
+belt-and-braces there rather than load-bearing. `web/` and `docs/` still rely
+on the dashboard field alone.
+
+**A wrong Worker name does not fail either.** `wrangler deploy` takes the name
+from `wrangler.toml`, so a name that does not match the Worker the build is
+attached to creates a second Worker with no custom domain bound, then reports
+success while the live site stays unchanged. Note that the three names do not
+follow one convention: `deepcausality-prod`, `deepcausality-docs`, and
+`deep-causality-cfd-prod`, the last hyphenated throughout. Match the dashboard,
+not the pattern.
 
 ## License
 

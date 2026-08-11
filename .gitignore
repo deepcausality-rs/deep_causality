@@ -15,6 +15,9 @@ coverage
 .cargo/config.toml
 .cargo/config
 
+# Bazel config
+.bazelrc.remote
+
 # Bazel stuff
 /target-bzl/
 /target-bzl/*
