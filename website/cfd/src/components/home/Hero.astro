@@ -5,8 +5,8 @@
  * The page opens on a plain statement of what the crate is and what it does,
  * following the Katzoff introduction formula (docs/writing_guides/
  * ClarityTechnicalReporting.pdf, p. 9): background, contribution, scope. No
- * figure: the capabilities section below carries the code and the run output,
- * which is where a reader can check the claims.
+ * figure: the five sections below carry the code and the run output, which is
+ * where a reader can check the claims.
  */
 ---
 <section class="hero">
@@ -15,16 +15,9 @@
     <h1>Counterfactual fluid dynamics</h1>
 
     <p class="tagline">
-      A Rust crate that marches a compressible flow with plasma chemistry,
-      navigation and control in one typed process, then forks the marched state
-      to evaluate alternative commands.
-    </p>
-
-    <p class="sub">
-      Three solver families share one interface and one scalar type: a
-      DEC-native incompressible solver, quantized tensor-train compressible
-      marchers, and fitted analytic closures. A program selects per problem and
-      composes them into one coupled run.
+      Counterfactual fluid dynamics and multidisciplinary analysis and
+      optimization, by coupling fluid dynamics, multiple physics, navigation
+      and control in one typed dynamic process.
     </p>
 
     <div class="cta-row">
@@ -52,17 +45,12 @@
     margin: var(--space-3) 0 var(--space-5);
     max-width: 18ch;
   }
+  /* Carries the space the removed `.sub` paragraph used to hold off the CTA. */
   .tagline {
     font-size: var(--t-h3);
     line-height: var(--lh-h3);
     color: var(--fg-1);
     max-width: var(--measure-lede);
-    margin: 0 0 var(--space-4);
-  }
-  .sub {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
     margin: 0 0 var(--space-6);
   }
 

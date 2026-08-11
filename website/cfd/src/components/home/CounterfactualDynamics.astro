@@ -1,0 +1,151 @@
+---
+/**
+ * Section 01 — Counterfactual dynamics.
+ *
+ * First of the five arguments the crate README makes, in the README's order.
+ * The section states the plain claim, shows the code that makes it, then gives
+ * the measured cost. Every figure is quoted from a committed run artifact:
+ * `studies/qtt_rank_plume/output.txt` for the fork cost, the corridor and
+ * retropulsion `output.txt` files for the rest.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const flow = `// Trajectory level: march until the evolved sheath's n_e crosses the GPS L1 cutoff.
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .trigger(trigger)
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
+
+// Campaign level: fork that pause once per candidate bank command, fly every
+// branch concurrently, score the rows — then refine around the coarse winner
+// from the same onset, and gate the two-round result.
+let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())
+    .fork(&onset)                            // the shared flow-resolved fork point
+    .branch(model::bank_world)               // one alternated world per command
+    .continue_for(constants::BRANCH_STEPS)   // concurrent, copy-on-write
+    .reduce_all(model::score_branches)
+    .refine(&onset, model::fine_candidates)  // second round, same paused onset
+    .branch(model::bank_world)
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .gates(model::corridor_gates())          // steering beats ballistic; fine >= coarse
+    .verdict()?;`;
+
+const ensemble = `let table = CfdFlow::study("weather-dispersion table")
+    .cases(model::weather_cases())
+    .baseline(model::standard_day)
+    .alternate(model::weather_world)
+    .ensemble(constants::MC_DRAWS)
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)
+    .reduce_ensemble(model::world_row)
+    .gates(model::weather_gates())
+    .verdict()?;`;
+---
+<section class="cfd-sec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">01 / 07</span><span class="lb">Counterfactual Dynamics</span>
+    </p>
+    <h2>Counterfactual Dynamics</h2>
+    <p class="lede">
+      Fork a running simulation. The physics decides when the fork happens and
+      how, and every alternate scenario continues.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets body-panel rise">
+    <p class="body">
+      <code>CfdFlow</code> is a language with two levels. At the trajectory
+      level, <code>march</code> advances a coupled run until a predicate fires
+      and hands back a pause you can resume. At the campaign level,
+      <code>study</code> runs a family of cases forked from that pause and ends
+      in a <code>Verdict</code>. Here is the plasma-blackout corridor,
+      condensed:
+    </p>
+
+    <Code code={flow} lang="rust" themes={SHIKI} />
+
+    <p class="body">
+      The fork itself shares the marched tensor state in O(1) and copies
+      nothing. What follows is copy-on-write: each branch takes a single clone
+      at its first field write, and continuing a march always writes. So the
+      honest per-branch cost is O(cells), not O(1). That clone covers the
+      per-cell scalar vectors, the navigation engine and the provenance log.
+      Each branch then continues in a world of its own.
+    </p>
+
+    <p class="body">
+      This is why forking state is not the same as sweeping parameters. A sweep
+      reruns from initial conditions. A fork starts from the plume, the sheath
+      and the filter as they stand at that instant, so the branches answer the
+      decision the vehicle actually faces.
+    </p>
+
+    <ul class="nums">
+      <li>Fork setup 42 ns; branches enter by reference, with no tensor copied at fork time.</li>
+      <li>Powered continuation costs 1.00–1.04× an unforked trunk; a coasting branch is cheaper at 0.67×.</li>
+      <li>The corridor commits the best of seventeen worlds (six coarse, eleven fine) mid-descent: 2.07 m off the aim point against 20.00 m ballistic.</li>
+      <li>A mid-burn fork of a marched, plume-coupled state departs a frozen-drag prediction by 139.4 m/s.</li>
+    </ul>
+
+    <p class="body">
+      Branch fan-outs run on scoped threads and produce bits identical to the
+      sequential run. Every branch stamps a
+      <code>!!ContextAlternation!!</code> marker into its provenance log naming
+      the baseline it replaced.
+    </p>
+
+    <p class="body">
+      A campaign takes a second form. Instead of forking one pause, it
+      alternates whole worlds from a baseline and flies an ensemble of each:
+    </p>
+
+    <Code code={ensemble} lang="rust" themes={SHIKI} />
+
+    <p class="body">
+      Six atmospheres, eight receiver-noise draws apiece, forty-eight descents,
+      one gated table. <code>verdict()</code> returns data; the DSL never prints
+      and never exits, so the caller decides what an exit code means.
+    </p>
+
+    <p class="more">
+      <a href="/tutorial/stage-1-corridor/">Walk 1: how the fork is built</a>
+      <a href="/blueprints/fork-a-running-simulation/">Blueprint: fork a running simulation</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .cfd-sec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+    max-width: var(--measure);
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

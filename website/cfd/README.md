@@ -23,6 +23,14 @@ The Bazel target is wired: `@npm_cfd` is registered in the root `MODULE.bazel`
 alongside `@npm_web` and `@npm_docs`, and `website/cfd/node_modules` is listed
 in `.bazelignore`.
 
+## Deploy
+
+Cloudflare Workers Builds, configured in the dashboard: root directory
+`/website/cfd/`, build command `pnpm run build`, deploy command
+`npx wrangler deploy`. The Worker is `deepcausality-cfd`, which is the name
+`wrangler.toml` must carry. See [`../README.md`](../README.md) for why both of
+those settings fail quietly when they are wrong.
+
 ## Design
 
 The binding spec is [`../web/DESIGN.md`](../web/DESIGN.md); the descriptive
@@ -63,6 +71,14 @@ project, not something this site should diverge on.
 
 From `openspec/notes/cfd-website/cfd-docs-website.md`:
 
+- **The landing page follows the crate README.** `src/pages/index.astro`
+  makes the same five arguments in the same order as
+  `deep_causality_cfd/README.md`: counterfactual dynamics, dynamic regime
+  change, dynamic multiphysics, multiple solver paradigms, provenance for
+  comparison across boundaries. Evidence follows the argument, not the other
+  way round, so validation and the worked examples come last. One component
+  per argument, under `src/components/home/`. When the crate README changes an
+  argument, this page changes with it.
 - **A toolbox for a named problem class**, with an explicit line between what
   works today and what is aspirational. That line is the `/roadmap/` page's
   three-list structure, and no item moves up a list without a committed artifact.

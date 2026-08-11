@@ -3,7 +3,11 @@
 # Fully static — no SSR, no API routes, no `main` worker entry. Wrangler
 # uploads dist/ as the Worker's static assets. Mirrors website/web/wrangler.toml.
 
-name = "deepcausality-cfd-prod"
+# No `-prod` suffix, unlike website/web's "deepcausality-prod": this must match
+# the Worker the Cloudflare build is attached to, which is the one holding the
+# cfd.deepcausality.com binding. A mismatch here deploys to a second, unbound
+# Worker instead of failing, so do not "fix" this for consistency.
+name = "deepcausality-cfd"
 # Same account as the marketing site; pinned explicitly because this credential
 # is linked to two Cloudflare accounts.
 account_id = "222139bff18ce0390d15f59a78d3d6b2"

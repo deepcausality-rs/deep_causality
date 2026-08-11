@@ -21,9 +21,9 @@ const couplingCode = `Coupling::between_steps()
     .build()`;
 
 const regimeLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
-regime -> slip (GNSS-denied),    Kn=0.01705925949914955
-regime -> continuum (GNSS-denied), Kn=0.009938308574526865
-regime -> continuum (GNSS-available), Kn=0.00025839060489290773`;
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
+regime -> continuum (GNSS-denied), Kn=0.00993838892165156
+regime -> continuum (GNSS-available), Kn=0.0002551442196046344`;
 
 const precisionCode = `/// Working precision.
 pub type FloatType = f64; // or f32, or deep_causality_num::Float106
@@ -210,7 +210,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
       </p>
 
       <ul class="nums">
-        <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 333.6 s.</li>
+        <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 355.6 s.</li>
         <li>Weather-dispersion table: six atmospheres alternated from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
         <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
       </ul>
