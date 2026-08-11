@@ -95,7 +95,7 @@ impl QttObserve {
 
 /// An immersed body for the QTT march: the (smoothed) volume-fraction mask, the body velocity, the
 /// Brinkman penalization `eta`, and the reference speed/length the drag coefficients use.
-pub struct QttBody<R>
+pub(crate) struct QttBody<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {

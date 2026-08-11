@@ -120,7 +120,7 @@ pub use crate::types::flow_config::{
     AtmosphereRow, Body, CfdConfigBuilder, CompressibleMarchConfig, CompressibleMarchConfigBuilder,
     DescentSchedule, DuctAreaProfile, DuctConfig, DuctConfigBuilder, Grading, Manufactured,
     ManufacturedSample, MarchConfig, MarchConfigBuilder, MarchStop, Mesh, Observe, PlumeImprint,
-    QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
+    QttMarchConfig, QttMarchConfigBuilder, QttObserve, ReferenceScales, Seed, TaylorGreen,
     VerifyConfig, VerifyConfigBuilder,
 };
 // IO effect: the `IoAction` trait (from haft), so a `CfdFlow` program can describe and run file
