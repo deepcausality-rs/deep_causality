@@ -7,9 +7,6 @@
  * ClarityTechnicalReporting.pdf, p. 9): background, contribution, scope. No
  * figure: the five sections below carry the code and the run output, which is
  * where a reader can check the claims.
- *
- * The `.sub` list names those five in the order the crate README argues them,
- * so the promise and the page agree.
  */
 ---
 <section class="hero">
@@ -21,15 +18,6 @@
       Counterfactual fluid dynamics and multidisciplinary analysis and
       optimization, by coupling fluid dynamics, multiple physics, navigation
       and control in one typed dynamic process.
-    </p>
-
-    <p class="sub">
-      The plasma-blackout example marches a compressible flow, reacts its
-      plasma chemistry, gates a Kalman filter on the result, flies the control
-      command it selects, and picks that command by forking the running
-      simulation into counterfactual worlds. Multiple solvers, multi-physics,
-      multi-regime, counterfactual dynamics, and precision as a parameter, in
-      one crate.
     </p>
 
     <div class="cta-row">
@@ -57,17 +45,12 @@
     margin: var(--space-3) 0 var(--space-5);
     max-width: 18ch;
   }
+  /* Carries the space the removed `.sub` paragraph used to hold off the CTA. */
   .tagline {
     font-size: var(--t-h3);
     line-height: var(--lh-h3);
     color: var(--fg-1);
     max-width: var(--measure-lede);
-    margin: 0 0 var(--space-4);
-  }
-  .sub {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
     margin: 0 0 var(--space-6);
   }
 
