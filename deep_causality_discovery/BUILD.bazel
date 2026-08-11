@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
     name = "deep_causality_discovery",
@@ -37,4 +37,17 @@ rust_doc_test(
     crate = ":deep_causality_discovery",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+rust_binary(
+    name = "brcd_cache_cold_vs_warm",
+    srcs = ["examples/brcd_cache_cold_vs_warm.rs"],
+    crate_root = "examples/brcd_cache_cold_vs_warm.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_discovery",
+        "//deep_causality_rand",
+    ],
 )

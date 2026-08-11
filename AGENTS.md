@@ -368,7 +368,11 @@ To rebuild and test the entire repo
 You aim for one hundred percent test coverage of all added or edited code files.
 The only exception is if, for some reason, some code is impossible to reach. Then you skip testing that dead code.
 
-Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
+Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
+
+Every `[[example]]` also needs a `rust_binary` in its package's `examples/<package>/BUILD.bazel`, because Bazel does not read `Cargo.toml`. Its `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set. `make check_examples` fails when a Cargo example has no Bazel target; an example that is deliberately Cargo-only is listed in `build/scripts/check_examples.sh` with the reason recorded in the package's `BUILD.bazel`.
+
+An example that reads bundled data or records an output table resolves the path through its package's `paths::manifest_dir()` rather than `env!("CARGO_MANIFEST_DIR")`. Under Bazel the compile-time manifest directory names a rustc sandbox that no longer exists when the binary runs, so the helper falls back to it only under Cargo and uses `BUILD_WORKSPACE_DIRECTORY` under `bazel run`.
 
 If tests find any bug, you fix the implementation so that the test pass. Because the testing exists to ensure that the API is correct, and if the API is not correct, you fix the API so that the test is passing.
 

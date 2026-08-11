@@ -73,11 +73,11 @@ fn in_path() -> PathBuf {
         .nth(1)
         .map(PathBuf::from)
         .unwrap_or_else(|| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            avionics_examples::paths::manifest_dir()
                 .join("cfd/nozzle_operating_map/back_pressures.csv")
         })
 }
 
 fn out_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/nozzle_operating_map/operating_map.csv")
+    avionics_examples::paths::manifest_dir().join("cfd/nozzle_operating_map/operating_map.csv")
 }

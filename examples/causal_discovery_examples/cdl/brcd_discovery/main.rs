@@ -12,8 +12,8 @@
 //! CDL pipeline and the algorithm agree: the top-ranked root cause is
 //! `shipping_latency` (column index 42), matching the case's `expected.txt`.
 //!
-//! Data is loaded relative to the crate root via `CARGO_MANIFEST_DIR`, so the
-//! example runs from any working directory / machine.
+//! Data is loaded relative to the crate root, so the example runs from any working
+//! directory / machine and under either build system.
 
 use deep_causality_discovery::*;
 
@@ -23,7 +23,10 @@ pub type FloatType = f64;
 
 fn main() {
     // 1. Real Sock Shop case, loaded relative to the crate root.
-    let base = concat!(env!("CARGO_MANIFEST_DIR"), "/data/sock-shop-2/carts_cpu_1");
+    let base = causal_discovery_examples::paths::manifest_dir()
+        .join("data/sock-shop-2/carts_cpu_1")
+        .display()
+        .to_string();
     let normal_path = format!("{base}/normal.csv");
     let anomalous_path = format!("{base}/anomalous.csv");
     let cpdag_path = format!("{base}/cpdag.csv");

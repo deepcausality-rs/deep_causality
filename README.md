@@ -320,6 +320,18 @@ bazel build //...
 bazel test  //...
 ```
 
+Every example is a Bazel binary, so the two commands in the [Examples](#examples) section above
+have Bazel equivalents:
+
+```bash
+bazel run //examples/physics_examples:event_horizon_probe
+bazel run //examples/avionics_examples:flight_envelope_monitor
+```
+
+Examples that read bundled data or record an output table resolve those paths against the
+workspace root, so they read and write the same files under either build system.
+`make check_examples` verifies that no Cargo example is missing its Bazel target.
+
 ---
 
 ## Contributing

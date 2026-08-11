@@ -1,0 +1,69 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "causal_counterfactual_examples",
+    srcs = glob(["src/**"]),
+    crate_root = "src/lib.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "counterfactual_treatment_effect",
+    srcs = glob(["counterfactual_treatment_effect/**/*.rs"]),
+    crate_root = "counterfactual_treatment_effect/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_counterfactual_examples",
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "counterfactual_envelope_fault",
+    srcs = glob(["counterfactual_envelope_fault/**/*.rs"]),
+    crate_root = "counterfactual_envelope_fault/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_counterfactual_examples",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "counterfactual_treatment_options",
+    srcs = glob(["counterfactual_treatment_options/**/*.rs"]),
+    crate_root = "counterfactual_treatment_options/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_counterfactual_examples",
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "counterfactual_cascade_failure",
+    srcs = glob(["counterfactual_cascade_failure/**/*.rs"]),
+    crate_root = "counterfactual_cascade_failure/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_counterfactual_examples",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "counterfactual_resection_intervention",
+    srcs = glob(["counterfactual_resection_intervention/**/*.rs"]),
+    crate_root = "counterfactual_resection_intervention/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_counterfactual_examples",
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+    ],
+)

@@ -93,7 +93,7 @@ fn main() {
 
 /// Resolve the path to a bundled Galileo data file.
 fn data_path(file: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    avionics_examples::paths::manifest_dir()
         .join("../chronometric_examples/data/gnss")
         .join(file)
 }

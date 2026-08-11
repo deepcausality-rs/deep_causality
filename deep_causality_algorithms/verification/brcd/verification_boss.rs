@@ -28,13 +28,12 @@
 
 mod common;
 
-use common::{Report, load_csv, load_expected, tensor};
+use common::{Report, load_csv, load_expected, manifest_dir, tensor};
 use deep_causality_algorithms::brcd::{BossConfig, BrcdConfig, boss_learn, brcd_run};
 use deep_causality_rand::{Rng, Xoshiro256};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::EdgeKind;
 use std::f64::consts::TAU;
-use std::path::PathBuf;
 
 /// One standard-normal draw via Box-Muller.
 fn next_normal(rng: &mut Xoshiro256) -> f64 {
@@ -108,8 +107,7 @@ fn structural_checks(report: &mut Report) {
 }
 
 fn end_to_end_check(report: &mut Report) {
-    let case = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("verification/brcd/data/online-boutique/adservice_cpu_1");
+    let case = manifest_dir().join("verification/brcd/data/online-boutique/adservice_cpu_1");
     if !case.join("normal.csv").exists() {
         report.check(
             &format!("online-boutique case present at {}", case.display()),

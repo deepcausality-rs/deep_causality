@@ -14,11 +14,10 @@
 
 mod common;
 
-use common::{Report, verify_dataset};
-use std::path::PathBuf;
+use common::{Report, manifest_dir, verify_dataset};
 
 fn main() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("verification/brcd/data/sock-shop-2");
+    let dir = manifest_dir().join("verification/brcd/data/sock-shop-2");
 
     if !dir.exists() {
         eprintln!(

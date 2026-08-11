@@ -1,0 +1,87 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "causal_discovery_examples",
+    srcs = [
+        "no_lib.rs",
+        "shared/cdl_data.rs",
+        "shared/paths.rs",
+    ],
+    crate_root = "no_lib.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+    ],
+)
+
+rust_binary(
+    name = "example_mrmr",
+    srcs = glob(["algos/mrmr/**/*.rs"]),
+    crate_root = "algos/mrmr/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "example_mrmr_cdl",
+    srcs = glob(["algos/mrmr_cdl/**/*.rs"]),
+    crate_root = "algos/mrmr_cdl/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "example_surd",
+    srcs = glob(["algos/surd/**/*.rs"]),
+    crate_root = "algos/surd/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algorithms",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "example_surd_discovery",
+    srcs = glob(["cdl/surd_discovery/**/*.rs"]),
+    crate_root = "cdl/surd_discovery/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_discovery_examples",
+        "//deep_causality_discovery",
+        "//deep_causality_num",
+    ],
+)
+
+rust_binary(
+    name = "example_brcd_discovery",
+    srcs = glob(["cdl/brcd_discovery/**/*.rs"]),
+    crate_root = "cdl/brcd_discovery/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_discovery_examples",
+        "//deep_causality_discovery",
+    ],
+)
+
+rust_binary(
+    name = "example_brcd_boss_discovery",
+    srcs = glob(["cdl/brcd_boss_discovery/**/*.rs"]),
+    crate_root = "cdl/brcd_boss_discovery/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_discovery_examples",
+        "//deep_causality_discovery",
+        "//deep_causality_num",
+    ],
+)
+
+# `example_ml_rca` is Cargo-only.
+# candle-core is not vendored for Bazel: it pulls ~74 further crates, including
+# onig_sys (Oniguruma C library) and esaxx-rs (C++), both built via `cc`. The example
+# stays a Cargo-only target: `cargo run -p causal_discovery_examples --example example_ml_rca`.

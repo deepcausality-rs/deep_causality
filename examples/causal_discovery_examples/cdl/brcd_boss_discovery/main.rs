@@ -8,8 +8,7 @@
 //! Same real-world Sock Shop case (`carts_cpu_1`) as the supplied-CPDAG example,
 //! but no CPDAG is provided. The loader leaves the CPDAG `None`, and the BRCD
 //! driver learns the structure from the normal (observational) window via BOSS
-//! before ranking. Data is loaded relative to the crate root via
-//! `CARGO_MANIFEST_DIR`.
+//! before ranking. Data is loaded relative to the crate root.
 //!
 //! Note: the in-repo BOSS uses a corrected score sign, so the learned structure
 //! (and hence the ranking) need not reproduce the supplied-CPDAG result — this
@@ -24,7 +23,10 @@ pub type FloatType = deep_causality_num::Float106;
 fn main() {
     // Real Sock Shop case, loaded relative to the crate root. No CPDAG file: the
     // structure is learned via BOSS inside brcd_run.
-    let base = concat!(env!("CARGO_MANIFEST_DIR"), "/data/sock-shop-2/carts_cpu_1");
+    let base = causal_discovery_examples::paths::manifest_dir()
+        .join("data/sock-shop-2/carts_cpu_1")
+        .display()
+        .to_string();
     let normal_path = format!("{base}/normal.csv");
     let anomalous_path = format!("{base}/anomalous.csv");
 
