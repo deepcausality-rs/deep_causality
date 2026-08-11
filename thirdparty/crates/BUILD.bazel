@@ -56,6 +56,18 @@ alias(
 )
 
 alias(
+    name = "getrandom-0.4.3",
+    actual = "//thirdparty/crates/getrandom-0.4.3:getrandom",
+    tags = ["manual"],
+)
+
+alias(
+    name = "getrandom",
+    actual = "//thirdparty/crates/getrandom-0.4.3:getrandom",
+    tags = ["manual"],
+)
+
+alias(
     name = "libm-0.2.16",
     actual = "//thirdparty/crates/libm-0.2.16:libm",
     tags = ["manual"],

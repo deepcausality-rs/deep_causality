@@ -318,6 +318,7 @@ _NORMAL_DEPENDENCIES = {
         _COMMON_CONDITION: {
             "chrono": Label("//thirdparty/crates/chrono-0.4.45:chrono"),
             "csv": Label("//thirdparty/crates/csv-1.4.0:csv"),
+            "getrandom": Label("//thirdparty/crates/getrandom-0.4.3:getrandom"),
             "libm": Label("//thirdparty/crates/libm-0.2.16:libm"),
             "parquet": Label("//thirdparty/crates/parquet-59.2.0:parquet"),
             "rusty-fork": Label("//thirdparty/crates/rusty-fork-0.3.1:rusty_fork"),
