@@ -56,6 +56,10 @@ common --reuse_sandbox_directories
 # Debug toolchain resolution
 # build --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type
 
+# Required to resolve C/C++ toolchain.
+# https://github.com/bazel-contrib/musl-toolchain?tab=readme-ov-file#setup
+build --incompatible_enable_cc_toolchain_resolution
+
 # Required to support cross compilation from different host systems i.e Mac and Linux
 # https://bazel.build/reference/command-line-reference#flag--enable_platform_specific_config
 common --enable_platform_specific_config
@@ -68,13 +72,36 @@ build:linux --extra_execution_platforms=//build/platforms:linux-x86_64
 ## Remote configuration
 ###############################################################################
 
-# N/A. Add later to configure RBE.
+# Flags shared across remote configs
+common:remote-shared --remote_timeout=600
+common:remote-shared --remote_download_minimal
+common:remote-shared --remote_cache_compression
+common:remote-shared --verbose_failures
+# Avoid inflating blobs smaller than 100 bytes with ZSTD compression.
+common:remote-shared --experimental_remote_cache_compression_threshold=100
+# Enable remote cache chunking
+common:remote-shared--experimental_remote_cache_chunking
+
+# Remote host platform
+# https://github.com/buildbuddy-io/buildbuddy/blob/8579ca30f1a1f401ed8279d99d9b47ec5637873f/.bazelrc#L30
+common:remote-shared --host_platform=//build/platforms:linux_x86_64_remote
+common:remote-shared --extra_execution_platforms=//build/platforms:linux_x86_64_remote
+
+# Remote cross compilation
+common:remote-shared --extra_execution_platforms=//build/platforms:linux-aarch64
+common:remote-shared --extra_execution_platforms=//build/platforms:linux-x86_64
+
+# Build with --config=remote to enable Remote Build Execution (RBE)
+common:remote --config=remote-shared
+common:remote --remote_cache=grpcs://remote.buildbuddy.io
+common:remote --remote_executor=remote.buildbuddy.io
 
 ###############################################################################
-## Custom user flags
+## Custom user or remote flags
 ##
-## This should always be the last thing in the `.bazelrc` file to ensure
-## consistent behavior when setting flags in that file as `.bazelrc` files are
-## evaluated top to bottom.
+## This should always be the last thing in the `.bazelrc` beccause
+# `.bazelrc` files are evaluated top to bottom.
 ###############################################################################
 try-import %workspace%/user.bazelrc
+
+try-import %workspace%/.bazelrc.remote

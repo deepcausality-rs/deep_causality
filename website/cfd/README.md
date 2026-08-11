@@ -25,11 +25,14 @@ in `.bazelignore`.
 
 ## Deploy
 
-Cloudflare Workers Builds, configured in the dashboard: root directory
-`/website/cfd/`, build command `pnpm run build`, deploy command
-`npx wrangler deploy`. The Worker is `deepcausality-cfd`, which is the name
-`wrangler.toml` must carry. See [`../README.md`](../README.md) for why both of
-those settings fail quietly when they are wrong.
+Cloudflare Workers Builds. The dashboard supplies the root directory
+(`/website/cfd/`) and the deploy command (`npx wrangler deploy`); the build
+lives in `wrangler.toml` as a `[build]` command, so an empty dashboard build
+field cannot break the deploy.
+
+The Worker is **`deep-causality-cfd-prod`**, spelled with hyphens throughout,
+and `wrangler.toml` must carry that exact name. See
+[`../README.md`](../README.md) for the two ways this fails quietly.
 
 ## Design
 
