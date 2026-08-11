@@ -82,6 +82,12 @@ common:remote-shared --experimental_remote_cache_compression_threshold=100
 # Enable remote cache chunking
 common:remote-shared--experimental_remote_cache_chunking
 
+# Metadata
+common:remote-shared --build_metadata=REPO_URL=https://github.com/deepcausality-rs/deep_causality.git
+common:remote-shared --build_metadata=BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+common:remote-shared --build_metadata=ROLE=CI
+common:remote-shared --build_metadata=USER=gh
+
 # Remote host platform
 # https://github.com/buildbuddy-io/buildbuddy/blob/8579ca30f1a1f401ed8279d99d9b47ec5637873f/.bazelrc#L30
 common:remote-shared --host_platform=//build/platforms:linux_x86_64_remote
