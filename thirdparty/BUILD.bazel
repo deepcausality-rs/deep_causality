@@ -24,6 +24,13 @@ crates_vendor(
             package = "csv",
             version = "1.4",
         ),
+        # Already present transitively; declared here so `//thirdparty/crates:getrandom`
+        # exists as a top-level alias for `deep_causality_rand`'s `os-random` feature.
+        "getrandom": crate.spec(
+            default_features = True,
+            package = "getrandom",
+            version = "0.4",
+        ),
         "parquet": crate.spec(
             default_features = False,
             package = "parquet",
@@ -38,6 +45,12 @@ crates_vendor(
             default_features = False,
             package = "tempfile",
             version = "3",
+        ),
+        "tokio": crate.spec(
+            default_features = True,
+            features = ["full"],
+            package = "tokio",
+            version = "1",
         ),
     },  # End packages
     repository_name = "deep_causality_vendored",

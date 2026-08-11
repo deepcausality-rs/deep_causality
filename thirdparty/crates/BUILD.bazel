@@ -102,3 +102,15 @@ alias(
     actual = "//thirdparty/crates/tempfile-3.27.0:tempfile",
     tags = ["manual"],
 )
+
+alias(
+    name = "tokio-1.53.1",
+    actual = "//thirdparty/crates/tokio-1.53.1:tokio",
+    tags = ["manual"],
+)
+
+alias(
+    name = "tokio",
+    actual = "//thirdparty/crates/tokio-1.53.1:tokio",
+    tags = ["manual"],
+)
