@@ -11,7 +11,7 @@ bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
 bazel_dep(name = "llvm", version = "0.8.17")
 
 ###############################################################################
-# Vendored module sources (thirdparty/<module>)
+# Vendored module sources (thirdparty/bzlmod/<module>)
 
 # IMPORTANT: local_path_override pins the module at the vendored version and takes
 # it out of version resolution. If a future dependency needs a newer
@@ -20,34 +20,41 @@ bazel_dep(name = "llvm", version = "0.8.17")
 ###############################################################################
 local_path_override(
     module_name = "aspect_bazel_lib",
-    path = "thirdparty/aspect_bazel_lib",
+    path = "thirdparty/bzlmod/aspect_bazel_lib",
 )
 
 local_path_override(
     module_name = "bazel_skylib",
-    path = "thirdparty/bazel_skylib",
+    path = "thirdparty/bzlmod/bazel_skylib",
 )
 
 local_path_override(
     module_name = "platforms",
-    path = "thirdparty/platforms",
+    path = "thirdparty/bzlmod/platforms",
 )
 
 local_path_override(
     module_name = "toolchains_buildbuddy",
-    path = "thirdparty/toolchains_buildbuddy",
+    path = "thirdparty/bzlmod/toolchains_buildbuddy",
 )
 
 local_path_override(
     module_name = "llvm",
-    path = "thirdparty/llvm",
+    path = "thirdparty/bzlmod/llvm",
 )
 
-# Vendored locally and patched to pin the Lean v4.32.0 toolchain sha256. See lean/.
-bazel_dep(name = "rules_lean", version = "0.5.4")
-local_path_override(
+# The Lean rules were extracted out of thirdparty/rules_lean into their own MIT
+# repository, so the patches that made @lake_deps content-addressed live somewhere
+# they can be released and reused. See lean/ and the ruleset's NOTICE.
+#
+# Pinned by commit rather than by version until the module is published to the
+# Bazel Central Registry; at that point this becomes a plain bazel_dep and the
+# git_override goes away.
+bazel_dep(name = "rules_lean", version = "0.1.0")
+git_override(
     module_name = "rules_lean",
-    path = "thirdparty/rules_lean",
+    commit = "59a43fb15fd15591b0b04042a5d6045cee35ba60",
+    remote = "https://github.com/marvin-hansen/rules_lean.git",
 )
 
 ###############################################################################
@@ -117,7 +124,7 @@ use_repo(buildbuddy, "buildbuddy_toolchain")
 
 ###############################################################################
 # Lean 4 toolchain + Lake/Mathlib workspace
-# https://github.com/tomato-bazel/rules_lean  (vendored: thirdparty/rules_lean)
+# https://github.com/marvin-hansen/rules_lean  (pinned by commit above)
 ###############################################################################
 #
 # Lean 4 toolchain version is pinned in

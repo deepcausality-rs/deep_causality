@@ -11,18 +11,19 @@ extraction proceeds.
 ## 2. Decide identity and stand up the repository
 
 - [ ] 2.1 Settle the repository owner and module name; confirm `rules_lean` is still unclaimed in BCR at that time
-- [ ] 2.2 Create the repository with an MIT LICENSE at the root and an attribution notice naming `tomato-bazel/rules_lean` as upstream and summarising what changed
+- [x] 2.2 Create the repository with an MIT LICENSE at the root and an attribution notice naming `tomato-bazel/rules_lean` as upstream and summarising what changed
 - [ ] 2.3 Write `MODULE.bazel` with the module name matching the intended registry directory, a semantic version and a `compatibility_level`
-- [ ] 2.4 Add the `.bcr` templates before any rule code, modelled on `thirdparty/toolchains_buildbuddy/.bcr/`: `metadata.template.json`, `source.template.json`, `presubmit.yml`
-- [ ] 2.5 Establish the examples split that presubmit scope forces: a toolchain-only module for the registry, Mathlib-dependent examples for the ruleset's own CI
+- [x] 2.4 Add the `.bcr` templates before any rule code, modelled on `thirdparty/toolchains_buildbuddy/.bcr/`: `metadata.template.json`, `source.template.json`, `presubmit.yml`
+- [x] 2.5 Establish the examples split that presubmit scope forces: a toolchain-only module for the registry, Mathlib-dependent examples for the ruleset's own CI
 
 ## 3. Port the rules and their fixes
 
-- [ ] 3.1 Port the rule sources from `thirdparty/rules_lean/lean/`, adding SPDX headers to every file
-- [ ] 3.2 Port the `lock` attribute: sha256-pinned `download_and_extract` for every package plus the olean archive, with validation against the manifest and toolchain failing closed on drift
-- [ ] 3.3 Port the all-or-nothing degradation: a lock with no olean archive falls back to the subprocess path with a diagnostic, since `lake` deletes tarball-sourced packages and `cache get` reads `mathlib/.git`
-- [ ] 3.4 Port `lean_toolchain_decls` and the per-platform `lean_dist`, with `exec_compatible_with` constraints and lazy fetching of the selected platform only
-- [ ] 3.5 Port `cache_roots` tree-shaking and the generated package list, keeping the rule that packages building to no oleans get no target
+- [x] 3.1 Port the rule sources from `thirdparty/rules_lean/lean/`, adding SPDX headers to every file
+- [x] 3.2 Port the `lock` attribute: sha256-pinned `download_and_extract` for every package plus the olean archive, with validation against the manifest and toolchain failing closed on drift
+- [x] 3.3 Port the all-or-nothing degradation: a lock with no olean archive falls back to the subprocess path with a diagnostic, since `lake` deletes tarball-sourced packages and `cache get` reads `mathlib/.git`
+- [x] 3.4 Port `lean_toolchain_decls` and the per-platform `lean_dist`, with `exec_compatible_with` constraints and lazy fetching of the selected platform only
+- [x] 3.5 Port `cache_roots` tree-shaking and the generated package list, keeping the rule that packages building to no oleans get no target
+- [x] 3.7 Add a toolchain-only extension tag: the only way to get a toolchain was to declare a `lake.workspace`, which the Mathlib-free presubmit module cannot do
 - [ ] 3.6 Verify the ported rules build the deep_causality proofs unchanged, locally and under remote execution
 
 ## 4. Fold in the surveyed improvements
@@ -36,7 +37,7 @@ extraction proceeds.
 
 ## 5. Move the generic tooling, keep the consumer-side tooling
 
-- [ ] 5.1 Move the reproducible archive packer into the ruleset, preserving the three reproducibility fixes (tar mtime/uid/gid, gzip mtime, and the gzip FNAME field that made the digest depend on the output path)
+- [x] 5.1 Move the reproducible archive packer into the ruleset, preserving the three reproducibility fixes (tar mtime/uid/gid, gzip mtime, and the gzip FNAME field that made the digest depend on the output path)
 - [ ] 5.2 Assert reproducibility in the ruleset's tests by packing twice to different output paths and comparing digests
 - [ ] 5.3 Keep the repin and drift-check scripts consumer-side in `build/scripts/`, adjusting them to the published rule surface
 - [ ] 5.4 Document the pin format and the repack workflow for consumers who are not this repository

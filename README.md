@@ -392,9 +392,6 @@ Implemented research:
 
 ---
 
-## License
-
-This project is licensed under the [MIT license](LICENSE).
 
 ## 👮 Security
 
@@ -420,6 +417,6 @@ The [Center for Dynamic Causality](https://www.causalcenter.com) contributes ong
 
 ---
 
-## Linux Foundation
+## License
 
-The 
+This project is licensed under the [MIT license](LICENSE).
