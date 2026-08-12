@@ -139,21 +139,29 @@ lake.workspace(
     # Regenerate after touching lake-manifest.json or lean-toolchain:
     #   build/scripts/lean_lock.sh sources
     lock = "//lean:lake-lock.json",
+    # Tree-shake the Mathlib olean download to the modules the proofs import.
+    # Regenerate after changing any import:
+    #
+    #   git ls-files 'lean/**/*.lean' | xargs grep -hoE '^import Mathlib[A-Za-z0-9_.]*' \
+    #     | sed 's/^import //' | sort -u
+    cache_roots = [
+        "Mathlib.Algebra.Algebra.Basic",
+        "Mathlib.Algebra.DualNumber",
+        "Mathlib.Algebra.Field.Basic",
+        "Mathlib.Algebra.Group.Basic",
+        "Mathlib.Algebra.Group.Defs",
+        "Mathlib.Algebra.Order.Group.Int",
+        "Mathlib.Algebra.Order.Ring.Defs",
+        "Mathlib.Algebra.Quaternion",
+        "Mathlib.Algebra.Ring.Basic",
+        "Mathlib.Algebra.Star.Basic",
+        "Mathlib.Analysis.Complex.Basic",
+        "Mathlib.Analysis.Normed.Field.Basic",
+        "Mathlib.Data.Rat.Cast.Defs",
+        "Mathlib.Data.Real.Basic",
+        "Mathlib.LinearAlgebra.Matrix.Trace",
+    ],
 )
 use_repo(lake, "lake_deps", "lean_dist_4_32_0_toolchains")
 
-# Register the DECLARATION repo, never @lake_deps or the distribution.
-#
-# Registering a toolchain makes Bazel fetch the repo its `toolchain()` target
-# lives in so resolution can evaluate it — on every build, for every target,
-# Lean-related or not. Pointed at @lake_deps that meant `bazel build` on a Rust
-# crate first materialized the whole Lake/Mathlib workspace; pointed at the
-# distribution it would mean a 2.5G toolchain download instead.
-#
-# `@<dist>_toolchains` contains the `toolchain()` declaration and nothing else,
-# so resolution is free and Bazel fetches the implementation lazily, only when
-# the Lean toolchain actually wins — i.e. only when Lean is being compiled.
-#
-# The repo name is derived from lean/lean-toolchain (v4.32.0 -> 4_32_0); bumping
-# Lean means bumping it here too, and an unknown-repo error says so loudly.
 register_toolchains("@lean_dist_4_32_0_toolchains//:lean_toolchain_def")

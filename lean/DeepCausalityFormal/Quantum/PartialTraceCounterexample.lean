@@ -16,10 +16,15 @@ arithmetic. This is the exact counterpart of the crate's numerical witness
 
 Rust witness: `deep_causality_quantum/tests/kernels/operator_linalg_tests.rs ::
 test_partial_trace_nonpreservation_counterexample`.
+
+Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
+the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
+once reached 8,639 of Mathlib's 9,450 modules to supply four algebraic laws. Mirror any new import
+into `cache_roots` in `//MODULE.bazel`: that list tree-shakes the Mathlib olean download to those
+roots plus their closure, so a module absent from it is never fetched and the build fails on it.
 -/
 
 import DeepCausalityFormal.Quantum.PartialTrace
-import Mathlib.LinearAlgebra.Matrix.Notation
 
 -- The pair-indexed matrix model leaves some section instances unused per-lemma; this is
 -- the standard Mathlib idiom for that situation and keeps the proofs uncluttered.

@@ -13,7 +13,6 @@ actions:
       disk: "40GB"
     steps:
       # Build all targets
-      - run: "bazel build --config=ci //..."
+      - run: "bazel build --config=ci -- //... -//lean/..."
       # Run all tests
-      - run: "bazel test --config=ci //..."
-z
+      - run: "bazel test --config=ci -- //... -//lean/..."

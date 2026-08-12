@@ -12,10 +12,15 @@ the action from the Choi matrix of a linear channel recovers the channel, `apply
 
 Rust witness: `deep_causality_quantum/tests/kernels/channel_tests.rs` (the Choi↔Kraus round-trip and
 `apply_choi`/`apply_kraus` agreement).
+
+Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
+the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
+once reached 8,639 of Mathlib's 9,450 modules to supply four algebraic laws. Mirror any new import
+into `cache_roots` in `//MODULE.bazel`: that list tree-shakes the Mathlib olean download to those
+roots plus their closure, so a module absent from it is never fetched and the build fails on it.
 -/
 
 import DeepCausalityFormal.Quantum.PartialTrace
-import Mathlib.LinearAlgebra.Matrix.StdBasis
 
 set_option linter.unusedSectionVars false
 
