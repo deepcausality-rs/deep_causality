@@ -41,6 +41,23 @@ jobs:
       - name: lake build
         run: lake build
 
+  # The Bazel Lean build fetches a tree-shaken slice of Mathlib: `cache_roots` in
+  # MODULE.bazel narrows `lake exe cache get`, and lake-lock.json pins an olean archive cut
+  # to the proofs' import closure (1,918 of 9,450 modules). An import added outside that
+  # slice is covered by neither, and surfaces as `unknown module` from Lean against a
+  # Mathlib file nobody touched. This names it at the point of change instead.
+  #
+  # Pure text: reads the imports out of lean/**/*.lean and the revs out of the lock, which
+  # are the only two inputs the closure depends on. No Lean toolchain, no Lake workspace,
+  # no network — so it stays a seconds-long job while `lake build` runs separately.
+  lean-closure:
+    name: tree-shaken Mathlib slice covers the imports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: cache_roots and the olean archive cover every import
+        run: build/scripts/lean_lock.sh check
+
   # No unproven placeholders. Our proof files must be zero-sorry; the only whitelisted slots are the
   # QCM obligation stubs under DeepCausalityFormal/Quantum/ (which land with deep_causality_quantum).
   # The guard is scoped to our own proofs — never the vendored Mathlib under lean/.lake/.
