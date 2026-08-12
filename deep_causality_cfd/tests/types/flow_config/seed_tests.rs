@@ -168,6 +168,38 @@ fn perturbed_seed_adds_transverse_energy_to_the_uniform_stream() {
 }
 
 #[test]
+fn perturbed_seed_rejects_a_non_finite_width() {
+    // Every comparison against NaN is false, so a `sigma <= 0.0` guard lets NaN through to divide
+    // the Gaussian exponent — poisoning the seed and the projection after it instead of reporting
+    // the documented error.
+    for sigma in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let config = CfdConfigBuilder::march::<2, f64>("bad-sigma")
+            .mesh(Mesh::periodic_cube(5))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.05)
+                    .time_step(0.005)
+                    .build()
+                    .unwrap(),
+            )
+            .seed(Seed::UniformXPerturbed {
+                speed: 1.0,
+                center: [1.0, 1.0, 0.0],
+                sigma,
+                amplitude: 0.1,
+            })
+            .march_for(0)
+            .build()
+            .unwrap();
+        let manifold = config.materialize().unwrap();
+        assert!(
+            CfdFlow::march(&config).on(&manifold).run().is_err(),
+            "sigma = {sigma} must be rejected, not divided by"
+        );
+    }
+}
+
+#[test]
 fn perturbed_seed_rejects_a_nonpositive_width() {
     let config = CfdConfigBuilder::march::<2, f64>("bad-sigma")
         .mesh(Mesh::periodic_cube(5))

@@ -86,9 +86,12 @@ impl Seed {
             } => {
                 // The blob is stated in physical coordinates, so the vertex lattice indices are
                 // scaled by the per-axis spacing — the same convention `Observe::probe` uses.
-                if *sigma <= 0.0 {
+                // `is_finite` first: every comparison against NaN is false, so a bare `<= 0.0` test
+                // lets a NaN width through to divide the Gaussian exponent and poison the seed —
+                // and the projection after it — instead of reporting the documented error.
+                if !sigma.is_finite() || *sigma <= 0.0 {
                     return Err(PhysicsError::PhysicalInvariantBroken(format!(
-                        "Seed::UniformXPerturbed requires a positive sigma, got {sigma}"
+                        "Seed::UniformXPerturbed requires a finite, positive sigma, got {sigma}"
                     )));
                 }
                 if D < 2 {

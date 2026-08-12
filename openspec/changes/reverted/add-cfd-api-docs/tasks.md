@@ -1,12 +1,21 @@
+> **ABANDONED PLAN — HISTORICAL RECORD ONLY. DO NOT IMPLEMENT.**
+>
+> This checklist belongs to a reverted change; see the sibling `add-cfd-api-docs.md` for why. Its
+> phase-1 premise is falsified: it plans `cargo doc` inside the site deploy, and Cloudflare's build
+> image has no Rust toolchain. Everything phases 1-2 describe was either built and rolled back or
+> never started, so **every box is unchecked** — no task's output exists in the tree.
+>
+> The resolution is not on this list: publish the crate and link to docs.rs.
+
 > Five phases. Phases 1 and 2 deliver value alone and can ship without 3–5.
 > Each phase ends with `pnpm -C website/cfd build` clean and the parity gate green.
 
 ## 1. Generated reference
 
-- [x] 1.1 Add a `docs` target to the makefile: `cargo doc --no-deps -p deep_causality_cfd --target-dir <tmp>` copying `doc/` into `website/cfd/public/api/`
-- [x] 1.2 Git-ignore `website/cfd/public/api/`
+- [ ] 1.1 Add a `docs` target to the makefile: `cargo doc --no-deps -p deep_causality_cfd --target-dir <tmp>` copying `doc/` into `website/cfd/public/api/`
+- [ ] 1.2 Git-ignore `website/cfd/public/api/`
 - [ ] 1.3 **BLOCKED** — Cloudflare's build image has no Rust toolchain, so `cargo doc` cannot run in the deploy build. Needs a hosting decision (see below)
-- [x] 1.4 Verify `cargo doc` emits no new warnings for the crate; the 9 pre-existing intra-doc warnings are recorded, not introduced
+- [ ] 1.4 Verify `cargo doc` emits no new warnings for the crate; the 9 pre-existing intra-doc warnings are recorded, not introduced
 - [ ] 1.5 Add the nav entry in `src/components/nav/SiteHeader.astro` and confirm `/api/` resolves in a local build
 - [ ] 1.6 Fix `documentation` in `deep_causality_cfd/Cargo.toml` — it points at `docs.rs/deep_causality`, a different crate
 

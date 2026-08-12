@@ -34,7 +34,9 @@ over its `EulerStateTt` state, with `run_coupled` hosting the between-step `Phys
 and the blackout sampler. Precision SHALL remain a parameter, and the marcher's numerics SHALL be
 consumed as-is (no solver changes).
 
-The builder's constructor and its `Default` implementation SHALL be crate-private, and the case name
+The builder's constructor SHALL be crate-private and the builder SHALL NOT implement `Default` (a
+trait impl has no visibility of its own, so only the absence of the impl closes that bypass), and the
+case name
 SHALL be taken at the entry rather than through a builder method. The fixed dimensional anchors of
 the physical projections SHALL be set through a builder method taking the temperature, number-density
 and speed references, rather than through a public-field struct.

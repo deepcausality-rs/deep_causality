@@ -26,11 +26,17 @@ The crate SHALL separate **configuration** (the "what") from **workflow composit
 mirroring the Discovery `CdlConfigBuilder` → `CdlBuilder` split. A single `CfdConfigBuilder` entry
 SHALL start each owned, validated configuration — the solver config (`dec_ns`) and every marching /
 verification case container (`march`, `qtt_march`, `compressible_march`, `duct`, `verify`,
-`uncertain_march`) — and the `CfdFlow` facade SHALL compose those configs onto a caller-owned
-geometry and run them. The entry set SHALL be complete: no configuration family SHALL be reachable
-through a public constructor outside `CfdConfigBuilder`. Configuration objects SHALL hold no geometry
-borrow; the geometry SHALL be lent to the run via `.on(&manifold)` (the B1 borrow model) and SHALL NOT
-escape the run.
+`uncertain_march`) — and the `CfdFlow` facade SHALL compose those configs and run them. The entry set
+SHALL be complete: no configuration family SHALL be reachable through a public constructor outside
+`CfdConfigBuilder`.
+
+Geometry ownership splits by family. The **geometry-bearing** families — `march` and
+`uncertain_march` — SHALL hold no geometry borrow in the configuration; the geometry SHALL be lent to
+the run via `.on(&manifold)` (the B1 borrow model) and SHALL NOT escape the run. The **self-contained**
+families — `qtt_march` and `compressible_march`, whose owned seed fields are sized to a power-of-two
+periodic grid, and `duct`, which is quasi-one-dimensional — SHALL carry everything the run needs and
+SHALL NOT take a lent geometry. `verify` evaluates a manufactured solution pointwise and has no
+geometry stage either.
 
 #### Scenario: A marching case is configured, then composed and run
 - **WHEN** a marching case is built with `CfdConfigBuilder::march(...)` and run with `CfdFlow::march(&config).on(&manifold)`

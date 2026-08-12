@@ -12,9 +12,11 @@ policy), the owned seed velocity fields `(u0, v0)`, the march-stop, and the obse
 SHALL materialize the seed from a closure over the grid (or the analytic Taylor–Green vortex) **at build
 time**, and SHALL reject a grid that is not `2^Lx × 2^Ly` or seed fields that do not match it.
 
-The builder's constructor and its `Default` implementation SHALL be crate-private, and the case name
-SHALL be taken at the entry rather than set through a builder method, so a QTT case cannot be built
-unnamed.
+The builder's constructor SHALL be crate-private and the builder SHALL NOT implement `Default`, and
+the case name SHALL be taken at the entry rather than set through a builder method, so a QTT case
+cannot be built unnamed. A trait implementation has no visibility of its own — an implemented
+`Default` is callable wherever the type is nameable — so the absence of the impl, not its
+visibility, is what closes the bypass.
 
 #### Scenario: Builds a runnable config from a seed closure
 - **WHEN** a name, a grid, solver parameters, a seed closure, a stop, and an observe set are supplied
@@ -27,7 +29,8 @@ unnamed.
 
 #### Scenario: The builder is not constructible outside the entry
 - **WHEN** a consumer attempts `QttMarchConfigBuilder::new()` or `QttMarchConfigBuilder::default()`
-- **THEN** the code does not compile, because both are crate-private
+- **THEN** the code does not compile — `new` because it is crate-private, `default` because no
+  `Default` implementation exists to call
 
 ### Requirement: CfdFlow QTT marching pipeline
 

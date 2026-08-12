@@ -2,7 +2,8 @@
 
 ## Status
 
-**Reverted during implementation, at 3 of 35 tasks. No living-spec impact.** The change set was
+**Reverted during implementation, after 5 of 35 tasks (all of phase 1 except the blocked 1.3).
+No living-spec impact.** The change set was
 authored and validated (`--strict`), and its artifacts were committed (`e7d69b947`), but the
 deployment premise underneath it was falsified while implementing phase 1. Neither delta was synced
 into `openspec/specs/`: `cfd-api-reference` was never created as a capability, and the
@@ -12,8 +13,9 @@ Date reverted: 2026-08-11 (same day it was created).
 
 ## What the change set assumed
 
-That `deep_causality_cfd`'s ~297 public names have no published API reference — true, and the reason
-is that the crate is `publish = false`, so docs.rs builds no page for it. The plan was a hybrid: ship
+That `deep_causality_cfd`'s ~297 public names have no published API reference. True at the time, and
+the reason is that the crate had never been released to crates.io — docs.rs builds a page from a
+*published release*, so an unreleased crate has none regardless of any manifest flag. The plan was a hybrid: ship
 generated rustdoc at `/api/` on the CFD site for complete signatures, plus a curated MDX guide in the
 site's design for orientation, with a CI parity gate against drift.
 
@@ -41,9 +43,10 @@ Cloudflare deploy — to substitute for a page that a normal crate release produ
 ## What happens instead
 
 **The crate gets published, and docs.rs hosts its API reference.** That is the mechanism this change
-set was reimplementing by hand. Once `publish = false` is lifted, docs.rs builds and hosts the
-rustdoc per version, and the CFD site links to it — a link, not a build step, a workflow, or a
-generated artifact in the repo.
+set was reimplementing by hand. Publishing was enabled the same day this was reverted (`c95c0fb6d`,
+which removed the manifest's `publish = false`); once a release lands on crates.io, docs.rs builds
+and hosts the rustdoc per version and the CFD site links to it — a link, not a build step, a
+workflow, or a generated artifact in the repo.
 
 The curated-guide half of the proposal is not refuted by any of this: rustdoc will never tell a
 reader which of ~297 names to start from, and docs.rs does not change that. If that layer is wanted
@@ -52,7 +55,9 @@ it.
 
 ## What was rolled back
 
-Implementation (phase 1, tasks 1.1–1.6, all reverted):
+Implementation — phase 1 tasks 1.1, 1.2, 1.4, 1.5 and 1.6 were completed and are all reverted
+(1.3 was never implemented; it is the task the blocker landed on). The task list in this directory
+has been reset to unchecked, since nothing any of them produced survives:
 
 - `build/scripts/docs.sh` and the `make docs` target — deleted.
 - `website/cfd/public/api/` (1,262 generated files) — deleted; it was git-ignored and never committed.
@@ -71,6 +76,7 @@ other crates), concentrated in `types/flow` (112), `solvers/dec` (37), `types/fl
 Two defects it surfaced are real and outlive this revert:
 
 1. `deep_causality_cfd/Cargo.toml` sets `documentation = "https://docs.rs/deep_causality"` — a
-   **different crate**. Publishing the crate fixes this properly; until then the field misdirects.
+   **different crate**. Publishing fixes this properly, but the field still needs pointing at
+   `docs.rs/deep_causality_cfd` when the first release goes out; it misdirects until then.
 2. `blueprints/en/couple-multiphysics.mdx` cites `compressible_march_run.rs:441-444` for a block that
    sits at 466. Pre-existing drift, unrelated to this change, still unfixed.
