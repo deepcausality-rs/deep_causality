@@ -86,7 +86,7 @@ common:remote-shared --experimental_remote_cache_chunking
 # target produces. Do NOT also set --remote_download_minimal: both expand to
 # --remote_download_outputs, so setting both makes the winner depend on rc
 # ordering rather than on intent.
-common:remote-shared --remote_download_toplevel
+common:remote-shared --remote_download_minimal
 
 # Metadata. Only what is true of every remote invocation belongs here; ROLE and
 # USER are set by the :ci config so BuildBuddy can tell CI runs from local ones.
@@ -129,6 +129,7 @@ common:remote --config=remote-shared
 common:ci --config=remote-shared
 common:ci --build_metadata=ROLE=CI
 common:ci --build_metadata=USER=gh
+common:ci --build_metadata=VISIBILITY=PUBLIC
 
 ###############################################################################
 ## Custom user or remote flags
