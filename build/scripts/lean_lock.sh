@@ -166,38 +166,56 @@ EOF
 # freshly fetched sources.
 cmd_oleans() {
     local url="${1:-}"
-    [ -n "${url}" ] || die "usage: lean_lock.sh oleans <URL the archive will be served from>"
+    [ -n "${url}" ] || die "usage: lean_lock.sh oleans <URL the archive will be served from> [output-path]"
     [ -f "${LOCK}" ] || die "no lock at ${LOCK}; run \`lean_lock.sh sources\` first"
 
-    local output_base packages_dir
-    output_base="$(cd "${REPO_ROOT}" && bazel info output_base)"
-    packages_dir="${output_base}/external/rules_lean++lake+lake_deps/lake_ws/.lake/packages"
-    [ -d "${packages_dir}" ] || die "no materialized workspace at ${packages_dir}
-Run \`bazel build //lean/...\` once (with the fast path off) to populate it."
+    # Source workspace: prefer the standalone Lake build in lean/, fall back to the
+    # one Bazel materialized. Either is a full `.lake/packages` tree.
+    local packages_dir="${REPO_ROOT}/lean/.lake/packages"
+    if [ ! -d "${packages_dir}" ]; then
+        packages_dir="$(cd "${REPO_ROOT}" && bazel info output_base)/external/rules_lean++lake+lake_deps/lake_ws/.lake/packages"
+    fi
+    [ -d "${packages_dir}" ] || die "no materialized workspace found.
+Run \`lake build\` in lean/, or \`bazel build //lean/...\` with the fast path off."
 
     mkdir -p "${WORK}"
     trap 'rm -rf "${WORK}"' EXIT
 
-    local tarball="${WORK}/lake-oleans.tar.gz"
-    echo "lean_lock: packing ${packages_dir} -> ${tarball}" >&2
+    # NOT under ${WORK}: the archive is this command's deliverable and must survive
+    # the cleanup trap. Second arg overrides the destination.
+    local tarball="${2:-${TMPDIR:-/tmp}/lake-oleans-$(head -n1 "${TOOLCHAIN}" | tr -d '[:space:]' | tr '/:' '--').tar.gz}"
+    mkdir -p "$(dirname "${tarball}")"
+    echo "lean_lock: packing ${packages_dir}" >&2
 
-    # Only the build trees. Sources come from the pinned package archives, and
-    # .git must not be in here at all: non-reproducible packfiles are exactly what
-    # this change exists to remove from the repo.
-    ( cd "${packages_dir}" && \
-      find . -type d -name build -path '*/.lake/build' -prune -print ) \
-        | sed 's|^\./||' \
-        | tar -czf "${tarball}" -C "${packages_dir}" -T -
+    # Tree-shaken to the proofs' import closure, and build trees only: sources come
+    # from the pinned package archives, and `.git` must not appear here at all --
+    # non-reproducible packfiles are what this whole change exists to remove.
+    ( cd "${REPO_ROOT}" && python3 build/scripts/lean_oleans.py "${packages_dir}" "${tarball}" ) \
+        || die "packing failed"
 
     local digest size
     digest="$(sha256_of "${tarball}")"
     size="$(du -h "${tarball}" | cut -f1)"
 
-    python3 - "${LOCK}" "${url}" "${digest}" <<'PY'
+    # Record WHAT the archive was cut from, not just the archive. `inputs_sha256`
+    # digests the direct imports plus the pinned package revs -- the two inputs the
+    # closure depends on -- so `lean_lock.sh check` can tell a stale archive from a
+    # current one without Lean, a workspace, or the network.
+    local inputs
+    inputs="$(cd "${REPO_ROOT}" && python3 build/scripts/lean_closure.py fingerprint)"
+
+    python3 - "${LOCK}" "${url}" "${digest}" "${inputs}" <<'PY'
 import json, sys
-lock_path, url, sha = sys.argv[1:4]
+lock_path, url, sha, inputs = sys.argv[1:5]
+meta = json.loads(inputs)
 lock = json.load(open(lock_path))
-lock["oleans"] = {"url": url, "sha256": sha, "strip_prefix": ""}
+lock["oleans"] = {
+    "url": url,
+    "sha256": sha,
+    "strip_prefix": "",
+    "inputs_sha256": meta["inputs_sha256"],
+    "imports": meta["imports"],
+}
 with open(lock_path, "w") as f:
     json.dump(lock, f, indent=2, sort_keys=False)
     f.write("\n")
@@ -230,13 +248,28 @@ EOF
 # Bazel resolves lazily, only for targets it actually analyzes.
 cmd_packages() {
     [ -f "${MANIFEST}" ] || die "no manifest at ${MANIFEST}"
+    # A materialized workspace decides which manifest packages actually build to
+    # oleans; rules_lean emits targets only for those. Prefer the standalone Lake
+    # workspace in lean/, fall back to the one Bazel materialized.
+    local pkgs="${REPO_ROOT}/lean/.lake/packages"
+    if [ ! -d "${pkgs}" ]; then
+        pkgs="$(cd "${REPO_ROOT}" && bazel info output_base)/external/rules_lean++lake+lake_deps/lake_ws/.lake/packages"
+    fi
     python3 "${REPO_ROOT}/build/scripts/lean_packages_bzl.py" \
-        "${MANIFEST}" "${REPO_ROOT}/lean/lake_packages.bzl"
+        "${MANIFEST}" "${REPO_ROOT}/lean/lake_packages.bzl" "${pkgs}"
+}
+
+# ── check ────────────────────────────────────────────────────────────────────
+# Fail when the tree-shaken artifacts no longer cover what the proofs import.
+# Needs no Lean toolchain, no Lake workspace and no network -- see lean_closure.py.
+cmd_check() {
+    ( cd "${REPO_ROOT}" && python3 build/scripts/lean_closure.py check )
 }
 
 case "${1:-}" in
     sources)  shift; cmd_sources "$@" ;;
     packages) shift; cmd_packages "$@" ;;
     oleans)   shift; cmd_oleans "$@" ;;
-    *) die "usage: lean_lock.sh {sources|packages|oleans <URL>}" ;;
+    check)    shift; cmd_check "$@" ;;
+    *) die "usage: lean_lock.sh {sources|packages|oleans <URL> [out]|check}" ;;
 esac

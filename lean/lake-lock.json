@@ -67,5 +67,27 @@
       "strip_prefix": "lean4-cli-88679d088c9720c27ebdf2ba4dafe17341747f94"
     }
   ],
-  "oleans": {}
+  "oleans": {
+    "url": "file:///var/folders/0j/v3sh2d251fv3kdx_k2q7crsm0000gn/T//lake-oleans-leanprover-lean4-v4.32.0.tar.gz",
+    "sha256": "f00fefd9d85142f33beb5ee1a77e8812d10fdce0bca17b39f73557c0f1a23f6b",
+    "strip_prefix": "",
+    "inputs_sha256": "3122af4bdb51dca742de2444eb4a3039b1714cae6f0960012af243e44aa8e3f5",
+    "imports": [
+      "Mathlib.Algebra.Algebra.Basic",
+      "Mathlib.Algebra.DualNumber",
+      "Mathlib.Algebra.Field.Basic",
+      "Mathlib.Algebra.Group.Basic",
+      "Mathlib.Algebra.Group.Defs",
+      "Mathlib.Algebra.Order.Group.Int",
+      "Mathlib.Algebra.Order.Ring.Defs",
+      "Mathlib.Algebra.Quaternion",
+      "Mathlib.Algebra.Ring.Basic",
+      "Mathlib.Algebra.Star.Basic",
+      "Mathlib.Analysis.Complex.Basic",
+      "Mathlib.Analysis.Normed.Field.Basic",
+      "Mathlib.Data.Rat.Cast.Defs",
+      "Mathlib.Data.Real.Basic",
+      "Mathlib.LinearAlgebra.Matrix.Trace"
+    ]
+  }
 }
