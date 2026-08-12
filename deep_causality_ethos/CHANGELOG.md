@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.9...deep_causality_ethos-v0.2.10) - 2026-08-12
+
+### Added
+
+- *(bazel)* build and run the library-crate examples under Bazel
+
+### Fixed
+
+- *(deep_causality_cfd)* reject non-finite seed widths; build the cut registry from the graded metric
+
+### Other
+
+- *(website)* update deps and add the CFD site to the README
+
 ## [0.2.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.8...deep_causality_ethos-v0.2.9) - 2026-07-14
 
 ### Added
