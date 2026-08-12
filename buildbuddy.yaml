@@ -1,7 +1,10 @@
+# BB Workflows configuration
+# https://www.buildbuddy.io/docs/workflows-config
 actions:
   - name: "BazelCI"
+    container_image: "ubuntu-24.04"
     triggers:
-      pr:
+      pull_request:
         branches:
           - "main"
     steps:
