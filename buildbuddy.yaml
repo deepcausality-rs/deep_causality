@@ -13,6 +13,6 @@ actions:
       disk: "40GB"
     steps:
       # Build all targets
-      - run: "bazel build --config=ci //... --build_metadata=COMMIT_SHA=$(git rev-parse HEAD)"
+      - run: "bazel build --config=ci //..."
       # Run all tests
-      - run: "bazel test --config=ci //...  --build_metadata=COMMIT_SHA=$(git rev-parse HEAD)"
+      - run: "bazel test --config=ci //..."
