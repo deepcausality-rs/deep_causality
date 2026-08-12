@@ -53,7 +53,7 @@ local_path_override(
 bazel_dep(name = "rules_lean", version = "0.1.0")
 git_override(
     module_name = "rules_lean",
-    commit = "59a43fb15fd15591b0b04042a5d6045cee35ba60",
+    commit = "3f6c35f617fa750168b34c1a2a76e769d1142993",
     remote = "https://github.com/marvin-hansen/rules_lean.git",
 )
 

@@ -13,6 +13,6 @@ actions:
       disk: "20GB"  # 20 is default
     steps:
       # Build all targets
-      - run: "bazel build --config=ci -- //... -//lean/..."
+      - run: "bazel build --config=ci -- //..."
       # Run all tests
-      - run: "bazel test --config=ci -- //... -//lean/..."
+      - run: "bazel test --config=ci -- //..."
