@@ -7,6 +7,10 @@ actions:
       pull_request:
         branches:
           - "main"
+    # UNITS: `GB` HERE MEANS GiB, NOT 10^9.
+    resource_requests:
+     # memory: "12B"
+      disk: "40GB"
     steps:
       # Build all targets
       - run: "bazel build --config=ci //... --build_metadata=COMMIT_SHA=$(git rev-parse HEAD)"
