@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.15.0...deep_causality-v0.15.1) - 2026-08-12
+
+### Added
+
+- *(bazel)* build and run the library-crate examples under Bazel
+
+### Fixed
+
+- *(lean)* select the Lean toolchain by execution platform
+- *(deep_causality_cfd)* reject non-finite seed widths; build the cut registry from the graded metric
+
+### Other
+
+- source rules_lean from its own repository, and group vendored modules
+- *(website)* update deps and add the CFD site to the README
+- *(deep_causality)* Added paper
+
 ## [0.15.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.14.0...deep_causality-v0.15.0) - 2026-07-14
 
 ### Added

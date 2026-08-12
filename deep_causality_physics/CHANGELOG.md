@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.0...deep_causality_physics-v0.8.1) - 2026-08-12
+
+### Added
+
+- *(deep_causality_physics)* Added random feature flag
+- *(deep_causality_physics)* add propulsion kernel family (SRP Stage 1)
+
+### Other
+
+- *(deep_causality_cfd)* reconcile all 125 catalogued doc rows, trace constants, retire Gates
+- *(deep_causality_cfd)* add READMEs for the two QTT rank-lever gates; refresh the wake README
+- *(deep_causality_physics)* improved test coverage
+
 ## [0.8.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.7.0...deep_causality_physics-v0.8.0) - 2026-07-14
 
 ### Added
