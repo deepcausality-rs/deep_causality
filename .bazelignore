@@ -16,11 +16,11 @@ target-bzl/out
 target-bzl/quant-engine
 target-bzl/testlogs
 thirdparty/rules_lean
-thirdparty/aspect_bazel_lib
-thirdparty/bazel_skylib
-thirdparty/platforms
-thirdparty/toolchains_buildbuddy
-thirdparty/llvm
+thirdparty/bzlmod/aspect_bazel_lib
+thirdparty/bzlmod/bazel_skylib
+thirdparty/bzlmod/platforms
+thirdparty/bzlmod/toolchains_buildbuddy
+thirdparty/bzlmod/llvm
 website/web/node_modules
 website/cfd/node_modules
 website/docs/node_modules

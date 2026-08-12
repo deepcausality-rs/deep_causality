@@ -6,7 +6,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# Re-vendor the Bazel module sources checked into thirdparty/.
+# Re-vendor the Bazel module sources checked into thirdparty/bzlmod/.
 #
 # Run this after bumping any of the bazel_dep versions in MODULE.bazel that
 # have a matching local_path_override, otherwise the override keeps pinning the
@@ -24,7 +24,7 @@ set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-THIRDPARTY="${REPO_ROOT}/thirdparty"
+THIRDPARTY="${REPO_ROOT}/thirdparty/bzlmod"
 
 # Modules to vendor. rules_rust is deliberately absent: it is pinned to a fork
 # via git_override while https://github.com/bazelbuild/rules_rust/pull/4220 is
@@ -41,7 +41,7 @@ cd "${REPO_ROOT}"
 
 # The overrides have to be inactive while re-vendoring, otherwise Bazel resolves
 # the module to the tree we are about to overwrite instead of to the registry.
-if grep -q 'path = "thirdparty/llvm"' MODULE.bazel; then
+if grep -q 'path = "thirdparty/bzlmod/llvm"' MODULE.bazel; then
   echo "ERROR: the local_path_override entries in MODULE.bazel are active." >&2
   echo "       Comment out the vendored-module override block, run this script," >&2
   echo "       then restore it." >&2
