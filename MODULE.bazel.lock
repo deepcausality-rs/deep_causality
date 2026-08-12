@@ -289,22 +289,49 @@
     },
     "@@rules_lean+//lean:lake.bzl%lake": {
       "general": {
-        "bzlTransitiveDigest": "W2OjkdQ1NEXGtzcqEXSrYvIAvsxgTThjO1HRL1B7bfk=",
+        "bzlTransitiveDigest": "FWQIV7aeMtuJ86zO+83N+hGCktzr99mVKUayoRzeR/c=",
         "usagesDigest": "JYdHp4iH+CQqgvA1eRqeOERSP33neLQQsaeMfrYx/0w=",
         "recordedInputs": [
           "FILE:@@//lean/lean-toolchain 2773c517aa90b66ea8a2c52bddddf84393157797f8341be0df45294fff7fd32e"
         ],
         "generatedRepoSpecs": {
-          "lean_dist_4_32_0": {
+          "lean_dist_4_32_0_darwin_aarch64": {
             "repoRuleId": "@@rules_lean+//lean:lake.bzl%lean_dist",
             "attributes": {
-              "version": "v4.32.0"
+              "version": "v4.32.0",
+              "platform": "darwin_aarch64"
+            }
+          },
+          "lean_dist_4_32_0_darwin_x86_64": {
+            "repoRuleId": "@@rules_lean+//lean:lake.bzl%lean_dist",
+            "attributes": {
+              "version": "v4.32.0",
+              "platform": "darwin_x86_64"
+            }
+          },
+          "lean_dist_4_32_0_linux_x86_64": {
+            "repoRuleId": "@@rules_lean+//lean:lake.bzl%lean_dist",
+            "attributes": {
+              "version": "v4.32.0",
+              "platform": "linux_x86_64"
+            }
+          },
+          "lean_dist_4_32_0_linux_aarch64": {
+            "repoRuleId": "@@rules_lean+//lean:lake.bzl%lean_dist",
+            "attributes": {
+              "version": "v4.32.0",
+              "platform": "linux_aarch64"
             }
           },
           "lean_dist_4_32_0_toolchains": {
             "repoRuleId": "@@rules_lean+//lean:lake.bzl%lean_toolchain_decls",
             "attributes": {
-              "dist": "lean_dist_4_32_0"
+              "dists": {
+                "darwin_aarch64": "lean_dist_4_32_0_darwin_aarch64",
+                "darwin_x86_64": "lean_dist_4_32_0_darwin_x86_64",
+                "linux_x86_64": "lean_dist_4_32_0_linux_x86_64",
+                "linux_aarch64": "lean_dist_4_32_0_linux_aarch64"
+              }
             }
           },
           "lake_deps": {
@@ -334,8 +361,8 @@
               ],
               "olean_cache": "",
               "olean_cache_packages": [],
-              "lean_dist_lake": "@@rules_lean++lake+lean_dist_4_32_0//:lean_toolchain/bin/lake",
-              "lean_dist_toolchain": "@@rules_lean++lake+lean_dist_4_32_0//:lean_toolchain"
+              "lean_dist_lake": "@@rules_lean++lake+lean_dist_4_32_0_darwin_aarch64//:lean_toolchain/bin/lake",
+              "lean_dist_toolchain": "@@rules_lean++lake+lean_dist_4_32_0_darwin_aarch64//:lean_toolchain"
             }
           }
         }

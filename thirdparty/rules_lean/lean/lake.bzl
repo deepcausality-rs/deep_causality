@@ -72,7 +72,27 @@ load("//lean/private:known_lean_versions.bzl", "KNOWN_LEAN_VERSIONS", "PLATFORM_
 
 LEAN_RELEASE_BASE = "https://github.com/leanprover/lean4/releases/download"
 
+# Bazel constraints per Lean release platform. These make the `toolchain()`
+# declarations selectable by EXECUTION platform, which is the difference between
+# "the toolchain of whoever ran bazel" and "the toolchain the action will run on".
+PLATFORM_CONSTRAINTS = {
+    "darwin_aarch64": ["@platforms//os:macos", "@platforms//cpu:aarch64"],
+    "darwin_x86_64": ["@platforms//os:macos", "@platforms//cpu:x86_64"],
+    "linux_x86_64": ["@platforms//os:linux", "@platforms//cpu:x86_64"],
+    "linux_aarch64": ["@platforms//os:linux", "@platforms//cpu:aarch64"],
+}
+
 def _detect_platform(rctx):
+    """The HOST platform. Correct for fetch-time `lake` runs, wrong for actions.
+
+    Repository rules always run on the host, so this cannot answer "what platform
+    will the action execute on". Using it to pick the toolchain an action consumes
+    ships (say) a Mach-O arm64 `lean` to a Linux x86_64 RBE worker, which fails as
+    `Exec format error` at execution time -- long after analysis, and only when
+    remote execution is on. Actions select their toolchain through
+    PLATFORM_CONSTRAINTS instead; this stays for the fetch-time `lake` invocations,
+    which genuinely do run here.
+    """
     os_name = rctx.os.name.lower()
     arch = rctx.os.arch.lower()
     if "mac" in os_name or "darwin" in os_name:
@@ -169,38 +189,59 @@ exports_files(["lean_toolchain/bin/lake"])
 # the `@lean_dist` implementation only if the Lean toolchain is actually selected
 # — i.e. only when something is really compiling Lean. This is the same shape
 # rules_rust uses for `@rust_toolchains`.
-_DECLS_BUILD = '''\
+_DECLS_HEADER = '''\
 package(default_visibility = ["//visibility:public"])
 
-# Declaration only — no downloads. The implementation it points at lives in
-# @{dist}, which Bazel fetches lazily, when and only when this toolchain wins
-# resolution. Keep these two in separate repos: merging them puts the toolchain
-# download back on the critical path of every build in the workspace.
+# Declarations only — no downloads. One `toolchain()` per Lean release platform,
+# constrained by EXECUTION platform so Bazel picks the binary that will actually run
+# where the action runs. Without `exec_compatible_with` a single unconstrained
+# declaration matches every platform, and a host-detected distribution gets shipped
+# to whatever worker is executing: a Mach-O `lean` on a Linux RBE worker fails as
+# `Exec format error`, at execution time, only under remote execution.
+#
+# Kept in a separate repo from the implementations: registering a toolchain forces
+# the DECLARING repo to be fetched during resolution, on every build of every
+# target. Declaring next to the implementation would put a 2.5G download on the
+# critical path of a pure-Rust build. Here resolution is free, and Bazel fetches the
+# one @lean_dist it selected — and only that one.
+'''
+
+_DECLS_ENTRY = '''
 toolchain(
-    name = "lean_toolchain_def",
+    name = "lean_toolchain_{platform}",
+    exec_compatible_with = {constraints},
     toolchain = "@{dist}//:lean_toolchain",
     toolchain_type = "@rules_lean//lean:toolchain_type",
 )
 '''
 
 def _lean_toolchain_decls_impl(rctx):
-    rctx.file("BUILD.bazel", _DECLS_BUILD.format(dist = rctx.attr.dist))
+    parts = [_DECLS_HEADER]
+    for platform, dist in sorted(rctx.attr.dists.items()):
+        parts.append(_DECLS_ENTRY.format(
+            platform = platform,
+            dist = dist,
+            constraints = repr(PLATFORM_CONSTRAINTS[platform]).replace("'", '"'),
+        ))
+    rctx.file("BUILD.bazel", "".join(parts))
 
 lean_toolchain_decls = repository_rule(
     implementation = _lean_toolchain_decls_impl,
     attrs = {
-        "dist": attr.string(
+        "dists": attr.string_dict(
             mandatory = True,
-            doc = "Name of the `lean_dist` repo holding the toolchain implementation.",
+            doc = "platform -> name of the `lean_dist` repo carrying that platform's toolchain.",
         ),
     },
-    doc = "Emits `toolchain()` declarations for a Lean distribution and nothing else. " +
-          "Register THIS repo, not the distribution: it costs no download, so " +
-          "toolchain resolution stops dragging the Lean toolchain into every build.",
+    doc = "Emits `toolchain()` declarations for a Lean version across every supported " +
+          "execution platform, and nothing else. Register THIS repo (`//:all`), not the " +
+          "distributions: it costs no download, so resolution stops dragging the Lean " +
+          "toolchain into every build, and the platform is chosen per action rather than " +
+          "per host.",
 )
 
 def _lean_dist_impl(rctx):
-    _download_lean(rctx, rctx.attr.version, _detect_platform(rctx))
+    _download_lean(rctx, rctx.attr.version, rctx.attr.platform)
     rctx.file("BUILD.bazel", _DIST_BUILD)
 
 lean_dist = repository_rule(
@@ -208,11 +249,18 @@ lean_dist = repository_rule(
     attrs = {
         "version": attr.string(
             mandatory = True,
-            doc = "Lean version tag (e.g. 'v4.30.0-rc2'); platform is auto-detected.",
+            doc = "Lean version tag (e.g. 'v4.30.0-rc2').",
+        ),
+        "platform": attr.string(
+            mandatory = True,
+            values = sorted(PLATFORM_CONSTRAINTS),
+            doc = "Release platform to extract. Explicit rather than host-detected: a " +
+                  "repository rule runs on the host, which says nothing about where the " +
+                  "actions consuming this toolchain will execute.",
         ),
     },
-    doc = "Extracts the Lean toolchain once; shared by all lake.workspace repos of " +
-          "the same version (deduplicates the multi-GB toolchain across workspaces).",
+    doc = "Extracts one Lean toolchain (version, platform). Fetched lazily, so declaring " +
+          "every platform costs nothing until one is selected.",
 )
 
 def _stage_lake_workspace(rctx):
@@ -816,18 +864,36 @@ def _lake_extension_impl(mctx):
             seen_versions[version] = True
             resolved.append((tag, version))
 
-    for version in seen_versions:
-        dist = _dist_name(version)
-        lean_dist(name = dist, version = version)
+    # The host platform, for the fetch-time `lake` runs only. Those genuinely execute
+    # here, so host detection is the right answer for them — and the wrong answer for
+    # the toolchain that actions consume, which is why the two are separated below.
+    host = _detect_platform(mctx)
 
-        # Downloadless companion holding just the `toolchain()` declaration. Consumers
-        # should `register_toolchains("@<dist>_toolchains//:lean_toolchain_def")` —
-        # registering the workspace or the distribution instead forces that repo to be
-        # fetched during toolchain resolution, i.e. on every build of every target.
-        lean_toolchain_decls(name = dist + "_toolchains", dist = dist)
+    for version in seen_versions:
+        base = _dist_name(version)
+
+        # One distribution per platform. All are declared; none is downloaded until
+        # toolchain resolution selects it, so a Linux RBE worker pulls the Linux
+        # toolchain while the Mac that launched the build never fetches it at all.
+        for platform in PLATFORM_CONSTRAINTS:
+            lean_dist(
+                name = "%s_%s" % (base, platform),
+                version = version,
+                platform = platform,
+            )
+
+        # Downloadless companion holding the `toolchain()` declarations. Consumers
+        # should `register_toolchains("@<dist>_toolchains//:all")` — registering the
+        # workspace or a distribution instead forces that repo to be fetched during
+        # toolchain resolution, i.e. on every build of every target.
+        lean_toolchain_decls(
+            name = base + "_toolchains",
+            dists = {p: "%s_%s" % (base, p) for p in PLATFORM_CONSTRAINTS},
+        )
 
     for tag, version in resolved:
-        dist = _dist_name(version)
+        # Fetch-time `lake` needs a binary that runs HERE, hence the host dist.
+        dist = "%s_%s" % (_dist_name(version), host)
         lake_workspace(
             name = tag.name,
             lean_toolchain = tag.lean_toolchain,

@@ -164,4 +164,10 @@ lake.workspace(
 )
 use_repo(lake, "lake_deps", "lean_dist_4_32_0_toolchains")
 
-register_toolchains("@lean_dist_4_32_0_toolchains//:lean_toolchain_def")
+# `//:all`, not a single target: the repo declares one toolchain per execution
+# platform, each constrained by `exec_compatible_with`, so Bazel picks the binary that
+# runs where the action runs. A single unconstrained declaration matched every
+# platform and shipped this Mac's Lean to the Linux RBE workers -- `Exec format
+# error`, at execution time, only under --config=remote.
+
+register_toolchains("@lean_dist_4_32_0_toolchains//:all")
