@@ -46,7 +46,8 @@ local_path_override(
 ###############################################################################
 # Rules Rust
 # Patched in a fork to fix doc-test issue with hermetic LLVM
-bazel_dep(name = "rules_rust", version = "0.73.0", )
+bazel_dep(name = "rules_rust", version = "0.73.0")
+
 # Remove when https://github.com/bazelbuild/rules_rust/pull/4220
 # lands and an updated version of rules_rust becomes available.
 git_override(
@@ -96,6 +97,7 @@ llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 
 # llvm_version matches the one Rust uses in the version declared in the previous step.
 llvm.version(llvm_version = "22.1.6")
+use_repo(llvm, "llvm-project")
 
 toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
 toolchain.exec(
