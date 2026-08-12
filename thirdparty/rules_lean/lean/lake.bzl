@@ -40,14 +40,26 @@ Use via the module extension:
         deps = ["@lake_deps//:mathlib", "@lake_deps//:batteries"],
     )
 
-Hermeticity:
+Content addressing (`lock`):
+  Pass a lockfile and the whole workspace is fetched with
+  `download_and_extract` from sha256-pinned archives — no `lake update`,
+  no `git clone`, no `lake exe cache get`. That is what puts the workspace
+  in reach of Bazel's repository cache and `--experimental_remote_downloader`,
+  which key on sha256 and cannot see inside `rctx.execute`. It also makes the
+  repo byte-reproducible, so Lean action results are shareable across machines.
+  Resolution moves to a deliberate repin step whose output is committed, the
+  same discipline as Cargo.Bazel.lock or maven_install.json.
+
+Hermeticity, without a lock:
   - The Lean toolchain is downloaded with a known sha256 (see
     private/known_lean_versions.bzl) when the version is pinned there.
     Unpinned versions download unverified (warning emitted).
-  - Lake dep revs are pinned by the user's committed lake-manifest.json.
+  - Lake dep revs are pinned by the user's committed lake-manifest.json,
+    but the clones themselves are not content-addressed and the resulting
+    tree is not byte-reproducible.
   - Mathlib oleans (when applicable) are content-addressed by mathlib's
     commit hash in the upstream Reservoir cache; integrity is verified by
-    Lake.
+    Lake, not by Bazel.
 
 Constraints on the lakefile passed in:
   - Should be a *deps-only* lakefile (the rule creates a placeholder
@@ -144,6 +156,48 @@ toolchain(
 # without owning a toolchain copy.
 exports_files(["lean_toolchain/bin/lake"])
 '''
+
+# ── Toolchain declarations, split out from the distribution ──────────────────
+# Registering a toolchain forces Bazel to fetch the repo the `toolchain()` target
+# lives in, so that it can be evaluated during resolution — on EVERY build, for
+# every target, whether or not anything Lean is involved. Declaring `toolchain()`
+# next to the implementation therefore makes a 2.5G toolchain download the price
+# of admission for a pure-Rust build.
+#
+# Splitting the declaration into its own downloadless repo restores the laziness:
+# resolution reads the `toolchain()` targets from here (cheap), and Bazel fetches
+# the `@lean_dist` implementation only if the Lean toolchain is actually selected
+# — i.e. only when something is really compiling Lean. This is the same shape
+# rules_rust uses for `@rust_toolchains`.
+_DECLS_BUILD = '''\
+package(default_visibility = ["//visibility:public"])
+
+# Declaration only — no downloads. The implementation it points at lives in
+# @{dist}, which Bazel fetches lazily, when and only when this toolchain wins
+# resolution. Keep these two in separate repos: merging them puts the toolchain
+# download back on the critical path of every build in the workspace.
+toolchain(
+    name = "lean_toolchain_def",
+    toolchain = "@{dist}//:lean_toolchain",
+    toolchain_type = "@rules_lean//lean:toolchain_type",
+)
+'''
+
+def _lean_toolchain_decls_impl(rctx):
+    rctx.file("BUILD.bazel", _DECLS_BUILD.format(dist = rctx.attr.dist))
+
+lean_toolchain_decls = repository_rule(
+    implementation = _lean_toolchain_decls_impl,
+    attrs = {
+        "dist": attr.string(
+            mandatory = True,
+            doc = "Name of the `lean_dist` repo holding the toolchain implementation.",
+        ),
+    },
+    doc = "Emits `toolchain()` declarations for a Lean distribution and nothing else. " +
+          "Register THIS repo, not the distribution: it costs no download, so " +
+          "toolchain resolution stops dragging the Lean toolchain into every build.",
+)
 
 def _lean_dist_impl(rctx):
     _download_lean(rctx, rctx.attr.version, _detect_platform(rctx))
@@ -353,6 +407,122 @@ def _fetch_prebuilt_oleans(rctx):
             output = "lake_ws/.lake/packages/{p}/.lake".format(p = pkg),
         )
 
+# ── Content-addressed path (lockfile + sha256) ───────────────────────────────
+#
+# The default path below resolves dependencies at FETCH time: `lake update` git-
+# clones every package (full history), and `lake exe cache get` pulls one blob per
+# mathlib module. Neither goes through `rctx.download*`, so neither is covered by
+# Bazel's repository cache or by `--experimental_remote_downloader`, and the repo
+# it produces is not byte-reproducible (git packfiles differ per clone). Every
+# consumer therefore re-fetches the whole workspace on every cold output base, and
+# the Lean actions keyed on that repo cannot share cache entries across machines.
+#
+# `lock` moves resolution OFF the fetch path. A committed lockfile pins each
+# package to an archive URL + sha256, exactly like every other toolchain repo
+# here, and fetching becomes `download_and_extract` and nothing else. Regenerating
+# the lock is a deliberate, reviewable step — the same discipline as
+# `Cargo.Bazel.lock` or `maven_install.json`.
+#
+# The fast path is ALL-OR-NOTHING by necessity, not by preference: mathlib's cache
+# client reads `mathlib/.git` (it derives the cache scope from the checked-out
+# commit and probes the git remote), so a workspace whose sources came from
+# tarballs cannot fall back to `cache get`. A lock without an `oleans` entry is
+# therefore treated as absent and the legacy path runs unchanged.
+
+_LOCK_VERSION = 1
+
+_LOCK_REPIN_HINT = (
+    "Regenerate the lock with `build/scripts/lean_lock.sh sources` (and `oleans` " +
+    "for the prebuilt olean archive) and commit the result."
+)
+
+def _read_lock(rctx):
+    """Read and validate the lockfile. Returns None when there is no usable lock.
+
+    Validation is deliberately strict and fails closed: a lock that disagrees with
+    the committed manifest would type-check the proofs against a *different*
+    mathlib than the manifest claims, which is precisely the failure a lockfile
+    exists to prevent. Silent drift is worse than a hard error.
+    """
+    if not rctx.attr.lock:
+        return None
+
+    lock_path = rctx.path(rctx.attr.lock)
+    lock = json.decode(rctx.read(lock_path))
+
+    version = lock.get("version", 0)
+    if version != _LOCK_VERSION:
+        fail("rules_lean: %s declares lock version %s; this rules_lean understands %d. %s" %
+             (lock_path, version, _LOCK_VERSION, _LOCK_REPIN_HINT))
+
+    # The toolchain the oleans were built against. Mixing Lean versions produces
+    # oleans the compiler refuses to load, with an error that points at the module
+    # rather than at the pin, so check it here where the cause is obvious.
+    want_toolchain = rctx.read(rctx.path(rctx.attr.lean_toolchain)).strip().split("\n")[0].strip()
+    got_toolchain = lock.get("lean_toolchain", "").strip()
+    if got_toolchain != want_toolchain:
+        fail(("rules_lean: lockfile is stale — %s pins Lean %r but the lock was " +
+              "generated for %r. %s") %
+             (rctx.attr.lean_toolchain, want_toolchain, got_toolchain, _LOCK_REPIN_HINT))
+
+    # Every manifest package must be pinned, at the manifest's rev, and nothing else.
+    manifest_revs = _read_manifest_revs(rctx)
+    locked = {}
+    for pkg in lock.get("packages", []):
+        name = pkg.get("name", "")
+        if not name:
+            fail("rules_lean: %s has a package entry with no name. %s" % (lock_path, _LOCK_REPIN_HINT))
+        if not pkg.get("url", "") or not pkg.get("sha256", ""):
+            fail(("rules_lean: %s pins package %r without a url+sha256. An unpinned " +
+                  "entry defeats the point of the lock. %s") % (lock_path, name, _LOCK_REPIN_HINT))
+        locked[name.lower()] = pkg
+
+    drift = []
+    for name, rev in manifest_revs.items():
+        pkg = locked.get(name)
+        if not pkg:
+            drift.append("%s: in the manifest, missing from the lock" % name)
+        elif pkg.get("rev", "") != rev:
+            drift.append("%s: manifest rev %s, lock rev %s" % (name, rev, pkg.get("rev", "<none>")))
+    for name in locked:
+        if name not in manifest_revs:
+            drift.append("%s: in the lock, missing from the manifest" % name)
+    if drift:
+        fail("rules_lean: lockfile is stale relative to %s:\n  %s\n%s" %
+             (rctx.attr.lake_manifest, "\n  ".join(drift), _LOCK_REPIN_HINT))
+
+    # No olean archive means no fast path (see the note above on `cache get` and
+    # `.git`). Fall through to the legacy path rather than half-applying the lock.
+    oleans = lock.get("oleans", {})
+    if not oleans.get("url", "") or not oleans.get("sha256", ""):
+        # buildifier: disable=print
+        print("rules_lean: %s pins package sources but no olean archive; using the " %
+              lock_path + "`lake update` + `cache get` path. " + _LOCK_REPIN_HINT)
+        return None
+
+    return lock
+
+def _materialize_from_lock(rctx, lock):
+    """Fetch the whole workspace from sha256-pinned archives. No git, no cache get."""
+    for pkg in lock["packages"]:
+        rctx.download_and_extract(
+            url = pkg["url"],
+            sha256 = pkg["sha256"],
+            stripPrefix = pkg.get("strip_prefix", ""),
+            output = "lake_ws/.lake/packages/" + pkg["name"],
+        )
+
+    # The olean archive is rooted at `.lake/packages`, so each package's build tree
+    # lands beside the sources just fetched (`<pkg>/.lake/build/...`). Extracting
+    # over the existing directories merges rather than replaces.
+    oleans = lock["oleans"]
+    rctx.download_and_extract(
+        url = oleans["url"],
+        sha256 = oleans["sha256"],
+        stripPrefix = oleans.get("strip_prefix", ""),
+        output = "lake_ws/.lake/packages",
+    )
+
 def _lake_workspace_impl(rctx):
     # Use the shared Lean toolchain (extracted once by the `@<lean_dist>` repo the
     # lake extension created for this version) instead of extracting a private 2.5G
@@ -364,6 +534,16 @@ def _lake_workspace_impl(rctx):
     _stage_lake_workspace(rctx)
 
     env = _lake_env(rctx)
+
+    lock = _read_lock(rctx)
+    if lock:
+        _materialize_from_lock(rctx, lock)
+        packages = _list_lake_packages(rctx)
+        if not packages:
+            fail("rules_lean: the lockfile produced no packages under " +
+                 "lake_ws/.lake/packages/. " + _LOCK_REPIN_HINT)
+        _finalize_workspace(rctx, env, packages)
+        return
 
     # Resolve deps. Lake respects the existing lake-manifest.json if revs match
     # the lakefile; otherwise it updates the manifest. Materializes
@@ -426,6 +606,14 @@ def _lake_workspace_impl(rctx):
                 fail("rules_lean: `lake build %s` failed.\nstdout:\n%s\nstderr:\n%s" %
                      (pkg, build.stdout, build.stderr))
 
+    _finalize_workspace(rctx, env, packages)
+
+def _finalize_workspace(rctx, env, packages):
+    """Turn a populated `lake_ws/.lake/packages/` into the repo's Bazel surface.
+
+    Shared by both paths: everything from here on reads the olean trees off disk
+    and does not care whether they arrived via `cache get` or a pinned archive.
+    """
     ready = _write_package_markers(rctx, packages)
     if not ready:
         fail("rules_lean: no package oleans found under " +
@@ -537,6 +725,26 @@ lake_workspace = repository_rule(
             mandatory = True,
             doc = "The committed lake-manifest.json (pins git revs of every Lake dep).",
         ),
+        "lock": attr.label(
+            allow_single_file = [".json"],
+            doc = "A committed lockfile pinning every package archive (and the prebuilt " +
+                  "olean archive) by URL + sha256. When present and complete, the whole " +
+                  "workspace is materialized with `download_and_extract` — no `git " +
+                  "clone`, no `lake update`, no `lake exe cache get`.\n\n" +
+                  "This is what makes the repo content-addressed, and it is the only " +
+                  "way the workspace can be served by Bazel's repository cache or by " +
+                  "`--experimental_remote_downloader`: both key on sha256, and neither " +
+                  "can see inside the `rctx.execute` subprocesses the default path " +
+                  "uses. It is also what makes the repo byte-reproducible, which is a " +
+                  "precondition for Lean action results to be shared across machines.\n\n" +
+                  "The lock is validated against `lake_manifest` and `lean_toolchain` on " +
+                  "every fetch and fails closed on drift — a lock that disagrees with " +
+                  "the manifest would check the proofs against a different mathlib than " +
+                  "the manifest claims.\n\n" +
+                  "A lock without an `oleans` entry is ignored (with a warning) rather " +
+                  "than half-applied: mathlib's cache client reads `mathlib/.git`, so a " +
+                  "tarball-sourced workspace cannot fall back to `cache get`.",
+        ),
         "allow_source_build": attr.bool(
             default = False,
             doc = "If True, run `lake build <pkg>` for every package whose oleans " +
@@ -609,7 +817,14 @@ def _lake_extension_impl(mctx):
             resolved.append((tag, version))
 
     for version in seen_versions:
-        lean_dist(name = _dist_name(version), version = version)
+        dist = _dist_name(version)
+        lean_dist(name = dist, version = version)
+
+        # Downloadless companion holding just the `toolchain()` declaration. Consumers
+        # should `register_toolchains("@<dist>_toolchains//:lean_toolchain_def")` —
+        # registering the workspace or the distribution instead forces that repo to be
+        # fetched during toolchain resolution, i.e. on every build of every target.
+        lean_toolchain_decls(name = dist + "_toolchains", dist = dist)
 
     for tag, version in resolved:
         dist = _dist_name(version)
@@ -618,6 +833,7 @@ def _lake_extension_impl(mctx):
             lean_toolchain = tag.lean_toolchain,
             lakefile = tag.lakefile,
             lake_manifest = tag.lake_manifest,
+            lock = tag.lock,
             allow_source_build = tag.allow_source_build,
             cache_roots = tag.cache_roots,
             olean_cache = tag.olean_cache,
@@ -631,6 +847,12 @@ _workspace_tag = tag_class(attrs = {
     "lean_toolchain": attr.label(mandatory = True),
     "lakefile": attr.label(mandatory = True),
     "lake_manifest": attr.label(mandatory = True),
+    "lock": attr.label(
+        doc = "Lockfile pinning every package archive + the prebuilt olean archive by " +
+              "URL and sha256. Present and complete → the workspace is fetched entirely " +
+              "with `download_and_extract`, making it repository-cacheable, remote-" +
+              "downloadable and byte-reproducible. See the repo rule's attr.",
+    ),
     "allow_source_build": attr.bool(default = False),
     "cache_roots": attr.string_list(
         default = [],

@@ -9,7 +9,7 @@
 # deep_causality_core/tests/kani_proofs.rs remain and can be run locally on demand
 # (`cargo kani --tests -p deep_causality_core`).
 
-name: Formalization
+name: LEAN Formalization
 
 on:
   pull_request:

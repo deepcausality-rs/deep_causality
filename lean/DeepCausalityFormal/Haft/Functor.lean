@@ -19,6 +19,12 @@ provable only for pure functions. The Lean model is pure by construction.
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
 Rust witness: `deep_causality_haft/tests/formalization_lean/functor_tests.rs`.
+
+Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
+the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
+once reached 8,639 of Mathlib's 9,450 modules to supply four algebraic laws. Mirror any new import
+into `cache_roots` in `//MODULE.bazel`: that list tree-shakes the Mathlib olean download to those
+roots plus their closure, so a module absent from it is never fetched and the build fails on it.
 -/
 
 namespace DeepCausalityFormal.Haft.Functor

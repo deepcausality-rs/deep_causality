@@ -82,11 +82,11 @@ common:remote-shared --experimental_remote_cache_compression_threshold=100
 # Enable remote cache chunking
 common:remote-shared --experimental_remote_cache_chunking
 
-# Keep intermediate outputs in the CAS and download only what a top-level
-# target produces. Do NOT also set --remote_download_minimal: both expand to
-# --remote_download_outputs, so setting both makes the winner depend on rc
-# ordering rather than on intent.
-common:remote-shared --remote_download_minimal
+#
+# common:remote-shared --experimental_remote_downloader=grpcs://deepcausality-rs.buildbuddy.io
+
+
+# common:remote-shared --remote_download_minimal
 
 # Metadata. Only what is true of every remote invocation belongs here; ROLE and
 # USER are set by the :ci config so BuildBuddy can tell CI runs from local ones.
@@ -108,13 +108,6 @@ common:remote-shared --host_platform=//build/platforms:linux_x86_64_remote
 common:remote-shared --platforms=//build/platforms:linux_x86_64_remote
 common:remote-shared --extra_execution_platforms=//build/platforms:linux_x86_64_remote
 
-# The Lean toolchain in @lake_deps is downloaded for the fetching host (macOS
-# here) and its toolchain() declares no exec constraints, so Lean actions must
-# not be sent to a Linux worker. no-remote-exec keeps them local while still
-# allowing remote caching: the macOS lean binary is part of the action key, so
-# a Linux CI host computes different keys and cannot pick up wrong artifacts.
-common:remote-shared --modify_execution_info=^Lean.*=+no-remote-exec
-
 # Endpoints. The org subdomain serves BES, CAS and execution alike.
 common:remote-shared --bes_results_url=https://deepcausality-rs.buildbuddy.io/invocation/
 common:remote-shared --bes_backend=grpcs://deepcausality-rs.buildbuddy.io
@@ -123,6 +116,8 @@ common:remote-shared --remote_executor=grpcs://deepcausality-rs.buildbuddy.io
 
 # Build with --config=remote to enable Remote Build Execution (RBE)
 common:remote --config=remote-shared
+common:remote --build_metadata=USER=remote
+
 # Build with --config=ci specifically for CI runs. Same execution setup as
 # --config=remote, tagged so the BuildBuddy dashboard can separate CI runs from
 # developer machines.

@@ -10,7 +10,7 @@ load("@aspect_bazel_lib//lib:bazelrc_presets.bzl", "write_aspect_bazelrc_presets
 write_aspect_bazelrc_presets(name = "update_aspect_bazelrc_presets")
 ```
 
-When `@aspect_bazel_lib` is upgraded in your `WORKSPACE.bazel` or your `MODULE.bazel` file, a `diff_test`
+When `@aspect_bazel_lib` is upgraded in your `WORKSPACE.bazel` or your `../../../../MODULE.bazel` file, a `diff_test`
 stamped out by `write_aspect_bazelrc_presets` will fail if your vendored copy is out-of-date and print the Bazel command
 to run to update it. For example, `bazel run //.aspect/bazelrc:update_aspect_bazelrc_presets`.
 

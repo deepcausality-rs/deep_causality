@@ -40,7 +40,7 @@ Make sure you set the executable bit, eg. `chmod +x tools/bazel_stamp_vars.sh`.
 > Other keys will NOT cause a re-build, so stale values can appear in your app.
 > Non-stable (volatile) keys should typically be things like timestamps that always vary between builds.
 
-You might like to encode your setup using an entry in `.bazelrc` such as:
+You might like to encode your setup using an entry in `../../../.bazelrc` such as:
 
 ```sh
 # This tells Bazel how to interact with the version control system
