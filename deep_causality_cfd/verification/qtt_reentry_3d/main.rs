@@ -23,6 +23,14 @@
 //! ```text
 //! cargo run --release -p deep_causality_cfd --example qtt_reentry_3d
 //! ```
+//!
+//! ## Config-layer exemption
+//!
+//! This harness constructs `CompressibleMarcher3d` directly rather than through a
+//! `CfdConfigBuilder` entry. It is a **rank-measurement** harness: most of it quantizes analytic
+//! fields through `quantize_3d` and reports bonds, and the single marched leg exists to show the
+//! bond a march reaches. There is no 3-D compressible case family to lift onto, and its
+//! configuration is eight constants.
 
 use deep_causality_cfd::{CompressibleMarcher3d, EulerState3d, EvidenceClass, quantize_3d};
 use deep_causality_tensor::{CausalTensor, Truncation};

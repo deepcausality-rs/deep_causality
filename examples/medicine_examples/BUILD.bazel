@@ -1,0 +1,73 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "aneurysm_risk",
+    srcs = glob(["aneurysm_risk/**/*.rs"]),
+    crate_root = "aneurysm_risk/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "diving_decompression",
+    srcs = glob(["diving_decompression/**/*.rs"]),
+    crate_root = "diving_decompression/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "epilepsy",
+    srcs = glob(["epilepsy/**/*.rs"]),
+    crate_root = "epilepsy/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "protein_folding",
+    srcs = glob(["protein_folding/**/*.rs"]),
+    crate_root = "protein_folding/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "tissue_classification",
+    srcs = glob(["tissue_classification/**/*.rs"]),
+    crate_root = "tissue_classification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "tumor_treatment",
+    srcs = glob(["tumor_treatment/**/*.rs"]),
+    crate_root = "tumor_treatment/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_num",
+    ],
+)

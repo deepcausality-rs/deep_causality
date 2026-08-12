@@ -1,0 +1,43 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "propagating_effect_example",
+    srcs = ["examples/propagating_effect.rs"],
+    crate_root = "examples/propagating_effect.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "propagating_effect_counterfactual_example",
+    srcs = ["examples/propagating_effect_counterfactual.rs"],
+    crate_root = "examples/propagating_effect_counterfactual.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "propagating_process_example",
+    srcs = ["examples/propagating_process.rs"],
+    crate_root = "examples/propagating_process.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "propagating_process_counterfactual",
+    srcs = ["examples/propagating_process_counterfactual.rs"],
+    crate_root = "examples/propagating_process_counterfactual.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)

@@ -13,8 +13,10 @@
 pub(crate) mod dec;
 
 pub use dec::dec_config::{
-    DecNs, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
+    DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity, DecNsConfigReady,
 };
+// Crate-internal: `CfdConfigBuilder::dec_ns` is the public entry to this configuration.
+pub(crate) use dec::dec_config::DecNs;
 
 // The quantized-tensor-train (QTT) rollout: a quasi-1D linear advection–diffusion marcher that
 // evolves a flowfield in compressed tensor-train form (the CFD ↔ tensor-network bridge).

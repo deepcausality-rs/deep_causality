@@ -273,6 +273,24 @@ whole program at another precision.
 
 ## Selected Capabilities
 
+- **One entry per configuration.** `CfdConfigBuilder` starts every owned config: the DEC solver
+  (`dec_ns`), the four marching cases (`march`, `qtt_march`, `compressible_march`, `duct`), the
+  MMS verification (`verify`), and the sensor-fed uncertain march (`uncertain_march`). Each case
+  entry takes the case name, each builder validates at `build()`, and no config family has a
+  second public constructor.
+
+  ```rust,ignore
+  let config = CfdConfigBuilder::duct::<f64>("nozzle-pr-0.7")
+      .profile(DuctAreaProfile::ConvergingDiverging { inlet_area, throat_area, exit_area, length })
+      .inlet(p0, t0)
+      .gamma(1.4)
+      .back_pressure(p0 * 0.7)
+      .cells(128)
+      .stop(10_000, 1e-8)
+      .build()?;
+  let report = CfdFlow::march(&config).run()?;
+  ```
+
 - **Suspend and resume a march.** `save_resume_state` / `load_resume_state` (with `pack_resume` /
   `unpack_resume`) checkpoint a running `CoupledField` to disk and restore it. A world fingerprint guards
   the seam, so a snapshot taken under different constants is refused rather than silently resumed.

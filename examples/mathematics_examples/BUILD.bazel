@@ -1,0 +1,431 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "mathematics_examples",
+    srcs = [
+        "effect_helpers.rs",
+        "no_lib.rs",
+    ],
+    crate_root = "no_lib.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "leibniz_dual_integration_examples",
+    srcs = ["calculus/leibniz_dual_integration.rs"],
+    crate_root = "calculus/leibniz_dual_integration.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_calculus",
+        "//deep_causality_num_dual",
+    ],
+)
+
+rust_binary(
+    name = "basic_multivector_examples",
+    srcs = ["algebra/basic_multivector.rs"],
+    crate_root = "algebra/basic_multivector.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "clifford_mhd_multivector_examples",
+    srcs = ["algebra/clifford_mhd_multivector.rs"],
+    crate_root = "algebra/clifford_mhd_multivector.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "dixon_multivector_examples",
+    srcs = ["algebra/dixon_multivector.rs"],
+    crate_root = "algebra/dixon_multivector.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_multivector",
+        "//deep_causality_num_complex",
+    ],
+)
+
+rust_binary(
+    name = "geometric_tilt_estimator_examples",
+    srcs = ["algebra/geometric_tilt_estimator.rs"],
+    crate_root = "algebra/geometric_tilt_estimator.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "grmhd_multivector_examples",
+    srcs = ["algebra/grmhd_integration.rs"],
+    crate_root = "algebra/grmhd_integration.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "hkt_multivector_examples",
+    srcs = ["algebra/hkt_multivector.rs"],
+    crate_root = "algebra/hkt_multivector.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "maxwell_multivector_examples",
+    srcs = ["algebra/maxwell_multivector.rs"],
+    crate_root = "algebra/maxwell_multivector.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "pga3d_multivector_examples",
+    srcs = ["algebra/pga3d_multivector.rs"],
+    crate_root = "algebra/pga3d_multivector.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "algebraic_scanner_examples",
+    srcs = glob(["algebra/algebraic_scanner/**/*.rs"]),
+    crate_root = "algebra/algebraic_scanner/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "tensor_x_algebra_rotation_field_examples",
+    srcs = glob(["composable_multi_math/tensor_x_algebra_rotation_field/**/*.rs"]),
+    crate_root = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "tensor_x_topology_laplacian_examples",
+    srcs = glob(["composable_multi_math/tensor_x_topology_laplacian/**/*.rs"]),
+    crate_root = "composable_multi_math/tensor_x_topology_laplacian/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "triple_hkt_stress_field_examples",
+    srcs = glob(["composable_multi_math/triple_hkt_stress_field/**/*.rs"]),
+    crate_root = "composable_multi_math/triple_hkt_stress_field/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "effect_kalman_predict_correct_examples",
+    srcs = glob(["composable_multi_math/effect_kalman_predict_correct/**/*.rs"]),
+    crate_root = "composable_multi_math/effect_kalman_predict_correct/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mathematics_examples",
+        "//deep_causality_algebra",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "effect_diffusion_on_manifold_examples",
+    srcs = glob(["composable_multi_math/effect_diffusion_on_manifold/**/*.rs"]),
+    crate_root = "composable_multi_math/effect_diffusion_on_manifold/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mathematics_examples",
+        "//deep_causality_haft",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "effect_tensor_algebra_roundtrip_examples",
+    srcs = glob(["composable_multi_math/effect_tensor_algebra_roundtrip/**/*.rs"]),
+    crate_root = "composable_multi_math/effect_tensor_algebra_roundtrip/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mathematics_examples",
+        "//deep_causality_algebra",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "capstone_spinor_minkowski_examples",
+    srcs = glob(["composable_multi_math/capstone_spinor_minkowski/**/*.rs"]),
+    crate_root = "composable_multi_math/capstone_spinor_minkowski/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":mathematics_examples",
+        "//deep_causality_algebra",
+        "//deep_causality_haft",
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_num",
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "tensor_sparse_memory_budget",
+    srcs = glob(["isomorphism/tensor_sparse_memory_budget/**/*.rs"]),
+    crate_root = "isomorphism/tensor_sparse_memory_budget/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "multifield_data_pipeline",
+    srcs = glob(["isomorphism/multifield_data_pipeline/**/*.rs"]),
+    crate_root = "isomorphism/multifield_data_pipeline/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_metric",
+        "//deep_causality_multivector",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "basic_csr_ops_examples",
+    srcs = ["sparse/basic_csr_ops.rs"],
+    crate_root = "sparse/basic_csr_ops.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_sparse",
+    ],
+)
+
+rust_binary(
+    name = "hkt_csr_ops_examples",
+    srcs = ["sparse/hkt_csr_ops.rs"],
+    crate_root = "sparse/hkt_csr_ops.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_sparse",
+    ],
+)
+
+rust_binary(
+    name = "applicative_causal_tensor_examples",
+    srcs = ["tensor/applicative_causal_tensor.rs"],
+    crate_root = "tensor/applicative_causal_tensor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "basic_causal_tensor_examples",
+    srcs = ["tensor/basic_causal_tensor.rs"],
+    crate_root = "tensor/basic_causal_tensor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "effect_system_causal_tensor_examples",
+    srcs = ["tensor/effect_system_causal_tensor.rs"],
+    crate_root = "tensor/effect_system_causal_tensor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "ein_sum_causal_tensor_examples",
+    srcs = ["tensor/ein_sum_causal_tensor.rs"],
+    crate_root = "tensor/ein_sum_causal_tensor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "einstein_field_causal_tensor_examples",
+    srcs = ["tensor/einstein_field_causal_tensor.rs"],
+    crate_root = "tensor/einstein_field_causal_tensor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "functor_causal_tensor_examples",
+    srcs = ["tensor/functor_causal_tensor.rs"],
+    crate_root = "tensor/functor_causal_tensor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "basic_graph_examples",
+    srcs = ["topology/basic_graph.rs"],
+    crate_root = "topology/basic_graph.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "chain_algebra_examples",
+    srcs = ["topology/chain_algebra.rs"],
+    crate_root = "topology/chain_algebra.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_sparse",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "complex_operators_examples",
+    srcs = ["topology/complex_operators.rs"],
+    crate_root = "topology/complex_operators.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "cubical_heat_diffusion_examples",
+    srcs = ["topology/cubical_heat_diffusion.rs"],
+    crate_root = "topology/cubical_heat_diffusion.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "differential_field_examples",
+    srcs = ["topology/differential_field.rs"],
+    crate_root = "topology/differential_field.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "hkt_graph_convolution_examples",
+    srcs = ["topology/hkt_graph_convolution.rs"],
+    crate_root = "topology/hkt_graph_convolution.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "lattice_gauge_simulation_examples",
+    srcs = ["topology/lattice_gauge_simulation.rs"],
+    crate_root = "topology/lattice_gauge_simulation.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_num_complex",
+        "//deep_causality_rand",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "manifold_analysis_examples",
+    srcs = ["topology/manifold_analysis.rs"],
+    crate_root = "topology/manifold_analysis.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_sparse",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)

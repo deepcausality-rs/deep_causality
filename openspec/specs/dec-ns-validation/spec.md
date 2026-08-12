@@ -5,9 +5,7 @@
 The validation ladder of `cfd-gap.md` §7 items 4–8: analytic Taylor–Green
 rungs, inviscid invariants, and the double shear layer in CI; the Re-1600
 flagship as an example program.
-
 ## Requirements
-
 ### Requirement: 2D Taylor–Green decay with convergence table (CI)
 
 The test suite SHALL march the 2D Taylor–Green vortex on `square_torus`
@@ -197,10 +195,15 @@ cycle-mean drag coefficient `C_d` against the published laminar benchmarks it al
 1996 for `St`; Dröge & Verstappen 2005 and the Lehmkuhl lineage for `C_d`), and SHALL exit non-zero when a
 gate breaks or when the solver returns an error.
 
-The harness currently contains no assertion and no `process::exit` call: on a solver `Err` it prints,
-breaks the march, then reports `St` and `C_d` computed from the *truncated* series and returns zero. That
-behaviour contradicts the convention `verification/README.md` advertises for every program in the suite,
-and it is the crate's only isolated-cylinder validation.
+The harness SHALL be configured through the config layer: its mesh (box domain with the immersed
+disk and its merge floor), solver (viscosity, time step, CG options, warm start, and the staircase
+no-slip toggle), boundary-zone tuple, seed, and observables SHALL be assembled through
+`CfdConfigBuilder::march` and run through `CfdFlow::march`, with its per-step force sampling on the
+pipeline's `run_with` hook. The harness SHALL NOT hand-assemble the lattice, cut-cell registry,
+manifold, and solver that the configuration family already materializes.
+
+Its environment-overridable knobs remain harness plumbing: they SHALL feed the configuration's
+values rather than being replaced by it.
 
 Because the affordable default grid (8 cells/D) is below reference-grid quality, the `St` and `C_d` bounds
 MAY be pinned tripwires rather than reference gates at the default configuration. Whichever class is used
@@ -209,7 +212,7 @@ alongside the measured ones so the offset stays visible.
 
 #### Scenario: A solver error fails the run
 
-- **WHEN** `solver.step` returns `Err` during the march
+- **WHEN** the march returns `Err`
 - **THEN** the harness reports the failure and exits non-zero, and does not report `St` or `C_d` derived
   from the truncated series
 
@@ -224,3 +227,10 @@ alongside the measured ones so the offset stays visible.
 - **WHEN** the gate block is printed
 - **THEN** the Williamson `St` and the Dröge–Verstappen / Lehmkuhl `C_d` band appear next to the measured
   values, with the grid resolution stated, so an under-resolved pass is not read as reference agreement
+
+#### Scenario: The lift preserves the reported numbers
+
+- **WHEN** the harness is run at its default knobs before and after being configured through the
+  config layer
+- **THEN** the reported `St`, `C_d`, and the pressure/friction split match to the printed precision
+

@@ -12,29 +12,23 @@ use crate::constants::{
     THROAT_AREA_M2,
 };
 use avionics_examples::shared::utils::ft;
-use deep_causality_cfd::{DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, PhysicsError};
+use deep_causality_cfd::{CfdConfigBuilder, DuctAreaProfile, DuctConfig, PhysicsError};
 
 /// The 2:1:2 parabolic demonstration nozzle at one back-pressure ratio. Takes the ratio by
 /// reference so it plugs directly into the grammar's `.case(model_config::duct_case)`.
 pub fn duct_case(p_ratio: &FloatType) -> Result<DuctConfig<FloatType>, PhysicsError> {
     let p_ratio = *p_ratio;
-    DuctConfig::new(
-        DuctAreaProfile::ConvergingDiverging {
+    CfdConfigBuilder::duct::<FloatType>("nozzle-operating-point")
+        .profile(DuctAreaProfile::ConvergingDiverging {
             inlet_area: ft(INLET_AREA_M2),
             throat_area: ft(THROAT_AREA_M2),
             exit_area: ft(EXIT_AREA_M2),
             length: ft(LENGTH_M),
-        },
-        DuctInlet {
-            p0: ft(P0_PA),
-            t0: ft(T0_K),
-        },
-        ft(GAMMA),
-        ft(P0_PA) * p_ratio,
-        CELLS,
-        DuctStop {
-            max_steps: MAX_STEPS,
-            residual_tol: ft(RESIDUAL_TOL),
-        },
-    )
+        })
+        .inlet(ft(P0_PA), ft(T0_K))
+        .gamma(ft(GAMMA))
+        .back_pressure(ft(P0_PA) * p_ratio)
+        .cells(CELLS)
+        .stop(MAX_STEPS, ft(RESIDUAL_TOL))
+        .build()
 }

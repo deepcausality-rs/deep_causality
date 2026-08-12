@@ -1,0 +1,402 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:common_settings.bzl", "string_setting")
+load("@llvm-project//:vars.bzl", "LLVM_VERSION_MAJOR")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//toolchain/args:llvm_target_triple.bzl", "LLVM_TARGET_TRIPLE")
+load("//toolchain/runtimes:cc_stage0_object.bzl", "cc_stage0_object")
+load(":copy_to_resource_directory.bzl", "copy_to_resource_directory")
+
+exports_files(["module_map.BUILD.bazel"])
+
+#TODO(cerisier): duplicate this per runtime repo ? or do differently ?
+string_setting(
+    name = "linkmode",
+    build_setting_default = "dynamic",
+    values = [
+        "static",
+        "dynamic",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "linkmode_static",
+    flag_values = {
+        ":linkmode": "static",
+    },
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "linkmode_dynamic",
+    flag_values = {
+        ":linkmode": "dynamic",
+    },
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "coverage_enabled",
+    values = {
+        "collect_code_coverage": "true",
+    },
+    visibility = ["//visibility:public"],
+)
+
+selects.config_setting_group(
+    name = "profile_runtime_enabled",
+    match_any = [
+        ":coverage_enabled",
+        "//config:profile_enabled",
+    ],
+)
+
+filegroup(
+    name = "none",
+    srcs = [],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "static_runtime_lib",
+    srcs = ["//runtimes/cxxstdlib:static_runtime_lib"],
+    visibility = ["//visibility:public"],
+)
+
+# macOS + a target sanitizer flag. Using <san>_target_config (the exec-forced
+# wrapper) keeps host tools out even when the sanitizer flag is set globally.
+config_setting(
+    name = "_asan_dynamic_runtime_macos",
+    constraint_values = ["@platforms//os:macos"],
+    flag_values = {"//config:asan_target_config": "true"},
+)
+
+config_setting(
+    name = "_ubsan_dynamic_runtime_macos",
+    constraint_values = ["@platforms//os:macos"],
+    flag_values = {"//config:ubsan_target_config": "true"},
+)
+
+config_setting(
+    name = "_lsan_dynamic_runtime_macos",
+    constraint_values = ["@platforms//os:macos"],
+    flag_values = {"//config:lsan_target_config": "true"},
+)
+
+config_setting(
+    name = "_tsan_dynamic_runtime_macos",
+    constraint_values = ["@platforms//os:macos"],
+    flag_values = {"//config:tsan_target_config": "true"},
+)
+
+# On Darwin the sanitizer runtimes are dylibs. Adding an enabled sanitizer's
+# dylib to the dynamic runtime libs makes the toolchain place it in the runfiles
+# of any dynamically-linked target and emit the @loader_path rpath (via the
+# runtime_library_search_directories feature), so it loads at run time without a
+# per-target dynamic_deps. This covers cc_test (and other dynamically-linked
+# rules); statically-linked cc_binary targets still add it via dynamic_deps.
+# Linux links the static runtimes, so nothing is added there; the .shared
+# targets are Darwin-only, hence the macOS gate.
+filegroup(
+    name = "dynamic_runtime_lib",
+    srcs = ["//runtimes/cxxstdlib:dynamic_runtime_lib"] + select({
+        ":_asan_dynamic_runtime_macos": ["//runtimes/compiler-rt:clang_rt.asan.shared"],
+        "//conditions:default": [],
+    }) + select({
+        ":_ubsan_dynamic_runtime_macos": ["//runtimes/compiler-rt:clang_rt.ubsan_standalone.shared"],
+        "//conditions:default": [],
+    }) + select({
+        ":_lsan_dynamic_runtime_macos": ["//runtimes/compiler-rt:clang_rt.lsan.shared"],
+        "//conditions:default": [],
+    }) + select({
+        ":_tsan_dynamic_runtime_macos": ["//runtimes/compiler-rt:clang_rt.tsan.shared"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "empty",
+    srcs = ["empty.c"],
+    copts = ["-fno-addrsig"],
+)
+
+cc_stage0_object(
+    name = "crti_object",
+    srcs = [
+        ":empty",
+    ],
+    out = "crti.o",
+    copts = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE,
+    visibility = ["//visibility:public"],
+)
+
+cc_stage0_object(
+    name = "crtn_object",
+    srcs = [
+        ":empty",
+    ],
+    out = "crtn.o",
+    copts = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE,
+    visibility = ["//visibility:public"],
+)
+
+copy_to_directory(
+    name = "crt_objects_directory_linux",
+    srcs = select({
+        "//platforms/config:musl": [
+            # -static
+            "//runtimes/musl:musl_crt1.object",
+            # static-pie
+            "//runtimes/musl:musl_rcrt1.object",
+            "//runtimes/musl:musl_Scrt1.object",
+        ],
+        "//platforms/config:gnu": [
+            "//runtimes/glibc:glibc_Scrt1.object",
+            "//runtimes/glibc:glibc_crt1.object",
+        ],
+    }) + [
+        ":crti_object",
+        ":crtn_object",
+        "@llvm-project//compiler-rt:crtbeginS_object",
+        "@llvm-project//compiler-rt:crtbeginT_object",
+        "@llvm-project//compiler-rt:crtbegin_object",
+        "@llvm-project//compiler-rt:crtendS_object",
+        "@llvm-project//compiler-rt:crtend_object",
+    ],
+    include_external_repositories = ["**"],
+    root_paths = [
+        ".",
+        "compiler-rt",
+        "runtimes/musl",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+copy_to_directory(
+    name = "crt_objects_directory_windows",
+    srcs = [
+        "//runtimes/mingw:CRT_fp8.o",
+        "//runtimes/mingw:crt2.o",
+        "//runtimes/mingw:crt2u.o",
+        "//runtimes/mingw:crtbegin.o",
+        "//runtimes/mingw:crtend.o",
+        "//runtimes/mingw:dllcrt2.o",
+    ],
+    root_paths = [
+        "runtimes/mingw",
+    ],
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "crt_objects_directory",
+    actual = select({
+        "@platforms//os:linux": ":crt_objects_directory_linux",
+        "@platforms//os:windows": ":crt_objects_directory_windows",
+    }),
+    target_compatible_with = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:windows": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+copy_to_resource_directory(
+    name = "resource_directory_default",
+    srcs = select({
+        "//platforms/config:none_bpfeb": {},
+        "//platforms/config:none_bpfel": {},
+        "//conditions:default": {
+            "//runtimes/compiler-rt:clang_rt.builtins.static": "libclang_rt.builtins",
+        },
+    }) | select({
+        "//config:fuzzer_enabled": {
+            "//runtimes/compiler-rt:clang_rt.fuzzer.static": "libclang_rt.fuzzer",
+            "//runtimes/compiler-rt:clang_rt.fuzzer_no_main.static": "libclang_rt.fuzzer_no_main",
+            "//runtimes/compiler-rt:clang_rt.fuzzer_interceptors.static": "libclang_rt.fuzzer_interceptors",
+        },
+        "//conditions:default": {},
+    }) | select({
+        ":profile_runtime_enabled": {
+            "//runtimes/compiler-rt:clang_rt.profile.static": "libclang_rt.profile",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:ubsan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.ubsan_standalone.static": "libclang_rt.ubsan_standalone",
+            "//runtimes/compiler-rt:clang_rt.ubsan_standalone_cxx.static": "libclang_rt.ubsan_standalone_cxx",
+        },
+        "//conditions:default": {},
+    }) | ({
+        "//runtimes/compiler-rt:clang_rt.ubsan_loop_detect.static": "libclang_rt.ubsan_loop_detect",
+    } if int(LLVM_VERSION_MAJOR) >= 23 else {}) | select({
+        "//config:cfi_enabled": {
+            "//runtimes/compiler-rt:clang_rt.cfi.static": "libclang_rt.cfi",
+            "//runtimes/compiler-rt:clang_rt.cfi_diag.static": "libclang_rt.cfi_diag",
+            "//runtimes/compiler-rt:clang_rt.ubsan_standalone.static": "libclang_rt.ubsan_standalone",
+            "//runtimes/compiler-rt:clang_rt.ubsan_standalone_cxx.static": "libclang_rt.ubsan_standalone_cxx",
+            "//runtimes/compiler-rt:clang_rt.cfi_ignorelist": "share/cfi_ignorelist.txt",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:msan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.msan.static": "libclang_rt.msan",
+            "//runtimes/compiler-rt:clang_rt.msan_cxx.static": "libclang_rt.msan_cxx",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:dfsan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.dfsan.static": "libclang_rt.dfsan",
+            "//runtimes/compiler-rt:clang_rt.dfsan_abilist": "share/dfsan_abilist",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:nsan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.nsan.static": "libclang_rt.nsan",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:safestack_enabled": {
+            "//runtimes/compiler-rt:clang_rt.safestack.static": "libclang_rt.safestack",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:rtsan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.rtsan.static": "libclang_rt.rtsan",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:tysan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.tysan.static": "libclang_rt.tysan",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:tsan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.tsan.static": "libclang_rt.tsan",
+            "//runtimes/compiler-rt:clang_rt.tsan_cxx.static": "libclang_rt.tsan_cxx",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:asan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.asan_cxx.static": "libclang_rt.asan_cxx",
+            "//runtimes/compiler-rt:clang_rt.asan_static.static": "libclang_rt.asan_static",
+            "//runtimes/compiler-rt:clang_rt.asan.static": "libclang_rt.asan",
+            "//runtimes/compiler-rt:clang_rt.asan.shared": "libclang_rt.asan",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:lsan_enabled": {
+            "//runtimes/compiler-rt:clang_rt.lsan.static": "libclang_rt.lsan",
+        },
+        "//config:xray_enabled": {
+            "//runtimes/compiler-rt:clang_rt.xray.static": "libclang_rt.xray",
+            "//runtimes/compiler-rt:clang_rt.xray_basic.static": "libclang_rt.xray-basic",
+        },
+        "//conditions:default": {},
+    }),
+    # macOS uses :resource_directory_macos instead: the Darwin runtime naming
+    # differs (libclang_rt.<name>_osx[_dynamic]) and only a subset of runtimes
+    # is supported upstream. See the :resource_directory alias below.
+    target_compatible_with = select({
+        "@platforms//os:macos": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+# Darwin resource directory. Upstream compiler-rt supports only a subset of
+# runtimes on macOS, with different library names (libclang_rt.<name>_osx for
+# static archives, libclang_rt.<name>_osx_dynamic.dylib for shared runtimes).
+# Runtimes that upstream does not build on Darwin (msan, dfsan, hwasan,
+# safestack, scudo, gwp_asan, cfi, nsan, rtsan, tysan) are intentionally absent.
+copy_to_resource_directory(
+    name = "resource_directory_macos",
+    srcs = select({
+        "//config:asan_enabled": {
+            # asan ships as a dylib on Darwin (no static standalone runtime);
+            # asan_cxx is folded into the dylib. The asan_static archive carries
+            # the always-statically-linked portion.
+            "//runtimes/compiler-rt:clang_rt.asan.shared": "libclang_rt.asan_osx_dynamic",
+            "//runtimes/compiler-rt:clang_rt.asan_static.static": "libclang_rt.asan_static_osx",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:ubsan_enabled": {
+            # Standalone UBSan is a dylib on Darwin (cxxabi folded in); no static.
+            "//runtimes/compiler-rt:clang_rt.ubsan_standalone.shared": "libclang_rt.ubsan_osx_dynamic",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:lsan_enabled": {
+            # LSan is a dylib on Darwin; no static standalone runtime.
+            "//runtimes/compiler-rt:clang_rt.lsan.shared": "libclang_rt.lsan_osx_dynamic",
+        },
+        "//conditions:default": {},
+    }) | select({
+        "//config:tsan_enabled": {
+            # TSan is a dylib on Darwin (x86_64/arm64); no static runtime.
+            "//runtimes/compiler-rt:clang_rt.tsan.shared": "libclang_rt.tsan_osx_dynamic",
+        },
+        "//conditions:default": {},
+    }) | select({
+        ":profile_runtime_enabled": {
+            "//runtimes/compiler-rt:clang_rt.profile.static": "libclang_rt.profile_osx",
+        },
+        "//conditions:default": {},
+    }),
+    target_compatible_with = ["@platforms//os:macos"],
+    target_triple = "darwin",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "resource_directory",
+    actual = select({
+        "@platforms//os:macos": ":resource_directory_macos",
+        "//conditions:default": ":resource_directory_default",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "copy_to_resource_directory",
+    srcs = ["copy_to_resource_directory.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_lib//lib:copy_file",
+        "@bazel_lib//lib:copy_to_directory",
+    ],
+)
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["@bazel_lib//lib:run_binary"],
+)
+
+bzl_library(
+    name = "module_map",
+    srcs = ["module_map.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:directory",
+        "@bazel_features//:features",
+        "@bazel_skylib//lib:paths",
+        "@bazel_skylib//rules/directory:providers",
+    ],
+)

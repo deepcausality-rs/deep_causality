@@ -12,7 +12,7 @@ set -o pipefail
 # command cargo clippy --fix --allow-dirty --all-targets -- -D warnings
 
 # fix all configured features
-command cargo fix --lib --allow-dirty --all-targets --all-features
+command cargo fix --lib --examples --allow-dirty --all-targets --all-features
 
 # Double check if nothing has beem missed
-command cargo clippy --all-targets --all-features -- -D warnings
+command cargo clippy --examples --all-targets --all-features -- -D warnings

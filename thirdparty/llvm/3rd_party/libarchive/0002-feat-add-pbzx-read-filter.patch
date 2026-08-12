@@ -1,0 +1,416 @@
+diff --git a/Makefile.am b/Makefile.am
+index a3b04e75..eb1e4120 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -182,6 +182,7 @@ libarchive_la_SOURCES= \
+ 	libarchive/archive_read_support_filter_lz4.c \
+ 	libarchive/archive_read_support_filter_lzop.c \
+ 	libarchive/archive_read_support_filter_none.c \
++	libarchive/archive_read_support_filter_pbzx.c \
+ 	libarchive/archive_read_support_filter_program.c \
+ 	libarchive/archive_read_support_filter_rpm.c \
+ 	libarchive/archive_read_support_filter_uu.c \
+diff --git a/contrib/android/Android.mk b/contrib/android/Android.mk
+index 20e46a69..53576758 100644
+--- a/contrib/android/Android.mk
++++ b/contrib/android/Android.mk
+@@ -73,6 +73,7 @@ libarchive_src_files := libarchive/archive_acl.c \
+ 						libarchive/archive_read_support_filter_lz4.c \
+ 						libarchive/archive_read_support_filter_lzop.c \
+ 						libarchive/archive_read_support_filter_none.c \
++						libarchive/archive_read_support_filter_pbzx.c \
+ 						libarchive/archive_read_support_filter_program.c \
+ 						libarchive/archive_read_support_filter_rpm.c \
+ 						libarchive/archive_read_support_filter_uu.c \
+diff --git a/libarchive/BUILD.bazel b/libarchive/BUILD.bazel
+index 0b00027e..6b3cd69d 100644
+--- a/libarchive/BUILD.bazel
++++ b/libarchive/BUILD.bazel
+@@ -86,6 +86,7 @@ cc_library(
+         "archive_read_support_filter_lz4.c",
+         "archive_read_support_filter_lzop.c",
+         "archive_read_support_filter_none.c",
++        "archive_read_support_filter_pbzx.c",
+         "archive_read_support_filter_program.c",
+         "archive_read_support_filter_rpm.c",
+         "archive_read_support_filter_uu.c",
+diff --git a/libarchive/CMakeLists.txt b/libarchive/CMakeLists.txt
+index 4fb91713..8d5a41ee 100644
+--- a/libarchive/CMakeLists.txt
++++ b/libarchive/CMakeLists.txt
+@@ -91,6 +91,7 @@ SET(libarchive_SOURCES
+   archive_read_support_filter_lz4.c
+   archive_read_support_filter_lzop.c
+   archive_read_support_filter_none.c
++  archive_read_support_filter_pbzx.c
+   archive_read_support_filter_program.c
+   archive_read_support_filter_rpm.c
+   archive_read_support_filter_uu.c
+diff --git a/libarchive/archive.h b/libarchive/archive.h
+index 9a1d5ade..7912b6d2 100644
+--- a/libarchive/archive.h
++++ b/libarchive/archive.h
+@@ -321,6 +321,7 @@ typedef const char *archive_passphrase_callback(struct archive *,
+ #define	ARCHIVE_FILTER_GRZIP	12
+ #define	ARCHIVE_FILTER_LZ4	13
+ #define	ARCHIVE_FILTER_ZSTD	14
++#define	ARCHIVE_FILTER_PBZX	15
+ 
+ #if ARCHIVE_VERSION_NUMBER < 4000000
+ #define	ARCHIVE_COMPRESSION_NONE	ARCHIVE_FILTER_NONE
+@@ -334,6 +335,7 @@ typedef const char *archive_passphrase_callback(struct archive *,
+ #define	ARCHIVE_COMPRESSION_RPM		ARCHIVE_FILTER_RPM
+ #define	ARCHIVE_COMPRESSION_LZIP	ARCHIVE_FILTER_LZIP
+ #define	ARCHIVE_COMPRESSION_LRZIP	ARCHIVE_FILTER_LRZIP
++#define	ARCHIVE_COMPRESSION_PBZX	ARCHIVE_FILTER_PBZX
+ #endif
+ 
+ /*
+@@ -473,6 +475,7 @@ __LA_DECL int archive_read_support_filter_lzip(struct archive *);
+ __LA_DECL int archive_read_support_filter_lzma(struct archive *);
+ __LA_DECL int archive_read_support_filter_lzop(struct archive *);
+ __LA_DECL int archive_read_support_filter_none(struct archive *);
++__LA_DECL int archive_read_support_filter_pbzx(struct archive *);
+ __LA_DECL int archive_read_support_filter_program(struct archive *,
+ 		     const char *command);
+ __LA_DECL int archive_read_support_filter_program_signature
+diff --git a/libarchive/archive_read_append_filter.c b/libarchive/archive_read_append_filter.c
+index cd88df11..1f26ab2f 100644
+--- a/libarchive/archive_read_append_filter.c
++++ b/libarchive/archive_read_append_filter.c
+@@ -92,6 +92,10 @@ archive_read_append_filter(struct archive *_a, int code)
+       strcpy(str, "zstd");
+       r1 = archive_read_support_filter_zstd(_a);
+       break;
++    case ARCHIVE_FILTER_PBZX:
++      strcpy(str, "pbzx");
++      r1 = archive_read_support_filter_pbzx(_a);
++      break;
+     case ARCHIVE_FILTER_LZIP:
+       strcpy(str, "lzip");
+       r1 = archive_read_support_filter_lzip(_a);
+diff --git a/libarchive/archive_read_filter.3 b/libarchive/archive_read_filter.3
+index 72ff240f..1053b1ea 100644
+--- a/libarchive/archive_read_filter.3
++++ b/libarchive/archive_read_filter.3
+@@ -33,6 +33,7 @@
+ .Nm archive_read_support_filter_lz4 ,
+ .Nm archive_read_support_filter_lzma ,
+ .Nm archive_read_support_filter_none ,
++.Nm archive_read_support_filter_pbzx ,
+ .Nm archive_read_support_filter_rpm ,
+ .Nm archive_read_support_filter_uu ,
+ .Nm archive_read_support_filter_xz ,
+@@ -68,6 +69,8 @@ Streaming Archive Library (libarchive, -larchive)
+ .Ft int
+ .Fn archive_read_support_filter_none "struct archive *"
+ .Ft int
++.Fn archive_read_support_filter_pbzx "struct archive *"
++.Ft int
+ .Fn archive_read_support_filter_rpm "struct archive *"
+ .Ft int
+ .Fn archive_read_support_filter_uu "struct archive *"
+@@ -100,6 +103,7 @@ Streaming Archive Library (libarchive, -larchive)
+ .Fn archive_read_support_filter_lzma ,
+ .Fn archive_read_support_filter_lzop ,
+ .Fn archive_read_support_filter_none ,
++.Fn archive_read_support_filter_pbzx ,
+ .Fn archive_read_support_filter_rpm ,
+ .Fn archive_read_support_filter_uu ,
+ .Fn archive_read_support_filter_xz ,
+diff --git a/libarchive/archive_read_support_filter_all.c b/libarchive/archive_read_support_filter_all.c
+index cb46d120..09971b11 100644
+--- a/libarchive/archive_read_support_filter_all.c
++++ b/libarchive/archive_read_support_filter_all.c
+@@ -58,6 +58,8 @@ archive_read_support_filter_all(struct archive *a)
+ 	archive_read_support_filter_lzma(a);
+ 	/* Xz falls back to "unxz" command-line program. */
+ 	archive_read_support_filter_xz(a);
++	/* pbzx framing filter (Apple payloads). */
++	archive_read_support_filter_pbzx(a);
+ 	/* The decode code doesn't use an outside library. */
+ 	archive_read_support_filter_uu(a);
+ 	/* The decode code doesn't use an outside library. */
+diff --git a/libarchive/archive_read_support_filter_by_code.c b/libarchive/archive_read_support_filter_by_code.c
+index 4c8b6cb5..e7785229 100644
+--- a/libarchive/archive_read_support_filter_by_code.c
++++ b/libarchive/archive_read_support_filter_by_code.c
+@@ -63,6 +63,8 @@ archive_read_support_filter_by_code(struct archive *a, int filter_code)
+ 		return archive_read_support_filter_lz4(a);
+ 	case ARCHIVE_FILTER_ZSTD:
+ 		return archive_read_support_filter_zstd(a);
++	case ARCHIVE_FILTER_PBZX:
++		return archive_read_support_filter_pbzx(a);
+ 	}
+ 	return (ARCHIVE_FATAL);
+ }
+diff --git a/libarchive/archive_read_support_filter_pbzx.c b/libarchive/archive_read_support_filter_pbzx.c
+new file mode 100644
+index 00000000..71fffe96
+--- /dev/null
++++ b/libarchive/archive_read_support_filter_pbzx.c
+@@ -0,0 +1,264 @@
++/*-
++ * Copyright (c) 2026
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "archive_platform.h"
++
++#ifdef HAVE_ERRNO_H
++#include <errno.h>
++#endif
++#ifdef HAVE_STDLIB_H
++#include <stdlib.h>
++#endif
++#ifdef HAVE_STRING_H
++#include <string.h>
++#endif
++
++#include "archive.h"
++#include "archive_endian.h"
++#include "archive_private.h"
++#include "archive_read_private.h"
++
++#define PBZX_MAGIC_PREFIX "pbz"
++#define PBZX_MAGIC_PREFIX_LEN 3
++#define PBZX_MAGIC_LEN 4
++
++struct pbzx {
++	uint64_t	block_size;
++	uint64_t	remaining;
++	uint64_t	uncompressed_size;
++	uint64_t	compressed_size;
++	enum {
++		ST_SIGNATURE,
++		ST_BLOCK_HEADER,
++		ST_BLOCK_DATA,
++		ST_DONE
++	}	state;
++};
++
++static int	pbzx_bidder_bid(struct archive_read_filter_bidder *,
++		    struct archive_read_filter *);
++static int	pbzx_bidder_init(struct archive_read_filter *);
++
++static ssize_t	pbzx_filter_read(struct archive_read_filter *,
++		    const void **);
++static int	pbzx_filter_close(struct archive_read_filter *);
++
++static int	pbzx_read_bytes(struct archive_read_filter *,
++		    unsigned char *, size_t);
++static int	pbzx_read_u64_be(struct archive_read_filter *, uint64_t *);
++
++static const struct archive_read_filter_bidder_vtable
++pbzx_bidder_vtable = {
++	.bid = pbzx_bidder_bid,
++	.init = pbzx_bidder_init,
++};
++
++int
++archive_read_support_filter_pbzx(struct archive *_a)
++{
++	struct archive_read *a = (struct archive_read *)_a;
++
++	return __archive_read_register_bidder(a, NULL, "pbzx",
++	    &pbzx_bidder_vtable);
++}
++
++static int
++pbzx_bidder_bid(struct archive_read_filter_bidder *self,
++    struct archive_read_filter *filter)
++{
++	const unsigned char *b;
++	ssize_t avail;
++
++	(void)self; /* UNUSED */
++
++	b = __archive_read_filter_ahead(filter, PBZX_MAGIC_LEN, &avail);
++	if (b == NULL)
++		return (0);
++	if (memcmp(b, PBZX_MAGIC_PREFIX, PBZX_MAGIC_PREFIX_LEN) != 0)
++		return (0);
++	if (b[PBZX_MAGIC_LEN - 1] != 'z' && b[PBZX_MAGIC_LEN - 1] != 'x' &&
++	    b[PBZX_MAGIC_LEN - 1] != '4' && b[PBZX_MAGIC_LEN - 1] != 'e')
++		return (0);
++	return (PBZX_MAGIC_LEN * 8);
++}
++
++static const struct archive_read_filter_vtable
++pbzx_reader_vtable = {
++	.read = pbzx_filter_read,
++	.close = pbzx_filter_close,
++};
++
++static int
++pbzx_bidder_init(struct archive_read_filter *self)
++{
++	struct pbzx *pbzx;
++
++	self->code = ARCHIVE_FILTER_PBZX;
++	self->name = "pbzx";
++
++	pbzx = calloc(1, sizeof(*pbzx));
++	if (pbzx == NULL) {
++		archive_set_error(&self->archive->archive, ENOMEM,
++		    "Can't allocate pbzx filter data");
++		return (ARCHIVE_FATAL);
++	}
++	pbzx->state = ST_SIGNATURE;
++	self->data = pbzx;
++	self->vtable = &pbzx_reader_vtable;
++
++	return (ARCHIVE_OK);
++}
++
++static int
++pbzx_read_bytes(struct archive_read_filter *self, unsigned char *out,
++    size_t len)
++{
++	size_t remaining = len;
++	while (remaining > 0) {
++		ssize_t avail;
++		const unsigned char *b = __archive_read_filter_ahead(
++		    self->upstream, 1, &avail);
++		if (b == NULL) {
++			if (avail < 0)
++				return (ARCHIVE_FATAL);
++			archive_set_error(&self->archive->archive,
++			    ARCHIVE_ERRNO_FILE_FORMAT,
++			    "Truncated pbzx stream");
++			return (ARCHIVE_FATAL);
++		}
++		if ((size_t)avail > remaining)
++			avail = (ssize_t)remaining;
++		memcpy(out, b, (size_t)avail);
++		__archive_read_filter_consume(self->upstream, avail);
++		out += (size_t)avail;
++		remaining -= (size_t)avail;
++	}
++	return (ARCHIVE_OK);
++}
++
++static int
++pbzx_read_u64_be(struct archive_read_filter *self, uint64_t *v)
++{
++	unsigned char buf[8];
++	int r = pbzx_read_bytes(self, buf, sizeof(buf));
++	if (r != ARCHIVE_OK)
++		return (r);
++	*v = archive_be64dec(buf);
++	return (ARCHIVE_OK);
++}
++
++static ssize_t
++pbzx_filter_read(struct archive_read_filter *self, const void **buff)
++{
++	struct pbzx *pbzx = (struct pbzx *)self->data;
++	const unsigned char *b;
++	ssize_t avail_in;
++	size_t n;
++	unsigned char magic[PBZX_MAGIC_LEN];
++
++	*buff = NULL;
++
++	for (;;) {
++		switch (pbzx->state) {
++		case ST_SIGNATURE:
++			if (pbzx_read_bytes(self, magic, sizeof(magic)) != ARCHIVE_OK)
++				return (ARCHIVE_FATAL);
++			if (memcmp(magic, PBZX_MAGIC_PREFIX, PBZX_MAGIC_PREFIX_LEN) != 0 ||
++			    (magic[PBZX_MAGIC_LEN - 1] != 'z' &&
++			    magic[PBZX_MAGIC_LEN - 1] != 'x' &&
++			    magic[PBZX_MAGIC_LEN - 1] != '4' &&
++			    magic[PBZX_MAGIC_LEN - 1] != 'e')) {
++				archive_set_error(&self->archive->archive,
++				    ARCHIVE_ERRNO_FILE_FORMAT,
++				    "Invalid pbzx signature");
++				return (ARCHIVE_FATAL);
++			}
++			if (pbzx_read_u64_be(self, &pbzx->block_size) != ARCHIVE_OK)
++				return (ARCHIVE_FATAL);
++			pbzx->state = ST_BLOCK_HEADER;
++			break;
++		case ST_BLOCK_HEADER:
++			b = __archive_read_filter_ahead(self->upstream, 1, &avail_in);
++			if (b == NULL) {
++				if (avail_in < 0)
++					return (ARCHIVE_FATAL);
++				if (avail_in == 0) {
++					pbzx->state = ST_DONE;
++					return (0);
++				}
++				archive_set_error(&self->archive->archive,
++				    ARCHIVE_ERRNO_FILE_FORMAT,
++				    "Truncated pbzx stream");
++				return (ARCHIVE_FATAL);
++			}
++			if (pbzx_read_u64_be(self, &pbzx->uncompressed_size) != ARCHIVE_OK)
++				return (ARCHIVE_FATAL);
++			if (pbzx_read_u64_be(self, &pbzx->compressed_size) != ARCHIVE_OK)
++				return (ARCHIVE_FATAL);
++			if (pbzx->block_size != 0 &&
++			    pbzx->uncompressed_size > pbzx->block_size) {
++				archive_set_error(&self->archive->archive,
++				    ARCHIVE_ERRNO_FILE_FORMAT,
++				    "pbzx uncompressed size too large");
++				return (ARCHIVE_FATAL);
++			}
++			pbzx->remaining = pbzx->compressed_size;
++			pbzx->state = ST_BLOCK_DATA;
++			break;
++		case ST_BLOCK_DATA:
++			if (pbzx->remaining == 0) {
++				pbzx->state = ST_BLOCK_HEADER;
++				break;
++			}
++			b = __archive_read_filter_ahead(self->upstream, 1,
++			    &avail_in);
++			if (b == NULL) {
++				if (avail_in < 0)
++					return (ARCHIVE_FATAL);
++				archive_set_error(&self->archive->archive,
++				    ARCHIVE_ERRNO_FILE_FORMAT,
++				    "Truncated pbzx stream");
++				return (ARCHIVE_FATAL);
++			}
++			n = (size_t)avail_in;
++			if (n > pbzx->remaining)
++				n = (size_t)pbzx->remaining;
++			*buff = b;
++			__archive_read_filter_consume(self->upstream, n);
++			pbzx->remaining -= n;
++			return ((ssize_t)n);
++		case ST_DONE:
++			return (0);
++		}
++	}
++}
++
++static int
++pbzx_filter_close(struct archive_read_filter *self)
++{
++	struct pbzx *pbzx = (struct pbzx *)self->data;
++	free(pbzx);
++	return (ARCHIVE_OK);
++}

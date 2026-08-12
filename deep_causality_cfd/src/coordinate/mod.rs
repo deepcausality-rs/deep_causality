@@ -31,7 +31,7 @@ mod cartesian_3d;
 
 pub use crate::traits::MetricProvider;
 pub use crate::traits::MetricProvider3d;
-pub use blended::{BlendedMap, BlendedMapConfig};
+pub use blended::{BlendedMap, BlendedMapConfig, BlendedMapConfigBuilder};
 pub use body_fitted_3d::BodyFittedCoordinate3d;
 pub use cartesian::CartesianIdentity;
 pub use cartesian_3d::CartesianIdentity3d;

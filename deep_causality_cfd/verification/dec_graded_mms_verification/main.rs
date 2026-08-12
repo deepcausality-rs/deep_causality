@@ -43,6 +43,13 @@
 //! ```text
 //! cargo run --release -p deep_causality_cfd --example dec_graded_mms_verification
 //! ```
+//!
+//! ## Config-layer exemption
+//!
+//! This harness builds manifolds and applies DEC operators directly rather than going through a
+//! `CfdConfigBuilder` entry. It marches nothing: its subject is the *truncation order* of the
+//! convective and viscous operators on a graded metric, which is measured one operator application
+//! at a time. A marching-case container has nothing to configure here.
 
 use deep_causality_cfd::{Grading, Mesh};
 use deep_causality_tensor::CausalTensor;

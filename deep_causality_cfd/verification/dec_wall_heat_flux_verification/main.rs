@@ -23,6 +23,13 @@
 //! WHF-4 is the one that exercises the scalar solver rather than a manufactured field: it marches
 //! diffusion from an isothermal body into cold fluid and checks the flux behaves as conduction must.
 //! It is a tripwire, not a reference — the decay *rate* is not compared to a closed form here.
+//!
+//! ## Config-layer exemption
+//!
+//! This harness builds its cut-cell fixtures and `DecScalarRate` directly rather than through a
+//! `CfdConfigBuilder` entry. Its subject is the `wall_heat_flux` **kernel** — a read-only surface
+//! integral below the case layer — and the scalar-transport path has no marching-case family. Its
+//! configuration is five constants.
 
 use deep_causality_cfd::{DecScalarRate, EvidenceClass, wall_heat_flux};
 use deep_causality_tensor::CausalTensor;

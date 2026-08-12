@@ -16,7 +16,7 @@
 
 use crate::FloatType;
 use deep_causality_cfd::{
-    MarchStop, PhysicsError, QttMarchConfig, QttMarchConfigBuilder, QttObserve, body_mask_2d,
+    CfdConfigBuilder, MarchStop, PhysicsError, QttMarchConfig, QttObserve, body_mask_2d,
 };
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensorTrain, Truncation};
@@ -140,8 +140,7 @@ pub fn build_config_with(
     let trunc = trunc_bond(cap);
     let mask = cyl_mask_smoothed(l, &trunc, smooth_cells)?;
     let u_inf = ft(U_INF);
-    QttMarchConfigBuilder::<FloatType>::new()
-        .name("qtt-cylinder")
+    CfdConfigBuilder::qtt_march::<FloatType>("qtt-cylinder")
         .grid(l, l, dx, dx)
         .solver(ft(DT), ft(NU), trunc)
         .seed_fn(|_, _| (u_inf, ft(0.0)))?

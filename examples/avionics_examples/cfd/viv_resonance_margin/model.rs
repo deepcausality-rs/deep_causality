@@ -11,7 +11,7 @@ use crate::constants::{DIAMETER_M, F_STRUCT_HZ, MARGIN_MIN, NU_AIR_M2_S, ST_BAND
 use crate::model_config::WakeCase;
 use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::{CaseRun, GateSeq, PhysicsError, StudyView, TableRow, strouhal_number};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// One swept airspeed's reduced result, all in the working precision.
 #[derive(Clone)]
@@ -154,7 +154,7 @@ pub fn gate_finite_wake(view: &StudyView<'_, MarginRow>) -> (bool, String) {
 /// A file next to this example's sources, resolved from the crate manifest so the example runs
 /// from any working directory.
 pub fn example_file(name: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
+    avionics_examples::paths::manifest_dir()
         .join("cfd/viv_resonance_margin")
         .join(name)
 }

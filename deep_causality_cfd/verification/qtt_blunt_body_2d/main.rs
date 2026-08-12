@@ -77,7 +77,13 @@ fn bow_shock_state(map: &BlendedMap<f64>, l: usize, w: f64) -> EulerState2d<f64>
 
 /// QTT bond of the bow-shock density field at blend `lambda`, resolution `l`.
 fn ic_bond(lambda: f64, l: usize, w: f64) -> usize {
-    let cfg = BlendedMapConfig::new(l, l, R0, DR, -DTHETA / 2.0, DTHETA, lambda);
+    let cfg = BlendedMapConfig::builder()
+        .lattice(l, l)
+        .radial_range(R0, DR)
+        .angular_range(-DTHETA / 2.0, DTHETA)
+        .lambda(lambda)
+        .build()
+        .unwrap_or_else(|e| fail("blend config", e));
     let map = BlendedMap::new(cfg, tr()).unwrap_or_else(|e| fail("blend build", e));
     let state = bow_shock_state(&map, l, w);
     let side = 1usize << l;
@@ -91,7 +97,13 @@ fn ic_bond(lambda: f64, l: usize, w: f64) -> usize {
 
 /// Peak density-train bond seen while *marching* the bow shock in the body-fitted coordinate.
 fn marched_fitted_peak(l: usize, w: f64, steps: usize) -> usize {
-    let cfg = BlendedMapConfig::new(l, l, R0, DR, -DTHETA / 2.0, DTHETA, 1.0);
+    let cfg = BlendedMapConfig::builder()
+        .lattice(l, l)
+        .radial_range(R0, DR)
+        .angular_range(-DTHETA / 2.0, DTHETA)
+        .lambda(1.0)
+        .build()
+        .unwrap_or_else(|e| fail("fitted blend config", e));
     let map = BlendedMap::new(cfg, tr()).unwrap_or_else(|e| fail("fitted blend", e));
     let state = bow_shock_state(&map, l, w);
     // Reference wave speed ≈ post-shock |u| + c; u = 0 initially, c = √(γ p/ρ).

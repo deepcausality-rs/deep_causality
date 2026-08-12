@@ -19,11 +19,10 @@
 
 mod common;
 
-use common::{Report, compare_dataset};
-use std::path::PathBuf;
+use common::{Report, compare_dataset, manifest_dir};
 
 fn main() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("verification/brcd/data/sock-shop-2");
+    let dir = manifest_dir().join("verification/brcd/data/sock-shop-2");
     if !dir.exists() {
         eprintln!(
             "=== verification_boss_sockshop — FAILED (no data at {}) ===",

@@ -17,6 +17,7 @@ After all dependencies have been installed, the following commands are ready to 
     make build          Builds the code base incrementally (fast) for dev.
     make bench          Runs all benchmarks across all crates.
     make check          Checks the code base for security vulnerabilities.
+    make check_examples Checks that every Cargo example has a Bazel target.
     make example        Runs the example code.
     make fix            Fixes linting issues as reported by clippy
     make format         Formats call code according to cargo fmt style

@@ -76,8 +76,19 @@ pub struct BlendedMapConfig<R> {
 }
 
 impl<R: CfdScalar> BlendedMapConfig<R> {
-    /// Bundle the blend's lattice + fan geometry + blend parameter.
-    pub fn new(lx: usize, ly: usize, r0: R, dr: R, theta0: R, dtheta: R, lambda: R) -> Self {
+    /// Start a blend configuration. Set the lattice, the radial and angular ranges, and the blend
+    /// parameter by name, then [`build`](BlendedMapConfigBuilder::build).
+    ///
+    /// This is the only public entry: the seven-argument field constructor is crate-private, so a
+    /// caller cannot silently transpose the angular range and the blend parameter.
+    pub fn builder() -> BlendedMapConfigBuilder<R> {
+        BlendedMapConfigBuilder::new()
+    }
+
+    /// The field constructor. Crate-private: every validation lives in
+    /// [`BlendedMapConfigBuilder::build`].
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn new(lx: usize, ly: usize, r0: R, dr: R, theta0: R, dtheta: R, lambda: R) -> Self {
         Self {
             lx,
             ly,
@@ -87,6 +98,99 @@ impl<R: CfdScalar> BlendedMapConfig<R> {
             dtheta,
             lambda,
         }
+    }
+}
+
+/// Fluent builder for a [`BlendedMapConfig`]. Every section is required; `build` names the first
+/// missing one, then validates the geometry — before any metric field is assembled.
+pub struct BlendedMapConfigBuilder<R> {
+    lattice: Option<(usize, usize)>,
+    radial: Option<(R, R)>,
+    angular: Option<(R, R)>,
+    lambda: Option<R>,
+}
+
+impl<R: CfdScalar> Default for BlendedMapConfigBuilder<R> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<R: CfdScalar> BlendedMapConfigBuilder<R> {
+    /// A fresh builder.
+    pub fn new() -> Self {
+        Self {
+            lattice: None,
+            radial: None,
+            angular: None,
+            lambda: None,
+        }
+    }
+
+    /// The `2^lx × 2^ly` computational `(ξ, η)` lattice (required).
+    pub fn lattice(mut self, lx: usize, ly: usize) -> Self {
+        self.lattice = Some((lx, ly));
+        self
+    }
+
+    /// The radial range of the polar fan: `r ∈ [r0, r0 + dr]` (required).
+    pub fn radial_range(mut self, r0: R, dr: R) -> Self {
+        self.radial = Some((r0, dr));
+        self
+    }
+
+    /// The angular range of the polar fan: `θ ∈ [theta0, theta0 + dtheta]` (required).
+    ///
+    /// The Cartesian-capture partner is an axis-aligned rectangle, which is the fan's own frame
+    /// only when the fan is centred on `θ = 0` — pass `theta0 = −dtheta/2` for a blend that sweeps
+    /// fitted → capture for one geometry (see the type documentation).
+    pub fn angular_range(mut self, theta0: R, dtheta: R) -> Self {
+        self.angular = Some((theta0, dtheta));
+        self
+    }
+
+    /// The blend parameter `λ ∈ [0, 1]`: `0` is the Cartesian-capture rectangle, `1` the
+    /// body-fitted fan (required).
+    pub fn lambda(mut self, lambda: R) -> Self {
+        self.lambda = Some(lambda);
+        self
+    }
+
+    /// Finalize the configuration, validating the fan geometry and the blend parameter.
+    ///
+    /// # Errors
+    /// [`PhysicsError::PhysicalInvariantBroken`] when a required section is missing, when `r0`,
+    /// `dr`, or `dtheta` is not finite and positive, or when `lambda` lies outside `[0, 1]`.
+    pub fn build(self) -> Result<BlendedMapConfig<R>, PhysicsError> {
+        let missing = |what: &str| {
+            PhysicsError::PhysicalInvariantBroken(format!(
+                "BlendedMapConfig::builder: {what} is required"
+            ))
+        };
+        let (lx, ly) = self.lattice.ok_or_else(|| missing("a lattice"))?;
+        let (r0, dr) = self.radial.ok_or_else(|| missing("a radial range"))?;
+        let (theta0, dtheta) = self.angular.ok_or_else(|| missing("an angular range"))?;
+        let lambda = self.lambda.ok_or_else(|| missing("a blend parameter"))?;
+
+        let positive = |x: R| x.is_finite() && x > R::zero();
+        if !positive(r0) || !positive(dr) || !positive(dtheta) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "BlendedMap requires r0 > 0, dr > 0, dtheta > 0".into(),
+            ));
+        }
+        if !theta0.is_finite() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "BlendedMap requires a finite theta0".into(),
+            ));
+        }
+        if !lambda.is_finite() || lambda < R::zero() || lambda > R::one() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "BlendedMap requires lambda in [0, 1]".into(),
+            ));
+        }
+        Ok(BlendedMapConfig::new(
+            lx, ly, r0, dr, theta0, dtheta, lambda,
+        ))
     }
 }
 
@@ -145,19 +249,12 @@ where
             dtheta,
             lambda,
         } = cfg;
+        // The fan geometry and `lambda` were validated by `BlendedMapConfigBuilder::build`, which
+        // is the only way to obtain a `BlendedMapConfig`; what remains here is the determinant
+        // scan, which needs the assembled map.
         let one = R::one();
         let two = one + one;
         let half = R::from_f64(0.5).unwrap_or_else(R::one);
-        if r0 <= R::zero() || dr <= R::zero() || dtheta <= R::zero() {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "BlendedMap requires r0 > 0, dr > 0, dtheta > 0".into(),
-            ));
-        }
-        if lambda < R::zero() || lambda > one {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "BlendedMap requires lambda in [0, 1]".into(),
-            ));
-        }
         let nx = 1usize << lx;
         let ny = 1usize << ly;
         let dxi = one

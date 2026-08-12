@@ -331,7 +331,7 @@ rust_library(
     }),
     version = "0.8.12",
     deps = [
-        "//thirdparty/crates/ahash-0.8.12:build_script_build",
+        ":build_script_build",
         "//thirdparty/crates/cfg-if-1.0.4:cfg_if",
         "//thirdparty/crates/zerocopy-0.8.56:zerocopy",
     ] + select({
@@ -555,6 +555,9 @@ cargo_build_script(
         include = ["**/*.rs"],
         allow_empty = False,
     ),
+    build_script_env_files = [
+        ":cargo_toml_env_vars",
+    ],
     compile_data = glob(
         include = ["**"],
         allow_empty = True,

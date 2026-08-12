@@ -1,0 +1,12 @@
+diff --git a/mlir/tblgen.bzl b/mlir/tblgen.bzl
+--- a/mlir/tblgen.bzl
++++ b/mlir/tblgen.bzl
+@@ -161,7 +161,7 @@ def _gentbl_rule_impl(ctx):
+         # Make sure action_env settings are honored so the env is the same as
+         # when the tool was built. Important for locating shared libraries with
+         # a custom LD_LIBRARY_PATH.
+-        use_default_shell_env = True,
++        # use_default_shell_env = True,
+         mnemonic = "TdGenerate",
+     )
+ 

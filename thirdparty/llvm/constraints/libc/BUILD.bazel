@@ -1,0 +1,28 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load(":libc_versions.bzl", "LIBCS")
+
+package(default_visibility = ["//visibility:public"])
+
+constraint_setting(
+    name = "variant",
+    # For linux, platform declarations may map this to an explicit default glibc.
+    default_constraint_value = "unconstrained",
+)
+
+constraint_value(
+    name = "unconstrained",
+    constraint_setting = "variant",
+)
+
+[
+    constraint_value(
+        name = libc,
+        constraint_setting = "variant",
+    )
+    for libc in LIBCS
+]
+
+bzl_library(
+    name = "libc_versions",
+    srcs = ["libc_versions.bzl"],
+)

@@ -1,0 +1,11 @@
+diff --git a/utils/bazel/third_party_build/pfm.BUILD b/utils/bazel/third_party_build/pfm.BUILD
+--- a/utils/bazel/third_party_build/pfm.BUILD
++++ b/utils/bazel/third_party_build/pfm.BUILD
+@@ -2,6 +2,7 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ load("@rules_foreign_cc//foreign_cc:defs.bzl", "make_variant")
+ 
+ filegroup(

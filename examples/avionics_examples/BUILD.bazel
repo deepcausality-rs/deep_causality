@@ -1,0 +1,167 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "avionics_examples",
+    srcs = glob(["src/**"]),
+    crate_root = "src/lib.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_cfd",
+        "//deep_causality_num",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "turbulence_flow",
+    srcs = glob(["cfd/turbulence_flow/**/*.rs"]),
+    crate_root = "cfd/turbulence_flow/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_num",
+    ],
+)
+
+rust_binary(
+    name = "magnav",
+    srcs = glob(["navigation/magnav/**/*.rs"]),
+    crate_root = "navigation/magnav/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "geometric_tcas",
+    srcs = glob(["control/geometric_tcas/**/*.rs"]),
+    crate_root = "control/geometric_tcas/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "hypersonic_2t",
+    srcs = glob(["control/hypersonic_2t/**/*.rs"]),
+    crate_root = "control/hypersonic_2t/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_calculus",
+        "//deep_causality_core",
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "flight_envelope_monitor",
+    srcs = glob(["control/flight_envelope_monitor/**/*.rs"]),
+    crate_root = "control/flight_envelope_monitor/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality",
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "ins_gnss_blackout",
+    srcs = glob(["navigation/ins_gnss_blackout/**/*.rs"]),
+    crate_root = "navigation/ins_gnss_blackout/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_core",
+        "//deep_causality_file",
+        "//deep_causality_haft",
+        "//deep_causality_physics",
+        "//thirdparty/crates:chrono",
+    ],
+)
+
+rust_binary(
+    name = "plasma_blackout_corridor",
+    srcs = glob(["cfd/plasma_blackout/corridor/**/*.rs"]),
+    crate_root = "cfd/plasma_blackout/corridor/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_cfd",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "plasma_blackout_weather",
+    srcs = glob(["cfd/plasma_blackout/weather/**/*.rs"]),
+    crate_root = "cfd/plasma_blackout/weather/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_algebra",
+        "//deep_causality_cfd",
+    ],
+)
+
+rust_binary(
+    name = "plasma_blackout_retropulsion",
+    srcs = glob(["cfd/plasma_blackout/retropulsion/**/*.rs"]),
+    crate_root = "cfd/plasma_blackout/retropulsion/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_cfd",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "flight_envelope_placard",
+    srcs = glob(["cfd/flight_envelope_placard/**/*.rs"]),
+    crate_root = "cfd/flight_envelope_placard/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_algebra",
+        "//deep_causality_cfd",
+        "//deep_causality_physics",
+    ],
+)
+
+rust_binary(
+    name = "nozzle_operating_map",
+    srcs = glob(["cfd/nozzle_operating_map/**/*.rs"]),
+    crate_root = "cfd/nozzle_operating_map/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_cfd",
+        "//deep_causality_physics",
+    ],
+)
+
+rust_binary(
+    name = "viv_resonance_margin",
+    srcs = glob(["cfd/viv_resonance_margin/**/*.rs"]),
+    crate_root = "cfd/viv_resonance_margin/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":avionics_examples",
+        "//deep_causality_cfd",
+        "//deep_causality_topology",
+    ],
+)

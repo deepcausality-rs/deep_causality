@@ -21,7 +21,7 @@ use std::path::PathBuf;
 
 /// The recorded dispersion table's path, from the manifest directory as the siblings do.
 pub fn weather_table_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/plasma_blackout/weather/weather_table.csv")
+    avionics_examples::paths::manifest_dir().join("cfd/plasma_blackout/weather/weather_table.csv")
 }
 
 /// The consumption row: the columns the flight side actually reads, bound to the recorded
@@ -1082,7 +1082,7 @@ fn gate_wall_clock(v: &StudyView<'_, LegSet>) -> (bool, String) {
 
 /// Where the branch roster is recorded.
 pub fn branch_table_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    avionics_examples::paths::manifest_dir()
         .join("cfd/plasma_blackout/retropulsion/retropulsion_branches.csv")
 }
 

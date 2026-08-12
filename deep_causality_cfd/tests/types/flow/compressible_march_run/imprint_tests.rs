@@ -6,10 +6,9 @@
 //! The plume re-imprint channel (M3): the carrier reads the geometry `PlumeObstruction` publishes
 //! and refreshes its forcing region, so a stage never touches the marched layer directly.
 
-use super::{GAMMA_EFF, imprint_field, reference};
+use super::{GAMMA_EFF, REFERENCE, imprint_field};
 use deep_causality_cfd::{
-    BlackoutTrigger, CfdFlow, CompressibleMarchConfig, CompressibleMarchConfigBuilder, MarchStop,
-    QttObserve,
+    BlackoutTrigger, CfdConfigBuilder, CfdFlow, CompressibleMarchConfig, MarchStop, QttObserve,
 };
 use deep_causality_tensor::Truncation;
 
@@ -17,31 +16,33 @@ use deep_causality_tensor::Truncation;
 
 /// A nozzle inside the Cordell validity envelope, matching the retropulsion-stage tests.
 fn imprint_nozzle() -> deep_causality_cfd::PlumeNozzle<f64> {
-    deep_causality_cfd::PlumeNozzle {
-        chamber_pressure_max: 2.0e6,
-        chamber_temperature: 1_500.0,
-        r_specific: 300.0,
-        gamma_jet: 1.3,
-        exit_mach: 3.0,
-        nozzle_half_angle_rad: 15.0 * std::f64::consts::PI / 180.0,
-        throat_diameter: 0.03,
-        exit_radius: 0.03407,
-        cone_length: 0.0712,
-        gamma_inf: 1.4,
-    }
+    deep_causality_cfd::PlumeNozzle::new(
+        2.0e6,
+        1_500.0,
+        300.0,
+        1.3,
+        3.0,
+        15.0 * std::f64::consts::PI / 180.0,
+        0.03,
+        0.03407,
+        0.0712,
+        1.4,
+    )
+    .expect("a nozzle inside the Cordell envelope")
 }
 
 fn imprint_spec(tolerance: f64, max_refreshes: usize) -> deep_causality_cfd::PlumeImprint<f64> {
-    deep_causality_cfd::PlumeImprint {
-        throttle_tolerance: tolerance,
+    deep_causality_cfd::PlumeImprint::new(
+        tolerance,
         max_refreshes,
-        face_x: 0.72,
-        axis_y: 0.5,
-        smoothing_cells: 1.0,
-        domain_m: 4.0,
-        target: [1.0, -0.5, 0.0, 2.0],
-        eta: 0.002,
-    }
+        0.72,
+        0.5,
+        1.0,
+        4.0,
+        [1.0, -0.5, 0.0, 2.0],
+        0.002,
+    )
+    .expect("a valid imprint spec")
 }
 
 /// A world that publishes a throttle and opts into plume re-imprint.
@@ -52,8 +53,7 @@ fn imprint_world(
     spec: Option<deep_causality_cfd::PlumeImprint<f64>>,
 ) -> CompressibleMarchConfig<f64> {
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    let mut builder = CompressibleMarchConfigBuilder::<f64>::new()
-        .name(name)
+    let mut builder = CfdConfigBuilder::compressible_march::<f64>(name)
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, 3.0, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -61,7 +61,7 @@ fn imprint_world(
         .unwrap()
         .stop(MarchStop::Fixed(steps))
         .observe(QttObserve::default())
-        .reference(reference())
+        .reference(REFERENCE.0, REFERENCE.1, REFERENCE.2)
         .publish_constant("commanded_throttle", throttle)
         // The plume stage senses its freestream each step rather than carrying a constant. This
         // world composes no `FlightSensors`, so it publishes the sensed values directly.

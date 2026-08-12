@@ -30,6 +30,13 @@
 //! the recorded run (`output.txt`) the recommended configuration reports a peak bond equal to its
 //! cap of 32, so the cap binds rather than sitting idle. Treat it as a cost figure carried
 //! forward, and establish adequacy separately before any accuracy claim rests on it.
+//!
+//! ## Config-layer exemption
+//!
+//! This study constructs its marchers directly rather than through a `CfdConfigBuilder` entry, and
+//! must: **marcher assembly cost is one of the two numbers it measures**. Routing construction
+//! through a case container would put the container's own work inside the measurement it exists to
+//! report.
 
 use deep_causality_cfd::{
     BodyFittedCoordinate3d, CartesianIdentity, CompressibleMarcher2d, CompressibleMarcher3dFitted,

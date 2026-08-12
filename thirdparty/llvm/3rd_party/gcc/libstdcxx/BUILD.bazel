@@ -1,0 +1,145 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(
+    [
+        "acinclude.m4.bzl",
+        "configure.ac.bzl",
+        "crossconfig.m4.bzl",
+        "gcc_config_checks.bzl",
+        "libstdcxx_config_h.bzl",
+        "libstdcxx_cxxconfig_header.bzl",
+        "libstdcxx_gthr_headers.bzl",
+        "libstdcxx_largefile_config_header.bzl",
+        "libstdcxx_symbols_version_script.bzl",
+        "linkage.m4.bzl",
+        "target_config.bzl",
+    ],
+    visibility = ["//3rd_party/gcc/libstdcxx/tests:__pkg__"],
+)
+
+bzl_library(
+    name = "acinclude_checks",
+    deps = [
+        ":gcc_config_checks",
+        ":linkage_checks",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "crossconfig_checks",
+    deps = [
+        ":gcc_config_checks",
+        ":linkage_checks",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "configure_ac_checks",
+    deps = [
+        ":acinclude_checks",
+        ":gcc_config_checks",
+        ":linkage_checks",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "gcc_config_checks",
+    srcs = ["gcc_config_checks.bzl"],
+    deps = ["//3rd_party/gcc/libstdcxx/autoconf:checks"],
+)
+
+bzl_library(
+    name = "linkage_checks",
+    deps = ["//3rd_party/gcc/libstdcxx/autoconf:checks"],
+)
+
+bzl_library(
+    name = "libstdcxx_config_h",
+    srcs = ["libstdcxx_config_h.bzl"],
+    deps = [
+        ":configure.ac",
+        "//3rd_party/gcc/libstdcxx/autoconf:autoconf_config",
+        "//3rd_party/gcc/libstdcxx/autoconf:autoconf_hdr",
+    ],
+)
+
+bzl_library(
+    name = "target_config",
+    srcs = ["target_config.bzl"],
+    deps = [
+        "//3rd_party/gcc:version",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "acinclude.m4",
+    srcs = ["acinclude.m4.bzl"],
+    deps = [
+        ":gcc_config_checks",
+        ":linkage.m4",
+        "//3rd_party/gcc:version",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "configure.ac",
+    srcs = ["configure.ac.bzl"],
+    deps = [
+        ":acinclude.m4",
+        ":gcc_config_checks",
+        ":linkage.m4",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "crossconfig.m4",
+    srcs = ["crossconfig.m4.bzl"],
+    deps = [
+        ":gcc_config_checks",
+        ":linkage.m4",
+        "//3rd_party/gcc:version",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "linkage.m4",
+    srcs = ["linkage.m4.bzl"],
+    deps = [
+        "//3rd_party/gcc:version",
+        "//3rd_party/gcc/libstdcxx/autoconf:checks",
+    ],
+)
+
+bzl_library(
+    name = "libstdcxx_symbols_version_script",
+    srcs = ["libstdcxx_symbols_version_script.bzl"],
+    deps = [
+        "@rules_cc//cc:action_names_bzl",
+        "@rules_cc//cc:find_cc_toolchain_bzl",
+        "@rules_cc//cc/common",
+    ],
+)
+
+bzl_library(
+    name = "libstdcxx_cxxconfig_header",
+    srcs = ["libstdcxx_cxxconfig_header.bzl"],
+)
+
+bzl_library(
+    name = "libstdcxx_gthr_headers",
+    srcs = ["libstdcxx_gthr_headers.bzl"],
+)
+
+bzl_library(
+    name = "libstdcxx_largefile_config_header",
+    srcs = ["libstdcxx_largefile_config_header.bzl"],
+)

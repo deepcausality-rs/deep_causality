@@ -1,0 +1,69 @@
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_args(
+    name = "mingw_headers_include_search_paths",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    allowlist_include_directories = [
+        "@mingw//:mingw_generated_headers_crt_directory",
+        "@mingw//:mingw_w64_headers_include_directory",
+        "@mingw//:mingw_w64_headers_crt_directory",
+        "@mingw//:mingw_w64_winpthreads_include_directory",
+    ],
+    args = [
+        "-isystem",
+        "{mingw_w64_winpthreads_include}",
+        "-isystem",
+        "{mingw_generated_headers_crt}",
+        "-isystem",
+        "{mingw_w64_headers_include}",
+        "-isystem",
+        "{mingw_w64_headers_crt}",
+    ],
+    data = [
+        "@mingw//:mingw_generated_headers_crt_directory",
+        "@mingw//:mingw_w64_headers_crt_directory",
+        "@mingw//:mingw_w64_headers_include_directory",
+        "@mingw//:mingw_w64_winpthreads_include_directory",
+    ],
+    format = {
+        "mingw_generated_headers_crt": "@mingw//:mingw_generated_headers_crt_directory",
+        "mingw_w64_headers_include": "@mingw//:mingw_w64_headers_include_directory",
+        "mingw_w64_headers_crt": "@mingw//:mingw_w64_headers_crt_directory",
+        "mingw_w64_winpthreads_include": "@mingw//:mingw_w64_winpthreads_include_directory",
+    },
+)
+
+cc_args(
+    name = "default_libs",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-L{mingw_import_library_search_path}",
+        "-L{mingw_crt_library_search_path}",
+
+        # Clang will respect the user's chosen CRT variant.
+    ] + select({
+        "//constraints/windows/crt:msvcrt": [
+            # msvcrt.dll plus compatibility objects provided by mingw-w64.
+            "-lmsvcrt_common",
+            "-lmsvcrt_extra",
+            "-lmsvcrt",
+        ],
+        "//constraints/windows/crt:ucrt": [
+            "-lucrt",
+        ],
+    }),
+    data = [
+        "//runtimes/mingw:mingw_crt_library_search_directory",
+        "//runtimes/mingw:mingw_import_libraries_directory",
+    ],
+    format = {
+        "mingw_crt_library_search_path": "//runtimes/mingw:mingw_crt_library_search_directory",
+        "mingw_import_library_search_path": "//runtimes/mingw:mingw_import_libraries_directory",
+    },
+)

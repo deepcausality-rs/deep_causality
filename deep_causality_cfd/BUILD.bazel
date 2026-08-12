@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
     name = "deep_causality_cfd",
@@ -52,4 +52,328 @@ rust_doc_test(
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+rust_binary(
+    name = "mms_taylor_green_verification",
+    srcs = glob(["verification/mms_taylor_green_verification/**/*.rs"]),
+    crate_root = "verification/mms_taylor_green_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+    ],
+)
+
+rust_binary(
+    name = "dec_taylor_green_re1600_verification",
+    srcs = glob(["verification/dec_taylor_green_re1600_verification/**/*.rs"]),
+    crate_root = "verification/dec_taylor_green_re1600_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+    ],
+)
+
+rust_binary(
+    name = "dec_lid_cavity_re1000_verification",
+    srcs = glob(["verification/dec_lid_cavity_re1000_verification/**/*.rs"]),
+    crate_root = "verification/dec_lid_cavity_re1000_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_core",
+        "//deep_causality_num",
+    ],
+)
+
+rust_binary(
+    name = "dec_wall_heat_flux_verification",
+    srcs = glob(["verification/dec_wall_heat_flux_verification/**/*.rs"]),
+    crate_root = "verification/dec_wall_heat_flux_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "dec_graded_mms_verification",
+    srcs = glob(["verification/dec_graded_mms_verification/**/*.rs"]),
+    crate_root = "verification/dec_graded_mms_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "dec_cylinder_wake_verification",
+    srcs = glob(["verification/dec_cylinder_wake_verification/**/*.rs"]),
+    crate_root = "verification/dec_cylinder_wake_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_binary(
+    name = "dec_cylinder_verification",
+    srcs = glob(["verification/dec_cylinder_verification/**/*.rs"]),
+    crate_root = "verification/dec_cylinder_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "qtt_taylor_green_verification",
+    srcs = glob(["verification/qtt_taylor_green_verification/**/*.rs"]),
+    crate_root = "verification/qtt_taylor_green_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_cylinder_verification",
+    srcs = glob(["verification/qtt_cylinder_verification/**/*.rs"]),
+    crate_root = "verification/qtt_cylinder_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_park2t_blackout",
+    srcs = glob(["verification/qtt_park2t_blackout/**/*.rs"]),
+    crate_root = "verification/qtt_park2t_blackout/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_sod",
+    srcs = glob(["verification/qtt_sod/**/*.rs"]),
+    crate_root = "verification/qtt_sod/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_ramc_stagline",
+    srcs = glob(["verification/qtt_ramc_stagline/**/*.rs"]),
+    crate_root = "verification/qtt_ramc_stagline/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_num",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_blunt_body_2d",
+    srcs = glob(["verification/qtt_blunt_body_2d/**/*.rs"]),
+    crate_root = "verification/qtt_blunt_body_2d/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_reentry_3d",
+    srcs = glob(["verification/qtt_reentry_3d/**/*.rs"]),
+    crate_root = "verification/qtt_reentry_3d/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "compressible_carrier_timing",
+    srcs = glob(["studies/compressible_carrier_timing/**/*.rs"]),
+    crate_root = "studies/compressible_carrier_timing/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_rank_study",
+    srcs = glob(["studies/qtt_rank_study/**/*.rs"]),
+    crate_root = "studies/qtt_rank_study/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_rank_dynamic",
+    srcs = glob(["studies/qtt_rank_dynamic/**/*.rs"]),
+    crate_root = "studies/qtt_rank_dynamic/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_rank_nonlinear",
+    srcs = glob(["studies/qtt_rank_nonlinear/**/*.rs"]),
+    crate_root = "studies/qtt_rank_nonlinear/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_rank_3d",
+    srcs = glob(["studies/qtt_rank_3d/**/*.rs"]),
+    crate_root = "studies/qtt_rank_3d/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_rank_fitted_dynamic",
+    srcs = glob(["studies/qtt_rank_fitted_dynamic/**/*.rs"]),
+    crate_root = "studies/qtt_rank_fitted_dynamic/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_acoustic_precond",
+    srcs = glob(["studies/qtt_acoustic_precond/**/*.rs"]),
+    crate_root = "studies/qtt_acoustic_precond/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_blend_metric",
+    srcs = glob(["studies/qtt_blend_metric/**/*.rs"]),
+    crate_root = "studies/qtt_blend_metric/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_repin_marcher",
+    srcs = glob(["studies/qtt_repin_marcher/**/*.rs"]),
+    crate_root = "studies/qtt_repin_marcher/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "qtt_rank_plume",
+    srcs = glob(["studies/qtt_rank_plume/**/*.rs"]),
+    crate_root = "studies/qtt_rank_plume/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "srp_momentum_jet",
+    srcs = glob(["studies/srp_momentum_jet/**/*.rs"]),
+    crate_root = "studies/srp_momentum_jet/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_physics",
+        "//deep_causality_tensor",
+    ],
+)
+
+rust_binary(
+    name = "traj_fs1_generator",
+    srcs = glob(["studies/traj_fs1_generator/**/*.rs"]),
+    crate_root = "studies/traj_fs1_generator/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_physics",
+    ],
+)
+
+rust_binary(
+    name = "traj_fs2_coupling",
+    srcs = glob(["studies/traj_fs2_coupling/**/*.rs"]),
+    crate_root = "studies/traj_fs2_coupling/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_physics",
+    ],
+)
+
+rust_binary(
+    name = "traj_fs3_clock",
+    srcs = glob(["studies/traj_fs3_clock/**/*.rs"]),
+    crate_root = "studies/traj_fs3_clock/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_cfd",
+        "//deep_causality_physics",
+    ],
 )

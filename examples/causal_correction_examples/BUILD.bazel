@@ -1,0 +1,72 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "causal_correction_examples",
+    srcs = glob(["src/**"]),
+    crate_root = "src/lib.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+    ],
+)
+
+rust_binary(
+    name = "corrective_lane_keeping",
+    srcs = glob(["corrective_lane_keeping/**/*.rs"]),
+    crate_root = "corrective_lane_keeping/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_correction_examples",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "corrective_glucose_pump",
+    srcs = glob(["corrective_glucose_pump/**/*.rs"]),
+    crate_root = "corrective_glucose_pump/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_correction_examples",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "corrective_decompression_stops",
+    srcs = glob(["corrective_decompression_stops/**/*.rs"]),
+    crate_root = "corrective_decompression_stops/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_correction_examples",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "corrective_network_failover",
+    srcs = glob(["corrective_network_failover/**/*.rs"]),
+    crate_root = "corrective_network_failover/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_correction_examples",
+        "//deep_causality_core",
+        "//deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "corrective_ddos_detector",
+    srcs = glob(["corrective_ddos_detector/**/*.rs"]),
+    crate_root = "corrective_ddos_detector/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":causal_correction_examples",
+        "//deep_causality_core",
+        "//deep_causality_data_structures",
+        "//deep_causality_haft",
+    ],
+)

@@ -1,0 +1,43 @@
+load("@llvm//3rd_party/gcc:version.bzl", "GCC_VERSIONS", "gcc_repo_name")
+load("@llvm//3rd_party/gcc/extension:make_select_gcc_repository_target.bzl", "make_select_gcc_repository_target")
+
+package(default_visibility = ["//visibility:public"])
+
+# The concrete GCC repositories own the version-specific libstdc++ build graph.
+# This repository is only the stable selected facade consumed by the rest of
+# hermetic-llvm.
+_SELECTED_FACADE_TARGETS = [
+    "abi_headers_include_search_directory",
+    "headers_include_search_directory",
+    "libstdcxx.shared",
+    "libstdcxxfs",
+    "libstdcxxfs.static",
+]
+
+_VERSION_MATRIX_TARGETS = [
+    "libstdcxx_autoconf_audit_inputs",
+    "libstdcxx_cxx26",
+]
+
+[
+    alias(
+        name = target,
+        actual = make_select_gcc_repository_target(target),
+    )
+    for target in _SELECTED_FACADE_TARGETS
+]
+
+[
+    alias(
+        name = "{}/{}".format(
+            gcc_repo_name(version),
+            target,
+        ),
+        actual = "@{}//:{}".format(
+            gcc_repo_name(version),
+            target,
+        ),
+    )
+    for version in GCC_VERSIONS
+    for target in _VERSION_MATRIX_TARGETS
+]

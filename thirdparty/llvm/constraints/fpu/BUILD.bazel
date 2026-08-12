@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:public"])
+
+# Older ARM cores can be configured without an FPU or without NEON, which
+# causes general-purpose code to run much slower so LLVM assumes that these
+# are always available. For most silicon out there this is true, but there
+# are exceptions, some of which we care about so this constraint can select
+# these non-standard core configs.
+constraint_setting(
+    name = "fpu",
+    default_constraint_value = ":neon",
+)
+
+constraint_value(
+    name = "neon",
+    constraint_setting = ":fpu",
+)
+
+constraint_value(
+    name = "vfpv4-d16",
+    constraint_setting = ":fpu",
+)

@@ -1,0 +1,68 @@
+diff --git a/lld/COFF/COFFLinkerContext.h b/lld/COFF/COFFLinkerContext.h
+index f45b754..74095a7 100644
+--- a/lld/COFF/COFFLinkerContext.h
++++ b/lld/COFF/COFFLinkerContext.h
+@@ -61,0 +62 @@ public:
++  std::vector<BitcodeFile *> lazyBitcodeFileInstances;
+diff --git a/lld/COFF/Driver.cpp b/lld/COFF/Driver.cpp
+index 570b8f9..c6be1ba 100644
+--- a/lld/COFF/Driver.cpp
++++ b/lld/COFF/Driver.cpp
+@@ -14,0 +15 @@
++#include "LTO.h"
+@@ -200,9 +201,11 @@ void LinkerDriver::addFile(InputFile *file) {
+   Log(ctx) << "Reading " << toString(file);
+   if (file->lazy) {
+-    if (auto *f = dyn_cast<BitcodeFile>(file))
++    if (auto *f = dyn_cast<BitcodeFile>(file)) {
++      ctx.lazyBitcodeFileInstances.push_back(f);
+       f->parseLazy();
+-    else
++    } else {
+       cast<ObjFile>(file)->parseLazy();
++    }
+   } else {
+     file->parse();
+     if (auto *f = dyn_cast<ObjFile>(file)) {
+@@ -2650,0 +2654,2 @@ void LinkerDriver::linkerMain(ArrayRef<const char *> argsArr) {
++  if (config->thinLTOIndexOnly)
++    thinLTOCreateEmptyIndexFiles(ctx);
+diff --git a/lld/COFF/LTO.cpp b/lld/COFF/LTO.cpp
+index 1050874..532a828 100644
+--- a/lld/COFF/LTO.cpp
++++ b/lld/COFF/LTO.cpp
+@@ -140,0 +141,27 @@ BitcodeCompiler::~BitcodeCompiler() = default;
++// If a lazy BitcodeFile has not been added to the link, emit an empty index
++// file. This matches ELF and GNU gold plugin behavior for distributed builds.
++void lld::coff::thinLTOCreateEmptyIndexFiles(COFFLinkerContext &ctx) {
++  DenseSet<StringRef> linkedBitcodeFiles;
++  ctx.forEachSymtab([&](SymbolTable &symtab) {
++    for (BitcodeFile *f : symtab.bitcodeFileInstances)
++      linkedBitcodeFiles.insert(f->getName());
++  });
++
++  for (BitcodeFile *f : ctx.lazyBitcodeFileInstances) {
++    if (!f->lazy || linkedBitcodeFiles.contains(f->getName()))
++      continue;
++    std::string path = lto::getThinLTOOutputFile(
++        f->obj->getName(), ctx.config.thinLTOPrefixReplaceOld,
++        ctx.config.thinLTOPrefixReplaceNew);
++    std::unique_ptr<raw_fd_ostream> os = openFile(path + ".thinlto.bc");
++    if (!os)
++      continue;
++
++    ModuleSummaryIndex m(/*HaveGVs=*/false);
++    m.setSkipModuleByDistributedBackend();
++    writeIndexToFile(m, *os);
++    if (ctx.config.thinLTOEmitImportsFiles)
++      openFile(path + ".imports");
++  }
++}
++
+diff --git a/lld/COFF/LTO.h b/lld/COFF/LTO.h
+index 6826251..1fbf019 100644
+--- a/lld/COFF/LTO.h
++++ b/lld/COFF/LTO.h
+@@ -40,0 +41,2 @@ class COFFLinkerContext;
++void thinLTOCreateEmptyIndexFiles(COFFLinkerContext &ctx);
++

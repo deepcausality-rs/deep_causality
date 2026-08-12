@@ -6,10 +6,9 @@
 //! The carrier itself: evolved projections, the shock-fitted inflow strip, world constants, the
 //! rebuild accounting and its budget, and leg-re-seed provenance.
 
-use super::{GAMMA_EFF, budgeted_world, field_at_61km, reference, world};
+use super::{GAMMA_EFF, REFERENCE, budgeted_world, field_at_61km, world};
 use deep_causality_cfd::{
-    Ambient, BlackoutTrigger, CfdFlow, CompressibleMarchConfigBuilder, CoupledField, MarchStop,
-    QttObserve,
+    Ambient, BlackoutTrigger, CfdConfigBuilder, CfdFlow, CoupledField, MarchStop, QttObserve,
 };
 use deep_causality_tensor::Truncation;
 
@@ -89,8 +88,7 @@ fn wave_speed_drift_rebuilds_the_solver_and_logs_it() {
 #[test]
 fn world_published_constants_land_on_the_field_each_step() {
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    let cfg = CompressibleMarchConfigBuilder::<f64>::new()
-        .name("commanded")
+    let cfg = CfdConfigBuilder::compressible_march::<f64>("commanded")
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, 3.0, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -98,7 +96,7 @@ fn world_published_constants_land_on_the_field_each_step() {
         .unwrap()
         .stop(MarchStop::Fixed(2))
         .observe(QttObserve::default())
-        .reference(reference())
+        .reference(REFERENCE.0, REFERENCE.1, REFERENCE.2)
         .publish_constant("commanded_bank", 0.35)
         .build()
         .unwrap();

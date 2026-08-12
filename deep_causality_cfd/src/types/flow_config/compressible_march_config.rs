@@ -187,14 +187,32 @@ impl<R: CfdScalar> DescentSchedule<R> {
 /// physical projections (`T_tr = T̂·t_ref`, `n_tot = ρ̂·n_ref`, `speed = |û|·u_ref`). Chosen once
 /// per corridor (the peak-station post-shock values are the natural pick) and never varied, so
 /// the marched numbers stay O(1) across the whole descent.
+///
+/// Set through
+/// [`CompressibleMarchConfigBuilder::reference`](crate::CompressibleMarchConfigBuilder::reference)
+/// and read back through [`CompressibleMarchConfig::reference`].
 #[derive(Debug, Clone, Copy)]
 pub struct ReferenceScales<R> {
-    /// Temperature anchor, K.
-    pub t_ref: R,
-    /// Number-density anchor, m⁻³.
-    pub n_ref: R,
-    /// Speed anchor, m·s⁻¹.
-    pub u_ref: R,
+    t_ref: R,
+    n_ref: R,
+    u_ref: R,
+}
+
+impl<R: Copy> ReferenceScales<R> {
+    /// The temperature anchor, K.
+    pub fn t_ref(&self) -> R {
+        self.t_ref
+    }
+
+    /// The number-density anchor, m⁻³.
+    pub fn n_ref(&self) -> R {
+        self.n_ref
+    }
+
+    /// The speed anchor, m·s⁻¹.
+    pub fn u_ref(&self) -> R {
+        self.u_ref
+    }
 }
 
 /// The owned configuration container for a compressible coupled marching case. Holds only owned
@@ -298,30 +316,137 @@ where
 /// correlation the `PlumeObstruction` stage applies to the force channel.
 #[derive(Debug, Clone, Copy)]
 pub struct PlumeImprint<R: CfdScalar> {
-    /// Refresh only when the commanded throttle moves by more than this (absolute).
-    pub throttle_tolerance: R,
-    /// Cap on refreshes over the march, so a noisy throttle cannot rebuild the mask every step.
-    pub max_refreshes: usize,
-    /// Body-face `x̂` on the unit square; the plume hugs it and extends upstream.
-    pub face_x: R,
-    /// Plume axis `ŷ` on the unit square.
-    pub axis_y: R,
-    /// Mask smoothing skirt, in cell widths.
-    pub smoothing_cells: R,
-    /// Physical width of the domain (m) the published geometry is nondimensionalized by.
-    pub domain_m: R,
-    /// The pinned jet conserved state `[ρ̂, m̂x, m̂y, Ê]` the mask interior relaxes toward.
-    pub target: [R; 4],
-    /// Penalization strength `η` (solver time units); `η ≤ Δt` is a hard pin.
-    pub eta: R,
+    pub(crate) throttle_tolerance: R,
+    pub(crate) max_refreshes: usize,
+    pub(crate) face_x: R,
+    pub(crate) axis_y: R,
+    pub(crate) smoothing_cells: R,
+    pub(crate) domain_m: R,
+    pub(crate) target: [R; 4],
+    pub(crate) eta: R,
 }
 
-/// A fluent builder for [`CompressibleMarchConfig`].
+impl<R: CfdScalar> PlumeImprint<R> {
+    /// A validated imprint spec.
+    ///
+    /// * `throttle_tolerance` — refresh only when the commanded throttle moves by more than this
+    ///   (absolute).
+    /// * `max_refreshes` — cap on refreshes over the march, so a noisy throttle cannot rebuild the
+    ///   mask every step.
+    /// * `face_x` — body-face `x̂` on the unit square; the plume hugs it and extends upstream.
+    /// * `axis_y` — plume axis `ŷ` on the unit square.
+    /// * `smoothing_cells` — mask smoothing skirt, in cell widths.
+    /// * `domain_m` — physical width of the domain (m) the published geometry is
+    ///   nondimensionalized by.
+    /// * `target` — the pinned jet conserved state `[ρ̂, m̂x, m̂y, Ê]` the mask interior relaxes
+    ///   toward.
+    /// * `eta` — penalization strength `η` (solver time units); `η ≤ Δt` is a hard pin.
+    ///
+    /// # Errors
+    /// [`PhysicsError::PhysicalInvariantBroken`] when `throttle_tolerance`, `smoothing_cells`,
+    /// `domain_m`, or `eta` is not finite and positive; when `face_x` or `axis_y` lies outside the
+    /// unit square (the mask is built on it); when a target component is not finite; or when the
+    /// target density is not positive (the marcher refuses a non-positive density the moment it
+    /// sees one, so an imprint must not inject it).
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        throttle_tolerance: R,
+        max_refreshes: usize,
+        face_x: R,
+        axis_y: R,
+        smoothing_cells: R,
+        domain_m: R,
+        target: [R; 4],
+        eta: R,
+    ) -> Result<Self, PhysicsError> {
+        let positive = |x: R| x.is_finite() && x > R::zero();
+        if !positive(throttle_tolerance) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeImprint: throttle_tolerance must be finite and positive".into(),
+            ));
+        }
+        if !positive(smoothing_cells) || !positive(domain_m) || !positive(eta) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeImprint: smoothing_cells, domain_m, and eta must be finite and positive"
+                    .into(),
+            ));
+        }
+        let on_unit_square = |x: R| x.is_finite() && x >= R::zero() && x <= R::one();
+        if !on_unit_square(face_x) || !on_unit_square(axis_y) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeImprint: face_x and axis_y must lie on the unit square [0, 1]".into(),
+            ));
+        }
+        if target.iter().any(|t| !t.is_finite()) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeImprint: every target component must be finite".into(),
+            ));
+        }
+        if !positive(target[0]) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeImprint: the target density must be finite and positive".into(),
+            ));
+        }
+        Ok(Self {
+            throttle_tolerance,
+            max_refreshes,
+            face_x,
+            axis_y,
+            smoothing_cells,
+            domain_m,
+            target,
+            eta,
+        })
+    }
+
+    /// The absolute throttle move that triggers a refresh.
+    pub fn throttle_tolerance(&self) -> R {
+        self.throttle_tolerance
+    }
+
+    /// The refresh cap over the march.
+    pub fn max_refreshes(&self) -> usize {
+        self.max_refreshes
+    }
+
+    /// The body-face `x̂` on the unit square.
+    pub fn face_x(&self) -> R {
+        self.face_x
+    }
+
+    /// The plume axis `ŷ` on the unit square.
+    pub fn axis_y(&self) -> R {
+        self.axis_y
+    }
+
+    /// The mask smoothing skirt, in cell widths.
+    pub fn smoothing_cells(&self) -> R {
+        self.smoothing_cells
+    }
+
+    /// The physical domain width (m) the published geometry is nondimensionalized by.
+    pub fn domain_m(&self) -> R {
+        self.domain_m
+    }
+
+    /// The pinned jet conserved state `[ρ̂, m̂x, m̂y, Ê]`.
+    pub fn target(&self) -> [R; 4] {
+        self.target
+    }
+
+    /// The penalization strength `η`.
+    pub fn eta(&self) -> R {
+        self.eta
+    }
+}
+
+/// A fluent builder for [`CompressibleMarchConfig`]. Started by
+/// [`CfdConfigBuilder::compressible_march`](crate::CfdConfigBuilder), which takes the case name.
 pub struct CompressibleMarchConfigBuilder<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
-    name: Option<String>,
+    name: String,
     grid: Option<(usize, usize, R, R)>,
     solver: Option<(R, R, R, Truncation<R>)>,
     dt_flight: Option<R>,
@@ -335,22 +460,14 @@ where
     imprint: Option<PlumeImprint<R>>,
 }
 
-impl<R> Default for CompressibleMarchConfigBuilder<R>
-where
-    R: CfdScalar + ConjugateScalar<Real = R>,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl<R> CompressibleMarchConfigBuilder<R>
 where
     R: CfdScalar + ConjugateScalar<Real = R>,
 {
-    pub fn new() -> Self {
+    /// A fresh builder for the named case.
+    pub(crate) fn new(name: impl Into<String>) -> Self {
         Self {
-            name: None,
+            name: name.into(),
             grid: None,
             solver: None,
             dt_flight: None,
@@ -363,12 +480,6 @@ where
             forcing: None,
             imprint: None,
         }
-    }
-
-    /// The case name.
-    pub fn name(mut self, name: impl Into<String>) -> Self {
-        self.name = Some(name.into());
-        self
     }
 
     /// The `2^lx × 2^ly` grid with computational spacings `(dx, dy)`.
@@ -458,9 +569,14 @@ where
         self
     }
 
-    /// The fixed dimensional anchors of the physical projections.
-    pub fn reference(mut self, reference: ReferenceScales<R>) -> Self {
-        self.reference = Some(reference);
+    /// The fixed dimensional anchors of the physical projections: the temperature anchor `t_ref`
+    /// (K), the number-density anchor `n_ref` (m⁻³), and the speed anchor `u_ref` (m·s⁻¹).
+    pub fn reference(mut self, t_ref: R, n_ref: R, u_ref: R) -> Self {
+        self.reference = Some(ReferenceScales {
+            t_ref,
+            n_ref,
+            u_ref,
+        });
         self
     }
 
@@ -501,7 +617,7 @@ where
         let (lx, ly, dx, dy) = self.grid.ok_or_else(|| missing("grid"))?;
         let (dt_solver, s_ref, gamma, trunc) = self.solver.ok_or_else(|| missing("solver"))?;
         Ok(CompressibleMarchConfig {
-            name: self.name.unwrap_or_else(|| "compressible_march".into()),
+            name: self.name,
             lx,
             ly,
             dx,

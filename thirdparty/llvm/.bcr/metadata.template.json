@@ -1,0 +1,20 @@
+{
+  "homepage": "https://github.com/hermeticbuild/hermetic-llvm",
+  "maintainers": [
+    {
+      "name": "Corentin Kerisit",
+      "email": "corentin.kerisit@gmail.com",
+      "github": "cerisier"
+    },
+    {
+      "name": "David Zbarsky",
+      "email": "dzbarsky@gmail.com",
+      "github": "dzbarsky"
+    }
+  ],
+  "repository": [
+    "github:hermeticbuild/hermetic-llvm"
+  ],
+  "versions": [],
+  "yanked_versions": {}
+}

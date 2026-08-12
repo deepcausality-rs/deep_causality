@@ -77,3 +77,38 @@ fn test_mesh_is_clone_debug() {
     assert!(cloned.manifold().is_ok());
     assert!(format!("{mesh:?}").contains("Mesh"));
 }
+
+// ── The cut-cell registry the diagnostics read must match the one the run marches ──
+
+#[test]
+fn test_cut_registry_follows_the_graded_metric() {
+    // `from_primitive` derives node coordinates from the geometry it is handed, so a graded mesh
+    // cuts the body at different places than a uniform one. `cut_registry` built its base with
+    // `uniform(spacing)` while `materialize` used the graded base, so the surface-force diagnostics
+    // integrated over a body the march never saw. Both now derive it through `base_geometry`;
+    // that they agree is a crate-internal invariant (`materialize` is crate-private), so what this
+    // test pins is the publicly observable half: the registry honours the grading at all.
+    let body = Body::disk([4.0_f64, 4.0], 1.5).merge_floor(0.25);
+    let cut_count = |m: Mesh<2, f64>| {
+        m.cut_registry()
+            .expect("registry builds")
+            .expect("the mesh carries a body")
+            .iter()
+            .filter(|(_, c)| c.class().is_cut())
+            .count()
+    };
+
+    let uniform = cut_count(Mesh::box_domain([16, 16]).spacing(0.5).immersed(body));
+    let graded = cut_count(
+        Mesh::box_domain([16, 16])
+            .spacing(0.5)
+            .graded(Grading::cosine(1, 0.3_f64))
+            .immersed(body),
+    );
+
+    assert_ne!(
+        uniform, graded,
+        "a graded metric moves the cut pattern; an equal count means cut_registry ignored the \
+         grading and rebuilt on a uniform base"
+    );
+}

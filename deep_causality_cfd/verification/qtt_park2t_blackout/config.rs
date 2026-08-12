@@ -15,8 +15,8 @@
 
 use crate::FloatType;
 use deep_causality_cfd::{
-    BlackoutTrigger, Coupling, EosStage, IonizationStage, MarchStop, PhysicsError, PhysicsStage,
-    QttMarchConfig, QttMarchConfigBuilder, QttObserve, RecoveryTemperatureStage, body_mask_2d,
+    BlackoutTrigger, CfdConfigBuilder, Coupling, EosStage, IonizationStage, MarchStop,
+    PhysicsError, PhysicsStage, QttMarchConfig, QttObserve, RecoveryTemperatureStage, body_mask_2d,
 };
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensorTrain, Truncation};
@@ -103,8 +103,7 @@ pub fn build_config(l: usize, cap: usize) -> Result<QttMarchConfig<FloatType>, P
     let trunc = trunc_bond(cap);
     let mask = body_mask(l, &trunc)?;
     let u_inf = ft(U_INF);
-    QttMarchConfigBuilder::<FloatType>::new()
-        .name("qtt-park2t-blackout")
+    CfdConfigBuilder::qtt_march::<FloatType>("qtt-park2t-blackout")
         .grid(l, l, dx, dx)
         .solver(ft(DT), ft(NU), trunc)
         .seed_fn(|_, _| (u_inf, ft(0.0)))?

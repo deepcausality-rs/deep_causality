@@ -288,18 +288,19 @@ fn the_summed_force_a_navigation_stage_reads_includes_thrust() {
 /// A nozzle inside the Cordell validity envelope (M∞ = 2, γ_jet = 1.3, and a chamber pressure high
 /// enough that p_exit/p∞ clears the model's ≥ 7 floor at the swept throttles).
 fn nozzle() -> PlumeNozzle<f64> {
-    PlumeNozzle {
-        chamber_pressure_max: 2.0e6,
-        chamber_temperature: 1_500.0,
-        r_specific: 300.0,
-        gamma_jet: 1.3,
-        exit_mach: 3.0,
-        nozzle_half_angle_rad: 15.0 * std::f64::consts::PI / 180.0,
-        throat_diameter: 0.03,
-        exit_radius: 0.03407,
-        cone_length: 0.0712,
-        gamma_inf: 1.4,
-    }
+    PlumeNozzle::new(
+        2.0e6,
+        1_500.0,
+        300.0,
+        1.3,
+        3.0,
+        15.0 * std::f64::consts::PI / 180.0,
+        0.03,
+        0.03407,
+        0.0712,
+        1.4,
+    )
+    .expect("a nozzle inside the Cordell envelope")
 }
 
 #[test]
@@ -667,4 +668,86 @@ fn the_geometry_kernel_rejects_a_freestream_outside_its_envelope() {
         text.to_lowercase().contains("mach"),
         "the kernel's envelope refusal must reach the caller: {text}"
     );
+}
+
+// ── PlumeNozzle construction: the Cordell validity envelope is enforced, not stated ──
+
+/// The valid nozzle's arguments, so each rejection test varies exactly one of them.
+fn nozzle_args() -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+    (
+        2.0e6,
+        1_500.0,
+        300.0,
+        1.3,
+        3.0,
+        15.0 * std::f64::consts::PI / 180.0,
+        0.03,
+        0.03407,
+        0.0712,
+        1.4,
+    )
+}
+
+#[test]
+fn nozzle_construction_accepts_the_validated_envelope() {
+    let a = nozzle_args();
+    assert!(
+        PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, a.5, a.6, a.7, a.8, a.9).is_ok(),
+        "the corpus nozzle sits inside every documented bound"
+    );
+}
+
+#[test]
+fn nozzle_construction_refuses_a_jet_gamma_outside_the_cordell_envelope() {
+    // The correlation is fitted for jet gamma in [1.2, 1.4]; outside it the plume boundary is an
+    // extrapolation the caller cannot distinguish from a validated one.
+    let a = nozzle_args();
+    for gamma_jet in [1.19, 1.41, 1.67, f64::NAN] {
+        let r = PlumeNozzle::new(a.0, a.1, a.2, gamma_jet, a.4, a.5, a.6, a.7, a.8, a.9);
+        assert!(r.is_err(), "gamma_jet = {gamma_jet} must be refused");
+    }
+    // The bounds themselves are inside the envelope.
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, 1.2, a.4, a.5, a.6, a.7, a.8, a.9).is_ok());
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, 1.4, a.4, a.5, a.6, a.7, a.8, a.9).is_ok());
+}
+
+#[test]
+fn nozzle_construction_refuses_a_subsonic_exit() {
+    let a = nozzle_args();
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, 0.9, a.5, a.6, a.7, a.8, a.9).is_err());
+}
+
+#[test]
+fn nozzle_construction_refuses_a_nonphysical_geometry_or_chamber_state() {
+    let a = nozzle_args();
+    // Non-positive chamber state.
+    assert!(PlumeNozzle::new(0.0, a.1, a.2, a.3, a.4, a.5, a.6, a.7, a.8, a.9).is_err());
+    assert!(PlumeNozzle::new(a.0, -1.0, a.2, a.3, a.4, a.5, a.6, a.7, a.8, a.9).is_err());
+    // Non-positive gas constant.
+    assert!(PlumeNozzle::new(a.0, a.1, 0.0, a.3, a.4, a.5, a.6, a.7, a.8, a.9).is_err());
+    // Half-angle outside (0, pi/2).
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, 0.0, a.6, a.7, a.8, a.9).is_err());
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, 2.0, a.6, a.7, a.8, a.9).is_err());
+    // Non-positive lengths.
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, a.5, 0.0, a.7, a.8, a.9).is_err());
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, a.5, a.6, -0.1, a.8, a.9).is_err());
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, a.5, a.6, a.7, f64::NAN, a.9).is_err());
+    // Freestream gamma not above one.
+    assert!(PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, a.5, a.6, a.7, a.8, 1.0).is_err());
+}
+
+#[test]
+fn nozzle_getters_report_what_was_supplied() {
+    let a = nozzle_args();
+    let n = PlumeNozzle::new(a.0, a.1, a.2, a.3, a.4, a.5, a.6, a.7, a.8, a.9).unwrap();
+    assert_eq!(n.chamber_pressure_max(), a.0);
+    assert_eq!(n.chamber_temperature(), a.1);
+    assert_eq!(n.r_specific(), a.2);
+    assert_eq!(n.gamma_jet(), a.3);
+    assert_eq!(n.exit_mach(), a.4);
+    assert_eq!(n.nozzle_half_angle_rad(), a.5);
+    assert_eq!(n.throat_diameter(), a.6);
+    assert_eq!(n.exit_radius(), a.7);
+    assert_eq!(n.cone_length(), a.8);
+    assert_eq!(n.gamma_inf(), a.9);
 }

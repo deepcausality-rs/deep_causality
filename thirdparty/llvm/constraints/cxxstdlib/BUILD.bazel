@@ -1,0 +1,29 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load(":cxxstdlib_versions.bzl", "CXXSTDLIBS", "DEFAULT_CXXSTDLIB", "LIBSTDCXXS")
+
+package(default_visibility = ["//visibility:public"])
+
+constraint_setting(
+    name = "variant",
+    default_constraint_value = DEFAULT_CXXSTDLIB,
+)
+
+[
+    constraint_value(
+        name = cxxstdlib,
+        constraint_setting = "variant",
+    )
+    for cxxstdlib in CXXSTDLIBS
+]
+
+selects.config_setting_group(
+    name = "libstdcxx",
+    match_any = LIBSTDCXXS,
+)
+
+bzl_library(
+    name = "cxxstdlib_versions",
+    srcs = ["cxxstdlib_versions.bzl"],
+    deps = ["//3rd_party/gcc:version"],
+)

@@ -1,0 +1,4 @@
+exports_files([
+    "atexit.c",
+    "at_quick_exit.c",
+])

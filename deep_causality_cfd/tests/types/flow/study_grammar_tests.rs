@@ -9,7 +9,7 @@
 //! sequence merges into one verdict.
 
 use deep_causality_cfd::{
-    CaseRun, CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, EvidenceClass, GateSeq,
+    CaseRun, CfdConfigBuilder, CfdFlow, DuctAreaProfile, DuctConfig, EvidenceClass, GateSeq,
     StudyView,
 };
 use deep_causality_file::{FromTableRow, TableRow};
@@ -138,22 +138,19 @@ fn a_sweep_error_short_circuits_and_names_the_verb() {
 /// A converging-diverging nozzle case per back-pressure ratio.
 fn duct_case(p_ratio: &f64) -> Result<DuctConfig<f64>, PhysicsError> {
     let p0 = 101_325.0;
-    DuctConfig::new(
-        DuctAreaProfile::ConvergingDiverging {
+    CfdConfigBuilder::duct::<f64>("duct-case")
+        .profile(DuctAreaProfile::ConvergingDiverging {
             inlet_area: 2.0,
             throat_area: 1.0,
             exit_area: 2.0,
             length: 1.0,
-        },
-        DuctInlet { p0, t0: 300.0 },
-        1.4,
-        p0 * p_ratio,
-        64,
-        DuctStop {
-            max_steps: 2_000,
-            residual_tol: 1.0e-8,
-        },
-    )
+        })
+        .inlet(p0, 300.0)
+        .gamma(1.4)
+        .back_pressure(p0 * p_ratio)
+        .cells(64)
+        .stop(2_000, 1.0e-8)
+        .build()
 }
 
 /// Reduce a duct report to a map row: the case ratio and the thrust coefficient.

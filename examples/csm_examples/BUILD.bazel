@@ -1,0 +1,32 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "csm_example",
+    srcs = glob(["csm_basic/**/*.rs"]),
+    crate_root = "csm_basic/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality",
+    ],
+)
+
+rust_binary(
+    name = "csm_context_example",
+    srcs = glob(["csm_context/**/*.rs"]),
+    crate_root = "csm_context/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality",
+    ],
+)
+
+rust_binary(
+    name = "csm_effect_ethos_example",
+    srcs = glob(["csm_effect_ethos/**/*.rs"]),
+    crate_root = "csm_effect_ethos/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality",
+        "//deep_causality_ethos",
+    ],
+)

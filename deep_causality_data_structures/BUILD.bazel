@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
     name = "deep_causality_data_structures",
@@ -26,4 +26,36 @@ rust_doc_test(
     crate = ":deep_causality_data_structures",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+rust_binary(
+    name = "array_grid",
+    srcs = ["examples/array_grid/array_grid.rs"],
+    crate_root = "examples/array_grid/array_grid.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_data_structures",
+    ],
+)
+
+rust_binary(
+    name = "window_type_array_storage",
+    srcs = ["examples/window_type/array_storage.rs"],
+    crate_root = "examples/window_type/array_storage.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_data_structures",
+    ],
+)
+
+rust_binary(
+    name = "window_type_vector_storage",
+    srcs = ["examples/window_type/vector_storage.rs"],
+    crate_root = "examples/window_type/vector_storage.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_data_structures",
+    ],
 )

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_cfd::{MarchStop, QttMarchConfigBuilder, QttObserve};
+use deep_causality_cfd::{CfdConfigBuilder, MarchStop, QttObserve};
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const TAU: f64 = core::f64::consts::TAU;
@@ -17,7 +17,7 @@ fn seed_closure_materializes_over_the_grid() {
     let dy = TAU / ny as f64;
     let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
 
-    let cfg = QttMarchConfigBuilder::<f64>::new()
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("seed_closure")
         .grid(lx, ly, dx, dy)
         .solver(0.01, 0.05, trunc)
         .seed_fn(|x, y| (-(x.cos() * y.sin()), x.sin() * y.cos()))
@@ -48,14 +48,14 @@ fn taylor_green_convenience_matches_the_closure() {
     let dy = TAU / ny as f64;
     let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
 
-    let via_tg = QttMarchConfigBuilder::<f64>::new()
+    let via_tg = CfdConfigBuilder::qtt_march::<f64>("tg_convenience")
         .grid(lx, ly, dx, dy)
         .solver(0.01, 0.05, trunc)
         .taylor_green()
         .unwrap()
         .build()
         .unwrap();
-    let via_fn = QttMarchConfigBuilder::<f64>::new()
+    let via_fn = CfdConfigBuilder::qtt_march::<f64>("tg_closure")
         .grid(lx, ly, dx, dy)
         .solver(0.01, 0.05, trunc)
         .seed_fn(|x, y| (-(x.cos() * y.sin()), x.sin() * y.cos()))
@@ -70,7 +70,7 @@ fn taylor_green_convenience_matches_the_closure() {
 #[test]
 fn seed_fn_requires_grid_first() {
     let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
-    let r = QttMarchConfigBuilder::<f64>::new()
+    let r = CfdConfigBuilder::qtt_march::<f64>("seed_fn_no_grid")
         .solver(0.01, 0.05, trunc)
         .seed_fn(|_, _| (0.0, 0.0));
     assert!(r.is_err(), "seed_fn without a grid must error");
@@ -82,7 +82,7 @@ fn rejects_mismatched_seed_shape() {
     // Grid says 8 x 4, but the supplied fields are 4 x 4.
     let u0 = CausalTensor::new(vec![0.0; 16], vec![4, 4]).unwrap();
     let v0 = CausalTensor::new(vec![0.0; 16], vec![4, 4]).unwrap();
-    let r = QttMarchConfigBuilder::<f64>::new()
+    let r = CfdConfigBuilder::qtt_march::<f64>("mismatched_seed")
         .grid(3, 2, 0.1, 0.1)
         .solver(0.01, 0.05, trunc)
         .seed_fields(u0, v0)
@@ -94,7 +94,7 @@ fn rejects_mismatched_seed_shape() {
 fn rejects_missing_grid_or_solver() {
     let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
     // Missing solver.
-    let r = QttMarchConfigBuilder::<f64>::new()
+    let r = CfdConfigBuilder::qtt_march::<f64>("no_grid")
         .grid(2, 2, 0.1, 0.1)
         .seed_fields(
             CausalTensor::new(vec![0.0; 16], vec![4, 4]).unwrap(),
@@ -103,7 +103,7 @@ fn rejects_missing_grid_or_solver() {
         .build();
     assert!(r.is_err());
     // Missing grid.
-    let r = QttMarchConfigBuilder::<f64>::new()
+    let r = CfdConfigBuilder::qtt_march::<f64>("no_solver")
         .solver(0.01, 0.05, trunc)
         .build();
     assert!(r.is_err());
@@ -113,7 +113,7 @@ fn rejects_missing_grid_or_solver() {
 fn rejects_missing_seed() {
     let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
     // Grid + solver set, but no seed supplied.
-    let r = QttMarchConfigBuilder::<f64>::new()
+    let r = CfdConfigBuilder::qtt_march::<f64>("no_seed")
         .grid(2, 2, 0.1, 0.1)
         .solver(0.01, 0.05, trunc)
         .build();
@@ -129,8 +129,7 @@ fn config_accessors_report_name_and_modes() {
     let dy = TAU / ny as f64;
     let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
 
-    let cfg = QttMarchConfigBuilder::<f64>::new()
-        .name("named_case")
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("named_case")
         .grid(lx, ly, dx, dy)
         .solver(0.01, 0.05, trunc)
         .seed_fn(|_, _| (0.0, 0.0))
@@ -145,17 +144,24 @@ fn config_accessors_report_name_and_modes() {
 }
 
 #[test]
-fn default_name_when_unset() {
-    let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
-    let cfg = QttMarchConfigBuilder::<f64>::new()
-        .grid(2, 2, 0.1, 0.1)
-        .solver(0.01, 0.05, trunc)
-        .seed_fn(|_, _| (0.0, 0.0))
-        .unwrap()
-        .build()
-        .unwrap();
-    // No `.name(...)` call → the default case name.
-    assert_eq!(cfg.name(), "qtt_march");
+fn each_case_carries_its_own_name() {
+    // The name is taken at the `CfdConfigBuilder` entry and is required, so two cases built the
+    // same way are still distinguishable — there is no shared default name to collide on.
+    let build = |name: &str| {
+        let trunc = Truncation::<f64>::by_tol(1e-9).unwrap();
+        CfdConfigBuilder::qtt_march::<f64>(name)
+            .grid(2, 2, 0.1, 0.1)
+            .solver(0.01, 0.05, trunc)
+            .seed_fn(|_, _| (0.0, 0.0))
+            .unwrap()
+            .build()
+            .unwrap()
+    };
+    let first = build("case_a");
+    let second = build("case_b");
+    assert_eq!(first.name(), "case_a");
+    assert_eq!(second.name(), "case_b");
+    assert_ne!(first.name(), second.name());
 }
 
 #[test]
@@ -167,7 +173,7 @@ fn blackout_observe_flags_chain_and_build() {
         .electron_density()
         .plasma_frequency()
         .blackout_dwell();
-    let cfg = QttMarchConfigBuilder::<f64>::new()
+    let cfg = CfdConfigBuilder::qtt_march::<f64>("blackout_observe")
         .grid(2, 2, 0.1, 0.1)
         .solver(0.01, 0.05, trunc)
         .seed_fn(|_, _| (0.0, 0.0))

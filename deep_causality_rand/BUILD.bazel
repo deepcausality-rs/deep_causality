@@ -1,10 +1,17 @@
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
 
+# `os-random` matches what a Cargo workspace build resolves to: resolver-2 unifies
+# features across the graph, and `deep_causality_physics` (via `physics_examples` and
+# `chronometric_examples`) turns it on. Keeping Bazel on the same feature set is what
+# makes the Lund hadronization kernels reachable from the example binaries.
 rust_library(
     name = "deep_causality_rand",
     srcs = glob([
         "src/**",
     ]),
+    crate_features = [
+        "os-random",
+    ],
     crate_root = "src/lib.rs",
     tags = [
         "random_number_utils",
@@ -13,6 +20,8 @@ rust_library(
     deps = [
         "//deep_causality_algebra",
         "//deep_causality_num",
+        # `os-random` feature dep
+        "//thirdparty/crates:getrandom",
     ],
 )
 

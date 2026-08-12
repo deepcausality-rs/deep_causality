@@ -98,7 +98,7 @@ gate breaks.
 | File | Responsibility |
 | --- | --- |
 | `main.rs` | The `FloatType` alias, the refinement ladder driven through `CfdFlow::march`, the convection-operator check (through the shipped `rate_pair`), and the call into the self-verify gate. |
-| `config.rs` | Case parameters (`NU`, `DT`, `STEPS`, `MAX_BOND`), the `QttMarchConfigBuilder` case builder, and the analytic-field helpers (`ft`, `spacing`, `decay`, `tg_u`, `tg_v`, `trunc`). |
+| `config.rs` | Case parameters (`NU`, `DT`, `STEPS`, `MAX_BOND`), the `CfdConfigBuilder::qtt_march` case builder, and the analytic-field helpers (`ft`, `spacing`, `decay`, `tg_u`, `tg_v`, `trunc`). |
 | `print_utils.rs` | The analytic-reference error and compression measurement (`measure`), the rendered ladder and summary, and the published-reference gates (`verify`). |
 | `baseline.txt` | A captured reference run (f64). |
 

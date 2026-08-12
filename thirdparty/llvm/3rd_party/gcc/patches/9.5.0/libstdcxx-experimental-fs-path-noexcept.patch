@@ -1,0 +1,21 @@
+diff --git a/libstdc++-v3/include/experimental/bits/fs_path.h b/libstdc++-v3/include/experimental/bits/fs_path.h
+--- a/libstdc++-v3/include/experimental/bits/fs_path.h
++++ b/libstdc++-v3/include/experimental/bits/fs_path.h
+@@ -1105,7 +1105,7 @@
+   }
+ 
+   inline path::iterator
+-  path::begin() const
++  path::begin() const noexcept
+   {
+     if (_M_type == _Type::_Multi)
+       return iterator(this, _M_cmpts.begin());
+@@ -1113,7 +1113,7 @@
+   }
+ 
+   inline path::iterator
+-  path::end() const
++  path::end() const noexcept
+   {
+     if (_M_type == _Type::_Multi)
+       return iterator(this, _M_cmpts.end());

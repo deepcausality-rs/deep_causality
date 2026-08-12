@@ -13,6 +13,7 @@
 mod body;
 mod cfd_config_builder;
 pub(crate) mod compressible_march_config;
+mod duct_builder;
 pub(crate) mod duct_config;
 pub(crate) mod manufactured;
 mod march_builder;
@@ -30,7 +31,8 @@ pub use compressible_march_config::{
     AtmosphereRow, CompressibleMarchConfig, CompressibleMarchConfigBuilder, DescentSchedule,
     PlumeImprint, ReferenceScales,
 };
-pub use duct_config::{DuctAreaProfile, DuctConfig, DuctInlet, DuctStop};
+pub use duct_builder::DuctConfigBuilder;
+pub use duct_config::{DuctAreaProfile, DuctConfig};
 pub use manufactured::{
     Manufactured, ManufacturedSample, TaylorGreen, VerifyConfig, VerifyConfigBuilder,
 };
@@ -38,7 +40,7 @@ pub use march_builder::MarchConfigBuilder;
 pub use march_config::{MarchConfig, MarchStop};
 pub use mesh::{Grading, Mesh};
 pub use observe::Observe;
-pub use qtt_march_config::{QttBody, QttMarchConfig, QttMarchConfigBuilder, QttObserve};
+pub use qtt_march_config::{QttMarchConfig, QttMarchConfigBuilder, QttObserve};
 pub use seed::Seed;
 #[cfg(feature = "std")]
 pub use uncertain_march_config::{UncertainMarchConfig, UncertainMarchConfigBuilder};

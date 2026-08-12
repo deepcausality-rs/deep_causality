@@ -1,0 +1,9 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+
+exports_files(["glibc.BUILD.bazel"])
+
+bzl_library(
+    name = "helpers",
+    srcs = ["helpers.bzl"],
+    visibility = ["//visibility:public"],
+)

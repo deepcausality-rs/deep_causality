@@ -14,7 +14,8 @@
 //! stack are fixed in the type before the build. The required scalar sections are not. `mesh` and
 //! `solver` are `Option` fields checked inside [`build`](MarchConfigBuilder::build), which is why
 //! `build` returns a `Result`: a forgotten `.mesh(..)` is a runtime error, not a compile error.
-//! [`DecNs::config`](crate::DecNs::config) in `src/solvers/` is the contrasting pattern. Its
+//! [`CfdConfigBuilder::dec_ns`](crate::CfdConfigBuilder::dec_ns) in `src/solvers/` is the
+//! contrasting pattern. Its
 //! `DecNsConfigNeedsViscosity` → `DecNsConfigNeedsTimeStep` → `DecNsConfigReady` chain makes the
 //! terminal `build` reachable only once every required field is set, leaving `build` to validate
 //! values rather than presence.

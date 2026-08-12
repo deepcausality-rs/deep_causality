@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
     name = "ultragraph",
@@ -27,4 +27,16 @@ rust_doc_test(
     crate = ":ultragraph",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+rust_binary(
+    name = "ultragraph_example",
+    srcs = ["examples/ultraph_example.rs"],
+    crate_root = "examples/ultraph_example.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ultragraph",
+    ],
 )

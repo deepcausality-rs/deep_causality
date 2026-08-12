@@ -1,0 +1,35 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "gps_navigation",
+    srcs = glob(["gps_navigation/**/*.rs"]),
+    crate_root = "gps_navigation/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_binary(
+    name = "sensor_processing",
+    srcs = glob(["sensor_processing/**/*.rs"]),
+    crate_root = "sensor_processing/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_haft",
+        "//deep_causality_uncertain",
+    ],
+)
+
+rust_binary(
+    name = "clinical_trial",
+    srcs = glob(["clinical_trial/**/*.rs"]),
+    crate_root = "clinical_trial/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_uncertain",
+    ],
+)

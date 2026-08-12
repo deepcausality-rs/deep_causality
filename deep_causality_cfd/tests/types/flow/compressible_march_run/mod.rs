@@ -19,8 +19,8 @@ mod imprint_tests;
 mod study_tests;
 
 use deep_causality_cfd::{
-    Ambient, AtmosphereRow, CompressibleMarchConfig, CompressibleMarchConfigBuilder, CoupledField,
-    DescentSchedule, MarchStop, QttObserve, ReferenceScales,
+    Ambient, AtmosphereRow, CfdConfigBuilder, CompressibleMarchConfig, CoupledField,
+    DescentSchedule, MarchStop, QttObserve,
 };
 use deep_causality_physics::EARTH_RADIUS;
 use deep_causality_tensor::Truncation;
@@ -50,20 +50,14 @@ fn rows() -> Vec<AtmosphereRow<f64>> {
     ]
 }
 
-fn reference() -> ReferenceScales<f64> {
-    ReferenceScales {
-        t_ref: 8_044.0,
-        n_ref: 2.645e22,
-        u_ref: 376.0,
-    }
-}
+/// The corridor's dimensional anchors as the builder takes them: `(t_ref, n_ref, u_ref)`.
+const REFERENCE: (f64, f64, f64) = (8_044.0, 2.645e22, 376.0);
 
 /// A small scheduled descent world: post-shock-like uniform seed, `s_ref` roomy enough that no
 /// rebuild triggers.
 fn world(name: &str, s_ref: f64, steps: usize) -> CompressibleMarchConfig<f64> {
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    CompressibleMarchConfigBuilder::<f64>::new()
-        .name(name)
+    CfdConfigBuilder::compressible_march::<f64>(name)
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, s_ref, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -77,7 +71,7 @@ fn world(name: &str, s_ref: f64, steps: usize) -> CompressibleMarchConfig<f64> {
                 .blackout_dwell(),
         )
         .schedule(DescentSchedule::new(rows(), GAMMA_EFF).unwrap())
-        .reference(reference())
+        .reference(REFERENCE.0, REFERENCE.1, REFERENCE.2)
         .build()
         .unwrap()
 }
@@ -109,8 +103,7 @@ fn budgeted_world(
     budget: usize,
 ) -> CompressibleMarchConfig<f64> {
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
-    CompressibleMarchConfigBuilder::<f64>::new()
-        .name(name)
+    CfdConfigBuilder::compressible_march::<f64>(name)
         .grid(3, 3, 0.125, 0.125)
         .solver(0.002, s_ref, GAMMA_EFF, trunc)
         .flight_dt(0.05)
@@ -122,7 +115,7 @@ fn budgeted_world(
                 .unwrap()
                 .with_rebuild_budget(budget),
         )
-        .reference(reference())
+        .reference(REFERENCE.0, REFERENCE.1, REFERENCE.2)
         .build()
         .unwrap()
 }

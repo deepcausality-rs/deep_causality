@@ -43,7 +43,6 @@ use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{CfdFlow, MarchStop, PhysicsError, StudyError, StudyView, Verdict};
 use deep_causality_core::AlternatableContext;
 use std::cell::RefCell;
-use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Instant;
 
@@ -65,7 +64,7 @@ fn main() -> ExitCode {
 
     // Where the fine-round branch table is recorded (the campaign's `record` seam).
     let table_path = || {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        avionics_examples::paths::manifest_dir()
             .join("cfd/plasma_blackout/corridor/corridor_branches.csv")
     };
     // Lift a leg's solver error into the study error channel, so the whole corridor resolves to

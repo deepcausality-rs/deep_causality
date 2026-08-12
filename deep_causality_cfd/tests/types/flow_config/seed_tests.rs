@@ -106,3 +106,122 @@ fn seed_is_debug_clone_copy() {
     assert!(format!("{:?}", Seed::Rest).contains("Rest"));
     assert!(format!("{:?}", Seed::TaylorGreenVortex).contains("TaylorGreenVortex"));
 }
+
+// ── The symmetry-breaking perturbed free-stream ──
+
+/// The perturbed seed's divergence residual after the seed projection, on the same periodic mesh
+/// the other variants use.
+fn seed_divergence_2d(seed: Seed) -> f64 {
+    let config = CfdConfigBuilder::march::<2, f64>("seed-divergence")
+        .mesh(Mesh::periodic_cube(6))
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(0.05)
+                .time_step(0.005)
+                .build()
+                .unwrap(),
+        )
+        .seed(seed)
+        .march_for(0)
+        .observe(Observe::default().divergence())
+        .build()
+        .unwrap();
+    let manifold = config.materialize().unwrap();
+    let report = CfdFlow::march(&config).on(&manifold).run().unwrap();
+    report.series("divergence").expect("divergence")[0]
+}
+
+fn perturbed(amplitude: f64) -> Seed {
+    Seed::UniformXPerturbed {
+        speed: 1.0,
+        center: [3.0, 3.0, 0.0],
+        sigma: 0.5,
+        amplitude,
+    }
+}
+
+#[test]
+fn perturbed_seed_is_divergence_free_like_the_uniform_seed() {
+    // The perturbation rides the same seed projection, so it cannot cost incompressibility.
+    let uniform = seed_divergence_2d(Seed::UniformX { speed: 1.0 });
+    let blob = seed_divergence_2d(perturbed(0.05));
+    assert!(
+        blob <= uniform.max(1e-10) * 10.0,
+        "perturbed seed divergence {blob:e} must sit at the uniform seed's floor {uniform:e}"
+    );
+}
+
+#[test]
+fn perturbed_seed_adds_transverse_energy_to_the_uniform_stream() {
+    // A zero-amplitude blob is exactly the uniform seed; a finite one carries strictly more.
+    let uniform = seed_energy_2d(Seed::UniformX { speed: 1.0 });
+    let none = seed_energy_2d(perturbed(0.0));
+    let some = seed_energy_2d(perturbed(0.2));
+    assert!(
+        (none - uniform).abs() < 1e-12,
+        "a zero-amplitude blob is the uniform seed: {none} vs {uniform}"
+    );
+    assert!(
+        some > uniform,
+        "the transverse blob adds energy: {some} vs {uniform}"
+    );
+}
+
+#[test]
+fn perturbed_seed_rejects_a_non_finite_width() {
+    // Every comparison against NaN is false, so a `sigma <= 0.0` guard lets NaN through to divide
+    // the Gaussian exponent — poisoning the seed and the projection after it instead of reporting
+    // the documented error.
+    for sigma in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let config = CfdConfigBuilder::march::<2, f64>("bad-sigma")
+            .mesh(Mesh::periodic_cube(5))
+            .solver(
+                CfdConfigBuilder::dec_ns()
+                    .viscosity(0.05)
+                    .time_step(0.005)
+                    .build()
+                    .unwrap(),
+            )
+            .seed(Seed::UniformXPerturbed {
+                speed: 1.0,
+                center: [1.0, 1.0, 0.0],
+                sigma,
+                amplitude: 0.1,
+            })
+            .march_for(0)
+            .build()
+            .unwrap();
+        let manifold = config.materialize().unwrap();
+        assert!(
+            CfdFlow::march(&config).on(&manifold).run().is_err(),
+            "sigma = {sigma} must be rejected, not divided by"
+        );
+    }
+}
+
+#[test]
+fn perturbed_seed_rejects_a_nonpositive_width() {
+    let config = CfdConfigBuilder::march::<2, f64>("bad-sigma")
+        .mesh(Mesh::periodic_cube(5))
+        .solver(
+            CfdConfigBuilder::dec_ns()
+                .viscosity(0.05)
+                .time_step(0.005)
+                .build()
+                .unwrap(),
+        )
+        .seed(Seed::UniformXPerturbed {
+            speed: 1.0,
+            center: [1.0, 1.0, 0.0],
+            sigma: 0.0,
+            amplitude: 0.1,
+        })
+        .march_for(0)
+        .build()
+        .unwrap();
+    let manifold = config.materialize().unwrap();
+    assert!(
+        CfdFlow::march(&config).on(&manifold).run().is_err(),
+        "a zero-width blob must be rejected, not silently divided by"
+    );
+}

@@ -1,0 +1,23 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "hyperlens_example",
+    srcs = glob(["hyperlens/**/*.rs"]),
+    crate_root = "hyperlens/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_multivector",
+    ],
+)
+
+rust_binary(
+    name = "structural_health_monitor_example",
+    srcs = glob(["structural_health_monitor/**/*.rs"]),
+    crate_root = "structural_health_monitor/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_core",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)

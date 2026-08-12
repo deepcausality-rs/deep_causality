@@ -307,37 +307,174 @@ impl<const D: usize, R: CfdScalar> PhysicsStage<D, R> for RetroThrust<R> {
 }
 
 /// The nozzle + freestream description the analytic plume boundary needs
-/// (`cordell_braun_plume_boundary_kernel`). A plain configuration record, like
-/// [`AtmosphereRow`](crate::AtmosphereRow): the chamber pressure at full throttle scales linearly
-/// with the commanded throttle, and the remaining fields are the fixed nozzle and freestream
+/// (`cordell_braun_plume_boundary_kernel`). The chamber pressure at full throttle scales linearly
+/// with the commanded throttle, and the remaining values are the fixed nozzle and freestream
 /// constants. Supplying it to [`PlumeObstruction::with_plume_geometry`] opts a world into publishing
 /// the plume geometry each step.
+///
+/// The freestream **static pressure** and **Mach number** are deliberately absent: they are sensed
+/// from the flown state each step, so the kernel's validity envelope tests the flight. Only the
+/// composition of the ambient gas is a fixed property of the world.
 #[derive(Debug, Clone, Copy)]
 pub struct PlumeNozzle<R: CfdScalar> {
-    /// Chamber (stagnation) pressure at full throttle, Pa.
-    pub chamber_pressure_max: R,
-    /// Chamber (stagnation) temperature, K.
-    pub chamber_temperature: R,
-    /// Jet specific gas constant, J/(kg·K).
-    pub r_specific: R,
-    /// Jet ratio of specific heats (the Cordell envelope is [1.2, 1.4]).
-    pub gamma_jet: R,
-    /// Nozzle exit Mach number.
-    pub exit_mach: R,
-    /// Conical nozzle half-angle, rad.
-    pub nozzle_half_angle_rad: R,
-    /// Throat diameter, m.
-    pub throat_diameter: R,
-    /// Exit radius, m.
-    pub exit_radius: R,
-    /// Cone length, m.
-    pub cone_length: R,
-    /// Freestream ratio of specific heats.
+    pub(crate) chamber_pressure_max: R,
+    pub(crate) chamber_temperature: R,
+    pub(crate) r_specific: R,
+    pub(crate) gamma_jet: R,
+    pub(crate) exit_mach: R,
+    pub(crate) nozzle_half_angle_rad: R,
+    pub(crate) throat_diameter: R,
+    pub(crate) exit_radius: R,
+    pub(crate) cone_length: R,
+    pub(crate) gamma_inf: R,
+}
+
+impl<R: CfdScalar> PlumeNozzle<R> {
+    /// A validated nozzle + freestream description.
     ///
-    /// The freestream **static pressure** and **Mach number** are deliberately absent: they are
-    /// sensed from the flown state each step, so the kernel's validity envelope tests the flight.
-    /// Only the composition of the ambient gas is a fixed property of the world.
-    pub gamma_inf: R,
+    /// * `chamber_pressure_max` — chamber (stagnation) pressure at full throttle, Pa.
+    /// * `chamber_temperature` — chamber (stagnation) temperature, K.
+    /// * `r_specific` — jet specific gas constant, J/(kg·K).
+    /// * `gamma_jet` — jet ratio of specific heats.
+    /// * `exit_mach` — nozzle exit Mach number.
+    /// * `nozzle_half_angle_rad` — conical nozzle half-angle, rad.
+    /// * `throat_diameter`, `exit_radius`, `cone_length` — nozzle geometry, m.
+    /// * `gamma_inf` — freestream ratio of specific heats.
+    ///
+    /// The **Cordell–Braun validity envelope** is enforced here rather than stated in prose: the
+    /// correlation is fitted for `γ_jet ∈ [1.2, 1.4]`, so a jet outside that band is refused at
+    /// construction instead of producing an extrapolated plume boundary a caller cannot tell from
+    /// a validated one.
+    ///
+    /// # Errors
+    /// [`PhysicsError::PhysicalInvariantBroken`] when `gamma_jet` lies outside `[1.2, 1.4]`; when
+    /// `gamma_inf` is not finite and `> 1`; when `exit_mach` is not finite and `>= 1` (the exit is
+    /// supersonic); when the half-angle is not finite and in `(0, π/2)`; or when any pressure,
+    /// temperature, gas constant, or length is not finite and positive.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        chamber_pressure_max: R,
+        chamber_temperature: R,
+        r_specific: R,
+        gamma_jet: R,
+        exit_mach: R,
+        nozzle_half_angle_rad: R,
+        throat_diameter: R,
+        exit_radius: R,
+        cone_length: R,
+        gamma_inf: R,
+    ) -> Result<Self, PhysicsError> {
+        let positive = |x: R| x.is_finite() && x > R::zero();
+        let lift = |x: f64| {
+            R::from_f64(x).ok_or_else(|| {
+                PhysicsError::NumericalInstability(
+                    "PlumeNozzle: an envelope bound does not lift into R".into(),
+                )
+            })
+        };
+        if !positive(chamber_pressure_max) || !positive(chamber_temperature) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: the chamber state must be finite and positive".into(),
+            ));
+        }
+        if !positive(r_specific) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: r_specific must be finite and positive".into(),
+            ));
+        }
+        // The Cordell-Braun correlation is fitted for jet gamma in [1.2, 1.4].
+        let (gamma_lo, gamma_hi) = (lift(1.2)?, lift(1.4)?);
+        if !gamma_jet.is_finite() || gamma_jet < gamma_lo || gamma_jet > gamma_hi {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: gamma_jet must lie inside the Cordell-Braun validity envelope \
+                 [1.2, 1.4]"
+                    .into(),
+            ));
+        }
+        if !gamma_inf.is_finite() || gamma_inf <= R::one() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: gamma_inf must be finite and > 1".into(),
+            ));
+        }
+        if !exit_mach.is_finite() || exit_mach < R::one() {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: exit_mach must be finite and at least 1 (a supersonic exit)".into(),
+            ));
+        }
+        let half_pi = lift(core::f64::consts::FRAC_PI_2)?;
+        if !positive(nozzle_half_angle_rad) || nozzle_half_angle_rad >= half_pi {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: nozzle_half_angle_rad must be finite and in (0, pi/2)".into(),
+            ));
+        }
+        if !positive(throat_diameter) || !positive(exit_radius) || !positive(cone_length) {
+            return Err(PhysicsError::PhysicalInvariantBroken(
+                "PlumeNozzle: the nozzle lengths must be finite and positive".into(),
+            ));
+        }
+        Ok(Self {
+            chamber_pressure_max,
+            chamber_temperature,
+            r_specific,
+            gamma_jet,
+            exit_mach,
+            nozzle_half_angle_rad,
+            throat_diameter,
+            exit_radius,
+            cone_length,
+            gamma_inf,
+        })
+    }
+
+    /// The chamber (stagnation) pressure at full throttle, Pa.
+    pub fn chamber_pressure_max(&self) -> R {
+        self.chamber_pressure_max
+    }
+
+    /// The chamber (stagnation) temperature, K.
+    pub fn chamber_temperature(&self) -> R {
+        self.chamber_temperature
+    }
+
+    /// The jet specific gas constant, J/(kg·K).
+    pub fn r_specific(&self) -> R {
+        self.r_specific
+    }
+
+    /// The jet ratio of specific heats.
+    pub fn gamma_jet(&self) -> R {
+        self.gamma_jet
+    }
+
+    /// The nozzle exit Mach number.
+    pub fn exit_mach(&self) -> R {
+        self.exit_mach
+    }
+
+    /// The conical nozzle half-angle, rad.
+    pub fn nozzle_half_angle_rad(&self) -> R {
+        self.nozzle_half_angle_rad
+    }
+
+    /// The throat diameter, m.
+    pub fn throat_diameter(&self) -> R {
+        self.throat_diameter
+    }
+
+    /// The exit radius, m.
+    pub fn exit_radius(&self) -> R {
+        self.exit_radius
+    }
+
+    /// The cone length, m.
+    pub fn cone_length(&self) -> R {
+        self.cone_length
+    }
+
+    /// The freestream ratio of specific heats.
+    pub fn gamma_inf(&self) -> R {
+        self.gamma_inf
+    }
 }
 
 /// The production **plume** stage (change `add-retropulsion-coupled-stages`, capability

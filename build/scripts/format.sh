@@ -30,6 +30,7 @@ buildifier -r deep_causality_num_complex/
 buildifier -r deep_causality_num_dual/
 buildifier -r deep_causality_par/
 buildifier -r deep_causality_physics/
+buildifier -r deep_causality_quantum/
 buildifier -r deep_causality_rand/
 buildifier -r deep_causality_sparse/
 buildifier -r deep_causality_tensor/

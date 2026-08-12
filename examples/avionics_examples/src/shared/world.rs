@@ -35,12 +35,12 @@ use super::stages::{
 use super::utils;
 use deep_causality_algebra::Real;
 use deep_causality_cfd::{
-    Ambient, AtmosphereRow, BankSteeredLift, BurnEnvelope, CompressibleMarchConfig,
-    CompressibleMarchConfigBuilder, CoupledField, Coupling, CyberneticCorrect, DescentSchedule,
+    Ambient, AtmosphereRow, BankSteeredLift, BurnEnvelope, CfdConfigBuilder,
+    CompressibleMarchConfig, CoupledField, Coupling, CyberneticCorrect, DescentSchedule,
     FiniteRateIonizationStage, FlightSensors, IgnitionCorridor, ImuModel, InsErrorState, MarchStop,
     NavFilter, PhysicsError, PhysicsStage, PlumeImprint, PlumeNozzle, PlumeObstruction, QttObserve,
-    ReentryNavEngine, ReferenceScales, RegimeClassify, RetroThrust, SafetyEnvelope,
-    ThrottleGuidance, TrajectoryNav, VibrationalLagStage,
+    ReentryNavEngine, RegimeClassify, RetroThrust, SafetyEnvelope, ThrottleGuidance, TrajectoryNav,
+    VibrationalLagStage,
 };
 use deep_causality_physics::{EARTH_GM, EARTH_RADIUS};
 
@@ -93,8 +93,7 @@ pub fn descent_world_with(
     let schedule = DescentSchedule::new(rows, utils::ft(GAMMA_EFF))?;
     let n = 1usize << L;
     let dx = utils::ft(1.0) / utils::ft(n as f64);
-    let mut builder = CompressibleMarchConfigBuilder::<FloatType>::new()
-        .name(name)
+    let mut builder = CfdConfigBuilder::compressible_march::<FloatType>(name)
         .grid(L, L, dx, dx)
         .solver(
             utils::ft(DT_SOLVER),
@@ -120,11 +119,7 @@ pub fn descent_world_with(
                 .blackout_dwell(),
         )
         .schedule(schedule)
-        .reference(ReferenceScales {
-            t_ref: utils::ft(T_REF),
-            n_ref: utils::ft(N_REF),
-            u_ref: utils::ft(U_REF),
-        });
+        .reference(utils::ft(T_REF), utils::ft(N_REF), utils::ft(U_REF));
     for &(cname, value) in constants {
         builder = builder.publish_constant(cname, value);
     }
@@ -466,8 +461,7 @@ pub fn terminal_descent_world(
         .with_rebuild_budget(TERMINAL_REBUILD_BUDGET);
     let n = 1usize << L;
     let dx = utils::ft(1.0) / utils::ft(n as f64);
-    CompressibleMarchConfigBuilder::<FloatType>::new()
-        .name(name)
+    CfdConfigBuilder::compressible_march::<FloatType>(name)
         .grid(L, L, dx, dx)
         .solver(
             utils::ft(DT_SOLVER),
@@ -487,11 +481,11 @@ pub fn terminal_descent_world(
         .stop(MarchStop::Fixed(steps))
         .observe(QttObserve::default().heat_flux())
         .schedule(schedule)
-        .reference(ReferenceScales {
-            t_ref: utils::ft(T_REF_TERMINAL),
-            n_ref: utils::ft(N_REF_TERMINAL),
-            u_ref: utils::ft(U_REF_TERMINAL),
-        })
+        .reference(
+            utils::ft(T_REF_TERMINAL),
+            utils::ft(N_REF_TERMINAL),
+            utils::ft(U_REF_TERMINAL),
+        )
         .publish_constant("commanded_bank", utils::ft(0.0))
         .build()
 }
@@ -500,18 +494,19 @@ pub fn terminal_descent_world(
 /// Cordell–Braun validated envelope (jet gamma in [1.2, 1.4], freestream Mach in [2, 4]) — the
 /// discipline pin that keeps a surprising result attributable to physics rather than extrapolation.
 pub fn plume_nozzle() -> PlumeNozzle<FloatType> {
-    PlumeNozzle {
-        chamber_pressure_max: utils::ft(CHAMBER_PRESSURE_MAX),
-        chamber_temperature: utils::ft(CHAMBER_TEMPERATURE),
-        r_specific: utils::ft(JET_R_SPECIFIC),
-        gamma_jet: utils::ft(JET_GAMMA),
-        exit_mach: utils::ft(NOZZLE_EXIT_MACH),
-        nozzle_half_angle_rad: utils::ft(NOZZLE_HALF_ANGLE_RAD),
-        throat_diameter: utils::ft(NOZZLE_THROAT_D),
-        exit_radius: utils::ft(NOZZLE_EXIT_R),
-        cone_length: utils::ft(NOZZLE_CONE_L),
-        gamma_inf: utils::ft(PLUME_GAMMA_INF),
-    }
+    PlumeNozzle::new(
+        utils::ft(CHAMBER_PRESSURE_MAX),
+        utils::ft(CHAMBER_TEMPERATURE),
+        utils::ft(JET_R_SPECIFIC),
+        utils::ft(JET_GAMMA),
+        utils::ft(NOZZLE_EXIT_MACH),
+        utils::ft(NOZZLE_HALF_ANGLE_RAD),
+        utils::ft(NOZZLE_THROAT_D),
+        utils::ft(NOZZLE_EXIT_R),
+        utils::ft(NOZZLE_CONE_L),
+        utils::ft(PLUME_GAMMA_INF),
+    )
+    .expect("the nozzle constants sit inside the Cordell validity envelope")
 }
 
 /// The marched-layer plume imprint spec.
@@ -522,14 +517,15 @@ pub fn plume_nozzle() -> PlumeNozzle<FloatType> {
 /// the plume exists — so the branch flow observables cannot spread, and the flow-spread witness has
 /// nothing to measure. It never touches the drag closure.
 pub fn plume_imprint() -> PlumeImprint<FloatType> {
-    PlumeImprint {
-        throttle_tolerance: utils::ft(IMPRINT_THROTTLE_TOL),
-        max_refreshes: IMPRINT_MAX_REFRESHES,
-        face_x: utils::ft(IMPRINT_FACE_X),
-        axis_y: utils::ft(IMPRINT_AXIS_Y),
-        smoothing_cells: utils::ft(IMPRINT_SMOOTHING_CELLS),
-        domain_m: utils::ft(IMPRINT_DOMAIN_M),
-        target: core::array::from_fn(|i| utils::ft(IMPRINT_TARGET[i])),
-        eta: utils::ft(IMPRINT_ETA),
-    }
+    PlumeImprint::new(
+        utils::ft(IMPRINT_THROTTLE_TOL),
+        IMPRINT_MAX_REFRESHES,
+        utils::ft(IMPRINT_FACE_X),
+        utils::ft(IMPRINT_AXIS_Y),
+        utils::ft(IMPRINT_SMOOTHING_CELLS),
+        utils::ft(IMPRINT_DOMAIN_M),
+        core::array::from_fn(|i| utils::ft(IMPRINT_TARGET[i])),
+        utils::ft(IMPRINT_ETA),
+    )
+    .expect("the imprint constants describe a valid masked forcing region")
 }

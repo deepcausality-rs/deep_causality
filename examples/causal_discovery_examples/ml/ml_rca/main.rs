@@ -41,7 +41,10 @@ use utils::{
 fn main() -> Result<(), String> {
     print_banner();
 
-    let base = concat!(env!("CARGO_MANIFEST_DIR"), "/data/sock-shop-2/carts_cpu_1");
+    let base = causal_discovery_examples::paths::manifest_dir()
+        .join("data/sock-shop-2/carts_cpu_1")
+        .display()
+        .to_string();
     let normal_path = format!("{base}/normal.csv");
     let anomalous_path = format!("{base}/anomalous.csv");
     let cpdag_path = format!("{base}/cpdag.csv");

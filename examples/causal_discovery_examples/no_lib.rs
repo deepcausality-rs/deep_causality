@@ -8,3 +8,6 @@
 
 #[path = "shared/cdl_data.rs"]
 pub mod cdl_data;
+
+#[path = "shared/paths.rs"]
+pub mod paths;

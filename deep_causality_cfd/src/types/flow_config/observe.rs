@@ -18,6 +18,9 @@ pub struct Observe<const D: usize, R: CfdScalar> {
     /// `Some(u_ref)` enables the drag/lift coefficient series on the immersed body,
     /// nondimensionalized by the reference speed `u_ref` and the body's frontal length.
     pub(crate) drag: Option<R>,
+    /// Also emit the drag coefficient's **pressure** and **viscous (friction)** contributions as
+    /// separate series. Requires `drag`; off by default.
+    pub(crate) drag_split: bool,
     /// `Some(point)` enables a transverse-velocity time series sampled at the wake
     /// `point` (lattice/spacing coordinates) — the raw signal a Strouhal number is read from.
     pub(crate) probe: Option<[R; D]>,
@@ -33,6 +36,7 @@ impl<const D: usize, R: CfdScalar> Default for Observe<D, R> {
             divergence: false,
             max_speed: false,
             drag: None,
+            drag_split: false,
             probe: None,
             centerline: None,
         }
@@ -63,6 +67,17 @@ impl<const D: usize, R: CfdScalar> Observe<D, R> {
     /// `run` errors otherwise.
     pub fn drag(mut self, u_ref: R) -> Self {
         self.drag = Some(u_ref);
+        self
+    }
+
+    /// Also collect the **pressure** and **viscous (friction)** contributions to the drag
+    /// coefficient, as the series `"drag_pressure"` and `"drag_friction"` alongside the combined
+    /// `"drag"`. Both come from the same surface integrations the combined coefficient is summed
+    /// from, so they add to it by construction.
+    ///
+    /// Requires [`drag`](Self::drag); off by default, so an existing report is unchanged.
+    pub fn drag_split(mut self) -> Self {
+        self.drag_split = true;
         self
     }
 

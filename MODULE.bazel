@@ -7,9 +7,57 @@ module(name = "deep_causality")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "rules_rust", version = "0.73.0")
+bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
+bazel_dep(name = "llvm", version = "0.8.17")
 
 ###############################################################################
+# Vendored module sources (thirdparty/<module>)
+
+# CAVEAT: local_path_override pins the module at the vendored version and takes
+# it out of version resolution. If a future dependency needs a newer
+# bazel_skylib or platforms, MVS cannot resolve it -- re-vendor instead.
+# Re-vendor with: build/scripts/vendor_modules.sh
+###############################################################################
+local_path_override(
+    module_name = "aspect_bazel_lib",
+    path = "thirdparty/aspect_bazel_lib",
+)
+
+local_path_override(
+    module_name = "bazel_skylib",
+    path = "thirdparty/bazel_skylib",
+)
+
+local_path_override(
+    module_name = "platforms",
+    path = "thirdparty/platforms",
+)
+
+local_path_override(
+    module_name = "toolchains_buildbuddy",
+    path = "thirdparty/toolchains_buildbuddy",
+)
+
+local_path_override(
+    module_name = "llvm",
+    path = "thirdparty/llvm",
+)
+
+###############################################################################
+# Rules Rust
+# Patched in a fork to fix doc-test issue with hermetic LLVM
+bazel_dep(name = "rules_rust", version = "0.73.0")
+
+# Remove when https://github.com/bazelbuild/rules_rust/pull/4220
+# lands and an updated version of rules_rust becomes available.
+git_override(
+    module_name = "rules_rust",
+    commit = "47a9fd98b40798e32183dc7d9051d5d9f35dca75",
+    remote = "https://github.com/marvin-hansen/rules_rust.git",
+)
+
+###############################################################################
+# Rules LEAN
 # Vendored locally (thirdparty/rules_lean) and patched to pin
 # the Lean v4.32.0 toolchain sha256. See lean/.
 ###############################################################################
@@ -17,19 +65,6 @@ bazel_dep(name = "rules_lean", version = "0.5.4")
 local_path_override(
     module_name = "rules_lean",
     path = "thirdparty/rules_lean",
-)
-
-###############################################################################
-# Vendored locally (thirdparty/rules_astro) rather than pulled from a
-# third-party registry, matching the rules_lean vendoring pattern. Provides
-# astro_site / astro_dev — hermetic `astro build` under Bazel via
-# aspect_rules_js. See website/ and the Astro/Node toolchain section below.
-# https://github.com/tomato-bazel/rules_astro
-###############################################################################
-bazel_dep(name = "rules_astro", version = "0.0.1")
-local_path_override(
-    module_name = "rules_astro",
-    path = "thirdparty/rules_astro",
 )
 
 ###############################################################################
@@ -43,6 +78,10 @@ RUST_VERSION = "1.97.1"
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = RUST_EDITION,
+    extra_target_triples = [
+        "aarch64-unknown-linux-gnu",
+        "x86_64-unknown-linux-gnu",
+    ],
     versions = [RUST_VERSION],
 )
 use_repo(rust, "rust_toolchains")
@@ -50,13 +89,44 @@ use_repo(rust, "rust_toolchains")
 register_toolchains("@rust_toolchains//:all")
 
 ###############################################################################
+# Hermetic LLVM toolchain
+# https://github.com/hermeticbuild/hermetic-llvm
+###############################################################################
+# The LLVM version is selected on the `llvm` extension.
+llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
+
+# llvm_version matches the one Rust uses in the version declared in the previous step.
+llvm.version(llvm_version = "22.1.6")
+use_repo(llvm, "llvm-project")
+
+toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
+toolchain.exec(
+    arch = "x86_64",
+    os = "linux",
+)
+toolchain.exec(
+    arch = "aarch64",
+    os = "linux",
+)
+use_repo(toolchain, "llvm_toolchains")
+
+register_toolchains("@llvm_toolchains//:all")
+
+###############################################################################
+# BuildBuddy Rules for Remote build
+# https://github.com/buildbuddy-io/buildbuddy-toolchain
+###############################################################################
+buildbuddy = use_extension("@toolchains_buildbuddy//:extensions.bzl", "buildbuddy")
+use_repo(buildbuddy, "buildbuddy_toolchain")
+
+###############################################################################
 # Lean 4 toolchain + Lake/Mathlib workspace
 # https://github.com/tomato-bazel/rules_lean  (vendored: thirdparty/rules_lean)
+###############################################################################
 #
 # Lean 4 toolchain version is pinned in
 # lean/lakefile.toml
 # lean/lean-toolchain
-#
 # Both files are loaded via lean/BUILD.bazel
 #
 # Downloads the pinned Lean toolchain (lean/lean-toolchain) and resolves the
@@ -74,80 +144,3 @@ lake.workspace(
 use_repo(lake, "lake_deps")
 
 register_toolchains("@lake_deps//:lean_toolchain_def")
-
-###############################################################################
-# Astro / Node.js web toolchain
-# rules_astro (vendored) -> aspect_rules_js -> rules_nodejs
-#
-# `bazel build //website/...` builds all three Astro projects hermetically:
-#   //website/web  — pnpm (pnpm-lock.yaml) -> @npm_web
-#   //website/docs — pnpm (pnpm-lock.yaml) -> @npm_docs
-#   //website/cfd  — pnpm (pnpm-lock.yaml) -> @npm_cfd
-#
-# Each project's node_modules is materialized from its own lockfile by
-# npm_translate_lock; the astro CLI then runs as a cacheable Bazel action.
-###############################################################################
-# rules_astro pins aspect_rules_js 2.1.3, but this project's web site uses the
-# pnpm 11 convention where `onlyBuiltDependencies` / `allowBuilds` live in
-# pnpm-workspace.yaml (not package.json). aspect_rules_js only learned to read
-# those from pnpm-workspace.yaml after 2.1.3, so the root pins 2.9.2 (still the
-# 2.x API line rules_astro is built against; MVS uses this higher version).
-bazel_dep(name = "aspect_rules_js", version = "2.9.2")
-
-# rules_nodejs >= 6.7.3 loads `CcInfo` from @rules_cc (Bazel 9 removed the
-# top-level CcInfo global); 6.3.3 (aspect's floor) fails to compile its
-# nodejs/toolchain.bzl on Bazel 9.2.0. Pin the latest 6.7.x for the fix.
-bazel_dep(name = "rules_nodejs", version = "6.7.5")
-
-node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
-
-# Astro 7 requires node >=22.12.0 (both sites' package.json engines). Pin
-# 26.4.0 to match the local/CI dev node (node -v) for build parity.
-node.toolchain(node_version = "26.4.0")
-
-npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
-npm.npm_translate_lock(
-    name = "npm_web",
-    npmrc = "//website/web:.npmrc",
-    pnpm_lock = "//website/web:pnpm-lock.yaml",
-    # @astrojs/mdx reaches the (native) satteri markdown processor through its
-    # optional peer @astrojs/markdown-satteri, which pnpm hoists on the host but
-    # aspect's strict store does not link. Hoist them (and satteri's native
-    # binding) to the root node_modules so the bare `import 'satteri'` resolves.
-    public_hoist_packages = {
-        "satteri": ["website/web"],
-        "@astrojs/markdown-satteri": ["website/web"],
-    },
-    verify_node_modules_ignored = "//:.bazelignore",
-)
-use_repo(npm, "npm_web")
-
-npm.npm_translate_lock(
-    name = "npm_cfd",
-    npmrc = "//website/cfd:.npmrc",
-    pnpm_lock = "//website/cfd:pnpm-lock.yaml",
-    # Same @astrojs/mdx -> satteri hoist as the other two sites: the CFD site
-    # renders its blueprints and worked examples from .mdx content collections.
-    public_hoist_packages = {
-        "satteri": ["website/cfd"],
-        "@astrojs/markdown-satteri": ["website/cfd"],
-    },
-    verify_node_modules_ignored = "//:.bazelignore",
-)
-use_repo(npm, "npm_cfd")
-
-npm.npm_translate_lock(
-    name = "npm_docs",
-    npmrc = "//website/docs:.npmrc",
-    pnpm_lock = "//website/docs:pnpm-lock.yaml",
-    # Starlight renders .mdx content through @astrojs/mdx, which reaches the
-    # native satteri markdown processor via its optional peer @astrojs/markdown-
-    # satteri — hoisted on the host by pnpm but not by aspect's strict store.
-    # Hoist them into docs' root node_modules so the bare import resolves.
-    public_hoist_packages = {
-        "satteri": ["website/docs"],
-        "@astrojs/markdown-satteri": ["website/docs"],
-    },
-    verify_node_modules_ignored = "//:.bazelignore",
-)
-use_repo(npm, "npm_docs")

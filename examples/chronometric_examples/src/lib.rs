@@ -10,6 +10,7 @@
 //! gravity/GM types — stays local.
 
 pub mod data_manager;
+pub mod paths;
 pub mod proces_utils;
 pub(crate) mod types;
 

@@ -1,0 +1,282 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@rules_cc//cc/toolchains/impl:documented_api.bzl", "cc_args_list")
+
+# gazelle:exclude cc_unsanitized_library.bzl
+
+cc_args_list(
+    name = "hermetic_link_flags",
+    args = select({
+        "@platforms//os:macos": [],
+        "//conditions:default": [
+            "//toolchain/runtimes/args:hermetic_link_flags",
+        ],
+    }),
+)
+
+cc_args_list(
+    name = "default_link_flags",
+    args = select({
+        "@platforms//os:macos": [
+            "//toolchain/args/macos:default_link_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args_list(
+    name = "linux_hosted_c_toolchain_args",
+    args = select({
+        "//platforms/config:musl": [
+            "//toolchain/args/linux:kernel_headers_include_search_paths",
+            "//toolchain/args/linux:musl_libc_headers_include_search_paths",
+        ],
+        "//platforms/config:gnu": [
+            "//toolchain/args/linux:kernel_headers_include_search_paths",
+            "//toolchain/args/linux:glibc_headers_include_search_paths",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//platforms/config:musl": [
+            # TODO: Handle musl dynamic linking.
+            # musl implies static linking for now.
+            "//toolchain/args:static_link_executable",
+        ],
+        "//conditions:default": [],
+    }) + [
+        "//toolchain/args/linux:sanitizer_headers_include_search_paths",
+    ],
+    visibility = ["//toolchain:__subpackages__"],
+)
+
+cc_args_list(
+    name = "windows_hosted_c_toolchain_args",
+    args = [
+        "//toolchain/args/windows:mingw_headers_include_search_paths",
+    ],
+    visibility = ["//toolchain:__subpackages__"],
+)
+
+cc_args_list(
+    name = "stage1_hosted_platform_specific_args",
+    args = select({
+        "@platforms//os:macos": [
+            "//toolchain:macos_toolchain_args",
+        ],
+        "@platforms//os:linux": [
+            ":linux_hosted_c_toolchain_args",
+        ],
+        "@platforms//os:windows": [
+            ":windows_hosted_c_toolchain_args",
+        ],
+        "@platforms//os:none": [],
+    }),
+    visibility = ["//toolchain:__subpackages__"],
+)
+
+cc_args_list(
+    name = "platform_specific_args",
+    args = select({
+        "@platforms//os:macos": [
+            "//toolchain:macos_toolchain_args",
+        ],
+        "@platforms//os:linux": [],
+        "@platforms//os:windows": [],
+        "@platforms//os:none": [],
+    }),
+    visibility = ["//toolchain:__subpackages__"],
+)
+
+cc_args_list(
+    name = "staged_platform_specific_args",
+    args = select({
+        "//toolchain:runtimes_stage1_hosted": [
+            ":stage1_hosted_platform_specific_args",
+        ],
+        "//conditions:default": [
+            ":platform_specific_args",
+        ],
+    }),
+    visibility = ["//toolchain:__subpackages__"],
+)
+
+cc_args_list(
+    name = "toolchain_args",
+    args = [
+        # Common default compile flags.
+        "//toolchain/args:target_flags",
+        "//toolchain/args:no_absolute_paths_for_builtins",
+        "//toolchain/args:deterministic_compile_flags",
+        "//toolchain/args:module_map",
+        "//toolchain/runtimes/args:optimization_flags",
+        "//toolchain:sysroot_flags",
+        "//toolchain:hermetic_compile_flags",
+        ":hermetic_link_flags",
+
+        # Keep external -isystem directories before the toolchain C
+        # -isystem directories in :staged_platform_specific_args.
+        "@rules_cc//cc/toolchains/args/external_include_paths:external_include_paths",
+
+        # TODO(cerisier): Explode this into specific args instead
+        ":staged_platform_specific_args",
+
+        # Optional sanitizers
+        "//toolchain/runtimes/args:ubsan_flags",
+        "//toolchain/runtimes/args:cfi_flags",
+        "//toolchain/runtimes/args:msan_flags",
+        "//toolchain/runtimes/args:dfsan_flags",
+        "//toolchain/runtimes/args:nsan_flags",
+        "//toolchain/runtimes/args:safestack_flags",
+        "//toolchain/runtimes/args:rtsan_flags",
+        "//toolchain/runtimes/args:tysan_flags",
+        "//toolchain/runtimes/args:tsan_flags",
+        "//toolchain/runtimes/args:asan_flags",
+        "//toolchain/runtimes/args:lsan_flags",
+        "//toolchain/runtimes/args:profile_flags",
+
+        # Common default link flags.
+        "//toolchain/args:fuse_ld",
+        "//toolchain/args:lto_plugin_target_flags",
+        ":rtlib",
+        ":resource_dir",
+        ":default_link_flags",
+        # Needs to stay out of resource_dir since clang does not always search for crtstuff for all targets.
+        ":default_startfiles",
+        ":default_libs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+#TODO(cerisier): Maybe with a _gt_x select we could reuse this everywhere.
+
+cc_args_list(
+    name = "resource_dir",
+    args = select({
+        "//toolchain:runtimes_all": [],
+        "//toolchain:runtimes_stage1": ["//toolchain:resource_dir"],
+        "//toolchain:runtimes_stage1_hosted": ["//toolchain:resource_dir"],
+        "//toolchain:runtimes_none": [],
+    }),
+)
+
+cc_args_list(
+    name = "default_startfiles",
+    args = select({
+        "//toolchain:runtimes_all": [],
+        "//toolchain:runtimes_stage1": ["//toolchain:default_startfiles"],
+        "//toolchain:runtimes_stage1_hosted": ["//toolchain:default_startfiles"],
+        "//toolchain:runtimes_none": [],
+    }),
+)
+
+cc_args_list(
+    name = "rtlib",
+    args = select({
+        "//toolchain:runtimes_all": [],
+        "//toolchain:runtimes_stage1": [
+            "//toolchain:rtlib",
+        ],
+        "//toolchain:runtimes_stage1_hosted": [
+            "//toolchain:rtlib",
+        ],
+        "//toolchain:runtimes_none": [],
+    }),
+)
+
+#TODO(cerisier): Need a level of indirection to handle OS differences between stages.
+cc_args_list(
+    name = "default_libs",
+    args = select({
+        "//toolchain:runtimes_all": [],
+        "//toolchain:runtimes_stage1": [
+            "//toolchain:default_libs",
+        ],
+        "//toolchain:runtimes_stage1_hosted": [
+            "//toolchain:default_libs",
+        ],
+        "//toolchain:runtimes_none": [],
+    }),
+)
+
+bzl_library(
+    name = "cc_runtime_library",
+    srcs = ["cc_runtime_library.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@llvm//toolchain/runtimes:with_cfg_runtimes_common",
+        "@rules_cc//cc:core_rules",
+        "@with_cfg.bzl//:with_cfg",
+    ],
+)
+
+bzl_library(
+    name = "cc_runtime_binary",
+    srcs = ["cc_runtime_binary.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@llvm//toolchain/runtimes:with_cfg_runtimes_common",
+        "@rules_cc//cc:core_rules",
+        "@with_cfg.bzl//:with_cfg",
+    ],
+)
+
+bzl_library(
+    name = "cc_runtime_shared_library",
+    srcs = ["cc_runtime_shared_library.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@llvm//toolchain/runtimes:with_cfg_runtimes_common",
+        "@rules_cc//cc:core_rules",
+        "@rules_cc//cc/common",
+        "@with_cfg.bzl//:with_cfg",
+    ],
+)
+
+bzl_library(
+    name = "cc_runtime_static_library",
+    srcs = ["cc_runtime_static_library.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@llvm//toolchain/runtimes:with_cfg_runtimes_common",
+        "@rules_cc//cc:core_rules",
+        "@with_cfg.bzl//:with_cfg",
+    ],
+)
+
+bzl_library(
+    name = "cc_stage0_object",
+    srcs = ["cc_stage0_object.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@rules_cc//cc:action_names_bzl",
+        "@rules_cc//cc:find_cc_toolchain_bzl",
+        "@rules_cc//cc/common",
+    ],
+)
+
+bzl_library(
+    name = "cc_internal_symbolizer_object",
+    srcs = ["cc_internal_symbolizer_object.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@rules_cc//cc:action_names_bzl",
+        "@rules_cc//cc:find_cc_toolchain_bzl",
+        "@rules_cc//cc/common",
+    ],
+)
+
+# TODO: Depends on private API that isn't visible
+# bzl_library(
+#     name = "cc_unsanitized_library",
+#     srcs = ["cc_unsanitized_library.bzl"],
+#     visibility = ["//visibility:public"],
+#     deps = [
+#         "@rules_cc//cc/common",
+#         "@rules_cc//cc/private/rules_impl:core_rules",
+#     ],
+# )
+
+bzl_library(
+    name = "with_cfg_runtimes_common",
+    srcs = ["with_cfg_runtimes_common.bzl"],
+    visibility = ["//visibility:public"],
+)

@@ -13,7 +13,7 @@ pub use deep_causality_file::DataManager;
 
 /// Absolute path to this crate's bundled GNSS data directory (`data/gnss`).
 pub fn get_gnss_data_input_path() -> PathBuf {
-    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut path = crate::paths::manifest_dir();
     path.push("data/gnss");
     path
 }

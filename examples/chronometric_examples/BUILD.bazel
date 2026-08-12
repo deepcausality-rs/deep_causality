@@ -1,0 +1,29 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "chronometric_examples",
+    srcs = glob(["src/**"]),
+    crate_root = "src/lib.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_algebra",
+        "//deep_causality_file",
+        "//deep_causality_num",
+        "//deep_causality_physics",
+        "//thirdparty/crates:chrono",
+    ],
+)
+
+rust_binary(
+    name = "gm_recovery",
+    srcs = glob(["gm_recovery/**/*.rs"]),
+    crate_root = "gm_recovery/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":chronometric_examples",
+        "//deep_causality_algebra",
+        "//deep_causality_core",
+        "//deep_causality_num",
+        "//deep_causality_physics",
+    ],
+)

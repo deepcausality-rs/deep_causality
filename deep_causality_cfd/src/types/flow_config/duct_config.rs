@@ -10,7 +10,6 @@
 //! [`Report`](crate::Report) (design D4).
 
 use crate::CfdScalar;
-use deep_causality_physics::PhysicsError;
 
 /// The duct's cross-sectional area as a function of axial position.
 #[derive(Debug, Clone)]
@@ -121,31 +120,14 @@ impl<R: CfdScalar> DuctAreaProfile<R> {
     }
 }
 
-/// The inlet stagnation (reservoir) state of a duct case.
-#[derive(Debug, Clone, Copy)]
-pub struct DuctInlet<R> {
-    /// Stagnation pressure `p₀`.
-    pub p0: R,
-    /// Stagnation temperature `T₀` (K).
-    pub t0: R,
-}
-
-/// The stop condition of the quasi-steady duct march: a step budget and the
-/// residual the march must settle below within it.
-#[derive(Debug, Clone, Copy)]
-pub struct DuctStop<R> {
-    /// The step budget.
-    pub max_steps: usize,
-    /// The residual gate: maximum relative change of the conserved state per
-    /// step.
-    pub residual_tol: R,
-}
-
-/// The owned configuration for a quasi-one-dimensional duct march: geometry,
+/// The owned configuration for a quasi-one-dimensional duct march: the case name, geometry,
 /// inlet stagnation state, back pressure, resolution, and the stop condition.
-/// Holds only owned specs; the same config can be run repeatedly.
+/// Holds only owned specs; the same config can be run repeatedly. Built by
+/// [`DuctConfigBuilder`](crate::DuctConfigBuilder), started by
+/// [`CfdConfigBuilder::duct`](crate::CfdConfigBuilder).
 #[derive(Debug, Clone)]
 pub struct DuctConfig<R: CfdScalar> {
+    pub(crate) name: String,
     pub(crate) profile: DuctAreaProfile<R>,
     /// Inlet stagnation pressure `p₀`.
     pub(crate) p0: R,
@@ -165,111 +147,23 @@ pub struct DuctConfig<R: CfdScalar> {
 }
 
 impl<R: CfdScalar> DuctConfig<R> {
-    /// A validated duct case: `profile` geometry, `inlet` stagnation state,
-    /// ratio of specific heats `gamma`, exit-plane `back_pressure`, `cells`
-    /// finite volumes, and the `stop` condition.
-    ///
-    /// # Errors
-    /// [`PhysicsError::PhysicalInvariantBroken`] on a table with fewer than
-    /// two points, non-ascending `x`, or a non-positive or non-finite area;
-    /// on an analytic profile whose throat is not the strict minimum or whose
-    /// length is not positive; on a `p0`, `t0`, or `back_pressure` that is
-    /// not finite and positive; on `back_pressure >= p0` (nothing drives the
-    /// flow); on `gamma` not finite and `> 1`; on `cells < 8` (the driver
-    /// needs a resolvable throat); on a zero `max_steps`; or on a
-    /// `residual_tol` that is not finite and positive.
-    pub fn new(
+    /// The field constructor. Crate-private: every validation lives in
+    /// [`DuctConfigBuilder::build`](crate::DuctConfigBuilder::build), so the owned config is
+    /// unconstructible in an invalid state from outside the crate.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn new(
+        name: String,
         profile: DuctAreaProfile<R>,
-        inlet: DuctInlet<R>,
+        p0: R,
+        t0: R,
         gamma: R,
         back_pressure: R,
         cells: usize,
-        stop: DuctStop<R>,
-    ) -> Result<Self, PhysicsError> {
-        let DuctInlet { p0, t0 } = inlet;
-        let DuctStop {
-            max_steps,
-            residual_tol,
-        } = stop;
-        let positive = |x: R| x.is_finite() && x > R::zero();
-        match &profile {
-            DuctAreaProfile::Table(points) => {
-                if points.len() < 2 {
-                    return Err(PhysicsError::PhysicalInvariantBroken(
-                        "DuctConfig area table needs at least two (x, area) points".into(),
-                    ));
-                }
-                if points.iter().any(|&(x, a)| !x.is_finite() || !positive(a)) {
-                    return Err(PhysicsError::PhysicalInvariantBroken(
-                        "DuctConfig area table needs finite x and finite, positive areas".into(),
-                    ));
-                }
-                if points.windows(2).any(|w| w[1].0 <= w[0].0) {
-                    return Err(PhysicsError::PhysicalInvariantBroken(
-                        "DuctConfig area table must be strictly ascending in x".into(),
-                    ));
-                }
-            }
-            DuctAreaProfile::ConvergingDiverging {
-                inlet_area,
-                throat_area,
-                exit_area,
-                length,
-            } => {
-                if !positive(*inlet_area) || !positive(*throat_area) || !positive(*exit_area) {
-                    return Err(PhysicsError::PhysicalInvariantBroken(
-                        "DuctConfig areas must be finite and positive".into(),
-                    ));
-                }
-                if !(*throat_area < *inlet_area && *throat_area < *exit_area) {
-                    return Err(PhysicsError::PhysicalInvariantBroken(
-                        "DuctConfig throat_area must be the strict minimum (below inlet and exit)"
-                            .into(),
-                    ));
-                }
-                if !positive(*length) {
-                    return Err(PhysicsError::PhysicalInvariantBroken(
-                        "DuctConfig length must be finite and positive".into(),
-                    ));
-                }
-            }
-        }
-        if !positive(p0) || !positive(t0) {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig stagnation state (p0, t0) must be finite and positive".into(),
-            ));
-        }
-        if !(gamma.is_finite() && gamma > R::one()) {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig gamma must be finite and > 1".into(),
-            ));
-        }
-        if !positive(back_pressure) {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig back_pressure must be finite and positive".into(),
-            ));
-        }
-        if back_pressure >= p0 {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig back_pressure must be below the stagnation pressure p0".into(),
-            ));
-        }
-        if cells < 8 {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig needs at least 8 cells".into(),
-            ));
-        }
-        if max_steps == 0 {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig max_steps must be at least 1".into(),
-            ));
-        }
-        if !positive(residual_tol) {
-            return Err(PhysicsError::PhysicalInvariantBroken(
-                "DuctConfig residual_tol must be finite and positive".into(),
-            ));
-        }
-        Ok(Self {
+        max_steps: usize,
+        residual_tol: R,
+    ) -> Self {
+        Self {
+            name,
             profile,
             p0,
             t0,
@@ -278,7 +172,12 @@ impl<R: CfdScalar> DuctConfig<R> {
             cells,
             max_steps,
             residual_tol,
-        })
+        }
+    }
+
+    /// The case name, carried into the run's `Report`.
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     /// The area profile.

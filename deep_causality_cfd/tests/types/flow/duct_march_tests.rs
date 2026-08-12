@@ -8,7 +8,7 @@
 //! loud convergence-failure path.
 
 use deep_causality_cfd::{
-    CfdFlow, DuctAreaProfile, DuctConfig, DuctInlet, DuctStop, FittedNormalShock,
+    CfdConfigBuilder, CfdFlow, DuctAreaProfile, DuctConfig, FittedNormalShock,
 };
 use deep_causality_physics::area_mach_ratio_kernel;
 
@@ -17,23 +17,20 @@ const GAMMA: f64 = 1.4;
 /// A converging-diverging test nozzle: throat at the strict minimum, exit twice the throat.
 fn nozzle(back_pressure_ratio: f64, cells: usize, max_steps: usize) -> DuctConfig<f64> {
     let p0 = 101_325.0;
-    DuctConfig::new(
-        DuctAreaProfile::ConvergingDiverging {
+    CfdConfigBuilder::duct::<f64>("test-nozzle")
+        .profile(DuctAreaProfile::ConvergingDiverging {
             inlet_area: 2.0,
             throat_area: 1.0,
             exit_area: 2.0,
             length: 1.0,
-        },
-        DuctInlet { p0, t0: 300.0 },
-        GAMMA,
-        p0 * back_pressure_ratio,
-        cells,
-        DuctStop {
-            max_steps,
-            residual_tol: 1.0e-10,
-        },
-    )
-    .expect("valid nozzle config")
+        })
+        .inlet(p0, 300.0)
+        .gamma(GAMMA)
+        .back_pressure(p0 * back_pressure_ratio)
+        .cells(cells)
+        .stop(max_steps, 1.0e-10)
+        .build()
+        .expect("valid nozzle config")
 }
 
 /// Invert the area-Mach relation on one branch by bisection.

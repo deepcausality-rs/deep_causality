@@ -1,0 +1,338 @@
+diff --git a/utils/bazel/WORKSPACE b/utils/bazel/WORKSPACE
+index 5e28c3b67fc3..e041d8a497bc 100644
+--- a/utils/bazel/WORKSPACE
++++ b/utils/bazel/WORKSPACE
+@@ -199,3 +199,17 @@ python_register_toolchains(
+     name = "python_3_12",
+     python_version = "3.12",
+ )
++
++maybe(
++    http_archive,
++    name = "rules_shell",
++    sha256 = "e6b87c89bd0b27039e3af2c5da01147452f240f75d505f5b6880874f31036307",
++    strip_prefix = "rules_shell-0.6.1",
++    url = "https://github.com/bazelbuild/rules_shell/releases/download/v0.6.1/rules_shell-v0.6.1.tar.gz",
++)
++
++load("@rules_shell//shell:repositories.bzl", "rules_shell_dependencies", "rules_shell_toolchains")
++
++rules_shell_dependencies()
++
++rules_shell_toolchains()
+diff --git a/clang/BUILD.bazel b/clang/BUILD.bazel
+index ac4e3813fbba..a6e4bbb7bd60 100644
+--- a/clang/BUILD.bazel
++++ b/clang/BUILD.bazel
+@@ -2,6 +2,7 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+ load("@rules_python//python:defs.bzl", "py_binary")
+ load(
+     "//:vars.bzl",
+@@ -2455,30 +2456,30 @@ cc_library(
+     ],
+ )
+ 
+-proto_library(
+-    name = "cxx-proto",
+-    srcs = ["tools/clang-fuzzer/cxx_proto.proto"],
+-)
+-
+-cc_proto_library(
+-    name = "cxx_cc_proto",
+-    deps = [":cxx-proto"],
+-)
+-
+-cc_library(
+-    name = "proto-to-cxx-lib",
+-    srcs = ["tools/clang-fuzzer/proto-to-cxx/proto_to_cxx.cpp"],
+-    hdrs = ["tools/clang-fuzzer/proto-to-cxx/proto_to_cxx.h"],
+-    includes = ["tools/clang-fuzzer"],
+-    deps = [":cxx_cc_proto"],
+-)
+-
+-cc_binary(
+-    name = "clang-proto-to-cxx",
+-    srcs = ["tools/clang-fuzzer/proto-to-cxx/proto_to_cxx_main.cpp"],
+-    deps = [":proto-to-cxx-lib"],
+-)
+-
++# proto_library(
++#     name = "cxx-proto",
++#     srcs = ["tools/clang-fuzzer/cxx_proto.proto"],
++# )
++# 
++# cc_proto_library(
++#     name = "cxx_cc_proto",
++#     deps = [":cxx-proto"],
++# )
++# 
++# cc_library(
++#     name = "proto-to-cxx-lib",
++#     srcs = ["tools/clang-fuzzer/proto-to-cxx/proto_to_cxx.cpp"],
++#     hdrs = ["tools/clang-fuzzer/proto-to-cxx/proto_to_cxx.h"],
++#     includes = ["tools/clang-fuzzer"],
++#     deps = [":cxx_cc_proto"],
++# )
++# 
++# cc_binary(
++#     name = "clang-proto-to-cxx",
++#     srcs = ["tools/clang-fuzzer/proto-to-cxx/proto_to_cxx_main.cpp"],
++#     deps = [":proto-to-cxx-lib"],
++# )
++# 
+ cc_library(
+     name = "clang-fuzzer-initialize",
+     srcs = ["tools/clang-fuzzer/fuzzer-initialize/fuzzer_initialize.cpp"],
+diff --git a/compiler-rt/BUILD.bazel b/compiler-rt/BUILD.bazel
+index bcf947a23014..f34d56dd3944 100644
+--- a/compiler-rt/BUILD.bazel
++++ b/compiler-rt/BUILD.bazel
+@@ -2,6 +2,8 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:defs.bzl", "cc_library")
++
+ package(
+     default_visibility = ["//visibility:public"],
+     features = ["layering_check"],
+diff --git a/libc/libc_build_rules.bzl b/libc/libc_build_rules.bzl
+index e123e4d32b78..e41a5c357cde 100644
+--- a/libc/libc_build_rules.bzl
++++ b/libc/libc_build_rules.bzl
+@@ -6,6 +6,7 @@
+ 
+ load("@bazel_skylib//lib:paths.bzl", "paths")
+ load("@bazel_skylib//lib:selects.bzl", "selects")
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ load(":libc_configure_options.bzl", "LIBC_CONFIGURE_OPTIONS")
+ load(":libc_namespace.bzl", "LIBC_NAMESPACE")
+ load(":platforms.bzl", "PLATFORM_CPU_X86_64")
+@@ -52,7 +53,7 @@ def _libc_library(name, **kwargs):
+     for attr in ["copts", "local_defines"]:
+         if attr in kwargs:
+             fail("disallowed attribute: '{}' in rule: '{}'".format(attr, name))
+-    native.cc_library(
++    cc_library(
+         name = name,
+         copts = libc_common_copts(),
+         local_defines = LIBC_CONFIGURE_OPTIONS,
+@@ -188,7 +189,7 @@ def libc_release_library(
+         name = name + "_textual_hdrs",
+         libs = libc_functions,
+     )
+-    native.cc_library(
++    cc_library(
+         name = name + "_textual_hdr_library",
+         textual_hdrs = [":" + name + "_textual_hdrs"],
+     )
+@@ -198,7 +199,7 @@ def libc_release_library(
+         for name in weak_symbols
+     ]
+ 
+-    native.cc_library(
++    cc_library(
+         name = name,
+         srcs = [":" + name + "_srcs"],
+         copts = libc_common_copts() + libc_release_copts(),
+@@ -229,12 +230,12 @@ def libc_header_library(name, hdrs, deps = [], **kwargs):
+         name = name + "_textual_hdrs",
+         libs = deps,
+     )
+-    native.cc_library(
++    cc_library(
+         name = name + "_textual_hdr_library",
+         textual_hdrs = [":" + name + "_textual_hdrs"],
+     )
+ 
+-    native.cc_library(
++    cc_library(
+         name = name,
+         hdrs = hdrs,
+         # We put _hdr_deps in srcs, as they are not a part of this cc_library
+diff --git a/libunwind/BUILD.bazel b/libunwind/BUILD.bazel
+index f8448fb0e726..81bbf1602dc2 100644
+--- a/libunwind/BUILD.bazel
++++ b/libunwind/BUILD.bazel
+@@ -2,6 +2,8 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
++
+ package(
+     default_visibility = ["//visibility:public"],
+ )
+diff --git a/lld/BUILD.bazel b/lld/BUILD.bazel
+index 76957a95a544..722b695e3bf2 100644
+--- a/lld/BUILD.bazel
++++ b/lld/BUILD.bazel
+@@ -2,6 +2,7 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ load(
+     "//:vars.bzl",
+     "LLVM_VERSION",
+diff --git a/llvm/BUILD.bazel b/llvm/BUILD.bazel
+index 37e79db376b4..a8ec86a7500d 100644
+--- a/llvm/BUILD.bazel
++++ b/llvm/BUILD.bazel
+@@ -2,9 +2,12 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+ load("@rules_python//python:defs.bzl", "py_binary")
++load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+ load("//mlir:tblgen.bzl", "gentbl_cc_library", "gentbl_filegroup", "td_library")
+ load(":binary_alias.bzl", "binary_alias")
+ load(":config.bzl", "llvm_config_defines")
+diff --git a/llvm/driver.bzl b/llvm/driver.bzl
+index 66e8af7db7d0..7d0201e7d0cf 100644
+--- a/llvm/driver.bzl
++++ b/llvm/driver.bzl
+@@ -6,6 +6,8 @@
+ 
+ load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
+ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
++load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
++load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+ 
+ # Mapping from every tool to the cc_library that implements the tool's entrypoint.
+ _TOOLS = {
+@@ -175,7 +177,7 @@ def llvm_driver_cc_binary(
+         template = "//llvm:cmake/modules/llvm-driver-template.cpp.in",
+     )
+     deps = deps or []
+-    native.cc_binary(
++    cc_binary(
+         name = name,
+         srcs = [name + "-driver.cpp"],
+         deps = deps + ["//llvm:Support"],
+diff --git a/mlir/build_defs.bzl b/mlir/build_defs.bzl
+index 53767fd03c44..c91dfdb53953 100644
+--- a/mlir/build_defs.bzl
++++ b/mlir/build_defs.bzl
+@@ -4,6 +4,9 @@
+ 
+ """Rules and macros for MLIR"""
+ 
++load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
++
+ def if_cuda_available(if_true, if_false = []):
+     return select({
+         # CUDA auto-detection is not yet supported.
+@@ -49,20 +52,20 @@ def mlir_c_api_cc_library(
+     """
+     capi_header_deps = ["%sHeaders" % d for d in capi_deps]
+     capi_object_deps = ["%sObjects" % d for d in capi_deps]
+-    native.cc_library(
++    cc_library(
+         name = name,
+         srcs = srcs,
+         hdrs = hdrs,
+         deps = deps + capi_deps + header_deps,
+         **kwargs
+     )
+-    native.cc_library(
++    cc_library(
+         name = name + "Headers",
+         hdrs = hdrs,
+         deps = header_deps + capi_header_deps,
+         **kwargs
+     )
+-    native.cc_library(
++    cc_library(
+         name = name + "Objects",
+         srcs = srcs,
+         hdrs = hdrs,
+diff --git a/mlir/linalggen.bzl b/mlir/linalggen.bzl
+index d893471e6249..7e7dacadeed8 100644
+--- a/mlir/linalggen.bzl
++++ b/mlir/linalggen.bzl
+@@ -4,6 +4,8 @@
+ 
+ """BUILD extensions for MLIR linalg generation."""
+ 
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
++
+ def genlinalg(name, linalggen, src, linalg_outs):
+     """genlinalg() generates code from a tc spec file.
+ 
+@@ -35,7 +37,7 @@ def genlinalg(name, linalggen, src, linalg_outs):
+         )
+ 
+     hdrs = [f for (opts, f) in linalg_outs]
+-    native.cc_library(
++    cc_library(
+         name = name,
+         hdrs = hdrs,
+         textual_hdrs = hdrs,
+diff --git a/mlir/tblgen.bzl b/mlir/tblgen.bzl
+index 89b17735e005..cd3ae39f046d 100644
+--- a/mlir/tblgen.bzl
++++ b/mlir/tblgen.bzl
+@@ -4,6 +4,7 @@
+ """BUILD extensions for MLIR table generation."""
+ 
+ load("@bazel_skylib//lib:paths.bzl", "paths")
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ 
+ TdInfo = provider(
+     "Holds TableGen files and the dependencies and include paths necessary to" +
+@@ -424,7 +425,7 @@ def gentbl_cc_library(
+         skip_opts = ["-gen-op-doc"],
+         **kwargs
+     )
+-    native.cc_library(
++    cc_library(
+         name = name,
+         # strip_include_prefix does not apply to textual_hdrs.
+         # https://github.com/bazelbuild/bazel/issues/12424
+diff --git a/third-party/siphash/BUILD.bazel b/third-party/siphash/BUILD.bazel
+index d5b9631e7d2a..3a6e908f4a06 100644
+--- a/third-party/siphash/BUILD.bazel
++++ b/third-party/siphash/BUILD.bazel
+@@ -2,6 +2,8 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ 
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
++
+ package(default_visibility = ["//visibility:public"])
+ 
+ licenses(["notice"])
+diff --git a/utils/bazel/third_party_build/zlib-ng.BUILD b/utils/bazel/third_party_build/zlib-ng.BUILD
+index 055261acb0f6..bb880c0e3279 100644
+--- a/utils/bazel/third_party_build/zlib-ng.BUILD
++++ b/utils/bazel/third_party_build/zlib-ng.BUILD
+@@ -3,6 +3,7 @@
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ 
+ package(
+     default_visibility = ["//visibility:public"],
+diff --git a/utils/bazel/third_party_build/zstd.BUILD b/utils/bazel/third_party_build/zstd.BUILD
+index 7d022d4226de..de0d1396c8e8 100644
+--- a/utils/bazel/third_party_build/zstd.BUILD
++++ b/utils/bazel/third_party_build/zstd.BUILD
+@@ -2,6 +2,7 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
++load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ 
+ package(
+     default_visibility = ["//visibility:public"],

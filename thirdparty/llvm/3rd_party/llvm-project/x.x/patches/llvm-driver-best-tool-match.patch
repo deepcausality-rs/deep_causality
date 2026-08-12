@@ -1,0 +1,97 @@
+diff --git a/llvm/tools/llvm-driver/llvm-driver.cpp b/llvm/tools/llvm-driver/llvm-driver.cpp
+index 14ce162faee4..b411c491e9ba 100644
+--- a/llvm/tools/llvm-driver/llvm-driver.cpp
++++ b/llvm/tools/llvm-driver/llvm-driver.cpp
+@@ -36,6 +36,45 @@ static void printHelpMessage() {
+                << "OPTIONS:\n\n  --help - Display this message\n";
+ }
+ 
++struct ToolMatch {
++  unsigned Kind = 0;
++  size_t Length = 0;
++
++  explicit operator bool() const { return Kind != 0; }
++};
++
++static bool betterMatch(ToolMatch LHS, ToolMatch RHS) {
++  return LHS.Kind != RHS.Kind ? LHS.Kind < RHS.Kind : LHS.Length < RHS.Length;
++}
++
++static ToolMatch matchTool(StringRef ToolName, StringRef Tool) {
++  ToolMatch Match;
++
++  auto MaybeUpdate = [&](StringRef Candidate) {
++    if (Candidate.equals_insensitive(Tool)) {
++      ToolMatch Exact = {2, Tool.size()};
++      if (betterMatch(Match, Exact))
++        Match = Exact;
++      return;
++    }
++
++    auto I = Candidate.rfind_insensitive(Tool);
++    if (I != StringRef::npos &&
++        (I + Tool.size() == Candidate.size() ||
++         !llvm::isAlnum(Candidate[I + Tool.size()]))) {
++      ToolMatch Suffix = {1, Tool.size()};
++      if (betterMatch(Match, Suffix))
++        Match = Suffix;
++    }
++  };
++
++  for (StringRef Candidate : {sys::path::stem(ToolName),
++                              sys::path::filename(ToolName)})
++    MaybeUpdate(Candidate);
++
++  return Match;
++}
++
+ static int findTool(int Argc, char **Argv, const char *Argv0) {
+   if (!Argc) {
+     printHelpMessage();
+@@ -49,31 +88,30 @@ static int findTool(int Argc, char **Argv, const char *Argv0) {
+     return 0;
+   }
+ 
+-  StringRef Stem = sys::path::stem(ToolName);
+-  auto Is = [=](StringRef Tool) {
+-    auto IsImpl = [=](StringRef Stem) {
+-      auto I = Stem.rfind_insensitive(Tool);
+-      return I != StringRef::npos && (I + Tool.size() == Stem.size() ||
+-                                      !llvm::isAlnum(Stem[I + Tool.size()]));
+-    };
+-    for (StringRef S : {Stem, sys::path::filename(ToolName)})
+-      if (IsImpl(S))
+-        return true;
+-    return false;
+-  };
+-
+   auto MakeDriverArgs = [=]() -> llvm::ToolContext {
+     if (ToolName != Argv0)
+       return {Argv0, ToolName.data(), true};
+     return {Argv0, sys::path::filename(Argv0).data(), false};
+   };
+ 
++  using ToolMain = int (*)(int, char **, const llvm::ToolContext &);
++  ToolMatch BestMatch;
++  ToolMain BestTool = nullptr;
++
+ #define LLVM_DRIVER_TOOL(tool, entry)                                          \
+-  if (Is(tool))                                                                \
+-    return entry##_main(Argc, Argv, MakeDriverArgs());
++  do {                                                                         \
++    ToolMatch Match = matchTool(ToolName, tool);                               \
++    if (betterMatch(BestMatch, Match)) {                                       \
++      BestMatch = Match;                                                       \
++      BestTool = entry##_main;                                                 \
++    }                                                                          \
++  } while (false);
+ #include "LLVMDriverTools.def"
+ 
+-  if (Is("llvm") || Argv0 == Argv[0])
++  if (BestTool)
++    return BestTool(Argc, Argv, MakeDriverArgs());
++
++  if (matchTool(ToolName, "llvm") || Argv0 == Argv[0])
+     return findTool(Argc - 1, Argv + 1, Argv0);
+ 
+   printHelpMessage();

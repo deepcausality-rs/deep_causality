@@ -1,0 +1,83 @@
+diff --git a/clang/BUILD.bazel b/clang/BUILD.bazel
+--- a/clang/BUILD.bazel
++++ b/clang/BUILD.bazel
+@@ -5,7 +5,6 @@
+ load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+ load("@bazel_skylib//rules:write_file.bzl", "write_file")
+ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+-load("@rules_python//python:defs.bzl", "py_binary")
+ load(
+     "//:vars.bzl",
+     "LLVM_VERSION_MAJOR",
+@@ -678,14 +677,6 @@ write_file(
+     ],
+ )
+ 
+-py_binary(
+-    name = "bundle_resources",
+-    srcs = [
+-        "utils/bundle_resources.py",
+-    ],
+-    main = "utils/bundle_resources.py",
+-)
+-
+ cc_library(
+     name = "basic",
+     srcs = [
+diff --git a/llvm/BUILD.bazel b/llvm/BUILD.bazel
+--- a/llvm/BUILD.bazel
++++ b/llvm/BUILD.bazel
+@@ -7,7 +7,6 @@ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+ load("@bazel_skylib//rules:write_file.bzl", "write_file")
+ load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+ load("@rules_cc//cc:cc_library.bzl", "cc_library")
+-load("@rules_python//python:defs.bzl", "py_binary")
+ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+ load("//mlir:tblgen.bzl", "gentbl_cc_library", "gentbl_filegroup", "td_library")
+ load(":binary_alias.bzl", "binary_alias")
+@@ -6607,45 +6606,6 @@ cc_library(
+     ],
+ )
+ 
+-py_binary(
+-    name = "lit",
+-    testonly = True,
+-    srcs = ["utils/lit/lit.py"] + glob(["utils/lit/lit/**/*.py"]),
+-    imports = ["utils/lit"],
+-)
+-
+-py_binary(
+-    name = "extract_ir",
+-    srcs = [
+-        "utils/mlgo-utils/extract_ir.py",
+-        "utils/mlgo-utils/mlgo/__init__.py",
+-        "utils/mlgo-utils/mlgo/corpus/extract_ir_lib.py",
+-        "utils/mlgo-utils/mlgo/corpus/flags.py",
+-    ],
+-    imports = ["utils/mlgo-utils"],
+-)
+-
+-py_binary(
+-    name = "combine_training_corpus",
+-    srcs = [
+-        "utils/mlgo-utils/combine_training_corpus.py",
+-        "utils/mlgo-utils/mlgo/__init__.py",
+-        "utils/mlgo-utils/mlgo/corpus/combine_training_corpus_lib.py",
+-        "utils/mlgo-utils/mlgo/corpus/flags.py",
+-    ],
+-    imports = ["utils/mlgo-utils"],
+-)
+-
+-py_binary(
+-    name = "make_corpus",
+-    srcs = [
+-        "utils/mlgo-utils/make_corpus.py",
+-        "utils/mlgo-utils/mlgo/__init__.py",
+-        "utils/mlgo-utils/mlgo/corpus/make_corpus_lib.py",
+-    ],
+-    imports = ["utils/mlgo-utils"],
+-)
+-
+ cc_library(
+     name = "TestingADT",
+     testonly = True,

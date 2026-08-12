@@ -20,14 +20,14 @@ pub fn matrix_path() -> PathBuf {
         .nth(1)
         .map(PathBuf::from)
         .unwrap_or_else(|| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            avionics_examples::paths::manifest_dir()
                 .join("cfd/flight_envelope_placard/mach_alt_matrix.csv")
         })
 }
 
 /// Where the placard table is written.
 pub fn table_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cfd/flight_envelope_placard/placard_table.csv")
+    avionics_examples::paths::manifest_dir().join("cfd/flight_envelope_placard/placard_table.csv")
 }
 
 /// The exact-Rankine-Hugoniot shock model at the study's effective gamma.

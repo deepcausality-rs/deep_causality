@@ -1,0 +1,27 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load(":linux_kernel_versions.bzl", "LINUX_KERNEL_VERSIONS")
+
+package(default_visibility = ["//visibility:public"])
+
+constraint_setting(
+    name = "version",
+    default_constraint_value = "unconstrained",
+)
+
+constraint_value(
+    name = "unconstrained",
+    constraint_setting = "version",
+)
+
+[
+    constraint_value(
+        name = version,
+        constraint_setting = "version",
+    )
+    for version in LINUX_KERNEL_VERSIONS
+]
+
+bzl_library(
+    name = "linux_kernel_versions",
+    srcs = ["linux_kernel_versions.bzl"],
+)

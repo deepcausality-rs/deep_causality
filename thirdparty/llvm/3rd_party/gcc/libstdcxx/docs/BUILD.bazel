@@ -1,0 +1,29 @@
+package(default_visibility = ["//3rd_party/gcc/libstdcxx/tests:__pkg__"])
+
+exports_files(
+    [
+        "autoconf.README.md",
+        "autoconf.checks.md",
+        "autoconf.usage.md",
+        "config_define_status.txt",
+        "config_macro_status.txt",
+    ],
+    visibility = ["//3rd_party/gcc/libstdcxx/tests:__pkg__"],
+)
+
+filegroup(
+    name = "autoconf_docs",
+    srcs = [
+        "autoconf.README.md",
+        "autoconf.checks.md",
+        "autoconf.usage.md",
+    ],
+)
+
+filegroup(
+    name = "autoconf_status",
+    srcs = [
+        "config_define_status.txt",
+        "config_macro_status.txt",
+    ],
+)

@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
 
 rust_library(
     name = "deep_causality_algorithms",
@@ -34,4 +34,111 @@ rust_doc_test(
     crate = ":deep_causality_algorithms",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+rust_binary(
+    name = "verification_base",
+    srcs = [
+        "verification/brcd/common.rs",
+        "verification/brcd/verification_base.rs",
+    ],
+    crate_root = "verification/brcd/verification_base.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_rand",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "brcd_eval_accuracy_compute",
+    srcs = ["verification/brcd/brcd_eval_accuracy_compute.rs"],
+    crate_root = "verification/brcd/brcd_eval_accuracy_compute.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_rand",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "verification_boss",
+    srcs = [
+        "verification/brcd/common.rs",
+        "verification/brcd/verification_boss.rs",
+    ],
+    crate_root = "verification/brcd/verification_boss.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_rand",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "verification_boss_sockshop",
+    srcs = [
+        "verification/brcd/common.rs",
+        "verification/brcd/verification_boss_sockshop.rs",
+    ],
+    crate_root = "verification/brcd/verification_boss_sockshop.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "verification_boss_online_boutique",
+    srcs = [
+        "verification/brcd/common.rs",
+        "verification/brcd/verification_boss_online_boutique.rs",
+    ],
+    crate_root = "verification/brcd/verification_boss_online_boutique.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "verification_online_boutique",
+    srcs = [
+        "verification/brcd/common.rs",
+        "verification/brcd/verification_online_boutique.rs",
+    ],
+    crate_root = "verification/brcd/verification_online_boutique.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
+)
+
+rust_binary(
+    name = "verification_sockshop",
+    srcs = [
+        "verification/brcd/common.rs",
+        "verification/brcd/verification_sockshop.rs",
+    ],
+    crate_root = "verification/brcd/verification_sockshop.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+        "//deep_causality_tensor",
+        "//deep_causality_topology",
+    ],
 )

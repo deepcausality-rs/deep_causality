@@ -1,0 +1,17 @@
+diff --git a/llvm/BUILD.bazel b/llvm/BUILD.bazel
+--- a/llvm/BUILD.bazel
++++ b/llvm/BUILD.bazel
+@@ -386,8 +386,12 @@ cc_library(
+             "BLAKE3_NO_AVX512",
+             "BLAKE3_NO_SSE2",
+             "BLAKE3_NO_SSE41",
+         ],
+-    }),
++    }) + [
++        "LLVM_ENABLE_ZLIB=1",
++        "LLVM_ENABLE_ZSTD=1",
++        "ZSTD_MULTITHREAD",
++    ],
+     includes = ["include"],
+     linkopts = select({
+         ":is_windows_clang_mingw": [

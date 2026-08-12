@@ -1,0 +1,32 @@
+# In real repo, this should be replaced with like this
+#
+#   load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+#
+#   http_archive(
+#       name = "io_buildbuddy_buildbuddy_toolchain",
+#       sha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", # replace with actual value
+#       strip_prefix = "buildbuddy-toolchain-0000000000000000000000000000000000000000", # replace with actual commit hash
+#       urls = ["https://github.com/buildbuddy-io/buildbuddy-toolchain/archive/0000000000000000000000000000000000000000.tar.gz"], # replace with actual commit hash
+#   )
+#
+#   load("@io_buildbuddy_buildbuddy_toolchain//:deps.bzl", "buildbuddy_deps")
+#
+#   buildbuddy_deps()
+#
+#   load("@io_buildbuddy_buildbuddy_toolchain//:rules.bzl", "buildbuddy")
+#
+#   buildbuddy(name = "buildbuddy_toolchain")
+#
+# for more information, see instructions in https://github.com/buildbuddy-io/buildbuddy-toolchain?tab=readme-ov-file#usage-instructions
+local_repository(
+    name = "io_buildbuddy_buildbuddy_toolchain",
+    path = "../../",
+)
+
+load("@io_buildbuddy_buildbuddy_toolchain//:deps.bzl", "buildbuddy_deps")
+
+buildbuddy_deps()
+
+load("@io_buildbuddy_buildbuddy_toolchain//:rules.bzl", "buildbuddy")
+
+buildbuddy(name = "buildbuddy_toolchain")

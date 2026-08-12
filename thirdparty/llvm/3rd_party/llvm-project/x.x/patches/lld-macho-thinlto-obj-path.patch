@@ -1,0 +1,78 @@
+diff --git a/lld/MachO/Config.h b/lld/MachO/Config.h
+index 814ba1016849..84e7cfa2b6ca 100644
+--- a/lld/MachO/Config.h
++++ b/lld/MachO/Config.h
+@@ -169,6 +169,7 @@ struct Configuration {
+   llvm::StringRef mapFile;
+   llvm::StringRef ltoNewPmPasses;
+   llvm::StringRef ltoObjPath;
++  bool ltoObjPathIsFile = false;
+   llvm::StringRef thinLTOJobs;
+   llvm::StringRef umbrella;
+   uint32_t ltoo = 2;
+diff --git a/lld/MachO/Driver.cpp b/lld/MachO/Driver.cpp
+index 973b3f5535cb..697be3f4c023 100644
+--- a/lld/MachO/Driver.cpp
++++ b/lld/MachO/Driver.cpp
+@@ -1928,7 +1928,11 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
+       warn("-umbrella used, but not creating dylib");
+     config->umbrella = arg->getValue();
+   }
+-  config->ltoObjPath = args.getLastArgValue(OPT_object_path_lto);
++  if (const Arg *arg =
++          args.getLastArg(OPT_object_path_lto, OPT_lto_obj_path_eq)) {
++    config->ltoObjPath = arg->getValue();
++    config->ltoObjPathIsFile = arg->getOption().matches(OPT_lto_obj_path_eq);
++  }
+   config->ltoNewPmPasses = args.getLastArgValue(OPT_lto_newpm_passes);
+   config->thinLTOCacheDir = args.getLastArgValue(OPT_cache_path_lto);
+   config->thinLTOCachePolicy = getLTOCachePolicy(args);
+diff --git a/lld/MachO/LTO.cpp b/lld/MachO/LTO.cpp
+index 2c360374ef3c..b1e45bfc8199 100644
+--- a/lld/MachO/LTO.cpp
++++ b/lld/MachO/LTO.cpp
+@@ -234,15 +234,15 @@ std::vector<ObjFile *> BitcodeCompiler::compile() {
+     thinLTOCreateEmptyIndexFiles();
+
+   // In ThinLTO mode, Clang passes a temporary directory in -object_path_lto,
+-  // while the argument is a single file in FullLTO mode.
+-  bool objPathIsDir = true;
+-  if (!config->ltoObjPath.empty()) {
++  // while -object_path_lto specifies a single file in FullLTO mode.
++  // --lto-obj-path always specifies a file.
++  bool objPathIsDir = !config->ltoObjPathIsFile;
++  if (!config->ltoObjPath.empty() && objPathIsDir) {
+     if (std::error_code ec = fs::create_directories(config->ltoObjPath))
+       fatal("cannot create LTO object path " + config->ltoObjPath + ": " +
+             ec.message());
+-
+-    if (!fs::is_directory(config->ltoObjPath)) {
+-      objPathIsDir = false;
++    objPathIsDir = fs::is_directory(config->ltoObjPath);
++    if (!objPathIsDir) {
+       unsigned objCount =
+           count_if(buf, [](const SmallString<0> &b) { return !b.empty(); });
+       if (objCount > 1)
+@@ -258,6 +258,8 @@ std::vector<ObjFile *> BitcodeCompiler::compile() {
+         path::append(filePath, Twine(i) + "." +
+                                    getArchitectureName(config->arch()) +
+                                    ".lto.o");
++      else if (config->ltoObjPathIsFile && i != 0)
++        filePath += Twine(i).str();
+     }
+     return filePath;
+   };
+diff --git a/lld/MachO/Options.td b/lld/MachO/Options.td
+index 5bd220b3c196..7c694d17c928 100644
+--- a/lld/MachO/Options.td
++++ b/lld/MachO/Options.td
+@@ -41,6 +41,9 @@ def thinlto_index_only: Flag<["--"], "thinlto-index-only">,
+     Group<grp_lld>;
+ def thinlto_index_only_eq: Joined<["--"], "thinlto-index-only=">,
+     Group<grp_lld>;
++def lto_obj_path_eq: Joined<["--"], "lto-obj-path=">,
++    HelpText<"Write the regular LTO object to <path>">,
++    Group<grp_lld>;
+ def thinlto_jobs_eq : Joined<["--"], "thinlto-jobs=">,
+     HelpText<"Number of ThinLTO jobs. Default to --threads=">,
+     Group<grp_lld>;

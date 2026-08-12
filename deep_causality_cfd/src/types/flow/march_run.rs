@@ -404,7 +404,7 @@ impl<'a, const D: usize, R: CfdScalar> Context<'a, D, R> {
         if let (Some(u_ref), Some(registry), Some(ref_len)) =
             (self.observe.drag, self.registry, self.ref_len)
         {
-            let (cd, cl) = surface_force_coefficients(
+            let split = surface_force_coefficients(
                 self.manifold,
                 registry,
                 self.solver,
@@ -412,8 +412,12 @@ impl<'a, const D: usize, R: CfdScalar> Context<'a, D, R> {
                 u_ref,
                 ref_len,
             )?;
-            series.drag.push(cd);
-            series.lift.push(cl);
+            series.drag.push(split.drag);
+            series.lift.push(split.lift);
+            if self.observe.drag_split {
+                series.drag_pressure.push(split.drag_pressure);
+                series.drag_friction.push(split.drag_friction);
+            }
         }
         if let Some(point) = self.observe.probe {
             let v = dec_sample_velocity(self.manifold, u, &point)?;
@@ -430,6 +434,8 @@ struct Series<R: CfdScalar> {
     max_speed: Vec<R>,
     drag: Vec<R>,
     lift: Vec<R>,
+    drag_pressure: Vec<R>,
+    drag_friction: Vec<R>,
     probe: Vec<R>,
 }
 
@@ -441,6 +447,8 @@ impl<R: CfdScalar> Series<R> {
             max_speed: Vec::new(),
             drag: Vec::new(),
             lift: Vec::new(),
+            drag_pressure: Vec::new(),
+            drag_friction: Vec::new(),
             probe: Vec::new(),
         }
     }
@@ -458,6 +466,10 @@ impl<R: CfdScalar> Series<R> {
         if observe.drag.is_some() {
             report.add_series("drag", self.drag);
             report.add_series("lift", self.lift);
+            if observe.drag_split {
+                report.add_series("drag_pressure", self.drag_pressure);
+                report.add_series("drag_friction", self.drag_friction);
+            }
         }
         if observe.probe.is_some() {
             report.add_series("probe", self.probe);
@@ -465,7 +477,16 @@ impl<R: CfdScalar> Series<R> {
     }
 }
 
-/// The (drag, lift) coefficients on the immersed body at the given state.
+/// The immersed-body force coefficients at one state: the combined drag and lift, plus the
+/// pressure and viscous (friction) contributions the drag is summed from.
+struct SurfaceForces<R> {
+    drag: R,
+    lift: R,
+    drag_pressure: R,
+    drag_friction: R,
+}
+
+/// The force coefficients on the immersed body at the given state.
 fn surface_force_coefficients<const D: usize, R: CfdScalar>(
     manifold: &Manifold<LatticeComplex<D, R>, R>,
     registry: &CutCellRegistry<D, R>,
@@ -473,7 +494,7 @@ fn surface_force_coefficients<const D: usize, R: CfdScalar>(
     state: &SolenoidalField<R>,
     u_ref: R,
     ref_len: R,
-) -> Result<(R, R), PhysicsError> {
+) -> Result<SurfaceForces<R>, PhysicsError> {
     let (_bernoulli, static_p) = solver.pressure_diagnostic(state)?;
 
     let pressure: BTreeMap<[usize; D], R> = manifold
@@ -503,13 +524,22 @@ fn surface_force_coefficients<const D: usize, R: CfdScalar>(
 
     let fp = pressure_surface_force(registry, cell_pressure);
     let fv = viscous_surface_force(manifold, registry, state.as_one_form(), solver.nu())?;
+    // The split is taken from these same two integrations, so `drag_pressure + drag_friction`
+    // equals `drag` by construction — there is no second force path to disagree with.
+    let drag_pressure = force_coefficient(fp[0], u_ref, ref_len);
+    let drag_friction = force_coefficient(fv[0], u_ref, ref_len);
     let drag = force_coefficient(fp[0] + fv[0], u_ref, ref_len);
     let lift = if D > 1 {
         force_coefficient(fp[1] + fv[1], u_ref, ref_len)
     } else {
         R::zero()
     };
-    Ok((drag, lift))
+    Ok(SurfaceForces {
+        drag,
+        lift,
+        drag_pressure,
+        drag_friction,
+    })
 }
 
 /// The final-state velocity profile along the domain-centered line parallel to `axis`.

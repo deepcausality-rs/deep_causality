@@ -1,0 +1,18 @@
+# BB Workflows configuration
+# https://www.buildbuddy.io/docs/workflows-config
+actions:
+  - name: "BazelCI"
+    container_image: "ubuntu-24.04"
+    triggers:
+      pull_request:
+        branches:
+          - "main"
+    # UNITS: `GB` HERE MEANS GiB, NOT 10^9.
+    resource_requests:
+     # memory: "12B"
+      disk: "40GB"
+    steps:
+      # Build all targets
+      - run: "bazel build --config=ci //..."
+      # Run all tests
+      - run: "bazel test --config=ci //..."

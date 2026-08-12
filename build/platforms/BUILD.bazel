@@ -1,7 +1,8 @@
-###############################################################################
-# Platform
-###############################################################################
 package(default_visibility = ["//visibility:public"])
+
+###############################################################################
+# MacOs (Darwin) Platform
+###############################################################################
 
 # Host platform for local development
 platform(
@@ -21,47 +22,70 @@ platform(
     ],
 )
 
-# Platform for cross compilation on CI.
+###############################################################################
+# Linux platforms
+###############################################################################
+# Every Linux platform inherits its constraint set from the hermetic LLVM
+# toolchain's own platform. @llvm//platforms:linux_*
+# carries @platforms//os:linux, @platforms//cpu:<arch>, plus the two
+# constraints hermetic-llvm actually keys its cc_toolchain on:
+#
+#   @llvm//constraints/libc:gnu.2.28        -- glibc version compiled/linked against
+#   @llvm//constraints/cxxstdlib:libcxx     -- C++ standard library
+#
+# Inheriting keeps the platforms in step with the toolchain: if the libc or
+# stdlib default moves, these follow instead of silently failing to resolve.
+# Only the RBE scheduling properties are added on top.
+#
+# Platform for cross compilation
 platform(
     name = "linux-x86_64",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
-    exec_properties = {"container-image": "docker://ghcr.io/marvin-hansen/rbe-custom/rbe:latest@sha256:4579f9c333976fcd60fb9cdfe28786a8219f1d83970e5cb12b7fa11ccbd0e95a"},
-)
-
-# Platform for cross compilation on CI.
-platform(
-    name = "linux-aarch64",
-    constraint_values = [
-        "@platforms//os:linux",
-        "@platforms//cpu:aarch64",
-    ],
-    exec_properties = {"container-image": "docker://ghcr.io/marvin-hansen/rbe-custom/rbe:latest@sha256:4579f9c333976fcd60fb9cdfe28786a8219f1d83970e5cb12b7fa11ccbd0e95a"},
-)
-
-###############################################################################
-# BB Remote Platform
-###############################################################################
-# This is technically not required, but speeds up host toolchain resolution.
-# https://github.com/buildbuddy-io/buildbuddy/blob/8579ca30f1a1f401ed8279d99d9b47ec5637873f/.bazelrc#L30
-platform(
-    name = "linux",
-    constraint_values = [
-        "@platforms//os:linux",
-        # This helps us differentiate between the default local platform, which does not have this,
-        # and the remote platform, which does have this.
-        "@bazel_tools//tools/cpp:gcc",
-    ],
     exec_properties = {
         "OSFamily": "Linux",
+        "Arch": "amd64",
     },
+    parents = ["@llvm//platforms:linux_x86_64"],
+)
+
+# Platform for cross compilation
+platform(
+    name = "linux-aarch64",
+    exec_properties = {
+        "OSFamily": "Linux",
+        "Arch": "arm64",
+    },
+    parents = ["@llvm//platforms:linux_aarch64"],
+)
+
+###############################################################################
+# Remote (RBE) execution platform
+###############################################################################
+# Used as --host_platform, --platforms and --extra_execution_platforms under
+# --config=remote. The BuildBuddy workers are x86_64 Linux while this host is
+# an arm64 Mac, so pinning all three away from the auto-detected host platform
+# is what keeps Bazel sending them to Linux worker.
+#
+# container-image is a plain stock Ubuntu: hermetic LLVM
+# ships the compiler, headers, CRT objects and unwinder from the CAS, so the
+# worker needs no build tools at all. What it does still need is a glibc at
+# least as new as the one the toolchain links against
+# (@llvm//constraints/libc:gnu.2.28).
+platform(
+    name = "linux_x86_64_remote",
+    exec_properties = {
+        "OSFamily": "Linux",
+        "Arch": "amd64",
+        "container-image": "docker://ubuntu:22.04",
+    },
+    parents = ["@llvm//platforms:linux_x86_64"],
 )
 
 platform(
-    name = "linux_x86_64_remote",
-    constraint_values = ["@platforms//cpu:x86_64"],
-    exec_properties = {"container-image": "docker://ghcr.io/marvin-hansen/rbe-custom/rbe:latest@sha256:4579f9c333976fcd60fb9cdfe28786a8219f1d83970e5cb12b7fa11ccbd0e95a"},
-    parents = [":linux"],
+    name = "linux-aarch64_remote",
+    exec_properties = {
+        "OSFamily": "Linux",
+        "Arch": "arm64",
+        "container-image": "docker://ubuntu:22.04",
+    },
+    parents = ["@llvm//platforms:linux_aarch64"],
 )

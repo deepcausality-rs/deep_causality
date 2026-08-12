@@ -1,0 +1,119 @@
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains/args:sysroot.bzl", "cc_sysroot")
+load(
+    ":macos_minimum_os_flag.bzl",
+    "macos_minimum_os_flag",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+cc_sysroot(
+    name = "macos_sdk_sysroot",
+    allowlist_include_directories = ["@macos_sdk//sysroot"],
+    # NOTE: cc_sysroot automatically passes --sysroot=, but Clang checks
+    # -isysroot, SDKROOT, then --sysroot:
+    # https://github.com/llvm/llvm-project/blob/8a531c3608c722ad529be448d6ecef06ba107228/clang/lib/Driver/ToolChains/Darwin.cpp#L2581-L2599
+    args = [
+        "-isysroot",
+        "{sysroot}",
+    ],
+    data = ["@macos_sdk//sysroot"],
+    sysroot = "@macos_sdk//sysroot",
+)
+
+macos_minimum_os_flag(
+    name = "macos_minimum_os_flag",
+)
+
+cc_args(
+    name = "macos_minimum_os_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = ["-mmacosx-version-min={version}"],
+    format = {"version": ":macos_minimum_os_flag"},
+)
+
+cc_args(
+    name = "macos_default_framework_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-Wl,-framework,Foundation",
+    ],
+)
+
+# Make compiler-rt's public sanitizer interface headers (sanitizer/*.h)
+# available when compiling instrumented user code (e.g. abseil's
+# <sanitizer/common_interface_defs.h>). Mirrors
+# //toolchain/args/linux:sanitizer_headers_include_search_paths.
+#
+# This is only added for user-program (runtime_stage=complete) builds, never
+# when building the compiler-rt runtimes themselves: those already pull in
+# compiler-rt/include via includes=["include"], and on macOS the copy-based
+# sandbox rejects staging that directory twice ("File exists"). See
+# macos_toolchain_args in //toolchain:BUILD.bazel.
+cc_args(
+    name = "sanitizer_headers_include_search_paths",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:source_compile_actions",
+    ],
+    allowlist_include_directories = [
+        "//sanitizers:sanitizers_headers_include_search_directory",
+    ],
+    # Make sure these sanitizer paths come after any user supplied paths, which
+    # might also include another version of llvm's sanitizer headers.
+    args = [
+        "-Xclang",
+        "-internal-isystem",
+        "-Xclang",
+        "{sanitizer_headers_include_search_paths}",
+    ],
+    data = [
+        "//sanitizers:sanitizers_headers_include_search_directory",
+    ],
+    format = {
+        "sanitizer_headers_include_search_paths": "//sanitizers:sanitizers_headers_include_search_directory",
+    },
+)
+
+# TODO(cerisier): Extract those into proper semantic args list.
+cc_args(
+    name = "default_link_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        # The macOS toolchain has no resource directory, so add libc++ here.
+        # This is incorrect for C links, but rules_cc cannot distinguish C links
+        # from C++ links.
+        "-lc++",
+        "-headerpad_max_install_names",
+        "-Wl,-no_warn_duplicate_libraries",
+        "-Wl,-oso_prefix,.",  # Strip absolute paths from debug info file references
+    ],
+    env = {
+        # Required for hermetic links on macOS
+        "ZERO_AR_DATE": "1",
+    },
+)
+
+cc_args(
+    name = "default_libs",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    # -l: is not supported by lld64
+    args = [
+        "-lSystem",
+        "{libclang_rt.builtins.a}",
+    ],
+    data = [
+        "//runtimes/compiler-rt:clang_rt.builtins.static",
+    ],
+    format = {
+        "libclang_rt.builtins.a": "//runtimes/compiler-rt:clang_rt.builtins.static",
+    },
+)

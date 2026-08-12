@@ -5,24 +5,37 @@ TBD - created by archiving change add-cfd-qtt-flow-observe. Update Purpose after
 ## Requirements
 ### Requirement: QTT marching config container and builder
 
-The crate SHALL provide an owned `QttMarchConfig<R>` container and a `QttMarchConfigBuilder` that holds
-the power-of-two grid (`Lx, Ly, dx, dy`), the solver parameters (`dt`, kinematic viscosity, round
+The crate SHALL provide an owned `QttMarchConfig<R>` container and a `QttMarchConfigBuilder` started
+by `CfdConfigBuilder::qtt_march::<R>(name)`, holding the case name, the power-of-two grid
+(`Lx, Ly, dx, dy`), the solver parameters (`dt`, kinematic viscosity, round
 policy), the owned seed velocity fields `(u0, v0)`, the march-stop, and the observe set. The builder
 SHALL materialize the seed from a closure over the grid (or the analytic Taylor–Green vortex) **at build
 time**, and SHALL reject a grid that is not `2^Lx × 2^Ly` or seed fields that do not match it.
 
+The builder's constructor SHALL be crate-private and the builder SHALL NOT implement `Default`, and
+the case name SHALL be taken at the entry rather than set through a builder method, so a QTT case
+cannot be built unnamed. A trait implementation has no visibility of its own — an implemented
+`Default` is callable wherever the type is nameable — so the absence of the impl, not its
+visibility, is what closes the bypass.
+
 #### Scenario: Builds a runnable config from a seed closure
-- **WHEN** a grid, solver parameters, a seed closure, a stop, and an observe set are supplied
+- **WHEN** a name, a grid, solver parameters, a seed closure, a stop, and an observe set are supplied
 - **THEN** the builder produces a `QttMarchConfig` whose owned seed fields are the closure evaluated over
-  the grid
+  the grid, labelled with the supplied name
 
 #### Scenario: Rejects a non-power-of-two grid or mismatched seed
 - **WHEN** the grid is not `2^Lx × 2^Ly`, or a supplied seed field's shape does not match the grid
 - **THEN** the builder returns a dimension-mismatch error
 
+#### Scenario: The builder is not constructible outside the entry
+- **WHEN** a consumer attempts `QttMarchConfigBuilder::new()` or `QttMarchConfigBuilder::default()`
+- **THEN** the code does not compile — `new` because it is crate-private, `default` because no
+  `Default` implementation exists to call
+
 ### Requirement: CfdFlow QTT marching pipeline
 
-`CfdFlow` SHALL provide a `qtt_march(&config)` entry — parallel to `march` — returning a runnable pipeline
+`CfdFlow::march(&config)` SHALL accept a `QttMarchConfig` through the `MarchDispatch` seam — the same
+entry every other config family uses — returning a runnable pipeline
 that borrows the config, drives `QttIncompressible2d` over the configured horizon, samples the enabled
 observables each step into an owned `Report<R>`, and exposes the dequantized final `(u, v)` fields on the
 report. It SHALL support a fixed-step and a steady-state (kinetic-energy plateau) stop reusing
@@ -38,18 +51,8 @@ same seed, horizon, and round policy.
   `(u, v)` fields, and the kinetic-energy series matches the analytic Taylor–Green decay within
   discretization + truncation error
 
-#### Scenario: Matches the direct driver
-- **WHEN** the same seed, horizon, and round policy are run through `CfdFlow::qtt_march` and through
-  `QttIncompressible2d::run` directly
-- **THEN** the final fields are identical
-
-#### Scenario: Steady-state stop terminates on the energy plateau
-- **WHEN** the march is configured with a steady-state stop and the kinetic energy stops changing within
-  tolerance
-- **THEN** the march terminates before the maximum step count
-
-#### Scenario: Per-step hook observes each step
-- **WHEN** the march is run with a per-step hook
-- **THEN** the hook is invoked once per completed step with a view exposing the step index, elapsed time,
-  and the current diagnostics, and the final report is identical to the hookless run
+#### Scenario: One march verb serves the QTT family
+- **WHEN** a QTT config is handed to `CfdFlow::march`
+- **THEN** the QTT pipeline is selected at compile time through `MarchDispatch`, with no
+  family-specific entry method on the facade
 

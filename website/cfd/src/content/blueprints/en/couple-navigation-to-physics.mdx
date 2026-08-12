@@ -17,7 +17,7 @@ worked:
 becomes the loop body after every marcher step. The return type is
 `impl PhysicsStage<2, FloatType>`.
 
-From the corridor's coupling stack, `examples/avionics_examples/src/shared/world.rs:159-210`:
+From the corridor's coupling stack, `examples/avionics_examples/src/shared/world.rs:154-205`:
 
 ```rust
     Coupling::between_steps()
@@ -86,7 +86,7 @@ carries the `SafetyEnvelope` limits on heat flux, g-load and bank angle.
 
 Stages communicate through `CoupledField`. `initial_field()` seeds the engine
 that `TrajectoryNav` then threads through the march
-(`world.rs:215-242`):
+(`world.rs:210-237`):
 
 ```rust
 field.set_nav(ReentryNavEngine::new(...))
@@ -104,5 +104,5 @@ across six atmospheres and measures the effect on dead-reckoning drift.
 compile-time type, so stage dispatch is static and adding a stage costs no
 indirection.
 
-`powered_descent_coupling` (`world.rs:271-286`) is the same stack extended with
+`powered_descent_coupling` (`world.rs:266-281`) is the same stack extended with
 the burn stages.
