@@ -1,0 +1,29 @@
+diff --git a/llvm/lib/LTO/LTOBackend.cpp b/llvm/lib/LTO/LTOBackend.cpp
+--- a/llvm/lib/LTO/LTOBackend.cpp
++++ b/llvm/lib/LTO/LTOBackend.cpp
+@@ -703,7 +703,24 @@ Error lto::thinBackend(const Config &Conf, unsigned Task, AddStreamFn AddStream,
+         if (IRAddStream)
+           cgdata::saveModuleForTwoRounds(Mod, Task, IRAddStream);
+ 
+-        codegen(Conf, TM, AddStream, Task, Mod, CombinedIndex);
++        SmallString<0> BC;
++        raw_svector_ostream BCOS(BC);
++        WriteBitcodeToFile(Mod, BCOS);
++
++        LTOLLVMContext CodeGenCtx(Conf);
++        Expected<std::unique_ptr<Module>> CodeGenModOrErr =
++            parseBitcodeFile(MemoryBufferRef(BC.str(),
++                                             Mod.getModuleIdentifier()),
++                             CodeGenCtx);
++        if (!CodeGenModOrErr)
++          return CodeGenModOrErr.takeError();
++
++        std::unique_ptr<Module> CodeGenMod = std::move(*CodeGenModOrErr);
++        std::unique_ptr<TargetMachine> CodeGenTM =
++            createTargetMachine(Conf, &TM->getTarget(), *CodeGenMod);
++
++        codegen(Conf, CodeGenTM.get(), AddStream, Task, *CodeGenMod,
++                CombinedIndex);
+         return finalizeOptimizationRemarks(std::move(DiagnosticOutputFile));
+       };
+ 

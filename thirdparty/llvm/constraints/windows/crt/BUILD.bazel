@@ -1,0 +1,17 @@
+package(default_visibility = ["//visibility:public"])
+
+# Selects the Windows CRT flavor to link against.
+constraint_setting(
+    name = "crt",
+    default_constraint_value = ":ucrt",
+)
+
+constraint_value(
+    name = "ucrt",
+    constraint_setting = ":crt",
+)
+
+constraint_value(
+    name = "msvcrt",
+    constraint_setting = ":crt",
+)

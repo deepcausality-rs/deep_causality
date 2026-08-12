@@ -1,0 +1,53 @@
+diff --git a/llvm/lit_test.bzl b/llvm/lit_test.bzl
+index 000000000000..111111111111 100644
+--- a/llvm/lit_test.bzl
++++ b/llvm/lit_test.bzl
+@@ -4,7 +4,7 @@
+ """Rules for running lit tests."""
+ 
+ load("@bazel_skylib//lib:paths.bzl", "paths")
+-load("@rules_python//python:defs.bzl", _py_test = "py_test")
++# Stubbed out - rules_python is removed
+ 
+ def lit_test(
+         name,
+@@ -12,37 +12,9 @@ def lit_test(
+         args = None,
+         data = None,
+         deps = None,
+-        py_test = _py_test,
+         **kwargs):
+-    """Runs a single test file with LLVM's lit tool.
+-
+-    Args:
+-      name: string. the name of the generated test target.
+-      srcs: label list. The files on which to run lit.
+-      args: string list. Additional arguments to pass to lit.
+-        Note that `-v` and the 'srcs' paths are added automatically.
+-      data: label list. Additional data dependencies of the test.
+-        Note that 'srcs' targets are added automatically.
+-      deps: label list. List of targets the test depends on.
+-      py_test: function. The py_test rule to use for the underlying test.
+-      **kwargs: additional keyword arguments.
+-
+-    See https://llvm.org/docs/CommandGuide/lit.html for details on lit.
+-    """
+-
+-    args = args or []
+-    data = data or []
+-    deps = deps or []
+-    py_test(
+-        name = name,
+-        srcs = [Label("//llvm:lit")],
+-        main = Label("//llvm:utils/lit/lit.py"),
+-        args = args + ["-v"] + ["$(execpath %s)" % src for src in srcs],
+-        data = data + srcs,
+-        legacy_create_init = False,
+-        deps = deps + [Label("//llvm:lit")],
+-        **kwargs
+-    )
++    """Stub implementation"""
++    pass
+ 
+ def package_path(label):
+     """Returns the path to the package of 'label'.

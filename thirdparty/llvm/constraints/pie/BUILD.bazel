@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:public"])
+
+constraint_setting(
+    name = "pie",
+    default_constraint_value = "unset",
+)
+
+constraint_value(
+    name = "unset",
+    constraint_setting = "pie",
+)
+
+constraint_value(
+    name = "on",
+    constraint_setting = "pie",
+)
+
+constraint_value(
+    name = "off",
+    constraint_setting = "pie",
+)

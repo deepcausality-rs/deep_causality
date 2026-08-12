@@ -1,0 +1,44 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+
+exports_files([
+    "kernel-headers.BUILD.bazel",
+    "trampoline.BUILD.bazel",
+])
+
+bzl_library(
+    name = "kernel_headers",
+    srcs = ["kernel_headers.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_features//:features",
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
+        "@bazel_tools//tools/build_defs/repo:http.bzl",
+        "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
+    name = "make_select_kernel_headers_repository_target",
+    srcs = ["make_select_kernel_headers_repository_target.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":kernel_helpers",
+        ":libc_kernel_versions",
+        "//constraints/kernel/linux:linux_kernel_versions",
+        "//constraints/libc:libc_versions",
+        "//platforms:common",
+        "@kernel_headers//:linux_kernel_version_map",
+    ],
+)
+
+bzl_library(
+    name = "kernel_helpers",
+    srcs = ["kernel_helpers.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "libc_kernel_versions",
+    srcs = ["libc_kernel_versions.bzl"],
+    visibility = ["//visibility:public"],
+)

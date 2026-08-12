@@ -1,0 +1,19 @@
+diff --git a/llvm/BUILD.bazel b/llvm/BUILD.bazel
+index 84cf004f5776..d2224f998f29 100644
+--- a/llvm/BUILD.bazel
++++ b/llvm/BUILD.bazel
+@@ -3586,6 +3586,12 @@ cc_library(
+         "tools/dsymutil/*.cpp",
+         "tools/dsymutil/*.h",
+     ]),
+     copts = llvm_copts,
++    linkopts = select({
++        "@platforms//os:macos": [
++            "-framework", "CoreFoundation",
++        ],
++        "//conditions:default": [],
++    }),
+     deps = [
+         ":AllTargetsCodeGens",
+         ":BinaryFormat",
+         ":BitReader",

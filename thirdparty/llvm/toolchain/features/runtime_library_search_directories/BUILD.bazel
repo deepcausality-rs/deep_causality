@@ -1,0 +1,49 @@
+# This workaround bazel eponym runtime_library_search_directories feature using
+# google internal EXEC_ORIGIN variable in rpath for cc_test.
+#
+# This variable doesn't exist for the rest of us, so we force $ORIGIN instead
+# in all situations.
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains:args_list.bzl", "cc_args_list")
+load("@rules_cc//cc/toolchains:feature.bzl", "cc_feature")
+load("@rules_cc//cc/toolchains:nested_args.bzl", "cc_nested_args")
+
+package(default_visibility = ["//visibility:private"])
+
+cc_feature(
+    name = "feature",
+    args = [":runtime_library_search_directories"],
+    feature_name = "runtime_library_search_directories_workaround",
+    visibility = ["//visibility:public"],
+)
+
+cc_args_list(
+    name = "runtime_library_search_directories",
+    args = [
+        ":runtime_library_search_directories_args",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_args(
+    name = "runtime_library_search_directories_args",
+    actions = ["@rules_cc//cc/toolchains/actions:link_actions"],
+    nested = [":search_dir_args"],
+    requires_not_none = "@rules_cc//cc/toolchains/variables:runtime_library_search_directories",
+)
+
+cc_nested_args(
+    name = "search_dir_args",
+    args = [
+        "-Xlinker",
+        "-rpath",
+        "-Xlinker",
+    ] + select({
+        "@platforms//os:macos": ["@loader_path/{search_path}"],
+        "//conditions:default": ["$ORIGIN/{search_path}"],
+    }),
+    format = {
+        "search_path": "@rules_cc//cc/toolchains/variables:runtime_library_search_directories",
+    },
+    iterate_over = "@rules_cc//cc/toolchains/variables:runtime_library_search_directories",
+)

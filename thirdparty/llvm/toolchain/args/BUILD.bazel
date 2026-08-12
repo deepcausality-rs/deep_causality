@@ -1,0 +1,981 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains/impl:documented_api.bzl", "cc_args_list")
+load("//toolchain/args:llvm_target_triple.bzl", "LLVM_TARGET_TRIPLE")
+
+package(default_visibility = ["//visibility:public"])
+
+# COMMON RESET FLAGS
+# --no-default-config
+# -fno-spell-checking
+
+# if (target.cpu.arch.isArm()) {
+#     try argv.append(if (target.cpu.arch.isThumb()) "-mthumb" else "-mno-thumb");
+# }
+
+# -mcpu for arm assembly
+
+cc_args(
+    name = "resource_dir",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-resource-dir",
+        "{resource_dir}",
+    ],
+    data = [
+        "//runtimes:resource_directory",
+    ],
+    format = {
+        "resource_dir": "//runtimes:resource_directory",
+    },
+)
+
+cc_args(
+    name = "target_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE + select({
+        # We hardcode these for now given the complexity of RISC-V extensions.
+        # TODO(cerisier): Support ISA configuration.
+        "@platforms//cpu:riscv64": [
+            # General-purpose 64-bit RISC-V.
+            # Common in most Linux distros.
+            "-march=rv64gc",
+            "-mabi=lp64d",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//constraints/fpu:vfpv4-d16": ["-mfpu=vfpv4-d16"],
+        "//conditions:default": [],
+    }),
+)
+
+# See https://discourse.llvm.org/t/myterious-soft-float-output-in-lto-cache/70753/16
+# Target features are currently not passed to the LTO linker for RISC-V.
+# So we need to pass matching flags ourselves
+# NOTE: These neeed to be fully synchronized with the target_flags.
+# NOTE: partial linking (cc_stage0_object) maybe affected by https://github.com/llvm/llvm-project/issues/59350
+cc_args(
+    name = "lto_plugin_target_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = select({
+        "@platforms//cpu:riscv64": [
+            "-Xlinker",
+            # "-plugin-opt=-mattr=+m,+a,+f,+d,+c",
+            "-plugin-opt=-target-abi=lp64d",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args(
+    name = "module_map",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        # With C++20, Clang defaults to using C++ rather than Clang modules,
+        # which breaks Bazel's `use_module_maps` feature, which is used by
+        # `layering_check`. Since Bazel doesn't support C++ modules yet, it
+        # is safe to disable them globally until the toolchain shipped by
+        # Bazel sets this flag on `use_module_maps`.
+        # https://github.com/llvm/llvm-project/commit/0556138624edf48621dd49a463dbe12e7101f17d
+        "-Xclang",
+        "-fno-cxx-modules",
+        "-Wno-module-import-in-extern-c",
+        # This warning would mean we had an error configuring the toolchain or modulemap
+        "-Werror=incomplete-umbrella",
+        "-Wno-modules-import-nested-redundant",
+    ],
+)
+
+cc_args(
+    name = "cxxstdlib_headers_include_search_paths",
+    actions = [
+        # cpp_compile_actions - lto_backend
+        # Omitted to avoid unused arg warning for -I paths.
+        "@rules_cc//cc/toolchains/actions:linkstamp_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_header_parsing",
+        "@rules_cc//cc/toolchains/actions:cpp_module_compile",
+        "@rules_cc//cc/toolchains/actions:cpp_module_codegen",
+        "@rules_cc//cc/toolchains/actions:clif_match",
+        "@rules_cc//cc/toolchains/actions:objcpp_compile",
+    ],
+    args = [
+        "-isystem",
+        "{cxxstdlib_headers_include_search_path}",
+        "-isystem",
+        "{cxxstdlib_abi_headers_include_search_path}",
+    ],
+    # Do not sort: keep the data order aligned with the argument order above.
+    data = [
+        "//runtimes/cxxstdlib:headers_include_search_directory",
+        "//runtimes/cxxstdlib:abi_headers_include_search_directory",
+    ],
+    format = {
+        "cxxstdlib_headers_include_search_path": "//runtimes/cxxstdlib:headers_include_search_directory",
+        "cxxstdlib_abi_headers_include_search_path": "//runtimes/cxxstdlib:abi_headers_include_search_directory",
+    },
+)
+
+alias(
+    name = "libcxx_headers_include_search_paths",
+    actual = ":cxxstdlib_headers_include_search_paths",
+)
+
+cc_args(
+    name = "crt_search_directory",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+        "@rules_cc//cc/toolchains/actions:lto_index_for_executable",
+        "@rules_cc//cc/toolchains/actions:lto_index_for_dynamic_library",
+        "@rules_cc//cc/toolchains/actions:lto_index_for_nodeps_dynamic_library",
+    ],
+    # clang::driver::Toolchain::GetFilePath("crtn.o") looks for those using
+    # prefix directories (-B).
+    args = [
+        "-B{crt_objects_directory}",
+    ],
+    data = [
+        "//runtimes:crt_objects_directory",
+    ],
+    format = {
+        "crt_objects_directory": "//runtimes:crt_objects_directory",
+    },
+)
+
+cc_args(
+    name = "static_link_executable_pic",
+    actions = ["@rules_cc//cc/toolchains/actions:link_executable_actions"],
+    args = select({
+        "//constraints/pie:unset": ["-static-pie"],
+        "//constraints/pie:on": ["-static-pie"],
+        "//constraints/pie:off": ["-static"],
+    }),
+    requires_not_none = "@rules_cc//cc/toolchains/variables:force_pic",
+)
+
+cc_args(
+    name = "static_link_executable_no_pic",
+    actions = ["@rules_cc//cc/toolchains/actions:link_executable_actions"],
+    args = select({
+        "//constraints/pie:unset": ["-static"],
+        "//constraints/pie:on": ["-static-pie"],
+        "//constraints/pie:off": ["-static"],
+    }),
+    requires_none = "@rules_cc//cc/toolchains/variables:force_pic",
+)
+
+cc_args_list(
+    name = "static_link_executable",
+    args = [
+        ":static_link_executable_pic",
+        ":static_link_executable_no_pic",
+    ],
+)
+
+cc_args(
+    name = "fuse_ld",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fuse-ld=lld",
+        # lld will be used if it's next to clang.
+        # It would have been great to set the path explicitly.
+        # "--ld-path={lld_path}",
+    ],
+)
+
+cc_args(
+    name = "no_absolute_paths_for_builtins",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        # If the compiler sometimes rewrites paths in the .d files without symlinks
+        # (ie when they're shorter), it confuses Bazel's logic for verifying all
+        # #included header files are listed as inputs to the action.
+        "-no-canonical-prefixes",
+    ],
+)
+
+cc_args(
+    name = "deterministic_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        # Make C++ compilation deterministic. Use linkstamping instead of these
+        # compiler symbols.
+        "-Wno-builtin-macro-redefined",
+        "-D__DATE__=\"redacted\"",
+        "-D__TIMESTAMP__=\"redacted\"",
+        "-D__TIME__=\"redacted\"",
+        "-ffile-compilation-dir=.",  # Avoid absolute paths in binaries
+    ],
+)
+
+#######
+
+cc_args(
+    name = "ubsan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=undefined",
+        "-fsanitize-ignorelist={ubsan_ignore}",
+    ],
+    data = ["//sanitizers:ubsan_ignore"],
+    format = {
+        "ubsan_ignore": "//sanitizers:ubsan_ignore",
+    },
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "ubsan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=undefined",
+    ],
+)
+
+cc_args_list(
+    name = "ubsan_flags",
+    args = select({
+        "//config:ubsan_enabled": [
+            ":ubsan_compiler_flags",
+            ":ubsan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "cfi_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=cfi-icall",
+        "-flto",
+        "-fvisibility=hidden",
+        "-fno-sanitize-trap=cfi",
+        "-fno-sanitize-ignorelist",
+        "-fsanitize-ignorelist={cfi_ignore}",
+    ],
+    data = [
+        "//sanitizers:cfi_ignore",
+    ],
+    format = {
+        "cfi_ignore": "//sanitizers:cfi_ignore",
+    },
+)
+
+cc_args(
+    name = "cfi_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=cfi-icall",
+        "-flto",
+        "-fvisibility=hidden",
+        "-fno-sanitize-trap=cfi",
+        "-fno-sanitize-ignorelist",
+        "-fsanitize-ignorelist={cfi_ignore}",
+    ],
+    data = ["//sanitizers:cfi_ignore"],
+    format = {
+        "cfi_ignore": "//sanitizers:cfi_ignore",
+    },
+)
+
+cc_args_list(
+    name = "cfi_flags",
+    args = select({
+        "//config:cfi_enabled": [
+            ":cfi_compiler_flags",
+            ":cfi_linker_flags",
+        ],
+        "//config:host_cfi_enabled": [
+            ":cfi_compiler_flags",
+            ":cfi_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "msan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=memory",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "msan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=memory",
+    ],
+)
+
+cc_args_list(
+    name = "msan_flags",
+    args = select({
+        "//config:msan_enabled": [
+            ":msan_compiler_flags",
+            ":msan_linker_flags",
+        ],
+        "//config:host_msan_enabled": [
+            ":msan_compiler_flags",
+            ":msan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "dfsan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=dataflow",
+        "-mllvm",
+        "-dfsan-abilist={dfsan_abilist}",
+    ],
+    data = ["//runtimes/compiler-rt:clang_rt.dfsan_abilist"],
+    format = {
+        "dfsan_abilist": "//runtimes/compiler-rt:clang_rt.dfsan_abilist",
+    },
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "dfsan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=dataflow",
+    ],
+)
+
+cc_args_list(
+    name = "dfsan_flags",
+    args = select({
+        "//config:dfsan_enabled": [
+            ":dfsan_compiler_flags",
+            ":dfsan_linker_flags",
+        ],
+        "//config:host_dfsan_enabled": [
+            ":dfsan_compiler_flags",
+            ":dfsan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "nsan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=numerical",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "nsan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=numerical",
+    ],
+)
+
+cc_args_list(
+    name = "nsan_flags",
+    args = select({
+        "//config:nsan_enabled": [
+            ":nsan_compiler_flags",
+            ":nsan_linker_flags",
+        ],
+        "//config:host_nsan_enabled": [
+            ":nsan_compiler_flags",
+            ":nsan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "safestack_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=safe-stack",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "safestack_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=safe-stack",
+    ],
+)
+
+cc_args_list(
+    name = "safestack_flags",
+    args = select({
+        "//config:safestack_enabled": [
+            ":safestack_compiler_flags",
+            ":safestack_linker_flags",
+        ],
+        "//config:host_safestack_enabled": [
+            ":safestack_compiler_flags",
+            ":safestack_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "rtsan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=realtime",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "rtsan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=realtime",
+    ],
+)
+
+cc_args_list(
+    name = "rtsan_flags",
+    args = select({
+        "//config:rtsan_enabled": [
+            ":rtsan_compiler_flags",
+            ":rtsan_linker_flags",
+        ],
+        "//config:host_rtsan_enabled": [
+            ":rtsan_compiler_flags",
+            ":rtsan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "tysan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=type",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "tysan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=type",
+    ],
+)
+
+cc_args_list(
+    name = "tysan_flags",
+    args = select({
+        "//config:tysan_enabled": [
+            ":tysan_compiler_flags",
+            ":tysan_linker_flags",
+        ],
+        "//config:host_tysan_enabled": [
+            ":tysan_compiler_flags",
+            ":tysan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "tsan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=thread",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "tsan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=thread",
+    ],
+)
+
+cc_args_list(
+    name = "tsan_flags",
+    args = select({
+        "//config:tsan_enabled": [
+            ":tsan_compiler_flags",
+            ":tsan_linker_flags",
+        ],
+        "//config:host_tsan_enabled": [
+            ":tsan_compiler_flags",
+            ":tsan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "asan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=address",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "asan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=address",
+    ],
+)
+
+cc_args_list(
+    name = "asan_flags",
+    args = select({
+        "//config:asan_enabled": [
+            ":asan_compiler_flags",
+            ":asan_linker_flags",
+        ],
+        "//config:host_asan_enabled": [
+            ":asan_compiler_flags",
+            ":asan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "lsan_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fno-omit-frame-pointer",
+        "-fsanitize=leak",
+    ],
+)
+
+# Note that sanitizers must use `cc_unsanitized_library` on third-party deps
+# if they end up depending on an exec-configure binary, as linking that binary can fail
+# since it was compiled with sanitizer support but linked without it.
+cc_args(
+    name = "lsan_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=leak",
+    ],
+)
+
+cc_args_list(
+    name = "lsan_flags",
+    args = select({
+        "//config:lsan_enabled": [
+            ":lsan_compiler_flags",
+            ":lsan_linker_flags",
+        ],
+        "//config:host_lsan_enabled": [
+            ":lsan_compiler_flags",
+            ":lsan_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "xray_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fxray-instrument",
+        "-fxray-modes=xray-basic",
+    ],
+)
+
+cc_args(
+    name = "xray_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fxray-instrument",
+        "-fxray-modes=xray-basic",
+    ],
+)
+
+cc_args_list(
+    name = "xray_flags",
+    args = select({
+        "//config:xray_enabled": [
+            ":xray_compiler_flags",
+            ":xray_linker_flags",
+        ],
+        "//config:host_xray_enabled": [
+            ":xray_compiler_flags",
+            ":xray_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args(
+    name = "fuzzer_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fsanitize=fuzzer",
+    ],
+)
+
+cc_args(
+    name = "fuzzer_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fsanitize=fuzzer",
+    ],
+)
+
+cc_args(
+    name = "profile_compiler_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+    ],
+    args = [
+        "-fprofile-instr-generate",
+    ],
+)
+
+cc_args(
+    name = "profile_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-fprofile-instr-generate",
+    ],
+)
+
+cc_args(
+    name = "profile_runtime_windows_linker_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = select({
+        "@platforms//os:windows": [
+            "-Wl,-u,__llvm_profile_runtime",
+            "-Wl,/include:__llvm_profile_runtime",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args_list(
+    name = "fuzzer_flags",
+    args = select({
+        "//config:fuzzer_enabled": [
+            ":fuzzer_compiler_flags",
+            ":fuzzer_linker_flags",
+            ":profile_runtime_windows_linker_flags",
+        ],
+        "//config:host_fuzzer_enabled": [
+            ":fuzzer_compiler_flags",
+            ":fuzzer_linker_flags",
+            ":profile_runtime_windows_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args_list(
+    name = "profile_flags",
+    args = select({
+        "//config:profile_enabled": [
+            ":profile_compiler_flags",
+            ":profile_linker_flags",
+            ":profile_runtime_windows_linker_flags",
+        ],
+        "//config:host_profile_enabled": [
+            ":profile_compiler_flags",
+            ":profile_linker_flags",
+            ":profile_runtime_windows_linker_flags",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+#######
+
+cc_args(
+    name = "hermetic_compile_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:cpp_compile_actions",
+        "@rules_cc//cc/toolchains/actions:c_compile_actions",
+        # -nostdlibinc triggers a warning for assemble (no preprocess)
+        "@rules_cc//cc/toolchains/actions:preprocess_assemble",
+        "@rules_cc//cc/toolchains/actions:objc_compile",
+        "@rules_cc//cc/toolchains/actions:objcpp_compile",
+    ],
+    args = [
+        # We want to disable everything except builtin headers since they are
+        # provided as part of the compiler toolchain repository.
+        "-nostdlibinc",
+    ],
+)
+
+config_setting(
+    name = "empty_sysroot",
+    flag_values = {
+        "//config:empty_sysroot": "True",
+    },
+)
+
+# Passing a sysroot to /dev/null has the side effect of removing all default
+# library search paths that clang passes like -L/usr/lib.
+cc_args(
+    name = "empty_sysroot_flags",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:compile_actions",
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = select({
+        ":empty_sysroot": [
+            "--sysroot=/dev/null",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_args(
+    name = "rtlib_compiler_rt",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-rtlib=compiler-rt",
+    ],
+)
+
+cc_args(
+    # We provide the libc++ and libunwind ourselves through static_runtime_libs
+    # and dynamic_runtime_libs.
+    name = "stdlib",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        # will prevent clang to choose which libc++ to link against
+        "-nostdlib++",
+    ],
+)
+
+cc_args(
+    name = "unwindlib_none",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = select({
+        # The clang driver forces -ISystem and doesn't claim the arg, which
+        # would result in a warning when targeting macOS.
+        "@platforms//os:macos": [],
+        # Will prevent clang from choosing which libunwind to link against.
+        "//conditions:default": ["--unwindlib=none"],
+    }),
+)
+
+# Those are stubs since we link against static_runtime_libs / dynamic_runtime_libs.
+cc_args(
+    name = "cxxstdlib_library_search_paths",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-L{cxxstdlib_library_search_path}",
+    ],
+    data = [
+        "//runtimes/cxxstdlib:library_search_directory",
+    ],
+    format = {
+        "cxxstdlib_library_search_path": "//runtimes/cxxstdlib:library_search_directory",
+    },
+)
+
+# Those are stubs since we link against static_runtime_libs / dynamic_runtime_libs.
+cc_args(
+    name = "libunwind_library_search_paths",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:link_actions",
+    ],
+    args = [
+        "-L{libunwind_library_search_path}",
+    ],
+    data = [
+        "//runtimes/libunwind:libunwind_library_search_directory",
+    ],
+    format = {
+        "libunwind_library_search_path": "//runtimes/libunwind:libunwind_library_search_directory",
+    },
+)
+
+cc_args(
+    name = "parse_header_args",
+    actions = ["@rules_cc//cc/toolchains/actions:cpp_header_parsing"],
+    args = [
+        "-xc++-header",  # TODO: This is wrong for C only headers https://github.com/bazelbuild/bazel/pull/22971
+        "-fsyntax-only",
+    ],
+    env = {
+        "PARSE_HEADER": "{output_file}",
+    },
+    format = {"output_file": "@rules_cc//cc/toolchains/variables:output_file"},
+    requires_not_none = "@rules_cc//cc/toolchains/variables:output_file",
+)
+
+cc_args(
+    name = "validate_static_library_args",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:validate_static_library",
+    ],
+    env = select({
+        "@platforms//os:macos": {"DARWIN_TARGET": "1"},
+        "//conditions:default": {},
+    }),
+)
+
+# TODO: rules_cc passes extra args to these actions, ideally these would be fixed in rules_cc.
+cc_args(
+    name = "ignore_unused_command_line_argument",
+    actions = [
+        "@rules_cc//cc/toolchains/actions:lto_backend",
+        "@rules_cc//cc/toolchains/actions:cpp_header_parsing",
+    ],
+    args = ["-Wno-unused-command-line-argument"],
+)
+
+bzl_library(
+    name = "llvm_target_triple",
+    srcs = ["llvm_target_triple.bzl"],
+)

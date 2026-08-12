@@ -1,0 +1,51 @@
+diff --git a/libstdc++-v3/src/c++17/fs_dir.cc b/libstdc++-v3/src/c++17/fs_dir.cc
+--- a/libstdc++-v3/src/c++17/fs_dir.cc
++++ b/libstdc++-v3/src/c++17/fs_dir.cc
+@@ -148,7 +148,7 @@
+ }
+ 
+ const fs::directory_entry&
+-fs::directory_iterator::operator*() const
++fs::directory_iterator::operator*() const noexcept
+ {
+   if (!_M_dir)
+     _GLIBCXX_THROW_OR_ABORT(filesystem_error(
+diff --git a/libstdc++-v3/src/c++17/fs_path.cc b/libstdc++-v3/src/c++17/fs_path.cc
+--- a/libstdc++-v3/src/c++17/fs_path.cc
++++ b/libstdc++-v3/src/c++17/fs_path.cc
+@@ -335,7 +335,7 @@
+ }
+ 
+ inline auto
+-path::_List::begin() noexcept
++path::_List::begin()
+ -> iterator
+ {
+   __glibcxx_assert(!empty());
+@@ -345,7 +345,7 @@
+ }
+ 
+ inline auto
+-path::_List::end() noexcept
++path::_List::end()
+ -> iterator
+ {
+   __glibcxx_assert(!empty());
+@@ -355,7 +355,7 @@
+ }
+ 
+ auto
+-path::_List::begin() const noexcept
++path::_List::begin() const
+ -> const_iterator
+ {
+   __glibcxx_assert(!empty());
+@@ -365,7 +365,7 @@
+ }
+ 
+ auto
+-path::_List::end() const noexcept
++path::_List::end() const
+ -> const_iterator
+ {
+   __glibcxx_assert(!empty());

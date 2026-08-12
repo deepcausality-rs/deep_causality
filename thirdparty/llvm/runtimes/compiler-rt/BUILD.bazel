@@ -1,0 +1,197 @@
+alias(
+    name = "clang_rt.fuzzer.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.fuzzer.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.fuzzer_no_main.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.fuzzer_no_main.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.fuzzer_interceptors.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.fuzzer_interceptors.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.profile.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.profile.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.builtins.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.builtins.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.ubsan_standalone.static",
+    actual = "@llvm-project//compiler-rt:ubsan_standalone.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.ubsan_standalone_cxx.static",
+    actual = "@llvm-project//compiler-rt:ubsan_standalone_cxx.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.ubsan_loop_detect.static",
+    actual = "@llvm-project//compiler-rt:ubsan_loop_detect.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.ubsan_standalone.shared",
+    actual = "@llvm-project//compiler-rt:ubsan_standalone.shared",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.cfi.static",
+    actual = "@llvm-project//compiler-rt:cfi.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.cfi_diag.static",
+    actual = "@llvm-project//compiler-rt:cfi_diag.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.cfi_ignorelist",
+    actual = "@llvm-project//compiler-rt:cfi_ignorelist",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.msan.static",
+    actual = "@llvm-project//compiler-rt:msan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.msan_cxx.static",
+    actual = "@llvm-project//compiler-rt:msan_cxx.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.dfsan.static",
+    actual = "@llvm-project//compiler-rt:dfsan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.dfsan_abilist",
+    actual = "@llvm-project//compiler-rt:dfsan_abilist",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.nsan.static",
+    actual = "@llvm-project//compiler-rt:nsan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.safestack.static",
+    actual = "@llvm-project//compiler-rt:safestack.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.rtsan.static",
+    actual = "@llvm-project//compiler-rt:rtsan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.tysan.static",
+    actual = "@llvm-project//compiler-rt:tysan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.tsan.static",
+    actual = "@llvm-project//compiler-rt:tsan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.tsan_cxx.static",
+    actual = "@llvm-project//compiler-rt:tsan_cxx.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.tsan.shared",
+    actual = "@llvm-project//compiler-rt:tsan.shared",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.asan.static",
+    actual = "@llvm-project//compiler-rt:asan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.asan_static.static",
+    actual = "@llvm-project//compiler-rt:asan_static.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.asan_cxx.static",
+    actual = "@llvm-project//compiler-rt:asan_cxx.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.asan.shared",
+    actual = "@llvm-project//compiler-rt:asan.shared",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.lsan.static",
+    actual = "@llvm-project//compiler-rt:lsan.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.lsan.shared",
+    actual = "@llvm-project//compiler-rt:lsan.shared",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.xray.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.xray.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.xray_basic.static",
+    actual = "@llvm-project//compiler-rt:clang_rt.xray_basic.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.crtbegin",
+    actual = "@llvm-project//compiler-rt:clang_rt.crtbegin.static",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "clang_rt.crtend",
+    actual = "@llvm-project//compiler-rt:clang_rt.crtend.static",
+    visibility = ["//visibility:public"],
+)

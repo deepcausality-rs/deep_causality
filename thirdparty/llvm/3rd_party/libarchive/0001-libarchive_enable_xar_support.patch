@@ -1,0 +1,68 @@
+diff --git a/MODULE.bazel b/MODULE.bazel
+index cdf2d5b66..1ff04b45c 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -14,3 +14,4 @@ bazel_dep(name = "platforms", version = "0.0.10")
+ bazel_dep(name = "rules_cc", version = "0.0.9")
+ bazel_dep(name = "bazel_skylib", version = "1.6.1")
+ bazel_dep(name = "mbedtls", version = "3.6.0.bcr.1")
++bazel_dep(name = "libxml2", version = "2.15.1.bcr.1")
+diff --git a/BUILD.bazel b/BUILD.bazel
+index e74107039..fb9fec383 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -22,6 +22,14 @@ cc_library(
+             "HAVE_MBEDTLS_MD_H",
+             "HAVE_MBEDTLS_PKCS5_H",
+             "HAVE_MBEDTLS_VERSION_H",
++            "ARCHIVE_CRYPTO_MD5_MBEDTLS",
++            "ARCHIVE_CRYPTO_SHA1_MBEDTLS",
++        ],
++        "//conditions:default": [],
++    }) + select({
++        "@platforms//os:macos": [
++            "ARCHIVE_CRYPTO_MD5_LIBSYSTEM",
++            "ARCHIVE_CRYPTO_SHA1_LIBSYSTEM",
+         ],
+         "//conditions:default": [],
+     }),
+diff --git a/libarchive/BUILD.bazel b/libarchive/BUILD.bazel
+index e0d2859a7..21198b39f 100644
+--- a/libarchive/BUILD.bazel
++++ b/libarchive/BUILD.bazel
+@@ -209,6 +209,7 @@ cc_library(
+         "@xz//:lzma",
+         "@zlib",
+         "@zstd",
++        "@libxml2",
+     ] + select({
+         "//:use_mbedtls_setting": ["@mbedtls"],
+         "//conditions:default": [],
+diff --git a/libarchive_bazel_generic_config.h b/libarchive_bazel_generic_config.h
+index 79cff88ab..1d42565da 100644
+--- a/libarchive_bazel_generic_config.h
++++ b/libarchive_bazel_generic_config.h
+@@ -167,6 +167,9 @@
+ #define HAVE_LIBLZ4 1
+ #define HAVE_LZ4_H 1
+ #define HAVE_LZ4HC_H 1
++#define HAVE_LIBXML2 1
++#define HAVE_LIBXML_XMLREADER_H 1
++#define HAVE_LIBXML_XMLVERSION_H 1
+ 
+ #ifdef __APPLE__
+ #define MAC_OS_X_VERSION_MIN_REQUIRED 1060
+diff --git a/libarchive_bazel_windows_config.h b/libarchive_bazel_windows_config.h
+index c954cb5ac..77a1cf526 100644
+--- a/libarchive_bazel_windows_config.h
++++ b/libarchive_bazel_windows_config.h
+@@ -109,6 +109,9 @@
+ #define HAVE_LIBLZ4 1
+ #define HAVE_LZ4_H 1
+ #define HAVE_LZ4HC_H 1
++#define HAVE_LIBXML2 1
++#define HAVE_LIBXML_XMLREADER_H 1
++#define HAVE_LIBXML_XMLVERSION_H 1
+ 
+ 
+ #define LIBARCHIVE_VERSION_NUMBER "3007003"

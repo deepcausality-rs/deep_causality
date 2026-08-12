@@ -1,0 +1,34 @@
+From f9c2c342865960a1b67dff0b4920e8399652eae8 Mon Sep 17 00:00:00 2001
+From: Corentin Kerisit <corentin.kerisit@gmail.com>
+Date: Mon, 26 Jan 2026 18:24:48 +0100
+Subject: [PATCH] wip mingw
+
+---
+ libarchive_bazel_windows_config.h | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/libarchive_bazel_windows_config.h b/libarchive_bazel_windows_config.h
+index 77a1cf52..22d8adab 100644
+--- a/libarchive_bazel_windows_config.h
++++ b/libarchive_bazel_windows_config.h
+@@ -118,9 +118,11 @@
+ #define SIZEOF_WCHAR_T 2
+ #define VERSION "3.8.1"
+ 
+-#define gid_t short
+-#define id_t short
+-#define mode_t unsigned short
+-#define pid_t int
+-#define ssize_t int64_t
+-#define uid_t short
++#define HAVE_DECL_SSIZE_MAX 1
++
++typedef short gid_t;
++typedef short id_t;
++typedef unsigned short mode_t;
++// typedef int pid_t;
++// typedef int64_t ssize_t;
++typedef short uid_t;
+-- 
+2.52.0
+

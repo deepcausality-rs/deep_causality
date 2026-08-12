@@ -1,9 +1,0 @@
-###############################################################################
-# Patches applied to external modules via single_version_override in MODULE.bazel.
-#
-# A package (rather than a bare directory) so the patch files are addressable
-# as labels, which is what bzlmod's `patches` attribute takes.
-###############################################################################
-package(default_visibility = ["//visibility:public"])
-
-exports_files(glob(["*.patch"]))

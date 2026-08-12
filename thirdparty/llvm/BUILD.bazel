@@ -1,0 +1,91 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+
+# gazelle:map_kind bzl_library bzl_library @bazel_lib//:bzl_library.bzl
+# gazelle:exclude tests
+
+exports_files([
+    "MODULE.bazel",
+    ".buildifier.json",
+])
+
+alias(
+    name = "rbe_platform",
+    actual = "@rbe_platform//:rbe_platform",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "rbe_linux_x86_64",
+    actual = "@rbe_platform//:rbe_linux_x86_64",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "rbe_linux_aarch64",
+    actual = "@rbe_platform//:rbe_linux_aarch64",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "builtin_resource_dir",
+    actual = select({
+        "//platforms/config:macos_x86_64_stage0_prebuilt_seed": "@llvm-toolchain-minimal-darwin-amd64//:builtin_resource_dir",
+        "//platforms/config:macos_aarch64_stage0_prebuilt_seed": "@llvm-toolchain-minimal-darwin-arm64//:builtin_resource_dir",
+        "//platforms/config:linux_x86_64_stage0_prebuilt_seed": "@llvm-toolchain-minimal-linux-amd64//:builtin_resource_dir",
+        "//platforms/config:linux_aarch64_stage0_prebuilt_seed": "@llvm-toolchain-minimal-linux-arm64//:builtin_resource_dir",
+        "//platforms/config:windows_aarch64_stage0_prebuilt_seed": "@llvm-toolchain-minimal-windows-arm64//:builtin_resource_dir",
+        "//platforms/config:windows_x86_64_stage0_prebuilt_seed": "@llvm-toolchain-minimal-windows-amd64//:builtin_resource_dir",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "directory",
+    srcs = ["directory.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_skylib//rules/directory",
+        "@bazel_skylib//rules/directory:providers",
+        "@bazel_skylib//rules/directory:subdirectory",
+    ],
+)
+
+bzl_library(
+    name = "http_pkg_archive",
+    srcs = ["http_pkg_archive.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_lib//lib:repo_utils",
+        "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
+    name = "http_bsdtar_archive",
+    srcs = ["http_bsdtar_archive.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_lib//lib:repo_utils",
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
+        "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
+    name = "sh_script",
+    srcs = ["sh_script.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["@bazel_lib//lib:run_binary"],
+)
+
+bzl_library(
+    name = "defs",
+    srcs = ["defs.bzl"],
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "rbe",
+    srcs = ["rbe.bzl"],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,25 @@
+{
+  "homepage": "https://github.com/buildbuddy-io/buildbuddy-toolchain",
+  "maintainers": [
+    {
+      "name": "Son Luong Ngoc",
+      "email": "son@buildbuddy.io",
+      "github": "sluongng"
+    },
+    {
+      "email": "fabian@meumertzhe.im",
+      "github": "fmeum",
+      "name": "Fabian Meumertzheim"
+    },
+    {
+      "email": "dan@buildbuddy.io",
+      "github": "dan-stowell",
+      "name": "Dan Stowell"
+    }
+  ],
+  "repository": [
+    "github:buildbuddy-io/buildbuddy-toolchain"
+  ],
+  "versions": [],
+  "yanked_versions": {}
+}

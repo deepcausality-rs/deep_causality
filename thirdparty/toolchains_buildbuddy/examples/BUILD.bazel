@@ -1,0 +1,186 @@
+load("@bazel_binaries//:defs.bzl", "bazel_binaries")
+load(
+    "@rules_bazel_integration_test//bazel_integration_test:defs.bzl",
+    "bazel_integration_test",
+    "default_test_runner",
+)
+
+_BAZEL_BUILD_CMD = [
+    "build",
+    "//:main",
+]
+
+_REMOTE_SHARED_FLAGS = [
+    "--noremote_accept_cached",
+    "--noremote_upload_local_results",
+    "--experimental_platform_in_output_dir",
+    "--remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}",
+]
+
+_RBE_BZLMOD_LINUX_X86_64_FLAGS = [
+    "--config=remote-linux",
+    "--extra_toolchains=@toolchains_buildbuddy//toolchains/cc:ubuntu_gcc_x86_64",
+]
+
+_RBE_BZLMOD_LINUX_ARM64_FLAGS = [
+    "--config=remote-linux-arm64",
+    "--extra_toolchains=@toolchains_buildbuddy//toolchains/cc:ubuntu_gcc_arm64",
+]
+
+_RBE_WORKSPACE_LINUX_X86_64_FLAGS = [
+    "--config=remote-linux",
+    "--platforms=@buildbuddy_toolchain//:platform_linux_x86_64",
+    "--extra_execution_platforms=@buildbuddy_toolchain//:platform_linux_x86_64",
+    "--extra_toolchains=@buildbuddy_toolchain//:ubuntu_cc_toolchain",
+]
+
+_RBE_WORKSPACE_LINUX_ARM64_FLAGS = [
+    "--config=remote-linux-arm64",
+    "--platforms=@buildbuddy_toolchain//:platform_linux_arm64",
+    "--extra_execution_platforms=@buildbuddy_toolchain//:platform_linux_arm64",
+    "--extra_toolchains=@buildbuddy_toolchain//:ubuntu_cc_toolchain_arm64",
+]
+
+# Test runner for integration tests
+default_test_runner(
+    name = "test_runner",
+    bazel_cmds = [
+        "info",
+        " ".join(_BAZEL_BUILD_CMD),
+    ],
+)
+
+# Remote execution test runner that exercises BuildBuddy RBE (bzlmod)
+default_test_runner(
+    name = "rbe_test_runner",
+    bazel_cmds = [
+        "info",
+        " ".join(_BAZEL_BUILD_CMD + _RBE_BZLMOD_LINUX_X86_64_FLAGS + _REMOTE_SHARED_FLAGS),
+        " ".join(_BAZEL_BUILD_CMD + _RBE_BZLMOD_LINUX_ARM64_FLAGS + _REMOTE_SHARED_FLAGS),
+    ],
+)
+
+# Remote execution test runner for WORKSPACE (non-bzlmod)
+default_test_runner(
+    name = "workspace_rbe_test_runner",
+    bazel_cmds = [
+        "info",
+        " ".join(_BAZEL_BUILD_CMD + _RBE_WORKSPACE_LINUX_X86_64_FLAGS + _REMOTE_SHARED_FLAGS),
+        " ".join(_BAZEL_BUILD_CMD + _RBE_WORKSPACE_LINUX_ARM64_FLAGS + _REMOTE_SHARED_FLAGS),
+    ],
+)
+
+# Filegroup to collect child workspace files
+filegroup(
+    name = "bzlmod_workspace_files",
+    srcs = [
+        "bzlmod/.bazelrc",
+        "bzlmod/.gitignore",
+        "bzlmod/BUILD",
+        "bzlmod/MODULE.bazel",
+        "bzlmod/main.cc",
+    ],
+)
+
+filegroup(
+    name = "workspace_workspace_files",
+    srcs = [
+        "workspace/.bazelrc",
+        "workspace/.gitignore",
+        "workspace/BUILD",
+        "workspace/WORKSPACE",
+        "workspace/main.cc",
+    ],
+)
+
+# Local integration test for bzlmod example
+bazel_integration_test(
+    name = "local_bzlmod_test",
+    timeout = "moderate",
+    bazel_binaries = bazel_binaries,
+    bazel_version = bazel_binaries.versions.current,
+    test_runner = ":test_runner",
+    workspace_files = [
+        ":bzlmod_workspace_files",
+        "//:local_repository_files",
+    ],
+    workspace_path = "bzlmod",
+)
+
+# RBE integration test for bzlmod example
+bazel_integration_test(
+    name = "rbe_bzlmod_test",
+    timeout = "moderate",
+    additional_env_inherit = [
+        "BUILDBUDDY_API_KEY",
+    ],
+    bazel_binaries = bazel_binaries,
+    bazel_version = bazel_binaries.versions.current,
+    tags = [],
+    test_runner = ":rbe_test_runner",
+    workspace_files = [
+        ":bzlmod_workspace_files",
+        "//:local_repository_files",
+    ],
+    workspace_path = "bzlmod",
+)
+
+# Local integration test for workspace (non-bzlmod) example
+bazel_integration_test(
+    name = "local_workspace_test",
+    timeout = "moderate",
+    bazel_binaries = bazel_binaries,
+    bazel_version = bazel_binaries.versions.current,
+    test_runner = ":test_runner",
+    workspace_files = [
+        ":workspace_workspace_files",
+        "//:local_repository_files",
+    ],
+    workspace_path = "workspace",
+)
+
+# RBE integration test for workspace (non-bzlmod) example
+bazel_integration_test(
+    name = "rbe_workspace_test",
+    timeout = "moderate",
+    additional_env_inherit = [
+        "BUILDBUDDY_API_KEY",
+    ],
+    bazel_binaries = bazel_binaries,
+    bazel_version = bazel_binaries.versions.current,
+    tags = [],
+    test_runner = ":workspace_rbe_test_runner",
+    workspace_files = [
+        ":workspace_workspace_files",
+        "//:local_repository_files",
+    ],
+    workspace_path = "workspace",
+)
+
+# Test suite for local integration tests
+test_suite(
+    name = "local_tests",
+    tests = [
+        ":local_bzlmod_test",
+        ":local_workspace_test",
+    ],
+)
+
+# Test suite for RBE integration tests (requires BUILDBUDDY_API_KEY)
+test_suite(
+    name = "rbe_tests",
+    tags = [],
+    tests = [
+        ":rbe_bzlmod_test",
+        ":rbe_workspace_test",
+    ],
+)
+
+# Test suite for all integration tests
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":local_tests",
+        ":rbe_tests",
+    ],
+)

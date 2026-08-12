@@ -1,0 +1,18 @@
+diff --git a/compiler-rt/lib/sanitizer_common/symbolizer/sanitizer_symbolize.cpp b/compiler-rt/lib/sanitizer_common/symbolizer/sanitizer_symbolize.cpp
+--- a/compiler-rt/lib/sanitizer_common/symbolizer/sanitizer_symbolize.cpp
++++ b/compiler-rt/lib/sanitizer_common/symbolizer/sanitizer_symbolize.cpp
+@@ -166,6 +166,7 @@ bool __sanitizer_symbolize_set_inline_frames(bool Value) {
+   return true;
+ }
+ 
++#if !defined(SANITIZER_SKIP_CXA_ATEXIT_OVERRIDE)
+ // Override __cxa_atexit and ignore callbacks.
+ // This prevents crashes in a configuration when the symbolizer
+ // is built into sanitizer runtime and consequently into the test process.
+@@ -193,5 +194,6 @@ bool __sanitizer_symbolize_set_inline_frames(bool Value) {
+ // For the standalone llvm-symbolizer this does not hurt,
+ // we just don't destroy few global objects on exit.
+ int __cxa_atexit(void (*f)(void *a), void *arg, void *dso) { return 0; }
++#endif
+ 
+ }  // extern "C"

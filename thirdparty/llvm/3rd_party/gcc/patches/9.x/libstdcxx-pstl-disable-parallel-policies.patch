@@ -1,0 +1,14 @@
+diff --git a/libstdc++-v3/include/pstl/pstl_config.h b/libstdc++-v3/include/pstl/pstl_config.h
+--- a/libstdc++-v3/include/pstl/pstl_config.h
++++ b/libstdc++-v3/include/pstl/pstl_config.h
+@@ -9,6 +9,10 @@
+ 
+ #ifndef __PSTL_config_H
+ #define __PSTL_config_H
++
++#ifndef PSTL_USE_PARALLEL_POLICIES
++#define PSTL_USE_PARALLEL_POLICIES 0
++#endif
+ 
+ #define PSTL_VERSION 203
+ #define PSTL_VERSION_MAJOR (PSTL_VERSION / 100)

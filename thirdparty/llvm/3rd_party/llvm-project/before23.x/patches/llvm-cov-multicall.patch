@@ -1,0 +1,120 @@
+diff --git a/llvm/tools/llvm-cov/llvm-cov.cpp b/llvm/tools/llvm-cov/llvm-cov.cpp
+index 52610eff4f473..5106d369baf05 100644
+--- a/llvm/tools/llvm-cov/llvm-cov.cpp
++++ b/llvm/tools/llvm-cov/llvm-cov.cpp
+@@ -10,10 +10,11 @@
+ //
+ //===----------------------------------------------------------------------===//
+ 
++#include "llvm/ADT/SmallVector.h"
+ #include "llvm/ADT/StringRef.h"
+ #include "llvm/ADT/StringSwitch.h"
+ #include "llvm/Support/CommandLine.h"
+-#include "llvm/Support/InitLLVM.h"
++#include "llvm/Support/LLVMDriver.h"
+ #include "llvm/Support/Path.h"
+ #include "llvm/Support/Process.h"
+ #include "llvm/Support/raw_ostream.h"
+@@ -55,17 +56,18 @@ static int versionMain(int argc, const char *argv[]) {
+   return 0;
+ }
+ 
+-int main(int argc, const char **argv) {
+-  InitLLVM X(argc, argv);
++int llvm_cov_main(int argc, char **argv, const llvm::ToolContext &) {
++  SmallVector<const char *, 8> ArgStorage(argv, argv + argc);
++  const char **Argv = ArgStorage.data();
+ 
+   // If argv[0] is or ends with 'gcov', always be gcov compatible
+-  if (sys::path::stem(argv[0]).ends_with_insensitive("gcov"))
+-    return gcovMain(argc, argv);
++  if (sys::path::stem(Argv[0]).ends_with_insensitive("gcov"))
++    return gcovMain(argc, Argv);
+ 
+   // Check if we are invoking a specific tool command.
+   if (argc > 1) {
+     typedef int (*MainFunction)(int, const char *[]);
+-    MainFunction Func = StringSwitch<MainFunction>(argv[1])
++    MainFunction Func = StringSwitch<MainFunction>(Argv[1])
+                             .Case("convert-for-testing", convertForTestingMain)
+                             .Case("export", exportMain)
+                             .Case("gcov", gcovMain)
+@@ -76,19 +78,19 @@ int main(int argc, const char **argv) {
+                             .Default(nullptr);
+ 
+     if (Func) {
+-      std::string Invocation = std::string(argv[0]) + " " + argv[1];
+-      argv[1] = Invocation.c_str();
+-      return Func(argc - 1, argv + 1);
++      std::string Invocation = std::string(Argv[0]) + " " + Argv[1];
++      ArgStorage[1] = Invocation.c_str();
++      return Func(argc - 1, Argv + 1);
+     }
+   }
+ 
+   if (argc > 1) {
+     if (sys::Process::StandardErrHasColors())
+       errs().changeColor(raw_ostream::RED);
+-    errs() << "Unrecognized command: " << argv[1] << ".\n\n";
++    errs() << "Unrecognized command: " << Argv[1] << ".\n\n";
+     if (sys::Process::StandardErrHasColors())
+       errs().resetColor();
+   }
+-  helpMain(argc, argv);
++  helpMain(argc, Argv);
+   return 1;
+ }
+diff --git a/llvm/BUILD.bazel b/llvm/BUILD.bazel
+index e83a237a5397f..403d0cedaddae 100644
+--- a/llvm/BUILD.bazel
++++ b/llvm/BUILD.bazel
+@@ -4891,14 +4891,13 @@ cc_binary(
+     ],
+ )
+ 
+-cc_binary(
+-    name = "llvm-cov",
++cc_library(
++    name = "llvm-cov-lib",
+     srcs = glob([
+         "tools/llvm-cov/*.cpp",
+         "tools/llvm-cov/*.h",
+     ]),
+     copts = llvm_copts,
+-    stamp = 0,
+     deps = [
+         ":Coverage",
+         ":Debuginfod",
+@@ -4911,6 +4910,12 @@ cc_binary(
+     ],
+ )
+ 
++llvm_driver_cc_binary(
++    name = "llvm-cov",
++    stamp = 0,
++    deps = [":llvm-cov-lib"],
++)
++
+ gentbl_cc_library(
+     name = "CvtResTableGen",
+     strip_include_prefix = "tools/llvm-cvtres",
+diff --git a/llvm/driver.bzl b/llvm/driver.bzl
+index e38c681370ed1..a695b3b495cd0 100644
+--- a/llvm/driver.bzl
++++ b/llvm/driver.bzl
+@@ -16,6 +16,7 @@ _TOOLS = {
+     "lld": "//lld:lld-lib",
+     "llvm-ar": "//llvm:llvm-ar-lib",
+     "llvm-cgdata": "//llvm:llvm-cgdata-lib",
++    "llvm-cov": "//llvm:llvm-cov-lib",
+     "llvm-cxxfilt": "//llvm:llvm-cxxfilt-lib",
+     "llvm-debuginfod-find": "//llvm:llvm-debuginfod-find-lib",
+     "llvm-dwp": "//llvm:llvm-dwp-lib",
+@@ -41,6 +42,7 @@ _EXTRA_ALIASES = {
+     "clang": ["clang++", "clang-cl", "clang-cpp"],
+     "lld": ["ld", "lld-link", "ld.lld", "ld64.lld", "wasm-ld"],
+     "llvm-ar": ["ranlib", "lib", "dlltool"],
++    "llvm-cov": ["gcov"],
+     "llvm-cxxfilt": ["c++filt"],
+     "llvm-objcopy": ["bitcode-strip", "install-name-tool", "strip"],
+     "llvm-objdump": ["otool"],

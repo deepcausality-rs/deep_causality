@@ -1,0 +1,18 @@
+# TODO(zbarsky): This can't be a `exports_files` because rules_cc only accepts labels
+filegroup(
+    name = "ubsan_ignore",
+    srcs = ["ubsan_ignore.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "cfi_ignore",
+    srcs = ["cfi_ignore.txt"],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "sanitizers_headers_include_search_directory",
+    actual = "@llvm-project//compiler-rt:sanitizers_headers_include_search_directory",
+    visibility = ["//visibility:public"],
+)

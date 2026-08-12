@@ -1,0 +1,35 @@
+commit a8202e11aaad25ea04c93b3050898930b71ca107
+Author: David Zbarsky <dzbarsky@gmail.com>
+Date:   Sat Dec 13 20:46:55 2025 -0500
+
+    Avoid genrule in zlib
+
+diff --git a/utils/bazel/third_party_build/zlib-ng.BUILD b/utils/bazel/third_party_build/zlib-ng.BUILD
+index bb880c0e3279..78b2b482a9ea 100644
+--- a/utils/bazel/third_party_build/zlib-ng.BUILD
++++ b/utils/bazel/third_party_build/zlib-ng.BUILD
+@@ -2,6 +2,7 @@
+ # See https://llvm.org/LICENSE.txt for license information.
+ # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
++load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+ load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+ load("@rules_cc//cc:cc_library.bzl", "cc_library")
+ 
+@@ -21,12 +22,12 @@ config_setting(
+     flag_values = {":llvm_enable_zlib": "true"},
+ )
+ 
+-genrule(
++copy_file(
+     # The input template is identical to the CMake output.
+     name = "zconf_gen",
+-    srcs = ["zconf.h.in"],
+-    outs = ["zconf.h"],
+-    cmd = "cp $(SRCS) $(OUTS)",
++    src = "zconf.h.in",
++    out = "zconf.h",
++    allow_symlink = True,
+ )
+ 
+ cc_library(

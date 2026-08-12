@@ -1,0 +1,58 @@
+load("//platforms:common.bzl", "SUPPORTED_TARGETS")
+load("//toolchain/bootstrap:bootstrap_binary.bzl", "bootstrap_binaries")
+load("//toolchain/bootstrap:fdo_profile.bzl", "llvm_fdo_profile_data", "llvm_fdo_profile_workload")
+
+_LLVM_FDO_EXECUTORS = {
+    "linux_aarch64": {
+        "buildbuddy_arch": "arm64",
+        "cpu": "aarch64",
+    },
+    "linux_x86_64": {
+        "buildbuddy_arch": "amd64",
+        "cpu": "x86_64",
+    },
+}
+
+bootstrap_binaries(fdo_profile = ":llvm_fdo_profdata")
+
+[
+    llvm_fdo_profile_workload(
+        name = "llvm_fdo_profile_workload_%s_to_%s_%s" % (executor, target_os, target_cpu),
+        srcs = ":fdo_freestanding.c" if target_os == "none" else "@llvm_fdo_zstd//:zstd_compress_files",
+        exec_compatible_with = [
+            "@platforms//cpu:" + executor_config["cpu"],
+            "@platforms//os:linux",
+        ],
+        exec_properties = {
+            "Arch": executor_config["buildbuddy_arch"],
+        },
+        target_platform = "//platforms:%s_%s" % (target_os, target_cpu),
+        workload_kind = "freestanding" if target_os == "none" else "hosted",
+    )
+    for executor, executor_config in _LLVM_FDO_EXECUTORS.items()
+    for target_os, target_cpu in SUPPORTED_TARGETS
+]
+
+[
+    llvm_fdo_profile_data(
+        name = "llvm_fdo_profdata_linux_" + executor_cpu,
+        profiles = [
+            "llvm_fdo_profile_workload_linux_%s_to_%s_%s" % (executor_cpu, target_os, target_cpu)
+            for target_os, target_cpu in SUPPORTED_TARGETS
+        ],
+        visibility = ["//visibility:public"],
+    )
+    for executor_cpu in [
+        "aarch64",
+        "x86_64",
+    ]
+]
+
+alias(
+    name = "llvm_fdo_profdata",
+    actual = select({
+        "@platforms//cpu:aarch64": ":llvm_fdo_profdata_linux_aarch64",
+        "@platforms//cpu:x86_64": ":llvm_fdo_profdata_linux_x86_64",
+    }),
+    visibility = ["//visibility:public"],
+)

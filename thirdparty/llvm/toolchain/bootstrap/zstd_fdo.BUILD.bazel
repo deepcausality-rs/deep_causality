@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "zstd_compress_files",
+    srcs = glob([
+        "lib/**/*.h",
+        "lib/common/*.c",
+        "lib/compress/*.c",
+        "programs/*.h",
+    ]) + [
+        "programs/fileio.c",
+        "programs/timefn.c",
+        "programs/util.c",
+        "programs/zstdcli.c",
+    ],
+)

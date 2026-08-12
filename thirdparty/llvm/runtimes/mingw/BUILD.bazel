@@ -1,0 +1,486 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@llvm//toolchain/runtimes:cc_runtime_library.bzl", "cc_runtime_stage0_library")
+load("//runtimes:defs.bzl", "stub_library")
+load(":crt_object.bzl", "crt_object")
+
+exports_files(["mingw.BUILD.bazel"])
+
+MINGW_CRT_COMMON_COPTS = [
+    "-D_CRTBLD",
+    "-D_WIN32_WINNT=0x0f00",
+    "-D__MSVCRT_VERSION__=0x600",
+    "-D__USE_MINGW_ANSI_STDIO=0",
+    "-fno-builtin",
+    "-std=gnu99",
+] + select({
+    "@platforms//cpu:x86_64": ["-m64"],
+    "//conditions:default": [],
+}) + [
+    "-Wno-typedef-redefinition",
+    "-Wno-pragma-pack",
+    "-Wno-missing-declarations",
+]
+
+WINPTHREAD_COPTS = [
+    "-D_WIN32_WINNT=0x0f00",
+    "-D__USE_MINGW_ANSI_STDIO=0",
+    "-DIN_WINPTHREAD",
+    "-std=gnu99",
+] + select({
+    "@platforms//cpu:x86_64": ["-m64"],
+    "//conditions:default": [],
+}) + [
+    "-Wall",
+]
+
+cc_runtime_stage0_library(
+    name = "mingw32",
+    srcs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:mingw32_crt_x86_64_srcs"],
+        "@platforms//cpu:aarch64": ["@mingw//:mingw32_crt_aarch64_srcs"],
+    }),
+    copts = MINGW_CRT_COMMON_COPTS,
+    # TODO(zbarsky): `includes = ["include"]` instead of mingw_Crt_headers?
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    textual_hdrs = [
+        "@mingw//:mingw32_crt_textual_hdrs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "mingwex",
+    srcs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:mingwex_crt_x86_64_srcs"],
+        "@platforms//cpu:aarch64": ["@mingw//:mingwex_crt_aarch64_srcs"],
+    }),
+    copts = MINGW_CRT_COMMON_COPTS + [
+        "-Wno-attribute-warning",
+    ],
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    textual_hdrs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:mingwex_crt_x86_64_textual_hdrs"],
+        "@platforms//cpu:aarch64": ["@mingw//:mingwex_crt_aarch64_textual_hdrs"],
+    }),
+)
+
+cc_runtime_stage0_library(
+    name = "ucrt_extra",
+    srcs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:ucrt_base_crt_x86_64_srcs"],
+        "@platforms//cpu:aarch64": ["@mingw//:ucrt_base_crt_aarch64_srcs"],
+    }),
+    copts = MINGW_CRT_COMMON_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+)
+
+# Mirror mingw-w64's libucrtbase import lib assembly: merge the DEF-based
+# import library with the extra object archive. Using llvm-ar directly matches
+# the MRI result for this simple merge.
+run_binary(
+    name = "ucrtbase",
+    srcs = [
+        ":ucrt_extra",
+        "@mingw//:import_lib_ucrtbase",
+    ],
+    outs = ["libucrtbase.a"],
+    args = [
+        "qcsDL",
+        "$(location libucrtbase.a)",
+        "$(location @mingw//:import_lib_ucrtbase)",
+        "$(location ucrt_extra)",
+    ],
+    tool = "//tools:llvm-ar",
+    visibility = ["//visibility:public"],
+)
+
+# Debug-flavor import library assembled the same way as upstream (ucrtbased.mri).
+run_binary(
+    name = "ucrtbased",
+    srcs = [
+        ":ucrt_extra",
+        "@mingw//:import_lib_ucrtbased",
+    ],
+    outs = ["libucrtbased.a"],
+    args = [
+        "qcsDL",
+        "$(location libucrtbased.a)",
+        "$(location @mingw//:import_lib_ucrtbased)",
+        "$(location ucrt_extra)",
+    ],
+    tool = "//tools:llvm-ar",
+    visibility = ["//visibility:public"],
+)
+
+# Assemble the umbrella UCRT import library like upstream's ucrt.mri recipe.
+run_binary(
+    name = "ucrt",
+    srcs = [
+        ":ucrt_extra",
+        "@mingw//:import_lib_api-ms-win-crt-conio-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-convert-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-environment-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-filesystem-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-heap-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-locale-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-math-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-multibyte-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-private-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-process-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-runtime-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-stdio-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-string-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-time-l1-1-0",
+        "@mingw//:import_lib_api-ms-win-crt-utility-l1-1-0",
+    ],
+    outs = ["libucrt.a"],
+    args = [
+        "qcsDL",
+        "$(location libucrt.a)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-conio-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-convert-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-environment-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-filesystem-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-heap-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-locale-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-math-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-multibyte-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-private-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-process-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-runtime-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-stdio-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-string-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-time-l1-1-0)",
+        "$(location @mingw//:import_lib_api-ms-win-crt-utility-l1-1-0)",
+        "$(location ucrt_extra)",
+    ],
+    tool = "//tools:llvm-ar",
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "msvcrt_common",
+    srcs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:msvcrt_common_x86_64_srcs"],
+        "@platforms//cpu:aarch64": ["@mingw//:msvcrt_common_aarch64_srcs"],
+    }),
+    hdrs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:mingwex_crt_x86_64_textual_hdrs"],
+        "@platforms//cpu:aarch64": ["@mingw//:mingwex_crt_aarch64_textual_hdrs"],
+    }) + ["@mingw//:msvcrt_textual_hdrs"],
+    copts = MINGW_CRT_COMMON_COPTS + [
+        "-D__LIBMSVCRT__",
+    ],
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "msvcrt_extra",
+    srcs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:msvcrt_extra_x86_64_srcs"],
+        "@platforms//cpu:aarch64": ["@mingw//:msvcrt_extra_aarch64_srcs"],
+    }),
+    hdrs = select({
+        "@platforms//cpu:x86_64": ["@mingw//:mingwex_crt_x86_64_textual_hdrs"],
+        "@platforms//cpu:aarch64": ["@mingw//:mingwex_crt_aarch64_textual_hdrs"],
+    }) + ["@mingw//:msvcrt_textual_hdrs"],
+    copts = MINGW_CRT_COMMON_COPTS + [
+        "-D__LIBMSVCRT__",
+        "-D__LIBMSVCRT_OS__",
+    ],
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "moldname",
+    srcs = ["@mingw//:moldname_crt_srcs"],
+    copts = MINGW_CRT_COMMON_COPTS,
+)
+
+run_binary(
+    name = "libsynchronization",
+    srcs = [
+        "@mingw//:import_lib_api-ms-win-core-synch-l1-2-0",
+    ],
+    outs = ["libsynchronization.a"],
+    args = [
+        "qcsDL",
+        "$(location :libsynchronization.a)",
+        "$(location @mingw//:import_lib_api-ms-win-core-synch-l1-2-0)",
+    ],
+    tool = "@llvm//tools:llvm-ar",
+)
+
+cc_runtime_stage0_library(
+    name = "ws2_32_extra",
+    srcs = ["@mingw//:ws2_32_srcs"],
+    copts = MINGW_CRT_COMMON_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+)
+
+run_binary(
+    name = "libws2_32",
+    srcs = [
+        ":ws2_32_extra",
+        "@mingw//:import_lib_ws2_32",
+    ],
+    outs = ["libws2_32.a"],
+    args = [
+        "qcsDL",
+        "$(location :libws2_32.a)",
+        "$(location @mingw//:import_lib_ws2_32)",
+        "$(location :ws2_32_extra)",
+    ],
+    tool = "@llvm//tools:llvm-ar",
+)
+
+cc_runtime_stage0_library(
+    name = "kernel32_intrinsics",
+    srcs = [
+        "@mingw//:mingw-w64-crt/intrincs/RtlSecureZeroMemory.c",
+    ],
+    copts = MINGW_CRT_COMMON_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+)
+
+# Match mingw's build by adding the RtlSecureZeroMemory object into the
+# kernel32 import library archive.
+run_binary(
+    name = "kernel32",
+    srcs = [
+        ":kernel32_intrinsics",
+        "@mingw//:import_lib_kernel32",
+    ],
+    outs = ["libkernel32.a"],
+    args = [
+        "qcsDL",
+        "$(location libkernel32.a)",
+        "$(location @mingw//:import_lib_kernel32)",
+        "$(location :kernel32_intrinsics)",
+    ],
+    tool = "//tools:llvm-ar",
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "uuid",
+    srcs = ["@mingw//:mingw_uuid_srcs"],
+    copts = MINGW_CRT_COMMON_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_headers",
+    ],
+)
+
+cc_runtime_stage0_library(
+    name = "winpthread",
+    srcs = [
+        "@mingw//:winpthreads_srcs",
+    ],
+    hdrs = ["@mingw//:winpthreads_hdrs"],
+    copts = WINPTHREAD_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+)
+
+copy_file(
+    name = "pthread",
+    src = ":winpthread",
+    out = "libpthread.a",
+    allow_symlink = True,
+    visibility = ["//visibility:public"],
+)
+
+# An empty library that provides "-lm", which is pervasive in Bazel build files
+# but not actually needed for Windows.
+stub_library(
+    name = "m",
+    visibility = ["//visibility:public"],
+)
+
+# TODO(zbarsky): Hack for now until we have real libstdc++ support...
+stub_library(
+    name = "stdc++",
+)
+
+copy_to_directory(
+    name = "mingw_crt_library_search_directory",
+    srcs = [
+        ":m",
+        ":mingw32",
+        ":mingwex",
+        ":moldname",
+        ":pthread",
+        ":stdc++",
+        ":uuid",
+        ":winpthread",
+    ] + select({
+        "//constraints/windows/crt:msvcrt": [
+            ":msvcrt_common",
+            ":msvcrt_extra",
+        ],
+        "//constraints/windows/crt:ucrt": [
+            ":ucrt",
+            ":ucrtbase",
+            ":ucrtbased",
+        ],
+    }),
+    # cc_library archives are emitted below target-specific directories such
+    # as mingw32_/libmingw32.a. Make those directories copy roots so the CRT
+    # search directory contains the upstream archive basenames.
+    root_paths = [
+        ".",
+        "runtimes/mingw/mingw32_",
+        "runtimes/mingw/mingwex_",
+        "runtimes/mingw/moldname_",
+        "runtimes/mingw/msvcrt_common_",
+        "runtimes/mingw/msvcrt_extra_",
+        "runtimes/mingw/uuid_",
+        "runtimes/mingw/winpthread_",
+        "windows",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+copy_to_directory(
+    name = "mingw_import_libraries_directory",
+    srcs = [
+        ":libkernel32.a",
+        ":libsynchronization.a",
+        ":libws2_32.a",
+        "@mingw//:mingw_import_libraries_common",
+    ] + select({
+        "@platforms//cpu:x86_64": ["@mingw//:mingw_import_libraries_x86_64"],
+        # Aarch64 are fully templatized in .def.in files, x86_64 have not been merged yet.
+        "@platforms//cpu:aarch64": [],
+    }),
+    include_external_repositories = ["**"],
+    root_paths = [
+        ".",
+        "windows",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+MINGW_CRT_OBJECT_COPTS = MINGW_CRT_COMMON_COPTS + [
+    "-D_SYSCRT=1",
+]
+
+crt_object(
+    name = "mingw_crt_fp8",
+    srcs = ["@mingw//:mingw-w64-crt/crt/CRT_fp8.c"],
+    out = "CRT_fp8.o",
+    copts = MINGW_CRT_OBJECT_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+crt_object(
+    name = "mingw_crtbegin",
+    srcs = ["@mingw//:mingw-w64-crt/crt/crtbegin.c"],
+    out = "crtbegin.o",
+    copts = MINGW_CRT_OBJECT_COPTS,
+    visibility = ["//visibility:public"],
+)
+
+crt_object(
+    name = "mingw_crtend",
+    srcs = ["@mingw//:mingw-w64-crt/crt/crtend.c"],
+    out = "crtend.o",
+    copts = MINGW_CRT_OBJECT_COPTS,
+    textual_hdrs = [
+        "@mingw//:mingw_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+crt_object(
+    name = "mingw_crt2",
+    srcs = ["@mingw//:mingw-w64-crt/crt/crtexe.c"],
+    out = "crt2.o",
+    copts = MINGW_CRT_OBJECT_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+crt_object(
+    name = "mingw_crt2u",
+    srcs = ["@mingw//:mingw-w64-crt/crt/ucrtexe.c"],
+    out = "crt2u.o",
+    copts = MINGW_CRT_OBJECT_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    textual_hdrs = [
+        "@mingw//:mingw-w64-crt/crt/crtexe.c",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+crt_object(
+    name = "mingw_dllcrt2",
+    srcs = ["@mingw//:mingw-w64-crt/crt/crtdll.c"],
+    out = "dllcrt2.o",
+    copts = MINGW_CRT_OBJECT_COPTS,
+    implementation_deps = [
+        "@mingw//:mingw_crt_headers",
+        "@mingw//:mingw_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "crt_object",
+    srcs = ["crt_object.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_lib//lib:copy_file",
+        "@llvm//toolchain/runtimes:cc_runtime_library",
+    ],
+)
+
+bzl_library(
+    name = "import_libs",
+    srcs = ["import_libs.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["@bazel_lib//lib:run_binary"],
+)
+
+bzl_library(
+    name = "crt_sources",
+    srcs = ["crt_sources.bzl"],
+    visibility = ["//visibility:public"],
+)

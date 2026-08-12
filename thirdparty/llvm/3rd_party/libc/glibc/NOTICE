@@ -1,0 +1,6 @@
+Files under `nptl` and `stlibd` packages were copied from the `ziglang/zig` 
+project which is under the MIT License, which themselves were edited from the
+ `glibc` project were they fall under the `LGPL` License.
+
+Files under `csu` are copied from the `glibc` project were they fall under the
+the `LGPL` License.

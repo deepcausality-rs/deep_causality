@@ -1,0 +1,26 @@
+From b88b5deeb665d8371fd023cc8636ba540f15f780 Mon Sep 17 00:00:00 2001
+From: Corentin Kerisit <corentin.kerisit@gmail.com>
+Date: Tue, 13 May 2025 17:08:16 +0200
+Subject: [PATCH 2/3] Add abi-tag.h
+
+This is generated normally as part of the glibc build but is
+stable for all libc 2.x
+---
+ csu/abi-tag.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+ create mode 100644 csu/abi-tag.h
+
+diff --git a/csu/abi-tag.h b/csu/abi-tag.h
+new file mode 100644
+index 0000000000..2ee19e3f75
+--- /dev/null
++++ b/csu/abi-tag.h
+@@ -0,0 +1,5 @@
++#define __ABI_TAG_OS 0
++#ifndef __ABI_TAG_VERSION
++# define __ABI_TAG_VERSION 2,0,0
++#endif
++
+-- 
+2.39.3 (Apple Git-146)
+

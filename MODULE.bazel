@@ -7,36 +7,52 @@ module(name = "deep_causality")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "rules_rust", version = "0.73.0")
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
 bazel_dep(name = "llvm", version = "0.8.17")
 
-# Patch: make rust_doc_test link against the cc_toolchain's runtime libs.
-#
-# rustdoc drives the doctest link itself instead of running a Bazel C++ link
-# action, so the libc++/libunwind that the hermetic LLVM toolchain supplies
-# through cc_toolchain.static_runtime_lib never reach the command line. Bazel
-# emits their -Lnative= search path but gates the matching -lstatic= behind
-# include_link_flags, which rustdoc sets to False (PR #2467). PR #4080 added a
-# compensating -Clink-arg=-l loop for native deps but iterates only
-# dep_info.transitive_noncrates, which does not include the toolchain runtime
-# libs -- so every doc test fails to link with undefined `_Unwind_*`.
-#
-# Still present in 0.73.0 (#3741 landed in 0.68.0, #4080 in 0.71.0), unreported
-# upstream as of 2026-08-11. Drop this once a fix lands; the build fails loudly
-# if the patch stops applying on a rules_rust upgrade.
-#
-# One patch file per source file on purpose: Bazel's built-in patch
-# implementation mis-attributes hunks across file boundaries in a multi-file
-# unified diff (it applied rustdoc.bzl's hunks to rustdoc_test.bzl), even
-# though GNU patch accepts the same diff.
-single_version_override(
+###############################################################################
+# Vendored module sources (thirdparty/<module>)
+
+# CAVEAT: local_path_override pins the module at the vendored version and takes
+# it out of version resolution. If a future dependency needs a newer
+# bazel_skylib or platforms, MVS cannot resolve it -- re-vendor instead.
+# Re-vendor with: build/scripts/vendor_modules.sh
+###############################################################################
+local_path_override(
+    module_name = "aspect_bazel_lib",
+    path = "thirdparty/aspect_bazel_lib",
+)
+
+local_path_override(
+    module_name = "bazel_skylib",
+    path = "thirdparty/bazel_skylib",
+)
+
+local_path_override(
+    module_name = "platforms",
+    path = "thirdparty/platforms",
+)
+
+local_path_override(
+    module_name = "toolchains_buildbuddy",
+    path = "thirdparty/toolchains_buildbuddy",
+)
+
+local_path_override(
+    module_name = "llvm",
+    path = "thirdparty/llvm",
+)
+
+###############################################################################
+# Rules Rust
+# Patched in a fork to fix doc-test issue with hermetic LLVM
+bazel_dep(name = "rules_rust", version = "0.73.0", )
+# Remove when https://github.com/bazelbuild/rules_rust/pull/4220
+# lands and an updated version of rules_rust becomes available.
+git_override(
     module_name = "rules_rust",
-    patch_strip = 1,
-    patches = [
-        "//thirdparty/patches:rules_rust_doctest_runtime_libs_rustdoc.patch",
-        "//thirdparty/patches:rules_rust_doctest_runtime_libs_rustdoc_test.patch",
-    ],
+    commit = "47a9fd98b40798e32183dc7d9051d5d9f35dca75",
+    remote = "https://github.com/marvin-hansen/rules_rust.git",
 )
 
 ###############################################################################
@@ -75,9 +91,13 @@ register_toolchains("@rust_toolchains//:all")
 # Hermetic LLVM toolchain
 # https://github.com/hermeticbuild/hermetic-llvm
 ###############################################################################
-toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
+# The LLVM version is selected on the `llvm` extension.
+llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 
-#toolchain.version(llvm_version = "22.1.0")
+# llvm_version matches the one Rust uses in the version declared in the previous step.
+llvm.version(llvm_version = "22.1.6")
+
+toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
 toolchain.exec(
     arch = "x86_64",
     os = "linux",

@@ -1,0 +1,92 @@
+commit 04aab9a3b0f2b5f81da28323f4e01ca971502b62
+Author: David Zbarsky <dzbarsky@gmail.com>
+Date:   Sat Dec 13 13:27:17 2025 -0500
+
+    Rewrite bundle_resources to c++
+
+diff --git a/clang/BUILD.bazel b/clang/BUILD.bazel
+index ae6d4d28d3a8..5ceb2e42c23d 100644
+--- a/clang/BUILD.bazel
++++ b/clang/BUILD.bazel
+@@ -963,6 +963,72 @@ cc_library(
+     ],
+ )
+ 
++write_file(
++    name = "write_bundle_resources_cc",
++    out = "bundle_resources.cc",
++    content = ["""
++#include <filesystem>
++#include <fstream>
++#include <iostream>
++#include <string>
++
++namespace fs = std::filesystem;
++
++// Turn "path/to/a.js" into "a_js"
++static std::string make_varname(const std::string &path) {
++    std::string base = fs::path(path).filename().string();
++    for (char &ch : base) {
++        if (ch == '.')
++            ch = '_';
++    }
++    return base;
++}
++
++int main(int argc, char **argv) {
++    if (argc < 3) {
++        std::cerr << "Usage: " << argv[0] << " OUTFILE INFILES...\\n";
++        return 1;
++    }
++
++    const char *outfile = argv[1];
++    std::ofstream out(outfile);
++    if (!out) {
++        std::cerr << "Error: cannot open output file '" << outfile << "'\\n";
++        return 1;
++    }
++
++    // For each input file
++    for (int i = 2; i < argc; ++i) {
++        const std::string filename = argv[i];
++        std::ifstream in(filename);
++        if (!in) {
++            std::cerr << "Error: cannot open input file '" << filename << "'\\n";
++            return 1;
++        }
++
++        const std::string varname = make_varname(filename);
++        out << "const char " << varname << "[] = \\n";
++
++        std::string line;
++        while (std::getline(in, line)) {
++            // Emit:   R"x(<line>)x" "\\n"
++            out << "  R\\\"x(" << line << ")x\\\" \\\"\\\\n\\\"\\n";
++        }
++
++        out << "  ;\\n";
++    }
++
++    return 0;
++}
++"""],
++)
++
++cc_binary(
++    name = "bundle_resources_cc",
++    srcs = ["bundle_resources.cc"],
++)
++
++
+ run_binary(
+     name = "analysis_htmllogger_gen",
+     srcs = [
+@@ -977,7 +1043,7 @@ run_binary(
+         "$(execpath lib/Analysis/FlowSensitive/HTMLLogger.css)",
+         "$(execpath lib/Analysis/FlowSensitive/HTMLLogger.js)",
+     ],
+-    tool = ":bundle_resources",
++    tool = ":bundle_resources_cc",
+ )
+ 
+ cc_library(

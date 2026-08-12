@@ -8,4 +8,4 @@ actions:
       # Build all targets
       - run: "bazel build --config=ci //..."
       # Run all tests
-      - run: "bazel test --config=remote //..."
+      - run: "bazel test --config=ci //..."

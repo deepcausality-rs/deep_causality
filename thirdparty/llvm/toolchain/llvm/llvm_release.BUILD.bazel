@@ -1,0 +1,4 @@
+load("@llvm//toolchain/llvm:llvm.bzl", "declare_llvm_targets")
+
+# selects won't work here to choose between .exe and no suffix, so we have a separate BUILD file for Windows and non-Windows
+declare_llvm_targets()

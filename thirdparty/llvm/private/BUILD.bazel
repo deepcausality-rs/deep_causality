@@ -1,0 +1,40 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+
+bzl_library(
+    name = "llvm_project_common",
+    srcs = ["llvm_project_common.bzl"],
+    visibility = ["//:__subpackages__"],
+)
+
+bzl_library(
+    name = "llvm_project_archive",
+    srcs = ["llvm_project_archive.bzl"],
+    visibility = ["//extensions:__pkg__"],
+    deps = [
+        ":llvm_project_common",
+        "//:http_bsdtar_archive",
+        "@bazel_lib//lib:repo_utils",
+        "@bazel_skylib//lib:paths",
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
+        "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
+    name = "llvm_project_from_git",
+    srcs = ["llvm_project_from_git.bzl"],
+    visibility = ["//extensions:__pkg__"],
+    deps = [
+        ":llvm_project_common",
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
+        "@bazel_tools//tools/build_defs/repo:git_worker.bzl",
+        "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
+    name = "llvm_project_from_path",
+    srcs = ["llvm_project_from_path.bzl"],
+    visibility = ["//extensions:__pkg__"],
+    deps = [":llvm_project_common"],
+)

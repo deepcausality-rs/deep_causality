@@ -1,0 +1,290 @@
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@llvm//3rd_party/libc/musl:musl_headers.bzl", "musl_alltypes_headers")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+MUSL_SUPPORTED_ARCHS = [
+    "x86_64",
+    "aarch64",
+    "riscv64",
+    "s390x",
+    "arm",
+]
+
+# Exposed for e2e tests that compare Starlark header generation against musl's sed scripts.
+exports_files(
+    [
+        "include/alltypes.h.in",
+        "tools/mkalltypes.sed",
+    ] + [
+        "arch/{arch}/bits/alltypes.h.in".format(arch = arch)
+        for arch in MUSL_SUPPORTED_ARCHS
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "compile_srcs",
+    srcs = glob(
+        [
+            "src/**/*.c",
+            "src/**/*.S",
+            "src/**/*.s",
+        ],
+        exclude = glob([
+            # As of this commit, oldmalloc and mallocng are the only subdir that are
+            # not an <arch>
+            "src/malloc/oldmalloc/**",  # only mallocng
+        ]),
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "compile_hdrs",
+    srcs = glob([
+        "src/**/*.h",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "internal_textual_hdrs",
+    srcs = glob([
+        "src/ldso/**",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+## INTERNAL HEADERS
+
+write_file(
+    name = "version_h",
+    out = "obj/src/internal/version.h",
+    content = [
+        # Keep this in sync with the musl release fetched in runtimes/musl/extension/musl.bzl.
+        "#define VERSION \"1.2.6\"",
+        "",
+    ],
+)
+
+[
+    cc_library(
+        name = "musl_internal_headers_{arch}".format(arch = arch),
+        hdrs = glob([
+            "arch/{arch}/**".format(arch = arch),
+            "arch/generic/**",
+            "src/include/**",
+            "src/internal/**",
+            "ldso/**",
+            "include/**",
+        ]) + [":version_h"],
+        includes = [
+            # do not sort: order matters for include resolution
+            "arch/{arch}".format(arch = arch),
+            "arch/generic",
+            "src/include",
+            "src/internal",
+            "obj/src/internal",  # version_h
+            "ldso",
+            "include",
+        ],
+        textual_hdrs = glob([
+            "ldso/**",
+        ]),
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+alias(
+    name = "musl_internal_headers",
+    actual = select({
+        "@platforms//cpu:x86_64": ":musl_internal_headers_x86_64",
+        "@platforms//cpu:aarch64": ":musl_internal_headers_aarch64",
+        "@platforms//cpu:riscv64": ":musl_internal_headers_riscv64",
+        "@platforms//cpu:s390x": ":musl_internal_headers_s390x",
+        "@platforms//cpu:armv7": ":musl_internal_headers_arm",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+## PUBLIC HEADERS
+
+filegroup(
+    name = "headers_generic",
+    srcs = glob([
+        "arch/generic/bits/*.h",
+        "include/*.h",
+        "include/*/*.h",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+[
+    filegroup(
+        name = "headers_arch_specific_{arch}".format(arch = arch),
+        srcs = glob([
+            "arch/{arch}/bits/*.h".format(arch = arch),
+            "arch/{arch}/bits/syscall.h.in".format(arch = arch),
+        ]),
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+ALLTYPES_HEADERS = {
+    arch: musl_alltypes_headers(
+        name = "alltypes_h_{arch}".format(arch = arch),
+        arch = arch,
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+}
+
+[
+    write_file(
+        name = "syscall_h_{arch}".format(arch = arch),
+        out = "obj/{arch}/include/bits/syscall.h".format(arch = arch),
+        content = [
+            "#include <bits/syscall.h.in>",
+            "#include <bits/syscall_aliases.h>",
+            "",
+        ],
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+[
+    expand_template(
+        name = "syscall_aliases_h_{arch}".format(arch = arch),
+        out = "obj/{arch}/include/bits/syscall_aliases.h".format(arch = arch),
+        substitutions = {
+            "__NR_": "SYS_",
+        },
+        template = "arch/{arch}/bits/syscall.h.in".format(arch = arch),
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+[
+    filegroup(
+        name = "headers_{arch}".format(arch = arch),
+        srcs = [
+            ":headers_generic",
+            ":headers_arch_specific_{arch}".format(arch = arch),
+            ":syscall_h_{arch}".format(arch = arch),
+            ":syscall_aliases_h_{arch}".format(arch = arch),
+        ] + ALLTYPES_HEADERS[arch],
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+[
+    copy_to_directory(
+        name = "headers_{arch}_include_directory".format(arch = arch),
+        srcs = [
+            ":headers_{arch}".format(arch = arch),
+        ],
+        out = "generated/{arch}/includes".format(arch = arch),
+        allow_overwrites = True,
+        root_paths = [
+            "include",
+            "arch/generic",
+            "arch/{arch}".format(arch = arch),
+            "obj/{arch}/include".format(arch = arch),
+            "obj/src/internal",
+        ],
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+# For use when building user code that links against musl
+[
+    cc_library(
+        name = "musl_libc_headers_{arch}".format(arch = arch),
+        hdrs = [":headers_{arch}".format(arch = arch)],
+        # user code should always get musl headers as -isystem
+        features = ["system_include_paths"],
+        includes = [
+            "obj/src/internal",
+            "obj/{arch}/include".format(arch = arch),
+            "arch/{arch}".format(arch = arch),
+            "arch/generic",
+            "include",
+        ],
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+# For use when building musl itself
+#
+# The difference is just the `system_include_paths` feature
+# so that musl headers are not passed as -isystem only when building musl
+#
+# TODO(cerisier): figure out a way to avoid this duplication
+[
+    cc_library(
+        name = "musl_libc_headers_{arch}_for_musl".format(arch = arch),
+        hdrs = [":headers_{arch}".format(arch = arch)],
+        includes = [
+            "obj/src/internal",
+            "obj/{arch}/include".format(arch = arch),
+            "arch/{arch}".format(arch = arch),
+            "arch/generic",
+            "include",
+        ],
+        visibility = ["//visibility:public"],
+    )
+    for arch in MUSL_SUPPORTED_ARCHS
+]
+
+alias(
+    name = "musl_libc_headers",
+    actual = select({
+        "@platforms//cpu:x86_64": ":musl_libc_headers_x86_64",
+        "@platforms//cpu:aarch64": ":musl_libc_headers_aarch64",
+        "@platforms//cpu:riscv64": ":musl_libc_headers_riscv64",
+        "@platforms//cpu:s390x": ":musl_libc_headers_s390x",
+        "@platforms//cpu:armv7": ":musl_libc_headers_arm",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "musl_libc_headers_for_musl",
+    actual = select({
+        "@platforms//cpu:x86_64": ":musl_libc_headers_x86_64_for_musl",
+        "@platforms//cpu:aarch64": ":musl_libc_headers_aarch64_for_musl",
+        "@platforms//cpu:riscv64": ":musl_libc_headers_riscv64_for_musl",
+        "@platforms//cpu:s390x": ":musl_libc_headers_s390x_for_musl",
+        "@platforms//cpu:armv7": ":musl_libc_headers_arm_for_musl",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "musl_libc_headers_include_directory",
+    actual = select({
+        "@platforms//cpu:x86_64": ":headers_x86_64_include_directory",
+        "@platforms//cpu:aarch64": ":headers_aarch64_include_directory",
+        "@platforms//cpu:riscv64": ":headers_riscv64_include_directory",
+        "@platforms//cpu:s390x": ":headers_s390x_include_directory",
+        "@platforms//cpu:armv7": ":headers_arm_include_directory",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+exports_files([
+    "crt/crt1.c",
+    "crt/rcrt1.c",
+    "crt/Scrt1.c",
+    "ldso/dlstart.c",
+    "ldso/dynlink.c",
+])

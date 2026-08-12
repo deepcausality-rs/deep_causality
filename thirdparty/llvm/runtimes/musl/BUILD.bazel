@@ -1,0 +1,256 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@bazel_lib//lib:copy_file.bzl", "copy_file")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@llvm//toolchain/runtimes:cc_runtime_shared_library.bzl", "cc_runtime_stage0_shared_library")
+load("@llvm//toolchain/runtimes:cc_runtime_static_library.bzl", "cc_runtime_stage0_static_library")
+load("@llvm//toolchain/runtimes:cc_stage0_object.bzl", "cc_stage0_object")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("//runtimes:defs.bzl", "stub_library")
+load("//toolchain/args:llvm_target_triple.bzl", "LLVM_TARGET_TRIPLE")
+load(":libc_musl_srcs_filegroup.bzl", "libc_musl_srcs_filegroup")
+
+libc_musl_srcs_filegroup(
+    name = "musl_arch_compile_srcs",
+    srcs = ["@musl_libc//:compile_srcs"],
+    arch = select(
+        {
+            "@platforms//cpu:x86_64": "x86_64",
+            "@platforms//cpu:aarch64": "aarch64",
+            "@platforms//cpu:riscv64": "riscv64",
+            "@platforms//cpu:s390x": "s390x",
+            "@platforms//cpu:armv7": "arm",
+        },
+        no_match_error = "Unsupported platform",
+    ),
+    visibility = ["//visibility:public"],
+)
+
+CFLAGS_C99FSE = [
+    "-std=c99",
+    "-nostdinc",
+    "-ffreestanding",
+    "-fexcess-precision=standard",
+    "-frounding-math",
+    "-fno-strict-aliasing",
+    "-Wa,--noexecstack",
+]
+
+CFLAGS_AUTO = [
+    # "-O2", # auto
+    "-fno-align-functions",
+    # "-pipe",
+] + select({
+    "@llvm//config:runtimes_optimization_mode_optimized": [
+        "-fomit-frame-pointer",
+    ],
+    "//conditions:default": [],
+}) + [
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    # "-ffunction-sections", # default
+    # "-fdata-sections", # default
+    "-w",
+    "-Qunused-arguments",
+]
+
+CFLAGS_ALL = CFLAGS_C99FSE + [
+    "-D_XOPEN_SOURCE=700",
+] + CFLAGS_AUTO
+
+CFLAGS_NOSSP = [
+    "-fno-stack-protector",
+]
+
+cc_library(
+    name = "musl_libc",
+    srcs = [
+        ":musl_arch_compile_srcs",
+        "@musl_libc//:compile_hdrs",
+    ],
+    copts = CFLAGS_ALL + ["-nostdlib"],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers_for_musl",
+    ],
+    # passing all files as textual_hdrs since arch specific .c can #include
+    # their generic .c counterpart.
+    textual_hdrs = ["@musl_libc//:compile_srcs"],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_static_library(
+    name = "musl_libc.static",
+    visibility = ["//visibility:public"],
+    deps = [":musl_libc"],
+)
+
+cc_library(
+    name = "musl_ldso",
+    srcs = [
+        "@musl_libc//:ldso/dlstart.c",
+        "@musl_libc//:ldso/dynlink.c",
+    ],
+    copts = CFLAGS_ALL + [
+        "-nostdlib",
+        "-fPIC",
+    ],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers_for_musl",
+    ],
+    # passing all files as textual_hdrs since arch specific .c can #include
+    # their generic .c counterpart.
+    textual_hdrs = ["@musl_libc//:compile_srcs"],
+)
+
+cc_runtime_stage0_shared_library(
+    name = "musl_libc.shared",
+    user_link_flags = [
+        "-Wl,-e,_dlstart",
+        # should it be "now"?
+        "-Wl,-z,now",
+        "-Wl,-soname,libc.so",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":musl_ldso",
+        ":musl_libc",
+    ],
+)
+
+cc_library(
+    name = "musl_crt1",
+    srcs = ["@musl_libc//:crt/crt1.c"],
+    copts = CFLAGS_ALL + ["-DCRT"] + CFLAGS_NOSSP + ["-fno-addrsig"],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers_for_musl",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "musl_rcrt1",
+    srcs = ["@musl_libc//:crt/rcrt1.c"],
+    copts = CFLAGS_ALL + ["-DCRT"] + CFLAGS_NOSSP + [
+        "-fPIC",
+        "-fno-addrsig",
+    ],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers_for_musl",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "musl_Scrt1",
+    srcs = ["@musl_libc//:crt/Scrt1.c"],
+    copts = CFLAGS_ALL + ["-DCRT"] + CFLAGS_NOSSP + [
+        "-fPIC",
+        "-fno-addrsig",
+    ],
+    implementation_deps = [
+        "@musl_libc//:musl_internal_headers",
+        "@musl_libc//:musl_libc_headers_for_musl",
+    ],
+    textual_hdrs = [
+        "@musl_libc//:crt/crt1.c",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_stage0_object(
+    name = "musl_Scrt1.object",
+    srcs = [":musl_Scrt1"],
+    out = "Scrt1.o",
+    copts = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE,
+    visibility = ["//visibility:public"],
+)
+
+cc_stage0_object(
+    name = "musl_rcrt1.object",
+    srcs = [":musl_rcrt1"],
+    out = "rcrt1.o",
+    copts = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE,
+    visibility = ["//visibility:public"],
+)
+
+cc_stage0_object(
+    name = "musl_crt1.object",
+    srcs = [":musl_crt1"],
+    out = "crt1.o",
+    copts = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE,
+    visibility = ["//visibility:public"],
+)
+
+copy_file(
+    name = "musl_libc.a",
+    src = ":musl_libc.static",
+    out = "libc.a",
+    allow_symlink = True,
+    visibility = ["//visibility:public"],
+)
+
+copy_file(
+    name = "musl_libc.so",
+    src = ":musl_libc.shared",
+    out = "libc.so",
+    allow_symlink = True,
+    visibility = ["//visibility:public"],
+)
+
+MUSL_LIBS = [
+    "m",
+    "rt",
+    "pthread",
+    "util",
+    "resolv",
+    "dl",
+    "crypt",
+    "xnet",
+]
+
+# Generate empty static libraries for all other companion libraries.
+# That's what musl does.
+[
+    stub_library(
+        name = "musl_lib{}_stub".format(lib),
+        out = "stubs/lib{}.a".format(lib),
+        visibility = ["//visibility:public"],
+    )
+    for lib in MUSL_LIBS
+]
+
+copy_to_directory(
+    name = "musl_library_search_directory",
+    srcs = [
+        ":musl_libc.a",
+    ] + [
+        ":musl_lib{}_stub".format(lib)
+        for lib in MUSL_LIBS
+    ],
+    replace_prefixes = {
+        "stubs": "",
+    },
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "musl_headers_include_search_directory",
+    actual = "@musl_libc//:musl_libc_headers_include_directory",
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "libc_musl_srcs_filegroup",
+    srcs = ["libc_musl_srcs_filegroup.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["@bazel_skylib//lib:paths"],
+)

@@ -1,0 +1,326 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@llvm//3rd_party/libc/glibc:helpers.bzl", "glibc_includes")
+load("@llvm//toolchain/args:llvm_target_triple.bzl", "LLVM_TARGET_TRIPLE")
+load("@llvm//toolchain/runtimes:cc_runtime_library.bzl", "cc_runtime_stage0_library")
+load("@llvm//toolchain/runtimes:cc_runtime_static_library.bzl", "cc_runtime_stage0_static_library")
+load("@llvm//toolchain/runtimes:cc_stage0_object.bzl", "cc_stage0_object")
+
+alias(
+    name = "gnu_libc_headers",
+    actual = "@glibc//:gnu_libc_headers",
+)
+
+alias(
+    name = "kernel_headers",
+    actual = "@kernel_headers//:kernel_headers",
+)
+
+HDRS = glob(
+    [
+        "bits/**/*.h",
+        "csu/**",
+        "debug/**/*.h",
+        "elf/**/*.h",
+        "include/**/*.h",
+        "io/**/*.h",
+        "locale/**/*.h",
+        "misc/**/*.h",
+        "posix/**/*.h",
+        "signal/**/*.h",
+        "stdlib/**/*.h",
+        "string/**/*.h",
+        "sysdeps/**/*.h",
+        "time/**/*.h",
+    ],
+    exclude = [
+        # These are template stubs with unconditional #error directives.
+        # The real versions come from arch-specific sysdeps/ or system headers.
+        "bits/endian.h",
+        "bits/errno.h",
+        "bits/link.h",
+        "bits/wordsize.h",
+    ],
+)
+
+cc_runtime_stage0_library(
+    name = "glibc_init",
+    srcs = ["csu/init.c"],
+    copts = [
+        # Normally, we would pass -nostdinc, but since we pass -nostdlibinc
+        # from the stage0 toolchain args regarless, having them both cause a
+        # warning about -nostdlibinc being ignored, so we duplicate the
+        # -nostdlibinc and add -nobuiltininc to avoid the warning.
+        #
+        # -nostdinc = -nostdlibinc -nobuiltininc
+        "-nostdlibinc",
+        "-nobuiltininc",
+        "-fno-addrsig",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "glibc_abi_note",
+    srcs = [
+        "@llvm//3rd_party/libc/glibc/csu:abi-note-2.31.S",
+    ],
+    hdrs = HDRS,
+    copts = [
+        # Normally, we would pass -nostdinc, but since we pass -nostdlibinc
+        # from the stage0 toolchain args regarless, having them both cause a
+        # warning about -nostdlibinc being ignored, so we duplicate the
+        # -nostdlibinc and add -nobuiltininc to avoid the warning.
+        #
+        # -nostdinc = -nostdlibinc -nobuiltininc
+        "-nostdlibinc",
+        "-nobuiltininc",
+        "-Wa,--noexecstack",
+    ],
+    includes = [
+        "csu",
+    ] + select({
+        "@platforms//cpu:x86_64": glibc_includes("x86_64"),
+        "@platforms//cpu:aarch64": glibc_includes("aarch64"),
+        "@platforms//cpu:riscv64": glibc_includes("riscv64"),
+        "@platforms//cpu:s390x": glibc_includes("s390x"),
+        "@platforms//cpu:armv7": glibc_includes("armv7"),
+    }),
+    local_defines = [
+        "_LIBC_REENTRANT",
+        "MODULE_NAME=libc",
+        "TOP_NAMESPACE=glibc",
+        "ASSEMBLER",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "glibc_start",
+    srcs = select(
+        {
+            "@platforms//cpu:x86_64": ["sysdeps/x86_64/start.S"],
+            "@platforms//cpu:aarch64": ["sysdeps/aarch64/start.S"],
+            "@platforms//cpu:riscv64": ["sysdeps/riscv/start.S"],
+            "@platforms//cpu:s390x": glob(
+                ["sysdeps/s390/**/start.S"],
+                exclude = ["sysdeps/s390/s390-32/start.S"],
+            ),
+            "@platforms//cpu:armv7": ["sysdeps/arm/start.S"],
+        },
+        no_match_error = "Unsupported platform",
+    ),
+    hdrs = HDRS,
+    additional_compiler_inputs = [
+        "include/libc-modules.h",
+        "include/libc-symbols.h",
+    ],
+    copts = [
+        # Normally, we would pass -nostdinc, but since we pass -nostdlibinc
+        # from the stage0 toolchain args regarless, having them both cause a
+        # warning about -nostdlibinc being ignored, so we duplicate the
+        # -nostdlibinc and add -nobuiltininc to avoid the warning.
+        #
+        # -nostdinc = -nostdlibinc -nobuiltininc
+        "-nostdlibinc",
+        "-nobuiltininc",
+        "-Wno-nonportable-include-path",
+        "-Wa,--noexecstack",
+        "-include",
+        "$(location include/libc-modules.h)",
+        "-DMODULE_NAME=libc",
+        "-include",
+        "$(location include/libc-symbols.h)",
+    ],
+    implementation_deps = [
+        ":gnu_libc_headers",
+        ":kernel_headers",
+    ],
+    includes = select({
+        "@platforms//cpu:x86_64": glibc_includes("x86_64"),
+        "@platforms//cpu:aarch64": glibc_includes("aarch64"),
+        "@platforms//cpu:riscv64": glibc_includes("riscv64"),
+        "@platforms//cpu:s390x": glibc_includes("s390x"),
+        "@platforms//cpu:armv7": glibc_includes("armv7"),
+    }),
+    local_defines = [
+        "_LIBC_REENTRANT",
+        "MODULE_NAME=libc",
+        "PIC",
+        "SHARED",
+        "TOP_NAMESPACE=glibc",
+        "ASSEMBLER",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_library(
+    name = "glibc_Scrt1",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":glibc_abi_note",
+        ":glibc_init",
+        ":glibc_start",
+    ],
+)
+
+cc_stage0_object(
+    name = "glibc_Scrt1.object",
+    srcs = [
+        ":glibc_abi_note",
+        ":glibc_init",
+        ":glibc_start",
+    ],
+    out = "Scrt1.o",
+    copts = [
+        "-target",
+    ] + LLVM_TARGET_TRIPLE,
+    visibility = ["//visibility:public"],
+)
+
+#TODO(cerisier): start.o should be compiled without -DSHARED here.
+#TODO(cerisier): Also find out why this is compiled with -DPIC by the glibc
+# even tho it's for -no-pie...
+copy_file(
+    name = "glibc_crt1.object",
+    src = "Scrt1.o",
+    out = "crt1.o",
+    allow_symlink = True,
+    visibility = ["//visibility:public"],
+)
+
+# pub fn compilerRtOptMode(comp: Compilation) std.builtin.OptimizeMode {
+#     if (comp.debug_compiler_runtime_libs) {
+#         return comp.root_mod.optimize_mode;
+#     }
+#     const target = comp.root_mod.resolved_target.result;
+#     switch (comp.root_mod.optimize_mode) {
+#         .Debug, .ReleaseSafe => return target_util.defaultCompilerRtOptimizeMode(target),
+#         .ReleaseFast => return .ReleaseFast,
+#         .ReleaseSmall => return .ReleaseSmall,
+#     }
+# }
+
+# pub fn defaultCompilerRtOptimizeMode(target: std.Target) std.builtin.OptimizeMode {
+#     if (target.cpu.arch.isWasm() and target.os.tag == .freestanding) {
+#         return .ReleaseSmall;
+#     } else {
+#         return .ReleaseFast;
+#     }
+# }
+
+cc_runtime_stage0_library(
+    name = "glibc_c_nonshared",
+    srcs = [
+        # From stdlib/Makefile
+        "@llvm//3rd_party/libc/glibc/stdlib:atexit.c",
+        "@llvm//3rd_party/libc/glibc/stdlib:at_quick_exit.c",
+        # From nptl/Makefile
+        "@llvm//3rd_party/libc/glibc/nptl:pthread_atfork.c",
+        # From debug/Makefile
+        "debug/stack_chk_fail_local.c",
+    ] + selects.with_or({
+        (
+            # For now the minimum version of all supported platforms is glibc 2.28
+            #
+            # unconstrained defaults to 2.28
+            # TODO(cerisier): Make a is_at_least_gnu_version macro helper.
+            "@llvm//constraints/libc:unconstrained",
+            "@llvm//constraints/libc:gnu.2.28",
+            "@llvm//constraints/libc:gnu.2.29",
+            "@llvm//constraints/libc:gnu.2.30",
+            "@llvm//constraints/libc:gnu.2.31",
+            "@llvm//constraints/libc:gnu.2.32",
+        ): [
+            # libc_nonshared.a redirected stat functions to xstat until glibc 2.33,
+            # when they were finally versioned like other symbols.
+
+            # From io/Makefile
+            "io/stat.c",
+            "io/fstat.c",
+            "io/lstat.c",
+            "io/stat64.c",
+            "io/fstat64.c",
+            "io/lstat64.c",
+            "io/fstatat.c",
+            "io/fstatat64.c",
+            "io/mknodat.c",
+            "io/mknod.c",
+
+            # if libc <= 2.32 but also <= 2.33
+            # From csu/Makefile
+            "@llvm//3rd_party/libc/glibc/csu:elf-init-2.31.c",
+        ],
+        "@llvm//constraints/libc:gnu.2.33": [
+            # if libc <= 2.32 but also <= 2.33
+            # __libc_start_main used to require statically linked init/fini callbacks
+            # until glibc 2.34 when they were assimilated into the shared library.
+            "@llvm//3rd_party/libc/glibc/csu:elf-init-2.31.c",
+        ],
+        "//conditions:default": [],
+    }),
+    #TODO: glibc_includes with glob
+    hdrs = HDRS,
+    additional_compiler_inputs = [
+        "include/libc-modules.h",
+        "include/libc-symbols.h",
+    ],
+    copts = [
+        "-std=gnu11",
+        "-fgnu89-inline",
+        "-fmerge-all-constants",
+        "-frounding-math",
+        "-Wno-unsupported-floating-point-opt",  # For targets that don't support -frounding-math.
+        "-fno-common",
+        "-fmath-errno",
+        # glibc states that c_nonshared can end up in shared libraries, and so
+        # it needs to be compiled with -fPIC.
+        "-fPIC",
+        "-ftls-model=initial-exec",
+        "-Wno-ignored-attributes",
+        "-Qunused-arguments",
+        "-Wno-nonportable-include-path",
+        "-include",
+        "$(location include/libc-modules.h)",
+        "-include",
+        "$(location include/libc-symbols.h)",
+
+        # glibc has compile-time checks ensuring we compile it optimized.
+        "-O2",
+    ],
+    implementation_deps = [
+        ":gnu_libc_headers",
+        ":kernel_headers",
+    ],
+    includes = [
+        "csu",
+    ] + select({
+        "@platforms//cpu:x86_64": glibc_includes("x86_64"),
+        "@platforms//cpu:aarch64": glibc_includes("aarch64"),
+        "@platforms//cpu:riscv64": glibc_includes("riscv64"),
+        "@platforms//cpu:s390x": glibc_includes("s390x"),
+        "@platforms//cpu:armv7": glibc_includes("armv7"),
+    }),
+    local_defines = [
+        "NO_INITFINI",
+        "_LIBC_REENTRANT",
+        "MODULE_NAME=libc",
+        "PIC",
+        "LIBC_NONSHARED=1",
+        "TOP_NAMESPACE=glibc",
+    ] + select({
+        "@platforms//cpu:x86_64": [
+            "CAN_USE_REGISTER_ASM_EBP",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+cc_runtime_stage0_static_library(
+    name = "c_nonshared",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":glibc_c_nonshared",
+    ],
+)
