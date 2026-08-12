@@ -6,6 +6,6 @@ actions:
           - "main"
     steps:
       # Build all targets
-      - run: "bazel build --config=ci //..."
+      - run: "bazel build --config=ci //... --build_metadata=COMMIT_SHA=$(git rev-parse HEAD)"
       # Run all tests
-      - run: "bazel test --config=ci //..."
+      - run: "bazel test --config=ci //...  --build_metadata=COMMIT_SHA=$(git rev-parse HEAD)"
