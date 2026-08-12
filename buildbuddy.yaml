@@ -16,3 +16,4 @@ actions:
       - run: "bazel build --config=ci //..."
       # Run all tests
       - run: "bazel test --config=ci //..."
+z

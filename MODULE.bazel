@@ -13,7 +13,7 @@ bazel_dep(name = "llvm", version = "0.8.17")
 ###############################################################################
 # Vendored module sources (thirdparty/<module>)
 
-# CAVEAT: local_path_override pins the module at the vendored version and takes
+# IMPORTANT: local_path_override pins the module at the vendored version and takes
 # it out of version resolution. If a future dependency needs a newer
 # bazel_skylib or platforms, MVS cannot resolve it -- re-vendor instead.
 # Re-vendor with: build/scripts/vendor_modules.sh
@@ -43,6 +43,13 @@ local_path_override(
     path = "thirdparty/llvm",
 )
 
+# Vendored locally and patched to pin the Lean v4.32.0 toolchain sha256. See lean/.
+bazel_dep(name = "rules_lean", version = "0.5.4")
+local_path_override(
+    module_name = "rules_lean",
+    path = "thirdparty/rules_lean",
+)
+
 ###############################################################################
 # Rules Rust
 # Patched in a fork to fix doc-test issue with hermetic LLVM
@@ -54,17 +61,6 @@ git_override(
     module_name = "rules_rust",
     commit = "47a9fd98b40798e32183dc7d9051d5d9f35dca75",
     remote = "https://github.com/marvin-hansen/rules_rust.git",
-)
-
-###############################################################################
-# Rules LEAN
-# Vendored locally (thirdparty/rules_lean) and patched to pin
-# the Lean v4.32.0 toolchain sha256. See lean/.
-###############################################################################
-bazel_dep(name = "rules_lean", version = "0.5.4")
-local_path_override(
-    module_name = "rules_lean",
-    path = "thirdparty/rules_lean",
 )
 
 ###############################################################################
@@ -140,7 +136,24 @@ lake.workspace(
     lake_manifest = "//lean:lake-manifest.json",
     lakefile = "//lean:lakefile.toml",
     lean_toolchain = "//lean:lean-toolchain",
+    # Regenerate after touching lake-manifest.json or lean-toolchain:
+    #   build/scripts/lean_lock.sh sources
+    lock = "//lean:lake-lock.json",
 )
-use_repo(lake, "lake_deps")
+use_repo(lake, "lake_deps", "lean_dist_4_32_0_toolchains")
 
-register_toolchains("@lake_deps//:lean_toolchain_def")
+# Register the DECLARATION repo, never @lake_deps or the distribution.
+#
+# Registering a toolchain makes Bazel fetch the repo its `toolchain()` target
+# lives in so resolution can evaluate it — on every build, for every target,
+# Lean-related or not. Pointed at @lake_deps that meant `bazel build` on a Rust
+# crate first materialized the whole Lake/Mathlib workspace; pointed at the
+# distribution it would mean a 2.5G toolchain download instead.
+#
+# `@<dist>_toolchains` contains the `toolchain()` declaration and nothing else,
+# so resolution is free and Bazel fetches the implementation lazily, only when
+# the Lean toolchain actually wins — i.e. only when Lean is being compiled.
+#
+# The repo name is derived from lean/lean-toolchain (v4.32.0 -> 4_32_0); bumping
+# Lean means bumping it here too, and an unknown-repo error says so loudly.
+register_toolchains("@lean_dist_4_32_0_toolchains//:lean_toolchain_def")
