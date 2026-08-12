@@ -1,10 +1,10 @@
 # Aspect bazelrc presets
 
-The `.bazelrc` files found here are the source-of-truth for our recommended Bazel presets.
+The `../../../../.bazelrc` files found here are the source-of-truth for our recommended Bazel presets.
 
 ## Using Aspect bazelrc presets in your project
 
-The `.bazelrc` file can get large, fast.
+The `../../../../.bazelrc` file can get large, fast.
 Some settings don't apply everywhere - some options are appropriate only on CI,
 and some vary depending on the version of Bazel you use or languages used.
 
@@ -12,7 +12,7 @@ Bazel rc files can contain `import` statements, which allow you to organize the 
 
 To use these presets in your project, simply vendor the `*.bazelrc` files from
 https://github.com/bazel-contrib/bazel-lib/tree/main/.aspect/bazelrc into the
-`.aspect/bazelrc` folder in your repository and `import` them in your `.bazelrc` file.
+`.aspect/bazelrc` folder in your repository and `import` them in your `../../../../.bazelrc` file.
 
 For example,
 
@@ -46,7 +46,7 @@ load("@aspect_bazel_lib//lib:bazelrc_presets.bzl", "write_aspect_bazelrc_presets
 write_aspect_bazelrc_presets(name = "update_aspect_bazelrc_presets")
 ```
 
-When `@aspect_bazel_lib` is upgraded in your `WORKSPACE.bazel` or your `MODULE.bazel` file, a `diff_test`
+When `@aspect_bazel_lib` is upgraded in your `WORKSPACE.bazel` or your `../../../../MODULE.bazel` file, a `diff_test`
 stamped out by `write_aspect_bazelrc_presets` will fail if your vendored copy is out-of-date and print the Bazel command
 to run to update it. For example, `bazel run //.aspect/bazelrc:update_aspect_bazelrc_presets`.
 

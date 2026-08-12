@@ -14,7 +14,7 @@ load("@aspect_bazel_lib//lib:bazelrc_presets.bzl", "write_aspect_bazelrc_presets
 write_aspect_bazelrc_presets(<a href="#write_aspect_bazelrc_presets-name">name</a>, <a href="#write_aspect_bazelrc_presets-presets">presets</a>, <a href="#write_aspect_bazelrc_presets-kwargs">**kwargs</a>)
 </pre>
 
-Keeps your vendored copy of Aspect recommended `.bazelrc` presets up-to-date.
+Keeps your vendored copy of Aspect recommended `../../../.bazelrc` presets up-to-date.
 
 This macro uses a [write_source_files](https://docs.aspect.build/rules/aspect_bazel_lib/docs/write_source_files)
 rule under the hood to keep your presets up-to-date.

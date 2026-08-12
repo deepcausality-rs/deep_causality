@@ -91,7 +91,7 @@ Assert that the given json files have the same semantic content.
 Uses jq to filter each file. The default value of `"."` as the filter
 means to compare the whole file.
 
-See the [jq rule](./jq.md#jq) for more about the filter expressions as well as
+See the [jq rule](jq.md#jq) for more about the filter expressions as well as
 setup notes for the `jq` toolchain.
 
 

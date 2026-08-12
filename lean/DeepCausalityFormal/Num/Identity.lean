@@ -10,6 +10,12 @@ from Mathlib's `Monoid`/`AddMonoid` classes; stating them here binds each Rust m
 property.
 
 Rust witness: `deep_causality_num/tests/identity/`.
+
+Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
+the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
+once reached 8,639 of Mathlib's 9,450 modules to supply four algebraic laws. Mirror any new import
+into `cache_roots` in `//MODULE.bazel`: that list tree-shakes the Mathlib olean download to those
+roots plus their closure, so a module absent from it is never fetched and the build fails on it.
 -/
 
 import Mathlib.Algebra.Group.Defs

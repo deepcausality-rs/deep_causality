@@ -12,10 +12,19 @@ non-commutativity via the Hamilton relations `i·j = k` and `j·i = -k`. Octonio
 out of scope (non-associative and absent from Mathlib).
 
 Rust witness: `deep_causality_num_complex/tests/complex/`.
+
+Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
+the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
+once reached 8,639 of Mathlib's 9,450 modules to supply four algebraic laws. Mirror any new import
+into `cache_roots` in `//MODULE.bazel`: that list tree-shakes the Mathlib olean download to those
+roots plus their closure, so a module absent from it is never fetched and the build fails on it.
 -/
 
+-- `Mathlib.Data.Real.Basic` supplies `ℝ`. The four laws below are purely algebraic
+-- (division ring, multiplicative normSq, antihomomorphic star), so the normed and
+-- inner-product structure carried by `Mathlib.Analysis.Quaternion` is not needed.
 import Mathlib.Algebra.Quaternion
-import Mathlib.Analysis.Quaternion
+import Mathlib.Data.Real.Basic
 
 open scoped Quaternion
 

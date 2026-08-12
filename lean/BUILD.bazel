@@ -17,11 +17,21 @@
 # every namespace; `bazel test //lean:proofs` runs them all as a suite.
 
 load("@rules_lean//lean:lean.bzl", "lean_test")
-load("@lake_deps//:packages.bzl", "LAKE_PACKAGES")
+
+# Generated from lake-manifest.json by `build/scripts/lean_lock.sh packages`.
+#
+# Deliberately a LOCAL load, not `@lake_deps//:packages.bzl`: loading from an
+# external repo forces that repo to be fetched before this package can be
+# evaluated, and `//...` evaluates every package — which made a full Mathlib fetch
+# the price of building any Rust crate, and of `bazel test -- //... -//lean/...`
+# too. The labels below are plain attribute values, resolved lazily, so @lake_deps
+# is fetched only when a target here is actually analyzed.
+load(":lake_packages.bzl", "LAKE_PACKAGES")
 
 # Read as labels by the `lake.workspace` extension in //MODULE.bazel.
 exports_files([
     "lakefile.toml",
+    "lake-lock.json",
     "lake-manifest.json",
     "lean-toolchain",
 ])

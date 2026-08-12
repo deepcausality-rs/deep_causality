@@ -15,7 +15,7 @@ To use a commit rather than a release, you can point at any SHA of the repo.
 However, this adds more "dev dependencies", as you'll have to build our helper programs (such as `copy_to_directory`, `expand_template`) from their Go sources rather than
 download pre-built binaries.
 
-For example to use commit `abc123` in `MODULE.bazel`:
+For example to use commit `abc123` in `../../MODULE.bazel`:
 
 ```
 # Automatically picks up new Go dev dependencies
