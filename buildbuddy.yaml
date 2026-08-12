@@ -10,7 +10,7 @@ actions:
     # UNITS: `GB` HERE MEANS GiB, NOT 10^9.
     resource_requests:
       memory: "8GB" # 8 is default
-      disk: "30GB" # 20 is default
+      disk: "20GB"  # 20 is default
     steps:
       # Build all targets
       - run: "bazel build --config=ci -- //... -//lean/..."
