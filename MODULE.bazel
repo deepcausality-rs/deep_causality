@@ -43,14 +43,14 @@ local_path_override(
     path = "thirdparty/bzlmod/llvm",
 )
 
-# Pinned by commit rather than by version until the module is published to the
+# Pinned by commit until the module is published to the
 # Bazel Central Registry; at that point this becomes a plain bazel_dep and the
 # git_override goes away.
 bazel_dep(name = "rules_lean", version = "0.1.0")
 git_override(
     module_name = "rules_lean",
     commit = "3f6c35f617fa750168b34c1a2a76e769d1142993",
-    remote = "https://github.com/Bazelverse/rules_lean.git",
+    remote = "https://github.com/bazelverse/rules_lean.git",
 )
 
 ###############################################################################
