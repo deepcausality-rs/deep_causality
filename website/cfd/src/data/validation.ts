@@ -7,7 +7,9 @@
  * or that target's README. Nothing is rounded for presentation and nothing is
  * estimated.
  *
- * All figures measured at `f64` on an Apple M3 Max, release build.
+ * All figures measured at `f64`, release build, on the machine named by
+ * `MACHINE` in `src/consts.ts`. Quote that constant rather than restating the
+ * spec, so a single edit moves every attribution on the site.
  *
  * `status` is deliberately narrow:
  *   'quantitative' — checked against a published reference to a stated tolerance
@@ -49,7 +51,7 @@ export const validation: ValidationRecord[] = [
       { quantity: 'Density, L1 over |x| ≤ 0.5', computed: '0.0175', expected: '0 (exact)', delta: 'tol 0.03' },
       { quantity: 'Velocity, L1 over |x| ≤ 0.5', computed: '0.0274', expected: '0 (exact)', delta: 'tol 0.03' },
       { quantity: 'Pressure, L1 over |x| ≤ 0.5', computed: '0.0151', expected: '0 (exact)', delta: 'tol 0.03' },
-      { quantity: 'Star pressure p*', computed: '0.3031', expected: '0.3031', delta: 'exact' },
+      { quantity: 'Star-region pressure (x = 0.10, 0.30)', computed: '0.3032, 0.3033', expected: '0.3031 (canonical p*)', delta: '≤ +0.0002' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_sod',
     caveat:
@@ -85,15 +87,15 @@ export const validation: ValidationRecord[] = [
     reference:
       'Ghia, U., Ghia, K. N., Shin, C. T. (1982). High-Re solutions for incompressible flow using the Navier–Stokes equations and a multigrid method. J. Comput. Phys. 48, 387–411.',
     measured: [
-      { quantity: 'Centerline RMSE vs Ghia (33², t = 40)', computed: '0.137', expected: '0', delta: '—' },
-      { quantity: 'Primary vortex position', computed: '(0.563, 0.594)', expected: '(0.531, 0.563)', delta: '≈ 6% of span' },
-      { quantity: 'Corner eddies resolved', computed: 'both', expected: 'both', delta: 'at 33²/t=40' },
-      { quantity: 'Grid-trend gate (17² → 33²)', computed: '0.252 → 0.133', expected: 'decreasing', delta: 'gates 0.32 / 0.20' },
+      { quantity: 'Centerline RMSE vs Ghia (65², t_end = 100)', computed: '0.0617', expected: '0', delta: '—' },
+      { quantity: 'Primary vortex position', computed: '(0.5312, 0.5625)', expected: '(0.5313, 0.5625)', delta: 'on Ghia\'s node' },
+      { quantity: 'Corner eddies resolved', computed: 'both', expected: 'both', delta: 'bottom-left, bottom-right' },
+      { quantity: 'Grid-trend gate (17² → 33²)', computed: '0.2369 → 0.1309', expected: 'decreasing', delta: 'gates 0.32 / 0.20' },
     ],
-    command: 'cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification trend',
+    command: 'cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification',
     caveat:
-      'The 6%-of-span vortex offset is at a coarse 33² grid. Reporting resolution is 129² with t_end ≥ 150, Ghia\'s own grid, which takes hours. The committed baseline.txt for this target is a partial run log and records no RMSE; the figures above come from the target README.',
-    hasArtifact: false,
+      'The 65² reporting grid is four times coarser than Ghia\'s own 129², and t_end = 100 rather than the ≥ 150 a settled reporting run would use. The bottom-left eddy centre sits one cell off in x (0.0781 against 0.0859). The refinement-trend gate runs at 17² and 33² with t_end = 60, a separate coarser sweep invoked as `… dec_lid_cavity_re1000_verification trend`.',
+    hasArtifact: true,
   },
   {
     id: 'dec-cylinder',
@@ -104,7 +106,7 @@ export const validation: ValidationRecord[] = [
     reference:
       'Williamson (1996); Dröge & Verstappen (2005); Lehmkuhl, Rodríguez, Borrell & Oliva (2013). Window compiled in arXiv:2303.09262.',
     measured: [
-      { quantity: 'Strouhal St', computed: '0.1714', expected: '0.164–0.165', delta: '+4.3%' },
+      { quantity: 'Strouhal St', computed: '0.1714', expected: '0.164–0.165', delta: '+4.3% on the band' },
       { quantity: 'Mean drag C_d', computed: '1.246', expected: '1.32–1.36', delta: '−6%' },
       { quantity: 'C_d split (pressure + friction)', computed: '1.078 + 0.167', expected: 'friction ≈ 25%', delta: 'friction 13%' },
       { quantity: 'Lift C_l, drag swing', computed: '0.010, [1.238, 1.254]', expected: 'sustained limit cycle', delta: 'amplitude ≈ 0.41' },
@@ -112,7 +114,7 @@ export const validation: ValidationRecord[] = [
     command:
       'CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 cargo run --release -p deep_causality_cfd --example dec_cylinder_verification',
     caveat:
-      'Acceptable but not DNS-grade at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. This target has no baseline.txt; the figures are the committed run output re100_16_resolved.txt. Its staircase companion at the same 16 cells/D does not shed at all: the wake decays to a steady residual. That run\'s printed St 0.2444 is therefore the crossing detector firing on 7th-decimal noise, and its C_d 1.356 is a steady-flow value rather than a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
+      'The committed capture predates the harness moving into deep_causality_cfd: it was taken under the former crate and example names at an earlier revision and has not been regenerated, so it is not the output of the code in the tree today. Acceptable but not DNS-grade at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. This target has no baseline.txt; the figures are the committed run output re100_16_resolved.txt. Its staircase companion at the same 16 cells/D does not shed at all: the wake decays to a steady residual. That run\'s printed St 0.2444 is therefore the crossing detector firing on 7th-decimal noise, and its C_d 1.356 is a steady-flow value rather than a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
     hasArtifact: true,
   },
   {

@@ -210,6 +210,13 @@ Because every derived number is computed in `FloatType`, the alias is a one-line
 error budget. Three runs, same corridor (the precision study was recorded on the surrogate-era
 build; the network keeps the same SI-unit exponent ranges that set its conclusion):
 
+> **The `Float106` row is history, not a reproducible step.** Switching the alias today fails to
+> compile: 44 errors, most of them in this example's own `model.rs`, `main.rs` and
+> `shared/utils.rs`, plus eight in the crate. The example has drifted to `f64`-specific code since
+> the study was recorded. The `f64` figure below is also stale; the committed `output.txt` says
+> 44.4 s. Precision as a parameter is still demonstrable end to end in `turbulence_flow`, which runs
+> all three precisions from one rate field.
+
 | Alias | Outcome |
 |---|---|
 | `f64` | All gates pass in about 35 s. The default. |

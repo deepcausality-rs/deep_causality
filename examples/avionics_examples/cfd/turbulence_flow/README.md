@@ -51,7 +51,7 @@ amount.
 ## Running it
 
 ```sh
-cargo run -p avionics_examples --example turbulence_flow
+cargo run --release -p avionics_examples --example turbulence_flow
 ```
 
 The divergence table and horizon summary from a run, verbatim (state-space distance to the Float106
@@ -78,8 +78,7 @@ Forecast horizon (lead time before the flow state is off by one state-space unit
   Float106   beyond T=60 here; the law below puts it near t ≈ 81
 ```
 
-There is no committed `output.txt` for this example, so the block above is the only reference
-record of what it prints; rerun it to diff.
+The full run is committed as `output.txt`; rerun it to diff.
 
 ## Reading it
 

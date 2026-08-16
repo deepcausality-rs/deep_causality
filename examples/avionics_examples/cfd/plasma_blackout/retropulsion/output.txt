@@ -55,7 +55,7 @@
     regime -> continuum (GNSS-denied), Kn=0.009825077357757745, supersonic / thrust-unknown
     regime -> continuum (GNSS-available), Kn=0.00023029462780754038, supersonic / thrust-unknown
     nav: aided (position fix folded)
-    ignition corridor committed at step 2117: Mach 1.997501570461523, q 2229.2800050958263 Pa, nav aided, sigma 0.381314074996424 m
+    ignition corridor committed at step 2117: Mach 1.997501570461523, q 2229.2800050958263 Pa, nav aided, sigma 0.38127861761973975 m
     march paused at step 2118
     leg re-seeded from step 2118 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
     regime -> continuum (GNSS-available), Kn=0.000019032190686017852, supersonic / burn
@@ -75,15 +75,15 @@
   [PASS] [tripwire] (4c) coupling load-bearing: branch trajectories depart the frozen-drag prediction by up to 139.3755 m/s over the continuation (threshold 100.0000) — thrust-only kinematics does not predict the outcome
   [PASS] [tripwire] (4d) fork economics: 5/5 branches entered by reference (no tensor copied at fork time), and the worst post-fork bond growth is 0 against a cap of 8. The fan-out's step cost is gate (4g), which is run-level because the branches are concurrent
   [PASS] [tripwire] (4e) audit trail: 5/5 branches record an applied context alternation naming the world they replace (the typed flag, which the carrier's refusal path sets false)
-  [PASS] [tripwire] (4f) roster non-degeneracy: 5 branches flew 5 distinct throttles (minimum gap 0.020) — the envelope admitted every commanded value, so each row describes its own flight
+  [PASS] [tripwire] (4f) roster non-degeneracy: 5 branches flew 5 distinct throttles (minimum gap 0.020), so each row describes its own flight. This gates separation, not admission: a branch whose command the envelope clamped still passes as long as it did not land on another branch's realized throttle. Read cmd against flown in the roster to see which were clamped
   [PASS] [tripwire] (0) integrity: 2516 coupled steps flown across four legs; no leg captured a step error
   [PASS] [tripwire] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 12.60 s against the table's 12.61 s for this day (error 0.013 s) and dwell 56.10 s against 55.99 s (error 0.107 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 51.70 m
   [PASS] [tripwire] (2) ignition corridor: commit fired at step 2117 on aided navigation at sigma 0.381 m against the day's table-sized margin of 62.30 m (Mach 2.00, q 2229 Pa — the corridor predicate's own preconditions, not re-asserted here)
   [PASS] [tripwire] (3) regime cascade: 8 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log
-  [PASS] [tripwire] (4g) fork step cost: the branch fan-out marched at 1.11x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
+  [PASS] [tripwire] (4g) fork step cost: the branch fan-out marched at 1.09x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
   [PASS] [tripwire] (5) table earns its place: informed and uninformed guidance lit the landing burn 14.06 m apart (139.12 m vs 125.06 m, threshold 10.00 m) and arrived at 1.81 vs 1.72 m/s; the informed world spent 7.28 kg more propellant, which is the dispersion-sized reserve measured rather than configured
   [PASS] [tripwire] (6) touchdown: altitude floor reached at 0.015 km at 1.81 m/s against a commanded contact speed of 2.0 m/s (admissible [1.50, 2.50]), with 1192.5 kg propellant remaining (floor 40)
   [PASS] [tripwire] (7) compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16)
   [PASS] [tripwire] (8) bounded rebuilds: 1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally. A runaway detector, not a regression band
-  [PASS] [tripwire] (9) wall-clock budget: 355.6 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
+  [PASS] [tripwire] (9) wall-clock budget: 337.5 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
 === All gates passed: retropulsion counterfactuals + retropulsion descent. ===

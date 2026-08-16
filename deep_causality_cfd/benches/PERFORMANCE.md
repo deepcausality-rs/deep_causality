@@ -11,7 +11,10 @@ feature set as it stands today.
 
 ## Methodology
 
-- **Machine:** Apple M3 Max, 16 logical / 16 physical cores, 128 GB, macOS 26.5.1 (arm64).
+- **Machine:** Apple M3 Max, 16 logical / 16 physical cores (12 performance + 4 efficiency),
+  128 GB, macOS 26.5.1 (arm64). The core split matters for any fan-out figure: `scoped_map`
+  chunks one contiguous block per `available_parallelism()` core and does not distinguish the
+  two classes, so a 16-way fan-out puts a quarter of its work on efficiency cores.
 - **Toolchain:** rustc 1.96.0, `bench` profile (optimized).
 - **Harness:** Criterion, `--warm-up-time 1 --measurement-time 2 --sample-size 30`. Reported value is
   Criterion's point estimate (median of the slope/mean estimate).

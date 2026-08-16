@@ -8,17 +8,21 @@
  */
 import '../styles/global.css';
 import '../styles/tokens-cfd.css';
-import { GITHUB_URL, DOCS_URL, SITE_URL, DISCORD_URL, CRATE_URL } from '../consts';
+import { GITHUB_URL, DOCS_URL, SITE_URL, DISCORD_URL, CRATE_URL, MAINTAINER_URL } from '../consts';
 
 interface Props {
   title: string;
   description: string;
   /** Absolute path for canonical/OG URLs, e.g. "/validation/". */
   path?: string;
+  /** Site-relative share card. 1200×630. */
+  ogImage?: string;
 }
 
-const { title, description, path = '/' } = Astro.props;
-const canonical = new URL(path, Astro.site ?? 'https://cfd.deepcausality.com').href;
+const { title, description, path = '/', ogImage = '/img/social-share.jpg' } = Astro.props;
+const site = Astro.site ?? 'https://cfd.deepcausality.com';
+const canonical = new URL(path, site).href;
+const ogImageUrl = new URL(ogImage, site).href;
 const year = 2026;
 ---
 <html lang="en" data-theme="dark">
@@ -37,7 +41,12 @@ const year = 2026;
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DeepCausality CFD — counterfactual fluid dynamics in Rust" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageUrl} />
 
     <!-- Preload the two font subsets actually used above the fold. -->
     <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
@@ -73,7 +82,10 @@ const year = 2026;
           <p class="footer-note">
             Counterfactual Fluid Dynamics in Rust. Part of the
             <a href={SITE_URL}>DeepCausality</a> project, hosted at the Linux Foundation
-            for Data &amp; AI.
+            for Data &amp; AI and maintained by the
+            <a href={MAINTAINER_URL}>Center for Dynamic Causality</a>. The project
+            has been in continuous development since June 2023, across eight
+            contributors and 2,800 commits in the last twelve months.
           </p>
         </div>
         <nav class="footer-col" aria-label="Documentation">
@@ -81,9 +93,14 @@ const year = 2026;
           <ul>
             <li><a href="/tutorial/">Tutorial</a></li>
             <li><a href="/blueprints/">Blueprints</a></li>
+            <li><a href="/vs-monte-carlo/">Fork or sweep</a></li>
             <li><a href="/validation/">Validation status</a></li>
             <li><a href="/boundaries/">Capability boundaries</a></li>
+            <li><a href="/solvers/">Solvers</a></li>
+            <li><a href="/solvers/precision/">Precision</a></li>
+            <li><a href="/provenance/">Provenance</a></li>
             <li><a href="/roadmap/">Roadmap</a></li>
+            <li><a href="/brief.pdf">One-page brief (PDF)</a></li>
           </ul>
         </nav>
         <nav class="footer-col" aria-label="Source">
@@ -97,8 +114,7 @@ const year = 2026;
         </nav>
       </div>
       <p class="footer-legal">
-        © {year} The DeepCausality Authors. MIT licensed. The CFD crate is
-        unpublished and versioned with the monorepo.
+        © {year} The DeepCausality Authors. MIT licensed.
       </p>
     </footer>
 

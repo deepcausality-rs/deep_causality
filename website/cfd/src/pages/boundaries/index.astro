@@ -6,7 +6,7 @@ import { STUDIES_URL } from '../../consts';
 
 const title = 'Capability boundaries — DeepCausality CFD';
 const description =
-  'Where this toolbox stops working, stated where you will hit it, with the measurements behind each limit. Includes four hypotheses the project refuted by running them.';
+  'Where this toolbox stops working, stated where you will hit it, with the measurements behind each limit. Includes the hypotheses the project refuted by running them.';
 
 const refuted = boundaries.filter((b) => b.refuted);
 const limits = boundaries.filter((b) => !b.refuted);
@@ -24,9 +24,9 @@ const limits = boundaries.filter((b) => !b.refuted);
         crosses it.
       </p>
       <p class="lede">
-        Four entries record hypotheses that measurement refuted. They appear
-        first. The remaining entries are standing limits of the current
-        design.
+        {refuted.length} entries record hypotheses that measurement refuted.
+        They appear first. The remaining {limits.length} are standing limits of
+        the current design.
       </p>
 
       <div class="callout callout-warn">
@@ -89,7 +89,7 @@ const limits = boundaries.filter((b) => !b.refuted);
             </details>
           )}
 
-          <p class="src"><code>studies/{b.study}</code></p>
+          <p class="src"><code>{b.study}</code></p>
         </section>
       ))}
     </section>
@@ -108,7 +108,7 @@ const limits = boundaries.filter((b) => !b.refuted);
           <ul class="nums">
             {b.numbers.map((n) => <li class="num">{n}</li>)}
           </ul>
-          <p class="src"><code>studies/{b.study}</code></p>
+          <p class="src"><code>{b.study}</code></p>
         </section>
       ))}
     </section>

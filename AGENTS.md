@@ -217,7 +217,7 @@ The project is a monorepo containing 27 library crates:
 ### Topology and Physics Crates
 * `deep_causality_topology`: Topological data structures (complexes, manifolds, differential geometry).
 * `deep_causality_physics`: Standard library of physics formulas and engineering primitives.
-* `deep_causality_cfd`: Computational fluid dynamics solvers and the Flow DSL (`publish = false`).
+* `deep_causality_cfd`: Computational fluid dynamics solvers and the Flow DSL.
 
 ## Project Dependencies
 
@@ -225,7 +225,7 @@ Scope: the 24 library crates that are workspace members. Example crates (`exampl
 vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
 `deep_causality_effects` exists on disk but is **not** a workspace member, so it is omitted.
 `deep_causality_macros` is a member but deprecated and has no dependents.
-`deep_causality_cfd` is a member but marked `publish = false` (not released to crates.io).
+`deep_causality_cfd` was released to crates.io as 0.1.0 on 2026-08-12.
 
 ### Internal Dependencies
 

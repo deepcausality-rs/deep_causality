@@ -1,0 +1,118 @@
+---
+/**
+ * Section 04 — three questions that arrive after a run, as things that
+ * happened rather than as features.
+ *
+ * Each scenario leads in plain engineering English and the code or the output
+ * follows it, never the other way round. The excerpts are short on purpose: a
+ * reader who wants the whole log has /provenance/ one click away.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+/* weather/output.txt:9-15, trimmed to four of six rows. */
+const weather = `  world          dT K   rho    IMU dep  onset s  dwell s   drift(dark) m     terminal m
+  standard_day      0   1.00     1.00     13.1     55.7    41.60 +- 1.97   0.133 (max 0.195)
+  hot_day          20   0.90     1.20     13.6     55.5    48.64 +- 2.40   0.141 (max 0.212)
+  cold_day        -25   1.10     1.25     12.8     55.9    50.68 +- 2.93   0.132 (max 0.206)
+  polar_winter    -40   1.20     1.40     12.4     56.1    58.71 +- 2.27   0.151 (max 0.219)`;
+
+/* corridor/output.txt:56-62, verbatim. */
+const blackout = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+nav: aided (position fix folded)
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
+nav: dead reckoning (no usable fix)
+march paused at step 131
+!!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_08'`;
+
+/* retropulsion/output.txt:13-40, the Act headers, condensed. */
+const acts = `--- Act: BURN — supersonic retropulsion under the SRP envelope ---
+  steps  731 | altitude    18.50 km | Mach  0.60 | rebuilds 0
+  regime: continuum / subsonic / burn
+
+--- Act: TERMINAL — cutoff, subsonic re-seed, touchdown ---
+  steps 2516 | altitude     0.01 km | Mach  0.01 | rebuilds 1
+  regime: continuum / subsonic / burn / touchdown`;
+---
+<section class="cfd-sec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">04 / 05</span><span class="lb">In practice</span>
+    </p>
+    <h2>Three questions that arrive after the run</h2>
+    <p class="lede">
+      The case ran overnight, the result is on the screen, and the first thing
+      the room asks is a what-if. These are the three shapes that question
+      takes.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets body-panel rise">
+    <h3>“What if it had been a hot day?”</h3>
+    <p class="body">
+      Six atmospheres, eight receiver-noise draws each, forty-eight descents,
+      one gated table. The answer was not the expected one: the inertial unit
+      does not behave as assumed in the cold. Polar-winter mean drift through
+      blackout came out 58.71 m against a standard day's 41.60 m. The gate
+      requires that separation to clear two combined standard deviations before
+      it counts as a finding; it cleared 5.7.
+    </p>
+    <Code code={weather} lang="text" themes={SHIKI} />
+
+    <h3>“The link dropped — when did the filter go blind?”</h3>
+    <p class="body">
+      One append-only log carries flow, chemistry, navigation and control in a
+      single sequence, so the answer is two adjacent lines rather than four logs
+      correlated after the fact. The flow said the link was gone; the next entry
+      is the filter falling back to dead reckoning. Nothing scheduled that. The
+      evolved electron density located it.
+    </p>
+    <Code code={blackout} lang="text" themes={SHIKI} />
+
+    <h3>“It left the envelope — at which stage?”</h3>
+    <p class="body">
+      Each leg reports the classification it ended in, so a run that changed
+      character can be named at the stage it did so. The retropulsion descent
+      logs eight regime transitions, counted by the classifier rather than
+      tallied from rendered text, and its throttle roster prints commanded
+      against flown so a clamped branch shows up per row.
+    </p>
+    <Code code={acts} lang="text" themes={SHIKI} />
+
+    <p class="more">
+      <a href="/provenance/">The full provenance record</a>
+      <a href="/tutorial/">The three-walk tutorial</a>
+      <a href="/examples/">Worked examples</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .cfd-sec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .body-panel h3 {
+    font-size: var(--t-h4);
+    margin: var(--space-6) 0 var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+  }
+  .body-panel h3:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-5) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

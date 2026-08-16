@@ -52,9 +52,17 @@ pub const TERMINAL_STEPS: usize = 3000;
 ///
 /// The roster was previously capped near 0.44 because the envelope's dynamic `C_T` ceiling bound
 /// there. That ceiling was computed against a reference area three times too small; corrected, it
-/// sits at 1.35 and never binds, so the admissible band is the engine's own throttle range. Gate (4f)
-/// still fails a roster whose branches collapse onto one realized throttle, so a future envelope
-/// change that re-introduces clamping is a run failure rather than a silent one.
+/// sits at 1.35 **at the fork**, above the 0.95 static ceiling, so every command in this roster is
+/// admissible at the moment it is issued.
+///
+/// It does not stay that way. The cap is `τ_cap = MAX_CT · q∞ · S_ref / T`, so it tightens as the
+/// burn sheds dynamic pressure, and the branch pushing hardest reaches the lowest `q∞`. On the
+/// committed run the `hard` branch commands 0.85 and flies 0.7931, which is `τ_cap` at
+/// `q∞ ≈ 1314 Pa`; the other three burning branches fly their commands exactly. That is the envelope
+/// working, and the roster's `cmd` and `flown` columns are what disclose it.
+///
+/// Gate (4f) does not check admission. It fails a roster whose branches **collapse onto one
+/// realized throttle**, which is the failure that would make distinct rows report one trajectory.
 pub const ROSTER: [(&str, f64); 5] = [
     ("coast", 0.0),
     ("low", 0.20),

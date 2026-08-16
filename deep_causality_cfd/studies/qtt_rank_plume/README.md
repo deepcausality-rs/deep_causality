@@ -49,9 +49,18 @@ neither a cap nor a ceiling but an uncapped measurement at roughly half saturati
 holds `O(10)` and grows only weakly with thrust, so the blend-metric dial works on a
 plume-plus-shock field, not just on a clean bow shock.
 
-*B, fork economics:* sharing is structural, with **shares fluid + field = true** at a setup cost of
-**42 ns**. Continuation cost against an unforked trunk is a ratio of **1.00 to 1.04** for every
-powered branch, and coast is cheaper at 0.67. The mirrored post-fork bond is **16, flat** across the
+*B, fork economics:* sharing is **structural**, with `shares fluid + field = true`. That is the
+load-bearing result, and it is a property of the code rather than of a clock: no tensor is copied at
+fork time.
+
+Continuation cost against an unforked trunk is a ratio of **about 1× for every powered branch**,
+with coast cheaper at **0.66**. Three recordings on the machine below span 0.95 to 1.05 on the
+powered rows, which is the resolution this harness has; read the ratio as "indistinguishable from an
+unforked march", not as a figure to three digits.
+
+The printed setup cost is **noise-dominated and should not be quoted**. It is a single sub-microsecond
+measurement: the first recording gave 42 ns and two consecutive re-runs both gave 83 ns, with every
+physics observable identical across all three. The mirrored post-fork bond is **16, flat** across the
 roster. Final-field L2 against coast spreads 0.0 to 0.608 with throttle, so the branches genuinely
 diverge; the corridor's branch-invariant flow columns are the explicit foil.
 
@@ -68,7 +77,9 @@ cap at relative tolerance 1e-6, so it measures what that tolerance retains rathe
 rank; a tighter tolerance would admit a larger bond. The post-fork bond of 16 is read on the
 bare-marcher mirror, not on the forked carrier: the mirror's pre-pause segment marches no plume
 where the trunk world does, and it applies sponge and body every step where a carrier world applies
-only its forcing region. No observable is compared between the two at the pause point. The
-continuation-time band was pinned from the first run on one machine.
+only its forcing region. No observable is compared between the two at the pause point.
+
+**Machine.** Apple M3 Max, 16 cores (12 performance + 4 efficiency), 128 GB, release build, at
+`FloatType = f64`. Every timing column here varies run to run; the rank and L2 columns do not.
 
 See `output.txt` for the recorded reference output.

@@ -13,15 +13,11 @@ pnpm check      # astro check; needs TypeScript 6.x, see below
 pnpm check:tokens   # verify the token mirror has not drifted
 ```
 
-Or build it hermetically through Bazel:
-
-```bash
-bazel build //website/cfd:build   # -> target-bzl/bin/website/cfd/dist
-```
-
-The Bazel target is wired: `@npm_cfd` is registered in the root `MODULE.bazel`
-alongside `@npm_web` and `@npm_docs`, and `website/cfd/node_modules` is listed
-in `.bazelignore`.
+There is **no Bazel target for this site**. `pnpm build` is the only build path.
+`website/cfd/node_modules` is listed in `.bazelignore` so the Rust build ignores
+it, and that is the whole of the Bazel involvement: the root `MODULE.bazel`
+declares no `npm_*` extension and no `BUILD.bazel` exists anywhere under
+`website/`.
 
 ## Deploy
 
@@ -54,15 +50,6 @@ but the marketing site has not yet applied:
 `../web/src/styles/tokens.css`. Do not edit values in it — edit the source and
 re-copy, then run `pnpm check:tokens`. Site-local tokens go in `tokens-cfd.css`.
 
-### Brand anchor
-
-The marketing site reads its mood from a raster (`frontpage-art.webp`). No
-equivalent art exists for this crate, so the anchor here is a **drawn schlieren
-figure** in `Hero.astro`: a blunt body, its standing bow shock, streamlines
-deflecting across it, and sample nodes on the stagnation line. It uses the same
-hairline and node vocabulary as the rest of the site, animates with the existing
-draw-in idiom, is theme-aware for free, and costs no raster bytes.
-
 ### Inherited defect
 
 The light-mode accent (`#0a8a98`) fails WCAG AA at 4.12:1, which affects body
@@ -74,17 +61,30 @@ project, not something this site should diverge on.
 
 From `openspec/notes/cfd-website/cfd-docs-website.md`:
 
-- **The landing page follows the crate README.** `src/pages/index.astro`
-  makes the same five arguments in the same order as
-  `deep_causality_cfd/README.md`: counterfactual dynamics, dynamic regime
-  change, dynamic multiphysics, multiple solver paradigms, provenance for
-  comparison across boundaries. Evidence follows the argument, not the other
-  way round, so validation and the worked examples come last. One component
-  per argument, under `src/components/home/`. When the crate README changes an
-  argument, this page changes with it.
+- **Facts are rooted in the crate. Authoring is for the prime audience.**
+  Every claim on this site traces to `deep_causality_cfd` in this repo: a
+  committed run artifact, a verification baseline, a study, or the crate
+  source. That constraint is absolute and is what makes the site citable.
+
+  Structure, order, emphasis and vocabulary are a separate decision, and they
+  serve the prime audience: a working CFD engineer who runs Fluent, SU2,
+  OpenFOAM or an in-house code and arrives cold from a link. Pages are ordered
+  by what that reader needs in order to decide whether to keep reading, which
+  is rarely the order the crate README argues in. Evidence may lead. Material
+  may be cut from one page and kept on another. A change to the crate README is
+  not by itself a reason to change a page.
+
+  Where the two pull apart, the fact holds and the framing moves. Landing-page
+  sections stay one-per-component under `src/components/home/`.
 - **A toolbox for a named problem class**, with an explicit line between what
-  works today and what is aspirational. That line is the `/roadmap/` page's
-  three-list structure, and no item moves up a list without a committed artifact.
+  works today and what is aspirational. That line is the `/roadmap/` page, and
+  no item moves up a list without a committed artifact.
+
+  Three of its lists are stages of one ladder: *works today*, *building*,
+  *open*. The fourth, **not pursued**, is a different kind of entry — a decision
+  with its reason, not a gap waiting to be filled, so it carries its own status
+  mark and nothing is promoted out of it on effort alone. An unstated non-goal
+  reads as an omission; a stated one reads as a choice.
 - **Blueprints, not rustdoc.** `/blueprints/` is task-shaped: sweep a parameter,
   gate against a placard, fork a running simulation, pick a solver.
 - **One citable validation page.** `/validation/` is the adoption document —
@@ -123,6 +123,35 @@ two resolved copies break Bazel's `public_hoist_packages`. See
 from the `bundledThemes` of this project's own copy, while astro highlights with
 the copy its `^4.0.2` dependency resolves; a single override keeps those the
 same shiki.
+
+## Diagrams
+
+The fork tree in `src/components/home/ForkTree.astro` is the site's first figure
+and sets the convention. Follow it rather than inventing a second mechanism.
+
+- **Hand-drawn inline SVG**, in the instrument vocabulary: hairline strokes,
+  accent node circles, no fills, no gradients, no raster.
+- **Geometry in the SVG, words in HTML.** SVG text scales with the viewBox, so a
+  label that reads well on a desktop lands at eight or nine pixels on a phone.
+  Labels go in an HTML row beneath, using the site's own type tokens.
+- **Animate through the shared contract.** Put `data-anim-draw` on the `<svg>`,
+  give every `<line>` and `<path>` `pathLength="100"`, and let the site-wide
+  observer add `.in-view`. No per-diagram script; the reduced-motion contract in
+  §6 then holds for free.
+- **Order circles the way the figure should be read.** The node stagger is
+  `circle:nth-of-type(n)` in `global.css`, currently declared to eight.
+- **Colour is scoped to the component**, never global. `global.css` carries dash
+  and node *timing* only.
+- **Never combine `vector-effect: non-scaling-stroke` with the draw-in.** It
+  resolves `stroke-dasharray` in device pixels, which fights the
+  `pathLength="100"` normalization and renders every stroke as a dashed line
+  instead of a drawn one. Set `stroke-width` in user units instead. Note that
+  `SectionDivider.astro` still pairs the two, which is why the dividers render
+  dashed rather than drawing in.
+
+The Open Graph card at `public/img/social-share.jpg` is built from the same
+figure. Its source is committed beside it as `social-share.source.svg`; re-render
+with `rsvg-convert -w 1200 -h 630`, then convert to JPEG.
 
 ## Deliberate omissions
 

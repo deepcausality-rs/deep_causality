@@ -9,5 +9,8 @@ export const GITHUB_URL = 'https://github.com/deepcausality-rs/deep_causality';
 /** DeepCausality community Discord invite. */
 export const DISCORD_URL = 'https://discord.gg/Bxj9P7JXSj';
 
+/** Counterfactual Fluid Dynamics site (website/cfd), on its own Worker. */
+export const CFD_URL = 'https://cfd.deepcausality.com';
+
 /** docs.rs base; the per-crate API reference is `${DOCSRS_BASE}/<crate>`. */
 export const DOCSRS_BASE = 'https://docs.rs';

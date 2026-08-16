@@ -27,8 +27,21 @@ export default defineConfig({
         } else if (path.startsWith('/tutorial/')) {
           item.priority = 0.85;
           item.changefreq = 'monthly';
+        } else if (path.startsWith('/vs-monte-carlo/')) {
+          // Answers the first question a reviewer asks, and the one with search
+          // traffic the landing page will never capture on its own.
+          item.priority = 0.9;
+          item.changefreq = 'monthly';
+        } else if (path.startsWith('/boundaries/')) {
+          // Paired with /validation/ on the landing page: the honest half of
+          // the same argument, so it ranks with it rather than in the tail.
+          item.priority = 0.85;
+          item.changefreq = 'monthly';
         } else if (path.startsWith('/blueprints/')) {
           item.priority = 0.8;
+          item.changefreq = 'monthly';
+        } else if (path.startsWith('/solvers/') || path.startsWith('/provenance/')) {
+          item.priority = 0.75;
           item.changefreq = 'monthly';
         } else if (path.startsWith('/examples/')) {
           item.priority = 0.7;

@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
 import { validation, statusLabel, statusClass } from '../../data/validation';
-import { VERIFICATION_URL } from '../../consts';
+import { VERIFICATION_URL, MACHINE } from '../../consts';
 
 const title = 'Validation status — DeepCausality CFD';
 const description =
@@ -27,9 +27,8 @@ const groups = [
         exits nonzero when its check fails, so the suite runs as a CI gate.
       </p>
       <p class="lede">
-        Every number below is copied from a committed run artifact, except on the
-        one card flagged as sourced from its target README. All figures are
-        <code>f64</code> on an Apple M3 Max, release build.
+        Every number below is copied from a committed run artifact. All figures
+        are <code>f64</code>, release build, on {MACHINE}.
       </p>
 
       <div class="callout">

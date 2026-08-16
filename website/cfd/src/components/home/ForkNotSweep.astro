@@ -1,0 +1,144 @@
+---
+/**
+ * Section 01 — the fork-vs-restart discriminator, which is the whole product.
+ *
+ * The comparison is against restart files, not against rerunning from t = 0.
+ * Every production code restarts from a checkpoint — Fluent case-plus-data, an
+ * SU2 restart_flow.dat, an OpenFOAM time directory — so a page that competes
+ * against rerunning from initial conditions is arguing with nobody.
+ *
+ * The coupled-physics claim rests on the retropulsion roster, not the corridor.
+ * Across the corridor's bank branches the flow observables agree to three
+ * digits (its own gate 4a says so); only the trajectory moves. Retropulsion is
+ * the shipped case where the branches genuinely change the flow.
+ *
+ * The fork tree diagram lands in the next phase. A placeholder would be worse
+ * than its absence.
+ */
+import { Code } from 'astro:components';
+import ForkTree from './ForkTree.astro';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+/* corridor/main.rs:84-90 and :98-115, condensed. `.trigger` is kept: it is the
+   mechanism the lede's "predicate on the flow" claim rests on. */
+const flow = `// Trajectory: march until the evolved sheath's n_e crosses the GPS L1 cutoff.
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .trigger(trigger)
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
+
+// Campaign: fork that one pause per candidate command, fly every branch
+// concurrently, score the rows, then refine around the winner from the
+// same onset and gate the two-round result.
+let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())
+    .fork(&onset)                            // the shared flow-resolved fork point
+    .branch(model::bank_world)               // one alternated world per command
+    .continue_for(constants::BRANCH_STEPS)   // concurrent, copy-on-write
+    .reduce_all(model::score_branches)
+    .refine(&onset, model::fine_candidates)  // second round, same paused onset
+    .branch(model::bank_world)
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .gates(model::corridor_gates())
+    .verdict()?;`;
+
+/* retropulsion/output.txt:24-29, verbatim. */
+const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
+  coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
+  low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
+  mid           0.40   0.4000     0.1238      9.9667     122.30    120.335     99.984
+  high          0.60   0.6000    -0.0161     12.8932     182.54    151.991    151.413
+  hard          0.85   0.7931    -0.0611     17.1977     256.80    212.085    216.209`;
+---
+<section class="cfd-sec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">01 / 05</span><span class="lb">Forking a solved case</span>
+    </p>
+    <h2>Branch from the state the vehicle reached</h2>
+    <p class="lede">
+      The fork point is a predicate on the flow, not a step number. The corridor
+      marches until the evolved sheath's electron density crosses the GPS L1
+      cutoff, then hands back a state every branch continues from.
+    </p>
+  </header>
+
+  <div class="panel corner-brackets body-panel rise">
+    <p class="body">
+      You already restart from checkpoints: a Fluent case and data pair, an SU2
+      <code>restart_flow.dat</code>, an OpenFOAM time directory, a shell loop
+      around them. A fork differs in four ways. The pause is chosen by a
+      predicate on the evolved state, not a time picked in advance. Every branch
+      stamps a marker naming the baseline it replaced. The fan-out is concurrent
+      in one process, sharing the marched state by reference. And the roster
+      reduces to one gated table instead of a directory you diff by hand.
+    </p>
+
+    <ForkTree />
+
+    <Code code={flow} lang="rust" themes={SHIKI} />
+
+    <h3>What the coupling is worth</h3>
+
+    <p class="body">
+      The retropulsion descent forks a mid-burn state five ways. For every
+      branch it also computes what thrust-only kinematics would have predicted,
+      with the flow closure frozen at the fork. The last two columns are the
+      coupled answer and the decoupled one, side by side:
+    </p>
+
+    <Code code={roster} lang="text" themes={SHIKI} />
+
+    <p class="body">
+      Read the <code>axial m/s2</code> column. Net deceleration is non-monotone
+      in throttle: the 20% branch sheds less speed than the coasting one, and
+      the drag it preserves falls through zero as the roster hardens. A campaign
+      that solves the drag model separately and composes afterwards gets the
+      <code>dv frozen</code> column, which misses that ordering by 38.9 m/s on
+      the branch where it matters most.
+    </p>
+
+    <p class="body">
+      The corridor is the better first run and the weaker demonstration. Across
+      its bank branches the flow observables agree to three digits; only the
+      trajectory moves. The retropulsion roster is where branches change the
+      flow, gated at a spread of 0.0202 against a 0.0150 threshold.
+    </p>
+
+    <p class="more">
+      <a href="/tutorial/stage-1-corridor/">Walk 1: how the fork is built</a>
+      <a href="/blueprints/fork-a-running-simulation/">Blueprint: fork a running simulation</a>
+    </p>
+  </div>
+</section>
+
+<style>
+  .cfd-sec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .body-panel h3 {
+    font-size: var(--t-h4);
+    margin: var(--space-6) 0 var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

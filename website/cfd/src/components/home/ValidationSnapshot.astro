@@ -1,11 +1,23 @@
 ---
 /**
- * Landing-page validation summary. Pulls the same records the full validation
- * page renders, so the two can never disagree.
+ * Section 03 — the evidence and its limits, deliberately in one section.
+ *
+ * Pairing them is the trust move: nobody expects the limitations next to the
+ * references, and it is why a reader believes the first half. This section
+ * hosts three things — the reference strip, a one-line solver strip, and the
+ * boundaries partial — which is why it carries the largest word budget.
+ *
+ * The strip's four rows are chosen for artifact quality, not for flattery. The
+ * cylinder is off it: its own committed capture states that it predates the
+ * harness moving into `deep_causality_cfd` and has not been regenerated under
+ * the current names, so it cannot sit in a strip whose contract is that every
+ * number reproduces. It stays on /validation/ with that provenance attached.
  */
 import { validation, statusLabel, statusClass } from '../../data/validation';
+import { gateSemantics } from '../../data/boundaries';
+import BoundaryTeaser from './BoundaryTeaser.astro';
 
-const featured = ['qtt-sod', 'qtt-ramc', 'dec-cavity', 'dec-cylinder'];
+const featured = ['dec-graded-mms', 'mms-tgv', 'qtt-sod', 'qtt-ramc'];
 const rows = featured
   .map((id) => validation.find((v) => v.id === id))
   .filter((v): v is NonNullable<typeof v> => Boolean(v));
@@ -18,13 +30,13 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
 <section class="vsnap page" data-rise>
   <header class="sec-head">
     <p class="eyebrow eyebrow-coord">
-      <span class="ix">06 / 07</span><span class="lb">Evidence</span>
+      <span class="ix">03 / 05</span><span class="lb">Evidence</span>
     </p>
-    <h2>Validation status</h2>
+    <h2>Verified, and here is what it cannot do</h2>
     <p class="lede">
-      Thirteen verification targets. Each checks a run against a published
-      reference or a discretization invariant, and exits nonzero when the check
-      fails.
+      Four published references with their measured deltas, then the things that
+      do not work. Both halves come from the same committed artifacts, and every
+      target exits nonzero when its check fails.
     </p>
   </header>
 
@@ -63,15 +75,30 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
         <li><span class="status status-measured">Anchored / invariant</span> {(counts.anchored ?? 0) + (counts.invariant ?? 0)}</li>
         <li><span class="status status-partial">Structural</span> {counts.structural ?? 0}</li>
       </ul>
-      <a class="more" href="/validation/">Full validation status <span aria-hidden="true">→</span></a>
+      <a class="more" href="/validation/">All {validation.length} targets <span aria-hidden="true">→</span></a>
     </div>
   </div>
 
-  <p class="caveat-note">
-    Structural targets gate rank and cost. They do not gate physical
-    accuracy. The status column records which of the two applies to each
-    target.
-  </p>
+  <div class="callout callout-warn gate-note">
+    <p class="callout-title">A passing gate is not a passing physics target</p>
+    <p>{gateSemantics}</p>
+  </div>
+
+  <div class="solver-strip panel corner-brackets">
+    <h3>Three solvers, one job</h3>
+    <p class="body">
+      These close the coupled loop without an external dependency. Meshing stays
+      with your mesher: this reads no mesh format, and geometry is declared in
+      code. Converged flow at scale, turbulence closures and certification stay
+      with your solver. A discrete-exterior-calculus discretization,
+      divergence-free by construction, carries the incompressible cases. A
+      tensor-train-compressed marcher carries the compressible and reacting
+      ones. Fitted closures carry the stagnation line.
+    </p>
+    <a class="more" href="/solvers/">What each is for <span aria-hidden="true">→</span></a>
+  </div>
+
+  <BoundaryTeaser />
 </section>
 
 <style>
@@ -113,10 +140,9 @@ const counts = validation.reduce<Record<string, number>>((acc, v) => {
   .more { font-size: var(--t-body-sm); border-bottom: none; }
   .more:hover { border-bottom: 1px solid currentColor; }
 
-  .caveat-note {
-    margin: var(--space-5) 0 0;
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
-  }
+  .gate-note { margin-top: var(--space-5); }
+
+  .solver-strip { padding: var(--space-5); margin-top: var(--space-5); }
+  .solver-strip h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
 </style>

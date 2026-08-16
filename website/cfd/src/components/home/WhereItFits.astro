@@ -1,0 +1,110 @@
+---
+/**
+ * Section 05 — placement, by naming the incumbents.
+ *
+ * A reader places a new tool by what it stands next to. Naming Monte Carlo
+ * dispersion, DAKOTA and the solver-plus-GNC toolchain costs nothing and is
+ * what lets someone decide in one screen whether this is their problem.
+ */
+const replaces = [
+  {
+    what: 'A rerun-per-question loop',
+    how: 'Restart files and a shell loop answer one question per run, from a checkpoint chosen in advance. A fork takes its pause from the evolved state and answers the whole family concurrently, into one gated table.',
+  },
+  {
+    what: 'A solver plus a separate GNC toolchain',
+    how: 'One process, one shared field. The filter reads the sheath the flow evolved; the command it returns steers the trajectory that sets the next freestream.',
+  },
+];
+
+const alongside = [
+  {
+    what: 'Monte Carlo dispersion',
+    how: 'The ensemble path is first-class in the same language, and the two compose: the weather table sizes a margin, then the descent forks against it.',
+  },
+  {
+    what: 'DAKOTA and UQ or DoE drivers',
+    how: 'Same slot, different axis. Those sample an input distribution before the run; this branches a state during it.',
+  },
+  {
+    what: 'Your solver',
+    how: 'Meshing, converged flow at scale, turbulence closures and certification stay where they are. This reads no mesh format.',
+  },
+];
+---
+<section class="fits page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">05 / 05</span><span class="lb">Fit</span>
+    </p>
+    <h2>Where this sits in your toolchain</h2>
+    <p class="lede">
+      A layer above the solver. Here is what it takes over, and what it leaves
+      alone.
+    </p>
+  </header>
+
+  <div class="cols">
+    <div class="col">
+      <h3>What it replaces</h3>
+      <dl>
+        {replaces.map((r) => (
+          <div class="row">
+            <dt>{r.what}</dt>
+            <dd>{r.how}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <div class="col">
+      <h3>What it sits alongside</h3>
+      <dl>
+        {alongside.map((r) => (
+          <div class="row">
+            <dt>{r.what}</dt>
+            <dd>{r.how}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+
+  <p class="more">
+    <a href="/why/">Which CFD challenges this answers</a>
+    <a href="/roadmap/">What is built, and what is not pursued</a>
+    <a href="/boundaries/">Where it stops working</a>
+  </p>
+</section>
+
+<style>
+  .fits { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .cols { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
+  @media (min-width: 900px) { .cols { grid-template-columns: 1fr 1fr; gap: var(--space-7); } }
+
+  .col h3 {
+    font-size: var(--t-h4);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+  }
+  dl { margin: 0; }
+  .row { padding: 0 0 var(--space-4); }
+  .row:last-child { padding-bottom: 0; }
+  dt { color: var(--fg-0); font-size: var(--t-body-sm); font-weight: var(--fw-heading); margin-bottom: var(--space-2); }
+  dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

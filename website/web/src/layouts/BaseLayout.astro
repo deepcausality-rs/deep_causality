@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import { getCollection } from 'astro:content';
-import { GITHUB_URL, DISCORD_URL } from '../consts';
+import { GITHUB_URL, DISCORD_URL, CFD_URL } from '../consts';
 
 interface ArticleMeta {
   publishedTime?: string;
@@ -119,6 +119,7 @@ const featuredPosts = (await getCollection('blog', ({ data }) => !data.draft))
           <h4>Project</h4>
           <a href="/overview/">Overview</a>
           <a href="/examples/">Examples</a>
+          <a href={CFD_URL}>Counterfactual Fluid Dynamics</a>
           <a href="/blog/">Blog</a>
           <a href="/about/">About</a>
         </div>

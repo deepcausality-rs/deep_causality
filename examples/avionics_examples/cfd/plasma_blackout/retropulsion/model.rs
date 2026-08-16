@@ -608,8 +608,10 @@ fn gate_roster_distinct(v: &StudyView<'_, BranchRow>) -> (bool, String) {
         collisions.is_empty() && rows.len() > 1,
         if collisions.is_empty() {
             format!(
-                "{} branches flew {} distinct throttles (minimum gap {:.3}) — the envelope admitted \
-                 every commanded value, so each row describes its own flight",
+                "{} branches flew {} distinct throttles (minimum gap {:.3}), so each row describes \
+                 its own flight. This gates separation, not admission: a branch whose command the \
+                 envelope clamped still passes as long as it did not land on another branch's \
+                 realized throttle. Read cmd against flown in the roster to see which were clamped",
                 rows.len(),
                 rows.len(),
                 ROSTER_THROTTLE_MIN_GAP

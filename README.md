@@ -259,6 +259,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 | Crate                                                        | Description                                                                                                                 |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | [`deep_causality_physics`](deep_causality_physics/README.md) | Astrophysics, condensed matter, EM, fluids, MHD, nuclear, photonics, QM, relativity, thermo, waves; generic over float type |
+| [`deep_causality_cfd`](deep_causality_cfd/README.md)         | Counterfactual fluid dynamics: DEC and tensor-train solvers behind the `CfdFlow` DSL, coupling flow, chemistry, navigation and control in one run. Site: [cfd.deepcausality.com](https://cfd.deepcausality.com) |
 
 ### Mathematics
 

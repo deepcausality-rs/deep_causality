@@ -1,0 +1,36 @@
+    Finished `release` profile [optimized] target(s) in 0.05s
+     Running `target/release/examples/turbulence_flow`
+=== Turbulence predictability: the forecast horizon of a chaotic convective flow ===
+
+Forecasting a chaotic convective flow (Lorenz / Rayleigh-Bénard truncation).
+Rk4 dt=0.005, identical initial state (1,1,1); same scheme at every precision, so
+truncation cancels and the distance to the Float106 run is the roundoff growth alone.
+
+     t    |  f32 vs F106  |  f64 vs F106
+  --------+---------------+--------------
+     5.0  |     2.69e-5   |    2.31e-14
+    10.0  |     1.48e-4   |    1.09e-13
+    15.0  |     4.49e-3   |    4.62e-12
+    20.0  |     1.94e-1   |    1.96e-10
+    25.0  |      1.99e1   |     4.01e-8
+    30.0  |      1.75e1   |     2.97e-6
+    35.0  |      2.49e1   |     2.21e-3
+    40.0  |      2.69e0   |     4.84e-3
+    45.0  |      1.71e1   |      2.00e0
+    50.0  |      1.17e1   |      1.55e1
+    55.0  |      3.31e1   |      1.67e1
+
+Forecast horizon (lead time before the flow state is off by one state-space unit):
+  f32        t ≈ 21.5
+  f64        t ≈ 44.5
+  Float106   beyond T=60 here; the law below puts it near t ≈ 81
+
+The horizon follows ln(1/ε)/λ with λ ≈ 0.906, so it grows linearly in correct digits:
+    f32  (ε≈1.2e-7 ):  t ≈ 17.6
+    f64  (ε≈2.2e-16):  t ≈ 39.8
+    F106 (ε≈1.0e-32):  t ≈ 81.3
+
+Each ~16 extra digits roughly doubles the trustworthy forecast time. Past its horizon a
+turbulence prediction is numerical fiction, however fine the step: for a chaotic flow the
+only way to forecast further ahead is more precision. Here Float106, reached by a type
+parameter, is the lever that buys the extra lead time.

@@ -15,7 +15,13 @@ counterfactual dynamics, and precision as a parameter, in one crate.
 
 ## Usage
 
-The crate is unpublished, but you can add it [as a git dependency](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories):
+The crate is on crates.io:
+
+```bash
+cargo add deep_causality_cfd
+```
+
+It also moves with the monorepo, so you can track unreleased work [as a git dependency](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories):
 
 You can pin the repo by:
 * branch e.g. 'branch = "main"'

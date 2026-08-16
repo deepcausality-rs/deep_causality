@@ -11,11 +11,11 @@ const now = [
   { item: 'QTT compressible marchers, 1-D through 3-D', note: 'Sod to L1 ≤ 0.027 against the exact Riemann solution.' },
   { item: 'Fitted closures and the reacting-air kernel suite', note: 'RAM-C II peak electron density: the uncalibrated finite-rate network lands within about a factor of two of the flight anchor (+0.35 dec).' },
   { item: 'The CfdFlow study grammar with compile-time phase discipline', note: 'sweep, gates, record, verdict; four compile_fail doctests pin the ordering.' },
-  { item: 'O(1) copy-on-write forks of a paused marched state', note: 'Measured fork setup at 42 ns; continuation cost 0.67–1.04× the trunk.' },
+  { item: 'O(1) copy-on-write forks of a paused marched state', note: 'Sharing is structural, gated: branches enter by reference and no tensor is copied at fork time. Continuing one costs about the same as an unforked march, and coasting is cheaper at 0.66×.' },
   { item: 'Precision as a type parameter', note: 'f32 / f64 / Float106 through the same physics, switched at one alias.' },
   {
     item: 'Plasma retropulsion descent, blackout exit to touchdown',
-    note: 'Sixteen gates in 355.6 s. The mid-burn fork of the marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s, which is what forking state rather than parameters buys.',
+    note: 'Sixteen gates in 337.5 s. The mid-burn fork of the marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s, which is what forking state rather than parameters buys.',
   },
 ];
 
@@ -48,6 +48,22 @@ const later = [
     note: 'Excluded by validity discipline: off-axis leaves the Cordell–Braun validated envelope, so a surprising result would be unattributable.',
   },
 ];
+
+/**
+ * Stated non-goals. Not a fourth stage of the ladder — these are decisions, and
+ * an unstated decision reads as a gap. Both are on record in the project's own
+ * de-risk verdict; this list is where they become visible.
+ */
+const nonGoals = [
+  {
+    item: 'Distributed execution across a cluster',
+    note: 'A branch roster fans out across the cores of one machine and is bit-identical to the sequential run. Scaling that across nodes buys no early user an answer they cannot already get, and it brings a deployment and operations surface that would have to be maintained forever. The acceleration ladder is algorithm first, parallelism second.',
+  },
+  {
+    item: 'GPU acceleration over the tensor-train layer',
+    note: 'Deferred, not refused. A single bond-≤64 train is latency-bound small-matrix work, and double precision rules out the local hardware. It earns its place on batched branch rosters, or at 3-D and bond ≥ 128, so it is revisited at the batched-roster stage rather than now.',
+  },
+];
 ---
 <BaseLayout title={title} description={description} path="/roadmap/">
   <SiteHeader slot="header" />
@@ -58,7 +74,8 @@ const later = [
       <h1>Implementation status</h1>
       <p class="lede">
         Entries in the first list have a committed run artifact. Entries in the
-        third are open questions with no scheduled date.
+        third are open questions with no scheduled date. The fourth list is
+        different in kind: decisions not to build something, with the reason.
       </p>
     </header>
 
@@ -99,6 +116,18 @@ const later = [
     </section>
 
     <section class="rgroup">
+      <h2><span class="status status-nongoal">Not pursued</span></h2>
+      <ul class="rlist">
+        {nonGoals.map((r) => (
+          <li>
+            <span class="ritem">{r.item}</span>
+            <span class="rnote">{r.note}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="rgroup">
       <h2>How this list is maintained</h2>
       <div class="prose">
         <p>
@@ -107,6 +136,11 @@ const later = [
           self-verifying target or a committed example output covers it. Four
           items were removed after measurement refuted them; they are recorded on
           the <a href="/boundaries/">boundaries</a> page.
+        </p>
+        <p>
+          Nothing moves out of <em>not pursued</em> on effort alone. Those two
+          entries change only if the reason behind them stops holding, and the
+          reason is stated so you can judge that for yourself.
         </p>
       </div>
     </section>
