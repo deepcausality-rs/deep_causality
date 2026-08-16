@@ -32,11 +32,11 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
     <p class="tagline">Your run finished. Now answer the what-if.</p>
 
     <p class="sub">
-      It sits above your solver the way a UQ or DoE driver does, on a different
-      axis: branches from a state, not draws from an input distribution. Fork a
-      coupled run where the physics gets interesting and continue every
-      alternative from that one state, so the interaction between flow,
-      chemistry, navigation and control lands in the answer.
+      Pause a coupled run at a point the physics picks, continue every
+      alternative from that one state, and get back a single gated table with a
+      per-branch record of why. Flow, chemistry, navigation and control run in
+      one process over one shared field, so an interaction between them lands in
+      the result.
     </p>
 
     <Code code={run} lang="bash" themes={SHIKI} />
@@ -63,12 +63,11 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
     </div>
 
     <p class="proof">
-      Seventeen worlds flown from one mid-descent fork: the committed branch
-      closes 20.0 m of commanded cross-range to <strong>2.07 m</strong>, against
-      a gate requiring 6.67 m. Fork a mid-burn state instead and the coupling
-      reorders the roster; net deceleration is non-monotone in throttle, at its
-      minimum on the 20% branch, <strong>7.472 m/s²</strong> against the
-      10.595 m/s² a coasting vehicle sheds.
+      Fork a mid-burn state five ways and the coupling reorders the answer. The
+      vehicle decelerates <em>less</em> under 20% throttle,
+      <strong>7.472 m/s²</strong>, than it does coasting, <strong>10.595
+      m/s²</strong>. A drag model solved separately and composed afterwards
+      predicts the opposite ordering.
     </p>
   </div>
 </section>

@@ -15,7 +15,7 @@
       --print-to-pdf=public/brief.pdf public/brief.source.html
 -->
 <style>
-  @page { size: A4; margin: 14mm 15mm; }
+  @page { size: A4; margin: 11mm 14mm; }
   * { box-sizing: border-box; }
   body {
     margin: 0; font-family: Helvetica, Arial, sans-serif; color: #14201f;
@@ -26,13 +26,13 @@
     font-size: 7pt; letter-spacing: 1.6pt; text-transform: uppercase;
     color: #0a7a87; margin: 0 0 2mm; font-weight: 700;
   }
-  .lede { font-size: 10.5pt; color: #33474a; margin: 0 0 4mm; max-width: 150mm; }
+  .lede { font-size: 10.2pt; color: #33474a; margin: 0 0 3.2mm; max-width: 150mm; }
   h2 {
     font-size: 8pt; letter-spacing: 1.1pt; text-transform: uppercase; color: #56696c;
     margin: 0 0 1.6mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #cdd8d9;
   }
-  .rule { height: 1.6pt; background: #0a7a87; margin: 0 0 4mm; }
-  section { margin-bottom: 4.2mm; }
+  .rule { height: 1.6pt; background: #0a7a87; margin: 0 0 3.2mm; }
+  section { margin-bottom: 2.9mm; }
   p { margin: 0 0 2mm; }
   ul { margin: 0; padding-left: 4.2mm; }
   li { margin-bottom: 1.1mm; }
@@ -43,10 +43,15 @@
   td { padding: 1.2mm 0; border-bottom: 0.4pt solid #e3eaea; vertical-align: top; }
   td:first-child { color: #56696c; padding-right: 4mm; white-space: nowrap; }
   .foot {
-    margin-top: 5mm; padding-top: 2mm; border-top: 0.5pt solid #cdd8d9;
+    margin-top: 2.5mm; padding-top: 1.6mm; border-top: 0.5pt solid #cdd8d9;
     font-size: 7.4pt; color: #6b7d80; display: flex; justify-content: space-between;
   }
   code { font-family: Menlo, monospace; font-size: 8pt; }
+  pre {
+    font-family: Menlo, monospace; font-size: 7.6pt; line-height: 1.5;
+    background: #f1f5f5; border-left: 1.4pt solid #0a7a87;
+    padding: 1.7mm 3mm; margin: 0 0 2mm; white-space: pre-wrap; word-break: break-all;
+  }
 </style>
 </head>
 <body>
@@ -66,9 +71,9 @@
     A case runs overnight. In the review, the first question is a what-if: three
     more degrees of bank, a hot-day atmosphere, ignition half a second later.
     Answering it today means a rerun per question, and the decision gets made on
-    judgement before the results land. Interactions <i>between</i> domains are
-    the ones that fall out between tools, because each tool solves its own domain
-    and the results are composed afterwards.
+    judgement before the results land. Interactions <i>between</i> domains fall
+    out between tools, because each tool solves its own domain and the results
+    are composed afterwards.
   </p>
 </section>
 
@@ -80,7 +85,7 @@
     a per-branch record of why. Flow, chemistry, navigation and control run in one
     process over one shared field, so an interaction between them lands in the
     result. It sits above your solver the way a UQ or DoE driver does, on a
-    different axis: branches from a state, not draws from an input distribution.
+    different axis: branches from a state, not draws from a distribution.
   </p>
 </section>
 
@@ -121,7 +126,7 @@
 <section>
   <h2>What it does not do</h2>
   <ul>
-    <li><b>It is not a replacement solver.</b> It reads no mesh format; geometry is declared in code on structured Cartesian grids. Meshing, converged flow at industrial scale, turbulence closures and certification stay with your existing solver.</li>
+    <li><b>It is not a replacement solver.</b> It reads no mesh format; geometry is declared in code on structured Cartesian grids. Meshing, converged flow at scale, turbulence closures and certification stay with your existing solver.</li>
     <li><b>Turbulence is staged, not available.</b> Validated incompressible cases sit at Re 100–1600.</li>
     <li><b>One published result comes out with the wrong sign.</b> Supersonic retropropulsion drag collapse does not reproduce on this harness, and the cause is attributed to our own discretization rather than to the model class. It is documented with its numbers.</li>
     <li><b>Distributed execution is a stated non-goal;</b> GPU work is deferred, with the reasoning published.</li>
@@ -129,14 +134,21 @@
 </section>
 
 <section>
-  <h2>Standing and cost</h2>
+  <h2>Getting started</h2>
   <p>
-    MIT licensed, open source, published on crates.io. Part of the DeepCausality
-    project, hosted at the Linux Foundation for Data &amp; AI and maintained by the
-    Center for Dynamic Causality. In continuous development since June 2023,
-    across eight contributors. An engineer can clone it and have a gated result in
-    under a minute on the machine already on their desk, without asking anyone's
-    permission.
+    From nothing to a gated result, on the machine already on your desk. The run
+    itself takes 44.4 s after a first-time build. Rust 1.93 or newer; skip the
+    first line if you already have it.
+  </p>
+  <pre>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality
+cargo run --release -p avionics_examples --example plasma_blackout_corridor</pre>
+  <p>
+    Keep <code>--depth 1</code>: the full history is 2.46 GB against 195 MB
+    shallow. As a library, <code>cargo add deep_causality_cfd</code>. MIT
+    licensed, part of the DeepCausality project, hosted at the Linux Foundation
+    for Data &amp; AI and maintained by the Center for Dynamic Causality.
   </p>
 </section>
 

@@ -62,8 +62,9 @@ const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg 
     <h2>Branch from the state the vehicle reached</h2>
     <p class="lede">
       The fork point is a predicate on the flow, not a step number. The corridor
-      marches until the evolved sheath's electron density crosses the GPS L1
-      cutoff, then hands back a state every branch continues from.
+      example, a reentry descent through comms blackout, marches until the
+      evolved sheath's electron density crosses the GPS L1 cutoff, then hands
+      back a state every branch continues from.
     </p>
   </header>
 
@@ -73,9 +74,17 @@ const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg 
       <code>restart_flow.dat</code>, an OpenFOAM time directory, a shell loop
       around them. A fork differs in four ways. The pause is chosen by a
       predicate on the evolved state, not a time picked in advance. Every branch
-      stamps a marker naming the baseline it replaced. The fan-out is concurrent
-      in one process, sharing the marched state by reference. And the roster
-      reduces to one gated table instead of a directory you diff by hand.
+      stamps a marker naming the baseline it replaced. The branches run
+      concurrently in one process, sharing the marched state by reference. And
+      the set of branches, which the run calls a roster, reduces to one table of
+      scored rows with a pass or fail on each.
+    </p>
+
+    <p class="body">
+      The figure below traces that shape left to right. A single march runs to
+      the pause, five branches leave that one point and run side by side, and
+      the collector on the right is the verdict they reduce to. The accent line
+      through the middle is the branch the run committed.
     </p>
 
     <ForkTree />
@@ -85,28 +94,32 @@ const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg 
     <h3>What the coupling is worth</h3>
 
     <p class="body">
-      The retropulsion descent forks a mid-burn state five ways. For every
-      branch it also computes what thrust-only kinematics would have predicted,
-      with the flow closure frozen at the fork. The last two columns are the
-      coupled answer and the decoupled one, side by side:
+      A second example, a powered landing under retropropulsion, forks a
+      mid-burn state five ways at different throttle settings. For every branch
+      it also computes what thrust-only kinematics would have predicted, with
+      the flow closure frozen at the fork. Its roster prints the coupled answer
+      and that decoupled prediction side by side, in the last two columns:
     </p>
 
     <Code code={roster} lang="text" themes={SHIKI} />
 
     <p class="body">
-      Read the <code>axial m/s2</code> column. Net deceleration is non-monotone
-      in throttle: the 20% branch sheds less speed than the coasting one, and
-      the drag it preserves falls through zero as the roster hardens. A campaign
-      that solves the drag model separately and composes afterwards gets the
+      Read down the <code>axial m/s2</code> column, which is the deceleration
+      each branch actually flew. It is non-monotone in throttle: the 20% branch
+      sheds less speed than the coasting one. The <code>preserved</code> column
+      explains why, falling through zero as the throttles harden, because the
+      plume reorganises the drag the vehicle sees. A campaign that solved the
+      drag model separately and composed afterwards would get the
       <code>dv frozen</code> column, which misses that ordering by 38.9 m/s on
       the branch where it matters most.
     </p>
 
     <p class="body">
-      The corridor is the better first run and the weaker demonstration. Across
-      its bank branches the flow observables agree to three digits; only the
-      trajectory moves. The retropulsion roster is where branches change the
-      flow, gated at a spread of 0.0202 against a 0.0150 threshold.
+      Not every fork earns that. The corridor's bank branches agree to three
+      digits in the flow, so only their trajectories differ, and the corridor is
+      a weaker demonstration of coupling for exactly that reason. The
+      retropulsion roster is where branches change the flow, gated at a spread
+      of 0.0202 against a 0.0150 threshold.
     </p>
 
     <p class="more">

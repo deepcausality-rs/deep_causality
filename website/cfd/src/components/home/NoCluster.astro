@@ -27,25 +27,25 @@ import { MACHINE } from '../../consts';
     <h2>No cluster required</h2>
     <p class="lede">
       Load a solved case, fork it, fly the roster on the machine already on your
-      desk. If the answer arrives before an HPC job would have cleared the
-      queue, the scale question is answered.
+      desk.
     </p>
   </header>
 
   <div class="panel corner-brackets body-panel rise">
     <p class="body">
-      A roster has no shared mutable state, no cross-thread floating-point
-      reduction and no RNG, which makes it embarrassingly parallel in the exact
-      sense. Dispatch is a scoped fork-join, one chunk per available core; no
-      thread pool, no Rayon, no external scheduler. Concurrency does not change
-      the answer, and a regression test holds that line: a two-branch fan-out
-      must equal a sequential fork chain of the same pause, bit for bit.
+      That works because the branches never interact. A roster has no shared
+      mutable state, no cross-thread floating-point reduction and no random
+      draws, so it is embarrassingly parallel. Dispatch is a scoped fork-join,
+      one chunk per available core; no thread pool, no Rayon, no external
+      scheduler. Concurrency also does not change the answer, and a regression
+      test holds that line: a two-branch fan-out must equal a sequential fork
+      chain of the same pause, bit for bit.
     </p>
 
     <ul class="nums">
       <li>Whole retropulsion descent, 2516 coupled steps across four legs with a five-branch mid-burn fan-out: 337.5 s, 18.3 MB peak resident set.</li>
       <li>Corridor, one march to the onset plus seventeen forked worlds: 44.4 s against a 600 s budget.</li>
-      <li>Five concurrent branches at 1.09× the trunk's per-step cost, gate cap 3.00, so that roster cost about one branch rather than five.</li>
+      <li>Five concurrent branches at 1.09× the per-step cost of the unforked run they came from, so the whole roster cost about one branch rather than five.</li>
     </ul>
 
     <p class="src">All at <code>FloatType = f64</code>, release build, on {MACHINE}.</p>
@@ -56,6 +56,14 @@ import { MACHINE } from '../../consts';
       branch pays for is its first write: the per-cell scalar vectors, the
       navigation engine and the provenance log. So per-branch cost is O(cells),
       and 18.3 MB at 1024 cells is the number to size a larger fan-out against.
+    </p>
+
+    <p class="body">
+      That 1024 is the counterfactual examples, not the ceiling. The
+      incompressible solver runs cylinder verification at 256², and has been
+      marched at 512², 262 thousand cells, at 1.22 s a step. Nothing here has
+      been run at production mesh scale, and the fork machinery is independent
+      of the grid it forks.
     </p>
 
     <p class="body">

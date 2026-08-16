@@ -27,7 +27,7 @@ export default defineConfig({
         } else if (path.startsWith('/tutorial/')) {
           item.priority = 0.85;
           item.changefreq = 'monthly';
-        } else if (path.startsWith('/vs-monte-carlo/')) {
+        } else if (path.startsWith('/fork-or-sweep/')) {
           // Answers the first question a reviewer asks, and the one with search
           // traffic the landing page will never capture on its own.
           item.priority = 0.9;

@@ -1,6 +1,6 @@
 ---
 /**
- * /vs-monte-carlo/ — the first question every reviewer asks.
+ * /fork-or-sweep/ — the first question every reviewer asks.
  *
  * The honest thesis is composition, not replacement. Monte Carlo dispersion is
  * a first-class phase chain in this crate, the shipped examples use it, and the
@@ -76,7 +76,7 @@ const compare = [
   },
 ];
 ---
-<BaseLayout title={title} description={description} path="/vs-monte-carlo/">
+<BaseLayout title={title} description={description} path="/fork-or-sweep/">
   <SiteHeader slot="header" />
 
   <article class="page mpage">
@@ -126,35 +126,79 @@ const compare = [
       </div>
     </section>
 
-    <section class="mgroup">
-      <h2>Both are first-class</h2>
+    <p class="body handoff">
+      Both ship, and both are phase chains in the same language. The next two
+      sections work one shipped example of each, answering the same four
+      questions in the same order, so the table above can be read against real
+      runs.
+    </p>
+
+    <section class="mgroup worked">
+      <h2><span class="wtag">Worked</span> A dispersion sweep</h2>
       <p class="body">
-        The ensemble path is not a thing this works around. It is a phase chain
-        in the same language, and the weather campaign flies 48 descents through
-        it: six atmospheres, eight deterministic receiver-noise draws each, every
-        one from a fresh initial field.
+        The weather campaign asks how wide the landing dispersion gets across
+        atmospheres the vehicle might meet.
       </p>
+
+      <dl class="qa">
+        <div><dt>What varies</dt><dd>Six atmospheres, from polar winter to a hot day, each declared as one departure from a validated baseline.</dd></div>
+        <div><dt>What each branch starts from</dt><dd>A fresh initial field. All 48 descents fly the full 850 coupled steps.</dd></div>
+        <div><dt>What it answers</dt><dd>How wide, and whether the width is real. Eight deterministic noise draws per atmosphere give every cell an error bar.</dd></div>
+        <div><dt>What it costs</dt><dd>Six atmospheres × eight draws = 48 full descents.</dd></div>
+      </dl>
+
       <Code code={ensemble} lang="rust" themes={SHIKI} />
+
       <p class="body">
-        The fork path takes the same grammar and replaces the origin. Instead of
-        a baseline description it takes a paused run.
+        The result is a finding the single run could not have supported: the
+        inertial unit does not behave as assumed in the cold. Polar-winter mean
+        drift through blackout is 58.71 m against a standard day's 41.60 m, and
+        because each row carries a scatter, the gate can require that separation
+        to clear two combined standard deviations before it counts. It clears
+        5.7.
       </p>
-      <Code code={fork} lang="rust" themes={SHIKI} />
       <p class="body">
-        Draws are deterministic low-discrepancy sequences rather than an RNG, so
-        the campaign gains error bars and stays bit-reproducible at the same
-        time. That is what lets a statistical gate bind on the result.
+        The draws are deterministic low-discrepancy sequences rather than an
+        RNG, so the campaign gains error bars and stays bit-reproducible at the
+        same time. That is what lets a statistical gate bind at all.
+      </p>
+    </section>
+
+    <section class="mgroup worked">
+      <h2><span class="wtag">Worked</span> A state fork</h2>
+      <p class="body">
+        The corridor asks which bank command to commit, given where the vehicle
+        actually is when the link drops.
+      </p>
+
+      <dl class="qa">
+        <div><dt>What varies</dt><dd>Seventeen candidate bank commands, in two rounds: six coarse, then eleven refined around the winner.</dd></div>
+        <div><dt>What each branch starts from</dt><dd>One paused state, 131 coupled steps in, with its plume, sheath and filter covariance as they stand. Each branch continues 100 steps from there.</dd></div>
+        <div><dt>What it answers</dt><dd>Which command to commit, and by how much it beats the alternatives on the same flown state.</dd></div>
+        <div><dt>What it costs</dt><dd>One march to the pause, then a continuation per branch. 44.4 s for the whole campaign.</dd></div>
+      </dl>
+
+      <Code code={fork} lang="rust" themes={SHIKI} />
+
+      <p class="body">
+        The grammar is the same as the sweep above. Only the origin changes:
+        <code>.fork(&amp;onset)</code> takes a paused run where
+        <code>.baseline(...)</code> took a description. Everything downstream —
+        the cases, the concurrency, the scoring, the gates — is shared.
       </p>
     </section>
 
     <section class="mgroup">
       <h2>What a sweep cannot see</h2>
       <p class="body">
-        For every forked branch, the retropulsion descent also computes what
-        thrust-only kinematics would have predicted for the same command
-        schedule, with the flow closure frozen at the fork. That frozen column
-        is what a campaign gets when it solves the drag model separately and
-        composes afterwards. It is printed next to the coupled answer:
+        Neither worked example above settles the harder question: whether the
+        coupling changes the answer, or only decorates it. A third example
+        measures that directly. For every forked branch, the retropulsion
+        descent also computes what thrust-only kinematics would have predicted
+        for the same command schedule, with the flow closure frozen at the fork.
+        That frozen column is what a campaign gets when it solves the drag model
+        separately and composes afterwards. The roster below prints the two side
+        by side, in its last two columns:
       </p>
       <Code code={roster} lang="text" themes={SHIKI} />
       <p class="body">
@@ -226,6 +270,44 @@ const compare = [
     margin-bottom: var(--space-4);
   }
   .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  /* The two worked sections are a matched pair, so they carry a shared mark
+     and the same internal order. A reader should be able to hold one against
+     the other line by line. */
+  .handoff {
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--accent);
+    margin-bottom: var(--space-7);
+  }
+  .worked h2 { display: flex; align-items: baseline; gap: var(--space-3); }
+  .wtag {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .qa { margin: 0 0 var(--space-5); display: grid; gap: 0; }
+  .qa > div {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  @media (min-width: 720px) {
+    .qa > div { grid-template-columns: 16rem 1fr; gap: var(--space-5); align-items: baseline; }
+  }
+  .qa > div:last-child { border-bottom: none; }
+  .qa dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .qa dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
 
   table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); margin-bottom: var(--space-4); }
   th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--line-1); vertical-align: top; }

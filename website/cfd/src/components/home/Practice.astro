@@ -57,7 +57,8 @@ const acts = `--- Act: BURN — supersonic retropulsion under the SRP envelope -
       does not behave as assumed in the cold. Polar-winter mean drift through
       blackout came out 58.71 m against a standard day's 41.60 m. The gate
       requires that separation to clear two combined standard deviations before
-      it counts as a finding; it cleared 5.7.
+      it counts as a finding; it cleared 5.7. Four of the six rows are below,
+      with the drift column on the right.
     </p>
     <Code code={weather} lang="text" themes={SHIKI} />
 
@@ -65,19 +66,20 @@ const acts = `--- Act: BURN — supersonic retropulsion under the SRP envelope -
     <p class="body">
       One append-only log carries flow, chemistry, navigation and control in a
       single sequence, so the answer is two adjacent lines rather than four logs
-      correlated after the fact. The flow said the link was gone; the next entry
-      is the filter falling back to dead reckoning. Nothing scheduled that. The
-      evolved electron density located it.
+      correlated after the fact. In the excerpt below, the third line is the
+      flow reporting the link gone and the fourth is the filter falling back to
+      dead reckoning. Nothing scheduled that. The evolved electron density
+      located it.
     </p>
     <Code code={blackout} lang="text" themes={SHIKI} />
 
     <h3>“It left the envelope — at which stage?”</h3>
     <p class="body">
       Each leg reports the classification it ended in, so a run that changed
-      character can be named at the stage it did so. The retropulsion descent
-      logs eight regime transitions, counted by the classifier rather than
-      tallied from rendered text, and its throttle roster prints commanded
-      against flown so a clamped branch shows up per row.
+      character can be named at the stage it did so. The two act headers below
+      are consecutive: the vehicle is supersonic under burn in the first and
+      subsonic at touchdown in the second, and the classifier counted eight such
+      transitions across the descent.
     </p>
     <Code code={acts} lang="text" themes={SHIKI} />
 
