@@ -43,7 +43,7 @@ where
     let lhs = delta(c, p + q, &cup_product(c, &a, p, &b, q).expect("cup"));
     let t1 = cup_product(c, &delta(c, p, &a), p + 1, &b, q).expect("cup da b");
     let t2 = cup_product(c, &a, p, &delta(c, q, &b), q + 1).expect("cup a db");
-    let sgn = if p % 2 == 0 { 1.0 } else { -1.0 };
+    let sgn = if p.is_multiple_of(2) { 1.0 } else { -1.0 };
     let rhs: Vec<f64> = t1.iter().zip(&t2).map(|(x, y)| x + sgn * y).collect();
     max_abs_diff(&lhs, &rhs)
 }
@@ -53,7 +53,10 @@ where
     K::CellType: SplittableCell,
 {
     let r = leibniz_residual(c, p, q);
-    assert!(r < TOL, "Leibniz failed at (p,q)=({p},{q}); residual {r:.3e}");
+    assert!(
+        r < TOL,
+        "Leibniz failed at (p,q)=({p},{q}); residual {r:.3e}"
+    );
 }
 
 // --------------------------------------------------------------------------
@@ -210,27 +213,47 @@ fn leibniz_holds_on_a_cubic_torus() {
 fn associativity_holds_on_a_simplicial_complex() {
     let c = tetrahedron();
     let n = c.num_cells(1);
-    let (x, y, z) = (pseudo_cochain(n, 3), pseudo_cochain(n, 5), pseudo_cochain(n, 7));
+    let (x, y, z) = (
+        pseudo_cochain(n, 3),
+        pseudo_cochain(n, 5),
+        pseudo_cochain(n, 7),
+    );
     let l = cup_product(&c, &cup_product(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
     let r = cup_product(&c, &x, 1, &cup_product(&c, &y, 1, &z, 1).unwrap(), 2).unwrap();
-    assert!(max_abs_diff(&l, &r) < TOL, "residual {:.3e}", max_abs_diff(&l, &r));
+    assert!(
+        max_abs_diff(&l, &r) < TOL,
+        "residual {:.3e}",
+        max_abs_diff(&l, &r)
+    );
 }
 
 #[test]
 fn associativity_holds_on_a_cubic_torus() {
     let c = LatticeComplex::<3, f64>::cubic_torus(3);
     let n = c.num_cells(1);
-    let (x, y, z) = (pseudo_cochain(n, 3), pseudo_cochain(n, 5), pseudo_cochain(n, 7));
+    let (x, y, z) = (
+        pseudo_cochain(n, 3),
+        pseudo_cochain(n, 5),
+        pseudo_cochain(n, 7),
+    );
     let l = cup_product(&c, &cup_product(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
     let r = cup_product(&c, &x, 1, &cup_product(&c, &y, 1, &z, 1).unwrap(), 2).unwrap();
-    assert!(max_abs_diff(&l, &r) < TOL, "residual {:.3e}", max_abs_diff(&l, &r));
+    assert!(
+        max_abs_diff(&l, &r) < TOL,
+        "residual {:.3e}",
+        max_abs_diff(&l, &r)
+    );
 }
 
 #[test]
 fn n_fold_agrees_with_the_left_fold() {
     let c = LatticeComplex::<3, f64>::cubic_torus(3);
     let n = c.num_cells(1);
-    let (x, y, z) = (pseudo_cochain(n, 3), pseudo_cochain(n, 5), pseudo_cochain(n, 7));
+    let (x, y, z) = (
+        pseudo_cochain(n, 3),
+        pseudo_cochain(n, 5),
+        pseudo_cochain(n, 7),
+    );
     let folded = cup_product(&c, &cup_product(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
     let nfold = cup_product_n(
         &c,
@@ -252,7 +275,11 @@ fn n_fold_of_a_single_factor_returns_it_unchanged() {
 fn triple_product_on_a_two_dimensional_complex_is_rejected() {
     let c = LatticeComplex::<2, f64>::square_torus(3);
     let n = c.num_cells(1);
-    let (x, y, z) = (pseudo_cochain(n, 3), pseudo_cochain(n, 5), pseudo_cochain(n, 7));
+    let (x, y, z) = (
+        pseudo_cochain(n, 3),
+        pseudo_cochain(n, 5),
+        pseudo_cochain(n, 7),
+    );
     assert!(
         cup_product_n(
             &c,
@@ -296,7 +323,11 @@ fn torus_pairing_is_the_intersection_number() {
         let yx: f64 = cup_product(&c, &ay, 1, &ax, 1).unwrap().iter().sum();
         let l2 = (l * l) as f64;
         assert!((xy - l2).abs() < TOL, "L={l}: <x,y> = {xy}, expected {l2}");
-        assert!((yx + l2).abs() < TOL, "L={l}: <y,x> = {yx}, expected {}", -l2);
+        assert!(
+            (yx + l2).abs() < TOL,
+            "L={l}: <y,x> = {yx}, expected {}",
+            -l2
+        );
     }
 }
 
@@ -331,7 +362,10 @@ fn arbitrary_cochains_need_not_commute() {
     let (x, y) = (pseudo_cochain(n, 31), pseudo_cochain(n, 37));
     let xy = cup_product(&c, &x, 1, &y, 1).unwrap();
     let yx = cup_product(&c, &y, 1, &x, 1).unwrap();
-    assert!(max_abs_diff(&xy, &yx) > TOL, "expected the two orders to differ");
+    assert!(
+        max_abs_diff(&xy, &yx) > TOL,
+        "expected the two orders to differ"
+    );
 }
 
 #[test]
@@ -406,4 +440,141 @@ fn both_complex_families_resolve_through_the_same_generic_path() {
     }
     assert!(total_leibniz_residual(&tetrahedron()) < TOL);
     assert!(total_leibniz_residual(&LatticeComplex::<3, f64>::cubic_torus(3)) < TOL);
+}
+
+// --------------------------------------------------------------------------
+// Corner cases
+//
+// Every fixture below satisfies the Leibniz identity exactly under an
+// independent Python reference using its own boundary operators and exact
+// rational arithmetic, so these expectations are known-correct before any
+// implementation exists to satisfy them.
+// --------------------------------------------------------------------------
+
+#[test]
+fn leibniz_holds_on_a_non_square_torus() {
+    // Extents 3 and 5: a wrapping bug reusing one axis extent for all axes
+    // survives every square-lattice test and dies here.
+    let c = LatticeComplex::<2, f64>::new([3, 5], [true, true]);
+    for (p, q) in [(0, 0), (0, 1), (1, 0)] {
+        assert_leibniz(&c, p, q);
+    }
+}
+
+#[test]
+fn leibniz_holds_on_a_cylinder() {
+    // Mixed periodicity: x wraps, y does not. Split terms that fall outside the
+    // complex contribute nothing, and the identity still holds.
+    let c = LatticeComplex::<2, f64>::new([3, 3], [true, false]);
+    for (p, q) in [(0, 0), (0, 1), (1, 0)] {
+        assert_leibniz(&c, p, q);
+    }
+}
+
+#[test]
+fn leibniz_holds_on_a_fully_open_box() {
+    // No periodicity at all, so every boundary cell has missing partners.
+    let c = LatticeComplex::<2, f64>::new([3, 3], [false, false]);
+    for (p, q) in [(0, 0), (0, 1), (1, 0)] {
+        assert_leibniz(&c, p, q);
+    }
+}
+
+#[test]
+fn leibniz_holds_on_a_four_torus() {
+    // Degree pairs unavailable in three dimensions.
+    let c = LatticeComplex::<4, f64>::new([2, 2, 2, 2], [true; 4]);
+    for (p, q) in [(1, 1), (1, 2)] {
+        assert_leibniz(&c, p, q);
+    }
+}
+
+#[test]
+fn leibniz_holds_on_a_circle() {
+    let c = LatticeComplex::<1, f64>::new([4], [true]);
+    assert_leibniz(&c, 0, 0);
+}
+
+#[test]
+fn n_fold_of_two_factors_equals_the_binary_product() {
+    // An implementation that special-cases small arities would slip past a
+    // three-factor test alone.
+    let c = LatticeComplex::<3, f64>::cubic_torus(3);
+    let n = c.num_cells(1);
+    let (x, y) = (pseudo_cochain(n, 3), pseudo_cochain(n, 5));
+    let binary = cup_product(&c, &x, 1, &y, 1).expect("binary");
+    let nfold = cup_product_n(&c, &[(x.as_slice(), 1), (y.as_slice(), 1)]).expect("n-fold");
+    assert!(max_abs_diff(&binary, &nfold) < TOL);
+}
+
+#[test]
+fn n_fold_validates_every_factor_length() {
+    let c = tetrahedron();
+    let good = pseudo_cochain(c.num_cells(1), 3);
+    let bad = vec![0.0; c.num_cells(1) + 1];
+    assert!(
+        cup_product_n(&c, &[(good.as_slice(), 1), (bad.as_slice(), 1)]).is_err(),
+        "a wrong-length factor must be rejected wherever it appears"
+    );
+    assert!(
+        cup_product_n(&c, &[(bad.as_slice(), 1), (good.as_slice(), 1)]).is_err(),
+        "including in first position"
+    );
+}
+
+#[test]
+fn cubic_torus_direction_cochains_are_cocycles() {
+    // Precondition for the triple-product tests: the pairing is a statement
+    // about cohomology classes only if the inputs are cocycles.
+    let c = LatticeComplex::<3, f64>::cubic_torus(3);
+    for dir in 0..3 {
+        let e = direction_cochain(&c, dir);
+        let d = delta(&c, 1, &e);
+        assert!(
+            d.iter().all(|v| v.abs() < 1e-12),
+            "direction {dir} cochain is not a cocycle"
+        );
+    }
+}
+
+#[test]
+fn binary_product_class_is_independent_of_the_representative() {
+    // The two-dimensional counterpart of the triple-product invariance: on a
+    // 2-torus the class of a 2-cochain is its total sum.
+    let l = 4;
+    let c = LatticeComplex::<2, f64>::square_torus(l);
+    let (ax, ay) = (direction_cochain(&c, 0), direction_cochain(&c, 1));
+    let total = |a: &[f64]| -> f64 { cup_product(&c, a, 1, &ay, 1).unwrap().iter().sum() };
+    let before = total(&ax);
+    let df = delta(&c, 0, &pseudo_cochain(c.num_cells(0), 77));
+    let shifted: Vec<f64> = ax.iter().zip(&df).map(|(a, b)| a + b).collect();
+    assert!(
+        (before - total(&shifted)).abs() < TOL,
+        "class changed: {before} -> {}",
+        total(&shifted)
+    );
+}
+
+#[test]
+fn a_zero_cochain_annihilates_the_product() {
+    let c = tetrahedron();
+    let zeros = vec![0.0; c.num_cells(1)];
+    let x = pseudo_cochain(c.num_cells(1), 5);
+    let out = cup_product(&c, &zeros, 1, &x, 1).expect("cup");
+    assert!(out.iter().all(|v| v.abs() < TOL));
+}
+
+#[test]
+fn degree_zero_cup_acts_by_the_leading_vertex() {
+    // For AW at p = 0 the left cell is the simplex's first vertex, so a
+    // 0-cochain reweights each simplex by its leading vertex's value.
+    let c = tetrahedron();
+    let v = simplex_index(&c, 0);
+    let e = simplex_index(&c, 1);
+    let mut f = vec![0.0; c.num_cells(0)];
+    f[v[&Simplex::new(vec![0])]] = 4.0;
+    let mut b = vec![0.0; c.num_cells(1)];
+    b[e[&Simplex::new(vec![0, 1])]] = 6.0;
+    let out = cup_product(&c, &f, 0, &b, 1).expect("cup");
+    assert_eq!(out[e[&Simplex::new(vec![0, 1])]], 24.0, "f([0]) * b([0,1])");
 }

@@ -21,6 +21,11 @@ pub fn torus_layout(d: usize, l: usize) -> CellLayout {
     (vec![l; d], vec![true; d])
 }
 
+/// A layout with per-axis extent and periodicity, for the non-uniform cases.
+pub fn layout_of(shape: &[usize], periodic: &[bool]) -> CellLayout {
+    (shape.to_vec(), periodic.to_vec())
+}
+
 /// A fully open (non-periodic) layout, so no position wraps.
 pub fn open_layout(d: usize, l: usize) -> CellLayout {
     (vec![l; d], vec![false; d])
@@ -79,17 +84,22 @@ pub fn pseudo_cochain(n: usize, seed: u64) -> Vec<f64> {
 /// is a test bug rather than a numerical result.
 pub fn max_abs_diff(a: &[f64], b: &[f64]) -> f64 {
     assert_eq!(a.len(), b.len(), "cochain lengths differ");
-    a.iter().zip(b).map(|(x, y)| (x - y).abs()).fold(0.0, f64::max)
+    a.iter()
+        .zip(b)
+        .map(|(x, y)| (x - y).abs())
+        .fold(0.0, f64::max)
+}
+
+/// Maps each `k`-simplex to its index in the complex's own cell order.
+pub fn simplex_index(complex: &SimplicialComplex<f64>, k: usize) -> HashMap<Simplex, usize> {
+    complex.cells(k).enumerate().map(|(i, s)| (s, i)).collect()
 }
 
 /// The 1-cochain equal to 1 on every edge in direction `dir` and 0 elsewhere.
 ///
 /// On a torus this is a cocycle representing a generator of `H¹` scaled by the
 /// side length.
-pub fn direction_cochain<const D: usize>(
-    complex: &LatticeComplex<D, f64>,
-    dir: usize,
-) -> Vec<f64> {
+pub fn direction_cochain<const D: usize>(complex: &LatticeComplex<D, f64>, dir: usize) -> Vec<f64> {
     complex
         .cells(1)
         .map(|cell| {
@@ -100,11 +110,6 @@ pub fn direction_cochain<const D: usize>(
             }
         })
         .collect()
-}
-
-/// Maps each `k`-simplex to its index in the complex's own cell order.
-pub fn simplex_index(complex: &SimplicialComplex<f64>, k: usize) -> HashMap<Simplex, usize> {
-    complex.cells(k).enumerate().map(|(i, s)| (s, i)).collect()
 }
 
 /// Maps each `k`-cell to its index in the complex's own cell order.

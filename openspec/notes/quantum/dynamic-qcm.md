@@ -110,11 +110,12 @@ Established lineage (Hsin–Kobayashi–Zhu, arXiv 2411.15848: KCL mathematics /
 
 ### 3.3 Gap inventory against the topology crate
 
-Have: chain complexes, cell complexes, Hodge theory, Betti numbers.
+Have: chain complexes, cell complexes, Hodge theory, Betti numbers. **Since 2026-08-21 also the cup product**, binary and n-fold, generic over `ChainComplex`, for both the simplicial (Alexander–Whitney) and cubical (Serre) families — see `openspec/changes/add-cup-product`.
+
 Missing (all classical algebraic topology with explicit lattice formulas in the papers):
 
-1. **Cup product with global vertex ordering (branching structure)** — the keystone; gates every construction (A4).
-2. Higher cup products (∪_i), Steenrod squares, the explicit higher-Pontryagin-power formula (HKZ App. B).
+1. ~~**Cup product with global vertex ordering (branching structure)**~~ — **DELIVERED, and the premise was wrong.** The branching structure was never missing: `Simplex` stores strictly-increasing vertices and `LatticeCell{position, orientation}` orders its corners deterministically, so A4 was already satisfied by construction. The work was documenting those invariants and writing the formulas against them, not building an ordering. This was **not** the keystone gating T2–T6; see the re-scoped SPEC-T1 below.
+2. Higher cup products (∪_i), Steenrod squares, the explicit higher-Pontryagin-power formula (HKZ App. B). **This is now the real gate** on the catalogue and the co-design search.
 3. Dual complexes / Poincaré duality.
 4. Z_N coefficients with orientation signs (Z₂ shortcuts where −1 = 1 stop working for qudits).
 5. Relative (co)homology (boundaries, the folding generalization).
@@ -187,9 +188,9 @@ Ordered by dependency; each spec is implementable independently once its gate (a
 
 **Track T — Topology crate extension (the QEC substrate)**
 
-- **SPEC-T1** — Branching structure: global vertex ordering as a typed property of the cell complex. *Gate: A4. Keystone; blocks T2–T6.*
-- **SPEC-T2** — Cup product on simplicial and cubical complexes (explicit lattice formulas per HKZ App. A).
-- **SPEC-T3** — Higher cup products (∪_i), Steenrod squares, higher Pontryagin powers (HKZ App. B explicit formula).
+- **SPEC-T1** — ~~Branching structure: global vertex ordering as a typed property of the cell complex.~~ **DONE, re-scoped.** The ordering was already present in both cell families; what was owed was making it a documented contract. A4 required no construction work and gated nothing. Delivered as task group 1 of `add-cup-product`.
+- **SPEC-T2** — ~~Cup product on simplicial and cubical complexes.~~ **DONE** (`add-cup-product`). Binary and n-fold, generic over `ChainComplex`, `SplittableCell` supplying the per-family split. Pinned by the Leibniz identity against the crate's own coboundary operators, associativity, graded commutativity on cohomology, the `H¹×H¹→H²` torus pairing (`±L²`), and the 3-torus triple product (`L³`). Cubical geometry and signs follow Chen & Tata (arXiv:2106.05274, in `deep_causality_topology/papers/`); the sign is the plain shuffle sign, their Eq. (26) prefactor being relative to their own coboundary convention.
+- **SPEC-T3** — Higher cup products (∪_i), Steenrod squares, higher Pontryagin powers (HKZ App. B explicit formula). **Now the gating item for T6 and the co-design search**, T1 and T2 being done.
 - **SPEC-T4** — Dual complexes and Poincaré duality; Z_N coefficients with orientation signs; relative (co)homology.
 - **SPEC-T5** — Operator-valued cochains: shared payload type with SPEC-Q1 (one type design — static/cell-indexed vs dynamic/bind-threaded).
 - **SPEC-T6** — **Gate catalogue tool**: given a cell complex, compute the full inventory of native cohomology-operation logical gates and addressable generators from the Betti vector; static, freeze-shaped. *(The unshipped tool; also the co-design search instrument.)*

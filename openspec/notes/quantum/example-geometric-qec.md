@@ -209,9 +209,15 @@ Three examples, three amendments, which is the pattern a design should want:
 
 ---
 
-## 6. The gap this example motivates, and why it is smaller than advertised
+## 6. The gap, now closed at the cup-product rung
 
-Everything above runs on what ships. The next rung is the cup product, and checking the data
+**Status, 2026-08-21.** Items 1 through 4 of §6.3 are delivered
+(`openspec/changes/add-cup-product`). `deep_causality_topology` now carries the binary and `n`-fold
+cup product, generic over `ChainComplex`, for both the simplicial and cubical families. What remains
+of this section is the reasoning that produced that scope and the rungs still above it, kept because
+the estimate it corrected is worth remembering.
+
+Everything above runs on what ships. The next rung was the cup product, and checking the data
 structures changed my estimate of what it costs.
 
 ### 6.1 Why a cup product needs an ordering at all
@@ -281,13 +287,22 @@ Every one of these is written against `ChainComplex` rather than against a concr
 reason in §1.2. Specialising to `LatticeComplex` would be simpler and would forfeit the only property
 that makes the work worth doing.
 
-Items 1 through 4 are the whole distance between what runs today and a working logical `CZ` on the
-toric code. That is a smaller gap than the ladder in `dynamic-qcm.md` implies, and the reason it
+Items 1 through 4 are the whole distance between what ran before and a working logical `CZ` on the
+toric code, **and all four are now done**. Item 2 resolved itself: no `Cochain` type was added,
+because the repository's convention is a flat slice indexed by cell index and a wrapper would have
+forced conversions on existing callers. Items 5 and 6 remain, item 6 being the gate on the
+catalogue. That is a smaller gap than the ladder in `dynamic-qcm.md` implies, and the reason it
 looked larger is that the ladder was written against a specification rather than against the types.
 
 ### 6.4 What stays out of reach
 
-The gate **catalogue** still does, and with it the code search that consumes it. Counting
+**What the example can now build.** The cup product is available, so a logical `CZ` on the toric
+code and a `CCZ` on a 3-torus can be constructed from it, and their homology-class invariance
+checked. The crate delivers the *operation*, not the gate: `deep_causality_quantum` does not depend
+on `deep_causality_topology`, so the example itself is where the two meet, and no fault-tolerance
+claim attaches either way (§10 items 1 and 5).
+
+The gate **catalogue** still lies out of reach, and with it the code search that consumes it. Counting
 independently addressable `C^{n−q−1}Z` generators from the Betti vector needs the higher products of
 item 6 and the duality bookkeeping that goes with them. The dependency runs catalogue first, search
 second: a search over complexes needs a computable objective, and the objective is the native gate
@@ -401,11 +416,12 @@ multivector, num_complex and core in `deps`, and a row in the package README tab
    and the invariance check aborts would do for this gate what the non-commuting model does for
    `qcm_freeze_check`. *Recommendation: yes, if a physically honest failing case can be found; do not
    manufacture one.*
-5. **Does this example justify starting `SPEC-T1` and `T2`?** §6.2 found the ordering already
-   present in both complex families, so `SPEC-T1` reduces to writing the invariant down and exposing
-   it. *Recommendation: write the example first, then items 1 through 4 of §6.3, which is a much
-   smaller piece of work than the ladder suggested. Re-scope `SPEC-T1` in `dynamic-qcm.md` to match
-   what the types already provide.*
+5. ~~**Does this example justify starting `SPEC-T1` and `T2`?**~~ **Answered and done.** §6.2 was
+   right that the ordering was already present, so `SPEC-T1` reduced to documenting the invariant.
+   Both are delivered and `dynamic-qcm.md` is re-scoped. The open question that replaces it: does the
+   example get written next, or does `SPEC-T3` (higher cup products) come first? *Recommendation:
+   the example, since it now has everything it needs and would exercise the new operation against a
+   real code.*
 
 ---
 

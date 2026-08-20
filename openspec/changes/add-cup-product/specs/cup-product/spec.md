@@ -153,35 +153,21 @@ the correctness criterion Haruna proves for the gauge-field gates.
 - **WHEN** `α` and `β` are arbitrary cochains rather than cocycles
 - **THEN** the two orderings are permitted to differ, and no test asserts they are equal
 
-### Requirement: The relocated Alexander–Whitney implementation preserves MHD results
-`deep_causality_physics::kernels::mhd::ideal::wedge_product_1form_1form` MUST become a caller of the
-topology cup product and MUST produce numerically identical results. It already implements the
-Alexander–Whitney formula at the fixed degree pair `(1, 1)`; the general implementation belongs in
-topology, where the complex lives. Physics keeps the antisymmetrisation that turns a cup product into
-a wedge product, which is its own concern.
+### Requirement: The binary product's class is independent of the representative
+The binary cup product MUST give the same cohomology class when an input cocycle is replaced by
+another representative of the same class, that is, when it is shifted by a coboundary. This is the
+two-dimensional counterpart of the triple-product requirement above and follows from Leibniz; it is
+stated separately because it is the property a logical gate built on this operation would rely on.
 
-#### Scenario: Existing MHD kernel tests pass unchanged
-- **WHEN** the ideal-induction kernel tests in `deep_causality_physics` are run after the relocation
-- **THEN** they pass without modification to the tests or to their expected values
+Like that requirement this is stated at **cochain level**. A gate demonstration needs
+`deep_causality_quantum`, which does not depend on this crate.
 
-#### Scenario: No physics public surface changes
-- **WHEN** the relocation is applied
-- **THEN** `deep_causality_physics` exposes the same public items as before, since the relocated
-  function is private with a single caller
+#### Scenario: Representatives of one class agree
+- **WHEN** `∫ α ∪ β` is summed over the faces of `square_torus(L)` and `α` is replaced by `α + δf`
+  for an arbitrary 0-cochain `f`, with `β` a cocycle
+- **THEN** the sum is unchanged
 
-### Requirement: A logical gate built from the cup product acts on the homology class
-The change MUST be demonstrated end to end on a toric code: a logical `CZ` built from the cup product
-MUST give the same logical action for every representative cycle of a homology class. This is the
-downstream obligation the whole change exists to serve, and it is the same invariance the
-`geometric_qec` example checks.
-
-#### Scenario: Representatives agree
-- **WHEN** a logical operator's cycle `γ` on `LatticeComplex::<2, f64>::square_torus(L)` is varied by
-  adding face boundaries, producing several representatives of one class, and a cup-product `CZ` is
-  formed from each
-- **THEN** the resulting logical actions agree to within floating-point tolerance
-
-#### Scenario: Distinct classes differ
-- **WHEN** the two independent homology classes of the torus are used
-- **THEN** the resulting logical actions differ, confirming the check has discriminating power rather
-  than passing trivially
+#### Scenario: Distinct classes are distinguished
+- **WHEN** the pairing is taken of two distinct generators, and of a generator with itself
+- **THEN** the first is nonzero and the second is zero, so the operation separates classes rather
+  than collapsing them

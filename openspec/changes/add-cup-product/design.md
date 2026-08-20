@@ -33,8 +33,8 @@ signature.
 - A splitting abstraction that unifies the simplicial and cubical formulas without a common vertex
   type.
 - Correctness pinned by the Leibniz rule against the crate's own coboundary operators.
-- A demonstrated logical `CZ` on a torus and a logical `CCZ` on a 3-torus, both verified to depend
-  only on homology class.
+- A cochain-level verification on a torus and a 3-torus that the product's class depends only on
+  the homology class of its inputs.
 - Zero blast radius.
 
 **Non-Goals:**
@@ -103,16 +103,31 @@ all: a computable native gate set for a code nobody has studied. The implementat
 written against `ChainComplex` and the splitting trait, and the tori are test cases rather than the
 target.
 
-### Decision 4: Relocate Alexander–Whitney, keep the wedge in physics
+### Decision 4: Leave the physics wedge kernel alone
 
-The cup product belongs where the complex lives. The antisymmetrisation
-`α ∧ β = α ∪ β − β ∪ α` is a differential-geometry concern and stays in physics.
+An earlier draft of this design proposed relocating
+`deep_causality_physics::kernels::mhd::ideal::wedge_product_1form_1form` into topology, on the
+grounds that the cup product belongs where the complex lives and two copies of one formula drift.
+Reading the function overturned both premises.
 
-*Risk.* The relocated implementation feeds the MHD ideal-induction kernel, so it must be numerically
-identical. The guard is the existing kernel test suite, run unmodified.
+It is not a second implementation of the cup product. It is a **wedge** product with the cup formula
+fused inline, computing `α ∪ β − β ∪ α` in a single pass over faces with four indexed reads and one
+subtraction. Neither cup product is ever materialised, so there is no separable cup product in there
+to move.
 
-**Chosen:** topology gains the general implementation; physics's private helper becomes a thin caller
-plus the antisymmetrisation.
+Relocating would also cost performance in a hot path. The function is called from
+`ideal_induction_kernel` once per timestep; today it builds one edge map and makes one pass. Routed
+through the generic `cup_product` it would make two calls, each building two hash maps over all cells
+and allocating a split vector per cell, followed by a subtraction pass over a freshly allocated
+cochain.
+
+And drift needs an observable surface. The function is private, has exactly one caller, and its
+behaviour is pinned by the physics test suite.
+
+**Chosen:** leave it untouched. The duplication worth consolidating is elsewhere and inside this
+crate: `Topology::cup_product` and the new generic `cup_product` are both public and are the same
+operation. That consolidation is named as a follow-up rather than done here, because it changes an
+existing tested public method and this change is otherwise strictly additive.
 
 ### Decision 5: Scalars stay on `RealField`
 
