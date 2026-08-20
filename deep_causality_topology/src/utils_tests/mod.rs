@@ -6,7 +6,9 @@
 //! Test utilities for deep_causality_topology tests
 
 pub mod cubical_regge_utils;
+pub mod cup_product_utils;
 pub mod simplicial_complex_utils;
 
 pub use cubical_regge_utils::*;
+pub use cup_product_utils::*;
 pub use simplicial_complex_utils::*;

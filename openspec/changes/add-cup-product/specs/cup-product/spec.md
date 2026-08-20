@@ -89,40 +89,33 @@ and `C^{n−1}Z` from an `n`-fold product, which is the multi-controlled family
 - **THEN** it returns that cochain unchanged, and an empty slice returns a typed error rather than a
   silent unit
 
-### Requirement: Multi-controlled logical actions are demonstrated on a higher-dimensional complex
-The change MUST demonstrate a `CCZ` logical action built from a triple cup product on a
-three-dimensional complex, and MUST verify it depends only on the homology classes of its inputs.
-`CZ` on a surface is Clifford; the triple product is where the construction reaches non-Clifford
-territory, and a change that stopped at `CZ` would leave the more valuable half untested.
+### Requirement: The triple product is verified at cochain level on a three-dimensional complex
+The `n`-fold product MUST be verified by a triple product on a three-dimensional complex, checking
+that it is nonzero on the generators and that its cohomology class is unchanged when any input is
+shifted by a coboundary. A binary product on a surface is Clifford territory; the triple product is
+where the construction reaches the non-Clifford gates, so a change that verified only the binary case
+would leave the more valuable half untested.
 
-#### Scenario: CCZ is homology-class invariant
-- **WHEN** a `CCZ` logical action is built from three 1-cochains on `cubic_torus(L)` and each input
-  is varied by adding a coboundary
-- **THEN** the resulting logical action is unchanged to within floating-point tolerance
+This requirement is stated at **cochain level and no higher**. Building a `CCZ` logical action is a
+`deep_causality_quantum` concern, and that crate does not depend on `deep_causality_topology`, so the
+gate demonstration belongs to the `geometric_qec` example, which can depend on both. This change
+delivers the operation such a gate is built from, and claims nothing about the gate.
 
-#### Scenario: No fault-tolerance claim accompanies it
-- **WHEN** the `CCZ` demonstration is documented
-- **THEN** it states that a logical action is computed and verified, and that emitting a
-  constant-depth fault-tolerant physical decomposition is out of scope
+#### Scenario: The triple product of the three generators is nonzero
+- **WHEN** `∫ e₀ ∪ e₁ ∪ e₂` is summed over the 3-cells of `cubic_torus(L)`, where `e_d` is the
+  1-cochain equal to 1 on every edge in direction `d`
+- **THEN** it equals `L³`, the pairing of the three fundamental cycles
 
-### Requirement: The cup product satisfies the Leibniz rule against the shipped coboundary
-The implementation MUST satisfy `δ(α ∪ β) = δα ∪ β + (−1)^p · α ∪ δβ` when checked against the
-crate's existing `coboundary_matrix`, for both complex families and across a range of degrees. This
-is Chen & Tata (arXiv:2106.05274) Proposition 3; over `ℤ₂` the sign vanishes and it reduces to their
-Proposition 1. This
-is the acceptance criterion that matters most, because it is the only place a sign error in the
-cubical splittings can hide: wrong signs still produce a well-formed cochain and only surface later
-as a logical gate that acts incorrectly.
+#### Scenario: The class is invariant under a coboundary shift
+- **WHEN** any one input is replaced by `α + δf` for an arbitrary 0-cochain `f`, the others being
+  cocycles
+- **THEN** the summed triple product is unchanged, which follows from Leibniz and is the cochain-level
+  form of the homology-class invariance a logical gate needs
 
-#### Scenario: Leibniz holds on a simplicial complex
-- **WHEN** random cochains of degrees `p` and `q` are drawn over a simplicial complex and both sides
-  of the Leibniz identity are computed using the complex's own coboundary operators
-- **THEN** they agree to within floating-point tolerance for every degree pair the complex admits
-
-#### Scenario: Leibniz holds on a torus
-- **WHEN** the same check is run on `LatticeComplex::<2, f64>::square_torus(L)` and on
-  `LatticeComplex::<3, f64>::cubic_torus(L)` for several `L`
-- **THEN** they agree to within floating-point tolerance
+#### Scenario: The inputs are verified to be cocycles first
+- **WHEN** the triple-product test runs
+- **THEN** it asserts `δe₀ = δe₁ = δe₂ = 0` before pairing, so the result is a statement about
+  cohomology classes
 
 ### Requirement: The cohomological pairing on a torus matches its intersection number
 The cup product MUST reproduce the known `H¹ × H¹ → H²` pairing on a 2-torus. Taking `α_x` as the

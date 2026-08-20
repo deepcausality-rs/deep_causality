@@ -138,7 +138,7 @@ them separately, and they have very different cost profiles.
 | Tier | What | Machinery needed | Cost | Gain |
 |---|---|---|---|---|
 | A | `CZ` from a binary cup product | the cup product | this change | Clifford gate on a surface code; unblocks `geometric_qec` |
-| B | `CCZ`, `C^{n−1}Z` from `n`-fold cup products | **none beyond A**, because the cup product is associative | an `n`-ary fold, its tests, and a 3-torus demonstration | the non-Clifford multi-controlled family, the more valuable half |
+| B | the `n`-fold cup product those gates are built from | **none beyond A**, because the cup product is associative | an `n`-ary fold, its tests, and a 3-torus verification | reaches the degree where `CCZ` and `C^{n−1}Z` live, the more valuable half |
 | C | Steenrod squares from higher cup products `∪ᵢ` | Steenrod's cup-`i` recursion, both families, with signs | comparable to all of A | prerequisite for D and E; little standalone value |
 | D | `R_k`, `C^m R_k` from higher Pontryagin powers | C, plus HKZ App. B formulas on projective-space codes | larger than C | QFT, phase estimation and Shor compilation |
 | E | the Betti-vector gate catalogue | C and D, plus addressability via higher-form symmetries | largest | the co-design search instrument |
@@ -158,9 +158,11 @@ its signs are harder to pin, and its standalone value is nil: Steenrod squares m
 lead to D and E, and stopping at C delivers machinery with no consumer. A change that reached C
 without D and E would be the worst of both, so C waits until it is taken together with them.
 
-One honesty constraint applies to B and is written into the spec: the cup product computes a logical
-*action* and verifies its homology invariance. HKZ's constant-depth fault-tolerant decompositions are
-circuits, and this change emits none. No fault-tolerance claim accompanies it.
+Two constraints apply to B and are written into the spec. First, the verification stays at **cochain
+level**: `deep_causality_quantum` does not depend on `deep_causality_topology`, so a `CCZ` gate cannot
+be built here at all, and the gate demonstration belongs to the `geometric_qec` example, which can
+depend on both. Second, even there the cup product yields a logical *action* and its invariance;
+HKZ's constant-depth fault-tolerant decompositions are circuits, and this change emits none.
 
 ## Risks / Trade-offs
 

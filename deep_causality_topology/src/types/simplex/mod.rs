@@ -5,6 +5,7 @@
 
 use core::slice::SliceIndex;
 
+mod cell_splitting;
 mod display;
 mod getters;
 

@@ -38,6 +38,7 @@ pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitnes
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
 pub use crate::traits::cell::Cell;
+pub use crate::traits::cell_splitting::{CellLayout, CellSplit, SplittableCell};
 pub use crate::traits::chain_complex::ChainComplex;
 pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;
@@ -54,6 +55,7 @@ pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
 // Re-export types
 pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
 pub use crate::types::chain::Chain;
+pub use crate::types::cup_product::{cup_product, cup_product_n};
 pub use crate::types::lattice_complex::dual_lattice_complex::DualLatticeComplex;
 pub use crate::types::lattice_complex::specialized::{
     HeavyHexLattice, HoneycombLattice, KagomeLattice, TriangularLattice,

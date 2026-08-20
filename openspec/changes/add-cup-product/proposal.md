@@ -23,8 +23,9 @@ present in both complex families, so the gap is smaller and differently shaped t
   `[usize; D]` positions, so no common vertex type is workable, but a common splitting is.
 - Implement the trait for `Simplex` and `LatticeCell<D>`.
 - Add a **degree-general cup product** over cochains, generic across both families via the trait.
-- Add the **`n`-fold cup product**, a fold of the binary product over a slice of cochains, and with
-  it the multi-controlled `C^{n−1}Z` logical actions on complexes of dimension `n`.
+- Add the **`n`-fold cup product**, a fold of the binary product over a slice of cochains. This is the
+  operation the multi-controlled `C^{n−1}Z` gates are built from; the gates themselves are not built
+  here, because `deep_causality_quantum` does not depend on this crate.
 - **Document the ordering invariants that already hold**: that `Simplex::vertices()` returns a
   strictly increasing list (already stated on the type, absent from the accessor), and the corner
   enumeration order of `LatticeCell::vertices()` (deterministic today, undocumented).

@@ -45,8 +45,8 @@ This group is the acceptance gate. A cubical sign error is invisible without it.
 - [ ] 5.2 Add the `n`-fold cup product as a left fold of the binary product over a slice of cochains
 - [ ] 5.3 Add tests: agreement with repeated binary application, a single-element slice returning its input unchanged, and an empty slice returning a typed error
 - [ ] 5.4 Add a triple-product test on `cubic_torus(L)` yielding a 3-cochain, and confirm the same request on a two-dimensional complex returns the degree-exceeds-dimension error
-- [ ] 5.5 Add the `CCZ` homology-class-invariance test: build the logical action from three 1-cochains on `cubic_torus(L)`, vary each input by a coboundary, and assert the action is unchanged
-- [ ] 5.6 Document in the module rustdoc that a logical action is computed and verified, and that emitting a constant-depth fault-tolerant physical decomposition is out of scope
+- [ ] 5.5 Add the triple-product verification on `cubic_torus(L)`: assert the three direction cochains are cocycles, that `∫ e₀ ∪ e₁ ∪ e₂ = L³`, and that the integral is unchanged when an input is shifted by a coboundary
+- [ ] 5.6 Document in the module rustdoc that this crate delivers the cup product only: gate construction lives in `deep_causality_quantum`, which does not depend on this crate, and emitting fault-tolerant circuits is out of scope entirely
 - [ ] 5.7 Register test files in `mod.rs` and `BUILD.bazel`
 
 ## 6. Relocate the physics Alexander–Whitney implementation
