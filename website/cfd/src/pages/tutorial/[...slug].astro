@@ -1,4 +1,5 @@
 ---
+import { createHash } from 'node:crypto';
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
@@ -7,9 +8,17 @@ import { GITHUB_URL } from '../../consts';
 
 export async function getStaticPaths() {
   const entries = await getCollection('tutorial');
+  // Incremental build: the page body re-reads the whole collection to build the
+  // prev/next stage links, so a neighbouring stage's title or order changes this
+  // page's output. The cache key covers the collection, not just this entry.
+  const collectionKey = createHash('sha256')
+    .update(entries.map((e) => e.digest).sort().join('\n'))
+    .digest('hex')
+    .slice(0, 16);
   return entries.map((entry) => ({
     params: { slug: entry.id.replace(/^en\//, '') },
     props: { entry },
+    cacheKey: `${entry.digest}-${collectionKey}`,
   }));
 }
 

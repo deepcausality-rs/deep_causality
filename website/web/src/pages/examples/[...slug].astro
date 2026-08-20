@@ -9,6 +9,9 @@ export async function getStaticPaths() {
   return entries.map((entry) => ({
     params: { slug: entry.id.replace(/^en\//, '') },
     props: { entry },
+    // Incremental build: this page renders from `entry` alone, so the entry's
+    // content digest is a complete cache key.
+    cacheKey: entry.digest,
   }));
 }
 
