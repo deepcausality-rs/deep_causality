@@ -81,11 +81,6 @@ common:remote-shared --verbose_failures
 common:remote-shared --experimental_remote_cache_compression_threshold=100
 # Enable remote cache chunking
 common:remote-shared --experimental_remote_cache_chunking
-
-#
-# common:remote-shared --experimental_remote_downloader=grpcs://deepcausality-rs.buildbuddy.io
-
-
 # common:remote-shared --remote_download_minimal
 
 # Metadata. Only what is true of every remote invocation belongs here; ROLE and
