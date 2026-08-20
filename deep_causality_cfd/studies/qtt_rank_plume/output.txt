@@ -20,14 +20,14 @@
    4.00 |          32          |         12
 
   B fork economics (carrier pause at step 20, 20-step continuations):
-    fork: shares fluid+field = true, setup 42 ns
+    fork: shares fluid+field = true, setup 83 ns
     throttle | cont. time (s) | ratio vs trunk | final-field L2 vs coast
     ---------+----------------+----------------+------------------------
-       0.00  |       0.896    |       0.67     |        0.000e0
-       0.50  |       1.336    |       1.00     |        1.806e-1
-       1.00  |       1.347    |       1.01     |        2.770e-1
-       1.50  |       1.344    |       1.00     |        3.528e-1
-       4.00  |       1.395    |       1.04     |        6.083e-1
+       0.00  |       0.612    |       0.66     |        0.000e0
+       0.50  |       0.935    |       1.01     |        1.806e-1
+       1.00  |       0.948    |       1.03     |        2.770e-1
+       1.50  |       0.933    |       1.01     |        3.528e-1
+       4.00  |       0.967    |       1.05     |        6.083e-1
 
     mirrored post-fork bond (bare marcher, same seed/steps/round policy):
     throttle | peak bond through continuation

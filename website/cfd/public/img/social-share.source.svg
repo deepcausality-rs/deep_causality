@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0d1416"/>
+  <rect x="0" y="0" width="1200" height="3" fill="#3fb6c4"/>
+
+  <text x="80" y="112" font-family="Helvetica,Arial,sans-serif" font-size="19"
+        letter-spacing="4.2" fill="#3fb6c4">DEEPCAUSALITY · CFD</text>
+
+  <text x="80" y="196" font-family="Helvetica,Arial,sans-serif" font-size="62"
+        font-weight="600" fill="#e4ecec">Counterfactual Fluid Dynamics</text>
+
+  <text x="80" y="256" font-family="Helvetica,Arial,sans-serif" font-size="31"
+        fill="#a3b3b5">Your run finished. Now answer the what-if.</text>
+
+  <!-- The fork tree, same geometry as the landing page figure. -->
+  <g transform="translate(255,236) scale(8.6)">
+    <g fill="none" stroke="#3a4b4f" stroke-width="0.16">
+      <line x1="3" y1="21" x2="26" y2="21"/>
+      <path d="M26,21 C38,21 40,5 52,5"/>   <line x1="52" y1="5"  x2="70" y2="5"/>
+      <path d="M70,5  C80,5  80,21 88,21"/>
+      <path d="M26,21 C38,21 40,13 52,13"/> <line x1="52" y1="13" x2="70" y2="13"/>
+      <path d="M70,13 C80,13 80,21 88,21"/>
+      <path d="M26,21 C38,21 40,29 52,29"/> <line x1="52" y1="29" x2="70" y2="29"/>
+      <path d="M70,29 C80,29 80,21 88,21"/>
+      <path d="M26,21 C38,21 40,37 52,37"/> <line x1="52" y1="37" x2="70" y2="37"/>
+      <path d="M70,37 C80,37 80,21 88,21"/>
+    </g>
+    <line x1="26" y1="21" x2="88" y2="21" stroke="#3fb6c4" stroke-width="0.22"/>
+    <g fill="#7d8f93">
+      <circle cx="61" cy="5" r="1"/><circle cx="61" cy="13" r="1"/>
+      <circle cx="61" cy="29" r="1"/><circle cx="61" cy="37" r="1"/>
+    </g>
+    <g fill="#3fb6c4">
+      <circle cx="26" cy="21" r="1.5"/><circle cx="61" cy="21" r="1.2"/><circle cx="88" cy="21" r="1.5"/>
+    </g>
+  </g>
+
+  <text x="80" y="586" font-family="Menlo,monospace" font-size="20" fill="#75868a"
+        letter-spacing="1.1">cfd.deepcausality.com</text>
+</svg>

@@ -1,0 +1,244 @@
+---
+/**
+ * /provenance/ — the carried effect log, off the landing page.
+ *
+ * Copied from `components/home/Provenance.astro`, which stays on the landing
+ * page until cleanup retires it.
+ *
+ * The headline excerpt is upgraded here. The corridor block the landing page
+ * shows carries three domains; the retropulsion block carries five in one
+ * uninterrupted stream — flow regime with its Knudsen number and the
+ * supersonic-to-subsonic cascade, the navigation filter, a control commit that
+ * reads the filter's own sigma, two fork re-seeds naming their world, the
+ * solver's carrier rebuilding itself mid-run, and the aero closure declaring
+ * itself inert. Both blocks are quoted verbatim from committed run output.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { EXAMPLES_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Provenance — DeepCausality CFD';
+const description =
+  'One append-only effect log continues across regime changes, across physics domains, and across a counterfactual fan-out, so the same quantity can be read on both sides of a transition.';
+
+/** retropulsion/output.txt:55-68, verbatim. */
+const retroLog = `regime -> continuum (GNSS-denied), Kn=0.009825077357757745, supersonic / thrust-unknown
+regime -> continuum (GNSS-available), Kn=0.00023029462780754038, supersonic / thrust-unknown
+nav: aided (position fix folded)
+ignition corridor committed at step 2117: Mach 1.997501570461523, q 2229.28 Pa, nav aided, sigma 0.38127861761973975 m
+march paused at step 2118
+leg re-seeded from step 2118 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
+regime -> continuum (GNSS-available), Kn=0.000019032190686017852, supersonic / burn
+regime -> continuum (GNSS-available), Kn=0.000007544601182537176, transonic / burn
+regime -> continuum (GNSS-available), Kn=0.0000031835841432511187, subsonic / burn
+march paused at step 731
+leg re-seeded from step 731 in world 'terminal_descent': coupled field carried, marched fluid state re-seeded from the world seed
+carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)
+SRP drag closure inert: no throttle commanded, no decrement applied
+stopping burn started at step 2445: altitude 139.12 m, speed 48.99 m/s, thrust-to-weight 2.874449170180377`;
+
+/** corridor/output.txt:56-62, verbatim. The blackout window. */
+const blackoutLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+nav: aided (position fix folded)
+regime -> slip (GNSS-denied), Kn=0.012690837165407727
+nav: dead reckoning (no usable fix)
+march paused at step 131
+leg re-seeded from step 131 in world 'fine_bank_08': coupled field carried, ...
+!!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_08'`;
+
+/** Read straight off the corridor's per-leg summary lines. */
+const legs = [
+  { leg: 'Onset, 73.2 km', link: 'GNSS denied', err: '0.1823 m', var: '2.290e-1 m²' },
+  { leg: 'Peak passage, 60.9 km', link: 'GNSS denied', err: '1.5637 m', var: '2.671e1 m²' },
+  { leg: 'Flow-resolved exit, 46.8 km', link: 'GNSS available', err: '2.2879 m', var: '2.999e0 m²' },
+  { leg: 'Reacquisition, 47.4 km', link: 'GNSS available', err: '0.2804 m', var: '3.184e-1 m²' },
+];
+---
+<BaseLayout title={title} description={description} path="/provenance/">
+  <SiteHeader slot="header" />
+
+  <article class="page vpage">
+    <header class="vhead">
+      <p class="eyebrow">Provenance</p>
+      <h1>One log, across every boundary</h1>
+      <p class="lede">
+        The append-only effect log continues across regimes, across physics
+        domains, and across a counterfactual fan-out. That is what lets the same
+        quantity be read on both sides of a transition.
+      </p>
+    </header>
+
+    <section class="vgroup">
+      <h2>What gets an entry</h2>
+      <p class="body">
+        Every stage that changes the story of a run appends one: a regime
+        transition, a navigation mode change, a pause, a leg re-seed, a world
+        replacement, a solver rebuild, a control commit. Fourteen consecutive
+        entries from the committed retropulsion descent, which carries
+        twenty-two in total:
+      </p>
+
+      <Code code={retroLog} lang="text" themes={SHIKI} />
+
+      <p class="body">
+        Five domains are interleaved in that one sequence. The flow regime
+        carries its Knudsen number and cascades supersonic to transonic to
+        subsonic. The navigation filter reports its mode. The guidance commits
+        an ignition corridor and quotes the filter's own sigma as the reason.
+        Two legs re-seed, each naming the world it continues in. The solver
+        rebuilds its own carrier mid-run. And the aero closure declares itself
+        inert rather than silently applying nothing.
+      </p>
+
+      <p class="body">
+        That is what "across boundaries" means in practice: one chain to read,
+        rather than four logs to correlate afterwards.
+      </p>
+    </section>
+
+    <section class="vgroup">
+      <h2>The blackout window</h2>
+      <p class="body">
+        The two adjacent entries in the middle of this block are the whole
+        scenario. The flow said the link was gone, and the very next entry is
+        the filter falling back to dead reckoning. Nothing scheduled that; the
+        chemistry located it.
+      </p>
+
+      <Code code={blackoutLog} lang="text" themes={SHIKI} />
+
+      <p class="body">
+        The <code>!!ContextAlternation!!</code> entry names both sides of the
+        intervention, the world replaced and the world that replaced it, so a
+        counterfactual is auditable rather than implied.
+      </p>
+    </section>
+
+    <section class="vgroup">
+      <h2>Comparing across a transition</h2>
+      <p class="body">
+        Because the log spans the transition, the same quantity can be read on
+        both sides of it. The corridor's navigation error through the blackout,
+        as committed:
+      </p>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Leg</th>
+              <th scope="col">Link</th>
+              <th scope="col">Error vs truth</th>
+              <th scope="col">Position variance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {legs.map((l) => (
+              <tr>
+                <th scope="row">{l.leg}</th>
+                <td>{l.link}</td>
+                <td class="num">{l.err}</td>
+                <td class="num">{l.var}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="body">
+        Variance grows by two orders of magnitude in the dark, then comes back
+        once fixes resume. The retropulsion descent supports the same reading
+        across a Mach boundary: it logs supersonic, transonic and subsonic
+        entries in one sequence with the thrust state on each line, so the flow
+        parameters before and after the transition sit in the same record.
+      </p>
+    </section>
+
+    <section class="vgroup">
+      <h2>Comparing across branches</h2>
+      <p class="body">
+        Each branch of a fan-out writes its own scenario log, so a variant that
+        failed can be diffed against one that passed rather than re-run under a
+        debugger. The weather table gates on exactly this: every dispersion
+        world must carry the marker naming its baseline.
+      </p>
+      <p class="body">
+        Where a campaign uses the coupled <code>march_for</code> path, an
+        optional <code>save_log(path)</code> flushes provenance to disk: one
+        file per branch, plus a <code>.main.log</code> naming every spawn and
+        rejoin. The <code>fork</code> / <code>branch</code> /
+        <code>continue_for</code> chain does not thread that sink and writes no
+        files; those branches still carry their full provenance in the returned
+        report.
+      </p>
+
+      <ul class="nums">
+        <li>Corridor descent: 16 entries covering four legs, two regime bands and one committed counterfactual.</li>
+        <li>Retropulsion descent: 22 entries covering blackout, ignition commit, a carrier rebuild, the stopping burn and touchdown.</li>
+        <li>Weather table: 48 descents, each carrying its own log, gated on the alternation marker naming its baseline.</li>
+      </ul>
+    </section>
+
+    <section class="vgroup">
+      <p class="more">
+        <a href="/tutorial/stage-2-weather/">Walk 2: one baseline, six worlds</a>
+        <a href="/blueprints/fork-a-running-simulation/">Blueprint: fork a running simulation</a>
+        <a href={EXAMPLES_URL}>The committed run output <span aria-hidden="true">↗</span></a>
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .vpage { max-width: var(--w-panel); }
+  .vhead { margin-bottom: var(--space-7); }
+  .vhead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .vhead .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .vgroup { margin-bottom: var(--space-7); }
+  .vgroup h2 {
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-4);
+  }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); margin-bottom: var(--space-4); }
+  th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  tbody th { font-weight: 400; }
+  tbody td { color: var(--fg-1); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background-color var(--dur-fast) var(--ease-out); }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-size: var(--t-mono-sm);
+    max-width: var(--measure);
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    font-size: var(--t-body-sm);
+  }
+</style>

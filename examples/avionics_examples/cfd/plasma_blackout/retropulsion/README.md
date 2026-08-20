@@ -20,7 +20,21 @@ lights its engine too hard arrives faster than one that coasts.
 This example flies that trade as a **counterfactual on a marched flow state**. Mid-burn, the
 marched, burn-coupled state is forked once per candidate throttle and each branch continues from the same
 instant in its own alternated world. The run self-verifies through sixteen gates and exits
-nonzero on any regression. Wall-clock is about six minutes.
+nonzero on any regression.
+
+Measured on an Apple M3 Max, 16 cores (12 performance + 4 efficiency), 128 GB, release build:
+**337.5 s wall clock and 18.3 MB peak resident set** for the whole descent — 2516 coupled steps
+across four legs, including the five-branch mid-burn fan-out at 32×32 (1024 cells). Take the
+measurement against the built binary, not through `cargo run`, or rustc's own peak dominates it:
+
+```bash
+cargo build --release -p avionics_examples --example plasma_blackout_retropulsion
+/usr/bin/time -l target/release/examples/plasma_blackout_retropulsion
+```
+
+The memory figure is the one to size a fan-out on. Forking is O(1) — every branch enters by
+reference with no tensor copied — but each branch pays O(cells) at its first field write, for the
+per-cell scalar vectors, the navigation engine and the provenance log.
 
 ## How to Run
 

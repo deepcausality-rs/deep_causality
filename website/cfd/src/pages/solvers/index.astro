@@ -1,18 +1,23 @@
 ---
 /**
- * Section 04 — Multiple solver paradigms, as a label-plus-content band stack.
- * Follows the CausalStack shape from DESIGN.md §8.4: fixed mono label column,
- * accent tick on the left edge, staggered entrance gated on `.in-view`.
+ * /solvers/ — the three solver families, off the landing page.
  *
- * The QTT band states storage and runtime separately on purpose. The crate
- * README was truthed up against the immersed harness measurement, which found
- * per-step wall clock rising far faster than the stored size, so a band that
- * said "costs" would be claiming something the measurement contradicts.
+ * These moved here because presenting them as headline capabilities invites a
+ * comparison this project loses and does not want: mesh scale, turbulence
+ * closures, BC libraries, ecosystem maturity. The honest job they do is
+ * narrower and stronger — they are why the coupled loop closes without an
+ * external dependency.
+ *
+ * Content is copied from `components/home/SolverStack.astro`, which stays on
+ * the landing page until the rework's cleanup phase retires it. Duplication is
+ * deliberate and temporary: nothing loses a destination mid-flight.
  */
-import { Code } from 'astro:components';
-import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
 
-const SHIKI = { light: rustLight, dark: rustDark };
+const title = 'Solvers — DeepCausality CFD';
+const description =
+  'Three solver families behind one CfdFlow language: a DEC-native incompressible discretization, quantized tensor-train compressible marchers, and gridless fitted closures. What each is for, and what each does not do.';
 
 const families = [
   {
@@ -55,79 +60,86 @@ const families = [
     caveat: null,
     evidence: [
       { text: 'MMS to machine ε', href: '/validation/#mms-tgv' },
-      { text: 'Envelope placard example', href: '/examples/#flight-envelope-placard' },
+      { text: 'Envelope placard example', href: '/examples/flight-envelope-placard/' },
     ],
   },
 ];
-
-const precision = `/// Working precision.
-pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
 ---
-<section class="solvers page" data-rise>
-  <header class="sec-head">
-    <p class="eyebrow eyebrow-coord">
-      <span class="ix">04 / 07</span><span class="lb">Multiple Solver Paradigms</span>
-    </p>
-    <h2>Multiple Solver Paradigms</h2>
-    <p class="lede">
-      Calculus-based, compression-based and analytic. All three sit behind the
-      same <code>CfdFlow</code> language and the same scalar type, so you pick
-      the best fit for your problem: the DEC solver for an incompressible
-      cavity, the QTT marcher for a reentry layer, a fitted closure for the
-      stagnation line.
-    </p>
-  </header>
+<BaseLayout title={title} description={description} path="/solvers/">
+  <SiteHeader slot="header" />
 
-  <div class="stack">
-    {families.map((f, i) => (
-      <article class="layer rise" style={`--i:${i}`}>
-        <div class="layer-label">
-          <span class="lk">{f.label}</span>
-          <span class="lv">{f.key}</span>
-        </div>
-        <div class="layer-body">
-          <h3>{f.title}</h3>
-          <p class="for-what">{f.forWhat}</p>
-          <p class="detail">{f.body}</p>
-          {f.caveat && <p class="caveat">{f.caveat}</p>}
-          <div class="ev-row">
-            {f.evidence.map((e) => (
-              <a class="chip chip-mono" href={e.href}>
-                {e.text}<span aria-hidden="true">→</span>
-              </a>
-            ))}
+  <article class="page spage">
+    <header class="shead">
+      <p class="eyebrow">Solvers</p>
+      <h1>Three solvers, one job</h1>
+      <p class="lede">
+        These exist so the coupled loop can close without an external
+        dependency. They are not offered as a replacement for the solver you
+        already run.
+      </p>
+    </header>
+
+    <section class="handoff panel corner-brackets">
+      <h2>Where the line sits</h2>
+      <p class="detail">
+        Meshing is your mesher's job — this reads no mesh format, and geometry
+        is declared in code on structured Cartesian grids with aperture-resolved
+        cut cells. Converged flow at industrial scale, turbulence closures and
+        certification stay with your solver. What happens at the seams between
+        domains, under alternatives, with the record of why, is what this is
+        for.
+      </p>
+      <p class="detail">
+        All three families sit behind the same <code>CfdFlow</code> language and
+        the same scalar type, so a program picks by problem: the DEC solver for
+        an incompressible cavity, the QTT marcher for a reentry layer, a fitted
+        closure for the stagnation line.
+      </p>
+    </section>
+
+    <div class="stack">
+      {families.map((f, i) => (
+        <article class="layer" style={`--i:${i}`}>
+          <div class="layer-label">
+            <span class="lk">{f.label}</span>
+            <span class="lv">{f.key}</span>
           </div>
-        </div>
-      </article>
-    ))}
-  </div>
+          <div class="layer-body">
+            <h3>{f.title}</h3>
+            <p class="for-what">{f.forWhat}</p>
+            <p class="detail">{f.body}</p>
+            {f.caveat && <p class="caveat">{f.caveat}</p>}
+            <div class="ev-row">
+              {f.evidence.map((e) => (
+                <a class="chip chip-mono" href={e.href}>
+                  {e.text}<span aria-hidden="true">→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
 
-  <div class="precision">
-    <h3>Precision as a Parameter</h3>
-    <p class="detail">
-      Every theory, solver, stage and observable is generic over one real
-      scalar. A program fixes a single alias and the whole computation runs at
-      that precision: <code>f32</code> for speed, <code>f64</code> for the
-      industry-standard choice, or <code>Float106</code> for reference-grade
-      results with up to 30 significant digits.
-    </p>
-    <Code code={precision} lang="rust" themes={SHIKI} />
-    <p class="detail">
-      Specification constants stay exact <code>f64</code> literals and are
-      lifted into the working precision, so changing the alias reruns the whole
-      program somewhere else on the ladder. The plasma-blackout corridor was
-      flown at <code>f64</code> and again at 106-bit: every gate and every
-      discrete event step came out identical, the continuous witnesses agreed
-      to 15 or 16 significant digits, and it cost about 11× the wall clock.
-    </p>
-  </div>
-</section>
+    <section class="tail">
+      <p class="more">
+        <a href="/solvers/precision/">Precision as a parameter →</a>
+        <a href="/blueprints/pick-a-solver/">Blueprint: pick a solver</a>
+        <a href="/validation/">Validation status</a>
+        <a href="/boundaries/">Measured boundaries</a>
+      </p>
+    </section>
+  </article>
+</BaseLayout>
 
 <style>
-  .solvers { max-width: var(--w-panel); }
-  .sec-head { margin-bottom: var(--space-6); }
-  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
-  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+  .spage { max-width: var(--w-panel); }
+  .shead { margin-bottom: var(--space-7); }
+  .shead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .shead .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .handoff { padding: var(--space-5); margin-bottom: var(--space-7); }
+  .handoff h2 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
 
   .stack { border-top: 1px solid var(--line-1); }
 
@@ -180,6 +192,7 @@ pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
   .layer-body h3 { margin: 0 0 var(--space-2); }
   .for-what { color: var(--fg-0); font-size: var(--t-body-sm); margin: 0 0 var(--space-3); }
   .detail { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .detail:last-child { margin-bottom: 0; }
   .caveat {
     color: var(--fg-2);
     font-size: var(--t-body-sm);
@@ -190,6 +203,12 @@ pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
   }
   .ev-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
-  .precision { padding: var(--space-5) var(--space-4) 0; }
-  .precision h3 { margin: 0 0 var(--space-3); font-size: var(--t-h4); }
+  .tail { padding-top: var(--space-5); }
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    font-size: var(--t-body-sm);
+  }
 </style>

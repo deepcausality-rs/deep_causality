@@ -5,7 +5,7 @@ question: Why is a weather world an alternation of a baseline rather than its ow
 summary: A walk through the weather campaign, where the counterfactual axis moves from the command to the world. Five stations covering baseline alternation, ensembles, the coupling closure, and the gate that makes the error bars load-bearing.
 objective: State when to fork a state, when to alternate a world, and why a table row without an ensemble cannot separate a mechanism from a draw.
 command: cargo run --release -p avionics_examples --example plasma_blackout_weather
-runtime: 312.5 s against a 600 s budget
+runtime: within a 600 s budget
 files:
   - cfd/plasma_blackout/weather/main.rs
   - cfd/plasma_blackout/weather/model.rs
@@ -177,18 +177,18 @@ Two gates sit at the centre of the run:
 
 ```text
 [PASS] (4) the INS does not behave as assumed in the cold: polar-winter mean
-       blackout drift 68.75 m vs standard-day 45.93 m (1.50x; gate requires 1.2x)
+       blackout drift 58.71 m vs standard-day 41.60 m (1.41x; gate requires 1.2x)
 [PASS] (4b) the cold effect is statistically resolved: polar-standard
-       separation 22.81 m vs combined sigma 5.69 m (4.0 sigma; gate requires 2)
+       separation 17.11 m vs combined sigma 3.01 m (5.7 sigma; gate requires 2)
 ```
 
 Gate 4 measures the size of the effect. Gate 4b measures whether the effect is
 resolved.
 
 Without 4b, gate 4 compares two means and asserts a ratio. At an underlying
-scatter of 20 m a 22.81 m separation would carry no information, and the gate
+scatter of 15 m a 17.11 m separation would carry no information, and the gate
 would pass regardless. Gate 4b requires the separation to clear two combined
-standard deviations; it clears four.
+standard deviations; it clears nearly six.
 
 The `save_log` phase flushes the audit files stepwise as the branches run
 rather than assembling them at the end. A campaign that dies at draw 40 of 48

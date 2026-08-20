@@ -5,7 +5,7 @@ question: Why does the blackout window come out of a predicate instead of a cons
 summary: A walk through the corridor program in execution order. Six stations, each covering the committed code, the reason for that construction, and the failure mode of the alternative.
 objective: Read a CfdFlow program and state the reason for each of its four structural decisions.
 command: cargo run --release -p avionics_examples --example plasma_blackout_corridor
-runtime: 40.9 s against a 600 s budget
+runtime: 44.4 s against a 600 s budget
 files:
   - cfd/plasma_blackout/corridor/main.rs
   - cfd/plasma_blackout/corridor/constants.rs
@@ -39,7 +39,7 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor
 The run ends with thirteen gate lines, the last of which reads:
 
 ```text
-[PASS] (5b) wall-clock budget: 40.9 s elapsed (budget 600 s)
+[PASS] (5b) wall-clock budget: 44.4 s elapsed (budget 600 s)
 ```
 
 Open the three files listed above. `main.rs` is under 200 lines and
@@ -48,8 +48,8 @@ behind each construction.
 
 <div class="callout">
 <p class="callout-title">Notice</p>
-<p>Scroll back to the line reporting blackout onset. It gives step 119 and
-74.7 km. Station 2 shows that no constant in the program produced those
+<p>Scroll back to the line reporting blackout onset. It gives step 131 and
+73.2 km. Station 2 shows that no constant in the program produced those
 numbers.</p>
 </div>
 
@@ -107,10 +107,10 @@ a `gnss_denied` flag. The classifier set that flag from the electron density,
 which the chemistry stage evolved on the previous step.
 
 Search `constants.rs` for an onset altitude. The corridor contains no onset
-constant. The 74.7 km in the output is therefore a prediction rather than a
+constant. The 73.2 km in the output is therefore a prediction rather than a
 setting.
 
-Consider the alternative construction, `.run_for(119)`. It reproduces today's
+Consider the alternative construction, `.run_for(131)`. It reproduces today's
 numbers and fails on the next atmosphere.
 [Walk 2](/tutorial/stage-2-weather/) flies this same descent through six of
 them, and a colder, denser atmosphere ionizes 4.2 s earlier across the
@@ -252,7 +252,7 @@ comment on `AIM_CROSS_RANGE_M` records that the aim was re-pinned when the
 chemistry changed: the higher onset altitude means the branches fork in
 thinner air, which reduces the reachable cross-range.
 
-The sweep resolves to 0.5° and stops at a 2.39 m miss. Finer resolution would
+The sweep resolves to 0.5° and stops at a 2.07 m miss. Finer resolution would
 optimize below the vehicle's knowledge floor, since INS dead-reckoning error at
 the blackout peak measures about 2.5 m in this same run. A flight system
 commands off the navigated state rather than off truth, so steering precision

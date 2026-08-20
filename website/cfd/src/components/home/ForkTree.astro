@@ -1,0 +1,129 @@
+---
+/**
+ * The fork tree. This is the site's first content figure, so it also sets the
+ * diagram convention: hand-drawn inline SVG in the instrument vocabulary,
+ * hairline strokes and accent nodes, animated through the shared
+ * `[data-anim-draw]` contract rather than any per-diagram script.
+ *
+ * Two decisions worth keeping:
+ *
+ * Geometry only in the SVG, labels in HTML. SVG text scales with the viewBox,
+ * so a label legible on a desktop lands at eight or nine pixels on a phone.
+ * Keeping the words in HTML lets them use the site's own type tokens and wrap.
+ *
+ * Five branches, not seventeen. Five is the retropulsion roster the section
+ * above prints in full, so the figure and the table describe the same run.
+ * Seventeen strands at this size is a smear rather than a diagram.
+ */
+---
+<figure class="fork-tree">
+  <svg
+    viewBox="0 0 100 42"
+    preserveAspectRatio="xMidYMid meet"
+    data-anim-draw
+    role="img"
+    aria-label="A trunk march runs left to right into a pause chosen by the flow. Five branches fan out from that one pause, continue in parallel, and are collected into a single gated verdict."
+  >
+    <!-- Trunk: one coupled march to the pause. -->
+    <line x1="3" y1="21" x2="26" y2="21" pathLength="100" />
+
+    <!-- Fan out, run in parallel, collect. The straight middle segment is the
+         point of the figure: the branches are concurrent, not sequential. -->
+    <path d="M26,21 C38,21 40,5 52,5"   pathLength="100" />
+    <line x1="52" y1="5"  x2="70" y2="5"  pathLength="100" />
+    <path d="M70,5  C80,5  80,21 88,21"  pathLength="100" />
+
+    <path d="M26,21 C38,21 40,13 52,13" pathLength="100" />
+    <line x1="52" y1="13" x2="70" y2="13" pathLength="100" />
+    <path d="M70,13 C80,13 80,21 88,21"  pathLength="100" />
+
+    <path d="M26,21 C38,21 40,29 52,29" pathLength="100" />
+    <line x1="52" y1="29" x2="70" y2="29" pathLength="100" />
+    <path d="M70,29 C80,29 80,21 88,21"  pathLength="100" />
+
+    <path d="M26,21 C38,21 40,37 52,37" pathLength="100" />
+    <line x1="52" y1="37" x2="70" y2="37" pathLength="100" />
+    <path d="M70,37 C80,37 80,21 88,21"  pathLength="100" />
+
+    <!-- The committed world runs straight through, which is what committing is. -->
+    <line x1="26" y1="21" x2="88" y2="21" pathLength="100" class="committed" />
+
+    <!-- Nodes, in stagger order: the pause, each branch top to bottom, the verdict. -->
+    <circle cx="26" cy="21" r="1.5" class="pause" />
+    <circle cx="61" cy="5"  r="1" />
+    <circle cx="61" cy="13" r="1" />
+    <circle cx="61" cy="21" r="1.2" class="committed-node" />
+    <circle cx="61" cy="29" r="1" />
+    <circle cx="61" cy="37" r="1" />
+    <circle cx="88" cy="21" r="1.5" class="verdict" />
+  </svg>
+
+  <div class="ft-labels" aria-hidden="true">
+    <span class="ft-l ft-l-1">One coupled march</span>
+    <span class="ft-l ft-l-2">Pause the flow chose</span>
+    <span class="ft-l ft-l-3">Branches, concurrent</span>
+    <span class="ft-l ft-l-4">One gated verdict</span>
+  </div>
+
+  <figcaption>
+    Every branch leaves the same pause and shares everything before it. The
+    marched state is entered by reference; a branch copies only on write.
+  </figcaption>
+</figure>
+
+<style>
+  .fork-tree { margin: var(--space-5) 0; }
+
+  .fork-tree svg {
+    display: block;
+    width: 100%;
+    max-width: 44rem;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Stroke and fill are scoped per diagram; global.css only carries the
+     dash and node timing, never the colour. */
+  /* Stroke width is in user units, and `vector-effect: non-scaling-stroke` is
+     deliberately absent. It resolves `stroke-dasharray` in device pixels, which
+     fights the `pathLength="100"` normalization the draw-in depends on and
+     renders every stroke as a dashed line. At the 44rem cap this is about one
+     device pixel, which is the hairline the rest of the site uses. */
+  .fork-tree line,
+  .fork-tree path {
+    fill: none;
+    stroke: var(--line-2);
+    stroke-width: 0.16;
+  }
+  .fork-tree line.committed { stroke: var(--accent); stroke-width: 0.22; }
+
+  .fork-tree circle { fill: var(--fg-2); }
+  .fork-tree circle.pause,
+  .fork-tree circle.verdict,
+  .fork-tree circle.committed-node { fill: var(--accent); }
+
+  .ft-labels {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2) var(--space-4);
+    max-width: 44rem;
+    margin-top: var(--space-3);
+  }
+  @media (min-width: 720px) {
+    .ft-labels { grid-template-columns: repeat(4, 1fr); }
+  }
+  .ft-l {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

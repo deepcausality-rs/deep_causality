@@ -12,13 +12,17 @@ const isActive = (href: string) =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
 
 const nav = [
+  // Ordered by what a cold reader needs in order to decide whether to keep
+  // reading: the argument, then the evidence for it, then its limits, then the
+  // ways in. Seven items is the rail's capacity at 900px — an eighth overflows.
+  // Roadmap is reachable from the footer, which is the right weight for it.
   { href: '/why/', label: 'Why' },
-  { href: '/tutorial/', label: 'Tutorial' },
-  { href: '/blueprints/', label: 'Blueprints' },
+  { href: '/fork-or-sweep/', label: 'Fork or sweep' },
   { href: '/validation/', label: 'Validation' },
-  { href: '/examples/', label: 'Examples' },
   { href: '/boundaries/', label: 'Boundaries' },
-  { href: '/roadmap/', label: 'Roadmap' },
+  { href: '/tutorial/', label: 'Tutorial' },
+  { href: '/examples/', label: 'Examples' },
+  { href: '/solvers/', label: 'Solvers' },
 ];
 ---
 <header class="site-header">

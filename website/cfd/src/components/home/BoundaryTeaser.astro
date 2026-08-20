@@ -1,24 +1,24 @@
 ---
 /**
- * Capability boundaries on the landing page. Leads with the refuted
- * hypotheses, because a project that publishes what it disproved is easier to
- * trust than one that publishes only wins.
+ * Capability boundaries, as a headerless partial inside section 03.
+ *
+ * It has no header of its own because it is the second half of one argument:
+ * the section it sits in supplies the eyebrow and the heading, and splitting
+ * the pairing across two numbered sections would lose the point of pairing it.
+ *
+ * Leads with the refuted hypotheses, because a project that publishes what it
+ * disproved is easier to trust than one that publishes only wins.
  */
 import { boundaries } from '../../data/boundaries';
 
 const refuted = boundaries.filter((b) => b.refuted).slice(0, 3);
 ---
-<section class="bteaser page" data-rise>
-  <header class="sec-head">
-    <p class="eyebrow eyebrow-coord">
-      <span class="ix">04 / 04</span><span class="lb">Boundaries</span>
-    </p>
-    <h2>Capability boundaries</h2>
-    <p class="lede">
-      Four working hypotheses were refuted by measurement. The studies and
-      their output files are committed alongside the confirming results.
-    </p>
-  </header>
+<div class="bteaser">
+  <h3>Refuted by measurement</h3>
+  <p class="blede">
+    Working hypotheses the project overturned by running them. The studies and
+    their output files are committed alongside the confirming results.
+  </p>
 
   <div class="grid">
     {refuted.map((b, i) => (
@@ -29,21 +29,20 @@ const refuted = boundaries.filter((b) => b.refuted).slice(0, 3);
         <ul class="bnums">
           {b.numbers.slice(0, 2).map((n) => <li class="num">{n}</li>)}
         </ul>
-        <p class="bstudy"><code>studies/{b.study}</code></p>
+        <p class="bstudy"><code>{b.study}</code></p>
       </article>
     ))}
   </div>
 
   <a class="more" href="/boundaries/">
-    All measured boundaries <span aria-hidden="true">→</span>
+    All {boundaries.length} measured boundaries <span aria-hidden="true">→</span>
   </a>
-</section>
+</div>
 
 <style>
-  .bteaser { max-width: var(--w-panel); }
-  .sec-head { margin-bottom: var(--space-6); }
-  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
-  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+  .bteaser { margin-top: var(--space-6); }
+  .bteaser h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .blede { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
 
   .grid {
     display: grid;

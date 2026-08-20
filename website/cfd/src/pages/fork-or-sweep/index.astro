@@ -1,0 +1,335 @@
+---
+/**
+ * /fork-or-sweep/ — the first question every reviewer asks.
+ *
+ * The honest thesis is composition, not replacement. Monte Carlo dispersion is
+ * a first-class phase chain in this crate, the shipped examples use it, and the
+ * project's own tutorial records the ensemble overturning a false single-draw
+ * finding. A page that argued the fork replaces the ensemble would be arguing
+ * against the crate's own examples.
+ *
+ * The centrepiece is the retropulsion roster's `dv m/s` and `dv frozen`
+ * columns, because they are the coupled answer and the decoupled answer to the
+ * same intervention, printed side by side by the run itself.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Fork or sweep — DeepCausality CFD';
+const description =
+  'A dispersion campaign varies inputs at t = 0 and composes afterwards. A state fork pauses one coupled run and continues every alternative from it. Both ship here, they answer different questions, and the retropulsion roster prints the difference as two columns.';
+
+/* weather/main.rs:72-84. */
+const ensemble = `let table = CfdFlow::study("weather-dispersion table")
+    .cases(model::weather_cases())
+    .baseline(model::standard_day)      // the validated origin, built once
+    .alternate(model::weather_world)    // six counterfactual atmospheres, each marked
+    .ensemble(constants::MC_DRAWS)      // deterministic receiver-noise draws
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)   // from a fresh initial field
+    .reduce_ensemble(model::world_row)  // draw sets collapse to mean / scatter / worst
+    .gates(model::weather_gates())
+    .verdict()?;`;
+
+/* corridor/main.rs:98-115, condensed. */
+const fork = `let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())
+    .fork(&onset)                       // one paused, marched, coupled state
+    .branch(model::bank_world)          // one alternated world per command
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .gates(model::corridor_gates())
+    .verdict()?;`;
+
+/* retropulsion/output.txt:24-29, verbatim. */
+const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
+  coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
+  low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
+  mid           0.40   0.4000     0.1238      9.9667     122.30    120.335     99.984
+  high          0.60   0.6000    -0.0161     12.8932     182.54    151.991    151.413
+  hard          0.85   0.7931    -0.0611     17.1977     256.80    212.085    216.209`;
+
+const compare = [
+  {
+    q: 'What varies',
+    sweep: 'An input, before the run starts.',
+    forkc: 'The world a branch continues in, at a pause the flow chose.',
+  },
+  {
+    q: 'What each branch starts from',
+    sweep: 'A fresh initial field. Branches share a description, not a past.',
+    forkc: 'The marched coupled field as it stands. Branches share a past.',
+  },
+  {
+    q: 'What it answers',
+    sweep: 'How wide is the outcome, given what I do not know.',
+    forkc: 'Which command should I commit, given where the vehicle actually is.',
+  },
+  {
+    q: 'What it costs',
+    sweep: 'One full march per case per draw.',
+    forkc: 'One march to the pause, then a continuation per branch.',
+  },
+];
+---
+<BaseLayout title={title} description={description} path="/fork-or-sweep/">
+  <SiteHeader slot="header" />
+
+  <article class="page mpage">
+    <header class="mhead">
+      <p class="eyebrow">Fork or sweep</p>
+      <h1>Where a dispersion campaign stops</h1>
+      <p class="lede">
+        Both ship here, and the shipped examples use both. They answer different
+        questions, and the retropulsion run prints the difference as two columns
+        of one table.
+      </p>
+    </header>
+
+    <section class="mgroup">
+      <h2>The distinction</h2>
+      <p class="body">
+        A parameter sweep re-runs a model from different inputs, and each branch
+        is an independent world. A state fork pauses one marched coupled field
+        and continues every branch from it, so an intervention feeds back into
+        the flow it inherited.
+      </p>
+      <p class="body">
+        The rule the tutorial gives for choosing: fork a state when the branches
+        must share a past, alternate a world when they must share a description
+        and differ in one declared way.
+      </p>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Dispersion sweep</th>
+              <th scope="col">State fork</th>
+            </tr>
+          </thead>
+          <tbody>
+            {compare.map((r) => (
+              <tr>
+                <th scope="row">{r.q}</th>
+                <td>{r.sweep}</td>
+                <td>{r.forkc}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="body handoff">
+      Both ship, and both are phase chains in the same language. The next two
+      sections work one shipped example of each, answering the same four
+      questions in the same order, so the table above can be read against real
+      runs.
+    </p>
+
+    <section class="mgroup worked">
+      <h2><span class="wtag">Worked</span> A dispersion sweep</h2>
+      <p class="body">
+        The weather campaign asks how wide the landing dispersion gets across
+        atmospheres the vehicle might meet.
+      </p>
+
+      <dl class="qa">
+        <div><dt>What varies</dt><dd>Six atmospheres, from polar winter to a hot day, each declared as one departure from a validated baseline.</dd></div>
+        <div><dt>What each branch starts from</dt><dd>A fresh initial field. All 48 descents fly the full 850 coupled steps.</dd></div>
+        <div><dt>What it answers</dt><dd>How wide, and whether the width is real. Eight deterministic noise draws per atmosphere give every cell an error bar.</dd></div>
+        <div><dt>What it costs</dt><dd>Six atmospheres × eight draws = 48 full descents.</dd></div>
+      </dl>
+
+      <Code code={ensemble} lang="rust" themes={SHIKI} />
+
+      <p class="body">
+        The result is a finding the single run could not have supported: the
+        inertial unit does not behave as assumed in the cold. Polar-winter mean
+        drift through blackout is 58.71 m against a standard day's 41.60 m, and
+        because each row carries a scatter, the gate can require that separation
+        to clear two combined standard deviations before it counts. It clears
+        5.7.
+      </p>
+      <p class="body">
+        The draws are deterministic low-discrepancy sequences rather than an
+        RNG, so the campaign gains error bars and stays bit-reproducible at the
+        same time. That is what lets a statistical gate bind at all.
+      </p>
+    </section>
+
+    <section class="mgroup worked">
+      <h2><span class="wtag">Worked</span> A state fork</h2>
+      <p class="body">
+        The corridor asks which bank command to commit, given where the vehicle
+        actually is when the link drops.
+      </p>
+
+      <dl class="qa">
+        <div><dt>What varies</dt><dd>Seventeen candidate bank commands, in two rounds: six coarse, then eleven refined around the winner.</dd></div>
+        <div><dt>What each branch starts from</dt><dd>One paused state, 131 coupled steps in, with its plume, sheath and filter covariance as they stand. Each branch continues 100 steps from there.</dd></div>
+        <div><dt>What it answers</dt><dd>Which command to commit, and by how much it beats the alternatives on the same flown state.</dd></div>
+        <div><dt>What it costs</dt><dd>One march to the pause, then a continuation per branch. 44.4 s for the whole campaign.</dd></div>
+      </dl>
+
+      <Code code={fork} lang="rust" themes={SHIKI} />
+
+      <p class="body">
+        The grammar is the same as the sweep above. Only the origin changes:
+        <code>.fork(&amp;onset)</code> takes a paused run where
+        <code>.baseline(...)</code> took a description. Everything downstream —
+        the cases, the concurrency, the scoring, the gates — is shared.
+      </p>
+    </section>
+
+    <section class="mgroup">
+      <h2>What a sweep cannot see</h2>
+      <p class="body">
+        Neither worked example above settles the harder question: whether the
+        coupling changes the answer, or only decorates it. A third example
+        measures that directly. For every forked branch, the retropulsion
+        descent also computes what thrust-only kinematics would have predicted
+        for the same command schedule, with the flow closure frozen at the fork.
+        That frozen column is what a campaign gets when it solves the drag model
+        separately and composes afterwards. The roster below prints the two side
+        by side, in its last two columns:
+      </p>
+      <Code code={roster} lang="text" themes={SHIKI} />
+      <p class="body">
+        Read the two right-hand columns. On the 20% branch the coupled run sheds
+        88.399 m/s where the frozen prediction says 49.490, and the ordering
+        changes with it: net deceleration is non-monotone in throttle, at its
+        minimum on that branch, below what the vehicle sheds coasting. The
+        preserved-drag column falls through zero as the roster hardens. A
+        campaign that composed a separately-solved drag model would report the
+        frozen column and miss the reversal.
+      </p>
+    </section>
+
+    <section class="mgroup">
+      <h2>The case for the ensemble</h2>
+      <p class="body">
+        An earlier single-draw version of the weather table showed the cold-day
+        row eight percent below its predicted value, which reads as a physics
+        finding. The Monte Carlo mean identified it as one draw. A single run per
+        condition cannot separate a mechanism from a draw, and no amount of
+        forking fixes that.
+      </p>
+      <p class="body">
+        So the two compose, and the shipped examples compose them. The weather
+        table sizes a dispersion margin across 48 descents; the retropulsion
+        descent then reads that table in flight and forks against it. Gate 5 of
+        that run measures what the composition bought: informed and uninformed
+        guidance lit the landing burn 14.06 m apart, and the informed world spent
+        7.28 kg more propellant, which is the dispersion-sized reserve measured
+        rather than configured.
+      </p>
+    </section>
+
+    <section class="mgroup">
+      <h2>What the fork does not do</h2>
+      <p class="body">
+        A fork varies the world configuration, so a counterfactual about what the
+        guidance believed had to be run as two separate marches, and it carries
+        no alternation marker. The branch fan-out through
+        <code>fork</code> / <code>branch</code> / <code>continue_for</code> also
+        does not thread the audit sink, so it writes no log files; those branches
+        carry their provenance in the returned report instead.
+      </p>
+      <p class="body">
+        And the corridor, the cheapest fork to run, is the weakest evidence for
+        the coupling: across its bank branches the flow observables agree to
+        three digits. The retropulsion roster is where branches change the flow.
+      </p>
+      <p class="more">
+        <a href="/blueprints/fork-a-running-simulation/">Blueprint: fork a running simulation</a>
+        <a href="/tutorial/stage-2-weather/">Walk 2: one baseline, six worlds</a>
+        <a href="/boundaries/">Measured boundaries</a>
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .mpage { max-width: var(--w-panel); }
+  .mhead { margin-bottom: var(--space-7); }
+  .mhead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .mhead .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .mgroup { margin-bottom: var(--space-7); }
+  .mgroup h2 {
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-4);
+  }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  /* The two worked sections are a matched pair, so they carry a shared mark
+     and the same internal order. A reader should be able to hold one against
+     the other line by line. */
+  .handoff {
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--accent);
+    margin-bottom: var(--space-7);
+  }
+  .worked h2 { display: flex; align-items: baseline; gap: var(--space-3); }
+  .wtag {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .qa { margin: 0 0 var(--space-5); display: grid; gap: 0; }
+  .qa > div {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  @media (min-width: 720px) {
+    .qa > div { grid-template-columns: 16rem 1fr; gap: var(--space-5); align-items: baseline; }
+  }
+  .qa > div:last-child { border-bottom: none; }
+  .qa dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .qa dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); margin-bottom: var(--space-4); }
+  th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--line-1); vertical-align: top; }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+  }
+  tbody th { font-weight: 400; color: var(--fg-0); }
+  tbody td { color: var(--fg-1); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

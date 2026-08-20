@@ -3,7 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-import { CRATE_URL, STUDIES_URL, VERIFICATION_URL } from '../../consts';
+import { CRATE_URL, STUDIES_URL, VERIFICATION_URL, MACHINE } from '../../consts';
 
 const SHIKI = { light: rustLight, dark: rustDark };
 
@@ -81,13 +81,24 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
       <Code code={precisionCode} lang="rust" themes={SHIKI} />
 
       <p class="body">
-        That turns error attribution into an experiment you can run. The
-        plasma-blackout corridor was flown at <code>f64</code> and again at
-        106-bit precision. Every gate and every discrete event step came out
-        identical; the continuous witnesses agreed to 15 or 16 significant
-        digits. Round-off is therefore excluded, and the corridor's remaining
-        error budget sits in the model closures and the grid. One line changes,
-        and the question is answered by measurement rather than by argument.
+        That turns error attribution into an experiment. The turbulence example
+        runs one Lorenz rate field at all three precisions in a single program
+        and reports what each buys: the forecast horizon of a chaotic flow lands
+        at t ≈ 21.5, 44.5 and about 81 for <code>f32</code>, <code>f64</code>
+        and <code>Float106</code>, so round-off, not the step size, is what caps
+        the prediction.
+      </p>
+
+      <p class="body">
+        The plasma-blackout corridor was flown the same way once, at
+        <code>f64</code> and again at 106-bit, and every gate and every discrete
+        event step came out identical with the continuous witnesses agreeing to
+        15 or 16 significant digits. That result stands as history: it was
+        recorded on the superseded surrogate-era build, and re-flying the
+        corridor at 106-bit today fails to compile, because the example has
+        accumulated <code>f64</code>-specific code and a few spots in the crate
+        have too. Closing that gap is what would make the corridor's round-off
+        budget a claim rather than a record.
       </p>
 
       <p class="body">
@@ -104,7 +115,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
         <li>Graded-torus MMS, 8² → 64²: observed order 1.98–2.01 against 2.00; divergence-freeness exact by construction.</li>
         <li>Taylor–Green RHS kernel against exact autodiff derivatives: max abs error 1.11e-16.</li>
         <li>Precision ladder on the same program: 3e-8 (f32) / 1e-16 (f64) / 8e-33 (Float106).</li>
-        <li>Sod shock tube at 512 cells, t = 0.2: density L1 0.0175, velocity 0.0274, pressure 0.0151; star pressure p* = 0.3031 exact.</li>
+        <li>Sod shock tube at 512 cells, t = 0.2: density L1 0.0175, velocity 0.0274, pressure 0.0151, all against a 0.03 tolerance; star-region pressure 0.3032 against the canonical p* = 0.3031.</li>
         <li>Taylor–Green on a tensor train at 32²: bond 32 against 1024 dense, a 32× compression, observed order 2.18.</li>
         <li>Blunt-body bow shock, 2⁵ → 2⁷: fitted bond 3 → 5, Cartesian capture bond 16 → 61.</li>
       </ul>
@@ -210,7 +221,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
       </p>
 
       <ul class="nums">
-        <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 355.6 s.</li>
+        <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 337.5 s.</li>
         <li>Weather-dispersion table: six atmospheres alternated from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
         <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
       </ul>
@@ -309,7 +320,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
       </p>
 
       <ul class="nums">
-        <li>Fork setup measured at 42 ns; continuation cost 0.67–1.04× the trunk.</li>
+        <li>Fork sharing is structural and gated: branches enter by reference, with no tensor copied at fork time. Continuing a branch costs about the same as an unforked march; coasting is cheaper at 0.66×.</li>
         <li>Bank-angle corridor: seventeen worlds, six coarse and eleven fine, with the best committed mid-descent.</li>
         <li>Plasma retropulsion: the mid-burn fork of a marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s.</li>
       </ul>
@@ -347,7 +358,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
         figure is copied from a committed artifact under
         <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
         or <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>,
-        at <code>f64</code> on an Apple M3 Max, release build.
+        at <code>f64</code>, release build, on {MACHINE}.
       </p>
     </section>
   </article>

@@ -3,18 +3,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import SectionDivider from '../components/home/SectionDivider.astro';
-import CounterfactualDynamics from '../components/home/CounterfactualDynamics.astro';
-import RegimeChange from '../components/home/RegimeChange.astro';
-import Multiphysics from '../components/home/Multiphysics.astro';
-import SolverStack from '../components/home/SolverStack.astro';
-import Provenance from '../components/home/Provenance.astro';
+import ForkNotSweep from '../components/home/ForkNotSweep.astro';
+import NoCluster from '../components/home/NoCluster.astro';
 import ValidationSnapshot from '../components/home/ValidationSnapshot.astro';
-import ExampleLadder from '../components/home/ExampleLadder.astro';
+import Practice from '../components/home/Practice.astro';
+import WhereItFits from '../components/home/WhereItFits.astro';
 import { GITHUB_URL } from '../consts';
 
 const title = 'DeepCausality CFD — Counterfactual Fluid Dynamics in Rust';
 const description =
-  'A Rust CFD toolbox that couples flow, chemistry, navigation and control in one typed process, then forks the running simulation into counterfactual worlds. Validated against Sod, Ghia, Williamson and RAM-C II, with measured capability boundaries.';
+  'Fork a coupled simulation at the moment the physics gets interesting and fly every what-if from the state the vehicle actually reached, instead of rerunning each case from a checkpoint. Validated against Sod, Ghia, Williamson and RAM-C II, with measured capability boundaries.';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -29,23 +27,20 @@ const jsonLd = {
 <BaseLayout title={title} description={description} path="/">
   <SiteHeader slot="header" />
 
-  <!-- The five arguments, in the order the crate README makes them, then the
-       evidence for all five. -->
+  <!-- Five sections, ordered by what a cold reader needs in order to keep
+       reading: what it does, whether it fits their machine, whether the physics
+       holds and where it stops, what the day looks like, and where it sits. -->
   <Hero />
   <SectionDivider />
-  <CounterfactualDynamics />
+  <ForkNotSweep />
   <SectionDivider />
-  <RegimeChange />
-  <SectionDivider />
-  <Multiphysics />
-  <SectionDivider />
-  <SolverStack />
-  <SectionDivider />
-  <Provenance />
+  <NoCluster />
   <SectionDivider />
   <ValidationSnapshot />
   <SectionDivider />
-  <ExampleLadder />
+  <Practice />
+  <SectionDivider />
+  <WhereItFits />
 
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>

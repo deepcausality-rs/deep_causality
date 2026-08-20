@@ -1,0 +1,187 @@
+---
+/**
+ * /solvers/precision/ — precision as a type parameter.
+ *
+ * Copied from `components/home/SolverStack.astro`'s precision block, which
+ * stays on the landing page until cleanup retires it.
+ *
+ * The 11x figure is reported with its provenance rather than as a bare number.
+ * It traces only to `corridor/README.md`, in a section that flags itself as
+ * recorded on the superseded surrogate-era build, and the f64 baseline quoted
+ * in the same table (about 35 s) disagrees with the committed artifact (44.4 s).
+ * Both facts belong next to the ratio, or the ratio should not be published.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { MACHINE } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Precision as a parameter — DeepCausality CFD';
+const description =
+  'Every theory, solver, stage and observable is generic over one real scalar. Changing a single alias reruns the whole program at f32, f64 or 106-bit, which turns the error budget into a measurement.';
+
+const alias = `/// Working precision.
+pub type FloatType = f64; // or f32, or deep_causality_num::Float106`;
+
+const lift = `/// Lift an exact \`f64\` specification into the working precision.
+pub fn ft(x: f64) -> FloatType {
+    FromPrimitive::from_f64(x).expect("specification lifts into FloatType")
+}`;
+
+/** The committed precision ladder from the Taylor-Green MMS target. */
+const ladder = [
+  { alias: 'f32', err: '3e-8', note: 'Fast, and the floor of the ladder.' },
+  { alias: 'f64', err: '1e-16', note: 'The default, and the industry-standard choice.' },
+  { alias: 'Float106', err: '8e-33', note: 'Reference-grade, up to 30 significant digits.' },
+];
+---
+<BaseLayout title={title} description={description} path="/solvers/precision/">
+  <SiteHeader slot="header" />
+
+  <article class="page ppage">
+    <header class="phead">
+      <p class="eyebrow">Solvers · Precision</p>
+      <h1>Precision as a parameter</h1>
+      <p class="lede">
+        One alias fixes the working precision for the whole computation, from
+        the flux stencils through to the Kalman filter. That turns the error
+        budget from an argument into an experiment.
+      </p>
+    </header>
+
+    <section class="pgroup">
+      <h2>One alias</h2>
+      <p class="body">
+        Every theory, solver, stage and observable is generic over a single real
+        scalar. A program fixes the alias and the whole run follows it,
+        downcasting to <code>f64</code> only at the display boundary.
+      </p>
+      <Code code={alias} lang="rust" themes={SHIKI} />
+      <p class="body">
+        Specification constants stay exact <code>f64</code> literals and are
+        lifted into the working precision, so changing the alias reruns the same
+        program somewhere else on the ladder rather than silently rounding its
+        inputs first.
+      </p>
+      <Code code={lift} lang="rust" themes={SHIKI} />
+    </section>
+
+    <section class="pgroup">
+      <h2>The measured ladder</h2>
+      <p class="body">
+        Taylor–Green through the incompressible Navier–Stokes RHS kernel with
+        exact autodiff derivatives, against the closed form. Committed at
+        <code>verification/mms_taylor_green_verification/</code>, on {MACHINE}.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Alias</th>
+              <th scope="col">Max abs error</th>
+              <th scope="col">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ladder.map((r) => (
+              <tr>
+                <th scope="row"><code>{r.alias}</code></th>
+                <td class="num">{r.err}</td>
+                <td>{r.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="pgroup">
+      <h2>Where it holds today</h2>
+      <p class="body">
+        The turbulence example is the clearest demonstration, because it runs
+        all three precisions in one program and reports what each buys. The same
+        rate field and the same <code>Rk4</code> march, instantiated at
+        <code>f32</code>, <code>f64</code> and <code>Float106</code>, put the
+        forecast horizon of a chaotic flow at t ≈ 21.5, 44.5 and about 81. Each
+        sixteen digits roughly doubles the trustworthy lead time.
+      </p>
+
+      <div class="callout callout-warn">
+        <p class="callout-title">The plasma-blackout corridor does not currently build at 106-bit</p>
+        <p>
+          It did once, and the result is worth stating: every gate and every
+          discrete event step came out identical to the <code>f64</code> run,
+          with the continuous witnesses agreeing to 15 or 16 significant digits,
+          at roughly eleven times the wall clock. That was recorded on the
+          superseded surrogate-era build and has no committed timing artifact.
+        </p>
+        <p>
+          Re-flying it today fails to compile. The generic scalar reaches most of
+          the way, but the corridor example has accumulated <code>f64</code>-specific
+          code, and a handful of spots in the crate have too. So treat the 11×
+          ratio and the identical-gates result as history rather than as a
+          property you can reproduce, and take the working ladder from the
+          turbulence example and the manufactured-solution target above.
+        </p>
+      </div>
+
+      <p class="body">
+        Precision is load-bearing at the bottom of the range as well as the top.
+        The corridor at <code>f32</code> crashed at step 1, because
+        <code>h²</code> in the then-flown Saha kernel (4.4e-67) underflows the
+        <code>f32</code> exponent range, and the position ulp at Earth radius is
+        about 0.5 m, which would swallow a sub-meter navigation result anyway.
+      </p>
+    </section>
+
+    <section class="pgroup">
+      <p class="more">
+        <a href="/solvers/">The three solvers</a>
+        <a href="/validation/#mms-tgv">The Taylor–Green record</a>
+        <a href="/why/#algorithms">Why error attribution</a>
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .ppage { max-width: var(--w-panel); }
+  .phead { margin-bottom: var(--space-7); }
+  .phead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .phead .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .pgroup { margin-bottom: var(--space-7); }
+  .pgroup h2 {
+    font-size: var(--t-h3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    margin-bottom: var(--space-4);
+  }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); margin-bottom: var(--space-4); }
+  th, td { text-align: left; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  tbody th { font-weight: 400; }
+  tbody td { color: var(--fg-1); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+    font-size: var(--t-body-sm);
+  }
+</style>

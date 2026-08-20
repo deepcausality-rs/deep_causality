@@ -122,9 +122,17 @@ and `main.rs:143`, on diagnostic legs outside the study.
 ## Measured fork cost
 
 Sharing is O(1). Branches share the trunk read-only through `Arc` and take a
-copy-on-write clone at first divergent write. On a plume-coupled state
-(`studies/qtt_rank_plume`): fork setup 42 ns, per-branch continuation 0.67 to
-1.04× the trunk step cost. The 0.67 case is a coast branch performing less work.
+copy-on-write clone at first divergent write. That sharing is structural rather
+than timed: the study gates `shares fluid + field = true`, so no tensor is
+copied at fork time.
+
+On a plume-coupled state (`studies/qtt_rank_plume`), per-branch continuation
+costs about the same as an unforked trunk step, and a coast branch is cheaper at
+0.66× because it performs less work. Three recordings span 0.95 to 1.05 on the
+powered rows, so read that as indistinguishable from an unforked march rather
+than as a figure to three digits. The setup cost the study prints is a single
+sub-microsecond measurement and moves by a factor of two between runs; it is not
+a number to plan against.
 
 `fork` does not fail. A broken pause is carried through and surfaces as each
 branch's error at `continue_for`, which keeps the failure attributable to the

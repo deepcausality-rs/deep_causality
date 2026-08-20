@@ -8,7 +8,6 @@
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
 [![CodeFactor][codefactor-badge]][codefactor-url]
-![Tests][test-url]
 [![OpenSSF Best Practices][ossf-badge]][ossf-url]
 [![codecov][codecov-badge]][codecov-url]
 
@@ -37,8 +36,6 @@
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
-
-[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
 
 [miri-badge]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/rust_miri.yml/badge.svg
 
@@ -259,6 +256,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 | Crate                                                        | Description                                                                                                                 |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | [`deep_causality_physics`](deep_causality_physics/README.md) | Astrophysics, condensed matter, EM, fluids, MHD, nuclear, photonics, QM, relativity, thermo, waves; generic over float type |
+| [`deep_causality_cfd`](deep_causality_cfd/README.md)         | Counterfactual fluid dynamics: DEC and tensor-train solvers behind the `CfdFlow` DSL, coupling flow, chemistry, navigation and control in one run. Site: [cfd.deepcausality.com](https://cfd.deepcausality.com) |
 
 ### Mathematics
 

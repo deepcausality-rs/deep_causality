@@ -1,7 +1,7 @@
 ---
 title: Install and run a reference case
 task: You need the crate as a dependency, or a single command that exercises it.
-summary: An unpublished git dependency, and one command that exercises the full coupling stack in about forty seconds.
+summary: One line from crates.io, or a git dependency pinned to the monorepo, and one command that exercises the full coupling stack in about forty seconds.
 order: 0
 verbs:
   - cargo
@@ -10,7 +10,14 @@ worked:
     href: /tutorial/stage-1-corridor/
 ---
 
-The crate is unpublished and versioned with the monorepo, so it is a git dependency.
+The crate is on crates.io.
+
+```bash
+cargo add deep_causality_cfd
+```
+
+It is also versioned with the monorepo, so a git dependency tracks work that has
+not been released yet.
 
 ```toml
 [dependencies]
@@ -39,7 +46,7 @@ the target grid size before enabling it.
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-Runtime is 40.9 s. The run marches a compressible flow, reacts its plasma
+Runtime is 44.4 s. The run marches a compressible flow, reacts its plasma
 chemistry, gates a Kalman filter on the result, forks the marched state into
 seventeen counterfactual worlds, and reports thirteen gate verdicts.
 

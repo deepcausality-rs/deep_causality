@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DeepCausality CFD — one-page brief</title>
+<!--
+  Source for public/brief.pdf. Different artifact, different reader: this is for
+  the person an engineer forwards the site to, who will not run anything.
+
+  Every figure here also appears on the site and traces to a committed run
+  artifact. Regenerate with:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless --disable-gpu --no-pdf-header-footer \
+      --print-to-pdf=public/brief.pdf public/brief.source.html
+-->
+<style>
+  @page { size: A4; margin: 11mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: Helvetica, Arial, sans-serif; color: #14201f;
+    font-size: 9.1pt; line-height: 1.42; -webkit-print-color-adjust: exact;
+  }
+  h1 { font-size: 19pt; margin: 0 0 2mm; letter-spacing: -0.2pt; }
+  .kicker {
+    font-size: 7pt; letter-spacing: 1.6pt; text-transform: uppercase;
+    color: #0a7a87; margin: 0 0 2mm; font-weight: 700;
+  }
+  .lede { font-size: 10.2pt; color: #33474a; margin: 0 0 3.2mm; max-width: 150mm; }
+  h2 {
+    font-size: 8pt; letter-spacing: 1.1pt; text-transform: uppercase; color: #56696c;
+    margin: 0 0 1.6mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #cdd8d9;
+  }
+  .rule { height: 1.6pt; background: #0a7a87; margin: 0 0 3.2mm; }
+  section { margin-bottom: 2.9mm; }
+  p { margin: 0 0 2mm; }
+  ul { margin: 0; padding-left: 4.2mm; }
+  li { margin-bottom: 1.1mm; }
+  .cols { display: flex; gap: 8mm; }
+  .cols > div { flex: 1; }
+  b { color: #06282c; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
+  td { padding: 1.2mm 0; border-bottom: 0.4pt solid #e3eaea; vertical-align: top; }
+  td:first-child { color: #56696c; padding-right: 4mm; white-space: nowrap; }
+  .foot {
+    margin-top: 2.5mm; padding-top: 1.6mm; border-top: 0.5pt solid #cdd8d9;
+    font-size: 7.4pt; color: #6b7d80; display: flex; justify-content: space-between;
+  }
+  code { font-family: Menlo, monospace; font-size: 8pt; }
+  pre {
+    font-family: Menlo, monospace; font-size: 7.6pt; line-height: 1.5;
+    background: #f1f5f5; border-left: 1.4pt solid #0a7a87;
+    padding: 1.7mm 3mm; margin: 0 0 2mm; white-space: pre-wrap; word-break: break-all;
+  }
+</style>
+</head>
+<body>
+
+<p class="kicker">DeepCausality · CFD</p>
+<h1>Counterfactual Fluid Dynamics</h1>
+<div class="rule"></div>
+
+<p class="lede">
+  Your run finished. Now answer the what-if — from the state the vehicle actually
+  reached, rather than by rerunning each case from a checkpoint.
+</p>
+
+<section>
+  <h2>The problem it addresses</h2>
+  <p>
+    A case runs overnight. In the review, the first question is a what-if: three
+    more degrees of bank, a hot-day atmosphere, ignition half a second later.
+    Answering it today means a rerun per question, and the decision gets made on
+    judgement before the results land. Interactions <i>between</i> domains fall
+    out between tools, because each tool solves its own domain and the results
+    are composed afterwards.
+  </p>
+</section>
+
+<section>
+  <h2>What it does</h2>
+  <p>
+    It pauses a coupled run at a point the physics chooses, then continues every
+    alternative from that one state, concurrently, into a single gated table with
+    a per-branch record of why. Flow, chemistry, navigation and control run in one
+    process over one shared field, so an interaction between them lands in the
+    result. It sits above your solver the way a UQ or DoE driver does, on a
+    different axis: branches from a state, not draws from a distribution.
+  </p>
+</section>
+
+<div class="cols">
+  <div>
+    <section>
+      <h2>Measured, on one desktop machine</h2>
+      <table>
+        <tr><td>Whole powered descent</td><td><b>337.5 s</b>, 2516 coupled steps, four legs, sixteen gates</td></tr>
+        <tr><td>Peak memory</td><td><b>18.3 MB</b> resident, five concurrent branches</td></tr>
+        <tr><td>Seventeen-branch campaign</td><td><b>44.4 s</b> against a 600 s budget</td></tr>
+        <tr><td>Fan-out cost</td><td><b>1.09×</b> one trunk step for five branches</td></tr>
+        <tr><td>Machine</td><td>Apple M3 Max, 16 cores, 128 GB</td></tr>
+      </table>
+      <p style="margin-top:2mm">
+        No cluster, no scheduler queue, no allocation request. Concurrent branches
+        are bit-identical to the sequential run, held by a regression test.
+      </p>
+    </section>
+  </div>
+  <div>
+    <section>
+      <h2>Verified against published references</h2>
+      <table>
+        <tr><td>Manufactured solutions</td><td>observed order <b>1.98–2.01</b> against 2.00; divergence-free by construction</td></tr>
+        <tr><td>Taylor–Green (1937)</td><td>RHS kernel to <b>1.11e-16</b>, machine epsilon</td></tr>
+        <tr><td>Sod shock tube</td><td>density L1 <b>0.0175</b> against a 0.03 tolerance</td></tr>
+        <tr><td>RAM-C II flight, NASA (1970)</td><td>peak electron density <b>+0.35 decade</b> on the anchor</td></tr>
+      </table>
+      <p style="margin-top:2mm">
+        Thirteen self-verifying targets. Every one exits nonzero when its check
+        fails, so a stale claim breaks a run rather than surviving in prose.
+      </p>
+    </section>
+  </div>
+</div>
+
+<section>
+  <h2>What it does not do</h2>
+  <ul>
+    <li><b>It is not a replacement solver.</b> It reads no mesh format; geometry is declared in code on structured Cartesian grids. Meshing, converged flow at scale, turbulence closures and certification stay with your existing solver.</li>
+    <li><b>Turbulence is staged, not available.</b> Validated incompressible cases sit at Re 100–1600.</li>
+    <li><b>One published result comes out with the wrong sign.</b> Supersonic retropropulsion drag collapse does not reproduce on this harness, and the cause is attributed to our own discretization rather than to the model class. It is documented with its numbers.</li>
+    <li><b>Distributed execution is a stated non-goal;</b> GPU work is deferred, with the reasoning published.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Getting started</h2>
+  <p>
+    From nothing to a gated result, on the machine already on your desk. The run
+    itself takes 44.4 s after a first-time build. Rust 1.93 or newer; skip the
+    first line if you already have it.
+  </p>
+  <pre>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality
+cargo run --release -p avionics_examples --example plasma_blackout_corridor</pre>
+  <p>
+    Keep <code>--depth 1</code>: the full history is 2.46 GB against 195 MB
+    shallow. As a library, <code>cargo add deep_causality_cfd</code>. MIT
+    licensed, part of the DeepCausality project, hosted at the Linux Foundation
+    for Data &amp; AI and maintained by the Center for Dynamic Causality.
+  </p>
+</section>
+
+<div class="foot">
+  <span>cfd.deepcausality.com</span>
+  <span>Every figure traces to a committed run artifact in the repository.</span>
+</div>
+
+</body>
+</html>

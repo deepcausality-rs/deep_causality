@@ -3,7 +3,7 @@ title: Forecast horizon under precision
 question: How far ahead can a chaotic flow be forecast before roundoff destroys it?
 summary: One Lorenz rate field written over the scalar bound and instantiated at f32, f64 and Float106, measuring the forecast horizon each precision supports. No flow solver is involved.
 order: 4
-command: cargo run -p avionics_examples --example turbulence_flow
+command: cargo run --release -p avionics_examples --example turbulence_flow
 uses:
   - Arrow calculus (Rk4)
   - causal monad
@@ -14,7 +14,7 @@ results:
   - the ε-law puts the same horizons near 17.6 / 39.8 / 81.3
   - Lyapunov λ ≈ 0.906 on the Lorenz attractor
 limitation: For most CFD the precision floor is not the limiting term; discretization and modelling error exceed f64 roundoff. No output.txt is committed for this example; figures come from its README.
-recorded: false
+recorded: true
 source: examples/avionics_examples/cfd/turbulence_flow
 ---
 

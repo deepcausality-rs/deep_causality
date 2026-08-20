@@ -126,7 +126,8 @@ main { display: block; }
   opacity: 0.7;
 }
 
-/* --- §12.2 Coordinate eyebrow — "01 / 05  SOLVERS" --- */
+/* --- §12.2 Coordinate eyebrow, e.g. "02 / 05  SCALE". Landing page only:
+   interior pages use the plain `.eyebrow` form. --- */
 .eyebrow-coord { display: inline-flex; gap: 0.6em; align-items: baseline; letter-spacing: 0.06em; }
 .eyebrow-coord .ix { color: var(--fg-2); }
 .eyebrow-coord .lb { color: var(--fg-1); }
@@ -245,6 +246,10 @@ a.chip { border-bottom: 1px solid var(--line-1); }
 .status-partial   { color: var(--warn); }
 .status-roadmap   { color: var(--fg-2); }
 .status-roadmap::before { content: '○ '; }
+/* A stated non-goal is not a gap on the way to being filled, so it does not
+   share the open mark. It is a decision, and it reads as one. */
+.status-nongoal   { color: var(--fg-2); }
+.status-nongoal::before { content: '— '; }
 
 /* --- §12.10 Section divider + draw-in --- */
 .section-divider {
@@ -275,9 +280,19 @@ a.chip { border-bottom: 1px solid var(--line-1); }
     transition: opacity var(--dur-node) var(--ease-out), transform var(--dur-node) var(--ease-out);
   }
   [data-anim-draw].in-view circle { transform: scale(1); }
+  /* Nodes light in document order after the strokes are half drawn. A diagram
+     orders its circles by the order the reader should read them, which for the
+     fork tree is the pause, then each branch, then the verdict. Eight covers
+     every figure on the site; extend the list rather than inventing a second
+     mechanism. */
   [data-anim-draw].in-view circle:nth-of-type(1) { transition-delay: calc(var(--dur-draw) * 0.5 + 1 * var(--stagger)); }
   [data-anim-draw].in-view circle:nth-of-type(2) { transition-delay: calc(var(--dur-draw) * 0.5 + 2 * var(--stagger)); }
   [data-anim-draw].in-view circle:nth-of-type(3) { transition-delay: calc(var(--dur-draw) * 0.5 + 3 * var(--stagger)); }
+  [data-anim-draw].in-view circle:nth-of-type(4) { transition-delay: calc(var(--dur-draw) * 0.5 + 4 * var(--stagger)); }
+  [data-anim-draw].in-view circle:nth-of-type(5) { transition-delay: calc(var(--dur-draw) * 0.5 + 5 * var(--stagger)); }
+  [data-anim-draw].in-view circle:nth-of-type(6) { transition-delay: calc(var(--dur-draw) * 0.5 + 6 * var(--stagger)); }
+  [data-anim-draw].in-view circle:nth-of-type(7) { transition-delay: calc(var(--dur-draw) * 0.5 + 7 * var(--stagger)); }
+  [data-anim-draw].in-view circle:nth-of-type(8) { transition-delay: calc(var(--dur-draw) * 0.5 + 8 * var(--stagger)); }
 }
 @media (prefers-reduced-motion: reduce) {
   [data-anim-draw] line,
