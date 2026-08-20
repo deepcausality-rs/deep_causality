@@ -8,6 +8,19 @@ import mermaid from 'astro-mermaid';
 export default defineConfig({
   site: 'https://www.deepcausality.com',
   output: 'static',
+
+  // Astro 7.2. Static output with no adapter, so the session runtime is already
+  // tree-shaken; declaring it keeps `Astro.session` undefined by contract rather
+  // than by inference.
+  session: false,
+
+  // Astro 7.2 experimental. Skips re-rendering static pages whose module graph
+  // and `cacheKey` are unchanged since the last build. The cache lives in
+  // `cacheDir` (node_modules/.astro), so it only pays off where that directory
+  // survives between builds.
+  experimental: {
+    incrementalBuild: true,
+  },
   integrations: [
     mermaid({
       theme: 'dark',

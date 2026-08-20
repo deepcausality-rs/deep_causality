@@ -1,13 +1,22 @@
 ---
+import { createHash } from 'node:crypto';
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
 
 export async function getStaticPaths() {
   const entries = await getCollection('blog', ({ data }) => !data.draft);
+  // Incremental build: every post renders a "related posts" list ranked over the
+  // whole collection, so its output changes when any other post's tags or date
+  // change. The cache key covers the collection, not just this entry.
+  const collectionKey = createHash('sha256')
+    .update(entries.map((e) => e.digest).sort().join('\n'))
+    .digest('hex')
+    .slice(0, 16);
   return entries.map((entry) => ({
     params: { slug: entry.id.replace(/^en\//, '').replace(/\.md$/, '') },
     props: { entry, entries },
+    cacheKey: `${entry.digest}-${collectionKey}`,
   }));
 }
 
