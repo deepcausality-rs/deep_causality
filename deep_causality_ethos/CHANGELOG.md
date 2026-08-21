@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.10...deep_causality_ethos-v0.2.11) - 2026-08-21
+
+### Added
+
+- *(website)* rework the CFD landing page and re-sync every published number to its artifact
+
+### Other
+
+- Removed broken Test URL from README
+- Merge remote-tracking branch 'origin/main'
+
 ## [0.2.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.9...deep_causality_ethos-v0.2.10) - 2026-08-12
 
 ### Added

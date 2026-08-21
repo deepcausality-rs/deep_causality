@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.3...ultragraph-v0.9.4) - 2026-08-21
+
+### Added
+
+- *(ultragraph)* Configured no-std flag.
+
+### Other
+
+- lints and minor code fixes
+- lints and minor code fixes
+- lints and minor code fixes
+- lints and minor code fixes
+
 ## [0.9.3](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.2...ultragraph-v0.9.3) - 2026-07-14
 
 ### Fixed
