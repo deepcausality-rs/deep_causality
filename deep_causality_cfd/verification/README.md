@@ -17,7 +17,8 @@ reference check fails — so the suite is usable as a gate, not just a demo. Wha
 how it fails, is in the per-example sections below.
 
 **CI runs this suite.** `.github/workflows/cfd_verification.yml` executes the ten `FAST_HARNESSES` on
-every pull request and the three `SLOW_HARNESSES` nightly, failing the build on a non-zero exit. A
+every pull request and the three `SLOW_HARNESSES` on the first of each month (and on
+`workflow_dispatch`), failing the build on a non-zero exit. A
 fourteenth, `qtt_cylinder_verification`, sits in `OFFLINE_HARNESSES` and no job runs it. A completeness
 check asserts that every `[[example]]` declared under `verification/` in `Cargo.toml` appears in one of
 those three lists, so a newly added harness cannot silently never run. Until this workflow existed,
@@ -99,7 +100,7 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 | `qtt_blunt_body_2d` | rank lever: bow-shock χ, fitted vs Cartesian capture | fitted 3→5; capture 16→61 | structural (fitted χ bounded, ≤ +1 per refinement) | fitted flat 3→5; capture ≈ side/2 (16, 32, 61), not ~√side | 2^5–2^7 | <1 s |
 | `qtt_reentry_3d` | rank lever: 3-D forebody χ (wake out-of-scope) | fitted 2→4; Cartesian 10→59; wake 41 | structural (`qtt_rank_3d` bound) | fitted plateau; capture grows | 2^3–2^5 | <1 s |
 
-> ⚠ **`qtt_cylinder_verification` is known-failing and runs nightly, not per-PR.** Its two parameter
+> ⚠ **`qtt_cylinder_verification` is known-failing and runs offline by hand, not in CI.** Its two parameter
 > ladders gate and both report `NOT CONVERGING`. This is a correct measurement, not a regression:
 >
 > - **η ladder** (0.128 → 0.008): `C_d` = 17.39, 24.02, 26.25, 23.76, 21.40 — it rises, peaks, then

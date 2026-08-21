@@ -309,10 +309,11 @@ whole program at another precision.
 
 ## Verification
 
-The crate ships its evidence, and CI runs it. `verification/` holds thirteen runnable programs gated
+The crate ships its evidence, and CI runs it. `verification/` holds fourteen runnable programs gated
 against analytic solutions, published references, or internal invariants;
-`.github/workflows/cfd_verification.yml` executes the fast nine on every pull request and the slow
-four nightly, failing the build on a non-zero exit. `studies/` holds the empirical probes that settled
+`.github/workflows/cfd_verification.yml` executes the fast ten on every pull request and the slow
+three monthly, failing the build on a non-zero exit. The fourteenth, `qtt_cylinder_verification`, is
+too slow for CI at the resolution its physics needs and is run by hand. `studies/` holds the empirical probes that settled
 design questions before they were committed to specs, findings encoded as gates so the conclusions
 stay reproducible. `benches/` pins performance in `PERFORMANCE.md`.
 
