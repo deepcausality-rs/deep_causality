@@ -12,6 +12,7 @@
 //! decimation-in-time split over the next-smaller kernel with a
 //! precomputed twiddle row.
 
+use alloc::vec::Vec;
 use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;
