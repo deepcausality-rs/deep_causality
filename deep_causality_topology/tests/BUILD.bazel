@@ -79,6 +79,22 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types/cup_product",
+    srcs = glob([
+        "types/cup_product/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+    ],
+)
+
+rust_test_suite(
     name = "types/curvature_tensor",
     srcs = glob([
         "types/curvature_tensor/*_tests.rs",

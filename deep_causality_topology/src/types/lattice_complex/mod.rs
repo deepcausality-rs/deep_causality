@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+pub mod cell_splitting;
 pub mod dual_lattice_complex;
 pub mod lattice_cell;
 pub mod specialized;

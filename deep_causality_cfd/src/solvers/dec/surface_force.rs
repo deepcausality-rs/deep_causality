@@ -122,12 +122,8 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
     let complex = manifold.complex();
     let velocity: BTreeMap<[usize; D], [R; D]> = complex
         .iter_cells(0)
-        .zip(vertex_vectors.as_slice().chunks_exact(D))
-        .map(|(vertex, v)| {
-            let mut vec = [R::zero(); D];
-            vec.copy_from_slice(v);
-            (*vertex.position(), vec)
-        })
+        .zip(vertex_vectors.as_slice().as_chunks::<D>().0)
+        .map(|(vertex, v)| (*vertex.position(), *v))
         .collect();
 
     // The top cells (D-cells) in registry-key order, so a `CellId` resolves to its base position

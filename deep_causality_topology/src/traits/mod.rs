@@ -43,6 +43,7 @@
 
 pub mod base_topology;
 pub mod cell;
+pub mod cell_splitting;
 pub mod chain_complex;
 pub mod gauge_group;
 pub mod graph_topology;

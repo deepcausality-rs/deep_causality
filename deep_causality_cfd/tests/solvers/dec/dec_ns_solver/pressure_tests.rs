@@ -119,7 +119,13 @@ where
     // Recompute ½|u|² from sharp, exactly as the diagnostic does.
     let vertex_vectors = manifold.sharp(state.as_one_form()).unwrap();
     let half = R::from_f64(0.5).unwrap();
-    for (i, chunk) in vertex_vectors.as_slice().chunks_exact(2).enumerate() {
+    for (i, chunk) in vertex_vectors
+        .as_slice()
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .enumerate()
+    {
         let kinetic = (chunk[0] * chunk[0] + chunk[1] * chunk[1]) * half;
         let diff = bernoulli.as_tensor().as_slice()[i] - static_p.as_tensor().as_slice()[i];
         let scale = if kinetic.abs() > R::one() {

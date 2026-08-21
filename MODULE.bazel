@@ -136,12 +136,6 @@ use_repo(buildbuddy, "buildbuddy_toolchain")
 lake = use_extension("@rules_lean//lean:lake.bzl", "lake")
 lake.workspace(
     name = "lake_deps",
-    lake_manifest = "//lean:lake-manifest.json",
-    lakefile = "//lean:lakefile.toml",
-    lean_toolchain = "//lean:lean-toolchain",
-    # Regenerate after touching lake-manifest.json or lean-toolchain:
-    #   build/scripts/lean_lock.sh sources
-    lock = "//lean:lake-lock.json",
     # Tree-shake the Mathlib olean download to the modules the proofs import.
     # Regenerate after changing any import:
     #
@@ -164,6 +158,12 @@ lake.workspace(
         "Mathlib.Data.Real.Basic",
         "Mathlib.LinearAlgebra.Matrix.Trace",
     ],
+    lake_manifest = "//lean:lake-manifest.json",
+    lakefile = "//lean:lakefile.toml",
+    lean_toolchain = "//lean:lean-toolchain",
+    # Regenerate after touching lake-manifest.json or lean-toolchain:
+    #   build/scripts/lean_lock.sh sources
+    lock = "//lean:lake-lock.json",
 )
 use_repo(lake, "lake_deps", "lean_dist_4_32_0_toolchains")
 

@@ -5,6 +5,7 @@
 
 use core::slice::SliceIndex;
 
+mod cell_splitting;
 mod display;
 mod getters;
 
@@ -37,7 +38,11 @@ impl Cell for Simplex {
 }
 
 /// A combinatorial simplex defined by sorted vertex indices.
-/// Order is strictly increasing to ensure canonical representation.
+///
+/// [`Simplex::new`] sorts its input into non-decreasing order, which gives a
+/// canonical representation. It does not deduplicate, so the order is strictly
+/// increasing exactly when the caller supplies distinct vertices. See
+/// [`Simplex::vertices`] for what downstream code may rely on.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Simplex {
     pub(crate) vertices: Vec<usize>,
