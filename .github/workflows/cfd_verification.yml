@@ -8,7 +8,7 @@
 # verification/README.md was unenforced. Each harness self-verifies and exits non-zero on a broken
 # gate, so running it is the whole check — no extra assertions live here.
 #
-# Split by cost: the fast harnesses gate every pull request; the slow ones run nightly.
+# Split by cost: the fast harnesses gate every pull request; the slow ones run monthly.
 # `verification-suite-complete` fails if a harness is declared in Cargo.toml but listed in neither
 # set, so a newly added harness cannot silently never run.
 #
@@ -40,8 +40,13 @@ name: CFD Verification
 on:
   pull_request:
   schedule:
-    # 03:17 UTC daily. Off the hour to avoid the scheduler's peak-minute queue.
-    - cron: '17 3 * * *'
+    # 03:17 UTC on the 1st of each month. Off the hour to avoid the scheduler's peak-minute queue.
+    #
+    # Monthly, not nightly: the slow set re-verified an unchanged tree every night and was the single
+    # largest consumer of the repository's Actions minutes (~53 min/day, ~41% of all CI compute over
+    # August 2026) for a signal that changes only when the DEC solver does. Between scheduled runs,
+    # reach for `workflow_dispatch` after any change to the solver or to a slow harness's gates.
+    - cron: '17 3 1 * *'
   workflow_dispatch:
 
 permissions:
@@ -113,7 +118,7 @@ jobs:
 
   fast:
     name: Fast harnesses (pull request)
-    # Skipped on the nightly schedule: the PR run already covers these.
+    # Skipped on the monthly schedule: the PR run already covers these.
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
@@ -169,8 +174,8 @@ jobs:
           echo "All fast verification harnesses passed."
 
   slow:
-    name: Slow harnesses (nightly)
-    # Nightly and manual only — ~12 min, dominated by dec_cylinder. Never gates a pull request.
+    name: Slow harnesses (monthly)
+    # Monthly and manual only — ~12 min, dominated by dec_cylinder. Never gates a pull request.
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 90
