@@ -25,12 +25,17 @@ exclude = [
 ]
 
 [features]
-default = []
+default = ["std"]
+std = ["alloc"]
+alloc = []
+no-std = ["alloc"]
 # Turns `MaybeParallel` into a `Send + Sync` alias and switches
 # `scoped_map` from an inline map to scoped fork-join threads. Downstream
 # crates forward their own `parallel` feature here so the single
 # definition unifies across the workspace.
-parallel = []
+# `parallel` spawns `std::thread::scope` threads, so it requires `std`.
+# Declaring the dependency here makes `no-std + parallel` unrepresentable.
+parallel = ["std"]
 
 [dependencies]
 # Intentionally empty. The fork-join surface (`scoped_map`) rides

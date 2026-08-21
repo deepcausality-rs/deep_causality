@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! Shared parallelism primitives for the DeepCausality workspace.
 //!
 //! Two items live here:
@@ -18,6 +20,8 @@
 //!   an order-preserving parallel map over a slice on
 //!   [`std::thread::scope`] threads under the `parallel` feature, a plain
 //!   inline map without it. No thread pool, no external dependency.
+
+extern crate alloc;
 
 mod functions;
 pub mod traits;
