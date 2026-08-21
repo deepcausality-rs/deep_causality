@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Rk4, Scalar};
-use deep_causality_haft::Arrow;
 use core::ops::{Add, Mul};
+use deep_causality_haft::Arrow;
 
 impl<S, R, F> Arrow for Rk4<S, R, F>
 where
