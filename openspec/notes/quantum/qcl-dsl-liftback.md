@@ -49,7 +49,9 @@ example side there were four in `quantum_geometric_tensor` and one in `qcm_freez
 On that evidence alone a pipeline DSL would have been designed against one prospective consumer.
 
 Three designed consumers now exist, and the two that came after the first each changed the API
-rather than confirming it. An abstraction that survives being pushed on by independent problems is a
+rather than confirming it. A fourth arrived from outside the design: `deep_causality_topology`'s
+cup product, shipped 2026-08-21, is a real consumer of the same cochain-as-slice convention §3.2 and
+Decision 2 argue for, and it landed on that convention without being asked to. An abstraction that survives being pushed on by independent problems is a
 different object from one that was fitted to a single problem, and that is the difference between
 revision 1 and this one.
 
@@ -260,7 +262,10 @@ ever gets built.
    matrices, Betti numbers, cell and lattice complexes and the gauge field machinery are
    `deep_causality_topology`'s, and the sparse carrier under the parity checks is
    `deep_causality_sparse`'s. The quantum crate may name their QEC meaning (§3.4) and must not
-   reimplement them. Cup products, when they arrive, belong in topology as `SPEC-T2`, not here.
+   reimplement them. The cup product **arrived in topology on 2026-08-21**, as `SPEC-T2` said it
+   should, alongside the `SplittableCell` trait that gives each cell family its own decomposition.
+   That it landed there rather than here is the rule working: the quantum crate names the QEC
+   meaning of a topological object and the topological operation stays where the complex lives.
 
 ---
 
@@ -281,9 +286,10 @@ principle: composites first, pipeline once real code has exercised the shape.
    a design that three notes agree on is weaker evidence than two programs that compile.
 4. **`Ambiguous` (§5) and the experiment designer (§8) land together**, ahead of the pipeline, for
    the reason in §8.7. Both are used by two of the three examples.
-5. **`SPEC-T1` (branching structure) and `SPEC-T2` (cup product)** sit outside this crate and outside
-   this sequence. `geometric_qec` stops one rung short of the gate catalogue and is the best argument
-   for starting them; see that note's §6.
+5. **`SPEC-T1` and `SPEC-T2` are done** and sat outside this crate, as expected. The branching
+   structure turned out to be present already, so T1 cost documentation rather than construction,
+   and the cup product shipped on top of it. `SPEC-T3` (higher cup products) is now the rung
+   `geometric_qec` stops short of, and the catalogue is what it feeds; see that note's §6.
 
 The failure mode to avoid has not changed: writing the DSL first and shaping examples to justify it.
 What has changed is that the examples now push back. Two of the three amended the API before a line

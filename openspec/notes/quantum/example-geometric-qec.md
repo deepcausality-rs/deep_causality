@@ -26,7 +26,7 @@ Companion to [`example-quantum-control-loop.md`](example-quantum-control-loop.md
 ### 1.1 The surprise: most of this already ships
 
 I expected this example to be blocked on the topology track, since
-[`dynamic-qcm.md`](dynamic-qcm.md) §3.3 lists cup products as the keystone gap. Running the crates
+[`dynamic-qcm.md`](dynamic-qcm.md) §3.3 listed cup products as the keystone gap. Running the crates
 says otherwise. `deep_causality_topology` carries `ChainComplex` with `boundary_matrix(k)`,
 `coboundary_matrix(k)` and `betti_number(k)`, over `CellComplex`, `SimplicialComplex` and
 `LatticeComplex`, plus a full lattice gauge theory module with link variables and Wilson loops.
@@ -180,11 +180,13 @@ QclBuilder::build_validate(&cfg)
 **Design: partial fit, and honestly bounded.** There is a real selection problem, which is choosing
 a complex that delivers a required `k` and `d` and gate set at the lowest physical qubit count. It
 has the shape of §8.8's minimum-cost cover, with the requirement set as elements and candidate
-complexes as covering options. Two of the three axes are computable today: `n` and `k` exactly, `d`
-by enumeration on small complexes. The third axis, the **native gate catalogue**, is not, because
-cohomology-operation gates need cup products and `SPEC-T1` (branching structure) through `SPEC-T2`
-(cup product) are unbuilt. The example should run the design over `(n, k, d)` and name the gate axis
-as the gap rather than faking it.
+complexes as covering options. Three of the four axes are computable today: `n` and `k` exactly, `d`
+by enumeration on small complexes, and — since `SPEC-T2` shipped — the individual `CZ`-class gates a
+complex supports, by evaluating the cup product on its cocycles. What is still missing is the
+**catalogue**: the full inventory of independently addressable generators, which needs the higher
+cup products of `SPEC-T3` and the duality bookkeeping that goes with them. The example should run
+the design over `(n, k, d)` plus the gates it can actually evaluate, and name the catalogue as the
+remaining gap rather than faking it.
 
 **Control: no fit, and the example should say so.** There is no monitor, no envelope, no
 intervention here. This is construction and verification. The natural control loop over a code is
@@ -391,8 +393,10 @@ multivector, num_complex and core in `deps`, and a row in the package README tab
    onto it is a separate discipline.
 3. **`d` is enumerated, not solved.** Distance is computed by brute force on small complexes.
    Minimum-weight homology representative is NP-hard in general.
-4. **The gate catalogue is absent.** The example counts logical qubits from `β₁`; it does not
-   enumerate native cohomology-operation gates, because cup products are unbuilt.
+4. **The gate catalogue is absent.** The example counts logical qubits from `β₁` and can evaluate
+   individual `CZ`-class gates now that the cup product ships, but it does not enumerate the
+   *inventory* of independently addressable generators. That needs the higher cup products of
+   `SPEC-T3` and the duality bookkeeping with them.
 5. **No decoder, no noise, no threshold.** Nothing here is a statement about logical error rates.
 6. **The toric code is a demonstration, not a contribution.** Its parameters are textbook. What the
    example shows is that they fall out of a general complex rather than out of code-specific

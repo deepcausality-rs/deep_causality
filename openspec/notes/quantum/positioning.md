@@ -236,7 +236,7 @@ already been chosen.
 | C5 provenance | The log channel records what a step rested on; the Effect Ethos gates an action on it | **[ships]** as channels; **[planned]** as a worked audit trail |
 | C6 mixed relata | One hypergraph holds classical and quantum nodes, joined by the same hyperedges | **[ships]** structurally; the classical intervention calculus is **[planned]** (`deep_causality_do_calculus`) |
 | C2 correlated noise | Complete common cause has an operator form (Allen et al. 2017): factorization into pairwise-commuting Choi factors. The freeze gate tests exactly that | **[ships]** as the check; the decoder is **[planned]** (Track D) |
-| E1 topology | The Haruna gates are the first rung; cup products, Steenrod squares and the Betti gate catalogue are specified | **[ships]** in part; **[planned]** for the catalogue |
+| E1 topology | The Haruna gates and the **cup product** they are built from both run: binary and `n`-fold, generic over `ChainComplex`, simplicial and cubical. Steenrod squares and the Betti gate catalogue remain specified | **[ships]** through the cup product; **[planned]** for the catalogue |
 | E2 indefinite order | The hypergraph is order-neutral and admits cyclic structure; superposition of orders needs a linear carrier | **[open]**, stated as out of scope |
 | E3 safety cases | Quantum sensors feeding classical fusion under a deontic gate; the navigation link | **[planned]** |
 | E4 advantage qualification | Counterfactual value attribution with SURD, then kernel extraction and resource estimation | **[planned]** |
@@ -311,6 +311,13 @@ Two things must be said in the same breath, every time, because QEC reviewers po
 Within those bounds this is a real capability, and it is the avenue with the shortest path to a
 result P1 cares about: the homology-class invariance Haruna proves is a *check*, and this codebase
 turns checks into freeze-time gates for a living.
+
+As of 2026-08-21 the operation beneath the gates also runs. `deep_causality_topology` carries the
+cup product, generic over `ChainComplex` rather than specialised to lattices, which is what lets an
+arbitrary CSS code be asked what it natively supports. The roadmap had recorded a branching
+structure as the keystone blocking this; the audit found it already present in both cell families,
+so the rung cost documentation rather than construction. What remains above it is `SPEC-T3`, the
+higher cup products, and the catalogue they feed.
 
 ### 4.3 Avenue three: the freeze gate
 
@@ -409,6 +416,13 @@ On the reference machine (Apple M3 Max, 16 cores, 128 GB):
   Hermitian eigendecomposition.
 - **Six Haruna logical gates** on the gauge-field construction, with typed failure on overflow and
   non-convergence.
+- In `deep_causality_topology`, the **cup product** those gates are built from: binary and `n`-fold,
+  generic over any `ChainComplex` whose cells split, covering the simplicial (Alexander–Whitney) and
+  cubical (Serre) families. Pinned by the Leibniz identity against the crate's own coboundary
+  operators, associativity, graded commutativity on cohomology, the `H¹ × H¹ → H²` torus pairing
+  (`±L²`) and the 3-torus triple product (`L³`). 72 tests, whose expectations were fixed before the
+  implementation existed and cross-checked against an independent reference in exact rational
+  arithmetic.
 - Two freeze-time gates: quantum Markov commutativity, C₃-exclusion faithfulness.
 - An orthomodular projection lattice as a `Verdict` carrier, with Born read-out to `Prob`.
 - Seven runnable quantum examples: the freeze check, error correction by history rewind,
