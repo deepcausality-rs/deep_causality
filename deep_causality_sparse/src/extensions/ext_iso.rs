@@ -39,6 +39,8 @@
 //! `RingIso`, etc. would not type-check. The base `Iso<S, T>` is the
 //! right surface.
 
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::CsrMatrix;
 use core::fmt;
 use deep_causality_algebra::iso::witness::Iso;
@@ -69,7 +71,7 @@ impl fmt::Display for CsrFromTensorError {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for CsrFromTensorError {}
+impl core::error::Error for CsrFromTensorError {}
 
 // =============================================================================
 // Forward (Tier 1): CausalTensor<F> -> CsrMatrix<F> via TryFrom

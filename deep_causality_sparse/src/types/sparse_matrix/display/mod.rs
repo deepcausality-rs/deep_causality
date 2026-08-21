@@ -5,13 +5,13 @@
 
 use crate::CsrMatrix;
 use deep_causality_num::Zero;
-use std::fmt::Display;
+use core::fmt::Display;
 
 impl<T> Display for CsrMatrix<T>
 where
     T: Display + Copy + Zero + PartialEq, // Added Zero and PartialEq for get_value_at
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let (rows, cols) = self.shape;
         if rows == 0 || cols == 0 {
             return write!(f, "CsrMatrix ({}x{}) [Empty]", rows, cols);

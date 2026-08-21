@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 mod algebra;
 mod api;
 mod arithmetic;
@@ -250,7 +253,7 @@ where
 
 impl<T> CsrMatrix<T>
 where
-    T: Clone + PartialEq + std::ops::Add<Output = T>,
+    T: Clone + PartialEq + core::ops::Add<Output = T>,
 {
     /// Creates a new `CsrMatrix` from a list of `(row, col, value)` triplets, using an explicit zero value.
     ///
@@ -349,7 +352,7 @@ where
     /// * `zero` - The value to treat as zero.
     pub fn add_with_zero(&self, other: &Self, zero: T) -> Result<Self, SparseMatrixError>
     where
-        T: std::ops::Add<Output = T>,
+        T: core::ops::Add<Output = T>,
     {
         self.add_matrix_with_zero_impl(other, zero)
     }

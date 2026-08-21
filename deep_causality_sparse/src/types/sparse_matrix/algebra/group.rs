@@ -3,14 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::CsrMatrix;
 use deep_causality_algebra::AbelianGroup;
-use std::ops::Sub;
+use core::ops::Sub;
 
 // AbelianGroup for CsrMatrix
 impl<T> AbelianGroup for CsrMatrix<T>
 where
-    T: AbelianGroup + Copy + std::ops::Neg<Output = T> + Default + PartialEq,
+    T: AbelianGroup + Copy + core::ops::Neg<Output = T> + Default + PartialEq,
 {
     // Marker trait, no methods needed here.
 }
@@ -62,7 +65,7 @@ where
 
 impl<T> CsrMatrix<T>
 where
-    T: AbelianGroup + Copy + std::ops::Neg<Output = T>,
+    T: AbelianGroup + Copy + core::ops::Neg<Output = T>,
 {
     /// Element-wise negation.
     pub fn neg(&self) -> Self {

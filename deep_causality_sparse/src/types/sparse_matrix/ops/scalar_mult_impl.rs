@@ -3,8 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 use crate::CsrMatrix;
-use std::ops::Mul;
+use core::ops::Mul;
 
 impl<T> CsrMatrix<T> {
     /// Performs scalar multiplication: \( B = s \cdot A \).

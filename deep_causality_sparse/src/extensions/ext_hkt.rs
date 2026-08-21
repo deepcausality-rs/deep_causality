@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::CsrMatrix;
 use deep_causality_haft::{
     Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Satisfies,

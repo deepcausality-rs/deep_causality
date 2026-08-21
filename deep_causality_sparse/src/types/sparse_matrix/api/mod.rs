@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec::Vec;
 use crate::{CsrMatrix, SparseMatrixError};
 use deep_causality_num::{One, Zero};
-use std::ops::{Mul, Sub};
+use core::ops::{Mul, Sub};
 
 impl<T> CsrMatrix<T>
 where
