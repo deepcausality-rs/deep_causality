@@ -4,7 +4,7 @@
  */
 
 use crate::Metric;
-use std::hash::{Hash, Hasher};
+use core::hash::{Hash, Hasher};
 
 impl Hash for Metric {
     fn hash<H: Hasher>(&self, state: &mut H) {
