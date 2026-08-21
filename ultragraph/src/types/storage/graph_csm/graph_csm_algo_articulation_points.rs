@@ -12,6 +12,8 @@
 
 use crate::types::storage::graph_csm::graph_csm_biconnectivity_common::build_symmetric_adjacency;
 use crate::{CsmGraph, GraphError, GraphView};
+use alloc::vec;
+use alloc::vec::Vec;
 
 const NO_PARENT_EDGE: usize = usize::MAX;
 

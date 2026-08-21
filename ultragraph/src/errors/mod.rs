@@ -5,8 +5,10 @@
 
 #![forbid(unsafe_code)]
 
-use std::error::Error;
-use std::fmt;
+use alloc::string::String;
+
+use core::error::Error;
+use core::fmt;
 
 pub mod graph_error;
 

@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{GraphError, GraphView};
+use alloc::vec::Vec;
 
 pub trait TopologicalGraphAlgorithms<N, W>: GraphView<N, W> {
     /// Finds a single cycle in the graph and returns the path of nodes that form it.

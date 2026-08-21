@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::{CentralityGraphAlgorithms, CsmGraph, GraphError, GraphView};
-use std::collections::HashSet;
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 impl<N, W> CentralityGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
@@ -195,9 +197,12 @@ where
                 for &neighbor in &self.backward_edges.targets[start_bwd..end_bwd] {
                     neighbors_to_process.push(neighbor);
                 }
-                // Use HashSet for efficient deduplication
-                let unique_neighbors: HashSet<usize> = neighbors_to_process.drain(..).collect();
-                neighbors_to_process.extend(unique_neighbors);
+                // Deduplicate in place. Sorting first makes the neighbour order
+                // deterministic; the previous `HashSet` round-trip inherited
+                // `RandomState`'s per-process seed, so the traversal order varied
+                // between runs.
+                neighbors_to_process.sort_unstable();
+                neighbors_to_process.dedup();
             }
 
             for &w in &neighbors_to_process {

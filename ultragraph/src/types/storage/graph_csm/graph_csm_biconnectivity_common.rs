@@ -21,8 +21,10 @@
 //! components (e.g., two parallel edges between `u` and `v` are not a bridge,
 //! but a collapsed single edge would be).
 
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::{CsmGraph, GraphView};
-use std::collections::HashMap;
+use alloc::collections::BTreeMap;
 
 /// Symmetric CSR adjacency over the undirected view of a `CsmGraph`.
 ///
@@ -53,7 +55,7 @@ where
     // are genuine parallel multi-edges. This rule is consistent with
     // `parallel_directed_edges_canonicalized_to_min_max` (anti-parallel pair
     // -> one undirected edge) and preserves multigraph semantics.
-    let mut counts: HashMap<(usize, usize), (usize, usize)> = HashMap::new();
+    let mut counts: BTreeMap<(usize, usize), (usize, usize)> = BTreeMap::new();
     for u in 0..n {
         let start = g.forward_edges.offsets[u];
         let end = g.forward_edges.offsets[u + 1];

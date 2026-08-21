@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 pub trait GraphView<N, W> {
     // State Inspection
     fn is_frozen(&self) -> bool;

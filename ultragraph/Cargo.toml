@@ -28,6 +28,12 @@ exclude = [
     "papers/*",
 ]
 
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+no-std = ["alloc"]
+
 [dev-dependencies]
 criterion = {  version = "0.8" }
 deep_causality_rand = { path = "../deep_causality_rand" }

@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::types::storage::graph_csm::CsrAdjacency;
 use crate::{CsmGraph, DynamicGraph, Freezable, GraphView};
 
@@ -265,7 +268,7 @@ where
     let mut next_weights = &mut weights_buffer[..];
 
     // Process the `usize` keys 8 bits (1 byte) at a time.
-    for i in 0..std::mem::size_of::<usize>() {
+    for i in 0..core::mem::size_of::<usize>() {
         let shift = i * 8;
 
         // 1. Counting pass: Count occurrences of each byte value in the current data.
@@ -289,14 +292,14 @@ where
 
             next_targets[write_pos] = target;
             // Use mem::take to move the weight without cloning, preserving data.
-            next_weights[write_pos] = std::mem::take(&mut current_weights[j]);
+            next_weights[write_pos] = core::mem::take(&mut current_weights[j]);
 
             offsets[key] += 1;
         }
 
         // 4. Swap buffers: The `next` buffer is now the `current` for the next pass.
-        std::mem::swap(&mut current_targets, &mut next_targets);
-        std::mem::swap(&mut current_weights, &mut next_weights);
+        core::mem::swap(&mut current_targets, &mut next_targets);
+        core::mem::swap(&mut current_weights, &mut next_weights);
     }
 
     // After all passes, the data is fully sorted. Because we swap an even number

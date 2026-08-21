@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{GraphError, GraphView};
+use alloc::vec::Vec;
 
 pub trait CentralityGraphAlgorithms<N, W>: GraphView<N, W> {
     /// Calculates the betweenness centrality of each node in the graph.
