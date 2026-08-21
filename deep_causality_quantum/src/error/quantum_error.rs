@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::string::String;
+use alloc::format;
+
 use core::fmt::{Debug, Display, Formatter};
 use deep_causality_core::{CausalityError, CausalityErrorEnum};
 

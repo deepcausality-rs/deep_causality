@@ -11,6 +11,8 @@
 //! not linear-in-depth). It is sound (never accepts a non-commuting model) and
 //! MAY be incomplete.
 
+use alloc::vec::Vec;
+use alloc::format;
 use crate::QuantumError;
 use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
@@ -18,8 +20,8 @@ use crate::types::qgates::operator_linalg::{embed_on_legs, frobenius_norm, matri
 use deep_causality::{CausableGraph, CausalityGraphError};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
-use std::cell::RefCell;
-use std::collections::BTreeSet;
+use core::cell::RefCell;
+use alloc::collections::BTreeSet;
 
 /// The orphan-rule-legal bridge from the crate-local [`QuantumError`] into the
 /// engine's `CausalityGraphError`, so a quantum freeze hook can surface a
@@ -42,7 +44,7 @@ impl From<QuantumError> for CausalityGraphError {
 pub struct CommutatorTolerance<R: RealField> {
     safety_factor: R,
     unit_roundoff: R,
-    budgets: std::collections::BTreeMap<usize, R>,
+    budgets: alloc::collections::BTreeMap<usize, R>,
 }
 
 impl<R: RealField + FromPrimitive> Default for CommutatorTolerance<R> {
@@ -50,7 +52,7 @@ impl<R: RealField + FromPrimitive> Default for CommutatorTolerance<R> {
         Self {
             safety_factor: R::from_f64(8.0).unwrap_or_else(R::one),
             unit_roundoff: R::epsilon(),
-            budgets: std::collections::BTreeMap::new(),
+            budgets: alloc::collections::BTreeMap::new(),
         }
     }
 }

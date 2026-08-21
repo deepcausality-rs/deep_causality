@@ -17,6 +17,9 @@
 //! Reichenbach's principle" (2022); M.-D. Choi, "Completely positive linear
 //! maps on complex matrices", Linear Algebra Appl. 10 (1975) 285–290.
 
+use alloc::vec;
+use alloc::vec::Vec;
+use alloc::format;
 use crate::QuantumError;
 use crate::types::qgates::operator_linalg::{
     hermiticity_defect, identity_matrix, partial_trace, square_dim,

@@ -30,7 +30,15 @@ publish = false
 all-features = true
 
 [features]
-default = []
+default = ["std", "qcm"]
+std = ["alloc", "deep_causality_algebra/std", "deep_causality_core/std", "deep_causality_haft/std", "deep_causality_metric/std", "deep_causality_multivector/std", "deep_causality_num/std", "deep_causality_num_complex/std", "deep_causality_tensor/std"]
+alloc = []
+no-std = ["alloc", "deep_causality_algebra/no-std", "deep_causality_core/no-std", "deep_causality_haft/no-std", "deep_causality_metric/no-std", "deep_causality_multivector/no-std", "deep_causality_num/no-std", "deep_causality_num_complex/no-std", "deep_causality_tensor/no-std"]
+
+# The quantum causal-model slice: CausalStructure, the Markov freeze check and the
+# C3-exclusion faithfulness check. Pulls in `deep_causality` for the causal graph,
+# which is std-only, so this is off on bare-metal builds.
+qcm = ["dep:deep_causality"]
 # The emergent QPU seam: QpuSampler / ShotHistogram / the shots→Uncertain
 # bridges / qpu_effect / the in-process SimQpu. Off by default; adds no
 # network or async dependency.
@@ -39,38 +47,47 @@ qpu = ["dep:deep_causality_uncertain"]
 [dependencies.deep_causality]
 path = "../deep_causality"
 version = "0.15"
+optional = true
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
 version = "0.2"
+default-features = false
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
 version = "0.11.1"
+default-features = false
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
 version = "0.4"
+default-features = false
 
 [dependencies.deep_causality_metric]
 path = "../deep_causality_metric"
 version = "0.2"
+default-features = false
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
 version = "0.5"
+default-features = false
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.4"
+default-features = false
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
 version = "0.1"
+default-features = false
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
 version = "0.5"
+default-features = false
 
 [dependencies.deep_causality_uncertain]
 path = "../deep_causality_uncertain"

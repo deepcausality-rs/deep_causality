@@ -8,12 +8,14 @@
 //! `LambdaEdges` (R3). `σ` is **static freeze-time decoration**, consulted only
 //! at the freeze boundary; it never rides the runtime STATE channel.
 
+use alloc::vec::Vec;
+use alloc::format;
 use crate::QuantumError;
 use deep_causality::CausableGraph;
 use deep_causality_algebra::RealField;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
-use std::collections::{BTreeMap, BTreeSet};
+use alloc::collections::{BTreeMap, BTreeSet};
 
 /// A single Choi–Jamiołkowski factor `ρ_{Aᵢ|Pa(Aᵢ)}` — a complex matrix on the
 /// composite Hilbert space of node `Aᵢ` and its parents.

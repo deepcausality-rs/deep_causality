@@ -20,6 +20,8 @@
 //!   conjugation** (grade involution ∘ reversion) + coefficient conjugation
 //!   is the metric-correct adjoint.
 
+use alloc::vec::Vec;
+use alloc::format;
 use crate::{QuantumError, QuantumOps};
 use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, HilbertState, MultiVector};

@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::format;
+
 use crate::QuantumError;
 use crate::types::qgates::bridge::metric_adjoint;
 use crate::types::qgates::gates_haruna;

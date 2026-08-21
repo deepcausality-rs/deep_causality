@@ -8,6 +8,9 @@
 //! as inert input so both an in-process simulator and a future cloud adapter
 //! satisfy the same `QpuSampler` trait.
 
+use alloc::vec;
+use alloc::vec::Vec;
+use alloc::format;
 use crate::QuantumError;
 
 /// A single reified gate over the migrated gate alphabet. Plain data — no

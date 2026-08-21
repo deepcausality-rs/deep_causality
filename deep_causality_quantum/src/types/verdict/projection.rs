@@ -17,6 +17,8 @@
 //! meet/join. Verdicts are extracted from operators at the measurement boundary
 //! (see [`crate::verdict::born`]).
 
+use alloc::vec;
+use alloc::format;
 use crate::QuantumError;
 use crate::types::qgates::operator_linalg::{hermiticity_defect, identity_matrix, square_dim};
 use deep_causality_algebra::{RealField, Verdict};
