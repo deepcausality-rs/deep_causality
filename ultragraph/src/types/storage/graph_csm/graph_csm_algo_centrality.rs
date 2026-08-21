@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec;
-use alloc::vec::Vec;
 use crate::{CentralityGraphAlgorithms, CsmGraph, GraphError, GraphView};
 use alloc::collections::VecDeque;
+use alloc::vec;
+use alloc::vec::Vec;
 
 impl<N, W> CentralityGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
