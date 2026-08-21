@@ -79,7 +79,9 @@ fn cross_stream_energy(
 ) -> f64 {
     let vv = manifold.sharp(state.as_one_form()).unwrap();
     vv.as_slice()
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|c| 0.5 * c[1] * c[1])
         .sum()
 }

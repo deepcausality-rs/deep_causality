@@ -19,7 +19,7 @@ fn test_index_error_debug() {
     let err = IndexError(msg.to_string());
     let dbg = format!("{err:?}");
     let expected = String::from("IndexError(\"index out of bounds\")");
-    assert_eq!(format!("{dbg}"), expected);
+    assert_eq!(dbg, expected);
 }
 
 #[test]

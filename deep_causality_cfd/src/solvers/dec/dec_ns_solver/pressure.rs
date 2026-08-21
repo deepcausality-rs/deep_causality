@@ -66,7 +66,9 @@ impl<const D: usize, R: DecNsScalar> DecNsSolver<'_, D, R> {
             .expect("0.5 lifts into R");
         let kinetic: Vec<R> = vertex_vectors
             .as_slice()
-            .chunks_exact(D)
+            .as_chunks::<D>()
+            .0
+            .iter()
             .map(|v| v.iter().fold(R::zero(), |acc, x| acc + *x * *x) * half)
             .collect();
 

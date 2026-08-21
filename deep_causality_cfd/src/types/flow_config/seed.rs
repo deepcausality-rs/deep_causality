@@ -73,7 +73,7 @@ impl Seed {
             Seed::UniformX { speed } => {
                 let s = R::from_f64(*speed).expect("the seed speed lifts into every real field");
                 let mut v = vec![R::zero(); D * n0];
-                for chunk in v.chunks_exact_mut(D) {
+                for chunk in v.as_chunks_mut::<D>().0 {
                     chunk[0] = s;
                 }
                 v
