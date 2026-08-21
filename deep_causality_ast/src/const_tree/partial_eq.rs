@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::ConstTree;
-use std::sync::Arc;
+use alloc::sync::Arc;
 
 // Allow comparing trees for equality if their values can be compared.
 impl<T: PartialEq> PartialEq for ConstTree<T> {

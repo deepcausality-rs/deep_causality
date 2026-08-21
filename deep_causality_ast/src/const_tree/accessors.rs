@@ -4,8 +4,8 @@
  */
 
 use crate::ConstTree;
-use std::collections::VecDeque;
-use std::sync::Arc;
+use alloc::collections::VecDeque;
+use alloc::sync::Arc;
 
 impl<T> ConstTree<T> {
     /// Returns a reference to the value stored at the root of the tree.

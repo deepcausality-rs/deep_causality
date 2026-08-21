@@ -4,7 +4,7 @@
  */
 
 use crate::ConstTree;
-use std::fmt;
+use core::fmt;
 
 impl<T: fmt::Display> fmt::Display for ConstTree<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -3,8 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::ConstTree;
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 
 impl<T> ConstTree<T> {
     /// Returns an iterator that traverses the tree's values in pre-order (root, then children).
@@ -96,7 +99,7 @@ impl<'a, T> Iterator for PreOrderNodeIter<'a, T> {
 /// An iterator that traverses a `ConstTree` in post-order (children, then root).
 /// It maintains a stack containing tuples of a node and an iterator over its children.
 pub struct PostOrderIter<'a, T> {
-    stack: Vec<(&'a ConstTree<T>, std::slice::Iter<'a, ConstTree<T>>)>,
+    stack: Vec<(&'a ConstTree<T>, core::slice::Iter<'a, ConstTree<T>>)>,
 }
 
 impl<'a, T> PostOrderIter<'a, T> {

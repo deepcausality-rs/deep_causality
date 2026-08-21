@@ -2,6 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::ConstTree;
 
 /// An iterator that consumes a `ConstTree` and yields its values.
@@ -16,7 +19,7 @@ impl<T: Clone> Iterator for IntoIter<T> {
     fn next(&mut self) -> Option<Self::Item> {
         let tree = self.stack.pop()?;
 
-        match std::sync::Arc::try_unwrap(tree.node) {
+        match alloc::sync::Arc::try_unwrap(tree.node) {
             Ok(node) => {
                 self.stack.extend(node.children.into_iter().rev());
                 Some(node.value)

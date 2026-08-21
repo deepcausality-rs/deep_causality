@@ -25,5 +25,11 @@ exclude = [
     "papers/*",
 ]
 
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+no-std = ["alloc"]
+
 [lints]
 workspace = true
