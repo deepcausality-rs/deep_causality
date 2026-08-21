@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::error::Error;
+
+use alloc::string::String;
+use core::error::Error;
 
 /// Specific errors that can occur during EinSum AST validation or execution.
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
@@ -19,8 +21,8 @@ pub enum EinSumValidationError {
     RankMismatch { expected: usize, found: usize },
 }
 
-impl std::fmt::Display for EinSumValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for EinSumValidationError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             EinSumValidationError::InvalidNumberOfChildren { expected, found } => {
                 write!(

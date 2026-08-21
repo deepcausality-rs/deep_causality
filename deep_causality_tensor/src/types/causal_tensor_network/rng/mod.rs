@@ -20,6 +20,7 @@
 //! previous `(z >> 11) / 2^53` mapping — the change is transparent at `f64` and only *adds* precision
 //! at higher-precision scalars.
 
+use alloc::vec::Vec;
 use deep_causality_algebra::{ConjugateScalar, Real, Scalar};
 use deep_causality_num::{FromPrimitive, One, Zero};
 

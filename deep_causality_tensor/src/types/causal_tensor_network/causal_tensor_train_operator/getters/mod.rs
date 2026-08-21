@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 use crate::CausalTensor;
 use crate::types::causal_tensor_network::causal_tensor_train_operator::CausalTensorTrainOperator;
 use crate::types::causal_tensor_network::truncation::Truncation;

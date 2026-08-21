@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::CausalTensor;
 use deep_causality_haft::{Foldable, Functor, HKT, Pure, Satisfies};
 use deep_causality_num_complex::Complex;

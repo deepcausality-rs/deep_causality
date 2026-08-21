@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 mod algebra;
 mod api;
 mod construct;

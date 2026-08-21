@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::rng::gaussian_vec;
 use crate::types::causal_tensor_network::truncation::{RoundStrategy, Truncation};

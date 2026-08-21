@@ -2,12 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::Tensor;
 use crate::{CausalTensor, CausalTensorError};
 use deep_causality_algebra::RealField;
 use deep_causality_num::Zero;
-use std::iter::Sum;
-use std::ops::{Add, Div, Mul};
+use core::iter::Sum;
+use core::ops::{Add, Div, Mul};
 
 impl<T> CausalTensor<T>
 where

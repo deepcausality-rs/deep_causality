@@ -3,6 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+
 // `get_ref` and `set` are crate-private helpers (used by `inverse_impl`), so
 // their error branches can only be exercised from within the crate.
 

@@ -2,9 +2,14 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec;
+use alloc::vec::Vec;
+use alloc::format;
+use alloc::string::ToString;
 use crate::Tensor;
 use crate::{CausalTensor, CausalTensorError, EinSumAST, EinSumValidationError};
-use std::ops::{Add, Mul};
+use core::ops::{Add, Mul};
 
 impl<T> CausalTensor<T>
 where

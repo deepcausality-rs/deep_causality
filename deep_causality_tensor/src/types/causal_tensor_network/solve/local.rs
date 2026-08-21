@@ -3,6 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+use alloc::string::ToString;
+
 use crate::TensorTrain;
 use crate::traits::tensor_train_operator::TensorTrainOperator;
 use crate::types::causal_tensor::sym_eig;

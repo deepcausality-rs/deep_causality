@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+
 use crate::CausalTensor;
 use crate::extensions::ext_hkt_strict::StrictCausalTensorWitness;
 use deep_causality_haft::{Foldable, Functor, Pure};

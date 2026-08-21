@@ -4,7 +4,7 @@
  */
 use crate::Tensor;
 use crate::{CausalTensor, CausalTensorError, EinSumAST, EinSumOp};
-use std::ops::{Add, Mul};
+use core::ops::{Add, Mul};
 
 impl<T> CausalTensor<T>
 where

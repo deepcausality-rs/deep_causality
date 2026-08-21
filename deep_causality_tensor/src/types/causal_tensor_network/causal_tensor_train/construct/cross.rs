@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
