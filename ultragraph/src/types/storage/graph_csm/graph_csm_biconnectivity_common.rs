@@ -84,13 +84,6 @@ where
             canonical.push((a, b));
         }
     }
-    // TEMP-PROBE: was canonical already sorted before the sort call?
-    {
-        let already = canonical.is_sorted();
-        if !already {
-            panic!("PROBE: canonical NOT already sorted, len={}", canonical.len());
-        }
-    }
     // Sort to make edge_id assignment deterministic regardless of CSR layout.
     canonical.sort_unstable();
 
