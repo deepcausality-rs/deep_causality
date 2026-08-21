@@ -48,6 +48,7 @@ pub use crate::traits::manifold_topology::ManifoldTopology;
 pub use crate::traits::mixed_graph_topology::MixedGraphTopology;
 pub use crate::traits::neighborhood::{CellId, Neighborhood};
 pub use crate::traits::simplicial_topology::SimplicialTopology;
+pub use crate::types::lattice_complex::cell_splitting::axis_mask;
 pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
     BoundaryWitness, ExteriorDerivativeWitness, StokesAdjunction, StokesContext,
 };

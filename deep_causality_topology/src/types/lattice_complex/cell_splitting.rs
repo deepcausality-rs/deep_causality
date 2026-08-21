@@ -9,18 +9,24 @@ use crate::traits::cell_splitting::{CellLayout, CellSplit, SplittableCell};
 use crate::types::lattice_complex::lattice_cell::LatticeCell;
 
 /// The orientation bitmask for a set of axis indices.
-fn axis_mask(axes: &[usize]) -> u32 {
+///
+/// This is the single source of truth for the `(axes) -> orientation` mapping.
+/// Test fixtures build cells the same way through
+/// [`utils_tests`](crate::utils_tests), which re-exports this rather than
+/// keeping a second copy.
+pub fn axis_mask(axes: &[usize]) -> u32 {
     axes.iter().fold(0u32, |m, &a| m | (1 << a))
 }
 
-/// `sgn` of the permutation carrying the cell's ascending axes to
-/// `(S_alpha ascending, then S_beta ascending)`, counted as inversions.
-fn shuffle_sign(left: &[usize], right: &[usize]) -> i8 {
-    let inversions: usize = left
-        .iter()
+/// The number of inversions between two ascending axis sets: pairs
+/// `(i, j)` with `i` in `left`, `j` in `right` and `j < i`.
+///
+/// Its parity is the shuffle sign of the permutation carrying the cell's
+/// ascending axes to `(left ascending, then right ascending)`.
+fn inversions(left: &[usize], right: &[usize]) -> usize {
+    left.iter()
         .map(|&i| right.iter().filter(|&&j| j < i).count())
-        .sum();
-    if inversions.is_multiple_of(2) { 1 } else { -1 }
+        .sum()
 }
 
 impl<const D: usize> SplittableCell for LatticeCell<D> {
@@ -87,10 +93,10 @@ impl<const D: usize> SplittableCell for LatticeCell<D> {
                 }
             }
 
-            terms.push(CellSplit::new(
+            terms.push(CellSplit::from_parity(
                 LatticeCell::new(base, axis_mask(&left_axes)),
                 LatticeCell::new(right_pos, axis_mask(&right_axes)),
-                shuffle_sign(&left_axes, &right_axes),
+                inversions(&left_axes, &right_axes),
             ));
         }
         terms

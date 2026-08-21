@@ -6,10 +6,17 @@
 use crate::Simplex;
 
 impl Simplex {
-    /// The simplex's vertex indices, **strictly increasing and without repeats**.
+    /// The simplex's vertex indices, in **non-decreasing order**.
     ///
-    /// Every construction path preserves this: [`Simplex::new`] sorts its input,
-    /// and internally generated faces are built from an already-sorted parent.
+    /// Every construction path preserves the ordering: [`Simplex::new`] sorts its
+    /// input, and internally generated faces are built from an already-sorted
+    /// parent. For a well-formed simplex, whose vertices are distinct, the order
+    /// is therefore strictly increasing.
+    ///
+    /// **`Simplex::new` does not deduplicate.** A caller passing a repeated index
+    /// gets a degenerate simplex, and that is the caller's to avoid. It is not a
+    /// hazard for the cup product: a split of such a simplex yields a face that
+    /// no complex contains, so its lookup misses and the term contributes zero.
     ///
     /// This ordering is not incidental. It is the *branching structure* the cup
     /// product is defined against: the Alexander–Whitney split of a `(p+q)`-simplex

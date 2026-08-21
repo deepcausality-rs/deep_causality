@@ -86,6 +86,22 @@ fn simplex_split_beyond_its_dimension_is_empty() {
 }
 
 #[test]
+fn split_at_the_maximum_left_dim_is_empty_not_a_panic() {
+    // Guards against `left_dim + 1` overflowing: in release that wraps to zero
+    // and the guard would let an out-of-bounds slice through.
+    assert!(
+        Simplex::new(vec![0, 1, 2])
+            .split(usize::MAX, None)
+            .is_empty()
+    );
+    assert!(
+        LatticeCell::<2>::new([0, 0], axis_mask(&[0, 1]))
+            .split(usize::MAX, None)
+            .is_empty()
+    );
+}
+
+#[test]
 fn simplex_split_ignores_the_layout() {
     let s = Simplex::new(vec![0, 1, 2]);
     let layout = torus_layout(2, 4);
@@ -111,15 +127,38 @@ fn zero_simplex_splits_into_itself() {
 }
 
 #[test]
-fn simplex_construction_yields_strictly_increasing_vertices() {
-    for raw in [vec![2, 0, 1], vec![5, 5, 1], vec![9], vec![3, 1, 2, 0]] {
+fn simplex_construction_sorts_its_vertices() {
+    // The guarantee the cup product rests on is the ordering. Distinct inputs
+    // therefore come back strictly increasing.
+    for raw in [vec![2, 0, 1], vec![9], vec![3, 1, 2, 0]] {
         let s = Simplex::new(raw.clone());
         let v = s.vertices();
         assert!(
-            v.windows(2).all(|w| w[0] <= w[1]),
-            "not sorted for {raw:?}: {v:?}"
+            v.windows(2).all(|w| w[0] < w[1]),
+            "distinct input {raw:?} should be strictly increasing, got {v:?}"
         );
     }
+}
+
+#[test]
+fn simplex_construction_sorts_but_does_not_deduplicate() {
+    // The documented invariant is non-decreasing order, not uniqueness. A
+    // repeated index survives, which is the caller's to avoid.
+    let s = Simplex::new(vec![5, 5, 1]);
+    assert_eq!(s.vertices(), &vec![1, 5, 5], "sorted, duplicate retained");
+    assert!(s.vertices().windows(2).all(|w| w[0] <= w[1]));
+}
+
+#[test]
+fn a_degenerate_simplex_splits_without_panicking() {
+    // A split of a repeated-vertex simplex yields a face no complex contains,
+    // so the cup product's lookup misses and the term contributes zero. What
+    // matters here is that the split itself stays total.
+    let s = Simplex::new(vec![5, 5, 1]);
+    let terms = s.split(1, None);
+    assert_eq!(terms.len(), 1);
+    assert_eq!(terms[0].left(), &Simplex::new(vec![1, 5]));
+    assert_eq!(terms[0].right(), &Simplex::new(vec![5, 5]));
 }
 
 // ---------------------------------------------------------------------------
@@ -407,7 +446,7 @@ fn lattice_cell_corner_order_is_the_documented_one() {
 #[test]
 fn cell_split_exposes_its_parts() {
     let (l, r) = (Simplex::new(vec![0, 1]), Simplex::new(vec![1, 2]));
-    let t = CellSplit::new(l.clone(), r.clone(), -1);
+    let t = CellSplit::negative(l.clone(), r.clone());
     assert_eq!(t.left(), &l);
     assert_eq!(t.right(), &r);
     assert_eq!(t.sign(), -1);
@@ -416,8 +455,35 @@ fn cell_split_exposes_its_parts() {
 #[test]
 fn cell_split_into_parts_round_trips() {
     let (l, r) = (Simplex::new(vec![0, 1]), Simplex::new(vec![1, 2]));
-    let (a, b, s) = CellSplit::new(l.clone(), r.clone(), 1).into_parts();
+    let (a, b, s) = CellSplit::positive(l.clone(), r.clone()).into_parts();
     assert_eq!((a, b, s), (l, r, 1));
+}
+
+#[test]
+fn cell_split_sign_is_always_a_unit() {
+    // There is no constructor taking an arbitrary i8, so a stray 0 cannot
+    // annihilate a term and no other magnitude can be read as a unit.
+    let (l, r) = (Simplex::new(vec![0, 1]), Simplex::new(vec![1, 2]));
+    assert_eq!(CellSplit::positive(l.clone(), r.clone()).sign(), 1);
+    assert_eq!(CellSplit::negative(l.clone(), r.clone()).sign(), -1);
+    for inv in 0..6usize {
+        let sign = CellSplit::from_parity(l.clone(), r.clone(), inv).sign();
+        assert_eq!(sign, if inv % 2 == 0 { 1 } else { -1 });
+    }
+}
+
+#[test]
+fn every_split_a_shipped_cell_family_produces_carries_a_unit_sign() {
+    let layout = torus_layout(3, 4);
+    let cell = LatticeCell::<3>::new([0, 0, 0], axis_mask(&[0, 1, 2]));
+    for d in 0..=3 {
+        for t in cell.split(d, Some(&layout)) {
+            assert!(t.sign() == 1 || t.sign() == -1, "left_dim {d}");
+        }
+    }
+    for t in Simplex::new(vec![0, 1, 2, 3]).split(2, None) {
+        assert_eq!(t.sign(), 1);
+    }
 }
 
 #[test]

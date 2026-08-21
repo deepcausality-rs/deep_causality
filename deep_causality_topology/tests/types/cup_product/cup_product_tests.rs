@@ -578,3 +578,48 @@ fn degree_zero_cup_acts_by_the_leading_vertex() {
     let out = cup_product(&c, &f, 0, &b, 1).expect("cup");
     assert_eq!(out[e[&Simplex::new(vec![0, 1])]], 24.0, "f([0]) * b([0,1])");
 }
+
+// --------------------------------------------------------------------------
+// Grade-contract edge cases
+// --------------------------------------------------------------------------
+
+#[test]
+fn degree_sum_that_overflows_is_rejected() {
+    // The degrees are caller-supplied. An overflowing sum would panic in debug
+    // and wrap in release, the wrapped value then passing the dimension check.
+    let c = tetrahedron();
+    let a = pseudo_cochain(c.num_cells(1), 1);
+    let b = pseudo_cochain(c.num_cells(1), 2);
+    assert!(cup_product(&c, &a, usize::MAX, &b, 1).is_err());
+    assert!(cup_product(&c, &a, 1, &b, usize::MAX).is_err());
+}
+
+#[test]
+fn n_fold_rejects_a_first_factor_above_the_maximum_dimension() {
+    // A degree above the complex's dimension has zero cells, so an empty
+    // cochain there passes the length check. With a single factor the binary
+    // path is never reached, so the grade contract has to be enforced here too,
+    // or the two APIs would disagree on the same request.
+    let c = LatticeComplex::<2, f64>::square_torus(3);
+    let empty: Vec<f64> = Vec::new();
+    assert_eq!(c.num_cells(99), 0, "the degree really does have no cells");
+    assert!(
+        cup_product_n(&c, &[(empty.as_slice(), 99)]).is_err(),
+        "single factor above max_dim must be rejected"
+    );
+}
+
+#[test]
+fn the_two_apis_agree_on_an_out_of_range_degree() {
+    // Whatever the answer is, `cup_product` and `cup_product_n` must give it.
+    let c = LatticeComplex::<2, f64>::square_torus(3);
+    let empty: Vec<f64> = Vec::new();
+    let a = pseudo_cochain(c.num_cells(0), 5);
+    let binary = cup_product(&c, &empty, 99, &a, 0).is_err();
+    let nfold = cup_product_n(&c, &[(empty.as_slice(), 99), (a.as_slice(), 0)]).is_err();
+    assert_eq!(
+        binary, nfold,
+        "binary and n-fold disagree on the grade contract"
+    );
+    assert!(binary);
+}

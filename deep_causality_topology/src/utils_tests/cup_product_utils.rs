@@ -9,6 +9,8 @@
 //! compiles its sources independently and cannot reach a helper module in the
 //! test tree, while the whole `src` tree is available during testing.
 
+pub use crate::types::lattice_complex::cell_splitting::axis_mask;
+
 use crate::traits::cell_splitting::CellLayout;
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
@@ -29,11 +31,6 @@ pub fn layout_of(shape: &[usize], periodic: &[bool]) -> CellLayout {
 /// A fully open (non-periodic) layout, so no position wraps.
 pub fn open_layout(d: usize, l: usize) -> CellLayout {
     (vec![l; d], vec![false; d])
-}
-
-/// The orientation bitmask for a set of axis indices.
-pub fn axis_mask(axes: &[usize]) -> u32 {
-    axes.iter().fold(0u32, |m, &a| m | (1 << a))
 }
 
 /// A single tetrahedron: a hand-built, non-lattice complex, so tests exercise

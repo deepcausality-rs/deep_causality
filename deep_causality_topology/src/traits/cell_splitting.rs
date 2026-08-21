@@ -54,9 +54,35 @@ pub struct CellSplit<C> {
 }
 
 impl<C> CellSplit<C> {
-    /// A split term pairing `left` with `right` under `sign`.
-    pub fn new(left: C, right: C, sign: i8) -> Self {
-        Self { left, right, sign }
+    /// A split term pairing `left` with `right` with sign `+1`.
+    pub fn positive(left: C, right: C) -> Self {
+        Self {
+            left,
+            right,
+            sign: 1,
+        }
+    }
+
+    /// A split term pairing `left` with `right` with sign `-1`.
+    pub fn negative(left: C, right: C) -> Self {
+        Self {
+            left,
+            right,
+            sign: -1,
+        }
+    }
+
+    /// A split term whose sign is the parity of `inversions`: `+1` when even,
+    /// `-1` when odd.
+    ///
+    /// This is the shuffle sign a cubical split carries, expressed so the caller
+    /// hands over the inversion count and cannot get the mapping wrong.
+    pub fn from_parity(left: C, right: C, inversions: usize) -> Self {
+        if inversions.is_multiple_of(2) {
+            Self::positive(left, right)
+        } else {
+            Self::negative(left, right)
+        }
     }
 
     /// The cell the left-hand cochain factor is evaluated on.
@@ -69,7 +95,12 @@ impl<C> CellSplit<C> {
         &self.right
     }
 
-    /// The sign this term contributes, `+1` or `-1`.
+    /// The sign this term contributes, always exactly `+1` or `-1`.
+    ///
+    /// There is deliberately no constructor taking an arbitrary `i8`. A cup
+    /// product multiplies by this sign, so a stray `0` would silently annihilate
+    /// a term and any other magnitude would be silently read as a unit; the
+    /// constructors above make both unrepresentable.
     pub fn sign(&self) -> i8 {
         self.sign
     }

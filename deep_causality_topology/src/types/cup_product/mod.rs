@@ -94,7 +94,16 @@ where
     K::CellType: SplittableCell,
     R: RealField,
 {
-    let target = alpha_degree + beta_degree;
+    // `checked_add` rather than `+`: the degrees are caller-supplied, and an
+    // overflowing sum would panic in debug and wrap in release, the wrapped
+    // value then passing the maximum-dimension check below.
+    let Some(target) = alpha_degree.checked_add(beta_degree) else {
+        return Err(TopologyError(TopologyErrorEnum::InvalidGradeOperation(
+            format!(
+                "cup product of degrees {alpha_degree} and {beta_degree} overflows the degree type"
+            ),
+        )));
+    };
     if target > complex.max_dim() {
         return Err(TopologyError(TopologyErrorEnum::InvalidGradeOperation(
             format!(
@@ -170,13 +179,29 @@ where
                 .to_string(),
         )));
     };
+    // The grade contract is checked here as well as inside `cup_product`,
+    // because a single factor never reaches the binary path. Without this, an
+    // empty cochain at a degree above the complex's dimension would be accepted:
+    // `num_cells` reports zero cells for such a degree, so the length check
+    // alone passes and the function would return `Ok` where the binary API
+    // rejects the same request.
+    if *first_degree > complex.max_dim() {
+        return Err(TopologyError(TopologyErrorEnum::InvalidGradeOperation(
+            format!(
+                "factor of degree {first_degree} exceeds the complex's maximum dimension {}",
+                complex.max_dim()
+            ),
+        )));
+    }
     check_len(complex, first, *first_degree, "first")?;
 
     let mut acc = first.to_vec();
     let mut degree = *first_degree;
     for (cochain, cochain_degree) in rest {
         acc = cup_product(complex, &acc, degree, cochain, *cochain_degree)?;
-        degree += cochain_degree;
+        degree = degree
+            .checked_add(*cochain_degree)
+            .expect("degree sum already validated by cup_product");
     }
     Ok(acc)
 }

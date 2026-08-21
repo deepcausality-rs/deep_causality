@@ -22,12 +22,14 @@ impl SplittableCell for Simplex {
     fn split(&self, left_dim: usize, _layout: Option<&CellLayout>) -> Vec<CellSplit<Self>> {
         let verts = self.vertices();
         // A `k`-simplex carries `k + 1` vertices, so a left cell of dimension
-        // `left_dim` needs `left_dim + 1` of them.
-        if verts.is_empty() || left_dim + 1 > verts.len() {
+        // `left_dim` needs `left_dim + 1` of them. The comparison is written
+        // against `len` rather than as `left_dim + 1 > len` so that a caller
+        // passing `usize::MAX` cannot overflow into an out-of-bounds slice.
+        if left_dim >= verts.len() {
             return Vec::new();
         }
         let left = Simplex::new(verts[0..=left_dim].to_vec());
         let right = Simplex::new(verts[left_dim..].to_vec());
-        vec![CellSplit::new(left, right, 1)]
+        vec![CellSplit::positive(left, right)]
     }
 }
