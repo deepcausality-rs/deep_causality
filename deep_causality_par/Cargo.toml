@@ -33,8 +33,14 @@ no-std = ["alloc"]
 # `scoped_map` from an inline map to scoped fork-join threads. Downstream
 # crates forward their own `parallel` feature here so the single
 # definition unifies across the workspace.
-# `parallel` spawns `std::thread::scope` threads, so it requires `std`.
-# Declaring the dependency here makes `no-std + parallel` unrepresentable.
+# `parallel` spawns `std::thread::scope` threads, so it requires `std`, and
+# declaring that here is what lets a bare `--features parallel` — and a
+# downstream crate that forwards only `deep_causality_par/parallel` — resolve
+# to a working host build. It does not make `no-std + parallel` unrepresentable:
+# Cargo features are additive, so `--features no-std,parallel` turns `std` back
+# on rather than failing. That is harmless on a host and impossible on a target
+# without `std`, where `src/lib.rs` rejects the combination with an explicit
+# `compile_error!` instead of a `can't find crate for std` cascade.
 parallel = ["std"]
 
 [dependencies]

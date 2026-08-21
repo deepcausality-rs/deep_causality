@@ -5,9 +5,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Building DeepCausality without `std`
 
-Seventeen of the twenty-seven active crates build on bare metal. That covers the whole numeric
-tower, the causal monad, tensors, multivectors, sparse matrices, FFT, and the quantum layer. What
-stays behind is the graph engine, uncertainty, topology, and everything that touches files.
+Eighteen of the twenty-seven active crates build on bare metal. That covers the whole numeric
+tower, the causal monad, tensors, multivectors, sparse matrices, FFT, the quantum layer, and the
+`ultragraph` graph store. What stays behind is uncertainty, topology, the hypergraph reasoning
+engine in `deep_causality`, and everything that touches files.
 
 Verified against `aarch64-unknown-none` on 2026-08-21. Every crate listed as covered was compiled
 for that target; nothing here is inferred from a host build with `std` switched off.
@@ -22,13 +23,13 @@ cargo build -p deep_causality_core \
   --target aarch64-unknown-none
 ```
 
-Five crates need only `core`. The other twelve need an allocator. See
+Four crates need only `core`. The other fourteen need an allocator. See
 [Allocators](#allocators) for what that does and does not rule out; the short answer is that it
 rules out very little.
 
-## The three feature levels
+## The feature levels
 
-Every covered crate declares the same three levels:
+The fourteen allocator-required crates declare the same three levels:
 
 ```toml
 [features]
@@ -43,6 +44,39 @@ no-std  = ["alloc", "<dep>/no-std", ...]
 Cargo hands a dependency its own defaults and `std` returns through the back door, which compiles
 fine on a host and fails only when you cross-compile.
 
+The four `core`-only crates declare no `alloc` feature at all, because nothing in them touches the
+heap. They carry `default`, `std` and `no-std`, and `no-std` does not name `alloc`.
+`deep_causality_num` is where the float-math backend is chosen:
+
+```toml
+# deep_causality_num
+[features]
+default   = ["std"]
+std       = []
+no-std    = ["libm_math"]
+libm_math = ["dep:libm"]
+```
+
+`std` takes the intrinsics; `no-std` routes through `libm`. The other three core-only crates,
+`deep_causality_algebra`, `deep_causality_num_complex` and `deep_causality_num_dual`, only forward
+that choice, for example `no-std = ["deep_causality_num/no-std"]`.
+
+### `alloc` on its own is not a configuration
+
+`alloc` is a level, not a platform. It says a heap is available; it says nothing about where float
+math comes from. `--no-default-features --features alloc` therefore selects neither `std` nor
+`no-std`, `deep_causality_num` gets no backend, and its `Float` impls compile with no bodies:
+
+```
+error[E0425]: cannot find value `n` in this scope
+  --> deep_causality_num/src/float_106/ops_arithmetic.rs:259:38
+```
+
+`deep_causality_core` declares a `compile_error!` for this combination whose message names the fix,
+though it does not always get the chance to fire: when `deep_causality_num` is in the tree, that
+crate fails first and the errors above are what you see. Always pick a platform level, `std` or
+`no-std`, and add `alloc` only through one of them.
+
 ## Covered crates
 
 ### Allocator-free (`core` only)
@@ -56,13 +90,15 @@ reasoning about allocator behaviour.
 | `deep_causality_algebra` | The trait tower: `Magma` through `Field`, `Real`, `RealField`, `Prob` |
 | `deep_causality_num_complex` | Complex scalars over the tower |
 | `deep_causality_num_dual` | Dual numbers for forward-mode differentiation |
-| `deep_causality_calculus` | Euler and RK4 integrators as causal arrows |
+
+These four are exactly the crates that declare no `alloc` feature.
 
 ### Allocator required
 
 | Crate | What it gives you |
 |---|---|
 | `deep_causality_haft` | HKT witnesses, `Functor`/`Monad`/`Arrow`, `SymMonoidal` |
+| `deep_causality_calculus` | Euler and RK4 integrators as causal arrows; see the note below |
 | `deep_causality_core` | The causal monad, `CausalFlow`, `EffectLog`, `alternate_value` |
 | `deep_causality_metric` | Metric signatures shared by tensor, multivector and physics |
 | `deep_causality_ast` | `ConstTree`, the persistent tree behind the HKT impls |
@@ -74,6 +110,13 @@ reasoning about allocator behaviour.
 | `deep_causality_rand` | Xoshiro256, Sobol sequences, normal and uniform distributions |
 | `deep_causality_par` | The `MaybeParallel` marker and `scoped_map` |
 | `deep_causality_quantum` | Density matrices, quantum gates, channels, Born read-out |
+| `ultragraph` | `CsmGraph`, `DynamicGraph`, traversal, centrality, biconnectivity |
+
+`deep_causality_calculus` is the borderline case. Its own operators allocate nothing: the
+integrators step over stack values and `gradient` seeds one coordinate per pass. It is listed here
+because it depends on `deep_causality_haft`, and both its `std` and its `no-std` feature enable
+`alloc = ["deep_causality_haft/alloc"]`. Differentiation and integration therefore arrive with the
+same allocator requirement as the rest of this table.
 
 ## Allocators
 
@@ -92,7 +135,7 @@ unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
 ```
 
 The attribute has been stable since Rust 1.28. A Cortex-M0+ with 8 KB of RAM can carry a heap, so
-the twelve allocator-dependent crates are not gated on device class.
+the fourteen allocator-dependent crates are not gated on device class.
 
 **The constraint that matters is timing, not availability.** Allocation is not bounded-time, so the
 question is whether a given crate allocates in the deadline path or only at init. A system can have
@@ -105,8 +148,10 @@ makes the heap a startup convenience rather than a runtime hazard.
 
 What genuinely rules out a heap is policy. Safety-certified work under DO-178C, IEC 61508 or MISRA
 commonly forbids dynamic allocation after init whatever the RAM budget. That is the case where the
-five allocator-free crates carry weight: the scalar tower and the RK4 and Euler integrators, usable
-with no heap at all.
+four allocator-free crates carry weight: the scalar tower, `Float106` extended precision, complex
+numbers and dual numbers, usable with no heap at all. The Euler and RK4 integrators allocate
+nothing either, but they arrive through `deep_causality_calculus`, which links
+`deep_causality_haft` and brings the allocator with it.
 
 Note that `deep_causality_core` allocates per stage. `EffectLog::add_entry` pushes an owned
 `String` on every entry, so a hard-deadline loop wants a bounded log rather than the default one.
@@ -151,9 +196,12 @@ Targets without atomic compare-and-swap must also use `from_seed` directly.
 `bind`, `CausalFlow`, the `EffectLog`, and `alternate_value` for counterfactual substitution. The
 five closed-loop programs in `examples/causal_correction_examples` are built from exactly these.
 
-`deep_causality` itself, which holds `CausableGraph` and the hypergraph reasoning engine, is not
-covered. So you get the monad and not the graph. For a control loop that monitors, tests an
-envelope, and intervenes, the monad is the part you need.
+`ultragraph` is covered too, so the graph store underneath is available: `CsmGraph`,
+`DynamicGraph`, traversal, centrality, biconnectivity. `deep_causality` itself, which holds
+`CausableGraph` and the hypergraph reasoning engine, is not covered; it waits on
+`deep_causality_uncertain`. So you get the monad and the graph store, not the causal-graph engine.
+For a control loop that monitors, tests an envelope, and intervenes, the monad is the part you
+need.
 
 ### The quantum causal-model slice
 
@@ -186,23 +234,23 @@ second matters more, because it cannot be worked around locally.
 
 | Crate | Uncovered dependencies | Own blockers |
 |---|---|---|
-| `ultragraph` | none | `HashMap`, `HashSet`, `VecDeque`; 5 sites |
 | `deep_causality_uncertain` | none | `HashMap`, `Arc`, `std::sync::atomic`; 19 sites |
 | `deep_causality_topology` | none | `HashMap`/`HashSet` 67 sites, `OnceLock` (one lazy field) |
 | `deep_causality_physics` | `deep_causality_topology` | one `HashMap` in the MHD kernel |
 | `deep_causality_algorithms` | `deep_causality_topology` | `HashMap`/`HashSet`; 90 sites |
-| `deep_causality` | `deep_causality_uncertain`, `ultragraph` | `HashMap`, `Arc`, `std::time`; 67 sites |
-| `deep_causality_ethos` | `deep_causality`, `ultragraph` | `HashMap`/`HashSet`; 28 sites |
+| `deep_causality` | `deep_causality_uncertain` | `HashMap`, `Arc`, `std::time`; 67 sites |
+| `deep_causality_ethos` | `deep_causality` | `HashMap`/`HashSet`; 28 sites |
 | `deep_causality_file` | none | `std::fs`, `std::io`; out of scope |
 | `deep_causality_discovery` | `deep_causality_algorithms`, `deep_causality_topology` | `std::fs`, `std::io`; out of scope |
 | `deep_causality_cfd` | `deep_causality_file`, `deep_causality_physics`, `deep_causality_topology`, `deep_causality_uncertain` | `std::fs`, `std::io`; out of scope |
 
-Only four crates have no uncovered dependency, so only four can be worked on today: `ultragraph`,
+Only three crates have no uncovered dependency, so only three can be worked on today:
 `deep_causality_uncertain`, `deep_causality_topology`, and `deep_causality_file`. Everything else
 waits on one of them.
 
-`ultragraph` is the smallest at five sites. `deep_causality_topology` is the one that unblocks the
-most: `deep_causality_physics` needs only it, and `deep_causality_algorithms` likewise.
+`deep_causality_topology` is the one that unblocks the most: `deep_causality_physics` needs only
+it, and `deep_causality_algorithms` likewise. `deep_causality_uncertain` is the last uncovered
+dependency of `deep_causality`, and so of `deep_causality_ethos` behind it.
 
 ### The `HashMap` question
 
@@ -210,7 +258,7 @@ most: `deep_causality_physics` needs only it, and `deep_causality_algorithms` li
 Rust 1.36, and hashbrown itself is `no_std` with `alloc`. The map is not the problem. The default
 hasher is: `RandomState` seeds SipHash from OS entropy, and that is what bare metal cannot supply.
 
-So the port names a hasher instead of switching container:
+The remedy is to name a hasher rather than switch container:
 
 ```rust
 use hashbrown::{HashMap, HashSet};
@@ -226,6 +274,13 @@ therefore std-only. Take `FxBuildHasher` from `rustc-hash` and the container fro
 Unlike the libm split, this needs no `cfg`. std hands you hashbrown anyway, so using it directly on
 both paths costs nothing on the host and removes a divergence that would otherwise go untested.
 
+`ultragraph` did not need either crate; it still has no dependencies. Its two hash sites were small
+enough to remove: the `HashSet` deduplicating neighbours in the centrality traversal became a
+sort-and-dedup over a `Vec`, and the edge-multiplicity map in the biconnectivity pass became an
+`alloc::collections::BTreeMap`. Both changes also dropped a per-run ordering dependence that
+`RandomState` had introduced. That trade goes the other way at sixty or ninety sites, which is what
+`deep_causality_topology` and `deep_causality_algorithms` face.
+
 Dropping SipHash is not a security regression in these crates. HashDoS resistance guards against an
 adversary choosing keys to force collisions, and the keys here are internal: lattice cells, simplex
 and edge indices, node ids, `Vec<usize>` paths. On integer keys FxHash is faster than SipHash, so
@@ -236,13 +291,17 @@ that is the one place where the default hasher earns its cost.
 ## Verification
 
 ```bash
-for c in num algebra haft num_complex num_dual metric ast core calculus \
-         data_structures par fft tensor multivector sparse rand quantum; do
-  cargo build -p deep_causality_$c \
+for c in deep_causality_num deep_causality_algebra deep_causality_haft \
+         deep_causality_num_complex deep_causality_num_dual deep_causality_metric \
+         deep_causality_ast deep_causality_core deep_causality_calculus \
+         deep_causality_data_structures deep_causality_par deep_causality_fft \
+         deep_causality_tensor deep_causality_multivector deep_causality_sparse \
+         deep_causality_rand deep_causality_quantum ultragraph; do
+  cargo build -p $c \
     --no-default-features --features no-std \
     --target aarch64-unknown-none || echo "FAIL: $c"
 done
 ```
 
-All seventeen build clean. `cargo build --workspace` reports no warnings and no errors, and
+All eighteen build clean. `cargo build --workspace` reports no warnings and no errors, and
 `cargo clippy` is clean on both the `std` and `no-std` paths.
