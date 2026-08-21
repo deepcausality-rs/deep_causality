@@ -120,7 +120,7 @@ benchmark does not move them; a stated boundary does. Three consequences for the
 
 ## 3. The challenges
 
-Each current challenge below is backed by published work, cited in §10. Three papers carry most of
+Each current challenge below is backed by published work, cited in §12. Three papers carry most of
 the weight, and they are recent and from inside the field rather than from its commentary.
 
 ### 3.1 Current
@@ -404,7 +404,231 @@ rested on, and the compiler enforces the split.
 
 ---
 
-## 5. What ships today, measured
+## 5. The value chain, and where QCL sits
+
+### 5.1 The eleven tiers
+
+| # | Layer | Representative tooling | Scarce resource | QCL |
+|---|---|---|---|---|
+| 1 | Materials, fabrication | foundries, in-house | yield | — |
+| 2 | QPU / chip | IBM, Google, Quantinuum, QuEra | coherence | — |
+| 3 | Cryogenics, wiring, amplifiers | Bluefors, in-house | thermal budget, I/O lines | — |
+| 4 | Control electronics | Quantum Machines, QICK/RFSoC, Zurich | channel count | — |
+| 5 | **Quantum firmware** — calibration, tune-up, characterization, stabilization | Qiskit Experiments, Qibocal | **device time** | **primary** |
+| 6 | Real-time control and feedback | Guppy/Selene, `cudaq-realtime`, QUA | latency inside the coherence window | **reachable, unmeasured** |
+| 7 | QEC — code design, simulation, decoding | Stim, PyMatching, Qualtran | decoder throughput | **secondary** |
+| 8 | Compilation, transpilation | tket, BQSKit, Qiskit transpiler | circuit depth | — |
+| 9 | Circuit and algorithm frameworks | Qiskit, Cirq, PennyLane, Q# | developer attention | — |
+| 10 | Applications | domain libraries | problem fit | — |
+| 11 | Cloud orchestration | Braket, Azure Quantum, IBM Platform | access | — |
+
+Layer 5 is the recognised quantum-firmware tier: the layer that minimises hardware error through
+calibration, tune-up, characterization and automation. Its scarce resource is **device time**, and
+the chain above it optimises for circuit depth, developer attention and access instead. That is the
+economic argument for the position, and it stands without any claim about causality.
+
+### 5.2 Two loops, not one
+
+QCL runs a **slow loop**. Its unit of work is a shot budget: declare hypotheses, screen them, buy
+the cheapest experiment that separates the survivors by a stated number of bits, adjudicate. A
+thousand shots is the granularity, minutes is the cadence, and the output is a repair decision — 
+which knob, which coupler, which pulse.
+
+DeepCausality's substrate also runs a **fast loop**, and it ships today. The five programs in
+[`causal_correction_examples`](../../../examples/causal_correction_examples) are closed-loop control:
+a monitor inspects each tick, `alternate_value` replaces the in-flight value when it leaves the safe
+envelope, and the chain advances from the corrected state. `corrective_ddos_detector` is the closest
+in shape to a syndrome loop — a sliding-window baseline carried in `State`, five consecutive samples
+above 3σ declare the event, and the intervention engages within one tick.
+
+The two loops sit at different tiers and have different budgets. Conflating them understates the
+substrate and overstates QCL.
+
+### 5.3 What layer 6 would require, in numbers
+
+| Modality | Code cycle | Demonstrated feedback |
+|---|---|---|
+| Superconducting | 0.2–10 µs | sub-1 µs mean decode per round, 9.6 µs feedback latency |
+| Trapped ion, shuttling design | ~235 µs | — |
+
+The gap between the two is a factor of 25 to 1000, and it decides the question. Sustaining a decision
+per round at 0.2–10 µs is FPGA and ASIC territory; a general-purpose causal engine does not belong
+there. A ~235 µs code cycle is a different proposition, and it is the reason Guppy and Selene target
+that class of machine.
+
+**The loop shape is native and demonstrated. The port is verified. The latency budget is still
+unmeasured.**
+
+Measured on 2026-08-21:
+
+```
+rustup target add aarch64-unknown-none
+cargo build -p deep_causality_core --no-default-features --features no-std \
+      --target aarch64-unknown-none          →  Finished
+cargo clippy  … same flags                   →  clean
+cargo build -p deep_causality_core           →  Finished  (std path unaffected)
+cargo test   -p deep_causality_core          →  pass
+```
+
+`deep_causality_core` compiles for bare-metal ARM64. It is `no_std` **plus `alloc`**: building with
+no allocator at all fails with 17 errors, because `EffectLog` holds a `Vec<LogEntry>` and
+`CausalityError` holds an `alloc::string::String`. An allocator is available on the class of board
+that matters, so this is a constraint rather than an obstacle.
+
+Reaching that took a two-line fix. `deep_causality_haft`, `deep_causality_algebra` and
+`deep_causality_num` already declared `default-features = false` on their dependants and carried a
+`no-std` feature; `deep_causality_core` declared neither, so its `--no-default-features` build
+silently pulled `std` back in through `haft`. Core's own code was always `no_std`-clean — the
+dependency wiring was the gap, and the earlier host-side build that appeared to succeed had simply
+linked a `std` dependency chain underneath a `no_std` crate.
+
+What this changes: the relevant hardware is the **processing system**, not the fabric. Zynq
+UltraScale+ RFSoC boards — ZCU111, ZCU216, RFSoC 4x2, the class QICK targets — carry hard ARM A53
+application cores and R5F real-time cores on the same die as the converters, so the decision logic
+sits on-chip with no PCIe or network hop. Rust synthesised to fabric is not a path and is not
+proposed. The fabric generates pulses and streams converters; the cores sequence and decide.
+
+**One known obstacle remains, and it is the log.** `EffectLog::add_entry` performs
+`entries.push(LogEntry::new(ts, message.to_string()))` — a `String` allocation per entry, per stage,
+per tick. Allocation is not bounded-time, so as written the channel that makes a device-time decision
+defensible is the channel a hard deadline cannot tolerate. The resolution follows the two-loop split
+of §5.2: the fast loop writes fixed-capacity, preallocated event codes; the slow loop drains that
+ring and inflates it into the full provenance record. A design item with a clear shape, not a
+research question.
+
+What is still not measured is the tick cost itself. That is what the benchmark suite in
+[`qcl-design-note.md`](qcl-design-note.md) §7 exists to establish, against the 235 µs and 0.2–10 µs
+reference points above.
+
+### 5.4 The port surface above core
+
+`deep_causality_quantum` does not declare `no_std`, so whether it can reach bare metal was open.
+Surveyed on 2026-08-21, it can, and nothing in the way is architectural.
+
+| Crate | Status | What stands in the way |
+|---|---|---|
+| `deep_causality_num` | `no_std` ✓ | — (already carries `libm_math` for bare-metal float math) |
+| `deep_causality_algebra` | `no_std` ✓ | — |
+| `deep_causality_haft` | `no_std` ✓ | — |
+| `deep_causality_core` | `no_std` ✓ | — (wired 2026-08-21, §5.3) |
+| `deep_causality_num_complex` | `no_std` ✓ | — |
+| `deep_causality_num_dual` | `no_std` ✓ | — |
+| `deep_causality_metric` | `no_std` ✓ | — |
+| `deep_causality_ast` | std only | 11 sites / 9 files; `Arc` and `VecDeque` → `alloc` |
+| `deep_causality_tensor` | std only | 38 sites / 27 files |
+| `deep_causality_multivector` | std only | 54 sites / 17 files |
+| `deep_causality_quantum` | std only | 10 sites / 6 files |
+| `deep_causality` (graph) | std only | reached from 3 files, all under `types/qcm/` |
+| `deep_causality_uncertain` | std only | optional already, behind the `qpu` feature |
+| `deep_causality_rand` | std only | **dev-dependency** of tensor; does not affect the library build |
+
+**No genuine std blocker exists in the numeric stack.** `deep_causality_tensor` and
+`deep_causality_multivector` contain no `std::collections`, no `std::sync`, no threads and no IO.
+Their `std::` imports are `ops`, `iter::Sum`, `fmt` and `marker::PhantomData` — every one of them
+reachable as `core::`. Neither depends on `deep_causality_par` or rayon, which was the risk worth
+checking and is absent.
+
+The three items that are not a plain `core::` rewrite are all `alloc::` rewrites:
+
+- `std::error::Error`, twice in tensor. `core::error::Error` has been stable since Rust 1.81 and the
+  workspace MSRV is 1.93.0, so this is a rename.
+- `BTreeMap` and `BTreeSet`, seven sites in quantum. These live in `alloc::collections`; they were
+  never std-only.
+- `Arc` and `VecDeque` in `deep_causality_ast`. `alloc::sync::Arc` needs atomic pointers, which
+  aarch64 has.
+
+**The one dependency worth restructuring is the graph.** `deep_causality_quantum` reaches into
+`deep_causality` for `CausableGraph` and `CausalityGraphError` from exactly three files, all under
+`types/qcm/`. That pulls a large std-only crate in for a narrow surface. Feature-gating those three
+files keeps the QCM validation path off the bare-metal build without touching the gate kernels,
+density matrices, or the QPU seam.
+
+**The feature scaffolding is most of the work, and it does not exist yet.** `deep_causality_ast`,
+`deep_causality_tensor` and `deep_causality_multivector` carry **no `[features]` section at all**.
+`deep_causality_quantum` has one, but only for the `qpu` seam, and it declares `default = []`, so
+giving it `default = ["std"]` changes what downstream consumers get by default. Across the four
+crates there are 22 dependency blocks and **not one** sets `default-features = false` — which is
+exactly the omission that made core's `--no-default-features` build silently link `std` underneath a
+`no_std` crate (§5.3).
+
+**Two naming conventions are already in the tree, and mixing them will produce confusing feature
+graphs.** `deep_causality_metric` uses `std` / `alloc`. The numeric chain — `num`, `algebra`, `haft`,
+`num_complex`, `num_dual` — uses `std` / `no-std`. `deep_causality_core` now carries all three,
+`std` / `alloc` / `no-std`, because it needs `alloc` as a distinct level and a `no-std` name to
+forward. Settle on core's three-level shape before porting anything above it; retrofitting a
+convention across four more crates costs more than choosing one now.
+
+**Per crate, the work is four mechanical steps:** add the `[features]` block; add
+`#![cfg_attr(not(feature = "std"), no_std)]` and `extern crate alloc` to `lib.rs`; add
+`default-features = false` to every dependency block; rewrite the `std::` imports.
+
+**Ordering.** `ast` → `tensor` → `multivector` → `quantum`, bottom-up, each verified with a
+cross-compile before the next begins. About 113 import sites across 59 files, plus 22 dependency
+blocks and four feature sections.
+
+The estimate is a survey, not a build. The claim that survives without one is narrow: nothing found
+requires std, and the work is feature wiring plus import rewriting. Only a green cross-compile
+settles it.
+
+---
+
+### 5.5 Five gaps, ranked
+
+**A — diagnosis is projected out at the 5↔7 seam.** Stim's documentation states the design directly:
+the detector error model "focuses on the relationship between error mechanisms and their detector
+signatures rather than tracking individual fault types." That is correct for decoding, where the
+likely error *pattern* is what a correction needs. It means the ecosystem's standard artifact
+structurally cannot answer which coupler to recalibrate. A decoder repairs the state; nothing
+attributes the cause.
+
+**B — no experiment design under a cost budget.** Layer 5 runs known protocols and fits them.
+Bayesian adaptive design exists and is mature, over *continuous parameters* — adaptive tomography,
+Hamiltonian learning. Selecting a **discrete** experiment subset under a cost budget against a stated
+separation floor is the open case, and device time is what it spends.
+
+**C — no admissibility screening before device time.** Nothing checks that a proposed explanation is
+a valid causal model before shots are spent. A supporting feature rather than a product.
+
+**D — code design upstream of Stim.** Real, contested, and distant. qLDPC construction is an active
+field.
+
+**E — drift attribution over time.** Optimus solved calibration *scheduling*; the attribution inside
+it is a human reading plots.
+
+**A and B are the target.** They are one capability seen from two tiers: attribute a symptom to a
+mechanism, then buy the cheapest evidence that confirms it.
+
+---
+
+## 6. Related work
+
+Three lines of published work sit close enough that the delta has to be stated rather than implied.
+
+**Causal inference for crosstalk.** Rudinger et al., *Detecting crosstalk errors in quantum
+information processors* (Quantum 4, 321, 2020) adapts the PC algorithm to crosstalk, uses conditional
+independence tests under the Markov condition, and determines direction as well as existence, at
+O(n²) to O(n³) experiments on 2- and 6-qubit processors. The causal framing for crosstalk is six
+years old and belongs to that paper. The delta is that the protocol runs a **fixed experiment set**:
+it does not enumerate named hypotheses, does not reject inadmissible ones before spending device
+time, and does not select experiments under a cost budget.
+
+**Bayesian adaptive experiment design.** Adaptive Hamiltonian estimation, adaptive tomography, and
+transmon-qutrit identifiability all select the next experiment to maximise information. They target
+continuous parameter estimation. Discrete discrimination among named causal structures under a cost
+budget is the case that remains.
+
+**DEM reconstruction and equivalence.** Recent work learns detector error models from syndrome data
+(arXiv 2606.16288, 2601.22286) and checks DEM equivalence in quasilinear time (arXiv 2606.14677). The
+first is parameter estimation over a known structure; the second is verification. Neither closes gap
+A, and both are close enough that any claim in this area should cite them.
+
+**Calibration frameworks.** Qiskit Experiments and Qibocal fit a model to data from a chosen
+experiment. QCL chooses the experiment by what it would discriminate. These compose: QCL decides,
+layer 5 executes and fits, layer 6 runs it against the device.
+
+---
+
+## 7. What ships today, measured
 
 On the reference machine (Apple M3 Max, 16 cores, 128 GB):
 
@@ -435,7 +659,7 @@ On the reference machine (Apple M3 Max, 16 cores, 128 GB):
 
 ---
 
-## 6. The boundaries
+## 8. The boundaries
 
 These go on their own page, phrased as situations rather than as feature gaps. The CFD site's
 boundaries page is the model.
@@ -466,7 +690,7 @@ boundaries page is the model.
 
 ---
 
-## 7. Why "dynamic" earns its place
+## 9. Why "dynamic" earns its place
 
 Quantum causal models are written as static objects: a fixed graph, a fixed factorization, a theorem
 about it. A control loop is the opposite kind of object. The word *dynamic* claims three specific
@@ -487,7 +711,7 @@ quantum state is an ordinary use of the monad, not an extension to it.
 
 ---
 
-## 8. What the site should therefore be
+## 10. What the site should therefore be
 
 Ten pages, grouped by the three avenues. Same discipline as the CFD site: a claim per page, evidence
 under it.
@@ -501,7 +725,7 @@ under it.
 | Formalization | The Lean table, the refuted theorem first, `THEOREM_MAP` traceability, and the shared verdict lattice of §4.5 |
 | Modalities | Verifiable against emergent, and why the split is a compile-time guarantee |
 | Examples | Every runnable one, with its field and its exact command |
-| Boundaries | Section 6, written as situations |
+| Boundaries | Section 8, written as situations |
 | Roadmap | Tracks Q, T, G and D with their gating assumptions, and what a failed gate kills |
 | Papers | The bundled PDFs and the evidence citations, all properly attributed |
 
@@ -511,7 +735,7 @@ material lives in `dynamic-qcm.md` and stays there.
 
 ---
 
-## 9. Decisions I need from you
+## 11. Decisions I need from you
 
 1. **Prime audience.** Set to the classical-quantum control engineer, with P1 error correction and
    logical-gate design and P2 characterization as the entry personas, and P3 as the review audience.
@@ -534,7 +758,35 @@ material lives in `dynamic-qcm.md` and stays there.
 
 ---
 
-## 10. Sources
+## 12. Sources
+
+### Ecosystem and related work (§5, §6)
+
+- Sarovar, M., Proctor, T., Rudinger, K., Young, K., Nielsen, E. & Blume-Kohout, R. (2020).
+  *Detecting crosstalk errors in quantum information processors.* Quantum **4**, 321.
+  DOI 10.22331/q-2020-09-11-321. The PC
+  algorithm adapted to crosstalk; conditional independence under the Markov condition; direction as
+  well as existence; a fixed experiment set at O(n²)–O(n³).
+- *Qiskit Experiments: A Python package to characterize and calibrate quantum computers.* JOSS
+  **8**(84), 5329 (2023). Layer 5: run a known protocol, fit, update calibration.
+- *Qibocal: an open-source framework for calibration of self-hosted quantum devices.*
+  arXiv:2410.00101 (2024). Layer 5, self-hosted platforms, live fitting.
+- Gidney, C. (2021). *Stim: a fast stabilizer circuit simulator.* Quantum **5**, 497. And the DEM
+  file-format specification, `doc/file_format_dem_detector_error_model.md` in `quantumlib/Stim`.
+  The source for gap A: the DEM tracks detector signatures rather than individual fault types.
+- Ferrie, C., Granade, C.E. & Cory, D.G. (2012). *Adaptive Hamiltonian Estimation Using Bayesian
+  Experimental Design.* arXiv:1111.0935. Adaptive design over continuous parameters, the closest
+  prior work to the `design` stage. See also *Identifiability and Characterization of Transmon
+  Qutrits Through Bayesian Experimental Design*, arXiv:2312.10233.
+- *Demonstrating real-time and low-latency quantum error correction with superconducting qubits.*
+  Nature Communications (2026). Sub-1 µs mean decode per round, 9.6 µs feedback latency — two of the
+  numbers behind §5.3. The 0.2–10 µs code-cycle range and the ~235 µs trapped-ion shuttling estimate
+  are from arXiv:2108.12371, *The Impact of Hardware Specifications on Reaching Quantum Advantage in
+  the Fault Tolerant Regime*.
+- DEM reconstruction from syndrome data, arXiv:2606.16288 and arXiv:2601.22286; quasilinear DEM
+  equivalence checking, arXiv:2606.14677. Parameter estimation and verification respectively,
+  adjacent to gap A without closing it.
+- *Quantum firmware and the quantum computing stack*, Physics Today. The layer-5 naming used in §5.1.
 
 ### Evidence for the challenges
 
