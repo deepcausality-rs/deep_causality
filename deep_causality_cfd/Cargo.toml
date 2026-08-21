@@ -42,6 +42,11 @@ std = [
     "deep_causality_num_complex/std",
     "deep_causality_num_dual/std",
     "deep_causality_physics/std",
+    "deep_causality_calculus/std",
+    "deep_causality_haft/std",
+    "deep_causality_tensor/std",
+    "deep_causality_par/std",
+    "deep_causality_fft/std",
     "dep:deep_causality_uncertain",
 ]
 
@@ -58,16 +63,18 @@ parallel = [
 
 [dependencies.deep_causality_physics]
 path = "../deep_causality_physics"
-version = "0.8"
 default-features = false
+version = "0.8"
 
 [dependencies.deep_causality_calculus]
 path = "../deep_causality_calculus"
+default-features = false
 version = "0.1"
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
 version = "0.11"
+default-features = false
 
 [dependencies.deep_causality_file]
 path = "../deep_causality_file"
@@ -75,26 +82,32 @@ version = "0.1"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
+default-features = false
 version = "0.4"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
+default-features = false
 version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
+default-features = false
 version = "0.2"
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
+default-features = false
 version = "0.1"
 
 [dependencies.deep_causality_num_dual]
 path = "../deep_causality_num_dual"
+default-features = false
 version = "0.1"
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
+default-features = false
 version = "0.5"
 
 # Std-only: the uncertain-inflow zone consumes `MaybeUncertain<R>` and its global
@@ -110,12 +123,13 @@ version = "0.7"
 
 [dependencies.deep_causality_par]
 path = "../deep_causality_par"
+default-features = false
 version = "0.1"
 
 [dependencies.deep_causality_fft]
 path = "../deep_causality_fft"
-version = "0.1"
 default-features = false
+version = "0.1"
 
 [dev-dependencies]
 criterion = { version = "0.8" }
