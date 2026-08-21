@@ -4,7 +4,7 @@
  */
 use crate::ScalarEval;
 use deep_causality_algebra::Normed;
-use std::iter::Sum;
+use core::iter::Sum;
 
 // `ScalarEval` is the multivector-side facade over `deep_causality_algebra::Normed`. Every scalar with
 // a real modulus, every real float and `Complex<T>`, satisfies `Normed`, so this single blanket

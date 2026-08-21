@@ -2,12 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec;
+use alloc::vec::Vec;
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
 use deep_causality_algebra::RealField;
 use deep_causality_num::Zero;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 /// The distinguished minimal-left-ideal column of the matrix representation
 /// used by the ket ↔ matrix bridge: the image of the primitive idempotent
@@ -202,7 +205,7 @@ impl<R: RealField> core::ops::Mul<Complex<R>> for HilbertState<R> {
 }
 
 impl<R: RealField + core::fmt::Debug> Display for HilbertState<R> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self.mv)
     }
 }

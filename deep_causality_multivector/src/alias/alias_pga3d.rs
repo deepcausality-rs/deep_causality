@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+
 // 3D Projective Geometric Algebra
 // Signature: R(3, 0, 1) -> 3 Euclidean, 0 Negative, 1 Zero
 

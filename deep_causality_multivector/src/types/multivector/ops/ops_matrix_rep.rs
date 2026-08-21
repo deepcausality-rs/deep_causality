@@ -13,7 +13,7 @@ use crate::types::multifield::ops::gamma;
 use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
 use deep_causality_tensor::{CausalTensor, Tensor};
-use std::ops::Neg;
+use core::ops::Neg;
 
 impl<T> CausalMultiVector<T>
 where

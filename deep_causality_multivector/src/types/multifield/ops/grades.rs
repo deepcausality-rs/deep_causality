@@ -21,7 +21,7 @@ where
     /// * `k` - The grade to project onto (0=scalar, 1=vector, 2=bivector, etc.)
     pub fn grade_project(&self, k: usize) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         // Download to Coefficients
         let mut mvs = self.to_coefficients();
@@ -38,7 +38,7 @@ where
     /// Extracts the scalar part (grade 0): ⟨F⟩₀.
     pub fn scalar_part(&self) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         self.grade_project(0)
     }
@@ -46,7 +46,7 @@ where
     /// Extracts the vector part (grade 1): ⟨F⟩₁.
     pub fn vector_part(&self) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         self.grade_project(1)
     }
@@ -54,7 +54,7 @@ where
     /// Extracts the bivector part (grade 2): ⟨F⟩₂.
     pub fn bivector_part(&self) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         self.grade_project(2)
     }
@@ -62,7 +62,7 @@ where
     /// Extracts the trivector part (grade 3): ⟨F⟩₃.
     pub fn trivector_part(&self) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         self.grade_project(3)
     }
@@ -70,7 +70,7 @@ where
     /// Extracts the pseudoscalar part (highest grade).
     pub fn pseudoscalar_part(&self) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         let n = self.metric.dimension();
         self.grade_project(n)

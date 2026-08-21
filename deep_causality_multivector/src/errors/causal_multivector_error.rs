@@ -4,7 +4,7 @@
  */
 
 use crate::Metric;
-use std::fmt;
+use core::fmt;
 
 /// The main error type for CausalMultiVector operations.
 ///
@@ -27,7 +27,7 @@ pub enum CausalMultiVectorErrorInner {
     MetricMismatch { left: Metric, right: Metric },
 }
 
-impl std::error::Error for CausalMultiVectorError {}
+impl core::error::Error for CausalMultiVectorError {}
 
 impl CausalMultiVectorError {
     /// Creates a DimensionMismatch error.

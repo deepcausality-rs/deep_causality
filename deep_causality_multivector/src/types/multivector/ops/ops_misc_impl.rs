@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+use alloc::vec;
 use crate::CausalMultiVector;
 use core::ops::Neg;
 use deep_causality_algebra::Field;

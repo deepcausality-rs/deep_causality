@@ -10,7 +10,7 @@ use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 use deep_causality_algebra::{Field, Ring};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
-use std::ops::{Add, Mul, Neg, Sub};
+use core::ops::{Add, Mul, Neg, Sub};
 
 // === Zero Implementation ===
 

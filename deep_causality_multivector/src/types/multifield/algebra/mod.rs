@@ -18,6 +18,7 @@
 //! All operations preserve the Matrix Isomorphism: they work directly on the
 //! matrix representation, avoiding costly coefficient extraction.
 
+use alloc::vec::Vec;
 // Import local modules
 use crate::CausalMultiField;
 use crate::MultiVector;
@@ -90,7 +91,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T> + 'static,
+    T: Field + Copy + Default + PartialOrd + core::ops::Neg<Output = T> + 'static,
 {
     /// Computes the reversion (reversal) of the field.
     ///

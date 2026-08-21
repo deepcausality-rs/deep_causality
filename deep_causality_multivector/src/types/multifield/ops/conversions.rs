@@ -9,6 +9,7 @@
 //! - `to_coefficients`: Extract CausalMultiVector collection
 //! - Factory methods: `zeros`, `ones`
 
+use alloc::vec::Vec;
 use crate::types::multifield::ops::gamma;
 use crate::{CausalMultiField, CausalMultiVector};
 use deep_causality_algebra::Field;
@@ -71,7 +72,7 @@ where
     /// * `dx` - Grid spacing [dx, dy, dz]
     pub fn from_coefficients(mvs: &[CausalMultiVector<T>], shape: [usize; 3], dx: [T; 3]) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         let expected_len = shape[0] * shape[1] * shape[2];
         assert_eq!(
@@ -126,7 +127,7 @@ where
     /// Converts from Matrix Representation back to coefficient form using trace projection.
     pub fn to_coefficients(&self) -> Vec<CausalMultiVector<T>>
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         let num_cells = self.num_cells();
         let num_blades = 1 << self.metric.dimension();
