@@ -4,7 +4,7 @@
  */
 use crate::{Euler, Scalar};
 use deep_causality_haft::Arrow;
-use std::ops::{Add, Mul};
+use core::ops::{Add, Mul};
 
 impl<S, R, F> Arrow for Euler<S, R, F>
 where
