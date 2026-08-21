@@ -46,7 +46,10 @@ no-std = [
 # Serial behavior and results are unchanged; small transforms stay
 # serial behind a measured granularity threshold. Forwards to the
 # shared MaybeParallel definition in deep_causality_par.
-parallel = ["dep:rayon", "deep_causality_par/parallel"]
+# Rayon needs threads, so `parallel` requires `std`. Declaring the dependency
+# here makes the `parallel`-without-`std` combination unrepresentable; it used
+# to compile the Rayon scratch buffers under `no_std`, where `vec!` is absent.
+parallel = ["std", "dep:rayon", "deep_causality_par/parallel"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"

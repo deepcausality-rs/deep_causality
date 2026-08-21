@@ -84,8 +84,9 @@ where
             canonical.push((a, b));
         }
     }
-    // Sort to make edge_id assignment deterministic regardless of CSR layout.
-    canonical.sort_unstable();
+    // `counts` is a BTreeMap, so the loop above already pushed `canonical` in
+    // ascending (a, b) order with runs of parallel edges contiguous. Edge-id
+    // assignment is deterministic without an explicit sort.
 
     let mut degree: Vec<usize> = vec![0; n];
     for &(a, b) in &canonical {
