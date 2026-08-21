@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::marker::PhantomData;
+use alloc::vec::Vec;
+use alloc::string::String;
+
+use core::marker::PhantomData;
 
 use crate::{ArrayStorage, VectorStorage, WindowStorage};
 

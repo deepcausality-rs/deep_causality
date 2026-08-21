@@ -3,6 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+use alloc::string::String;
+use alloc::string::ToString;
+
 /// Trait defining the interface for a sliding window data structure
 ///
 /// # Type Parameters
