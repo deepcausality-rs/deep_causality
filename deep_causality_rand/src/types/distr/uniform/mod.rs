@@ -8,8 +8,8 @@ pub mod standard_uniform;
 use crate::{
     Distribution, Rng, SampleBorrow, SampleUniform, UniformDistributionError, UniformSampler,
 };
-use deep_causality_algebra::RealField;
 use core::fmt::Debug;
+use deep_causality_algebra::RealField;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
