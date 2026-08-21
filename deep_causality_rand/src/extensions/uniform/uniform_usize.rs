@@ -5,7 +5,7 @@
 
 use crate::{Rng, SampleBorrow, SampleRange, SampleUniform, UniformSampler};
 use crate::{RngError, UniformDistributionError};
-use std::ops::Range;
+use core::ops::Range;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UniformUsize {

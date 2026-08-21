@@ -14,6 +14,7 @@
 //! unscrambled), which uses the Joe–Kuo `new-joe-kuo-6.21201` set — so the generated points
 //! match a widely used reference implementation bit-for-bit.
 
+use alloc::format;
 use crate::{RngCore, RngError, Xoshiro256};
 
 /// Maximum dimension supported by the embedded direction-number table.

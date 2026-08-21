@@ -3,6 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod errors;
 mod extensions;
 mod traits;
@@ -42,18 +46,18 @@ pub use crate::types::map::Map;
 pub use crate::types::qmc::sobol::{MAX_SOBOL_DIM, SobolSequence};
 pub use crate::types::range::{Open01, OpenClosed01};
 
-#[cfg(not(feature = "os-random"))]
-use std::cell::RefCell;
+#[cfg(all(feature = "std", not(feature = "os-random")))]
+use core::cell::RefCell;
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 thread_local! {
     static THREAD_RNG: RefCell<Xoshiro256> = RefCell::new(Xoshiro256::new());
 }
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 pub struct ThreadRng;
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 impl RngCore for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         THREAD_RNG.with(|rng| rng.borrow_mut().next_u32())
@@ -66,7 +70,7 @@ impl RngCore for ThreadRng {
     }
 }
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 impl Rng for ThreadRng {}
 
 /// Returns a new random number generator.
@@ -85,8 +89,15 @@ pub fn rng() -> impl Rng {
 
         OsRandomRng::new().expect("Failed to create OsRandomRng")
     }
-    #[cfg(not(feature = "os-random"))]
+    #[cfg(all(feature = "std", not(feature = "os-random")))]
     {
         ThreadRng
+    }
+    // Bare metal: no threads, so no thread-local generator. Hand back an
+    // owned `Xoshiro256`; the caller keeps it rather than reaching for a
+    // process-wide one.
+    #[cfg(all(not(feature = "std"), not(feature = "os-random")))]
+    {
+        Xoshiro256::new()
     }
 }

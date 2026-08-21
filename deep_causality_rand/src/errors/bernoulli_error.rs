@@ -10,7 +10,7 @@ pub enum BernoulliDistributionError {
     InvalidProbability,
 }
 
-impl std::error::Error for BernoulliDistributionError {}
+impl core::error::Error for BernoulliDistributionError {}
 
 impl fmt::Display for BernoulliDistributionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

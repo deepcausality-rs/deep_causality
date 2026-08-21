@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use core::fmt;
-use std::error::Error;
+use core::error::Error;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NormalDistributionError {
