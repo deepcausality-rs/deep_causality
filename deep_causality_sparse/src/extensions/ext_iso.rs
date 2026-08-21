@@ -70,7 +70,6 @@ impl fmt::Display for CsrFromTensorError {
     }
 }
 
-#[cfg(feature = "std")]
 impl core::error::Error for CsrFromTensorError {}
 
 // =============================================================================

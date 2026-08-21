@@ -58,10 +58,17 @@ fn entropy_seed() -> u64 {
 
 impl Xoshiro256 {
     /// Creates a generator seeded from whatever ambient entropy the target
-    /// offers. See [`entropy_seed`] for what that means on each: on `std` a
-    /// per-thread draw, on `no_std` a per-call counter that repeats across
-    /// resets. Use [`from_seed`](Self::from_seed) when the seed must be known
-    /// or must vary per boot.
+    /// offers.
+    ///
+    /// On `std` that is a per-thread draw: a fresh `RandomState` mixed with the
+    /// current thread id, so two threads of one process run distinct streams.
+    /// On `no_std` there is neither ambient entropy nor a thread identity, so
+    /// the seed comes from a per-call counter instead: successive calls within
+    /// one run yield distinct streams, and the sequence repeats identically
+    /// after every reset.
+    ///
+    /// Use [`from_seed`](Self::from_seed) when the seed must be known, must be
+    /// reproducible, or must vary per boot on a bare-metal target.
     pub fn new() -> Self {
         Self::from_seed(entropy_seed())
     }

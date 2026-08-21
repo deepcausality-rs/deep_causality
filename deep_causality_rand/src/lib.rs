@@ -73,14 +73,21 @@ impl RngCore for ThreadRng {
 #[cfg(all(feature = "std", not(feature = "os-random")))]
 impl Rng for ThreadRng {}
 
-/// Returns a new random number generator.
+/// Returns a new random number generator. Which one depends on the enabled
+/// features:
 ///
-/// By default, this returns a `ThreadRng` backed by `Xoshiro256` PRNG, with each
-/// thread getting a unique seed derived from the thread ID.
-/// If the `os-random` feature is enabled, it returns an `OsRandomRng` that
-/// sources entropy from the operating system.
-/// If the `aead-random` feature is enabled, it returns a `ChaCha20Rng` seeded from
-/// the OS CSPRNG. This is the preferred secure option.
+/// * With `os-random`: an `OsRandomRng` that sources every draw from the
+///   operating system. This is the option to use in production.
+/// * With `std` and without `os-random` (the default): a `ThreadRng` handle to
+///   a thread-local [`Xoshiro256`]. Each thread seeds its generator once, from
+///   a fresh `RandomState` mixed with the thread id, so threads of one process
+///   run distinct streams.
+/// * Without `std` and without `os-random` (bare metal): an owned
+///   [`Xoshiro256`] that the caller keeps, since there are no threads to hang a
+///   thread-local on. Its seed comes from a per-call counter rather than
+///   ambient entropy, so the sequence of streams repeats identically after
+///   every reset. When the stream has to differ per boot, build the generator
+///   with [`Xoshiro256::from_seed`] and a seed drawn from the board.
 pub fn rng() -> impl Rng {
     #[cfg(feature = "os-random")]
     {

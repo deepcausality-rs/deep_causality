@@ -30,6 +30,18 @@
 //! user writes a model once over `Scalar` and applies operators; `Dual`, `ε`, seeding,
 //! stepper coefficients, and loops are never visible.
 
+// `alloc` is a level, not a complete configuration. It says a heap is available; it does not
+// say where float math comes from. Selected on its own it leaves `deep_causality_num` with
+// neither `std` nor `libm_math`, so every `Float` method loses its body and the build dies in
+// a dependency the caller never named. Reject the incomplete combination here instead.
+#[cfg(not(any(feature = "std", feature = "no-std")))]
+compile_error!(
+    "deep_causality_calculus needs one of the `std` or `no-std` features. The `alloc` feature \
+     only selects the allocator level; it does not choose a float-math backend, which leaves \
+     `deep_causality_num` without one. Build with `--features std` (the default), or for bare \
+     metal with `--no-default-features --features no-std`."
+);
+
 mod extensions;
 mod ops;
 mod traits;

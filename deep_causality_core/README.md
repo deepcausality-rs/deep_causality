@@ -53,9 +53,12 @@ The crate defines the core types for modeling causal systems using **Monadic Eff
 | Feature | Default | Description |
 | :--- | :--- | :--- |
 | **`std`** | Yes | Enables standard library support. Suitable for servers, desktops, and research. |
-| **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). Required for `no_std` use on embedded Linux / RTOS. |
+| **`no-std`** | No | Builds without the standard library and routes float math through `libm`. Suitable for bare metal, embedded Linux / RTOS. |
+| **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). Enabled by both `std` and `no-std`, which are the two features to choose between. |
 
-Use **default features** for general applications. For bare-metal `no_std`, disable defaults and enable only `alloc` (see [non-std Support](#non-std-support) below).
+Pick exactly one platform level: `std` or `no-std`. Because `alloc` sits on top of either one and leaves the float-math backend unselected, enabling it alone fails the build with a message pointing back here.
+
+Use **default features** for general applications. For bare-metal `no_std`, disable defaults and enable `no-std` (see [non-std Support](#non-std-support) below).
 
 ## Usage Examples
 
@@ -199,7 +202,7 @@ To use this crate in a bare-metal `no_std` environment:
 
 ```toml
 [dependencies]
-deep_causality_core = { version = "...", default-features = false, features = ["alloc"] }
+deep_causality_core = { version = "...", default-features = false, features = ["no-std"] }
 ```
 
 ## License

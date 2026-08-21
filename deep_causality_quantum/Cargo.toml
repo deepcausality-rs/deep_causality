@@ -37,8 +37,8 @@ no-std = ["alloc", "deep_causality_algebra/no-std", "deep_causality_core/no-std"
 
 # The quantum causal-model slice: CausalStructure, the Markov freeze check and the
 # C3-exclusion faithfulness check. Pulls in `deep_causality` for the causal graph,
-# which is std-only, so this is off on bare-metal builds.
-qcm = ["dep:deep_causality"]
+# which is std-only, so `qcm` implies `std` and is off on bare-metal builds.
+qcm = ["std", "dep:deep_causality"]
 # The emergent QPU seam: QpuSampler / ShotHistogram / the shots→Uncertain
 # bridges / qpu_effect / the in-process SimQpu. Off by default; adds no
 # network or async dependency.
