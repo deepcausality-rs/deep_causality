@@ -9,26 +9,26 @@ use deep_causality::RelationKind;
 fn test_datial() {
     let rk = RelationKind::Datial;
     assert_eq!(rk, RelationKind::Datial);
-    assert_eq!(rk.to_string(), format!("Datial"));
+    assert_eq!(rk.to_string(), "Datial");
 }
 
 #[test]
 fn test_temporal() {
     let rk = RelationKind::Temporal;
     assert_eq!(rk, RelationKind::Temporal);
-    assert_eq!(rk.to_string(), format!("Temporal"));
+    assert_eq!(rk.to_string(), "Temporal");
 }
 
 #[test]
 fn test_spatial() {
     let rk = RelationKind::Spatial;
     assert_eq!(rk, RelationKind::Spatial);
-    assert_eq!(rk.to_string(), format!("Spatial"));
+    assert_eq!(rk.to_string(), "Spatial");
 }
 
 #[test]
 fn test_space_temporal() {
     let rk = RelationKind::SpaceTemporal;
     assert_eq!(rk, RelationKind::SpaceTemporal);
-    assert_eq!(rk.to_string(), format!("SpaceTemporal"));
+    assert_eq!(rk.to_string(), "SpaceTemporal");
 }

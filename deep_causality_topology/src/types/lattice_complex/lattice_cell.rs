@@ -79,8 +79,30 @@ impl<const D: usize> LatticeCell<D> {
 
     // --- Operations ---
 
-    /// Get the vertices of this cell.
-    /// A k-cell is a hypercube with 2^k vertices.
+    /// The cell's `2^k` corners, in a **guaranteed order**.
+    ///
+    /// A `k`-cell is a hypercube spanned by its `k` active axes. The corners are
+    /// enumerated as follows, and this order is part of the contract:
+    ///
+    /// 1. The active axes are taken in **ascending axis index**.
+    /// 2. Corner `i` is the base position offset by `+1` along the `j`-th active
+    ///    axis exactly when bit `j` of `i` is set.
+    ///
+    /// So corner `0` is always the cell's own `position`, and the last corner is
+    /// the far corner offset along every active axis. For a 2-cell on axes
+    /// `{x, y}` at `p` the order is `p`, `p + e_x`, `p + e_y`, `p + e_x + e_y`.
+    ///
+    /// This ordering is the cubical counterpart of a simplex's sorted vertex list
+    /// and plays the same role: it is the branching structure the cup product is
+    /// defined against. The cubical split partitions the active axes into a left
+    /// and a right set taken in ascending order, and its shuffle sign counts
+    /// inversions between them, so a different corner or axis order would change
+    /// the sign and silently change the product.
+    ///
+    /// Positions are **not** wrapped here; periodicity is a property of the
+    /// containing complex, not of a cell. See
+    /// [`SplittableCell::split`](crate::SplittableCell::split), which wraps using
+    /// the layout it is given.
     pub fn vertices(&self) -> Vec<[usize; D]> {
         let k = self.cell_dim();
         let num_vertices = 1 << k;

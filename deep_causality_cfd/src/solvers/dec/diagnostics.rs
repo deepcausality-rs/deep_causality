@@ -129,7 +129,7 @@ pub fn dec_max_speed<const D: usize, R: DecNsScalar>(
         .map_err(|e| PhysicsError::TopologyError(format!("sharp failed: {e}")))?;
     let v = vertex_vectors.as_slice();
     let mut max_sq = R::zero();
-    for chunk in v.chunks_exact(D) {
+    for chunk in v.as_chunks::<D>().0 {
         let norm_sq = chunk.iter().fold(R::zero(), |acc, x| acc + *x * *x);
         if norm_sq > max_sq {
             max_sq = norm_sq;
@@ -166,12 +166,8 @@ pub fn dec_sample_velocity<const D: usize, R: DecNsScalar>(
     let velocity: BTreeMap<[usize; D], [R; D]> = manifold
         .complex()
         .iter_cells(0)
-        .zip(vertex_vectors.as_slice().chunks_exact(D))
-        .map(|(vertex, v)| {
-            let mut vec = [R::zero(); D];
-            vec.copy_from_slice(v);
-            (*vertex.position(), vec)
-        })
+        .zip(vertex_vectors.as_slice().as_chunks::<D>().0)
+        .map(|(vertex, v)| (*vertex.position(), *v))
         .collect();
 
     let mut lo = [0usize; D];
