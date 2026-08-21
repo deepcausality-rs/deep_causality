@@ -39,16 +39,16 @@
 //! 3. **Future resolution**: This limitation will be resolved when the new trait
 //!    solver stabilizes, enabling proper generic constraints.
 
+use crate::CausalMultiField;
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::CausalMultiField;
+use core::marker::PhantomData;
 use deep_causality_algebra::Field;
 use deep_causality_haft::{
     Applicative, CoMonad, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
-use core::marker::PhantomData;
 
 /// HKT witness for `CausalMultiField<T>`.
 ///

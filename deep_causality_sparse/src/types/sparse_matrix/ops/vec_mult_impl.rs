@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
 use crate::{CsrMatrix, SparseMatrixError};
-use deep_causality_num::Zero;
+use alloc::vec::Vec;
 use core::ops::Mul;
+use deep_causality_num::Zero;
 
 impl<T> CsrMatrix<T> {
     /// Performs matrix-vector multiplication: \( y = Ax \).

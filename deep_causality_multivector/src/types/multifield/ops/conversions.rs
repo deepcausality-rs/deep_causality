@@ -9,9 +9,9 @@
 //! - `to_coefficients`: Extract CausalMultiVector collection
 //! - Factory methods: `zeros`, `ones`
 
-use alloc::vec::Vec;
 use crate::types::multifield::ops::gamma;
 use crate::{CausalMultiField, CausalMultiVector};
+use alloc::vec::Vec;
 use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
 use deep_causality_tensor::{CausalTensor, Tensor};

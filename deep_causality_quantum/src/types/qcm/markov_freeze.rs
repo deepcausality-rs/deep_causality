@@ -11,17 +11,17 @@
 //! not linear-in-depth). It is sound (never accepts a non-commuting model) and
 //! MAY be incomplete.
 
-use alloc::vec::Vec;
-use alloc::format;
 use crate::QuantumError;
 use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
 use crate::types::qgates::operator_linalg::{embed_on_legs, frobenius_norm, matrix_commutator};
+use alloc::collections::BTreeSet;
+use alloc::format;
+use alloc::vec::Vec;
+use core::cell::RefCell;
 use deep_causality::{CausableGraph, CausalityGraphError};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
-use core::cell::RefCell;
-use alloc::collections::BTreeSet;
 
 /// The orphan-rule-legal bridge from the crate-local [`QuantumError`] into the
 /// engine's `CausalityGraphError`, so a quantum freeze hook can surface a

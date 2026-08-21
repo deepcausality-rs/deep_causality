@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ConstTree;
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::ConstTree;
 
 /// An iterator that consumes a `ConstTree` and yields its values.
 /// Traverses the tree in pre-order.

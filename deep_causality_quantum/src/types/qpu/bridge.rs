@@ -9,10 +9,10 @@
 //! measurement statistics surface as `Uncertain<_>`, and a job failure routes to
 //! the error channel with the value absent.
 
-use alloc::format;
 use crate::QuantumError;
 use crate::types::qpu::circuit::QuantumCircuit;
 use crate::types::qpu::sampler::{QpuSampler, ShotHistogram};
+use alloc::format;
 use core::fmt::Debug;
 use deep_causality_core::{
     CausalEffectPropagationProcess, CausalityError, EffectLog, PropagatingEffect,

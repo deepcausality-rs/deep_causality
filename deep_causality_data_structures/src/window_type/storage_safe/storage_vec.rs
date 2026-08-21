@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
+use crate::WindowStorage;
 use alloc::string::String;
 use alloc::string::ToString;
-use crate::WindowStorage;
+use alloc::vec::Vec;
 
 /// A highly optimized vector-based sliding window implementation using only safe Rust.
 ///

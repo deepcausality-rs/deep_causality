@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
 use crate::CausalTensor;
+use alloc::vec::Vec;
 
 impl<T> CausalTensor<T> {
     pub fn from_vec(data: Vec<T>, shape: &[usize]) -> Self {

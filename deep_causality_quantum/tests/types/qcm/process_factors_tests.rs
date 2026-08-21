@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#![cfg(feature = "qcm")]
+
 use deep_causality::utils_test::test_utils;
 use deep_causality::{CausableGraph, CausaloidGraph};
 use deep_causality_num_complex::Complex;

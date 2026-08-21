@@ -27,6 +27,16 @@
 //! adds what quantum error correction needs and that surface cannot express:
 //! the cubical case, genericity over [`ChainComplex`], and the `n`-fold form.
 //!
+//! # Scalars
+//!
+//! The bound is [`CommutativeRing`] plus `Copy`, not `RealField`. The product
+//! adds, subtracts and multiplies coefficients and needs a zero; it never
+//! divides, never orders, and never calls an analytic function. Bounding at the
+//! weakest structure that carries the operation is what the algebra tower is
+//! for, and it leaves the door open to coefficient rings a cohomology
+//! computation may actually want, `Z_N` among them, without a second
+//! implementation.
+//!
 //! # Cochain representation
 //!
 //! A `k`-cochain is a flat slice indexed by cell index within the complex's
@@ -46,7 +56,7 @@
 use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::traits::cell_splitting::SplittableCell;
 use crate::traits::chain_complex::ChainComplex;
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::CommutativeRing;
 use std::collections::HashMap;
 
 /// Rejects a cochain whose length does not match the cell count of its degree.
@@ -92,7 +102,7 @@ pub fn cup_product<K, R>(
 where
     K: ChainComplex,
     K::CellType: SplittableCell,
-    R: RealField,
+    R: CommutativeRing + Copy,
 {
     // `checked_add` rather than `+`: the degrees are caller-supplied, and an
     // overflowing sum would panic in debug and wrap in release, the wrapped
@@ -144,9 +154,9 @@ where
             };
             let term = alpha[l] * beta[r];
             if split.sign() >= 0 {
-                acc += term;
+                acc = acc + term;
             } else {
-                acc -= term;
+                acc = acc - term;
             }
         }
         out[i] = acc;
@@ -171,7 +181,7 @@ pub fn cup_product_n<K, R>(complex: &K, factors: &[(&[R], usize)]) -> Result<Vec
 where
     K: ChainComplex,
     K::CellType: SplittableCell,
-    R: RealField,
+    R: CommutativeRing + Copy,
 {
     let Some(((first, first_degree), rest)) = factors.split_first() else {
         return Err(TopologyError(TopologyErrorEnum::InvalidInput(

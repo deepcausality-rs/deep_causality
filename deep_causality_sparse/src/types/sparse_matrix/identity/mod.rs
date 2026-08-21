@@ -7,9 +7,9 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::CsrMatrix;
+use core::ops::Neg;
 use deep_causality_algebra::{AbelianGroup, Ring};
 use deep_causality_num::{One, Zero};
-use core::ops::Neg;
 
 // Implements Zero trait for CsrMatrix.
 // Returns an empty (0,0) matrix, representing a scalar zero.

@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
 use crate::CausalTensor;
 use crate::CausalTensorError;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 
 pub trait CausalTensorMathExt<T> {

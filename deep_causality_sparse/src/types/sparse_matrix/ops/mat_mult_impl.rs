@@ -3,11 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::{CsrMatrix, SparseMatrixError};
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::{CsrMatrix, SparseMatrixError};
-use deep_causality_num::Zero;
 use core::ops::Mul;
+use deep_causality_num::Zero;
 
 impl<T> CsrMatrix<T> {
     /// Performs matrix multiplication: \( C = A \cdot B \).

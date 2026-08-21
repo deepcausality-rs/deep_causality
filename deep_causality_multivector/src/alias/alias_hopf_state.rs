@@ -7,10 +7,10 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::{CausalMultiVector, CausalMultiVectorError, HilbertState, Metric, MultiVector};
+use core::fmt::{Display, Formatter};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
-use core::fmt::{Display, Formatter};
 
 /// A point on the 3-Sphere ($S^3$), representing a unit spinor or rotor in 3D Euclidean space.
 ///

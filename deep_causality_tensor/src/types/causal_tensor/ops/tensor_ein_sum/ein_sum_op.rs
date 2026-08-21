@@ -3,9 +3,9 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::CausalTensor;
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::CausalTensor;
 use deep_causality_ast::ConstTree;
 
 // The core enum for the EinSum AST. T is the element type (e.g., Complex<f64>)

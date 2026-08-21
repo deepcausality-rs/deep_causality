@@ -12,13 +12,13 @@
 //! (`ℓ` columns) left-to-right. No QR ever touches a full bond-`r` unfolding, so the cost is
 //! `O(d·n·r²·ℓ)` with `ℓ ≈ target rank + oversample`.
 
-use alloc::vec;
-use alloc::vec::Vec;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::rng::gaussian_vec;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor, TensorTrain};
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;
 
 type Re<T> = <T as ConjugateScalar>::Real;

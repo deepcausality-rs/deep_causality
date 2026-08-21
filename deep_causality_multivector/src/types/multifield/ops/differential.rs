@@ -7,9 +7,9 @@
 //!
 //! Implements curl, divergence, and gradient using central-difference stencils.
 
-use alloc::vec;
 use crate::CausalMultiField;
 use crate::types::multifield::ops::gamma;
+use alloc::vec;
 use deep_causality_algebra::{Field, Ring};
 use deep_causality_tensor::{CausalTensor, Tensor};
 

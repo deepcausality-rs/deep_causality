@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::string::String;
 use crate::EinSumValidationError;
+use alloc::string::String;
 use core::error::Error;
 
 /// Errors that can occur during tensor operations.

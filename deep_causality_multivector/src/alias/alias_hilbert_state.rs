@@ -3,14 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
+use core::fmt::{Display, Formatter};
 use deep_causality_algebra::RealField;
 use deep_causality_num::Zero;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
-use core::fmt::{Display, Formatter};
 
 /// The distinguished minimal-left-ideal column of the matrix representation
 /// used by the ket ↔ matrix bridge: the image of the primitive idempotent

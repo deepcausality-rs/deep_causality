@@ -7,8 +7,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::CsrMatrix;
-use deep_causality_algebra::AbelianGroup;
 use core::ops::Sub;
+use deep_causality_algebra::AbelianGroup;
 
 // AbelianGroup for CsrMatrix
 impl<T> AbelianGroup for CsrMatrix<T>

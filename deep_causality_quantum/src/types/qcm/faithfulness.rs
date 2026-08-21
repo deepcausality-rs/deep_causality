@@ -16,12 +16,12 @@
 //! commuting CNOTs, `U₃`). A `C₃`-containing structure provably has no
 //! traditional-circuit faithful decomposition and is rejected at freeze.
 
+use crate::QuantumError;
+use alloc::collections::BTreeSet;
+use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
-use alloc::format;
-use crate::QuantumError;
 use deep_causality::CausableGraph;
-use alloc::collections::BTreeSet;
 
 /// A causal structure: a bipartite influence relation between input systems and
 /// output systems. `contains(i, o)` holds when input `i` influences output `o`.

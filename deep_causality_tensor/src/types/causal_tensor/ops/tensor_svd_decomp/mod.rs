@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::{CausalTensor, CausalTensorError};
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::{CausalTensor, CausalTensorError};
-use deep_causality_algebra::RealField;
 use core::iter::Sum;
 use core::ops::Neg;
+use deep_causality_algebra::RealField;
 
 impl<T> CausalTensor<T>
 where

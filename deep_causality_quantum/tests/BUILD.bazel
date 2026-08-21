@@ -82,6 +82,9 @@ rust_test_suite(
     srcs = glob([
         "types/qcm/*_tests.rs",
     ]),
+    crate_features = [
+        "qcm",
+    ],
     tags = [
         "unit-test",
     ],

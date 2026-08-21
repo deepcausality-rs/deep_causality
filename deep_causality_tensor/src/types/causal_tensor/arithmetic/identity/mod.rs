@@ -3,8 +3,8 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec;
 use crate::CausalTensor;
+use alloc::vec;
 use deep_causality_num::{One, Zero};
 
 /// Implements Zero trait for CausalTensor.

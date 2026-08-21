@@ -8,13 +8,13 @@
 //! examples can exercise the emergent path without any network/async/vendor
 //! dependency. Given a fixed seed it reproduces the same histogram exactly.
 
-use alloc::vec;
-use alloc::string::String;
-use alloc::format;
-use alloc::string::ToString;
 use crate::QuantumError;
 use crate::types::qpu::circuit::{GateOp, QuantumCircuit};
 use crate::types::qpu::sampler::{CountHistogram, QpuSampler};
+use alloc::format;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec;
 
 /// The calibration surfaced to the context channel by `qpu_effect`.
 #[derive(Debug, Clone, PartialEq, Eq)]

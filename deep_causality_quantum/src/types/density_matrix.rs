@@ -6,13 +6,13 @@
 //! The mixed-state density matrix with enforced invariants (L1 of the
 //! operator build ladder, design B4).
 
-use alloc::vec;
-use alloc::vec::Vec;
-use alloc::format;
 use crate::QuantumError;
 use crate::types::qgates::operator_linalg::{
     frobenius_norm, hermiticity_defect, matrix_trace, square_dim,
 };
+use alloc::format;
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;

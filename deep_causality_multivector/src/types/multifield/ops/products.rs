@@ -11,10 +11,10 @@
 //! - Outer product → antisymmetrization
 //! - Commutator → AB - BA
 
-use alloc::vec::Vec;
 use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector as MultiVectorTrait;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
+use alloc::vec::Vec;
 use deep_causality_algebra::{Field, Ring};
 use deep_causality_tensor::CausalTensor;
 

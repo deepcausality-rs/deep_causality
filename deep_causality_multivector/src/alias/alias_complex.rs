@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
 use crate::{ComplexMultiVector, Metric};
+use alloc::vec::Vec;
 use deep_causality_num_complex::Complex64;
 
 impl ComplexMultiVector {

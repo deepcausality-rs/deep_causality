@@ -39,9 +39,9 @@
 //! `RingIso`, etc. would not type-check. The base `Iso<S, T>` is the
 //! right surface.
 
+use crate::CsrMatrix;
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::CsrMatrix;
 use core::fmt;
 use deep_causality_algebra::iso::witness::Iso;
 use deep_causality_num::Zero;

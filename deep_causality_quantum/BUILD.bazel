@@ -9,6 +9,7 @@ rust_library(
     # compiled and tested; the default *cargo* build stays verifiable-only
     # (`default = []`), which is the modality guarantee the spec states.
     crate_features = [
+        "qcm",
         "qpu",
     ],
     crate_root = "src/lib.rs",
@@ -35,6 +36,7 @@ rust_doc(
     name = "doc",
     crate = ":deep_causality_quantum",
     crate_features = [
+        "qcm",
         "qpu",
     ],
     tags = ["doc"],
@@ -45,6 +47,7 @@ rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_quantum",
     crate_features = [
+        "qcm",
         "qpu",
     ],
     tags = ["doc-test"],

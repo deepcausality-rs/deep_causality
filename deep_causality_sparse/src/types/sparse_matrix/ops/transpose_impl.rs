@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec;
 use crate::CsrMatrix;
+use alloc::vec;
 use deep_causality_num::Zero;
 
 impl<T> CsrMatrix<T> {

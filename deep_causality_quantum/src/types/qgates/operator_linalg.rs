@@ -11,15 +11,15 @@
 //! everything is plain index arithmetic over the existing tensor substrate;
 //! no new numeric substance.
 
+use crate::QuantumError;
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
-use alloc::format;
-use crate::QuantumError;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
-use alloc::collections::{BTreeMap, BTreeSet};
 
 /// Validates that `op` is a non-empty square matrix and returns its dimension.
 pub(crate) fn square_dim<R>(op: &CausalTensor<Complex<R>>) -> Result<usize, QuantumError>

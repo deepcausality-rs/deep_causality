@@ -7,10 +7,10 @@
 
 use crate::{CausalMultiVector, CausalMultiVectorError};
 use crate::{MultiVector, MultiVectorL2Norm, ScalarEval};
-use deep_causality_algebra::{Field, Real};
-use deep_causality_num::{One, Zero};
 use core::iter::Sum;
 use core::ops::{AddAssign, Neg, SubAssign};
+use deep_causality_algebra::{Field, Real};
+use deep_causality_num::{One, Zero};
 
 impl<T> MultiVector<T> for CausalMultiVector<T> {
     fn grade_projection(&self, k: u32) -> Self

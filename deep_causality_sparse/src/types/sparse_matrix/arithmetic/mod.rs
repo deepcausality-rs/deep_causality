@@ -6,8 +6,8 @@
 use alloc::vec::Vec;
 
 use crate::CsrMatrix;
-use deep_causality_algebra::{AbelianGroup, Ring};
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use deep_causality_algebra::{AbelianGroup, Ring};
 
 // ============================================================================
 // Add Implementations (4 variants for all ownership combinations)

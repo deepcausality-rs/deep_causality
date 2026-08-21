@@ -4,8 +4,8 @@
  */
 
 use crate::CsrMatrix;
-use deep_causality_num::Zero;
 use core::fmt::Display;
+use deep_causality_num::Zero;
 
 impl<T> Display for CsrMatrix<T>
 where

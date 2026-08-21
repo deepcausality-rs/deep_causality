@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
 use alloc::format;
 use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use crate::{CausalTensor, CausalTensorError, Tensor};
 
