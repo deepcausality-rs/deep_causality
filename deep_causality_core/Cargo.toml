@@ -26,10 +26,11 @@ exclude = [
 [features]
 default = ["std"]
 std = ["alloc", "deep_causality_haft/std"]
-alloc = []
+alloc = ["deep_causality_haft/alloc"]
+no-std = ["alloc", "deep_causality_haft/no-std"]
 
 [dependencies]
-deep_causality_haft = { path = "../deep_causality_haft", version = "0.4" }
+deep_causality_haft = { path = "../deep_causality_haft", version = "0.4", default-features = false }
 
 [lints]
 workspace = true

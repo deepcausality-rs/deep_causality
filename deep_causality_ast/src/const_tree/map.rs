@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::ConstTree;
-use std::sync::Arc;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
 
 impl<T: Clone> ConstTree<ConstTree<T>> {
     /// Flattens a tree of trees into a single tree.

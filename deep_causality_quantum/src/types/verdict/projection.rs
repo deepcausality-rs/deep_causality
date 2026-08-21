@@ -19,6 +19,8 @@
 
 use crate::QuantumError;
 use crate::types::qgates::operator_linalg::{hermiticity_defect, identity_matrix, square_dim};
+use alloc::format;
+use alloc::vec;
 use deep_causality_algebra::{RealField, Verdict};
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;

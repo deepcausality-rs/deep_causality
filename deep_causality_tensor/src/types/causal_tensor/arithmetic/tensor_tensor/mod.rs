@@ -4,8 +4,8 @@
  */
 use crate::CausalTensorError;
 use crate::types::causal_tensor::CausalTensor;
+use core::ops::{Add, Div, Mul, Sub};
 use deep_causality_num::Zero;
-use std::ops::{Add, Div, Mul, Sub};
 
 //
 // Implement Add trait for CausalTensor

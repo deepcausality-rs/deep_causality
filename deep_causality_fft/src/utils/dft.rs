@@ -9,6 +9,8 @@
 //! tests, the same role the naïve DFT plays in RustFFT. The planner never
 //! selects them.
 
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;

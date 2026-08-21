@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt;
+use core::fmt;
 
 /// Enumeration representing the dimensionality of a `PointIndex`.
 ///

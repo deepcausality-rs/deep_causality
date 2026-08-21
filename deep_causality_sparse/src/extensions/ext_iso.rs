@@ -40,6 +40,8 @@
 //! right surface.
 
 use crate::CsrMatrix;
+use alloc::vec;
+use alloc::vec::Vec;
 use core::fmt;
 use deep_causality_algebra::iso::witness::Iso;
 use deep_causality_num::Zero;
@@ -68,8 +70,7 @@ impl fmt::Display for CsrFromTensorError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for CsrFromTensorError {}
+impl core::error::Error for CsrFromTensorError {}
 
 // =============================================================================
 // Forward (Tier 1): CausalTensor<F> -> CsrMatrix<F> via TryFrom

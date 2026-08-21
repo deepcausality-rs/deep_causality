@@ -3,11 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::{CausalMultiVector, CausalMultiVectorError, HilbertState, Metric, MultiVector};
+use core::fmt::{Display, Formatter};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
-use std::fmt::{Display, Formatter};
 
 /// A point on the 3-Sphere ($S^3$), representing a unit spinor or rotor in 3D Euclidean space.
 ///
@@ -174,7 +177,7 @@ impl<R: RealField> TryFrom<HopfState<R>> for HilbertState<R> {
 }
 
 impl<R: RealField + core::fmt::Debug> Display for HopfState<R> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "HopfState({:?})", self.0)
     }
 }

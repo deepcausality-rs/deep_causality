@@ -61,7 +61,15 @@ There are many valid reasons and use cases for macros, and, in fact, this crate 
 
 ## No-Std
 
-Unfortunately, a `no-std` option is not yet supported in this first release. It can be added at some point but requires more work. If you need `no-std`, please file an issue. Alternatively, explore the `no-std` option in the [rand](https://crates.io/crates/rand) crate.
+This crate builds without a standard library. Three feature levels select the target environment:
+
+* `std` (the default) builds against the standard library. This is the level that enables the thread-local generator behind `rng()` and host entropy for seeding.
+* `alloc` adds the heap without the standard library. It is a level rather than a complete configuration, because it does not say where floating-point math comes from; select it through `std` or `no-std` rather than on its own.
+* `no-std` builds against `core` plus `alloc` and routes float math through the pure-Rust `libm` crate that `deep_causality_num` pulls in, so still no libc. Build with `cargo build --no-default-features --features no-std`, and cross-compile to a bare-metal target the same way, for example `--target aarch64-unknown-none`.
+
+Seeding deserves attention on bare metal. A bare-metal target offers no ambient entropy and no thread identity, so `Xoshiro256::new()` falls back to a per-call counter mixed into a fixed base seed. Successive calls within one run yield distinct streams, but the whole sequence repeats identically after every reset, which makes the default seeding reproducible rather than random. When the stream has to differ per boot, seed explicitly with `Xoshiro256::from_seed` from whatever entropy the board offers, such as a hardware RNG peripheral, ADC noise, or a timer capture. This crate cannot know what a given board provides, so that entropy belongs to the firmware. The counter also uses a 32-bit atomic, so targets without atomic compare-and-swap must call `Xoshiro256::from_seed` directly.
+
+`ThreadRng` and the thread-local generator it wraps require `std` and are therefore unavailable under `no-std`; there, `rng()` hands back an owned `Xoshiro256` that the caller keeps. The "os-random" feature flag is a separate matter: `getrandom` ships no backend for a bare-metal target, so that combination fails to build unless the firmware registers a custom backend.
 
 ## Contributions
 

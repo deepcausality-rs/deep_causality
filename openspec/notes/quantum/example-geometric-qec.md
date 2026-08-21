@@ -302,7 +302,7 @@ looked larger is that the ladder was written against a specification rather than
 code and a `CCZ` on a 3-torus can be constructed from it, and their homology-class invariance
 checked. The crate delivers the *operation*, not the gate: `deep_causality_quantum` does not depend
 on `deep_causality_topology`, so the example itself is where the two meet, and no fault-tolerance
-claim attaches either way (§10 items 1 and 5).
+claim attaches either way (§11 items 1 and 5).
 
 The gate **catalogue** still lies out of reach, and with it the code search that consumes it. Counting
 independently addressable `C^{n−q−1}Z` generators from the Betti vector needs the higher products of
@@ -331,7 +331,118 @@ storage detail but the representation in which the defining property of a qLDPC 
 
 ---
 
-## 8. Sketch of the output
+## 8. DEM interop: the ecosystem's format is already a causal model
+
+Stim's Detector Error Model is the practical interchange standard across the QEC simulation
+ecosystem. Reading and writing it puts this example upstream of Stim and PyMatching rather than
+beside them.
+
+### 8.1 The format
+
+Five instructions, UTF-8, double-precision coordinates:
+
+```
+error(0.001) D0 D1 L0                 # probability, then symptoms and frame changes
+error(0.02) D2 L0 ^ D5 D6             # ^ suggests a decomposition into edge-like parts
+detector(2.5, 3.5, 6) D7              # coordinates, relative to the running offset
+logical_observable L1 L2              # assert the frame change exists
+shift_detectors(0, 0.5) 2             # advance detector index by 2, y by 0.5
+repeat 9 { ... }                      # a time-homogeneous block
+error[tag_name](0.1) D0               # optional tag
+```
+
+A DEM is a list of **independent** error mechanisms. Each carries a probability, the set of detectors
+it flips, and the set of logical observables it flips. Sampling keeps each mechanism independently
+and XORs the results, so symptoms appearing an odd number of times survive.
+
+Three details decide whether an importer is correct:
+
+1. **`D#` is relative, `L#` is absolute.** Detector indices are adjusted by the running offset;
+   observable indices are not. Treating them alike mis-wires every `repeat` block.
+2. **`repeat` with `shift_detectors` encodes time.** A repeat block is a time-homogeneous causal
+   process and the shift is the temporal stride. Preserve it; expanding it discards the stationarity
+   that makes the model compact.
+3. **`^` is a decoder hint.** It records a suggested decomposition for matching decoders and carries
+   no causal content. Drop it on import, regenerate it on export.
+
+### 8.2 The correspondence is exact
+
+A DEM is a bipartite graph from latent mechanisms to observed symptoms, with independent mechanisms
+and known marginals. `error(0.001) D0 D1 L0` reads directly as a hypothesis: a mechanism with effect
+set `{D0, D1, L0}` at `p = 0.001`. No translation layer is required.
+
+### 8.3 A DEM imports into two different configs
+
+This is where the subject-keyed config of [`qcl-design-note.md`](qcl-design-note.md) §4.2 earns its
+keep. A DEM carries a code **and** a noise model, and the two answer different questions.
+
+**Structural questions — `over_code`.** No device, exact evaluation.
+
+```rust
+let cfg = QclBuilder::config::<FloatType>()
+    .over_code(Code::from_dem_file("surface_d5.dem")?)
+    .build()?;
+
+QclBuilder::validate(&cfg)
+    .check_degeneracy()
+    .check_ldpc_weights()
+    .finalize().print_results();
+```
+
+**Diagnostic questions — `over_plant`.** The DEM supplies the hypothesis structure; the device
+supplies the evidence.
+
+```rust
+let dem = Dem::from_file("surface_d5.dem")?;
+
+let cfg = QclBuilder::config::<FloatType>()
+    .over_plant(device)
+    .evidence(Evidence::shots(4096).seed(20260821))
+    .baseline(Experiment::probe("syndrome", detector_readout, 1, cost = 1))
+    .probes(&targeted_experiments)
+    .candidates(&dem.mechanisms())          // each error(p) line becomes a hypothesis
+    .build()?;
+```
+
+### 8.4 The check that does not exist today
+
+Group error mechanisms by identical target set. Any group with more than one member is a
+**Markov-equivalence class: indistinguishable from syndrome data alone**.
+
+Stim combines such mechanisms by design, and for decoding they are the same — the correction depends
+on the symptom pattern, not on which fault produced it. For diagnosis they are different physical
+faults with different repairs, and the merge removes the only signal that would separate them. This
+is the failure class the calibration example opens on: a confident answer with nothing marking it as
+uninformative.
+
+`check_degeneracy` reports the class and names the experiment that breaks it. That is `validate`
+applied to a DEM, and it is the most defensible thing this line of work adds at the QEC tier.
+
+### 8.5 Export
+
+The derived code plus a noise model emits DEM text, which Stim samples and PyMatching decodes:
+
+```rust
+QclBuilder::validate(&cfg)
+    .derive_code()
+    .check_class_invariance()
+    .finalize()
+    .to_dem(&noise)?;
+```
+
+### 8.6 What this must not claim
+
+The example does not decode. Stim and PyMatching decode, and they are fast and correct at it. The
+contribution is upstream — deriving the code from a complex, checking that logical gates act on
+homology classes rather than representatives, and reporting which error mechanisms syndrome data
+cannot separate. Two recent lines of work sit nearby and should be cited rather than ignored: DEM
+reconstruction from syndrome data (arXiv 2606.16288, 2601.22286), which estimates parameters over a
+known structure, and quasilinear DEM equivalence checking (arXiv 2606.14677), which verifies rather
+than attributes.
+
+---
+
+## 9. Sketch of the output
 
 ```
 === Geometric quantum error correction: codes from shapes ===
@@ -371,7 +482,7 @@ until the example runs.
 
 ---
 
-## 9. Layout and build
+## 10. Layout and build
 
 ```
 examples/quantum_examples/geometric_qec/
@@ -384,7 +495,7 @@ multivector, num_complex and core in `deps`, and a row in the package README tab
 
 ---
 
-## 10. What the example must not claim
+## 11. What the example must not claim
 
 1. **The gates are not fault-tolerant.** Haruna states his focus "is not on fault tolerance such as
    constant depth or locality." The constant-depth line is Hsin–Kobayashi–Zhu and is not
@@ -404,7 +515,7 @@ multivector, num_complex and core in `deps`, and a row in the package README tab
 
 ---
 
-## 11. Open questions
+## 12. Open questions
 
 1. **Which complex family?** The 2-torus is the clearest. Adding the 3-torus shows the Betti vector
    generalising and costs a few lines. *Recommendation: both.*
@@ -429,13 +540,21 @@ multivector, num_complex and core in `deps`, and a row in the package README tab
 
 ---
 
-## 12. Sources
+## 13. Sources
 
 - Haruna, J. (2025). *Note on Logical Gates by Gauge Field Formalism of Quantum Error Correction.*
   arXiv:2511.15224. The gate construction and the homology-class invariance theorem the validate
   gate checks. Bundled in `deep_causality_quantum/papers/`.
 - Hsin, P.-S., Kobayashi, R. & Zhu, G. (2024). arXiv:2411.15848. The fault-tolerant constant-depth
   line, cited as the boundary of what is implemented, not as what is implemented.
+- Gidney, C. (2021). *Stim: a fast stabilizer circuit simulator.* Quantum **5**, 497. And
+  `doc/file_format_dem_detector_error_model.md` in `quantumlib/Stim`, the Detector Error Model
+  specification §8.1 follows: five instructions, relative `D#` against absolute `L#`, `repeat` with
+  `shift_detectors` for time-homogeneous blocks, `^` as a decoder hint.
+- DEM reconstruction from syndrome data, arXiv:2606.16288 and arXiv:2601.22286. Parameter estimation
+  over a known structure, adjacent to §8.4.
+- *Quasilinear Equivalence Checking for Detector Error Models*, arXiv:2606.14677. Verification, not
+  causal attribution.
 - `dynamic-qcm.md` §3, for the QEC-as-topology identification and the `SPEC-T1` through `SPEC-T6`
   ladder this example stops against.
 

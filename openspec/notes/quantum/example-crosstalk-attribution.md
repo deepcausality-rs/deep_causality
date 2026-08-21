@@ -83,11 +83,28 @@ shutdown**, a spatial asymmetry metric, a **swap into a second refrigerator**, a
 measurements. Eighteen authors. The shutdown and the refrigerator swap are interventions, and the
 campaign is a hypothesis set against a family of experiments with wildly different costs.
 
-One honest correction, because it changes what may be claimed. A search summary reported that the
-process-tensor literature already frames this in the vocabulary of common cause and direct cause,
-citing White's thesis (arXiv:2405.05416). Reading the source did not confirm that vocabulary. So the
-causal framing is this project's contribution rather than an idiom borrowed from the target
-community, which is a weaker claim than the search suggested and the one that survives checking.
+Two corrections, because they change what may be claimed.
+
+The first is narrow. A search summary reported that the process-tensor literature already frames this
+in the vocabulary of common cause and direct cause, citing White's thesis (arXiv:2405.05416). Reading
+the source did not confirm that vocabulary.
+
+The second is not narrow, and it retires an earlier draft of this section. **Statistical causal
+inference was applied to crosstalk in quantum processors six years ago.** Sarovar, Proctor, Rudinger,
+Young, Nielsen & Blume-Kohout, *Detecting crosstalk errors in quantum information processors*
+(Quantum **4**, 321, 2020) adapts the PC algorithm, tests conditional independence under the Markov
+condition, and resolves direction as well as existence, at O(n²) to O(n³) experiments, demonstrated
+on 2- and 6-qubit processors. The causal framing for crosstalk belongs to that paper and this example
+must cite it rather than present the framing as new.
+
+What the example adds sits inside that framing, and it is narrower than the earlier draft implied.
+The Sandia protocol runs a **fixed experiment set**. It does not enumerate named hypotheses, so an
+inadmissible structure is never considered and never rejected; it does not screen for admissibility
+before device time is spent; and it does not select experiments against a cost budget. This example
+enumerates four structures including a cyclic one, rejects that one as a `C₃` before any shots, and
+then buys the cheapest experiment subset that separates the survivors by a stated number of bits.
+That conjunction — discrete structural hypotheses, admissibility screening, cost-bounded design — is
+the contribution. The causal vocabulary is not.
 
 ---
 
@@ -334,7 +351,8 @@ examples/quantum_examples/crosstalk_attribution/
 1. **Does this displace the calibration example or accompany it?** They share a shape: hypotheses,
    degenerate observation, designed experiment. *Recommendation: both, in this order.* Calibration
    discriminates parameter faults on one system and is the gentler introduction; this discriminates
-   causal structures across systems and is the one only this crate can pose.
+   causal structures across systems, which is the harder question and the one the design
+   stage is built for.
 2. **Is H₄ worth including given it is rejected?** *Recommendation: yes.* A validation gate that
    never rejects anything reads as decoration. H₄ is physically reasonable, and its rejection is the
    only demonstration in the repository of the C₃ criterion refusing a model an engineer might
@@ -350,6 +368,13 @@ examples/quantum_examples/crosstalk_attribution/
 
 ## 12. Sources
 
+- Sarovar, M., Proctor, T., Rudinger, K., Young, K., Nielsen, E. & Blume-Kohout, R. (2020).
+  *Detecting crosstalk errors in quantum information processors.* Quantum **4**, 321.
+  DOI 10.22331/q-2020-09-11-321. The prior work §3 defers to: PC algorithm, conditional independence
+  under the Markov condition, direction and existence, fixed experiment set.
+- Ferrie, C., Granade, C.E. & Cory, D.G. (2012). *Adaptive Hamiltonian Estimation Using Bayesian
+  Experimental Design.* arXiv:1111.0935. Adaptive design over continuous parameters; the `design`
+  stage here selects over discrete structures under a cost budget instead.
 - Allen, J.-M. et al. (2017). Complete common cause as factorization into commuting Choi factors,
   the theorem the freeze gate tests.
 - van der Lugt, T. & Lorenz, R. (2025). *Unitary causal decompositions.* arXiv:2508.11762. The

@@ -2,9 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{CsmGraph, GraphError, GraphView, TopologicalGraphAlgorithms};
-use std::collections::VecDeque;
-use std::slice;
+use alloc::collections::VecDeque;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::slice;
 
 /// Private enum representing the state of a node during a DFS traversal.
 /// It is not part of the public API.

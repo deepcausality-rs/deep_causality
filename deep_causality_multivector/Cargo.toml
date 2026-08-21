@@ -25,31 +25,41 @@ exclude = [
     "papers/*",
 ]
 
+[features]
+default = ["std"]
+std = ["alloc", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_tensor/std", "deep_causality_metric/std"]
+alloc = []
+no-std = ["alloc", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_tensor/no-std", "deep_causality_metric/no-std"]
+
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
 version = "0.4"
-
+default-features = false
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
 version = "0.4"
+default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
 version = "0.2"
+default-features = false
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
 version = "0.1"
-
+default-features = false
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
 version = "0.5"
+default-features = false
 
 [dependencies.deep_causality_metric]
 path = "../deep_causality_metric"
 version = "0.2"
+default-features = false
 
 
 [dev-dependencies]

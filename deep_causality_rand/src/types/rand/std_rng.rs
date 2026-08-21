@@ -17,20 +17,60 @@ impl Default for Xoshiro256 {
     }
 }
 
+/// Base seed shared by both seeding paths.
+const BASE_SEED: u64 = 0x736f_6d65_7073_6575;
+
+/// Ambient entropy from the host: a fresh `RandomState` mixed with the thread
+/// id, so each thread of a process draws a distinct stream.
+#[cfg(feature = "std")]
+fn entropy_seed() -> u64 {
+    use core::hash::BuildHasher;
+    use std::collections::hash_map::RandomState;
+    use std::thread;
+
+    let hash_builder = RandomState::new();
+    BASE_SEED.wrapping_add(hash_builder.hash_one(thread::current().id()))
+}
+
+/// Bare metal has neither ambient entropy nor a thread identity, so there is
+/// nothing honest to draw from. A counter is mixed into the base seed instead:
+/// successive `new()` calls within one run yield distinct streams, and the
+/// sequence repeats identically after every reset.
+///
+/// When the stream has to differ per boot, seed explicitly with
+/// [`Xoshiro256::from_seed`]. On an embedded target the entropy belongs to the
+/// board — a hardware RNG peripheral, ADC noise, a timer capture — not to this
+/// crate, which cannot know what the board offers.
+///
+/// Uses a 32-bit atomic, so targets without atomic compare-and-swap must use
+/// [`Xoshiro256::from_seed`] directly.
+#[cfg(not(feature = "std"))]
+fn entropy_seed() -> u64 {
+    use core::sync::atomic::{AtomicU32, Ordering};
+
+    /// Golden-ratio odd stride: walks the whole 32-bit range before repeating.
+    const GOLDEN: u32 = 0x9E37_79B9;
+    static COUNTER: AtomicU32 = AtomicU32::new(0);
+
+    let n = COUNTER.fetch_add(GOLDEN, Ordering::Relaxed);
+    BASE_SEED.wrapping_add(u64::from(n))
+}
+
 impl Xoshiro256 {
+    /// Creates a generator seeded from whatever ambient entropy the target
+    /// offers.
+    ///
+    /// On `std` that is a per-thread draw: a fresh `RandomState` mixed with the
+    /// current thread id, so two threads of one process run distinct streams.
+    /// On `no_std` there is neither ambient entropy nor a thread identity, so
+    /// the seed comes from a per-call counter instead: successive calls within
+    /// one run yield distinct streams, and the sequence repeats identically
+    /// after every reset.
+    ///
+    /// Use [`from_seed`](Self::from_seed) when the seed must be known, must be
+    /// reproducible, or must vary per boot on a bare-metal target.
     pub fn new() -> Self {
-        use std::collections::hash_map::RandomState;
-        use std::hash::BuildHasher;
-        use std::thread;
-
-        // Base seed for deterministic behavior within a single thread
-        let base_seed = 0x736f6d6570736575u64;
-
-        // Combine base seed with thread ID to ensure each thread gets a unique seed
-        let hash_builder = RandomState::new();
-        let thread_component = hash_builder.hash_one(thread::current().id());
-
-        Self::from_seed(base_seed.wrapping_add(thread_component))
+        Self::from_seed(entropy_seed())
     }
 
     /// Creates a generator from an explicit 64-bit seed.

@@ -8,7 +8,7 @@ use deep_causality_algebra::{Field, RealField};
 /// Defines L2 norm operations for multivectors, treating their coefficients as a vector space.
 pub trait MultiVectorL2Norm<T>
 where
-    T: Field + Copy + std::iter::Sum,
+    T: Field + Copy + core::iter::Sum,
 {
     /// Returns the Real magnitude type (e.g. f64 for `Complex<f64>`)
     type Output: RealField + Copy;

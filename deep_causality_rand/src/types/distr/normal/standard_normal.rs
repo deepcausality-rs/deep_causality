@@ -3,6 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+// On `std` the inherent `f64::exp`/`ln` win method resolution. Without it they
+// do not exist, and the `Float` impl in `deep_causality_num` supplies them
+// (routed to libm), so the trait only needs to be in scope on `no_std`.
+#[cfg(not(feature = "std"))]
+use deep_causality_num::Float;
+
 use crate::Open01;
 use crate::utils::{ziggurat_sampler, ziggurat_tables};
 use crate::{Distribution, Rng};

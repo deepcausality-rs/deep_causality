@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Euler, Scalar};
+use core::ops::{Add, Mul};
 use deep_causality_haft::Arrow;
-use std::ops::{Add, Mul};
 
 impl<S, R, F> Arrow for Euler<S, R, F>
 where

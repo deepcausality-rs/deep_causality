@@ -15,6 +15,7 @@
 //! match a widely used reference implementation bit-for-bit.
 
 use crate::{RngCore, RngError, Xoshiro256};
+use alloc::format;
 
 /// Maximum dimension supported by the embedded direction-number table.
 pub const MAX_SOBOL_DIM: usize = 16;

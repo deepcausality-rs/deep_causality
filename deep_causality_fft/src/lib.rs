@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! Fast Fourier transforms for the DeepCausality stack.
 //!
 //! The crate provides plan-based forward and inverse transforms, generic
@@ -38,6 +40,8 @@
 //! caller-provided scratch buffer of at least [`FftPlan::scratch_len`]
 //! elements and performs no heap allocation (the opt-in `parallel`
 //! feature allocates per-thread scratch inside parallel sections).
+
+extern crate alloc;
 
 pub mod errors;
 pub mod traits;

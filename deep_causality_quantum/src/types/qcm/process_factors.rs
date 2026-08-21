@@ -9,11 +9,13 @@
 //! at the freeze boundary; it never rides the runtime STATE channel.
 
 use crate::QuantumError;
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::format;
+use alloc::vec::Vec;
 use deep_causality::CausableGraph;
 use deep_causality_algebra::RealField;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
-use std::collections::{BTreeMap, BTreeSet};
 
 /// A single Choi–Jamiołkowski factor `ρ_{Aᵢ|Pa(Aᵢ)}` — a complex matrix on the
 /// composite Hilbert space of node `Aᵢ` and its parents.

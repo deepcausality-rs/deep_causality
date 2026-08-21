@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! Quantum causal models on the causal monad.
 //!
 //! This crate carries the quantum-information layer of DeepCausality: the
@@ -19,11 +21,14 @@
 //! All metric signatures come from `deep_causality_metric`, the single source
 //! of truth; this crate defines no metric type of its own.
 
+extern crate alloc;
+
 pub(crate) mod error;
 pub(crate) mod types;
 
 pub use crate::error::quantum_error::{QuantumError, QuantumErrorEnum};
 
+#[cfg(feature = "qcm")]
 pub use crate::types::qcm::*;
 pub use crate::types::qgates::*;
 pub use crate::types::verdict::*;

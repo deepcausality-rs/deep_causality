@@ -17,6 +17,7 @@
 //! Normalization matches the complex plans: forward unnormalized,
 //! inverse scaled by `1/n`.
 
+use alloc::vec::Vec;
 use deep_causality_num_complex::Complex;
 
 use crate::errors::fft_error::FftError;

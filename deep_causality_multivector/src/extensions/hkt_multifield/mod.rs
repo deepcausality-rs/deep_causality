@@ -40,13 +40,15 @@
 //!    solver stabilizes, enabling proper generic constraints.
 
 use crate::CausalMultiField;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::marker::PhantomData;
 use deep_causality_algebra::Field;
 use deep_causality_haft::{
     Applicative, CoMonad, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
-use std::marker::PhantomData;
 
 /// HKT witness for `CausalMultiField<T>`.
 ///
@@ -104,9 +106,9 @@ where
                 .iter()
                 .map(|x| {
                     // Transmute T -> A, apply f, transmute result -> T
-                    let a_val = std::mem::transmute_copy::<T, A>(x);
+                    let a_val = core::mem::transmute_copy::<T, A>(x);
                     let c_val = f(a_val);
-                    std::mem::transmute_copy::<C, T>(&c_val)
+                    core::mem::transmute_copy::<C, T>(&c_val)
                 })
                 .collect();
 
@@ -124,9 +126,9 @@ where
 
             // Transmute to CausalMultiField<C>
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
-            let ret = std::ptr::read(result_ptr);
-            std::mem::forget(result);
-            // std::mem::forget(fa); // Do not forget the input `fa`, let it drop naturally.
+            let ret = core::ptr::read(result_ptr);
+            core::mem::forget(result);
+            // core::mem::forget(fa); // Do not forget the input `fa`, let it drop naturally.
             ret
         }
     }
@@ -174,9 +176,9 @@ where
             };
 
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<A>;
-            let ret = std::ptr::read(result_ptr);
-            std::mem::forget(result);
-            // std::mem::forget(value); // This causes a memory leak.
+            let ret = core::ptr::read(result_ptr);
+            core::mem::forget(result);
+            // core::mem::forget(value); // This causes a memory leak.
             ret
         }
     }
@@ -240,9 +242,9 @@ where
             // Extract first coefficient and apply f
             let data_vec = ma_concrete.data().as_slice();
             if let Some(&first_val) = data_vec.first() {
-                let a_val = std::mem::transmute_copy::<T, A>(&first_val);
+                let a_val = core::mem::transmute_copy::<T, A>(&first_val);
                 let result = f(a_val);
-                // std::mem::forget(ma); // This causes a memory leak.
+                // core::mem::forget(ma); // This causes a memory leak.
                 return result;
             }
 
@@ -266,9 +268,9 @@ where
             };
 
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
-            let ret = std::ptr::read(result_ptr);
-            std::mem::forget(result);
-            // std::mem::forget(ma); // This causes a memory leak.
+            let ret = core::ptr::read(result_ptr);
+            core::mem::forget(result);
+            // core::mem::forget(ma); // This causes a memory leak.
             ret
         }
     }
@@ -297,7 +299,7 @@ where
             let data_vec = fa_concrete.data().as_slice();
             let first_val = data_vec.first().copied().unwrap_or_else(T::zero);
 
-            std::mem::transmute_copy::<T, A>(&first_val)
+            core::mem::transmute_copy::<T, A>(&first_val)
         }
     }
 
@@ -314,7 +316,7 @@ where
         // as a constant field.
         unsafe {
             let c_val = f(fa);
-            let c_t = std::mem::transmute_copy::<C, T>(&c_val);
+            let c_t = core::mem::transmute_copy::<C, T>(&c_val);
 
             let fa_ptr = fa as *const CausalMultiField<A> as *const CausalMultiField<T>;
             let fa_concrete = &*fa_ptr;
@@ -338,9 +340,9 @@ where
             };
 
             let result_ptr = &result as *const CausalMultiField<T> as *const CausalMultiField<C>;
-            let ret = std::ptr::read(result_ptr);
-            std::mem::forget(result);
-            std::mem::forget(c_val);
+            let ret = core::ptr::read(result_ptr);
+            core::mem::forget(result);
+            core::mem::forget(c_val);
             ret
         }
     }

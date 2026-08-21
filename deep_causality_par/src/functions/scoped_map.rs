@@ -22,6 +22,8 @@
 //! matches Rayon without the dependency. For many small, irregular tasks a
 //! real scheduler would win; nothing in the workspace needs one.
 
+use alloc::vec::Vec;
+
 use crate::MaybeParallel;
 
 /// Map `f` over `items`, preserving input order in the returned `Vec`.

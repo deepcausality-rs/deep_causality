@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{GraphState, GraphView, UltraGraphContainer};
+use alloc::vec::Vec;
 
 impl<N, W> GraphView<N, W> for UltraGraphContainer<N, W>
 where

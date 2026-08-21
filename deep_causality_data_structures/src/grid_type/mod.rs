@@ -11,7 +11,7 @@ pub mod storage_array_2d;
 pub mod storage_array_3d;
 pub mod storage_array_4d;
 
-use std::fmt::{Debug, Display, Formatter};
+use core::fmt::{Debug, Display, Formatter};
 
 pub use point::PointIndexType;
 
@@ -179,7 +179,7 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> Display
 where
     T: Copy + Default + Debug,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             ArrayGrid::ArrayGrid1D(_) => write!(f, "ArrayGrid1D"),
             ArrayGrid::ArrayGrid2D(_) => write!(f, "ArrayGrid2D"),

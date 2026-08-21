@@ -11,6 +11,10 @@
 use crate::QuantumError;
 use crate::types::qpu::circuit::{GateOp, QuantumCircuit};
 use crate::types::qpu::sampler::{CountHistogram, QpuSampler};
+use alloc::format;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec;
 
 /// The calibration surfaced to the context channel by `qpu_effect`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -149,8 +153,8 @@ impl QpuSampler for SimQpu {
         let mut state = vec![C::new(0.0, 0.0); dim];
         state[0] = C::new(1.0, 0.0);
 
-        let s = 1.0 / std::f64::consts::SQRT_2;
-        let pi4 = std::f64::consts::FRAC_PI_4;
+        let s = 1.0 / core::f64::consts::SQRT_2;
+        let pi4 = core::f64::consts::FRAC_PI_4;
         for op in circuit.ops() {
             // Exhaustive over all GateOp variants — no catch-all, so a new gate
             // must be handled explicitly rather than silently mis-applied.

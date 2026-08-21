@@ -3,8 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 use crate::{CsmGraph, DynamicGraph, Unfreezable};
-use std::mem;
+use core::mem;
 
 /// This implementation provides the logic for the "unfreeze" part of the graph's
 /// evolutionary lifecycle. It allows a static, high-performance `CsmGraph` to be

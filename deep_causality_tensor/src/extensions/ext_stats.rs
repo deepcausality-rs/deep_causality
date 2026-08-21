@@ -2,8 +2,13 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::CausalTensor;
 use crate::CausalTensorError;
+use alloc::format;
+use alloc::string::ToString;
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 

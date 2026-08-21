@@ -44,6 +44,12 @@ name = "window_type_vector_storage"
 path = "examples/window_type/vector_storage.rs"
 
 
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+no-std = ["alloc"]
+
 [dev-dependencies]
 criterion = {  version = "0.8" }
 deep_causality_rand = { path = "../deep_causality_rand"}

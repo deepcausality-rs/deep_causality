@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::CausalTensor;
 use crate::CausalTensorError;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 
 pub trait CausalTensorMathExt<T> {
@@ -23,10 +25,10 @@ pub trait CausalTensorMathExt<T> {
     /// ```
     /// use deep_causality_tensor::{CausalTensor, CausalTensorMathExt};
     ///
-    /// let tensor = CausalTensor::new(vec![1.0, std::f32::consts::E, 10.0], vec![3, 1]).unwrap();
+    /// let tensor = CausalTensor::new(vec![1.0, core::f32::consts::E, 10.0], vec![3, 1]).unwrap();
     /// let result = tensor.log_nat().unwrap();
     ///
-    /// assert_eq!(result.as_slice(), &[0.0, 0.99999994, std::f32::consts::LN_10]); // Approx. ln(10)
+    /// assert_eq!(result.as_slice(), &[0.0, 0.99999994, core::f32::consts::LN_10]); // Approx. ln(10)
     /// ```
     fn log_nat(&self) -> Result<CausalTensor<T>, CausalTensorError>;
 

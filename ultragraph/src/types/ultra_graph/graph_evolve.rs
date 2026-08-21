@@ -18,7 +18,7 @@ where
     pub fn freeze(&mut self) {
         if !self.is_frozen() {
             // Safely take ownership of the state, leaving a default in its place.
-            let current_state = std::mem::take(&mut self.state);
+            let current_state = core::mem::take(&mut self.state);
 
             // We know this will be the `Dynamic` variant because of the check above.
             if let GraphState::Dynamic(dynamic_graph) = current_state {
@@ -38,7 +38,7 @@ where
     pub fn unfreeze(&mut self) {
         if self.is_frozen() {
             // Safely take ownership of the state.
-            let current_state = std::mem::take(&mut self.state);
+            let current_state = core::mem::take(&mut self.state);
 
             // We know this will be the `Static` variant because of the check above.
             if let GraphState::Static(static_graph) = current_state {

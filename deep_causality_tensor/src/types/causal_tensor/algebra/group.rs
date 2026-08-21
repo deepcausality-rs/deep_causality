@@ -3,13 +3,15 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+
 use crate::CausalTensor;
 use deep_causality_algebra::{AbelianGroup, AddGroup};
 
 /// Marker trait for Abelian Group.
 /// CausalTensor addition is commutative if T's addition is commutative.
 impl<T> AbelianGroup for CausalTensor<T> where
-    T: AbelianGroup + Copy + Default + PartialOrd + std::ops::Neg<Output = T>
+    T: AbelianGroup + Copy + Default + PartialOrd + core::ops::Neg<Output = T>
 {
 }
 
@@ -18,7 +20,7 @@ impl<T> AbelianGroup for CausalTensor<T> where
 
 impl<T> CausalTensor<T>
 where
-    T: AddGroup + Copy + std::ops::Neg<Output = T>,
+    T: AddGroup + Copy + core::ops::Neg<Output = T>,
 {
     /// Creates a zero tensor with the specified shape.
     pub fn zero(shape: &[usize]) -> Self {

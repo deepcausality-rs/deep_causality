@@ -10,7 +10,8 @@
 
 use crate::QuantumError;
 use crate::types::qpu::circuit::QuantumCircuit;
-use std::collections::BTreeMap;
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 
 /// A classical measurement histogram: outcome bitstrings (packed LSB-first over
 /// the circuit's measured qubits) to shot counts. Never exposes amplitudes.

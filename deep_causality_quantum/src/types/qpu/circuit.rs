@@ -9,6 +9,9 @@
 //! satisfy the same `QpuSampler` trait.
 
 use crate::QuantumError;
+use alloc::format;
+use alloc::vec;
+use alloc::vec::Vec;
 
 /// A single reified gate over the migrated gate alphabet. Plain data — no
 /// function pointers, no amplitudes.

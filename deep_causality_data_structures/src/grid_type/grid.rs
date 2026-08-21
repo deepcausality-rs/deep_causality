@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::cell::RefCell;
-use std::fmt::Debug;
+use core::cell::RefCell;
+use core::fmt::Debug;
 
 use crate::{PointIndex, Storage};
 
@@ -49,7 +49,7 @@ where
     /// Internal storage wrapped in `RefCell` to allow interior mutability.
     storage: RefCell<S>,
     // Type marker to retain generic parameter `T` even though it's not stored directly.
-    _marker: std::marker::PhantomData<T>,
+    _marker: core::marker::PhantomData<T>,
 }
 
 impl<S, T> Grid<S, T>
@@ -70,7 +70,7 @@ where
     pub fn new(storage: S) -> Self {
         Self {
             storage: RefCell::new(storage),
-            _marker: std::marker::PhantomData,
+            _marker: core::marker::PhantomData,
         }
     }
 

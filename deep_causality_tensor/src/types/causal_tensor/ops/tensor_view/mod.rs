@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{CausalTensor, CausalTensorError};
+use alloc::vec;
+use alloc::vec::Vec;
 
 impl<T> CausalTensor<T>
 where

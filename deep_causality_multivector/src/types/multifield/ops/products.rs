@@ -14,6 +14,7 @@
 use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector as MultiVectorTrait;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
+use alloc::vec::Vec;
 use deep_causality_algebra::{Field, Ring};
 use deep_causality_tensor::CausalTensor;
 
@@ -25,7 +26,7 @@ where
     /// Computes the inner product (grade-0 projection of geometric product).
     pub fn inner_product(&self, rhs: &Self) -> Self
     where
-        T: std::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T>,
     {
         assert_eq!(self.metric, rhs.metric, "Metric mismatch");
         assert_eq!(self.shape, rhs.shape, "Shape mismatch");
@@ -46,7 +47,7 @@ where
     /// for mixed-grade multivectors. (AB - BA)/2 is only valid for vectors.
     pub fn outer_product(&self, rhs: &Self) -> Self
     where
-        T: std::ops::Neg<Output = T> + std::ops::AddAssign + std::ops::SubAssign,
+        T: core::ops::Neg<Output = T> + core::ops::AddAssign + core::ops::SubAssign,
     {
         assert_eq!(self.metric, rhs.metric, "Metric mismatch");
         assert_eq!(self.shape, rhs.shape, "Shape mismatch");
@@ -68,7 +69,7 @@ where
     /// A × B = -I(A ∧ B) where I is the pseudoscalar.
     pub fn cross(&self, rhs: &Self) -> Self
     where
-        T: std::ops::AddAssign + std::ops::SubAssign + std::ops::Neg<Output = T>,
+        T: core::ops::AddAssign + core::ops::SubAssign + core::ops::Neg<Output = T>,
     {
         let wedge = self.outer_product(rhs);
         wedge.hodge_dual()
@@ -79,7 +80,7 @@ where
     /// A* = A · I⁻¹ where I is the pseudoscalar.
     pub fn hodge_dual(&self) -> Self
     where
-        T: std::ops::AddAssign + std::ops::SubAssign + std::ops::Neg<Output = T>,
+        T: core::ops::AddAssign + core::ops::SubAssign + core::ops::Neg<Output = T>,
     {
         // Download to Coefficients
         let mut mvs = self.to_coefficients();

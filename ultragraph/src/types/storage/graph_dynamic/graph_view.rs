@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 use crate::{DynamicGraph, GraphView};
 
 impl<N, W> GraphView<N, W> for DynamicGraph<N, W> {

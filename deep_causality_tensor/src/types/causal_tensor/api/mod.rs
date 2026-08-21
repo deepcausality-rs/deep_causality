@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{CausalTensor, CausalTensorError, EinSumAST, Tensor};
+use alloc::vec::Vec;
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul};
 use deep_causality_algebra::{RealField, Ring};

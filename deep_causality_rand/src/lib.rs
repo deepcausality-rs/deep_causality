@@ -3,6 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod errors;
 mod extensions;
 mod traits;
@@ -42,18 +46,18 @@ pub use crate::types::map::Map;
 pub use crate::types::qmc::sobol::{MAX_SOBOL_DIM, SobolSequence};
 pub use crate::types::range::{Open01, OpenClosed01};
 
-#[cfg(not(feature = "os-random"))]
-use std::cell::RefCell;
+#[cfg(all(feature = "std", not(feature = "os-random")))]
+use core::cell::RefCell;
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 thread_local! {
     static THREAD_RNG: RefCell<Xoshiro256> = RefCell::new(Xoshiro256::new());
 }
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 pub struct ThreadRng;
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 impl RngCore for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         THREAD_RNG.with(|rng| rng.borrow_mut().next_u32())
@@ -66,17 +70,24 @@ impl RngCore for ThreadRng {
     }
 }
 
-#[cfg(not(feature = "os-random"))]
+#[cfg(all(feature = "std", not(feature = "os-random")))]
 impl Rng for ThreadRng {}
 
-/// Returns a new random number generator.
+/// Returns a new random number generator. Which one depends on the enabled
+/// features:
 ///
-/// By default, this returns a `ThreadRng` backed by `Xoshiro256` PRNG, with each
-/// thread getting a unique seed derived from the thread ID.
-/// If the `os-random` feature is enabled, it returns an `OsRandomRng` that
-/// sources entropy from the operating system.
-/// If the `aead-random` feature is enabled, it returns a `ChaCha20Rng` seeded from
-/// the OS CSPRNG. This is the preferred secure option.
+/// * With `os-random`: an `OsRandomRng` that sources every draw from the
+///   operating system. This is the option to use in production.
+/// * With `std` and without `os-random` (the default): a `ThreadRng` handle to
+///   a thread-local [`Xoshiro256`]. Each thread seeds its generator once, from
+///   a fresh `RandomState` mixed with the thread id, so threads of one process
+///   run distinct streams.
+/// * Without `std` and without `os-random` (bare metal): an owned
+///   [`Xoshiro256`] that the caller keeps, since there are no threads to hang a
+///   thread-local on. Its seed comes from a per-call counter rather than
+///   ambient entropy, so the sequence of streams repeats identically after
+///   every reset. When the stream has to differ per boot, build the generator
+///   with [`Xoshiro256::from_seed`] and a seed drawn from the board.
 pub fn rng() -> impl Rng {
     #[cfg(feature = "os-random")]
     {
@@ -85,8 +96,15 @@ pub fn rng() -> impl Rng {
 
         OsRandomRng::new().expect("Failed to create OsRandomRng")
     }
-    #[cfg(not(feature = "os-random"))]
+    #[cfg(all(feature = "std", not(feature = "os-random")))]
     {
         ThreadRng
+    }
+    // Bare metal: no threads, so no thread-local generator. Hand back an
+    // owned `Xoshiro256`; the caller keeps it rather than reaching for a
+    // process-wide one.
+    #[cfg(all(not(feature = "std"), not(feature = "os-random")))]
+    {
+        Xoshiro256::new()
     }
 }

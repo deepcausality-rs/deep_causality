@@ -2,9 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{CsmGraph, GraphError, GraphView, PathfindingGraphAlgorithms};
-use std::cmp::Reverse;
-use std::collections::{BinaryHeap, VecDeque};
+use alloc::collections::{BinaryHeap, VecDeque};
+use alloc::vec;
+use alloc::vec::Vec;
+use core::cmp::Reverse;
 
 impl<N, W> PathfindingGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
@@ -116,7 +119,7 @@ where
         stop_index: usize,
     ) -> Result<Option<(Vec<usize>, W)>, GraphError>
     where
-        W: Copy + Ord + Default + std::ops::Add<Output = W>,
+        W: Copy + Ord + Default + core::ops::Add<Output = W>,
     {
         if !self.contains_node(start_index) || !self.contains_node(stop_index) {
             return Ok(None);

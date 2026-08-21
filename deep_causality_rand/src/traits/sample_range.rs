@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{Rng, RngError};
-use std::ops::Range;
+use alloc::string::ToString;
+use core::ops::Range;
 
 pub trait SampleRange<T> {
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, RngError>;

@@ -9,6 +9,7 @@
 
 use crate::CausalMultiField;
 use crate::types::multifield::ops::gamma;
+use alloc::vec;
 use deep_causality_algebra::{Field, Ring};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
@@ -35,7 +36,7 @@ where
     /// Returns the grade-2 component of the gradient ∇F.
     pub fn curl(&self) -> Self
     where
-        T: Ring + std::ops::Neg<Output = T>,
+        T: Ring + core::ops::Neg<Output = T>,
     {
         self.gradient().grade_project(2)
     }
@@ -45,7 +46,7 @@ where
     /// Returns the scalar part (Grade 0) of the gradient ∇F.
     pub fn divergence(&self) -> Self
     where
-        T: Ring + std::ops::Neg<Output = T>,
+        T: Ring + core::ops::Neg<Output = T>,
     {
         self.gradient().grade_project(0)
     }
@@ -55,7 +56,7 @@ where
     /// Returns the full geometric derivative field (all grades).
     pub fn gradient(&self) -> Self
     where
-        T: Ring + std::ops::Neg<Output = T>,
+        T: Ring + core::ops::Neg<Output = T>,
     {
         let dx = self.partial_derivative(Axis::X);
         let dy = self.partial_derivative(Axis::Y);
@@ -132,7 +133,7 @@ where
         dz: &CausalTensor<T>,
     ) -> Self
     where
-        T: Ring + std::ops::Neg<Output = T>,
+        T: Ring + core::ops::Neg<Output = T>,
     {
         let n = self.metric.dimension();
         let gammas = gamma::get_gammas::<T>(&self.metric);

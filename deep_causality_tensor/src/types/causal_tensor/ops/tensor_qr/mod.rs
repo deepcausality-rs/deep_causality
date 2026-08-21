@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
+
 use crate::{CausalTensor, CausalTensorError};
 use deep_causality_algebra::{ConjugateScalar, Real};
 use deep_causality_num::{One, Zero};

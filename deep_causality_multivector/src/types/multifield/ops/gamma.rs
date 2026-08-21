@@ -8,6 +8,7 @@
 //! This module provides generator matrices (gamma matrices) for matrix representations
 //! of Clifford algebras. These are used to convert between coefficient and matrix forms.
 
+use alloc::vec;
 use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
@@ -31,7 +32,7 @@ pub fn num_blades(n: usize) -> usize {
 /// Uses the Brauer-Weyl construction for Clifford algebra representations.
 pub fn compute_gamma_element<T>(gamma_idx: usize, row: usize, col: usize, metric: &Metric) -> T
 where
-    T: Field + std::ops::Neg<Output = T>,
+    T: Field + core::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let num_bits = n.div_ceil(2); // Number of tensor factors (M)
@@ -124,7 +125,7 @@ where
 /// and D is the matrix dimension.
 pub fn get_gammas<T>(metric: &Metric) -> CausalTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + core::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let dim = matrix_dim(n);
@@ -140,7 +141,7 @@ where
 /// Returns a tensor of shape [2^N, D, D] containing the matrix for each blade.
 pub fn get_basis_gammas<T>(metric: &Metric) -> CausalTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + core::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let num_blades = num_blades(n);
@@ -202,7 +203,7 @@ where
 /// Returns a tensor of shape [2^N, D, D] containing the dual (inverse transpose) of each blade matrix.
 pub fn get_dual_basis_gammas<T>(metric: &Metric) -> CausalTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + std::ops::Neg<Output = T>,
+    T: Field + Copy + Default + PartialOrd + core::ops::Neg<Output = T>,
 {
     let n = metric.dimension();
     let num_blades = num_blades(n);

@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::WindowStorage;
+use alloc::string::String;
+use alloc::string::ToString;
 
 const ERROR_EMPTY_ARRAY: &str = "Array is empty";
 const ERROR_ARRAY_NOT_FILLED: &str = "Array is not yet filled";

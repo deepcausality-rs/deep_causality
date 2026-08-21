@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{GraphError, GraphView};
+use alloc::vec::Vec;
 
 pub trait PathfindingGraphAlgorithms<N, W>: GraphView<N, W> {
     /// Checks if a path of any length exists from a start to a stop index.
@@ -29,5 +31,5 @@ pub trait PathfindingGraphAlgorithms<N, W>: GraphView<N, W> {
         stop_index: usize,
     ) -> Result<Option<(Vec<usize>, W)>, GraphError>
     where
-        W: Copy + Ord + Default + std::ops::Add<Output = W>;
+        W: Copy + Ord + Default + core::ops::Add<Output = W>;
 }

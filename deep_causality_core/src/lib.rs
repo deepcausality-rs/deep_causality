@@ -4,6 +4,20 @@
  */
 
 #![cfg_attr(not(feature = "std"), no_std)]
+
+// `alloc` is a level, not a complete configuration: it grants heap support but says nothing
+// about where float math comes from. Selected on its own it leaves `deep_causality_num`
+// without a math backend, which surfaces as a wall of unrelated errors deep in the
+// dependency tree. Reject the incomplete combination here with an actionable message.
+#[cfg(not(any(feature = "std", feature = "no-std")))]
+compile_error!(
+    "deep_causality_core needs one platform level: `std` or `no-std`. \
+     The `alloc` feature is a level on top of those and does not select a float-math backend \
+     for deep_causality_num, so it cannot be enabled on its own. \
+     Use the default features for hosted targets, or \
+     `--no-default-features --features no-std` for bare metal."
+);
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 extern crate core;

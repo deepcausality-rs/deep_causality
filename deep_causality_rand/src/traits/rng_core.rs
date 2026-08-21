@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::ops::DerefMut;
+use core::ops::DerefMut;
 
 pub trait RngCore {
     fn next_u32(&mut self) -> u32 {

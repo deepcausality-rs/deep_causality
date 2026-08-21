@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt;
+use core::fmt;
 
 /// A lightweight, copyable, stack-allocated error type for the next_graph library
 /// that provides context about the failure.
@@ -79,4 +79,4 @@ impl fmt::Display for GraphError {
 }
 
 // This makes GraphError a fully-fledged error type compatible with the Rust ecosystem.
-impl std::error::Error for GraphError {}
+impl core::error::Error for GraphError {}

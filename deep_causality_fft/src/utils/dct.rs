@@ -16,6 +16,7 @@
 //! Pairings: `DCT-III(DCT-II(x)) = (n/2)·x`; `DCT-I(DCT-I(x)) = ((n−1)/2)·x`.
 
 use crate::traits::fft_scalar::FftScalar;
+use alloc::vec::Vec;
 
 fn cos_pi_ratio<R: FftScalar>(numer: usize, denom: usize) -> R {
     let pi = R::pi();

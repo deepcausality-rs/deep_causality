@@ -17,6 +17,8 @@ use crate::types::causal_tensor_network::causal_tensor_train::linalg::matmul;
 use crate::types::causal_tensor_network::rng::gaussian_vec;
 use crate::types::causal_tensor_network::truncation::Truncation;
 use crate::{CausalTensor, CausalTensorError, Tensor, TensorTrain};
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;
 
 type Re<T> = <T as ConjugateScalar>::Real;

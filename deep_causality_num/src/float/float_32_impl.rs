@@ -6,9 +6,6 @@
 use crate::Float;
 use core::num::FpCategory;
 
-#[cfg(all(not(feature = "std"), feature = "libm_math"))]
-use libm;
-
 // F32 Helper functions for integer_decode
 fn integer_decode_f32(f: f32) -> (u64, i16, i8) {
     let bits: u32 = f.to_bits();

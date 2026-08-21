@@ -9,6 +9,8 @@
 //! (no `Default`), so they stay valid for the dual-number scalar — unlike `CausalTensor::matmul`,
 //! which requires `Default`.
 
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_algebra::ConjugateScalar;
 
 /// Row-major matrix product: `a` (`m × k`) times `b` (`k × n`) into an `m × n` buffer.

@@ -12,6 +12,9 @@
 //! angle is reduced as `π·t²/n = 2π·(t² mod 2n)/(2n)` in integer
 //! arithmetic before any trigonometry.
 
+use alloc::boxed::Box;
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_num_complex::Complex;
 
 use crate::traits::fft_scalar::FftScalar;

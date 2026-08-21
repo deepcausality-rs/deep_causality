@@ -6,9 +6,6 @@
 use crate::Float;
 use core::num::FpCategory;
 
-#[cfg(all(not(feature = "std"), feature = "libm_math"))]
-use libm;
-
 fn integer_decode_f64(f: f64) -> (u64, i16, i8) {
     let bits: u64 = f.to_bits();
     let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };

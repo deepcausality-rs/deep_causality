@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt;
+use core::fmt;
 
 /// Represents errors that can occur during sparse matrix operations.
 #[derive(Debug, Clone, PartialEq, Eq)] // Added Clone, PartialEq, Eq for completeness
@@ -45,4 +45,4 @@ impl fmt::Display for SparseMatrixError {
     }
 }
 
-impl std::error::Error for SparseMatrixError {}
+impl core::error::Error for SparseMatrixError {}

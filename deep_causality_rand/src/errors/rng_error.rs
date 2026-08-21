@@ -3,8 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::string::String;
+use alloc::string::ToString;
+
 use crate::UniformDistributionError;
-use std::error::Error;
+use core::error::Error;
 
 #[derive(Debug, PartialEq)]
 pub enum RngError {
@@ -15,8 +18,8 @@ pub enum RngError {
 
 impl Error for RngError {}
 
-impl std::fmt::Display for RngError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for RngError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             RngError::OsRandomGenerator(e) => write!(f, "OS random generator error: {}", e),
             RngError::InvalidRange(e) => write!(f, "Invalid range: {}", e),

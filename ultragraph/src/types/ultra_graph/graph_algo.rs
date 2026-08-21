@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 use crate::{
     CentralityGraphAlgorithms, GraphAlgorithms, GraphError, GraphState, PathfindingGraphAlgorithms,
     StructuralGraphAlgorithms, TopologicalGraphAlgorithms, UltraGraphContainer,
@@ -175,7 +177,7 @@ where
     /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
     ///
     /// # Type Parameters
-    /// - `W`: The weight type, which must implement `Copy`, `Ord`, `Default`, and `std::ops::Add`.
+    /// - `W`: The weight type, which must implement `Copy`, `Ord`, `Default`, and `core::ops::Add`.
     ///
     /// # Errors
     ///
@@ -188,7 +190,7 @@ where
         stop_index: usize,
     ) -> Result<Option<(Vec<usize>, W)>, GraphError>
     where
-        W: Copy + Ord + Default + std::ops::Add<Output = W>,
+        W: Copy + Ord + Default + core::ops::Add<Output = W>,
     {
         match &self.state {
             GraphState::Static(g) => g.shortest_weighted_path(start_index, stop_index),

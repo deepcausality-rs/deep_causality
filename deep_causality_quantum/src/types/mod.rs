@@ -4,6 +4,7 @@
  */
 
 pub(crate) mod density_matrix;
+#[cfg(feature = "qcm")]
 pub(crate) mod qcm;
 pub(crate) mod qgates;
 #[cfg(feature = "qpu")]

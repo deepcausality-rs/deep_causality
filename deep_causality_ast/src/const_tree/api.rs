@@ -5,7 +5,7 @@
 
 use crate::ConstTree;
 use crate::const_tree::Node;
-use std::sync::Arc;
+use alloc::sync::Arc;
 
 impl<T: Clone> ConstTree<T> {
     /// Returns a new `ConstTree` with an additional child appended to the end of the

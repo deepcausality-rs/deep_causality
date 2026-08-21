@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
 use crate::{CsrMatrix, SparseMatrixError};
+use alloc::vec::Vec;
+use core::ops::Mul;
 use deep_causality_num::Zero;
-use std::ops::Mul;
 
 impl<T> CsrMatrix<T> {
     /// Performs matrix-vector multiplication: \( y = Ax \).
@@ -46,7 +48,7 @@ impl<T> CsrMatrix<T> {
     /// ```
     pub(crate) fn vec_mult_impl(&self, x: &[T]) -> Result<Vec<T>, SparseMatrixError>
     where
-        T: Copy + Zero + std::ops::Add<Output = T> + Mul<Output = T>,
+        T: Copy + Zero + core::ops::Add<Output = T> + Mul<Output = T>,
     {
         if x.len() != self.shape.1 {
             return Err(SparseMatrixError::DimensionMismatch(self.shape.1, x.len()));

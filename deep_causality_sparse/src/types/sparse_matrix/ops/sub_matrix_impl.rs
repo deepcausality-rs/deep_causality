@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec::Vec;
+
 use crate::{CsrMatrix, SparseMatrixError};
 use deep_causality_num::Zero;
 
@@ -47,7 +49,7 @@ impl<T> CsrMatrix<T> {
     /// ```
     pub(crate) fn sub_matrix_impl(&self, other: &Self) -> Result<Self, SparseMatrixError>
     where
-        T: Copy + Zero + std::ops::Sub<Output = T> + PartialEq,
+        T: Copy + Zero + core::ops::Sub<Output = T> + PartialEq,
     {
         if self.shape != other.shape {
             return Err(SparseMatrixError::ShapeMismatch(self.shape, other.shape));

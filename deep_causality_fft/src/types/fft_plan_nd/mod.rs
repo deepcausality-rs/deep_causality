@@ -7,6 +7,7 @@
 //! along each axis (row-column decomposition), with one shared 1-D plan
 //! per distinct axis length.
 
+use alloc::vec::Vec;
 pub(crate) mod axis;
 
 use deep_causality_num_complex::Complex;
