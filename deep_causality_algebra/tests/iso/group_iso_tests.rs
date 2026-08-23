@@ -18,7 +18,7 @@
 //! - Panic: a separate `BadAddWrap` newtype with a broken `From<BadAddWrap>
 //!   for f64` (adds +1.0) triggers the homomorphism assertion's panic branch.
 
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 use deep_causality_algebra::iso::GroupIso;
 use deep_causality_algebra::iso::test_support::assert_group_iso_from_law;
 use deep_causality_num::Zero;
@@ -155,4 +155,20 @@ impl From<BadAddWrap> for f64 {
 fn group_iso_law_panics_on_broken_homomorphism() {
     // From<BadAddWrap> for f64 adds 1.0, so the homomorphism breaks.
     assert_group_iso_from_law::<BadAddWrap, f64>(BadAddWrap(3.0), BadAddWrap(5.0));
+}
+
+// `AddGroup` requires `Neg`: the inverse axiom needs `-a`, which `Sub` does not supply.
+impl Neg for IdWrap {
+    type Output = Self;
+    fn neg(self) -> Self {
+        IdWrap(-self.0)
+    }
+}
+
+// `AddGroup` requires `Neg`: the inverse axiom needs `-a`, which `Sub` does not supply.
+impl Neg for BadAddWrap {
+    type Output = Self;
+    fn neg(self) -> Self {
+        BadAddWrap(-self.0)
+    }
 }

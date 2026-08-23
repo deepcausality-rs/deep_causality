@@ -21,7 +21,7 @@
 //!   breaks the multiplicative homomorphism while preserving addition;
 //!   helper panics on the `RingIso multiplication homomorphism failed` message.
 
-use core::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use deep_causality_algebra::iso::test_support::assert_ring_iso_from_laws;
 use deep_causality_algebra::{
     AbelianGroup, Associative, Commutative, Distributive, GroupIso, RingIso,
@@ -310,4 +310,28 @@ fn ring_iso_laws_panic_on_broken_multiplication() {
     // addition (T::from(a+b) == 2*(a+b) == 2*a + 2*b == T::from(a) + T::from(b))
     // but breaks multiplication.
     assert_ring_iso_from_laws::<BadMulRing, f64>(BadMulRing(3.0), BadMulRing(5.0));
+}
+
+// `AddGroup` requires `Neg`: the inverse axiom needs `-a`, which `Sub` does not supply.
+impl Neg for IdRingWrap {
+    type Output = Self;
+    fn neg(self) -> Self {
+        IdRingWrap(-self.0)
+    }
+}
+
+// `AddGroup` requires `Neg`: the inverse axiom needs `-a`, which `Sub` does not supply.
+impl Neg for BadAddRing {
+    type Output = Self;
+    fn neg(self) -> Self {
+        BadAddRing(-self.0)
+    }
+}
+
+// `AddGroup` requires `Neg`: the inverse axiom needs `-a`, which `Sub` does not supply.
+impl Neg for BadMulRing {
+    type Output = Self;
+    fn neg(self) -> Self {
+        BadMulRing(-self.0)
+    }
 }
