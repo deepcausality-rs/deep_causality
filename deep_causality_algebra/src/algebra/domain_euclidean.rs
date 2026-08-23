@@ -76,6 +76,24 @@ pub trait EuclideanDomain: CommutativeRing {
     /// Unlike the `%` operator, the result is always non-negative.
     fn rem_euclid(&self, other: &Self) -> Self;
 
+    /// Returns the canonical associate of `self`.
+    ///
+    /// A greatest common divisor is only defined **up to associates**: if `g` divides both
+    /// arguments then so does `u·g` for any unit `u`, and both have equal claim to being "the"
+    /// gcd. Over `ℤ` the units are `±1`, so `6` and `-6` are equally valid gcds of `48` and `18`.
+    /// Fixing a representative is what lets [`gcd`](Self::gcd) return *a value* rather than an
+    /// equivalence class.
+    ///
+    /// For `ℤ` the canonical associate is the absolute value, so `gcd` is always non-negative.
+    /// For a polynomial ring `F[x]` it would be the monic representative.
+    ///
+    /// # Overflow
+    ///
+    /// For the signed integers this negates negative values, so `T::MIN` has no representable
+    /// canonical associate and overflows — a panic in debug builds, wrapping in release. This is
+    /// the same asymmetry that makes `T::MIN.abs()` overflow.
+    fn normalize(&self) -> Self;
+
     /// Computes the greatest common divisor by the Euclidean algorithm.
     ///
     /// # Properties
@@ -94,12 +112,24 @@ pub trait EuclideanDomain: CommutativeRing {
             a = b;
             b = r;
         }
-        a
+        // `a` holds the last non-zero remainder, or a seed when the loop ran fewer than two
+        // steps — `gcd(a, 0)` exits immediately, and `gcd(-24, -12)` exits after one step. Those
+        // seeds carry their own sign, so the result is normalized here rather than assumed
+        // non-negative: without this, `gcd(-7, 0)` would be `-7`.
+        a.normalize()
     }
 
     /// Computes the least common multiple, `lcm(a, b) = |a·b| / gcd(a, b)`.
     ///
     /// Returns zero when either argument is zero.
+    ///
+    /// The division is performed **before** the multiplication. Forming `a·b` first overflows
+    /// whenever the product exceeds the width even though the result would fit: `lcm(2⁴⁰, 2⁴⁰)`
+    /// is `2⁴⁰`, but `2⁴⁰ · 2⁴⁰` is `2⁸⁰` and does not fit in an `i64`. Dividing one operand by
+    /// the gcd first keeps the intermediate no larger than the answer.
+    ///
+    /// The result is normalized, so it is non-negative for the integers — matching the `|a·b|`
+    /// in the formula above.
     fn lcm(&self, other: &Self) -> Self
     where
         Self: Sized + Clone + Div<Output = Self>,
@@ -108,7 +138,8 @@ pub trait EuclideanDomain: CommutativeRing {
             return Self::zero();
         }
         let g = self.gcd(other);
-        self.clone() * other.clone() / g
+        // `g` divides `self` exactly, so `self / g` is exact and no precision is lost.
+        ((self.clone() / g) * other.clone()).normalize()
     }
 }
 
@@ -138,6 +169,11 @@ macro_rules! impl_euclidean_domain_signed {
                 #[inline]
                 fn rem_euclid(&self, other: &Self) -> Self {
                     <$t>::rem_euclid(*self, *other)
+                }
+
+                #[inline]
+                fn normalize(&self) -> Self {
+                    <$t>::abs(*self)
                 }
             }
         )*

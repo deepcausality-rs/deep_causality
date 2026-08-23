@@ -117,3 +117,33 @@ fn every_signed_width_is_a_euclidean_domain() {
     assert_euclidean::<i128>();
     assert_euclidean::<isize>();
 }
+
+#[test]
+fn lcm_is_non_negative() {
+    // The doc promises |a·b| / gcd, so the result is normalized like `gcd` is.
+    assert_eq!(lcm_of(-4i64, 6i64), 12);
+    assert_eq!(lcm_of(4i64, -6i64), 12);
+    assert_eq!(lcm_of(-4i64, -6i64), 12);
+}
+
+#[test]
+fn lcm_divides_before_multiplying() {
+    // `lcm(x, x) == x`, but forming `x · x` first overflows: 2⁴⁰ · 2⁴⁰ = 2⁸⁰ exceeds i64.
+    // Dividing by the gcd first keeps the intermediate no larger than the answer.
+    let big = 1i64 << 40;
+    assert_eq!(lcm_of(big, big), big);
+    // A case where the answer fits but the naive product would not.
+    let a = 1i64 << 40;
+    let b = 3i64 << 40;
+    assert_eq!(lcm_of(a, b), b);
+}
+
+#[test]
+fn lcm_agrees_with_the_gcd_identity() {
+    // gcd(a,b) · lcm(a,b) = |a·b| on inputs small enough for the product to fit.
+    for a in 1i64..=20 {
+        for b in 1i64..=20 {
+            assert_eq!(a.gcd(&b) * lcm_of(a, b), a * b, "failed for a={a}, b={b}");
+        }
+    }
+}
