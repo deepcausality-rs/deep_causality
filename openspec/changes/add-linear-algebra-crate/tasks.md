@@ -11,12 +11,13 @@ here; this phase is a move plus a facade.
 - [ ] 1.6 Move the 1,916 lines of `deep_causality_sparse/tests/` and the `csr_matrix_benchmarks` bench
 - [ ] 1.7 Reduce `deep_causality_sparse/src/lib.rs` to re-exports of `deep_causality_linear`; confirm the public surface matches the last independent release item for item
 - [ ] 1.8 Write the retirement notice at the top of `deep_causality_sparse/README.md`, naming `deep_causality_linear` and stating that the crate receives no further development
-- [ ] 1.9 Switch imports in `deep_causality_topology` (67 files), `deep_causality_physics` (2), `examples/mathematics_examples` (8) and `examples/physics_examples` (1)
-- [ ] 1.10 Add `deep_causality_linear/BUILD.bazel` and retarget the 30 label references across the 8 `BUILD.bazel` files that name the old crate
+- [ ] 1.9 Switch the 102 import sites: `deep_causality_topology` 61 (32 `src`, 29 `tests`), examples 10, `deep_causality_physics` 2 (`kernels/mhd/ideal.rs:11`, `kernels/mhd/grmhd.rs:11`), and the 29 inside the crate being moved
+- [ ] 1.10 Add `deep_causality_linear/BUILD.bazel` and retarget the 35 label references across the 8 `BUILD.bazel` files that name the old crate
 - [ ] 1.11 Resolve the `deep_causality_cfd` discrepancy: `BUILD.bazel:30` declares a dependency `Cargo.toml` does not — decide which is correct and make both agree
 - [ ] 1.12 Update `AGENTS.md` §Project Structure and §Project Dependencies, `README.md:268`, `website/web/src/pages/overview/index.astro` (2 sites), `website/docs/…/getting-started/install.md`, `website/docs/…/concepts/uniform-math.md`
-- [ ] 1.13 Leave the 36 files under `openspec/changes/archive/` unchanged; confirm by diff that none were touched
-- [ ] 1.14 `cargo test --workspace` and `bazel test //...` green; clippy clean with no new `#[allow]`
+- [ ] 1.13 Leave the 34 files under `openspec/changes/archive/` unchanged; confirm by diff that none were touched
+- [ ] 1.14 Register the crate in `build/scripts/sbom.sh`, and add the two crates missing from it (`deep_causality_num_rational`, `deep_causality_quantum`) — it lists 26 against a workspace of 29
+- [ ] 1.15 `cargo test --workspace` and `bazel test //...` green; clippy clean with no new `#[allow]`
 
 ## 2. Add the representations
 
@@ -34,12 +35,13 @@ here; this phase is a move plus a facade.
 
 - [ ] 3.1 Implement `rref` returning rank and pivot columns, generic over the row-operation trait, naming no concrete representation or scalar
 - [ ] 3.2 Implement `rank`, `kernel_basis`, `image_basis`, `determinant` and `solve` over the same trait
-- [ ] 3.3 Keep closed-form determinants for order ≤ 3 and dispatch to elimination at order ≥ 4; assert bit-identical results against the expressions they replace
-- [ ] 3.4 Verify the 𝔽₂ kernel basis: `M · v = 0` over 𝔽₂ for every returned `v`, and the basis has exactly `cols − rank` elements
-- [ ] 3.5 Verify the 𝔽₂ image basis: exactly `rank` elements, and every column of `M` is an 𝔽₂ sum of them
-- [ ] 3.6 Port the prototype's four-way benchmark into `benches/`; record packed vs byte-scalar at n ∈ {128, 256, 512, 1024, 2048} and the seam cost against a hand-written non-generic loop
-- [ ] 3.7 Confirm the seam requirement holds: generic packed elimination within 10% of hand-written (the prototype measured 0.92–0.95×)
-- [ ] 3.8 Confirm the packing requirement holds: ≥ 2× against the byte scalar at n=1024, and no smaller a ratio at n=2048
+- [ ] 3.3 Pivot by column search in every elimination path; add the Cayley-Menger regression first — a 5×5 CM matrix has `m[0][0] = 0`, and an unpivoted elimination returns zero for every simplex volume (`prototype/cm_det.py`)
+- [ ] 3.4 Keep closed-form determinants for order ≤ 3 and dispatch to pivoted elimination at order ≥ 4; assert bit-identical results against the expressions they replace
+- [ ] 3.5 Verify the 𝔽₂ kernel basis: `M · v = 0` over 𝔽₂ for every returned `v`, and the basis has exactly `cols − rank` elements
+- [ ] 3.6 Verify the 𝔽₂ image basis: exactly `rank` elements, and every column of `M` is an 𝔽₂ sum of them
+- [ ] 3.7 Port the prototype's four-way benchmark into `benches/`; record packed vs byte-scalar at n ∈ {128, 256, 512, 1024, 2048} and the seam cost against a hand-written non-generic loop
+- [ ] 3.8 Confirm the seam requirement holds: generic packed elimination within 10% of hand-written (the prototype measured 0.92–0.95×)
+- [ ] 3.9 Confirm the packing requirement holds: ≥ 2× against the byte scalar at n=1024, and no smaller a ratio at n=2048
 
 ## 4. Relocate the decompositions
 
@@ -50,19 +52,22 @@ here; this phase is a move plus a facade.
 - [ ] 4.5 Expose the decompositions on the dense matrix directly, with no rank-2 tensor constructed
 - [ ] 4.6 Re-run the tensor benchmarks and diff against 4.1; record both figures with the machine
 - [ ] 4.7 Rebuild the 8 in-workspace and 7 example dependents with no source edit and confirm results are unchanged
+- [ ] 4.8 Spot-check `deep_causality_physics` specifically — 18 `matmul` and 2 `inverse()` call sites, the largest delegation surface outside tensor's own tests
+- [ ] 4.9 Leave physics' five hand-rolled fixed-size helpers alone (`invert_4x4`, `invert_3x3`, `inverse_spatial_metric`, `symmetric_3x3_eigenvalues`, the inline 3×3 determinant); they are correct and out of scope
 
 ## 5. Retire the duplication in topology
 
 - [ ] 5.1 Replace `regge_geometry/curvature.rs:275` `det_recursive` and its `submatrix` helper with the shared determinant
 - [ ] 5.2 Replace `manifold/geometry/mod.rs:145` `determinant_impl` with the shared determinant
 - [ ] 5.3 Replace `simplicial_complex/lazy_hodge_star.rs:97` `gaussian_determinant` with the shared determinant
-- [ ] 5.4 Diff the topology suite before and after 5.1–5.3; investigate every changed value rather than re-baselining
-- [ ] 5.5 Replace `chain_complex_impl.rs:94` `rank_of_csr` and `cell_complex/mod.rs:172` `rank_of_matrix` with one implementation
-- [ ] 5.6 Route `betti_number` through exact 𝔽₂ rank; make the choice of field explicit at the call site rather than a global default
-- [ ] 5.7 Confirm every complex currently under test reports the Betti numbers it reported before
-- [ ] 5.8 Confirm no floating-point tolerance remains on any rank path used for homology
-- [ ] 5.9 Mark G-01 and G-02 closed in `openspec/notes/quantum/qcl-gaps.md`, correcting G-01's owner field from `deep_causality_topology` to `deep_causality_linear` and recording why
-- [ ] 5.10 Add a Lean theorem and Rust witness for mod-2 rank–nullity if the formalization layer covers it; otherwise record the omission in the crate's `LEAN_*.md` and add the crate to the `formalization.yml` allowlist only when a witness exists
+- [ ] 5.4 Confirm the Cayley-Menger volumes are unchanged: `regge_geometry` (5×5, tetrahedron) and `manifold/geometry` (`k + 2`) both feed matrices with a zero `(0,0)` entry
+- [ ] 5.5 Diff the topology suite before and after 5.1–5.4; investigate every changed value rather than re-baselining
+- [ ] 5.6 Replace `chain_complex_impl.rs:94` `rank_of_csr` and `cell_complex/mod.rs:172` `rank_of_matrix` with one implementation
+- [ ] 5.7 Route `betti_number` through exact 𝔽₂ rank; make the choice of field explicit at the call site rather than a global default
+- [ ] 5.8 Confirm every complex currently under test reports the Betti numbers it reported before
+- [ ] 5.9 Confirm no floating-point tolerance remains on any rank path used for homology
+- [ ] 5.10 Mark G-01 and G-02 closed in `openspec/notes/quantum/qcl-gaps.md`, correcting G-01's owner field from `deep_causality_topology` to `deep_causality_linear` and recording why
+- [ ] 5.11 Add a Lean theorem and Rust witness for mod-2 rank–nullity if the formalization layer covers it; otherwise record the omission in the crate's `LEAN_*.md` and add the crate to the `formalization.yml` allowlist only when a witness exists
 
 ## 6. Publish
 

@@ -86,15 +86,19 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
 - **`deep_causality_tensor`**: gains a dependency on `deep_causality_linear`; its 2-D method bodies
   become delegations; it takes over the `CausalTensor ↔ CsrMatrix` conversion. Public surface
   unchanged.
-- **`deep_causality_topology`**: the largest consumer — 67 files, 279 `CsrMatrix` mentions. Five
+- **`deep_causality_topology`**: the largest consumer — 61 import sites across 73 files (282 `CsrMatrix` mentions). Five
   duplicated helpers are replaced and `betti_number` changes from f64 SVD to exact 𝔽₂ rank.
 - **`deep_causality_physics`**, **`examples/mathematics_examples`**, **`examples/physics_examples`**:
   import paths follow.
-- **Build**: 30 Bazel label references across 8 `BUILD.bazel` files. `deep_causality_cfd/BUILD.bazel:30`
+- **Build**: 35 Bazel label references across 8 `BUILD.bazel` files. `deep_causality_cfd/BUILD.bazel:30`
   declares a sparse dependency its `Cargo.toml` does not, so the two disagree today and the
   discrepancy is resolved as part of this change.
 - **Documentation**: `AGENTS.md` §Project Structure and §Project Dependencies, `README.md:268`,
   `website/web/src/pages/overview/index.astro`, `website/docs/…/install.md` and
   `…/concepts/uniform-math.md`.
-- **Not touched**: the 36 files under `openspec/changes/archive/` that name `deep_causality_sparse`.
+- **New-crate checklist**: `build/scripts/sbom.sh` enumerates 26 crates against a workspace of 29 —
+  `deep_causality_num_rational` and `deep_causality_quantum` were both added without being registered
+  there. This change adds its crate to that list and closes the two existing gaps rather than
+  becoming the third.
+- **Not touched**: the 34 files under `openspec/changes/archive/` that name `deep_causality_sparse`.
   Archived changes record what was proposed at the time and are not rewritten.

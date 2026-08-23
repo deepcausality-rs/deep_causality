@@ -96,7 +96,7 @@ the discrepancy forward silently.
 ### Requirement: Documentation names the crate that exists
 Every document that names `deep_causality_sparse` outside the archive SHALL be updated to name `deep_causality_linear`, and archived change proposals SHALL be left unchanged.
 
-The literal appears in 203 files. 36 of those are under `openspec/changes/archive/`, which records
+The literal appears in 203 files. 34 of those are under `openspec/changes/archive/`, which records
 what was proposed at the time; rewriting them would falsify the record.
 
 #### Scenario: Live documentation is current

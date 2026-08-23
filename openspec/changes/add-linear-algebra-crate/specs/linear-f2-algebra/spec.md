@@ -75,18 +75,17 @@ every homology dimension the crate reports currently depends on that threshold.
 - **WHEN** a caller computes a Betti number
 - **THEN** whether the rank is taken over ℝ or over 𝔽₂ is determined by the call, not by a global default
 
-### Requirement: The 𝔽₂ layer is owned by the linear crate
-The 𝔽₂ matrix and its elimination SHALL live in `deep_causality_linear`, and SHALL be usable without depending on `deep_causality_topology`.
+### Requirement: The 𝔽₂ matrix is separable from the chain-complex objects built on it
+The 𝔽₂ matrix and its elimination SHALL be usable by a crate that needs mod-2 rank without needing chain complexes.
 
-G-01 assigns this to `deep_causality_topology` so that topology need not learn about codes. The same
-reasoning places it better in a linear-algebra crate, which knows about neither chain complexes nor
-codes, and lets `deep_causality_quantum` use it without taking a dependency on topology.
-
-#### Scenario: Quantum reaches 𝔽₂ without topology
-- **WHEN** a crate needs mod-2 rank and does not need chain complexes
-- **THEN** it depends on `deep_causality_linear` alone
+G-01 assigns this to `deep_causality_topology` so that topology need not learn about codes. This
+requirement weakens that to a separability property rather than a placement, because the placement
+argument that would have justified moving it does not hold: `qcl-gaps.md` records G-07 and G-09
+(quantum) as needing G-04 (homology representatives) and G-05 (the `Chain` type), both owned by
+`deep_causality_topology`. Quantum therefore takes a topology dependency for the 𝔽₂ work whichever
+crate owns the matrix, so moving the matrix removes no dependency edge.
 
 #### Scenario: The gap register is updated
 - **WHEN** this requirement is implemented
 - **THEN** G-01 and G-02 in `openspec/notes/quantum/qcl-gaps.md` are marked closed
-- **AND** the owner field recorded there is corrected to name the implementing crate
+- **AND** the owner field records the implementing crate

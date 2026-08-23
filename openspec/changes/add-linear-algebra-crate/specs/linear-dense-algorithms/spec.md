@@ -20,7 +20,9 @@ The row-operation trait SHALL let an implementation supply its own pivot selecti
 
 An exact field takes the first non-zero. Floating point takes the largest magnitude, and a `Field`
 bound supplies neither an order nor an epsilon with which to express that. Making the rule an
-overridable method keeps both correct without weakening the bound.
+overridable method keeps both correct without weakening the bound. What an override may not do is
+skip the search — see *Elimination selects a pivot by search, never by position* below, which sets
+the floor every rule has to clear.
 
 #### Scenario: A floating-point implementation pivots on magnitude
 - **WHEN** a dense f64 matrix whose first candidate pivot is near zero is reduced
@@ -47,12 +49,37 @@ factorisation — a different algorithm, not a different implementation of this 
 - **WHEN** a sparse matrix's shape and entries are read through the read trait
 - **THEN** it works without conversion
 
-### Requirement: Determinant keeps closed forms for small matrices
-The determinant SHALL use direct closed-form expressions for matrices of order three or below, and elimination above that.
+### Requirement: Elimination selects a pivot by search, never by position
+Every elimination path SHALL choose its pivot by searching the column at or below the current row, and SHALL NOT assume the diagonal entry is usable.
 
-Regge geometry evaluates Cayley-Menger determinants on small simplices, where the closed forms are
-both faster and free of the pivoting round-off that elimination introduces. `manifold/geometry/mod.rs`
-already special-cases orders zero, one and two for the same reason.
+This is load-bearing, not a quality nicety. Both Laplace determinants in `deep_causality_topology`
+are fed Cayley-Menger matrices, which have `m[0][0] = 0` by construction
+(`manifold/geometry/mod.rs:41` writes `one` only into indices `1..matrix_dim`). The existing
+`gaussian_determinant` at `lazy_hodge_star.rs:97` takes `mat[i][i]` as the pivot and returns zero
+when it is small, so consolidating onto it unpivoted returns **zero for every simplex volume**.
+Measured on a regular unit tetrahedron: Laplace and pivoted elimination both give `det = 4.0` and
+`vol = 0.117851130198` (exactly √2⁄12); unpivoted gives `det = 0.0` and a NaN volume. That helper is
+correct today only because its own caller feeds it a Gram matrix with a positive diagonal.
+
+#### Scenario: A matrix with a zero leading entry
+- **WHEN** a determinant is evaluated on a matrix whose `(0,0)` entry is zero and which is non-singular
+- **THEN** a non-zero determinant is returned
+
+#### Scenario: Cayley-Menger volumes are preserved
+- **WHEN** the 5×5 Cayley-Menger determinant of a regular unit tetrahedron is evaluated
+- **THEN** the result matches the Laplace expansion it replaces
+- **AND** the derived volume equals √2⁄12
+
+#### Scenario: A genuinely singular matrix still reports zero
+- **WHEN** a determinant is evaluated on a singular matrix
+- **THEN** zero is returned
+
+### Requirement: Determinant keeps closed forms for small matrices
+The determinant SHALL use direct closed-form expressions for matrices of order three or below, and pivoted elimination above that.
+
+At order three or below a closed form is faster than elimination and introduces no pivoting
+round-off. `manifold/geometry/mod.rs:145` already special-cases orders zero, one and two, and
+`deep_causality_physics` carries five fixed-size closed forms of its own for the same reason.
 
 #### Scenario: A 3×3 determinant is unchanged
 - **WHEN** a 3×3 determinant is evaluated through the new implementation
@@ -85,8 +112,8 @@ matrix can use directly; keeping the methods means no caller changes.
 ### Requirement: Delegation does not cost measurable throughput
 The delegated methods SHALL show no throughput regression against the benchmarks recorded before the move.
 
-`matmul` alone has fifteen call sites inside the physics Kalman filter. A trait boundary in this
-position monomorphises, and the prototype measured a comparable seam at 0.92–0.95× of a
+`matmul` alone has thirteen call sites inside the physics Kalman filter and eighteen across that
+crate. A trait boundary in this position monomorphises, and the prototype measured a comparable seam at 0.92–0.95× of a
 non-generic loop; the benchmarks confirm it rather than assume it.
 
 #### Scenario: Benchmarks are compared across the move

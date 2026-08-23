@@ -48,7 +48,7 @@ physics and `DensityMatrix<R>` in quantum are newtypes over it. There is no gene
 
 The 1,088 lines are dense linear algebra that reached a tensor crate because `CausalTensor` was the
 only dense container available. `matmul` sits in `tensor_product/` and is the most-called of the
-group — 15 call sites in the physics Kalman filter alone
+group — 13 call sites in the physics Kalman filter alone
 (`deep_causality_physics/src/kernels/dynamics/estimation.rs`), plus GRMHD, quantum channels and
 projections, and multivector conversions.
 
@@ -66,6 +66,41 @@ And two ranks that are near-identical copies. `chain_complex_impl.rs:94` says so
 comment — "Mirrors the helper used by `CellComplex::rank_of_matrix`". Both densify a
 `CsrMatrix<i8>` into `Vec<f64>`, build a `CausalTensor`, call `svd()`, and count singular values
 above `1e-5`; roughly 30 lines each, differing in whitespace and comments.
+
+### Physics carries its own small-matrix linear algebra
+
+`deep_causality_physics` is 23,352 lines of `src` and 26,173 of tests — the second-largest consumer
+after topology. It reaches linear algebra three separate ways.
+
+**Through `CsrMatrix`, read-only.** Two import sites, `kernels/mhd/ideal.rs:11` and
+`kernels/mhd/grmhd.rs:11`, both for matrix–vector products: `apply_csr_real` against Hodge-star
+operators carrying manifold scalars, and `apply_csr_i8` against coboundary operators whose entries
+are pure ±1. Nothing mutates a CSR matrix and nothing eliminates on one, so the constraint that
+sparse implements the read side only costs this crate nothing.
+
+**Through `CausalTensor`.** 18 `matmul` calls — 13 in the Kalman filter
+(`kernels/dynamics/estimation.rs`), 4 in GRMHD, 1 in photonics ray transfer — and 2 `inverse()`
+calls, at `estimation.rs:158` for the innovation covariance and `grmhd.rs:223` for the metric. That
+is the whole of this crate's exposure to the decomposition relocation.
+
+**Hand-rolled, bypassing both.** Fixed-size closed forms that never touch `CausalTensor::inverse`:
+
+| helper | shape |
+|---|---|
+| `theories/general_relativity/gr_utils.rs:12` `invert_4x4` | `&CausalTensor<T>` in, `[T; 16]` out, cofactor/adjugate |
+| `theories/general_relativity/gr_utils.rs:114` `invert_3x3` | `[[T; 3]; 3]` |
+| `theories/general_relativity/adm_state.rs:126` `inverse_spatial_metric` | `[[S; 3]; 3]` |
+| `kernels/fluids/coherent_structures.rs:211` `symmetric_3x3_eigenvalues` | `[[R; 3]; 3]` |
+| `kernels/fluids/kinematics.rs:125` | inline 3×3 determinant by cofactor |
+
+These are correct as written — at n ≤ 4 a closed form beats a general routine and avoids pivoting
+round-off entirely — and they are evidence for the small-n rule the change adopts rather than a
+target for it. They are out of scope; consolidating them is a separate decision with its own
+numerical risk.
+
+**Physics does not compute homology.** It imports `ChainComplex` for `num_cells(grade)` only.
+`betti_number` is called nowhere outside `deep_causality_topology`'s own tests, so the exact-𝔽₂
+change reaches no consumer.
 
 ## The correctness defect this exposes
 
@@ -134,6 +169,44 @@ That bounds the claim. `deep_causality_linear` holding sparse and dense side by 
 owning both representations and the algorithms appropriate to each — the shape LAPACK and its sparse
 counterparts have — rather than one algorithm covering everything.
 
+## Do topology's determinants change numerically?
+
+Researched, because the answer decides whether the consolidation is safe.
+
+**What the three determinants are actually fed.** Two of them get Cayley-Menger matrices:
+
+| call site | matrix | order |
+|---|---|---|
+| `regge_geometry/curvature.rs:254` → `det_recursive` | Cayley-Menger, hard-coded literal | 5×5 (tetrahedron) |
+| `manifold/geometry/mod.rs:72` → `determinant_impl` | Cayley-Menger, `matrix_dim = k + 2` | 3×3 up to (dim+2)² |
+| `simplicial_complex/lazy_hodge_star.rs:81` → `gaussian_determinant` | Gram matrix, `vectors[i]·vectors[j]` | `k − 1` |
+
+A Cayley-Menger matrix has **`m[0][0] = 0` by construction** — `mod.rs:41` allocates zeros and then
+writes `one` only into indices `1..matrix_dim`. A Gram matrix has a strictly positive diagonal.
+
+**The consequence.** `gaussian_determinant` performs no row pivoting and bails on a small leading
+pivot (`lazy_hodge_star.rs:104`: `if mat[pivot].abs() < pivot_threshold { return T::zero(); }`).
+Consolidating the two Laplace determinants onto it would return **zero for every simplex volume**.
+Measured on a regular unit tetrahedron:
+
+| method | det(CM₅ₓ₅) | vol² | vol |
+|---|---|---|---|
+| Laplace — what `det_recursive` and `determinant_impl` do now | 4.000000000000 | 0.013888888889 | 0.117851130198 |
+| elimination as `gaussian_determinant` is written | **0.000000000000** | 0.000000000000 | **NaN** |
+| elimination **with partial pivoting** | 4.000000000000 | 0.013888888889 | 0.117851130198 |
+
+The exact regular-tetrahedron volume is √2⁄12 = 0.117851130198. The 4×4 case (a right triangle)
+behaves identically: −4, 0, −4. The Gram matrix `lazy_hodge_star` actually feeds it agrees across all
+three methods, which is why the missing pivoting has never shown up.
+
+**The answer.** With partial pivoting the values are identical to Laplace on the shapes topology
+uses — no numerical change at all. Without it, every volume collapses to zero. So the risk is not
+"replacing Laplace perturbs rounding"; it is that `gaussian_determinant` is not a general determinant
+and must not be treated as one. The shared implementation **must pivot**, and that requirement is
+load-bearing rather than a quality nicety.
+
+The reproduction script is `prototype/cm_det.py`.
+
 ## Blast radius
 
 ### The sparse crate
@@ -149,19 +222,28 @@ The literal string `deep_causality_sparse` appears in **203 files, 435 lines** (
 |---|---|
 | the crate itself | 30 |
 | consuming crates | 95 |
-| openspec archived changes | 36 |
+| openspec archived changes | 34 |
 | examples | 18 |
 | build / CI / root | 11 |
-| openspec notes and specs | 8 |
+| openspec notes and specs | 10 |
 | docs and website | 5 |
 
-Of those, 102 are `use deep_causality_sparse…` import lines outside the crate. 67 of the 95
-consuming-crate files are `deep_causality_topology`, which mentions `CsrMatrix` 279 times.
-`deep_causality_physics` has 2 import sites and 11 `CsrMatrix` mentions. `deep_causality_algebra`
-mentions `CsrMatrix` 4 times, all in doc comments explaining which algebraic laws it does not
-satisfy.
+Mentions are not edits. Of the 435 lines, **102 are `use deep_causality_sparse…` imports outside
+the crate** — the code that must actually change:
 
-Bazel carries 30 label references across 8 `BUILD.bazel` files. One of them —
+| crate | files mentioning | import sites |
+|---|---|---|
+| `deep_causality_topology` | 73 | 61 (32 `src`, 29 `tests`) |
+| `deep_causality_physics` | 5 | 2 |
+| examples | 18 | 10 |
+| `deep_causality_algebra` | 5 | 0 — doc comments naming laws `CsrMatrix` does not satisfy |
+| discovery, cfd, and seven others | 1–2 each | 0 — prose and changelogs |
+
+`deep_causality_topology` mentions `CsrMatrix` 282 times.
+
+Bazel carries 35 label references across 8 `BUILD.bazel` files — 15 in
+`deep_causality_topology/tests/`, 9 in `examples/mathematics_examples/`, 7 in the sparse crate's own
+two files, and one each in topology, physics and cfd. One of them —
 `deep_causality_cfd/BUILD.bazel:30` — declares a dependency that `deep_causality_cfd/Cargo.toml`
 does not, so the two build systems currently disagree.
 
@@ -206,18 +288,25 @@ and any crate depending on both — which is exactly what a partially-migrated d
 would fail to typecheck. Re-exporting keeps one type.
 
 Archived openspec changes under `openspec/changes/archive/` are historical records of what was
-proposed at the time and are not rewritten. That leaves 36 of the 203 files untouched by design.
+proposed at the time and are not rewritten. That leaves 34 of the 203 files untouched by design.
+
+## Resolved
+
+- **Do topology's small determinants change numerically?** No, provided the shared determinant does
+  partial pivoting — see the section above, where pivoted elimination reproduces Laplace exactly on
+  the Cayley-Menger matrices topology uses. Without pivoting every volume collapses to zero.
+- **How much of the 1,088 tensor lines moves?** All of it. Nothing stays in `deep_causality_tensor`
+  but the delegating method shells, and none is deferred to a follow-up change.
+- **Does the retirement window end in a yank?** No. `deep_causality_sparse` is never yanked at any
+  point.
 
 ## Open questions
 
-1. **Do topology's small determinants change numerically?** Replacing the two O(n!) Laplace
-   expansions with elimination perturbs floating-point results. Regge geometry uses them on
-   Cayley-Menger determinants of small simplices where Laplace is also the faster path.
-2. **How much of the 1,088 tensor lines moves in the first change?** Delegation is behaviour-preserving
-   but touches the most-used numerical code in the workspace.
-3. **Does the retirement window end in a yank?** The stated intent is a few months of availability.
-   Nothing in this repository's conventions requires a yank afterwards, and yanking would break the
-   already-published dependents the window exists to protect.
+1. **Does the dense matrix type replace rank-2 `CausalTensor` at any call site?** Physics and quantum
+   use rank-2 tensors heavily; switching them is a separate decision with its own blast radius.
+2. **Do physics' five hand-rolled small-matrix helpers ever consolidate?** They are correct as
+   written and out of scope here. Four reuse the `[[T; 3]; 3]` shape without going through the
+   `Matrix3` alias; `invert_4x4` adds a sixth shape, `[T; 16]`.
 
 ## Related
 

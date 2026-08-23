@@ -1,6 +1,6 @@
 ## Context
 
-The workspace has 28 crates and no linear-algebra crate. Matrices exist in five representations:
+The workspace has 29 crates and no linear-algebra crate. Matrices exist in five representations:
 `CausalTensor<T>` (strided, rank-2 serves as dense), `CsrMatrix<T>`, `Matrix3<F> = [[F;3];3]`, and
 two ad-hoc shapes inside `deep_causality_topology` — `&[Vec<R>]` and `&mut [T]` with a stride
 argument. `AdjacencyMatrix`, `IncidenceMatrix` and `LaplacianMatrix` are aliases of `CausalTensor`;
@@ -86,6 +86,20 @@ optional = true
 confined to `extensions/ext_iso.rs` behind `#[cfg(feature = "tensor-iso")]`. The core — `CsrMatrix`,
 `solver/cg.rs` — is tensor-free, so the absorbing crate can sit below tensor with no contortion.
 
+### `gaussian_determinant` is not a general determinant
+
+It is correct where it is used and wrong as a shared implementation. `lazy_hodge_star.rs:81` feeds it
+a Gram matrix — `vectors[i]·vectors[j]`, symmetric with a strictly positive diagonal — where taking
+`mat[i][i]` as the pivot always works. The two Laplace determinants are fed Cayley-Menger matrices,
+whose `(0,0)` entry is zero by construction, where it always fails.
+
+So the consolidation is not "pick the O(n³) one and delete the two O(n!) ones". The shared
+implementation pivots by search, which none of the three does today, and the closed-form cutoff at
+order three is a separate matter of speed. `deep_causality_physics` carries five more fixed-size
+closed forms (`invert_4x4`, `invert_3x3`, `inverse_spatial_metric`, `symmetric_3x3_eigenvalues`, and
+an inline 3×3 determinant) which are correct as written and stay where they are — evidence for the
+small-n rule rather than targets for it.
+
 ### Delegate the decompositions, do not relocate them
 
 `svd`, `svd_decomp`, `svd_truncated`, `qr`, `eigen` and `inverse` are inherent methods on
@@ -146,24 +160,36 @@ type, so a dependent can migrate module by module.
 
 ### Archived openspec changes are not rewritten
 
-36 of the 203 files naming `deep_causality_sparse` are under `openspec/changes/archive/`. They
+34 of the 203 files naming `deep_causality_sparse` are under `openspec/changes/archive/`. They
 record what was proposed at the time. Rewriting them would falsify the record.
 
 ## Risks / Trade-offs
 
-**Replacing topology's determinants perturbs floating-point output.** Regge geometry uses
-`det_recursive` on Cayley-Menger determinants of small simplices, where Laplace expansion is exact in
-a different way than elimination and, at n ≤ 3, faster. `deep_causality_topology` has 29,474 lines of
-tests, some of which may encode expected values to full precision. *Mitigation:* keep the closed
-forms for n ≤ 3 and dispatch to elimination only at n ≥ 4, which is what
-`manifold/geometry/mod.rs:145` already does for its base cases. Run the topology suite before and
-after and diff, rather than assuming.
+**Consolidating topology's determinants onto an unpivoted elimination returns zero volumes.**
+Researched rather than assumed. Both Laplace determinants are fed Cayley-Menger matrices, which have
+`m[0][0] = 0` by construction; `gaussian_determinant` at `lazy_hodge_star.rs:97` takes `mat[i][i]` as
+its pivot and returns zero when it is small. Measured on a regular unit tetrahedron: Laplace gives
+`det = 4.0` → `vol = 0.117851130198` (exactly √2⁄12), the unpivoted elimination gives `det = 0.0` →
+NaN, and elimination **with partial pivoting** reproduces Laplace exactly. *Mitigation:* the shared
+determinant pivots by search, which `linear-dense-algorithms` now requires with those scenarios
+attached. With pivoting there is no numerical change on the shapes topology uses. Run the topology
+suite before and after and diff regardless.
 
 **Changing `betti_number` from f64 SVD to exact 𝔽₂ rank changes answers.** That is the point — G-02
 records that the current answer can be wrong — but it changes committed test expectations wherever
 the two ranks differ. *Mitigation:* the two agree for the toric code and for every complex currently
 under test, per G-02. Keep the ℝ-rank path available for complexes that are not being read as codes,
 and make the choice explicit at the call site rather than global.
+
+**Deduplication alone does not justify a published crate.** Topology's five helpers are all inside
+`deep_causality_topology`, and `deep_causality_tensor` has its own internal copies — six `matmul`
+definitions, two SVD paths (`svd_impl` power-iteration and `jacobi_svd`), two Choleskys
+(`cholesky_decomposition_impl` and `cholesky_in_place`). Every one of those is fixable with a
+`pub(crate) fn` and no crate boundary. The crate rests on holding the representations side by side
+and on giving 𝔽₂ a home that is neither a chain-complex crate nor a tensor crate; the duplication is
+what gets tidied on the way, not the reason. *Mitigation:* none needed — but the Why section should
+not be read as claiming otherwise, and the last workspace split cost 828 files and 7,537 insertions,
+so the bar is real.
 
 **A new crate boundary can trap coherence.** The `deep_causality_num` split produced E0119 when
 marker traits over a now-foreign `Float` could not admit integers. *Mitigation:* the traits this
@@ -172,7 +198,7 @@ is the direction the orphan rule permits; the prototype compiles both the permit
 forbidden direction and shows which fails.
 
 **Delegation adds a call layer to the most-used numerical code in the workspace.** `matmul` alone has
-15 call sites in the physics Kalman filter. *Mitigation:* the delegating methods are generic and
+13 call sites in the physics Kalman filter and 18 across that crate. *Mitigation:* the delegating methods are generic and
 monomorphise; the prototype's 0.93× seam measurement is evidence that a trait boundary in this
 position does not cost, but the tensor benchmarks are re-run before and after regardless.
 
@@ -208,16 +234,22 @@ Publication order: `deep_causality_linear` 0.1.0 first, then the final `deep_cau
 the dependents. release-plz strips path dependencies when verifying publish tarballs, so each
 dependent resolves the *published* API of the crate below it and the order is load-bearing.
 
+## Resolved
+
+- **The retirement window never ends in a yank.** `deep_causality_sparse` stays published
+  indefinitely; the window governs how long it receives a re-export, not how long it exists.
+- **All 1,088 relocated lines move in this change.** Nothing stays in `deep_causality_tensor` but the
+  delegating method shells, and none is deferred to a follow-up.
+- **Topology's determinants do not change numerically**, provided the shared implementation pivots.
+  See Risks.
+
 ## Open Questions
 
-1. **Does the retirement window end in a yank?** The stated intent is a few months of availability so
-   that already-published dependents keep resolving. Yanking afterwards would break the dependents
-   the window exists to protect, so the default is that it does not.
-2. **Does the dense matrix type replace rank-2 `CausalTensor` at any call site?** Phase 4 makes both
+1. **Does the dense matrix type replace rank-2 `CausalTensor` at any call site?** Phase 4 makes both
    viable. Physics and quantum use rank-2 tensors heavily and switching them is a separate decision
    with its own blast radius.
-3. **Does `Matrix3` fold in later?** It has two consumers and lives below this crate. Folding it in
+2. **Does `Matrix3` fold in later?** It has two consumers and lives below this crate. Folding it in
    would need `deep_causality_num` to depend on `deep_causality_linear`, which inverts the tower.
-4. **How is the 𝔽₂ rank chosen at the call site in topology?** A parameter on `betti_number`, a
+3. **How is the 𝔽₂ rank chosen at the call site in topology?** A parameter on `betti_number`, a
    separate method, or a property of the complex. Phase 5 decides; the risk section requires only
    that it not be a silent global switch.
