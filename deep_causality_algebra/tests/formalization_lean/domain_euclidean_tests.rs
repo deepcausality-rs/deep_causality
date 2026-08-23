@@ -36,11 +36,22 @@ fn test_remainder_nonneg() {
 /// THEOREM_MAP: algebra.euclidean.remainder_lt_divisor
 #[test]
 fn test_remainder_lt_divisor() {
-    // 0 < b → a % b < b. The termination argument: φ strictly decreases, and φ is ℕ-valued.
+    // b ≠ 0 → a % b < |b|. The termination argument: φ strictly decreases, and φ is ℕ-valued.
+    //
+    // Negative divisors are exercised alongside positive ones. The first step of the Euclidean
+    // algorithm takes the caller's `other` as its divisor, and that argument may be negative;
+    // only from the second step on is the divisor a previous remainder and therefore
+    // non-negative. A bound stated for `0 < b` would leave that first step uncovered.
     for a in -30_i64..=30 {
-        for b in 1_i64..=9 {
+        for b in -9_i64..=9 {
+            if b == 0 {
+                continue;
+            }
             let r = EuclideanDomain::rem_euclid(&a, &b);
-            assert!(r < b, "remainder not below divisor for a={a}, b={b}, r={r}");
+            assert!(
+                r < b.abs(),
+                "remainder not below |divisor| for a={a}, b={b}, r={r}"
+            );
         }
     }
 }
@@ -49,18 +60,24 @@ fn test_remainder_lt_divisor() {
 #[test]
 fn test_euclidean_algorithm_terminates() {
     // The decreasing sequence the termination argument describes, run concretely: each remainder
-    // is strictly smaller than the last, so the recursion bottoms out.
-    let (mut a, mut b) = (1071_i64, 462_i64);
-    let mut steps = 0;
-    while b != 0 {
-        let r = EuclideanDomain::rem_euclid(&a, &b);
-        assert!(r < b, "phi did not decrease: a={a}, b={b}, r={r}");
-        a = b;
-        b = r;
-        steps += 1;
-        assert!(steps < 64, "Euclidean algorithm failed to terminate");
+    // is strictly smaller than |divisor|, so the recursion bottoms out. Run twice — once from a
+    // positive divisor, once from a negative one, which is the case the `b ≠ 0` form of the
+    // bound is needed for.
+    fn run(mut a: i64, mut b: i64) -> i64 {
+        let mut steps = 0;
+        while b != 0 {
+            let r = EuclideanDomain::rem_euclid(&a, &b);
+            assert!(r < b.abs(), "phi did not decrease: a={a}, b={b}, r={r}");
+            a = b;
+            b = r;
+            steps += 1;
+            assert!(steps < 64, "Euclidean algorithm failed to terminate");
+        }
+        a
     }
-    assert_eq!(a, 21);
+
+    assert_eq!(run(1071, 462), 21);
+    assert_eq!(run(1071, -462), 21);
 }
 
 /// THEOREM_MAP: algebra.euclidean.gcd_dvd_left
@@ -103,6 +120,15 @@ fn test_gcd_nonneg() {
             assert!(a.gcd(&b) >= 0, "negative gcd for a={a}, b={b}");
         }
     }
+
+    // Where the Lean statement and the Rust type part company. Lean proves this over ℤ, which is
+    // unbounded, so `0 ≤ gcd a b` holds for every pair. `i64` is not ℤ: at `i64::MIN` the
+    // canonical associate `|MIN|` is unrepresentable, so the total `gcd` cannot return a
+    // non-negative value there — it panics in debug and wraps to a negative one in release.
+    // `checked_gcd` is the total form, and reports that pair rather than violating the bound.
+    assert_eq!(EuclideanDomain::checked_gcd(&i64::MIN, &0_i64), None);
+    // Everywhere the result is representable, the checked form agrees and the bound holds.
+    assert_eq!(EuclideanDomain::checked_gcd(&i64::MIN, &6_i64), Some(2));
 }
 
 /// THEOREM_MAP: algebra.euclidean.gcd_zero_right

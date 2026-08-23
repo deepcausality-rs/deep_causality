@@ -17,7 +17,10 @@ fn gcd_of<T: EuclideanDomain + Clone>(a: T, b: T) -> T {
     a.gcd(&b)
 }
 
-fn lcm_of<T: EuclideanDomain + Clone + core::ops::Div<Output = T>>(a: T, b: T) -> T {
+/// No `Div` bound. This signature is the regression test for `lcm`: the default body can only
+/// use what these bounds permit, so it compiles only while `lcm` takes its quotient with
+/// `div_euclid` rather than with the `/` operator. Re-introducing `/` breaks this file.
+fn lcm_of<T: EuclideanDomain + Clone>(a: T, b: T) -> T {
     a.lcm(&b)
 }
 
@@ -144,6 +147,77 @@ fn lcm_agrees_with_the_gcd_identity() {
     for a in 1i64..=20 {
         for b in 1i64..=20 {
             assert_eq!(a.gcd(&b) * lcm_of(a, b), a * b, "failed for a={a}, b={b}");
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// The signed minimum: where `normalize` and `gcd` run out of representation.
+// -----------------------------------------------------------------------------
+
+#[test]
+#[cfg(debug_assertions)]
+#[should_panic(expected = "attempt to negate with overflow")]
+fn normalize_panics_at_the_signed_minimum_in_debug() {
+    // Documented partiality: |T::MIN| is one past the top of the type, so the canonical
+    // associate does not exist. Debug builds trap on the negation.
+    let _ = EuclideanDomain::normalize(&core::hint::black_box(i64::MIN));
+}
+
+#[test]
+#[cfg(not(debug_assertions))]
+fn normalize_wraps_at_the_signed_minimum_in_release() {
+    // The same input in release wraps back to a *negative* value, which is exactly why the
+    // non-negativity guarantee is documented as partial rather than absolute.
+    assert_eq!(
+        EuclideanDomain::normalize(&core::hint::black_box(i64::MIN)),
+        i64::MIN
+    );
+}
+
+#[test]
+fn checked_normalize_reports_the_signed_minimum() {
+    // Same function, total: the one input with no canonical associate comes back as `None`.
+    fn assert_min_has_no_associate<T>(min: T)
+    where
+        T: EuclideanDomain + Copy + core::fmt::Debug + PartialEq,
+    {
+        assert_eq!(min.checked_normalize(), None, "expected None at {min:?}");
+    }
+
+    assert_min_has_no_associate(i8::MIN);
+    assert_min_has_no_associate(i16::MIN);
+    assert_min_has_no_associate(i32::MIN);
+    assert_min_has_no_associate(i64::MIN);
+    assert_min_has_no_associate(i128::MIN);
+    assert_min_has_no_associate(isize::MIN);
+}
+
+#[test]
+fn checked_normalize_agrees_with_normalize_everywhere_else() {
+    for n in -128i64..=128 {
+        assert_eq!(n.checked_normalize(), Some(EuclideanDomain::normalize(&n)));
+    }
+    assert_eq!(i64::MAX.checked_normalize(), Some(i64::MAX));
+    assert_eq!((i64::MIN + 1).checked_normalize(), Some(i64::MAX));
+}
+
+#[test]
+fn checked_gcd_reports_an_unrepresentable_result() {
+    // gcd(MIN, 0) is |MIN|, which the type cannot hold. The total `gcd` cannot honour its
+    // non-negativity contract here; `checked_gcd` says so instead.
+    assert_eq!(EuclideanDomain::checked_gcd(&i64::MIN, &0i64), None);
+    assert_eq!(EuclideanDomain::checked_gcd(&i64::MIN, &i64::MIN), None);
+    assert_eq!(EuclideanDomain::checked_gcd(&i8::MIN, &0i8), None);
+}
+
+#[test]
+fn checked_gcd_agrees_with_gcd_where_the_result_is_representable() {
+    // MIN is 2^63, so its gcd with 6 is 2 — representable, and returned.
+    assert_eq!(EuclideanDomain::checked_gcd(&i64::MIN, &6i64), Some(2));
+    for a in -24i64..=24 {
+        for b in -12i64..=12 {
+            assert_eq!(EuclideanDomain::checked_gcd(&a, &b), Some(a.gcd(&b)));
         }
     }
 }

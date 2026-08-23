@@ -4,7 +4,6 @@
  */
 
 use crate::CommutativeRing;
-use core::ops::Div;
 
 /// Represents a **Euclidean Domain**.
 ///
@@ -67,6 +66,16 @@ pub trait EuclideanDomain: CommutativeRing {
     /// Computes the quotient of Euclidean division.
     ///
     /// For `a.div_euclid(b)`, returns `q` such that `a = b·q + r` with `0 ≤ r < |b|`.
+    ///
+    /// # Panics
+    ///
+    /// The divisor must be non-zero. That precondition is necessary but, on the fixed-width
+    /// signed integers, not sufficient: `-1` satisfies it, yet `T::MIN.div_euclid(-1)` has the
+    /// mathematical value `2^(N-1)`, which the type cannot hold. The primitive panics there in
+    /// **every** build profile — signed division overflow is checked unconditionally rather than
+    /// wrapped in release, because the hardware traps on it. ℤ is unbounded and has no such
+    /// case, so this is a limit of the fixed-width representation and not of the Euclidean
+    /// domain; it is documented rather than solved.
     fn div_euclid(&self, other: &Self) -> Self;
 
     /// Computes the remainder of Euclidean division.
@@ -74,6 +83,13 @@ pub trait EuclideanDomain: CommutativeRing {
     /// For `a.rem_euclid(b)`, returns `r` such that `a = b·q + r` with `0 ≤ r < |b|`.
     ///
     /// Unlike the `%` operator, the result is always non-negative.
+    ///
+    /// # Panics
+    ///
+    /// As for [`div_euclid`](Self::div_euclid), and for the same reason: a zero divisor has no
+    /// remainder, and on the fixed-width signed integers `T::MIN.rem_euclid(-1)` panics in every
+    /// build profile even though the answer, `0`, is representable — the quotient it is computed
+    /// from is not.
     fn rem_euclid(&self, other: &Self) -> Self;
 
     /// Returns the canonical associate of `self`.
@@ -84,15 +100,32 @@ pub trait EuclideanDomain: CommutativeRing {
     /// Fixing a representative is what lets [`gcd`](Self::gcd) return *a value* rather than an
     /// equivalence class.
     ///
-    /// For `ℤ` the canonical associate is the absolute value, so `gcd` is always non-negative.
-    /// For a polynomial ring `F[x]` it would be the monic representative.
+    /// For `ℤ` the canonical associate is the absolute value, so `gcd` is non-negative wherever
+    /// it is defined. For a polynomial ring `F[x]` it would be the monic representative.
     ///
-    /// # Overflow
+    /// # Panics
     ///
-    /// For the signed integers this negates negative values, so `T::MIN` has no representable
-    /// canonical associate and overflows — a panic in debug builds, wrapping in release. This is
-    /// the same asymmetry that makes `T::MIN.abs()` overflow.
+    /// On the fixed-width signed integers this function is **partial**. It negates negative
+    /// values, and `T::MIN` has no representable non-negative associate: `|i64::MIN|` is `2^63`,
+    /// one past the top of the type. `T::MIN.normalize()` therefore panics in debug builds and
+    /// wraps back to `T::MIN` — a *negative* value — in release, which is the one input where the
+    /// non-negativity promise above cannot be kept. Over ℤ, which is unbounded, the promise holds
+    /// everywhere; the gap is in the representation, not in the mathematics.
+    ///
+    /// [`checked_normalize`](Self::checked_normalize) is the same function with that input
+    /// reported rather than hit. Callers for whom the non-negativity is load-bearing — reducing a
+    /// fraction to a canonical form, say — should use it.
     fn normalize(&self) -> Self;
+
+    /// Returns the canonical associate of `self`, or `None` when it is not representable.
+    ///
+    /// This is the total counterpart of [`normalize`](Self::normalize): every input either yields
+    /// a canonical associate that satisfies the contract, or `None`. On the signed integers the
+    /// sole `None` is `T::MIN`. A domain in which every element has a representable canonical
+    /// associate returns `Some` for every input.
+    fn checked_normalize(&self) -> Option<Self>
+    where
+        Self: Sized;
 
     /// Computes the greatest common divisor by the Euclidean algorithm.
     ///
@@ -101,6 +134,18 @@ pub trait EuclideanDomain: CommutativeRing {
     /// - `gcd(a, b) = gcd(b, a mod b)`
     /// - `gcd(a, b)` divides both `a` and `b`
     /// - every common divisor of `a` and `b` divides `gcd(a, b)`
+    ///
+    /// # Panics
+    ///
+    /// The result is normalized, so `gcd` is partial exactly where
+    /// [`normalize`](Self::normalize) is: `i64::MIN.gcd(&0)` is `|i64::MIN|`, which the type
+    /// cannot hold, so it panics in debug and wraps to a negative value in release. The `0 ≤
+    /// gcd(a, b)` guarantee holds on every other input.
+    ///
+    /// The loop also calls [`rem_euclid`](Self::rem_euclid), so `gcd(T::MIN, -1)` panics on the
+    /// first step, in every build profile, for the separate reason documented there.
+    ///
+    /// [`checked_gcd`](Self::checked_gcd) reports the unrepresentable-result case as `None`.
     fn gcd(&self, other: &Self) -> Self
     where
         Self: Sized + Clone,
@@ -119,6 +164,32 @@ pub trait EuclideanDomain: CommutativeRing {
         a.normalize()
     }
 
+    /// Computes the greatest common divisor, returning `None` when the result is not
+    /// representable.
+    ///
+    /// Same algorithm as [`gcd`](Self::gcd), closed off with
+    /// [`checked_normalize`](Self::checked_normalize) instead of `normalize`. On the signed
+    /// integers the `None` case is a gcd of `|T::MIN|`, which is where the algorithm terminates
+    /// on `T::MIN` itself — `checked_gcd(T::MIN, 0)` and `checked_gcd(T::MIN, T::MIN)`. Whenever
+    /// this returns `Some(g)`, `g` is the canonical associate and so satisfies `0 ≤ g`.
+    ///
+    /// `None` covers an unrepresentable *result*, not an unrepresentable *intermediate*: the
+    /// `(T::MIN, -1)` case of [`rem_euclid`](Self::rem_euclid) still panics inside the loop,
+    /// before any value can be returned.
+    fn checked_gcd(&self, other: &Self) -> Option<Self>
+    where
+        Self: Sized + Clone,
+    {
+        let mut a = self.clone();
+        let mut b = other.clone();
+        while !b.is_zero() {
+            let r = a.rem_euclid(&b);
+            a = b;
+            b = r;
+        }
+        a.checked_normalize()
+    }
+
     /// Computes the least common multiple, `lcm(a, b) = |a·b| / gcd(a, b)`.
     ///
     /// Returns zero when either argument is zero.
@@ -129,17 +200,24 @@ pub trait EuclideanDomain: CommutativeRing {
     /// the gcd first keeps the intermediate no larger than the answer.
     ///
     /// The result is normalized, so it is non-negative for the integers — matching the `|a·b|`
-    /// in the formula above.
+    /// in the formula above. It is partial wherever [`normalize`](Self::normalize) and
+    /// [`gcd`](Self::gcd) are.
+    ///
+    /// The quotient is taken with [`div_euclid`](Self::div_euclid) rather than with the `/`
+    /// operator. A domain is free to implement `Div` as something other than its Euclidean
+    /// quotient — `Div` carries no law that ties the two together — so dividing through the
+    /// operator would compute the least common multiple of a *different* division than the one
+    /// this trait defines. `div_euclid` is the division the trait is about.
     fn lcm(&self, other: &Self) -> Self
     where
-        Self: Sized + Clone + Div<Output = Self>,
+        Self: Sized + Clone,
     {
         if self.is_zero() || other.is_zero() {
             return Self::zero();
         }
         let g = self.gcd(other);
-        // `g` divides `self` exactly, so `self / g` is exact and no precision is lost.
-        ((self.clone() / g) * other.clone()).normalize()
+        // `g` divides `self` exactly, so the quotient is exact and no precision is lost.
+        (self.div_euclid(&g) * other.clone()).normalize()
     }
 }
 
@@ -150,41 +228,180 @@ pub trait EuclideanDomain: CommutativeRing {
 // absent: they are not `CommutativeRing`, because ℕ has no additive inverses.
 // -----------------------------------------------------------------------------
 
-macro_rules! impl_euclidean_domain_signed {
-    ($($t:ty => $u:ty),* $(,)?) => {
-        $(
-            impl EuclideanDomain for $t {
-                type EuclideanValue = $u;
+// Written out one width at a time rather than generated by a macro: everything under `src/` in
+// this workspace is macro-free, so the repetition is deliberate. `normalize` is `abs`, which is
+// partial at `T::MIN`; `checked_normalize` is `checked_abs`, which reports that input as `None`.
 
-                #[inline]
-                fn euclidean_fn(&self) -> Self::EuclideanValue {
-                    self.unsigned_abs()
-                }
+impl EuclideanDomain for i8 {
+    type EuclideanValue = u8;
 
-                #[inline]
-                fn div_euclid(&self, other: &Self) -> Self {
-                    <$t>::div_euclid(*self, *other)
-                }
+    #[inline]
+    fn euclidean_fn(&self) -> Self::EuclideanValue {
+        self.unsigned_abs()
+    }
 
-                #[inline]
-                fn rem_euclid(&self, other: &Self) -> Self {
-                    <$t>::rem_euclid(*self, *other)
-                }
+    #[inline]
+    fn div_euclid(&self, other: &Self) -> Self {
+        i8::div_euclid(*self, *other)
+    }
 
-                #[inline]
-                fn normalize(&self) -> Self {
-                    <$t>::abs(*self)
-                }
-            }
-        )*
-    };
+    #[inline]
+    fn rem_euclid(&self, other: &Self) -> Self {
+        i8::rem_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        i8::abs(*self)
+    }
+
+    #[inline]
+    fn checked_normalize(&self) -> Option<Self> {
+        i8::checked_abs(*self)
+    }
 }
 
-impl_euclidean_domain_signed!(
-    i8 => u8,
-    i16 => u16,
-    i32 => u32,
-    i64 => u64,
-    i128 => u128,
-    isize => usize,
-);
+impl EuclideanDomain for i16 {
+    type EuclideanValue = u16;
+
+    #[inline]
+    fn euclidean_fn(&self) -> Self::EuclideanValue {
+        self.unsigned_abs()
+    }
+
+    #[inline]
+    fn div_euclid(&self, other: &Self) -> Self {
+        i16::div_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn rem_euclid(&self, other: &Self) -> Self {
+        i16::rem_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        i16::abs(*self)
+    }
+
+    #[inline]
+    fn checked_normalize(&self) -> Option<Self> {
+        i16::checked_abs(*self)
+    }
+}
+
+impl EuclideanDomain for i32 {
+    type EuclideanValue = u32;
+
+    #[inline]
+    fn euclidean_fn(&self) -> Self::EuclideanValue {
+        self.unsigned_abs()
+    }
+
+    #[inline]
+    fn div_euclid(&self, other: &Self) -> Self {
+        i32::div_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn rem_euclid(&self, other: &Self) -> Self {
+        i32::rem_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        i32::abs(*self)
+    }
+
+    #[inline]
+    fn checked_normalize(&self) -> Option<Self> {
+        i32::checked_abs(*self)
+    }
+}
+
+impl EuclideanDomain for i64 {
+    type EuclideanValue = u64;
+
+    #[inline]
+    fn euclidean_fn(&self) -> Self::EuclideanValue {
+        self.unsigned_abs()
+    }
+
+    #[inline]
+    fn div_euclid(&self, other: &Self) -> Self {
+        i64::div_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn rem_euclid(&self, other: &Self) -> Self {
+        i64::rem_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        i64::abs(*self)
+    }
+
+    #[inline]
+    fn checked_normalize(&self) -> Option<Self> {
+        i64::checked_abs(*self)
+    }
+}
+
+impl EuclideanDomain for i128 {
+    type EuclideanValue = u128;
+
+    #[inline]
+    fn euclidean_fn(&self) -> Self::EuclideanValue {
+        self.unsigned_abs()
+    }
+
+    #[inline]
+    fn div_euclid(&self, other: &Self) -> Self {
+        i128::div_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn rem_euclid(&self, other: &Self) -> Self {
+        i128::rem_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        i128::abs(*self)
+    }
+
+    #[inline]
+    fn checked_normalize(&self) -> Option<Self> {
+        i128::checked_abs(*self)
+    }
+}
+
+impl EuclideanDomain for isize {
+    type EuclideanValue = usize;
+
+    #[inline]
+    fn euclidean_fn(&self) -> Self::EuclideanValue {
+        self.unsigned_abs()
+    }
+
+    #[inline]
+    fn div_euclid(&self, other: &Self) -> Self {
+        isize::div_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn rem_euclid(&self, other: &Self) -> Self {
+        isize::rem_euclid(*self, *other)
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        isize::abs(*self)
+    }
+
+    #[inline]
+    fn checked_normalize(&self) -> Option<Self> {
+        isize::checked_abs(*self)
+    }
+}
