@@ -114,12 +114,14 @@ The split matters when you go looking: `num` holds the **representation** traits
 ```
 Magma → Semigroup → Monoid → Group → AbelianGroup
                        ↓                  ↓
-                   Semiring →            Ring → CommutativeRing → Field → RealField
-                       ↓                            ↓                ↓
-              CommutativeSemiring            EuclideanDomain    ComplexField<R>
+                   Semiring               Ring → CommutativeRing → Field → RealField
+                   ↓                             ↓                 ↓
+                   CommutativeSemiring           EuclideanDomain   ComplexField<R>
 ```
 
-with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, and `DivisionAlgebra<R>` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`, `Invertible`) make algebraic laws compile-time promises rather than convention.
+The two columns are branches, not one chain. `Semiring` is `Ring` with the additive inverses removed, and nothing on the ℕ branch climbs across into the ring branch: `3 - 5` has no value in ℕ, so there is no `-a`, so there is no `AbelianGroup` and no `Ring`.
+
+Alongside these sit `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, and `DivisionAlgebra<R>` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`, `Annihilating`, `Invertible`) make algebraic laws compile-time promises rather than convention.
 
 ### The five number systems
 

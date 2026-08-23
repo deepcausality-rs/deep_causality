@@ -38,6 +38,9 @@
 #     to strip the internal links from the rendered PDF.
 #
 # Notes:
+#   - The preview binds PDF_PREVIEW_PORT (default 4321). The script refuses to run
+#     when that port is already taken, and checks that the server answering on it
+#     is the one it started, so a stray server cannot end up in the PDF.
 #   - Set CHROME_PATH to use an installed browser instead of the one Puppeteer
 #     downloads on first run (e.g. when that download is unusable):
 #       CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm pdf
@@ -59,18 +62,45 @@ python3 -c 'import pypdf' 2>/dev/null || {
 echo "==> Building the site ..."
 pnpm build
 
+# The site we just built has to identify itself, because the readiness probe below
+# would otherwise accept whatever answers on $PORT and crawl it into the committed
+# PDF. The <title> of the page in dist/ is the marker.
+SITE_MARKER="$(sed -n 's/.*<title>\([^<]*\)<\/title>.*/\1/p' "$DOCS_DIR/dist/index.html" | head -n 1)"
+[[ -n "$SITE_MARKER" ]] || {
+  echo "error: no <title> in dist/index.html; cannot identify the preview server" >&2
+  exit 1
+}
+
+# Refuse to share the port rather than guess. An unrelated server already bound
+# here would make the two checks below ambiguous, and killing it is not ours to do.
+if curl -sfo /dev/null --max-time 2 "$BASE_URL/"; then
+  echo "error: something is already serving $BASE_URL." >&2
+  echo "       Stop it, or point PDF_PREVIEW_PORT at a free port." >&2
+  exit 1
+fi
+
 echo "==> Starting a local preview on $BASE_URL ..."
 pnpm preview --port "$PORT" >/tmp/starlight-pdf-preview.log 2>&1 &
 PREVIEW_PID=$!
 # Always take the preview server down, whether the crawl succeeds or fails.
 trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
 
+# Wait for *our* preview, not merely for a responder: the body has to carry the
+# marker taken from dist/. The response is captured rather than piped into grep,
+# because `grep -q` exits early and `set -o pipefail` would then read curl's
+# SIGPIPE as a failed probe.
+READY=
 for _ in $(seq 1 60); do
-  if curl -sfo /dev/null "$BASE_URL/"; then break; fi
+  body="$(curl -sf --max-time 5 "$BASE_URL/" || true)"
+  if [[ "$body" == *"<title>$SITE_MARKER</title>"* ]]; then
+    READY=1
+    break
+  fi
   sleep 1
 done
-curl -sfo /dev/null "$BASE_URL/" || {
-  echo "error: preview server never came up; see /tmp/starlight-pdf-preview.log" >&2
+[[ -n "$READY" ]] || {
+  echo "error: nothing serving \"$SITE_MARKER\" on $BASE_URL after 60s." >&2
+  echo "       See /tmp/starlight-pdf-preview.log" >&2
   exit 1
 }
 
@@ -91,6 +121,7 @@ npx --yes starlight-to-pdf "$BASE_URL" \
 
 echo "==> Removing the internal cross-reference links ..."
 python3 - "$OUT_DIR/deepcausality-docs.pdf" "$BASE_URL" <<'PYTHON'
+import os
 import sys
 from pathlib import Path
 
@@ -130,12 +161,23 @@ for page in writer.pages:
         surviving.append(ref)
     page[NameObject("/Annots")] = ArrayObject(surviving)
 
-with pdf_path.open("wb") as handle:
-    writer.write(handle)
+# Write beside the target and swap in only what validates. Writing in place would
+# leave the committed PDF truncated if `write` failed midway, and would leave a
+# modified file behind even when the page-count check below rejects the result.
+tmp_path = pdf_path.with_name(pdf_path.name + ".tmp")
+try:
+    with tmp_path.open("wb") as handle:
+        writer.write(handle)
 
-after = len(PdfReader(str(pdf_path)).pages)
-if before != after:
-    sys.exit(f"error: page count changed, {before} -> {after}; refusing to continue")
+    after = len(PdfReader(str(tmp_path)).pages)
+    if before != after:
+        sys.exit(f"error: page count changed, {before} -> {after}; refusing to continue")
+
+    # Same directory, so this is an atomic rename rather than a copy.
+    os.replace(tmp_path, pdf_path)
+finally:
+    # A `sys.exit` above raises SystemExit, so the half-written file goes either way.
+    tmp_path.unlink(missing_ok=True)
 
 print(f"    Stripped {stripped} internal link(s); kept {kept} external link(s).")
 if stripped == 0:
