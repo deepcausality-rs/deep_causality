@@ -290,7 +290,7 @@
     "@@rules_lean+//lean:lake.bzl%lake": {
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "97UpLFYh0a2KNs+W0SiJoPCMwqLSLUM24hP8vni84gY=",
-        "usagesDigest": "IhaLkWgp6YxBxQbJT2FmrzYIuflFYr9IqNvSnYAHOg8=",
+        "usagesDigest": "YhDMwNQS2HGnc0CWCTQ/XxAg8xU7jlP0Rx/ZctgnMQI=",
         "recordedInputs": [
           "FILE:@@//lean/lean-toolchain 2773c517aa90b66ea8a2c52bddddf84393157797f8341be0df45294fff7fd32e"
         ],
@@ -349,6 +349,7 @@
                 "Mathlib.Algebra.Group.Basic",
                 "Mathlib.Algebra.Group.Defs",
                 "Mathlib.Algebra.Order.Group.Int",
+                "Mathlib.Algebra.Order.Group.Unbundled.Int",
                 "Mathlib.Algebra.Order.Ring.Defs",
                 "Mathlib.Algebra.Quaternion",
                 "Mathlib.Algebra.Ring.Basic",
@@ -357,7 +358,8 @@
                 "Mathlib.Analysis.Normed.Field.Basic",
                 "Mathlib.Data.Rat.Cast.Defs",
                 "Mathlib.Data.Real.Basic",
-                "Mathlib.LinearAlgebra.Matrix.Trace"
+                "Mathlib.LinearAlgebra.Matrix.Trace",
+                "Mathlib.Tactic.Linarith"
               ],
               "olean_cache": "",
               "olean_cache_packages": [],

@@ -19,6 +19,8 @@ mod commutative_monoid_tests;
 #[cfg(test)]
 mod division_algebra_tests;
 #[cfg(test)]
+mod domain_euclidean_tests;
+#[cfg(test)]
 mod field_tests;
 #[cfg(test)]
 mod group_tests;

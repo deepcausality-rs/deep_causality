@@ -702,6 +702,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "deep_causality_num_rational"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_algebra",
+ "deep_causality_num",
+]
+
+[[package]]
 name = "deep_causality_par"
 version = "0.1.2"
 

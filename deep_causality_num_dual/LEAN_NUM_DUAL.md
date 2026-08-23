@@ -32,8 +32,10 @@ implementation by a per-theorem witness test:
   crate's real `Dual` type to the same statement at representative inputs.
 - **The bridge:** each theorem carries a shared id (e.g. `dual.leibniz.product_rule`) recorded in
   [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **6 dual ids, all proved and witnessed**. CI
-  (`.github/workflows/formalization.yml`) runs `lake build`, the witness tests, and a consistency
-  gate that fails if any Lean id lacks a Rust witness or a manifest row.
+  (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
+  placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a
+  manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in
+  `rust_coverage.yaml` does.
 - **Model fidelity:** the Lean carrier is Mathlib's `DualNumber R`, the ring `R[ε]` with `ε² = 0`.
   The real projection `TrivSqZeroExt.fst` mirrors `Dual::value()` and the dual (tangent) projection
   `TrivSqZeroExt.snd` mirrors `Dual::derivative()`. The formalized facts are: `DualNumber R` is a

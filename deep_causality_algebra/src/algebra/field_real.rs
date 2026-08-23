@@ -2,7 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, Field, Float, Real};
+use crate::{
+    AbelianGroup, Annihilating, Associative, Commutative, Distributive, Field, Float, Invertible,
+    Num, Real,
+};
+use core::ops::Neg;
 
 /// An ordered `Field` that is also an analytic real scalar.
 ///
@@ -19,9 +23,24 @@ use crate::{AbelianGroup, Field, Float, Real};
 /// This trait abstracts over concrete floating-point types like `f32` and `f64`.
 pub trait RealField: Real + Field {}
 
-// Every `Float` is an Abelian group under addition and a `RealField`. The rest of the
-// tower (`Ring`, `CommutativeRing`, `Field`, …) is derived automatically from these
-// plus the marker blankets, so a new float type needs only `impl Float`.
-impl<T> AbelianGroup for T where T: Float {}
+// A number is an Abelian group under addition exactly when it has additive inverses, and
+// `Neg` is the witness for those. That bound is load-bearing rather than incidental: the
+// unsigned integers are a `Num` and do satisfy the commutative, associative, and distributive
+// laws, but `3u64 - 5u64` has no value in `u64`, so ℕ is a commutative *monoid* under
+// addition and never a group. `Neg` is exactly the property separating ℤ from ℕ, so requiring
+// it here keeps the unsigned types out of `AbelianGroup`, and therefore out of `Ring`,
+// `CommutativeRing`, and `Field` — none of which they satisfy.
+//
+// `Num` is kept in the bound, rather than the weaker `AddGroup`, because it is what makes this
+// blanket disjoint from the concrete impls for `Complex<T>`, `Dual<T>`, `Quaternion<T>`, and
+// the tensor types: none of those implement `Num`. `AddGroup` alone would overlap them, and it
+// would not exclude the unsigned types either, since its inverse axiom rests on `Sub` merely
+// existing.
+impl<T> AbelianGroup for T where T: Num + Neg<Output = T> + Clone {}
 
-impl<T> RealField for T where T: Float {}
+// Every `Float` that carries the law markers is a `RealField`. `Invertible` is what separates ℝ
+// from ℤ here: it promises that `/` really inverts, which integer division does not.
+impl<T> RealField for T where
+    T: Float + Commutative + Associative + Distributive + Annihilating + Invertible
+{
+}

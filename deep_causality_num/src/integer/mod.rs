@@ -5,17 +5,20 @@
 
 //! Integer traits for abstracting over primitive integer types.
 //!
-//! This module provides three traits:
+//! This module provides four traits:
 //! - [`Integer`]: Common operations for all primitive integers
+//! - [`NaturalNumber`]: ℕ over the unsigned types — successor, truncated subtraction, gcd
 //! - [`SignedInt`]: Operations specific to signed integers
 //! - [`UnsignedInt`]: Operations specific to unsigned integers
 
 mod integer_impl;
+mod natural;
 mod signed;
 mod signed_impl;
 mod unsigned;
 mod unsigned_impl;
 
+pub use natural::NaturalNumber;
 pub use signed::SignedInt;
 pub use unsigned::UnsignedInt;
 

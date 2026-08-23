@@ -14,7 +14,7 @@
 /// It explicitly states the algebraic properties of octonions, such as being
 /// a distributive and abelian group, and a division algebra, while correctly
 /// identifying their non-associative and non-commutative nature.
-use crate::{AbelianGroup, Distributive, DivisionAlgebra, Octonion, RealField};
+use crate::{AbelianGroup, Annihilating, Distributive, DivisionAlgebra, Octonion, RealField};
 
 // Marker Traits
 /// Implements the `Distributive` marker trait for `Octonion`.
@@ -22,6 +22,9 @@ use crate::{AbelianGroup, Distributive, DivisionAlgebra, Octonion, RealField};
 /// This signifies that multiplication of `Octonion`s distributes over addition,
 /// i.e., `a * (b + c) = (a * b) + (a * c)`. This property holds for octonions.
 impl<T: RealField> Distributive for Octonion<T> {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T: RealField> Annihilating for Octonion<T> {}
 
 // DO NOT IMPLEMENT `Associative` as octonion multiplication is non-associative.
 // DO NOT IMPLEMENT `Commutative` as octonion multiplication is non-commutative.

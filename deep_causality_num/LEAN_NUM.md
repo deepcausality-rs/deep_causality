@@ -34,8 +34,10 @@ linked back to the Rust implementation by a per-theorem witness test:
   tight epsilon for the model laws).
 - **The bridge:** each theorem carries a shared id (e.g. `num.integer.euclidean`) recorded in
   [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **10 num ids, all proved and witnessed**. CI
-  (`.github/workflows/formalization.yml`) runs `lake build`, the witness tests, and a consistency
-  gate that fails if any Lean id lacks a Rust witness or a manifest row.
+  (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
+  placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a
+  manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in
+  `rust_coverage.yaml` does.
 - **Model fidelity:** the Lean carriers are the canonical mathematical structures the crate's traits
   stand in for — the additive/multiplicative identity monoids for the `Zero`/`One` markers, the
   commutative ring with Euclidean division over Mathlib `ℤ` for `Integer`, the `ℕ ↔ ℤ` round-trip

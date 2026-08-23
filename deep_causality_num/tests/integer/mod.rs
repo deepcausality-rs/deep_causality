@@ -5,6 +5,7 @@
 
 mod integer_all_types_tests;
 mod integer_tests;
+mod natural_tests;
 mod signed_all_types_tests;
 mod signed_tests;
 mod unsigned_all_types_tests;

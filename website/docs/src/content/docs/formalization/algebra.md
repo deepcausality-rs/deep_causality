@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Thirty-three laws for the abstract-algebra trait tower: monoid and commutative-monoid, group and abelian-group, ring and commutative-ring, field and real-field, module and algebra over a ring, division algebra, conjugation (`star`), norm, semilattice, and the verdict lattice. Proved in [`lean/DeepCausalityFormal/Algebra/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Algebra) and checked by law-tests in `deep_causality_algebra/tests/formalization_lean/`. These are the laws the [Uniform Math](/concepts/uniform-math/) surface relies on.
+Forty laws for the abstract-algebra trait tower: monoid and commutative-monoid, group and abelian-group, ring and commutative-ring, field and real-field, module and algebra over a ring, division algebra, conjugation (`star`), norm, semilattice, the verdict lattice, and the Euclidean domain that carries exact integer arithmetic. Proved in [`lean/DeepCausalityFormal/Algebra/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Algebra) and checked by law-tests in `deep_causality_algebra/tests/formalization_lean/`. These are the laws the [Uniform Math](/concepts/uniform-math/) surface relies on.
 
 Every row is `proved` in Lean. The **Lean proof** and **Rust witness** cells give the file and theorem/test name, relative to the directories above.
 
@@ -44,3 +44,10 @@ Every row is `proved` in Lean. The **Lean proof** and **Rust witness** cells giv
 | `algebra.semilattice.comm` | commutativity of the boolean ∧-semilattice | `CommutativeMonoid.lean :: semilattice_comm` | `commutative_monoid_tests.rs :: test_semilattice_assoc_and_comm` | ✓ |
 | `algebra.verdict.lattice_laws` | boolean verdict lattice: meet commutativity + absorption | `Verdict.lean :: verdict_meet_comm / verdict_absorption` | `verdict_tests.rs :: test_verdict_lattice_laws` | ✓ |
 | `algebra.verdict.complement` | complement involution + De Morgan (Boolean); MV-algebra complement `1−p` (Prob) | `Verdict.lean :: verdict_compl_compl / verdict_de_morgan` | `verdict_tests.rs :: test_verdict_complement` | ✓ |
+| `algebra.euclidean.remainder_nonneg` | `b ≠ 0 → 0 ≤ a % b`; `rem_euclid` is non-negative whatever the signs | `EuclideanDomain.lean :: euclidean_remainder_nonneg` | `domain_euclidean_tests.rs :: test_remainder_nonneg` | ✓ |
+| `algebra.euclidean.remainder_lt_divisor` | `b ≠ 0 → a % b < \|b\|`; the **termination argument** — φ is ℕ-valued and strictly decreases, so `gcd` is well founded. Stated for any non-zero divisor, since the algorithm's first step divides by the caller's own argument, which may be negative | `EuclideanDomain.lean :: euclidean_remainder_lt_divisor` | `domain_euclidean_tests.rs :: test_remainder_lt_divisor` | ✓ |
+| `algebra.euclidean.gcd_dvd_left` | `gcd(a,b) ∣ a` | `EuclideanDomain.lean :: euclidean_gcd_dvd_left` | `domain_euclidean_tests.rs :: test_gcd_divides_left` | ✓ |
+| `algebra.euclidean.gcd_dvd_right` | `gcd(a,b) ∣ b` | `EuclideanDomain.lean :: euclidean_gcd_dvd_right` | `domain_euclidean_tests.rs :: test_gcd_divides_right` | ✓ |
+| `algebra.euclidean.gcd_nonneg` | `0 ≤ gcd(a,b)`; a gcd is defined only up to associates, and this fixes the representative | `EuclideanDomain.lean :: euclidean_gcd_nonneg` | `domain_euclidean_tests.rs :: test_gcd_nonneg` | ✓ |
+| `algebra.euclidean.gcd_zero_right` | `gcd(a,0) = \|a\|`; the base case where the recursion stops | `EuclideanDomain.lean :: euclidean_gcd_zero_right` | `domain_euclidean_tests.rs :: test_gcd_zero_right` | ✓ |
+| `algebra.euclidean.integers_not_field` | `¬∃ x : ℤ, 2x = 1`; why `Invertible` is withheld from ℤ, so `CommutativeRing` never becomes `Field` | `EuclideanDomain.lean :: euclidean_integers_not_field` | `domain_euclidean_tests.rs :: test_integers_are_not_a_field` | ✓ |

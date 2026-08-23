@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Algebra, Field, Float};
+use crate::{
+    Algebra, Annihilating, Associative, Commutative, Distributive, Field, Float, Invertible,
+};
 
 /// Represents a **Division Algebra** over a `Field`.
 ///
@@ -68,10 +70,10 @@ pub trait DivisionAlgebra<R: Field>: Algebra<R> {
 
 /// Every `Float` is a division algebra over itself: the conjugate of a real number is
 /// itself, the squared norm of `x` is `x*x`, and the inverse is `1/x` (`inf` at zero).
-/// A new float type inherits this through `impl Float` — no per-type impl needed.
+/// A new float type inherits this through `impl Float` plus the law markers.
 impl<T> DivisionAlgebra<T> for T
 where
-    T: Float,
+    T: Float + Commutative + Associative + Distributive + Annihilating + Invertible,
 {
     #[inline]
     fn conjugate(&self) -> Self {

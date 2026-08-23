@@ -5,7 +5,7 @@ sidebar:
   order: 12
 ---
 
-DeepCausality treats algebra, geometry, topology, and effect propagation as a single mathematical surface. The same `Functor`, `Monad`, and `CoMonad` operations run over tensors, multivectors, manifolds, sparse matrices, and propagating effects. Two crates do the work: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) provides the Higher-Kinded Type machinery; [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num) provides the algebraic trait floor that the math containers stand on.
+DeepCausality treats algebra, geometry, topology, and effect propagation as a single mathematical surface. The same `Functor`, `Monad`, and `CoMonad` operations run over tensors, multivectors, manifolds, sparse matrices, and propagating effects. Two crates do the work: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) provides the Higher-Kinded Type machinery; [`deep_causality_algebra`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algebra) provides the algebraic trait floor that the math containers stand on, standing in turn on the primitive numeric abstractions in [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num).
 
 ## Why Uniform Mathematics matters
 
@@ -17,7 +17,7 @@ The practical consequences are real:
 
 - **One composition law applies everywhere.** `fmap`, `bind`, `extend`, and `extract` mean the same thing on a tensor, a multivector, a manifold, or a propagating effect.
 - **Cross-domain pipelines stay readable.** Mesh walk and tensor algebra and rotor application can share a single closure. The structure of the code matches the structure of the math.
-- **Numerical precision becomes a parameter, not an assumption.** Because the algebraic floor is generic, every container honors the same `RealField` / `Field` / `Ring` traits, and the float type can be changed in one place.
+- **Numerical precision becomes a parameter, not an assumption.** Because the algebraic floor is generic, every container honors the same `RealField` / `Field` / `Ring` traits, and the working type is changed in one place — `FloatType` for ℝ, `IntType` for ℤ. The two are not the same kind of knob: widening `FloatType` buys accuracy, and its failure mode is rounding, bounded by `epsilon()`; widening `IntType` buys headroom, and its failure mode is overflow, which is not a graded error but a hard wrongness.
 - **Algebraic laws are compile-time guarantees.** A type that is not associative cannot be passed where associativity is required. The compiler enforces what mathematicians prove by hand.
 
 ## A concrete example: GRMHD
@@ -105,26 +105,56 @@ Adjunctions (`BoundedAdjunction`) formally link Geometry (Multivectors) and Topo
 
 ## The algebraic trait hierarchy
 
-The numeric layer underneath ships an explicit algebraic hierarchy in [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num). The trait names follow standard abstract algebra:
+The numeric layer underneath ships an explicit algebraic hierarchy in
+[`deep_causality_algebra`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algebra),
+standing on the primitive abstractions in
+[`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num).
+The split matters when you go looking: `num` holds the **representation** traits, which say what a machine number can do; `algebra` holds the **algebraic** traits, which say what laws it obeys. The trait names follow standard abstract algebra:
 
 ```
 Magma → Semigroup → Monoid → Group → AbelianGroup
-                                        ↓
-                                       Ring → CommutativeRing → Field → RealField → ComplexField<R>
+                       ↓                  ↓
+                   Semiring               Ring → CommutativeRing → Field → RealField
+                   ↓                             ↓                 ↓
+                   CommutativeSemiring           EuclideanDomain   ComplexField<R>
 ```
 
-with `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, and `DivisionAlgebra<R>` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`) make algebraic laws compile-time promises rather than convention. Concrete classifications:
+The two columns are branches, not one chain. `Semiring` is `Ring` with the additive inverses removed, and nothing on the ℕ branch climbs across into the ring branch: `3 - 5` has no value in ℕ, so there is no `-a`, so there is no `AbelianGroup` and no `Ring`.
 
-| Type | Primary traits |
-|---|---|
-| `f32`, `f64` | `RealField`, `Field`, `DivisionAlgebra<Self>` |
-| `Complex<T>` | `Field`, `DivisionAlgebra<T>`, `Rotation<T>` |
-| `Quaternion<T>` | `AssociativeRing`, `DivisionAlgebra<T>`, `Rotation<T>` |
-| `Octonion<T>` | `DivisionAlgebra<T>` (non-associative) |
-| `i8`…`i128`, `isize` | `Ring`, `Integer`, `SignedInt` |
-| `u8`…`u128`, `usize` | `Ring`, `Integer`, `UnsignedInt` |
+Alongside these sit `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R>`, and `DivisionAlgebra<R>` for vector and ring-with-division structures. Marker traits (`Associative`, `Commutative`, `Distributive`, `Annihilating`, `Invertible`) make algebraic laws compile-time promises rather than convention.
 
-The library will not let an algorithm that requires associativity use a non-associative type. The type system rejects it before the program runs.
+### The five number systems
+
+ℕ, ℤ, ℚ, ℝ, and ℂ are all covered. Each has two names — the **set name** you reach for when writing code, and the **algebraic name** that says what structure it has:
+
+| Set | Set name | Algebraic name | Concrete types | Crate |
+|---|---|---|---|---|
+| **ℕ** naturals | `NaturalNumber` | `CommutativeSemiring` | `u8`…`u128`, `usize` | `num` |
+| **ℤ** integers | `Integer` | `EuclideanDomain` | `i8`…`i128`, `isize` | `num` |
+| **ℚ** rationals | `Rational<T>` | `Field` | `Rational<i64>` | `num_rational` |
+| **ℝ** reals | `Real` | `RealField` | `f32`, `f64`, `Float106` | `algebra` |
+| **ℂ** complex | `Complex<T>` | `ComplexField<R>` | `Complex<f64>` | `num_complex` |
+
+Reach for the set name by default. Reach for the algebraic name when the code needs a *structure* rather than a *set* — which is what lets one `Field` bound serve ℚ, ℝ, and ℂ at once.
+
+### Where each type stops, and why
+
+The gaps are as informative as the entries, because each one is a law that does not hold:
+
+| Type | Highest structure | Where it stops, and why |
+|---|---|---|
+| `f32`, `f64`, `Float106` | `RealField` | the analytic axis: `sqrt`, `exp`, `ln`, `sin` |
+| `Complex<T>` | `Field` + `ComplexField<T>` | not ordered, so not a `RealField` |
+| `Rational<T>` | `Field` | **not** a `Real`: no rational `sqrt(2)`, `exp`, or `ln` |
+| `i8`…`i128`, `isize` | `CommutativeRing` + `EuclideanDomain` | **not** a `Field`: `1/5` is `0`, so `5 · (1/5)` is `0`, not `1` |
+| `u8`…`u128`, `usize` | `CommutativeSemiring` | **not** a `Ring`: `3 - 5` has no value in ℕ, so no additive inverses |
+| `Quaternion<T>` | `DivisionAlgebra<T>` | not `Commutative`, so not a field |
+| `Octonion<T>` | `DivisionAlgebra<T>` | not `Associative` either |
+| `Dual<T>` | `Real` | **not** a `Field`: `ε` is a zero divisor |
+
+Two of those pairs mirror each other exactly. ℤ is exact and ordered but has no inverses; ℚ supplies the inverses and gives up nothing. `Rational` is a field without being analytic; `Dual` is analytic without being a field.
+
+These are not documentation claims. `Field` for an integer type, `Ring` for an unsigned type, and `Real` for a rational are each a compile error — the library will not let an algorithm that requires a law use a type that does not satisfy it, and the type system rejects it before the program runs. The laws themselves are machine-checked; see [Formalization](/formalization/).
 
 ## The math layers
 
@@ -189,6 +219,6 @@ A single closure can walk a mesh, contract a tensor, apply a Clifford rotor, acc
 
 ## See also
 
-- Reference READMEs: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_haft/README.md), [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_num/README.md).
+- Reference READMEs: [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_haft/README.md), [`deep_causality_algebra`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_algebra/README.md), [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_num/README.md), [`deep_causality_num_rational`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_num_rational/README.md).
 - Examples: [`examples/mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) covers HKT composition (`tensor_x_algebra_rotation_field`, `tensor_x_topology_laplacian`, `triple_hkt_stress_field`), causal-monad composition (`effect_kalman_predict_correct`, `effect_diffusion_on_manifold`, `effect_tensor_algebra_roundtrip`), and the `Cl(3,1)` spinor capstone.
 - Concept: [Higher-Kinded Types](/concepts/hkt/), [Causal Monad](/concepts/causal-monad/), [Effect Propagation Process](/concepts/effect-propagation-process/).
