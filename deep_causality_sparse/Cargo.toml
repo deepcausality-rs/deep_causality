@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_sparse"
-version = "0.2.2"
+version = "0.2.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -43,7 +43,7 @@ default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.2"
+version = "0.3"
 default-features = false
 
 [dependencies.deep_causality_haft]
@@ -53,7 +53,7 @@ default-features = false
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.5"
+version = "0.6"
 default-features = false
 optional = true
 

@@ -51,12 +51,12 @@ optional = true
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.2"
+version = "0.3"
 default-features = false
 
 [dependencies.deep_causality_core]
 path = "../deep_causality_core"
-version = "0.11.1"
+version = "0.11.2"
 default-features = false
 
 [dependencies.deep_causality_haft]
@@ -81,12 +81,12 @@ default-features = false
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
-version = "0.1"
+version = "0.2"
 default-features = false
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"
-version = "0.5"
+version = "0.6"
 default-features = false
 
 [dependencies.deep_causality_uncertain]

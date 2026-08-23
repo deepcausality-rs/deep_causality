@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.1.0...deep_causality_cfd-v0.1.1) - 2026-08-23
+
+### Added
+
+- *(website)* rework the CFD landing page and re-sync every published number to its artifact
+
+### Fixed
+
+- *(deep_causality_cfd)* fixes std feat bug.
+- *(clippy)* silence chunks_exact_to_as_chunks and useless_format
+
+### Other
+
+- *(cfd)* run slow verification harnesses monthly, not nightly
+- Merge remote-tracking branch 'origin/main'
+
 ## [0.1.0](https://github.com/deepcausality-rs/deep_causality/releases/tag/deep_causality_cfd-v0.1.0) - 2026-08-12
 
 ### Added

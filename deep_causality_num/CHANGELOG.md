@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.1...deep_causality_num-v0.4.2) - 2026-08-23
+
+### Added
+
+- *(deep_causality_num)* add NaturalNumber, the set-named entry point for N
+
+### Fixed
+
+- *(deep_causality_num)* Added u64 and i64 default implementation to num trait
+- *(deep_causality_num)* fixed a non-std lint
+
+### Other
+
+- Fixed docstring
+- bring the algebra reference current and correct the CI claim
+- *(deep_causality_num)* document all five number systems and where each lives
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.0...deep_causality_num-v0.4.1) - 2026-07-14
 
 ### Added

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.4...deep_causality_num_complex-v0.2.0) - 2026-08-23
+
+### Fixed
+
+- *(deep_causality_algebra)* [**breaking**] stop handing out algebraic laws by inference
+- *(deep_causality_num_complex)* Added default implementation for Invertible trait
+
+### Other
+
+- bring the algebra reference current and correct the CI claim
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.3...deep_causality_num_complex-v0.1.4) - 2026-07-14
 
 ### Added
