@@ -23,11 +23,17 @@ therefore marked unresolved rather than confirmed. Everything else carries evide
 The algebra tower was completed after this register was written — ℕ and ℚ added, ℤ admitted, three
 correctness bugs fixed. It is worth being exact about what that did and did not do here.
 
-**It closed no gap in this register.** All eighteen remain open. Verified against the tree rather
-than inferred: no 𝔽₂ or bit-matrix module exists in `topology`, `sparse`, `algebra` or `num`;
-`rank_of_csr` still lifts to `f64` and runs an SVD; `LatticeComplex::betti_number` still returns the
-binomial; `logical_z` is still typed on `CausalMultiVector`; and neither `choi_compose` nor
-`choi_identity` exists.
+**It closed no gap in this register.** All eighteen remain open. Re-verified against the tree after
+the tower work merged, rather than inferred: no 𝔽₂ or bit-matrix module exists in `topology`,
+`sparse`, `algebra` or `num`; `rank_of_csr` still lifts to `f64` and runs an SVD
+(`chain_complex_impl.rs:113`); `LatticeComplex::betti_number` still returns the binomial;
+`homology_representatives` and `dual_representative` do not exist; there is no bit-packed chain and
+no `Cochain`; `logical_z` is still typed on `CausalMultiVector`; `partial_trace` still says nothing
+about commutation; and neither `choi_compose` nor `choi_identity` exists.
+
+The merged branch touched `deep_causality_quantum` and `deep_causality_topology` in one line each —
+the `deep_causality_algebra` requirement moving from `0.2` to `0.3`. No functional change reached
+either crate, which is the expected shape: the tower work was orthogonal to this register.
 
 Three things did change, and each affects how a spec should be written.
 
@@ -45,6 +51,18 @@ it no longer has to be written against a concrete `u64`. `NaturalNumber`
 carries `gcd`, `lcm`, `monus`, `div_rem`, `succ`/`pred` on top of `UnsignedInt`'s bit surface, and
 `deep_causality_topology` already depends on `deep_causality_num`. A `Gf2Matrix` generic over
 `W: NaturalNumber` gets its word width as a parameter rather than a hard-coded assumption.
+
+**Law markers are no longer handed out by inference, which changes the shape of the rejected
+alternative.** `Commutative`, `Associative` and `Distributive` were blanket-implemented over `Num`;
+they are now written out per type, and `Ring` additionally requires a new `Annihilating` marker.
+So the `Matrix<F2>`-over-a-`Field`-impl route this gap rejects is now also more work than it was: a
+`Gf2` scalar would have to state every marker explicitly rather than acquiring them from `Num`.
+That reinforces the recommendation rather than changing it — but a spec that reaches for the tower
+route should know the cost has gone up, not down.
+
+`EuclideanDomain` also gained `normalize`, `checked_normalize` and `checked_gcd`. None of them bear
+on 𝔽₂ work, where the only arithmetic is XOR and popcount; they are noted so a reader diffing the
+trait against this register is not surprised.
 
 **G-05 has a name collision that was not visible before.** `deep_causality_topology` already exports
 a `Chain<T>` (`src/types/chain/mod.rs:18`) — a *weighted* chain, holding an `Arc<SimplicialComplex<T>>`,
@@ -364,7 +382,7 @@ exact-hypothesis theorem, and record the answer. This is a soundness question, n
 
 **Severity S1.** This is friction F9.
 
-`operator_linalg.rs:152` documents shape errors carefully and says nothing about commutation. The
+`deep_causality_quantum/src/types/qgates/operator_linalg.rs:152` documents shape errors carefully and says nothing about commutation. The
 refutation of `quantum.partial_trace_preservation` lives only in `LEAN_QUANTUM.md` and the Lean tree,
 so a caller marginalising a validated factorization would destroy the Markov property that validate
 had certified, with nothing at the call site to say so.
