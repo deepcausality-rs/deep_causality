@@ -8,9 +8,9 @@ extern crate core;
 
 // Private re-exports so the `rational` module keeps resolving these through `crate::` paths.
 use deep_causality_algebra::{
-    AbelianGroup, Associative, Commutative, Distributive, EuclideanDomain, Invertible,
+    AbelianGroup, Annihilating, Associative, Commutative, Distributive, EuclideanDomain, Invertible,
 };
-use deep_causality_num::{One, Zero};
+use deep_causality_num::{One, SignedInt, Zero};
 
 mod rational;
 

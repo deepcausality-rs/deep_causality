@@ -12,4 +12,6 @@ mod construction_tests;
 #[cfg(test)]
 mod display_tests;
 #[cfg(test)]
+mod identity_tests;
+#[cfg(test)]
 mod ord_tests;

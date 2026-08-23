@@ -17,6 +17,7 @@
 //! | `Associative`  | likewise, from associativity of `T` |
 //! | `Distributive` | `(a/b)·((c/d)+(e/f))` expands to the same fraction either way |
 //! | `AbelianGroup` | additive inverse `-a/b`, identity `0/1` |
+//! | `Annihilating` | `0/1 · a/b = 0/b`, which reduces to `0/1` |
 //! | `Invertible`   | every non-zero `a/b` has `b/a`, which is the field axiom |
 //!
 //! `Invertible` is the one that distinguishes ℚ from ℤ. The integers reach `CommutativeRing` and
@@ -30,10 +31,13 @@
 //! which is analytic without being a field.
 
 use super::{Rational, RationalScalar};
-use crate::{AbelianGroup, Associative, Commutative, Distributive, Invertible};
+use crate::{AbelianGroup, Annihilating, Associative, Commutative, Distributive, Invertible};
 
 impl<T: RationalScalar> Commutative for Rational<T> {}
 impl<T: RationalScalar> Associative for Rational<T> {}
 impl<T: RationalScalar> Distributive for Rational<T> {}
 impl<T: RationalScalar> AbelianGroup for Rational<T> {}
+// `0/1 · a/b = 0/b`, which reduces to `0/1`. In a ring this is a theorem, but `Semiring` takes it
+// as an axiom — the derivation needs an additive inverse — so it is stated rather than assumed.
+impl<T: RationalScalar> Annihilating for Rational<T> {}
 impl<T: RationalScalar> Invertible for Rational<T> {}
