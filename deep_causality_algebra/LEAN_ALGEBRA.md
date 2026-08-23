@@ -36,8 +36,10 @@ discharged.
   semilattice, and verdict laws.
 - **The bridge:** each theorem carries a shared id (e.g. `algebra.euclidean.gcd_nonneg`) recorded
   in [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **40 algebra ids, all proved and
-  witnessed**. CI (`.github/workflows/formalization.yml`) runs `lake build`, the witness tests, and
-  a consistency gate that fails if any Lean id lacks a Rust witness or a manifest row.
+  witnessed**. CI (`.github/workflows/formalization.yml`) runs `lake build`, a guard against
+  unproven placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file
+  or a manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in
+  `rust_coverage.yaml` does.
 - **Model fidelity:** the Lean carriers are the canonical structures the traits stand in for. The
   tower's positive claims are proved where the structure holds; equally important, the **negative**
   facts are proved where it does not — `algebra.euclidean.integers_not_field` is what justifies

@@ -32,13 +32,19 @@ laws, the canonical-form invariants, and density.
   than checking a single representative.
 - **The bridge:** each theorem carries a shared id (e.g. `rational.canonical.coprime`) recorded in
   [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **8 rational ids, all proved and witnessed**.
-  CI (`.github/workflows/formalization.yml`) runs `lake build`, the witness tests, and a
-  consistency gate that fails if any Lean id lacks a Rust witness or a manifest row.
+  CI (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
+  placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a
+  manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in
+  `rust_coverage.yaml` does.
 - **Model fidelity:** the Lean carrier is Mathlib's `Rat`, which maintains **exactly the
   normalisation the Rust type does** — `Rat.den_pos` and `Rat.reduced` are the model of the crate's
   invariants 1 and 2 (positive denominator, coprime components). That correspondence is unusually
   tight: the two implementations agree not just on the values but on the representation, so the
-  canonical-form theorems transfer directly rather than through a quotient.
+  canonical-form theorems transfer directly rather than through a quotient. The crate carries a
+  fourth invariant with **no** counterpart in the model — the numerator is never `T::MIN` — which
+  is a fixed-width artifact rather than a fact about ℚ: Mathlib's `Rat` is unbounded and has
+  nothing to exclude. It is what makes the `rational.abelian_group.add_neg` witness hold at every
+  representable input rather than at all but one, since `-T::MIN` does not fit.
 
 ## How to check
 
@@ -78,11 +84,15 @@ bazel test //...
    by the Rust type system instead, where `Real for Rational<T>` is simply not implemented and a
    `Real` bound on it fails to compile.
 2. **Overflow is out of L1 scope.** Lean's ℚ is unbounded; the crate's `Rational<T>` is backed by a
-   fixed-width `T`, so `a/b + c/d` can overflow even after the implementation's cross-cancellation.
-   The formalized laws are the algebraic ones and hold of the mathematical values; the fixed-width
-   behaviour is covered by `tests/rational/rational_number/arithmetic_tests.rs` only. This is the
-   same boundary as `Float106`, whose real-field model is proved while its bit-exact error bounds
-   are `[open]`.
+   fixed-width `T`, so `a/b + c/d` can overflow even after the implementation's cross-cancellation
+   and integer-part split. The formalized laws are the algebraic ones and hold of the mathematical
+   values; the fixed-width behaviour is covered by
+   `tests/rational/rational_number/arithmetic_tests.rs` and `construction_tests.rs` only, where the
+   edge cases are cross-checked against a wider integer width rather than proved. Construction,
+   comparison, and negation *are* total — see the `Overflow` section on `Rational` for which
+   operations are which — but that totality is tested, not machine-checked. This is the same
+   boundary as `Float106`, whose real-field model is proved while its bit-exact error bounds are
+   `[open]`.
 3. **Laws are proved on Mathlib's `Rat`, not on `Rational<T>` itself.** L1 states the laws over
    Mathlib's ℚ; the bridge to the crate's `Rational<i64>` is the L2 witness tests. Unlike the float
    -backed crates the witnesses are exact rather than epsilon-tolerant, but they remain checks at
