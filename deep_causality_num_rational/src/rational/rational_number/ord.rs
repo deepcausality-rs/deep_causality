@@ -84,12 +84,16 @@ impl<T: RationalScalar> Ord for Rational<T> {
             // non-negative, and strictly smaller than the divisor.
             let r_lhs = a.rem_euclid(b);
             let r_rhs = c.rem_euclid(d);
+            // A zero remainder on one side settles it, and both cannot be zero at once.
+            //
+            // If they were, the quotients being equal would make the two values equal — and equal
+            // values in canonical form have equal denominators, so they would have returned
+            // through the fast path above rather than entering this loop. On the first pass the
+            // same conclusion is more direct: `r_lhs == 0` means `b` divides `a`, and coprimality
+            // forces `b == 1`, so `r_rhs == 0` would force `d == 1` and the denominators would
+            // again have matched.
             if r_lhs.is_zero() {
-                return if r_rhs.is_zero() {
-                    Ordering::Equal
-                } else {
-                    Ordering::Less
-                };
+                return Ordering::Less;
             }
             if r_rhs.is_zero() {
                 return Ordering::Greater;

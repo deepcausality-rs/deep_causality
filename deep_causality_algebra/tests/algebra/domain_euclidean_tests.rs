@@ -221,3 +221,93 @@ fn checked_gcd_agrees_with_gcd_where_the_result_is_representable() {
         }
     }
 }
+
+// -----------------------------------------------------------------------------
+// Per-width coverage.
+//
+// The impls are written out one per width rather than macro-generated, so each width's
+// `euclidean_fn` and `div_euclid` is a distinct body that can be wrong on its own — a mismatched
+// `EuclideanValue`, or a delegation to the wrong primitive. Exercising only `i32` and `i64` left
+// the other four unchecked.
+// -----------------------------------------------------------------------------
+
+#[test]
+fn euclidean_fn_is_the_magnitude_at_every_width() {
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i8), 5u8);
+    assert_eq!(EuclideanDomain::euclidean_fn(&5i8), 5u8);
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i16), 5u16);
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i32), 5u32);
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i64), 5u64);
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5i128), 5u128);
+    assert_eq!(EuclideanDomain::euclidean_fn(&-5isize), 5usize);
+}
+
+#[test]
+fn euclidean_fn_is_unsigned_at_every_width() {
+    // The reason `EuclideanValue` is the unsigned counterpart rather than `Self`: |MIN| does not
+    // fit in the signed type at any width.
+    assert_eq!(EuclideanDomain::euclidean_fn(&i8::MIN), 128u8);
+    assert_eq!(EuclideanDomain::euclidean_fn(&i16::MIN), 32_768u16);
+    assert_eq!(EuclideanDomain::euclidean_fn(&i32::MIN), 2_147_483_648u32);
+    assert_eq!(
+        EuclideanDomain::euclidean_fn(&i64::MIN),
+        9_223_372_036_854_775_808u64
+    );
+    assert_eq!(
+        EuclideanDomain::euclidean_fn(&i128::MIN),
+        170_141_183_460_469_231_731_687_303_715_884_105_728u128
+    );
+    assert_eq!(
+        EuclideanDomain::euclidean_fn(&isize::MIN),
+        (isize::MAX as usize) + 1
+    );
+}
+
+#[test]
+fn div_euclid_is_the_floor_quotient_at_every_width() {
+    // Euclidean division rounds toward negative infinity for a positive divisor, which is what
+    // keeps the remainder non-negative — it is not the truncating `/`.
+    assert_eq!(EuclideanDomain::div_euclid(&-7i8, &2i8), -4);
+    assert_eq!(EuclideanDomain::div_euclid(&7i8, &2i8), 3);
+    assert_eq!(EuclideanDomain::div_euclid(&-7i16, &2i16), -4);
+    assert_eq!(EuclideanDomain::div_euclid(&-7i32, &2i32), -4);
+    assert_eq!(EuclideanDomain::div_euclid(&-7i64, &2i64), -4);
+    assert_eq!(EuclideanDomain::div_euclid(&-7i128, &2i128), -4);
+    assert_eq!(EuclideanDomain::div_euclid(&-7isize, &2isize), -4);
+    // and it differs from `/`, which truncates toward zero
+    assert_ne!(EuclideanDomain::div_euclid(&-7i64, &2i64), -7i64 / 2i64);
+}
+
+#[test]
+fn the_division_law_holds_at_every_width() {
+    // a = b·q + r with 0 <= r < |b|, checked once per width.
+    assert_eq!(
+        -7i8,
+        2i8 * EuclideanDomain::div_euclid(&-7i8, &2i8) + EuclideanDomain::rem_euclid(&-7i8, &2i8)
+    );
+    assert_eq!(
+        -7i16,
+        2i16 * EuclideanDomain::div_euclid(&-7i16, &2i16)
+            + EuclideanDomain::rem_euclid(&-7i16, &2i16)
+    );
+    assert_eq!(
+        -7i128,
+        2i128 * EuclideanDomain::div_euclid(&-7i128, &2i128)
+            + EuclideanDomain::rem_euclid(&-7i128, &2i128)
+    );
+    assert_eq!(
+        -7isize,
+        2isize * EuclideanDomain::div_euclid(&-7isize, &2isize)
+            + EuclideanDomain::rem_euclid(&-7isize, &2isize)
+    );
+}
+
+#[test]
+fn gcd_works_at_every_width() {
+    assert_eq!(48i8.gcd(&18i8), 6);
+    assert_eq!(48i16.gcd(&18i16), 6);
+    assert_eq!(48i32.gcd(&18i32), 6);
+    assert_eq!(48i64.gcd(&18i64), 6);
+    assert_eq!(48i128.gcd(&18i128), 6);
+    assert_eq!(48isize.gcd(&18isize), 6);
+}

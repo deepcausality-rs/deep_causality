@@ -181,3 +181,25 @@ fn construction_is_total_across_the_edges_of_a_narrow_width() {
         }
     }
 }
+
+#[test]
+#[should_panic(expected = "no canonical form")]
+fn arithmetic_panics_when_the_result_has_no_canonical_form() {
+    // The operators return `Self` and so have nowhere to put a `None`. Invariant 4 forbids a
+    // `T::MIN` numerator, and an exact result can land on it: (MIN+1) + (-1) is MIN/1, whose
+    // negation is unrepresentable. That is the one arithmetic input the type cannot answer, and
+    // it panics rather than wrapping to a wrong value.
+    let a = Rational::new(i64::MIN + 1, 1);
+    let b = Rational::from_integer(-1_i64);
+    let _ = a + b;
+}
+
+#[test]
+fn the_same_result_is_reportable_through_the_total_constructor() {
+    // The value that arithmetic cannot represent is exactly the one `try_new` rejects, so a
+    // caller who needs totality has a path that does not panic.
+    assert_eq!(Rational::try_new(i64::MIN, 1), None);
+    assert_eq!(Rational::try_from_integer(i64::MIN), None);
+    // and one step away from it is fine
+    assert!(Rational::try_new(i64::MIN + 1, 1).is_some());
+}
