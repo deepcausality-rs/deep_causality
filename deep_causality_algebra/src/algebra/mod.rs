@@ -64,6 +64,7 @@ pub mod algebra_assoc;
 pub mod algebra_assoc_div;
 pub mod algebra_base;
 pub mod algebra_div;
+pub mod annihilating;
 pub mod associative;
 pub mod bounded_semilattice;
 pub mod commutative;

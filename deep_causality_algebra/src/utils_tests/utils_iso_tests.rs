@@ -22,7 +22,8 @@
 #![allow(dead_code)]
 
 use crate::{
-    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Invertible, One, Zero,
+    AbelianGroup, Annihilating, Associative, Commutative, Distributive, DivisionAlgebra,
+    Invertible, One, Zero,
 };
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -128,6 +129,7 @@ impl One for FloatWrap {
 impl Associative for FloatWrap {}
 impl Commutative for FloatWrap {}
 impl Distributive for FloatWrap {}
+impl Annihilating for FloatWrap {}
 impl Invertible for FloatWrap {}
 
 impl AbelianGroup for FloatWrap {}
@@ -277,6 +279,7 @@ impl One for BadFieldWrap {
 impl Associative for BadFieldWrap {}
 impl Commutative for BadFieldWrap {}
 impl Distributive for BadFieldWrap {}
+impl Annihilating for BadFieldWrap {}
 impl Invertible for BadFieldWrap {}
 
 impl AbelianGroup for BadFieldWrap {}

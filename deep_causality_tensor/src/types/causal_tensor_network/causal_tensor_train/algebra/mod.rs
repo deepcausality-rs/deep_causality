@@ -17,7 +17,7 @@ use crate::TensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain, Identity};
 use core::ops::{Add, Mul, MulAssign, Neg, Sub};
 use deep_causality_algebra::{
-    AbelianGroup, Associative, Commutative, ConjugateScalar, Distributive, Scalar,
+    AbelianGroup, Annihilating, Associative, Commutative, ConjugateScalar, Distributive, Scalar,
 };
 use deep_causality_num::{One, Zero};
 
@@ -176,4 +176,7 @@ where
 impl<T> Associative for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
 impl<T> Commutative for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
 impl<T> Distributive for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T> Annihilating for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
 impl<T> AbelianGroup for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}

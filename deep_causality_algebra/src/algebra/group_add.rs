@@ -23,9 +23,9 @@ use core::ops::{Add, Neg, Sub};
 ///
 /// # Why `Neg` and not `Sub`
 ///
-/// The inverse axiom needs `-a`, and only `Neg` supplies it. `Sub` gives `a - a = 0`, which is a
-/// weaker statement that a commutative *monoid* with a truncating difference also satisfies:
-/// `3u64 - 3u64` is `0`, yet `u64` has no additive inverses at all.
+/// The inverse axiom needs `-a`, and only `Neg` supplies it. `Sub` supplies an operation, not the
+/// axiom, and a truncating implementation of that operation satisfies `a - a = 0` while having no
+/// additive inverses at all: `3u64 - 3u64` is `0`, and `3u64 - 5u64` has no value in `u64`.
 ///
 /// Requiring only `Sub` therefore admitted ℕ. `u64` satisfied `AddGroup`, so
 /// `fn inverse_of<T: AddGroup>(x: T) -> T { T::zero() - x }` type-checked at `u64` and returned

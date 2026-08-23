@@ -24,7 +24,7 @@
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use deep_causality_algebra::iso::test_support::assert_ring_iso_from_laws;
 use deep_causality_algebra::{
-    AbelianGroup, Associative, Commutative, Distributive, GroupIso, RingIso,
+    AbelianGroup, Annihilating, Associative, Commutative, Distributive, GroupIso, RingIso,
 };
 use deep_causality_num::{One, Zero};
 
@@ -94,6 +94,7 @@ impl One for IdRingWrap {
 impl Associative for IdRingWrap {}
 impl Commutative for IdRingWrap {}
 impl Distributive for IdRingWrap {}
+impl Annihilating for IdRingWrap {}
 
 impl AbelianGroup for IdRingWrap {}
 
@@ -196,6 +197,7 @@ impl One for BadAddRing {
 impl Associative for BadAddRing {}
 impl Commutative for BadAddRing {}
 impl Distributive for BadAddRing {}
+impl Annihilating for BadAddRing {}
 
 impl AbelianGroup for BadAddRing {}
 
@@ -287,6 +289,7 @@ impl One for BadMulRing {
 impl Associative for BadMulRing {}
 impl Commutative for BadMulRing {}
 impl Distributive for BadMulRing {}
+impl Annihilating for BadMulRing {}
 
 impl AbelianGroup for BadMulRing {}
 

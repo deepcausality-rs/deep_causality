@@ -8,7 +8,7 @@ extern crate core;
 
 // Private re-exports of `deep_causality_num` core symbols so that the moved
 // `algebra` and `iso` modules keep resolving them through `crate::` paths.
-use deep_causality_num::{Float, FromPrimitive, Num, One, Zero};
+use deep_causality_num::{Float, Float106, FromPrimitive, Num, One, Zero};
 
 mod algebra;
 pub mod iso;
@@ -19,6 +19,7 @@ pub use crate::algebra::algebra_assoc::AssociativeAlgebra;
 pub use crate::algebra::algebra_assoc_div::AssociativeDivisionAlgebra;
 pub use crate::algebra::algebra_base::Algebra;
 pub use crate::algebra::algebra_div::DivisionAlgebra;
+pub use crate::algebra::annihilating::Annihilating;
 pub use crate::algebra::associative::Associative;
 pub use crate::algebra::bounded_semilattice::BoundedSemilattice;
 pub use crate::algebra::commutative::Commutative;

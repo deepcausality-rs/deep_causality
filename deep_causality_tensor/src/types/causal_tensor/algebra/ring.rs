@@ -6,13 +6,16 @@
 use alloc::vec;
 
 use crate::CausalTensor;
-use deep_causality_algebra::{Associative, Distributive, Ring};
+use deep_causality_algebra::{Annihilating, Associative, Distributive, Ring};
 
 // Implement Associative marker trait
 impl<T> Associative for CausalTensor<T> where T: Associative + Copy {}
 
 // Implement Distributive marker trait
 impl<T> Distributive for CausalTensor<T> where T: Distributive + Copy {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T> Annihilating for CausalTensor<T> where T: Annihilating + Copy {}
 
 // Ring is automatically implemented by blanket impl in deep_causality_num
 // because CausalTensor implements AbelianGroup, MulMonoid (via One+Associative+Mul), Distributive.

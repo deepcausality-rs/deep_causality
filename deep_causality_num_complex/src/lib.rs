@@ -9,8 +9,8 @@ extern crate core;
 // Private re-exports so the moved `complex` module keeps resolving these
 // through `crate::` paths.
 use deep_causality_algebra::{
-    AbelianGroup, Associative, Commutative, ComplexField, Distributive, DivisionAlgebra, Field,
-    Invertible, RealField, Rotation,
+    AbelianGroup, Annihilating, Associative, Commutative, ComplexField, Distributive,
+    DivisionAlgebra, Field, Invertible, RealField, Rotation,
 };
 use deep_causality_num::{
     AsPrimitive, ConstOne, ConstZero, FromPrimitive, Matrix3, NumCast, One, ToPrimitive, Vector3,

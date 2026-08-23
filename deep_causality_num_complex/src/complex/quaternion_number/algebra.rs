@@ -4,7 +4,8 @@
  */
 
 use crate::{
-    AbelianGroup, Associative, Distributive, DivisionAlgebra, Invertible, Quaternion, RealField,
+    AbelianGroup, Annihilating, Associative, Distributive, DivisionAlgebra, Invertible, Quaternion,
+    RealField,
 };
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
@@ -13,6 +14,9 @@ use crate::{
 // Marker Traits
 impl<T: RealField> Associative for Quaternion<T> {}
 impl<T: RealField> Distributive for Quaternion<T> {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T: RealField> Annihilating for Quaternion<T> {}
 
 impl<T: RealField> AbelianGroup for Quaternion<T> {}
 // ℍ is a division ring: every non-zero `q` has `q⁻¹ = q̄ / |q|²`. It is not `Commutative`, so it

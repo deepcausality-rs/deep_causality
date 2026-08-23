@@ -17,9 +17,11 @@
 //! positive case it bounds, so that the intended limit is recorded next to what is asserted.
 
 use deep_causality_algebra::{
-    AbelianGroup, AddGroup, AddMonoid, Associative, Commutative, CommutativeRing, Distributive,
-    EuclideanDomain, Field, Group, MulMonoid, Real, RealField, Ring,
+    AbelianGroup, AddGroup, AddMonoid, Annihilating, Associative, Commutative, CommutativeRing,
+    CommutativeSemiring, Distributive, EuclideanDomain, Field, Group, MulMonoid, Real, RealField,
+    Ring, Semiring,
 };
+use deep_causality_num::Zero;
 
 fn assert_markers<T: Commutative + Associative + Distributive>() {}
 /// The full commutative-semiring surface, not just the three empty markers: two monoids on one
@@ -137,4 +139,71 @@ fn integers_are_not_analytic() {
     // (sqrt, exp, ln, nan, is_infinite). `sqrt` does not close over ℤ and there is no integer
     // NaN. ℤ reaches `CommutativeRing` and stops.
     assert_commutative_ring::<i64>();
+}
+
+#[test]
+fn every_ring_is_a_semiring() {
+    // Not a claim about particular types: this compiles only if `Semiring`'s bounds are a strict
+    // subset of `Ring`'s, for every `T` at once. It is the regression guard for a real inversion —
+    // `Semiring` once required `AddMonoid`, which carries `AddAssign<Self>`, while `Ring` requires
+    // only `AbelianGroup`, which does not. That made the "weaker" structure strictly stronger on
+    // the additive side, and evicted `CausalTensor` (which has `AddAssign<T>` for a scalar
+    // right-hand side but no `AddAssign<Self>`) from `Semiring` while it stayed a `Ring`.
+    fn ring_implies_semiring<T: Ring>() {
+        fn require_semiring<U: Semiring>() {}
+        require_semiring::<T>();
+    }
+    ring_implies_semiring::<f64>();
+    ring_implies_semiring::<i64>();
+}
+
+#[test]
+fn naturals_are_a_semiring_without_being_a_ring() {
+    // The other direction: the weakening has to actually admit something new, or it is pointless.
+    fn semi<T: Semiring>() {}
+    fn csemi<T: CommutativeSemiring>() {}
+    semi::<u64>();
+    csemi::<u64>();
+    csemi::<usize>();
+    // `assert_ring::<u64>()` still does NOT compile — N has no additive inverses.
+}
+
+#[test]
+fn annihilation_is_promised_rather_than_assumed() {
+    // `0 * a = 0` is a THEOREM in a ring — the proof cancels by adding -(0*a) — but an AXIOM in a
+    // semiring, which has no additive inverse to cancel with. `Semiring` therefore requires the
+    // marker rather than inferring the law, and `Ring` carries it too so that every ring stays a
+    // semiring.
+    fn assert_annihilating<T: Annihilating>() {}
+    assert_annihilating::<f64>();
+    assert_annihilating::<i64>();
+    assert_annihilating::<u64>();
+
+    // And the law itself, at the carriers that matter. Read through variables so the products are
+    // evaluated rather than constant-folded away.
+    for a in 1u64..=8 {
+        let zero = u64::zero();
+        assert_eq!(zero * a, zero, "0 * {a} must annihilate");
+        assert_eq!(a * zero, zero, "{a} * 0 must annihilate");
+    }
+    for a in -8i64..=8 {
+        let zero = i64::zero();
+        assert_eq!(zero * a, zero, "0 * {a} must annihilate over Z");
+    }
+}
+
+#[test]
+fn the_law_markers_are_not_handed_out_by_inference() {
+    // The markers are implemented per type rather than blanket-implemented over `Num`, which is
+    // unsealed: a downstream type implementing `Num` must not silently acquire a law nobody
+    // promised, then enter `CommutativeRing` and `Field` on that claim. These assertions check the
+    // supported types still have the markers after that change.
+    assert_markers::<f32>();
+    assert_markers::<f64>();
+    assert_markers::<i8>();
+    assert_markers::<i128>();
+    assert_markers::<u8>();
+    assert_markers::<u128>();
+    assert_markers::<usize>();
+    assert_markers::<isize>();
 }

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, Associative, Commutative, Distributive, Dual, Real};
+use crate::{AbelianGroup, Annihilating, Associative, Commutative, Distributive, Dual, Real};
 
 // | Type | `Distributive` | `Associative` | `Commutative` | lands at |
 // | :--- | :---: | :---: | :---: | :--- |
@@ -13,6 +13,9 @@ use crate::{AbelianGroup, Associative, Commutative, Distributive, Dual, Real};
 impl<T: Real> Associative for Dual<T> {}
 impl<T: Real> Commutative for Dual<T> {}
 impl<T: Real> Distributive for Dual<T> {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T: Real> Annihilating for Dual<T> {}
 impl<T: Real> AbelianGroup for Dual<T> {}
 
 // `Dual<T>` is a module over its scalar ring `T` (scalar multiplication by `T`) — provided

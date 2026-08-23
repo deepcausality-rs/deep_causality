@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, Field, Float, Num, Real};
+use crate::{
+    AbelianGroup, Annihilating, Associative, Commutative, Distributive, Field, Float, Invertible,
+    Num, Real,
+};
 use core::ops::Neg;
 
 /// An ordered `Field` that is also an analytic real scalar.
@@ -35,7 +38,9 @@ pub trait RealField: Real + Field {}
 // existing.
 impl<T> AbelianGroup for T where T: Num + Neg<Output = T> + Clone {}
 
-// Every `Float` is a `RealField`. The rest of the tower (`Ring`, `CommutativeRing`, `Field`, …)
-// is derived automatically from this plus the marker blankets, so a new float type needs only
-// `impl Float`.
-impl<T> RealField for T where T: Float {}
+// Every `Float` that carries the law markers is a `RealField`. `Invertible` is what separates ℝ
+// from ℤ here: it promises that `/` really inverts, which integer division does not.
+impl<T> RealField for T where
+    T: Float + Commutative + Associative + Distributive + Annihilating + Invertible
+{
+}
