@@ -11,11 +11,13 @@
 //! - [`UnsignedInt`]: Operations specific to unsigned integers
 
 mod integer_impl;
+mod natural;
 mod signed;
 mod signed_impl;
 mod unsigned;
 mod unsigned_impl;
 
+pub use natural::NaturalNumber;
 pub use signed::SignedInt;
 pub use unsigned::UnsignedInt;
 

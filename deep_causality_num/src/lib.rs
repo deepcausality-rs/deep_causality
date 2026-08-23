@@ -39,7 +39,7 @@ pub use crate::identity::one::{ConstOne, One};
 pub use crate::identity::zero::{ConstZero, Zero};
 
 // Integer types
-pub use crate::integer::{Integer, SignedInt, UnsignedInt};
+pub use crate::integer::{Integer, NaturalNumber, SignedInt, UnsignedInt};
 
 // General numeric traits
 pub use crate::num::Num;
