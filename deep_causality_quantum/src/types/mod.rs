@@ -4,7 +4,6 @@
  */
 
 pub(crate) mod density_matrix;
-pub mod qcl;
 #[cfg(feature = "qcm")]
 pub(crate) mod qcm;
 pub(crate) mod qgates;
