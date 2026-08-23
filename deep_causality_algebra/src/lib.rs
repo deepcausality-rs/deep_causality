@@ -53,6 +53,8 @@ pub use crate::algebra::rotation::Rotation;
 pub use crate::algebra::scalar::Scalar;
 pub use crate::algebra::scalar_conjugate::ConjugateScalar;
 pub use crate::algebra::scalar_normed::NormedScalar;
+pub use crate::algebra::semiring::Semiring;
+pub use crate::algebra::semiring_commutative::CommutativeSemiring;
 pub use crate::algebra::verdict::Verdict;
 
 // Isomorphism traits

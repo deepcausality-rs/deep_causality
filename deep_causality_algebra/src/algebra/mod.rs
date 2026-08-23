@@ -98,4 +98,6 @@ pub(crate) mod rotation;
 pub mod scalar;
 pub mod scalar_conjugate;
 pub mod scalar_normed;
+pub mod semiring;
+pub mod semiring_commutative;
 pub mod verdict;

@@ -17,11 +17,14 @@
 //! positive case it bounds, so that the intended limit is recorded next to what is asserted.
 
 use deep_causality_algebra::{
-    AbelianGroup, Associative, Commutative, CommutativeRing, Distributive, EuclideanDomain, Field,
-    Real, RealField, Ring,
+    AbelianGroup, AddGroup, AddMonoid, Associative, Commutative, CommutativeRing, Distributive,
+    EuclideanDomain, Field, Group, MulMonoid, Real, RealField, Ring,
 };
 
 fn assert_markers<T: Commutative + Associative + Distributive>() {}
+/// The full commutative-semiring surface, not just the three empty markers: two monoids on one
+/// carrier, with `Zero`, `One`, `Add`, and `Mul` actually present.
+fn assert_semiring<T: AddMonoid + MulMonoid + Distributive + Commutative>() {}
 fn assert_abelian<T: AbelianGroup>() {}
 fn assert_ring<T: Ring>() {}
 fn assert_commutative_ring<T: CommutativeRing>() {}
@@ -63,11 +66,43 @@ fn unsigned_integers_are_a_semiring_only() {
     assert_markers::<u128>();
     assert_markers::<usize>();
 
-    // ...but none of these compile, because ℕ has no additive inverses:
+    // ...and carry the full two-operation semiring structure, not merely the empty markers.
+    assert_semiring::<u8>();
+    assert_semiring::<u16>();
+    assert_semiring::<u32>();
+    assert_semiring::<u64>();
+    assert_semiring::<u128>();
+    assert_semiring::<usize>();
+
+    // But none of these compile, because ℕ has no additive inverses. `Neg` is the witness for
+    // them, and it is what `AddGroup` and `AbelianGroup` both require:
+    //   assert_add_group::<u64>();
+    //   assert_group::<u64>();
     //   assert_abelian::<u64>();
     //   assert_ring::<u64>();
     //   assert_commutative_ring::<u64>();
     //   assert_euclidean::<u64>();
+}
+
+#[test]
+fn signed_integers_are_a_semiring_too() {
+    // A ring is a semiring, so admitting ℤ to `CommutativeRing` must not cost it the weaker
+    // structure. The same holds for the reals.
+    assert_semiring::<i64>();
+    assert_semiring::<f64>();
+}
+
+#[test]
+fn additive_inverses_are_gated_on_neg() {
+    // `AddGroup` requires `Neg`, not merely `Sub`. `Sub` gives `a - a = 0`, which ℕ satisfies
+    // without having a single additive inverse — so requiring only `Sub` would admit ℕ, and
+    // `T::zero() - x` would then hand back a garbage "inverse" for `u64`.
+    fn assert_add_group<T: AddGroup>() {}
+    fn assert_group<T: Group>() {}
+    assert_add_group::<i64>();
+    assert_group::<i64>();
+    assert_add_group::<f64>();
+    // `assert_add_group::<u64>()` and `assert_group::<u64>()` do NOT compile.
 }
 
 #[test]
