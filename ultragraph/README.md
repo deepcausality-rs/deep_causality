@@ -3,7 +3,7 @@
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
-![Tests][test-url]
+ 
 
 [ossf-badge]: https://bestpractices.coreinfrastructure.org/projects/7568/badge
 
@@ -19,7 +19,7 @@
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
-[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+ 
 
 ## Goal
 

@@ -3,7 +3,7 @@
 [![Crates.io][crates-badge]][crates-url]
 [![Docs.rs][docs-badge]][docs-url]
 [![MIT licensed][mit-badge]][mit-url]
-![Tests][test-url]
+ 
 
 [crates-badge]: https://img.shields.io/badge/Crates.io-Latest-blue
 
@@ -17,7 +17,7 @@
 
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
 
-[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+ 
 
 A collection of computational causality algorithms used in
 the [DeepCausality](https://github.com/deepcausality-rs/deep_causality) project. This crate provides tools for analyzing

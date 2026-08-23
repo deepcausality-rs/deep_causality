@@ -4,11 +4,11 @@
 [![Docs.rs](https://docs.rs/deep_causality_sparse/badge.svg)](https://docs.rs/deep_causality_sparse)
 
 [![MIT licensed][mit-badge]][mit-url]
-![Tests][test-url]
+ 
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 [mit-url]: https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE
-[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+ 
 
 
 # CausalSparse - Efficient Sparse Matrix Operations

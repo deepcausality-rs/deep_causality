@@ -93,7 +93,7 @@ version = "0.4"
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
 default-features = false
-version = "0.2"
+version = "0.3"
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
