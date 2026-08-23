@@ -62,7 +62,7 @@ forces a dependency direction:
 | `deep_causality_tensor` | yes | `CausalTensor` is local | tensor `use`s `MatrixView` → tensor → linear |
 | any third crate | no | neither is local | E0117; no impl exists |
 
-`.claude/worktrees/wf_d43bff9e-2a0-2/proto/tensor_impl/` compiles the third row and confirms E0117.
+`openspec/notes/linear/prototype/tensor_impl/` compiles the third row and confirms E0117.
 
 The two legal rows are mutually exclusive — taking both closes a cycle — so the orphan rule narrows
 the field without choosing. What chooses is the relocation of the decompositions: `CausalTensor::svd`
@@ -71,7 +71,8 @@ fixes tensor → linear, which makes "the impl lives in linear" the forbidden di
 `deep_causality_tensor` as the only home for the impl.
 
 Two consequences follow. `deep_causality_linear` cannot depend on `deep_causality_tensor` under any
-feature, so the `tensor-iso` conversion moves up into tensor. And the 𝔽₂ layer lands below tensor, so
+feature, so the `tensor-iso` conversion moves up into tensor — and stops being a feature, because the
+dependency it was gating is now unconditional. And the 𝔽₂ layer lands below tensor, so
 `deep_causality_quantum` reaches mod-2 rank without pulling in the tensor crate.
 
 This is affordable because `deep_causality_sparse → deep_causality_tensor` is already optional:
@@ -191,8 +192,8 @@ Five phases, each independently green under `bazel test //...`.
 1. **Stand up the crate.** `deep_causality_linear` with `CsrMatrix`, the CG solvers, the HKT witness
    and the errors moved over from `deep_causality_sparse`. `deep_causality_sparse` becomes a
    re-export facade with a retirement notice; every in-workspace consumer switches its import.
-   `tensor-iso` moves to `deep_causality_tensor`. At the end of this phase the workspace builds
-   against the new name and the old name still works.
+   The `tensor-iso` conversion moves to `deep_causality_tensor` and the feature is deleted. At the
+   end of this phase the workspace builds against the new name and the old name still works.
 2. **Add the representations.** A dense row-major matrix and a bit-packed 𝔽₂ matrix, plus the read
    and row-operation traits, plus conversions among the three.
 3. **Add elimination.** RREF, rank, kernel basis, image basis, determinant and solve, written once

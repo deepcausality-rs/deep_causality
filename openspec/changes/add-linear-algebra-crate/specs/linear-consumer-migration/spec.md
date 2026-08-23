@@ -54,21 +54,29 @@ dependent can migrate one module at a time.
 - **WHEN** the retired crate's public surface is compared against its last independent release
 - **THEN** every item is still present
 
-### Requirement: The tensor conversion moves with the dependency inversion
-The `CausalTensor` ↔ sparse conversion SHALL be provided by `deep_causality_tensor`, and `deep_causality_linear` SHALL NOT declare an optional dependency on `deep_causality_tensor`.
+### Requirement: The tensor conversion becomes an ordinary part of the tensor crate
+The `CausalTensor` ↔ sparse conversion SHALL move into `deep_causality_tensor` unconditionally, and the `tensor-iso` feature SHALL be removed rather than relocated.
 
-The conversion lives today in `deep_causality_sparse/src/extensions/ext_iso.rs` behind the
-`tensor-iso` feature. Once tensor depends on linear, the edge cannot also run the other way, so the
-conversion has to sit in the crate above.
+The conversion lives today in `deep_causality_sparse/src/extensions/ext_iso.rs` behind
+`tensor-iso`, which exists so that sparse users do not pay for an optional dependency on tensor.
+Once tensor depends on `deep_causality_linear` outright, that dependency is already paid and the gate
+has nothing left to gate. No library crate enables the feature; the only enablements are
+`examples/mathematics_examples/Cargo.toml:23` for one example and the sparse crate's own Bazel
+targets for its own tests.
 
-#### Scenario: The feature no longer exists below tensor
-- **WHEN** `deep_causality_linear`'s features are enumerated
-- **THEN** none of them pulls in `deep_causality_tensor`
+#### Scenario: No feature gate remains
+- **WHEN** the features of `deep_causality_linear` and `deep_causality_tensor` are enumerated
+- **THEN** neither declares `tensor-iso`
+- **AND** no `#[cfg(feature = "tensor-iso")]` remains in either crate
 
-#### Scenario: The conversion is still reachable
-- **WHEN** a caller converts between a tensor and a sparse matrix
+#### Scenario: The conversion is unconditionally available
+- **WHEN** a caller converts between a tensor and a sparse matrix with default features
 - **THEN** the conversion is available from `deep_causality_tensor`
 - **AND** its behaviour, including its error type, is unchanged
+
+#### Scenario: The example builds without naming a feature
+- **WHEN** `examples/mathematics_examples` is built after its `features = ["tensor-iso"]` line is removed
+- **THEN** the `tensor_sparse_memory_budget` example compiles and runs unchanged
 
 ### Requirement: Both build systems describe the same dependency graph
 Every crate's `Cargo.toml` and its `BUILD.bazel` SHALL declare the same dependency on the linear crate.

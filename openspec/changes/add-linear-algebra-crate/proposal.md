@@ -49,9 +49,11 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   that re-exports `deep_causality_linear` and carries a retirement notice in its README, then stays
   available on crates.io and in the workspace for a deprecation window of a few months so that
   already-published dependents keep resolving. Nothing is yanked.
-- **BREAKING** for the `tensor-iso` feature: `deep_causality_sparse` depends optionally on
-  `deep_causality_tensor` today. Once tensor depends on linear, linear cannot depend on tensor even
-  optionally, so the `CausalTensor ↔ CsrMatrix` conversion moves into `deep_causality_tensor`.
+- Drop the `tensor-iso` feature. The `CausalTensor ↔ CsrMatrix` conversion moves into
+  `deep_causality_tensor` and stops being optional: the gate exists so that sparse users do not pay
+  for a dependency on tensor, and once tensor depends on linear that dependency is already paid. No
+  library crate enables the feature today, so this changes one manifest line in
+  `examples/mathematics_examples`.
 
 ## Capabilities
 

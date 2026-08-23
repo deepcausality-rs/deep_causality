@@ -84,7 +84,7 @@ a correctness fix for topology, not only a new capability for quantum.
 
 ### The access seam preserves word-parallel XOR
 
-A prototype in `.claude/worktrees/wf_d43bff9e-2a0-2/proto/` runs one generic `rref`, written against
+A prototype in `openspec/notes/linear/prototype/` runs one generic `rref`, written against
 a row-operation trait, over four representations of the same 𝔽₂ matrix. M3 Max, 16 cores, 128 GB;
 `--release`.
 
@@ -96,7 +96,9 @@ a row-operation trait, over four representations of the same 𝔽₂ matrix. M3 
 | 1024 | 7.869 ms | 8.494 ms | 18.685 ms | 26.682 ms | 2.4× | 0.93× | 128 vs 1024 KiB |
 | 2048 | 34.748 ms | 37.311 ms | 112.517 ms | 148.227 ms | 3.2× | 0.93× | 512 vs 4096 KiB |
 
-Two results.
+Two results. The `Vec<Vec<Gf2>>` column varies by up to 1.5× between runs on the same input and
+nothing below rests on it; the other three columns reproduce. `prototype/README.md` records how to
+re-run this and what the harness does not control.
 
 **The seam costs nothing.** The generic algorithm through the trait runs at 0.92–0.95× the
 hand-written non-generic elimination over `&mut [u64]` at every size — it is slightly faster,
@@ -114,7 +116,7 @@ and now with a number attached.
 
 **Only two crates can broker `CausalTensor`.** `impl MatrixView for CausalTensor<f64>` is legal in
 `deep_causality_linear` (trait is local) or in `deep_causality_tensor` (type is local), and nowhere
-else — `proto/tensor_impl/` compiles the third case and gets E0117. The two legal placements force
+else — `prototype/tensor_impl/` compiles the third case and gets E0117. The two legal placements force
 opposite dependency edges and cannot coexist, so the orphan rule narrows the field without choosing.
 The choice comes from the decompositions: `CausalTensor::svd` must call into linear, so the edge is
 tensor → linear, and the impl therefore lives in `deep_causality_tensor`.
@@ -171,6 +173,18 @@ One published spec names the crate normatively: `openspec/specs/neumann-poisson/
 seven example crates depend on it. Relocating `svd`/`qr`/`eigen`/`inverse` off `CausalTensor` would
 break every one of them, so the proposal keeps the methods and moves only their bodies.
 
+### The `tensor-iso` feature is not load-bearing
+
+`deep_causality_sparse` depends optionally on `deep_causality_tensor` through `tensor-iso`, gating
+the `CausalTensor ↔ CsrMatrix` conversion in `extensions/ext_iso.rs`. **No library crate enables it.**
+The only enablements are `examples/mathematics_examples/Cargo.toml:23`, for the
+`tensor_sparse_memory_budget` example, and the sparse crate's own Bazel targets at `BUILD.bazel:10`
+and `tests/BUILD.bazel:58` for its own tests.
+
+So the conversion moves into `deep_causality_tensor` and the feature is deleted rather than
+relocated. The gate exists so sparse users do not pay for a dependency on tensor; once tensor depends
+on linear outright, that dependency is already paid and there is nothing left to gate.
+
 ### The name
 
 `deep_causality_linear` returns 404 from the crates.io API — the name is free.
@@ -196,17 +210,12 @@ proposed at the time and are not rewritten. That leaves 36 of the 203 files unto
 
 ## Open questions
 
-1. **Does the retired crate keep its `tensor-iso` feature?** Today `deep_causality_sparse` depends
-   optionally on `deep_causality_tensor`. Once tensor depends on linear, linear cannot depend on
-   tensor even optionally, so the `CausalTensor ↔ CsrMatrix` conversion has to move into
-   `deep_causality_tensor`. A re-export facade cannot re-export a feature whose code moved to a
-   crate above it.
-2. **Do topology's small determinants change numerically?** Replacing the two O(n!) Laplace
+1. **Do topology's small determinants change numerically?** Replacing the two O(n!) Laplace
    expansions with elimination perturbs floating-point results. Regge geometry uses them on
    Cayley-Menger determinants of small simplices where Laplace is also the faster path.
-3. **How much of the 1,088 tensor lines moves in the first change?** Delegation is behaviour-preserving
+2. **How much of the 1,088 tensor lines moves in the first change?** Delegation is behaviour-preserving
    but touches the most-used numerical code in the workspace.
-4. **Does the retirement window end in a yank?** The stated intent is a few months of availability.
+3. **Does the retirement window end in a yank?** The stated intent is a few months of availability.
    Nothing in this repository's conventions requires a yank afterwards, and yanking would break the
    already-published dependents the window exists to protect.
 

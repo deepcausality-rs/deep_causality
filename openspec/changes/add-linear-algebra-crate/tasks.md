@@ -7,7 +7,7 @@ here; this phase is a move plus a facade.
 - [ ] 1.2 Move `CsrMatrix`, its arithmetic, ops, getters, identity, display and algebra impls from `deep_causality_sparse/src/types/sparse_matrix/`
 - [ ] 1.3 Move `solver/cg.rs` (`cg_solve`, `cg_solve_preconditioned`, `cg_solve_preconditioned_from`, `CgFailure`) and `errors/sparse_matrix_error.rs`
 - [ ] 1.4 Move `extensions/ext_hkt.rs` (`CsrMatrixWitness`) and its tests
-- [ ] 1.5 Move `extensions/ext_iso.rs` into `deep_causality_tensor`, dropping the `tensor-iso` feature; the conversion becomes unconditional there and `CsrFromTensorError` moves with it
+- [ ] 1.5 Move `extensions/ext_iso.rs` and `CsrFromTensorError` into `deep_causality_tensor` unconditionally; delete the `tensor-iso` feature and its `#[cfg]` gates, the `"tensor-iso"` entries in `deep_causality_sparse/BUILD.bazel:10` and `tests/BUILD.bazel:58`, and the `features = ["tensor-iso"]` on `examples/mathematics_examples/Cargo.toml:23`
 - [ ] 1.6 Move the 1,916 lines of `deep_causality_sparse/tests/` and the `csr_matrix_benchmarks` bench
 - [ ] 1.7 Reduce `deep_causality_sparse/src/lib.rs` to re-exports of `deep_causality_linear`; confirm the public surface matches the last independent release item for item
 - [ ] 1.8 Write the retirement notice at the top of `deep_causality_sparse/README.md`, naming `deep_causality_linear` and stating that the crate receives no further development
