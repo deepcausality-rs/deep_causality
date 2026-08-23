@@ -5,7 +5,7 @@
 
 use crate::{
     AbelianGroup, Associative, Commutative, Complex, ComplexField, Distributive, DivisionAlgebra,
-    RealField,
+    Invertible, RealField,
 };
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
@@ -16,6 +16,8 @@ impl<T: RealField> Associative for Complex<T> {}
 impl<T: RealField> Commutative for Complex<T> {}
 impl<T: RealField> Distributive for Complex<T> {}
 impl<T: RealField> AbelianGroup for Complex<T> {}
+// ℂ is a field: every non-zero `z` has `z⁻¹ = z̄ / |z|²`, so `Div` really does invert.
+impl<T: RealField> Invertible for Complex<T> {}
 
 // The blanket impls for AssociativeRing, Field, and AssociativeDivisionAlgebra
 // will apply automatically as Complex<T> now satisfies their super-traits.

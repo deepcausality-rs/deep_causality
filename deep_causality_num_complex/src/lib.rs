@@ -10,7 +10,7 @@ extern crate core;
 // through `crate::` paths.
 use deep_causality_algebra::{
     AbelianGroup, Associative, Commutative, ComplexField, Distributive, DivisionAlgebra, Field,
-    RealField, Rotation,
+    Invertible, RealField, Rotation,
 };
 use deep_causality_num::{
     AsPrimitive, ConstOne, ConstZero, FromPrimitive, Matrix3, NumCast, One, ToPrimitive, Vector3,
