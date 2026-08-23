@@ -96,9 +96,9 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
 - **Documentation**: `AGENTS.md` §Project Structure and §Project Dependencies, `README.md:268`,
   `website/web/src/pages/overview/index.astro`, `website/docs/…/install.md` and
   `…/concepts/uniform-math.md`.
-- **New-crate checklist**: `build/scripts/sbom.sh` enumerates 26 crates against a workspace of 29 —
-  `deep_causality_num_rational` and `deep_causality_quantum` were both added without being registered
-  there. This change adds its crate to that list and closes the two existing gaps rather than
-  becoming the third.
+- **New-crate checklist**: `build/scripts/sbom.sh` enumerates the publishable crates, and
+  `deep_causality_num_rational` was added without being registered there. This change adds its own
+  crate to that list and generates the artifacts, rather than becoming the second omission.
+  (`deep_causality_quantum` is absent by design — it is `publish = false`.)
 - **Not touched**: the 34 files under `openspec/changes/archive/` that name `deep_causality_sparse`.
   Archived changes record what was proposed at the time and are not rewritten.

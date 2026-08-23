@@ -27,6 +27,7 @@ CRATES=(
     "deep_causality_num"
     "deep_causality_num_complex"
     "deep_causality_num_dual"
+    "deep_causality_num_rational"
     "deep_causality_par"
     "deep_causality_rand"
     "deep_causality_physics"

@@ -16,7 +16,7 @@ here; this phase is a move plus a facade.
 - [ ] 1.11 Resolve the `deep_causality_cfd` discrepancy: `BUILD.bazel:30` declares a dependency `Cargo.toml` does not — decide which is correct and make both agree
 - [ ] 1.12 Update `AGENTS.md` §Project Structure and §Project Dependencies, `README.md:268`, `website/web/src/pages/overview/index.astro` (2 sites), `website/docs/…/getting-started/install.md`, `website/docs/…/concepts/uniform-math.md`
 - [ ] 1.13 Leave the 34 files under `openspec/changes/archive/` unchanged; confirm by diff that none were touched
-- [ ] 1.14 Register the crate in `build/scripts/sbom.sh`, and add the two crates missing from it (`deep_causality_num_rational`, `deep_causality_quantum`) — it lists 26 against a workspace of 29
+- [ ] 1.14 Register the crate in `build/scripts/sbom.sh` and commit its generated `*_sbom.spdx.json` + `.sha`; the list tracks publishable crates only, so a `publish = false` crate is correctly absent
 - [ ] 1.15 `cargo test --workspace` and `bazel test //...` green; clippy clean with no new `#[allow]`
 
 ## 2. Add the representations
