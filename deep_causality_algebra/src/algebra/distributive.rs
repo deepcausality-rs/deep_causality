@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::Float;
+use crate::Num;
 
 /// Marker trait: Promises that a * (b + c)  == (a * b) + (a * c).
 pub trait Distributive {}
 
-impl<T> Distributive for T where T: Float {}
+impl<T> Distributive for T where T: Num {}

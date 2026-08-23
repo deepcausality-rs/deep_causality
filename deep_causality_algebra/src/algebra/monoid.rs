@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Associative, MulMagma, One, Zero};
+use crate::{Associative, Invertible, MulMagma, One, Zero};
 use core::ops::{Add, AddAssign, Div, DivAssign};
 
 /// Represents an **Additive Monoid**.
@@ -77,7 +77,7 @@ pub trait InvMonoid: MulMonoid + Div<Output = Self> + DivAssign {
 // calculation using 1 / self.
 impl<T> InvMonoid for T
 where
-    T: MulMonoid + Div<Output = Self> + DivAssign + One + Clone,
+    T: MulMonoid + Div<Output = Self> + DivAssign + One + Clone + Invertible,
 {
     #[inline]
     fn inverse(&self) -> Self {

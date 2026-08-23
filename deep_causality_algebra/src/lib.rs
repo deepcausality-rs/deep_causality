@@ -8,7 +8,7 @@ extern crate core;
 
 // Private re-exports of `deep_causality_num` core symbols so that the moved
 // `algebra` and `iso` modules keep resolving them through `crate::` paths.
-use deep_causality_num::{Float, FromPrimitive, One, Zero};
+use deep_causality_num::{Float, FromPrimitive, Num, One, Zero};
 
 mod algebra;
 pub mod iso;
@@ -27,6 +27,7 @@ pub use crate::algebra::conjunction::Conjunction;
 pub use crate::algebra::count::Count;
 pub use crate::algebra::disjunction::Disjunction;
 pub use crate::algebra::distributive::Distributive;
+pub use crate::algebra::domain_euclidean::EuclideanDomain;
 pub use crate::algebra::field::Field;
 pub use crate::algebra::field_complex::ComplexField;
 pub use crate::algebra::field_real::RealField;
@@ -37,6 +38,7 @@ pub use crate::algebra::group_div::DivGroup;
 pub use crate::algebra::group_mul::MulGroup;
 pub use crate::algebra::group_semi::{AddSemigroup, MulSemigroup};
 pub use crate::algebra::idempotent::Idempotent;
+pub use crate::algebra::invertible::Invertible;
 pub use crate::algebra::magma::{AddMagma, MulMagma};
 pub use crate::algebra::module::Module;
 pub use crate::algebra::monoid::{AddMonoid, InvMonoid, MulMonoid};
