@@ -21,6 +21,7 @@ exclude = [
     "MODULE.bazel",
     ".bazelignore",
     ".bazelrc",
+    "tests/*",
     "tests/**/*",
     "papers/*",
 ]
@@ -37,7 +38,7 @@ default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.2"
+version = "0.3"
 default-features = false
 
 [lints]
