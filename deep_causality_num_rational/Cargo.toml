@@ -21,6 +21,7 @@ exclude = [
     "MODULE.bazel",
     ".bazelignore",
     ".bazelrc",
+    "tests/*",
     "tests/**/*",
     "papers/*",
 ]

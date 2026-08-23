@@ -4,7 +4,7 @@
 [![Docs.rs](https://docs.rs/deep_causality_uncertain/badge.svg)](https://docs.rs/deep_causality_uncertain)
 
 [![MIT licensed][mit-badge]][mit-url]
-![Tests][test-url]
+ 
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg
 
@@ -12,7 +12,7 @@
 
 [audit-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/audit.yml/badge.svg
 
-[test-url]: https://github.com/deepcausality-rs/deep_causality/actions/workflows/run_tests.yml/badge.svg
+ 
 
 A Rust library for first-order uncertain data types, enabling robust computation and decision-making under uncertainty.
 
