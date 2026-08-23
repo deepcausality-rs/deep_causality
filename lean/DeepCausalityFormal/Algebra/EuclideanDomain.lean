@@ -11,7 +11,7 @@ default `gcd`/`lcm` pair computed by the Euclidean algorithm.
 
 The reconstruction law `b * (a / b) + a % b = a` is already pinned by `num.integer.euclidean` in
 `Num/Integer.lean`. What this file adds is the part that makes the division *Euclidean* rather
-than merely exact: the remainder is non-negative and strictly smaller than the divisor. That
+than merely exact: the remainder is non-negative and strictly smaller than φ of the divisor. That
 second bound is the termination argument for the Euclidean algorithm — φ strictly decreases on
 each step and φ is ℕ-valued, so the recursion is well founded.
 
@@ -29,6 +29,7 @@ roots plus their closure, so a module absent from it is never fetched and the bu
 -/
 
 import Mathlib.Algebra.Order.Group.Int
+import Mathlib.Algebra.Order.Group.Unbundled.Int
 
 namespace DeepCausalityFormal.Algebra
 
@@ -41,18 +42,20 @@ namespace DeepCausalityFormal.Algebra
 theorem euclidean_remainder_nonneg (a b : ℤ) (h : b ≠ 0) : 0 ≤ a % b :=
   Int.emod_nonneg a h
 
-/-- The Euclidean remainder strictly decreases φ: `0 < b → a % b < b`.
+/-- The Euclidean remainder strictly decreases φ: `b ≠ 0 → a % b < |b|`.
 
-    This is the termination argument. Stated for a positive divisor, which is the case the
-    algorithm actually runs in: `rem_euclid` is non-negative by
-    `euclidean_remainder_nonneg`, so every divisor after the first step is a previous
-    remainder and therefore non-negative. Since φ(n) = |n| coincides with `n` there, and φ is
-    ℕ-valued and strictly decreasing, the recursion in `EuclideanDomain::gcd` is well founded
-    and terminates in finitely many steps rather than merely being well typed.
+    This is the termination argument, and it is stated for every non-zero divisor rather than
+    only for a positive one. The first step of the Euclidean algorithm divides by the caller's
+    own argument, which may be negative — `gcd(a, -12)` is an ordinary call — and only from the
+    second step on is the divisor a previous remainder and hence non-negative by
+    `euclidean_remainder_nonneg`. A bound assuming `0 < b` would therefore leave the entry to
+    the recursion uncovered. Bounding by φ(b) = |b| covers both, and since φ is ℕ-valued and
+    strictly decreasing the recursion in `EuclideanDomain::gcd` is well founded and terminates
+    in finitely many steps rather than merely being well typed.
 
     THEOREM_MAP: `algebra.euclidean.remainder_lt_divisor` -/
-theorem euclidean_remainder_lt_divisor (a b : ℤ) (h : 0 < b) : a % b < b :=
-  Int.emod_lt_of_pos a h
+theorem euclidean_remainder_lt_divisor (a b : ℤ) (h : b ≠ 0) : a % b < |b| :=
+  Int.emod_lt_abs a h
 
 /-- The gcd divides its left argument.
 
