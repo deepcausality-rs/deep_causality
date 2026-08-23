@@ -50,9 +50,11 @@ It writes to a temporary file and replaces the committed PDF only once the page
 count matches, so a rejected result cannot leave a truncated file behind.
 
 The preview binds `PDF_PREVIEW_PORT`, default `4321`. The script refuses to start
-when that port is already taken, and then waits for a server that returns the
-`<title>` of the page it just built into `dist/`. Without those two checks a
-stray server on the same port would be crawled into the committed PDF instead.
+when anything already listens on that port, and then waits for a server that
+returns the `dist/index.html` it has just built, byte for byte. Without those two
+checks a stray server on the same port would be crawled into the committed PDF
+instead. A leftover preview is the usual reason for the refusal; stop it with
+`pnpm exec astro preview stop`, or point `PDF_PREVIEW_PORT` at a free port.
 
 Puppeteer downloads its own Chromium on first run. Set `CHROME_PATH` to use an
 installed browser instead, which is the fix when that download is unusable:

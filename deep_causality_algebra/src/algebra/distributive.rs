@@ -9,13 +9,24 @@ use crate::Float106;
 ///
 /// The compiler cannot check this, so implementing it is a promise by the developer.
 ///
-/// This holds for every numeric type in the workspace, including the non-commutative and
-/// non-associative division algebras.
+/// # Which types promise it
 ///
-/// Non-primitive types carry their own impls in the crate that defines them: `Complex<T>`,
-/// `Quaternion<T>` and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in
-/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and the tensor and
-/// sparse-matrix types in their own crates.///
+/// Past the primitives below, seven types carry `Distributive`, each in the crate that defines it:
+/// `Complex<T>`, `Quaternion<T>` and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in
+/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and
+/// `CausalTensor<T>` and `CausalTensorTrain<T>` in `deep_causality_tensor`.
+///
+/// This is the widest of the three multiplicative laws, and the list shows why. ℍ and 𝕆 appear
+/// here even though they are missing from [`Commutative`](crate::Commutative) and 𝕆 is missing
+/// from [`Associative`](crate::Associative): distributivity is what makes a division algebra an
+/// algebra at all, so it survives where the other two fail.
+///
+/// One absence is structural. `CsrMatrix<T>` in `deep_causality_sparse` stops at
+/// [`AbelianGroup`](crate::AbelianGroup) and carries none of the multiplicative markers.
+///
+/// For `f32`, `f64` and `Float106` the promise covers the finite values. See the scope note on
+/// [`Annihilating`](crate::Annihilating).
+///
 /// # Why these are written out one by one
 ///
 /// This trait was once blanket-implemented over `Num`, which is unsealed: any downstream type
@@ -25,7 +36,7 @@ use crate::Float106;
 ///
 /// Listing the types is the point, not an accident of style. Each line is one deliberate
 /// assertion about one type, and the repetition is the cost of making the promise explicit.
-/// The workspace also forbids macros in library code (`AGENTS.md`), so the list stays literal.
+/// `AGENTS.md` also steers library code away from macros, so the list stays literal.
 pub trait Distributive {}
 
 // The real scalars.

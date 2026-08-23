@@ -11,10 +11,24 @@ use crate::Float106;
 ///
 /// DO NOT IMPLEMENT for `Octonion`, whose multiplication is not associative.
 ///
-/// Non-primitive types carry their own impls in the crate that defines them: `Complex<T>`,
-/// `Quaternion<T>` and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in
-/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and the tensor and
-/// sparse-matrix types in their own crates.///
+/// # Which types promise it
+///
+/// Past the primitives below, six types carry `Associative`, each in the crate that defines it:
+/// `Complex<T>` and `Quaternion<T>` in `deep_causality_num_complex`, `Dual<T>` in
+/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and
+/// `CausalTensor<T>` and `CausalTensorTrain<T>` in `deep_causality_tensor`. `Quaternion<T>` is on
+/// that list although it is missing from [`Commutative`](crate::Commutative): ℍ associates, it
+/// just does not commute.
+///
+/// `Octonion<T>` is absent, and the absence is the definition. 𝕆 satisfies only the weaker
+/// alternative law, and associativity fails on any triple of imaginary units that does not lie in
+/// a common quaternion subalgebra. A second absence is structural: `CsrMatrix<T>` in
+/// `deep_causality_sparse` stops at [`AbelianGroup`](crate::AbelianGroup) and carries none of the
+/// multiplicative markers.
+///
+/// For `f32`, `f64` and `Float106` the promise covers the finite values. See the scope note on
+/// [`Annihilating`](crate::Annihilating).
+///
 /// # Why these are written out one by one
 ///
 /// This trait was once blanket-implemented over `Num`, which is unsealed: any downstream type
@@ -24,7 +38,7 @@ use crate::Float106;
 ///
 /// Listing the types is the point, not an accident of style. Each line is one deliberate
 /// assertion about one type, and the repetition is the cost of making the promise explicit.
-/// The workspace also forbids macros in library code (`AGENTS.md`), so the list stays literal.
+/// `AGENTS.md` also steers library code away from macros, so the list stays literal.
 pub trait Associative {}
 
 // The real scalars.

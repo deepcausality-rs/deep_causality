@@ -11,10 +11,25 @@ use crate::Float106;
 ///
 /// DO NOT IMPLEMENT for `Quaternion` or `Octonion`, whose multiplication does not commute.
 ///
-/// Non-primitive types carry their own impls in the crate that defines them: `Complex<T>`,
-/// `Quaternion<T>` and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in
-/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and the tensor and
-/// sparse-matrix types in their own crates.///
+/// # Which types promise it
+///
+/// Past the primitives below, four types carry `Commutative`, each in the crate that defines it:
+/// `Complex<T>` in `deep_causality_num_complex`, `Dual<T>` in `deep_causality_num_dual`,
+/// `Rational<T>` in `deep_causality_num_rational`, and `CausalTensor<T>` and
+/// `CausalTensorTrain<T>` in `deep_causality_tensor`. The two tensor impls are conditional on
+/// their element type — multiplication there is element-wise, so the container commutes exactly
+/// when its elements do, and a tensor of quaternions does not. This crate adds the monoid carriers
+/// `Conjunction`, `Disjunction`, `Count` and `Prob`, which need the marker to reach
+/// [`CommutativeMonoid`](crate::CommutativeMonoid).
+///
+/// Two absences are deliberate. `Quaternion<T>` does not commute: `i * j` is `k`, and `j * i` is
+/// `-k`. `Octonion<T>` inherits that failure. A third absence is structural: `CsrMatrix<T>` in
+/// `deep_causality_sparse` stops at [`AbelianGroup`](crate::AbelianGroup) and carries none of the
+/// multiplicative markers.
+///
+/// For `f32`, `f64` and `Float106` the promise covers the finite values. See the scope note on
+/// [`Annihilating`](crate::Annihilating).
+///
 /// # Why these are written out one by one
 ///
 /// This trait was once blanket-implemented over `Num`, which is unsealed: any downstream type
@@ -24,7 +39,7 @@ use crate::Float106;
 ///
 /// Listing the types is the point, not an accident of style. Each line is one deliberate
 /// assertion about one type, and the repetition is the cost of making the promise explicit.
-/// The workspace also forbids macros in library code (`AGENTS.md`), so the list stays literal.
+/// `AGENTS.md` also steers library code away from macros, so the list stays literal.
 pub trait Commutative {}
 
 // The real scalars.

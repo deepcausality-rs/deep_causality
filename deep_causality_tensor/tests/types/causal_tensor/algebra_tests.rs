@@ -144,3 +144,28 @@ fn test_blanket_add_group_via_num_trait() {
     let c = use_add_group(&a, &b);
     assert_eq!(c.as_slice(), &[4.0, 6.0]);
 }
+
+#[test]
+fn commutativity_is_conditional_on_the_element_type() {
+    // Multiplication is element-wise, so the tensor commutes exactly when its elements do. The
+    // marker is therefore bounded on `T` rather than asserted flatly: a tensor of quaternions
+    // must not inherit a law its elements do not have.
+    fn assert_commutative<T: deep_causality_algebra::Commutative>() {}
+    fn assert_commutative_ring<T: deep_causality_algebra::CommutativeRing>() {}
+
+    assert_commutative::<CausalTensor<f64>>();
+    assert_commutative::<CausalTensor<i64>>();
+    // ...and with it the rung the marker unlocks, matching `CausalTensorTrain`.
+    assert_commutative_ring::<CausalTensor<f64>>();
+
+    // `assert_commutative::<CausalTensor<Quaternion<f64>>>()` does NOT compile, because
+    // `Quaternion<T>` carries no `Commutative` impl.
+}
+
+#[test]
+fn element_wise_product_actually_commutes() {
+    // The law itself, not just the marker.
+    let a = CausalTensor::new(vec![1.0_f64, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
+    let b = CausalTensor::new(vec![5.0_f64, 6.0, 7.0, 8.0], vec![2, 2]).unwrap();
+    assert_eq!(a.mul(&b), b.mul(&a));
+}

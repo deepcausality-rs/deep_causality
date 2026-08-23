@@ -19,7 +19,6 @@
 //!   for f64` (adds +1.0) triggers the homomorphism assertion's panic branch.
 
 use core::ops::{Add, AddAssign, Neg, Sub, SubAssign};
-use deep_causality_algebra::Annihilating;
 use deep_causality_algebra::iso::GroupIso;
 use deep_causality_algebra::iso::test_support::assert_group_iso_from_law;
 use deep_causality_num::Zero;
@@ -173,9 +172,3 @@ impl Neg for BadAddWrap {
         BadAddWrap(-self.0)
     }
 }
-
-// These wrappers model field-like carriers, so zero annihilates.
-impl Annihilating for IdWrap {}
-
-// These wrappers model field-like carriers, so zero annihilates.
-impl Annihilating for BadAddWrap {}
