@@ -62,12 +62,14 @@ import DeepCausalityFormal.Algebra.Verdict
 import DeepCausalityFormal.Algebra.Group
 import DeepCausalityFormal.Algebra.Ring
 import DeepCausalityFormal.Algebra.Field
+import DeepCausalityFormal.Algebra.EuclideanDomain
 import DeepCausalityFormal.Algebra.Module
 import DeepCausalityFormal.Algebra.DivisionAlgebra
 import DeepCausalityFormal.Algebra.Scalar
 import DeepCausalityFormal.Complex.Complex
 import DeepCausalityFormal.Complex.Quaternion
 import DeepCausalityFormal.Dual.Dual
+import DeepCausalityFormal.Rational.Rational
 import DeepCausalityFormal.Core.EffectLog
 import DeepCausalityFormal.Core.CausalEffect
 import DeepCausalityFormal.Core.CausalCommand

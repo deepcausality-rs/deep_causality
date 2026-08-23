@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CommutativeRing, Float};
+use crate::{Annihilating, Associative, Commutative, CommutativeRing, Distributive, Float};
 use core::cmp::PartialOrd;
 use core::ops::{AddAssign, MulAssign, Neg, SubAssign};
 
@@ -282,9 +282,12 @@ pub trait Real:
 // Blanket implementation over all Floats
 
 // Every `Float` is an analytic real scalar. The `Real` surface delegates to the
-// corresponding `Float` operation, so a new float type implements `Float` and gets
-// `Real` — and, via the other blanket impls, the whole algebra tower — for free.
-impl<T: Float> Real for T {
+// corresponding `Float` operation.
+//
+// The law markers are named explicitly rather than inferred. They record promises the compiler
+// cannot check, so they are asserted per type (see `commutative.rs`) rather than granted by a
+// blanket over an unsealed trait; a new float type therefore states them alongside `impl Float`.
+impl<T: Float + Commutative + Associative + Distributive + Annihilating> Real for T {
     #[inline]
     fn nan() -> Self {
         Float::nan()

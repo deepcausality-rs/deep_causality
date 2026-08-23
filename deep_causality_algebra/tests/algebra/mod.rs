@@ -27,6 +27,10 @@ pub(crate) mod field_real_f64_tests;
 #[cfg(test)]
 mod commutative_semilattice_tests;
 #[cfg(test)]
+mod domain_euclidean_tests;
+#[cfg(test)]
+mod integer_tower_tests;
+#[cfg(test)]
 mod monoid_generic_tests;
 #[cfg(test)]
 #[cfg(not(miri))]

@@ -92,18 +92,36 @@ const examplesRepo = `${GITHUB_URL}/tree/main/examples`;
       <h3>Foundation layer</h3>
       <p>
         Three crates establish the foundation the DeepCausality project is built upon. The numerical
-        foundation library (<code>deep_causality_num</code>) provides a complete trait hierarchy for abstract
-        algebra, encoding the categorical structure of mathematical objects in the Rust type system. The
-        hierarchy ranges from foundational structures (Magma, Semigroup, Monoid) through groups (Group,
-        AbelianGroup) and rings (Ring, AssociativeRing, CommutativeRing) to fields (Field,
-        RealField, ComplexField) and module-and-algebra structures (Module, Algebra, AssociativeAlgebra,
-        DivisionAlgebra), wired so that types implementing each level satisfy the corresponding mathematical
-        laws as compile-time assertions. The crate also provides <code>Float106</code>, a 106-bit
-        high-precision floating-point type with approximately thirty-two decimal digits of precision,
-        comparable to IEEE binary128 but available now on stable Rust and several times faster on most
-        hardware. Full implementations of <code>Complex</code>, <code>Quaternion</code>, and
-        <code>Octonion</code> as division algebras are included. The library is macro-free, unsafe-free, and
-        dependency-free, and supports no-std environments.
+        foundation is split across two of them: <code>deep_causality_num</code> holds the representation
+        traits, which describe what a machine number can do, and <code>deep_causality_algebra</code> holds
+        the algebraic trait hierarchy, which describes the laws it obeys. The hierarchy ranges from
+        foundational structures (Magma, Semigroup, Monoid) through semirings (Semiring,
+        CommutativeSemiring), groups (Group, AbelianGroup) and rings (Ring, AssociativeRing,
+        CommutativeRing, EuclideanDomain) to fields (Field, RealField, ComplexField) and
+        module-and-algebra structures (Module, Algebra, AssociativeAlgebra, DivisionAlgebra), wired so that
+        types implementing each level satisfy the corresponding mathematical laws as compile-time
+        assertions.
+      </p>
+      <p>
+        All five number systems are covered, each with a set name for everyday use and an algebraic name
+        for when the code needs a structure rather than a set: the naturals
+        &#8469; (<code>NaturalNumber</code>, a commutative semiring), the integers &#8484;
+        (<code>Integer</code>, a Euclidean domain), the rationals &#8474; (<code>Rational</code>, a field),
+        the reals &#8477; (<code>Real</code>, a real field), and the complex numbers &#8450;
+        (<code>Complex</code>, a complex field). Where each one stops is enforced rather than documented:
+        the unsigned types are a semiring and not a ring, because &#8469; has no additive inverses; the
+        integers are a commutative ring and not a field, because integer division truncates rather than
+        inverting; and the rationals are a field but not a real, because &#8474; has no square root of two.
+        Each of those is a compile error rather than a comment.
+      </p>
+      <p>
+        The foundation also provides <code>Float106</code>, a 106-bit high-precision floating-point type
+        with approximately thirty-two decimal digits of precision, comparable to IEEE binary128 but
+        available now on stable Rust and several times faster on most hardware. Full implementations of
+        <code>Complex</code>, <code>Quaternion</code>, and <code>Octonion</code> as division algebras are
+        included, alongside <code>Rational</code> for exact arithmetic and <code>Dual</code> for
+        forward-mode automatic differentiation. The libraries are macro-free, unsafe-free, and
+        dependency-free, and support no-std environments.
       </p>
       <p>
         The higher-kinded type crate (<code>deep_causality_haft</code>) provides a working implementation of

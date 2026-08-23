@@ -45,6 +45,72 @@ their own crates:
   Field), the scalar traits, and the isomorphism markers.
 - [`deep_causality_num_complex`](../deep_causality_num_complex/README.md) — `Complex`, `Quaternion`, and `Octonion`.
 - [`deep_causality_num_dual`](../deep_causality_num_dual/README.md) — the `Dual` number for forward-mode autodiff.
+- [`deep_causality_num_rational`](../deep_causality_num_rational/README.md) — the `Rational` number, exact ℚ arithmetic.
+
+## The five number systems
+
+ℕ, ℤ, ℚ, ℝ, and ℂ are all covered. Each is split across two layers, and knowing which layer you want is the fastest way
+to find what you need:
+
+- **This crate** holds the *representation* traits — abstractions over Rust's own primitives, concerned with what a
+  machine number can do.
+- **`deep_causality_algebra`** holds the *algebraic* traits — the laws a number obeys, independent of how it is stored.
+
+A number system needs a crate of its own only when it introduces a **type Rust does not have**. That is why ℂ and ℚ have
+crates while ℕ, ℤ, and ℝ do not: `u64`, `i64`, and `f64` already exist.
+
+Each system has two names: the **set name** you reach for when writing code, and the **algebraic
+name** that says what structure it has. Both are listed, with where each lives.
+
+| Set | Set name | Where | Algebraic name | Where | Concrete types |
+|-----|----------|-------|----------------|-------|----------------|
+| **ℕ** naturals | `NaturalNumber` | `deep_causality_num` | `CommutativeSemiring` | `deep_causality_algebra` | `u8`–`u128`, `usize` |
+| **ℤ** integers | `Integer` | `deep_causality_num` | `EuclideanDomain` | `deep_causality_algebra` | `i8`–`i128`, `isize` |
+| **ℚ** rationals | `Rational<T>` | [`deep_causality_num_rational`](../deep_causality_num_rational/README.md) | `Field` | `deep_causality_algebra` | `Rational<i64>`, … |
+| **ℝ** reals | `Real` | `deep_causality_algebra` | `RealField` | `deep_causality_algebra` | `f32`, `f64`, `Float106` |
+| **ℂ** complex | `Complex<T>` | [`deep_causality_num_complex`](../deep_causality_num_complex/README.md) | `ComplexField` | `deep_causality_algebra` | `Complex<f64>`, … |
+
+Reach for the **set name** by default — `NaturalNumber`, `Integer`, `Rational`, `Real`, `Complex`
+read the way the mathematics is spoken. Reach for the **algebraic name** when the code needs a
+specific structure rather than a specific set, which is what lets one function serve ℚ, ℝ, and ℂ
+at once through a single `Field` bound.
+
+Two supporting traits sit beside `Integer` on the ℤ row and describe the *representation* rather
+than the set: `SignedInt` (`abs`, `signum`, `checked_neg`) and `UnsignedInt` (`is_power_of_two`,
+`next_power_of_two`). `NaturalNumber` builds on `UnsignedInt` and adds ℕ's own vocabulary —
+`succ`, `pred`, `monus`, `checked_difference`, `div_rem`, `gcd`, `lcm`.
+
+The tower stops each system exactly where the mathematics does, and the gaps are as informative as the entries:
+
+- **ℕ is not a ring.** The unsigned types are a `CommutativeSemiring`, but `3u64 - 5u64` has no value in ℕ, so there are
+  no additive inverses. They stop before `AbelianGroup`, and therefore before `Ring`. `NaturalNumber` reflects that in
+  its API: subtraction appears as `checked_difference` (returning `None`) and `monus` (truncating to zero), never as the
+  `Sub` operator, which wraps or panics rather than reporting the absence.
+- **ℤ is not a field.** Integer `/` is a truncating quotient, not an inverse — `1 / 5` is `0`, so `5 * (1 / 5)` is `0`
+  rather than `1`. The `Invertible` marker is withheld from the integers, which is what stops `CommutativeRing` from
+  becoming `Field`. Passing to ℚ is precisely the act of supplying the missing inverses.
+- **ℚ is not a `Real`.** `Real` is the *analytic* axis — `sqrt`, `exp`, `ln`, `sin` — and ℚ is closed under none of them.
+  ℚ is arithmetically complete and analytically empty; ℝ is the completion that fixes it.
+- **ℍ and 𝕆 are neither.** `Quaternion` is not `Commutative`; `Octonion` is not `Associative` either. Both are still
+  `DivisionAlgebra`, which is why they sit beside ℂ rather than under it.
+
+Two further types round out the tower without being number systems in their own right: `Float106`
+(double-double, ~31 digits) extends ℝ's precision, and `Dual` ([crate](../deep_causality_num_dual/README.md)) is
+analytic without being a field, the exact mirror of ℚ being a field without being analytic.
+
+Every claim above is machine-checked. See [`LEAN_NUM.md`](LEAN_NUM.md),
+[`LEAN_ALGEBRA.md`](../deep_causality_algebra/LEAN_ALGEBRA.md),
+[`LEAN_NUM_COMPLEX.md`](../deep_causality_num_complex/LEAN_NUM_COMPLEX.md),
+[`LEAN_NUM_DUAL.md`](../deep_causality_num_dual/LEAN_NUM_DUAL.md), and
+[`LEAN_NUM_RATIONAL.md`](../deep_causality_num_rational/LEAN_NUM_RATIONAL.md).
+
+### Choosing a working type
+
+Numeric code is written against the algebraic bound, never a concrete width, and names a concrete type only through a
+single alias. `FloatType = f64` is the precision parameter for ℝ; `IntType = i64` is the range parameter for ℤ. The two
+are not the same kind of knob: widening `FloatType` buys **accuracy**, and the failure mode is rounding, bounded by
+`epsilon()`. Widening `IntType` buys **headroom**, and the failure mode is overflow — not a graded error but a hard
+wrongness, with no analogue of `epsilon()`.
 
 ### Integer Traits
 
@@ -55,6 +121,12 @@ Type-safe abstractions over Rust's primitive integer types:
 | **Integer**     | All primitives       | Bit ops, checked/saturating/wrapping arithmetic, Euclidean division |
 | **SignedInt**   | `i8`–`i128`, `isize` | `abs`, `signum`, `is_negative`, `checked_neg`                       |
 | **UnsignedInt** | `u8`–`u128`, `usize` | `is_power_of_two`, `next_power_of_two`                              |
+
+These are representation traits: they say what the machine integer can do, not what laws it obeys. The algebraic side
+lives in [`deep_causality_algebra`](../deep_causality_algebra/README.md), where the signed types implement
+`EuclideanDomain` (φ, `div_euclid`, `rem_euclid`, `gcd`, `lcm`) and so reach `CommutativeRing`, while the unsigned types
+stop at `CommutativeSemiring`. Since `EuclideanDomain` is a *ring* structure it cannot serve ℕ at all, which is why
+`NaturalNumber` carries its own `gcd` and `lcm`.
 
 ### Float Types
 

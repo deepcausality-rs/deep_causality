@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AbelianGroup, Distributive, MulMonoid};
+use crate::{AbelianGroup, Annihilating, Distributive, MulMonoid};
 
 /// Represents a **Ring** in abstract algebra.
 ///
@@ -29,13 +29,17 @@ use crate::{AbelianGroup, Distributive, MulMonoid};
 ///     - `a * (b + c) = (a * b) + (a * c)` (Left distributivity)
 ///     - `(a + b) * c = (a * c) + (b * c)` (Right distributivity)
 ///
+/// [`Annihilating`](crate::Annihilating) is required even though `0 * a = 0` is *derivable* in a
+/// ring, because it is not derivable in a [`Semiring`](crate::Semiring) and every ring must remain
+/// a semiring. Carrying the marker at both rungs is what keeps that relation true.
+///
 /// This trait combines `AbelianGroup` and `MulMonoid` to enforce these properties.
 /// The distributivity law is implicitly assumed to be upheld by the `Add` and
 /// `Mul` implementations.
-pub trait Ring: AbelianGroup + MulMonoid + Distributive {}
+pub trait Ring: AbelianGroup + MulMonoid + Distributive + Annihilating {}
 // This is a marker trait that combines other traits.
 // It guarantees that a type supports `+`, `-`, `*`, `0`, and `1`
 // with the expected algebraic properties of a ring.
 
 // Blanket Implementation
-impl<T> Ring for T where T: AbelianGroup + MulMonoid + Distributive {}
+impl<T> Ring for T where T: AbelianGroup + MulMonoid + Distributive + Annihilating {}

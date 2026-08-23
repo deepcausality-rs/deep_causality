@@ -6,13 +6,23 @@
 use alloc::vec;
 
 use crate::CausalTensor;
-use deep_causality_algebra::{Associative, Distributive, Ring};
+use deep_causality_algebra::{Annihilating, Associative, Commutative, Distributive, Ring};
 
 // Implement Associative marker trait
 impl<T> Associative for CausalTensor<T> where T: Associative + Copy {}
 
+// Multiplication is element-wise — `broadcast_op(rhs, |a, b| Ok(a * b))` — so the tensor commutes
+// exactly when its elements do, and the marker is conditioned on `T` rather than asserted flatly.
+// Corresponding shapes multiply pairwise and broadcasting is symmetric in the two operands, so
+// nothing in the layout can reorder a product. This mirrors `CausalTensorTrain`, which carries the
+// same marker for the same reason.
+impl<T> Commutative for CausalTensor<T> where T: Commutative + Copy {}
+
 // Implement Distributive marker trait
 impl<T> Distributive for CausalTensor<T> where T: Distributive + Copy {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T> Annihilating for CausalTensor<T> where T: Annihilating + Copy {}
 
 // Ring is automatically implemented by blanket impl in deep_causality_num
 // because CausalTensor implements AbelianGroup, MulMonoid (via One+Associative+Mul), Distributive.

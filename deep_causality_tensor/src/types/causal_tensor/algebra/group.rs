@@ -17,10 +17,9 @@ impl<T> AbelianGroup for CausalTensor<T> where
 
 // AddGroup is automatically implemented by blanket impl in deep_causality_num
 // because CausalTensor implements Zero, Add, Sub, Neg, Clone.
-
 impl<T> CausalTensor<T>
 where
-    T: AddGroup + Copy + core::ops::Neg<Output = T>,
+    T: AddGroup + Copy,
 {
     /// Creates a zero tensor with the specified shape.
     pub fn zero(shape: &[usize]) -> Self {

@@ -1,6 +1,6 @@
 # Algebraic Traits
 
-This document is a reference for the algebraic trait hierarchy in `deep_causality_algebra`. These traits model the structures of abstract algebra, giving a type-safe vocabulary for number systems from real fields to complex numbers, quaternions, and octonions.
+This document is a reference for the algebraic trait hierarchy in `deep_causality_algebra`. These traits model the structures of abstract algebra, giving a type-safe vocabulary for number systems from the naturals and the integers, through the rationals and the reals, to complex numbers, quaternions, and octonions.
 
 ## Trait Hierarchy
 
@@ -11,6 +11,8 @@ graph TD
         Assoc["Associative"]
         Comm["Commutative"]
         Dist["Distributive"]
+        Annih["Annihilating"]
+        Inv["Invertible"]
     end
 
     subgraph Foundational Structures
@@ -33,10 +35,16 @@ graph TD
         DivGrp["DivGroup"]
     end
 
+    subgraph Semiring Structures
+        Semi["Semiring"]
+        CommSemi["CommutativeSemiring"]
+    end
+
     subgraph Ring Structures
         Ring["Ring"]
         AssocRing["AssociativeRing"]
         CommRing["CommutativeRing"]
+        EuclidDom["EuclideanDomain"]
     end
 
     subgraph Field Structures
@@ -73,17 +81,27 @@ graph TD
     %% Multiplicative path
     MulSemi --> MulMon
     MulMon --> InvMon
+    Inv --> InvMon
     InvMon --> MulGrp
     MulGrp --> DivGrp
+
+    %% Semiring path. No additive inverses, so it never joins the ring path.
+    MulMon --> Semi
+    Dist --> Semi
+    Annih --> Semi
+    Semi --> CommSemi
+    Comm --> CommSemi
 
     %% Ring path
     AbelGrp --> Ring
     MulMon --> Ring
     Dist --> Ring
+    Annih --> Ring
     Ring --> AssocRing
     Assoc --> AssocRing
     Ring --> CommRing
     Comm --> CommRing
+    CommRing --> EuclidDom
 
     %% Field path
     CommRing --> Real
@@ -122,16 +140,36 @@ These marker traits encode fundamental algebraic properties. They have no method
 | **Associative** | Associativity | $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ |
 | **Commutative** | Commutativity | $a \cdot b = b \cdot a$ |
 | **Distributive** | Distributivity | $a \cdot (b + c) = a \cdot b + a \cdot c$ |
+| **Annihilating** | Annihilation | $0 \cdot a = a \cdot 0 = 0$ |
+| **Invertible** | Field division | $a \cdot a^{-1} = 1$ for $a \neq 0$ |
+
+None of the five is blanket-implemented. A blanket over `Num` or `Float` would hand the promise to
+any downstream type that happened to meet the structural bound, and a marker whose whole purpose is
+to record what the compiler cannot check must not be granted by inference. Each type is listed by
+hand, in the crate that defines it.
+
+Two of the five exist because the law they name does not follow from the others:
+
+- **`Annihilating`** is a theorem in a `Ring`: $0 \cdot a = (0 + 0) \cdot a = 0 \cdot a + 0 \cdot a$,
+  then cancel. That last step spends an additive inverse, and a `Semiring` has none, so ℕ has to
+  promise annihilation separately.
+- **`Invertible`** separates a `Field` from a `CommutativeRing` that merely owns a `/` operator.
+  `i64` has `Div` and `DivAssign`, but `1 / 5 == 0`, so `5 * (1 / 5) == 0` rather than `1`. Without
+  the marker the tower would conclude that ℤ is a field.
 
 **Implementation Guide:**
 
-| Type | Distributive | Associative | Commutative | Resulting Trait |
-|------|:---:|:---:|:---:|-----------------|
-| Real (`f32`, `f64`) | ✅ | ✅ | ✅ | `Field` |
-| Complex | ✅ | ✅ | ✅ | `Field` |
-| Quaternion | ✅ | ✅ | ❌ | `AssociativeRing` |
-| Octonion | ✅ | ❌ | ❌ | `DivisionAlgebra` |
-| Matrix | ✅ | ✅ | ❌ | `AssociativeRing` |
+| Type | Distributive | Associative | Commutative | Annihilating | Invertible | Highest structure |
+|------|:---:|:---:|:---:|:---:|:---:|-----------------|
+| `f32`, `f64`, `Float106` | ✅ | ✅ | ✅ | ✅ | ✅ | `RealField` |
+| `i8`…`i128`, `isize` | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeRing`, `EuclideanDomain` |
+| `u8`…`u128`, `usize` | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeSemiring` |
+| `Rational<T>` | ✅ | ✅ | ✅ | ✅ | ✅ | `Field` |
+| `Complex<T>` | ✅ | ✅ | ✅ | ✅ | ✅ | `Field` |
+| `Quaternion<T>` | ✅ | ✅ | ❌ | ✅ | ✅ | `AssociativeRing` |
+| `Octonion<T>` | ✅ | ❌ | ❌ | ✅ | ❌ | `DivisionAlgebra` |
+| `Dual<T>` | ✅ | ✅ | ✅ | ✅ | ❌ | `Real`, `Scalar` |
+| `CausalTensor<T>` | ✅ | ✅ | ❌ | ✅ | ❌ | `AssociativeRing` |
 
 ---
 
@@ -214,12 +252,21 @@ pub trait AddMonoid: Add<Output = Self> + AddAssign + Zero + Clone {}
 An additive monoid where every element has an inverse.
 
 ```rust
-pub trait AddGroup: Add<Output = Self> + Sub<Output = Self> + Zero + Clone {}
+pub trait AddGroup:
+    Add<Output = Self> + Sub<Output = Self> + Neg<Output = Self> + Zero + Clone
+{
+}
 ```
 
 **Laws:**
 1. All `AddMonoid` laws
 2. **Inverse:** $a + (-a) = 0$
+
+> [!IMPORTANT]
+> `Neg` is load-bearing, and `Sub` alone will not do. `Sub` supplies an operation, not the inverse
+> axiom: a truncating implementation satisfies $a - a = 0$ while having no inverses at all. That is
+> how `u64` once satisfied `AddGroup` and made `T::zero() - x` return `18446744073709551615`. `Neg`
+> is exactly the property separating ℤ from ℕ.
 
 ---
 
@@ -228,11 +275,18 @@ An additive group where addition is commutative.
 
 ```rust
 pub trait AbelianGroup: AddGroup {}
+
+// Blanket, in `field_real.rs`.
+impl<T> AbelianGroup for T where T: Num + Neg<Output = T> + Clone {}
 ```
 
 **Laws:**
 1. All `AddGroup` laws
 2. **Commutativity:** $a + b = b + a$
+
+The `Neg` in the blanket keeps the unsigned types out, and with them out of `Ring`,
+`CommutativeRing`, and `Field`. `Complex<T>`, `Dual<T>`, `Quaternion<T>`, `Rational<T>`, and the
+tensor types carry their own impls, none of them via this blanket.
 
 ---
 
@@ -258,11 +312,26 @@ A multiplicative monoid where every element has an inverse.
 pub trait InvMonoid: MulMonoid + Div<Output = Self> + DivAssign {
     fn inverse(&self) -> Self;
 }
+
+// The blanket asks for `Invertible` on top of the supertrait bounds.
+impl<T> InvMonoid for T
+where
+    T: MulMonoid + Div<Output = Self> + DivAssign + One + Clone + Invertible,
+{
+    fn inverse(&self) -> Self {
+        T::one() / self.clone()
+    }
+}
 ```
 
 **Laws:**
 1. All `MulMonoid` laws
 2. **Inverse:** $a \cdot a^{-1} = 1$ for $a \neq 0$
+
+> [!IMPORTANT]
+> `Div` and `DivAssign` are not enough to reach `InvMonoid`. The blanket also demands
+> [`Invertible`](#marker-traits), the promise that `/` really inverts. `i64` has both operators and
+> is still not an `InvMonoid`, because `1 / 5 == 0`.
 
 > [!TIP]
 > For floating-point types, the inverse of zero returns `Infinity` per IEEE 754.
@@ -287,13 +356,62 @@ pub trait DivGroup: MulGroup {}
 
 ---
 
+### Semiring Structures
+
+A semiring is a ring with the additive inverses removed. It is the structure the natural numbers
+have and cannot exceed: `3 - 5` has no value in ℕ, so there is no `-a`, so the additive monoid never
+becomes a group. This branch of the tower never rejoins the ring branch.
+
+#### Semiring
+
+```rust
+pub trait Semiring:
+    Add<Output = Self> + Zero + Clone + MulMonoid + Distributive + Annihilating
+{
+}
+```
+
+**Laws:**
+1. **Commutative monoid under $+$:** associative, commutative, identity $0$ — and no inverses
+2. **Monoid under $\cdot$:** associative, identity $1$
+3. **Distributivity:** $a \cdot (b + c) = a \cdot b + a \cdot c$
+4. **Annihilation:** $0 \cdot a = a \cdot 0 = 0$
+
+> [!NOTE]
+> The additive side reads `Add + Zero + Clone` rather than `AddMonoid`, and the weakening is
+> deliberate. `AddMonoid` also demands `AddAssign<Self>`, which `Ring`'s own `AbelianGroup` bound
+> does not, so requiring it here would leave `Semiring` *stronger* than `Ring` on the additive side.
+> `CausalTensor` implements `AddAssign<T>` for a scalar right-hand side but never `AddAssign<Self>`,
+> and would then have satisfied `Ring` while failing `Semiring`.
+
+Every `Ring` is a `Semiring`, because these bounds are a strict subset of `Ring`'s. `Ring` is
+nevertheless not declared as `Ring: Semiring`; the blanket impls already give every ring the weaker
+bound, so re-rooting the supertrait would change nothing about membership.
+
+---
+
+#### CommutativeSemiring
+
+```rust
+pub trait CommutativeSemiring: Semiring + Commutative {}
+```
+
+**Additional Law:**
+- $a \cdot b = b \cdot a$
+
+Exactly the structure of ℕ, and the highest rung the unsigned integers reach. The step from here to
+`CommutativeRing` is `Neg`, which is why `assert_commutative_semiring::<u64>()` compiles and
+`assert_commutative_ring::<u64>()` does not.
+
+---
+
 ### Ring Structures
 
 #### Ring
 An abelian group under addition combined with a monoid under multiplication, satisfying distributivity.
 
 ```rust
-pub trait Ring: AbelianGroup + MulMonoid + Distributive {}
+pub trait Ring: AbelianGroup + MulMonoid + Distributive + Annihilating {}
 ```
 
 **Laws:**
@@ -301,6 +419,11 @@ pub trait Ring: AbelianGroup + MulMonoid + Distributive {}
 2. $(R, \cdot)$ is a `MulMonoid`
 3. $a \cdot (b + c) = a \cdot b + a \cdot c$ (left distributivity)
 4. $(a + b) \cdot c = a \cdot c + b \cdot c$ (right distributivity)
+5. $0 \cdot a = a \cdot 0 = 0$ (annihilation)
+
+> [!NOTE]
+> Annihilation is derivable in a ring, but it is still required as a marker so that `Ring` and
+> `Semiring` present the same surface and generic semiring code accepts ℤ and ℕ alike.
 
 ---
 
@@ -325,6 +448,44 @@ pub trait CommutativeRing: Ring + Commutative {}
 
 **Additional Law:**
 - $a \cdot b = b \cdot a$
+
+---
+
+#### EuclideanDomain
+A commutative ring carrying a Euclidean function, so that division with remainder — and therefore
+the Euclidean algorithm — is well defined. This is the rung at which exact integer arithmetic lives.
+
+```rust
+pub trait EuclideanDomain: CommutativeRing {
+    type EuclideanValue: Ord;
+
+    fn euclidean_fn(&self) -> Self::EuclideanValue;
+    fn div_euclid(&self, other: &Self) -> Self;
+    fn rem_euclid(&self, other: &Self) -> Self;
+    fn normalize(&self) -> Self;
+
+    // Provided, on top of the four above.
+    fn gcd(&self, other: &Self) -> Self;
+    fn lcm(&self, other: &Self) -> Self;
+}
+```
+
+**Laws:** there is a function $\varphi: R \setminus \{0\} \to \mathbb{N}$ such that for any
+$a, b \in R$ with $b \neq 0$ there exist $q, r$ with $a = b \cdot q + r$, and either $r = 0$ or
+$\varphi(r) < \varphi(b)$. For ℤ, $\varphi(n) = |n|$.
+
+Implementing it also promises the **integral domain** axioms, which the compiler cannot check:
+$1 \neq 0$, and no zero divisors ($a \cdot b = 0$ implies $a = 0$ or $b = 0$). The absence of zero
+divisors is what licenses cancellation, and therefore what makes exact elimination over the ring
+well defined.
+
+**Implemented for:** `i8`, `i16`, `i32`, `i64`, `i128`, `isize`.
+
+> [!NOTE]
+> The unsigned types are absent by construction, not by oversight: ℕ has no additive inverses, so it
+> is not an `AbelianGroup`, so it is not a `CommutativeRing` and cannot reach this trait at all. A
+> Euclidean domain is a *ring* first, and ℕ is only a semiring. `ℤ/6ℤ` is excluded for the other
+> reason — it is a commutative ring, but $2 \cdot 3 = 0$.
 
 ---
 
@@ -541,13 +702,22 @@ pub trait Rotation<T: RealField> {
 ## Type Examples
 
 The concrete number types implement these traits in their own crates: `Complex`, `Quaternion`, and `Octonion` live in
-`deep_causality_num_complex`; `Dual` lives in `deep_causality_num_dual`. The primitive integer traits (`Integer`,
-`SignedInt`, `UnsignedInt`) live in `deep_causality_num` and are not part of this algebraic hierarchy.
+`deep_causality_num_complex`; `Dual` lives in `deep_causality_num_dual`; `Rational` lives in `deep_causality_num_rational`.
+
+The primitive integers *are* part of this hierarchy — signed types reach `CommutativeRing` and
+`EuclideanDomain`, unsigned types reach `CommutativeSemiring`. What lives in `deep_causality_num`
+instead is the set-named vocabulary: `NaturalNumber` for ℕ, and `Integer` / `SignedInt` /
+`UnsignedInt` for the machine widths. Those traits state the *operations* of each set; the traits
+here state the *laws*. `NaturalNumber` carries the gcd for the unsigned types, because ℕ is not a
+ring and so cannot reach `EuclideanDomain`, where the signed gcd lives.
 
 | Type | Primary Traits |
 |------|----------------|
-| `f32`, `f64` | `RealField`, `Real`, `Scalar`, `Field`, `DivisionAlgebra<Self>` |
+| `f32`, `f64`, `Float106` | `RealField`, `Real`, `Scalar`, `Field`, `DivisionAlgebra<Self>` |
+| `i8`…`i128`, `isize` | `CommutativeRing`, `EuclideanDomain` (not a `Field`: `1 / 5` is `0`) |
+| `u8`…`u128`, `usize` | `CommutativeSemiring` (not a `Ring`: ℕ has no additive inverses) |
+| `Rational<T>` | `Field` (not a `Real`: there is no rational `sqrt(2)`) |
 | `Dual<T>` | `Real`, `Scalar` (a non-field: `ε` is a zero divisor) |
-| `Complex<T>` | `Field`, `DivisionAlgebra<T>`, `Rotation<T>` |
+| `Complex<T>` | `Field`, `ComplexField<T>`, `DivisionAlgebra<T>`, `Rotation<T>` |
 | `Quaternion<T>` | `AssociativeRing`, `DivisionAlgebra<T>`, `Rotation<T>` |
 | `Octonion<T>` | `DivisionAlgebra<T>` (non-associative) |

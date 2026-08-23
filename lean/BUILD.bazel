@@ -44,6 +44,7 @@ _NAMESPACES = {
     "Algebra": "DeepCausalityFormal/Algebra/Monoid.lean",
     "Complex": "DeepCausalityFormal/Complex/Complex.lean",
     "Dual": "DeepCausalityFormal/Dual/Dual.lean",
+    "Rational": "DeepCausalityFormal/Rational/Rational.lean",
     "Core": "DeepCausalityFormal/Core/CausalMonad.lean",
     "Haft": "DeepCausalityFormal/Haft/Hkt.lean",
     "Topology": "DeepCausalityFormal/Topology/RiemannCurvature.lean",

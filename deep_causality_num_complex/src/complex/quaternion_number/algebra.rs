@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AbelianGroup, Associative, Distributive, DivisionAlgebra, Quaternion, RealField};
+use crate::{
+    AbelianGroup, Annihilating, Associative, Distributive, DivisionAlgebra, Invertible, Quaternion,
+    RealField,
+};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
 // | **Quaternion** | ✅ | ✅ | ❌ | `AssociativeRing` |
@@ -11,8 +14,14 @@ use crate::{AbelianGroup, Associative, Distributive, DivisionAlgebra, Quaternion
 // Marker Traits
 impl<T: RealField> Associative for Quaternion<T> {}
 impl<T: RealField> Distributive for Quaternion<T> {}
+// Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
+// requires it and cannot derive it (see `Annihilating`).
+impl<T: RealField> Annihilating for Quaternion<T> {}
 
 impl<T: RealField> AbelianGroup for Quaternion<T> {}
+// ℍ is a division ring: every non-zero `q` has `q⁻¹ = q̄ / |q|²`. It is not `Commutative`, so it
+// is not a field, but `Div` does invert.
+impl<T: RealField> Invertible for Quaternion<T> {}
 
 impl<T: RealField> DivisionAlgebra<T> for Quaternion<T> {
     /// Returns the conjugate of the quaternion.
