@@ -90,6 +90,7 @@ pub mod module;
 pub mod monoid;
 pub mod monoid_generic;
 pub mod normed;
+pub mod operator;
 pub mod prob;
 pub mod real;
 pub mod ring;

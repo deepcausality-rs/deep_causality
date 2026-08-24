@@ -6,7 +6,8 @@
 //! Trait compliance tests for `DoubleFloat`.
 
 use deep_causality_algebra::{
-    AbelianGroup, Associative, Commutative, Distributive, DivisionAlgebra, Field, Real, RealField,
+    AbelianGroup, Additive, Associative, Commutative, Distributive, DivisionAlgebra, Field,
+    Multiplicative, Real, RealField,
 };
 use deep_causality_num::{Float, Float106, Num, NumCast, One, ToPrimitive, Zero};
 
@@ -155,13 +156,17 @@ fn test_numcast_from_i32() {
 // Marker Trait Tests
 // =============================================================================
 
-fn assert_associative<T: Associative>() {}
-fn assert_commutative<T: Commutative>() {}
+fn assert_associative<T: Associative<Multiplicative>>() {}
+fn assert_additive_associative<T: Associative<Additive>>() {}
+fn assert_additive_commutative<T: Commutative<Additive>>() {}
+fn assert_commutative<T: Commutative<Multiplicative>>() {}
 fn assert_distributive<T: Distributive>() {}
 
 #[test]
 fn test_associative_bound() {
     assert_associative::<Float106>();
+    assert_additive_associative::<Float106>();
+    assert_additive_commutative::<Float106>();
 }
 
 #[test]

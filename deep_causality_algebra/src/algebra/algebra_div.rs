@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::algebra::operator::{Additive, Multiplicative};
 use crate::{
     Algebra, Annihilating, Associative, Commutative, Distributive, Field, Float, Invertible,
 };
@@ -73,7 +74,14 @@ pub trait DivisionAlgebra<R: Field>: Algebra<R> {
 /// A new float type inherits this through `impl Float` plus the law markers.
 impl<T> DivisionAlgebra<T> for T
 where
-    T: Float + Commutative + Associative + Distributive + Annihilating + Invertible,
+    T: Float
+        + Commutative<Multiplicative>
+        + Commutative<Additive>
+        + Associative<Multiplicative>
+        + Associative<Additive>
+        + Distributive
+        + Annihilating
+        + Invertible,
 {
     #[inline]
     fn conjugate(&self) -> Self {

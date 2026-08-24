@@ -5,18 +5,24 @@
 
 use alloc::vec;
 use alloc::vec::Vec;
+use deep_causality_algebra::{Additive, Associative, Commutative, Multiplicative};
 
 use crate::CsrMatrix;
 use core::ops::Sub;
 use deep_causality_algebra::AbelianGroup;
 
 // AbelianGroup for CsrMatrix
-impl<T> AbelianGroup for CsrMatrix<T>
-where
-    T: AbelianGroup + Copy + core::ops::Neg<Output = T> + Default + PartialEq,
-{
-    // Marker trait, no methods needed here.
-}
+// Matrix addition is element-wise, so it associates and commutes exactly when the element
+// type does. These were previously unstatable: the only marker available promised
+// `a * b == b * a`, and `CsrMatrix`'s `Mul` is matrix multiplication, which does not
+// commute — so claiming any law meant claiming a false one.
+impl<T> Associative<Additive> for CsrMatrix<T> where T: Associative<Additive> + Copy {}
+impl<T> Commutative<Additive> for CsrMatrix<T> where T: Commutative<Additive> + Copy {}
+// Matrix multiplication IS associative, and that is now sayable without also claiming
+// that it commutes.
+impl<T> Associative<Multiplicative> for CsrMatrix<T> where T: Associative<Multiplicative> + Copy {}
+
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 
 impl<T> CsrMatrix<T>
 where

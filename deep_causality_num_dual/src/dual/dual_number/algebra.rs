@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AbelianGroup, Annihilating, Associative, Commutative, Distributive, Dual, Real};
+use crate::{Annihilating, Associative, Commutative, Distributive, Dual, Real};
+use deep_causality_algebra::{Additive, Multiplicative};
 
 // | Type | `Distributive` | `Associative` | `Commutative` | lands at |
 // | :--- | :---: | :---: | :---: | :--- |
@@ -10,13 +11,16 @@ use crate::{AbelianGroup, Annihilating, Associative, Commutative, Distributive, 
 
 // Marker traits — `T[ε]/(ε²)` is a quotient of the commutative ring `T[x]`, so it is
 // associative, commutative, and distributive.
-impl<T: Real> Associative for Dual<T> {}
-impl<T: Real> Commutative for Dual<T> {}
+impl<T: Real> Associative<Multiplicative> for Dual<T> {}
+// Componentwise addition, so the additive laws come straight from the scalar.
+impl<T: Real> Associative<Additive> for Dual<T> {}
+impl<T: Real> Commutative<Additive> for Dual<T> {}
+impl<T: Real> Commutative<Multiplicative> for Dual<T> {}
 impl<T: Real> Distributive for Dual<T> {}
 // Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
 // requires it and cannot derive it (see `Annihilating`).
 impl<T: Real> Annihilating for Dual<T> {}
-impl<T: Real> AbelianGroup for Dual<T> {}
+// Reached through the `AbelianGroup` blanket now that `Dual` carries the additive markers.
 
 // `Dual<T>` is a module over its scalar ring `T` (scalar multiplication by `T`) — provided
 // automatically by the blanket `Module` impl, since `Dual<T>` is an `AbelianGroup` with

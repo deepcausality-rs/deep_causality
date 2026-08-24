@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use core::ops::{Add, AddAssign, Mul};
+use core::ops::{Add, Mul};
 
 /// An Additive Magma.
 ///
@@ -13,10 +13,10 @@ use core::ops::{Add, AddAssign, Mul};
 ///
 /// It does NOT guarantee Associativity: (a + b) + c != a + (b + c).
 /// It does NOT guarantee Identity (Zero).
-pub trait AddMagma: Add<Output = Self> + AddAssign + Clone + PartialEq {}
+pub trait AddMagma: Add<Output = Self> + Clone {}
 
 // Blanket Implementation
-impl<T> AddMagma for T where T: Add<Output = Self> + AddAssign + Clone + PartialEq {}
+impl<T> AddMagma for T where T: Add<Output = Self> + Clone {}
 
 // A Magma is just a set with multiplication (No laws guaranteed).
 // Octonions live here.

@@ -8,8 +8,10 @@ This document is a reference for the algebraic trait hierarchy in `deep_causalit
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f4f4f4', 'primaryTextColor': '#333', 'lineColor': '#666' }}}%%
 graph TD
     subgraph Marker Traits
-        Assoc["Associative"]
-        Comm["Commutative"]
+        AssocA["Associative&lt;Additive&gt;"]
+        AssocM["Associative&lt;Multiplicative&gt;"]
+        CommA["Commutative&lt;Additive&gt;"]
+        CommM["Commutative&lt;Multiplicative&gt;"]
         Dist["Distributive"]
         Annih["Annihilating"]
         Inv["Invertible"]
@@ -70,13 +72,14 @@ graph TD
     %% Semigroup path
     AddMag --> AddSemi
     MulMag --> MulSemi
-    Assoc --> AddSemi
-    Assoc --> MulSemi
+    AssocA --> AddSemi
+    AssocM --> MulSemi
 
     %% Additive path
     AddSemi --> AddMon
     AddMon --> AddGrp
     AddGrp --> AbelGrp
+    CommA --> AbelGrp
 
     %% Multiplicative path
     MulSemi --> MulMon
@@ -90,7 +93,7 @@ graph TD
     Dist --> Semi
     Annih --> Semi
     Semi --> CommSemi
-    Comm --> CommSemi
+    CommM --> CommSemi
 
     %% Ring path
     AbelGrp --> Ring
@@ -98,9 +101,9 @@ graph TD
     Dist --> Ring
     Annih --> Ring
     Ring --> AssocRing
-    Assoc --> AssocRing
+    AssocM --> AssocRing
     Ring --> CommRing
-    Comm --> CommRing
+    CommM --> CommRing
     CommRing --> EuclidDom
 
     %% Field path
@@ -137,11 +140,42 @@ These marker traits encode fundamental algebraic properties. They have no method
 
 | Trait | Law | Formula |
 |-------|-----|---------|
-| **Associative** | Associativity | $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ |
-| **Commutative** | Commutativity | $a \cdot b = b \cdot a$ |
+| **Associative\<O\>** | Associativity | $(a \circ b) \circ c = a \circ (b \circ c)$ |
+| **Commutative\<O\>** | Commutativity | $a \circ b = b \circ a$ |
 | **Distributive** | Distributivity | $a \cdot (b + c) = a \cdot b + a \cdot c$ |
 | **Annihilating** | Annihilation | $0 \cdot a = a \cdot 0 = 0$ |
 | **Invertible** | Field division | $a \cdot a^{-1} = 1$ for $a \neq 0$ |
+
+#### Why two of them name an operation
+
+Associativity and commutativity are properties of a **single** operation, so the law is a statement
+about a *pair* — a set together with an operation. ℍ is the case that forces the distinction:
+quaternion addition commutes and quaternion multiplication does not, so "ℍ is commutative" is not a
+well-formed claim. Only "(ℍ, +) commutes" and "(ℍ, ×) does not" are.
+
+A flat marker cannot say which operation it means, and a type can implement a non-generic trait only
+once — so one `Commutative` has exactly one slot where ℍ needs two opposite answers. The operator
+parameter gives each law its operation:
+
+```rust
+pub trait Operator {}
+pub struct Additive;        // whatever `Add` does
+pub struct Multiplicative;  // whatever `Mul` does — the DEFAULT
+pub struct Combining;       // whatever `Monoid::combine` does
+```
+
+`Associative` and `Associative<Multiplicative>` are the same bound, because that is what the flat
+marker always meant: every law impl and six of the eight law bounds state the multiplicative case.
+
+`Combining` exists because `Monoid::combine` is neither addition nor multiplication and cannot be
+mapped onto either: `Prob::combine` multiplies, `Count::combine` adds, `Conjunction`/`Disjunction`
+are `∧` and `∨`. The operation is `combine`, whatever it wraps.
+
+**Distributivity takes no operator.** It *relates* the two operations rather than describing one, so
+"multiplication distributes over addition" is the entire statement — there is no additive variant.
+The two variants that do exist are **left** ($a(b+c) = ab+ac$) and **right** ($(b+c)a = ba+ca$),
+which differ only in non-commutative rings; no type here distinguishes them, and the marker promises
+both. `Annihilating` is likewise a two-operation law and takes no operator.
 
 None of the five is blanket-implemented. A blanket over `Num` or `Float` would hand the promise to
 any downstream type that happened to meet the structural bound, and a marker whose whole purpose is
@@ -159,17 +193,37 @@ Two of the five exist because the law they name does not follow from the others:
 
 **Implementation Guide:**
 
-| Type | Distributive | Associative | Commutative | Annihilating | Invertible | Highest structure |
-|------|:---:|:---:|:---:|:---:|:---:|-----------------|
-| `f32`, `f64`, `Float106` | ✅ | ✅ | ✅ | ✅ | ✅ | `RealField` |
-| `i8`…`i128`, `isize` | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeRing`, `EuclideanDomain` |
-| `u8`…`u128`, `usize` | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeSemiring` |
-| `Rational<T>` | ✅ | ✅ | ✅ | ✅ | ✅ | `Field` |
-| `Complex<T>` | ✅ | ✅ | ✅ | ✅ | ✅ | `Field` |
-| `Quaternion<T>` | ✅ | ✅ | ❌ | ✅ | ✅ | `AssociativeRing` |
-| `Octonion<T>` | ✅ | ❌ | ❌ | ✅ | ❌ | `DivisionAlgebra` |
-| `Dual<T>` | ✅ | ✅ | ✅ | ✅ | ❌ | `Real`, `Scalar` |
-| `CausalTensor<T>` | ✅ | ✅ | ❌ | ✅ | ❌ | `AssociativeRing` |
+The five number systems first, then the algebras and containers built over them. `Assoc⟨+⟩` is
+`Associative<Additive>`, `Comm⟨×⟩` is `Commutative<Multiplicative>`, and so on.
+
+| Set | Rust Type                | Assoc⟨+⟩ | Comm⟨+⟩ | Assoc⟨×⟩ | Comm⟨×⟩ | Distrib. | Annih. | Invert. | Highest structure |
+|:--:|--------------------------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|-----------------|
+| ℕ | `u8`…`u128`, `usize`     | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeSemiring` |
+| ℤ | `i8`…`i128`, `isize`     | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeRing`, `EuclideanDomain` |
+| ℚ | `Rational<T>`            | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `Field` |
+| ℝ | `f32`, `f64`, `Float106` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `RealField` |
+| ℂ | `Complex<T>`             | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `Field`, `ComplexField<T>` |
+| ℍ | `Quaternion<T>`          | ✅ | ✅ | ✅ | **❌** | ✅ | ✅ | ✅ | `AssociativeDivisionAlgebra` |
+| 𝕆 | `Octonion<T>`            | ✅ | ✅ | **❌** | **❌** | ✅ | ✅ | ❌ | `DivisionAlgebra` |
+| — | `Dual<T>` = ℝ[ε]         | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `Real`, `Scalar` |
+| — | `CausalTensor<T>`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeRing` |
+| — | `CausalTensorTrain<T>`   | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeRing` |
+| — | `CsrMatrix<T>`           | ✅ | ✅ | ✅ | **❌** | ✅ | ✅ | ❌ | `AbelianGroup` |
+
+Every entry above is conditioned on the element type where the container is generic: `CausalTensor<T>`
+promises a law exactly when `T` does.
+
+**The multiplicative column is the one that discriminates.** Every type in the table associates and
+commutes additively — abelian addition is what makes any of them a ring in the first place. The
+structure is decided by what happens under `×`: ℍ associates but does not commute, 𝕆 does neither,
+and `CsrMatrix` matches ℍ because its `Mul` is matrix multiplication.
+
+| Type | Operator | Assoc⟨∘⟩ | Comm⟨∘⟩ | Idempotent | `combine` is |
+|------|----------|:---:|:---:|:---:|--------------|
+| `Prob` | `Combining` | ✅ | ✅ | ❌ | $p \cdot q$ |
+| `Count` | `Combining` | ✅ | ✅ | ❌ | $m + n$ |
+| `Conjunction` | `Combining` | ✅ | ✅ | ✅ | $a \wedge b$ |
+| `Disjunction` | `Combining` | ✅ | ✅ | ✅ | $a \vee b$ |
 
 ---
 
@@ -210,12 +264,18 @@ Octonions implement `MulMagma` but not `MulMonoid` (non-associative multiplicati
 A set with an associative binary addition operation (no identity required).
 
 ```rust
-pub trait AddSemigroup: Add<Output = Self> + Associative + Clone {}
+pub trait AddSemigroup: Add<Output = Self> + Associative<Additive> + Clone {}
 ```
 
 **Laws:**
 1. **Closure:** $a + b \in S$
 2. **Associativity:** $(a + b) + c = a + (b + c)$
+
+> [!IMPORTANT]
+> This bound previously read `Associative`, which — before the marker took an operator — promised
+> $(a \cdot b) \cdot c = a \cdot (b \cdot c)$. An additive structure was asserting the
+> multiplicative law. Every type it admitted happens to satisfy both, so no wrong type was ever
+> admitted, but the bound named the wrong operation and nothing could detect it.
 
 ---
 
@@ -223,7 +283,7 @@ pub trait AddSemigroup: Add<Output = Self> + Associative + Clone {}
 A set with an associative binary multiplication operation (no identity required).
 
 ```rust
-pub trait MulSemigroup: Mul<Output = Self> + Associative + Clone {}
+pub trait MulSemigroup: Mul<Output = Self> + Associative<Multiplicative> + Clone {}
 ```
 
 **Hierarchy:**
@@ -296,7 +356,7 @@ tensor types carry their own impls, none of them via this blanket.
 A multiplicative magma with associativity and an identity element.
 
 ```rust
-pub trait MulMonoid: MulMagma + One + Associative {}
+pub trait MulMonoid: MulMagma + One + Associative<Multiplicative> {}
 ```
 
 **Laws:**
@@ -393,7 +453,7 @@ bound, so re-rooting the supertrait would change nothing about membership.
 #### CommutativeSemiring
 
 ```rust
-pub trait CommutativeSemiring: Semiring + Commutative {}
+pub trait CommutativeSemiring: Semiring + Commutative<Multiplicative> {}
 ```
 
 **Additional Law:**
@@ -431,7 +491,7 @@ pub trait Ring: AbelianGroup + MulMonoid + Distributive + Annihilating {}
 A ring where multiplication is explicitly marked as associative.
 
 ```rust
-pub trait AssociativeRing: Ring + Associative {}
+pub trait AssociativeRing: Ring + Associative<Multiplicative> {}
 ```
 
 > [!NOTE]
@@ -443,7 +503,7 @@ pub trait AssociativeRing: Ring + Associative {}
 A ring where multiplication is commutative.
 
 ```rust
-pub trait CommutativeRing: Ring + Commutative {}
+pub trait CommutativeRing: Ring + Commutative<Multiplicative> {}
 ```
 
 **Additional Law:**

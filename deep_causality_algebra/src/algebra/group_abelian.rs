@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::AddGroup;
+use crate::Commutative;
+use crate::algebra::operator::Additive;
 
 /// A marker trait for an **Abelian Group** (also known as a Commutative Group).
 ///
@@ -24,7 +26,7 @@ use crate::AddGroup;
 /// Its purpose is to signal at the type level that the commutativity law holds.
 /// The compiler cannot verify this law, so implementing this trait is a promise
 /// by the developer that the underlying type's addition operation is commutative.
-pub trait AbelianGroup: AddGroup {}
+pub trait AbelianGroup: AddGroup + Commutative<Additive> {}
 
 // The default impl for f32 and f64 is in the field_real file for coherence with the complex field trait hierarchy.
 //

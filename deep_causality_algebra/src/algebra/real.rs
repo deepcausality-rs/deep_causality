@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::algebra::operator::{Additive, Multiplicative};
 use crate::{Annihilating, Associative, Commutative, CommutativeRing, Distributive, Float};
 use core::cmp::PartialOrd;
 use core::ops::{AddAssign, MulAssign, Neg, SubAssign};
@@ -287,7 +288,16 @@ pub trait Real:
 // The law markers are named explicitly rather than inferred. They record promises the compiler
 // cannot check, so they are asserted per type (see `commutative.rs`) rather than granted by a
 // blanket over an unsealed trait; a new float type therefore states them alongside `impl Float`.
-impl<T: Float + Commutative + Associative + Distributive + Annihilating> Real for T {
+impl<T> Real for T
+where
+    T: Float
+        + Commutative<Multiplicative>
+        + Commutative<Additive>
+        + Associative<Multiplicative>
+        + Associative<Additive>
+        + Distributive
+        + Annihilating,
+{
     #[inline]
     fn nan() -> Self {
         Float::nan()

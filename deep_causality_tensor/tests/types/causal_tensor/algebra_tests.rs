@@ -150,7 +150,10 @@ fn commutativity_is_conditional_on_the_element_type() {
     // Multiplication is element-wise, so the tensor commutes exactly when its elements do. The
     // marker is therefore bounded on `T` rather than asserted flatly: a tensor of quaternions
     // must not inherit a law its elements do not have.
-    fn assert_commutative<T: deep_causality_algebra::Commutative>() {}
+    fn assert_commutative<
+        T: deep_causality_algebra::Commutative<deep_causality_algebra::Multiplicative>,
+    >() {
+    }
     fn assert_commutative_ring<T: deep_causality_algebra::CommutativeRing>() {}
 
     assert_commutative::<CausalTensor<f64>>();

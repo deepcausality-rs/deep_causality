@@ -14,7 +14,8 @@
 /// It explicitly states the algebraic properties of octonions, such as being
 /// a distributive and abelian group, and a division algebra, while correctly
 /// identifying their non-associative and non-commutative nature.
-use crate::{AbelianGroup, Annihilating, Distributive, DivisionAlgebra, Octonion, RealField};
+use crate::{Annihilating, Distributive, DivisionAlgebra, Octonion, RealField};
+use deep_causality_algebra::{Additive, Associative, Commutative};
 
 // Marker Traits
 /// Implements the `Distributive` marker trait for `Octonion`.
@@ -25,6 +26,9 @@ impl<T: RealField> Distributive for Octonion<T> {}
 // Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
 // requires it and cannot derive it (see `Annihilating`).
 impl<T: RealField> Annihilating for Octonion<T> {}
+// Componentwise addition, so the additive laws come straight from the scalar.
+impl<T: RealField> Associative<Additive> for Octonion<T> {}
+impl<T: RealField> Commutative<Additive> for Octonion<T> {}
 
 // DO NOT IMPLEMENT `Associative` as octonion multiplication is non-associative.
 // DO NOT IMPLEMENT `Commutative` as octonion multiplication is non-commutative.
@@ -34,8 +38,7 @@ impl<T: RealField> Annihilating for Octonion<T> {}
 ///
 /// This signifies that `Octonion`s form an abelian (commutative) group under addition.
 /// Addition is component-wise, ensuring commutativity and associativity.
-impl<T: RealField> AbelianGroup for Octonion<T> {}
-
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 // Octonions are a Division Algebra, but NOT associative.
 // The blanket impl for `Algebra<T>` will apply, since we can satisfy its
 // bounds: `Module<T> + Mul<...> + MulAssign + One + Distributive`.

@@ -31,12 +31,16 @@
 //! which is analytic without being a field.
 
 use super::{Rational, RationalScalar};
-use crate::{AbelianGroup, Annihilating, Associative, Commutative, Distributive, Invertible};
+use crate::{Annihilating, Associative, Commutative, Distributive, Invertible};
+use deep_causality_algebra::{Additive, Multiplicative};
 
-impl<T: RationalScalar> Commutative for Rational<T> {}
-impl<T: RationalScalar> Associative for Rational<T> {}
+impl<T: RationalScalar> Commutative<Multiplicative> for Rational<T> {}
+impl<T: RationalScalar> Associative<Multiplicative> for Rational<T> {}
+// Componentwise addition, so the additive laws come straight from the scalar.
+impl<T: RationalScalar> Associative<Additive> for Rational<T> {}
+impl<T: RationalScalar> Commutative<Additive> for Rational<T> {}
 impl<T: RationalScalar> Distributive for Rational<T> {}
-impl<T: RationalScalar> AbelianGroup for Rational<T> {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 // `0/1 · a/b = 0/b`, which reduces to `0/1`. In a ring this is a theorem, but `Semiring` takes it
 // as an axiom — the derivation needs an additive inverse — so it is stated rather than assumed.
 impl<T: RationalScalar> Annihilating for Rational<T> {}

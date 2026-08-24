@@ -21,9 +21,9 @@
 
 #![allow(dead_code)]
 
+use crate::algebra::operator::{Additive, Multiplicative};
 use crate::{
-    AbelianGroup, Annihilating, Associative, Commutative, Distributive, DivisionAlgebra,
-    Invertible, One, Zero,
+    Annihilating, Associative, Commutative, Distributive, DivisionAlgebra, Invertible, One, Zero,
 };
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -31,6 +31,11 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAss
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct FloatWrap(pub f64);
+
+// Wraps `f64`, so it inherits ℝ's additive laws; the additive markers are now required
+// by `AddSemigroup` and `AbelianGroup`.
+impl Associative<Additive> for FloatWrap {}
+impl Commutative<Additive> for FloatWrap {}
 
 impl Add for FloatWrap {
     type Output = Self;
@@ -126,13 +131,13 @@ impl One for FloatWrap {
     }
 }
 
-impl Associative for FloatWrap {}
-impl Commutative for FloatWrap {}
+impl Associative<Multiplicative> for FloatWrap {}
+impl Commutative<Multiplicative> for FloatWrap {}
 impl Distributive for FloatWrap {}
 impl Annihilating for FloatWrap {}
 impl Invertible for FloatWrap {}
 
-impl AbelianGroup for FloatWrap {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 
 // `InvMonoid` is blanket-implemented over types satisfying
 // `MulMonoid + Div + DivAssign + One + Clone`; FloatWrap qualifies, so no
@@ -182,6 +187,11 @@ impl crate::iso::DivisionAlgebraIso<f64, f64> for FloatWrap {}
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct BadFieldWrap(pub f64);
+
+// Wraps `f64`, so it inherits ℝ's additive laws; the additive markers are now required
+// by `AddSemigroup` and `AbelianGroup`.
+impl Associative<Additive> for BadFieldWrap {}
+impl Commutative<Additive> for BadFieldWrap {}
 
 impl Add for BadFieldWrap {
     type Output = Self;
@@ -276,13 +286,13 @@ impl One for BadFieldWrap {
     }
 }
 
-impl Associative for BadFieldWrap {}
-impl Commutative for BadFieldWrap {}
+impl Associative<Multiplicative> for BadFieldWrap {}
+impl Commutative<Multiplicative> for BadFieldWrap {}
 impl Distributive for BadFieldWrap {}
 impl Annihilating for BadFieldWrap {}
 impl Invertible for BadFieldWrap {}
 
-impl AbelianGroup for BadFieldWrap {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 
 // `InvMonoid` is blanket-implemented; see comment on FloatWrap above.
 

@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::algebra::operator::Multiplicative;
 
 use crate::Associative;
 use crate::Ring;
@@ -24,7 +25,7 @@ use crate::Ring;
 ///
 /// An associative ring is a `Ring` that satisfies the law:
 /// - `(a * b) * c = a * (b * c)` for all `a, b, c` in the ring.
-pub trait AssociativeRing: Ring + Associative {}
+pub trait AssociativeRing: Ring + Associative<Multiplicative> {}
 
 // Blanket Implementation for all types that implement Ring
-impl<T> AssociativeRing for T where T: Ring + Associative {}
+impl<T> AssociativeRing for T where T: Ring + Associative<Multiplicative> {}

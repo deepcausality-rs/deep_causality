@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::Zero;
-use core::ops::{Add, Neg, Sub};
+use crate::AddMonoid;
+use core::ops::{Neg, Sub};
 
 /// Represents an **Additive Group**.
 ///
@@ -35,10 +35,7 @@ use core::ops::{Add, Neg, Sub};
 ///
 /// `Neg` is exactly the property separating ℤ from ℕ, and it is the same bound
 /// [`AbelianGroup`](crate::AbelianGroup) uses for the same reason.
-pub trait AddGroup:
-    Add<Output = Self> + Sub<Output = Self> + Neg<Output = Self> + Zero + Clone
-{
-}
+pub trait AddGroup: AddMonoid + Sub<Output = Self> + Neg<Output = Self> {}
 
 // Blanket Implementation for all types that impl Add, Sub, Neg, and have zero
-impl<T> AddGroup for T where T: Add<Output = T> + Sub<Output = T> + Neg<Output = T> + Zero + Clone {}
+impl<T> AddGroup for T where T: AddMonoid + Sub<Output = T> + Neg<Output = T> {}

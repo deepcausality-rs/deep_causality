@@ -2,11 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::AddGroup;
+use crate::algebra::operator::{Additive, Multiplicative};
 use crate::{
     AbelianGroup, Annihilating, Associative, Commutative, Distributive, Field, Float, Invertible,
-    Num, Real,
+    Real,
 };
-use core::ops::Neg;
 
 /// An ordered `Field` that is also an analytic real scalar.
 ///
@@ -36,11 +37,18 @@ pub trait RealField: Real + Field {}
 // the tensor types: none of those implement `Num`. `AddGroup` alone would overlap them, and it
 // would not exclude the unsigned types either, since its inverse axiom rests on `Sub` merely
 // existing.
-impl<T> AbelianGroup for T where T: Num + Neg<Output = T> + Clone {}
+impl<T> AbelianGroup for T where T: AddGroup + Commutative<Additive> {}
 
 // Every `Float` that carries the law markers is a `RealField`. `Invertible` is what separates ℝ
 // from ℤ here: it promises that `/` really inverts, which integer division does not.
 impl<T> RealField for T where
-    T: Float + Commutative + Associative + Distributive + Annihilating + Invertible
+    T: Float
+        + Commutative<Multiplicative>
+        + Commutative<Additive>
+        + Associative<Multiplicative>
+        + Associative<Additive>
+        + Distributive
+        + Annihilating
+        + Invertible
 {
 }

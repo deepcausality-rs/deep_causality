@@ -4,19 +4,23 @@
  */
 
 use alloc::vec;
+use deep_causality_algebra::{Additive, Multiplicative};
 
 use crate::CausalTensor;
 use deep_causality_algebra::{Annihilating, Associative, Commutative, Distributive, Ring};
 
 // Implement Associative marker trait
-impl<T> Associative for CausalTensor<T> where T: Associative + Copy {}
+impl<T> Associative<Multiplicative> for CausalTensor<T> where T: Associative<Multiplicative> + Copy {}
 
 // Multiplication is element-wise — `broadcast_op(rhs, |a, b| Ok(a * b))` — so the tensor commutes
 // exactly when its elements do, and the marker is conditioned on `T` rather than asserted flatly.
 // Corresponding shapes multiply pairwise and broadcasting is symmetric in the two operands, so
 // nothing in the layout can reorder a product. This mirrors `CausalTensorTrain`, which carries the
 // same marker for the same reason.
-impl<T> Commutative for CausalTensor<T> where T: Commutative + Copy {}
+impl<T> Commutative<Multiplicative> for CausalTensor<T> where T: Commutative<Multiplicative> + Copy {}
+// Addition is element-wise too, so the additive laws also come from the element type.
+impl<T> Associative<Additive> for CausalTensor<T> where T: Associative<Additive> + Copy {}
+impl<T> Commutative<Additive> for CausalTensor<T> where T: Commutative<Additive> + Copy {}
 
 // Implement Distributive marker trait
 impl<T> Distributive for CausalTensor<T> where T: Distributive + Copy {}

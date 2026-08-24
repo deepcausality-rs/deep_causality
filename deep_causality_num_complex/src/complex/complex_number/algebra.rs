@@ -4,21 +4,25 @@
  */
 
 use crate::{
-    AbelianGroup, Annihilating, Associative, Commutative, Complex, ComplexField, Distributive,
-    DivisionAlgebra, Invertible, RealField,
+    Annihilating, Associative, Commutative, Complex, ComplexField, Distributive, DivisionAlgebra,
+    Invertible, RealField,
 };
+use deep_causality_algebra::{Additive, Multiplicative};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
 // | **Complex** | ✅ | ✅ | ✅ | `Field`  `ComplexField` |
 
 // Marker Traits
-impl<T: RealField> Associative for Complex<T> {}
-impl<T: RealField> Commutative for Complex<T> {}
+impl<T: RealField> Associative<Multiplicative> for Complex<T> {}
+// Componentwise addition, so the additive laws come straight from the scalar.
+impl<T: RealField> Associative<Additive> for Complex<T> {}
+impl<T: RealField> Commutative<Additive> for Complex<T> {}
+impl<T: RealField> Commutative<Multiplicative> for Complex<T> {}
 impl<T: RealField> Distributive for Complex<T> {}
 // Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
 // requires it and cannot derive it (see `Annihilating`).
 impl<T: RealField> Annihilating for Complex<T> {}
-impl<T: RealField> AbelianGroup for Complex<T> {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 // ℂ is a field: every non-zero `z` has `z⁻¹ = z̄ / |z|²`, so `Div` really does invert.
 impl<T: RealField> Invertible for Complex<T> {}
 

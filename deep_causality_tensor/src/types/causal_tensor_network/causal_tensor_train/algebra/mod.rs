@@ -16,8 +16,9 @@
 use crate::TensorTrain;
 use crate::types::causal_tensor_network::causal_tensor_train::{CausalTensorTrain, Identity};
 use core::ops::{Add, Mul, MulAssign, Neg, Sub};
+use deep_causality_algebra::{Additive, Multiplicative};
 use deep_causality_algebra::{
-    AbelianGroup, Annihilating, Associative, Commutative, ConjugateScalar, Distributive, Scalar,
+    Annihilating, Associative, Commutative, ConjugateScalar, Distributive, Scalar,
 };
 use deep_causality_num::{One, Zero};
 
@@ -173,10 +174,19 @@ where
 // Marker traits → AddGroup / AbelianGroup / Ring / Module derive by blanket impl
 // ============================================================================
 
-impl<T> Associative for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
-impl<T> Commutative for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+impl<T> Associative<Multiplicative> for CausalTensorTrain<T> where
+    T: Scalar + ConjugateScalar<Real = T>
+{
+}
+impl<T> Commutative<Multiplicative> for CausalTensorTrain<T> where
+    T: Scalar + ConjugateScalar<Real = T>
+{
+}
+// The Hadamard product and the sum are both element-wise, so both sets of laws hold.
+impl<T> Associative<Additive> for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+impl<T> Commutative<Additive> for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
 impl<T> Distributive for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
 // Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
 // requires it and cannot derive it (see `Annihilating`).
 impl<T> Annihilating for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
-impl<T> AbelianGroup for CausalTensorTrain<T> where T: Scalar + ConjugateScalar<Real = T> {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
