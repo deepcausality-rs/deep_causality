@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CommutativeRing;
+use crate::IntegralDomain;
 
 /// Represents a **Euclidean Domain**.
 ///
@@ -24,8 +24,8 @@ use crate::CommutativeRing;
 ///
 /// # What implementing this promises
 ///
-/// Beyond the division law above, this trait carries the **integral domain** axioms, which the
-/// compiler cannot check:
+/// The **integral domain** axioms come from the [`IntegralDomain`](crate::IntegralDomain)
+/// supertrait, which states them on the rung they belong to:
 ///
 /// - `1 ≠ 0`, and
 /// - there are no zero divisors: `a·b = 0` implies `a = 0` or `b = 0`.
@@ -50,7 +50,7 @@ use crate::CommutativeRing;
 ///   [`CommutativeRing`](crate::CommutativeRing) — it cannot reach this trait at all. A
 ///   Euclidean domain is a *ring* first, and `ℕ` is only a semiring.
 /// - `ℤ/6ℤ`, which is a commutative ring but has zero divisors.
-pub trait EuclideanDomain: CommutativeRing {
+pub trait EuclideanDomain: IntegralDomain {
     /// The Euclidean function's value type — a measure of "size", ordered so that the
     /// remainder can be shown to strictly decrease.
     ///

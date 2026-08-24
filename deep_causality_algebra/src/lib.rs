@@ -29,6 +29,7 @@ pub use crate::algebra::count::Count;
 pub use crate::algebra::disjunction::Disjunction;
 pub use crate::algebra::distributive::Distributive;
 pub use crate::algebra::domain_euclidean::EuclideanDomain;
+pub use crate::algebra::domain_integral::IntegralDomain;
 pub use crate::algebra::field::Field;
 pub use crate::algebra::field_complex::ComplexField;
 pub use crate::algebra::field_real::RealField;
@@ -49,7 +50,6 @@ pub use crate::algebra::operator::{Additive, Combining, Multiplicative, Operator
 pub use crate::algebra::prob::Prob;
 pub use crate::algebra::real::Real;
 pub use crate::algebra::ring::Ring;
-pub use crate::algebra::ring_associative::AssociativeRing;
 pub use crate::algebra::ring_commutative::CommutativeRing;
 pub use crate::algebra::rotation::Rotation;
 pub use crate::algebra::scalar::Scalar;

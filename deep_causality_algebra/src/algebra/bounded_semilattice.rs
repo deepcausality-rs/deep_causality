@@ -5,6 +5,7 @@
 
 //! A bounded semilattice: a commutative, idempotent monoid.
 
+use crate::algebra::operator::Combining;
 use crate::{CommutativeMonoid, Idempotent};
 
 /// A **bounded semilattice**: a [`CommutativeMonoid`] that is also [`Idempotent`] — associative,
@@ -12,4 +13,4 @@ use crate::{CommutativeMonoid, Idempotent};
 ///
 /// The boolean `AggregateLogic` reducers are exactly these: `All` is the bounded ∧-semilattice
 /// (identity `true`), `Any` the bounded ∨-semilattice (identity `false`).
-pub trait BoundedSemilattice: CommutativeMonoid + Idempotent {}
+pub trait BoundedSemilattice: CommutativeMonoid + Idempotent<Combining> {}

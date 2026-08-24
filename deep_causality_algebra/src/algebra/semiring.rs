@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Annihilating, Distributive, MulMonoid, Zero};
-use core::ops::Add;
+use crate::algebra::operator::Additive;
+use crate::{AddMonoid, Commutative};
+use crate::{Annihilating, Distributive, MulMonoid};
 
 /// Represents a **Semiring** in abstract algebra.
 ///
@@ -72,10 +73,10 @@ use core::ops::Add;
 /// ## Counter-examples
 /// - Any structure without a multiplicative identity, which is a *rig* rather than a semiring
 pub trait Semiring:
-    Add<Output = Self> + Zero + Clone + MulMonoid + Distributive + Annihilating
+    AddMonoid + Commutative<Additive> + MulMonoid + Distributive + Annihilating
 {
 }
 impl<T> Semiring for T where
-    T: Add<Output = T> + Zero + Clone + MulMonoid + Distributive + Annihilating
+    T: AddMonoid + Commutative<Additive> + MulMonoid + Distributive + Annihilating
 {
 }

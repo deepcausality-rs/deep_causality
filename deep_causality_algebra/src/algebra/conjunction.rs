@@ -30,5 +30,5 @@ impl Monoid for Conjunction {
 impl Associative<Combining> for Conjunction {}
 impl Commutative<Combining> for Conjunction {}
 impl CommutativeMonoid for Conjunction {}
-impl Idempotent for Conjunction {}
+impl Idempotent<Combining> for Conjunction {}
 impl BoundedSemilattice for Conjunction {}

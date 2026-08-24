@@ -30,5 +30,5 @@ impl Monoid for Disjunction {
 impl Associative<Combining> for Disjunction {}
 impl Commutative<Combining> for Disjunction {}
 impl CommutativeMonoid for Disjunction {}
-impl Idempotent for Disjunction {}
+impl Idempotent<Combining> for Disjunction {}
 impl BoundedSemilattice for Disjunction {}

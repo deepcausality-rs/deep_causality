@@ -44,8 +44,8 @@ graph TD
 
     subgraph Ring Structures
         Ring["Ring"]
-        AssocRing["AssociativeRing"]
         CommRing["CommutativeRing"]
+        IntDom["IntegralDomain"]
         EuclidDom["EuclideanDomain"]
     end
 
@@ -100,11 +100,10 @@ graph TD
     MulMon --> Ring
     Dist --> Ring
     Annih --> Ring
-    Ring --> AssocRing
-    AssocM --> AssocRing
     Ring --> CommRing
     CommM --> CommRing
-    CommRing --> EuclidDom
+    CommRing --> IntDom
+    IntDom --> EuclidDom
 
     %% Field path
     CommRing --> Real
@@ -120,7 +119,7 @@ graph TD
     Module --> Alg
     Dist --> Alg
     Alg --> AssocAlg
-    AssocRing --> AssocAlg
+    Ring --> AssocAlg
     Alg --> DivAlg
     DivAlg --> AssocDivAlg
     AssocAlg --> AssocDivAlg
@@ -487,18 +486,6 @@ pub trait Ring: AbelianGroup + MulMonoid + Distributive + Annihilating {}
 
 ---
 
-#### AssociativeRing
-A ring where multiplication is explicitly marked as associative.
-
-```rust
-pub trait AssociativeRing: Ring + Associative<Multiplicative> {}
-```
-
-> [!NOTE]
-> All `Ring` types in this crate are associative by construction (via `MulMonoid`).
-
----
-
 #### CommutativeRing
 A ring where multiplication is commutative.
 
@@ -511,12 +498,39 @@ pub trait CommutativeRing: Ring + Commutative<Multiplicative> {}
 
 ---
 
+#### IntegralDomain
+A non-trivial commutative ring with no zero divisors — the rung between `CommutativeRing` and
+`EuclideanDomain`.
+
+```rust
+pub trait IntegralDomain: CommutativeRing {}
+```
+
+**Laws** (both unverifiable promises, like the other markers):
+- **Non-triviality:** $1 \neq 0$
+- **No zero divisors:** $a \cdot b = 0 \implies a = 0 \lor b = 0$
+
+The absence of zero divisors is what licenses **cancellation**: $a \cdot b = a \cdot c$ with
+$a \neq 0$ gives $b = c$. That is the property exact elimination over a ring rests on, and it is
+what fraction-free (Bareiss) elimination needs — not a Euclidean valuation.
+
+**Implemented for:** `i8`…`isize`, `f32`, `f64`, `Float106`, `Complex<T>`, `Rational<T>`.
+
+> [!IMPORTANT]
+> `Dual<T>` is the case that makes this rung load-bearing. ℝ[ε] is a `CommutativeRing`, but
+> $\varepsilon \cdot \varepsilon = 0$ with $\varepsilon \neq 0$, so cancellation fails and it is
+> **not** an `IntegralDomain` — the same reason it is not a `Field`. `Quaternion<T>` is excluded
+> because an integral domain is commutative (ℍ is a division ring); the container types because
+> element-wise and matrix products both have zero divisors; ℕ because it is not a ring at all.
+
+---
+
 #### EuclideanDomain
-A commutative ring carrying a Euclidean function, so that division with remainder — and therefore
+An integral domain carrying a Euclidean function, so that division with remainder — and therefore
 the Euclidean algorithm — is well defined. This is the rung at which exact integer arithmetic lives.
 
 ```rust
-pub trait EuclideanDomain: CommutativeRing {
+pub trait EuclideanDomain: IntegralDomain {
     type EuclideanValue: Ord;
 
     fn euclidean_fn(&self) -> Self::EuclideanValue;
@@ -534,10 +548,8 @@ pub trait EuclideanDomain: CommutativeRing {
 $a, b \in R$ with $b \neq 0$ there exist $q, r$ with $a = b \cdot q + r$, and either $r = 0$ or
 $\varphi(r) < \varphi(b)$. For ℤ, $\varphi(n) = |n|$.
 
-Implementing it also promises the **integral domain** axioms, which the compiler cannot check:
-$1 \neq 0$, and no zero divisors ($a \cdot b = 0$ implies $a = 0$ or $b = 0$). The absence of zero
-divisors is what licenses cancellation, and therefore what makes exact elimination over the ring
-well defined.
+The integral-domain axioms come from the [`IntegralDomain`](#integraldomain) supertrait, which
+states them on the rung they belong to.
 
 **Implemented for:** `i8`, `i16`, `i32`, `i64`, `i128`, `isize`.
 
@@ -697,7 +709,7 @@ pub trait Algebra<R: Ring>: Module<R> + Mul<Output = Self> + MulAssign + One + D
 An algebra where multiplication is associative.
 
 ```rust
-pub trait AssociativeAlgebra<R: Ring>: Algebra<R> + AssociativeRing {}
+pub trait AssociativeAlgebra<R: Ring>: Algebra<R> + Ring {}
 ```
 
 **Examples:** Real, Complex, Quaternion algebras
@@ -779,5 +791,5 @@ ring and so cannot reach `EuclideanDomain`, where the signed gcd lives.
 | `Rational<T>` | `Field` (not a `Real`: there is no rational `sqrt(2)`) |
 | `Dual<T>` | `Real`, `Scalar` (a non-field: `ε` is a zero divisor) |
 | `Complex<T>` | `Field`, `ComplexField<T>`, `DivisionAlgebra<T>`, `Rotation<T>` |
-| `Quaternion<T>` | `AssociativeRing`, `DivisionAlgebra<T>`, `Rotation<T>` |
+| `Quaternion<T>` | `Ring`, `DivisionAlgebra<T>`, `Rotation<T>` (associative, not commutative) |
 | `Octonion<T>` | `DivisionAlgebra<T>` (non-associative) |
