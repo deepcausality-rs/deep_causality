@@ -28,25 +28,25 @@ the workspace is green, and no `Field` bound that halves can reach 𝔽₂.
 Exit condition: the crate compiles, every public item is reachable, every call panics as
 unimplemented.
 
-- [ ] 1.1 Create `deep_causality_linear` with `[lints] workspace = true`, `no_std` + `alloc` feature parity with `deep_causality_sparse`, dependencies on `deep_causality_num`, `deep_causality_algebra`, `deep_causality_haft` only, and dev-dependencies on `deep_causality_num_complex` and `deep_causality_num_rational` — the suite instantiates `Complex<f64>` for the Hermitian inner product and `Rational<i64>` for the unordered-field and rank-agreement scenarios
-- [ ] 1.2 Declare the access traits: read (`rows`, `cols`, `get` by value), row operations (`swap_rows`, `scale_row`, `axpy_rows`, overridable `pivot_in_column`), build (`zeros`, `set`, default `identity`)
-- [ ] 1.3 Declare the four containers — CSR, dense row-major, dense vector, bit-packed 𝔽₂ over a `NaturalNumber` word — with their constructors and accessors, bodies `todo!()`
-- [ ] 1.4 Declare the algorithm surface: `rref`, `rank`, `kernel_basis`, `image_basis`, `determinant`, `solve`, the LU factorisation as a reusable value, forward/backward substitution, the CG solvers, and the six decompositions
-- [ ] 1.5 Declare the vector surface: element access, scale, add, sub, dot, Hermitian inner product, outer product, slice round-trip, and matrix–vector for all three matrix representations
-- [ ] 1.6 Declare the norms: vector 1/2/∞, matrix 1/∞/Frobenius, each in exactly one place, bounded on `NormedScalar`
-- [ ] 1.7 Declare the integer surface: fraction-free determinant and exact rank over `EuclideanDomain`, plus the ring operations over `CommutativeRing`
-- [ ] 1.8 Band every declaration on the weakest tower trait that makes it correct — `CommutativeSemiring` / `CommutativeRing` / `IntegralDomain` / `EuclideanDomain` / `Field` / `DivisibleByIntegers` / `NormedScalar` / `RealField` — and document on each what property the bound supplies
-- [ ] 1.8a Bound nothing on an ad-hoc `core::ops` bundle. The code being moved does this throughout — `mat_mult_impl` takes `T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`, `transpose_impl` takes `T: Copy + Zero`, `vec_mult_impl` takes `T: Copy + Zero + Add + Mul` — and each is a semiring spelled longhand. Restate them as tower traits, keeping `Copy`/`Clone`/`Default` where the representation needs them
-- [ ] 1.8b Record every bound loosened from `Field` or `RealField` with the number set it newly admits, so phase 2 can write the test that instantiates it
-- [ ] 1.9 Confirm the crate declares no scalar trait, marker or newtype of its own
-- [ ] 1.10 Declare an HKT witness per container, matching the trait set `CsrMatrixWitness` implements (`HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Adjunction`)
-- [ ] 1.10a Declare the tower impls per container: each matrix reaches `Ring` via `AbelianGroup` + `MulMonoid` + `Distributive` + `Annihilating`, with `Associative<Multiplicative>` and deliberately without `Commutative<Multiplicative>`; the vector reaches `AbelianGroup` with the additive markers only
-- [ ] 1.10b Declare `Module<R>` for every container, the vector included — the tower's name for a vector space, and the bound that admits ℤ where `Field` would not
-- [ ] 1.10c Document at each impl site any tower trait a container stops short of, and why
-- [ ] 1.11 Declare the error types and the conversions among representations
-- [ ] 1.12 Add `BUILD.bazel`; confirm `cargo build` and `bazel build //deep_causality_linear/...` both succeed
-- [ ] 1.13 Confirm no algorithm exists yet: every public function body is `todo!()` or a trivial accessor
-- [ ] 1.14 Confirm the band assignment compiles as intended: `rref` over `i64` must FAIL to compile; `determinant` over `i64` must compile; matrix subtraction over `u64` must FAIL to compile; `rref` over `Gf2` must compile; any operation that halves must FAIL to compile over `Gf2`
+- [x] 1.1 Create `deep_causality_linear` with `[lints] workspace = true`, `no_std` + `alloc` feature parity with `deep_causality_sparse`, dependencies on `deep_causality_num`, `deep_causality_algebra`, `deep_causality_haft` only, and dev-dependencies on `deep_causality_num_complex` and `deep_causality_num_rational` — the suite instantiates `Complex<f64>` for the Hermitian inner product and `Rational<i64>` for the unordered-field and rank-agreement scenarios
+- [x] 1.2 Declare the access traits: read (`rows`, `cols`, `get` by value), row operations (`swap_rows`, `scale_row`, `axpy_rows`, overridable `pivot_in_column`), build (`zeros`, `set`, default `identity`)
+- [x] 1.3 Declare the four containers — CSR, dense row-major, dense vector, bit-packed 𝔽₂ over a `NaturalNumber` word — with their constructors and accessors, bodies `todo!()`
+- [x] 1.4 Declare the algorithm surface: `rref`, `rank`, `kernel_basis`, `image_basis`, `determinant`, `solve`, the LU factorisation as a reusable value, forward/backward substitution, the CG solvers, and the six decompositions
+- [x] 1.5 Declare the vector surface: element access, scale, add, sub, dot, Hermitian inner product, outer product, slice round-trip, and matrix–vector for all three matrix representations
+- [x] 1.6 Declare the norms: vector 1/2/∞, matrix 1/∞/Frobenius, each in exactly one place, bounded on `NormedScalar`
+- [x] 1.7 Declare the integer surface: fraction-free determinant and exact rank over `EuclideanDomain`, plus the ring operations over `CommutativeRing`
+- [x] 1.8 Band every declaration on the weakest tower trait that makes it correct — `CommutativeSemiring` / `CommutativeRing` / `IntegralDomain` / `EuclideanDomain` / `Field` / `DivisibleByIntegers` / `NormedScalar` / `RealField` — and document on each what property the bound supplies
+- [x] 1.8a Bound nothing on an ad-hoc `core::ops` bundle. The code being moved does this throughout — `mat_mult_impl` takes `T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`, `transpose_impl` takes `T: Copy + Zero`, `vec_mult_impl` takes `T: Copy + Zero + Add + Mul` — and each is a semiring spelled longhand. Restate them as tower traits, keeping `Copy`/`Clone`/`Default` where the representation needs them
+- [x] 1.8b Record every bound loosened from `Field` or `RealField` with the number set it newly admits, so phase 2 can write the test that instantiates it
+- [x] 1.9 Confirm the crate declares no scalar trait, marker or newtype of its own
+- [x] 1.10 Declare an HKT witness per container, matching the trait set `CsrMatrixWitness` implements (`HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Adjunction`)
+- [x] 1.10a Declare the tower impls per container: each matrix reaches `Ring` via `AbelianGroup` + `MulMonoid` + `Distributive` + `Annihilating`, with `Associative<Multiplicative>` and deliberately without `Commutative<Multiplicative>`; the vector reaches `AbelianGroup` with the additive markers only
+- [x] 1.10b Declare `Module<R>` for every container, the vector included — the tower's name for a vector space, and the bound that admits ℤ where `Field` would not
+- [x] 1.10c Document at each impl site any tower trait a container stops short of, and why
+- [x] 1.11 Declare the error types and the conversions among representations
+- [x] 1.12 Add `BUILD.bazel`; confirm `cargo build` and `bazel build //deep_causality_linear/...` both succeed
+- [x] 1.13 Confirm no algorithm exists yet: every public function body is `todo!()` or a trivial accessor
+- [x] 1.14 Confirm the band assignment compiles as intended: `rref` over `i64` must FAIL to compile; `determinant` over `i64` must compile; matrix subtraction over `u64` must FAIL to compile; `rref` over `Gf2` must compile; any operation that halves must FAIL to compile over `Gf2`
 
 ## 2. Write the full suite against the unimplemented API
 

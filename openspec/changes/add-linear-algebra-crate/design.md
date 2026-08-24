@@ -178,6 +178,47 @@ return shapes are unchanged, which makes this a patch-level change for tensor ra
 one. It also gives the 1,088 lines a home where a dense matrix type can use them without going
 through a rank-2 tensor.
 
+### The pivot rule splits by entry point, not by impl
+
+`linear-dense-algorithms` asks for two things that pull against each other. Elimination is "written
+once against a row-operation trait", and "a dense f64 matrix whose first candidate pivot is near zero
+is reduced" must select a larger-magnitude pivot below it — while `rref` over 𝔽₂ or `Rational<i64>`
+must run "requiring no ordering and no epsilon".
+
+So the same function, over the same representation, needs two pivot rules depending on the scalar.
+`DenseMatrix<T>` has one impl slot for `RowOps`, which is the mechanic that forced the algebra
+tower's law markers to be parameterised by their operator: ℍ needed two opposite answers about
+commutativity and a flat marker had one slot.
+
+Three ways out were considered.
+
+**A pivot-rule trait on the scalar** fails on coherence. A blanket `impl<T: NormedScalar> PivotRank
+for T` plus `impl PivotRank for Gf2` is E0119: the compiler cannot prove `Gf2: !NormedScalar`, this
+MSRV has no negative impls, and both types are foreign to this crate. Probed: `Complex<f64>` is a
+`NormedScalar` and `Rational<i64>` is not, so a blanket over `NormedScalar` covers the float and
+complex cases and leaves exactly the two exact fields that need the other rule.
+
+**A phantom type parameter on the matrix** — `DenseMatrix<T, P = ByMagnitude>` — works and is the
+direct analogue of `Associative<O>`. It was rejected on cost rather than correctness: the parameter
+appears in every signature, and the derives leak `P: Debug` bounds onto a `PhantomData` marker, which
+is the trap that made `IsoForward`/`IsoBackward` hand-write six impls earlier in this work.
+
+**Two entry points over one private generic core** is what the crate does. `RowOps::pivot_in_column`
+keeps a default that searches for the first non-zero — correct over any field, needing no order and
+no epsilon — and the bit-packed matrix overrides it to scan a word at a time rather than a bit at a
+time. The magnitude rule arrives as a second entry point bounded on `NormedScalar`, passing a
+different pivot selector to the same core.
+
+"Written once" is satisfied by the core, which names no representation, no scalar and no word width.
+What the two entry points differ in is a numerical decision, and they are numerically different
+algorithms: one is exact and the other is conditioned. Making that visible in the signature is the
+same discipline `linear-scalar-contract` applies to the three ranks.
+
+The cost is recorded: `solve`, `lu` and the pivoted `determinant` are unavailable over `Rational<i64>`
+and over a dense 𝔽₂ matrix, because neither is a `NormedScalar`. No spec scenario needs them there —
+ℚ appears only in `rref` and rank — and the exact-pivot core is already generic, so adding an exact
+`solve` later is an entry point rather than a redesign.
+
 ### Sparse implements the read side only
 
 The prototype records the constraint in `tensor_impl/src/lib.rs`: `swap_rows` is fine on CSR,
