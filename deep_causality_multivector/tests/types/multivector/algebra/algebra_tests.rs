@@ -281,7 +281,7 @@ fn test_geometric_product_complex_case() {
 
 // ============================================================================
 // Tier 4: The Generalized Algebra (Non-Commutative Coefficients) - using Complex<f64>
-// Requirements: AssociativeRing (No Commutativity guaranteed)
+// Requirements: Ring (associative via MulMonoid; no commutativity guaranteed)
 // ============================================================================
 
 #[test]

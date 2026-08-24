@@ -38,7 +38,7 @@ version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"

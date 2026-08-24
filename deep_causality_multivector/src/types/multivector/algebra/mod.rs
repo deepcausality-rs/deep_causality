@@ -8,7 +8,7 @@
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
 use alloc::vec;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealField, Ring};
+use deep_causality_algebra::{AbelianGroup, Field, Module, RealField, Ring};
 
 // Algebraic Composition
 //
@@ -18,14 +18,14 @@ use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealF
 //     *   **Result:** Standard Quantum Mechanics (Spin(10)) works.
 //
 // 2.  **Quaternions (`Quaternion<f64>`):**
-//     *   **Implements:** `AssociativeRing` + `Copy`.
+//     *   **Implements:** `Ring` + `Copy`.
 //     *   **Does NOT Implement:** `Field` (Non-commutative).
 //     *   **Path:** Uses **Tier 4**. `geometric_product_general` works correctly.
 //     *   **Result:** Dixon Algebra nesting works. The non-commutative multiplication `q1 * q2` inside the geometric product loop is preserved.
 //
 // 3.  **Octonions (`Octonion<f64>`):**
 //     *   **Implements:** `AbelianGroup` + `Copy`.
-//     *   **Does NOT Implement:** `AssociativeRing` (Non-associative).
+//     *   **Does NOT Implement:** `Ring` (non-associative; it is an `Algebra`).
 //     *   **Path:** Uses **Tier 1**. `add`, `sub` work.
 //     *   **Safety:** `geometric_product` is **Compile-Time Blocked**.
 //
@@ -33,7 +33,7 @@ use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealF
 // This is correct behavior.
 //
 // 4.  **Tensors (`CausalTensor<T>`):**
-//     *   **Path:** `CausalMultiVector<f64>` implements `AssociativeRing` (via Tier 3/4).
+//     *   **Path:** `CausalMultiVector<f64>` implements `Ring` (via Tier 3/4).
 //     *   **Result:** `CausalTensor` accepts `CausalMultiVector`. You can do `tensor_a * tensor_b` where elements are MultiVectors.
 //
 
@@ -115,13 +115,13 @@ impl<T> CausalMultiVector<T> {
 
 // ============================================================================
 // TIER 4: The Generalized Algebra (Non-Commutative Coefficients)
-// Requirements: AssociativeRing (No Commutativity guaranteed)
+// Requirements: Ring (associative via MulMonoid; no commutativity guaranteed)
 // Use Case: Dixon Algebra (Nesting), Tensor<MultiVector>
 // ============================================================================
 
 impl<T> CausalMultiVector<T>
 where
-    T: AssociativeRing + Copy,
+    T: Ring + Copy,
 {
     /// Generalized Geometric Product.
     ///

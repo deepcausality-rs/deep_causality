@@ -9,7 +9,7 @@ use crate::{
 use deep_causality_algebra::{Additive, Commutative, Multiplicative};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
-// | **Quaternion** | ✅ | ✅ | ❌ | `AssociativeRing` |
+// | **Quaternion** | ✅ | ✅ | ❌ | `Ring` (associative, not commutative) |
 
 // Marker Traits
 impl<T: RealField> Associative<Multiplicative> for Quaternion<T> {}

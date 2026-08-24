@@ -7,6 +7,7 @@ use crate::{
     Annihilating, Associative, Commutative, Complex, ComplexField, Distributive, DivisionAlgebra,
     Invertible, RealField,
 };
+use deep_causality_algebra::IntegralDomain;
 use deep_causality_algebra::{Additive, Multiplicative};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
@@ -26,7 +27,7 @@ impl<T: RealField> Annihilating for Complex<T> {}
 // ℂ is a field: every non-zero `z` has `z⁻¹ = z̄ / |z|²`, so `Div` really does invert.
 impl<T: RealField> Invertible for Complex<T> {}
 
-// The blanket impls for AssociativeRing, Field, and AssociativeDivisionAlgebra
+// The blanket impls for Ring, Field, and AssociativeDivisionAlgebra
 // will apply automatically as Complex<T> now satisfies their super-traits.
 
 // Implement all methods for DivisionAlgebra, delegating to inherent methods.
@@ -101,3 +102,6 @@ impl<T: RealField> ComplexField<T> for Complex<T> {
         self.re.is_zero()
     }
 }
+
+// ℂ is a field, so it has no zero divisors.
+impl<T: RealField> IntegralDomain for Complex<T> {}

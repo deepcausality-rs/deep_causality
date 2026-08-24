@@ -26,7 +26,7 @@ impl<T: Real> Annihilating for Dual<T> {}
 // automatically by the blanket `Module` impl, since `Dual<T>` is an `AbelianGroup` with
 // `Mul<T>`/`MulAssign<T>`.
 //
-// The blanket impls for `Ring`, `AssociativeRing`, and `CommutativeRing` apply
+// The blanket impls for `Ring` and `CommutativeRing` apply
 // automatically now that `Dual<T>` satisfies their super-traits (AbelianGroup +
 // MulMonoid + the markers).
 //

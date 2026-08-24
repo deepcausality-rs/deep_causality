@@ -48,7 +48,7 @@ default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.3"
+version = "0.4"
 default-features = false
 
 [dependencies.deep_causality_num_dual]

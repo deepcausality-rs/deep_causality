@@ -533,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algebra"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "deep_causality_num",
 ]
@@ -687,7 +687,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num_complex"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_num",
@@ -695,7 +695,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num_dual"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_num",
@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num_rational"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_num",
@@ -760,7 +760,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_sparse"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -772,7 +772,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_tensor"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "criterion",
  "deep_causality_algebra",

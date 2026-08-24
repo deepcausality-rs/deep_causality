@@ -32,6 +32,7 @@
 
 use super::{Rational, RationalScalar};
 use crate::{Annihilating, Associative, Commutative, Distributive, Invertible};
+use deep_causality_algebra::IntegralDomain;
 use deep_causality_algebra::{Additive, Multiplicative};
 
 impl<T: RationalScalar> Commutative<Multiplicative> for Rational<T> {}
@@ -45,3 +46,6 @@ impl<T: RationalScalar> Distributive for Rational<T> {}
 // as an axiom — the derivation needs an additive inverse — so it is stated rather than assumed.
 impl<T: RationalScalar> Annihilating for Rational<T> {}
 impl<T: RationalScalar> Invertible for Rational<T> {}
+
+// ℚ is a field, so it has no zero divisors: `a·b = 0` with `a ≠ 0` gives `b = a⁻¹·a·b = 0`.
+impl<T: RationalScalar> IntegralDomain for Rational<T> {}
