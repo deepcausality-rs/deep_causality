@@ -110,3 +110,49 @@ what was proposed at the time; rewriting them would falsify the record.
 #### Scenario: Archived proposals are untouched
 - **WHEN** `openspec/changes/archive/` is inspected after the migration
 - **THEN** its references to the retired crate are unchanged
+
+### Requirement: The duplicated linear algebra in `deep_causality_multivector` is marked for replacement
+Every operation in `deep_causality_multivector` that duplicates one this crate provides SHALL be recorded with its successor, and each SHALL either be routed through `deep_causality_linear` or carry a written reason for staying.
+
+The impact research surveyed six crates and reached multivector only through the shape census, which
+counts what a crate *constructs* rather than what it *defines*. That missed a norm, a matmul and a
+magnitude. Recording them here keeps the successor attached to each, so that "norms are defined in
+exactly one place" is a checkable claim rather than an aspiration that stopped at the crates anyone
+looked in.
+
+| duplicate | successor | disposition |
+|---|---|---|
+| `MultiVectorL2Norm::norm_l2` / `normalize_l2` (`traits/l2_norm.rs:21,30`, impl `multivector/api/mod.rs:117`) | the vector 2-norm from `linear-vector` | route through it |
+| `CausalMultiField::squared_magnitude` (`multifield/algebra/mod.rs`) — a hand-written `Σ x·x` over the tensor's slice | the vector squared 2-norm | route through it |
+| `BatchedMatMul` (`multifield/ops/batched_matmul.rs`, 62 lines) | none — it batches rank-3 slices and belongs to the tensor surface | decide explicitly, and record the decision |
+
+`ScalarEval` (`traits/scalar_eval.rs`) is **not** a duplicate and is not marked. It has the same
+three members as `deep_causality_algebra::Normed`, but `extensions/scalar_eval/mod.rs` is a single
+blanket delegating to it, existing only to add the `Sum` bound. It is a facade over the tower, which
+is the arrangement this requirement wants everywhere else.
+
+`squared_magnitude` is the one whose duplication is not merely tidiness. It sums `*val * *val` over
+the raw slice, which is the squared modulus only for a real scalar; the tower's `modulus_squared`
+is the operation that stays correct when the scalar is complex. The bound on the impl is
+`T: Field + RealField`, so it is not wrong today — it is a second definition that is correct only
+because of a bound that a later widening would remove silently.
+
+#### Scenario: Each duplicate names its successor
+- **WHEN** the table above is checked against `deep_causality_multivector`
+- **THEN** each entry is either routed through `deep_causality_linear` or carries a written reason for staying
+
+#### Scenario: The norm is defined once
+- **WHEN** the workspace is searched for a definition of the Euclidean norm after migration
+- **THEN** the definitions that remain are `deep_causality_linear`'s and any that documents why it differs
+
+#### Scenario: The multivector results are unchanged
+- **WHEN** the `deep_causality_multivector` suite runs after the routing
+- **THEN** every value it reported before is reported again
+
+#### Scenario: The batched matmul decision is recorded
+- **WHEN** `BatchedMatMul` is inspected after this change
+- **THEN** it either calls into `deep_causality_linear` or documents why a batched rank-3 operation stays on the tensor surface
+
+#### Scenario: The census is corrected
+- **WHEN** the construction census in `openspec/notes/linear/deep-causality-linear.md` is re-read
+- **THEN** the `deep_causality_multivector` row reflects the 13 `CausalTensor` constructions in its `src`, not zero

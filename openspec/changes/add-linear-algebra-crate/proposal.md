@@ -52,6 +52,29 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   product, and the vector and matrix norms defined once.
 - Give every container a `deep_causality_haft` witness matching the existing ones, so the new types
   compose with `CausalTensor` and the other mathematical crates rather than stopping the pipeline.
+- Give every container its **tower** impls too, not only the HKT witness. A witness makes a container
+  composable through `deep_causality_haft`; it does not make it composable through the tower, and a
+  function bounded on `Ring` or `Module` cannot take a container that never declares them. The crate
+  inherits an unfinished case: `CsrMatrix<f64>` reaches `AbelianGroup` and stops, because
+  `Distributive` and `Annihilating` are missing, which also puts `Module<S>` out of reach even though
+  `arithmetic/mod.rs:283` already implements the scaling. The vector is a `Module<R>` — the tower's
+  name for a vector space, and the general notion that admits ℤ where `Field` would not.
+- **Add 𝔽₂ to the tower.** The packed representation needs an element type; the crate is forbidden
+  from defining a scalar; the tower had none. `Gf2` moves into `deep_causality_num` alongside every
+  other primitive, with its law markers in `deep_causality_algebra`. Packing decides the storage, not
+  the element — the prototype packs bits and still names `type Scalar = Gf2`.
+- **Separate fields by characteristic, not by finiteness.** `Field` is blanket-implemented, so
+  admitting 𝔽₂ widens every `T: Field` bound in the workspace at once. Sixteen sites compute
+  `T::one() + T::one()` as two; twelve are bounded on `RealField` and safe; **four sit under a
+  `Field` bound**, including `commutator_geometric`, whose `one / (one + one)` is a division by zero
+  over 𝔽₂. Finiteness is the wrong guard — 𝔽₃ is finite and halves, 𝔽₄ is finite and does not, 𝔽ₚ(x)
+  is infinite and does not — so the tower gains `CharacteristicZero` and `FiniteField`, disjoint by
+  definition but not a partition, and the four sites are rebounded.
+- **Sweep the bounds down.** Integer admission is what bounding each operation at its lowest correct
+  level yields, not a feature beside the field work. The code being moved bounds on ad-hoc operator
+  bundles — `mat_mult_impl` takes `T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`,
+  a semiring spelled longhand — and each becomes a tower trait. Every bound loosened off `Field`
+  names the number set it newly admits and is instantiated at it.
 - Build the crate **test-first**: declare the whole public API with `todo!()` bodies, write the
   complete suite against it, observe every test fail for the right reason, prove the suite rejects
   each known defect class, then implement, then migrate consumers. No consumer is repointed until the
@@ -98,8 +121,15 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   substitution, and solving preferred over inverting.
 - `linear-hkt-composition`: an HKT witness per container, the laws tested, and composition with the
   neighbouring mathematical crates preserved.
+- `linear-tower-integration`: every container implementing the tower traits its structure supports,
+  the vector as a `Module<R>`, law markers that name their operator, bounds that state algebraic
+  structure rather than operator bundles, and the lowering sweep with each admission instantiated.
+- `num-finite-field`: 𝔽₂ as a tower scalar owned by `deep_causality_num`, the characteristic-based
+  separation of fields, the `CharacteristicZero` bound on everything that divides by an integer, and
+  the rungs 𝔽₂ deliberately does not reach.
 - `linear-consumer-migration`: the retirement of `deep_causality_sparse`, the type identity a
-  re-export preserves, and what the two build systems and the documentation must agree on.
+  re-export preserves, the duplicated linear algebra in `deep_causality_multivector` marked with its
+  successor, and what the two build systems and the documentation must agree on.
 - `linear-test-first-development`: the crate is built test-first — API declared with unimplemented
   bodies, the full suite written and observed failing against it, the suite verified against
   deliberate defects, then implementation, and only then downstream migration.
@@ -131,6 +161,13 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   unchanged.
 - **`deep_causality_topology`**: the largest consumer — 61 import sites across 73 files (282 `CsrMatrix` mentions). Five
   duplicated helpers are replaced and `betti_number` changes from f64 SVD to exact 𝔽₂ rank.
+- **`deep_causality_num`**: gains `Gf2`, the tower's first finite field.
+- **`deep_causality_algebra`**: gains `Characteristic`, `CharacteristicZero` and `FiniteField`, and
+  the law-marker impls for `Gf2`. Both crates take a version bump before phase 1 begins.
+- **`deep_causality_multivector`**: four sites rebounded on `CharacteristicZero`, and three
+  duplicates marked — `MultiVectorL2Norm::norm_l2` and `CausalMultiField::squared_magnitude` routed
+  through the shared norm, `BatchedMatMul` decided explicitly. `ScalarEval` is left alone: it is
+  already a facade over `Normed` rather than a second definition.
 - **`deep_causality_physics`**, **`examples/mathematics_examples`**, **`examples/physics_examples`**:
   import paths follow.
 - **Build**: 35 Bazel label references across 8 `BUILD.bazel` files. `deep_causality_cfd/BUILD.bazel:30`

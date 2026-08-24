@@ -4,12 +4,22 @@
 `deep_causality_linear` SHALL bound every operation on a trait already published by `deep_causality_algebra` or `deep_causality_num`, and SHALL NOT define a scalar trait, a numeric marker, or a scalar newtype.
 
 The tower already carries the whole scalar layer: `CommutativeSemiring`
-(`algebra/semiring_commutative.rs:34`), `CommutativeRing` (`ring_commutative.rs:30`),
-`EuclideanDomain` (`domain_euclidean.rs:53`), `Field` (`field.rs:38`), `RealField`
-(`field_real.rs:24`), `Normed` (`normed.rs:16`), `NormedScalar` (`scalar_normed.rs:24`),
-`ConjugateScalar` (`scalar_conjugate.rs:33`), `Scalar` (`scalar.rs:29`) and `NaturalNumber`
-(`num/integer/natural.rs:58`). A linear-algebra crate that introduced its own would fork the
-hierarchy the `deep_causality_num` split built, and would reintroduce that split's coherence traps.
+(`algebra/semiring_commutative.rs:35`), `CommutativeRing` (`ring_commutative.rs:31`),
+`IntegralDomain` (`domain_integral.rs:55`), `EuclideanDomain` (`domain_euclidean.rs:53`), `Field`
+(`field.rs:38`), `RealField` (`field_real.rs:25`), `Normed` (`normed.rs:16`), `NormedScalar`
+(`scalar_normed.rs:24`), `ConjugateScalar` (`scalar_conjugate.rs:33`), `Scalar` (`scalar.rs:29`) and
+`NaturalNumber` (`num/integer/natural.rs:58`). A linear-algebra crate that introduced its own would
+fork the hierarchy the `deep_causality_num` split built, and would reintroduce that split's
+coherence traps.
+
+The one scalar the tower did not carry is 𝔽₂, and the packed representation needs it as an element
+type. That is resolved by the tower gaining it rather than by this crate defining it:
+`num-finite-field` puts `Gf2` in `deep_causality_num` alongside every other primitive. The rule here
+is therefore unconditional — there is no scalar this crate has to invent.
+
+#### Scenario: The packed representation names a tower scalar
+- **WHEN** the element type of the bit-packed 𝔽₂ matrix is inspected
+- **THEN** it is `Gf2` from `deep_causality_num`, not a type declared in this crate
 
 #### Scenario: No new scalar abstraction appears
 - **WHEN** the crate's public surface is enumerated
@@ -31,21 +41,37 @@ its pivot and therefore leaves ℤ.
 The bands, which are a tree rather than a chain:
 
 ```
-CommutativeSemiring ......... ℕ
-  └─ CommutativeRing ........ ℤ, 𝔽₂, ℚ, ℝ, ℂ
-       ├─ Field ............. 𝔽₂, ℚ, ℝ, ℂ          — not ℤ
-       │    └─ NormedScalar / RealField ... ℝ, ℂ, `Float106`
-       └─ EuclideanDomain ... ℤ                     — not 𝔽₂, ℚ, ℝ, ℂ
+CommutativeSemiring ............. ℕ
+  └─ CommutativeRing ............ ℤ, 𝔽₂, ℚ, ℝ, ℂ
+       └─ IntegralDomain ........ ℤ, 𝔽₂, ℚ, ℝ, ℂ    — not ℝ[ε]
+            ├─ Field ............ 𝔽₂, ℚ, ℝ, ℂ       — not ℤ
+            │    ├─ CharacteristicZero ... ℚ, ℝ, ℂ   — not 𝔽₂
+            │    │    └─ NormedScalar / RealField ... ℝ, ℂ, `Float106`
+            │    └─ FiniteField ......... 𝔽₂          — not ℚ, ℝ, ℂ
+            └─ EuclideanDomain .. ℤ                  — not 𝔽₂, ℚ, ℝ, ℂ
 ```
 
 | band | tower bound | what it admits | operations |
 |---|---|---|---|
 | semiring | `CommutativeSemiring` | ℕ | add, scale, matmul, matrix–vector, dot, transpose, trace |
 | ring | `CommutativeRing` | ℤ, 𝔽₂, ℚ, ℝ, ℂ | the above, plus subtract, negate, **determinant** |
+| integral domain | `IntegralDomain` | ℤ, 𝔽₂, ℚ, ℝ, ℂ | the above, plus anything resting on cancellation |
 | Euclidean domain | `EuclideanDomain` | ℤ | fraction-free determinant and exact rank — see `linear-integer-algebra` |
 | field | `Field` | 𝔽₂, ℚ, ℝ, ℂ | rref, rank, kernel basis, image basis, inverse, solve |
+| characteristic zero | `CharacteristicZero` | ℚ, ℝ, ℂ | anything dividing by an integer — see `num-finite-field` |
 | normed field | `NormedScalar` | ℝ, ℂ, `Float106` | norms, and pivot selection by magnitude |
 | real field | `RealField` | ℝ, `Float106` | SVD, QR, eigendecomposition, Cholesky, conjugate gradient |
+
+`IntegralDomain` is the rung that makes the integer path's exactness a stated promise rather than an
+assumption. Bareiss elimination is correct because cancellation holds, and cancellation holds because
+there are no zero divisors — not because a Euclidean valuation exists. `EuclideanDomain` now sits
+above it, so the bound `linear-integer-algebra` uses carries the promise its algorithm rests on,
+which it did not when `EuclideanDomain: CommutativeRing`.
+
+`CharacteristicZero` is the rung that keeps 𝔽₂ out of a body that halves. It is not a convenience:
+`Field` is blanket-implemented, so admitting 𝔽₂ to the tower widens every `T: Field` bound in the
+workspace at once, and four of them divide by `one + one`. `num-finite-field` carries the reasoning
+and the measurement.
 
 **`Field` and `EuclideanDomain` are disjoint sets of concrete types in this tower**, even though
 mathematically every field is a Euclidean domain. `EuclideanDomain` is implemented for the six signed
@@ -91,6 +117,18 @@ are both unavailable over it. That is not a limitation to work around; `3u64 - 5
 #### Scenario: Subtraction does not admit the naturals
 - **WHEN** matrix subtraction is attempted over `u64`
 - **THEN** it fails to compile
+
+#### Scenario: The integer path's exactness is a stated promise
+- **WHEN** the bound on the fraction-free determinant is traced upward
+- **THEN** it reaches `IntegralDomain`, and the absence of zero divisors is what the exact divisions rest on
+
+#### Scenario: An operation that halves does not admit 𝔽₂
+- **WHEN** an operation that divides by two is attempted over `Gf2`
+- **THEN** it fails to compile, because `Gf2` is not `CharacteristicZero`
+
+#### Scenario: Elimination admits 𝔽₂ because it never halves
+- **WHEN** `rref` is called over `Gf2`
+- **THEN** it compiles, because elimination divides only by pivots and every non-zero element of 𝔽₂ is its own inverse
 
 #### Scenario: An over-bound is a defect
 - **WHEN** an operation's bound is stronger than its body needs

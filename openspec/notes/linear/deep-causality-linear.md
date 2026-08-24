@@ -5,7 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # `deep_causality_linear` — impact research
 
-Status as of 2026-08-23. This note records the measurements taken before proposing a linear-algebra
+Status as of 2026-08-24. This note records the measurements taken before proposing a linear-algebra
 crate: where linear algebra lives in the workspace today, what is duplicated, what is wrong, what a
 consolidation costs, and what the migration looks like. It is the input to the change
 `openspec/changes/add-linear-algebra-crate/`.
@@ -18,7 +18,7 @@ workspace, and assigns the work to `deep_causality_topology` "because that is wh
 live and topology must not learn about codes."
 
 Placing it there raises the prior question of where linear algebra belongs at all. The answer turned
-out to be: in three places, none of them a linear-algebra crate.
+out to be: in four places, none of them a linear-algebra crate.
 
 ## Where linear algebra lives today
 
@@ -101,6 +101,32 @@ numerical risk.
 **Physics does not compute homology.** It imports `ChainComplex` for `num_cells(grade)` only.
 `betti_number` is called nowhere outside `deep_causality_topology`'s own tests, so the exact-𝔽₂
 change reaches no consumer.
+
+### Multivector carries a norm and a matmul
+
+Added after the first survey, which reached `deep_causality_multivector` only through the shape
+census — a count of what a crate *constructs* rather than what it *defines*. Three definitions sit
+below that threshold:
+
+| definition | what it is |
+|---|---|
+| `traits/l2_norm.rs:21,30` `MultiVectorL2Norm::norm_l2` / `normalize_l2`, impl at `multivector/api/mod.rs:117` | a fourth Euclidean norm, alongside `CausalTensor::norm_l2`, `norm_sq` and quantum's `frobenius_norm` |
+| `multifield/algebra/mod.rs` `CausalMultiField::squared_magnitude` | a hand-written `Σ *val * *val` over the tensor's slice |
+| `multifield/ops/batched_matmul.rs` `BatchedMatMul` | 62 lines of batched matrix multiplication over `CausalTensor` |
+
+`squared_magnitude` is the one that is more than tidiness. `*val * *val` is the squared modulus only
+for a real scalar; `Normed::modulus_squared` is the operation that stays correct when the scalar is
+complex. The impl is bounded `T: Field + RealField`, so it is right today — but it is right because
+of a bound, and a later widening would make it silently wrong.
+
+`ScalarEval` (`traits/scalar_eval.rs`) looks like a fourth duplicate and is not one.
+`extensions/scalar_eval/mod.rs` is a single blanket delegating to `deep_causality_algebra::Normed`,
+added only to carry a `Sum` bound. It is a facade over the tower, which is the arrangement the rest
+of this list should reach.
+
+The census row for this crate reads "0 direct constructions". Its `src` has 13
+`CausalTensor::from_slice` / `from_shape_fn` sites, at least two of them rank-2
+(`alias/alias_hilbert_state.rs`). That row needs re-counting by the method the other six used.
 
 ## The correctness defect this exposes
 
@@ -384,16 +410,18 @@ pieces of a library exist, each added for one caller and scoped to it:
 | dense solve `Ax=b` | `algorithms/.../brcd_linalg.rs:28`, `pub(crate)` | the workspace's only LU, private to one estimator |
 | least squares | `CausalTensor::solve_least_squares_cholsky` | Cholesky on the normal equations; squares the condition number |
 | matrix exponential | `expm_scaled`, private, `causal_tensor_network/solve/local.rs:880` | locked inside the MPS solver |
-| Frobenius norm | `quantum/.../operator_linalg.rs:64` and `CausalTensor::norm_l2` | two answers to one question |
+| Euclidean norm | `quantum/.../operator_linalg.rs:64`, `CausalTensor::norm_l2` and `norm_sq`, `MultiVectorL2Norm::norm_l2`, `CausalMultiField::squared_magnitude` | four answers to one question |
 | LU, pseudo-inverse, condition number, non-symmetric eigen, vector type | absent | — |
+| 𝔽₂ | absent, and the tower has no finite field to build it on | G-01, severity S1 |
 
 The sharpest consequence is at `physics/src/kernels/dynamics/estimation.rs:158-164`, where the Kalman
 gain `K = P Hᵀ S⁻¹` is computed by explicitly inverting `S` and multiplying. Solve, don't invert, is
 the first rule of numerical linear algebra; it is broken here because **there is no solve to call**.
 
-**Tier 1, in this change:** the scalar contract banded on the tower; the vector; dense against sparse;
-`solve` with a reusable LU and triangular substitution; norms and inner products defined once; exact
-integer determinant and rank; an HKT witness per container.
+**Tier 1, in this change:** the scalar contract banded on the tower, with 𝔽₂ added to the tower and
+fields separated by characteristic; the vector as a `Module<R>`; dense against sparse; `solve` with a
+reusable LU and triangular substitution; norms and inner products defined once; exact integer
+determinant and rank; an HKT witness **and** the tower impls per container.
 
 **Tier 2, subsequent changes:** QR-based least squares; pseudo-inverse and condition number, both
 cheap once the SVD is here; non-symmetric eigendecomposition; the matrix exponential promoted out of
@@ -414,10 +442,35 @@ leaves ℤ on its first step.
 |---|---|---|---|
 | semiring | `CommutativeSemiring` | ℕ | add, scale, matmul, matrix–vector, dot, transpose, trace |
 | ring | `CommutativeRing` | ℤ and above | the above, plus subtract, negate, determinant |
+| integral domain | `IntegralDomain` | ℤ and above, not ℝ[ε] | anything resting on cancellation |
 | Euclidean domain | `EuclideanDomain` | ℤ | exact fraction-free determinant and rank |
 | field | `Field` | 𝔽₂, ℚ, ℝ, ℂ | rref, rank, kernel, image, inverse, solve |
+| characteristic zero | `CharacteristicZero` | ℚ, ℝ, ℂ | anything dividing by an integer |
 | normed field | `NormedScalar` | ℝ, ℂ, `Float106` | norms, pivot selection by magnitude |
 | real field | `RealField` | ℝ, `Float106` | SVD, QR, eigen, Cholesky, CG |
+
+Two of these rungs did not exist when this note was first written, and both were added by the algebra
+tower work that preceded the crate.
+
+`IntegralDomain` is what Bareiss actually rests on. Its divisions are exact because cancellation
+holds, and cancellation holds because there are no zero divisors — not because a Euclidean valuation
+exists. `EuclideanDomain: IntegralDomain` now, so the bound this note already specified carries the
+promise its algorithm needs; before, it carried only `CommutativeRing`, and the exactness claim
+rested on nothing the type system held.
+
+`CharacteristicZero` exists because admitting 𝔽₂ to the tower is not free. `Field` is
+blanket-implemented (`field.rs:41`), so the day `Gf2` satisfies the structural bound, every
+`T: Field` in the workspace widens at once with no per-type opt-in. Sixteen sites compute
+`T::one() + T::one()` as two; twelve are bounded on `RealField` or `Float`, which 𝔽₂ cannot reach.
+Four sit under a `Field` bound — `multivector` `commutator_geometric`, `ops_product_impl.rs:316`,
+`multifield/ops/conversions.rs:139`, and `tensor_svd_decomp/mod.rs:64` — and
+`commutator_geometric`'s `let half = T::one() / (T::one() + T::one());` is a division by zero over
+𝔽₂.
+
+Finiteness is the wrong guard for that. 𝔽₃ is finite and halves; 𝔽₄ is finite and does not; 𝔽ₚ(x) is
+infinite and does not. The property the code depends on is `n · 1 ≠ 0`, which is characteristic zero.
+`CharacteristicZero` and `FiniteField` are disjoint by definition — every finite field has prime
+characteristic — but they do not partition the fields, and 𝔽ₚ(x) is the case in neither.
 
 This is not academic. Topology's boundary matrices are `CsrMatrix<i8>`
 (`cell_complex/boundary_operator.rs:19`) — integer matrices whose rank is currently obtained by
@@ -429,10 +482,38 @@ The crate therefore carries **three ranks** — exact over `EuclideanDomain`, ex
 over `RealField` — as three separate calls. They disagree on real inputs, and G-02 records what
 conflating two of them already cost.
 
+## The tower impls the moved code stops short of
+
+Compile-probed against the current tower. `CsrMatrix<f64>` satisfies `AbelianGroup` and stops there:
+`Distributive` and `Annihilating` are not implemented for it. Everything else `Ring` needs is already
+present — `One` (`identity/mod.rs:40`), `Mul` (`arithmetic/mod.rs:213`) and
+`Associative<Multiplicative>` (`algebra/group.rs:23`).
+
+A matrix ring over a ring is a ring, so those two markers are the whole distance. The consequence
+runs further than a missing label: `Module<S>` requires `Ring`, so it is unreachable too, and the
+scalar multiplication `arithmetic/mod.rs:283` already implements as `Mul<S>` is invisible to the
+tower. `algebra/module.rs` works around it by constraining the *element* to be a `Module` and giving
+the matrix an inherent `scale`.
+
+What the crate gets right and should keep: `algebra/group.rs:19-23` claims `Associative<Additive>`,
+`Commutative<Additive>` and `Associative<Multiplicative>`, and deliberately **not**
+`Commutative<Multiplicative>`. Matrix multiplication does not commute, and the comment there records
+that the flat marker made the true claim unstatable — promising associativity also promised
+commutativity. The dense and packed matrices carry the same three and the same omission; the vector,
+having no multiplication, carries the additive pair only.
+
+The bounds tell the same story. `mat_mult_impl` takes
+`T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`, `transpose_impl` takes
+`T: Copy + Zero`, `vec_mult_impl` takes `T: Copy + Zero + Add<Output = T> + Mul<Output = T>`. Each is
+a semiring written longhand: it states no algebraic claim, records nothing about why those operators
+and not others, and leaves a reader unable to tell whether ℕ is admitted deliberately or by accident.
+
 ## Open questions
 
 1. **Does the sparse vector ever earn its place?** Deferred: every measured site is dense, sparse
    matrix–vector produces a dense result, and the CG solvers work matrix-free against `&[R]`.
+2. **Does `BatchedMatMul` move?** It batches rank-3 slices, which reads as the tensor surface rather
+   than the matrix surface. Recorded for an explicit decision rather than left unexamined.
 
 ## Related
 

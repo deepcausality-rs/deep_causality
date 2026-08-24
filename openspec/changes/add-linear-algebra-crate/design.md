@@ -192,11 +192,22 @@ topology's rank helpers already do by hand.
 This bounds the "side by side" claim honestly: one crate owning both representations and the
 algorithms appropriate to each, rather than one algorithm covering everything.
 
-### 𝔽₂ is bit-packed, not a tower scalar
+### 𝔽₂ is bit-packed in storage, and a tower scalar as an element
 
-G-01 argued this and the prototype now prices it. At n=2048, packed `u64` runs 3.2× faster than a
-`Gf2` scalar satisfying `Field` stored one byte per bit, on 8× less memory, and the gap widens with
-n as cache pressure grows.
+G-01 argued for packing and the prototype now prices it. At n=2048, packed `u64` runs 3.2× faster
+than a `Gf2` scalar stored one byte per bit, on 8× less memory, and the gap widens with n as cache
+pressure grows.
+
+That measurement decides the **storage** and says nothing about the **element type**. A packed
+matrix still has to answer `get` with something, and the prototype is explicit about what:
+`prototype/consumer_b/src/packed_gf2.rs:76` sets `type Scalar = Gf2`, where `Gf2(pub bool)` is
+defined at `prototype/linear_a/src/gf2_scalar.rs:15`. Both facts hold at once — pack the bits,
+name the element.
+
+`linear-scalar-contract` forbids this crate from defining a scalar newtype, and the tower has none
+to offer, so `Gf2` moves into `deep_causality_num` alongside every other primitive and its law
+markers into `deep_causality_algebra`. That is the same arrangement `i8` already has: the type is
+foreign to the algebra crate, and `impl IntegralDomain for i8 {}` is written there regardless.
 
 The generic seam costs nothing: 0.92–0.95× the hand-written non-generic loop at every size, slightly
 faster because the trait's `from_col` argument lets the implementation skip the eliminated prefix
@@ -206,12 +217,75 @@ behind a row-operation trait run at the same speed, so the generic one is taken.
 The word type is generic over `NaturalNumber` (`deep_causality_num/src/integer/natural.rs`) rather
 than fixed to `u64`, which the algebra tower work made possible.
 
-### 𝔽₂ is owned by `deep_causality_linear`, superseding G-01's owner field
+### The tower separates fields by characteristic, not by finiteness
+
+Admitting 𝔽₂ needs a guard, because `Field` is blanket-implemented (`field.rs:41`). A type becomes a
+field the moment it satisfies `CommutativeRing + InvMonoid + Div + DivAssign`, with no per-type
+opt-in, so every `T: Field` bound in the workspace widens the day `Gf2` lands. The tower has had
+this failure once already: a blanket over `Float` widened to `Num` and silently admitted integers to
+`Field`.
+
+The obvious guard is a finite-versus-infinite split, and it is the wrong one. What the exposed code
+depends on is that `n · 1 ≠ 0`, which is characteristic zero. Finiteness neither implies it nor
+follows from it: 𝔽₃ is finite and halves perfectly well, 𝔽₄ is finite and does not, and the rational
+function field 𝔽ₚ(x) is infinite and does not.
+
+Measured rather than assumed. Sixteen sites in the workspace compute `T::one() + T::one()` as two.
+Twelve are bounded on `RealField` or `Float`, which 𝔽₂ cannot reach, and are safe. **Four sit under a
+`Field` bound**, among them `multivector/src/types/multifield/algebra/mod.rs` `commutator_geometric`,
+whose `let half = T::one() / (T::one() + T::one());` would be a division by zero over 𝔽₂. Those four
+are the migration and they are the whole of it.
+
+So the tower gains `CharacteristicZero` and `FiniteField` as separate refinements of `Field`. They
+are disjoint by definition — every finite field has prime characteristic — but they do not partition
+the fields, and the documentation says so: 𝔽ₚ(x) is in neither. Stating the cut as
+finite-against-infinite would claim a partition that does not exist while guarding the wrong
+property.
+
+### Every container implements the tower, not only the HKT surface
+
+An HKT witness makes a container composable through `deep_causality_haft`. It does not make it
+composable through the tower: a function bounded on `Ring` or `Module` cannot take a container that
+never declares them.
+
+The crate inherits an unfinished instance. `CsrMatrix<f64>` reaches `AbelianGroup` and stops —
+compile-probed — because `Distributive` and `Annihilating` are not implemented for it. Everything
+else `Ring` needs is present: `One`, `Mul`, and `Associative<Multiplicative>`. A matrix ring over a
+ring is a ring, and the tower is two marker impls away from saying so. Because `Ring` is missing,
+`Module<S>` is unreachable, so the scalar multiplication `arithmetic/mod.rs:283` already implements
+is invisible to the tower as well.
+
+The move finishes this rather than carrying it across, and the dense matrix, the vector and the
+packed matrix are built with it from the start. The vector in particular is a `Module<R>` over its
+scalar ring — the tower's name for a vector space, and the general notion that admits ℤ where
+`Field` would not.
+
+### Integer admission is a sweep, not a feature
+
+Bounding each operation at its lowest correct level is what yields integer support; 
+. The sweep is therefore a review of every bound, and the code
+being moved shows what it will find: `mat_mult_impl` takes
+`T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`, which is a semiring spelled out
+longhand, stating no algebraic claim and leaving a reader unable to tell whether ℕ is admitted
+deliberately.
+
+Rewriting those as tower traits says what was already meant. 
+The genuine loosenings are the operations that never divide — addition, subtraction,
+negation, scaling, matrix multiplication, matrix–vector, transpose, trace, dot product, and the
+determinant, which is a polynomial in the entries. Each one loosened names the number set it newly
+admits and is instantiated at it, because a loosened bound nothing exercises is indistinguishable
+from an untested one.
+
+### 𝔽₂ linear algebra is owned by `deep_causality_linear`, superseding G-01's owner field
 
 G-01 assigns 𝔽₂ to `deep_causality_topology` "because that is where chain complexes live and
 topology must not learn about codes." The same reasoning places it better in a linear-algebra crate,
 which knows about neither chain complexes nor codes. Topology then consumes it, and
 `deep_causality_quantum` consumes it without depending on topology.
+
+The ownership splits cleanly along the scalar boundary. `Gf2` — the two-element field itself — is a
+number and lives in `deep_causality_num` with the other numbers. The elimination, the rank, the
+kernel and image bases and the packed representation are linear algebra and live here.
 
 ### The retired crate re-exports rather than freezes
 
