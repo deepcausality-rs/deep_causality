@@ -86,16 +86,30 @@ fn test_the_hermitian_inner_product_over_the_complexes() {
 // ---- deliberately not loosened ------------------------------------------------------------------
 
 #[test]
-fn test_the_stable_paths_stay_on_normed_scalar() {
+fn test_the_pivoted_determinant_runs_over_the_complex_numbers() {
     // solve, Lu, inverse and the pivoted determinant pivot by magnitude, so they need a modulus
     // landing in an ordered real. That admits R, C and Float106 and no more, which is why an exact
     // solve over Q is a later entry point rather than a widening of this one.
+    //
+    // What is checked here is the running, not the admission: C reaching NormedScalar is settled by
+    // the call compiling, so the assertion has to be the answer the complex path computes.
     use deep_causality_linear::determinant;
-    let m: DenseMatrix<f64> = DenseMatrix::identity(2);
-    assert!(determinant(&m).is_ok());
-    let c: DenseMatrix<Complex<f64>> = DenseMatrix::identity(2);
-    assert!(
-        determinant(&c).is_ok(),
-        "the complex path must reach the pivoted determinant"
-    );
+    let m: DenseMatrix<f64> = DenseMatrix::from_vec(vec![1.0, 2.0, 3.0, 4.0], 2, 2).unwrap();
+    assert_eq!(determinant(&m).unwrap(), -2.0);
+
+    // [1+i, 2; 3, 4-i]: (1+i)(4-i) - 6 = (5 + 3i) - 6 = -1 + 3i.
+    let c: DenseMatrix<Complex<f64>> = DenseMatrix::from_vec(
+        vec![
+            Complex::new(1.0, 1.0),
+            Complex::new(2.0, 0.0),
+            Complex::new(3.0, 0.0),
+            Complex::new(4.0, -1.0),
+        ],
+        2,
+        2,
+    )
+    .unwrap();
+    let d = determinant(&c).unwrap();
+    assert!((d.re - (-1.0)).abs() < 1e-12, "re was {}", d.re);
+    assert!((d.im - 3.0).abs() < 1e-12, "im was {}", d.im);
 }

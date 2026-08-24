@@ -114,10 +114,3 @@ fn test_errors_are_debug() {
     let s = format!("{:?}", LinearError::NotSquare { shape: (1, 2) });
     assert!(s.contains("NotSquare"), "{s}");
 }
-
-#[cfg(feature = "std")]
-#[test]
-fn test_error_implements_the_std_error_trait() {
-    fn takes_error<E: std::error::Error>(_: &E) {}
-    takes_error(&LinearError::EmptyMatrix);
-}

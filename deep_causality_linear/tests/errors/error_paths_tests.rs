@@ -93,8 +93,20 @@ fn test_a_buffer_longer_than_the_shape_is_rejected_too() {
 
 #[test]
 fn test_a_zero_dimension_with_a_non_empty_buffer_is_rejected() {
-    assert!(DenseMatrix::from_vec(vec![1.0], 0, 0).is_err());
-    assert!(DenseMatrix::from_vec(vec![1.0], 0, 5).is_err());
+    assert!(matches!(
+        DenseMatrix::from_vec(vec![1.0], 0, 0),
+        Err(LinearError::ShapeMismatch {
+            left: (0, 0),
+            right: (1, 1)
+        })
+    ));
+    assert!(matches!(
+        DenseMatrix::from_vec(vec![1.0], 0, 5),
+        Err(LinearError::ShapeMismatch {
+            left: (0, 5),
+            right: (1, 1)
+        })
+    ));
 }
 
 // ---- NotSquare ----------------------------------------------------------------------------------
@@ -230,10 +242,14 @@ fn test_the_strict_packing_rejects_every_value_outside_zero_and_one() {
 fn test_the_strict_packing_accepts_exactly_zero_and_one() {
     for good in [0i8, 1] {
         let m = CsrMatrix::from_triplets(2, 2, &[(1, 1, good)]).unwrap();
-        assert!(
-            csr_to_packed_gf2_strict::<u64>(&m).is_ok(),
-            "the strict packing rejected {good}, which is inside the alphabet"
-        );
+        let p = csr_to_packed_gf2_strict::<u64>(&m)
+            .unwrap_or_else(|e| panic!("{good} is inside the alphabet, but the packing gave {e}"));
+        // Accepting is not enough: the entry has to arrive, and the rest has to stay clear.
+        assert_eq!(p.shape(), (2, 2));
+        assert_eq!(p.get(1, 1).unwrap(), Gf2::new(good == 1));
+        for (i, j) in [(0, 0), (0, 1), (1, 0)] {
+            assert_eq!(p.get(i, j).unwrap(), Gf2::ZERO, "at ({i}, {j})");
+        }
     }
 }
 
@@ -283,10 +299,43 @@ fn test_an_error_is_returned_rather_than_panicking_for_every_rejected_input() {
     let v: DenseVector<f64> = DenseVector::from_vec(vec![1.0]);
     let p: PackedGf2<u8> = PackedGf2::zeros(1, 1);
 
-    assert!(determinant(&d).is_err());
-    assert!(d.get(99, 99).is_err());
-    assert!(v.get(99).is_err());
-    assert!(p.get(99, 99).is_err());
-    assert!(DenseMatrix::<f64>::from_vec(vec![1.0], 7, 7).is_err());
-    assert!(CsrMatrix::<f64>::from_triplets(1, 1, &[(9, 9, 1.0)]).is_err());
+    assert!(matches!(
+        determinant(&d),
+        Err(LinearError::NotSquare { shape: (2, 3) })
+    ));
+    assert!(matches!(
+        d.get(99, 99),
+        Err(LinearError::IndexOutOfBounds {
+            index: (99, 99),
+            shape: (2, 3)
+        })
+    ));
+    assert!(matches!(
+        v.get(99),
+        Err(LinearError::IndexOutOfBounds {
+            index: (99, 0),
+            shape: (1, 1)
+        })
+    ));
+    assert!(matches!(
+        p.get(99, 99),
+        Err(LinearError::IndexOutOfBounds {
+            index: (99, 99),
+            shape: (1, 1)
+        })
+    ));
+    assert!(matches!(
+        DenseMatrix::<f64>::from_vec(vec![1.0], 7, 7),
+        Err(LinearError::ShapeMismatch {
+            left: (7, 7),
+            right: (1, 1)
+        })
+    ));
+    assert!(matches!(
+        CsrMatrix::<f64>::from_triplets(1, 1, &[(9, 9, 1.0)]),
+        Err(LinearError::IndexOutOfBounds {
+            index: (9, 9),
+            shape: (1, 1)
+        })
+    ));
 }

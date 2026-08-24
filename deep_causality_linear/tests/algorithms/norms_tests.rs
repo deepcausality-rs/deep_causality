@@ -4,7 +4,8 @@
  */
 
 use deep_causality_linear::{
-    DenseMatrix, DenseVector, MatrixBuild, matrix_norm_frobenius, matrix_norm_inf, matrix_norm_l1,
+    CsrMatrix, DenseMatrix, DenseVector, MatrixBuild, matrix_norm_frobenius, matrix_norm_inf,
+    matrix_norm_l1,
 };
 use deep_causality_num_complex::Complex;
 
@@ -58,13 +59,24 @@ fn test_the_identity_has_unit_norms() {
 }
 
 #[test]
-fn test_norms_apply_to_every_representation_through_the_read_trait() {
-    use deep_causality_linear::PackedGf2;
-    // The norms are generic over MatrixView, so they reach the sparse and packed types too.
-    let m: PackedGf2<u64> = PackedGf2::identity(3);
-    // GF(2) is not a NormedScalar, so this must not compile -- asserted by its absence here rather
-    // than by a call. What is asserted is that a dense integer matrix does reach them.
-    let _ = m;
-    let i: DenseMatrix<f64> = DenseMatrix::identity(2);
-    assert!(matrix_norm_l1(&i).is_ok());
+fn test_the_norms_agree_across_the_dense_and_sparse_representations() {
+    // The norms are generic over MatrixView, so the representation is the caller's choice and must
+    // not change the answer. Same matrix, same three values, read two different ways.
+    //
+    // PackedGf2 is absent because its scalar is Gf2, which is not Normed -- an exclusion the type
+    // system makes, not one a runtime assertion could observe.
+    let dense: DenseMatrix<f64> = DenseMatrix::from_vec(vec![1.0, -2.0, -3.0, 4.0], 2, 2).unwrap();
+    let sparse: CsrMatrix<f64> = CsrMatrix::from_triplets(
+        2,
+        2,
+        &[(0, 0, 1.0), (0, 1, -2.0), (1, 0, -3.0), (1, 1, 4.0)],
+    )
+    .unwrap();
+
+    assert_eq!(matrix_norm_l1(&dense).unwrap(), 6.0);
+    assert_eq!(matrix_norm_l1(&sparse).unwrap(), 6.0);
+    assert_eq!(matrix_norm_inf(&dense).unwrap(), 7.0);
+    assert_eq!(matrix_norm_inf(&sparse).unwrap(), 7.0);
+    assert!((matrix_norm_frobenius(&dense).unwrap() - 30.0f64.sqrt()).abs() < 1e-12);
+    assert!((matrix_norm_frobenius(&sparse).unwrap() - 30.0f64.sqrt()).abs() < 1e-12);
 }

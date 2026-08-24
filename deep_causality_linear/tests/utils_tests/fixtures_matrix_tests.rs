@@ -21,7 +21,14 @@ fn test_rank_deficient_3x3_third_row_is_the_sum_of_the_first_two() {
             "row 3 must be row 1 + row 2 at {j}"
         );
     }
-    assert_eq!(RANK_DEFICIENT_3X3_RANK, 2);
+    // The dependency puts the rank at 2 or below. A non-singular minor over the first two rows
+    // puts it at 2 or above. Together they force the constant, rather than restating it.
+    let independent_rows = if d[0] * d[4] - d[1] * d[3] == 0.0 {
+        1
+    } else {
+        2
+    };
+    assert_eq!(RANK_DEFICIENT_3X3_RANK, independent_rows);
 }
 
 #[test]
@@ -35,7 +42,7 @@ fn test_unit_determinant_3x3_is_upper_unitriangular() {
         }
     }
     // The determinant of a triangular matrix is the product of its diagonal.
-    assert_eq!(UNIT_DETERMINANT_3X3, 1.0);
+    assert_eq!(UNIT_DETERMINANT_3X3, d[0] * d[4] * d[8]);
 }
 
 #[test]
@@ -45,8 +52,14 @@ fn test_zero_leading_entry_3x3_has_a_zero_at_0_0_and_is_non_singular() {
         d[0], 0.0,
         "the (0,0) entry is what an unpivoted elimination trips on"
     );
-    // A permutation matrix exchanging two rows: determinant is -1.
-    assert_eq!(ZERO_LEADING_ENTRY_DETERMINANT, -1.0);
+    // A permutation matrix exchanging two rows. Expanded along the first row rather than read off
+    // the constant it is checking.
+    let m = |i: usize, j: usize| d[i * 3 + j];
+    let det = m(0, 0) * (m(1, 1) * m(2, 2) - m(1, 2) * m(2, 1))
+        - m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0))
+        + m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+    assert_eq!(ZERO_LEADING_ENTRY_DETERMINANT, det);
+    assert!(det < 0.0, "the exchange is what makes the sign negative");
 }
 
 #[test]
@@ -81,7 +94,8 @@ fn test_boundary_alphabet_3x3_uses_only_minus_one_zero_one() {
     for j in 0..3 {
         assert_eq!(d[6 + j], d[j] + d[3 + j]);
     }
-    assert_eq!(BOUNDARY_ALPHABET_3X3_RANK, 2);
+    let independent_rows = if d[0] * d[4] - d[1] * d[3] == 0 { 1 } else { 2 };
+    assert_eq!(BOUNDARY_ALPHABET_3X3_RANK, independent_rows);
 }
 
 #[test]
@@ -108,8 +122,19 @@ fn test_ranks_disagree_3x3_has_an_even_weight_dependency() {
             "and must not be zero, or the dependency would hold over Q too"
         );
     }
-    assert_eq!(RANKS_DISAGREE_RATIONAL_RANK, 3);
-    assert_eq!(RANKS_DISAGREE_GF2_RANK, 2);
+    // Over Q the determinant is non-zero, so the rank is full; over F2 the dependency drops it by
+    // one, and a minor that survives reduction mod 2 stops it dropping further.
+    let m = |i: usize, j: usize| d[i * 3 + j];
+    let det = m(0, 0) * (m(1, 1) * m(2, 2) - m(1, 2) * m(2, 1))
+        - m(0, 1) * (m(1, 0) * m(2, 2) - m(1, 2) * m(2, 0))
+        + m(0, 2) * (m(1, 0) * m(2, 1) - m(1, 1) * m(2, 0));
+    // A 3x3 with non-zero determinant has full rank; a zero one would have dropped below it.
+    let rational_rank = if det == 0 { 2 } else { 3 };
+    assert_eq!(RANKS_DISAGREE_RATIONAL_RANK, rational_rank);
+
+    let minor_mod2 = (m(0, 0) * m(1, 1) - m(0, 1) * m(1, 0)).rem_euclid(2);
+    assert_ne!(minor_mod2, 0, "a 2x2 minor must survive reduction mod 2");
+    assert_eq!(RANKS_DISAGREE_GF2_RANK, RANKS_DISAGREE_RATIONAL_RANK - 1);
 }
 
 #[test]

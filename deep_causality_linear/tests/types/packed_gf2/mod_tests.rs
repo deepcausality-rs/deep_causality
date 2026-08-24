@@ -95,8 +95,22 @@ fn test_the_same_matrix_at_two_word_widths_reads_identically() {
 #[test]
 fn test_out_of_shape_access_is_rejected() {
     let m: PackedGf2<u64> = PackedGf2::zeros(2, 2);
-    assert!(m.get(2, 0).is_err());
-    assert!(m.get(0, 2).is_err());
+    // A packed row is padded out to a whole word, so an index past the column count still lands
+    // inside the allocation. The rejection has to come from the shape, and it has to name it.
+    assert!(matches!(
+        m.get(2, 0),
+        Err(LinearError::IndexOutOfBounds {
+            index: (2, 0),
+            shape: (2, 2)
+        })
+    ));
+    assert!(matches!(
+        m.get(0, 2),
+        Err(LinearError::IndexOutOfBounds {
+            index: (0, 2),
+            shape: (2, 2)
+        })
+    ));
 }
 
 #[test]

@@ -103,8 +103,21 @@ fn test_sub_over_the_integers() {
 fn test_add_and_sub_reject_a_length_mismatch() {
     let a = DenseVector::from_vec(vec![1.0, 2.0]);
     let b = DenseVector::from_vec(vec![1.0]);
-    assert!(a.add(&b).is_err());
-    assert!(a.sub(&b).is_err());
+    // Both lengths are carried, so a caller can see which side was short.
+    assert!(matches!(
+        a.add(&b),
+        Err(LinearError::LengthMismatch {
+            expected: 2,
+            found: 1
+        })
+    ));
+    assert!(matches!(
+        a.sub(&b),
+        Err(LinearError::LengthMismatch {
+            expected: 2,
+            found: 1
+        })
+    ));
 }
 
 #[test]

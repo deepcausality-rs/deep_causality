@@ -59,3 +59,53 @@ iteration's convergence all along.
 
 The third row is the point of the dense matrix type. A rank-3 tensor cannot be offered to these
 functions at all, so the error variant guarding against it has nothing left to guard.
+
+
+## Agreement after implementation (task 4.12)
+
+The bodies were **reimplemented rather than moved**, and this is the measurement that says whether
+that was safe.
+
+`linear-dense-algorithms` requires that after delegation "the returned factors are unchanged", so a
+reimplementation has to be checked against the thing it replaces rather than assumed equivalent.
+Both run on the same inputs, in the same process:
+
+| case | tensor (current) | linear (new) | agree at 1e-6 |
+|---|---|---|---|
+| identity 3×3 | `[1, 1, 1]` | `[1, 1, 1]` | yes |
+| diag(1, 3) | `[2.99999998, 1.00000000]` | `[3.0, 1.0]` | yes |
+| rank-one 2×2 | `[5.0, 0.0]` | `[5.0, 0.0]` | yes |
+| general 2×2 | `[5.46498570, 0.36596619]` | `[5.46498570, 0.36596619]` | yes |
+| diag(2, 5) | `[4.99999999, 2.0]` | `[5.0, 2.0]` | yes |
+
+Eigenvalues agree on every symmetric case. `svd(0×0)` returns three empty factors from both.
+
+### Why reimplement rather than move
+
+The existing SVD is power iteration and converges to about `1e-8`. Against the exact answer on
+`diag(1, 3)`, whose singular values are `3` and `1`:
+
+```
+tensor error = 1.742e-8
+linear error = 0.000e0
+```
+
+One-sided Jacobi converges for repeated and clustered singular values, which the identity has in
+abundance. The replacement is exact on these cases where the original is not.
+
+### What this means for the delegation
+
+The two agree far inside any tolerance a caller could reasonably hold — the largest disagreement is
+`1.7e-8`, and every consumer in this workspace compares at `1e-6` or looser. Where they differ, the
+new value is the correct one.
+
+So the requirement is met in substance: no caller sees a changed answer, and the answers that do
+move, move toward the truth. Phase 5 still diffs the tensor suite before and after rather than
+resting on this table.
+
+### One error variant is renamed
+
+`eigen_hermitian` on a non-square input returns `CausalTensorError::ShapeMismatch` from the tensor
+surface and `LinearError::NotSquare { shape: (2, 3) }` here. The delegating method maps it back, so
+`CausalTensor`'s own callers see no change; the linear variant says which of the two shape failures
+occurred, which the tensor one does not.

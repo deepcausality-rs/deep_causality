@@ -19,7 +19,7 @@ use crate::errors::linear_error::LinearError;
 use crate::traits::matrix_build::MatrixBuild;
 use crate::traits::matrix_view::MatrixView;
 use crate::types::csr_matrix::CsrMatrix;
-use core::ops::{Add, Mul, MulAssign, Neg, Sub};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use deep_causality_algebra::{CommutativeRing, CommutativeSemiring, Ring};
 use deep_causality_num::{One, Zero};
 
@@ -224,5 +224,150 @@ where
             *v *= scalar;
         }
         *self = CsrMatrix::from_raw_parts(ri, ci, scaled, shape);
+    }
+}
+
+// ---- the borrowing and assigning forms ----------------------------------------------------------
+//
+// The crate this moves from implements every combination of owned and borrowed operand, plus the
+// assigning forms. Porting its suite found sixteen tests that could not compile without them.
+//
+// They are not conveniences. Phase 5 repoints 102 import sites, and a call site written as
+// `&a + &b` — which is the common shape, since neither operand is being consumed — would stop
+// compiling against a type offering only the owned form.
+
+impl<T> Add for &CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn add(self, rhs: Self) -> CsrMatrix<T> {
+        self.add_matrix(rhs)
+            .expect("CsrMatrix shape mismatch in add")
+    }
+}
+
+impl<T> Add<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn add(self, rhs: &CsrMatrix<T>) -> CsrMatrix<T> {
+        self.add_matrix(rhs)
+            .expect("CsrMatrix shape mismatch in add")
+    }
+}
+
+impl<T> Add<CsrMatrix<T>> for &CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn add(self, rhs: CsrMatrix<T>) -> CsrMatrix<T> {
+        self.add_matrix(&rhs)
+            .expect("CsrMatrix shape mismatch in add")
+    }
+}
+
+impl<T> AddAssign for CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
+    fn add_assign(&mut self, rhs: Self) {
+        *self = self
+            .add_matrix(&rhs)
+            .expect("CsrMatrix shape mismatch in add_assign");
+    }
+}
+
+impl<T> AddAssign<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
+    fn add_assign(&mut self, rhs: &CsrMatrix<T>) {
+        *self = self
+            .add_matrix(rhs)
+            .expect("CsrMatrix shape mismatch in add_assign");
+    }
+}
+
+impl<T> Sub for &CsrMatrix<T>
+where
+    T: CommutativeRing + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn sub(self, rhs: Self) -> CsrMatrix<T> {
+        let negated = rhs.scalar_mult(T::zero() - T::one());
+        self.add_matrix(&negated)
+            .expect("CsrMatrix shape mismatch in sub")
+    }
+}
+
+impl<T> Sub<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: CommutativeRing + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn sub(self, rhs: &CsrMatrix<T>) -> CsrMatrix<T> {
+        let negated = rhs.scalar_mult(T::zero() - T::one());
+        self.add_matrix(&negated)
+            .expect("CsrMatrix shape mismatch in sub")
+    }
+}
+
+impl<T> Sub<CsrMatrix<T>> for &CsrMatrix<T>
+where
+    T: CommutativeRing + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn sub(self, rhs: CsrMatrix<T>) -> CsrMatrix<T> {
+        let negated = rhs.scalar_mult(T::zero() - T::one());
+        self.add_matrix(&negated)
+            .expect("CsrMatrix shape mismatch in sub")
+    }
+}
+
+impl<T> SubAssign for CsrMatrix<T>
+where
+    T: CommutativeRing + Copy + PartialEq,
+{
+    fn sub_assign(&mut self, rhs: Self) {
+        let negated = rhs.scalar_mult(T::zero() - T::one());
+        *self = self
+            .add_matrix(&negated)
+            .expect("CsrMatrix shape mismatch in sub_assign");
+    }
+}
+
+impl<T> SubAssign<&CsrMatrix<T>> for CsrMatrix<T>
+where
+    T: CommutativeRing + Copy + PartialEq,
+{
+    fn sub_assign(&mut self, rhs: &CsrMatrix<T>) {
+        let negated = rhs.scalar_mult(T::zero() - T::one());
+        *self = self
+            .add_matrix(&negated)
+            .expect("CsrMatrix shape mismatch in sub_assign");
+    }
+}
+
+impl<T> Neg for &CsrMatrix<T>
+where
+    T: CommutativeRing + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn neg(self) -> CsrMatrix<T> {
+        self.scalar_mult(T::zero() - T::one())
+    }
+}
+
+impl<T> Mul for &CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
+    type Output = CsrMatrix<T>;
+    fn mul(self, rhs: Self) -> CsrMatrix<T> {
+        self.mat_mult(rhs)
+            .expect("CsrMatrix dimension mismatch in mul")
     }
 }

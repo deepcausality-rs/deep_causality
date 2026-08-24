@@ -167,9 +167,10 @@ fn test_zero_is_the_lower_bound_of_the_naturals_and_needs_no_inverse() {
 #[test]
 fn test_the_largest_index_inside_the_shape_is_readable_and_the_next_is_not() {
     let m: DenseMatrix<f64> = DenseMatrix::zeros(3, 4);
-    assert!(
-        m.get(2, 3).is_ok(),
-        "the last valid position must be readable"
+    assert_eq!(
+        m.get(2, 3).unwrap(),
+        0.0,
+        "the last valid position must read the entry, not merely succeed"
     );
     assert!(matches!(
         m.get(3, 3),

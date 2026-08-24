@@ -5,4 +5,6 @@
 #[cfg(test)]
 mod laws_tests;
 #[cfg(test)]
+mod ported_csr_witness_tests;
+#[cfg(test)]
 mod witness_tests;

@@ -5,7 +5,7 @@
 
 //! The operator impls for the bit-packed 𝔽₂ matrix, where arithmetic is word-parallel.
 
-use deep_causality_linear::{MatrixBuild, MatrixView, PackedGf2, RowOps};
+use deep_causality_linear::{LinearError, MatrixBuild, MatrixView, PackedGf2, RowOps};
 use deep_causality_num::{Gf2, One, Zero};
 
 fn packed(bits: &[u8], r: usize, c: usize) -> PackedGf2<u8> {
@@ -181,9 +181,20 @@ fn test_swap_rows_and_the_pivot_search() {
 #[test]
 fn test_the_row_operations_reject_an_out_of_range_row() {
     let mut a = packed(&[1, 0, 0, 1], 2, 2);
-    assert!(a.swap_rows(0, 5).is_err());
-    assert!(a.scale_row(5, &Gf2::ONE, 0).is_err());
-    assert!(a.axpy_rows(5, 0, &Gf2::ONE, 0).is_err());
+    let out_of_range = |r: Result<(), LinearError>| {
+        matches!(
+            r,
+            Err(LinearError::IndexOutOfBounds {
+                index: (5, 0),
+                shape: (2, 2)
+            })
+        )
+    };
+    assert!(out_of_range(a.swap_rows(0, 5)));
+    assert!(out_of_range(a.scale_row(5, &Gf2::ONE, 0)));
+    assert!(out_of_range(a.axpy_rows(5, 0, &Gf2::ONE, 0)));
+    // A rejected row operation leaves the bits alone.
+    assert_eq!(a, packed(&[1, 0, 0, 1], 2, 2));
 }
 
 #[test]

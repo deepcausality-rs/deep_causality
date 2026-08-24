@@ -6,6 +6,7 @@
 //! A compressed-sparse-row matrix.
 
 pub mod algebra;
+pub mod display;
 pub mod ops;
 
 use crate::errors::linear_error::LinearError;
@@ -48,7 +49,10 @@ impl<T> CsrMatrix<T> {
     /// An empty matrix with shape `(0, 0)`.
     pub fn new() -> Self {
         Self {
-            row_indices: alloc::vec![0],
+            // Empty, not `[0]`. A `0x0` matrix has no rows, so no row-pointer is ever indexed, and
+            // `row_indices()` is public — the code being moved returns an empty vector here and a
+            // caller reading it must keep seeing one.
+            row_indices: Vec::new(),
             col_indices: Vec::new(),
             values: Vec::new(),
             shape: (0, 0),
@@ -152,13 +156,26 @@ where
 
         let mut row_indices = alloc::vec![0usize; rows + 1];
         let mut col_indices = Vec::with_capacity(sorted.len());
-        let mut values = Vec::with_capacity(sorted.len());
-        for (r, c, v) in sorted {
-            if v == T::zero() {
+        let mut values: Vec<T> = Vec::with_capacity(sorted.len());
+
+        // Duplicate `(row, col)` triplets are **summed**, matching the crate this moves from.
+        // Keeping both would put two entries at one position, which is not a CSR matrix: every
+        // later read would see whichever the search happened to reach first.
+        let mut i = 0usize;
+        while i < sorted.len() {
+            let (r, c, mut acc) = sorted[i];
+            let mut j = i + 1;
+            while j < sorted.len() && sorted[j].0 == r && sorted[j].1 == c {
+                acc = acc + sorted[j].2;
+                j += 1;
+            }
+            i = j;
+            // A sum that cancels to zero is structurally absent, as an explicit zero is.
+            if acc == T::zero() {
                 continue;
             }
             col_indices.push(c);
-            values.push(v);
+            values.push(acc);
             row_indices[r + 1] += 1;
         }
         for i in 0..rows {
@@ -305,7 +322,7 @@ where
 impl<T> Default for CsrMatrix<T> {
     fn default() -> Self {
         Self {
-            row_indices: alloc::vec![0],
+            row_indices: Vec::new(),
             col_indices: Vec::new(),
             values: Vec::new(),
             shape: (0, 0),

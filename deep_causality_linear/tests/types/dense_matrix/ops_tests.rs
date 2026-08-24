@@ -162,11 +162,23 @@ fn test_the_row_operations_the_elimination_seam_uses() {
 
 #[test]
 fn test_the_row_operations_reject_an_out_of_range_row() {
-    use deep_causality_linear::RowOps;
+    use deep_causality_linear::{LinearError, RowOps};
     let mut a = m2([1.0, 2.0, 3.0, 4.0]);
-    assert!(a.swap_rows(0, 9).is_err());
-    assert!(a.scale_row(9, &2.0, 0).is_err());
-    assert!(a.axpy_rows(9, 0, &1.0, 0).is_err());
+    // Each names the offending row and the shape, so a check against the wrong bound is visible.
+    let out_of_range = |r: Result<(), LinearError>| {
+        matches!(
+            r,
+            Err(LinearError::IndexOutOfBounds {
+                index: (9, 0),
+                shape: (2, 2)
+            })
+        )
+    };
+    assert!(out_of_range(a.swap_rows(0, 9)));
+    assert!(out_of_range(a.scale_row(9, &2.0, 0)));
+    assert!(out_of_range(a.axpy_rows(9, 0, &1.0, 0)));
+    // And the matrix is untouched by a rejected operation.
+    assert_eq!(a.as_slice(), &[1.0, 2.0, 3.0, 4.0]);
 }
 
 #[test]

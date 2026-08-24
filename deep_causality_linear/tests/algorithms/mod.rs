@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod bounds_tests;
 #[cfg(test)]
+mod branches_tests;
+#[cfg(test)]
 mod cg_tests;
 #[cfg(test)]
 mod decomposition_tests;
@@ -16,5 +18,7 @@ mod gf2_tests;
 mod integer_tests;
 #[cfg(test)]
 mod norms_tests;
+#[cfg(test)]
+mod ported_cg_tests;
 #[cfg(test)]
 mod solve_tests;

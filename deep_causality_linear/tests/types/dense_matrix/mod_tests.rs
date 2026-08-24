@@ -129,6 +129,12 @@ fn test_non_square_in_both_orientations() {
 #[test]
 fn test_a_degenerate_shape_never_panics_on_access() {
     let m: DenseMatrix<f64> = DenseMatrix::zeros(0, 0);
-    // A typed error, not a panic and not a fabricated value.
-    assert!(m.get(0, 0).is_err());
+    // A typed error naming the shape it was checked against, not a panic and not a fabricated zero.
+    assert!(matches!(
+        m.get(0, 0),
+        Err(LinearError::IndexOutOfBounds {
+            index: (0, 0),
+            shape: (0, 0)
+        })
+    ));
 }
