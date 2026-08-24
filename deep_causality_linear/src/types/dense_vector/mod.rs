@@ -43,6 +43,11 @@ impl<T> DenseVector<T> {
         self.data
     }
 
+    /// The entries, mutably. Internal.
+    pub(crate) fn as_mut_data(&mut self) -> &mut [T] {
+        &mut self.data
+    }
+
     /// The number of entries.
     pub fn len(&self) -> usize {
         self.data.len()

@@ -8,6 +8,7 @@
 use crate::errors::linear_error::LinearError;
 use crate::traits::matrix_view::MatrixView;
 use deep_causality_algebra::EuclideanDomain;
+use deep_causality_num::{One, Zero};
 
 /// The determinant of an integer matrix, by fraction-free (Bareiss) elimination.
 ///
@@ -56,8 +57,72 @@ where
     M: MatrixView,
     M::Scalar: EuclideanDomain,
 {
-    let _ = m;
-    todo!("determinant_exact")
+    let (rows, cols) = (m.rows(), m.cols());
+    if rows != cols {
+        return Err(LinearError::NotSquare {
+            shape: (rows, cols),
+        });
+    }
+    let n = rows;
+    if n == 0 {
+        return Ok(M::Scalar::one());
+    }
+    let mut a = alloc::vec::Vec::with_capacity(n * n);
+    for i in 0..n {
+        for j in 0..n {
+            a.push(m.get(i, j)?);
+        }
+    }
+
+    // Bareiss. Every division below is exact, guaranteed by the integral-domain structure that
+    // `EuclideanDomain` sits above: no zero divisors means cancellation holds.
+    let mut prev = M::Scalar::one();
+    let mut sign_negative = false;
+    for k in 0..(n - 1) {
+        if a[k * n + k].is_zero() {
+            // Pivot by search, as everywhere else here.
+            let Some(p) = ((k + 1)..n).find(|&r| !a[r * n + k].is_zero()) else {
+                return Ok(M::Scalar::zero());
+            };
+            for j in 0..n {
+                a.swap(k * n + j, p * n + j);
+            }
+            sign_negative = !sign_negative;
+        }
+        for i in (k + 1)..n {
+            for j in (k + 1)..n {
+                const OP: &str = "fraction-free determinant";
+                let lhs = mul_or_overflow(&a[i * n + j], &a[k * n + k], OP)?;
+                let rhs = mul_or_overflow(&a[i * n + k], &a[k * n + j], OP)?;
+                let num = sub_or_overflow(&lhs, &rhs, OP)?;
+                a[i * n + j] = num.div_euclid(&prev);
+            }
+        }
+        prev = a[k * n + k].clone();
+    }
+    let d = a[(n - 1) * n + (n - 1)].clone();
+    Ok(if sign_negative {
+        M::Scalar::zero() - d
+    } else {
+        d
+    })
+}
+
+/// Multiplies, reporting an overflow rather than wrapping or panicking.
+///
+/// ℤ is unbounded and the scalar is not. `EuclideanDomain::checked_mul` is what makes this
+/// detectable: checking the product afterwards is too late, because a fixed-width multiply panics
+/// on overflow in debug builds and wraps in release, so an after-the-fact check runs after the
+/// panic in one profile and against a wrapped value in the other.
+fn mul_or_overflow<T: EuclideanDomain>(a: &T, b: &T, op: &'static str) -> Result<T, LinearError> {
+    a.checked_mul(b)
+        .ok_or(LinearError::Overflow { operation: op })
+}
+
+/// Subtracts, reporting an overflow rather than wrapping or panicking.
+fn sub_or_overflow<T: EuclideanDomain>(a: &T, b: &T, op: &'static str) -> Result<T, LinearError> {
+    a.checked_sub(b)
+        .ok_or(LinearError::Overflow { operation: op })
 }
 
 /// The rank of an integer matrix, exactly.
@@ -89,8 +154,68 @@ where
 pub fn rank_exact<M>(m: &M) -> Result<usize, LinearError>
 where
     M: MatrixView,
-    M::Scalar: EuclideanDomain,
+    M::Scalar: EuclideanDomain + PartialEq,
 {
-    let _ = m;
-    todo!("rank_exact")
+    let (rows, cols) = (m.rows(), m.cols());
+    if rows == 0 || cols == 0 {
+        return Ok(0);
+    }
+    let mut a = alloc::vec::Vec::with_capacity(rows * cols);
+    for i in 0..rows {
+        for j in 0..cols {
+            a.push(m.get(i, j)?);
+        }
+    }
+
+    // Each row is reduced by its content — the gcd of its entries — before elimination starts.
+    //
+    // This is not an optimisation. Rank is scale-invariant, so dividing a row through by a common
+    // factor cannot change the answer; but the fraction-free intermediates are products of entries,
+    // and a matrix of large entries overflows on products whose *difference* is zero. Reducing
+    // `[[i64::MAX, i64::MAX], [i64::MAX, i64::MAX]]` to `[[1, 1], [1, 1]]` first makes the
+    // computation deserve the invariance the mathematics already has.
+    for i in 0..rows {
+        let mut content = M::Scalar::zero();
+        for j in 0..cols {
+            content = content.gcd(&a[i * cols + j]);
+        }
+        if !content.is_zero() && content != M::Scalar::one() {
+            for j in 0..cols {
+                a[i * cols + j] = a[i * cols + j].div_euclid(&content);
+            }
+        }
+    }
+
+    // Fraction-free forward elimination, counting pivots. No threshold: over ℤ an entry is zero or
+    // it is not, and the answer is exact.
+    let mut prev = M::Scalar::one();
+    let mut row = 0usize;
+    let mut rank = 0usize;
+    for col in 0..cols {
+        if row >= rows {
+            break;
+        }
+        let Some(p) = (row..rows).find(|&r| !a[r * cols + col].is_zero()) else {
+            continue;
+        };
+        if p != row {
+            for j in 0..cols {
+                a.swap(row * cols + j, p * cols + j);
+            }
+        }
+        for i in (row + 1)..rows {
+            for j in (col + 1)..cols {
+                const OP: &str = "exact integer rank";
+                let lhs = mul_or_overflow(&a[i * cols + j], &a[row * cols + col], OP)?;
+                let rhs = mul_or_overflow(&a[i * cols + col], &a[row * cols + j], OP)?;
+                let num = sub_or_overflow(&lhs, &rhs, OP)?;
+                a[i * cols + j] = num.div_euclid(&prev);
+            }
+            a[i * cols + col] = M::Scalar::zero();
+        }
+        prev = a[row * cols + col].clone();
+        row += 1;
+        rank += 1;
+    }
+    Ok(rank)
 }

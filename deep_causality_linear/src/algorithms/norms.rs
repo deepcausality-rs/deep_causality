@@ -23,6 +23,7 @@
 use crate::errors::linear_error::LinearError;
 use crate::traits::matrix_view::MatrixView;
 use deep_causality_algebra::{Normed, NormedScalar};
+use deep_causality_num::Zero;
 
 /// The 1-norm: the largest column sum of moduli.
 pub fn matrix_norm_l1<M>(m: &M) -> Result<<M::Scalar as Normed>::Real, LinearError>
@@ -30,8 +31,19 @@ where
     M: MatrixView,
     M::Scalar: NormedScalar,
 {
-    let _ = m;
-    todo!("matrix_norm_l1")
+    use deep_causality_algebra::Real;
+    let (r, c) = (m.rows(), m.cols());
+    let mut best = <M::Scalar as Normed>::Real::zero();
+    for j in 0..c {
+        let mut col = <M::Scalar as Normed>::Real::zero();
+        for i in 0..r {
+            col += m.get(i, j)?.modulus_squared().sqrt();
+        }
+        if col > best {
+            best = col;
+        }
+    }
+    Ok(best)
 }
 
 /// The ∞-norm: the largest row sum of moduli.
@@ -40,8 +52,19 @@ where
     M: MatrixView,
     M::Scalar: NormedScalar,
 {
-    let _ = m;
-    todo!("matrix_norm_inf")
+    use deep_causality_algebra::Real;
+    let (r, c) = (m.rows(), m.cols());
+    let mut best = <M::Scalar as Normed>::Real::zero();
+    for i in 0..r {
+        let mut row = <M::Scalar as Normed>::Real::zero();
+        for j in 0..c {
+            row += m.get(i, j)?.modulus_squared().sqrt();
+        }
+        if row > best {
+            best = row;
+        }
+    }
+    Ok(best)
 }
 
 /// The Frobenius norm: `sqrt(Σ |aᵢⱼ|²)`.
@@ -52,6 +75,13 @@ where
     M: MatrixView,
     M::Scalar: NormedScalar,
 {
-    let _ = m;
-    todo!("matrix_norm_frobenius")
+    use deep_causality_algebra::Real;
+    let (r, c) = (m.rows(), m.cols());
+    let mut acc = <M::Scalar as Normed>::Real::zero();
+    for i in 0..r {
+        for j in 0..c {
+            acc += m.get(i, j)?.modulus_squared();
+        }
+    }
+    Ok(acc.sqrt())
 }

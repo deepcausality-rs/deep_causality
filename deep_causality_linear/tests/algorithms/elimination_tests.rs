@@ -8,7 +8,8 @@
 use deep_causality_linear::utils_tests::fixtures_cayley_menger::*;
 use deep_causality_linear::utils_tests::fixtures_matrix::*;
 use deep_causality_linear::{
-    DenseMatrix, LinearError, MatrixBuild, determinant, rank, rank_stable, rref, rref_stable,
+    DenseMatrix, LinearError, MatrixBuild, MatrixView, determinant, image_basis, kernel_basis,
+    rank, rank_stable, rref, rref_stable,
 };
 
 fn dense(f: (Vec<f64>, usize, usize)) -> DenseMatrix<f64> {
@@ -216,4 +217,76 @@ fn test_rref_over_an_unordered_field_needs_no_epsilon() {
     let mut m = DenseMatrix::from_vec(d, 2, 2).unwrap();
     let reduced = rref(&mut m).unwrap();
     assert_eq!(reduced.rank(), 2, "the Hilbert-like 2x2 is non-singular");
+}
+
+// ---- kernel and image, generic over the row-operation seam --------------------------------------
+
+#[test]
+fn test_the_kernel_basis_annihilates_and_is_the_right_size() {
+    let m = dense(rank_deficient_3x3());
+    let kernel: DenseMatrix<f64> = kernel_basis(&m).unwrap();
+    let rank = rank(&m).unwrap();
+    assert_eq!(kernel.cols(), m.cols() - rank, "cols - rank vectors");
+    for k in 0..kernel.cols() {
+        for i in 0..m.rows() {
+            let mut acc = 0.0;
+            for j in 0..m.cols() {
+                acc += m.get(i, j).unwrap() * kernel.get(j, k).unwrap();
+            }
+            assert!(
+                acc.abs() < 1e-9,
+                "kernel vector {k} not annihilated at row {i}: {acc}"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_a_full_rank_matrix_has_an_empty_kernel() {
+    let m: DenseMatrix<f64> = DenseMatrix::identity(3);
+    let kernel: DenseMatrix<f64> = kernel_basis(&m).unwrap();
+    assert_eq!(kernel.cols(), 0);
+}
+
+#[test]
+fn test_the_image_basis_has_rank_columns_taken_from_the_original() {
+    let m = dense(rank_deficient_3x3());
+    let image: DenseMatrix<f64> = image_basis(&m).unwrap();
+    let rank = rank(&m).unwrap();
+    assert_eq!(image.cols(), rank);
+    assert_eq!(image.rows(), m.rows());
+    // The columns are columns of the original, so the first is recognisable.
+    for i in 0..m.rows() {
+        assert_eq!(image.get(i, 0).unwrap(), m.get(i, 0).unwrap());
+    }
+}
+
+#[test]
+fn test_the_zero_matrix_has_a_full_kernel_and_an_empty_image() {
+    let m: DenseMatrix<f64> = DenseMatrix::zeros(3, 4);
+    let kernel: DenseMatrix<f64> = kernel_basis(&m).unwrap();
+    let image: DenseMatrix<f64> = image_basis(&m).unwrap();
+    assert_eq!(kernel.cols(), 4);
+    assert_eq!(image.cols(), 0);
+}
+
+#[test]
+fn test_rref_puts_the_matrix_in_reduced_row_echelon_form() {
+    let mut m = dense(rank_deficient_3x3());
+    let reduced = rref_stable(&mut m).unwrap();
+    // Each pivot column holds a one in its own row and zeros elsewhere.
+    for (row, &col) in reduced.pivot_columns().iter().enumerate() {
+        assert!(
+            (m.get(row, col).unwrap() - 1.0).abs() < 1e-9,
+            "pivot at ({row}, {col}) not one"
+        );
+        for other in 0..m.rows() {
+            if other != row {
+                assert!(
+                    m.get(other, col).unwrap().abs() < 1e-9,
+                    "column {col} not cleared"
+                );
+            }
+        }
+    }
 }

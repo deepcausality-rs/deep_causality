@@ -252,8 +252,24 @@ where
     M::Scalar: Field,
     B: MatrixBuild<Scalar = M::Scalar>,
 {
-    let _ = m;
-    todo!("kernel_basis")
+    let cols = m.cols();
+    let mut work = m.clone();
+    let reduced = rref(&mut work)?;
+    let pivots = reduced.pivot_columns().to_vec();
+    let free: Vec<usize> = (0..cols).filter(|c| !pivots.contains(c)).collect();
+
+    let mut basis = B::zeros(cols, free.len());
+    for (k, &f) in free.iter().enumerate() {
+        // The free variable is one; each pivot variable takes the negated reduced coefficient.
+        basis.set(f, k, M::Scalar::one())?;
+        for (row, &p) in pivots.iter().enumerate() {
+            let coeff = work.get(row, f)?;
+            if !coeff.is_zero() {
+                basis.set(p, k, M::Scalar::zero() - coeff)?;
+            }
+        }
+    }
+    Ok(basis)
 }
 
 /// A basis of the image, as the columns of the returned matrix.
@@ -266,8 +282,20 @@ where
     M::Scalar: Field,
     B: MatrixBuild<Scalar = M::Scalar>,
 {
-    let _ = m;
-    todo!("image_basis")
+    let rows = m.rows();
+    let mut work = m.clone();
+    let reduced = rref(&mut work)?;
+    let pivots = reduced.pivot_columns().to_vec();
+
+    // The pivot columns of the original, so a caller reads back vectors it recognises rather than
+    // combinations of them.
+    let mut basis = B::zeros(rows, pivots.len());
+    for (k, &p) in pivots.iter().enumerate() {
+        for i in 0..rows {
+            basis.set(i, k, m.get(i, p)?)?;
+        }
+    }
+    Ok(basis)
 }
 
 /// The determinant, pivoting on magnitude.

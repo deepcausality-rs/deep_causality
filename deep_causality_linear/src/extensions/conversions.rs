@@ -33,8 +33,14 @@ pub fn csr_to_dense<T>(m: &CsrMatrix<T>) -> DenseMatrix<T>
 where
     T: CommutativeSemiring + Copy + PartialEq,
 {
-    let _ = m;
-    todo!("csr_to_dense")
+    let (r, c) = m.shape();
+    let mut out = alloc::vec::Vec::with_capacity(r * c);
+    for i in 0..r {
+        for j in 0..c {
+            out.push(m.get_value_at(i, j));
+        }
+    }
+    DenseMatrix::from_vec(out, r, c).expect("the buffer is built from the shape")
 }
 
 /// Sparsifies a dense matrix, storing only its non-zeros.
@@ -42,8 +48,18 @@ pub fn dense_to_csr<T>(m: &DenseMatrix<T>) -> CsrMatrix<T>
 where
     T: CommutativeSemiring + Copy + PartialEq,
 {
-    let _ = m;
-    todo!("dense_to_csr")
+    use crate::traits::matrix_view::MatrixView;
+    let (r, c) = (m.rows(), m.cols());
+    let mut triplets = alloc::vec::Vec::new();
+    for i in 0..r {
+        for j in 0..c {
+            let v = m.get(i, j).expect("indices come from the shape");
+            if v != T::zero() {
+                triplets.push((i, j, v));
+            }
+        }
+    }
+    CsrMatrix::from_triplets(r, c, &triplets).expect("indices come from the shape")
 }
 
 /// Packs a dense matrix of 𝔽₂ entries.
@@ -51,8 +67,15 @@ pub fn dense_gf2_to_packed<W>(m: &DenseMatrix<Gf2>) -> Result<PackedGf2<W>, Line
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("dense_gf2_to_packed")
+    use crate::traits::matrix_view::MatrixView;
+    let (r, c) = (m.rows(), m.cols());
+    let mut flat = alloc::vec::Vec::with_capacity(r * c);
+    for i in 0..r {
+        for j in 0..c {
+            flat.push(m.get(i, j)?);
+        }
+    }
+    PackedGf2::from_slice(&flat, r, c)
 }
 
 /// Unpacks into a dense matrix of 𝔽₂ entries.
@@ -60,8 +83,15 @@ pub fn packed_to_dense_gf2<W>(m: &PackedGf2<W>) -> DenseMatrix<Gf2>
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("packed_to_dense_gf2")
+    use crate::traits::matrix_view::MatrixView;
+    let (r, c) = (m.rows(), m.cols());
+    let mut out = alloc::vec::Vec::with_capacity(r * c);
+    for i in 0..r {
+        for j in 0..c {
+            out.push(m.get(i, j).expect("indices come from the shape"));
+        }
+    }
+    DenseMatrix::from_vec(out, r, c).expect("the buffer is built from the shape")
 }
 
 /// Packs an integer matrix by reducing every entry modulo 2.
@@ -74,8 +104,14 @@ pub fn csr_to_packed_gf2_mod2<W>(m: &CsrMatrix<i8>) -> PackedGf2<W>
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("csr_to_packed_gf2_mod2")
+    let (r, c) = m.shape();
+    let mut flat = alloc::vec::Vec::with_capacity(r * c);
+    for i in 0..r {
+        for j in 0..c {
+            flat.push(i64::from(m.get_value_at(i, j)));
+        }
+    }
+    PackedGf2::from_i64_mod2(&flat, r, c).expect("the buffer is built from the shape")
 }
 
 /// Packs an integer matrix, rejecting any entry outside `{0, 1}`.
@@ -87,6 +123,16 @@ pub fn csr_to_packed_gf2_strict<W>(m: &CsrMatrix<i8>) -> Result<PackedGf2<W>, Li
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("csr_to_packed_gf2_strict")
+    let (r, c) = m.shape();
+    let mut flat = alloc::vec::Vec::with_capacity(r * c);
+    for i in 0..r {
+        for j in 0..c {
+            let v = m.get_value_at(i, j);
+            if v != 0 && v != 1 {
+                return Err(LinearError::NotBinary { at: (i, j) });
+            }
+            flat.push(i64::from(v));
+        }
+    }
+    PackedGf2::from_i64_mod2(&flat, r, c)
 }

@@ -133,11 +133,11 @@ where
     T: CommutativeSemiring + Clone,
 {
     fn zero() -> Self {
-        todo!("DenseMatrix::zero")
+        DenseMatrix::from_vec(alloc::vec::Vec::new(), 0, 0).expect("0x0 holds nothing")
     }
 
     fn is_zero(&self) -> bool {
-        todo!("DenseMatrix::is_zero")
+        self.as_slice().iter().all(|v| v.is_zero())
     }
 }
 
@@ -146,11 +146,21 @@ where
     T: CommutativeSemiring + Clone,
 {
     fn one() -> Self {
-        todo!("DenseMatrix::one")
+        // `One` has no order to work from, so it takes the smallest identity.
+        DenseMatrix::from_vec(alloc::vec![T::one()], 1, 1).expect("1x1 holds one entry")
     }
 
     fn is_one(&self) -> bool {
-        todo!("DenseMatrix::is_one")
+        let (r, c) = (self.row_count(), self.col_count());
+        if r != c {
+            return false;
+        }
+        (0..r).all(|i| {
+            (0..c).all(|j| {
+                let v = &self.as_slice()[i * c + j];
+                if i == j { v.is_one() } else { v.is_zero() }
+            })
+        })
     }
 }
 
@@ -160,8 +170,19 @@ where
 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("DenseMatrix::add")
+        let (r, c) = (self.row_count(), self.col_count());
+        assert_eq!(
+            (r, c),
+            (rhs.row_count(), rhs.col_count()),
+            "shape mismatch in add"
+        );
+        let out: alloc::vec::Vec<T> = self
+            .into_data()
+            .into_iter()
+            .zip(rhs.into_data())
+            .map(|(a, b)| a + b)
+            .collect();
+        DenseMatrix::from_vec(out, r, c).expect("addition preserves the element count")
     }
 }
 
@@ -171,8 +192,19 @@ where
 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("DenseMatrix::sub")
+        let (r, c) = (self.row_count(), self.col_count());
+        assert_eq!(
+            (r, c),
+            (rhs.row_count(), rhs.col_count()),
+            "shape mismatch in sub"
+        );
+        let out: alloc::vec::Vec<T> = self
+            .into_data()
+            .into_iter()
+            .zip(rhs.into_data())
+            .map(|(a, b)| a - b)
+            .collect();
+        DenseMatrix::from_vec(out, r, c).expect("subtraction preserves the element count")
     }
 }
 
@@ -182,7 +214,13 @@ where
 {
     type Output = Self;
     fn neg(self) -> Self {
-        todo!("DenseMatrix::neg")
+        let (r, c) = (self.row_count(), self.col_count());
+        let out: alloc::vec::Vec<T> = self
+            .into_data()
+            .into_iter()
+            .map(|v| T::zero() - v)
+            .collect();
+        DenseMatrix::from_vec(out, r, c).expect("negation preserves the element count")
     }
 }
 
@@ -192,9 +230,23 @@ where
     T: CommutativeSemiring + Clone,
 {
     type Output = Self;
+    /// Matrix multiplication, which is what makes this a `Ring` and not a `CommutativeRing`.
     fn mul(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("DenseMatrix::mul")
+        let (m, k) = (self.row_count(), self.col_count());
+        let (k2, n) = (rhs.row_count(), rhs.col_count());
+        assert_eq!(k, k2, "inner dimension mismatch in mul");
+        let mut out = alloc::vec::Vec::with_capacity(m * n);
+        for i in 0..m {
+            for j in 0..n {
+                let mut acc = T::zero();
+                for t in 0..k {
+                    acc = acc
+                        + self.as_slice()[i * k + t].clone() * rhs.as_slice()[t * n + j].clone();
+                }
+                out.push(acc);
+            }
+        }
+        DenseMatrix::from_vec(out, m, n).expect("the product has m*n entries")
     }
 }
 
@@ -206,8 +258,9 @@ where
 {
     type Output = Self;
     fn mul(self, scalar: S) -> Self {
-        let _ = scalar;
-        todo!("DenseMatrix::mul_scalar")
+        let (r, c) = (self.row_count(), self.col_count());
+        let out: alloc::vec::Vec<T> = self.into_data().into_iter().map(|v| v * scalar).collect();
+        DenseMatrix::from_vec(out, r, c).expect("scaling preserves the element count")
     }
 }
 
@@ -217,7 +270,8 @@ where
     S: Ring + Copy,
 {
     fn mul_assign(&mut self, scalar: S) {
-        let _ = scalar;
-        todo!("DenseMatrix::mul_assign_scalar")
+        for v in self.as_mut_slice() {
+            *v *= scalar;
+        }
     }
 }

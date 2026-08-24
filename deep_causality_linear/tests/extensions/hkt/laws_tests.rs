@@ -137,3 +137,77 @@ fn test_pure_then_extract_round_trips() {
     let v: DenseVector<i64> = DenseVectorWitness::pure(42);
     assert_eq!(DenseVectorWitness::extract(&v), 42);
 }
+
+// ---- foldable and applicative ------------------------------------------------------------------
+
+#[test]
+fn test_matrix_fold_visits_every_entry() {
+    use deep_causality_haft::Foldable;
+    let total = DenseMatrixWitness::fold(matrix(), 0i64, |acc, v| acc + v);
+    assert_eq!(total, 1 + 2 + 3 + 4);
+}
+
+#[test]
+fn test_vector_fold_visits_every_entry() {
+    use deep_causality_haft::Foldable;
+    let total = DenseVectorWitness::fold(vector(), 0i64, |acc, v| acc + v);
+    assert_eq!(total, 1 + 2 + 3);
+}
+
+#[test]
+fn test_fold_respects_the_initial_value() {
+    use deep_causality_haft::Foldable;
+    assert_eq!(
+        DenseVectorWitness::fold(vector(), 100i64, |acc, v| acc + v),
+        106
+    );
+}
+
+#[test]
+fn test_fold_over_an_empty_container_returns_the_initial_value() {
+    use deep_causality_haft::Foldable;
+    let empty: DenseVector<i64> = DenseVector::from_vec(vec![]);
+    assert_eq!(DenseVectorWitness::fold(empty, 42i64, |acc, v| acc + v), 42);
+}
+
+#[test]
+fn test_matrix_applicative_applies_pointwise() {
+    use deep_causality_haft::Applicative;
+    let fns: DenseMatrix<fn(i64) -> i64> =
+        DenseMatrix::from_vec(vec![(|x| x + 1) as fn(i64) -> i64; 4], 2, 2).unwrap();
+    let applied = DenseMatrixWitness::apply(fns, matrix());
+    assert_eq!(applied.as_slice(), &[2, 3, 4, 5]);
+    assert_eq!(applied.shape(), (2, 2), "apply preserves the shape");
+}
+
+#[test]
+fn test_vector_applicative_applies_pointwise() {
+    use deep_causality_haft::Applicative;
+    let fns: DenseVector<fn(i64) -> i64> =
+        DenseVector::from_vec(vec![(|x| x * 10) as fn(i64) -> i64; 3]);
+    let applied = DenseVectorWitness::apply(fns, vector());
+    assert_eq!(applied.as_slice(), &[10, 20, 30]);
+}
+
+#[test]
+fn test_vector_bind_concatenates() {
+    use deep_causality_haft::Monad;
+    // The list monad: each element expands, and the pieces join.
+    let doubled = DenseVectorWitness::bind(vector(), |x| DenseVector::from_vec(vec![x, x]));
+    assert_eq!(doubled.as_slice(), &[1, 1, 2, 2, 3, 3]);
+}
+
+#[test]
+fn test_extend_sees_each_position_in_turn() {
+    use deep_causality_haft::CoMonad;
+    // The shifted view is what makes extend(extract) the identity; this checks the focus moves.
+    let firsts = DenseVectorWitness::extend(&vector(), |v| v.as_slice()[0]);
+    assert_eq!(firsts.as_slice(), &[1, 2, 3]);
+}
+
+#[test]
+fn test_matrix_extend_sees_each_position_in_turn() {
+    use deep_causality_haft::CoMonad;
+    let firsts = DenseMatrixWitness::extend(&matrix(), |m| m.as_slice()[0]);
+    assert_eq!(firsts.as_slice(), &[1, 2, 3, 4]);
+}

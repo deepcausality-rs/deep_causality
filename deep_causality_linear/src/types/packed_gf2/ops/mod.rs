@@ -146,67 +146,110 @@ impl<W: NaturalNumber> RowOps for PackedGf2<W> {
 
 impl<W: NaturalNumber> Zero for PackedGf2<W> {
     fn zero() -> Self {
-        todo!("PackedGf2::zero")
+        PackedGf2::allocate(0, 0)
     }
     fn is_zero(&self) -> bool {
-        todo!("PackedGf2::is_zero")
+        self.as_words().iter().all(|w| w.is_zero())
     }
 }
 
 impl<W: NaturalNumber> One for PackedGf2<W> {
     fn one() -> Self {
-        todo!("PackedGf2::one")
+        let mut m = PackedGf2::allocate(1, 1);
+        m.set_bit(0, 0);
+        m
     }
     fn is_one(&self) -> bool {
-        todo!("PackedGf2::is_one")
+        let (r, c) = self.dims();
+        r == c && (0..r).all(|i| (0..c).all(|j| self.bit_at(i, j) == (i == j)))
     }
 }
 
 /// Addition over 𝔽₂ is exclusive-or, so this is a whole-word XOR of the two buffers.
 impl<W: NaturalNumber> Add for PackedGf2<W> {
     type Output = Self;
+    /// Whole-word exclusive-or, which is what addition over 𝔽₂ is.
     fn add(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("PackedGf2::add")
+        assert_eq!(self.dims(), rhs.dims(), "shape mismatch in add");
+        let mut out = self;
+        for (k, w) in rhs.as_words().iter().enumerate() {
+            out.as_mut_words()[k] = out.as_words()[k] ^ *w;
+        }
+        out
     }
 }
 
 /// Subtraction coincides with addition: every element of 𝔽₂ is its own additive inverse.
 impl<W: NaturalNumber> Sub for PackedGf2<W> {
     type Output = Self;
+    /// The same operation as addition: every element of 𝔽₂ is its own additive inverse, so
+    /// `a - b` and `a + b` are the same exclusive-or.
+    ///
+    /// Written out rather than delegating to `+`, so that the body says what it does instead of
+    /// relying on a reader knowing that the two coincide here.
     fn sub(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("PackedGf2::sub")
+        assert_eq!(self.dims(), rhs.dims(), "shape mismatch in sub");
+        let mut out = self;
+        for (k, w) in rhs.as_words().iter().enumerate() {
+            out.as_mut_words()[k] = out.as_words()[k] ^ *w;
+        }
+        out
     }
 }
 
 /// Negation is the identity, for the same reason.
 impl<W: NaturalNumber> Neg for PackedGf2<W> {
     type Output = Self;
+    /// The identity, for the same reason.
     fn neg(self) -> Self {
-        todo!("PackedGf2::neg")
+        self
     }
 }
 
 impl<W: NaturalNumber> Mul for PackedGf2<W> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("PackedGf2::mul")
+        let (m, k) = self.dims();
+        let (k2, n) = rhs.dims();
+        assert_eq!(k, k2, "inner dimension mismatch in mul");
+        let mut out = PackedGf2::allocate(m, n);
+        for i in 0..m {
+            for j in 0..n {
+                // The 𝔽₂ dot product of row i and column j: parity of the shared ones.
+                let mut acc = false;
+                for t in 0..k {
+                    if self.bit_at(i, t) && rhs.bit_at(t, j) {
+                        acc = !acc;
+                    }
+                }
+                if acc {
+                    out.set_bit(i, j);
+                }
+            }
+        }
+        out
     }
 }
 
 impl<W: NaturalNumber, S: Ring + Copy> Mul<S> for PackedGf2<W> {
     type Output = Self;
     fn mul(self, scalar: S) -> Self {
-        let _ = scalar;
-        todo!("PackedGf2::mul_scalar")
+        // Scaling by a ring element: zero clears the matrix, anything else leaves it, because the
+        // only units of 𝔽₂ are 0 and 1.
+        if scalar.is_zero() {
+            let (r, c) = self.dims();
+            return PackedGf2::allocate(r, c);
+        }
+        self
     }
 }
 
 impl<W: NaturalNumber, S: Ring + Copy> MulAssign<S> for PackedGf2<W> {
     fn mul_assign(&mut self, scalar: S) {
-        let _ = scalar;
-        todo!("PackedGf2::mul_assign_scalar")
+        if scalar.is_zero() {
+            for w in self.as_mut_words() {
+                *w = W::zero();
+            }
+        }
     }
 }

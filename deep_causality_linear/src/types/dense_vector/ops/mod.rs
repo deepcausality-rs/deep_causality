@@ -19,10 +19,10 @@ where
     T: CommutativeSemiring + Clone,
 {
     fn zero() -> Self {
-        todo!("DenseVector::zero")
+        DenseVector::from_vec(alloc::vec::Vec::new())
     }
     fn is_zero(&self) -> bool {
-        todo!("DenseVector::is_zero")
+        self.as_slice().iter().all(|v| v.is_zero())
     }
 }
 
@@ -32,8 +32,14 @@ where
 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("DenseVector::add_op")
+        assert_eq!(self.len(), rhs.len(), "length mismatch in add");
+        DenseVector::from_vec(
+            self.into_data()
+                .into_iter()
+                .zip(rhs.into_data())
+                .map(|(a, b)| a + b)
+                .collect(),
+        )
     }
 }
 
@@ -43,8 +49,14 @@ where
 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("DenseVector::sub_op")
+        assert_eq!(self.len(), rhs.len(), "length mismatch in sub");
+        DenseVector::from_vec(
+            self.into_data()
+                .into_iter()
+                .zip(rhs.into_data())
+                .map(|(a, b)| a - b)
+                .collect(),
+        )
     }
 }
 
@@ -54,7 +66,12 @@ where
 {
     type Output = Self;
     fn neg(self) -> Self {
-        todo!("DenseVector::neg_op")
+        DenseVector::from_vec(
+            self.into_data()
+                .into_iter()
+                .map(|v| T::zero() - v)
+                .collect(),
+        )
     }
 }
 
@@ -65,8 +82,7 @@ where
 {
     type Output = Self;
     fn mul(self, scalar: S) -> Self {
-        let _ = scalar;
-        todo!("DenseVector::mul_scalar")
+        DenseVector::from_vec(self.into_data().into_iter().map(|v| v * scalar).collect())
     }
 }
 
@@ -76,7 +92,8 @@ where
     S: Ring + Copy,
 {
     fn mul_assign(&mut self, scalar: S) {
-        let _ = scalar;
-        todo!("DenseVector::mul_assign_scalar")
+        for v in self.as_mut_data() {
+            *v *= scalar;
+        }
     }
 }

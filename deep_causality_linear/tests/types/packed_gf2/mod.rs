@@ -6,3 +6,5 @@
 mod algebra_tests;
 #[cfg(test)]
 mod mod_tests;
+#[cfg(test)]
+mod ops_tests;

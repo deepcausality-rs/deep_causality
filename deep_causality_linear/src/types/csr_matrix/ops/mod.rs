@@ -30,17 +30,30 @@ where
     type Scalar = T;
 
     fn rows(&self) -> usize {
-        todo!("CsrMatrix::rows")
+        self.shape().0
     }
     fn cols(&self) -> usize {
-        todo!("CsrMatrix::cols")
+        self.shape().1
     }
 
     /// A position inside the shape but outside the stored pattern returns the scalar zero. It is
     /// genuinely zero, and a caller asking for it has done nothing wrong.
     fn get(&self, row: usize, col: usize) -> Result<T, LinearError> {
-        let _ = (row, col);
-        todo!("CsrMatrix::get_view")
+        let (r, c) = self.shape();
+        if row >= r || col >= c {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, col),
+                shape: (r, c),
+            });
+        }
+        // A position inside the shape but outside the stored pattern is a zero, not an error.
+        let (start, end) = (self.row_indices()[row], self.row_indices()[row + 1]);
+        for k in start..end {
+            if self.col_indices()[k] == col {
+                return Ok(self.values()[k].clone());
+            }
+        }
+        Ok(T::zero())
     }
 }
 
@@ -50,13 +63,54 @@ where
 {
     /// Stores nothing, so the cost is the row-pointer array rather than `rows * cols`.
     fn zeros(rows: usize, cols: usize) -> Self {
-        let _ = (rows, cols);
-        todo!("CsrMatrix::zeros_build")
+        CsrMatrix::with_capacity(rows, cols, 0)
     }
 
     fn set(&mut self, row: usize, col: usize, value: T) -> Result<(), LinearError> {
-        let _ = (row, col, value);
-        todo!("CsrMatrix::set_build")
+        let (r, c) = self.shape();
+        if row >= r || col >= c {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, col),
+                shape: (r, c),
+            });
+        }
+        // Rebuilding is O(nnz) per write and this is not the construction path a caller should
+        // reach for in a loop; `from_triplets` builds in one pass. `set` exists because
+        // `MatrixBuild` needs it, and correctness matters more here than the constant.
+        let mut triplets = alloc::vec::Vec::with_capacity(self.values().len() + 1);
+        let mut replaced = false;
+        for i in 0..r {
+            for k in self.row_indices()[i]..self.row_indices()[i + 1] {
+                let j = self.col_indices()[k];
+                if i == row && j == col {
+                    triplets.push((i, j, value.clone()));
+                    replaced = true;
+                } else {
+                    triplets.push((i, j, self.values()[k].clone()));
+                }
+            }
+        }
+        if !replaced {
+            triplets.push((row, col, value));
+        }
+        triplets.sort_by_key(|&(i, j, _)| (i, j));
+
+        let mut row_indices = alloc::vec![0usize; r + 1];
+        let mut col_indices = alloc::vec::Vec::new();
+        let mut values = alloc::vec::Vec::new();
+        for (i, j, v) in triplets {
+            if v.is_zero() {
+                continue;
+            }
+            col_indices.push(j);
+            values.push(v);
+            row_indices[i + 1] += 1;
+        }
+        for i in 0..r {
+            row_indices[i + 1] += row_indices[i];
+        }
+        *self = CsrMatrix::from_raw_parts(row_indices, col_indices, values, (r, c));
+        Ok(())
     }
 }
 
@@ -65,10 +119,10 @@ where
     T: CommutativeSemiring + Copy + PartialEq,
 {
     fn zero() -> Self {
-        todo!("CsrMatrix::zero_op")
+        CsrMatrix::new()
     }
     fn is_zero(&self) -> bool {
-        todo!("CsrMatrix::is_zero_op")
+        self.values().iter().all(|v| v.is_zero())
     }
 }
 
@@ -77,10 +131,21 @@ where
     T: CommutativeSemiring + Copy + PartialEq,
 {
     fn one() -> Self {
-        todo!("CsrMatrix::one_op")
+        // The 1x1 identity: `One` has no size to work from, so it takes the smallest.
+        CsrMatrix::from_triplets(1, 1, &[(0, 0, T::one())])
+            .expect("a 1x1 triplet is inside a 1x1 shape")
     }
     fn is_one(&self) -> bool {
-        todo!("CsrMatrix::is_one_op")
+        let (r, c) = self.shape();
+        if r != c {
+            return false;
+        }
+        (0..r).all(|i| {
+            (0..c).all(|j| {
+                let v = self.get_value_at(i, j);
+                if i == j { v == T::one() } else { v.is_zero() }
+            })
+        })
     }
 }
 
@@ -90,8 +155,8 @@ where
 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("CsrMatrix::add_op")
+        self.add_matrix(&rhs)
+            .expect("CsrMatrix shape mismatch in add")
     }
 }
 
@@ -101,8 +166,9 @@ where
 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("CsrMatrix::sub_op")
+        let neg = rhs.scalar_mult(T::zero() - T::one());
+        self.add_matrix(&neg)
+            .expect("CsrMatrix shape mismatch in sub")
     }
 }
 
@@ -112,7 +178,8 @@ where
 {
     type Output = Self;
     fn neg(self) -> Self {
-        todo!("CsrMatrix::neg_op")
+        let minus_one = T::zero() - T::one();
+        self.scalar_mult(minus_one)
     }
 }
 
@@ -122,8 +189,8 @@ where
 {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self {
-        let _ = rhs;
-        todo!("CsrMatrix::mul_op")
+        self.mat_mult(&rhs)
+            .expect("CsrMatrix dimension mismatch in mul")
     }
 }
 
@@ -134,8 +201,13 @@ where
 {
     type Output = Self;
     fn mul(self, scalar: S) -> Self {
-        let _ = scalar;
-        todo!("CsrMatrix::mul_scalar_op")
+        let (ri, ci, vals, shape) = self.into_parts();
+        CsrMatrix::from_raw_parts(
+            ri,
+            ci,
+            vals.into_iter().map(|v| v * scalar).collect(),
+            shape,
+        )
     }
 }
 
@@ -145,7 +217,12 @@ where
     S: Ring + Copy,
 {
     fn mul_assign(&mut self, scalar: S) {
-        let _ = scalar;
-        todo!("CsrMatrix::mul_assign_scalar_op")
+        let taken = core::mem::take(self);
+        let (ri, ci, vals, shape) = taken.into_parts();
+        let mut scaled = vals;
+        for v in &mut scaled {
+            *v *= scalar;
+        }
+        *self = CsrMatrix::from_raw_parts(ri, ci, scaled, shape);
     }
 }
