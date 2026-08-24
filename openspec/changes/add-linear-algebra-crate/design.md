@@ -27,7 +27,11 @@ and no negative impls; `unsafe_code = "forbid"` workspace-wide; macros barred fr
 **Goals:**
 
 - One crate that owns matrix representations and the algorithms over them, with sparse, dense and
-  bit-packed 𝔽₂ side by side.
+  bit-packed 𝔽₂ side by side, plus the vector type the census showed is the larger need.
+- A crate that is genuinely generic over the tower — integers and floats — rather than a float
+  library with type parameters. Operations banded by the structure they need, not by convenience.
+- The minimum surface expected of a linear algebra library: solve, a reusable factorisation,
+  triangular substitution, inner products and norms.
 - Exact 𝔽₂ rank, kernel basis and image basis, closing G-01 and removing the `1e-5` tolerance from
   homology, closing G-02.
 - The duplicated determinants and ranks in `deep_causality_topology` replaced by shared
@@ -87,6 +91,43 @@ optional = true
 
 confined to `extensions/ext_iso.rs` behind `#[cfg(feature = "tensor-iso")]`. The core — `CsrMatrix`,
 `solver/cg.rs` — is tensor-free, so the absorbing crate can sit below tensor with no contortion.
+
+### Integers are a first-class scalar, not a special case
+
+The tower distinguishes ℕ, ℤ, ℚ, ℝ and ℂ, and linear algebra respects that distinction rather than
+flattening it to `f64`. The decisive fact is that **the determinant is a polynomial in the entries**
+— it needs no division — so it is well defined over any commutative ring, ℤ included. Gaussian
+elimination divides by its pivot and therefore leaves ℤ on its first step.
+
+That is not academic here. `deep_causality_topology`'s boundary matrices are `CsrMatrix<i8>`
+(`cell_complex/boundary_operator.rs:19`), and their rank is currently obtained by densifying to
+`f64`, running an SVD and thresholding at `1e-5`. The rank of an integer matrix is an exact question.
+Bareiss fraction-free elimination answers it in cubic time without leaving ℤ, using the `div_euclid`
+and `normalize` that `EuclideanDomain` already supplies.
+
+So the crate carries three ranks — exact over `EuclideanDomain`, exact over 𝔽₂, numerical over
+`RealField` — as three separate calls. They disagree on real inputs, and `qcl-gaps.md` G-02 records
+what conflating two of them already cost.
+
+### The scalar layer is the tower's, not the crate's
+
+`deep_causality_algebra` already publishes `CommutativeSemiring`, `CommutativeRing`,
+`EuclideanDomain`, `Field`, `RealField`, `Normed`, `NormedScalar`, `ConjugateScalar` and `Scalar`,
+and `deep_causality_num` publishes `NaturalNumber`. The crate defines none of its own.
+
+This is the discipline the `deep_causality_num` split was about. A linear-algebra crate with its own
+scalar hierarchy would fork the tower, and the E0119 traps that split produced are the evidence for
+what that costs. `NormedScalar` in particular does more work than it looks: `modulus_squared` lands
+in an ordered `Real`, which is what lets partial pivoting work over ℂ without requiring the scalar
+itself to be ordered.
+
+### Composition is part of the contract, not an extension
+
+Every container gets a `deep_causality_haft` witness matching the trait set `CsrMatrixWitness`
+already implements — `HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad`,
+`Adjunction`. A container that stopped short would compose in some pipelines and not others, which is
+worse than being uniformly absent, and the workspace has cross-crate examples that would break
+silently.
 
 ### The crate is built test-first, and the suite is verified before it is trusted
 

@@ -374,10 +374,65 @@ proposed at the time and are not rewritten. That leaves 34 of the 203 files unto
 - **Do physics' five small-matrix helpers consolidate?** One pair does, inside
   `deep_causality_physics`, and it needs no crate boundary. Out of scope here.
 
+## Scope: tier 1
+
+Linear algebra was a side utility here until the quantum work arrived, and the code shows it. The
+pieces of a library exist, each added for one caller and scoped to it:
+
+| operation | where it lives | why it does not add up to a library |
+|---|---|---|
+| dense solve `Ax=b` | `algorithms/.../brcd_linalg.rs:28`, `pub(crate)` | the workspace's only LU, private to one estimator |
+| least squares | `CausalTensor::solve_least_squares_cholsky` | Cholesky on the normal equations; squares the condition number |
+| matrix exponential | `expm_scaled`, private, `causal_tensor_network/solve/local.rs:880` | locked inside the MPS solver |
+| Frobenius norm | `quantum/.../operator_linalg.rs:64` and `CausalTensor::norm_l2` | two answers to one question |
+| LU, pseudo-inverse, condition number, non-symmetric eigen, vector type | absent | — |
+
+The sharpest consequence is at `physics/src/kernels/dynamics/estimation.rs:158-164`, where the Kalman
+gain `K = P Hᵀ S⁻¹` is computed by explicitly inverting `S` and multiplying. Solve, don't invert, is
+the first rule of numerical linear algebra; it is broken here because **there is no solve to call**.
+
+**Tier 1, in this change:** the scalar contract banded on the tower; the vector; dense against sparse;
+`solve` with a reusable LU and triangular substitution; norms and inner products defined once; exact
+integer determinant and rank; an HKT witness per container.
+
+**Tier 2, subsequent changes:** QR-based least squares; pseudo-inverse and condition number, both
+cheap once the SVD is here; non-symmetric eigendecomposition; the matrix exponential promoted out of
+the MPS solver; Hermite and Smith normal forms — Smith is what integral homology **with torsion**
+would need, which no floating-point decomposition can give.
+
+**Tier 3, not planned:** BLAS/LAPACK bindings, SIMD, GPU; iterative solvers beyond CG; sparse direct
+factorisation with fill-reducing ordering.
+
+## The integer band
+
+The tower distinguishes ℕ, ℤ, ℚ, ℝ, ℂ, and the linear algebra respects that rather than flattening
+to `f64`. The load-bearing fact: **the determinant is a polynomial in the entries and needs no
+division**, so it is defined over any commutative ring. Gaussian elimination divides by its pivot and
+leaves ℤ on its first step.
+
+| band | tower bound | admits | operations |
+|---|---|---|---|
+| semiring | `CommutativeSemiring` | ℕ | add, scale, matmul, matrix–vector, dot, transpose, trace |
+| ring | `CommutativeRing` | ℤ and above | the above, plus subtract, negate, determinant |
+| Euclidean domain | `EuclideanDomain` | ℤ | exact fraction-free determinant and rank |
+| field | `Field` | 𝔽₂, ℚ, ℝ, ℂ | rref, rank, kernel, image, inverse, solve |
+| normed field | `NormedScalar` | ℝ, ℂ, `Float106` | norms, pivot selection by magnitude |
+| real field | `RealField` | ℝ, `Float106` | SVD, QR, eigen, Cholesky, CG |
+
+This is not academic. Topology's boundary matrices are `CsrMatrix<i8>`
+(`cell_complex/boundary_operator.rs:19`) — integer matrices whose rank is currently obtained by
+densifying to `f64`, running an SVD and thresholding at `1e-5`. Bareiss fraction-free elimination
+answers it exactly in cubic time using the `div_euclid` and `normalize` that `EuclideanDomain`
+already supplies.
+
+The crate therefore carries **three ranks** — exact over `EuclideanDomain`, exact over 𝔽₂, numerical
+over `RealField` — as three separate calls. They disagree on real inputs, and G-02 records what
+conflating two of them already cost.
+
 ## Open questions
 
-1. **Are the 60 rank-1 sites worth a vector type?** The census answered the matrix question and
-   raised this one. A dense matrix type serves none of them, and `Vec<T>` may simply be right.
+1. **Does the sparse vector ever earn its place?** Deferred: every measured site is dense, sparse
+   matrix–vector produces a dense result, and the CG solvers work matrix-free against `&[R]`.
 
 ## Related
 

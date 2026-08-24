@@ -131,11 +131,38 @@ unambiguously a migration failure.
 - **WHEN** a consumer fails to build or its tests fail after migration
 - **THEN** the crate's own suite is known to have been passing beforehand
 
-### Requirement: Test layout follows the repository's structure rules
-The suite SHALL mirror the `src` tree file for file, SHALL register every test module upward, SHALL declare its directories in `tests/BUILD.bazel`, and SHALL place shared helpers under `src/utils_tests/`.
+### Requirement: Shared test helpers live in `src`, never in `tests`
+Every shared test helper SHALL live under `src/utils_tests/`, and no helper module SHALL be placed inside the `tests/` tree.
 
-Bazel cannot reach helper files inside `tests/`, which is why shared helpers live in `src` and are
-themselves covered. A test file that is not registered in its `mod.rs` compiles and never runs.
+Bazel cannot reach a helper file that lives inside `tests/` — only the `src` tree is available to the
+test target — so a helper placed there builds under Cargo and fails under Bazel. Placing helpers in
+`src` has a second consequence that is not optional: they are library code, so the repository's
+coverage requirement applies to them, and they need their own tests.
+
+The workspace spells this directory two ways today — `utils_tests` in `deep_causality_algebra`,
+`deep_causality_num_complex`, `deep_causality_physics` and `deep_causality_topology`, and
+`utils_test` in `deep_causality` and `deep_causality_ethos`. This crate follows `AGENTS.md` and the
+neighbouring math crates: **`utils_tests`**.
+
+#### Scenario: No helper sits under tests
+- **WHEN** the `tests/` tree is searched for helper modules
+- **THEN** it contains only test files, each named `*_tests.rs`
+
+#### Scenario: Bazel reaches every helper
+- **WHEN** `bazel test //deep_causality_linear/...` runs from a clean output base
+- **THEN** it resolves every helper without a missing-file error
+
+#### Scenario: Helpers are themselves tested
+- **WHEN** a helper `src/utils_tests/h.rs` exists
+- **THEN** its tests are at `tests/utils_tests/h_tests.rs`
+- **AND** coverage over `src/utils_tests/` meets the crate's coverage requirement
+
+### Requirement: Test layout mirrors the source tree and is registered in both build systems
+The suite SHALL mirror the `src` tree file for file, SHALL register every test module upward through its `mod.rs` chain, and SHALL declare every test directory in `tests/BUILD.bazel`.
+
+A test file that is not registered in its `mod.rs` compiles and never runs, and a directory absent
+from `tests/BUILD.bazel` is invisible to the primary gate. Both failures are silent: the suite
+appears to pass.
 
 #### Scenario: Structure mirrors the source
 - **WHEN** a source file `src/a/b.rs` exists
@@ -148,7 +175,4 @@ themselves covered. A test file that is not registered in its `mod.rs` compiles 
 #### Scenario: Bazel sees every test directory
 - **WHEN** `bazel test //deep_causality_linear/...` runs
 - **THEN** every test directory is declared in `tests/BUILD.bazel` and executes
-
-#### Scenario: Shared helpers are covered
-- **WHEN** coverage is measured
-- **THEN** helpers under `src/utils_tests/` are themselves covered
+- **AND** the count of tests it executes matches the count `cargo test` executes

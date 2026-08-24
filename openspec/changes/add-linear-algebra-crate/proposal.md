@@ -1,4 +1,4 @@
-# Consolidate the workspace's linear algebra into `deep_causality_linear`
+# Establish `deep_causality_linear` as the workspace's linear algebra crate
 
 ## Why
 
@@ -38,8 +38,20 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   cannot write it at all (E0117, probed), and writing it in linear would need the reverse edge, so
   it lives in `deep_causality_tensor`.
 - Move `CsrMatrix`, the CG solvers and the sparse HKT witness into it from `deep_causality_sparse`.
-- Add a dense row-major matrix and a bit-packed 𝔽₂ matrix, generic over `NaturalNumber` word types,
-  alongside the sparse one.
+- Add a dense row-major matrix, a dense vector, and a bit-packed 𝔽₂ matrix alongside the sparse one.
+  The vector answers the larger half of the census: **60 rank-1 constructions against 46 rank-2**.
+- Band every operation on the tower trait it actually needs, so the crate is generic over **integers
+  and floats** rather than floats with generics bolted on. The determinant needs no division and so
+  works over ℤ; elimination divides and so does not. ℕ admits less again — no subtraction, no
+  determinant.
+- Add exact integer linear algebra: a fraction-free determinant and an exact rank over
+  `EuclideanDomain`, neither leaving ℤ. This is what `deep_causality_topology`'s `CsrMatrix<i8>`
+  boundary matrices need and currently reach by densifying to `f64` and running an SVD.
+- Add the operations that make it a library rather than a consolidation: `solve(A, b)` by LU with
+  partial pivoting, the factorisation exposed for reuse, triangular substitution, the Hermitian inner
+  product, and the vector and matrix norms defined once.
+- Give every container a `deep_causality_haft` witness matching the existing ones, so the new types
+  compose with `CausalTensor` and the other mathematical crates rather than stopping the pipeline.
 - Build the crate **test-first**: declare the whole public API with `todo!()` bodies, write the
   complete suite against it, observe every test fail for the right reason, prove the suite rejects
   each known defect class, then implement, then migrate consumers. No consumer is repointed until the
@@ -75,6 +87,17 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   and the decompositions relocated behind `CausalTensor`'s unchanged methods.
 - `linear-f2-algebra`: exact mod-2 rank, kernel basis and image basis; word-parallel elimination;
   and the exactness that removes the `1e-5` tolerance from homology.
+- `linear-scalar-contract`: no new scalar traits; every operation banded on the weakest tower trait
+  that makes it correct, from `CommutativeSemiring` up to `RealField`, with exact and approximate
+  scalars distinguished at the signature.
+- `linear-integer-algebra`: fraction-free integer determinant, exact integer rank, the ring
+  operations without a field bound, and the three distinct ranks kept distinct.
+- `linear-vector`: the dense vector, dot and outer products, the Hermitian inner product,
+  matrix–vector for all three representations, and norms defined once.
+- `linear-solve`: `solve`, LU with partial pivoting, a reusable factorisation, triangular
+  substitution, and solving preferred over inverting.
+- `linear-hkt-composition`: an HKT witness per container, the laws tested, and composition with the
+  neighbouring mathematical crates preserved.
 - `linear-consumer-migration`: the retirement of `deep_causality_sparse`, the type identity a
   re-export preserves, and what the two build systems and the documentation must agree on.
 - `linear-test-first-development`: the crate is built test-first — API declared with unimplemented
@@ -86,6 +109,15 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
 - `neumann-poisson`: `openspec/specs/neumann-poisson/spec.md:34` requires the preconditioned CG
   variant of `deep_causality_sparse`. The requirement moves to `deep_causality_linear`; the
   behaviour is unchanged.
+
+## Deferred to subsequent changes
+
+- **Tier 2**: QR-based least squares alongside the existing Cholesky path; pseudo-inverse and
+  condition number, both cheap once the SVD is here; non-symmetric eigendecomposition; the matrix
+  exponential promoted out of `causal_tensor_network/solve/local.rs:880`; Hermite and Smith normal
+  forms — Smith is what integral homology **with torsion** would need.
+- **Tier 3**: BLAS or LAPACK bindings, SIMD, GPU offload; iterative solvers beyond conjugate
+  gradient; sparse direct factorisation with fill-reducing ordering.
 
 ## Impact
 
