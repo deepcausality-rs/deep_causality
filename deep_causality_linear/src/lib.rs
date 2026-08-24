@@ -51,6 +51,7 @@ mod errors;
 mod extensions;
 mod traits;
 mod types;
+pub mod utils_tests;
 
 // Errors
 pub use crate::errors::linear_error::LinearError;
@@ -80,7 +81,8 @@ pub use crate::algorithms::integer::{determinant_exact, rank_exact};
 
 // Decompositions, whose bodies `CausalTensor` delegates to
 pub use crate::algorithms::decomposition::{
-    EigenPair, QrFactors, SvdFactors, eigen_hermitian, qr, svd, svd_decomp, svd_truncated,
+    EigenPair, QrFactors, SvdFactors, Truncation, eigen_hermitian, qr, singular_values, svd,
+    svd_truncated,
 };
 
 // Norms, defined once

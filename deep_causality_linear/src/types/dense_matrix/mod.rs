@@ -6,6 +6,7 @@
 //! A dense, row-major matrix.
 
 pub mod algebra;
+pub mod ops;
 
 use crate::errors::linear_error::LinearError;
 use alloc::vec::Vec;

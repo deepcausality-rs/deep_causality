@@ -123,11 +123,17 @@ itself to be ordered.
 
 ### Composition is part of the contract, not an extension
 
-Every container gets a `deep_causality_haft` witness matching the trait set `CsrMatrixWitness`
-already implements — `HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad`,
-`Adjunction`. A container that stopped short would compose in some pipelines and not others, which is
-worse than being uniformly absent, and the workspace has cross-crate examples that would break
-silently.
+Every **element-generic** container gets a `deep_causality_haft` witness matching the trait set
+`CsrMatrixWitness` already implements — `HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`,
+`CoMonad`, `Adjunction`. A container that stopped short would compose in some pipelines and not
+others, which is worse than being uniformly absent, and the workspace has cross-crate examples that
+would break silently.
+
+`PackedGf2` is the one exclusion and it is structural rather than a shortfall. `HKT` projects
+`Type<T>` to a container of `T`; this type is generic in its *word* and fixed to `Gf2` in its
+element, because one bit per entry has no room for anything else. There is no `PackedGf2<T>` to
+name. That falls out of the packing decision, which is taken on measured grounds elsewhere in this
+document, and a caller who wants to map over an 𝔽₂ matrix converts to `DenseMatrix<Gf2>`.
 
 ### The crate is built test-first, and the suite is verified before it is trusted
 

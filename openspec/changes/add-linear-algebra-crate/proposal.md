@@ -50,8 +50,10 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
 - Add the operations that make it a library rather than a consolidation: `solve(A, b)` by LU with
   partial pivoting, the factorisation exposed for reuse, triangular substitution, the Hermitian inner
   product, and the vector and matrix norms defined once.
-- Give every container a `deep_causality_haft` witness matching the existing ones, so the new types
-  compose with `CausalTensor` and the other mathematical crates rather than stopping the pipeline.
+- Give every element-generic container a `deep_causality_haft` witness matching the existing ones, so
+  the new types compose with `CausalTensor` and the other mathematical crates rather than stopping
+  the pipeline. The bit-packed 𝔽₂ matrix is excluded structurally — `HKT` projects `Type<T>` and its
+  element type is fixed by the packing — with the conversion to `DenseMatrix<Gf2>` as the route in.
 - Give every container its **tower** impls too, not only the HKT witness. A witness makes a container
   composable through `deep_causality_haft`; it does not make it composable through the tower, and a
   function bounded on `Ring` or `Module` cannot take a container that never declares them. The crate

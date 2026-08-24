@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
-### Requirement: Every container type carries an HKT witness
-`deep_causality_linear` SHALL provide a `deep_causality_haft` witness for each of its container types — the dense matrix, the vector, the bit-packed 𝔽₂ matrix and the sparse matrix — and each witness SHALL implement the same trait set the existing witnesses do.
+### Requirement: Every element-generic container carries an HKT witness
+`deep_causality_linear` SHALL provide a `deep_causality_haft` witness for each container that is generic in its element type — the dense matrix, the vector and the sparse matrix — and each witness SHALL implement the same trait set the existing witnesses do.
 
 Uniform composition across the mathematical crates is the reason `deep_causality_haft` exists, and
 the containers this crate ships are the ones a caller would compose with `CausalTensor` and
@@ -10,9 +10,24 @@ the containers this crate ships are the ones a caller would compose with `Causal
 container that stopped short of that would be composable in some pipelines and not others, which is
 worse than being uniformly absent.
 
-#### Scenario: Each container has a witness
+**The bit-packed 𝔽₂ matrix is excluded, and the exclusion is structural.** `HKT` projects `Type<T>`
+to a container of `T`. `PackedGf2<W>` is generic in its *word* type and not in its element type,
+which is fixed to `Gf2` by the storage: one bit per entry has no room for anything else. There is no
+`PackedGf2<T>` for `Type<T>` to name, and `fmap` with a function returning `f64` would have nowhere
+to put the result.
+
+This follows from the packing decision, which `linear-matrix-representations` takes on measured
+grounds — 3.2× faster on one eighth the memory at n=2048. A caller who wants to map over an 𝔽₂
+matrix unpacks to `DenseMatrix<Gf2>`, which has a witness, and the conversion is explicit.
+
+#### Scenario: Each element-generic container has a witness
 - **WHEN** the crate's public surface is enumerated
-- **THEN** the dense matrix, the vector, the bit-packed 𝔽₂ matrix and the sparse matrix each name a witness type
+- **THEN** the dense matrix, the vector and the sparse matrix each name a witness type
+
+#### Scenario: The packed exclusion is stated where a reader will look
+- **WHEN** the bit-packed 𝔽₂ matrix is inspected for a witness
+- **THEN** the crate documents that it has none, and that the reason is a fixed element type rather than an omission
+- **AND** it names the conversion to `DenseMatrix<Gf2>` as the route to the HKT surface
 
 #### Scenario: The witness surface matches the existing one
 - **WHEN** a new witness is compared against `CsrMatrixWitness`
@@ -46,7 +61,7 @@ representative values, and the repository already does this for its existing wit
 - **THEN** the result equals the container
 
 ### Requirement: Shape is preserved by the mapping operations
-`fmap` over any of the crate's containers SHALL preserve the container's shape, and SHALL NOT change a matrix's dimensions or a vector's length.
+`fmap` over any of the crate's witnessed containers SHALL preserve the container's shape, and SHALL NOT change a matrix's dimensions or a vector's length.
 
 `fmap` is elementwise, so the shape is not its business. A sparse matrix adds a wrinkle worth stating
 because it is the one that has bitten this pattern before: mapping a function that sends zero to a

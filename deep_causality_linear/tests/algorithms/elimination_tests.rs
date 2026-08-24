@@ -1,0 +1,219 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! Elimination, and the Cayley-Menger regression that makes pivoting non-negotiable.
+
+use deep_causality_linear::utils_tests::fixtures_cayley_menger::*;
+use deep_causality_linear::utils_tests::fixtures_matrix::*;
+use deep_causality_linear::{
+    DenseMatrix, LinearError, MatrixBuild, determinant, rank, rank_stable, rref, rref_stable,
+};
+
+fn dense(f: (Vec<f64>, usize, usize)) -> DenseMatrix<f64> {
+    let (d, r, c) = f;
+    DenseMatrix::from_vec(d, r, c).unwrap()
+}
+
+// ---- rank --------------------------------------------------------------------------------------
+
+#[test]
+fn test_rank_of_a_known_rank_deficient_matrix() {
+    let m = dense(rank_deficient_3x3());
+    assert_eq!(rank_stable(&m).unwrap(), RANK_DEFICIENT_3X3_RANK);
+}
+
+#[test]
+fn test_rank_of_the_identity_is_its_order() {
+    let m: DenseMatrix<f64> = DenseMatrix::identity(4);
+    assert_eq!(rank_stable(&m).unwrap(), 4);
+}
+
+#[test]
+fn test_rank_of_a_zero_matrix_is_zero() {
+    let m: DenseMatrix<f64> = DenseMatrix::zeros(3, 3);
+    assert_eq!(rank_stable(&m).unwrap(), 0);
+}
+
+#[test]
+fn test_rank_of_an_empty_matrix_is_zero_rather_than_an_error() {
+    for shape in [(0usize, 0usize), (0, 3), (3, 0)] {
+        let m: DenseMatrix<f64> = DenseMatrix::zeros(shape.0, shape.1);
+        assert_eq!(rank_stable(&m).unwrap(), 0, "shape {shape:?}");
+    }
+}
+
+#[test]
+fn test_a_zero_row_and_a_zero_column_do_not_contribute_rank() {
+    let mut m: DenseMatrix<f64> = DenseMatrix::zeros(3, 3);
+    m.set(0, 0, 1.0).unwrap();
+    m.set(1, 1, 1.0).unwrap();
+    // Row 2 and column 2 are entirely zero.
+    assert_eq!(rank_stable(&m).unwrap(), 2);
+}
+
+#[test]
+fn test_rank_of_a_non_square_matrix_in_both_orientations() {
+    let wide: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0], 2, 3).unwrap();
+    let tall: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 3, 2).unwrap();
+    assert_eq!(rank_stable(&wide).unwrap(), 2);
+    assert_eq!(rank_stable(&tall).unwrap(), 2);
+}
+
+// ---- rref --------------------------------------------------------------------------------------
+
+#[test]
+fn test_rref_reports_the_rank_and_the_pivot_columns_from_one_pass() {
+    let mut m = dense(rank_deficient_3x3());
+    let reduced = rref_stable(&mut m).unwrap();
+    assert_eq!(reduced.rank(), 2);
+    assert_eq!(reduced.pivot_columns().len(), 2);
+    // Ascending, and each within the shape.
+    let pivots = reduced.pivot_columns();
+    assert!(
+        pivots.windows(2).all(|w| w[0] < w[1]),
+        "pivots must ascend: {pivots:?}"
+    );
+}
+
+#[test]
+fn test_rref_of_the_identity_is_the_identity() {
+    use deep_causality_linear::MatrixView;
+    let mut m: DenseMatrix<f64> = DenseMatrix::identity(3);
+    let reduced = rref_stable(&mut m).unwrap();
+    assert_eq!(reduced.rank(), 3);
+    for i in 0..3 {
+        for j in 0..3 {
+            let expected = if i == j { 1.0 } else { 0.0 };
+            assert_eq!(m.get(i, j).unwrap(), expected);
+        }
+    }
+}
+
+// ---- the pivot rule ----------------------------------------------------------------------------
+
+#[test]
+fn test_a_near_zero_leading_pivot_does_not_become_the_pivot() {
+    // The conditioning case: eliminating on 1e-18 loses the second row to rounding.
+    let m = dense(near_zero_pivot_2x2());
+    let det = determinant(&m).unwrap();
+    // 1e-18 * 1 - 1 * 1, which is -1.0 in f64.
+    assert!((det - (-1.0)).abs() < 1e-12, "determinant was {det}");
+}
+
+#[test]
+fn test_a_matrix_with_a_zero_leading_entry_is_still_non_singular() {
+    let m = dense(zero_leading_entry_3x3());
+    let det = determinant(&m).unwrap();
+    assert!(
+        (det - ZERO_LEADING_ENTRY_DETERMINANT).abs() < 1e-12,
+        "determinant was {det}"
+    );
+    assert_ne!(det, 0.0, "an unpivoted elimination returns zero here");
+}
+
+// ---- Cayley-Menger: the regression -------------------------------------------------------------
+
+#[test]
+fn test_the_tetrahedron_cayley_menger_determinant_is_four() {
+    let m = dense(regular_unit_tetrahedron());
+    let det = determinant(&m).unwrap();
+    assert!(
+        (det - TETRAHEDRON_CM_DETERMINANT).abs() < 1e-9,
+        "determinant was {det}, must be 4.0; a determinant that takes the diagonal as its pivot returns 0.0 here"
+    );
+}
+
+#[test]
+fn test_the_tetrahedron_volume_is_root_two_over_twelve() {
+    let m = dense(regular_unit_tetrahedron());
+    let det = determinant(&m).unwrap();
+    let vol = cm_determinant_to_volume_squared(det, 5).sqrt();
+    assert!(
+        (vol - TETRAHEDRON_VOLUME).abs() < 1e-12,
+        "volume was {vol}, must be sqrt(2)/12; an unpivoted elimination gives NaN here"
+    );
+    assert!(!vol.is_nan(), "an unpivoted elimination produces NaN");
+}
+
+#[test]
+fn test_the_right_triangle_cayley_menger_determinant_is_minus_four() {
+    let m = dense(right_triangle());
+    let det = determinant(&m).unwrap();
+    assert!(
+        (det - RIGHT_TRIANGLE_CM_DETERMINANT).abs() < 1e-9,
+        "determinant was {det}"
+    );
+}
+
+// ---- determinant -------------------------------------------------------------------------------
+
+#[test]
+fn test_determinant_of_a_triangular_matrix_is_the_product_of_its_diagonal() {
+    let m = dense(unit_determinant_3x3());
+    assert!((determinant(&m).unwrap() - UNIT_DETERMINANT_3X3).abs() < 1e-12);
+}
+
+#[test]
+fn test_determinant_of_a_singular_matrix_is_zero() {
+    let m = dense(singular_2x2());
+    assert!(determinant(&m).unwrap().abs() < 1e-12);
+}
+
+#[test]
+fn test_determinant_of_the_empty_matrix_is_one() {
+    // The empty product.
+    let m: DenseMatrix<f64> = DenseMatrix::zeros(0, 0);
+    assert_eq!(determinant(&m).unwrap(), 1.0);
+}
+
+#[test]
+fn test_determinant_rejects_a_non_square_matrix() {
+    let m: DenseMatrix<f64> = DenseMatrix::zeros(2, 3);
+    let e = determinant(&m).unwrap_err();
+    assert!(
+        matches!(e, LinearError::NotSquare { shape: (2, 3) }),
+        "got {e:?}"
+    );
+}
+
+#[test]
+fn test_determinant_of_a_one_by_one_is_its_entry() {
+    let mut m: DenseMatrix<f64> = DenseMatrix::zeros(1, 1);
+    m.set(0, 0, -3.0).unwrap();
+    assert_eq!(determinant(&m).unwrap(), -3.0);
+}
+
+#[test]
+fn test_a_six_by_six_determinant_uses_elimination_rather_than_expansion() {
+    // Cubic rather than factorial: at order 6 a Laplace expansion is 720 terms.
+    let m: DenseMatrix<f64> = DenseMatrix::identity(6);
+    assert!((determinant(&m).unwrap() - 1.0).abs() < 1e-12);
+}
+
+// ---- the exact entry points --------------------------------------------------------------------
+
+#[test]
+fn test_the_exact_and_stable_ranks_agree_on_a_well_conditioned_matrix() {
+    let m = dense(rank_deficient_3x3());
+    assert_eq!(rank(&m).unwrap(), rank_stable(&m).unwrap());
+}
+
+#[test]
+fn test_rref_over_an_unordered_field_needs_no_epsilon() {
+    // The exact entry point admits a field with no ordering. Rational<i64> is not a NormedScalar,
+    // so it can only reach elimination through the exact rule -- which is the point of the split.
+    use deep_causality_num_rational::Rational;
+    let d: Vec<Rational<i64>> = vec![
+        Rational::new(1, 2),
+        Rational::new(1, 3),
+        Rational::new(1, 3),
+        Rational::new(1, 4),
+    ];
+    let mut m = DenseMatrix::from_vec(d, 2, 2).unwrap();
+    let reduced = rref(&mut m).unwrap();
+    assert_eq!(reduced.rank(), 2, "the Hilbert-like 2x2 is non-singular");
+}

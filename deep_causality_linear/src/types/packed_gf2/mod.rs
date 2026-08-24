@@ -6,6 +6,7 @@
 //! A bit-packed matrix over 𝔽₂.
 
 pub mod algebra;
+pub mod ops;
 
 use crate::errors::linear_error::LinearError;
 use alloc::vec::Vec;

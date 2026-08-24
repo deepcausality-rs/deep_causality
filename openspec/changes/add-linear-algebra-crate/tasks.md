@@ -39,7 +39,7 @@ unimplemented.
 - [x] 1.8a Bound nothing on an ad-hoc `core::ops` bundle. The code being moved does this throughout — `mat_mult_impl` takes `T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`, `transpose_impl` takes `T: Copy + Zero`, `vec_mult_impl` takes `T: Copy + Zero + Add + Mul` — and each is a semiring spelled longhand. Restate them as tower traits, keeping `Copy`/`Clone`/`Default` where the representation needs them
 - [x] 1.8b Record every bound loosened from `Field` or `RealField` with the number set it newly admits, so phase 2 can write the test that instantiates it
 - [x] 1.9 Confirm the crate declares no scalar trait, marker or newtype of its own
-- [x] 1.10 Declare an HKT witness per container, matching the trait set `CsrMatrixWitness` implements (`HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Adjunction`)
+- [x] 1.10 Declare an HKT witness per **element-generic** container — dense matrix, vector, sparse matrix — matching the trait set `CsrMatrixWitness` implements (`HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Adjunction`). `PackedGf2` is excluded structurally: `HKT` projects `Type<T>`, and its element type is fixed to `Gf2` by the packing. Document the exclusion where a reader looks for the witness
 - [x] 1.10a Declare the tower impls per container: each matrix reaches `Ring` via `AbelianGroup` + `MulMonoid` + `Distributive` + `Annihilating`, with `Associative<Multiplicative>` and deliberately without `Commutative<Multiplicative>`; the vector reaches `AbelianGroup` with the additive markers only
 - [x] 1.10b Declare `Module<R>` for every container, the vector included — the tower's name for a vector space, and the bound that admits ℤ where `Field` would not
 - [x] 1.10c Document at each impl site any tower trait a container stops short of, and why
@@ -52,23 +52,23 @@ unimplemented.
 
 Exit condition: every test compiles, every test fails, and every failure is the unimplemented panic.
 
-- [ ] 2.1 Build the test tree mirroring `src` file for file, every module registered upward, every directory declared in `tests/BUILD.bazel`
-- [ ] 2.2 Put every shared test helper under `src/utils_tests/` — never inside `tests/`, which Bazel cannot reach — and give each helper its own test at `tests/utils_tests/<name>_tests.rs`, since helpers in `src` are library code and count toward coverage
-- [ ] 2.3 Write one test per scenario in `linear-matrix-representations`, `linear-dense-algorithms`, `linear-f2-algebra` and `linear-crate-identity`; record the scenario → test mapping in a committed `SCENARIOS.md`
-- [ ] 2.4 Cover the enumerated corner cases: 0×0, 0×n, n×0, 1×1, non-square both ways, zero row, zero column, singular, non-singular with a zero `(0,0)`, rank-deficient, column count not a multiple of the word width, same matrix at two word widths, `{-1,0,1}` reduced mod 2, an entry outside `{0,1}` offered to the packed constructor, an empty CSR row, an out-of-shape index, a near-zero float pivot with a larger one below
-- [ ] 2.5 Write the Cayley-Menger regression: the 5×5 CM matrix of a regular unit tetrahedron must give `det = 4.0` and `vol = √2⁄12` (`prototype/cm_det.py` reproduces both, and shows an unpivoted elimination returning zero)
-- [ ] 2.6 Write the 𝔽₂ oracle tests: kernel vectors annihilate and number `cols − rank`; the image basis has `rank` elements and spans the columns; two word widths agree on rank and pivot columns
-- [ ] 2.7 Write the scalar-band tests: the three compile-fail cases from 1.14 as `trybuild`-style or documented negative tests, and one positive test per band showing the admitted scalars
-- [ ] 2.8 Write the integer tests: fraction-free determinant equals the exact rational answer with no float appearing; exact rank on a matrix whose singular values straddle `1e-5`; the three ranks disagreeing on one matrix
-- [ ] 2.9 Write the vector tests: dot against a manual sum, outer product shape, length mismatch rejected, slice round-trip, Hermitian inner product real and non-negative on a complex vector, norms of `[3, -4]` giving 7 / 5 / 4, zero vector giving no `NaN`
-- [ ] 2.10 Write the solve tests: known system, singular rejected, zero `(0,0)` handled, one factorisation applied to three right-hand sides, triangular substitution against the general path, zero diagonal rejected, wrong triangle rejected
+- [x] 2.1 Build the test tree mirroring `src` file for file, every module registered upward, every directory declared in `tests/BUILD.bazel`
+- [x] 2.2 Put every shared test helper under `src/utils_tests/` — never inside `tests/`, which Bazel cannot reach — and give each helper its own test at `tests/utils_tests/<name>_tests.rs`, since helpers in `src` are library code and count toward coverage
+- [x] 2.3 Write one test per scenario in `linear-matrix-representations`, `linear-dense-algorithms`, `linear-f2-algebra` and `linear-crate-identity`; record the scenario → test mapping in a committed `SCENARIOS.md`
+- [x] 2.4 Cover the enumerated corner cases: 0×0, 0×n, n×0, 1×1, non-square both ways, zero row, zero column, singular, non-singular with a zero `(0,0)`, rank-deficient, column count not a multiple of the word width, same matrix at two word widths, `{-1,0,1}` reduced mod 2, an entry outside `{0,1}` offered to the packed constructor, an empty CSR row, an out-of-shape index, a near-zero float pivot with a larger one below
+- [x] 2.5 Write the Cayley-Menger regression: the 5×5 CM matrix of a regular unit tetrahedron must give `det = 4.0` and `vol = √2⁄12` (`prototype/cm_det.py` reproduces both, and shows an unpivoted elimination returning zero)
+- [x] 2.6 Write the 𝔽₂ oracle tests: kernel vectors annihilate and number `cols − rank`; the image basis has `rank` elements and spans the columns; two word widths agree on rank and pivot columns
+- [x] 2.7 Write the scalar-band tests: the three compile-fail cases from 1.14 as `trybuild`-style or documented negative tests, and one positive test per band showing the admitted scalars
+- [x] 2.8 Write the integer tests: fraction-free determinant equals the exact rational answer with no float appearing; exact rank on a matrix whose singular values straddle `1e-5`; the three ranks disagreeing on one matrix
+- [x] 2.9 Write the vector tests: dot against a manual sum, outer product shape, length mismatch rejected, slice round-trip, Hermitian inner product real and non-negative on a complex vector, norms of `[3, -4]` giving 7 / 5 / 4, zero vector giving no `NaN`
+- [x] 2.10 Write the solve tests: known system, singular rejected, zero `(0,0)` handled, one factorisation applied to three right-hand sides, triangular substitution against the general path, zero diagonal rejected, wrong triangle rejected
 - [ ] 2.11 Write the HKT law tests per witness: functor identity and composition, monad left/right identity and associativity, comonad `extend(extract)`, and shape preserved by `fmap`
-- [ ] 2.11a Write the tower-membership tests: each container admitted by a function bounded on `Ring` and by one bounded on `Module<R>`; each matrix REJECTED by one bounded on `CommutativeRing`, because matrix multiplication does not commute
+- [x] 2.11a Write the tower-membership tests: each container admitted by a function bounded on `Ring` and by one bounded on `Module<R>`; each matrix REJECTED by one bounded on `CommutativeRing`, because matrix multiplication does not commute
 - [ ] 2.11b Write one instantiation test per bound recorded in 1.8b, calling the loosened operation at the number set it newly admits — `i64` for every operation moved off `Field`, `u64` for every operation moved to `CommutativeSemiring`
 - [ ] 2.12 Write the delegation tests: each decomposition's result and error variant, to be compared against `CausalTensor`'s current output in phase 5
 - [ ] 2.13 Port the sparse crate's 1,916 lines of tests, adjusted to the new paths
-- [ ] 2.14 Run the suite: confirm every test fails, and that each failure is the unimplemented panic rather than a compile error, a missing import, or an unrelated panic
-- [ ] 2.15 Confirm the suite needed no addition to the public surface to compile — if it did, that is an API design finding: record it and revise phase 1
+- [x] 2.14 Run the suite: confirm every test fails, and that each failure is the unimplemented panic rather than a compile error, a missing import, or an unrelated panic
+- [x] 2.15 Confirm the suite needed no addition to the public surface to compile — if it did, that is an API design finding: record it and revise phase 1
 
 ## 3. Verify the suite before trusting it
 
