@@ -6,3 +6,4 @@
 pub mod matrix_build;
 pub mod matrix_view;
 pub mod row_ops;
+mod tower_pins;

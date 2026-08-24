@@ -55,6 +55,17 @@ pub enum LinearError {
     /// the caller can find it without re-scanning.
     NotBinary { at: (usize, usize) },
 
+    /// An exact computation whose result does not fit the scalar type.
+    ///
+    /// ℤ is unbounded and `i64` is not. The determinant of an integer matrix is an integer, but not
+    /// necessarily one that fits: `det(diag(i64::MAX, 2))` is `2^64 - 2`. Wrapping would return a
+    /// plausible integer that is wrong, and no caller could tell it from a correct one — which is
+    /// the failure mode the exact path exists to remove, reappearing one level down.
+    ///
+    /// Carries the operation that overflowed, because by the time a caller sees this the
+    /// intermediate that overflowed is gone.
+    Overflow { operation: &'static str },
+
     /// An operation that has no meaning on an empty matrix.
     EmptyMatrix,
 }
@@ -103,6 +114,10 @@ impl fmt::Display for LinearError {
                 f,
                 "Not binary: the entry at ({}, {}) is outside {{0, 1}} and cannot be packed into GF(2).",
                 at.0, at.1
+            ),
+            LinearError::Overflow { operation } => write!(
+                f,
+                "Overflow: {operation} produced a value the scalar type cannot hold. The exact result exists in the unbounded structure; it does not fit this representation."
             ),
             LinearError::EmptyMatrix => write!(
                 f,

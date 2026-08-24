@@ -33,6 +33,21 @@ use deep_causality_algebra::EuclideanDomain;
 /// `deep_causality_topology` needs and reaches today by densifying `CsrMatrix<i8>` to `f64` and
 /// running an SVD.
 ///
+/// # The bound is checked, not merely stated
+///
+/// Widening this from `EuclideanDomain` to `CommutativeRing` would compile — the body's divisions
+/// would simply stop being exact — and no behavioural test over ℤ would notice, because ℤ satisfies
+/// both. What notices is a scalar that satisfies the wider bound and not this one:
+///
+/// ```compile_fail,E0277
+/// use deep_causality_linear::{DenseMatrix, determinant_exact};
+///
+/// // f64 is a CommutativeRing and is not a EuclideanDomain in this tower. The fraction-free path
+/// // must refuse it; if the bound is widened, this starts compiling and the doctest fails.
+/// let m: DenseMatrix<f64> = DenseMatrix::from_vec(vec![1.0, 0.0, 0.0, 1.0], 2, 2).unwrap();
+/// let _ = determinant_exact(&m);
+/// ```
+///
 /// # Errors
 ///
 /// [`LinearError::NotSquare`] if the matrix is not square.
@@ -63,6 +78,14 @@ where
 ///
 /// It is **not** the rank over 𝔽₂, which is a different number. See
 /// [`rank_gf2`](crate::algorithms::gf2::rank_gf2).
+///
+/// ```compile_fail,E0277
+/// use deep_causality_linear::{DenseMatrix, rank_exact};
+///
+/// // As for the determinant: f64 must be refused, or the "exact" in the name is false.
+/// let m: DenseMatrix<f64> = DenseMatrix::from_vec(vec![1.0, 0.0, 0.0, 1.0], 2, 2).unwrap();
+/// let _ = rank_exact(&m);
+/// ```
 pub fn rank_exact<M>(m: &M) -> Result<usize, LinearError>
 where
     M: MatrixView,

@@ -10,6 +10,7 @@ pub mod ops;
 
 use crate::errors::linear_error::LinearError;
 use alloc::vec::Vec;
+use deep_causality_num::Zero;
 
 /// A dense vector, carrying its length.
 ///
@@ -34,23 +35,27 @@ pub struct DenseVector<T> {
 impl<T> DenseVector<T> {
     /// Builds from a buffer.
     pub fn from_vec(data: Vec<T>) -> Self {
-        let _ = data;
-        todo!("DenseVector::from_vec")
+        Self { data }
+    }
+
+    /// Consumes the vector and yields its entries.
+    pub(crate) fn into_data(self) -> Vec<T> {
+        self.data
     }
 
     /// The number of entries.
     pub fn len(&self) -> usize {
-        todo!("DenseVector::len")
+        self.data.len()
     }
 
     /// Whether the vector has no entries.
     pub fn is_empty(&self) -> bool {
-        todo!("DenseVector::is_empty")
+        self.data.is_empty()
     }
 
     /// The entries.
     pub fn as_slice(&self) -> &[T] {
-        todo!("DenseVector::as_slice")
+        &self.data
     }
 
     /// The entry at `index`.
@@ -62,8 +67,13 @@ impl<T> DenseVector<T> {
     where
         T: Clone,
     {
-        let _ = index;
-        todo!("DenseVector::get")
+        self.data
+            .get(index)
+            .cloned()
+            .ok_or(LinearError::IndexOutOfBounds {
+                index: (index, 0),
+                shape: (self.data.len(), 1),
+            })
     }
 }
 
@@ -81,8 +91,17 @@ where
     ///
     /// [`LinearError::LengthMismatch`] if the lengths differ, rather than truncating to the shorter.
     pub fn dot(&self, other: &Self) -> Result<T, LinearError> {
-        let _ = other;
-        todo!("DenseVector::dot")
+        if self.data.len() != other.data.len() {
+            return Err(LinearError::LengthMismatch {
+                expected: self.data.len(),
+                found: other.data.len(),
+            });
+        }
+        let mut acc = T::zero();
+        for (a, b) in self.data.iter().zip(other.data.iter()) {
+            acc = acc + *a * *b;
+        }
+        Ok(acc)
     }
 
     /// The outer product, an `m x n` matrix from an `m`-vector and an `n`-vector.
@@ -90,8 +109,15 @@ where
     /// The one operation that makes the vector and the matrix know about each other, which is why it
     /// is declared here rather than on the matrix.
     pub fn outer(&self, other: &Self) -> crate::types::dense_matrix::DenseMatrix<T> {
-        let _ = other;
-        todo!("DenseVector::outer")
+        let (m, n) = (self.data.len(), other.data.len());
+        let mut out = Vec::with_capacity(m * n);
+        for a in &self.data {
+            for b in &other.data {
+                out.push(*a * *b);
+            }
+        }
+        crate::types::dense_matrix::DenseMatrix::from_vec(out, m, n)
+            .expect("the buffer is built from the two lengths")
     }
 }
 
@@ -105,8 +131,20 @@ where
     ///
     /// [`LinearError::LengthMismatch`] if the lengths differ.
     pub fn add(&self, other: &Self) -> Result<Self, LinearError> {
-        let _ = other;
-        todo!("DenseVector::add")
+        if self.data.len() != other.data.len() {
+            return Err(LinearError::LengthMismatch {
+                expected: self.data.len(),
+                found: other.data.len(),
+            });
+        }
+        Ok(Self {
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| *a + *b)
+                .collect(),
+        })
     }
 
     /// Entrywise subtraction.
@@ -118,14 +156,27 @@ where
     ///
     /// [`LinearError::LengthMismatch`] if the lengths differ.
     pub fn sub(&self, other: &Self) -> Result<Self, LinearError> {
-        let _ = other;
-        todo!("DenseVector::sub")
+        if self.data.len() != other.data.len() {
+            return Err(LinearError::LengthMismatch {
+                expected: self.data.len(),
+                found: other.data.len(),
+            });
+        }
+        Ok(Self {
+            data: self
+                .data
+                .iter()
+                .zip(other.data.iter())
+                .map(|(a, b)| *a - *b)
+                .collect(),
+        })
     }
 
     /// Multiplies every entry by `scalar`.
     pub fn scale(&self, scalar: T) -> Self {
-        let _ = scalar;
-        todo!("DenseVector::scale")
+        Self {
+            data: self.data.iter().map(|a| *a * scalar).collect(),
+        }
     }
 }
 
@@ -148,8 +199,17 @@ where
     ///
     /// [`LinearError::LengthMismatch`] if the lengths differ.
     pub fn hermitian_inner(&self, other: &Self) -> Result<T, LinearError> {
-        let _ = other;
-        todo!("DenseVector::hermitian_inner")
+        if self.data.len() != other.data.len() {
+            return Err(LinearError::LengthMismatch {
+                expected: self.data.len(),
+                found: other.data.len(),
+            });
+        }
+        let mut acc = T::zero();
+        for (a, b) in self.data.iter().zip(other.data.iter()) {
+            acc += a.conjugate() * *b;
+        }
+        Ok(acc)
     }
 }
 
@@ -159,7 +219,12 @@ where
 {
     /// The 1-norm, `Σ |aᵢ|`.
     pub fn norm_l1(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        todo!("DenseVector::norm_l1")
+        use deep_causality_algebra::{Normed, Real};
+        let mut acc = <T as Normed>::Real::zero();
+        for v in &self.data {
+            acc += v.modulus_squared().sqrt();
+        }
+        acc
     }
 
     /// The 2-norm, `sqrt(Σ |aᵢ|²)`.
@@ -167,7 +232,8 @@ where
     /// Uses `modulus_squared`, so the complex case is right without a separate surface. This is the
     /// one definition of the Euclidean norm in this crate; the workspace currently has four.
     pub fn norm_l2(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        todo!("DenseVector::norm_l2")
+        use deep_causality_algebra::Real;
+        self.norm_sq().sqrt()
     }
 
     /// The squared 2-norm, without the square root.
@@ -175,7 +241,12 @@ where
     /// Available separately because the square root is the expensive part and comparisons rarely
     /// need it.
     pub fn norm_sq(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        todo!("DenseVector::norm_sq")
+        use deep_causality_algebra::Normed;
+        let mut acc = <T as Normed>::Real::zero();
+        for v in &self.data {
+            acc += v.modulus_squared();
+        }
+        acc
     }
 
     /// The ∞-norm, `max |aᵢ|`.
@@ -183,6 +254,14 @@ where
     /// Zero for the empty vector, which is the supremum over an empty set in the convention this
     /// crate uses, and never `NaN`.
     pub fn norm_inf(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        todo!("DenseVector::norm_inf")
+        use deep_causality_algebra::{Normed, Real};
+        let mut best = <T as Normed>::Real::zero();
+        for v in &self.data {
+            let m = v.modulus_squared().sqrt();
+            if m > best {
+                best = m;
+            }
+        }
+        best
     }
 }

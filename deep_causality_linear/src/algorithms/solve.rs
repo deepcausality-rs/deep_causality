@@ -10,6 +10,7 @@ use crate::traits::row_ops::RowOps;
 use crate::types::dense_vector::DenseVector;
 use alloc::vec::Vec;
 use deep_causality_algebra::NormedScalar;
+use deep_causality_num::{One, Zero};
 
 /// An LU factorisation with partial pivoting, kept so it can be applied more than once.
 ///
@@ -51,8 +52,61 @@ where
     where
         M: RowOps<Scalar = T> + Clone,
     {
-        let _ = m;
-        todo!("Lu::factor")
+        let (rows, cols) = (m.rows(), m.cols());
+        if rows != cols {
+            return Err(LinearError::NotSquare {
+                shape: (rows, cols),
+            });
+        }
+        let n = rows;
+        let mut a = alloc::vec::Vec::with_capacity(n * n);
+        for i in 0..n {
+            for j in 0..n {
+                a.push(m.get(i, j)?);
+            }
+        }
+        let mut perm: alloc::vec::Vec<usize> = (0..n).collect();
+        let mut negative = false;
+
+        for col in 0..n {
+            // Pivot by magnitude, searching at or below the current row. Never the diagonal on
+            // faith: a Cayley-Menger matrix has a zero there and is not singular.
+            let mut best = col;
+            let mut best_mag = a[col * n + col].modulus_squared();
+            for r in (col + 1)..n {
+                let mag = a[r * n + col].modulus_squared();
+                if mag > best_mag {
+                    best = r;
+                    best_mag = mag;
+                }
+            }
+            if a[best * n + col].is_zero() {
+                return Err(LinearError::Singular { at_column: col });
+            }
+            if best != col {
+                for j in 0..n {
+                    a.swap(col * n + j, best * n + j);
+                }
+                perm.swap(col, best);
+                negative = !negative;
+            }
+            let head = a[col * n + col];
+            for r in (col + 1)..n {
+                let factor = a[r * n + col] / head;
+                a[r * n + col] = factor;
+                for j in (col + 1)..n {
+                    let upd = a[r * n + j] - factor * a[col * n + j];
+                    a[r * n + j] = upd;
+                }
+            }
+        }
+
+        Ok(Self {
+            factors: a,
+            order: n,
+            permutation: perm,
+            sign_is_negative: negative,
+        })
     }
 
     /// Applies the factorisation to one right-hand side.
@@ -61,13 +115,36 @@ where
     ///
     /// [`LinearError::LengthMismatch`] if `b`'s length is not the matrix order.
     pub fn apply(&self, b: &DenseVector<T>) -> Result<DenseVector<T>, LinearError> {
-        let _ = b;
-        todo!("Lu::apply")
+        let n = self.order;
+        if b.len() != n {
+            return Err(LinearError::LengthMismatch {
+                expected: n,
+                found: b.len(),
+            });
+        }
+        // Permute, then forward substitution through L (unit diagonal), then backward through U.
+        let mut y = alloc::vec::Vec::with_capacity(n);
+        for i in 0..n {
+            let mut acc = b.get(self.permutation[i])?;
+            for (j, yj) in y.iter().enumerate().take(i) {
+                acc = acc - self.factors[i * n + j] * *yj;
+            }
+            y.push(acc);
+        }
+        let mut x = alloc::vec![T::zero(); n];
+        for i in (0..n).rev() {
+            let mut acc = y[i];
+            for (j, xj) in x.iter().enumerate().skip(i + 1) {
+                acc = acc - self.factors[i * n + j] * *xj;
+            }
+            x[i] = acc / self.factors[i * n + i];
+        }
+        Ok(DenseVector::from_vec(x))
     }
 
     /// The row permutation partial pivoting chose.
     pub fn permutation(&self) -> &[usize] {
-        todo!("Lu::permutation")
+        &self.permutation
     }
 
     /// The determinant, read off the factorisation.
@@ -76,7 +153,16 @@ where
     /// factorisation exists, which is why a caller wanting both a solve and a determinant should
     /// factor once rather than call each.
     pub fn determinant(&self) -> T {
-        todo!("Lu::determinant")
+        let n = self.order;
+        let mut d = T::one();
+        for i in 0..n {
+            d = d * self.factors[i * n + i];
+        }
+        if self.sign_is_negative {
+            T::zero() - d
+        } else {
+            d
+        }
     }
 }
 
@@ -96,8 +182,13 @@ where
     M: RowOps + Clone,
     M::Scalar: NormedScalar,
 {
-    let _ = (a, b);
-    todo!("solve")
+    if b.len() != a.rows() {
+        return Err(LinearError::LengthMismatch {
+            expected: a.rows(),
+            found: b.len(),
+        });
+    }
+    Lu::factor(a)?.apply(b)
 }
 
 /// Solves a lower-triangular system by forward substitution.
@@ -120,8 +211,41 @@ where
     M: RowOps,
     M::Scalar: NormedScalar,
 {
-    let _ = (a, b);
-    todo!("solve_lower")
+    let n = a.rows();
+    if n != a.cols() {
+        return Err(LinearError::NotSquare {
+            shape: (n, a.cols()),
+        });
+    }
+    if b.len() != n {
+        return Err(LinearError::LengthMismatch {
+            expected: n,
+            found: b.len(),
+        });
+    }
+    // The wrong triangle is rejected rather than ignored: a non-zero where the caller promised a
+    // zero means the caller has the wrong matrix, and silently dropping it answers a question that
+    // was not asked.
+    for i in 0..n {
+        for j in 0..n {
+            if j > i && !a.get(i, j)?.is_zero() {
+                return Err(LinearError::WrongTriangle { at: (i, j) });
+            }
+        }
+    }
+    let mut x = alloc::vec![M::Scalar::zero(); n];
+    for i in 0..n {
+        let d = a.get(i, i)?;
+        if d.is_zero() {
+            return Err(LinearError::ZeroDiagonal { at_index: i });
+        }
+        let mut acc = b.get(i)?;
+        for (j, xj) in x.iter().enumerate().take(i) {
+            acc = acc - a.get(i, j)? * *xj;
+        }
+        x[i] = acc / d;
+    }
+    Ok(DenseVector::from_vec(x))
 }
 
 /// Solves an upper-triangular system by backward substitution.
@@ -137,8 +261,41 @@ where
     M: RowOps,
     M::Scalar: NormedScalar,
 {
-    let _ = (a, b);
-    todo!("solve_upper")
+    let n = a.rows();
+    if n != a.cols() {
+        return Err(LinearError::NotSquare {
+            shape: (n, a.cols()),
+        });
+    }
+    if b.len() != n {
+        return Err(LinearError::LengthMismatch {
+            expected: n,
+            found: b.len(),
+        });
+    }
+    // The wrong triangle is rejected rather than ignored: a non-zero where the caller promised a
+    // zero means the caller has the wrong matrix, and silently dropping it answers a question that
+    // was not asked.
+    for i in 0..n {
+        for j in 0..n {
+            if j < i && !a.get(i, j)?.is_zero() {
+                return Err(LinearError::WrongTriangle { at: (i, j) });
+            }
+        }
+    }
+    let mut x = alloc::vec![M::Scalar::zero(); n];
+    for i in (0..n).rev() {
+        let d = a.get(i, i)?;
+        if d.is_zero() {
+            return Err(LinearError::ZeroDiagonal { at_index: i });
+        }
+        let mut acc = b.get(i)?;
+        for (j, xj) in x.iter().enumerate().skip(i + 1) {
+            acc = acc - a.get(i, j)? * *xj;
+        }
+        x[i] = acc / d;
+    }
+    Ok(DenseVector::from_vec(x))
 }
 
 /// The inverse.
@@ -154,9 +311,24 @@ where
 /// [`LinearError::NotSquare`] or [`LinearError::Singular`].
 pub fn inverse<M>(a: &M) -> Result<M, LinearError>
 where
-    M: RowOps + Clone,
+    M: RowOps + Clone + crate::traits::matrix_build::MatrixBuild,
     M::Scalar: NormedScalar,
 {
-    let _ = a;
-    todo!("inverse")
+    let n = a.rows();
+    if n != a.cols() {
+        return Err(LinearError::NotSquare {
+            shape: (n, a.cols()),
+        });
+    }
+    let lu = Lu::factor(a)?;
+    let mut out = M::zeros(n, n);
+    for j in 0..n {
+        let mut e = alloc::vec![M::Scalar::zero(); n];
+        e[j] = M::Scalar::one();
+        let col = lu.apply(&DenseVector::from_vec(e))?;
+        for i in 0..n {
+            out.set(i, j, col.get(i)?)?;
+        }
+    }
+    Ok(out)
 }

@@ -26,7 +26,8 @@ use crate::errors::linear_error::LinearError;
 use crate::traits::matrix_build::MatrixBuild;
 use crate::traits::row_ops::RowOps;
 use alloc::vec::Vec;
-use deep_causality_algebra::{Field, NormedScalar};
+use deep_causality_algebra::{Field, Normed, NormedScalar, Real};
+use deep_causality_num::{One, Zero};
 
 /// What a row reduction learned, beyond the reduced matrix itself.
 ///
@@ -41,15 +42,153 @@ pub struct Reduced {
 impl Reduced {
     /// The rank, which is the number of pivots found.
     pub fn rank(&self) -> usize {
-        todo!("Reduced::rank")
+        self.rank
     }
 
     /// The columns a pivot was found in, ascending.
     ///
     /// The free columns are the complement, and they are what index a kernel basis.
     pub fn pivot_columns(&self) -> &[usize] {
-        todo!("Reduced::pivot_columns")
+        &self.pivot_columns
     }
+}
+
+/// The elimination every entry point here runs.
+///
+/// Names no representation, no scalar and no word width. `choose_pivot` is the only thing the
+/// entry points differ in: the exact rule takes the first non-zero, the stable rule the largest
+/// modulus. Both search the column at or below the current row; neither takes the diagonal.
+fn reduce<M, P>(m: &mut M, mut choose_pivot: P) -> Result<Reduced, LinearError>
+where
+    M: RowOps,
+    M::Scalar: Field,
+    P: FnMut(&M, usize, usize) -> Option<usize>,
+{
+    let (rows, cols) = (m.rows(), m.cols());
+    let mut pivot_columns = Vec::new();
+    let mut row = 0usize;
+
+    for col in 0..cols {
+        if row >= rows {
+            break;
+        }
+        let Some(p) = choose_pivot(m, col, row) else {
+            continue;
+        };
+        m.swap_rows(row, p)?;
+
+        let head = m.get(row, col)?;
+        let inv = M::Scalar::one() / head;
+        m.scale_row(row, &inv, col)?;
+
+        for other in 0..rows {
+            if other == row {
+                continue;
+            }
+            let factor = m.get(other, col)?;
+            if factor.is_zero() {
+                continue;
+            }
+            let neg = M::Scalar::zero() - factor;
+            m.axpy_rows(other, row, &neg, col)?;
+        }
+
+        pivot_columns.push(col);
+        row += 1;
+    }
+
+    Ok(Reduced {
+        rank: pivot_columns.len(),
+        pivot_columns,
+    })
+}
+
+/// The exact pivot rule: the first non-zero at or below `from_row`.
+fn pivot_exact<M>(m: &M, col: usize, from_row: usize) -> Option<usize>
+where
+    M: RowOps,
+    M::Scalar: Field,
+{
+    m.pivot_in_column(col, from_row)
+}
+
+/// The threshold below which a pivot candidate counts as zero, derived from the scalar's `epsilon`.
+///
+/// # Why a threshold at all
+///
+/// Elimination over the floats does not produce exact zeros. Reducing `[1 2 3; 4 5 6; 5 7 9]`,
+/// whose third row is the sum of the first two, leaves a residue on the order of `1e-16` rather than
+/// `0`. An exact `is_zero()` counts that residue as a pivot and reports rank 3 for a matrix of
+/// rank 2.
+///
+/// # Why it is derived rather than written down
+///
+/// `linear-scalar-contract` requires that an operation whose result depends on a threshold take it
+/// as an argument or derive it from `epsilon`, and never carry a literal in its body. A literal is
+/// what `deep_causality_topology` has today — `1e-5`, applied to singular values of a matrix whose
+/// entries are `{-1, 0, 1}` — and it is wrong at both ends: too coarse for a well-scaled problem and
+/// too fine for a badly-scaled one.
+///
+/// This is the conventional relative bound: `eps * scale * max(rows, cols)`, where `scale` is the
+/// largest modulus in the matrix. It moves with the data, so a matrix multiplied through by `1e6`
+/// gets a threshold `1e6` times larger and reports the same rank.
+///
+/// The exact paths — [`rref`], [`rank`], and everything over 𝔽₂ and ℤ — use no threshold at all,
+/// because they have no rounding to absorb.
+fn negligible_below<M>(m: &M) -> <M::Scalar as Normed>::Real
+where
+    M: RowOps,
+    M::Scalar: NormedScalar,
+{
+    let mut scale = <M::Scalar as Normed>::Real::zero();
+    for r in 0..m.rows() {
+        for c in 0..m.cols() {
+            if let Ok(v) = m.get(r, c) {
+                let mag = v.modulus_squared();
+                if mag > scale {
+                    scale = mag;
+                }
+            }
+        }
+    }
+    // `scale` is a squared modulus, so the comparison below is squared too.
+    let n = m.rows().max(m.cols()).max(1);
+    let mut n_real = <M::Scalar as Normed>::Real::zero();
+    for _ in 0..n {
+        n_real += <M::Scalar as Normed>::Real::one();
+    }
+    let eps = <M::Scalar as Normed>::Real::epsilon();
+    let rel = eps * n_real;
+    scale * rel * rel
+}
+
+/// The stable pivot rule: the largest modulus at or below `from_row`, ignoring what is negligible.
+///
+/// `modulus_squared` lands in an ordered real, which is what lets this work over ℂ without the
+/// scalar itself being ordered.
+fn pivot_stable_with<M>(
+    m: &M,
+    col: usize,
+    from_row: usize,
+    floor: <M::Scalar as Normed>::Real,
+) -> Option<usize>
+where
+    M: RowOps,
+    M::Scalar: NormedScalar,
+{
+    let mut best: Option<(usize, <M::Scalar as Normed>::Real)> = None;
+    for r in from_row..m.rows() {
+        let Ok(v) = m.get(r, col) else { continue };
+        let mag = v.modulus_squared();
+        if mag <= floor {
+            continue;
+        }
+        match &best {
+            Some((_, b)) if *b >= mag => {}
+            _ => best = Some((r, mag)),
+        }
+    }
+    best.map(|(r, _)| r)
 }
 
 /// Reduces `m` to reduced row echelon form in place, pivoting on the first non-zero.
@@ -61,8 +200,7 @@ where
     M: RowOps,
     M::Scalar: Field,
 {
-    let _ = m;
-    todo!("rref")
+    reduce(m, pivot_exact)
 }
 
 /// Reduces `m` to reduced row echelon form in place, pivoting on the largest modulus.
@@ -75,8 +213,10 @@ where
     M: RowOps,
     M::Scalar: NormedScalar,
 {
-    let _ = m;
-    todo!("rref_stable")
+    let floor = negligible_below(m);
+    reduce(m, move |mm, col, row| {
+        pivot_stable_with(mm, col, row, floor)
+    })
 }
 
 /// The rank, by exact elimination.
@@ -85,8 +225,8 @@ where
     M: RowOps + Clone,
     M::Scalar: Field,
 {
-    let _ = m;
-    todo!("rank")
+    let mut work = m.clone();
+    Ok(rref(&mut work)?.rank())
 }
 
 /// The rank, by elimination pivoting on magnitude.
@@ -99,8 +239,8 @@ where
     M: RowOps + Clone,
     M::Scalar: NormedScalar,
 {
-    let _ = m;
-    todo!("rank_stable")
+    let mut work = m.clone();
+    Ok(rref_stable(&mut work)?.rank())
 }
 
 /// A basis of the kernel, as the columns of the returned matrix.
@@ -145,6 +285,55 @@ where
     M: RowOps + Clone,
     M::Scalar: NormedScalar,
 {
-    let _ = m;
-    todo!("determinant")
+    let (rows, cols) = (m.rows(), m.cols());
+    if rows != cols {
+        return Err(LinearError::NotSquare {
+            shape: (rows, cols),
+        });
+    }
+    // The empty product.
+    if rows == 0 {
+        return Ok(M::Scalar::one());
+    }
+    match rows {
+        1 => return m.get(0, 0),
+        2 => {
+            let (a, b, c, d) = (m.get(0, 0)?, m.get(0, 1)?, m.get(1, 0)?, m.get(1, 1)?);
+            return Ok(a * d - b * c);
+        }
+        3 => {
+            let g = |i, j| m.get(i, j);
+            let (a, b, c) = (g(0, 0)?, g(0, 1)?, g(0, 2)?);
+            let (d, e, f) = (g(1, 0)?, g(1, 1)?, g(1, 2)?);
+            let (h, i, j) = (g(2, 0)?, g(2, 1)?, g(2, 2)?);
+            return Ok(a * (e * j - f * i) - b * (d * j - f * h) + c * (d * i - e * h));
+        }
+        _ => {}
+    }
+
+    // Forward elimination, pivoting by search. The product of the pivots, negated once per swap.
+    let mut work = m.clone();
+    let floor = negligible_below(&work);
+    let mut det = M::Scalar::one();
+    for col in 0..cols {
+        let Some(p) = pivot_stable_with(&work, col, col, floor) else {
+            return Ok(M::Scalar::zero());
+        };
+        if p != col {
+            work.swap_rows(col, p)?;
+            det = M::Scalar::zero() - det;
+        }
+        let head = work.get(col, col)?;
+        det = det * head;
+        let inv = M::Scalar::one() / head;
+        for other in (col + 1)..rows {
+            let factor = work.get(other, col)?;
+            if factor.is_zero() {
+                continue;
+            }
+            let neg = M::Scalar::zero() - factor * inv;
+            work.axpy_rows(other, col, &neg, col)?;
+        }
+    }
+    Ok(det)
 }

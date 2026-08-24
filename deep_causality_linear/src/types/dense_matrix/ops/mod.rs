@@ -25,16 +25,21 @@ where
     type Scalar = T;
 
     fn rows(&self) -> usize {
-        todo!("DenseMatrix::rows")
+        self.row_count()
     }
 
     fn cols(&self) -> usize {
-        todo!("DenseMatrix::cols")
+        self.col_count()
     }
 
     fn get(&self, row: usize, col: usize) -> Result<T, LinearError> {
-        let _ = (row, col);
-        todo!("DenseMatrix::get")
+        if row >= self.row_count() || col >= self.col_count() {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, col),
+                shape: (self.row_count(), self.col_count()),
+            });
+        }
+        Ok(self.as_slice()[row * self.col_count() + col].clone())
     }
 }
 
@@ -43,13 +48,20 @@ where
     T: Zero + Clone,
 {
     fn zeros(rows: usize, cols: usize) -> Self {
-        let _ = (rows, cols);
-        todo!("DenseMatrix::zeros")
+        DenseMatrix::from_vec(alloc::vec![T::zero(); rows * cols], rows, cols)
+            .expect("the buffer is built from the shape, so it matches by construction")
     }
 
     fn set(&mut self, row: usize, col: usize, value: T) -> Result<(), LinearError> {
-        let _ = (row, col, value);
-        todo!("DenseMatrix::set")
+        let (r, c) = (self.row_count(), self.col_count());
+        if row >= r || col >= c {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, col),
+                shape: (r, c),
+            });
+        }
+        self.as_mut_slice()[row * c + col] = value;
+        Ok(())
     }
 }
 
@@ -60,13 +72,35 @@ where
     T: Field + Clone,
 {
     fn swap_rows(&mut self, a: usize, b: usize) -> Result<(), LinearError> {
-        let _ = (a, b);
-        todo!("DenseMatrix::swap_rows")
+        let (r, c) = (self.row_count(), self.col_count());
+        if a >= r || b >= r {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (a.max(b), 0),
+                shape: (r, c),
+            });
+        }
+        if a == b {
+            return Ok(());
+        }
+        for j in 0..c {
+            self.as_mut_slice().swap(a * c + j, b * c + j);
+        }
+        Ok(())
     }
 
     fn scale_row(&mut self, row: usize, factor: &T, from_col: usize) -> Result<(), LinearError> {
-        let _ = (row, factor, from_col);
-        todo!("DenseMatrix::scale_row")
+        let (r, c) = (self.row_count(), self.col_count());
+        if row >= r {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, 0),
+                shape: (r, c),
+            });
+        }
+        for j in from_col..c {
+            let v = self.as_slice()[row * c + j].clone();
+            self.as_mut_slice()[row * c + j] = v * factor.clone();
+        }
+        Ok(())
     }
 
     fn axpy_rows(
@@ -76,8 +110,19 @@ where
         factor: &T,
         from_col: usize,
     ) -> Result<(), LinearError> {
-        let _ = (dst, src, factor, from_col);
-        todo!("DenseMatrix::axpy_rows")
+        let (r, c) = (self.row_count(), self.col_count());
+        if dst >= r || src >= r {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (dst.max(src), 0),
+                shape: (r, c),
+            });
+        }
+        for j in from_col..c {
+            let s = self.as_slice()[src * c + j].clone();
+            let d = self.as_slice()[dst * c + j].clone();
+            self.as_mut_slice()[dst * c + j] = d + s * factor.clone();
+        }
+        Ok(())
     }
 }
 

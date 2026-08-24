@@ -49,13 +49,48 @@ impl<T> DenseMatrix<T> {
     ///
     /// [`LinearError::ShapeMismatch`] if `data.len()` is not `rows * cols`.
     pub fn from_vec(data: Vec<T>, rows: usize, cols: usize) -> Result<Self, LinearError> {
-        let _ = (&data, rows, cols);
-        todo!("DenseMatrix::from_vec")
+        if data.len() != rows * cols {
+            return Err(LinearError::ShapeMismatch {
+                left: (rows, cols),
+                right: (data.len(), 1),
+            });
+        }
+        Ok(Self { data, rows, cols })
     }
 
     /// The entries, row-major.
     pub fn as_slice(&self) -> &[T] {
-        todo!("DenseMatrix::as_slice")
+        &self.data
+    }
+
+    /// The number of rows.
+    pub(crate) fn row_count(&self) -> usize {
+        self.rows
+    }
+
+    /// The number of columns.
+    pub(crate) fn col_count(&self) -> usize {
+        self.cols
+    }
+
+    /// The row count, for the HKT witness, which must rebuild the shape after mapping.
+    pub(crate) fn rows_pub(&self) -> usize {
+        self.rows
+    }
+
+    /// The column count, for the same reason.
+    pub(crate) fn cols_pub(&self) -> usize {
+        self.cols
+    }
+
+    /// Consumes the matrix and yields its entries, row-major.
+    pub(crate) fn into_data(self) -> Vec<T> {
+        self.data
+    }
+
+    /// The entries, row-major, mutably.
+    pub(crate) fn as_mut_slice(&mut self) -> &mut [T] {
+        &mut self.data
     }
 
     /// One row's entries, which are contiguous.
@@ -64,7 +99,12 @@ impl<T> DenseMatrix<T> {
     ///
     /// [`LinearError::IndexOutOfBounds`] if the row is outside the shape.
     pub fn row(&self, row: usize) -> Result<&[T], LinearError> {
-        let _ = row;
-        todo!("DenseMatrix::row")
+        if row >= self.rows {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, 0),
+                shape: (self.rows, self.cols),
+            });
+        }
+        Ok(&self.data[row * self.cols..(row + 1) * self.cols])
     }
 }

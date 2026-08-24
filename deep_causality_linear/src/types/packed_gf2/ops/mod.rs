@@ -27,37 +27,80 @@ impl<W: NaturalNumber> MatrixView for PackedGf2<W> {
     type Scalar = Gf2;
 
     fn rows(&self) -> usize {
-        todo!("PackedGf2::rows")
+        self.dims().0
     }
     fn cols(&self) -> usize {
-        todo!("PackedGf2::cols")
+        self.dims().1
     }
     fn get(&self, row: usize, col: usize) -> Result<Gf2, LinearError> {
-        let _ = (row, col);
-        todo!("PackedGf2::get")
+        let (r, c) = self.dims();
+        if row >= r || col >= c {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, col),
+                shape: (r, c),
+            });
+        }
+        Ok(Gf2::new(self.bit_at(row, col)))
     }
 }
 
 impl<W: NaturalNumber> MatrixBuild for PackedGf2<W> {
     fn zeros(rows: usize, cols: usize) -> Self {
-        let _ = (rows, cols);
-        todo!("PackedGf2::zeros")
+        Self::allocate(rows, cols)
     }
     fn set(&mut self, row: usize, col: usize, value: Gf2) -> Result<(), LinearError> {
-        let _ = (row, col, value);
-        todo!("PackedGf2::set")
+        let (r, c) = self.dims();
+        if row >= r || col >= c {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, col),
+                shape: (r, c),
+            });
+        }
+        if value.bit() {
+            self.set_bit(row, col);
+        } else {
+            self.clear_bit(row, col);
+        }
+        Ok(())
     }
 }
 
 impl<W: NaturalNumber> RowOps for PackedGf2<W> {
     fn swap_rows(&mut self, a: usize, b: usize) -> Result<(), LinearError> {
-        let _ = (a, b);
-        todo!("PackedGf2::swap_rows")
+        let (r, c) = self.dims();
+        if a >= r || b >= r {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (a.max(b), 0),
+                shape: (r, c),
+            });
+        }
+        if a == b {
+            return Ok(());
+        }
+        let w = self.words_per_row();
+        for k in 0..w {
+            self.as_mut_words().swap(a * w + k, b * w + k);
+        }
+        Ok(())
     }
 
+    /// Degenerate over 𝔽₂: scaling by the only unit leaves the row alone, and scaling by zero
+    /// clears it from `from_col` onward.
     fn scale_row(&mut self, row: usize, factor: &Gf2, from_col: usize) -> Result<(), LinearError> {
-        let _ = (row, factor, from_col);
-        todo!("PackedGf2::scale_row")
+        let (r, c) = self.dims();
+        if row >= r {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (row, 0),
+                shape: (r, c),
+            });
+        }
+        if factor.bit() {
+            return Ok(());
+        }
+        for j in from_col..c {
+            self.clear_bit(row, j);
+        }
+        Ok(())
     }
 
     /// `dst ^= src`, a word at a time from `from_col`'s word onward.
@@ -68,8 +111,28 @@ impl<W: NaturalNumber> RowOps for PackedGf2<W> {
         factor: &Gf2,
         from_col: usize,
     ) -> Result<(), LinearError> {
-        let _ = (dst, src, factor, from_col);
-        todo!("PackedGf2::axpy_rows")
+        let (r, c) = self.dims();
+        if dst >= r || src >= r {
+            return Err(LinearError::IndexOutOfBounds {
+                index: (dst.max(src), 0),
+                shape: (r, c),
+            });
+        }
+        if !factor.bit() {
+            return Ok(());
+        }
+        // `dst ^= src`, a whole word at a time. The factor can only be one here, so the multiply
+        // vanishes and the add is an exclusive-or. This is where the packing pays.
+        let bits = core::mem::size_of::<W>() * 8;
+        let w = self.words_per_row();
+        let first = from_col / bits;
+        for k in first..w {
+            let s = self.as_words()[src * w + k];
+            let d = self.as_words()[dst * w + k];
+            self.as_mut_words()[dst * w + k] = d ^ s;
+        }
+        let _ = c;
+        Ok(())
     }
 
     /// Overridden to scan a word at a time rather than a bit at a time.
@@ -77,8 +140,7 @@ impl<W: NaturalNumber> RowOps for PackedGf2<W> {
     /// It still searches. What the override changes is how the search reads memory, not whether it
     /// happens — the first set bit at or below `from_row` is exactly what the default would find.
     fn pivot_in_column(&self, col: usize, from_row: usize) -> Option<usize> {
-        let _ = (col, from_row);
-        todo!("PackedGf2::pivot_in_column")
+        (from_row..self.dims().0).find(|&r| self.bit_at(r, col))
     }
 }
 

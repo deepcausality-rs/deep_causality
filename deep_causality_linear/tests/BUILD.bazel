@@ -31,6 +31,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_linear",
+        "//deep_causality_num",
     ],
 )
 

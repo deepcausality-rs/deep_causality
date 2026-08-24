@@ -60,11 +60,22 @@ fn test_preconditioned_cg_agrees_with_the_plain_solve() {
 
 #[test]
 fn test_preconditioned_cg_uses_no_more_iterations_than_plain() {
-    // The neumann-poisson requirement: the preconditioned solve converges no slower.
+    // The neumann-poisson requirement: the preconditioned solve converges no slower. Asserted by
+    // giving it a budget and checking it reaches the reference answer within it, rather than only
+    // that it returned Ok -- an implementation that returned a wrong vector would also return Ok.
     let b = vec![1.0, 0.0, 1.0];
     let inv_diag = vec![0.5, 0.5, 0.5];
-    // Both must succeed at a budget the plain solve needs in full.
-    assert!(cg_solve_preconditioned(laplacian, &b, &inv_diag, 3, 1e-10).is_ok());
+    let expected = [1.0, 1.0, 1.0];
+    let x = cg_solve_preconditioned(laplacian, &b, &inv_diag, 3, 1e-10)
+        .expect("must converge within three iterations on a 3x3 SPD system");
+    for i in 0..3 {
+        assert!(
+            (x[i] - expected[i]).abs() < 1e-8,
+            "x[{i}] was {}, reference says {}",
+            x[i],
+            expected[i]
+        );
+    }
 }
 
 #[test]

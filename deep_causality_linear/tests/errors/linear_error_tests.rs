@@ -84,6 +84,19 @@ fn test_not_binary_names_the_position_so_the_caller_need_not_rescan() {
 }
 
 #[test]
+fn test_overflow_names_the_operation_that_produced_it() {
+    let e = LinearError::Overflow {
+        operation: "fraction-free determinant",
+    };
+    let s = format!("{e}");
+    assert!(
+        s.contains("fraction-free determinant"),
+        "must name the operation: {s}"
+    );
+    assert!(s.contains("Overflow"), "{s}");
+}
+
+#[test]
 fn test_empty_matrix_says_so() {
     assert!(format!("{}", LinearError::EmptyMatrix).contains("Empty"));
 }

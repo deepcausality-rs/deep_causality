@@ -71,22 +71,16 @@ fn test_fmap_preserves_the_vector_length() {
 }
 
 // ---- monad -------------------------------------------------------------------------------------
-
-#[test]
-fn test_matrix_monad_left_identity() {
-    // bind(pure(a), f) == f(a)
-    let f = |x: i64| DenseMatrix::from_vec(vec![x * 2], 1, 1).unwrap();
-    let lhs = DenseMatrixWitness::bind(DenseMatrixWitness::pure(5i64), f);
-    assert_eq!(lhs, f(5));
-}
-
-#[test]
-fn test_matrix_monad_right_identity() {
-    // bind(m, pure) == m
-    let m = matrix();
-    let bound = DenseMatrixWitness::bind(m.clone(), DenseMatrixWitness::pure);
-    assert_eq!(bound, m);
-}
+//
+// Only the vector claims `Monad`, so only the vector is tested for its laws.
+//
+// `DenseMatrixWitness` does not claim it. `pure` must choose a shape for one value and a shaped
+// container has no canonical one; taking the 1x1, right identity would need `bind` to reassemble an
+// `m x n` out of `m*n` one-by-ones, which no general `bind` can do. `deep_causality_sparse`'s
+// witness claims `Monad` and fails this law — `bind(m, pure)` turns a 2x2 into a 1x4 — which is
+// recorded in openspec/notes/linear/HKT-LAW-FINDINGS.md rather than reproduced here.
+//
+// A vector has no shape beyond its length, so its `bind` is list concatenation and the laws hold.
 
 #[test]
 fn test_vector_monad_left_identity() {

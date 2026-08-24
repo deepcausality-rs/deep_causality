@@ -27,8 +27,7 @@ impl Functor<DenseVectorWitness> for DenseVectorWitness {
         B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
-        let _ = (m_a, f);
-        todo!("DenseVectorWitness::fmap")
+        DenseVector::from_vec(m_a.into_data().into_iter().map(f).collect())
     }
 }
 
@@ -39,8 +38,7 @@ impl Foldable<DenseVectorWitness> for DenseVectorWitness {
         B: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
-        let _ = (fa, init, f);
-        todo!("DenseVectorWitness::fold")
+        fa.into_data().into_iter().fold(init, f)
     }
 }
 
@@ -54,8 +52,7 @@ impl Pure<DenseVectorWitness> for DenseVectorWitness {
     where
         T: Satisfies<NoConstraint>,
     {
-        let _ = value;
-        todo!("DenseVectorWitness::pure")
+        DenseVector::from_vec(alloc::vec![value])
     }
 }
 
@@ -66,20 +63,28 @@ impl Applicative<DenseVectorWitness> for DenseVectorWitness {
         B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B + Satisfies<NoConstraint>,
     {
-        let _ = (ff, fa);
-        todo!("DenseVectorWitness::apply")
+        let mut fns = ff.into_data().into_iter();
+        let mut out = alloc::vec::Vec::new();
+        for a in fa.into_data() {
+            let mut g = fns.next().expect("apply requires matching lengths");
+            out.push(g(a));
+        }
+        DenseVector::from_vec(out)
     }
 }
 
 impl Monad<DenseVectorWitness> for DenseVectorWitness {
-    fn bind<A, B, Func>(fa: DenseVector<A>, f: Func) -> DenseVector<B>
+    fn bind<A, B, Func>(fa: DenseVector<A>, mut f: Func) -> DenseVector<B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> DenseVector<B>,
     {
-        let _ = (fa, f);
-        todo!("DenseVectorWitness::bind")
+        let mut out = alloc::vec::Vec::new();
+        for a in fa.into_data() {
+            out.extend(f(a).into_data());
+        }
+        DenseVector::from_vec(out)
     }
 }
 
@@ -94,17 +99,37 @@ impl CoMonad<DenseVectorWitness> for DenseVectorWitness {
     where
         A: Satisfies<NoConstraint> + Clone,
     {
-        let _ = fa;
-        todo!("DenseVectorWitness::extract")
+        fa.as_slice()
+            .first()
+            .cloned()
+            .expect("a comonad has no counit for an empty container")
     }
 
-    fn extend<A, B, Func>(fa: &DenseVector<A>, f: Func) -> DenseVector<B>
+    fn extend<A, B, Func>(fa: &DenseVector<A>, mut f: Func) -> DenseVector<B>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
         Func: FnMut(&DenseVector<A>) -> B,
     {
-        let _ = (fa, f);
-        todo!("DenseVectorWitness::extend")
+        // The same focus rule as the matrix: rotate position `i` to the front and apply `f` there,
+        // so that `extend(extract) == id`.
+        let n = fa.as_slice().len();
+        let mut out = alloc::vec::Vec::with_capacity(n);
+        for i in 0..n {
+            let view = shifted_view(fa, i);
+            out.push(f(&view));
+        }
+        DenseVector::from_vec(out)
     }
+}
+
+/// The vector `fa` rotated so that `index` is first.
+fn shifted_view<A: Clone>(fa: &DenseVector<A>, index: usize) -> DenseVector<A> {
+    let s = fa.as_slice();
+    let n = s.len();
+    let mut out = alloc::vec::Vec::with_capacity(n);
+    for i in 0..n {
+        out.push(s[(i + index) % n].clone());
+    }
+    DenseVector::from_vec(out)
 }

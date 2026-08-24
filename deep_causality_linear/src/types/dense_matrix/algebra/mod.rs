@@ -36,6 +36,34 @@
 //! times `[[0,0],[0,1]]` is zero with neither factor zero, so cancellation fails and any algorithm
 //! resting on it — Bareiss, for one — would be wrong.
 
+/// The two absences above are checked rather than merely documented.
+///
+/// A false `Commutative<Multiplicative>` claim changes no runtime value — `AB` and `BA` are computed
+/// the same way whether or not the marker is present — so no behavioural test can catch it. What
+/// catches it is a bound that must keep failing:
+///
+/// ```compile_fail,E0277
+/// use deep_causality_algebra::CommutativeRing;
+/// use deep_causality_linear::DenseMatrix;
+///
+/// fn requires_commutative_ring<T: CommutativeRing>() {}
+///
+/// // Matrix multiplication does not commute, so this must not compile. If someone adds
+/// // `Commutative<Multiplicative>` for `DenseMatrix`, this starts compiling and the doctest fails.
+/// requires_commutative_ring::<DenseMatrix<f64>>();
+/// ```
+///
+/// The same for `IntegralDomain`: `[[1,0],[0,0]] * [[0,0],[0,1]]` is zero with neither factor zero,
+/// so cancellation fails and any algorithm resting on it would be wrong.
+///
+/// ```compile_fail,E0277
+/// use deep_causality_algebra::IntegralDomain;
+/// use deep_causality_linear::DenseMatrix;
+///
+/// fn requires_integral_domain<T: IntegralDomain>() {}
+///
+/// requires_integral_domain::<DenseMatrix<f64>>();
+/// ```
 use crate::types::dense_matrix::DenseMatrix;
 use deep_causality_algebra::{
     Additive, Annihilating, Associative, Commutative, Distributive, Multiplicative,

@@ -62,10 +62,10 @@ Exit condition: every test compiles, every test fails, and every failure is the 
 - [x] 2.8 Write the integer tests: fraction-free determinant equals the exact rational answer with no float appearing; exact rank on a matrix whose singular values straddle `1e-5`; the three ranks disagreeing on one matrix
 - [x] 2.9 Write the vector tests: dot against a manual sum, outer product shape, length mismatch rejected, slice round-trip, Hermitian inner product real and non-negative on a complex vector, norms of `[3, -4]` giving 7 / 5 / 4, zero vector giving no `NaN`
 - [x] 2.10 Write the solve tests: known system, singular rejected, zero `(0,0)` handled, one factorisation applied to three right-hand sides, triangular substitution against the general path, zero diagonal rejected, wrong triangle rejected
-- [ ] 2.11 Write the HKT law tests per witness: functor identity and composition, monad left/right identity and associativity, comonad `extend(extract)`, and shape preserved by `fmap`
-- [x] 2.11a Write the tower-membership tests: each container admitted by a function bounded on `Ring` and by one bounded on `Module<R>`; each matrix REJECTED by one bounded on `CommutativeRing`, because matrix multiplication does not commute
-- [ ] 2.11b Write one instantiation test per bound recorded in 1.8b, calling the loosened operation at the number set it newly admits — `i64` for every operation moved off `Field`, `u64` for every operation moved to `CommutativeSemiring`
-- [ ] 2.12 Write the delegation tests: each decomposition's result and error variant, to be compared against `CausalTensor`'s current output in phase 5
+- [x] 2.11 Write the HKT law tests per witness: functor identity and composition, monad left/right identity and associativity, comonad `extend(extract)`, and shape preserved by `fmap`
+- [x] 2.11a Pin the tower memberships at compile time in `src/traits/tower_pins.rs`, not as tests: a test calling a function bounded on `Ring` passes by compiling, so running it checks nothing the build has not. The half that is a real check — each matrix **rejected** by `CommutativeRing` and by `IntegralDomain` — is a `compile_fail` doctest, since "must not compile" is not established by the build succeeding
+- [x] 2.11b Write one instantiation test per bound recorded in 1.8b, calling the loosened operation at the number set it newly admits — `i64` for every operation moved off `Field`, `u64` for every operation moved to `CommutativeSemiring`
+- [x] 2.12 Write the delegation tests: each decomposition's result and error variant, to be compared against `CausalTensor`'s current output in phase 5
 - [ ] 2.13 Port the sparse crate's 1,916 lines of tests, adjusted to the new paths
 - [x] 2.14 Run the suite: confirm every test fails, and that each failure is the unimplemented panic rather than a compile error, a missing import, or an unrelated panic
 - [x] 2.15 Confirm the suite needed no addition to the public surface to compile — if it did, that is an API design finding: record it and revise phase 1
@@ -74,18 +74,29 @@ Exit condition: every test compiles, every test fails, and every failure is the 
 
 Exit condition: the suite is shown to reject every known defect class, and the tree is clean again.
 
-- [ ] 3.1 Stub a deliberately unpivoted elimination; confirm a Cayley-Menger test fails
-- [ ] 3.2 Stub a packed row update that skips one word, then one that repeats a word; confirm a test fails in each case
-- [ ] 3.3 Replace an 𝔽₂ exactness check with a tolerance comparison; confirm a test fails
-- [ ] 3.4 Perturb a reported rank by ±1; confirm a test fails in both directions
-- [ ] 3.5 Widen a band deliberately — bound `rref` on `Field` where the body needs a pivot rule, or drop `EuclideanDomain` to `CommutativeRing` on the integer determinant; confirm a test or a compile-fail case catches it
-- [ ] 3.6 Break one HKT law in one witness; confirm a law test fails
-- [ ] 3.6a Claim `Commutative<Multiplicative>` on a matrix container; confirm a test fails, because the claim is false for matrix multiplication
-- [ ] 3.6b Remove one container's `Distributive` impl; confirm the `Ring` admission test fails — this is the defect the crate inherits, so the suite must catch it
-- [ ] 3.7 Replace `solve` with invert-then-multiply; confirm the ill-conditioned residual test fails
-- [ ] 3.8 Check the scenario → test mapping is complete; every scenario in the four capabilities names at least one test
-- [ ] 3.9 Check the corner-case list against the suite; every case names a test
-- [ ] 3.10 Revert every deliberate defect; confirm the tree is clean
+**The premise here needed correcting.** As written, these tasks follow phase 2, where every body is
+`todo!()` and so every test already fails — injecting a defect changes nothing observable. Showing a
+suite *rejects* a defect needs a baseline that *passes* first. Each defect class was therefore run as
+implement → verify green → inject → verify red → revert, pulling the phase-4 tasks it needed forward
+(4.1, 4.2, 4.5, 4.6, 4.9, 4.10 in part). Those are marked where they landed.
+
+**Three of the ten defects were not caught on the first attempt**, and the suite was strengthened
+before they were: 3.5 and 3.6a needed `compile_fail` doctests, because a widened bound and a false
+law marker change no runtime value; 3.7 needed a strictly larger margin on a worse-conditioned
+system, because the original comparison was satisfied trivially by the defect it was meant to catch.
+
+- [x] 3.1 Stub a deliberately unpivoted elimination; confirm a Cayley-Menger test fails
+- [x] 3.2 Stub a packed row update that skips one word, then one that repeats a word; confirm a test fails in each case
+- [x] 3.3 Replace an 𝔽₂ exactness check with a tolerance comparison; confirm a test fails
+- [x] 3.4 Perturb a reported rank by ±1; confirm a test fails in both directions
+- [x] 3.5 Widen a band deliberately — bound `rref` on `Field` where the body needs a pivot rule, or drop `EuclideanDomain` to `CommutativeRing` on the integer determinant; confirm a test or a compile-fail case catches it
+- [x] 3.6 Break one HKT law in one witness; confirm a law test fails
+- [x] 3.6a Claim `Commutative<Multiplicative>` on a matrix container; confirm a test fails, because the claim is false for matrix multiplication
+- [x] 3.6b Remove one container's `Distributive` impl; confirm the `Ring` admission test fails — this is the defect the crate inherits, so the suite must catch it
+- [x] 3.7 Replace `solve` with invert-then-multiply; confirm the ill-conditioned residual test fails
+- [x] 3.8 Check the scenario → test mapping is complete; every scenario in the four capabilities names at least one test
+- [x] 3.9 Check the corner-case list against the suite; every case names a test
+- [x] 3.10 Revert every deliberate defect; confirm the tree is clean
 
 ## 4. Implement until the suite is green
 

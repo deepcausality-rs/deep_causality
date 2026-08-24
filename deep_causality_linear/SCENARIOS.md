@@ -9,8 +9,23 @@ Task 2.3. Every scenario in the four capabilities the change names, against the 
 A scenario with no test is a requirement nobody checks, and it is invisible unless the mapping is
 written down.
 
-Status key: **T** covered by a test here · **P** covered by a compile probe recorded in
-`openspec/notes/linear/BOUND-LEDGER.md` · **5** deferred to phase 5, where the consumer exists
+Status key: **T** covered by a test here · **P** covered by a compile-time pin
+(`src/traits/tower_pins.rs`) or a `compile_fail` doctest · **5** deferred to phase 5, where the
+consumer exists
+
+## What is not tested, and why
+
+The tower memberships — that `u64` is a `CommutativeSemiring`, that `DenseMatrix<f64>` is a `Ring` —
+were briefly written as tests and are not any more. Such a test passes **by compiling**: if the impl
+were missing the crate would not build and the test would never run to report it. Running it checks
+nothing the build has not already checked, and counting it as a test overstates what the suite
+verifies. They are compile-time pins in `src/traits/tower_pins.rs` instead.
+
+What *is* a real check is the opposite claim. "This must **not** compile" is not established by the
+build succeeding, so it needs an assertion of its own. Those are `compile_fail` doctests, four of
+them: a matrix refused by `CommutativeRing` and by `IntegralDomain`, and `f64` refused by
+`EuclideanDomain` on both integer entry points. Each was verified to fail when the guard it protects
+is removed.
 
 ## linear-matrix-representations (13)
 

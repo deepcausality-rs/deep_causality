@@ -23,8 +23,8 @@ pub fn rank_gf2<W>(m: &PackedGf2<W>) -> Result<usize, LinearError>
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("rank_gf2")
+    let mut work = m.clone();
+    Ok(crate::algorithms::elimination::rref(&mut work)?.rank())
 }
 
 /// A basis of the kernel over 𝔽₂.
@@ -36,8 +36,29 @@ pub fn kernel_basis_gf2<W>(m: &PackedGf2<W>) -> Result<PackedGf2<W>, LinearError
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("kernel_basis_gf2")
+    use crate::traits::matrix_build::MatrixBuild;
+    use crate::traits::matrix_view::MatrixView;
+    use deep_causality_num::Gf2;
+
+    let cols = m.cols();
+    let mut work = m.clone();
+    let reduced = crate::algorithms::elimination::rref(&mut work)?;
+    let pivots = reduced.pivot_columns();
+
+    let free: alloc::vec::Vec<usize> = (0..cols).filter(|c| !pivots.contains(c)).collect();
+    let mut basis = PackedGf2::<W>::zeros(cols, free.len());
+
+    for (k, &f) in free.iter().enumerate() {
+        // The free variable is one; each pivot variable takes the reduced coefficient in that
+        // column. Over 𝔽₂ the sign does not arise, since every element is its own inverse.
+        basis.set(f, k, Gf2::ONE)?;
+        for (row, &p) in pivots.iter().enumerate() {
+            if work.get(row, f)?.bit() {
+                basis.set(p, k, Gf2::ONE)?;
+            }
+        }
+    }
+    Ok(basis)
 }
 
 /// A basis of the image over 𝔽₂.
@@ -47,6 +68,21 @@ pub fn image_basis_gf2<W>(m: &PackedGf2<W>) -> Result<PackedGf2<W>, LinearError>
 where
     W: NaturalNumber,
 {
-    let _ = m;
-    todo!("image_basis_gf2")
+    use crate::traits::matrix_build::MatrixBuild;
+    use crate::traits::matrix_view::MatrixView;
+
+    let rows = m.rows();
+    let mut work = m.clone();
+    let reduced = crate::algorithms::elimination::rref(&mut work)?;
+    let pivots = reduced.pivot_columns();
+
+    // The pivot columns of the original, so a caller reads back vectors it recognises.
+    let mut basis = PackedGf2::<W>::zeros(rows, pivots.len());
+    for (k, &p) in pivots.iter().enumerate() {
+        for i in 0..rows {
+            let v = m.get(i, p)?;
+            basis.set(i, k, v)?;
+        }
+    }
+    Ok(basis)
 }

@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
+mod bounds_tests;
+#[cfg(test)]
 mod cg_tests;
 #[cfg(test)]
 mod decomposition_tests;

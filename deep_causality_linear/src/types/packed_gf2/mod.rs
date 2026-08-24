@@ -57,12 +57,12 @@ pub struct PackedGf2<W> {
 impl<W: NaturalNumber> PackedGf2<W> {
     /// The number of bits in one word.
     pub fn bits_per_word() -> usize {
-        todo!("PackedGf2::bits_per_word")
+        core::mem::size_of::<W>() * 8
     }
 
     /// The number of words one row occupies, which is `ceil(cols / bits_per_word)`.
     pub fn words_per_row(&self) -> usize {
-        todo!("PackedGf2::words_per_row")
+        self.words_per_row
     }
 
     /// The packed words, row-major.
@@ -70,7 +70,30 @@ impl<W: NaturalNumber> PackedGf2<W> {
     /// Exposed because the 𝔽₂ elimination is word-parallel and a caller measuring it needs to see
     /// the same words the algorithm does.
     pub fn as_words(&self) -> &[W] {
-        todo!("PackedGf2::as_words")
+        &self.words
+    }
+
+    /// The packed words, mutably. Internal: the padding invariant is this type's to keep.
+    pub(crate) fn as_mut_words(&mut self) -> &mut [W] {
+        &mut self.words
+    }
+
+    /// The shape, as `(rows, cols)`.
+    pub(crate) fn dims(&self) -> (usize, usize) {
+        (self.rows, self.cols)
+    }
+
+    /// An all-zero matrix of the given shape, with the padding invariant established.
+    pub(crate) fn allocate(rows: usize, cols: usize) -> Self {
+        let bits = core::mem::size_of::<W>() * 8;
+        let words_per_row = cols.div_ceil(bits);
+        Self {
+            words: alloc::vec![W::zero(); rows * words_per_row],
+            rows,
+            cols,
+            words_per_row,
+            _word: PhantomData,
+        }
     }
 
     /// Builds from entries in `{0, 1}` given as integers, reducing each modulo 2.
@@ -82,8 +105,45 @@ impl<W: NaturalNumber> PackedGf2<W> {
     ///
     /// [`LinearError::ShapeMismatch`] if the buffer length is not `rows * cols`.
     pub fn from_i64_mod2(data: &[i64], rows: usize, cols: usize) -> Result<Self, LinearError> {
-        let _ = (data, rows, cols);
-        todo!("PackedGf2::from_i64_mod2")
+        if data.len() != rows * cols {
+            return Err(LinearError::ShapeMismatch {
+                left: (rows, cols),
+                right: (data.len(), 1),
+            });
+        }
+        let mut m = Self::allocate(rows, cols);
+        for i in 0..rows {
+            for j in 0..cols {
+                if data[i * cols + j] % 2 != 0 {
+                    m.set_bit(i, j);
+                }
+            }
+        }
+        Ok(m)
+    }
+
+    /// Sets the bit at `(row, col)`. Callers have already bounds-checked.
+    pub(crate) fn set_bit(&mut self, row: usize, col: usize) {
+        let bits = core::mem::size_of::<W>() * 8;
+        let idx = row * self.words_per_row + col / bits;
+        let mask = W::one() << ((col % bits) as u32);
+        self.words[idx] = self.words[idx] | mask;
+    }
+
+    /// Clears the bit at `(row, col)`.
+    pub(crate) fn clear_bit(&mut self, row: usize, col: usize) {
+        let bits = core::mem::size_of::<W>() * 8;
+        let idx = row * self.words_per_row + col / bits;
+        let mask = W::one() << ((col % bits) as u32);
+        self.words[idx] = self.words[idx] & !mask;
+    }
+
+    /// Reads the bit at `(row, col)`.
+    pub(crate) fn bit_at(&self, row: usize, col: usize) -> bool {
+        let bits = core::mem::size_of::<W>() * 8;
+        let idx = row * self.words_per_row + col / bits;
+        let mask = W::one() << ((col % bits) as u32);
+        !(self.words[idx] & mask).is_zero()
     }
 
     /// Builds from 𝔽₂ entries given row-major.
@@ -92,7 +152,20 @@ impl<W: NaturalNumber> PackedGf2<W> {
     ///
     /// [`LinearError::ShapeMismatch`] if the buffer length is not `rows * cols`.
     pub fn from_slice(data: &[Gf2], rows: usize, cols: usize) -> Result<Self, LinearError> {
-        let _ = (data, rows, cols);
-        todo!("PackedGf2::from_slice")
+        if data.len() != rows * cols {
+            return Err(LinearError::ShapeMismatch {
+                left: (rows, cols),
+                right: (data.len(), 1),
+            });
+        }
+        let mut m = Self::allocate(rows, cols);
+        for i in 0..rows {
+            for j in 0..cols {
+                if data[i * cols + j].bit() {
+                    m.set_bit(i, j);
+                }
+            }
+        }
+        Ok(m)
     }
 }
