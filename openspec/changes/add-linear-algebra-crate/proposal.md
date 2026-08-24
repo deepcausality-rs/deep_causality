@@ -24,6 +24,10 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   representations of the same 𝔽₂ matrix. Through a row-operation trait, bit-packed `u64` runs at
   0.92–0.95× the hand-written non-generic loop at every size from n=128 to n=2048 — slightly faster —
   while beating a `Field`-satisfying `Gf2` byte scalar by 1.7× rising to 3.2×, on 8× less memory.
+- **The dense type has real call sites: 46.** Taking the rank of every constructed shape across the
+  seven consumer crates gives 118 constructions — 60 rank-1, 46 rank-2, 12 rank ≥ 3. Physics, quantum
+  and topology call 56 two-dimensional operations and **zero** N-d ones between them; topology
+  constructs 46 tensors and not one has rank above 2.
 - **`deep_causality_linear` is free on crates.io** (404 against a 200 control).
 
 ## What Changes
@@ -36,6 +40,10 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
 - Move `CsrMatrix`, the CG solvers and the sparse HKT witness into it from `deep_causality_sparse`.
 - Add a dense row-major matrix and a bit-packed 𝔽₂ matrix, generic over `NaturalNumber` word types,
   alongside the sparse one.
+- Build the crate **test-first**: declare the whole public API with `todo!()` bodies, write the
+  complete suite against it, observe every test fail for the right reason, prove the suite rejects
+  each known defect class, then implement, then migrate consumers. No consumer is repointed until the
+  crate's own suite is green at full coverage.
 - Add elimination — RREF, rank, kernel basis, image basis, determinant, solve — written once against
   a row-operation trait, with dense and bit-packed implementations. Sparse implements the read side
   only: `axpy_rows` changes a CSR row's non-zero pattern, so sparse elimination is a different
@@ -69,6 +77,9 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   and the exactness that removes the `1e-5` tolerance from homology.
 - `linear-consumer-migration`: the retirement of `deep_causality_sparse`, the type identity a
   re-export preserves, and what the two build systems and the documentation must agree on.
+- `linear-test-first-development`: the crate is built test-first — API declared with unimplemented
+  bodies, the full suite written and observed failing against it, the suite verified against
+  deliberate defects, then implementation, and only then downstream migration.
 
 ### Modified Capabilities
 

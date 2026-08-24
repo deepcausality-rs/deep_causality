@@ -169,6 +169,76 @@ That bounds the claim. `deep_causality_linear` holding sparse and dense side by 
 owning both representations and the algorithms appropriate to each — the shape LAPACK and its sparse
 counterparts have — rather than one algorithm covering everything.
 
+## Does a dense matrix type have real call sites?
+
+Yes — 46, and three crates never construct anything else. Measured by taking the rank of every
+constructed shape across the seven consumer crates.
+
+| crate | constructions | ranks | 2-D ops called | N-d ops called |
+|---|---|---|---|---|
+| `deep_causality_topology` | 46 | rank1=26, rank2=20, **no rank≥3** | 23 | **0** |
+| `deep_causality_physics` | 20 | rank1=13, rank2=6, rank4=1 | 20 | **0** |
+| `deep_causality_quantum` | 10 via `from_slice` | **all rank-2**, 8 square | 13 | **0** |
+| `deep_causality_discovery` | 6 | rank1=1, rank2=5 | 0 | 0 |
+| `deep_causality_cfd` | 30 | rank1=18, rank2=7, rank3=4, rank4=1 | 1 | 6 |
+| `deep_causality_algorithms` | 16 | rank2=8, rank3=5, rank4=1 | 0 | 19 |
+| `deep_causality_multivector` | 0 direct | — | 5 | 18 |
+
+118 constructions in total: **60 rank-1, 46 rank-2, 12 rank ≥ 3**. N-d operations means `ein_sum`,
+`broadcast_*`, `kronecker`, axis reductions, `reshape`, `stack`, `view`, or the tensor-train entry
+points; 2-D operations means `matmul`, `transpose`, `inverse`, `svd`, `qr`, `eigen_hermitian`,
+`dagger`.
+
+**Rank ≥ 3 is 10% of constructions and lives in three files**:
+`physics/src/theories/electromagnetism/gauge_em_ops_impl.rs:82` (`vec![num_points, dim, dim, 1]`),
+`cfd/src/tensor_bridge/operators.rs:36` (`vec![rl, 2, 2, rr]`, an MPO core), and SURD's joint
+distributions in `algorithms`.
+
+**Physics, quantum and topology call 56 two-dimensional operations and zero N-d operations between
+them.** Quantum's ten shapes are `[d,d]`, `[d_out,d_out]`, `[dim,dim]`, `[d_keep,d_keep]`,
+`[d_full,d_full]` and one `[d_out,d_in]`.
+
+**What the type would buy, concretely.** `DensityMatrix` stores `dim: usize` beside its tensor
+(`quantum/src/types/density_matrix.rs:29-32`) because `CausalTensor` cannot express squareness. That
+invariant is maintained by hand today, as are topology's `AdjacencyMatrix`/`IncidenceMatrix`/
+`LaplacianMatrix` aliases. A dense matrix type moves rank and squareness from runtime checks into the
+type.
+
+**The qualifier.** 60 of the 118 constructions are rank-1 vectors — more than the matrices — and a
+dense *matrix* type serves none of them. The split is 46 matrix sites, 60 vector sites, 12 genuine
+tensors.
+
+## Do physics' five small-matrix helpers consolidate?
+
+Partly: one genuine pair, and the fix does not need this crate.
+
+`gr_utils.rs:114` `invert_3x3` and `adm_state.rs:126` `inverse_spatial_metric` are the same function.
+The determinant expression and all nine adjugate terms match term for term. They differ in input
+shape (`[[T;3];3]` against a flat 9-slice) and in two things that look accidental:
+
+| | `invert_3x3` | `inverse_spatial_metric` |
+|---|---|---|
+| singularity threshold | `1e-14` | `1e-12` |
+| compared in | `T` | `f64`, after `det.into()` |
+| error text | "Singular spatial metric (det ~ 0)" | "Spatial metric determinant is zero" |
+
+The same physical quantity — the spatial metric determinant — has thresholds 100× apart depending on
+which helper is reached, and the `adm_state` path truncates to `f64`, discarding precision whenever
+the scalar is wider (`Float106`). No test pins either threshold; the `1e-12` occurrences under
+`deep_causality_physics/tests/` are unrelated propulsion and nuclear assertions.
+
+The 3×3 cofactor determinant appears four times: `gr_utils.rs:118`, `adm_state.rs:144`,
+`kinematics.rs:126`, and again as `det_b` inside `symmetric_3x3_eigenvalues`.
+
+`invert_4x4` stays: it extracts a **strided** 4×4 block from a larger tensor (`cols` from
+`shape.last()`, reading a 4×6 connection), which is a different operation from inverting a 4×4.
+`symmetric_3x3_eigenvalues` stays: Smith (1961) closed form with a diagonal fast path and `acos`
+clamping, more accurate here than a general eigensolver.
+
+**Both crates involved are `deep_causality_physics`.** Merging them is a `pub(crate) fn` inside that
+crate, so this finding supports a small physics fix and not the linear crate. It is recorded here
+because the question was asked, and it is out of scope for this change.
+
 ## Do topology's determinants change numerically?
 
 Researched, because the answer decides whether the consolidation is safe.
@@ -299,14 +369,15 @@ proposed at the time and are not rewritten. That leaves 34 of the 203 files unto
   but the delegating method shells, and none is deferred to a follow-up change.
 - **Does the retirement window end in a yank?** No. `deep_causality_sparse` is never yanked at any
   point.
+- **Does a dense matrix type have real call sites?** Yes — 46 rank-2 constructions, and physics,
+  quantum and topology call 56 two-dimensional operations and zero N-d ones. See the census above.
+- **Do physics' five small-matrix helpers consolidate?** One pair does, inside
+  `deep_causality_physics`, and it needs no crate boundary. Out of scope here.
 
 ## Open questions
 
-1. **Does the dense matrix type replace rank-2 `CausalTensor` at any call site?** Physics and quantum
-   use rank-2 tensors heavily; switching them is a separate decision with its own blast radius.
-2. **Do physics' five hand-rolled small-matrix helpers ever consolidate?** They are correct as
-   written and out of scope here. Four reuse the `[[T; 3]; 3]` shape without going through the
-   `Matrix3` alias; `invert_4x4` adds a sixth shape, `[T; 16]`.
+1. **Are the 60 rank-1 sites worth a vector type?** The census answered the matrix question and
+   raised this one. A dense matrix type serves none of them, and `Vec<T>` may simply be right.
 
 ## Related
 

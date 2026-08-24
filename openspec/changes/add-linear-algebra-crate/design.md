@@ -15,6 +15,8 @@ The consequences are measured in `openspec/notes/linear/deep-causality-linear.md
 | topology carries two near-identical ranks | `chain_complex_impl.rs:94` documents itself as a mirror of `cell_complex/mod.rs:172` |
 | homology is computed by thresholded f64 SVD | both helpers densify `CsrMatrix<i8>` and count singular values above `1e-5` |
 | no 𝔽₂ linear algebra exists | `qcl-gaps.md` G-01, severity S1 |
+| a dense matrix type has 46 call sites | 118 constructions across seven crates: 60 rank-1, 46 rank-2, 12 rank ≥ 3 |
+| three crates never construct anything above rank 2 | physics, quantum, topology: 56 two-dimensional ops, **zero** N-d ops |
 
 Constraints this repository imposes: MSRV 1.93.0 pinned to Kani's toolchain, so no specialization
 and no negative impls; `unsafe_code = "forbid"` workspace-wide; macros barred from `src`;
@@ -85,6 +87,29 @@ optional = true
 
 confined to `extensions/ext_iso.rs` behind `#[cfg(feature = "tensor-iso")]`. The core — `CsrMatrix`,
 `solver/cg.rs` — is tensor-free, so the absorbing crate can sit below tensor with no contortion.
+
+### The crate is built test-first, and the suite is verified before it is trusted
+
+The order is: declare the API with unimplemented bodies, write the complete suite against it, observe
+every test fail with the unimplemented panic, prove the suite rejects each defect class this change
+already knows is reachable, implement until green, and only then repoint a consumer.
+
+Two of those steps are not ceremony. **Observing the failure** distinguishes a test that will catch a
+defect from one that passes vacuously — a suite written after the implementation tends to encode what
+the implementation does. **Verifying against deliberate defects** is the only way to know the suite
+is worth gating on: the research already produced four concrete defect classes (an unpivoted
+elimination, an off-by-one in the packed word index, a loosened 𝔽₂ tolerance, a rank off by one), so
+each is a thing the suite must be shown to catch rather than a hypothesis.
+
+**Gating migration on a green suite** separates two failure sources. Repointing 102 import sites
+against an implementation that is still moving means a build failure could be either a broken
+consumer or a broken library. Sequencing them makes any post-migration failure unambiguously a
+migration failure.
+
+The repository's standing rules apply unchanged: full coverage of added files, tests mirror `src`
+file for file, every test module registered upward and declared in `tests/BUILD.bazel`, shared
+helpers under `src/utils_tests/` because Bazel cannot reach helpers inside `tests/`, and a failing
+test changes the implementation or the API — never the test.
 
 ### `gaussian_determinant` is not a general determinant
 
@@ -242,6 +267,12 @@ dependent resolves the *published* API of the crate below it and the order is lo
   delegating method shells, and none is deferred to a follow-up.
 - **Topology's determinants do not change numerically**, provided the shared implementation pivots.
   See Risks.
+- **A dense matrix type has 46 real call sites**, concentrated in three crates that call no N-d
+  operation at all. `DensityMatrix` carries `dim: usize` beside its tensor precisely because
+  `CausalTensor` cannot express squareness.
+- **Physics' five small-matrix helpers do not consolidate here.** One genuine pair exists
+  (`invert_3x3` and `inverse_spatial_metric`, same math, thresholds 100× apart), and merging it is a
+  `pub(crate) fn` inside `deep_causality_physics` needing no crate boundary. Recorded as task 8.1.
 
 ## Open Questions
 

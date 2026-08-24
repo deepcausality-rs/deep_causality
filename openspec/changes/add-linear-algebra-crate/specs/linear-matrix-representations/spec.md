@@ -64,6 +64,27 @@ per entry. At n=2048 that is 4,096 KiB against 512 KiB, and the measured elimina
 - **WHEN** an `r`×`c` 𝔽₂ matrix is allocated over a `w`-bit word
 - **THEN** it holds `r * ceil(c / w)` words
 
+### Requirement: The dense type makes rank and squareness type-level
+The dense matrix SHALL carry its two dimensions in its own type, and a square-matrix operation SHALL reject a non-square input without a separate dimension field being maintained by the caller.
+
+The census found 46 rank-2 constructions across the consumer crates, and the crates holding them
+maintain the invariant by hand: `DensityMatrix` stores `dim: usize` beside its tensor
+(`quantum/src/types/density_matrix.rs:29-32`) because `CausalTensor` cannot express squareness, and
+topology's `AdjacencyMatrix`, `IncidenceMatrix` and `LaplacianMatrix` are bare aliases of it. Physics,
+quantum and topology together call 56 two-dimensional operations and zero N-d ones.
+
+#### Scenario: A non-square input to a square-only operation
+- **WHEN** a determinant, inverse or eigendecomposition is asked for on a non-square dense matrix
+- **THEN** it fails without the caller having supplied a dimension
+
+#### Scenario: The dimension is not duplicated
+- **WHEN** a consumer holds a dense matrix
+- **THEN** it needs no separate field recording the matrix's order
+
+#### Scenario: Rank is not a runtime property
+- **WHEN** a dense matrix is passed to a two-dimensional operation
+- **THEN** no runtime check on the number of dimensions is required
+
 ### Requirement: Every representation reports its shape and its entries
 The crate SHALL define a read trait exposing row count, column count and element access by value, and SHALL implement it for all three representations.
 
