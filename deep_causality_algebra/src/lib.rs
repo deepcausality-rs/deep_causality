@@ -11,6 +11,7 @@ extern crate core;
 use deep_causality_num::{Float, Float106, FromPrimitive, One, Zero};
 
 mod algebra;
+pub mod hom;
 pub mod iso;
 pub mod utils_tests;
 
@@ -58,6 +59,11 @@ pub use crate::algebra::scalar_normed::NormedScalar;
 pub use crate::algebra::semiring::Semiring;
 pub use crate::algebra::semiring_commutative::CommutativeSemiring;
 pub use crate::algebra::verdict::Verdict;
+pub use crate::hom::compose::Compose;
+pub use crate::hom::hom::Hom;
+pub use crate::hom::iso_bridge::{IsoBackward, IsoForward};
+pub use crate::hom::properties::{Bijective, Injective, Isomorphism, Surjective};
+pub use crate::hom::ring_hom::RingHom;
 
 // Isomorphism traits
 pub use crate::iso::{AlgebraIso, DivisionAlgebraIso, FieldIso, GroupIso, RingIso};

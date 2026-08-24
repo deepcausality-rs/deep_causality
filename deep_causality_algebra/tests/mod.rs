@@ -6,4 +6,5 @@ mod algebra;
 mod float106;
 #[cfg(not(miri))]
 mod formalization_lean;
+mod hom;
 mod iso;

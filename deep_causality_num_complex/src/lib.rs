@@ -18,9 +18,11 @@ use deep_causality_num::{
 };
 
 mod complex;
+pub mod hom;
 pub mod utils_tests;
 
 //  Complex number types
 pub use crate::complex::complex_number::{Complex, Complex32, Complex64};
 pub use crate::complex::octonion_number::{Octonion, Octonion32, Octonion64};
 pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion64};
+pub use crate::hom::{ComplexToReal, RealToComplex};
