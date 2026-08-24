@@ -15,12 +15,12 @@ use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector as MultiVectorTrait;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 use alloc::vec::Vec;
-use deep_causality_algebra::{Field, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, Ring};
 use deep_causality_tensor::CausalTensor;
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Ring + Copy + Default + PartialOrd,
+    T: DivisibleByIntegers + Ring + Copy + Default + PartialOrd,
     CausalTensor<T>: BatchedMatMul<T>,
 {
     /// Computes the inner product (grade-0 projection of geometric product).

@@ -67,6 +67,7 @@ pub mod algebra_div;
 pub mod annihilating;
 pub mod associative;
 pub mod bounded_semilattice;
+pub mod characteristic;
 pub mod commutative;
 pub mod commutative_monoid;
 pub mod conjunction;

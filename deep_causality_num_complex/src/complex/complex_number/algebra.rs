@@ -9,6 +9,7 @@ use crate::{
 };
 use deep_causality_algebra::IntegralDomain;
 use deep_causality_algebra::{Additive, Multiplicative};
+use deep_causality_algebra::{Characteristic, DivisibleByIntegers};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
 // | **Complex** | ✅ | ✅ | ✅ | `Field`  `ComplexField` |
@@ -105,3 +106,15 @@ impl<T: RealField> ComplexField<T> for Complex<T> {
 
 // ℂ is a field, so it has no zero divisors.
 impl<T: RealField> IntegralDomain for Complex<T> {}
+
+// ℂ has characteristic zero: `n · 1` is the complex number `(n, 0)`, which is zero only for
+// `n = 0`. Stated per type rather than blanket-implemented, because it is a promise the compiler
+// cannot check.
+//
+// This is what admits `Complex<T>` to the operations that divide by an integer, and what keeps 𝔽₂
+// out of them. See `deep_causality_algebra::DivisibleByIntegers`.
+impl<T: RealField> Characteristic for Complex<T> {
+    const CHARACTERISTIC: u32 = 0;
+}
+
+impl<T: RealField> DivisibleByIntegers for Complex<T> {}

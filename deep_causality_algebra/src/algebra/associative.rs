@@ -89,3 +89,9 @@ impl Associative<Additive> for u32 {}
 impl Associative<Additive> for u64 {}
 impl Associative<Additive> for u128 {}
 impl Associative<Additive> for usize {}
+
+// 𝔽₂. Addition is exclusive-or and multiplication is conjunction, both of which associate
+// exactly. Unlike the floats, this is not a promise to a model the representation approximates —
+// the field has two elements and the laws are checked exhaustively.
+impl Associative<Additive> for deep_causality_num::Gf2 {}
+impl Associative<Multiplicative> for deep_causality_num::Gf2 {}

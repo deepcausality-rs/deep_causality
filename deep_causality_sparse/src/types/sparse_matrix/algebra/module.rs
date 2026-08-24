@@ -32,3 +32,12 @@ impl<T> CsrMatrix<T> {
         }
     }
 }
+
+// `Module<S>` needs no impl here. `deep_causality_algebra::module.rs:65` blankets it over
+// `AbelianGroup + Mul<R, Output = Self> + MulAssign<R>`, and `CsrMatrix` satisfies all three —
+// the additive markers carry it to `AbelianGroup`, and the scalar multiplication is implemented
+// at `arithmetic/mod.rs:283,321`. Writing one by hand is E0119.
+//
+// `Module` rather than a vector space is what admits ℤ: the general notion is over a ring, and a
+// vector space is the special case where that ring is a field. `CsrMatrix<i64>` scaled by `i64` is
+// a module and is not a vector space.

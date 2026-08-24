@@ -230,13 +230,19 @@ depends on is that `n · 1 ≠ 0`, which is characteristic zero. Finiteness neit
 follows from it: 𝔽₃ is finite and halves perfectly well, 𝔽₄ is finite and does not, and the rational
 function field 𝔽ₚ(x) is infinite and does not.
 
-Measured rather than assumed. Sixteen sites in the workspace compute `T::one() + T::one()` as two.
-Twelve are bounded on `RealField` or `Float`, which 𝔽₂ cannot reach, and are safe. **Four sit under a
-`Field` bound**, among them `multivector/src/types/multifield/algebra/mod.rs` `commutator_geometric`,
-whose `let half = T::one() / (T::one() + T::one());` would be a division by zero over 𝔽₂. Those four
-are the migration and they are the whole of it.
+Measured rather than assumed, and measured twice. Sixteen sites in the workspace compute
+`T::one() + T::one()` as two. **Three sit under a `Field` bound**, all in
+`deep_causality_multivector` — `commutator_geometric` at `types/multifield/algebra/mod.rs:163`, whose
+`let half = T::one() / (T::one() + T::one());` would be a division by zero over 𝔽₂;
+`types/multifield/ops/conversions.rs:139`; and `types/multivector/ops/ops_product_impl.rs:316`. Those
+three are the migration and they are the whole of it.
 
-So the tower gains `CharacteristicZero` and `FiniteField` as separate refinements of `Field`. They
+The other thirteen are excluded by a bound 𝔽₂ cannot reach: `RealField` (nine), `ConjugateScalar`
+(two) and `Real` (three). The count matters less than how it was reached — a file-level reading
+over-counted, because a file containing a `Field` bound somewhere is not a file whose halving site is
+under it. Each exclusion is a compile probe against the bound itself.
+
+So the tower gains `DivisibleByIntegers` and `FiniteField` as separate refinements of `Field`. They
 are disjoint by definition — every finite field has prime characteristic — but they do not partition
 the fields, and the documentation says so: 𝔽ₚ(x) is in neither. Stating the cut as
 finite-against-infinite would claim a partition that does not exist while guarding the wrong

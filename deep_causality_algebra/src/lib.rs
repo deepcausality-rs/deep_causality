@@ -23,6 +23,7 @@ pub use crate::algebra::algebra_div::DivisionAlgebra;
 pub use crate::algebra::annihilating::Annihilating;
 pub use crate::algebra::associative::Associative;
 pub use crate::algebra::bounded_semilattice::BoundedSemilattice;
+pub use crate::algebra::characteristic::{Characteristic, DivisibleByIntegers, FiniteField};
 pub use crate::algebra::commutative::Commutative;
 pub use crate::algebra::commutative_monoid::CommutativeMonoid;
 pub use crate::algebra::conjunction::Conjunction;

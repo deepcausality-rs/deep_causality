@@ -23,7 +23,7 @@ use alloc::vec::Vec;
 use crate::CausalMultiField;
 use crate::MultiVector;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
-use deep_causality_algebra::{Field, RealField, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, Field, RealField, Ring};
 use deep_causality_tensor::CausalTensor;
 
 // ============================================================================
@@ -91,7 +91,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + core::ops::Neg<Output = T> + 'static,
+    T: DivisibleByIntegers + Copy + Default + PartialOrd + core::ops::Neg<Output = T> + 'static,
 {
     /// Computes the reversion (reversal) of the field.
     ///
@@ -147,7 +147,18 @@ where
             shape: self.shape,
         }
     }
+}
 
+/// The geometric commutator halves, so it needs a scalar in which `1 + 1` is invertible.
+///
+/// [`DivisibleByIntegers`] rather than `Field`: `Field` is blanket-implemented and so admits every
+/// finite field automatically, and over 𝔽₂ the `half` below is a division by zero. The Lie
+/// commutator above does not halve and keeps the looser bound.
+impl<T> CausalMultiField<T>
+where
+    T: DivisibleByIntegers + Ring + Copy + Default + PartialOrd,
+    CausalTensor<T>: BatchedMatMul<T>,
+{
     /// Computes the geometric commutator: `(AB - BA) / 2`.
     ///
     /// Equivalent to the Lie commutator scaled by 1/2.

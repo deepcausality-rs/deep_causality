@@ -8,20 +8,20 @@ The linear crate cannot declare its own scalar, so 𝔽₂ has to exist before p
 packed representation. Exit condition: the tower carries `Gf2` and the characteristic refinements,
 the workspace is green, and no `Field` bound that halves can reach 𝔽₂.
 
-- [ ] 0.1 Add `Gf2` to `deep_causality_num`: `Add`, `Sub`, `Neg`, `Mul`, `Div`, `DivAssign`, `Zero`, `One`, `PartialEq`, `Eq`, `Clone`, `Copy`, `Debug`, `Display`, all arithmetic mod 2
-- [ ] 0.2 Implement its law markers in `deep_causality_algebra`: `Associative<Additive>`, `Associative<Multiplicative>`, `Commutative<Additive>`, `Commutative<Multiplicative>`, `Distributive`, `Annihilating`
-- [ ] 0.3 Implement `IntegralDomain for Gf2` deliberately, per the tower's per-type rule; confirm `Field` arrives through the blanket and is not written by hand
-- [ ] 0.4 Confirm by compile probe that `Gf2` does NOT reach `RealField`, `Normed`, `NormedScalar`, `ConjugateScalar` or `EuclideanDomain`
-- [ ] 0.5 Add `Characteristic` with the characteristic as an associated constant — 0 for ℚ, ℝ, ℂ; `p` for a finite field
-- [ ] 0.6 Add `CharacteristicZero: Field` with per-type impls for `f32`, `f64`, `Float106`, `Complex<T>` and `Rational<T>`; document that it is an unverifiable promise like every other law here
-- [ ] 0.7 Add `FiniteField: Field` carrying `ORDER`; implement for `Gf2` with order 2 and characteristic 2; document that `q = p^k` and that 𝔽₄ has order 4 and characteristic 2, so the two are different questions
-- [ ] 0.8 Document on both traits that they are disjoint by definition but do not partition the fields, naming 𝔽ₚ(x) as the case that is in neither
-- [ ] 0.9 Rebound the four `Field`-bounded sites that divide by `one + one` on `CharacteristicZero`: `multivector/src/types/multifield/algebra/mod.rs` `commutator_geometric`, `multivector/src/types/multivector/ops/ops_product_impl.rs:316`, `multivector/src/types/multifield/ops/conversions.rs:139`, and the `svd_decomp` site at `tensor/.../tensor_svd_decomp/mod.rs:64`
-- [ ] 0.10 Let the compiler enumerate any site 0.9 missed; rebound each and record the count against the sixteen `one() + one()` sites the survey found
-- [ ] 0.11 Add a compile-fail test that halving over `Gf2` is rejected and that the error names `CharacteristicZero`
-- [ ] 0.12 Add `Distributive` and `Annihilating` for `CsrMatrix<T>`, closing the two markers that keep it at `AbelianGroup`; confirm `CsrMatrix<f64>: Ring` then holds
-- [ ] 0.13 Add `impl Module<S> for CsrMatrix<T>`, now reachable, and confirm the tower sees the scalar multiplication `arithmetic/mod.rs:283` already implements
-- [ ] 0.14 Bump `deep_causality_num` and `deep_causality_algebra`, repin dependents, and confirm `bazel test //...` is green before phase 1 starts
+- [x] 0.1 Add `Gf2` to `deep_causality_num`: `Add`, `Sub`, `Neg`, `Mul`, `Div`, `DivAssign`, `Zero`, `One`, `PartialEq`, `Eq`, `Clone`, `Copy`, `Debug`, `Display`, all arithmetic mod 2
+- [x] 0.2 Implement its law markers in `deep_causality_algebra`: `Associative<Additive>`, `Associative<Multiplicative>`, `Commutative<Additive>`, `Commutative<Multiplicative>`, `Distributive`, `Annihilating`
+- [x] 0.3 Implement `IntegralDomain for Gf2` deliberately, per the tower's per-type rule; confirm `Field` arrives through the blanket and is not written by hand
+- [x] 0.4 Confirm by compile probe that `Gf2` does NOT reach `RealField`, `Normed`, `NormedScalar`, `ConjugateScalar` or `EuclideanDomain`
+- [x] 0.5 Add `Characteristic` with the characteristic as an associated constant — 0 for ℚ, ℝ, ℂ; `p` for a finite field
+- [x] 0.6 Add `DivisibleByIntegers: Field` with per-type impls for `f32`, `f64`, `Float106`, `Complex<T>` and `Rational<T>`; document that it is an unverifiable promise like every other law here
+- [x] 0.7 Add `FiniteField: Field` carrying `ORDER`; implement for `Gf2` with order 2 and characteristic 2; document that `q = p^k` and that 𝔽₄ has order 4 and characteristic 2, so the two are different questions
+- [x] 0.8 Document on both traits that they are disjoint by definition but do not partition the fields, naming 𝔽ₚ(x) as the case that is in neither
+- [x] 0.9 Rebound the three `Field`-bounded sites that divide by `one + one` on `DivisibleByIntegers`, all in `deep_causality_multivector`: `types/multifield/algebra/mod.rs:163` `commutator_geometric`, `types/multifield/ops/conversions.rs:139`, and `types/multivector/ops/ops_product_impl.rs:316`
+- [x] 0.10 Let the compiler enumerate any site 0.9 missed; rebound each and record the count against the sixteen `one() + one()` sites the survey found. The other thirteen are already excluded by a bound 𝔽₂ cannot reach — `RealField` (nine), `ConjugateScalar` (two) and `Real` (three, in `num_dual`) — each confirmed by compile probe rather than by reading the bound
+- [x] 0.11 Add a compile-fail test that halving over `Gf2` is rejected and that the error names `DivisibleByIntegers`
+- [x] 0.12 Add `Distributive` and `Annihilating` for `CsrMatrix<T>`, closing the two markers that keep it at `AbelianGroup`; confirm `CsrMatrix<f64>: Ring` then holds
+- [x] 0.13 Confirm `CsrMatrix<T>: Module<S>` — it holds already, through the blanket at `algebra/module.rs:65`, which needs only `AbelianGroup` and the scalar multiplication at `arithmetic/mod.rs:283,321`. Writing an impl by hand is E0119. Record that `Ring` was the only rung missing
+- [x] 0.14 Bump `deep_causality_num` and `deep_causality_algebra`, repin dependents, and confirm `bazel test //...` is green before phase 1 starts
 
 ## 1. Declare the API, implement nothing
 
@@ -35,7 +35,7 @@ unimplemented.
 - [ ] 1.5 Declare the vector surface: element access, scale, add, sub, dot, Hermitian inner product, outer product, slice round-trip, and matrix–vector for all three matrix representations
 - [ ] 1.6 Declare the norms: vector 1/2/∞, matrix 1/∞/Frobenius, each in exactly one place, bounded on `NormedScalar`
 - [ ] 1.7 Declare the integer surface: fraction-free determinant and exact rank over `EuclideanDomain`, plus the ring operations over `CommutativeRing`
-- [ ] 1.8 Band every declaration on the weakest tower trait that makes it correct — `CommutativeSemiring` / `CommutativeRing` / `IntegralDomain` / `EuclideanDomain` / `Field` / `CharacteristicZero` / `NormedScalar` / `RealField` — and document on each what property the bound supplies
+- [ ] 1.8 Band every declaration on the weakest tower trait that makes it correct — `CommutativeSemiring` / `CommutativeRing` / `IntegralDomain` / `EuclideanDomain` / `Field` / `DivisibleByIntegers` / `NormedScalar` / `RealField` — and document on each what property the bound supplies
 - [ ] 1.8a Bound nothing on an ad-hoc `core::ops` bundle. The code being moved does this throughout — `mat_mult_impl` takes `T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`, `transpose_impl` takes `T: Copy + Zero`, `vec_mult_impl` takes `T: Copy + Zero + Add + Mul` — and each is a semiring spelled longhand. Restate them as tower traits, keeping `Copy`/`Clone`/`Default` where the representation needs them
 - [ ] 1.8b Record every bound loosened from `Field` or `RealField` with the number set it newly admits, so phase 2 can write the test that instantiates it
 - [ ] 1.9 Confirm the crate declares no scalar trait, marker or newtype of its own

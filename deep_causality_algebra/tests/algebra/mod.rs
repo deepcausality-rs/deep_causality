@@ -25,9 +25,13 @@ pub(crate) mod field_real_f64_tests;
 // results for transcendental ops, so exact equality cannot hold. The test
 // itself is correct and runs under normal CI.
 #[cfg(test)]
+mod characteristic_tests;
+#[cfg(test)]
 mod commutative_semilattice_tests;
 #[cfg(test)]
 mod domain_euclidean_tests;
+#[cfg(test)]
+mod gf2_tower_tests;
 #[cfg(test)]
 mod integer_tower_tests;
 #[cfg(test)]

@@ -45,7 +45,7 @@ CommutativeSemiring ............. ℕ
   └─ CommutativeRing ............ ℤ, 𝔽₂, ℚ, ℝ, ℂ
        └─ IntegralDomain ........ ℤ, 𝔽₂, ℚ, ℝ, ℂ    — not ℝ[ε]
             ├─ Field ............ 𝔽₂, ℚ, ℝ, ℂ       — not ℤ
-            │    ├─ CharacteristicZero ... ℚ, ℝ, ℂ   — not 𝔽₂
+            │    ├─ DivisibleByIntegers ... ℚ, ℝ, ℂ   — not 𝔽₂
             │    │    └─ NormedScalar / RealField ... ℝ, ℂ, `Float106`
             │    └─ FiniteField ......... 𝔽₂          — not ℚ, ℝ, ℂ
             └─ EuclideanDomain .. ℤ                  — not 𝔽₂, ℚ, ℝ, ℂ
@@ -58,7 +58,7 @@ CommutativeSemiring ............. ℕ
 | integral domain | `IntegralDomain` | ℤ, 𝔽₂, ℚ, ℝ, ℂ | the above, plus anything resting on cancellation |
 | Euclidean domain | `EuclideanDomain` | ℤ | fraction-free determinant and exact rank — see `linear-integer-algebra` |
 | field | `Field` | 𝔽₂, ℚ, ℝ, ℂ | rref, rank, kernel basis, image basis, inverse, solve |
-| characteristic zero | `CharacteristicZero` | ℚ, ℝ, ℂ | anything dividing by an integer — see `num-finite-field` |
+| integer-divisible field | `DivisibleByIntegers` | ℚ, ℝ, ℂ | anything dividing by an integer — see `num-finite-field` |
 | normed field | `NormedScalar` | ℝ, ℂ, `Float106` | norms, and pivot selection by magnitude |
 | real field | `RealField` | ℝ, `Float106` | SVD, QR, eigendecomposition, Cholesky, conjugate gradient |
 
@@ -68,9 +68,9 @@ there are no zero divisors — not because a Euclidean valuation exists. `Euclid
 above it, so the bound `linear-integer-algebra` uses carries the promise its algorithm rests on,
 which it did not when `EuclideanDomain: CommutativeRing`.
 
-`CharacteristicZero` is the rung that keeps 𝔽₂ out of a body that halves. It is not a convenience:
+`DivisibleByIntegers` is the rung that keeps 𝔽₂ out of a body that halves. It is not a convenience:
 `Field` is blanket-implemented, so admitting 𝔽₂ to the tower widens every `T: Field` bound in the
-workspace at once, and four of them divide by `one + one`. `num-finite-field` carries the reasoning
+workspace at once, and three of them divide by `one + one`. `num-finite-field` carries the reasoning
 and the measurement.
 
 **`Field` and `EuclideanDomain` are disjoint sets of concrete types in this tower**, even though
@@ -124,7 +124,7 @@ are both unavailable over it. That is not a limitation to work around; `3u64 - 5
 
 #### Scenario: An operation that halves does not admit 𝔽₂
 - **WHEN** an operation that divides by two is attempted over `Gf2`
-- **THEN** it fails to compile, because `Gf2` is not `CharacteristicZero`
+- **THEN** it fails to compile, because `Gf2` is not `DivisibleByIntegers`
 
 #### Scenario: Elimination admits 𝔽₂ because it never halves
 - **WHEN** `rref` is called over `Gf2`

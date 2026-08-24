@@ -60,3 +60,6 @@ impl Distributive for u32 {}
 impl Distributive for u64 {}
 impl Distributive for u128 {}
 impl Distributive for usize {}
+
+// 𝔽₂. `a ∧ (b ⊕ c) = (a ∧ b) ⊕ (a ∧ c)`, checked exhaustively over the four cases.
+impl Distributive for deep_causality_num::Gf2 {}

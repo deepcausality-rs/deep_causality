@@ -65,11 +65,12 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   the element — the prototype packs bits and still names `type Scalar = Gf2`.
 - **Separate fields by characteristic, not by finiteness.** `Field` is blanket-implemented, so
   admitting 𝔽₂ widens every `T: Field` bound in the workspace at once. Sixteen sites compute
-  `T::one() + T::one()` as two; twelve are bounded on `RealField` and safe; **four sit under a
-  `Field` bound**, including `commutator_geometric`, whose `one / (one + one)` is a division by zero
-  over 𝔽₂. Finiteness is the wrong guard — 𝔽₃ is finite and halves, 𝔽₄ is finite and does not, 𝔽ₚ(x)
-  is infinite and does not — so the tower gains `CharacteristicZero` and `FiniteField`, disjoint by
-  definition but not a partition, and the four sites are rebounded.
+  `T::one() + T::one()` as two; thirteen are already excluded by `RealField`, `ConjugateScalar` or
+  `Real`; **three sit under a `Field` bound**, all in `deep_causality_multivector`, including
+  `commutator_geometric`, whose `one / (one + one)` is a division by zero over 𝔽₂. Finiteness is the
+  wrong guard — 𝔽₃ is finite and halves, 𝔽₄ is finite and does not, 𝔽ₚ(x) is infinite and does not —
+  so the tower gains `DivisibleByIntegers` and `FiniteField`, disjoint by definition but not a
+  partition, and the three sites are rebounded.
 - **Sweep the bounds down.** Integer admission is what bounding each operation at its lowest correct
   level yields, not a feature beside the field work. The code being moved bounds on ad-hoc operator
   bundles — `mat_mult_impl` takes `T: Copy + Clone + Mul<Output = T> + Zero + PartialEq + Default`,
@@ -125,7 +126,7 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
   the vector as a `Module<R>`, law markers that name their operator, bounds that state algebraic
   structure rather than operator bundles, and the lowering sweep with each admission instantiated.
 - `num-finite-field`: 𝔽₂ as a tower scalar owned by `deep_causality_num`, the characteristic-based
-  separation of fields, the `CharacteristicZero` bound on everything that divides by an integer, and
+  separation of fields, the `DivisibleByIntegers` bound on everything that divides by an integer, and
   the rungs 𝔽₂ deliberately does not reach.
 - `linear-consumer-migration`: the retirement of `deep_causality_sparse`, the type identity a
   re-export preserves, the duplicated linear algebra in `deep_causality_multivector` marked with its
@@ -162,9 +163,10 @@ Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries
 - **`deep_causality_topology`**: the largest consumer — 61 import sites across 73 files (282 `CsrMatrix` mentions). Five
   duplicated helpers are replaced and `betti_number` changes from f64 SVD to exact 𝔽₂ rank.
 - **`deep_causality_num`**: gains `Gf2`, the tower's first finite field.
-- **`deep_causality_algebra`**: gains `Characteristic`, `CharacteristicZero` and `FiniteField`, and
+- **`deep_causality_algebra`**: gains `Characteristic`, `DivisibleByIntegers` and `FiniteField`, and
   the law-marker impls for `Gf2`. Both crates take a version bump before phase 1 begins.
-- **`deep_causality_multivector`**: four sites rebounded on `CharacteristicZero`, and three
+- **`deep_causality_multivector`**: three sites rebounded on `DivisibleByIntegers` (and the bound
+  propagated to eight further call sites the compiler found), and three
   duplicates marked — `MultiVectorL2Norm::norm_l2` and `CausalMultiField::squared_magnitude` routed
   through the shared norm, `BatchedMatMul` decided explicitly. `ScalarEval` is left alone: it is
   already a facade over `Normed` rather than a second definition.

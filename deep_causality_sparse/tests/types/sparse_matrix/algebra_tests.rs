@@ -160,3 +160,108 @@ fn test_module_trait() {
     // Verify it's a new matrix
     assert_ne!(matrix.values(), scaled.values());
 }
+
+// ---------------------------------------------------------------------------
+// Where CsrMatrix sits in the algebra tower.
+//
+// Each admission witness compiles only if the type reaches the bound, so calling it is the
+// assertion. `Ring` is the rung the two marker impls `Distributive` and `Annihilating` closed;
+// `CommutativeRing` must stay refused, because matrix multiplication does not commute.
+// ---------------------------------------------------------------------------
+
+mod tower {
+    use deep_causality_algebra::{
+        AbelianGroup, Additive, Annihilating, Associative, Distributive, Module, Multiplicative,
+        Ring,
+    };
+    use deep_causality_sparse::CsrMatrix;
+
+    fn admits_abelian_group<T: AbelianGroup>() {}
+    fn admits_ring<T: Ring>() {}
+    fn admits_module<M: Module<R>, R: Ring>() {}
+    fn admits_distributive<T: Distributive>() {}
+    fn admits_annihilating<T: Annihilating>() {}
+    fn admits_associative_add<T: Associative<Additive>>() {}
+    fn admits_associative_mul<T: Associative<Multiplicative>>() {}
+
+    #[test]
+    fn test_csr_matrix_carries_the_markers_that_reach_ring() {
+        admits_associative_add::<CsrMatrix<f64>>();
+        admits_associative_mul::<CsrMatrix<f64>>();
+        admits_distributive::<CsrMatrix<f64>>();
+        admits_annihilating::<CsrMatrix<f64>>();
+    }
+
+    #[test]
+    fn test_csr_matrix_is_an_abelian_group() {
+        admits_abelian_group::<CsrMatrix<f64>>();
+        admits_abelian_group::<CsrMatrix<i64>>();
+    }
+
+    #[test]
+    fn test_csr_matrix_reaches_the_ring_rung() {
+        admits_ring::<CsrMatrix<f64>>();
+        admits_ring::<CsrMatrix<i64>>();
+    }
+
+    #[test]
+    fn test_csr_matrix_is_a_module_over_its_scalar_ring() {
+        // Reached through the blanket at `algebra/module.rs:65`, which needs only `AbelianGroup`
+        // and the scalar multiplication -- not `Ring`.
+        admits_module::<CsrMatrix<f64>, f64>();
+        admits_module::<CsrMatrix<i64>, i64>();
+    }
+
+    #[test]
+    fn test_the_module_scaling_is_the_operation_the_tower_names() {
+        let m = CsrMatrix::from_triplets(2, 2, &[(0, 0, 2.0), (1, 1, 3.0)]).unwrap();
+        let scaled = m.clone() * 2.0_f64;
+        assert_eq!(scaled.get_value_at(0, 0), 4.0);
+        assert_eq!(scaled.get_value_at(1, 1), 6.0);
+    }
+
+    #[test]
+    fn test_ring_distributivity_holds_on_a_worked_example() {
+        // The law `Distributive` promises: A(B + C) = AB + AC.
+        let a = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0), (0, 1, 2.0), (1, 1, 3.0)]).unwrap();
+        let b = CsrMatrix::from_triplets(2, 2, &[(0, 0, 4.0), (1, 0, 5.0)]).unwrap();
+        let c = CsrMatrix::from_triplets(2, 2, &[(0, 1, 6.0), (1, 1, 7.0)]).unwrap();
+
+        let lhs = a.mul(&(b.clone() + c.clone()));
+        let rhs = a.mul(&b) + a.mul(&c);
+
+        for i in 0..2 {
+            for j in 0..2 {
+                assert_eq!(
+                    lhs.get_value_at(i, j),
+                    rhs.get_value_at(i, j),
+                    "mismatch at ({i}, {j})"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_ring_annihilation_holds_on_a_worked_example() {
+        // The law `Annihilating` promises: 0 * A = 0.
+        let a = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0), (1, 1, 2.0)]).unwrap();
+        let zero = CsrMatrix::<f64>::zero(2, 2);
+        let product = zero.mul(&a);
+        for i in 0..2 {
+            for j in 0..2 {
+                assert_eq!(product.get_value_at(i, j), 0.0);
+            }
+        }
+    }
+
+    #[test]
+    fn test_matrix_multiplication_does_not_commute() {
+        // Why `Commutative<Multiplicative>` is deliberately absent, and why a `CommutativeRing`
+        // bound must keep refusing this type.
+        let a = CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0), (0, 1, 1.0)]).unwrap();
+        let b = CsrMatrix::from_triplets(2, 2, &[(1, 0, 1.0)]).unwrap();
+        let ab = a.mul(&b);
+        let ba = b.mul(&a);
+        assert_ne!(ab.get_value_at(0, 0), ba.get_value_at(0, 0));
+    }
+}

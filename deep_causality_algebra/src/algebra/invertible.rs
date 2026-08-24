@@ -33,3 +33,8 @@ pub trait Invertible {}
 impl Invertible for f32 {}
 impl Invertible for f64 {}
 impl Invertible for Float106 {}
+
+// 𝔽₂. The single non-zero element is `1`, and `1 · (1 / 1) = 1`, so field division holds exactly.
+// Unlike the reals, no rounding qualifies the promise: the whole of the law is one case, and it is
+// checked in the tests rather than argued for.
+impl Invertible for deep_causality_num::Gf2 {}

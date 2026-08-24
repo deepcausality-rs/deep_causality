@@ -445,7 +445,7 @@ leaves ℤ on its first step.
 | integral domain | `IntegralDomain` | ℤ and above, not ℝ[ε] | anything resting on cancellation |
 | Euclidean domain | `EuclideanDomain` | ℤ | exact fraction-free determinant and rank |
 | field | `Field` | 𝔽₂, ℚ, ℝ, ℂ | rref, rank, kernel, image, inverse, solve |
-| characteristic zero | `CharacteristicZero` | ℚ, ℝ, ℂ | anything dividing by an integer |
+| characteristic zero | `DivisibleByIntegers` | ℚ, ℝ, ℂ | anything dividing by an integer |
 | normed field | `NormedScalar` | ℝ, ℂ, `Float106` | norms, pivot selection by magnitude |
 | real field | `RealField` | ℝ, `Float106` | SVD, QR, eigen, Cholesky, CG |
 
@@ -458,18 +458,24 @@ exists. `EuclideanDomain: IntegralDomain` now, so the bound this note already sp
 promise its algorithm needs; before, it carried only `CommutativeRing`, and the exactness claim
 rested on nothing the type system held.
 
-`CharacteristicZero` exists because admitting 𝔽₂ to the tower is not free. `Field` is
+`DivisibleByIntegers` exists because admitting 𝔽₂ to the tower is not free. `Field` is
 blanket-implemented (`field.rs:41`), so the day `Gf2` satisfies the structural bound, every
 `T: Field` in the workspace widens at once with no per-type opt-in. Sixteen sites compute
-`T::one() + T::one()` as two; twelve are bounded on `RealField` or `Float`, which 𝔽₂ cannot reach.
-Four sit under a `Field` bound — `multivector` `commutator_geometric`, `ops_product_impl.rs:316`,
-`multifield/ops/conversions.rs:139`, and `tensor_svd_decomp/mod.rs:64` — and
+`T::one() + T::one()` as two. Three sit under a `Field` bound, all in `deep_causality_multivector` —
+`commutator_geometric` (`types/multifield/algebra/mod.rs:163`),
+`types/multifield/ops/conversions.rs:139` and `types/multivector/ops/ops_product_impl.rs:316` — and
 `commutator_geometric`'s `let half = T::one() / (T::one() + T::one());` is a division by zero over
 𝔽₂.
 
+The other thirteen are excluded by a bound 𝔽₂ cannot reach: `RealField` (nine), `ConjugateScalar`
+(two) and `Real` (three). The classification is per site by compile probe. A first pass classified
+per *file* and over-counted, because a file that contains a `Field` bound somewhere is not a file
+whose halving site sits under it — `tensor_svd_decomp/mod.rs:64` reads as exposed that way and is
+bounded `T: RealField + Sum + Neg<Output = T>`.
+
 Finiteness is the wrong guard for that. 𝔽₃ is finite and halves; 𝔽₄ is finite and does not; 𝔽ₚ(x) is
 infinite and does not. The property the code depends on is `n · 1 ≠ 0`, which is characteristic zero.
-`CharacteristicZero` and `FiniteField` are disjoint by definition — every finite field has prime
+`DivisibleByIntegers` and `FiniteField` are disjoint by definition — every finite field has prime
 characteristic — but they do not partition the fields, and 𝔽ₚ(x) is the case in neither.
 
 This is not academic. Topology's boundary matrices are `CsrMatrix<i8>`

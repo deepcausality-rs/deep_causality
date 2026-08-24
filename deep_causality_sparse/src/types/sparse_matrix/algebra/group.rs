@@ -5,7 +5,9 @@
 
 use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_algebra::{Additive, Associative, Commutative, Multiplicative};
+use deep_causality_algebra::{
+    Additive, Annihilating, Associative, Commutative, Distributive, Multiplicative,
+};
 
 use crate::CsrMatrix;
 use core::ops::Sub;
@@ -22,7 +24,24 @@ impl<T> Commutative<Additive> for CsrMatrix<T> where T: Commutative<Additive> + 
 // that it commutes.
 impl<T> Associative<Multiplicative> for CsrMatrix<T> where T: Associative<Multiplicative> + Copy {}
 
+// `Commutative<Multiplicative>` is deliberately absent: `CsrMatrix`'s `Mul` is matrix
+// multiplication, and `AB != BA` in general. That omission is what keeps a `CommutativeRing` bound
+// from admitting a matrix.
+
+// Matrix multiplication distributes over matrix addition — `A(B + C) = AB + AC` — entrywise,
+// because each entry of the product is a sum of products of entries and the scalar distributes.
+impl<T> Distributive for CsrMatrix<T> where T: Distributive + Copy {}
+
+// The zero matrix annihilates: every entry of `0 · A` is a sum of terms each containing a scalar
+// zero factor. Stated rather than derived, for the same reason the scalar case is (see
+// `Annihilating`).
+impl<T> Annihilating for CsrMatrix<T> where T: Annihilating + Copy {}
+
 // Reached through the `AbelianGroup` blanket now that the additive markers are present.
+// `Ring` is reached through its own blanket now that `Distributive` and `Annihilating` are present:
+// a matrix ring over a ring is a ring, and these were the two markers standing between the type and
+// the tower saying so. `Module<S>` was already reachable without them — its blanket needs only
+// `AbelianGroup` and the scalar multiplication — so `Ring` is what this closes, and nothing else.
 
 impl<T> CsrMatrix<T>
 where

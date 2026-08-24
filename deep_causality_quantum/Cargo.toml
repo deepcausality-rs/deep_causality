@@ -71,7 +71,7 @@ default-features = false
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.5"
+version = "0.6"
 default-features = false
 
 [dependencies.deep_causality_num]

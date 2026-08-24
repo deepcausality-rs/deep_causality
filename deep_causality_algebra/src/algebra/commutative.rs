@@ -88,3 +88,7 @@ impl Commutative<Additive> for u32 {}
 impl Commutative<Additive> for u64 {}
 impl Commutative<Additive> for u128 {}
 impl Commutative<Additive> for usize {}
+
+// 𝔽₂. Exclusive-or and conjunction both commute.
+impl Commutative<Additive> for deep_causality_num::Gf2 {}
+impl Commutative<Multiplicative> for deep_causality_num::Gf2 {}

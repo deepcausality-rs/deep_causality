@@ -13,10 +13,14 @@ and stops — verified by compile probe — because `Distributive` and `Annihila
 implemented for it. Everything else `Ring` needs is already there: `One`
 (`identity/mod.rs:40`), `Mul` (`arithmetic/mod.rs:213`) and `Associative<Multiplicative>`
 (`algebra/group.rs:23`). A matrix ring over a ring **is** a ring, and the tower is two marker impls
-away from saying so. Because `Ring` is missing, `Module<S>` is unreachable too, so the scalar
-multiplication that `arithmetic/mod.rs:283` already implements as `Mul<S>` is not visible to the
-tower either — `algebra/module.rs` constrains the *element* to be a `Module` and gives the matrix
-an inherent `scale` instead.
+away from saying so.
+
+`Module<S>` is *not* part of that gap, and the distinction is worth recording because the obvious
+inference is wrong. `Module<R>` is blanket-implemented over
+`AbelianGroup + Mul<R, Output = Self> + MulAssign<R>` (`algebra/module.rs:65`), and `CsrMatrix`
+satisfies all three already — the additive markers carry it to `AbelianGroup`, and the scaling is
+implemented at `arithmetic/mod.rs:283,321`. It is a module today, and an impl written by hand is
+E0119. `Ring` is the only rung actually missing.
 
 The move is when this gets finished, not carried across.
 
@@ -37,7 +41,7 @@ The move is when this gets finished, not carried across.
 - **THEN** each is admitted without an adapter
 
 ### Requirement: The vector is a module over its scalar ring
-The dense vector SHALL implement `Module<R>` for its scalar ring `R`, and the matrix containers SHALL implement it for the same `R`.
+The dense vector SHALL satisfy `Module<R>` for its scalar ring `R`, and every matrix container SHALL satisfy it for the same `R`.
 
 `Module<R: Ring>` (`algebra/module.rs:33`) is the tower's name for a vector space, and a
 linear-algebra crate whose vector type does not implement it has skipped the integration the crate

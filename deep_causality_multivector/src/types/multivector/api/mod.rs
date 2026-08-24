@@ -9,7 +9,7 @@ use crate::{CausalMultiVector, CausalMultiVectorError};
 use crate::{MultiVector, MultiVectorL2Norm, ScalarEval};
 use core::iter::Sum;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_algebra::{Field, Real};
+use deep_causality_algebra::{DivisibleByIntegers, Field, Real};
 use deep_causality_num::{One, Zero};
 
 impl<T> MultiVector<T> for CausalMultiVector<T> {
@@ -92,7 +92,7 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
 
     fn commutator_geometric(&self, rhs: &Self) -> Self
     where
-        T: Field + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
+        T: DivisibleByIntegers + Copy + Clone + AddAssign + SubAssign + Neg<Output = T>,
     {
         self.commutator_geometric_impl(rhs)
     }

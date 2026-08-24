@@ -10,7 +10,7 @@
 use crate::CausalMultiField;
 use crate::types::multifield::ops::gamma;
 use alloc::vec;
-use deep_causality_algebra::{Field, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, Ring};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 /// Axis enumeration for differential operators.
@@ -29,7 +29,7 @@ impl Axis {
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd,
+    T: DivisibleByIntegers + Copy + Default + PartialOrd,
 {
     /// Computes the curl: ∇ × F.
     ///
