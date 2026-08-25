@@ -183,3 +183,101 @@ fn compiled_operators_match_generic_on_extent_two_torus() {
         assert!((a - b).abs() <= 1e-12, "convective {a} vs generic {b}");
     }
 }
+
+// ---------------------------------------------------------------------------
+// `build::star_diag` reads only the diagonal of a Hodge ⋆ matrix. Off-diagonal
+// entries stored ahead of the diagonal in a row must be scanned past.
+// ---------------------------------------------------------------------------
+
+/// A triangle (3 vertices, 3 edges, 1 face) with hand-supplied Hodge ⋆
+/// operators, so a test controls the exact sparsity of `⋆₀`.
+fn triangle_with_star_zero(
+    star_zero: deep_causality_linear::CsrMatrix<f64>,
+) -> deep_causality_topology::SimplicialManifold<f64, f64> {
+    use deep_causality_linear::CsrMatrix;
+    use deep_causality_topology::{ReggeGeometry, Simplex, SimplicialComplex, Skeleton};
+
+    let sk0 = Skeleton::new(
+        0,
+        vec![
+            Simplex::new(vec![0]),
+            Simplex::new(vec![1]),
+            Simplex::new(vec![2]),
+        ],
+    );
+    let sk1 = Skeleton::new(
+        1,
+        vec![
+            Simplex::new(vec![0, 1]),
+            Simplex::new(vec![0, 2]),
+            Simplex::new(vec![1, 2]),
+        ],
+    );
+    let sk2 = Skeleton::new(2, vec![Simplex::new(vec![0, 1, 2])]);
+
+    let d1 = CsrMatrix::from_triplets(
+        3,
+        3,
+        &[
+            (0, 0, -1i8),
+            (1, 0, 1),
+            (0, 1, -1),
+            (2, 1, 1),
+            (1, 2, -1),
+            (2, 2, 1),
+        ],
+    )
+    .unwrap();
+    let d2 = CsrMatrix::from_triplets(3, 1, &[(0, 0, 1i8), (1, 0, -1), (2, 0, 1)]).unwrap();
+    let cob = vec![d1.transpose(), d2.transpose()];
+
+    let star_one =
+        CsrMatrix::from_triplets(3, 3, &[(0, 0, 1.0f64), (1, 1, 1.0), (2, 2, 1.0)]).unwrap();
+    let star_two = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0f64)]).unwrap();
+
+    let complex = SimplicialComplex::new(
+        vec![sk0, sk1, sk2],
+        vec![d1, d2],
+        cob,
+        vec![star_zero, star_one, star_two],
+    );
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0f64; 3], vec![3]).unwrap());
+    let data = CausalTensor::new(vec![0.0f64; 7], vec![7]).unwrap();
+    Manifold::with_metric(complex, data, Some(regge), 0).unwrap()
+}
+
+/// The mass weighting of the grade-0 Poisson solve is the diagonal of `⋆₀`.
+/// Adding an off-diagonal entry to `⋆₀` — stored ahead of that row's diagonal —
+/// leaves the diagonal it extracts unchanged, so the Leray projection is
+/// identical to the one computed against the purely diagonal star.
+#[test]
+fn star_diag_ignores_off_diagonal_entries_of_the_hodge_star() {
+    use deep_causality_linear::CsrMatrix;
+
+    let diagonal =
+        CsrMatrix::from_triplets(3, 3, &[(0, 0, 1.0f64), (1, 1, 1.0), (2, 2, 1.0)]).unwrap();
+    let with_off_diagonal = CsrMatrix::from_triplets(
+        3,
+        3,
+        &[(0, 0, 1.0f64), (1, 0, 0.25), (1, 1, 1.0), (2, 2, 1.0)],
+    )
+    .unwrap();
+
+    let field = CausalTensor::new(vec![1.0f64, 2.0, -0.5], vec![3]).unwrap();
+
+    let reference = triangle_with_star_zero(diagonal)
+        .leray_project(&field)
+        .expect("plain projection on a triangle converges");
+    let perturbed = triangle_with_star_zero(with_off_diagonal)
+        .leray_project(&field)
+        .expect("plain projection on a triangle converges");
+
+    assert_eq!(
+        reference.projected().as_slice(),
+        perturbed.projected().as_slice()
+    );
+    assert_eq!(
+        reference.potential().as_slice(),
+        perturbed.potential().as_slice()
+    );
+}

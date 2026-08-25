@@ -210,3 +210,134 @@ fn interior_product_without_metric_is_rejected() {
     let err = m.interior_product(&x, &omega, 2).unwrap_err();
     assert!(matches!(err.0, TopologyErrorEnum::InvalidInput(_)));
 }
+
+// ---------------------------------------------------------------------------
+// The mass matrices are read as diagonals, and the operators degrade to zero
+// rather than panicking when a matrix and a field disagree on length.
+// ---------------------------------------------------------------------------
+
+/// A triangle whose Hodge stars are supplied verbatim, so a test can put an
+/// off-diagonal entry and a missing diagonal into `⋆₀` and observe how the
+/// codifferential's per-row mass lookup treats each.
+fn triangle_with_handmade_star_zero(
+    star_zero: deep_causality_linear::CsrMatrix<f64>,
+) -> SimplicialManifold<f64, f64> {
+    use deep_causality_linear::CsrMatrix;
+    use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
+
+    let sk0 = Skeleton::new(
+        0,
+        vec![
+            Simplex::new(vec![0]),
+            Simplex::new(vec![1]),
+            Simplex::new(vec![2]),
+        ],
+    );
+    let sk1 = Skeleton::new(
+        1,
+        vec![
+            Simplex::new(vec![0, 1]),
+            Simplex::new(vec![0, 2]),
+            Simplex::new(vec![1, 2]),
+        ],
+    );
+    let sk2 = Skeleton::new(2, vec![Simplex::new(vec![0, 1, 2])]);
+
+    let d1 = CsrMatrix::from_triplets(
+        3,
+        3,
+        &[
+            (0, 0, -1i8),
+            (1, 0, 1),
+            (0, 1, -1),
+            (2, 1, 1),
+            (1, 2, -1),
+            (2, 2, 1),
+        ],
+    )
+    .unwrap();
+    let d2 = CsrMatrix::from_triplets(3, 1, &[(0, 0, 1i8), (1, 0, -1), (2, 0, 1)]).unwrap();
+    let cob = vec![d1.transpose(), d2.transpose()];
+
+    let star_one =
+        CsrMatrix::from_triplets(3, 3, &[(0, 0, 1.0f64), (1, 1, 1.0), (2, 2, 1.0)]).unwrap();
+    let star_two = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0f64)]).unwrap();
+
+    let complex = SimplicialComplex::new(
+        vec![sk0, sk1, sk2],
+        vec![d1, d2],
+        cob,
+        vec![star_zero, star_one, star_two],
+    );
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0f64; 3], vec![3]).unwrap());
+    let data = CausalTensor::new(vec![0.0f64; 7], vec![7]).unwrap();
+    Manifold::with_metric(complex, data, Some(regge), 0).unwrap()
+}
+
+/// `δ` divides row `i` by the `(i, i)` entry of `⋆_{k-1}`. A row that stores an
+/// off-diagonal entry ahead of its diagonal must be scanned past, not read at
+/// its first entry; a row that stores no diagonal at all has no mass to divide
+/// by and yields zero.
+///
+/// `⋆₀` here is `(0,0) = 1`, row 1 = `[(0, 0.5), (1, 2.0)]`, row 2 empty, and
+/// `⋆₁` is the identity, so `δω = ⋆₀⁻¹ ∂₁ ω` on `ω = (1, 2, 3)` is
+/// `(-3/1, -2/2, 0) = (-3, -1, 0)`.
+#[test]
+fn codifferential_scans_past_off_diagonal_mass_and_zeroes_a_massless_row() {
+    use deep_causality_linear::CsrMatrix;
+
+    let star_zero = CsrMatrix::from_triplets(
+        3,
+        3,
+        &[(0, 0, 1.0f64), (1, 0, 0.5), (1, 1, 2.0)], // row 2 carries no entry at all
+    )
+    .unwrap();
+    let m = triangle_with_handmade_star_zero(star_zero);
+
+    let out = m.codifferential_of(&[1.0, 2.0, 3.0], 1);
+    assert_eq!(out.as_slice(), [-3.0f64, -1.0, 0.0].as_slice());
+}
+
+/// `d` is sized by the (k+1)-skeleton, not by the stored coboundary matrix. With
+/// no coboundary operator supplied the matvec has nothing to contract against
+/// and the result is padded out to the edge count as the zero 1-form.
+#[test]
+fn exterior_derivative_pads_to_the_next_skeleton_when_the_operator_is_absent() {
+    use deep_causality_topology::utils_tests::create_triangle_complex;
+
+    let complex = create_triangle_complex();
+    let data = CausalTensor::new(vec![0.0f64; 7], vec![7]).unwrap();
+    let m: SimplicialManifold<f64, f64> = Manifold::new(complex, data, 0).unwrap();
+
+    let out = m.exterior_derivative_of(&[1.0, 2.0, 3.0], 0);
+    assert_eq!(out.shape(), vec![3], "one coefficient per 1-simplex");
+    assert_eq!(out.as_slice(), [0.0f64, 0.0, 0.0].as_slice());
+}
+
+/// `δ` on a k-form whose length does not match the k-cell count contracts
+/// nothing and returns the zero (k-1)-form of the correct length.
+#[test]
+fn codifferential_of_a_wrong_length_form_is_the_zero_form() {
+    let m = triangle_with_metric();
+    let n0 = m.complex().num_cells(0);
+
+    let out = m.codifferential_of(&[1.0], 1);
+    assert_eq!(out.shape(), vec![n0]);
+    assert!(out.as_slice().iter().all(|&x| x == 0.0));
+}
+
+/// The per-grade view of the manifold's data slab reads as zero when the slab is
+/// shorter than the grade needs, so `d` of the stored 0-form is the zero 1-form
+/// rather than an out-of-bounds read.
+#[test]
+fn stored_form_of_a_too_short_data_slab_reads_as_zero() {
+    let lattice = LatticeComplex::<2, f64>::new([3, 3], [false, false]);
+    let n1 = lattice.num_cells(1);
+    // One value for a lattice that needs nine at grade 0 alone.
+    let data = CausalTensor::new(vec![7.0f64], vec![1]).unwrap();
+    let m = Manifold::from_cubical(lattice, data, 0);
+
+    let out = m.exterior_derivative(0);
+    assert_eq!(out.shape(), vec![n1]);
+    assert!(out.as_slice().iter().all(|&x| x == 0.0));
+}

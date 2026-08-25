@@ -306,3 +306,34 @@ fn test_triangulate_delaunay_three_point_accepted_by_manifold_with_metric() {
         manifold.err()
     );
 }
+
+/// The super-triangle's bounding box is taken over every input point, not over
+/// the first one. A cloud whose first point is interior to the others still
+/// triangulates to the full Delaunay complex of the four points: one interior
+/// vertex inside a triangular hull gives 3 triangles and 6 edges (V − E + F = 1
+/// for a disk).
+#[test]
+fn test_triangulate_delaunay_when_first_point_is_not_the_extreme() {
+    use deep_causality_topology::{BaseTopology, ChainComplex};
+
+    // Point 0 is strictly inside the hull of points 1..3, so min/max in both
+    // axes are set by later points.
+    let points =
+        CausalTensor::new(vec![1.0, 0.5, 0.0, 0.0, 2.0, 0.0, 1.0, 2.0], vec![4, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
+    let pc = PointCloud::new(points, metadata, 0).unwrap();
+
+    let complex = pc.triangulate_delaunay().expect("non-degenerate input");
+
+    assert_eq!(complex.num_elements_at_grade(0).unwrap(), 4);
+    assert_eq!(
+        complex.num_cells(2),
+        3,
+        "one interior point in a triangular hull fans into three triangles"
+    );
+    assert_eq!(
+        complex.num_cells(1),
+        6,
+        "Euler: 4 - E + 3 = 1 for a triangulated disk"
+    );
+}

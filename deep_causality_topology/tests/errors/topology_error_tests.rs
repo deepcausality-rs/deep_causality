@@ -194,3 +194,17 @@ fn test_topology_error_hodge_decomposition_failed_via_new() {
         "Hodge decomposition failed: field length 7 does not match expected 12"
     );
 }
+
+/// The `LinearAlgebraError` constructor wraps the message in the matching enum
+/// variant and formats it under the "Linear algebra error" prefix. This is the
+/// variant `From<LinearError>` produces, and the one `ChainComplex::betti_number`
+/// matches on to name the cause of an exact-rank failure.
+#[test]
+fn test_topology_error_linear_algebra_error() {
+    let msg = "matrix 3x4 is not square".to_string();
+    let err = TopologyError::LinearAlgebraError(msg.clone());
+
+    assert_eq!(format!("{}", err), format!("Linear algebra error: {}", msg));
+    assert_eq!(err, TopologyError::LinearAlgebraError(msg.clone()));
+    assert!(matches!(err.0, TopologyErrorEnum::LinearAlgebraError(m) if m == msg));
+}

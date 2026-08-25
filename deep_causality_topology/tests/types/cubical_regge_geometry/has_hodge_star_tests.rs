@@ -495,3 +495,45 @@ fn per_edge_diagonal_entries_change_when_individual_edges_change() {
 fn per_edge_total_edges_2d(lattice: &LatticeComplex<2, f64>) -> usize {
     lattice.num_cells(1)
 }
+
+// ---------------------------------------------------------------------------
+// Per-edge dual volumes that cannot be resolved.
+//
+// The dual volume of a k-cell averages the products of complement-axis edge
+// lengths over the 2^(D-k) corner shifts. A corner is dropped when the edge it
+// needs does not exist; when every corner is dropped the cell contributes no
+// diagonal entry at all.
+// ---------------------------------------------------------------------------
+
+/// A per-edge table shorter than the lattice's edge count cannot supply any
+/// corner product, so grade-0 ⋆ comes back square but with no stored entries.
+#[test]
+fn per_edge_table_shorter_than_the_lattice_yields_an_empty_star() {
+    let lattice = periodic_square_3();
+    let n0 = lattice.num_cells(0);
+    let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(Vec::new());
+
+    let star = geom.hodge_star_matrix(&lattice, 0).unwrap();
+    assert_eq!(star.shape(), (n0, n0));
+    assert!(
+        star.values().is_empty(),
+        "no dual volume is resolvable, so no vertex gets a diagonal entry"
+    );
+}
+
+/// An open axis of extent 1 carries no edges along itself, so every corner
+/// product for a vertex needs an edge that does not exist and the whole grade-0
+/// star is empty even though the per-edge table is exactly the right size.
+#[test]
+fn open_axis_of_extent_one_yields_an_empty_grade_zero_star() {
+    let lattice = LatticeComplex::<2, f64>::new([1, 3], [false, false]);
+    let n0 = lattice.num_cells(0);
+    let n1 = lattice.num_cells(1);
+    assert_eq!(n0, 3, "one column of three vertices");
+    assert_eq!(n1, 2, "only the two edges along the extent-3 axis");
+
+    let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(vec![1.0; n1]);
+    let star = geom.hodge_star_matrix(&lattice, 0).unwrap();
+    assert_eq!(star.shape(), (n0, n0));
+    assert!(star.values().is_empty());
+}

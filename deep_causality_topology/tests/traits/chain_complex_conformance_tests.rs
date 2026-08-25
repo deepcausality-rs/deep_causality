@@ -205,3 +205,71 @@ fn betti_number_over_is_available_on_a_lattice_complex() {
         "an open 3x3 lattice is connected, so its zeroth Betti number is 1"
     );
 }
+
+// ---------------------------------------------------------------------------
+// `betti_number` is the panicking form of `betti_number_over`. A minimal
+// implementor that reports a failure from `betti_number_over` shows which
+// message each failure class turns into.
+// ---------------------------------------------------------------------------
+
+/// A `ChainComplex` with no cells whose `betti_number_over` always fails with a
+/// caller-chosen error, so the panic arms of the default `betti_number` body are
+/// reachable without a real rank computation overflowing.
+struct FailingComplex {
+    error: deep_causality_topology::TopologyError,
+}
+
+impl ChainComplex for FailingComplex {
+    type CellType = Simplex;
+    type CellIter<'a>
+        = std::iter::Empty<Simplex>
+    where
+        Self: 'a;
+    type Metric = ();
+
+    fn cells(&self, _k: usize) -> Self::CellIter<'_> {
+        std::iter::empty()
+    }
+
+    fn num_cells(&self, _k: usize) -> usize {
+        0
+    }
+
+    fn max_dim(&self) -> usize {
+        0
+    }
+
+    fn boundary_matrix(&self, _k: usize) -> Cow<'_, deep_causality_linear::CsrMatrix<i8>> {
+        Cow::Owned(deep_causality_linear::CsrMatrix::new())
+    }
+
+    fn coboundary_matrix(&self, _k: usize) -> Cow<'_, deep_causality_linear::CsrMatrix<i8>> {
+        Cow::Owned(deep_causality_linear::CsrMatrix::new())
+    }
+
+    fn betti_number_over(
+        &self,
+        _k: usize,
+        _field: HomologyField,
+    ) -> Result<usize, deep_causality_topology::TopologyError> {
+        Err(self.error.clone())
+    }
+}
+
+#[test]
+#[should_panic(expected = "exact rank over the rationals failed at grade 2: elimination overflow")]
+fn betti_number_panics_naming_the_exact_rank_failure() {
+    let c = FailingComplex {
+        error: deep_causality_topology::TopologyError::LinearAlgebraError("elimination overflow"),
+    };
+    let _ = c.betti_number(2);
+}
+
+#[test]
+#[should_panic(expected = "Betti number at grade 1 failed: Dimension mismatch: grade too high")]
+fn betti_number_panics_reporting_any_other_failure_with_its_display() {
+    let c = FailingComplex {
+        error: deep_causality_topology::TopologyError::DimensionMismatch("grade too high"),
+    };
+    let _ = c.betti_number(1);
+}
