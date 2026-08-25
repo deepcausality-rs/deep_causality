@@ -41,7 +41,7 @@ use crate::CausalTensor;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt;
-use deep_causality_algebra::CommutativeSemiring;
+use deep_causality_algebra::Semiring;
 use deep_causality_algebra::iso::witness::Iso;
 use deep_causality_linear::CsrMatrix;
 
@@ -74,9 +74,13 @@ impl core::error::Error for CsrFromTensorError {}
 // Forward (Tier 1): CausalTensor<F> -> CsrMatrix<F> via TryFrom
 // =============================================================================
 
+/// The scalar bound is [`Semiring`]. Both directions read coefficients, compare them against
+/// `F::zero()`, and sum duplicates. Neither multiplies, so multiplicative commutativity is
+/// irrelevant to them. `Quaternion<f64>` is a `Semiring` without multiplicative commutativity, and
+/// it converts and round-trips under this bound.
 impl<F> TryFrom<CausalTensor<F>> for CsrMatrix<F>
 where
-    F: CommutativeSemiring + Copy + PartialEq,
+    F: Semiring + Copy + PartialEq,
 {
     type Error = CsrFromTensorError;
 
@@ -116,7 +120,7 @@ where
 
 impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>
 where
-    F: CommutativeSemiring + Copy + PartialEq,
+    F: Semiring + Copy + PartialEq,
 {
     /// Materialise this sparse matrix as a dense rank-2
     /// [`CausalTensor`] of the matching shape. Missing entries are
@@ -192,7 +196,7 @@ pub trait ToDenseTensor<F> {
 
 impl<F> ToDenseTensor<F> for CsrMatrix<F>
 where
-    F: CommutativeSemiring + Copy + PartialEq,
+    F: Semiring + Copy + PartialEq,
 {
     fn to_dense(self) -> CausalTensor<F> {
         <Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)

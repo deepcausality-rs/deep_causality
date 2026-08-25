@@ -199,3 +199,73 @@ fn exact_intersections_f106() {
     half_disk_strip_2d::<Float106>();
     quarter_cylinder_3d::<Float106>();
 }
+
+// -- Degenerate cell shapes and sub-quadrature cuts ---------------------------------------
+
+#[test]
+fn plane_through_a_highly_elongated_cell_keeps_exact_measures() {
+    // Cell 1e13 x 1 x 1 cut in half by { x ≤ 5e12 }: the clipped fluid measure
+    // is exactly half the cell, the two x-faces are fully dry and fully wet,
+    // and the four faces parallel to x are half wet. The cut cross-section
+    // (area 1) is fourteen orders of magnitude below the cell volume, which is
+    // the scale the classification tolerance is drawn from.
+    let prim = Primitive::<3, f64>::halfspace([1.0, 0.0, 0.0], 5e12);
+    let cell = CutCell::from_box(&prim, [0.0, 0.0, 0.0], [1e13, 1.0, 1.0]).unwrap();
+
+    assert_eq!(cell.class(), CellClass::Cut);
+    assert_eq!(cell.full_volume(), 1e13);
+    assert_eq!(cell.fluid_volume(), 5e12);
+    assert_eq!(cell.volume_fraction(), 0.5);
+    assert_eq!(cell.face_aperture(0, 0).unwrap(), 0.0);
+    assert_eq!(cell.face_aperture(0, 1).unwrap(), 1.0);
+    for axis in 1..3 {
+        for side in 0..2 {
+            assert_eq!(cell.face_aperture(axis, side).unwrap(), 0.5);
+        }
+    }
+}
+
+/// A cell of side `h` centred on the unit circle, midway between two samples of
+/// the arc quadrature, at polar angle `(512 + 1/2) · 2π / 2048`.
+fn micro_cell_on_the_unit_circle(h: f64) -> ([f64; 2], [f64; 2]) {
+    let theta = 512.5 * (2.0 * std::f64::consts::PI / 2048.0);
+    let (cx, cy) = (theta.cos(), theta.sin());
+    ([cx - h / 2.0, cy - h / 2.0], [cx + h / 2.0, cy + h / 2.0])
+}
+
+#[test]
+fn disk_cut_far_finer_than_the_arc_quadrature_still_clips_exactly() {
+    // A 1e-4 cell straddling the unit circle: the circle crosses the cell
+    // centre, so a straight chord would halve it and the curvature correction
+    // over 1e-4 of arc is below 1e-5 of the cell. The clipped measure comes
+    // from the closed-form rectangle-disk area and is exact regardless of the
+    // cell's size relative to the circle.
+    let (lo, hi) = micro_cell_on_the_unit_circle(1e-4);
+    let prim = Primitive::<2, f64>::ball([0.0, 0.0], 1.0);
+    let cell = CutCell::from_box(&prim, lo, hi).unwrap();
+
+    assert_eq!(cell.class(), CellClass::Cut);
+    let frac = cell.volume_fraction();
+    assert!(
+        (frac - 0.5).abs() < 1e-3,
+        "the circle halves the cell, got fluid fraction {frac}"
+    );
+}
+
+#[test]
+fn cylinder_cut_far_finer_than_the_arc_quadrature_still_clips_exactly() {
+    // The 3D reading of the same configuration: a cylinder of unit radius along
+    // axis 2 through a cell whose cross-section is 1e-4 on a side. The clipped
+    // volume is the cross-section measure times the cell's length along the
+    // cylinder axis, so the fluid fraction is again one half.
+    let (lo2, hi2) = micro_cell_on_the_unit_circle(1e-4);
+    let prim = Primitive::<3, f64>::cylinder(2, [0.0, 0.0, 0.0], 1.0);
+    let cell = CutCell::from_box(&prim, [lo2[0], lo2[1], 0.0], [hi2[0], hi2[1], 1.0]).unwrap();
+
+    assert_eq!(cell.class(), CellClass::Cut);
+    let frac = cell.volume_fraction();
+    assert!(
+        (frac - 0.5).abs() < 1e-3,
+        "the cylinder halves the cell, got fluid fraction {frac}"
+    );
+}

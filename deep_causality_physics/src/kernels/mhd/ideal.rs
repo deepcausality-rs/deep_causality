@@ -130,10 +130,21 @@ where
     let n1 = skeletons[1].simplices().len();
     let n2 = skeletons[2].simplices().len();
 
-    // Verify data lengths (Manifold enforces this on creation, but checks are cheap)
+    // Verify data lengths (Manifold enforces this on creation, but checks are cheap).
+    //
+    // Both manifolds are checked, and against the same complex. `n0`, `n1` and `n2` come from
+    // `v_manifold`'s complex, and the slices below index BOTH buffers with offsets derived from
+    // them. The signature takes two independent manifolds, so a `b_manifold` built over a smaller
+    // complex is a legal call; without this check it indexed past the end of `b_manifold`'s buffer
+    // and panicked, where every other malformed input here returns `DimensionMismatch`.
     if v_manifold.data().len() < n0 + n1 + n2 {
         return Err(PhysicsError::DimensionMismatch(
             "v_manifold data too small".into(),
+        ));
+    }
+    if b_manifold.data().len() < n0 + n1 + n2 {
+        return Err(PhysicsError::DimensionMismatch(
+            "b_manifold data too small".into(),
         ));
     }
 

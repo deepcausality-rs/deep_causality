@@ -57,6 +57,11 @@ impl Pure<DenseVectorWitness> for DenseVectorWitness {
 }
 
 impl Applicative<DenseVectorWitness> for DenseVectorWitness {
+    /// Pairs the functions with the values by position, and stops at the shorter of the two.
+    ///
+    /// `CsrMatrixWitness::apply` stops the same way. Demanding matching lengths made
+    /// `apply(pure(f), v)` — the left-hand side of the applicative identity law, where `pure`
+    /// builds a one-element vector — panic for every `v` of two entries or more.
     fn apply<A, B, Func>(ff: DenseVector<Func>, fa: DenseVector<A>) -> DenseVector<B>
     where
         A: Satisfies<NoConstraint>,
@@ -66,8 +71,10 @@ impl Applicative<DenseVectorWitness> for DenseVectorWitness {
         let mut fns = ff.into_data().into_iter();
         let mut out = alloc::vec::Vec::new();
         for a in fa.into_data() {
-            let mut g = fns.next().expect("apply requires matching lengths");
-            out.push(g(a));
+            match fns.next() {
+                Some(mut g) => out.push(g(a)),
+                None => break,
+            }
         }
         DenseVector::from_vec(out)
     }

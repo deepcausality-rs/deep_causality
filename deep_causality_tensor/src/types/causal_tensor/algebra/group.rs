@@ -8,11 +8,11 @@ use alloc::vec;
 use crate::CausalTensor;
 use deep_causality_algebra::AddGroup;
 
-/// Marker trait for Abelian Group.
-/// CausalTensor addition is commutative if T's addition is commutative.
-// Reached through the `AbelianGroup` blanket now that `CausalTensor` carries the additive markers.
-// AddGroup is automatically implemented by blanket impl in deep_causality_num
-// because CausalTensor implements Zero, Add, Sub, Neg, Clone.
+/// Element-wise `zero`, `add`, `sub` and `neg`.
+///
+/// The tower memberships come from elsewhere. The operator impls live in `arithmetic/` and the
+/// additive markers in `algebra/ring.rs`; `AddGroup` and `AbelianGroup` follow from those through
+/// the blanket impls in `deep_causality_algebra`.
 impl<T> CausalTensor<T>
 where
     T: AddGroup + Copy,

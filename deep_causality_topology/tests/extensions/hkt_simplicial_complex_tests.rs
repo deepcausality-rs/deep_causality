@@ -246,3 +246,23 @@ fn test_chain_foldable_fold_to_string() {
 
     assert_eq!(result, "10, 20");
 }
+
+#[test]
+#[should_panic(expected = "Adjunction::right_adjunct resulted in empty chain.")]
+fn test_simplicial_complex_right_adjunct_empty_outer_chain_panics() {
+    // An input chain with no stored weight produces an outer `Chain<Chain<B>>`
+    // with nothing to unpack, so the outer guard fails as well as the inner one
+    // and there is no value to return.
+    let complex = create_simple_complex();
+
+    let empty: CsrMatrix<f64> = CsrMatrix::new();
+    let chain = Chain::new(complex.clone(), 0, empty);
+
+    let ctx_complex = complex.clone();
+    let f = |w: f64| -> Chain<f64> {
+        let w_matrix = CsrMatrix::from_triplets(1, 1, &[(0, 0, w)]).unwrap();
+        Chain::new(complex.clone(), 0, w_matrix)
+    };
+
+    let _ = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+}

@@ -49,3 +49,29 @@ fn test_hypergraph_graph_topology() {
     // Error check
     assert!(hg.get_neighbors(99).is_err());
 }
+
+#[test]
+fn test_get_neighbors_skips_a_stored_zero_incidence_entry() {
+    // An incidence matrix is 0/1 valued: a stored 0 means the node is not in
+    // that hyperedge. `from_triplets_with_zero` keeps such an entry in the
+    // sparse pattern, so the traversal has to read the value rather than treat
+    // every stored position as a membership.
+    //
+    // Hyperedge 0: {0, 1}, with an explicit non-membership recorded for node 2.
+    // Hyperedge 1: {2} alone.
+    let incidence = CsrMatrix::from_triplets_with_zero(
+        3,
+        2,
+        &[(0, 0, 1i8), (1, 0, 1), (2, 0, 0), (2, 1, 1)],
+        7i8,
+    )
+    .unwrap();
+    let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let hg = Hypergraph::new(incidence, data, 0).unwrap();
+
+    assert_eq!(hg.get_neighbors(0).unwrap(), vec![1]);
+    assert_eq!(hg.get_neighbors(1).unwrap(), vec![0]);
+    // Node 2 is recorded against hyperedge 0 with value 0, so it is not a
+    // member and gains no neighbour from it; hyperedge 1 holds it alone.
+    assert!(hg.get_neighbors(2).unwrap().is_empty());
+}

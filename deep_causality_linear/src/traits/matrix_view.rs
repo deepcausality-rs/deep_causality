@@ -37,7 +37,7 @@ pub trait MatrixView {
     /// An associated type rather than a type parameter: a representation has exactly one scalar,
     /// and a type parameter would let a caller ask for `MatrixView<f64>` on a matrix of `i64` and
     /// get a confusing error rather than a missing-impl one.
-    type Scalar: Zero + Clone;
+    type Scalar: Zero;
 
     /// The number of rows.
     fn rows(&self) -> usize;
@@ -52,9 +52,13 @@ pub trait MatrixView {
     }
 
     /// The number of entries the shape describes, which is not the number stored.
+    ///
+    /// Saturates at `usize::MAX`. A sparse representation can hold a shape whose entry count does
+    /// not fit a `usize` — `CsrMatrix::with_capacity(2, usize::MAX, 0)` costs three words — and a
+    /// query answering how large a matrix is has no business panicking on one.
     #[inline]
     fn len(&self) -> usize {
-        self.rows() * self.cols()
+        self.rows().saturating_mul(self.cols())
     }
 
     /// Whether the shape describes no entries at all.
@@ -99,7 +103,10 @@ pub trait MatrixView {
     /// every representation here is nothing.
     fn to_row_major(&self) -> Result<Vec<Self::Scalar>, LinearError> {
         let (rows, cols) = (self.rows(), self.cols());
-        let mut out = Vec::with_capacity(rows * cols);
+        // The saturating count from `len`. The product overflows for a shape a sparse
+        // representation can hold cheaply, and a wrapped capacity hint understates the buffer by
+        // several orders of magnitude.
+        let mut out = Vec::with_capacity(self.len());
         for i in 0..rows {
             for j in 0..cols {
                 out.push(self.get(i, j)?);

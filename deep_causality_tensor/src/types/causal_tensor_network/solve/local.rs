@@ -885,7 +885,7 @@ fn expm_scaled<T: ConjugateScalar>(m: &[T], n: usize, dt: T) -> Vec<T> {
     for i in 0..n {
         let mut row = Re::<T>::zero();
         for j in 0..n {
-            row += b[i * n + j].modulus_squared().sqrt();
+            row += b[i * n + j].modulus();
         }
         if row > norm {
             norm = row;
@@ -1021,9 +1021,9 @@ fn forward_then_back(d: usize) -> Vec<usize> {
 fn solve_dense<T: ConjugateScalar>(m: &mut [T], y: &mut [T], n: usize) {
     for col in 0..n {
         let mut piv = col;
-        let mut best = m[col * n + col].modulus_squared().sqrt();
+        let mut best = m[col * n + col].modulus();
         for r in (col + 1)..n {
-            let v = m[r * n + col].modulus_squared().sqrt();
+            let v = m[r * n + col].modulus();
             if v > best {
                 best = v;
                 piv = r;

@@ -63,7 +63,12 @@ where
         Ok(Self::from_vec_and_shape_unchecked(data, new_shape))
     }
 
-    fn is_contiguous(&self) -> bool {
+    /// Whether the physical buffer is in the logical row-major order of the current shape.
+    ///
+    /// `pub(crate)` so `extensions::ext_linear` can gate its `to_row_major` fast path on it:
+    /// `permute_axes` restrides without moving data, so `as_slice()` is the logical row-major
+    /// order only when this holds.
+    pub(crate) fn is_contiguous(&self) -> bool {
         // Calculate expected standard strides
         let mut expected_strides = vec![0; self.shape.len()];
         if !self.shape.is_empty() {

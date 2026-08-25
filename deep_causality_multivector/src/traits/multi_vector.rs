@@ -7,7 +7,7 @@
 
 use crate::CausalMultiVectorError;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_algebra::{DivisibleByIntegers, Field};
+use deep_causality_algebra::{DivisibleByIntegers, Field, NormedScalar};
 // Added Complex, DivisionAlgebra
 
 pub trait MultiVector<T> {
@@ -45,7 +45,8 @@ pub trait MultiVector<T> {
             + SubAssign
             + Neg<Output = T>
             + core::ops::Div<Output = T>
-            + PartialEq,
+            + PartialEq
+            + NormedScalar,
         Self: Sized;
 
     /// Computes the dual of the multivector $A^*$.
@@ -58,7 +59,8 @@ pub trait MultiVector<T> {
             + SubAssign
             + Neg<Output = T>
             + core::ops::Div<Output = T>
-            + PartialEq,
+            + PartialEq
+            + NormedScalar,
         Self: Sized;
 
     // --- Products ---

@@ -47,9 +47,15 @@ impl<T> DenseMatrix<T> {
     ///
     /// # Errors
     ///
-    /// [`LinearError::ShapeMismatch`] if `data.len()` is not `rows * cols`.
+    /// [`LinearError::ShapeMismatch`] if `data.len()` is not `rows * cols`, which includes a shape
+    /// whose entry count does not fit a `usize`.
     pub fn from_vec(data: Vec<T>, rows: usize, cols: usize) -> Result<Self, LinearError> {
-        if data.len() != rows * cols {
+        // `checked_mul`: `rows * cols` overflows for a shape such as `(1 << 63, 2)`, which panics
+        // where overflow checks are on and wraps where they are off. A wrapped product matches an
+        // unrelated buffer length — `(1 << 63, 2)` wraps to zero and accepts an empty buffer — and
+        // the matrix that comes out breaks the invariant this type exists to keep. No buffer has
+        // more than `usize::MAX` entries, so a shape that does not fit is a mismatch.
+        if rows.checked_mul(cols) != Some(data.len()) {
             return Err(LinearError::ShapeMismatch((rows, cols), (data.len(), 1)));
         }
         Ok(Self { data, rows, cols })

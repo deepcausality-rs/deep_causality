@@ -44,7 +44,8 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
             + core::ops::Div<Output = T>
             + PartialEq
             + AddAssign
-            + SubAssign,
+            + SubAssign
+            + NormedScalar,
     {
         self.inverse_impl()
     }
@@ -58,7 +59,8 @@ impl<T> MultiVector<T> for CausalMultiVector<T> {
             + core::ops::Div<Output = T>
             + PartialEq
             + AddAssign
-            + SubAssign,
+            + SubAssign
+            + NormedScalar,
     {
         self.dual_impl()
     }

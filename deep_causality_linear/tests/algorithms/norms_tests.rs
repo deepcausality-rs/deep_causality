@@ -5,7 +5,7 @@
 
 use deep_causality_linear::{
     CsrMatrix, DenseMatrix, DenseVector, MatrixBuild, matrix_norm_frobenius, matrix_norm_inf,
-    matrix_norm_l1,
+    matrix_norm_l1, vector_norm_inf, vector_norm_l1, vector_norm_sq,
 };
 use deep_causality_num_complex::Complex;
 
@@ -79,4 +79,43 @@ fn test_the_norms_agree_across_the_dense_and_sparse_representations() {
     assert_eq!(matrix_norm_inf(&sparse).unwrap(), 7.0);
     assert!((matrix_norm_frobenius(&dense).unwrap() - 30.0f64.sqrt()).abs() < 1e-12);
     assert!((matrix_norm_frobenius(&sparse).unwrap() - 30.0f64.sqrt()).abs() < 1e-12);
+}
+
+// ---- the unsquared norms do not overflow --------------------------------------------------------
+
+/// `vector_norm_l1(&[1e308])` is `1e308`. It returned infinity while the norms formed each
+/// modulus as `modulus_squared().sqrt()`, because `(1e308)²` is not representable.
+#[test]
+fn test_the_l1_norm_of_a_large_entry_is_finite() {
+    assert_eq!(vector_norm_l1(&[1e308_f64]), 1e308);
+    assert_eq!(vector_norm_l1(&[3e300_f64, 4e300]), 7e300);
+}
+
+#[test]
+fn test_the_inf_norm_of_a_large_entry_is_finite() {
+    assert_eq!(vector_norm_inf(&[1e308_f64]), 1e308);
+    assert_eq!(vector_norm_inf(&[1.0_f64, -1e308, 2.0]), 1e308);
+}
+
+/// The other end: a subnormal entry survives, where squaring flushed it to zero.
+#[test]
+fn test_the_unsquared_norms_keep_a_subnormal_entry() {
+    assert_eq!(vector_norm_l1(&[1e-320_f64]), 1e-320);
+    assert_eq!(vector_norm_inf(&[1e-320_f64]), 1e-320);
+}
+
+/// `norm_sq` is the squared norm and is expected to overflow there — that is what it is for, and
+/// the split between the two is the point.
+#[test]
+fn test_the_squared_norm_still_reports_the_square() {
+    assert_eq!(vector_norm_sq(&[3.0_f64, 4.0]), 25.0);
+    assert!(vector_norm_sq(&[1e308_f64]).is_infinite());
+}
+
+/// A matrix's row and column sums inherit the same property.
+#[test]
+fn test_the_matrix_one_and_inf_norms_of_large_entries_are_finite() {
+    let m = DenseMatrix::from_vec(vec![1e308_f64, 0.0, 0.0, 1e308], 2, 2).unwrap();
+    assert_eq!(matrix_norm_l1(&m).unwrap(), 1e308);
+    assert_eq!(matrix_norm_inf(&m).unwrap(), 1e308);
 }

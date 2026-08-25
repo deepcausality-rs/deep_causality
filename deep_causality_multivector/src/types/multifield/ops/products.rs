@@ -15,7 +15,7 @@ use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector as MultiVectorTrait;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 use alloc::vec::Vec;
-use deep_causality_algebra::{DivisibleByIntegers, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, NormedScalar, Ring};
 use deep_causality_tensor::CausalTensor;
 
 impl<T> CausalMultiField<T>
@@ -69,7 +69,7 @@ where
     /// A × B = -I(A ∧ B) where I is the pseudoscalar.
     pub fn cross(&self, rhs: &Self) -> Self
     where
-        T: core::ops::AddAssign + core::ops::SubAssign + core::ops::Neg<Output = T>,
+        T: core::ops::AddAssign + core::ops::SubAssign + core::ops::Neg<Output = T> + NormedScalar,
     {
         let wedge = self.outer_product(rhs);
         wedge.hodge_dual()
@@ -80,7 +80,7 @@ where
     /// A* = A · I⁻¹ where I is the pseudoscalar.
     pub fn hodge_dual(&self) -> Self
     where
-        T: core::ops::AddAssign + core::ops::SubAssign + core::ops::Neg<Output = T>,
+        T: core::ops::AddAssign + core::ops::SubAssign + core::ops::Neg<Output = T> + NormedScalar,
     {
         // Download to Coefficients
         let mut mvs = self.to_coefficients();

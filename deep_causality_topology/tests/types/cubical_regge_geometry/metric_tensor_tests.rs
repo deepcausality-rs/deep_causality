@@ -138,3 +138,61 @@ fn lorentzian_per_axis_metric_4d() {
     assert!((s[10] - c * c).abs() < TOL);
     assert!((s[15] - (-t * t)).abs() < TOL);
 }
+
+// -- Uniform tier and degenerate axis extents -------------------------------------
+
+#[test]
+fn euclidean_uniform_metric_diagonals_are_the_common_length_squared() {
+    // Uniform assigns one spacing to every edge, so g = diag(a², a²).
+    let a = 2.5_f64;
+    let lattice = open_square_3();
+    let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::uniform(a);
+    let g = geom.metric_tensor_at(&lattice, &LatticeCell::vertex([1, 1]));
+
+    assert_diagonal_with_off_diagonals_zero(&g, 2);
+    assert!((g.as_slice()[0] - a * a).abs() < TOL);
+    assert!((g.as_slice()[3] - a * a).abs() < TOL);
+}
+
+#[test]
+fn per_edge_metric_uses_unit_length_on_a_zero_extent_axis() {
+    // Axis 0 has no extent, so the lattice carries no edge along it and the
+    // per-edge table has nothing to look up. The metric falls back to unit
+    // length there while axis 1 still reads its stored edge length.
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::open([0, 3]);
+    let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(vec![7.0; 8]);
+    let g = geom.metric_tensor_at(&lattice, &LatticeCell::vertex([0, 0]));
+
+    assert_diagonal_with_off_diagonals_zero(&g, 2);
+    assert!(
+        (g.as_slice()[0] - 1.0).abs() < TOL,
+        "got {}",
+        g.as_slice()[0]
+    );
+    assert!(
+        (g.as_slice()[3] - 49.0).abs() < TOL,
+        "got {}",
+        g.as_slice()[3]
+    );
+}
+
+#[test]
+fn per_edge_metric_uses_unit_length_on_a_single_slice_axis() {
+    // An open axis of extent 1 holds a single vertex slice and no edge, so
+    // neither the forward nor the backward edge slot exists at position 0.
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::open([1, 3]);
+    let geom: CubicalReggeGeometry<2, f64> = CubicalReggeGeometry::from_edge_lengths(vec![7.0; 8]);
+    let g = geom.metric_tensor_at(&lattice, &LatticeCell::vertex([0, 0]));
+
+    assert_diagonal_with_off_diagonals_zero(&g, 2);
+    assert!(
+        (g.as_slice()[0] - 1.0).abs() < TOL,
+        "got {}",
+        g.as_slice()[0]
+    );
+    assert!(
+        (g.as_slice()[3] - 49.0).abs() < TOL,
+        "got {}",
+        g.as_slice()[3]
+    );
+}

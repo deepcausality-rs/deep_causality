@@ -248,3 +248,23 @@ fn degenerate_wall_extent_falls_back_to_cg() {
     let omega = CausalTensor::new(random_cochain(n1, 139), vec![n1]).unwrap();
     assert!(m.leray_project(&omega).is_ok());
 }
+
+#[test]
+fn zero_extent_periodic_axis_reports_the_degenerate_transform() {
+    // Axis 0 is periodic with a zero extent and axis 1 is a wall of extent 4,
+    // so the wall-bounded dispatch accepts the lattice and then asks for a
+    // length-zero DFT along axis 0. That transform does not exist, and the
+    // plan's rejection surfaces as an InvalidInput naming the Neumann solve.
+    let manifold = manifold_with_metric(
+        LatticeComplex::<2, f64>::new([0, 4], [true, false]),
+        CubicalReggeGeometry::unit(),
+    );
+    let omega = CausalTensor::new(Vec::<f64>::new(), vec![0]).unwrap();
+
+    let err = manifold.leray_project(&omega).unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("Neumann Poisson solve"),
+        "error should name the Neumann solve: {msg}"
+    );
+}

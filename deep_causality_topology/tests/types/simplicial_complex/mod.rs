@@ -15,6 +15,8 @@ mod display_tests;
 #[cfg(test)]
 mod getters_tests;
 #[cfg(test)]
+mod lazy_hodge_star_tests;
+#[cfg(test)]
 mod map_and_default_tests;
 #[cfg(test)]
 mod mod_map_geometry_tests;

@@ -7,10 +7,11 @@
 //!
 //! # A vector has no multiplication
 //!
-//! It carries the additive law markers and no multiplicative ones, because there is no product of
-//! two vectors that returns a vector. The dot product returns a scalar and the outer product returns
-//! a matrix; neither is a `Mul` on this type, so claiming `Associative<Multiplicative>` would be
-//! claiming a law about an operation that does not exist.
+//! It carries the additive law markers. `Annihilating` is the one multiplicative marker present,
+//! and it states the law for the module action: `v * 0` is the zero vector. The rest are absent
+//! because there is no product of two vectors that returns a vector. The dot product returns a
+//! scalar and the outer product returns a matrix; neither is a `Mul` on this type, so claiming
+//! `Associative<Multiplicative>` would be claiming a law about an operation that does not exist.
 //!
 //! That places it at `AbelianGroup` and no higher on the multiplicative side, which is correct — a
 //! vector space is not a ring.
@@ -30,5 +31,5 @@ impl<T> Associative<Additive> for DenseVector<T> where T: Associative<Additive> 
 impl<T> Commutative<Additive> for DenseVector<T> where T: Commutative<Additive> + Clone {}
 impl<T> Annihilating for DenseVector<T> where T: Annihilating + Clone {}
 
-// Deliberately absent: every multiplicative marker, and `Distributive`. There is no `Mul` on this
-// type for them to be about.
+// Deliberately absent: `Associative<Multiplicative>`, `Commutative<Multiplicative>` and
+// `Distributive`. Each states a law about a product of two vectors, and this type has none.

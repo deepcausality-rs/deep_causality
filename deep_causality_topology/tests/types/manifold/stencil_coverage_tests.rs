@@ -281,3 +281,89 @@ fn star_diag_ignores_off_diagonal_entries_of_the_hodge_star() {
         perturbed.potential().as_slice()
     );
 }
+
+// ---------------------------------------------------------------------------
+// Degenerate lattices and metrics in the table build.
+// ---------------------------------------------------------------------------
+
+/// An open axis of extent 1 leaves every dual volume unresolvable, so every star
+/// diagonal is zero. `build_delta` compiles a zero-mass row to an empty stencil
+/// row, which is the same answer the generic codifferential's zero-mass guard
+/// gives: the zero form.
+#[test]
+fn zero_mass_rows_compile_to_empty_delta_rows() {
+    let lattice = LatticeComplex::<2, f64>::new([1, 3], [false, false]);
+    let n0 = lattice.num_cells(0);
+    let n1 = lattice.num_cells(1);
+    let m = manifold(
+        lattice,
+        CubicalReggeGeometry::from_edge_lengths(vec![1.0; n1]),
+    );
+    let tables = DecStencilTables::compile(&m).unwrap();
+
+    let field = random(n1, 91);
+    let mut out = vec![0.0; n0];
+    tables.apply_delta1(&field, &mut out).unwrap();
+    let generic = m.codifferential_of(&field, 1);
+    assert!(out.iter().all(|&x| x == 0.0));
+    assert_eq!(out.as_slice(), generic.as_slice());
+}
+
+/// An open axis of extent 1 carries no cells oriented along it, so a transport
+/// target whose complement includes that axis gathers from nothing and its row
+/// compiles empty. The convective table still agrees with the generic interior
+/// product, which is zero everywhere on a lattice with no 2-cells.
+#[test]
+fn transport_rows_with_no_source_cells_compile_empty() {
+    let lattice = LatticeComplex::<2, f64>::new([1, 3], [false, false]);
+    assert_eq!(
+        lattice.num_cells(2),
+        0,
+        "no plaquette fits an extent-1 axis"
+    );
+    let n1 = lattice.num_cells(1);
+    let m = manifold(lattice, CubicalReggeGeometry::unit());
+    let tables = DecStencilTables::compile(&m).unwrap();
+
+    let x = random(n1, 95);
+    let omega: Vec<f64> = Vec::new();
+    let (pre_len, wedge_len) = tables.convective_scratch_lens();
+    let mut pre = vec![0.0; pre_len];
+    let mut wb = vec![0.0; wedge_len];
+    let mut conv = vec![0.0; n1];
+    tables
+        .apply_convective(&omega, &x, &mut pre, &mut wb, &mut conv)
+        .unwrap();
+    assert!(conv.iter().all(|&c| c == 0.0));
+}
+
+/// A periodic axis of extent 1 wraps every shift back onto the same cell, so two
+/// offsets of the transport gather alias onto one source column and their
+/// coefficients merge. The merged table must still reproduce the generic
+/// interior product.
+#[test]
+fn transport_merges_aliased_columns_on_a_periodic_extent_one_axis() {
+    let lattice = LatticeComplex::<2, f64>::new([1, 3], [true, true]);
+    let n1 = lattice.num_cells(1);
+    let n2 = lattice.num_cells(2);
+    assert!(n2 > 0);
+    let m = manifold(lattice, CubicalReggeGeometry::unit());
+    let tables = DecStencilTables::compile(&m).unwrap();
+
+    let omega = random(n2, 97);
+    let x = random(n1, 99);
+    let (pre_len, wedge_len) = tables.convective_scratch_lens();
+    let mut pre = vec![0.0; pre_len];
+    let mut wb = vec![0.0; wedge_len];
+    let mut conv = vec![0.0; n1];
+    tables
+        .apply_convective(&omega, &x, &mut pre, &mut wb, &mut conv)
+        .unwrap();
+
+    let x_t = CausalTensor::new(x, vec![n1]).unwrap();
+    let w_t = CausalTensor::new(omega, vec![n2]).unwrap();
+    let generic = m.interior_product(&x_t, &w_t, 2).unwrap();
+    for (a, b) in conv.iter().zip(generic.as_slice().iter()) {
+        assert!((a - b).abs() <= 1e-12, "stencil {a} vs generic {b}");
+    }
+}

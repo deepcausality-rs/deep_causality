@@ -23,7 +23,7 @@ use alloc::vec::Vec;
 use crate::CausalMultiField;
 use crate::MultiVector;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
-use deep_causality_algebra::{DivisibleByIntegers, Field, RealField, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, Field, NormedScalar, RealField, Ring};
 use deep_causality_linear::vector_norm_sq;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
@@ -115,7 +115,7 @@ where
     /// Uses matrix inverse for each cell.
     pub fn inverse(&self) -> Self
     where
-        T: RealField,
+        T: RealField + NormedScalar,
     {
         let mvs = self.to_coefficients();
         let inverted: Vec<_> = mvs

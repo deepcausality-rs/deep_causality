@@ -139,16 +139,88 @@ fn test_trait_inverse_zero_multivector_is_an_error() {
 /// f64::EPSILON, so the two entry points disagree on the same input.
 #[test]
 fn test_trait_inverse_accepts_magnitude_below_epsilon() {
+    // A scalar multivector of 1e-9 is invertible; its inverse is 1e9. This once distinguished the
+    // two `inverse` methods — the inherent one rejected any squared magnitude at or below
+    // `f64::EPSILON` while the trait rejected only exact zero — and both now share one body, so
+    // the case is here to pin that the small-but-invertible input is accepted by each.
     let metric = Metric::Euclidean(2);
     let tiny = CausalMultiVector::new(vec![1e-9, 0.0, 0.0, 0.0], metric).unwrap();
 
-    let inv = <CausalMultiVector<f64> as MultiVector<f64>>::inverse(&tiny).unwrap();
-    // 1/1e-9 = 1e9, to within f64 rounding of the intermediate 1e-18.
-    assert!(
-        (inv.data()[0] - 1e9).abs() < 1.0,
-        "expected 1e9, got {}",
-        inv.data()[0]
-    );
+    let via_trait = <CausalMultiVector<f64> as MultiVector<f64>>::inverse(&tiny).unwrap();
+    let via_inherent = tiny.inverse().unwrap();
 
-    assert!(tiny.inverse().is_err());
+    for (label, inv) in [("trait", &via_trait), ("inherent", &via_inherent)] {
+        assert!(
+            (inv.data()[0] - 1e9).abs() < 1.0,
+            "{label}: expected 1e9, got {}",
+            inv.data()[0]
+        );
+    }
+    assert_eq!(
+        via_trait.data(),
+        via_inherent.data(),
+        "the two entry points must return the same multivector"
+    );
+}
+
+#[test]
+fn test_inverse_is_a_two_sided_inverse_across_metrics() {
+    // `A * A^-1 = 1`. The formula this replaced returned `Ã / <AÃ>₀`, which fails this for almost
+    // every input: for `1 + 2e₁` in Cl(2) it gave `A/5`, so `A * A^-1` was `1 + 0.8e₁`.
+    let cases: Vec<(&str, Metric, Vec<f64>)> = vec![
+        (
+            "Cl(2) versor",
+            Metric::Euclidean(2),
+            vec![1.0, 2.0, 0.0, 0.0],
+        ),
+        (
+            "Cl(2) general",
+            Metric::Euclidean(2),
+            vec![1.0, 2.0, 3.0, 4.0],
+        ),
+        (
+            "Cl(3) general",
+            Metric::Euclidean(3),
+            (1..=8).map(|i| i as f64).collect(),
+        ),
+        (
+            "Cl(4) general",
+            Metric::Euclidean(4),
+            (1..=16).map(|i| i as f64).collect(),
+        ),
+        (
+            "Minkowski general",
+            Metric::Minkowski(4),
+            (1..=16).map(|i| i as f64 * 0.5).collect(),
+        ),
+    ];
+
+    for (label, metric, data) in cases {
+        let a = CausalMultiVector::new(data, metric).unwrap();
+        let inv = a.inverse().unwrap_or_else(|e| panic!("{label}: {e}"));
+        let product = a.geometric_product(&inv);
+
+        assert!(
+            (product.data()[0] - 1.0).abs() < 1e-12,
+            "{label}: scalar part of A * A^-1 was {}",
+            product.data()[0]
+        );
+        for (k, coeff) in product.data().iter().enumerate().skip(1) {
+            assert!(
+                coeff.abs() < 1e-12,
+                "{label}: blade {k} of A * A^-1 was {coeff}, must be zero"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_a_null_multivector_has_no_inverse() {
+    // `1 + e₁` squares to `2(1 + e₁)`; it spans a null direction and the left-multiplication map
+    // is singular. The replaced formula returned an answer for it.
+    let metric = Metric::Euclidean(2);
+    let null = CausalMultiVector::new(vec![1.0, 1.0, 0.0, 0.0], metric).unwrap();
+
+    assert!(null.inverse().is_err());
+    assert!(<CausalMultiVector<f64> as MultiVector<f64>>::inverse(&null).is_err());
 }

@@ -75,7 +75,9 @@ pub trait ChainComplex {
     ///
     /// `dim C_k = rank ∂_k + dim ker ∂_k` holds over any field, which is what lets one body serve
     /// both: `β_k = (n_k − rank ∂_k) − rank ∂_{k+1}`. The saturating subtractions are a floor at
-    /// zero for the grades where a complex has no cells, not a correction to the identity.
+    /// zero for the grades where a complex has no cells, not a correction to the identity. The
+    /// grade step saturates for the same reason: at `k == usize::MAX` there are no cells either
+    /// way, so `β_k` is zero and `k + 1` never has to be formed.
     ///
     /// # Errors
     ///
@@ -84,7 +86,7 @@ pub trait ChainComplex {
     fn betti_number_over(&self, k: usize, field: HomologyField) -> Result<usize, TopologyError> {
         let n_k = self.num_cells(k);
         let rank_k = field.rank_of(&self.boundary_matrix(k))?;
-        let rank_k_next = field.rank_of(&self.boundary_matrix(k + 1))?;
+        let rank_k_next = field.rank_of(&self.boundary_matrix(k.saturating_add(1)))?;
         let dim_ker = n_k.saturating_sub(rank_k);
         Ok(dim_ker.saturating_sub(rank_k_next))
     }

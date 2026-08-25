@@ -38,7 +38,8 @@ use deep_causality_algebra::{Characteristic, DivisibleByIntegers};
 
 impl<T: RationalScalar> Commutative<Multiplicative> for Rational<T> {}
 impl<T: RationalScalar> Associative<Multiplicative> for Rational<T> {}
-// Componentwise addition, so the additive laws come straight from the scalar.
+// Addition carries the integer parts separately and adds the fractions over their least
+// common denominator. Both additive laws follow from the ring laws of `T`.
 impl<T: RationalScalar> Associative<Additive> for Rational<T> {}
 impl<T: RationalScalar> Commutative<Additive> for Rational<T> {}
 impl<T: RationalScalar> Distributive for Rational<T> {}

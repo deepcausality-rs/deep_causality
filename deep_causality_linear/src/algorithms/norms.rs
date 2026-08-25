@@ -36,7 +36,7 @@ use deep_causality_num::Zero;
 pub fn vector_norm_l1<T: NormedScalar>(v: &[T]) -> <T as Normed>::Real {
     let mut acc = <T as Normed>::Real::zero();
     for x in v {
-        acc += x.modulus_squared().sqrt();
+        acc += x.modulus();
     }
     acc
 }
@@ -69,7 +69,7 @@ pub fn vector_norm_l2<T: NormedScalar>(v: &[T]) -> <T as Normed>::Real {
 pub fn vector_norm_inf<T: NormedScalar>(v: &[T]) -> <T as Normed>::Real {
     let mut best = <T as Normed>::Real::zero();
     for x in v {
-        let m = x.modulus_squared().sqrt();
+        let m = x.modulus();
         if m > best {
             best = m;
         }
@@ -83,13 +83,12 @@ where
     M: MatrixView,
     M::Scalar: NormedScalar,
 {
-    use deep_causality_algebra::Real;
     let (r, c) = (m.rows(), m.cols());
     let mut best = <M::Scalar as Normed>::Real::zero();
     for j in 0..c {
         let mut col = <M::Scalar as Normed>::Real::zero();
         for i in 0..r {
-            col += m.get(i, j)?.modulus_squared().sqrt();
+            col += m.get(i, j)?.modulus();
         }
         if col > best {
             best = col;
@@ -104,13 +103,12 @@ where
     M: MatrixView,
     M::Scalar: NormedScalar,
 {
-    use deep_causality_algebra::Real;
     let (r, c) = (m.rows(), m.cols());
     let mut best = <M::Scalar as Normed>::Real::zero();
     for i in 0..r {
         let mut row = <M::Scalar as Normed>::Real::zero();
         for j in 0..c {
-            row += m.get(i, j)?.modulus_squared().sqrt();
+            row += m.get(i, j)?.modulus();
         }
         if row > best {
             best = row;
@@ -127,7 +125,6 @@ where
     M: MatrixView,
     M::Scalar: NormedScalar,
 {
-    use deep_causality_algebra::Real;
     let (r, c) = (m.rows(), m.cols());
     let mut acc = <M::Scalar as Normed>::Real::zero();
     for i in 0..r {

@@ -18,7 +18,6 @@ use deep_causality_algebra::{Hom, Injective, RealField, RingHom, Surjective};
 ///
 /// `(a + b) + 0i = (a + 0i) + (b + 0i)`, and `(a·b) + 0i = (a + 0i)·(b + 0i)` because the imaginary
 /// cross terms are zero. `1 ↦ 1 + 0i`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct RealToComplex<R>(PhantomData<R>);
 
 impl<R> RealToComplex<R> {
@@ -58,7 +57,6 @@ impl<R> Injective for RealToComplex<R> where R: RealField {}
 ///
 /// So it preserves addition but not multiplication. Stating that in the type is the point: a
 /// generic conversion bounded on `RingHom` will not accept this map, which is correct.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct ComplexToReal<R>(PhantomData<R>);
 
 impl<R> ComplexToReal<R> {
@@ -82,3 +80,43 @@ where
 
 impl<R> Surjective for ComplexToReal<R> where R: RealField {}
 // Deliberately neither `Injective` nor `RingHom`; see the type documentation.
+
+// The derives would place `R: Debug`, `R: Eq`, … bounds on these marker types because of the
+// `PhantomData`. A map carries no data, so its parameter should not have to satisfy anything —
+// and `R: Eq` would be unreachable, since `RealField` is satisfied by the floats and no float is
+// `Eq`. The impls are written out to keep the parameter free.
+
+macro_rules! marker_impls {
+    ($name:ident, $label:literal) => {
+        impl<R> core::fmt::Debug for $name<R> {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.write_str($label)
+            }
+        }
+
+        impl<R> Clone for $name<R> {
+            fn clone(&self) -> Self {
+                *self
+            }
+        }
+
+        impl<R> Copy for $name<R> {}
+
+        impl<R> Default for $name<R> {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
+        impl<R> PartialEq for $name<R> {
+            fn eq(&self, _: &Self) -> bool {
+                true
+            }
+        }
+
+        impl<R> Eq for $name<R> {}
+    };
+}
+
+marker_impls!(RealToComplex, "RealToComplex");
+marker_impls!(ComplexToReal, "ComplexToReal");

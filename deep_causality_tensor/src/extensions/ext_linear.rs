@@ -76,17 +76,41 @@ where
             .ok_or(LinearError::IndexOutOfBounds((row, col), (*r, *c)))
     }
 
-    /// A tensor already holds its entries contiguously in row-major order, so this is the copy.
+    /// The entries in row-major order, by memcpy when the buffer is already in that order.
     ///
     /// The default walks every position through [`MatrixView::get`], which costs a rank check and a
     /// bounds check per entry. On the 48x48 QR benchmark that measured 4.7% slower than the memcpy,
     /// which is the whole cost of routing the decompositions through the read trait.
     ///
+    /// # The memcpy is conditional, and has to be
+    ///
+    /// A `CausalTensor` is not always in the logical order of its shape. `permute_axes` builds a
+    /// **strided view**: it swaps `shape` and `strides` and shares the original buffer without
+    /// moving an element. For such a tensor `as_slice()` is the *physical* order, while
+    /// [`MatrixView::get`] reads through the strides — so returning the slice hands the kernels a
+    /// buffer whose contents disagree with the shape they were told.
+    ///
+    /// That is not a hypothetical. Measured on `[[1,2,3],[4,5,6]]` permuted to its 3x2 transpose:
+    /// `get` yields `[1,4,2,5,3,6]` and the raw slice yields `[1,2,3,4,5,6]`, and
+    /// `singular_values` returned `(9.5255, 0.5143)` where the matrix's values are
+    /// `(9.5080, 0.7729)`. Wrong, and silent — the shape is right, so nothing errors.
+    ///
     /// A tensor of rank other than two presents as `0 x 1` and so has no entries to copy.
     fn to_row_major(&self) -> Result<Vec<T>, LinearError> {
-        match self.shape() {
-            [_, _] => Ok(self.as_slice().to_vec()),
-            _ => Ok(Vec::new()),
+        let [rows, cols] = self.shape() else {
+            return Ok(Vec::new());
+        };
+        if self.is_contiguous() {
+            return Ok(self.as_slice().to_vec());
         }
+        // A strided view: read it the way the trait's own default does, through the strides.
+        let (rows, cols) = (*rows, *cols);
+        let mut out = Vec::with_capacity(rows * cols);
+        for i in 0..rows {
+            for j in 0..cols {
+                out.push(MatrixView::get(self, i, j)?);
+            }
+        }
+        Ok(out)
     }
 }

@@ -9,7 +9,7 @@ use deep_causality_linear::{
     LinearError, LinearErrorEnum, MatrixView, matrix_norm_frobenius, matrix_norm_inf,
     matrix_norm_l1,
 };
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, Tensor};
 
 fn m23() -> CausalTensor<f64> {
     // [1 2 3]
@@ -177,4 +177,59 @@ fn test_row_major_copy_of_a_degenerate_two_dimensional_shape_is_empty() {
     // non-matrix one. Both owe zero entries, for different reasons.
     let empty: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 3]).unwrap();
     assert!(MatrixView::to_row_major(&empty).unwrap().is_empty());
+}
+
+// ---- strided views ------------------------------------------------------------------------------
+
+#[test]
+fn test_a_permuted_tensor_reads_row_major_through_its_strides() {
+    // `permute_axes` restrides without moving data, so the physical buffer is not the logical
+    // row-major order. `to_row_major` has to agree with `MatrixView::get` or the kernels
+    // decompose a different matrix than the one the shape describes.
+    let a = CausalTensor::new(vec![1.0f64, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+    let t = a.permute_axes(&[1, 0]).unwrap();
+
+    assert_eq!(t.shape(), &[3, 2]);
+    assert_eq!(
+        t.as_slice(),
+        &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        "the physical buffer is unchanged by the permutation"
+    );
+
+    let mut via_get = Vec::new();
+    for i in 0..MatrixView::rows(&t) {
+        for j in 0..MatrixView::cols(&t) {
+            via_get.push(MatrixView::get(&t, i, j).unwrap());
+        }
+    }
+    assert_eq!(
+        t.to_row_major().unwrap(),
+        via_get,
+        "to_row_major must present the transposed view, not the physical slice"
+    );
+    assert_eq!(
+        t.to_row_major().unwrap(),
+        vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0]
+    );
+}
+
+#[test]
+fn test_a_decomposition_of_a_permuted_tensor_matches_the_same_matrix_built_directly() {
+    // The consequence of the above: before it held, `singular_values` of the permuted view gave
+    // (9.5255, 0.5143) against the matrix's true (9.5080, 0.7729) — silently, because the shape
+    // was right and nothing errored.
+    let a = CausalTensor::new(vec![1.0f64, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+    let permuted = a.permute_axes(&[1, 0]).unwrap();
+    let direct = CausalTensor::new(vec![1.0f64, 4.0, 2.0, 5.0, 3.0, 6.0], vec![3, 2]).unwrap();
+
+    let from_view = deep_causality_linear::singular_values(&permuted).unwrap();
+    let from_direct = deep_causality_linear::singular_values(&direct).unwrap();
+
+    assert_eq!(from_view.len(), from_direct.len());
+    for (v, d) in from_view.as_slice().iter().zip(from_direct.as_slice()) {
+        assert!(
+            (v - d).abs() < 1e-12,
+            "permuted view gave {v}, the same matrix built directly gave {d}"
+        );
+    }
 }

@@ -22,7 +22,10 @@
 //! `deep_causality_linear` also carries the dense, bit-packed 𝔽₂ and vector representations, the
 //! eliminations, the decompositions and the exact integer path — none of which had a home here.
 //!
-//! # Two names are not re-exported, because matching them would be worse than breaking them
+//! # Two names are re-exported with a different shape
+//!
+//! Both keep their old names. Their shapes changed, and carrying the old shapes forward would
+//! have been worse than the break.
 //!
 //! **`CgFailure` changed from a struct to an enum.** It was one struct carrying `iterations` and
 //! `residual` for every failure mode, including two that are not non-convergence and have no

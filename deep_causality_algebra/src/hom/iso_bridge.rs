@@ -17,11 +17,18 @@ use crate::iso::witness::ring_iso::RingIso as WitnessRingIso;
 use crate::{Bijective, Hom, Injective, Isomorphism, RingHom, Surjective};
 use core::marker::PhantomData;
 
+/// The parameters a view is indexed by, in a form that carries no auto-trait obligation.
+///
+/// A bare `PhantomData<(W, S, T)>` would make the marker `Send`/`Sync` only when all three
+/// parameters are, so a view of an isomorphism between non-`Send` types could not cross a thread.
+/// A function type is `Send` and `Sync` for every `W`, `S`, `T`, with the same variance.
+type Ends<W, S, T> = fn() -> (W, S, T);
+
 /// The forward direction of an isomorphism witness, `S → T`, as a [`Hom`].
-pub struct IsoForward<W, S, T>(PhantomData<(W, S, T)>);
+pub struct IsoForward<W, S, T>(PhantomData<Ends<W, S, T>>);
 
 /// The backward direction of an isomorphism witness, `T → S`, as a [`Hom`].
-pub struct IsoBackward<W, S, T>(PhantomData<(W, S, T)>);
+pub struct IsoBackward<W, S, T>(PhantomData<Ends<W, S, T>>);
 
 impl<W, S, T> IsoForward<W, S, T> {
     /// The forward view.
@@ -117,6 +124,7 @@ where
 
 // The derives would place `W: Debug`, `W: Default`, … bounds on these marker types because of the
 // `PhantomData`. A view carries no data, so its parameters should not have to satisfy anything.
+// The same reasoning picks the `Ends` alias for the `PhantomData` above.
 
 impl<W, S, T> core::fmt::Debug for IsoForward<W, S, T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

@@ -19,6 +19,13 @@ impl<T: Scalar> ConjugateScalar for Dual<T> {
     fn modulus_squared(&self) -> Dual<T> {
         *self * *self
     }
+    /// `|x|`, without forming `x²`. `Real::abs` for a dual carries the derivative — `d/dx |x|` is
+    /// `sign(x)` — so this differentiates as the modulus should, and it does not overflow for a
+    /// real part near `T::MAX` the way squaring then rooting does.
+    #[inline]
+    fn modulus(&self) -> Dual<T> {
+        deep_causality_algebra::Real::abs(*self)
+    }
     #[inline]
     fn real_part(&self) -> Dual<T> {
         *self

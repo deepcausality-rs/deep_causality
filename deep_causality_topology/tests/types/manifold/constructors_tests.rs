@@ -379,3 +379,26 @@ fn test_new_on_complex_with_empty_vertex_skeleton_rejects_as_non_manifold() {
         assert!(result.is_err());
     }
 }
+
+#[test]
+fn test_new_rejects_a_complex_without_vertices() {
+    // A complex carrying an edge over an empty 0-skeleton has no vertices, so
+    // it describes no manifold. The data still matches the simplex count (one
+    // edge, one value), so the size and cursor checks pass and the rejection
+    // comes from the manifold criteria.
+    use deep_causality_topology::{Simplex, Skeleton};
+
+    let skeletons = vec![
+        Skeleton::new(0, Vec::new()),
+        Skeleton::new(1, vec![Simplex::new(vec![0, 1])]),
+    ];
+    let complex: deep_causality_topology::SimplicialComplex<f64> =
+        deep_causality_topology::SimplicialComplex::new(skeletons, vec![], vec![], Vec::new());
+    let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+
+    let err = Manifold::new(complex, data, 0).unwrap_err();
+    match err.0 {
+        TopologyErrorEnum::ManifoldError(_) => {}
+        ref other => panic!("Expected ManifoldError, got {:?}", other),
+    }
+}

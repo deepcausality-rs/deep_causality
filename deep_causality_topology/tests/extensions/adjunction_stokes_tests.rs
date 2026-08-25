@@ -465,3 +465,23 @@ fn test_exterior_derivative_short_coefficients_skips_out_of_range_columns() {
             .all(|x| x.is_finite())
     );
 }
+
+#[test]
+fn test_boundary_of_a_chain_supported_off_the_operator_columns_is_zero() {
+    // The inner accumulation looks each of the operator's column indices up in
+    // the chain's weight map. A chain whose only stored weight sits at an index
+    // the operator never names misses on every lookup, so no row accumulates and
+    // the resulting chain carries no stored entry.
+    let complex = simple_complex();
+    let ctx = StokesContext::new(complex.clone());
+
+    let weights = CsrMatrix::from_triplets(1, 3, &[(0, 2, 5.0f64)]).unwrap();
+    let chain = Chain::new(Arc::new(complex), 1, weights);
+
+    let bd = StokesAdjunction::boundary(&ctx, &chain);
+    assert_eq!(bd.grade(), 0);
+    assert!(
+        bd.weights().values().is_empty(),
+        "no column was found, so every row's dot product stayed zero"
+    );
+}
