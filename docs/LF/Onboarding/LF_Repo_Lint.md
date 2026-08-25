@@ -63,35 +63,35 @@ Did not find file matching the specified patterns. Below is a list of files or p
 
 ### ✅ `license-file-exists` <a href="#user-content--license-file-exists" id="-license-file-exists">#</a>
 
-Found file (`LICENSE`).
+Found file (`../../../LICENSE`).
 
 ### ✅ `readme-file-exists` <a href="#user-content--readme-file-exists" id="-readme-file-exists">#</a>
 
-Found file (`README.md`).
+Found file (`../../../README.md`).
 
 ### ✅ `contributing-file-exists` <a href="#user-content--contributing-file-exists" id="-contributing-file-exists">#</a>
 
-Found file (`CONTRIBUTING.md`).
+Found file (`../../../CONTRIBUTING.md`).
 
 ### ✅ `code-of-conduct-file-exists` <a href="#user-content--code-of-conduct-file-exists" id="-code-of-conduct-file-exists">#</a>
 
-Found file (`CODE_OF_CONDUCT.md`).
+Found file (`../../../CODE_OF_CONDUCT.md`).
 
 ### ✅ `changelog-file-exists` <a href="#user-content--changelog-file-exists" id="-changelog-file-exists">#</a>
 
-Found file (`CHANGELOG.md`).
+Found file (`../../../CHANGELOG.md`).
 
 ### ✅ `security-file-exists` <a href="#user-content--security-file-exists" id="-security-file-exists">#</a>
 
-Found file (`SECURITY.md`).
+Found file (`../../../SECURITY.md`).
 
 ### ✅ `support-file-exists` <a href="#user-content--support-file-exists" id="-support-file-exists">#</a>
 
-Found file (`SUPPORT.md`).
+Found file (`../../../SUPPORT.md`).
 
 ### ✅ `readme-references-license` <a href="#user-content--readme-references-license" id="-readme-references-license">#</a>
 
-Contains license (`README.md`).
+Contains license (`../../../README.md`).
 
 ### ✅ `binaries-not-present` <a href="#user-content--binaries-not-present" id="-binaries-not-present">#</a>
 
@@ -107,15 +107,15 @@ Found file (`.github/workflows/audit.yml`).
 
 ### ✅ `code-of-conduct-file-contains-email` <a href="#user-content--code-of-conduct-file-contains-email" id="-code-of-conduct-file-contains-email">#</a>
 
-Contains email address (`CODE_OF_CONDUCT.md`).
+Contains email address (`../../../CODE_OF_CONDUCT.md`).
 
 ### ✅ `github-issue-template-exists` <a href="#user-content--github-issue-template-exists" id="-github-issue-template-exists">#</a>
 
-Found file (`.github/ISSUE_TEMPLATE`).
+Found file (`../../../.github/ISSUE_TEMPLATE`).
 
 ### ✅ `github-pull-request-template-exists` <a href="#user-content--github-pull-request-template-exists" id="-github-pull-request-template-exists">#</a>
 
-Found file (`.github/PULL_REQUEST_TEMPLATE.md`).
+Found file (`../../../.github/PULL_REQUEST_TEMPLATE.md`).
 
 </details>
 
