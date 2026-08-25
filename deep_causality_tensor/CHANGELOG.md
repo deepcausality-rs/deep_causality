@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.5.1...deep_causality_tensor-v0.5.2) - 2026-08-25
+
+### Added
+
+- *(linear)* migrate the workspace onto deep_causality_linear
+- *(algebra)* [**breaking**] state each algebraic law about the operation it governs
+- *(deep_causality_tensor)* Configured no-std flag.
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+- *(deep_causality_algebra)* [**breaking**] stop handing out algebraic laws by inference
+- *(deep_causality_algebra)* [**breaking**] AddGroup requires Neg, not merely Sub
+
+### Other
+
+- General QA: Bug fixes and code improvements.
+- Improved test coverage
+- *(deep_causality_tensor)* Updated SBOM.
+- Updated version requirmentes
+- More fixes and lints.
+- lints and minor code fixes
+- lints and minor code fixes
+
 ## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.5.0...deep_causality_tensor-v0.5.1) - 2026-07-14
 
 ### Added

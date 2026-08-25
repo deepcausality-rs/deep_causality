@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_fft-v0.1.2...deep_causality_fft-v0.1.3) - 2026-08-25
+
+### Added
+
+- *(deep_causality_fft)* Configured no-std flag.
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+
+### Other
+
+- *(deep_causality_fft)* Updated SBOM.
+- Updated version requirmentes
+- lints and minor code fixes
+- lints and minor code fixes
+
 ## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_fft-v0.1.1...deep_causality_fft-v0.1.2) - 2026-07-14
 
 ### Added

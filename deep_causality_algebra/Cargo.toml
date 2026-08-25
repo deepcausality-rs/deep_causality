@@ -32,7 +32,7 @@ no-std = ["deep_causality_num/no-std"]
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
-version = "0.4.2"
+version = "0.4.3"
 default-features = false
 
 [lints]

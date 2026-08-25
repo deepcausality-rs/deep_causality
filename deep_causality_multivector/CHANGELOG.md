@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.4...deep_causality_multivector-v0.6.0) - 2026-08-25
+
+### Added
+
+- *(topology)* retire the duplicated linear algebra
+- *(algebra)* give the tower a finite field, and a guard for admitting it
+- *(deep_causality_multivector)* Configured no-std flag.
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+
+### Other
+
+- General QA: Bug fixes and code improvements.
+- Improved test coverage
+- *(deep_causality_multivector)* Updated SBOM.
+- Updated version requirmentes
+- lints and minor code fixes
+
 ## [0.5.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.3...deep_causality_multivector-v0.5.4) - 2026-07-14
 
 ### Added

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_file-v0.1.3...deep_causality_file-v0.1.4) - 2026-08-25
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+
+### Other
+
+- *(deep_causality_file)* Updated SBOM.
+- Updated version requirmentes
+
 ## [0.1.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_file-v0.1.2...deep_causality_file-v0.1.3) - 2026-07-14
 
 ### Added

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_dual-v0.1.4...deep_causality_num_dual-v0.1.5) - 2026-08-25
+
+### Added
+
+- *(algebra)* [**breaking**] state each algebraic law about the operation it governs
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+- *(deep_causality_algebra)* [**breaking**] stop handing out algebraic laws by inference
+
+### Other
+
+- General QA: Bug fixes and code improvements.
+- *(deep_causality_num_dual)* Updated SBOM.
+- Updated version requirmentes
+- bring the algebra reference current and correct the CI claim
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_dual-v0.1.3...deep_causality_num_dual-v0.1.4) - 2026-07-14
 
 ### Other

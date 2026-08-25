@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.3.0...deep_causality_algebra-v0.4.1) - 2026-08-25
+
+### Added
+
+- *(linear)* implement until the suite is green
+- *(algebra)* give the tower a finite field, and a guard for admitting it
+- *(algebra)* give morphisms a domain and a codomain
+- *(algebra)* [**breaking**] add IntegralDomain, connect Semiring, remove AssociativeRing
+- *(algebra)* [**breaking**] state each algebraic law about the operation it governs
+
+### Other
+
+- General QA: Bug fixes and code improvements.
+- *(deep_causality_algebra)* Updated SBOM
+
 ## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.1.1...deep_causality_algebra-v0.2.0) - 2026-07-14
 
 ### Added

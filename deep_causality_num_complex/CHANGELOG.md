@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.4...deep_causality_num_complex-v0.1.6) - 2026-08-25
+
+### Added
+
+- *(algebra)* give the tower a finite field, and a guard for admitting it
+- *(algebra)* give morphisms a domain and a codomain
+- *(algebra)* [**breaking**] state each algebraic law about the operation it governs
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+- *(deep_causality_algebra)* [**breaking**] stop handing out algebraic laws by inference
+- *(deep_causality_num_complex)* Added default implementation for Invertible trait
+
+### Other
+
+- General QA: Bug fixes and code improvements.
+- *(deep_causality_num_complex)* Updated SBOM.
+- Updated version requirmentes
+- bring the algebra reference current and correct the CI claim
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.3...deep_causality_num_complex-v0.1.4) - 2026-07-14
 
 ### Added
