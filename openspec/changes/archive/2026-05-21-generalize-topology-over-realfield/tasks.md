@@ -124,7 +124,7 @@ Architectural correction. The `ChainComplex` trait's `Metric` stays a **plain as
 
 - [ ] 12.1 Run `cargo build --workspace`. The compile errors enumerate every `deep_causality_physics` and `deep_causality_effects` call site that needs a temporary pin.
 - [ ] 12.2 For each error in `deep_causality_physics/`, add `::<f64>` at the construction site and tag the line `// TEMP: removed by generalize-physics-over-realfield`.
-- [ ] 12.3 For each error in `deep_causality_effects/`, add `::<f64>` at the construction site and tag the line `// TEMP: removed by generalize-effects-over-realfield`.
+- [ ] 12.3 For each error in `../../../../yanked/deep_causality_effects/`, add `::<f64>` at the construction site and tag the line `// TEMP: removed by generalize-effects-over-realfield`.
 - [ ] 12.4 Confirm `cargo build --workspace` succeeds.
 - [ ] 12.5 Confirm `cargo test --workspace` succeeds (every existing test passes; bit-identical at `R = f64`).
 

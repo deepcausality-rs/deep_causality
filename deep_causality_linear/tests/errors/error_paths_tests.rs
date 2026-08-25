@@ -14,8 +14,9 @@
 //! number, not a truncated result, not a fabricated zero.
 
 use deep_causality_linear::{
-    CsrMatrix, DenseMatrix, DenseVector, LinearError, MatrixBuild, MatrixView, PackedGf2,
-    csr_to_packed_gf2_strict, determinant, determinant_exact, solve, solve_lower, solve_upper,
+    CsrMatrix, DenseMatrix, DenseVector, LinearError, LinearErrorEnum, MatrixBuild, MatrixView,
+    PackedGf2, csr_to_packed_gf2_strict, determinant, determinant_exact, solve, solve_lower,
+    solve_upper,
 };
 use deep_causality_num::Gf2;
 
@@ -26,28 +27,28 @@ fn test_index_out_of_bounds_from_every_container() {
     let d: DenseMatrix<f64> = DenseMatrix::zeros(2, 2);
     assert!(matches!(
         d.get(2, 0),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (2, 0),
             shape: (2, 2)
-        })
+        }))
     ));
 
     let c: CsrMatrix<f64> = CsrMatrix::zeros(2, 2);
     assert!(matches!(
         c.get(0, 2),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 
     let p: PackedGf2<u64> = PackedGf2::zeros(2, 2);
     assert!(matches!(
         p.get(9, 9),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 
     let v: DenseVector<f64> = DenseVector::from_vec(vec![1.0]);
     assert!(matches!(
         v.get(1),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 }
 
@@ -73,7 +74,7 @@ fn test_writing_out_of_bounds_is_rejected_and_leaves_the_matrix_unchanged() {
 fn test_a_buffer_shorter_than_the_shape_is_rejected() {
     assert!(matches!(
         DenseMatrix::from_vec(vec![1.0, 2.0], 2, 2),
-        Err(LinearError::ShapeMismatch { .. })
+        Err(LinearError(LinearErrorEnum::ShapeMismatch { .. }))
     ));
 }
 
@@ -83,11 +84,11 @@ fn test_a_buffer_longer_than_the_shape_is_rejected_too() {
     // would silently discard the tail.
     assert!(matches!(
         DenseMatrix::from_vec(vec![1.0; 9], 2, 2),
-        Err(LinearError::ShapeMismatch { .. })
+        Err(LinearError(LinearErrorEnum::ShapeMismatch { .. }))
     ));
     assert!(matches!(
         PackedGf2::<u64>::from_slice(&[Gf2::ONE; 9], 2, 2),
-        Err(LinearError::ShapeMismatch { .. })
+        Err(LinearError(LinearErrorEnum::ShapeMismatch { .. }))
     ));
 }
 
@@ -95,17 +96,17 @@ fn test_a_buffer_longer_than_the_shape_is_rejected_too() {
 fn test_a_zero_dimension_with_a_non_empty_buffer_is_rejected() {
     assert!(matches!(
         DenseMatrix::from_vec(vec![1.0], 0, 0),
-        Err(LinearError::ShapeMismatch {
+        Err(LinearError(LinearErrorEnum::ShapeMismatch {
             left: (0, 0),
             right: (1, 1)
-        })
+        }))
     ));
     assert!(matches!(
         DenseMatrix::from_vec(vec![1.0], 0, 5),
-        Err(LinearError::ShapeMismatch {
+        Err(LinearError(LinearErrorEnum::ShapeMismatch {
             left: (0, 5),
             right: (1, 1)
-        })
+        }))
     ));
 }
 
@@ -116,12 +117,18 @@ fn test_square_only_operations_reject_both_orientations() {
     for shape in [(2usize, 3usize), (3, 2)] {
         let m: DenseMatrix<f64> = DenseMatrix::zeros(shape.0, shape.1);
         assert!(
-            matches!(determinant(&m), Err(LinearError::NotSquare { .. })),
+            matches!(
+                determinant(&m),
+                Err(LinearError(LinearErrorEnum::NotSquare { .. }))
+            ),
             "determinant accepted {shape:?}"
         );
         let mi: DenseMatrix<i64> = DenseMatrix::zeros(shape.0, shape.1);
         assert!(
-            matches!(determinant_exact(&mi), Err(LinearError::NotSquare { .. })),
+            matches!(
+                determinant_exact(&mi),
+                Err(LinearError(LinearErrorEnum::NotSquare { .. }))
+            ),
             "exact determinant accepted {shape:?}"
         );
     }
@@ -135,17 +142,17 @@ fn test_a_vector_operation_rejects_a_length_mismatch_in_both_directions() {
     let long: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0, 3.0]);
     assert!(matches!(
         short.dot(&long),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 1,
             found: 3
-        })
+        }))
     ));
     assert!(matches!(
         long.dot(&short),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 3,
             found: 1
-        })
+        }))
     ));
     assert!(short.add(&long).is_err());
     assert!(long.sub(&short).is_err());
@@ -158,7 +165,10 @@ fn test_a_solve_rejects_a_right_hand_side_of_the_wrong_length() {
     for len in [0usize, 2, 4] {
         let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0; len]);
         assert!(
-            matches!(solve(&a, &b), Err(LinearError::LengthMismatch { .. })),
+            matches!(
+                solve(&a, &b),
+                Err(LinearError(LinearErrorEnum::LengthMismatch { .. }))
+            ),
             "solve accepted a right-hand side of length {len} for a 3x3"
         );
     }
@@ -172,7 +182,10 @@ fn test_a_singular_system_is_rejected_rather_than_given_an_arbitrary_answer() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0]);
     // This system is consistent -- b is in the column space -- and still has no unique solution.
     // Returning one of the infinitely many would be worse than failing.
-    assert!(matches!(solve(&a, &b), Err(LinearError::Singular { .. })));
+    assert!(matches!(
+        solve(&a, &b),
+        Err(LinearError(LinearErrorEnum::Singular { .. }))
+    ));
 }
 
 #[test]
@@ -181,7 +194,7 @@ fn test_an_all_zero_matrix_is_singular_rather_than_a_division_by_zero() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 1.0, 1.0]);
     assert!(matches!(
         solve(&a, &b),
-        Err(LinearError::Singular { at_column: 0 })
+        Err(LinearError(LinearErrorEnum::Singular { at_column: 0 }))
     ));
 }
 
@@ -194,13 +207,13 @@ fn test_triangular_substitution_rejects_a_zero_anywhere_on_the_diagonal() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 1.0]);
     assert!(matches!(
         solve_lower(&a, &b),
-        Err(LinearError::ZeroDiagonal { at_index: 1 })
+        Err(LinearError(LinearErrorEnum::ZeroDiagonal { at_index: 1 }))
     ));
 
     let c: DenseMatrix<f64> = DenseMatrix::from_vec(vec![0.0, 1.0, 0.0, 1.0], 2, 2).unwrap();
     assert!(matches!(
         solve_upper(&c, &b),
-        Err(LinearError::ZeroDiagonal { at_index: 0 })
+        Err(LinearError(LinearErrorEnum::ZeroDiagonal { at_index: 0 }))
     ));
 }
 
@@ -211,13 +224,13 @@ fn test_substitution_rejects_the_wrong_triangle_rather_than_ignoring_it() {
     let upper: DenseMatrix<f64> = DenseMatrix::from_vec(vec![1.0, 5.0, 2.0, 1.0], 2, 2).unwrap();
     assert!(matches!(
         solve_lower(&upper, &b),
-        Err(LinearError::WrongTriangle { at: (0, 1) })
+        Err(LinearError(LinearErrorEnum::WrongTriangle { at: (0, 1) }))
     ));
     // And below, offered to backward substitution.
     let lower: DenseMatrix<f64> = DenseMatrix::from_vec(vec![1.0, 0.0, 5.0, 1.0], 2, 2).unwrap();
     assert!(matches!(
         solve_upper(&lower, &b),
-        Err(LinearError::WrongTriangle { at: (1, 0) })
+        Err(LinearError(LinearErrorEnum::WrongTriangle { at: (1, 0) }))
     ));
 }
 
@@ -231,7 +244,7 @@ fn test_the_strict_packing_rejects_every_value_outside_zero_and_one() {
         assert!(
             matches!(
                 csr_to_packed_gf2_strict::<u64>(&m),
-                Err(LinearError::NotBinary { at: (1, 1) })
+                Err(LinearError(LinearErrorEnum::NotBinary { at: (1, 1) }))
             ),
             "the strict packing accepted {bad}"
         );
@@ -261,10 +274,10 @@ fn test_a_product_whose_inner_dimensions_do_not_meet_is_rejected() {
     let b: CsrMatrix<f64> = CsrMatrix::zeros(4, 2);
     assert!(matches!(
         a.mat_mult(&b),
-        Err(LinearError::InnerDimensionMismatch {
+        Err(LinearError(LinearErrorEnum::InnerDimensionMismatch {
             left_cols: 3,
             right_rows: 4
-        })
+        }))
     ));
 }
 
@@ -273,7 +286,7 @@ fn test_a_sparse_matrix_vector_product_rejects_a_wrong_length_vector() {
     let a: CsrMatrix<f64> = CsrMatrix::zeros(2, 3);
     assert!(matches!(
         a.vec_mult(&[1.0, 2.0]),
-        Err(LinearError::LengthMismatch { .. })
+        Err(LinearError(LinearErrorEnum::LengthMismatch { .. }))
     ));
 }
 
@@ -283,11 +296,11 @@ fn test_a_sparse_matrix_vector_product_rejects_a_wrong_length_vector() {
 fn test_a_triplet_outside_the_shape_is_rejected() {
     assert!(matches!(
         CsrMatrix::from_triplets(2, 2, &[(2, 0, 1.0)]),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
     assert!(matches!(
         CsrMatrix::from_triplets(2, 2, &[(0, 2, 1.0)]),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 }
 
@@ -301,41 +314,41 @@ fn test_an_error_is_returned_rather_than_panicking_for_every_rejected_input() {
 
     assert!(matches!(
         determinant(&d),
-        Err(LinearError::NotSquare { shape: (2, 3) })
+        Err(LinearError(LinearErrorEnum::NotSquare { shape: (2, 3) }))
     ));
     assert!(matches!(
         d.get(99, 99),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (99, 99),
             shape: (2, 3)
-        })
+        }))
     ));
     assert!(matches!(
         v.get(99),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (99, 0),
             shape: (1, 1)
-        })
+        }))
     ));
     assert!(matches!(
         p.get(99, 99),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (99, 99),
             shape: (1, 1)
-        })
+        }))
     ));
     assert!(matches!(
         DenseMatrix::<f64>::from_vec(vec![1.0], 7, 7),
-        Err(LinearError::ShapeMismatch {
+        Err(LinearError(LinearErrorEnum::ShapeMismatch {
             left: (7, 7),
             right: (1, 1)
-        })
+        }))
     ));
     assert!(matches!(
         CsrMatrix::<f64>::from_triplets(1, 1, &[(9, 9, 1.0)]),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (9, 9),
             shape: (1, 1)
-        })
+        }))
     ));
 }

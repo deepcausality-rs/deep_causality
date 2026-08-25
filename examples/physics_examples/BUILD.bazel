@@ -166,7 +166,7 @@ rust_binary(
         "//deep_causality_physics",
         "//deep_causality_quantum",
         "//deep_causality_rand",
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],

@@ -11,9 +11,10 @@
 //! exercises the trivial path is a test that would pass against an algorithm which does nothing.
 
 use deep_causality_linear::{
-    DenseMatrix, DenseVector, LinearError, Lu, MatrixBuild, MatrixView, PackedGf2, Truncation,
-    determinant_exact, eigen_hermitian, image_basis_gf2, inverse, kernel_basis_gf2, matrix_norm_l1,
-    qr, rank_exact, rref, singular_values, solve, solve_lower, solve_upper, svd_truncated,
+    DenseMatrix, DenseVector, LinearError, LinearErrorEnum, Lu, MatrixBuild, MatrixView, PackedGf2,
+    Truncation, determinant_exact, eigen_hermitian, image_basis_gf2, inverse, kernel_basis_gf2,
+    matrix_norm_l1, qr, rank_exact, rref, singular_values, solve, solve_lower, solve_upper,
+    svd_truncated,
 };
 use deep_causality_num::Gf2;
 
@@ -169,11 +170,11 @@ fn test_triangular_substitution_rejects_a_non_square_matrix() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0]);
     assert!(matches!(
         solve_lower(&a, &b),
-        Err(LinearError::NotSquare { shape: (2, 3) })
+        Err(LinearError(LinearErrorEnum::NotSquare { shape: (2, 3) }))
     ));
     assert!(matches!(
         solve_upper(&a, &b),
-        Err(LinearError::NotSquare { shape: (2, 3) })
+        Err(LinearError(LinearErrorEnum::NotSquare { shape: (2, 3) }))
     ));
 }
 
@@ -183,17 +184,17 @@ fn test_triangular_substitution_rejects_a_right_hand_side_of_the_wrong_length() 
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0]);
     assert!(matches!(
         solve_lower(&a, &b),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 3,
             found: 1
-        })
+        }))
     ));
     assert!(matches!(
         solve_upper(&a, &b),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 3,
             found: 1
-        })
+        }))
     ));
 }
 
@@ -202,14 +203,17 @@ fn test_inverse_rejects_a_non_square_matrix() {
     let a: DenseMatrix<f64> = DenseMatrix::zeros(2, 3);
     assert!(matches!(
         inverse(&a),
-        Err(LinearError::NotSquare { shape: (2, 3) })
+        Err(LinearError(LinearErrorEnum::NotSquare { shape: (2, 3) }))
     ));
 }
 
 #[test]
 fn test_inverse_rejects_a_singular_matrix() {
     let a = dm(&[1.0, 2.0, 2.0, 4.0], 2, 2);
-    assert!(matches!(inverse(&a), Err(LinearError::Singular { .. })));
+    assert!(matches!(
+        inverse(&a),
+        Err(LinearError(LinearErrorEnum::Singular { .. }))
+    ));
 }
 
 #[test]
@@ -236,7 +240,7 @@ fn test_lu_factor_rejects_a_non_square_matrix() {
     let a: DenseMatrix<f64> = DenseMatrix::zeros(3, 2);
     assert!(matches!(
         Lu::factor(&a),
-        Err(LinearError::NotSquare { shape: (3, 2) })
+        Err(LinearError(LinearErrorEnum::NotSquare { shape: (3, 2) }))
     ));
 }
 
@@ -247,10 +251,10 @@ fn test_lu_apply_rejects_a_right_hand_side_of_the_wrong_length() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0]);
     assert!(matches!(
         lu.apply(&b),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 3,
             found: 2
-        })
+        }))
     ));
 }
 
@@ -363,14 +367,14 @@ fn test_the_sparse_build_trait_rejects_an_out_of_bounds_write() {
     let mut m: CsrMatrix<f64> = CsrMatrix::zeros(2, 2);
     assert!(matches!(
         m.set(5, 0, 1.0),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (5, 0),
             shape: (2, 2)
-        })
+        }))
     ));
     assert!(matches!(
         m.set(0, 5, 1.0),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 }
 
@@ -401,21 +405,24 @@ fn test_the_packed_matrix_rejects_an_out_of_bounds_write() {
     let mut m: PackedGf2<u8> = PackedGf2::zeros(2, 2);
     assert!(matches!(
         m.set(9, 0, Gf2::ONE),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (9, 0),
             shape: (2, 2)
-        })
+        }))
     ));
     assert!(matches!(
         m.set(0, 9, Gf2::ONE),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 }
 
 #[test]
 fn test_the_mod_two_constructor_rejects_a_buffer_of_the_wrong_length() {
     let e = PackedGf2::<u8>::from_i64_mod2(&[1, 0, 1], 2, 2).unwrap_err();
-    assert!(matches!(e, LinearError::ShapeMismatch { .. }), "got {e:?}");
+    assert!(
+        matches!(e, LinearError(LinearErrorEnum::ShapeMismatch { .. })),
+        "got {e:?}"
+    );
 }
 
 #[test]

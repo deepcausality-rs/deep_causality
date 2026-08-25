@@ -57,7 +57,7 @@ where
 /// Helper to apply a sparse matrix operator to a vector. Rows are
 /// independent, so under the `parallel` feature the matvec fans out over
 /// Rayon — this is the inner kernel of every CG iteration.
-pub(super) fn apply_operator<D>(matrix: &deep_causality_sparse::CsrMatrix<i8>, data: &[D]) -> Vec<D>
+pub(super) fn apply_operator<D>(matrix: &deep_causality_linear::CsrMatrix<i8>, data: &[D]) -> Vec<D>
 where
     D: Field + Copy + core::ops::Neg<Output = D> + MaybeParallel,
 {
@@ -101,7 +101,7 @@ where
 /// Helper to apply a sparse matrix operator with C values to a vector of D.
 /// Row-parallel under the `parallel` feature, as [`apply_operator`].
 pub(super) fn apply_metric_operator<C, D>(
-    matrix: &deep_causality_sparse::CsrMatrix<C>,
+    matrix: &deep_causality_linear::CsrMatrix<C>,
     data: &[D],
 ) -> Vec<D>
 where

@@ -11,8 +11,8 @@
 //! and the dispatch boundary (mixed/open/per-edge stay on CG).
 
 use deep_causality_algebra::RealField;
+use deep_causality_linear::cg_solve;
 use deep_causality_num::{Float106, FromPrimitive};
-use deep_causality_sparse::cg_solve;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,

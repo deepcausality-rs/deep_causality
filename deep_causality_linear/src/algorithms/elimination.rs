@@ -315,9 +315,7 @@ where
 {
     let (rows, cols) = (m.rows(), m.cols());
     if rows != cols {
-        return Err(LinearError::NotSquare {
-            shape: (rows, cols),
-        });
+        return Err(LinearError::NotSquare((rows, cols)));
     }
     // The empty product.
     if rows == 0 {

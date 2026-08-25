@@ -4,9 +4,9 @@
  */
 
 use deep_causality_linear::{
-    CsrMatrix, DenseMatrix, LinearError, MatrixBuild, MatrixView, PackedGf2, csr_to_dense,
-    csr_to_packed_gf2_mod2, csr_to_packed_gf2_strict, dense_gf2_to_packed, dense_to_csr,
-    packed_to_dense_gf2,
+    CsrMatrix, DenseMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView, PackedGf2,
+    csr_to_dense, csr_to_packed_gf2_mod2, csr_to_packed_gf2_strict, dense_gf2_to_packed,
+    dense_to_csr, packed_to_dense_gf2,
 };
 use deep_causality_num::Gf2;
 
@@ -50,7 +50,7 @@ fn test_packing_rejects_an_entry_outside_zero_one_and_names_the_position() {
     let m = CsrMatrix::from_triplets(2, 2, &[(1, 0, 5i8)]).unwrap();
     let e = csr_to_packed_gf2_strict::<u64>(&m).unwrap_err();
     assert!(
-        matches!(e, LinearError::NotBinary { at: (1, 0) }),
+        matches!(e, LinearError(LinearErrorEnum::NotBinary { at: (1, 0) })),
         "got {e:?}"
     );
 }

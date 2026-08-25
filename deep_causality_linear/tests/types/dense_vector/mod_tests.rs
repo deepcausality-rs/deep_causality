@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_linear::{DenseVector, LinearError};
+use deep_causality_linear::{DenseVector, LinearError, LinearErrorEnum};
 use deep_causality_num_complex::Complex;
 
 #[test]
@@ -28,7 +28,7 @@ fn test_get_rejects_an_index_outside_the_length() {
     assert_eq!(v.get(1).unwrap(), 2.0);
     assert!(matches!(
         v.get(2),
-        Err(LinearError::IndexOutOfBounds { .. })
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds { .. }))
     ));
 }
 
@@ -64,10 +64,10 @@ fn test_dot_rejects_a_length_mismatch_rather_than_truncating() {
     assert!(
         matches!(
             e,
-            LinearError::LengthMismatch {
+            LinearError(LinearErrorEnum::LengthMismatch {
                 expected: 2,
                 found: 3
-            }
+            })
         ),
         "got {e:?}"
     );
@@ -106,17 +106,17 @@ fn test_add_and_sub_reject_a_length_mismatch() {
     // Both lengths are carried, so a caller can see which side was short.
     assert!(matches!(
         a.add(&b),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 2,
             found: 1
-        })
+        }))
     ));
     assert!(matches!(
         a.sub(&b),
-        Err(LinearError::LengthMismatch {
+        Err(LinearError(LinearErrorEnum::LengthMismatch {
             expected: 2,
             found: 1
-        })
+        }))
     ));
 }
 

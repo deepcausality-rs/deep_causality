@@ -6,6 +6,7 @@
 use crate::PhysicsError;
 use crate::Probability;
 use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 /// Generalized Master Equation Kernel.
@@ -115,7 +116,10 @@ pub fn kalman_filter_linear_kernel<R>(
     _process_noise: &CausalTensor<R>,
 ) -> Result<(CausalTensor<R>, CausalTensor<R>), PhysicsError>
 where
-    R: RealField + Default + core::iter::Sum,
+    // `FromPrimitive` reaches here from `CausalTensor::inverse`, whose body now delegates to
+    // `deep_causality_linear`, whose `NormedScalar` bound requires it. Every scalar this kernel is
+    // instantiated with satisfies it.
+    R: RealField + Default + core::iter::Sum + FromPrimitive,
 {
     // H * x
     let hx = measurement_matrix

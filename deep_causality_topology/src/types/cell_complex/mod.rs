@@ -8,7 +8,7 @@ pub mod boundary_operator;
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
 pub use boundary_operator::BoundaryOperator;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, Tensor};
 use std::borrow::Cow;
 use std::collections::HashMap;

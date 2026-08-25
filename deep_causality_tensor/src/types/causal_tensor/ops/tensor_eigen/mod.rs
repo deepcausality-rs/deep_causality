@@ -8,11 +8,8 @@ use alloc::vec::Vec;
 
 use crate::CausalTensorError;
 use crate::types::causal_tensor::CausalTensor;
-use deep_causality_algebra::{ConjugateScalar, Real};
-use deep_causality_num::{One, Zero};
-
-/// The real magnitude type of a conjugate scalar.
-type Re<T> = <T as ConjugateScalar>::Real;
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_linear::DenseMatrix;
 
 /// Eigendecomposition of a **Hermitian** row-major `n×n` matrix by cyclic Jacobi rotations
 /// (`Uᴴ A U`). Returns `(eigenvalues, V)` where the columns of the row-major `n×n` `V` are the
@@ -23,97 +20,15 @@ type Re<T> = <T as ConjugateScalar>::Real;
 /// G. H. Golub and C. F. Van Loan, *Matrix Computations*, 4th ed. (Johns Hopkins Univ. Press,
 /// 2013), §8.5 (Jacobi methods).
 pub(crate) fn sym_eig<T: ConjugateScalar>(mat: &[T], n: usize) -> (Vec<T>, Vec<T>) {
-    let mut a = mat.to_vec();
-    let mut v = vec![T::zero(); n * n];
-    for i in 0..n {
-        v[i * n + i] = T::one();
-    }
-    let one = Re::<T>::one();
-    let two = one + one;
-    // Relative stopping threshold: scale the ε² off-diagonal budget by ‖A‖²_F,
-    // which is invariant under the (orthogonal) Jacobi rotations, so it is
-    // computed once from the input. An absolute ε² test never terminates for
-    // large-magnitude matrices and burns the full sweep budget every time.
-    let eps2 = Re::<T>::epsilon() * Re::<T>::epsilon();
-    let norm_sq = a
-        .iter()
-        .fold(Re::<T>::zero(), |acc, x| acc + x.modulus_squared());
-    // If ‖A‖²_F overflowed to a non-finite value (a pathologically large but
-    // finite matrix), fall back to the absolute ε² threshold. Otherwise the
-    // `off <= threshold` test could become `∞ <= ∞` and break before any Jacobi
-    // rotation, returning the undiagonalized input as its own eigendecomposition.
-    let threshold = if norm_sq.is_finite() {
-        eps2 * norm_sq
-    } else {
-        eps2
-    };
-    for _ in 0..100 {
-        // Off-diagonal magnitude (real): Σ_{p<q} |a[p,q]|².
-        let mut off = Re::<T>::zero();
-        for p in 0..n {
-            for q in (p + 1)..n {
-                off += a[p * n + q].modulus_squared();
-            }
-        }
-        if off <= threshold {
-            break;
-        }
-        for p in 0..n {
-            for q in (p + 1)..n {
-                let apq = a[p * n + q];
-                let gmod = apq.modulus_squared().sqrt(); // |γ|
-                if gmod <= Re::<T>::zero() {
-                    continue;
-                }
-                // Hermitian diagonal is real.
-                let app = a[p * n + p].real_part();
-                let aqq = a[q * n + q].real_part();
-                let zeta = (app - aqq) / (two * gmod);
-                let t = if zeta == Re::<T>::zero() {
-                    one
-                } else {
-                    let sgn = if zeta < Re::<T>::zero() { -one } else { one };
-                    sgn / (zeta.abs() + (zeta * zeta + one).sqrt())
-                };
-                let c = one / (t * t + one).sqrt();
-                let s = t * c;
-
-                // Rotation U = diag(1, conj(ρ))·[[c,-s],[s,c]] with phase ρ = γ/|γ|; apply Uᴴ A U.
-                let rho = apq * T::from_real(one / gmod);
-                let ct = T::from_real(c);
-                let cs = T::from_real(s);
-                let conj_rho = rho.conjugate();
-                let srho = conj_rho * cs; // conj(ρ)·s
-                let crho = conj_rho * ct; // conj(ρ)·c
-                let rs = rho * cs; // ρ·s
-                let rc = rho * ct; // ρ·c
-
-                // A ← A·U (columns p, q).
-                for i in 0..n {
-                    let aip = a[i * n + p];
-                    let aiq = a[i * n + q];
-                    a[i * n + p] = ct * aip + srho * aiq;
-                    a[i * n + q] = crho * aiq - cs * aip;
-                }
-                // A ← Uᴴ·A (rows p, q).
-                for j in 0..n {
-                    let apj = a[p * n + j];
-                    let aqj = a[q * n + j];
-                    a[p * n + j] = ct * apj + rs * aqj;
-                    a[q * n + j] = rc * aqj - cs * apj;
-                }
-                // V ← V·U (accumulate eigenvectors).
-                for i in 0..n {
-                    let vip = v[i * n + p];
-                    let viq = v[i * n + q];
-                    v[i * n + p] = ct * vip + srho * viq;
-                    v[i * n + q] = crho * viq - cs * vip;
-                }
-            }
-        }
-    }
-    let evals: Vec<T> = (0..n).map(|i| a[i * n + i]).collect();
-    (evals, v)
+    // One copy of the algorithm, and it is not this one. The DMRG local solver
+    // (`causal_tensor_network::solve::local`) needs the kernel at slice level rather than through
+    // `CausalTensor`, so this stays as the shape that call site wants — but the numerics come from
+    // `deep_causality_linear`, which is where the rest of the workspace reads them from.
+    let m = DenseMatrix::from_vec(mat.to_vec(), n, n)
+        .expect("n * n entries in an n x n shape, by construction");
+    let (vals, vecs) =
+        deep_causality_linear::eigen_hermitian(&m).expect("square, so the only error cannot arise");
+    (vals.as_slice().to_vec(), vecs.as_slice().to_vec())
 }
 
 impl<T> CausalTensor<T>
@@ -151,8 +66,12 @@ where
         if n != self.shape()[1] {
             return Err(CausalTensorError::ShapeMismatch);
         }
-        let (vals, vecs) = sym_eig(self.as_slice(), n);
-        let v = CausalTensor::new(vecs, vec![n, n])?;
-        Ok((vals, v))
+        // The guards above stay here: `deep_causality_linear` has no notion of tensor rank, so
+        // `DimensionMismatch` and `EmptyTensor` have no source there. What it does have is the
+        // kernel, which this crate no longer carries a second copy of.
+        let (vals, vecs) = deep_causality_linear::eigen_hermitian(self)
+            .map_err(|_| CausalTensorError::ShapeMismatch)?;
+        let v = CausalTensor::new(vecs.as_slice().to_vec(), vec![n, n])?;
+        Ok((vals.as_slice().to_vec(), v))
     }
 }

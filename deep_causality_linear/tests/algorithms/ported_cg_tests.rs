@@ -12,13 +12,27 @@
 //! Four contract changes separate this file from its source, and each ported test carries a note
 //! where it is affected:
 //!
-//! 1. Argument order is `(…, max_iterations, tolerance)` here and `(…, tolerance, max_iterations)`
-//!    in the sparse crate.
-//! 2. The preconditioner argument is the **reciprocal** of the operator's diagonal, and it comes
-//!    after `b` rather than before it. The sparse crate took the diagonal itself.
-//! 3. `tolerance` is absolute. The sparse crate scaled it by `‖b‖` whenever `‖b‖ ≠ 0`.
+//! Four divergences were recorded here when the port was written. Three have since been closed, and
+//! this header is kept as the record of which:
+//!
+//! 1. ~~Argument order was `(…, max_iterations, tolerance)`.~~ Restored to the sparse crate's
+//!    `(…, tolerance, max_iterations)`.
+//! 2. ~~The preconditioner argument was the **reciprocal** of the diagonal, and came after `b`.~~
+//!    Restored to the diagonal itself, before `b`.
+//! 3. ~~`tolerance` was absolute where the sparse crate scaled it by `‖b‖`.~~ Restored to relative.
+//!    This one outlived the other two: it changes no answer, only when the iteration stops, so it
+//!    was invisible to every test here — all of them use `‖b‖ ≈ 1`, where the two agree.
+//!    `cg_tests.rs` now pins the scaling directly.
 //! 4. `CgFailure` is an enum of three named cases, where the sparse crate had one struct carrying
-//!    `iterations` and `residual` for every failure mode.
+//!    `iterations` and `residual` for every failure mode. **This one stands** — it is the divergence
+//!    a re-export shim cannot hide, and the one consumer that destructures the struct is repointed
+//!    by hand rather than the type being widened back.
+//!
+//! A fifth was found while scouting phase 5 and is not a divergence but a defect: the operator's
+//! returned length went unchecked, so a short vector indexed past the end of the residual and
+//! panicked where the sparse crate returned a typed error. The tests below named that case and
+//! asserted the curvature guard's incidental rejection of the *long* direction, which is why the
+//! short one went unnoticed. Both directions are now checked.
 
 use deep_causality_linear::{
     CgFailure, cg_solve, cg_solve_preconditioned, cg_solve_preconditioned_from,
@@ -353,13 +367,30 @@ fn test_warm_started_cg_surfaces_budget_exhaustion() {
 
 #[test]
 fn test_cg_solve_rejects_a_wrong_length_operator() {
-    // The operator returns a vector of the wrong length. The sparse solver compared the returned
-    // length against `b.len()` and reported the mismatch; this one truncates against `b` and the
-    // rejection arrives from the curvature guard on the first iteration instead.
+    // The operator returns a vector of the wrong length. Compared against `b.len()` and reported
+    // as a mismatch, as the sparse solver did.
+    //
+    // An earlier version of this crate had no such check: `zip` truncated the longer case against
+    // `b` and the curvature guard rejected the solve one step later for the wrong reason, while the
+    // shorter case indexed past the end of the residual and panicked.
     let b = vec![1.0_f64, 2.0];
-    let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0; 5] };
-    let err = cg_solve(apply, &b, 1e-12, 50).unwrap_err();
-    assert_eq!(err, CgFailure::NotPositiveDefinite { iteration: 0 });
+    let long = |_v: &[f64]| -> Vec<f64> { vec![0.0; 5] };
+    assert_eq!(
+        cg_solve(long, &b, 1e-12, 50).unwrap_err(),
+        CgFailure::LengthMismatch {
+            expected: 2,
+            found: 5
+        }
+    );
+    // The direction that used to panic rather than truncate.
+    let short = |_v: &[f64]| -> Vec<f64> { vec![0.0; 1] };
+    assert_eq!(
+        cg_solve(short, &b, 1e-12, 50).unwrap_err(),
+        CgFailure::LengthMismatch {
+            expected: 2,
+            found: 1
+        }
+    );
 }
 
 #[test]
@@ -391,7 +422,21 @@ fn test_preconditioned_cg_rejects_a_wrong_length_operator() {
     let b = vec![1.0_f64, 2.0];
     let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0; 7] };
     let err = cg_solve_preconditioned(apply, &inv_diag, &b, 1e-12, 50).unwrap_err();
-    assert_eq!(err, CgFailure::NotPositiveDefinite { iteration: 0 });
+    assert_eq!(
+        err,
+        CgFailure::LengthMismatch {
+            expected: 2,
+            found: 7
+        }
+    );
+    let short = |_v: &[f64]| -> Vec<f64> { vec![0.0; 1] };
+    assert_eq!(
+        cg_solve_preconditioned(short, &inv_diag, &b, 1e-12, 50).unwrap_err(),
+        CgFailure::LengthMismatch {
+            expected: 2,
+            found: 1
+        }
+    );
 }
 
 #[test]
@@ -416,15 +461,20 @@ fn test_warm_started_cg_returns_zero_for_zero_rhs() {
 
 #[test]
 fn test_warm_started_cg_rejects_a_wrong_length_operator_on_the_initial_residual() {
-    // The very first application (A·x₀) returns the wrong length. The sparse solver caught it there
-    // and returned before the loop; here the initial residual is formed against the truncated
-    // vector and the curvature guard rejects the solve one step later.
+    // The very first application (A·x₀) returns the wrong length, and is caught there rather than
+    // being carried into the residual.
     let inv_diag = vec![1.0_f64, 1.0];
     let b = vec![1.0_f64, 2.0];
     let x0 = vec![0.0_f64, 0.0];
     let apply = |_v: &[f64]| -> Vec<f64> { vec![0.0; 9] };
     let err = cg_solve_preconditioned_from(apply, &inv_diag, &b, &x0, 1e-12, 50).unwrap_err();
-    assert_eq!(err, CgFailure::NotPositiveDefinite { iteration: 0 });
+    assert_eq!(
+        err,
+        CgFailure::LengthMismatch {
+            expected: 2,
+            found: 9
+        }
+    );
 }
 
 #[test]
@@ -442,8 +492,11 @@ fn test_warm_started_cg_rejects_a_wrong_length_operator_inside_the_loop() {
     let err = cg_solve_preconditioned_from(apply, &inv_diag, &b, &x0, 1e-12, 50).unwrap_err();
     assert_eq!(
         err,
-        CgFailure::NotPositiveDefinite { iteration: 0 },
-        "the loop's operator application is rejected"
+        CgFailure::LengthMismatch {
+            expected: 2,
+            found: 9
+        },
+        "the loop's operator application is checked, not only the initial one"
     );
 }
 

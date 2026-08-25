@@ -6,7 +6,7 @@
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::cell_complex::CellComplex;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::collections::HashMap;
 use std::sync::Arc;
 

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_linear::utils_tests::fixtures_matrix::*;
-use deep_causality_linear::{LinearError, MatrixBuild, MatrixView, PackedGf2};
+use deep_causality_linear::{LinearError, LinearErrorEnum, MatrixBuild, MatrixView, PackedGf2};
 use deep_causality_num::Gf2;
 
 #[test]
@@ -55,7 +55,10 @@ fn test_from_slice_round_trips() {
 fn test_from_slice_rejects_a_buffer_that_does_not_match_the_shape() {
     let data = [Gf2::ONE; 3];
     let e = PackedGf2::<u64>::from_slice(&data, 2, 2).unwrap_err();
-    assert!(matches!(e, LinearError::ShapeMismatch { .. }), "got {e:?}");
+    assert!(
+        matches!(e, LinearError(LinearErrorEnum::ShapeMismatch { .. })),
+        "got {e:?}"
+    );
 }
 
 #[test]
@@ -99,17 +102,17 @@ fn test_out_of_shape_access_is_rejected() {
     // inside the allocation. The rejection has to come from the shape, and it has to name it.
     assert!(matches!(
         m.get(2, 0),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (2, 0),
             shape: (2, 2)
-        })
+        }))
     ));
     assert!(matches!(
         m.get(0, 2),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (0, 2),
             shape: (2, 2)
-        })
+        }))
     ));
 }
 

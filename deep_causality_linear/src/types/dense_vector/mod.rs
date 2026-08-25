@@ -75,10 +75,10 @@ impl<T> DenseVector<T> {
         self.data
             .get(index)
             .cloned()
-            .ok_or(LinearError::IndexOutOfBounds {
-                index: (index, 0),
-                shape: (self.data.len(), 1),
-            })
+            .ok_or(LinearError::IndexOutOfBounds(
+                (index, 0),
+                (self.data.len(), 1),
+            ))
     }
 }
 
@@ -97,10 +97,10 @@ where
     /// [`LinearError::LengthMismatch`] if the lengths differ, rather than truncating to the shorter.
     pub fn dot(&self, other: &Self) -> Result<T, LinearError> {
         if self.data.len() != other.data.len() {
-            return Err(LinearError::LengthMismatch {
-                expected: self.data.len(),
-                found: other.data.len(),
-            });
+            return Err(LinearError::LengthMismatch(
+                self.data.len(),
+                other.data.len(),
+            ));
         }
         let mut acc = T::zero();
         for (a, b) in self.data.iter().zip(other.data.iter()) {
@@ -137,10 +137,10 @@ where
     /// [`LinearError::LengthMismatch`] if the lengths differ.
     pub fn add(&self, other: &Self) -> Result<Self, LinearError> {
         if self.data.len() != other.data.len() {
-            return Err(LinearError::LengthMismatch {
-                expected: self.data.len(),
-                found: other.data.len(),
-            });
+            return Err(LinearError::LengthMismatch(
+                self.data.len(),
+                other.data.len(),
+            ));
         }
         Ok(Self {
             data: self
@@ -162,10 +162,10 @@ where
     /// [`LinearError::LengthMismatch`] if the lengths differ.
     pub fn sub(&self, other: &Self) -> Result<Self, LinearError> {
         if self.data.len() != other.data.len() {
-            return Err(LinearError::LengthMismatch {
-                expected: self.data.len(),
-                found: other.data.len(),
-            });
+            return Err(LinearError::LengthMismatch(
+                self.data.len(),
+                other.data.len(),
+            ));
         }
         Ok(Self {
             data: self
@@ -205,10 +205,10 @@ where
     /// [`LinearError::LengthMismatch`] if the lengths differ.
     pub fn hermitian_inner(&self, other: &Self) -> Result<T, LinearError> {
         if self.data.len() != other.data.len() {
-            return Err(LinearError::LengthMismatch {
-                expected: self.data.len(),
-                found: other.data.len(),
-            });
+            return Err(LinearError::LengthMismatch(
+                self.data.len(),
+                other.data.len(),
+            ));
         }
         let mut acc = T::zero();
         for (a, b) in self.data.iter().zip(other.data.iter()) {

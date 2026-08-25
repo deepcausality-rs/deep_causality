@@ -5,7 +5,7 @@
 
 //! The operator impls that carry `DenseMatrix` into the tower.
 
-use deep_causality_linear::{DenseMatrix, MatrixBuild, MatrixView};
+use deep_causality_linear::{DenseMatrix, LinearErrorEnum, MatrixBuild, MatrixView};
 use deep_causality_num::{One, Zero};
 
 fn m2(d: [f64; 4]) -> DenseMatrix<f64> {
@@ -168,10 +168,10 @@ fn test_the_row_operations_reject_an_out_of_range_row() {
     let out_of_range = |r: Result<(), LinearError>| {
         matches!(
             r,
-            Err(LinearError::IndexOutOfBounds {
+            Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
                 index: (9, 0),
                 shape: (2, 2)
-            })
+            }))
         )
     };
     assert!(out_of_range(a.swap_rows(0, 9)));

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Demonstrating basic CsrMatrix operations:");

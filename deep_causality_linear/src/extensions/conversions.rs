@@ -129,7 +129,7 @@ where
         for j in 0..c {
             let v = m.get_value_at(i, j);
             if v != 0 && v != 1 {
-                return Err(LinearError::NotBinary { at: (i, j) });
+                return Err(LinearError::NotBinary((i, j)));
             }
             flat.push(i64::from(v));
         }

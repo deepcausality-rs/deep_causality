@@ -14,8 +14,8 @@
 //! each one states what must happen instead.
 
 use deep_causality_linear::{
-    DenseMatrix, DenseVector, LinearError, MatrixBuild, MatrixView, PackedGf2, determinant,
-    determinant_exact, matrix_norm_frobenius, rank_exact,
+    DenseMatrix, DenseVector, LinearError, LinearErrorEnum, MatrixBuild, MatrixView, PackedGf2,
+    determinant, determinant_exact, matrix_norm_frobenius, rank_exact,
 };
 
 // ---- the integer determinant against i64's range ------------------------------------------------
@@ -38,7 +38,7 @@ fn test_an_integer_determinant_that_overflows_is_reported_rather_than_wrapped() 
     // integer that is wrong, and no caller can tell.
     let m = DenseMatrix::from_vec(vec![i64::MAX, 0, 0, 2i64], 2, 2).unwrap();
     match determinant_exact(&m) {
-        Err(LinearError::Overflow { .. }) => {}
+        Err(LinearError(LinearErrorEnum::Overflow { .. })) => {}
         other => panic!("an overflowing determinant must be reported, got {other:?}"),
     }
 }
@@ -55,7 +55,7 @@ fn test_the_integer_path_handles_i64_min_without_wrapping_silently() {
             i64::MIN,
             "det of diag(MIN, 1) is MIN, which is representable"
         ),
-        Err(LinearError::Overflow { .. }) => {}
+        Err(LinearError(LinearErrorEnum::Overflow { .. })) => {}
         other => panic!("unexpected: {other:?}"),
     }
 }
@@ -174,17 +174,17 @@ fn test_the_largest_index_inside_the_shape_is_readable_and_the_next_is_not() {
     );
     assert!(matches!(
         m.get(3, 3),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (3, 3),
             shape: (3, 4)
-        })
+        }))
     ));
     assert!(matches!(
         m.get(2, 4),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (2, 4),
             shape: (3, 4)
-        })
+        }))
     ));
 }
 

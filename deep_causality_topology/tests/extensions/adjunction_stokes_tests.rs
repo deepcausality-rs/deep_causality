@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::Adjunction;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_topology::{
     BaseTopology, Chain, DifferentialForm, Simplex, SimplicialComplex, SimplicialComplexBuilder,
     StokesAdjunction, StokesContext,
@@ -279,7 +279,7 @@ fn test_boundary_1_chain_non_trivial() {
 
     // 1-chain with weight 1.0 on first edge
     let triplets: Vec<(usize, usize, f64)> = (0..num_edges).map(|i| (0, i, 1.0)).collect();
-    let weights = deep_causality_sparse::CsrMatrix::from_triplets(1, num_edges, &triplets).unwrap();
+    let weights = deep_causality_linear::CsrMatrix::from_triplets(1, num_edges, &triplets).unwrap();
     let chain = Chain::new(Arc::new(complex), 1, weights);
 
     let bd = StokesAdjunction::boundary(&ctx, &chain);

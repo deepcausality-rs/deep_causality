@@ -35,10 +35,7 @@ impl<W: NaturalNumber> MatrixView for PackedGf2<W> {
     fn get(&self, row: usize, col: usize) -> Result<Gf2, LinearError> {
         let (r, c) = self.dims();
         if row >= r || col >= c {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, col),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, col), (r, c)));
         }
         Ok(Gf2::new(self.bit_at(row, col)))
     }
@@ -51,10 +48,7 @@ impl<W: NaturalNumber> MatrixBuild for PackedGf2<W> {
     fn set(&mut self, row: usize, col: usize, value: Gf2) -> Result<(), LinearError> {
         let (r, c) = self.dims();
         if row >= r || col >= c {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, col),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, col), (r, c)));
         }
         if value.bit() {
             self.set_bit(row, col);
@@ -69,10 +63,7 @@ impl<W: NaturalNumber> RowOps for PackedGf2<W> {
     fn swap_rows(&mut self, a: usize, b: usize) -> Result<(), LinearError> {
         let (r, c) = self.dims();
         if a >= r || b >= r {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (a.max(b), 0),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((a.max(b), 0), (r, c)));
         }
         if a == b {
             return Ok(());
@@ -89,10 +80,7 @@ impl<W: NaturalNumber> RowOps for PackedGf2<W> {
     fn scale_row(&mut self, row: usize, factor: &Gf2, from_col: usize) -> Result<(), LinearError> {
         let (r, c) = self.dims();
         if row >= r {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, 0),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, 0), (r, c)));
         }
         if factor.bit() {
             return Ok(());
@@ -113,10 +101,7 @@ impl<W: NaturalNumber> RowOps for PackedGf2<W> {
     ) -> Result<(), LinearError> {
         let (r, c) = self.dims();
         if dst >= r || src >= r {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (dst.max(src), 0),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((dst.max(src), 0), (r, c)));
         }
         if !factor.bit() {
             return Ok(());

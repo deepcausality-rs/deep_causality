@@ -21,6 +21,29 @@ witnesses. Recorded rather than reproduced.
 
 Probed against the crate as published, not inferred from reading it.
 
+## Where it holds and where it does not
+
+Re-measured during phase 5, when the question of porting the impl into `deep_causality_linear` came
+up and the claim above had to be checked rather than repeated. `bind` collects every stored value and
+rebuilds as `shape: (1, count)` with `col_indices: (0..count)`, so both the shape and the column
+positions are discarded:
+
+| input | `m` | `bind(m, pure)` | law |
+|---|---|---|---|
+| 2×2 diagonal | shape (2,2), 2 stored | shape (1,2) | **violated** |
+| 3×3 sparse | shape (3,3), 2 stored | shape (1,2) | **violated** |
+| 1×3 full row | shape (1,3), cols [0,1,2] | identical | holds |
+| 1×1 | identical | identical | holds |
+| 1×3 with a gap | cols **[0,2]** | cols **[0,1]** | **violated** |
+
+Right identity holds exactly when `m` is already a fully-dense `1 × n` row — the shape `bind`
+happens to produce. The 2×2 in the original probe was dense, which is why its count was 4.
+
+The last row is the sharpest case and was not in the original probe. The value count is unchanged and
+the shape stays `1 × 3`, but the entry at column 2 **moves to column 1**. This is not a shape
+annotation being lost: a caller who binds a sparse row gets a matrix whose non-zeros are in different
+places, and nothing reports it.
+
 ## Why it is not a matter of taste
 
 Monad right identity is `bind(m, pure) == m`. It is one of the three laws the trait exists to

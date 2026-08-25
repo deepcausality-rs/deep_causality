@@ -45,8 +45,8 @@ fn assert_shape_invariant<K: ChainComplex>(complex: &K) {
 }
 
 fn csr_eq(
-    a: &deep_causality_sparse::CsrMatrix<i8>,
-    b: &deep_causality_sparse::CsrMatrix<i8>,
+    a: &deep_causality_linear::CsrMatrix<i8>,
+    b: &deep_causality_linear::CsrMatrix<i8>,
 ) -> bool {
     let (ar, ac) = a.shape();
     let (br, bc) = b.shape();

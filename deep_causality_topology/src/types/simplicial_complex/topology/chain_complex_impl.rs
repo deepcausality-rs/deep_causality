@@ -13,7 +13,7 @@
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
 use crate::{Simplex, SimplicialComplex};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, Tensor};
 use std::borrow::Cow;
 use std::iter::Cloned;

@@ -5,7 +5,7 @@
 
 //! The sparse matrix's API and the operator impls that carry it into the tower.
 
-use deep_causality_linear::{CsrMatrix, LinearError, MatrixBuild, MatrixView};
+use deep_causality_linear::{CsrMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView};
 use deep_causality_num::{One, Zero};
 
 fn m(triplets: &[(usize, usize, f64)], r: usize, c: usize) -> CsrMatrix<f64> {
@@ -128,7 +128,7 @@ fn test_add_matrix_rejects_a_shape_mismatch() {
     let b: CsrMatrix<f64> = CsrMatrix::zeros(2, 3);
     assert!(matches!(
         a.add_matrix(&b),
-        Err(LinearError::ShapeMismatch { .. })
+        Err(LinearError(LinearErrorEnum::ShapeMismatch { .. }))
     ));
 }
 
@@ -152,9 +152,12 @@ fn test_scalar_multiply_assign() {
 
 #[test]
 fn test_zero_one_and_their_predicates() {
-    let z: CsrMatrix<f64> = CsrMatrix::zero();
+    // Spelled through the traits: `CsrMatrix` also carries inherent `zero(rows, cols)` and
+    // `one(size)`, and an inherent method wins the name against a trait one. That shadowing is
+    // inherited deliberately from the crate this replaces, where the same pair exists.
+    let z: CsrMatrix<f64> = <CsrMatrix<f64> as Zero>::zero();
     assert!(z.is_zero());
-    let o: CsrMatrix<f64> = CsrMatrix::one();
+    let o: CsrMatrix<f64> = <CsrMatrix<f64> as One>::one();
     assert!(o.is_one());
     assert_eq!(o.shape(), (1, 1));
     let i2 = m(&[(0, 0, 1.0), (1, 1, 1.0)], 2, 2);

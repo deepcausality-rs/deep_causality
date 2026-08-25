@@ -4,9 +4,11 @@
  */
 
 pub mod cg;
+pub mod cholesky;
 pub mod decomposition;
 pub mod elimination;
 pub mod gf2;
 pub mod integer;
+pub mod kernels;
 pub mod norms;
 pub mod solve;

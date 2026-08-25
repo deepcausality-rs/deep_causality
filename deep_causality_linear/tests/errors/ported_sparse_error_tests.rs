@@ -26,10 +26,7 @@ use deep_causality_linear::LinearError;
 
 #[test]
 fn test_shape_mismatch_display_names_both_shapes() {
-    let error = LinearError::ShapeMismatch {
-        left: (2, 3),
-        right: (3, 2),
-    };
+    let error = LinearError::ShapeMismatch((2, 3), (3, 2));
     assert_eq!(
         format!("{error}"),
         "Shape mismatch: left is 2x3, right is 3x2."
@@ -38,10 +35,7 @@ fn test_shape_mismatch_display_names_both_shapes() {
 
 #[test]
 fn test_inner_dimension_mismatch_display_names_left_columns_and_right_rows() {
-    let error = LinearError::InnerDimensionMismatch {
-        left_cols: 3,
-        right_rows: 2,
-    };
+    let error = LinearError::InnerDimensionMismatch(3, 2);
     assert_eq!(
         format!("{error}"),
         "Inner dimension mismatch: left has 3 columns, right has 2 rows."
@@ -52,10 +46,7 @@ fn test_inner_dimension_mismatch_display_names_left_columns_and_right_rows() {
 fn test_index_out_of_bounds_display_names_the_position_and_the_shape() {
     // The sparse original was `IndexOutOfBounds(5, 3)`: index 5 into a dimension of size 3. The
     // same failure here is row 5 of a 3x3 matrix, and the message names the column too.
-    let error = LinearError::IndexOutOfBounds {
-        index: (5, 0),
-        shape: (3, 3),
-    };
+    let error = LinearError::IndexOutOfBounds((5, 0), (3, 3));
     assert_eq!(
         format!("{error}"),
         "Index out of bounds: (5, 0) is outside a 3x3 matrix."
@@ -64,7 +55,7 @@ fn test_index_out_of_bounds_display_names_the_position_and_the_shape() {
 
 #[test]
 fn test_empty_matrix_display_says_the_operation_has_no_meaning() {
-    let error = LinearError::EmptyMatrix;
+    let error = LinearError::EmptyMatrix();
     assert_eq!(
         format!("{error}"),
         "Empty matrix: the operation has no meaning on an empty matrix."
@@ -76,16 +67,13 @@ fn test_empty_matrix_display_says_the_operation_has_no_meaning() {
 fn test_linear_error_is_an_error_with_no_source() {
     use std::error::Error;
 
-    let error = LinearError::EmptyMatrix;
+    let error = LinearError::EmptyMatrix();
     assert!(error.source().is_none());
 }
 
 #[test]
 fn test_linear_error_debug_shows_the_variant_and_both_shapes() {
-    let error = LinearError::ShapeMismatch {
-        left: (1, 1),
-        right: (2, 2),
-    };
+    let error = LinearError::ShapeMismatch((1, 1), (2, 2));
     let debug_str = format!("{error:?}");
     assert!(debug_str.contains("ShapeMismatch"), "{debug_str}");
     assert!(debug_str.contains("(1, 1)"), "{debug_str}");
@@ -94,35 +82,23 @@ fn test_linear_error_debug_shows_the_variant_and_both_shapes() {
 
 #[test]
 fn test_linear_error_clones_to_an_equal_value() {
-    let error = LinearError::InnerDimensionMismatch {
-        left_cols: 10,
-        right_rows: 5,
-    };
+    let error = LinearError::InnerDimensionMismatch(10, 5);
     let cloned_error = error.clone();
     assert_eq!(error, cloned_error);
 }
 
 #[test]
 fn test_linear_error_compares_by_payload() {
-    let error1 = LinearError::IndexOutOfBounds {
-        index: (0, 0),
-        shape: (10, 10),
-    };
-    let error2 = LinearError::IndexOutOfBounds {
-        index: (0, 0),
-        shape: (10, 10),
-    };
-    let error3 = LinearError::IndexOutOfBounds {
-        index: (1, 0),
-        shape: (10, 10),
-    };
+    let error1 = LinearError::IndexOutOfBounds((0, 0), (10, 10));
+    let error2 = LinearError::IndexOutOfBounds((0, 0), (10, 10));
+    let error3 = LinearError::IndexOutOfBounds((1, 0), (10, 10));
     assert_eq!(error1, error2);
     assert_ne!(error1, error3);
 }
 
 #[test]
 fn test_linear_error_payload_free_variants_are_equal() {
-    let error1 = LinearError::EmptyMatrix;
-    let error2 = LinearError::EmptyMatrix;
+    let error1 = LinearError::EmptyMatrix();
+    let error2 = LinearError::EmptyMatrix();
     assert!(error1 == error2);
 }

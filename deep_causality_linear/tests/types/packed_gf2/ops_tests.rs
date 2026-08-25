@@ -5,7 +5,9 @@
 
 //! The operator impls for the bit-packed 𝔽₂ matrix, where arithmetic is word-parallel.
 
-use deep_causality_linear::{LinearError, MatrixBuild, MatrixView, PackedGf2, RowOps};
+use deep_causality_linear::{
+    LinearError, LinearErrorEnum, MatrixBuild, MatrixView, PackedGf2, RowOps,
+};
 use deep_causality_num::{Gf2, One, Zero};
 
 fn packed(bits: &[u8], r: usize, c: usize) -> PackedGf2<u8> {
@@ -184,10 +186,10 @@ fn test_the_row_operations_reject_an_out_of_range_row() {
     let out_of_range = |r: Result<(), LinearError>| {
         matches!(
             r,
-            Err(LinearError::IndexOutOfBounds {
+            Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
                 index: (5, 0),
                 shape: (2, 2)
-            })
+            }))
         )
     };
     assert!(out_of_range(a.swap_rows(0, 5)));

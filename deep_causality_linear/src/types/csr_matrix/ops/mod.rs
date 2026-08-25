@@ -41,10 +41,7 @@ where
     fn get(&self, row: usize, col: usize) -> Result<T, LinearError> {
         let (r, c) = self.shape();
         if row >= r || col >= c {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, col),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, col), (r, c)));
         }
         // A position inside the shape but outside the stored pattern is a zero, not an error.
         let (start, end) = (self.row_indices()[row], self.row_indices()[row + 1]);
@@ -69,10 +66,7 @@ where
     fn set(&mut self, row: usize, col: usize, value: T) -> Result<(), LinearError> {
         let (r, c) = self.shape();
         if row >= r || col >= c {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, col),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, col), (r, c)));
         }
         // Rebuilding is O(nnz) per write and this is not the construction path a caller should
         // reach for in a loop; `from_triplets` builds in one pass. `set` exists because

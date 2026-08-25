@@ -88,9 +88,10 @@ path = "../deep_causality_rand"
 version = "0.2"
 optional = true
 
-[dependencies.deep_causality_sparse]
-path = "../deep_causality_sparse"
-version = "0.2"
+[dependencies.deep_causality_linear]
+path = "../deep_causality_linear"
+version = "0.1"
+default-features = false
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"

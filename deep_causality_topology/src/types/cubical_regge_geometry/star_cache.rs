@@ -30,7 +30,7 @@
 use std::sync::OnceLock;
 
 use deep_causality_algebra::RealField;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 /// Per-grade diagonal Hodge ⋆ memo, fingerprint-guarded on the lattice the
 /// stars were first built for. See the module doc.

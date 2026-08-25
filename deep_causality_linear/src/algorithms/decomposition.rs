@@ -10,18 +10,45 @@
 //! example dependents need no edit. That makes the relocation a patch-level change for the tensor
 //! crate rather than a major one.
 //!
-//! Bounded on [`RealField`] throughout. These are iterative numerical algorithms — power iteration,
-//! Jacobi rotations, Householder reflections — that compare magnitudes and take square roots, so
-//! they need an ordered real. That excludes 𝔽₂, ℚ and ℤ, correctly: none of them has a singular
-//! value decomposition in any sense this code computes.
+//! These are iterative numerical algorithms — Jacobi rotations, Householder reflections, one-sided
+//! Jacobi — that compare magnitudes and take square roots. That excludes 𝔽₂, ℚ and ℤ, correctly:
+//! none of them has a singular value decomposition in any sense this code computes.
+//!
+//! # Bounded on `ConjugateScalar`, because complex is not ordered
+//!
+//! Every entry point here is bounded on [`ConjugateScalar`], which spans real fields, dual numbers
+//! and complex. Magnitudes and thresholds live in `T::Real` and only the rotations are injected
+//! back into `T`, so a Hermitian complex matrix decomposes as readily as a real symmetric one — the
+//! case a density matrix needs. `RealField` could never cover it: `Complex` is unordered.
+//!
+//! [`svd`], [`svd_sorted`], [`svd_truncated`] and [`singular_values`] are on the same bound: the
+//! one-sided Jacobi splits each complex 2x2 sub-problem into a real angle and a phase, so it
+//! orthogonalises columns under the Hermitian inner product without ever ordering a complex value.
+//!
+//! # Read-only, so a view is enough
+//!
+//! [`qr`] and [`eigen_hermitian`] take [`MatrixView`] rather than [`RowOps`]. They never mutate a
+//! row — they copy the entries out and work on a flat buffer — so requiring the mutating trait
+//! excluded every read-only representation for nothing. `CausalTensor` is the one that matters:
+//! in-place row mutation has no meaning on a tensor of rank three, and it does not need one.
 
+use crate::algorithms::kernels;
 use crate::errors::linear_error::LinearError;
-use crate::traits::row_ops::RowOps;
+use crate::traits::matrix_view::MatrixView;
 use crate::types::dense_matrix::DenseMatrix;
 use crate::types::dense_vector::DenseVector;
 use alloc::vec::Vec;
-use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::{One, Zero};
+use deep_causality_algebra::ConjugateScalar;
+use deep_causality_num::Zero;
+
+/// Copies a view's entries into a flat row-major buffer.
+///
+/// The kernels work on a slice, so every entry is read once here rather than through the trait in
+/// an inner loop. A representation holding its entries contiguously overrides
+/// [`MatrixView::to_row_major`] and this becomes the copy.
+pub(crate) fn flatten<M: MatrixView>(m: &M) -> Result<Vec<M::Scalar>, LinearError> {
+    m.to_row_major()
+}
 
 /// The three factors of a singular value decomposition: `U`, `S` and `Vᵀ`.
 ///
@@ -37,11 +64,35 @@ pub type QrFactors<T> = (DenseMatrix<T>, DenseMatrix<T>);
 /// The eigenvalues and eigenvectors of a Hermitian matrix.
 pub type EigenPair<T> = (DenseVector<T>, DenseMatrix<T>);
 
+/// The full singular value decomposition with **real** singular values, sorted descending.
+///
+/// `(U, sigma, Vᴴ)` with `U` of `m × k`, `sigma` of length `k` and `Vᴴ` of `k × n`, where
+/// `k = min(m, n)`.
+///
+/// # Why the singular values come back real
+///
+/// They are real, for a complex matrix as much as a real one — `A = U Σ Vᴴ` with `Σ` real
+/// non-negative diagonal is what the decomposition *is*. [`svd`] injects them back into the scalar
+/// type to keep the shape `CausalTensor::svd` returns; this is the entry point for a caller that
+/// wants the spectrum itself, and for one applying its own truncation policy to it.
+pub type SvdReal<T> = (
+    DenseMatrix<T>,
+    Vec<<T as ConjugateScalar>::Real>,
+    DenseMatrix<T>,
+);
+
 /// The singular value decomposition, as `(U, S, Vᵀ)`.
 ///
 /// `U` and `Vᵀ` are matrices and `S` is a vector of the singular values, matching what
-/// `CausalTensor::svd` returns today — that method has to delegate here without changing its return
-/// shape.
+/// `CausalTensor::svd` returns — that method delegates here and must not change its return shape.
+///
+/// **Thin:** `U` is `m × k`, `S` has length `k` and `Vᵀ` is `k × n` with `k = min(m, n)`. A matrix
+/// has `min(m, n)` singular values and no more; returning `n` of them for a wide matrix means
+/// returning zeros dressed as a spectrum.
+///
+/// The singular values are real and are injected back into the scalar type here. A caller that
+/// wants them as reals — to apply a tolerance, or to read a condition number — should use
+/// [`svd_sorted`], which does not do the round trip.
 ///
 /// # The empty matrix is decomposed, not rejected
 ///
@@ -49,138 +100,84 @@ pub type EigenPair<T> = (DenseVector<T>, DenseMatrix<T>);
 /// being replaced does.
 pub fn svd<M>(m: &M) -> Result<SvdFactors<M::Scalar>, LinearError>
 where
-    M: RowOps + Clone,
-    M::Scalar: RealField,
+    M: MatrixView,
+    M::Scalar: ConjugateScalar,
 {
-    svd_impl(m, None)
+    let (u, sigma, vt) = svd_sorted(m)?;
+    let s = sigma
+        .into_iter()
+        .map(<M::Scalar as ConjugateScalar>::from_real)
+        .collect();
+    Ok((u, DenseVector::from_vec(s), vt))
 }
 
-/// One-sided Jacobi: rotate pairs of columns until they are orthogonal.
+/// The full decomposition, singular values real and sorted descending.
 ///
-/// Chosen over power iteration because it converges for repeated and clustered singular values,
-/// which the identity has in abundance and which the delegation baseline shows the existing
-/// implementation handling only to about 1e-8.
-fn svd_impl<M>(
-    m: &M,
-    keep: Option<&Truncation<M::Scalar>>,
-) -> Result<SvdFactors<M::Scalar>, LinearError>
+/// The shared body of [`svd`] and [`svd_truncated`], and the entry point a caller with its own
+/// truncation policy applies that policy to: the factors come back at full rank `k = min(m, n)`
+/// with the values sorted, so keeping the leading `k' ≤ k` of them is a slice.
+pub fn svd_sorted<M>(m: &M) -> Result<SvdReal<M::Scalar>, LinearError>
 where
-    M: RowOps + Clone,
-    M::Scalar: RealField,
+    M: MatrixView,
+    M::Scalar: ConjugateScalar,
 {
     let (rows, cols) = (m.rows(), m.cols());
     if rows == 0 || cols == 0 {
         // The baseline decomposes the empty matrix rather than rejecting it.
         return Ok((
-            DenseMatrix::from_vec(alloc::vec::Vec::new(), rows, rows).expect("empty"),
-            DenseVector::from_vec(alloc::vec::Vec::new()),
-            DenseMatrix::from_vec(alloc::vec::Vec::new(), cols, cols).expect("empty"),
+            DenseMatrix::from_vec(Vec::new(), rows, 0).expect("empty"),
+            Vec::new(),
+            DenseMatrix::from_vec(Vec::new(), 0, cols).expect("empty"),
         ));
     }
+    let flat = flatten(m)?;
 
-    // u holds the working columns, v the accumulated right rotations.
-    let mut u = alloc::vec![M::Scalar::zero(); rows * cols];
-    for i in 0..rows {
-        for j in 0..cols {
-            u[i * cols + j] = m.get(i, j)?;
+    // One-sided Jacobi needs `rows >= cols`. A wide matrix is decomposed through its conjugate
+    // transpose, and the roles of U and V swap on the way out: from `Aᴴ = U' Σ V'ᴴ` it follows that
+    // `A = V' Σ U'ᴴ`, so `U = V'` and `Vᴴ = U'ᴴ`.
+    let transposed = rows < cols;
+    let (wr, wc, work) = if transposed {
+        (cols, rows, kernels::conj_transpose(&flat, rows, cols))
+    } else {
+        (rows, cols, flat)
+    };
+
+    let (u_full, sigma, v_full) = kernels::jacobi_svd::<M::Scalar>(work, wr, wc);
+
+    let mut order: Vec<usize> = (0..wc).collect();
+    order.sort_by(|&a, &b| {
+        sigma[b]
+            .partial_cmp(&sigma[a])
+            .unwrap_or(core::cmp::Ordering::Equal)
+    });
+
+    let k = wc; // = min(rows, cols) either way round
+    let (left, right, left_rows, right_rows) = if transposed {
+        (&v_full, &u_full, wc, wr)
+    } else {
+        (&u_full, &v_full, wr, wc)
+    };
+
+    let mut u_out = alloc::vec![M::Scalar::zero(); left_rows * k];
+    for (col, &j) in order.iter().take(k).enumerate() {
+        for row in 0..left_rows {
+            u_out[row * k + col] = left[row * wc + j];
         }
     }
-    let mut v = alloc::vec![M::Scalar::zero(); cols * cols];
-    for i in 0..cols {
-        v[i * cols + i] = M::Scalar::one();
-    }
-
-    let two = M::Scalar::one() + M::Scalar::one();
-    let eps = M::Scalar::epsilon();
-    for _ in 0..60 {
-        let mut off = M::Scalar::zero();
-        for p in 0..cols {
-            for q in (p + 1)..cols {
-                let mut alpha = M::Scalar::zero();
-                let mut beta = M::Scalar::zero();
-                let mut gamma = M::Scalar::zero();
-                for i in 0..rows {
-                    let (a, b) = (u[i * cols + p], u[i * cols + q]);
-                    alpha += a * a;
-                    beta += b * b;
-                    gamma += a * b;
-                }
-                if gamma.abs() <= eps * (alpha * beta).sqrt() {
-                    continue;
-                }
-                off += gamma.abs();
-                let zeta = (beta - alpha) / (two * gamma);
-                let sign = if zeta >= M::Scalar::zero() {
-                    M::Scalar::one()
-                } else {
-                    M::Scalar::zero() - M::Scalar::one()
-                };
-                let t = sign / (zeta.abs() + (M::Scalar::one() + zeta * zeta).sqrt());
-                let c = M::Scalar::one() / (M::Scalar::one() + t * t).sqrt();
-                let s = c * t;
-                for i in 0..rows {
-                    let (a, b) = (u[i * cols + p], u[i * cols + q]);
-                    u[i * cols + p] = c * a - s * b;
-                    u[i * cols + q] = s * a + c * b;
-                }
-                for i in 0..cols {
-                    let (a, b) = (v[i * cols + p], v[i * cols + q]);
-                    v[i * cols + p] = c * a - s * b;
-                    v[i * cols + q] = s * a + c * b;
-                }
-            }
-        }
-        if off <= eps {
-            break;
+    // Row `r` of Vᴴ is the conjugate of the r-th right singular vector.
+    let mut vt_out = alloc::vec![M::Scalar::zero(); k * right_rows];
+    for (r, &j) in order.iter().take(k).enumerate() {
+        for c in 0..right_rows {
+            vt_out[r * right_rows + c] = right[c * wc + j].conjugate();
         }
     }
-
-    // The singular values are the column norms; normalising the columns gives U.
-    let mut order: Vec<(usize, M::Scalar)> = (0..cols)
-        .map(|j| {
-            let mut acc = M::Scalar::zero();
-            for i in 0..rows {
-                acc += u[i * cols + j] * u[i * cols + j];
-            }
-            (j, acc.sqrt())
-        })
-        .collect();
-    order.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(core::cmp::Ordering::Equal));
-
-    let mut keep_count = order.len();
-    if let Some(spec) = keep {
-        keep_count = match spec {
-            Truncation::Rank(k) => (*k).min(keep_count),
-            Truncation::Tolerance(t) => order.iter().filter(|(_, s)| *s > *t).count(),
-            Truncation::RankAndTolerance { rank, tolerance } => order
-                .iter()
-                .filter(|(_, s)| *s > *tolerance)
-                .count()
-                .min(*rank),
-        };
-    }
-
-    let mut u_out = alloc::vec![M::Scalar::zero(); rows * keep_count];
-    let mut s_out = alloc::vec::Vec::with_capacity(keep_count);
-    let mut vt_out = alloc::vec![M::Scalar::zero(); keep_count * cols];
-    for (k, &(j, sigma)) in order.iter().take(keep_count).enumerate() {
-        s_out.push(sigma);
-        for i in 0..rows {
-            u_out[i * keep_count + k] = if sigma > eps {
-                u[i * cols + j] / sigma
-            } else {
-                M::Scalar::zero()
-            };
-        }
-        for i in 0..cols {
-            vt_out[k * cols + i] = v[i * cols + j];
-        }
-    }
+    let s_out: Vec<<M::Scalar as ConjugateScalar>::Real> =
+        order.iter().take(k).map(|&j| sigma[j]).collect();
 
     Ok((
-        DenseMatrix::from_vec(u_out, rows, keep_count).expect("built from the shape"),
-        DenseVector::from_vec(s_out),
-        DenseMatrix::from_vec(vt_out, keep_count, cols).expect("built from the shape"),
+        DenseMatrix::from_vec(u_out, left_rows, k).expect("built from the shape"),
+        s_out,
+        DenseMatrix::from_vec(vt_out, k, right_rows).expect("built from the shape"),
     ))
 }
 
@@ -191,8 +188,8 @@ where
 /// a condition number and a spectral norm each need the values and none of them needs the vectors.
 pub fn singular_values<M>(m: &M) -> Result<DenseVector<M::Scalar>, LinearError>
 where
-    M: RowOps + Clone,
-    M::Scalar: RealField,
+    M: MatrixView,
+    M::Scalar: ConjugateScalar,
 {
     Ok(svd(m)?.1)
 }
@@ -202,15 +199,48 @@ where
 /// `CausalTensor::svd_truncated` takes a `Truncation<T::Real>` rather than a bare rank, and the
 /// distinction is load-bearing: truncating at a fixed rank and truncating at a tolerance are
 /// different requests, and the tensor-train code that calls this uses both.
+///
+/// The tolerance is in `T::Real`, because that is what a singular value is. A complex tolerance
+/// would have no ordering to compare against.
 pub fn svd_truncated<M>(
     m: &M,
-    spec: &Truncation<M::Scalar>,
+    spec: &Truncation<<M::Scalar as ConjugateScalar>::Real>,
 ) -> Result<SvdFactors<M::Scalar>, LinearError>
 where
-    M: RowOps + Clone,
-    M::Scalar: RealField,
+    M: MatrixView,
+    M::Scalar: ConjugateScalar,
 {
-    svd_impl(m, Some(spec))
+    let (u, sigma, vt) = svd_sorted(m)?;
+    // The values arrive sorted descending, so every gate is a prefix length and truncation is a
+    // slice rather than a selection.
+    let keep = match spec {
+        Truncation::Rank(k) => (*k).min(sigma.len()),
+        Truncation::Tolerance(t) => sigma.iter().filter(|s| *s > t).count(),
+        Truncation::RankAndTolerance { rank, tolerance } => {
+            sigma.iter().filter(|s| *s > tolerance).count().min(*rank)
+        }
+    };
+
+    let (rows, k_full) = u.shape();
+    let (_, cols) = vt.shape();
+    let mut u_out = alloc::vec![M::Scalar::zero(); rows * keep];
+    for i in 0..rows {
+        for j in 0..keep {
+            u_out[i * keep + j] = u.as_slice()[i * k_full + j];
+        }
+    }
+    let vt_out = vt.as_slice()[..keep * cols].to_vec();
+    let s_out = sigma
+        .into_iter()
+        .take(keep)
+        .map(<M::Scalar as ConjugateScalar>::from_real)
+        .collect();
+
+    Ok((
+        DenseMatrix::from_vec(u_out, rows, keep).expect("built from the shape"),
+        DenseVector::from_vec(s_out),
+        DenseMatrix::from_vec(vt_out, keep, cols).expect("built from the shape"),
+    ))
 }
 
 /// How a truncated decomposition decides what to keep.
@@ -229,134 +259,60 @@ pub enum Truncation<R> {
 }
 
 /// The QR decomposition, as `(Q, R)`.
+///
+/// Thin: `Q` is `m×k` and `R` is `k×n` with `k = min(m, n)`. For a wide matrix that is narrower than
+/// the input, because a `Q` with more columns than rows cannot have orthonormal columns.
+///
+/// Bounded on `ConjugateScalar` rather than `RealField`, so it admits complex and dual scalars as
+/// well as real ones. See [`kernels`](crate::algorithms::kernels) for why that is the right bound
+/// and what reduces to what for a real scalar.
+///
+/// # Errors
+///
+/// [`LinearError::IndexOutOfBounds`] if the view refuses a position inside its own shape.
 pub fn qr<M>(m: &M) -> Result<QrFactors<M::Scalar>, LinearError>
 where
-    M: RowOps + Clone,
-    M::Scalar: RealField,
+    M: MatrixView,
+    M::Scalar: ConjugateScalar,
 {
-    // Modified Gram-Schmidt: numerically better behaved than the classical form, and enough for
-    // the sizes this workspace factorises.
     let (rows, cols) = (m.rows(), m.cols());
-    let mut a = alloc::vec![M::Scalar::zero(); rows * cols];
-    for i in 0..rows {
-        for j in 0..cols {
-            a[i * cols + j] = m.get(i, j)?;
-        }
-    }
-    let mut q = alloc::vec![M::Scalar::zero(); rows * cols];
-    let mut r = alloc::vec![M::Scalar::zero(); cols * cols];
-
-    for k in 0..cols {
-        let mut norm = M::Scalar::zero();
-        for i in 0..rows {
-            norm += a[i * cols + k] * a[i * cols + k];
-        }
-        let norm = norm.sqrt();
-        r[k * cols + k] = norm;
-        for i in 0..rows {
-            q[i * cols + k] = if norm > M::Scalar::epsilon() {
-                a[i * cols + k] / norm
-            } else {
-                M::Scalar::zero()
-            };
-        }
-        for j in (k + 1)..cols {
-            let mut dot = M::Scalar::zero();
-            for i in 0..rows {
-                dot += q[i * cols + k] * a[i * cols + j];
-            }
-            r[k * cols + j] = dot;
-            for i in 0..rows {
-                a[i * cols + j] -= dot * q[i * cols + k];
-            }
-        }
-    }
-
+    let a = flatten(m)?;
+    let (q, r, k) = kernels::householder_qr(&a, rows, cols);
     Ok((
-        DenseMatrix::from_vec(q, rows, cols).expect("built from the shape"),
-        DenseMatrix::from_vec(r, cols, cols).expect("built from the shape"),
+        DenseMatrix::from_vec(q, rows, k).expect("built from the shape"),
+        DenseMatrix::from_vec(r, k, cols).expect("built from the shape"),
     ))
 }
 
 /// The eigendecomposition of a Hermitian matrix, as `(eigenvalues, eigenvectors)`.
 ///
+/// The columns of the returned matrix are the eigenvectors, so `A = V diag(λ) Vᴴ`. The eigenvalues
+/// are unsorted.
+///
 /// The eigenvalues come back as a [`DenseVector`] where `CausalTensor::eigen_hermitian` returns a
 /// bare `Vec<T>`. The delegating method converts, which costs one allocation it already pays; the
 /// vector type is what the rest of this crate speaks, and returning a bare `Vec` here would put the
 /// tensor crate's choice into an API that has a vector of its own.
+///
+/// Bounded on `ConjugateScalar`, so a Hermitian complex matrix decomposes here as well as a real
+/// symmetric one — which is the case `deep_causality_quantum` needs for a density matrix.
+///
+/// # Errors
+///
+/// [`LinearError::NotSquare`] if the matrix is not square.
 pub fn eigen_hermitian<M>(m: &M) -> Result<EigenPair<M::Scalar>, LinearError>
 where
-    M: RowOps + Clone,
-    M::Scalar: RealField,
+    M: MatrixView,
+    M::Scalar: ConjugateScalar,
 {
     let (rows, cols) = (m.rows(), m.cols());
     if rows != cols {
-        return Err(LinearError::NotSquare {
-            shape: (rows, cols),
-        });
+        return Err(LinearError::NotSquare((rows, cols)));
     }
-    let n = rows;
-    let mut a = alloc::vec![M::Scalar::zero(); n * n];
-    for i in 0..n {
-        for j in 0..n {
-            a[i * n + j] = m.get(i, j)?;
-        }
-    }
-    let mut v = alloc::vec![M::Scalar::zero(); n * n];
-    for i in 0..n {
-        v[i * n + i] = M::Scalar::one();
-    }
-
-    // The cyclic Jacobi eigenvalue algorithm: zero the largest off-diagonal by rotation, repeat.
-    // Symmetric by assumption, which is what `hermitian` in the name promises the caller has.
-    let two = M::Scalar::one() + M::Scalar::one();
-    let eps = M::Scalar::epsilon();
-    for _ in 0..100 {
-        let mut off = M::Scalar::zero();
-        for p in 0..n {
-            for q in (p + 1)..n {
-                off += a[p * n + q] * a[p * n + q];
-            }
-        }
-        if off.sqrt() <= eps {
-            break;
-        }
-        for p in 0..n {
-            for q in (p + 1)..n {
-                if a[p * n + q].abs() <= eps {
-                    continue;
-                }
-                let theta = (a[q * n + q] - a[p * n + p]) / (two * a[p * n + q]);
-                let sign = if theta >= M::Scalar::zero() {
-                    M::Scalar::one()
-                } else {
-                    M::Scalar::zero() - M::Scalar::one()
-                };
-                let t = sign / (theta.abs() + (theta * theta + M::Scalar::one()).sqrt());
-                let c = M::Scalar::one() / (t * t + M::Scalar::one()).sqrt();
-                let s = t * c;
-                for k in 0..n {
-                    let (akp, akq) = (a[k * n + p], a[k * n + q]);
-                    a[k * n + p] = c * akp - s * akq;
-                    a[k * n + q] = s * akp + c * akq;
-                }
-                for k in 0..n {
-                    let (apk, aqk) = (a[p * n + k], a[q * n + k]);
-                    a[p * n + k] = c * apk - s * aqk;
-                    a[q * n + k] = s * apk + c * aqk;
-                }
-                for k in 0..n {
-                    let (vkp, vkq) = (v[k * n + p], v[k * n + q]);
-                    v[k * n + p] = c * vkp - s * vkq;
-                    v[k * n + q] = s * vkp + c * vkq;
-                }
-            }
-        }
-    }
-
-    let values: Vec<M::Scalar> = (0..n).map(|i| a[i * n + i]).collect();
+    let a = flatten(m)?;
+    let (values, v) = kernels::sym_eig(&a, rows);
     Ok((
         DenseVector::from_vec(values),
-        DenseMatrix::from_vec(v, n, n).expect("built from the shape"),
+        DenseMatrix::from_vec(v, rows, rows).expect("built from the shape"),
     ))
 }

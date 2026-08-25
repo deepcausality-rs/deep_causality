@@ -70,13 +70,7 @@ fn test_add_matrix_rejects_two_different_shapes() {
 
     let err = a.add_matrix(&b).unwrap_err();
 
-    assert_eq!(
-        err,
-        LinearError::ShapeMismatch {
-            left: (2, 2),
-            right: (2, 3)
-        }
-    );
+    assert_eq!(err, LinearError::ShapeMismatch((2, 2), (2, 3)));
 }
 
 #[test]
@@ -128,13 +122,7 @@ fn test_vec_mult_rejects_a_vector_of_the_wrong_length() {
 
     let err = a.vec_mult(&x_invalid).unwrap_err();
 
-    assert_eq!(
-        err,
-        LinearError::LengthMismatch {
-            expected: 3,
-            found: 2
-        }
-    );
+    assert_eq!(err, LinearError::LengthMismatch(3, 2));
 }
 
 #[test]
@@ -161,13 +149,7 @@ fn test_mat_mult_rejects_inner_dimensions_that_do_not_meet() {
 
     let err = a.mat_mult(&b).unwrap_err();
 
-    assert_eq!(
-        err,
-        LinearError::InnerDimensionMismatch {
-            left_cols: 2,
-            right_rows: 3
-        }
-    );
+    assert_eq!(err, LinearError::InnerDimensionMismatch(2, 3));
 }
 
 #[test]

@@ -5,6 +5,10 @@
 #[cfg(test)]
 mod causal_tensor_ext_hkt_tests;
 #[cfg(test)]
+mod causal_tensor_ext_iso_tests;
+#[cfg(test)]
+mod causal_tensor_ext_linear_tests;
+#[cfg(test)]
 mod causal_tensor_ext_math_f32_tests;
 #[cfg(test)]
 mod causal_tensor_ext_math_f64_tests;

@@ -76,13 +76,7 @@ fn test_from_triplets_of_nothing_gives_all_zero_row_pointers() {
 fn test_from_triplets_rejects_a_row_far_past_the_row_count() {
     let triplets = vec![(0, 0, 1.0), (5, 1, 2.0)];
     let err = CsrMatrix::from_triplets(2, 2, &triplets).unwrap_err();
-    assert_eq!(
-        err,
-        LinearError::IndexOutOfBounds {
-            index: (5, 1),
-            shape: (2, 2),
-        }
-    );
+    assert_eq!(err, LinearError::IndexOutOfBounds((5, 1), (2, 2)));
 }
 
 #[test]
@@ -129,26 +123,14 @@ fn test_from_triplets_drops_a_cancelled_position_and_an_explicit_zero_together()
 fn test_from_triplets_rejects_a_row_one_past_the_row_count() {
     let triplets = vec![(0, 0, 1.0), (2, 1, 2.0)];
     let err = CsrMatrix::from_triplets(2, 2, &triplets).unwrap_err();
-    assert_eq!(
-        err,
-        LinearError::IndexOutOfBounds {
-            index: (2, 1),
-            shape: (2, 2),
-        }
-    );
+    assert_eq!(err, LinearError::IndexOutOfBounds((2, 1), (2, 2)));
 }
 
 #[test]
 fn test_from_triplets_rejects_a_column_one_past_the_column_count() {
     let triplets = vec![(0, 0, 1.0), (1, 2, 2.0)];
     let err = CsrMatrix::from_triplets(2, 2, &triplets).unwrap_err();
-    assert_eq!(
-        err,
-        LinearError::IndexOutOfBounds {
-            index: (1, 2),
-            shape: (2, 2),
-        }
-    );
+    assert_eq!(err, LinearError::IndexOutOfBounds((1, 2), (2, 2)));
 }
 
 #[test]
@@ -189,13 +171,7 @@ fn test_from_triplets_checks_a_row_against_the_row_count_of_a_wide_matrix() {
     // 3x10: row 5 is past the three rows, and the column is inside the ten columns.
     let triplets = vec![(5, 1, 1.0)];
     let err = CsrMatrix::from_triplets(3, 10, &triplets).unwrap_err();
-    assert_eq!(
-        err,
-        LinearError::IndexOutOfBounds {
-            index: (5, 1),
-            shape: (3, 10),
-        }
-    );
+    assert_eq!(err, LinearError::IndexOutOfBounds((5, 1), (3, 10)));
 }
 
 #[test]
@@ -203,13 +179,7 @@ fn test_from_triplets_checks_a_column_against_the_column_count_of_a_tall_matrix(
     // 10x3: column 5 is past the three columns, and the row is inside the ten rows.
     let triplets = vec![(1, 5, 1.0)];
     let err = CsrMatrix::from_triplets(10, 3, &triplets).unwrap_err();
-    assert_eq!(
-        err,
-        LinearError::IndexOutOfBounds {
-            index: (1, 5),
-            shape: (10, 3),
-        }
-    );
+    assert_eq!(err, LinearError::IndexOutOfBounds((1, 5), (10, 3)));
 }
 
 #[test]
@@ -218,11 +188,5 @@ fn test_from_triplets_reports_both_coordinates_and_the_shape_it_checked_them_aga
     // position and the whole shape, so the reader can see which coordinate failed.
     let triplets = vec![(6, 50, 1.0)];
     let err = CsrMatrix::from_triplets(5, 100, &triplets).unwrap_err();
-    assert_eq!(
-        err,
-        LinearError::IndexOutOfBounds {
-            index: (6, 50),
-            shape: (5, 100),
-        }
-    );
+    assert_eq!(err, LinearError::IndexOutOfBounds((6, 50), (5, 100)));
 }

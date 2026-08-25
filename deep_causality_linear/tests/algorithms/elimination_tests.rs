@@ -8,8 +8,8 @@
 use deep_causality_linear::utils_tests::fixtures_cayley_menger::*;
 use deep_causality_linear::utils_tests::fixtures_matrix::*;
 use deep_causality_linear::{
-    DenseMatrix, LinearError, MatrixBuild, MatrixView, determinant, image_basis, kernel_basis,
-    rank, rank_stable, rref, rref_stable,
+    DenseMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView, determinant, image_basis,
+    kernel_basis, rank, rank_stable, rref, rref_stable,
 };
 
 fn dense(f: (Vec<f64>, usize, usize)) -> DenseMatrix<f64> {
@@ -176,7 +176,7 @@ fn test_determinant_rejects_a_non_square_matrix() {
     let m: DenseMatrix<f64> = DenseMatrix::zeros(2, 3);
     let e = determinant(&m).unwrap_err();
     assert!(
-        matches!(e, LinearError::NotSquare { shape: (2, 3) }),
+        matches!(e, LinearError(LinearErrorEnum::NotSquare { shape: (2, 3) })),
         "got {e:?}"
     );
 }

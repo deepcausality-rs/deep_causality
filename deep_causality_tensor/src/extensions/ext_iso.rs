@@ -6,7 +6,6 @@
 //! Feature-gated isomorphism between rank-2 [`CausalTensor<F>`] and
 //! [`CsrMatrix<F>`].
 //!
-//! This module is enabled by the `tensor-iso` Cargo feature. Off by
 //! default so that downstream sparse users who don't need the tensor
 //! interop don't pay the compile cost of pulling in
 //! `deep_causality_tensor`.
@@ -18,7 +17,6 @@
 //! ## Design (mixed-tier)
 //!
 //! `deep_causality_sparse` depends on `deep_causality_tensor` (via the
-//! `tensor-iso` feature); the reverse is blocked by the orphan rule and
 //! by the dependency direction. The iso ships in two pieces, both
 //! rooted in this crate:
 //!
@@ -39,13 +37,13 @@
 //! `RingIso`, etc. would not type-check. The base `Iso<S, T>` is the
 //! right surface.
 
-use crate::CsrMatrix;
+use crate::CausalTensor;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt;
+use deep_causality_algebra::CommutativeSemiring;
 use deep_causality_algebra::iso::witness::Iso;
-use deep_causality_num::Zero;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_linear::CsrMatrix;
 
 /// Error returned by [`CsrMatrix::try_from`] when the input
 /// [`CausalTensor`] has a rank other than 2.
@@ -78,7 +76,7 @@ impl core::error::Error for CsrFromTensorError {}
 
 impl<F> TryFrom<CausalTensor<F>> for CsrMatrix<F>
 where
-    F: Clone + Copy + Zero + PartialEq,
+    F: CommutativeSemiring + Copy + PartialEq,
 {
     type Error = CsrFromTensorError;
 
@@ -118,7 +116,7 @@ where
 
 impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>
 where
-    F: Clone + Copy + Zero + PartialEq,
+    F: CommutativeSemiring + Copy + PartialEq,
 {
     /// Materialise this sparse matrix as a dense rank-2
     /// [`CausalTensor`] of the matching shape. Missing entries are
@@ -161,29 +159,42 @@ where
 }
 
 // =============================================================================
-// Ergonomic alias
+// Ergonomic alias, as an extension trait
 // =============================================================================
 
-impl<F> CsrMatrix<F>
-where
-    F: Clone + Copy + Zero + PartialEq,
-{
-    /// Materialise this sparse matrix as a dense rank-2
-    /// [`CausalTensor`]. Equivalent to
-    /// `<Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)`.
+/// `to_dense` for a sparse matrix, as an extension trait.
+///
+/// # Why a trait rather than an inherent method
+///
+/// `CsrMatrix` belongs to `deep_causality_linear` and this conversion belongs here — a crate cannot
+/// write an inherent `impl` for a type it does not own (E0116). The trait impl is allowed because
+/// `CausalTensor` is local, which is the same reason the [`TryFrom`] and [`Iso`] impls above can
+/// live here. A caller brings the method into scope with a `use`.
+pub trait ToDenseTensor<F> {
+    /// Materialises this sparse matrix as a dense rank-2 [`CausalTensor`].
     ///
-    /// Available only with the `tensor-iso` feature enabled.
+    /// Equivalent to `<Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)`. Missing
+    /// entries become `F::zero()`.
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// use deep_causality_sparse::CsrMatrix;
-    /// let triplets = vec![(0, 0, 1.0), (1, 2, 6.0)];
-    /// let sparse = CsrMatrix::from_triplets(2, 3, &triplets).unwrap();
+    /// ```
+    /// use deep_causality_linear::CsrMatrix;
+    /// use deep_causality_tensor::ToDenseTensor;
+    ///
+    /// let sparse = CsrMatrix::from_triplets(2, 3, &[(0, 0, 1.0), (1, 2, 6.0)]).unwrap();
     /// let dense = sparse.to_dense();
     /// assert_eq!(dense.shape(), &[2, 3]);
+    /// assert_eq!(dense.as_slice(), &[1.0, 0.0, 0.0, 0.0, 0.0, 6.0]);
     /// ```
-    pub fn to_dense(self) -> CausalTensor<F> {
+    fn to_dense(self) -> CausalTensor<F>;
+}
+
+impl<F> ToDenseTensor<F> for CsrMatrix<F>
+where
+    F: CommutativeSemiring + Copy + PartialEq,
+{
+    fn to_dense(self) -> CausalTensor<F> {
         <Self as Iso<CsrMatrix<F>, CausalTensor<F>>>::to_target(self)
     }
 }

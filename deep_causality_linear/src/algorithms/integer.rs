@@ -59,9 +59,7 @@ where
 {
     let (rows, cols) = (m.rows(), m.cols());
     if rows != cols {
-        return Err(LinearError::NotSquare {
-            shape: (rows, cols),
-        });
+        return Err(LinearError::NotSquare((rows, cols)));
     }
     let n = rows;
     if n == 0 {
@@ -115,14 +113,12 @@ where
 /// on overflow in debug builds and wraps in release, so an after-the-fact check runs after the
 /// panic in one profile and against a wrapped value in the other.
 fn mul_or_overflow<T: EuclideanDomain>(a: &T, b: &T, op: &'static str) -> Result<T, LinearError> {
-    a.checked_mul(b)
-        .ok_or(LinearError::Overflow { operation: op })
+    a.checked_mul(b).ok_or(LinearError::Overflow(op))
 }
 
 /// Subtracts, reporting an overflow rather than wrapping or panicking.
 fn sub_or_overflow<T: EuclideanDomain>(a: &T, b: &T, op: &'static str) -> Result<T, LinearError> {
-    a.checked_sub(b)
-        .ok_or(LinearError::Overflow { operation: op })
+    a.checked_sub(b).ok_or(LinearError::Overflow(op))
 }
 
 /// The rank of an integer matrix, exactly.

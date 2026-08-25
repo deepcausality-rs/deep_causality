@@ -20,8 +20,8 @@
 
 use crate::{Simplex, Skeleton, TopologyError};
 use deep_causality_algebra::RealField;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::FromPrimitive;
-use deep_causality_sparse::CsrMatrix;
 
 fn euclidean_distance<T>(p1: &[T], p2: &[T]) -> T
 where

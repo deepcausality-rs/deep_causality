@@ -5,6 +5,8 @@
 #[cfg(test)]
 mod algebra_tests;
 #[cfg(test)]
+mod compat_tests;
+#[cfg(test)]
 mod ops_tests;
 #[cfg(test)]
 mod ported_algebra_tests;

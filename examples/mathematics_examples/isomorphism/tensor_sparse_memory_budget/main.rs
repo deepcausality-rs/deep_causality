@@ -30,13 +30,16 @@
 //!   returns `Err(CsrFromTensorError { rank })` on rank ≠ 2).
 //! - `impl<F> Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>` (Tier 2
 //!   reverse, on `CsrMatrix<F>` as `Self`).
-//! - `CsrMatrix::to_dense()` inherent alias for the Tier 2 reverse.
+//! - `ToDenseTensor::to_dense()` for the Tier 2 reverse. An extension trait rather than an
+//!   inherent method: `CsrMatrix` belongs to `deep_causality_linear` and the conversion belongs to
+//!   `deep_causality_tensor`, and a crate cannot write an inherent impl for a foreign type (E0116).
 //!
-//! Both isos are behind the `tensor-iso` Cargo feature on
-//! `deep_causality_sparse`, which this crate enables.
+//! Both isos live in `deep_causality_tensor` unconditionally. They were behind a `tensor-iso`
+//! feature on `deep_causality_linear`; that feature is gone, and so is the optional dependency that
+//! let a sparse matrix reach a tensor at all.
 
-use deep_causality_sparse::CsrMatrix;
-use deep_causality_tensor::CausalTensor;
+use deep_causality_linear::CsrMatrix;
+use deep_causality_tensor::{CausalTensor, ToDenseTensor};
 
 type F = f64;
 

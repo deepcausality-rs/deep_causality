@@ -6,8 +6,8 @@
 //! CPU implementation of Hypergraph constructors.
 
 use crate::{Hypergraph, TopologyError};
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::Zero;
-use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 
 impl<T> Hypergraph<T>

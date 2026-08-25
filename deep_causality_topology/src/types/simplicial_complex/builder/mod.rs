@@ -7,7 +7,7 @@
 
 use std::collections::HashMap;
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 use crate::{Simplex, SimplicialComplex, Skeleton, TopologyError};
 

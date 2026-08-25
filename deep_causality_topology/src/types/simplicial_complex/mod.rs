@@ -6,7 +6,7 @@
 //! SimplicialComplex type for representing simplicial structures.
 
 use crate::Skeleton;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::sync::OnceLock;
 
 // Submodule declarations (folder-based)

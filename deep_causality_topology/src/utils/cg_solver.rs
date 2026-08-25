@@ -6,7 +6,7 @@
 //! Gauge-fixing helper for the matrix-free Hodge solve.
 //!
 //! The conjugate-gradient solver itself now lives in
-//! [`deep_causality_sparse::cg_solve`]; this module retains only the
+//! [`deep_causality_linear::cg_solve`]; this module retains only the
 //! crate-private gauge helper that the Hodge decomposition applies around that
 //! solve. The constant functions are always in the kernel of `Δ_0`, so the
 //! grade-0 Poisson solve is degenerate by exactly one dimension; subtracting the

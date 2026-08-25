@@ -8,6 +8,7 @@ mod bounds_tests;
 mod branches_tests;
 #[cfg(test)]
 mod cg_tests;
+mod cholesky_tests;
 #[cfg(test)]
 mod decomposition_tests;
 #[cfg(test)]

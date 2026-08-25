@@ -4,9 +4,6 @@
  */
 
 use alloc::vec::Vec;
-mod get_ref;
-#[cfg(test)]
-mod get_ref_tests;
 
 use crate::CausalTensor;
 

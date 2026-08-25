@@ -48,7 +48,7 @@ where
         }
 
         let coboundary_cow = self.complex.coboundary_matrix(k);
-        let coboundary: &deep_causality_sparse::CsrMatrix<i8> = &coboundary_cow;
+        let coboundary: &deep_causality_linear::CsrMatrix<i8> = &coboundary_cow;
 
         // Operation: C_k * omega_k
         let result = utils_differential::apply_operator(coboundary, field);

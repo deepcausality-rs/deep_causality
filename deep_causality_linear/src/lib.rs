@@ -54,7 +54,7 @@ mod types;
 pub mod utils_tests;
 
 // Errors
-pub use crate::errors::linear_error::LinearError;
+pub use crate::errors::linear_error::{LinearError, LinearErrorEnum};
 
 // Access traits
 pub use crate::traits::matrix_build::MatrixBuild;
@@ -73,6 +73,7 @@ pub use crate::algorithms::elimination::{
 };
 
 // Solving
+pub use crate::algorithms::cholesky::{cholesky, solve_least_squares};
 pub use crate::algorithms::solve::{Lu, inverse, solve, solve_lower, solve_upper};
 
 // Exact paths, kept distinct from each other and from the numerical one
@@ -81,8 +82,8 @@ pub use crate::algorithms::integer::{determinant_exact, rank_exact};
 
 // Decompositions, whose bodies `CausalTensor` delegates to
 pub use crate::algorithms::decomposition::{
-    EigenPair, QrFactors, SvdFactors, Truncation, eigen_hermitian, qr, singular_values, svd,
-    svd_truncated,
+    EigenPair, QrFactors, SvdFactors, SvdReal, Truncation, eigen_hermitian, qr, singular_values,
+    svd, svd_sorted, svd_truncated,
 };
 
 // Norms, defined once

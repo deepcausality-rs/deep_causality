@@ -50,10 +50,7 @@ impl<T> DenseMatrix<T> {
     /// [`LinearError::ShapeMismatch`] if `data.len()` is not `rows * cols`.
     pub fn from_vec(data: Vec<T>, rows: usize, cols: usize) -> Result<Self, LinearError> {
         if data.len() != rows * cols {
-            return Err(LinearError::ShapeMismatch {
-                left: (rows, cols),
-                right: (data.len(), 1),
-            });
+            return Err(LinearError::ShapeMismatch((rows, cols), (data.len(), 1)));
         }
         Ok(Self { data, rows, cols })
     }
@@ -100,10 +97,10 @@ impl<T> DenseMatrix<T> {
     /// [`LinearError::IndexOutOfBounds`] if the row is outside the shape.
     pub fn row(&self, row: usize) -> Result<&[T], LinearError> {
         if row >= self.rows {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, 0),
-                shape: (self.rows, self.cols),
-            });
+            return Err(LinearError::IndexOutOfBounds(
+                (row, 0),
+                (self.rows, self.cols),
+            ));
         }
         Ok(&self.data[row * self.cols..(row + 1) * self.cols])
     }

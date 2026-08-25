@@ -4,8 +4,8 @@
  */
 
 use crate::{Simplex, SimplicialComplex, Skeleton};
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::Zero;
-use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 
 /// Creates a simple triangle (2-simplex) simplicial complex

@@ -16,7 +16,6 @@
 //! `pin_container_ring::<CsrMatrix<f64>>()` and `pin_module::<CsrMatrix<f64>, f64>()` already stand,
 //! so they are not restated as tests.
 
-use deep_causality_algebra::Module;
 use deep_causality_linear::{CsrMatrix, MatrixBuild};
 use deep_causality_num::{One, Zero};
 
@@ -24,13 +23,9 @@ fn m(triplets: &[(usize, usize, f64)], r: usize, c: usize) -> CsrMatrix<f64> {
     CsrMatrix::from_triplets(r, c, triplets).unwrap()
 }
 
-/// The `n × n` identity.
-///
-/// `deep_causality_sparse` had `CsrMatrix::one(n)` for this. Here `One::one` is the 1×1 identity and
-/// takes no size, so a sized identity is built from triplets.
+/// The `n × n` identity, through the inherent `one(n)` this crate now carries.
 fn identity(n: usize) -> CsrMatrix<f64> {
-    let triplets: Vec<(usize, usize, f64)> = (0..n).map(|i| (i, i, 1.0)).collect();
-    m(&triplets, n, n)
+    CsrMatrix::one(n)
 }
 
 #[test]

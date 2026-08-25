@@ -6,7 +6,9 @@
 //! The integer path: exact, cubic, and never leaving ℤ.
 
 use deep_causality_linear::utils_tests::fixtures_matrix::*;
-use deep_causality_linear::{DenseMatrix, LinearError, determinant_exact, rank_exact};
+use deep_causality_linear::{
+    DenseMatrix, LinearError, LinearErrorEnum, determinant_exact, rank_exact,
+};
 
 fn dense_i64(f: (Vec<i64>, usize, usize)) -> DenseMatrix<i64> {
     let (d, r, c) = f;
@@ -58,7 +60,7 @@ fn test_the_integer_determinant_rejects_a_non_square_matrix() {
     let m = DenseMatrix::from_vec(vec![1i64, 2, 3, 4, 5, 6], 2, 3).unwrap();
     assert!(matches!(
         determinant_exact(&m),
-        Err(LinearError::NotSquare { .. })
+        Err(LinearError(LinearErrorEnum::NotSquare { .. }))
     ));
 }
 

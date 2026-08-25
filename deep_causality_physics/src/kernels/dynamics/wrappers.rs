@@ -12,6 +12,7 @@ use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// Causal wrapper for [`estimation::kalman_filter_linear_kernel`].
@@ -24,7 +25,7 @@ pub fn kalman_filter_linear<R>(
     process_noise: &CausalTensor<R>,
 ) -> PropagatingEffect<(CausalTensor<R>, CausalTensor<R>)>
 where
-    R: RealField + Default + Debug + core::iter::Sum,
+    R: RealField + Default + Debug + core::iter::Sum + FromPrimitive,
 {
     match estimation::kalman_filter_linear_kernel(
         x_pred,

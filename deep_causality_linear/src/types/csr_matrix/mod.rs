@@ -6,6 +6,7 @@
 //! A compressed-sparse-row matrix.
 
 pub mod algebra;
+pub mod compat;
 pub mod display;
 pub mod ops;
 
@@ -46,6 +47,25 @@ pub struct CsrMatrix<T> {
 }
 
 impl<T> CsrMatrix<T> {
+    /// Builds from the four CSR arrays directly.
+    ///
+    /// Private: the arrays have an invariant between them — `row_indices` is monotone, its last
+    /// entry is `values.len()`, and `col_indices` is sorted within each row — that a caller could
+    /// break. The constructors that take triplets establish it.
+    pub(crate) fn from_parts(
+        row_indices: Vec<usize>,
+        col_indices: Vec<usize>,
+        values: Vec<T>,
+        shape: (usize, usize),
+    ) -> Self {
+        Self {
+            row_indices,
+            col_indices,
+            values,
+            shape,
+        }
+    }
+
     /// An empty matrix with shape `(0, 0)`.
     pub fn new() -> Self {
         Self {
@@ -116,9 +136,13 @@ impl<T> CsrMatrix<T> {
     /// Structural zeros are not visited. A function that does not fix zero therefore changes the
     /// matrix this represents, and the caller is choosing that by calling this rather than
     /// densifying first.
+    ///
+    /// `f` is `FnMut`, so it may carry state across entries — a running index, a counter, an
+    /// accumulator. Narrowing it to `Fn` would rule that out for no gain, and the crate this moves
+    /// from took `FnMut`.
     pub fn map_values<U, F>(self, f: F) -> CsrMatrix<U>
     where
-        F: Fn(T) -> U,
+        F: FnMut(T) -> U,
     {
         CsrMatrix {
             row_indices: self.row_indices,
@@ -131,7 +155,7 @@ impl<T> CsrMatrix<T> {
 
 impl<T> CsrMatrix<T>
 where
-    T: CommutativeSemiring + Copy + PartialEq,
+    T: Clone + Zero + PartialEq + core::ops::Add<Output = T>,
 {
     /// Builds from `(row, col, value)` triplets.
     ///
@@ -145,10 +169,7 @@ where
     ) -> Result<Self, LinearError> {
         for &(r, c, _) in triplets {
             if r >= rows || c >= cols {
-                return Err(LinearError::IndexOutOfBounds {
-                    index: (r, c),
-                    shape: (rows, cols),
-                });
+                return Err(LinearError::IndexOutOfBounds((r, c), (rows, cols)));
             }
         }
         let mut sorted: Vec<(usize, usize, T)> = triplets.to_vec();
@@ -163,10 +184,11 @@ where
         // later read would see whichever the search happened to reach first.
         let mut i = 0usize;
         while i < sorted.len() {
-            let (r, c, mut acc) = sorted[i];
+            let (r, c) = (sorted[i].0, sorted[i].1);
+            let mut acc = sorted[i].2.clone();
             let mut j = i + 1;
             while j < sorted.len() && sorted[j].0 == r && sorted[j].1 == c {
-                acc = acc + sorted[j].2;
+                acc = acc + sorted[j].2.clone();
                 j += 1;
             }
             i = j;
@@ -188,7 +210,12 @@ where
             shape: (rows, cols),
         })
     }
+}
 
+impl<T> CsrMatrix<T>
+where
+    T: CommutativeSemiring + Copy + PartialEq,
+{
     /// The entry at `(row, col)`, returning the scalar zero for a position outside the stored
     /// pattern.
     pub fn get_value_at(&self, row_idx: usize, col_idx: usize) -> T
@@ -233,10 +260,7 @@ where
     pub fn vec_mult(&self, vector: &[T]) -> Result<Vec<T>, LinearError> {
         let (r, c) = self.shape;
         if vector.len() != c {
-            return Err(LinearError::LengthMismatch {
-                expected: c,
-                found: vector.len(),
-            });
+            return Err(LinearError::LengthMismatch(c, vector.len()));
         }
         // Proportional to the stored entries, which is what the representation is for.
         let out: Vec<T> = (0..r)
@@ -258,10 +282,10 @@ where
     /// [`LinearError::InnerDimensionMismatch`] if the inner dimensions do not meet.
     pub fn mat_mult(&self, other: &Self) -> Result<Self, LinearError> {
         if self.shape.1 != other.shape.0 {
-            return Err(LinearError::InnerDimensionMismatch {
-                left_cols: self.shape.1,
-                right_rows: other.shape.0,
-            });
+            return Err(LinearError::InnerDimensionMismatch(
+                self.shape.1,
+                other.shape.0,
+            ));
         }
         let (m, n) = (self.shape.0, other.shape.1);
         let mut triplets = Vec::new();
@@ -290,10 +314,7 @@ where
     /// [`LinearError::ShapeMismatch`] if the shapes differ.
     pub fn add_matrix(&self, other: &Self) -> Result<Self, LinearError> {
         if self.shape != other.shape {
-            return Err(LinearError::ShapeMismatch {
-                left: self.shape,
-                right: other.shape,
-            });
+            return Err(LinearError::ShapeMismatch(self.shape, other.shape));
         }
         let (r, c) = self.shape;
         let mut triplets = Vec::new();

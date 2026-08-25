@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::collections::BTreeSet;
 
 use deep_causality_num::{Float, Zero};

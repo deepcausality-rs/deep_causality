@@ -135,21 +135,68 @@ baseline. They are marked here, where they belong.
 
 Exit condition: the workspace builds against the new crate and the old name still works.
 
-- [ ] 5.1 Confirm phase 4's exit condition holds before touching any consumer
-- [ ] 5.2 Add `deep_causality_linear` as a dependency of `deep_causality_tensor`; implement the read trait for `CausalTensor` there — this impl cannot live anywhere else (E0117)
-- [ ] 5.3 Reduce `CausalTensor`'s inherent methods and the `Tensor` trait members at `traits/tensor.rs:435,439` to delegations; keep every signature, return shape and error variant
-- [ ] 5.4 Record the tensor benchmark baseline, re-run after delegation, diff; record both figures with the machine
-- [ ] 5.5 Move `ext_iso.rs` and `CsrFromTensorError` into `deep_causality_tensor` unconditionally; delete the `tensor-iso` feature, its `#[cfg]` gates, the `"tensor-iso"` entries in `deep_causality_sparse/BUILD.bazel:10` and `tests/BUILD.bazel:58`, and `features = ["tensor-iso"]` on `examples/mathematics_examples/Cargo.toml:23`
-- [ ] 5.6 Reduce `deep_causality_sparse/src/lib.rs` to re-exports of `deep_causality_linear`; confirm the public surface matches its last independent release item for item
-- [ ] 5.7 Write the retirement notice at the top of `deep_causality_sparse/README.md`, naming the successor and stating that the crate receives no further development
-- [ ] 5.8 Switch the 102 import sites: topology 61 (32 `src`, 29 `tests`), examples 10, physics 2 (`kernels/mhd/ideal.rs:11`, `kernels/mhd/grmhd.rs:11`), and the 29 inside the crate being moved
-- [ ] 5.9 Retarget the 35 Bazel label references across the 8 `BUILD.bazel` files that name the old crate
-- [ ] 5.10 Resolve the `deep_causality_cfd` discrepancy: `BUILD.bazel:30` declares a dependency `Cargo.toml` does not — decide which is correct and make both agree
-- [ ] 5.11 Register the crate in `build/scripts/sbom.sh` and commit its generated `*_sbom.spdx.json` + `.sha`
-- [ ] 5.12 Update `AGENTS.md` §Project Structure and §Project Dependencies, `README.md:268`, `website/web/src/pages/overview/index.astro` (2 sites), `website/docs/…/getting-started/install.md`, `website/docs/…/concepts/uniform-math.md`
-- [ ] 5.13 Leave the 34 files under `openspec/changes/archive/` unchanged; confirm by diff
-- [ ] 5.14 Rebuild the 8 in-workspace and 7 example tensor dependents with no source edit; confirm results unchanged
-- [ ] 5.15 `cargo test --workspace` and `bazel test //...` green
+- [x] 5.1 Confirm phase 4's exit condition holds before touching any consumer — 468 tests, 4 doctests, clippy clean, Bazel 1214/1214, coverage 98.48%
+- [x] 5.2 Added as a dependency (no cycle: linear's deps are `num`, `algebra`, `haft` only) and `MatrixView for CausalTensor` implemented in `deep_causality_tensor/src/extensions/ext_linear.rs`, with 8 tests. A tensor of rank ≠ 2 presents as `0 × 1`, not `0 × 0`: the obvious choice is the wrong one, because the determinant of the empty matrix is the empty product and a rank-3 tensor would get a confident `1` back
+- [x] 5.3 **Nine of the twelve linear-algebra members now delegate; three stay, on evidence.**
+
+      Delegating: `qr`, `eigen_hermitian`, `sym_eig`, `svd`, `svd_truncated`, `inverse`, `cholesky_decomposition`, `solve_least_squares_cholsky`, and the slice-level Jacobi shared by the DMRG solver.
+
+      **Staying, because they are N-index operations and `linear-crate-identity` forbids those in this crate** ("no operation whose domain is a tensor of rank other than two"):
+      - `matmul` builds an einsum AST node (`EinSumOp::MatMul` → `execute_ein_sum`). It is the tensor crate's contraction engine, not a rank-2 product; delegating would replace a general contraction with a triple loop.
+      - `norm_l2` and `norm_sq` reduce over `self.data` — the whole flattened buffer at any rank. They coincide with the Frobenius norm only at rank 2.
+
+      **The blocker and how it was closed.** Linear's decompositions were bounded on `RealField`; the tensor's are on `ConjugateScalar`, and `Complex` is not a `RealField` — it is unordered, so no ordered-field bound can cover it. Delegating would have dropped complex support and broken `deep_causality_quantum` (`density_matrix.rs:88`). Closed by moving the kernels rather than widening bounds, which is what `linear-dense-algorithms` said in the first place; phase 4 reimplemented instead (4.12), and that is where the divergence came from.
+
+      `deep_causality_linear/src/algorithms/kernels.rs` now holds the Hermitian-Jacobi eigen, the thin Householder QR and the one-sided Jacobi SVD. `algorithms/cholesky.rs` is new — neither Cholesky nor least squares existed in the crate at all — and both are `ConjugateScalar`-generic, so a Hermitian complex matrix factors as `A = L Lᴴ`.
+
+      **Three defects closed on the way:** linear's SVD returned `cols` singular values where a matrix has `min(m, n)`; the eigen sweep used an absolute ε threshold that never terminates for a large-magnitude matrix; and `LinearError` gained `NotPositiveDefinite`, because a matrix can be invertible and indefinite — `diag(1, −1)` is both — so "no Cholesky factor" and "no inverse" are different failures.
+
+      **Verified.** `qr`/`eigen_hermitian` bit-identical to what they replace (`max|tensor − linear| = 0.000e0`, `Complex<f64>` and `f64`). Cholesky exact against NumPy's `linalg.cholesky`; least squares exactly `[3.5, 1.4]` against `linalg.lstsq`; inverse to 1.1e-16 with `A·A⁻¹ − I` at 2.2e-16; SVD reconstruction ~1e-15 with the identity now **exact** where power iteration reached ~1e-8. Every error variant preserved: `SingularMatrix`, `DimensionMismatch`, `ShapeMismatch` all still returned where they were before.
+
+      **Cost: a `FromPrimitive` bound** on `Tensor::svd`, `inverse`, `cholesky_decomposition` and `solve_least_squares_cholsky` — `ConjugateScalar` and `NormedScalar` both require it. The cascade was measured across the whole workspace and reached exactly two further sites, both in `deep_causality_physics`: `kalman_filter_linear_kernel` and its wrapper. Every scalar in the workspace satisfies it.
+
+      Workspace 1216/1216; linear 496 tests, tensor 544, quantum 171. One warning left: `CausalTensor::get_ref`/`set` are now unused in `src` — my change orphaned them, and AGENTS.md:84 says not to delete unused code unless asked
+
+- [x] 5.4 Recorded before and after on the same machine (M3 Max, 16 cores, 128 GB) by stashing to the pre-delegation tree, benchmarking, and restoring. Only two of the twelve linear-algebra methods have benchmarks at all — `tt_svd_truncated_48x48` and `tt_qr_48x48` — so the other ten have no baseline to diff and would need benchmarks written first.
+
+      | benchmark | before | after | change |
+      |---|---|---|---|
+      | `tt_svd_truncated_48x48` | 705.38 µs | 693.74 µs | 1.7% faster |
+      | `tt_qr_48x48` | 37.477 µs | 37.375 µs | 0.3% faster |
+
+      The first delegation *did* regress QR by 4.7% with non-overlapping confidence intervals — `flatten` read every entry through `MatrixView::get`, a bounds check per entry, where the buffer was already contiguous row-major. Closed by giving `MatrixView` a `to_row_major` hook whose default is the per-entry walk and which `DenseMatrix` and `CausalTensor` override with the copy
+- [x] 5.5 Moved with `git mv` so the history follows. The feature is gone everywhere — the `[features]` entry, the optional dependency, the four `#[cfg]` gates, both Bazel feature strings and the example's `features = [...]`.
+      Two things the move forced, both verified by compiling rather than reasoned about: the `TryFrom` and `Iso` impls **do** survive it (the orphan rule permits them because `CausalTensor` is local), but the inherent `CsrMatrix::to_dense` does **not** — E0116, a crate cannot write an inherent impl for a foreign type. It is now the `ToDenseTensor` extension trait, which costs the one call site a `use` line.
+      The conversion also gained `CommutativeSemiring` on its scalar, because linear's `from_triplets` asks more than sparse's did
+- [x] 5.6 `lib.rs` is now re-exports and nothing else. The surface matches item for item **with two stated exceptions**, both cases where matching it would mean re-exporting something demonstrably wrong:
+      - `CgFailure` is an enum where it was a struct. Code that destructured it gets a compile error rather than a plausible wrong message — two of the three failure modes are not non-convergence and have no residual to report, which the single struct forced them to claim.
+      - `CsrMatrixWitness` does not claim `Monad` or `Adjunction`. Re-measured during this phase: `bind(m, pure)` flattens to `1 x count` and renumbers the columns, so a 1x3 row with a gap comes back with its entry moved from column 2 to column 1. Table in `HKT-LAW-FINDINGS.md`.
+      Getting here needed ten `CsrMatrix` methods ported into linear (`compat.rs`) — seven of them reached by live topology code — plus `map_values` widened back to `FnMut` and `from_triplets` loosened off `CommutativeSemiring`, which was an over-bound its body never used.
+      `SparseMatrixError` is now an alias for `LinearError`, which absorbed its four failures
+- [x] 5.7 Notice at the top of the README: successor named, no further development, a repointing table, and the two changes a re-export cannot hide. `reverted/README.md` records why the old implementation is kept rather than deleted — it is the reference the replacement was checked against, and the `ported_*` suites are it
+- [x] 5.8 79 source files repointed across topology, physics and both example crates; `deep_causality_linear` added as a dependency to each. Zero references to the old crate remain outside it.
+      Four sites needed more than a changed `use`: the `CgFailure` destructure in `hodge_decomposition_impl.rs` and three field accesses in `leray.rs` and `wall_hodge_star_tests.rs`. Each now reports the failure it actually got — `CgFailure` gained a `Display` impl (neither crate had one), and topology's Hodge path distinguishes a non-positive-definite Laplacian and a wrong-length operator result from non-convergence, which the old struct reported all three as
+- [x] 5.9 All retargeted, deduplicating where a target already listed `//deep_causality_linear`. The shim's own `BUILD.bazel` now depends on linear alone, and the moved `tests/BUILD.bazel` is detached under `reverted/`
+- [x] 5.10 **The Bazel declaration was spurious.** No file under `deep_causality_cfd` names `deep_causality_sparse` or any symbol of it, and the crate builds and its tests build without it. Two more were stale the same way — `deep_causality_metric` and `deep_causality_multivector`, also zero references — so all three are removed and `//deep_causality_cfd/...` builds green
+- [x] 5.11 **Registration is gone, not updated.** `sbom.sh` no longer carries a crate list; `build/scripts/crates.sh` reads the workspace members from the root `Cargo.toml` and every consumer sources it. All 29 crates have an SBOM and its `.sha`, `deep_causality_linear` included.
+
+      The four scripts that carried the list by hand had each drifted, and each was missing a *different* set — `sbom.sh` 28 entries, `miri.sh` 27, `check.sh` 27, `format.sh` 28. Nothing failed when a crate was absent; the loop skipped it, so a crate could ship unformatted, unaudited and without an SBOM with no signal at all. `crates.sh` refuses to continue on an empty list rather than becoming a silent no-op, and `dc_crates_except` warns when an exclusion names a crate that no longer exists. Exclusions moved to the call sites where they can be read: `miri.sh` skips `deep_causality_cfd` with the reason beside it, rather than by omission.
+
+      It proved itself twice within the hour — it flagged `deep_causality_sparse` still declared by `physics` and `topology` after the repoint had made it unused, and it dropped `deep_causality_macros` on its own when that crate was yanked
+- [x] 5.12 All six updated. Two things the task did not anticipate:
+
+      **The tier block was already wrong before this change.** `deep_causality_haft` was listed at Tier 0 but has depended on `deep_causality_algebra` at runtime for some time, and `deep_causality_macros` was still listed after being moved to `yanked/`. The block is now generated from the `[dependencies]` tables of each member's `Cargo.toml` — dev- and build-deps excluded — rather than hand-maintained, and a note says so. Tiers run 0–8 where they ran 0–5: `deep_causality_linear` sits at 3, which pushes `tensor` to 4, `multivector` to 5, `topology` to 6, `physics`/`algorithms` to 7 and `cfd`/`discovery` to 8.
+
+      Also corrected while there: `deep_causality_num_rational` and `deep_causality_quantum` were missing from §Project Structure, the scope sentence said 24 crates against 29, the external-dependency count said 21 against 23, `deep_causality_discovery` was missing from `rand`'s dev-dependents, and `deep_causality_tensor`'s description was the single word "Tensors".
+
+      **`uniform-math.md` claimed `Monad`.** Its "Sparse matrices" section advertised `Functor`, `Applicative` and `Monad` on the CSR matrix. The crate does not implement `Monad` and should not — a shaped container cannot satisfy right identity. The section is rewritten for `deep_causality_linear` and states which instances exist and why `Monad` is absent.
+
+      `whats-new-in-deep-causality.md` is left alone: it is a release note describing a past release, and rewriting it would falsify the record
+- [x] 5.13 Confirmed by diff. 34 archive files mention the old crate and none was touched: zero overlap with the four archive files that do show as modified — those predate this session and concern `deep_causality_effects` moving to `yanked/` — and none of the 34 mentions `deep_causality_linear`, so no repointing leaked in
+- [x] 5.14 All 15 rebuilt and green: 6,043 tests across the 8 in-workspace crates (algorithms 366, cfd 943, discovery 358, multivector 360, physics 1751, quantum 171, tensor 608, topology 1486) and 82 examples building across the 7 example crates.
+
+      **"No source edit" holds with one exception, and it is the documented one.** Of the 15, only `deep_causality_physics` needed an edit caused by the tensor change: `FromPrimitive` added to `kalman_filter_linear_kernel` and its wrapper, because `ConjugateScalar` and `NormedScalar` both require it. Every other edit among the 15 belongs to task 5.8's sparse repoint, not to this one — `topology`'s 67 files, `mathematics_examples`' 9 and `physics_examples`' 1 are all `use` lines and the four `CgFailure` sites
+- [x] 5.15 Both green. `cargo test --workspace`: 128 suites, 0 failed. `bazel test //...`: 1206 of 1206 pass
 
 ## 6. Retire the duplication in topology and multivector
 

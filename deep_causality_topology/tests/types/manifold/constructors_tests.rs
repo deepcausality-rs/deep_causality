@@ -327,7 +327,7 @@ fn test_with_metric_data_size_mismatch() {
 fn test_with_metric_on_complex_without_1_simplices_with_non_empty_edge_lengths() {
     // Lines 74-78: complex.skeletons.get(1) returns None but regge.edge_lengths is
     // non-empty → InvalidInput error.
-    use deep_causality_sparse::CsrMatrix;
+    use deep_causality_linear::CsrMatrix;
     use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
 
     // Build a SimplicialComplex with only a 0-skeleton (vertices), no 1-simplices.

@@ -7,15 +7,46 @@ use core::fmt;
 
 /// Every way an operation in this crate can fail.
 ///
-/// One enum rather than one per module. The alternative — a `MatrixError`, a `SolveError`, a
+/// One error type rather than one per module. The alternative — a `MatrixError`, a `SolveError`, a
 /// `ConversionError` — makes every call site that composes two operations write a `From` impl or a
 /// `map_err`, and the variants would overlap anyway: a dimension mismatch is the same failure
 /// whether it arises in a product or in a solve.
 ///
+/// It is also **one type across representations**. `deep_causality_sparse` carried a separate
+/// `SparseMatrixError` whose four variants named the same four failures under different names and
+/// different payload shapes — a flat `IndexOutOfBounds(index, size)` against a positional
+/// `IndexOutOfBounds { index: (row, col), shape }`, and a `DimensionMismatch(a, b)` that conflated
+/// a product's inner dimensions with a vector's length. Both are folded in here, which is why a
+/// caller that composes a sparse operation with a dense one no longer converts between two error
+/// types that were describing the same things.
+///
+/// # A struct wrapping an enum, not a bare enum
+///
+/// The public type is a newtype and the classification lives in [`LinearErrorEnum`] behind it.
+/// That is what keeps the surface forward compatible: a new failure mode is a new variant on the
+/// inner enum, and a caller that matched `LinearError(LinearErrorEnum::NotSquare { .. })` with a
+/// wildcard arm keeps compiling. A bare public enum makes every addition a breaking change, since
+/// an exhaustive `match` in any downstream crate stops being exhaustive.
+///
+/// Construct one through the associated functions rather than the inner enum:
+///
+/// ```
+/// use deep_causality_linear::{LinearError, LinearErrorEnum};
+///
+/// let e = LinearError::NotSquare((2, 3));
+/// assert!(matches!(e.kind(), LinearErrorEnum::NotSquare { shape: (2, 3) }));
+/// ```
+///
+/// This is the shape `deep_causality_physics::PhysicsError` uses, for the same reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LinearError(pub LinearErrorEnum);
+
+/// The classification behind [`LinearError`].
+///
 /// Variants carry the numbers needed to say what went wrong, because an error that reports only
 /// that something was out of bounds sends the reader back to the debugger.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LinearError {
+pub enum LinearErrorEnum {
     /// An index outside the matrix or vector shape. Carries the offending `(row, col)` and the
     /// shape it was checked against.
     IndexOutOfBounds {
@@ -66,60 +97,156 @@ pub enum LinearError {
     /// intermediate that overflowed is gone.
     Overflow { operation: &'static str },
 
+    /// A Cholesky factorisation whose radicand went non-positive, so the input is not positive
+    /// definite. Carries the diagonal index where that was discovered.
+    ///
+    /// Distinct from [`Singular`](Self::Singular): a matrix can be invertible and indefinite —
+    /// `diag(1, -1)` is both — so "no Cholesky factor" and "no inverse" are different failures and
+    /// a caller may well recover from one and not the other.
+    NotPositiveDefinite { at_index: usize },
+
     /// An operation that has no meaning on an empty matrix.
     EmptyMatrix,
 }
 
+impl LinearError {
+    /// The classification behind this error.
+    ///
+    /// Matching on this rather than on `self.0` keeps a caller working if the field is ever made
+    /// private.
+    pub fn kind(&self) -> &LinearErrorEnum {
+        &self.0
+    }
+
+    /// Wraps a classification.
+    pub fn new(variant: LinearErrorEnum) -> Self {
+        Self(variant)
+    }
+
+    #[allow(non_snake_case)]
+    pub fn IndexOutOfBounds(index: (usize, usize), shape: (usize, usize)) -> Self {
+        Self(LinearErrorEnum::IndexOutOfBounds { index, shape })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn ShapeMismatch(left: (usize, usize), right: (usize, usize)) -> Self {
+        Self(LinearErrorEnum::ShapeMismatch { left, right })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn InnerDimensionMismatch(left_cols: usize, right_rows: usize) -> Self {
+        Self(LinearErrorEnum::InnerDimensionMismatch {
+            left_cols,
+            right_rows,
+        })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn LengthMismatch(expected: usize, found: usize) -> Self {
+        Self(LinearErrorEnum::LengthMismatch { expected, found })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn NotSquare(shape: (usize, usize)) -> Self {
+        Self(LinearErrorEnum::NotSquare { shape })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn Singular(at_column: usize) -> Self {
+        Self(LinearErrorEnum::Singular { at_column })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn ZeroDiagonal(at_index: usize) -> Self {
+        Self(LinearErrorEnum::ZeroDiagonal { at_index })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn WrongTriangle(at: (usize, usize)) -> Self {
+        Self(LinearErrorEnum::WrongTriangle { at })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn NotBinary(at: (usize, usize)) -> Self {
+        Self(LinearErrorEnum::NotBinary { at })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn Overflow(operation: &'static str) -> Self {
+        Self(LinearErrorEnum::Overflow { operation })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn NotPositiveDefinite(at_index: usize) -> Self {
+        Self(LinearErrorEnum::NotPositiveDefinite { at_index })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn EmptyMatrix() -> Self {
+        Self(LinearErrorEnum::EmptyMatrix)
+    }
+}
+
 impl fmt::Display for LinearError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
+impl fmt::Display for LinearErrorEnum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LinearError::IndexOutOfBounds { index, shape } => write!(
+            LinearErrorEnum::IndexOutOfBounds { index, shape } => write!(
                 f,
                 "Index out of bounds: ({}, {}) is outside a {}x{} matrix.",
                 index.0, index.1, shape.0, shape.1
             ),
-            LinearError::ShapeMismatch { left, right } => write!(
+            LinearErrorEnum::ShapeMismatch { left, right } => write!(
                 f,
                 "Shape mismatch: left is {}x{}, right is {}x{}.",
                 left.0, left.1, right.0, right.1
             ),
-            LinearError::InnerDimensionMismatch {
+            LinearErrorEnum::InnerDimensionMismatch {
                 left_cols,
                 right_rows,
             } => write!(
                 f,
                 "Inner dimension mismatch: left has {left_cols} columns, right has {right_rows} rows."
             ),
-            LinearError::LengthMismatch { expected, found } => {
+            LinearErrorEnum::LengthMismatch { expected, found } => {
                 write!(f, "Length mismatch: expected {expected}, found {found}.")
             }
-            LinearError::NotSquare { shape } => write!(
+            LinearErrorEnum::NotSquare { shape } => write!(
                 f,
                 "Not square: this operation needs a square matrix, got {}x{}.",
                 shape.0, shape.1
             ),
-            LinearError::Singular { at_column } => {
+            LinearErrorEnum::Singular { at_column } => {
                 write!(f, "Singular: no pivot available in column {at_column}.")
             }
-            LinearError::ZeroDiagonal { at_index } => write!(
+            LinearErrorEnum::ZeroDiagonal { at_index } => write!(
                 f,
                 "Zero diagonal: entry {at_index} on the diagonal is zero, so the substitution cannot divide by it."
             ),
-            LinearError::WrongTriangle { at } => write!(
+            LinearErrorEnum::WrongTriangle { at } => write!(
                 f,
                 "Wrong triangle: a non-zero entry at ({}, {}) is outside the expected triangle.",
                 at.0, at.1
             ),
-            LinearError::NotBinary { at } => write!(
+            LinearErrorEnum::NotBinary { at } => write!(
                 f,
                 "Not binary: the entry at ({}, {}) is outside {{0, 1}} and cannot be packed into GF(2).",
                 at.0, at.1
             ),
-            LinearError::Overflow { operation } => write!(
+            LinearErrorEnum::Overflow { operation } => write!(
                 f,
                 "Overflow: {operation} produced a value the scalar type cannot hold. The exact result exists in the unbounded structure; it does not fit this representation."
             ),
-            LinearError::EmptyMatrix => write!(
+            LinearErrorEnum::NotPositiveDefinite { at_index } => write!(
+                f,
+                "Not positive definite: the Cholesky radicand at diagonal entry {at_index} is not positive, so the matrix has no Cholesky factor. It may still be invertible."
+            ),
+            LinearErrorEnum::EmptyMatrix => write!(
                 f,
                 "Empty matrix: the operation has no meaning on an empty matrix."
             ),
@@ -127,5 +254,8 @@ impl fmt::Display for LinearError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for LinearError {}
+// Unconditional, not gated on `std`. `deep_causality_sparse::SparseMatrixError` implemented
+// `core::error::Error` for every build, and a no-std caller that relied on the bound would lose it
+// silently if this were narrower.
+impl core::error::Error for LinearError {}
+impl core::error::Error for LinearErrorEnum {}

@@ -6,7 +6,7 @@
 //! Boundary operator API for SimplicialComplex.
 
 use crate::{SimplicialComplex, TopologyError};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {
     /// Returns the boundary operator ∂ for dimension k.

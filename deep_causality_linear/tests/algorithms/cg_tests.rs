@@ -99,3 +99,75 @@ fn test_a_right_hand_side_of_the_wrong_length_is_rejected() {
         cg_solve_preconditioned(laplacian, &[2.0, 2.0, 2.0], &[1.0, 0.0], 1e-9, 10).unwrap_err();
     assert!(matches!(e, CgFailure::LengthMismatch { .. }), "got {e:?}");
 }
+
+// =============================================================================
+// The convergence threshold is relative to ‖b‖, not absolute.
+// =============================================================================
+
+#[test]
+fn test_the_tolerance_is_relative_to_the_norm_of_the_right_hand_side() {
+    // Reading `tolerance` as an absolute residual makes the criterion ‖b‖ times stricter than the
+    // caller asked for, so a solve with a fixed iteration budget stops converging on systems it
+    // used to handle. `deep_causality_topology` documents its default as a *relative* residual, and
+    // this is what holds the crate to that.
+    //
+    // Zero iterations isolates the threshold: the only comparison left is the initial residual —
+    // which is ‖b‖, since x₀ = 0 — against the threshold itself.
+    let apply = |v: &[f64]| v.to_vec();
+    let b = vec![60.0_f64, 80.0];
+    assert_eq!(
+        b.iter().map(|x| x * x).sum::<f64>().sqrt(),
+        100.0,
+        "the fixture's norm is what the scaling is read against"
+    );
+
+    // tolerance = 1 asks for a residual no larger than ‖b‖, which the initial residual meets
+    // exactly. Read as an absolute threshold it would be 100x too tight and this would fail.
+    assert_eq!(cg_solve(apply, &b, 1.0, 0).unwrap(), vec![0.0, 0.0]);
+
+    // Just below it, the same residual does not clear the threshold.
+    assert!(matches!(
+        cg_solve(apply, &b, 0.99, 0),
+        Err(CgFailure::NotConverged { iterations: 0, .. })
+    ));
+}
+
+#[test]
+fn test_a_zero_right_hand_side_takes_the_tolerance_unscaled() {
+    // ‖b‖ = 0 has no scale to be relative to, so the tolerance is used as given. Scaling by zero
+    // would make every threshold zero and turn an exactly-solved system into a failure.
+    let apply = |v: &[f64]| v.to_vec();
+    let b = vec![0.0_f64, 0.0];
+    assert_eq!(cg_solve(apply, &b, 0.0, 0).unwrap(), vec![0.0, 0.0]);
+    assert_eq!(cg_solve(apply, &b, 1e-12, 50).unwrap(), vec![0.0, 0.0]);
+}
+
+#[test]
+fn test_the_relative_threshold_survives_a_large_right_hand_side() {
+    // The case that motivated the fix: an ill-conditioned system with ‖b‖ far from 1 and a budget
+    // that an absolute threshold would exhaust.
+    let n = 200usize;
+    let op = |v: &[f64]| -> Vec<f64> {
+        (0..v.len())
+            .map(|i| {
+                let left = if i == 0 { 0.0 } else { v[i - 1] };
+                let right = if i + 1 == v.len() { 0.0 } else { v[i + 1] };
+                2.0 * v[i] - left - right
+            })
+            .collect()
+    };
+    let b: Vec<f64> = (0..n).map(|i| 1e6 * (1.0 + (i % 7) as f64)).collect();
+    let x = cg_solve(op, &b, 1e-10, 400).expect("converges against a relative threshold");
+    // The answer solves the system: ‖Ax - b‖ is within the relative threshold of ‖b‖.
+    let residual = op(&x)
+        .iter()
+        .zip(&b)
+        .map(|(a, c)| (a - c) * (a - c))
+        .sum::<f64>()
+        .sqrt();
+    let norm_b = b.iter().map(|x| x * x).sum::<f64>().sqrt();
+    assert!(
+        residual <= 1e-10 * norm_b,
+        "residual {residual:e} exceeds 1e-10 * {norm_b:e}"
+    );
+}

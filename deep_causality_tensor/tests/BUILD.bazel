@@ -32,6 +32,7 @@ rust_test_suite(
         # Internal deps
         "//deep_causality_algebra",
         "//deep_causality_haft",
+        "//deep_causality_linear",
         "//deep_causality_num",
     ],
 )

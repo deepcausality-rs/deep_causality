@@ -5,8 +5,8 @@
 
 use deep_causality_linear::utils_tests::fixtures_matrix::*;
 use deep_causality_linear::{
-    DenseMatrix, DenseVector, LinearError, Lu, MatrixBuild, MatrixView, inverse, solve,
-    solve_lower, solve_upper,
+    DenseMatrix, DenseVector, LinearError, LinearErrorEnum, Lu, MatrixBuild, MatrixView, inverse,
+    solve, solve_lower, solve_upper,
 };
 
 fn dense(f: (Vec<f64>, usize, usize)) -> DenseMatrix<f64> {
@@ -37,7 +37,10 @@ fn test_a_singular_system_is_rejected_rather_than_answered() {
     let a = dense(singular_2x2());
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0]);
     let e = solve(&a, &b).unwrap_err();
-    assert!(matches!(e, LinearError::Singular { .. }), "got {e:?}");
+    assert!(
+        matches!(e, LinearError(LinearErrorEnum::Singular { .. })),
+        "got {e:?}"
+    );
 }
 
 #[test]
@@ -57,7 +60,7 @@ fn test_a_right_hand_side_of_the_wrong_length_is_rejected() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0]);
     assert!(matches!(
         solve(&a, &b),
-        Err(LinearError::LengthMismatch { .. })
+        Err(LinearError(LinearErrorEnum::LengthMismatch { .. }))
     ));
 }
 
@@ -65,7 +68,10 @@ fn test_a_right_hand_side_of_the_wrong_length_is_rejected() {
 fn test_a_non_square_system_is_rejected() {
     let a: DenseMatrix<f64> = DenseMatrix::zeros(2, 3);
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 2.0]);
-    assert!(matches!(solve(&a, &b), Err(LinearError::NotSquare { .. })));
+    assert!(matches!(
+        solve(&a, &b),
+        Err(LinearError(LinearErrorEnum::NotSquare { .. }))
+    ));
 }
 
 // ---- the factorisation as a reusable value ------------------------------------------------------
@@ -100,7 +106,10 @@ fn test_the_factorisation_carries_its_permutation() {
 #[test]
 fn test_a_singular_matrix_fails_at_factorisation_not_at_the_first_application() {
     let a = dense(singular_2x2());
-    assert!(matches!(Lu::factor(&a), Err(LinearError::Singular { .. })));
+    assert!(matches!(
+        Lu::factor(&a),
+        Err(LinearError(LinearErrorEnum::Singular { .. }))
+    ));
 }
 
 #[test]
@@ -171,7 +180,10 @@ fn test_a_zero_on_the_diagonal_is_rejected_rather_than_divided_by() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 1.0]);
     let e = solve_lower(&a, &b).unwrap_err();
     assert!(
-        matches!(e, LinearError::ZeroDiagonal { at_index: 1 }),
+        matches!(
+            e,
+            LinearError(LinearErrorEnum::ZeroDiagonal { at_index: 1 })
+        ),
         "got {e:?}"
     );
 }
@@ -183,7 +195,10 @@ fn test_the_wrong_triangle_is_rejected_rather_than_ignored() {
     let b: DenseVector<f64> = DenseVector::from_vec(vec![1.0, 1.0]);
     let e = solve_lower(&a, &b).unwrap_err();
     assert!(
-        matches!(e, LinearError::WrongTriangle { at: (0, 1) }),
+        matches!(
+            e,
+            LinearError(LinearErrorEnum::WrongTriangle { at: (0, 1) })
+        ),
         "got {e:?}"
     );
 }

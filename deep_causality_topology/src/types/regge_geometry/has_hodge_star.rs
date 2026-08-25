@@ -7,8 +7,8 @@ use crate::TopologyError;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::{ReggeGeometry, SimplicialComplex};
 use deep_causality_algebra::RealField;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::FromPrimitive;
-use deep_causality_sparse::CsrMatrix;
 use std::borrow::Cow;
 
 /// Simplicial backend for the `HasHodgeStar<R>` capability trait.

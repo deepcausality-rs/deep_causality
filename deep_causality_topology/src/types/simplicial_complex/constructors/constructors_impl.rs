@@ -7,7 +7,7 @@
 
 use crate::types::simplicial_complex::GeometricData;
 use crate::{SimplicialComplex, Skeleton};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::sync::OnceLock;
 
 impl<T> SimplicialComplex<T> {

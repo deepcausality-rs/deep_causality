@@ -34,12 +34,17 @@ where
 
     fn get(&self, row: usize, col: usize) -> Result<T, LinearError> {
         if row >= self.row_count() || col >= self.col_count() {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, col),
-                shape: (self.row_count(), self.col_count()),
-            });
+            return Err(LinearError::IndexOutOfBounds(
+                (row, col),
+                (self.row_count(), self.col_count()),
+            ));
         }
         Ok(self.as_slice()[row * self.col_count() + col].clone())
+    }
+
+    /// The dense layout *is* the row-major buffer, so this is the copy rather than a walk.
+    fn to_row_major(&self) -> Result<alloc::vec::Vec<T>, LinearError> {
+        Ok(self.as_slice().to_vec())
     }
 }
 
@@ -55,10 +60,7 @@ where
     fn set(&mut self, row: usize, col: usize, value: T) -> Result<(), LinearError> {
         let (r, c) = (self.row_count(), self.col_count());
         if row >= r || col >= c {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, col),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, col), (r, c)));
         }
         self.as_mut_slice()[row * c + col] = value;
         Ok(())
@@ -74,10 +76,7 @@ where
     fn swap_rows(&mut self, a: usize, b: usize) -> Result<(), LinearError> {
         let (r, c) = (self.row_count(), self.col_count());
         if a >= r || b >= r {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (a.max(b), 0),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((a.max(b), 0), (r, c)));
         }
         if a == b {
             return Ok(());
@@ -91,10 +90,7 @@ where
     fn scale_row(&mut self, row: usize, factor: &T, from_col: usize) -> Result<(), LinearError> {
         let (r, c) = (self.row_count(), self.col_count());
         if row >= r {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (row, 0),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((row, 0), (r, c)));
         }
         for j in from_col..c {
             let v = self.as_slice()[row * c + j].clone();
@@ -112,10 +108,7 @@ where
     ) -> Result<(), LinearError> {
         let (r, c) = (self.row_count(), self.col_count());
         if dst >= r || src >= r {
-            return Err(LinearError::IndexOutOfBounds {
-                index: (dst.max(src), 0),
-                shape: (r, c),
-            });
+            return Err(LinearError::IndexOutOfBounds((dst.max(src), 0), (r, c)));
         }
         for j in from_col..c {
             let s = self.as_slice()[src * c + j].clone();

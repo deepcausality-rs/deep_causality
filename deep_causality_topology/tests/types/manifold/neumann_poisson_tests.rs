@@ -12,7 +12,7 @@
 //! property of the projection, and exactness under a starved iteration
 //! budget (the direct path has no convergence-failure mode).
 
-use deep_causality_sparse::cg_solve_preconditioned;
+use deep_causality_linear::cg_solve_preconditioned;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HasHodgeStar, LatticeComplex, Manifold,
@@ -137,7 +137,7 @@ fn assert_agrees_with_pcg<const D: usize>(
     let metric = metric_binding.as_ref().unwrap();
     let star0 = metric.hodge_star_matrix(manifold.complex(), 0).unwrap();
     let star1 = metric.hodge_star_matrix(manifold.complex(), 1).unwrap();
-    let diag_of = |m: &deep_causality_sparse::CsrMatrix<f64>, n: usize| -> Vec<f64> {
+    let diag_of = |m: &deep_causality_linear::CsrMatrix<f64>, n: usize| -> Vec<f64> {
         let mut d = vec![0.0; n];
         for (i, slot) in d.iter_mut().enumerate() {
             for e in m.row_indices()[i]..m.row_indices()[i + 1] {

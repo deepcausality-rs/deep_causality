@@ -106,10 +106,7 @@ impl<W: NaturalNumber> PackedGf2<W> {
     /// [`LinearError::ShapeMismatch`] if the buffer length is not `rows * cols`.
     pub fn from_i64_mod2(data: &[i64], rows: usize, cols: usize) -> Result<Self, LinearError> {
         if data.len() != rows * cols {
-            return Err(LinearError::ShapeMismatch {
-                left: (rows, cols),
-                right: (data.len(), 1),
-            });
+            return Err(LinearError::ShapeMismatch((rows, cols), (data.len(), 1)));
         }
         let mut m = Self::allocate(rows, cols);
         for i in 0..rows {
@@ -153,10 +150,7 @@ impl<W: NaturalNumber> PackedGf2<W> {
     /// [`LinearError::ShapeMismatch`] if the buffer length is not `rows * cols`.
     pub fn from_slice(data: &[Gf2], rows: usize, cols: usize) -> Result<Self, LinearError> {
         if data.len() != rows * cols {
-            return Err(LinearError::ShapeMismatch {
-                left: (rows, cols),
-                right: (data.len(), 1),
-            });
+            return Err(LinearError::ShapeMismatch((rows, cols), (data.len(), 1)));
         }
         let mut m = Self::allocate(rows, cols);
         for i in 0..rows {

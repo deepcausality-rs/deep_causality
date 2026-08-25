@@ -7,7 +7,7 @@
 //! until phase 4, and must then pass without its assertion being weakened.
 
 use deep_causality_linear::utils_tests::fixtures_matrix::*;
-use deep_causality_linear::{DenseMatrix, LinearError, MatrixBuild, MatrixView};
+use deep_causality_linear::{DenseMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView};
 
 #[test]
 fn test_from_vec_carries_the_shape() {
@@ -21,7 +21,10 @@ fn test_from_vec_carries_the_shape() {
 #[test]
 fn test_from_vec_rejects_a_buffer_that_does_not_match_the_shape() {
     let e = DenseMatrix::from_vec(vec![1.0, 2.0, 3.0], 2, 2).unwrap_err();
-    assert!(matches!(e, LinearError::ShapeMismatch { .. }), "got {e:?}");
+    assert!(
+        matches!(e, LinearError(LinearErrorEnum::ShapeMismatch { .. })),
+        "got {e:?}"
+    );
 }
 
 #[test]
@@ -41,10 +44,10 @@ fn test_get_rejects_an_index_outside_the_shape() {
     assert!(
         matches!(
             e,
-            LinearError::IndexOutOfBounds {
+            LinearError(LinearErrorEnum::IndexOutOfBounds {
                 index: (3, 0),
                 shape: (3, 3)
-            }
+            })
         ),
         "got {e:?}"
     );
@@ -132,9 +135,9 @@ fn test_a_degenerate_shape_never_panics_on_access() {
     // A typed error naming the shape it was checked against, not a panic and not a fabricated zero.
     assert!(matches!(
         m.get(0, 0),
-        Err(LinearError::IndexOutOfBounds {
+        Err(LinearError(LinearErrorEnum::IndexOutOfBounds {
             index: (0, 0),
             shape: (0, 0)
-        })
+        }))
     ));
 }

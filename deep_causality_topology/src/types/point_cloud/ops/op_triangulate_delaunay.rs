@@ -26,8 +26,8 @@
 
 use super::op_triangulate::find_duplicate_points;
 use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::{Float, Zero};
-use deep_causality_sparse::CsrMatrix;
 use std::collections::{BTreeSet, HashSet};
 use std::iter::Sum;
 

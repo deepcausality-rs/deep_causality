@@ -35,7 +35,7 @@ Reach for one of these when the umbrella is broader than you need:
 - [`deep_causality_discovery`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_discovery): the Causal Discovery Language (CDL) pipeline.
 - [`deep_causality_ethos`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_ethos): the Effect Ethos and its Teloids.
 - [`deep_causality_topology`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_topology), [`deep_causality_physics`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_physics), [`deep_causality_multivector`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_multivector): math and physics primitives.
-- [`deep_causality_tensor`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_tensor), [`deep_causality_sparse`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_sparse): numerical containers.
+- [`deep_causality_tensor`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_tensor), [`deep_causality_linear`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_linear): numerical containers.
 - [`deep_causality_uncertain`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain): a first-order type for uncertain values.
 
 Each crate stands on its own and links back to the others through clear seams. The full API reference is on [docs.rs](https://docs.rs/deep_causality), one page per crate.

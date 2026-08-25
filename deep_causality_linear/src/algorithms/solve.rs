@@ -54,9 +54,7 @@ where
     {
         let (rows, cols) = (m.rows(), m.cols());
         if rows != cols {
-            return Err(LinearError::NotSquare {
-                shape: (rows, cols),
-            });
+            return Err(LinearError::NotSquare((rows, cols)));
         }
         let n = rows;
         let mut a = alloc::vec::Vec::with_capacity(n * n);
@@ -81,7 +79,7 @@ where
                 }
             }
             if a[best * n + col].is_zero() {
-                return Err(LinearError::Singular { at_column: col });
+                return Err(LinearError::Singular(col));
             }
             if best != col {
                 for j in 0..n {
@@ -117,10 +115,7 @@ where
     pub fn apply(&self, b: &DenseVector<T>) -> Result<DenseVector<T>, LinearError> {
         let n = self.order;
         if b.len() != n {
-            return Err(LinearError::LengthMismatch {
-                expected: n,
-                found: b.len(),
-            });
+            return Err(LinearError::LengthMismatch(n, b.len()));
         }
         // Permute, then forward substitution through L (unit diagonal), then backward through U.
         let mut y = alloc::vec::Vec::with_capacity(n);
@@ -183,10 +178,7 @@ where
     M::Scalar: NormedScalar,
 {
     if b.len() != a.rows() {
-        return Err(LinearError::LengthMismatch {
-            expected: a.rows(),
-            found: b.len(),
-        });
+        return Err(LinearError::LengthMismatch(a.rows(), b.len()));
     }
     Lu::factor(a)?.apply(b)
 }
@@ -213,15 +205,10 @@ where
 {
     let n = a.rows();
     if n != a.cols() {
-        return Err(LinearError::NotSquare {
-            shape: (n, a.cols()),
-        });
+        return Err(LinearError::NotSquare((n, a.cols())));
     }
     if b.len() != n {
-        return Err(LinearError::LengthMismatch {
-            expected: n,
-            found: b.len(),
-        });
+        return Err(LinearError::LengthMismatch(n, b.len()));
     }
     // The wrong triangle is rejected rather than ignored: a non-zero where the caller promised a
     // zero means the caller has the wrong matrix, and silently dropping it answers a question that
@@ -229,7 +216,7 @@ where
     for i in 0..n {
         for j in 0..n {
             if j > i && !a.get(i, j)?.is_zero() {
-                return Err(LinearError::WrongTriangle { at: (i, j) });
+                return Err(LinearError::WrongTriangle((i, j)));
             }
         }
     }
@@ -237,7 +224,7 @@ where
     for i in 0..n {
         let d = a.get(i, i)?;
         if d.is_zero() {
-            return Err(LinearError::ZeroDiagonal { at_index: i });
+            return Err(LinearError::ZeroDiagonal(i));
         }
         let mut acc = b.get(i)?;
         for (j, xj) in x.iter().enumerate().take(i) {
@@ -263,15 +250,10 @@ where
 {
     let n = a.rows();
     if n != a.cols() {
-        return Err(LinearError::NotSquare {
-            shape: (n, a.cols()),
-        });
+        return Err(LinearError::NotSquare((n, a.cols())));
     }
     if b.len() != n {
-        return Err(LinearError::LengthMismatch {
-            expected: n,
-            found: b.len(),
-        });
+        return Err(LinearError::LengthMismatch(n, b.len()));
     }
     // The wrong triangle is rejected rather than ignored: a non-zero where the caller promised a
     // zero means the caller has the wrong matrix, and silently dropping it answers a question that
@@ -279,7 +261,7 @@ where
     for i in 0..n {
         for j in 0..n {
             if j < i && !a.get(i, j)?.is_zero() {
-                return Err(LinearError::WrongTriangle { at: (i, j) });
+                return Err(LinearError::WrongTriangle((i, j)));
             }
         }
     }
@@ -287,7 +269,7 @@ where
     for i in (0..n).rev() {
         let d = a.get(i, i)?;
         if d.is_zero() {
-            return Err(LinearError::ZeroDiagonal { at_index: i });
+            return Err(LinearError::ZeroDiagonal(i));
         }
         let mut acc = b.get(i)?;
         for (j, xj) in x.iter().enumerate().skip(i + 1) {
@@ -316,9 +298,7 @@ where
 {
     let n = a.rows();
     if n != a.cols() {
-        return Err(LinearError::NotSquare {
-            shape: (n, a.cols()),
-        });
+        return Err(LinearError::NotSquare((n, a.cols())));
     }
     let lu = Lu::factor(a)?;
     let mut out = M::zeros(n, n);
