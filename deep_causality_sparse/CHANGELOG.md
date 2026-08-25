@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.2.2...deep_causality_sparse-v0.2.5) - 2026-08-25
+
+### Added
+
+- *(linear)* migrate the workspace onto deep_causality_linear
+- *(algebra)* give the tower a finite field, and a guard for admitting it
+- *(algebra)* [**breaking**] state each algebraic law about the operation it governs
+- *(deep_causality_sparse)* Configured no-std flag.
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+
+### Other
+
+- *(release)* patch-bump every publishable crate to clear the split algebra graph
+- General QA: Bug fixes and code improvements.
+- Updated version requirmentes
+- lints and minor code fixes
+- lints and minor code fixes
+
 ## [0.2.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_sparse-v0.2.1...deep_causality_sparse-v0.2.2) - 2026-07-14
 
 ### Added

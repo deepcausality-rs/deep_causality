@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.7.1...deep_causality_topology-v0.7.3) - 2026-08-25
+
+### Added
+
+- *(topology)* retire the duplicated linear algebra
+- *(linear)* migrate the workspace onto deep_causality_linear
+- *(algebra)* give the tower a finite field, and a guard for admitting it
+- *(topology)* add the cup product, generic over ChainComplex
+
+### Fixed
+
+- *(ci)* raised version number for ast crate to auto-publish to unblock downstream tensor crate
+- *(topology)* dimension-matched cut-face tolerance, and an analytic charge test
+- *(deep_causality_topology)* Fixed a number of incorrect tests.
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+- *(topology)* address review findings on the cup product changeset
+
+### Other
+
+- *(release)* patch-bump every publishable crate to clear the split algebra graph
+- General QA: Bug fixes and code improvements.
+- Improved test coverage
+- *(ci)* Fixed various lints and minor issues.
+- *(deep_causality_topology)* Updated SBOM.
+- Updated version requirmentes
+- lints and minor code fixes
+- *(topology)* document the vertex and corner ordering contracts
+- *(deep_causality_topology)* added test suite for cup product
+
 ## [0.7.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.7.0...deep_causality_topology-v0.7.1) - 2026-07-14
 
 ### Fixed

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.1...deep_causality_rand-v0.2.2) - 2026-08-25
+
+### Added
+
+- *(deep_causality_rand)* Configured no-std flag.
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+
+### Other
+
+- *(release)* patch-bump every publishable crate to clear the split algebra graph
+- *(deep_causality_rand)* Updated SBOM.
+- Updated version requirmentes
+- lints and minor code fixes
+- lints and minor code fixes
+
 ## [0.2.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.0...deep_causality_rand-v0.2.1) - 2026-07-14
 
 ### Added

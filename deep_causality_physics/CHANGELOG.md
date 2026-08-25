@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.1...deep_causality_physics-v0.8.2) - 2026-08-25
+
+### Added
+
+- *(linear)* migrate the workspace onto deep_causality_linear
+- *(algebra)* give the tower a finite field, and a guard for admitting it
+
+### Fixed
+
+- *(release)* bump algebra to 0.3.0 so the new traits are actually published
+
+### Other
+
+- *(release)* patch-bump every publishable crate to clear the split algebra graph
+- General QA: Bug fixes and code improvements.
+- Improved test coverage
+- *(deep_causality_physics)* Updated SBOM.
+- Updated version requirmentes
+
 ## [0.8.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.0...deep_causality_physics-v0.8.1) - 2026-08-12
 
 ### Added

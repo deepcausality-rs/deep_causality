@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_metric-v0.2.5...deep_causality_metric-v0.2.6) - 2026-08-25
+
+### Other
+
+- *(release)* patch-bump every publishable crate to clear the split algebra graph
+
 ## [0.2.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_metric-v0.2.3...deep_causality_metric-v0.2.4) - 2026-07-14
 
 ### Added
