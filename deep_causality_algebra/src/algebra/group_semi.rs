@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::algebra::operator::{Additive, Multiplicative};
+use crate::{AddMagma, MulMagma};
 
 use crate::algebra::associative::Associative;
-use core::ops::{Add, Mul};
 
 /// Represents an **Additive Semigroup**.
 ///
@@ -20,10 +21,10 @@ use core::ops::{Add, Mul};
 /// # Examples
 /// - Positive integers under addition (no zero identity).
 /// - Non-empty strings under concatenation.
-pub trait AddSemigroup: Add<Output = Self> + Associative + Clone {}
+pub trait AddSemigroup: AddMagma + Associative<Additive> {}
 
 // Blanket implementation
-impl<T> AddSemigroup for T where T: Add<Output = Self> + Associative + Clone {}
+impl<T> AddSemigroup for T where T: AddMagma + Associative<Additive> {}
 
 /// Represents a **Multiplicative Semigroup**.
 ///
@@ -44,7 +45,7 @@ impl<T> AddSemigroup for T where T: Add<Output = Self> + Associative + Clone {}
 ///   ↓
 /// Monoid (+ identity)
 /// ```
-pub trait MulSemigroup: Mul<Output = Self> + Associative + Clone {}
+pub trait MulSemigroup: MulMagma + Associative<Multiplicative> {}
 
 // Blanket implementation
-impl<T> MulSemigroup for T where T: Mul<Output = Self> + Associative + Clone {}
+impl<T> MulSemigroup for T where T: MulMagma + Associative<Multiplicative> {}

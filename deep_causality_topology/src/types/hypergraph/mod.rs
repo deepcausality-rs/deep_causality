@@ -5,7 +5,7 @@
 
 //! Hypergraph type for representing hypergraph structures.
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 
 // Submodule declarations (folder-based)

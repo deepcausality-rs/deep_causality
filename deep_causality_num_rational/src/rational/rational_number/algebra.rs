@@ -31,13 +31,35 @@
 //! which is analytic without being a field.
 
 use super::{Rational, RationalScalar};
-use crate::{AbelianGroup, Annihilating, Associative, Commutative, Distributive, Invertible};
+use crate::{Annihilating, Associative, Commutative, Distributive, Invertible};
+use deep_causality_algebra::IntegralDomain;
+use deep_causality_algebra::{Additive, Multiplicative};
+use deep_causality_algebra::{Characteristic, DivisibleByIntegers};
 
-impl<T: RationalScalar> Commutative for Rational<T> {}
-impl<T: RationalScalar> Associative for Rational<T> {}
+impl<T: RationalScalar> Commutative<Multiplicative> for Rational<T> {}
+impl<T: RationalScalar> Associative<Multiplicative> for Rational<T> {}
+// Addition carries the integer parts separately and adds the fractions over their least
+// common denominator. Both additive laws follow from the ring laws of `T`.
+impl<T: RationalScalar> Associative<Additive> for Rational<T> {}
+impl<T: RationalScalar> Commutative<Additive> for Rational<T> {}
 impl<T: RationalScalar> Distributive for Rational<T> {}
-impl<T: RationalScalar> AbelianGroup for Rational<T> {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 // `0/1 · a/b = 0/b`, which reduces to `0/1`. In a ring this is a theorem, but `Semiring` takes it
 // as an axiom — the derivation needs an additive inverse — so it is stated rather than assumed.
 impl<T: RationalScalar> Annihilating for Rational<T> {}
 impl<T: RationalScalar> Invertible for Rational<T> {}
+
+// ℚ is a field, so it has no zero divisors: `a·b = 0` with `a ≠ 0` gives `b = a⁻¹·a·b = 0`.
+impl<T: RationalScalar> IntegralDomain for Rational<T> {}
+
+// ℚ has characteristic zero: `n · 1` is the fraction `n/1`, which is zero only for `n = 0`.
+// Stated per type rather than blanket-implemented, because it is a promise the compiler cannot
+// check.
+//
+// This is what admits `Rational<T>` to the operations that divide by an integer, and what keeps 𝔽₂
+// out of them. See `deep_causality_algebra::DivisibleByIntegers`.
+impl<T: RationalScalar> Characteristic for Rational<T> {
+    const CHARACTERISTIC: u32 = 0;
+}
+
+impl<T: RationalScalar> DivisibleByIntegers for Rational<T> {}

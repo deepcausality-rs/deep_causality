@@ -1,0 +1,13 @@
+[package]
+name = "linear_a"
+version = "0.0.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+publish = false
+
+[dependencies]
+deep_causality_num = { workspace = true }
+deep_causality_algebra = { workspace = true }
+
+[lints]
+workspace = true

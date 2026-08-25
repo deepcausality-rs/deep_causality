@@ -19,7 +19,7 @@
 //! 3. `h = ω − α − β`.
 //!
 //! The Poisson solves run through the matrix-free CG solver
-//! [`deep_causality_sparse::cg_solve`], which composes against `Manifold::laplacian`
+//! [`deep_causality_linear::cg_solve`], which composes against `Manifold::laplacian`
 //! rather than assembling `Δ_k` as a `CsrMatrix`. The gauge-fixing mean subtraction
 //! lives in [`crate::utils::cg_solver`]. The gauge non-uniqueness at grade 0 (where
 //! the constant functions are always harmonic) is fixed by subtracting the mean from
@@ -47,8 +47,8 @@ use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::manifold::Manifold;
 use crate::utils::cg_solver::subtract_mean_in_place;
+use deep_causality_linear::{CgFailure, cg_solve, cg_solve_preconditioned};
 use deep_causality_par::MaybeParallel;
-use deep_causality_sparse::{CgFailure, cg_solve, cg_solve_preconditioned};
 
 /// Caller-tunable knobs for `Manifold::hodge_decompose_opts`.
 ///
@@ -360,7 +360,11 @@ where
     };
     match solve_result {
         Ok(x) => Ok(x),
-        Err(CgFailure {
+        // `CgFailure` is an enum of three named cases where the sparse crate had one struct
+        // carrying `iterations` and `residual` for every failure mode. Two of the three are not
+        // non-convergence at all, and reporting them as such -- with a residual that was never
+        // measured -- is what the struct forced. Each now maps to what it is.
+        Err(CgFailure::NotConverged {
             iterations,
             residual,
         }) => Err(HodgeFailReason::Nonconvergence {
@@ -368,6 +372,23 @@ where
             residual,
         }
         .into_topology_error()),
+        // The Laplacian is positive semi-definite by construction, so a non-positive curvature is
+        // a defect in the operator this assembled, not a solve that ran out of budget.
+        Err(CgFailure::NotPositiveDefinite { iteration }) => {
+            Err(TopologyError::HodgeDecompositionFailed(format!(
+                "the assembled Laplacian is not positive definite: the conjugate-gradient \
+                 curvature went non-positive at iteration {iteration}"
+            )))
+        }
+        // The operator returned a vector of the wrong length, which is an assembly bug rather than
+        // a numerical one.
+        Err(CgFailure::LengthMismatch { expected, found }) => {
+            Err(HodgeFailReason::<R>::DimensionMismatch {
+                expected,
+                actual: found,
+            }
+            .into_topology_error())
+        }
     }
 }
 

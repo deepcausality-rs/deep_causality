@@ -130,3 +130,28 @@ fn test_eigen_hermitian_large_finite_norm_still_diagonalizes() {
         s[1]
     );
 }
+
+#[test]
+fn test_eigen_hermitian_rejects_a_dimension_of_zero_as_empty() {
+    // A shape with a zero extent is refused as empty before squareness is considered, so 0x0 --
+    // which is square -- is refused too. There is no spectrum to return: the decomposition would
+    // have to produce an empty eigenvalue list and an empty basis, which no caller can use.
+    let square: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    assert_eq!(
+        square.eigen_hermitian().unwrap_err(),
+        CausalTensorError::EmptyTensor
+    );
+
+    // A zero extent outranks non-squareness: 0x3 reports EmptyTensor, not ShapeMismatch.
+    let no_rows: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 3]).unwrap();
+    assert_eq!(
+        no_rows.eigen_hermitian().unwrap_err(),
+        CausalTensorError::EmptyTensor
+    );
+
+    let no_cols: CausalTensor<f64> = CausalTensor::new(vec![], vec![3, 0]).unwrap();
+    assert_eq!(
+        no_cols.eigen_hermitian().unwrap_err(),
+        CausalTensorError::EmptyTensor
+    );
+}

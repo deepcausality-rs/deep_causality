@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_tensor"
-version = "0.5.1"
+version = "0.5.2"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -27,9 +27,9 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc", "deep_causality_ast/std", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_num_dual/std"]
+std = ["alloc", "deep_causality_ast/std", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_num_dual/std", "deep_causality_linear/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_ast/no-std", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_num_dual/no-std"]
+no-std = ["alloc", "deep_causality_ast/no-std", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_num_dual/no-std", "deep_causality_linear/no-std"]
 
 [dependencies.deep_causality_ast]
 path = "../deep_causality_ast"
@@ -48,7 +48,7 @@ default-features = false
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.3"
+version = "0.4"
 default-features = false
 
 [dependencies.deep_causality_num_complex]
@@ -58,6 +58,11 @@ default-features = false
 
 [dependencies.deep_causality_num_dual]
 path = "../deep_causality_num_dual"
+version = "0.1"
+default-features = false
+
+[dependencies.deep_causality_linear]
+path = "../deep_causality_linear"
 version = "0.1"
 default-features = false
 

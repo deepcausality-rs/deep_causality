@@ -12,7 +12,7 @@
 //! idempotence, M-orthogonality of the removed component, the empty-set
 //! delegation, and the typed rejections.
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HasHodgeStar, HodgeDecomposeOptions, LatticeComplex,

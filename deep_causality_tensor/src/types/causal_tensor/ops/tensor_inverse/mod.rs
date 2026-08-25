@@ -1,123 +1,58 @@
 /*
  * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+
+//! The matrix inverse, delegating the numerics to `deep_causality_linear`.
 
 use crate::{CausalTensor, CausalTensorError};
 use alloc::vec;
-use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
-use deep_causality_num::{One, Zero};
+use deep_causality_linear::DenseMatrix;
+use deep_causality_num::{FromPrimitive, One, Zero};
 
 impl<T> CausalTensor<T> {
+    /// The inverse of a square matrix.
+    ///
+    /// # What changed when this became a delegation
+    ///
+    /// The body here was Gauss-Jordan on an augmented `n × 2n` matrix. It is now LU with partial
+    /// pivoting in `deep_causality_linear`, solved against each basis column. Both are exact for a
+    /// well-conditioned input; the LU route allocates `n × n` where the augmented one allocated
+    /// `n × 2n`, and it shares its factorisation with the crate's `solve`.
+    ///
+    /// A caller computing `A⁻¹ b` should use `solve` instead — forming the inverse to multiply by
+    /// it is both slower and less accurate than solving directly.
+    ///
+    /// # Errors
+    ///
+    /// [`CausalTensorError::DimensionMismatch`] if the tensor is not 2-dimensional,
+    /// [`CausalTensorError::ShapeMismatch`] if it is not square, and
+    /// [`CausalTensorError::SingularMatrix`] if it has no inverse.
     pub(in crate::types::causal_tensor) fn inverse_impl(&self) -> Result<Self, CausalTensorError>
     where
-        T: Clone + RealField + Zero + One + Copy + PartialEq,
+        T: Clone + RealField + Zero + One + Copy + PartialEq + FromPrimitive,
     {
-        let num_dim = self.num_dim();
-        if num_dim != 2 {
+        // The rank guard stays here: `deep_causality_linear` has no notion of tensor rank.
+        if self.num_dim() != 2 {
             return Err(CausalTensorError::DimensionMismatch);
         }
-
-        let rows = self.shape()[0];
-        let cols = self.shape()[1];
-
-        if rows != cols {
-            return Err(CausalTensorError::ShapeMismatch); // Not a square matrix
+        let n = self.shape()[0];
+        if n != self.shape()[1] {
+            return Err(CausalTensorError::ShapeMismatch);
+        }
+        if n == 0 {
+            return Self::new(vec![], vec![0, 0]);
         }
 
-        let n = rows;
+        // `inverse` returns the representation it was given and builds it through `MatrixBuild`,
+        // which a tensor does not implement — in-place construction by position has no meaning at
+        // rank three. The dense matrix is that representation for the length of the call.
+        let a = DenseMatrix::from_vec(self.as_slice().to_vec(), n, n)
+            .map_err(|_| CausalTensorError::ShapeMismatch)?;
+        let inv =
+            deep_causality_linear::inverse(&a).map_err(|_| CausalTensorError::SingularMatrix)?;
 
-        // Handle 1x1 matrix case
-        if n == 1 {
-            let val = self.data[0];
-            if val.is_zero() {
-                return Err(CausalTensorError::SingularMatrix);
-            }
-            return Self::new(vec![T::one() / val], vec![1, 1]); // Should not fail for 1x1
-        }
-
-        // Create an augmented matrix [A | I]
-        let mut augmented_data = Vec::with_capacity(n * 2 * n);
-        for r in 0..n {
-            for c in 0..n {
-                augmented_data.push(*self.get_ref(r, c)?);
-            }
-            for c in 0..n {
-                if r == c {
-                    augmented_data.push(T::one());
-                } else {
-                    augmented_data.push(T::zero());
-                }
-            }
-        }
-
-        let mut augmented_matrix = Self::from_vec_and_shape_unchecked(augmented_data, &[n, 2 * n]);
-
-        // Gaussian Elimination
-        for i in 0..n {
-            // Estimate scale using max absolute value in column i
-            let mut pivot_row = i;
-            let mut max_val = T::zero();
-            for r in i..n {
-                let current_val = augmented_matrix.get_ref(r, i)?.abs();
-                if current_val > max_val {
-                    max_val = current_val;
-                    pivot_row = r;
-                }
-            }
-            // Use relative threshold: tol = epsilon * max(1, max_val)
-            let one = T::one();
-            let tol = T::epsilon() * if max_val > one { max_val } else { one };
-            if max_val <= tol {
-                return Err(CausalTensorError::SingularMatrix);
-            }
-
-            // Swap pivot row with current row if necessary
-            if pivot_row != i {
-                for c in 0..2 * n {
-                    let a = *augmented_matrix.get_ref(i, c)?;
-                    let b = *augmented_matrix.get_ref(pivot_row, c)?;
-                    augmented_matrix.set(i, c, b)?;
-                    augmented_matrix.set(pivot_row, c, a)?;
-                }
-            }
-
-            // Normalize pivot row across ALL columns to make pivot exactly 1
-            let pivot_val = *augmented_matrix.get_ref(i, i)?;
-            if pivot_val.abs() < T::epsilon() {
-                return Err(CausalTensorError::DivisionByZero);
-            }
-            for c in 0..2 * n {
-                let val = *augmented_matrix.get_ref(i, c)?;
-                augmented_matrix.set(i, c, val / pivot_val)?;
-            }
-
-            // Eliminate other rows
-            for r in 0..n {
-                if r == i {
-                    continue;
-                }
-                let factor = *augmented_matrix.get_ref(r, i)?;
-                if factor.abs() < T::epsilon() {
-                    continue;
-                }
-                for c in 0..2 * n {
-                    let v_rc = *augmented_matrix.get_ref(r, c)?;
-                    let v_ic = *augmented_matrix.get_ref(i, c)?;
-                    augmented_matrix.set(r, c, v_rc - factor * v_ic)?;
-                }
-            }
-        }
-
-        // Extract the inverse matrix
-        let mut inverse_data = Vec::with_capacity(n * n);
-        for r in 0..n {
-            for c in n..2 * n {
-                inverse_data.push(*augmented_matrix.get_ref(r, c)?); // Use get and ?
-            }
-        }
-
-        Ok(Self::from_vec_and_shape_unchecked(inverse_data, &[n, n]))
+        Self::new(inv.as_slice().to_vec(), vec![n, n])
     }
 }

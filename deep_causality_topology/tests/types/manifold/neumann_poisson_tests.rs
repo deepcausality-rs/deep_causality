@@ -12,7 +12,7 @@
 //! property of the projection, and exactness under a starved iteration
 //! budget (the direct path has no convergence-failure mode).
 
-use deep_causality_sparse::cg_solve_preconditioned;
+use deep_causality_linear::cg_solve_preconditioned;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HasHodgeStar, LatticeComplex, Manifold,
@@ -137,7 +137,7 @@ fn assert_agrees_with_pcg<const D: usize>(
     let metric = metric_binding.as_ref().unwrap();
     let star0 = metric.hodge_star_matrix(manifold.complex(), 0).unwrap();
     let star1 = metric.hodge_star_matrix(manifold.complex(), 1).unwrap();
-    let diag_of = |m: &deep_causality_sparse::CsrMatrix<f64>, n: usize| -> Vec<f64> {
+    let diag_of = |m: &deep_causality_linear::CsrMatrix<f64>, n: usize| -> Vec<f64> {
         let mut d = vec![0.0; n];
         for (i, slot) in d.iter_mut().enumerate() {
             for e in m.row_indices()[i]..m.row_indices()[i + 1] {
@@ -247,4 +247,24 @@ fn degenerate_wall_extent_falls_back_to_cg() {
     let n1 = m.complex().num_cells(1);
     let omega = CausalTensor::new(random_cochain(n1, 139), vec![n1]).unwrap();
     assert!(m.leray_project(&omega).is_ok());
+}
+
+#[test]
+fn zero_extent_periodic_axis_reports_the_degenerate_transform() {
+    // Axis 0 is periodic with a zero extent and axis 1 is a wall of extent 4,
+    // so the wall-bounded dispatch accepts the lattice and then asks for a
+    // length-zero DFT along axis 0. That transform does not exist, and the
+    // plan's rejection surfaces as an InvalidInput naming the Neumann solve.
+    let manifold = manifold_with_metric(
+        LatticeComplex::<2, f64>::new([0, 4], [true, false]),
+        CubicalReggeGeometry::unit(),
+    );
+    let omega = CausalTensor::new(Vec::<f64>::new(), vec![0]).unwrap();
+
+    let err = manifold.leray_project(&omega).unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("Neumann Poisson solve"),
+        "error should name the Neumann solve: {msg}"
+    );
 }

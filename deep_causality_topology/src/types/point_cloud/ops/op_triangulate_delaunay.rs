@@ -24,10 +24,10 @@
 //! same path used by Vietoris-Rips post-`harden-simplicial-hodge-degeneracy-
 //! detection`.
 
-use super::op_triangulate::find_duplicate_points;
+use super::op_triangulate::{ambient_dim, find_duplicate_points};
 use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::{Float, Zero};
-use deep_causality_sparse::CsrMatrix;
 use std::collections::{BTreeSet, HashSet};
 use std::iter::Sum;
 
@@ -123,7 +123,9 @@ where
     ///
     /// # Preconditions
     ///
-    /// 1. Ambient dimension must be 2 (`self.points.shape()[1] == 2`).
+    /// 1. The `points` tensor must be rank 2 with ambient dimension 2
+    ///    (`self.points.shape() == [n, 2]`). `PointCloud::new` accepts any
+    ///    rank, so both halves are checked here.
     /// 2. At least 3 input points.
     /// 3. No duplicate input points (within `T::epsilon() * max_extent`).
     /// 4. Input points must not all be collinear (within
@@ -154,7 +156,7 @@ where
                 "triangulate_delaunay: empty point cloud".to_string(),
             ));
         }
-        let dim = self.points.shape()[1];
+        let dim = ambient_dim(self.points.shape(), "triangulate_delaunay")?;
         if dim != 2 {
             return Err(TopologyError::PointCloudError(format!(
                 "triangulate_delaunay requires 2D ambient (D == 2), got D == {}",

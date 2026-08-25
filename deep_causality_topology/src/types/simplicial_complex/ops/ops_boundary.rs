@@ -5,8 +5,8 @@
 
 use crate::{Chain, SimplicialComplex};
 use core::fmt::Debug;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_num::Num;
-use deep_causality_sparse::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {
     /// Computes the boundary of a chain: ∂c

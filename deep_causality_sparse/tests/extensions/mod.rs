@@ -1,9 +1,0 @@
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
-mod ext_hkt_tests;
-
-#[cfg(feature = "tensor-iso")]
-mod ext_iso_tests;

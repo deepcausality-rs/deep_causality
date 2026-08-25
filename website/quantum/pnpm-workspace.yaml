@@ -1,0 +1,53 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+# Fresh releases accepted despite the configured minimum release age.
+# pnpm appends here on install; each entry is a version we chose to take early.
+minimumReleaseAgeExclude:
+  - '@shikijs/core@4.4.3'
+  - '@shikijs/engine-javascript@4.4.3'
+  - '@shikijs/engine-oniguruma@4.4.3'
+  - '@shikijs/langs@4.4.3'
+  - '@shikijs/primitive@4.4.3'
+  - '@shikijs/themes@4.4.3'
+  - '@shikijs/types@4.4.3'
+  - miniflare@5.20260804.0-alpha
+  - shiki@4.4.3
+  - wrangler@4.120.1
+  - '@rolldown/binding-darwin-x64@1.2.5'
+  - '@rolldown/binding-linux-arm64-gnu@1.2.5'
+
+# pnpm settings live here, not in package.json.
+#
+# pnpm 11 no longer reads the `pnpm` field from package.json (it warns
+# "The 'pnpm' field in package.json is no longer read by pnpm"). The
+# build-script allowlist that lets these native deps run their install
+# scripts must therefore be declared here. Without it, `pnpm install`
+# aborts on Cloudflare with ERR_PNPM_IGNORED_BUILDS.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+
+# Deduplicate @astrojs/markdown-satteri.
+#
+# @astrojs/markdown-remark peers "^0.3.1" while astro pins an exact patch, so
+# pnpm legitimately resolves two copies. Bazel's public_hoist_packages cannot
+# hoist an ambiguous name and fails the build:
+#   "Invalid public hoist configuration with multiple packages to hoist"
+# Force the single version astro requires; it also satisfies the ^0.3.1 peer.
+#
+# NOTE: overrides must live here. pnpm 11 no longer reads the `pnpm` field from
+# package.json, so an override placed there is silently ignored.
+#
+# Deduplicate shiki.
+#
+# astro and @astrojs/internal-helpers both depend on "^4.0.2", so pnpm is free
+# to keep an older copy alongside the one this project depends on directly.
+# shiki-rust-themes.mjs derives its themes from `bundledThemes` of the direct
+# copy and hands them to the highlighter astro instantiates from its own copy;
+# those two must be the same shiki. Force one version, which satisfies ^4.0.2.
+overrides:
+  '@astrojs/markdown-satteri': 0.3.6
+  shiki: 4.4.3

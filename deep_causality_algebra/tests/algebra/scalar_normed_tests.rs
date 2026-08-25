@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algebra::NormedScalar;
+use deep_causality_algebra::{Normed, NormedScalar};
 use deep_causality_num::Float106;
 
 fn assert_normed_scalar<T: NormedScalar>() {}
@@ -26,4 +26,83 @@ fn test_modulus_through_the_bound() {
         x.modulus_squared()
     }
     assert_eq!(modulus_sq(3.0f64), 9.0);
+}
+
+// ---------------------------------------------------------------------------
+// The `Normed` blanket over `RealField` itself — a real is its own real type,
+// its squared modulus is `x²`, and scaling is plain multiplication.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_normed_real_modulus_squared() {
+    use deep_causality_algebra::Normed;
+    assert_eq!(Normed::modulus_squared(&3.0_f64), 9.0);
+    assert_eq!(Normed::modulus_squared(&-4.0_f64), 16.0);
+    assert_eq!(Normed::modulus_squared(&0.0_f64), 0.0);
+    // f32 goes through the same blanket.
+    assert_eq!(Normed::modulus_squared(&2.5_f32), 6.25);
+}
+
+#[test]
+fn test_normed_real_scale_by_real() {
+    use deep_causality_algebra::Normed;
+    assert_eq!(Normed::scale_by_real(&3.0_f64, 2.0), 6.0);
+    assert_eq!(Normed::scale_by_real(&-1.5_f64, 4.0), -6.0);
+    assert_eq!(Normed::scale_by_real(&7.0_f64, 0.0), 0.0);
+    assert_eq!(Normed::scale_by_real(&1.5_f32, 2.0), 3.0);
+}
+
+#[test]
+fn test_normed_real_associated_type_is_self() {
+    use deep_causality_algebra::Normed;
+    // The associated `Real` of a real field element is the element's own type, which is what lets
+    // one bound serve both the real and the complex cases.
+    fn modulus<T: Normed>(x: &T) -> T::Real {
+        x.modulus_squared()
+    }
+    let m: f64 = modulus(&5.0_f64);
+    assert_eq!(m, 25.0);
+}
+
+#[test]
+fn test_normed_real_scaling_is_homogeneous() {
+    use deep_causality_algebra::Normed;
+    // |s·x|² == s²·|x|² for a real scalar.
+    let (x, s) = (3.0_f64, 2.0_f64);
+    let scaled = Normed::scale_by_real(&x, s);
+    assert_eq!(
+        Normed::modulus_squared(&scaled),
+        s * s * Normed::modulus_squared(&x)
+    );
+}
+
+// ---- modulus: the magnitude without the square ---------------------------------------------
+
+/// `modulus_squared().sqrt()` overflows where the modulus itself is representable. `1e308` fits in
+/// `f64`; its square does not, so the square reaches infinity and the root stays there.
+#[test]
+fn test_modulus_of_a_real_near_the_top_of_the_range_is_finite() {
+    assert_eq!(1e308_f64.modulus(), 1e308);
+    assert_eq!((-1e308_f64).modulus(), 1e308);
+    assert!((1e308_f64 * 1e308).sqrt().is_infinite());
+}
+
+/// The same at the bottom: `1e-200` squares to zero, so the squared route loses the value.
+#[test]
+fn test_modulus_of_a_real_near_the_bottom_of_the_range_is_not_flushed_to_zero() {
+    assert_eq!(1e-200_f64.modulus(), 1e-200);
+    assert_eq!(1e-320_f64.modulus(), 1e-320);
+    assert_eq!((1e-200_f64 * 1e-200).sqrt(), 0.0);
+}
+
+/// Where both routes are in range they agree, so `modulus` is the same number computed safely.
+#[test]
+fn test_modulus_agrees_with_the_squared_route_in_the_representable_range() {
+    for x in [0.0_f64, 1.0, -1.0, 3.0, -7.5, 1e100, 1e-100] {
+        assert_eq!(
+            x.modulus(),
+            x.modulus_squared().sqrt(),
+            "disagreement at {x}"
+        );
+    }
 }

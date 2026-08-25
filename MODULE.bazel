@@ -72,7 +72,7 @@ git_override(
 ###############################################################################
 RUST_EDITION = "2024"
 
-RUST_VERSION = "1.97.1"
+RUST_VERSION = "1.98.0"
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
@@ -145,6 +145,7 @@ lake.workspace(
         "Mathlib.Algebra.Algebra.Basic",
         "Mathlib.Algebra.DualNumber",
         "Mathlib.Algebra.Field.Basic",
+        "Mathlib.Algebra.Field.ZMod",
         "Mathlib.Algebra.Group.Basic",
         "Mathlib.Algebra.Group.Defs",
         "Mathlib.Algebra.Order.Group.Int",
@@ -157,6 +158,9 @@ lake.workspace(
         "Mathlib.Analysis.Normed.Field.Basic",
         "Mathlib.Data.Rat.Cast.Defs",
         "Mathlib.Data.Real.Basic",
+        "Mathlib.LinearAlgebra.Dimension.RankNullity",
+        "Mathlib.LinearAlgebra.FiniteDimensional.Lemmas",
+        "Mathlib.LinearAlgebra.Matrix.Rank",
         "Mathlib.LinearAlgebra.Matrix.Trace",
         "Mathlib.Tactic.Linarith",
     ],

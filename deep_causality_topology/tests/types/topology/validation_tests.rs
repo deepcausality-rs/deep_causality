@@ -65,3 +65,25 @@ fn test_topology_validation_success() {
     let result = Topology::new(complex, grade, data, cursor);
     assert!(result.is_ok());
 }
+
+#[test]
+fn test_topology_validation_grade_zero_on_complex_without_skeletons() {
+    // `max_simplex_dimension()` is `skeletons.len().saturating_sub(1)`, so an
+    // empty complex reports 0 and grade 0 clears the max-dimension guard. The
+    // skeleton-count guard is what rejects it, since skeleton 0 does not exist.
+    let complex: Arc<deep_causality_topology::SimplicialComplex<f64>> =
+        Arc::new(deep_causality_topology::SimplicialComplex::new(
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+        ));
+    let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+
+    let err = Topology::new(complex, 0, data, 0).unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("grade 0 exceeds available skeletons 0"),
+        "got {err}"
+    );
+}

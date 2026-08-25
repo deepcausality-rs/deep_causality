@@ -1,0 +1,180 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import ApiTable from '../../components/docs/ApiTable.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { SRC_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Two modalities — DeepCausality Quantum';
+const description =
+  'The verifiable path and the emergent QPU seam, separated by a cargo feature rather than by convention. What the qpu feature contains, and what it deliberately does not.';
+
+const seam = `use deep_causality_quantum::{GateOp, QuantumCircuit, SimQpu, qpu_effect};
+
+// A circuit is inert data: no amplitudes, no function pointers.
+let circuit = QuantumCircuit::new(
+    2,
+    vec![GateOp::H(0), GateOp::Cnot { control: 0, target: 1 }],
+    vec![0, 1],
+)?;
+
+// The sampler is a generic bound, never a trait object.
+let qpu = SimQpu::new(0xC0FFEE);
+let effect = qpu_effect(&qpu, &circuit, 1024);`;
+
+const bridge = `// One measured qubit as a Bernoulli, at its measured frequency.
+let bit: Uncertain<bool> = shots_to_qubit_bernoulli(&hist, 0)?;
+
+// An observable as a normal, from the count entries rather than
+// one materialized sample per shot.
+let obs: Uncertain<f64> = shots_to_observable(&hist, |outcome| {
+    if outcome.count_ones() % 2 == 0 { 1.0 } else { -1.0 }
+})?;`;
+---
+<BaseLayout title={title} description={description} path="/modalities/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Modality"
+    title="Verifiable and emergent"
+    lede="Two things get called quantum in this workspace. One is simulated and proved; the other is a boundary to hardware. A cargo feature keeps them apart."
+    sourceHref={`${SRC_URL}/types/qpu`}
+    sourceLabel="src/types/qpu"
+  >
+    <h2>The split</h2>
+
+    <p>
+      The verifiable modality is the default build. Its operators are
+      deterministic simulated Choi–Jamiołkowski matrices, carried as freeze-time
+      decoration and checked at the freeze boundary. Every LEAN theorem in the
+      workspace's quantum tree attaches to this path.
+    </p>
+
+    <p>
+      The emergent modality is a physical QPU call lifted into the causal monad
+      as a typed effect. It is not a LEAN target by nature; a claim about
+      hardware is not the kind of thing a proof assistant settles. Its evidence
+      is tests and provenance.
+    </p>
+
+    <p>
+      Separating them by a feature rather than by documentation means the
+      separation is checkable. A default build contains no sampler at all, so a
+      statement about the verifiable path cannot quietly acquire a hardware
+      caveat.
+    </p>
+
+    <h2>What the qpu feature contains</h2>
+
+    <p>
+      A circuit is inert data. <code>GateOp</code> has eight variants,
+      <code>H</code>, <code>X</code>, <code>Y</code>, <code>Z</code>,
+      <code>S</code>, <code>T</code>, <code>Cnot</code> and <code>Cz</code>,
+      each carrying qubit indices and nothing else. <code>QuantumCircuit</code>
+      holds a register width, an ordered program and a measurement list, and it
+      is <code>Clone</code>, <code>Debug</code> and <code>PartialEq</code>.
+      Nothing in it references an amplitude or a function pointer, which is what
+      lets an in-process simulator and a future cloud adapter accept the same
+      value.
+    </p>
+
+    <p>
+      The constructor rejects a zero-qubit register, a gate referencing a qubit
+      at or beyond the register width, a two-qubit gate with coincident control
+      and target, a measurement of an out-of-range qubit, and a qubit measured
+      more than once. That last one matters more than it looks: a repeated
+      measurement both inflates the outcome table beyond the register and makes
+      the bit order ambiguous.
+    </p>
+
+    <Code code={seam} lang="rust" themes={SHIKI} />
+
+    <h2>The sampler seam</h2>
+
+    <p>
+      <code>QpuSampler</code> has two associated types and two methods.
+      <code>sample</code> runs a circuit for a number of shots and returns
+      <code>Self::Shots</code>; <code>calibration</code> returns device
+      metadata. The trait is used only as a generic bound, never as a trait
+      object, in line with the workspace's static-dispatch rule.
+    </p>
+
+    <p>
+      <code>Self::Shots</code> is bounded by <code>ShotHistogram</code>, and
+      that bound is where the design does its work. The trait exposes a total, a
+      bit width, a count for one outcome, and the non-zero entries. It exposes
+      no amplitudes and has no method that could. The coherence boundary is
+      therefore pinned at the type level rather than by a convention someone
+      could forget.
+    </p>
+
+    <p>
+      <code>SimQpu</code> is the hardware-free default: a deterministic dense
+      state-vector simulator seeded by a <code>u64</code>, using splitmix64 for
+      its draws, so the same seed reproduces the same histogram exactly. It caps
+      at 24 qubits, which is 2²⁴ amplitudes, and refuses a wider circuit with
+      <code>DimensionMismatch</code>. Its gate dispatch is exhaustive over
+      <code>GateOp</code> with no catch-all arm, so adding a gate variant breaks
+      the build rather than silently mis-applying it.
+    </p>
+
+    <p>
+      No concrete vendor adapter ships with the crate. The seam is a boundary,
+      not a driver.
+    </p>
+
+    <h2>Shots into uncertainty</h2>
+
+    <p>
+      Measurement statistics leave the seam as
+      <code>deep_causality_uncertain</code> values, so no new notion of an
+      uncertain quantity is introduced.
+    </p>
+
+    <Code code={bridge} lang="rust" themes={SHIKI} />
+
+    <p>
+      <code>shots_to_qubit_bernoulli</code> gives one measured qubit as a
+      Bernoulli whose success probability is the measured frequency of 1 on that
+      bit, counting LSB-first in measurement order.
+      <code>shots_to_observable</code> maps each outcome to a real value and
+      summarizes the empirical mean and the unbiased sample variance as a
+      normal. It accumulates directly from the count entries, so its cost is the
+      number of distinct outcomes rather than the number of shots. Both refuse
+      an empty histogram.
+    </p>
+
+    <h2>The lift</h2>
+
+    <p>
+      <code>qpu_effect</code> puts a sampler call into the arity-5 causal monad
+      and spreads the result across the five channels. The shot histogram rides
+      the value channel; the requested parameters, as
+      <code>QpuParams</code>, ride the state channel; the device calibration
+      rides the context channel; the provenance string rides the log channel.
+      A job failure rides the error channel with the value absent.
+    </p>
+
+    <p>
+      Enabling <code>qpu</code> adds <code>deep_causality_uncertain</code> as a
+      dependency. It adds nothing network-facing and nothing async.
+    </p>
+  </DocPage>
+
+  <div class="wide-wrap">
+    <ApiTable layer="qpu" title="The qpu surface" />
+  </div>
+</BaseLayout>
+
+<style>
+  .wide-wrap {
+    max-width: var(--w-panel);
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-9);
+  }
+  @media (min-width: 720px) { .wide-wrap { padding: 0 var(--space-5) var(--space-9); } }
+</style>

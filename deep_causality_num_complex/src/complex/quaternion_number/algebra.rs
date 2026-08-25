@@ -4,21 +4,24 @@
  */
 
 use crate::{
-    AbelianGroup, Annihilating, Associative, Distributive, DivisionAlgebra, Invertible, Quaternion,
-    RealField,
+    Annihilating, Associative, Distributive, DivisionAlgebra, Invertible, Quaternion, RealField,
 };
+use deep_causality_algebra::{Additive, Commutative, Multiplicative};
 // | Type | `Distributive` | `Associative` | `Commutative` | Trait |
 // | :--- | :---: | :---: | :---: | :--- |
-// | **Quaternion** | ✅ | ✅ | ❌ | `AssociativeRing` |
+// | **Quaternion** | ✅ | ✅ | ❌ | `Ring` (associative, not commutative) |
 
 // Marker Traits
-impl<T: RealField> Associative for Quaternion<T> {}
+impl<T: RealField> Associative<Multiplicative> for Quaternion<T> {}
+// Componentwise addition, so the additive laws come straight from the scalar.
+impl<T: RealField> Associative<Additive> for Quaternion<T> {}
+impl<T: RealField> Commutative<Additive> for Quaternion<T> {}
 impl<T: RealField> Distributive for Quaternion<T> {}
 // Zero annihilates: the law is derivable here, but the marker is stated because `Semiring`
 // requires it and cannot derive it (see `Annihilating`).
 impl<T: RealField> Annihilating for Quaternion<T> {}
 
-impl<T: RealField> AbelianGroup for Quaternion<T> {}
+// Reached through the `AbelianGroup` blanket now that the additive markers are present.
 // ℍ is a division ring: every non-zero `q` has `q⁻¹ = q̄ / |q|²`. It is not `Commutative`, so it
 // is not a field, but `Div` does invert.
 impl<T: RealField> Invertible for Quaternion<T> {}

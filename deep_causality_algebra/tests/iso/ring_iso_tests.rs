@@ -24,7 +24,8 @@
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use deep_causality_algebra::iso::test_support::assert_ring_iso_from_laws;
 use deep_causality_algebra::{
-    AbelianGroup, Annihilating, Associative, Commutative, Distributive, GroupIso, RingIso,
+    Additive, Annihilating, Associative, Commutative, Distributive, GroupIso, Multiplicative,
+    RingIso,
 };
 use deep_causality_num::{One, Zero};
 
@@ -91,12 +92,14 @@ impl One for IdRingWrap {
     }
 }
 
-impl Associative for IdRingWrap {}
-impl Commutative for IdRingWrap {}
+impl Associative<Multiplicative> for IdRingWrap {}
+impl Associative<Additive> for IdRingWrap {}
+impl Commutative<Multiplicative> for IdRingWrap {}
+impl Commutative<Additive> for IdRingWrap {}
 impl Distributive for IdRingWrap {}
 impl Annihilating for IdRingWrap {}
 
-impl AbelianGroup for IdRingWrap {}
+// IdRingWrap reaches `AbelianGroup` through the blanket now that it carries the additive markers.
 
 impl From<f64> for IdRingWrap {
     fn from(x: f64) -> Self {
@@ -194,12 +197,14 @@ impl One for BadAddRing {
     }
 }
 
-impl Associative for BadAddRing {}
-impl Commutative for BadAddRing {}
+impl Associative<Multiplicative> for BadAddRing {}
+impl Associative<Additive> for BadAddRing {}
+impl Commutative<Multiplicative> for BadAddRing {}
+impl Commutative<Additive> for BadAddRing {}
 impl Distributive for BadAddRing {}
 impl Annihilating for BadAddRing {}
 
-impl AbelianGroup for BadAddRing {}
+// BadAddRing reaches `AbelianGroup` through the blanket now that it carries the additive markers.
 
 impl From<f64> for BadAddRing {
     fn from(x: f64) -> Self {
@@ -286,12 +291,14 @@ impl One for BadMulRing {
     }
 }
 
-impl Associative for BadMulRing {}
-impl Commutative for BadMulRing {}
+impl Associative<Multiplicative> for BadMulRing {}
+impl Associative<Additive> for BadMulRing {}
+impl Commutative<Multiplicative> for BadMulRing {}
+impl Commutative<Additive> for BadMulRing {}
 impl Distributive for BadMulRing {}
 impl Annihilating for BadMulRing {}
 
-impl AbelianGroup for BadMulRing {}
+// BadMulRing reaches `AbelianGroup` through the blanket now that it carries the additive markers.
 
 impl From<f64> for BadMulRing {
     fn from(x: f64) -> Self {

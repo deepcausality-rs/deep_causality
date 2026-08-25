@@ -67,11 +67,11 @@ where
         let mass_k_minus_1_cow = metric
             .hodge_star_matrix(&self.complex, k - 1)
             .expect("Hodge ⋆ availability is validated at Manifold::with_metric");
-        let mass_k: &deep_causality_sparse::CsrMatrix<R> = mass_k_cow.as_ref();
-        let mass_k_minus_1: &deep_causality_sparse::CsrMatrix<R> = mass_k_minus_1_cow.as_ref();
+        let mass_k: &deep_causality_linear::CsrMatrix<R> = mass_k_cow.as_ref();
+        let mass_k_minus_1: &deep_causality_linear::CsrMatrix<R> = mass_k_minus_1_cow.as_ref();
 
         let boundary_k_cow = self.complex.boundary_matrix(k);
-        let boundary_k: &deep_causality_sparse::CsrMatrix<i8> = &boundary_k_cow;
+        let boundary_k: &deep_causality_linear::CsrMatrix<i8> = &boundary_k_cow;
 
         let weighted_form = utils_differential::apply_metric_operator(mass_k, field);
         let integrated_form = utils_differential::apply_operator(boundary_k, &weighted_form);

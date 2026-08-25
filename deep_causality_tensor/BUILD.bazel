@@ -14,6 +14,7 @@ rust_library(
         "//deep_causality_algebra",
         "//deep_causality_ast",
         "//deep_causality_haft",
+        "//deep_causality_linear",
         "//deep_causality_num",
         "//deep_causality_num_complex",
         "//deep_causality_num_dual",

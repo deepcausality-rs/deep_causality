@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Associative, Invertible, MulMagma, One, Zero};
-use core::ops::{Add, AddAssign, Div, DivAssign};
+use crate::{AddSemigroup, MulSemigroup};
+use crate::{Invertible, One, Zero};
+use core::ops::{Div, DivAssign};
 
 /// Represents an **Additive Monoid**.
 ///
@@ -21,10 +22,10 @@ use core::ops::{Add, AddAssign, Div, DivAssign};
 ///     `a + 0 = 0 + a = a` for all `a` in `S`. (Provided by the `Zero` trait).
 ///
 /// The `Clone` and `AddAssign` bounds are included for practical purposes.
-pub trait AddMonoid: Add<Output = Self> + AddAssign + Zero + Clone {}
+pub trait AddMonoid: AddSemigroup + Zero {}
 
 // Blanket Implementation for all types that implement Add, AddAssign, and Zero
-impl<T> AddMonoid for T where T: Add<Output = Self> + AddAssign + Zero + Clone {}
+impl<T> AddMonoid for T where T: AddSemigroup + Zero {}
 
 /// Represents a **Multiplicative Monoid**.
 ///
@@ -42,10 +43,10 @@ impl<T> AddMonoid for T where T: Add<Output = Self> + AddAssign + Zero + Clone {
 ///     `a * 1 = 1 * a = a` for all `a` in `S`. (Provided by the `One` trait).
 ///
 /// The `Clone` and `MulAssign` bounds are included for practical purposes.
-pub trait MulMonoid: MulMagma + One + Associative {}
+pub trait MulMonoid: MulSemigroup + One {}
 
 // Blanket Implementation for all types that implement Mul, MulAssign, and One
-impl<T> MulMonoid for T where T: MulMagma + One + Associative {}
+impl<T> MulMonoid for T where T: MulSemigroup + One {}
 
 /// Represents a **Multiplicative Monoid** with the additional property
 /// that every element has a multiplicative inverse.

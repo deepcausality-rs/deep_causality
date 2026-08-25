@@ -4,6 +4,7 @@
  */
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::PointCloud;
+use deep_causality_topology::TopologyErrorEnum;
 
 #[test]
 fn test_point_cloud_triangulate_success() {
@@ -182,4 +183,70 @@ fn test_point_cloud_triangulate_cap_does_not_fire_for_matching_dim_tetrahedron()
 
     let complex = pc.triangulate(1.5).unwrap();
     assert_eq!(complex.max_simplex_dimension(), 3);
+}
+
+// -----------------------------------------------------------------------------
+// Shape-contract rejection
+//
+// `PointCloud::new` validates emptiness, matching row counts and cursor range
+// only, so a `points` tensor of any rank constructs. `triangulate` reads the
+// ambient dimension off axis 1 and must report a `PointCloudError` rather than
+// index a shape slice that has no axis 1.
+// -----------------------------------------------------------------------------
+
+#[test]
+fn test_point_cloud_triangulate_rejects_rank_one_points_tensor() {
+    use deep_causality_topology::TopologyError;
+
+    let points = CausalTensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![4]).unwrap();
+    let metadata = CausalTensor::new(vec![0.0; 4], vec![4]).unwrap();
+    let pc = PointCloud::new(points, metadata, 0).expect("rank-1 cloud constructs");
+
+    let err = pc.triangulate(1.5).unwrap_err();
+    assert!(
+        matches!(err, TopologyError(TopologyErrorEnum::PointCloudError(_))),
+        "rank-1 coordinates are a documented precondition violation; got: {:?}",
+        err
+    );
+    let msg = format!("{}", err);
+    assert!(
+        msg.contains("rank-2") && msg.contains("rank 1"),
+        "message must name the required and the supplied rank; got: {}",
+        msg
+    );
+}
+
+#[test]
+fn test_point_cloud_triangulate_rejects_rank_three_points_tensor() {
+    use deep_causality_topology::TopologyError;
+
+    // Shape [2, 2, 2] has an axis 1, so the old code read an ambient dimension
+    // of 2 and silently triangulated 2 of the 8 coordinates.
+    let points =
+        CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0], vec![2, 2, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![0.0; 2], vec![2]).unwrap();
+    let pc = PointCloud::new(points, metadata, 0).expect("rank-3 cloud constructs");
+
+    let err = pc.triangulate(2.0).unwrap_err();
+    assert!(
+        matches!(err, TopologyError(TopologyErrorEnum::PointCloudError(_))),
+        "rank-3 coordinates are a precondition violation; got: {:?}",
+        err
+    );
+    assert!(
+        format!("{}", err).contains("rank 3"),
+        "message must name the supplied rank; got: {}",
+        err
+    );
+}
+
+#[test]
+fn test_point_cloud_triangulate_accepts_rank_two_points_tensor_unchanged() {
+    // Control for the two rejections above: the N x M path is untouched.
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![3, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    let pc = PointCloud::new(points, metadata, 0).unwrap();
+
+    let complex = pc.triangulate(1.5).unwrap();
+    assert_eq!(complex.max_simplex_dimension(), 2);
 }

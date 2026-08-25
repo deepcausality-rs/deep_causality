@@ -327,7 +327,7 @@ fn test_with_metric_data_size_mismatch() {
 fn test_with_metric_on_complex_without_1_simplices_with_non_empty_edge_lengths() {
     // Lines 74-78: complex.skeletons.get(1) returns None but regge.edge_lengths is
     // non-empty → InvalidInput error.
-    use deep_causality_sparse::CsrMatrix;
+    use deep_causality_linear::CsrMatrix;
     use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
 
     // Build a SimplicialComplex with only a 0-skeleton (vertices), no 1-simplices.
@@ -377,5 +377,28 @@ fn test_new_on_complex_with_empty_vertex_skeleton_rejects_as_non_manifold() {
     if let Ok(d) = data {
         let result = Manifold::new(complex, d, 0);
         assert!(result.is_err());
+    }
+}
+
+#[test]
+fn test_new_rejects_a_complex_without_vertices() {
+    // A complex carrying an edge over an empty 0-skeleton has no vertices, so
+    // it describes no manifold. The data still matches the simplex count (one
+    // edge, one value), so the size and cursor checks pass and the rejection
+    // comes from the manifold criteria.
+    use deep_causality_topology::{Simplex, Skeleton};
+
+    let skeletons = vec![
+        Skeleton::new(0, Vec::new()),
+        Skeleton::new(1, vec![Simplex::new(vec![0, 1])]),
+    ];
+    let complex: deep_causality_topology::SimplicialComplex<f64> =
+        deep_causality_topology::SimplicialComplex::new(skeletons, vec![], vec![], Vec::new());
+    let data = CausalTensor::new(vec![1.0], vec![1]).unwrap();
+
+    let err = Manifold::new(complex, data, 0).unwrap_err();
+    match err.0 {
+        TopologyErrorEnum::ManifoldError(_) => {}
+        ref other => panic!("Expected ManifoldError, got {:?}", other),
     }
 }

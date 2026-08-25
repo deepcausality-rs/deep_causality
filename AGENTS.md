@@ -184,7 +184,6 @@ The project is a monorepo containing 27 library crates:
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
 * `deep_causality_core`: Core types for the deep_causality crate.
 * `deep_causality_ast`: AST data structure for the deep_causality crate.
-* `deep_causality_macros`: Custom code generation macros for DeepCausality (_deprecated_).
 * `deep_causality_metric`: Foundational metric signatures used acros tensor, multivector, and physics. 
 * `deep_causality_par`: Shared parallelism primitives (the `MaybeParallel` marker) used across the compute crates.
 
@@ -204,9 +203,13 @@ The project is a monorepo containing 27 library crates:
 * `deep_causality_num`: Numerical traits and utils (casts, identity, float, integer) used across all crates.
 * `deep_causality_num_complex`: Complex, quaternion, and octonion number types.
 * `deep_causality_num_dual`: Dual number type (forward-mode automatic differentiation).
+* `deep_causality_num_rational`: Exact rational number type over the integers.
 * `deep_causality_rand`: Random number generator and statistical distributions.
-* `deep_causality_sparse`: Sparse matrix data structure (CSR format) for deep_causality.
-* `deep_causality_tensor`: Tensors 
+* `deep_causality_linear`: Linear algebra — sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors,
+  eliminations, decompositions, conjugate gradient, and an exact integer path.
+* `deep_causality_sparse`: **Retired.** A re-export shim over `deep_causality_linear`; no further development.
+* `deep_causality_tensor`: N-index tensors, broadcasting, Einstein summation, and the
+  tensor-train stack. Its rank-2 decompositions delegate to `deep_causality_linear`.
 * `deep_causality_multivector`: Multivector implementation for geometric algebra.
 * `deep_causality_uncertain`: A first-order type for uncertain programming.
 
@@ -217,14 +220,20 @@ The project is a monorepo containing 27 library crates:
 ### Topology and Physics Crates
 * `deep_causality_topology`: Topological data structures (complexes, manifolds, differential geometry).
 * `deep_causality_physics`: Standard library of physics formulas and engineering primitives.
+* `deep_causality_quantum`: Quantum types — density matrices, channels, gates — over the complex tower.
 * `deep_causality_cfd`: Computational fluid dynamics solvers and the Flow DSL.
 
 ## Project Dependencies
 
-Scope: the 24 library crates that are workspace members. Example crates (`examples/*`),
+Scope: the 29 library crates that are workspace members. Example crates (`examples/*`),
 vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
-`deep_causality_effects` exists on disk but is **not** a workspace member, so it is omitted.
-`deep_causality_macros` is a member but deprecated and has no dependents.
+`deep_causality_effects` and `deep_causality_macros` were moved to `yanked/` and are no
+longer workspace members, so both are omitted.
+
+The tier block below is derived from the `[dependencies]` tables of each member's
+`Cargo.toml`, dev- and build-dependencies excluded. `build/scripts/crates.sh` reads the
+same source for the build scripts, so a crate added to the workspace appears in both
+without an edit here.
 `deep_causality_cfd` was released to crates.io as 0.1.0 on 2026-08-12.
 
 ### Internal Dependencies
@@ -236,80 +245,87 @@ dependency. Dev/test/bench-only dependencies are shown separately below.
 ```
 Tier 0 — Foundational (no internal runtime dependencies)
   deep_causality_ast
-  deep_causality_haft
+  deep_causality_data_structures
   deep_causality_metric
   deep_causality_num
   deep_causality_par
-  deep_causality_data_structures
   ultragraph
 
 Tier 1
-  deep_causality_core        → deep_causality_haft
   deep_causality_algebra     → deep_causality_num
 
-Tier 2 (number types layered on the algebra trait tower)
-  deep_causality_num_complex → deep_causality_num, deep_causality_algebra
-  deep_causality_num_dual    → deep_causality_num, deep_causality_algebra
-
-  deep_causality_calculus    → deep_causality_haft, deep_causality_num, deep_causality_algebra,
-                               deep_causality_num_dual
-  deep_causality_fft         → deep_causality_num, deep_causality_par, deep_causality_algebra,
-                               deep_causality_num_complex
-  deep_causality_file        → deep_causality_haft, deep_causality_num, deep_causality_algebra
-  deep_causality_rand        → deep_causality_num, deep_causality_algebra
-  deep_causality_tensor      → deep_causality_ast, deep_causality_haft, deep_causality_num,
-                               deep_causality_algebra, deep_causality_num_complex, deep_causality_num_dual
-  deep_causality_sparse      → deep_causality_num, deep_causality_haft, deep_causality_algebra,
-                               deep_causality_tensor (opt)
-  deep_causality_multivector → deep_causality_haft, deep_causality_num, deep_causality_tensor,
-                               deep_causality_metric, deep_causality_algebra, deep_causality_num_complex
-  deep_causality_uncertain   → deep_causality_ast, deep_causality_num, deep_causality_rand,
-                               deep_causality_algebra
+Tier 2
+  deep_causality_haft        → deep_causality_algebra
+  deep_causality_num_complex → deep_causality_algebra, deep_causality_num
+  deep_causality_num_dual    → deep_causality_algebra, deep_causality_num
+  deep_causality_num_rational → deep_causality_algebra, deep_causality_num
+  deep_causality_rand        → deep_causality_algebra, deep_causality_num
 
 Tier 3
-  deep_causality_topology    → deep_causality_num, deep_causality_haft, deep_causality_metric,
-                               deep_causality_tensor, deep_causality_multivector,
-                               deep_causality_sparse, deep_causality_rand,
-                               deep_causality_par, deep_causality_fft,
-                               deep_causality_algebra, deep_causality_num_complex
-  deep_causality             → deep_causality_ast, deep_causality_core,
-                               deep_causality_data_structures, deep_causality_haft,
-                               deep_causality_uncertain, ultragraph
+  deep_causality_calculus    → deep_causality_algebra, deep_causality_haft, deep_causality_num,
+                               deep_causality_num_dual
+  deep_causality_core        → deep_causality_haft
+  deep_causality_fft         → deep_causality_algebra, deep_causality_num, deep_causality_num_complex,
+                               deep_causality_par
+  deep_causality_file        → deep_causality_algebra, deep_causality_haft, deep_causality_num
+  deep_causality_linear      → deep_causality_algebra, deep_causality_haft, deep_causality_num
+  deep_causality_uncertain   → deep_causality_algebra, deep_causality_ast, deep_causality_num,
+                               deep_causality_rand
 
 Tier 4
-  deep_causality_algorithms  → deep_causality_num, deep_causality_rand,
-                               deep_causality_tensor, deep_causality_topology,
-                               deep_causality_par, deep_causality_algebra
-  deep_causality_physics     → deep_causality_calculus, deep_causality_core,
-                               deep_causality_haft, deep_causality_metric,
-                               deep_causality_multivector, deep_causality_num,
-                               deep_causality_sparse, deep_causality_tensor,
-                               deep_causality_topology, deep_causality_par,
-                               deep_causality_algebra, deep_causality_num_complex,
-                               deep_causality_num_dual, deep_causality_rand (opt)
-  deep_causality_ethos       → deep_causality, ultragraph
+  deep_causality             → deep_causality_algebra, deep_causality_ast, deep_causality_core,
+                               deep_causality_data_structures, deep_causality_haft,
+                               deep_causality_uncertain, ultragraph
+  deep_causality_sparse      → deep_causality_linear
+  deep_causality_tensor      → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
+                               deep_causality_linear, deep_causality_num, deep_causality_num_complex,
+                               deep_causality_num_dual
 
 Tier 5
-  deep_causality_discovery   → deep_causality_algorithms, deep_causality_haft,
-                               deep_causality_num, deep_causality_tensor,
-                               deep_causality_algebra
-  deep_causality_cfd         → deep_causality_physics, deep_causality_topology,
-                               deep_causality_calculus, deep_causality_core,
-                               deep_causality_haft, deep_causality_num,
-                               deep_causality_tensor, deep_causality_par,
-                               deep_causality_fft, deep_causality_algebra,
-                               deep_causality_num_complex, deep_causality_num_dual,
+  deep_causality_ethos       → deep_causality, ultragraph
+  deep_causality_multivector → deep_causality_algebra, deep_causality_haft, deep_causality_metric,
+                               deep_causality_num, deep_causality_num_complex, deep_causality_tensor
+
+Tier 6
+  deep_causality_quantum     → deep_causality (opt), deep_causality_algebra, deep_causality_core,
+                               deep_causality_haft, deep_causality_metric, deep_causality_multivector,
+                               deep_causality_num, deep_causality_num_complex, deep_causality_tensor,
                                deep_causality_uncertain (opt)
+  deep_causality_topology    → deep_causality_algebra, deep_causality_fft, deep_causality_haft,
+                               deep_causality_linear, deep_causality_metric, deep_causality_multivector,
+                               deep_causality_num, deep_causality_num_complex, deep_causality_par,
+                               deep_causality_rand, deep_causality_tensor
+
+Tier 7
+  deep_causality_algorithms  → deep_causality_algebra, deep_causality_num, deep_causality_par,
+                               deep_causality_rand, deep_causality_tensor, deep_causality_topology
+  deep_causality_physics     → deep_causality_algebra, deep_causality_calculus, deep_causality_core,
+                               deep_causality_haft, deep_causality_linear, deep_causality_metric,
+                               deep_causality_multivector, deep_causality_num,
+                               deep_causality_num_complex, deep_causality_num_dual, deep_causality_par,
+                               deep_causality_rand (opt), deep_causality_tensor, deep_causality_topology
+
+Tier 8
+  deep_causality_cfd         → deep_causality_algebra, deep_causality_calculus, deep_causality_core,
+                               deep_causality_fft, deep_causality_file, deep_causality_haft,
+                               deep_causality_num, deep_causality_num_complex, deep_causality_num_dual,
+                               deep_causality_par, deep_causality_physics, deep_causality_tensor,
+                               deep_causality_topology, deep_causality_uncertain (opt)
+  deep_causality_discovery   → deep_causality_algebra, deep_causality_algorithms, deep_causality_haft,
+                               deep_causality_num, deep_causality_tensor, deep_causality_topology
 ```
 
 Internal dev-only dependency (tests/benches, not part of any published runtime):
 * `deep_causality_rand` is a dev-dependency of `deep_causality_data_structures`,
-  `deep_causality_sparse`, `deep_causality_tensor`, and `ultragraph`.
+  `deep_causality_discovery`, `deep_causality_linear`, `deep_causality_tensor`, and
+  `ultragraph`.
+* `deep_causality_num_complex` and `deep_causality_num_rational` are dev-dependencies of
+  `deep_causality_linear`.
 
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 21 library crates have no external runtime dependencies.
+The other 23 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
@@ -323,7 +339,7 @@ The other 21 library crates have no external runtime dependencies.
 External dev-only dependencies (tests/benches, not part of any published runtime):
 * `criterion` — benchmarks in `deep_causality`, `deep_causality_algorithms`,
   `deep_causality_cfd`, `deep_causality_data_structures`, `deep_causality_fft`,
-  `deep_causality_multivector`, `deep_causality_sparse`,
+  `deep_causality_multivector`, `deep_causality_linear`,
   `deep_causality_tensor`, `deep_causality_uncertain`, `ultragraph`.
 * `tempfile` — `deep_causality_discovery` tests.
 * `rusty-fork` — `deep_causality_uncertain` tests.
@@ -367,6 +383,52 @@ To rebuild and test the entire repo
 
 You aim for one hundred percent test coverage of all added or edited code files.
 The only exception is if, for some reason, some code is impossible to reach. Then you skip testing that dead code.
+
+### Coverage is a floor
+
+Coverage says a line ran. It does not say a test would notice if that line were wrong, and the two
+come apart on exactly the code that matters most.
+
+The topological-charge normalization in `deep_causality_topology` was eight times too small. The
+line computing it ran 513 times across the suite. Every test of it used the identity gauge field,
+where the field strength is zero, so `q == 0` held for any constant whatsoever. Four true
+assertions, full coverage, and a wrong answer that survived until someone compared the docstring
+with the code.
+
+That failure has a shape, and it recurs: a test that pins a quantity only where the quantity
+vanishes, or only at one well-behaved input. Watch for it when a test
+
+- asserts a result is zero, and the suspected error is a factor or an offset,
+- uses only the identity, a diagonal, or a symmetric matrix, where several distinct quantities
+  coincide,
+- uses only one size, where an index expression degenerates. A `2x2` Cholesky has one off-diagonal
+  entry at `j = 0`, and there `a[i * n + j]` and `a[i * n - j]` are the same number.
+
+### Mutation testing
+
+`build/scripts/mutants.sh` runs `cargo mutants`, which changes one expression at a time and re-runs
+the tests. A mutant no test objects to is a decision nothing pins. It answers the question coverage
+cannot.
+
+Point it at code where a wrong constant or a flipped comparison yields a plausible number rather
+than a crash: numeric kernels, tolerance gates, index arithmetic. It is not a whole-workspace gate,
+because every mutant costs a build plus a test run and `deep_causality_linear/src/algorithms` alone
+yields 1156 of them.
+
+Equivalent mutants — changes that cannot alter behaviour — belong in `.cargo/mutants.toml`, each
+with the measurement that settles it rather than an assertion that it is fine. A survivor not
+listed there is a real gap.
+
+Those entries are regular expressions matched against text that is itself full of regex
+metacharacters, and getting one wrong is silent both ways: an unescaped `+` or `*` matches nothing,
+an unescaped `||` matches everything, and `cargo mutants` reports neither. Escape them, and confirm
+the entry did what it claims with the `comm` check the file carries.
+
+An entry must also match no *more* than it argues for, which the same check shows. A pattern like
+`replace + with * in <function>` reads as one mutation and matches every `+` in that function,
+index arithmetic included. Two such entries once hid 32 mutants the suite was killing in order to
+excuse 5 it could not. Prefer a pattern that resolves to a single mutant; where none exists,
+describe the equivalence in prose and leave the mutant in the report.
 
 Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
 

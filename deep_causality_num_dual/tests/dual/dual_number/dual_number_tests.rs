@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algebra::{Associative, Commutative, CommutativeRing, Distributive, Module};
+use deep_causality_algebra::{
+    Associative, Commutative, CommutativeRing, Distributive, Module, Multiplicative,
+};
 use deep_causality_num::{One, Zero};
 use deep_causality_num_dual::Dual;
 
@@ -84,7 +86,10 @@ fn test_algebra_typing_commutative_ring_with_markers() {
     // Field nor DivAssign), which holds by construction — there is no such impl to satisfy
     // a `T: Field` bound.
     fn assert_comm_ring<T: CommutativeRing>() {}
-    fn assert_markers<T: Associative + Commutative + Distributive>() {}
+    fn assert_markers<
+        T: Associative<Multiplicative> + Commutative<Multiplicative> + Distributive,
+    >() {
+    }
     fn assert_module<T: Module<f64>>() {}
     assert_comm_ring::<Dual<f64>>();
     assert_markers::<Dual<f64>>();

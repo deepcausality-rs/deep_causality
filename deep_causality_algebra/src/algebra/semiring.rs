@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Annihilating, Distributive, MulMonoid, Zero};
-use core::ops::Add;
+use crate::algebra::operator::Additive;
+use crate::{AddMonoid, Commutative};
+use crate::{Annihilating, Distributive, MulMonoid};
 
 /// Represents a **Semiring** in abstract algebra.
 ///
@@ -51,14 +52,14 @@ use core::ops::Add;
 /// Every ring is a semiring, and the bounds here are deliberately a strict subset of the ones
 /// `Ring` requires, so every `Ring` really is a `Semiring`.
 ///
-/// Getting that subset right needed care. `Ring`'s additive side is
-/// [`AbelianGroup`](crate::AbelianGroup) — `Add + Sub + Neg + Zero + Clone` — which carries **no**
-/// `AddAssign`. An earlier version of this trait required [`AddMonoid`](crate::AddMonoid), which
-/// does, and so was accidentally *stronger* than `Ring` on the additive side: `CausalTensor`
-/// implements `AddAssign<T>` for a scalar right-hand side but never `AddAssign<Self>`, so it
-/// satisfied `Ring` while failing `Semiring` — the exact inversion of what a weakening should do.
-/// Dropping to `Add + Zero + Clone` is `AbelianGroup` with the inverses removed, which is what a
-/// semiring is.
+/// Getting that subset right needed care. [`AddMonoid`](crate::AddMonoid) once required
+/// `AddAssign`, which `Ring`'s additive side never has, and while it did this trait was
+/// accidentally *stronger* than `Ring`: `CausalTensor` implements `AddAssign<T>` for a scalar
+/// right-hand side and never `AddAssign<Self>`, so it satisfied `Ring` while failing `Semiring` —
+/// the exact inversion of what a weakening should do. `AddMonoid` is now
+/// `Add + Clone + Associative<Additive> + Zero`, which together with `Commutative<Additive>` is
+/// [`AbelianGroup`](crate::AbelianGroup) with `Sub` and `Neg` dropped. That is the additive side
+/// of a semiring, and it is what the bound below states.
 ///
 /// `Ring` is nevertheless not declared as `Ring: Semiring`. Re-rooting the supertrait changes
 /// nothing about membership, since the blanket impls already give every `Ring` the weaker bound,
@@ -72,10 +73,10 @@ use core::ops::Add;
 /// ## Counter-examples
 /// - Any structure without a multiplicative identity, which is a *rig* rather than a semiring
 pub trait Semiring:
-    Add<Output = Self> + Zero + Clone + MulMonoid + Distributive + Annihilating
+    AddMonoid + Commutative<Additive> + MulMonoid + Distributive + Annihilating
 {
 }
 impl<T> Semiring for T where
-    T: Add<Output = T> + Zero + Clone + MulMonoid + Distributive + Annihilating
+    T: AddMonoid + Commutative<Additive> + MulMonoid + Distributive + Annihilating
 {
 }

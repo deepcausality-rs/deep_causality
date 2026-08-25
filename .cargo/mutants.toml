@@ -1,0 +1,216 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+#
+# cargo-mutants configuration.
+#
+# ---------------------------------------------------------------------------------------------
+# Why this exists
+# ---------------------------------------------------------------------------------------------
+#
+# Line coverage answers "did this run". It does not answer "would a test notice if this were
+# wrong", and the two came apart badly in `deep_causality_topology`: the topological-charge
+# normalization was eight times too small, its line ran 513 times across the suite, and every
+# charge test used the identity gauge field, where the field strength is zero and any constant
+# gives the same answer. A true assertion with no discriminating power.
+#
+# Mutation testing asks the second question directly. A surviving mutant is a change to the
+# source that no test objects to.
+#
+# ---------------------------------------------------------------------------------------------
+# Writing an exclusion
+# ---------------------------------------------------------------------------------------------
+#
+# Each entry is a REGULAR EXPRESSION matched against the mutant's description, and mutant
+# descriptions are full of regex metacharacters. `+` and `*` are the ones that bite: written bare,
+# `replace + with * in sym_eig` compiles to "replace", one-or-more spaces, "with", zero-or-more
+# spaces, "in sym_eig", which no mutant says. cargo-mutants reports nothing, because that is a
+# valid regex and it matched nothing. `|` bites the other way: bare `||` is an alternation between
+# two empty branches, which matches every mutant and empties the whole run. Both failures were
+# present in this file. Two entries were inert, excluding 7 mutants where 44 were intended, and a
+# third excluded all 2300.
+#
+# Escape `+`, `*`, `|`, `(`, `)`, `[`, `]`, `?`, `.` and `^` as `\\+`, `\\*` and so on. After
+# adding one, check that it matched:
+#
+#     printf 'exclude_re = []\n' > /tmp/none.toml
+#     cargo mutants --list -p <crate> --config /tmp/none.toml | sort > /tmp/all.txt
+#     cargo mutants --list -p <crate> --config .cargo/mutants.toml | sort > /tmp/kept.txt
+#     comm -23 /tmp/all.txt /tmp/kept.txt
+#
+# The last command prints exactly what the file excludes. An entry that appears in no line of it is
+# not doing anything, and an entry that pulls in more than it argues for is hiding caught mutants.
+
+# ---------------------------------------------------------------------------------------------
+# Equivalent mutants
+# ---------------------------------------------------------------------------------------------
+#
+# A mutant that cannot change behaviour is not a test gap and no test can kill it. Those are
+# excluded by name below, each with the argument for why it is equivalent. A survivor that is
+# neither listed here nor in the section further down for the ones no regex can reach alone is a
+# real gap.
+
+exclude_re = [
+    # `if m > best { best = m }` versus `>=` in a maximum reduction. On a tie the two do different
+    # things: `>` keeps the incumbent, `>=` overwrites it. They are the same function anyway,
+    # because these three return the maximum VALUE and never its index, and the value a tie writes
+    # is equal to the one it replaces. Applies to `vector_norm_inf`, `matrix_norm_l1` and
+    # `matrix_norm_inf`; `negligible_below` below is the same argument.
+    "replace > with >= in vector_norm_inf",
+    "replace > with >= in matrix_norm_l1",
+    "replace > with >= in matrix_norm_inf",
+
+    # `if rows == 0 || cols == 0` versus `&&` in `svd_sorted`. The two differ only when exactly
+    # one dimension is zero, and there the general path produces the same factors as the early
+    # return: for `3 x 0` both give `U` at `3 x 0` and `Vᴴ` at `0 x 0`, for `0 x 4` both give `U`
+    # at `0 x 0` and `Vᴴ` at `0 x 4`, with no singular values either way. Checked by applying the
+    # mutant and diffing the printed factors for both orientations: identical.
+    #
+    # `let transposed = rows < cols` versus `<=` in `svd_sorted`. Widening it sends a square
+    # matrix down the transposed path, which is the same computation: from `A = U Σ Vᴴ` it
+    # follows that `Aᴴ = V Σ Uᴴ`, so decomposing `Aᴴ` yields `U' = V` and `V' = U`, and the
+    # function's own swap-back returns `U` and `Vᴴ` unchanged. Checked by applying the mutant to
+    # `[[4, 1], [2, 3]]`, a matrix whose two factors are different (`A Aᴴ = [[17,11],[11,13]]`
+    # against `Aᴴ A = [[20,10],[10,10]]`): every entry of `U` and `Vᴴ` agrees to fifteen digits,
+    # differing only in the last one or two units in the last place.
+    #
+    # `test_a_square_matrix_keeps_its_left_and_right_factors_distinct` was written to kill this
+    # and cannot. It is kept because it pins `U` and `Vᴴ` as separate factors, which no test did
+    # before, and because a reconstruction check cannot make that distinction.
+    "replace \\|\\| with && in svd_sorted",
+    "replace < with <= in svd_sorted",
+
+    # Deleting the order-1 or order-3 closed-form arm of `determinant`. Those arms exist for speed
+    # — the doc says so — and deleting one falls through to the pivoted elimination below, which
+    # computes the same determinant. `test_the_three_by_three_closed_form_agrees_with_elimination`
+    # asserts that agreement directly, so the equivalence is pinned rather than assumed.
+    #
+    # The arithmetic INSIDE the arm is not equivalent and is not excluded:
+    # `test_the_three_by_three_determinant_on_a_dense_matrix` kills those.
+    "delete match arm 1 in determinant",
+    "delete match arm 3 in determinant",
+
+    # `if mag > scale` versus `>=` in `negligible_below`'s maximum reduction. The same argument as
+    # the three norms above: the function returns the maximum value, not the index it came from.
+    "replace > with >= in negligible_below",
+
+    # `n_real += one` versus `-=` in `negligible_below`. The loop runs `n` times either way, so the
+    # mutant leaves `n_real = -n` instead of `n`, and `rel = eps * n_real` changes sign. The return
+    # is `scale * rel * rel`, where the sign cancels. The same number, by construction.
+    "replace \\+= with -= in negligible_below",
+
+    # `if rows == 0 || cols == 0` versus `&&` in `rank_exact`, which differ only when exactly one
+    # dimension is zero. Both paths then reach zero anyway: with `cols == 0` the content loop never
+    # runs and `for col in 0..0` never runs, and with `rows == 0` the first `if row >= rows` breaks
+    # immediately. `test_exact_rank_of_rectangular_and_empty_shapes` pins the value for all three
+    # empty shapes rather than leaving the claim on this comment.
+    "replace \\|\\| with && in rank_exact",
+
+    # `for j in (i + 1)..n` versus `(i * 1)..n` in `solve_upper`'s backward substitution, which is
+    # the `solve_least_squares` argument above in another function: the extra index is `j = i`, and
+    # the term it adds is `a[i][i] * x[i]` where `x[i]` is still zero, because it is assigned on the
+    # line after the sum.
+    "replace \\+ with \\* in solve_upper",
+]
+
+# ---------------------------------------------------------------------------------------------
+# Equivalent, and not excludable without hiding caught mutants
+# ---------------------------------------------------------------------------------------------
+#
+# These are equivalent for the reasons below, and each is left in the report because no regex
+# reaches it alone. `exclude_re` matches the mutant's description, not its line, and every pattern
+# broad enough to catch one of these also catches a dozen of its neighbours that the suite does
+# kill. Hiding a caught mutant costs a tripwire, which is worth more than a tidy report.
+#
+# Two entries used to be in the array above and were exactly that mistake.
+# `replace \+ with \* in solve_least_squares` argued for one loop bound and excluded nine mutants,
+# eight of them the index arithmetic `k * n + i`, `i * n + j` and `lf[i * n + i]`, which change the
+# answer. `replace \+ with \* in sym_eig` argued for the rotation angle and excluded twenty-eight,
+# including the index arithmetic of the similarity transform at lines 128-150 -- which the comment
+# beside it explicitly said it did NOT cover. The prose and the pattern disagreed, and the pattern
+# won silently. Both are now here instead.
+#
+#   cholesky.rs:168  replace + with * in solve_least_squares
+#     `for j in (i + 1)..n` becomes `(i * 1)..n` in the back substitution. The extra index is
+#     `j = i`, and the term it adds is `conj(L[i][i]) * x[i]`, where `x[i]` is still zero because
+#     it is assigned on the line after the sum. A multiplication by zero at every `i` and every
+#     `n`. The other eight `+ -> *` mutants in that function are index arithmetic and are killed.
+#
+#   kernels.rs       replace + with * in sym_eig, ANGLE ONLY (lines 65, 68, 75, 89, 90, 104, 105,
+#                    111)
+#     `t` sets only which angle the sweep turns through. `c = 1/sqrt(t*t + 1)` with `s = t*c` gives
+#     `c^2 + s^2 = 1` for any `t`, so the rotation stays orthogonal, the similarity preserves the
+#     spectrum exactly, and the sweep runs until the off-diagonal is under threshold. A mutated
+#     angle changes the convergence rate, not the result. Checked rather than argued: with
+#     `(zeta*zeta + one)` mutated to `(zeta*zeta * one)` -- which turns
+#     `t = sgn/(|z| + sqrt(z^2+1))` into `sgn/(2|z|)` -- a 5x5 with a degenerate diagonal, a 4x4
+#     with an exactly equal diagonal, and a 6x6 spanning 1e-3 to 1e3 all reconstruct to 1e-12 or
+#     better.
+#
+#     The same argument covers every path-only mutation in `sym_eig`, not just the angle: Jacobi is
+#     a fixed-point iteration under orthogonal similarity, so only the exit test or a break in the
+#     similarity structure can change the answer. What it does NOT cover is the surrounding index
+#     arithmetic. `a[p * n + p]`, `a[q * n + q]` and `(app - aqq)` are not angle choices, and
+#     mutating them reconstructs to 1.4e-5, 3.1 and 3.1 respectively on a 5x5, caught by
+#     `test_the_eigendecomposition_of_a_five_by_five_satisfies_its_defining_properties`.
+#
+#   integer.rs:79   replace - with / in determinant_exact
+#     `for k in 0..(n - 1)` becomes `0..(n / 1)`, one extra iteration at `k = n - 1`. Both inner
+#     loops there are empty, `prev` is written and never read again, and the pivot search reduces
+#     to `((n)..n).find(..)`, which is `None` and returns zero -- the right answer, because the
+#     branch is only reached when the last diagonal entry is zero.
+#
+#   integer.rs:82   replace + with * in determinant_exact
+#     `((k + 1)..n).find(..)` becomes `(k..n).find(..)`. The extra candidate is `r = k`, and the
+#     branch is only entered when `a[k][k]` is zero, so `find` steps past it to the same row.
+#
+#   solve.rs:74     replace + with * in Lu<T>::factor
+#     `for r in (col + 1)..n` becomes `col..n`. The extra iteration compares `a[col][col]` against
+#     `best_mag`, which was just seeded from that same entry, so `mag > best_mag` is false.
+#
+#   solve.rs:132    replace + with * in Lu<T>::apply
+#     `.skip(i + 1)` becomes `.skip(i)` in the backward substitution, the same shape as the
+#     `solve_upper` entry above: the extra term multiplies `x[i]`, still zero at that point.
+
+# ---------------------------------------------------------------------------------------------
+# The two noise floors, resolved
+# ---------------------------------------------------------------------------------------------
+#
+# `householder_qr` and `jacobi_svd` each compute a floor from the input's magnitude and skip a
+# column below it. Both floors carried surviving mutants for a long stretch, recorded here as
+# unresolved, on the strength of probes at `1e-170` and `1e-280` that showed no difference.
+#
+# Those magnitudes were the mistake. A squared norm at `1e-170` is `1e-340`, which underflows to
+# exactly zero, and the later `v_norm_sq <= 0` guard catches zero on its own. The window where the
+# floor is the only thing standing between the input and an overflow is narrow: the squared norm
+# has to be denormal and non-zero, which puts the entries near `1e-160`. There
+# `v^H v` is about `7e-320`, `beta = 2/(v^H v)` is `3e319` and overflows to infinity, and every
+# entry the reflector touches comes back non-finite.
+#
+# `test_a_sub_column_with_a_denormal_squared_norm_is_skipped_rather_than_reflected` supplies that
+# input and kills both mutants of the Frobenius accumulation.
+#
+# The floor's own arithmetic needed a second input, at the other end. `||A||^2_F * eps * eps` has
+# two factors of `eps` because the quantity compared against it is squared; dropping to one raises
+# the floor by `1e16`. Nothing noticed, because every sub-column in the suite was either close to
+# the largest entry or exactly zero.
+# `test_a_small_but_genuine_sub_column_is_not_swallowed_by_the_qr_noise_floor` puts a sub-column at
+# `1e-9`, above the true floor and below the inflated one.
+#
+# One thing about `householder_qr` had to be understood before either test could work. R's
+# strictly-lower triangle is cleaned to exact zero on the way out, unconditionally, so no assertion
+# below the diagonal can detect a reflector that did not run. The first versions of both tests
+# asserted exactly that and could not fail. The reconstruction is the observable: zeroing an entry
+# that no reflector eliminated discards it, and `Q*R` leaves `A` by the size of what was thrown
+# away.
+#
+# `jacobi_svd`'s floor is a different case and is NOT resolved as a defect-preventing guard.
+# Measured across column magnitudes from `1e-100` to `1e-200` on `[[1, m, 0], [0, m, 0],
+# [0, 0, 1]]`, whose exact singular values are `{1, 1, m}`: with the floor in place the third value
+# comes back as `m * sqrt(2)`, the raw norm of the skipped column, and with the floor removed it
+# comes back as `m`, the singular value. The floor is making the answer worse, by 41% on a value
+# that is `1e-100` times the largest and that the caller's rank gate discards either way.
+#
+# So the surviving mutants there are not a test gap. They mark a guard whose only effect is on
+# numbers already below the problem's noise floor, and the question it raises is whether the guard
+# should be there at all -- which is a change to the algorithm, not to the tests, and is left for
+# its own decision rather than made here.

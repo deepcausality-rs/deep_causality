@@ -5,7 +5,7 @@
 use crate::types::chain::Chain;
 use crate::types::simplicial_complex::SimplicialComplex;
 use deep_causality_algebra::AbelianGroup;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::sync::Arc;
 
 impl<T> Chain<T>

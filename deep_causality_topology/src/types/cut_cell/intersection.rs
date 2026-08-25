@@ -42,6 +42,23 @@ fn disk_chord_overlap<R: RealField>(
     rmax(hi - lo, R::zero())
 }
 
+/// The two tolerances a cut-cell measure is gated against, one per dimensionality.
+///
+/// Grouped rather than passed as two parameters because a tolerance has to carry the dimensions
+/// of the quantity it gates, and keeping them together is what makes picking the wrong one a
+/// visible mistake instead of a silent one. They were a single volume-scaled number compared
+/// against a volume, an area and a length alike.
+#[derive(Debug, Clone, Copy)]
+struct Tolerances<R> {
+    /// Gates the solid and fluid volumes, the `D`-measures. Relative to the cell volume.
+    volume: R,
+    /// Gates the cut surface, a `(D−1)`-measure: the planar cross-section of a half-space cut,
+    /// the curved patch of a cylinder, the arc of a disk. Relative to the smallest product of
+    /// `D−1` of the cell's extents, which is the shortest edge at `D = 2` and the smallest
+    /// 2-face at `D = 3`.
+    surface: R,
+}
+
 impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
     /// Classify and clip the axis-aligned box `[lo, hi]` against `primitive`, returning the
     /// [`CutCell`] overlay (or `Fluid` / `Solid` for an uncut box). All volumes and areas are
@@ -58,11 +75,45 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
             l[a] = hi[a] - lo[a];
             full *= l[a];
         }
-        let eps = full * R::from_f64(1e-12).expect("1e-12 representable");
+        let rel = R::from_f64(1e-12).expect("1e-12 representable");
+        // Two tolerances, because two quantities are gated and a tolerance has to carry the
+        // dimensions of what it is compared against. Volumes are `D`-measures. Every cut-surface
+        // measure is a `(D−1)`-measure: the planar cross-section of a half-space cut, the curved
+        // patch of a cylinder, the arc of a disk.
+        //
+        // Both gates were once a single volume-scaled number, so the meaning of the surface
+        // comparison depended on the cell's absolute size. A 1e13 x 1 x 1 cell gave a tolerance of
+        // 10 against a cut cross-section of area 1, and a cell cut exactly in half recorded no
+        // cut-face fragment at all.
+        //
+        // The surface scale is the smallest product of `D−1` of the cell's extents. Smallest,
+        // because a tolerance discards a fragment that is negligible against the cell, and the
+        // smallest extent is the scale a genuine fragment is at least as large as. The largest
+        // reintroduces the original defect in a subtler form: a 1e13 x 1 x 1 cell has a largest
+        // 2-face of 1e13, so the tolerance would again be 10 against a real cross-section of 1.
+        // `D−1` of them, because a face spanned by two fixed axes is an area whatever `D` is, and
+        // at `D = 2` that gated a length: on a 1e13 x 1 cell, a cross-section of 1 against a
+        // tolerance of 10.
+        let mut smallest_cross = R::one();
+        for k in 0..D {
+            let mut cross = R::one();
+            for (a, &la) in l.iter().enumerate() {
+                if a != k {
+                    cross *= la;
+                }
+            }
+            if k == 0 || cross < smallest_cross {
+                smallest_cross = cross;
+            }
+        }
+        let tol = Tolerances {
+            volume: full * rel,
+            surface: smallest_cross * rel,
+        };
 
         match primitive {
             Primitive::Halfspace { normal, offset } => {
-                Ok(Self::from_halfspace(&l, normal, *offset, lo, full, eps))
+                Ok(Self::from_halfspace(&l, normal, *offset, lo, full, tol))
             }
             Primitive::Cylinder {
                 axis,
@@ -75,7 +126,7 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
                     )));
                 }
                 Ok(Self::from_cylinder(
-                    &l, *axis, center, *radius, lo, full, eps,
+                    &l, *axis, center, *radius, lo, full, tol,
                 ))
             }
             Primitive::Ball { center, radius } => {
@@ -84,12 +135,19 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
                         "Ball cut is supported for D = 2 only in Group A (got D = {D}); the 3D ball closed form is deferred"
                     )));
                 }
-                Ok(Self::from_disk(&l, center, *radius, lo, full, eps))
+                Ok(Self::from_disk(&l, center, *radius, lo, full, tol))
             }
         }
     }
 
-    fn from_halfspace(l: &[R; D], normal: &[R; D], offset: R, lo: [R; D], full: R, eps: R) -> Self {
+    fn from_halfspace(
+        l: &[R; D],
+        normal: &[R; D],
+        offset: R,
+        lo: [R; D],
+        full: R,
+        tol: Tolerances<R>,
+    ) -> Self {
         // Local-coordinate offset: solid is { n·x ≤ offset } ⇒ { n·(lo + u) ≤ offset }.
         let mut n_dot_lo = R::zero();
         for a in 0..D {
@@ -99,10 +157,10 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
 
         let solid = box_halfspace_solid_volume(l.as_slice(), normal.as_slice(), c_local);
         let fluid = full - solid;
-        if solid <= eps {
+        if solid <= tol.volume {
             return Self::fluid(full);
         }
-        if fluid <= eps {
+        if fluid <= tol.volume {
             return Self::solid(full);
         }
 
@@ -130,7 +188,7 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
         // n·x ≥ offset fluid side).
         let area = box_halfspace_cross_area(l.as_slice(), normal.as_slice(), c_local);
         let mut fragments = Vec::new();
-        if area > eps {
+        if area > tol.surface {
             // Centroid: the cell centre projected onto the cut plane `n·x = offset`, so it lies on
             // the wetted surface (the anchor for the wall-normal friction diagnostic).
             let mut nn = R::zero();
@@ -165,7 +223,7 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
         radius: R,
         lo: [R; D],
         full: R,
-        eps: R,
+        tol: Tolerances<R>,
     ) -> Self {
         // The two perpendicular axes form the disk cross-section.
         let perp: Vec<usize> = (0..D).filter(|&a| a != axis).collect();
@@ -177,10 +235,10 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
         let solid_cross = rect_disk_solid_area(lo2, hi2, c2, radius);
         let solid = solid_cross * l[axis];
         let fluid = full - solid;
-        if solid <= eps {
+        if solid <= tol.volume {
             return Self::fluid(full);
         }
-        if fluid <= eps {
+        if fluid <= tol.volume {
             return Self::solid(full);
         }
 
@@ -216,7 +274,7 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
         let arc = circle_in_rect_arc_len(lo2, hi2, c2, radius);
         let mut fragments = Vec::new();
         let area = arc * l[axis];
-        if area > eps {
+        if area > tol.surface {
             let mut normal = [R::zero(); D];
             // Representative radial outward normal at the cell-centre projection.
             let cell_cx = lo[p] + l[p] / (R::one() + R::one());
@@ -247,7 +305,14 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
         Self::cut(full, fluid, apertures, fragments)
     }
 
-    fn from_disk(l: &[R; D], center: &[R; D], radius: R, lo: [R; D], full: R, eps: R) -> Self {
+    fn from_disk(
+        l: &[R; D],
+        center: &[R; D],
+        radius: R,
+        lo: [R; D],
+        full: R,
+        tol: Tolerances<R>,
+    ) -> Self {
         // D == 2 guaranteed by the caller.
         let lo2 = [lo[0], lo[1]];
         let hi2 = [lo[0] + l[0], lo[1] + l[1]];
@@ -255,10 +320,10 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
 
         let solid = rect_disk_solid_area(lo2, hi2, c2, radius);
         let fluid = full - solid;
-        if solid <= eps {
+        if solid <= tol.volume {
             return Self::fluid(full);
         }
-        if fluid <= eps {
+        if fluid <= tol.volume {
             return Self::solid(full);
         }
 
@@ -283,7 +348,7 @@ impl<const D: usize, R: RealField + FromPrimitive> CutCell<D, R> {
 
         let arc = circle_in_rect_arc_len(lo2, hi2, c2, radius);
         let mut fragments = Vec::new();
-        if arc > eps {
+        if arc > tol.surface {
             let mut normal = [R::zero(); D];
             let cell_cx = lo[0] + l[0] / (R::one() + R::one());
             let cell_cy = lo[1] + l[1] / (R::one() + R::one());

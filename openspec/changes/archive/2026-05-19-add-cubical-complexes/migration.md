@@ -67,7 +67,7 @@ Re-verified by workspace build:
 
 ### 2.5 Cross-crate consumers
 
-- ✅ `deep_causality_effects/` — 3 source/test files migrated during Stage B (R5 + import-alias inject).
+- ✅ `../../../../yanked/deep_causality_effects/` — 3 source/test files migrated during Stage B (R5 + import-alias inject).
 - ✅ `deep_causality_physics/` — 32 source/test files migrated during Stage B (R5 + import-alias inject).
 
 ---

@@ -159,7 +159,7 @@ Library code propagates `R`; only end-consumer call sites bind a concrete `R`.
 6. **Remove every `// TEMP: removed by generalize-effects-over-realfield` pin** in this crate and its upstream consumers.
 7. **Update consumers** of `EffectData` and `NumericValue` across the workspace. Pattern-match sites add `::<R>` or update payload type names.
 8. **Add `f32` duplicates** for the algorithmically-meaningful tests (effect propagation invariants, serialization round-trips, `From` impl correctness).
-9. **Verification:** `cargo build --workspace`, `cargo test --workspace`, the four invariant greps from R0 task 11 inside `deep_causality_effects/src/`. Zero hits required.
+9. **Verification:** `cargo build --workspace`, `cargo test --workspace`, the four invariant greps from R0 task 11 inside `../../../../yanked/deep_causality_effects/src/`. Zero hits required.
 
 ## Open Questions
 

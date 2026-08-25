@@ -7,7 +7,7 @@ use crate::{Chain, SimplicialComplex};
 use deep_causality_haft::{
     Adjunction, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
 };
-use deep_causality_sparse::CsrMatrixWitness;
+use deep_causality_linear::CsrMatrixWitness;
 use std::sync::Arc;
 
 pub struct ChainWitness;

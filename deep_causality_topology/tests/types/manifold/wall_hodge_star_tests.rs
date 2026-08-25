@@ -8,7 +8,7 @@
 //! periodic invariance, and the M-weighted symmetry the CG solves rely
 //! on.
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HasHodgeStar, LatticeComplex, Manifold,
@@ -205,7 +205,7 @@ fn weighted_laplacian_symmetric_mixed_3d_grade1() {
 /// operator and report consistency/convergence per grade.
 #[test]
 fn probe_weighted_solves_on_open_3x3() {
-    use deep_causality_sparse::cg_solve;
+    use deep_causality_linear::cg_solve;
     let lattice = LatticeComplex::<2, f64>::open([3, 3]);
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
     let mut data = vec![0.0; total];
@@ -243,7 +243,7 @@ fn probe_weighted_solves_on_open_3x3() {
     };
     match cg_solve(apply0, &wrhs, 1e-10, 1000) {
         Ok(_) => println!("grade0: converged"),
-        Err(e) => println!("grade0: FAILED iters={} res={:e}", e.iterations, e.residual),
+        Err(e) => println!("grade0: FAILED {e}"),
     }
 
     // beta step: grade 2
@@ -265,6 +265,6 @@ fn probe_weighted_solves_on_open_3x3() {
     };
     match cg_solve(apply2, &wrhs2, 1e-10, 1000) {
         Ok(_) => println!("grade2: converged"),
-        Err(e) => println!("grade2: FAILED iters={} res={:e}", e.iterations, e.residual),
+        Err(e) => println!("grade2: FAILED {e}"),
     }
 }

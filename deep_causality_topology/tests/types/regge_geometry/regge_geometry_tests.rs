@@ -65,3 +65,17 @@ fn test_regge_geometry_metric_at_invalid_edge_panic() {
     // Try to compute metric for the (0,1,2) face. The edge (1,2) will not be found.
     regge_geometry.metric_at(&complex, 2, 0);
 }
+
+#[test]
+fn test_regge_geometry_metric_at_collinear_triangle_is_degenerate() {
+    // Vertices 0, 1, 2 sit at 0, 1 and 2 on a line: d(0,1) = 1, d(0,2) = 2,
+    // d(1,2) = 1. The Gram matrix built from those squared distances is
+    // [[1, 2], [2, 4]], which has rank 1, so the signature is (p, q, r) =
+    // (1, 0, 1) and `Metric::from_signature` names a single zero direction PGA.
+    let complex = create_triangle_complex();
+    // Edge order in the 1-skeleton is (0,1), (0,2), (1,2).
+    let edge_lengths = CausalTensor::new(vec![1.0, 2.0, 1.0], vec![3]).unwrap();
+    let geometry = ReggeGeometry::new(edge_lengths);
+
+    assert_eq!(geometry.metric_at(&complex, 2, 0), Metric::PGA(2));
+}

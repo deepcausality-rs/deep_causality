@@ -1,0 +1,186 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import ApiTable from '../../components/docs/ApiTable.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { SRC_URL, TENSOR_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Operator layer — DeepCausality Quantum';
+const description =
+  'A validated density matrix, the Choi–Jamiołkowski isomorphism in both directions, the CPTP checks, and the dense complex linear algebra they are built from.';
+
+const channel = `use deep_causality_quantum::{
+    apply_choi, apply_kraus, check_completely_positive,
+    check_trace_preserving, choi_from_kraus, kraus_from_choi,
+};
+
+// One channel, two representations.
+let choi = choi_from_kraus(&kraus)?;
+
+// A channel is legal iff both checks pass.
+check_completely_positive(&choi, tol)?;         // J ⪰ 0
+check_trace_preserving(&choi, d_in, d_out, tol)?; // Tr_out(J) = I_in
+
+// Either route applies it, and the two agree.
+let out_k = apply_kraus(&kraus, &rho)?;
+let out_c = apply_choi(&choi, &rho, d_in, d_out)?;
+
+// And the isomorphism runs backwards.
+let recovered = kraus_from_choi(&choi, d_in, d_out, tol)?;`;
+
+const trace = `// dims is row-major: leg 0 is most significant, and the product
+// of dims must equal the matrix dimension.
+let reduced = partial_trace(&op, &[d_a, d_b], &[1])?;  // the classic Tr_B`;
+---
+<BaseLayout title={title} description={description} path="/operators/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Layer · Operators"
+    title="The operator layer"
+    lede="Everything above this layer assumes its operators are what they claim to be. This layer is where that gets checked."
+    sourceHref={`${SRC_URL}/types/qgates`}
+    sourceLabel="src/types/qgates"
+  >
+    <h2>Density matrices</h2>
+
+    <p>
+      <code>DensityMatrix&lt;R&gt;</code> holds a square complex matrix and its
+      dimension. Every constructor enforces the same three invariants: Hermitian,
+      positive semidefinite, unit trace. Positive semidefiniteness is decided
+      through the dense Hermitian eigendecomposition supplied by
+      <a href={TENSOR_URL}>deep_causality_tensor</a>, and the order matters,
+      since that decomposition is only meaningful once Hermiticity holds.
+    </p>
+
+    <p>
+      Four constructors cover the usual ways a state arrives.
+      <code>new</code> validates a matrix at the default tolerance and
+      <code>with_tolerance</code> at a supplied one. <code>from_ket</code> builds
+      the pure state <code>|ψ⟩⟨ψ|</code> from a column vector.
+      <code>from_ensemble</code> takes weighted kets and forms the convex
+      mixture. <code>from_choi</code> reads a normalized state out of a Choi
+      operator.
+    </p>
+
+    <p>
+      Each violation has its own error rather than a shared one:
+      <code>NonPositiveOperator</code> when an eigenvalue is negative beyond
+      tolerance, <code>NonUnitTrace</code> when the trace misses 1, and
+      <code>NonFiniteValue</code> when a NaN or an infinity is present. Reading
+      the variant tells you which invariant broke without inspecting the matrix.
+    </p>
+
+    <p>
+      <code>purity()</code> returns <code>Tr(ρ²)</code>, and
+      <code>is_pure(tol)</code> tests it against 1.
+    </p>
+
+    <h2>Channels</h2>
+
+    <p>
+      A quantum channel <code>E: L(H_in) → L(H_out)</code> has two standard
+      representations, and the crate supports both plus the map between them.
+      The Choi operator is
+      <code>J(E) = Σ&#123;ik&#125; |i⟩⟨k| ⊗ E(|i⟩⟨k|)</code>, a square matrix of
+      dimension <code>d_in · d_out</code> whose composite row index is
+      <code>i·d_out + j</code>. For a Kraus family <code>&#123;K_κ&#125;</code>
+      the entries are
+      <code>J[(i,j),(k,l)] = Σ_κ K_κ[j,i]·conj(K_κ[l,k])</code>. Those
+      conventions are fixed by the tests, not left to the reader.
+    </p>
+
+    <p>
+      The two properties that make a map a channel are each a check on
+      <code>J</code>. Complete positivity is <code>J ⪰ 0</code>; trace
+      preservation is <code>Tr_out(J) = I_in</code>. Both are exposed as
+      functions, so a caller can validate a channel it did not build.
+    </p>
+
+    <Code code={channel} lang="rust" themes={SHIKI} />
+
+    <p>
+      <code>kraus_from_choi</code> is gated on finiteness and Hermiticity before
+      it decomposes, for the same reason the density matrix is: the
+      eigendecomposition it needs is only defined once those hold. A
+      non-Hermitian input is refused rather than silently producing a family that
+      reconstructs to something else.
+    </p>
+
+    <p>
+      That the two application routes agree is a test, not an assumption.
+      <code>test_apply_kraus_and_apply_choi_agree</code> in
+      <code>channel_tests</code> holds the line, and it is also the Rust witness
+      for the two LEAN linearity theorems about the reconstructed Choi action.
+    </p>
+
+    <h2>The dense kernels</h2>
+
+    <p>
+      Under the channel layer sits ordinary complex linear algebra on
+      <code>CausalTensor&lt;Complex&lt;R&gt;&gt;</code>. Five of these are the
+      ones the rest of the crate is built out of.
+    </p>
+
+    <p>
+      <code>partial_trace</code> traces out a named subset of tensor legs. It
+      takes the per-leg dimensions and the legs to remove, rather than assuming a
+      bipartition, so a model with several legs does not have to reshape first.
+    </p>
+
+    <Code code={trace} lang="rust" themes={SHIKI} />
+
+    <p>
+      A non-square operator, a <code>dims</code> product that disagrees with the
+      matrix dimension, and duplicate or out-of-range legs are all rejected, as
+      <code>PartialTraceShape</code> or <code>DimensionMismatch</code>.
+    </p>
+
+    <p>
+      <code>embed_on_legs</code> goes the other way. It lifts an operator from
+      its own legs onto a larger labelled space, which is what puts two factors
+      declared on different supports into the same matrix algebra so their
+      commutator means something. The freeze check calls it on every pair it
+      tests.
+    </p>
+
+    <p>
+      <code>matrix_commutator</code> forms <code>AB − BA</code>.
+      <code>frobenius_norm</code> measures it. <code>hermiticity_defect</code>
+      reports how far an operator is from Hermitian, and
+      <code>identity_matrix</code> supplies the <code>I</code> that the
+      trace-preservation check and the projection orthocomplement both need.
+      <code>matrix_trace</code> and <code>supports_intersect</code> round out the
+      set.
+    </p>
+
+    <h2>A note on the partial trace</h2>
+
+    <p>
+      Partial trace is linear and positive, and both facts are proved in LEAN.
+      It is not an algebra homomorphism, and that is proved too, by
+      counterexample. The distinction is not academic here: it is the reason the
+      Markov check has to embed factors onto their common support rather than
+      comparing reduced descriptions. The
+      <a href="/formalization/">formalization page</a> gives the residual
+      commutator explicitly.
+    </p>
+  </DocPage>
+
+  <div class="wide-wrap">
+    <ApiTable layer="operator" title="The operator surface" />
+  </div>
+</BaseLayout>
+
+<style>
+  .wide-wrap {
+    max-width: var(--w-panel);
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-9);
+  }
+  @media (min-width: 720px) { .wide-wrap { padding: 0 var(--space-5) var(--space-9); } }
+</style>

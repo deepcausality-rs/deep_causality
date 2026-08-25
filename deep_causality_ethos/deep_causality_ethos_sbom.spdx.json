@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-07-07T22:29:37Z",
+    "created": "2026-08-25T01:32:48Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_ethos-466a23d8-9562-4b87-a2b7-6974bc1ed7bd",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_ethos-60f25be9-7e50-4dff-b4a2-005800f68525",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_ethos",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
+          "checksumValue": "be5644a2bb15f4378275212a3073b4189002d798"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,93 +27,40 @@
   "name": "deep_causality_ethos",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality-0.13.10",
-      "description": "Computational causality library. Provides causality graph, collections, context and causal reasoning.",
-      "downloadLocation": "NONE",
-      "homepage": "https://deepcausality.com/about/",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality",
-      "versionInfo": "0.13.10"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--core-0.10.0",
-      "description": "Core types for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.3",
+      "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_core",
-      "versionInfo": "0.10.0"
+      "name": "deep_causality_num",
+      "versionInfo": "0.4.3"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "SPDXID": "SPDXRef-Package-deep--causality--ast-0.1.9",
       "description": "AST data structure for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_ast",
-      "versionInfo": "0.1.7"
+      "versionInfo": "0.1.9"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "description": "Random number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_rand",
-      "versionInfo": "0.1.16"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.1",
       "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_algebra",
-      "versionInfo": "0.1.0"
+      "versionInfo": "0.4.1"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.3.16",
-      "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_uncertain",
-      "versionInfo": "0.3.16"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "description": "HKT traits for for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_haft",
-      "versionInfo": "0.3.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
-      "description": "A small cross-platform library for retrieving random data from system source",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/getrandom@0.4.3",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "getrandom",
-      "versionInfo": "0.4.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--data--structures-0.10.14",
+      "SPDXID": "SPDXRef-Package-deep--causality--data--structures-0.10.16",
       "description": "Data structures for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_data_structures",
-      "versionInfo": "0.10.14"
+      "versionInfo": "0.10.16"
     },
     {
       "SPDXID": "SPDXRef-Package-r-efi-6.0.0",
@@ -133,20 +80,14 @@
       "versionInfo": "6.0.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-libm-0.2.16",
-      "description": "libm in pure Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.16",
-          "referenceType": "purl"
-        }
-      ],
+      "SPDXID": "SPDXRef-Package-deep--causality-0.15.1",
+      "description": "Computational causality library. Provides causality graph, collections, context and causal reasoning.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/about/",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.16"
+      "name": "deep_causality",
+      "versionInfo": "0.15.1"
     },
     {
       "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
@@ -165,101 +106,195 @@
       "versionInfo": "1.0.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--ethos-0.2.7",
-      "description": "Programmable ethics for DeepCausality.",
-      "downloadLocation": "NONE",
-      "homepage": "https://deepcausality.com/about/",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_ethos",
-      "versionInfo": "0.2.7"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "description": "Number utils for for deep_causality crate.",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.4.2",
+      "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.3.3"
+      "name": "deep_causality_haft",
+      "versionInfo": "0.4.2"
     },
     {
-      "SPDXID": "SPDXRef-Package-libc-0.2.186",
+      "SPDXID": "SPDXRef-Package-libm-0.2.16",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libc-0.2.189",
       "description": "Raw FFI bindings to platform libraries like libc.",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libc@0.2.186",
+          "referenceLocator": "pkg:cargo/libc@0.2.189",
           "referenceType": "purl"
         }
       ],
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "libc",
-      "versionInfo": "0.2.186"
+      "versionInfo": "0.2.189"
     },
     {
-      "SPDXID": "SPDXRef-Package-ultragraph-0.9.1",
+      "SPDXID": "SPDXRef-Package-deep--causality--core-0.11.1",
+      "description": "Core types for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_core",
+      "versionInfo": "0.11.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.2.1",
+      "description": "Random number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_rand",
+      "versionInfo": "0.2.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ultragraph-0.9.3",
       "description": "Hypergraph data structure.",
       "downloadLocation": "NONE",
       "homepage": "https://github.com/deepcausality/deep_causality/tree/main/ultragraph",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "ultragraph",
-      "versionInfo": "0.9.1"
+      "versionInfo": "0.9.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/getrandom@0.4.3",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "getrandom",
+      "versionInfo": "0.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--ethos-0.2.10",
+      "description": "Programmable ethics for DeepCausality.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/about/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_ethos",
+      "versionInfo": "0.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--uncertain-0.5.0",
+      "description": "A First-Order Type for Uncertain Programming for the DeepCausality project.'",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_uncertain",
+      "versionInfo": "0.5.0"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--data--structures-0.10.14",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.4.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.10"
+      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.11.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.2.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.5.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.189",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.4.2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.4.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.11.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.9.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.3.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.5.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.9.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.9",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.10"
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.1.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ethos-0.2.10",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_ethos"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--uncertain-0.5.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.9.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--ethos-0.2.7"
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_ethos",
@@ -267,64 +302,39 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality-0.15.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
+      "spdxElementId": "SPDXRef-Package-deep--causality--ethos-0.2.10"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--core-0.10.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.10"
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.5.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.7",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ast-0.1.9",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.10"
+      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.5.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality-0.13.10",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--ethos-0.2.7"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--core-0.10.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.10"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--uncertain-0.3.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality-0.13.10"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.1.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--uncertain-0.3.16"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.3.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.1.16"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-libc-0.2.186",
+      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--ethos-0.2.7",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_ethos"
+      "relatedSpdxElement": "SPDXRef-Package-ultragraph-0.9.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--ethos-0.2.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--data--structures-0.10.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality-0.15.1"
     }
   ],
   "spdxVersion": "SPDX-2.3"

@@ -11,7 +11,7 @@
 //! `CoMonad`, `Applicative` — on stable Rust with no inherent-method shim.
 
 use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Monad, Pure};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::collections::BTreeSet;
 
 use deep_causality_num::{Float, Zero};
@@ -75,6 +75,27 @@ where
     None
 }
 
+/// Returns the ambient dimension `M` of an `N x M` `points` tensor, or an
+/// error naming the rank actually supplied.
+///
+/// `PointCloud::new` validates emptiness, matching row counts and cursor
+/// range; it does not constrain the rank of the `points` tensor, and the
+/// `Display` impl deliberately renders a rank-1 cloud. The `N x M` shape
+/// contract is therefore established by the triangulation entry points, each
+/// of which documents a `TopologyError::PointCloudError` for a precondition
+/// violation. `caller` names the entry point in the message.
+pub(super) fn ambient_dim(shape: &[usize], caller: &str) -> Result<usize, TopologyError> {
+    if shape.len() != 2 {
+        return Err(TopologyError::PointCloudError(format!(
+            "{}: `points` must be a rank-2 N x M tensor, got rank {} with shape {:?}",
+            caller,
+            shape.len(),
+            shape
+        )));
+    }
+    Ok(shape[1])
+}
+
 impl<T, D> PointCloud<T, D>
 where
     T: Float + Sum + From<f64> + Zero + PartialOrd + Copy,
@@ -96,10 +117,14 @@ where
     ///
     /// # Errors
     ///
-    /// Returns `Err(TopologyError::PointCloudError(_))` in two cases:
+    /// Returns `Err(TopologyError::PointCloudError(_))` in three cases:
     ///
     /// 1. **Empty input.** The point cloud contains no points.
-    /// 2. **Duplicate input points.** A pair of input points has Euclidean
+    /// 2. **Coordinates that are not `N x M`.** The `points` tensor has a rank
+    ///    other than 2, so it carries no ambient dimension to triangulate in.
+    ///    `PointCloud::new` accepts any rank, so this entry point establishes
+    ///    the shape contract; the message reports the rank it received.
+    /// 3. **Duplicate input points.** A pair of input points has Euclidean
     ///    distance below `T::epsilon() * max_extent`, where `max_extent` is the
     ///    largest axis-aligned bounding-box extent. The error message contains
     ///    the substring `"duplicate point"` and references both offending
@@ -128,7 +153,7 @@ where
         }
 
         let num_points = self.len();
-        let dim = self.points.shape()[1];
+        let dim = ambient_dim(self.points.shape(), "triangulate")?;
         let coords = self.points.as_slice();
 
         if let Some((i, j)) = find_duplicate_points(coords, num_points, dim) {

@@ -8,9 +8,7 @@ extern crate core;
 
 // Private re-exports so the moved `dual` module keeps resolving these through
 // `crate::` paths.
-use deep_causality_algebra::{
-    AbelianGroup, Annihilating, Associative, Commutative, Distributive, Real,
-};
+use deep_causality_algebra::{Annihilating, Associative, Commutative, Distributive, Real};
 use deep_causality_num::{FromPrimitive, One, Zero};
 
 mod dual;

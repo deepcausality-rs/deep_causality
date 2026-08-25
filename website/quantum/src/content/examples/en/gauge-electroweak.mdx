@@ -1,0 +1,27 @@
+---
+title: "Electroweak one-loop"
+question: "What does the W boson mass come out at once quantum loops are included?"
+summary: "The implicit loop equation for M_W, with Veltman screening from the top quark and QED running of the coupling."
+order: 6
+command: "cargo run --release -p quantum_examples --example gauge_electroweak"
+usesCrate: false
+crates:
+  - deep_causality_algebra
+  - deep_causality_core
+  - deep_causality_num
+  - deep_causality_physics
+source: "examples/quantum_examples/gauge_electroweak"
+---
+
+The example solves the implicit equation linking the Fermi constant to the gauge
+boson masses,
+`M_W²(1 − M_W²/M_Z²) = πα / (√2 G_F (1 − Δr))`, and reports the W mass and the ρ
+parameter with one-loop radiative corrections included.
+
+Two corrections carry the result. Veltman screening, `Δρ`, comes from the
+top-bottom mass splitting and lands near 0.009. QED running, `Δα`, comes from
+photon vacuum polarization. Leave either out and the prediction misses the
+measured mass by far more than the roughly 0.02% the example achieves.
+
+This example does not import `deep_causality_quantum`. The formulas come from
+`deep_causality_physics`.

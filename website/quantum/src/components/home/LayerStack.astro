@@ -1,0 +1,139 @@
+---
+/**
+ * Section 03 — the five bands, bottom to top.
+ *
+ * Label-plus-content rows on the fixed `--w-label` column, with a 3px accent
+ * tick on the left edge that grows on hover. Entrance is staggered by an inline
+ * `--i` custom property consumed as a transition delay, which is the site's
+ * sequenced-entrance idiom.
+ *
+ * The carrier band is listed first and marked as outside the crate. A reader
+ * who goes looking for `HilbertState` in this crate's source and does not find
+ * it has been misled by a diagram that left it out.
+ */
+const bands = [
+  {
+    label: 'Carrier',
+    where: 'sibling crates',
+    title: 'The ket, the metric, the tensor',
+    body:
+      'HilbertState is a minimal-left-ideal element of a Clifford algebra and lives in deep_causality_multivector. Metric signatures come from deep_causality_metric, the workspace’s single source of truth; this crate defines no metric type. The dense complex matrices are CausalTensor from deep_causality_tensor, which also supplies the Hermitian eigendecomposition.',
+  },
+  {
+    label: 'Operators',
+    where: 'always compiled',
+    title: 'Density matrices, channels, kernels',
+    body:
+      'A validated DensityMatrix, the Choi–Jamiołkowski isomorphism in both directions, the two channel-application routes, the CPTP checks, and the dense linear algebra they are built from: partial trace, leg embedding, commutator, Frobenius norm, hermiticity defect.',
+    href: '/operators/',
+  },
+  {
+    label: 'Model',
+    where: 'feature qcm',
+    title: 'Factors, supports, freeze gate',
+    body:
+      'The external factor store and its Hilbert supports, the depth-aware commutator tolerance, the freeze-time Markov check, and C₃-exclusion faithfulness over the declared input and output systems.',
+    href: '/qcm/',
+  },
+  {
+    label: 'Read-out',
+    where: 'always compiled',
+    title: 'Projections and the Born rule',
+    body:
+      'A quantum causaloid carries no verdict over its operators. A verdict is read out at the measurement boundary instead: Tr(Pρ) as a Prob, or the projection itself as a proposition in the orthomodular lattice.',
+    href: '/verdicts/',
+  },
+  {
+    label: 'Monad',
+    where: 'always compiled',
+    title: 'Kernels lifted into PropagatingEffect',
+    body:
+      'Every gate kernel has a wrapper that lifts it into the arity-5 causal monad and routes failure to the error channel. Under the qpu feature, qpu_effect does the same for a sampler call, putting shots on the value channel and calibration on the context channel.',
+    href: '/gates/',
+  },
+];
+---
+<section class="qsec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">03 / 05</span><span class="lb">Stack</span>
+    </p>
+    <h2>Five bands</h2>
+    <p class="lede">
+      The crate is the quantum-information layer of the workspace.
+    </p>
+  </header>
+
+  <ol class="stack">
+    {bands.map((b, i) => (
+      <li class="layer rise" style={`--i:${i}`}>
+        <span class="tick" aria-hidden="true"></span>
+        <div class="lmeta">
+          <p class="llabel">{b.label}</p>
+          <p class="lwhere">{b.where}</p>
+        </div>
+        <div class="lbody">
+          <h3>{b.title}</h3>
+          <p>{b.body}</p>
+          {b.href && <a class="lmore" href={b.href}>Detail <span aria-hidden="true">→</span></a>}
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .qsec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .stack { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+
+  .layer {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-5) 0 var(--space-5) var(--space-4);
+    border-bottom: 1px solid var(--line-1);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  @media (min-width: 720px) {
+    .layer { grid-template-columns: var(--w-label) 1fr; gap: var(--space-5); }
+  }
+  .layer:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+  .tick {
+    position: absolute;
+    left: 0;
+    top: var(--space-5);
+    width: 3px;
+    height: 18px;
+    background: var(--accent);
+    transition: height var(--dur-med) var(--ease-out);
+  }
+  .layer:hover .tick { height: 28px; }
+
+  .llabel {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-0);
+    margin: 0 0 var(--space-1);
+  }
+  .lwhere {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin: 0;
+  }
+
+  .lbody h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .lbody p { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0; }
+  .lmore { display: inline-block; margin-top: var(--space-3); font-size: var(--t-body-sm); border-bottom: none; }
+  .lmore:hover { border-bottom: 1px solid currentColor; }
+</style>

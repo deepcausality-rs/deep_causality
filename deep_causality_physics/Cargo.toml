@@ -65,7 +65,7 @@ version = "0.2"
 
 [dependencies.deep_causality_multivector]
 path = "../deep_causality_multivector"
-version = "0.5"
+version = "0.6"
 
 [dependencies.deep_causality_num]
 path = "../deep_causality_num"
@@ -73,7 +73,7 @@ version = "0.4"
 
 [dependencies.deep_causality_algebra]
 path = "../deep_causality_algebra"
-version = "0.3"
+version = "0.4"
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
@@ -88,9 +88,10 @@ path = "../deep_causality_rand"
 version = "0.2"
 optional = true
 
-[dependencies.deep_causality_sparse]
-path = "../deep_causality_sparse"
-version = "0.2"
+[dependencies.deep_causality_linear]
+path = "../deep_causality_linear"
+version = "0.1"
+default-features = false
 
 [dependencies.deep_causality_tensor]
 path = "../deep_causality_tensor"

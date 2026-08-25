@@ -8,11 +8,13 @@ extern crate core;
 
 // Private re-exports so the `rational` module keeps resolving these through `crate::` paths.
 use deep_causality_algebra::{
-    AbelianGroup, Annihilating, Associative, Commutative, Distributive, EuclideanDomain, Invertible,
+    Annihilating, Associative, Commutative, Distributive, EuclideanDomain, Invertible,
 };
 use deep_causality_num::{One, SignedInt, Zero};
 
+pub mod hom;
 mod rational;
 
 // The rational numbers ℚ — the field of fractions of an integral domain.
+pub use crate::hom::IntToRational;
 pub use crate::rational::rational_number::{Rational, RationalScalar};

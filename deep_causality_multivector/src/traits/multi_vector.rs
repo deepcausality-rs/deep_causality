@@ -7,7 +7,7 @@
 
 use crate::CausalMultiVectorError;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_algebra::Field;
+use deep_causality_algebra::{DivisibleByIntegers, Field, NormedScalar};
 // Added Complex, DivisionAlgebra
 
 pub trait MultiVector<T> {
@@ -45,7 +45,8 @@ pub trait MultiVector<T> {
             + SubAssign
             + Neg<Output = T>
             + core::ops::Div<Output = T>
-            + PartialEq,
+            + PartialEq
+            + NormedScalar,
         Self: Sized;
 
     /// Computes the dual of the multivector $A^*$.
@@ -58,7 +59,8 @@ pub trait MultiVector<T> {
             + SubAssign
             + Neg<Output = T>
             + core::ops::Div<Output = T>
-            + PartialEq,
+            + PartialEq
+            + NormedScalar,
         Self: Sized;
 
     // --- Products ---
@@ -107,10 +109,15 @@ pub trait MultiVector<T> {
     /// This projects the result onto the subspace orthogonal to the inputs.
     /// For orthogonal basis vectors: $e_1 \times e_2 = e_{12}$.
     ///
-    /// **Requirement:** Type `T` must support division by 2 (e.g. `1 + 1`).
+    /// **Requirement:** `T` must be of characteristic zero, so that `1 + 1` is invertible.
+    ///
+    /// This was previously a `Field` bound with the requirement stated only in prose. `Field` is
+    /// blanket-implemented, so it admits a characteristic-2 field such as 𝔽₂ automatically, and
+    /// over 𝔽₂ the halving divides by zero. [`DivisibleByIntegers`] states the requirement where the
+    /// compiler can act on it.
     fn commutator_geometric(&self, rhs: &Self) -> Self
     where
-        T: Field
+        T: DivisibleByIntegers
             + Copy
             + Clone
             + AddAssign

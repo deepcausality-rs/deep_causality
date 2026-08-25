@@ -1,0 +1,139 @@
+---
+/**
+ * Hero. Single column, left aligned.
+ *
+ * The page opens on what the crate decides rather than on what it contains.
+ * A reader who already knows what a quantum causal model is wants to know
+ * whether this one checks the Markov condition or assumes it, and that answer
+ * is the first concrete thing on the page.
+ *
+ * The dependency line is a git dependency because the crate carries
+ * `publish = false`. Quoting CARGO_DEP keeps that fact in one file.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { CARGO_DEP, MSRV } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const dep = `[dependencies]
+${CARGO_DEP}`;
+---
+<section class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">DeepCausality · Quantum</p>
+    <h1>Quantum causal models</h1>
+
+    <p class="tagline">A causal graph whose factors are quantum channels.</p>
+
+    <p class="sub">
+      Each node carries a Choi–Jamiołkowski operator; the whole model is their
+      product. Not every product is a legal model, and this crate decides which
+      ones are at the freeze boundary, before a single step runs.
+    </p>
+
+    <Code code={dep} lang="toml" themes={SHIKI} />
+
+    <p class="run-note">
+      The crate is unpublished, so a git dependency is the only way to take it.
+      The default build compiles the verifiable path and the causal-model slice;
+      it pulls in no network and no async dependency at any feature setting.
+      Rust {MSRV} or newer.
+    </p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/qcm/">
+        Read the model
+        <span class="btn-ico" aria-hidden="true">→</span>
+      </a>
+      <a class="btn btn-ghost" href="/formalization/">
+        See what is proved
+      </a>
+    </div>
+
+    <p class="proof">
+      Two factors declared on the same Hilbert leg. Diagonal ones commute, and
+      the graph freezes with a recorded margin of <strong>0.000e0</strong>. Swap
+      in <strong>σx</strong> against <strong>σz</strong> and the freeze aborts,
+      names nodes 0 and 1 as the offending pair, and rolls the graph back:
+      <code>is_frozen()</code> reports false.
+    </p>
+  </div>
+</section>
+
+<style>
+  .hero { padding: var(--space-8) var(--space-4) var(--space-7); }
+  @media (min-width: 720px) { .hero { padding: var(--space-9) var(--space-5) var(--space-8); } }
+
+  .hero-inner { max-width: var(--w-panel); margin: 0 auto; }
+
+  h1 {
+    font-size: clamp(2.25rem, 5vw + 0.5rem, 3.5rem);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+    margin: var(--space-3) 0 var(--space-4);
+    max-width: 18ch;
+  }
+  .tagline {
+    font-size: var(--t-h3);
+    line-height: var(--lh-h3);
+    color: var(--fg-0);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-4);
+  }
+  .sub {
+    color: var(--fg-1);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-6);
+  }
+
+  .run-note {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+    margin: var(--space-3) 0 var(--space-6);
+  }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 44px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-size: var(--t-body-sm);
+    font-weight: var(--fw-heading);
+    border-bottom: 1px solid transparent;
+    transition: transform var(--dur-fast) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out),
+                border-color var(--dur-fast) var(--ease-out),
+                color var(--dur-fast) var(--ease-out);
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--accent) 90%, white);
+    border-color: transparent;
+    border-bottom-color: transparent;
+  }
+  .btn-ico { transition: transform var(--dur-fast) var(--ease-out); }
+  .btn-primary:hover .btn-ico { transform: translateX(2px); }
+  .btn-ghost { color: var(--fg-0); border-color: var(--line-2); }
+  .btn-ghost:hover {
+    border-color: var(--fg-2);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+    border-bottom-color: var(--fg-2);
+  }
+
+  .proof {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+    margin: 0;
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--accent);
+  }
+  .proof strong { color: var(--fg-0); }
+</style>

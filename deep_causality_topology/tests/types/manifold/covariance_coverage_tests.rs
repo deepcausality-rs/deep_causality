@@ -7,7 +7,7 @@
 //! analysis: sample variance needs at least two observations, so a manifold
 //! whose field carries fewer than two samples must return `InvalidInput`.
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::Simplex;
 use deep_causality_topology::{Manifold, SimplicialComplex, Skeleton, TopologyErrorEnum};

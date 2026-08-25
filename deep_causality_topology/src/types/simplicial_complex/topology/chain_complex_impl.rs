@@ -13,8 +13,7 @@
 use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
 use crate::{Simplex, SimplicialComplex};
-use deep_causality_sparse::CsrMatrix;
-use deep_causality_tensor::{CausalTensor, Tensor};
+use deep_causality_linear::CsrMatrix;
 use std::borrow::Cow;
 use std::iter::Cloned;
 use std::slice::Iter;
@@ -79,41 +78,6 @@ impl<T: deep_causality_algebra::RealField> ChainComplex for SimplicialComplex<T>
             None => Cow::Owned(CsrMatrix::new()),
         }
     }
-
-    fn betti_number(&self, k: usize) -> usize {
-        let n_k = self.num_cells(k);
-        let rank_k = rank_of_csr(&self.boundary_matrix(k));
-        let rank_k_next = rank_of_csr(&self.boundary_matrix(k + 1));
-        let dim_ker = n_k.saturating_sub(rank_k);
-        dim_ker.saturating_sub(rank_k_next)
-    }
-}
-
-/// SVD-based rank computation for a CsrMatrix<i8>. Lifts to f64 for the SVD.
-/// Mirrors the helper used by `CellComplex::rank_of_matrix`.
-fn rank_of_csr(matrix: &CsrMatrix<i8>) -> usize {
-    let (rows, cols) = matrix.shape();
-    if rows == 0 || cols == 0 {
-        return 0;
-    }
-    let mut data = vec![0.0f64; rows * cols];
-    let row_ptrs = matrix.row_indices();
-    let col_idxs = matrix.col_indices();
-    let vals = matrix.values();
-    for r in 0..rows {
-        let start = row_ptrs[r];
-        let end = row_ptrs[r + 1];
-        for idx in start..end {
-            let c = col_idxs[idx];
-            data[r * cols + c] = vals[idx] as f64;
-        }
-    }
-    let tensor =
-        CausalTensor::new(data, vec![rows, cols]).expect("Failed to build tensor for rank");
-    let (_, s, _) = tensor.svd().expect("SVD failed");
-    let s_vec: Vec<f64> = s.to_vec();
-    let tolerance = 1e-5;
-    s_vec.iter().filter(|&x| x.abs() > tolerance).count()
 }
 
 // Touch unused trait import to satisfy lint when only the trait bound matters.

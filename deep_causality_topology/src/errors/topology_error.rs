@@ -6,6 +6,7 @@
 use core::fmt;
 use std::fmt::Display;
 
+use deep_causality_linear::LinearError;
 use deep_causality_multivector::CausalMultiVectorError;
 use deep_causality_tensor::CausalTensorError;
 
@@ -47,6 +48,10 @@ pub enum TopologyErrorEnum {
     /// is formatted at the error-construction site to keep the public error surface
     /// free of the field-precision type parameter `R`.
     HodgeDecompositionFailed(String),
+    /// A `deep_causality_linear` operation failed: a non-square matrix where one was
+    /// required, a shape mismatch on construction, or a singular system. The carried
+    /// message is the linear error's own, so the failing shape survives the conversion.
+    LinearAlgebraError(String),
     /// General catch-all error for other topological issues.
     GenericError(String),
 }
@@ -78,6 +83,9 @@ impl Display for TopologyError {
             TopologyErrorEnum::HodgeDecompositionFailed(msg) => {
                 write!(f, "Hodge decomposition failed: {}", msg)
             }
+            TopologyErrorEnum::LinearAlgebraError(msg) => {
+                write!(f, "Linear algebra error: {}", msg)
+            }
             TopologyErrorEnum::GenericError(msg) => write!(f, "Topology error: {}", msg),
         }
     }
@@ -94,6 +102,12 @@ impl From<CausalTensorError> for TopologyError {
 impl From<CausalMultiVectorError> for TopologyError {
     fn from(err: CausalMultiVectorError) -> Self {
         TopologyError(TopologyErrorEnum::MultivectorError(err.to_string()))
+    }
+}
+
+impl From<LinearError> for TopologyError {
+    fn from(err: LinearError) -> Self {
+        TopologyError(TopologyErrorEnum::LinearAlgebraError(err.to_string()))
     }
 }
 
@@ -176,6 +190,11 @@ impl TopologyError {
     #[allow(non_snake_case)]
     pub fn HodgeDecompositionFailed<S: Into<String>>(msg: S) -> Self {
         Self(TopologyErrorEnum::HodgeDecompositionFailed(msg.into()))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn LinearAlgebraError<S: Into<String>>(msg: S) -> Self {
+        Self(TopologyErrorEnum::LinearAlgebraError(msg.into()))
     }
 
     #[allow(non_snake_case)]

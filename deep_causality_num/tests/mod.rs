@@ -8,6 +8,7 @@ mod float_double;
 mod float_option;
 #[cfg(not(miri))]
 mod formalization_lean;
+mod gf2;
 mod identity;
 mod integer;
 mod num;

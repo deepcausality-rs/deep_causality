@@ -115,7 +115,6 @@ impl<
     /// # Errors
     ///
     /// Returns error if plaquette/rectangle computation fails.
-    /// Returns error if plaquette/rectangle computation fails.
     pub fn try_improved_action(&self, coeffs: &ActionCoeffs<R>) -> Result<R, TopologyError>
     where
         M: deep_causality_algebra::ComplexField<R>,

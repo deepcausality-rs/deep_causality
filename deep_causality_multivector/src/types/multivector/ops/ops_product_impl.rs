@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use crate::CausalMultiVector;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_algebra::Field;
+use deep_causality_algebra::{DivisibleByIntegers, Field};
 
 impl<T> CausalMultiVector<T> {
     // Threshold for sparse algorithm (CPU-based)
@@ -297,10 +297,20 @@ impl<T> CausalMultiVector<T> {
         }
     }
 
-    // The scaled logic 0.5 * (AB - BA)
+    /// The scaled logic `0.5 * (AB - BA)`.
+    ///
+    /// Bounded on [`DivisibleByIntegers`] rather than `Field` because it halves. In a field of
+    /// characteristic 2 — 𝔽₂ is the one this workspace has — `1 + 1` is `0`, so the scaling step
+    /// divides by zero. The bound refuses such a scalar at the call site, which is what a
+    /// `Field` bound could not do: `Field` is blanket-implemented, so it admits every finite field
+    /// automatically.
+    ///
+    /// This replaces a runtime `panic!` on `two.is_zero()`. The check was correct and unreachable
+    /// for ℝ and ℂ; moving it into the signature makes the same guarantee without a branch that no
+    /// test can cover.
     pub(in crate::types::multivector) fn commutator_geometric_impl(&self, rhs: &Self) -> Self
     where
-        T: Field
+        T: DivisibleByIntegers
             + Copy
             + Clone
             + AddAssign
@@ -311,21 +321,11 @@ impl<T> CausalMultiVector<T> {
         // 1. Calculate the raw Lie bracket (AB - BA)
         let lie_bracket = self.commutator_lie_impl(rhs);
 
-        // 2. Define "2" using the generic One trait
-        // This works for f64 (1.0+1.0=2.0), Complex (1+i0 + 1+i0 = 2+i0), etc.
+        // 2. Define "2" using the generic One trait. `DivisibleByIntegers` is what promises this is
+        // not zero: `n · 1 != 0` for every `n > 0`.
         let two = T::one() + T::one();
 
-        // 3. Check for division by zero (e.g. in Boolean algebra 1+1=0, or GF(2))
-        if two.is_zero() {
-            // In a field where 1+1=0 (Characteristic 2), division by 2 is undefined.
-            // For Physics (R/C), this branch is never taken.
-            // You might panic or return the Lie bracket depending on philosophy.
-            panic!(
-                "Cannot compute Geometric Commutator (scale by 1/2) in a field with characteristic 2"
-            );
-        }
-
-        // 4. Scale the result
+        // 3. Scale the result
         let scaled_data = lie_bracket.data.into_iter().map(|val| val / two).collect();
 
         Self {

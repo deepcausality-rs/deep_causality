@@ -19,4 +19,10 @@ mod cut_face_constraint_tests;
 mod cut_star_tests;
 
 #[cfg(test)]
+mod geometry_tests;
+
+#[cfg(test)]
 mod intersection_tests;
+
+#[cfg(test)]
+mod registry_tests;

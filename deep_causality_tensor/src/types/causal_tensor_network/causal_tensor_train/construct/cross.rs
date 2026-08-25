@@ -296,7 +296,7 @@ fn pivot_rows<T: ConjugateScalar>(a: &[T], rows: usize, cols: usize, target: usi
     // noise rows and inflate the rank. Break once the best remaining pivot drops below this.
     let mut max_abs = Re::<T>::zero();
     for &x in a {
-        let ax = x.modulus_squared().sqrt();
+        let ax = x.modulus();
         if ax > max_abs {
             max_abs = ax;
         }
@@ -314,7 +314,7 @@ fn pivot_rows<T: ConjugateScalar>(a: &[T], rows: usize, cols: usize, target: usi
             if is_used {
                 continue;
             }
-            let val = work[r * cols + c].modulus_squared().sqrt();
+            let val = work[r * cols + c].modulus();
             if best.is_none() || val > best_val {
                 best_val = val;
                 best = Some(r);
@@ -358,9 +358,9 @@ fn invert_square<T: ConjugateScalar>(a: &[T], n: usize) -> Option<Vec<T>> {
     for col in 0..n {
         // Partial pivot by modulus.
         let mut piv = col;
-        let mut best = m[col * n + col].modulus_squared().sqrt();
+        let mut best = m[col * n + col].modulus();
         for r in (col + 1)..n {
-            let v = m[r * n + col].modulus_squared().sqrt();
+            let v = m[r * n + col].modulus();
             if v > best {
                 best = v;
                 piv = r;
@@ -426,11 +426,11 @@ where
         }
         let got = train.eval(&idx)?;
         // Magnitudes are real moduli.
-        let err = (want - got).modulus_squared().sqrt();
+        let err = (want - got).modulus();
         if err > max_err {
             max_err = err;
         }
-        let av = want.modulus_squared().sqrt();
+        let av = want.modulus();
         if av > max_val {
             max_val = av;
         }

@@ -17,7 +17,7 @@ members = [
     "deep_causality_fft",
     "deep_causality_file",
     "deep_causality_haft",
-    "deep_causality_macros",
+    "deep_causality_linear",
     "deep_causality_metric",
     "deep_causality_multivector",
     "deep_causality_num",
@@ -39,7 +39,7 @@ members = [
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.93.0"
+rust-version = "1.97.1"
 license = "MIT"
 
 [workspace.dependencies]

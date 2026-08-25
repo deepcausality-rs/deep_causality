@@ -9,8 +9,8 @@ extern crate core;
 // Private re-exports so the moved `complex` module keeps resolving these
 // through `crate::` paths.
 use deep_causality_algebra::{
-    AbelianGroup, Annihilating, Associative, Commutative, ComplexField, Distributive,
-    DivisionAlgebra, Field, Invertible, RealField, Rotation,
+    Annihilating, Associative, Commutative, ComplexField, Distributive, DivisionAlgebra, Field,
+    Invertible, RealField, Rotation,
 };
 use deep_causality_num::{
     AsPrimitive, ConstOne, ConstZero, FromPrimitive, Matrix3, NumCast, One, ToPrimitive, Vector3,
@@ -18,9 +18,11 @@ use deep_causality_num::{
 };
 
 mod complex;
+pub mod hom;
 pub mod utils_tests;
 
 //  Complex number types
 pub use crate::complex::complex_number::{Complex, Complex32, Complex64};
 pub use crate::complex::octonion_number::{Octonion, Octonion32, Octonion64};
 pub use crate::complex::quaternion_number::{Quaternion, Quaternion32, Quaternion64};
+pub use crate::hom::{ComplexToReal, RealToComplex};

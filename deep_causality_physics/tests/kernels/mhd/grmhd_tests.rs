@@ -3,10 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
-use deep_causality_physics::{energy_momentum_tensor_em_kernel, relativistic_current_kernel};
+use deep_causality_physics::{
+    PhysicsErrorEnum, energy_momentum_tensor_em_kernel, relativistic_current_kernel,
+};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
+use deep_causality_topology::{
+    Manifold, PointCloud, ReggeGeometry, Simplex, SimplicialComplex, Skeleton,
+};
 
 #[test]
 fn test_relativistic_current_kernel_4d() {
@@ -165,20 +170,57 @@ fn test_relativistic_current_kernel_insufficient_hodge_ops_error() {
     );
 }
 
+#[test]
+fn test_relativistic_current_kernel_missing_coboundary_operators_error() {
+    // The codifferential J = ★d★F reads d off `coboundary_operators()[2]`. A
+    // complex assembled directly through `SimplicialComplex::new` can carry a
+    // full Hodge ★ surface and no coboundary operators at all, which is the only
+    // way to observe the coboundary-count guard (grmhd.rs:77-81) — a
+    // triangulated point cloud always supplies both families together.
+    let vertices: Vec<Simplex> = (0..3usize).map(|v| Simplex::new(vec![v])).collect();
+    let edges = vec![
+        Simplex::new(vec![0, 1]),
+        Simplex::new(vec![0, 2]),
+        Simplex::new(vec![1, 2]),
+    ];
+    let faces = vec![Simplex::new(vec![0, 1, 2])];
+    let skeletons = vec![
+        Skeleton::new(0, vertices),
+        Skeleton::new(1, edges),
+        Skeleton::new(2, faces),
+    ];
+    // Four Hodge ★ operators clear the `hodge_ops.len() < 4` guard; none of them
+    // is read before the coboundary count is checked.
+    let hodge: Vec<CsrMatrix<f64>> = (0..4).map(|_| CsrMatrix::new()).collect();
+    let complex = SimplicialComplex::new(skeletons, vec![], vec![], hodge);
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![0.0; 7], vec![7]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let err = relativistic_current_kernel(&manifold, &EastCoastMetric::minkowski_4d()).unwrap_err();
+    match err.0 {
+        PhysicsErrorEnum::CalculationError(msg) => assert!(
+            msg.contains("Missing coboundary operators") && msg.contains("have 0"),
+            "unexpected message: {msg}"
+        ),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
 // NOTE on defensively-unreachable GRMHD branches:
-//   * grmhd.rs:77-80 — "Missing coboundary operators: need 3". To reach it the
-//     manifold must first pass the `hodge_ops.len() >= 4` check (lines 69-74),
-//     which requires max_dim >= 3. A complex with max_dim >= 3 always yields
-//     >= 3 coboundary operators (k -> k+1 for k = 0..max_dim), so the < 3
-//     branch can never fire.
 //   * grmhd.rs:91-93 — "Manifold data too short for 2-form extraction".
-//     `Manifold` enforces `data().len() == total_simplices >= n0 + n1 + n2` at
-//     construction, so the data slab is never shorter than the 2-form domain.
+//     `Manifold::new` rejects any data tensor whose length differs from the
+//     complex's total simplex count, and that total is at least n0 + n1 + n2,
+//     so the data slab is never shorter than the 2-form domain.
 //   * grmhd.rs:206 (the `|| (len == 1 && [0] == 1)` operand) and 210-212
-//     (the "Scalar contraction failed" else-arm): the double-axis contraction
-//     of two rank-2 tensors always yields a scalar whose shape `is_empty()` is
-//     true, short-circuiting the `||` and never taking the else. Covered scalar
-//     path is exercised by `test_energy_momentum_tensor`.
+//     (the "Scalar contraction failed" else-arm): the kernel admits only rank-2
+//     `em_tensor` and `metric`, and contracting two rank-2 tensors over both
+//     axes always yields a scalar whose shape `is_empty()` is true. That
+//     short-circuits the `||` and never takes the else. The scalar path is
+//     exercised by `test_energy_momentum_tensor`.
 
 #[test]
 fn test_energy_momentum_tensor_dimension_error() {

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::CommutativeRing;
+use crate::IntegralDomain;
 
 /// Represents a **Euclidean Domain**.
 ///
@@ -24,8 +24,8 @@ use crate::CommutativeRing;
 ///
 /// # What implementing this promises
 ///
-/// Beyond the division law above, this trait carries the **integral domain** axioms, which the
-/// compiler cannot check:
+/// The **integral domain** axioms come from the [`IntegralDomain`](crate::IntegralDomain)
+/// supertrait, which states them on the rung they belong to:
 ///
 /// - `1 ≠ 0`, and
 /// - there are no zero divisors: `a·b = 0` implies `a = 0` or `b = 0`.
@@ -50,7 +50,7 @@ use crate::CommutativeRing;
 ///   [`CommutativeRing`](crate::CommutativeRing) — it cannot reach this trait at all. A
 ///   Euclidean domain is a *ring* first, and `ℕ` is only a semiring.
 /// - `ℤ/6ℤ`, which is a commutative ring but has zero divisors.
-pub trait EuclideanDomain: CommutativeRing {
+pub trait EuclideanDomain: IntegralDomain {
     /// The Euclidean function's value type — a measure of "size", ordered so that the
     /// remainder can be shown to strictly decrease.
     ///
@@ -124,6 +124,31 @@ pub trait EuclideanDomain: CommutativeRing {
     /// sole `None` is `T::MIN`. A domain in which every element has a representable canonical
     /// associate returns `Some` for every input.
     fn checked_normalize(&self) -> Option<Self>
+    where
+        Self: Sized;
+
+    /// Multiplies, returning `None` when the product does not fit.
+    ///
+    /// # Why the tower needs this
+    ///
+    /// ℤ is unbounded; a fixed-width scalar is not. Exact elimination over the integers — Bareiss —
+    /// forms products of entries, and `det(diag(i64::MAX, 2))` does not fit an `i64`. There is no
+    /// way to detect that *after* multiplying: the primitives panic on overflow in debug builds and
+    /// wrap in release, so a check on the product runs too late in one profile and against a wrapped
+    /// value in the other.
+    ///
+    /// This is the same shape as [`checked_normalize`](Self::checked_normalize) and
+    /// [`checked_gcd`](Self::checked_gcd), which exist because those operations are partial on a
+    /// fixed width for the same reason.
+    fn checked_mul(&self, other: &Self) -> Option<Self>
+    where
+        Self: Sized;
+
+    /// Subtracts, returning `None` when the difference does not fit.
+    ///
+    /// Partial for the same reason as [`checked_mul`](Self::checked_mul): `i64::MIN - 1` has a
+    /// value in ℤ and none in `i64`.
+    fn checked_sub(&self, other: &Self) -> Option<Self>
     where
         Self: Sized;
 
@@ -243,6 +268,16 @@ impl EuclideanDomain for i8 {
     }
 
     #[inline]
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        i8::checked_mul(*self, *other)
+    }
+
+    #[inline]
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        i8::checked_sub(*self, *other)
+    }
+
+    #[inline]
     fn div_euclid(&self, other: &Self) -> Self {
         i8::div_euclid(*self, *other)
     }
@@ -269,6 +304,16 @@ impl EuclideanDomain for i16 {
     #[inline]
     fn euclidean_fn(&self) -> Self::EuclideanValue {
         self.unsigned_abs()
+    }
+
+    #[inline]
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        i16::checked_mul(*self, *other)
+    }
+
+    #[inline]
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        i16::checked_sub(*self, *other)
     }
 
     #[inline]
@@ -301,6 +346,16 @@ impl EuclideanDomain for i32 {
     }
 
     #[inline]
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        i32::checked_mul(*self, *other)
+    }
+
+    #[inline]
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        i32::checked_sub(*self, *other)
+    }
+
+    #[inline]
     fn div_euclid(&self, other: &Self) -> Self {
         i32::div_euclid(*self, *other)
     }
@@ -327,6 +382,16 @@ impl EuclideanDomain for i64 {
     #[inline]
     fn euclidean_fn(&self) -> Self::EuclideanValue {
         self.unsigned_abs()
+    }
+
+    #[inline]
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        i64::checked_mul(*self, *other)
+    }
+
+    #[inline]
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        i64::checked_sub(*self, *other)
     }
 
     #[inline]
@@ -359,6 +424,16 @@ impl EuclideanDomain for i128 {
     }
 
     #[inline]
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        i128::checked_mul(*self, *other)
+    }
+
+    #[inline]
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        i128::checked_sub(*self, *other)
+    }
+
+    #[inline]
     fn div_euclid(&self, other: &Self) -> Self {
         i128::div_euclid(*self, *other)
     }
@@ -385,6 +460,16 @@ impl EuclideanDomain for isize {
     #[inline]
     fn euclidean_fn(&self) -> Self::EuclideanValue {
         self.unsigned_abs()
+    }
+
+    #[inline]
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        isize::checked_mul(*self, *other)
+    }
+
+    #[inline]
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        isize::checked_sub(*self, *other)
     }
 
     #[inline]

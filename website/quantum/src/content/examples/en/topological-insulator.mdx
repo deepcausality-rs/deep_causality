@@ -1,0 +1,28 @@
+---
+title: "Topological insulator"
+question: "Is this material's band topology trivial or not?"
+summary: "The Chern number of the Qi-Wu-Zhang model, from Berry flux summed over a discretized Brillouin zone."
+order: 5
+command: "cargo run --release -p quantum_examples --example topological_insulator"
+usesCrate: false
+crates:
+  - deep_causality_algebra
+  - deep_causality_calculus
+  - deep_causality_core
+  - deep_causality_num_complex
+source: "examples/quantum_examples/topological_insulator"
+---
+
+The Qi-Wu-Zhang Hamiltonian on a two-dimensional square lattice is
+`H(k) = sin(kₓ)σₓ + sin(k_y)σ_y + (u + cos(kₓ) + cos(k_y))σ_z`. Its lower band
+carries a Chern number, and that integer decides whether the material is a
+trivial insulator or a topological one with conducting edge states.
+
+The walk computes the Berry connection as the overlap of neighbouring
+eigenstates, takes the Berry flux around each plaquette as `F = Im ln(U₁U₂U₃U₄)`,
+and sums the flux over the whole Brillouin zone. Dividing by 2π has to land on
+an integer, which is the check that the discretization is fine enough.
+
+This example does not import `deep_causality_quantum`. The quadrature comes from
+`deep_causality_calculus` and the complex arithmetic from
+`deep_causality_num_complex`.

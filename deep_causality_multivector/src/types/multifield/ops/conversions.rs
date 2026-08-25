@@ -12,7 +12,7 @@
 use crate::types::multifield::ops::gamma;
 use crate::{CausalMultiField, CausalMultiVector};
 use alloc::vec::Vec;
-use deep_causality_algebra::Field;
+use deep_causality_algebra::{DivisibleByIntegers, Field};
 use deep_causality_metric::Metric;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
@@ -125,9 +125,15 @@ where
     /// Downloads the field to a collection of CausalMultiVectors.
     ///
     /// Converts from Matrix Representation back to coefficient form using trace projection.
+    /// Downloads the field to a collection of `CausalMultiVector`s.
+    ///
+    /// Bounded on [`DivisibleByIntegers`] because the trace projection divides by
+    /// `d = 2^ceil(dim/2)`. In a field of characteristic 2 that divisor is zero for every
+    /// `dim >= 1`, so the scaling step below would divide by zero. `Field` alone does not exclude
+    /// such a scalar — it is blanket-implemented and admits every finite field automatically.
     pub fn to_coefficients(&self) -> Vec<CausalMultiVector<T>>
     where
-        T: core::ops::Neg<Output = T>,
+        T: core::ops::Neg<Output = T> + DivisibleByIntegers,
     {
         let num_cells = self.num_cells();
         let num_blades = 1 << self.metric.dimension();

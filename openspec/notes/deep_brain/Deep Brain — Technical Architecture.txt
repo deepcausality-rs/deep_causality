@@ -1,0 +1,1286 @@
+# Deep Brain — Technical Architecture
+
+## Revision 3: Dual Hypergraph Architecture
+
+**Author:** Marvin Hansen / Emet-Labs  
+**Date:** March 2026  
+**Status:** Authoritative architecture reference  
+**Companion documents:**
+
+- `deep-brain-foundation.md` — philosophical foundation (read first)
+- `deep-brain-proposal.md` — project proposal and roadmap
+- EPP Metaphysics and Ontology documents — prior work this extends
+
+-----
+
+## 1. System Overview
+
+Deep Brain is a standalone Rust binary implementing a local MCP (Model Context Protocol) server. It is the epistemic counterpart to DeepCausality’s Effect Propagating Process — where the EPP propagates causal effects, Deep Brain propagates knowledge. Both are grounded in the same process ontology.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          Deep Brain                                  │
+│                                                                      │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────────────┐  │
+│  │  Content        │  │  Context         │  │  Relational        │  │
+│  │  Hypergraph     │◄─┤  Hypergraph      │  │  Hypergraph        │  │
+│  │  (what is       │  │  (conditions of  │  │  (content ↔        │  │
+│  │   known)        │  │   knowing)       │  │   context)         │  │
+│  └────────┬────────┘  └────────┬─────────┘  └────────┬───────────┘  │
+│           │                    │                      │              │
+│  ┌────────▼────────────────────▼──────────────────────▼───────────┐  │
+│  │              Relational Store (SQLite / Postgres)              │  │
+│  │         Diesel ORM · sqlite-vec / pgvector · Migrations        │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  fastembed-rs · gline-rs · ort (shared ONNX) · Local LLM           │
+│  reqwest (arXiv, outbound only) · rmcp (MCP server, stdio)         │
+└──────────────────────────────────┬───────────────────────────────────┘
+                                   │ MCP over stdio
+              ┌────────────────────┼────────────────┐
+              ▼                    ▼                 ▼
+    Air Gap Voice          Claude Desktop      Any MCP client
+    (dictation)            (local mode)        (Cursor, custom)
+```
+
+**System properties:**
+
+- **Cross-disciplinary first** — structural resonance across domain boundaries is the primary signal; within-domain retrieval is a fallback
+- **Architecturally offline** — all processing is local; arXiv fetch is the single controlled exception, outbound-only, human-gated
+- **Dual hypergraph** — content and context are co-equal first-class structures; their relationship is a third first-class structure
+- **Human-gated** — the system proposes; the researcher decides; the genesis process is never modified by the system
+- **Process-native** — validity windows, invalidation lifecycles, gap nodes, and session occasions are architectural expressions of becoming, not features bolted onto a database
+- **DeepCausality-ready** — the context hypergraph is designed to project into a DeepCausality Context structure when the bridge condition is met
+
+-----
+
+## 2. Storage and ORM
+
+### 2.1 ORM
+
+**Diesel 2.x** — compile-time query verification, stable 2.x API, explicit `pgvector` support.
+
+### 2.2 Backends
+
+|Backend                |Use case                                   |Vector layer                                                                    |
+|-----------------------|-------------------------------------------|--------------------------------------------------------------------------------|
+|SQLite + `sqlite-vec`  |Default, local, zero-config, iOS-compatible|Brute-force cosine via `rusqlite` direct                                        |
+|PostgreSQL + `pgvector`|Large corpora, LAN sharing                 |Typed Diesel DSL: `.cosine_distance()`, `.l2_distance()`, `.max_inner_product()`|
+
+Backend selected at startup via `DATABASE_URL`. All non-vector queries use Diesel on both backends. Vector queries dispatch through the `VectorStore` trait to backend-specific implementations.
+
+**Vector abstraction:**
+
+```rust
+trait VectorStore {
+    fn upsert_embedding(&mut self, id: &str, embedding: &[f32]) -> Result<()>;
+    fn search_similar(&mut self, query: &[f32], limit: usize,
+                      filters: &SearchFilters) -> Result<Vec<SimilarityResult>>;
+    fn search_invalidated(&mut self, query: &[f32], threshold: f32)
+                          -> Result<Vec<InvalidationMatch>>;
+}
+```
+
+-----
+
+## 3. Complete Database Schema
+
+The schema has four logical layers: Content, Context, Relational, and arXiv. Together these implement the dual hypergraph architecture.
+
+### 3.1 Content Layer — What Is Known
+
+```sql
+-- ─────────────────────────────────────────────
+-- MEMORIES: primary epistemic satisfaction units
+-- ─────────────────────────────────────────────
+
+CREATE TABLE memories (
+    id              TEXT PRIMARY KEY,        -- ULID
+    content         TEXT NOT NULL,           -- full text of the memory
+    summary         TEXT,                    -- auto-condensed for long entries
+
+    -- Classification
+    mem_type        TEXT NOT NULL,           -- hypothesis | experiment | finding |
+                                             -- decision | note | definition |
+                                             -- action_item | reference | idea
+
+    -- Epistemic state
+    epistemic_state TEXT NOT NULL            -- active | superseded | invalidated
+                         DEFAULT 'active',
+    valid_from      INTEGER NOT NULL,
+    valid_until     INTEGER,                 -- NULL = currently active
+
+    -- NER output (surface entities, distinct from context)
+    entities        TEXT,                    -- JSON array (named entities from NER)
+    topics          TEXT,                    -- JSON array
+
+    -- Provenance (source linkage — mandatory)
+    source          TEXT NOT NULL,           -- airgap_voice | adlr | markdown |
+                                             -- arxiv | manual
+    source_path     TEXT NOT NULL,           -- path to originating file or arXiv URL
+    source_line     INTEGER,                 -- line number for deep link
+    session_id      TEXT,                    -- groups memories from same session
+
+    created_at      INTEGER NOT NULL,
+    updated_at      INTEGER NOT NULL
+);
+
+-- Note: domain, temporal regime, assumptions, provenance, and persons
+-- are no longer fields on this table. They are contextoid nodes in the
+-- context hypergraph, connected through content_context_relations.
+
+-- ─────────────────────────────────────────────
+-- CAUSAL EDGES: epistemic relations between memories
+-- ─────────────────────────────────────────────
+
+CREATE TABLE causal_edges (
+    id                      TEXT PRIMARY KEY,
+    source_node_id          TEXT NOT NULL,   -- memory.id or contextoid.id
+    target_node_id          TEXT NOT NULL,
+    relation                TEXT NOT NULL,   -- Causes | Enables | Prevents |
+                                             -- Amplifies | Triggers |
+                                             -- ContributesTo | FailedDueTo |
+                                             -- ResolvedBy | Refines | Supersedes
+
+    -- Provenance
+    extracted_from          TEXT NOT NULL REFERENCES memories(id),
+    source_path             TEXT,
+    extraction_method       TEXT NOT NULL,   -- ADLR | NLP | Manual | LLM_REVIEW
+    extraction_confidence   REAL NOT NULL,   -- 0.0–1.0
+
+    -- Epistemic weight
+    confidence              TEXT NOT NULL,   -- Observed | Inferred | Asserted
+    valid_from              INTEGER NOT NULL,
+    valid_until             INTEGER,
+
+    -- DeepCausality bridge — null until bridge condition met
+    causaloid_id            TEXT,
+
+    created_at              INTEGER NOT NULL
+);
+
+-- ─────────────────────────────────────────────
+-- CAUSAL REPORTS: ADLR and equivalent structured documents
+-- ─────────────────────────────────────────────
+
+CREATE TABLE causal_reports (
+    id              TEXT PRIMARY KEY,
+    memory_id       TEXT NOT NULL REFERENCES memories(id),
+    source_path     TEXT NOT NULL,
+    report_date     INTEGER NOT NULL,
+    title           TEXT NOT NULL,
+
+    -- Extracted structure (JSON)
+    driving_event   TEXT NOT NULL,           -- {description, event_chain[]}
+    root_cause      TEXT NOT NULL,           -- {statement, dominant_link_id, confidence}
+    causal_chain    TEXT NOT NULL,           -- CausalFactor[]
+    conditions      TEXT,                    -- CausalCondition[]
+    corrective_actions TEXT,                 -- CorrectiveAction[]
+
+    -- DeepCausality bridge
+    causaloid_graph_id  TEXT,               -- null until promoted
+    context_id          TEXT,               -- null until context built
+
+    created_at      INTEGER NOT NULL
+);
+
+-- ─────────────────────────────────────────────
+-- INVALIDATIONS: qualified negative prehensions
+-- ─────────────────────────────────────────────
+
+CREATE TABLE invalidations (
+    id                  TEXT PRIMARY KEY,
+    target_memory_id    TEXT NOT NULL REFERENCES memories(id),
+    source_path         TEXT,
+
+    -- What is being invalidated
+    scope               TEXT NOT NULL,       -- Method | Assumption | Hypothesis |
+                                             -- Conclusion | BoundaryCondition
+
+    -- Why (the grounds)
+    grounds             TEXT NOT NULL,       -- human-readable statement of evidence
+    evidence_type       TEXT NOT NULL,       -- Experimental | Theoretical |
+                                             -- Empirical | Consensus
+    grounds_memory_ids  TEXT,                -- JSON array of supporting memory IDs
+
+    -- Epistemic weight
+    confidence          TEXT NOT NULL,       -- Hard | Soft | Provisional
+    revisability        TEXT NOT NULL,       -- Open | Contested | Settled
+
+    -- Lifecycle
+    challenged_by       TEXT REFERENCES invalidations(id),
+    valid_from          INTEGER NOT NULL,
+    valid_until         INTEGER,
+    created_at          INTEGER NOT NULL
+
+    -- Note: assumptions and regime_context are no longer embedded here.
+    -- They are assumption contextoids and regime contextoids in the context
+    -- hypergraph, connected to this invalidation via content_context_relations
+    -- with relation_type = 'AssumesC' and 'ValidIn' respectively.
+    -- This makes the Duhem-Quine blast radius a relational hypergraph query,
+    -- not a content graph traversal.
+);
+
+-- ─────────────────────────────────────────────
+-- GAP INDEX: characterized absences
+-- ─────────────────────────────────────────────
+
+CREATE TABLE open_problems (
+    id                  TEXT PRIMARY KEY,
+    description         TEXT NOT NULL,
+    impact              TEXT,
+    status              TEXT NOT NULL        -- Unsolved | PartialWorkaround |
+                             DEFAULT 'Unsolved', -- Investigating | Resolved
+
+    -- Causal context
+    causal_chain_ids    TEXT,                -- JSON array of causal_edge IDs upstream
+    termination_reason  TEXT,               -- Unknown | ResourceLimit |
+                                            -- ConflictingConstraints | InsufficientData
+
+    -- Source linkage (mandatory)
+    extracted_from      TEXT NOT NULL REFERENCES memories(id),
+    source_path         TEXT NOT NULL,
+    source_line         INTEGER,
+
+    -- Resolution
+    resolved_by         TEXT REFERENCES memories(id),
+    resolution_notes    TEXT,
+
+    created_at          INTEGER NOT NULL,
+    updated_at          INTEGER NOT NULL
+
+    -- Note: domains are now domain contextoids connected via content_context_relations.
+    -- Domain arrays on this table are removed in favour of the relational layer.
+);
+
+-- Adjacency: which open problems are causally related
+-- Cross-domain adjacency (problems in different domain contextoids) is
+-- ranked higher than within-domain adjacency by the cross_domain flag.
+CREATE TABLE problem_adjacency (
+    problem_a           TEXT NOT NULL REFERENCES open_problems(id),
+    problem_b           TEXT NOT NULL REFERENCES open_problems(id),
+    relation            TEXT NOT NULL,       -- Upstream | Downstream | Parallel
+    shared_node         TEXT,               -- memory.id or contextoid.id connecting them
+    cross_domain        INTEGER NOT NULL     -- 1 if problems span different domain contextoids
+                             DEFAULT 0,
+    PRIMARY KEY (problem_a, problem_b)
+);
+```
+
+### 3.2 Context Layer — Conditions of Knowing
+
+```sql
+-- ─────────────────────────────────────────────
+-- CONTEXTOIDS: atomic units of epistemic context
+-- ─────────────────────────────────────────────
+-- The context hypergraph is co-equal with the content hypergraph.
+-- Domain, temporal regime, assumption, provenance, and person are
+-- not metadata fields on content tables. They are first-class nodes
+-- in this structure, connected to content through the relational layer.
+
+CREATE TABLE contextoids (
+    id              TEXT PRIMARY KEY,        -- ULID
+    contextoid_type TEXT NOT NULL,           -- Temporal | Domain | Regime |
+                                             -- Assumption | Provenance | Person
+
+    label           TEXT NOT NULL,           -- human-readable identifier
+                                             -- e.g. "hep-lat", "pre-Strassen model",
+                                             -- "NANOGrav 15-year dataset", "Hardy 2001"
+    description     TEXT,
+
+    -- Type-specific properties (JSON, schema varies by contextoid_type)
+    properties      TEXT,
+    -- Temporal:    {from_ts, until_ts, period_name}
+    -- Domain:      {arxiv_code, parent_code, display_name}
+    -- Regime:      {conditions, scope, hardware_gen, framework_version}
+    -- Assumption:  {statement, dissoluble: bool}
+    -- Provenance:  {source_path, source_type, abs_url, doi}
+    -- Person:      {name, affiliation, orcid}
+
+    valid_from      INTEGER,
+    valid_until     INTEGER,
+    created_at      INTEGER NOT NULL
+);
+
+-- ─────────────────────────────────────────────
+-- CONTEXT EDGES: internal structure of the context hypergraph
+-- ─────────────────────────────────────────────
+
+CREATE TABLE context_edges (
+    id              TEXT PRIMARY KEY,
+    source_id       TEXT NOT NULL REFERENCES contextoids(id),
+    target_id       TEXT NOT NULL REFERENCES contextoids(id),
+    relation        TEXT NOT NULL,           -- ParentDomain | ChildDomain |
+                                             -- Precedes | Supersedes |
+                                             -- Dissolves | ColleagueOf |
+                                             -- CitedBy | Cites
+    properties      TEXT,                    -- JSON: edge-specific properties
+    valid_from      INTEGER,
+    valid_until     INTEGER,
+    created_at      INTEGER NOT NULL
+);
+
+-- Examples of context graph internal structure:
+--
+-- Domain hierarchy:
+--   (hep) --[ParentDomain]--> (hep-lat)
+--   (hep) --[ParentDomain]--> (hep-th)
+--   (math) --[ParentDomain]--> (math.AT)
+--
+-- Temporal sequence:
+--   (pre-Strassen era) --[Precedes]--> (post-Strassen era)
+--
+-- Assumption dissolution:
+--   (Hardy 2001 paper) --[Dissolves]--> (assumption: fixed causal order required)
+--
+-- Citation:
+--   (arXiv:2405.12345) --[Cites]--> (arXiv:1903.07020)
+--
+-- Collaboration:
+--   (Marvin Hansen) --[ColleagueOf]--> (researcher B)
+```
+
+### 3.3 Relational Layer — Content ↔ Context
+
+```sql
+-- ─────────────────────────────────────────────
+-- CONTENT-CONTEXT RELATIONS: the relational hypergraph
+-- ─────────────────────────────────────────────
+-- This is the third co-equal structure of the KPP.
+-- Every connection between a content node and a context node
+-- is a first-class edge here, typed, timestamped, and queryable.
+-- This is NOT a join table. It is the primary structure for:
+--   - Revision tracking (what context changed?)
+--   - Temporal progression (what context held at time T?)
+--   - Partial context detection (what context is missing?)
+--   - Relational gap detection (what connections don't exist yet?)
+--   - Reverse dependency (what content depends on this context?)
+--   - Cross-domain bridge detection (what content spans domains?)
+
+CREATE TABLE content_context_relations (
+    id              TEXT PRIMARY KEY,        -- ULID
+    content_id      TEXT NOT NULL,           -- memory.id | causal_edge.id |
+                                             -- invalidation.id | open_problem.id |
+                                             -- causal_report.id
+    content_type    TEXT NOT NULL,           -- Memory | CausalEdge | Invalidation |
+                                             -- GapNode | CausalReport
+    contextoid_id   TEXT NOT NULL REFERENCES contextoids(id),
+    relation_type   TEXT NOT NULL,           -- ValidIn | BelongsTo | GroundedIn |
+                                             -- AssumesC | AuthoredIn | CrossDomain
+
+    -- Confidence and provenance
+    confidence      REAL NOT NULL            -- how certain is this relation?
+                        DEFAULT 1.0,
+    inferred        INTEGER NOT NULL         -- 0 = explicit, 1 = inferred from context graph
+                        DEFAULT 0,
+    extraction_method TEXT,                  -- ADLR | NLP | Manual | arXiv_import | Auto
+
+    -- Temporal validity of this specific relation
+    valid_from      INTEGER,
+    valid_until     INTEGER,                 -- NULL = currently active
+
+    created_at      INTEGER NOT NULL
+);
+
+-- Primary indices for the core query patterns
+CREATE INDEX idx_ccr_content
+    ON content_context_relations(content_id, content_type);
+
+CREATE INDEX idx_ccr_contextoid
+    ON content_context_relations(contextoid_id);
+
+CREATE INDEX idx_ccr_relation_type
+    ON content_context_relations(relation_type);
+
+-- Dedicated index for the primary cross-disciplinary signal
+CREATE INDEX idx_ccr_cross_domain
+    ON content_context_relations(relation_type, contextoid_id)
+    WHERE relation_type = 'CrossDomain';
+
+-- Dedicated index for reverse dependency queries
+-- "If this contextoid changes, what content is affected?"
+CREATE INDEX idx_ccr_reverse_dep
+    ON content_context_relations(contextoid_id, relation_type, content_type);
+```
+
+**Relation type semantics:**
+
+|Type         |Meaning                                                   |Example                                                  |
+|-------------|----------------------------------------------------------|---------------------------------------------------------|
+|`ValidIn`    |Content is valid within this temporal or regime context   |Memory X is valid in “post-Strassen computational model” |
+|`BelongsTo`  |Content belongs to this domain context                    |Memory X belongs to domain `hep-lat`                     |
+|`GroundedIn` |Content is grounded in this provenance context            |Memory X came from arXiv paper Y                         |
+|`AssumesC`   |Content depends on this assumption context                |Invalidation X assumes “standard arithmetic as primitive”|
+|`AuthoredIn` |Content was produced in a session with this person context|Memory X was produced by researcher Y                    |
+|`CrossDomain`|Content connects domain context C1 to domain context C2   |Finding X bridges `hep-lat` and `math.AT`                |
+
+**The power of the relational layer — what it dissolves:**
+
+*Revisions:* A revision is a change in the relational hypergraph — the `valid_until` on an old `BelongsTo` or `ValidIn` relation, and a new relation with `valid_from`. Content, context, and their relationship are each independently versioned. Three independent queries: what changed in the content? What changed in the context? What changed in their relationship?
+
+*Temporal progression:* `SELECT * FROM content_context_relations WHERE content_id = ? AND valid_from <= T AND (valid_until IS NULL OR valid_until >= T)` returns the full context of a memory at any point in time T.
+
+*Partial context detection:* Content nodes missing expected context connections are relational gaps — as first-class and queryable as gap nodes in the content layer.
+
+*Reverse dependency:* `SELECT content_id FROM content_context_relations WHERE contextoid_id = ? AND relation_type IN ('AssumesC', 'ValidIn')` returns the full blast radius of any context change in one query, covering all content types.
+
+*Cross-domain bridge detection:* `SELECT content_id FROM content_context_relations WHERE relation_type = 'CrossDomain'` returns all structural bridges between domains. Their absence between two active domains is a relational gap — an undiscovered connection.
+
+### 3.4 arXiv Integration Layer
+
+```sql
+-- ─────────────────────────────────────────────
+-- ARXIV STAGED: fetched papers awaiting human review
+-- Nothing here enters the knowledge graph until the researcher approves.
+-- ─────────────────────────────────────────────
+
+CREATE TABLE arxiv_staged (
+    id                  TEXT PRIMARY KEY,    -- arXiv paper ID e.g. "2405.12345v2"
+    title               TEXT NOT NULL,
+    authors             TEXT NOT NULL,       -- JSON array
+    abstract            TEXT NOT NULL,
+    primary_category    TEXT NOT NULL,       -- e.g. "hep-th", "math.AT", "cs.AI"
+    categories          TEXT NOT NULL,       -- JSON array of all category codes
+    published           INTEGER NOT NULL,
+    updated             INTEGER NOT NULL,
+    doi                 TEXT,
+    journal_ref         TEXT,
+    pdf_url             TEXT,
+    abs_url             TEXT NOT NULL,
+
+    -- Human review state
+    review_status       TEXT NOT NULL DEFAULT 'Staged',  -- Staged | Reviewing |
+                                                          -- Imported | Rejected
+    review_notes        TEXT,
+
+    -- Researcher annotations — filled by researcher, never by system
+    relevance_domains   TEXT,               -- JSON array: which research domains this touches
+    relevance_reason    TEXT,               -- why this paper matters
+    causal_role         TEXT,               -- FoundationalWork | DirectEvidence |
+                                            -- CounterEvidence | MethodSource |
+                                            -- BackgroundContext
+    import_scope        TEXT,               -- Abstract | FullPaper | Section
+    section_notes       TEXT,
+
+    staged_at           INTEGER NOT NULL,
+    reviewed_at         INTEGER,
+    imported_at         INTEGER
+);
+
+-- ─────────────────────────────────────────────
+-- ARXIV WATCHES: saved search queries, run on demand
+-- ─────────────────────────────────────────────
+
+CREATE TABLE arxiv_watches (
+    id                  TEXT PRIMARY KEY,
+    name                TEXT NOT NULL,
+    query               TEXT NOT NULL,       -- arXiv API query string
+    categories          TEXT,               -- JSON array of category filters
+    max_results         INTEGER NOT NULL DEFAULT 20,
+    sort_by             TEXT NOT NULL DEFAULT 'lastUpdatedDate',
+    research_domains    TEXT,               -- JSON array: which domains this feeds
+    description         TEXT,
+    last_fetched        INTEGER,
+    created_at          INTEGER NOT NULL
+);
+
+-- ─────────────────────────────────────────────
+-- ARXIV PAPERS: imported papers (become memories + contextoids)
+-- ─────────────────────────────────────────────
+
+CREATE TABLE arxiv_papers (
+    id                  TEXT PRIMARY KEY,    -- arXiv paper ID
+    memory_id           TEXT NOT NULL REFERENCES memories(id),
+
+    -- Full metadata
+    title               TEXT NOT NULL,
+    authors             TEXT NOT NULL,       -- JSON array
+    abstract            TEXT NOT NULL,
+    primary_category    TEXT NOT NULL,
+    categories          TEXT NOT NULL,       -- JSON array
+    published           INTEGER NOT NULL,
+    updated             INTEGER NOT NULL,
+    doi                 TEXT,
+    journal_ref         TEXT,
+    abs_url             TEXT NOT NULL,
+
+    -- Researcher annotations (mandatory before import)
+    relevance_reason    TEXT NOT NULL,
+    causal_role         TEXT NOT NULL,
+    import_scope        TEXT NOT NULL,
+    section_notes       TEXT,
+
+    -- Extraction results
+    extracted_claims    INTEGER DEFAULT 0,
+    extracted_gaps      INTEGER DEFAULT 0,
+
+    imported_at         INTEGER NOT NULL
+
+    -- On import, the following contextoids are auto-created and linked:
+    -- 1. Provenance contextoid: {source_path: abs_url, source_type: arxiv}
+    --    → GroundedIn relation to the memory
+    -- 2. Domain contextoids for each category in categories[]
+    --    → BelongsTo relations to the memory
+    -- 3. Person contextoids for each author
+    --    → AuthoredIn relations to the memory
+    -- 4. If relevance_domains spans multiple arXiv category groups:
+    --    → CrossDomain relations created automatically
+);
+```
+
+-----
+
+## 4. The Three Hypergraphs
+
+All three hypergraphs are implemented using **UltraGraph 0.8** — dual-state architecture, `DynamicGraph` for O(1) mutation during capture, `.freeze()` to `CsmGraph` (Struct of Arrays, cache-friendly) for analytics. The freeze-state conversion temporarily doubles memory usage; freeze cycles are scheduled, not inline.
+
+Each hypergraph is rebuilt from the relational store on startup. For large corpora, serialized checkpoints are a v2 consideration.
+
+### 4.1 Content Hypergraph
+
+The in-memory reasoning layer over the content relational tables.
+
+**Node types:**
+
+|Type              |Source table    |Role                         |
+|------------------|----------------|-----------------------------|
+|`MemoryNode`      |`memories`      |Any epistemic satisfaction   |
+|`GapNode`         |`open_problems` |Characterized absence        |
+|`InvalidationNode`|`invalidations` |Qualified negative prehension|
+|`ReportNode`      |`causal_reports`|Structured causal analysis   |
+
+**Edge types:**
+
+|Type                                                                                                                  |Meaning                                             |
+|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
+|`Causes / Enables / Prevents / Amplifies / Triggers / ContributesTo / FailedDueTo / ResolvedBy / Refines / Supersedes`|Full causal relation taxonomy from `causal_edges`   |
+|`InvalidatedBy`                                                                                                       |Blocking — traversal surfaces reconstruction warning|
+|`ChallengedBy`                                                                                                        |An invalidation is under review                     |
+|`SupersededBy`                                                                                                        |Memory replaced by newer version                    |
+|`Terminates`                                                                                                          |Causal chain ends at gap node                       |
+
+**Algorithms on frozen content hypergraph:**
+
+- Shortest path — how is memory A connected to memory B?
+- Reachability — all content transitively connected to a given node
+- Gap centrality — which gap nodes are upstream of the most other gaps?
+- Cycle detection — contradictory decision chains
+- Topological sort — dependency ordering
+
+### 4.2 Context Hypergraph
+
+The in-memory representation of the conditions of knowing.
+
+**Node types:**
+
+|Type                  |Source                             |Examples                                     |
+|----------------------|-----------------------------------|---------------------------------------------|
+|`TemporalContextoid`  |`contextoids` WHERE type=Temporal  |“post-Strassen era”, “NANOGrav 15-year epoch”|
+|`DomainContextoid`    |`contextoids` WHERE type=Domain    |“hep-lat”, “math.AT”, “cs.AI”                |
+|`RegimeContextoid`    |`contextoids` WHERE type=Regime    |“strong coupling limit”, “rules_oci Apr 2024”|
+|`AssumptionContextoid`|`contextoids` WHERE type=Assumption|“standard arithmetic as primitive”           |
+|`ProvenanceContextoid`|`contextoids` WHERE type=Provenance|arXiv paper, ADLR report, Markdown file      |
+|`PersonContextoid`    |`contextoids` WHERE type=Person    |researcher, author, collaborator             |
+
+**Edge types (internal to context hypergraph):**
+
+|Type                        |Meaning                                                                                          |
+|----------------------------|-------------------------------------------------------------------------------------------------|
+|`ParentDomain / ChildDomain`|arXiv taxonomy hierarchy                                                                         |
+|`Precedes / Supersedes`     |Temporal sequence                                                                                |
+|`Dissolves`                 |One contextoid dissolves another’s validity (Hardy paper dissolves fixed-causal-order assumption)|
+|`Cites / CitedBy`           |Provenance citation relations                                                                    |
+|`ColleagueOf`               |Person collaboration                                                                             |
+
+**Algorithms on frozen context hypergraph:**
+
+- Domain hierarchy traversal — find all sub-domains of a given domain
+- Dissolution chain — what does dissolving this assumption affect?
+- Provenance clustering — which source documents are mutually citing?
+- Temporal ordering — what was the epistemic context at time T?
+
+### 4.3 Relational Hypergraph
+
+The in-memory representation of the relationships between content and context.
+
+**Node types:** Content-context pairs (content_id, contextoid_id, relation_type)
+
+**Edge types:**
+
+|Type         |Meaning                                     |
+|-------------|--------------------------------------------|
+|`ValidIn`    |Content valid within temporal/regime context|
+|`BelongsTo`  |Content belongs to domain context           |
+|`GroundedIn` |Content grounded in provenance context      |
+|`AssumesC`   |Content depends on assumption context       |
+|`AuthoredIn` |Content produced with person context        |
+|`CrossDomain`|Content bridges two domain contexts         |
+
+**Algorithms on frozen relational hypergraph:**
+
+- Context blast radius — all content affected by a context change
+- Relational gap detection — content nodes missing expected context connections
+- Cross-domain bridge enumeration — all CrossDomain edges, ranked by domain distance
+- Temporal context slice — all content-context relations valid at time T
+- Partial context surface — content with incomplete context coverage
+
+**Freeze/unfreeze coordination:** The three hypergraphs share a coordinated freeze cycle. During active capture: all three are in `DynamicGraph` state. For analytics queries: freeze all three, run algorithms, unfreeze. This ensures consistency across the three structures during analysis.
+
+-----
+
+## 5. The Five Extraction Pipelines
+
+### Pipeline 1: General Markdown Notes
+
+```
+Markdown file
+    │
+    ├── fastembed-rs (nomic-embed-text-v1.5, 384d) → embedding → VectorStore
+    ├── gline-rs (GLiNER small v2.1, INT8 ONNX)
+    │       ├── Tier 1 cross-domain labels → EntityNode candidates
+    │       └── Tier 2 domain-specific labels → domain-sensitive entities
+    ├── rule-based classifier → mem_type
+    ├── causal marker NLP → CausalEdge candidates (ExtractionMethod::NLP, low confidence)
+    ├── reconstruction detection against invalidated content (before write)
+    └── write:
+            memories record
+            + content_context_relations (BelongsTo domain contextoids from NER)
+            + content hypergraph update
+            + relational hypergraph update
+```
+
+### Pipeline 2: ADLR Reports
+
+```
+ADLR Markdown file
+    │
+    ├── local LLM (Phi-3-mini or Qwen2.5-3B, quantized) → structured JSON extraction
+    │       Extracts: driving_event, root_cause (implicit — synthesized, not located),
+    │                 causal_chain, conditions, lessons_learned (as invalidations),
+    │                 open_problems, corrective_actions
+    │       Regime context: mandatory on lessons_learned ("as of [tool version/date]")
+    │
+    ├── JSON → causal_reports record
+    ├── dominant_link → CausalEdge (ExtractionMethod::ADLR, high confidence)
+    ├── lessons_learned → invalidations records
+    │       + assumption contextoids created for each stated assumption
+    │       + AssumesC relations in content_context_relations
+    │       + regime contextoids created for each regime_context
+    │       + ValidIn relations in content_context_relations
+    ├── open_problems → open_problems records
+    ├── corrective_actions → CausalEdge (relation: ResolvedBy)
+    └── write: all records + all three hypergraph updates
+```
+
+### Pipeline 3: arXiv Import (Human-gated, three stages)
+
+```
+Stage 1 — Search and Stage:
+    researcher calls arxiv_search(query, categories)
+        → reqwest: GET http://export.arxiv.org/api/query?...
+        → quick-xml: parse Atom 1.0 response
+        → write: arxiv_staged records (status: Staged)
+        → nothing enters knowledge graph
+
+Stage 2 — Human Review:
+    researcher calls arxiv_review()
+        → returns staged papers for reading
+    researcher annotates each paper:
+        relevance_reason (mandatory)
+        causal_role (mandatory)
+        import_scope
+        relevance_domains
+        → marks: Imported | Rejected | Deferred
+
+Stage 3 — Import:
+    researcher calls arxiv_import(paper_id)
+        → create memories record (abstract + annotations as content)
+        → create arxiv_papers record (full metadata + annotations)
+        → create ProvenanceContextoid for the paper
+            + GroundedIn relation in content_context_relations
+        → create DomainContextoids for each category
+            + BelongsTo relations in content_context_relations
+        → create PersonContextoids for each author
+            + AuthoredIn relations in content_context_relations
+        → if relevance_domains spans multiple domain groups:
+            → create CrossDomain relations in content_context_relations
+        → fastembed-rs: embed abstract + title + relevance_reason
+        → gline-rs: NER on abstract (both tier label sets)
+        → if import_scope == FullPaper:
+            → reqwest: fetch PDF
+            → pdf-extract: extract text
+            → causal marker NLP on full text
+            → propose CausalEdge candidates for researcher approval
+        → if causal_role == CounterEvidence:
+            → prompt researcher to formalize invalidation record
+        → write: all records + all three hypergraph updates
+```
+
+### Pipeline 4: Manual Causal Linking
+
+```
+researcher calls link_memories(source_id, target_id, relation, note)
+    → create CausalEdge (ExtractionMethod::Manual, confidence: Observed)
+    → if source and target span different domain contextoids:
+        → create CrossDomain relation in content_context_relations
+    → write: causal_edges + relational hypergraph update
+    → Manual linking is epistemologically primary — no human review step
+      because it IS the human review
+```
+
+### Pipeline 5: Gap Resolution
+
+```
+researcher calls resolve_gap(problem_id, resolution_memory_id, notes)
+    → update open_problems: status = Resolved, resolved_by = resolution_memory_id
+    → create CausalEdge: resolution_memory → gap_node (relation: ResolvedBy)
+    → original gap node is NOT deleted — it becomes epistemic history
+    → write: open_problems update + causal_edges + content hypergraph update
+```
+
+-----
+
+## 6. Named Entity Recognition
+
+**Model:** GLiNER small v2.1 (quantized INT8 ONNX, ~188MB) via `gline-rs`  
+**Architecture:** Zero-shot — label sets are defined per run, not baked into weights  
+**Runtime:** `ort` (shared ONNX Runtime instance with fastembed-rs)
+
+### Tier 1: Cross-Domain Structural Labels
+
+Applied to every memory regardless of domain. These capture epistemic role, not domain identity.
+
+```
+algebraic_structure    -- groups, rings, manifolds, algebras, Clifford algebras
+physical_observable    -- measurable quantities (field strength, coupling constant)
+causal_pattern         -- structural causal forms that recur across domains
+computational_method   -- numerical or symbolic methods (Monte Carlo, SURD, einsum)
+regime_condition       -- boundary conditions under which something holds
+mathematical_object    -- tensors, multivectors, differential forms, operators
+open_conjecture        -- explicitly open mathematical or physical questions
+constraint             -- what limits or bounds a result
+person                 -- researchers, authors
+organization           -- institutions, collaborations
+```
+
+Tier 1 entities are candidates for contextoid creation:
+
+- `person` → PersonContextoid
+- `regime_condition` → RegimeContextoid
+- `open_conjecture` → GapNode candidate
+- `causal_pattern` co-occurring across two domain contexts → CrossDomain candidate
+
+### Tier 2: Domain-Specific Labels
+
+Applied based on domain contextoids already connected to the memory.
+
+|Domain contextoid group        |Additional labels                                                                                       |
+|-------------------------------|--------------------------------------------------------------------------------------------------------|
+|`hep-th`, `hep-lat`, `gr-qc`   |`gauge_group`, `lattice_action`, `wilson_loop`, `coupling_regime`, `universality_class`, `path_integral`|
+|`math.AT`, `math.DG`, `math-ph`|`topological_invariant`, `fiber_bundle`, `connection`, `cohomology_class`, `manifold_type`              |
+|`cs.AI`, `cs.LG`               |`model_architecture`, `loss_function`, `training_regime`, `benchmark`, `dataset`                        |
+|`quant-ph`                     |`quantum_observable`, `hilbert_space`, `entanglement_structure`, `measurement_basis`                    |
+|`physics.plasm-ph`             |`plasma_parameter`, `mhd_regime`, `field_configuration`, `confinement_geometry`                         |
+
+-----
+
+## 7. Reconstruction Detection
+
+Reconstruction detection is prospective epistemic defeat: before writing a new memory, check whether defeating evidence already exists in the corpus.
+
+```
+new_memory_candidate
+    │
+    ├── embed(content) → query_vector
+    ├── VectorStore.search_invalidated(query_vector, threshold=0.95)
+    │       → search restricted to invalidated memory subgraph
+    │
+    ├── for each match above threshold:
+    │       retrieve invalidation record
+    │       retrieve assumption contextoids (via content_context_relations AssumesC)
+    │       retrieve regime contextoids (via content_context_relations ValidIn)
+    │       apply confidence-scaled threshold:
+    │
+    │       | Confidence | Revisability | Warning threshold |
+    │       |---|---|---|
+    │       | Hard | Settled | 70% |
+    │       | Hard | Contested | 80% |
+    │       | Soft | Open | 90% |
+    │       | Provisional | Open | 95% |
+    │
+    ├── if match found:
+    │       surface warning with:
+    │           - invalidated content description
+    │           - similarity score
+    │           - confidence and revisability
+    │           - assumption contextoids (has the assumption changed?)
+    │           - regime contextoids (has the regime changed?)
+    │           - source link to original invalidation document
+    │       researcher decides: proceed | abort | update invalidation
+    │
+    └── write on proceed
+```
+
+-----
+
+## 8. Gap Query and Due Diligence Flow
+
+### Content Gap Query
+
+```sql
+-- Full due diligence briefing for open problems
+SELECT
+    op.description                      AS gap,
+    op.impact,
+    op.termination_reason,
+    op.source_path,
+    -- Domain context via relational layer
+    GROUP_CONCAT(DISTINCT dc.label)     AS domains,
+    -- Upstream causal context
+    ce.relation                         AS caused_by_relation,
+    m_cause.content                     AS upstream_cause,
+    -- Known failed approaches (invalidations connected to source memory)
+    inv.grounds                         AS known_failed_approach,
+    -- Regime context of failures via relational layer
+    rc.label                            AS failure_regime,
+    -- Adjacent open problems
+    op2.description                     AS adjacent_gap,
+    pa.relation                         AS adjacency_type,
+    pa.cross_domain                     AS is_cross_domain
+FROM open_problems op
+-- Domain context via relational hypergraph
+LEFT JOIN content_context_relations ccr_domain
+    ON ccr_domain.content_id = op.id
+    AND ccr_domain.content_type = 'GapNode'
+    AND ccr_domain.relation_type = 'BelongsTo'
+LEFT JOIN contextoids dc ON dc.id = ccr_domain.contextoid_id
+-- Upstream causal edges
+LEFT JOIN causal_edges ce
+    ON ce.target_node_id = op.id
+LEFT JOIN memories m_cause
+    ON m_cause.id = ce.source_node_id
+-- Invalidations on source memory
+LEFT JOIN invalidations inv
+    ON inv.target_memory_id = op.extracted_from
+-- Regime context of invalidations
+LEFT JOIN content_context_relations ccr_regime
+    ON ccr_regime.content_id = inv.id
+    AND ccr_regime.content_type = 'Invalidation'
+    AND ccr_regime.relation_type = 'ValidIn'
+LEFT JOIN contextoids rc ON rc.id = ccr_regime.contextoid_id
+                         AND rc.contextoid_type = 'Regime'
+-- Adjacent problems (cross-domain ranked first)
+LEFT JOIN problem_adjacency pa ON pa.problem_a = op.id
+LEFT JOIN open_problems op2 ON op2.id = pa.problem_b
+WHERE op.status IN ('Unsolved', 'PartialWorkaround')
+ORDER BY pa.cross_domain DESC, op.created_at;
+```
+
+### Relational Gap Query
+
+```sql
+-- Content nodes missing expected context connections
+-- These are underspecified knowledge — not missing knowledge, but
+-- knowledge whose conditions of validity are not yet documented
+
+-- Memories with no domain context
+SELECT m.id, m.content, m.source_path
+FROM memories m
+WHERE NOT EXISTS (
+    SELECT 1 FROM content_context_relations ccr
+    WHERE ccr.content_id = m.id
+    AND ccr.content_type = 'Memory'
+    AND ccr.relation_type = 'BelongsTo'
+);
+
+-- Invalidations with no assumption context
+SELECT i.id, i.grounds, i.source_path
+FROM invalidations i
+WHERE NOT EXISTS (
+    SELECT 1 FROM content_context_relations ccr
+    WHERE ccr.content_id = i.id
+    AND ccr.content_type = 'Invalidation'
+    AND ccr.relation_type = 'AssumesC'
+);
+
+-- Domain pairs with no CrossDomain bridges between them
+-- (active domain contextoids that share no content connections)
+SELECT a.label AS domain_a, b.label AS domain_b
+FROM contextoids a, contextoids b
+WHERE a.contextoid_type = 'Domain'
+AND b.contextoid_type = 'Domain'
+AND a.id < b.id  -- avoid duplicates
+AND EXISTS (  -- both domains have content
+    SELECT 1 FROM content_context_relations
+    WHERE contextoid_id = a.id AND relation_type = 'BelongsTo'
+)
+AND EXISTS (
+    SELECT 1 FROM content_context_relations
+    WHERE contextoid_id = b.id AND relation_type = 'BelongsTo'
+)
+AND NOT EXISTS (  -- but no bridges between them
+    SELECT 1 FROM content_context_relations
+    WHERE relation_type = 'CrossDomain'
+    AND contextoid_id IN (a.id, b.id)
+);
+```
+
+### Context Blast Radius Query
+
+```sql
+-- "What content is affected if this context changes?"
+-- Works for any contextoid type: assumption dissolution,
+-- regime shift, source retraction, domain reclassification
+
+SELECT
+    ccr.content_id,
+    ccr.content_type,
+    ccr.relation_type,
+    ccr.confidence,
+    ccr.valid_from
+FROM content_context_relations ccr
+WHERE ccr.contextoid_id = :changed_contextoid_id
+AND (ccr.valid_until IS NULL OR ccr.valid_until > :current_timestamp)
+ORDER BY ccr.relation_type, ccr.content_type;
+```
+
+-----
+
+## 9. MCP Tool Surface
+
+Deep Brain exposes a local MCP server over stdio transport. Seventeen tools across five groups.
+
+### Knowledge Capture and Retrieval
+
+|Tool                   |Description                                                                                                                                                                                                     |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`capture_memory`       |General capture. Triggers: embedding, NER (both tiers), classification, reconstruction detection, content + relational hypergraph update. Domain contextoids created and linked automatically from Tier 1 NER.  |
+|`extract_causal_report`|ADLR-format capture. Local LLM structured extraction → full causal chain, invalidations with assumption/regime contextoids, open problems, corrective actions. Returns extraction summary for researcher review.|
+|`search_memories`      |Semantic vector search. Optional filters: domain contextoid, mem_type, epistemic_state, date range, person contextoid. Results enriched with causal neighborhood and context summary.                           |
+|`recall_session`       |All memories from a session_id, chronologically ordered.                                                                                                                                                        |
+|`link_memories`        |Manual causal linking. Ground truth. Epistemologically primary. Automatically creates CrossDomain relation if source and target span different domain contextoids.                                              |
+
+### Gap Intelligence
+
+|Tool                   |Description                                                                                                                                                                                      |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`query_gaps`           |Content gaps: open problems with upstream causal context, known failed approaches with regime context, adjacent problems. Primary due diligence entry point.                                     |
+|`query_relational_gaps`|Relational gaps: content nodes missing expected context connections. Surfaces underspecified knowledge — different from missing knowledge, different remediation.                                |
+|`cross_domain_gaps`    |Pairs of open problems from different domain contextoids where causal neighborhoods overlap. Ranked by structural similarity of gap causal chain. The primary cross-disciplinary research signal.|
+|`causal_neighborhood`  |All causally connected content nodes within N hops, with edge types, confidence, and source links.                                                                                               |
+
+### Context Management
+
+|Tool                  |Description                                                                                                                                                         |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`create_contextoid`   |Create a new contextoid (Temporal, Domain, Regime, Assumption, Provenance, Person).                                                                                 |
+|`link_context`        |Manually create a content-context relation. Specify content_id, contextoid_id, relation_type.                                                                       |
+|`context_blast_radius`|Given a contextoid ID, return all content connected to it. “What is affected if this context changes?” Covers all content types and all relation types in one query.|
+|`query_context`       |Query the context hypergraph: find all content connected to a given contextoid, or find all contextoids connected to given content.                                 |
+
+### Invalidation Management
+
+|Tool                    |Description                                                                                                                                                                                         |
+|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`invalidate_memory`     |Record a qualified invalidation. Automatically creates assumption contextoids for each stated assumption and links via AssumesC. Creates regime contextoid for regime_context and links via ValidIn.|
+|`challenge_invalidation`|Challenge an existing invalidation. Dissolves the relevant assumption contextoid (creates a Dissolves edge in context hypergraph). Propagates via context_blast_radius.                             |
+
+### arXiv Integration
+
+|Tool           |Description                                                                                                                                     |
+|---------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+|`arxiv_search` |Search arXiv API. Query syntax: field prefixes `ti:`, `au:`, `abs:`, `cat:`, combinable with AND/OR/ANDNOT. Results staged. No automatic import.|
+|`arxiv_review` |Staged papers for researcher annotation and approval. Human judgment only — no LLM filtering.                                                   |
+|`arxiv_import` |Import an approved paper. Creates memory, all contextoids (provenance, domain, person), all relational edges, embedding, NER.                   |
+|`arxiv_watches`|Manage saved watch queries. Execute on demand only — no background polling.                                                                     |
+
+### Corpus Overview
+
+|Tool          |Description                                                                                                                                                                                                                                              |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`memory_stats`|Content: counts by mem_type, epistemic_state, extraction_method. Context: contextoid counts by type, domain distribution. Relational: cross-domain edge count, relational gap count. Gap index: open problem count by domain, average causal chain depth.|
+
+-----
+
+## 10. The DeepCausality Bridge
+
+The bridge is structural, not active. It activates when the knowledge base has accumulated sufficient density.
+
+**Bridge fields in schema:**
+
+- `causal_edges.causaloid_id` — null until bridge condition met per edge
+- `causal_reports.causaloid_graph_id` — null until report promoted to causaloid graph
+- `causal_reports.context_id` — null until context projection generated
+
+**Bridge condition** — data-driven, not calendar-driven:
+
+```
+Per domain contextoid:
+    ratio = COUNT(DISTINCT causal_report_id) per high-confidence causal_edge
+            WHERE source_node_id OR target_node_id appears in > 2 report chains
+    
+    When ratio > 0.3 AND total high-confidence edges > 20:
+        flag domain contextoid as causaloid candidate
+        surface to researcher via memory_stats
+```
+
+**When bridge condition is met:**
+
+1. Shared nodes identified as causaloid candidates
+1. Researcher writes causal function: `fn(observation) -> Result<bool, CausalityError>`
+1. Function registered as `BaseCausaloid`
+1. `causaloid_id` populated on relevant `causal_edges` records
+1. Context projection: the domain’s context hypergraph slice is projected into a DeepCausality Context structure
+- TemporalContextoids → Tempoids
+- DomainContextoids → Symboids (domain identity)
+- RegimeContextoids → Datoids (regime facts)
+- AssumptionContextoids → Datoids (assumption facts)
+- The relational hypergraph determines which contextoids to include
+
+The context hypergraph of the KPP is the Context structure that the EPP was designed to receive. The projection is a translation, not a redesign.
+
+-----
+
+## 11. Crate Stack
+
+```toml
+[dependencies]
+
+# ── ORM & Storage ──────────────────────────────────────────────────────────
+diesel              = { version = "2", features = ["sqlite", "postgres", "r2d2"] }
+diesel_migrations   = "2"
+rusqlite            = { version = "...", features = ["bundled"] }  # sqlite-vec path
+sqlite-vec          = "..."                    # vector extension, SQLite backend
+pgvector            = { version = "0.4", features = ["diesel"] }   # Postgres backend
+
+# ── ML Inference (shared ort runtime) ─────────────────────────────────────
+fastembed           = "..."          # nomic-embed-text-v1.5, 384d, ONNX
+gline-rs            = "1"            # GLiNER NER, zero-shot, ONNX
+ort                 = "2"            # shared ONNX Runtime (one instance for all models)
+
+# ── Knowledge Graph ────────────────────────────────────────────────────────
+ultragraph          = "0.8"          # dual-state hypergraph (three instances)
+
+# ── MCP ───────────────────────────────────────────────────────────────────
+rmcp                = "..."          # official Rust MCP SDK, stdio transport
+
+# ── arXiv Integration ─────────────────────────────────────────────────────
+reqwest             = { version = "0.12", features = ["rustls-tls"] }
+quick-xml           = "0.36"         # Atom 1.0 XML parsing
+pdf-extract         = "..."          # PDF text extraction for full paper import
+
+# ── Utilities ─────────────────────────────────────────────────────────────
+serde               = { version = "1", features = ["derive"] }
+serde_json          = "1"
+ulid                = "..."
+tokio               = { version = "1", features = ["full"] }
+regex               = "1"            # causal marker extraction
+```
+
+**Note on `ort`:** One shared ONNX Runtime instance serves both `fastembed-rs` (embedding) and `gline-rs` (NER). A third instance may serve the local LLM for ADLR extraction if it uses ONNX format; otherwise `llama.cpp` bindings are used.
+
+**Note on `reqwest`:** Used exclusively for arXiv API calls, initiated only by explicit researcher action. No background network activity. Zero outbound connections except on explicit arXiv tool invocation.
+
+-----
+
+## 12. Privacy Architecture
+
+The same architectural guarantee as Air Gap Voice: data transmission is not prohibited by policy — it is impossible by design.
+
+**What never leaves the device:**
+
+- All captured text, summaries, and source links
+- All contextoid data (domains, regimes, assumptions, persons, provenance)
+- All relational hypergraph edges
+- Semantic embeddings (generated locally)
+- NER entity extraction (generated locally)
+- ADLR structured extractions (generated locally)
+- The full content, context, and relational hypergraphs
+- All invalidation records, gap nodes, causal reports
+- Every query, traversal, blast radius, and gap analysis result
+
+**What has no network dependency:**
+
+- Embedding generation (fastembed-rs, CPU, ONNX)
+- NER inference (gline-rs, CPU, ONNX)
+- ADLR extraction (local quantized LLM, CPU)
+- Vector search (sqlite-vec or local pgvector)
+- All three hypergraph traversals (UltraGraph, in-memory)
+- MCP transport (stdio)
+
+**The single controlled network exception:**
+`reqwest` fetches arXiv metadata (Atom XML) and optionally PDFs. This is:
+
+- Outbound only — no data from the device is transmitted in the request body
+- Human-initiated only — fires only on explicit `arxiv_search`, `arxiv_import`, or `arxiv_watches` invocation
+- Metadata only for search/staging — no content leaves the device in any case
+
+**Data portability:** SQLite — a single `.db` file, inspectable with any SQLite client. Postgres — standard `pg_dump`. Source Markdown files remain the canonical human-readable record and are never modified by Deep Brain.
+
+-----
+
+## 13. Platform Strategy
+
+|Platform|Default backend         |Integration               |Timeline|
+|--------|------------------------|--------------------------|--------|
+|macOS   |SQLite or local Postgres|Swift shim, bundled binary|v1      |
+|iOS     |SQLite only             |Swift shim, bundled binary|v1      |
+|Windows |SQLite or local Postgres|Standalone binary         |v2      |
+|Linux   |SQLite or local Postgres|Standalone binary         |v2      |
+
+**Swift shim:** Thin subprocess manager — spawn, health check, restart, stdio pipe. No FFI required. The binary communicates over stdio; the shim manages the process lifecycle.
+
+**iOS constraints:** The local LLM for ADLR extraction (~1-2GB quantized) may be too large for iOS in v1. ADLR extraction is macOS/desktop-only initially, with iOS receiving ADLR reports captured on desktop. The `ort` ONNX Runtime supports iOS via dynamic linking; fastembed-rs and gline-rs require device validation under iOS sandbox constraints.
+
+-----
+
+## 14. Phased Roadmap
+
+### Phase 1 — Foundation (Weeks 1–4)
+
+- Diesel setup, all schema tables, migrations (SQLite + Postgres)
+- `VectorStore` trait, both backend implementations
+- `contextoids` and `context_edges` tables (context hypergraph schema)
+- `content_context_relations` table with all indices (relational hypergraph schema)
+- fastembed-rs embedding pipeline
+- gline-rs NER pipeline, both tier label sets
+- Rule-based classifier → mem_type
+- Markdown source parser with line-number tracking
+- Auto-creation of DomainContextoids from Tier 1 NER output
+- Auto-creation of BelongsTo relations in content_context_relations
+- Unit tests across all pipeline stages
+
+### Phase 2 — Invalidation System (Weeks 5–6)
+
+- Invalidation Diesel models and full lifecycle
+- AssumptionContextoid auto-creation on invalidation write
+- RegimeContextoid auto-creation on invalidation write
+- AssumesC and ValidIn relations in content_context_relations
+- Reconstruction detection with relational-layer assumption/regime retrieval
+- Confidence-scaled warning thresholds
+- InvalidationChallenge flow + Dissolves edge in context hypergraph
+- Context blast radius query (`context_blast_radius` tool)
+
+### Phase 3 — Causal Structure + arXiv (Weeks 7–10)
+
+- causal_edges, causal_reports, open_problems, problem_adjacency Diesel models
+- Causal marker NLP extraction
+- ADLR structured extraction pipeline (local LLM)
+- CrossDomain relation auto-creation on cross-domain causal edges
+- Relational gap detection queries
+- arXiv subsystem: staged, watches, papers tables
+- reqwest + quick-xml Atom 1.0 parser
+- All four arXiv MCP tools
+- ProvenanceContextoid, PersonContextoid auto-creation on arXiv import
+- PDF text extraction (pdf-extract)
+- Source linkage verified across all extraction types
+
+### Phase 4 — Three Hypergraphs (Weeks 11–12)
+
+- UltraGraph integration: three separate instances (content, context, relational)
+- All node and edge types for each hypergraph
+- Population from relational store on startup
+- Coordinated freeze/unfreeze cycle across all three
+- Content algorithms: reachability, shortest path, gap centrality, cycle detection
+- Context algorithms: domain hierarchy traversal, dissolution chain, temporal ordering
+- Relational algorithms: blast radius traversal, cross-domain bridge enumeration, relational gap surface
+- Graph context enrichment of search results
+
+### Phase 5 — MCP Server (Weeks 13–14)
+
+- rmcp server scaffold, stdio transport
+- All 17 tools implemented and tested
+- `query_gaps` with full due diligence SQL (content + relational layers)
+- `query_relational_gaps` with all gap patterns
+- `cross_domain_gaps` with domain contextoid traversal
+- `causal_neighborhood` traversal
+- `context_blast_radius` traversal
+- Dead-end recovery loop (source pull + LLM review + user approval)
+- Integration tests with a local MCP client
+
+### Phase 6 — Air Gap Voice Integration (Weeks 15–16)
+
+- Swift subprocess manager
+- Auto-capture hook post-transcription review
+- Session ID threading, domain sync
+- Markdown export from Voice transcriptions → Deep Brain ingestion
+- UI: memory stats, open problem count, relational gap count, invalidation warnings
+
+### Phase 7 — Polish and Cross-platform (Weeks 17–19)
+
+- Windows and Linux cross-compilation, CI pipeline
+- SQLite → Postgres migration tooling (schema + embedding blobs)
+- Performance profiling: capture latency, search latency, all three hypergraph traversal latencies
+- Binary size audit and model bundling decision
+- MCP tool schema documentation
+- Integration guide for third-party MCP clients
+
+### Phase 8 — DeepCausality Bridge (Condition-triggered)
+
+- Bridge condition metric monitoring per domain contextoid
+- Causaloid candidate identification and surfacing via memory_stats
+- Manual causaloid authoring workflow
+- Context projection: KPP context hypergraph → EPP Context structure
+- PropagatingEffect chain construction for formalized causal chains
+- Evaluation: does the causal monad return meaningfully better reasoning than hypergraph traversal alone?
+
+-----
+
+## 15. Success Criteria
+
+**Phase 1–4 (Foundation):**
+
+- Capture-to-searchable latency ≤ 3 seconds on M1 (embed + NER + three hypergraph updates + DB write)
+- ADLR extraction produces valid JSON on 90%+ of test reports without manual correction
+- Reconstruction detection fires correctly on known invalidated hypotheses in CI tests
+- Semantic search returns relevant results in ≤ 500ms across 10,000-entry corpus
+- Content hypergraph traversal returns entity subgraph in ≤ 200ms on frozen graph
+- Context blast radius query returns correctly for known contextoid changes in test corpus
+- Zero network calls confirmed via packet capture in CI (except explicit arXiv tool invocations)
+
+**Phase 5 (MCP + Gap queries):**
+
+- `query_gaps` returns structured due diligence output for all known open problems in test corpus
+- `query_relational_gaps` correctly identifies known missing context connections in test corpus
+- `cross_domain_gaps` returns correct pairs for known cross-domain gap adjacencies in test corpus
+- `context_blast_radius` returns complete affected content for known contextoid changes in test corpus
+- Dead-end recovery loop successfully proposes at least one valid graph update on a known thin node
+
+**Phase 6–7 (Integration + Cross-platform):**
+
+- Air Gap Voice transcription → Deep Brain ingestion end-to-end without manual intervention
+- Windows and Linux binaries pass full integration test suite
+- SQLite → Postgres migration preserves all content, context, and relational records
+
+**Phase 8 (Bridge — conditional):**
+
+- Bridge condition metric is observable and stable across 30 days of production use
+- At least one domain contextoid reaches the bridge condition threshold
+- A manually authored `BaseCausaloid` evaluates correctly against new observations in that domain
+- Context projection from KPP context hypergraph to EPP Context structure validated
+
+-----
+
+## 16. Open Questions
+
+**1. Local LLM for ADLR extraction.** Phi-3-mini and Qwen2.5-3B are candidates. Qwen2.5 has stronger multilingual capability. Decision deferred to benchmark against actual ADLR reports, particularly those with implicit root causes distributed across the narrative rather than stated explicitly.
+
+**2. Model bundling.** nomic-embed (~80MB) + GLiNER (~188MB) + local LLM (~1–2GB quantized) ≈ 2GB total. Options: bundle all (maximum air gap guarantee), integrity-verified first-run download (preserves air gap after setup), or split (bundle embedding + NER, download LLM on first ADLR use). Decision deferred pending iOS sandbox testing.
+
+**3. iOS ONNX Runtime.** `ort` supports iOS via dynamic linking. fastembed-rs and gline-rs need device validation. ADLR extraction LLM is likely too large for iOS v1.
+
+**4. Three-hypergraph startup performance.** All three hypergraphs are rebuilt from relational store on startup. Measure startup time in production before deciding on serialized checkpoints.
+
+**5. Contextoid deduplication.** When NER extracts “hep-lat” from multiple documents, the system should reuse the existing DomainContextoid rather than creating a duplicate. A deduplication strategy — matching on label + contextoid_type — is needed before Phase 1 ships.
+
+**6. Coreference resolution.** The `anno` crate adds cross-sentence entity linking (“she”, “the partner”, “Sarah Chen” → same PersonContextoid). High value for long sessions. Adds model weight. Evaluate after v1 NER quality is measured.
+
+**7. Multi-device sync.** Out of scope for v1. The Postgres backend partially addresses LAN use. Full encrypted local-network sync should be specced before v2 begins.
+
+**8. Bridge condition operationalization.** The proposed metric (ratio > 0.3, min 20 high-confidence edges per domain contextoid) is a hypothesis. Revisit after Phase 5 production data.
+
+**9. Relational hypergraph inference.** Some content-context relations can be inferred from context graph structure rather than stated explicitly (e.g., if memory X belongs to `hep-lat`, it also belongs to `hep` via the ParentDomain edge). The `inferred` flag in `content_context_relations` supports this, but the inference rules need to be specified and validated before Phase 4.
+
+-----
+
+*Deep Brain is the epistemic layer of the same process ontology that grounds DeepCausality’s Effect Propagating Process. Content is what is known. Context is the conditions of knowing. The relationship between them is the third co-equal structure. The EPP propagates causal effects through content. The KPP accumulates epistemic becoming through content, context, and their relationship. When the bridge condition is met, the KPP’s context hypergraph becomes the EPP’s Context — the conditions of knowing become the ground of causal reasoning.*

@@ -8,6 +8,7 @@ use alloc::vec::Vec;
 
 use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
+use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 
 /// Standard Quantum Gates interface.
@@ -35,10 +36,18 @@ pub trait QuantumOps<R: RealField> {
     fn expectation_value(&self, operator: &Self) -> Complex<R>;
 
     /// Normalize the state vector: $|\psi\rangle / \sqrt{\langle\psi|\psi\rangle}$.
-    fn normalize(&self) -> Self;
+    ///
+    /// The extra bounds belong to this method alone. Routing the multivector 2-norm onto
+    /// `deep_causality_linear` binds it on `NormedScalar`, which requires `FromPrimitive` of the
+    /// scalar, and `Complex<R>` has it exactly when `R` does. The other three methods reach the
+    /// geometric product and reversion, which ask for neither, so the bounds sit here rather than
+    /// on the trait.
+    fn normalize(&self) -> Self
+    where
+        R: FromPrimitive + core::iter::Sum;
 }
 
-impl<R: RealField + core::iter::Sum> QuantumOps<R> for CausalMultiVector<Complex<R>> {
+impl<R: RealField> QuantumOps<R> for CausalMultiVector<Complex<R>> {
     fn dag(&self) -> Self {
         // Hermitian conjugate: reverse basis (reversion) and conjugate coefficients
         let reverted = self.reversion();
@@ -72,7 +81,10 @@ impl<R: RealField + core::iter::Sum> QuantumOps<R> for CausalMultiVector<Complex
             .unwrap_or(Complex::new(R::zero(), R::zero()))
     }
 
-    fn normalize(&self) -> Self {
+    fn normalize(&self) -> Self
+    where
+        R: FromPrimitive + core::iter::Sum,
+    {
         use deep_causality_multivector::MultiVectorL2Norm;
         self.normalize_l2()
     }

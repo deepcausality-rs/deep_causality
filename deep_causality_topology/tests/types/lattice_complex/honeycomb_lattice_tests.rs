@@ -135,3 +135,49 @@ fn test_honeycomb_lattice_small() {
     assert_eq!(complex.num_cells(0), 2);
     assert_eq!(complex.num_cells(2), 1);
 }
+
+// ============================================================================
+// HoneycombCell boundary through the `Cell` trait
+// ============================================================================
+
+#[test]
+fn test_honeycomb_vertex_boundary_is_empty() {
+    // A 0-cell has no faces, so its boundary chain is empty. `compute_boundary_matrix(0)`
+    // short-circuits before consulting the cells, so the vertex arm of
+    // `HoneycombCell::boundary` is only observable by calling it directly.
+    use deep_causality_topology::Cell;
+
+    let lattice = HoneycombLattice::new([2, 2], [false, false]);
+    let complex = lattice.as_cell_complex();
+
+    let vertices: Vec<_> = ChainComplex::cells(&complex, 0).collect();
+    assert_eq!(vertices.len(), 8);
+
+    for vertex in &vertices {
+        assert_eq!(vertex.dim(), 0);
+        assert!(
+            vertex.boundary().is_empty(),
+            "a honeycomb site has an empty boundary chain"
+        );
+    }
+}
+
+#[test]
+fn test_honeycomb_edge_boundary_is_head_minus_tail() {
+    // ∂[A, B] = B - A: every bond returns exactly two terms whose coefficients
+    // sum to zero, which is what makes ∂∂ = 0 on the 1-skeleton.
+    use deep_causality_topology::Cell;
+
+    let lattice = HoneycombLattice::new([2, 2], [false, false]);
+    let complex = lattice.as_cell_complex();
+
+    for edge in ChainComplex::cells(&complex, 1) {
+        let boundary = edge.boundary();
+        assert_eq!(boundary.len(), 2, "a bond has two endpoints");
+        let sum: i32 = boundary.iter().map(|(_, c)| *c as i32).sum();
+        assert_eq!(sum, 0, "the two endpoints carry opposite orientation");
+        for (vertex, _) in &boundary {
+            assert_eq!(vertex.dim(), 0);
+        }
+    }
+}

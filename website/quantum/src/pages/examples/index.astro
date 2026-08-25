@@ -1,0 +1,127 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import { EXAMPLES_URL } from '../../consts';
+
+const title = 'Examples — DeepCausality Quantum';
+const description =
+  'Seven runnable examples ship in the quantum_examples package. Two exercise this crate; the other five are quantum in subject and build on sibling crates.';
+
+const all = (await getCollection('examples')).sort((a, b) => a.data.order - b.data.order);
+const uses = all.filter((e) => e.data.usesCrate);
+const others = all.filter((e) => !e.data.usesCrate);
+
+const slug = (id: string) => id.replace(/^en\//, '');
+---
+<BaseLayout title={title} description={description} path="/examples/">
+  <SiteHeader slot="header" />
+
+  <article class="page cpage">
+    <header class="chead">
+      <p class="eyebrow">Examples</p>
+      <h1>Seven runnable examples</h1>
+      <p class="lede">
+        All seven live in the <code>quantum_examples</code> package and all seven
+        are quantum in subject. Two of them import this crate. The split is
+        listed rather than blurred, because a reader who runs the electroweak
+        example is not exercising anything documented on this site.
+      </p>
+    </header>
+
+    <h2 class="ghead">Exercising this crate</h2>
+    <ol class="rlist">
+      {uses.map((e, i) => (
+        <li class="ritem">
+          <a href={`/examples/${slug(e.id)}/`}>
+            <span class="rix num">{String(i + 1).padStart(2, '0')}</span>
+            <span class="rmain">
+              <span class="rtitle">{e.data.title}</span>
+              <span class="rq">{e.data.question}</span>
+              <span class="rsummary">{e.data.summary}</span>
+              <span class="rverbs">
+                {e.data.uses.map((v) => <code>{v}</code>)}
+              </span>
+            </span>
+            <span class="rgo" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+
+    <h2 class="ghead">Quantum in subject, built on sibling crates</h2>
+    <p class="gnote">
+      These do not import <code>deep_causality_quantum</code>. Each page names
+      the crates it does use.
+    </p>
+    <ol class="rlist">
+      {others.map((e, i) => (
+        <li class="ritem">
+          <a href={`/examples/${slug(e.id)}/`}>
+            <span class="rix num">{String(i + 3).padStart(2, '0')}</span>
+            <span class="rmain">
+              <span class="rtitle">{e.data.title}</span>
+              <span class="rq">{e.data.question}</span>
+              <span class="rsummary">{e.data.summary}</span>
+              <span class="rverbs">
+                {e.data.crates.map((c) => <code>{c}</code>)}
+              </span>
+            </span>
+            <span class="rgo" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+
+    <p class="src-note">
+      Sources: <a href={EXAMPLES_URL}>examples/quantum_examples <span aria-hidden="true">↗</span></a>
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .cpage { max-width: var(--w-panel); }
+  .chead { margin-bottom: var(--space-7); }
+  .chead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .chead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+
+  .ghead { font-size: var(--t-h4); margin: var(--space-7) 0 var(--space-3); }
+  .gnote { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .rlist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+  .ritem { border-bottom: 1px solid var(--line-1); }
+  .ritem a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-5) var(--space-2);
+    color: var(--fg-0);
+    border-bottom: none;
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--dur-med) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out);
+  }
+  .ritem a:hover {
+    transform: translate3d(var(--space-2), 0, 0);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+  .rix { color: var(--fg-2); }
+  .rmain { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+  .rtitle { font-weight: var(--fw-heading); font-size: var(--t-h4); }
+  .rq { color: var(--fg-0); font-size: var(--t-body-sm); }
+  .rsummary { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); }
+  .rverbs { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
+  .rverbs code {
+    font-size: var(--t-eyebrow);
+    color: var(--fg-2);
+    background: none;
+    padding: 0;
+  }
+  .rverbs code::after { content: '·'; margin-left: var(--space-2); color: var(--line-2); }
+  .rverbs code:last-child::after { content: ''; }
+  .rgo { color: var(--accent); align-self: center; transition: transform var(--dur-fast) var(--ease-out); }
+  .ritem a:hover .rgo { transform: translateX(2px); }
+
+  .src-note { color: var(--fg-2); font-size: var(--t-body-sm); margin-top: var(--space-6); }
+</style>

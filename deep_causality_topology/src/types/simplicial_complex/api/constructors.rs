@@ -6,7 +6,7 @@
 //! Constructor API for SimplicialComplex.
 
 use crate::{SimplicialComplex, Skeleton};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {
     /// Creates a new SimplicialComplex with the given pre-computed Hodge ⋆ operators.

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{CoMonad, Functor};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Hypergraph, HypergraphTopology, HypergraphWitness};
 

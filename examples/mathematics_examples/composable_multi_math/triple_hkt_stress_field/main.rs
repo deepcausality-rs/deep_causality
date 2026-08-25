@@ -26,9 +26,9 @@
 //! that names the production-grade alternative.
 
 use deep_causality_haft::CoMonad;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_sparse::CsrMatrix;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,

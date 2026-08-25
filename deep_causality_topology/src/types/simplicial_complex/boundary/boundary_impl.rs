@@ -6,7 +6,7 @@
 //! CPU implementation of boundary operators for SimplicialComplex.
 
 use crate::{SimplicialComplex, TopologyError};
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 impl<T> SimplicialComplex<T> {
     /// CPU implementation: returns boundary operator for dimension k.

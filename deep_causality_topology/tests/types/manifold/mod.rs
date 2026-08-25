@@ -61,6 +61,10 @@ mod stencil_coverage_tests;
 #[cfg(test)]
 mod stencil_tests;
 #[cfg(test)]
+mod utils_differential_tests;
+#[cfg(test)]
+mod utils_manifold_tests;
+#[cfg(test)]
 mod wall_hodge_star_tests;
 #[cfg(test)]
 mod wedge_tests;

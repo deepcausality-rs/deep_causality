@@ -1,0 +1,258 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import ApiTable from '../../components/docs/ApiTable.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { SRC_URL, PAPERS_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Quantum causal models — DeepCausality Quantum';
+const description =
+  'The per-node Choi–Jamiołkowski factorization, the quantum Markov condition enforced as a freeze-time commutativity check with a condition-driven tolerance, and C₃-exclusion faithfulness derived from the frozen graph.';
+
+const setup = `use deep_causality_quantum::{
+    CommutatorTolerance, FactorSupports, ProcessFactors, freeze_quantum,
+};
+
+// The factors are freeze-time decoration, keyed by graph node index.
+let mut factors = ProcessFactors::<FloatType>::new();
+factors.insert(0, sigma_x());
+factors.insert(1, sigma_z());
+
+// Their Hilbert supports. Both live on leg 0, so the supports intersect.
+let mut supports = FactorSupports::new();
+supports.declare(0, &[0]);
+supports.declare(1, &[0]);
+
+let report = freeze_quantum(
+    &mut graph,
+    &[],                              // state writers
+    &factors,
+    &supports,
+    &CommutatorTolerance::default(),
+    None,                             // no faithfulness check this call
+)?;`;
+
+const faithful = `// Declaring input and output systems turns on the second gate.
+let report = freeze_quantum(
+    &mut graph,
+    &[],
+    &factors,
+    &supports,
+    &CommutatorTolerance::default(),
+    Some((&inputs, &outputs)),
+)?;`;
+---
+<BaseLayout title={title} description={description} path="/qcm/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Layer · Model"
+    title="Quantum causal models"
+    lede="Channels where the conditional probability tables used to be, plus the condition that decides whether a product of them is a model at all."
+    sourceHref={`${SRC_URL}/types/qcm`}
+    sourceLabel="src/types/qcm"
+  >
+    <h2>The problem</h2>
+
+    <p>
+      A classical causal model factorizes a joint distribution over its graph:
+      each variable contributes a conditional probability table given its
+      parents, and the product of those tables is the joint. Nothing constrains
+      the tables beyond being distributions. Any product of them is a model.
+    </p>
+
+    <p>
+      The quantum version replaces each table with an operator. Node
+      <code>Aᵢ</code> carries a Choi–Jamiołkowski operator
+      <code>ρ&#123;Aᵢ|Pa(Aᵢ)&#125;</code>, and the model is the product
+      <code>σ = ∏ᵢ ρ&#123;Aᵢ|Pa(Aᵢ)&#125;</code>, called the process operator.
+      Operators do not commute in general, so the product now depends on the
+      order in which it is taken, and the model is only well defined when that
+      dependence goes away.
+    </p>
+
+    <p>
+      Lorenz (2022, Def. 3.3) states the condition. Factors whose Hilbert
+      supports intersect must pairwise commute. Factors on disjoint supports are
+      unconstrained, because operators on separate tensor legs commute for free.
+    </p>
+
+    <h2>Where the factors live</h2>
+
+    <p>
+      The factors are not carried on the runtime state channel. They ride an
+      external <code>ProcessFactors</code> store, keyed by graph node index,
+      with a companion <code>FactorSupports</code> recording which tensor legs
+      each factor acts on and how wide each leg is. That store is the operator
+      analogue of the engine's edge-keyed lambda store, and it is static
+      freeze-time data.
+    </p>
+
+    <p>
+      Keeping it static is what makes the condition checkable once. If the
+      factors could change while the graph runs, every step would have to
+      recheck, and the cost of the check would scale with the run rather than
+      with the model.
+    </p>
+
+    <Code code={setup} lang="rust" themes={SHIKI} />
+
+    <p>
+      <code>FactorSupports::from_graph</code> derives the same layout from the
+      graph instead, which removes the chance of the declared supports and the
+      graph disagreeing. Either way, <code>validate</code> runs before anything
+      else, so a shape error is reported as a shape error rather than as a
+      downstream freeze failure.
+    </p>
+
+    <h2>The check</h2>
+
+    <p>
+      <code>quantum_markov_check</code> walks factor pairs. A pair with disjoint
+      supports is skipped and never appears in the report, because it carries no
+      obligation. For a pair that does intersect, both factors are embedded onto
+      the union of their legs by <code>embed_on_legs</code>, the commutator is
+      formed there by <code>matrix_commutator</code>, and its Frobenius norm is
+      compared against a threshold.
+    </p>
+
+    <p>The threshold is a first-order forward-error budget:</p>
+
+    <blockquote>
+      <p>
+        ‖[ρⱼ, ρₖ]‖_F ≤ C · (‖ρⱼ‖·budgetₖ + ‖ρₖ‖·budgetⱼ + 2·γₙ·‖ρⱼ‖·‖ρₖ‖),
+        with γₙ = n·u / (1 − n·u)
+      </p>
+    </blockquote>
+
+    <p>
+      Here <code>n</code> is the dimension of the embedded operators,
+      <code>u</code> is the unit roundoff, and <code>C</code> is a safety
+      factor. The defaults are <code>C = 8</code>, <code>u = ε</code>, and a
+      per-node budget of <code>u·‖ρ‖_F</code>. A model whose factors were built
+      through a long chain of operations can hand a larger budget for that one
+      node to <code>with_budget</code>. Naming the node is more honest than
+      loosening the safety factor for every pair at once.
+    </p>
+
+    <p>
+      Note that the threshold is condition-driven rather than linear in graph
+      depth. The quantity that grows is the norm of the operators involved, not
+      the number of nodes between them.
+    </p>
+
+    <p>
+      The check is sound and may be incomplete. It never accepts a pair whose
+      commutator exceeds the threshold; it does not claim to reject every pair
+      that a sharper analysis would reject.
+    </p>
+
+    <h2>What a failure looks like</h2>
+
+    <p>
+      A failing pair produces
+      <code>QuantumErrorEnum::CommutatorNonZero &#123; node_j, node_k, detail
+      &#125;</code>. The two node indices are fields rather than text, so a
+      caller can act on them.
+    </p>
+
+    <p>
+      <code>freeze_quantum</code> runs the check as the level-specific hook
+      inside the engine's own freeze. That hook can only return the engine's
+      error type, which would ordinarily flatten the structured error into a
+      message. The crate stashes the typed error and recovers it after the
+      rollback, so the caller reads the variant rather than parsing a string.
+      A failure in the engine's built-in checks, such as acyclicity or the
+      single-writer rule, surfaces instead as
+      <code>QuantumErrorEnum::CalculationError</code> carrying the graph error's
+      message.
+    </p>
+
+    <p>
+      On any failure the graph rolls back to its dynamic state. There is no
+      half-frozen outcome.
+    </p>
+
+    <h2>Faithfulness</h2>
+
+    <p>
+      Passing declared input and output systems adds a second gate after the
+      commutativity check.
+    </p>
+
+    <Code code={faithful} lang="rust" themes={SHIKI} />
+
+    <p>
+      <code>CausalStructure::from_graph_reachability</code> reads a bipartite
+      influence relation off the now-frozen graph: input <code>i</code> relates
+      to output <code>o</code> when <code>o</code> is reachable from
+      <code>i</code>. The relation is then tested for the C₃ obstruction of van
+      der Lugt and Lorenz (arXiv:2508.11762, Thm 3.2).
+    </p>
+
+    <p>
+      C₃ is the bipartite six-cycle: <code>K₃,₃</code> minus a perfect matching.
+      In a 3×3 induced block, every input relates to exactly two of the three
+      outputs and every output to exactly two of the three inputs. Canonically it
+      is two commuting CNOTs. A structure containing it provably has no
+      traditional-circuit causally faithful decomposition, so
+      <code>find_c3</code> searches every 3×3 block and
+      <code>check_c3_exclusion</code> rejects the model with
+      <code>NotFaithfullyRepresentable</code>, naming the three inputs and three
+      outputs that carry the obstruction.
+    </p>
+
+    <p>
+      Faithfulness claims stop there. The general routed and direct-sum
+      hypothesis of Lorenz and Barrett is open upstream, and the crate does not
+      speak to it.
+    </p>
+
+    <h2>What the report carries</h2>
+
+    <p>
+      On success <code>freeze_quantum</code> returns a
+      <code>QuantumMarkovReport</code>: one <code>CommutatorCheck</code> per
+      tested pair, each recording the two node indices, the commutator norm, the
+      threshold it was compared against, the ratio of the two, and the verdict.
+      <code>tested_pairs()</code> gives the count and
+      <code>worst_margin()</code> the largest ratio seen. A margin at or below 1
+      passes, so the worst margin is the number to watch when a model is close
+      to its tolerance.
+    </p>
+
+    <h2>Scope</h2>
+
+    <p>
+      The crate supports flat models. Quantum-subgraph nesting is not supported:
+      the physical meaning of such nesting is itself unestablished, so more work
+      needs to be done.
+    </p>
+
+    <p>
+      This whole layer sits behind the <code>qcm</code> feature, which is on by
+      default. It pulls in <code>deep_causality</code> for the causal graph, and
+      that crate is std-only, so <code>qcm</code> implies <code>std</code> and is
+      off in a bare-metal build. The papers behind the layer are committed in
+      the crate: see <a href={PAPERS_URL}>papers/</a> and the
+      <a href="/papers/">papers page</a>.
+    </p>
+  </DocPage>
+
+  <div class="wide-wrap">
+    <ApiTable layer="qcm" title="The qcm surface" />
+  </div>
+</BaseLayout>
+
+<style>
+  .wide-wrap {
+    max-width: var(--w-panel);
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-9);
+  }
+  @media (min-width: 720px) { .wide-wrap { padding: 0 var(--space-5) var(--space-9); } }
+</style>

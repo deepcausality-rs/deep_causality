@@ -10,9 +10,13 @@
 //!   (b) `coboundary_matrix(k)` equals the transpose of `boundary_matrix(k + 1)`.
 //!   (c) For `SimplicialComplex` specifically, `boundary_matrix` and `coboundary_matrix`
 //!       return `Cow::Borrowed` (zero copy from the pre-computed cache).
+//!   (d) `betti_number(k)` is `betti_number_over(k, HomologyField::Rational)` — the same number,
+//!       not merely a similar one — so which field a Betti number is over stays readable from the
+//!       call.
 
 use deep_causality_topology::{
-    ChainComplex, LatticeComplex, Simplex, SimplicialComplex, SimplicialComplexBuilder,
+    ChainComplex, HomologyField, LatticeComplex, Simplex, SimplicialComplex,
+    SimplicialComplexBuilder,
 };
 use std::borrow::Cow;
 
@@ -45,8 +49,8 @@ fn assert_shape_invariant<K: ChainComplex>(complex: &K) {
 }
 
 fn csr_eq(
-    a: &deep_causality_sparse::CsrMatrix<i8>,
-    b: &deep_causality_sparse::CsrMatrix<i8>,
+    a: &deep_causality_linear::CsrMatrix<i8>,
+    b: &deep_causality_linear::CsrMatrix<i8>,
 ) -> bool {
     let (ar, ac) = a.shape();
     let (br, bc) = b.shape();
@@ -156,4 +160,116 @@ fn lattice_coboundary_matrix_lazy_memo() {
     let first = lattice.coboundary_matrix(0).into_owned();
     let second = lattice.coboundary_matrix(0).into_owned();
     assert!(csr_eq(&first, &second));
+}
+
+// ---- (d) the field a Betti number is over is the one the call names ----------------------------
+
+#[test]
+fn betti_number_is_the_rational_case_of_betti_number_over() {
+    let c = make_triangle_complex();
+    for k in 0..=3 {
+        assert_eq!(
+            c.betti_number(k),
+            c.betti_number_over(k, HomologyField::Rational).unwrap(),
+            "betti_number({k}) must be defined as the rational case, not merely agree with it"
+        );
+    }
+}
+
+#[test]
+fn a_triangle_has_the_same_betti_numbers_over_both_fields() {
+    // A filled triangle is contractible: β₀ = 1 and nothing above it, over any field. Recorded
+    // here because the two fields agreeing is a property of this complex rather than of homology,
+    // and the crate's `[[32,2,4]]` toric-code result depends on the same coincidence.
+    let c = make_triangle_complex();
+    for k in 0..=2 {
+        assert_eq!(
+            c.betti_number_over(k, HomologyField::Rational).unwrap(),
+            c.betti_number_over(k, HomologyField::Gf2).unwrap(),
+            "the two fields must agree at grade {k} for a contractible complex"
+        );
+    }
+}
+
+#[test]
+fn betti_number_over_is_available_on_a_lattice_complex() {
+    // The default body reads the boundary matrices. `LatticeComplex` overrides `betti_number`
+    // with a closed form for the torus and does not override this, so the two are separate
+    // answers — see G-03 in `openspec/notes/quantum/qcl-gaps.md`, which is open.
+    let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(3);
+    let computed = lattice
+        .betti_number_over(0, HomologyField::Rational)
+        .expect("rank over the rationals");
+    assert_eq!(
+        computed, 1,
+        "an open 3x3 lattice is connected, so its zeroth Betti number is 1"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// `betti_number` is the panicking form of `betti_number_over`. A minimal
+// implementor that reports a failure from `betti_number_over` shows which
+// message each failure class turns into.
+// ---------------------------------------------------------------------------
+
+/// A `ChainComplex` with no cells whose `betti_number_over` always fails with a
+/// caller-chosen error, so the panic arms of the default `betti_number` body are
+/// reachable without a real rank computation overflowing.
+struct FailingComplex {
+    error: deep_causality_topology::TopologyError,
+}
+
+impl ChainComplex for FailingComplex {
+    type CellType = Simplex;
+    type CellIter<'a>
+        = std::iter::Empty<Simplex>
+    where
+        Self: 'a;
+    type Metric = ();
+
+    fn cells(&self, _k: usize) -> Self::CellIter<'_> {
+        std::iter::empty()
+    }
+
+    fn num_cells(&self, _k: usize) -> usize {
+        0
+    }
+
+    fn max_dim(&self) -> usize {
+        0
+    }
+
+    fn boundary_matrix(&self, _k: usize) -> Cow<'_, deep_causality_linear::CsrMatrix<i8>> {
+        Cow::Owned(deep_causality_linear::CsrMatrix::new())
+    }
+
+    fn coboundary_matrix(&self, _k: usize) -> Cow<'_, deep_causality_linear::CsrMatrix<i8>> {
+        Cow::Owned(deep_causality_linear::CsrMatrix::new())
+    }
+
+    fn betti_number_over(
+        &self,
+        _k: usize,
+        _field: HomologyField,
+    ) -> Result<usize, deep_causality_topology::TopologyError> {
+        Err(self.error.clone())
+    }
+}
+
+#[test]
+#[should_panic(expected = "exact rank over the rationals failed at grade 2: elimination overflow")]
+fn betti_number_panics_naming_the_exact_rank_failure() {
+    let c = FailingComplex {
+        error: deep_causality_topology::TopologyError::LinearAlgebraError("elimination overflow"),
+    };
+    let _ = c.betti_number(2);
+}
+
+#[test]
+#[should_panic(expected = "Betti number at grade 1 failed: Dimension mismatch: grade too high")]
+fn betti_number_panics_reporting_any_other_failure_with_its_display() {
+    let c = FailingComplex {
+        error: deep_causality_topology::TopologyError::DimensionMismatch("grade too high"),
+    };
+    let _ = c.betti_number(1);
 }

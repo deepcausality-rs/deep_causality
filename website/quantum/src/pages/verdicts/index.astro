@@ -1,0 +1,171 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import ApiTable from '../../components/docs/ApiTable.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { SRC_URL, TESTS_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Verdicts — DeepCausality Quantum';
+const description =
+  'Why a quantum causaloid carries no verdict over its operators, and what it does instead: the Birkhoff–von Neumann projection lattice as a Verdict carrier, and Born-rule read-out to Prob at the measurement boundary.';
+
+const born = `use deep_causality_quantum::{born_projective_prob, born_projective_probability};
+
+// Tr(P ρ) as a real number, clamped to [0, 1].
+let p: FloatType = born_projective_probability(&rho, &projection)?;
+
+// The same number as the Prob MV-algebra verdict.
+let verdict: Prob = born_projective_prob(&rho, &projection)?;`;
+---
+<BaseLayout title={title} description={description} path="/verdicts/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Layer · Read-out"
+    title="Verdicts at the measurement boundary"
+    lede="A quantum causaloid does not carry a verdict over its operators. It reads one out where a measurement happens, and the lattice it reads into is not Boolean."
+    sourceHref={`${SRC_URL}/types/verdict`}
+    sourceLabel="src/types/verdict"
+  >
+    <h2>Why there is no blanket implementation</h2>
+
+    <p>
+      The obvious move would be a <code>Verdict</code> implementation for a
+      general operator or process-matrix type, so that any quantum quantity
+      could be joined and met like a Boolean. The crate declines, and the reason
+      is structural rather than cautious.
+    </p>
+
+    <p>
+      General effects, the operators satisfying <code>0 ≤ E ≤ I</code>, form an
+      effect algebra. Meet and join on an effect algebra are partial: they are
+      not defined for every pair. A trait whose operations are total cannot be
+      implemented faithfully on a structure whose operations are not, so
+      implementing it would mean inventing values where the mathematics has
+      none.
+    </p>
+
+    <p>
+      Two things get implemented instead. A verdict is read out from a state and
+      a measurement projection through the Born rule; and the projection itself
+      is a proposition in a lattice that does have total operations.
+    </p>
+
+    <h2>The projection lattice</h2>
+
+    <p>
+      <code>Projection&lt;R, D&gt;</code> is a Hermitian idempotent on a fixed
+      <code>D</code>-dimensional Hilbert space. The dimension is a const generic
+      because <code>Verdict::bottom</code> and <code>Verdict::top</code> take no
+      arguments and still have to know which space they inhabit.
+      <code>new</code> rejects anything that is not Hermitian and idempotent to
+      tolerance, so an invalid projection never exists.
+    </p>
+
+    <p>The three lattice operations are the subspace operations:</p>
+
+    <ul>
+      <li>
+        <strong>Orthocomplement.</strong> <code>P^⊥ = I − P</code>, computed
+        directly.
+      </li>
+      <li>
+        <strong>Join.</strong> The projector onto
+        <code>range(P) + range(Q)</code>, realized as the range projector of the
+        positive semidefinite sum <code>P + Q</code> through its
+        eigendecomposition.
+      </li>
+      <li>
+        <strong>Meet.</strong> <code>¬(¬P ∨ ¬Q)</code> by De Morgan, which is
+        the projector onto <code>range(P) ∩ range(Q)</code>.
+      </li>
+    </ul>
+
+    <p>
+      The join hides a numerical decision worth stating. Deciding which
+      eigenvectors belong to the range needs a cutoff, and the cutoff used is a
+      numerical-rank one at roughly <code>D·ε·‖·‖</code>, not the
+      <code>√ε</code> tolerance used for validation. With <code>√ε</code> the
+      second eigenvector of <code>P + Q</code> is dropped whenever two distinct
+      subspaces sit closer than about 1.7e-4 radians, and the join then silently
+      fails to be an upper bound of its own arguments.
+    </p>
+
+    <h2>What fails, and why that is correct</h2>
+
+    <p>
+      This is an orthomodular lattice. It satisfies the bounded-lattice laws,
+      the orthocomplement laws, and the orthomodular law. It does not satisfy
+      distributivity, and the failure is exhibited by three projections in
+      general position, such as <code>|0⟩</code>, <code>|1⟩</code> and
+      <code>|+⟩</code>.
+    </p>
+
+    <p>
+      That failure is the point rather than a defect, in the same way that
+      <code>Prob</code> fails excluded middle and is still the right carrier for
+      fuzzy verdicts. Distributivity does hold inside a commuting family, and
+      <code>commutes_with</code> is how a caller finds out whether the
+      propositions in hand are compatible. Both the failure and the restricted
+      success are held by tests:
+      <code>test_distributivity_fails_on_general_position_triple</code> and
+      <code>test_distributivity_holds_within_a_commuting_family</code>.
+    </p>
+
+    <p>
+      The LEAN statement that would tie this lattice into the core verdict
+      theory is not written yet. The Rust carrier and its law tests are
+      complete, and the <a href="/formalization/">formalization page</a> lists
+      the gap rather than glossing it.
+    </p>
+
+    <h2>The Born read-out</h2>
+
+    <p>
+      <code>born_projective_probability</code> computes <code>Tr(Pρ)</code> and
+      clamps the result to <code>[0, 1]</code>. For a Hermitian
+      <code>P</code> and <code>ρ</code> the trace is real, so a non-negligible
+      imaginary part means a malformed input and produces an error rather than a
+      discarded component.
+    </p>
+
+    <Code code={born} lang="rust" themes={SHIKI} />
+
+    <p>
+      <code>born_projective_prob</code> returns the same number as
+      <code>Prob</code>, the MV-algebra verdict from
+      <code>deep_causality_algebra</code>. That call is the boundary: on one
+      side operators and projections, on the other a classical fuzzy verdict the
+      rest of the engine already knows how to combine.
+    </p>
+
+    <p>
+      Both functions error with <code>DimensionMismatch</code> when the state's
+      dimension and the projection's const parameter disagree, which is the one
+      way the two can be mismatched given that each is validated on
+      construction.
+    </p>
+
+    <p>
+      The law tests for this layer live in
+      <a href={`${TESTS_URL}/types/verdict`}>tests/types/verdict</a>.
+    </p>
+  </DocPage>
+
+  <div class="wide-wrap">
+    <ApiTable layer="verdict" title="The verdict surface" />
+  </div>
+</BaseLayout>
+
+<style>
+  .wide-wrap {
+    max-width: var(--w-panel);
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-9);
+  }
+  @media (min-width: 720px) { .wide-wrap { padding: 0 var(--space-5) var(--space-9); } }
+</style>

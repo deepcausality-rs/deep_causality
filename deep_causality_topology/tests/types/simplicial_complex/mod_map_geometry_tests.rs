@@ -13,7 +13,7 @@
 //! - `SimplicialTopology::max_simplex_dimension` (trait method, distinct from the
 //!   inherent getter), exercised through an explicit fully-qualified call.
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     PointCloud, Simplex, SimplicialComplex, SimplicialTopology, Skeleton,

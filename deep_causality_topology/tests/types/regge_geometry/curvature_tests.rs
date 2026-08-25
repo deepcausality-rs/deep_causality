@@ -308,3 +308,258 @@ fn test_3d_degenerate_tetrahedron_face() {
         panic!("Test Failed. Unexpected error message: {}", err_msg);
     }
 }
+
+// ============================================================================
+// Structural guards of the dihedral-angle computation.
+//
+// `calculate_ricci_curvature` reads the bone/face/top-cell incidence from the
+// complex's stored boundary operators and the vertex lists from its skeletons.
+// The tests below hand-build complexes whose incidence and vertex lists
+// disagree, which is what each guard is there to catch.
+// ============================================================================
+
+use deep_causality_linear::CsrMatrix;
+use deep_causality_topology::{SimplicialComplex, Skeleton};
+
+fn verts(n: usize) -> Skeleton {
+    Skeleton::new(0, (0..n).map(|i| Simplex::new(vec![i])).collect())
+}
+
+fn geometry(lengths: Vec<f64>) -> ReggeGeometry<f64> {
+    let n = lengths.len();
+    ReggeGeometry::new(CausalTensor::new(lengths, vec![n]).unwrap())
+}
+
+/// In 2D the bone is a vertex of the triangle whose angle is being measured, so
+/// removing it must leave exactly two vertices. An incidence matrix that routes
+/// a vertex to a triangle it is not part of leaves three, and the calculation
+/// rejects the complex instead of indexing into the wrong pair.
+#[test]
+fn two_dimensional_bone_outside_its_triangle_is_rejected() {
+    let sk1 = Skeleton::new(1, vec![Simplex::new(vec![0, 1])]);
+    // Two top cells so the single edge reads as interior, neither containing vertex 0.
+    let sk2 = Skeleton::new(
+        2,
+        vec![Simplex::new(vec![1, 2, 3]), Simplex::new(vec![1, 2, 3])],
+    );
+    let d1 = CsrMatrix::from_triplets(4, 1, &[(0, 0, -1i8), (1, 0, 1)]).unwrap();
+    let d2 = CsrMatrix::from_triplets(1, 2, &[(0, 0, 1i8), (0, 1, -1)]).unwrap();
+
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![verts(4), sk1, sk2], vec![d1, d2], vec![], vec![]);
+
+    let err = geometry(vec![1.0])
+        .calculate_ricci_curvature(&complex)
+        .unwrap_err();
+    match err.0 {
+        deep_causality_topology::TopologyErrorEnum::InvalidInput(msg) => {
+            assert_eq!(msg, "Simplex topology error");
+        }
+        other => panic!("expected InvalidInput, got {other:?}"),
+    }
+}
+
+/// Every edge of a triangle whose angle is measured must be present in the
+/// 1-skeleton, since its length is read from the metric by skeleton index. A
+/// missing edge is reported rather than silently treated as zero-length.
+#[test]
+fn missing_edge_length_is_reported_as_simplex_not_found() {
+    // The triangle [0,1,2] needs edges [0,1], [0,2] and [1,2]; only [0,1] exists.
+    let sk1 = Skeleton::new(1, vec![Simplex::new(vec![0, 1])]);
+    let sk2 = Skeleton::new(
+        2,
+        vec![Simplex::new(vec![0, 1, 2]), Simplex::new(vec![0, 1, 2])],
+    );
+    let d1 = CsrMatrix::from_triplets(3, 1, &[(0, 0, -1i8), (1, 0, 1)]).unwrap();
+    let d2 = CsrMatrix::from_triplets(1, 2, &[(0, 0, 1i8), (0, 1, -1)]).unwrap();
+
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![verts(3), sk1, sk2], vec![d1, d2], vec![], vec![]);
+
+    let err = geometry(vec![1.0])
+        .calculate_ricci_curvature(&complex)
+        .unwrap_err();
+    assert_eq!(
+        err,
+        deep_causality_topology::TopologyError::SimplexNotFound()
+    );
+}
+
+/// In 3D the bone is an edge of the tetrahedron, so removing its two endpoints
+/// must leave exactly the two opposite vertices. An incidence matrix that routes
+/// an edge to a tetrahedron that does not contain it leaves four.
+#[test]
+fn three_dimensional_bone_outside_its_tetrahedron_is_rejected() {
+    let sk1 = Skeleton::new(1, vec![Simplex::new(vec![0, 1])]);
+    let sk2 = Skeleton::new(2, vec![Simplex::new(vec![2, 3, 4])]);
+    let sk3 = Skeleton::new(
+        3,
+        vec![
+            Simplex::new(vec![2, 3, 4, 5]),
+            Simplex::new(vec![2, 3, 4, 5]),
+        ],
+    );
+    let d1 = CsrMatrix::from_triplets(6, 1, &[(0, 0, -1i8), (1, 0, 1)]).unwrap();
+    let d2 = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1i8)]).unwrap();
+    let d3 = CsrMatrix::from_triplets(1, 2, &[(0, 0, 1i8), (0, 1, -1)]).unwrap();
+
+    let complex: SimplicialComplex<f64> = SimplicialComplex::new(
+        vec![verts(6), sk1, sk2, sk3],
+        vec![d1, d2, d3],
+        vec![],
+        vec![],
+    );
+
+    let err = geometry(vec![1.0])
+        .calculate_ricci_curvature(&complex)
+        .unwrap_err();
+    match err.0 {
+        deep_causality_topology::TopologyErrorEnum::InvalidInput(msg) => {
+            assert_eq!(msg, "Bone not in simplex");
+        }
+        other => panic!("expected InvalidInput, got {other:?}"),
+    }
+}
+
+/// The 3D dihedral angle divides by the areas of the two faces meeting at the
+/// bone. Edge lengths that make one of those faces degenerate (1, 1, 2 — the
+/// three points are collinear) give it zero area, and the calculation reports
+/// the degeneracy rather than dividing by it.
+///
+/// The tetrahedron here is `[0,1,2,3]` with `|01| = |12| = |13| = 1`,
+/// `|02| = |03| = 2` and `|23| = 0`. Both faces at the bone `[0,1]` are the
+/// degenerate `(1, 1, 2)` triangle, and the Cayley-Menger matrix has two equal
+/// rows, so the volume is exactly zero and the area guard is what fires.
+#[test]
+fn degenerate_face_at_the_bone_is_reported() {
+    let edges = vec![
+        Simplex::new(vec![0, 1]),
+        Simplex::new(vec![0, 2]),
+        Simplex::new(vec![0, 3]),
+        Simplex::new(vec![1, 2]),
+        Simplex::new(vec![1, 3]),
+        Simplex::new(vec![2, 3]),
+    ];
+    let faces = vec![
+        Simplex::new(vec![0, 1, 2]),
+        Simplex::new(vec![0, 1, 3]),
+        Simplex::new(vec![0, 2, 3]),
+        Simplex::new(vec![1, 2, 3]),
+    ];
+    let sk1 = Skeleton::new(1, edges);
+    let sk2 = Skeleton::new(2, faces);
+    let sk3 = Skeleton::new(
+        3,
+        vec![
+            Simplex::new(vec![0, 1, 2, 3]),
+            Simplex::new(vec![0, 1, 2, 3]),
+        ],
+    );
+
+    let d1 = CsrMatrix::from_triplets(
+        4,
+        6,
+        &[
+            (0, 0, -1i8),
+            (1, 0, 1),
+            (0, 1, -1),
+            (2, 1, 1),
+            (0, 2, -1),
+            (3, 2, 1),
+            (1, 3, -1),
+            (2, 3, 1),
+            (1, 4, -1),
+            (3, 4, 1),
+            (2, 5, -1),
+            (3, 5, 1),
+        ],
+    )
+    .unwrap();
+    // Edge-face incidence: [0,1,2] = e0,e1,e3; [0,1,3] = e0,e2,e4;
+    // [0,2,3] = e1,e2,e5; [1,2,3] = e3,e4,e5.
+    let d2 = CsrMatrix::from_triplets(
+        6,
+        4,
+        &[
+            (0, 0, 1i8),
+            (1, 0, -1),
+            (3, 0, 1),
+            (0, 1, 1),
+            (2, 1, -1),
+            (4, 1, 1),
+            (1, 2, 1),
+            (2, 2, -1),
+            (5, 2, 1),
+            (3, 3, 1),
+            (4, 3, -1),
+            (5, 3, 1),
+        ],
+    )
+    .unwrap();
+    // Every face carries two top cells, so no bone reads as a boundary bone.
+    let d3 = CsrMatrix::from_triplets(
+        4,
+        2,
+        &[
+            (0, 0, 1i8),
+            (0, 1, -1),
+            (1, 0, 1),
+            (1, 1, -1),
+            (2, 0, 1),
+            (2, 1, -1),
+            (3, 0, 1),
+            (3, 1, -1),
+        ],
+    )
+    .unwrap();
+
+    let complex: SimplicialComplex<f64> = SimplicialComplex::new(
+        vec![verts(4), sk1, sk2, sk3],
+        vec![d1, d2, d3],
+        vec![],
+        vec![],
+    );
+
+    // Lengths in 1-skeleton order: [0,1], [0,2], [0,3], [1,2], [1,3], [2,3].
+    let err = geometry(vec![1.0, 2.0, 2.0, 1.0, 1.0, 0.0])
+        .calculate_ricci_curvature(&complex)
+        .unwrap_err();
+    match err.0 {
+        deep_causality_topology::TopologyErrorEnum::ManifoldError(msg) => {
+            assert_eq!(msg, "Degenerate face in tetrahedron");
+        }
+        other => panic!("expected ManifoldError, got {other:?}"),
+    }
+}
+
+/// The dihedral angle has closed forms for triangles and tetrahedra only. A top
+/// cell with five vertices (a 4-simplex) is not implemented, so it contributes a
+/// zero angle and every bone keeps the full 2π as its deficit.
+#[test]
+fn four_dimensional_top_cell_contributes_no_angle() {
+    let sk1 = Skeleton::new(1, vec![Simplex::new(vec![0, 1])]);
+    let sk2 = Skeleton::new(
+        2,
+        vec![
+            Simplex::new(vec![0, 1, 2, 3, 4]),
+            Simplex::new(vec![0, 1, 2, 3, 5]),
+        ],
+    );
+    let d1 = CsrMatrix::from_triplets(6, 1, &[(0, 0, -1i8), (1, 0, 1)]).unwrap();
+    let d2 = CsrMatrix::from_triplets(1, 2, &[(0, 0, 1i8), (0, 1, -1)]).unwrap();
+
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![verts(6), sk1, sk2], vec![d1, d2], vec![], vec![]);
+
+    let curvature = geometry(vec![1.0])
+        .calculate_ricci_curvature(&complex)
+        .expect("an unimplemented dimension is not an error");
+
+    assert_eq!(curvature.shape(), vec![6]);
+    for &val in curvature.data() {
+        assert!(
+            (val - 2.0 * PI).abs() < 1e-12,
+            "no angle was subtracted, so the deficit is the full turn; got {val}"
+        );
+    }
+}

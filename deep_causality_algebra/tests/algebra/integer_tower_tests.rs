@@ -17,16 +17,19 @@
 //! positive case it bounds, so that the intended limit is recorded next to what is asserted.
 
 use deep_causality_algebra::{
-    AbelianGroup, AddGroup, AddMonoid, Annihilating, Associative, Commutative, CommutativeRing,
-    CommutativeSemiring, Distributive, EuclideanDomain, Field, Group, MulMonoid, Real, RealField,
-    Ring, Semiring,
+    AbelianGroup, AddGroup, AddMonoid, Additive, Annihilating, Associative, Commutative,
+    CommutativeRing, CommutativeSemiring, Distributive, EuclideanDomain, Field, Group, MulMonoid,
+    Multiplicative, Real, RealField, Ring, Semiring,
 };
 use deep_causality_num::Zero;
 
-fn assert_markers<T: Commutative + Associative + Distributive>() {}
+fn assert_markers<T: Commutative<Multiplicative> + Associative<Multiplicative> + Distributive>() {}
+/// The additive laws, which the flat markers could not state separately. Every ring's addition is
+/// an abelian group, so ℤ and ℕ both carry these.
+fn assert_additive_markers<T: Commutative<Additive> + Associative<Additive>>() {}
 /// The full commutative-semiring surface, not just the three empty markers: two monoids on one
 /// carrier, with `Zero`, `One`, `Add`, and `Mul` actually present.
-fn assert_semiring<T: AddMonoid + MulMonoid + Distributive + Commutative>() {}
+fn assert_semiring<T: AddMonoid + MulMonoid + Distributive + Commutative<Multiplicative>>() {}
 fn assert_abelian<T: AbelianGroup>() {}
 fn assert_ring<T: Ring>() {}
 fn assert_commutative_ring<T: CommutativeRing>() {}
@@ -39,6 +42,7 @@ fn assert_real_field<T: RealField>() {}
 fn signed_integers_are_commutative_rings() {
     // ℤ: an Abelian group under +, a monoid under ×, distributive, and commutative.
     assert_markers::<i64>();
+    assert_additive_markers::<i64>();
     assert_abelian::<i64>();
     assert_ring::<i64>();
     assert_commutative_ring::<i64>();
@@ -62,11 +66,17 @@ fn signed_integers_are_euclidean_domains() {
 fn unsigned_integers_are_a_semiring_only() {
     // ℕ satisfies the three laws...
     assert_markers::<u8>();
+    assert_additive_markers::<u8>();
     assert_markers::<u16>();
+    assert_additive_markers::<u16>();
     assert_markers::<u32>();
+    assert_additive_markers::<u32>();
     assert_markers::<u64>();
+    assert_additive_markers::<u64>();
     assert_markers::<u128>();
+    assert_additive_markers::<u128>();
     assert_markers::<usize>();
+    assert_additive_markers::<usize>();
 
     // ...and carry the full two-operation semiring structure, not merely the empty markers.
     assert_semiring::<u8>();
@@ -115,6 +125,7 @@ fn floats_keep_the_full_real_tower() {
 
 fn for_each_float() {
     assert_markers::<f32>();
+    assert_additive_markers::<f32>();
     assert_abelian::<f32>();
     assert_commutative_ring::<f32>();
     assert_field::<f32>();
@@ -122,6 +133,8 @@ fn for_each_float() {
     assert_real_field::<f32>();
 
     assert_markers::<f64>();
+
+    assert_additive_markers::<f64>();
     assert_abelian::<f64>();
     assert_commutative_ring::<f64>();
     assert_field::<f64>();
@@ -199,11 +212,19 @@ fn the_law_markers_are_not_handed_out_by_inference() {
     // promised, then enter `CommutativeRing` and `Field` on that claim. These assertions check the
     // supported types still have the markers after that change.
     assert_markers::<f32>();
+    assert_additive_markers::<f32>();
     assert_markers::<f64>();
+    assert_additive_markers::<f64>();
     assert_markers::<i8>();
+    assert_additive_markers::<i8>();
     assert_markers::<i128>();
+    assert_additive_markers::<i128>();
     assert_markers::<u8>();
+    assert_additive_markers::<u8>();
     assert_markers::<u128>();
+    assert_additive_markers::<u128>();
     assert_markers::<usize>();
+    assert_additive_markers::<usize>();
     assert_markers::<isize>();
+    assert_additive_markers::<isize>();
 }

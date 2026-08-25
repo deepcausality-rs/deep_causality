@@ -78,3 +78,6 @@ impl Annihilating for u32 {}
 impl Annihilating for u64 {}
 impl Annihilating for u128 {}
 impl Annihilating for usize {}
+
+// 𝔽₂. `0 · a = 0`, since multiplication is conjunction.
+impl Annihilating for deep_causality_num::Gf2 {}

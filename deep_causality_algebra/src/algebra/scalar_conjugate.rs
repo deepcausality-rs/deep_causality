@@ -55,6 +55,22 @@ pub trait ConjugateScalar:
     /// The squared modulus as a real: `x²` for reals/duals, `re² + im²` for complex.
     fn modulus_squared(&self) -> Self::Real;
 
+    /// The modulus as a real: `|x|` for reals and duals, `|z|` for complex.
+    ///
+    /// Separate from [`modulus_squared`](Self::modulus_squared) for the same reason as
+    /// [`Normed::modulus`](crate::Normed::modulus): `modulus_squared().sqrt()` overflows where the
+    /// modulus itself is representable. `|1e308|` fits in `f64` and `(1e308)²` does not, so the
+    /// square reaches infinity and the root stays there; at the other end `1e-200` squares to zero.
+    /// Every implementor overrides this with a form that does not go through the square.
+    ///
+    /// Used wherever a magnitude is compared or summed — pivot selection, off-diagonal measures,
+    /// row sums. Use `modulus_squared` where the square is what is wanted.
+    #[inline]
+    fn modulus(&self) -> Self::Real {
+        use crate::Real;
+        self.modulus_squared().sqrt()
+    }
+
     /// The real part as a `Real`: `self` for reals/duals, `re` for complex.
     fn real_part(&self) -> Self::Real;
 
@@ -73,6 +89,11 @@ impl<T: RealField + FromPrimitive> ConjugateScalar for T {
     #[inline]
     fn modulus_squared(&self) -> T {
         *self * *self
+    }
+    /// `|x|`, without forming `x²`.
+    #[inline]
+    fn modulus(&self) -> T {
+        crate::Real::abs(*self)
     }
     #[inline]
     fn real_part(&self) -> T {

@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::algebra::operator::Multiplicative;
 
 use crate::Semiring;
 use crate::algebra::commutative::Commutative;
@@ -31,5 +32,5 @@ use crate::algebra::commutative::Commutative;
 /// `-a` and the bound that [`AbelianGroup`](crate::AbelianGroup) requires — so
 /// `assert_commutative_semiring::<u64>()` compiles while `assert_commutative_ring::<u64>()` does
 /// not.
-pub trait CommutativeSemiring: Semiring + Commutative {}
-impl<T> CommutativeSemiring for T where T: Semiring + Commutative {}
+pub trait CommutativeSemiring: Semiring + Commutative<Multiplicative> {}
+impl<T> CommutativeSemiring for T where T: Semiring + Commutative<Multiplicative> {}

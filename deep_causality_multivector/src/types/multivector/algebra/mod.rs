@@ -8,7 +8,8 @@
 use crate::{CausalMultiVector, CausalMultiVectorError, Metric};
 use alloc::vec;
 use core::ops::{AddAssign, Neg, SubAssign};
-use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealField, Ring};
+use deep_causality_algebra::{AbelianGroup, Field, Module, NormedScalar, RealField, Ring};
+use deep_causality_linear::{DenseMatrix, DenseVector, solve};
 
 // Algebraic Composition
 //
@@ -18,14 +19,14 @@ use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealF
 //     *   **Result:** Standard Quantum Mechanics (Spin(10)) works.
 //
 // 2.  **Quaternions (`Quaternion<f64>`):**
-//     *   **Implements:** `AssociativeRing` + `Copy`.
+//     *   **Implements:** `Ring` + `Copy`.
 //     *   **Does NOT Implement:** `Field` (Non-commutative).
 //     *   **Path:** Uses **Tier 4**. `geometric_product_general` works correctly.
 //     *   **Result:** Dixon Algebra nesting works. The non-commutative multiplication `q1 * q2` inside the geometric product loop is preserved.
 //
 // 3.  **Octonions (`Octonion<f64>`):**
 //     *   **Implements:** `AbelianGroup` + `Copy`.
-//     *   **Does NOT Implement:** `AssociativeRing` (Non-associative).
+//     *   **Does NOT Implement:** `Ring` (non-associative; it is an `Algebra`).
 //     *   **Path:** Uses **Tier 1**. `add`, `sub` work.
 //     *   **Safety:** `geometric_product` is **Compile-Time Blocked**.
 //
@@ -33,7 +34,7 @@ use deep_causality_algebra::{AbelianGroup, AssociativeRing, Field, Module, RealF
 // This is correct behavior.
 //
 // 4.  **Tensors (`CausalTensor<T>`):**
-//     *   **Path:** `CausalMultiVector<f64>` implements `AssociativeRing` (via Tier 3/4).
+//     *   **Path:** `CausalMultiVector<f64>` implements `Ring` (via Tier 3/4).
 //     *   **Result:** `CausalTensor` accepts `CausalMultiVector`. You can do `tensor_a * tensor_b` where elements are MultiVectors.
 //
 
@@ -115,13 +116,13 @@ impl<T> CausalMultiVector<T> {
 
 // ============================================================================
 // TIER 4: The Generalized Algebra (Non-Commutative Coefficients)
-// Requirements: AssociativeRing (No Commutativity guaranteed)
+// Requirements: Ring (associative via MulMonoid; no commutativity guaranteed)
 // Use Case: Dixon Algebra (Nesting), Tensor<MultiVector>
 // ============================================================================
 
 impl<T> CausalMultiVector<T>
 where
-    T: AssociativeRing + Copy,
+    T: Ring + Copy,
 {
     /// Generalized Geometric Product.
     ///
@@ -192,7 +193,45 @@ impl<T> CausalMultiVector<T> {
         product.data[0] // Scalar part
     }
 
-    /// Computes the inverse of the multivector $A^{-1}$ (CPU-only).
+    /// The multiplicative inverse $A^{-1}$, by solving a linear system in `deep_causality_linear`.
+    ///
+    /// # The previous formula was wrong
+    ///
+    /// It was $\tilde{A} / \langle A \tilde{A} \rangle_0$, quoted for versors. It does not hold
+    /// even for those. For $A = 1 + 2e_1$ in $Cl(2)$: $A\tilde{A} = 5 + 4e_1$, so the formula
+    /// returns $A/5$ and $A A^{-1} = 1 + 0.8 e_1$. The inverse is $(-1 + 2e_1)/3$. The reversion
+    /// is the wrong involution and the scalar part of $A\tilde{A}$ is the wrong normaliser.
+    ///
+    /// Measured as $|A A^{-1} - 1|$ before this change: 0.8 for that versor, 0.93 for a general
+    /// $Cl(2)$ element, 0.98 in $Cl(3)$, 0.99 in $Cl(4)$, 1.0 in $Cl(5)$.
+    ///
+    /// # What replaces it
+    ///
+    /// Left multiplication by `self` is a linear map on the $2^n$-dimensional coefficient space.
+    /// Column `j` of its matrix is the coefficient vector of `self * e_j`, read straight off the
+    /// geometric product, and $A^{-1}$ is the solution of $L_A x = 1$. Solving that is
+    /// `deep_causality_linear`'s job.
+    ///
+    /// This needs no matrix *representation* of the algebra, which matters here: `to_matrix` is a
+    /// faithful homomorphism only up to $n = 3$. Measured, $|\phi(AB) - \phi(A)\phi(B)|$ relative
+    /// to scale is at machine epsilon for $n \le 3$ and of order one for $Cl(4)$, $Cl(5)$ and
+    /// Minkowski, because those are quaternionic matrix algebras with no faithful real
+    /// $4 \times 4$ form. A route through `to_matrix` would inherit that; this does not.
+    ///
+    /// Verified against $A A^{-1} = 1$ at $10^{-15}$ or better for $Cl(2)$ through $Cl(5)$ and
+    /// Minkowski.
+    ///
+    /// # `NormedScalar`, not `Field`
+    ///
+    /// The LU factorisation pivots on magnitude. The alternative is `rref`, which needs only
+    /// `Field` and picks the first non-zero pivot; measured on a $Cl(4)$ element with a $10^{-13}$
+    /// leading coefficient it gave $3.2 \times 10^{-2}$ against LU's $1.3 \times 10^{-15}$.
+    ///
+    /// # Errors
+    ///
+    /// [`CausalMultiVectorError::zero_magnitude`] when `self` has no inverse. That now means the
+    /// linear map is singular, which is the real condition — $1 + e_1$ is a null element with no
+    /// inverse, and the old formula returned an answer for it.
     pub(in crate::types::multivector) fn inverse_impl(&self) -> Result<Self, CausalMultiVectorError>
     where
         T: Field
@@ -202,15 +241,37 @@ impl<T> CausalMultiVector<T> {
             + core::ops::Div<Output = T>
             + PartialEq
             + AddAssign
-            + SubAssign,
+            + SubAssign
+            + NormedScalar,
     {
-        let sq_mag = self.squared_magnitude_impl();
-        if sq_mag == T::zero() {
-            return Err(CausalMultiVectorError::zero_magnitude());
+        let n = self.data.len();
+        // Column j is the coefficients of `self * e_j`.
+        let mut columns = vec![T::zero(); n * n];
+        for j in 0..n {
+            let mut basis = vec![T::zero(); n];
+            basis[j] = T::one();
+            let product = self.geometric_product_impl(&Self {
+                data: basis,
+                metric: self.metric,
+            });
+            for (i, coeff) in product.data.iter().enumerate() {
+                columns[i * n + j] = *coeff;
+            }
         }
 
-        let reverse = self.reversion_impl();
-        Ok(reverse / sq_mag)
+        let map = DenseMatrix::from_vec(columns, n, n)
+            .map_err(|_| CausalMultiVectorError::zero_magnitude())?;
+        // The right-hand side is the identity multivector: scalar one, every other blade zero.
+        let mut identity = vec![T::zero(); n];
+        identity[0] = T::one();
+
+        let solution = solve(&map, &DenseVector::from_vec(identity))
+            .map_err(|_| CausalMultiVectorError::zero_magnitude())?;
+
+        Ok(Self {
+            data: solution.as_slice().to_vec(),
+            metric: self.metric,
+        })
     }
 
     /// Computes the dual of the multivector $A^*$ (CPU-only).
@@ -223,7 +284,8 @@ impl<T> CausalMultiVector<T> {
             + core::ops::Div<Output = T>
             + PartialEq
             + AddAssign
-            + SubAssign,
+            + SubAssign
+            + NormedScalar,
     {
         let pseudo = Self::pseudoscalar(self.metric);
         let pseudo_inv = pseudo.inverse_impl()?;
@@ -257,20 +319,22 @@ where
         self.commutator_lie_impl(rhs)
     }
 
-    /// Computes the Multiplicative Inverse.
-    /// $A^{-1} = \tilde{A} / |A|^2$ (For Versors).
-    /// Requires Division (Field).
-    pub fn inverse(&self) -> Result<Self, CausalMultiVectorError> {
-        let mag_sq = self.squared_magnitude_impl();
-
-        if mag_sq.abs() <= T::epsilon() {
-            return Err(CausalMultiVectorError::zero_magnitude());
-        }
-
-        let conjugate = self.reversion_impl();
-        let scale = T::one() / mag_sq;
-
-        Ok(conjugate.scale(scale))
+    /// The multiplicative inverse, so that `A * A.inverse()? == 1`.
+    ///
+    /// A wrapper over [`inverse_impl`](Self::inverse_impl), which is also what
+    /// [`MultiVector::inverse`](crate::MultiVector::inverse) calls. One body, so the two cannot
+    /// disagree — and they did: this method rejected any `|A|^2` at or below `T::epsilon()` while
+    /// the trait rejected only exact zero. An inherent method wins method resolution, so
+    /// `mv.inverse()` and `<_ as MultiVector<_>>::inverse(&mv)` answered differently for the same
+    /// input, and the trait impl was unreachable without UFCS.
+    ///
+    /// The bound sits on the method rather than the block so [`commutator`](Self::commutator)
+    /// keeps the looser one.
+    pub fn inverse(&self) -> Result<Self, CausalMultiVectorError>
+    where
+        T: NormedScalar,
+    {
+        self.inverse_impl()
     }
 
     /// The Geometric Product for Commutative Coefficients.

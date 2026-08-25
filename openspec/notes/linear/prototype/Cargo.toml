@@ -1,0 +1,16 @@
+[workspace]
+resolver = "3"
+members = ["linear_a", "linear_b", "linear_c", "consumer_b", "tensor_impl"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.97.1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.dependencies]
+deep_causality_num = { path = "../../../../deep_causality_num" }
+deep_causality_algebra = { path = "../../../../deep_causality_algebra" }
+deep_causality_tensor = { path = "../../../../deep_causality_tensor" }
+deep_causality_sparse = { path = "../../../../deep_causality_sparse" }

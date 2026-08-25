@@ -280,3 +280,64 @@ fn d3_gradient_entry_changes_only_when_local_edge_changes() {
         );
     }
 }
+
+// -- Degenerate zero-length metric ------------------------------------------------
+
+#[test]
+fn zero_length_uniform_metric_yields_a_finite_zero_gradient_3d() {
+    // ∂S/∂L_i = Σ_h (vol(h) / L_i) · deficit(h) is undefined at L_i = 0. The
+    // per-edge division is skipped there, so the gradient stays a finite zero
+    // vector instead of producing NaN or infinity.
+    let lattice = open_cube_3();
+    let geom: CubicalReggeGeometry<3, f64> = CubicalReggeGeometry::uniform(0.0);
+
+    let g = geom.regge_gradient(&lattice);
+
+    assert_eq!(g.len(), lattice.num_cells(1));
+    for (i, v) in g.iter().enumerate() {
+        assert!(v.is_finite(), "entry {i} must stay finite, got {v}");
+        assert_eq!(*v, 0.0, "entry {i}");
+    }
+}
+
+#[test]
+fn zero_length_uniform_metric_yields_zero_single_edge_gradient_3d() {
+    // Same guard on the single-edge hot path: a zero-length edge has no
+    // well-defined derivative, and the reported component is zero.
+    let lattice = open_cube_3();
+    let geom: CubicalReggeGeometry<3, f64> = CubicalReggeGeometry::uniform(0.0);
+
+    for edge_id in 0..lattice.num_cells(1) {
+        let v = geom.regge_gradient_at_edge(&lattice, edge_id);
+        assert!(v.is_finite(), "edge {edge_id} must stay finite, got {v}");
+        assert_eq!(v, 0.0, "edge {edge_id}");
+    }
+}
+
+// -- 4D periodic wraparound in the single-edge hinge enumeration ------------------
+
+#[test]
+fn single_edge_gradient_agrees_with_full_gradient_periodic_4d() {
+    // On a 4D torus each hinge is a square, so enumerating the hinges that
+    // contain one edge has to step backwards along a second axis, wrapping
+    // from position 0 to the far end. Every hinge on a torus has four incident
+    // top cubes and therefore zero deficit, so the whole gradient vanishes and
+    // the single-edge path must agree with the full vector.
+    let lattice: LatticeComplex<4, f64> = LatticeComplex::hypercubic_torus(2);
+    let geom = unit_geometry::<4>();
+
+    let full = geom.regge_gradient(&lattice);
+    assert_eq!(full.len(), lattice.num_cells(1));
+
+    for (edge_id, &expected) in full.iter().enumerate() {
+        let got = geom.regge_gradient_at_edge(&lattice, edge_id);
+        assert!(
+            (got - expected).abs() < TOL,
+            "edge {edge_id}: single-edge {got} vs full {expected}"
+        );
+        assert_eq!(
+            expected, 0.0,
+            "a periodic lattice is flat at edge {edge_id}"
+        );
+    }
+}

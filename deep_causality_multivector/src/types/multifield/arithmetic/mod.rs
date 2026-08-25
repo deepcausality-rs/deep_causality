@@ -8,7 +8,7 @@
 use super::CausalMultiField;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
 use core::ops::{Add, Mul, Neg, Sub};
-use deep_causality_algebra::{Field, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, Field, Ring};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 
@@ -16,7 +16,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<T> Zero for CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + Zero + Neg<Output = T>,
+    T: DivisibleByIntegers + Copy + Default + PartialOrd + Zero + Neg<Output = T>,
 {
     fn zero() -> Self {
         panic!(

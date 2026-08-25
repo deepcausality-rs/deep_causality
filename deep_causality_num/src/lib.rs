@@ -11,6 +11,7 @@ mod cast;
 mod float;
 mod float_106;
 mod float_option;
+mod gf2;
 mod identity;
 mod integer;
 mod num;
@@ -33,6 +34,9 @@ pub use crate::float_106::Float106;
 
 // Float option number type
 pub use crate::float_option::FloatOption;
+
+// Finite field types
+pub use crate::gf2::Gf2;
 
 // Identity types
 pub use crate::identity::one::{ConstOne, One};

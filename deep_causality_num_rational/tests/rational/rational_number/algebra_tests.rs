@@ -10,12 +10,12 @@
 
 use deep_causality_algebra::{
     AbelianGroup, Annihilating, Associative, Commutative, CommutativeRing, Distributive, Field,
-    Invertible, Ring, Semiring,
+    Invertible, Multiplicative, Ring, Semiring,
 };
 use deep_causality_num::Zero;
 use deep_causality_num_rational::Rational;
 
-fn assert_markers<T: Commutative + Associative + Distributive>() {}
+fn assert_markers<T: Commutative<Multiplicative> + Associative<Multiplicative> + Distributive>() {}
 fn assert_abelian<T: AbelianGroup>() {}
 fn assert_annihilating<T: Annihilating>() {}
 fn assert_semiring<T: Semiring>() {}

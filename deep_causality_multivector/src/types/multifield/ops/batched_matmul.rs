@@ -3,6 +3,31 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Batched matrix multiplication over a rank-3 tensor.
+//!
+//! # Decision: this stays on the tensor surface
+//!
+//! `add-linear-algebra-crate` marked three duplicated operations in this crate for replacement by
+//! `deep_causality_linear`. Two — the vector 2-norm and the squared magnitude — were routed there.
+//! This one was not, and the reason is the split the linear crate is defined by: **arity, not
+//! density**. A two-index object is a matrix and belongs in `deep_causality_linear`; an N-index
+//! object stays in `deep_causality_tensor`.
+//!
+//! What this does is reshape to `[batch, d, d]`, `slice` along axis 0, `stack` the results and
+//! reshape back. Reshape, slice and stack are all N-index operations with no matrix meaning, and
+//! they are the bulk of the body. The only two-index step is the inner `matmul`, which is already
+//! `CausalTensor`'s own einsum path — `linear-crate-identity` keeps einsum in the tensor crate for
+//! the same reason it keeps `broadcast` and `kronecker` there.
+//!
+//! Routing the inner call through `deep_causality_linear` would mean converting each rank-2 slice
+//! to a `DenseMatrix` and back, once per batch element, to reach an operation the tensor crate
+//! already has. That is a copy per batch element in exchange for no consolidation: the batching,
+//! which is the whole content of this file, would still be here.
+//!
+//! The comparison worth stating is with the norms. `MultiVectorL2Norm::norm_l2` was a genuine
+//! second definition of the Euclidean norm — the same expression, written again. This is not a
+//! second definition of anything: `CausalTensor::matmul` is called, not reimplemented.
+
 use alloc::vec::Vec;
 
 use deep_causality_algebra::{Field, Ring};

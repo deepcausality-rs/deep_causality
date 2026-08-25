@@ -23,7 +23,9 @@ use alloc::vec::Vec;
 use crate::CausalMultiField;
 use crate::MultiVector;
 use crate::types::multifield::ops::batched_matmul::BatchedMatMul;
-use deep_causality_algebra::{Field, RealField, Ring};
+use deep_causality_algebra::{DivisibleByIntegers, Field, NormedScalar, RealField, Ring};
+use deep_causality_linear::vector_norm_sq;
+use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 // ============================================================================
@@ -57,7 +59,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + RealField + Copy + Default + PartialOrd,
+    T: Field + RealField + Copy + Default + PartialOrd + FromPrimitive,
 {
     /// Normalizes the field: `result = self / ||self||`.
     ///
@@ -72,16 +74,21 @@ where
         self.scale(inv_mag)
     }
 
-    /// Computes the squared magnitude of the field.
+    /// Computes the squared magnitude of the field: the squared 2-norm of its coefficients.
     ///
-    /// Uses the L2 norm of the matrix representation.
+    /// # Routed through `deep_causality_linear`
+    ///
+    /// The body was `Σ *val * *val` over the tensor's buffer. That is the squared modulus **only
+    /// because the impl is bounded on `RealField`** — for a complex scalar `Σ z·z` is not `Σ |z|²`,
+    /// and nothing in the expression says so. It was not wrong; it was correct for a reason that
+    /// lived in the bound rather than in the code, and a later widening would have made it
+    /// silently wrong.
+    ///
+    /// [`vector_norm_sq`](deep_causality_linear::vector_norm_sq) uses `modulus_squared`, which is
+    /// the operation that stays right when the scalar does not. The return type is unchanged:
+    /// `<T as Normed>::Real` is `T` for a real field, which is what this impl is bounded on.
     pub fn squared_magnitude(&self) -> T {
-        let data_vec = self.data.as_slice();
-        let mut sum = T::zero();
-        for val in data_vec {
-            sum += *val * *val;
-        }
-        sum
+        vector_norm_sq(self.data.as_slice())
     }
 }
 
@@ -91,7 +98,7 @@ where
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd + core::ops::Neg<Output = T> + 'static,
+    T: DivisibleByIntegers + Copy + Default + PartialOrd + core::ops::Neg<Output = T> + 'static,
 {
     /// Computes the reversion (reversal) of the field.
     ///
@@ -108,7 +115,7 @@ where
     /// Uses matrix inverse for each cell.
     pub fn inverse(&self) -> Self
     where
-        T: RealField,
+        T: RealField + NormedScalar,
     {
         let mvs = self.to_coefficients();
         let inverted: Vec<_> = mvs
@@ -147,7 +154,18 @@ where
             shape: self.shape,
         }
     }
+}
 
+/// The geometric commutator halves, so it needs a scalar in which `1 + 1` is invertible.
+///
+/// [`DivisibleByIntegers`] rather than `Field`: `Field` is blanket-implemented and so admits every
+/// finite field automatically, and over 𝔽₂ the `half` below is a division by zero. The Lie
+/// commutator above does not halve and keeps the looser bound.
+impl<T> CausalMultiField<T>
+where
+    T: DivisibleByIntegers + Ring + Copy + Default + PartialOrd,
+    CausalTensor<T>: BatchedMatMul<T>,
+{
     /// Computes the geometric commutator: `(AB - BA) / 2`.
     ///
     /// Equivalent to the Lie commutator scaled by 1/2.

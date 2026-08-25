@@ -214,3 +214,100 @@ fn test_simplex_volume_squared_high_dim_exercises_determinant_recursion() {
     let s2 = manifold.complex().skeletons()[2].simplices()[0].clone();
     let _ = manifold.simplex_volume_squared(&s2).unwrap();
 }
+
+// ---------------------------------------------------------------------------
+// Edge-length lookup: the key normalisation, the missing 1-skeleton, and a
+// metric whose tensor is not the flat per-edge vector the lookup indexes.
+// ---------------------------------------------------------------------------
+
+use deep_causality_linear::CsrMatrix;
+use deep_causality_topology::{SimplicialComplex, Skeleton};
+
+/// A repeated vertex makes the two ends of a pair compare equal, so the
+/// edge-length key is built from the second-then-first ordering. It has to name
+/// the same edge as the ordinary case, and a simplex with a repeated vertex has
+/// zero volume.
+#[test]
+fn repeated_vertex_pair_resolves_to_the_same_edge_key() {
+    let sk0 = Skeleton::new(0, vec![Simplex::new(vec![0]), Simplex::new(vec![1])]);
+    // The 1-skeleton carries the self-pair [0,0] alongside the ordinary edge.
+    let sk1 = Skeleton::new(1, vec![Simplex::new(vec![0, 0]), Simplex::new(vec![0, 1])]);
+    let sk2 = Skeleton::new(2, vec![Simplex::new(vec![0, 0, 1])]);
+
+    let stars = vec![
+        CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0f64), (1, 1, 1.0)]).unwrap(),
+        CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0f64), (1, 1, 1.0)]).unwrap(),
+        CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0f64)]).unwrap(),
+    ];
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![sk0, sk1, sk2], vec![], vec![], stars);
+
+    // |0,0| = 0 and |0,1| = 1.
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![0.0f64, 1.0], vec![2]).unwrap());
+    let data = CausalTensor::new(vec![0.0f64; 5], vec![5]).unwrap();
+    let m: SimplicialManifold<f64, f64> =
+        Manifold::with_metric(complex, data, Some(regge), 0).unwrap();
+
+    let vol_sq = m
+        .simplex_volume_squared(&Simplex::new(vec![0, 0, 1]))
+        .expect("every pair of the simplex resolves to a stored edge");
+    assert!(
+        vol_sq.abs() < 1e-12,
+        "a simplex with a repeated vertex is degenerate; got {vol_sq}"
+    );
+}
+
+/// Edge lengths are read out of the 1-skeleton, so a complex that has none
+/// cannot answer a volume query for anything above a point.
+#[test]
+fn volume_of_an_edge_without_a_one_skeleton_is_a_dimension_mismatch() {
+    let sk0 = Skeleton::new(0, vec![Simplex::new(vec![0]), Simplex::new(vec![1])]);
+    let stars = vec![CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0f64), (1, 1, 1.0)]).unwrap()];
+    let complex: SimplicialComplex<f64> = SimplicialComplex::new(vec![sk0], vec![], vec![], stars);
+
+    // An empty metric is accepted against a complex with no 1-simplices.
+    let regge = ReggeGeometry::new(CausalTensor::new(Vec::<f64>::new(), vec![0]).unwrap());
+    let data = CausalTensor::new(vec![0.0f64; 2], vec![2]).unwrap();
+    let m: SimplicialManifold<f64, f64> =
+        Manifold::with_metric(complex, data, Some(regge), 0).unwrap();
+
+    let err = m
+        .simplex_volume_squared(&Simplex::new(vec![0, 1]))
+        .unwrap_err();
+    match err.0 {
+        deep_causality_topology::TopologyErrorEnum::DimensionMismatch(msg) => {
+            assert_eq!(msg, "1-skeleton not found");
+        }
+        other => panic!("expected DimensionMismatch, got {other:?}"),
+    }
+}
+
+/// The metric is indexed by a single edge index, so its tensor has to be rank 1.
+/// A rank-2 tensor of the right element count passes the construction-time size
+/// check and then fails the lookup, which is reported rather than panicking.
+#[test]
+fn rank_two_metric_tensor_fails_the_edge_length_lookup() {
+    let points = CausalTensor::new(vec![0.0, 0.0, 3.0, 0.0, 0.0, 4.0], vec![3, 2]).unwrap();
+    let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
+    let point_cloud = PointCloud::new(points, metadata, 0).unwrap();
+    let complex = point_cloud.triangulate(6.0).unwrap();
+
+    let num_edges = complex.skeletons()[1].simplices().len();
+    // Same three lengths, shaped as a column instead of a flat vector.
+    let regge =
+        ReggeGeometry::new(CausalTensor::new(vec![3.0f64, 4.0, 5.0], vec![num_edges, 1]).unwrap());
+    let data_len = complex.total_simplices();
+    let data = CausalTensor::new(vec![0.0; data_len], vec![data_len]).unwrap();
+    let m: SimplicialManifold<f64, f64> =
+        Manifold::with_metric(complex, data, Some(regge), 0).unwrap();
+
+    let err = m
+        .simplex_volume_squared(&Simplex::new(vec![0, 1]))
+        .unwrap_err();
+    match err.0 {
+        deep_causality_topology::TopologyErrorEnum::IndexOutOfBounds(msg) => {
+            assert_eq!(msg, "Edge length not found");
+        }
+        other => panic!("expected IndexOutOfBounds, got {other:?}"),
+    }
+}

@@ -9,35 +9,10 @@ set -o pipefail
 # Bazel file formatting (Installed via homebrew)
 # https://github.com/bazelbuild/buildtools
 buildifier -r MODULE.bazel BUILD.bazel thirdparty/BUILD.bazel
-buildifier -r deep_causality/
-buildifier -r deep_causality_algebra/
-buildifier -r deep_causality_algorithms/
-buildifier -r deep_causality_ast/
-buildifier -r deep_causality_calculus/
-buildifier -r deep_causality_cfd/
-buildifier -r deep_causality_core/
-buildifier -r deep_causality_data_structures/
-buildifier -r deep_causality_discovery/
-buildifier -r deep_causality_ethos/
-buildifier -r deep_causality_fft/
-buildifier -r deep_causality_file/
-buildifier -r deep_causality_haft/
-buildifier -r deep_causality_macros/
-buildifier -r deep_causality_metric/
-buildifier -r deep_causality_multivector/
-buildifier -r deep_causality_num/
-buildifier -r deep_causality_num_complex/
-buildifier -r deep_causality_num_dual/
-buildifier -r deep_causality_par/
-buildifier -r deep_causality_physics/
-buildifier -r deep_causality_quantum/
-buildifier -r deep_causality_rand/
-buildifier -r deep_causality_sparse/
-buildifier -r deep_causality_tensor/
-buildifier -r deep_causality_topology/
-buildifier -r deep_causality_uncertain/
-buildifier -r examples/
-buildifier -r ultragraph/
+source "$(dirname "${BASH_SOURCE[0]}")/crates.sh"
+for CRATE_DIR in "${DC_CRATE_DIRS[@]}"; do
+    buildifier -r "$CRATE_DIR"/
+done
 
 # Code formatting
 # https://github.com/rust-lang/rustfmt

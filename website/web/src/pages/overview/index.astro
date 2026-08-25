@@ -55,7 +55,7 @@ const examplesRepo = `${GITHUB_URL}/tree/main/examples`;
       </p>
 
       <div class="dc-diagram dc-stack" role="img"
-           aria-label="The DeepCausality stack, top to bottom. Causal discovery layer: deep_causality_discovery. Causal layer: deep_causality_core, deep_causality, deep_causality_uncertain. Physics layer: deep_causality_physics. Mathematical layers: deep_causality_tensor, deep_causality_sparse, deep_causality_multivector, deep_causality_topology, deep_causality_calculus. Foundation layer: deep_causality_num, deep_causality_haft, deep_causality_metric, ultragraph. Each layer builds on the ones below it.">
+           aria-label="The DeepCausality stack, top to bottom. Causal discovery layer: deep_causality_discovery. Causal layer: deep_causality_core, deep_causality, deep_causality_uncertain. Physics layer: deep_causality_physics. Mathematical layers: deep_causality_tensor, deep_causality_linear, deep_causality_multivector, deep_causality_topology, deep_causality_calculus. Foundation layer: deep_causality_num, deep_causality_haft, deep_causality_metric, ultragraph. Each layer builds on the ones below it.">
         <p class="dc-cap">The stack, top to bottom</p>
         <div class="dc-band">
           <span class="dc-band-name">Causal discovery</span>
@@ -75,7 +75,7 @@ const examplesRepo = `${GITHUB_URL}/tree/main/examples`;
         <div class="dc-band">
           <span class="dc-band-name">Mathematical</span>
           <div class="dc-chips">
-            <span class="dc-chip">deep_causality_tensor</span><span class="dc-chip">deep_causality_sparse</span>
+            <span class="dc-chip">deep_causality_tensor</span><span class="dc-chip">deep_causality_linear</span>
             <span class="dc-chip">deep_causality_multivector</span><span class="dc-chip">deep_causality_topology</span>
             <span class="dc-chip">deep_causality_calculus</span>
           </div>
@@ -225,7 +225,7 @@ const examplesRepo = `${GITHUB_URL}/tree/main/examples`;
         contractions, and Functor, Applicative, Monad, and CoMonad instances for functional composition.
       </p>
       <p>
-        The sparse crate (<code>deep_causality_sparse</code>) provides a compressed-sparse-row (CSR) matrix,
+        The linear-algebra crate (<code>deep_causality_linear</code>) provides a compressed-sparse-row (CSR) matrix,
         the right representation when a system is large but mostly zeros, as causal graphs, discretized
         operators, and lattice problems usually are. It ships a conjugate-gradient solver for symmetric
         positive-definite systems, a higher-kinded type instance so a sparse matrix composes like the other

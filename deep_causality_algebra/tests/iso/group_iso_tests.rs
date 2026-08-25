@@ -21,6 +21,7 @@
 use core::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 use deep_causality_algebra::iso::GroupIso;
 use deep_causality_algebra::iso::test_support::assert_group_iso_from_law;
+use deep_causality_algebra::{Additive, Associative, Commutative};
 use deep_causality_num::Zero;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -51,6 +52,11 @@ impl SubAssign for IdWrap {
         self.0 -= rhs.0;
     }
 }
+
+// Wraps `f64`, so it inherits ℝ's additive laws — now required by `AddSemigroup`
+// and `AbelianGroup`.
+impl Associative<Additive> for IdWrap {}
+impl Commutative<Additive> for IdWrap {}
 
 impl Zero for IdWrap {
     fn zero() -> Self {
@@ -125,6 +131,11 @@ impl SubAssign for BadAddWrap {
         self.0 -= rhs.0;
     }
 }
+
+// Wraps `f64`, so it inherits ℝ's additive laws — now required by `AddSemigroup`
+// and `AbelianGroup`.
+impl Associative<Additive> for BadAddWrap {}
+impl Commutative<Additive> for BadAddWrap {}
 
 impl Zero for BadAddWrap {
     fn zero() -> Self {

@@ -83,36 +83,6 @@ deep_causality_metric/
     └── integration_tests.rs
 ```
 
-### 3.2 Cargo.toml
-
-```toml
-[package]
-name = "deep_causality_metric"
-version = "0.1.0"
-edition = "2021"
-rust-version = "1.80"
-license = "MIT"
-repository = "https://github.com/deepcausality/deep_causality.rs"
-authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
-description = "Metric signature types and sign conventions for Clifford algebras and physics"
-documentation = "https://docs.rs/deep_causality_metric"
-categories = ["mathematics", "science"]
-keywords = ["metric", "clifford", "spacetime", "signature", "physics"]
-exclude = [
-    "*.bazel", "*/*.bazel", "*.bazel.*",
-    "BUILD", "BUILD.bazel", "MODULE.bazel",
-    ".bazelignore", ".bazelrc", "tests/**/*",
-]
-
-[features]
-default = ["std"]
-std = ["alloc"]
-alloc = []
-
-# This crate has ZERO external dependencies
-# It is a foundational leaf crate
-```
-
 ---
 
 ## 4. Core Types

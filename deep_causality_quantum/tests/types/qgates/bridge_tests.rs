@@ -125,3 +125,33 @@ fn test_dirac_bracket_rejects_metric_mismatch_and_mixed_signature() {
     let m2 = HilbertState::<f64>::new(data, Metric::Minkowski(4)).unwrap();
     assert!(dirac_bracket_kernel(&m, &m2).is_err());
 }
+
+#[test]
+fn test_dirac_bracket_rejects_odd_dimensional_metric() {
+    // The column bridge is defined only for even dimensions (D = 2^(n/2)), so
+    // the promised column-inner-product equivalence cannot hold for an odd
+    // dimension. The kernel refuses and names the offending dimension.
+    for (metric, blades, dim) in [
+        (Metric::Euclidean(3), 8usize, 3usize),
+        (Metric::NonEuclidean(5), 32usize, 5usize),
+    ] {
+        let data = vec![Complex::new(1.0, 0.0); blades];
+        let a = HilbertState::<f64>::new(data.clone(), metric).unwrap();
+        let b = HilbertState::<f64>::new(data, metric).unwrap();
+
+        let err = dirac_bracket_kernel(&a, &b).unwrap_err();
+        let msg = format!("{}", err);
+        assert!(
+            msg.starts_with("Unsupported Metric:"),
+            "{:?}: unexpected error {}",
+            metric,
+            msg
+        );
+        assert!(
+            msg.contains(&format!("dimension {}", dim)),
+            "{:?}: error does not name the dimension: {}",
+            metric,
+            msg
+        );
+    }
+}

@@ -52,6 +52,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "gf2",
+    srcs = glob([
+        "gf2/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "identity",
     srcs = glob([
         "identity/*_tests.rs",

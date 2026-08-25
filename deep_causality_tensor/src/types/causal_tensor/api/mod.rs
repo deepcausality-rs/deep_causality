@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 use core::iter::Sum;
 use core::ops::{Add, Div, Mul};
 use deep_causality_algebra::{RealField, Ring};
-use deep_causality_num::{One, Zero};
+use deep_causality_num::{FromPrimitive, One, Zero};
 
 impl<T> Tensor<T> for CausalTensor<T> {
     /// Public API for Einstein summation.
@@ -468,14 +468,14 @@ impl<T> Tensor<T> for CausalTensor<T> {
     /// - `CausalTensorError::DivisionByZero`: If a pivot element is zero during elimination.
     fn inverse(&self) -> Result<Self, CausalTensorError>
     where
-        T: Clone + RealField + Zero + One + Sum + PartialEq,
+        T: Clone + RealField + Zero + One + Sum + PartialEq + FromPrimitive,
     {
         self.inverse_impl()
     }
 
     fn svd(&self) -> Result<(Self, Self, Self), CausalTensorError>
     where
-        T: Clone + RealField + Zero + One + Sum + PartialEq,
+        T: Clone + RealField + Zero + One + Sum + PartialEq + FromPrimitive,
     {
         self.svd_impl()
     }
@@ -521,7 +521,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
     ///   element becomes zero or negative during computation).
     fn cholesky_decomposition(&self) -> Result<Self, CausalTensorError>
     where
-        T: Default + Clone + RealField + Zero + One + PartialEq,
+        T: Default + Clone + RealField + Zero + One + PartialEq + FromPrimitive,
     {
         self.cholesky_decomposition_impl()
     }
@@ -577,7 +577,7 @@ impl<T> Tensor<T> for CausalTensor<T> {
         b: &Self, // Observation vector (m x 1)
     ) -> Result<Self, CausalTensorError>
     where
-        T: Default + Clone + RealField + Zero + One + PartialEq,
+        T: Default + Clone + RealField + Zero + One + PartialEq + FromPrimitive,
     {
         Self::solve_least_squares_cholsky_impl(a, b)
     }

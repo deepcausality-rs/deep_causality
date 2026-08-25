@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Monad, Pure};
-use deep_causality_sparse::{CsrMatrix, CsrMatrixWitness};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Pure};
+use deep_causality_linear::{CsrMatrix, CsrMatrixWitness};
 
 fn main() {
     println!("=== Higher-Kinded Type (HKT) Operations on CsrMatrix ===");
@@ -50,19 +50,21 @@ fn main() {
     print_matrix(&added_ten);
 
     // ------------------------------------------------------------------------
-    // 3. Monad: Chaining operations
+    // 3. Expanding each entry -- and why this is not a Monad
     // ------------------------------------------------------------------------
-    println!("\n--- Monad (bind) ---");
+    println!("\n--- Expanding each entry (no Monad) ---");
 
-    // Bind allows us to map a value to a new Matrix and flatten the result.
-    // Example: Expand each non-zero element `x` into two elements `x` and `x+0.1` in a larger row.
-    let expanded = CsrMatrixWitness::bind(pure_mat, |x| {
-        // Return a 1x2 matrix for each element
-        let t = vec![(0, 0, x), (0, 1, x + 0.1)];
-        CsrMatrix::from_triplets(1, 2, &t).unwrap()
-    });
+    // A shaped container cannot be a lawful Monad. `pure` has to pick a shape for a single value,
+    // and the only defensible choice is the 1x1; right identity `bind(m, pure) == m` then requires
+    // `bind` to reassemble an m x n matrix out of m*n one-by-ones, which a `bind` general enough to
+    // accept any `f` cannot do. Measured on the implementation that used to be here: a 1x3 row with
+    // a gap came back with its entry moved from column 2 to column 1, silently.
+    //
+    // The operation itself is fine -- it is a flat-map into a new row, not a monadic bind -- so it
+    // is written directly. `openspec/notes/linear/HKT-LAW-FINDINGS.md` carries the measurement.
+    let expanded = expand_each(&pure_mat, |x| [x, x + 0.1]);
 
-    println!("Expanded Matrix (via bind):");
+    println!("Expanded Matrix (each entry x -> x, x + 0.1):");
     print_matrix(&expanded);
 
     // ------------------------------------------------------------------------
@@ -88,6 +90,22 @@ fn main() {
     println!("\n--- Foldable (fold) ---");
     let total_sum = CsrMatrixWitness::fold(expanded, 0.0, |acc, x| acc + x);
     println!("Total Sum of Expanded Matrix: {}", total_sum);
+}
+
+/// Expands every stored entry into several, laid out as one row.
+///
+/// The flat-map a shaped container can offer honestly: the caller names the output shape by how
+/// many values each entry becomes, rather than a `bind` inferring one and discarding the input's.
+fn expand_each<const N: usize>(m: &CsrMatrix<f64>, f: impl Fn(f64) -> [f64; N]) -> CsrMatrix<f64> {
+    let mut triplets = Vec::new();
+    let mut col = 0usize;
+    for &v in m.values() {
+        for out in f(v) {
+            triplets.push((0, col, out));
+            col += 1;
+        }
+    }
+    CsrMatrix::from_triplets(1, col, &triplets).expect("built from its own column count")
 }
 
 fn print_matrix<T: std::fmt::Display + Copy + std::fmt::Debug>(matrix: &CsrMatrix<T>) {

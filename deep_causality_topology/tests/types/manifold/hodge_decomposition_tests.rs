@@ -307,3 +307,86 @@ fn hodge_decompose_options_explicit_override_succeeds_with_loose_tolerance() {
         assert!(x.abs() < TOL);
     }
 }
+
+// ---------------------------------------------------------------------------
+// A non-positive-definite assembled Laplacian is reported as such, not as a
+// solve that ran out of iterations.
+// ---------------------------------------------------------------------------
+
+/// A triangle whose grade-1 Hodge ⋆ is `-I`. The codifferential then carries the
+/// sign through, so the mass-weighted grade-0 operator the CG solve applies is
+/// `-Δ₀`: negative semi-definite, with `pᵀAp ≤ 0` on the very first search
+/// direction.
+fn triangle_with_negated_edge_masses() -> deep_causality_topology::SimplicialManifold<f64, f64> {
+    use deep_causality_linear::CsrMatrix;
+    use deep_causality_topology::{ReggeGeometry, Simplex, SimplicialComplex, Skeleton};
+
+    let sk0 = Skeleton::new(
+        0,
+        vec![
+            Simplex::new(vec![0]),
+            Simplex::new(vec![1]),
+            Simplex::new(vec![2]),
+        ],
+    );
+    let sk1 = Skeleton::new(
+        1,
+        vec![
+            Simplex::new(vec![0, 1]),
+            Simplex::new(vec![0, 2]),
+            Simplex::new(vec![1, 2]),
+        ],
+    );
+    let sk2 = Skeleton::new(2, vec![Simplex::new(vec![0, 1, 2])]);
+
+    let d1 = CsrMatrix::from_triplets(
+        3,
+        3,
+        &[
+            (0, 0, -1i8),
+            (1, 0, 1),
+            (0, 1, -1),
+            (2, 1, 1),
+            (1, 2, -1),
+            (2, 2, 1),
+        ],
+    )
+    .unwrap();
+    let d2 = CsrMatrix::from_triplets(3, 1, &[(0, 0, 1i8), (1, 0, -1), (2, 0, 1)]).unwrap();
+    let cob = vec![d1.transpose(), d2.transpose()];
+
+    let star_zero =
+        CsrMatrix::from_triplets(3, 3, &[(0, 0, 1.0f64), (1, 1, 1.0), (2, 2, 1.0)]).unwrap();
+    let star_one =
+        CsrMatrix::from_triplets(3, 3, &[(0, 0, -1.0f64), (1, 1, -1.0), (2, 2, -1.0)]).unwrap();
+    let star_two = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0f64)]).unwrap();
+
+    let complex = SimplicialComplex::new(
+        vec![sk0, sk1, sk2],
+        vec![d1, d2],
+        cob,
+        vec![star_zero, star_one, star_two],
+    );
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0f64; 3], vec![3]).unwrap());
+    let data = CausalTensor::new(vec![0.0f64; 7], vec![7]).unwrap();
+    Manifold::with_metric(complex, data, Some(regge), 0).unwrap()
+}
+
+#[test]
+fn indefinite_mass_matrix_is_reported_as_a_non_positive_definite_laplacian() {
+    let m = triangle_with_negated_edge_masses();
+    let field = CausalTensor::new(vec![1.0f64, 2.0, 3.0], vec![3]).unwrap();
+
+    let err = m
+        .hodge_decompose(&field, 1)
+        .expect_err("a negative-semi-definite operator cannot be solved by CG");
+    let msg = unwrap_hodge_msg(&err);
+    assert!(
+        msg.contains("not positive definite"),
+        "expected the breakdown to name the operator, got: {msg}"
+    );
+    assert!(
+        msg.contains("iteration 0"),
+        "the breakdown happens on the first search direction, got: {msg}"
+    );
+}

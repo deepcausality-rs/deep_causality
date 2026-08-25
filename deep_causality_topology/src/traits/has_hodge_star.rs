@@ -6,7 +6,7 @@
 use crate::TopologyError;
 use crate::traits::chain_complex::ChainComplex;
 use deep_causality_algebra::RealField;
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 use std::borrow::Cow;
 
 /// Capability trait for metric types that can vend a discrete Hodge star operator.

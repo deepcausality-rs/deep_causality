@@ -6,3 +6,5 @@
 mod groups_coverage_tests;
 #[cfg(test)]
 mod groups_tests;
+#[cfg(test)]
+mod se3_tests;

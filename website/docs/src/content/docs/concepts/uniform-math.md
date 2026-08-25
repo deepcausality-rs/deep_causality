@@ -176,9 +176,15 @@ Graphs, hypergraphs, **simplicial complexes**, **manifolds**, and point clouds, 
 
 `Manifold` is the layer's `CoMonad`; that is what makes `extend` (apply a function to every local neighborhood) and `extract` (read the value at the current point) first-class on geometric data. Graph convolutions and cellular automata become one comonadic walk over a typed neighborhood.
 
-### Sparse matrices: `deep_causality_sparse`
+### Linear algebra: `deep_causality_linear`
 
-CSR (Compressed Sparse Row) sparse matrices with `Functor`, `Applicative`, and `Monad` instances, used wherever the data is large and mostly zero: causal-graph adjacency, big covariance structures, transition matrices. The same `fmap`/`bind` surface applies.
+Three matrix representations behind one read trait, so the choice of storage is a local decision rather than an architectural one: **CSR** for data that is large and mostly zero (causal-graph adjacency, covariance structures, transition matrices), **dense row-major** for the small square problems that decompositions act on, and **bit-packed 𝔽₂** for mod-2 elimination, where a whole row updates in one word operation. A dense vector sits alongside them.
+
+Every operation is bounded on the weakest trait from the algebra tower that makes it correct, which is what admits the integers rather than only the floats. The determinant is a polynomial in the entries and needs no division, so it is defined over any commutative ring; Gaussian elimination divides by its pivot and so leaves ℤ on the first step, and is bounded accordingly. The exact integer path uses fraction-free Bareiss elimination and converts nothing to a float.
+
+The decompositions — Hermitian eigen, thin Householder QR, one-sided Jacobi SVD, Cholesky — are bounded on `ConjugateScalar`, which spans real fields, dual numbers for forward-mode AD, and complex. Magnitudes and thresholds live in the associated real type and only the rotations are injected back, so a Hermitian complex matrix decomposes as readily as a real symmetric one. `CausalTensor` delegates its own decompositions here, which is why a density matrix in the quantum layer and a stiffness matrix in the fluids layer run the same kernel.
+
+`CsrMatrix` carries `Functor`, `Foldable`, `Pure`, `Applicative` and `CoMonad`, so `fmap` and `fold` apply over the stored entries. It does **not** claim `Monad`. A shaped container cannot satisfy the monad laws: `pure` must choose a shape for a single value, and right identity `bind(m, pure) == m` then asks `bind` to reassemble an `m × n` matrix from `m · n` one-by-ones, which a `bind` general enough to accept any function cannot do. The dense **vector** does claim `Monad`, and satisfies it, because its only shape is its length.
 
 ### Metric signatures: `deep_causality_metric`
 

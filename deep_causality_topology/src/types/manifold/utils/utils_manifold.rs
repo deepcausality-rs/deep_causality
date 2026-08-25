@@ -19,7 +19,7 @@ pub(crate) fn is_oriented<T: deep_causality_algebra::RealField>(
 
     // Route through ChainComplex::boundary_matrix(max_dim) — Cow::Borrowed on SimplicialComplex.
     let boundary_cow = ChainComplex::boundary_matrix(complex, max_dim);
-    let boundary_op: &deep_causality_sparse::CsrMatrix<i8> = &boundary_cow;
+    let boundary_op: &deep_causality_linear::CsrMatrix<i8> = &boundary_cow;
     let rows = boundary_op.shape().0;
     if rows == 0 {
         return true;
@@ -117,7 +117,7 @@ pub(crate) fn has_boundary<T: deep_causality_algebra::RealField>(
 
     // Route through ChainComplex::boundary_matrix(max_dim) — Cow::Borrowed on SimplicialComplex.
     let boundary_cow = ChainComplex::boundary_matrix(complex, max_dim);
-    let boundary_op: &deep_causality_sparse::CsrMatrix<i8> = &boundary_cow;
+    let boundary_op: &deep_causality_linear::CsrMatrix<i8> = &boundary_cow;
     let rows = boundary_op.shape().0;
     if rows == 0 {
         return false;

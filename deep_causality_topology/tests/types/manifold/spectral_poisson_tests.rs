@@ -11,8 +11,8 @@
 //! and the dispatch boundary (mixed/open/per-edge stay on CG).
 
 use deep_causality_algebra::RealField;
+use deep_causality_linear::cg_solve;
 use deep_causality_num::{Float106, FromPrimitive};
-use deep_causality_sparse::cg_solve;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     ChainComplex, CubicalReggeGeometry, HodgeDecomposeOptions, LatticeComplex, Manifold,
@@ -302,4 +302,24 @@ fn per_edge_metric_stays_on_cg() {
     };
     let err = manifold.leray_project_opts(&omega, &opts).unwrap_err();
     assert!(format!("{err}").contains("did not converge"));
+}
+
+#[test]
+fn zero_extent_torus_reports_the_degenerate_transform() {
+    // A lattice with a zero extent along one axis carries no cells at all, so
+    // the spectral dispatch is handed a transform of length zero. That has no
+    // Fourier basis, and the FFT plan's rejection surfaces as an InvalidInput
+    // naming the spectral solve rather than as a silent empty result.
+    let manifold = manifold_with_metric(
+        LatticeComplex::<2, f64>::new([0, 4], [true, true]),
+        CubicalReggeGeometry::unit(),
+    );
+    let omega = CausalTensor::new(Vec::<f64>::new(), vec![0]).unwrap();
+
+    let err = manifold.leray_project(&omega).unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("spectral Poisson solve"),
+        "error should name the spectral solve: {msg}"
+    );
 }

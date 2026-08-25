@@ -69,16 +69,18 @@
   ],
   "oleans": {
     "url": "file:///var/folders/0j/v3sh2d251fv3kdx_k2q7crsm0000gn/T//lake-oleans-leanprover-lean4-v4.32.0.tar.gz",
-    "sha256": "f00fefd9d85142f33beb5ee1a77e8812d10fdce0bca17b39f73557c0f1a23f6b",
+    "sha256": "e96c8b713a22e0a14fa2db5e48f642db7265ad919f89f442dd4ef26bc86f1cc7",
     "strip_prefix": "",
-    "inputs_sha256": "3122af4bdb51dca742de2444eb4a3039b1714cae6f0960012af243e44aa8e3f5",
+    "inputs_sha256": "45195e87bf7eed7e5b478185fbcb697cf9f2dcb7b8438053d823d4c1b245bc36",
     "imports": [
       "Mathlib.Algebra.Algebra.Basic",
       "Mathlib.Algebra.DualNumber",
       "Mathlib.Algebra.Field.Basic",
+      "Mathlib.Algebra.Field.ZMod",
       "Mathlib.Algebra.Group.Basic",
       "Mathlib.Algebra.Group.Defs",
       "Mathlib.Algebra.Order.Group.Int",
+      "Mathlib.Algebra.Order.Group.Unbundled.Int",
       "Mathlib.Algebra.Order.Ring.Defs",
       "Mathlib.Algebra.Quaternion",
       "Mathlib.Algebra.Ring.Basic",
@@ -87,7 +89,11 @@
       "Mathlib.Analysis.Normed.Field.Basic",
       "Mathlib.Data.Rat.Cast.Defs",
       "Mathlib.Data.Real.Basic",
-      "Mathlib.LinearAlgebra.Matrix.Trace"
+      "Mathlib.LinearAlgebra.Dimension.RankNullity",
+      "Mathlib.LinearAlgebra.FiniteDimensional.Lemmas",
+      "Mathlib.LinearAlgebra.Matrix.Rank",
+      "Mathlib.LinearAlgebra.Matrix.Trace",
+      "Mathlib.Tactic.Linarith"
     ]
   }
 }

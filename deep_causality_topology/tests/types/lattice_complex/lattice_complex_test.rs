@@ -383,3 +383,13 @@ fn test_num_cells_zero_dimension_edge_case() {
         "Zero-sized dimension should yield 0 cells"
     );
 }
+
+#[test]
+fn test_lattice_complex_coboundary_matrix_above_top_grade_is_empty() {
+    // δ_k = (∂_{k+1})ᵀ, and a D-dimensional lattice has no cells above grade D,
+    // so there is no grade for δ_{D+1} to be the coboundary of.
+    let lat = LatticeComplex::<2, f64>::square_torus(3);
+    let above = lat.coboundary_matrix(3);
+    assert_eq!(above.shape(), (0, 0));
+    assert!(above.values().is_empty());
+}

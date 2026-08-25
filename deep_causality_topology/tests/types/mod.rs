@@ -14,6 +14,7 @@ mod differential_form;
 mod gauge;
 mod graph;
 mod hodge_decomposition;
+mod homology_field;
 mod hypergraph;
 mod lattice_complex;
 mod manifold;

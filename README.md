@@ -265,7 +265,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 | [`deep_causality_tensor`](deep_causality_tensor/README.md)           | N-dim tensors, broadcasting, Einstein summation, Functor/Applicative/Monad/Comonad                                                   |
 | [`deep_causality_multivector`](deep_causality_multivector/README.md) | Clifford algebras: Pauli, STA, CGA, PGA(3), Dixon, Spin(10) GUA                                                                      |
 | [`deep_causality_topology`](deep_causality_topology/README.md)       | Graphs, hypergraphs, simplicial complexes, manifolds, point clouds, exterior calculus, U(1)/SU(2)/SU(3)/Lorentz lattice gauge fields |
-| [`deep_causality_sparse`](deep_causality_sparse/README.md)           | CSR sparse matrices                                                                                                                  |
+| [`deep_causality_linear`](deep_causality_linear/README.md)           | Sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors, elimination, decompositions, conjugate gradient, exact integer path         |
 
 ### Foundation
 

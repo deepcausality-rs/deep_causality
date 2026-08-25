@@ -144,7 +144,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_haft",
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
@@ -159,7 +159,7 @@ rust_binary(
         "//deep_causality_haft",
         "//deep_causality_metric",
         "//deep_causality_multivector",
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
@@ -188,7 +188,7 @@ rust_binary(
     deps = [
         ":mathematics_examples",
         "//deep_causality_haft",
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
@@ -222,7 +222,7 @@ rust_binary(
         "//deep_causality_metric",
         "//deep_causality_multivector",
         "//deep_causality_num",
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],
@@ -234,7 +234,7 @@ rust_binary(
     crate_root = "isomorphism/tensor_sparse_memory_budget/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
     ],
 )
@@ -257,7 +257,7 @@ rust_binary(
     crate_root = "sparse/basic_csr_ops.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
     ],
 )
 
@@ -268,7 +268,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_haft",
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
     ],
 )
 
@@ -353,7 +353,7 @@ rust_binary(
     crate_root = "topology/chain_algebra.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_topology",
     ],
 )
@@ -424,7 +424,7 @@ rust_binary(
     crate_root = "topology/manifold_analysis.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_sparse",
+        "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
     ],

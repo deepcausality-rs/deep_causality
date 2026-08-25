@@ -4,6 +4,7 @@
  */
 use crate::Ring;
 use crate::algebra::commutative::Commutative;
+use crate::algebra::operator::Multiplicative;
 
 /// A marker trait for a **Commutative Ring**.
 ///
@@ -27,7 +28,7 @@ use crate::algebra::commutative::Commutative;
 /// This property is particularly important for constructs like matrix algebra,
 /// where certain properties (e.g., of the determinant) depend on the underlying
 /// ring being commutative.
-pub trait CommutativeRing: Ring + Commutative {}
+pub trait CommutativeRing: Ring + Commutative<Multiplicative> {}
 
 // Blanket implementation
-impl<T> CommutativeRing for T where T: Ring + Commutative {}
+impl<T> CommutativeRing for T where T: Ring + Commutative<Multiplicative> {}

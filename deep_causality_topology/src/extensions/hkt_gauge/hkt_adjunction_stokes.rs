@@ -16,9 +16,9 @@ use crate::types::differential_form::DifferentialForm;
 use crate::{BaseTopology, SimplicialComplex};
 use deep_causality_haft::Pure; // Added Pure
 use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_linear::CsrMatrix;
+use deep_causality_linear::CsrMatrixWitness; // Added Witness
 use deep_causality_num::Float;
-use deep_causality_sparse::CsrMatrix;
-use deep_causality_sparse::CsrMatrixWitness; // Added Witness
 use std::collections::HashMap;
 use std::sync::Arc;
 

@@ -1,0 +1,134 @@
+---
+/**
+ * Section 05 — placement.
+ *
+ * A reader places a new crate by what it stands next to and by what it declines
+ * to do. Both columns are drawn from what the source and the manifest actually
+ * say, so nothing here is aspiration.
+ */
+import { CFD_URL, DOCS_URL } from '../../consts';
+
+const does = [
+  {
+    what: 'Decides whether a factorization is a legal model',
+    how: 'The Markov commutativity check and C₃-exclusion faithfulness run at the freeze boundary and reject the graph rather than warning about it.',
+  },
+  {
+    what: 'Validates operators instead of trusting them',
+    how: 'A DensityMatrix is Hermitian, positive semidefinite and unit trace by construction. A channel is checked for complete positivity and trace preservation. A Projection is Hermitian and idempotent or it does not exist.',
+  },
+  {
+    what: 'Lifts quantum mechanics into the causal monad',
+    how: 'Every gate kernel has a PropagatingEffect wrapper, so a metric mismatch becomes a value on the error channel instead of an unwind.',
+  },
+];
+
+const doesNot = [
+  {
+    what: 'Ship a QPU driver',
+    how: 'The qpu feature carries a sampler trait, a reified circuit, the shots bridges, and an in-process simulator capped at 24 qubits. No vendor adapter, no network, no async.',
+  },
+  {
+    what: 'Define its own metric or ket',
+    how: 'Metric signatures come from deep_causality_metric and HilbertState from deep_causality_multivector. The crate adds neither.',
+  },
+  {
+    what: 'Support nested quantum subgraphs',
+    how: 'The physical meaning of such nesting is itself unestablished, so more work needs to be done. The crate says that rather than shipping it.',
+  },
+  {
+    what: 'Claim general faithfulness',
+    how: 'Faithfulness is limited to the C₃-exclusion regime of van der Lugt and Lorenz. The general routed and direct-sum hypothesis is open upstream and out of scope.',
+  },
+];
+---
+<section class="fits page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">05 / 05</span><span class="lb">Fit</span>
+    </p>
+    <h2>What it takes on, and what it leaves alone</h2>
+    <p class="lede">
+      The crate is unpublished and versioned 0.1.0. Reading the second column
+      first is a reasonable way to spend thirty seconds.
+    </p>
+  </header>
+
+  <div class="cols">
+    <div class="col">
+      <h3>What it does</h3>
+      <dl>
+        {does.map((r) => (
+          <div class="row">
+            <dt>{r.what}</dt>
+            <dd>{r.how}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <div class="col">
+      <h3>What it does not do</h3>
+      <dl>
+        {doesNot.map((r) => (
+          <div class="row">
+            <dt>{r.what}</dt>
+            <dd>{r.how}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+
+  <p class="sib">
+    Sibling properties: the <a href={DOCS_URL}>core library documentation</a> for
+    causaloids, context and the effect ethos, and the
+    <a href={CFD_URL}>computational fluid dynamics crate</a>, which is the other
+    subproject with a site of its own.
+  </p>
+
+  <p class="more">
+    <a href="/start/">Add the crate</a>
+    <a href="/papers/">The papers behind it</a>
+    <a href="/examples/">Something to run</a>
+  </p>
+</section>
+
+<style>
+  .fits { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .cols { display: grid; grid-template-columns: 1fr; gap: var(--space-6); }
+  @media (min-width: 900px) { .cols { grid-template-columns: 1fr 1fr; gap: var(--space-7); } }
+
+  .col h3 {
+    font-size: var(--t-h4);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+  }
+  dl { margin: 0; }
+  .row { padding: 0 0 var(--space-4); }
+  .row:last-child { padding-bottom: 0; }
+  dt { color: var(--fg-0); font-size: var(--t-body-sm); font-weight: var(--fw-heading); margin-bottom: var(--space-2); }
+  dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  .sib {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+    margin: var(--space-6) 0 0;
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-5) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

@@ -135,7 +135,7 @@ fn test_topology_cup_product_overflow_grade_returns_zero_field() {
 
 #[test]
 fn test_topology_cup_product_simplex_not_found_returns_error() {
-    use deep_causality_sparse::CsrMatrix;
+    use deep_causality_linear::CsrMatrix;
     use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
 
     // Build a complex with mismatched skeletons: the 1-skeleton lists an edge that is

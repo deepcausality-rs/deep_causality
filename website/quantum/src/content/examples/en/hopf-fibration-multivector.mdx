@@ -1,0 +1,26 @@
+---
+title: "Hopf fibration"
+question: "Where does this spinor sit on the Bloch sphere?"
+summary: "A qubit state encoded as a multivector, projected through the Hopf fibration onto S²; a global phase shift moves along the fibre and leaves the projection fixed."
+order: 7
+command: "cargo run --release -p quantum_examples --example hopf_fibration_multivector"
+usesCrate: false
+crates:
+  - deep_causality_multivector
+  - deep_causality_num_complex
+source: "examples/quantum_examples/hopf_fibration_multivector"
+---
+
+The Hopf fibration maps the 3-sphere onto the 2-sphere, which is exactly the map
+from a normalized two-component spinor to a point on the Bloch sphere. The
+example encodes the state as a `HopfState` multivector, applies a fibre shift,
+and projects.
+
+The fibre shift is a global phase change. It moves the state along the fibre and
+leaves the projected point where it was, which is the geometric statement of why
+global phase is not observable. Anyone debugging a quantum control loop has hit
+that fact from the other direction.
+
+This example does not import `deep_causality_quantum`. `HopfState` lives in
+`deep_causality_multivector`, alongside the `HilbertState` ket this crate builds
+on.

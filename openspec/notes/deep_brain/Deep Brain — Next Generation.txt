@@ -1,0 +1,867 @@
+# Deep Brain — Next Generation
+
+## Subgraph Schema Evolution
+
+**Author:** Marvin Hansen / Emet-Labs  
+**Date:** March 2026  
+**Status:** Future specification — infrastructure preparation begins in v1, feature implementation deferred until core system is stable  
+**Depends on:** Deep Brain Architecture (deep-brain-architecture.md) — must be operational before this feature is implemented  
+**Classification:** Speculative design document — the problem is anticipated, the solution is designed, the implementation is deferred
+
+-----
+
+## Preamble: Why This Document Exists Now
+
+The standard approach to speculative features is to defer documentation until implementation. This document exists now because the opposite is warranted here.
+
+Subgraph schema evolution requires **zone ID infrastructure to be present in the schema from day one**. Retrofitting zone IDs into a mature knowledge base with millions of records, established causal edges, and a populated relational hypergraph is significantly harder than adding empty zone scaffolding at the start. The zone ID columns cost nothing when empty. They are expensive to add later.
+
+More importantly, the problem this feature solves will be encountered before the feature is ready. Research domains evolve. Representational structures that seemed adequate will prove inadequate. Schema experiments will fail. The first time this happens in a single-zone system, the researcher faces a choice between accepting a degraded representation and rebuilding from scratch. Neither is acceptable for a system whose data is the research asset.
+
+This document defines the feature precisely enough to prepare the infrastructure, without over-specifying implementation details that will only become clear through experience with the core system.
+
+The implementation sequencing is explicit: **zone IDs in v1, zone schema versioning in v2, migration rules and rollback in v3**. Each phase builds on real experience with the prior phase.
+
+-----
+
+## Part I: The Problem
+
+### 1.1 The Full Schema Migration Problem
+
+In a traditional database system, schema evolution follows a simple model: the schema advances, all data migrates with it, the old schema is gone. This works because the schema is a single global artifact, migration is a one-time operation per version, and the data is primarily operational rather than an irreplaceable research asset.
+
+Deep Brain violates all three assumptions.
+
+**The schema is not global.** Different research domains have different representational needs. Lattice gauge theory requires edge types and contextoid categories that are meaningless to clinical research. Clinical research requires ADLR extraction schemas shaped by FDA documentation conventions that have no analog in physics. A global schema is the lowest common denominator of all domains — which is to say, it is too generic to be useful for any of them. This is the failure mode of every enterprise knowledge management system at scale: the schema becomes so general that researchers abandon it and return to domain-specific tools or flat files.
+
+**Migration is not a one-time operation.** Research domains evolve continuously. The representational structure adequate for lattice gauge theory at the beginning of a research program will be inadequate twelve months later, when the research has deepened and the domain’s internal structure has become clearer. Schema evolution is not a maintenance task — it is a continuous epistemic process, as much a part of research as the experiments themselves.
+
+**The data is irreplaceable.** Unlike operational databases where old data can be migrated or discarded, a research knowledge base accumulates irreplaceable epistemic history. The ADLR reports, the causal chains, the documented failures, the gap nodes — these cannot be regenerated. A migration that corrupts or loses this history is not a technical problem to be fixed. It is a research catastrophe.
+
+At enterprise scale — hundreds of researchers, dozens of domains, continuous operation across time zones — full schema migration becomes organizationally impossible without effectively shutting down the research operation. A global migration window for a semantically meaningful schema change, where the change requires human judgment on thousands of flagged edges, is measured in days, not hours.
+
+Subgraph schema evolution solves this by making schema changes local. A domain zone manages its own schema. Schema evolution in one zone does not require downtime in any other zone. The only global constraint is the integrity of cross-zone connections — and that constraint is enforced through explicit, versioned migration rules, not through global coordination.
+
+### 1.2 The Personal Research Version of the Problem
+
+At the scale of a single researcher working across multiple domains simultaneously, the problem manifests differently but is equally real.
+
+A researcher working in lattice gauge theory, unified mathematics, GQCD experimental physics, and software engineering has four effectively distinct representational needs. When the lattice gauge theory understanding deepens and requires a new contextoid type, the researcher should not need to worry about whether that change breaks the GQCD zone or the engineering zone. The domains are related — that is the point — but their internal representational structures are not identical, and evolution in one should not require re-evaluation of all others.
+
+More specifically: schema experiments will fail. The researcher will introduce a new representational structure — a new edge type, a new contextoid category, a new NER label taxonomy — that seems correct at the time and proves inadequate after three months of use. In a single-schema system, rolling back this experiment requires either accepting the inadequate representation permanently or rebuilding the affected portion of the knowledge base from scratch. Neither is acceptable.
+
+Subgraph schema evolution allows the researcher to roll back a schema experiment in one zone without touching any other zone. The failed schema version is recorded as an invalidation. The rollback is documented. The rest of the knowledge base continues operating normally.
+
+### 1.3 Why the Problem Hits Before the Feature Is Ready
+
+The core system will be operational before this feature is implemented. During that period, schema evolution will happen — it is unavoidable. The question is not whether schema evolution occurs but whether it is managed or unmanaged.
+
+Unmanaged schema evolution means: the researcher changes a table structure, runs a migration, and hopes nothing breaks. Cross-zone connections are not formally protected. Rollback requires manual reconstruction. The epistemic history of the schema itself — what representational choices were made, why, and whether they were later abandoned — is not captured.
+
+The zone ID infrastructure in v1 means that when managed schema evolution is implemented in v2 and v3, the records that carry zone membership information already exist. The migration path from unmanaged to managed schema evolution is a column population operation on existing records, not a ground-up redesign.
+
+-----
+
+## Part II: The Design
+
+### 2.1 Core Concepts
+
+**Zone:** A bounded subgraph of the knowledge base corresponding to a research domain or cluster of related domains. A zone owns its schema — it can evolve its internal representational structure independently of other zones. Zone boundaries are defined by domain contextoid membership.
+
+**Zone Schema:** A complete specification of the representational structure valid within a zone at a given point in time. Includes: content node types and their valid fields, contextoid types and their property schemas, causal edge types and their semantic constraints, NER label sets, classification rules, and schema invariants. Zone schemas are immutable once committed — evolution creates new versions, never modifies existing ones.
+
+**Cross-Zone Edge:** Any causal edge, relational hypergraph connection, or contextoid relation whose source belongs to one zone and whose target belongs to another. Cross-zone edges are the integrity boundary of the system. They are the connections that make the enterprise knowledge graph valuable, and they are the only thing that can propagate a schema inconsistency from one zone into another.
+
+**Migration Rule:** An explicit specification of how a cross-zone edge of a given type transforms when the schema version changes in either of its endpoint zones. Migration rules are required for all cross-zone edge types before a zone schema migration can proceed. The absence of a migration rule for any affected edge type aborts the migration.
+
+**Zone Lock:** An atomic lock acquired on all zones involved in a cross-zone edge migration. Prevents concurrent writes to locked zones during migration. Reads see the pre-migration state throughout the lock period. Released on transaction commit or rollback.
+
+### 2.2 Zone Architecture
+
+#### Zone Definition
+
+A zone is defined by its primary domain contextoids. All content with a `BelongsTo` relation to any of a zone’s primary domain contextoids is a member of that zone.
+
+Content belonging to multiple domains may span multiple zones. Such content has a **primary zone** — determined at capture time by the researcher or by the system’s zone assignment rules — and secondary zone memberships. Cross-zone edges from multi-zone content carry the primary zone assignment of their source endpoint.
+
+```
+Zone: lattice_gauge_theory
+  Primary domain contextoids: [hep-lat, hep-ph (partial)]
+  Member content: ~50,000 memories, ~8,000 causal edges
+  Cross-zone edges: ~300 edges to [unified_mathematics, gqcd_physics, cs_ai]
+
+Zone: unified_mathematics  
+  Primary domain contextoids: [math.AT, math.DG, math-ph, math.RA]
+  Member content: ~30,000 memories, ~5,000 causal edges
+  Cross-zone edges: ~400 edges to [lattice_gauge_theory, gqcd_physics, deep_causality]
+
+Zone: gqcd_physics
+  Primary domain contextoids: [gr-qc, astro-ph (partial), quant-ph (partial)]
+  Member content: ~20,000 memories, ~3,000 causal edges
+  Cross-zone edges: ~200 edges to [lattice_gauge_theory, unified_mathematics]
+
+Zone: engineering
+  Primary domain contextoids: [cs.SE, cs.DC, eess.SP]
+  Member content: ~40,000 memories, ~6,000 causal edges
+  Cross-zone edges: ~150 edges to [deep_causality, cs_ai]
+```
+
+Zone boundaries are explicit, not inferred. The researcher defines zones. The system enforces membership and tracks cross-zone edges. Zone boundaries can be refined over time — a domain contextoid can be moved from one zone to another — but this is itself a migration operation subject to the same rules as schema migration.
+
+#### Zone Isolation Properties
+
+Within a zone, schema evolution is fully local. No coordination with other zones is required. A zone schema migration that affects only intra-zone content and intra-zone edges can proceed without acquiring locks on any other zone.
+
+Cross-zone edges are the only thing that breaks zone isolation. They are the seam between zones, and the migration rule requirement is the guarantee that the seam remains coherent across schema changes.
+
+**The isolation invariant:** After any zone schema migration, every cross-zone edge must satisfy the migration rules for its edge type, and both endpoints must satisfy the schemas of their respective zones. If this invariant cannot be satisfied for any edge, the migration does not proceed.
+
+### 2.3 Zone Schema Versioning
+
+#### Schema as Data
+
+Zone schemas are stored in the database, not in code. This is a hard requirement. If migration rules lived only in code, rolling back to a prior schema version would require rolling back the code as well — which defeats the purpose. The schema specification, the migration rules, and the migration log are all first-class data, versioned and immutable.
+
+#### Schema Version Lifecycle
+
+```
+v1 (initial)
+    │
+    ├── used for 6 months
+    ├── found adequate for basic causal edges
+    └── found inadequate for lattice spacing regime representation
+    │
+    ▼
+v2 (adds LatticeSpacingRegime contextoid type)
+    │
+    ├── used for 3 months  
+    ├── LatticeSpacingRegime proves to be overcomplicated
+    ├── better modeled as a RegimeContextoid with specific properties
+    └── schema experiment flagged as failed
+    │
+    ▼
+v3 (rollback: removes LatticeSpacingRegime, adopts enhanced RegimeContextoid)
+    │
+    rollback_of: v2
+    grounds: "LatticeSpacingRegime contextoid type proved redundant with
+              RegimeContextoid(type=lattice_spacing). Three months of use
+              showed no cases where the dedicated type added value over
+              the generic regime contextoid with lattice-specific properties."
+    │
+    ├── used for 12 months
+    └── stable — no further evolution needed in this period
+```
+
+Every schema version is permanent in the record even after rollback. The rollback is not an erasure of v2 — it is a new version (v3) that documents the failure of v2 and returns to the representational structure of v1 with the lessons of v2 incorporated. The history of schema experimentation is itself knowledge.
+
+#### Schema Version Specification
+
+```rust
+struct ZoneSchemaVersion {
+    zone_id:        ZoneId,
+    version:        u32,           // monotonically increasing per zone
+    valid_from:     Timestamp,
+    valid_until:    Option<Timestamp>,
+    
+    // If this version is a rollback of a prior version
+    rollback_of:    Option<u32>,
+    rollback_grounds: Option<String>,
+    
+    // Complete schema specification
+    spec: ZoneSchemaSpec,
+    
+    // Migration rules for all cross-zone edge types
+    // Must be populated before migration can proceed
+    cross_zone_migrations: Vec<CrossZoneEdgeMigration>,
+}
+
+struct ZoneSchemaSpec {
+    // Content layer
+    content_node_types:     Vec<ContentNodeTypeSpec>,
+    causal_edge_types:      Vec<CausalEdgeTypeSpec>,
+    
+    // Context layer (zone-specific additions to global contextoid types)
+    contextoid_extensions:  Vec<ContextoidExtensionSpec>,
+    
+    // NER configuration
+    ner_tier1_labels:       Vec<String>,
+    ner_tier2_labels:       HashMap<DomainCode, Vec<String>>,
+    
+    // Classification rules
+    classification_rules:   Vec<ClassificationRule>,
+    
+    // Invariants that all zone content must satisfy
+    invariants:             Vec<SchemaInvariant>,
+}
+```
+
+### 2.4 Cross-Zone Edge Migration Rules
+
+#### The Hard Requirement
+
+Every cross-zone edge type must have an explicit migration rule for every schema version transition in every zone it touches. The migration cannot proceed if any cross-zone edge of an affected type lacks a migration rule.
+
+This requirement is enforced at migration time, not at schema definition time. You do not need to define migration rules for edge types that have no cross-zone usage. The requirement fires when a zone migration would affect cross-zone edges of a type without a defined rule.
+
+The error is explicit and actionable:
+
+```
+ZoneMigrationError::MissingMigrationRule {
+    zone_id: "lattice_gauge_theory",
+    from_version: 2,
+    to_version: 3,
+    edge_type: "LatticeSpacingConstrains",
+    cross_zone_targets: ["unified_mathematics", "gqcd_physics"],
+    message: "Cannot proceed: no migration rule defined for 
+              LatticeSpacingConstrains edges crossing into 
+              unified_mathematics or gqcd_physics zones. 
+              Define forward and backward migration rules 
+              before retrying."
+}
+```
+
+#### Migration Rule Structure
+
+```rust
+struct CrossZoneEdgeMigration {
+    edge_type:      EdgeType,
+    from_version:   u32,       // schema version in source zone
+    to_version:     u32,
+    
+    forward:        MigrationRule,    // upgrade: from_version → to_version
+    backward:       MigrationRule,    // downgrade: to_version → from_version
+    
+    mode:           MigrationMode,
+    rationale:      String,           // why this rule exists
+}
+
+enum MigrationRule {
+    // Trivial: validate endpoints exist and satisfy zone schemas.
+    // Edge properties preserved unchanged.
+    // Valid for: edge type unchanged, semantics unchanged
+    NoOp,
+    
+    // Edge type name changes, semantics preserved.
+    // Properties preserved unchanged.
+    Rename { new_edge_type: EdgeType },
+    
+    // Edge properties transform under a declared function.
+    // Function receives: edge record, source node, target node
+    // Returns: transformed edge record or migration error
+    Transform {
+        // Stored as serialized function spec, not Rust closure
+        // Interpreted at migration time
+        spec: TransformSpec,
+    },
+    
+    // One edge becomes multiple edges.
+    // Requires atomic zone lock — cannot be non-atomic.
+    Split {
+        spec: SplitSpec,
+    },
+    
+    // Edge cannot be automatically migrated.
+    // Migration pauses and surfaces this edge to the researcher.
+    // Researcher decides: transform manually, remove, or abort migration.
+    RequiresReview {
+        reason: String,
+        suggested_action: Option<String>,
+    },
+}
+
+enum MigrationMode {
+    // No zone lock required.
+    // Valid only for NoOp and Rename.
+    // Other zones continue operating normally during migration.
+    NonAtomic,
+    
+    // Zone lock required on source zone and all target zones.
+    // Required for Transform and Split.
+    // Target zones are locked for write during migration.
+    Atomic,
+    
+    // Cannot proceed automatically.
+    // Entire migration pauses for researcher review of flagged edges.
+    // Researcher resolves flagged edges, then migration resumes.
+    Manual,
+}
+```
+
+#### The Trivial Case
+
+For most cross-zone edges under most schema changes, the migration rule is `NoOp`. A `CrossDomain` edge between a memory in lattice gauge theory and a memory in unified mathematics survives any schema change in either zone without transformation, as long as both endpoint nodes still exist and still satisfy their respective zone schemas.
+
+The `NoOp` rule with `NonAtomic` mode means: validate endpoints, preserve edge, no lock required. This is the default for the vast majority of cross-zone edges under the vast majority of schema changes. The migration rule system exists for the non-trivial cases, but it does not impose overhead on the trivial ones.
+
+#### Example: Non-Trivial Migration Rule
+
+Scenario: The lattice gauge theory zone (v2) introduces a `LatticeSpacingConstrains` edge type. Some of these edges cross into the unified mathematics zone. The lattice gauge theory zone then rolls back to v3 (which abandons `LatticeSpacingConstrains` in favour of a `RegimeConstrains` edge type). The cross-zone edges of type `LatticeSpacingConstrains` must be migrated.
+
+```
+CrossZoneEdgeMigration {
+    edge_type: "LatticeSpacingConstrains",
+    from_version: 2,   // version being abandoned
+    to_version: 3,     // version being adopted (rollback target)
+    
+    forward: Transform {
+        spec: TransformSpec {
+            // Rename to RegimeConstrains
+            // Add property: regime_type = "lattice_spacing"
+            // Preserve all other properties
+            operations: [
+                SetEdgeType("RegimeConstrains"),
+                AddProperty("regime_type", "lattice_spacing"),
+            ]
+        }
+    },
+    
+    backward: Transform {
+        spec: TransformSpec {
+            // Rename back to LatticeSpacingConstrains
+            // Remove regime_type property
+            operations: [
+                SetEdgeType("LatticeSpacingConstrains"),
+                RemoveProperty("regime_type"),
+            ]
+        }
+    },
+    
+    mode: Atomic,   // requires zone lock — properties change
+    
+    rationale: "LatticeSpacingConstrains was a premature specialization
+                of RegimeConstrains. All semantic content is preserved
+                through the regime_type property on the generic edge type."
+}
+```
+
+### 2.5 The Atomic Zone Lock
+
+#### Lock Scope
+
+The zone lock is a write barrier, not a read barrier. Reads during migration see the pre-migration state throughout the lock period — they see a consistent snapshot. Writes to locked zones are queued or rejected until the lock is released.
+
+The lock covers:
+
+- The zone being migrated (source zone)
+- All zones with cross-zone edges to the source zone that have `Atomic` or `Manual` migration rules
+
+Zones with only `NonAtomic` migration rules for their cross-zone edges to the source zone are not locked. They continue operating normally.
+
+#### Deadlock Prevention
+
+Locks are always acquired in canonical order — sorted by zone ID lexicographically. Two concurrent migrations that both need to lock zones A and B will always acquire A before B, preventing the classic deadlock pattern.
+
+```rust
+fn acquire_zone_locks(zones: &[ZoneId]) -> Result<ZoneLockGuard> {
+    let mut sorted_zones = zones.to_vec();
+    sorted_zones.sort();  // canonical order
+    
+    let mut locks = Vec::new();
+    for zone_id in &sorted_zones {
+        locks.push(acquire_single_zone_lock(zone_id)?);
+    }
+    
+    Ok(ZoneLockGuard { locks })
+    // Released automatically on drop (Rust RAII)
+}
+```
+
+#### Lock Duration
+
+Zone locks are held for the minimum duration necessary. The protocol:
+
+1. Compute affected cross-zone edges and required migration rules — **before acquiring any lock**
+1. Classify migrations by mode — **before acquiring any lock**
+1. Surface `Manual` migrations to researcher for decision — **before acquiring any lock**
+1. Acquire zone locks
+1. Within a single database transaction: apply schema change + apply all migrations + validate
+1. Commit or rollback the transaction
+1. Release zone locks
+
+Steps 1-3 can be slow — they may involve researcher interaction for `Manual` cases. Steps 4-7 must be fast — they hold the zone lock. The design separates the slow preparation from the fast execution to minimize lock duration.
+
+### 2.6 The Migration Protocol
+
+#### Pre-Migration Validation
+
+```
+validate_zone_migration(zone_id, target_version):
+    
+    STEP 1: Identify affected cross-zone edges
+        SELECT all cross-zone edges where:
+            source belongs to zone_id OR target belongs to zone_id
+            AND (source or target node's zone schema is changing)
+    
+    STEP 2: Verify migration rules exist for all affected edge types
+        FOR each affected edge type:
+            IF no CrossZoneEdgeMigration exists for (edge_type, versions):
+                RETURN Error::MissingMigrationRule
+                (migration cannot proceed until rule is defined)
+    
+    STEP 3: Classify migrations by mode
+        NonAtomic: can proceed without lock, any order
+        Atomic: requires zone lock, single transaction
+        Manual: requires researcher decision before proceeding
+    
+    STEP 4: Surface Manual migrations to researcher
+        FOR each Manual migration:
+            PRESENT edge details, reason, suggested action
+            AWAIT researcher decision:
+                Accept(transform_spec) → convert to Transform migration
+                Remove → mark edge for deletion
+                Abort → abort entire migration
+    
+    STEP 5: Return migration plan (or abort)
+        MigrationPlan {
+            zone_id,
+            from_version,
+            to_version,
+            zones_to_lock: [zones with Atomic migrations],
+            non_atomic_migrations: [...],
+            atomic_migrations: [...],
+            // Manual migrations are now resolved
+        }
+```
+
+#### Migration Execution
+
+```
+execute_zone_migration(plan: MigrationPlan):
+    
+    STEP 1: Apply NonAtomic migrations
+        These don't require a lock — execute first to minimize lock duration
+        FOR each NonAtomic migration:
+            validate endpoints
+            apply NoOp or Rename
+            update zone_migration_log
+    
+    STEP 2: Acquire zone locks (canonical order)
+        acquire_zone_locks(plan.zones_to_lock)
+    
+    STEP 3: Begin database transaction
+    
+    STEP 4: Within transaction:
+        a. Create new zone_schema record (new version)
+        b. Update zone_memberships: set left_at on current,
+           create new with new schema_version
+        c. Apply all Atomic migrations:
+           FOR each edge:
+               apply Transform or Split
+               validate result against both zone schemas
+               IF validation fails: ROLLBACK transaction
+        d. Run schema invariant checks on all zone content
+        e. IF all checks pass: COMMIT
+           IF any check fails: ROLLBACK
+    
+    STEP 5: Release zone locks (automatic on transaction end)
+    
+    STEP 6: Record migration outcome
+        zone_migration_log entry with:
+            edges_migrated count
+            edges_reviewed count (Manual cases)
+            duration_ms
+            committed_at or rolled_back_at
+    
+    STEP 7: If this was a rollback:
+        Create invalidation record for the abandoned schema version
+            target: zone_schema (abandoned version)
+            grounds: researcher-provided rollback reason
+            scope: BoundaryCondition
+            regime_context: "zone:{zone_id} schema version {abandoned_version}"
+```
+
+#### The Rollback Operation
+
+A rollback is a forward migration to a prior schema specification. It is not a special case — it uses the same protocol as any schema migration. The only difference is that `target_version` is a prior version rather than a new one, and `rollback_of` is populated on the new zone_schema record.
+
+The backward migration rules on cross-zone edges are the forward rules for a rollback. When rolling back from v3 to v2, the system uses the `backward` rule of each `CrossZoneEdgeMigration` for the v2→v3 transition.
+
+-----
+
+## Part III: Database Schema
+
+### Infrastructure Tables (v1 — empty, ready)
+
+These tables are created in v1 with the core schema. They are empty and unused until zone schema evolution is implemented. Their presence allows zone IDs to be populated on all content records from the start, making the v2 migration path clean.
+
+```sql
+-- ─────────────────────────────────────────────
+-- ZONE REGISTRY
+-- ─────────────────────────────────────────────
+
+CREATE TABLE zones (
+    id                          TEXT PRIMARY KEY,    -- ULID
+    name                        TEXT NOT NULL UNIQUE,
+    description                 TEXT,
+
+    -- Zone boundary definition
+    primary_domain_contextoid_ids TEXT NOT NULL      -- JSON array of contextoid IDs
+                                      DEFAULT '[]',
+
+    -- Current schema version (denormalized for fast lookup)
+    current_schema_version      INTEGER NOT NULL DEFAULT 1,
+
+    created_at                  INTEGER NOT NULL,
+    updated_at                  INTEGER NOT NULL
+);
+
+-- ─────────────────────────────────────────────
+-- ZONE SCHEMA VERSIONS
+-- ─────────────────────────────────────────────
+
+CREATE TABLE zone_schemas (
+    id                  TEXT PRIMARY KEY,
+    zone_id             TEXT NOT NULL REFERENCES zones(id),
+    version             INTEGER NOT NULL,
+
+    -- Schema specification (complete ZoneSchemaSpec as JSON)
+    schema_spec         TEXT NOT NULL,
+
+    -- If this version is a rollback
+    rollback_of         INTEGER,                -- prior version number
+    rollback_grounds    TEXT,
+
+    -- Temporal validity
+    valid_from          INTEGER NOT NULL,
+    valid_until         INTEGER,                -- NULL = currently active
+
+    created_at          INTEGER NOT NULL,
+
+    UNIQUE(zone_id, version)
+);
+
+-- ─────────────────────────────────────────────
+-- ZONE MEMBERSHIPS
+-- ─────────────────────────────────────────────
+-- Tracks which content belongs to which zone under which schema version.
+-- Every content record has a zone_membership from day one.
+
+CREATE TABLE zone_memberships (
+    content_id          TEXT NOT NULL,
+    content_type        TEXT NOT NULL,           -- Memory | CausalEdge |
+                                                  -- Invalidation | GapNode |
+                                                  -- CausalReport
+    zone_id             TEXT NOT NULL REFERENCES zones(id),
+    schema_version      INTEGER NOT NULL,
+
+    -- Primary zone flag for multi-zone content
+    is_primary_zone     INTEGER NOT NULL DEFAULT 1,
+
+    joined_at           INTEGER NOT NULL,
+    left_at             INTEGER,                 -- NULL = currently active
+
+    PRIMARY KEY (content_id, content_type, zone_id, schema_version, joined_at)
+);
+
+CREATE INDEX idx_zone_memberships_content
+    ON zone_memberships(content_id, content_type)
+    WHERE left_at IS NULL;
+
+CREATE INDEX idx_zone_memberships_zone
+    ON zone_memberships(zone_id, schema_version)
+    WHERE left_at IS NULL;
+```
+
+### Migration Infrastructure Tables (v2 — implemented when needed)
+
+```sql
+-- ─────────────────────────────────────────────
+-- CROSS-ZONE EDGE MIGRATION RULES
+-- ─────────────────────────────────────────────
+
+CREATE TABLE cross_zone_edge_migrations (
+    id                  TEXT PRIMARY KEY,
+    zone_id             TEXT NOT NULL REFERENCES zones(id),
+    edge_type           TEXT NOT NULL,
+    from_version        INTEGER NOT NULL,
+    to_version          INTEGER NOT NULL,
+
+    -- Migration rules (serialized MigrationRule as JSON)
+    forward_rule        TEXT NOT NULL,
+    backward_rule       TEXT NOT NULL,
+    migration_mode      TEXT NOT NULL,           -- NonAtomic | Atomic | Manual
+
+    -- Documentation
+    rationale           TEXT NOT NULL,
+    created_at          INTEGER NOT NULL,
+
+    UNIQUE(zone_id, edge_type, from_version, to_version)
+);
+
+-- ─────────────────────────────────────────────
+-- ZONE MIGRATION LOG
+-- ─────────────────────────────────────────────
+
+CREATE TABLE zone_migration_log (
+    id                  TEXT PRIMARY KEY,
+    zone_id             TEXT NOT NULL REFERENCES zones(id),
+    from_version        INTEGER NOT NULL,
+    to_version          INTEGER NOT NULL,
+    is_rollback         INTEGER NOT NULL DEFAULT 0,
+
+    -- Outcome
+    edges_migrated      INTEGER NOT NULL DEFAULT 0,
+    edges_reviewed      INTEGER NOT NULL DEFAULT 0,  -- Manual cases
+    edges_failed        INTEGER NOT NULL DEFAULT 0,  -- 0 if committed
+    committed           INTEGER NOT NULL DEFAULT 0,  -- 1 if committed, 0 if rolled back
+
+    -- Full audit log of each edge migration
+    migration_log       TEXT,                        -- JSON array of edge migration records
+
+    -- Performance
+    lock_duration_ms    INTEGER,
+    total_duration_ms   INTEGER NOT NULL,
+
+    started_at          INTEGER NOT NULL,
+    completed_at        INTEGER NOT NULL
+);
+```
+
+### Zone ID on All Content Tables (v1 — populated from day one)
+
+The zone ID is added to every content table as a foreign key to the `zones` table. In v1, a single default zone is created (“default”) and all content is assigned to it. In v2, zones are defined and content is redistributed.
+
+```sql
+-- Add to memories table:
+zone_id         TEXT REFERENCES zones(id),      -- NULL until zones are defined (v1)
+schema_version  INTEGER,                         -- NULL until zones are defined (v1)
+
+-- Add to causal_edges table:
+zone_id         TEXT REFERENCES zones(id),
+schema_version  INTEGER,
+
+-- Add to invalidations table:
+zone_id         TEXT REFERENCES zones(id),
+schema_version  INTEGER,
+
+-- Add to open_problems table:
+zone_id         TEXT REFERENCES zones(id),
+schema_version  INTEGER,
+
+-- Add to causal_reports table:
+zone_id         TEXT REFERENCES zones(id),
+schema_version  INTEGER,
+
+-- Cross-zone edge flag on causal_edges:
+is_cross_zone   INTEGER NOT NULL DEFAULT 0,      -- 1 if source and target in different zones
+source_zone_id  TEXT REFERENCES zones(id),
+target_zone_id  TEXT REFERENCES zones(id),
+```
+
+-----
+
+## Part IV: The Three Hypergraphs Under Zone Evolution
+
+### 4.1 Zone-Aware Freeze Operations
+
+Each of the three hypergraphs supports zone-scoped freeze operations. These produce a `CsmGraph` containing only the content relevant to the specified zone(s) at the specified schema version.
+
+```rust
+// Freeze a single zone at its current schema version
+let zone_graph = content_hypergraph
+    .freeze_zone(zone_id, None);
+
+// Freeze a zone at a specific prior schema version (time travel)
+let historical_graph = content_hypergraph
+    .freeze_zone(zone_id, Some(SchemaVersion(2)));
+
+// Freeze two zones together for cross-zone analysis
+// Uses current schema version for both zones
+let joint_graph = content_hypergraph
+    .freeze_zones(&[zone_a_id, zone_b_id]);
+
+// Freeze the full graph (all zones at current schema versions)
+// Equivalent to current behavior before zones are introduced
+let full_graph = content_hypergraph.freeze_all();
+```
+
+The historical freeze — `freeze_zone(zone_id, Some(schema_version))` — is the time-travel query. It loads content with `zone_membership.schema_version = specified_version` and applies the schema interpretation of that version. Cross-zone edges from the historical zone are loaded but flagged as `historical_source` to indicate that one endpoint is using a non-current schema.
+
+### 4.2 Cross-Zone Edge Representation in the Hypergraphs
+
+Cross-zone edges are represented in the **relational hypergraph** as edges between nodes in different zone subgraphs. They carry metadata indicating their migration status:
+
+```rust
+struct CrossZoneEdgeNode {
+    id:                 EdgeId,
+    source_zone:        ZoneId,
+    target_zone:        ZoneId,
+    source_schema_ver:  u32,
+    target_schema_ver:  u32,
+    migration_status:   MigrationStatus,
+}
+
+enum MigrationStatus {
+    Current,            // both endpoints at current schema versions
+    NeedsReview,        // migration flagged for researcher review
+    Migrated { at: Timestamp, rule_applied: String },
+    Historical { source_version: u32 }, // source is at historical schema
+}
+```
+
+### 4.3 Zone Isolation in Graph Algorithms
+
+Graph algorithms can be scoped to a single zone, to a pair of zones, or to the full graph. Zone-scoped algorithms only traverse edges whose endpoints are both within the specified zone(s). Cross-zone edges are visible as boundary nodes but are not traversed by zone-scoped algorithms.
+
+```rust
+// Causal neighborhood within a zone only
+let neighborhood = content_hypergraph
+    .causal_neighborhood_in_zone(node_id, zone_id, hops=3);
+
+// Causal neighborhood including cross-zone connections
+let full_neighborhood = content_hypergraph
+    .causal_neighborhood_cross_zone(node_id, max_zone_hops=2, content_hops=3);
+
+// Cross-domain gap detection — requires relational hypergraph
+// Finds content in zone A that is causally adjacent to gaps in zone B
+let cross_zone_gaps = relational_hypergraph
+    .cross_zone_gap_adjacency(zone_a_id, zone_b_id);
+```
+
+-----
+
+## Part V: MCP Tools for Zone Management
+
+These tools are implemented in v2 and v3, not in v1. They are specified here for completeness.
+
+### v2 Tools (Zone Definition and Assignment)
+
+|Tool                    |Description                                                                                                                                    |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+|`create_zone`           |Define a new zone with name, description, and primary domain contextoids. All existing content in the primary domains is assigned to this zone.|
+|`assign_to_zone`        |Manually assign a specific content node to a zone. Used for content that spans multiple domains or requires explicit zone placement.           |
+|`zone_stats`            |Statistics for a zone: content count, causal edge count, cross-zone edge count, current schema version, schema history.                        |
+|`review_zone_boundaries`|Show all cross-zone edges for a zone. Flag any that need review after a recent schema change.                                                  |
+
+### v3 Tools (Schema Evolution and Migration)
+
+|Tool                     |Description                                                                                                                                                                  |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`propose_zone_schema`    |Submit a new schema version proposal for a zone. Includes full ZoneSchemaSpec and migration rules for all cross-zone edge types affected by the change.                      |
+|`validate_zone_migration`|Validate that a proposed schema migration can proceed. Returns: missing migration rules (blocking), Manual migrations (require researcher decision), estimated lock duration.|
+|`execute_zone_migration` |Execute a validated schema migration. Applies NonAtomic migrations, acquires zone locks, applies Atomic migrations in a single transaction, releases locks.                  |
+|`rollback_zone_schema`   |Roll back a zone to a specified prior schema version. Requires rollback grounds (recorded as invalidation). Executes the same migration protocol using backward rules.       |
+|`zone_migration_history` |Full history of schema versions for a zone, including rollbacks and their grounds. The schema evolution history of a zone is itself knowledge.                               |
+
+-----
+
+## Part VI: Enterprise Scale Properties
+
+### 6.1 Concurrent Zone Migrations
+
+Multiple zones can migrate simultaneously provided their lock sets do not overlap. Two zone migrations that affect entirely different zones — with no cross-zone edges between them — can proceed in parallel with no coordination.
+
+Zone migrations that share locked zones are serialized by the lock acquisition order. The canonical ordering (sorted zone ID) prevents deadlock. The worst case is a migration that must lock all zones — this is equivalent to a full schema migration and should be treated as such: scheduled, coordinated, and rare.
+
+In practice, the lock sets of zone migrations are small. A zone migration that affects one zone and has cross-zone edges to three other zones locks at most four zones. The other zones in the system continue operating normally.
+
+### 6.2 Zero-Downtime Schema Evolution
+
+The goal of subgraph schema evolution at enterprise scale is zero downtime for schema changes that are local to a zone or a small cluster of zones. This is achievable because:
+
+- Zones not involved in a migration are never locked
+- `NonAtomic` migrations require no lock at all
+- The lock duration for `Atomic` migrations is bounded by the transaction time, not the preparation time
+- `Manual` migrations are resolved before lock acquisition, not during
+
+A schema migration in the lattice gauge theory zone that requires locking three adjacent zones for a two-second transaction is invisible to the 490 researchers working in other zones. Zero downtime — not as an aspirational goal but as a structural property of the architecture.
+
+### 6.3 Governance Decentralization
+
+At enterprise scale, zone-based schema evolution decentralizes governance to the domain level. Each research group owns its zone schema. Schema evolution within a zone requires no approval from other groups. The only governance surface that requires cross-team coordination is cross-zone edge migration rules — and that coordination fires only when two domains need to connect in a new way, not every time a domain refines its internal representation.
+
+The central data architecture function shrinks to: approving new cross-zone edge types, maintaining the migration rule registry, and monitoring the zone migration log for anomalies. Everything else is decentralized.
+
+This maps onto how research organizations actually work. The people who understand lattice gauge theory design the lattice gauge theory zone schema. The people who understand clinical research design the clinical research zone schema. The central function coordinates connections, not content.
+
+-----
+
+## Part VII: Implementation Sequence
+
+### v1 — Infrastructure Preparation (Current phase)
+
+**Implement now:**
+
+- All zone infrastructure tables: `zones`, `zone_schemas`, `zone_memberships`
+- Zone ID columns on all content tables (nullable, NULL = unassigned)
+- A single default zone created at initialization
+- All content assigned to default zone on capture
+- `is_cross_zone`, `source_zone_id`, `target_zone_id` flags on `causal_edges`
+
+**Do not implement:**
+
+- Zone schema versioning (beyond version 1)
+- Migration rules
+- Zone lock mechanism
+- Any zone migration tooling
+
+**Why:** Zone IDs on content records from day one means the v2 migration path is a zone assignment operation on existing records, not a schema redesign. The cost is negligible. The alternative — adding zone IDs retroactively to a mature knowledge base — is a significant migration risk.
+
+### v2 — Zone Definition (After core system is stable, multiple iterations complete)
+
+**Prerequisites:** Core system operational, real research material flowing through it, clear picture of which domains naturally cluster into zones.
+
+**Implement:**
+
+- Zone definition and boundary rules
+- Content redistribution from default zone to named zones
+- Zone-scoped freeze operations on all three hypergraphs
+- `create_zone`, `assign_to_zone`, `zone_stats`, `review_zone_boundaries` MCP tools
+- Cross-zone edge detection and flagging
+- Basic zone statistics in `memory_stats`
+
+**Do not implement:**
+
+- Schema versioning beyond v1
+- Migration rules
+- Zone lock mechanism
+
+**Why:** Zone definition requires real experience with the knowledge base. You cannot correctly define zone boundaries before you understand what the zones actually are. This understanding comes from using the system.
+
+### v3 — Schema Evolution (After zones are defined and stable)
+
+**Prerequisites:** Zones defined, zone boundaries understood from real usage, at least one schema evolution requirement encountered in practice.
+
+**Implement:**
+
+- Zone schema versioning (ZoneSchemaSpec, zone_schemas versioning)
+- Cross-zone edge migration rules (cross_zone_edge_migrations table)
+- Zone lock mechanism
+- Full migration protocol (validation, execution, rollback)
+- Zone migration log
+- All v3 MCP tools
+- Rollback as invalidation record
+
+**Why:** This is the full feature. It should only be implemented after the core system has been used long enough to understand what schema evolution actually looks like in practice. The design is correct. The timing is data-driven, not calendar-driven.
+
+-----
+
+## Part VIII: What This Changes About the Architecture
+
+Subgraph schema evolution does not replace any existing architectural decision. It extends the architecture with a new layer of structure. The changes to the core architecture document are:
+
+**Schema:** Add zone infrastructure tables and zone ID columns to all content tables. Add `is_cross_zone` flag and zone ID references to `causal_edges`. No existing tables are modified — additions only.
+
+**Hypergraphs:** Add zone-scoped freeze operations as additional API surface on all three UltraGraph instances. No changes to existing freeze/unfreeze behavior.
+
+**MCP tools:** Add zone management and migration tools in v2 and v3. No changes to existing tools — additions only.
+
+**Pipelines:** Every extraction pipeline adds zone assignment as a final step: determine primary zone for the captured content, write zone_membership record. For v1, this always assigns to the default zone. For v2+, the zone assignment uses the domain contextoids attached through the relational layer.
+
+-----
+
+## Conclusion
+
+Subgraph schema evolution is a feature that does not exist elsewhere because the problem it solves has not been encountered by systems whose data is an irreplaceable epistemic asset rather than an operational record.
+
+The key insight is that research domains evolve at different rates and in different directions. Schema evolution that is adequate for a traditional database — global, coordinated, with a maintenance window — is incompatible with a research knowledge base where different domains have different representational needs, schema experiments will fail and must be reversible, and the knowledge base must remain operational continuously.
+
+The solution is local schema ownership at the zone level, with a hard requirement on cross-zone edge migration rules that guarantees integrity is preserved across zone boundaries. The atomic zone lock makes migration transactions safe. The rollback-as-invalidation record makes failed schema experiments part of the epistemic history rather than evidence that is lost.
+
+The infrastructure preparation — zone IDs from day one — costs almost nothing and makes everything else possible without a painful retrofitting migration.
+
+The rest is experience. The zones will be defined when their boundaries are understood. The schema will evolve when evolution is needed. The migration rules will be written when the first non-trivial cross-zone schema change is required. Each step is driven by real usage, not by the calendar.
+
+-----
+
+*A knowledge system that cannot evolve its representational structure is a knowledge system that cannot grow with the understanding it is meant to support. Subgraph schemas evolution is the architectural expression of the same process ontology that grounds the rest of Deep Brain: the schema is not a fixed truth, it is a becoming — shaped by experience, subject to revision, and valuable precisely because its history of revision is preserved.*

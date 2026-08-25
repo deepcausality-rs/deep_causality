@@ -35,7 +35,7 @@ fn test_idempotence_of_semilattices() {
 
 #[test]
 fn test_count_is_commutative_but_not_idempotent() {
-    // Commutative (proved above) but combine(x,x) != x — so not a BoundedSemilattice.
+    // Commutative<Multiplicative> (proved above) but combine(x,x) != x — so not a BoundedSemilattice.
     assert_eq!(Count(1).combine(Count(1)), Count(2));
     assert_ne!(Count(1).combine(Count(1)), Count(1));
 }

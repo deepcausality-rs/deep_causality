@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::algebra::operator::{Additive, Multiplicative, Operator};
+
 use crate::Float106;
 
 /// Marker trait: Promises that `a * b == b * a`.
@@ -40,26 +42,53 @@ use crate::Float106;
 /// Listing the types is the point, not an accident of style. Each line is one deliberate
 /// assertion about one type, and the repetition is the cost of making the promise explicit.
 /// `AGENTS.md` also steers library code away from macros, so the list stays literal.
-pub trait Commutative {}
+pub trait Commutative<O: Operator> {}
 
 // The real scalars.
-impl Commutative for f32 {}
-impl Commutative for f64 {}
-impl Commutative for Float106 {}
+impl Commutative<Multiplicative> for f32 {}
+impl Commutative<Multiplicative> for f64 {}
+impl Commutative<Multiplicative> for Float106 {}
 
 // The integers. ℤ is a commutative ring, so all three laws hold.
-impl Commutative for i8 {}
-impl Commutative for i16 {}
-impl Commutative for i32 {}
-impl Commutative for i64 {}
-impl Commutative for i128 {}
-impl Commutative for isize {}
+impl Commutative<Multiplicative> for i8 {}
+impl Commutative<Multiplicative> for i16 {}
+impl Commutative<Multiplicative> for i32 {}
+impl Commutative<Multiplicative> for i64 {}
+impl Commutative<Multiplicative> for i128 {}
+impl Commutative<Multiplicative> for isize {}
 
 // The naturals. ℕ is a commutative semiring: it has no additive inverses, but the three
 // multiplicative laws are unaffected by that.
-impl Commutative for u8 {}
-impl Commutative for u16 {}
-impl Commutative for u32 {}
-impl Commutative for u64 {}
-impl Commutative for u128 {}
-impl Commutative for usize {}
+impl Commutative<Multiplicative> for u8 {}
+impl Commutative<Multiplicative> for u16 {}
+impl Commutative<Multiplicative> for u32 {}
+impl Commutative<Multiplicative> for u64 {}
+impl Commutative<Multiplicative> for u128 {}
+impl Commutative<Multiplicative> for usize {}
+
+// Additive commutativity. This one does survive the machine: IEEE 754 addition is exactly
+// commutative on the finite values, unlike associativity above.
+// The real scalars.
+impl Commutative<Additive> for f32 {}
+impl Commutative<Additive> for f64 {}
+impl Commutative<Additive> for Float106 {}
+
+// The integers, ℤ.
+impl Commutative<Additive> for i8 {}
+impl Commutative<Additive> for i16 {}
+impl Commutative<Additive> for i32 {}
+impl Commutative<Additive> for i64 {}
+impl Commutative<Additive> for i128 {}
+impl Commutative<Additive> for isize {}
+
+// The naturals, ℕ.
+impl Commutative<Additive> for u8 {}
+impl Commutative<Additive> for u16 {}
+impl Commutative<Additive> for u32 {}
+impl Commutative<Additive> for u64 {}
+impl Commutative<Additive> for u128 {}
+impl Commutative<Additive> for usize {}
+
+// 𝔽₂. Exclusive-or and conjunction both commute.
+impl Commutative<Additive> for deep_causality_num::Gf2 {}
+impl Commutative<Multiplicative> for deep_causality_num::Gf2 {}

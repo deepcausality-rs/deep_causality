@@ -6,6 +6,7 @@
 //! The idempotence law for a [`Monoid`](crate::Monoid)'s operation.
 
 use crate::Monoid;
+use crate::algebra::operator::Operator;
 
 /// An **idempotent** monoid operation:
 ///
@@ -14,4 +15,4 @@ use crate::Monoid;
 /// A count monoid is commutative but NOT idempotent, so this is kept separate from
 /// [`CommutativeMonoid`](crate::CommutativeMonoid); a [`BoundedSemilattice`](crate::BoundedSemilattice)
 /// is exactly a commutative + idempotent monoid.
-pub trait Idempotent: Monoid {}
+pub trait Idempotent<O: Operator>: Monoid {}

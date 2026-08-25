@@ -1,0 +1,38 @@
+---
+title: "IKKT matrix model"
+question: "What does a non-commutative geometry calculation look like on this crate's kernels?"
+summary: "Spacetime from matrix dynamics, minimizing S = −Tr([X_μ, X_ν]²). The commutator kernel is the crate's contribution."
+order: 2
+command: "cargo run --release -p quantum_examples --example ikkt_matrix_model"
+usesCrate: true
+uses:
+  - commutator_kernel
+  - Operator
+crates:
+  - deep_causality_algebra
+  - deep_causality_multivector
+  - deep_causality_num_complex
+  - deep_causality_quantum
+source: "examples/quantum_examples/ikkt_matrix_model"
+---
+
+The IKKT matrix model is a non-perturbative formulation of superstring theory in
+which spacetime is not assumed. It emerges from the dynamics of a set of
+matrices `X_μ`, which minimize an action built entirely out of their mutual
+commutators.
+
+What this example takes from the crate is narrow and worth stating plainly: it
+imports `commutator_kernel` and the `Operator` alias, and nothing else. The
+geometry, the algebra and the printed report come from
+`deep_causality_multivector`, `deep_causality_algebra` and
+`deep_causality_num_complex`.
+
+That narrowness is the interesting part. `commutator_kernel` returns
+`Result<HilbertState<R>, QuantumError>` rather than a bare value, so a metric
+mismatch between the two operands is a named failure at the point it happens,
+not a silently wrong matrix that propagates into the action.
+
+The same kernel has a causal-monad wrapper, `commutator`, which returns a
+`PropagatingEffect` and routes that failure to the error channel. This example
+calls the kernel directly, which is the right choice when the caller is ordinary
+Rust rather than a causaloid.

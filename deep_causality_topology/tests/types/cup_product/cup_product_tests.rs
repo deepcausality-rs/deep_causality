@@ -623,3 +623,33 @@ fn the_two_apis_agree_on_an_out_of_range_degree() {
     );
     assert!(binary);
 }
+
+#[test]
+fn simplicial_cup_skips_a_split_whose_partner_is_absent_from_the_complex() {
+    use deep_causality_topology::{SimplicialComplex, Skeleton};
+
+    // Alexander–Whitney splits [0,1,2] as ([0,1], [1,2]). This complex is not
+    // closed under faces: its 1-skeleton holds [0,1] alone, so the right factor
+    // has no cell to be evaluated on. The term contributes nothing rather than
+    // failing, and the product on that face is zero.
+    let skeletons = vec![
+        Skeleton::new(
+            0,
+            vec![
+                Simplex::new(vec![0]),
+                Simplex::new(vec![1]),
+                Simplex::new(vec![2]),
+            ],
+        ),
+        Skeleton::new(1, vec![Simplex::new(vec![0, 1])]),
+        Skeleton::new(2, vec![Simplex::new(vec![0, 1, 2])]),
+    ];
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(skeletons, Vec::new(), Vec::new(), Vec::new());
+
+    let alpha = vec![3.0];
+    let beta = vec![5.0];
+    let out = cup_product(&complex, &alpha, 1, &beta, 1).expect("cup");
+
+    assert_eq!(out, vec![0.0]);
+}

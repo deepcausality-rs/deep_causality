@@ -716,16 +716,17 @@ where
             if let Some(guess) = lambda0.filter(|l| l.len() == m) {
                 g[n0..].copy_from_slice(guess);
             }
-            deep_causality_sparse::cg_solve_preconditioned_from(
+            deep_causality_linear::cg_solve_preconditioned_from(
                 apply, &diag, &rhs, &g, tolerance, max_iter,
             )
         } else {
-            deep_causality_sparse::cg_solve_preconditioned(apply, &diag, &rhs, tolerance, max_iter)
+            deep_causality_linear::cg_solve_preconditioned(apply, &diag, &rhs, tolerance, max_iter)
         };
         let y = solve.map_err(|f| {
+            // `CgFailure` names three distinct failures; reporting all of them as
+            // "did not converge in N iterations" was what the single-struct form forced.
             TopologyError::HodgeDecompositionFailed(format!(
-                "weighted projection solve did not converge in {} iterations (final residual {})",
-                f.iterations, f.residual
+                "weighted projection solve failed: {f}"
             ))
         })?;
         let (phi_slice, lambda) = y.split_at(n0);
@@ -967,19 +968,16 @@ where
                         *gi = R::zero();
                     }
                 }
-                deep_causality_sparse::cg_solve_preconditioned_from(
+                deep_causality_linear::cg_solve_preconditioned_from(
                     apply, &diag, &wrhs, &g, tolerance, max_iter,
                 )
             }
-            _ => deep_causality_sparse::cg_solve_preconditioned(
+            _ => deep_causality_linear::cg_solve_preconditioned(
                 apply, &diag, &wrhs, tolerance, max_iter,
             ),
         };
         let mut phi = solve.map_err(|f| {
-            TopologyError::HodgeDecompositionFailed(format!(
-                "open projection solve did not converge in {} iterations (final residual {})",
-                f.iterations, f.residual
-            ))
+            TopologyError::HodgeDecompositionFailed(format!("open projection solve failed: {f}"))
         })?;
         if reference_vertices.is_empty() {
             subtract_mean_in_place(&mut phi);

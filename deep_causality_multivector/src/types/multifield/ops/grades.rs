@@ -9,11 +9,11 @@
 
 use crate::CausalMultiField;
 use crate::traits::multi_vector::MultiVector;
-use deep_causality_algebra::Field;
+use deep_causality_algebra::DivisibleByIntegers;
 
 impl<T> CausalMultiField<T>
 where
-    T: Field + Copy + Default + PartialOrd,
+    T: DivisibleByIntegers + Copy + Default + PartialOrd,
 {
     /// Projects the field onto grade k: ⟨F⟩_k.
     ///

@@ -36,8 +36,8 @@ consumer that never materialized.
 
 The crate was **retired** rather than generalized:
 
-- `deep_causality_effects/src/` reduced to an empty stub library.
-- `deep_causality_effects/README.md` rewritten as a deprecation
+- `../../../../yanked/deep_causality_effects/src/` reduced to an empty stub library.
+- `../../../../yanked/deep_causality_effects/README.md` rewritten as a deprecation
   notice marking the crate name as effectively free for reuse.
 - Published versions on crates.io (0.0.1 – 0.0.7) remain available
   for any existing external dependents. Version 0.0.8 was published

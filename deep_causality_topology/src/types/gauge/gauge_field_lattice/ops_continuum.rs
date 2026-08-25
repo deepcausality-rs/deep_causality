@@ -154,17 +154,29 @@ impl<
             return Ok(R::zero());
         }
 
-        // Sum over all (μ,ν,ρ,σ) with proper epsilon tensor
-        // For simplicity, sum over independent pairs: (01,23), (02,13), (03,12)
+        // The epsilon contraction runs over all 24 permutations of four distinct indices. They
+        // fall into three unordered pairings — {01|23}, {02|13}, {03|12} — of eight permutations
+        // each: two orderings within the first pair, two within the second, and two for
+        // exchanging the pairs. Every one of the eight contributes the same term, because
+        // reversing a pair flips the sign of both epsilon and F and the two cancel.
+        //
+        // So  ε_{μνρσ} Tr[F_μν F_ρσ] = 8 (Tr[F01 F23] − Tr[F02 F13] + Tr[F03 F12]),
+        //
+        // the signs coming from ε_0123 = +1, ε_0213 = −1 and ε_0312 = +1. The three-term sum
+        // below is therefore an eighth of the contraction the docstring states, and the constant
+        // absorbs the eight: 8/(32π²) = 1/(4π²).
+        //
+        // This was 1/(32π²) applied to the three-term sum, which left the density eight times too
+        // small and Q unquantized. Nothing caught it: every charge test that existed then used the
+        // identity field, where F = 0 and any constant gives zero. A configuration with non-zero
+        // field strength covers it now, in
+        // `test_topological_charge_density_uses_the_full_epsilon_normalization`.
         let mut q = R::zero();
-        let normalization = R::from_f64(1.0 / (32.0 * std::f64::consts::PI * std::f64::consts::PI))
+        let normalization = R::from_f64(1.0 / (4.0 * std::f64::consts::PI * std::f64::consts::PI))
             .ok_or_else(|| {
                 TopologyError::LatticeGaugeError("Failed to convert normalization to T".to_string())
             })?;
 
-        // F_01 * F_23
-        let _f01 = self.try_field_strength(site, 0, 1)?;
-        let _f23 = self.try_field_strength(site, 2, 3)?;
         // F_01 * F_23
         let f01 = self.try_field_strength(site, 0, 1)?;
         let f23 = self.try_field_strength(site, 2, 3)?;

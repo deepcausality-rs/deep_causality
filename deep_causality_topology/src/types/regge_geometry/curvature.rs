@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use std::f64::consts::PI;
 
 use deep_causality_algebra::RealField;
+use deep_causality_linear::{DenseMatrix, determinant};
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
@@ -251,15 +252,23 @@ where
         let zero = R::zero();
         let one = R::one();
 
-        let mat = vec![
-            vec![zero, one, one, one, one],
-            vec![one, zero, d_uv, d_uw, d_ux],
-            vec![one, d_uv, zero, d_vw, d_vx],
-            vec![one, d_uw, d_vw, zero, d_wx],
-            vec![one, d_ux, d_vx, d_wx, zero],
-        ];
+        // The Cayley-Menger matrix, row-major. Its `(0,0)` entry is zero by construction, so the
+        // determinant has to pivot by search; `deep_causality_linear::determinant` does, and the
+        // Laplace expansion this replaces sidestepped the question by never pivoting at all.
+        let mat = DenseMatrix::from_vec(
+            vec![
+                zero, one, one, one, one, //
+                one, zero, d_uv, d_uw, d_ux, //
+                one, d_uv, zero, d_vw, d_vx, //
+                one, d_uw, d_vw, zero, d_wx, //
+                one, d_ux, d_vx, d_wx, zero,
+            ],
+            5,
+            5,
+        )
+        .map_err(TopologyError::from)?;
 
-        let det = Self::det_recursive(&mat);
+        let det = determinant(&mat).map_err(TopologyError::from)?;
         let denom = <R as FromPrimitive>::from_f64(288.0).expect("288 representable");
         let vol_sq = det / denom;
 
@@ -270,45 +279,6 @@ where
         }
 
         Ok(vol_sq.sqrt())
-    }
-
-    fn det_recursive(m: &[Vec<R>]) -> R {
-        let n = m.len();
-        if n == 1 {
-            return m[0][0];
-        }
-        if n == 2 {
-            return m[0][0] * m[1][1] - m[0][1] * m[1][0];
-        }
-
-        let mut det = R::zero();
-        let one = R::one();
-        let neg_one = -one;
-        for (c, &val) in m[0].iter().enumerate().take(n) {
-            let sign = if c % 2 == 0 { one } else { neg_one };
-            let sub = Self::submatrix(m, 0, c);
-            det += sign * val * Self::det_recursive(&sub);
-        }
-        det
-    }
-
-    fn submatrix(m: &[Vec<R>], skip_r: usize, skip_c: usize) -> Vec<Vec<R>> {
-        let n = m.len();
-        let mut res = Vec::with_capacity(n - 1);
-        for (r, row) in m.iter().enumerate().take(n) {
-            if r == skip_r {
-                continue;
-            }
-            let mut new_row = Vec::with_capacity(n - 1);
-            for (c, &val) in row.iter().enumerate().take(n) {
-                if c == skip_c {
-                    continue;
-                }
-                new_row.push(val);
-            }
-            res.push(new_row);
-        }
-        res
     }
 }
 

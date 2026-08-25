@@ -17,7 +17,7 @@
 use deep_causality_topology::{CellComplex, ChainComplex, HasHodgeStar, TopologyError};
 use std::borrow::Cow;
 
-use deep_causality_sparse::CsrMatrix;
+use deep_causality_linear::CsrMatrix;
 
 /// Minimal unit-struct implementor used purely to exercise the trait's shape.
 /// Pairs with `CellComplex<DummyCell>` (the simplest `ChainComplex` in the
