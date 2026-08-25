@@ -223,3 +223,74 @@ fn test_the_length_mismatch_message_names_the_length_produced_and_the_one_expect
         "the expected length is the right-hand side's: {s}"
     );
 }
+
+// ---- mutation-driven: the preconditioner's effect was never asserted ---------------------------
+
+/// Jacobi-preconditioned CG solves a diagonal system in one iteration.
+///
+/// For `A = diag(d)` the Jacobi preconditioner is `M = A`, so `M⁻¹A = I` and the first search
+/// direction already points at the solution. That makes a one-iteration budget a sharp test of the
+/// preconditioner: it succeeds only if the preconditioning step is `x / dᵢ` applied to positive
+/// diagonal entries.
+///
+/// Mutation testing found both halves of that step unasserted. Replacing `dᵢ > 0` with `dᵢ < 0`
+/// and replacing `x / dᵢ` with `x * dᵢ` each survived the whole suite: the existing cases used a
+/// Laplacian with a constant diagonal and a generous iteration budget, where preconditioning
+/// changes the iteration count but never the answer.
+#[test]
+fn test_the_jacobi_preconditioner_solves_a_diagonal_system_in_one_iteration() {
+    let d = [100.0_f64, 4.0, 0.25, 9.0];
+    let apply = |v: &[f64]| -> Vec<f64> { v.iter().zip(d.iter()).map(|(x, di)| x * di).collect() };
+    let b = [100.0_f64, 8.0, 0.5, 27.0];
+    // A x = b has the exact solution (1, 2, 2, 3).
+    let expected = [1.0_f64, 2.0, 2.0, 3.0];
+
+    let x = cg_solve_preconditioned(apply, &d, &b, 1e-12, 1)
+        .expect("preconditioned CG solves a diagonal system in one iteration");
+    for (got, want) in x.iter().zip(expected.iter()) {
+        assert!(
+            (got - want).abs() < 1e-9,
+            "expected {want}, got {got}; the preconditioner did not reduce the system to identity"
+        );
+    }
+}
+
+/// The same system without preconditioning does not converge in one iteration.
+///
+/// This is the control. It shows the test above is about the preconditioner rather than about the
+/// system being easy: the diagonal spans four orders of magnitude, so plain CG needs its full
+/// Krylov sequence.
+#[test]
+fn test_the_same_diagonal_system_needs_more_than_one_iteration_unpreconditioned() {
+    let d = [100.0_f64, 4.0, 0.25, 9.0];
+    let apply = |v: &[f64]| -> Vec<f64> { v.iter().zip(d.iter()).map(|(x, di)| x * di).collect() };
+    let b = [100.0_f64, 8.0, 0.5, 27.0];
+
+    let outcome = cg_solve(apply, &b, 1e-12, 1);
+    assert!(
+        outcome.is_err(),
+        "plain CG on a system with a spread diagonal must not converge in one iteration"
+    );
+}
+
+/// A non-positive diagonal entry is left unpreconditioned rather than inverted.
+///
+/// The guard is `dᵢ > 0`. A zero entry must pass the residual through unchanged; inverting it
+/// would divide by zero. A negative entry must also pass through, because dividing by it would
+/// make the preconditioner indefinite.
+#[test]
+fn test_a_non_positive_diagonal_entry_passes_through_unpreconditioned() {
+    // A is diag(4, 1) but the caller supplies a diagonal with a zero and a negative entry, which
+    // is what a clipped or partially-degenerate diagonal looks like. The solve must still reach
+    // the right answer, which it can only do if those rows are left alone.
+    let a = [4.0_f64, 1.0];
+    let apply = |v: &[f64]| -> Vec<f64> { v.iter().zip(a.iter()).map(|(x, ai)| x * ai).collect() };
+    let b = [8.0_f64, 3.0];
+
+    for supplied in [[0.0_f64, 1.0], [-4.0_f64, 1.0]] {
+        let x = cg_solve_preconditioned(apply, &supplied, &b, 1e-12, 50)
+            .unwrap_or_else(|e| panic!("diagonal {supplied:?} must still solve: {e}"));
+        assert!((x[0] - 2.0).abs() < 1e-9, "x0 was {}", x[0]);
+        assert!((x[1] - 3.0).abs() < 1e-9, "x1 was {}", x[1]);
+    }
+}

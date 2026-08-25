@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+#
+# cargo-mutants configuration.
+#
+# ---------------------------------------------------------------------------------------------
+# Why this exists
+# ---------------------------------------------------------------------------------------------
+#
+# Line coverage answers "did this run". It does not answer "would a test notice if this were
+# wrong", and the two came apart badly in `deep_causality_topology`: the topological-charge
+# normalization was eight times too small, its line ran 513 times across the suite, and every
+# charge test used the identity gauge field, where the field strength is zero and any constant
+# gives the same answer. A true assertion with no discriminating power.
+#
+# Mutation testing asks the second question directly. A surviving mutant is a change to the
+# source that no test objects to.
+#
+# ---------------------------------------------------------------------------------------------
+# Equivalent mutants
+# ---------------------------------------------------------------------------------------------
+#
+# A mutant that cannot change behaviour is not a test gap and no test can kill it. Those are
+# excluded by name below, each with the argument for why it is equivalent. Anything not listed
+# here that survives is a real gap.
+
+exclude_re = [
+    # `if m > best { best = m }` versus `>=` in a maximum reduction. Both keep the first of any
+    # tied pair and both end at the same maximum, so the two are the same function. Applies to
+    # `vector_norm_inf`, `matrix_norm_l1` and `matrix_norm_inf`.
+    "replace > with >= in vector_norm_inf",
+    "replace > with >= in matrix_norm_l1",
+    "replace > with >= in matrix_norm_inf",
+
+    # `if rows == 0 || cols == 0` versus `&&` in `svd_sorted`. The two differ only when exactly
+    # one dimension is zero, and there the general path produces the same factors as the early
+    # return: for `3 x 0` both give `U` at `3 x 0` and `Vᴴ` at `0 x 0`, for `0 x 4` both give `U`
+    # at `0 x 0` and `Vᴴ` at `0 x 4`, with no singular values either way. Checked by applying the
+    # mutant and diffing the printed factors for both orientations: identical.
+    #
+    # `let transposed = rows < cols` versus `<=` in `svd_sorted`. Widening it sends a square
+    # matrix down the transposed path, which is the same computation: from `A = U Σ Vᴴ` it
+    # follows that `Aᴴ = V Σ Uᴴ`, so decomposing `Aᴴ` yields `U' = V` and `V' = U`, and the
+    # function's own swap-back returns `U` and `Vᴴ` unchanged. Checked by applying the mutant to
+    # `[[4, 1], [2, 3]]`, a matrix whose two factors are different (`A Aᴴ = [[17,11],[11,13]]`
+    # against `Aᴴ A = [[20,10],[10,10]]`): every entry of `U` and `Vᴴ` agrees to fifteen digits,
+    # differing only in the last one or two units in the last place.
+    #
+    # `test_a_square_matrix_keeps_its_left_and_right_factors_distinct` was written to kill this
+    # and cannot. It is kept because it pins `U` and `Vᴴ` as separate factors, which no test did
+    # before, and because a reconstruction check cannot make that distinction.
+    "replace \\|\\| with && in svd_sorted",
+    "replace < with <= in svd_sorted",
+
+    # `for j in (i + 1)..n` versus `(i * 1)..n` in `solve_least_squares`'s back substitution.
+    # The mutation widens the range by exactly one index, `j = i`, and the term it adds is
+    # `conj(L[i][i]) * x[i]` — where `x[i]` is still zero, because it is assigned on the line
+    # after the sum. The extra term is a multiplication by zero at every `i` and every `n`.
+    # Confirmed by injection at `n = 3`, where the two other index mutations on the same loops do
+    # change the answer and are caught.
+    "replace + with * in solve_least_squares",
+]

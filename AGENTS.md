@@ -384,6 +384,41 @@ To rebuild and test the entire repo
 You aim for one hundred percent test coverage of all added or edited code files.
 The only exception is if, for some reason, some code is impossible to reach. Then you skip testing that dead code.
 
+### Coverage is a floor
+
+Coverage says a line ran. It does not say a test would notice if that line were wrong, and the two
+come apart on exactly the code that matters most.
+
+The topological-charge normalization in `deep_causality_topology` was eight times too small. The
+line computing it ran 513 times across the suite. Every test of it used the identity gauge field,
+where the field strength is zero, so `q == 0` held for any constant whatsoever. Four true
+assertions, full coverage, and a wrong answer that survived until someone compared the docstring
+with the code.
+
+That failure has a shape, and it recurs: a test that pins a quantity only where the quantity
+vanishes, or only at one well-behaved input. Watch for it when a test
+
+- asserts a result is zero, and the suspected error is a factor or an offset,
+- uses only the identity, a diagonal, or a symmetric matrix, where several distinct quantities
+  coincide,
+- uses only one size, where an index expression degenerates. A `2x2` Cholesky has one off-diagonal
+  entry at `j = 0`, and there `a[i * n + j]` and `a[i * n - j]` are the same number.
+
+### Mutation testing
+
+`build/scripts/mutants.sh` runs `cargo mutants`, which changes one expression at a time and re-runs
+the tests. A mutant no test objects to is a decision nothing pins. It answers the question coverage
+cannot.
+
+Point it at code where a wrong constant or a flipped comparison yields a plausible number rather
+than a crash: numeric kernels, tolerance gates, index arithmetic. It is not a whole-workspace gate,
+because every mutant costs a build plus a test run and `deep_causality_linear/src/algorithms` alone
+yields 1156 of them.
+
+Equivalent mutants — changes that cannot alter behaviour — belong in `//.cargo/mutants.toml`, each
+with the measurement that settles it rather than an assertion that it is fine. A survivor not
+listed there is a real gap.
+
 Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
 
 Every `[[example]]` also needs a `rust_binary` in its owning package's `BUILD.bazel`, because Bazel does not read `Cargo.toml`. Two places declare examples: the packages under `examples/`, and the library crates carrying their own verification harnesses and studies (`deep_causality_cfd/verification` and `studies`, `deep_causality_algorithms/verification`, `deep_causality_haft/examples`, and others). In a library crate the example binaries sit below the `rust_library` under a `# Example binaries` comment and depend on `:<crate_name>`. A binary's `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set.

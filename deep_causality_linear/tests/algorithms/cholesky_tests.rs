@@ -229,3 +229,167 @@ fn test_linearly_dependent_columns_are_rejected() {
         Err(LinearError(LinearErrorEnum::NotPositiveDefinite { .. }))
     ));
 }
+
+// ---- mutation-driven: every factorisation input above is 2x2 -----------------------------------
+
+/// The Cholesky factor of a 4x4, checked entry by entry.
+///
+/// `cholesky` reads `a[i * n + j]` in its off-diagonal branch, where `j < i`. Replacing that `+`
+/// with `-` survived the whole suite, because every square input here was 2x2: the only
+/// off-diagonal entry is `(1, 0)`, and at `j = 0` the two index expressions are the same number.
+///
+/// A 3x3 does not settle it either. At `i = 2, j = 1` the mutated index `i*n - j` lands on
+/// `a[1][2]`, which equals `a[2][1]` in a symmetric matrix. From 4x4 upwards the two diverge:
+/// `i = 3, j = 1` reads `a[2][3]` where `a[3][1]` is meant, and a symmetric matrix does not make
+/// those equal.
+///
+/// `A = L Lᴴ` for `L = [[2,0,0,0], [1,3,0,0], [4,1,2,0], [3,5,1,2]]`, so the expected factor is
+/// exact in integers and the assertion needs no tolerance argument.
+#[test]
+fn test_the_cholesky_factor_of_a_four_by_four_is_exact() {
+    #[rustfmt::skip]
+    let a = DenseMatrix::from_vec(
+        vec![
+            4.0,  2.0,  8.0,  6.0,
+            2.0, 10.0,  7.0, 18.0,
+            8.0,  7.0, 21.0, 19.0,
+            6.0, 18.0, 19.0, 39.0,
+        ],
+        4, 4,
+    )
+    .unwrap();
+
+    #[rustfmt::skip]
+    let expected: [f64; 16] = [
+        2.0, 0.0, 0.0, 0.0,
+        1.0, 3.0, 0.0, 0.0,
+        4.0, 1.0, 2.0, 0.0,
+        3.0, 5.0, 1.0, 2.0,
+    ];
+
+    let l = cholesky(&a).unwrap();
+    for (k, (got, want)) in l.as_slice().iter().zip(expected.iter()).enumerate() {
+        assert!(
+            (got - want).abs() < 1e-12,
+            "L[{}][{}] expected {want}, got {got}",
+            k / 4,
+            k % 4
+        );
+    }
+}
+
+/// The same matrix round-trips: `L Lᴴ` reproduces `A`.
+///
+/// The entry-by-entry check above pins the factor; this pins that the factor is a factor. Both
+/// are needed, since an index error can produce a lower-triangular matrix that is not `A`'s.
+#[test]
+fn test_the_four_by_four_factor_reconstructs_the_input() {
+    #[rustfmt::skip]
+    let entries = vec![
+        4.0,  2.0,  8.0,  6.0,
+        2.0, 10.0,  7.0, 18.0,
+        8.0,  7.0, 21.0, 19.0,
+        6.0, 18.0, 19.0, 39.0,
+    ];
+    let a = DenseMatrix::from_vec(entries.clone(), 4, 4).unwrap();
+    let l = cholesky(&a).unwrap();
+    let ls = l.as_slice();
+
+    for i in 0..4 {
+        for j in 0..4 {
+            let mut acc = 0.0_f64;
+            for k in 0..4 {
+                acc += ls[i * 4 + k] * ls[j * 4 + k];
+            }
+            assert!(
+                (acc - entries[i * 4 + j]).abs() < 1e-12,
+                "(L Lᴴ)[{i}][{j}] expected {}, got {acc}",
+                entries[i * 4 + j]
+            );
+        }
+    }
+}
+
+/// A least-squares fit with three unknowns, solved exactly.
+///
+/// Every least-squares case above has an `n x 2` design matrix, so the normal equations are 2x2
+/// and both substitution loops run with `n = 2`. At that size three separate index mutations are
+/// invisible: `lf[i*n + j]` and `lf[i*n - j]` agree at `j = 0`, which is the only forward index;
+/// `lf[j*n + i]` and `lf[j*n - i]` agree at `i = 0`, the only backward one; and widening the
+/// backward loop bound adds terms that multiply an `x[j]` still holding zero.
+///
+/// Fitting `2 + 3x - x²` at `x = 0..4` gives an overdetermined but consistent system, so the
+/// least-squares solution is the exact polynomial and the expected value comes from the
+/// polynomial rather than from running the solver.
+#[test]
+fn test_a_three_parameter_least_squares_fit_recovers_the_exact_polynomial() {
+    // Rows are [1, x, x²] for x = 0, 1, 2, 3, 4.
+    #[rustfmt::skip]
+    let a = DenseMatrix::from_vec(
+        vec![
+            1.0, 0.0,  0.0,
+            1.0, 1.0,  1.0,
+            1.0, 2.0,  4.0,
+            1.0, 3.0,  9.0,
+            1.0, 4.0, 16.0,
+        ],
+        5, 3,
+    )
+    .unwrap();
+    // 2 + 3x - x² evaluated at the same points.
+    let b = DenseVector::from_vec(vec![2.0_f64, 4.0, 4.0, 2.0, -2.0]);
+
+    let x = solve_least_squares(&a, &b).unwrap();
+    let expected = [2.0_f64, 3.0, -1.0];
+
+    assert_eq!(x.len(), 3);
+    for (k, want) in expected.iter().enumerate() {
+        assert!(
+            (x.as_slice()[k] - want).abs() < 1e-9,
+            "coefficient {k} expected {want}, got {}",
+            x.as_slice()[k]
+        );
+    }
+}
+
+/// The same fit with a residual, so the solution is a genuine projection rather than an exact hit.
+///
+/// A consistent system can be solved by any method that inverts the normal equations correctly;
+/// perturbing one observation makes the normal equations do real work, and the answer is then
+/// pinned by the residual being orthogonal to the column space, which is what least squares means.
+#[test]
+fn test_a_three_parameter_fit_leaves_a_residual_orthogonal_to_the_columns() {
+    #[rustfmt::skip]
+    let entries = vec![
+        1.0, 0.0,  0.0,
+        1.0, 1.0,  1.0,
+        1.0, 2.0,  4.0,
+        1.0, 3.0,  9.0,
+        1.0, 4.0, 16.0,
+    ];
+    let a = DenseMatrix::from_vec(entries.clone(), 5, 3).unwrap();
+    let obs = [2.0_f64, 4.0, 4.5, 2.0, -2.0];
+    let b = DenseVector::from_vec(obs.to_vec());
+
+    let x = solve_least_squares(&a, &b).unwrap();
+
+    // r = b − A x, then Aᵀ r = 0 to working precision.
+    let mut r = [0.0_f64; 5];
+    for (i, slot) in r.iter_mut().enumerate() {
+        let mut ax = 0.0;
+        for k in 0..3 {
+            ax += entries[i * 3 + k] * x.as_slice()[k];
+        }
+        *slot = obs[i] - ax;
+    }
+    for k in 0..3 {
+        let mut dot = 0.0_f64;
+        for (i, ri) in r.iter().enumerate() {
+            dot += entries[i * 3 + k] * ri;
+        }
+        assert!(
+            dot.abs() < 1e-9,
+            "column {k} of A must be orthogonal to the residual, got {dot}"
+        );
+    }
+}

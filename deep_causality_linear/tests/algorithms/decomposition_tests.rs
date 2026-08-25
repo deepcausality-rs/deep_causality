@@ -528,3 +528,258 @@ mod svd_shape_and_complex {
         assert_eq!(vt.shape(), (1, 2));
     }
 }
+
+// ---- mutation-driven: the tests above use diagonal matrices ------------------------------------
+//
+// Every SVD case in this file was a diagonal matrix. A diagonal matrix is symmetric, so U and V
+// coincide and several decisions in `svd_sorted` and `svd_truncated` become invisible. Mutation
+// testing surfaced ten surviving mutants across those two functions. The tests below are written
+// against the specific decisions the mutants flipped.
+
+/// `svd_sorted` returns empty factors when EITHER dimension is zero, not only when both are.
+///
+/// The guard is `rows == 0 || cols == 0`. Replacing the `||` with `&&` survived every test,
+/// because the only empty case under test was `0 x 0`, where both readings agree.
+#[test]
+fn test_the_svd_of_a_matrix_with_one_zero_dimension_is_empty() {
+    let tall: DenseMatrix<f64> = DenseMatrix::zeros(3, 0);
+    let (u, s, vt) = svd(&tall).unwrap();
+    assert_eq!(s.len(), 0, "a 3x0 matrix has no singular values");
+    assert_eq!(u.rows(), 3);
+    assert_eq!(u.cols(), 0);
+    assert_eq!(vt.rows(), 0);
+
+    let wide: DenseMatrix<f64> = DenseMatrix::zeros(0, 4);
+    let (u, s, vt) = svd(&wide).unwrap();
+    assert_eq!(s.len(), 0, "a 0x4 matrix has no singular values");
+    assert_eq!(u.rows(), 0);
+    assert_eq!(vt.cols(), 4);
+}
+
+/// A square matrix is decomposed directly, and its `U` and `Vᴴ` are not interchangeable.
+///
+/// `svd_sorted` transposes when `rows < cols`. Widening that to `rows <= cols` sends a square
+/// matrix down the transposed path, which returns `U` and `V` swapped. The swap still reconstructs
+/// the input — `V Σ Uᴴ = (U Σ Vᴴ)ᴴ` and the input is its own double adjoint — so a reconstruction
+/// check cannot see it. Only an assertion about `U` itself can.
+///
+/// The matrix has to be genuinely asymmetric under the swap. `[[0, 2], [1, 0]]` is not: its left
+/// and right singular vectors are both signed unit vectors, and exchanging them leaves every
+/// magnitude in place. `A = [[4, 1], [2, 3]]` has `A Aᴴ = [[17, 11], [11, 13]]` against
+/// `Aᴴ A = [[20, 10], [10, 10]]`, so the two factors are different matrices and the swap shows.
+#[test]
+fn test_a_square_matrix_keeps_its_left_and_right_factors_distinct() {
+    let m: DenseMatrix<f64> = DenseMatrix::from_vec(vec![4.0, 1.0, 2.0, 3.0], 2, 2).unwrap();
+    let (u, s, vt) = svd(&m).unwrap();
+
+    assert!((s.as_slice()[0] - 5.116_672_736_016_927).abs() < 1e-12);
+    assert!((s.as_slice()[1] - 1.954_395_075_848_547_8).abs() < 1e-12);
+
+    // The leading left and right singular vectors have different leading components, so reading
+    // one where the other is meant is visible here and nowhere in a reconstruction check.
+    assert!(
+        (u.get(0, 0).unwrap().abs() - 0.767_751_730_118_527).abs() < 1e-9,
+        "|U[0][0]| must be 0.7678 (the left factor), got {}",
+        u.get(0, 0).unwrap().abs()
+    );
+    assert!(
+        (vt.get(0, 0).unwrap().abs() - 0.850_650_808_352_039_9).abs() < 1e-9,
+        "|Vᴴ[0][0]| must be 0.8507 (the right factor), got {}",
+        vt.get(0, 0).unwrap().abs()
+    );
+}
+
+/// The tolerance gate is strict: a singular value exactly equal to the tolerance is dropped.
+///
+/// `filter(|s| *s > t)` versus `>= t` differ only at equality, and no test placed a singular value
+/// on the boundary. `diag(3, 2, 1)` at tolerance `2.0` keeps one value under the documented
+/// convention and two under the other.
+#[test]
+fn test_a_singular_value_equal_to_the_tolerance_is_truncated_away() {
+    let m: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![3.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 1.0], 3, 3).unwrap();
+
+    let (_, s, _) = svd_truncated(&m, &Truncation::Tolerance(2.0)).unwrap();
+    assert_eq!(s.len(), 1, "only the value strictly above 2.0 survives");
+    assert!((s.as_slice()[0] - 3.0).abs() < 1e-12);
+
+    // Just below the boundary keeps both.
+    let (_, s, _) = svd_truncated(&m, &Truncation::Tolerance(1.999_999)).unwrap();
+    assert_eq!(s.len(), 2);
+}
+
+/// `RankAndTolerance` applies the tolerance as well as the rank.
+///
+/// The rank was always the binding half in the existing cases, so the comparison in the tolerance
+/// filter was never observed. Three separate mutants of it survived. Here the rank is generous and
+/// the tolerance does the work.
+#[test]
+fn test_rank_and_tolerance_lets_the_tolerance_bind_when_the_rank_is_generous() {
+    let m: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![4.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.5], 3, 3).unwrap();
+
+    let (_, s, _) = svd_truncated(
+        &m,
+        &Truncation::RankAndTolerance {
+            rank: 3,
+            tolerance: 1.0,
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        s.len(),
+        2,
+        "the tolerance drops 0.5 while the rank allows 3"
+    );
+    assert!((s.as_slice()[0] - 4.0).abs() < 1e-12);
+    assert!((s.as_slice()[1] - 2.0).abs() < 1e-12);
+
+    // And the rank still binds when it is the smaller of the two.
+    let (_, s, _) = svd_truncated(
+        &m,
+        &Truncation::RankAndTolerance {
+            rank: 1,
+            tolerance: 1.0,
+        },
+    )
+    .unwrap();
+    assert_eq!(s.len(), 1);
+
+    // The gate is strict here too: a singular value exactly equal to the tolerance is dropped.
+    // Without a value on the boundary the comparison is unobserved, and three separate mutants of
+    // it survived.
+    let boundary: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![4.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 1.0], 3, 3).unwrap();
+    let (_, s, _) = svd_truncated(
+        &boundary,
+        &Truncation::RankAndTolerance {
+            rank: 3,
+            tolerance: 2.0,
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        s.len(),
+        1,
+        "2.0 sits on the tolerance and is dropped, leaving only 4.0"
+    );
+}
+
+/// Truncation copies the right columns of `U`, not a reindexed shuffle of them.
+///
+/// `u_out[i * keep + j] = u[i * k_full + j]` walks two different row strides. Replacing either
+/// multiplication survived, because every truncation case had `keep == k_full`, a single row, or a
+/// diagonal input where the stride error lands on a zero. Truncating a 3x3 to rank one exercises
+/// both strides against a full decomposition of the same matrix.
+#[test]
+fn test_truncation_keeps_the_leading_columns_of_the_full_factor() {
+    let m: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![4.0, 1.0, 0.0, 1.0, 3.0, 1.0, 0.0, 1.0, 2.0], 3, 3).unwrap();
+
+    let (u_full, s_full, _) = svd(&m).unwrap();
+    let (u_cut, s_cut, vt_cut) = svd_truncated(&m, &Truncation::Rank(1)).unwrap();
+
+    assert_eq!(s_cut.len(), 1);
+    assert!((s_cut.as_slice()[0] - s_full.as_slice()[0]).abs() < 1e-12);
+    assert_eq!(u_cut.rows(), 3);
+    assert_eq!(u_cut.cols(), 1);
+    assert_eq!(vt_cut.rows(), 1);
+
+    for i in 0..3 {
+        assert!(
+            (u_cut.get(i, 0).unwrap() - u_full.get(i, 0).unwrap()).abs() < 1e-12,
+            "row {i} of the truncated U must be the full U's leading column: expected {}, got {}",
+            u_full.get(i, 0).unwrap(),
+            u_cut.get(i, 0).unwrap()
+        );
+    }
+
+    // Rank two as well, and that is the case that pins the output stride. At `keep == 1` the
+    // stride is one and `i * keep` cannot be told from `i / keep`; the mutant on it survived a
+    // rank-one check. Rank two gives output rows at 0, 2, 4 against 0, 0, 1 under the mutation.
+    let (u_two, s_two, vt_two) = svd_truncated(&m, &Truncation::Rank(2)).unwrap();
+    assert_eq!(s_two.len(), 2);
+    assert_eq!(u_two.cols(), 2);
+    assert_eq!(vt_two.rows(), 2);
+    for i in 0..3 {
+        for j in 0..2 {
+            assert!(
+                (u_two.get(i, j).unwrap() - u_full.get(i, j).unwrap()).abs() < 1e-12,
+                "U[{i}][{j}] of the rank-two truncation must match the full factor: expected {}, got {}",
+                u_full.get(i, j).unwrap(),
+                u_two.get(i, j).unwrap()
+            );
+        }
+    }
+}
+
+// ---- mutation-driven: every eigen case above is 2x2 --------------------------------------------
+
+/// The eigendecomposition of a 5x5, checked against the three properties that define one.
+///
+/// Every `eigen_hermitian` case in this file is 2x2, and one of those is diagonal, where the
+/// rotation body never executes. Mutation testing left 22 survivors inside `sym_eig`'s Jacobi
+/// rotation as a result.
+///
+/// A 2x2 cannot see them. The angle enters only through `t`, and `c = 1/√(t²+1)` with `s = t·c`
+/// gives `c² + s² = 1` whatever `t` is, so any mutation of the angle leaves the rotation
+/// orthogonal and the sweep still converges on a matrix that small. At 5x5 the cyclic sweep has to
+/// undo fill-in from earlier rotations, and a wrong angle stops converging: the mutation
+/// `app - aqq` to `app / aqq` reconstructs to 3.12 here against 1.1e-14 clean, and the index
+/// mutation `a[p*n + p]` to `a[p + n + p]` reconstructs to 1.4e-5.
+///
+/// The reconstruction is what catches them. Both mutations preserve the trace and leave `V`
+/// orthogonal to 1e-14, because an orthogonal similarity does that no matter which angle it turns
+/// through. Only `A = V Λ Vᵀ` distinguishes a converged sweep from an unconverged one.
+#[test]
+fn test_the_eigendecomposition_of_a_five_by_five_satisfies_its_defining_properties() {
+    const N: usize = 5;
+    #[rustfmt::skip]
+    let entries = vec![
+        6.0, 2.0, 1.0, 3.0, 1.0,
+        2.0, 7.0, 2.0, 1.0, 4.0,
+        1.0, 2.0, 8.0, 2.0, 1.0,
+        3.0, 1.0, 2.0, 9.0, 3.0,
+        1.0, 4.0, 1.0, 3.0, 5.0,
+    ];
+    let m: DenseMatrix<f64> = DenseMatrix::from_vec(entries.clone(), N, N).unwrap();
+    let (vals, v) = eigen_hermitian(&m).unwrap();
+
+    // 1. A = V Λ Vᵀ. The definition, and the only one of the three that sees an unconverged sweep.
+    for i in 0..N {
+        for j in 0..N {
+            let mut acc = 0.0_f64;
+            for k in 0..N {
+                acc += v.get(i, k).unwrap() * vals.as_slice()[k] * v.get(j, k).unwrap();
+            }
+            assert!(
+                (acc - entries[i * N + j]).abs() < 1e-12,
+                "(V Λ Vᵀ)[{i}][{j}] expected {}, got {acc}",
+                entries[i * N + j]
+            );
+        }
+    }
+
+    // 2. The eigenvectors are orthonormal: VᵀV = I.
+    for i in 0..N {
+        for j in 0..N {
+            let mut acc = 0.0_f64;
+            for k in 0..N {
+                acc += v.get(k, i).unwrap() * v.get(k, j).unwrap();
+            }
+            let want = if i == j { 1.0 } else { 0.0 };
+            assert!(
+                (acc - want).abs() < 1e-12,
+                "(VᵀV)[{i}][{j}] expected {want}, got {acc}"
+            );
+        }
+    }
+
+    // 3. The trace is the sum of the eigenvalues.
+    let trace: f64 = (0..N).map(|i| entries[i * N + i]).sum();
+    let sum: f64 = vals.as_slice().iter().sum();
+    assert!(
+        (trace - sum).abs() < 1e-12,
+        "trace {trace} against the eigenvalue sum {sum}"
+    );
+}
