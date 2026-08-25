@@ -3,12 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_linear::CsrMatrix;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Density, PhysicalField, alfven_speed_kernel, ideal_induction_kernel, magnetic_pressure_kernel,
+    Density, PhysicalField, PhysicsError, PhysicsErrorEnum, alfven_speed_kernel,
+    ideal_induction_kernel, magnetic_pressure_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
+use deep_causality_topology::{
+    Manifold, PointCloud, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
+};
 
 fn create_dummy_manifold() -> SimplicialManifold<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
@@ -101,26 +105,14 @@ fn test_ideal_induction() {
 
 // NOTE on defensively-unreachable ideal-MHD branches (all in
 // `ideal_induction_kernel` / its private helper `wedge_product_1form_1form`):
-//   * ideal.rs:134-136 — "v_manifold data too small". `Manifold` enforces
-//     `data().len() == total_simplices >= n0 + n1 + n2` at construction, so the
-//     data slab is never shorter than n0 + n1 + n2.
-//   * ideal.rs:156-158 — "Hodge star operator for 2-forms not available"
-//     (`hodge_ops.len() <= 2`). Reaching this requires the earlier
-//     `skeletons.len() >= 3` check (line 122) to pass, i.e. max_dim >= 2, which
-//     always yields >= 3 Hodge operators (dims 0..=2). The two conditions are
-//     mutually exclusive.
-//   * ideal.rs:175-177 — "Coboundary operator for 1-forms not available"
-//     (`coboundary_operators().len() <= 1`). Same argument: a complex with
-//     2-simplices yields >= 2 coboundary operators, so this never fires.
+//   * ideal.rs:134-136 — "v_manifold data too small". `Manifold::new` rejects
+//     any data tensor whose length differs from the complex's total simplex
+//     count, and that total is at least n0 + n1 + n2, so the data slab is never
+//     shorter than the slices the kernel takes.
 //   * ideal.rs:265-267 — `wedge_product_1form_1form`'s own `skeletons.len() < 3`
-//     guard. The only caller (`ideal_induction_kernel`) has already validated
-//     `skeletons.len() >= 3` before invoking it.
-//   * ideal.rs:287-288 — `verts.len() != 3` for a face. Every 2-simplex (face)
-//     of a simplicial complex has exactly 3 vertices, so the zero-push branch
-//     is unreachable.
-//   * ideal.rs:309-310 — the edge-lookup `else` push-zero. A face [v0,v1,v2]
-//     always has its boundary edges (v0,v1) and (v1,v2) present in the complex's
-//     edge set, so both lookups succeed and the else is never taken.
+//     guard. The helper is private and its only caller
+//     (`ideal_induction_kernel`) has already validated `skeletons.len() >= 3`
+//     before invoking it.
 
 #[test]
 fn test_ideal_induction_dimension_error() {
@@ -144,4 +136,162 @@ fn test_ideal_induction_dimension_error() {
 
     let res = ideal_induction_kernel(&m, &m);
     assert!(res.is_err());
+}
+
+// =============================================================================
+// Hand-built simplicial fixtures for the guard branches of
+// `ideal_induction_kernel`.
+//
+// `PointCloud::triangulate` only ever yields well-formed complexes with a full
+// operator set, so the kernel's structural guards are only observable on a
+// complex assembled directly through `SimplicialComplex::new`, which takes the
+// skeletons and the operator vectors verbatim.
+// =============================================================================
+
+/// Three vertices {0,1,2} as the 0-skeleton, with the 1- and 2-skeletons
+/// supplied by the caller so one fixture serves the well-formed triangle and
+/// its degenerate variants.
+fn skeletons_of(edges: &[&[usize]], faces: &[&[usize]]) -> Vec<Skeleton> {
+    let vertices: Vec<Simplex> = (0..3usize).map(|v| Simplex::new(vec![v])).collect();
+    let edges: Vec<Simplex> = edges.iter().map(|e| Simplex::new(e.to_vec())).collect();
+    let faces: Vec<Simplex> = faces.iter().map(|f| Simplex::new(f.to_vec())).collect();
+    vec![
+        Skeleton::new(0, vertices),
+        Skeleton::new(1, edges),
+        Skeleton::new(2, faces),
+    ]
+}
+
+/// A structurally empty operator, used where the kernel never reads the matrix.
+fn empty_op<T>() -> CsrMatrix<T> {
+    CsrMatrix::new()
+}
+
+/// ⋆ on 2-forms: sends the single face value `b` to the edge 1-form
+/// `(1·b, 2·b, 3·b)`. The three weights differ so an index slip anywhere in the
+/// pipeline changes the result.
+fn hodge_star_2() -> CsrMatrix<f64> {
+    CsrMatrix::from_triplets(3, 1, &[(0, 0, 1.0), (1, 0, 2.0), (2, 0, 3.0)]).unwrap()
+}
+
+/// d on 1-forms: the single face reads edge0 − edge1 + edge2.
+fn coboundary_1() -> CsrMatrix<i8> {
+    CsrMatrix::from_triplets(1, 3, &[(0, 0, 1i8), (0, 1, -1i8), (0, 2, 1i8)]).unwrap()
+}
+
+/// Manifold data laid out as [3 vertices | 3 edges | 1 face]. The velocity
+/// 1-form is v = (2, 7, 5) on the edges and the magnetic 2-form is B = 0.5 on
+/// the face.
+fn fixture_manifold(complex: SimplicialComplex<f64>) -> SimplicialManifold<f64, f64> {
+    let data = vec![0.0, 0.0, 0.0, 2.0, 7.0, 5.0, 0.5];
+    Manifold::new(complex, CausalTensor::new(data, vec![7]).unwrap(), 0).unwrap()
+}
+
+fn calculation_error_message(err: PhysicsError) -> String {
+    match err.0 {
+        PhysicsErrorEnum::CalculationError(msg) => msg,
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_ideal_induction_rejects_hodge_star_without_2_form_operator() {
+    // The kernel needs ⋆ on 2-forms, i.e. `hodge_star_operators()[2]`. A complex
+    // that carries only the dim-0 and dim-1 operators passes the skeleton-count
+    // check and then fails on the operator count (ideal.rs:156-159).
+    let complex = SimplicialComplex::new(
+        skeletons_of(&[&[0, 1], &[0, 2], &[1, 2]], &[&[0, 1, 2]]),
+        vec![],
+        vec![empty_op::<i8>(), coboundary_1()],
+        vec![empty_op::<f64>(), empty_op::<f64>()],
+    );
+    let m = fixture_manifold(complex);
+
+    let msg = calculation_error_message(ideal_induction_kernel(&m, &m).unwrap_err());
+    assert!(
+        msg.contains("Hodge star operator for 2-forms"),
+        "unexpected message: {msg}"
+    );
+}
+
+#[test]
+fn test_ideal_induction_rejects_missing_coboundary_operator() {
+    // d on 1-forms is `coboundary_operators()[1]`. With the Hodge ⋆ surface
+    // complete but no coboundary operators, the kernel gets as far as ⋆(v ∧ ⋆B)
+    // and then fails on the exterior derivative (ideal.rs:175-178).
+    let complex = SimplicialComplex::new(
+        skeletons_of(&[&[0, 1], &[0, 2], &[1, 2]], &[&[0, 1, 2]]),
+        vec![],
+        vec![],
+        vec![empty_op::<f64>(), empty_op::<f64>(), hodge_star_2()],
+    );
+    let m = fixture_manifold(complex);
+
+    let msg = calculation_error_message(ideal_induction_kernel(&m, &m).unwrap_err());
+    assert!(
+        msg.contains("Coboundary operator for 1-forms"),
+        "unexpected message: {msg}"
+    );
+}
+
+#[test]
+fn test_ideal_induction_on_a_single_triangle() {
+    // Reference value derived from the documented pipeline
+    // ∂ₜB = d(⋆(v ∧ ⋆B)) with the fixture operators:
+    //   ⋆B          = (1, 2, 3)·0.5              = (0.5, 1.0, 1.5)
+    //   (v ∧ ⋆B)[F] = v[0,1]·⋆B[1,2] − ⋆B[0,1]·v[1,2]
+    //               = 2·1.5 − 0.5·5              = 0.5
+    //   ⋆(v ∧ ⋆B)   = (1, 2, 3)·0.5              = (0.5, 1.0, 1.5)
+    //   d(...)      = 0.5 − 1.0 + 1.5            = 1.0
+    let complex = SimplicialComplex::new(
+        skeletons_of(&[&[0, 1], &[0, 2], &[1, 2]], &[&[0, 1, 2]]),
+        vec![],
+        vec![empty_op::<i8>(), coboundary_1()],
+        vec![empty_op::<f64>(), empty_op::<f64>(), hodge_star_2()],
+    );
+    let m = fixture_manifold(complex);
+
+    let dt_b = ideal_induction_kernel(&m, &m).unwrap();
+    assert_eq!(dt_b.shape(), &[1]);
+    assert!(
+        (dt_b.as_slice()[0] - 1.0).abs() < 1e-12,
+        "expected 1.0, got {}",
+        dt_b.as_slice()[0]
+    );
+}
+
+#[test]
+fn test_ideal_induction_ignores_a_2_skeleton_entry_that_is_not_a_triangle() {
+    // The wedge of two 1-forms is defined on triangles. A 2-skeleton entry with
+    // four vertices carries no such value, so it contributes zero to v ∧ ⋆B and
+    // the whole induction collapses to zero (ideal.rs:287-289) — against 1.0 for
+    // the genuine triangle above, with identical data and operators.
+    let complex = SimplicialComplex::new(
+        skeletons_of(&[&[0, 1], &[0, 2], &[1, 2]], &[&[0, 1, 2, 3]]),
+        vec![],
+        vec![empty_op::<i8>(), coboundary_1()],
+        vec![empty_op::<f64>(), empty_op::<f64>(), hodge_star_2()],
+    );
+    let m = fixture_manifold(complex);
+
+    let dt_b = ideal_induction_kernel(&m, &m).unwrap();
+    assert_eq!(dt_b.as_slice(), &[0.0]);
+}
+
+#[test]
+fn test_ideal_induction_ignores_a_face_whose_boundary_edge_is_absent() {
+    // The cup product reads α on [v0,v1] and β on [v1,v2]. Here edge [1,2] is
+    // absent from the 1-skeleton, so the face [0,1,2] has no [v1,v2] slot to
+    // read and contributes zero (ideal.rs:309-311) — again against 1.0 for the
+    // complete triangle, with identical data and operators.
+    let complex = SimplicialComplex::new(
+        skeletons_of(&[&[0, 1], &[0, 2], &[1, 3]], &[&[0, 1, 2]]),
+        vec![],
+        vec![empty_op::<i8>(), coboundary_1()],
+        vec![empty_op::<f64>(), empty_op::<f64>(), hodge_star_2()],
+    );
+    let m = fixture_manifold(complex);
+
+    let dt_b = ideal_induction_kernel(&m, &m).unwrap();
+    assert_eq!(dt_b.as_slice(), &[0.0]);
 }

@@ -84,3 +84,56 @@ fn test_normalize() {
 // metric, so the rebuild is always consistent and `new` always returns `Ok`.
 // The `Err(_)` fallback (which would rebuild a zeroed multivector) is therefore
 // unreachable for any input.
+
+// =============================================================================
+// QuantumOps::expectation_value
+// =============================================================================
+
+/// Builds a Cl(3,0) multivector from (blade index, coefficient) pairs; every
+/// unnamed blade is zero.
+fn mv3(entries: &[(usize, Complex<f64>)]) -> CausalMultiVector<Complex<f64>> {
+    let mut data = vec![Complex::new(0.0, 0.0); 8];
+    for (idx, c) in entries {
+        data[*idx] = *c;
+    }
+    CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap()
+}
+
+/// For a scalar-only state c and a real scalar operator a, ⟨ψ|A|ψ⟩ = a·|c|².
+/// The conjugation on the bra side is what makes the answer real: without it
+/// the product would be a·c² = 6i for c = 1+i and a = 3.
+#[test]
+fn test_expectation_value_scalar_state_real_operator() {
+    let psi = mv3(&[(0, Complex::new(1.0, 1.0))]);
+    let op = mv3(&[(0, Complex::new(3.0, 0.0))]);
+
+    let ev = psi.expectation_value(&op);
+    assert!((ev.re - 6.0).abs() < 1e-12, "Re<psi|A|psi> = {}", ev.re);
+    assert!(ev.im.abs() < 1e-12, "Im<psi|A|psi> = {}", ev.im);
+}
+
+/// ⟨e₁|(2 + e₁)|e₁⟩ = 2 in Cl(3,0). The operator's scalar part contributes
+/// 2·e₁e₁ = 2 to the scalar projection, and its vector part contributes
+/// e₁·e₁e₁ = e₁, which sits in grade 1 and is projected away.
+#[test]
+fn test_expectation_value_vector_state_mixed_grade_operator() {
+    let psi = mv3(&[(1, Complex::new(1.0, 0.0))]);
+    let op = mv3(&[(0, Complex::new(2.0, 0.0)), (1, Complex::new(1.0, 0.0))]);
+
+    let ev = psi.expectation_value(&op);
+    assert!((ev.re - 2.0).abs() < 1e-12, "Re<e1|A|e1> = {}", ev.re);
+    assert!(ev.im.abs() < 1e-12, "Im<e1|A|e1> = {}", ev.im);
+}
+
+/// The trait method returns ⟨ψ|A|ψ⟩ as a complex number. For the
+/// anti-Hermitian A = i·1 on the unit scalar state the value is i, so the
+/// imaginary part is carried through rather than screened or discarded.
+#[test]
+fn test_expectation_value_carries_imaginary_part_of_anti_hermitian_operator() {
+    let psi = mv3(&[(0, Complex::new(1.0, 0.0))]);
+    let op = mv3(&[(0, Complex::new(0.0, 1.0))]);
+
+    let ev = psi.expectation_value(&op);
+    assert!(ev.re.abs() < 1e-12, "Re<psi|iI|psi> = {}", ev.re);
+    assert!((ev.im - 1.0).abs() < 1e-12, "Im<psi|iI|psi> = {}", ev.im);
+}

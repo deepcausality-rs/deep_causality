@@ -136,3 +136,45 @@ fn test_a_degenerate_two_dimensional_shape_is_empty_not_broken() {
         }))
     ));
 }
+
+#[test]
+fn test_row_major_copy_is_the_tensor_buffer_in_order() {
+    // The override exists to skip the per-entry path; it must still deliver rows * cols entries in
+    // the order the default would have produced them.
+    let t = m23();
+    let buf = MatrixView::to_row_major(&t).unwrap();
+    assert_eq!(buf.len(), MatrixView::rows(&t) * MatrixView::cols(&t));
+    assert_eq!(buf, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+
+    let by_position: Vec<f64> = (0..MatrixView::rows(&t))
+        .flat_map(|r| (0..MatrixView::cols(&t)).map(move |c| (r, c)))
+        .map(|(r, c)| MatrixView::get(&t, r, c).unwrap())
+        .collect();
+    assert_eq!(buf, by_position);
+}
+
+#[test]
+fn test_row_major_copy_of_a_non_matrix_tensor_is_empty() {
+    // A rank-3 tensor presents as 0x1, so the buffer the view owes is rows * cols = 0 entries. A
+    // copy of the tensor's 24 entries would be a buffer whose shape disagrees with the reported
+    // one, and the kernels index it by the reported shape.
+    let rank3: CausalTensor<f64> =
+        CausalTensor::new((0..24).map(|i| i as f64).collect(), vec![2, 3, 4]).unwrap();
+    let buf = MatrixView::to_row_major(&rank3).unwrap();
+    assert_eq!(
+        buf.len(),
+        MatrixView::rows(&rank3) * MatrixView::cols(&rank3)
+    );
+    assert!(buf.is_empty());
+
+    let rank1: CausalTensor<f64> = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
+    assert!(MatrixView::to_row_major(&rank1).unwrap().is_empty());
+}
+
+#[test]
+fn test_row_major_copy_of_a_degenerate_two_dimensional_shape_is_empty() {
+    // 0x3 is a genuine 2-D shape holding nothing, and it takes the copy branch rather than the
+    // non-matrix one. Both owe zero entries, for different reasons.
+    let empty: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 3]).unwrap();
+    assert!(MatrixView::to_row_major(&empty).unwrap().is_empty());
+}

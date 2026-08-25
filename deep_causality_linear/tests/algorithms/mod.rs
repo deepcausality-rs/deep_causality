@@ -18,6 +18,8 @@ mod gf2_tests;
 #[cfg(test)]
 mod integer_tests;
 #[cfg(test)]
+mod kernels_tests;
+#[cfg(test)]
 mod norms_tests;
 #[cfg(test)]
 mod ported_cg_tests;

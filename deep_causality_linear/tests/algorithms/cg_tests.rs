@@ -171,3 +171,55 @@ fn test_the_relative_threshold_survives_a_large_right_hand_side() {
         "residual {residual:e} exceeds 1e-10 * {norm_b:e}"
     );
 }
+
+// =============================================================================
+// What the failures say. A caller that logs the message and nothing else still has to be able to
+// tell the three apart and to see the numbers that name the failure.
+// =============================================================================
+
+#[test]
+fn test_the_breakdown_message_names_the_iteration_and_the_curvature_it_found() {
+    // Negating the identity gives pᵀAp = -‖p‖², which is negative on the first search direction.
+    let negate = |v: &[f64]| -> Vec<f64> { v.iter().map(|x| -x).collect() };
+    let e = cg_solve(negate, &[1.0, 2.0], 1e-12, 10).unwrap_err();
+    assert_eq!(e, CgFailure::NotPositiveDefinite { iteration: 0 });
+    let s = format!("{e}");
+    assert!(s.contains('0'), "must name the iteration it broke at: {s}");
+    assert!(
+        s.contains("not positive definite"),
+        "must name the cause: {s}"
+    );
+    assert!(
+        s.contains("curvature"),
+        "must say what was found rather than only that it stopped: {s}"
+    );
+}
+
+#[test]
+fn test_the_length_mismatch_message_names_the_length_produced_and_the_one_expected() {
+    // The operator is the caller's closure and can return any length. Both numbers have to appear,
+    // and on the right sides of the sentence: 3 is what was asked for, 5 is what came back.
+    let too_long = |v: &[f64]| -> Vec<f64> {
+        let mut out = v.to_vec();
+        out.extend([0.0, 0.0]);
+        out
+    };
+    let e = cg_solve(too_long, &[1.0, 1.0, 1.0], 1e-12, 10).unwrap_err();
+    assert_eq!(
+        e,
+        CgFailure::LengthMismatch {
+            expected: 3,
+            found: 5
+        }
+    );
+    let s = format!("{e}");
+    assert!(s.contains("length mismatch"), "{s}");
+    assert!(
+        s.contains("produced 5"),
+        "the operator's length is the one it produced: {s}"
+    );
+    assert!(
+        s.contains("right-hand side of 3"),
+        "the expected length is the right-hand side's: {s}"
+    );
+}

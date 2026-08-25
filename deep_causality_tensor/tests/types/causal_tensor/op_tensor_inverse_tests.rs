@@ -103,3 +103,26 @@ fn test_inverse_non_2d_tensor_error() {
     let err_3d = tensor_3d.inverse().unwrap_err();
     assert_eq!(err_3d, CausalTensorError::DimensionMismatch);
 }
+
+#[test]
+fn test_inverse_of_the_empty_matrix_is_the_empty_matrix() {
+    // The 0x0 matrix is the identity on the zero-dimensional space, so it is invertible and is its
+    // own inverse. The shape is preserved, and nothing is delegated to the LU factorisation.
+    let empty: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 0]).unwrap();
+    let inv = empty.inverse().unwrap();
+    assert_eq!(inv.shape(), &[0, 0]);
+    assert!(inv.as_slice().is_empty());
+
+    // Its own inverse: inverting twice returns the same matrix.
+    let inv2 = inv.inverse().unwrap();
+    assert_eq!(inv2.shape(), empty.shape());
+    assert_eq!(inv2.as_slice(), empty.as_slice());
+}
+
+#[test]
+fn test_inverse_of_a_zero_extent_non_square_shape_is_rejected() {
+    // A zero extent does not excuse non-squareness: 0x3 has no inverse and is refused before the
+    // empty case is reached.
+    let t: CausalTensor<f64> = CausalTensor::new(vec![], vec![0, 3]).unwrap();
+    assert_eq!(t.inverse().unwrap_err(), CausalTensorError::ShapeMismatch);
+}

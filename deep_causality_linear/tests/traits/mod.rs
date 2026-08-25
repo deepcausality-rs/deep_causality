@@ -4,3 +4,5 @@
  */
 #[cfg(test)]
 mod bound_ledger_tests;
+#[cfg(test)]
+mod matrix_view_tests;

@@ -6,9 +6,9 @@
 use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    apply_gate_kernel, born_probability_kernel, commutator_kernel, expectation_value_kernel,
-    fidelity_kernel, haruna_cz_gate_kernel, haruna_hadamard_gate_kernel, haruna_s_gate_kernel,
-    haruna_t_gate_kernel, haruna_x_gate_kernel, haruna_z_gate_kernel,
+    QuantumError, apply_gate_kernel, born_probability_kernel, commutator_kernel,
+    expectation_value_kernel, fidelity_kernel, haruna_cz_gate_kernel, haruna_hadamard_gate_kernel,
+    haruna_s_gate_kernel, haruna_t_gate_kernel, haruna_x_gate_kernel, haruna_z_gate_kernel,
 };
 
 // Helper to create a normalized quantum state
@@ -309,4 +309,64 @@ fn test_haruna_t_gate_kernel_valid() {
     let field = create_real_field();
     let result = haruna_t_gate_kernel(&field);
     assert!(result.is_ok());
+}
+
+// =============================================================================
+// Kernel guard paths
+// =============================================================================
+
+#[test]
+fn test_expectation_value_kernel_nonfinite() {
+    // Amplitudes at f64::MAX overflow the geometric products, so the scalar
+    // part of adj(psi)·A·psi is not finite. The kernel reports that instead of
+    // handing back an infinity.
+    let huge = vec![Complex::new(f64::MAX, 0.0); 8];
+    let mv = CausalMultiVector::new(huge, Metric::Euclidean(3)).unwrap();
+    let state = HilbertState::<f64>::from_multivector(mv.clone());
+    let operator = HilbertState::<f64>::from_multivector(mv);
+
+    let err = expectation_value_kernel(&state, &operator).unwrap_err();
+    assert_eq!(
+        err,
+        QuantumError::NonFiniteValue("expectation value is not finite".into())
+    );
+}
+
+#[test]
+fn test_expectation_value_kernel_rejects_non_hermitian_operator() {
+    // A = i·1 is anti-Hermitian, and <psi|A|psi> = i for the unit scalar state.
+    // The kernel refuses rather than returning the real projection 0, which
+    // would be a different observable.
+    let state = create_test_state();
+    let mut op_data = vec![Complex::new(0.0, 0.0); 8];
+    op_data[0] = Complex::new(0.0, 1.0);
+    let operator = HilbertState::<f64>::from_multivector(
+        CausalMultiVector::new(op_data, Metric::Euclidean(3)).unwrap(),
+    );
+
+    let err = expectation_value_kernel(&state, &operator).unwrap_err();
+    assert_eq!(
+        err,
+        QuantumError::NonPositiveOperator(
+            "expectation value has a non-negligible imaginary part; operator is not Hermitian"
+                .into()
+        )
+    );
+}
+
+#[test]
+fn test_commutator_kernel_nonfinite() {
+    // Amplitudes at f64::MAX overflow both AB and BA, so AB - BA carries
+    // non-finite components and the kernel reports that rather than returning
+    // a state full of NaN.
+    let huge = vec![Complex::new(f64::MAX, 0.0); 8];
+    let mv = CausalMultiVector::new(huge, Metric::Euclidean(3)).unwrap();
+    let a = HilbertState::<f64>::from_multivector(mv.clone());
+    let b = HilbertState::<f64>::from_multivector(mv);
+
+    let err = commutator_kernel(&a, &b).unwrap_err();
+    assert_eq!(
+        err,
+        QuantumError::NonFiniteValue("Non-finite component in commutator result".into())
+    );
 }

@@ -554,3 +554,28 @@ fn test_squared_magnitude_field_sum() {
     // Total = 2 + 8 = 10
     assert!((mag - 10.0).abs() < 1e-5, "Expected 10.0, got {}", mag);
 }
+
+#[test]
+fn test_normalize_zero_field_is_returned_unchanged() {
+    // A zero field has zero magnitude, so scaling by 1/||self|| would divide by zero and
+    // fill every coefficient with NaN. normalize() returns the field as it stands instead.
+    let metric = Metric::from_signature(3, 0, 0);
+    let field = CausalMultiField::<f32>::zeros([2, 2, 2], metric, [1.0, 1.0, 1.0]);
+
+    let normalized = field.normalize();
+
+    assert!(normalized.is_zero());
+    assert_eq!(normalized.squared_magnitude(), 0.0);
+    assert_eq!(normalized.metric(), metric);
+    assert_eq!(*normalized.shape(), [2, 2, 2]);
+
+    for mv in normalized.to_coefficients() {
+        for value in mv.data() {
+            assert!(
+                value.is_finite(),
+                "normalize of a zero field must not produce NaN"
+            );
+            assert_eq!(*value, 0.0);
+        }
+    }
+}

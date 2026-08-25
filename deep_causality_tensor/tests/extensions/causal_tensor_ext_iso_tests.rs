@@ -130,3 +130,49 @@ fn round_trip_holds_for_all_zero_inputs() {
         sparse, dense,
     );
 }
+
+// =============================================================================
+// Display / Error surface of CsrFromTensorError
+// =============================================================================
+
+#[test]
+fn error_display_states_the_required_rank_and_the_rank_given() {
+    // The message has to carry both halves: what the conversion needs (rank 2) and what it was
+    // handed, so a caller reading a log knows why the tensor was refused without the value.
+    let err = CsrFromTensorError { rank: 3 };
+    assert_eq!(
+        err.to_string(),
+        "CausalTensor -> CsrMatrix requires rank 2, got rank 3"
+    );
+}
+
+#[test]
+fn error_display_reports_the_rank_of_the_tensor_that_was_refused() {
+    // The rank in the message is the one the caller actually handed over, so refusals of
+    // different ranks are distinguishable from the message alone.
+    let rank1 = CausalTensor::new(vec![1.0_f64, 2.0, 3.0], vec![3]).unwrap();
+    let rank4 = CausalTensor::new(vec![0.0_f64; 16], vec![2, 2, 2, 2]).unwrap();
+
+    let msg1 = CsrMatrix::try_from(rank1).unwrap_err().to_string();
+    let msg4 = CsrMatrix::try_from(rank4).unwrap_err().to_string();
+
+    assert_eq!(
+        msg1,
+        "CausalTensor -> CsrMatrix requires rank 2, got rank 1"
+    );
+    assert_eq!(
+        msg4,
+        "CausalTensor -> CsrMatrix requires rank 2, got rank 4"
+    );
+}
+
+#[test]
+fn error_carries_no_cause_of_its_own() {
+    // The refusal originates here -- nothing underneath failed -- so the error chain ends at it.
+    let err: Box<dyn std::error::Error> = Box::new(CsrFromTensorError { rank: 0 });
+    assert!(err.source().is_none());
+    assert_eq!(
+        err.to_string(),
+        "CausalTensor -> CsrMatrix requires rank 2, got rank 0"
+    );
+}

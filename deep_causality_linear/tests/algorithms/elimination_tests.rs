@@ -290,3 +290,46 @@ fn test_rref_puts_the_matrix_in_reduced_row_echelon_form() {
         }
     }
 }
+
+#[test]
+fn test_the_determinant_of_a_singular_matrix_above_the_closed_forms_is_zero() {
+    // Order four and above leaves the closed forms and runs elimination, where rank deficiency
+    // shows up as a column with no pivot rather than as a product of pivots. Row 1 is twice row 0,
+    // so the determinant is zero exactly.
+    #[rustfmt::skip]
+    let m = DenseMatrix::from_vec(
+        vec![
+            1.0, 2.0, 3.0, 4.0,
+            2.0, 4.0, 6.0, 8.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        ],
+        4,
+        4,
+    )
+    .unwrap();
+    assert_eq!(rank_stable(&m).unwrap(), 3, "the fixture is rank deficient");
+    assert_eq!(determinant(&m).unwrap(), 0.0);
+}
+
+#[test]
+fn test_a_kernel_vector_leaves_a_pivot_variable_at_zero_when_the_free_column_does_not_couple_to_it()
+{
+    // The kernel of [[1,0,0],[0,0,1]] is spanned by e₂: x₀ and x₂ are pinned to zero and x₁ is
+    // free. Neither pivot row carries a coefficient in the free column, so no pivot entry is
+    // written and the basis vector is the free variable alone.
+    let m = DenseMatrix::from_vec(vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0], 2, 3).unwrap();
+    let kernel: DenseMatrix<f64> = kernel_basis(&m).unwrap();
+    assert_eq!(kernel.shape(), (3, 1), "cols - rank vectors of length cols");
+    assert_eq!(kernel.get(0, 0).unwrap(), 0.0);
+    assert_eq!(kernel.get(1, 0).unwrap(), 1.0);
+    assert_eq!(kernel.get(2, 0).unwrap(), 0.0);
+    // And it is annihilated, which is what a kernel vector has to be.
+    for i in 0..m.rows() {
+        let mut acc = 0.0;
+        for j in 0..m.cols() {
+            acc += m.get(i, j).unwrap() * kernel.get(j, 0).unwrap();
+        }
+        assert_eq!(acc, 0.0, "row {i}");
+    }
+}

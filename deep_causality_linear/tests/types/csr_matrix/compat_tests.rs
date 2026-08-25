@@ -283,3 +283,64 @@ fn test_one_and_the_trait_identity_agree_at_size_one() {
     assert_eq!(inherent.shape(), from_trait.shape());
     assert_eq!(inherent.get(0, 0).unwrap(), from_trait.get(0, 0).unwrap());
 }
+
+#[test]
+fn test_the_merge_keeps_the_columns_ascending_when_the_right_operand_leads() {
+    // The merge advances whichever side holds the smaller column. The right operand leading is the
+    // mirror of the left one leading, and CSR requires each row's columns ascending: a branch that
+    // emitted the wrong side's value, or emitted it out of order, would leave a matrix whose own
+    // reader disagrees with its stored pattern.
+    //
+    // Row 0 of `a` is stored at columns 1 and 2; row 0 of `b` at columns 0 and 2. The merge visits
+    // b's column 0 first, then a's column 1, then the shared column 2.
+    let a = m(&[(0, 1, 2.0), (0, 2, 4.0)], 1, 3);
+    let b = m(&[(0, 0, 5.0), (0, 2, 1.0)], 1, 3);
+    let s = a.add(&b);
+    assert_eq!(s.col_indices(), &vec![0, 1, 2], "columns stay ascending");
+    assert_eq!(s.values(), &vec![5.0, 2.0, 5.0]);
+    assert_eq!(s.get(0, 0).unwrap(), 5.0, "b alone");
+    assert_eq!(s.get(0, 1).unwrap(), 2.0, "a alone");
+    assert_eq!(s.get(0, 2).unwrap(), 5.0, "4 + 1, held by both");
+}
+
+#[test]
+fn test_the_contextual_constructor_sums_duplicate_positions() {
+    // `from_triplets` sums duplicates; naming a different absent value must not change that. Three
+    // triplets at one position accumulate: 2 + 3 + 4 = 9.
+    let summed = CsrMatrix::from_triplets_with_zero(
+        1,
+        2,
+        &[(0, 0, 2.0), (0, 0, 3.0), (0, 0, 4.0), (0, 1, 1.0)],
+        -1.0,
+    )
+    .unwrap();
+    assert_eq!(summed.value_at_or(0, 0, -1.0), 9.0);
+    assert_eq!(summed.value_at_or(0, 1, -1.0), 1.0);
+    assert_eq!(
+        summed.values().len(),
+        2,
+        "the duplicates collapse into one entry"
+    );
+    assert_eq!(summed.row_indices(), &vec![0, 2]);
+}
+
+#[test]
+fn test_a_duplicate_sum_landing_on_the_contextual_zero_is_left_unstored() {
+    // The accumulated value is tested against the named absent value, not against `T::zero()`.
+    // With `zero = 9.0`, the position summing to nine is the one that disappears and the position
+    // summing to zero is the one that stays.
+    let built = CsrMatrix::from_triplets_with_zero(
+        1,
+        2,
+        &[(0, 0, 4.0), (0, 0, 5.0), (0, 1, 3.0), (0, 1, -3.0)],
+        9.0,
+    )
+    .unwrap();
+    assert_eq!(
+        built.values(),
+        &vec![0.0],
+        "4 + 5 = 9 is absent, 3 - 3 = 0 is not"
+    );
+    assert_eq!(built.col_indices(), &vec![1]);
+    assert_eq!(built.row_indices(), &vec![0, 1]);
+}

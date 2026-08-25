@@ -207,3 +207,19 @@ fn test_set_clears_as_well_as_sets() {
     a.set(0, 1, Gf2::ZERO).unwrap();
     assert_eq!(a.get(0, 1).unwrap(), Gf2::ZERO);
 }
+
+#[test]
+fn test_scaling_a_packed_matrix_by_one_in_place_leaves_every_bit() {
+    // The only units of F2 are 0 and 1, so in-place scaling either clears the words or leaves them.
+    // One is the multiplicative identity, and scaling by it is the identity map on the matrix --
+    // an implementation that cleared unconditionally would pass a test that only checked zero.
+    let a = packed(&[1, 1, 0, 1], 2, 2);
+    let mut b = a.clone();
+    b *= Gf2::ONE;
+    assert!(!b.is_zero(), "one does not clear the matrix");
+    for r in 0..2 {
+        for c in 0..2 {
+            assert_eq!(b.get(r, c).unwrap(), a.get(r, c).unwrap(), "at ({r}, {c})");
+        }
+    }
+}

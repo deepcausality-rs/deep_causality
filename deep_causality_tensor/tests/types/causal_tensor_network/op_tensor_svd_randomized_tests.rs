@@ -563,3 +563,82 @@ fn deterministic_round_rank_deficient_f64() {
 fn deterministic_round_rank_deficient_float106() {
     check_deterministic_round_rank_deficient::<Float106>();
 }
+
+// ---- bond-capped and absolute-floor sketch sizing ---------------------------------------------
+
+/// A bond cap below the full rank fixes the sketch at the cap plus the oversample, so the retained
+/// rank is the cap rather than whatever the tolerance would have selected.
+fn check_randomized_svd_bond_capped<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
+    // maxr = 6, so a cap of 2 is a real cap and the sketch is sized from it.
+    let (data, m, n) = low_rank(8, 6, 2);
+    let mat = tensor::<T>(&data, &[m, n]);
+
+    let capped_at_rank = Truncation::<T>::by_bond(2).unwrap().randomized(4, 0x7788);
+    let (u, s, vt) = mat.svd_truncated(&capped_at_rank).unwrap();
+    // The data is exactly rank 2, so a cap at 2 discards nothing and the factors reproduce it.
+    assert_eq!(s.len(), 2, "the bond cap fixes the retained rank");
+    let rec = reconstruct(&u, &s, &vt);
+    for (g, w) in rec.iter().zip(mat.as_slice()) {
+        approx(*g, *w);
+    }
+
+    // A cap of 1 binds: one singular value is kept, and the rank-1 factors cannot reproduce a
+    // rank-2 matrix. The discarded weight is the second singular value.
+    let capped_below_rank = Truncation::<T>::by_bond(1).unwrap().randomized(4, 0x7788);
+    let (u1, s1, vt1) = mat.svd_truncated(&capped_below_rank).unwrap();
+    assert_eq!(s1.len(), 1);
+    let rec1 = reconstruct(&u1, &s1, &vt1);
+    let mut dropped_sq = T::zero();
+    for (g, w) in rec1.iter().zip(mat.as_slice()) {
+        dropped_sq += (*g - *w) * (*g - *w);
+    }
+    // ‖A − A₁‖_F = σ₂ for the best rank-1 approximation (Eckart–Young).
+    approx(dropped_sq.sqrt(), s.as_slice()[1]);
+}
+
+/// When the relative floor is zero the residual is measured against the absolute floor, and the
+/// sketch grows until it clears that floor.
+fn check_randomized_svd_grows_against_absolute_floor<
+    T: RealField + FromPrimitive + ConjugateScalar<Real = T>,
+>() {
+    // rel_tol = 0 makes rel_tol·‖A‖_F zero for any input, so abs_tol is the threshold the range
+    // finder must satisfy. oversample = 1 starts the sketch at 2, below the rank 3 of the data,
+    // so the loop has to grow before the residual clears 1e-8.
+    let (data, m, n) = low_rank(20, 18, 3);
+    let mat = tensor::<T>(&data, &[m, n]);
+    let trunc = Truncation::<T>::new(usize::MAX, v::<T>(0.0), v::<T>(1e-8))
+        .unwrap()
+        .randomized(1, 0x9911);
+
+    let (u, s, vt) = mat.svd_truncated(&trunc).unwrap();
+    // The same absolute floor gates the retained rank: three singular values are O(1), the rest
+    // are numerical noise far below 1e-8.
+    assert_eq!(s.len(), 3, "rank-3 range not captured under abs_tol");
+    for x in s.as_slice() {
+        assert!(
+            *x >= v::<T>(1e-8),
+            "a value below the absolute floor was kept"
+        );
+    }
+    let rec = reconstruct(&u, &s, &vt);
+    for (g, w) in rec.iter().zip(mat.as_slice()) {
+        approx(*g, *w);
+    }
+}
+
+#[test]
+fn randomized_svd_bond_capped_f64() {
+    check_randomized_svd_bond_capped::<f64>();
+}
+#[test]
+fn randomized_svd_bond_capped_float106() {
+    check_randomized_svd_bond_capped::<Float106>();
+}
+#[test]
+fn randomized_svd_grows_against_absolute_floor_f64() {
+    check_randomized_svd_grows_against_absolute_floor::<f64>();
+}
+#[test]
+fn randomized_svd_grows_against_absolute_floor_float106() {
+    check_randomized_svd_grows_against_absolute_floor::<Float106>();
+}

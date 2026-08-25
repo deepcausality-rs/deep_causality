@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
+use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric, MultiVector};
 
 #[test]
 fn test_api_delegation() {
@@ -89,4 +89,66 @@ fn test_inverse() {
     let mv_zero = CausalMultiVector::new(data_zero, metric).unwrap();
     let result = mv_zero.inverse();
     assert!(result.is_err());
+}
+
+// ============================================================================
+// MultiVector trait methods reached through UFCS.
+//
+// `CausalMultiVector` carries an inherent `inverse` as well, and an inherent method wins
+// method resolution. `<CausalMultiVector<f64> as MultiVector<f64>>::inverse` is therefore
+// the only way to call the trait impl.
+// ============================================================================
+
+/// The trait `inverse` returns the algebraic inverse: A * A^-1 = 1.
+#[test]
+fn test_trait_inverse_scalar_and_bivector() {
+    let metric = Metric::Euclidean(2);
+
+    // The scalar 2 inverts to 1/2.
+    let two = CausalMultiVector::new(vec![2.0, 0.0, 0.0, 0.0], metric).unwrap();
+    let inv_two = <CausalMultiVector<f64> as MultiVector<f64>>::inverse(&two).unwrap();
+    assert_eq!(inv_two.data(), &[0.5, 0.0, 0.0, 0.0]);
+
+    // e12 squares to -1 in the Euclidean plane, so e12^-1 = -e12.
+    let e12 = CausalMultiVector::new(vec![0.0, 0.0, 0.0, 1.0], metric).unwrap();
+    let inv_e12 = <CausalMultiVector<f64> as MultiVector<f64>>::inverse(&e12).unwrap();
+    assert_eq!(inv_e12.data(), &[0.0, 0.0, 0.0, -1.0]);
+
+    let round_trip = e12.geometric_product(&inv_e12);
+    assert_eq!(round_trip.data(), &[1.0, 0.0, 0.0, 0.0]);
+}
+
+/// The zero multivector has no inverse, and the trait reports it as a zero-magnitude error.
+#[test]
+fn test_trait_inverse_zero_multivector_is_an_error() {
+    let metric = Metric::Euclidean(2);
+    let zero = CausalMultiVector::new(vec![0.0; 4], metric).unwrap();
+
+    let err = <CausalMultiVector<f64> as MultiVector<f64>>::inverse(&zero).unwrap_err();
+
+    assert_eq!(err, CausalMultiVectorError::zero_magnitude());
+    assert!(
+        err.to_string().contains("non-zero magnitude"),
+        "unexpected message: {}",
+        err
+    );
+}
+
+/// The trait `inverse` guards on an exact zero squared magnitude; the inherent `inverse`
+/// guards on `T::epsilon()`. The scalar 1e-9 has squared magnitude 1e-18, which sits below
+/// f64::EPSILON, so the two entry points disagree on the same input.
+#[test]
+fn test_trait_inverse_accepts_magnitude_below_epsilon() {
+    let metric = Metric::Euclidean(2);
+    let tiny = CausalMultiVector::new(vec![1e-9, 0.0, 0.0, 0.0], metric).unwrap();
+
+    let inv = <CausalMultiVector<f64> as MultiVector<f64>>::inverse(&tiny).unwrap();
+    // 1/1e-9 = 1e9, to within f64 rounding of the intermediate 1e-18.
+    assert!(
+        (inv.data()[0] - 1e9).abs() < 1.0,
+        "expected 1e9, got {}",
+        inv.data()[0]
+    );
+
+    assert!(tiny.inverse().is_err());
 }

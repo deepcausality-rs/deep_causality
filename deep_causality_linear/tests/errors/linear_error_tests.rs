@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_linear::LinearError;
+use deep_causality_linear::{DenseMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView};
 
 #[test]
 fn test_index_out_of_bounds_names_the_position_and_the_shape() {
@@ -99,4 +99,59 @@ fn test_errors_compare_and_clone() {
 fn test_errors_are_debug() {
     let s = format!("{:?}", LinearError::NotSquare((1, 2)));
     assert!(s.contains("NotSquare"), "{s}");
+}
+
+#[test]
+fn test_not_positive_definite_names_the_diagonal_index_and_keeps_invertibility_open() {
+    // `diag(1, -1)` is invertible and indefinite, so "no Cholesky factor" and "no inverse" are
+    // different failures. The message has to say which one this is.
+    let e = LinearError::NotPositiveDefinite(3);
+    let s = format!("{e}");
+    assert!(s.contains('3'), "must name the diagonal index: {s}");
+    assert!(
+        s.contains("positive definite"),
+        "must name the classification: {s}"
+    );
+    assert!(
+        s.contains("invertible"),
+        "must not claim the matrix is singular: {s}"
+    );
+    assert_ne!(
+        e,
+        LinearError::Singular(3),
+        "the two failures are distinct at the same index"
+    );
+}
+
+#[test]
+fn test_kind_reports_the_classification_of_an_error_an_operation_produced() {
+    // The accessor exists so a caller can match without naming the tuple field. Driven through a
+    // real failure rather than a hand-built value, since that is how a caller meets it.
+    let m: DenseMatrix<f64> = MatrixBuild::identity(2);
+    let e = m.get(0, 7).unwrap_err();
+    assert!(
+        matches!(
+            e.kind(),
+            LinearErrorEnum::IndexOutOfBounds {
+                index: (0, 7),
+                shape: (2, 2)
+            }
+        ),
+        "got {:?}",
+        e.kind()
+    );
+}
+
+#[test]
+fn test_new_and_the_named_constructor_build_the_same_error() {
+    // Two routes to one value: the inner enum is public, so a caller may already hold a variant.
+    // They must not drift, or a match on one route stops matching a value built by the other.
+    let via_new = LinearError::new(LinearErrorEnum::ZeroDiagonal { at_index: 4 });
+    let via_named = LinearError::ZeroDiagonal(4);
+    assert_eq!(via_new, via_named);
+    assert_eq!(format!("{via_new}"), format!("{via_named}"));
+    assert!(matches!(
+        via_new.kind(),
+        LinearErrorEnum::ZeroDiagonal { at_index: 4 }
+    ));
 }
