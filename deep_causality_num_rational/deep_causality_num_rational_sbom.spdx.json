@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-08-23T15:39:14Z",
+    "created": "2026-08-25T01:32:49Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num_rational-315a4656-6d3f-485f-b6f4-2de8149a3341",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_num_rational-f4163382-9f20-4be3-88d8-80bd72fa740c",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_num_rational",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "335d397cbcbecd2f828a837a77066eaed6dc6796"
+          "checksumValue": "be5644a2bb15f4378275212a3073b4189002d798"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,31 +27,13 @@
   "name": "deep_causality_num_rational",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.3.0",
-      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_algebra",
-      "versionInfo": "0.3.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.2",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.4.2"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num--rational-0.1.0",
+      "SPDXID": "SPDXRef-Package-deep--causality--num--rational-0.1.2",
       "description": "Exact rational number type (the field of fractions of an integral domain) for deep_causality.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_num_rational",
-      "versionInfo": "0.1.0"
+      "versionInfo": "0.1.2"
     },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.16",
@@ -68,13 +50,36 @@
       "licenseDeclared": "MIT",
       "name": "libm",
       "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.3",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.1",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.4.1"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--rational-0.1.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--rational-0.1.2",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_num_rational"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_num_rational",
@@ -82,24 +87,19 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.3.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--rational-0.1.2"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.3.0",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num--rational-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--rational-0.1.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_num_rational"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.2",
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num--rational-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.3"
     }
   ],
   "spdxVersion": "SPDX-2.3"
