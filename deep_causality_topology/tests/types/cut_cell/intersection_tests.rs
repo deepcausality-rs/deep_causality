@@ -269,3 +269,43 @@ fn cylinder_cut_far_finer_than_the_arc_quadrature_still_clips_exactly() {
         "the cylinder halves the cell, got fluid fraction {frac}"
     );
 }
+
+// ---- the fragment tolerance carries the right dimensions --------------------------------------
+
+/// A highly elongated cell cut in half still records its cut-face fragment.
+///
+/// The fragment threshold compared a cross-section **area** against a **volume**-scaled tolerance,
+/// `cell_volume * 1e-12`. On a `1e13 x 1 x 1` cell that tolerance is 10 while the cut area is 1,
+/// so a cell cut exactly in half recorded no fragment at all. The tolerance now scales with the
+/// quantity it gates: the cell's largest face for an area, its longest edge for a length.
+#[test]
+fn test_a_plane_through_a_highly_elongated_cell_keeps_its_fragment() {
+    let prim = Primitive::<3, f64>::halfspace([1.0, 0.0, 0.0], 5e12);
+    let cell = CutCell::from_box(&prim, [0.0; 3], [1e13, 1.0, 1.0]).unwrap();
+
+    assert_eq!(cell.class(), CellClass::Cut);
+    assert_eq!(
+        cell.fragments().len(),
+        1,
+        "a cell cut through its middle has a cut face whatever its aspect ratio"
+    );
+
+    let half = 1e13 * 0.5;
+    assert!(
+        (cell.fluid_volume() - half).abs() < half * 1e-9,
+        "half the cell is fluid: expected {half}, got {}",
+        cell.fluid_volume()
+    );
+}
+
+/// The same cell at a normal aspect ratio, so the test above is about the tolerance and not
+/// about the cut.
+#[test]
+fn test_a_plane_through_a_unit_cell_keeps_its_fragment() {
+    let prim = Primitive::<3, f64>::halfspace([1.0, 0.0, 0.0], 0.5);
+    let cell = CutCell::from_box(&prim, [0.0; 3], [1.0; 3]).unwrap();
+
+    assert_eq!(cell.class(), CellClass::Cut);
+    assert_eq!(cell.fragments().len(), 1);
+    assert!((cell.fluid_volume() - 0.5).abs() < 1e-12);
+}

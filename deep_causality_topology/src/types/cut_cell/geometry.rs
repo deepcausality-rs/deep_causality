@@ -102,6 +102,30 @@ pub(super) fn box_halfspace_solid_volume<R: RealField + FromPrimitive>(
         return if cc >= R::zero() { full } else { R::zero() };
     }
 
+    // After the reduction the constraint is `Σ aⱼ yⱼ ≤ cc` with every `aⱼ > 0` and
+    // `yⱼ ∈ [0, lⱼ]`, so the sum ranges over `[0, Σ aⱼ lⱼ]`. Outside that range the answer needs
+    // no quadrature, and taking it here is what keeps the answer right rather than merely fast.
+    //
+    // The inclusion-exclusion below sums `2^m` terms of size `cc^m` and divides by `m! ∏aⱼ`. The
+    // terms cancel down to a result of order the cell volume, so once `cc` is large against the
+    // cell the cancellation is total: at `cc ≈ 1.6e5` on a unit cell the rounding error already
+    // exceeds the result. When the error came out negative the clamp at the end reported zero
+    // solid and the cell was classified `Fluid` while lying entirely inside the solid halfspace.
+    // Measured: a halfspace with unit normal `[1/√3; 3]` at offset `150000` over the unit cube
+    // gave `Fluid`.
+    let mut span = R::zero();
+    for (&aj, &lj) in pos_a.iter().zip(pos_l.iter()) {
+        span += aj * lj;
+    }
+    if cc >= span {
+        // Every point of the box satisfies the constraint.
+        return full;
+    }
+    if cc <= R::zero() {
+        // No point does: the sum is non-negative and `cc` is not.
+        return R::zero();
+    }
+
     let num_subsets = 1usize << m;
     let mut total = R::zero();
     for subset in 0..num_subsets {
@@ -176,6 +200,12 @@ pub(super) fn box_halfspace_cross_area<R: RealField + FromPrimitive>(l: &[R], n:
 /// `∫_a^b sqrt(r² − u²) du`, the elementary antiderivative
 /// `½(u·sqrt(r²−u²) + r²·asin(u/r))`, with `u` clamped to `[−r, r]`.
 fn sqrt_integral<R: RealField>(a: R, b: R, r: R) -> R {
+    // A circle of zero radius encloses nothing, and `(u / r).asin()` below would be `asin(0/0)`.
+    // That NaN propagated all the way out: a ball or cylinder of radius zero produced a cell
+    // classified `Cut` with NaN volumes, because both comparisons against a NaN are false.
+    if r <= R::zero() {
+        return R::zero();
+    }
     let prim = |u: R| -> R {
         let uc = if u < -r {
             -r
@@ -194,6 +224,11 @@ fn sqrt_integral<R: RealField>(a: R, b: R, r: R) -> R {
 /// Area of `disk(0, r) ∩ { u ≤ x, v ≤ y }` (center-relative coordinates). The four-corner
 /// inclusion–exclusion of this primitive yields the exact rectangle ∩ disk area.
 fn circular_quadrant_area<R: RealField>(x: R, y: R, r: R) -> R {
+    // A degenerate disk has no area. Checked before the comparisons below, which are all
+    // satisfied at `r = 0` and would carry the degeneracy into `sqrt_integral`.
+    if r <= R::zero() {
+        return R::zero();
+    }
     if x <= -r || y <= -r {
         return R::zero();
     }
@@ -267,21 +302,56 @@ pub(super) fn circle_in_rect_arc_len<R: RealField + FromPrimitive>(
     if r <= R::zero() {
         return R::zero();
     }
-    // Sample the angular indicator on a fine uniform grid and trapezoid-integrate. The arc
-    // length is r·∫ 1_inside dθ; a fragment measure feeds the Stage-4 BC stage and is not on
-    // the spec's exactness scenario (which gates volume + apertures), so a high-resolution
-    // quadrature is the pragmatic, dependency-free choice here.
-    let steps = 2048usize;
+    // The in-rectangle indicator is piecewise constant in θ, and it can only change where the
+    // circle crosses one of the four rectangle lines. Collecting those crossing angles and
+    // testing one interior point per resulting interval is exact, with no resolution to tune.
+    //
+    // This was a fixed 2048-point uniform sweep. A cell subtending less than one step, 2π/2048
+    // radians, could contain no sample at all and measured an arc length of exactly zero, so a
+    // genuinely cut cell recorded no cut-face fragment and the aperture-resolved no-slip stage
+    // dropped that wetted surface. Measured on a 1e-4 cell on the unit circle at polar angle
+    // 512.5·2π/2048, which is midway between two samples: the sweep returned 0.
     let two_pi = R::pi() * (R::one() + R::one());
-    let dtheta = two_pi / R::from_usize(steps).expect("step count fits in R");
-    let mut inside = 0usize;
-    for k in 0..steps {
-        let theta = dtheta * R::from_usize(k).expect("index fits in R");
-        let px = center[0] + r * theta.cos();
-        let py = center[1] + r * theta.sin();
-        if px >= lo[0] && px <= hi[0] && py >= lo[1] && py <= hi[1] {
-            inside += 1;
+    let mut breaks: Vec<R> = Vec::with_capacity(10);
+    breaks.push(R::zero());
+    breaks.push(two_pi);
+
+    // A vertical line x = X is met where cos θ = (X − cx)/r, giving ±acos of that ratio.
+    for &x in &[lo[0], hi[0]] {
+        let t = (x - center[0]) / r;
+        if t >= -R::one() && t <= R::one() {
+            let a = t.acos();
+            breaks.push(a);
+            breaks.push(two_pi - a);
         }
     }
-    r * dtheta * R::from_usize(inside).expect("count fits in R")
+    // A horizontal line y = Y is met where sin θ = (Y − cy)/r, giving asin and π − asin.
+    for &y in &[lo[1], hi[1]] {
+        let t = (y - center[1]) / r;
+        if t >= -R::one() && t <= R::one() {
+            let a = t.asin();
+            let wrapped = if a < R::zero() { a + two_pi } else { a };
+            breaks.push(wrapped);
+            breaks.push(R::pi() - a);
+        }
+    }
+
+    breaks.retain(|&b| b >= R::zero() && b <= two_pi);
+    breaks.sort_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal));
+
+    let half = R::one() / (R::one() + R::one());
+    let mut inside_angle = R::zero();
+    for w in breaks.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        if b <= a {
+            continue;
+        }
+        let mid = (a + b) * half;
+        let px = center[0] + r * mid.cos();
+        let py = center[1] + r * mid.sin();
+        if px >= lo[0] && px <= hi[0] && py >= lo[1] && py <= hi[1] {
+            inside_angle += b - a;
+        }
+    }
+    r * inside_angle
 }
