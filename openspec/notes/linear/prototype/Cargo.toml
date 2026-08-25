@@ -4,7 +4,7 @@ members = ["linear_a", "linear_b", "linear_c", "consumer_b", "tensor_impl"]
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.93.0"
+rust-version = "1.97.1"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

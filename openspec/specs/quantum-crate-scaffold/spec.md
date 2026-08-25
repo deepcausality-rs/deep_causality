@@ -6,7 +6,7 @@ TBD - created by archiving change add-quantum-crate. Update Purpose after archiv
 ### Requirement: A dedicated `deep_causality_quantum` crate under workspace policy
 
 The change SHALL add a new crate `deep_causality_quantum` as a workspace member that adopts the
-repo-wide policy: `[lints] workspace = true`, `unsafe_code = "forbid"`, MSRV `rust-version = 1.93.0`,
+repo-wide policy: `[lints] workspace = true`, `unsafe_code = "forbid"`, MSRV `rust-version = 1.97.1`,
 no `dyn`, and no crate-defined macros. The crate SHALL depend only on `deep_causality` (the engine
 crate — required by the freeze-hook integration: `CausableGraph::freeze_verified_with_check` and
 `CausalityGraphError` live there, and the orphan-legal `impl From<QuantumError> for

@@ -730,7 +730,7 @@ rustdoc output and gives the finest locator. Measure the node count on this repo
 committing.
 
 **2. Rustdoc JSON stability.** The format is nightly-only and versioned. This workspace pins
-`rust-version = "1.98.0"`, so a fixed toolchain exists; confirm the JSON format version is stable
+`rust-version = "1.97.1"`, so a fixed toolchain exists; confirm the JSON format version is stable
 across that pin and pin `rustdoc-types` to match.
 
 **3. Third-party PDF fidelity.** Papers authored here index from LaTeX with exact granularity. The 49

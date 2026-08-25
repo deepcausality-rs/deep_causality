@@ -241,7 +241,7 @@ SVD-based `σ_max` / condition estimates — never globally.
 ### B9. Crate policy + dependency set
 
 **Decision.** `deep_causality_quantum` is a new workspace member with `[lints] workspace = true`,
-`unsafe_code = "forbid"`, MSRV `rust-version = 1.93.0`, no `dyn`, no crate-defined macros, std (it
+`unsafe_code = "forbid"`, MSRV `rust-version = 1.97.1`, no `dyn`, no crate-defined macros, std (it
 depends on `CausalTensor`). Dependencies: core, haft, algebra, num, num_complex, multivector, tensor,
 uncertain (optional, behind the `qpu` feature), and **`deep_causality_metric`** (the metric-signature
 SSOT — see cross-cutting constraints). It depends on nothing that would create a cycle (physics does
