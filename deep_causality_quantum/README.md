@@ -158,17 +158,16 @@ overflow and non-convergence as typed errors rather than a silent identity.
 
 ## Usage
 
-The crate is unpublished; add it as a git dependency:
 
 ```toml
 [dependencies]
-deep_causality_quantum = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main" }
+deep_causality_quantum = { version = "0.1.1" }
 ```
 
 Enable the emergent QPU seam with the `qpu` feature:
 
 ```toml
-deep_causality_quantum = { git = "…", branch = "main", features = ["qpu"] }
+deep_causality_quantum = { version = "0.1.1", features = ["qpu"] }
 ```
 
 ## Examples
