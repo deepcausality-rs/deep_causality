@@ -24,4 +24,5 @@ thirdparty/bzlmod/llvm
 website/web/node_modules
 website/cfd/node_modules
 website/docs/node_modules
+website/quantum/node_modules
 yanked/

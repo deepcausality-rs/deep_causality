@@ -1,0 +1,168 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import { theorems, deferred } from '../../data/formalization';
+import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, TESTS_URL } from '../../consts';
+
+const title = 'Formalization — DeepCausality Quantum';
+const description =
+  'Ten LEAN 4 theorems, each bound to an executable Rust witness, including the counterexample proving that partial trace does not preserve commutation. Plus the seven targets that carry test witnesses and no proof yet.';
+
+const TESTS = 197;
+---
+<BaseLayout title={title} description={description} path="/formalization/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Evidence"
+    title="What is proved, and what is not"
+    lede="The verifiable path is backed by LEAN 4. Ten theorems close with no sorry, each tied to a Rust test that runs the same statement on real numbers."
+    sourceHref={LEAN_URL}
+    sourceLabel="lean/DeepCausalityFormal/Quantum"
+  >
+    <h2>Why these theorems</h2>
+
+    <p>
+      The Mathlib version the workspace pins carries neither a partial trace nor
+      a Choi–Jamiołkowski layer, so both are built from first principles over a
+      pair-indexed matrix model. That is more work than importing them would
+      have been, and it fixes what can be proved: the results below are about
+      the reconstruction, not about a library someone else validated.
+    </p>
+
+    <p>
+      Every theorem is bound to a Rust witness through
+      <a href={THEOREM_MAP_URL}>THEOREM_MAP.md</a>, and the witnesses live in
+      <a href={`${TESTS_URL}/formalization_lean`}>tests/formalization_lean</a>.
+      The binding runs both ways in practice: a theorem with no witness is a
+      statement nobody exercises, and a witness with no theorem is a test whose
+      generality is unknown.
+    </p>
+
+    <h2>The headline is a refutation</h2>
+
+    <div class="callout callout-warn">
+      <p class="callout-title">partial_trace_preservation is false</p>
+      <p>
+        Partial trace is positive and linear, and it is not an algebra
+        homomorphism. The counterexample gives two matrices with
+        <code>[X, Y] = 0</code> whose partial traces do not commute. The
+        residual commutator is <code>[[0, 4], [−4, 0]]</code>, which is
+        <code>+4i·σy</code>. Because that is an integer matrix, the proof closes
+        by <code>decide</code> over ℤ, with no analysis and no
+        <code>sorry</code>.
+      </p>
+    </div>
+
+    <p>
+      What survives is the conditional statement. A boundary operator of the
+      form <code>Z ⊗ 1_B</code> that commutes with <code>M</code> does force
+      <code>Z</code> to commute with <code>Tr_B(M)</code>, and that is proved as
+      <code>partial_trace_preservation_boundary</code>.
+    </p>
+
+    <p>
+      Commutativity is therefore checked where the factors meet, by embedding
+      both onto the union of their supports. Separately, the crate supports flat
+      models only: the physical meaning of quantum-subgraph nesting is itself
+      unestablished, so more work needs to be done.
+    </p>
+
+    <h2>Proved</h2>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Identifier</th>
+            <th scope="col">Statement</th>
+            <th scope="col">LEAN</th>
+            <th scope="col">Rust witness</th>
+          </tr>
+        </thead>
+        <tbody>
+          {theorems.map((t) => (
+            <tr>
+              <td><code class="tid">{t.id}</code></td>
+              <td class="tst">{t.statement}</td>
+              <td><code class="tsrc">{t.lean}</code></td>
+              <td><code class="tsrc">{t.witness}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="after">
+      All {theorems.length} close with zero <code>sorry</code>. The quantum tree
+      is exempt from the repository's CI <code>sorry</code> gate while this
+      foundation is being extended, which is recorded in
+      <a href={LEAN_STATUS_URL}>LEAN_QUANTUM.md</a> rather than left implicit.
+    </p>
+
+    <h2>Stated, not proved</h2>
+
+    <p>
+      These carry numerical or property-test witnesses in the crate today. Their
+      LEAN proofs need machinery the pinned Mathlib does not have.
+    </p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Target</th>
+            <th scope="col">What exists today</th>
+            <th scope="col">Why not yet</th>
+          </tr>
+        </thead>
+        <tbody>
+          {deferred.map((d) => (
+            <tr>
+              <td><code class="tid">{d.id}</code></td>
+              <td class="tst">{d.carries}</td>
+              <td class="tst">{d.reason}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Tests</h2>
+
+    <p>
+      <code>cargo test -p deep_causality_quantum --all-features</code> runs
+      {TESTS} tests and reports zero failures and zero ignored. There are no doc
+      tests; the suite is behavioural and lives under <code>tests/</code>,
+      mirroring the source tree file for file.
+    </p>
+
+    <h2>Scope of the faithfulness claim</h2>
+
+    <p>
+      Faithfulness is limited to the C₃-exclusion regime of van der Lugt and
+      Lorenz. A declared causal structure with no C₃ sub-relation is faithfully
+      representable by a traditional circuit, and one containing a C₃ is
+      rejected at freeze. The general routed and direct-sum hypothesis of
+      Lorenz and Barrett remains open upstream, and the crate makes no claim
+      about it.
+    </p>
+  </DocPage>
+</BaseLayout>
+
+<style>
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td {
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    vertical-align: top;
+  }
+  th { color: var(--fg-0); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--bg-1); }
+  .tid { font-size: var(--t-mono-sm); color: var(--fg-0); background: none; padding: 0; }
+  .tst { color: var(--fg-1); max-width: 34ch; }
+  .tsrc { font-size: var(--t-eyebrow); color: var(--fg-1); background: none; padding: 0; }
+  .after { color: var(--fg-1); font-size: var(--t-body-sm); }
+</style>

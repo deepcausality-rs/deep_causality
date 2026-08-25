@@ -1,0 +1,63 @@
+---
+title: "Freeze-time Markov check"
+question: "Does this factorization actually qualify as a quantum causal model?"
+summary: "Two factors on a shared Hilbert leg. Diagonal ones commute and the graph freezes; σx and σz do not, and the freeze aborts naming the pair."
+order: 1
+command: "cargo run --release -p quantum_examples --example qcm_freeze_check"
+usesCrate: true
+uses:
+  - freeze_quantum
+  - CommutatorTolerance
+  - QuantumMarkovReport
+  - QuantumErrorEnum::CommutatorNonZero
+  - ProcessFactors
+  - FactorSupports
+crates:
+  - deep_causality
+  - deep_causality_quantum
+  - deep_causality_num_complex
+  - deep_causality_tensor
+source: "examples/quantum_examples/qcm_freeze_check"
+---
+
+This is the example that exercises the crate's reason for existing. It builds a
+two-node causal graph twice, decorates it with a pair of Choi–Jamiołkowski
+factors, and asks the freeze boundary whether the pair is a legal quantum causal
+model.
+
+Both factors are declared on leg 0, so their supports intersect and the check
+has an obligation to discharge. In the first run the factors are `σz` and
+`diag(3, -1)`. Diagonal matrices commute, the commutator norm comes out at zero,
+and the graph freezes:
+
+```text
+[1] Commuting model: σz and diag(3, -1) on leg 0
+    ✓ froze cleanly; 1 commuting pair(s) checked, worst margin 0.000e0
+    is_frozen() = true
+```
+
+The margin is the recorded quantity to read. It is `‖[ρⱼ, ρₖ]‖_F` divided by the
+Q-TOL threshold, so anything at or below 1 accepts. Zero means the commutator
+vanished exactly rather than within tolerance.
+
+The second run swaps in `σx` against `σz`. Those anticommute, the norm is far
+above threshold, and the freeze refuses:
+
+```text
+[2] Non-commuting model: σx and σz on leg 0
+    ✓ freeze aborted: factors at nodes 0 and 1 do not commute
+    is_frozen() = false (rolled back)
+```
+
+Two details in that second line carry the design. The error is
+`QuantumErrorEnum::CommutatorNonZero { node_j, node_k, detail }`, so the caller
+gets the offending node indices as data and not as a string to parse. And
+`is_frozen()` reports false: a failed check rolls the graph back to its dynamic
+state rather than leaving it half-committed.
+
+The example passes `None` for the faithfulness argument, so it runs the
+commutativity check alone. Supplying `Some((inputs, outputs))` adds the
+C₃-exclusion check over the frozen graph's reachability.
+
+The model construction lives in `model.rs`, and `constants.rs` carries the
+`FloatType` alias the run is parameterized on.

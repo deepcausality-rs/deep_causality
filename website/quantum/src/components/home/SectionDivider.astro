@@ -1,0 +1,17 @@
+---
+/**
+ * DESIGN.md §12.10. Full-width hairline with three accent node dots.
+ * All styling lives in global.css; this file is structure only.
+ *
+ * `pathLength="100"` normalizes the dash math so the draw-in is independent
+ * of the rendered width.
+ */
+---
+<div class="section-divider">
+  <svg viewBox="0 0 100 4" preserveAspectRatio="none" data-anim-draw aria-hidden="true">
+    <line x1="0" y1="2" x2="100" y2="2" pathLength="100" />
+    <circle cx="25" cy="2" r="0.55" />
+    <circle cx="50" cy="2" r="0.55" />
+    <circle cx="75" cy="2" r="0.55" />
+  </svg>
+</div>

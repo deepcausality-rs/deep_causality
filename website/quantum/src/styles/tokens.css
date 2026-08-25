@@ -1,0 +1,141 @@
+/*
+ * DeepCausality design tokens — canonical source of truth.
+ * Spec: website/web/DESIGN.md
+ *
+ * Dark is the default theme. The `[data-theme="light"]` selector overrides
+ * the palette and shadows for light mode. A pre-paint inline script in
+ * BaseLayout sets `data-theme` from localStorage or prefers-color-scheme.
+ */
+
+:root,
+[data-theme='dark'] {
+  /* Surfaces */
+  --bg-0: #070b10;
+  --bg-1: #0b1118;
+  --bg-2: #121a23;
+  --bg-3: #1a2430;
+
+  /* Lines / borders */
+  --line-1: #1f2a36;
+  --line-2: #2a3a4a;
+
+  /* Foreground */
+  --fg-0: #e6edf3;
+  --fg-1: #aab3bd;
+  --fg-2: #6b7682;
+
+  /* Accent (single) */
+  --accent: #5cd4e1;
+  --accent-ink: #062029;
+
+  /* Status (inline feedback only) */
+  --warn: #e3b341;
+  --danger: #f47174;
+  --ok: #8ed4a8;
+
+  /* Shadows — tinted to dark page background */
+  --shadow-1: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --shadow-2: 0 12px 24px -16px rgba(8, 16, 24, 0.70);
+  --shadow-3: 0 24px 48px -24px rgba(8, 16, 24, 0.80);
+}
+
+[data-theme='light'] {
+  --bg-0: #ffffff;
+  --bg-1: #f6f8fa;
+  --bg-2: #eef2f6;
+  --bg-3: #e2e8ef;
+
+  --line-1: #d8dee4;
+  --line-2: #c0c8d1;
+
+  --fg-0: #0b1118;
+  --fg-1: #3b4754;
+  --fg-2: #5b6772;
+
+  --accent: #0a8a98;
+  --accent-ink: #ffffff;
+
+  --warn: #a25c00;
+  --danger: #b42318;
+  --ok: #1f7a3a;
+
+  --shadow-1: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  --shadow-2: 0 10px 24px -16px rgba(15, 23, 32, 0.18);
+  --shadow-3: 0 24px 48px -24px rgba(15, 23, 32, 0.22);
+}
+
+/* Type families */
+:root {
+  --font-sans: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale (rem) */
+  --t-display: 3.75rem;
+  --t-h1: 2.5rem;
+  --t-h2: 1.875rem;
+  --t-h3: 1.375rem;
+  --t-h4: 1.125rem;
+  --t-body: 1rem;
+  --t-body-sm: 0.9375rem;
+  --t-mono-sm: 0.875rem;
+  --t-mono-block: 0.9375rem;
+  --t-eyebrow: 0.75rem;
+
+  /* Line heights */
+  --lh-display: 1.02;
+  --lh-h1: 1.08;
+  --lh-h2: 1.15;
+  --lh-h3: 1.25;
+  --lh-h4: 1.35;
+  --lh-body: 1.6;
+  --lh-eyebrow: 1.2;
+
+  /* Letter spacing */
+  --ls-display: -0.022em;
+  --ls-h1: -0.018em;
+  --ls-h2: -0.012em;
+  --ls-h3: -0.005em;
+  --ls-eyebrow: 0.08em;
+
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+
+  /* Container widths */
+  --w-prose: 720px;
+  --w-doc: 1080px;
+  --w-page: 1280px;
+  --w-wide: 1440px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --dur-slow: 420ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Prose */
+  --measure: 68ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
+}

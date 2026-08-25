@@ -1,0 +1,125 @@
+---
+/**
+ * Section 04 — the evidence, led by the LEAN result rather than by the counts.
+ *
+ * Counts are derived from the data file, so the headline number and the table
+ * on /formalization/ cannot drift apart. The test count is the figure the suite
+ * itself reports under `--all-features`, not a count of `#[test]` attributes:
+ * one of those attributes appears inside a doc comment.
+ */
+import { theorems, deferred } from '../../data/formalization';
+
+const proved = theorems.length;
+const open = deferred.length;
+const TESTS = 197;
+---
+<section class="qsec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">04 / 05</span><span class="lb">Evidence</span>
+    </p>
+    <h2>The theorem verified in LEAN</h2>
+  </header>
+
+  <div class="panel corner-brackets headline rise">
+    <p class="hkind">Refuted in LEAN</p>
+    <p class="hbody">
+      Partial trace is positive and linear, but it is not an algebra
+      homomorphism. The counterexample gives two matrices with
+      <code>[X, Y] = 0</code> whose partial traces do not commute; the residual
+      commutator is <code>[[0, 4], [−4, 0]]</code>, which is
+      <code>+4i·σy</code>.
+    </p>
+    <p class="hbody">
+      Two consequences follow. Commutativity has to be checked where the factors
+      actually meet. And the crate supports flat models: the physical meaning of
+      quantum-subgraph nesting is itself unestablished, so more work needs to be
+      done.
+    </p>
+    <p class="hsrc">
+      <code>Quantum/PartialTraceCounterexample.lean :: partial_trace_nonpreservation</code>
+    </p>
+  </div>
+
+  <dl class="figs">
+    <div>
+      <dt>LEAN theorems proved</dt>
+      <dd class="num">{proved}</dd>
+      <dd class="cap">Each bound to a Rust witness through <code>THEOREM_MAP.md</code>.</dd>
+    </div>
+    <div>
+      <dt>Tests passing</dt>
+      <dd class="num">{TESTS}</dd>
+      <dd class="cap">
+        <code>cargo test -p deep_causality_quantum --all-features</code>, zero
+        failures, zero ignored.
+      </dd>
+    </div>
+    <div>
+      <dt>Stated but unproved</dt>
+      <dd class="num">{open}</dd>
+      <dd class="cap">
+        Targets carrying test witnesses today and no LEAN statement yet.
+      </dd>
+    </div>
+  </dl>
+
+  <p class="more">
+    <a href="/formalization/">Every theorem and its witness</a>
+    <a href="/errors/">What the crate refuses, and how it says so</a>
+  </p>
+</section>
+
+<style>
+  .qsec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .headline { padding: var(--space-5); margin-bottom: var(--space-6); }
+  .hkind {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--warn);
+    margin: 0 0 var(--space-3);
+  }
+  .hbody { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .hsrc { margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--line-1); }
+  .hsrc code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
+
+  .figs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 600px) { .figs { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 900px) { .figs { grid-template-columns: repeat(3, 1fr); } }
+
+  .figs dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--line-1);
+  }
+  .figs dd { margin: 0; }
+  .figs dd.num { font-size: var(--t-h2); color: var(--fg-0); line-height: 1.1; }
+  .figs dd.cap { color: var(--fg-1); font-size: var(--t-body-sm); margin-top: var(--space-2); }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

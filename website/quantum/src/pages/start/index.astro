@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { CARGO_DEP, MSRV, CRATE_URL, GITHUB_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Add the crate — DeepCausality Quantum';
+const description =
+  'The crate is unpublished, so a git dependency is the only route. Feature flags, the no-std story, the workspace MSRV, and what the default build actually compiles.';
+
+const dep = `[dependencies]
+${CARGO_DEP}`;
+
+const qpu = `[dependencies]
+deep_causality_quantum = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main", features = ["qpu"] }`;
+
+const nostd = `[dependencies]
+deep_causality_quantum = { git = "…", branch = "main", default-features = false, features = ["no-std"] }`;
+
+const run = `git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality
+cargo run --release -p quantum_examples --example qcm_freeze_check`;
+
+const features = [
+  {
+    name: 'std',
+    on: 'default',
+    what: 'The standard-library build. Enables std on every workspace dependency the crate pulls in.',
+  },
+  {
+    name: 'qcm',
+    on: 'default',
+    what: 'The causal-model slice: CausalStructure, the Markov freeze check, and the C₃-exclusion faithfulness check. It pulls in deep_causality for the causal graph, which is std-only, so qcm implies std and is off on a bare-metal build.',
+  },
+  {
+    name: 'alloc',
+    on: 'off',
+    what: 'Allocation without the standard library. Implied by both std and no-std.',
+  },
+  {
+    name: 'no-std',
+    on: 'off',
+    what: 'The bare-metal build. Implies alloc and switches every workspace dependency to its own no-std feature.',
+  },
+  {
+    name: 'qpu',
+    on: 'off',
+    what: 'The emergent QPU seam: QpuSampler, ShotHistogram, the shots-to-Uncertain bridges, qpu_effect and the in-process SimQpu. Adds deep_causality_uncertain, and nothing network-facing or async.',
+  },
+];
+---
+<BaseLayout title={title} description={description} path="/start/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Getting started"
+    title="Add the crate"
+    lede="Version 0.1.0, MIT licensed, and unpublished. There is no crates.io release and therefore no cargo add line."
+    sourceHref={CRATE_URL}
+    sourceLabel="deep_causality_quantum"
+  >
+    <h2>The dependency</h2>
+
+    <p>
+      The manifest carries <code>publish = false</code>, so a git dependency is
+      the only way to take the crate today. Pinning to a tag or a commit rather
+      than to <code>branch = "main"</code> is the sensible choice for anything
+      you intend to keep building.
+    </p>
+
+    <Code code={dep} lang="toml" themes={SHIKI} />
+
+    <p>
+      The workspace minimum supported Rust version is {MSRV}, from
+      <code>rust-version</code> in the root manifest. The crate opts into the
+      workspace lints, which include <code>unsafe_code = "forbid"</code>; there
+      is no unsafe code here and no exemption.
+    </p>
+
+    <h2>What the default build gives you</h2>
+
+    <p>
+      The default feature set is <code>["std", "qcm"]</code>. That compiles the
+      operator layer, the gate kernels and their causal-monad wrappers, the
+      verdict layer, and the causal-model slice with its freeze-time checks. It
+      does not compile the QPU seam.
+    </p>
+
+    <p>
+      No feature setting adds a network dependency or an async runtime. The
+      external dependency list for this crate is empty; everything it uses is a
+      workspace path dependency.
+    </p>
+
+    <h2>Feature flags</h2>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col">Default</th>
+            <th scope="col">What it turns on</th>
+          </tr>
+        </thead>
+        <tbody>
+          {features.map((f) => (
+            <tr>
+              <td><code class="fname">{f.name}</code></td>
+              <td>
+                {f.on === 'default'
+                  ? <span class="status status-validated">on</span>
+                  : <span class="status status-roadmap">off</span>}
+              </td>
+              <td class="fwhat">{f.what}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The QPU seam</h3>
+
+    <Code code={qpu} lang="toml" themes={SHIKI} />
+
+    <h3>Bare metal</h3>
+
+    <Code code={nostd} lang="toml" themes={SHIKI} />
+
+    <p>
+      A <code>no-std</code> build loses the causal-model slice, because
+      <code>qcm</code> depends on the std-only causal graph. What remains is the
+      operator layer, the gate kernels and the verdict layer, all of which use
+      <code>alloc</code> and compile without the standard library.
+    </p>
+
+    <h2>Run something first</h2>
+
+    <p>
+      The fastest way to see whether the crate does what you need is the freeze
+      check, which is the crate's reason for existing and runs in a few seconds
+      after the workspace builds.
+    </p>
+
+    <Code code={run} lang="bash" themes={SHIKI} />
+
+    <p>
+      The <code>--depth 1</code> matters on an ordinary connection: the
+      full-history pack is large, and the clone is the slow step. The example
+      prints two runs, one that freezes and one that aborts naming the offending
+      pair. The <a href="/examples/qcm-freeze-check/">example page</a> walks
+      through the output line by line.
+    </p>
+
+    <h2>Where to go next</h2>
+
+    <ul class="hairline-list">
+      <li><a href="/qcm/">The model, the freeze check and faithfulness</a></li>
+      <li><a href="/operators/">The operator layer the checks are built from</a></li>
+      <li><a href="/formalization/">What is proved in LEAN, and what is not</a></li>
+      <li><a href={`${GITHUB_URL}/issues`}>Open an issue ↗</a></li>
+    </ul>
+  </DocPage>
+</BaseLayout>
+
+<style>
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td {
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    vertical-align: top;
+  }
+  th { color: var(--fg-0); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--bg-1); }
+  .fname { font-size: var(--t-mono-sm); color: var(--fg-0); background: none; padding: 0; }
+  .fwhat { color: var(--fg-1); max-width: 52ch; }
+</style>

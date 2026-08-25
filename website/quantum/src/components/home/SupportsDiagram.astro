@@ -1,0 +1,114 @@
+---
+/**
+ * The shared-support figure. This is the site's first content figure, so it
+ * also sets the diagram convention, following website/cfd's ForkTree:
+ * hand-drawn inline SVG in the instrument vocabulary, hairline strokes and
+ * accent nodes, animated through the shared `[data-anim-draw]` contract rather
+ * than any per-diagram script.
+ *
+ * Geometry only in the SVG, labels in HTML. SVG text scales with the viewBox,
+ * so a label legible on a desktop lands at eight or nine pixels on a phone.
+ *
+ * Three legs, not eight. Three is the smallest number that shows a shared leg
+ * and an unshared one at the same time, which is the whole content of the
+ * figure: the check fires on the middle rail and skips the outer two.
+ *
+ * `vector-effect: non-scaling-stroke` is deliberately absent. It resolves
+ * `stroke-dasharray` in device pixels, which fights the `pathLength="100"`
+ * normalization the draw-in depends on and renders every stroke dashed.
+ */
+---
+<figure class="supports">
+  <svg
+    viewBox="0 0 100 46"
+    preserveAspectRatio="xMidYMid meet"
+    data-anim-draw
+    role="img"
+    aria-label="Three horizontal Hilbert legs. One factor spans the top two legs, a second factor spans the bottom two. They meet on the middle leg, which is drawn in the accent colour, and that shared leg is where the commutator has to vanish."
+  >
+    <!-- Three Hilbert legs. The middle one is shared, so it is the accent. -->
+    <line x1="6" y1="10" x2="94" y2="10" pathLength="100" />
+    <line x1="6" y1="23" x2="94" y2="23" pathLength="100" class="shared" />
+    <line x1="6" y1="36" x2="94" y2="36" pathLength="100" />
+
+    <!-- Factor A: a bracket over legs 0 and 1. -->
+    <path d="M20,4 L44,4 L44,29 L20,29 Z" pathLength="100" class="factor" />
+    <!-- Factor B: a bracket over legs 1 and 2. -->
+    <path d="M56,17 L80,17 L80,42 L56,42 Z" pathLength="100" class="factor" />
+
+    <!-- Nodes, in stagger order: A on its two legs, the shared crossing, then
+         B on its two legs. -->
+    <circle cx="32" cy="10" r="1.3" />
+    <circle cx="32" cy="23" r="1.3" class="on-shared" />
+    <circle cx="50" cy="23" r="1.7" class="meet" />
+    <circle cx="68" cy="23" r="1.3" class="on-shared" />
+    <circle cx="68" cy="36" r="1.3" />
+  </svg>
+
+  <div class="s-labels" aria-hidden="true">
+    <span class="s-l">Factor ρ_A</span>
+    <span class="s-l">Shared leg</span>
+    <span class="s-l">Factor ρ_B</span>
+    <span class="s-l">‖[ρ_A, ρ_B]‖_F ≤ tol</span>
+  </div>
+
+  <figcaption>
+    Supports that do not intersect impose no obligation and are skipped. Where
+    they do, both factors are embedded onto the union of their legs, the
+    commutator is formed there, and its Frobenius norm is compared against a
+    forward-error threshold.
+  </figcaption>
+</figure>
+
+<style>
+  .supports { margin: var(--space-5) 0; }
+
+  .supports svg {
+    display: block;
+    width: 100%;
+    max-width: 44rem;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Stroke and fill are scoped per diagram; global.css carries only the dash
+     and node timing, never the colour. Stroke width is in user units; at the
+     44rem cap this is about one device pixel, the hairline the site uses. */
+  .supports line,
+  .supports path {
+    fill: none;
+    stroke: var(--line-2);
+    stroke-width: 0.16;
+  }
+  .supports line.shared { stroke: var(--accent); stroke-width: 0.24; }
+  .supports path.factor { stroke: var(--fg-2); stroke-width: 0.2; }
+
+  .supports circle { fill: var(--fg-2); }
+  .supports circle.on-shared,
+  .supports circle.meet { fill: var(--accent); }
+
+  .s-labels {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2) var(--space-4);
+    max-width: 44rem;
+    margin-top: var(--space-3);
+  }
+  @media (min-width: 720px) {
+    .s-labels { grid-template-columns: repeat(4, 1fr); }
+  }
+  .s-l {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

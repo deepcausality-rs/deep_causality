@@ -1,0 +1,28 @@
+---
+title: "Quantum counterfactual"
+question: "What does history-aware state rewind look like on a qubit?"
+summary: "A bit-flip is injected, syndrome measurement detects it, the history is rewound and an X gate restores |0⟩."
+order: 3
+command: "cargo run --release -p quantum_examples --example quantum_counterfactual"
+usesCrate: false
+crates:
+  - deep_causality_algebra
+  - deep_causality_core
+  - deep_causality_multivector
+  - deep_causality_num_complex
+source: "examples/quantum_examples/quantum_counterfactual"
+---
+
+A `QuantumHistory` of `HilbertState` vectors rides the state channel. A gate
+injects a bit flip, taking the qubit from |0⟩ to |1⟩. Syndrome measurement then
+reads `P(|1⟩) > 0.9` and flags the error. The bad state is popped from the
+history, an X gate is applied, and the final state verifies at `P(|0⟩) = 0.98`.
+
+The point of the walk is that error correction here is a property of monadic
+state threading rather than of a special-purpose recovery API. Because every
+step's state is on the channel, the history is inspectable, and rewinding is an
+ordinary operation on it.
+
+This example does not import `deep_causality_quantum`. The ket carrier
+`HilbertState` lives in `deep_causality_multivector`, and the effect plumbing
+comes from `deep_causality_core`, so the walk runs on those two directly.

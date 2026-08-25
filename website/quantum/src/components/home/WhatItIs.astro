@@ -1,0 +1,86 @@
+---
+/**
+ * Section 01 — what a quantum causal model is, and where the crate draws the
+ * line between structure and state.
+ *
+ * The figure carries the load here. The prose says only what the picture
+ * cannot: that the factors are freeze-time decoration rather than runtime
+ * state, which is the design decision a reader has to accept before any of the
+ * rest makes sense.
+ */
+import SupportsDiagram from './SupportsDiagram.astro';
+---
+<section class="qsec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">01 / 05</span><span class="lb">Model</span>
+    </p>
+    <h2>Channels where the conditional tables used to be</h2>
+    <p class="lede">
+      A classical causal model factorizes a joint distribution over its graph. A
+      quantum causal model does the same for a process operator.
+    </p>
+  </header>
+
+  <div class="body-cols">
+    <div>
+      <p class="body">
+        Every node <code>Aᵢ</code> carries a Choi–Jamiołkowski operator
+        <code>ρ_&#123;Aᵢ|Pa(Aᵢ)&#125;</code>, and the model is their product
+        <code>σ = ∏ᵢ ρ_&#123;Aᵢ|Pa(Aᵢ)&#125;</code>. That product is the process
+        operator, and it lives on the composite Hilbert space of everything the
+        graph touches.
+      </p>
+      <p class="body">
+        A product of operators is not automatically a model. Lorenz (2022,
+        Def. 3.3) states the condition it has to meet: factors whose Hilbert
+        supports intersect must pairwise commute. Classical conditionals commute
+        for free, which is why the classical case never has to say this out loud.
+      </p>
+    </div>
+    <div>
+      <p class="body">
+        The factors ride an external <code>ProcessFactors</code> decoration,
+        keyed by graph node index, with a separate <code>FactorSupports</code>
+        recording which legs each one lives on. They are static freeze-time
+        data. They never travel on the runtime state channel, which is what
+        makes the condition checkable once instead of per step.
+      </p>
+      <p class="body">
+        <code>FactorSupports::from_graph</code> derives the supports from the
+        graph rather than asking the caller to restate them, so the two cannot
+        drift apart.
+      </p>
+    </div>
+  </div>
+
+  <SupportsDiagram />
+
+  <p class="more">
+    <a href="/qcm/">The model in full, including faithfulness</a>
+    <a href="/operators/">The operator layer it is built from</a>
+  </p>
+</section>
+
+<style>
+  .qsec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  .body-cols { display: grid; grid-template-columns: 1fr; gap: var(--space-5); }
+  @media (min-width: 900px) { .body-cols { grid-template-columns: 1fr 1fr; gap: var(--space-7); } }
+
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .body:last-child { margin-bottom: 0; }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

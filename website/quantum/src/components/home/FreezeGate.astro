@@ -1,0 +1,152 @@
+---
+/**
+ * Section 02 — the freeze gate, shown as code plus the output that code
+ * actually prints.
+ *
+ * Both blocks come from `examples/quantum_examples/qcm_freeze_check`: the call
+ * shape is condensed from its `main.rs`, and the terminal block is the run's
+ * own stdout. Nothing here is illustrative.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const call = `use deep_causality_quantum::{
+    CommutatorTolerance, QuantumErrorEnum, freeze_quantum,
+};
+
+// σx and σz are both declared on leg 0, so their supports intersect.
+let (factors, supports) = factors_on_shared_leg(sigma_x(), sigma_z());
+let tolerance = CommutatorTolerance::<FloatType>::default();
+
+match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance, None) {
+    Ok(report) => { /* report.tested_pairs(), report.worst_margin() */ }
+    Err(e) => match e.0 {
+        QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => {
+            // The offending pair arrives as data, not as a string to parse.
+        }
+        _ => {}
+    },
+}`;
+
+const output = `[1] Commuting model: σz and diag(3, -1) on leg 0
+    ✓ froze cleanly; 1 commuting pair(s) checked, worst margin 0.000e0
+    is_frozen() = true
+
+[2] Non-commuting model: σx and σz on leg 0
+    ✓ freeze aborted: factors at nodes 0 and 1 do not commute
+    is_frozen() = false (rolled back)`;
+---
+<section class="qsec page" data-rise>
+  <header class="sec-head">
+    <p class="eyebrow eyebrow-coord">
+      <span class="ix">02 / 05</span><span class="lb">Freeze</span>
+    </p>
+    <h2>The Markov condition as a gate</h2>
+    <p class="lede">
+      <code>freeze_quantum</code> runs the check at the boundary where a graph
+      stops being editable. A model that fails never becomes frozen.
+    </p>
+  </header>
+
+  <div class="split">
+    <div>
+      <Code code={call} lang="rust" themes={SHIKI} />
+    </div>
+    <div>
+      <Code code={output} lang="text" themes={SHIKI} />
+      <p class="cap">
+        Output of <code>cargo run --release -p quantum_examples --example
+        qcm_freeze_check</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel corner-brackets body-panel rise">
+    <p class="body">
+      The check walks factor pairs and skips any whose supports are disjoint,
+      because those carry no obligation. For a pair that does intersect, both
+      factors are embedded onto the union of their legs by
+      <code>embed_on_legs</code>, the commutator is formed there, and its
+      Frobenius norm is compared against a forward-error threshold.
+    </p>
+
+    <ul class="nums">
+      <li>‖[ρⱼ, ρₖ]‖_F ≤ C · (‖ρⱼ‖·budgetₖ + ‖ρₖ‖·budgetⱼ + 2·γₙ·‖ρⱼ‖·‖ρₖ‖)</li>
+      <li>γₙ = n·u / (1 − n·u), with n the embedded dimension</li>
+      <li>Defaults: safety factor C = 8, unit roundoff u = ε, per-node budget u·‖ρ‖_F</li>
+    </ul>
+
+    <p class="body">
+      The threshold is condition-driven rather than linear in graph depth. A
+      model constructed through many operations can hand a larger per-node
+      budget to <code>with_budget</code> instead of loosening the whole check.
+    </p>
+
+    <p class="body">
+      The check is sound and may be incomplete: it never accepts a pair whose
+      commutator exceeds the threshold, and it does not claim to catch every
+      pair that a tighter analysis would reject. On failure the graph rolls back
+      to its dynamic state and the structured error survives the trip through
+      the engine's own error channel, so the caller reads node indices rather
+      than a formatted message.
+    </p>
+
+    <p class="body">
+      Passing input and output systems as the last argument adds a second gate:
+      C₃-exclusion faithfulness, derived from the frozen graph's own
+      reachability.
+    </p>
+  </div>
+
+  <p class="more">
+    <a href="/qcm/">How the tolerance and the faithfulness check work</a>
+    <a href="/examples/qcm-freeze-check/">Run it</a>
+  </p>
+</section>
+
+<style>
+  .qsec { max-width: var(--w-panel); }
+  .sec-head { margin-bottom: var(--space-6); }
+  .sec-head h2 { margin: var(--space-3) 0 var(--space-3); }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
+
+  /* minmax(0, 1fr) guards the code columns: a plain 1fr cannot shrink below
+     its content's min-content width, and an unbroken code line blows out the
+     grid. */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+  @media (min-width: 900px) {
+    .split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-5); }
+  }
+  .cap { color: var(--fg-1); font-size: var(--t-body-sm); margin: var(--space-3) 0 0; }
+
+  .body-panel { padding: var(--space-5); }
+  .body { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .body:last-child { margin-bottom: 0; }
+
+  .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .nums li {
+    color: var(--fg-1);
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--line-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-mono-sm);
+    max-width: var(--measure);
+  }
+
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

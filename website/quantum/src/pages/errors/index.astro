@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { errorVariants } from '../../data/errors';
+import { SRC_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Error surface — DeepCausality Quantum';
+const description =
+  'Twelve typed variants naming the exact failure: dimension and metric mismatch, non-finite values, normalization, non-positive operators, non-CPTP channels, freeze-time commutativity, and unfaithful structure.';
+
+const matching = `use deep_causality_quantum::{QuantumError, QuantumErrorEnum};
+
+// The outer newtype carries one constructor per variant, so a call site
+// never wraps by hand.
+let err = QuantumError::DimensionMismatch("…".into());
+
+// Matching goes through .0, and the freeze failure hands back node
+// indices as fields rather than as text to parse.
+match err.0 {
+    QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => { /* … */ }
+    QuantumErrorEnum::NotFaithfullyRepresentable(detail) => { /* … */ }
+    _ => {}
+}`;
+---
+<BaseLayout title={title} description={description} path="/errors/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Reference"
+    title="What the crate refuses"
+    lede="Every fallible operation returns the same typed error. Reading the variant tells you which invariant broke, without inspecting the matrix that broke it."
+    sourceHref={`${SRC_URL}/error/quantum_error.rs`}
+    sourceLabel="src/error/quantum_error.rs"
+  >
+    <h2>Shape</h2>
+
+    <p>
+      <code>QuantumError</code> is a newtype over
+      <code>QuantumErrorEnum</code>. Each variant has a matching constructor
+      function on the newtype, so no call site builds the wrapper by hand, and
+      matching goes through the tuple field.
+    </p>
+
+    <Code code={matching} lang="rust" themes={SHIKI} />
+
+    <p>
+      Eleven variants carry a <code>String</code> detail.
+      <code>CommutatorNonZero</code> is the exception: it carries the two graph
+      node indices as named fields alongside its detail, because a caller that
+      learns which pair failed can do something about it, and a caller handed a
+      formatted sentence cannot.
+    </p>
+
+    <p>
+      That distinction survives the trip through the engine.
+      <code>freeze_quantum</code> runs inside a hook whose return type is the
+      engine's own error, which would flatten the structure into a message. The
+      crate stashes the typed error and recovers it after the rollback, so the
+      variant reaches the caller intact.
+    </p>
+
+    <h2>The twelve</h2>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Variant</th>
+            <th scope="col">Payload</th>
+            <th scope="col">Meaning</th>
+            <th scope="col">Raised in</th>
+          </tr>
+        </thead>
+        <tbody>
+          {errorVariants.map((v) => (
+            <tr>
+              <td><code class="ename">{v.name}</code></td>
+              <td><code class="epay">{v.payload}</code></td>
+              <td class="emean">{v.meaning}</td>
+              <td class="ewhere">
+                {v.raisedIn.map((m) => <code>{m}</code>)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Reading the table</h2>
+
+    <p>
+      The right-hand column is a grep result rather than a summary of the doc
+      comments, so it says where a variant is actually constructed today.
+      <code>CalculationError</code> appears in nine modules, which is what a
+      catch-all looks like; the narrow variants appear in one or two, which is
+      what makes them worth matching on.
+    </p>
+
+    <p>
+      Three variants are worth knowing before you hit them.
+      <code>UnsupportedMetric</code> is what a mixed-signature metric produces
+      at the ket bridge, where no single involution is the correct adjoint.
+      <code>NonCptpChannel</code> comes from the two CPTP checks, once for a
+      negative Choi eigenvalue and once for a trace that misses the identity;
+      a Choi operator that is not Hermitian in the first place fails earlier,
+      as <code>NonPositiveOperator</code>, since certifying the Hermitian part
+      of a non-Hermitian input would be worse than refusing it. And
+      <code>NotFaithfullyRepresentable</code> names the three inputs and three
+      outputs carrying the C₃ obstruction, so the offending block can be located
+      in the graph.
+    </p>
+  </DocPage>
+</BaseLayout>
+
+<style>
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td {
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    vertical-align: top;
+  }
+  th { color: var(--fg-0); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--bg-1); }
+  .ename { font-size: var(--t-mono-sm); color: var(--fg-0); background: none; padding: 0; }
+  .epay { font-size: var(--t-eyebrow); color: var(--fg-1); background: none; padding: 0; }
+  .emean { color: var(--fg-1); max-width: 36ch; }
+  .ewhere { max-width: 22ch; }
+  .ewhere code {
+    display: block;
+    font-size: var(--t-eyebrow);
+    color: var(--fg-2);
+    background: none;
+    padding: 0;
+  }
+</style>

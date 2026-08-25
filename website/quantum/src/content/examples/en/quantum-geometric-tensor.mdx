@@ -1,0 +1,27 @@
+---
+title: "Quantum geometric tensor"
+question: "How do the quantum metric and the Berry curvature come apart?"
+summary: "The QGT for a flat-band system, split into its symmetric real part and its antisymmetric imaginary part."
+order: 4
+command: "cargo run --release -p quantum_examples --example quantum_geometric_tensor"
+usesCrate: false
+crates:
+  - deep_causality_num_complex
+  - deep_causality_physics
+  - deep_causality_tensor
+source: "examples/quantum_examples/quantum_geometric_tensor"
+---
+
+The quantum geometric tensor carries both the geometry and the topology of a
+family of quantum states over a parameter space. Its real symmetric part is the
+quantum metric; its imaginary antisymmetric part is the Berry curvature. The
+example computes both for twisted bilayer graphene, where the flat bands make
+geometric contributions to transport dominant.
+
+The velocity operator is `vᵢ = ∂_{kᵢ} H`, and the tensor sums over the bands
+other than the one being tracked, weighted by the inverse square of the energy
+gap.
+
+This example does not import `deep_causality_quantum`. It builds on
+`deep_causality_physics` for the band model and `deep_causality_tensor` for the
+numerics.

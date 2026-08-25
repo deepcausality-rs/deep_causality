@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocDetail from '../../components/docs/DocDetail.astro';
+import { GITHUB_URL } from '../../consts';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('examples');
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/^en\//, '') },
+    props: { entry },
+    // Incremental build: this page renders from `entry` alone, so the entry's
+    // content digest is a complete cache key.
+    cacheKey: entry.digest,
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+const meta = [
+  { label: 'Uses this crate', value: d.usesCrate ? 'yes' : 'no' },
+  { label: 'Crates imported', value: d.crates.join(', '), mono: true },
+];
+---
+<BaseLayout
+  title={`${d.title} — DeepCausality Quantum`}
+  description={d.summary}
+  path={`/examples/${entry.id.replace(/^en\//, '')}/`}
+>
+  <SiteHeader slot="header" />
+
+  <DocDetail
+    eyebrow="Example"
+    title={d.title}
+    summary={d.question}
+    tags={d.usesCrate ? d.uses : []}
+    command={d.command}
+    meta={meta}
+    backHref="/examples/"
+    backLabel="All examples"
+    sourceHref={`${GITHUB_URL}/tree/main/${d.source}`}
+    sourceLabel="Example source"
+  >
+    <Content />
+  </DocDetail>
+</BaseLayout>

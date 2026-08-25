@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+---
+<BaseLayout
+  title="Not found — DeepCausality Quantum"
+  description="That page does not exist."
+  path="/404"
+>
+  <SiteHeader slot="header" />
+
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">404</p>
+      <h1>Page not found</h1>
+      <p class="lede">
+        The requested page does not exist on this site.
+      </p>
+    </header>
+
+    <ul class="hairline-list">
+      <li><a href="/">Overview</a></li>
+      <li><a href="/qcm/">Quantum causal models</a></li>
+      <li><a href="/operators/">Operator layer</a></li>
+      <li><a href="/gates/">Gate kernels</a></li>
+      <li><a href="/verdicts/">Verdicts</a></li>
+      <li><a href="/modalities/">Two modalities</a></li>
+      <li><a href="/formalization/">Formalization</a></li>
+      <li><a href="/examples/">Examples</a></li>
+      <li><a href="/papers/">Papers</a></li>
+      <li><a href="/errors/">Error surface</a></li>
+      <li><a href="/start/">Add the crate</a></li>
+    </ul>
+  </article>
+</BaseLayout>

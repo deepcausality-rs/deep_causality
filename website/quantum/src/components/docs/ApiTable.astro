@@ -1,0 +1,102 @@
+---
+/**
+ * One layer's public surface, rendered from src/data/api.ts.
+ *
+ * Signatures are long and must not force the page to scroll sideways, so the
+ * table sits in an `.table-scroll` container and the signature cell keeps its
+ * own line breaks off. The kind column is a chip because a reader scanning for
+ * "which of these are traits" is scanning for a shape, not for a word.
+ */
+import { byLayer, type Layer } from '../../data/api';
+import { SRC_URL } from '../../consts';
+
+interface Props {
+  layer: Layer;
+  /** Heading above the table. */
+  title?: string;
+}
+
+const { layer, title = 'Public surface' } = Astro.props;
+const items = byLayer(layer);
+---
+<section class="api">
+  <h2>{title}</h2>
+  <p class="acount">
+    {items.length} exported items, each linked to the module that declares it.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Item</th>
+          <th scope="col">Kind</th>
+          <th scope="col">Role</th>
+          <th scope="col">Module</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((i) => (
+          <tr>
+            <td>
+              <code class="aname">{i.name}</code>
+              <code class="asig">{i.signature}</code>
+            </td>
+            <td><span class="chip chip-mono">{i.kind}</span></td>
+            <td class="arole">{i.role}</td>
+            <td>
+              <a class="amod" href={`${SRC_URL}/${i.module}.rs`}>
+                {i.module}<span aria-hidden="true"> ↗</span>
+              </a>
+              {i.feature && <span class="afeat">feature {i.feature}</span>}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<style>
+  .api { margin-top: var(--space-8); }
+  .api h2 { margin: 0 0 var(--space-2); }
+  .acount { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td {
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    vertical-align: top;
+  }
+  th { color: var(--fg-0); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--bg-1); }
+
+  .aname {
+    display: block;
+    color: var(--fg-0);
+    background: none;
+    padding: 0;
+    font-size: var(--t-mono-sm);
+  }
+  .asig {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--fg-1);
+    background: none;
+    padding: 0;
+    font-size: var(--t-eyebrow);
+    max-width: 46ch;
+  }
+  .arole { color: var(--fg-1); max-width: 42ch; }
+  .amod { font-family: var(--font-mono); font-size: var(--t-eyebrow); white-space: nowrap; }
+  .afeat {
+    display: block;
+    margin-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--warn);
+  }
+</style>

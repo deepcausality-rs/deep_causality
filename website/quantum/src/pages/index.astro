@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+import Hero from '../components/home/Hero.astro';
+import SectionDivider from '../components/home/SectionDivider.astro';
+import WhatItIs from '../components/home/WhatItIs.astro';
+import FreezeGate from '../components/home/FreezeGate.astro';
+import LayerStack from '../components/home/LayerStack.astro';
+import EvidenceSnapshot from '../components/home/EvidenceSnapshot.astro';
+import WhereItFits from '../components/home/WhereItFits.astro';
+import { GITHUB_URL } from '../consts';
+
+const title = 'DeepCausality Quantum — quantum causal models on the causal monad';
+const description =
+  'A causal graph whose factors are quantum channels. The quantum Markov condition is enforced as a commutativity check at the freeze boundary, with C₃-exclusion faithfulness, a validated operator layer, an orthomodular verdict carrier, and LEAN proofs behind the verifiable path.';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'deep_causality_quantum',
+  description,
+  programmingLanguage: 'Rust',
+  codeRepository: GITHUB_URL,
+  license: 'https://opensource.org/licenses/MIT',
+};
+---
+<BaseLayout title={title} description={description} path="/">
+  <SiteHeader slot="header" />
+
+  <!-- Five sections, ordered as a reader needs them: what a quantum causal
+       model is, what this crate does about it, how the code is stacked, what
+       the evidence is, and where the thing sits. -->
+  <Hero />
+  <SectionDivider />
+  <WhatItIs />
+  <SectionDivider />
+  <FreezeGate />
+  <SectionDivider />
+  <LayerStack />
+  <SectionDivider />
+  <EvidenceSnapshot />
+  <SectionDivider />
+  <WhereItFits />
+
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+</BaseLayout>

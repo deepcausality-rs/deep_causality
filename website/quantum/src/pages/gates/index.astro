@@ -1,0 +1,174 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import ApiTable from '../../components/docs/ApiTable.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { SRC_URL, MULTIVECTOR_URL, METRIC_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'Gate kernels — DeepCausality Quantum';
+const description =
+  'Five kernels over the Clifford ket, each with a PropagatingEffect wrapper that routes failure to the error channel; the signature-dependent Dirac adjoint; and the six Haruna gauge-field logical gates.';
+
+const pairs = `// The kernel returns a Result. Use it from ordinary Rust.
+let p: FloatType = born_probability_kernel(&state, &basis)?;
+
+// The wrapper returns a PropagatingEffect. Use it from a causaloid.
+let effect: PropagatingEffect<FloatType> = born_probability(&state, &basis);`;
+---
+<BaseLayout title={title} description={description} path="/gates/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Layer · Gates"
+    title="Gate kernels on the causal monad"
+    lede="Quantum mechanics as ordinary Rust functions, each paired with a lift into the effect propagation the rest of DeepCausality speaks."
+    sourceHref={`${SRC_URL}/types/qgates`}
+    sourceLabel="src/types/qgates"
+  >
+    <h2>The carrier</h2>
+
+    <p>
+      A state here is a <code>HilbertState&lt;R&gt;</code>, which is a
+      minimal-left-ideal element of a Clifford algebra. It lives in
+      <a href={MULTIVECTOR_URL}>deep_causality_multivector</a> rather than in
+      this crate, and this crate adds two aliases for it,
+      <code>Operator&lt;R&gt;</code> and <code>Gate&lt;R&gt;</code>. Both name
+      the same type; the two names exist because a reader of a signature wants
+      to know which role the argument plays.
+    </p>
+
+    <p>
+      Metric signatures come from
+      <a href={METRIC_URL}>deep_causality_metric</a>, the workspace's single
+      source of truth. This crate defines no metric type of its own, which is
+      why a mismatch between two operands is reported as
+      <code>MetricMismatch</code> rather than resolved by a conversion nobody
+      asked for.
+    </p>
+
+    <h2>Kernel and wrapper</h2>
+
+    <p>
+      Five kernels carry the mechanics: <code>born_probability_kernel</code>
+      computes <code>|⟨basis|state⟩|²</code>,
+      <code>expectation_value_kernel</code> computes <code>⟨ψ|A|ψ⟩</code> for a
+      Hermitian <code>A</code>, <code>apply_gate_kernel</code> computes
+      <code>U|ψ⟩</code>, <code>commutator_kernel</code> computes
+      <code>[A, B]</code>, and <code>fidelity_kernel</code> compares an intended
+      state against a realized one.
+    </p>
+
+    <p>
+      Each has a wrapper of the same name without the suffix. The kernel returns
+      a <code>Result</code>; the wrapper returns a
+      <code>PropagatingEffect</code> and routes a failure onto the error channel
+      of the arity-5 causal monad. Neither form is preferred. A causaloid wants
+      the wrapper, and ordinary Rust wants the kernel.
+    </p>
+
+    <Code code={pairs} lang="rust" themes={SHIKI} />
+
+    <p>
+      The Born kernel does more than square an amplitude. It rejects a metric
+      mismatch up front, rejects a non-finite result, and rejects a probability
+      outside a narrow band around <code>[0, 1]</code> before clamping the
+      survivor into range. A value that drifts out of bounds is a symptom of a
+      malformed state, and reporting it is more useful than clamping it away.
+    </p>
+
+    <h2>Which adjoint is the right one</h2>
+
+    <p>
+      The inner product on a Clifford ket depends on the metric signature, and
+      getting this wrong does not produce an error; it produces zero. On a
+      positive, Euclidean signature the Dirac adjoint is reversion together with
+      coefficient conjugation, which is <code>QuantumOps::dag</code>. On a
+      negative <code>Cl(0,n)</code> signature that form is degenerate: it is
+      identically zero on the minimal left ideal, so a correctly normalized ket
+      would report a Born probability of 0.
+    </p>
+
+    <p>
+      The metric-correct adjoint there is the Clifford conjugation, grade
+      involution composed with reversion, again with coefficient conjugation.
+      The grade-<code>k</code> blade picks up the sign
+      <code>(−1)^(k(k+1)/2)</code>. <code>clifford_conjugation</code> exposes it,
+      and <code>dirac_bracket_kernel</code> gives the inner product built on it.
+    </p>
+
+    <p>
+      The choice is made by inspecting the metric rather than by a flag. A
+      uniformly positive signature takes <code>dag</code>, a uniformly negative
+      one takes the Clifford conjugation, and a mixed signature is refused with
+      <code>UnsupportedMetric</code>. Refusing the mixed case is deliberate: no
+      single involution is correct there, so returning something would be worse
+      than returning nothing.
+    </p>
+
+    <h2>The Haruna logical gates</h2>
+
+    <p>
+      Six gates come from Haruna's gauge field formalism (arXiv:2511.15224):
+      <code>logical_s</code>, <code>logical_z</code>, <code>logical_x</code>,
+      <code>logical_hadamard</code>, <code>logical_cz</code> and
+      <code>logical_t</code>. Each is an exponential of a polynomial function of
+      the electric and magnetic gauge fields, so each needs a matrix exponential
+      over the multivector algebra.
+    </p>
+
+    <p>
+      That exponential is a Taylor series with a budget, and the way it fails is
+      the interesting part. <code>exp(0)</code> returns the identity immediately,
+      which is a genuine result. An exponent whose norm is non-finite or exceeds
+      1e6 is rejected before the loop starts. A term that overflows during
+      accumulation is rejected. And a series that exhausts its 64-term budget
+      without reaching a tolerance of 1e-12 is rejected as
+      <code>CalculationError</code>.
+    </p>
+
+    <p>
+      Returning the truncated sum would have been easier. It would also be wrong
+      by many orders of magnitude for an exponent norm above roughly 16. Falling
+      back to the identity would be worse still, because a real identity gate
+      and a silent failure would then be indistinguishable, which is exactly the
+      ambiguity a caller must not face.
+    </p>
+
+    <p>
+      Each of the six has a <code>PropagatingEffect</code> wrapper in the same
+      pattern as the mechanics kernels: <code>haruna_s_gate</code> and its five
+      siblings. The wrappers take a real multivector field and lift it into the
+      complex algebra; the <code>logical_*</code> functions underneath take the
+      complex field directly.
+    </p>
+
+    <h2>The two traits</h2>
+
+    <p>
+      <code>QuantumGates</code> supplies the standard constructors:
+      <code>gate_identity</code>, <code>gate_x</code>, <code>gate_y</code>,
+      <code>gate_z</code>, <code>gate_hadamard</code> and
+      <code>gate_cnot</code>. <code>QuantumOps&lt;R&gt;</code> supplies the
+      Dirac-notation operations on a state: <code>dag</code>,
+      <code>bracket</code>, <code>expectation_value</code> and
+      <code>normalize</code>.
+    </p>
+  </DocPage>
+
+  <div class="wide-wrap">
+    <ApiTable layer="gates" title="The gate surface" />
+  </div>
+</BaseLayout>
+
+<style>
+  .wide-wrap {
+    max-width: var(--w-panel);
+    margin: 0 auto;
+    padding: 0 var(--space-4) var(--space-9);
+  }
+  @media (min-width: 720px) { .wide-wrap { padding: 0 var(--space-5) var(--space-9); } }
+</style>

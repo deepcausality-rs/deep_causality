@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import DocPage from '../../components/docs/DocPage.astro';
+import { papers, citedElsewhere } from '../../data/papers';
+import { PAPERS_URL, SRC_URL } from '../../consts';
+
+const title = 'Papers — DeepCausality Quantum';
+const description =
+  'The six papers committed with the crate, with the modules that cite each one. Three are implemented today and three are committed background that no module cites yet.';
+
+const implemented = papers.filter((p) => p.citedFrom.length > 0);
+const background = papers.filter((p) => p.citedFrom.length === 0);
+---
+<BaseLayout title={title} description={description} path="/papers/">
+  <SiteHeader slot="header" />
+
+  <DocPage
+    eyebrow="Reference"
+    title="The papers behind the crate"
+    lede="Six PDFs ship in the repository. Three of them are cited from module doc comments and implemented; three are background that no module cites yet."
+    sourceHref={PAPERS_URL}
+    sourceLabel="deep_causality_quantum/papers"
+  >
+    <h2>Implemented</h2>
+
+    <p>
+      Each of these is cited by name from at least one module's doc comment, and
+      the crate carries a concrete construction from it. Titles and author lists
+      below are taken from each PDF's own first page.
+    </p>
+
+    {implemented.map((p) => (
+      <article class="paper">
+        <h3>{p.title}</h3>
+        <p class="pmeta">
+          <span class="pauth">{p.authors}</span>
+          <span class="pref">{p.ref}</span>
+          <span class="pyear">{p.year}</span>
+        </p>
+        <p class="puse">{p.usedFor}</p>
+        <p class="pcite">
+          <span class="k">Cited from</span>
+          {p.citedFrom.map((m) => (
+            <a href={`${SRC_URL}/${m}.rs`}><code>{m}</code></a>
+          ))}
+        </p>
+        <p class="pfile"><code>{p.file}</code></p>
+      </article>
+    ))}
+
+    <h2>Committed background</h2>
+
+    <p>
+      These three are in the repository and no module cites them. They are
+      listed here so the folder is accounted for, and listed separately so the
+      presence of a PDF is not read as a claim that something implements it.
+    </p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Authors</th>
+            <th scope="col">Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {background.map((p) => (
+            <tr>
+              <td class="btitle">{p.title}</td>
+              <td class="bauth">{p.authors}</td>
+              <td><code class="bref">{p.ref}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Cited without a committed PDF</h2>
+
+    <p>
+      Two works are cited from the source and have no file in
+      <code>papers/</code>.
+    </p>
+
+    <ul>
+      {citedElsewhere.map((c) => (
+        <li>
+          {c.work} <a href={`${SRC_URL}/${c.citedFrom}.rs`}><code>{c.citedFrom}</code></a>
+        </li>
+      ))}
+    </ul>
+  </DocPage>
+</BaseLayout>
+
+<style>
+  .paper {
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  .paper h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); max-width: 52ch; }
+
+  .pmeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    font-size: var(--t-body-sm);
+  }
+  .pauth { color: var(--fg-1); }
+  .pref { font-family: var(--font-mono); font-size: var(--t-mono-sm); color: var(--accent); }
+  .pyear { font-family: var(--font-mono); font-size: var(--t-mono-sm); color: var(--fg-2); }
+
+  .puse { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
+
+  .pcite { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; margin: 0 0 var(--space-2); }
+  .k {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-right: var(--space-1);
+  }
+  .pcite code { font-size: var(--t-eyebrow); background: none; padding: 0; }
+  .pfile { margin: 0; }
+  .pfile code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td {
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line-1);
+    vertical-align: top;
+  }
+  th { color: var(--fg-0); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--bg-1); }
+  .btitle { color: var(--fg-0); max-width: 34ch; }
+  .bauth { color: var(--fg-1); max-width: 24ch; }
+  .bref { font-size: var(--t-eyebrow); color: var(--fg-1); background: none; padding: 0; }
+</style>

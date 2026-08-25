@@ -2,21 +2,22 @@
 
 # Project websites
 
-This folder holds **three independent Astro projects**, each built and deployed
+This folder holds **four independent Astro projects**, each built and deployed
 on its own. They are deliberately decoupled: the main project site changes
-rarely, the documentation evolves with the library, and the CFD site tracks a
-single crate, so each ships on its own cadence to its own Cloudflare Worker and
-hostname.
+rarely, the documentation evolves with the library, and the two crate sites each
+track a single crate, so each ships on its own cadence to its own Cloudflare
+Worker and hostname.
 
 | Directory | Purpose | Framework | Cloudflare Worker | Domain |
 | --- | --- | --- | --- | --- |
 | [`web/`](./web) | Website (home, blog, examples, short getting-started/overview) | Astro (custom) | `deepcausality-prod` | https://www.deepcausality.com |
 | [`docs/`](./docs) | Reference documentation (concepts, guides, overview, single-PDF export) | [Starlight](https://starlight.astro.build) on Astro | `deepcausality-docs` | https://docs.deepcausality.com |
 | [`cfd/`](./cfd) | `deep_causality_cfd`: blueprints, validation status, worked examples, capability boundaries | Astro (custom) | `deep-causality-cfd-prod` | https://cfd.deepcausality.com |
+| [`quantum/`](./quantum) | `deep_causality_quantum`: the quantum causal model, operator layer, verdicts, formalization status | Astro (custom) | `deep-causality-quantum-prod` | https://quantum.deepcausality.com |
 
-A fourth directory, [`web_design/`](./web_design), is documentation rather
+A fifth directory, [`web_design/`](./web_design), is documentation rather
 than a site: it describes the shipped visual system as implemented. The binding
-specification is [`web/DESIGN.md`](./web/DESIGN.md), which all three sites
+specification is [`web/DESIGN.md`](./web/DESIGN.md), which all four sites
 follow.
 
 The Rust API reference is generated separately and hosted on
@@ -36,34 +37,41 @@ The Rust API reference is generated separately and hosted on
   measured capability-boundaries page. Every figure is quoted from a committed
   artifact under `deep_causality_cfd/` or an example's `output.txt`.
   See [`cfd/README.md`](./cfd/README.md).
+- **`quantum/` — the quantum crate site.** One page per layer of
+  `deep_causality_quantum`, a citable formalization-status page pairing each Lean
+  theorem with its Rust witness, and a typed API inventory. Every claim traces to
+  the crate source, the committed papers, or `lean/THEOREM_MAP.md`.
+  See [`quantum/README.md`](./quantum/README.md).
 
 Each project is standalone: its own `package.json`, lockfile, Astro version,
 and `wrangler.toml`. A change under one directory rebuilds and deploys only
 that Worker.
 
-`cfd/` mirrors `web/`'s design tokens byte-for-byte in
-`cfd/src/styles/tokens.css`; `pnpm check:tokens` fails if the two drift. Any
-site-local token lives in `cfd/src/styles/tokens-cfd.css` instead.
+`cfd/` and `quantum/` each mirror `web/`'s design tokens byte-for-byte in their
+own `src/styles/tokens.css`; `pnpm check:tokens` fails if a copy drifts. Any
+site-local token lives beside it, in `tokens-cfd.css` or `tokens-quantum.css`.
 
 ## Local development
 
 ```bash
 # Project website
-cd web  && pnpm install && pnpm dev      # http://localhost:4321
+cd web     && pnpm install && pnpm dev   # http://localhost:4321
 
 # Documentation
-cd docs && pnpm install && pnpm dev      # http://localhost:4321
+cd docs    && pnpm install && pnpm dev   # http://localhost:4321
 
 # CFD crate site
-cd cfd  && pnpm install && pnpm dev      # http://localhost:4321
+cd cfd     && pnpm install && pnpm dev   # http://localhost:4321
+
+# Quantum crate site
+cd quantum && pnpm install && pnpm dev   # http://localhost:4321
 ```
 
 Each project builds to its own `dist/` (`pnpm build`).
 
-All three also build hermetically under Bazel. `bazel build //website/...`
-builds `web`, `docs` and `cfd` together; each has its own npm repository
-(`@npm_web`, `@npm_docs`, `@npm_cfd`) declared in the repo `MODULE.bazel`, and
-its `node_modules` path is listed in `.bazelignore`.
+`web` and `docs` also build under Bazel. `cfd/` and `quantum/` are `pnpm`-only:
+neither declares an npm repository in `MODULE.bazel` and neither carries a
+`BUILD.bazel`. Each site's `node_modules` path is listed in `.bazelignore`.
 
 ## Toolchain constraints
 
@@ -72,7 +80,7 @@ Three pins are deliberate and should not be "fixed" by a routine upgrade.
 **TypeScript stays on the 6 line.** TypeScript 7.0 dropped the programmatic API
 that `@astrojs/check` uses, so `pnpm check` fails on 7.x
 ([withastro/roadmap#1321](https://github.com/withastro/roadmap/discussions/1321)).
-All three projects pin `typescript` to `^6.0.3`.
+All four projects pin `typescript` to `^6.0.3`.
 
 **`@astrojs/markdown-satteri` is deduplicated by an override.**
 `@astrojs/markdown-remark` peers `^0.3.1` while `astro` pins an exact patch, so
@@ -80,11 +88,12 @@ pnpm resolves two copies. Bazel's `public_hoist_packages` cannot hoist an
 ambiguous name and fails the build. Each project therefore forces one version in
 its `pnpm-workspace.yaml`.
 
-**`shiki` is pinned in `cfd/`.** `cfd/shiki-rust-themes.mjs` derives the site's
-Rust themes from the `bundledThemes` of the project's own `shiki`, while astro
-highlights with whatever its `^4.0.2` dependency resolves to. Left free, pnpm
-keeps two copies and the derived themes cross a version boundary, so
-`cfd/pnpm-workspace.yaml` forces one.
+**`shiki` is pinned in `cfd/` and `quantum/`.** Each carries a
+`shiki-rust-themes.mjs` that derives the site's Rust themes from the
+`bundledThemes` of the project's own `shiki`, while astro highlights with
+whatever its `^4.0.2` dependency resolves to. Left free, pnpm keeps two copies
+and the derived themes cross a version boundary, so each project's
+`pnpm-workspace.yaml` forces one.
 
 Note that pnpm 11 no longer reads the `pnpm` field from `package.json`, so
 `overrides` and `onlyBuiltDependencies` must live in `pnpm-workspace.yaml`. An
@@ -94,7 +103,7 @@ override placed in `package.json` is silently ignored, and a missing
 
 ## Deployment
 
-All three sites are fully static and deployed as Cloudflare Workers Static Assets during CI.
+All four sites are fully static and deployed as Cloudflare Workers Static Assets during CI.
 
 Custom domains are bound in the Cloudflare dashboard. Per-origin caching and
 security headers are configured via each project's `public/_headers` file.
@@ -113,18 +122,18 @@ Two of these fail quietly, and both cost a debugging session on `cfd/`.
 dependencies by itself, so the build step reports success, and the run dies
 later in the deploy with `The directory specified by the "assets.directory"
 field in your configuration file does not exist`, because nothing produced
-`dist/`. `cfd/wrangler.toml` therefore carries its own `[build]` command;
-wrangler runs it before reading `assets.directory`, so the dashboard field is
-belt-and-braces there rather than load-bearing. `web/` and `docs/` still rely
-on the dashboard field alone.
+`dist/`. `cfd/wrangler.toml` and `quantum/wrangler.toml` therefore carry their
+own `[build]` command; wrangler runs it before reading `assets.directory`, so
+the dashboard field is belt-and-braces there rather than load-bearing. `web/`
+and `docs/` still rely on the dashboard field alone.
 
 **A wrong Worker name does not fail either.** `wrangler deploy` takes the name
 from `wrangler.toml`, so a name that does not match the Worker the build is
 attached to creates a second Worker with no custom domain bound, then reports
-success while the live site stays unchanged. Note that the three names do not
-follow one convention: `deepcausality-prod`, `deepcausality-docs`, and
-`deep-causality-cfd-prod`, the last hyphenated throughout. Match the dashboard,
-not the pattern.
+success while the live site stays unchanged. Note that the four names do not
+follow one convention: `deepcausality-prod`, `deepcausality-docs`,
+`deep-causality-cfd-prod` and `deep-causality-quantum-prod`, the last two
+hyphenated throughout. Match the dashboard, not the pattern.
 
 ## License
 

@@ -1,0 +1,50 @@
+---
+/**
+ * Shell for the layer pages: eyebrow, title, lede, a prose body capped at the
+ * measure, and a wider region below it for tables that the measure would
+ * squeeze. Layout only; the prose rules come from global.css.
+ */
+interface Props {
+  eyebrow: string;
+  title: string;
+  lede: string;
+  /** Repository link shown in the footer rail. */
+  sourceHref?: string;
+  sourceLabel?: string;
+}
+
+const { eyebrow, title, lede, sourceHref, sourceLabel } = Astro.props;
+---
+<article class="page dpage">
+  <header class="dhead">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1>{title}</h1>
+    <p class="dlede">{lede}</p>
+  </header>
+
+  <div class="prose">
+    <slot />
+  </div>
+
+  <slot name="wide" />
+
+  {sourceHref && (
+    <footer class="dfoot">
+      <a href={sourceHref}>{sourceLabel ?? 'Source'} <span aria-hidden="true">↗</span></a>
+    </footer>
+  )}
+</article>
+
+<style>
+  .dpage { max-width: var(--w-panel); }
+  .dhead { margin-bottom: var(--space-7); }
+  .dhead h1 { margin: var(--space-3) 0 var(--space-4); }
+  .dlede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; font-size: var(--t-h4); line-height: var(--lh-h4); }
+
+  .dfoot {
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+</style>
