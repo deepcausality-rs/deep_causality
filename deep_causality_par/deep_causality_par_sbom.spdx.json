@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-07-07T22:29:38Z",
+    "created": "2026-08-25T01:32:49Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_par-40e4b3fa-c268-4fd6-afb8-fe84ab197495",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_par-691633e8-9431-4c45-acc0-1b1c8d2b989d",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_par",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
+          "checksumValue": "be5644a2bb15f4378275212a3073b4189002d798"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,25 +27,25 @@
   "name": "deep_causality_par",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.0",
+      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.2",
       "description": "Shared parallelism primitives (MaybeParallel marker, scoped fork-join) for the deep_causality crates.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_par",
-      "versionInfo": "0.1.0"
+      "versionInfo": "0.1.2"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_par"
-    },
-    {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_par",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.2",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_par"
     }
   ],
   "spdxVersion": "SPDX-2.3"
