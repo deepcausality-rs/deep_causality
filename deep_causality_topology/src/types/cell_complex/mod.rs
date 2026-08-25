@@ -150,6 +150,4 @@ impl<C: Cell> ChainComplex for CellComplex<C> {
         // No internal memoization for CellComplex; recompute as δ_k = (∂_{k+1})ᵀ on each call.
         Cow::Owned(self.compute_boundary_matrix(k + 1).transpose())
     }
-
 }
-

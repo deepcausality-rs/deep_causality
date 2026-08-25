@@ -7,8 +7,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
+use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 
 /// Standard Quantum Gates interface.

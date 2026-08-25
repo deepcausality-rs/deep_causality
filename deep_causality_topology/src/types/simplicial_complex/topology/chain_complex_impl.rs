@@ -78,9 +78,7 @@ impl<T: deep_causality_algebra::RealField> ChainComplex for SimplicialComplex<T>
             None => Cow::Owned(CsrMatrix::new()),
         }
     }
-
 }
-
 
 // Touch unused trait import to satisfy lint when only the trait bound matters.
 const _: fn() = || {

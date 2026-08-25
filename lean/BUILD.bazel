@@ -10,12 +10,6 @@
 # The Lean toolchain and the resolved Lake/Mathlib packages come from @lake_deps,
 # materialized by rules_lean's `lake.workspace` extension (see //MODULE.bazel).
 #
-# One `lean_test` PER top-level namespace instead of a single whole-tree target:
-# the namespaces are mutually independent (the only intra-project imports are
-# within Quantum), so Bazel type-checks all of them in parallel — each Lean
-# process loads Mathlib once for its own subtree. `bazel build //lean/...` builds
-# every namespace; `bazel test //lean:proofs` runs them all as a suite.
-
 load("@rules_lean//lean:lean.bzl", "lean_test")
 
 # Generated from lake-manifest.json by `build/scripts/lean_lock.sh packages`.
@@ -57,6 +51,7 @@ _NAMESPACES = {
         name = ns,
         srcs = glob(["DeepCausalityFormal/{}/**/*.lean".format(ns)]),
         entry = entry,
+        tags = ["lean"],
         deps = LAKE_PACKAGES,
     )
     for ns, entry in _NAMESPACES.items()
@@ -65,5 +60,6 @@ _NAMESPACES = {
 # `//lean:proofs` still means "all proofs" — now a suite over the parallel targets.
 test_suite(
     name = "proofs",
+    tags = ["lean"],
     tests = [":" + ns for ns in _NAMESPACES],
 )

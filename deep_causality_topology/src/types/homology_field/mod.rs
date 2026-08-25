@@ -24,9 +24,7 @@
 //! threshold. Both are gone; this is the one that remains, and it constructs no floating-point
 //! anything.
 
-use deep_causality_linear::{
-    CsrMatrix, DenseMatrix, csr_to_packed_gf2_mod2, rank_exact, rank_gf2,
-};
+use deep_causality_linear::{CsrMatrix, DenseMatrix, csr_to_packed_gf2_mod2, rank_exact, rank_gf2};
 
 use crate::TopologyError;
 

@@ -5,8 +5,8 @@
 
 mod algorithms;
 mod errors;
-mod formalization_lean;
 mod extensions;
+mod formalization_lean;
 mod traits;
 mod types;
 mod utils_tests;
