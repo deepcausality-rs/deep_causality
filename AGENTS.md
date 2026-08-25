@@ -419,6 +419,11 @@ Equivalent mutants — changes that cannot alter behaviour — belong in `//.car
 with the measurement that settles it rather than an assertion that it is fine. A survivor not
 listed there is a real gap.
 
+Those entries are regular expressions matched against text that is itself full of regex
+metacharacters, and getting one wrong is silent both ways: an unescaped `+` or `*` matches nothing,
+an unescaped `||` matches everything, and `cargo mutants` reports neither. Escape them, and confirm
+the entry did what it claims with the `comm` check the file carries.
+
 Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
 
 Every `[[example]]` also needs a `rust_binary` in its owning package's `BUILD.bazel`, because Bazel does not read `Cargo.toml`. Two places declare examples: the packages under `examples/`, and the library crates carrying their own verification harnesses and studies (`deep_causality_cfd/verification` and `studies`, `deep_causality_algorithms/verification`, `deep_causality_haft/examples`, and others). In a library crate the example binaries sit below the `rust_library` under a `# Example binaries` comment and depend on `:<crate_name>`. A binary's `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set.
