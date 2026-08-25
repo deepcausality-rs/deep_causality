@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-07-07T22:29:37Z",
+    "created": "2026-08-25T01:32:48Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_haft-506e5364-bae7-47ec-9082-3c61fb34d13b",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_haft-ed87c037-71bb-4015-b710-135b07a924d6",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_haft",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "5c3b88158295f2a586b267227fe36c51700f799e"
+          "checksumValue": "be5644a2bb15f4378275212a3073b4189002d798"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,25 +27,74 @@
   "name": "deep_causality_haft",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.3.3",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.3",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.1",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.4.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libm-0.2.16",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.4.2",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.3.3"
+      "versionInfo": "0.4.2"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.3.3",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_haft"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.4.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.1"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_haft",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.4.2",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_haft"
     }
   ],
   "spdxVersion": "SPDX-2.3"
