@@ -277,7 +277,8 @@ fn cylinder_cut_far_finer_than_the_arc_quadrature_still_clips_exactly() {
 /// The fragment threshold compared a cross-section **area** against a **volume**-scaled tolerance,
 /// `cell_volume * 1e-12`. On a `1e13 x 1 x 1` cell that tolerance is 10 while the cut area is 1,
 /// so a cell cut exactly in half recorded no fragment at all. The tolerance now scales with the
-/// quantity it gates: the cell's largest face for an area, its longest edge for a length.
+/// quantity it gates: the smallest product of `D−1` of the cell's extents, which is the smallest
+/// 2-face here.
 #[test]
 fn test_a_plane_through_a_highly_elongated_cell_keeps_its_fragment() {
     let prim = Primitive::<3, f64>::halfspace([1.0, 0.0, 0.0], 5e12);
@@ -308,4 +309,43 @@ fn test_a_plane_through_a_unit_cell_keeps_its_fragment() {
     assert_eq!(cell.class(), CellClass::Cut);
     assert_eq!(cell.fragments().len(), 1);
     assert!((cell.fluid_volume() - 0.5).abs() < 1e-12);
+}
+
+/// The 2D reading of the same cut: an elongated planar cell halved by a vertical line.
+///
+/// The cut-face measure of a `D`-dimensional cell is a `(D−1)`-measure, so at `D = 2` it is a
+/// length. Gating it against a tolerance drawn from the cell's smallest 2-face compares a length
+/// against an area: on a `1e13 x 1` cell that tolerance is `1e13 * 1 * 1e-12 = 10`, while the cut
+/// runs the full height of the cell and measures `1`. The fragment survives because the tolerance
+/// is built from the smallest product of `D−1` extents, which is `min(1e13, 1) * 1e-12 = 1e-12`
+/// here.
+#[test]
+fn test_a_line_through_a_highly_elongated_2d_cell_keeps_its_fragment() {
+    let prim = Primitive::<2, f64>::halfspace([1.0, 0.0], 5e12);
+    let cell = CutCell::from_box(&prim, [0.0; 2], [1e13, 1.0]).unwrap();
+
+    assert_eq!(cell.class(), CellClass::Cut);
+    assert_eq!(
+        cell.fragments().len(),
+        1,
+        "a cell cut through its middle has a cut face whatever its aspect ratio"
+    );
+
+    let f = &cell.fragments()[0];
+    assert_eq!(f.source(), SourceGeometry::Plane);
+    assert!(
+        (f.area() - 1.0).abs() < 1e-9,
+        "the cut spans the cell's height: expected 1, got {}",
+        f.area()
+    );
+    // The centroid sits on the cut line, at the cell centre along the uncut axis.
+    assert!((f.centroid()[0] - 5e12).abs() < 5e12 * 1e-12);
+    assert!((f.centroid()[1] - 0.5).abs() < 1e-12);
+
+    let half = 1e13 * 0.5;
+    assert!(
+        (cell.fluid_volume() - half).abs() < half * 1e-9,
+        "half the cell is fluid: expected {half}, got {}",
+        cell.fluid_volume()
+    );
 }

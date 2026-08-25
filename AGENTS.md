@@ -415,7 +415,7 @@ than a crash: numeric kernels, tolerance gates, index arithmetic. It is not a wh
 because every mutant costs a build plus a test run and `deep_causality_linear/src/algorithms` alone
 yields 1156 of them.
 
-Equivalent mutants — changes that cannot alter behaviour — belong in `//.cargo/mutants.toml`, each
+Equivalent mutants — changes that cannot alter behaviour — belong in `.cargo/mutants.toml`, each
 with the measurement that settles it rather than an assertion that it is fine. A survivor not
 listed there is a real gap.
 
@@ -423,6 +423,12 @@ Those entries are regular expressions matched against text that is itself full o
 metacharacters, and getting one wrong is silent both ways: an unescaped `+` or `*` matches nothing,
 an unescaped `||` matches everything, and `cargo mutants` reports neither. Escape them, and confirm
 the entry did what it claims with the `comm` check the file carries.
+
+An entry must also match no *more* than it argues for, which the same check shows. A pattern like
+`replace + with * in <function>` reads as one mutation and matches every `+` in that function,
+index arithmetic included. Two such entries once hid 32 mutants the suite was killing in order to
+excuse 5 it could not. Prefer a pattern that resolves to a single mutant; where none exists,
+describe the equivalence in prose and leave the mutant in the report.
 
 Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
 

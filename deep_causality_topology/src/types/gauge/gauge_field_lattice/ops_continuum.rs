@@ -167,8 +167,10 @@ impl<
         // absorbs the eight: 8/(32π²) = 1/(4π²).
         //
         // This was 1/(32π²) applied to the three-term sum, which left the density eight times too
-        // small and Q unquantized. No test caught it because every configuration under test is
-        // the identity, where F = 0 and both constants give zero.
+        // small and Q unquantized. Nothing caught it: every charge test that existed then used the
+        // identity field, where F = 0 and any constant gives zero. A configuration with non-zero
+        // field strength covers it now, in
+        // `test_topological_charge_density_uses_the_full_epsilon_normalization`.
         let mut q = R::zero();
         let normalization = R::from_f64(1.0 / (4.0 * std::f64::consts::PI * std::f64::consts::PI))
             .ok_or_else(|| {

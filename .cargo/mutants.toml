@@ -50,9 +50,11 @@
 # real gap.
 
 exclude_re = [
-    # `if m > best { best = m }` versus `>=` in a maximum reduction. Both keep the first of any
-    # tied pair and both end at the same maximum, so the two are the same function. Applies to
-    # `vector_norm_inf`, `matrix_norm_l1` and `matrix_norm_inf`.
+    # `if m > best { best = m }` versus `>=` in a maximum reduction. On a tie the two do different
+    # things: `>` keeps the incumbent, `>=` overwrites it. They are the same function anyway,
+    # because these three return the maximum VALUE and never its index, and the value a tie writes
+    # is equal to the one it replaces. Applies to `vector_norm_inf`, `matrix_norm_l1` and
+    # `matrix_norm_inf`; `negligible_below` below is the same argument.
     "replace > with >= in vector_norm_inf",
     "replace > with >= in matrix_norm_l1",
     "replace > with >= in matrix_norm_inf",
@@ -77,31 +79,6 @@ exclude_re = [
     "replace \\|\\| with && in svd_sorted",
     "replace < with <= in svd_sorted",
 
-    # `for j in (i + 1)..n` versus `(i * 1)..n` in `solve_least_squares`'s back substitution.
-    # The mutation widens the range by exactly one index, `j = i`, and the term it adds is
-    # `conj(L[i][i]) * x[i]` — where `x[i]` is still zero, because it is assigned on the line
-    # after the sum. The extra term is a multiplication by zero at every `i` and every `n`.
-    # Confirmed by injection at `n = 3`, where the two other index mutations on the same loops do
-    # change the answer and are caught.
-    "replace \\+ with \\* in solve_least_squares",
-
-    # The Jacobi rotation ANGLE in `sym_eig`, lines 107-111. `t` sets only which angle the sweep
-    # turns through: `c = 1/sqrt(t*t + 1)` with `s = t*c` gives `c^2 + s^2 = 1` for any `t`, so
-    # the rotation stays orthogonal, the similarity preserves the spectrum exactly, and the sweep
-    # runs until the off-diagonal is under threshold. A mutated angle changes the convergence
-    # rate, not the result.
-    #
-    # Checked rather than argued: with `(zeta*zeta + one)` mutated to `(zeta*zeta * one)` — which
-    # turns `t = sgn/(|z| + sqrt(z^2+1))` into `sgn/(2|z|)` — a 5x5 with a degenerate diagonal, a
-    # 4x4 with an exactly equal diagonal, and a 6x6 spanning 1e-3 to 1e3 all reconstruct to 1e-12
-    # or better.
-    #
-    # This does NOT cover the surrounding index arithmetic. `a[p * n + p]`, `a[q * n + q]` and
-    # `(app - aqq)` are not angle choices, and mutating them reconstructs to 1.4e-5, 3.1 and 3.1
-    # respectively on a 5x5. Those are caught by
-    # `test_the_eigendecomposition_of_a_five_by_five_satisfies_its_defining_properties`.
-    "replace \\+ with \\* in sym_eig",
-
     # Deleting the order-1 or order-3 closed-form arm of `determinant`. Those arms exist for speed
     # — the doc says so — and deleting one falls through to the pivoted elimination below, which
     # computes the same determinant. `test_the_three_by_three_closed_form_agrees_with_elimination`
@@ -112,9 +89,8 @@ exclude_re = [
     "delete match arm 1 in determinant",
     "delete match arm 3 in determinant",
 
-    # `if mag > scale` versus `>=` in `negligible_below`'s maximum reduction, the same tie-break
-    # argument as the three norms above: both keep the first of any tied pair and both end at the
-    # same maximum.
+    # `if mag > scale` versus `>=` in `negligible_below`'s maximum reduction. The same argument as
+    # the three norms above: the function returns the maximum value, not the index it came from.
     "replace > with >= in negligible_below",
 
     # `n_real += one` versus `-=` in `negligible_below`. The loop runs `n` times either way, so the
@@ -140,10 +116,42 @@ exclude_re = [
 # Equivalent, and not excludable without hiding caught mutants
 # ---------------------------------------------------------------------------------------------
 #
-# These four are equivalent for the reasons below, and each is left in the report because no regex
+# These are equivalent for the reasons below, and each is left in the report because no regex
 # reaches it alone. `exclude_re` matches the mutant's description, not its line, and every pattern
 # broad enough to catch one of these also catches a dozen of its neighbours that the suite does
 # kill. Hiding a caught mutant costs a tripwire, which is worth more than a tidy report.
+#
+# Two entries used to be in the array above and were exactly that mistake.
+# `replace \+ with \* in solve_least_squares` argued for one loop bound and excluded nine mutants,
+# eight of them the index arithmetic `k * n + i`, `i * n + j` and `lf[i * n + i]`, which change the
+# answer. `replace \+ with \* in sym_eig` argued for the rotation angle and excluded twenty-eight,
+# including the index arithmetic of the similarity transform at lines 128-150 -- which the comment
+# beside it explicitly said it did NOT cover. The prose and the pattern disagreed, and the pattern
+# won silently. Both are now here instead.
+#
+#   cholesky.rs:168  replace + with * in solve_least_squares
+#     `for j in (i + 1)..n` becomes `(i * 1)..n` in the back substitution. The extra index is
+#     `j = i`, and the term it adds is `conj(L[i][i]) * x[i]`, where `x[i]` is still zero because
+#     it is assigned on the line after the sum. A multiplication by zero at every `i` and every
+#     `n`. The other eight `+ -> *` mutants in that function are index arithmetic and are killed.
+#
+#   kernels.rs       replace + with * in sym_eig, ANGLE ONLY (lines 65, 68, 75, 89, 90, 104, 105,
+#                    111)
+#     `t` sets only which angle the sweep turns through. `c = 1/sqrt(t*t + 1)` with `s = t*c` gives
+#     `c^2 + s^2 = 1` for any `t`, so the rotation stays orthogonal, the similarity preserves the
+#     spectrum exactly, and the sweep runs until the off-diagonal is under threshold. A mutated
+#     angle changes the convergence rate, not the result. Checked rather than argued: with
+#     `(zeta*zeta + one)` mutated to `(zeta*zeta * one)` -- which turns
+#     `t = sgn/(|z| + sqrt(z^2+1))` into `sgn/(2|z|)` -- a 5x5 with a degenerate diagonal, a 4x4
+#     with an exactly equal diagonal, and a 6x6 spanning 1e-3 to 1e3 all reconstruct to 1e-12 or
+#     better.
+#
+#     The same argument covers every path-only mutation in `sym_eig`, not just the angle: Jacobi is
+#     a fixed-point iteration under orthogonal similarity, so only the exit test or a break in the
+#     similarity structure can change the answer. What it does NOT cover is the surrounding index
+#     arithmetic. `a[p * n + p]`, `a[q * n + q]` and `(app - aqq)` are not angle choices, and
+#     mutating them reconstructs to 1.4e-5, 3.1 and 3.1 respectively on a 5x5, caught by
+#     `test_the_eigendecomposition_of_a_five_by_five_satisfies_its_defining_properties`.
 #
 #   integer.rs:79   replace - with / in determinant_exact
 #     `for k in 0..(n - 1)` becomes `0..(n / 1)`, one extra iteration at `k = n - 1`. Both inner
