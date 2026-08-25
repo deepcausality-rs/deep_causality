@@ -13,3 +13,6 @@ description = "Moved to: https://crates.io/crates/deep_causality_data_structures
 documentation = "https://docs.rs/deep_causality"
 categories = ["data-structures", "science"]
 keywords = ["data-structures"]
+
+
+publish = false

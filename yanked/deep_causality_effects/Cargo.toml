@@ -10,6 +10,4 @@ repository = "https://github.com/deepcausality/deep_causality.rs"
 keywords = ["deprecated"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 
-[dependencies]
-
-[dev-dependencies]
+publish = false
