@@ -44,6 +44,10 @@ export default defineConfig({
         } else if (path.startsWith('/examples/')) {
           item.priority = 0.6;
           item.changefreq = 'monthly';
+        } else if (path.startsWith('/projects/')) {
+          // The three sub-projects are the main outbound path from this site.
+          item.priority = 0.7;
+          item.changefreq = 'monthly';
         } else {
           item.priority = 0.4;
           item.changefreq = 'monthly';
