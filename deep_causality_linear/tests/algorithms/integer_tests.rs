@@ -104,3 +104,172 @@ fn test_the_integer_rank_and_the_mod_two_rank_differ_on_the_same_matrix() {
     assert_eq!(over_f2, RANKS_DISAGREE_GF2_RANK);
     assert_ne!(over_z, over_f2, "the two ranks are different questions");
 }
+
+// ---- mutation-driven: every input above is a 3x3 of {-1, 0, 1} ---------------------------------
+//
+// Those three matrices share more than their size. Every row has content 1, no row is zero, no
+// pivot search ever has to look past the diagonal, and the Bareiss divisor `prev` is `±1` at every
+// step. Twenty-one mutants of `integer.rs` survived on them, and they are not twenty-one problems:
+// the eleven lines that reduce a row by its content never executed at all, the row swap in each
+// function never executed, and a divisor of one divides nothing. The tests below supply the inputs
+// that make each of those load-bearing.
+
+/// Content reduction, on the matrix the docstring names it for.
+///
+/// `rank_exact` divides each row through by its content before eliminating, and the stated reason
+/// is overflow rather than speed: the fraction-free intermediates are products of entries, so a
+/// matrix of large entries overflows on products whose difference is zero. Nothing exercised it.
+/// Every fixture had rows of content 1, where `content != one` is false and the block is skipped.
+///
+/// Row 0 here has content 1 and is left alone; row 1 is three times row 0 and has content 3.
+/// Reduced, the two rows are equal and the rank is 1. Unreduced, the first product is
+/// `9_000_000_003 * 3_000_000_000`, which is `2.7e19` against an `i64` ceiling of `9.2e18`, so
+/// `checked_mul` returns `None` and the call comes back `Err(Overflow)` instead of a rank.
+#[test]
+fn test_exact_rank_reduces_a_row_by_its_content_before_eliminating() {
+    let m = DenseMatrix::from_vec(
+        vec![
+            3_000_000_000i64,
+            3_000_000_001,
+            9_000_000_000,
+            9_000_000_003,
+        ],
+        2,
+        2,
+    )
+    .unwrap();
+    assert_eq!(rank_exact(&m).unwrap(), 1);
+}
+
+/// A zero row and a pivot that is not on the diagonal, which no earlier input had.
+///
+/// Two things here that the `{-1, 0, 1}` fixtures never produced. The content of row 0 is zero, so
+/// the `!content.is_zero()` half of the guard is what stops a division by zero rather than
+/// decoration. And column 0 has its first non-zero at row 1, so the pivot search returns `p = 1`
+/// against `row = 0` and the swap runs.
+///
+/// The rank is 2: rows 1 and 2 are independent, since `2 * [1, 2, 3]` is `[2, 4, 6]` and not
+/// `[2, 4, 7]`.
+#[test]
+fn test_exact_rank_of_a_matrix_with_a_zero_row_and_an_off_diagonal_pivot() {
+    let m = DenseMatrix::from_vec(vec![0i64, 0, 0, 1, 2, 3, 2, 4, 7], 3, 3).unwrap();
+    assert_eq!(rank_exact(&m).unwrap(), 2);
+}
+
+/// Rectangular and empty shapes, neither of which had been passed to the integer path.
+///
+/// The wide case stops on columns, the tall case stops on rows through the `row >= rows` break, and
+/// the empty shapes return zero rather than an error. `rank_exact` was only ever called on squares.
+#[test]
+fn test_exact_rank_of_rectangular_and_empty_shapes() {
+    let wide = DenseMatrix::from_vec(vec![1i64, 2, 3, 4, 5, 2, 4, 6, 8, 11], 2, 5).unwrap();
+    assert_eq!(rank_exact(&wide).unwrap(), 2);
+
+    let tall = DenseMatrix::from_vec(vec![1i64, 2, 2, 4, 3, 7, 0, 0, 5, 10], 5, 2).unwrap();
+    assert_eq!(rank_exact(&tall).unwrap(), 2);
+
+    for (r, c) in [(0usize, 0usize), (0, 3), (3, 0)] {
+        let empty: DenseMatrix<i64> = DenseMatrix::from_vec(Vec::new(), r, c).unwrap();
+        assert_eq!(rank_exact(&empty).unwrap(), 0, "shape {r}x{c}");
+    }
+}
+
+/// Two dense 4x4s, where the Bareiss divisor is no longer one.
+///
+/// At 3x3 with entries in `{-1, 0, 1}` the divisor `prev` is `±1` at every step, so `div_euclid`
+/// divides nothing and the elimination is a subtraction. A 4x4 with entries in the tens reaches a
+/// third step whose divisor is a genuine 2x2 minor, which is what makes both the divisor's index
+/// and the explicit zeroing of the sub-column observable.
+///
+/// The first matrix has rank 3: its last row is `[26, 40, 50, 64]`, which is
+/// `[12, 18, 24, 30] + [7, 11, 13, 17] + [7, 11, 13, 17]`. The second has rank 4. Both ranks come
+/// from exact rational elimination, computed outside this crate.
+#[test]
+fn test_exact_rank_of_dense_four_by_four_matrices() {
+    #[rustfmt::skip]
+    let deficient = DenseMatrix::from_vec(
+        vec![
+            12i64, 18, 24, 30,
+             7,    11, 13, 17,
+            19,    23, 29, 31,
+            26,    40, 50, 64,
+        ],
+        4, 4,
+    ).unwrap();
+    assert_eq!(rank_exact(&deficient).unwrap(), 3);
+
+    #[rustfmt::skip]
+    let full = DenseMatrix::from_vec(
+        vec![
+            -5i64, -13, -26,   0,
+           -13,     13, -10, -16,
+            26,     26, -30,  32,
+            30,    -23,   0,  -7,
+        ],
+        4, 4,
+    ).unwrap();
+    assert_eq!(rank_exact(&full).unwrap(), 4);
+}
+
+/// The determinant's own pivot search, which no earlier matrix reached.
+///
+/// `integer_determinant_4x4` is tridiagonal with 2 on the diagonal and the singular 2x2 is
+/// `[[1, 2], [2, 4]]`, so `a[k][k]` is non-zero at every step of both and the swap below the
+/// diagonal never runs. Here the first Bareiss step drives `a[1][1]` to `6*2 - 4*3 = 0`, the search
+/// finds the pivot at row 2, the rows swap and the sign flips. That last part matters on its own:
+/// no test had ever produced a negative `sign_negative`.
+///
+/// The determinant is 15, by cofactor expansion:
+/// `2(6*9 - 7*4) - 3(4*9 - 7*1) + 5(4*4 - 6*1) = 52 - 87 + 50`.
+#[test]
+fn test_the_integer_determinant_pivots_when_a_later_diagonal_entry_is_zero() {
+    let m = DenseMatrix::from_vec(vec![2i64, 3, 5, 4, 6, 7, 1, 4, 9], 3, 3).unwrap();
+    assert_eq!(determinant_exact(&m).unwrap(), 15);
+}
+
+/// A dense 4x4 determinant, where the pivot search has more than one row to reject.
+///
+/// At 3x3 the search below a zero diagonal entry has a single candidate, so reading the wrong cell
+/// still lands on the only row that could be chosen. A 4x4 separates the two: the correct search
+/// finds a pivot and returns 330, while a search that reads across rows instead of down the column
+/// finds none and reports the matrix singular.
+///
+/// 330 is from exact rational elimination, computed outside this crate.
+#[test]
+fn test_the_integer_determinant_of_a_dense_four_by_four() {
+    #[rustfmt::skip]
+    let m = DenseMatrix::from_vec(
+        vec![
+            -9i64, -6, -3,  3,
+             2,     6, -6,  9,
+             4,     5, -2,  1,
+             4,     7, -8,  0,
+        ],
+        4, 4,
+    ).unwrap();
+    assert_eq!(determinant_exact(&m).unwrap(), 330);
+}
+
+/// A row swap below the first row, which the zero-row matrix above does not produce.
+///
+/// That matrix swaps rows 0 and 1, and at `row = 0` the swap's own index arithmetic — `row * cols`
+/// — is zero whichever way it is written, so two mutants of it survived. Column 1 here is zero at
+/// rows 0, 1 and 3 and `-2` at row 2, so the second pivot is found at row 2 against `row = 1` and
+/// the swap runs with a non-zero base. The same step is the first whose Bareiss divisor is read
+/// from a row other than the first.
+///
+/// The rank is 4, from exact rational elimination computed outside this crate.
+#[test]
+fn test_exact_rank_when_the_second_pivot_needs_a_swap() {
+    #[rustfmt::skip]
+    let m = DenseMatrix::from_vec(
+        vec![
+            -6i64,  0, -1, 7,
+             9,     0, -7, 2,
+            -9,    -2, -1, 3,
+             9,     0,  2, 3,
+        ],
+        4, 4,
+    ).unwrap();
+    assert_eq!(rank_exact(&m).unwrap(), 4);
+}

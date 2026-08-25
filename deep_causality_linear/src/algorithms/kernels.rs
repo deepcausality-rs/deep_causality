@@ -328,6 +328,60 @@ where
     // pathological angles — `gmod → 0` makes `ζ → ∞` — that overflow or NaN the rotation. Skipping
     // such a column leaves its singular value at ~0, which the caller's rank gate then drops.
     let eps = Re::<T>::epsilon();
+
+    // The sweep is scale-free in exact arithmetic and is not in floating point, because every
+    // magnitude here is reached by squaring. `gmod` is `|γ|` obtained from `γ·conj(γ)`, which needs
+    // `|γ|²` to be representable, and a column norm is a sum of squares. At `|γ| < 2⁻⁵³⁷` the
+    // square underflows to zero, `gmod` is zero, `rel` is zero, `rel <= tol` holds for every column
+    // pair, no rotation is applied, and this returns the raw column norms as though they were
+    // singular values. At the other end an entry above `√MAX` squares to infinity and the column
+    // norm comes back infinite for singular values that are perfectly representable.
+    //
+    // Both are fixed by working at unit scale. The scale comes from the largest entry **modulus**,
+    // not from a squared norm: a modulus is finite whenever the entry is, so the quantity deciding
+    // whether to rescale cannot itself overflow. Deriving it from a squared norm was the earlier
+    // shape of this code, and it skipped the rescale exactly when the matrix most needed it.
+    //
+    // `scale` is a power of two, so multiplying by it and dividing the singular values by it
+    // afterwards are both exact: a well-scaled matrix decomposes to the bits it did before.
+    //
+    // Measured on `[[x, x], [0, x]]`, whose singular values are `x(√5±1)/2`: correct from `2³⁰⁰`
+    // down to `2⁻³⁰⁰`. Before, `2⁻²⁷⁰` returned the two column norms and `diag(1e200, 1e200)`
+    // returned infinity.
+    let mut max_abs = Re::<T>::zero();
+    for x in u.iter() {
+        let m = x.modulus();
+        if m > max_abs {
+            max_abs = m;
+        }
+    }
+
+    let mut scale = Re::<T>::one();
+    // Bounded rather than `while`: a non-finite entry would otherwise never leave the loop. The
+    // bound is far outside any binary exponent range, so it cannot stop a real rescale early.
+    const MAX_RESCALE_STEPS: usize = 4096;
+    if max_abs > Re::<T>::zero() && max_abs.is_finite() {
+        let half = Re::<T>::one() / two;
+        let mut steps = 0usize;
+        while max_abs < Re::<T>::one() && steps < MAX_RESCALE_STEPS {
+            max_abs = max_abs + max_abs;
+            scale = scale + scale;
+            steps += 1;
+        }
+        while max_abs >= two && steps < MAX_RESCALE_STEPS {
+            max_abs *= half;
+            scale *= half;
+            steps += 1;
+        }
+    }
+    if scale != Re::<T>::one() {
+        let f = T::from_real(scale);
+        for entry in u.iter_mut() {
+            *entry *= f;
+        }
+    }
+
+    // Read after scaling, so the squares are in range. A column norm is now at most `rows · 4`.
     let mut max_diag = Re::<T>::zero();
     for j in 0..cols {
         let mut nrm = Re::<T>::zero();
@@ -339,52 +393,6 @@ where
         }
     }
 
-    // The sweep is scale-free in exact arithmetic and is not in floating point, because every
-    // magnitude here is reached by squaring. `gmod` is `|γ|` computed as `sqrt(γ·conj(γ))`, so it
-    // needs `|γ|²` to be representable — and for a matrix of small entries it is not. At
-    // `|γ| < 2⁻⁵³⁷` the square underflows to zero, `gmod` is zero, `rel` is zero, `rel <= tol`
-    // holds for every column pair, no rotation is ever applied, and this returns the raw column
-    // norms as though they were singular values. Silently: the factors still multiply back to the
-    // input exactly, so a reconstruction check passes while `U` is not orthogonal.
-    //
-    // Measured on `[[x, x], [0, x]]`, whose singular values are `x(√5±1)/2`: correct at
-    // `x = 2⁻²⁶⁰`, and at `2⁻²⁷⁰` it returned `(√2·x, x)` — the two column norms exactly.
-    //
-    // Fixed by working at unit scale. `scale` is a power of two, so multiplying by it and dividing
-    // the singular values by it afterwards are both exact: a well-scaled matrix decomposes to the
-    // same bits it did before, and a badly-scaled one is brought into range rather than losing its
-    // off-diagonal to underflow.
-    let four = two * two;
-    // The reciprocals are exact — both divisors are powers of two — so scaling down multiplies by
-    // them rather than dividing, which `Real` supports as an assign operation and which produces
-    // the identical bits.
-    let quarter = Re::<T>::one() / four;
-    let half = Re::<T>::one() / two;
-    let mut scale = Re::<T>::one();
-    // Bounded rather than `while`: an entry above `√MAX` squares to infinity, and `∞ · ¼` is `∞`,
-    // so an unbounded loop never leaves. The bound is far outside any binary exponent range — it
-    // cannot stop a real rescale early, and it makes termination independent of the input.
-    const MAX_RESCALE_STEPS: usize = 4096;
-    if max_diag > Re::<T>::zero() && max_diag.is_finite() {
-        // `max_diag` is a squared norm, so stepping it by four steps the scale by two.
-        let mut steps = 0usize;
-        while max_diag < Re::<T>::one() && steps < MAX_RESCALE_STEPS {
-            max_diag *= four;
-            scale = scale + scale;
-            steps += 1;
-        }
-        while max_diag >= four && steps < MAX_RESCALE_STEPS {
-            max_diag *= quarter;
-            scale *= half;
-            steps += 1;
-        }
-    }
-    if scale != Re::<T>::one() {
-        let f = T::from_real(scale);
-        for entry in u.iter_mut() {
-            *entry *= f;
-        }
-    }
     let floor = max_diag * eps * eps;
 
     for _sweep in 0..max_sweeps {

@@ -260,3 +260,161 @@ fn test_solving_is_strictly_more_accurate_than_inverting_then_multiplying() {
          If these are equal, solve is implemented as invert-then-multiply."
     );
 }
+
+// ---- mutation-driven: every triangular fixture had a unit diagonal -----------------------------
+//
+// `solve_lower` was tested on `[[1, 0], [2, 1]]` and `solve_upper` on `unit_determinant_3x3`,
+// which is `[[1, 2, 3], [0, 1, 4], [0, 0, 1]]`. Both divide by a diagonal entry of exactly 1, and
+// dividing by one is the same operation as multiplying by it, so the final `acc / d` in each
+// function could be inverted without any assertion moving. Both LU determinant fixtures likewise
+// had pivots of `±1`, which makes the product over `U`'s diagonal insensitive to the same
+// inversion. The tests below give each of them a diagonal that is not 1.
+
+/// Forward substitution where dividing by the diagonal is not a no-op.
+///
+/// `L = [[2, 0, 0, 0], [1, 3, 0, 0], [4, 5, 5, 0], [6, 7, 8, 7]]` and `b = [2, 7, 29, 72]` have the
+/// exact solution `[1, 2, 3, 4]`, every step of which divides by 2, 3, 5 and 7 in turn. Order four
+/// also separates `i * n + j` from `i * n - j`, which coincide whenever one of the two indices is
+/// zero, as they are at order two.
+#[test]
+fn test_forward_substitution_through_a_non_unit_diagonal() {
+    #[rustfmt::skip]
+    let a: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+            2.0, 0.0, 0.0, 0.0,
+            1.0, 3.0, 0.0, 0.0,
+            4.0, 5.0, 5.0, 0.0,
+            6.0, 7.0, 8.0, 7.0,
+        ],
+        4, 4,
+    ).unwrap();
+    let b: DenseVector<f64> = DenseVector::from_vec(vec![2.0, 7.0, 29.0, 72.0]);
+    let x = solve_lower(&a, &b).unwrap();
+    for (i, want) in [1.0, 2.0, 3.0, 4.0].iter().enumerate() {
+        assert!(
+            (x.get(i).unwrap() - want).abs() < 1e-12,
+            "x[{i}] was {}, expected {want}",
+            x.get(i).unwrap()
+        );
+    }
+}
+
+/// Backward substitution where dividing by the diagonal is not a no-op.
+///
+/// `U = [[2, 1, 4, 6], [0, 3, 5, 7], [0, 0, 5, 8], [0, 0, 0, 7]]` and `b = [40, 49, 47, 28]` have
+/// the exact solution `[1, 2, 3, 4]`. Every entry is a power of two or a small odd integer, so each
+/// division is exact and the tolerance is doing nothing but guarding the comparison.
+#[test]
+fn test_backward_substitution_through_a_non_unit_diagonal() {
+    #[rustfmt::skip]
+    let a: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+            2.0, 1.0, 4.0, 6.0,
+            0.0, 3.0, 5.0, 7.0,
+            0.0, 0.0, 5.0, 8.0,
+            0.0, 0.0, 0.0, 7.0,
+        ],
+        4, 4,
+    ).unwrap();
+    let b: DenseVector<f64> = DenseVector::from_vec(vec![40.0, 49.0, 47.0, 28.0]);
+    let x = solve_upper(&a, &b).unwrap();
+    for (i, want) in [1.0, 2.0, 3.0, 4.0].iter().enumerate() {
+        assert!(
+            (x.get(i).unwrap() - want).abs() < 1e-12,
+            "x[{i}] was {}, expected {want}",
+            x.get(i).unwrap()
+        );
+    }
+}
+
+/// The LU determinant where the pivots are not `±1`.
+///
+/// `Lu::determinant` multiplies `U`'s diagonal together. `unit_determinant_3x3` and
+/// `zero_leading_entry_3x3` both factor to pivots of `±1`, where multiplying and dividing agree, so
+/// the accumulation could be inverted unnoticed. The first sixteen primes laid out in rows factor
+/// to pivots of 41, 4.878, 3 and 1.467, none of them 1, and the determinant is 880 by exact
+/// rational elimination.
+#[test]
+fn test_the_lu_determinant_of_a_matrix_whose_pivots_are_not_one() {
+    #[rustfmt::skip]
+    let a: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+             2.0,  3.0,  5.0,  7.0,
+            11.0, 13.0, 17.0, 19.0,
+            23.0, 29.0, 31.0, 37.0,
+            41.0, 43.0, 47.0, 53.0,
+        ],
+        4, 4,
+    ).unwrap();
+    let lu = Lu::factor(&a).unwrap();
+    assert!(
+        (lu.determinant() - 880.0).abs() < 1e-9,
+        "determinant was {}, exact elimination says 880",
+        lu.determinant()
+    );
+}
+
+/// The pivot search has to run down the column, not across the first row.
+///
+/// `Lu::factor` seeds its search with the diagonal entry and then looks below it. Reading that seed
+/// from the wrong cell only shows when the seed it lands on is larger than every real candidate,
+/// because the search then never replaces it. Column 1 has `0` on the diagonal and `5` below it, so
+/// the correct search moves to row 2. Both cells a mis-written index reaches at that step hold
+/// something bigger: `a[0][1]` is `100` and `a[0][2]` is `50`, and a search seeded from either
+/// keeps row 1 and rejects the matrix as singular.
+///
+/// The matrix is not singular. Expanding along column 0, its determinant is
+/// `1 * (0 * 1 − 1 * 5) = −5`.
+#[test]
+fn test_the_lu_pivot_search_reads_down_the_column() {
+    #[rustfmt::skip]
+    let a: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+            1.0, 100.0, 50.0,
+            0.0,   0.0,  1.0,
+            0.0,   5.0,  1.0,
+        ],
+        3, 3,
+    ).unwrap();
+    let lu = Lu::factor(&a).expect("non-singular: the pivot for column 1 is the 5 in row 2");
+    assert!(
+        (lu.determinant() + 5.0).abs() < 1e-12,
+        "determinant was {}, expected -5",
+        lu.determinant()
+    );
+}
+
+/// A tie in the pivot column must not move a row.
+///
+/// Partial pivoting takes the largest magnitude at or below the row, and when the entry already on
+/// the diagonal ties with a later one, either is equally good numerically. Every value the API
+/// returns is blind to the choice: `P·A = L·U` holds for both, and the determinant is the product
+/// of the pivots negated once per swap, so an extra swap and an extra negation cancel. The
+/// permutation is the one place it shows.
+///
+/// Keeping the first is the choice worth having, because swapping on a tie moves rows for nothing.
+/// Column 0 here is `[1, 1, 0]`, so rows 0 and 1 tie; the factorisation must leave them where they
+/// are. The determinant is 6, by expansion along the last row: `2 * (1*5 − 2*1)`.
+#[test]
+fn test_a_tie_in_the_pivot_column_does_not_swap_rows() {
+    #[rustfmt::skip]
+    let a: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+            1.0, 2.0, 3.0,
+            1.0, 5.0, 4.0,
+            0.0, 0.0, 2.0,
+        ],
+        3, 3,
+    ).unwrap();
+    let lu = Lu::factor(&a).unwrap();
+    assert_eq!(
+        lu.permutation(),
+        [0, 1, 2],
+        "rows 0 and 1 tie in column 0, so no swap is warranted"
+    );
+    assert!(
+        (lu.determinant() - 6.0).abs() < 1e-12,
+        "determinant was {}, expected 6",
+        lu.determinant()
+    );
+}

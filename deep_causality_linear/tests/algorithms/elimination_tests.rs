@@ -333,3 +333,114 @@ fn test_a_kernel_vector_leaves_a_pivot_variable_at_zero_when_the_free_column_doe
         assert_eq!(acc, 0.0, "row {i}");
     }
 }
+
+// ---- mutation-driven: both 3x3 determinant fixtures are sparse ---------------------------------
+
+/// The 3x3 closed form, on a matrix where every term of it contributes.
+///
+/// `determinant` uses a closed form at order three: `a(ej − fi) − b(dj − fh) + c(di − eh)`. The
+/// two 3x3 fixtures are `unit_determinant_3x3`, which is upper triangular, and
+/// `zero_leading_entry_3x3`, a permutation matrix. Between them they leave most of those nine
+/// products multiplying a zero, so mutating the closed form's arithmetic changed nothing anything
+/// asserted. Five separate mutants of it survived, along with deletion of the whole arm.
+///
+/// The first matrix written here for that was `[[2, −3, 1], [2, 0, −1], [1, 4, 5]]`, which has a
+/// zero at `e` and so left `e·j` and `e·h` still multiplying it. Two mutants survived the fix.
+/// `[[2, 3, 5], [7, 11, 13], [17, 19, 23]]` has no zero anywhere and no two products equal:
+/// `2(11·23 − 13·19) − 3(7·23 − 13·17) + 5(7·19 − 11·17) = 12 + 180 − 270 = −78`.
+#[test]
+fn test_the_three_by_three_determinant_on_a_dense_matrix() {
+    let m: DenseMatrix<f64> =
+        DenseMatrix::from_vec(vec![2.0, 3.0, 5.0, 7.0, 11.0, 13.0, 17.0, 19.0, 23.0], 3, 3)
+            .unwrap();
+    let det = determinant(&m).unwrap();
+    assert!((det + 78.0).abs() < 1e-12, "expected -78, got {det}");
+}
+
+/// The closed form and the general elimination agree.
+///
+/// The arm exists for speed, not for a different answer, so deleting it must not change the
+/// result. A 4x4 goes through elimination; embedding the 3x3 above as the leading block of a 4x4
+/// with a unit trailing entry keeps the determinant at −78 and exercises the other path.
+#[test]
+fn test_the_three_by_three_closed_form_agrees_with_elimination() {
+    #[rustfmt::skip]
+    let embedded: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+             2.0,  3.0,  5.0, 0.0,
+             7.0, 11.0, 13.0, 0.0,
+            17.0, 19.0, 23.0, 0.0,
+             0.0,  0.0,  0.0, 1.0,
+        ],
+        4, 4,
+    )
+    .unwrap();
+    let det = determinant(&embedded).unwrap();
+    assert!(
+        (det + 78.0).abs() < 1e-9,
+        "the elimination path must agree with the closed form: expected -78, got {det}"
+    );
+}
+
+// ---- mutation-driven: the pivot rule and the noise floor ---------------------------------------
+
+/// The stable rule has to pick the largest candidate, not merely a non-zero one.
+///
+/// `pivot_stable_with` searches for the largest modulus at or below the row. Any non-zero pivot
+/// gives a mathematically valid elimination, so nothing that only checks a result against exact
+/// arithmetic can tell the rules apart, and three mutants of the selection survived: keep the
+/// first candidate, keep the last, keep the smallest.
+///
+/// What separates them is round-off. Here row 1 is exactly twice row 2 in binary — `2 * 0.1` is
+/// `0.2` to the bit, and likewise for 20 and 2000 — so the exact rank is 2. The largest entry in
+/// column 0 is `20`, and pivoting there reports 2. Each of the three mutants pivots somewhere else:
+/// keeping the first candidate or the smallest takes `-0.1`, keeping the last takes `10`. All three
+/// come back with rank 3, because the dependency that should cancel exactly is left holding a
+/// residue above the noise floor instead.
+#[test]
+fn test_the_stable_pivot_rule_keeps_a_rank_deficient_matrix_from_inflating() {
+    #[rustfmt::skip]
+    let m: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+            -0.1,  0.01, -1000.0,
+            20.0,  0.2,   2000.0,
+            10.0,  0.1,   1000.0,
+        ],
+        3, 3,
+    ).unwrap();
+    // Row 1 is exactly 2 x row 2, so two of the three rows are independent and no more.
+    assert_eq!(
+        rank_stable(&m).unwrap(),
+        2,
+        "a pivot chosen for position rather than magnitude inflates this to 3"
+    );
+}
+
+/// A pivot can be small and still be real, and the floor has to leave it alone.
+///
+/// `negligible_below` returns `scale * (eps * n)^2`, where `scale` is the largest squared modulus.
+/// Both factors of `eps * n` are needed, because `scale` is squared and the comparison against it
+/// is squared too. Dropping to a single factor raises the floor by about `1e15`, and no earlier
+/// matrix noticed: every pivot in the suite was within a factor of a few of the largest entry, so
+/// a floor `1e15` times too large still sat far below all of them.
+///
+/// `diag(1, 1e-9, 1)` has a pivot whose squared modulus is `1e-18`. The correct floor is near
+/// `4e-31` and passes it. A floor of `scale * eps * n` is near `1e-15` and swallows it, reporting
+/// rank 2 for a matrix that is plainly invertible.
+#[test]
+fn test_a_small_but_genuine_pivot_is_not_swallowed_by_the_noise_floor() {
+    #[rustfmt::skip]
+    let m: DenseMatrix<f64> = DenseMatrix::from_vec(
+        vec![
+            1.0, 0.0,   0.0,
+            0.0, 1e-9,  0.0,
+            0.0, 0.0,   1.0,
+        ],
+        3, 3,
+    ).unwrap();
+    assert_eq!(
+        rank_stable(&m).unwrap(),
+        3,
+        "1e-9 is nine orders above the double-precision floor and is a real pivot"
+    );
+}

@@ -393,3 +393,40 @@ fn test_a_three_parameter_fit_leaves_a_residual_orthogonal_to_the_columns() {
         );
     }
 }
+
+// ---- mutation-driven: every least-squares fixture had two unknowns -----------------------------
+
+/// Least squares with three unknowns, which no earlier fixture had.
+///
+/// Every matrix passed to `solve_least_squares` was `n x 2`. Both substitutions index the factor as
+/// `i * n + j`, and at `n = 2` the only inner iteration has one of the two indices at zero, where
+/// `i * n + j` and `i * n - j` are the same number. Three mutants of those indices survived on
+/// that coincidence alone.
+///
+/// Fitting `2 − 3t + t²` at `t = 1..5` gives a 5x3 Vandermonde system whose right-hand side lies
+/// exactly in the column space, so the least-squares answer is the polynomial's own coefficients
+/// and the residual is zero. `AᴴA` is `[[5, 15, 55], [15, 55, 225], [55, 225, 979]]`, determinant
+/// 700, comfortably positive definite.
+#[test]
+fn test_the_least_squares_fit_of_a_quadratic_with_three_unknowns() {
+    #[rustfmt::skip]
+    let a = DenseMatrix::from_vec(
+        vec![
+            1.0, 1.0,  1.0,
+            1.0, 2.0,  4.0,
+            1.0, 3.0,  9.0,
+            1.0, 4.0, 16.0,
+            1.0, 5.0, 25.0,
+        ],
+        5, 3,
+    ).unwrap();
+    let b = DenseVector::from_vec(vec![0.0_f64, 0.0, 2.0, 6.0, 12.0]);
+    let x = solve_least_squares(&a, &b).expect("full column rank");
+    for (i, want) in [2.0, -3.0, 1.0].iter().enumerate() {
+        assert!(
+            (x.get(i).unwrap() - want).abs() < 1e-9,
+            "coefficient {i} was {}, expected {want}",
+            x.get(i).unwrap()
+        );
+    }
+}
