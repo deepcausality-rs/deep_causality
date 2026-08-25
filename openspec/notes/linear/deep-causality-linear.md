@@ -124,9 +124,26 @@ of a bound, and a later widening would make it silently wrong.
 added only to carry a `Sum` bound. It is a facade over the tower, which is the arrangement the rest
 of this list should reach.
 
-The census row for this crate reads "0 direct constructions". Its `src` has 13
-`CausalTensor::from_slice` / `from_shape_fn` sites, at least two of them rank-2
-(`alias/alias_hilbert_state.rs`). That row needs re-counting by the method the other six used.
+### The census row, recounted
+
+It read "0 direct constructions". Recounted by the method the other six rows used — every
+`CausalTensor` construction in `src`, classified by the rank of the shape passed:
+
+| rank | count | where |
+|---|---|---|
+| 2 | 3 | `alias/alias_hilbert_state.rs:122` `[d, 1]` and `:171` `[d, d]`; `multifield/ops/conversions.rs:101` `[batch, num_blades]` |
+| 3 | 5 | `multifield/ops/gamma.rs:134,198,242` (`[n, dim, dim]`, `[num_blades, dim, dim]` ×2); `multifield/ops/differential.rs:175`; `multivector/ops/ops_matrix_rep.rs:29` |
+| 5 | 5 | `extensions/hkt_multifield/mod.rs:119,166,258,330` and `multifield/ops/differential.rs:125`, all `[nx, ny, nz, dim, dim]` |
+
+**13 constructions, none of them rank-1, three of them rank-2.** `CausalTensor::stack` at
+`multifield/ops/batched_matmul.rs:82` also produces a tensor and is counted as an N-d operation
+rather than a construction, matching how the other rows treated it.
+
+The N-d column read 18 and recounts to **15** by the definition stated above: `reshape` ×12,
+`stack` ×1, axis reductions ×2. The four `.slice(` calls make 19 if included, and the definition
+does not name `slice`, so they are not. The 2-D column is unchanged at 5 — `matmul` ×4 and
+`inverse` ×1 — and confirms the disposition recorded for `BatchedMatMul`: four of those five are
+the inner call of a batched rank-3 operation.
 
 ## The correctness defect this exposes
 
@@ -197,7 +214,7 @@ counterparts have — rather than one algorithm covering everything.
 
 ## Does a dense matrix type have real call sites?
 
-Yes — 46, and three crates never construct anything else. Measured by taking the rank of every
+Yes — 49, and three crates never construct anything else. Measured by taking the rank of every
 constructed shape across the seven consumer crates.
 
 | crate | constructions | ranks | 2-D ops called | N-d ops called |
@@ -208,17 +225,24 @@ constructed shape across the seven consumer crates.
 | `deep_causality_discovery` | 6 | rank1=1, rank2=5 | 0 | 0 |
 | `deep_causality_cfd` | 30 | rank1=18, rank2=7, rank3=4, rank4=1 | 1 | 6 |
 | `deep_causality_algorithms` | 16 | rank2=8, rank3=5, rank4=1 | 0 | 19 |
-| `deep_causality_multivector` | 0 direct | — | 5 | 18 |
+| `deep_causality_multivector` | 13 | rank2=3, rank3=5, rank5=5, **no rank-1** | 5 | 15 |
 
-118 constructions in total: **60 rank-1, 46 rank-2, 12 rank ≥ 3**. N-d operations means `ein_sum`,
+131 constructions in total: **60 rank-1, 49 rank-2, 22 rank ≥ 3**. N-d operations means `ein_sum`,
 `broadcast_*`, `kronecker`, axis reductions, `reshape`, `stack`, `view`, or the tensor-train entry
 points; 2-D operations means `matmul`, `transpose`, `inverse`, `svd`, `qr`, `eigen_hermitian`,
 `dagger`.
 
-**Rank ≥ 3 is 10% of constructions and lives in three files**:
-`physics/src/theories/electromagnetism/gauge_em_ops_impl.rs:82` (`vec![num_points, dim, dim, 1]`),
-`cfd/src/tensor_bridge/operators.rs:36` (`vec![rl, 2, 2, rr]`, an MPO core), and SURD's joint
-distributions in `algorithms`.
+The multivector row was recounted after the first pass recorded it as "0 direct" — see below. Its
+thirteen constructions do not change the conclusion this section draws, and they do sharpen it: the
+crate is the one place in the workspace whose tensors are genuinely N-index, and it is also the one
+crate the rank-2 argument was never about.
+
+**Rank ≥ 3 is 17% of constructions, and ten of the twenty-two are `deep_causality_multivector`'s.**
+Outside that crate it lives in three files: `physics/src/theories/electromagnetism/
+gauge_em_ops_impl.rs:82` (`vec![num_points, dim, dim, 1]`), `cfd/src/tensor_bridge/operators.rs:36`
+(`vec![rl, 2, 2, rr]`, an MPO core), and SURD's joint distributions in `algorithms`. The multivector
+ten are the Γ-matrix batches (`[n, dim, dim]`) and the field's own `[nx, ny, nz, dim, dim]` — a
+geometric-algebra field is a rank-5 object, and no matrix type is the right home for it.
 
 **Physics, quantum and topology call 56 two-dimensional operations and zero N-d operations between
 them.** Quantum's ten shapes are `[d,d]`, `[d_out,d_out]`, `[dim,dim]`, `[d_keep,d_keep]`,

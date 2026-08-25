@@ -86,8 +86,11 @@ pub use crate::algorithms::decomposition::{
     svd, svd_sorted, svd_truncated,
 };
 
-// Norms, defined once
-pub use crate::algorithms::norms::{matrix_norm_frobenius, matrix_norm_inf, matrix_norm_l1};
+// Norms, defined once. The `DenseVector` methods of the same names delegate to the vector forms.
+pub use crate::algorithms::norms::{
+    matrix_norm_frobenius, matrix_norm_inf, matrix_norm_l1, vector_norm_inf, vector_norm_l1,
+    vector_norm_l2, vector_norm_sq,
+};
 
 // Conjugate gradient, matrix-free
 pub use crate::algorithms::cg::{

@@ -36,6 +36,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_linear",
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "extensions",
     srcs = glob([
         "extensions/*_tests.rs",

@@ -27,9 +27,9 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_tensor/std", "deep_causality_metric/std"]
+std = ["alloc", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_linear/std", "deep_causality_tensor/std", "deep_causality_metric/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_tensor/no-std", "deep_causality_metric/no-std"]
+no-std = ["alloc", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_linear/no-std", "deep_causality_tensor/no-std", "deep_causality_metric/no-std"]
 
 [dependencies.deep_causality_haft]
 path = "../deep_causality_haft"
@@ -48,6 +48,11 @@ default-features = false
 
 [dependencies.deep_causality_num_complex]
 path = "../deep_causality_num_complex"
+version = "0.1"
+default-features = false
+
+[dependencies.deep_causality_linear]
+path = "../deep_causality_linear"
 version = "0.1"
 default-features = false
 

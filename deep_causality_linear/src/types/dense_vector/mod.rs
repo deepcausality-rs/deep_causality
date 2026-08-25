@@ -10,7 +10,6 @@ pub mod ops;
 
 use crate::errors::linear_error::LinearError;
 use alloc::vec::Vec;
-use deep_causality_num::Zero;
 
 /// A dense vector, carrying its length.
 ///
@@ -223,50 +222,34 @@ where
     T: deep_causality_algebra::NormedScalar,
 {
     /// The 1-norm, `Σ |aᵢ|`.
+    ///
+    /// Delegates to [`vector_norm_l1`](crate::vector_norm_l1). The body is there so that a caller
+    /// holding a slice — which is what `deep_causality_multivector` holds — reaches the same norm
+    /// without allocating a vector to put it in.
     pub fn norm_l1(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        use deep_causality_algebra::{Normed, Real};
-        let mut acc = <T as Normed>::Real::zero();
-        for v in &self.data {
-            acc += v.modulus_squared().sqrt();
-        }
-        acc
+        crate::algorithms::norms::vector_norm_l1(&self.data)
     }
 
     /// The 2-norm, `sqrt(Σ |aᵢ|²)`.
     ///
-    /// Uses `modulus_squared`, so the complex case is right without a separate surface. This is the
-    /// one definition of the Euclidean norm in this crate; the workspace currently has four.
+    /// Delegates to [`vector_norm_l2`](crate::vector_norm_l2).
     pub fn norm_l2(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        use deep_causality_algebra::Real;
-        self.norm_sq().sqrt()
+        crate::algorithms::norms::vector_norm_l2(&self.data)
     }
 
     /// The squared 2-norm, without the square root.
     ///
-    /// Available separately because the square root is the expensive part and comparisons rarely
-    /// need it.
+    /// Delegates to [`vector_norm_sq`](crate::vector_norm_sq). Available separately because the
+    /// square root is the expensive part and comparisons rarely need it.
     pub fn norm_sq(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        use deep_causality_algebra::Normed;
-        let mut acc = <T as Normed>::Real::zero();
-        for v in &self.data {
-            acc += v.modulus_squared();
-        }
-        acc
+        crate::algorithms::norms::vector_norm_sq(&self.data)
     }
 
     /// The ∞-norm, `max |aᵢ|`.
     ///
-    /// Zero for the empty vector, which is the supremum over an empty set in the convention this
-    /// crate uses, and never `NaN`.
+    /// Delegates to [`vector_norm_inf`](crate::vector_norm_inf). Zero for the empty vector, and
+    /// never `NaN`.
     pub fn norm_inf(&self) -> <T as deep_causality_algebra::Normed>::Real {
-        use deep_causality_algebra::{Normed, Real};
-        let mut best = <T as Normed>::Real::zero();
-        for v in &self.data {
-            let m = v.modulus_squared().sqrt();
-            if m > best {
-                best = m;
-            }
-        }
-        best
+        crate::algorithms::norms::vector_norm_inf(&self.data)
     }
 }

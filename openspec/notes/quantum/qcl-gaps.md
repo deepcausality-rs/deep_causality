@@ -23,6 +23,10 @@ therefore marked unresolved rather than confirmed. Everything else carries evide
 The algebra tower was completed after this register was written — ℕ and ℚ added, ℤ admitted, three
 correctness bugs fixed. It is worth being exact about what that did and did not do here.
 
+**It closed no gap in this register.** All eighteen remained open at the time of writing; G-01 and
+G-02 have since been closed by `add-linear-algebra-crate`, and the paragraph below is the state as
+the tower work left it rather than the state today.
+
 **It closed no gap in this register.** All eighteen remain open. Re-verified against the tree after
 the tower work merged, rather than inferred: no 𝔽₂ or bit-matrix module exists in `topology`,
 `sparse`, `algebra` or `num`; `rank_of_csr` still lifts to `f64` and runs an SVD
@@ -103,9 +107,9 @@ tractable; they are not the computational path.
 Severity: **S1** produces a wrong answer with no error raised. **S2** blocks a designed consumer.
 **S3** is ergonomics or documentation.
 
-### G-01 — No 𝔽₂ linear algebra anywhere in the workspace
+### G-01 — No 𝔽₂ linear algebra anywhere in the workspace — **CLOSED**
 
-**Severity S1.** Blocks R1, R4, R6.
+**Severity S1.** Blocks R1, R4, R6. **Closed** by `add-linear-algebra-crate`.
 
 Searched `deep_causality_topology`, `deep_causality_sparse` and `deep_causality_algebra` for GF(2),
 mod-2 elimination or binary-field arithmetic. There is none. The only `mod 2` reference is a comment
@@ -114,8 +118,24 @@ in `lattice_complex/cell_splitting.rs:48` about the cup-product sign rule.
 **Closure.** A bit-packed 𝔽₂ matrix with Gaussian elimination returning rank, kernel basis and image
 basis. Roughly 200 lines over `u64` words using XOR and `count_ones`.
 
-**Owner:** `deep_causality_topology`, because that is where chain complexes live and topology must
-not learn about codes.
+**Owner (as closed):** `deep_causality_linear`, not `deep_causality_topology` as proposed.
+
+The placement argument here was that topology must not learn about codes. It holds, and the crate
+that was created satisfies it without owning chain complexes at all: `PackedGf2<W>` is a bit-packed
+matrix over a `NaturalNumber` word, and `rank_gf2` / `kernel_basis_gf2` / `image_basis_gf2` are
+elimination over it. Neither knows what a complex is. `linear-f2-algebra` restates the placement as
+a **separability** property for that reason — the requirement is that the matrix be usable without
+chain complexes, which is a stronger and more checkable claim than which crate the file sits in.
+
+Moving it removed no dependency edge either way: `qcl-gaps` records G-07 and G-09 as needing G-04
+and G-05, both owned by `deep_causality_topology`, so quantum takes a topology dependency for the
+𝔽₂ work regardless.
+
+**What was built.** `deep_causality_linear/src/types/packed_gf2/` — the representation, over
+`W: NaturalNumber` rather than a fixed `u64`, which is what the aside below asked for.
+`deep_causality_linear/src/algorithms/gf2.rs` — rank, kernel basis, image basis. `Gf2` itself is a
+`deep_causality_num` scalar reaching `Field` through the tower's blanket, and is confirmed by
+compile probe not to reach `RealField`, `NormedScalar` or `ConjugateScalar`.
 
 **On the algebra tower.** `deep_causality_num` has an `Integer` trait supplying exactly the needed
 primitives (`count_ones`, `trailing_zeros`, `checked_*`, `wrapping_*`,
@@ -129,9 +149,9 @@ tower work** — see §0.
 does mean the bit-packed layer can be written generically: bound the word type on `NaturalNumber`
 (`src/integer/natural.rs`) rather than fixing it to `u64`.
 
-### G-02 — Homology rank is computed by `f64` SVD, not over 𝔽₂
+### G-02 — Homology rank is computed by `f64` SVD, not over 𝔽₂ — **CLOSED**
 
-**Severity S1.**
+**Severity S1.** **Closed** by `add-linear-algebra-crate`.
 
 ```rust
 // deep_causality_topology/src/types/simplicial_complex/topology/chain_complex_impl.rs:94
@@ -150,11 +170,31 @@ example's `[[32,2,4]]` comes out right, but that is a property of that code fami
 even-weight dependencies has a smaller 𝔽₂ rank, so the reported `k` would be wrong and no error
 would be raised.
 
-**Closure.** Route `betti_number` through the G-01 𝔽₂ rank for complexes used as CSS codes. Keep the
-real-valued path where the complex is genuinely a manifold discretisation.
+**Closure as built.** Neither helper survives. `HomologyField`
+(`deep_causality_topology/src/types/homology_field/mod.rs`) is an enum with one method,
+`rank_of(&CsrMatrix<i8>)`, and `ChainComplex::betti_number_over(k, field)` is the one body both
+`SimplicialComplex` and `CellComplex` now inherit — each had an identical override, and both are
+gone along with their rank helpers.
 
-**Owner:** `deep_causality_topology`. **Note:** this is a pre-existing correctness risk independent
-of QCL.
+The register proposed keeping "the real-valued path". It was not kept, and the reason is that the
+real-valued path was never needed: rank over ℚ **is** rank over ℝ for an integer matrix, so the
+characteristic-zero case is served exactly by fraction-free integer elimination
+(`deep_causality_linear::rank_exact`) with no tolerance and no float. `HomologyField::Rational` is
+that path; `HomologyField::Gf2` is the mod-2 one. A manifold discretisation asks for the former and
+gets the same number it got before — exactly, rather than to `1e-5`.
+
+`betti_number(k)` remains, defined as `betti_number_over(k, HomologyField::Rational)`. It is an
+alias rather than a default: there is no setting, feature or global that changes which field a call
+lands in.
+
+**Measured, not assumed.** The register predicted the two ranks agree for every complex currently
+under test. Confirmed by running the whole topology suite with `betti_number` bound to
+`HomologyField::Gf2`: 1471 tests, none failed. Injecting a wrong rank fails 7, so the suite does
+discriminate. Both were run rather than reasoned about.
+
+**Owner (as closed):** `deep_causality_topology` for `HomologyField` and the trait method;
+`deep_causality_linear` for the two ranks underneath. **Note:** this was a pre-existing correctness
+risk independent of QCL.
 
 ### G-03 — `LatticeComplex::betti_number` never reads the boundary matrices
 
@@ -427,10 +467,10 @@ implements.
 ## 4. Dependency order for closure
 
 ```
-G-01  F₂ linear algebra                    (topology, no deps)
-  ├── G-02  betti via F₂ rank              (topology)
-  ├── G-03  LatticeComplex betti from matrices (topology)
-  └── G-04  homology representatives       (topology)
+G-01  F₂ linear algebra                    CLOSED — deep_causality_linear
+  ├── G-02  betti via F₂ rank              CLOSED — topology + linear
+  ├── G-03  LatticeComplex betti from matrices (topology)   <- now unblocked
+  └── G-04  homology representatives       (topology)       <- now unblocked
         └── G-08  Poincaré-dual representative (topology)
 
 G-05 + G-18  Chain / Cochain type          (topology, no deps)
@@ -453,6 +493,13 @@ G-10  Stirling numbers                     (num; only for the §3.5 general fami
 **Two independent starting points.** G-01 unblocks the topology chain and is the load-bearing item
 for the geometric-QEC example. G-11 and G-12 are self-contained, already verified, and unblock
 nothing else; they can land in any order.
+
+**Where this stands after `add-linear-algebra-crate`.** G-01 and G-02 are closed, so the head of the
+topology chain is done and G-03 and G-04 are next: both now have an exact rank, an exact kernel
+basis and an exact image basis to build on, which is what they were waiting for. G-03 in particular
+is a small job now — `LatticeComplex::betti_number` returns a binomial where
+`betti_number_over(k, field)` already computes the honest answer from the boundary matrices, so
+closing it is deciding whether the closed form stays as a checked fast path.
 
 **What the three designed examples need.** The calibration and crosstalk examples need none of
 G-01 through G-09: two feasibility lenses reproduced their headline results on shipped APIs in

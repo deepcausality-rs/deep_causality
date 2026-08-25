@@ -71,7 +71,7 @@ pub fn expectation_value_kernel<R>(
     operator: &Operator<R>,
 ) -> Result<R, QuantumError>
 where
-    R: RealField + core::iter::Sum,
+    R: RealField + FromPrimitive + core::iter::Sum,
 {
     if state.mv().metric() != operator.mv().metric() {
         return Err(QuantumError::MetricMismatch(format!(

@@ -45,7 +45,8 @@ pub struct LatticeComplex<const D: usize, R: RealField> {
     /// `coboundary_cache`. `codifferential` (hence every Laplacian
     /// application, hence every CG iteration) reads ∂_k; without the memo
     /// each read rebuilt the matrix from a cell-indexed `HashMap`. Slot 0
-    /// is unused (∂_0 does not exist; `boundary_matrix` requires k ≥ 1).
+    /// is unused: ∂_0 is the zero map, and `boundary_matrix` returns the
+    /// empty matrix for it without reaching the cache.
     boundary_cache: Box<[OnceLock<CsrMatrix<i8>>]>,
     /// Anchors the metric-precision parameter `R`. Zero-sized.
     _precision: PhantomData<R>,
@@ -481,6 +482,14 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     }
 
     fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
+        // Outside `1..=D` there is no ∂_k to build, and the empty matrix is what
+        // `SimplicialComplex` returns there. Without these two guards `k == 0` underflows on
+        // `num_cells(k - 1)` and `k > D` indexes past the cache; both were unreachable while the
+        // only caller was `codifferential`, and `ChainComplex::betti_number_over` reaches them by
+        // asking for ∂_0 and ∂_{D+1} at the ends of its range.
+        if k == 0 || k > D {
+            return Cow::Owned(CsrMatrix::new());
+        }
         // Lazy memo, mirroring `coboundary_matrix`: ∂_k is read by
         // `codifferential` on every Laplacian application — once per CG
         // iteration in the Hodge/Leray solves — and the cell-indexed
@@ -513,7 +522,11 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     }
 
     fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
-        // Lazy memo: δ_k = (∂_{k+1})ᵀ. One OnceLock per grade in 0..=D.
+        // Lazy memo: δ_k = (∂_{k+1})ᵀ. One OnceLock per grade in 0..=D; above that there is no
+        // grade to be the coboundary of, and the cache has no slot to hold one.
+        if k > D {
+            return Cow::Owned(CsrMatrix::new());
+        }
         let slot = &self.coboundary_cache[k];
         let m = slot.get_or_init(|| self.boundary_matrix(k + 1).into_owned().transpose());
         Cow::Borrowed(m)

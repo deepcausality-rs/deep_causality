@@ -29,7 +29,7 @@ where
 /// Causal wrapper for [`mechanics::expectation_value_kernel`].
 pub fn expectation_value<R>(state: &HilbertState<R>, operator: &Operator<R>) -> PropagatingEffect<R>
 where
-    R: RealField + core::iter::Sum + Default + Debug,
+    R: RealField + FromPrimitive + core::iter::Sum + Default + Debug,
 {
     match mechanics::expectation_value_kernel(state, operator) {
         Ok(val) => PropagatingEffect::pure(val),

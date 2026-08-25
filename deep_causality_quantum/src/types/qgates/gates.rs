@@ -7,6 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 use deep_causality_num_complex::Complex;
 
@@ -38,7 +39,12 @@ pub trait QuantumOps<R: RealField> {
     fn normalize(&self) -> Self;
 }
 
-impl<R: RealField + core::iter::Sum> QuantumOps<R> for CausalMultiVector<Complex<R>> {
+// `FromPrimitive` reaches this through `normalize`: routing the multivector 2-norm onto
+// `deep_causality_linear` binds it on `NormedScalar`, which requires `FromPrimitive` of the
+// scalar, and `Complex<R>` has it exactly when `R` does.
+impl<R: RealField + FromPrimitive + core::iter::Sum> QuantumOps<R>
+    for CausalMultiVector<Complex<R>>
+{
     fn dag(&self) -> Self {
         // Hermitian conjugate: reverse basis (reversion) and conjugate coefficients
         let reverted = self.reversion();

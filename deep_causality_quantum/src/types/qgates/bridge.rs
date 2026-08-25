@@ -24,6 +24,7 @@ use crate::{QuantumError, QuantumOps};
 use alloc::format;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_multivector::{CausalMultiVector, HilbertState, MultiVector};
 use deep_causality_num_complex::Complex;
 
@@ -66,7 +67,7 @@ pub(crate) fn metric_adjoint<R>(
     mv: &CausalMultiVector<Complex<R>>,
 ) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
 where
-    R: RealField + core::iter::Sum,
+    R: RealField + FromPrimitive + core::iter::Sum,
 {
     let metric = mv.metric();
     let n = metric.dimension();
@@ -99,7 +100,7 @@ pub fn dirac_bracket_kernel<R>(
     psi: &HilbertState<R>,
 ) -> Result<Complex<R>, QuantumError>
 where
-    R: RealField + core::iter::Sum,
+    R: RealField + FromPrimitive + core::iter::Sum,
 {
     let metric = phi.mv().metric();
     if metric != psi.mv().metric() {

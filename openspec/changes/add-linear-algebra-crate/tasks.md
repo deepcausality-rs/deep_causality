@@ -203,23 +203,23 @@ Exit condition: the workspace builds against the new crate and the old name stil
 Exit condition: one determinant, one rank helper, one Euclidean norm, exact 𝔽₂ homology, G-01 and
 G-02 closed.
 
-- [ ] 6.1 Replace `regge_geometry/curvature.rs:275` `det_recursive` and its `submatrix` helper with the shared determinant
-- [ ] 6.2 Replace `manifold/geometry/mod.rs:145` `determinant_impl` with the shared determinant
-- [ ] 6.3 Replace `simplicial_complex/lazy_hodge_star.rs:97` `gaussian_determinant` with the shared determinant
-- [ ] 6.4 Confirm the Cayley-Menger volumes are unchanged: `regge_geometry` (5×5, tetrahedron) and `manifold/geometry` (`k + 2`) both feed matrices with a zero `(0,0)` entry
-- [ ] 6.5 Diff the topology suite before and after 6.1–6.4; investigate every changed value rather than re-baselining
-- [ ] 6.6 Replace `chain_complex_impl.rs:94` `rank_of_csr` and `cell_complex/mod.rs:172` `rank_of_matrix` with one implementation
-- [ ] 6.7 Route `betti_number` through an exact rank — 𝔽₂ for complexes read as codes, exact integer otherwise — and make the choice of field explicit at the call site rather than a global default
-- [ ] 6.8 Confirm every complex currently under test reports the Betti numbers it reported before
-- [ ] 6.9 Confirm no floating-point tolerance remains on any rank path used for homology
-- [ ] 6.10 Mark G-01 and G-02 closed in `openspec/notes/quantum/qcl-gaps.md`; record the implementing crate in the owner field
-- [ ] 6.11 Add a Lean theorem and Rust witness for mod-2 rank–nullity if the formalization layer covers it; otherwise record the omission in the crate's `LEAN_*.md` and add the crate to the `formalization.yml` allowlist only when a witness exists
-- [ ] 6.12 Route `MultiVectorL2Norm::norm_l2` and `normalize_l2` (`multivector/src/traits/l2_norm.rs:21,30`, impl at `multivector/src/types/multivector/api/mod.rs:117`) through the vector 2-norm; keep the trait as the multivector-facing name if it earns one, the way `ScalarEval` does over `Normed`
-- [ ] 6.13 Route `CausalMultiField::squared_magnitude` (`multivector/src/types/multifield/algebra/mod.rs`) through the vector squared 2-norm; it hand-writes `Σ *val * *val`, which is the squared modulus only because the impl is bounded on `RealField`, and a later widening would make it silently wrong for a complex scalar
-- [ ] 6.14 Decide `BatchedMatMul` (`multivector/src/types/multifield/ops/batched_matmul.rs`, 62 lines) explicitly: it batches rank-3 slices, which is the tensor surface rather than the matrix surface. Record the decision either way; do not leave it unexamined
-- [ ] 6.15 Leave `ScalarEval` alone and record why: `multivector/src/extensions/scalar_eval/mod.rs` is already a single blanket over `deep_causality_algebra::Normed`, added only for the `Sum` bound. It is a facade over the tower, not a second definition
-- [ ] 6.16 Diff the `deep_causality_multivector` suite before and after 6.12–6.14; investigate every changed value rather than re-baselining
-- [ ] 6.17 Correct the construction census in `openspec/notes/linear/deep-causality-linear.md`: the `deep_causality_multivector` row reads "0 direct", and its `src` has 13 `CausalTensor::from_slice`/`from_shape_fn` sites, at least two of them rank-2 (`alias/alias_hilbert_state.rs`). Re-count that row by the same method used for the other six
+- [x] 6.1 Replace `regge_geometry/curvature.rs:275` `det_recursive` and its `submatrix` helper with the shared determinant
+- [x] 6.2 Replace `manifold/geometry/mod.rs:145` `determinant_impl` with the shared determinant
+- [x] 6.3 Replace `simplicial_complex/lazy_hodge_star.rs:97` `gaussian_determinant` with the shared determinant
+- [x] 6.4 Confirm the Cayley-Menger volumes are unchanged: `regge_geometry` (5×5, tetrahedron) and `manifold/geometry` (`k + 2`) both feed matrices with a zero `(0,0)` entry
+- [x] 6.5 Diff the topology suite before and after 6.1–6.4; investigate every changed value rather than re-baselining
+- [x] 6.6 Replace `chain_complex_impl.rs:94` `rank_of_csr` and `cell_complex/mod.rs:172` `rank_of_matrix` with one implementation
+- [x] 6.7 Route `betti_number` through an exact rank — 𝔽₂ for complexes read as codes, exact integer otherwise — and make the choice of field explicit at the call site rather than a global default
+- [x] 6.8 Confirm every complex currently under test reports the Betti numbers it reported before
+- [x] 6.9 Confirm no floating-point tolerance remains on any rank path used for homology
+- [x] 6.10 Mark G-01 and G-02 closed in `openspec/notes/quantum/qcl-gaps.md`; record the implementing crate in the owner field
+- [x] 6.11 Add a Lean theorem and Rust witness for mod-2 rank–nullity if the formalization layer covers it; otherwise record the omission in the crate's `LEAN_*.md` and add the crate to the `formalization.yml` allowlist only when a witness exists
+- [x] 6.12 Route `MultiVectorL2Norm::norm_l2` and `normalize_l2` (`multivector/src/traits/l2_norm.rs:21,30`, impl at `multivector/src/types/multivector/api/mod.rs:117`) through the vector 2-norm; keep the trait as the multivector-facing name if it earns one, the way `ScalarEval` does over `Normed`
+- [x] 6.13 Route `CausalMultiField::squared_magnitude` (`multivector/src/types/multifield/algebra/mod.rs`) through the vector squared 2-norm; it hand-writes `Σ *val * *val`, which is the squared modulus only because the impl is bounded on `RealField`, and a later widening would make it silently wrong for a complex scalar
+- [x] 6.14 Decide `BatchedMatMul` (`multivector/src/types/multifield/ops/batched_matmul.rs`, 62 lines) explicitly: it batches rank-3 slices, which is the tensor surface rather than the matrix surface. Record the decision either way; do not leave it unexamined
+- [x] 6.15 Leave `ScalarEval` alone and record why: `multivector/src/extensions/scalar_eval/mod.rs` is already a single blanket over `deep_causality_algebra::Normed`, added only for the `Sum` bound. It is a facade over the tower, not a second definition
+- [x] 6.16 Diff the `deep_causality_multivector` suite before and after 6.12–6.14; investigate every changed value rather than re-baselining
+- [x] 6.17 Correct the construction census in `openspec/notes/linear/deep-causality-linear.md`: the `deep_causality_multivector` row reads "0 direct", and its `src` has 13 `CausalTensor::from_slice`/`from_shape_fn` sites, at least two of them rank-2 (`alias/alias_hilbert_state.rs`). Re-count that row by the same method used for the other six
 
 ## 7. Publish
 

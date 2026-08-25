@@ -10,10 +10,10 @@
 //! treated as an opaque identifier and is no longer bounded numerically here.
 
 use deep_causality_algebra::RealField;
+use deep_causality_linear::{DenseMatrix, determinant};
 use deep_causality_num::FromPrimitive;
 
 use crate::{Manifold, Simplex, SimplicialComplex, TopologyError};
-use deep_causality_tensor::{CausalTensor, CausalTensorError};
 use std::collections::HashMap;
 
 impl<C, D> Manifold<SimplicialComplex<C>, D>
@@ -67,9 +67,13 @@ where
             }
         }
 
-        let cm_tensor = CausalTensor::new(cm_matrix_data, vec![matrix_dim, matrix_dim])?;
-        let det =
-            determinant_impl(&cm_tensor).map_err(|e| TopologyError::TensorError(e.to_string()))?;
+        // `cm_matrix_data` is already row-major, so this is the same buffer read as a matrix
+        // rather than as a rank-2 tensor. Its `(0,0)` entry is zero — the loop above writes `one`
+        // only into indices `1..matrix_dim` — which is why the shared determinant's pivot search
+        // is load-bearing here and not a refinement.
+        let cm = DenseMatrix::from_vec(cm_matrix_data, matrix_dim, matrix_dim)
+            .map_err(TopologyError::from)?;
+        let det = determinant(&cm).map_err(TopologyError::from)?;
 
         // Squared k-volume formula: vol² = (-1)^(k+1) / (2^k * (k!)^2) * det(CM)
         let mut k_fac = C::one();
@@ -139,48 +143,4 @@ where
 
         Ok(edge_lengths)
     }
-}
-
-/// CPU implementation of determinant using Laplace expansion.
-pub(crate) fn determinant_impl<T>(matrix: &CausalTensor<T>) -> Result<T, CausalTensorError>
-where
-    T: RealField,
-{
-    let shape = matrix.shape();
-    if shape.len() != 2 || shape[0] != shape[1] {
-        return Err(CausalTensorError::InvalidParameter(
-            "Determinant requires a square matrix".into(),
-        ));
-    }
-    let n = shape[0];
-
-    if n == 0 {
-        return Ok(T::one());
-    }
-    if n == 1 {
-        return Ok(matrix.as_slice()[0]);
-    }
-    if n == 2 {
-        let m = matrix.as_slice();
-        return Ok(m[0] * m[3] - m[1] * m[2]);
-    }
-
-    let mut det = T::zero();
-    for j1 in 0..n {
-        let sign = if j1 % 2 == 0 { T::one() } else { -T::one() };
-
-        let mut sub_matrix_data = Vec::with_capacity((n - 1) * (n - 1));
-        for i in 1..n {
-            for j in 0..n {
-                if j == j1 {
-                    continue;
-                }
-                sub_matrix_data.push(*matrix.get(&[i, j]).unwrap());
-            }
-        }
-        let sub_matrix = CausalTensor::new(sub_matrix_data, vec![n - 1, n - 1])?;
-        det += sign * *matrix.get(&[0, j1]).unwrap() * determinant_impl(&sub_matrix)?;
-    }
-
-    Ok(det)
 }

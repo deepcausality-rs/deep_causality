@@ -9,7 +9,6 @@ use crate::traits::cell::Cell;
 use crate::traits::chain_complex::ChainComplex;
 pub use boundary_operator::BoundaryOperator;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_tensor::{CausalTensor, Tensor};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::iter::Cloned;
@@ -152,58 +151,5 @@ impl<C: Cell> ChainComplex for CellComplex<C> {
         Cow::Owned(self.compute_boundary_matrix(k + 1).transpose())
     }
 
-    fn betti_number(&self, k: usize) -> usize {
-        let n_k = self.num_cells(k);
-        // Rank of boundary_k: C_k -> C_{k-1}
-        let rank_k = self.rank_of_matrix(k);
-        // Rank of boundary_{k+1}: C_{k+1} -> C_k
-        let rank_k_next = self.rank_of_matrix(k + 1);
-
-        // dim(Ker ∂_k) = n_k - rank(∂_k)
-        // dim(Im ∂_{k+1}) = rank(∂_{k+1})
-        // b_k = dim(Ker ∂_k) - dim(Im ∂_{k+1})
-
-        let dim_ker = n_k.saturating_sub(rank_k);
-        dim_ker.saturating_sub(rank_k_next)
-    }
 }
 
-impl<C: Cell> CellComplex<C> {
-    fn rank_of_matrix(&self, k: usize) -> usize {
-        let matrix = self.boundary_matrix(k);
-        let (rows, cols) = matrix.shape();
-        if rows == 0 || cols == 0 {
-            return 0;
-        }
-
-        // Convert CSR to Dense Vector for Tensor creation
-        // We assume numeric type i8 from boundary is mapped to f64 for SVD
-        let mut data = vec![0.0f64; rows * cols];
-
-        // Iterate using CSR structure
-        let row_ptrs = matrix.row_indices();
-        let col_idxs = matrix.col_indices();
-        let vals = matrix.values();
-
-        for r in 0..rows {
-            let start = row_ptrs[r];
-            let end = row_ptrs[r + 1];
-            for idx in start..end {
-                let c = col_idxs[idx];
-                let v = vals[idx];
-                data[r * cols + c] = v as f64;
-            }
-        }
-
-        let tensor = CausalTensor::new(data, vec![rows, cols]).expect("Failed to create tensor");
-
-        // SVD: M = U S V^T
-        // Sigmas are in S (vector)
-        let (_, s, _) = tensor.svd().expect("SVD failed");
-
-        // Count non-zero singular values
-        let s_vec: Vec<f64> = s.to_vec();
-        let tolerance = 1e-5;
-        s_vec.iter().filter(|&x| x.abs() > tolerance).count()
-    }
-}

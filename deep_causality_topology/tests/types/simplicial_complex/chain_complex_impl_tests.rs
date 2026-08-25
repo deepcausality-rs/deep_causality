@@ -6,8 +6,8 @@
 //! Tests for the `ChainComplex` impl on `SimplicialComplex`.
 //!
 //! Exercises: `cells`, `num_cells`, `max_dim`, `boundary_matrix`, `coboundary_matrix`,
-//! `betti_number`, plus the `SimplicialCellIter` and the `rank_of_csr` helper (covered
-//! indirectly via `betti_number`).
+//! `betti_number`, plus the `SimplicialCellIter`. The rank behind `betti_number` is
+//! `HomologyField::rank_of`, covered directly in `types/homology_field/mod_tests.rs`.
 
 use deep_causality_topology::utils_tests::create_triangle_complex;
 use deep_causality_topology::{ChainComplex, Simplex, SimplicialComplex, SimplicialComplexBuilder};

@@ -81,6 +81,7 @@ pub use crate::types::cut_cell::{
 };
 pub use crate::types::graph::Graph;
 pub use crate::types::hodge_decomposition::HodgeDecomposition;
+pub use crate::types::homology_field::HomologyField;
 pub use crate::types::hypergraph::Hypergraph;
 pub use crate::types::leray_projection::LerayProjection;
 pub use crate::types::manifold::DecStencilTables;

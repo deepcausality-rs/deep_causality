@@ -15,6 +15,8 @@ Layered to mirror the Rust crate tiers:
                  mirroring `deep_causality_num_dual`.
   * `Haft`     — HKT / functor / monad / arrow laws, mirroring `deep_causality_haft`.
   * `Core`     — the Causal Monad `pure`/`bind` laws, mirroring `deep_causality_core`.
+  * `Linear`   — rank–nullity over 𝔽₂ and the Betti-number identity read off it, mirroring
+                 `deep_causality_linear`.
   * `Topology` — curvature-tensor laws at the concrete carriers, mirroring `deep_causality_topology`.
 
 Each theorem is bound to a Rust witness via `lean/THEOREM_MAP.md`. See `lean/README.md`.
@@ -38,6 +40,9 @@ Scope (what is proved end-to-end here, each bound to a Rust witness):
                  profunctor, monoidal-merge, parametric-monad, arrow, morphism, endomorphism,
                  adjunction, foldable, traversable, natural-iso, either, effect-system, io,
                  signatures) — ~60 theorems.
+  * `Linear`   — rank–nullity over 𝔽₂, the nullity-as-count-minus-rank substitution that
+                 `betti_number_over` performs without materialising a kernel, and that what it
+                 computes is the dimension of mod-2 homology.
   * `Topology` — the curvature laws at the concrete carrier (antisymmetry, first Bianchi identity,
                  linearity).
 Deviations from accepted category theory are recorded in
@@ -114,6 +119,7 @@ import DeepCausalityFormal.Haft.Signatures
 import DeepCausalityFormal.Haft.SymmetricMonoidal
 import DeepCausalityFormal.Haft.FreeMonad
 import DeepCausalityFormal.Haft.Cofree
+import DeepCausalityFormal.Linear.RankNullity
 import DeepCausalityFormal.Topology.RiemannCurvature
 import DeepCausalityFormal.Quantum.PartialTrace
 import DeepCausalityFormal.Quantum.PartialTraceCounterexample

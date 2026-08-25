@@ -20,7 +20,7 @@
 
 use crate::{Simplex, Skeleton, TopologyError};
 use deep_causality_algebra::RealField;
-use deep_causality_linear::CsrMatrix;
+use deep_causality_linear::{CsrMatrix, DenseMatrix, determinant};
 use deep_causality_num::FromPrimitive;
 
 fn euclidean_distance<T>(p1: &[T], p2: &[T]) -> T
@@ -78,7 +78,14 @@ where
         }
     }
 
-    let det = gaussian_determinant(&mut matrix_data, n_vecs);
+    // The Gram matrix is square by construction, so the only error `determinant` can raise
+    // cannot arise. Unlike the fixed-diagonal elimination this replaces, it pivots by search and
+    // scales its degeneracy floor by the matrix's own magnitude, so a uniformly small simplex is
+    // no longer read as degenerate merely for being small. The caller's absolute top-volume
+    // threshold still rejects one.
+    let gram = DenseMatrix::from_vec(matrix_data, n_vecs, n_vecs)
+        .expect("Gram matrix is square by construction");
+    let det = determinant(&gram).expect("Gram matrix is square by construction");
 
     if det <= T::zero() {
         return T::zero();
@@ -92,31 +99,6 @@ where
         .expect("factorial of n_vecs fits in every RealField");
 
     det.sqrt() / factorial_t
-}
-
-fn gaussian_determinant<T>(mat: &mut [T], n: usize) -> T
-where
-    T: RealField + FromPrimitive,
-{
-    let mut det = T::one();
-    let hundred = <T as FromPrimitive>::from_f64(100.0).expect("100.0 fits in every RealField");
-    let pivot_threshold = T::epsilon() * hundred;
-    for i in 0..n {
-        let pivot = i * n + i;
-        if mat[pivot].abs() < pivot_threshold {
-            return T::zero();
-        }
-        det *= mat[pivot];
-
-        for j in (i + 1)..n {
-            let factor = mat[j * n + i] / mat[pivot];
-            for k in i..n {
-                let val = mat[i * n + k];
-                mat[j * n + k] -= factor * val;
-            }
-        }
-    }
-    det
 }
 
 /// Builds the lumped-mass Hodge ⋆ operators for a simplicial complex from its

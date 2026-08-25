@@ -427,6 +427,23 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types/homology_field",
+    srcs = glob([
+        "types/homology_field/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_linear",
+    ],
+)
+
+rust_test_suite(
     name = "types/hodge_decomposition",
     srcs = glob([
         "types/hodge_decomposition/*_tests.rs",

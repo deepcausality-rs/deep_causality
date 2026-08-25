@@ -222,6 +222,10 @@ Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
 
 | id | statement | Lean | Lean location | Test | Kani |
 |---|---|---|---|---|---|
+| `linear.gf2.rank_nullity` | `rank ∂ + dim ker ∂ = n` over 𝔽₂ | proved | `DeepCausalityFormal/Linear/RankNullity.lean :: gf2_rank_nullity` | `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs :: test_gf2_rank_nullity` | ✓ | n/a |
+| `linear.gf2.nullity_is_count_minus_rank` | `dim ker ∂ = n − rank ∂`; the substitution `betti_number_over` performs, computing a nullity it never materialises | proved | `DeepCausalityFormal/Linear/RankNullity.lean :: gf2_nullity_is_count_minus_rank` | `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs :: test_gf2_nullity_is_count_minus_rank` | ✓ | n/a |
+| `linear.gf2.rank_le_cell_count` | `rank ∂ ≤ n`; the `saturating_sub` floor in `betti_number_over` is never reached at that step | proved | `DeepCausalityFormal/Linear/RankNullity.lean :: gf2_rank_le_cell_count` | `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs :: test_gf2_rank_le_cell_count` | ✓ | n/a |
+| `linear.gf2.betti_from_ranks` | `dim H_k = (n_k − rank ∂_k) − rank ∂_{k+1}` over 𝔽₂; what `ChainComplex::betti_number_over` computes is the dimension of mod-2 homology | proved | `DeepCausalityFormal/Linear/RankNullity.lean :: gf2_betti_from_ranks` | `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs :: test_gf2_betti_from_ranks` | ✓ | n/a |
 | `topology.curvature.antisymmetry` | `R(u,v)w = −R(v,u)w` | proved | `Topology/RiemannCurvature.lean` | ✓ | n/a |
 | `topology.curvature.bianchi_first` | `R(u,v)w + R(v,w)u + R(w,u)v = 0` (needs `g` symmetric) | proved | `Topology/RiemannCurvature.lean` | ✓ | n/a |
 | `topology.curvature.linearity` | additivity + homogeneity in the transported slot | proved | `Topology/RiemannCurvature.lean` | ✓ | n/a |
