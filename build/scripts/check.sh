@@ -14,35 +14,11 @@ set -o pipefail
 cargo outdated --workspace
 
 # Scan for unused dependencies
-cargo machete deep_causality/
-cargo machete deep_causality_algebra/
-cargo machete deep_causality_algorithms/
-cargo machete deep_causality_ast/
-cargo machete deep_causality_calculus/
-cargo machete deep_causality_cfd/
-cargo machete deep_causality_core/
-cargo machete deep_causality_data_structures/
-cargo machete deep_causality_discovery/
-cargo machete deep_causality_ethos/
-cargo machete deep_causality_fft/
-cargo machete deep_causality_file/
-cargo machete deep_causality_haft/
-cargo machete deep_causality_macros/
-cargo machete deep_causality_metric/
-cargo machete deep_causality_multivector/
-cargo machete deep_causality_num/
-cargo machete deep_causality_num_complex/
-cargo machete deep_causality_num_dual/
-cargo machete deep_causality_par/
-cargo machete deep_causality_physics/
-cargo machete deep_causality_rand/
-cargo machete deep_causality_sparse/
-cargo machete deep_causality_tensor/
-cargo machete deep_causality_topology/
-cargo machete deep_causality_uncertain/
-cargo machete ultragraph/
-# 
-cargo machete examples/
+source "$(dirname "${BASH_SOURCE[0]}")/crates.sh"
+for CRATE_DIR in "${DC_CRATE_DIRS[@]}"; do
+    cargo machete "$CRATE_DIR"/
+done
+
 
 
 # Scan again to report all unfixed vulnerabilities
