@@ -669,10 +669,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deep_causality_macros"
-version = "0.9.5"
-
-[[package]]
 name = "deep_causality_metric"
 version = "0.2.4"
 
@@ -732,6 +728,7 @@ dependencies = [
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
@@ -739,7 +736,6 @@ dependencies = [
  "deep_causality_num_dual",
  "deep_causality_par",
  "deep_causality_rand",
- "deep_causality_sparse",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
@@ -773,12 +769,7 @@ dependencies = [
 name = "deep_causality_sparse"
 version = "0.2.4"
 dependencies = [
- "criterion",
- "deep_causality_algebra",
- "deep_causality_haft",
- "deep_causality_num",
- "deep_causality_rand",
- "deep_causality_tensor",
+ "deep_causality_linear",
 ]
 
 [[package]]
@@ -789,6 +780,7 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_ast",
  "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_num",
  "deep_causality_num_complex",
  "deep_causality_num_dual",
@@ -802,13 +794,13 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_fft",
  "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_num_complex",
  "deep_causality_par",
  "deep_causality_rand",
- "deep_causality_sparse",
  "deep_causality_tensor",
  "rayon",
 ]
@@ -1313,6 +1305,7 @@ dependencies = [
  "deep_causality_calculus",
  "deep_causality_core",
  "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_metric",
  "deep_causality_multivector",
  "deep_causality_num",
@@ -1555,6 +1548,7 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
+ "deep_causality_linear",
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_num_complex",

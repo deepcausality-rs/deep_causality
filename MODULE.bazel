@@ -72,7 +72,7 @@ git_override(
 ###############################################################################
 RUST_EDITION = "2024"
 
-RUST_VERSION = "1.97.1"
+RUST_VERSION = "1.98.0"
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
