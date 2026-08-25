@@ -1,0 +1,189 @@
+---
+/**
+ * Sponsors. Two entries today, both already recorded in the repository README,
+ * plus a short note on what the project does and does not take.
+ *
+ * Each sponsor states what it actually contributes rather than sitting as a
+ * logo with no sentence attached. A logo wall that does not say what was given
+ * is decoration; a reader wants to know whether the project has a dependency on
+ * someone and what kind.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+import { GITHUB_URL, CAUSAL_CENTER_URL } from '../consts';
+
+const title = 'Sponsors — DeepCausality';
+const description =
+  'Who supports DeepCausality and what they contribute: JetBrains provides core maintainers with an all-product licence, and the Center for Dynamic Causality contributes research and ongoing support.';
+---
+<BaseLayout title={title} description={description}>
+  <SiteHeader />
+
+  <article class="sponsors-page">
+    <header class="sh">
+      <p class="eyebrow">Sponsors</p>
+      <h1>Who supports the project</h1>
+      <p class="lede">
+        DeepCausality is an open-source project hosted as a sandbox project at
+        the Linux Foundation for Data &amp; AI. Two organisations support the
+        work directly, and each one's contribution is named below.
+      </p>
+    </header>
+
+    <ol class="slist">
+      <li class="srow">
+        <div class="smark">
+          <a href="https://jb.gg/OpenSource" class="slogo-link" aria-label="JetBrains open-source support">
+            <img class="slogo" src="/img/jb_beam.svg" alt="JetBrains" width="180" height="180" />
+          </a>
+        </div>
+        <div class="sbody">
+          <h2>JetBrains</h2>
+          <p>
+            <a href="https://www.jetbrains.com/">JetBrains</a> provides the
+            project's core maintainers with an all-product licence through its
+            <a href="https://jb.gg/OpenSource">open-source support programme</a>.
+            The licence was granted on 22 September 2023 and
+            <a href="/blog/jetbrains-announcement/">announced on the blog</a>.
+          </p>
+          <dl class="smeta">
+            <div>
+              <dt>Contributes</dt>
+              <dd>Tooling licences for core maintainers</dd>
+            </div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="srow">
+        <div class="smark">
+          <a href={CAUSAL_CENTER_URL} class="slogo-link" aria-label="Center for Dynamic Causality">
+            <img class="slogo slogo-light" src="/img/causal_center_logo.svg" alt="Center for Dynamic Causality" width="1254" height="1254" />
+            <img class="slogo slogo-dark" src="/img/causal_center_logo_dark.svg" alt="Center for Dynamic Causality" width="1254" height="1254" />
+          </a>
+        </div>
+        <div class="sbody">
+          <h2>Center for Dynamic Causality</h2>
+          <p>
+            The <a href={CAUSAL_CENTER_URL}>Center for Dynamic Causality</a>
+            contributes research and ongoing support. Its work informs the formal
+            foundations of the framework and feeds back into the library's
+            design. The Deep Brain research programme is written up on its
+            research pages.
+          </p>
+          <dl class="smeta">
+            <div>
+              <dt>Contributes</dt>
+              <dd>Research and ongoing support</dd>
+            </div>
+            <div>
+              <dt>Also</dt>
+              <dd><a href="/projects/">Host of the Deep Brain programme</a></dd>
+            </div>
+          </dl>
+        </div>
+      </li>
+    </ol>
+
+    <section class="snote">
+      <h2>How the project is funded</h2>
+      <p>
+        There is no paid tier, no commercial edition, and nothing on this site is
+        gated. The library is MIT licensed and the whole repository, including
+        the source of this website, is public.
+      </p>
+      <p>
+        The site takes no money from readers either: it sets no cookies, runs no
+        analytics, and carries no tracking pixels. See
+        <a href="/about/">About</a> for the full statement.
+      </p>
+      <p>
+        If your organisation depends on DeepCausality and wants to support it,
+        the most useful thing is usually engineering time rather than money. Open
+        an <a href={`${GITHUB_URL}/issues`}>issue</a> describing what you need, or
+        start a <a href={`${GITHUB_URL}/discussions`}>discussion</a>.
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .sponsors-page {
+    max-width: var(--w-page);
+    margin: 0 auto;
+    padding: var(--space-7) var(--space-4);
+  }
+  @media (min-width: 720px) {
+    .sponsors-page { padding: var(--space-9) var(--space-5); }
+  }
+
+  .sh { margin-bottom: var(--space-8); }
+  .sh .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .sh h1 { margin: var(--space-2) 0 var(--space-4) 0; }
+  .sh .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+
+  .slist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+
+  .srow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    padding: var(--space-7) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  @media (min-width: 720px) {
+    .srow { grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-7); }
+  }
+
+  .smark { align-self: start; }
+  .slogo-link { display: inline-block; border-bottom: none; line-height: 0; }
+  .slogo { display: block; width: 128px; height: auto; }
+  /* The Center's mark ships as two files, one per theme. JetBrains supplies a
+     single mark that reads on both. */
+  .slogo-light, .slogo-dark { display: none; }
+  :global([data-theme='light']) .slogo-light { display: block; }
+  :global([data-theme='dark']) .slogo-dark { display: block; }
+
+  .sbody h2 {
+    font-size: var(--t-h3);
+    line-height: var(--lh-h3);
+    letter-spacing: var(--ls-h3);
+    margin: 0 0 var(--space-4) 0;
+  }
+  .sbody p { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+
+  .smeta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin: var(--space-5) 0 0 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+  }
+  @media (min-width: 600px) { .smeta { grid-template-columns: 1fr 1fr; } }
+  .smeta dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: var(--space-2);
+  }
+  .smeta dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  .snote { margin-top: var(--space-8); }
+  .snote h2 {
+    font-size: var(--t-h3);
+    line-height: var(--lh-h3);
+    letter-spacing: var(--ls-h3);
+    margin: 0 0 var(--space-4) 0;
+  }
+  .snote p { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
+  .snote p:last-child { margin-bottom: 0; }
+</style>

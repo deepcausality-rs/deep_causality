@@ -24,13 +24,12 @@ Verified against the tree on **2026-08-25**, after `add-linear-algebra-crate` la
 closed, sixteen are open, and the state of each open one below was re-checked rather than carried
 forward.
 
-**Publication is not a gate on anything here.** `deep_causality_linear` is **not** on crates.io as
-of this check: the sparse index returns `NoSuchKey` for it, against fifteen versions for
-`deep_causality_topology`, and phase 7 of `add-linear-algebra-crate` stands at 0 of 5. It does not
-matter for this register. Every closure below consumes the crate through a workspace path
-dependency, which `deep_causality_topology/Cargo.toml:81` already carries, so what unblocked G-03
-and G-04 was the crate existing in the tree rather than on a registry. Publication gates downstream
-consumers outside this workspace; it gates no gap in this file.
+**Publication is not a gate on anything here.** `deep_causality_linear` **0.1.0 is on crates.io**,
+published after this section was first drafted. It makes no difference to this register either way.
+Every closure below consumes the crate through a workspace path dependency, which
+`deep_causality_topology/Cargo.toml:81` already carries, so what unblocked G-03 and G-04 was the
+crate existing in the tree. Publication gates consumers outside this workspace; it gates no gap in
+this file.
 
 **Two closed, verified.** `deep_causality_linear/src/types/packed_gf2/` and
 `deep_causality_linear/src/algorithms/gf2.rs` exist and export `rank_gf2`, `kernel_basis_gf2` and

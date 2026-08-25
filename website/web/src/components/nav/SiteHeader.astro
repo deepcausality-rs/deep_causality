@@ -31,9 +31,21 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
           <li><a href="/examples/mathematics/" role="menuitem">Mathematics</a></li>
         </ul>
       </div>
+      <a href="/projects/" class:list={["nav-link", isActive('/projects/') && 'is-active']}>Projects</a>
       <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
       <a href="/community/" class:list={["nav-link", isActive('/community/') && 'is-active']}>Community</a>
-      <a href="/about/" class:list={["nav-link", isActive('/about/') && 'is-active']}>About</a>
+      <div class="nav-dropdown">
+        <a href="/about/" class:list={["nav-link nav-link-trigger", (isActive('/about/') || isActive('/sponsors/')) && 'is-active']} aria-haspopup="true">
+          About
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 4 L5 6.5 L7.5 4"/>
+          </svg>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" role="menu">
+          <li><a href="/about/" role="menuitem">About the project</a></li>
+          <li><a href="/sponsors/" role="menuitem">Sponsors</a></li>
+        </ul>
+      </div>
     </nav>
 
     <div class="utility">
@@ -84,9 +96,15 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
           <li><a href="/examples/mathematics/">Mathematics</a></li>
         </ul>
       </li>
+      <li><a href="/projects/">Projects</a></li>
       <li><a href="/blog/">Blog</a></li>
       <li><a href="/community/">Community</a></li>
-      <li><a href="/about/">About</a></li>
+      <li>
+        <a href="/about/">About</a>
+        <ul class="mobile-menu-sub">
+          <li><a href="/sponsors/">Sponsors</a></li>
+        </ul>
+      </li>
     </ul>
   </nav>
 </div>
@@ -167,8 +185,14 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   :global([data-theme='light']) .logo-light { display: block; }
   :global([data-theme='dark'])  .logo-dark  { display: block; }
 
-  .primary { display: none; gap: var(--space-5); }
+  /* Six items plus two carets measure ~397px of labels. At the 900px
+     breakpoint about 517px of rail is free once the 151px brand and the 120px
+     utility rail are subtracted, which a 24px gap would consume exactly. The
+     gap therefore steps down to --space-4 through the narrow band and returns
+     to --space-5 at 1080px, where there is room for it. */
+  .primary { display: none; gap: var(--space-4); }
   @media (min-width: 900px) { .primary { display: flex; } }
+  @media (min-width: 1080px) { .primary { gap: var(--space-5); } }
   .nav-link {
     position: relative;
     color: var(--fg-1);
@@ -218,6 +242,11 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
                 visibility 0s linear var(--dur-fast);
     z-index: 30;
   }
+  /* The last dropdown in the rail opens toward the centre; a left-anchored
+     200px menu there would reach across the utility icons. Declared after the
+     base rule: same specificity, so source order decides. */
+  .dropdown-menu-end { left: auto; right: -8px; }
+
   .nav-dropdown:hover .dropdown-menu,
   .nav-dropdown:focus-within .dropdown-menu {
     opacity: 1;

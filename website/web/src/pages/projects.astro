@@ -1,0 +1,238 @@
+---
+/**
+ * Sub-projects. Three entries, each with its lockup, a plain summary, its
+ * current status, and a link to where the work actually lives.
+ *
+ * The rows are label-plus-content with a fixed first column, which is the
+ * site's generalization for this shape (web_design/03-space-layout.md). The
+ * lockups are wide, so they take the fixed column and the prose takes the
+ * `1fr`; three narrow cards side by side would shrink the artwork to nothing.
+ *
+ * Each logo ships as two files rather than one recoloured by CSS. The variants
+ * are separate artwork, each drawn in its own theme's tokens, so the swap is on
+ * `[data-theme]` the way the header brand and ThemeToggle already do it.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/nav/SiteHeader.astro';
+import { CFD_URL, QUANTUM_URL, DEEPBRAIN_URL, CAUSAL_CENTER_URL, GITHUB_URL } from '../consts';
+
+const projects = [
+  {
+    slug: 'cfd',
+    name: 'DeepCausality CFD',
+    descriptor: 'Counterfactual fluid dynamics',
+    logo: '/img/project-logos/deepcausality-cfd',
+    logoH: 279,
+    body: [
+      'Pause a coupled run at a point the physics picks, continue every alternative from that one state, and get back a single gated table with a per-branch record of why. Flow, chemistry, navigation and control run in one process over one shared field, so an interaction between them lands in the result rather than falling between two tools.',
+      'The site carries task-shaped blueprints, one citable validation page, and a measured capability-boundaries page that leads with the hypotheses the project refuted by running them.',
+    ],
+    status: 'Released on crates.io',
+    crate: 'deep_causality_cfd',
+    href: CFD_URL,
+    hrefLabel: 'cfd.deepcausality.com',
+  },
+  {
+    slug: 'quantum',
+    name: 'DeepCausality Quantum',
+    descriptor: 'Quantum causal models',
+    logo: '/img/project-logos/deepcausality-quantum',
+    logoH: 296,
+    body: [
+      'A causal graph whose factors are quantum channels. Each node carries a Choi–Jamiołkowski operator and the model is their product, which is only well defined when factors sharing a Hilbert support commute. The crate enforces that condition at the freeze boundary instead of assuming it, and a model that fails never becomes frozen.',
+      'Under the freeze sit a validated operator layer, an orthomodular projection lattice for read-out at the measurement boundary, and gate kernels lifted into the causal monad. Ten LEAN theorems back the verifiable path, each bound to an executable Rust witness.',
+    ],
+    status: 'Unpublished, version 0.1.0',
+    crate: 'deep_causality_quantum',
+    href: QUANTUM_URL,
+    hrefLabel: 'quantum.deepcausality.com',
+  },
+  {
+    slug: 'deepbrain',
+    name: 'DeepCausality Deep Brain',
+    descriptor: 'Dynamic knowledge',
+    logo: '/img/project-logos/deepcausality-deepbrain',
+    logoH: 278,
+    body: [
+      'Deep Brain addresses the static-snapshot problem: database systems treat knowledge as discrete snapshots frozen in time, while a research corpus evolves continuously with no natural snapshot boundary. Over a project measured in years, decisions and the invalidations that overturn them both get lost in a commit log.',
+      'The approach makes decisions first-class objects, turns invalidations and characterised gaps into queryable structures, and treats the relationship between content and the conditions of its validity as a structure in its own right. The stated goal is a knowledge substrate in which staleness is structurally impossible. It is the epistemic counterpart of the effect propagation process.',
+    ],
+    status: 'Research programme, architecture published',
+    crate: null,
+    href: DEEPBRAIN_URL,
+    hrefLabel: 'causalcenter.com/research/dynamic-knowledge',
+  },
+];
+
+const title = 'Projects — DeepCausality';
+const description =
+  'The DeepCausality sub-projects: counterfactual fluid dynamics, quantum causal models, and the Deep Brain dynamic-knowledge research programme.';
+---
+<BaseLayout title={title} description={description}>
+  <SiteHeader />
+
+  <article class="projects-page">
+    <header class="ph">
+      <p class="eyebrow">Projects</p>
+      <h1>Three sub-projects</h1>
+      <p class="lede">
+        The core library is a framework for causal reasoning. These three take it
+        somewhere specific: into a solver, into quantum information, and into the
+        way a research corpus keeps its own knowledge current. Each has its own
+        site and its own pace.
+      </p>
+    </header>
+
+    <ol class="plist">
+      {projects.map((p, i) => (
+        <li class="prow">
+          <div class="pmark">
+            <img
+              class="plogo plogo-dark"
+              src={`${p.logo}-on-dark.svg`}
+              alt={p.name}
+              width="1076"
+              height={p.logoH}
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+            <img
+              class="plogo plogo-light"
+              src={`${p.logo}-on-light.svg`}
+              alt={p.name}
+              width="1076"
+              height={p.logoH}
+              loading={i === 0 ? 'eager' : 'lazy'}
+            />
+          </div>
+
+          <div class="pbody">
+            <h2>{p.descriptor}</h2>
+            {p.body.map((para) => <p>{para}</p>)}
+
+            <dl class="pmeta">
+              <div>
+                <dt>Status</dt>
+                <dd>{p.status}</dd>
+              </div>
+              {p.crate && (
+                <div>
+                  <dt>Crate</dt>
+                  <dd><code>{p.crate}</code></dd>
+                </div>
+              )}
+            </dl>
+
+            <a class="pgo" href={p.href}>
+              {p.hrefLabel}
+              <span class="pgo-ico" aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <footer class="pfoot">
+      <p>
+        Deep Brain is a research programme at the
+        <a href={CAUSAL_CENTER_URL}>Center for Dynamic Causality</a> rather than a
+        crate in this repository, which is why its link leaves deepcausality.com.
+        The other two are crates in the
+        <a href={GITHUB_URL}>monorepo</a> and ship from it.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .projects-page {
+    max-width: var(--w-page);
+    margin: 0 auto;
+    padding: var(--space-7) var(--space-4);
+  }
+  @media (min-width: 720px) {
+    .projects-page { padding: var(--space-9) var(--space-5); }
+  }
+
+  .ph { margin-bottom: var(--space-8); }
+  .ph .eyebrow {
+    margin: 0;
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .ph h1 { margin: var(--space-2) 0 var(--space-4) 0; }
+  .ph .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+
+  .plist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+
+  .prow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    padding: var(--space-7) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  /* Fixed first column for the lockup, `minmax(0, 1fr)` for the prose: a plain
+     1fr cannot shrink below its content's min-content width. */
+  @media (min-width: 900px) {
+    .prow { grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-7); }
+  }
+
+  .pmark { align-self: start; }
+  .plogo { display: none; width: 100%; max-width: 300px; height: auto; }
+  :global([data-theme='dark']) .plogo-dark { display: block; }
+  :global([data-theme='light']) .plogo-light { display: block; }
+
+  .pbody h2 {
+    font-size: var(--t-h3);
+    line-height: var(--lh-h3);
+    letter-spacing: var(--ls-h3);
+    margin: 0 0 var(--space-4) 0;
+  }
+  .pbody p {
+    color: var(--fg-1);
+    max-width: var(--measure);
+    margin: 0 0 var(--space-4) 0;
+  }
+
+  .pmeta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin: var(--space-5) 0 0 0;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line-1);
+  }
+  @media (min-width: 600px) { .pmeta { grid-template-columns: 1fr 1fr; } }
+  .pmeta dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: var(--space-2);
+  }
+  .pmeta dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+  .pmeta code { font-size: var(--t-mono-sm); }
+
+  .pgo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    font-size: var(--t-body-sm);
+    border-bottom: none;
+  }
+  .pgo:hover { border-bottom: 1px solid currentColor; }
+  .pgo-ico { transition: transform var(--dur-fast) var(--ease-out); }
+  .pgo:hover .pgo-ico { transform: translate(2px, -2px); }
+
+  .pfoot { margin-top: var(--space-7); }
+  .pfoot p {
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+    margin: 0;
+  }
+</style>
