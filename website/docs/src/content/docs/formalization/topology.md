@@ -2,7 +2,7 @@
 title: Topology
 description: Machine-checked Riemann curvature symmetries (antisymmetry, first Bianchi, linearity), bound to Rust law-tests on the CurvatureTensor.
 sidebar:
-  order: 7
+  order: 8
 ---
 
 The curvature laws at the concrete `CurvatureTensor`, proved in [`lean/DeepCausalityFormal/Topology/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Topology). Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
