@@ -144,6 +144,30 @@ pub fn supports_intersect(a: &BTreeSet<usize>, b: &BTreeSet<usize>) -> bool {
 /// dim`); `traced` names the legs to trace out. The classic `Tr_B` on
 /// `H_A ⊗ H_B` is `partial_trace(op, &[d_a, d_b], &[1])`.
 ///
+/// # This does not preserve commutation
+///
+/// Partial trace is positive and linear. It is **not** an algebra homomorphism,
+/// and in particular `[X, Y] = 0` does not imply `[Tr_B X, Tr_B Y] = 0`. The
+/// counterexample is proved in Lean as `quantum.partial_trace_nonpreservation`,
+/// closed by `decide` over ℤ: two commuting operators whose partial traces have
+/// commutator `[[0, 4], [−4, 0]]`. Its Rust witness is
+/// `formalization_lean::partial_trace_tests::test_partial_trace_nonpreservation_counterexample`.
+///
+/// The consequence for a caller is concrete. Marginalising a factorization that
+/// `validate` has certified can destroy the Markov property that certificate
+/// stands for, and nothing at this call site will say so. The roadmap item
+/// `quantum.partial_trace_preservation` states the unconditional version and is
+/// **false**.
+///
+/// The sound path is the conditional `partial_trace_preservation_boundary`: a
+/// boundary operator of the form `Z ⊗ 1_B` that commutes with `M` does force
+/// `Z` to commute with `Tr_B(M)`. Its witness is
+/// `formalization_lean::partial_trace_tests::test_partial_trace_preservation_boundary_case`.
+/// A caller that needs commutation to survive marginalisation must establish
+/// that boundary form first; this function will not check it.
+///
+/// See `deep_causality_quantum/LEAN_QUANTUM.md` for both statements.
+///
 /// # Errors
 /// Rejects a non-square operator, a `dims` product that disagrees with the
 /// matrix dimension, and duplicate/out-of-range `traced` legs — all as

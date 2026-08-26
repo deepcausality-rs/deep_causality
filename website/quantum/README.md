@@ -85,6 +85,7 @@ Numbers on the site come from a command anyone can re-run:
 | Figure | Source |
 | --- | --- |
 | 197 tests passing | `cargo test -p deep_causality_quantum --all-features` |
+| Version 0.1.2, released 2026-08-25 | `crates.io/crates/deep_causality_quantum` |
 | 10 LEAN theorems | the quantum section of `lean/THEOREM_MAP.md` |
 | Freeze-check output | `cargo run --release -p quantum_examples --example qcm_freeze_check` |
 
@@ -119,7 +120,7 @@ locale-stripping pattern as `website/cfd` and `website/web`.
 | `/examples/` | Seven runnable examples, split by whether they import this crate |
 | `/papers/` | Six committed papers, split by whether a module cites them |
 | `/errors/` | Twelve `QuantumErrorEnum` variants and the modules that raise them |
-| `/start/` | The git dependency, the feature flags, the no-std story, the MSRV |
+| `/start/` | Installing from crates.io, the feature flags, the no-std story, the MSRV |
 
 ## Diagrams
 

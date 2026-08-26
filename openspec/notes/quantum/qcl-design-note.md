@@ -193,9 +193,24 @@ Two rules for QCL follow, and neither is optional:
 1. **A verdict enters the pipeline only at `observe`.** Stages upstream of the measurement boundary
    carry operators, not verdicts. A design that lets `gate` or `fork` fold verdicts over operator
    values has left the lattice where the laws hold.
-2. **Combining verdicts requires commutation.** When `adjudicate` folds verdicts from forked worlds,
-   projections that do not commute have no distributive joint verdict. `Projection::commutes_with`
-   is the guard, and a non-commuting fold is an `Ambiguous`, not an answer.
+2. **Combining verdicts requires commutation, where the verdicts are projection-valued.** When
+   `adjudicate` folds verdicts carried by `Projection<R, D>`, projections that do not commute have
+   no distributive joint verdict. `Projection::commutes_with` is the guard there, and a
+   non-commuting fold is an `Ambiguous`, not an answer.
+
+   **The qualifier is load-bearing, and it was missing.** Rule 2 first read as though it governed
+   every fold. It cannot: rule 1 puts the measurement boundary at `observe`, and the calibration
+   pipeline in §7.5 forks *after* it, on `Spec::at_least(ft(0.999))`. A threshold on a real
+   quantity is a classical proposition. Those form a Boolean algebra, the distributive law holds
+   unconditionally, and no pair of them fails to commute — so the guard has nothing to apply to and
+   `Ambiguous` cannot arise. Applying it there would reject folds that are sound.
+
+   **Neither `fork` nor `adjudicate` exists yet.** Searched: the only `fork` in the workspace is
+   `deep_causality_cfd`'s state-fork counterfactual, an unrelated thing. So this rule constrains an
+   API still to be built rather than describing one that is, and the constraint is: whichever of
+   the two kinds of verdict a world carries, the fold must be the one that matches. A stage that
+   folds projection-valued verdicts checks commutation. A stage that folds read-outs against a
+   real-valued spec does not, and must not.
 
 `quantum.verdict.orthomodular` is listed in `LEAN_QUANTUM.md` as complete in Rust with law tests, and
 the Lean statement as future work. QCL builds on the Rust laws and should not claim more.

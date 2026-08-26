@@ -17,6 +17,8 @@ import {
   CRATE_URL,
   EXAMPLES_URL,
   LEAN_URL,
+  DOCSRS_URL,
+  CRATESIO_URL,
   MAINTAINER_URL,
 } from '../consts';
 
@@ -114,7 +116,9 @@ const year = 2026;
         <nav class="footer-col" aria-label="Source">
           <p class="footer-head">Source</p>
           <ul>
-            <li><a href={CRATE_URL}>Crate <span aria-hidden="true">↗</span></a></li>
+            <li><a href={CRATE_URL}>Crate source <span aria-hidden="true">↗</span></a></li>
+            <li><a href={CRATESIO_URL}>crates.io <span aria-hidden="true">↗</span></a></li>
+            <li><a href={DOCSRS_URL}>API reference <span aria-hidden="true">↗</span></a></li>
             <li><a href={EXAMPLES_URL}>Example sources <span aria-hidden="true">↗</span></a></li>
             <li><a href={LEAN_URL}>LEAN proofs <span aria-hidden="true">↗</span></a></li>
             <li><a href={`${GITHUB_URL}/issues`}>Issues <span aria-hidden="true">↗</span></a></li>

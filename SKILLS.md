@@ -105,11 +105,11 @@ this for forced mid-chain substitutions.
   [examples/csm_examples/csm_context/](examples/csm_examples/csm_context/).
 - Effect Ethos check: define Teloid norms, evaluate a `ProposedAction` against a
   Context, and use the verdict before executing CSM-proposed actions. See
-  [docs/ETHOS.md](docs/ETHOS.md) and
+  [deep_causality_ethos](deep_causality_ethos) and
   [examples/csm_examples/csm_effect_ethos/](examples/csm_examples/csm_effect_ethos/).
 - Causal discovery: use `deep_causality_discovery` when the user starts from
   observational data and needs the CDL pipeline: load, clean, select, discover,
-  analyze, report. See [docs/DISCOVERY.md](docs/DISCOVERY.md) and
+  analyze, report. Seee @deep_causality_discovery
   [examples/causal_discovery_examples/](examples/causal_discovery_examples/).
 
 ## User-Facing Crate Map
@@ -144,19 +144,6 @@ this for forced mid-chain substitutions.
 - `ultragraph`: dynamic and frozen graph backend used by CausaloidGraph and
   Context.
 
-## Internal Docs To Read By Name
-
-- [docs/INTRO.md](docs/INTRO.md): conceptual introduction to dynamic causality, explicit
-  Context, and the spacetime-agnostic dependency model.
-- [docs/CORE.md](docs/CORE.md): monadic effect system, `PropagatingEffect`,
-  `PropagatingProcess`, error channels, logs, and interventions.
-- [docs/DEEP_DIVE.md](docs/DEEP_DIVE.md): Effect Propagation Process, Causaloids, Context,
-  Causaloid collections, causal hypergraphs, CSM, and Effect Ethos.
-- [docs/ETHOS.md](docs/ETHOS.md): Effect Ethos, Teloids, modalities, conflict resolution, and
-  verdicts.
-- [docs/DISCOVERY.md](docs/DISCOVERY.md): Causal Discovery Language, MRMR, SURD, and CDL pipeline
-  stages.
-- [examples/README.md](examples/README.md): runnable examples and the command catalogue.
 
 ## Agent Rules
 

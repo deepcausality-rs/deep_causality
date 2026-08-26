@@ -532,6 +532,21 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
         Cow::Borrowed(m)
     }
 
+    /// The Betti number by closed form, as a fast path over the general computation.
+    ///
+    /// A lattice with `p` periodic dimensions is homotopy equivalent to `T^p`, whose `k`-th Betti
+    /// number is `C(p, k)` over any field. So this reads no boundary matrix and allocates nothing,
+    /// where the trait's default eliminates two of them.
+    ///
+    /// It is a fast path rather than a lookup only because the two are checked against each other.
+    /// `betti_agreement_tests` asserts that this override and
+    /// [`betti_number_over`](ChainComplex::betti_number_over) agree at every grade, over ℚ and over
+    /// 𝔽₂, for the fully periodic, partially periodic and fully non-periodic branches. Without
+    /// those, an assertion of Betti `[1, 4, 6, 4, 1]` on `T⁴` tests this formula and not the
+    /// complex it claims to describe.
+    ///
+    /// This cannot produce representatives, and nothing derived from it can. A caller that needs
+    /// generators rather than a count wants the boundary matrices.
     fn betti_number(&self, k: usize) -> usize {
         let all_periodic = self.periodic.iter().all(|&p| p);
         if all_periodic {

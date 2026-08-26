@@ -12,6 +12,7 @@ mod curvature_tensor;
 mod cut_cell;
 mod differential_form;
 mod gauge;
+mod gf2_chain;
 mod graph;
 mod hodge_decomposition;
 mod homology_field;

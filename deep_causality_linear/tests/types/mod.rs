@@ -10,3 +10,5 @@ mod dense_matrix;
 mod dense_vector;
 #[cfg(test)]
 mod packed_gf2;
+#[cfg(test)]
+mod packed_gf2_vector;

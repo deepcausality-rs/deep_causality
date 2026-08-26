@@ -112,6 +112,21 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "combinatorics",
+    srcs = glob([
+        "combinatorics/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_num",
+    ],
+)
+
+rust_test_suite(
     name = "integer",
     srcs = glob([
         "integer/*_tests.rs",

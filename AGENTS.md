@@ -178,7 +178,7 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 27 library crates:
+The project is a monorepo containing 29 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -283,8 +283,9 @@ Tier 4
 
 Tier 5
   deep_causality_ethos       → deep_causality, ultragraph
-  deep_causality_multivector → deep_causality_algebra, deep_causality_haft, deep_causality_metric,
-                               deep_causality_num, deep_causality_num_complex, deep_causality_tensor
+  deep_causality_multivector → deep_causality_algebra, deep_causality_haft, deep_causality_linear,
+                               deep_causality_metric, deep_causality_num, deep_causality_num_complex,
+                               deep_causality_tensor
 
 Tier 6
   deep_causality_quantum     → deep_causality (opt), deep_causality_algebra, deep_causality_core,

@@ -92,6 +92,7 @@ rust_test_suite(
         "types/dense_matrix/*_tests.rs",
         "types/dense_vector/*_tests.rs",
         "types/packed_gf2/*_tests.rs",
+        "types/packed_gf2_vector/*_tests.rs",
     ]),
     tags = [
         "unit-test",

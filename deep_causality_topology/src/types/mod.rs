@@ -11,6 +11,7 @@ pub mod curvature_tensor;
 pub mod cut_cell;
 pub mod differential_form;
 pub mod gauge;
+pub mod gf2_chain;
 pub mod graph;
 pub mod hodge_decomposition;
 pub mod homology_field;

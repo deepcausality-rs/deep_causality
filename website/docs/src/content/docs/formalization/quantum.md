@@ -2,7 +2,7 @@
 title: Quantum
 description: Quantum partial-trace, Choi, and channel laws built from first principles in Lean, including the partial-trace preservation counterexample, bound to Rust witnesses.
 sidebar:
-  order: 8
+  order: 9
 ---
 
 Ten laws for the partial-trace / Choi foundation: partial-trace linearity, product, and bimodule laws, the B1 preservation result, and the Choi application laws — built from first principles on the pair-indexed matrix model, because the pinned Mathlib carries neither partial trace nor a Choi–Jamiołkowski layer. Proved in [`lean/DeepCausalityFormal/Quantum/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Quantum) and checked by law-tests in `deep_causality_quantum/tests/formalization_lean/`.

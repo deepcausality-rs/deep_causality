@@ -332,3 +332,114 @@ where
     }
     Ok(())
 }
+
+/// The Choi operator of the identity channel on a `d`-dimensional space.
+///
+/// `J(id_d)[(i,j),(k,l)] = δ_ij·δ_kl`. Feeding it to [`apply_choi`] returns the
+/// state unchanged, which is the defining property and what the tests assert.
+///
+/// It is the unit for [`choi_compose`] on both sides. With the two together
+/// this module carries a category: dimensions are the objects, Choi operators
+/// the morphisms, `choi_compose` the composition, and this the identity.
+pub fn choi_identity<R>(d: usize) -> CausalTensor<Complex<R>>
+where
+    R: RealField,
+{
+    let n = d * d;
+    let mut out = vec![Complex::new(R::zero(), R::zero()); n * n];
+    for i in 0..d {
+        for k in 0..d {
+            // Row `(i, j)` with `j = i`, column `(k, l)` with `l = k`.
+            out[(i * d + i) * n + (k * d + k)] = Complex::new(R::one(), R::zero());
+        }
+    }
+    CausalTensor::from_slice(&out, &[n, n])
+}
+
+/// Composes two channels through their Choi operators.
+///
+/// `first` is `J(E)` for `E: L(H_a) → L(H_b)` and `then` is `J(F)` for
+/// `F: L(H_b) → L(H_c)`. The result is `J(F∘E)`, the channel that applies `E`
+/// and then `F`. The argument order is the order of application, not the order
+/// of the `∘` symbol.
+///
+/// # The formula, and where it comes from
+///
+/// ```text
+/// J(F∘E)[(a,c),(a',c')] = Σ_{b,b'} J(E)[(a,b),(a',b')] · J(F)[(b,c),(b',c')]
+/// ```
+///
+/// A plain double contraction over the shared wire. No partial transpose and no
+/// partial trace, both of which appear in the textbook form only because it
+/// writes the contraction as a matrix product on the joint space.
+///
+/// It follows from this module's own [`apply_choi`] rather than from a
+/// convention chosen to make it true. That function fixes
+/// `E(ρ)[b,b'] = Σ_{a,a'} ρ[a,a']·J(E)[(a,b),(a',b')]`; substituting it into
+/// itself for `F(E(ρ))` and collecting the coefficient of `ρ[a,a']` gives the
+/// sum above.
+///
+/// # Composition needs no CPTP re-validation
+///
+/// This is linear-map composition. Complete positivity and trace preservation
+/// are properties of the maps being composed and are inherited by the
+/// composite, so a caller that validated its inputs does not have to validate
+/// the result. The function is bound on `RealField` alone for that reason,
+/// where the two `check_*` functions need more.
+///
+/// # Errors
+///
+/// [`QuantumError::DimensionMismatch`] if either operator is not square, if
+/// `first` is not `d_a·d_b` square, or if `then` is not `d_b·d_c` square.
+pub fn choi_compose<R>(
+    first: &CausalTensor<Complex<R>>,
+    then: &CausalTensor<Complex<R>>,
+    d_a: usize,
+    d_b: usize,
+    d_c: usize,
+) -> Result<CausalTensor<Complex<R>>, QuantumError>
+where
+    R: RealField,
+{
+    let de = square_dim(first)?;
+    let df = square_dim(then)?;
+    if de != d_a * d_b {
+        return Err(QuantumError::DimensionMismatch(format!(
+            "first Choi dim {} != d_a·d_b = {}",
+            de,
+            d_a * d_b
+        )));
+    }
+    if df != d_b * d_c {
+        return Err(QuantumError::DimensionMismatch(format!(
+            "then Choi dim {} != d_b·d_c = {}",
+            df,
+            d_b * d_c
+        )));
+    }
+
+    let es = first.as_slice();
+    let fs = then.as_slice();
+    let n = d_a * d_c;
+    let mut out = vec![Complex::new(R::zero(), R::zero()); n * n];
+    for a in 0..d_a {
+        for c in 0..d_c {
+            for ap in 0..d_a {
+                for cp in 0..d_c {
+                    let mut acc = Complex::new(R::zero(), R::zero());
+                    for b in 0..d_b {
+                        for bp in 0..d_b {
+                            let v = cmul(
+                                es[(a * d_b + b) * de + (ap * d_b + bp)],
+                                fs[(b * d_c + c) * df + (bp * d_c + cp)],
+                            );
+                            acc = Complex::new(acc.re + v.re, acc.im + v.im);
+                        }
+                    }
+                    out[(a * d_c + c) * n + (ap * d_c + cp)] = acc;
+                }
+            }
+        }
+    }
+    Ok(CausalTensor::from_slice(&out, &[n, n]))
+}
