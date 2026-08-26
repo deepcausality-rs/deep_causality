@@ -7,17 +7,19 @@
  * whether this one checks the Markov condition or assumes it, and that answer
  * is the first concrete thing on the page.
  *
- * The dependency line is a git dependency because the crate carries
- * `publish = false`. Quoting CARGO_DEP keeps that fact in one file.
+ * The install line quotes CARGO_ADD and CRATE_VERSION rather than spelling a
+ * version out, so a release bump is one edit in consts.ts.
  */
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-import { CARGO_DEP, MSRV } from '../../consts';
+import { CARGO_ADD, CRATE_VERSION, MSRV } from '../../consts';
 
 const SHIKI = { light: rustLight, dark: rustDark };
 
-const dep = `[dependencies]
-${CARGO_DEP}`;
+const dep = `${CARGO_ADD}
+
+# or, in Cargo.toml
+# deep_causality_quantum = "${CRATE_VERSION}"`;
 ---
 <section class="hero">
   <div class="hero-inner">
@@ -32,13 +34,12 @@ ${CARGO_DEP}`;
       ones are at the freeze boundary, before a single step runs.
     </p>
 
-    <Code code={dep} lang="toml" themes={SHIKI} />
+    <Code code={dep} lang="bash" themes={SHIKI} />
 
     <p class="run-note">
-      The crate is unpublished, so a git dependency is the only way to take it.
-      The default build compiles the verifiable path and the causal-model slice;
-      it pulls in no network and no async dependency at any feature setting.
-      Rust {MSRV} or newer.
+      Version {CRATE_VERSION}, MIT licensed. The default build compiles the
+      verifiable path and the causal-model slice; it pulls in no network and no
+      async dependency at any feature setting. Rust {MSRV} or newer.
     </p>
 
     <div class="cta-row">
