@@ -15,6 +15,8 @@ Three crates carry the foundation:
 
 Two more crates sit horizontally across every layer above. [`deep_causality_metric`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_metric) defines metric signatures once, so a general-relativity calculation in the tensor layer and a particle-physics calculation in the multivector layer share sign conventions. [`deep_causality_par`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_par) supplies the `MaybeParallel` marker and scoped fork-join, so a crate opts into parallelism through one seam rather than growing its own.
 
+This page develops that claim in five steps. It first states what the uniformity buys, then maps the crates and their dependency order. It next covers the two things every layer shares: the algebraic tower that says which laws a scalar obeys, and the single alias that fixes the working type. It then describes the composition surface itself, container by container. It closes with a worked example that crosses four layers in one chain, and with what that composition buys in measured precision.
+
 ## Why uniform mathematics matters
 
 Scientific code usually pays a hidden tax. Every time the math crosses a domain, from a mesh walk to a tensor contraction, from a tensor to a rotor, from a rotor back to a scalar field, someone writes bridge code. Indices get repacked. Loops get rewritten. The contraction lives in one library, the rotation in another, the per-vertex traversal in a third. Each crossing hides bugs, and each library brings conventions that clash with its neighbour's.
@@ -111,7 +113,7 @@ Beside the structure traits sit `Module<R>`, `Algebra<R>`, `AssociativeAlgebra<R
 
 Above them sit the scalar traits the numerical code actually binds on: `Scalar`, `Normed`, `NormedScalar`, `ConjugateScalar`, `Characteristic`, `DivisibleByIntegers`, and `FiniteField`.
 
-### The five number systems, and the two that are not systems
+### The five plus two number sets
 
 Each system has two names. The **set name** is what you reach for when writing code; the **algebraic name** says what structure it has.
 
@@ -127,7 +129,7 @@ A number system needs a crate of its own only when it introduces a type Rust doe
 
 Two further types round out the tower without being number systems. `Gf2` is the two-element field, and it is a `Field` in full standing, which is what lets one elimination serve 𝔽₂ and ℝ. `Float106` is double-double arithmetic, roughly 32 decimal digits, and it is an ordinary `RealField` rather than a special case.
 
-Reach for the set name by default. Reach for the algebraic name when the code needs a *structure* rather than a *set*, which is what lets one `Field` bound serve ℚ, ℝ, and ℂ at once, and one `CommutativeRing` bound serve ℤ and ℝ together.
+Reach for the set name by default. Reach for the algebraic name when the code needs a *structure* rather than a *set*. That is what lets one `Field` bound serve ℚ, ℝ, and ℂ at once, and one `CommutativeRing` bound serve ℤ and ℝ together.
 
 ### Where each type stops, and why
 
@@ -147,7 +149,7 @@ The gaps carry as much information as the entries, because each one is a law tha
 
 Two of those pairs mirror each other exactly. ℤ is exact and ordered and has no inverses; ℚ supplies the inverses and gives up the analytic axis. `Rational` is a field without being analytic, and `Dual` is analytic without being a field.
 
-These are not documentation claims. `Field` for an integer type, `Ring` for an unsigned type, and `Real` for a rational are each a compile error. The laws themselves are machine-checked; see [Formalization](/formalization/).
+The stopping points above are not documentation claims. `Field` for an integer type, `Ring` for an unsigned type, and `Real` for a rational are each a compile error. The laws themselves are machine-checked; see [Formalization](/formalization/).
 
 ### Bounding on the weakest law that works
 
@@ -213,6 +215,11 @@ Most math containers use `NoConstraint` and accept any element. The constraint s
 
 ### The math witnesses
 
+The table below lists every math container that joins the surface. Read a row as one container: the
+crate that owns it, the type, the witness that stands for its constructor, and the functional traits
+that witness implements. The rightmost column is the useful one, because it says exactly which
+operations are available on that container and, by omission, which are not.
+
 | Crate | Container | Witness | Implements |
 |---|---|---|---|
 | `linear` | `CsrMatrix<T>` | `CsrMatrixWitness` | Functor, Foldable, Pure, Applicative, CoMonad |
@@ -238,7 +245,7 @@ A witness claims a trait only when the laws hold. Two absences carry weight.
 
 ### Adjunctions
 
-An adjunction is a typed bridge between two categories, so a problem stated in one can be carried to the other without ad-hoc glue. Two are implemented.
+An adjunction is a typed bridge between two categories, so a problem stated in one can be carried to the other without hand-written glue. Two are implemented.
 
 `Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>` links geometry to itself across a **metric signature**. The context parameter is the `Metric`, which is what makes changing signature a typed operation rather than a reinterpretation of raw coefficients.
 
@@ -264,7 +271,7 @@ Above the dense tensor sits the **tensor-train** stack. `CausalTensorTrain` stor
 
 ### Multivectors and geometric algebra: `deep_causality_multivector`
 
-Clifford algebras over the dynamic signature space, with constructors for **Pauli**, **Spacetime Algebra**, **Conformal Geometric Algebra**, **Projective Geometric Algebra in 3D**, the **Dixon algebra** of Standard Model particle physics, and the **Grand Unified Algebra** hosting Spin(10). `bind` realizes the **tensor product of algebras**, so dimension-changing composition is monadic rather than ad-hoc.
+Clifford algebras over the dynamic signature space, with constructors for **Pauli**, **Spacetime Algebra**, **Conformal Geometric Algebra**, **Projective Geometric Algebra in 3D**, the **Dixon algebra** of Standard Model particle physics, and the **Grand Unified Algebra** hosting Spin(10). `bind` realizes the **tensor product of algebras**, so dimension-changing composition is monadic rather than improvised.
 
 `CausalMultiField` extends the type from a single multivector to a field of them over a grid, with its own differential operators, batched matrix multiplication, and gamma-matrix machinery.
 
@@ -286,7 +293,7 @@ One horizontal crate defining signatures once: `Euclidean(n)`, `NonEuclidean(n)`
 
 ### Differentiation, integration, and quadrature: `deep_causality_calculus`
 
-The analytic operators of the Causal Arrow. **Differentiation** is the tangent functor: write a model once as a `DifferentiableArrow`, or a multi-input `DifferentiableField<N>`, whose `run` is generic over the scalar, and the fluent methods (`derivative`, `value_and_derivative`, `second_derivative`, `gradient`, `directional_derivative`) seed and read the dual channel so that `Dual`, `ε`, and seeding never surface. **Integration** is endomorphism iteration: `Euler` and `Rk4` build value-level endo-arrows and iterate them to a fixed horizon, to a fixpoint, or until an event predicate holds. **Quadrature** is composite Simpson's rule, exact through cubics; run it over `Dual` and the result carries the Leibniz rule.
+The analytic operators of the Causal Arrow. **Differentiation** is the tangent functor. You write a model once as a `DifferentiableArrow`, or as a multi-input `DifferentiableField<N>`, whose `run` is generic over the scalar. The fluent methods then seed and read the dual channel for you, so that `Dual`, `ε`, and seeding never surface: `derivative`, `value_and_derivative`, `second_derivative`, `gradient`, and `directional_derivative`. **Integration** is endomorphism iteration: `Euler` and `Rk4` build value-level endo-arrows and iterate them to a fixed horizon, to a fixpoint, or until an event predicate holds. **Quadrature** is composite Simpson's rule, exact through cubics; run it over `Dual` and the result carries the Leibniz rule.
 
 The derivative view `Diff` is an ordinary `Arrow` and composes with the same `compose`/`first`/`split`/`fanout` combinators as the rest of the Arrow algebra.
 
@@ -294,7 +301,7 @@ The derivative view `Diff` is an ordinary `Arrow` and composes with the same `co
 
 Plan-based forward and inverse transforms, generic over `RealField` and operating on `Complex` data. `FftPlan` handles 1-D complex transforms of any length, `RfftPlan` the real-to-complex case, and `FftPlanNd` / `RfftPlanNd` the N-dimensional case. `DctPlan` adds cosine transforms of types I to III, the building block for Neumann-Poisson solves on wall-bounded boxes.
 
-The planner picks its algorithm by length: hardcoded kernels from 2 to 32, a mixed radix-4/radix-2 Stockham pipeline for larger powers of two, and Bluestein's chirp-z method for everything else, so the cost stays O(N log N) at every size. Twiddles are computed per index rather than by recurrence, so a transform is as accurate as the scalar's `sin`/`cos`, which is what makes `Float106` yield genuinely extended precision rather than `f64`-limited results.
+The planner picks its algorithm by length: hardcoded kernels from 2 to 32, a mixed radix-4/radix-2 Stockham pipeline for larger powers of two, and Bluestein's chirp-z method for everything else. The cost therefore stays O(N log N) at every size. Twiddles are computed per index rather than by recurrence, so a transform is as accurate as the scalar's `sin`/`cos`, which is what makes `Float106` yield genuinely extended precision rather than `f64`-limited results.
 
 The crate exists for one job: to give the DEC-native Navier-Stokes solver a spectral Poisson solve on periodic lattices. There it replaced a conjugate-gradient Leray projection that dominated the 388 ms (32³) solver step, cutting that projection to about 1.9 ms.
 
@@ -343,7 +350,7 @@ Look at what the chain crosses. Step 1 is tensor algebra in `deep_causality_tens
 
 `CausalFlow` hands the raw state to each step and short-circuits on the first error, so a failure in Step 2 never reaches Step 3 and never gets swallowed by a default value. `CausalTensor`, `CausalMultiVector`, and `Metric` are all instances over the same carrier, so each stage consumes a `GrmhdState` and returns one regardless of which regime it works in. The pipeline reads like the physics: curvature, then metric selection, then Lorentz force, then stress-energy, then stability.
 
-The [`mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) tree extends the same composition: a Kalman predict-correct chain mixing tensor and rotor steps, a heat equation alternating `extend` for the spatial Laplacian with `bind` for the time step, and the `capstone_spinor_minkowski` example parallel-transporting a unit timelike spinor through `Cl(3,1)` along a discretized worldline.
+The [`mathematics_examples`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/mathematics_examples) tree extends the same composition three more ways. A Kalman predict-correct chain mixes tensor and rotor steps. A heat equation alternates `extend` for the spatial Laplacian with `bind` for the time step. The `capstone_spinor_minkowski` example parallel-transports a unit timelike spinor through `Cl(3,1)` along a discretized worldline.
 
 ## Precision, measured
 
