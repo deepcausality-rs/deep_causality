@@ -91,6 +91,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_tensor",
     ],
 )
 
@@ -148,6 +149,24 @@ rust_test_suite(
         "//deep_causality_rand",
         "//deep_causality_metric",
         "//deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
+    name = "types/gf2_chain",
+    srcs = glob([
+        "types/gf2_chain/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_topology",
+        # Internal deps
+        "//deep_causality_linear",
+        "//deep_causality_num",
     ],
 )
 
