@@ -8,6 +8,7 @@ extern crate core;
 
 mod alias;
 mod cast;
+mod combinatorics;
 mod float;
 mod float_106;
 mod float_option;
@@ -36,6 +37,8 @@ pub use crate::float_106::Float106;
 pub use crate::float_option::FloatOption;
 
 // Finite field types
+pub use crate::combinatorics::{stirling_first_unsigned, stirling_second};
+
 pub use crate::gf2::Gf2;
 
 // Identity types

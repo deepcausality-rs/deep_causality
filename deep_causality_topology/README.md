@@ -65,8 +65,9 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
     * Users add their own strategies (anisotropic LIDAR cones, half-space RF, etc.) by implementing
       `Neighborhood<K>` for a custom zero-sized type.
 * **Higher-Kinded Types (HKT)**:
-    * Implements `Functor`, `BoundedComonad` (Extract/Extend), and `BoundedAdjunction` (Unit/Counit) via
-      `deep_causality_haft`.
+    * Implements `Functor`, `CoMonad` (Extract/Extend), and `Adjunction` (Unit/Counit) via
+      `deep_causality_haft`. Both traits carry a `Context` parameter and replace the retired
+      `BoundedComonad` / `BoundedAdjunction` pair.
     * Enables functional geometric patterns like "neighborhood extraction" (Comonad) and "geometric realization" (
       Adjunction).
     * Witnesses ship for each topology: `SimplicialManifoldWitness<C>` (full HKT stack), `GenericManifoldWitness<K>`
@@ -255,11 +256,11 @@ let laplacian = manifold.laplacian(0);
 This crate leverages `deep_causality_haft` to provide functional geometric abstractions.
 
 * **Functor**: Map functions over the data stored in the topology (e.g., transform node weights).
-* **BoundedComonad (Extract/Extend)**:
+* **CoMonad (Extract/Extend)**:
     * *Extract*: Get the value at the current "cursor" (focus).
     * *Extend*: Apply a local computation (convolution) over the neighborhood of every point to produce a new topology.
       This is the foundation of **Graph Neural Networks (GNNs)** and **Cellular Automata**.
-* **BoundedAdjunction (Unit/Counit)**:
+* **Adjunction (Unit/Counit)**:
     * *Unit*: Embed discrete data into a topological structure.
     * *Counit*: Project/Integrate topological data back into a flat representation.
 

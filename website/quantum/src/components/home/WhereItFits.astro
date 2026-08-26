@@ -6,7 +6,7 @@
  * to do. Both columns are drawn from what the source and the manifest actually
  * say, so nothing here is aspiration.
  */
-import { CFD_URL, DOCS_URL } from '../../consts';
+import { CFD_URL, DOCS_URL, CRATE_VERSION, CRATE_RELEASED } from '../../consts';
 
 const does = [
   {
@@ -49,8 +49,9 @@ const doesNot = [
     </p>
     <h2>What it takes on, and what it leaves alone</h2>
     <p class="lede">
-      The crate is unpublished and versioned 0.1.0. Reading the second column
-      first is a reasonable way to spend thirty seconds.
+      Version {CRATE_VERSION}, released on crates.io on {CRATE_RELEASED}.
+      Reading the second column first is a reasonable way to spend thirty
+      seconds.
     </p>
   </header>
 

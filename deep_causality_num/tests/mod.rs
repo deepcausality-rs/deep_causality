@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod casts;
+mod combinatorics;
 mod float;
 mod float_double;
 mod float_option;

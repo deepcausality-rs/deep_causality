@@ -79,6 +79,7 @@ pub use crate::types::cut_cell::{
     CellClass, CutCell, CutCellRegistry, CutConstraintKind, CutFaceConstraint, CutFaceFragment,
     Primitive, SourceGeometry,
 };
+pub use crate::types::gf2_chain::Gf2Chain;
 pub use crate::types::graph::Graph;
 pub use crate::types::hodge_decomposition::HodgeDecomposition;
 pub use crate::types::homology_field::HomologyField;

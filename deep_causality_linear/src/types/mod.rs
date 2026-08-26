@@ -7,3 +7,4 @@ pub mod csr_matrix;
 pub mod dense_matrix;
 pub mod dense_vector;
 pub mod packed_gf2;
+pub mod packed_gf2_vector;

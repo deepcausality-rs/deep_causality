@@ -28,11 +28,15 @@ export const TENSOR_URL = `${GITHUB_URL}/tree/main/deep_causality_tensor`;
 /** DeepCausality community Discord invite. */
 export const DISCORD_URL = 'https://discord.gg/Bxj9P7JXSj';
 
-/**
- * The crate carries `publish = false`, so there is no crates.io release and no
- * `cargo add` line. A git dependency is the only way to take it today; quote
- * this constant rather than writing a version number that does not exist.
- */
+/** Released on crates.io. Quote these rather than writing a version inline. */
+export const CRATE_VERSION = '0.1.2';
+export const CRATE_RELEASED = '25 August 2026';
+export const CRATESIO_URL = 'https://crates.io/crates/deep_causality_quantum';
+export const DOCSRS_URL = 'https://docs.rs/deep_causality_quantum';
+
+export const CARGO_ADD = 'cargo add deep_causality_quantum';
+
+/** Git dependency, for work that has not been released yet. */
 export const CARGO_DEP =
   'deep_causality_quantum = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main" }';
 

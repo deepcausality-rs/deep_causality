@@ -14,7 +14,7 @@ It is the **L1** layer of a four-layer verification architecture. The Lean proje
 No tool turns a Lean proof into a Rust test. Each property is stated twice and linked by a shared **id**:
 
 - **Lean proves it.** Deductive, unbounded, higher-order.
-- **A Rust witness checks it.** A law-test for the `num`, `algebra`, and `haft` layers, or a [Kani](https://model-checking.github.io/kani/) bounded-model-checking harness for the `core` layer.
+- **A Rust witness checks it.** A law-test for the `num`, `algebra`, `haft`, and `linear` layers, or a [Kani](https://model-checking.github.io/kani/) bounded-model-checking harness for the `core` layer.
 
 CI (`formalization.yml`) fails if an id is missing either side. The authoritative source is [`lean/THEOREM_MAP.md`](https://github.com/deepcausality-rs/deep_causality/blob/main/lean/THEOREM_MAP.md); the pages here render it for the web.
 
@@ -37,6 +37,7 @@ Each row is one property.
 - **[Core](/formalization/core/)**: the causal-monad, causal-arrow, causaloid-fixpoint, verdict, and graph-fold laws behind the [Effect Propagation Process](/concepts/effect-propagation-process/).
 - **[Complex & Dual](/formalization/complex-dual/)**: `ℂ` field/conjugation/norm laws, `ℍ` division-ring laws with a non-commutativity witness, and the dual numbers with the forward-mode Leibniz rule.
 - **[Rational](/formalization/rational/)**: `ℚ` field laws, the canonical-form invariants that make equality structural, and density.
+- **[Linear](/formalization/linear/)**: rank–nullity over `𝔽₂` and the three facts the Betti-number computation substitutes without stating.
 - **[Topology](/formalization/topology/)**: Riemann curvature symmetries.
 - **[Quantum](/formalization/quantum/)**: the partial-trace / Choi foundation, headlined by the B1 counterexample — unconditional partial-trace preservation is proved false, the conditional boundary version holds.
 

@@ -20,30 +20,34 @@ therefore marked unresolved rather than confirmed. Everything else carries evide
 
 ## 0. Status
 
-Verified against the tree on **2026-08-25**, after `add-linear-algebra-crate` landed. Two gaps are
-closed, sixteen are open, and the state of each open one below was re-checked rather than carried
-forward.
+Verified against the tree on **2026-08-25**. **Eight gaps are closed, ten are open.**
 
-**Publication is not a gate on anything here.** `deep_causality_linear` **0.1.0 is on crates.io**,
-published after this section was first drafted. It makes no difference to this register either way.
-Every closure below consumes the crate through a workspace path dependency, which
-`deep_causality_topology/Cargo.toml:81` already carries, so what unblocked G-03 and G-04 was the
-crate existing in the tree. Publication gates consumers outside this workspace; it gates no gap in
-this file.
+`add-linear-algebra-crate` closed G-01 and G-02. The category-A sweep then closed G-03, G-10, G-11,
+G-12, G-15 and G-17: everything that was unblocked, self-contained and small.
 
-**Two closed, verified.** `deep_causality_linear/src/types/packed_gf2/` and
-`deep_causality_linear/src/algorithms/gf2.rs` exist and export `rank_gf2`, `kernel_basis_gf2` and
-`image_basis_gf2`. `deep_causality_topology/src/types/homology_field/mod.rs` exists and calls
-`rank_exact` and `rank_gf2`. `csr_to_packed_gf2_mod2` and `csr_to_packed_gf2_strict`
-(`deep_causality_linear/src/extensions/conversions.rs`) are the bridge from a `CsrMatrix<i8>`
-boundary matrix to a packed 𝔽₂ one, which is what G-04 will consume.
+**Publication is not a gate on anything here.** `deep_causality_linear` 0.1.0 is on crates.io, and
+the whole workspace has since been patch-bumped and republished. It makes no difference to this
+register: every closure consumes its crate through a workspace path dependency, so what unblocked
+G-03 and G-04 was the crate existing in the tree. Publication gates consumers outside this
+workspace and gates no gap in this file.
 
-**Sixteen open, verified today.** `LatticeComplex::betti_number` still returns the binomial
-(`lattice_complex/mod.rs:535-543`); `homology_representatives` and `dual_representative` do not
-exist anywhere in `deep_causality_topology/src`; the only `Chain` is the weighted one and there is
-no `Cochain`; `logical_z` is still typed on `CausalMultiVector`
-(`gates_haruna.rs:137-139`); `partial_trace`'s doc block says nothing about commutation or
-preservation; and neither `choi_compose` nor `choi_identity` exists.
+**What the sweep found that the register had wrong.** Four things, each recorded at its own gap.
+G-17's third clause asked to gate `predict`, which does not exist. G-15 asked what `fork` produces,
+and neither `fork` nor `adjudicate` exists in QCL — the only `fork` in the workspace is
+`deep_causality_cfd`'s, unrelated. G-10 said "Stirling numbers" without saying which, and A.12 and
+A.14 need both kinds, the first of them unsigned. G-18's cited signature is stale: `cup_product`
+takes two cochains and two degrees at `cup_product/mod.rs:95`, not one cochain at line 62.
+
+**A fifth, at G-06, changes its size.** The register says "the work is in the gate enum". `GateOp`
+has an execution path — `sim.rs:162-223` dispatches every variant into a state-vector simulator — so
+each new gate needs a simulator arm too, and `C^{m-1}Z` needs a generic multi-control apply rather
+than a copy of `apply_cz`.
+
+**Ten open, verified today.** `homology_representatives` and `dual_representative` do not exist
+anywhere in `deep_causality_topology/src`; the only `Chain` is the weighted one and there is no
+`Cochain`; `logical_z` is still typed on `CausalMultiVector` (`gates_haruna.rs:137-139`); `GateOp`
+carries four of Table 1's seven gates; and `deep_causality_quantum` still depends on neither
+`deep_causality_topology` nor `deep_causality_linear`.
 
 ### What the numeric-tower work changed
 
@@ -208,9 +212,9 @@ discriminate. Both were run rather than reasoned about.
 `deep_causality_linear` for the two ranks underneath. **Note:** this was a pre-existing correctness
 risk independent of QCL.
 
-### G-03 — `LatticeComplex::betti_number` never reads the boundary matrices
+### G-03 — `LatticeComplex::betti_number` never reads the boundary matrices — **CLOSED**
 
-**Severity S2.**
+**Severity S2.** **Closed** as a checked fast path.
 
 ```rust
 // deep_causality_topology/src/types/lattice_complex/mod.rs:522
@@ -228,12 +232,16 @@ binomial formula, not the complex.
 **Closure.** Compute from the boundary matrices via G-01. Keep the closed form as a fast path only if
 a test asserts the two agree.
 
-**State on 2026-08-25: unblocked, and smaller than it was.** `LatticeComplex` implements
-`ChainComplex` (`lattice_complex/mod.rs:443`), so it already inherits
-`betti_number_over(k, field)` (`traits/chain_complex.rs:86`), which computes the honest answer from
-the boundary matrices over either field. Nothing has to be written to get the number. What remains
-is a decision and a test: whether the binomial stays as a checked fast path for the fully periodic
-case, or goes. This is the cheapest open item in the register.
+**Closure as built: the closed form stays, and is now checked.** The decision was made by running
+the comparison rather than by argument. `LatticeComplex` implements `ChainComplex`, so it already
+inherited `betti_number_over(k, field)`, which reads the boundary matrices. Measured across `T²` at
+two extents, `T³`, a cylinder, `T² × I`, a 2D disk and a 3D block, at every grade, over both ℚ and
+𝔽₂: the binomial agrees everywhere. So it is kept, and
+`tests/types/lattice_complex/betti_agreement_tests.rs` asserts the agreement rather than assuming
+it. Injecting a wrong binomial fails the suite, so the check discriminates.
+
+The partially periodic arm is covered too, which the register did not ask for. A lattice with `p`
+periodic dimensions returns `C(p, k)`, and that arm had no test at all.
 
 **Owner:** `deep_causality_topology`.
 
@@ -298,8 +306,12 @@ representation of a physical-gate sequence, which is what every Table 1 decompos
 the seven. Missing: `CS†`, `CCZ`, and `C^{m-1}Z` for general `m`. No adjoint form exists for any
 gate, so `S†` and `T†` are absent as well, and the multi-controlled case needs a control *list*
 rather than the fixed `{ control, target }` shape the two-qubit variants use. `QuantumCircuit`
-itself (`qpu/circuit.rs:59`) is a register width plus an ordered program and needs no change; the
-work is in the gate enum.
+itself (`qpu/circuit.rs:59`) is a register width plus an ordered program and needs no change.
+
+**The work is not only in the enum.** `GateOp` has an execution path: `sim.rs:162-223` dispatches
+every variant into a state-vector simulator through `apply_single`, `apply_cnot` and `apply_cz`. So
+each new gate needs a variant, a `qubits()` arm at `circuit.rs:41`, **and** a simulator
+implementation. `C^{m-1}Z` needs a generic multi-control apply rather than a copy of `apply_cz`.
 
 **Owner:** `deep_causality_quantum`.
 
@@ -358,20 +370,40 @@ matrix comparison. Theorem A.1 supplies the underlying justification.
 
 **Owner:** `deep_causality_quantum`.
 
-### G-10 — Stirling numbers absent
+### G-10 — Stirling numbers absent — **CLOSED**
 
 **Severity S3.** Needed only for R9, the compact `a(γ)^m` form of A.12 to A.14.
 
 Not required for any gate in Table 1. Record it so a later spec that wants the general
 `O_k(γ₁…γₘ)` family of §3.5 knows the dependency.
 
-**Owner:** `deep_causality_num` if ever wanted. The crate now has a natural home for it: ℕ is
-represented by `NaturalNumber` and ℤ by `Integer`, both in the tower, so Stirling numbers would sit
-beside them rather than needing a new abstraction.
+**Closure as built.** `deep_causality_num/src/combinatorics/` with `stirling_second` and
+`stirling_first_unsigned`, both generic over `N: NaturalNumber + FromPrimitive + Copy`.
 
-### G-11 — No quantum channel composition
+**Both kinds, not one.** The register said "Stirling numbers" without saying which. Reading A.12 and
+A.14 settles it: A.12 expands `a(γ)^m` using `S(m,r)` of the second kind, and A.14 inverts it using
+the paper's `s(r,m)`, defined there as *the number of permutations of r elements with exactly m
+disjoint cycles*. That is the **unsigned** first-kind number, with the sign carried separately as
+`(−1)^{m+r}`. Handing A.14 a signed convention would count the sign twice, so the function is named
+for the convention it implements.
 
-**Severity S2.** Designed and verified; not implemented.
+**The caller supplies the working row.** `deep_causality_num` allocates nowhere — it contains no
+`Vec` and no `String`, and has no `alloc` feature — so both functions take a `scratch: &mut [N]`
+rather than building a row. A fixed internal array was considered and rejected: any cap is a real
+limit, since `S(n, n−1) = C(n, 2)` makes `S(200, 199) = 19900` representable but 200 wide.
+
+**Verified against published values and against each other.** Rows 0–5 of both triangles against
+OEIS A008277 and A132393; the row sums against the Bell numbers and the factorials; the edges
+against `S(n,2) = 2^{n−1} − 1` and `c(n,1) = (n−1)!`; overflow reported rather than wrapped at the
+exact boundary in each. The sharp one is the inversion `Σ_k (−1)^{n−k} c(n,k) S(k,m) = δ_{n,m}`,
+which is what makes A.12 and A.14 a matched pair and which pins the sign convention. Mutating either
+recurrence's multiplier fails six of the eight tests.
+
+**Owner:** `deep_causality_num`.
+
+### G-11 — No quantum channel composition — **CLOSED**
+
+**Severity S2.**
 
 `channel.rs` has `choi_from_kraus`, `kraus_from_choi`, `apply_kraus`, `apply_choi` and the two CPTP
 checks, and no way to compose two CPTP maps.
@@ -389,18 +421,35 @@ conjugated variant is wrong by O(1), so a single test pins the convention. Assoc
 6.5e-16 and the unit laws are exactly zero. One agent reproduced it against a real Rust build linking
 the crate's own `choi_from_kraus`/`apply_choi`.
 
-**Closure.** `choi_compose` as a free function in `channel.rs`, bound on `R: RealField` only, with
-dimensions validated through `square_dim`. Composition is pure linear-map composition; CP and TP ride
-along as consequences, so no CPTP re-validation is required.
+**Closure as built.** `choi_compose(first, then, d_a, d_b, d_c)` in `channel.rs`, bound on
+`R: RealField`, dimensions validated through `square_dim`. The parameters are named for the order of
+application rather than the order of the `∘` symbol.
+
+**The formula is derived in the doc, not asserted.** It follows from this module's own `apply_choi`:
+substituting `E(ρ)[b,b'] = Σ_{a,a'} ρ[a,a']·J(E)[(a,b),(a',b')]` into itself for `F(E(ρ))` and
+collecting the coefficient of `ρ[a,a']` gives the double contraction. So the convention is a
+consequence of the crate's own definition rather than a choice that happens to agree with it.
+
+**Tested against references that do not use it.** Two unitary channels composing to the product
+unitary, checked against one `apply_kraus` with `U = HS`, whose factors do not commute. A `2 → 3 → 2`
+composition against an answer computed on paper, `Tr(ρ)·|0⟩⟨0| = 5·|0⟩⟨0|`, because unequal
+dimensions are where a wrong stride survives. Both unit laws, associativity, and the dimension
+errors. Injecting a transposed `J(F)`, a transposed `J(E)`, and a `b`/`b'` swap each fails.
 
 **Owner:** `deep_causality_quantum`.
 
-### G-12 — No identity channel
+### G-12 — No identity channel — **CLOSED**
 
-**Severity S3.** Blocks the natural unit-law tests for G-11.
+**Severity S3.**
 
-**Closure.** `choi_identity(d)` giving `J(id_d)_{(i,j),(k,l)} = δ_ij δ_kl`. With it, `channel.rs`
-carries a category: objects are dimensions, morphisms are Choi operators.
+**Closure as built.** `choi_identity(d)` in `channel.rs`, giving `J(id_d)[(i,j),(k,l)] = δ_ij·δ_kl`.
+With `choi_compose` the module now carries a category: dimensions are the objects, Choi operators the
+morphisms, and both unit laws are asserted.
+
+**Checked against an independent construction.** `choi_identity(d)` must equal
+`choi_from_kraus(&[identity_matrix(d)])`, which reaches the same operator through the Kraus formula
+`Σ_κ K_κ[j,i]·conj(K_κ[l,k])`. The two share no code, so the test pins the index layout rather than
+restating it.
 
 **Owner:** `deep_causality_quantum`.
 
@@ -433,9 +482,9 @@ to 20 to find the cliff" may be measuring a cliff that need not exist.
 
 **Owner:** the design note, then the implementation.
 
-### G-15 — The orthomodular guard may be misplaced (UNRESOLVED)
+### G-15 — The orthomodular guard may be misplaced — **CLOSED**
 
-**Severity: unknown.**
+**Severity: was unknown; the guard was over-broad.**
 
 `qcl-design-note.md` §4 requires `adjudicate` to check `Projection::commutes_with` before folding
 verdicts from forked worlds. But the forked worlds in the calibration example carry
@@ -444,8 +493,19 @@ has nothing to apply to and §4's second rule over-reaches, however sound the un
 
 The lens assigned to settle this did not complete before the workflow was stopped.
 
-**Closure.** Determine what `fork` actually produces. If `Uncertain`, either narrow §4's second rule
-to the projection-valued case or remove it.
+**Closure as resolved.** §4's second rule is narrowed to the projection-valued case, in the note.
+
+**There was nothing to determine.** The register's closure said to find out what `fork` produces.
+Searched: the only `fork` in the workspace is `deep_causality_cfd`'s state-fork counterfactual, an
+unrelated thing. Neither `fork` nor `adjudicate` exists in QCL. So the rule constrains an API still
+to be built.
+
+**The rule was over-broad regardless.** Rule 1 puts the measurement boundary at `observe`, and the
+calibration pipeline in §7.5 forks *after* it, on `Spec::at_least(ft(0.999))`. A threshold on a real
+quantity is a classical proposition; those form a Boolean algebra where the distributive law holds
+unconditionally and no pair fails to commute. Applying the guard there would reject sound folds. The
+rule now reads: whichever kind of verdict a world carries, the fold must match — projection-valued
+folds check commutation, read-outs against a real-valued spec do not, and must not.
 
 **Owner:** the design note.
 
@@ -461,9 +521,13 @@ Q-TOL tolerance while the Lean theorem is stated on exact equality.
 **Closure.** Decide whether a Q-TOL-satisfied commutator is sufficient warrant to invoke an
 exact-hypothesis theorem, and record the answer. This is a soundness question, not an ergonomics one.
 
+**It also inherits a clause from G-17.** That gap asked to gate `predict` behind this boundary check.
+`predict` does not exist in `deep_causality_quantum`, so the gating belongs with whenever it is
+built, and it belongs here rather than at G-17 because this is the check it would be gated on.
+
 **Owner:** `deep_causality_quantum`, with a note in `LEAN_QUANTUM.md`.
 
-### G-17 — `partial_trace` does not document its non-preservation
+### G-17 — `partial_trace` does not document its non-preservation — **CLOSED**
 
 **Severity S1.** This is friction F9.
 
@@ -472,9 +536,16 @@ refutation of `quantum.partial_trace_preservation` lives only in `LEAN_QUANTUM.m
 so a caller marginalising a validated factorization would destroy the Markov property that validate
 had certified, with nothing at the call site to say so.
 
-**Closure.** Document the non-preservation at the function, name the conditional
-`partial_trace_preservation_boundary` as the sound path, and gate `predict` behind the boundary check
-of G-16.
+**Closure as built.** `partial_trace`'s doc block now carries a *This does not preserve commutation*
+section: the refutation, its Lean name `quantum.partial_trace_nonpreservation` and the
+`[[0, 4], [−4, 0]]` counterexample, the concrete consequence for a caller marginalising a validated
+factorization, and `partial_trace_preservation_boundary` named as the sound path with its witness
+test. Both witnesses were confirmed to exist at
+`tests/formalization_lean/partial_trace_tests.rs`.
+
+**The third clause was moot.** The register also asked to "gate `predict` behind the boundary check
+of G-16". `predict` does not exist in `deep_causality_quantum`. That clause belongs with whenever it
+is built, and is recorded under G-16 rather than here.
 
 **Owner:** `deep_causality_quantum`.
 
@@ -482,8 +553,14 @@ of G-16.
 
 **Severity S3.** The dual of G-05.
 
-`cup_product` takes `cochain: &[R]` plus a separate `degree: usize` (`cup_product/mod.rs:62-70`).
-Nothing binds them, so a degree/length mismatch is caught by a runtime check rather than by the type.
+`cup_product` takes two cochains and two degrees as four separate arguments
+(`cup_product/mod.rs:95-101`): `(complex, alpha, alpha_degree, beta, beta_degree)`. `cup_product_n`
+(line 180) takes `&[(&[R], usize)]`, pairing them by convention only. Nothing binds data to degree,
+so a mismatch is caught by a runtime check rather than by the type.
+
+The register previously cited `cup_product/mod.rs:62-70` and a single `cochain: &[R]`. Both are
+stale. The real signature strengthens the case: a `Cochain` turns five parameters into three, and a
+slice of tuples into a slice of one type.
 
 **Closure.** Fold into G-05: one type carrying data and degree together, used by both the cup product
 and the gate layer.
@@ -512,75 +589,64 @@ implements.
 ## 4. Dependency order for closure
 
 ```
-G-01  F₂ linear algebra                    CLOSED — deep_causality_linear
-G-02  betti via F₂ rank                    CLOSED — topology + linear
+CLOSED
+  G-01  F₂ linear algebra                    deep_causality_linear
+  G-02  betti via F₂ rank                    topology + linear
+  G-03  LatticeComplex betti                 topology — closed form kept, now checked
+  G-10  Stirling numbers                     num — both kinds, first one unsigned
+  G-11  choi_compose                         quantum
+  G-12  choi_identity                        quantum
+  G-15  the verdict guard                    design note — rule 2 narrowed
+  G-17  partial_trace non-preservation       quantum — documented
 
+OPEN
 G-05 + G-18  Chain / Cochain               (topology, no deps)   <- head of the chain
-  ├── G-03  LatticeComplex betti from matrices (topology)   <- unblocked, decision + test only
   ├── G-04  homology representatives       (topology)       <- needs G-05 for its return type
   │     └── G-08  Poincaré-dual representative (topology)
   ├── G-07  retype the Haruna layer        (quantum; needs G-04, G-05, G-06, + a topology dep)
   └── G-09  logical equivalence            (quantum; needs G-04, G-05, + a topology dep)
 
-G-06  Circuit                              (quantum, no deps; GateOp needs 3 more variants)
+G-06  Circuit                              (quantum, no deps; 3 variants AND 3 simulator arms)
 
-G-11  choi_compose                         (quantum, no deps; formula settled)
-G-12  choi_identity                        (quantum, no deps)
-
-G-17  document non-preservation            (quantum, no deps)
-G-16  resolve the tolerance question       (quantum; blocks predict)
-G-15  resolve the verdict guard            (design note)
+G-16  resolve the tolerance question       (quantum; blocks predict when predict is built)
 G-13, G-14  correct the note               (design note)
-
-G-10  Stirling numbers                     (num; only for the §3.5 general family)
 ```
 
-**Correction to the previous order.** G-05 used to sit beside the G-01 chain as an independent root.
-It is not independent: G-04, G-08, G-07 and G-09 all name `Chain` in their signatures, so G-05 heads
-the chain rather than parallels it. G-03 is the only topology item that does not need it.
+### What the remaining ten cost
 
-### What can be closed now
+Sized against the tree, not estimated.
 
-Everything below is unblocked today. None of it waits on a publication.
+**Mid effort, unblocked.** G-05 with G-18 heads the chain: four gaps name its type, and its cost is
+the two decisions rather than the code — the name against the weighted `Chain<T>`, and whether it
+wraps `PackedGf2` or carries its own words. G-06 needs three enum variants, three `qubits()` arms and
+three simulator implementations. G-13 needs eight rows re-derived against real signatures, and the
+lens's finding is explicitly not to be copied. G-14 needs the set-cover algorithm re-derived at
+QCL's scale; the edit that follows is small. G-16 is a soundness decision with a written rationale:
+whether a Q-TOL-satisfied commutator is warrant to invoke an exact-hypothesis Lean theorem.
 
-| Gap | Why it is ready | Size |
-|---|---|---|
-| G-03 | `betti_number_over` already computes it; `LatticeComplex` already implements `ChainComplex` | Decision plus a test |
-| G-05 + G-18 | Never had a dependency; the 𝔽₂ word type is settled as `W: NaturalNumber` | Small, one new type |
-| G-11 | Formula verified to 3.198e-16 over 500 random CPTP pairs | One free function |
-| G-12 | `δ_ij δ_kl`, and it makes G-11's unit laws testable | Trivial |
-| G-17 | Pure documentation; the refutation is already written in `LEAN_QUANTUM.md` | Trivial |
-| G-06 | `QuantumCircuit` needs no change; `GateOp` needs `CS†`, `CCZ`, `C^{m-1}Z` | Small, one enum |
-| G-04 | `kernel_basis_gf2`, `image_basis_gf2` and `csr_to_packed_gf2_mod2` all ship | Real work, after G-05 |
+**Mid effort, blocked.** G-04 needs G-05 for its return type; the 𝔽₂ bases and the
+`CsrMatrix<i8>` bridge already ship, so the work is quotient-basis extraction for homology and
+cohomology.
 
-Still blocked: G-08 on G-04, and G-07 and G-09 on G-04 plus G-05 plus a new dependency edge.
-Unresolved rather than blocked: G-15 and G-16, both of which need a decision before code.
+**Serious.** G-08 is a linear solve over 𝔽₂ against the cohomology basis. G-09 implements B.1 and
+B.3. G-07 rewrites 272 lines and six public functions off `CausalMultiVector` onto `Chain` and
+`Circuit`. All three additionally need the `deep_causality_quantum` → `deep_causality_topology`
+dependency edge, which does not exist.
 
 ### What to tackle next
 
-**G-05 with G-18.** It is the head of the remaining chain, it has no dependency of its own, and four
-other gaps name its type in their signatures. Nothing else on the critical path can be specified
-until the shape of `Chain` is fixed, and specifying it wrongly propagates into G-04's return type
-and both quantum gaps.
+**G-05 with G-18.** It heads the remaining chain and has no dependency of its own. Nothing else on
+the critical path can be specified until the shape of `Chain` is fixed, and specifying it wrongly
+propagates into G-04's return type and both quantum gaps.
 
-The two decisions it carries are the reason to do it deliberately rather than quickly. First the
-name, against the weighted `Chain<T>` that already exists. Second whether the bit-packed chain wraps
-`PackedGf2` from `deep_causality_linear` or carries its own words: the former inherits the word
-generic and the elimination for free, the latter keeps `deep_causality_topology` free of a
-representation choice it may not want in its public API.
-
-**G-11 and G-12 are the alternative if a quick win is wanted.** They are self-contained, the formula
-is settled and independently verified, they touch one file, and they unblock nothing, so they can
-land in any order without constraining anything else.
-
-**Not G-03 first, despite being the cheapest.** It closes a real correctness gap and costs almost
-nothing, but it is off the critical path to the geometric-QEC example, so doing it first buys no
-schedule.
+The cup product supplies a second argument the register did not record. `cup_product` takes
+`(complex, alpha, alpha_degree, beta, beta_degree)` and `cup_product_n` takes `&[(&[R], usize)]`; a
+`Cochain` turns five parameters into three and a slice of tuples into a slice of one type.
 
 **What the three designed examples need.** The calibration and crosstalk examples need none of G-01
 through G-09: two feasibility lenses reproduced their headline results on shipped APIs in scratch
-crates. The geometric-QEC example needs G-05, G-03, G-04, G-08, G-06, G-07 and G-09, in roughly that
-order, plus the `deep_causality_quantum` to `deep_causality_topology` dependency edge.
+crates. The geometric-QEC example needs G-05, G-04, G-08, G-06, G-07 and G-09, in roughly that
+order, plus the dependency edge.
 
 ---
 

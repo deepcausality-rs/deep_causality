@@ -4,22 +4,37 @@ import SiteHeader from '../../components/nav/SiteHeader.astro';
 import DocPage from '../../components/docs/DocPage.astro';
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-import { CARGO_DEP, MSRV, CRATE_URL, GITHUB_URL } from '../../consts';
+import {
+  CARGO_ADD,
+  CARGO_DEP,
+  CRATE_VERSION,
+  CRATE_RELEASED,
+  CRATESIO_URL,
+  DOCSRS_URL,
+  MSRV,
+  CRATE_URL,
+  GITHUB_URL,
+} from '../../consts';
 
 const SHIKI = { light: rustLight, dark: rustDark };
 
 const title = 'Add the crate — DeepCausality Quantum';
 const description =
-  'The crate is unpublished, so a git dependency is the only route. Feature flags, the no-std story, the workspace MSRV, and what the default build actually compiles.';
+  'Install from crates.io, the feature flags, the no-std story, the workspace MSRV, and what the default build actually compiles.';
 
-const dep = `[dependencies]
+const add = CARGO_ADD;
+
+const gitdep = `[dependencies]
 ${CARGO_DEP}`;
 
+const dep = `[dependencies]
+deep_causality_quantum = "${CRATE_VERSION}"`;
+
 const qpu = `[dependencies]
-deep_causality_quantum = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main", features = ["qpu"] }`;
+deep_causality_quantum = { version = "${CRATE_VERSION}", features = ["qpu"] }`;
 
 const nostd = `[dependencies]
-deep_causality_quantum = { git = "…", branch = "main", default-features = false, features = ["no-std"] }`;
+deep_causality_quantum = { version = "${CRATE_VERSION}", default-features = false, features = ["no-std"] }`;
 
 const run = `git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
 cd deep_causality
@@ -59,20 +74,26 @@ const features = [
   <DocPage
     eyebrow="Getting started"
     title="Add the crate"
-    lede="Version 0.1.0, MIT licensed, and unpublished. There is no crates.io release and therefore no cargo add line."
+    lede={`Version ${CRATE_VERSION}, MIT licensed, released on crates.io on ${CRATE_RELEASED}.`}
     sourceHref={CRATE_URL}
     sourceLabel="deep_causality_quantum"
   >
     <h2>The dependency</h2>
 
-    <p>
-      The manifest carries <code>publish = false</code>, so a git dependency is
-      the only way to take the crate today. Pinning to a tag or a commit rather
-      than to <code>branch = "main"</code> is the sensible choice for anything
-      you intend to keep building.
-    </p>
+    <Code code={add} lang="bash" themes={SHIKI} />
+
+    <p>Or by hand:</p>
 
     <Code code={dep} lang="toml" themes={SHIKI} />
+
+    <p>
+      The generated API reference is on
+      <a href={DOCSRS_URL}>docs.rs</a>, built with all features enabled, and the
+      release itself is on <a href={CRATESIO_URL}>crates.io</a>. To track work
+      that has not been released yet, take the branch instead:
+    </p>
+
+    <Code code={gitdep} lang="toml" themes={SHIKI} />
 
     <p>
       The workspace minimum supported Rust version is {MSRV}, from
@@ -162,6 +183,7 @@ const features = [
       <li><a href="/qcm/">The model, the freeze check and faithfulness</a></li>
       <li><a href="/operators/">The operator layer the checks are built from</a></li>
       <li><a href="/formalization/">What is proved in LEAN, and what is not</a></li>
+      <li><a href={DOCSRS_URL}>API reference on docs.rs ↗</a></li>
       <li><a href={`${GITHUB_URL}/issues`}>Open an issue ↗</a></li>
     </ul>
   </DocPage>

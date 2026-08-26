@@ -66,6 +66,7 @@ pub use crate::types::csr_matrix::CsrMatrix;
 pub use crate::types::dense_matrix::DenseMatrix;
 pub use crate::types::dense_vector::DenseVector;
 pub use crate::types::packed_gf2::PackedGf2;
+pub use crate::types::packed_gf2_vector::PackedGf2Vector;
 
 // Elimination and everything read off it
 pub use crate::algorithms::elimination::{
