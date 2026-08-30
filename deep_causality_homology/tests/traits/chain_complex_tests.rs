@@ -8,7 +8,7 @@
 //! # Where the expected values come from
 //!
 //! Hatcher, *Algebraic Topology*, by way of `utils_tests::reference_spaces`, which carries the
-//! citation per space. `openspec/notes/homology/reference/reference.py` builds the same ten spaces
+//! citation per space. `openspec/notes/archive/homology/reference/reference.py` builds the same ten spaces
 //! independently in Python and checks *its* output against the same source. No expectation here is
 //! a reading of this crate.
 //!

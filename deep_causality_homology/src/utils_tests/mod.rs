@@ -19,7 +19,7 @@
 //!
 //! # Where the spaces come from
 //!
-//! `openspec/notes/homology/reference/reference.py` builds the same ten spaces in Python and checks
+//! `openspec/notes/archive/homology/reference/reference.py` builds the same ten spaces in Python and checks
 //! its own Betti numbers against Hatcher, *Algebraic Topology*. This file is an independent
 //! construction of the same spaces; the tests check it against the same published values. Two
 //! implementations agreeing with a source is not the same as one implementation agreeing with

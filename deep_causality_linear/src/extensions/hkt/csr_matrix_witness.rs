@@ -145,7 +145,7 @@ impl CoMonad<CsrMatrixWitness> for CsrMatrixWitness {
 // crate. `Adjunction`'s `counit` is written in terms of that `bind`, so it inherits the defect.
 //
 // The cause is structural rather than careless: `pure` must choose a shape for one value and a
-// shaped container has no canonical one. `openspec/notes/linear/HKT-LAW-FINDINGS.md` carries the
+// shaped container has no canonical one. `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` carries the
 // reasoning and the decision owed when the surface is retired.
 //
 // Nothing outside the two crates' own tests uses either trait, so the omission reaches no consumer.

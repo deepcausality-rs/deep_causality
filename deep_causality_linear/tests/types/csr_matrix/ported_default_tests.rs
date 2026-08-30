@@ -60,7 +60,7 @@ fn test_default_and_with_capacity_disagree_on_the_empty_row_pointer() {
     // move faithful; `linear-matrix-representations` requires that code written against the old
     // type get identical results, and a caller comparing two empty matrices gets `false` today.
     //
-    // Recorded in openspec/notes/linear/PORTING-FINDINGS.md as a candidate to settle in phase 5,
+    // Recorded in openspec/notes/archive/linear/PORTING-FINDINGS.md as a candidate to settle in phase 5,
     // where the old surface is retired and changing it costs nothing.
     let default_made: CsrMatrix<f64> = CsrMatrix::default();
     let capacity_made: CsrMatrix<f64> = CsrMatrix::with_capacity(0, 0, 0);

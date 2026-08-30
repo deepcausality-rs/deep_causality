@@ -5,7 +5,7 @@
 
 //! The coefficient field, and the rank it produces.
 //!
-//! Ranks come from `openspec/notes/homology/reference/reference.py`, where each is derived from the
+//! Ranks come from `openspec/notes/archive/homology/reference/reference.py`, where each is derived from the
 //! matrix's structure rather than measured.
 
 use deep_causality_homology::HomologyField;

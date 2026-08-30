@@ -258,7 +258,7 @@ fn test_the_bounds_and_shape_checks() {
 // returns a vector whose length is the number of basis vectors rather than the dimension they live
 // in.
 //
-// The shapes and their ranks come from `openspec/notes/homology/reference/reference.py`, where each
+// The shapes and their ranks come from `openspec/notes/archive/homology/reference/reference.py`, where each
 // rank is derived from the matrix's structure rather than measured. That script imports nothing
 // from this workspace.
 //

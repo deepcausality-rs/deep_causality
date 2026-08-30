@@ -101,7 +101,7 @@ impl Applicative<DenseMatrixWitness> for DenseMatrixWitness {
 // `deep_causality_sparse::CsrMatrixWitness` claims `Monad` and does not satisfy the law: its `bind`
 // flattens to `1 x count`, so `bind(m, pure)` turns a 2x2 into a 1x4. Verified by probe against the
 // published crate. That is a defect in the code being moved, recorded in
-// `openspec/notes/linear/HKT-LAW-FINDINGS.md` and to be decided at task 4.11 rather than copied
+// `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` and to be decided at task 4.11 rather than copied
 // here.
 //
 // `DenseVectorWitness` does claim `Monad` and does satisfy the laws, because a vector's `bind` is

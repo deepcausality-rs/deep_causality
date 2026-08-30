@@ -7,7 +7,7 @@
 //!
 //! Each records what `CausalTensor`'s method must still return after phase 5 reduces it to a call
 //! into here. The baseline these are written against was captured from the tensor crate before any
-//! of its bodies moved, and is recorded in `openspec/notes/linear/DELEGATION-BASELINE.md`.
+//! of its bodies moved, and is recorded in `openspec/notes/archive/linear/DELEGATION-BASELINE.md`.
 
 use deep_causality_linear::{
     DenseMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView, Truncation,

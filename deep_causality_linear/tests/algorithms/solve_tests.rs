@@ -134,7 +134,7 @@ fn test_the_factorisation_determinant_carries_the_swap_sign() {
 #[test]
 fn test_backward_substitution_matches_the_exact_reference() {
     // The reference answer, from exact rational elimination in
-    // openspec/notes/linear/reference/reference.py: [1 2 3; 0 1 4; 0 0 1] x = [1; 2; 3]
+    // openspec/notes/archive/linear/reference/reference.py: [1 2 3; 0 1 4; 0 0 1] x = [1; 2; 3]
     // has the exact solution [12, -10, 3].
     //
     // Comparing solve_upper against solve would be circular: both are this crate's, and a shared

@@ -35,7 +35,7 @@
 //! **`CsrMatrixWitness` no longer claims `Monad` or `Adjunction`.** The `bind` here violates monad
 //! right identity: it flattens to `1 × count` and renumbers the columns, so a sparse row comes back
 //! with its non-zeros in different places. Measured cases are in
-//! `openspec/notes/linear/HKT-LAW-FINDINGS.md`. `Functor`, `Foldable`, `Pure`, `Applicative` and
+//! `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`. `Functor`, `Foldable`, `Pure`, `Applicative` and
 //! `CoMonad` are all present and lawful.
 //!
 //! # Where the old implementation went
