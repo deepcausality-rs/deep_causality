@@ -54,8 +54,10 @@ must depend on 27,317 lines of geometry to reach 419 lines of chain-complex mach
   re-exports that keep every existing consumer compiling unchanged.
 
 ### Modified Capabilities
-<!-- None. No spec in openspec/specs/ covers chain complexes or homology today; the linear crate's
-     specs remain under the unarchived add-linear-algebra-crate change. -->
+<!-- None. No spec in openspec/specs/ covers chain complexes or homology. The thirteen
+     `linear-*` and `num-finite-field` specs promoted by archiving add-linear-algebra-crate
+     describe the matrix and elimination layer this crate consumes, not the chain complex it
+     defines over them. -->
 
 ## Impact
 

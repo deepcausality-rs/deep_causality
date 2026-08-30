@@ -5,7 +5,6 @@
 The pressure-Poisson solve under Neumann boundary conditions on wall-bounded boxes: a
 direct spectral solve where the geometry is uniform, and a Jacobi-preconditioned CG
 fallback everywhere else.
-
 ## Requirements
 ### Requirement: Direct spectral Neumann solve on uniform wall-bounded boxes
 `deep_causality_topology` SHALL solve the gauge-fixed grade-0 Poisson
@@ -31,11 +30,16 @@ or convergence-failure mode.
 - **THEN** its divergence vanishes to rounding at every vertex including wall and corner vertices, whose clipped dual volumes realize the no-flux wall condition discretely (amended at implementation: the variational Neumann condition is encoded in the boundary control volumes, not as pointwise vanishing of boundary-normal gradient components)
 
 ### Requirement: Jacobi-preconditioned CG fallback
-`deep_causality_sparse` SHALL provide a preconditioned variant of the
+`deep_causality_linear` SHALL provide a preconditioned variant of the
 matrix-free CG (additive API), and the wall-aware grade-0 solve SHALL use
 it with the diagonal of the boundary-corrected `Δ₀` wherever the direct
 solve does not apply (per-edge metrics, non-uniform geometry). Plain
 `cg_solve` semantics are unchanged.
+
+The requirement previously named `deep_causality_sparse`. The solver moves with the rest of that
+crate's contents into `deep_causality_linear`; its signature, convergence behaviour and iteration
+counts are unchanged. During the deprecation window the retired crate re-exports it, so callers that
+have not migrated reach the same function.
 
 #### Scenario: Preconditioned CG converges faster on walled lattices
 - **WHEN** the same walled-lattice Poisson problem is solved by plain and Jacobi-preconditioned CG at the same tolerance
@@ -44,3 +48,8 @@ solve does not apply (per-edge metrics, non-uniform geometry). Plain
 #### Scenario: Existing CG callers unaffected
 - **WHEN** the existing `cg_solve` test suite runs
 - **THEN** all results are unchanged
+
+#### Scenario: The solver is reachable through both paths during the window
+- **WHEN** a caller imports the preconditioned solver from either the retired crate or `deep_causality_linear`
+- **THEN** both resolve to the same function
+

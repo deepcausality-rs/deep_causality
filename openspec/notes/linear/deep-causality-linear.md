@@ -8,7 +8,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-08-24. This note records the measurements taken before proposing a linear-algebra
 crate: where linear algebra lives in the workspace today, what is duplicated, what is wrong, what a
 consolidation costs, and what the migration looks like. It is the input to the change
-`openspec/changes/add-linear-algebra-crate/`.
+`openspec/changes/archive/2026-08-30-add-linear-algebra-crate/`, whose specs are now the
+`linear-*` capabilities under `openspec/specs/`.
 
 ## Why this came up
 

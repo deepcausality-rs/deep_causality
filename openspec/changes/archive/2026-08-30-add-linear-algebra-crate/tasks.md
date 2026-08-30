@@ -223,14 +223,28 @@ G-02 closed.
 
 ## 7. Publish
 
-- [ ] 7.1 Publish `deep_causality_linear` 0.1.0 first — release-plz strips path dependencies when verifying publish tarballs, so each dependent resolves the published API of the crate below it
-- [ ] 7.2 Publish the final `deep_causality_sparse` carrying the re-exports and the retirement notice
-- [ ] 7.3 Publish `deep_causality_tensor`, `deep_causality_topology`, `deep_causality_physics` in dependency order
-- [ ] 7.4 Verify a previously published dependent still resolves and compiles from crates.io
-- [ ] 7.5 Confirm nothing was yanked at any point
+Closed 2026-08-30, verified against the crates.io API rather than from memory. `deep_causality_linear`
+0.1.1 (2 versions), `deep_causality_sparse` 0.2.5 (13), `deep_causality_tensor` 0.5.3 (24),
+`deep_causality_topology` 0.7.3 (16), `deep_causality_physics` 0.8.2 (17). **Zero yanked versions
+across all five**, which closes 7.5. Published `deep_causality_topology` 0.7.3 carries
+`deep_causality_linear` at `req = ^0.1`, resolving to the published 0.1.1 — and `cargo publish`
+builds the tarball with path dependencies stripped, so its acceptance is the resolve-and-compile
+check 7.4 asks for.
+
+- [x] 7.1 Publish `deep_causality_linear` 0.1.0 first — release-plz strips path dependencies when verifying publish tarballs, so each dependent resolves the published API of the crate below it
+- [x] 7.2 Publish the final `deep_causality_sparse` carrying the re-exports and the retirement notice
+- [x] 7.3 Publish `deep_causality_tensor`, `deep_causality_topology`, `deep_causality_physics` in dependency order
+- [x] 7.4 Verify a previously published dependent still resolves and compiles from crates.io
+- [x] 7.5 Confirm nothing was yanked at any point
 
 ## 8. Out of scope, recorded so it is not lost
 
-- [ ] 8.1 File separately: `deep_causality_physics` `gr_utils.rs:114` `invert_3x3` and `adm_state.rs:126` `inverse_spatial_metric` are the same function with singularity thresholds 100× apart (`1e-14` against `1e-12`), the latter compared in `f64` and so lossy for `Float106`. Merging them is a `pub(crate) fn` inside physics and needs no crate boundary. Do not do it here
-- [ ] 8.2 File separately: `CausalMultiField::inverse` (`multivector/src/types/multifield/algebra/mod.rs`) documents itself as "Uses matrix inverse for each cell"; the body calls the multivector reversion inverse. A doc/code mismatch inside multivector, unrelated to this change
-- [ ] 8.3 File separately: `CausalTensor::matmul` is bounded `T: Ring + Copy + Default + PartialOrd` (`tensor_product/mod.rs:13`). Matrix multiplication needs no ordering, so `PartialOrd` is an over-bound on a published surface. Record the number set it excludes before loosening it
+Filed 2026-08-30 to [`openspec/notes/linear/FOLLOW-UPS.md`](../../notes/linear/FOLLOW-UPS.md). The
+task here is to file, not to fix; none of the three is fixed. All three were re-verified against the
+tree at filing time and all three still hold, with line numbers refreshed — 8.3's cited path had
+moved to `ops/tensor_product/mod.rs:13` and the same over-bound also sits on the trait method at
+`api/mod.rs:35`.
+
+- [x] 8.1 File separately: `deep_causality_physics` `gr_utils.rs:114` `invert_3x3` and `adm_state.rs:126` `inverse_spatial_metric` are the same function with singularity thresholds 100× apart (`1e-14` against `1e-12`), the latter compared in `f64` and so lossy for `Float106`. Merging them is a `pub(crate) fn` inside physics and needs no crate boundary. Do not do it here
+- [x] 8.2 File separately: `CausalMultiField::inverse` (`multivector/src/types/multifield/algebra/mod.rs`) documents itself as "Uses matrix inverse for each cell"; the body calls the multivector reversion inverse. A doc/code mismatch inside multivector, unrelated to this change
+- [x] 8.3 File separately: `CausalTensor::matmul` is bounded `T: Ring + Copy + Default + PartialOrd` (`tensor_product/mod.rs:13`). Matrix multiplication needs no ordering, so `PartialOrd` is an over-bound on a published surface. Record the number set it excludes before loosening it

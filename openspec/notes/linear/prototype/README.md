@@ -6,7 +6,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # `deep_causality_linear` design prototype
 
 Throwaway code kept for its evidence. It answers two questions that
-`openspec/changes/add-linear-algebra-crate/` states as requirements, and the requirements are only
+`openspec/changes/archive/2026-08-30-add-linear-algebra-crate/` states as requirements — now the
+`linear-*` specs under `openspec/specs/` — and the requirements are only
 as good as these measurements, so the measurements are kept runnable.
 
 This is a **separate Cargo workspace**, deliberately not a member of the repository workspace. It
