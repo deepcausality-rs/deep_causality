@@ -33,7 +33,7 @@ one of them already passes by coincidence (task 8.5).
 Everything in every later V phase resolves here, so it comes first.
 
 - [x] 1.1 Write `../../notes/archive/homology/reference/reference.py` in the style of
-      `openspec/notes/linear/reference/reference.py`: exact arithmetic, no import of this
+      `openspec/notes/archive/linear/reference/reference.py`: exact arithmetic, no import of this
       workspace, emits constants to paste
 - [x] 1.2 Emit boundary matrices and Betti numbers over ℚ and 𝔽₂ for the minimal triangulations of
       point, interval, `S¹`, `S²`, `T²`, `T³`, cylinder, Möbius band, `RP²` and the Klein bottle

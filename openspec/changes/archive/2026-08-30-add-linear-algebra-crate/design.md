@@ -6,7 +6,7 @@ two ad-hoc shapes inside `deep_causality_topology` — `&[Vec<R>]` and `&mut [T]
 argument. `AdjacencyMatrix`, `IncidenceMatrix` and `LaplacianMatrix` are aliases of `CausalTensor`;
 `AbcdMatrix` and `DensityMatrix` are newtypes over it.
 
-The consequences are measured in `openspec/notes/linear/deep-causality-linear.md`:
+The consequences are measured in `openspec/notes/archive/linear/deep-causality-linear.md`:
 
 | finding | evidence |
 |---|---|
@@ -68,7 +68,7 @@ forces a dependency direction:
 | `deep_causality_tensor` | yes | `CausalTensor` is local | tensor `use`s `MatrixView` → tensor → linear |
 | any third crate | no | neither is local | E0117; no impl exists |
 
-`openspec/notes/linear/prototype/tensor_impl/` compiles the third row and confirms E0117.
+`openspec/notes/archive/linear/prototype/tensor_impl/` compiles the third row and confirms E0117.
 
 The two legal rows are mutually exclusive — taking both closes a cycle — so the orphan rule narrows
 the field without choosing. What chooses is the relocation of the decompositions: `CausalTensor::svd`

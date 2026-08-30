@@ -154,5 +154,5 @@ because of a bound that a later widening would remove silently.
 - **THEN** it either calls into `deep_causality_linear` or documents why a batched rank-3 operation stays on the tensor surface
 
 #### Scenario: The census is corrected
-- **WHEN** the construction census in `openspec/notes/linear/deep-causality-linear.md` is re-read
+- **WHEN** the construction census in `openspec/notes/archive/linear/deep-causality-linear.md` is re-read
 - **THEN** the `deep_causality_multivector` row reflects the 13 `CausalTensor` constructions in its `src`, not zero

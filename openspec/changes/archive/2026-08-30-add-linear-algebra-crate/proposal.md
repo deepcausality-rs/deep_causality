@@ -6,7 +6,7 @@ The quantum gap register asks for 𝔽₂ linear algebra (`openspec/notes/quantu
 severity S1, blocking three requirements). Deciding where to put it surfaced the prior question:
 the workspace has no linear-algebra crate, and its linear algebra is spread across three places.
 
-Measured, not inferred (`openspec/notes/linear/deep-causality-linear.md` carries the full research):
+Measured, not inferred (`openspec/notes/archive/linear/deep-causality-linear.md` carries the full research):
 
 - **`deep_causality_tensor` is two libraries.** 1,088 lines of 2-D matrix operations — `svd` 117,
   `svd_decomp` 170, `svd_truncated` 375, `qr` 145, `eigen` 158, `inverse` 123 — sit alongside 2,069

@@ -1,0 +1,18 @@
+[package]
+name = "linear_b"
+version = "0.0.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+publish = false
+
+[features]
+default = ["std"]
+std = ["deep_causality_num/std", "deep_causality_algebra/std"]
+no-std = ["deep_causality_num/no-std", "deep_causality_algebra/no-std"]
+
+[dependencies]
+deep_causality_num = { path = "../../../../../../deep_causality_num", default-features = false }
+deep_causality_algebra = { path = "../../../../../../deep_causality_algebra", default-features = false }
+
+[lints]
+workspace = true
