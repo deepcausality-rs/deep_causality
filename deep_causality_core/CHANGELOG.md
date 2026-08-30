@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.11.2...deep_causality_core-v0.11.3) - 2026-08-30
+
+### Other
+
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.11.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.11.0...deep_causality_core-v0.11.1) - 2026-07-14
 
 ### Added

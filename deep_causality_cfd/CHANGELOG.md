@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.1.1...deep_causality_cfd-v0.1.2) - 2026-08-30
+
+### Added
+
+- *(deep_causality_homology)* extract the chain-complex layer into deep_causality_homology
+
+### Fixed
+
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.1.0](https://github.com/deepcausality-rs/deep_causality/releases/tag/deep_causality_cfd-v0.1.0) - 2026-08-12
 
 ### Added
