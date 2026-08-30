@@ -29,7 +29,7 @@ This file is self-contained (no imports) so it typechecks standalone with bare `
 
 Rust witnesses: `deep_causality_core/tests/types/causal_arrow/causal_arrow_tests.rs`
 (`arrow_threads_accumulated_state`, `arrow_error_short_circuit_preserves_state`, identity/compose)
-and the formalization mirror `tests/formalization_lean/causal_arrow_tests.rs`.
+and the Kani harnesses in `deep_causality_core/tests/kani_proofs.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

@@ -13,14 +13,35 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# The library-crate list comes from the workspace manifest via crates.sh. It replaces a
+# `*/Cargo.toml` glob, which reached exactly one level down and therefore stopped seeing every
+# crate under `deep_causality_unified_math/` on the day they moved there. Twelve
+# `deep_causality_haft` examples went unchecked while this script still printed
+# "All Cargo examples have a Bazel target" and exited 0. A glob that encodes the repository's
+# shape is a coverage cliff waiting for the next move; the manifest cannot be wrong about which
+# crates exist.
+source "$(dirname "${BASH_SOURCE[0]}")/crates.sh"
+cd "$DC_REPO_ROOT"
+
 # <package>:<example name> pairs that Bazel deliberately does not build.
 CARGO_ONLY="causal_discovery_examples:example_ml_rca"
 
 status=0
+scanned=0
 
-for manifest in examples/*/Cargo.toml */Cargo.toml; do
+# crates.sh drops `examples/*` on purpose, so those are added back here.
+MANIFESTS=""
+for d in examples/*/; do
+    [ -f "${d}Cargo.toml" ] && MANIFESTS="$MANIFESTS ${d}Cargo.toml"
+done
+for d in "${DC_CRATE_DIRS[@]}"; do
+    [ -f "$d/Cargo.toml" ] && MANIFESTS="$MANIFESTS $d/Cargo.toml"
+done
+
+for manifest in $MANIFESTS; do
     dir=$(dirname "$manifest")
     package=$(basename "$dir")
+    scanned=$((scanned + 1))
 
     cargo_targets=$(grep -A1 '^\[\[example\]\]' "$manifest" |
         sed -n 's/^name = "\(.*\)"$/\1/p' | sort || true)
@@ -51,7 +72,7 @@ for manifest in examples/*/Cargo.toml */Cargo.toml; do
 done
 
 if [ "$status" -eq 0 ]; then
-    echo "All Cargo examples have a Bazel target."
+    echo "All Cargo examples have a Bazel target ($scanned manifests scanned)."
 fi
 
 exit "$status"

@@ -71,30 +71,68 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Every proved Lean theorem needs a Rust witness and a manifest entry
+        shell: bash
         run: |
           set -euo pipefail
+          # The crate list comes from the workspace manifest via crates.sh rather than being
+          # written out here. A hand-maintained list was a trap in two directions: a new crate
+          # carrying a witness was invisible until someone remembered to add it, and a crate that
+          # moved on disk turned every id into a false "MISSING Rust witness" because `grep`
+          # printed "No such file or directory" while `|| true` swallowed the exit status.
+          source build/scripts/crates.sh
+          echo "Searching ${#DC_CRATE_DIRS[@]} crate directories for witnesses."
+
           # Source of truth: the `THEOREM_MAP: `id`` tags in the Lean proofs.
           ids=$(grep -rhoE 'THEOREM_MAP: `[a-z0-9_.]+`' lean --include='*.lean' \
                 | sed -E 's/.*`([a-z0-9_.]+)`.*/\1/' | sort -u || true)
           if [ -z "$ids" ]; then echo "no THEOREM_MAP ids found in lean/**/*.lean"; exit 1; fi
           fail=0
           for id in $ids; do
-            rust_hit=$(grep -Frl "THEOREM_MAP: $id" \
-                       deep_causality_unified_math/deep_causality_algebra \
-                       deep_causality_unified_math/deep_causality_num \
-                       deep_causality_unified_math/deep_causality_num_complex \
-                       deep_causality_unified_math/deep_causality_num_dual \
-                       deep_causality_unified_math/deep_causality_num_rational \
-                       deep_causality_core \
-                       deep_causality_unified_math/deep_causality_haft \
-                       deep_causality_unified_math/deep_causality_topology \
-                       deep_causality \
-                       deep_causality_quantum \
-                       deep_causality_unified_math/deep_causality_linear \
-                       deep_causality_unified_math/deep_causality_homology \
-                       --include='*.rs' || true)
+            rust_hit=$(grep -Frl "THEOREM_MAP: $id" "${DC_CRATE_DIRS[@]}" --include='*.rs' || true)
             map_hit=$(grep -Fl "$id" lean/THEOREM_MAP.md || true)
             if [ -z "$rust_hit" ]; then echo "MISSING Rust witness for id: $id"; fail=1; fi
             if [ -z "$map_hit" ]; then echo "MISSING THEOREM_MAP.md entry for id: $id"; fail=1; fi
+          done
+          exit $fail
+
+      - name: Every path cited by a Lean proof or by THEOREM_MAP.md resolves
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUNNER_TEMP_LEAN_SRC="$(mktemp)"; RUNNER_TEMP_FN_NAMES="$(mktemp)"
+          trap 'rm -f "$RUNNER_TEMP_LEAN_SRC" "$RUNNER_TEMP_FN_NAMES"' EXIT
+          # Nothing used to check these. Five witness references rotted through the July num split,
+          # a quantum test reorganisation and a mirror file that never existed, and stayed broken
+          # for weeks: the job above greps THEOREM_MAP.md for the theorem *id* and never for the
+          # path beside it.
+          #
+          # `git ls-files` rather than `grep -r`: lean/.lake holds vendored Mathlib and Batteries,
+          # which cite thousands of paths that are none of this repo's business.
+          git ls-files 'lean/*.lean' > "$RUNNER_TEMP_LEAN_SRC"
+          fail=0; checked=0
+          # Cited paths are backtick-quoted. Anchoring on the backtick keeps a relative path like
+          # `tests/formalization_lean/x.rs` from being read as the repo path `lean/x.rs`.
+          paths=$( { xargs grep -ohE '`(deep_causality|ultragraph|lean)[A-Za-z0-9_/.-]*\.(rs|lean)`' \
+                       < "$RUNNER_TEMP_LEAN_SRC"
+                     grep -ohE '`(deep_causality|ultragraph|lean)[A-Za-z0-9_/.-]*\.(rs|lean)`' \
+                       lean/THEOREM_MAP.md; } | tr -d '`' | sort -u )
+          for p in $paths; do
+            # Prose elides a long path as `crate/.../file.rs`. That is a legitimate reading aid
+            # rather than a citation, and there is nothing to resolve, so skip it.
+            case "$p" in */.../*) continue ;; esac
+            checked=$((checked+1))
+            if [ ! -f "$p" ]; then echo "MISSING file cited by the formalization: $p"; fail=1; fi
+          done
+          echo "checked $checked cited paths"
+
+          # A named Rust test that no longer exists is the same defect one level down. Collect every
+          # test name in the repo once rather than grepping the tree per candidate.
+          git ls-files '*.rs' | xargs grep -ohE '\bfn (test_[a-z0-9_]+|[a-z0-9_]*_tests?)\b' \
+            | sed -E 's/^fn //' | sort -u > "$RUNNER_TEMP_FN_NAMES"
+          for fn in $(xargs grep -ohE '`test_[a-z0-9_]+`' < "$RUNNER_TEMP_LEAN_SRC" \
+                        | tr -d '`' | sort -u); do
+            if ! grep -qxF "$fn" "$RUNNER_TEMP_FN_NAMES"; then
+              echo "MISSING Rust test named by a Lean proof: $fn"; fail=1
+            fi
           done
           exit $fail

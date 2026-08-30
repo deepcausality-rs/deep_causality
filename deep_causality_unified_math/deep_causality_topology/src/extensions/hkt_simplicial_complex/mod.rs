@@ -125,25 +125,40 @@ where
         Self::fmap(wrapped, f)
     }
 
+    /// The right adjunct `(A -> Chain<B>) -> (Chain<A> -> B)`.
+    ///
+    /// # Panics
+    ///
+    /// On a chain storing nothing, in either of two places, and the message says which.
+    ///
+    /// The signature returns `B` rather than an `Option<B>`, and `B` carries no `Default`, so
+    /// there is no value to return when there is nothing to return: an empty `Chain<A>` offers no
+    /// `A` to apply `f` to, and an `f` that yields an empty `Chain<B>` offers no `B` to extract.
+    /// Fabricating one would be a lie about which element the adjunct selected.
+    ///
+    /// This matches [`CoMonad::extract`] on `CsrMatrixWitness`, which panics on an empty matrix
+    /// for the same reason and is the counit this method is built on. A chain is empty when its
+    /// weight matrix stores no entries, which `CsrMatrix::new()` produces, so both arms are
+    /// reachable and both are tested.
     fn right_adjunct<A, B, F>(_ctx: &(Arc<SimplicialComplex<T>>, usize), la: Chain<A>, f: F) -> B
     where
         A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone, // B needs Clone for unit in recursion if logic implies
+        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
         F: FnMut(A) -> Chain<B>,
     {
         // right: (A -> R<B>) -> (L<A> -> B)
         let result_chain: Chain<Chain<B>> = Self::fmap(la, f);
-
-        // Unpack manually
         let (_, _, outer_values, _) = result_chain.weights.into_parts();
 
-        if let Some(inner_chain) = outer_values.into_iter().next() {
-            let (_, _, inner_values, _) = inner_chain.weights.into_parts();
-            if let Some(val) = inner_values.into_iter().next() {
-                return val;
-            }
-        }
+        let inner_chain = outer_values.into_iter().next().expect(
+            "Adjunction::right_adjunct cannot be called on a Chain that stores nothing: \
+             there is no A to apply f to",
+        );
 
-        panic!("Adjunction::right_adjunct resulted in empty chain.");
+        let (_, _, inner_values, _) = inner_chain.weights.into_parts();
+        inner_values.into_iter().next().expect(
+            "Adjunction::right_adjunct: f returned a Chain that stores nothing, \
+             so there is no B to return",
+        )
     }
 }

@@ -69,7 +69,7 @@ crate_dir() {
 # The default target: the numeric algorithms, where a flipped comparison returns a plausible
 # number instead of failing. Extend this list as other crates earn it.
 if [ -z "$CRATE" ]; then
-    echo "Mutation testing deep_causality_linear/src/algorithms (the default set)"
+    echo "Mutation testing deep_causality_unified_math/deep_causality_linear/src/algorithms (the default set)"
     exec cargo mutants -p deep_causality_linear \
         --file 'deep_causality_unified_math/deep_causality_linear/src/algorithms/*.rs' \
         -j 8

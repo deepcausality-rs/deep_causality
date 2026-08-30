@@ -139,15 +139,12 @@ fn test_simplicial_complex_right_adjunct_returns_inner_value() {
 }
 
 #[test]
-#[should_panic(expected = "Adjunction::right_adjunct resulted in empty chain.")]
-fn test_simplicial_complex_right_adjunct_empty_panics() {
-    // When the generated chain produces no inner value, `right_adjunct` falls through
-    // both `if let` guards and panics.
-    // Covers src/extensions/hkt_simplicial_complex/mod.rs lines 145 and 147.
+#[should_panic(expected = "f returned a Chain that stores nothing")]
+fn test_simplicial_complex_right_adjunct_panics_when_f_yields_an_empty_chain() {
+    // Failure mode two of two: the input chain has a value, so `f` runs, but the chain `f`
+    // returns stores nothing. There is no `B` to return and `B` carries no `Default`.
     let complex = create_simple_complex();
 
-    // Outer chain has a single element so `outer_values.into_iter().next()` is `Some`,
-    // but the inner chain is empty so `inner_values.into_iter().next()` is `None`.
     let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0)]).expect("Matrix failed");
     let chain = Chain::new(complex.clone(), 0, weights);
 
@@ -248,11 +245,11 @@ fn test_chain_foldable_fold_to_string() {
 }
 
 #[test]
-#[should_panic(expected = "Adjunction::right_adjunct resulted in empty chain.")]
+#[should_panic(expected = "cannot be called on a Chain that stores nothing")]
 fn test_simplicial_complex_right_adjunct_empty_outer_chain_panics() {
-    // An input chain with no stored weight produces an outer `Chain<Chain<B>>`
-    // with nothing to unpack, so the outer guard fails as well as the inner one
-    // and there is no value to return.
+    // An input chain with no stored weight produces an outer `Chain<Chain<B>>` with nothing to
+    // unpack, so `f` is never applied. The message distinguishes this from the case where `f`
+    // ran and returned an empty chain: a caller seeing this one passed an empty chain in.
     let complex = create_simple_complex();
 
     let empty: CsrMatrix<f64> = CsrMatrix::new();
