@@ -175,9 +175,15 @@ here they are the only thing standing between those two types and a witness.
 
 ## 8. Recommendation
 
-1. **Drop the GAT where-clause from `HKT`.** One clause in `deep_causality_haft/src/hkt/mod.rs`,
-   plus three lines removed from each of the sixteen impls that spell it out. Thirty impls are
-   untouched. Verify with `cargo build --workspace --all-features` and `bazel test //...`.
+1. ~~**Drop the GAT where-clause from `HKT`.**~~ **Done 2026-08-30.** Removed from `HKT` and from
+   the whole `HKT2Unbound`..`HKT6Unbound` family, plus 24 now-redundant sites across 17 files. The
+   thesis held: a constrained `Monad` compiles and runs, `bind(m, pure) == m`, and a `String`
+   element is still rejected with `the trait bound String: Satisfies<FieldConstraint> is not
+   satisfied`. `bazel test //...` 1231 pass.
+
+   One trap worth recording: `cargo build` does not compile doctests, so a `rust` doctest in
+   `hkt/mod.rs` that spelled the clause out survived a green workspace build and failed only under
+   `bazel test`. Anything asserting the old shape has to be found by a doctest run, not a build.
 2. ~~**Then enable the strict witness.**~~ Superseded 2026-08-30. `StrictCausalTensorWitness` and
    `TensorConstraint` were deleted rather than enabled: unexported, uncalled outside their own unit
    tests, and carrying a whitelist that contradicted the tier it claimed. The measurement is in

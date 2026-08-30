@@ -24,22 +24,14 @@ struct PairWitness;
 
 impl HKT2Unbound for PairWitness {
     type Constraint = NoConstraint;
-    type Type<A, B>
-        = Pair<A, B>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>;
+    type Type<A, B> = Pair<A, B>;
 }
 
 struct MyPairWitness;
 
 impl HKT2Unbound for MyPairWitness {
     type Constraint = NoConstraint;
-    type Type<A, B>
-        = MyPair<A, B>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>;
+    type Type<A, B> = MyPair<A, B>;
 }
 
 struct PairMyPairIso;

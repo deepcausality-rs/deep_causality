@@ -27,28 +27,14 @@ struct QuintupleWitness;
 
 impl HKT5Unbound for QuintupleWitness {
     type Constraint = NoConstraint;
-    type Type<V, S, C, E, L>
-        = Quintuple<V, S, C, E, L>
-    where
-        V: Satisfies<NoConstraint>,
-        S: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        E: Satisfies<NoConstraint>,
-        L: Satisfies<NoConstraint>;
+    type Type<V, S, C, E, L> = Quintuple<V, S, C, E, L>;
 }
 
 struct MyQuintupleWitness;
 
 impl HKT5Unbound for MyQuintupleWitness {
     type Constraint = NoConstraint;
-    type Type<V, S, C, E, L>
-        = MyQuintuple<V, S, C, E, L>
-    where
-        V: Satisfies<NoConstraint>,
-        S: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        E: Satisfies<NoConstraint>,
-        L: Satisfies<NoConstraint>;
+    type Type<V, S, C, E, L> = MyQuintuple<V, S, C, E, L>;
 }
 
 struct QuintupleMyQuintupleIso;

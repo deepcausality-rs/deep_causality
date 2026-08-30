@@ -24,10 +24,6 @@ exclude = [
     "papers/*",
 ]
 
-[lib]
-name = "deep_causality_topology"
-path = "src/lib.rs"
-
 [features]
 # Enables random number generator from the host OS for secure random numbers.
 # Enabling os-random adds an indirect depdency on getrandom and libc.
