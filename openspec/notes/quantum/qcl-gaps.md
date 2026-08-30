@@ -49,6 +49,38 @@ anywhere in `deep_causality_topology/src`; the only `Chain` is the weighted one 
 carries four of Table 1's seven gates; and `deep_causality_quantum` still depends on neither
 `deep_causality_topology` nor `deep_causality_linear`.
 
+### An open question about the layering, raised 2026-08-25
+
+`deep_causality_topology` imports from `deep_causality_linear` in **36 files**, and the dominant
+import is `CsrMatrix` — the representation of the boundary operators. That coupling has a name in
+mathematics, and the register has been treating its symptoms without naming it.
+
+The bridge between topology and linear algebra is a functor composition:
+
+```
+Top  ──C_•──▶  Ch(R)  ──H_n──▶  R-Mod
+```
+
+A chain complex is a graded family of `R`-modules with differentials satisfying `∂∘∂ = 0`. Chain
+complexes over a ring form a category, and homology is a functor out of it. The categorical reason
+the same construction serves vector spaces, modules and complexes alike is that all three are
+**abelian categories**, which is where kernel-modulo-image is definable.
+
+Two consequences for this register.
+
+**G-02's finding is the universal coefficient theorem.** "Rank over ℝ is not rank over 𝔽₂" is the
+statement that `0 → H_n(C) ⊗ F → H_n(C; F) → Tor(H_{n-1}(C), F) → 0` has a vanishing Tor term over a
+field, so the two coefficient choices see different parts of the integral homology's torsion.
+`HomologyField::{Rational, Gf2}` is a coefficient-change functor with the theorem left implicit.
+
+**The middle layer does not exist as a crate.** `ChainComplex`, `HomologyField` and
+`betti_number_over` all live in the geometry crate. Under the layering above they are homological
+algebra, and so are G-04's representatives, G-08's duality, and the `Gf2Chain` this register asked
+to put in topology. Whether that justifies a `deep_causality_homology` crate is under assessment
+and is **not** decided here. What is decided: the earlier suggestion of a `deep_causality_packed`
+crate splits on the wrong axis, because bit-packing is a representation choice inside 𝔽₂ linear
+algebra rather than a branch of the mathematics.
+
 ### What the numeric-tower work changed
 
 The algebra tower was completed after this register was first written — ℕ and ℚ added, ℤ admitted,
@@ -561,6 +593,27 @@ so a mismatch is caught by a runtime check rather than by the type.
 The register previously cited `cup_product/mod.rs:62-70` and a single `cochain: &[R]`. Both are
 stale. The real signature strengthens the case: a `Cochain` turns five parameters into three, and a
 slice of tuples into a slice of one type.
+
+**The premise "no type binds data to degree" is also wrong, and that matters more.** `Topology<T>`
+(`types/topology/mod.rs:27-36`) carries `complex`, `grade`, `data` and `cursor`, and its
+`cup_product` method documents itself in cochain language: *"`other`: The q-cochain β. `self` is the
+p-cochain α."* A type binding data to degree exists. It carries two fields the cochain role does not
+need, and it is bound to `SimplicialComplex` where the free function is generic.
+
+**And the crate computes the cup product twice.** `Topology<T>::cup_product`
+(`types/topology/ops/cup_product.rs:35`) is a second, independent implementation. It does not call
+the free function. It extracts the Alexander-Whitney front and back faces by hand for the simplicial
+case, which the generic function already covers, because `Simplex` implements `SplittableCell`
+(`types/simplex/cell_splitting.rs:11`).
+
+Measured before anything was decided: the two agree **bit-for-bit**, maximum difference exactly zero,
+at every degree pair a tetrahedron admits. `tests/types/cup_product/implementation_agreement_tests.rs`
+pins that. It is the right artefact whichever way the duplication is resolved, and it is the safety
+net for resolving it.
+
+**Chosen closure, in this order:** make `Topology::cup_product` delegate to the free function, then
+add `Cochain<R>` and thread it through. Unifying first means the new type is threaded through one
+implementation rather than two, one of which would then be deleted.
 
 **Closure.** Fold into G-05: one type carrying data and degree together, used by both the cup product
 and the gate layer.
