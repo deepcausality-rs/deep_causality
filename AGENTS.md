@@ -178,7 +178,7 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 30 library crates:
+The project is a monorepo containing 29 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -207,7 +207,6 @@ The project is a monorepo containing 30 library crates:
 * `deep_causality_rand`: Random number generator and statistical distributions.
 * `deep_causality_linear`: Linear algebra — sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors,
   eliminations, decompositions, conjugate gradient, and an exact integer path.
-* `deep_causality_sparse`: **Retired.** A re-export shim over `deep_causality_linear`; no further development.
 * `deep_causality_tensor`: N-index tensors, broadcasting, Einstein summation, and the
   tensor-train stack. Its rank-2 decompositions delegate to `deep_causality_linear`.
 * `deep_causality_multivector`: Multivector implementation for geometric algebra.
@@ -227,10 +226,11 @@ The project is a monorepo containing 30 library crates:
 
 ## Project Dependencies
 
-Scope: the 30 library crates that are workspace members. Example crates (`examples/*`),
+Scope: the 29 library crates that are workspace members. Example crates (`examples/*`),
 vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
-`deep_causality_effects` and `deep_causality_macros` were moved to `yanked/` and are no
-longer workspace members, so both are omitted.
+`deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
+`yanked/` and are no longer workspace members, so all three are omitted. `deep_causality_sparse`
+was a re-export shim over `deep_causality_linear`; 0.2.5 is its last crates.io release.
 
 The tier block below is derived from the `[dependencies]` tables of each member's
 `Cargo.toml`, dev- and build-dependencies excluded. `build/scripts/crates.sh` reads the
@@ -279,7 +279,6 @@ Tier 4
   deep_causality             → deep_causality_algebra, deep_causality_ast, deep_causality_core,
                                deep_causality_data_structures, deep_causality_haft,
                                deep_causality_uncertain, ultragraph
-  deep_causality_sparse      → deep_causality_linear
   deep_causality_tensor      → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
                                deep_causality_linear, deep_causality_num, deep_causality_num_complex,
                                deep_causality_num_dual
@@ -330,7 +329,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 24 library crates have no external runtime dependencies.
+The other 23 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|

@@ -775,13 +775,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "deep_causality_sparse"
-version = "0.2.5"
-dependencies = [
- "deep_causality_linear",
-]
-
-[[package]]
 name = "deep_causality_tensor"
 version = "0.5.3"
 dependencies = [
@@ -1322,7 +1315,6 @@ dependencies = [
  "deep_causality_num_complex",
  "deep_causality_num_dual",
  "deep_causality_rand",
- "deep_causality_sparse",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
@@ -1566,7 +1558,6 @@ dependencies = [
  "deep_causality_physics",
  "deep_causality_quantum",
  "deep_causality_rand",
- "deep_causality_sparse",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
