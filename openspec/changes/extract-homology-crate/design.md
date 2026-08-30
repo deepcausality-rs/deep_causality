@@ -91,11 +91,54 @@ The cup product needs `SplittableCell::split` for the Alexander–Whitney diagon
 has no multiplication; a diagonal approximation comes from cells. The cup product is an operation of
 cellular complexes of spaces.
 
-### 5. `Gf2Chain` gains the identity of its complex
+### 5. `Gf2Chain` identifies its chain group structurally, by `(degree, len)`
 
-Today `add`, `intersect` and `inner` guard on degree and length alone, so a chain from a different
-complex with the same cell count is accepted and answered. `Chain<T>` in the same crate already
-decided the opposite. Settle it as the type moves, before anything is built on it.
+The workspace has already answered this four times. An element carries the *defining data* of its
+ambient object, by value, and operations compare that data:
+
+| element | ambient object | what it carries |
+|---|---|---|
+| `CausalTensor<T>` | a tensor space | `shape` |
+| `CausalMultiVector<T>` | a Clifford algebra | `Metric` — the signature |
+| `DensityMatrix<R>` | `B(H)` | `dim` |
+| `Chain<T>` | a simplicial complex | `Arc<SimplicialComplex<T>>`, compared by `ptr_eq` |
+
+`Chain<T>` is the one nominal case among four structural ones. Two identically built complexes fail
+its `Arc::ptr_eq` though they are the same complex, which is a claim homology does not make.
+Following it would spread the outlier.
+
+The rule asks what the operations need. `Gf2Chain` has `add`, `intersect`, `inner`, `weight`,
+`support`, `support_pairs`, `support_triples` — every one an operation of the chain *group* `C_k`,
+none of them mentioning a boundary. And `C_k = 𝔽₂^{n_k}` is fixed by `n_k` alone: two complexes with
+twelve 1-cells have the same `C₁`, and a sum of two of its elements is right whichever complex
+produced them. The defining data is `(degree, len)`, and the type already carries both.
+
+So the carrier stays as it is, and one guard changes. Today `add` checks the degree in
+`same_degree` and the length inside `PackedGf2Vector::add`, so two halves of one condition surface
+as two different error types. `same_group` checks both and names `C_k` in the message.
+
+The complex enters with `∂`, and there only. When `boundary` arrives — G-04 needs it — it reads
+
+```rust
+fn boundary(&self, c: &impl ChainComplex) -> Result<Self, HomologyError>
+```
+
+and checks `c.num_cells(self.degree) == self.len()` against the complex being applied, which a
+remembered token cannot do once it is stale.
+
+**Alternative rejected: `Arc<C>` and `ptr_eq`.** `ChainComplex` is a trait, so there is no complex
+type to hold. `Gf2Chain<W>` becomes `Gf2Chain<W, C>`, and the parameter reaches `from_row` and
+`from_column`, whose input is a `PackedGf2` kernel basis with no complex in it. That constructor is
+the Haruna path.
+
+**Alternative rejected: a generated `ComplexId`.** A global atomic counter with no mathematical
+content, and it makes a chain unconstructible without a complex to issue a token — the kernel-basis
+path again.
+
+**Alternative rejected: a phantom brand `Gf2Chain<W, Tag>`.** The right approximation to the
+dependent type, and out of reach here: the invariant-lifetime form needs `unsafe`, which the
+workspace forbids repo-wide, and the marker-type form puts a parameter on every signature to
+express a distinction no current operation can act on.
 
 ### 6. Conversions consolidate in linear
 
@@ -120,6 +163,46 @@ Moving them is a published-API break for no gain today.
 4. **A test passes by coincidence.** `lattice_complex_test.rs:183-193` asserts
    `cols(∂₂) == rows(∂₁)`, comparing `n₂` with `n₀`. Composability of `∂₁ ∘ ∂₂` is
    `cols(∂₁) == rows(∂₂)`.
+
+### 8. The crate carries `LEAN_HOMOLOGY.md` from creation, discharging an open hypothesis
+
+`lean/DeepCausalityFormal/Linear/RankNullity.lean` proves `gf2_betti_from_ranks`: that
+`(n_k − rank ∂_k) − rank ∂_{k+1}` is `dim H_k`. It proves it under a hypothesis it never supplies.
+
+```lean
+(hchain : LinearMap.range dk1.mulVecLin ≤ LinearMap.ker dk.mulVecLin)
+```
+
+That hypothesis is `∂ₖ ∘ ∂ₖ₊₁ = 0`. It is unproved in Lean, unstated in the `ChainComplex` trait,
+and unasserted in the conformance harness — defect 3 above. Every Betti number the workspace
+computes rests on an assumption written down in one place: as an argument to a theorem.
+
+`deep_causality_homology` is where that assumption becomes an obligation on implementors, so it is
+where the proof belongs. Two theorems, and the first is the bridge:
+
+- `homology.chain.dd_zero_implies_range_le_ker` — `∂ₖ ⬝ ∂ₖ₊₁ = 0 → range ∂ₖ₊₁ ≤ ker ∂ₖ`, turning
+  `hchain` into a matrix identity a Rust test can check.
+- `homology.chain.betti_from_dd_zero` — `gf2_betti_from_ranks` restated with `∂ₖ ⬝ ∂ₖ₊₁ = 0` in
+  place of the subspace inclusion, so the Betti identity stands on a hypothesis the Rust side
+  discharges rather than assumes.
+
+This meets the bar `LEAN_LINEAR.md` sets — *load-bearing and invisible* — for the same reason
+rank–nullity did: it is the step the source performs without stating.
+
+The Rust witnesses are what task 7.2's harness already computes, tagged with the two ids and moved
+to `deep_causality_homology/tests/formalization_lean/`, which is where
+`.github/workflows/formalization.yml` looks.
+
+**Not made a theorem: that `C_k` depends only on `n_k`.** It would formalize Decision 5, and in
+Lean `Fin n → F2` depends on `n` definitionally, so the statement is true by `rfl`. Neither
+load-bearing nor invisible.
+
+Four registrations follow from adding the crate and the namespace, each silent if missed:
+`_NAMESPACES` in `lean/BUILD.bazel` (no `Homology` entry means the proofs are never type-checked by
+`bazel test //lean:proofs`), the grep list in `.github/workflows/formalization.yml`, two rows in
+`lean/THEOREM_MAP.md`, and `cache_roots` in `MODULE.bazel` for any import the Linear file does not
+already pull — `Matrix.mulVecLin_mul` lives in `Mathlib.LinearAlgebra.Matrix.ToLin`, which is not
+in that list today.
 
 ## Risks / Trade-offs
 
@@ -147,6 +230,12 @@ Moving them is a published-API break for no gain today.
 
 ## Migration Plan
 
+Each step that produces API runs mock → suite → suite audit → implementation, with a root-cause
+diagnosis before any failing test is touched. `tasks.md` states the protocol and names the phase on
+each task.
+
+0. `openspec/notes/homology/reference/reference.py`: published Betti numbers and exact 𝔽₂ bases,
+   importing nothing from this workspace. Every later expectation resolves here, so it comes first.
 1. `deep_causality_linear` 0.1.2: add `from_column` and `csr_i8_to_dense_i64`; correct four
    docstrings. Independently useful and independently releasable.
 2. Create `deep_causality_homology` 0.1.0 with the three moved items and full Bazel, SBOM, lint and
@@ -161,8 +250,14 @@ after step 1 has proved the seam.
 
 ## Open Questions
 
-- Should `Gf2Chain` carry `Arc<Complex>` like `Chain<T>`, or a cheaper complex identity such as a
-  generation counter or a shape tuple? `Chain<T>`'s `Arc::ptr_eq` requires a concrete complex type,
-  which a generic `Gf2Chain<W>` does not have.
-- Does the new crate need a `LEAN_HOMOLOGY.md` and a theorem-map namespace at creation, or only when
-  it first carries a theorem? `∂∘∂ = 0` is a candidate first entry.
+Both questions this document opened are now decided — the carrier in Decision 5, the formalization
+in Decision 8. What remains open is downstream of them:
+
+- Does `Chain<T>`'s `Arc::ptr_eq` want the same structural treatment? It is the workspace's one
+  nominal identity and it refuses sums that are mathematically fine. Out of scope here: `Chain<T>`
+  stays in topology (Decision 4), and changing its compatibility rule is a published-API change
+  with its own blast radius.
+- Does `homology.chain.dd_zero_implies_range_le_ker` need `∂` over a general field, or is 𝔽₂
+  enough? `RankNullity.lean` fixes `ZMod 2` and the two files must compose, so 𝔽₂ is the answer for
+  the bridge. A ℚ statement would serve `HomologyField::Rational`, which has no formalization
+  today and is not opened by this change.
