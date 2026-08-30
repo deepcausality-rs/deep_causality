@@ -61,10 +61,14 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 // `deep_causality_haft` `HKT`/`Functor`/`Pure`/`Monad`/`Applicative` traits
 // declare their inner-type bounds as `T: Satisfies<F::Constraint>`, and Rust's
 // "impl has stricter requirements than trait" rule rejects adding `R: RealField`
-// to the impl methods. Same situation as `StrictCausalTensorWitness` in
-// `deep_causality_tensor` — verified to compile on nightly with `-Znext-solver`;
-// stable unblock is gated on the next-generation trait solver stabilizing or on
-// `deep_causality_haft` growing a capability-bridging `Constraint` mechanism.
+// to the impl methods.
+//
+// The next-generation trait solver does not lift this. Measured on
+// `rustc 1.100.0-nightly (bff8e12ff 2026-08-26)`, which enables it by default, the
+// strict impls still fail; the error changes from E0276/E0277 to E0271. The obstacle
+// is the `T: Satisfies<Self::Constraint>` where-clause on the `HKT` GAT, and the
+// unblock is dropping it. See `openspec/notes/hkt_gat/hkt_gat.md` for the measurement
+// and `openspec/notes/hkt_gat/hkt_gat_topology.md` for this crate's assessment.
 //
 // The cross-algebra composition story is preserved on `Manifold` (see
 // `extensions/hkt_manifold/mod.rs`) — that is the central composition surface.

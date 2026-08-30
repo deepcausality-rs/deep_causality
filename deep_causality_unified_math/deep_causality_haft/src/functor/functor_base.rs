@@ -14,9 +14,9 @@ use crate::{HKT, Satisfies};
 ///
 /// # Constraint Support
 ///
-/// The `fmap` function now requires both input type `A` and output type `B`
-/// to satisfy the HKT's constraint. This ensures type-safe mapping for
-/// constrained types like `CausalTensor<T>` where `T: TensorData`.
+/// The `fmap` function requires both input type `A` and output type `B` to satisfy the
+/// HKT's constraint. Under `NoConstraint` that admits every type; under a marker it admits
+/// only the types for which the marker is implemented.
 ///
 /// # Laws (Informal)
 ///

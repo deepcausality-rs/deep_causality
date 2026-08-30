@@ -148,7 +148,8 @@ pub struct Placeholder;
 /// trait hierarchy** for both constrained and unconstrained types:
 ///
 /// - **Unconstrained types** (like `Vec<T>`) use `type Constraint = NoConstraint;`
-/// - **Constrained types** (like `CausalTensor<T>`) use `type Constraint = TensorDataConstraint;`
+/// - **Constrained types** name their own marker, e.g. `type Constraint = ScalarConstraint;`,
+///   and implement `Satisfies<ScalarConstraint>` for each admitted element type
 ///
 /// Note: The constraint is enforced at the trait method level (Functor, Monad, etc.),
 /// not at the `Type<T>` GAT level. This allows the GAT to be used with any type,
@@ -169,10 +170,21 @@ pub struct Placeholder;
 ///
 /// # For Constrained Types
 ///
-/// ```rust,ignore
-/// impl HKT for CausalTensorWitness {
-///     type Constraint = TensorDataConstraint;
-///     type Type<T> = CausalTensor<T>;
+/// ```rust
+/// use deep_causality_haft::{HKT, Satisfies};
+///
+/// pub struct ScalarConstraint;
+/// impl Satisfies<ScalarConstraint> for f64 {}
+///
+/// pub struct Wrapper<T>(pub T);
+/// pub struct WrapperWitness;
+///
+/// impl HKT for WrapperWitness {
+///     type Constraint = ScalarConstraint;
+///     type Type<T>
+///         = Wrapper<T>
+///     where
+///         T: Satisfies<ScalarConstraint>;
 /// }
 /// ```
 ///

@@ -24,15 +24,17 @@ pub(crate) mod free_instances;
 /// # Design Note: Pure-Based Hierarchy
 ///
 /// Unlike the Haskell convention (`Monad: Applicative`), this trait extends `Functor + Pure`
-/// directly. This enables **strict constrained witnesses** (like `StrictCausalTensorWitness`)
-/// to implement `Monad` without being blocked by `Applicative`'s closure constraint.
+/// directly. A witness whose `Constraint` excludes function types cannot implement
+/// `Applicative`, because `apply` requires `Func: Satisfies<F::Constraint>`. Keeping `pure`
+/// in its own trait lets such a witness implement `Monad` regardless.
 ///
 /// Both `Applicative` and `Monad` share the same `pure` operation via the `Pure` trait.
 ///
 /// # Constraint Support
 ///
-/// The `bind` method requires types to satisfy the HKT's constraint. This ensures type-safe
-/// chaining for constrained types like `CausalTensor<T>` where `T: TensorData`.
+/// The `bind` method requires types to satisfy the HKT's constraint. A witness that declares
+/// `NoConstraint` admits every element type; one that declares a marker admits only the types
+/// for which that marker is implemented.
 ///
 /// # Laws (Informal)
 ///

@@ -140,7 +140,7 @@ not a defect worth that.
 | Crate | Today | After |
 |---|---|---|
 | `haft` | `Satisfies` and the dual-witness pattern documented as transitional, pending a compiler fix that does not deliver | The constraint system works as specified. The transitional framing can be retired |
-| `tensor` | `StrictCausalTensorWitness` has `HKT`, `Functor`, `Foldable`, `Pure`. `Monad` and `CoMonad` sit commented out across 66 lines with a note blaming E0276/E0277 | Both can be written. The commented block and its note go away |
+| `tensor` | Settled 2026-08-30: the strict witness was deleted, not enabled. `CausalTensorWitness` keeps `NoConstraint`, which is correct for a structural functor over a container with no element bound | Unchanged. Tensor's algebra is enforced per-impl and needs nothing from the constraint system |
 | `topology` | Ten witnesses write the clause; all use `NoConstraint`, so none enforces anything | Free to adopt the constraints the retired spec already assigned them |
 | `linear`, `multivector` | `NoConstraint` throughout, no clause written | Unchanged. Free to adopt constraints when wanted |
 
@@ -178,9 +178,11 @@ here they are the only thing standing between those two types and a witness.
 1. **Drop the GAT where-clause from `HKT`.** One clause in `deep_causality_haft/src/hkt/mod.rs`,
    plus three lines removed from each of the sixteen impls that spell it out. Thirty impls are
    untouched. Verify with `cargo build --workspace --all-features` and `bazel test //...`.
-2. **Then enable the strict witness.** `Monad` and `CoMonad` for `StrictCausalTensorWitness` become
-   writable; the commented block and its stale note come out. `Applicative` can go in ahead of this,
-   since it never depended on the change.
+2. ~~**Then enable the strict witness.**~~ Superseded 2026-08-30. `StrictCausalTensorWitness` and
+   `TensorConstraint` were deleted rather than enabled: unexported, uncalled outside their own unit
+   tests, and carrying a whitelist that contradicted the tier it claimed. The measurement is in
+   `openspec/notes/archive/hkt_gat/hkt_CausalTensor.md`. Tensor now has no constrained witness, so
+   the workspace has none; step 3 is where the first real one would come from.
 3. **Then adopt real constraints** where they are wanted, following the table the retired spec
    carried (recoverable with `git show HEAD:openspec/changes/deferred/hkt_gat.md`). This is the part with genuine design content and it should be taken crate by crate.
 4. **This note replaces the retired documents.** Their premise, that the wait is on a compiler
