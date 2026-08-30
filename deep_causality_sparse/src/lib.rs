@@ -35,14 +35,17 @@
 //! **`CsrMatrixWitness` no longer claims `Monad` or `Adjunction`.** The `bind` here violates monad
 //! right identity: it flattens to `1 × count` and renumbers the columns, so a sparse row comes back
 //! with its non-zeros in different places. Measured cases are in
-//! `openspec/notes/linear/HKT-LAW-FINDINGS.md`. `Functor`, `Foldable`, `Pure`, `Applicative` and
+//! `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`. `Functor`, `Foldable`, `Pure`, `Applicative` and
 //! `CoMonad` are all present and lawful.
 //!
 //! # Where the old implementation went
 //!
-//! `deep_causality_sparse/reverted/` holds it, detached from the build. It is the record of what
-//! the replacement was checked against — `deep_causality_linear`'s `ported_*` test files are that
-//! suite, run against the new implementation.
+//! Into git history, and nowhere else. There is no `reverted/` directory in this crate; the text
+//! here promised one that was never created. `git show a02944ee5^:deep_causality_sparse/src/`
+//! reads the implementation as it stood before the migration.
+//!
+//! What survives in the tree is the suite it was checked against: `deep_causality_linear`'s
+//! `ported_*` test files are that suite, run against the new implementation.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

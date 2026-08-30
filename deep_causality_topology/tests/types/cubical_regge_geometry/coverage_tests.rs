@@ -12,8 +12,8 @@
 
 use deep_causality_topology::utils_tests::{open_cube_3, unit_geometry};
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCellRegistry, Euclidean, HasHodgeStar, LatticeComplex,
-    Lorentzian, Primitive, SignatureMarker,
+    CellularComplex, ChainComplex, CubicalReggeGeometry, CutCellRegistry, Euclidean, HasHodgeStar,
+    LatticeComplex, Lorentzian, Primitive, SignatureMarker,
 };
 
 const TOL: f64 = 1e-10;

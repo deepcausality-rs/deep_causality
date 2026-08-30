@@ -16,9 +16,9 @@
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, CutConstraintKind,
-    CutFaceConstraint, CutFaceFragment, HodgeDecomposeOptions, LatticeCell, LatticeComplex,
-    Manifold, SourceGeometry, TopologyErrorEnum,
+    CellularComplex, ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry,
+    CutConstraintKind, CutFaceConstraint, CutFaceFragment, HodgeDecomposeOptions, LatticeCell,
+    LatticeComplex, Manifold, SourceGeometry, TopologyErrorEnum,
 };
 
 fn manifold_2d(

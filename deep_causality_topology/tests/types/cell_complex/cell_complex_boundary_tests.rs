@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{Cell, CellComplex, ChainComplex};
+use deep_causality_topology::{Cell, CellComplex, CellularComplex, ChainComplex};
 
 // Test cell implementation with proper boundary
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -100,7 +100,7 @@ fn test_cell_complex_cw_cells_iterator() {
 
     let complex = CellComplex::from_cells(cells);
 
-    let vertices: Vec<_> = ChainComplex::cells(&complex, 0).collect();
+    let vertices: Vec<_> = CellularComplex::cells(&complex, 0).collect();
     assert_eq!(vertices.len(), 3);
 }
 

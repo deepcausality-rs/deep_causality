@@ -161,6 +161,7 @@ lake.workspace(
         "Mathlib.LinearAlgebra.Dimension.RankNullity",
         "Mathlib.LinearAlgebra.FiniteDimensional.Lemmas",
         "Mathlib.LinearAlgebra.Matrix.Rank",
+        "Mathlib.LinearAlgebra.Matrix.ToLin",
         "Mathlib.LinearAlgebra.Matrix.Trace",
         "Mathlib.Tactic.Linarith",
     ],

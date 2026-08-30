@@ -17,8 +17,10 @@ use deep_causality_num::{Gf2, NaturalNumber};
 ///
 /// # Why this is not a one-row [`PackedGf2`]
 ///
-/// It could be stored as one, and [`from_row`](Self::from_row) exists because the 𝔽₂ elimination
-/// hands back its kernel and image bases exactly that way. What a one-row matrix cannot carry is
+/// It could be stored as one, and both [`from_row`](Self::from_row) and
+/// [`from_column`](Self::from_column) exist because a caller needs either orientation out of a
+/// packed matrix — the 𝔽₂ elimination hands back its kernel and image bases as **columns**. What a
+/// one-row matrix cannot carry is
 /// the meaning of its operators. `PackedGf2`'s `mul` is matrix multiplication; the product this
 /// type needs is the entrywise **intersection**, and its `inner` is a scalar rather than a vector.
 /// Giving a matrix type vector semantics would make `a * b` mean two different things depending on
@@ -105,8 +107,10 @@ impl<W: NaturalNumber> PackedGf2Vector<W> {
 
     /// Builds from one row of a packed matrix.
     ///
-    /// `kernel_basis_gf2` and `image_basis_gf2` return their bases as the rows of a
-    /// [`PackedGf2`], so this is how a homology or cohomology generator becomes a vector.
+    /// This reads a row, which is a contiguous run of words. It is **not** the way to read a
+    /// basis out of `kernel_basis_gf2` or `image_basis_gf2`: both write their vectors down columns,
+    /// so use [`from_column`](Self::from_column) for those. A basis read with this function has the
+    /// number of basis vectors as its length rather than the dimension they live in.
     ///
     /// # Errors
     ///
@@ -123,6 +127,41 @@ impl<W: NaturalNumber> PackedGf2Vector<W> {
             len: cols,
             _word: PhantomData,
         })
+    }
+
+    /// Builds from one column of a packed matrix.
+    ///
+    /// `kernel_basis_gf2` and `image_basis_gf2` write their bases down **columns**:
+    /// `kernel_basis_gf2` allocates `zeros(cols, free.len())` and sets `(f, k)` for basis vector
+    /// `k`, so vector `k` is column `k` and its length is the column count of the matrix that was
+    /// decomposed. This is how such a basis vector becomes a vector of the right length.
+    ///
+    /// [`from_row`](Self::from_row) cannot do it. A row is a contiguous run of words and a column
+    /// is one bit out of every row, so reading a basis with `from_row` yields a vector whose length
+    /// is the number of basis vectors rather than the dimension they live in.
+    ///
+    /// # Errors
+    ///
+    /// [`LinearError::IndexOutOfBounds`] if `col` is at or beyond the matrix's column count.
+    pub fn from_column(m: &PackedGf2<W>, col: usize) -> Result<Self, LinearError> {
+        let (rows, cols) = (MatrixView::rows(m), MatrixView::cols(m));
+        if col >= cols {
+            return Err(LinearError::IndexOutOfBounds((0, col), (rows, cols)));
+        }
+        let bits = Self::bits_per_word();
+        let wpr = m.words_per_row();
+        let words = m.as_words();
+        // The column selects one bit position, the same one in every row, so the word offset and
+        // the mask are computed once and only the row stride moves.
+        let word_in_row = col / bits;
+        let mask = W::one() << ((col % bits) as u32);
+        let mut v = Self::zeros(rows);
+        for (i, row_start) in (0..rows).map(|i| (i, i * wpr)) {
+            if !(words[row_start + word_in_row] & mask).is_zero() {
+                v.flip(i);
+            }
+        }
+        Ok(v)
     }
 
     /// The entry at `i`.

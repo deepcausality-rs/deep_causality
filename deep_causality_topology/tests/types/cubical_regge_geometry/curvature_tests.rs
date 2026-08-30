@@ -10,7 +10,9 @@ use deep_causality_topology::utils_tests::{
     open_cube_3, open_square_3, per_axis_geometry, per_edge_uniform_per_axis, periodic_cube_3,
     periodic_square_3, unit_geometry,
 };
-use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeCell, LatticeComplex};
+use deep_causality_topology::{
+    CellularComplex, ChainComplex, CubicalReggeGeometry, LatticeCell, LatticeComplex,
+};
 
 use std::f64::consts::{FRAC_PI_2, PI};
 

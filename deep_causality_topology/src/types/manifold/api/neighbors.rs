@@ -10,10 +10,10 @@
 //! adjacent etc. without baking the choice into the manifold's type.
 
 use crate::Manifold;
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::neighborhood::{CellId, Neighborhood};
 
-impl<K: ChainComplex, F> Manifold<K, F> {
+impl<K: CellularComplex, F> Manifold<K, F> {
     /// Enumerate the neighbors of `cell` under the given strategy.
     ///
     /// The strategy `n` is a zero-sized type (e.g. `VonNeumann`, `Moore`, `FaceAdjacent`),

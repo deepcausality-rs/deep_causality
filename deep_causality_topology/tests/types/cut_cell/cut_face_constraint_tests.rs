@@ -15,7 +15,7 @@
 use deep_causality_algebra::RealField;
 use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_topology::{
-    ChainComplex, CutCell, CutCellRegistry, CutConstraintKind, CutFaceFragment, LatticeCell,
+    CellularComplex, CutCell, CutCellRegistry, CutConstraintKind, CutFaceFragment, LatticeCell,
     LatticeComplex, SourceGeometry,
 };
 

@@ -5,8 +5,8 @@
 
 use deep_causality_linear::{
     CsrMatrix, DenseMatrix, LinearError, LinearErrorEnum, MatrixBuild, MatrixView, PackedGf2,
-    csr_to_dense, csr_to_packed_gf2_mod2, csr_to_packed_gf2_strict, dense_gf2_to_packed,
-    dense_to_csr, packed_to_dense_gf2,
+    csr_i8_to_dense_i64, csr_to_dense, csr_to_packed_gf2_mod2, csr_to_packed_gf2_strict,
+    dense_gf2_to_packed, dense_to_csr, packed_to_dense_gf2,
 };
 use deep_causality_num::Gf2;
 
@@ -95,4 +95,61 @@ fn test_dense_gf2_packs_and_unpacks() {
 fn test_a_conversion_preserves_an_empty_shape() {
     let m: CsrMatrix<f64> = CsrMatrix::zeros(0, 0);
     assert_eq!(csr_to_dense(&m).shape(), (0, 0));
+}
+
+/// Widening an `i8` boundary operator to dense `i64` preserves every entry, including the negative
+/// incidence numbers that distinguish this from the mod-2 path.
+///
+/// `csr_to_packed_gf2_mod2` sends `-1` and `1` to the same 𝔽₂ one. This conversion must not: over ℚ
+/// the sign is the orientation, and losing it turns a boundary operator into an incidence matrix
+/// with a different rank.
+#[test]
+fn test_widening_i8_to_dense_i64_keeps_the_signs() {
+    // The boundary of a triangle: three vertices, three edges, entries in {-1, 0, 1}.
+    let m = CsrMatrix::from_triplets(
+        3,
+        3,
+        &[
+            (0, 0, -1i8),
+            (1, 0, 1),
+            (1, 1, -1),
+            (2, 1, 1),
+            (0, 2, -1),
+            (2, 2, 1),
+        ],
+    )
+    .unwrap();
+    let d = csr_i8_to_dense_i64(&m);
+    assert_eq!(d.shape(), (3, 3));
+
+    let expected: [[i64; 3]; 3] = [[-1, 0, -1], [1, -1, 0], [0, 1, 1]];
+    for (i, row) in expected.iter().enumerate() {
+        for (j, want) in row.iter().enumerate() {
+            assert_eq!(d.get(i, j).unwrap(), *want, "entry ({i}, {j})");
+        }
+    }
+
+    // Every column sums to zero: that is what makes it a boundary operator, and it is a property
+    // the widening must not disturb.
+    for j in 0..3 {
+        let s: i64 = (0..3).map(|i| d.get(i, j).unwrap()).sum();
+        assert_eq!(s, 0, "column {j} of a boundary operator sums to zero");
+    }
+}
+
+/// A structural zero widens to a stored zero, and an empty matrix widens to an empty one.
+#[test]
+fn test_widening_fills_structural_zeros_and_handles_empty_shapes() {
+    let sparse = CsrMatrix::from_triplets(2, 4, &[(1, 3, 7i8)]).unwrap();
+    let d = csr_i8_to_dense_i64(&sparse);
+    assert_eq!(d.shape(), (2, 4));
+    assert_eq!(d.get(1, 3).unwrap(), 7);
+    let nonzero = (0..2)
+        .flat_map(|i| (0..4).map(move |j| (i, j)))
+        .filter(|&(i, j)| d.get(i, j).unwrap() != 0)
+        .count();
+    assert_eq!(nonzero, 1, "only the stored entry is non-zero");
+
+    let empty: CsrMatrix<i8> = CsrMatrix::from_triplets(0, 0, &[]).unwrap();
+    assert_eq!(csr_i8_to_dense_i64(&empty).shape(), (0, 0));
 }

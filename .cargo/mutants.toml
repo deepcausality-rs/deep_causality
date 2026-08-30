@@ -59,6 +59,17 @@ exclude_re = [
     "replace > with >= in matrix_norm_l1",
     "replace > with >= in matrix_norm_inf",
 
+    # `if rows == 0 || cols == 0` versus `&&` in `HomologyField::rank_of`. The guard is an early
+    # exit, not a correctness gate: measured on `(0,5)`, `(5,0)`, `(0,0)`, `(0,100)` and `(100,0)`,
+    # both eliminations return `Ok(0)` when they are allowed to run, so the mutant reaches the same
+    # answer by the longer route. Nothing is saved by the early exit either, since the widening
+    # allocates `rows * cols == 0` elements in every one of those shapes.
+    #
+    # This path is hot after `extract-homology-crate`: the degenerate grades now return `(0, n_0)`
+    # and `(n_max, 0)` rather than an empty matrix, so every `betti_number_over` call reaches it
+    # twice.
+    "replace \\|\\| with && in HomologyField::rank_of",
+
     # `if rows == 0 || cols == 0` versus `&&` in `svd_sorted`. The two differ only when exactly
     # one dimension is zero, and there the general path produces the same factors as the early
     # return: for `3 x 0` both give `U` at `3 x 0` and `Vᴴ` at `0 x 0`, for `0 x 4` both give `U`

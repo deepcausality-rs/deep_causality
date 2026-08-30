@@ -25,6 +25,31 @@ Verified against the tree on **2026-08-25**. **Eight gaps are closed, ten are op
 `add-linear-algebra-crate` closed G-01 and G-02. The category-A sweep then closed G-03, G-10, G-11,
 G-12, G-15 and G-17: everything that was unblocked, self-contained and small.
 
+**`deep_causality_homology` now exists, and it is where G-04 and G-08 land.**
+The `extract-homology-crate` change moved the chain-complex layer out of `deep_causality_topology`
+into its own crate at tier 4: `ChainComplex` over boundary matrices alone, `HomologyField`, and
+`Gf2Chain<W>`. The geometric half stayed behind on `CellularComplex: ChainComplex`, and topology
+re-exports all three moved names, so nothing downstream changed except two `use` lines in
+`deep_causality_cfd`.
+
+What this changes for this register is the *dependency edge*. G-07 and G-09 need
+`deep_causality_quantum` to reach homology, and until now that meant depending on
+`deep_causality_topology` — 27,317 lines of geometry, a Hodge star and a metric — to use 419 lines
+of chain-complex machinery. The edge now goes to `deep_causality_homology`, whose whole dependency
+set is `deep_causality_linear` and `deep_causality_num`. A CSS code is a chain complex with no
+cells; it can now be typed as one.
+
+Two further things came with the move and are worth recording here, because both were assumptions
+this register's Betti-number work rested on:
+
+- **`∂ₖ ∘ ∂ₖ₊₁ = 0` is now stated and proved.** It was the unproved hypothesis of
+  `linear.gf2.betti_from_ranks`. `homology.chain.dd_zero_implies_range_le_ker` discharges it, and
+  the conformance harness asserts it at every grade of every shipped complex. See
+  `deep_causality_homology/LEAN_HOMOLOGY.md`.
+- **The degenerate grades carry a shape.** `∂₀` is `(0, n₀)` and `∂_{max+1}` is `(n_max, 0)`, in
+  place of the empty matrix all three implementors returned. `betti_number_over` survived that on
+  `saturating_sub`; the kernel basis G-04 needs would not have.
+
 **Publication is not a gate on anything here.** `deep_causality_linear` 0.1.0 is on crates.io, and
 the whole workspace has since been patch-bumped and republished. It makes no difference to this
 register: every closure consumes its crate through a workspace path dependency, so what unblocked
@@ -48,6 +73,39 @@ anywhere in `deep_causality_topology/src`; the only `Chain` is the weighted one 
 `Cochain`; `logical_z` is still typed on `CausalMultiVector` (`gates_haruna.rs:137-139`); `GateOp`
 carries four of Table 1's seven gates; and `deep_causality_quantum` still depends on neither
 `deep_causality_topology` nor `deep_causality_linear`.
+
+### An open question about the layering, raised 2026-08-25
+
+`deep_causality_topology` imports from `deep_causality_linear` in **36 files**, and the dominant
+import is `CsrMatrix` — the representation of the boundary operators. That coupling has a name in
+mathematics, and the register has been treating its symptoms without naming it.
+
+The bridge between topology and linear algebra is a functor composition:
+
+```
+Top  ──C_•──▶  Ch(R)  ──H_n──▶  R-Mod
+```
+
+A chain complex is a graded family of `R`-modules with differentials satisfying `∂∘∂ = 0`. Chain
+complexes over a ring form a category, and homology is a functor out of it. The categorical reason
+the same construction serves vector spaces, modules and complexes alike is that all three are
+**abelian categories**, which is where kernel-modulo-image is definable.
+
+Two consequences for this register.
+
+**G-02's finding is the universal coefficient theorem.** "Rank over ℝ is not rank over 𝔽₂" is the
+statement that `0 → H_n(C) ⊗ F → H_n(C; F) → Tor(H_{n-1}(C), F) → 0` has a vanishing Tor term over a
+field, so the two coefficient choices see different parts of the integral homology's torsion.
+`HomologyField::{Rational, Gf2}` is a coefficient-change functor with the theorem left implicit.
+
+**The middle layer now exists as a crate.** `ChainComplex`, `HomologyField` and `betti_number_over`
+live in `deep_causality_homology`; `deep_causality_topology` keeps `pub use` re-export shims for all
+three (`traits/chain_complex.rs:38`, `types/homology_field/mod.rs:25`, `types/gf2_chain/mod.rs:27`),
+so no consumer moved. Under the layering above they are homological algebra, and so are G-04's
+representatives, G-08's duality, and `Gf2Chain`, which landed in homology rather than in topology as
+this register once asked. The earlier suggestion of a `deep_causality_packed` crate splits on the
+wrong axis, because bit-packing is a representation choice inside 𝔽₂ linear algebra rather than a
+branch of the mathematics.
 
 ### What the numeric-tower work changed
 
@@ -561,6 +619,27 @@ so a mismatch is caught by a runtime check rather than by the type.
 The register previously cited `cup_product/mod.rs:62-70` and a single `cochain: &[R]`. Both are
 stale. The real signature strengthens the case: a `Cochain` turns five parameters into three, and a
 slice of tuples into a slice of one type.
+
+**The premise "no type binds data to degree" is also wrong, and that matters more.** `Topology<T>`
+(`types/topology/mod.rs:27-36`) carries `complex`, `grade`, `data` and `cursor`, and its
+`cup_product` method documents itself in cochain language: *"`other`: The q-cochain β. `self` is the
+p-cochain α."* A type binding data to degree exists. It carries two fields the cochain role does not
+need, and it is bound to `SimplicialComplex` where the free function is generic.
+
+**And the crate computes the cup product twice.** `Topology<T>::cup_product`
+(`types/topology/ops/cup_product.rs:35`) is a second, independent implementation. It does not call
+the free function. It extracts the Alexander-Whitney front and back faces by hand for the simplicial
+case, which the generic function already covers, because `Simplex` implements `SplittableCell`
+(`types/simplex/cell_splitting.rs:11`).
+
+Measured before anything was decided: the two agree **bit-for-bit**, maximum difference exactly zero,
+at every degree pair a tetrahedron admits. `tests/types/cup_product/implementation_agreement_tests.rs`
+pins that. It is the right artefact whichever way the duplication is resolved, and it is the safety
+net for resolving it.
+
+**Chosen closure, in this order:** make `Topology::cup_product` delegate to the free function, then
+add `Cochain<R>` and thread it through. Unifying first means the new type is threaded through one
+implementation rather than two, one of which would then be deleted.
 
 **Closure.** Fold into G-05: one type carrying data and degree together, used by both the cup product
 and the gate layer.

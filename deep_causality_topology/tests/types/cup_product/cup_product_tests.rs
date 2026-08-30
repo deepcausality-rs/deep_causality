@@ -27,14 +27,15 @@ use deep_causality_topology::utils_tests::{
     tetrahedron,
 };
 use deep_causality_topology::{
-    ChainComplex, LatticeCell, LatticeComplex, Simplex, SplittableCell, cup_product, cup_product_n,
+    CellularComplex, ChainComplex, LatticeCell, LatticeComplex, Simplex, SplittableCell,
+    cup_product, cup_product_n,
 };
 
 const TOL: f64 = 1e-9;
 
 /// The Leibniz residual for one degree pair on any splittable complex:
 /// `|δ(α ∪ β) − (δα ∪ β + (−1)^p α ∪ δβ)|`, Chen & Tata Prop. 3.
-fn leibniz_residual<K: ChainComplex>(c: &K, p: usize, q: usize) -> f64
+fn leibniz_residual<K: CellularComplex>(c: &K, p: usize, q: usize) -> f64
 where
     K::CellType: SplittableCell,
 {
@@ -48,7 +49,7 @@ where
     max_abs_diff(&lhs, &rhs)
 }
 
-fn assert_leibniz<K: ChainComplex>(c: &K, p: usize, q: usize)
+fn assert_leibniz<K: CellularComplex>(c: &K, p: usize, q: usize)
 where
     K::CellType: SplittableCell,
 {
@@ -426,7 +427,7 @@ fn triple_product_class_is_invariant_under_a_coboundary_shift() {
 fn both_complex_families_resolve_through_the_same_generic_path() {
     // One generic function, bounded only on ChainComplex plus the splitting
     // trait, serves a hand-built simplicial complex and a lattice complex alike.
-    fn total_leibniz_residual<K: ChainComplex>(c: &K) -> f64
+    fn total_leibniz_residual<K: CellularComplex>(c: &K) -> f64
     where
         K::CellType: SplittableCell,
     {

@@ -9,7 +9,9 @@
 //! and gradient flow.
 
 use deep_causality_num_complex::Complex;
-use deep_causality_topology::{ChainComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1};
+use deep_causality_topology::{
+    CellularComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1,
+};
 use std::sync::Arc;
 
 // ============================================================================

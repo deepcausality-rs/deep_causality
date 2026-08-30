@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
 use core::fmt::Debug;
@@ -12,7 +12,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<K, D> Manifold<K, D>
 where
-    K: ChainComplex,
+    K: CellularComplex,
     D: RealField + MaybeParallel + Default + PartialEq + Debug,
 {
     /// Computes the exterior derivative of a k-form.

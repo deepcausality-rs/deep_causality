@@ -78,7 +78,7 @@ fn test_fmap_preserves_the_vector_length() {
 // container has no canonical one; taking the 1x1, right identity would need `bind` to reassemble an
 // `m x n` out of `m*n` one-by-ones, which no general `bind` can do. `deep_causality_sparse`'s
 // witness claims `Monad` and fails this law — `bind(m, pure)` turns a 2x2 into a 1x4 — which is
-// recorded in openspec/notes/linear/HKT-LAW-FINDINGS.md rather than reproduced here.
+// recorded in openspec/notes/unified_math/HKT-LAW-FINDINGS.md rather than reproduced here.
 //
 // A vector has no shape beyond its length, so its `bind` is list concatenation and the laws hold.
 

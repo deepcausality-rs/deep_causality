@@ -1,0 +1,35 @@
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+
+rust_library(
+    name = "deep_causality_homology",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "src/lib.rs",
+    tags = [
+        "homology",
+        "math",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_linear",
+        "//deep_causality_num",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_homology",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_homology",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)

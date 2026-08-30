@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::types::manifold::Manifold;
 use core::ops::Mul;
 use deep_causality_algebra::{Field, RealField};
@@ -23,7 +23,7 @@ pub(super) const PAR_MATVEC_THRESHOLD: usize = 1 << 18;
 
 impl<K, D> Manifold<K, D>
 where
-    K: ChainComplex,
+    K: CellularComplex,
     D: RealField + MaybeParallel + Default + PartialEq,
 {
     /// Extract the slice of data corresponding to grade-k forms from the flat

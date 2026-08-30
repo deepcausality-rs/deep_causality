@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{ChainComplex, LatticeCell, LatticeComplex};
+use deep_causality_linear::MatrixView;
+use deep_causality_topology::{CellularComplex, ChainComplex, LatticeCell, LatticeComplex};
 
 #[test]
 fn test_lattice_construction() {
@@ -179,18 +180,36 @@ fn test_boundary_matrix_2d_torus() {
     assert_eq!(cols, 9, "Should have 9 faces (cols)");
 }
 
+/// `∂₁ ∘ ∂₂ = 0`, which is the name this test has always carried.
+///
+/// Two defects were repaired here. It asserted `cols(∂₂) == rows(∂₁)` — that is `n₂` against `n₀`,
+/// which is not the composability condition and held on `square_torus(2)` only because that torus
+/// has four 0-cells and four 2-cells. Composability of `∂₁ ∘ ∂₂` is `cols(∂₁) == rows(∂₂)`. And
+/// having checked a shape, it returned without ever forming the product the name promises.
 #[test]
 fn test_boundary_matrix_squared_is_zero() {
-    // For any chain complex, ∂_{k-1} ∘ ∂_k = 0
     let lattice = LatticeComplex::<2, f64>::square_torus(2);
 
     let bdry_2 = lattice.boundary_matrix(2);
     let bdry_1 = lattice.boundary_matrix(1);
 
-    // Check dimensions allow composition
-    let (_, cols_2) = bdry_2.shape();
-    let (rows_1, _) = bdry_1.shape();
-    assert_eq!(cols_2, rows_1, "Matrices should be composable");
+    let (rows_1, cols_1) = bdry_1.shape();
+    let (rows_2, cols_2) = bdry_2.shape();
+    assert_eq!(
+        cols_1, rows_2,
+        "∂₁ ∘ ∂₂ needs cols(∂₁) == rows(∂₂); comparing cols(∂₂) with rows(∂₁) compares n₂ with n₀"
+    );
+
+    // The product itself. Coefficients widen to `i64` before multiplying: the entries are `i8`, and
+    // a wrapped intermediate would compare equal to zero in release.
+    for j in 0..cols_2 {
+        for i in 0..rows_1 {
+            let acc: i64 = (0..cols_1)
+                .map(|t| bdry_1.get(i, t).unwrap() as i64 * bdry_2.get(t, j).unwrap() as i64)
+                .sum();
+            assert_eq!(acc, 0, "(∂₁ ∂₂)[{i}, {j}] must vanish");
+        }
+    }
 }
 
 // =============================================================================

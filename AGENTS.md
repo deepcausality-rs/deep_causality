@@ -178,7 +178,7 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 29 library crates:
+The project is a monorepo containing 30 library crates:
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -218,6 +218,8 @@ The project is a monorepo containing 29 library crates:
 * `deep_causality_ethos`: Programmable ethics for DeepCausality.
 
 ### Topology and Physics Crates
+* `deep_causality_homology`: Chain complexes, boundary operators, and homology over a chosen
+  coefficient field. No geometry: a quantum code is a chain complex with no cells.
 * `deep_causality_topology`: Topological data structures (complexes, manifolds, differential geometry).
 * `deep_causality_physics`: Standard library of physics formulas and engineering primitives.
 * `deep_causality_quantum`: Quantum types — density matrices, channels, gates — over the complex tower.
@@ -225,7 +227,7 @@ The project is a monorepo containing 29 library crates:
 
 ## Project Dependencies
 
-Scope: the 29 library crates that are workspace members. Example crates (`examples/*`),
+Scope: the 30 library crates that are workspace members. Example crates (`examples/*`),
 vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
 `deep_causality_effects` and `deep_causality_macros` were moved to `yanked/` and are no
 longer workspace members, so both are omitted.
@@ -273,6 +275,7 @@ Tier 3
                                deep_causality_rand
 
 Tier 4
+  deep_causality_homology    → deep_causality_linear, deep_causality_num
   deep_causality             → deep_causality_algebra, deep_causality_ast, deep_causality_core,
                                deep_causality_data_structures, deep_causality_haft,
                                deep_causality_uncertain, ultragraph
@@ -293,7 +296,8 @@ Tier 6
                                deep_causality_num, deep_causality_num_complex, deep_causality_tensor,
                                deep_causality_uncertain (opt)
   deep_causality_topology    → deep_causality_algebra, deep_causality_fft, deep_causality_haft,
-                               deep_causality_linear, deep_causality_metric, deep_causality_multivector,
+                               deep_causality_homology, deep_causality_linear,
+                               deep_causality_metric, deep_causality_multivector,
                                deep_causality_num, deep_causality_num_complex, deep_causality_par,
                                deep_causality_rand, deep_causality_tensor
 
@@ -326,7 +330,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 23 library crates have no external runtime dependencies.
+The other 24 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|

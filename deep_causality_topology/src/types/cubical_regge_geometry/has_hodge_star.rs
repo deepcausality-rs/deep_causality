@@ -62,6 +62,7 @@
 
 use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::TopologyError;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::cut_cell::CutCellRegistry;

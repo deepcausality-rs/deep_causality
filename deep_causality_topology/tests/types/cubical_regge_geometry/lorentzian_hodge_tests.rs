@@ -14,7 +14,7 @@
 use deep_causality_topology::utils_tests::{
     open_square_3, periodic_cube_3, periodic_square_3, unit_geometry,
 };
-use deep_causality_topology::{ChainComplex, HasHodgeStar};
+use deep_causality_topology::{CellularComplex, HasHodgeStar};
 
 const TOL: f64 = 1e-12;
 

@@ -8,7 +8,7 @@
 //! clip on a degenerate lattice.
 
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, LatticeCell, LatticeComplex,
+    CellularComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, LatticeCell, LatticeComplex,
 };
 
 const TOL: f64 = 1e-12;

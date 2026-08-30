@@ -30,6 +30,44 @@ fn make_triangle_complex() -> SimplicialComplex<f64> {
 
 fn assert_shape_invariant<K: ChainComplex>(complex: &K) {
     let max_d = complex.max_dim();
+
+    // The degenerate grades carry the shape their dimension implies, rather than an empty matrix.
+    // Without this, `cols(∂_k) == rows(∂_{k+1})` fails at both ends and the composite that the
+    // `∂∘∂ = 0` law speaks about is not formable there. `betti_number_over` survives on
+    // `saturating_sub`; a kernel basis would not.
+    let d0 = complex.boundary_matrix(0);
+    assert_eq!(
+        d0.shape(),
+        (0, complex.num_cells(0)),
+        "boundary_matrix(0) must be (0, num_cells(0)); there are no (−1)-cells but there are cells"
+    );
+    let top = complex.boundary_matrix(max_d + 1);
+    assert_eq!(
+        top.shape(),
+        (complex.num_cells(max_d), 0),
+        "boundary_matrix(max_dim + 1) must be (num_cells(max_dim), 0)"
+    );
+    // Above `max_dim + 1` there are no cells on either side, so `(0, 0)` is the only shape that
+    // composes with the `(num_cells(max_dim), 0)` at `max_dim + 1`.
+    let above_top = complex.boundary_matrix(max_d + 2);
+    assert_eq!(
+        above_top.shape(),
+        (0, 0),
+        "boundary_matrix(max_dim + 2) must be (0, 0); no cells sit on either side of it"
+    );
+
+    // Composability across every grade, including both ends and the grades above the top.
+    for k in 0..=max_d + 2 {
+        let (_, cols) = complex.boundary_matrix(k).shape();
+        let (rows, _) = complex.boundary_matrix(k + 1).shape();
+        assert_eq!(
+            cols,
+            rows,
+            "cols(∂_{k}) must equal rows(∂_{}) for the composite to be formable",
+            k + 1
+        );
+    }
+
     for k in 1..=max_d {
         let mat = complex.boundary_matrix(k);
         let (rows, cols) = mat.shape();
@@ -216,21 +254,10 @@ fn betti_number_over_is_available_on_a_lattice_complex() {
 /// caller-chosen error, so the panic arms of the default `betti_number` body are
 /// reachable without a real rank computation overflowing.
 struct FailingComplex {
-    error: deep_causality_topology::TopologyError,
+    error: deep_causality_homology::HomologyError,
 }
 
 impl ChainComplex for FailingComplex {
-    type CellType = Simplex;
-    type CellIter<'a>
-        = std::iter::Empty<Simplex>
-    where
-        Self: 'a;
-    type Metric = ();
-
-    fn cells(&self, _k: usize) -> Self::CellIter<'_> {
-        std::iter::empty()
-    }
-
     fn num_cells(&self, _k: usize) -> usize {
         0
     }
@@ -251,7 +278,7 @@ impl ChainComplex for FailingComplex {
         &self,
         _k: usize,
         _field: HomologyField,
-    ) -> Result<usize, deep_causality_topology::TopologyError> {
+    ) -> Result<usize, deep_causality_homology::HomologyError> {
         Err(self.error.clone())
     }
 }
@@ -260,16 +287,16 @@ impl ChainComplex for FailingComplex {
 #[should_panic(expected = "exact rank over the rationals failed at grade 2: elimination overflow")]
 fn betti_number_panics_naming_the_exact_rank_failure() {
     let c = FailingComplex {
-        error: deep_causality_topology::TopologyError::LinearAlgebraError("elimination overflow"),
+        error: deep_causality_homology::HomologyError::LinearAlgebraError("elimination overflow"),
     };
     let _ = c.betti_number(2);
 }
 
 #[test]
-#[should_panic(expected = "Betti number at grade 1 failed: Dimension mismatch: grade too high")]
+#[should_panic(expected = "Betti number at grade 1 failed: Chain group mismatch: grade too high")]
 fn betti_number_panics_reporting_any_other_failure_with_its_display() {
     let c = FailingComplex {
-        error: deep_causality_topology::TopologyError::DimensionMismatch("grade too high"),
+        error: deep_causality_homology::HomologyError::ChainGroupMismatch("grade too high"),
     };
     let _ = c.betti_number(1);
 }

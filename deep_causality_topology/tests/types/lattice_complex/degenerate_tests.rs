@@ -7,7 +7,7 @@
 //! `LatticeComplex` — `D < 2`, `shape[d] == 0`, out-of-range `hinge_id`.
 //! Lifts these one-line conditional arms above the `cargo llvm-cov` floor.
 
-use deep_causality_topology::{ChainComplex, LatticeComplex};
+use deep_causality_topology::{CellularComplex, ChainComplex, LatticeComplex};
 
 // -- D < 2: hinge_top_cube_neighbors short-circuits to empty -----------------------
 

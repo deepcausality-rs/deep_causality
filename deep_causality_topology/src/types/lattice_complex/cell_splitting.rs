@@ -11,9 +11,9 @@ use crate::types::lattice_complex::lattice_cell::LatticeCell;
 /// The orientation bitmask for a set of axis indices.
 ///
 /// This is the single source of truth for the `(axes) -> orientation` mapping.
-/// Test fixtures build cells the same way through
-/// [`utils_tests`](crate::utils_tests), which re-exports this rather than
-/// keeping a second copy.
+/// The crate's test fixtures build cells the same way by re-exporting this function rather than
+/// keeping a second copy. They are not linked here: `utils_tests` is `#[doc(hidden)]`, and a link
+/// from public documentation into it would make rustdoc render the module anyway.
 pub fn axis_mask(axes: &[usize]) -> u32 {
     axes.iter().fold(0u32, |m, &a| m | (1 << a))
 }

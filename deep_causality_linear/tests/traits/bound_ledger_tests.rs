@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! One instantiation per row of `openspec/notes/linear/BOUND-LEDGER.md`.
+//! One instantiation per row of `openspec/notes/archive/linear/BOUND-LEDGER.md`.
 //!
 //! A bound loosened off `Field` or `RealField` that nothing exercises is indistinguishable from an
 //! untested one, and the loosening is the moment a body can quietly stop being correct for the types

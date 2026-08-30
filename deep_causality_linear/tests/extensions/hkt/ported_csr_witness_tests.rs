@@ -21,7 +21,7 @@
 //! Restoring them verbatim would enshrine a defect that is already on record:
 //!
 //! - `bind` flattens its result to `1 x count`, so `bind(m, pure)` turns a 2x2 into a 1x4 and monad
-//!   right identity fails. `openspec/notes/linear/HKT-LAW-FINDINGS.md` states the finding, and
+//!   right identity fails. `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` states the finding, and
 //!   `DenseMatrixWitness` answers the same problem by declining `Monad` outright.
 //! - `counit` and `right_adjunct` are written in terms of that `bind`, so the `Adjunction` impl
 //!   turns on the same decision.

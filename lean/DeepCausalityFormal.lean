@@ -13,11 +13,17 @@ Layered to mirror the Rust crate tiers:
                  non-commutativity), mirroring `deep_causality_num_complex`.
   * `Dual`     — the dual number `R[ε]` (commutative ring, ε² = 0, real projection, product rule),
                  mirroring `deep_causality_num_dual`.
+  * `Rational` — the field of fractions and its canonical form, mirroring
+                 `deep_causality_num_rational`.
   * `Haft`     — HKT / functor / monad / arrow laws, mirroring `deep_causality_haft`.
   * `Core`     — the Causal Monad `pure`/`bind` laws, mirroring `deep_causality_core`.
   * `Linear`   — rank–nullity over 𝔽₂ and the Betti-number identity read off it, mirroring
                  `deep_causality_linear`.
+  * `Homology` — the chain condition `∂ₖ ∘ ∂ₖ₊₁ = 0` and the Betti identity standing on it rather
+                 than assuming it, mirroring `deep_causality_homology`.
   * `Topology` — curvature-tensor laws at the concrete carriers, mirroring `deep_causality_topology`.
+  * `Quantum`  — linearity of the Choi action and of the partial trace, and where trace preservation
+                 fails, mirroring `deep_causality_quantum`.
 
 Each theorem is bound to a Rust witness via `lean/THEOREM_MAP.md`. See `lean/README.md`.
 
@@ -36,6 +42,9 @@ Scope (what is proved end-to-end here, each bound to a Rust witness):
   * `Core`     — the causal-monad laws over the single-channel carrier: bind left identity,
                  bind right identity (unconditional, including errored carriers), associativity,
                  and the error left-zero.
+  * `Rational` — ℚ is a field (inverse, commutativity, associativity, distributivity) and an abelian
+                 group under addition; the canonical form has a positive denominator coprime with
+                 the numerator, so equality is structural; and the order is dense.
   * `Haft`     — the algebraic-layer laws (functor, pure, applicative, monad, comonad, bifunctor,
                  profunctor, monoidal-merge, parametric-monad, arrow, morphism, endomorphism,
                  adjunction, foldable, traversable, natural-iso, either, effect-system, io,
@@ -43,8 +52,16 @@ Scope (what is proved end-to-end here, each bound to a Rust witness):
   * `Linear`   — rank–nullity over 𝔽₂, the nullity-as-count-minus-rank substitution that
                  `betti_number_over` performs without materialising a kernel, and that what it
                  computes is the dimension of mod-2 homology.
+  * `Homology` — that `∂ₖ ⬝ ∂ₖ₊₁ = 0` implies `im ∂ₖ₊₁ ⊆ ker ∂ₖ`, which discharges the hypothesis
+                 `Linear`'s Betti identity takes and never supplies, and that identity restated over
+                 the matrix condition. The subspace inclusion cannot be tested; the matrix product
+                 can, and the conformance harness checks it at every grade of every complex.
   * `Topology` — the curvature laws at the concrete carrier (antisymmetry, first Bianchi identity,
                  linearity).
+  * `Quantum`  — the Choi action and the partial trace are additive and homogeneous, the partial
+                 trace is a bimodule map on both sides and acts as expected on a Kronecker product,
+                 and trace preservation holds only at a stated boundary — with an explicit
+                 counterexample and its value where it does not.
 Deviations from accepted category theory are recorded in
 `openspec/notes/causal-algebra/haft-formalization-deviations.md`; the full program and its
 remaining layers are described in `openspec/notes/causal-algebra/Formalization.md`.
@@ -56,10 +73,12 @@ into `cache_roots` in `//MODULE.bazel`: that list tree-shakes the Mathlib olean 
 roots plus their closure, so a module absent from it is never fetched and the build fails on it.
 -/
 
+/- `Num` -/
 import DeepCausalityFormal.Num.Identity
 import DeepCausalityFormal.Num.Integer
 import DeepCausalityFormal.Num.Cast
 import DeepCausalityFormal.Num.Float106
+/- `Algebra` -/
 import DeepCausalityFormal.Algebra.Monoid
 import DeepCausalityFormal.Algebra.MonoidGeneric
 import DeepCausalityFormal.Algebra.CommutativeMonoid
@@ -71,10 +90,14 @@ import DeepCausalityFormal.Algebra.EuclideanDomain
 import DeepCausalityFormal.Algebra.Module
 import DeepCausalityFormal.Algebra.DivisionAlgebra
 import DeepCausalityFormal.Algebra.Scalar
+/- `Complex` -/
 import DeepCausalityFormal.Complex.Complex
 import DeepCausalityFormal.Complex.Quaternion
+/- `Dual` -/
 import DeepCausalityFormal.Dual.Dual
+/- `Rational` -/
 import DeepCausalityFormal.Rational.Rational
+/- `Core` -/
 import DeepCausalityFormal.Core.EffectLog
 import DeepCausalityFormal.Core.CausalEffect
 import DeepCausalityFormal.Core.CausalCommand
@@ -90,6 +113,7 @@ import DeepCausalityFormal.Core.GraphAlgebra
 import DeepCausalityFormal.Core.Catamorphism
 import DeepCausalityFormal.Core.CommandInput
 import DeepCausalityFormal.Core.ContextGraph
+/- `Haft` -/
 import DeepCausalityFormal.Haft.Hkt
 import DeepCausalityFormal.Haft.Functor
 import DeepCausalityFormal.Haft.Pure
@@ -119,8 +143,13 @@ import DeepCausalityFormal.Haft.Signatures
 import DeepCausalityFormal.Haft.SymmetricMonoidal
 import DeepCausalityFormal.Haft.FreeMonad
 import DeepCausalityFormal.Haft.Cofree
+/- `Homology` -/
+import DeepCausalityFormal.Homology.ChainCondition
+/- `Linear` -/
 import DeepCausalityFormal.Linear.RankNullity
+/- `Topology` -/
 import DeepCausalityFormal.Topology.RiemannCurvature
+/- `Quantum` -/
 import DeepCausalityFormal.Quantum.PartialTrace
 import DeepCausalityFormal.Quantum.PartialTraceCounterexample
 import DeepCausalityFormal.Quantum.Choi
