@@ -24,9 +24,9 @@ use deep_causality_physics::PhysicsError;
 /// sensor stage publishes each step — a publisher that goes quiet leaves no stale fix behind to
 /// be re-folded as fresh:
 /// * `"gnss_fix"` (3 cells, a measured Cartesian position) — folded **only when GNSS is available**;
-///   the gate is the classifier's [`RegimeClass::gnss_denied`] flag on the field (no classifier ⇒
-///   available). This is the ④ blackout gating of the corridor. A denied-step fix is consumed
-///   unread.
+///   the gate is the classifier's [`RegimeClass::gnss_denied`](crate::RegimeClass::gnss_denied)
+///   flag on the field (no classifier ⇒ available). This is the ④ blackout gating of the
+///   corridor. A denied-step fix is consumed unread.
 /// * `"optical_fix"` (3 cells) — the through-plasma optical fix, folded regardless of denial.
 ///
 /// Each step it publishes `"nav_position"` (3 cells) and `"nav_position_variance"` (1 cell) — the

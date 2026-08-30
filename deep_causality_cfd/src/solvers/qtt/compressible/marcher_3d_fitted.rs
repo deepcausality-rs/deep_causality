@@ -377,8 +377,8 @@ where
     /// March with **Res-5 / D9 re-pinning**: each step, track the radial (density) front and, if it has
     /// drifted off the fixed computational band `target`, roll the state back to it (a cyclic relabel
     /// that keeps the feature coordinate-stationary, applied densely and recompressed — see
-    /// [`roll_zeta`]) and slide the shell's inner radius `r0` so
-    /// the front's physical radius maps to that band — rebuilding the fitted metric while reusing the
+    /// `roll_zeta`) and slide the shell's inner radius `r0` so the front's physical radius maps to
+    /// that band — rebuilding the fitted metric while reusing the
     /// invariant acoustic inverse. Returns the final dense state, the peak `max_bond`, and the re-pin count.
     ///
     /// # Errors
