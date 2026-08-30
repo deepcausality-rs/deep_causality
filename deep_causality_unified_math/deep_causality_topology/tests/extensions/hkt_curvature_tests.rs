@@ -3,149 +3,235 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Properties of the curvature contraction on `CurvatureTensorWitness`.
+//!
+//! The previous suite asserted point values on hand-placed tensors. Its main case used
+//! `CurvatureTensor::flat`, whose components are all zero, and asserted the result was zero: an
+//! oracle that any implementation returning zeros passes, including one that ignores its arguments.
+//! Its second case set a single component and passed `u == w`, so transposing those indices changed
+//! nothing.
+//!
+//! These tests assert the properties a curvature operator has, over generated tensors and generated
+//! vectors, with `u`, `v` and `w` distinct.
+
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::Metric;
+use deep_causality_topology::utils_tests::LawRng;
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorWitness, TensorVector,
 };
 
-#[test]
-fn test_geodesic_deviation_flat() {
-    let flat: CurvatureTensor<
-        f64,
-        TensorVector<f64>,
-        TensorVector<f64>,
-        TensorVector<f64>,
-        TensorVector<f64>,
-    > = CurvatureTensor::flat(4);
+type W = CurvatureTensorWitness<f64>;
+const TOL: f64 = 1e-9;
 
-    let u = TensorVector::<f64>::basis(4, 0);
-    let v = TensorVector::<f64>::basis(4, 1);
-    let w = TensorVector::<f64>::new(&[1.0, 2.0, 3.0, 4.0]);
+/// Components antisymmetric in the `(a, b)` pair.
+///
+/// This is what makes `R(u,v)w == -R(v,u)w` a consequence rather than an accident. A generator that
+/// does not establish it turns the antisymmetry check into a test of nothing, so the result is
+/// verified before it is used.
+fn antisymmetric_tensor(dim: usize, rng: &mut LawRng) -> CurvatureTensor<f64> {
+    let mut comps = vec![0.0f64; dim * dim * dim * dim];
+    let at = |d: usize, a: usize, b: usize, c: usize| ((d * dim + a) * dim + b) * dim + c;
 
-    // Fully qualified path required due to HKT trait complexity
-    let deviation: TensorVector<f64> = <CurvatureTensorWitness<f64> as RiemannMap<
-        CurvatureTensorWitness<f64>,
-    >>::curvature(flat, u, v, w);
-
-    // Flat spacetime has zero geodesic deviation
-    assert!(deviation.data.iter().all(|&x: &f64| x.abs() < f64::EPSILON));
-}
-
-#[test]
-fn test_tensor_vector_operations() {
-    let v = TensorVector::<f64>::new(&[1.0, 2.0, 3.0]);
-    assert_eq!(v.dim(), 3);
-
-    let basis = TensorVector::<f64>::basis(4, 2);
-    assert_eq!(basis.data[2], 1.0);
-    assert_eq!(basis.data[0], 0.0);
-}
-
-#[test]
-fn test_curved_tensor_contraction() {
-    // Create a simple non-flat curvature tensor
-    let tensor: CurvatureTensor<
-        f64,
-        TensorVector<f64>,
-        TensorVector<f64>,
-        TensorVector<f64>,
-        TensorVector<f64>,
-    > = CurvatureTensor::from_generator(
-        2,
-        Metric::Euclidean(2),
-        CurvatureSymmetry::None,
-        |d, a, b, c| {
-            if d == 0 && a == 0 && b == 1 && c == 0 {
-                1.0 // R^0_010 = 1
-            } else {
-                0.0
+    for d in 0..dim {
+        for a in 0..dim {
+            for b in 0..a {
+                for c in 0..dim {
+                    let x = rng.well_scaled(1.0);
+                    comps[at(d, a, b, c)] = x;
+                    comps[at(d, b, a, c)] = -x;
+                }
             }
-        },
+        }
+    }
+
+    // Self-check: a property test is only as good as the precondition its generator establishes.
+    for d in 0..dim {
+        for a in 0..dim {
+            for b in 0..dim {
+                for c in 0..dim {
+                    let s = comps[at(d, a, b, c)] + comps[at(d, b, a, c)];
+                    assert!(s.abs() < 1e-12, "generator failed to be antisymmetric in (a,b)");
+                }
+            }
+        }
+    }
+
+    CurvatureTensor::from_generator(dim, Metric::Euclidean(dim), CurvatureSymmetry::None, {
+        let comps = comps.clone();
+        move |d, a, b, c| comps[at(d, a, b, c)]
+    })
+}
+
+fn vector(dim: usize, rng: &mut LawRng) -> TensorVector<f64> {
+    TensorVector::new(&rng.well_scaled_vec(dim, 3.0))
+}
+
+fn close(a: &TensorVector<f64>, b: &TensorVector<f64>) -> bool {
+    a.dim() == b.dim()
+        && a.as_slice()
+            .iter()
+            .zip(b.as_slice())
+            .all(|(x, y)| (x - y).abs() <= TOL * (1.0 + x.abs().max(y.abs())))
+}
+
+fn scaled(v: &TensorVector<f64>, k: f64) -> TensorVector<f64> {
+    TensorVector::new(&v.as_slice().iter().map(|x| x * k).collect::<Vec<_>>())
+}
+
+fn added(a: &TensorVector<f64>, b: &TensorVector<f64>) -> TensorVector<f64> {
+    TensorVector::new(
+        &a.as_slice()
+            .iter()
+            .zip(b.as_slice())
+            .map(|(x, y)| x + y)
+            .collect::<Vec<_>>(),
+    )
+}
+
+#[test]
+fn curvature_is_antisymmetric_in_the_first_two_slots() {
+    let mut rng = LawRng::new(0xA117_5EED);
+    for dim in [2usize, 3, 4] {
+        for case in 0..8 {
+            let t = antisymmetric_tensor(dim, &mut rng);
+            // u, v and w are distinct and are not basis vectors, so an index transposition shows.
+            let (u, v, w) = (
+                vector(dim, &mut rng),
+                vector(dim, &mut rng),
+                vector(dim, &mut rng),
+            );
+
+            let uvw = W::curvature(&t, &u, &v, &w);
+            let vuw = W::curvature(&t, &v, &u, &w);
+
+            assert!(
+                close(&uvw, &scaled(&vuw, -1.0)),
+                "R(u,v)w != -R(v,u)w at dim={dim} case={case}: {:?} vs {:?}",
+                uvw.as_slice(),
+                vuw.as_slice()
+            );
+        }
+    }
+}
+
+#[test]
+fn curvature_vanishes_when_the_first_two_arguments_agree() {
+    let mut rng = LawRng::new(0xA117_5EED ^ 1);
+    for dim in [2usize, 3, 4] {
+        let t = antisymmetric_tensor(dim, &mut rng);
+        for _ in 0..8 {
+            let (u, w) = (vector(dim, &mut rng), vector(dim, &mut rng));
+            let out = W::curvature(&t, &u, &u, &w);
+            assert!(
+                close(&out, &TensorVector::zeros(dim)),
+                "R(u,u)w should vanish at dim={dim}, got {:?}",
+                out.as_slice()
+            );
+        }
+    }
+}
+
+#[test]
+fn curvature_is_homogeneous_in_each_slot() {
+    let mut rng = LawRng::new(0xA117_5EED ^ 2);
+    for dim in [2usize, 3] {
+        let t = antisymmetric_tensor(dim, &mut rng);
+        for _ in 0..8 {
+            let (u, v, w) = (
+                vector(dim, &mut rng),
+                vector(dim, &mut rng),
+                vector(dim, &mut rng),
+            );
+            let k = rng.well_scaled(4.0);
+            let base = scaled(&W::curvature(&t, &u, &v, &w), k);
+
+            for (slot, got) in [
+                ("u", W::curvature(&t, &scaled(&u, k), &v, &w)),
+                ("v", W::curvature(&t, &u, &scaled(&v, k), &w)),
+                ("w", W::curvature(&t, &u, &v, &scaled(&w, k))),
+            ] {
+                assert!(
+                    close(&got, &base),
+                    "R is not homogeneous in {slot} at dim={dim}, k={k}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn curvature_is_additive_in_the_transported_slot() {
+    let mut rng = LawRng::new(0xA117_5EED ^ 3);
+    for dim in [2usize, 3] {
+        let t = antisymmetric_tensor(dim, &mut rng);
+        for _ in 0..8 {
+            let (u, v) = (vector(dim, &mut rng), vector(dim, &mut rng));
+            let (w1, w2) = (vector(dim, &mut rng), vector(dim, &mut rng));
+
+            let sum = W::curvature(&t, &u, &v, &added(&w1, &w2));
+            let parts = added(
+                &W::curvature(&t, &u, &v, &w1),
+                &W::curvature(&t, &u, &v, &w2),
+            );
+            assert!(sum.as_slice().len() == parts.as_slice().len());
+            assert!(
+                close(&sum, &parts),
+                "R(u,v)(w1+w2) != R(u,v)w1 + R(u,v)w2 at dim={dim}"
+            );
+        }
+    }
+}
+
+#[test]
+fn flat_spacetime_gives_zero_and_curved_spacetime_does_not() {
+    // The zero result on a flat tensor is necessary but not sufficient: an implementation that
+    // ignored its arguments would also pass it. The second half is what makes the pair meaningful.
+    let mut rng = LawRng::new(0xA117_5EED ^ 4);
+    let dim = 4;
+
+    let flat: CurvatureTensor<f64> = CurvatureTensor::flat(dim);
+    let (u, v, w) = (
+        TensorVector::<f64>::basis(dim, 0),
+        TensorVector::<f64>::basis(dim, 1),
+        TensorVector::<f64>::new(&[1.0, 2.0, 3.0, 4.0]),
+    );
+    let flat_out = W::curvature(&flat, &u, &v, &w);
+    assert!(
+        close(&flat_out, &TensorVector::zeros(dim)),
+        "flat spacetime should give zero deviation, got {:?}",
+        flat_out.as_slice()
     );
 
-    let u = TensorVector::<f64>::new(&[1.0, 0.0]);
-    let v = TensorVector::<f64>::new(&[0.0, 1.0]);
-    let w = TensorVector::<f64>::new(&[1.0, 0.0]);
-
-    let result: TensorVector<f64> = <CurvatureTensorWitness<f64> as RiemannMap<
-        CurvatureTensorWitness<f64>,
-    >>::curvature(tensor, u, v, w);
-
-    // R(u,v)w with R^0_010 = 1 should give [1, 0]
-    // u=0 -> a=0
-    // v=1 -> b=1
-    // w=0 -> c=0
-    // Sum R^d_010 * 1 * 1 * 1
-    // d=0 -> 1.0
-    // d=1 -> 0.0
-
-    // Using explicit tolerance check
-    assert!((result.data[0] - 1.0).abs() < f64::EPSILON);
-    assert!(result.data[1].abs() < f64::EPSILON);
-}
-
-#[test]
-fn test_scatter_vectors() {
-    // Test basic S-matrix placeholder logic
-    // Interaction tensor with 1.0 everywhere
-    let tensor: CurvatureTensor<
-        f64,
-        TensorVector<f64>,
-        TensorVector<f64>,
-        TensorVector<f64>,
-        TensorVector<f64>,
-    > = CurvatureTensor::from_generator(
-        2,
-        Metric::Euclidean(2),
-        CurvatureSymmetry::None,
-        |_, _, _, _| 1.0,
+    let curved = antisymmetric_tensor(dim, &mut rng);
+    let curved_out = W::curvature(&curved, &u, &v, &w);
+    assert!(
+        !close(&curved_out, &TensorVector::zeros(dim)),
+        "a curved tensor must not give zero deviation, or the flat case proves nothing"
     );
-
-    let in1 = TensorVector::<f64>::new(&[1.0, 0.0]);
-    let in2 = TensorVector::<f64>::new(&[1.0, 0.0]);
-
-    let (out1, out2): (TensorVector<f64>, TensorVector<f64>) =
-        <CurvatureTensorWitness<f64> as RiemannMap<CurvatureTensorWitness<f64>>>::scatter(
-            tensor, in1, in2,
-        );
-
-    // If all components 1.0:
-    // amplitude = 1.0 * 1.0 * 1.0 = 1.0 (since only a=0,b=0 nonzero)
-    // out1[c] += 1.0 * 0.5 * (dim=2 for d) = 1.0
-    // out2[d] += 1.0 * 0.5 * (dim=2 for c) = 1.0
-
-    assert!((out1.data[0] - 1.0).abs() < 1e-6);
-    assert!((out2.data[0] - 1.0).abs() < 1e-6);
 }
 
 #[test]
-fn test_tensor_vector_zeros() {
-    // Exercises TensorVector::zeros (data filled with T::zero()).
-    let z = TensorVector::<f64>::zeros(4);
-    assert_eq!(z.dim(), 4);
-    assert!(z.data.iter().all(|&x| x == 0.0));
-    assert_eq!(z.as_slice(), &[0.0, 0.0, 0.0, 0.0]);
+fn scatter_produces_finite_states_and_respects_scaling() {
+    let mut rng = LawRng::new(0xA117_5EED ^ 5);
+    let dim = 3;
+    let t = antisymmetric_tensor(dim, &mut rng);
 
-    // Zero-dimension edge case.
-    let empty = TensorVector::<f64>::zeros(0);
-    assert_eq!(empty.dim(), 0);
-    assert!(empty.data.is_empty());
-}
+    let (a, b) = (vector(dim, &mut rng), vector(dim, &mut rng));
+    let (o1, o2) = W::scatter(&t, &a, &b);
 
-#[test]
-fn test_tensor_vector_into_vec() {
-    // Exercises `From<TensorVector<T>> for Vec<T>`.
-    let v = TensorVector::<f64>::new(&[1.0, 2.0, 3.0]);
-    let raw: Vec<f64> = v.into();
-    assert_eq!(raw, vec![1.0, 2.0, 3.0]);
-}
+    assert!(
+        o1.as_slice().iter().all(|x| x.is_finite()) && o2.as_slice().iter().all(|x| x.is_finite()),
+        "scattering produced a non-finite out-state"
+    );
+    assert_eq!(o1.dim(), dim, "out-state 1 has the wrong dimension");
+    assert_eq!(o2.dim(), dim, "out-state 2 has the wrong dimension");
 
-#[test]
-fn test_tensor_vector_from_vec() {
-    // Exercises `From<Vec<T>> for TensorVector<T>` round-trip with into-Vec.
-    let tv: TensorVector<f64> = vec![4.0, 5.0].into();
-    assert_eq!(tv.dim(), 2);
-    let back: Vec<f64> = tv.into();
-    assert_eq!(back, vec![4.0, 5.0]);
+    // The amplitude is bilinear in the in-states, so scaling one scales both outputs.
+    let k = 3.0;
+    let (s1, s2) = W::scatter(&t, &scaled(&a, k), &b);
+    assert!(
+        close(&s1, &scaled(&o1, k)) && close(&s2, &scaled(&o2, k)),
+        "scattering is not linear in the first in-state"
+    );
 }

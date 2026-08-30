@@ -105,7 +105,5 @@ path = "../deep_causality_multivector"
 version = "0.6"
 
 
-[lints.rust]
-# Exempt from the workspace `unsafe_code = "forbid"` policy.
-# HKT fmap pointer-cast (rustc type-equality limitation) in hkt_gauge. Remove when the compiler limitation is resolved.
-unsafe_code = "allow"
+[lints]
+workspace = true

@@ -146,7 +146,10 @@ where
             complex: m_a.complex.clone(),
             data: new_tensor,
             metric: m_a.metric.clone(),
-            cursor: 0,
+            // Preserve the focus. `bind(m, pure)` must return `m`, and a focus reset to `0` breaks
+            // the monad right identity law for every non-zero focus. This is the same reasoning the
+            // `extend` implementations carry: the context of the input is the context of the result.
+            cursor: m_a.cursor,
         }
     }
 }

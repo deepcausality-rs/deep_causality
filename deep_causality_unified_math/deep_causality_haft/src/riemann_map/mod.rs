@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT4Unbound, Satisfies};
+
 
 /// The `RiemannMap` trait models high-arity geometric interactions, specifically the
 /// Riemann Curvature Tensor and Scattering Matrices.
@@ -26,22 +26,38 @@ use crate::{HKT4Unbound, Satisfies};
 /// *   **General Relativity**: Calculating gravity as spacetime curvature.
 /// *   **Particle Physics**: Scattering matrices (S-Matrix) taking 2 inputs and producing 2 outputs.
 /// *   **Differential Geometry**: Measuring the holonomy of a connection.
-pub trait RiemannMap<P: HKT4Unbound> {
-    /// The Curvature Operator: $R(u, v)w \to D$
-    /// Consumes two directions ($u, v$) and a vector ($w$) to measure curvature ($D$).
-    fn curvature<A, B, C, D>(tensor: P::Type<A, B, C, D>, u: A, v: B, w: C) -> D
-    where
-        A: Satisfies<P::Constraint>,
-        B: Satisfies<P::Constraint>,
-        C: Satisfies<P::Constraint>,
-        D: Satisfies<P::Constraint>;
+/// # Why this is not an arity-4 higher-kinded trait
+///
+/// A rank-4 multilinear map $R: V \otimes V \otimes V \to V$ has **one** domain. Its three inputs
+/// and its output are elements of the same vector space, which is what makes $R(u,v)w$ meaningful
+/// and what makes the antisymmetry $R(u,v)w = -R(v,u)w$ statable at all.
+///
+/// An earlier version made `curvature` generic in four independent type parameters bounded only by
+/// `Satisfies<P::Constraint>`. Under `NoConstraint` that admits every type, so the one real
+/// implementation had to reinterpret its arguments through raw pointers to recover the concrete
+/// vector type. That made a safe function undefined behaviour for inputs its own signature
+/// accepted. Naming the space as an associated type removes the possibility: the implementation
+/// receives the type it needs, and a caller passing anything else is a compile error.
+pub trait RiemannMap {
+    /// The rank-4 tensor this witness reads.
+    type Tensor;
 
-    /// The Scattering Matrix: $(A, B) \to (C, D)$
-    /// Models an interaction where two particles collide and produce two new states.
-    fn scatter<A, B, C, D>(interaction: P::Type<A, B, C, D>, in_1: A, in_2: B) -> (C, D)
-    where
-        A: Satisfies<P::Constraint>,
-        B: Satisfies<P::Constraint>,
-        C: Satisfies<P::Constraint>,
-        D: Satisfies<P::Constraint>;
+    /// The vector space the map acts on.
+    type Vector;
+
+    /// The Curvature Operator: $R(u, v)w$.
+    /// Consumes two directions ($u, v$) and a vector ($w$) to measure curvature.
+    fn curvature(
+        tensor: &Self::Tensor,
+        u: &Self::Vector,
+        v: &Self::Vector,
+        w: &Self::Vector,
+    ) -> Self::Vector;
+
+    /// The Scattering Matrix: two in-states produce two out-states in the same space.
+    fn scatter(
+        interaction: &Self::Tensor,
+        in_1: &Self::Vector,
+        in_2: &Self::Vector,
+    ) -> (Self::Vector, Self::Vector);
 }

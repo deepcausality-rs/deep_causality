@@ -3,49 +3,75 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! HKT4 witness and RiemannMap implementation for CurvatureTensor.
+//! `RiemannMap` witness for `CurvatureTensor`.
 //!
-//! This module provides the `CurvatureTensorWitness` type that enables `CurvatureTensor`
-//! to participate in HKT4 abstractions, along with the `RiemannMap` trait implementation.
+//! # Why this is not an arity-4 HKT witness
 //!
-//! # ⚠️ Unsafe Dispatch Warning
+//! The Riemann curvature operator is a multilinear map `R: V ⊗ V ⊗ V → V` over **one** vector
+//! space. `CurvatureTensor` previously carried four phantom type parameters so it could be viewed
+//! through `HKT4Unbound`, and `RiemannMap::curvature` was generic in all four bounded only by
+//! `Satisfies<NoConstraint>`, which admits every type. The implementation then reinterpreted its
+//! arguments as `TensorVector<T>` through raw pointers, which made a safe function undefined
+//! behaviour for inputs its own signature accepted.
 //!
-//! The `RiemannMap` trait is generic over its input types `A, B, C, D`. However,
-//! the implementation requires concrete `TensorVector` types for the actual tensor
-//! contraction operations.
+//! The vector space is now an associated type on the witness. The implementation receives the type
+//! it needs, no cast is required, and a caller passing anything else is a compile error. See
+//! `openspec/notes/hkt_gat/hkt_gat_topology_rewrite.md`.
 //!
-//! Since Rust's current GAT (Generic Associated Types) implementation cannot express
-//! constraints like "A must be TensorVector" on HKT trait methods without modifying
-//! the core abstraction, this implementation uses **unsafe pointer casting**.
+//! # The calls this now rejects
 //!
-//! ## Safety Contract
+//! Each of these compiled before the rewrite and reinterpreted its arguments as `TensorVector<T>`.
 //!
-//! **SAFETY:** The caller MUST ensure that `A`, `B`, `C`, and `D` are `TensorVector`.
-//! Passing any other type will result in **Undefined Behavior**.
+//! A vector of the right scalar type but the wrong container:
 //!
-//! ## Recommendations
+//! ```compile_fail
+//! use deep_causality_haft::RiemannMap;
+//! use deep_causality_topology::{CurvatureTensor, CurvatureTensorWitness};
 //!
-//! 1. **Prefer safe alternatives**: Use `CurvatureTensor::contract()` directly when
-//!    working with concrete `&[f64]` slices instead of the HKT `curvature()` method.
+//! let ct = CurvatureTensor::<f64>::flat(4);
+//! let u = vec![1.0f64, 0.0, 0.0, 0.0];
+//! let _ = CurvatureTensorWitness::<f64>::curvature(&ct, &u, &u, &u);
+//! ```
 //!
-//! 2. **Type-safe wrappers**: Consider using `TensorVector` explicitly in your code:
-//!    ```ignore
-//!    use deep_causality_topology::{CurvatureTensorWitness, TensorVector};
-//!    use deep_causality_haft::RiemannMap;
-//!    
-//!    let u = TensorVector::new(&[1.0, 0.0, 0.0, 0.0]);
-//!    let v = TensorVector::new(&[0.0, 1.0, 0.0, 0.0]);
-//!    let w = TensorVector::new(&[0.0, 0.0, 1.0, 0.0]);
-//!    
-//!    // This is safe because we're using TensorVector
-//!    let result: TensorVector = CurvatureTensorWitness::curvature(tensor, u, v, w);
-//!    ```
+//! A type sharing nothing with the vector space:
 //!
-//! 3. **Future resolution**: This limitation may be resolved with Rust's new trait
-//!    solver (`-Ztrait-solver=next`), which enables more expressive GAT constraints.
+//! ```compile_fail
+//! use deep_causality_haft::RiemannMap;
+//! use deep_causality_topology::{CurvatureTensor, CurvatureTensorWitness};
+//!
+//! struct Zst;
+//! let ct = CurvatureTensor::<f64>::flat(4);
+//! let _ = CurvatureTensorWitness::<f64>::curvature(&ct, &Zst, &Zst, &Zst);
+//! ```
+//!
+//! The right container carrying the wrong scalar:
+//!
+//! ```compile_fail
+//! use deep_causality_haft::RiemannMap;
+//! use deep_causality_topology::{CurvatureTensor, CurvatureTensorWitness, TensorVector};
+//!
+//! let ct = CurvatureTensor::<f64>::flat(4);
+//! let u = TensorVector::<f32>::new(&[1.0, 0.0, 0.0, 0.0]);
+//! let _ = CurvatureTensorWitness::<f64>::curvature(&ct, &u, &u, &u);
+//! ```
+//!
+//! And the call that is meant to work:
+//!
+//! ```
+//! use deep_causality_haft::RiemannMap;
+//! use deep_causality_topology::{CurvatureTensor, CurvatureTensorWitness, TensorVector};
+//!
+//! let ct = CurvatureTensor::<f64>::flat(4);
+//! let u = TensorVector::<f64>::basis(4, 0);
+//! let v = TensorVector::<f64>::basis(4, 1);
+//! let w = TensorVector::<f64>::basis(4, 2);
+//! let out = CurvatureTensorWitness::<f64>::curvature(&ct, &u, &v, &w);
+//! assert!(out.as_slice().iter().all(|x| *x == 0.0));
+//! ```
+
 use crate::CurvatureTensor;
 use deep_causality_algebra::Field;
-use deep_causality_haft::{HKT4Unbound, NoConstraint, RiemannMap, Satisfies};
+use deep_causality_haft::RiemannMap;
 use deep_causality_num::Float;
 // use deep_causality_tensor::CausalTensor; // Removed unused
 use std::marker::PhantomData;
@@ -54,24 +80,9 @@ use std::marker::PhantomData;
 // HKT4 Witness
 // ============================================================================
 
-/// HKT4 witness for `CurvatureTensor<A, B, C, D>`.
+/// Witness for the curvature operations on [`CurvatureTensor`].
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CurvatureTensorWitness<T>(PhantomData<T>);
-
-impl<T> HKT4Unbound for CurvatureTensorWitness<T>
-where
-    T: Satisfies<NoConstraint>,
-{
-    // We use NoConstraint because we are using unsafe dispatch and don't rely on Any.
-    type Constraint = NoConstraint;
-    type Type<A, B, C, D>
-        = CurvatureTensor<T, A, B, C, D>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint>;
-}
 
 // ============================================================================
 // TensorVector - Concrete Vector Type
@@ -140,118 +151,33 @@ impl<T> From<TensorVector<T>> for Vec<T> {
 }
 
 // ============================================================================
-// RiemannMap Trait Implementation (Unsafe Dispatch)
+// RiemannMap
 // ============================================================================
 
-impl<T> RiemannMap<CurvatureTensorWitness<T>> for CurvatureTensorWitness<T>
-where
-    T: Field + Float + Clone + From<f64> + Into<f64> + Satisfies<NoConstraint> + Copy + PartialOrd,
-{
-    /// Computes curvature contraction R(u,v)w.
-    ///
-    /// # Safety — ACKNOWLEDGED GAT Limitation
-    ///
-    /// This generic method uses **unsafe pointer casting** to work around Rust's
-    /// current GAT (Generic Associated Types) limitations that prevent proper
-    /// type enforcement at the trait level.
-    ///
-    /// **Status:** ACKNOWLEDGED. This will be resolved when the new trait solver
-    /// (`-Ztrait-solver=next`) stabilizes, enabling proper static type checks.
-    /// See `deep_causality_tensor` HKT implementation for the same pattern.
-    ///
-    /// **SAFETY CONTRACT:** The caller **MUST** ensure A, B, C are `TensorVector`.
-    fn curvature<A, B, C, D>(tensor: CurvatureTensor<T, A, B, C, D>, u: A, v: B, w: C) -> D
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint>,
-    {
-        // SAFETY: We assume the caller respects the implicit contract that A, B, C are TensorVector.
-        // We cast the references to &TensorVector to invoke the underlying logic.
-        // Since we take arguments by value, we must be careful.
-        // TensorVector is a wrapper around Vec<f64>. If A is TensorVector, memory layout is identical.
-        //
-        // NOTE: This avoids the Any/downcast overhead and static lifetime requirement.
-        unsafe {
-            let u_ptr = &u as *const A as *const TensorVector<T>;
-            let v_ptr = &v as *const B as *const TensorVector<T>;
-            let w_ptr = &w as *const C as *const TensorVector<T>;
-
-            // Dispatch to safe implementation
-            let result = Self::geodesic_deviation_impl(&tensor, &*u_ptr, &*v_ptr, &*w_ptr);
-
-            // Transmute result to D
-            let result_ptr = &result as *const TensorVector<T> as *const D;
-            // We read the D out of the result. Since result is a local variable,
-            // we must ensure it isn't dropped twice. reading moves it out.
-            let ret = std::ptr::read(result_ptr);
-            std::mem::forget(result);
-            ret
-        }
-    }
-
-    /// Computes S-matrix scattering: (A, B) → (C, D).
-    ///
-    /// # Safety
-    ///
-    /// This method **unsafely casts** inputs to `TensorVector`.
-    fn scatter<A, B, C, D>(interaction: CurvatureTensor<T, A, B, C, D>, in_1: A, in_2: B) -> (C, D)
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint>,
-    {
-        unsafe {
-            let in1_ptr = &in_1 as *const A as *const TensorVector<T>;
-            let in2_ptr = &in_2 as *const B as *const TensorVector<T>;
-
-            let (out1, out2) = Self::scatter_impl(&interaction, &*in1_ptr, &*in2_ptr);
-
-            // Transmute tuple (TensorVector, TensorVector) to (C, D).
-            // Layout of (C, D) might differ from (TensorVector, TensorVector) if C!=D?
-            let out1_ptr = &out1 as *const TensorVector<T> as *const C;
-            let out2_ptr = &out2 as *const TensorVector<T> as *const D;
-
-            let c = std::ptr::read(out1_ptr);
-            let d = std::ptr::read(out2_ptr);
-
-            // Ensure out1, out2 are not dropped since we moved their contents
-            std::mem::forget(out1);
-            std::mem::forget(out2);
-
-            (c, d)
-        }
-    }
-}
-
-// ============================================================================
-// Private safe implementations.
-// ============================================================================
-
-impl<T> CurvatureTensorWitness<T>
+impl<T> RiemannMap for CurvatureTensorWitness<T>
 where
     T: Field + Float + Clone + From<f64> + Into<f64> + Copy + PartialOrd,
 {
-    /// Internal implementation of geodesic deviation.
-    fn geodesic_deviation_impl<A, B, C, D>(
-        tensor: &CurvatureTensor<T, A, B, C, D>,
+    type Tensor = CurvatureTensor<T>;
+    type Vector = TensorVector<T>;
+
+    /// Computes the curvature contraction `R(u,v)w`.
+    fn curvature(
+        tensor: &CurvatureTensor<T>,
         u: &TensorVector<T>,
         v: &TensorVector<T>,
         w: &TensorVector<T>,
     ) -> TensorVector<T> {
-        let result = tensor.contract(u.as_slice(), v.as_slice(), w.as_slice());
-        TensorVector::from(result)
+        TensorVector::from(tensor.contract(u.as_slice(), v.as_slice(), w.as_slice()))
     }
 
-    /// Internal implementation of scattering.
-    fn scatter_impl<A, B, C, D>(
-        tensor: &CurvatureTensor<T, A, B, C, D>,
+    /// Computes S-matrix scattering: two in-states produce two out-states.
+    fn scatter(
+        interaction: &CurvatureTensor<T>,
         in_1: &TensorVector<T>,
         in_2: &TensorVector<T>,
     ) -> (TensorVector<T>, TensorVector<T>) {
-        let dim = tensor.dim();
+        let dim = interaction.dim();
         let mut out_1 = vec![T::zero(); dim];
         let mut out_2 = vec![T::zero(); dim];
         let point_five: T = <T as From<f64>>::from(0.5);
@@ -261,8 +187,7 @@ where
                 let mut amplitude = T::zero();
                 for a in 0..dim {
                     for b in 0..dim {
-                        // tensor.get() returns T
-                        let val = tensor.get(c, a, b, d);
+                        let val = interaction.get(c, a, b, d);
                         amplitude += val * in_1.data[a] * in_2.data[b];
                     }
                 }

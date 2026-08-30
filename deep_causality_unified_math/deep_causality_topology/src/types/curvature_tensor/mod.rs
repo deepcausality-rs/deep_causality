@@ -8,12 +8,10 @@
 //! The curvature tensor R^d_abc measures the holonomy of parallel transport
 //! around infinitesimal loops in a manifold.
 
-use crate::TensorVector;
 use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
 use deep_causality_num::Float;
 use deep_causality_tensor::CausalTensor;
-use std::marker::PhantomData;
 
 /// Symmetry properties of curvature tensors.
 ///
@@ -41,8 +39,12 @@ pub enum CurvatureSymmetry {
 }
 
 /// Type alias for generic curvature tensor
-pub type CurvatureTensorVector<T> =
-    CurvatureTensor<T, TensorVector<T>, TensorVector<T>, TensorVector<T>, TensorVector<T>>;
+/// Retained spelling for the curvature tensor over `TensorVector<T>`.
+///
+/// `CurvatureTensor` used to carry four phantom type parameters so it could be viewed through an
+/// arity-4 HKT witness. They held no data and were always instantiated identically, so they are
+/// gone; this alias keeps the name callers already use.
+pub type CurvatureTensorVector<T> = CurvatureTensor<T>;
 
 /// A rank-4 curvature tensor for RiemannMap operations.
 ///
@@ -52,10 +54,6 @@ pub type CurvatureTensorVector<T> =
 /// # Type Parameters
 ///
 /// * `T` - Scalar type (e.g., f64, DoubleFloat)
-/// * `A` - First direction type (u in R(u,v)w)
-/// * `B` - Second direction type (v in R(u,v)w)
-/// * `C` - Vector being transported (w in R(u,v)w)
-/// * `D` - Result type (output direction)
 ///
 /// # Mathematical Definition
 ///
@@ -64,7 +62,7 @@ pub type CurvatureTensorVector<T> =
 ///
 /// In components: (R(u,v)w)^d = R^d_abc u^a v^b w^c
 #[derive(Debug, Clone)]
-pub struct CurvatureTensor<T, A, B, C, D> {
+pub struct CurvatureTensor<T> {
     /// Tensor components R^d_abc.
     /// Shape: [dim, dim, dim, dim]
     components: CausalTensor<T>,
@@ -77,16 +75,13 @@ pub struct CurvatureTensor<T, A, B, C, D> {
 
     /// Spacetime dimension.
     dim: usize,
-
-    /// Phantom data for type parameters.
-    _phantom: PhantomData<(A, B, C, D)>,
 }
 
 // ============================================================================
 // Constructors
 // ============================================================================
 
-impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+impl<T> CurvatureTensor<T>
 where
     T: Field + Copy + PartialOrd,
 {
@@ -122,12 +117,11 @@ where
             metric,
             symmetry,
             dim,
-            _phantom: PhantomData,
         }
     }
 }
 
-impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+impl<T> CurvatureTensor<T>
 where
     T: Field + Copy + Default + PartialOrd + Float + From<f64> + Into<f64>,
 {
@@ -148,7 +142,6 @@ where
             metric,
             symmetry: CurvatureSymmetry::Riemann,
             dim,
-            _phantom: PhantomData,
         }
     }
 
@@ -191,7 +184,7 @@ where
 // Getters
 // ============================================================================
 
-impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+impl<T> CurvatureTensor<T>
 where
     T: Field + Copy + PartialOrd + Clone,
 {
@@ -220,7 +213,7 @@ where
     }
 }
 
-impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+impl<T> CurvatureTensor<T>
 where
     T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
 {
@@ -246,7 +239,7 @@ where
 // Tensor Operations
 // ============================================================================
 
-impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
+impl<T> CurvatureTensor<T>
 where
     T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
 {
@@ -592,27 +585,5 @@ where
         }
 
         max_violation
-    }
-}
-
-// ============================================================================
-// Type Conversion
-// ============================================================================
-
-impl<T, A, B, C, D> CurvatureTensor<T, A, B, C, D>
-where
-    T: Field + Copy + Default + PartialOrd + Clone,
-{
-    /// Converts to a CurvatureTensor with different type parameters.
-    ///
-    /// This is safe because the type parameters are phantom data only.
-    pub fn cast<A2, B2, C2, D2>(self) -> CurvatureTensor<T, A2, B2, C2, D2> {
-        CurvatureTensor {
-            components: self.components,
-            metric: self.metric,
-            symmetry: self.symmetry,
-            dim: self.dim,
-            _phantom: PhantomData,
-        }
     }
 }

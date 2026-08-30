@@ -3,10 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{MonoidalMerge, ParametricMonad};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    GaugeField, GaugeFieldHKT, GaugeFieldWitness, Manifold, SU2, Simplex, SimplicialComplexBuilder,
+    GaugeField, GaugeFieldWitness, Manifold, SU2, Simplex, SimplicialComplexBuilder,
     SimplicialManifold, U1,
 };
 
@@ -100,110 +99,11 @@ fn test_abelian_field_strength() {
 // Additional HKT Tests for Coverage
 // ============================================================================
 
-#[test]
-fn test_gauge_field_hkt_empty() {
-    let hkt: GaugeFieldHKT<(), (), (), f64> = GaugeFieldHKT::empty();
-    assert!(!hkt.has_data());
-    assert!(hkt.connection_data().is_none());
-    assert!(hkt.field_strength_data().is_none());
-}
-
-#[test]
-fn test_gauge_field_hkt_default() {
-    let hkt: GaugeFieldHKT<i32, i32, i32, f64> = GaugeFieldHKT::default();
-    assert!(!hkt.has_data());
-}
-
-#[test]
-fn test_gauge_field_hkt_from_data() {
-    let conn_data = vec![1.0, 2.0, 3.0, 4.0];
-    let fs_data = vec![0.5, 0.6, 0.7, 0.8];
-    let conn_shape = vec![1, 4, 1];
-    let fs_shape = vec![1, 2, 2, 1];
-
-    let hkt: GaugeFieldHKT<(), (), (), f64> =
-        GaugeFieldHKT::from_data(conn_data.clone(), fs_data.clone(), conn_shape, fs_shape);
-
-    assert!(hkt.has_data());
-    assert_eq!(hkt.connection_data(), Some(conn_data.as_slice()));
-    assert_eq!(hkt.field_strength_data(), Some(fs_data.as_slice()));
-}
-
-#[test]
-fn test_monoidal_merge() {
-    // Create two HKT wrappers with data
-    let pa: GaugeFieldHKT<f64, f64, f64, f64> = GaugeFieldHKT::from_data(
-        vec![1.0, 2.0],
-        vec![0.5, 0.5],
-        vec![1, 2, 1],
-        vec![1, 1, 1, 2],
-    );
-    let pb: GaugeFieldHKT<f64, f64, f64, f64> = GaugeFieldHKT::from_data(
-        vec![3.0, 4.0],
-        vec![1.5, 1.5],
-        vec![1, 2, 1],
-        vec![1, 1, 1, 2],
-    );
-
-    // Merge averages the data
-    let merged: GaugeFieldHKT<f64, f64, f64, f64> =
-        GaugeFieldWitness::merge(pa, pb, |a: f64, b: f64| a + b);
-
-    assert!(merged.has_data());
-    // (1+3)/2=2, (2+4)/2=3
-    let conn = merged.connection_data().unwrap();
-    assert_eq!(conn[0], 2.0);
-    assert_eq!(conn[1], 3.0);
-    // (0.5+1.5)/2=1.0
-    let fs = merged.field_strength_data().unwrap();
-    assert_eq!(fs[0], 1.0);
-}
-
-#[test]
-fn test_monoidal_merge_empty() {
-    let empty: GaugeFieldHKT<f64, f64, f64, f64> = GaugeFieldHKT::empty();
-    let with_data: GaugeFieldHKT<f64, f64, f64, f64> =
-        GaugeFieldHKT::from_data(vec![1.0], vec![2.0], vec![1, 1, 1], vec![1, 1, 1, 1]);
-
-    // Merge with empty returns empty
-    let result: GaugeFieldHKT<f64, f64, f64, f64> =
-        GaugeFieldWitness::merge(empty, with_data, |a: f64, b: f64| a + b);
-    assert!(!result.has_data());
-}
-
-#[test]
-fn test_parametric_monad_pure() {
-    // Pure returns empty wrapper (cannot store arbitrary A)
-    let result: GaugeFieldHKT<(), (), i32, f64> = GaugeFieldWitness::pure(42);
-    assert!(!result.has_data());
-}
-
-#[test]
-fn test_parametric_monad_ibind_empty() {
-    let empty: GaugeFieldHKT<i32, i32, f64, f64> = GaugeFieldHKT::empty();
-
-    let result: GaugeFieldHKT<i32, i64, String, f64> =
-        GaugeFieldWitness::ibind(empty, |_x: f64| GaugeFieldHKT::empty());
-
-    assert!(!result.has_data());
-}
-
-#[test]
-fn test_parametric_monad_ibind_with_data() {
-    let hkt: GaugeFieldHKT<i32, i32, f64, f64> = GaugeFieldHKT::from_data(
-        vec![1.0, 2.0],
-        vec![3.0, 4.0],
-        vec![1, 2, 1],
-        vec![1, 1, 1, 2],
-    );
-
-    let result: GaugeFieldHKT<i32, i64, String, f64> =
-        GaugeFieldWitness::ibind(hkt, |_x: f64| GaugeFieldHKT::empty());
-
-    // ibind propagates data unchanged (placeholder impl)
-    assert!(result.has_data());
-    assert_eq!(result.connection_data().unwrap(), &[1.0, 2.0]);
-}
+// The `GaugeFieldHKT` wrapper and the `MonoidalMerge` / `ParametricMonad` implementations that
+// operated on it have been removed, and with them eight tests. Five of those tests asserted the
+// defect as the specification: that `pure(42)` discards 42, that `merge` given `|a, b| a + b`
+// returns the average instead, and that `ibind` propagates its input unchanged without calling the
+// function it was handed. A test that pins a stub in place is worse than no test.
 
 #[test]
 fn test_compute_field_strength_non_abelian() {
