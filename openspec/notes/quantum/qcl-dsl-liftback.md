@@ -539,10 +539,10 @@ isolated sub-pipelines, shared analyze/finalize tail, effect monad with short-ci
 
 Crate surfaces referenced: `deep_causality_quantum/src/types/{density_matrix.rs,
 qgates/channel.rs, verdict/{born.rs, projection.rs}, qpu/{bridge.rs, sampler.rs}}`,
-`deep_causality_algebra/src/algebra/verdict.rs`, `deep_causality_haft/src/monoidal/mod.rs`,
-`deep_causality_uncertain/src/types/uncertain/uncertain_verdict.rs`,
-`deep_causality_topology/src/traits/chain_complex.rs`,
-`deep_causality_topology/src/types/lattice_complex/mod.rs`,
+`deep_causality_unified_math/deep_causality_algebra/src/algebra/verdict.rs`, `deep_causality_unified_math/deep_causality_haft/src/monoidal/mod.rs`,
+`deep_causality_unified_math/deep_causality_uncertain/src/types/uncertain/uncertain_verdict.rs`,
+`deep_causality_unified_math/deep_causality_topology/src/traits/chain_complex.rs`,
+`deep_causality_unified_math/deep_causality_topology/src/types/lattice_complex/mod.rs`,
 `deep_causality_sparse/src/types/sparse_matrix/`.
 
 Kelly, J. et al. (2018). *Physical qubit calibration on a directed acyclic graph.* arXiv:1803.03226.

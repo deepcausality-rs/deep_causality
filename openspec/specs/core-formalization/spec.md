@@ -184,7 +184,7 @@ or **Deferred** — with no item left as an open **Fix-planned** once its prereq
   are settled
 
 ### Requirement: A crate-local status document mirrors LEAN_HAFT
-`deep_causality_core/LEAN_CORE.md` SHALL exist, mirroring `deep_causality_haft/LEAN_HAFT.md`: a summary
+`deep_causality_core/LEAN_CORE.md` SHALL exist, mirroring `deep_causality_unified_math/deep_causality_haft/LEAN_HAFT.md`: a summary
 of the proof/witness/bridge counts, the `how to check` commands (`lake build`, bare `lean`, the witness
 test invocation), a per-mechanism status table with references, and a pointer to the resolved-deviations
 audit.

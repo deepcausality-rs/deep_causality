@@ -178,7 +178,31 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 30 library crates:
+The project is a monorepo containing 29 library crates.
+
+### Directory layout
+
+Twelve crates sit at the repository root. The **seventeen mathematics crates live under
+`deep_causality_unified_math/`**, one directory per crate:
+
+```
+deep_causality_unified_math/deep_causality_{algebra, ast, calculus, fft, haft, homology,
+                                            linear, metric, multivector, num, num_complex,
+                                            num_dual, num_rational, rand, tensor, topology,
+                                            uncertain}
+```
+
+Package names are unchanged, so every `use` statement, every `cargo -p <name>` and every crates.io
+entry reads exactly as before. Only paths moved: a Cargo path dependency into one of the sixteen is
+`../deep_causality_unified_math/deep_causality_x`, and a Bazel label is
+`//deep_causality_unified_math/deep_causality_x`. The crates that stayed at the root are
+`deep_causality`, `_algorithms`, `_cfd`, `_core`, `_data_structures`, `_discovery`, `_ethos`,
+`_file`, `_par`, `_physics`, `_quantum` and `ultragraph`.
+
+The groupings below are conceptual and cut across that split: `metric` and `ast` are filed under
+Core, `haft` under Functional Programming, and `homology` and `topology` under Topology and
+Physics, but all five live in `deep_causality_unified_math/`. `ast` sits there because its only
+consumers are `tensor` and `uncertain`, plus `deep_causality` itself.
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -207,7 +231,6 @@ The project is a monorepo containing 30 library crates:
 * `deep_causality_rand`: Random number generator and statistical distributions.
 * `deep_causality_linear`: Linear algebra — sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors,
   eliminations, decompositions, conjugate gradient, and an exact integer path.
-* `deep_causality_sparse`: **Retired.** A re-export shim over `deep_causality_linear`; no further development.
 * `deep_causality_tensor`: N-index tensors, broadcasting, Einstein summation, and the
   tensor-train stack. Its rank-2 decompositions delegate to `deep_causality_linear`.
 * `deep_causality_multivector`: Multivector implementation for geometric algebra.
@@ -227,10 +250,11 @@ The project is a monorepo containing 30 library crates:
 
 ## Project Dependencies
 
-Scope: the 30 library crates that are workspace members. Example crates (`examples/*`),
+Scope: the 29 library crates that are workspace members. Example crates (`examples/*`),
 vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
-`deep_causality_effects` and `deep_causality_macros` were moved to `yanked/` and are no
-longer workspace members, so both are omitted.
+`deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
+`yanked/` and are no longer workspace members, so all three are omitted. `deep_causality_sparse`
+was a re-export shim over `deep_causality_linear`; 0.2.5 is its last crates.io release.
 
 The tier block below is derived from the `[dependencies]` tables of each member's
 `Cargo.toml`, dev- and build-dependencies excluded. `build/scripts/crates.sh` reads the
@@ -279,7 +303,6 @@ Tier 4
   deep_causality             → deep_causality_algebra, deep_causality_ast, deep_causality_core,
                                deep_causality_data_structures, deep_causality_haft,
                                deep_causality_uncertain, ultragraph
-  deep_causality_sparse      → deep_causality_linear
   deep_causality_tensor      → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
                                deep_causality_linear, deep_causality_num, deep_causality_num_complex,
                                deep_causality_num_dual
@@ -330,7 +353,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 24 library crates have no external runtime dependencies.
+The other 23 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
@@ -417,7 +440,7 @@ cannot.
 
 Point it at code where a wrong constant or a flipped comparison yields a plausible number rather
 than a crash: numeric kernels, tolerance gates, index arithmetic. It is not a whole-workspace gate,
-because every mutant costs a build plus a test run and `deep_causality_linear/src/algorithms` alone
+because every mutant costs a build plus a test run and `deep_causality_unified_math/deep_causality_linear/src/algorithms` alone
 yields 1156 of them.
 
 Equivalent mutants — changes that cannot alter behaviour — belong in `.cargo/mutants.toml`, each
@@ -437,7 +460,7 @@ describe the equivalence in prose and leave the mutant in the report.
 
 Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
 
-Every `[[example]]` also needs a `rust_binary` in its owning package's `BUILD.bazel`, because Bazel does not read `Cargo.toml`. Two places declare examples: the packages under `examples/`, and the library crates carrying their own verification harnesses and studies (`deep_causality_cfd/verification` and `studies`, `deep_causality_algorithms/verification`, `deep_causality_haft/examples`, and others). In a library crate the example binaries sit below the `rust_library` under a `# Example binaries` comment and depend on `:<crate_name>`. A binary's `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set.
+Every `[[example]]` also needs a `rust_binary` in its owning package's `BUILD.bazel`, because Bazel does not read `Cargo.toml`. Two places declare examples: the packages under `examples/`, and the library crates carrying their own verification harnesses and studies (`deep_causality_cfd/verification` and `studies`, `deep_causality_algorithms/verification`, `deep_causality_unified_math/deep_causality_haft/examples`, and others). In a library crate the example binaries sit below the `rust_library` under a `# Example binaries` comment and depend on `:<crate_name>`. A binary's `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set.
 
 `make check_examples` fails when a Cargo example has no Bazel target, across both locations. An example that is deliberately Cargo-only is listed in `build/scripts/check_examples.sh` with the reason recorded in the owning package's `BUILD.bazel`.
 

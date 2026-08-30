@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Arrow laws (Hughes' strong category).
 
-Rust source: `deep_causality_haft/src/arrow/` — trait `Arrow` with combinators
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/arrow/` — trait `Arrow` with combinators
 `Id` (`id.rs`), `Lift` (`lift.rs`, = Hughes' `arr`), `Compose` (`compose.rs`, `>>>`),
 `First`/`Second` (`first.rs`/`second.rs`), `Split` (`split.rs`, `***`),
 `Fanout` (`fanout.rs`, `&&&`).
@@ -24,7 +24,7 @@ laws hold — proved below — so the Rust `Arrow` is a strong category as claim
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/arrow_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/arrow_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

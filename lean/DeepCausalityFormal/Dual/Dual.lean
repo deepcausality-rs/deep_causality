@@ -13,7 +13,7 @@ defined as `TrivSqZeroExt R R`, and bind its laws to the Rust witnesses.
 The real component `TrivSqZeroExt.fst` mirrors `Dual::value()`; the dual component
 `TrivSqZeroExt.snd` mirrors `Dual::derivative()`.
 
-Rust witness: `deep_causality_num_dual/tests/dual/dual_number/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num_dual/tests/dual/dual_number/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

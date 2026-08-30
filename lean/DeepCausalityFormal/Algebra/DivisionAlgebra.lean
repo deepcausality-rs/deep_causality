@@ -9,7 +9,7 @@ Mirrors the Rust trait `deep_causality_algebra::DivisionAlgebra`
 a multiplicative inverse; the defining law is exactly the non-zero cancellation of Mathlib's
 `DivisionRing`. Stating it here pins the property statement bound to the Rust witness.
 
-Rust witness: `deep_causality_algebra/tests/algebra/`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

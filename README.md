@@ -249,7 +249,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 | [`deep_causality`](deep_causality/README.md)                     | Causaloid (Singleton/Collection/Graph), Context, CSM, Teloid, Effect Ethos integration               |
 | [`deep_causality_core`](deep_causality_core/README.md)           | `PropagatingEffect`, `PropagatingProcess`, `CausalMonad`, `CausalEffectSystem`, `ControlFlowBuilder` |
 | [`deep_causality_ethos`](deep_causality_ethos/README.md)         | `EffectEthos` and `Teloid` for defeasible deontic reasoning                                          |
-| [`deep_causality_uncertain`](deep_causality_uncertain/README.md) | `Uncertain<T>` and `MaybeUncertain<T>` (after Bornholt et al.)                                       |
+| [`deep_causality_uncertain`](deep_causality_unified_math/deep_causality_uncertain/README.md) | `Uncertain<T>` and `MaybeUncertain<T>` (after Bornholt et al.)                                       |
 
 ### Physics
 
@@ -262,18 +262,18 @@ and is directly applicable to 5G/6G phased-array antenna design.
 
 | Crate                                                                | Description                                                                                                                          |
 |----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| [`deep_causality_tensor`](deep_causality_tensor/README.md)           | N-dim tensors, broadcasting, Einstein summation, Functor/Applicative/Monad/Comonad                                                   |
-| [`deep_causality_multivector`](deep_causality_multivector/README.md) | Clifford algebras: Pauli, STA, CGA, PGA(3), Dixon, Spin(10) GUA                                                                      |
-| [`deep_causality_topology`](deep_causality_topology/README.md)       | Graphs, hypergraphs, simplicial complexes, manifolds, point clouds, exterior calculus, U(1)/SU(2)/SU(3)/Lorentz lattice gauge fields |
-| [`deep_causality_linear`](deep_causality_linear/README.md)           | Sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors, elimination, decompositions, conjugate gradient, exact integer path         |
+| [`deep_causality_tensor`](deep_causality_unified_math/deep_causality_tensor/README.md)           | N-dim tensors, broadcasting, Einstein summation, Functor/Applicative/Monad/Comonad                                                   |
+| [`deep_causality_multivector`](deep_causality_unified_math/deep_causality_multivector/README.md) | Clifford algebras: Pauli, STA, CGA, PGA(3), Dixon, Spin(10) GUA                                                                      |
+| [`deep_causality_topology`](deep_causality_unified_math/deep_causality_topology/README.md)       | Graphs, hypergraphs, simplicial complexes, manifolds, point clouds, exterior calculus, U(1)/SU(2)/SU(3)/Lorentz lattice gauge fields |
+| [`deep_causality_linear`](deep_causality_unified_math/deep_causality_linear/README.md)           | Sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors, elimination, decompositions, conjugate gradient, exact integer path         |
 
 ### Foundation
 
 | Crate                                                      | Description                                                                                       |
 |------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| [`deep_causality_num`](deep_causality_num/README.md)       | Magma → Field algebraic hierarchy, `Float106`, Complex/Quaternion/Octonion division algebras      |
-| [`deep_causality_haft`](deep_causality_haft/README.md)     | Arity-5 higher-kinded types via witness pattern; Effect / Functor / Applicative / Monad / CoMonad |
-| [`deep_causality_metric`](deep_causality_metric/README.md) | Single source of truth for metric signatures (East Coast, West Coast, Cl(p,q,r))                  |
+| [`deep_causality_num`](deep_causality_unified_math/deep_causality_num/README.md)       | Magma → Field algebraic hierarchy, `Float106`, Complex/Quaternion/Octonion division algebras      |
+| [`deep_causality_haft`](deep_causality_unified_math/deep_causality_haft/README.md)     | Arity-5 higher-kinded types via witness pattern; Effect / Functor / Applicative / Monad / CoMonad |
+| [`deep_causality_metric`](deep_causality_unified_math/deep_causality_metric/README.md) | Single source of truth for metric signatures (East Coast, West Coast, Cl(p,q,r))                  |
 | [`ultragraph`](ultragraph/README.md)                       | Two-phase hypergraph backend for CausaloidGraph and Context                                       |
 
 ### Utilities
@@ -281,8 +281,8 @@ and is directly applicable to 5G/6G phased-array antenna design.
 | Crate                                                                        | Description                                                  |
 |------------------------------------------------------------------------------|--------------------------------------------------------------|
 | [`deep_causality_data_structures`](deep_causality_data_structures/README.md) | Sliding-window, grid-array, and other specialised structures |
-| [`deep_causality_rand`](deep_causality_rand/README.md)                       | RNG and statistical distributions                            |
-| [`deep_causality_ast`](deep_causality_ast/README.md)                         | Generic abstract syntax tree                                 |
+| [`deep_causality_rand`](deep_causality_unified_math/deep_causality_rand/README.md)                       | RNG and statistical distributions                            |
+| [`deep_causality_ast`](deep_causality_unified_math/deep_causality_ast/README.md)                         | Generic abstract syntax tree                                 |
 
 ---
 
@@ -372,10 +372,10 @@ Implemented research:
 * ["A Defeasible Deontic Calculus for Resolving Norm Conflicts"](deep_causality_ethos/papers/ddic.pdf), Olson & Forbus
 
 **deep_causality_multivector**
-* ["An Algebraic Roadmap of Particle Theories"](deep_causality_multivector/papers/algebraic_physics.pdf)
+* ["An Algebraic Roadmap of Particle Theories"](deep_causality_unified_math/deep_causality_multivector/papers/algebraic_physics.pdf)
 
 **deep_causality_uncertain**
-* ["Uncertain⟨T⟩: A First-Order Type for Uncertain Data"](deep_causality_uncertain/papers/uncertain_t.pdf), Bornholt et al.
+* ["Uncertain⟨T⟩: A First-Order Type for Uncertain Data"](deep_causality_unified_math/deep_causality_uncertain/papers/uncertain_t.pdf), Bornholt et al.
 
 **Ultragraph**
 * ["NWHy: A Framework for Hypergraph Analytics"](ultragraph/papers/nwhy.pdf)

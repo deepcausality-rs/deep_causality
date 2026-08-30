@@ -14,7 +14,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
         # External dependencies
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",
@@ -35,7 +35,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -53,7 +53,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -71,7 +71,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
         # External dependencies
         "//thirdparty/crates:tempfile",
     ],
@@ -91,7 +91,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
         "//thirdparty/crates:tempfile",
     ],
 )
@@ -110,7 +110,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
         # External dependencies
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",
@@ -132,7 +132,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -150,7 +150,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -168,7 +168,7 @@ rust_test_suite(
         "//deep_causality_discovery",
         # Internal dependencies
         "//deep_causality_algorithms",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -185,8 +185,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_algorithms",
         "//deep_causality_discovery",
-        "//deep_causality_haft",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_tensor",
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",
         "//thirdparty/crates:tempfile",
@@ -206,7 +206,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_algorithms",
         "//deep_causality_discovery",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",
         "//thirdparty/crates:tempfile",
@@ -226,8 +226,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_algorithms",
         "//deep_causality_discovery",
-        "//deep_causality_haft",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_tensor",
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",
         "//thirdparty/crates:tempfile",
@@ -247,7 +247,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_algorithms",
         "//deep_causality_discovery",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
         "//thirdparty/crates:csv",
         "//thirdparty/crates:parquet",
         "//thirdparty/crates:tempfile",

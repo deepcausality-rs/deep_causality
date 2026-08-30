@@ -9,7 +9,7 @@ round-trip law pins that a natural number cast up to `ℤ` and back via `toNat` 
 the injectivity law pins that the integer cast into a characteristic-zero field loses no information,
 so distinct integers cannot alias — the correctness guarantee behind the Rust widening conversions.
 
-Rust witness: `deep_causality_num/tests/casts/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num/tests/casts/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

@@ -52,8 +52,8 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_core",
-        "//deep_causality_metric",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -81,7 +81,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
     ],
 )
 
@@ -103,8 +103,8 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_core",
-        "//deep_causality_num",
-        "//deep_causality_num_dual",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_dual",
     ],
 )
 
@@ -126,13 +126,13 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_core",
-        "//deep_causality_multivector",
-        "//deep_causality_haft",
-        "//deep_causality_num",
-        "//deep_causality_num_complex",
-        "//deep_causality_algebra",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_complex",
+        "//deep_causality_unified_math/deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -153,8 +153,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_multivector",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -175,9 +175,9 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_multivector",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -239,7 +239,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -261,11 +261,11 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_core",
-        "//deep_causality_linear",
-        "//deep_causality_multivector",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
-        "//deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_linear",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_metric",
     ],
 )
 
@@ -286,8 +286,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_num",
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_algebra",
     ],
 )
 
@@ -309,9 +309,9 @@ rust_test_suite(
         "//deep_causality_physics",
         # Internal dependencies
         "//deep_causality_core",
-        "//deep_causality_num",
-        "//deep_causality_num_complex",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_complex",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -353,8 +353,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -375,8 +375,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_multivector",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -397,8 +397,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -446,17 +446,17 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies — union of all domain, unit, and fluid-form quantity deps
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_metric",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_par",
-        "//deep_causality_num",
-        "//deep_causality_num_complex",
-        "//deep_causality_algebra",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_complex",
+        "//deep_causality_unified_math/deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -484,16 +484,16 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_metric",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_par",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
-        "//deep_causality_uncertain",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_uncertain",
     ],
 )
 
@@ -514,16 +514,16 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_metric",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_par",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
-        "//deep_causality_uncertain",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_uncertain",
     ],
 )
 
@@ -544,16 +544,16 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_metric",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_par",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
-        "//deep_causality_uncertain",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_uncertain",
     ],
 )
 
@@ -574,15 +574,15 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_physics",
         # Internal dependencies
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_metric",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_metric",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_par",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
-        "//deep_causality_uncertain",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_uncertain",
     ],
 )

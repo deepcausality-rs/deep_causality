@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — IO action monad laws.
 
-Rust source: `deep_causality_haft/src/io/` — trait `IoAction` (`Output`, `Error`, `run`) with
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/io/` — trait `IoAction` (`Output`, `Error`, `run`) with
 combinators `IoPure` (`io_pure.rs`), `IoAndThen` (`io_and_then.rs`), `IoMap`, `IoMapErr`,
 `IoFail`. The module docstring states the three monad laws and says the equivalences "hold on
 the value produced by `run`" — a denotational equality, which is exactly what is proved here.
@@ -20,7 +20,7 @@ are proved below as `run`-level equalities.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/io_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/io_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

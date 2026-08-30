@@ -68,7 +68,7 @@ packing rather than a gate the suite can decide. What the suite decides is the p
 The crate used to reach these ranks by densifying a `CsrMatrix<i8>` into floating point, calling
 `svd()` and counting the singular values above a tolerance, which left every Betti number it reported
 depending on that threshold. The rank is now `HomologyField::rank_of`
-(`deep_causality_homology/src/types/homology_field/mod.rs:55`), one helper over two exact fields:
+(`deep_causality_unified_math/deep_causality_homology/src/types/homology_field/mod.rs:55`), one helper over two exact fields:
 fraction-free elimination over ℤ for `Rational`, packed mod-2 elimination for `Gf2`. Neither rounds.
 `deep_causality_topology` re-exports it (`src/types/homology_field/mod.rs:25`), so the field is a
 call-site choice.

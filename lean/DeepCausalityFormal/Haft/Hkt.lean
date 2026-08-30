@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — the HKT witness pattern: what it denotes.
 
-Rust source: `deep_causality_haft/src/hkt/mod.rs` (traits `HKT`, `HKT2..5`, `HKT2..6Unbound`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/hkt/mod.rs` (traits `HKT`, `HKT2..5`, `HKT2..6Unbound`,
 `Satisfies`, `NoConstraint`, `Placeholder`).
 
 This file is the definitional bridge between the Rust encoding and the mathematics — it

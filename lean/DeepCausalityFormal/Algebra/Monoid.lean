@@ -4,12 +4,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Exemplar 1 — foundational monoid laws (Num layer).
 
-Mirrors the Rust trait `deep_causality_num::AddMonoid`, a blanket impl over
-`Add + AddAssign + Zero + Clone` (see `deep_causality_num/src/algebra/monoid.rs`).
+Mirrors the Rust trait `deep_causality_algebra::AddMonoid`, a blanket impl over
+`AddSemigroup + Zero` (see `deep_causality_unified_math/deep_causality_algebra/src/algebra/monoid.rs`).
 These laws are near-inherited from Mathlib's `AddMonoid` class; the value of stating them
 here is that they become the pinned property statements bound to a Rust witness.
 
-Rust witness: `deep_causality_algebra/tests/algebra/monoid_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/formalization_lean/monoid_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

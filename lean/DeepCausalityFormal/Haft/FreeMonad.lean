@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — the Free Monad: `Free f a` for a functor `f`, the initial monad on `f`.
 
-Rust source: `deep_causality_haft/src/monad/free_monad.rs` (`Free<F, A>`, `FreeWitness<F>`).
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/free_monad.rs` (`Free<F, A>`, `FreeWitness<F>`).
 
 The free monad turns any functor `f` into a monad (Awodey, *Category Theory* 2nd ed. §10;
 Swierstra, *Data Types à la Carte*, JFP 18(4), 2008; the algebraic-effects reading:
@@ -25,7 +25,7 @@ multi-hole case (`Dispatch`'s map, i.e. `f a = List a`) has the identical induct
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witnesses: `deep_causality_haft/tests/formalization_lean/free_monad_tests.rs`.
+Rust witnesses: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/free_monad_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

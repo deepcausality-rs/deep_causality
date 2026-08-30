@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Parametric (indexed) monad laws.
 
-Rust source: `deep_causality_haft/src/monad/parametric_monad.rs` (trait
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/parametric_monad.rs` (trait
 `ParametricMonad<M: HKT3Unbound>`, operations `pure : A → M S S A` and
 `ibind : M S1 S2 A → (A → M S2 S3 B) → M S1 S3 B`). The same shape underlies
 `MonadEffect3Unbound/4/5` (`src/effect_system/monad_effect_unbound.rs`), whose `ibind` threads a
@@ -21,7 +21,7 @@ degenerate special case; the model here keeps real state so the index discipline
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/parametric_monad_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/parametric_monad_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

@@ -22,7 +22,7 @@ The website page `website/docs/src/content/docs/formalization/complex-dual.md` S
 - **THEN** the test names match the map exactly (e.g. `test_mul_comm`, `test_complex_norm_sqr_mul`), with no invented prefixes or spelling fixes
 
 ### Requirement: Page follows the completed-layer house style
-The page SHALL follow the conventions of the completed `num.md` and `algebra.md` pages: intro prose stating the law count (fifteen) with links to the Lean sources and both witness crate directories (`deep_causality_num_complex/tests/formalization_lean/`, `deep_causality_num_dual/tests/formalization_lean/`), retaining the stub's framing of the negative results (ℍ non-commutativity, `R[ε]` not a field), with no `Kani` column and no proved-status column (the prose states every row is `proved`).
+The page SHALL follow the conventions of the completed `num.md` and `algebra.md` pages: intro prose stating the law count (fifteen) with links to the Lean sources and both witness crate directories (`deep_causality_unified_math/deep_causality_num_complex/tests/formalization_lean/`, `deep_causality_unified_math/deep_causality_num_dual/tests/formalization_lean/`), retaining the stub's framing of the negative results (ℍ non-commutativity, `R[ε]` not a field), with no `Kani` column and no proved-status column (the prose states every row is `proved`).
 
 #### Scenario: Draft scaffolding removed
 - **WHEN** the finished page is inspected

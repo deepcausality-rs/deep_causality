@@ -17,7 +17,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality",
-        "//deep_causality_rand",
+        "//deep_causality_unified_math/deep_causality_rand",
     ],
 )
 

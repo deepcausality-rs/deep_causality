@@ -14,7 +14,7 @@ as a matrix), so the witness is stated over `ℤ` and closed by `decide` — no 
 arithmetic. This is the exact counterpart of the crate's numerical witness
 `test_partial_trace_nonpreservation_counterexample`.
 
-Rust witness: `deep_causality_quantum/tests/kernels/operator_linalg_tests.rs ::
+Rust witness: `deep_causality_quantum/tests/formalization_lean/partial_trace_tests.rs ::
 test_partial_trace_nonpreservation_counterexample`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into

@@ -8,7 +8,7 @@
 //! Lean source of truth: `lean/DeepCausalityFormal/Core/*.lean` — this directory mirrors that
 //! tree one-to-one (`EffectLog.lean` ↔ `effect_log_tests.rs`, `CausalEffect.lean` ↔
 //! `causal_effect_tests.rs`, …), matching the haft convention
-//! (`deep_causality_haft/tests/formalization_lean/`). Each Lean file cites its literature
+//! (`deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/`). Each Lean file cites its literature
 //! reference and the Rust source; each test carries the shared `THEOREM_MAP` id from
 //! `lean/THEOREM_MAP.md` and checks the law empirically on the crate's real implementation at
 //! representative inputs (Lean proves ∀; these tests pin the Rust code to the same statements).

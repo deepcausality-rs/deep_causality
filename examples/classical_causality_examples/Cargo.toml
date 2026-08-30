@@ -12,7 +12,7 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality =  { path = "../../deep_causality" }
 deep_causality_core =  { path = "../../deep_causality_core" }
-deep_causality_rand =  { path = "../../deep_causality_rand" }
+deep_causality_rand =  { path = "../../deep_causality_unified_math/deep_causality_rand" }
 
 
 # --- Causaloid + Contextual-Alternation implementations ---

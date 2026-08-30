@@ -1,0 +1,16 @@
+[package]
+name = "deep_causality_sparse"
+version = "0.2.5"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+description = "RETIRED. Superseded by deep_causality_linear. 0.2.5 is the last release. See README."
+documentation = "https://docs.rs/deep_causality"
+categories = ["data-structures", "science"]
+keywords = ["deprecated", "sparse-matrix", "csr"]
+readme = "README.md"
+
+publish = false

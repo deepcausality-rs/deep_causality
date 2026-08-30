@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Adjunction laws.
 
-Rust source: `deep_causality_haft/src/adjunction/mod.rs` (trait `Adjunction<L, R, Context>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/adjunction/mod.rs` (trait `Adjunction<L, R, Context>`,
 operations `unit`, `counit`, `left_adjunct`, `right_adjunct`).
 
 Accepted theory: Mac Lane, *CWM* 2nd ed., §IV.1 — an adjunction `L ⊣ R` is a natural bijection
@@ -23,7 +23,7 @@ itself ("Currying/Uncurrying") and the adjunction underlying the state monad. `L
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/adjunction_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/adjunction_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

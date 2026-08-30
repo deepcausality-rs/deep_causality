@@ -14,21 +14,20 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality = { path = "../../deep_causality" }
 deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_calculus = { path = "../../deep_causality_calculus" }
+deep_causality_calculus = { path = "../../deep_causality_unified_math/deep_causality_calculus" }
 deep_causality_physics = { path = "../../deep_causality_physics", features = [
     "os-random",
 ] }
 deep_causality_quantum = { path = "../../deep_causality_quantum" }
-deep_causality_multivector = { path = "../../deep_causality_multivector" }
-deep_causality_tensor = { path = "../../deep_causality_tensor" }
-deep_causality_topology = { path = "../../deep_causality_topology" }
-deep_causality_num = { path = "../../deep_causality_num" }
-deep_causality_num_complex = { path = "../../deep_causality_num_complex" }
-deep_causality_num_dual = { path = "../../deep_causality_num_dual" }
-deep_causality_algebra = { path = "../../deep_causality_algebra" }
-deep_causality_linear = { path = "../../deep_causality_linear" }
-deep_causality_sparse = { path = "../../deep_causality_sparse" }
-deep_causality_rand = { path = "../../deep_causality_rand", features = [
+deep_causality_multivector = { path = "../../deep_causality_unified_math/deep_causality_multivector" }
+deep_causality_tensor = { path = "../../deep_causality_unified_math/deep_causality_tensor" }
+deep_causality_topology = { path = "../../deep_causality_unified_math/deep_causality_topology" }
+deep_causality_num = { path = "../../deep_causality_unified_math/deep_causality_num" }
+deep_causality_num_complex = { path = "../../deep_causality_unified_math/deep_causality_num_complex" }
+deep_causality_num_dual = { path = "../../deep_causality_unified_math/deep_causality_num_dual" }
+deep_causality_algebra = { path = "../../deep_causality_unified_math/deep_causality_algebra" }
+deep_causality_linear = { path = "../../deep_causality_unified_math/deep_causality_linear" }
+deep_causality_rand = { path = "../../deep_causality_unified_math/deep_causality_rand", features = [
     "os-random",
 ] }
 

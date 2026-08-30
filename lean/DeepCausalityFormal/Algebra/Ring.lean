@@ -10,7 +10,7 @@ group under addition with an associative multiplicative monoid, tied together by
 laws; a commutative ring adds multiplicative commutativity. These are Mathlib's `Ring` and `CommRing`
 classes; stating them here pins the property statements bound to the Rust witnesses.
 
-Rust witness: `deep_causality_algebra/tests/algebra/`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

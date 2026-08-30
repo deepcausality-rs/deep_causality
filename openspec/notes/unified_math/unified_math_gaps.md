@@ -86,7 +86,7 @@ not. None of them cycles: `haft` depends on `algebra`, so any crate at tier 2 or
 `Complex<T: RealField>` is `{ re, im }` and `Dual<T: Real>` is `{ re, du }`. Both are two-field
 products over a constrained parameter, and `haft`'s `HKT` already supports constrained witnesses:
 `StrictCausalTensorWitness` declares `type Constraint = TensorConstraint`
-(`deep_causality_tensor/src/extensions/ext_hkt_strict.rs:71`). Neither crate exposes a `map` of any
+(`deep_causality_unified_math/deep_causality_tensor/src/extensions/ext_hkt_strict.rs:71`). Neither crate exposes a `map` of any
 kind today.
 
 `num_rational` is a correct absence rather than a gap. `Ratio<A> -> Ratio<B>` under an arbitrary `f`
@@ -102,7 +102,7 @@ today. Forward-mode AD under a tensor cannot map its own layer.
 
 This is the sharpest finding in the note.
 
-`deep_causality_uncertain/src/types/computation/uncertain_node_content/mod.rs:50` opens with the
+`deep_causality_unified_math/deep_causality_uncertain/src/types/computation/uncertain_node_content/mod.rs:50` opens with the
 comment `// HKT Operations` over four node kinds:
 
 ```rust

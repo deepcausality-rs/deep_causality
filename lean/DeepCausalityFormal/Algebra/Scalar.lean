@@ -10,7 +10,7 @@ order-reversing ring anti-homomorphism (Mathlib's `StarRing`), while the norm is
 multiplicative absolute value (Mathlib's `SeminormedAddGroup` / `NormedField`). Stating these laws
 here pins the property statements bound to the Rust witnesses.
 
-Rust witness: `deep_causality_algebra/tests/algebra/`
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/`
 (`scalar_conjugate_tests.rs`, `scalar_normed_tests.rs`).
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into

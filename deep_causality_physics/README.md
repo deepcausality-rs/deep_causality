@@ -77,7 +77,7 @@ The crate supports `no_std` environments via feature flags.
   QCD hadronization.
 * `parallel`: Enables Rayon-parallel execution of the DEC operator loops underneath the
   Navier–Stokes solver (wedge, interior product, de Rham, sharp, and the CG matvecs), by
-  forwarding to `deep_causality_topology/parallel`. Disabled by default; the parallel paths are
+  forwarding to `deep_causality_unified_math/deep_causality_topology/parallel`. Disabled by default; the parallel paths are
   granularity-thresholded, so small lattices run serial loops with no fork-join overhead either
   way.
 

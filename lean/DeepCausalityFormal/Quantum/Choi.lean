@@ -10,8 +10,9 @@ E(|i⟩⟨j|)(k,l)`, and the action reconstructed from a Choi matrix is `applyCh
 ∑ i j, A i j · J(i,k)(j,l)`. The keystone is the **Choi–Jamiołkowski isomorphism**: reconstructing
 the action from the Choi matrix of a linear channel recovers the channel, `applyChoi (choiOf E) = E`.
 
-Rust witness: `deep_causality_quantum/tests/kernels/channel_tests.rs` (the Choi↔Kraus round-trip and
-`apply_choi`/`apply_kraus` agreement).
+Rust witness: `deep_causality_quantum/tests/formalization_lean/choi_tests.rs` (the linearity
+witnesses bound to the ids below), with the Choi↔Kraus round-trip in
+`deep_causality_quantum/tests/types/qgates/channel_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
@@ -67,7 +68,7 @@ theorem applyChoi_smul (J : Matrix (α × β) (α × β) R) (c : R) (A : Matrix 
 -- The Choi–Jamiołkowski reconstruction isomorphism `applyChoi (choiOf E) = E` (that reconstructing
 -- the action from a linear channel's Choi matrix recovers the channel) is the CJ keystone. Its
 -- proof over Mathlib's `stdBasisMatrix` module-expansion is deferred; the correspondence is checked
--- numerically by the Rust round-trip witnesses in `channel_tests.rs`
--- (`test_choi_kraus_choi_round_trip`, `test_apply_kraus_and_apply_choi_agree`).
+-- numerically by the Rust round-trip witness `test_choi_kraus_choi_round_trip` in
+-- `deep_causality_quantum/tests/types/qgates/channel_tests.rs`.
 
 end DeepCausalityFormal.Quantum

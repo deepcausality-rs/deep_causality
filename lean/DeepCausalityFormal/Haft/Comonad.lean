@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Comonad laws.
 
-Rust source: `deep_causality_haft/src/monad/comonad.rs` (trait `CoMonad<F>: Functor<F>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/comonad.rs` (trait `CoMonad<F>: Functor<F>`,
 operations `extract`, `extend`, `duplicate`). The crate's canonical carriers are `BoxWitness`
 (≅ the Identity comonad) and the tests' `IdentityWitness`. Formalized here on the **Env (reader /
 coreader) comonad** `W A = E × A` — a genuinely non-trivial comonad that specializes to Identity
@@ -22,7 +22,7 @@ memory-management encoding with no mathematical content (the Lean model consumes
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/comonad_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/comonad_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

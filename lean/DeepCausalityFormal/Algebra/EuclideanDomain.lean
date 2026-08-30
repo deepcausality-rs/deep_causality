@@ -19,7 +19,7 @@ Also stated here is the negative fact that keeps ℤ out of `Field`: 2 has no mu
 over ℤ. That is why `Invertible` (see `Algebra/Invertible.lean`) is withheld from the integers, and
 so why the tower stops ℤ at `CommutativeRing`.
 
-Rust witness: `deep_causality_algebra/tests/formalization_lean/`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/formalization_lean/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

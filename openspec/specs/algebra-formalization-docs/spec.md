@@ -18,7 +18,7 @@ The website page `website/docs/src/content/docs/formalization/algebra.md` SHALL 
 - **THEN** the theorem names and test names are identical, rendered relative as `<File>.lean :: <theorem>` and `<file>_tests.rs :: <test>`, with multiple theorems separated by ` / `
 
 ### Requirement: Page follows the completed-layer house style
-The page SHALL follow the conventions of the completed `num.md` page: intro prose stating the law count with a GitHub link to `lean/DeepCausalityFormal/Algebra/` and the witness directory `deep_causality_algebra/tests/formalization_lean/`, no `Kani` column, and no proved-status column (the prose states every row is `proved`).
+The page SHALL follow the conventions of the completed `num.md` page: intro prose stating the law count with a GitHub link to `lean/DeepCausalityFormal/Algebra/` and the witness directory `deep_causality_unified_math/deep_causality_algebra/tests/formalization_lean/`, no `Kani` column, and no proved-status column (the prose states every row is `proved`).
 
 #### Scenario: Draft scaffolding removed
 - **WHEN** the finished page is inspected

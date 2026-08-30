@@ -59,7 +59,7 @@ libm_math = ["dep:libm"]
 
 `std` takes the intrinsics; `no-std` routes through `libm`. The other three core-only crates,
 `deep_causality_algebra`, `deep_causality_num_complex` and `deep_causality_num_dual`, only forward
-that choice, for example `no-std = ["deep_causality_num/no-std"]`.
+that choice, for example `no-std = ["deep_causality_unified_math/deep_causality_num/no-std"]`.
 
 ### `alloc` on its own is not a configuration
 
@@ -69,7 +69,7 @@ math comes from. `--no-default-features --features alloc` therefore selects neit
 
 ```
 error[E0425]: cannot find value `n` in this scope
-  --> deep_causality_num/src/float_106/ops_arithmetic.rs:259:38
+  --> deep_causality_unified_math/deep_causality_num/src/float_106/ops_arithmetic.rs:259:38
 ```
 
 `deep_causality_core` declares a `compile_error!` for this combination whose message names the fix,
@@ -115,7 +115,7 @@ These four are exactly the crates that declare no `alloc` feature.
 `deep_causality_calculus` is the borderline case. Its own operators allocate nothing: the
 integrators step over stack values and `gradient` seeds one coordinate per pass. It is listed here
 because it depends on `deep_causality_haft`, and both its `std` and its `no-std` feature enable
-`alloc = ["deep_causality_haft/alloc"]`. Differentiation and integration therefore arrive with the
+`alloc = ["deep_causality_unified_math/deep_causality_haft/alloc"]`. Differentiation and integration therefore arrive with the
 same allocator requirement as the rest of this table.
 
 ## Allocators

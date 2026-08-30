@@ -37,7 +37,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_core",
         # Internal dependencies
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -56,7 +56,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -95,7 +95,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -132,7 +132,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -151,7 +151,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -170,7 +170,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -189,7 +189,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -208,7 +208,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -227,7 +227,7 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -246,6 +246,6 @@ rust_test_suite(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )

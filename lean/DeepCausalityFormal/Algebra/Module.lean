@@ -11,7 +11,7 @@ and unit laws are Mathlib's `smul_add` / `add_smul` / `one_smul` / `mul_smul`, a
 commutation laws are `smul_mul_assoc` / `mul_smul_comm`; stating them here pins the property statements
 bound to the Rust witnesses.
 
-Rust witness: `deep_causality_algebra/tests/algebra/`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

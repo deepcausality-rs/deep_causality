@@ -9,7 +9,7 @@ ring structure over `ℤ` together with Euclidean division. The commutativity an
 are the ring laws; the Euclidean law mirrors the Rust `div_euclid`/`rem_euclid` pair, pinning the
 identity that reconstructs a dividend from its quotient and remainder.
 
-Rust witness: `deep_causality_num/tests/integer/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num/tests/integer/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

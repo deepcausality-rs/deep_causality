@@ -14,11 +14,11 @@ to pick one and lose the other.
 The crate inherited an unfinished instance of exactly this, and the move finished it.
 `CsrMatrix<f64>` had reached `AbelianGroup` and stopped, because `Distributive` and `Annihilating`
 were not implemented for it. Both markers are now present, at
-`deep_causality_linear/src/types/csr_matrix/algebra/mod.rs:23-24`, alongside the rest of what `Ring`
+`deep_causality_unified_math/deep_causality_linear/src/types/csr_matrix/algebra/mod.rs:23-24`, alongside the rest of what `Ring`
 needs: `One` (`csr_matrix/ops/mod.rs:123`), `Mul` (`csr_matrix/ops/mod.rs:180`) and
 `Associative<Multiplicative>` (`csr_matrix/algebra/mod.rs:22`). A matrix ring over a ring **is** a
 ring, and the tower now says so; the membership is pinned at
-`deep_causality_linear/src/traits/tower_pins.rs:107`.
+`deep_causality_unified_math/deep_causality_linear/src/traits/tower_pins.rs:107`.
 
 `Module<S>` was never part of that gap, and the distinction is worth recording because the obvious
 inference is wrong. `Module<R>` is blanket-implemented over
@@ -76,7 +76,7 @@ Matrix addition commutes; matrix multiplication does not. A marker on the type a
 which is meant, which is why the operator parameter exists. `CsrMatrix` already gets this right:
 `csr_matrix/algebra/mod.rs:20-22` claims `Associative<Additive>`, `Commutative<Additive>` and
 `Associative<Multiplicative>`, and its line 26 records `Commutative<Multiplicative>` as deliberately
-absent. `deep_causality_algebra/README_ALGEBRA_TRAITS.md:149-157` carries the reason the parameter
+absent. `deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md:149-157` carries the reason the parameter
 exists: a flat marker cannot say which operation it means, and a type implements a non-generic trait
 once, so a single `Commutative` has one slot where a matrix needs two opposite answers.
 

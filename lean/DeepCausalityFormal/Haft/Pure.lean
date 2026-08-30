@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Pure (pointed functor) naturality.
 
-Rust source: `deep_causality_haft/src/pure/mod.rs` (trait `Pure<F: HKT>`, operation `pure`).
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/pure/mod.rs` (trait `Pure<F: HKT>`, operation `pure`).
 The standalone `Pure` trait is a Rust-motivated split (documented in the source: it lets `Monad`
 avoid `Applicative`'s closure constraint); mathematically it is a *pointed functor* — a functor
 `F` equipped with a natural transformation `η : Id ⇒ F` (Mac Lane, *CWM* 2nd ed., §I.4 for
@@ -17,7 +17,7 @@ add it to the trait's law list.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/pure_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/pure_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

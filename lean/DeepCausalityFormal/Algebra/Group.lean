@@ -10,7 +10,7 @@ two-sided inverse; an abelian group adds commutativity. These laws are Mathlib's
 `AddGroup`, and `AddCommGroup` classes; stating them here pins the property statements bound
 to the Rust witnesses.
 
-Rust witness: `deep_causality_algebra/tests/algebra/`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

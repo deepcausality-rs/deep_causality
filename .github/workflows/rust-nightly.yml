@@ -1,0 +1,21 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+name: rust-nightly
+
+on: [ pull_request ]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: cargo build (nightly)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - name: cargo build --workspace on nightly
+        run: cargo build --workspace --all-targets --all-features

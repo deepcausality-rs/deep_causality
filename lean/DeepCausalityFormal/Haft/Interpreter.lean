@@ -4,8 +4,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — the one-way interpreter `ArrowTerm → Kleisli<M>` as a functor, plus naturality.
 
-Rust source: `deep_causality_haft/src/arrow/interpreter.rs` (`ArrowCore::interpret_kleisli`) and
-`deep_causality_haft/src/natural_transformation/mod.rs` (`NaturalTransformation`, `OptionToVec`).
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/arrow/interpreter.rs` (`ArrowCore::interpret_kleisli`) and
+`deep_causality_unified_math/deep_causality_haft/src/natural_transformation/mod.rs` (`NaturalTransformation`, `OptionToVec`).
 
 Textbook definition. The free arrow over a generator set is an initial object: for any target
 strong category (arrow), an interpretation of the generators extends to a **unique functor** from
@@ -38,7 +38,7 @@ DEVIATION NOTES.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/interpreter_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/interpreter_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

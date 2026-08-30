@@ -18,11 +18,11 @@ The website page `website/docs/src/content/docs/formalization/haft.md` SHALL con
 - **THEN** they are identical directory-qualified filenames (e.g. `Haft/Functor.lean`) with no theorem names, and the named file exists under `lean/DeepCausalityFormal/`
 
 #### Scenario: Every id has a Rust witness despite the absent column
-- **WHEN** each page id is searched as a `THEOREM_MAP:` annotation in `deep_causality_haft/tests/formalization_lean/`
+- **WHEN** each page id is searched as a `THEOREM_MAP:` annotation in `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/`
 - **THEN** every one of the 49 ids is found
 
 ### Requirement: Haft page follows the topology-page house style
-The page SHALL follow `topology.md`: no per-row Rust-witness column, with intro prose stating the law count (forty-nine), linking `lean/DeepCausalityFormal/Haft/` on GitHub, and stating the witness convention (mirrored test files in `deep_causality_haft/tests/formalization_lean/`, one test per id carrying a `THEOREM_MAP:` annotation) so witnesses are findable without a column.
+The page SHALL follow `topology.md`: no per-row Rust-witness column, with intro prose stating the law count (forty-nine), linking `lean/DeepCausalityFormal/Haft/` on GitHub, and stating the witness convention (mirrored test files in `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/`, one test per id carrying a `THEOREM_MAP:` annotation) so witnesses are findable without a column.
 
 #### Scenario: Draft scaffolding removed
 - **WHEN** the finished page is inspected

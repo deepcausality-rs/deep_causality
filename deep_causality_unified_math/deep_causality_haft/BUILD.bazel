@@ -1,0 +1,158 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+
+rust_library(
+    name = "deep_causality_haft",
+    srcs = glob([
+        "src/**",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    crate_root = "src/lib.rs",
+    tags = [
+        "HAFT",
+        "HKT",
+        "utils",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_unified_math/deep_causality_algebra",
+    ],
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_haft",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_haft",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+rust_binary(
+    name = "haft_applicative",
+    srcs = ["examples/applicative.rs"],
+    crate_root = "examples/applicative.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_foldable",
+    srcs = ["examples/foldable.rs"],
+    crate_root = "examples/foldable.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_monad",
+    srcs = ["examples/monad.rs"],
+    crate_root = "examples/monad.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_functor",
+    srcs = ["examples/functor.rs"],
+    crate_root = "examples/functor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_comonad",
+    srcs = ["examples/comonad.rs"],
+    crate_root = "examples/comonad.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_traversable",
+    srcs = ["examples/traversable.rs"],
+    crate_root = "examples/traversable.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_adjunction",
+    srcs = ["examples/adjunction.rs"],
+    crate_root = "examples/adjunction.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_parametric_monad",
+    srcs = ["examples/parametric_monad.rs"],
+    crate_root = "examples/parametric_monad.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_bifunctor",
+    srcs = ["examples/bifunctor.rs"],
+    crate_root = "examples/bifunctor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_profunctor",
+    srcs = ["examples/profunctor.rs"],
+    crate_root = "examples/profunctor.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_effect_system_example",
+    srcs = ["examples/effect_system.rs"],
+    crate_root = "examples/effect_system.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "haft_unbound_example",
+    srcs = ["examples/unbound_haft.rs"],
+    crate_root = "examples/unbound_haft.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_haft",
+    ],
+)

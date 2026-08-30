@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Morphism (witness-level identity + application).
 
-Rust source: `deep_causality_haft/src/morphism/morphism_base.rs` (trait `Morphism<P>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/morphism/morphism_base.rs` (trait `Morphism<P>`,
 operations `identity`, `apply`; canonical carrier `FnMorphism` with `Type<A, B> = fn(A) -> B`).
 
 The trait deliberately has NO composition: under the repo's `unsafe_code = "forbid"` / no-`dyn`
@@ -16,7 +16,7 @@ under `apply` — the unit law of the (external) category whose hom-carrier it n
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/morphism_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/morphism_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

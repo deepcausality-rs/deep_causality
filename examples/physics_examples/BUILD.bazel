@@ -28,10 +28,10 @@ rust_binary(
     crate_root = "event_horizon_probe/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_multivector",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_physics",
     ],
 )
@@ -43,11 +43,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_num",
-        "//deep_causality_num_dual",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_dual",
         "//deep_causality_physics",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -57,9 +57,9 @@ rust_binary(
     crate_root = "gauge_lattice_u1_2d/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_num",
-        "//deep_causality_num_complex",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_complex",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -70,7 +70,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_physics",
     ],
 )
@@ -82,7 +82,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_physics",
     ],
 )
@@ -95,9 +95,9 @@ rust_binary(
     deps = [
         "//deep_causality",
         "//deep_causality_core",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_physics",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -107,8 +107,8 @@ rust_binary(
     crate_root = "gravitational_wave/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -120,9 +120,9 @@ rust_binary(
     deps = [
         "//deep_causality",
         "//deep_causality_core",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_physics",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -132,11 +132,11 @@ rust_binary(
     crate_root = "laser_resonator_stability/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_core",
-        "//deep_causality_num_complex",
+        "//deep_causality_unified_math/deep_causality_num_complex",
         "//deep_causality_physics",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -147,9 +147,9 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality",
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_physics",
     ],
 )
@@ -161,13 +161,13 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_multivector",
-        "//deep_causality_num_complex",
+        "//deep_causality_unified_math/deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_num_complex",
         "//deep_causality_physics",
         "//deep_causality_quantum",
-        "//deep_causality_rand",
-        "//deep_causality_linear",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_rand",
+        "//deep_causality_unified_math/deep_causality_linear",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )

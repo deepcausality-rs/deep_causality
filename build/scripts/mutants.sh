@@ -54,17 +54,34 @@ cd "$REPO_ROOT"
 CRATE="${1:-}"
 FILE="${2:-}"
 
+# A package name is not its directory. The sixteen mathematics crates live under
+# `deep_causality_unified_math/`, so `--file` needs the manifest directory rather than the package
+# name. Cargo is the only thing that knows the mapping, so ask it.
+crate_dir() {
+    cargo metadata --no-deps --format-version 1 |
+        tr ',' '\n' |
+        grep -A0 "\"manifest_path\":[^,]*/$1/Cargo.toml" |
+        sed -E 's|.*"manifest_path":"||; s|/Cargo.toml"?||' |
+        sed "s|^$REPO_ROOT/||" |
+        head -1
+}
+
 # The default target: the numeric algorithms, where a flipped comparison returns a plausible
 # number instead of failing. Extend this list as other crates earn it.
 if [ -z "$CRATE" ]; then
-    echo "Mutation testing deep_causality_linear/src/algorithms (the default set)"
+    echo "Mutation testing deep_causality_unified_math/deep_causality_linear/src/algorithms (the default set)"
     exec cargo mutants -p deep_causality_linear \
-        --file 'deep_causality_linear/src/algorithms/*.rs' \
+        --file 'deep_causality_unified_math/deep_causality_linear/src/algorithms/*.rs' \
         -j 8
 fi
 
 if [ -n "$FILE" ]; then
-    exec cargo mutants -p "$CRATE" --file "$CRATE/$FILE" -j 8
+    DIR="$(crate_dir "$CRATE")"
+    if [ -z "$DIR" ]; then
+        echo "mutants.sh: no workspace package named $CRATE" >&2
+        exit 1
+    fi
+    exec cargo mutants -p "$CRATE" --file "$DIR/$FILE" -j 8
 fi
 
 exec cargo mutants -p "$CRATE" -j 8

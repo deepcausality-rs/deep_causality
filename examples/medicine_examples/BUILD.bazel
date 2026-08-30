@@ -7,8 +7,8 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -18,9 +18,9 @@ rust_binary(
     crate_root = "diving_decompression/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -30,10 +30,10 @@ rust_binary(
     crate_root = "epilepsy/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
-        "//deep_causality_num",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -44,7 +44,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_physics",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -55,8 +55,8 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_tensor",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )
 
@@ -66,8 +66,8 @@ rust_binary(
     crate_root = "tumor_treatment/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
     ],
 )

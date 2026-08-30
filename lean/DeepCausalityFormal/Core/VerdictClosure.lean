@@ -61,7 +61,7 @@ inductive AggLogic where
   | someK : Nat → AggLogic
 
 /-- The Verdict algebra: a carrier with the five operations of the Rust `Verdict` trait
-    (`deep_causality_algebra/src/algebra/verdict.rs`). Laws live per carrier
+    (`deep_causality_unified_math/deep_causality_algebra/src/algebra/verdict.rs`). Laws live per carrier
     (`algebra.verdict.*`); deviation note 1. -/
 structure VerdictAlg (V : Type) where
   bottom : V

@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Profunctor laws.
 
-Rust source: `deep_causality_haft/src/functor/profunctor.rs` (trait `Profunctor<P: HKT2Unbound>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/functor/profunctor.rs` (trait `Profunctor<P: HKT2Unbound>`,
 operations `dimap`, `lmap`, `rmap`). Canonical carrier: the function profunctor `P A B = A → B`
 (the crate's `profunctor_tests.rs` uses exactly this via its `FunctionWitness`).
 
@@ -21,7 +21,7 @@ Both laws are proved below; the recommendation is to add them to the docstring a
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/profunctor_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/profunctor_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

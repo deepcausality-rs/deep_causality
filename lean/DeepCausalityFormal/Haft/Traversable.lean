@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Traversable laws.
 
-Rust source: `deep_causality_haft/src/traversable/mod.rs` (trait
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/traversable/mod.rs` (trait
 `Traversable<F>: Functor<F> + Foldable<F>`, operation `sequence`). Canonical carrier: `Option`
 (`OptionWitness::sequence`: `Some m_a → M::fmap(m_a, Some)`, `None → M::pure(None)`) —
 transcribed literally by `seqOption` below, over an *abstract* applicative `M` given as an
@@ -27,7 +27,7 @@ both `M` and `N`; tracked in THEOREM_MAP's deferred section).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/traversable_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/traversable_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
