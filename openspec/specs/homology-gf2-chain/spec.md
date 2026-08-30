@@ -91,8 +91,8 @@ orientation that `kernel_basis_gf2` and `image_basis_gf2` actually produce, whic
 
 `kernel_basis_gf2` allocates `zeros(cols, free.len())` and `image_basis_gf2` allocates
 `zeros(rows, pivots.len())`; both write basis vectors down columns. The existing `from_row` is a
-contiguous word-slice copy and cannot read a column, and four committed docstrings describe the
-bases as rows. A caller following those docstrings receives a vector of the wrong length.
+contiguous word-slice copy and cannot read a column, and four committed docstrings described the
+bases as rows before this change. A caller following them received a vector of the wrong length.
 
 #### Scenario: A kernel basis vector round-trips into a chain
 - **WHEN** `kernel_basis_gf2` is called on a matrix with a known kernel and each basis vector is read
@@ -100,10 +100,11 @@ bases as rows. A caller following those docstrings receives a vector of the wron
 - **THEN** each chain has length equal to the matrix's column count, and multiplying it by the matrix
   gives zero
 
-#### Scenario: Reading a basis as rows is refused or absent
-- **WHEN** a caller attempts to read a kernel basis vector with the row-oriented constructor
-- **THEN** either the API offers no such path, or the mismatch is reported rather than producing a
-  wrong-length chain
+#### Scenario: The row path returns a differently-shaped vector
+- **WHEN** a kernel basis is read with the row-oriented constructor instead of the column one
+- **THEN** the chain's length is the number of basis vectors rather than the dimension they live
+  in, so a caller detects it from `len()`, and the column constructor is the one the docstrings
+  name for a basis
 
 #### Scenario: The documentation names the orientation the code produces
 - **WHEN** the docstrings of the basis functions and the chain constructors are read

@@ -17,7 +17,7 @@ The split is by arity, not by density. A strided N-d tensor is not a matrix, so 
 
 #### Scenario: N-d operations are untouched
 - **WHEN** the crate's public surface is enumerated
-- **THEN** it contains no operation whose domain is a tensor of rank other than two
+- **THEN** it contains no operation whose domain is a tensor of rank greater than two
 
 ### Requirement: The crate sits below every crate that supplies a representation
 `deep_causality_linear` SHALL NOT depend on `deep_causality_tensor` or on any crate above it, under any feature flag.

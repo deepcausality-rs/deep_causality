@@ -46,24 +46,32 @@ no error raised. Exactness is what removes that failure mode.
 ### Requirement: Elimination updates whole words rather than single bits
 The 𝔽₂ row update SHALL combine rows one machine word at a time.
 
-This is what makes packing worth its complexity. Measured on an M3 Max at `--release`, packed `u64`
-against a `Field`-satisfying byte scalar runs 1.7× faster at n=128, 1.9× at n=512, 2.4× at n=1024 and
-3.2× at n=2048, on one eighth the memory; the ratio grows with n as cache pressure does.
+This is what makes packing worth its complexity. Measured ad hoc at `--release` on an M3 Max with 16
+cores and 128 GB, packed `u64` against a `Field`-satisfying byte scalar runs 1.7× faster at n=128,
+1.9× at n=512, 2.4× at n=1024 and 3.2× at n=2048, on one eighth the memory; the ratio grows with n as
+cache pressure does. The crate carries no bench target, so those numbers are the rationale for
+packing rather than a gate the suite can decide. What the suite decides is the property.
 
-#### Scenario: Packed elimination outruns the byte-scalar alternative
-- **WHEN** a 1024×1024 𝔽₂ matrix is reduced through both the packed and a one-byte-per-entry representation
-- **THEN** the packed reduction is at least twice as fast
+#### Scenario: The row update runs a word at a time
+- **WHEN** one row is combined into another over 𝔽₂
+- **THEN** the update reads and writes whole `W`-sized words, from the pivot column's word to the end of the row
+- **AND** no path walks the row one bit at a time
 
-#### Scenario: The advantage grows with size
-- **WHEN** the comparison is repeated at 2048×2048
-- **THEN** the ratio is no smaller than at 1024×1024
+#### Scenario: The packing is one bit per entry
+- **WHEN** the packed representation is compared against one byte per entry
+- **THEN** it stores one bit per entry, `W::BITS` entries to a word
+- **AND** that is the eighth of the memory the rationale records
 
 ### Requirement: Homology ranks are computed over 𝔽₂ rather than by thresholded SVD
 `deep_causality_topology` SHALL compute boundary-matrix ranks for complexes read as codes through the exact 𝔽₂ elimination, and SHALL NOT reach that answer by counting floating-point singular values above a tolerance.
 
-`chain_complex_impl.rs:94` and `cell_complex/mod.rs:172` densify a `CsrMatrix<i8>` into `Vec<f64>`,
-call `svd()`, and count singular values above `1e-5`. Betti numbers are derived from those ranks, so
-every homology dimension the crate reports currently depends on that threshold.
+The crate used to reach these ranks by densifying a `CsrMatrix<i8>` into floating point, calling
+`svd()` and counting the singular values above a tolerance, which left every Betti number it reported
+depending on that threshold. The rank is now `HomologyField::rank_of`
+(`deep_causality_homology/src/types/homology_field/mod.rs:55`), one helper over two exact fields:
+fraction-free elimination over ℤ for `Rational`, packed mod-2 elimination for `Gf2`. Neither rounds.
+`deep_causality_topology` re-exports it (`src/types/homology_field/mod.rs:15`), so the field is a
+call-site choice.
 
 #### Scenario: The duplicated helpers are replaced by one
 - **WHEN** the topology crate is searched for rank helpers

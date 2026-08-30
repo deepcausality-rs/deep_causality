@@ -3,21 +3,22 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Feature-gated isomorphism between rank-2 [`CausalTensor<F>`] and
-//! [`CsrMatrix<F>`].
+//! Isomorphism between rank-2 [`CausalTensor<F>`] and [`CsrMatrix<F>`].
 //!
-//! default so that downstream sparse users who don't need the tensor
-//! interop don't pay the compile cost of pulling in
-//! `deep_causality_tensor`.
+//! # Not feature-gated, and no longer in the sparse crate
 //!
-//! Lives under `src/extensions/` (alongside `ext_hkt`) following the
-//! convention that anything bridging `deep_causality_sparse` to another
-//! DC crate is an `ext_*` extension.
+//! Both facts changed and the text here described neither. The conversion was once behind a
+//! `tensor-iso` feature in `deep_causality_sparse`, so that a caller wanting sparse matrices
+//! without tensors did not pay to compile `deep_causality_tensor`. That crate is retired, this
+//! file moved here, and the dependency now runs the other way: `deep_causality_tensor` depends on
+//! `deep_causality_linear`, which owns `CsrMatrix`. Nothing is gated, and no feature enables it.
+//!
+//! Lives under `src/extensions/` (alongside `ext_hkt`) following the convention that anything
+//! bridging this crate to another DC crate is an `ext_*` extension.
 //!
 //! ## Design (mixed-tier)
 //!
-//! `deep_causality_sparse` depends on `deep_causality_tensor` (via the
-//! by the dependency direction. The iso ships in two pieces, both
+//! The dependency direction decides where each half can live. The iso ships in two pieces, both
 //! rooted in this crate:
 //!
 //! - **Forward** (`CausalTensor<F>` -> `CsrMatrix<F>`): Tier 1

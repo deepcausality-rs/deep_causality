@@ -98,13 +98,14 @@ statement that `0 → H_n(C) ⊗ F → H_n(C; F) → Tor(H_{n-1}(C), F) → 0` h
 field, so the two coefficient choices see different parts of the integral homology's torsion.
 `HomologyField::{Rational, Gf2}` is a coefficient-change functor with the theorem left implicit.
 
-**The middle layer does not exist as a crate.** `ChainComplex`, `HomologyField` and
-`betti_number_over` all live in the geometry crate. Under the layering above they are homological
-algebra, and so are G-04's representatives, G-08's duality, and the `Gf2Chain` this register asked
-to put in topology. Whether that justifies a `deep_causality_homology` crate is under assessment
-and is **not** decided here. What is decided: the earlier suggestion of a `deep_causality_packed`
-crate splits on the wrong axis, because bit-packing is a representation choice inside 𝔽₂ linear
-algebra rather than a branch of the mathematics.
+**The middle layer now exists as a crate.** `ChainComplex`, `HomologyField` and `betti_number_over`
+live in `deep_causality_homology`; `deep_causality_topology` keeps `pub use` re-export shims for all
+three (`traits/chain_complex.rs:22`, `types/homology_field/mod.rs:15`, `types/gf2_chain/mod.rs:15`),
+so no consumer moved. Under the layering above they are homological algebra, and so are G-04's
+representatives, G-08's duality, and `Gf2Chain`, which landed in homology rather than in topology as
+this register once asked. The earlier suggestion of a `deep_causality_packed` crate splits on the
+wrong axis, because bit-packing is a representation choice inside 𝔽₂ linear algebra rather than a
+branch of the mathematics.
 
 ### What the numeric-tower work changed
 

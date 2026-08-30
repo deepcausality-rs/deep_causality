@@ -51,6 +51,9 @@ mod errors;
 mod extensions;
 mod traits;
 mod types;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
 pub mod utils_tests;
 
 // Errors

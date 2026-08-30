@@ -74,7 +74,7 @@ defect, and the extraction would otherwise carry it into a new crate.
 
 - [x] 3.1 `deep_causality_homology/Cargo.toml` at 0.1.0 with description, license, repository,
       `[lints] workspace = true`, and path deps on `deep_causality_linear`,
-      `deep_causality_algebra`, `deep_causality_num`
+      `deep_causality_num`
 - [x] 3.2 Add the crate to the workspace `members` list
 - [x] 3.3 `deep_causality_homology/BUILD.bazel` and `tests/BUILD.bazel` with a `rust_test_suite`
       per test directory

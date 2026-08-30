@@ -42,7 +42,9 @@ discharge belongs.
 - **Rust witnesses (L2):** one `#[test]` per theorem id under
   [`tests/formalization_lean/chain_condition_tests.rs`](tests/formalization_lean/chain_condition_tests.rs).
   Lean proves ∀ over `Matrix (Fin m) (Fin n) (ZMod 2)`; each witness pins the same statement across
-  the nine complexes in `utils_tests::reference_spaces`, at every grade of each.
+  the ten complexes in `utils_tests::reference_spaces`, at every grade of each. `T³` is gated
+  `#[cfg(not(miri))]`, so a Miri run covers the other nine; it alone takes 50 seconds to build
+  under Miri against 2 milliseconds native.
 - **The bridge:** each theorem carries a shared id (`homology.chain.dd_zero_implies_range_le_ker`,
   `homology.chain.betti_from_dd_zero`) recorded in
   [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **2 homology ids, both proved and witnessed**.

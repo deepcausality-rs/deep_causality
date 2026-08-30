@@ -8,10 +8,16 @@ TBD - created by archiving change add-linear-algebra-crate. Update Purpose after
 
 Uniform composition across the mathematical crates is the reason `deep_causality_haft` exists, and
 the containers this crate ships are the ones a caller would compose with `CausalTensor` and
-`CausalTensorTrain`. `CsrMatrixWitness` (`sparse/src/extensions/ext_hkt.rs:19`) already implements
-`HKT`, `Functor`, `Foldable`, `Pure`, `Applicative`, `Monad`, `CoMonad` and `Adjunction`; a new
-container that stopped short of that would be composable in some pipelines and not others, which is
-worse than being uniformly absent.
+`CausalTensorTrain`. `CsrMatrixWitness`
+(`deep_causality_linear/src/extensions/hkt/csr_matrix_witness.rs:27`) implements `HKT`, `Functor`,
+`Foldable`, `Pure`, `Applicative` and `CoMonad`; a new container that stopped short of that would be
+composable in some pipelines and not others, which is worse than being uniformly absent.
+
+`Monad` and `Adjunction` are not in that set, and a new witness does not owe them. The sparse `bind`
+flattens to `1 × count`, so `bind(m, pure)` turns a 2×2 into a 1×4 and monad right identity fails;
+`Adjunction`'s `counit` is written in terms of that `bind` and inherits the defect. The cause is
+structural, since `pure` must pick a shape for one value and a shaped container has no canonical one.
+The reasoning sits at the impl site and in `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`.
 
 **The bit-packed 𝔽₂ matrix is excluded, and the exclusion is structural.** `HKT` projects `Type<T>`
 to a container of `T`. `PackedGf2<W>` is generic in its *word* type and not in its element type,
@@ -36,9 +42,10 @@ matrix unpacks to `DenseMatrix<Gf2>`, which has a witness, and the conversion is
 - **WHEN** a new witness is compared against `CsrMatrixWitness`
 - **THEN** it implements the same trait set, or documents at that impl site which trait it cannot support and why
 
-#### Scenario: The moved witness is unchanged
+#### Scenario: The moved witness keeps what it retained
 - **WHEN** `CsrMatrixWitness` is compared against its behaviour before the move
-- **THEN** its trait impls and their results are identical
+- **THEN** the trait impls it retains produce identical results
+- **AND** `Monad` and `Adjunction` are absent, with the law they broke recorded at the impl site
 
 ### Requirement: The HKT laws hold for every witness
 Each witness SHALL satisfy the functor, applicative, monad and comonad laws its impls claim, and each law SHALL be exercised by a test.

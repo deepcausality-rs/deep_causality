@@ -93,4 +93,4 @@ home that `deep_causality_quantum` can depend on without inheriting geometry. Ne
 here.
 
 **Reference.** The reviewed inventory and measurements are in
-`../../notes/archive/homology/extraction-plan.md`.
+`../../../notes/archive/homology/extraction-plan.md`.

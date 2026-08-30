@@ -128,6 +128,10 @@ class Complex:
         The standard alternating-sign formula: d[s] = sum_i (-1)^i * (s with vertex i dropped).
         Entries land in {-1, 0, 1} because a face of a simplex is dropped at most once.
         """
+        if k == self.dim + 1:
+            # d_{max+1} : 0 -> C_max has no columns, but still one row per maximal cell. Returning
+            # an empty row list here would make the shape (0, 0) and break cols(d_k) == rows(d_k+1).
+            return [[] for _ in range(self.num_cells(self.dim))], 0
         if k <= 0 or k > self.dim:
             return [], self.num_cells(k)
         rows = [[0] * self.num_cells(k) for _ in range(self.num_cells(k - 1))]
@@ -139,7 +143,12 @@ class Complex:
 
     def betti(self, field):
         """beta_k = n_k - rank d_k - rank d_{k+1}, over the named field."""
-        rk = rank_rational if field == "Q" else rank_gf2
+        if field == "Q":
+            rk = rank_rational
+        elif field == "F2":
+            rk = rank_gf2
+        else:
+            raise ValueError(f"{self.name}: unknown field {field!r}, expected 'Q' or 'F2'")
         ranks = {}
         for k in range(self.dim + 2):
             rows, ncols = self.boundary(k)

@@ -239,7 +239,7 @@ check 7.4 asks for.
 
 ## 8. Out of scope, recorded so it is not lost
 
-Filed 2026-08-30 to [`../../../notes/archive/linear/FOLLOW-UPS.md`](../../notes/linear/FOLLOW-UPS.md). The
+Filed 2026-08-30 to [`../../../notes/archive/linear/FOLLOW-UPS.md`](../../../notes/archive/linear/FOLLOW-UPS.md). The
 task here is to file, not to fix; none of the three is fixed. All three were re-verified against the
 tree at filing time and all three still hold, with line numbers refreshed — 8.3's cited path had
 moved to `ops/tensor_product/mod.rs:13` and the same over-bound also sits on the trait method at

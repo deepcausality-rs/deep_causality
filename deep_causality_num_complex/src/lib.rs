@@ -19,6 +19,9 @@ use deep_causality_num::{
 
 mod complex;
 pub mod hom;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
 pub mod utils_tests;
 
 //  Complex number types

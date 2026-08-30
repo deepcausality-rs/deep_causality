@@ -46,14 +46,15 @@ day `Gf2` lands, and nothing marks which of them can take it. This is the failur
 already had once — a blanket over `Float` widened to `Num` and silently admitted integers to
 `Field`.
 
-What actually breaks is **characteristic**, and the workspace has the defect in it today. Sixteen
-sites compute `T::one() + T::one()` as two. **Three** sit under a `Field` bound and are reachable by
-𝔽₂, all in `deep_causality_multivector`: `commutator_geometric`
-(`types/multifield/algebra/mod.rs:163`), whose `let half = T::one() / (T::one() + T::one());` is a
-division by zero over 𝔽₂; `types/multifield/ops/conversions.rs:139`; and
-`types/multivector/ops/ops_product_impl.rs:316`.
+What actually breaks is **characteristic**. Seventeen sites compute `T::one() + T::one()` as two.
+**Three** would sit under a `Field` bound and be reachable by 𝔽₂, all in
+`deep_causality_multivector`, and each is bounded on `DivisibleByIntegers` instead:
+`commutator_geometric` (`types/multifield/algebra/mod.rs:166`), whose
+`let half = T::one() / (T::one() + T::one());` would be a division by zero over 𝔽₂;
+`to_coefficients` (`types/multifield/ops/conversions.rs:136`); and `commutator_geometric_impl`
+(`types/multivector/ops/ops_product_impl.rs:313`).
 
-The other thirteen are already excluded, each by a bound 𝔽₂ cannot reach — `RealField` (nine),
+The other fourteen are already excluded, each by a bound 𝔽₂ cannot reach — `RealField` (nine),
 `ConjugateScalar` (two, in the tensor-network solver) and `Real` (three, in `num_dual`). That
 classification is by compile probe against each bound, not by reading the `where` clause: a
 file-level reading of the same sites over-counted the exposure.
@@ -97,10 +98,10 @@ This is the admission control the separation exists for. The bound is unverifiab
 as every other law in this tower — the compiler cannot check that `n · 1 ≠ 0` — but it is checkable
 where it matters, at the signature, which is what stops 𝔽₂ reaching a body that halves.
 
-The four exposed sites are the migration, and they are the whole of it: the remaining twelve are
-already excluded by `RealField`. Bounding on `DivisibleByIntegers` makes the compiler enumerate any
-that were missed, the same way removing the operator default enumerated the eight law-marker
-stragglers.
+The three exposed sites are the migration, and they are the whole of it: the remaining fourteen are
+already excluded by `RealField`, `ConjugateScalar` or `Real`. Bounding on `DivisibleByIntegers` makes
+the compiler enumerate any that were missed, the same way removing the operator default enumerated
+the eight law-marker stragglers.
 
 #### Scenario: Halving is unavailable over 𝔽₂
 - **WHEN** an operation that divides by two is called with `Gf2`

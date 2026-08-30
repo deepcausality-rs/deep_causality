@@ -4,7 +4,7 @@
 TBD - created by archiving change add-linear-algebra-crate. Update Purpose after archive.
 ## Requirements
 ### Requirement: A dense vector type exists alongside the matrices
-`deep_causality_linear` SHALL provide a dense vector type carrying its length in its own type, usable without enabling a feature.
+`deep_causality_linear` SHALL provide a dense vector type carrying its own length, usable without enabling a feature.
 
 The rank census found **60 rank-1 `CausalTensor` constructions** across the consumer crates — more
 than the 46 rank-2 ones. Every one of them is a vector expressed as a tensor that happens to have one
@@ -19,7 +19,7 @@ type is not an ornament on the matrix work; it is the larger half of what the ce
 - **WHEN** a function expecting a vector is offered a matrix
 - **THEN** it fails to compile
 
-#### Scenario: Length is carried by the type
+#### Scenario: Length is carried by the vector
 - **WHEN** a consumer holds a vector
 - **THEN** it needs no separate field recording the length
 
@@ -38,16 +38,22 @@ know about each other.
 - **WHEN** the outer product of an `m`-vector and an `n`-vector is taken
 - **THEN** the result is an `m × n` dense matrix
 
-#### Scenario: Length mismatch is rejected
-- **WHEN** two vectors of different lengths are added, subtracted or dotted
-- **THEN** the call fails with a typed error rather than truncating or panicking
+#### Scenario: Length mismatch is rejected by the checked methods
+- **WHEN** two vectors of different lengths are passed to the inherent `add`, `sub` or `dot`
+- **THEN** each returns a typed error rather than truncating
+
+#### Scenario: The operator impls panic instead, and cannot do otherwise
+- **WHEN** two vectors of different lengths are combined through `core::ops::Add` or `Sub`
+- **THEN** the call panics naming the operation, which is the only option available: `Add` fixes
+  `type Output = Self`, so there is no error channel to return through. A caller that needs to
+  handle the mismatch uses the checked method.
 
 #### Scenario: Round-trip through a slice
 - **WHEN** a vector is built from a slice and read back
 - **THEN** the values and the length are unchanged
 
 ### Requirement: The Hermitian inner product is distinct from the dot product
-The crate SHALL provide a conjugating inner product bounded on `ConjugateScalar`, separate from the plain dot product.
+The crate SHALL provide an inner product bounded on `ConjugateScalar` that conjugates its left argument, separate from the plain dot product.
 
 Over ℂ the plain dot product is not an inner product — `⟨v, v⟩` is not real and not non-negative, so
 it cannot induce a norm. `deep_causality_quantum` works in `Complex<R>` throughout, so a single
@@ -61,6 +67,7 @@ it cannot induce a norm. `deep_causality_quantum` works in `Complex<R>` througho
 - **WHEN** the Hermitian inner product of a complex vector with itself is taken
 - **THEN** the result is real and non-negative
 - **AND** it equals the square of the vector's 2-norm
+- **AND** scaling the left argument conjugates: `⟨α·u, v⟩` equals `conj(α)·⟨u, v⟩`, while `⟨u, α·v⟩` equals `α·⟨u, v⟩`
 
 ### Requirement: Matrix–vector products exist for every matrix representation
 Each of the three matrix representations SHALL multiply a vector, and a sparse matrix SHALL do so without densifying.

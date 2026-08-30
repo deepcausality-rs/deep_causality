@@ -798,7 +798,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_topology"
-version = "0.7.4"
+version = "0.8.0"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_fft",

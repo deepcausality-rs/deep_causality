@@ -14,6 +14,9 @@ pub(crate) mod kernels;
 pub mod quantities;
 pub mod theories;
 #[cfg(feature = "alloc")]
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
 pub mod utils_tests;
 
 pub use crate::constants::*;

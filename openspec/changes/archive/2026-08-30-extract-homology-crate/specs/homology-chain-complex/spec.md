@@ -15,8 +15,9 @@ parity-check matrices with no cells and no metric. A trait that named cells coul
 
 #### Scenario: The crate compiles without a topology dependency
 - **WHEN** `deep_causality_homology` is built
-- **THEN** its dependency set contains `deep_causality_linear`, `deep_causality_algebra` and
-  `deep_causality_num`, and does not contain `deep_causality_topology`
+- **THEN** its direct dependencies are `deep_causality_linear` and `deep_causality_num`, which
+  bring `deep_causality_algebra` and `deep_causality_haft` in transitively, and neither set
+  contains `deep_causality_topology`
 
 ### Requirement: Boundary operators carry incidence numbers as `i8`
 `boundary_matrix` and `coboundary_matrix` SHALL return `Cow<'_, CsrMatrix<i8>>`, and the trait SHALL

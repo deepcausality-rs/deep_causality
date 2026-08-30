@@ -91,16 +91,17 @@ theorem dd_zero_implies_range_le_ker {n_prev n_k n_next : ℕ}
     (dk : Boundary n_prev n_k) (dk1 : Boundary n_k n_next) (h : dk * dk1 = 0) :
     LinearMap.range dk1.mulVecLin ≤ LinearMap.ker dk.mulVecLin := by
   rintro _ ⟨x, rfl⟩
-  have : dk.mulVecLin (dk1.mulVecLin x) = (dk * dk1).mulVecLin x := by
-    rw [Matrix.mulVecLin_mul]; rfl
-  simp [LinearMap.mem_ker, this, h]
+  -- `Matrix.mulVecLin_mul` is already a `simp` lemma, so the composite
+  -- `dk.mulVecLin (dk1.mulVecLin x)` rewrites to `(dk * dk1).mulVecLin x` on its own; `h` sends
+  -- that to zero. Passing either explicitly is redundant and the linter says so.
+  simp [h]
 
 /-- The `k`-th mod-2 homology group: cycles modulo boundaries.
 
 Stated over the matrix identity rather than the subspace inclusion, so that the hypothesis is the
 one the Rust side checks. -/
-abbrev Homology {n_prev n_k n_next : ℕ}
-    (dk : Boundary n_prev n_k) (dk1 : Boundary n_k n_next) (h : dk * dk1 = 0) :=
+abbrev HomologyGroup {n_prev n_k n_next : ℕ}
+    (dk : Boundary n_prev n_k) (dk1 : Boundary n_k n_next) (_h : dk * dk1 = 0) :=
   (LinearMap.ker dk.mulVecLin) ⧸
     ((LinearMap.range dk1.mulVecLin).comap (LinearMap.ker dk.mulVecLin).subtype)
 
@@ -117,7 +118,7 @@ no quotient is built on the Rust side to get there.
 THEOREM_MAP: `homology.chain.betti_from_dd_zero` -/
 theorem betti_from_dd_zero {n_prev n_k n_next : ℕ}
     (dk : Boundary n_prev n_k) (dk1 : Boundary n_k n_next) (h : dk * dk1 = 0) :
-    finrank F2 (Homology dk dk1 h) = (n_k - dk.rank) - dk1.rank := by
+    finrank F2 (HomologyGroup dk dk1 h) = (n_k - dk.rank) - dk1.rank := by
   have hchain := dd_zero_implies_range_le_ker dk dk1 h
   have hb : finrank F2 ((LinearMap.range dk1.mulVecLin).comap
       (LinearMap.ker dk.mulVecLin).subtype) = dk1.rank :=
@@ -126,6 +127,6 @@ theorem betti_from_dd_zero {n_prev n_k n_next : ℕ}
     (M := (LinearMap.ker dk.mulVecLin))
     ((LinearMap.range dk1.mulVecLin).comap (LinearMap.ker dk.mulVecLin).subtype)
   have hk := nullity_is_count_minus_rank dk
-  simpa [Homology, hb, hk] using hq
+  simpa [HomologyGroup, hb, hk] using hq
 
 end DeepCausalityFormal.Homology.ChainCondition

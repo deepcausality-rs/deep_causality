@@ -1,7 +1,10 @@
 # linear-consumer-migration Specification
 
 ## Purpose
-TBD - created by archiving change add-linear-algebra-crate. Update Purpose after archive.
+The retirement of `deep_causality_sparse` once `deep_causality_linear` carries its contents: what
+the retired crate still owes its dependents during the deprecation window, and what everything that
+named it is repointed to, from the two build systems to the live documentation and the linear
+algebra duplicated in `deep_causality_multivector`.
 ## Requirements
 ### Requirement: The retired crate stays published and keeps working
 `deep_causality_sparse` SHALL remain a published crate and a workspace member for a deprecation window of several months after `deep_causality_linear` is released, and SHALL NOT be yanked.
@@ -60,12 +63,11 @@ dependent can migrate one module at a time.
 ### Requirement: The tensor conversion becomes an ordinary part of the tensor crate
 The `CausalTensor` ↔ sparse conversion SHALL move into `deep_causality_tensor` unconditionally, and the `tensor-iso` feature SHALL be removed rather than relocated.
 
-The conversion lives today in `deep_causality_sparse/src/extensions/ext_iso.rs` behind
-`tensor-iso`, which exists so that sparse users do not pay for an optional dependency on tensor.
-Once tensor depends on `deep_causality_linear` outright, that dependency is already paid and the gate
-has nothing left to gate. No library crate enables the feature; the only enablements are
-`examples/mathematics_examples/Cargo.toml:23` for one example and the sparse crate's own Bazel
-targets for its own tests.
+The conversion lived in `deep_causality_sparse/src/extensions/ext_iso.rs` behind `tensor-iso`, a
+gate that existed so sparse users did not pay for an optional dependency on tensor. Tensor now
+depends on `deep_causality_linear` outright, so that dependency is already paid. The feature is
+gone: the conversion is `deep_causality_tensor/src/extensions/ext_iso.rs`, compiled unconditionally
+from `extensions/mod.rs`, and no manifest in the workspace declares `tensor-iso`.
 
 #### Scenario: No feature gate remains
 - **WHEN** the features of `deep_causality_linear` and `deep_causality_tensor` are enumerated
@@ -84,9 +86,10 @@ targets for its own tests.
 ### Requirement: Both build systems describe the same dependency graph
 Every crate's `Cargo.toml` and its `BUILD.bazel` SHALL declare the same dependency on the linear crate.
 
-`deep_causality_cfd/BUILD.bazel:30` declares a `deep_causality_sparse` dependency that
-`deep_causality_cfd/Cargo.toml` does not. Migrating one build system without the other would carry
-the discrepancy forward silently.
+Neither `deep_causality_cfd/BUILD.bazel` nor `deep_causality_cfd/Cargo.toml` declares a dependency
+on the retired crate; cfd reaches the linear crate transitively through `deep_causality_topology`.
+Comparing the two manifests is what keeps it that way, because migrating one build system without
+the other carries a discrepancy forward silently.
 
 #### Scenario: The existing discrepancy is resolved
 - **WHEN** the cfd crate's two manifests are compared after the migration
@@ -99,7 +102,7 @@ the discrepancy forward silently.
 ### Requirement: Documentation names the crate that exists
 Every document that names `deep_causality_sparse` outside the archive SHALL be updated to name `deep_causality_linear`, and archived change proposals SHALL be left unchanged.
 
-The literal appears in 203 files. 34 of those are under `openspec/changes/archive/`, which records
+The literal appears in 130 files. 44 of those are under `openspec/changes/archive/`, which records
 what was proposed at the time; rewriting them would falsify the record.
 
 #### Scenario: Live documentation is current

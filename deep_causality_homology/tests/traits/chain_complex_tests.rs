@@ -14,7 +14,7 @@
 //!
 //! # Suite audit, run before the implementation was trusted
 //!
-//! **Not a tautology.** Six of the nine fixtures have a non-zero Betti number above grade 0, so an
+//! **Not a tautology.** Seven of the ten fixtures have a non-zero Betti number above grade 0, so an
 //! implementation returning zero everywhere fails. Two — `ℝP²` and the Klein bottle — give
 //! *different* answers over ℚ and over 𝔽₂, so an implementation ignoring the field argument fails
 //! too. Every complex the workspace shipped before this crate is torsion-free, and a suite built
@@ -24,8 +24,8 @@
 //! reach the rank routine, and once from Betti numbers, which are nothing but ranks. The two agree
 //! by a theorem, so the agreement is evidence rather than arithmetic.
 //!
-//! **A range, not a point.** Grades 0 through 3, dimensions 0 through 2, orientable and
-//! non-orientable, with and without boundary, from 1 cell to 96.
+//! **A range, not a point.** Grades 0 through 4, dimensions 0 through 3, orientable and
+//! non-orientable, with and without boundary, from 1 cell to 702.
 
 use deep_causality_homology::utils_tests::{SimplicialFixture, reference_spaces};
 use deep_causality_homology::{ChainComplex, HomologyField};
@@ -282,6 +282,7 @@ fn test_cell_counts_match_the_independent_construction() {
         ("mobius_band", &[6, 12, 6]),
         ("real_projective_plane", &[6, 15, 10]),
         ("klein_bottle", &[16, 48, 32]),
+        ("torus_3", &[27, 189, 324, 162]),
     ];
     for (cx, _, _) in reference_spaces() {
         let want = expected
@@ -291,5 +292,71 @@ fn test_cell_counts_match_the_independent_construction() {
             .1;
         let got: Vec<usize> = (0..=cx.max_dim()).map(|k| cx.num_cells(k)).collect();
         assert_eq!(got, want, "{}: cell counts", cx.name());
+    }
+}
+
+/// The top grade does not subtract `rank ∂ₖ` twice.
+///
+/// `betti_number_over` reads `∂ₖ` and `∂ₖ₊₁`. At `k == usize::MAX` there is no `k + 1`, so the
+/// next-boundary rank must be zero; stepping the grade with a saturating add hands back `∂_MAX` a
+/// second time and subtracts its rank twice. No fixture in `reference_spaces` can show that,
+/// because every one of them has `num_cells(usize::MAX) == 0` and answers zero either way. The
+/// complex below puts cells at the top grade, which the trait permits.
+///
+/// `C_MAX` has 3 cells and `∂_MAX` has rank 1, so `dim ker ∂_MAX = 3 − 1 = 2`. There is no grade
+/// past `usize::MAX`, so `im ∂_{MAX+1}` is trivial and `β_MAX = 2`, where the double subtraction
+/// gives 1. The law holds because `∂_{MAX−1}` is `(0, 2)`, so the composite is `(0, 3)` and
+/// vacuously zero.
+#[test]
+fn test_the_top_grade_subtracts_the_boundary_rank_once() {
+    use std::borrow::Cow;
+
+    struct TopGrade;
+
+    impl ChainComplex for TopGrade {
+        fn num_cells(&self, k: usize) -> usize {
+            match k {
+                usize::MAX => 3,
+                k if k == usize::MAX - 1 => 2,
+                _ => 0,
+            }
+        }
+
+        fn max_dim(&self) -> usize {
+            usize::MAX
+        }
+
+        fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
+            let cols = self.num_cells(k);
+            let rows = if k == 0 {
+                0
+            } else {
+                self.num_cells(k.wrapping_sub(1))
+            };
+            // One non-zero row, so `∂_MAX` has rank 1 over ℚ and over 𝔽₂ alike.
+            let triplets: &[(usize, usize, i8)] = if k == usize::MAX {
+                &[(0, 0, 1), (0, 1, 1), (0, 2, 1)]
+            } else {
+                &[]
+            };
+            Cow::Owned(CsrMatrix::from_triplets(rows, cols, triplets).unwrap())
+        }
+
+        fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
+            match k.checked_add(1) {
+                Some(next) => Cow::Owned(self.boundary_matrix(next).transpose()),
+                // `∂_{MAX+1}` would be `(n_MAX, 0)`, so its transpose is `(0, n_MAX)`.
+                None => Cow::Owned(CsrMatrix::from_triplets(0, self.num_cells(k), &[]).unwrap()),
+            }
+        }
+    }
+
+    let cx = TopGrade;
+    for field in [HomologyField::Rational, HomologyField::Gf2] {
+        assert_eq!(
+            cx.betti_number_over(usize::MAX, field).unwrap(),
+            2,
+            "β_MAX over {field:?}: (3 − 1) − 0, not (3 − 1) − 1"
+        );
     }
 }

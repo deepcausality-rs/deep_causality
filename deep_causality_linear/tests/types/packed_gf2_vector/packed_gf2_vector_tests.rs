@@ -175,8 +175,8 @@ fn test_the_support_pairs_and_triples() {
 
 /// A row of a packed matrix becomes a vector.
 ///
-/// This is how a homology generator gets out of `kernel_basis_gf2`, whose basis is the rows of a
-/// [`PackedGf2`].
+/// This reads a row of an arbitrary matrix. It is not the path a homology generator takes:
+/// `kernel_basis_gf2` writes its basis down columns, which `from_column` reads.
 #[test]
 fn test_a_matrix_row_becomes_a_vector() {
     let mut m: PackedGf2<u64> = PackedGf2::zeros(3, 130);

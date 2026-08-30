@@ -225,8 +225,9 @@ no functor law about content constrains it. `ChainComplex` has no type parameter
 `Chain<T>`, it holds an `Arc<SimplicialComplex<T>>`, and both are topology's.
 
 Both crates stay reachable through `linear` if that ever changes. A coefficient parameter would bring
-the algebra bound with it, and `openspec/changes/extract-homology-crate/design.md` rejects
-`ChainComplex<R>` on the merits.
+the algebra bound with it, and
+`openspec/changes/archive/2026-08-30-extract-homology-crate/design.md` rejects `ChainComplex<R>` on
+the merits.
 
 ### 3.8 `right_adjunct` panics
 

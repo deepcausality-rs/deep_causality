@@ -29,7 +29,6 @@
 //! *   `algebra`: Algebraic traits (Functor, Monad, etc.).
 //! *   `effect_system`: Type-encoded effect system traits.
 //! *   `extensions`: Concrete HKT witness implementations for standard Rust types.
-//! *   `utils_tests`: Internal utilities and test-specific effect types.
 //!
 //! # Usage
 //!
@@ -64,6 +63,9 @@ pub(crate) mod natural_transformation;
 pub(crate) mod pure;
 pub(crate) mod riemann_map;
 pub(crate) mod traversable;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
 pub mod utils_tests;
 // ============================================================================
 // Re-exports

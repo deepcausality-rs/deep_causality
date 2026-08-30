@@ -8,7 +8,7 @@
 //! Two top-dimensional cells σ, τ are face-adjacent iff they share a (max_dim − 1)-face.
 //! Derived purely from `∂_{max_dim}` so the strategy works on any `ChainComplex`.
 
-use crate::traits::cellular_complex::CellularComplex;
+use crate::traits::chain_complex::ChainComplex;
 use crate::traits::neighborhood::{CellId, Neighborhood};
 use std::vec;
 
@@ -31,7 +31,7 @@ impl Iterator for FaceAdjacentIter {
     }
 }
 
-impl<K: CellularComplex> Neighborhood<K> for FaceAdjacent {
+impl<K: ChainComplex> Neighborhood<K> for FaceAdjacent {
     type Iter<'a>
         = FaceAdjacentIter
     where

@@ -5,7 +5,7 @@
 
 //! Manifold type for smooth geometric structures.
 //!
-//! `Manifold<K, F>` wraps any `ChainComplex` (simplicial, cubical, or user-defined) and
+//! `Manifold<K, F>` wraps any `CellularComplex` (simplicial, cubical, or user-defined) and
 //! carries an associated field tensor + an optional metric. The metric type is
 //! determined by the complex via the plain associated type `K::Metric` — its precision
 //! flows from the complex's own type parameters (e.g. `SimplicialComplex<R>` →
@@ -40,7 +40,7 @@ mod topology;
 pub use differential::DecStencilTables;
 pub use differential::HodgeDecomposeOptions;
 
-/// A newtype wrapper around any `ChainComplex` that represents a Manifold.
+/// A newtype wrapper around any `CellularComplex` that represents a Manifold.
 ///
 /// `K` is the underlying chain complex; `F` is the field-data type on cells. `F` is
 /// **unconstrained at the struct level** — see the module-level doc for the rationale.

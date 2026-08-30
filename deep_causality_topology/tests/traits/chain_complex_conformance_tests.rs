@@ -47,9 +47,17 @@ fn assert_shape_invariant<K: ChainComplex>(complex: &K) {
         (complex.num_cells(max_d), 0),
         "boundary_matrix(max_dim + 1) must be (num_cells(max_dim), 0)"
     );
+    // Above `max_dim + 1` there are no cells on either side, so `(0, 0)` is the only shape that
+    // composes with the `(num_cells(max_dim), 0)` at `max_dim + 1`.
+    let above_top = complex.boundary_matrix(max_d + 2);
+    assert_eq!(
+        above_top.shape(),
+        (0, 0),
+        "boundary_matrix(max_dim + 2) must be (0, 0); no cells sit on either side of it"
+    );
 
-    // Composability across every grade, including both ends.
-    for k in 0..=max_d {
+    // Composability across every grade, including both ends and the grades above the top.
+    for k in 0..=max_d + 2 {
         let (_, cols) = complex.boundary_matrix(k).shape();
         let (rows, _) = complex.boundary_matrix(k + 1).shape();
         assert_eq!(

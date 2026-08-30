@@ -40,7 +40,7 @@ version = "0.4"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_topology"
-version = "0.7"
+version = "0.8"
 
 [dependencies.deep_causality_rand]
 path = "../deep_causality_rand"

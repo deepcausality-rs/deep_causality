@@ -25,7 +25,7 @@
 //! simplicial-only Alexander–Whitney product over a bundled
 //! `Topology<T>` cochain. It uses the same convention as this one. This module
 //! adds what quantum error correction needs and that surface cannot express:
-//! the cubical case, genericity over [`ChainComplex`], and the `n`-fold form.
+//! the cubical case, genericity over [`CellularComplex`], and the `n`-fold form.
 //!
 //! # Scalars
 //!

@@ -40,9 +40,12 @@
 //!
 //! # Where the old implementation went
 //!
-//! `deep_causality_sparse/reverted/` holds it, detached from the build. It is the record of what
-//! the replacement was checked against — `deep_causality_linear`'s `ported_*` test files are that
-//! suite, run against the new implementation.
+//! Into git history, and nowhere else. There is no `reverted/` directory in this crate; the text
+//! here promised one that was never created. `git show a02944ee5^:deep_causality_sparse/src/`
+//! reads the implementation as it stood before the migration.
+//!
+//! What survives in the tree is the suite it was checked against: `deep_causality_linear`'s
+//! `ported_*` test files are that suite, run against the new implementation.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

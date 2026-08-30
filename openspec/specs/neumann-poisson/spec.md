@@ -37,9 +37,11 @@ solve does not apply (per-edge metrics, non-uniform geometry). Plain
 `cg_solve` semantics are unchanged.
 
 The requirement previously named `deep_causality_sparse`. The solver moves with the rest of that
-crate's contents into `deep_causality_linear`; its signature, convergence behaviour and iteration
-counts are unchanged. During the deprecation window the retired crate re-exports it, so callers that
-have not migrated reach the same function.
+crate's contents into `deep_causality_linear`; its parameter signature, convergence behaviour and
+iteration counts are unchanged. `CgFailure` is the exception. It is now an enum of three named cases
+where the sparse crate had one struct carrying `iterations` and `residual` for every failure mode,
+so a caller that destructures it gets a compile error. During the deprecation window the retired
+crate re-exports the solver, so a caller that has not migrated reaches the same function.
 
 #### Scenario: Preconditioned CG converges faster on walled lattices
 - **WHEN** the same walled-lattice Poisson problem is solved by plain and Jacobi-preconditioned CG at the same tolerance

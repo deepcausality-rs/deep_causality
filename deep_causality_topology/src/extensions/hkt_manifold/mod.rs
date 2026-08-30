@@ -5,7 +5,7 @@
 
 //! HKT witnesses for `Manifold`.
 //!
-//! Under the Option 2C design (`ChainComplex::Metric` is a plain associated type;
+//! Under the Option 2C design (`CellularComplex::Metric` is a plain associated type;
 //! `Manifold<K, F>` has no struct-level bound on `F`), the witness types implement the
 //! full `deep_causality_haft` trait surface on stable Rust: `HKT`, `Functor`, `Foldable`,
 //! `Pure`, `Monad`, `CoMonad`, and (for the simplicial witness) `Applicative`. All impls
@@ -243,7 +243,7 @@ where
 }
 
 // ============================================================================
-// PART 2: Generic witness — `GenericManifoldWitness<K>` over any `ChainComplex`
+// PART 2: Generic witness — `GenericManifoldWitness<K>` over any `CellularComplex`
 // ============================================================================
 
 pub struct GenericManifoldWitness<K>(PhantomData<K>);

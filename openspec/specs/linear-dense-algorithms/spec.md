@@ -55,14 +55,16 @@ factorisation — a different algorithm, not a different implementation of this 
 ### Requirement: Elimination selects a pivot by search, never by position
 Every elimination path SHALL choose its pivot by searching the column at or below the current row, and SHALL NOT assume the diagonal entry is usable.
 
-This is load-bearing, not a quality nicety. Both Laplace determinants in `deep_causality_topology`
-are fed Cayley-Menger matrices, which have `m[0][0] = 0` by construction
-(`manifold/geometry/mod.rs:41` writes `one` only into indices `1..matrix_dim`). The existing
-`gaussian_determinant` at `lazy_hodge_star.rs:97` takes `mat[i][i]` as the pivot and returns zero
-when it is small, so consolidating onto it unpivoted returns **zero for every simplex volume**.
-Measured on a regular unit tetrahedron: Laplace and pivoted elimination both give `det = 4.0` and
-`vol = 0.117851130198` (exactly √2⁄12); unpivoted gives `det = 0.0` and a NaN volume. That helper is
-correct today only because its own caller feeds it a Gram matrix with a positive diagonal.
+This is load-bearing, not a quality nicety. Both determinants in `deep_causality_topology` are fed
+matrices the diagonal cannot pivot. `simplex_volume_squared_impl` builds a Cayley-Menger matrix with
+`m[0][0] = 0` by construction (`manifold/geometry/mod.rs:46` writes `one` only into indices
+`1..matrix_dim`), and the `gaussian_determinant` in `simplicial_complex/lazy_hodge_star.rs` that the
+shared implementation replaced took `mat[i][i]` as the pivot and returned zero when it was small, so
+consolidating onto it unpivoted would have returned **zero for every simplex volume**. Measured on a
+regular unit tetrahedron: Laplace and pivoted elimination both give `det = 4.0` and
+`vol = 0.117851130198` (exactly √2⁄12); unpivoted gives `det = 0.0` and a NaN volume. Both sites now
+call the pivoted `determinant` — `manifold/geometry/mod.rs:76` and
+`simplicial_complex/lazy_hodge_star.rs:88`.
 
 #### Scenario: A matrix with a zero leading entry
 - **WHEN** a determinant is evaluated on a matrix whose `(0,0)` entry is zero and which is non-singular
@@ -81,8 +83,9 @@ correct today only because its own caller feeds it a Gram matrix with a positive
 The determinant SHALL use direct closed-form expressions for matrices of order three or below, and pivoted elimination above that.
 
 At order three or below a closed form is faster than elimination and introduces no pivoting
-round-off. `manifold/geometry/mod.rs:145` already special-cases orders zero, one and two, and
-`deep_causality_physics` carries five fixed-size closed forms of its own for the same reason.
+round-off. `deep_causality_linear/src/algorithms/elimination.rs:321-338` handles orders zero through
+three directly and eliminates above that, and `deep_causality_physics` carries five fixed-size closed
+forms of its own for the same reason.
 
 #### Scenario: A 3×3 determinant is unchanged
 - **WHEN** a 3×3 determinant is evaluated through the new implementation

@@ -80,8 +80,9 @@ pub trait ChainComplex {
     ///
     /// The saturating subtractions are a floor at zero for the grades where a complex has no cells,
     /// not a correction to the identity — `linear.gf2.rank_le_cell_count` shows the floor is never
-    /// reached at that step. The grade step saturates for the same reason: at `k == usize::MAX`
-    /// there are no cells either way, so `β_k` is zero and `k + 1` never has to be formed.
+    /// reached at that step. The grade step is checked rather than saturating. At `k == usize::MAX`
+    /// there is no `∂ₖ₊₁` to form and its image is trivial, so the next-boundary rank is zero;
+    /// saturating would read `∂_MAX` a second time and subtract its rank twice.
     ///
     /// # Errors
     ///
@@ -90,7 +91,14 @@ pub trait ChainComplex {
     fn betti_number_over(&self, k: usize, field: HomologyField) -> Result<usize, HomologyError> {
         let n_k = self.num_cells(k);
         let rank_k = field.rank_of(&self.boundary_matrix(k))?;
-        let rank_k_next = field.rank_of(&self.boundary_matrix(k.saturating_add(1)))?;
+        // There is no grade past `usize::MAX`, so `im ∂ₖ₊₁` is trivial there and its rank is zero.
+        // Saturating would re-read `∂_MAX` and subtract its rank a second time.
+        // There is no grade past `usize::MAX`, so `im ∂ₖ₊₁` is trivial there and its rank is zero.
+        // Saturating would re-read `∂_MAX` and subtract its rank a second time.
+        let rank_k_next = match k.checked_add(1) {
+            Some(next) => field.rank_of(&self.boundary_matrix(next))?,
+            None => 0,
+        };
         let dim_ker = n_k.saturating_sub(rank_k);
         Ok(dim_ker.saturating_sub(rank_k_next))
     }

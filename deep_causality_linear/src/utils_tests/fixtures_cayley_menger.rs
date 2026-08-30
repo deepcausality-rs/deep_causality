@@ -12,7 +12,8 @@
 //! **`m[0][0] = 0` by construction** — `manifold/geometry/mod.rs:41` allocates zeros and writes
 //! `one` only into indices `1..matrix_dim`.
 //!
-//! The crate's third determinant, `lazy_hodge_star.rs:97` `gaussian_determinant`, takes `mat[i][i]`
+//! The determinant this replaced, `gaussian_determinant` in `deep_causality_topology`'s
+//! `simplicial_complex/lazy_hodge_star.rs`, took `mat[i][i]`
 //! as its pivot and returns zero when it is small. Consolidating the two Laplace determinants onto
 //! it unpivoted returns **zero for every simplex volume**. Measured on the regular unit tetrahedron
 //! below:
@@ -20,7 +21,7 @@
 //! | method | det | vol² | vol |
 //! |---|---|---|---|
 //! | Laplace, what topology does today | 4.0 | 0.013888888889 | 0.117851130198 |
-//! | elimination as `gaussian_determinant` is written | **0.0** | 0.0 | **NaN** |
+//! | elimination as `gaussian_determinant` was written | **0.0** | 0.0 | **NaN** |
 //! | elimination with partial pivoting | 4.0 | 0.013888888889 | 0.117851130198 |
 //!
 //! That helper is correct today only because its own caller feeds it a Gram matrix, whose diagonal

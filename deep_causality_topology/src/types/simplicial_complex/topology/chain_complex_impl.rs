@@ -3,12 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! `ChainComplex` impl for `SimplicialComplex`.
+//! `CellularComplex` and `ChainComplex` impls for `SimplicialComplex`.
 //!
 //! Vends pre-computed boundary and coboundary matrices as `Cow::Borrowed` (zero copy).
-//! `boundary_matrix(k)` returns `&self.boundary_operators[k - 1]` for `k > 0`; an empty
-//! matrix is returned for `k == 0` (consistent with `boundary_operator(0)` returning
-//! `DimensionMismatch` today).
+//! `boundary_matrix(k)` borrows `&self.boundary_operators[k - 1]` where that operator
+//! exists. The degenerate grades are returned owned, carrying the shape their dimension
+//! implies rather than a shapeless empty matrix: `∂₀` is `0 × num_cells(0)`, and a grade
+//! above the top is `num_cells(k - 1) × num_cells(k)`. That keeps
+//! `cols(∂ₖ) == rows(∂ₖ₊₁)` at both ends.
 
 use crate::traits::cell::Cell;
 use crate::traits::cellular_complex::CellularComplex;
@@ -19,7 +21,7 @@ use std::borrow::Cow;
 use std::iter::Cloned;
 use std::slice::Iter;
 
-/// Concrete cell iterator for `SimplicialComplex`'s `ChainComplex` impl.
+/// Concrete cell iterator for `SimplicialComplex`'s `CellularComplex` impl.
 /// Wraps `Cloned<Iter<'a, Simplex>>` over the grade-`k` skeleton or returns nothing
 /// when no skeleton exists at the requested grade.
 pub struct SimplicialCellIter<'a> {

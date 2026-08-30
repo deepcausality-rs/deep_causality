@@ -73,6 +73,9 @@ extern crate core;
 pub mod errors;
 pub mod traits;
 pub mod types;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden because
+// they are not API. See `utils_tests`'s own header for why the module lives in `src`.
+#[doc(hidden)]
 pub mod utils_tests;
 
 pub use crate::errors::homology_error::{HomologyError, HomologyErrorEnum};

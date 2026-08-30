@@ -30,7 +30,7 @@
 use crate::traits::cell::Cell;
 
 /// The ambient lattice layout a splitting may need, as
-/// [`ChainComplex::uniform_lattice_layout`](crate::ChainComplex::uniform_lattice_layout)
+/// [`CellularComplex::uniform_lattice_layout`](crate::CellularComplex::uniform_lattice_layout)
 /// returns it: per-axis extent and per-axis periodicity.
 ///
 /// A simplicial splitting ignores it. A cubical splitting needs it to wrap the

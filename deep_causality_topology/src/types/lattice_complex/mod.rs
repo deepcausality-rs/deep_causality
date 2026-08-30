@@ -496,7 +496,8 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
         // asking for ∂_0 and ∂_{D+1} at the ends of its range.
         // The degenerate grades carry the shape their dimension implies rather than an empty
         // matrix, so `cols(∂ₖ) == rows(∂ₖ₊₁)` holds at both ends and the `∂∘∂ = 0` composite is
-        // formable there.
+        // formable there. Above `D + 1` neither side has cells, so the shape collapses to `(0, 0)`,
+        // which `num_cells(k - 1)` gives: `n_D` at `D + 1`, zero above it.
         if k == 0 {
             return Cow::Owned(
                 CsrMatrix::from_triplets(0, self.num_cells(0), &[])
@@ -505,7 +506,7 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
         }
         if k > D {
             return Cow::Owned(
-                CsrMatrix::from_triplets(self.num_cells(D), 0, &[])
+                CsrMatrix::from_triplets(self.num_cells(k - 1), 0, &[])
                     .expect("an empty matrix of a stated shape"),
             );
         }

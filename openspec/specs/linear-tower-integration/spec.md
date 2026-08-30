@@ -11,21 +11,21 @@ composable through the tower: a function bounded on `Ring` or `Module` cannot ta
 never declares them, however well it behaves. Both surfaces have to be present, or generic code has
 to pick one and lose the other.
 
-The crate inherits an unfinished instance of exactly this. `CsrMatrix<f64>` reaches `AbelianGroup`
-and stops — verified by compile probe — because `Distributive` and `Annihilating` are not
-implemented for it. Everything else `Ring` needs is already there: `One`
-(`identity/mod.rs:40`), `Mul` (`arithmetic/mod.rs:213`) and `Associative<Multiplicative>`
-(`algebra/group.rs:23`). A matrix ring over a ring **is** a ring, and the tower is two marker impls
-away from saying so.
+The crate inherited an unfinished instance of exactly this, and the move finished it.
+`CsrMatrix<f64>` had reached `AbelianGroup` and stopped, because `Distributive` and `Annihilating`
+were not implemented for it. Both markers are now present, at
+`deep_causality_linear/src/types/csr_matrix/algebra/mod.rs:23-24`, alongside the rest of what `Ring`
+needs: `One` (`csr_matrix/ops/mod.rs:123`), `Mul` (`csr_matrix/ops/mod.rs:180`) and
+`Associative<Multiplicative>` (`csr_matrix/algebra/mod.rs:22`). A matrix ring over a ring **is** a
+ring, and the tower now says so; the membership is pinned at
+`deep_causality_linear/src/traits/tower_pins.rs:107`.
 
-`Module<S>` is *not* part of that gap, and the distinction is worth recording because the obvious
+`Module<S>` was never part of that gap, and the distinction is worth recording because the obvious
 inference is wrong. `Module<R>` is blanket-implemented over
 `AbelianGroup + Mul<R, Output = Self> + MulAssign<R>` (`algebra/module.rs:65`), and `CsrMatrix`
-satisfies all three already — the additive markers carry it to `AbelianGroup`, and the scaling is
-implemented at `arithmetic/mod.rs:283,321`. It is a module today, and an impl written by hand is
-E0119. `Ring` is the only rung actually missing.
-
-The move is when this gets finished, not carried across.
+satisfies all three already: the additive markers carry it to `AbelianGroup`, and the scaling is
+implemented at `csr_matrix/ops/mod.rs:191,208`. It was a module before the move, and an impl written
+by hand is E0119. `Ring` was the only rung actually missing.
 
 #### Scenario: The sparse matrix reaches the ring rung
 - **WHEN** `CsrMatrix<f64>` is checked against `Ring`
@@ -73,11 +73,12 @@ the general notion is what lets `deep_causality_topology`'s integer chains stay 
 Every law marker a container implements SHALL name its operator, and no container SHALL claim `Commutative<Multiplicative>` for a multiplication that is matrix multiplication.
 
 Matrix addition commutes; matrix multiplication does not. A marker on the type alone cannot say
-which is meant, which is why the operator parameter exists. `CsrMatrix` already gets this right —
-`algebra/group.rs:19-23` claims `Associative<Additive>`, `Commutative<Additive>` and
-`Associative<Multiplicative>`, and deliberately not `Commutative<Multiplicative>` — and its comment
-records that the flat marker made the true claim unstatable, because promising associativity also
-promised commutativity.
+which is meant, which is why the operator parameter exists. `CsrMatrix` already gets this right:
+`csr_matrix/algebra/mod.rs:20-22` claims `Associative<Additive>`, `Commutative<Additive>` and
+`Associative<Multiplicative>`, and its line 26 records `Commutative<Multiplicative>` as deliberately
+absent. `deep_causality_algebra/README_ALGEBRA_TRAITS.md:149-157` carries the reason the parameter
+exists: a flat marker cannot say which operation it means, and a type implements a non-generic trait
+once, so a single `Commutative` has one slot where a matrix needs two opposite answers.
 
 The dense and packed matrices carry the same three and the same omission. The vector has no
 multiplication at all, so it carries the additive pair only.

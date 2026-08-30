@@ -11,6 +11,9 @@ mod types;
 mod utils;
 
 pub mod alias;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
 pub mod utils_tests;
 
 // Re-export errors

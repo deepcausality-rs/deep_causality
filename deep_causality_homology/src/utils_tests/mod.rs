@@ -153,7 +153,7 @@ impl ChainComplex for SimplicialFixture {
 /// `S¹`, Corollary 2.14 for `S²`, Example 2.36 for `T²`, Example 2.42 for `ℝP²`, Example 2.47 for
 /// the Klein bottle. They are not readings of this code.
 pub fn reference_spaces() -> Vec<(SimplicialFixture, Vec<usize>, Vec<usize>)> {
-    vec![
+    let mut spaces = vec![
         (SimplicialFixture::new("point", &[&[0]]), vec![1], vec![1]),
         (
             SimplicialFixture::new("interval", &[&[0, 1]]),
@@ -199,7 +199,26 @@ pub fn reference_spaces() -> Vec<(SimplicialFixture, Vec<usize>, Vec<usize>)> {
             vec![1, 1, 1],
         ),
         (klein_bottle(), vec![1, 1, 0], vec![1, 2, 1]),
-    ]
+    ];
+    spaces.extend(torus_3_space());
+    spaces
+}
+
+/// The oracle's tenth space, `T³`.
+///
+/// At 702 simplices against the next-largest 96 it dominates this crate's test time natively and
+/// is unbounded under Miri, where building it alone took 50 seconds against 2 milliseconds native.
+/// So `make miri` skips it, the way `deep_causality_num` and `deep_causality_physics` skip their
+/// slow suites. Every other space in the set is carried under both.
+#[cfg(not(miri))]
+fn torus_3_space() -> Option<(SimplicialFixture, Vec<usize>, Vec<usize>)> {
+    Some((torus_3(), vec![1, 3, 3, 1], vec![1, 3, 3, 1]))
+}
+
+/// The tenth space, withheld under Miri. See the sibling above for why.
+#[cfg(miri)]
+fn torus_3_space() -> Option<(SimplicialFixture, Vec<usize>, Vec<usize>)> {
+    None
 }
 
 /// Triangulates an `m × n` grid of squares and glues it by `ident`.
@@ -240,6 +259,50 @@ fn lattice_quotient(
 /// The 2-torus: wrap in both directions.
 fn torus_2() -> SimplicialFixture {
     lattice_quotient("torus_2", 3, 3, |x, y| (x % 3, y % 3))
+}
+
+/// The 3-torus: the three-dimensional Kuhn triangulation of a 3×3×3 lattice, wrapped in all three
+/// directions.
+///
+/// Each unit cube splits into `3! = 6` tetrahedra, one per permutation of the axes: start at the
+/// low corner and step `+1` along the axes in that order. The pieces meet face to face, so the
+/// union is simplicial. [`lattice_quotient`] above is the same construction one dimension down; it
+/// is left alone rather than generalised, since nothing else needs three.
+#[cfg(not(miri))]
+fn torus_3() -> SimplicialFixture {
+    const N: usize = 3;
+    let vid = |p: [usize; 3]| (p[0] % N) * N * N + (p[1] % N) * N + (p[2] % N);
+    // The six permutations of the three axes, by rejection over the cube of index triples.
+    let perms = (0..N)
+        .flat_map(|a| (0..N).flat_map(move |b| (0..N).map(move |c| [a, b, c])))
+        .filter(|[a, b, c]| a != b && b != c && a != c);
+    let mut facets: Vec<Vec<usize>> = Vec::new();
+    for perm in perms {
+        for i in 0..N {
+            for j in 0..N {
+                for k in 0..N {
+                    let mut corner = [i, j, k];
+                    let mut t = vec![vid(corner)];
+                    for axis in perm {
+                        corner[axis] += 1;
+                        t.push(vid(corner));
+                    }
+                    t.sort_unstable();
+                    t.dedup();
+                    // A degenerate tetrahedron means the wrap folded two corners together, which a
+                    // 3×3×3 grid is large enough to avoid. Dropping it would hide the fold.
+                    assert_eq!(
+                        t.len(),
+                        4,
+                        "torus_3: the gluing made a degenerate tetrahedron"
+                    );
+                    facets.push(t);
+                }
+            }
+        }
+    }
+    let refs: Vec<&[usize]> = facets.iter().map(|f| f.as_slice()).collect();
+    SimplicialFixture::new("torus_3", &refs)
 }
 
 /// The Klein bottle: wrap in `x` with no flip, wrap in `y` with a flip in `x`.

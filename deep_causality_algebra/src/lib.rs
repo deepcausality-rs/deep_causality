@@ -13,6 +13,9 @@ use deep_causality_num::{Float, Float106, FromPrimitive, One, Zero};
 mod algebra;
 pub mod hom;
 pub mod iso;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
 pub mod utils_tests;
 
 // Algebra types
