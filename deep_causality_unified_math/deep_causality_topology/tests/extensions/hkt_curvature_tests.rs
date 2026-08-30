@@ -51,7 +51,10 @@ fn antisymmetric_tensor(dim: usize, rng: &mut LawRng) -> CurvatureTensor<f64> {
             for b in 0..dim {
                 for c in 0..dim {
                     let s = comps[at(d, a, b, c)] + comps[at(d, b, a, c)];
-                    assert!(s.abs() < 1e-12, "generator failed to be antisymmetric in (a,b)");
+                    assert!(
+                        s.abs() < 1e-12,
+                        "generator failed to be antisymmetric in (a,b)"
+                    );
                 }
             }
         }

@@ -211,7 +211,7 @@ fn test_adjunction_left_adjunct() {
     let ctx = StokesContext::new(complex);
 
     // left_adjunct: (L(A) → B) → (A → R(B))
-    // Given f: DifferentialForm<A> → B, produce g: A → Chain<B>
+    // Given f: DifferentialForm<A> → B, produce g: A → Chain<B, B>
     let chain = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::left_adjunct(
         &ctx,
         5.0f64,
@@ -262,7 +262,7 @@ fn test_adjunction_right_adjunct_empty_output_chain() {
         form,
         |_a: f64| {
             // Create a chain with empty weights
-            let weights = CsrMatrix::new();
+            let weights = CsrMatrix::<f64>::new();
             Chain::new(ctx.complex_arc(), 0, weights)
         },
     );
@@ -302,17 +302,17 @@ fn test_adjunction_counit_empty_chain_in_form() {
     let ctx = StokesContext::new(complex.clone());
 
     // Create an empty chain
-    let weights = CsrMatrix::new();
+    let weights = CsrMatrix::<f64>::new();
     let chain = Chain::new(Arc::new(complex), 0, weights);
 
     // Embed this chain into a 0-form
-    // DifferentialForm<Chain<f64>>
+    // DifferentialForm<Chain<f64, f64>>
     // We can use Adjunction::unit to wrap it, but unit() creates a chain of forms.
-    // Counit input is DifferentialForm<Chain<B>>.
+    // Counit input is DifferentialForm<Chain<B, B>>.
     // So we need to create a DifferentialForm where the coefficient is a Chain.
 
     // DifferentialForm::from_coefficients takes Vec<T>.
-    // Here T is Chain<f64>.
+    // Here T is Chain<f64, f64>.
     let coeffs = vec![chain];
     let form_of_chains = DifferentialForm::from_coefficients(0, 2, coeffs);
 
@@ -332,7 +332,7 @@ fn test_adjunction_counit_returns_first_chain_value() {
     let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 7.0)]).unwrap();
     let chain = Chain::new(Arc::new(complex), 0, weights);
 
-    // DifferentialForm<Chain<f64>> with the chain as its single coefficient.
+    // DifferentialForm<Chain<f64, f64>> with the chain as its single coefficient.
     let form_of_chains = DifferentialForm::from_coefficients(0, 2, vec![chain]);
 
     let result =

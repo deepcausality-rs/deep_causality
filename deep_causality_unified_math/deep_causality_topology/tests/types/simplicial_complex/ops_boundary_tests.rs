@@ -45,7 +45,7 @@ fn test_simplicial_complex_coboundary_d0() {
     let b1 = CsrMatrix::from_triplets(2, 1, &[(1, 0, 1i8), (0, 0, -1)]).unwrap(); // d1: (0,1) -> (1)-(0)
     let c0 = b1.transpose(); // C0 = B1^T: (0) -> -(0,1), (1) -> (0,1)
 
-    let complex = Arc::new(SimplicialComplex::new(
+    let complex = Arc::new(SimplicialComplex::<f64>::new(
         std::vec![skeleton_0, skeleton_1],
         std::vec![b1],
         std::vec![c0], // Only c0

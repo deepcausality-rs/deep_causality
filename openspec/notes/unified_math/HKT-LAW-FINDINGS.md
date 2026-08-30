@@ -88,3 +88,150 @@ options, none of them "carry it across unexamined":
 3. **Reshape `bind`** so the law holds for the `1 x 1` case and document what it does otherwise.
 
 The move is when this gets decided, and the decision belongs with whoever owns the sparse surface.
+
+---
+
+# Further findings, 2026-08-30
+
+The decision owed above was taken: `CsrMatrixWitness` moved into `deep_causality_linear` **without**
+its `Monad` impl, option 1. `deep_causality_linear` now implements `Monad` for `DenseVector` only,
+the one container it owns with no context to fabricate, and that is the precedent the findings below
+should be read against.
+
+Measured while assessing the topology HKT layer, against the crates as they stand. Method and probes
+in `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §8 and §12.
+
+## The generalization: it is context, not shape
+
+The `CsrMatrixWitness` finding above is one instance of a wider pattern, and naming the pattern
+predicts the rest. **These containers pair a payload with a context**: a sparsity pattern, a shape, a
+metric, a complex, a cursor. `Pure::pure` receives one value and must produce a container, so it has
+to invent the context from nothing. `Monad::bind` receives a context from the input and another from
+every `f(a)`, and has to pick. `haft`'s `Functor`, `Pure` and `Monad` carry no channel for any of it.
+
+Where the context has somewhere to live, the operations behave. `Adjunction<L, R, Ctx>` takes the
+context explicitly, and all three uses in the workspace are correct. `Pure` and `Monad` have nowhere,
+which is where the failures cluster.
+
+Monad right identity, `bind(m, pure) == m`, measured across the stack:
+
+| Witness | Crate | Context | `Monad` | Right identity |
+|---|---|---|---|---|
+| `DenseVectorWitness` | linear | none | yes | **holds** |
+| `CsrMatrixWitness` | linear | sparsity pattern | not implemented | n/a |
+| `DenseMatrixWitness` | linear | shape | not implemented | n/a |
+| `CausalTensorWitness` | tensor | shape | yes | **fails** |
+| `CausalMultiVectorWitness` | multivector | metric | yes | **fails** |
+| `ManifoldWitness` | topology | complex, metric, cursor | yes | **fixed 2026-08-30** |
+
+## `CausalMultiVectorWitness` lost the metric (fixed 2026-08-30 by removing `Monad`)
+
+`Pure::pure` has no metric to work from and fabricates `Metric::Euclidean(0)`. `bind` then overwrites
+its accumulator with the metric of the **last** `f(a)` it evaluated, so the input's metric does not
+survive:
+
+```
+m.metric            = Minkowski(4)
+bind(m, pure).metric = Euclidean(0)
+
+data preserved      : true
+metric preserved    : false
+```
+
+The payload is intact; the geometry is not. A caller who binds a multivector in `Cl(3,1)` gets one
+whose metric says `Cl(0,0)`, and nothing reports it. This is the same class as the `CsrMatrix`
+column shift above: the values look right and the context silently changed.
+
+`Euclidean(0)` is not an identity element for `Metric`, because `Metric` is not a monoid. That is the
+difference between this case and a lawful one: `deep_causality_cfd`'s `StudyEffectWitness` carries a
+`StudyWarningLog`, `pure` produces the **empty** log, `bind` **merges** rather than overwrites, and
+right identity holds. A context that forms a monoid can be threaded; one that does not has to be
+taken from the input, or the operation should not be implemented.
+
+**It was worse than a lost metric.** A multivector holds exactly `2^dim` coefficients, so the metric
+fixes the length, and `bind` bypassed `CausalMultiVector::new` by building the struct directly. The
+result held 16 coefficients under `Euclidean(0)`, whose algebra admits one:
+
+```
+is bind(m, pure) a value `CausalMultiVector::new` would accept? false
+  constructor says: Data length mismatch: expected 1, found 16
+```
+
+**No metric choice fixes it, which is why the impl is gone rather than corrected.** Measured: left
+identity holds only when `bind` takes the metric from `f`'s result, and right identity only when it
+takes it from the input. `pure` carries `Euclidean(0)` and has nothing to reconcile them with, so
+the two laws are in direct conflict.
+
+`Pure` survives, and that is deliberate. `pure(x)` names `Cl(0)`, the one algebra reachable without
+inventing geometry, and its single coefficient is exactly `2^0`, so the value is well formed. The
+applicative identity law `apply(pure(id), v) == v` holds, because `apply` broadcasts a lone function
+and takes the metric from its argument. Eight law tests in
+`tests/extensions/hkt_multivector/hkt_law_tests.rs` sweep every metric from `Cl(0)` to `Minkowski(4)`.
+The dimension-changing operation the old `bind` was standing in for is a tensor product, which the
+example now writes directly and names as such.
+
+## `CausalTensorWitness` flattens the shape
+
+```
+m.shape            = [2, 2]
+bind(m, pure).shape = [4]
+```
+
+The same defect the `CsrMatrixWitness` analysis above predicts for any shaped container, and for the
+reason given there: `pure` must choose a shape, and no choice lets `bind` reassemble the original.
+
+## `ManifoldWitness` reset the focus (fixed)
+
+`bind` took the complex and the metric from the input, which is the correct discipline, and then
+hardcoded `cursor: 0`:
+
+```
+cursor 0, shape [3]    bind(m,pure)==m : true
+cursor 2, shape [3]    bind(m,pure)==m : false
+```
+
+Six `extend` implementations in the same crate carry a comment explaining that resetting the focus to
+`0` breaks the comonad laws for a non-zero focus. `bind` broke the monad law for exactly that reason
+and did not have the comment. Fixed 2026-08-30 (`cursor: m_a.cursor`), with generated law tests over
+every legal cursor in `tests/extensions/hkt_manifold_law_tests.rs`.
+
+## `fmap` dropped complex geometry (fixed 2026-08-30)
+
+`TopologyWitness::fmap`, `ChainWitness::fmap` and the Stokes `unit` and `left_adjunct` rebuild
+`SimplicialComplex::<B> { skeletons, boundary_operators, coboundary_operators, ..Default::default() }`.
+The Hodge ⋆ operators are typed by the payload, so they cannot carry from `A` to `B` and are dropped.
+Measured on a complex built with real coordinates:
+
+```
+source complex hodge stars: true
+Topology  before fmap: hodge ok = true
+Topology  after  fmap: hodge ok = false
+Chain     before fmap: hodge ok = true
+Chain     after  fmap: hodge ok = false
+```
+
+So `fmap(id, x)` is not `x` whenever `x` carries geometry, and the **functor identity law fails**.
+The behaviour is deliberate and commented at each site; the law consequence was recorded nowhere
+until now.
+
+**Fixed by making the geometry independent of the payload type.** The dropped data was typed by the
+parameter being mapped only because one parameter was doing two jobs: in `Chain<T>` and
+`Topology<T>`, `T` was simultaneously the complex's metric precision and the coefficient group.
+Mathematically those are independent — `C_k(K; G)` is a functor in `G` with `K` fixed, and the Hodge
+⋆ is determined by the metric on `K` — and `SimplicialComplex<T>` confirmed it, using `T` in exactly
+two fields, both geometric, with the combinatorics at `CsrMatrix<i8>`.
+
+Splitting them into `Chain<R, G>` and `Topology<R, G>` lets `fmap` carry the complex across instead
+of rebuilding it:
+
+```
+Topology  before fmap: hodge ok = true → after: true
+Chain     before fmap: hodge ok = true → after: true
+Chain     fmap(id, c) == c : true
+```
+
+The workspace already had the correct design in `Manifold<SimplicialComplex<R>, F>`, which passed
+this test throughout. Three regression tests in `tests/extensions/hkt_adjunction_law_tests.rs` guard
+it, including the type-level one: mapping `f64` coefficients to `i32` now yields `Chain<f64, i32>`,
+so the complex keeps its precision. Scope in
+`openspec/notes/archive/hkt_gat/chain-topology-parameter-split.md`.

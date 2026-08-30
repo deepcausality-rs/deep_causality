@@ -171,18 +171,13 @@ fn test_new_panics_on_shape_mismatch() {
     // Build a tensor with wrong shape and verify the assert fires.
     let data: Vec<f64> = vec![0.0; 8];
     let components = deep_causality_tensor::CausalTensor::new(data, vec![2, 2, 2]).unwrap();
-    let _ = CurvatureTensor::<f64>::new(
-        components,
-        Metric::Euclidean(2),
-        CurvatureSymmetry::None,
-        2,
-    );
+    let _ =
+        CurvatureTensor::<f64>::new(components, Metric::Euclidean(2), CurvatureSymmetry::None, 2);
 }
 
 #[test]
 fn test_flat_with_metric_preserves_metric_choice() {
-    let t: CurvatureTensor<f64> =
-        CurvatureTensor::flat_with_metric(3, Metric::Euclidean(3));
+    let t: CurvatureTensor<f64> = CurvatureTensor::flat_with_metric(3, Metric::Euclidean(3));
     assert!(t.is_flat());
     assert_eq!(t.metric(), Metric::Euclidean(3));
     assert_eq!(t.dim(), 3);

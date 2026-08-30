@@ -158,7 +158,7 @@ pub fn graph_cases(seed: u64) -> Vec<Case<Graph<f64>>> {
 /// The empty chain is included deliberately: it is the input on which `Adjunction::right_adjunct`
 /// and `CoMonad::extract` are documented to panic, and a suite that never builds one cannot
 /// establish that the panic is the only failure mode.
-pub fn chain_cases(seed: u64) -> Vec<Case<Chain<f64>>> {
+pub fn chain_cases(seed: u64) -> Vec<Case<Chain<f64, f64>>> {
     let mut rng = LawRng::new(seed);
     let mut out = Vec::new();
 

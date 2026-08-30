@@ -8,6 +8,16 @@ use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
+/// # Why `NoConstraint`
+///
+/// `PointCloud<C, T>` carries no element bound, and the categorical operations here move elements
+/// without computing on them: `fmap` maps `A` to an unrelated `B`, and `extend` hands a cursor to a
+/// closure. Constraining the element type would forbid mapping point metadata from a label to a score, which is legitimate and
+/// works today. `NoConstraint` is the accurate statement, not a placeholder for a bound that
+/// belongs here.
+///
+/// Operations that do compute on elements live on the concrete types and carry real trait bounds
+/// there. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct PointCloudWitness<C>(PhantomData<C>);
 
 impl<C> HKT for PointCloudWitness<C>
@@ -15,10 +25,7 @@ where
     C: Satisfies<NoConstraint>,
 {
     type Constraint = NoConstraint;
-    type Type<T>
-        = PointCloud<C, T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = PointCloud<C, T>;
 }
 
 impl<C> Functor<PointCloudWitness<C>> for PointCloudWitness<C>

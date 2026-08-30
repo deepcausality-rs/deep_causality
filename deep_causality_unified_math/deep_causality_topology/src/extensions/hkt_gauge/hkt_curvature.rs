@@ -16,7 +16,7 @@
 //!
 //! The vector space is now an associated type on the witness. The implementation receives the type
 //! it needs, no cast is required, and a caller passing anything else is a compile error. See
-//! `openspec/notes/hkt_gat/hkt_gat_topology_rewrite.md`.
+//! `openspec/notes/archive/hkt_gat/hkt_gat_topology_rewrite.md`.
 //!
 //! # The calls this now rejects
 //!

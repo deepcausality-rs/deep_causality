@@ -351,37 +351,62 @@ population D is concrete.
 
 ## 10. How to get there
 
-Ordered by urgency. Steps 1 and 2 are independent of everything else.
+**Status as of 2026-08-30: all ten items are done.** Items 1 through 4
+landed with the rewrite (`hkt_gat_topology_rewrite.md` §12); 6, 7 and 8 landed after it.
 
-1. **Close the soundness hole.** Remove the `RiemannMap` impl and both `unsafe` blocks from
-   `hkt_curvature.rs`; promote the existing private `geodesic_deviation_impl` and `scatter_impl` to
-   inherent methods taking `&TensorVector<T>`. Update two call sites, `gr_ops_impl.rs:142` and
-   `hkt_curvature_tests.rs`. No caller loses anything, because no caller passed anything else.
-2. **Narrow the unsafe exemption.** With step 1 done, the only remaining `unsafe` is the
-   `Send`/`Sync` pair in `lattice_cell.rs`. Move the exemption to a scoped `#[allow(unsafe_code)]`
-   there with a justification that matches what it covers, and restore `unsafe_code = "forbid"` for
-   the crate.
-3. **Fix the cursor in `ManifoldWitness::bind`.** Replace `cursor: 0` with `cursor: m_a.cursor`,
-   matching what the six `extend` impls already do and say. One line, and monad right identity then
-   holds for a non-zero focus. Add the law test.
-4. **Retire the three stubs.** Delete the `MonoidalMerge` and `ParametricMonad` impls,
-   `GaugeFieldHKT`, `GaugeFieldData` and the `HKT3Unbound` impl, with the tests asserting their stub
-   behaviour. Keep every inherent method on `GaugeFieldWitness`; those are what
-   `deep_causality_physics` calls. This removes the workspace's only implementers of two haft traits,
-   which the commit should say plainly.
-5. **Decide population B.** `CellComplexWitness` and `LatticeComplexWitness` either gain a `Functor`
-   over their field types, with `CellField` and `LatticeField` exported, or they go.
-6. **Correct the `LatticeGaugeFieldWitness` comment** to say that `M` is mappable and that the
-   blocker is capability rather than the struct bound on `R`, and delete the drafting notes inside
-   `map_field` and `zip_with`.
-7. **Record the context findings in `HKT-LAW-FINDINGS.md`**: the multivector metric reset, the
-   tensor shape flattening, the manifold cursor reset, and the `fmap` geometry drop. That file
-   already holds the `CsrMatrixWitness` finding and is where this belongs.
-8. **Document `NoConstraint` on populations A and C** as the accurate description of a structural
-   functor, matching the docstring now on `CausalTensorWitness`.
-9. **Drop the GAT where-clause** from `HKT`, removing three lines from each of topology's fourteen
-   declarations and ending the split convention in §8. This is `hkt_gat.md`'s step and is unrelated
-   to the rest.
+1. ~~**Close the soundness hole.**~~ **Done.** The `RiemannMap` impl and both `unsafe` blocks are
+   gone from `hkt_curvature.rs`. The two private `*_impl` functions were folded into the trait
+   methods rather than promoted, since with the cast gone they had no other caller. Three
+   `compile_fail` doctests hold the closed paths closed.
+2. ~~**Narrow the unsafe exemption.**~~ **Done, and better than this asked.** The `Send`/`Sync`
+   impls on `LatticeCell<D>` turned out to be unnecessary, because the struct is
+   `{ [usize; D], u32 }` and both are derived. No scoped `#[allow]` was needed: the crate carries
+   zero `unsafe` and its `[lints]` section is back to `workspace = true`.
+3. ~~**Fix the cursor in `ManifoldWitness::bind`.**~~ **Done.** `cursor: m_a.cursor`, with generated
+   law tests over every legal cursor in `tests/extensions/hkt_manifold_law_tests.rs`.
+4. ~~**Retire the three stubs.**~~ **Done.** `GaugeFieldHKT`, `GaugeFieldData` and the
+   `HKT3Unbound`, `MonoidalMerge` and `ParametricMonad` impls are removed, with the eight tests that
+   exercised them, five of which asserted the defect as the specification. Every inherent method on
+   `GaugeFieldWitness` is untouched; those are what `deep_causality_physics` calls. `MonoidalMerge`
+   and `ParametricMonad` keep lawful witnesses in haft's own tests.
+5. ~~**Decide population B.**~~ **Done**, by completing rather than removing them. Both field types
+   already had the right shape, with the structure parameters (`C`, and `D`/`R`) separate from the
+   value parameter, so `Functor` and `Foldable` were available without any change to the types.
+   `CellField` and `LatticeField` are exported, both gained a constructor and accessors, and
+   `CellField` needed `Debug` and `PartialEq` written by hand because `CellComplex` implements
+   neither.
+
+   `Pure`, `Monad` and `CoMonad` are deliberately absent, and the witness docs say why. `pure`
+   receives one value and would have to invent a complex around it; any complex it invented would be
+   the wrong one, so `bind(m, pure)` would not return `m` and right identity would fail by
+   construction. That is the defect measured on `CausalMultiVectorWitness`, and `linear`'s precedent
+   is to omit rather than ship it. `CoMonad` is absent because `extract` needs a distinguished cell
+   and neither field carries a cursor. Fourteen tests in
+   `tests/extensions/hkt_field_witness_tests.rs`, covering both functor laws on each witness.
+6. ~~**Correct the `LatticeGaugeFieldWitness` comment.**~~ **Done.** It now states that `M` is the
+   mappable parameter and that the blocker is the missing capability rather than the struct bound on
+   `R`, and it carries the witness over `M` that compiles on stable today. The roughly twenty lines
+   of drafting notes inside `map_field` and `zip_with` are gone.
+7. ~~**Record the context findings in `HKT-LAW-FINDINGS.md`.**~~ **Done.** That file now carries the
+   multivector metric reset, the tensor shape flattening, the manifold cursor reset and its fix, the
+   `fmap` geometry drop, and the generalization that the shared defect is context rather than shape.
+   It also records that the decision it left open was taken: `CsrMatrixWitness` moved into `linear`
+   without its `Monad` impl.
+8. ~~**Document `NoConstraint` on populations A and C.**~~ **Done.** All ten witnesses across eight
+   files carry a `# Why NoConstraint` section; the four that drop geometry also carry the caveat
+   from item 10.
+9. ~~**Drop the GAT where-clause** from `HKT`.~~ **Done 2026-08-30**, workspace-wide: the clause is
+   gone from `HKT` and the `*Unbound` family, and the 24 redundant impl sites with it, ending the
+   split convention in §8. A constrained `Monad` is now writable, which was the point.
+   `bazel test //...` 1231 pass.
+10. ~~**Decide what to do about the `fmap` geometry drop.**~~ **Done**, by the second option:
+   the geometry was made independent of the payload type. `Chain<T>` became `Chain<R, G>` and
+   `Topology<T>` became `Topology<R, G>`, separating the complex's metric precision `R` from the
+   coefficient group `G`, which had been sharing one parameter. `fmap` now carries the complex
+   across instead of rebuilding it, so the Hodge ⋆ operators survive and the functor identity law
+   holds. Measured before and after; three regression tests in
+   `tests/extensions/hkt_adjunction_law_tests.rs` hold it. Scope and rationale in
+   `chain-topology-parameter-split.md`.
 
 ## 11. Against the status quo
 

@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // 4. Compute the second boundary: z = ∂b = ∂(∂c)
-    let chain_z: Chain<f32> = complex.boundary(&chain_b);
+    let chain_z: Chain<f32, f32> = complex.boundary(&chain_b);
     println!(
         "Second boundary ∂(∂c) (a 0-chain of vertices):\n{}",
         chain_z

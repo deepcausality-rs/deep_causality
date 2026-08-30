@@ -22,14 +22,13 @@ impl Vec3 {
         Vec3([self.0[0] * k, self.0[1] * k, self.0[2] * k])
     }
     fn add(&self, o: &Self) -> Self {
-        Vec3([
-            self.0[0] + o.0[0],
-            self.0[1] + o.0[1],
-            self.0[2] + o.0[2],
-        ])
+        Vec3([self.0[0] + o.0[0], self.0[1] + o.0[1], self.0[2] + o.0[2]])
     }
     fn close(&self, o: &Self) -> bool {
-        self.0.iter().zip(o.0.iter()).all(|(a, b)| (a - b).abs() < 1e-9)
+        self.0
+            .iter()
+            .zip(o.0.iter())
+            .all(|(a, b)| (a - b).abs() < 1e-9)
     }
 }
 
@@ -138,7 +137,10 @@ fn curvature_vanishes_when_the_first_two_arguments_agree() {
     for i in 0..DIM {
         for k in 0..DIM {
             let out = Curvature3::curvature(&t, &basis(i), &basis(i), &basis(k));
-            assert!(out.close(&Vec3([0.0; DIM])), "R(u,u)w should vanish, got {out:?}");
+            assert!(
+                out.close(&Vec3([0.0; DIM])),
+                "R(u,u)w should vanish, got {out:?}"
+            );
         }
     }
 }
@@ -167,7 +169,10 @@ fn curvature_is_linear_in_each_slot() {
     let w2 = basis(0);
     let sum = Curvature3::curvature(&t, &u, &v, &w.add(&w2));
     let parts = Curvature3::curvature(&t, &u, &v, &w).add(&Curvature3::curvature(&t, &u, &v, &w2));
-    assert!(sum.close(&parts), "R is not additive in w: {sum:?} vs {parts:?}");
+    assert!(
+        sum.close(&parts),
+        "R is not additive in w: {sum:?} vs {parts:?}"
+    );
 }
 
 #[test]
@@ -175,6 +180,12 @@ fn scatter_returns_two_states_in_the_same_space() {
     let t = Riemann3::antisymmetric(0.59);
     let (a, b) = Curvature3::scatter(&t, &basis(0), &basis(1));
     // Both outputs are Vec3; the contraction is finite for finite input.
-    assert!(a.0.iter().all(|x| x.is_finite()), "out-state 1 not finite: {a:?}");
-    assert!(b.0.iter().all(|x| x.is_finite()), "out-state 2 not finite: {b:?}");
+    assert!(
+        a.0.iter().all(|x| x.is_finite()),
+        "out-state 1 not finite: {a:?}"
+    );
+    assert!(
+        b.0.iter().all(|x| x.is_finite()),
+        "out-state 2 not finite: {b:?}"
+    );
 }

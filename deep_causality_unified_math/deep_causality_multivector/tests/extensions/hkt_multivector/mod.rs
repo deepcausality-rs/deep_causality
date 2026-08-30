@@ -5,4 +5,6 @@
 #[cfg(test)]
 mod hkt_extensions_tests;
 #[cfg(test)]
+mod hkt_law_tests;
+#[cfg(test)]
 mod hkt_tests;

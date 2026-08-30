@@ -22,10 +22,10 @@ pub use crate::errors::link_variable_error::LinkVariableError;
 pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
 // Re-export extensions
-pub use crate::extensions::hkt_cell_complex::CellComplexWitness;
+pub use crate::extensions::hkt_cell_complex::{CellComplexWitness, CellField};
 pub use crate::extensions::hkt_graph::GraphWitness;
 pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
-pub use crate::extensions::hkt_lattice_complex::LatticeComplexWitness;
+pub use crate::extensions::hkt_lattice_complex::{LatticeComplexWitness, LatticeField};
 pub use crate::extensions::hkt_manifold::{
     GenericManifoldWitness, ManifoldWitness, SimplicialManifoldWitness,
 };
@@ -59,7 +59,7 @@ pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
 
 // Re-export types
 pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
-pub use crate::types::chain::Chain;
+pub use crate::types::chain::{Chain, UniformChain};
 pub use crate::types::cup_product::{cup_product, cup_product_n};
 pub use crate::types::lattice_complex::dual_lattice_complex::DualLatticeComplex;
 pub use crate::types::lattice_complex::specialized::{
@@ -103,7 +103,7 @@ pub use crate::types::simplex::Simplex;
 pub use crate::types::simplicial_complex::{SimplicialComplex, SimplicialComplexBuilder};
 pub use crate::types::skeleton::Skeleton;
 pub use crate::types::topological_invariants::TopologicalInvariants;
-pub use crate::types::topology::Topology;
+pub use crate::types::topology::{Topology, UniformTopology};
 
 // Re-export gauge field types
 pub use crate::types::curvature_tensor::{

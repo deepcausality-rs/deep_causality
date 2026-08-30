@@ -29,6 +29,13 @@ use std::marker::PhantomData;
 // PART 1: Simplicial witness — `ManifoldWitness<C>` / `SimplicialManifoldWitness<C>`
 // ============================================================================
 
+/// # Why `NoConstraint`
+///
+/// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
+/// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
+/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
+/// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct ManifoldWitness<C>(PhantomData<C>);
 
 /// Textbook alias for the simplicial case.
@@ -42,10 +49,7 @@ where
         + deep_causality_num::FromPrimitive,
 {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Manifold<SimplicialComplex<C>, T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = Manifold<SimplicialComplex<C>, T>;
 }
 
 impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
@@ -249,6 +253,13 @@ where
 // PART 2: Generic witness — `GenericManifoldWitness<K>` over any `CellularComplex`
 // ============================================================================
 
+/// # Why `NoConstraint`
+///
+/// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
+/// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
+/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
+/// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct GenericManifoldWitness<K>(PhantomData<K>);
 
 impl<K> HKT for GenericManifoldWitness<K>
@@ -256,10 +267,7 @@ where
     K: CellularComplex + Satisfies<NoConstraint>,
 {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Manifold<K, T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = Manifold<K, T>;
 }
 
 impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>

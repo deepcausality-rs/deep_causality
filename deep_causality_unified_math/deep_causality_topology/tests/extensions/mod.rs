@@ -9,6 +9,8 @@ mod hkt_adjunction_law_tests;
 #[cfg(test)]
 mod hkt_curvature_tests;
 #[cfg(test)]
+mod hkt_field_witness_tests;
+#[cfg(test)]
 mod hkt_gauge_field_tests;
 #[cfg(test)]
 mod hkt_generic_manifold_tests;

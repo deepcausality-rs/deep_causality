@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Adjunction laws for `ChainWitness`.
+//! Adjunction laws for `ChainWitness<f64>`.
 //!
 //! The crate has two `Adjunction` implementations and 38 tests across them, every one of which
 //! checks `unit`, `counit`, `left_adjunct` or `right_adjunct` in isolation on a single fixture.
@@ -11,8 +11,8 @@
 //! was asserted nowhere. These are those laws, over generated chains.
 
 use deep_causality_haft::Adjunction;
-use deep_causality_topology::utils_tests::{approx_eq, chain_cases, path_complex, LawRng};
 use deep_causality_linear::CsrMatrix;
+use deep_causality_topology::utils_tests::{LawRng, approx_eq, chain_cases, path_complex};
 use deep_causality_topology::{Chain, ChainWitness, SimplicialComplex};
 use std::sync::Arc;
 
@@ -25,7 +25,7 @@ fn ctx_for(n: usize, grade: usize) -> Ctx {
 }
 
 /// The first stored weight, which is the value `counit` and `right_adjunct` both select.
-fn first_weight(c: &Chain<f64>) -> f64 {
+fn first_weight(c: &Chain<f64, f64>) -> f64 {
     *c.weights()
         .values()
         .first()
@@ -41,13 +41,16 @@ fn counit_after_unit_is_the_identity() {
             let ctx = ctx_for(n, grade);
             for _ in 0..8 {
                 let a = rng.well_scaled(9.0);
-                let wrapped = <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::unit(
-                    &ctx, a,
-                );
-                let back =
-                    <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::counit(
-                        &ctx, wrapped,
-                    );
+                let wrapped = <ChainWitness<f64> as Adjunction<
+                    ChainWitness<f64>,
+                    ChainWitness<f64>,
+                    Ctx,
+                >>::unit(&ctx, a);
+                let back = <ChainWitness<f64> as Adjunction<
+                    ChainWitness<f64>,
+                    ChainWitness<f64>,
+                    Ctx,
+                >>::counit(&ctx, wrapped);
                 assert!(
                     approx_eq(back, a, TOL),
                     "counit(unit(a)) != a for n={n} grade={grade}: got {back}, want {a}"
@@ -63,18 +66,17 @@ fn right_adjunct_inverts_left_adjunct() {
     // This is the adjunction round-trip, and it is what the per-method tests cannot see.
     for case in chain_cases(SEED ^ 1) {
         let ctx = ctx_for(4, case.value.grade());
-        let f = |c: Chain<f64>| first_weight(&c) * 2.0 + 1.0;
+        let f = |c: Chain<f64, f64>| first_weight(&c) * 2.0 + 1.0;
 
-        let round_trip =
-            <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::right_adjunct(
-                &ctx,
-                case.value.clone(),
-                |a: f64| {
-                    <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::left_adjunct(
+        let round_trip = <ChainWitness<f64> as Adjunction<
+            ChainWitness<f64>,
+            ChainWitness<f64>,
+            Ctx,
+        >>::right_adjunct(&ctx, case.value.clone(), |a: f64| {
+            <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::left_adjunct(
                         &ctx, a, f,
                     )
-                },
-            );
+        });
 
         let direct = f(case.value.clone());
         assert!(
@@ -97,23 +99,22 @@ fn left_adjunct_inverts_right_adjunct() {
             let a = rng.well_scaled(5.0);
             let k = rng.well_scaled(3.0);
 
-            // A plain `A -> Chain<B>`: the one-entry chain holding `x * k`.
-            let g = |x: f64| -> Chain<f64> {
+            // A plain `A -> Chain<B, B>`: the one-entry chain holding `x * k`.
+            let g = |x: f64| -> Chain<f64, f64> {
                 let w = CsrMatrix::from_triplets(1, n, &[(0, 0, x * k)])
                     .expect("single-entry chain weights");
                 Chain::new(complex.clone(), 0, w)
             };
 
-            let via_round_trip =
-                <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::left_adjunct(
-                    &ctx,
-                    a,
-                    |la: Chain<f64>| {
-                        <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::right_adjunct(
+            let via_round_trip = <ChainWitness<f64> as Adjunction<
+                ChainWitness<f64>,
+                ChainWitness<f64>,
+                Ctx,
+            >>::left_adjunct(&ctx, a, |la: Chain<f64, f64>| {
+                <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::right_adjunct(
                             &ctx, la, g,
                         )
-                    },
-                );
+            });
 
             let direct = g(a);
             assert!(
@@ -132,7 +133,10 @@ fn unit_places_the_value_where_counit_looks_for_it() {
     for n in [2usize, 5] {
         let ctx = ctx_for(n, 0);
         let a = rng.well_scaled(7.0);
-        let outer = <ChainWitness as Adjunction<ChainWitness, ChainWitness, Ctx>>::unit(&ctx, a);
+        let outer =
+            <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::unit(
+                &ctx, a,
+            );
 
         assert_eq!(
             outer.weights().values().len(),
@@ -150,4 +154,73 @@ fn unit_places_the_value_where_counit_looks_for_it() {
             "unit lost the value it was given"
         );
     }
+}
+
+// ----------------------------------------------------------------------------
+// Functor identity on a complex that carries geometry
+// ----------------------------------------------------------------------------
+
+/// A line complex built from real coordinates, so its Hodge ⋆ operators are available.
+fn geometric_line() -> SimplicialComplex<f64> {
+    use deep_causality_topology::{Simplex, Skeleton};
+    let v = Skeleton::new(0, vec![Simplex::new(vec![0]), Simplex::new(vec![1])]);
+    let e = Skeleton::new(1, vec![Simplex::new(vec![0, 1])]);
+    let d1 = CsrMatrix::from_triplets(2, 1, &[(0, 0, -1i8), (1, 0, 1i8)]).expect("boundary");
+    SimplicialComplex::with_geometry(vec![v, e], vec![d1], vec![], vec![0.0, 0.0, 1.0, 0.0], 2)
+}
+
+#[test]
+fn fmap_preserves_the_complex_geometry() {
+    // `Chain` used to hold one parameter for both the complex's precision and the coefficient
+    // group, so `fmap` had to rebuild the complex and dropped its Hodge ⋆ operators. With the two
+    // separated the complex is carried across, and this is the regression guard for that.
+    use deep_causality_haft::Functor;
+
+    let source = geometric_line();
+    assert!(
+        source.hodge_star_operators().is_ok(),
+        "fixture is wrong: the source complex must carry geometry, or this test proves nothing"
+    );
+
+    let weights = CsrMatrix::from_triplets(1, 2, &[(0, 0, 1.5f64), (0, 1, 2.5)]).expect("weights");
+    let chain: Chain<f64, f64> = Chain::new(Arc::new(source), 0, weights);
+
+    let mapped = <ChainWitness<f64> as Functor<ChainWitness<f64>>>::fmap(chain, |x| x * 2.0);
+    assert!(
+        mapped.complex().hodge_star_operators().is_ok(),
+        "fmap dropped the Hodge star operators"
+    );
+}
+
+#[test]
+fn functor_identity_holds_on_a_geometric_complex() {
+    // The law the geometry drop broke: `fmap(id, c) == c`, on a complex carrying a metric.
+    use deep_causality_haft::Functor;
+
+    let weights = CsrMatrix::from_triplets(1, 2, &[(0, 0, 3.0f64), (0, 1, 4.0)]).expect("weights");
+    let chain: Chain<f64, f64> = Chain::new(Arc::new(geometric_line()), 0, weights);
+
+    let mapped = <ChainWitness<f64> as Functor<ChainWitness<f64>>>::fmap(chain.clone(), |x| x);
+    assert_eq!(
+        mapped, chain,
+        "fmap(id, c) != c on a geometry-carrying complex"
+    );
+}
+
+#[test]
+fn mapping_coefficients_leaves_the_precision_alone() {
+    // The type-level statement of the same fact: mapping f64 coefficients to i32 yields
+    // `Chain<f64, i32>`, not `Chain<i32, i32>`. The complex keeps its precision.
+    use deep_causality_haft::Functor;
+
+    let weights = CsrMatrix::from_triplets(1, 2, &[(0, 0, 1.9f64), (0, 1, 2.9)]).expect("weights");
+    let chain: Chain<f64, f64> = Chain::new(Arc::new(geometric_line()), 0, weights);
+
+    let ints: Chain<f64, i32> =
+        <ChainWitness<f64> as Functor<ChainWitness<f64>>>::fmap(chain, |x| x as i32);
+    assert_eq!(ints.weights().values(), &vec![1, 2]);
+    assert!(
+        ints.complex().hodge_star_operators().is_ok(),
+        "changing the coefficient type must not disturb the complex"
+    );
 }

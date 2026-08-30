@@ -15,7 +15,7 @@ fn test_topology_functor() {
     let data = CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap();
     let topology = Topology::new(complex, 0, data, 0).unwrap();
 
-    let mapped = TopologyWitness::fmap(topology, |x| x * 10.0);
+    let mapped = TopologyWitness::<f64>::fmap(topology, |x| x * 10.0);
 
     assert_eq!(mapped.data().as_slice(), &[10.0, 20.0, 30.0]);
 }
@@ -26,7 +26,7 @@ fn test_topology_extract() {
     let data = CausalTensor::new(vec![10.0, 20.0, 30.0], vec![3]).unwrap();
     let topology = Topology::new(complex, 0, data, 2).unwrap(); // Cursor at 2
 
-    let val = TopologyWitness::extract(&topology);
+    let val = TopologyWitness::<f64>::extract(&topology);
     assert_eq!(val, 30.0);
 }
 
@@ -37,8 +37,8 @@ fn test_topology_extend() {
     let topology = Topology::new(complex, 0, data, 0).unwrap();
 
     // Extend: Value + Cursor
-    let extended = TopologyWitness::extend(&topology, |w: &Topology<f64>| {
-        let val = TopologyWitness::extract(w);
+    let extended = TopologyWitness::<f64>::extend(&topology, |w: &Topology<f64, f64>| {
+        let val = TopologyWitness::<f64>::extract(w);
         val + (w.cursor() as f64)
     });
 
@@ -51,10 +51,10 @@ fn comonad_right_identity_holds_for_nonzero_focus() {
     let complex = Arc::new(create_triangle_complex());
     let data = CausalTensor::new(vec![3.0, 4.0, 5.0], vec![3]).unwrap();
     let topology = Topology::new(complex, 0, data, 2).unwrap();
-    let f = |w: &Topology<f64>| w.data().as_slice()[w.cursor()] + 100.0;
-    let extended = TopologyWitness::extend(&topology, f);
+    let f = |w: &Topology<f64, f64>| w.data().as_slice()[w.cursor()] + 100.0;
+    let extended = TopologyWitness::<f64>::extend(&topology, f);
     assert_eq!(extended.cursor(), 2);
-    assert_eq!(TopologyWitness::extract(&extended), 105.0);
+    assert_eq!(TopologyWitness::<f64>::extract(&extended), 105.0);
 }
 
 #[test]
@@ -63,11 +63,13 @@ fn comonad_associativity_law() {
     let complex = Arc::new(create_triangle_complex());
     let data = CausalTensor::new(vec![5.0, 7.0, 11.0], vec![3]).unwrap();
     let w = Topology::new(complex, 0, data, 1).unwrap();
-    let g = |w: &Topology<f64>| w.data().as_slice()[w.cursor()] + 1.0;
-    let f = |w: &Topology<f64>| w.data().as_slice()[w.cursor()] * 10.0;
+    let g = |w: &Topology<f64, f64>| w.data().as_slice()[w.cursor()] + 1.0;
+    let f = |w: &Topology<f64, f64>| w.data().as_slice()[w.cursor()] * 10.0;
 
-    let lhs = TopologyWitness::extend(&TopologyWitness::extend(&w, g), f);
-    let rhs = TopologyWitness::extend(&w, |wp: &Topology<f64>| f(&TopologyWitness::extend(wp, g)));
+    let lhs = TopologyWitness::<f64>::extend(&TopologyWitness::<f64>::extend(&w, g), f);
+    let rhs = TopologyWitness::<f64>::extend(&w, |wp: &Topology<f64, f64>| {
+        f(&TopologyWitness::<f64>::extend(wp, g))
+    });
 
     assert_eq!(lhs.data().as_slice(), rhs.data().as_slice());
 }

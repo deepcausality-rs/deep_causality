@@ -32,8 +32,9 @@ fn test_simplicial_complex_unit() {
     let complex = create_simple_complex();
     let val = 42.0;
 
-    // Unit: Embed scalar into Chain<Chain<A>>
-    let chain_of_chains: Chain<Chain<f64>> = ChainWitness::unit(&(complex, 0), val);
+    // Unit: Embed scalar into Chain<Chain<A, A>>
+    let chain_of_chains: Chain<f64, Chain<f64, f64>> =
+        ChainWitness::<f64>::unit(&(complex, 0), val);
 
     // Verify outer chain
     assert_eq!(chain_of_chains.grade(), 0);
@@ -53,14 +54,14 @@ fn test_simplicial_complex_unit() {
 fn test_simplicial_complex_left_adjunct() {
     let complex = create_simple_complex();
 
-    // Left Adjunct: (Chain<A> -> B) -> (A -> Chain<B>)
-    // f: Chain<f64> -> f64
-    let f = |c: Chain<f64>| c.weights().values().iter().sum::<f64>();
+    // Left Adjunct: (Chain<A, A> -> B) -> (A -> Chain<B, B>)
+    // f: Chain<f64, f64> -> f64
+    let f = |c: Chain<f64, f64>| c.weights().values().iter().sum::<f64>();
 
-    let chain: Chain<f64> = ChainWitness::left_adjunct(&(complex, 0), 0.0, f);
+    let chain: Chain<f64, f64> = ChainWitness::<f64>::left_adjunct(&(complex, 0), 0.0, f);
 
-    // Expect Chain<f64> containing f(unit(0.0)).
-    // unit(0.0) -> Chain<Chain<f64>> with inner value 0.0.
+    // Expect Chain<f64, f64> containing f(unit(0.0)).
+    // unit(0.0) -> Chain<f64, Chain<f64, f64>> with inner value 0.0.
     // f(inner) -> sum(0.0) -> 0.0.
     // So distinct chain with single value 0.0.
 
@@ -72,13 +73,13 @@ fn test_simplicial_complex_left_adjunct() {
 fn test_simplicial_complex_counit() {
     let complex = create_simple_complex();
 
-    // Counit: Chain<Chain<B>> -> B
+    // Counit: Chain<Chain<B, B>> -> B
     // We construct a nested chain manually or via unit.
     let inner_val = 100.0;
-    // We can use unit to create Chain<Chain<f64>> easily.
-    let chain_chain = ChainWitness::unit(&(complex.clone(), 0), inner_val);
+    // We can use unit to create Chain<f64, Chain<f64, f64>> easily.
+    let chain_chain = ChainWitness::<f64>::unit(&(complex.clone(), 0), inner_val);
 
-    let result = ChainWitness::counit(&(complex, 0), chain_chain);
+    let result = ChainWitness::<f64>::counit(&(complex, 0), chain_chain);
     assert_eq!(result, 100.0);
 }
 
@@ -86,28 +87,28 @@ fn test_simplicial_complex_counit() {
 fn test_simplicial_complex_right_adjunct() {
     let complex = create_simple_complex();
 
-    // Right Adjunct: (A -> Chain<B>) -> (Chain<A> -> B)
-    // Chain<A> with weights at 0 and 2.
+    // Right Adjunct: (A -> Chain<B, B>) -> (Chain<A, A> -> B)
+    // Chain<A, A> with weights at 0 and 2.
     let size = 3;
     let weights =
         CsrMatrix::from_triplets(1, size, &[(0, 0, 2.0), (0, 2, 3.0)]).expect("Matrix failed");
 
     let chain = Chain::new(complex.clone(), 0, weights);
 
-    // f: f64 -> Chain<f64>
+    // f: f64 -> Chain<f64, f64>
     // f(w) -> Chain with weight w*10 at index 0.
-    let f = |w: f64| -> Chain<f64> {
+    let f = |w: f64| -> Chain<f64, f64> {
         let val = w * 10.0;
         let w_matrix = CsrMatrix::from_triplets(1, 1, &[(0, 0, val)]).unwrap();
         Chain::new(complex.clone(), 0, w_matrix)
     };
 
     // Execution:
-    // fmap(chain, f) -> Chain<Chain<f64>>.    // Execution:
+    // fmap(chain, f) -> Chain<f64, Chain<f64, f64>>.    // Execution:
     // right_adjunct expects context: &(Arc<SimplicialComplex>, usize).
     // We clone complex for the context tuple to avoid move errors since closure borrows it.
     let ctx_complex = complex.clone();
-    let result = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+    let result = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
 
     assert_eq!(result, 20.0);
 }
@@ -118,23 +119,23 @@ fn test_simplicial_complex_right_adjunct() {
 
 #[test]
 fn test_simplicial_complex_right_adjunct_returns_inner_value() {
-    // Drives the success path of `right_adjunct`: the produced `Chain<Chain<B>>` has a
+    // Drives the success path of `right_adjunct`: the produced `Chain<Chain<B, B>>` has a
     // non-empty outer chain whose first inner chain has a non-empty value list, so the
     // function returns `val` from the innermost `if let`.
     // Covers src/extensions/hkt_simplicial_complex/mod.rs line 144.
     let complex = create_simple_complex();
 
-    // Chain<A> with a single weight at index 0.
+    // Chain<A, A> with a single weight at index 0.
     let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 4.0)]).expect("Matrix failed");
     let chain = Chain::new(complex.clone(), 0, weights);
 
     let ctx_complex = complex.clone();
-    let f = |w: f64| -> Chain<f64> {
+    let f = |w: f64| -> Chain<f64, f64> {
         let w_matrix = CsrMatrix::from_triplets(1, 1, &[(0, 0, w + 1.0)]).unwrap();
         Chain::new(complex.clone(), 0, w_matrix)
     };
 
-    let result = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+    let result = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
     assert_eq!(result, 5.0);
 }
 
@@ -149,12 +150,12 @@ fn test_simplicial_complex_right_adjunct_panics_when_f_yields_an_empty_chain() {
     let chain = Chain::new(complex.clone(), 0, weights);
 
     let ctx_complex = complex.clone();
-    let f = |_w: f64| -> Chain<f64> {
+    let f = |_w: f64| -> Chain<f64, f64> {
         let empty: CsrMatrix<f64> = CsrMatrix::new();
         Chain::new(complex.clone(), 0, empty)
     };
 
-    let _ = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+    let _ = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
 }
 
 #[test]
@@ -164,10 +165,10 @@ fn test_chain_functor_fmap() {
     // Create chain with weights [1.0, 2.0, 3.0]
     let weights = CsrMatrix::from_triplets(1, size, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])
         .expect("Matrix failed");
-    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+    let chain: Chain<f64, f64> = Chain::new(complex, 0, weights);
 
     // Apply fmap to double all values
-    let doubled: Chain<f64> = ChainWitness::fmap(chain, |x| x * 2.0);
+    let doubled: Chain<f64, f64> = ChainWitness::<f64>::fmap(chain, |x| x * 2.0);
 
     // Verify doubled values
     assert_eq!(doubled.weights().get_value_at(0, 0), 2.0);
@@ -182,10 +183,12 @@ fn test_chain_functor_fmap_type_change() {
     // Create chain with f64 weights
     let weights =
         CsrMatrix::from_triplets(1, size, &[(0, 0, 1.5), (0, 1, 2.5)]).expect("Matrix failed");
-    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+    let chain: Chain<f64, f64> = Chain::new(complex, 0, weights);
 
     // Apply fmap to convert to i32 (truncating)
-    let ints: Chain<i32> = ChainWitness::fmap(chain, |x| x as i32);
+    // The complex stays `f64`; only the coefficients become `i32`. Before the parameter
+    // split this had to be `Chain<i32, i32>`, which is why the geometry could not survive.
+    let ints: Chain<f64, i32> = ChainWitness::<f64>::fmap(chain, |x| x as i32);
 
     // Verify converted values
     assert_eq!(ints.weights().get_value_at(0, 0), 1);
@@ -199,10 +202,10 @@ fn test_chain_foldable_fold() {
     // Create chain with weights [1.0, 2.0, 3.0]
     let weights = CsrMatrix::from_triplets(1, size, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])
         .expect("Matrix failed");
-    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+    let chain: Chain<f64, f64> = Chain::new(complex, 0, weights);
 
     // Fold to compute sum
-    let sum: f64 = ChainWitness::fold(chain, 0.0, |acc, x| acc + x);
+    let sum: f64 = ChainWitness::<f64>::fold(chain, 0.0, |acc, x| acc + x);
 
     // 1 + 2 + 3 = 6
     assert_eq!(sum, 6.0);
@@ -215,10 +218,10 @@ fn test_chain_foldable_fold_product() {
     // Create chain with weights [1.0, 2.0, 3.0]
     let weights = CsrMatrix::from_triplets(1, size, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)])
         .expect("Matrix failed");
-    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+    let chain: Chain<f64, f64> = Chain::new(complex, 0, weights);
 
     // Fold to compute product
-    let product: f64 = ChainWitness::fold(chain, 1.0, |acc, x| acc * x);
+    let product: f64 = ChainWitness::<f64>::fold(chain, 1.0, |acc, x| acc * x);
 
     // 1 * 2 * 3 = 6
     assert_eq!(product, 6.0);
@@ -230,10 +233,10 @@ fn test_chain_foldable_fold_to_string() {
     let size = 2;
     let weights =
         CsrMatrix::from_triplets(1, size, &[(0, 0, 10.0), (0, 1, 20.0)]).expect("Matrix failed");
-    let chain: Chain<f64> = Chain::new(complex, 0, weights);
+    let chain: Chain<f64, f64> = Chain::new(complex, 0, weights);
 
     // Fold to collect values as string
-    let result: String = ChainWitness::fold(chain, String::new(), |mut acc, x| {
+    let result: String = ChainWitness::<f64>::fold(chain, String::new(), |mut acc, x| {
         if !acc.is_empty() {
             acc.push_str(", ");
         }
@@ -247,7 +250,7 @@ fn test_chain_foldable_fold_to_string() {
 #[test]
 #[should_panic(expected = "cannot be called on a Chain that stores nothing")]
 fn test_simplicial_complex_right_adjunct_empty_outer_chain_panics() {
-    // An input chain with no stored weight produces an outer `Chain<Chain<B>>` with nothing to
+    // An input chain with no stored weight produces an outer `Chain<Chain<B, B>>` with nothing to
     // unpack, so `f` is never applied. The message distinguishes this from the case where `f`
     // ran and returned an empty chain: a caller seeing this one passed an empty chain in.
     let complex = create_simple_complex();
@@ -256,10 +259,10 @@ fn test_simplicial_complex_right_adjunct_empty_outer_chain_panics() {
     let chain = Chain::new(complex.clone(), 0, empty);
 
     let ctx_complex = complex.clone();
-    let f = |w: f64| -> Chain<f64> {
+    let f = |w: f64| -> Chain<f64, f64> {
         let w_matrix = CsrMatrix::from_triplets(1, 1, &[(0, 0, w)]).unwrap();
         Chain::new(complex.clone(), 0, w_matrix)
     };
 
-    let _ = ChainWitness::right_adjunct(&(ctx_complex, 0), chain, f);
+    let _ = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
 }

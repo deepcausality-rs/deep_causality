@@ -10,7 +10,7 @@
 //! drops the complex, the metric or the focus is not a law that holds.
 
 use deep_causality_haft::{Applicative, CoMonad, Functor, Monad, Pure};
-use deep_causality_topology::utils_tests::{approx_eq_slice, manifold_cases, LawRng};
+use deep_causality_topology::utils_tests::{LawRng, approx_eq_slice, manifold_cases};
 use deep_causality_topology::{Manifold, ManifoldWitness, SimplicialComplex};
 
 type M = Manifold<SimplicialComplex<f64>, f64>;
@@ -96,9 +96,8 @@ fn monad_associativity() {
         let g = move |x: f64| <W as Pure<W>>::pure(x + q);
 
         let lhs = <W as Monad<W>>::bind(<W as Monad<W>>::bind(case.value.clone(), f), g);
-        let rhs = <W as Monad<W>>::bind(case.value.clone(), move |x| {
-            <W as Monad<W>>::bind(f(x), g)
-        });
+        let rhs =
+            <W as Monad<W>>::bind(case.value.clone(), move |x| <W as Monad<W>>::bind(f(x), g));
 
         assert!(
             approx_eq_slice(lhs.data().as_slice(), rhs.data().as_slice(), TOL),
@@ -114,11 +113,7 @@ fn applicative_identity() {
         let idf: fn(f64) -> f64 = |x| x;
         let out = <W as Applicative<W>>::apply(<W as Pure<W>>::pure(idf), case.value.clone());
         assert!(
-            approx_eq_slice(
-                out.data().as_slice(),
-                case.value.data().as_slice(),
-                TOL
-            ),
+            approx_eq_slice(out.data().as_slice(), case.value.data().as_slice(), TOL),
             "apply(pure(id), v) != v for {}",
             case.label
         );
@@ -179,9 +174,8 @@ fn comonad_associativity() {
         let f = |v: &M| v.data().as_slice()[v.cursor()] * 10.0;
 
         let lhs = <W as CoMonad<W>>::extend(&<W as CoMonad<W>>::extend(&case.value, g), f);
-        let rhs = <W as CoMonad<W>>::extend(&case.value, |vp: &M| {
-            f(&<W as CoMonad<W>>::extend(vp, g))
-        });
+        let rhs =
+            <W as CoMonad<W>>::extend(&case.value, |vp: &M| f(&<W as CoMonad<W>>::extend(vp, g)));
 
         assert!(
             approx_eq_slice(lhs.data().as_slice(), rhs.data().as_slice(), TOL),

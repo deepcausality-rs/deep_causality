@@ -3,8 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-
-
 /// The `RiemannMap` trait models high-arity geometric interactions, specifically the
 /// Riemann Curvature Tensor and Scattering Matrices.
 ///

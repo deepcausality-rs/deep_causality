@@ -9,8 +9,8 @@ use crate::{SimplicialComplex, Topology};
 use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 
-impl<T> Topology<T> {
-    pub fn complex(&self) -> &Arc<SimplicialComplex<T>> {
+impl<R, G> Topology<R, G> {
+    pub fn complex(&self) -> &Arc<SimplicialComplex<R>> {
         &self.complex
     }
 
@@ -18,7 +18,7 @@ impl<T> Topology<T> {
         self.grade
     }
 
-    pub fn data(&self) -> &CausalTensor<T> {
+    pub fn data(&self) -> &CausalTensor<G> {
         &self.data
     }
 

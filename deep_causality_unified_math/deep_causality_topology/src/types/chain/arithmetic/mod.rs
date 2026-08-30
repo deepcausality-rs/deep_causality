@@ -11,9 +11,9 @@ use deep_causality_algebra::{AbelianGroup, Module, Ring};
 // Add
 // ============================================================================
 
-impl<T> Add for Chain<T>
+impl<R, G> Add for Chain<R, G>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + Neg<Output = T>,
+    G: AbelianGroup + Copy + PartialEq + Default + Neg<Output = G>,
 {
     type Output = Self;
 
@@ -22,13 +22,13 @@ where
     }
 }
 
-impl<T> Add for &Chain<T>
+impl<R, G> Add for &Chain<R, G>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + Neg<Output = T>,
+    G: AbelianGroup + Copy + PartialEq + Default + Neg<Output = G>,
 {
-    type Output = Chain<T>;
+    type Output = Chain<R, G>;
 
-    fn add(self, rhs: Self) -> Chain<T> {
+    fn add(self, rhs: Self) -> Chain<R, G> {
         Chain::add(self, rhs)
     }
 }
@@ -37,9 +37,9 @@ where
 // Sub
 // ============================================================================
 
-impl<T> Sub for Chain<T>
+impl<R, G> Sub for Chain<R, G>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + Neg<Output = T>,
+    G: AbelianGroup + Copy + PartialEq + Default + Neg<Output = G>,
 {
     type Output = Self;
 
@@ -48,13 +48,13 @@ where
     }
 }
 
-impl<T> Sub for &Chain<T>
+impl<R, G> Sub for &Chain<R, G>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + Neg<Output = T>,
+    G: AbelianGroup + Copy + PartialEq + Default + Neg<Output = G>,
 {
-    type Output = Chain<T>;
+    type Output = Chain<R, G>;
 
-    fn sub(self, rhs: Self) -> Chain<T> {
+    fn sub(self, rhs: Self) -> Chain<R, G> {
         Chain::sub(self, rhs)
     }
 }
@@ -63,9 +63,9 @@ where
 // Neg
 // ============================================================================
 
-impl<T> Neg for Chain<T>
+impl<R, G> Neg for Chain<R, G>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + Neg<Output = T>,
+    G: AbelianGroup + Copy + PartialEq + Default + Neg<Output = G>,
 {
     type Output = Self;
 
@@ -74,13 +74,13 @@ where
     }
 }
 
-impl<T> Neg for &Chain<T>
+impl<R, G> Neg for &Chain<R, G>
 where
-    T: AbelianGroup + Copy + PartialEq + Default + Neg<Output = T>,
+    G: AbelianGroup + Copy + PartialEq + Default + Neg<Output = G>,
 {
-    type Output = Chain<T>;
+    type Output = Chain<R, G>;
 
-    fn neg(self) -> Chain<T> {
+    fn neg(self) -> Chain<R, G> {
         Chain::neg(self)
     }
 }
@@ -89,9 +89,9 @@ where
 // Mul (Scalar)
 // ============================================================================
 
-impl<T, S> Mul<S> for Chain<T>
+impl<R, G, S> Mul<S> for Chain<R, G>
 where
-    T: Module<S> + Copy,
+    G: Module<S> + Copy,
     S: Ring + Copy,
 {
     type Output = Self;
@@ -101,14 +101,14 @@ where
     }
 }
 
-impl<T, S> Mul<S> for &Chain<T>
+impl<R, G, S> Mul<S> for &Chain<R, G>
 where
-    T: Module<S> + Copy,
+    G: Module<S> + Copy,
     S: Ring + Copy,
 {
-    type Output = Chain<T>;
+    type Output = Chain<R, G>;
 
-    fn mul(self, scalar: S) -> Chain<T> {
+    fn mul(self, scalar: S) -> Chain<R, G> {
         self.scale(scalar)
     }
 }

@@ -37,12 +37,7 @@ where
         // Expand Lie-algebra storage [points, 4, 4, 6] to geometric [4, 4, 4, 4]
         let riemann = expand_lie_to_riemann(lie_fs)?;
 
-        let ct = CurvatureTensor::<S>::new(
-            riemann,
-            metric_sig,
-            CurvatureSymmetry::Riemann,
-            dim,
-        );
+        let ct = CurvatureTensor::<S>::new(riemann, metric_sig, CurvatureSymmetry::Riemann, dim);
 
         let ricci_data = ct.ricci_tensor();
         Ok(CausalTensor::from_vec(ricci_data, &[dim, dim]))
@@ -84,12 +79,7 @@ where
         // Expand Lie-algebra storage [points, 4, 4, 6] to geometric [4, 4, 4, 4]
         let riemann = expand_lie_to_riemann(lie_fs)?;
 
-        let ct = CurvatureTensor::<S>::new(
-            riemann,
-            metric_sig,
-            CurvatureSymmetry::Riemann,
-            dim,
-        );
+        let ct = CurvatureTensor::<S>::new(riemann, metric_sig, CurvatureSymmetry::Riemann, dim);
 
         // Use topology's einstein_tensor method
         let einstein_data = ct.einstein_tensor();
@@ -109,12 +99,7 @@ where
         let inv_g = gr_utils::invert_4x4(metric)?;
 
         // Create CurvatureTensor and use topology's kretschmann_scalar_with_metric
-        let ct = CurvatureTensor::<S>::new(
-            riemann,
-            metric_sig,
-            CurvatureSymmetry::Riemann,
-            dim,
-        );
+        let ct = CurvatureTensor::<S>::new(riemann, metric_sig, CurvatureSymmetry::Riemann, dim);
 
         // Use topology method with the precomputed inverse metric
         Ok(ct.kretschmann_scalar_with_metric(&inv_g))
