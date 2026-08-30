@@ -321,7 +321,7 @@ where
 
     /// The multiplicative inverse, so that `A * A.inverse()? == 1`.
     ///
-    /// A wrapper over [`inverse_impl`](Self::inverse_impl), which is also what
+    /// A wrapper over the crate-internal `inverse_impl`, which is also what
     /// [`MultiVector::inverse`](crate::MultiVector::inverse) calls. One body, so the two cannot
     /// disagree — and they did: this method rejected any `|A|^2` at or below `T::epsilon()` while
     /// the trait rejected only exact zero. An inherent method wins method resolution, so

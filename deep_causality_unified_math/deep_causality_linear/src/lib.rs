@@ -6,7 +6,7 @@
 //! Linear algebra for the DeepCausality crates.
 //!
 //! This crate owns the workspace's matrix representations and the algorithms over them. The split
-//! against [`deep_causality_tensor`] is by **arity, not density**: a two-index object is a matrix
+//! against `deep_causality_tensor` is by **arity, not density**: a two-index object is a matrix
 //! and lives here; `ein_sum`, `broadcast`, `kronecker`, the axis reductions and the tensor-train
 //! stack take an N-index object and stay there.
 //!

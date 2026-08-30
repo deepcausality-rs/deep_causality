@@ -7,7 +7,7 @@ use crate::{One, UnsignedInt, Zero};
 
 /// The natural numbers **ℕ** = {0, 1, 2, …}.
 ///
-/// This is the set-named entry point for ℕ, the counterpart of [`Integer`] for ℤ,
+/// This is the set-named entry point for ℕ, the counterpart of [`Integer`](crate::Integer) for ℤ,
 /// [`Real`](https://docs.rs/deep_causality_algebra) for ℝ, `Rational` for ℚ, and `Complex` for ℂ.
 /// Its algebraic counterpart is `CommutativeSemiring` in `deep_causality_algebra`; this trait is
 /// where the *operations* of ℕ live, stated in ℕ's own vocabulary.
