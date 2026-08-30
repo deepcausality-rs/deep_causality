@@ -10,7 +10,9 @@
 //! `HomologyField::rank_of`, covered directly in `types/homology_field/mod_tests.rs`.
 
 use deep_causality_topology::utils_tests::create_triangle_complex;
-use deep_causality_topology::{ChainComplex, Simplex, SimplicialComplex, SimplicialComplexBuilder};
+use deep_causality_topology::{
+    CellularComplex, ChainComplex, Simplex, SimplicialComplex, SimplicialComplexBuilder,
+};
 use std::borrow::Cow;
 
 fn triangle_with_coboundary() -> SimplicialComplex<f64> {
@@ -78,9 +80,12 @@ fn test_cells_iter_missing_grade_is_empty() {
 fn test_boundary_matrix_k_zero_returns_empty_owned() {
     let c = create_triangle_complex();
     let m = c.boundary_matrix(0);
-    // Must be the empty owned matrix for k == 0 by design.
+    // Owned, because there is no stored operator at this grade to borrow. Its shape is
+    // `(0, num_cells(0))` rather than `(0, 0)`: there are no (−1)-cells to be rows, but the 0-cells
+    // are real and are its columns. The `(0, 0)` this asserted made `cols(∂₀) == rows(∂₁)` false.
     assert!(matches!(m, Cow::Owned(_)));
-    assert_eq!(m.shape(), (0, 0));
+    assert_eq!(m.shape(), (0, c.num_cells(0)));
+    assert_eq!(m.shape().1, c.boundary_matrix(1).shape().0);
 }
 
 #[test]

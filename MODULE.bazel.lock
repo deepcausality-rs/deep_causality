@@ -290,7 +290,7 @@
     "@@rules_lean+//lean:lake.bzl%lake": {
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "97UpLFYh0a2KNs+W0SiJoPCMwqLSLUM24hP8vni84gY=",
-        "usagesDigest": "/1qhhsM9ByinlOsbxY3qx4R4W5f1A6BaM9gkrC9a+xE=",
+        "usagesDigest": "FOZEnDoXBJBERX93Me6PZ60Cvl4kx24VG7TZOAcsBEk=",
         "recordedInputs": [
           "FILE:@@//lean/lean-toolchain 2773c517aa90b66ea8a2c52bddddf84393157797f8341be0df45294fff7fd32e"
         ],
@@ -362,6 +362,7 @@
                 "Mathlib.LinearAlgebra.Dimension.RankNullity",
                 "Mathlib.LinearAlgebra.FiniteDimensional.Lemmas",
                 "Mathlib.LinearAlgebra.Matrix.Rank",
+                "Mathlib.LinearAlgebra.Matrix.ToLin",
                 "Mathlib.LinearAlgebra.Matrix.Trace",
                 "Mathlib.Tactic.Linarith"
               ],

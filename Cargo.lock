@@ -658,8 +658,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "deep_causality_homology"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_linear",
+ "deep_causality_num",
+]
+
+[[package]]
 name = "deep_causality_linear"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_haft",
@@ -790,11 +798,12 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_topology"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_fft",
  "deep_causality_haft",
+ "deep_causality_homology",
  "deep_causality_linear",
  "deep_causality_metric",
  "deep_causality_multivector",

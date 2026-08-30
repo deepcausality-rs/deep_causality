@@ -36,6 +36,7 @@ rust_test_suite(
         "//deep_causality_num_complex",
         "//deep_causality_haft",
         "//deep_causality_rand",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_metric",
@@ -56,6 +57,7 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_algebra",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_num",
     ],
@@ -74,6 +76,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
     ],
 )
@@ -153,24 +156,6 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "types/gf2_chain",
-    srcs = glob([
-        "types/gf2_chain/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        "//deep_causality_topology",
-        # Internal deps
-        "//deep_causality_linear",
-        "//deep_causality_num",
-    ],
-)
-
-rust_test_suite(
     name = "types/graph",
     srcs = glob([
         "types/graph/*_tests.rs",
@@ -183,6 +168,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
     ],
@@ -201,6 +187,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
     ],
@@ -219,6 +206,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
     ],
@@ -241,6 +229,7 @@ rust_test_suite(
         "//deep_causality_metric",
         "//deep_causality_num",
         "//deep_causality_tensor",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_rand",
     ],
@@ -294,6 +283,7 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_algebra",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_num",
@@ -314,6 +304,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
     ],
 )
@@ -348,6 +339,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_multivector",
@@ -383,6 +375,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
     ],
@@ -418,6 +411,7 @@ rust_test_suite(
         "//deep_causality_topology",
         # Internal deps
         "//deep_causality_tensor",
+        "//deep_causality_homology",
         "//deep_causality_linear",
     ],
 )
@@ -439,6 +433,7 @@ rust_test_suite(
         "//deep_causality_num",
         "//deep_causality_par",
         "//deep_causality_rand",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
@@ -458,6 +453,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_topology",
         # Internal deps
+        "//deep_causality_homology",
         "//deep_causality_linear",
     ],
 )
@@ -479,6 +475,7 @@ rust_test_suite(
         "//deep_causality_num",
         "//deep_causality_par",
         "//deep_causality_rand",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",
@@ -502,6 +499,7 @@ rust_test_suite(
         "//deep_causality_num",
         "//deep_causality_par",
         "//deep_causality_rand",
+        "//deep_causality_homology",
         "//deep_causality_linear",
         "//deep_causality_tensor",
         "//deep_causality_topology",

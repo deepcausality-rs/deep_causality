@@ -25,6 +25,7 @@ use crate::errors::linear_error::LinearError;
 use crate::types::csr_matrix::CsrMatrix;
 use crate::types::dense_matrix::DenseMatrix;
 use crate::types::packed_gf2::PackedGf2;
+use alloc::vec;
 use deep_causality_algebra::CommutativeSemiring;
 use deep_causality_num::{Gf2, NaturalNumber};
 
@@ -97,6 +98,29 @@ where
         }
     }
     DenseMatrix::from_vec(out, r, c).expect("the buffer is built from the shape")
+}
+
+/// Widens an `i8` sparse matrix to a dense `i64` one, row-major.
+///
+/// The sibling of [`csr_to_packed_gf2_mod2`] on the characteristic-zero side: that one takes a
+/// boundary operator to 𝔽₂, this one takes it to a carrier the exact integer elimination can use.
+///
+/// Dense because the elimination reads every position and the sparse read is a scan of the row.
+/// Widened because the entries are incidence numbers in `{-1, 0, 1}` but the fraction-free
+/// intermediates are minors of the whole matrix rather than single entries, so `i8` would report an
+/// overflow on the second pivot of almost any complex.
+pub fn csr_i8_to_dense_i64(m: &CsrMatrix<i8>) -> DenseMatrix<i64> {
+    let (rows, cols) = m.shape();
+    let mut data = vec![0i64; rows * cols];
+    let row_ptr = m.row_indices();
+    let col_idx = m.col_indices();
+    let values = m.values();
+    for i in 0..rows {
+        for k in row_ptr[i]..row_ptr[i + 1] {
+            data[i * cols + col_idx[k]] = values[k] as i64;
+        }
+    }
+    DenseMatrix::from_vec(data, rows, cols).expect("built from the shape")
 }
 
 /// Packs an integer matrix by reducing every entry modulo 2.

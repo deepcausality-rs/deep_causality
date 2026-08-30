@@ -5,7 +5,7 @@
 
 //! Tests for `LatticeComplex::hinge_top_cube_neighbors` — Phase R2 task 3.2.
 
-use deep_causality_topology::{ChainComplex, LatticeCell, LatticeComplex};
+use deep_causality_topology::{CellularComplex, ChainComplex, LatticeCell, LatticeComplex};
 
 /// Locate the flat `CellId` for a cell matching `target` in `lattice.cells(grade)` order.
 fn find_cell_id<const D: usize>(

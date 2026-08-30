@@ -100,8 +100,8 @@ pub use crate::algorithms::cg::{
 
 // Conversions among the representations, explicit at every call site
 pub use crate::extensions::conversions::{
-    csr_to_dense, csr_to_packed_gf2_mod2, csr_to_packed_gf2_strict, dense_gf2_to_packed,
-    dense_to_csr, packed_to_dense_gf2,
+    csr_i8_to_dense_i64, csr_to_dense, csr_to_packed_gf2_mod2, csr_to_packed_gf2_strict,
+    dense_gf2_to_packed, dense_to_csr, packed_to_dense_gf2,
 };
 
 // Higher-kinded witnesses

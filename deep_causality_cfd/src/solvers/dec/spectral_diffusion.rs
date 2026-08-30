@@ -31,7 +31,7 @@ use deep_causality_fft::RfftPlanNd;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_par::MaybeParallel;
-use deep_causality_topology::{ChainComplex, HasHodgeStar, LatticeComplex, Manifold};
+use deep_causality_topology::{CellularComplex, HasHodgeStar, LatticeComplex, Manifold};
 
 use crate::solvers::dec::DecNsScalar;
 use deep_causality_physics::PhysicsError;

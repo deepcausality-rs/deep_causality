@@ -55,6 +55,7 @@
 //! is a stationary point only when there is no boundary curvature.
 
 use super::{CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker};
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_algebra::RealField;

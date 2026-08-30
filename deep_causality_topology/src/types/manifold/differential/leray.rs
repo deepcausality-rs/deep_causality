@@ -25,7 +25,7 @@ use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 use crate::errors::topology_error::TopologyError;
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::cut_cell::CutFaceConstraint;
 use crate::types::hodge_decomposition::HodgeDecomposition;
@@ -40,7 +40,7 @@ use deep_causality_par::MaybeParallel;
 
 impl<K, R> Manifold<K, R>
 where
-    K: ChainComplex + Clone,
+    K: CellularComplex + Clone,
     K::Metric: HasHodgeStar<R, Complex = K> + Clone,
     R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug + Display,
 {

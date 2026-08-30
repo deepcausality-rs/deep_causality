@@ -11,6 +11,7 @@
 //! `DimensionMismatch` today).
 
 use crate::traits::cell::Cell;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::{Simplex, SimplicialComplex};
 use deep_causality_linear::CsrMatrix;
@@ -32,7 +33,7 @@ impl<'a> Iterator for SimplicialCellIter<'a> {
     }
 }
 
-impl<T: deep_causality_algebra::RealField> ChainComplex for SimplicialComplex<T> {
+impl<T: deep_causality_algebra::RealField> CellularComplex for SimplicialComplex<T> {
     type CellType = Simplex;
     type CellIter<'a>
         = SimplicialCellIter<'a>
@@ -48,7 +49,9 @@ impl<T: deep_causality_algebra::RealField> ChainComplex for SimplicialComplex<T>
             .map(|s| s.simplices.iter().cloned());
         SimplicialCellIter { inner }
     }
+}
 
+impl<T: deep_causality_algebra::RealField> ChainComplex for SimplicialComplex<T> {
     fn num_cells(&self, k: usize) -> usize {
         self.skeletons
             .iter()
@@ -63,12 +66,23 @@ impl<T: deep_causality_algebra::RealField> ChainComplex for SimplicialComplex<T>
 
     fn boundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
         // Existing storage: boundary_operators[k - 1] holds ∂_k.
+        //
+        // The degenerate grades carry the shape their dimension implies rather than an empty
+        // matrix: `∂₀` has no rows and one column per vertex, and any grade above the top has one
+        // row per cell below it and no columns. That keeps `cols(∂ₖ) == rows(∂ₖ₊₁)` at both ends,
+        // so the composite the `∂∘∂ = 0` law speaks about is formable there.
         if k == 0 {
-            return Cow::Owned(CsrMatrix::new());
+            return Cow::Owned(
+                CsrMatrix::from_triplets(0, self.num_cells(0), &[])
+                    .expect("an empty matrix of a stated shape"),
+            );
         }
         match self.boundary_operators.get(k - 1) {
             Some(m) => Cow::Borrowed(m),
-            None => Cow::Owned(CsrMatrix::new()),
+            None => Cow::Owned(
+                CsrMatrix::from_triplets(self.num_cells(k - 1), self.num_cells(k), &[])
+                    .expect("an empty matrix of a stated shape"),
+            ),
         }
     }
 

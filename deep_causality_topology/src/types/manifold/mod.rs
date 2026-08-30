@@ -23,7 +23,7 @@
 //! `generalize-topology-over-realfield` for the rationale.
 
 use crate::SimplicialComplex;
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use deep_causality_tensor::CausalTensor;
 
 mod api;
@@ -45,7 +45,7 @@ pub use differential::HodgeDecomposeOptions;
 /// `K` is the underlying chain complex; `F` is the field-data type on cells. `F` is
 /// **unconstrained at the struct level** — see the module-level doc for the rationale.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Manifold<K: ChainComplex, F> {
+pub struct Manifold<K: CellularComplex, F> {
     /// The underlying chain complex, guaranteed to satisfy manifold properties when set.
     pub(crate) complex: K,
     /// The data associated with the manifold (e.g. scalar field values, multivectors,

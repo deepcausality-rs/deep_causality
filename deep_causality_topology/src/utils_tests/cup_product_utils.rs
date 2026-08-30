@@ -12,6 +12,7 @@
 pub use crate::types::lattice_complex::cell_splitting::axis_mask;
 
 use crate::traits::cell_splitting::CellLayout;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};
 use crate::types::simplex::Simplex;

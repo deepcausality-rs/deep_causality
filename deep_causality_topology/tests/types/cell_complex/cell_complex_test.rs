@@ -4,7 +4,7 @@
  */
 
 use deep_causality_topology::Cell;
-use deep_causality_topology::{CellComplex, ChainComplex};
+use deep_causality_topology::{CellComplex, CellularComplex, ChainComplex};
 
 /// A mock cell with proper boundary implementation for testing
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -120,9 +120,21 @@ fn test_compute_boundary_matrix_k_zero() {
 
     let complex = CellComplex::from_cells(cells);
 
-    // k=0: boundary of 0-cells (vertices) is empty
+    // ∂₀ maps C₀ into a group with no generators, so it has no rows — and one column per 0-cell,
+    // because those cells exist. This asserted `(0, 0)` until the degenerate grades were given the
+    // shape their dimension implies; an empty matrix here breaks `cols(∂₀) == rows(∂₁)` and makes
+    // the `∂∘∂ = 0` composite unformable at the bottom of the complex.
     let bdry = complex.compute_boundary_matrix(0);
-    assert_eq!(bdry.shape(), (0, 0), "∂_0 should be empty matrix");
+    assert_eq!(
+        bdry.shape(),
+        (0, complex.num_cells(0)),
+        "∂_0 has no rows and one column per 0-cell"
+    );
+    assert_eq!(
+        bdry.shape().1,
+        complex.boundary_matrix(1).shape().0,
+        "cols(∂_0) must equal rows(∂_1)"
+    );
 }
 
 #[test]

@@ -4,7 +4,7 @@
  */
 
 use crate::errors::topology_error::TopologyError;
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::types::hodge_decomposition::HodgeDecomposition;
 use crate::types::manifold::Manifold;
 use crate::types::topological_invariants::TopologicalInvariants;
@@ -34,7 +34,7 @@ impl<R: RealField> HodgeDecomposition<R> {
         manifold: &Manifold<K, R>,
     ) -> Result<TopologicalInvariants<R>, TopologyError>
     where
-        K: ChainComplex,
+        K: CellularComplex,
     {
         let complex = manifold.complex();
         let mut betti = [0usize; 4];

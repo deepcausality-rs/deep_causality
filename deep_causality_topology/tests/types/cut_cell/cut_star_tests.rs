@@ -12,7 +12,7 @@
 //!   (the cut star is not a no-op when cells are removed).
 
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, HasHodgeStar, LatticeCell,
+    CellularComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, HasHodgeStar, LatticeCell,
     LatticeComplex,
 };
 

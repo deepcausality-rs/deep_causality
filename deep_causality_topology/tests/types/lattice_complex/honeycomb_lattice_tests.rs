@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_topology::{ChainComplex, HoneycombLattice};
+use deep_causality_topology::{CellularComplex, ChainComplex, HoneycombLattice};
 
 // ============================================================================
 // HoneycombLattice construction
@@ -150,7 +150,7 @@ fn test_honeycomb_vertex_boundary_is_empty() {
     let lattice = HoneycombLattice::new([2, 2], [false, false]);
     let complex = lattice.as_cell_complex();
 
-    let vertices: Vec<_> = ChainComplex::cells(&complex, 0).collect();
+    let vertices: Vec<_> = CellularComplex::cells(&complex, 0).collect();
     assert_eq!(vertices.len(), 8);
 
     for vertex in &vertices {
@@ -171,7 +171,7 @@ fn test_honeycomb_edge_boundary_is_head_minus_tail() {
     let lattice = HoneycombLattice::new([2, 2], [false, false]);
     let complex = lattice.as_cell_complex();
 
-    for edge in ChainComplex::cells(&complex, 1) {
+    for edge in CellularComplex::cells(&complex, 1) {
         let boundary = edge.boundary();
         assert_eq!(boundary.len(), 2, "a bond has two endpoints");
         let sum: i32 = boundary.iter().map(|(_, c)| *c as i32).sum();

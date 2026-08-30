@@ -10,7 +10,7 @@
 //! that contain ρ as a face. Derived purely from `δ_{max_dim − 1}` (the coboundary)
 //! so the strategy works on any `ChainComplex`.
 
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::neighborhood::{CellId, Neighborhood};
 use std::vec;
 
@@ -34,7 +34,7 @@ impl Iterator for CofaceAdjacentIter {
     }
 }
 
-impl<K: ChainComplex> Neighborhood<K> for CofaceAdjacent {
+impl<K: CellularComplex> Neighborhood<K> for CofaceAdjacent {
     type Iter<'a>
         = CofaceAdjacentIter
     where

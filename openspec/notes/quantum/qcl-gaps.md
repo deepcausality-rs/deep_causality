@@ -25,6 +25,31 @@ Verified against the tree on **2026-08-25**. **Eight gaps are closed, ten are op
 `add-linear-algebra-crate` closed G-01 and G-02. The category-A sweep then closed G-03, G-10, G-11,
 G-12, G-15 and G-17: everything that was unblocked, self-contained and small.
 
+**`deep_causality_homology` now exists, and it is where G-04 and G-08 land.**
+The `extract-homology-crate` change moved the chain-complex layer out of `deep_causality_topology`
+into its own crate at tier 4: `ChainComplex` over boundary matrices alone, `HomologyField`, and
+`Gf2Chain<W>`. The geometric half stayed behind on `CellularComplex: ChainComplex`, and topology
+re-exports all three moved names, so nothing downstream changed except two `use` lines in
+`deep_causality_cfd`.
+
+What this changes for this register is the *dependency edge*. G-07 and G-09 need
+`deep_causality_quantum` to reach homology, and until now that meant depending on
+`deep_causality_topology` — 27,317 lines of geometry, a Hodge star and a metric — to use 419 lines
+of chain-complex machinery. The edge now goes to `deep_causality_homology`, whose whole dependency
+set is `deep_causality_linear` and `deep_causality_num`. A CSS code is a chain complex with no
+cells; it can now be typed as one.
+
+Two further things came with the move and are worth recording here, because both were assumptions
+this register's Betti-number work rested on:
+
+- **`∂ₖ ∘ ∂ₖ₊₁ = 0` is now stated and proved.** It was the unproved hypothesis of
+  `linear.gf2.betti_from_ranks`. `homology.chain.dd_zero_implies_range_le_ker` discharges it, and
+  the conformance harness asserts it at every grade of every shipped complex. See
+  `deep_causality_homology/LEAN_HOMOLOGY.md`.
+- **The degenerate grades carry a shape.** `∂₀` is `(0, n₀)` and `∂_{max+1}` is `(n_max, 0)`, in
+  place of the empty matrix all three implementors returned. `betti_number_over` survived that on
+  `saturating_sub`; the kernel basis G-04 needs would not have.
+
 **Publication is not a gate on anything here.** `deep_causality_linear` 0.1.0 is on crates.io, and
 the whole workspace has since been patch-bumped and republished. It makes no difference to this
 register: every closure consumes its crate through a workspace path dependency, so what unblocked

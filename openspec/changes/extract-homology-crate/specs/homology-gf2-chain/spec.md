@@ -1,25 +1,32 @@
 ## ADDED Requirements
 
-### Requirement: A mod-2 chain carries its degree and its complex
-`Gf2Chain<W>` SHALL bind its bit vector to both the degree it lives in and the identity of the
-complex it ranges over, and SHALL refuse any binary operation whose operands disagree on either.
+### Requirement: A mod-2 chain binds its bit vector to the chain group it lives in
+`Gf2Chain<W>` SHALL identify its chain group by the pair `(degree, len)`, SHALL refuse any binary
+operation whose operands disagree on either component, and SHALL report both disagreements through
+one error that names the chain group.
 
-Today the guards check degree and length alone, so a chain from a different complex with the same
-cell count is accepted and answered. `Chain<T>` in the same workspace already decided the opposite
-by comparing complexes with `Arc::ptr_eq`.
+`C_k = 𝔽₂^{n_k}` is fixed by `n_k` alone, and every operation the type offers — the sum, the
+intersection, the pairing, the support enumerations, the weight — is an operation of that group.
+Two complexes with the same cell count in degree `k` have the same `C_k`, so no further identity is
+available to check and none is needed. The complex enters with the boundary operator, and there the
+compatibility check is made against the complex being applied.
+
+Today the degree is checked in the chain and the length in the packed vector beneath it, so two
+halves of one condition surface as two different error types.
 
 #### Scenario: Chains of different degree have no operation
-- **WHEN** a 1-chain and a 2-chain over the same complex are added, intersected or paired
+- **WHEN** a 1-chain and a 2-chain of equal length are added, intersected or paired
 - **THEN** each call returns an error naming both degrees
 
-#### Scenario: Chains from different complexes have no operation
-- **WHEN** two chains of equal degree and equal length, drawn from two different complexes, are
-  added, intersected or paired
-- **THEN** each call returns an error rather than an answer
+#### Scenario: Chains of different length have no operation
+- **WHEN** two chains of equal degree and unequal length are added, intersected or paired
+- **THEN** each call returns the same error variant as the degree mismatch, raised by the chain
+  rather than by the packed vector beneath it
 
-#### Scenario: Identity travels through construction
-- **WHEN** a chain is built from a basis row or column of a matrix derived from a complex
-- **THEN** the resulting chain reports that complex as its own
+#### Scenario: The complex is checked where the boundary is applied
+- **WHEN** a boundary operator drawn from a complex is applied to a chain
+- **THEN** the chain's length is checked against that complex's cell count in the chain's degree, at
+  that call
 
 ### Requirement: The support is enumerable as elements, pairs and triples
 `Gf2Chain` SHALL expose `supp(γ)` in ascending order, together with the unordered pairs and the

@@ -34,6 +34,7 @@
 //! - **Plaquettes:** Ordered product around elementary squares
 //! - **Wilson action:** S = β Σ_p (1 - Re[Tr(U_p)]/N)
 
+use crate::traits::cellular_complex::CellularComplex;
 use crate::{ChainComplex, GaugeGroup, RandomField};
 use crate::{LatticeCell, LatticeComplex, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};

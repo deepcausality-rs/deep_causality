@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::has_hodge_star::HasHodgeStar;
 use crate::types::manifold::Manifold;
 use crate::types::manifold::differential::utils_differential;
@@ -13,7 +13,7 @@ use deep_causality_tensor::CausalTensor;
 
 impl<K, R> Manifold<K, R>
 where
-    K: ChainComplex,
+    K: CellularComplex,
     K::Metric: HasHodgeStar<R, Complex = K>,
     R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq,
 {

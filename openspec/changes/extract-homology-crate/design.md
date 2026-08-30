@@ -55,6 +55,13 @@ The trait's eleven items divide into two disjoint groups:
 its external callers want it as a cell count. The supertrait relation gives them both readings from
 one method.
 
+**The trait is named `CellularComplex`, not `CellComplex`.** That name is taken, by
+`pub struct CellComplex<C: Cell>` in the same crate root. Rust puts types and traits in one
+namespace, so the collision is an `E0428`, not a shadowing. `CellularComplex` is the term of art for
+what the trait describes — a CW structure on a chain complex — and it leaves the published struct
+alone. Renaming the struct instead would break `deep_causality_topology` 0.7.x and would silently
+change the meaning of every existing `use deep_causality_topology::CellComplex`.
+
 **Alternative rejected:** splitting by caller, leaving `num_cells` in topology. That would duplicate
 it, since the homology trait needs `dim C_k` to compute anything.
 
@@ -240,7 +247,7 @@ each task.
    docstrings. Independently useful and independently releasable.
 2. Create `deep_causality_homology` 0.1.0 with the three moved items and full Bazel, SBOM, lint and
    CI registration.
-3. `deep_causality_topology` 0.7.4: add `CellComplex: ChainComplex`, re-export the three names,
+3. `deep_causality_topology` 0.7.4: add `CellularComplex: ChainComplex`, re-export the three names,
    delete nothing.
 4. Fix defects 2–4 and settle `Gf2Chain`'s complex identity.
 5. Verify: `bazel test //...`, clippy, fmt, and a build of CFD and physics with zero edits.

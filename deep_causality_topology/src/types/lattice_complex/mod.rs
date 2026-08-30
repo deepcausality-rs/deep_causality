@@ -11,6 +11,7 @@ pub mod specialized;
 pub use lattice_cell::LatticeCell;
 
 use crate::traits::cell::Cell;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::traits::neighborhood::CellId;
 use deep_causality_algebra::RealField;
@@ -440,7 +441,7 @@ impl<'a, const D: usize, R: RealField> Iterator for LatticeCellIterator<'a, D, R
     }
 }
 
-impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
+impl<const D: usize, R: RealField> CellularComplex for LatticeComplex<D, R> {
     type CellType = LatticeCell<D>;
     type CellIter<'a>
         = LatticeCellIterator<'a, D, R>
@@ -452,6 +453,12 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
         self.iter_cells(k)
     }
 
+    fn uniform_lattice_layout(&self) -> Option<(Vec<usize>, Vec<bool>)> {
+        Some((self.shape.to_vec(), self.periodic.to_vec()))
+    }
+}
+
+impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
     fn num_cells(&self, k: usize) -> usize {
         let mut total = 0;
         let limit: usize = 1 << D;
@@ -487,8 +494,20 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
         // `num_cells(k - 1)` and `k > D` indexes past the cache; both were unreachable while the
         // only caller was `codifferential`, and `ChainComplex::betti_number_over` reaches them by
         // asking for ∂_0 and ∂_{D+1} at the ends of its range.
-        if k == 0 || k > D {
-            return Cow::Owned(CsrMatrix::new());
+        // The degenerate grades carry the shape their dimension implies rather than an empty
+        // matrix, so `cols(∂ₖ) == rows(∂ₖ₊₁)` holds at both ends and the `∂∘∂ = 0` composite is
+        // formable there.
+        if k == 0 {
+            return Cow::Owned(
+                CsrMatrix::from_triplets(0, self.num_cells(0), &[])
+                    .expect("an empty matrix of a stated shape"),
+            );
+        }
+        if k > D {
+            return Cow::Owned(
+                CsrMatrix::from_triplets(self.num_cells(D), 0, &[])
+                    .expect("an empty matrix of a stated shape"),
+            );
         }
         // Lazy memo, mirroring `coboundary_matrix`: ∂_k is read by
         // `codifferential` on every Laplacian application — once per CG
@@ -569,10 +588,6 @@ impl<const D: usize, R: RealField> ChainComplex for LatticeComplex<D, R> {
             }
             res
         }
-    }
-
-    fn uniform_lattice_layout(&self) -> Option<(Vec<usize>, Vec<bool>)> {
-        Some((self.shape.to_vec(), self.periodic.to_vec()))
     }
 }
 

@@ -30,7 +30,9 @@ use deep_causality_topology::utils_tests::{
     open_cube_3, open_square_3, per_axis_geometry, per_edge_uniform_per_axis, periodic_cube_3,
     periodic_square_3, unit_geometry,
 };
-use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, HasHodgeStar, LatticeComplex};
+use deep_causality_topology::{
+    CellularComplex, ChainComplex, CubicalReggeGeometry, HasHodgeStar, LatticeComplex,
+};
 
 const TOL: f64 = 1e-12;
 

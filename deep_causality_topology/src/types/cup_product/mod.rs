@@ -55,12 +55,12 @@
 
 use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::traits::cell_splitting::SplittableCell;
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use deep_causality_algebra::CommutativeRing;
 use std::collections::HashMap;
 
 /// Rejects a cochain whose length does not match the cell count of its degree.
-fn check_len<K: ChainComplex, R>(
+fn check_len<K: CellularComplex, R>(
     complex: &K,
     cochain: &[R],
     degree: usize,
@@ -100,7 +100,7 @@ pub fn cup_product<K, R>(
     beta_degree: usize,
 ) -> Result<Vec<R>, TopologyError>
 where
-    K: ChainComplex,
+    K: CellularComplex,
     K::CellType: SplittableCell,
     R: CommutativeRing + Copy,
 {
@@ -179,7 +179,7 @@ where
 /// length is validated.
 pub fn cup_product_n<K, R>(complex: &K, factors: &[(&[R], usize)]) -> Result<Vec<R>, TopologyError>
 where
-    K: ChainComplex,
+    K: CellularComplex,
     K::CellType: SplittableCell,
     R: CommutativeRing + Copy,
 {

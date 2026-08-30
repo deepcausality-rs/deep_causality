@@ -11,7 +11,7 @@
 //! aperture-weighted reconstruction uniform fallback.
 
 use deep_causality_topology::{
-    CellClass, ChainComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, CutConstraintKind,
+    CellClass, CellularComplex, CubicalReggeGeometry, CutCell, CutCellRegistry, CutConstraintKind,
     CutFaceFragment, LatticeCell, LatticeComplex, Primitive, SourceGeometry,
 };
 use std::collections::HashMap;

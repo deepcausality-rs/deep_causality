@@ -16,7 +16,7 @@
 //!     Their definitions rely on the regular-grid coordinate structure and Chebyshev
 //!     metric, which have no principled simplicial analogue.
 
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 
 /// Stable identifier for a cell within a `ChainComplex`. Returned by `Neighborhood::neighbors`.
 ///
@@ -30,7 +30,7 @@ pub type CellId = usize;
 /// Implementors are zero-sized types (e.g. `pub struct VonNeumann;`) so passing one
 /// to a generic function compiles to nothing. The `Iter<'a>` GAT names the concrete
 /// iterator returned by `neighbors`.
-pub trait Neighborhood<K: ChainComplex> {
+pub trait Neighborhood<K: CellularComplex> {
     /// Concrete iterator type yielded by [`Neighborhood::neighbors`].
     type Iter<'a>: Iterator<Item = CellId>
     where

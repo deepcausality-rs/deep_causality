@@ -39,6 +39,7 @@ pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitnes
 pub use crate::traits::base_topology::BaseTopology;
 pub use crate::traits::cell::Cell;
 pub use crate::traits::cell_splitting::{CellLayout, CellSplit, SplittableCell};
+pub use crate::traits::cellular_complex::CellularComplex;
 pub use crate::traits::chain_complex::ChainComplex;
 pub use crate::traits::gauge_group::GaugeGroup;
 pub use crate::traits::graph_topology::GraphTopology;

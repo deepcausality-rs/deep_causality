@@ -19,7 +19,8 @@
 use deep_causality_cfd::{BodyForceOneForm, DecNsSolver};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeCell, LatticeComplex, Manifold,
+    CellularComplex, ChainComplex, CubicalReggeGeometry, CutCellRegistry, LatticeCell,
+    LatticeComplex, Manifold,
 };
 
 const NU: f64 = 0.1;

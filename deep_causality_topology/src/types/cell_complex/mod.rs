@@ -6,6 +6,7 @@
 pub mod boundary_operator;
 
 use crate::traits::cell::Cell;
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 pub use boundary_operator::BoundaryOperator;
 use deep_causality_linear::CsrMatrix;
@@ -91,8 +92,18 @@ impl<C: Cell> CellComplex<C> {
     /// Given `cells` are fixed, we can compute it deterministically.
     /// The trait `ChainComplex` requires `boundary_matrix(&self)`.
     pub fn compute_boundary_matrix(&self, k: usize) -> CsrMatrix<i8> {
-        if k == 0 || k >= self.cells.len() {
-            return CsrMatrix::new();
+        // The degenerate grades carry the shape their dimension implies. `∂₀` maps `C₀` into a
+        // group with no generators, so it has no rows and one column per 0-cell; `∂_{max+1}` has
+        // one row per top cell and no columns. An empty matrix at either end breaks
+        // `cols(∂ₖ) == rows(∂ₖ₊₁)`, and the composite the `∂∘∂ = 0` law speaks about stops being
+        // formable there.
+        if k == 0 {
+            return CsrMatrix::from_triplets(0, self.num_cells(0), &[])
+                .expect("an empty matrix of a stated shape");
+        }
+        if k >= self.cells.len() {
+            return CsrMatrix::from_triplets(self.num_cells(k - 1), 0, &[])
+                .expect("an empty matrix of a stated shape");
         }
 
         let rows = self.num_cells(k - 1);
@@ -122,7 +133,7 @@ impl<C: Cell> CellComplex<C> {
     }
 }
 
-impl<C: Cell> ChainComplex for CellComplex<C> {
+impl<C: Cell> CellularComplex for CellComplex<C> {
     type CellType = C;
     type CellIter<'a>
         = CellComplexCellIter<'a, C>
@@ -133,7 +144,9 @@ impl<C: Cell> ChainComplex for CellComplex<C> {
     fn cells(&self, k: usize) -> Self::CellIter<'_> {
         CellComplexCellIter(self.cells_vec(k).iter().cloned())
     }
+}
 
+impl<C: Cell> ChainComplex for CellComplex<C> {
     fn num_cells(&self, k: usize) -> usize {
         self.cells_vec(k).len()
     }

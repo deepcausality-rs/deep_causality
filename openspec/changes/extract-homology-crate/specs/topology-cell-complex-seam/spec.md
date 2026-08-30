@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: The geometric half of the trait stays in topology
-`deep_causality_topology` SHALL define `CellComplex: ChainComplex` carrying the associated types
+`deep_causality_topology` SHALL define `CellularComplex: ChainComplex` carrying the associated types
 `CellType`, `CellIter` and `Metric`, together with `cells(k)` and `uniform_lattice_layout()`.
 
 These five items describe a complex that comes from a space. A Riemannian metric and a per-axis
@@ -10,7 +10,7 @@ parity-check code.
 
 #### Scenario: All three shipped complexes implement both traits
 - **WHEN** `SimplicialComplex`, `CellComplex<C>` and `LatticeComplex` are built
-- **THEN** each implements `ChainComplex` and `CellComplex`, and the boundary operators are produced
+- **THEN** each implements `ChainComplex` and `CellularComplex`, and the boundary operators are produced
   by the same code as before
 
 #### Scenario: Cell enumeration reaches the chain groups

@@ -14,8 +14,8 @@
 //!   graded substrate (`graded-metrics`).
 
 use deep_causality_topology::{
-    CellClass, ChainComplex, CubicalReggeGeometry, CutCellRegistry, HasHodgeStar, LatticeComplex,
-    Primitive,
+    CellClass, CellularComplex, CubicalReggeGeometry, CutCellRegistry, HasHodgeStar,
+    LatticeComplex, Primitive,
 };
 
 const TOL: f64 = 1e-12;

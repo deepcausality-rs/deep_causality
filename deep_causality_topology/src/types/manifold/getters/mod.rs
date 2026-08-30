@@ -7,10 +7,10 @@
 //! Getter methods for Manifold fields.
 
 use crate::Manifold;
-use crate::traits::chain_complex::ChainComplex;
+use crate::traits::cellular_complex::CellularComplex;
 use deep_causality_tensor::CausalTensor;
 
-impl<K: ChainComplex, F> Manifold<K, F> {
+impl<K: CellularComplex, F> Manifold<K, F> {
     /// Returns a reference to the underlying chain complex.
     pub fn complex(&self) -> &K {
         &self.complex

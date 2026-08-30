@@ -16,6 +16,7 @@
 //! `deep_causality_tensor`, a dual number for automatic differentiation, or any other
 //! algebraic value type that flows through `CausalTensor<F>`.
 
+use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::{Manifold, SimplicialComplex};
 use deep_causality_haft::{
@@ -50,7 +51,7 @@ where
 impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone,
-    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
     C: Satisfies<NoConstraint>
         + Clone
         + deep_causality_algebra::RealField
@@ -118,7 +119,7 @@ where
 impl<C> Monad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone + Default,
-    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
     C: Satisfies<NoConstraint>
         + Clone
         + Default
@@ -153,7 +154,7 @@ where
 impl<C> Applicative<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone + Default,
-    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
     C: Satisfies<NoConstraint>
         + Clone
         + Default
@@ -193,7 +194,7 @@ where
 impl<C> CoMonad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone,
-    <SimplicialComplex<C> as ChainComplex>::Metric: Clone,
+    <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
     C: Satisfies<NoConstraint>
         + Clone
         + deep_causality_algebra::RealField
@@ -249,7 +250,7 @@ pub struct GenericManifoldWitness<K>(PhantomData<K>);
 
 impl<K> HKT for GenericManifoldWitness<K>
 where
-    K: ChainComplex + Satisfies<NoConstraint>,
+    K: CellularComplex + Satisfies<NoConstraint>,
 {
     type Constraint = NoConstraint;
     type Type<T>
@@ -260,7 +261,7 @@ where
 
 impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>
 where
-    K: ChainComplex + Satisfies<NoConstraint> + Clone,
+    K: CellularComplex + Satisfies<NoConstraint> + Clone,
     K::Metric: Clone,
 {
     fn fmap<A, B, Func>(m_a: Manifold<K, A>, f: Func) -> Manifold<K, B>
