@@ -14,7 +14,7 @@ complement.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_algebra/tests/algebra/verdict_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/verdict_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

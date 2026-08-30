@@ -37,6 +37,7 @@ Ordered oldest first. "Files" counts source files git detected as renames across
 | 2026-08-25 | `a02944ee5` | **The linear migration.** Workspace repointed onto `deep_causality_linear` | — |
 | 2026-08-25 | `21cf19e36` | `deep_causality_macros` retired to `yanked/` | — |
 | 2026-08-30 | `5d591e900` | **The homology extraction.** Chain complexes split out of topology and linear | — |
+| 2026-08-30 | this change | **The unified-math consolidation.** Seventeen crates moved under `deep_causality_unified_math/` | 1856 |
 | 2026-08-30 | this change | `deep_causality_sparse` retired to `yanked/` | 9 |
 
 Data structures also gave 36 files to `deep_causality_tensor`, physics gave 8 to
@@ -53,10 +54,10 @@ now holds only the numeric traits. Three crates came out of it.
 
 | Old path | Now in |
 |---|---|
-| `deep_causality_num/src/algebra/…` | `deep_causality_algebra/src/algebra/…` |
-| `deep_causality_num/src/complex/…` | `deep_causality_num_complex/src/complex/…` |
-| `deep_causality_num/src/dual/…` | `deep_causality_num_dual/src/dual/…` |
-| `deep_causality_num/src/rational/…` | `deep_causality_num_rational/src/…` |
+| `deep_causality_num/src/algebra/…` | `deep_causality_unified_math/deep_causality_algebra/src/algebra/…` |
+| `deep_causality_num/src/complex/…` | `deep_causality_unified_math/deep_causality_num_complex/src/complex/…` |
+| `deep_causality_num/src/dual/…` | `deep_causality_unified_math/deep_causality_num_dual/src/dual/…` |
+| `deep_causality_num/src/rational/…` | `deep_causality_unified_math/deep_causality_num_rational/src/…` |
 
 Package names in `use` statements changed with the paths. An archived change that says
 `use deep_causality_num::Field` predates the split; the trait is `deep_causality_algebra::Field`.
@@ -72,11 +73,11 @@ the eliminations, the decompositions and the exact integer path.
 
 | Old path | Now in |
 |---|---|
-| `deep_causality_sparse/src/types/sparse_matrix/` | `deep_causality_linear/src/types/csr_matrix/` |
-| `deep_causality_sparse/src/solver/cg.rs` | `deep_causality_linear/src/algorithms/cg.rs` |
-| `deep_causality_sparse/src/errors/sparse_matrix_error.rs` | `deep_causality_linear/src/errors/` |
-| `deep_causality_sparse/src/extensions/ext_hkt.rs` | `deep_causality_linear/src/extensions/ext_hkt.rs` |
-| `deep_causality_sparse/src/extensions/ext_iso.rs` | `deep_causality_tensor/src/extensions/ext_iso.rs` |
+| `deep_causality_sparse/src/types/sparse_matrix/` | `deep_causality_unified_math/deep_causality_linear/src/types/csr_matrix/` |
+| `deep_causality_sparse/src/solver/cg.rs` | `deep_causality_unified_math/deep_causality_linear/src/algorithms/cg.rs` |
+| `deep_causality_sparse/src/errors/sparse_matrix_error.rs` | `deep_causality_unified_math/deep_causality_linear/src/errors/` |
+| `deep_causality_sparse/src/extensions/ext_hkt.rs` | `deep_causality_unified_math/deep_causality_linear/src/extensions/ext_hkt.rs` |
+| `deep_causality_sparse/src/extensions/ext_iso.rs` | `deep_causality_unified_math/deep_causality_tensor/src/extensions/ext_iso.rs` |
 
 Two names changed shape rather than address. `SparseMatrixError` became `LinearError`, one error
 type across all representations; `CgFailure` became an enum. The retired crate's `src/lib.rs` carries
@@ -89,12 +90,12 @@ half moved. The geometry half stayed on `CellularComplex`.
 
 | Old path | Now in |
 |---|---|
-| `deep_causality_topology/src/traits/chain_complex.rs` | `deep_causality_homology/src/traits/chain_complex.rs` |
-| `deep_causality_topology/src/types/homology_field/…` | `deep_causality_homology/src/types/homology_field/…` |
-| `deep_causality_topology/src/types/gf2_chain/…` | `deep_causality_homology/src/types/gf2_chain/…` |
+| `deep_causality_topology/src/traits/chain_complex.rs` | `deep_causality_unified_math/deep_causality_homology/src/traits/chain_complex.rs` |
+| `deep_causality_topology/src/types/homology_field/…` | `deep_causality_unified_math/deep_causality_homology/src/types/homology_field/…` |
+| `deep_causality_topology/src/types/gf2_chain/…` | `deep_causality_unified_math/deep_causality_homology/src/types/gf2_chain/…` |
 | `deep_causality_linear/src/extensions/conversions.rs` (𝔽₂ arms) | shared with `deep_causality_homology` |
 
-`deep_causality_topology/src/traits/chain_complex.rs` still exists as a re-export shim, so
+`deep_causality_unified_math/deep_causality_topology/src/traits/chain_complex.rs` still exists as a re-export shim, so
 `use deep_causality_topology::ChainComplex` in an archived change still compiles. `Chain<T>`,
 `SimplicialComplex<T>` and `cup_product` did not move; they need cells, and a chain complex has
 none.
@@ -123,14 +124,29 @@ The design notes moved too, and archived changes link to them.
 | `openspec/notes/linear/HKT-LAW-FINDINGS.md` | `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` |
 | `specs/` | `openspec/` |
 
-## 4. Planned, not yet done
+## 4. The unified-math consolidation, 2026-08-30
 
-The sixteen mathematics crates are to be consolidated under `deep_causality_unified_math/`. Package
-names do not change; only directories do. When it lands, every path in this file that begins with a
-math crate name gains that prefix, and this section becomes §2.5 with a date and a commit.
+The seventeen mathematics crates moved from the repository root into `deep_causality_unified_math/`.
+Package names did not change, so no `use` statement moved and nothing on crates.io was affected.
+Only directories moved.
 
-The feasibility assessment is `openspec/notes/unified_math/deep_causality_unified_math.md`. It
-records the counts, the four ways the move can fail quietly, and the order to do it in.
+Every archived path that begins with one of these seventeen names gains the folder prefix:
+
+```
+deep_causality_{algebra, ast, calculus, fft, haft, homology, linear, metric, multivector,
+                num, num_complex, num_dual, num_rational, rand, tensor, topology, uncertain}
+```
+
+So an archived change naming `deep_causality_topology/src/types/chain/mod.rs` now means
+`deep_causality_unified_math/deep_causality_topology/src/types/chain/mod.rs`. The rule is uniform:
+prepend `deep_causality_unified_math/` and change nothing else.
+
+The twelve crates that stayed at the root are `deep_causality`, `_algorithms`, `_cfd`, `_core`,
+`_data_structures`, `_discovery`, `_ethos`, `_file`, `_par`, `_physics`, `_quantum` and
+`ultragraph`. A path beginning with one of those is still correct as written.
+
+The assessment that preceded the move is
+`openspec/notes/unified_math/deep_causality_unified_math.md`.
 
 ## 5. Keeping this file true
 

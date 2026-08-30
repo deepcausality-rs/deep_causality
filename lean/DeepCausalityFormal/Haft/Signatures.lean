@@ -4,8 +4,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — signature-only interfaces: RiemannMap and CyberneticLoop.
 
-Rust sources: `deep_causality_haft/src/riemann_map/mod.rs` (trait `RiemannMap<P: HKT4Unbound>`,
-operations `curvature`, `scatter`) and `deep_causality_haft/src/cybernetic_loop/mod.rs`
+Rust sources: `deep_causality_unified_math/deep_causality_haft/src/riemann_map/mod.rs` (trait `RiemannMap<P: HKT4Unbound>`,
+operations `curvature`, `scatter`) and `deep_causality_unified_math/deep_causality_haft/src/cybernetic_loop/mod.rs`
 (trait `CyberneticLoop<P: HKT5Unbound>`, operation `control_step`).
 
 HONESTY NOTE (deviation): these two traits carry **no equational theory** — they are typed
@@ -25,7 +25,7 @@ Kleisli composite over `Except` — observe, then decide, in the error monad —
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/signatures_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/signatures_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

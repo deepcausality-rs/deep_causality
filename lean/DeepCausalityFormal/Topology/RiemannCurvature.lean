@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Topology — Riemann curvature laws (the opener of the Topology formalization layer).
 
-Rust source: `deep_causality_topology/src/types/curvature_tensor/mod.rs` (`CurvatureTensor`,
+Rust source: `deep_causality_unified_math/deep_causality_topology/src/types/curvature_tensor/mod.rs` (`CurvatureTensor`,
 operations `contract`, `check_bianchi_identity`; symmetry taxonomy `CurvatureSymmetry`).
 The haft-level `RiemannMap` trait is a bare signature (deviation D10 of the formalization
 audit); the laws live HERE, where the carrier types have algebra — resolution of proposal P-3.
@@ -29,7 +29,7 @@ witness instantiates the same form on the concrete `CurvatureTensor` via `from_g
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_topology/tests/types/curvature_tensor/curvature_tensor_law_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_topology/tests/types/curvature_tensor/curvature_tensor_law_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

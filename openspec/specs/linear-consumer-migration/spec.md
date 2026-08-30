@@ -66,7 +66,7 @@ The `CausalTensor` ↔ sparse conversion SHALL move into `deep_causality_tensor`
 The conversion lived in `deep_causality_sparse/src/extensions/ext_iso.rs` behind `tensor-iso`, a
 gate that existed so sparse users did not pay for an optional dependency on tensor. Tensor now
 depends on `deep_causality_linear` outright, so that dependency is already paid. The feature is
-gone: the conversion is `deep_causality_tensor/src/extensions/ext_iso.rs`, compiled unconditionally
+gone: the conversion is `deep_causality_unified_math/deep_causality_tensor/src/extensions/ext_iso.rs`, compiled unconditionally
 from `extensions/mod.rs`, and no manifest in the workspace declares `tensor-iso`.
 
 #### Scenario: No feature gate remains

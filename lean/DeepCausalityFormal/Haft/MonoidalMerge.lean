@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — MonoidalMerge (lax-monoidal merge).
 
-Rust source: `deep_causality_haft/src/monad/monoidal_merge.rs` (trait
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/monoidal_merge.rs` (trait
 `MonoidalMerge<P: HKT3Unbound>`, operation `merge`).
 
 Naming history: the trait was previously `Promonad` — a misnomer, since in the accepted
@@ -22,7 +22,7 @@ What is lawful about `merge` is proved here on the diagonal Option carrier: `mer
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/monoidal_merge_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/monoidal_merge_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

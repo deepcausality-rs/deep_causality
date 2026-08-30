@@ -5,7 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Haft — the Cofree Comonad: `Cofree f a`, the cofree comonad on a functor `f` and the categorical
 dual of the free monad `Free f` (`FreeMonad.lean`).
 
-Rust source: `deep_causality_haft/src/monad/cofree_comonad.rs` (`Cofree<F, A>`, `CofreeWitness<F>`).
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/cofree_comonad.rs` (`Cofree<F, A>`, `CofreeWitness<F>`).
 
 The cofree comonad is `Cofree f a = a :< f (Cofree f a)` — a label paired with an `f`-structure of
 sub-trees — with
@@ -39,7 +39,7 @@ Deviation notes:
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witnesses: `deep_causality_haft/tests/formalization_lean/cofree_tests.rs`.
+Rust witnesses: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/cofree_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

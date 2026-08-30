@@ -162,7 +162,7 @@ implements §5.2* from *these two spans embed 0.71 similar*.
 
 ## 2.3 Worked example
 
-`deep_causality_tensor/src/types/causal_tensor/ops/tensor_qr/mod.rs:31`:
+`deep_causality_unified_math/deep_causality_tensor/src/types/causal_tensor/ops/tensor_qr/mod.rs:31`:
 
 ```rust
 /// Thin Householder QR: `A = Q · R` with `Q` (`m × k`) orthonormal columns and `R` (`k × n`)

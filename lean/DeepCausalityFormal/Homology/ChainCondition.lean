@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Homology — the chain condition, and the Betti identity standing on it.
 
-Rust source: `deep_causality_homology/src/traits/chain_complex.rs` (`ChainComplex`, and its provided
+Rust source: `deep_causality_unified_math/deep_causality_homology/src/traits/chain_complex.rs` (`ChainComplex`, and its provided
 `betti_number_over`), over `deep_causality_linear`'s 𝔽₂ elimination.
 
 Why this file exists. `DeepCausalityFormal/Linear/RankNullity.lean` proves `gf2_betti_from_ranks`:
@@ -31,7 +31,7 @@ here is the hypothesis there, and a mismatch in the coefficient field would make
 theorems. `HomologyField::Gf2` is the case where the coefficient ring's being a field is a choice
 the caller makes rather than a given.
 
-Rust witness: `deep_causality_homology/tests/formalization_lean/chain_condition_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_homology/tests/formalization_lean/chain_condition_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks. Mirror any new import into

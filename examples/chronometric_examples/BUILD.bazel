@@ -6,9 +6,9 @@ rust_library(
     crate_root = "src/lib.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_file",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_physics",
         "//thirdparty/crates:chrono",
     ],
@@ -21,9 +21,9 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":chronometric_examples",
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_core",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_physics",
     ],
 )

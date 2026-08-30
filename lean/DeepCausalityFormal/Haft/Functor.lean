@@ -4,9 +4,9 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Functor laws.
 
-Rust source: `deep_causality_haft/src/functor/functor_base.rs` (trait `Functor<F: HKT>`, operation
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/functor/functor_base.rs` (trait `Functor<F: HKT>`, operation
 `fmap`). Canonical carrier: `Option<T>` via `OptionWitness`
-(`deep_causality_haft/src/extensions/hkt_option_ext.rs`), whose `fmap` is `m_a.map(f)` — modelled
+(`deep_causality_unified_math/deep_causality_haft/src/extensions/hkt_option_ext.rs`), whose `fmap` is `m_a.map(f)` — modelled
 here by `optFmap`, transcribing the same match.
 
 Accepted theory: a functor `F : C → C` preserves identities and composition
@@ -18,7 +18,7 @@ provable only for pure functions. The Lean model is pure by construction.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/functor_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/functor_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

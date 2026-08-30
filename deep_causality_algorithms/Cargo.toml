@@ -27,23 +27,23 @@ exclude = [
 ]
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_tensor"
+path = "../deep_causality_unified_math/deep_causality_tensor"
 version = "0.5"
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
+path = "../deep_causality_unified_math/deep_causality_num"
 version = "0.4"
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
+path = "../deep_causality_unified_math/deep_causality_algebra"
 version = "0.4"
 
 [dependencies.deep_causality_topology]
-path = "../deep_causality_topology"
+path = "../deep_causality_unified_math/deep_causality_topology"
 version = "0.8"
 
 [dependencies.deep_causality_rand]
-path = "../deep_causality_rand"
+path = "../deep_causality_unified_math/deep_causality_rand"
 version = "0.2"
 
 # Feature-conditional thread-safety marker (`MaybeParallel`): vacuous on serial

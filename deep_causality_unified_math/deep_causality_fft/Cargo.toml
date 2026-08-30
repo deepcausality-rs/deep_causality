@@ -1,0 +1,86 @@
+[package]
+name = "deep_causality_fft"
+version = "0.1.3"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+repository = "https://github.com/deepcausality/deep_causality.rs"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+description = "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate."
+documentation = "https://docs.rs/deep_causality"
+categories = ["mathematics", "science", "algorithms"]
+keywords = ["fft", "rfft", "spectral", "fourier"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+    "papers/*",
+]
+
+[features]
+default = ["std"]
+std = [
+    "alloc",
+    "deep_causality_num/std",
+    "deep_causality_algebra/std",
+    "deep_causality_num_complex/std",
+    "deep_causality_par/std",
+]
+alloc = []
+no-std = [
+    "alloc",
+    "deep_causality_num/no-std",
+    "deep_causality_algebra/no-std",
+    "deep_causality_num_complex/no-std",
+    "deep_causality_par/no-std",
+]
+# Opt-in Rayon parallelism for the batched 1-D transforms inside
+# N-dimensional plans (the SURD pattern used across the workspace).
+# Serial behavior and results are unchanged; small transforms stay
+# serial behind a measured granularity threshold. Forwards to the
+# shared MaybeParallel definition in deep_causality_par.
+# Rayon needs threads, so `parallel` requires `std`. Declaring the dependency
+# here makes the `parallel`-without-`std` combination unrepresentable; it used
+# to compile the Rayon scratch buffers under `no_std`, where `vec!` is absent.
+parallel = ["std", "dep:rayon", "deep_causality_par/parallel"]
+
+[dependencies.deep_causality_num]
+path = "../deep_causality_num"
+version = "0.4"
+default-features = false
+
+[dependencies.deep_causality_algebra]
+path = "../deep_causality_algebra"
+version = "0.4"
+default-features = false
+
+[dependencies.deep_causality_num_complex]
+path = "../deep_causality_num_complex"
+version = "0.1"
+default-features = false
+
+[dependencies.deep_causality_par]
+path = "../../deep_causality_par"
+version = "0.1"
+default-features = false
+
+[dependencies.rayon]
+version = "1.11"
+optional = true
+
+[dev-dependencies]
+criterion = { version = "0.8" }
+
+[[bench]]
+name = "fft_benchmark"
+harness = false
+
+[lints]
+workspace = true

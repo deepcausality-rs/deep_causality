@@ -28,7 +28,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_file",
         # Internal dependencies
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
     ],
 )
 
@@ -45,8 +45,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_file",
         # Internal dependencies
-        "//deep_causality_haft",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_num",
         # External dependencies
         "//thirdparty/crates:chrono",
         "//thirdparty/crates:tempfile",
@@ -66,7 +66,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_file",
         # Internal dependencies
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
         # External dependencies
         "//thirdparty/crates:chrono",
         "//thirdparty/crates:tempfile",
@@ -84,7 +84,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_file",
         # Internal dependencies
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -101,8 +101,8 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_file",
         # Internal dependencies
-        "//deep_causality_haft",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_num",
         # External dependencies
         "//thirdparty/crates:tempfile",
     ],
@@ -121,7 +121,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_file",
         # Internal dependencies
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
         # External dependencies
         "//thirdparty/crates:tempfile",
     ],

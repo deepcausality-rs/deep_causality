@@ -44,7 +44,7 @@ names the offending entry.
 ### Requirement: The bit-packed representation is generic over its word type
 The 𝔽₂ matrix SHALL be generic over a word type bounded on `NaturalNumber`, and SHALL NOT fix the word width.
 
-`deep_causality_num/src/integer/natural.rs` supplies the bit primitives the elimination needs. A
+`deep_causality_unified_math/deep_causality_num/src/integer/natural.rs` supplies the bit primitives the elimination needs. A
 type parameter lets a caller pick the width that suits the target, and lets the crate be tested at a
 narrow width where an edge case at a word boundary appears in a small matrix.
 

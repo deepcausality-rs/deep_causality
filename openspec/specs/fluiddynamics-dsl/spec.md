@@ -78,7 +78,7 @@ trait implementation using static dispatch, not a change to the DSL core.
 - **THEN** it supplies its own associated `Ambient` type and the `FluidTheory` trait is unchanged
 
 ### Requirement: Parallelism is an opt-in parameter threaded through the solver bounds
-The crate SHALL carry an opt-in `parallel` feature that forwards to `deep_causality_topology/parallel`
+The crate SHALL carry an opt-in `parallel` feature that forwards to `deep_causality_unified_math/deep_causality_topology/parallel`
 and `deep_causality_par/parallel` (and pulls Rayon directly only where the crate fans out itself). The
 `CfdScalar` bound and the theory/solver trait bounds SHALL include `MaybeParallel`, so the inner
 topology operator loops fan out under the feature with no solver code change. Serial execution SHALL

@@ -12,8 +12,8 @@ path = "src/lib.rs"
 [dependencies]
 chrono = { version = "0.4" }
 #
-deep_causality_num = { path = "../../deep_causality_num" }
-deep_causality_algebra = { path = "../../deep_causality_algebra" }
+deep_causality_num = { path = "../../deep_causality_unified_math/deep_causality_num" }
+deep_causality_algebra = { path = "../../deep_causality_unified_math/deep_causality_algebra" }
 deep_causality_core = { path = "../../deep_causality_core" }
 deep_causality_physics = { path = "../../deep_causality_physics", features = [
     "os-random",

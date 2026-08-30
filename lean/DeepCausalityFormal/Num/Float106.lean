@@ -14,7 +14,7 @@ The bit-exact double-double behaviour — the Dekker/Knuth two-sum and two-produ
 transformations and their limb-level error bounds — is `[open]`: it is out of L1 scope and is NOT
 proved here. What is pinned here is the model, not the floating-point representation.
 
-Rust witness: `deep_causality_num/tests/float_double/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num/tests/float_double/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

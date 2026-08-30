@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Monad laws.
 
-Rust source: `deep_causality_haft/src/monad/mod.rs` (trait `Monad<F>: Functor<F> + Pure<F>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/mod.rs` (trait `Monad<F>: Functor<F> + Pure<F>`,
 operations `bind`, `join`). Canonical carrier: `Option` via `OptionWitness`, whose `bind`
 matches `Some → f(a) / None → None` — transcribed by `optBind`.
 
@@ -24,7 +24,7 @@ it in the docs for every witness implementing both traits.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/monad_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/monad_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

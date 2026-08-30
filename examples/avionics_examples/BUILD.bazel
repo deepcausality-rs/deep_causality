@@ -6,11 +6,11 @@ rust_library(
     crate_root = "src/lib.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_cfd",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_physics",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -20,10 +20,10 @@ rust_binary(
     crate_root = "cfd/turbulence_flow/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algebra",
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num",
     ],
 )
 
@@ -33,10 +33,10 @@ rust_binary(
     crate_root = "navigation/magnav/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -46,9 +46,9 @@ rust_binary(
     crate_root = "control/geometric_tcas/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_multivector",
     ],
 )
 
@@ -58,9 +58,9 @@ rust_binary(
     crate_root = "control/hypersonic_2t/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_calculus",
+        "//deep_causality_unified_math/deep_causality_calculus",
         "//deep_causality_core",
-        "//deep_causality_multivector",
+        "//deep_causality_unified_math/deep_causality_multivector",
     ],
 )
 
@@ -84,7 +84,7 @@ rust_binary(
         ":avionics_examples",
         "//deep_causality_core",
         "//deep_causality_file",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
         "//deep_causality_physics",
         "//thirdparty/crates:chrono",
     ],
@@ -99,8 +99,8 @@ rust_binary(
         ":avionics_examples",
         "//deep_causality_cfd",
         "//deep_causality_core",
-        "//deep_causality_haft",
-        "//deep_causality_tensor",
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
 
@@ -111,7 +111,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":avionics_examples",
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_cfd",
     ],
 )
@@ -125,7 +125,7 @@ rust_binary(
         ":avionics_examples",
         "//deep_causality_cfd",
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -136,7 +136,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":avionics_examples",
-        "//deep_causality_algebra",
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_cfd",
         "//deep_causality_physics",
     ],
@@ -162,6 +162,6 @@ rust_binary(
     deps = [
         ":avionics_examples",
         "//deep_causality_cfd",
-        "//deep_causality_topology",
+        "//deep_causality_unified_math/deep_causality_topology",
     ],
 )

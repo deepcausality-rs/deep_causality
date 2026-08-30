@@ -9,7 +9,7 @@ two-sided identity elements of the additive and multiplicative monoids. The laws
 from Mathlib's `Monoid`/`AddMonoid` classes; stating them here binds each Rust marker to a pinned
 property.
 
-Rust witness: `deep_causality_num/tests/identity/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num/tests/identity/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

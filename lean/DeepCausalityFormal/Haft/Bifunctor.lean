@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Bifunctor laws.
 
-Rust source: `deep_causality_haft/src/functor/bifunctor.rs` (trait `Bifunctor<F: HKT2Unbound>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/functor/bifunctor.rs` (trait `Bifunctor<F: HKT2Unbound>`,
 operations `bimap`, `first`, `second`). Canonical carrier: `Result<A, B>` via
 `ResultUnboundWitness`; modelled by the two-constructor sum (Lean `Sum`), which also models the
 crate's own `Either<L, R>`.
@@ -20,7 +20,7 @@ in the docstring means formally).
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/bifunctor_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/bifunctor_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

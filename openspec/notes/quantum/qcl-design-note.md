@@ -744,6 +744,6 @@ ranking.
   the crosstalk example defers to.
 - Kitaev, A. (2003). Ann. Phys. **303**, 2–30 — the toric code parameters in the QEC example.
 - Chen, Y.-A. & Tata, S. (2023). arXiv:2106.05274 — the cup product, in
-  `deep_causality_topology/papers/`.
+  `deep_causality_unified_math/deep_causality_topology/papers/`.
 - Haruna, J. (2025). arXiv:2511.15224 — the logical gates, in `deep_causality_quantum/papers/`.
 - Kelly, J. et al. (2018). arXiv:1803.03226 — the `check_data` trichotomy `Ambiguous` improves on.

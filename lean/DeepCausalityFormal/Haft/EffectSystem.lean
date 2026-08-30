@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Effect system (arity-3 fixed-channel monad).
 
-Rust source: `deep_causality_haft/src/effect_system/` — `Effect3/4/5` (`effect.rs`) fix all but
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/effect_system/` — `Effect3/4/5` (`effect.rs`) fix all but
 one parameter of an arity-k constructor (partial application; see `Hkt.lean`), and
 `MonadEffect3/4/5` (`monad_effect.rs`) impose `pure`/`bind` on the result. The unbound variants
 (`monad_effect_unbound.rs`) additionally thread a state-type transition `S1 → S2 → S3`; their
@@ -29,7 +29,7 @@ DEVIATION NOTES against this model:
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/effect_system_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/effect_system_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

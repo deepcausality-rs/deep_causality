@@ -122,7 +122,7 @@ where
 #### 3.1.1 Constraint System
 
 ```rust
-// Location: deep_causality_haft/src/core/constraint.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/core/constraint.rs
 
 /// Marker trait indicating that type `T` satisfies constraint `C`.
 pub trait Satisfies<C: ?Sized> {}
@@ -147,7 +147,7 @@ impl<T: Clone> Satisfies<CloneConstraint> for T {}
 #### 3.1.2 HKT Trait (Unified)
 
 ```rust
-// Location: deep_causality_haft/src/core/hkt.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/core/hkt.rs
 // REPLACES the old HKT trait
 
 /// Unified Higher-Kinded Type with declarative constraint.
@@ -181,7 +181,7 @@ pub trait HKT {
 #### 3.1.3 Functor Trait (Unified)
 
 ```rust
-// Location: deep_causality_haft/src/algebra/functor.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/algebra/functor.rs
 // REPLACES the old Functor trait
 
 /// Functor for type constructors with any constraint.
@@ -201,7 +201,7 @@ pub trait Functor<F: HKT> {
 #### 3.1.4 Applicative Trait (Unified)
 
 ```rust
-// Location: deep_causality_haft/src/algebra/applicative.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/algebra/applicative.rs
 // REPLACES the old Applicative trait
 
 /// Applicative functor with constraint support.
@@ -223,7 +223,7 @@ pub trait Applicative<F: HKT>: Functor<F> {
 #### 3.1.5 Monad Trait (Unified)
 
 ```rust
-// Location: deep_causality_haft/src/algebra/monad.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/algebra/monad.rs
 // REPLACES the old Monad trait
 
 /// Monad with constraint support.
@@ -254,7 +254,7 @@ pub trait Monad<F: HKT>: Applicative<F> {
 #### 3.1.6 CoMonad Trait (Unified)
 
 ```rust
-// Location: deep_causality_haft/src/algebra/comonad.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/algebra/comonad.rs
 // REPLACES both old CoMonad and BoundedComonad
 
 /// Comonad with constraint support.
@@ -287,7 +287,7 @@ pub trait CoMonad<F: HKT>: Functor<F> {
 #### 3.1.7 Adjunction Trait (Unified)
 
 ```rust
-// Location: deep_causality_haft/src/algebra/adjunction.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/algebra/adjunction.rs
 // REPLACES both old Adjunction and BoundedAdjunction
 
 /// Adjunction between two HKT functors with runtime context.
@@ -504,7 +504,7 @@ isomorphic representations, allowing automatic GPU acceleration without changing
 #### 3.2.3 Standard Constraints in `deep_causality_haft`
 
 ```rust
-// Location: deep_causality_haft/src/core/constraints.rs
+// Location: deep_causality_unified_math/deep_causality_haft/src/core/constraints.rs
 
 use deep_causality_num::{
     AbelianGroup, Ring, AssociativeRing, CommutativeRing, Field, RealField, Module
@@ -589,7 +589,7 @@ impl<T: RealField + Copy + Send + Sync> Satisfies<RealFieldThreadSafe> for T {}
 #### 3.2.4 Domain-Specific Constraints
 
 ```rust
-// Location: deep_causality_tensor/src/types/constraint.rs
+// Location: deep_causality_unified_math/deep_causality_tensor/src/types/constraint.rs
 
 /// TensorData: The full physics stack.
 /// Field + Copy + Default + PartialOrd + Send + Sync + 'static
@@ -652,7 +652,7 @@ because `Octonion` does not implement `AssociativeRing`, so it doesn't satisfy
 ### 4.1 Unconstrained Type: Vec
 
 ```rust
-// deep_causality_haft/src/extensions/hkt_vec_ext.rs
+// deep_causality_unified_math/deep_causality_haft/src/extensions/hkt_vec_ext.rs
 
 pub struct VecWitness;
 
@@ -709,7 +709,7 @@ impl Monad<VecWitness> for VecWitness {
 ### 4.2 Constrained Type: CausalTensor
 
 ```rust
-// deep_causality_tensor/src/extensions/ext_hkt.rs
+// deep_causality_unified_math/deep_causality_tensor/src/extensions/ext_hkt.rs
 
 pub struct CausalTensorWitness;
 
@@ -763,7 +763,7 @@ impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
 ### 4.3 New Physics Type: CausalMultiField
 
 ```rust
-// deep_causality_multivector/src/extensions/hkt_multifield.rs
+// deep_causality_unified_math/deep_causality_multivector/src/extensions/hkt_multifield.rs
 
 pub struct CausalMultiFieldWitness<B: LinearAlgebraBackend>(PhantomData<B>);
 

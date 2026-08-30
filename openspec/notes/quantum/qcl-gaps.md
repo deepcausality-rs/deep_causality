@@ -45,7 +45,7 @@ this register's Betti-number work rested on:
 - **`∂ₖ ∘ ∂ₖ₊₁ = 0` is now stated and proved.** It was the unproved hypothesis of
   `linear.gf2.betti_from_ranks`. `homology.chain.dd_zero_implies_range_le_ker` discharges it, and
   the conformance harness asserts it at every grade of every shipped complex. See
-  `deep_causality_homology/LEAN_HOMOLOGY.md`.
+  `deep_causality_unified_math/deep_causality_homology/LEAN_HOMOLOGY.md`.
 - **The degenerate grades carry a shape.** `∂₀` is `(0, n₀)` and `∂_{max+1}` is `(n_max, 0)`, in
   place of the empty matrix all three implementors returned. `betti_number_over` survived that on
   `saturating_sub`; the kernel basis G-04 needs would not have.
@@ -69,7 +69,7 @@ each new gate needs a simulator arm too, and `C^{m-1}Z` needs a generic multi-co
 than a copy of `apply_cz`.
 
 **Ten open, verified today.** `homology_representatives` and `dual_representative` do not exist
-anywhere in `deep_causality_topology/src`; the only `Chain` is the weighted one and there is no
+anywhere in `deep_causality_unified_math/deep_causality_topology/src`; the only `Chain` is the weighted one and there is no
 `Cochain`; `logical_z` is still typed on `CausalMultiVector` (`gates_haruna.rs:137-139`); `GateOp`
 carries four of Table 1's seven gates; and `deep_causality_quantum` still depends on neither
 `deep_causality_topology` nor `deep_causality_linear`.
@@ -125,7 +125,7 @@ word-parallel XOR. The closure is unchanged.
 **The 𝔽₂ layer now has a generic home.** It was never blocked — `Integer` has supplied `count_ones`,
 `BitXor` and the rest all along, so the "roughly 200 lines" was always writable. What is new is that
 it no longer has to be written against a concrete `u64`. `NaturalNumber`
-(`deep_causality_num/src/integer/natural.rs`) is blanket-implemented for every unsigned width and
+(`deep_causality_unified_math/deep_causality_num/src/integer/natural.rs`) is blanket-implemented for every unsigned width and
 carries `gcd`, `lcm`, `monus`, `div_rem`, `succ`/`pred` on top of `UnsignedInt`'s bit surface, and
 `deep_causality_topology` already depends on `deep_causality_num`. A `Gf2Matrix` generic over
 `W: NaturalNumber` gets its word width as a parameter rather than a hard-coded assumption.
@@ -205,15 +205,15 @@ Moving it removed no dependency edge either way: `qcl-gaps` records G-07 and G-0
 and G-05, both owned by `deep_causality_topology`, so quantum takes a topology dependency for the
 𝔽₂ work regardless.
 
-**What was built.** `deep_causality_linear/src/types/packed_gf2/` — the representation, over
+**What was built.** `deep_causality_unified_math/deep_causality_linear/src/types/packed_gf2/` — the representation, over
 `W: NaturalNumber` rather than a fixed `u64`, which is what the aside below asked for.
-`deep_causality_linear/src/algorithms/gf2.rs` — rank, kernel basis, image basis. `Gf2` itself is a
+`deep_causality_unified_math/deep_causality_linear/src/algorithms/gf2.rs` — rank, kernel basis, image basis. `Gf2` itself is a
 `deep_causality_num` scalar reaching `Field` through the tower's blanket, and is confirmed by
 compile probe not to reach `RealField`, `NormedScalar` or `ConjugateScalar`.
 
 **On the algebra tower.** `deep_causality_num` has an `Integer` trait supplying exactly the needed
 primitives (`count_ones`, `trailing_zeros`, `checked_*`, `wrapping_*`,
-`deep_causality_num/src/integer/mod.rs:38`). 𝔽₂ as a tower scalar would store one bit per element and
+`deep_causality_unified_math/deep_causality_num/src/integer/mod.rs:38`). 𝔽₂ as a tower scalar would store one bit per element and
 lose the word-parallel XOR that makes mod-2 elimination fast; the right shape is packed bitsets using
 `Integer`'s bit operations, not `Matrix<F2>` over a new `Field` impl. **This still holds after the
 tower work** — see §0.
@@ -228,7 +228,7 @@ does mean the bit-packed layer can be written generically: bound the word type o
 **Severity S1.** **Closed** by `add-linear-algebra-crate`.
 
 ```rust
-// deep_causality_topology/src/types/simplicial_complex/topology/chain_complex_impl.rs:94
+// deep_causality_unified_math/deep_causality_topology/src/types/simplicial_complex/topology/chain_complex_impl.rs:94
 fn rank_of_csr(matrix: &CsrMatrix<i8>) -> usize {
     // build an f64 dense tensor, then
     let (_, s, _) = tensor.svd().expect("SVD failed");
@@ -245,7 +245,7 @@ even-weight dependencies has a smaller 𝔽₂ rank, so the reported `k` would b
 would be raised.
 
 **Closure as built.** Neither helper survives. `HomologyField`
-(`deep_causality_topology/src/types/homology_field/mod.rs`) is an enum with one method,
+(`deep_causality_unified_math/deep_causality_topology/src/types/homology_field/mod.rs`) is an enum with one method,
 `rank_of(&CsrMatrix<i8>)`, and `ChainComplex::betti_number_over(k, field)` is the one body both
 `SimplicialComplex` and `CellComplex` now inherit — each had an identical override, and both are
 gone along with their rank helpers.
@@ -275,7 +275,7 @@ risk independent of QCL.
 **Severity S2.** **Closed** as a checked fast path.
 
 ```rust
-// deep_causality_topology/src/types/lattice_complex/mod.rs:522
+// deep_causality_unified_math/deep_causality_topology/src/types/lattice_complex/mod.rs:522
 fn betti_number(&self, k: usize) -> usize {
     let all_periodic = self.periodic.iter().all(|&p| p);
     if all_periodic { /* returns the binomial C(D, k) */ }
@@ -435,7 +435,7 @@ matrix comparison. Theorem A.1 supplies the underlying justification.
 Not required for any gate in Table 1. Record it so a later spec that wants the general
 `O_k(γ₁…γₘ)` family of §3.5 knows the dependency.
 
-**Closure as built.** `deep_causality_num/src/combinatorics/` with `stirling_second` and
+**Closure as built.** `deep_causality_unified_math/deep_causality_num/src/combinatorics/` with `stirling_second` and
 `stirling_first_unsigned`, both generic over `N: NaturalNumber + FromPrimitive + Copy`.
 
 **Both kinds, not one.** The register said "Stirling numbers" without saying which. Reading A.12 and
@@ -737,6 +737,6 @@ order, plus the dependency edge.
   (co)homology-invariance proofs.
 - `deep_causality_quantum/LEAN_QUANTUM.md` for the modality split, the refuted
   `partial_trace_preservation` and the conditional boundary theorem.
-- `deep_causality_quantum/src/` (3980 lines), `deep_causality_topology/src/`,
-  `deep_causality_multivector/README.md`, `deep_causality_num/src/integer/`.
+- `deep_causality_quantum/src/` (3980 lines), `deep_causality_unified_math/deep_causality_topology/src/`,
+  `deep_causality_unified_math/deep_causality_multivector/README.md`, `deep_causality_unified_math/deep_causality_num/src/integer/`.
 - [`qcl-design-note.md`](qcl-design-note.md) for the design these gaps are measured against.

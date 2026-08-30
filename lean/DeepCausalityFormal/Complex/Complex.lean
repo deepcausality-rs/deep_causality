@@ -5,12 +5,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Complex — field, conjugation, and norm laws.
 
 Mirrors the Rust `Complex` type of `deep_causality_num_complex` (see
-`deep_causality_num_complex/src/complex/`). The laws are stated on Mathlib's `ℂ`, which is the
+`deep_causality_unified_math/deep_causality_num_complex/src/complex/`). The laws are stated on Mathlib's `ℂ`, which is the
 canonical model of the same algebra: a field with an involutive, multiplicative conjugation whose
 squared norm is multiplicative. Octonions are intentionally out of scope (they are non-associative
 and absent from Mathlib).
 
-Rust witness: `deep_causality_num_complex/tests/complex/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num_complex/tests/complex/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

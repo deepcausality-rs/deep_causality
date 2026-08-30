@@ -11,8 +11,8 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_haft = { path = "../../deep_causality_haft" }
-deep_causality_uncertain = { path = "../../deep_causality_uncertain" }
+deep_causality_haft = { path = "../../deep_causality_unified_math/deep_causality_haft" }
+deep_causality_uncertain = { path = "../../deep_causality_unified_math/deep_causality_uncertain" }
 
 
 [[example]]

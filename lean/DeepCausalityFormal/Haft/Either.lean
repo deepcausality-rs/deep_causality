@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Either as the binary coproduct.
 
-Rust source: `deep_causality_haft/src/either/mod.rs` (`enum Either<L, R> { Left(L), Right(R) }`
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/either/mod.rs` (`enum Either<L, R> { Left(L), Right(R) }`
 — the carrier for choice in the arrow algebra, deliberately distinct from `Result`).
 
 Accepted theory: Mac Lane, *CWM* 2nd ed., §III.3 — the coproduct `L + R` with injections
@@ -18,7 +18,7 @@ the correspondence is one-to-one.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/either_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/either_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

@@ -14,8 +14,9 @@ library: linearity, the product identity `Tr_B(X ⊗ Y) = Tr(Y) • X`, and the 
 The Kronecker product is defined locally (`kron`) rather than imported, matching
 `Matrix.kroneckerMap (· * ·)`, to keep the module's dependency footprint minimal.
 
-Rust witness: `deep_causality_quantum/tests/kernels/operator_linalg_tests.rs` (the `partial_trace`
-property tests) and the migrated operator layer.
+Rust witness: `deep_causality_quantum/tests/formalization_lean/partial_trace_tests.rs` (the
+witnesses bound to the ids below), with the `partial_trace` property tests in
+`deep_causality_quantum/tests/types/qgates/operator_linalg_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — the symmetric-monoidal PROP: copy comonoid `Δ`/`ε`, merge monoid `∇`/`η`, symmetry `σ`.
 
-Rust source: `deep_causality_haft/src/monoidal/mod.rs` (`SymMonoidal::{copy, discard, swap, merge, unit}`).
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/monoidal/mod.rs` (`SymMonoidal::{copy, discard, swap, merge, unit}`).
 
 Textbook definition. A **symmetric monoidal category** is a monoidal category `(C, ⊗, I)` with a
 natural braiding `σ_{A,B} : A ⊗ B → B ⊗ A` satisfying `σ_{B,A} ∘ σ_{A,B} = id` and the hexagon
@@ -38,7 +38,7 @@ DEVIATION NOTES.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/monoidal_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/monoidal_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

@@ -89,7 +89,7 @@ call the pivoted `determinant` — `manifold/geometry/mod.rs:76` and
 The determinant SHALL use direct closed-form expressions for matrices of order three or below, and pivoted elimination above that.
 
 At order three or below a closed form is faster than elimination and introduces no pivoting
-round-off. `deep_causality_linear/src/algorithms/elimination.rs:321-338` handles orders zero through
+round-off. `deep_causality_unified_math/deep_causality_linear/src/algorithms/elimination.rs:321-338` handles orders zero through
 three directly and eliminates above that, and `deep_causality_physics` carries five fixed-size closed
 forms of its own for the same reason.
 

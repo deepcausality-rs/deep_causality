@@ -18,7 +18,7 @@ rust_binary(
     deps = [
         ":causal_correction_examples",
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -30,7 +30,7 @@ rust_binary(
     deps = [
         ":causal_correction_examples",
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -42,7 +42,7 @@ rust_binary(
     deps = [
         ":causal_correction_examples",
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -54,7 +54,7 @@ rust_binary(
     deps = [
         ":causal_correction_examples",
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -67,6 +67,6 @@ rust_binary(
         ":causal_correction_examples",
         "//deep_causality_core",
         "//deep_causality_data_structures",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )

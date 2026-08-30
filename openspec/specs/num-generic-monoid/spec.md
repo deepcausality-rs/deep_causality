@@ -19,7 +19,7 @@ TBD - created by archiving change num-generic-monoid-tower. Update Purpose after
 
 ### Requirement: Monoid laws are tested and proved in Lean
 
-Each `Monoid` law SHALL be exercised by a Rust law-test registered in `deep_causality_num/tests/BUILD.bazel`, and SHALL be proved in Lean under `DeepCausalityFormal/Num/`, bare-`lean` typecheck, bound by a `THEOREM_MAP.md` id (`num.monoid.left_id`, `num.monoid.right_id`, `num.monoid.assoc`) with a matching Rust witness.
+Each `Monoid` law SHALL be exercised by a Rust law-test registered in `deep_causality_unified_math/deep_causality_num/tests/BUILD.bazel`, and SHALL be proved in Lean under `DeepCausalityFormal/Num/`, bare-`lean` typecheck, bound by a `THEOREM_MAP.md` id (`num.monoid.left_id`, `num.monoid.right_id`, `num.monoid.assoc`) with a matching Rust witness.
 
 #### Scenario: Every monoid law has both sides of the bridge
 

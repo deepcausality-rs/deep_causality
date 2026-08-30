@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Natural isomorphism laws.
 
-Rust source: `deep_causality_haft/src/iso/natural_iso.rs` (trait `NaturalIso<F, G>`, operations
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/iso/natural_iso.rs` (trait `NaturalIso<F, G>`, operations
 `to_target`, `to_source`) and its arity-2..5 siblings (`natural_iso_2.rs` … `natural_iso_5.rs`,
 which lift the same two laws to more parameters; `NaturalIso5` targets the arity-5
 propagating-effect carrier).
@@ -19,7 +19,7 @@ between two genuinely different type constructors, so the naturality square carr
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/natural_iso_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/natural_iso_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

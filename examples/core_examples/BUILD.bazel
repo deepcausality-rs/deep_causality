@@ -17,7 +17,7 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )
 
@@ -38,6 +38,6 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality_core",
-        "//deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_haft",
     ],
 )

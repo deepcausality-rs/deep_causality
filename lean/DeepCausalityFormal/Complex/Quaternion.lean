@@ -5,13 +5,13 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Quaternion — division-ring, norm, conjugation, and non-commutativity laws.
 
 Mirrors the Rust `Quaternion` type of `deep_causality_num_complex` (see
-`deep_causality_num_complex/src/quaternion/`). The laws are stated on Mathlib's `ℍ[ℝ]`
+`deep_causality_unified_math/deep_causality_num_complex/src/quaternion/`). The laws are stated on Mathlib's `ℍ[ℝ]`
 (`Quaternion ℝ`), the canonical model: a non-commutative division ring with an antihomomorphic
 conjugation and a multiplicative squared norm. The `quaternion_noncomm` theorem pins the defining
 non-commutativity via the Hamilton relations `i·j = k` and `j·i = -k`. Octonions are intentionally
 out of scope (non-associative and absent from Mathlib).
 
-Rust witness: `deep_causality_num_complex/tests/complex/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num_complex/tests/complex/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

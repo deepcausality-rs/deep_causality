@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Kleisli category laws.
 
-Rust source: `deep_causality_haft/src/category/mod.rs` (witness `Kleisli<M>`). The Kleisli category of
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/category/mod.rs` (witness `Kleisli<M>`). The Kleisli category of
 a monad `M`: `Hom<B> = M::Type<B>`, `id = pure`, `compose f g = fun a => bind (f a) g`.
 
 Textbook definition: for a monad `(M, η, μ)` on a category, its **Kleisli category** `Kl(M)` has the
@@ -21,7 +21,7 @@ whose `id`/`compose` are `pure`/`bind`. Composition is diagrammatic (`compose f 
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/kleisli_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/kleisli_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

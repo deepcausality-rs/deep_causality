@@ -42,15 +42,15 @@ exclude = [
 os-random = ["deep_causality_uncertain/os-random"]
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
+path = "../deep_causality_unified_math/deep_causality_algebra"
 version = "0.4"
 
 [dependencies.deep_causality_uncertain]
-path = "../deep_causality_uncertain"
+path = "../deep_causality_unified_math/deep_causality_uncertain"
 version = "0.5"
 
 [dependencies.deep_causality_ast]
-path = "../deep_causality_ast"
+path = "../deep_causality_unified_math/deep_causality_ast"
 version = "0.1"
 
 [dependencies.deep_causality_core]
@@ -64,7 +64,7 @@ path = "../deep_causality_data_structures"
 version = "0.10"
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_haft"
+path = "../deep_causality_unified_math/deep_causality_haft"
 version = "0.4"
 
 [dependencies.ultragraph]

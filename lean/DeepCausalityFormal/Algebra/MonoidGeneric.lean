@@ -9,7 +9,7 @@ Mirrors the Rust trait `deep_causality_num::Monoid` (`fn empty() -> Self`, `fn c
 are exactly Mathlib's `Monoid` class (multiplicative notation: `1` = `empty`, `*` = `combine`); stating
 them here pins the property statements bound to the Rust witnesses.
 
-Rust witness: `deep_causality_algebra/tests/algebra/monoid_generic_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_algebra/tests/algebra/monoid_generic_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

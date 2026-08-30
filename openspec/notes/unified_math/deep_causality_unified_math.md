@@ -17,6 +17,10 @@ Cargo and Bazel read the layout independently, so each checks the other's work; 
 tooling already derives crate directories from the workspace manifest rather than assuming them.
 Four things fail quietly rather than loudly, and those are the whole risk. §4.
 
+**Status: done, 2026-08-30.** The move landed. Predictions against actuals are in §9. `deep_causality_ast`
+was added to the set during execution, so seventeen crates moved rather than sixteen. The website
+(§4.4) was carved out into a separate change set and is **not** done.
+
 **Method.** Counts measured against `main`, worktrees under `.claude/` and `thirdparty/` excluded.
 
 ---
@@ -279,3 +283,44 @@ sixteen live crates and no dead one. One thing is left to settle before opening 
    which is the stated reason for consolidating in the first place. If it does, that README becomes
    the natural home for the material currently spread across `AGENTS.md`, the gap note and the
    `composable_multi_math` examples README.
+
+
+## 9. Outcome
+
+Landed 2026-08-30. Every count below was predicted before the move and measured after.
+
+| Item | Predicted | Actual | Note |
+|---|---|---|---|
+| Cargo path deps, non-math into math | 105 | 104 | `sparse` retired in between |
+| Cargo path deps, math out to non-math | 4 | 4 | `fft`/`topology` to `par`, `tensor`/`uncertain` to `ast` |
+| Bazel labels | 853 | 852 | `sparse` again |
+| Rust source files | 0 | 0 | for compilation; 17 docstring paths in 16 files were stale and fixed |
+| Renames staged | — | 1,856 | 1,843 for the sixteen, 13 more for `ast` |
+
+**`deep_causality_ast` joined the move.** Its consumers are `tensor` and `uncertain`, both in the
+folder, plus `deep_causality` itself, which is not. That leaves one cross-boundary edge rather than
+none. The two math edges became siblings again, so `tensor` and `uncertain` went from
+`../../deep_causality_ast` back to `../deep_causality_ast`.
+
+**Two things the assessment missed.**
+
+`build/scripts/mutants.sh` assumed a package name equals its directory. It passes `$CRATE` to both
+`cargo mutants -p` and `--file "$CRATE/$FILE"`, and only the second is a path. A path substitution
+would have produced `-p deep_causality_unified_math/deep_causality_linear`, which is not a package
+name. Fixed with a `crate_dir` helper that asks `cargo metadata` for the manifest directory, so the
+assumption cannot come back.
+
+`openspec/changes/archive-notes.md` is a table whose left column is *supposed* to hold old paths. A
+blanket documentation sweep rewrote 22 of them and destroyed the mapping. Reverted and edited by
+hand. Any future relocation must exclude that file from bulk passes.
+
+**What was deliberately not rewritten.** `openspec/changes/archive/` and `openspec/notes/archive/`
+by the argument in `archive-notes.md`; `openspec/changes/reverted/` and `openspec/audits/` for the
+same reason, since both are dated records rather than live documents; every `CHANGELOG.md`, which
+release-plz generates; and all of `website/`, carved out per §4.4.
+
+**Still outstanding.** The website's 36 GitHub deep links now 404 and are the separate change set.
+The hardening in step 1 of §6 was skipped: `formalization.yml` and `rust_deps.yml` still carry
+inline crate lists rather than reading `crates.sh`, and `lean/THEOREM_MAP.md` still has no check
+that its paths resolve. Both lists were updated by hand and verified to resolve, so the traps did
+not fire this time. They remain traps.

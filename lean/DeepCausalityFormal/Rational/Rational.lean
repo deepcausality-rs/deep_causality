@@ -24,7 +24,7 @@ their stored components match, with no cross-multiplication.
 a third, so ℚ has no discrete successor. It is the reason ℚ is a sensible domain for exact
 subdivision even though it is not analytically closed.
 
-Rust witness: `deep_causality_num_rational/tests/formalization_lean/`.
+Rust witness: `deep_causality_unified_math/deep_causality_num_rational/tests/formalization_lean/`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

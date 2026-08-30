@@ -9,7 +9,7 @@ TBD - created by archiving change add-linear-algebra-crate. Update Purpose after
 Uniform composition across the mathematical crates is the reason `deep_causality_haft` exists, and
 the containers this crate ships are the ones a caller would compose with `CausalTensor` and
 `CausalTensorTrain`. `CsrMatrixWitness`
-(`deep_causality_linear/src/extensions/hkt/csr_matrix_witness.rs:27`) implements `HKT`, `Functor`,
+(`deep_causality_unified_math/deep_causality_linear/src/extensions/hkt/csr_matrix_witness.rs:27`) implements `HKT`, `Functor`,
 `Foldable`, `Pure`, `Applicative` and `CoMonad`; a new container that stopped short of that would be
 composable in some pipelines and not others, which is worse than being uniformly absent.
 

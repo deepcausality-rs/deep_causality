@@ -4,9 +4,9 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Haft — Endomorphism monoid and bounded iteration.
 
-Rust source: `deep_causality_haft/src/morphism/morphism_endo.rs` (trait `Endomorphism<P>`,
+Rust source: `deep_causality_unified_math/deep_causality_haft/src/morphism/morphism_endo.rs` (trait `Endomorphism<P>`,
 combinators `iterate_n`, `iterate_to_fixpoint`, `iterate_until`) and its value-level twin
-`deep_causality_haft/src/arrow/arrow_endo.rs` (`EndoArrow<S>` with the same three combinators).
+`deep_causality_unified_math/deep_causality_haft/src/arrow/arrow_endo.rs` (`EndoArrow<S>` with the same three combinators).
 
 Accepted theory: for any object `T`, the endomorphisms `End(T)` form a monoid under composition
 with the identity as unit (Mac Lane, *CWM* 2nd ed., §I.1 — a one-object category IS a monoid).
@@ -20,7 +20,7 @@ content is the power law, which is what is proved.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
-Rust witness: `deep_causality_haft/tests/formalization_lean/endomorphism_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/endomorphism_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`

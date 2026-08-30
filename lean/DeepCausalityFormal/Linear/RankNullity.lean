@@ -4,10 +4,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Linear — rank–nullity over 𝔽₂, and the Betti-number identity read off it.
 
-Rust source: `deep_causality_linear/src/algorithms/gf2.rs` (`rank_gf2`, `kernel_basis_gf2`) over
-`deep_causality_linear/src/types/packed_gf2/` (`PackedGf2<W>`), consumed by
-`deep_causality_topology/src/traits/chain_complex.rs` (`ChainComplex::betti_number_over`) through
-`deep_causality_topology/src/types/homology_field/mod.rs` (`HomologyField::Gf2`).
+Rust source: `deep_causality_unified_math/deep_causality_linear/src/algorithms/gf2.rs` (`rank_gf2`, `kernel_basis_gf2`) over
+`deep_causality_unified_math/deep_causality_linear/src/types/packed_gf2/` (`PackedGf2<W>`), consumed by
+`deep_causality_unified_math/deep_causality_topology/src/traits/chain_complex.rs` (`ChainComplex::betti_number_over`) through
+`deep_causality_unified_math/deep_causality_topology/src/types/homology_field/mod.rs` (`HomologyField::Gf2`).
 
 Why this statement and not a general one. `betti_number_over` computes
 
@@ -25,7 +25,7 @@ Rust side has: `PackedGf2<W>` is `Matrix (Fin m) (Fin n) (ZMod 2)` with the rows
 `Matrix.rank` is by definition `finrank` of the range of `mulVecLin`, which is the same number the
 mod-2 elimination counts pivots to get.
 
-Rust witness: `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs`.
+Rust witness: `deep_causality_unified_math/deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
