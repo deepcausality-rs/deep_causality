@@ -16,7 +16,7 @@ Every group that produces API runs the same five phases. They are named in the t
   - **No circularity.** No expected value is read off a run of the code under test. No test
     computes both sides with the same routine.
   - **External reference.** Every numeric expectation comes from a publication or from
-    `openspec/notes/homology/reference/reference.py`, which imports nothing from this workspace.
+    `../../notes/archive/homology/reference/reference.py`, which imports nothing from this workspace.
     Inputs cover a stated range rather than a chosen point.
 - **I — implement.** Replace the `todo!()`s until the suite passes. The suite does not change in
   this phase.
@@ -32,7 +32,7 @@ one of them already passes by coincidence (task 8.5).
 
 Everything in every later V phase resolves here, so it comes first.
 
-- [x] 1.1 Write `openspec/notes/homology/reference/reference.py` in the style of
+- [x] 1.1 Write `../../notes/archive/homology/reference/reference.py` in the style of
       `openspec/notes/linear/reference/reference.py`: exact arithmetic, no import of this
       workspace, emits constants to paste
 - [x] 1.2 Emit boundary matrices and Betti numbers over ℚ and 𝔽₂ for the minimal triangulations of
@@ -207,4 +207,6 @@ discharges it in Lean. Do it after group 7, whose harness supplies the witnesses
 - [x] 10.5 Generate the SBOM pair for the new crate
 - [x] 10.6 Record in `openspec/notes/quantum/qcl-gaps.md` that G-04 and G-08 now have a home, and
       that the `deep_causality_quantum` dependency edge goes to homology rather than topology
-- [ ] 10.7 Prepare the commit message; do not commit
+- [x] 10.7 Prepare the commit message; do not commit. Prepared and handed over; committed by
+      the author as `5d591e900 feat(deep_causality_homology): extract the chain-complex layer
+      into deep_causality_homology`

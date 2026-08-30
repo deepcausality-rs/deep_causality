@@ -1,5 +1,8 @@
-## ADDED Requirements
+# topology-cell-complex-seam Specification
 
+## Purpose
+TBD - created by archiving change extract-homology-crate. Update Purpose after archive.
+## Requirements
 ### Requirement: The geometric half of the trait stays in topology
 `deep_causality_topology` SHALL define `CellularComplex: ChainComplex` carrying the associated types
 `CellType`, `CellIter` and `Metric`, together with `cells(k)` and `uniform_lattice_layout()`.
@@ -17,18 +20,33 @@ parity-check code.
 - **WHEN** `cells(k)` is enumerated on any implementor
 - **THEN** the count equals `num_cells(k)` from the supertrait
 
-### Requirement: Existing consumers compile without an edit
+### Requirement: Consumers of the homology half compile without an edit
 `deep_causality_topology` SHALL re-export `ChainComplex`, `HomologyField` and `Gf2Chain`, so that an
-existing `use deep_causality_topology::ChainComplex` continues to resolve.
+existing `use deep_causality_topology::ChainComplex` continues to resolve and every homology method
+reached through it continues to resolve.
 
-`deep_causality_cfd` and `deep_causality_physics` name the trait in twelve files and call only
-`num_cells` and `uniform_lattice_layout`. Requiring them to change an import converts an additive
-change into a coordinated one for no benefit.
+A re-export carries a name, and it cannot carry a method to a trait that no longer owns it. Code
+that reached a *geometry* method — `cells` or `uniform_lattice_layout` — through a `ChainComplex`
+import must name `CellularComplex` instead, because that is the trait the method now belongs to.
+`CellularComplex` has `ChainComplex` as a supertrait, so the change is the import line and nothing
+else.
 
-#### Scenario: Dependents build with no source or manifest edit
-- **WHEN** `deep_causality_cfd` and `deep_causality_physics` are built after the extraction, with no
-  edit to any `Cargo.toml` and no edit to any `use` statement
-- **THEN** both compile and their test suites pass
+Measured over the workspace at the time of the extraction: `deep_causality_cfd` and
+`deep_causality_physics` name the trait in twelve files. Eighteen `num_cells` call sites and every
+`deep_causality_physics` file compile untouched. Two sites in `deep_causality_cfd` needed the
+import — `src/solvers/dec/spectral_diffusion.rs` calling `uniform_lattice_layout()`, and
+`tests/solvers/dec/cut_cell_wiring_tests.rs` calling `cells()` at four places.
+
+#### Scenario: A homology-only consumer builds with no edit at all
+- **WHEN** a dependent that calls only `num_cells`, `max_dim`, `boundary_matrix`,
+  `coboundary_matrix`, `betti_number` or `betti_number_over` through a `ChainComplex` import is
+  built after the extraction
+- **THEN** it compiles with no edit to its `Cargo.toml` and no edit to any `use` statement
+
+#### Scenario: A geometry consumer needs the owning trait named, and nothing more
+- **WHEN** a dependent calls `cells` or `uniform_lattice_layout` through a `ChainComplex` import
+- **THEN** the build fails until the import names `CellularComplex`, and changing that one line is
+  sufficient — no call site, signature or bound elsewhere in the file changes
 
 #### Scenario: The re-exported names resolve to the moved definitions
 - **WHEN** a caller imports `ChainComplex` from topology and another imports it from homology
@@ -85,3 +103,4 @@ have.
 - **WHEN** `betti_number_over(k, field)` is evaluated at every grade of every shipped complex over
   both fields, before and after
 - **THEN** every pair agrees
+

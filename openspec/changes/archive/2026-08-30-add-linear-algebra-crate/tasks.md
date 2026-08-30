@@ -125,7 +125,7 @@ baseline. They are marked here, where they belong.
 - [x] 4.10 Implement the HKT witnesses; verify the laws hold at representative values
 - [x] 4.10a Implement the tower impls per 1.10a–1.10c; confirm every container is admitted by a `Ring` bound and a `Module<R>` bound, and that no matrix claims `Commutative<Multiplicative>`
 - [x] 4.10b Implement the packed 𝔽₂ representation against `Gf2` from `deep_causality_num`; confirm this crate declares no scalar type of its own
-- [x] 4.11 **Reimplemented rather than moved**, then checked against the original by porting its suite (2.13). A `git mv` is faithful by construction; a reimplementation is faithful only if measured. Seven divergences found, all invisible when reading the two side by side — the worst a silently reordered CG signature that also inverted the meaning of a `&[R]` parameter. All closed; `openspec/notes/linear/PORTING-FINDINGS.md` carries them
+- [x] 4.11 **Reimplemented rather than moved**, then checked against the original by porting its suite (2.13). A `git mv` is faithful by construction; a reimplementation is faithful only if measured. Seven divergences found, all invisible when reading the two side by side — the worst a silently reordered CG signature that also inverted the meaning of a `&[R]` parameter. All closed; `../../../notes/archive/linear/PORTING-FINDINGS.md` carries them
 - [x] 4.12 **Reimplemented rather than moved**: one-sided Jacobi for the SVD, modified Gram-Schmidt for QR, cyclic Jacobi for eigen, because the captured baseline showed the existing power iteration converging only to ~1e-8. Both run side by side on the same inputs: they agree at 1e-6 on every case, and the replacement is exact on `diag(1,3)` where the original errs by `1.742e-8`. Table in `DELEGATION-BASELINE.md`
 - [x] 4.13 Fix implementation, not tests, wherever the suite disagrees; if a test's assertion is wrong because the API is wrong, change the API and say so
 - [x] 4.14 `cargo llvm-cov`: **98.73%**. 30 of 2369 lines missed, 12 of them `traits/tower_pins.rs`, whose `const _: () = {...}` blocks never execute — a justified exception — leaving 18 real lines across the crate. The threshold agreed for this change is 95%. Closing the gap from 95.36% found a genuine defect in the suite rather than padding a number: **`eigen_hermitian`'s rotation loop had never executed**, because every eigen test used a diagonal matrix and a diagonal matrix needs no rotation — the tests would have passed against an implementation that did nothing. Same for Bareiss's pivot swap, which no integer test had reached
@@ -219,7 +219,7 @@ G-02 closed.
 - [x] 6.14 Decide `BatchedMatMul` (`multivector/src/types/multifield/ops/batched_matmul.rs`, 62 lines) explicitly: it batches rank-3 slices, which is the tensor surface rather than the matrix surface. Record the decision either way; do not leave it unexamined
 - [x] 6.15 Leave `ScalarEval` alone and record why: `multivector/src/extensions/scalar_eval/mod.rs` is already a single blanket over `deep_causality_algebra::Normed`, added only for the `Sum` bound. It is a facade over the tower, not a second definition
 - [x] 6.16 Diff the `deep_causality_multivector` suite before and after 6.12–6.14; investigate every changed value rather than re-baselining
-- [x] 6.17 Correct the construction census in `openspec/notes/linear/deep-causality-linear.md`: the `deep_causality_multivector` row reads "0 direct", and its `src` has 13 `CausalTensor::from_slice`/`from_shape_fn` sites, at least two of them rank-2 (`alias/alias_hilbert_state.rs`). Re-count that row by the same method used for the other six
+- [x] 6.17 Correct the construction census in `../../../notes/archive/linear/deep-causality-linear.md`: the `deep_causality_multivector` row reads "0 direct", and its `src` has 13 `CausalTensor::from_slice`/`from_shape_fn` sites, at least two of them rank-2 (`alias/alias_hilbert_state.rs`). Re-count that row by the same method used for the other six
 
 ## 7. Publish
 
@@ -239,7 +239,7 @@ check 7.4 asks for.
 
 ## 8. Out of scope, recorded so it is not lost
 
-Filed 2026-08-30 to [`openspec/notes/linear/FOLLOW-UPS.md`](../../notes/linear/FOLLOW-UPS.md). The
+Filed 2026-08-30 to [`../../../notes/archive/linear/FOLLOW-UPS.md`](../../notes/linear/FOLLOW-UPS.md). The
 task here is to file, not to fix; none of the three is fixed. All three were re-verified against the
 tree at filing time and all three still hold, with line numbers refreshed — 8.3's cited path had
 moved to `ops/tensor_product/mod.rs:13` and the same over-bound also sits on the trait method at

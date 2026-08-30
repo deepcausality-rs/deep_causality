@@ -241,7 +241,7 @@ Each step that produces API runs mock → suite → suite audit → implementati
 diagnosis before any failing test is touched. `tasks.md` states the protocol and names the phase on
 each task.
 
-0. `openspec/notes/homology/reference/reference.py`: published Betti numbers and exact 𝔽₂ bases,
+0. `../../notes/archive/homology/reference/reference.py`: published Betti numbers and exact 𝔽₂ bases,
    importing nothing from this workspace. Every later expectation resolves here, so it comes first.
 1. `deep_causality_linear` 0.1.2: add `from_column` and `csr_i8_to_dense_i64`; correct four
    docstrings. Independently useful and independently releasable.

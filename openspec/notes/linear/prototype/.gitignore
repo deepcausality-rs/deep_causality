@@ -1,3 +1,0 @@
-# Build artifacts of the design prototype. The sources are tracked; the target dir is not.
-target/
-Cargo.lock
