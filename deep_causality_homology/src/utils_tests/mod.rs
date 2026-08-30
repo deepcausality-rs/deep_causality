@@ -221,35 +221,76 @@ fn torus_3_space() -> Option<(SimplicialFixture, Vec<usize>, Vec<usize>)> {
     None
 }
 
-/// Triangulates an `m × n` grid of squares and glues it by `ident`.
+/// Every ordering of the `dim` axes, `dim!` of them.
 ///
-/// Each square splits into two triangles along the diagonal, which is the two-dimensional Kuhn
-/// triangulation: the pieces meet face to face, so the union is simplicial.
-fn lattice_quotient(
-    name: &'static str,
-    m: usize,
-    n: usize,
-    ident: impl Fn(usize, usize) -> (usize, usize),
-) -> SimplicialFixture {
-    let vid = |x: usize, y: usize| {
-        let (a, b) = ident(x, y);
-        a * (n + 1) + b
-    };
-    let mut facets: Vec<Vec<usize>> = Vec::new();
-    for i in 0..m {
-        for j in 0..n {
-            for corners in [
-                [(i, j), (i + 1, j), (i + 1, j + 1)],
-                [(i, j), (i, j + 1), (i + 1, j + 1)],
-            ] {
-                let mut t: Vec<usize> = corners.iter().map(|&(x, y)| vid(x, y)).collect();
-                t.sort_unstable();
-                t.dedup();
-                // A degenerate triangle means the gluing folded two corners together, which the
-                // grid is chosen to avoid. Keeping only the non-degenerate ones would hide it.
-                assert_eq!(t.len(), 3, "{name}: the gluing made a degenerate triangle");
-                facets.push(t);
+/// Grown one slot at a time: each partial order is extended by every axis it does not already
+/// carry, so an axis appears exactly once per order.
+fn axis_orders(dim: usize) -> Vec<Vec<usize>> {
+    let mut orders = vec![Vec::new()];
+    for _ in 0..dim {
+        let mut next: Vec<Vec<usize>> = Vec::new();
+        for order in &orders {
+            for axis in 0..dim {
+                if !order.contains(&axis) {
+                    let mut extended = order.clone();
+                    extended.push(axis);
+                    next.push(extended);
+                }
             }
+        }
+        orders = next;
+    }
+    orders
+}
+
+/// Triangulates a `D`-dimensional lattice of `sizes[d]` cubes per axis and glues it by `ident`.
+///
+/// Each unit cube splits into `D!` simplices, one per ordering of the axes: start at the low corner
+/// and step `+1` along the axes in that order. That is the Kuhn (Freudenthal) triangulation, and
+/// the pieces meet face to face, so the union is simplicial. At `D == 2` it is the square split
+/// along its diagonal.
+///
+/// `ident` maps a lattice point to its canonical representative, which is what performs the
+/// gluing. A vertex is named by the place-value reading of that representative, one digit per axis.
+fn lattice_quotient<const D: usize>(
+    name: &'static str,
+    sizes: [usize; D],
+    ident: impl Fn([usize; D]) -> [usize; D],
+) -> SimplicialFixture {
+    let vid = |p: [usize; D]| {
+        ident(p)
+            .iter()
+            .zip(sizes.iter())
+            .fold(0, |acc, (c, n)| acc * (n + 1) + c)
+    };
+    let orders = axis_orders(D);
+    let cubes: usize = sizes.iter().product();
+    let mut facets: Vec<Vec<usize>> = Vec::new();
+    for flat in 0..cubes {
+        // The cube's low corner, read off the flat index one axis at a time.
+        let mut low = [0usize; D];
+        let mut rest = flat;
+        for (c, n) in low.iter_mut().zip(sizes.iter()).rev() {
+            *c = rest % n;
+            rest /= n;
+        }
+        for order in &orders {
+            let mut corner = low;
+            let mut t = vec![vid(corner)];
+            for &axis in order {
+                corner[axis] += 1;
+                t.push(vid(corner));
+            }
+            t.sort_unstable();
+            t.dedup();
+            // A degenerate simplex means the gluing folded two corners together, which the grid
+            // sizes are chosen to avoid. Keeping only the non-degenerate ones would hide it.
+            assert_eq!(
+                t.len(),
+                D + 1,
+                "{name}: the gluing made a degenerate simplex"
+            );
+            facets.push(t);
         }
     }
     let refs: Vec<&[usize]> = facets.iter().map(|f| f.as_slice()).collect();
@@ -258,68 +299,30 @@ fn lattice_quotient(
 
 /// The 2-torus: wrap in both directions.
 fn torus_2() -> SimplicialFixture {
-    lattice_quotient("torus_2", 3, 3, |x, y| (x % 3, y % 3))
+    lattice_quotient("torus_2", [3, 3], |[x, y]| [x % 3, y % 3])
 }
 
-/// The 3-torus: the three-dimensional Kuhn triangulation of a 3×3×3 lattice, wrapped in all three
-/// directions.
-///
-/// Each unit cube splits into `3! = 6` tetrahedra, one per permutation of the axes: start at the
-/// low corner and step `+1` along the axes in that order. The pieces meet face to face, so the
-/// union is simplicial. [`lattice_quotient`] above is the same construction one dimension down; it
-/// is left alone rather than generalised, since nothing else needs three.
+/// The 3-torus: wrap in all three directions. Withheld under Miri; [`torus_3_space`] says why.
 #[cfg(not(miri))]
 fn torus_3() -> SimplicialFixture {
-    const N: usize = 3;
-    let vid = |p: [usize; 3]| (p[0] % N) * N * N + (p[1] % N) * N + (p[2] % N);
-    // The six permutations of the three axes, by rejection over the cube of index triples.
-    let perms = (0..N)
-        .flat_map(|a| (0..N).flat_map(move |b| (0..N).map(move |c| [a, b, c])))
-        .filter(|[a, b, c]| a != b && b != c && a != c);
-    let mut facets: Vec<Vec<usize>> = Vec::new();
-    for perm in perms {
-        for i in 0..N {
-            for j in 0..N {
-                for k in 0..N {
-                    let mut corner = [i, j, k];
-                    let mut t = vec![vid(corner)];
-                    for axis in perm {
-                        corner[axis] += 1;
-                        t.push(vid(corner));
-                    }
-                    t.sort_unstable();
-                    t.dedup();
-                    // A degenerate tetrahedron means the wrap folded two corners together, which a
-                    // 3×3×3 grid is large enough to avoid. Dropping it would hide the fold.
-                    assert_eq!(
-                        t.len(),
-                        4,
-                        "torus_3: the gluing made a degenerate tetrahedron"
-                    );
-                    facets.push(t);
-                }
-            }
-        }
-    }
-    let refs: Vec<&[usize]> = facets.iter().map(|f| f.as_slice()).collect();
-    SimplicialFixture::new("torus_3", &refs)
+    lattice_quotient("torus_3", [3, 3, 3], |[x, y, z]| [x % 3, y % 3, z % 3])
 }
 
 /// The Klein bottle: wrap in `x` with no flip, wrap in `y` with a flip in `x`.
 fn klein_bottle() -> SimplicialFixture {
-    lattice_quotient("klein_bottle", 4, 4, |x, y| {
-        if y >= 4 { ((4 - x) % 4, 0) } else { (x % 4, y) }
+    lattice_quotient("klein_bottle", [4, 4], |[x, y]| {
+        if y >= 4 { [(4 - x) % 4, 0] } else { [x % 4, y] }
     })
 }
 
 /// The cylinder: wrap in `x` only, so the `y` edges stay free.
 fn cylinder() -> SimplicialFixture {
-    lattice_quotient("cylinder", 3, 1, |x, y| (x % 3, y))
+    lattice_quotient("cylinder", [3, 1], |[x, y]| [x % 3, y])
 }
 
 /// The Möbius band: wrap in `x` with a flip in `y`, leaving `y` free.
 fn mobius_band() -> SimplicialFixture {
-    lattice_quotient("mobius_band", 3, 1, |x, y| {
-        if x >= 3 { (0, 1 - y) } else { (x, y) }
+    lattice_quotient("mobius_band", [3, 1], |[x, y]| {
+        if x >= 3 { [0, 1 - y] } else { [x, y] }
     })
 }

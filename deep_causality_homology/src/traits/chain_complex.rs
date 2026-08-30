@@ -93,8 +93,6 @@ pub trait ChainComplex {
         let rank_k = field.rank_of(&self.boundary_matrix(k))?;
         // There is no grade past `usize::MAX`, so `im ∂ₖ₊₁` is trivial there and its rank is zero.
         // Saturating would re-read `∂_MAX` and subtract its rank a second time.
-        // There is no grade past `usize::MAX`, so `im ∂ₖ₊₁` is trivial there and its rank is zero.
-        // Saturating would re-read `∂_MAX` and subtract its rank a second time.
         let rank_k_next = match k.checked_add(1) {
             Some(next) => field.rank_of(&self.boundary_matrix(next))?,
             None => 0,

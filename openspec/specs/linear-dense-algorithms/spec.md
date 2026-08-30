@@ -55,13 +55,19 @@ factorisation — a different algorithm, not a different implementation of this 
 ### Requirement: Elimination selects a pivot by search, never by position
 Every elimination path SHALL choose its pivot by searching the column at or below the current row, and SHALL NOT assume the diagonal entry is usable.
 
-This is load-bearing, not a quality nicety. Both determinants in `deep_causality_topology` are fed
-matrices the diagonal cannot pivot. `simplex_volume_squared_impl` builds a Cayley-Menger matrix with
-`m[0][0] = 0` by construction (`manifold/geometry/mod.rs:46` writes `one` only into indices
-`1..matrix_dim`), and the `gaussian_determinant` in `simplicial_complex/lazy_hodge_star.rs` that the
-shared implementation replaced took `mat[i][i]` as the pivot and returned zero when it was small, so
-consolidating onto it unpivoted would have returned **zero for every simplex volume**. Measured on a
-regular unit tetrahedron: Laplace and pivoted elimination both give `det = 4.0` and
+This is load-bearing, not a quality nicety. The two determinant sites in `deep_causality_topology`
+both defeat a fixed-diagonal pivot, for different reasons. `simplex_volume_squared_impl` builds a
+Cayley-Menger matrix whose diagonal is zero end to end: the buffer starts at zero,
+`manifold/geometry/mod.rs:46` writes `one` only into indices `1..matrix_dim`, so `m[0][0] = 0`, and
+every remaining diagonal entry is a vertex's squared distance to itself. Nothing on that diagonal
+can pivot. The Gram matrix at `simplicial_complex/lazy_hodge_star.rs:86` is the other case. Its
+diagonal holds squared edge-vector norms, positive whenever the vertices are distinct and zero only
+when a vertex repeats, so the diagonal is usable but poorly scaled. The `gaussian_determinant` the
+shared implementation replaced took `mat[i][i]` as the pivot and returned zero when it was small on
+an absolute test, which read a uniformly small simplex as degenerate for being small; the shared
+`determinant` scales its degeneracy floor by the matrix's own magnitude instead. Consolidating the
+Cayley-Menger site onto that unpivoted body would have returned **zero for every simplex volume**.
+Measured on a regular unit tetrahedron: Laplace and pivoted elimination both give `det = 4.0` and
 `vol = 0.117851130198` (exactly √2⁄12); unpivoted gives `det = 0.0` and a NaN volume. Both sites now
 call the pivoted `determinant` — `manifold/geometry/mod.rs:76` and
 `simplicial_complex/lazy_hodge_star.rs:88`.
