@@ -3,10 +3,11 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
-# Consolidating the sixteen math crates under `deep_causality_unified_math/`
+# Consolidating the math crates under `deep_causality_unified_math/`
 
-**Scope.** Moving the sixteen mathematics crates from the workspace root into one folder, keeping
-their package names. What breaks, what does not, and in what order to do it.
+**Scope.** Moving the mathematics crates from the workspace root into one folder, keeping their
+package names. What breaks, what does not, and in what order to do it. The assessment below was
+written for sixteen crates; seventeen moved. §9 reconciles every count.
 
 **Not in scope.** Renaming any package. Merging crates. Changing any dependency edge. The gap work
 in `unified_math_gaps.md`. Publishing.
@@ -277,11 +278,11 @@ One consequence to accept: `unified_math_gaps.md` itself carries about twenty-fi
 that go stale on the day of the move. Updating one note once is the cheaper end of that trade.
 
 `deep_causality_sparse` is settled: it was retired to `yanked/` on 2026-08-30, so the folder holds
-sixteen live crates and no dead one. One thing is left to settle before opening the change proposal:
+seventeen live crates and no dead one. One thing is left to settle:
 
-1. Whether the folder gets a `README.md` that carries the tier diagram and the composition story,
-   which is the stated reason for consolidating in the first place. If it does, that README becomes
-   the natural home for the material currently spread across `AGENTS.md`, the gap note and the
+1. Whether the folder gets a `README.md` carrying the tier diagram and the composition story, which
+   is the stated reason for consolidating in the first place. If it does, that README becomes the
+   natural home for material now spread across `AGENTS.md`, the gap note and the
    `composable_multi_math` examples README.
 
 
