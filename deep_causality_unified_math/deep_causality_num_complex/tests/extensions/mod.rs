@@ -4,3 +4,5 @@
  */
 #[cfg(test)]
 mod hkt_law_tests;
+#[cfg(test)]
+mod hkt_monoidal_law_tests;

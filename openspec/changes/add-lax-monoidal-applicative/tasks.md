@@ -24,12 +24,12 @@
 
 ## 3. Cayley-Dickson adoption, closing E1
 
-- [ ] 3.1 Implement `Semigroupal` for `ComplexWitness`, `QuaternionWitness` and `OctonionWitness` with componentwise `zip_with`
-- [ ] 3.2 Implement `LaxMonoidal` for all three, with `unit` returning the all-`()` value
-- [ ] 3.3 Implement `Convolutional` and `MonoidalApplicative` for all three, the latter with empty bodies
-- [ ] 3.4 Rewrite the `extensions/mod.rs` module doc: replace the paragraph asserting `Applicative` is unreachable with the Yoneda argument for why componentwise φ is forced, and why `pure` still is not available
-- [ ] 3.5 Add law tests for naturality, associativity and both unit laws on all three arities, using varied generated inputs and at least one non-float payload
-- [ ] 3.6 Add a mutation test asserting the index-crossing pairing fails the unit law
+- [x] 3.1 Implement `Semigroupal` for `ComplexWitness`, `QuaternionWitness` and `OctonionWitness` with componentwise `zip_with`
+- [x] 3.2 Implement `LaxMonoidal` for all three, with `unit` returning the all-`()` value
+- [x] 3.3 Implement `Convolutional` and `MonoidalApplicative` for all three, the latter with empty bodies
+- [x] 3.4 Rewrite the `extensions/mod.rs` module doc: replace the paragraph asserting `Applicative` is unreachable with the Yoneda argument for why componentwise φ is forced, and why `pure` still is not available
+- [x] 3.5 Add law tests for naturality, associativity and both unit laws on all three arities, using varied generated inputs and at least one non-float payload
+- [x] 3.6 Add a mutation test asserting the index-crossing pairing fails the unit law
 
 ## 4. `Dual`, closing E2
 

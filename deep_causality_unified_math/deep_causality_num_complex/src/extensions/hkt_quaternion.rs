@@ -4,7 +4,10 @@
  */
 
 use crate::Quaternion;
-use deep_causality_haft::{Foldable, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative,
+    NoConstraint, Satisfies, Semigroupal,
+};
 
 /// HKT witness for [`Quaternion`], a functor over its component type.
 ///
@@ -46,3 +49,47 @@ impl Foldable<QuaternionWitness> for QuaternionWitness {
         f(acc, fa.z)
     }
 }
+
+impl Semigroupal<QuaternionWitness> for QuaternionWitness {
+    /// Pairs component with component. Total, and every component of `fa` and `fb` is moved
+    /// exactly once, so no payload needs `Clone`.
+    ///
+    /// Componentwise is not one option among several; it is the only lawful `φ`. For
+    /// `F(A) = A^S` over a finite index set `S`, Yoneda gives every natural `φ` the form
+    /// `φ(fa, fb)_s = (fa_{u(s)}, fb_{v(s)})` for fixed endofunctions `u, v` of `S`, and the
+    /// two unit laws force `u = v = id`. See the module docs.
+    fn zip_with<A, B, C, F>(fa: Quaternion<A>, fb: Quaternion<B>, mut f: F) -> Quaternion<C>
+    where
+        A: Satisfies<NoConstraint>,
+        B: Satisfies<NoConstraint>,
+        C: Satisfies<NoConstraint>,
+        F: FnMut(A, B) -> C,
+    {
+        Quaternion {
+            w: f(fa.w, fb.w),
+            x: f(fa.x, fb.x),
+            y: f(fa.y, fb.y),
+            z: f(fa.z, fb.z),
+        }
+    }
+}
+
+impl LaxMonoidal<QuaternionWitness> for QuaternionWitness {
+    /// `η : I → F I`. `Quaternion<()>` has exactly one inhabitant across its 4 slots, so this is
+    /// forced rather than chosen.
+    fn unit() -> Quaternion<()> {
+        Quaternion {
+            w: (),
+            x: (),
+            y: (),
+            z: (),
+        }
+    }
+}
+
+/// Promises that `φ` associates under Day convolution. Discharged by the law tests in
+/// `tests/extensions/`.
+impl Convolutional<QuaternionWitness> for QuaternionWitness {}
+
+/// `apply` is the provided method; there is no body to write.
+impl MonoidalApplicative<QuaternionWitness> for QuaternionWitness {}
