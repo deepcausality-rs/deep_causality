@@ -159,12 +159,10 @@ pub fn supports_intersect(a: &BTreeSet<usize>, b: &BTreeSet<usize>) -> bool {
 /// `quantum.partial_trace_preservation` states the unconditional version and is
 /// **false**.
 ///
-/// The sound path is the conditional `partial_trace_preservation_boundary`: a
-/// boundary operator of the form `Z ⊗ 1_B` that commutes with `M` does force
-/// `Z` to commute with `Tr_B(M)`. Its witness is
-/// `formalization_lean::partial_trace_tests::test_partial_trace_preservation_boundary_case`.
-/// A caller that needs commutation to survive marginalisation must establish
-/// that boundary form first; this function will not check it.
+/// The sound path is [`partial_trace_preservation_boundary`]: a boundary
+/// operator of the form `Z ⊗ 1_B` that commutes with `M` does force `Z` to
+/// commute with `Tr_B(M)`. A caller that needs commutation to survive
+/// marginalisation should call that; this function will not check it.
 ///
 /// See `deep_causality_quantum/LEAN_QUANTUM.md` for both statements.
 ///
@@ -343,4 +341,108 @@ where
         }
     }
     Ok(CausalTensor::from_slice(&out, &[d_full, d_full]))
+}
+
+/// What a boundary check certifies: the measured hypothesis and the bound it buys.
+///
+/// Returned by [`partial_trace_preservation_boundary`]. The fields are separate because the
+/// decision and the number are separate questions: `holds` answers "did the hypothesis pass at the
+/// tolerance I named", and `conclusion_bound` answers "what may I then assert about the traced
+/// commutator". A caller composing several of these needs the second.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BoundaryWarrant<R> {
+    /// The measured `‖[Z ⊗ 1_B, M]‖_F`.
+    pub hypothesis_residual: R,
+    /// The tolerance the caller named for that residual.
+    pub tolerance: R,
+    /// `√(d_B)`, the factor by which the partial trace can amplify a residual.
+    pub amplification: R,
+    /// The certified bound on `‖[Z, Tr_B(M)]‖_F`, namely `√(d_B) · hypothesis_residual`.
+    pub conclusion_bound: R,
+    /// Whether `hypothesis_residual ≤ tolerance`.
+    pub holds: bool,
+}
+
+/// The sound path past [`partial_trace`]'s non-preservation: given `Z` on the kept factor and `M`
+/// on the whole space, measure how nearly `Z ⊗ 1_B` commutes with `M`, and return the bound that
+/// buys on `[Z, Tr_B(M)]`.
+///
+/// # Why this returns a bound rather than a boolean
+///
+/// The Lean theorem `quantum.partial_trace_preservation_boundary` concludes
+/// `Z · Tr_B(M) = Tr_B(M) · Z` from the hypothesis `(Z ⊗ 1_B) · M = M · (Z ⊗ 1_B)`, and that
+/// hypothesis is **propositional equality over a general `CommRing`**. It carries no epsilon. A
+/// caller working in floating point can only ever measure the hypothesis to a tolerance, so
+/// invoking the theorem on the strength of a numeric check would substitute an approximate premise
+/// into an exact-hypothesis result. That substitution is not sound, and this function does not make
+/// it.
+///
+/// What is sound is the *unconditional* transport identity, `quantum.partial_trace.commutator_transport`:
+///
+/// ```text
+/// Tr_B([Z ⊗ 1_B, M]) = [Z, Tr_B(M)]
+/// ```
+///
+/// an equality with no hypothesis at all. Combined with the contraction
+/// `‖Tr_B(E)‖_F ≤ √(d_B) · ‖E‖_F`, which follows from Cauchy-Schwarz on the traced index and is
+/// tight at `E = F ⊗ 1_B`, a residual of `ε` in the hypothesis certifies
+/// `‖[Z, Tr_B(M)]‖_F ≤ √(d_B) · ε` in the conclusion. Exactly zero in, exactly zero out, which
+/// recovers the Lean theorem as the vanishing case; anything else in, an amplified bound out.
+///
+/// **So the ruling this settles is: a tolerance-satisfied commutator is not warrant for the exact
+/// conclusion, and is warrant for the conclusion at `√(d_B)` times the tolerance.** The
+/// amplification is the price of marginalising, and it grows with the dimension traced away.
+///
+/// # The form is built, not checked
+///
+/// The theorem's other hypothesis, that the operator has the shape `Z ⊗ 1_B`, is decidable from leg
+/// data alone. Rather than check it, this function constructs `Z ⊗ 1_B` from `z`, so the form holds
+/// by construction and cannot be got wrong by a caller.
+///
+/// # Errors
+///
+/// [`QuantumError::PartialTraceShape`] if `dims` does not factor `m`, and
+/// [`QuantumError::DimensionMismatch`] if `z` is not square of side `dims[0]`. The kept factor is
+/// `dims[0]` and the traced factor `dims[1]`, matching [`partial_trace`] with `traced = &[1]`.
+pub fn partial_trace_preservation_boundary<R>(
+    z: &CausalTensor<Complex<R>>,
+    m: &CausalTensor<Complex<R>>,
+    dims: [usize; 2],
+    tolerance: R,
+) -> Result<BoundaryWarrant<R>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default,
+{
+    let [d_a, d_b] = dims;
+    let full = square_dim(m)?;
+    if d_a.checked_mul(d_b) != Some(full) || d_a == 0 || d_b == 0 {
+        return Err(QuantumError::PartialTraceShape(format!(
+            "dims {:?} do not factor the {}x{} operator",
+            dims, full, full
+        )));
+    }
+    if square_dim(z)? != d_a {
+        return Err(QuantumError::DimensionMismatch(format!(
+            "the kept-factor operator must be {}x{} to match dims {:?}",
+            d_a, d_a, dims
+        )));
+    }
+
+    // `Z ⊗ 1_B`, so the boundary form is a construction rather than a claim.
+    let boundary = z
+        .kronecker(&identity_matrix::<R>(d_b))
+        .map_err(|e| QuantumError::DimensionMismatch(format!("{e}")))?;
+
+    let hypothesis_residual = frobenius_norm(&matrix_commutator(&boundary, m)?);
+    let amplification = R::from_f64((d_b as f64).sqrt()).ok_or_else(|| {
+        QuantumError::CalculationError("scalar type cannot represent √(d_B)".into())
+    })?;
+
+    Ok(BoundaryWarrant {
+        conclusion_bound: amplification * hypothesis_residual,
+        holds: hypothesis_residual <= tolerance,
+        hypothesis_residual,
+        tolerance,
+        amplification,
+    })
 }

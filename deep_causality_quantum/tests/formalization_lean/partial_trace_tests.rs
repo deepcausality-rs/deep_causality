@@ -18,6 +18,7 @@
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     frobenius_norm, hermiticity_defect, identity_matrix, matrix_commutator, partial_trace,
+    partial_trace_preservation_boundary,
 };
 use deep_causality_tensor::{CausalTensor, Tensor};
 
@@ -136,13 +137,131 @@ fn test_partial_trace_preservation_boundary_case() {
     let w = mat(vec![c(1., 0.), c(0., 2.), c(0., -2.), c(4., 0.)], 2);
     let x = sigma_z().kronecker(&w).unwrap();
 
-    assert!(frobenius_norm(&matrix_commutator(&x, &y).unwrap()) < 1e-12);
+    // The operands are small dyadic integers and the commutator vanishes algebraically —
+    // [σz⊗W, σz⊗1] = (σz σz)⊗W − (σz σz)⊗W — so kron and matmul are exact in binary64 and this
+    // is a bit-exact zero rather than a tolerance standing in for one. Asserted as such, because
+    // the theorem's hypothesis is exact equality and a `< 1e-12` here would misrepresent an exact
+    // premise as an approximate one. See `test_a_tolerance_is_not_warrant_for_the_exact_conclusion`
+    // for the case where the hypothesis genuinely only holds approximately.
+    assert_eq!(frobenius_norm(&matrix_commutator(&x, &y).unwrap()), 0.0);
     let tx = partial_trace(&x, &[2, 2], &[1]).unwrap();
     let ty = partial_trace(&y, &[2, 2], &[1]).unwrap();
-    assert!(
-        frobenius_norm(&matrix_commutator(&tx, &ty).unwrap()) < 1e-12,
+    assert_eq!(
+        frobenius_norm(&matrix_commutator(&tx, &ty).unwrap()),
+        0.0,
         "boundary-only support must preserve commutation"
     );
+}
+
+// THEOREM_MAP: quantum.partial_trace.commutator_transport
+#[test]
+fn test_partial_trace_transports_the_commutator_exactly() {
+    // Lean: partialTraceRight_commutator — Tr_B([Z⊗1_B, M]) = [Z, Tr_B(M)], with no hypothesis.
+    // This is the identity the boundary ruling rests on: it holds for every M, not only for one
+    // whose commutator vanishes, which is what lets a caller bound a near-miss instead of having
+    // to assert an exact premise.
+    let z = sigma_z();
+    let boundary = z.kronecker(&identity_matrix::<f64>(2)).unwrap();
+    // An M that does NOT commute with Z⊗1, so both sides are non-zero and the identity has
+    // content. σx⊗W fails to commute with σz⊗1 because σx and σz anticommute.
+    let w = mat(vec![c(1., 0.), c(0., 2.), c(0., -2.), c(4., 0.)], 2);
+    let m = sigma_x().kronecker(&w).unwrap();
+
+    let lhs = partial_trace(&matrix_commutator(&boundary, &m).unwrap(), &[2, 2], &[1]).unwrap();
+    let rhs = matrix_commutator(&z, &partial_trace(&m, &[2, 2], &[1]).unwrap()).unwrap();
+
+    assert!(
+        frobenius_norm(&lhs) > 0.0,
+        "the test case must be non-trivial"
+    );
+    assert_eq!(
+        max_abs_diff(&lhs, &rhs),
+        0.0,
+        "the transport is an identity"
+    );
+}
+
+#[test]
+fn test_the_boundary_check_recovers_the_exact_theorem_at_zero() {
+    // Exactly zero in, exactly zero out: the Lean theorem is the vanishing case of the bound.
+    let z = sigma_z();
+    let w = mat(vec![c(1., 0.), c(0., 2.), c(0., -2.), c(4., 0.)], 2);
+    let m = sigma_z().kronecker(&w).unwrap();
+
+    let warrant = partial_trace_preservation_boundary(&z, &m, [2, 2], 0.0).unwrap();
+    assert_eq!(warrant.hypothesis_residual, 0.0);
+    assert_eq!(warrant.conclusion_bound, 0.0);
+    assert!(
+        warrant.holds,
+        "a zero residual must satisfy a zero tolerance"
+    );
+}
+
+#[test]
+fn test_a_tolerance_is_not_warrant_for_the_exact_conclusion() {
+    // The ruling G-16 asks for. A hypothesis satisfied only to ε does not give the exact
+    // conclusion; it gives the conclusion at √(d_B)·ε. Here the commutator is small but non-zero,
+    // and the traced commutator is correspondingly non-zero — so a caller that read `holds` as
+    // "the operators commute after marginalisation" would be wrong.
+    let z = sigma_z();
+    let eps = 1e-9;
+    // M = σz⊗W + ε·(σx⊗1): the first term commutes with σz⊗1, the second does not.
+    let w = mat(vec![c(1., 0.), c(0., 2.), c(0., -2.), c(4., 0.)], 2);
+    let base = sigma_z().kronecker(&w).unwrap();
+    let perturb = sigma_x().kronecker(&identity_matrix::<f64>(2)).unwrap();
+    let m = mat(
+        base.as_slice()
+            .iter()
+            .zip(perturb.as_slice())
+            .map(|(a, b)| c(a.re + eps * b.re, a.im + eps * b.im))
+            .collect(),
+        4,
+    );
+
+    let warrant = partial_trace_preservation_boundary(&z, &m, [2, 2], 1e-6).unwrap();
+    assert!(warrant.holds, "the residual is well inside the tolerance");
+    assert!(
+        warrant.hypothesis_residual > 0.0,
+        "the hypothesis must be genuinely approximate here"
+    );
+
+    // The conclusion is not exact, and the certified bound covers what it actually is.
+    let traced = matrix_commutator(&z, &partial_trace(&m, &[2, 2], &[1]).unwrap()).unwrap();
+    let actual = frobenius_norm(&traced);
+    assert!(actual > 0.0, "the traced commutator does not vanish");
+    assert!(
+        actual <= warrant.conclusion_bound + 1e-15,
+        "the certified bound {} must cover the actual {}",
+        warrant.conclusion_bound,
+        actual
+    );
+}
+
+#[test]
+fn test_the_amplification_is_the_square_root_of_the_traced_dimension() {
+    // ‖Tr_B(E)‖_F ≤ √(d_B)·‖E‖_F, tight at E = F ⊗ 1_B. The factor is what the ruling costs, and
+    // it grows with the dimension marginalised away.
+    let z = sigma_z();
+    let m = sigma_z().kronecker(&identity_matrix::<f64>(2)).unwrap();
+    let w2 = partial_trace_preservation_boundary(&z, &m, [2, 2], 1.0).unwrap();
+    assert!((w2.amplification - 2f64.sqrt()).abs() < 1e-15);
+
+    // A wider traced factor amplifies more.
+    let m4 = sigma_z().kronecker(&identity_matrix::<f64>(4)).unwrap();
+    let w4 = partial_trace_preservation_boundary(&z, &m4, [2, 4], 1.0).unwrap();
+    assert!((w4.amplification - 2.0).abs() < 1e-15);
+    assert!(w4.amplification > w2.amplification);
+}
+
+#[test]
+fn test_the_boundary_check_rejects_shapes_it_cannot_factor() {
+    let z = sigma_z();
+    let m = sigma_z().kronecker(&identity_matrix::<f64>(2)).unwrap();
+    // dims that do not multiply to the operator's side.
+    assert!(partial_trace_preservation_boundary(&z, &m, [2, 3], 1.0).is_err());
+    // a kept-factor operator of the wrong side.
+    let wrong = identity_matrix::<f64>(4);
+    assert!(partial_trace_preservation_boundary(&wrong, &m, [2, 2], 1.0).is_err());
 }
 
 // =============================================================================

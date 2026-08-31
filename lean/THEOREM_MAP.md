@@ -250,16 +250,22 @@ no partial trace and no Choi–Jamiołkowski layer, so both are built from first
 pair-indexed matrix model in `DeepCausalityFormal/Quantum/`. The headline is the B1 result: the
 unconditional `partial_trace_preservation` is **false** (`partial_trace_nonpreservation`, a witnessed
 counterexample), while the *conditional* boundary version holds (`partial_trace_preservation_boundary`).
+The boundary theorem's hypothesis is exact equality over a `CommRing`, so a floating-point caller
+cannot discharge it directly; `commutator_transport` is the unconditional identity that lets one
+bound the conclusion from a measured residual instead, at the cost of a `√(dim B)` amplification
+supplied by the Rust `partial_trace_preservation_boundary`.
 Rust witnesses in `deep_causality_quantum/tests/formalization_lean/{partial_trace_tests,choi_tests}.rs`.
 
 | id | statement | Lean | Lean location | Rust witness | Test |
 |---|---|---|---|---|---|
 | `quantum.partial_trace.add` | `Tr_B(M+N) = Tr_B M + Tr_B N` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_add` | `partial_trace_tests.rs :: test_partial_trace_linearity` | ✓ |
+| `quantum.partial_trace.sub` | `Tr_B(M−N) = Tr_B M − Tr_B N` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_sub` | `partial_trace_tests.rs :: test_partial_trace_transports_the_commutator_exactly` | ✓ |
 | `quantum.partial_trace.smul` | `Tr_B(c•M) = c•Tr_B M` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_smul` | `partial_trace_tests.rs :: test_partial_trace_linearity` | ✓ |
 | `quantum.partial_trace.kronecker` | `Tr_B(X⊗Y) = Tr(Y)•X` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_kron` | `partial_trace_tests.rs :: test_partial_trace_product_identity` | ✓ |
 | `quantum.partial_trace.bimodule` | `Tr_B((Z⊗1)·M) = Z·Tr_B M` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_bimodule` | `partial_trace_tests.rs :: test_partial_trace_bimodule_law` | ✓ |
 | `quantum.partial_trace.bimodule_right` | `Tr_B(M·(Z⊗1)) = Tr_B M·Z` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_bimodule_right` | `partial_trace_tests.rs :: test_partial_trace_bimodule_law` | ✓ |
 | `quantum.partial_trace_preservation_boundary` | boundary op commutes ⇒ its A-part commutes with `Tr_B M` (Q-PTP) | proved | `Quantum/PartialTrace.lean :: partial_trace_preservation_boundary` | `partial_trace_tests.rs :: test_partial_trace_preservation_boundary_case` | ✓ |
+| `quantum.partial_trace.commutator_transport` | `Tr_B([Z⊗1,M]) = [Z,Tr_B M]`, unconditional (Q-PTT) | proved | `Quantum/PartialTrace.lean :: partialTraceRight_commutator` | `partial_trace_tests.rs :: test_partial_trace_transports_the_commutator_exactly` | ✓ |
 | `quantum.partial_trace_nonpreservation` | `[X,Y]=0` but `[Tr_B X, Tr_B Y] ≠ 0` (B1 counterexample) | proved | `Quantum/PartialTraceCounterexample.lean :: partial_trace_nonpreservation` | `partial_trace_tests.rs :: test_partial_trace_nonpreservation_counterexample` | ✓ |
 | `quantum.partial_trace_nonpreservation.value` | `[Tr_B X, Tr_B Y] = [[0,4],[−4,0]]` (`= +4i·σy`) | proved | `Quantum/PartialTraceCounterexample.lean :: partial_trace_nonpreservation_value` | `partial_trace_tests.rs :: test_partial_trace_nonpreservation_counterexample` | ✓ |
 | `quantum.choi.apply_add` | `applyChoi J` is additive in the state | proved | `Quantum/Choi.lean :: applyChoi_add` | `choi_tests.rs :: test_apply_choi_is_linear` | ✓ |

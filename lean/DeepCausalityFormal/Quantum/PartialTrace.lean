@@ -64,6 +64,15 @@ theorem partialTraceRight_add (M N : Matrix (α × β) (α × β) R) :
   funext i j
   simp [partialTraceRight, Matrix.add_apply, Finset.sum_add_distrib]
 
+/-- Partial trace is additive on differences, the subtractive form of
+    `partialTraceRight_add`. Needed to push the partial trace through a commutator.
+
+    THEOREM_MAP: `quantum.partial_trace.sub` -/
+theorem partialTraceRight_sub (M N : Matrix (α × β) (α × β) R) :
+    partialTraceRight (M - N) = partialTraceRight M - partialTraceRight N := by
+  funext i j
+  simp [partialTraceRight, Matrix.sub_apply, Finset.sum_sub_distrib]
+
 /-- Partial trace commutes with scalar multiplication.
 
     THEOREM_MAP: `quantum.partial_trace.smul` -/
@@ -146,5 +155,27 @@ theorem partial_trace_preservation_boundary (Z : Matrix α α R)
       = partialTraceRight ((kron Z 1) * M) := (partialTraceRight_bimodule Z M).symm
     _ = partialTraceRight (M * (kron Z 1)) := by rw [h]
     _ = partialTraceRight M * Z := partialTraceRight_bimodule_right Z M
+
+/-- **Commutator transport (Q-PTT).** The partial trace carries the commutator with a boundary
+    operator `Z ⊗ 1_B` to the commutator with `Z`, *unconditionally*:
+
+      `Tr_B([Z ⊗ 1_B, M]) = [Z, Tr_B(M)]`
+
+    This is the equality that `partial_trace_preservation_boundary` above is the vanishing case of,
+    and it is what lets a caller reason about a commutator that is *near* zero rather than only one
+    that *is* zero. The theorem above needs its hypothesis to hold exactly; this one needs no
+    hypothesis at all, so a caller who can only measure `‖[Z ⊗ 1_B, M]‖` numerically has an exact
+    identity to bound through instead of an exact premise to assert.
+
+    The bound itself is deliberately **not** stated here. `‖Tr_B(E)‖_F ≤ √(dim B) · ‖E‖_F` is a
+    metric statement, and this development is over a general `CommRing` with no norm; stating it
+    would pull in `Mathlib.Analysis` and change what this file depends on. The amplification factor
+    lives in the Rust `partial_trace_preservation_boundary`, which is where the norms are.
+
+    THEOREM_MAP: `quantum.partial_trace.commutator_transport` -/
+theorem partialTraceRight_commutator (Z : Matrix α α R) (M : Matrix (α × β) (α × β) R) :
+    partialTraceRight ((kron Z (1 : Matrix β β R)) * M - M * (kron Z (1 : Matrix β β R)))
+      = Z * partialTraceRight M - partialTraceRight M * Z := by
+  rw [partialTraceRight_sub, partialTraceRight_bimodule, partialTraceRight_bimodule_right]
 
 end DeepCausalityFormal.Quantum

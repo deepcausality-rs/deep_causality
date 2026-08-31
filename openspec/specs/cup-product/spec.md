@@ -3,21 +3,33 @@
 ## Purpose
 TBD - created by archiving change add-cup-product. Update Purpose after archive.
 ## Requirements
-### Requirement: Cochains are carried in the existing representation
+### Requirement: Cochains keep the existing representation and carry their degree
 The cup product MUST operate on the repository's established cochain representation, a flat slice of
-scalars indexed by cell index within a skeleton, and MUST NOT introduce a dedicated `Cochain` type.
-That representation is already pervasive: `deep_causality_physics` carries velocity one-forms,
-pressure zero-forms and test fixtures as bare `Vec<R>` or `CausalTensor<R>` over cell indices. A new
-wrapper type would fight the convention and force conversions across the physics and CFD stack for
-no gain.
+scalars indexed by cell index within a skeleton, exposed through a `Cochain<R>` that adds the degree
+and nothing else. Conversion in both directions MUST be available and MUST NOT change the layout, so
+a caller holding a bare `Vec<R>` or `CausalTensor<R>` over cell indices converts without copying its
+convention.
 
-#### Scenario: A physics cochain is accepted directly
-- **WHEN** a caller passes an existing edge one-form, held as a slice indexed by edge index, to the
-  cup product
-- **THEN** it is accepted without conversion or wrapping
+**This supersedes an earlier form of this requirement**, which forbade a `Cochain` type outright on
+the grounds that a wrapper would force conversions across the physics and CFD stack for no gain. The
+premise did not survive: neither the free cup product nor `Topology::cup_product` has a caller in
+`deep_causality_physics` or `deep_causality_cfd`, so the migration cost the prohibition was written
+to avoid is zero, while the cost it imposed was real. A binary product took five parameters and the
+`n`-fold form took a slice of `(values, degree)` tuples paired by convention, with a degree able to
+be paired with the wrong values and caught only at run time.
+
+#### Scenario: A physics cochain converts without changing layout
+- **WHEN** a caller holds an existing edge one-form as a slice indexed by edge index
+- **THEN** wrapping it for the cup product copies the values unchanged and adds only the degree, and
+  unwrapping the result returns the same flat representation
+
+#### Scenario: The degree travels with the values
+- **WHEN** a cup product is taken
+- **THEN** the operands carry their own degrees rather than taking them as separate arguments, and
+  the result carries `p + q`
 
 #### Scenario: Length is validated against the complex
-- **WHEN** a cochain slice's length does not equal the number of cells of its stated degree
+- **WHEN** a cochain's length does not equal the number of cells of its stated degree
 - **THEN** the call returns a typed error naming the expected and actual lengths
 
 ### Requirement: The cup product is degree-general over splittable complexes

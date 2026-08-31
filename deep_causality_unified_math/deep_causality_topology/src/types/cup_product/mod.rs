@@ -56,54 +56,35 @@
 use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::traits::cell_splitting::SplittableCell;
 use crate::traits::cellular_complex::CellularComplex;
+use crate::types::cochain::Cochain;
 use deep_causality_algebra::CommutativeRing;
 use std::collections::HashMap;
-
-/// Rejects a cochain whose length does not match the cell count of its degree.
-fn check_len<K: CellularComplex, R>(
-    complex: &K,
-    cochain: &[R],
-    degree: usize,
-    side: &str,
-) -> Result<(), TopologyError> {
-    let expected = complex.num_cells(degree);
-    if cochain.len() != expected {
-        return Err(TopologyError(TopologyErrorEnum::DimensionMismatch(
-            format!(
-                "{side} cochain of degree {degree} has length {}, but the complex has {expected} \
-             cells of that degree",
-                cochain.len()
-            ),
-        )));
-    }
-    Ok(())
-}
 
 /// The cup product of a `p`-cochain with a `q`-cochain, yielding a
 /// `(p+q)`-cochain over the same complex.
 ///
-/// `alpha` and `beta` are indexed by cell index within the `p`- and
-/// `q`-skeletons respectively.
+/// Each [`Cochain`] carries its own degree, so the product is three parameters
+/// rather than five and a degree cannot be paired with the wrong values.
 ///
 /// # Errors
 ///
-/// Returns [`TopologyErrorEnum::InvalidGradeOperation`] when
-/// `alpha_degree + beta_degree` exceeds the complex's maximum cell dimension,
-/// since the caller has asked for a cochain in a degree the complex does not
-/// have, and [`TopologyErrorEnum::DimensionMismatch`] when a cochain's length
-/// does not equal the number of cells of its stated degree.
+/// Returns [`TopologyErrorEnum::InvalidGradeOperation`] when the degrees sum
+/// past the complex's maximum cell dimension, since the caller has asked for a
+/// cochain in a degree the complex does not have, and
+/// [`TopologyErrorEnum::DimensionMismatch`] when a cochain's length does not
+/// equal the number of cells of its stated degree.
 pub fn cup_product<K, R>(
     complex: &K,
-    alpha: &[R],
-    alpha_degree: usize,
-    beta: &[R],
-    beta_degree: usize,
-) -> Result<Vec<R>, TopologyError>
+    alpha: &Cochain<R>,
+    beta: &Cochain<R>,
+) -> Result<Cochain<R>, TopologyError>
 where
     K: CellularComplex,
     K::CellType: SplittableCell,
     R: CommutativeRing + Copy,
 {
+    let (alpha_degree, beta_degree) = (alpha.degree(), beta.degree());
+    let (alpha, beta) = (alpha.values(), beta.values());
     // `checked_add` rather than `+`: the degrees are caller-supplied, and an
     // overflowing sum would panic in debug and wrap in release, the wrapped
     // value then passing the maximum-dimension check below.
@@ -123,8 +104,9 @@ where
             ),
         )));
     }
-    check_len(complex, alpha, alpha_degree, "left")?;
-    check_len(complex, beta, beta_degree, "right")?;
+    Cochain::new(alpha.to_vec(), alpha_degree)
+        .check_len(complex.num_cells(alpha_degree), "left")?;
+    Cochain::new(beta.to_vec(), beta_degree).check_len(complex.num_cells(beta_degree), "right")?;
 
     // The splitting of a lattice cell wraps on periodic axes, so it needs the
     // ambient layout. Simplicial cells ignore it.
@@ -161,11 +143,13 @@ where
         }
         out[i] = acc;
     }
-    Ok(out)
+    Ok(Cochain::new(out, target))
 }
 
-/// The `n`-fold cup product: a left fold of [`cup_product`] over `factors`,
-/// each a `(cochain, degree)` pair.
+/// The `n`-fold cup product: a left fold of [`cup_product`] over `factors`.
+///
+/// A slice of one type rather than a slice of `(cochain, degree)` tuples paired
+/// by convention, which is the other half of what [`Cochain`] buys.
 ///
 /// Associativity is what makes this well defined without new machinery, and it
 /// is what yields the triple product on a three-dimensional complex, the degree
@@ -177,18 +161,19 @@ where
 /// there is no unit cochain to return, and otherwise propagates every error
 /// [`cup_product`] can raise. A single factor is returned unchanged, after its
 /// length is validated.
-pub fn cup_product_n<K, R>(complex: &K, factors: &[(&[R], usize)]) -> Result<Vec<R>, TopologyError>
+pub fn cup_product_n<K, R>(complex: &K, factors: &[Cochain<R>]) -> Result<Cochain<R>, TopologyError>
 where
     K: CellularComplex,
     K::CellType: SplittableCell,
     R: CommutativeRing + Copy,
 {
-    let Some(((first, first_degree), rest)) = factors.split_first() else {
+    let Some((first, rest)) = factors.split_first() else {
         return Err(TopologyError(TopologyErrorEnum::InvalidInput(
             "n-fold cup product needs at least one factor; there is no unit cochain to return"
                 .to_string(),
         )));
     };
+    let first_degree = &first.degree();
     // The grade contract is checked here as well as inside `cup_product`,
     // because a single factor never reaches the binary path. Without this, an
     // empty cochain at a degree above the complex's dimension would be accepted:
@@ -203,15 +188,11 @@ where
             ),
         )));
     }
-    check_len(complex, first, *first_degree, "first")?;
+    first.check_len(complex.num_cells(*first_degree), "first")?;
 
-    let mut acc = first.to_vec();
-    let mut degree = *first_degree;
-    for (cochain, cochain_degree) in rest {
-        acc = cup_product(complex, &acc, degree, cochain, *cochain_degree)?;
-        degree = degree
-            .checked_add(*cochain_degree)
-            .expect("degree sum already validated by cup_product");
+    let mut acc = first.clone();
+    for cochain in rest {
+        acc = cup_product(complex, &acc, cochain)?;
     }
     Ok(acc)
 }

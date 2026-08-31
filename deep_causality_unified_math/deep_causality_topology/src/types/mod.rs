@@ -5,8 +5,9 @@
 
 pub mod cell_complex;
 pub mod chain;
+pub mod cochain;
 pub mod cubical_regge_geometry;
-pub mod cup_product;
+pub(crate) mod cup_product;
 pub mod curvature_tensor;
 pub mod cut_cell;
 pub mod differential_form;

@@ -20,7 +20,7 @@ therefore marked unresolved rather than confirmed. Everything else carries evide
 
 ## 0. Status
 
-Verified against the tree on **2026-08-31**. **Thirteen gaps are closed, five are open.**
+Verified against the tree on **2026-08-31**. **All eighteen gaps are closed.**
 
 `add-linear-algebra-crate` closed G-01 and G-02. The category-A sweep then closed G-03, G-10, G-11,
 G-12, G-15 and G-17: everything that was unblocked, self-contained and small. `Gf2Chain<W>` closed
@@ -79,7 +79,7 @@ has an execution path — `sim.rs:162-223` dispatches every variant into a state
 each new gate needs a simulator arm too, and `C^{m-1}Z` needs a generic multi-control apply rather
 than a copy of `apply_cz`.
 
-**Five open, verified today.** `homology_representatives` and `dual_representative` exist nowhere
+**One open, verified today.** `homology_representatives` and `dual_representative` exist nowhere
 in the workspace, and a sweep of every `fn` name containing homolog, representat, cycle, cocycle,
 generat, basis or dual returns nothing that yields a homology class. There is no `Cochain`, and an
 active spec forbids adding one (see G-18). `logical_z` is still typed on `CausalMultiVector`
@@ -322,13 +322,13 @@ periodic dimensions returns `C(p, k)`, and that arm had no test at all.
 
 **Owner:** `deep_causality_topology`.
 
-### G-04 — No homology representatives
+### G-04 — No homology representatives — **CLOSED**
 
 **Severity S2.** Blocks R4, and therefore R6 and the whole gate layer.
 
 `ChainComplex` exposes six methods and none of them returns a basis:
 `num_cells`, `max_dim`, `boundary_matrix`, `coboundary_matrix`, `betti_number_over` and
-`betti_number`, at lines 49, 52, 59, 62, 91 and 113 of
+`betti_number`, at lines 55, 58, 65, 68, 97 and 119 of
 `deep_causality_unified_math/deep_causality_homology/src/traits/chain_complex.rs`. Cite that path in
 full: `deep_causality_topology`'s file of the same name is a 38-line re-export shim, and the old
 line numbers land inside its doc comment. `betti_number_over` is rank
@@ -362,6 +362,40 @@ stacked before an rref or a rank sweep, and `deep_causality_linear` exports no c
 helper: a search for `hstack`, `concat_cols`, `augment` and `extend_basis` finds nothing. The
 stacking must be built from `MatrixBuild::zeros` plus `set`. This is the work; the bases underneath
 it are done.
+
+**Closure as built.** `ChainComplex::homology_representatives(k) -> Vec<Gf2Chain<W>>`, with
+`cohomology_representatives(k)` as its dual. Both go through one `quotient_basis` helper, which
+takes the kernel basis of the numerator's operator and the image basis of the denominator's,
+column-stacks them as `[B | Z]` with the image first, reduces, and keeps the kernel columns holding
+a pivot. A pivot at or beyond `B`'s width is a kernel vector the image and the earlier kernel
+columns together do not reproduce. The count that falls out is `rank[B | Z] − rank B`, which is
+`dim ker ∂ₖ − rank ∂ₖ₊₁`, which is `β_k`. The `[im | ker]` stacking was built from
+`MatrixBuild::zeros` plus `set`, as this register predicted, because `deep_causality_linear` has no
+column-concatenation primitive.
+
+**Generators come off columns, and that is load-bearing.** `kernel_basis_gf2` allocates
+`zeros(cols, free.len())` and `image_basis_gf2` allocates `zeros(rows, pivots.len())`, so both write
+down columns and `Gf2Chain::from_column` is the reader. `from_row` would return a vector whose
+length is the number of generators rather than the dimension they live in.
+
+**No field parameter, unlike `betti_number_over`.** A representative is a vector, and a vector over
+ℚ is not a vector over 𝔽₂. The bit-packed path is the one with a chain type to return, so this
+method names its field in its return type. Where both fields yield the same *kind* of answer, as
+they do for a dimension, the choice belongs in a parameter; where they do not, it belongs in the
+signature.
+
+**Tested by invariant, because a quotient basis is not canonical.** Which vectors come back depends
+on the elimination order, so there is nothing to diff against a stored answer, and the register's
+usual demand for an external oracle is met differently: the *count* is `β_k` over 𝔽₂, which the ten
+fixtures carry from Hatcher. Three properties are asserted at every grade of all ten: the count
+equals `β_k` and agrees with the rank-nullity path that builds no kernel; every representative is a
+cycle; and adjoining the representatives to a basis of `im ∂ₖ₊₁` raises the rank by exactly their
+number, which is independence modulo boundaries. The sharp case is `S²`, where `ker ∂₁` is
+non-trivial and `H₁` is not, so the basis must come back empty.
+
+Four mutations, four failures: an off-by-one in the pivot cut fails 3 tests, ignoring the image
+entirely fails 5, placing the kernel columns before the image fails 2, and accepting a zero pairing
+in `dual_representative` fails 2.
 
 **Owner:** `deep_causality_homology`, not `deep_causality_topology` as first proposed. The trait it
 extends and the type it returns both live there.
@@ -565,13 +599,13 @@ The carrier finding itself has been stable for six weeks: the last commit touchi
 
 **Owner:** `deep_causality_quantum`.
 
-### G-08 — No Poincaré-dual representative
+### G-08 — No Poincaré-dual representative — **CLOSED**
 
 **Severity S2.** Blocks R6, which the logical Hadamard needs (`H̄` requires a `γ̃` with `⟨γ,γ̃⟩ = 1`).
 
 **Closure.** `fn dual_representative(&self, gamma: &Gf2Chain<W>) -> Option<Gf2Chain<W>>` over the
 cohomology basis from G-04. `ChainComplex::coboundary_matrix`
-(`deep_causality_unified_math/deep_causality_homology/src/traits/chain_complex.rs:62`) supplies the
+(`deep_causality_unified_math/deep_causality_homology/src/traits/chain_complex.rs:68`) supplies the
 cohomology side.
 
 **The 𝔽₂ solve cannot be reached by instantiating an existing solver, and that is a tower fact
@@ -589,9 +623,33 @@ position for exact Poincaré duality geometric interpretation"*
 The surrounding docstring is unresolved deliberation, and the only law-level test is
 `dual(dual(cell)) = cell`. The type is public. Treat it as needing rework rather than extension.
 
+**Closure as built, and it needs no solver at all.** `ChainComplex::dual_representative(gamma, k)`
+scans the cohomology basis and returns the first class pairing to one, or `None`.
+
+That is the whole algorithm, and it is sound rather than a shortcut. The pairing is 𝔽₂-linear in its
+second argument, so for `γ̃ = Σ aᵢcᵢ` over a cohomology basis, `⟨γ, γ̃⟩ = Σ aᵢ⟨γ, cᵢ⟩`. That sum can
+be made one exactly when *some* `⟨γ, cᵢ⟩` is one. So the scan both decides the question and produces
+the witness, and a single basis element is a valid answer whenever any answer exists.
+
+**This register was wrong to call it a linear solve, twice over.** It first said G-08 "is a linear
+solve over 𝔽₂ against the cohomology basis", then that closing it "means writing a solver, not
+parameterizing one". Neither holds. There is no system: the linearity of the pairing collapses it to
+a scan. And had a solve been needed, `rref` is bounded on `M::Scalar: Field`, `Gf2` reaches `Field`,
+and `PackedGf2` implements `RowOps`, so 𝔽₂ elimination was available the whole time; only the
+shipped `solve` is out of reach, being `NormedScalar`-bounded.
+
+`DualLatticeComplex` is untouched, so the concern about building on it does not arise: this works
+off `coboundary_matrix`, which every `ChainComplex` already owes.
+
+**Tested against a non-degeneracy fact, not against itself.** On a closed orientable surface the
+intersection pairing is non-degenerate, so every torus 1-class must have a dual; that is asserted
+for both. The converse case is asserted too: a boundary pairs to zero with every cocycle, so it has
+no dual, and pushing a 2-cell down gives one to check. Every dual returned anywhere in the ten
+fixtures is re-paired against its argument and must give one.
+
 **Owner:** `deep_causality_homology`, not `deep_causality_topology` as first proposed.
 
-### G-09 — No logical-equivalence predicate
+### G-09 — No logical-equivalence predicate — **CLOSED**
 
 **Severity S2.** Blocks R8, and therefore `check_class_invariance`.
 
@@ -602,9 +660,38 @@ decides `O₁ ~ O₂`.
 every `X̄(γ̃)` for `γ̃ ∈ H¹`. With the representatives from G-04 this is a bitset computation, not a
 matrix comparison. Theorem A.1 supplies the underlying justification.
 
-**The homology dependency edge is as binding here as at G-07.** A bitset computation over `Gf2Chain`
-needs the `deep_causality_quantum` to `deep_causality_homology` edge, which does not exist. The
-register recorded that edge only under G-07.
+**Closure as built.** A new `qcode` module with two types. `LogicalPauli<W>` is a physical Pauli in
+symplectic form, `{ x: Gf2Chain, z: Gf2Chain }`, with `compose` adding the two vectors over 𝔽₂.
+`LogicalBasis<W>` holds the `H_k` and `H^k` representatives from G-04 and decides both questions:
+
+- `is_logically_trivial(op)` is B.1's criterion. A Pauli `P = (x, z)` anticommutes with
+  `Z̄(γ) = ∏_{i∈γ} Z_i` exactly when `|x ∩ γ|` is odd, since only a coincident `X_i` and `Z_i`
+  anticommute; that count mod two is `⟨x, γ⟩`. Symmetrically `⟨z, γ̃⟩` against `X̄(γ̃)`. So the test
+  is two loops of `Gf2Chain::inner` over the two bases, and nothing forms a matrix.
+- `are_logically_equivalent(a, b)` is B.1's reduction `O₁ ~ O₂ ⟺ O₁O₂⁻¹ ~ I`. A Pauli is its own
+  inverse up to phase, so the composite is the 𝔽₂ sum.
+
+**Two limits are documented rather than assumed away.** Phase is not carried: `Y = iXZ`, so a
+symplectic pair fixes a Pauli only up to phase, while B.1's matrix-element definition is
+phase-sensitive. And the criterion decides triviality *of a logical operator*: an operator outside
+the normalizer commutes with the logical generators without acting trivially, because it leaves the
+code space instead. This crate carries no stabilizer group, so that precondition is stated at the
+method rather than checked.
+
+**Tested on the toric code, against two external facts.** The complex is the 2-torus fixture, whose
+`β₁ = 2` over 𝔽₂ is Hatcher's and is why the toric code encodes two logical qubits (Kitaev, 2003).
+The physics those combine into is that a stabilizer acts trivially and a logical operator does not,
+so the predicate must separate exactly the boundaries from the non-trivial cycles. Asserted: every
+`∂₂` column is trivial; every `H₁` representative is not; adding any boundary to a class leaves it
+equivalent; the two independent classes are not equivalent to each other; an X-type operator is
+caught through the homology side, which a predicate testing only the `Z` part would pass vacuously;
+and `S²`, encoding nothing, calls every operator trivial rather than dividing by an empty basis.
+
+Four mutations, four failures: checking only the homology side fails 2, swapping which part pairs
+against which basis fails 2, composing by intersection instead of sum fails 3, and answering
+"trivial" unconditionally fails 3.
+
+**The dependency edge already existed**, paid for by G-07.
 
 **Owner:** `deep_causality_quantum`.
 
@@ -801,7 +888,7 @@ folds check commutation, read-outs against a real-valued spec do not, and must n
 
 **Owner:** the design note.
 
-### G-16 — `Boundary`'s second hypothesis is not decidable at the stated tolerance (UNRESOLVED)
+### G-16 — `Boundary`'s second hypothesis is not decidable at the stated tolerance — **CLOSED**
 
 **Severity S2 if confirmed.**
 
@@ -832,7 +919,45 @@ not been written and blocks no shipped code today. Note also that the `partial_t
 closed G-17 addresses the `Z ⊗ 1_B` **form**, the decidable half, and says nothing about tolerance.
 It is not the ruling this gap asks for.
 
-**Owner:** `deep_causality_quantum`, with a note in `LEAN_QUANTUM.md`.
+**Closure as built: the answer is a factor, not a yes or a no.** A tolerance-satisfied commutator
+is **not** warrant for the exact conclusion, and **is** warrant for the conclusion at `√(d_B)` times
+the tolerance. Both halves ship.
+
+The route around the exact hypothesis is to stop needing it. `quantum.partial_trace.commutator_transport`
+(`Quantum/PartialTrace.lean :: partialTraceRight_commutator`) states
+`Tr_B([Z ⊗ 1_B, M]) = [Z, Tr_B(M)]` with **no hypothesis at all**, proved from the two bimodule laws
+plus a new `partialTraceRight_sub`. It is a pure `CommRing` identity and needed no new Mathlib
+import. Combined with `‖Tr_B(E)‖_F ≤ √(d_B)·‖E‖_F`, which is Cauchy-Schwarz on the traced index and
+is tight at `E = F ⊗ 1_B`, a residual of `ε` in the hypothesis certifies `√(d_B)·ε` in the
+conclusion. Exactly zero in, exactly zero out, so the original theorem is the vanishing case.
+
+The bound is deliberately **not** stated in Lean. A norm-quantified theorem needs
+`Mathlib.Analysis`, and this development is over a general ring with no norm; the amplification
+lives in Rust, where the norms are.
+
+**The advertised function now exists.** `partial_trace`'s doc block named
+`partial_trace_preservation_boundary` as "the sound path" and pointed a caller at a *test*, because
+no such Rust function existed. It does now, in `qgates/operator_linalg.rs`, returning a
+`BoundaryWarrant` carrying the measured residual, the tolerance, the amplification and the certified
+`conclusion_bound`. It returns a bound rather than a boolean because that is the whole content of
+the ruling. The `Z ⊗ 1_B` form is *constructed* from the caller's `Z` rather than checked, so the
+theorem's other hypothesis holds by construction.
+
+**The severity did not survive, and this register was wrong about why.** It recorded that the
+exact-for-approximate substitution "is already being made, unrecorded, at a hardcoded `1e-12` in a
+THEOREM_MAP-bound witness". Checked rather than reasoned: in that witness `X = σz ⊗ W` and
+`Y = σz ⊗ 1`, so `[X, Y] = (σzσz) ⊗ W − (σzσz) ⊗ W` vanishes algebraically, and every entry is a
+small dyadic integer, so kron and matmul are exact in binary64. Measured: the commutator is
+bit-exactly `0.0`. The `1e-12` was defensive slack over an exact zero, which is a **traceability**
+defect and not a soundness one. That witness now asserts `== 0.0`, because writing `< 1e-12` there
+misrepresents an exact premise as an approximate one. The genuinely approximate case has its own
+test alongside it.
+
+**Four mutations, four failures:** amplifying by the kept dimension instead of the traced one fails
+1 test, dropping the amplification fails 1, making the tolerance comparison strict fails 1, and
+building the boundary as `1_B ⊗ Z` fails 2.
+
+**Owner:** `deep_causality_quantum`, and `lean/THEOREM_MAP.md` carries the two new rows.
 
 ### G-17 — `partial_trace` does not document its non-preservation — **CLOSED**
 
@@ -856,7 +981,7 @@ is built, and is recorded under G-16 rather than here.
 
 **Owner:** `deep_causality_quantum`.
 
-### G-18 — No `Cochain` type
+### G-18 — No `Cochain` type — **CLOSED**
 
 **Severity S3.** The dual of G-05.
 
@@ -876,7 +1001,9 @@ the p-cochain α."* A type binding data to degree exists. It carries two fields 
 not need, and it is bound to `SimplicialComplex` where the free function is generic.
 
 **And the crate computes the cup product twice.** `Topology<R, G>::cup_product`
-(`types/topology/ops/cup_product.rs:35`) is a second, independent implementation. It does not call
+(`types/topology/ops/cup_product.rs:35`, **line numbers in this section are historical**: the file
+was rewritten when the gap closed and now delegates in 84 lines) is a second, independent
+implementation. It does not call
 the free function. It extracts the Alexander-Whitney front and back faces by hand for the simplicial
 case, which the generic function already covers, because `Simplex` implements `SplittableCell`
 (`types/simplex/cell_splitting.rs:11`).
@@ -895,7 +1022,9 @@ divergent, and on simplices the two are provably identical: `Simplex::split` ret
 sign `+1` and `verts[p..]` is the same slice as the method's `verts[p..=r]`, while both index the
 same sorted skeleton vector.
 
-**Delegation is not behaviour-preserving, and this register did not say so.** Three deltas:
+**Delegation is not behaviour-preserving, and this register did not say so.** Three deltas as
+assessed, of which one turned out not to exist and a fourth was missing; see the closure below for
+what the tree actually held. The line numbers are those of the retired implementation.
 
 1. Out-of-range grade. `Topology::cup_product` returns `Ok` with a zero-filled cochain when
    `r > max_simplex_dimension()` (`ops/cup_product.rs:48-63`); the free function returns
@@ -912,28 +1041,68 @@ Delegation also narrows a public impl. The block is `impl<R, G> Topology<R, G>` 
 forces `R: RealField` onto it. The coefficient side is fine, `G: Field + Copy` already satisfies the
 free function's `R: CommutativeRing + Copy`.
 
-**A stale spec appears to forbid the chosen closure. It does not bind.**
-`openspec/specs/cup-product/spec.md:6-12` is an unarchived requirement titled *"Cochains are carried
-in the existing representation"*, whose normative sentence says the cup product *"MUST NOT introduce
-a dedicated `Cochain` type."* The author's ruling on 2026-08-31 is that this requirement is stale and
-was simply never archived, so it is not a constraint on this gap. **Archive it when this gap is
-picked up**, so the next reader does not stop where this sweep did.
+**A stale requirement forbade this, and it has been superseded rather than archived.**
+`openspec/specs/cup-product/spec.md`'s first requirement said the cup product *"MUST NOT introduce a
+dedicated `Cochain` type."* The author ruled it stale on 2026-08-31. Archiving the file would have
+been wrong: it carries eight requirements and only the first was stale, the other seven covering
+degree-generality, associativity, the torus pairing and graded commutativity, all of which this
+change preserves. So the one requirement was rewritten in place, with the supersession and its
+reason recorded there.
 
-The evidence agrees with the ruling. Decision 2 of the archived change priced the requirement on
-conversion cost: every physics and CFD call site would need converting. That cost is now zero for
-the cup product. Neither implementation has a production caller anywhere in the workspace; a search
-finds only the module wiring, the re-export and the crate's own tests. Nothing in quantum, physics
+The evidence agrees with the ruling. Decision 2 of the archived change priced the prohibition on
+conversion cost: every physics and CFD call site would need converting. That cost is zero. Neither
+cup product has a production caller anywhere in the workspace; a search finds only the module
+wiring, the re-export and the crate's own tests. Nothing in quantum, physics
 or CFD calls either one.
 
 **Chosen closure, in this order:** make `Topology::cup_product` delegate to the free function,
-handling the three deltas above, then add `Cochain<R>` and thread it through. Unifying first means
-the new type is threaded through one implementation rather than two. Neither step has been taken:
-the method is still the second, hand-rolled implementation.
+handling the deltas above, then add `Cochain<R>` and thread it through. Unifying first means the new
+type is threaded through one implementation rather than two.
+
+**Closure as built.** Both steps landed. `Cochain<R>` is `{ values: Vec<R>, degree: usize }` and
+nothing more: `from_values` takes the established flat slice and `into_values` gives it back
+unchanged, so the representation the superseded requirement was written to protect is untouched.
+`cup_product` went from five parameters to three and `cup_product_n` from a slice of
+`(values, degree)` tuples to a slice of one type. `Topology::cup_product` is 84 lines that delegate,
+down from 128 that hand-rolled Alexander-Whitney; what it keeps is the pair of things a free
+function taking one complex cannot express, the `Arc::ptr_eq` check that both operands live on the
+same complex and the rewrap into a `Topology`.
+
+**The deltas, corrected.** This register listed three. One does not exist and a fourth was missing.
+
+- **The grade tightening is real.** Out of range now returns `InvalidGradeOperation` where the
+  retired implementation returned `Ok` with a zero-filled cochain.
+- **The panic delta does not exist.** The register said the method panics through
+  `.expect("Data/Skeleton mismatch")` where the free function returns a typed error. The panic is in
+  the retired code, but `Topology::new` validates `data.len()` against the skeleton size, so it was
+  unreachable through the public constructor. A test written to pin the change could not construct
+  its own precondition.
+- **A fourth delta, unrecorded, and it is a loosening.** The retired implementation raised
+  `SimplexNotFound` when a split's partner was absent from the complex. The shared body skips such a
+  split instead, and that skip is load-bearing: on a lattice complex with a non-periodic axis the
+  boundary cells genuinely have no partner and must contribute zero. So a *malformed* simplicial
+  complex now yields zeros where it used to error. Deliberate, and recorded at the test that used to
+  assert the old behaviour: nothing in the crate builds such a complex, since `SimplicialComplex`
+  derives its skeletons from its facets.
+- The bound narrowing happened as predicted: the impl block gained `R: RealField`.
+
+**The safety net was widened on the way past.** The agreement test covered six of the ten degree
+pairs a tetrahedron admits while it was pinning two implementations against each other. It now
+covers all ten, and it is no longer an agreement test: with one implementation left it checks the
+wrapping the method adds.
+
+**Four mutations, four failures:** dropping the same-complex check fails 2 tests, swapping the
+method's operands fails 2, having `cup_product_n` ignore all but the first factor fails 5, and
+reporting the wrong result degree fails 6.
+
+**Breaking.** `deep_causality_topology` goes 0.8.0 to **0.9.0**, and the four crates pinning `"0.8"`
+were repinned: physics, cfd, algorithms and discovery. The example crates pin by path and needed
+nothing.
 
 **Closure.** ~~Fold into G-05: one type carrying data and degree together, used by both the cup
 product and the gate layer.~~ **Void.** G-05 closed as `Gf2Chain<W>`, which is 𝔽₂-only and cannot
-carry the ring-generic `R` the cup product needs. The two gaps need two types, and this one is now
-the sole occupant of §4's head node.
+carry the ring-generic `R` the cup product needs. The two gaps needed two types, and that is what
+shipped.
 
 **Owner:** `deep_causality_topology`, where both cup products live.
 
@@ -965,65 +1134,39 @@ CLOSED
   G-03  LatticeComplex betti                 topology — closed form kept, now checked
   G-05  Gf2Chain                             homology — not topology as proposed
   G-06  the Table 1 gate alphabet            quantum — one diagonal kernel, plus a validation fix
-  G-07  the Haruna layer on Gf2Chain         quantum — plus the homology edge, 0.2.0  
+  G-07  the Haruna layer on Gf2Chain         quantum — plus the homology edge, 0.2.0
+  G-08  Poincaré-dual representative         homology — a scan, not a solve
+  G-09  logical equivalence                  quantum — B.1 on bitsets, toric-code tested
   G-10  Stirling numbers                     num — both kinds, first one unsigned
   G-11  choi_compose                         quantum
   G-12  choi_identity                        quantum
   G-13  the scalar bound table               design note — premise did not reproduce
-  G-14  the set-cover exponent               design note — linear in k, exponential in n    
+  G-14  the set-cover exponent               design note — linear in k, exponential in n
   G-15  the verdict guard                    design note — rule 2 narrowed
+  G-16  the tolerance ruling                 quantum — a √(d_B) factor, not a yes or no
   G-17  partial_trace non-preservation       quantum — documented
+  G-18  Cochain and one cup product          topology — duplicate retired, 0.9.0
 
-OPEN
-G-04  homology representatives             (homology; unblocked, G-05 shipped)  <- start here
-  ├── G-08  Poincaré-dual representative   (homology; needs an 𝔽₂ solve helper)
-  └── G-09  logical equivalence            (quantum; needs G-04; the edge now exists)
-
-G-18  Cochain                              (topology, no deps)  <- independent root
-
-G-16  resolve the tolerance question       (quantum; blocks predict when predict is built)
 ```
 
-Two independent roots. G-04 heads the remaining chain, and G-09's wiring cost is now zero because
-G-07 paid for the `deep_causality_quantum` to `deep_causality_homology` edge. G-18 stands alone.
+**Nothing is open.** The chain that R1 through R9 asked for is complete end to end: `Gf2Chain`
+(G-05) carries the vectors, `homology_representatives` (G-04) produces the classes,
+`dual_representative` (G-08) pairs them, the Table 1 alphabet (G-06) and the Haruna layer (G-07)
+emit the circuits, `LogicalBasis` (G-09) decides when two of them act alike, `Cochain` (G-18)
+carries the ring-valued dual over a single cup product, and the boundary ruling (G-16) says what a
+measured commutator is worth after marginalisation.
 
-### What the remaining six cost
-
-Sized against the tree, not estimated.
-
-**Mid effort, unblocked.** G-04 is the one to start: the bases, the `CsrMatrix<i8>` bridge and the
-chain type all ship, so the work is quotient-basis extraction for homology and cohomology, plus the
-`[im | ker]` stacking that has no primitive. G-16 is a soundness decision with a written rationale: whether a Q-TOL-satisfied
-commutator is warrant to invoke an exact-hypothesis Lean theorem. Note that the trade is already
-being made at a hardcoded `1e-12` in a THEOREM_MAP-bound witness.
-
-**Mid effort, unblocked, with a stale spec to retire on the way.** G-18's delegation step flips
-three behaviours and narrows one public impl's bounds, and `openspec/specs/cup-product/spec.md`
-should be archived rather than obeyed.
-
-**Serious.** G-08 needs an 𝔽₂ solve helper and should not be built on `DualLatticeComplex` as it
-stands. The helper is smaller than this register first claimed: `rref` is bounded on
-`M::Scalar: Field` (`deep_causality_linear/src/algorithms/elimination.rs:198`), `Gf2` reaches
-`Field`, and `PackedGf2` implements `RowOps`, so elimination over 𝔽₂ works today. Only the shipped
-`solve` (`algorithms/solve.rs:175`) is out of reach, being `NormedScalar`-bounded. A `solve_gf2` is
-`rref` on the augmented matrix plus a read-off. G-09 implements B.1 and B.3 over `Gf2Chain::inner`,
-and its dependency edge is already paid for.
 
 ### What to tackle next
 
-**G-04.** Three gaps name its output in their signatures, and it is the last root on the gate-layer
-chain. The mathematics is
-quotient-basis extraction over bases that already exist; the two things to get right are reading
-generators off **columns** rather than rows, and building the `[im | ker]` stacking by hand.
-
-**G-18 in parallel.** It is independent of G-04. Archive
-`openspec/specs/cup-product/spec.md` on the way past: it forbids the type this gap adds, and it is
-stale rather than binding.
+**Nothing in this register.** Every gap it opened is closed. What comes next is not gap work: the
+geometric-QEC example, which §4 used to list as blocked on G-04 through G-09 and which is now
+blocked on nothing but itself.
 
 **What the three designed examples need.** The calibration and crosstalk examples need none of G-01
 through G-09: two feasibility lenses reproduced their headline results on shipped APIs in scratch
-crates. The geometric-QEC example needs G-04, G-08 and G-09, in roughly that order. G-05, G-06 and
-G-07 are no longer on that list, and neither is the dependency edge.
+crates. **The geometric-QEC example is no longer gap-blocked.** G-04 through G-09 have all closed
+and the dependency edge with them, so what remains for it is the example itself.
 
 ---
 

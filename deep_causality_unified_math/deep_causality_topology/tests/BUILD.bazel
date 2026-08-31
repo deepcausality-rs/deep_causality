@@ -113,6 +113,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_unified_math/deep_causality_topology",
         # Internal deps
+        "//deep_causality_unified_math/deep_causality_algebra",
         "//deep_causality_unified_math/deep_causality_tensor",
     ],
 )
