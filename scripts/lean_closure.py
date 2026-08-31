@@ -171,14 +171,14 @@ def cmd_check(root):
             problems.append(
                 "lean/lake-lock.json pins an olean archive with no `inputs_sha256`, so\n"
                 "  there is no way to tell whether it still covers these imports.\n"
-                "  Repack with `build/scripts/lean_lock.sh oleans <URL>`."
+                "  Repack with `scripts/lean_lock.sh oleans <URL>`."
             )
         elif got != want:
             problems.append(
                 "the pinned olean archive is stale: it was cut for a different set of\n"
                 "  imports or package revs.\n"
                 "    archive: %s\n    current: %s\n"
-                "  Repack with `build/scripts/lean_lock.sh oleans <URL>`." % (got, want)
+                "  Repack with `scripts/lean_lock.sh oleans <URL>`." % (got, want)
             )
 
     if problems:

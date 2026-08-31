@@ -5,7 +5,7 @@
 #
 # Pack the prebuilt Lean olean trees into the archive that lean/lake-lock.json pins.
 #
-# Invoked by `build/scripts/lean_lock.sh oleans`. Two jobs:
+# Invoked by `scripts/lean_lock.sh oleans`. Two jobs:
 #
 #   1. Compute the transitive import closure of the tracked proofs, so the archive
 #      carries the modules the proofs reach rather than all of Mathlib. Measured at

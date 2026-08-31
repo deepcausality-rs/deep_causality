@@ -29,6 +29,6 @@ jobs:
         run: |
           set -euo pipefail
           # The crate list comes from the workspace manifest via crates.sh 
-          source build/scripts/crates.sh
+          source scripts/crates.sh
           echo "Checking ${#DC_CRATE_DIRS[@]} crates for unused dependencies."
           cargo machete "${DC_CRATE_DIRS[@]}"

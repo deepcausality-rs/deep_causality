@@ -76,7 +76,7 @@ solver, DSL and formalization behaviour.
   Per repository convention it moves aside rather than being deleted.
 - **`lean/BUILD.bazel`**, **`lean/lake-lock.json`**, **`lean/lake_packages.bzl`**: consumer-side
   wiring tracks any rule-surface change.
-- **`build/scripts/lean_lock.sh`**, **`lean_oleans.py`**, **`lean_closure.py`**,
+- **`scripts/lean_lock.sh`**, **`lean_oleans.py`**, **`lean_closure.py`**,
   **`lean_packages_bzl.py`**: the repin and drift-check tooling is consumer-side and stays here;
   the parts that are generic to the ruleset move with it.
 - **`.github/workflows/formalization.yml`**: the `lean-closure` gate continues to run here.

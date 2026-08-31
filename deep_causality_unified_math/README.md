@@ -156,7 +156,7 @@ identity.
 
 **A package name is no longer its directory.** `deep_causality_linear` lives at
 `deep_causality_unified_math/deep_causality_linear`. Anything that needs the directory should ask
-`cargo metadata` or source `build/scripts/crates.sh`, which reads the workspace manifest and exposes
+`cargo metadata` or source `scripts/crates.sh`, which reads the workspace manifest and exposes
 `DC_CRATES` alongside `DC_CRATE_DIRS`. Scripts that assumed the two were the same string have been
 fixed; do not write a new one.
 

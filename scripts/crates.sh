@@ -50,7 +50,7 @@ fi
 if command -v git >/dev/null 2>&1 && git rev-parse --show-toplevel >/dev/null 2>&1; then
     DC_REPO_ROOT="$(git rev-parse --show-toplevel)"
 else
-    DC_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    DC_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
 if [ ! -f "$DC_REPO_ROOT/Cargo.toml" ]; then

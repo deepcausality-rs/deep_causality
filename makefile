@@ -23,74 +23,74 @@ help:
 
 .PHONY: build
 build:
-	@source build/scripts/build.sh
+	@source scripts/build.sh
 
 
 .PHONY: bench
 bench:
-	@source build/scripts/bench.sh
+	@source scripts/bench.sh
 
 
 .PHONY: check
 check:
-	@source build/scripts/check.sh
+	@source scripts/check.sh
 
 
 .PHONY: check_examples
 check_examples:
-	@source build/scripts/check_examples.sh
+	@source scripts/check_examples.sh
 
 
 .PHONY: fix
 fix:
-	@source build/scripts/fix.sh
+	@source scripts/fix.sh
 
 
 .PHONY: format
 format:
-	@source build/scripts/format.sh
+	@source scripts/format.sh
 
 
 .PHONY: install
 install:
-	@source build/scripts/install_deps.sh
+	@source scripts/install_deps.sh
 
 
 .PHONY: lean
 lean:
-	@source build/scripts/lean.sh
+	@source scripts/lean.sh
 
 
 .PHONY: miri
 miri:
-	@source build/scripts/miri.sh
+	@source scripts/miri.sh
 
 
 .PHONY: release
 release:
-	@source build/scripts/release.sh
+	@source scripts/release.sh
 
 
 .PHONY: start
 start:
-	@source build/scripts/start.sh
+	@source scripts/start.sh
 
 
 .PHONY: test
 test:
-	@source build/scripts/test.sh
+	@source scripts/test.sh
 
 
 .PHONY: sbom
 sbom:
-	 @source build/scripts/sbom.sh
+	 @source scripts/sbom.sh
 
 
 .PHONY: update
 update:
-	 @source build/scripts/update.sh
+	 @source scripts/update.sh
 
 
 .PHONY: vendor
 vendor:
-	@source build/scripts/vendor.sh
+	@source scripts/vendor.sh

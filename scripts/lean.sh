@@ -16,7 +16,7 @@ set -o pipefail
 # Locate the lean/ directory relative to this script so it works whether the script is
 # sourced (via `make lean`) or executed directly.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LEAN_DIR="${SCRIPT_DIR}/../../lean"
+LEAN_DIR="${SCRIPT_DIR}/../lean"
 
 cd "${LEAN_DIR}"
 

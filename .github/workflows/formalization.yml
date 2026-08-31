@@ -79,7 +79,7 @@ jobs:
           # carrying a witness was invisible until someone remembered to add it, and a crate that
           # moved on disk turned every id into a false "MISSING Rust witness" because `grep`
           # printed "No such file or directory" while `|| true` swallowed the exit status.
-          source build/scripts/crates.sh
+          source scripts/crates.sh
           echo "Searching ${#DC_CRATE_DIRS[@]} crate directories for witnesses."
 
           # Source of truth: the `THEOREM_MAP: `id`` tags in the Lean proofs.
