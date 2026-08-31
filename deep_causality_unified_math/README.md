@@ -24,44 +24,24 @@ is what that became.
 
 Every crate depends only on crates below it. The graph is drawn as its transitive reduction, so
 `tensor -> num` is omitted where `tensor -> linear -> haft -> algebra -> num` already implies it.
-Fifty-one direct dependency edges reduce to twenty-three without changing what is reachable.
+Fifty-four direct dependency edges reduce to twenty-two without changing what is reachable.
 
 ```
 tier 6   topology
 tier 5   multivector
-tier 4   homology   tensor
-tier 3   calculus   fft   linear   uncertain
-tier 2   haft   num_complex   num_dual   num_rational   rand
+tier 4   calculus   fft   homology   tensor
+tier 3   linear   num_complex   num_dual   uncertain
+tier 2   haft   num_rational   rand
 tier 1   algebra
 tier 0   num   metric   ast
 ```
 
-```mermaid
-graph BT
-  algebra --> num
-  haft --> algebra
-  num_complex --> algebra
-  num_dual --> algebra
-  num_rational --> algebra
-  rand --> algebra
-  linear --> haft
-  calculus --> haft
-  calculus --> num_dual
-  fft --> num_complex
-  uncertain --> rand
-  uncertain --> ast
-  homology --> linear
-  tensor --> linear
-  tensor --> num_complex
-  tensor --> num_dual
-  tensor --> ast
-  multivector --> tensor
-  multivector --> metric
-  topology --> multivector
-  topology --> homology
-  topology --> fft
-  topology --> rand
-```
+![Dependency graph of the deep_causality mathematics crates: seven tiers, from the roots num and
+metric at tier 0 up through algebra and haft, then linear algebra and the number types, then
+tensors, to topology at tier 6. The longest chain is highlighted.](graph.png)
+
+The diagram draws sixteen of the seventeen. `ast` is omitted: it is an expression AST rather than
+mathematics, and it sits at tier 0 beside `num` and `metric` feeding only `tensor` and `uncertain`.
 
 The longest chain is seven crates:
 
@@ -106,8 +86,8 @@ declares a *witness* type, binds `type Type<T>` to that container, and implement
 traits against the witness. Two mechanisms then fall out, and both are load-bearing in
 `examples/mathematics_examples/composable_multi_math/`.
 
-**Nesting.** A witness whose `Constraint` is `NoConstraint` accepts any element, including a type
-another crate owns. A tensor of multivectors is an ordinary `CausalTensor<CausalMultiVector<T>>`, and
+**Nesting.** A witness accepts any element type, including one another crate owns. 
+A tensor of multivectors is an ordinary `CausalTensor<CausalMultiVector<T>>`, and
 one `fmap` rotates every cell of a vector field by a single Clifford rotor:
 
 ```rust
@@ -134,14 +114,25 @@ about `1.7e-31` at `Float106`.
 
 ## Where the layer stops
 
-Four of the seventeen carry witnesses: `linear`, `tensor`, `multivector` and `topology`. Every one is
-a *container* crate. The element and effect crates carry none, so composition currently runs one way
-only, from containers down onto elements. `CausalTensor<Dual<T>>` compiles and the tensor layer maps;
-the `Dual` layer cannot, because `Dual` is not a functor.
+Six of the seventeen carry witnesses: the four container crates `linear`, `tensor`, `multivector`
+and `topology`, and now the two element crates `num_complex` and `num_dual`. That second pair is
+recent, and it is why both sit a tier above `num_rational`: the difference is not the numbers, it is
+whether the crate ships a witness over them.
+
+Composition no longer runs one way only. `CausalTensor<Dual<T>>` compiles, the tensor layer maps,
+and the `Dual` layer now maps too. The element witnesses stop short of `Pure`, though, and that is
+structural rather than unfinished: a `Complex<A>` holds two slots and a `Quaternion<A>` four, so
+`pure` would have to duplicate its one argument, which needs a `Clone` the trait does not give.
+They reach their applicative through `Semigroupal::zip_with` instead, which pairs slot with slot and
+consumes nothing twice.
 
 | Trait | Implementers outside `haft` |
 |---|---|
-| `HKT`, `Functor`, `Applicative`, `Monad`, `CoMonad`, `Pure`, `Foldable` | `linear`, `tensor`, `multivector`, `topology` |
+| `HKT`, `Functor`, `Foldable` | `linear`, `tensor`, `multivector`, `topology`, `num_complex`, `num_dual` |
+| `Applicative`, `Pure`, `CoMonad` | `linear`, `tensor`, `multivector`, `topology` |
+| `Monad` | `linear`, `tensor`, `topology` |
+| `Semigroupal`, `MonoidalApplicative` | `num_complex`, `num_dual`, `tensor` |
+| `Adjunction` | `topology` |
 | `Arrow` | `calculus`, `tensor` |
 | `Traversable`, `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
 
@@ -149,8 +140,10 @@ That table is the work list. `openspec/notes/archive/unified_math/unified_math_g
 analysis: which absences are real gaps and which are correct (a `Ratio<A> -> Ratio<B>` under an
 arbitrary `f` breaks coprimality, so `num_rational` is right to have none), what each costs, and a
 ranking from mechanical to design fork. Two findings there were measured by running code rather than
-read off the source: `CausalTensorWitness` and `CausalMultiVectorWitness` both violate monad right
-identity.
+read off the source: `CausalTensorWitness` and `CausalMultiVectorWitness` both violated monad right
+identity. Both are now resolved. `CausalMultiVectorWitness` gave up `Monad`, because no metric choice
+satisfies both identity laws, and `CausalTensorWitness::bind` keeps the input's shape when the map is
+shape preserving, so a `[2, 3]` no longer comes back `[6]`.
 
 ## Working here
 
