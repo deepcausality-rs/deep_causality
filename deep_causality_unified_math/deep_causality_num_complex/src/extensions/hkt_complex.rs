@@ -5,8 +5,8 @@
 
 use crate::Complex;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative,
-    NoConstraint, Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
+    Satisfies, Semigroupal,
 };
 
 /// HKT witness for [`Complex`], a functor over its component type.
@@ -73,10 +73,7 @@ impl LaxMonoidal<ComplexWitness> for ComplexWitness {
     /// `η : I → F I`. `Complex<()>` has exactly one inhabitant across its 2 slots, so this is
     /// forced rather than chosen.
     fn unit() -> Complex<()> {
-        Complex {
-            re: (),
-            im: (),
-        }
+        Complex { re: (), im: () }
     }
 }
 

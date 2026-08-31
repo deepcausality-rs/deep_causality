@@ -1,33 +1,30 @@
 ## ADDED Requirements
 
-### Requirement: `VecWitness` implements `Traversable` through the inner witness's `zip_with`
-`deep_causality_haft` SHALL implement `Traversable<VecWitness>` for `VecWitness`, with `sequence` folding an accumulator through the inner witness using `zip_with` rather than `apply`. The fold SHALL be `acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v })` seeded with `M::pure(Vec::new())`. The `apply`-based fold SHALL NOT be used, because it places an anonymous closure inside `M` and so requires that closure type to satisfy `M::Constraint`, which `sequence` cannot declare and an impl may not add.
+### Requirement: `Traversable` keeps its `Applicative` inner bound, and `VecWitness` stays without it
+`Traversable::sequence` SHALL keep `M: Applicative<M> + HKT` as its inner-witness bound, and `VecWitness` SHALL NOT implement `Traversable` in this change. A `sequence` for `VecWitness` is writable through `Semigroupal::zip_with` and was measured to compile and pass, but only if the trait's bound moves to `M: Semigroupal<M> + Pure<M> + HKT`, and that move SHALL NOT be made here.
 
-#### Scenario: A vector of options flips
+`Applicative` and `Semigroupal + Pure` are substitutive rather than comparable: neither implies the other, so the move is a swap of admissible populations, not a loosening. Measured, it takes the witnesses admissible as the inner applicative from **19 to 3**, losing `BoxWitness`, `CausalMultiFieldWitness`, `CausalMultiVectorWitness`, `CausalTensorWitness`, `CdlEffectWitness`, `CsrMatrixWitness`, `DenseMatrixWitness`, `DenseVectorWitness`, `GraphGeneratableEffectWitness`, `LinkedListWitness`, `ManifoldWitness`, `MyEffectHktWitness`, `MyEffectHktWitness4`, `MyEffectHktWitness5`, `StudyEffectWitness` and `VecWitness` itself. Four of those are the workspace's effect monads, which are the witnesses a downstream caller would most plausibly sequence over. One carrier gained does not pay for sixteen lost.
 
-- **WHEN** `sequence::<i32, OptionWitness>` is applied to `vec![Some(1), Some(2), Some(3)]`
-- **THEN** the result is `Some(vec![1, 2, 3])`
+#### Scenario: The trait's contract is unchanged
 
-#### Scenario: Failure propagates and the empty case succeeds
+- **WHEN** `Traversable::sequence`'s bound is compared against its state before this change
+- **THEN** it still reads `M: Applicative<M> + HKT`, and both existing impls are byte-identical
 
-- **WHEN** `sequence` is applied to a vector containing `None`, and separately to an empty vector
-- **THEN** the results are `None` and `Some(vec![])` respectively
+#### Scenario: The effect monads remain admissible as inner applicatives
 
-#### Scenario: The result carrier is not restricted to `Option`
+- **WHEN** the set of witnesses satisfying `sequence`'s inner bound is enumerated
+- **THEN** it still contains all four effect witnesses, `BoxWitness`, `LinkedListWitness` and `VecWitness`
 
-- **WHEN** `sequence::<i32, ResultWitness<String>>` is applied to `vec![Ok(1), Ok(2)]`
-- **THEN** the result is `Ok(vec![1, 2])`
+### Requirement: The absence is documented with its measurement
+The note at the foot of `hkt_vec_ext.rs` SHALL record that a `zip_with`-based `sequence` compiles and passes, that it is withheld because the required bound change costs sixteen inner witnesses to gain one, and that the change should be revisited only after `Semigroupal` is adopted across those witnesses so the bound can move without narrowing the contract. It SHALL cite the E0277 that blocks the `apply`-based fold, so the underlying constraint is not rediscovered.
 
-### Requirement: The inner witness needs only the semigroupal structure
-`Traversable` for `VecWitness` SHALL bound its inner witness on `Semigroupal` and `Pure`, not on `MonoidalApplicative`. `VecWitness` itself SHALL NOT be required to implement `Semigroupal`, `Convolutional` or `MonoidalApplicative` in order to be `Traversable`, since the structure is demanded of the inner carrier alone.
+#### Scenario: A reader learns why rather than only that
 
-#### Scenario: `Vec` traverses without adopting the monoidal stack
+- **WHEN** a reader asks why `VecWitness` has no `Traversable`
+- **THEN** the note gives the closure-constraint error, the measured cost of the alternative, and the precondition for revisiting
 
-- **WHEN** `VecWitness::sequence` is used
-- **THEN** it compiles while `VecWitness` still carries only `Applicative`, keeping its cartesian semantics untouched
-
-### Requirement: The `Traversable` documentation stops referring to code that does not exist
-The `Traversable::sequence` doctest SHALL compile and run rather than being fenced `rust,ignore`, and SHALL only name witnesses that implement the trait. The note at the foot of `hkt_vec_ext.rs` recording that `VecWitness` lacks `Traversable` SHALL be removed once the impl lands.
+### Requirement: The `Traversable` doctest names only witnesses that implement the trait
+The `Traversable::sequence` doctest SHALL compile and run rather than being fenced `rust,ignore`, and SHALL demonstrate the flip over `OptionWitness` and `ResultWitness`. It SHALL NOT reference `VecWitness::sequence`, which does not exist.
 
 #### Scenario: Every doctest on the trait executes
 

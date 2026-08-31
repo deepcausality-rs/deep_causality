@@ -5,8 +5,8 @@
 
 use crate::Octonion;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative,
-    NoConstraint, Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
+    Satisfies, Semigroupal,
 };
 
 /// HKT witness for [`Octonion`], a functor over its component type.

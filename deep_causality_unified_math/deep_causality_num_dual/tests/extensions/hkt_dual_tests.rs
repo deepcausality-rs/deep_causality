@@ -63,7 +63,10 @@ fn functor_identity_and_composition() {
 
 #[test]
 fn fmap_reaches_an_unrelated_payload_type() {
-    let d = Dual { re: 3.0_f64, du: 1.0 };
+    let d = Dual {
+        re: 3.0_f64,
+        du: 1.0,
+    };
     let labelled = DualWitness::fmap(d, |x| format!("<{x}>"));
     assert_eq!(labelled.re, "<3>");
     assert_eq!(labelled.du, "<1>");

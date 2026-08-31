@@ -45,13 +45,21 @@
 - [x] 4.10 Verify `Dual<Dual<f64>>` and `Dual<Dual<Dual<f64>>>` still give correct second and third derivatives
 - [x] 4.11 Verify `cargo check --workspace --all-targets` reports zero errors after the bound comes off
 
-## 5. `Traversable` for `VecWitness`
+## 5. `Traversable` for `VecWitness` — withdrawn
 
-- [ ] 5.1 Implement `Traversable<VecWitness>` for `VecWitness`, folding through the inner witness with `zip_with` seeded by `M::pure(Vec::new())`
-- [ ] 5.2 Bound the inner witness on `Semigroupal` and `Pure`, not on `MonoidalApplicative`
-- [ ] 5.3 Remove the note at the foot of `hkt_vec_ext.rs` recording the absence
-- [ ] 5.4 Restore the `Vec<Option<A>> -> Option<Vec<A>>` example to the `Traversable::sequence` doctest now that it compiles
-- [ ] 5.5 Add tests for the all-present, contains-`None`, empty, and `ResultWitness` cases
+Measured and reverted. A `zip_with`-based `sequence` compiles and passes, but requires
+`Traversable::sequence`'s inner bound to move from `Applicative` to `Semigroupal + Pure`. Those are
+substitutive, not comparable: the swap takes admissible inner witnesses from 19 to 3, losing all
+four effect monads. See `design.md` and the note in `hkt_vec_ext.rs`.
+
+- [x] 5.1 Measure whether `sequence` is writable for `VecWitness` via `zip_with` (it is) and what
+      the required bound change costs (19 inner witnesses down to 3)
+- [x] 5.2 Revert the implementation and the bound change; leave `Traversable` untouched
+- [x] 5.3 Record the measurement in `hkt_vec_ext.rs`, including the E0277 that blocks the
+      `apply`-based fold and the precondition for revisiting
+- [x] 5.4 Keep the `Traversable::sequence` doctest compiling over `OptionWitness` and
+      `ResultWitness`, with no `rust,ignore` and no reference to a non-existent impl
+- [x] 5.5 Re-scope the `haft-vec-traversable` capability to specify the deferral
 
 ## 6. Verification and documentation
 

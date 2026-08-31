@@ -5,8 +5,8 @@
 
 use crate::Quaternion;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative,
-    NoConstraint, Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
+    Satisfies, Semigroupal,
 };
 
 /// HKT witness for [`Quaternion`], a functor over its component type.

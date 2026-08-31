@@ -9,7 +9,7 @@ The investigation behind this change is `openspec/notes/hkt_gat/monoidal-applica
 **Goals:**
 
 - Admit fixed-arity products into an applicative hierarchy without requiring `Clone` of anything that does not already have it.
-- Close E1 for `Complex`, `Quaternion`, `Octonion` and E2 for `Dual`.
+- Close E1 for `Complex`, `Quaternion`, `Octonion` and E2's functor layer for `Dual`.
 - Make the choice of monoid a witness claims visible to the type system rather than buried in a method body.
 - Keep the change additive, with no coordinated cutover and no behaviour change to any existing caller.
 
@@ -108,6 +108,44 @@ The `Functor` and `Foldable` halves are unaffected. Structural traversal and pre
 **If the deferral is ever lifted**, prefer **absorbing** over **swap**. Swap makes `extend` observe a dual whose derivative channel holds a function value, which carries no meaning in forward-mode AD terms.
 
 **Alternative considered:** ship `CoMonad` with `absorbing` and document the choice. Rejected because a documented arbitrary choice is still an arbitrary choice, and the public API would then have to keep it.
+
+### `Traversable` for `VecWitness` is withdrawn
+
+**Decided, after implementing it.** `Semigroupal::zip_with` does express a `sequence` that
+`Applicative::apply` cannot: the `apply` fold has to lift a partially-applied `push` into `M`, so it
+requires the anonymous closure type to satisfy `M::Constraint`, which `sequence` cannot declare and
+an impl may not add. The `zip_with` fold keeps the combining function outside `M`, compiles, and
+passes. That finding stands and is why `zip_with` is the primitive.
+
+Shipping it does not. The impl is only reachable if `Traversable::sequence`'s inner bound moves from
+`M: Applicative<M>` to `M: Semigroupal<M> + Pure<M>`, and those are **substitutive, not
+comparable** — neither implies the other, so this swaps one admissible population for another rather
+than widening. Measured across the workspace, admissible inner witnesses go from 19 to 3:
+
+```
+LOST eligibility as inner applicative (16)
+  BoxWitness                       CausalTensorWitness       ManifoldWitness
+  CausalMultiFieldWitness          CsrMatrixWitness          MyEffectHktWitness{,4,5}
+  CausalMultiVectorWitness         DenseMatrixWitness        VecWitness
+  CdlEffectWitness                 DenseVectorWitness        LinkedListWitness
+  GraphGeneratableEffectWitness    StudyEffectWitness
+```
+
+Four are the effect monads, which are what a downstream caller would most plausibly sequence over;
+`Option<StudyEffect<A>> → StudyEffect<Option<A>>` would stop compiling. That nothing calls `sequence`
+today makes the regression invisible, not absent. One carrier gained does not pay for sixteen lost.
+
+The two existing impls are compatible either way — their bodies are byte-identical under both
+bounds, since neither ever called `M::apply`. Impl compatibility was the wrong thing to check; the
+cost falls entirely on callers.
+
+**Alternative considered:** `M: Applicative<M> + Semigroupal<M>`, to be additive. Strictly worse: it
+is more restrictive than either bound alone, losing the same sixteen plus any `Semigroupal`-only
+witness.
+
+**Precondition for revisiting.** Adopt `Semigroupal` across the effect witnesses, `Box` and
+`LinkedList` first; then the bound can move without narrowing the contract, and `VecWitness` can have
+`Traversable` for free.
 
 ## Risks / Trade-offs
 

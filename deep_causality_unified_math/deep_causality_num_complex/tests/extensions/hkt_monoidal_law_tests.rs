@@ -87,20 +87,27 @@ fn zip_is_natural_in_both_arguments() {
         let (a, b) = (cx(&mut rng), cx(&mut rng));
         let lhs = ComplexWitness::zip(ComplexWitness::fmap(a, f), ComplexWitness::fmap(b, g));
         let rhs = ComplexWitness::fmap(ComplexWitness::zip(a, b), |(x, y)| (f(x), g(y)));
-        assert_eq!(lhs, rhs, "Complex naturality failed, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            lhs, rhs,
+            "Complex naturality failed, seed {SEED:#x} iter {i}"
+        );
 
         let (a, b) = (quat(&mut rng), quat(&mut rng));
-        let lhs = QuaternionWitness::zip(
-            QuaternionWitness::fmap(a, f),
-            QuaternionWitness::fmap(b, g),
-        );
+        let lhs =
+            QuaternionWitness::zip(QuaternionWitness::fmap(a, f), QuaternionWitness::fmap(b, g));
         let rhs = QuaternionWitness::fmap(QuaternionWitness::zip(a, b), |(x, y)| (f(x), g(y)));
-        assert_eq!(lhs, rhs, "Quaternion naturality failed, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            lhs, rhs,
+            "Quaternion naturality failed, seed {SEED:#x} iter {i}"
+        );
 
         let (a, b) = (oct(&mut rng), oct(&mut rng));
         let lhs = OctonionWitness::zip(OctonionWitness::fmap(a, f), OctonionWitness::fmap(b, g));
         let rhs = OctonionWitness::fmap(OctonionWitness::zip(a, b), |(x, y)| (f(x), g(y)));
-        assert_eq!(lhs, rhs, "Octonion naturality failed, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            lhs, rhs,
+            "Octonion naturality failed, seed {SEED:#x} iter {i}"
+        );
     }
 }
 
@@ -147,16 +154,15 @@ fn unit_is_a_two_sided_identity_for_zip() {
     let mut rng = Rng::new(SEED ^ 0x11);
     for i in 0..ITERS {
         let a = cx(&mut rng);
-        let left = ComplexWitness::fmap(
-            ComplexWitness::zip(ComplexWitness::unit(), a),
-            |((), x)| x,
-        );
-        let right = ComplexWitness::fmap(
-            ComplexWitness::zip(a, ComplexWitness::unit()),
-            |(x, ())| x,
-        );
+        let left =
+            ComplexWitness::fmap(ComplexWitness::zip(ComplexWitness::unit(), a), |((), x)| x);
+        let right =
+            ComplexWitness::fmap(ComplexWitness::zip(a, ComplexWitness::unit()), |(x, ())| x);
         assert_eq!(left, a, "Complex left unit failed, seed {SEED:#x} iter {i}");
-        assert_eq!(right, a, "Complex right unit failed, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            right, a,
+            "Complex right unit failed, seed {SEED:#x} iter {i}"
+        );
 
         let a = quat(&mut rng);
         let left = QuaternionWitness::fmap(
@@ -167,16 +173,32 @@ fn unit_is_a_two_sided_identity_for_zip() {
             QuaternionWitness::zip(a, QuaternionWitness::unit()),
             |(x, ())| x,
         );
-        assert_eq!(left, a, "Quaternion left unit failed, seed {SEED:#x} iter {i}");
-        assert_eq!(right, a, "Quaternion right unit failed, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            left, a,
+            "Quaternion left unit failed, seed {SEED:#x} iter {i}"
+        );
+        assert_eq!(
+            right, a,
+            "Quaternion right unit failed, seed {SEED:#x} iter {i}"
+        );
 
         let a = oct(&mut rng);
-        let left =
-            OctonionWitness::fmap(OctonionWitness::zip(OctonionWitness::unit(), a), |((), x)| x);
-        let right =
-            OctonionWitness::fmap(OctonionWitness::zip(a, OctonionWitness::unit()), |(x, ())| x);
-        assert_eq!(left, a, "Octonion left unit failed, seed {SEED:#x} iter {i}");
-        assert_eq!(right, a, "Octonion right unit failed, seed {SEED:#x} iter {i}");
+        let left = OctonionWitness::fmap(
+            OctonionWitness::zip(OctonionWitness::unit(), a),
+            |((), x)| x,
+        );
+        let right = OctonionWitness::fmap(
+            OctonionWitness::zip(a, OctonionWitness::unit()),
+            |(x, ())| x,
+        );
+        assert_eq!(
+            left, a,
+            "Octonion left unit failed, seed {SEED:#x} iter {i}"
+        );
+        assert_eq!(
+            right, a,
+            "Octonion right unit failed, seed {SEED:#x} iter {i}"
+        );
     }
 }
 
@@ -189,13 +211,25 @@ fn zip_is_the_derived_form_of_zip_with() {
     let mut rng = Rng::new(SEED ^ 0x22);
     for i in 0..ITERS {
         let (a, b) = (cx(&mut rng), cx(&mut rng));
-        assert_eq!(ComplexWitness::zip(a, b), ComplexWitness::zip_with(a, b, |x, y| (x, y)), "Complex zip/zip_with disagree, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            ComplexWitness::zip(a, b),
+            ComplexWitness::zip_with(a, b, |x, y| (x, y)),
+            "Complex zip/zip_with disagree, seed {SEED:#x} iter {i}"
+        );
 
         let (a, b) = (quat(&mut rng), quat(&mut rng));
-        assert_eq!(QuaternionWitness::zip(a, b), QuaternionWitness::zip_with(a, b, |x, y| (x, y)), "Quaternion zip/zip_with disagree, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            QuaternionWitness::zip(a, b),
+            QuaternionWitness::zip_with(a, b, |x, y| (x, y)),
+            "Quaternion zip/zip_with disagree, seed {SEED:#x} iter {i}"
+        );
 
         let (a, b) = (oct(&mut rng), oct(&mut rng));
-        assert_eq!(OctonionWitness::zip(a, b), OctonionWitness::zip_with(a, b, |x, y| (x, y)), "Octonion zip/zip_with disagree, seed {SEED:#x} iter {i}");
+        assert_eq!(
+            OctonionWitness::zip(a, b),
+            OctonionWitness::zip_with(a, b, |x, y| (x, y)),
+            "Octonion zip/zip_with disagree, seed {SEED:#x} iter {i}"
+        );
     }
 }
 
@@ -214,8 +248,21 @@ fn apply_pairs_each_function_with_its_own_slot() {
         y: (|x: i64| x + 3) as fn(i64) -> i64,
         z: (|x: i64| x + 4) as fn(i64) -> i64,
     };
-    let qa = Quaternion { w: 0, x: 0, y: 0, z: 0 };
-    assert!(QuaternionWitness::apply(qf, qa) == Quaternion { w: 1, x: 2, y: 3, z: 4 });
+    let qa = Quaternion {
+        w: 0,
+        x: 0,
+        y: 0,
+        z: 0,
+    };
+    assert!(
+        QuaternionWitness::apply(qf, qa)
+            == Quaternion {
+                w: 1,
+                x: 2,
+                y: 3,
+                z: 4
+            }
+    );
 }
 
 /// `apply` is Δ-free: it runs over a payload that is neither `Clone` nor `Copy`, which
@@ -241,10 +288,7 @@ fn apply_accepts_a_move_only_payload() {
 /// `fmap` and `zip_with` carry no arithmetic bound, so an unrelated payload type works.
 #[test]
 fn zip_with_carries_an_unrelated_payload() {
-    let labels = Complex {
-        re: "re",
-        im: "im",
-    };
+    let labels = Complex { re: "re", im: "im" };
     let values = Complex { re: 1u8, im: 2u8 };
     let joined = ComplexWitness::zip_with(labels, values, |l, v| format!("{l}={v}"));
     assert_eq!(joined.re, "re=1");
@@ -279,10 +323,7 @@ fn the_index_crossing_pairing_fails_the_unit_laws() {
     assert_eq!(left, Complex { re: 2, im: 1 });
 
     // And the lawful one passes, on the same input.
-    let lawful = ComplexWitness::fmap(
-        ComplexWitness::zip(ComplexWitness::unit(), a),
-        |((), x)| x,
-    );
+    let lawful = ComplexWitness::fmap(ComplexWitness::zip(ComplexWitness::unit(), a), |((), x)| x);
     assert_eq!(lawful, a);
 }
 
@@ -335,7 +376,16 @@ fn octonion_is_debug_over_a_payload_that_is_not_a_field() {
 
     // And the zipped tuple payload, which is never a field either.
     let zipped = OctonionWitness::zip(
-        Octonion { s: 1i64, e1: 2, e2: 3, e3: 4, e4: 5, e5: 6, e6: 7, e7: 8 },
+        Octonion {
+            s: 1i64,
+            e1: 2,
+            e2: 3,
+            e3: 4,
+            e4: 5,
+            e5: 6,
+            e6: 7,
+            e7: 8,
+        },
         labels,
     );
     assert!(format!("{zipped:?}").contains("(1, \"s\")"));

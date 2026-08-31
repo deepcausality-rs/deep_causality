@@ -152,5 +152,17 @@ impl CloneFunctor for VecWitness {
 //
 //     acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v });
 //
-// See `openspec/notes/hkt_gat/monoidal-applicative.md` §6. Until that structure map exists,
+// The `zip_with` structure map now exists (`crate::Semigroupal`), and a `sequence` written
+// against it does compile and pass. It is still not implemented here, and that is a decision
+// rather than an omission: `sequence`'s inner-`M` bound would have to move from `Applicative` to
+// `Semigroupal + Pure`, and those two are substitutive rather than comparable. Measured, that
+// swap takes the witnesses admissible as the inner applicative from 19 down to 3, losing every
+// effect monad in the workspace — `StudyEffectWitness`, `CdlEffectWitness`,
+// `GraphGeneratableEffectWitness` and the `MyEffectHktWitness` family — along with `BoxWitness`,
+// `LinkedListWitness`, `ManifoldWitness`, `CausalTensorWitness` and `VecWitness` itself. One
+// carrier gained is not worth sixteen lost.
+//
+// Revisit only as part of a change that first adopts `Semigroupal` across those witnesses, so the
+// bound can move without narrowing the trait's contract. See
+// `openspec/notes/hkt_gat/monoidal-applicative.md` §6 finding 5 for the measurement. Until then,
 // `OptionWitness` and `ResultWitness` are the only two `Traversable` carriers.

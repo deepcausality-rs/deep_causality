@@ -82,9 +82,10 @@ fn test_lax_monoidal_assoc() {
     for (fa, fb) in CASES {
         for fc in [Some(true), None] {
             // zip(zip(fa, fb), fc) reassociated == zip(fa, zip(fb, fc))
-            let lhs = OptWitness::fmap(OptWitness::zip(OptWitness::zip(fa, fb), fc), |((a, b), c)| {
-                (a, (b, c))
-            });
+            let lhs = OptWitness::fmap(
+                OptWitness::zip(OptWitness::zip(fa, fb), fc),
+                |((a, b), c)| (a, (b, c)),
+            );
             let rhs = OptWitness::zip(fa, OptWitness::zip(fb, fc));
             assert_eq!(lhs, rhs, "assoc failed on ({fa:?}, {fb:?}, {fc:?})");
         }
@@ -135,8 +136,5 @@ fn test_apply_is_diagonal_free() {
     struct Moved(u32);
 
     let f: fn(Moved) -> Moved = |m| Moved(m.0 + 1);
-    assert_eq!(
-        OptWitness::apply(Some(f), Some(Moved(41))),
-        Some(Moved(42))
-    );
+    assert_eq!(OptWitness::apply(Some(f), Some(Moved(41))), Some(Moved(42)));
 }

@@ -33,15 +33,29 @@ impl Rng {
 }
 
 fn cx(rng: &mut Rng) -> Complex<f64> {
-    Complex { re: rng.scalar(), im: rng.scalar() }
+    Complex {
+        re: rng.scalar(),
+        im: rng.scalar(),
+    }
 }
 fn quat(rng: &mut Rng) -> Quaternion<f64> {
-    Quaternion { w: rng.scalar(), x: rng.scalar(), y: rng.scalar(), z: rng.scalar() }
+    Quaternion {
+        w: rng.scalar(),
+        x: rng.scalar(),
+        y: rng.scalar(),
+        z: rng.scalar(),
+    }
 }
 fn oct(rng: &mut Rng) -> Octonion<f64> {
     Octonion {
-        s: rng.scalar(), e1: rng.scalar(), e2: rng.scalar(), e3: rng.scalar(),
-        e4: rng.scalar(), e5: rng.scalar(), e6: rng.scalar(), e7: rng.scalar(),
+        s: rng.scalar(),
+        e1: rng.scalar(),
+        e2: rng.scalar(),
+        e3: rng.scalar(),
+        e4: rng.scalar(),
+        e5: rng.scalar(),
+        e6: rng.scalar(),
+        e7: rng.scalar(),
     }
 }
 
@@ -54,13 +68,22 @@ fn functor_identity() {
     let mut rng = Rng::new(0xC0FFEE);
     for _ in 0..32 {
         let c = cx(&mut rng);
-        assert_eq!(<ComplexWitness as Functor<ComplexWitness>>::fmap(c, |x| x), c);
+        assert_eq!(
+            <ComplexWitness as Functor<ComplexWitness>>::fmap(c, |x| x),
+            c
+        );
 
         let q = quat(&mut rng);
-        assert_eq!(<QuaternionWitness as Functor<QuaternionWitness>>::fmap(q, |x| x), q);
+        assert_eq!(
+            <QuaternionWitness as Functor<QuaternionWitness>>::fmap(q, |x| x),
+            q
+        );
 
         let o = oct(&mut rng);
-        assert_eq!(<OctonionWitness as Functor<OctonionWitness>>::fmap(o, |x| x), o);
+        assert_eq!(
+            <OctonionWitness as Functor<OctonionWitness>>::fmap(o, |x| x),
+            o
+        );
     }
 }
 
@@ -96,22 +119,41 @@ fn functor_composition() {
 
 #[test]
 fn fmap_changes_the_component_type() {
-    let c = Complex { re: 1.5f64, im: -2.5 };
+    let c = Complex {
+        re: 1.5f64,
+        im: -2.5,
+    };
     let labels = <ComplexWitness as Functor<ComplexWitness>>::fmap(c, |x| format!("{x:.1}"));
     assert_eq!(labels.re, "1.5");
     assert_eq!(labels.im, "-2.5");
 
-    let q = Quaternion { w: 1.0f64, x: 2.0, y: 3.0, z: 4.0 };
+    let q = Quaternion {
+        w: 1.0f64,
+        x: 2.0,
+        y: 3.0,
+        z: 4.0,
+    };
     let flags = <QuaternionWitness as Functor<QuaternionWitness>>::fmap(q, |x| x > 2.5);
-    assert_eq!((flags.w, flags.x, flags.y, flags.z), (false, false, true, true));
+    assert_eq!(
+        (flags.w, flags.x, flags.y, flags.z),
+        (false, false, true, true)
+    );
 }
 
 #[test]
 fn fmap_reaches_a_nested_component() {
     // Dropping the struct-level bound is what makes this type well formed. The outer `Complex`
     // maps its components without needing any arithmetic on them.
-    let inner = Quaternion { w: 1.0f64, x: 2.0, y: 3.0, z: 4.0 };
-    let nested: Complex<Quaternion<f64>> = Complex { re: inner, im: inner };
+    let inner = Quaternion {
+        w: 1.0f64,
+        x: 2.0,
+        y: 3.0,
+        z: 4.0,
+    };
+    let nested: Complex<Quaternion<f64>> = Complex {
+        re: inner,
+        im: inner,
+    };
 
     let sums = <ComplexWitness as Functor<ComplexWitness>>::fmap(nested, |q| {
         <QuaternionWitness as Foldable<QuaternionWitness>>::fold(q, 0.0, |acc, x| acc + x)
@@ -126,28 +168,53 @@ fn fmap_reaches_a_nested_component() {
 
 #[test]
 fn fold_visits_every_component_in_order() {
-    let c = Complex { re: 1.0f64, im: 2.0 };
+    let c = Complex {
+        re: 1.0f64,
+        im: 2.0,
+    };
     let order = <ComplexWitness as Foldable<ComplexWitness>>::fold(c, Vec::new(), |mut acc, x| {
         acc.push(x);
         acc
     });
     assert_eq!(order, vec![1.0, 2.0], "Complex folds re then im");
 
-    let q = Quaternion { w: 1.0f64, x: 2.0, y: 3.0, z: 4.0 };
-    let order = <QuaternionWitness as Foldable<QuaternionWitness>>::fold(q, Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
-    assert_eq!(order, vec![1.0, 2.0, 3.0, 4.0], "Quaternion folds w, x, y, z");
+    let q = Quaternion {
+        w: 1.0f64,
+        x: 2.0,
+        y: 3.0,
+        z: 4.0,
+    };
+    let order =
+        <QuaternionWitness as Foldable<QuaternionWitness>>::fold(q, Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+    assert_eq!(
+        order,
+        vec![1.0, 2.0, 3.0, 4.0],
+        "Quaternion folds w, x, y, z"
+    );
 
     let o = Octonion {
-        s: 1.0f64, e1: 2.0, e2: 3.0, e3: 4.0, e4: 5.0, e5: 6.0, e6: 7.0, e7: 8.0,
+        s: 1.0f64,
+        e1: 2.0,
+        e2: 3.0,
+        e3: 4.0,
+        e4: 5.0,
+        e5: 6.0,
+        e6: 7.0,
+        e7: 8.0,
     };
-    let order = <OctonionWitness as Foldable<OctonionWitness>>::fold(o, Vec::new(), |mut acc, x| {
-        acc.push(x);
-        acc
-    });
-    assert_eq!(order, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], "Octonion folds s, e1..e7");
+    let order =
+        <OctonionWitness as Foldable<OctonionWitness>>::fold(o, Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+    assert_eq!(
+        order,
+        vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0],
+        "Octonion folds s, e1..e7"
+    );
 }
 
 #[test]
@@ -157,7 +224,8 @@ fn fold_agrees_with_fmap_on_element_count() {
     for _ in 0..16 {
         let o = oct(&mut rng);
         let mapped = <OctonionWitness as Functor<OctonionWitness>>::fmap(o, |x| x * 2.0);
-        let n = <OctonionWitness as Foldable<OctonionWitness>>::fold(mapped, 0usize, |acc, _| acc + 1);
+        let n =
+            <OctonionWitness as Foldable<OctonionWitness>>::fold(mapped, 0usize, |acc, _| acc + 1);
         assert_eq!(n, 8, "Octonion must always fold exactly eight components");
     }
 }
