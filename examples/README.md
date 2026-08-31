@@ -241,6 +241,7 @@ effect monad.
 | Subfolder | Crate | Description |
 |-----------|-------|-------------|
 | [algebra](mathematics_examples/algebra/README.md) | `deep_causality_multivector` | Clifford and geometric-algebra examples (basic, PGA3D, Dixon, Maxwell, GRMHD, plus the `algebraic_scanner` study of complex structure) |
+| [applied_category_theory](mathematics_examples/applied_category_theory/README.md) | `deep_causality_haft` | The higher-kinded type traits on domain problems: `Functor`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `Traversable`, `Bifunctor`, `Profunctor`, `Adjunction`, `ParametricMonad`, effect system |
 | [sparse](mathematics_examples/sparse/README.md) | `deep_causality_sparse` | CSR-format sparse matrix ops and the HKT functor view |
 | [tensor](mathematics_examples/tensor/README.md) | `deep_causality_tensor` | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor, Applicative) |
 | [topology](mathematics_examples/topology/README.md) | `deep_causality_topology` | Graphs, simplicial and cubical complexes, manifolds, differential forms, lattice gauge fields |

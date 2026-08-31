@@ -20,6 +20,8 @@ cargo run -p mathematics_examples --example <example_name>
 ```
 mathematics_examples/
 ├── algebra/                 — multivector / Clifford-algebra examples + algebraic_scanner
+├── applied_category_theory/ — higher-kinded types: Functor, Monad, CoMonad, Adjunction, ...
+├── calculus/                — arrow-calculus operators (no folder README yet)
 ├── composable_multi_math/   — cross-crate composition (HKT + causal monad)
 ├── isomorphism/             — cross-crate bridges (tensor<->sparse, multifield, witness duality)
 ├── sparse/                  — CSR sparse-matrix examples
@@ -27,11 +29,13 @@ mathematics_examples/
 └── topology/                — graphs, manifolds, lattice gauge fields
 ```
 
-Each subfolder has its own README with the per-example table.
+Each subfolder has its own README with the per-example table, except `calculus/`, which
+holds a single example and is listed in the Cargo manifest only.
 
 | Subfolder | What's inside | Per-folder README |
 |-----------|---------------|-------------------|
 | [algebra](algebra/README.md) | Clifford / geometric algebra (`CausalMultiVector`, PGA, Dixon, Hopf, etc.) plus the `algebraic_scanner` study of complex structure in `Cl(p, q, r)` | [algebra/README.md](algebra/README.md) |
+| [applied_category_theory](applied_category_theory/README.md) | The higher-kinded type traits themselves: `Functor`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `Traversable`, `Bifunctor`, `Profunctor`, `Adjunction`, `ParametricMonad` and the effect system, each on a domain problem. Moved here from `deep_causality_haft/examples` | [applied_category_theory/README.md](applied_category_theory/README.md) |
 | [sparse](sparse/README.md) | Sparse matrix ops (`CsrMatrix`) and HKT integration | [sparse/README.md](sparse/README.md) |
 | [tensor](tensor/README.md) | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor / Applicative) | [tensor/README.md](tensor/README.md) |
 | [topology](topology/README.md) | Graphs, simplicial / cubical complexes, manifolds, differential forms, lattice gauge fields | [topology/README.md](topology/README.md) |

@@ -91,7 +91,7 @@ fn main() {
 
 When you run the example via:
 
-`cargo run  --example haft_functor_example`
+`cargo run -p mathematics_examples --example haft_functor_examples`
 
 You will see:
 
@@ -258,7 +258,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
 
 When you run the example via:
 
-`cargo run  --example haft_effect_system_example`
+`cargo run -p mathematics_examples --example haft_effect_system_examples`
 
 You will see:
 
