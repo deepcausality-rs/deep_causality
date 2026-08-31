@@ -244,13 +244,23 @@ Mechanical work. No design decision, one crate touched, laws follow from the sha
 | # | Item | Gap | Why easy |
 |---|---|---|---|
 | E1 | `Functor`, `Applicative`, `Foldable` for `Complex`, `Quaternion`, `Octonion` | §3.1 | Fixed-arity products. No shape to lose, so no law to break. Constrained-witness pattern already exists |
-| E2 | `Functor` and `CoMonad` for `Dual` | §3.1 | Two fields; `extract = re`. See the caveat below |
+| E2 | `Functor` for `Dual` (`CoMonad` deferred) | §3.1 | Two fields. See the two caveats below |
 | E3 | `right_adjunct` returns `Result` instead of panicking | §3.8 | Signature change plus one call site |
 | E4 | Law tests for the four existing witnesses | §3.6 | The probe in §6 is the template. Cheap, and it pins the two known violations before anything is built on them |
 
 Caveat on E2: the lawful `fmap` over `Dual` maps `re` and `du` independently, which is the pair
 functor and carries no chain rule. It is worth having for precision migration and for structural
 traversal. It is not forward-mode AD, and the docstring should say so.
+
+Second caveat on E2, and it narrows the item: **the `CoMonad` half is deferred.** `Dual<A> ≅ A^S`
+over the two-element index set, so lawful comonads correspond to monoid structures on `S`, and a
+two-element set with a chosen identity carries exactly two. Both were measured to satisfy all four
+comonad laws, so nothing in the type selects between them; a third shape that looks natural, handing
+both slots the same focus, is unlawful and fails the counit law. With two arbitrary-but-lawful
+candidates and no caller in the workspace wanting either, shipping one would lock a default into the
+public API with nothing to validate it against. The decision and its reasoning are recorded in
+`openspec/changes/add-lax-monoidal-applicative/design.md`. If it is ever lifted, prefer the
+absorbing comultiplication over the swap.
 
 ### 4.2 Moderate
 
