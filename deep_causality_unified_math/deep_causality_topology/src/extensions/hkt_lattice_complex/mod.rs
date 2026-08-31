@@ -5,7 +5,7 @@
 
 use crate::LatticeComplex;
 use deep_causality_algebra::RealField;
-use deep_causality_haft::{Foldable, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Foldable, Functor, HKT};
 use std::sync::Arc;
 
 /// HKT witness for [`LatticeField`], the functor over values on a lattice complex.
@@ -29,7 +29,6 @@ use std::sync::Arc;
 pub struct LatticeComplexWitness<const D: usize, R: RealField>(std::marker::PhantomData<R>);
 
 impl<const D: usize, R: RealField> HKT for LatticeComplexWitness<D, R> {
-    type Constraint = NoConstraint;
     type Type<T> = LatticeField<D, R, T>;
 }
 
@@ -72,8 +71,6 @@ impl<const D: usize, R: RealField> Functor<LatticeComplexWitness<D, R>>
     /// Maps the values, carrying the lattice across unchanged.
     fn fmap<A, B, F>(fa: LatticeField<D, R, A>, f: F) -> LatticeField<D, R, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         LatticeField {
@@ -88,7 +85,6 @@ impl<const D: usize, R: RealField> Foldable<LatticeComplexWitness<D, R>>
 {
     fn fold<A, B, F>(fa: LatticeField<D, R, A>, init: B, f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         fa.values.into_iter().fold(init, f)

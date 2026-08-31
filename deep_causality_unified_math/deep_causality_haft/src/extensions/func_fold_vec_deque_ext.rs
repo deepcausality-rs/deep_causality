@@ -3,9 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{
-    CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, NoConstraint, Satisfies,
-};
+use crate::{CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT};
 use alloc::collections::VecDeque;
 
 /// `VecDequeWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -21,8 +19,6 @@ use alloc::collections::VecDeque;
 pub struct VecDequeWitness;
 
 impl HKT for VecDequeWitness {
-    type Constraint = NoConstraint;
-
     /// Specifies that `VecDequeWitness` represents the `VecDeque<T>` type constructor.
     type Type<T> = VecDeque<T>;
 }
@@ -46,8 +42,6 @@ impl Functor<VecDequeWitness> for VecDequeWitness {
         f: Func,
     ) -> <VecDequeWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(f).collect()

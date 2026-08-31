@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{HKT, Satisfies};
+use crate::HKT;
 
 /// The `Pure` trait provides the ability to lift a value into a context.
 ///
@@ -57,7 +57,5 @@ pub trait Pure<F: HKT> {
     /// let opt: Option<i32> = OptionWitness::pure(42);
     /// assert_eq!(opt, Some(42));
     /// ```
-    fn pure<T>(value: T) -> F::Type<T>
-    where
-        T: Satisfies<F::Constraint>;
+    fn pure<T>(value: T) -> F::Type<T>;
 }

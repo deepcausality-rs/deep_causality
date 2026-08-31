@@ -5,8 +5,7 @@
 
 use crate::Octonion;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
-    Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, Semigroupal,
 };
 
 /// HKT witness for [`Octonion`], a functor over its eight component slots.
@@ -21,7 +20,6 @@ use deep_causality_haft::{
 pub struct OctonionWitness;
 
 impl HKT for OctonionWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Octonion<T>;
 }
 
@@ -29,8 +27,6 @@ impl Functor<OctonionWitness> for OctonionWitness {
     /// Maps all eight components, scalar part first.
     fn fmap<A, B, F>(fa: Octonion<A>, mut f: F) -> Octonion<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         Octonion {
@@ -50,7 +46,6 @@ impl Foldable<OctonionWitness> for OctonionWitness {
     /// Folds over the components in the order `s`, `e1` through `e7`.
     fn fold<A, B, F>(fa: Octonion<A>, init: B, mut f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         let acc = f(init, fa.s);
@@ -74,9 +69,6 @@ impl Semigroupal<OctonionWitness> for OctonionWitness {
     /// two unit laws force `u = v = id`. See the module docs.
     fn zip_with<A, B, C, F>(fa: Octonion<A>, fb: Octonion<B>, mut f: F) -> Octonion<C>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         Octonion {

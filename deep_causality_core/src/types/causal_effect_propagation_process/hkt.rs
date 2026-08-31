@@ -5,9 +5,7 @@
 
 use crate::{CausalEffect, CausalEffectPropagationProcess};
 use core::marker::PhantomData;
-use deep_causality_haft::{
-    Applicative, Functor, HKT, HKT5, LogAppend, NoConstraint, Placeholder, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT5, LogAppend, Placeholder, Pure};
 
 pub struct CausalEffectPropagationProcessWitness<S, C, E, L>(
     Placeholder,
@@ -24,7 +22,6 @@ impl<S, C, E, L> HKT5<S, C, E, L> for CausalEffectPropagationProcessWitness<S, C
 
 // Impl for arity-1 HKT, required by Functor/Monad bounds on Effect5
 impl<S, C, E, L> HKT for CausalEffectPropagationProcessWitness<S, C, E, L> {
-    type Constraint = NoConstraint;
     type Type<Value> = CausalEffectPropagationProcess<Value, S, C, E, L>;
 }
 
@@ -37,8 +34,6 @@ where
 {
     fn fmap<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
-        A: Satisfies<<Self as HKT>::Constraint>,
-        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
         // Error short-circuits: `f` is not invoked; the error propagates (left zero). Otherwise the
@@ -65,10 +60,7 @@ where
     E: Clone,
     L: LogAppend + Clone + Default,
 {
-    fn pure<T>(value: T) -> <Self as HKT>::Type<T>
-    where
-        T: Satisfies<<Self as HKT>::Constraint>,
-    {
+    fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
         CausalEffectPropagationProcess {
             outcome: Ok(CausalEffect::value(value)),
             state: S::default(),
@@ -90,9 +82,8 @@ where
         mut f_a: <Self as HKT>::Type<A>,
     ) -> <Self as HKT>::Type<B>
     where
-        A: Satisfies<<Self as HKT>::Constraint> + Clone,
-        B: Satisfies<<Self as HKT>::Constraint>,
-        Func: Satisfies<<Self as HKT>::Constraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);

@@ -8,15 +8,12 @@ use alloc::vec::Vec;
 
 use crate::CausalMultiVector;
 use crate::CausalMultiVectorError;
-use deep_causality_haft::{
-    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Pure};
 use deep_causality_metric::Metric;
 
 pub struct CausalMultiVectorWitness;
 
 impl HKT for CausalMultiVectorWitness {
-    type Constraint = NoConstraint;
     type Type<T> = CausalMultiVector<T>;
 }
 
@@ -26,8 +23,6 @@ impl HKT for CausalMultiVectorWitness {
 impl Functor<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn fmap<A, B, Func>(fa: CausalMultiVector<A>, f: Func) -> CausalMultiVector<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let metric = fa.metric;
@@ -40,10 +35,7 @@ impl Functor<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 // Pure
 // ----------------------------------------------------------------------------
 impl Pure<CausalMultiVectorWitness> for CausalMultiVectorWitness {
-    fn pure<T>(value: T) -> CausalMultiVector<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> CausalMultiVector<T> {
         let metric = Metric::Euclidean(0);
         let data = vec![value];
         CausalMultiVector { data, metric }
@@ -59,9 +51,8 @@ impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         f_a: CausalMultiVector<A>,
     ) -> CausalMultiVector<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         let metric = f_a.metric;
         let funcs = f_ab.data;
@@ -90,7 +81,6 @@ impl Applicative<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 impl Foldable<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn fold<A, B, Func>(fa: CausalMultiVector<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.data.into_iter().fold(init, f)
@@ -120,7 +110,7 @@ impl Foldable<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 impl CoMonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn extract<A>(fa: &CausalMultiVector<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         // Extract scalar part (index 0)
         fa.data.first().cloned().expect("Empty MultiVector")
@@ -129,8 +119,7 @@ impl CoMonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
     fn extend<A, B, Func>(fa: &CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
     where
         Func: FnMut(&CausalMultiVector<A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         // Extend with cyclic rotation.
         // For each position i, construct a view where i is the new origin (0).
@@ -172,7 +161,7 @@ impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
 
     fn unit<A>(ctx: &Metric, a: A) -> CausalMultiVector<CausalMultiVector<A>>
     where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         // unit: a -> R(L(a))
         // Inner MV: the context algebra Cl(ctx), which admits exactly 2^dim coefficients, so 'a'
@@ -202,7 +191,7 @@ impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
         lrb: CausalMultiVector<CausalMultiVector<B>>,
     ) -> Result<B, Self::Error>
     where
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        B: Clone,
     {
         // counit: L(R(b)) -> b. Flatten the nesting, then take the scalar part.
         lrb.data
@@ -214,8 +203,7 @@ impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
 
     fn left_adjunct<A, B, F>(ctx: &Metric, a: A, f: F) -> CausalMultiVector<B>
     where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         F: Fn(CausalMultiVector<A>) -> B,
     {
         // left: a -> f(unit(a))
@@ -233,8 +221,7 @@ impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
         f: F,
     ) -> Result<B, Self::Error>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
+        A: Clone,
         F: FnMut(A) -> CausalMultiVector<B>,
     {
         // right: (A -> R<B>) -> (L<A> -> B)

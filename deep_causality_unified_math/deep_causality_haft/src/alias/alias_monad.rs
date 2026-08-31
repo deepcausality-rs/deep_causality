@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, Monad, Satisfies};
+use crate::{HKT, Monad};
 
 /// Alias trait for `Monad` providing more intuitive method names.
 ///
@@ -14,8 +14,6 @@ pub trait AliasMonad<F: HKT>: Monad<F> {
     #[inline]
     fn chain<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> F::Type<B>,
     {
         Self::bind(m_a, f)
@@ -23,11 +21,7 @@ pub trait AliasMonad<F: HKT>: Monad<F> {
 
     /// Alias for `join`. Flattens a nested container.
     #[inline]
-    fn flatten<A>(m_m_a: F::Type<F::Type<A>>) -> F::Type<A>
-    where
-        A: Satisfies<F::Constraint>,
-        F::Type<A>: Satisfies<F::Constraint>,
-    {
+    fn flatten<A>(m_m_a: F::Type<F::Type<A>>) -> F::Type<A> {
         Self::join(m_m_a)
     }
 }

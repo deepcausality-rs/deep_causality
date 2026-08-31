@@ -5,24 +5,23 @@
 
 //! Witness for `lean/DeepCausalityFormal/Haft/Profunctor.lean` (Loregian, (Co)end Calculus §5).
 
-use deep_causality_haft::{HKT2Unbound, NoConstraint, Profunctor, Satisfies};
+use deep_causality_haft::{HKT2Unbound, Profunctor};
 
 // Local function carrier, mirroring the crate's canonical profunctor test.
 struct Fun<I, O>(Box<dyn Fn(I) -> O>);
 struct FunWitness;
 
 impl HKT2Unbound for FunWitness {
-    type Constraint = NoConstraint;
     type Type<A, B> = Fun<A, B>;
 }
 
 impl Profunctor<FunWitness> for FunWitness {
     fn dimap<A, B, C, D, F1, F2>(pab: Fun<A, B>, f_pre: F1, f_post: F2) -> Fun<C, D>
     where
-        A: 'static + Satisfies<NoConstraint>,
-        B: 'static + Satisfies<NoConstraint>,
-        C: 'static + Satisfies<NoConstraint>,
-        D: 'static + Satisfies<NoConstraint>,
+        A: 'static,
+        B: 'static,
+        C: 'static,
+        D: 'static,
         F1: FnMut(C) -> A + 'static,
         F2: FnMut(B) -> D + 'static,
     {

@@ -6,7 +6,7 @@
 use crate::types::flow::study_effect::{StudyEffect, StudyEffectWitness};
 use crate::types::flow::study_error::StudyError;
 use crate::types::flow::study_warning::StudyWarningLog;
-use deep_causality_haft::{LogAppend, Monad, NoConstraint, Satisfies};
+use deep_causality_haft::{LogAppend, Monad};
 
 /// `bind`: the lawful monadic sequencing — short-circuit on a prior error, otherwise run the
 /// continuation on the value and thread (merge) the warning log. The fluent `and_then` engine on
@@ -16,8 +16,6 @@ impl Monad<StudyEffectWitness<StudyError, StudyWarningLog>>
 {
     fn bind<A, B, Func>(m_a: StudyEffect<A>, f: Func) -> StudyEffect<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> StudyEffect<B>,
     {
         let mut f = f;

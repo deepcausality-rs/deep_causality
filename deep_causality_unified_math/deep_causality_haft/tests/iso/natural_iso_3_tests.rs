@@ -5,7 +5,7 @@
 
 //! Tier 3 `NaturalIso3<F, G>` round-trip tests (arity-3 HKT3Unbound).
 
-use deep_causality_haft::{HKT3Unbound, NaturalIso3, NoConstraint, Satisfies};
+use deep_causality_haft::{HKT3Unbound, NaturalIso3};
 
 // =============================================================================
 // Fixtures
@@ -24,26 +24,19 @@ struct MyTriple<A, B, C> {
 struct TripleWitness;
 
 impl HKT3Unbound for TripleWitness {
-    type Constraint = NoConstraint;
     type Type<A, B, C> = Triple<A, B, C>;
 }
 
 struct MyTripleWitness;
 
 impl HKT3Unbound for MyTripleWitness {
-    type Constraint = NoConstraint;
     type Type<A, B, C> = MyTriple<A, B, C>;
 }
 
 struct TripleMyTripleIso;
 
 impl NaturalIso3<TripleWitness, MyTripleWitness> for TripleMyTripleIso {
-    fn to_target<A, B, C>(fa: Triple<A, B, C>) -> MyTriple<A, B, C>
-    where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<A, B, C>(fa: Triple<A, B, C>) -> MyTriple<A, B, C> {
         MyTriple {
             a: fa.0,
             b: fa.1,
@@ -51,12 +44,7 @@ impl NaturalIso3<TripleWitness, MyTripleWitness> for TripleMyTripleIso {
         }
     }
 
-    fn to_source<A, B, C>(ga: MyTriple<A, B, C>) -> Triple<A, B, C>
-    where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<A, B, C>(ga: MyTriple<A, B, C>) -> Triple<A, B, C> {
         Triple(ga.a, ga.b, ga.c)
     }
 }

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Functor, HKT, Satisfies};
+use crate::{Functor, HKT};
 
 /// Alias trait for `Functor` providing more intuitive method names.
 ///
@@ -13,8 +13,6 @@ pub trait AliasFunctor<F: HKT>: Functor<F> {
     #[inline]
     fn transform<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> B,
     {
         Self::fmap(m_a, f)

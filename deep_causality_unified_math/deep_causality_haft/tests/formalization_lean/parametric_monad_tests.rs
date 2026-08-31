@@ -5,7 +5,7 @@
 
 //! Witness for `lean/DeepCausalityFormal/Haft/ParametricMonad.lean` (Atkey 2009).
 
-use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Satisfies};
+use deep_causality_haft::{HKT3Unbound, ParametricMonad};
 
 // Phantom-indexed carrier, mirroring the crate's canonical parametric-monad test.
 // The Lean model proves the laws for the full indexed-state monad; this carrier is its
@@ -27,26 +27,16 @@ fn ixval<SIn, SOut, A>(value: A) -> IxVal<SIn, SOut, A> {
 
 struct IxValWitness;
 impl HKT3Unbound for IxValWitness {
-    type Constraint = NoConstraint;
     type Type<A, B, C> = IxVal<A, B, C>;
 }
 
 impl ParametricMonad<IxValWitness> for IxValWitness {
-    fn pure<S, A>(value: A) -> IxVal<S, S, A>
-    where
-        S: Satisfies<NoConstraint>,
-        A: Satisfies<NoConstraint>,
-    {
+    fn pure<S, A>(value: A) -> IxVal<S, S, A> {
         ixval(value)
     }
 
     fn ibind<S1, S2, S3, A, B, F>(m: IxVal<S1, S2, A>, mut f: F) -> IxVal<S1, S3, B>
     where
-        S1: Satisfies<NoConstraint>,
-        S2: Satisfies<NoConstraint>,
-        S3: Satisfies<NoConstraint>,
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> IxVal<S2, S3, B>,
     {
         ixval(f(m.value).value)

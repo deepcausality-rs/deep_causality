@@ -16,7 +16,7 @@
 //! [`OptionToVec`] in `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/interpreter_tests.rs` and proved
 //! in `lean/DeepCausalityFormal/Haft/Interpreter.lean` (`haft.interpreter.naturality`).
 
-use crate::{HKT, Satisfies};
+use crate::HKT;
 
 /// A natural transformation `F ⇒ G` between two [`HKT`] functors.
 ///
@@ -29,9 +29,7 @@ where
     G: HKT,
 {
     /// The component at `A`: reshape an `F`-structure into a `G`-structure without touching payload.
-    fn transform<A>(fa: F::Type<A>) -> G::Type<A>
-    where
-        A: Satisfies<F::Constraint> + Satisfies<G::Constraint>;
+    fn transform<A>(fa: F::Type<A>) -> G::Type<A>;
 }
 
 /// The natural transformation `Option ⇒ Vec`: `None ↦ []`, `Some a ↦ [a]`.
@@ -46,10 +44,7 @@ impl NaturalTransformation<crate::OptionWitness, crate::VecWitness> for OptionTo
     #[inline]
     fn transform<A>(
         fa: <crate::OptionWitness as HKT>::Type<A>,
-    ) -> <crate::VecWitness as HKT>::Type<A>
-    where
-        A: Satisfies<crate::NoConstraint>,
-    {
+    ) -> <crate::VecWitness as HKT>::Type<A> {
         match fa {
             Some(a) => alloc::vec![a],
             None => alloc::vec::Vec::new(),

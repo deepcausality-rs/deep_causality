@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, Functor, HKT, HKT2, NoConstraint, Placeholder, Satisfies};
+use crate::{Foldable, Functor, HKT, HKT2, Placeholder};
 use alloc::collections::BTreeMap;
 
 /// `BTreeMapWitness<K>` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -24,8 +24,6 @@ impl<K> HKT2<K> for BTreeMapWitness<K> {
 }
 
 impl<K> HKT for BTreeMapWitness<K> {
-    type Constraint = NoConstraint;
-
     /// Specifies that `BTreeMapWitness<K>` also acts as a single-parameter HKT,
     /// where the `K` parameter is considered part of the "witness" itself.
     type Type<V> = BTreeMap<K, V>;
@@ -54,8 +52,6 @@ where
         mut f: Func,
     ) -> <BTreeMapWitness<K> as HKT2<K>>::Type<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(|(k, v)| (k, f(v))).collect()

@@ -5,33 +5,24 @@
 
 //! Witness for `lean/DeepCausalityFormal/Haft/NaturalIso.lean` (Mac Lane, CWM §I.4).
 
-use deep_causality_haft::{
-    Either, Functor, HKT, NaturalIso, NoConstraint, OptionWitness, Satisfies,
-};
+use deep_causality_haft::{Either, Functor, HKT, NaturalIso, OptionWitness};
 
 // Option A ≅ Either<(), A> — two genuinely different constructors.
 struct UnitSumWitness;
 impl HKT for UnitSumWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Either<(), T>;
 }
 
 struct OptSumIso;
 impl NaturalIso<OptionWitness, UnitSumWitness> for OptSumIso {
-    fn to_target<T>(fa: Option<T>) -> Either<(), T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn to_target<T>(fa: Option<T>) -> Either<(), T> {
         match fa {
             Some(a) => Either::Right(a),
             None => Either::Left(()),
         }
     }
 
-    fn to_source<T>(ga: Either<(), T>) -> Option<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn to_source<T>(ga: Either<(), T>) -> Option<T> {
         match ga {
             Either::Right(a) => Some(a),
             Either::Left(()) => None,

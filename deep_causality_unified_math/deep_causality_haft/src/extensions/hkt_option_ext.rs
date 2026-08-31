@@ -4,8 +4,8 @@
  */
 
 use crate::{
-    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
-    NoConstraint, Pure, Satisfies, Traversable,
+    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, Pure,
+    Traversable,
 };
 
 /// `OptionWitness` is a zero-sized type that acts as a Higher-Kinded Type (HKT) witness
@@ -21,8 +21,6 @@ use crate::{
 pub struct OptionWitness;
 
 impl HKT for OptionWitness {
-    type Constraint = NoConstraint;
-
     /// Specifies that `OptionWitness` represents the `Option<T>` type constructor.
     type Type<T> = Option<T>;
 }
@@ -47,8 +45,6 @@ impl Functor<OptionWitness> for OptionWitness {
         f: Func,
     ) -> <OptionWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.map(f)
@@ -66,10 +62,7 @@ impl Pure<OptionWitness> for OptionWitness {
     /// # Returns
     ///
     /// `Some(value)`.
-    fn pure<T>(value: T) -> <OptionWitness as HKT>::Type<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> <OptionWitness as HKT>::Type<T> {
         Some(value)
     }
 }
@@ -94,9 +87,8 @@ impl Applicative<OptionWitness> for OptionWitness {
         f_a: <OptionWitness as HKT>::Type<A>,
     ) -> <OptionWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         f_ab.and_then(|f| f_a.map(f))
     }
@@ -151,8 +143,6 @@ impl Monad<OptionWitness> for OptionWitness {
         mut f: Func,
     ) -> <OptionWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <OptionWitness as HKT>::Type<B>,
     {
         match m_a {
@@ -193,9 +183,7 @@ impl Traversable<OptionWitness> for OptionWitness {
     ) -> <M as HKT>::Type<<OptionWitness as HKT>::Type<A>>
     where
         M: Applicative<M> + HKT,
-        A: Clone + Satisfies<NoConstraint> + Satisfies<M::Constraint>,
-        M::Type<A>: Satisfies<NoConstraint>,
-        Option<A>: Satisfies<M::Constraint>,
+        A: Clone,
     {
         match fa {
             Some(m_a) => M::fmap(m_a, |a_val: A| Some(a_val)),

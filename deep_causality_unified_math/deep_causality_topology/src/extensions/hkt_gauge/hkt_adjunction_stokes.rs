@@ -16,7 +16,7 @@ use crate::types::chain::Chain;
 use crate::types::differential_form::DifferentialForm;
 use crate::{BaseTopology, SimplicialComplex};
 use deep_causality_haft::Pure; // Added Pure
-use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Adjunction, HKT};
 use deep_causality_linear::CsrMatrix;
 use deep_causality_linear::CsrMatrixWitness; // Added Witness
 use deep_causality_num::Float;
@@ -35,7 +35,6 @@ use std::sync::Arc;
 pub struct ExteriorDerivativeWitness;
 
 impl HKT for ExteriorDerivativeWitness {
-    type Constraint = NoConstraint;
     type Type<T> = DifferentialForm<T>;
 }
 
@@ -58,7 +57,6 @@ impl HKT for ExteriorDerivativeWitness {
 pub struct BoundaryWitness<R>(core::marker::PhantomData<R>);
 
 impl<R> HKT for BoundaryWitness<R> {
-    type Constraint = NoConstraint;
     type Type<G> = Chain<R, G>;
 }
 
@@ -130,8 +128,7 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
     /// Semantically, this maps a value `a` to a 0-chain where each vertex has the 0-form `a`.
     fn unit<A>(ctx: &StokesContext<R>, a: A) -> Chain<R, DifferentialForm<A>>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        DifferentialForm<A>: Satisfies<NoConstraint>,
+        A: Clone,
     {
         // Dimension of the complex
         let dim = ctx.dim();
@@ -161,8 +158,7 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
         lrb: DifferentialForm<Chain<R, B>>,
     ) -> Result<B, Self::Error>
     where
-        B: Satisfies<NoConstraint> + Clone,
-        Chain<R, B>: Satisfies<NoConstraint>,
+        B: Clone,
     {
         // Integration: collapse form of chains to scalar (B).
         // The counit evaluation doesn't strictly depend on the topological context
@@ -192,9 +188,7 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
     /// Given `f: DifferentialForm<A> → B`, produce `g: A → Chain<B>`
     fn left_adjunct<A, B, Func>(ctx: &StokesContext<R>, a: A, f: Func) -> Chain<R, B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        DifferentialForm<A>: Satisfies<NoConstraint>,
+        A: Clone,
         Func: Fn(DifferentialForm<A>) -> B,
     {
         // 1. Create a representative 0-form from 'a'
@@ -224,9 +218,8 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
         mut f: Func,
     ) -> Result<B, Self::Error>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Clone,
-        Chain<R, B>: Satisfies<NoConstraint>,
+        A: Clone,
+        B: Clone,
         Func: FnMut(A) -> Chain<R, B>,
     {
         // Extract value 'a' from the form 'la'. Non-empty by construction, but that is a

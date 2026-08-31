@@ -8,7 +8,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 use deep_causality_algebra::Field;
-use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Pure};
+use deep_causality_haft::{CoMonad, Functor, HKT, Pure};
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 
@@ -27,7 +27,6 @@ impl<T> CausalMultiFieldWitness<T> {
 }
 
 impl<T> HKT for CausalMultiFieldWitness<T> {
-    type Constraint = NoConstraint;
     type Type<A> = CausalMultiField<A, T>;
 }
 

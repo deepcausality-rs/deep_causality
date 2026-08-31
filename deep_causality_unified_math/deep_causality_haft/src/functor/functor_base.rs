@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, Satisfies};
+use crate::HKT;
 
 /// The `Functor` trait abstracts over types that can be mapped over.
 ///
@@ -68,7 +68,5 @@ pub trait Functor<F: HKT> {
     /// ```
     fn fmap<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> B;
 }

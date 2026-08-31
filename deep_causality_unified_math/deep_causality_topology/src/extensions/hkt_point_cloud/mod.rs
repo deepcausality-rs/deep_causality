@@ -4,7 +4,7 @@
  */
 
 use crate::PointCloud;
-use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{CoMonad, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
@@ -20,22 +20,16 @@ use std::marker::PhantomData;
 /// there. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct PointCloudWitness<C>(PhantomData<C>);
 
-impl<C> HKT for PointCloudWitness<C>
-where
-    C: Satisfies<NoConstraint>,
-{
-    type Constraint = NoConstraint;
+impl<C> HKT for PointCloudWitness<C> {
     type Type<T> = PointCloud<C, T>;
 }
 
 impl<C> Functor<PointCloudWitness<C>> for PointCloudWitness<C>
 where
-    C: Satisfies<NoConstraint> + Clone,
+    C: Clone,
 {
     fn fmap<A, B, F>(fa: PointCloud<C, A>, f: F) -> PointCloud<C, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         // Points are invariant
@@ -54,11 +48,11 @@ where
 
 impl<C> CoMonad<PointCloudWitness<C>> for PointCloudWitness<C>
 where
-    C: Satisfies<NoConstraint> + Clone,
+    C: Clone,
 {
     fn extract<A>(fa: &PointCloud<C, A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.metadata
             .as_slice()
@@ -70,8 +64,7 @@ where
     fn extend<A, B, Func>(fa: &PointCloud<C, A>, mut f: Func) -> PointCloud<C, B>
     where
         Func: FnMut(&PointCloud<C, A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         let size = fa.len();
         let shape = fa.metadata.shape().to_vec();

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT3Unbound, NoConstraint, ParametricMonad, Satisfies};
+use deep_causality_haft::{HKT3Unbound, ParametricMonad};
 
 // Simplified State for testing
 #[derive(Debug, Clone)]
@@ -16,16 +16,11 @@ pub struct State<SIn, SOut, A> {
 pub struct StateWitness;
 
 impl HKT3Unbound for StateWitness {
-    type Constraint = NoConstraint;
     type Type<SIn, SOut, A> = State<SIn, SOut, A>;
 }
 
 impl ParametricMonad<StateWitness> for StateWitness {
-    fn pure<S, A>(value: A) -> State<S, S, A>
-    where
-        S: Satisfies<NoConstraint>,
-        A: Satisfies<NoConstraint>,
-    {
+    fn pure<S, A>(value: A) -> State<S, S, A> {
         State {
             value,
             _phantom_in: std::marker::PhantomData,
@@ -35,11 +30,6 @@ impl ParametricMonad<StateWitness> for StateWitness {
 
     fn ibind<S1, S2, S3, A, B, F>(m: State<S1, S2, A>, mut f: F) -> State<S1, S3, B>
     where
-        S1: Satisfies<NoConstraint>,
-        S2: Satisfies<NoConstraint>,
-        S3: Satisfies<NoConstraint>,
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> State<S2, S3, B>,
     {
         let next = f(m.value);

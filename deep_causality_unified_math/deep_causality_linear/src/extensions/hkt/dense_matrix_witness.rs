@@ -4,9 +4,7 @@
  */
 
 use crate::types::dense_matrix::DenseMatrix;
-use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Pure};
 
 /// The higher-kinded witness for [`DenseMatrix`].
 ///
@@ -17,7 +15,6 @@ use deep_causality_haft::{
 pub struct DenseMatrixWitness;
 
 impl HKT for DenseMatrixWitness {
-    type Constraint = NoConstraint;
     type Type<T> = DenseMatrix<T>;
 }
 
@@ -37,8 +34,6 @@ impl HKT for DenseMatrixWitness {
 impl Functor<DenseMatrixWitness> for DenseMatrixWitness {
     fn fmap<A, B, Func>(m_a: DenseMatrix<A>, f: Func) -> DenseMatrix<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let (r, c) = (m_a.rows_pub(), m_a.cols_pub());
@@ -50,8 +45,6 @@ impl Functor<DenseMatrixWitness> for DenseMatrixWitness {
 impl Foldable<DenseMatrixWitness> for DenseMatrixWitness {
     fn fold<A, B, Func>(fa: DenseMatrix<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.into_data().into_iter().fold(init, f)
@@ -64,10 +57,7 @@ impl Pure<DenseMatrixWitness> for DenseMatrixWitness {
     /// The laws do not settle the shape; something has to choose it, and choosing the same shape
     /// the existing witness chooses is what lets a value round-trip through `pure` then `extract`
     /// unchanged.
-    fn pure<T>(value: T) -> DenseMatrix<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> DenseMatrix<T> {
         DenseMatrix::from_vec(alloc::vec![value], 1, 1).expect("1x1 holds exactly one value")
     }
 }
@@ -75,9 +65,7 @@ impl Pure<DenseMatrixWitness> for DenseMatrixWitness {
 impl Applicative<DenseMatrixWitness> for DenseMatrixWitness {
     fn apply<A, B, Func>(ff: DenseMatrix<Func>, fa: DenseMatrix<A>) -> DenseMatrix<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B + Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
         let (r, c) = (fa.rows_pub(), fa.cols_pub());
         let mut fns = ff.into_data().into_iter();
@@ -116,7 +104,7 @@ impl CoMonad<DenseMatrixWitness> for DenseMatrixWitness {
     /// would break `extend(extract) == id`.
     fn extract<A>(fa: &DenseMatrix<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.as_slice()
             .first()
@@ -126,8 +114,7 @@ impl CoMonad<DenseMatrixWitness> for DenseMatrixWitness {
 
     fn extend<A, B, Func>(fa: &DenseMatrix<A>, mut f: Func) -> DenseMatrix<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         Func: FnMut(&DenseMatrix<A>) -> B,
     {
         // For each position, build the view that focuses it at (0, 0) and apply `f` there. That is

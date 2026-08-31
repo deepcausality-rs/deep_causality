@@ -120,9 +120,9 @@ pub use crate::io::{
 pub use crate::iso::{NaturalIso, NaturalIso2, NaturalIso3, NaturalIso4, NaturalIso5};
 
 // HKT
-pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5, Satisfies};
+pub use crate::hkt::Placeholder;
+pub use crate::hkt::{HKT, HKT2, HKT3, HKT4, HKT5};
 pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unbound};
-pub use crate::hkt::{NoConstraint, Placeholder};
 
 // Traits
 pub use crate::adjunction::Adjunction;

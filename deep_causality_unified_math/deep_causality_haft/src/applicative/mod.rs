@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT, Pure, Satisfies};
+use crate::{Functor, HKT, Pure};
 
 /// The `Applicative` trait extends `Functor` and `Pure` by providing the `apply` operation
 /// to apply a function wrapped in a context to a value wrapped in a context.
@@ -69,7 +69,6 @@ pub trait Applicative<F: HKT>: Functor<F> + Pure<F> {
     /// *   `Func`: The type of the function, which must be `FnMut(A) -> B`.
     fn apply<A, B, Func>(f_ab: F::Type<Func>, f_a: F::Type<A>) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint> + Clone,
-        B: Satisfies<F::Constraint>,
-        Func: Satisfies<F::Constraint> + FnMut(A) -> B;
+        A: Clone,
+        Func: FnMut(A) -> B;
 }

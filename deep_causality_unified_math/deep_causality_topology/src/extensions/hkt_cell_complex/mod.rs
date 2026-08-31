@@ -5,7 +5,7 @@
 
 use crate::Cell;
 use crate::CellComplex;
-use deep_causality_haft::{Foldable, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Foldable, Functor, HKT};
 use std::sync::Arc;
 
 /// HKT witness for [`CellField`], the functor over values on a cell complex.
@@ -35,7 +35,6 @@ use std::sync::Arc;
 pub struct CellComplexWitness<C: Cell>(std::marker::PhantomData<C>);
 
 impl<C: Cell> HKT for CellComplexWitness<C> {
-    type Constraint = NoConstraint;
     type Type<T> = CellField<C, T>;
 }
 
@@ -96,8 +95,6 @@ impl<C: Cell> Functor<CellComplexWitness<C>> for CellComplexWitness<C> {
     /// Maps the values, carrying the complex across unchanged.
     fn fmap<A, B, F>(fa: CellField<C, A>, f: F) -> CellField<C, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         CellField {
@@ -110,7 +107,6 @@ impl<C: Cell> Functor<CellComplexWitness<C>> for CellComplexWitness<C> {
 impl<C: Cell> Foldable<CellComplexWitness<C>> for CellComplexWitness<C> {
     fn fold<A, B, F>(fa: CellField<C, A>, init: B, f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         fa.values.into_iter().fold(init, f)

@@ -6,7 +6,7 @@
 //! Witness for `lean/DeepCausalityFormal/Haft/EffectSystem.lean` (Moggi 1991; Wadler 1995
 //! §2.7 for the Writer monoid).
 
-use deep_causality_haft::{Effect3, Functor, HKT, HKT3, MonadEffect3, NoConstraint, Satisfies};
+use deep_causality_haft::{Effect3, Functor, HKT, HKT3, MonadEffect3};
 
 // Sum-encoded carrier: `Result` holds value XOR error (the W-invariant by construction),
 // so bind's error branch needs neither `U::default()` nor a spurious run of `f` —
@@ -22,14 +22,11 @@ impl HKT3<String, Vec<String>> for LawfulEffWitness {
     type Type<T> = LawfulEff<T>;
 }
 impl HKT for LawfulEffWitness {
-    type Constraint = NoConstraint;
     type Type<T> = LawfulEff<T>;
 }
 impl Functor<LawfulEffWitness> for LawfulEffWitness {
     fn fmap<A, B, Func>(m_a: LawfulEff<A>, mut f: Func) -> LawfulEff<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         LawfulEff {

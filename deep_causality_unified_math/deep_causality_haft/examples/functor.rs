@@ -5,7 +5,7 @@
 
 use deep_causality_haft::{
     BTreeMapWitness, BoxWitness, Functor, HKT, HashMapWitness, LinkedListWitness, OptionWitness,
-    ResultWitness, Satisfies, VecDequeWitness, VecWitness,
+    ResultWitness, VecDequeWitness, VecWitness,
 };
 use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
 
@@ -25,8 +25,6 @@ use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
 fn process_batch<F, T, U>(container: F::Type<T>, transform: impl FnMut(T) -> U) -> F::Type<U>
 where
     F: Functor<F> + HKT,
-    T: Satisfies<F::Constraint>,
-    U: Satisfies<F::Constraint>,
 {
     F::fmap(container, transform)
 }

@@ -4,8 +4,7 @@
  */
 
 use crate::{
-    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
-    NoConstraint, Pure, Satisfies,
+    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, Pure,
 };
 use alloc::vec;
 use alloc::vec::Vec;
@@ -23,8 +22,6 @@ use alloc::vec::Vec;
 pub struct VecWitness;
 
 impl HKT for VecWitness {
-    type Constraint = NoConstraint;
-
     /// Specifies that `VecWitness` represents the `Vec<T>` type constructor.
     type Type<T> = Vec<T>;
 }
@@ -32,10 +29,7 @@ impl HKT for VecWitness {
 // Implementation of Pure for VecWitness
 impl Pure<VecWitness> for VecWitness {
     /// Lifts a pure value into a `Vec` containing only that value.
-    fn pure<T>(value: T) -> <VecWitness as HKT>::Type<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> <VecWitness as HKT>::Type<T> {
         vec![value]
     }
 }
@@ -51,9 +45,8 @@ impl Applicative<VecWitness> for VecWitness {
         f_a: <VecWitness as HKT>::Type<A>,
     ) -> <VecWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         f_ab.into_iter()
             .flat_map(|mut f_val| {
@@ -72,8 +65,6 @@ impl Functor<VecWitness> for VecWitness {
     /// Applies the function `f` to each element in the vector, producing a new vector.
     fn fmap<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(f).collect()
@@ -86,7 +77,6 @@ impl Foldable<VecWitness> for VecWitness {
     fn fold<A, B, Func>(fa: <VecWitness as HKT>::Type<A>, init: B, f: Func) -> B
     where
         <VecWitness as HKT>::Type<A>: IntoIterator<Item = A>,
-        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.into_iter().fold(init, f)
@@ -101,8 +91,6 @@ impl Monad<VecWitness> for VecWitness {
     /// returns a new vector. All the resulting vectors are then concatenated into a single `Vec`.
     fn bind<A, B, Func>(m_a: <VecWitness as HKT>::Type<A>, f: Func) -> <VecWitness as HKT>::Type<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <VecWitness as HKT>::Type<B>,
     {
         m_a.into_iter().flat_map(f).collect()

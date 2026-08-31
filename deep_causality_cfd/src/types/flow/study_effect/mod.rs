@@ -19,7 +19,7 @@ mod monad;
 
 use crate::types::flow::study_error::StudyError;
 use crate::types::flow::study_warning::{StudyWarning, StudyWarningLog};
-use deep_causality_haft::{HKT, HKT3, LogAppend, NoConstraint, Pure};
+use deep_causality_haft::{HKT, HKT3, LogAppend, Pure};
 use std::marker::PhantomData;
 
 /// A phase value inside the study effect: either the carried value or the first (verb-tagged)
@@ -96,7 +96,6 @@ impl<T> StudyEffect<T> {
 pub struct StudyEffectWitness<E, WLog>(PhantomData<(E, WLog)>);
 
 impl<E, WLog> HKT for StudyEffectWitness<E, WLog> {
-    type Constraint = NoConstraint;
     type Type<T> = StudyEffect<T>;
 }
 

@@ -8,9 +8,7 @@ use alloc::vec::Vec;
 
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
-use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
 
 // ============================================================================
 // HKT Witness Implementation
@@ -35,7 +33,6 @@ use deep_causality_haft::{
 pub struct CausalTensorWitness;
 
 impl HKT for CausalTensorWitness {
-    type Constraint = NoConstraint;
     type Type<T> = CausalTensor<T>;
 }
 
@@ -46,8 +43,6 @@ impl HKT for CausalTensorWitness {
 impl Functor<CausalTensorWitness> for CausalTensorWitness {
     fn fmap<A, B, Func>(m_a: CausalTensor<A>, f: Func) -> CausalTensor<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let shape = m_a.shape().to_vec();
@@ -59,7 +54,6 @@ impl Functor<CausalTensorWitness> for CausalTensorWitness {
 impl Foldable<CausalTensorWitness> for CausalTensorWitness {
     fn fold<A, B, Func>(fa: CausalTensor<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.into_vec().into_iter().fold(init, f)
@@ -67,10 +61,7 @@ impl Foldable<CausalTensorWitness> for CausalTensorWitness {
 }
 
 impl Pure<CausalTensorWitness> for CausalTensorWitness {
-    fn pure<T>(value: T) -> CausalTensor<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> CausalTensor<T> {
         CausalTensor::from_vec(vec![value], &[])
     }
 }
@@ -78,8 +69,6 @@ impl Pure<CausalTensorWitness> for CausalTensorWitness {
 impl Monad<CausalTensorWitness> for CausalTensorWitness {
     fn bind<A, B, Func>(m_a: CausalTensor<A>, mut f: Func) -> CausalTensor<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         let mut result_data = Vec::with_capacity(m_a.len());
@@ -95,7 +84,7 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
 impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
     fn extract<A>(fa: &CausalTensor<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.as_slice()
             .first()
@@ -106,8 +95,7 @@ impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
     fn extend<A, B, Func>(fa: &CausalTensor<A>, mut f: Func) -> CausalTensor<B>
     where
         Func: FnMut(&CausalTensor<A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         let len = fa.len();
         let shape = fa.shape().to_vec();
@@ -124,9 +112,8 @@ impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
 impl Applicative<CausalTensorWitness> for CausalTensorWitness {
     fn apply<A, B, Func>(f_ab: CausalTensor<Func>, f_a: CausalTensor<A>) -> CausalTensor<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         let shape = f_a.shape().to_vec();
         let funcs = f_ab.into_vec();

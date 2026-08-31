@@ -53,24 +53,20 @@
 //!
 //! Laws are stated for pure functions; a stateful `FnMut` closure voids them.
 
-use crate::{Functor, HKT, Monad, Satisfies};
+use crate::{Functor, HKT, Monad};
 
 /// The semigroupal structure: the monoid multiplication `φ` on its own, with no unit.
 ///
-/// `zip_with` is the required method and `zip` is derived from it, not the other way round. That
-/// ordering is deliberate. Deriving [`apply`](MonoidalApplicative::apply) through `zip` builds an
-/// `F::Type<(Func, A)>` and hands it to [`fmap`](Functor::fmap), so the *tuple* would have to
-/// satisfy the witness constraint:
+/// `zip_with` is the required method and `zip` is derived from it.
 ///
-/// ```text
-/// error[E0277]: the trait bound `(Func, A): Satisfies<<F as HKT>::Constraint>` is not satisfied
-/// note: required by a bound in `fmap`
-/// ```
-///
-/// That bound then leaks: every function generic over the witness has to restate it or fail at the
-/// call site with the same error. `zip_with` never constructs the tuple, so `apply` and its callers
-/// are free of it, and only `zip` carries it, where a tuple is what the caller actually wanted.
-///
+/// That ordering was once forced. Deriving [`apply`](MonoidalApplicative::apply) through `zip`
+/// builds an `F::Type<(Func, A)>` and hands it to [`fmap`](Functor::fmap), and while every
+/// method carried a `T: Satisfies<F::Constraint>` bound, the *tuple* had to satisfy the witness
+/// constraint too. That bound then leaked into every function generic over the witness.
+/// `Satisfies` and the associated `Constraint` are gone, so `zip` now carries no bounds and the
+/// two are interderivable. `zip_with` stays the required method because it is the one that
+/// allocates nothing: it pairs and combines in a single pass, where `zip` must materialise a
+/// tuple the caller may only take apart again.
 /// The same shape appears twice elsewhere in the workspace: [`MonoidalMerge::merge`] at the
 /// `HKT3Unbound` level, and `LatticeGaugeFieldWitness::zip_with` concretely in
 /// `deep_causality_topology`, which returns `Result` because its `φ` is partial.
@@ -92,21 +88,10 @@ pub trait Semigroupal<F: HKT>: Functor<F> {
     /// consumed twice, so no payload needs `Clone`.
     fn zip_with<A, B, C, Func>(fa: F::Type<A>, fb: F::Type<B>, f: Func) -> F::Type<C>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
-        C: Satisfies<F::Constraint>,
         Func: FnMut(A, B) -> C;
 
     /// `φ : F A ⊗ F B → F (A ⊗ B)`, derived from [`zip_with`](Semigroupal::zip_with).
-    ///
-    /// Carries the `(A, B): Satisfies<F::Constraint>` bound that `zip_with` avoids, because this
-    /// is the operation that actually builds the tuple.
-    fn zip<A, B>(fa: F::Type<A>, fb: F::Type<B>) -> F::Type<(A, B)>
-    where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
-        (A, B): Satisfies<F::Constraint>,
-    {
+    fn zip<A, B>(fa: F::Type<A>, fb: F::Type<B>) -> F::Type<(A, B)> {
         Self::zip_with(fa, fb, |a, b| (a, b))
     }
 }
@@ -204,19 +189,16 @@ pub trait Convolutional<F: HKT>: Semigroupal<F> {}
 ///
 /// ```compile_fail
 /// use deep_causality_haft::{
-///     Convolutional, Functor, HKT, MonoidalApplicative, NoConstraint, Satisfies, Semigroupal,
+///     Convolutional, Functor, HKT, MonoidalApplicative, Semigroupal,
 /// };
 ///
 /// pub struct Unpromised;
 /// impl HKT for Unpromised {
-///     type Constraint = NoConstraint;
 ///     type Type<T> = Vec<T>;
 /// }
 /// impl Functor<Unpromised> for Unpromised {
 ///     fn fmap<A, B, Func>(fa: Vec<A>, f: Func) -> Vec<B>
 ///     where
-///         A: Satisfies<NoConstraint>,
-///         B: Satisfies<NoConstraint>,
 ///         Func: FnMut(A) -> B,
 ///     {
 ///         fa.into_iter().map(f).collect()
@@ -240,19 +222,16 @@ pub trait Convolutional<F: HKT>: Semigroupal<F> {}
 ///
 /// ```rust
 /// use deep_causality_haft::{
-///     Convolutional, Functor, HKT, MonoidalApplicative, NoConstraint, Satisfies, Semigroupal,
+///     Convolutional, Functor, HKT, MonoidalApplicative, Semigroupal,
 /// };
 ///
 /// pub struct Promised;
 /// impl HKT for Promised {
-///     type Constraint = NoConstraint;
 ///     type Type<T> = Vec<T>;
 /// }
 /// impl Functor<Promised> for Promised {
 ///     fn fmap<A, B, Func>(fa: Vec<A>, f: Func) -> Vec<B>
 ///     where
-///         A: Satisfies<NoConstraint>,
-///         B: Satisfies<NoConstraint>,
 ///         Func: FnMut(A) -> B,
 ///     {
 ///         fa.into_iter().map(f).collect()
@@ -279,9 +258,7 @@ pub trait MonoidalApplicative<F: HKT>: Functor<F> + Convolutional<F> {
     /// `zip_with` pairs each function with its argument exactly once.
     fn apply<A, B, Func>(ff: F::Type<Func>, fa: F::Type<A>) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
-        Func: Satisfies<F::Constraint> + FnMut(A) -> B,
+        Func: FnMut(A) -> B,
     {
         Self::zip_with(ff, fa, |mut f, a| f(a))
     }

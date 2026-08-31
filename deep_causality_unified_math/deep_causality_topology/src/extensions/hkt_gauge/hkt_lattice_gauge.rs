@@ -65,8 +65,7 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 //
 //     pub struct LgfOverM<G: GaugeGroup, const D: usize, R: RealField>(PhantomData<(G, R)>);
 //     impl<G: GaugeGroup, const D: usize, R: RealField> HKT for LgfOverM<G, D, R> {
-//         type Constraint = NoConstraint;
-//         type Type<T> = LatticeGaugeField<G, D, T, R> where T: Satisfies<NoConstraint>;
+//         type Type<T> = LatticeGaugeField<G, D, T, R>;
 //     }
 //
 // What stops `Functor` is that `fmap` must rebuild each `LinkVariable<G, B, R>`, which

@@ -3,14 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Adjunction, AliasAdjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Adjunction, AliasAdjunction, HKT};
 
 // Simplified Identity for testing
 #[derive(Debug, PartialEq, Clone)]
 struct Identity<T>(T);
 struct IdentityWitness;
 impl HKT for IdentityWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Identity<T>;
 }
 
@@ -23,9 +22,7 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
 
     fn left_adjunct<A, B, F>(_ctx: &(), a: A, f: F) -> Identity<B>
     where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Identity<A>: Satisfies<NoConstraint>,
+        A: Clone,
         F: Fn(Identity<A>) -> B,
     {
         let res_b = f(Identity(a));
@@ -34,9 +31,7 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
 
     fn right_adjunct<A, B, F>(_ctx: &(), la: Identity<A>, mut f: F) -> Result<B, Self::Error>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        Identity<B>: Satisfies<NoConstraint>,
+        A: Clone,
         F: FnMut(A) -> Identity<B>,
     {
         let a = la.0;
@@ -46,16 +41,14 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
 
     fn unit<A>(_ctx: &(), a: A) -> Identity<Identity<A>>
     where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
-        Identity<A>: Satisfies<NoConstraint>,
+        A: Clone,
     {
         Identity(Identity(a))
     }
 
     fn counit<B>(_ctx: &(), fa: Identity<Identity<B>>) -> Result<B, Self::Error>
     where
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
-        Identity<B>: Satisfies<NoConstraint>,
+        B: Clone,
     {
         Ok(fa.0.0)
     }

@@ -26,7 +26,7 @@
 //! `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/interpreter_tests.rs`.
 
 use crate::arrow::arrow_term::{ArrowCore, ArrowVal};
-use crate::{Functor, HKT, Monad, NoConstraint, Pure};
+use crate::{Functor, HKT, Monad, Pure};
 use alloc::boxed::Box;
 
 impl<G> ArrowCore<G> {
@@ -49,7 +49,7 @@ impl<G> ArrowCore<G> {
         input: ArrowVal<V>,
     ) -> M::Type<ArrowVal<V>>
     where
-        M: Monad<M> + HKT<Constraint = NoConstraint>,
+        M: Monad<M> + HKT,
         Phi: Fn(&G, V) -> M::Type<V>,
         V: Clone,
     {

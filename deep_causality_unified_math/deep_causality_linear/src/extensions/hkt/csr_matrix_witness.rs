@@ -6,9 +6,7 @@
 use crate::types::csr_matrix::CsrMatrix;
 use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Pure};
 
 /// The higher-kinded witness for [`CsrMatrix`].
 ///
@@ -27,7 +25,6 @@ use deep_causality_haft::{
 pub struct CsrMatrixWitness;
 
 impl HKT for CsrMatrixWitness {
-    type Constraint = NoConstraint;
     type Type<T> = CsrMatrix<T>;
 }
 
@@ -35,8 +32,6 @@ impl Functor<CsrMatrixWitness> for CsrMatrixWitness {
     /// Maps the **stored** entries, leaving the structural zeros alone.
     fn fmap<A, B, Func>(m_a: CsrMatrix<A>, f: Func) -> CsrMatrix<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let (ri, ci, values, shape) = m_a.into_parts();
@@ -49,8 +44,6 @@ impl Foldable<CsrMatrixWitness> for CsrMatrixWitness {
     /// `fmap` makes and for the same reason.
     fn fold<A, B, Func>(fa: CsrMatrix<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         let (_, _, values, _) = fa.into_parts();
@@ -60,10 +53,7 @@ impl Foldable<CsrMatrixWitness> for CsrMatrixWitness {
 
 impl Pure<CsrMatrixWitness> for CsrMatrixWitness {
     /// The 1×1 holding the value, matching what the crate this moves from produces.
-    fn pure<T>(value: T) -> CsrMatrix<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> CsrMatrix<T> {
         CsrMatrix::from_raw_parts(vec![0, 1], vec![0], vec![value], (1, 1))
     }
 }
@@ -72,9 +62,7 @@ impl Applicative<CsrMatrixWitness> for CsrMatrixWitness {
     /// Applies the stored functions to the stored entries, position by position.
     fn apply<A, B, Func>(ff: CsrMatrix<Func>, fa: CsrMatrix<A>) -> CsrMatrix<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B + Satisfies<NoConstraint>,
+        Func: FnMut(A) -> B,
     {
         let (_, _, fns, _) = ff.into_parts();
         let (ri, ci, values, shape) = fa.into_parts();
@@ -100,7 +88,7 @@ impl CoMonad<CsrMatrixWitness> for CsrMatrixWitness {
     /// fabricated zero would break `extend(extract) == id`.
     fn extract<A>(fa: &CsrMatrix<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.values()
             .first()
@@ -113,8 +101,7 @@ impl CoMonad<CsrMatrixWitness> for CsrMatrixWitness {
     /// The shifted-view focus, which is what makes `extend(extract) == id` hold.
     fn extend<A, B, Func>(fa: &CsrMatrix<A>, mut f: Func) -> CsrMatrix<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         Func: FnMut(&CsrMatrix<A>) -> B,
     {
         let n = fa.values().len();

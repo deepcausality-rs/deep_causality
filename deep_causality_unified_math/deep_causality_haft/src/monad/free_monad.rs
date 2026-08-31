@@ -33,7 +33,7 @@
 //! standard Rust free-monad constraint, so the monadic surface is provided as inherent methods;
 //! [`FreeWitness`] implements [`HKT`] and [`Pure`] (which need no cloning).
 
-use crate::{Functor, HKT, NoConstraint, Pure, Satisfies};
+use crate::{Functor, HKT, Pure};
 use alloc::boxed::Box;
 use core::marker::PhantomData;
 
@@ -44,7 +44,7 @@ use core::marker::PhantomData;
 /// `A` values and whose branches are `F`-shaped operation nodes.
 pub enum Free<F, A>
 where
-    F: HKT<Constraint = NoConstraint>,
+    F: HKT,
 {
     /// A pure value — the leaf / monadic unit.
     Pure(A),
@@ -54,7 +54,7 @@ where
 
 impl<F, A> Free<F, A>
 where
-    F: HKT<Constraint = NoConstraint> + Functor<F>,
+    F: HKT + Functor<F>,
 {
     /// The monadic unit: lift a pure value into the free monad. (`Pure a`.)
     #[inline]
@@ -126,21 +126,17 @@ pub struct FreeWitness<F>(PhantomData<F>);
 
 impl<F> HKT for FreeWitness<F>
 where
-    F: HKT<Constraint = NoConstraint>,
+    F: HKT,
 {
-    type Constraint = NoConstraint;
     type Type<T> = Free<F, T>;
 }
 
 impl<F> Pure<FreeWitness<F>> for FreeWitness<F>
 where
-    F: HKT<Constraint = NoConstraint> + Functor<F>,
+    F: HKT + Functor<F>,
 {
     #[inline]
-    fn pure<T>(value: T) -> <FreeWitness<F> as HKT>::Type<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> <FreeWitness<F> as HKT>::Type<T> {
         Free::Pure(value)
     }
 }

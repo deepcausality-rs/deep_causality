@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CoMonad, HKT, Satisfies};
+use crate::{CoMonad, HKT};
 
 /// Alias trait for `CoMonad` providing more intuitive method names.
 ///
@@ -14,7 +14,7 @@ pub trait AliasCoMonad<F: HKT>: CoMonad<F> {
     #[inline]
     fn observe<A>(fa: &F::Type<A>) -> A
     where
-        A: Satisfies<F::Constraint> + Clone,
+        A: Clone,
     {
         Self::extract(fa)
     }
@@ -23,8 +23,7 @@ pub trait AliasCoMonad<F: HKT>: CoMonad<F> {
     #[inline]
     fn propagate<A, B, Func>(fa: &F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint> + Clone,
-        B: Satisfies<F::Constraint>,
+        A: Clone,
         Func: FnMut(&F::Type<A>) -> B,
     {
         Self::extend(fa, f)

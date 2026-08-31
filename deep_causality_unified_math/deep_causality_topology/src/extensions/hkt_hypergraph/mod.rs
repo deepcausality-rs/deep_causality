@@ -4,7 +4,7 @@
  */
 
 use crate::Hypergraph;
-use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{CoMonad, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// # Why `NoConstraint`
@@ -20,15 +20,12 @@ use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 pub struct HypergraphWitness;
 
 impl HKT for HypergraphWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Hypergraph<T>;
 }
 
 impl Functor<HypergraphWitness> for HypergraphWitness {
     fn fmap<A, B, F>(fa: Hypergraph<A>, f: F) -> Hypergraph<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_data = CausalTensorWitness::fmap(fa.data, f);
@@ -45,7 +42,7 @@ impl Functor<HypergraphWitness> for HypergraphWitness {
 impl CoMonad<HypergraphWitness> for HypergraphWitness {
     fn extract<A>(fa: &Hypergraph<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.data
             .as_slice()
@@ -57,8 +54,7 @@ impl CoMonad<HypergraphWitness> for HypergraphWitness {
     fn extend<A, B, Func>(fa: &Hypergraph<A>, mut f: Func) -> Hypergraph<B>
     where
         Func: FnMut(&Hypergraph<A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         let size = fa.num_nodes;
         let shape = fa.data.shape().to_vec();

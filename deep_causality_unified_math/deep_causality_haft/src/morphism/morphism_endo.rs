@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT2Unbound, Morphism, Satisfies};
+use crate::{HKT2Unbound, Morphism};
 
 /// The type-preserving fragment of [`Morphism`]: arrows `T → T`.
 ///
@@ -27,10 +27,7 @@ use crate::{HKT2Unbound, Morphism, Satisfies};
 /// hanging.
 pub trait Endomorphism<P: HKT2Unbound>: Morphism<P> {
     /// Apply `arrow` to `x` exactly `n` times.
-    fn iterate_n<T>(arrow: &P::Type<T, T>, x: T, n: usize) -> T
-    where
-        T: Satisfies<P::Constraint>,
-    {
+    fn iterate_n<T>(arrow: &P::Type<T, T>, x: T, n: usize) -> T {
         let mut acc = x;
         for _ in 0..n {
             acc = Self::apply(arrow, acc);
@@ -45,7 +42,7 @@ pub trait Endomorphism<P: HKT2Unbound>: Morphism<P> {
     /// bound was hit first.
     fn iterate_to_fixpoint<T>(arrow: &P::Type<T, T>, x: T, max_steps: usize) -> (T, bool)
     where
-        T: Satisfies<P::Constraint> + Clone + PartialEq,
+        T: Clone + PartialEq,
     {
         let mut acc = x;
         for _ in 0..max_steps {
@@ -70,7 +67,6 @@ pub trait Endomorphism<P: HKT2Unbound>: Morphism<P> {
         max_steps: usize,
     ) -> (T, bool)
     where
-        T: Satisfies<P::Constraint>,
         Pred: FnMut(&T) -> bool,
     {
         let mut acc = x;

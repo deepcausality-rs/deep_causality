@@ -5,7 +5,7 @@
 
 use crate::types::cdl_effect::{CdlEffect, CdlEffectWitness};
 use crate::{CdlError, CdlWarningLog};
-use deep_causality_haft::{LogAppend, Monad, NoConstraint, Satisfies};
+use deep_causality_haft::{LogAppend, Monad};
 
 // Monad: bind
 impl Monad<CdlEffectWitness<CdlError, CdlWarningLog>>
@@ -13,8 +13,6 @@ impl Monad<CdlEffectWitness<CdlError, CdlWarningLog>>
 {
     fn bind<A, B, Func>(m_a: CdlEffect<A>, f: Func) -> CdlEffect<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> CdlEffect<B>,
     {
         let mut f = f;

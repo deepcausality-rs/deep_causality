@@ -35,7 +35,7 @@ use deep_causality_algebra::{
     AbelianGroup, CommutativeRing, CommutativeSemiring, ConjugateScalar, DivisibleByIntegers,
     EuclideanDomain, Field, IntegralDomain, Module, NormedScalar, RealField, Ring,
 };
-use deep_causality_haft::{HKT, Satisfies};
+use deep_causality_haft::HKT;
 use deep_causality_num::{Float106, Gf2};
 
 const fn pin_semiring<T: CommutativeSemiring>() {}
@@ -53,7 +53,6 @@ const fn pin_module<M: Module<R>, R: Ring>() {}
 const fn pin_projection<W, T, C>()
 where
     W: HKT<Type<T> = C>,
-    T: Satisfies<W::Constraint>,
 {
 }
 #[cfg(feature = "std")]

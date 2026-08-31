@@ -5,8 +5,7 @@
 
 use crate::Quaternion;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
-    Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, Semigroupal,
 };
 
 /// HKT witness for [`Quaternion`], a functor over its four component slots.
@@ -21,7 +20,6 @@ use deep_causality_haft::{
 pub struct QuaternionWitness;
 
 impl HKT for QuaternionWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Quaternion<T>;
 }
 
@@ -29,8 +27,6 @@ impl Functor<QuaternionWitness> for QuaternionWitness {
     /// Maps all four components, scalar part first.
     fn fmap<A, B, F>(fa: Quaternion<A>, mut f: F) -> Quaternion<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         Quaternion {
@@ -46,7 +42,6 @@ impl Foldable<QuaternionWitness> for QuaternionWitness {
     /// Folds over the components in the order `w`, `x`, `y`, `z`.
     fn fold<A, B, F>(fa: Quaternion<A>, init: B, mut f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         let acc = f(init, fa.w);
@@ -66,9 +61,6 @@ impl Semigroupal<QuaternionWitness> for QuaternionWitness {
     /// two unit laws force `u = v = id`. See the module docs.
     fn zip_with<A, B, C, F>(fa: Quaternion<A>, fb: Quaternion<B>, mut f: F) -> Quaternion<C>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         Quaternion {

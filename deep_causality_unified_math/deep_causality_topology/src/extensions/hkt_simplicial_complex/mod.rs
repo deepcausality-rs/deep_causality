@@ -5,7 +5,7 @@
 
 use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::{Chain, SimplicialComplex};
-use deep_causality_haft::{Adjunction, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies};
+use deep_causality_haft::{Adjunction, Foldable, Functor, HKT, Pure};
 use deep_causality_linear::CsrMatrixWitness;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -27,7 +27,6 @@ use std::sync::Arc;
 pub struct ChainWitness<R>(PhantomData<R>);
 
 impl<R> HKT for ChainWitness<R> {
-    type Constraint = NoConstraint;
     type Type<G> = Chain<R, G>;
 }
 
@@ -44,8 +43,6 @@ impl<R> Functor<ChainWitness<R>> for ChainWitness<R> {
     /// `SimplicialComplex<B>` from nothing and dropped the geometry doing it.
     fn fmap<A, B, Func>(fa: Chain<R, A>, f: Func) -> Chain<R, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let new_weights = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(fa.weights, f);
@@ -60,7 +57,6 @@ impl<R> Functor<ChainWitness<R>> for ChainWitness<R> {
 impl<R> Foldable<ChainWitness<R>> for ChainWitness<R> {
     fn fold<A, B, Func>(fa: Chain<R, A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         // Re-use CsrMatrix foldable logic
@@ -82,7 +78,7 @@ impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>,
 
     fn unit<A>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A) -> Chain<R, Chain<R, A>>
     where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        A: Clone,
         // We remove unnecessary recursive bounds if possible.
     {
         let (complex, grade) = ctx;
@@ -106,7 +102,7 @@ impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>,
         lrb: Chain<R, Chain<R, B>>,
     ) -> Result<B, Self::Error>
     where
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        B: Clone,
     {
         // counit: Chain<Chain<B>> -> B
         //
@@ -132,8 +128,7 @@ impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>,
 
     fn left_adjunct<A, B, F>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A, f: F) -> Chain<R, B>
     where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         F: FnMut(Chain<R, A>) -> B,
     {
         // left: a -> f(unit(a))
@@ -159,8 +154,8 @@ impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>,
         f: F,
     ) -> Result<B, Self::Error>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
+        A: Clone,
+        B: Clone,
         F: FnMut(A) -> Chain<R, B>,
     {
         // right: (A -> R<B>) -> (L<A> -> B)

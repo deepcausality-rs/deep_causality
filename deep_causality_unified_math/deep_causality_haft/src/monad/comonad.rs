@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT, Satisfies};
+use crate::{Functor, HKT};
 
 /// The `CoMonad` trait represents a comonadic context, which is the dual of a `Monad`.
 ///
@@ -79,7 +79,7 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     /// ```
     fn extract<A>(fa: &F::Type<A>) -> A
     where
-        A: Satisfies<F::Constraint> + Clone;
+        A: Clone;
 
     /// Extends the comonadic context by applying a function to its observed state.
     ///
@@ -125,8 +125,7 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     /// ```
     fn extend<A, B, Func>(fa: &F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint> + Clone,
-        B: Satisfies<F::Constraint>,
+        A: Clone,
         Func: FnMut(&F::Type<A>) -> B;
 
     /// Duplicates the comonadic context.
@@ -147,8 +146,8 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     /// Uses `extend` with clone: `extend(fa, |x| x.clone())`
     fn duplicate<A>(fa: &F::Type<A>) -> F::Type<F::Type<A>>
     where
-        A: Satisfies<F::Constraint> + Clone,
-        F::Type<A>: Satisfies<F::Constraint> + Clone,
+        A: Clone,
+        F::Type<A>: Clone,
     {
         Self::extend(fa, |x| x.clone())
     }

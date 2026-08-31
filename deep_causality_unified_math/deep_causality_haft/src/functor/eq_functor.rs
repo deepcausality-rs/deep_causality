@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, NoConstraint};
+use crate::HKT;
 
 /// Witness capability: an [`HKT`] functor whose `Type<T>` can be compared structurally
 /// whenever the payload `T: PartialEq`.
@@ -31,7 +31,7 @@ use crate::{HKT, NoConstraint};
 /// (`OptionWitness`, `VecWitness`, `BoxWitness`, `LinkedListWitness`, `VecDequeWitness`) implement
 /// it — the body is the container's own `==`.
 ///
-/// Scoped to `HKT<Constraint = NoConstraint>` because `Free`/`Cofree` require it.
+/// Scoped to `HKT` because `Free`/`Cofree` require it.
 ///
 /// # Law
 ///
@@ -53,11 +53,10 @@ use crate::{HKT, NoConstraint};
 /// gives no `==` for its programs.
 ///
 /// ```compile_fail
-/// use deep_causality_haft::{Free, HKT, NoConstraint};
+/// use deep_causality_haft::{Free, HKT};
 ///
 /// struct NoEq;
 /// impl HKT for NoEq {
-///     type Constraint = NoConstraint;
 ///     type Type<T> = Option<T>;
 /// }
 ///
@@ -65,7 +64,7 @@ use crate::{HKT, NoConstraint};
 /// let b: Free<NoEq, i32> = Free::Pure(1);
 /// let _ = a == b; // `NoEq: EqFunctor` is not satisfied — does not compile.
 /// ```
-pub trait EqFunctor: HKT<Constraint = NoConstraint> {
+pub trait EqFunctor: HKT {
     /// Structural equality of two `Self::Type<T>` containers, given `T: PartialEq`.
     fn eq_type<T: PartialEq>(a: &Self::Type<T>, b: &Self::Type<T>) -> bool;
 }

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, NoConstraint};
+use crate::HKT;
 use core::fmt;
 
 /// Witness capability: an [`HKT`] functor whose `Type<T>` can be `Debug`-formatted whenever the
@@ -21,7 +21,7 @@ use core::fmt;
 /// (`OptionWitness`, `VecWitness`, `BoxWitness`, `LinkedListWitness`, `VecDequeWitness`) implement it
 /// — the body delegates to the container's own `Debug`.
 ///
-/// Scoped to `HKT<Constraint = NoConstraint>` because `Free`/`Cofree` require it.
+/// Scoped to `HKT` because `Free`/`Cofree` require it.
 ///
 /// # Examples
 ///
@@ -32,7 +32,7 @@ use core::fmt;
 /// fn assert_debug_functor<W: DebugFunctor>() {}
 /// assert_debug_functor::<OptionWitness>();
 /// ```
-pub trait DebugFunctor: HKT<Constraint = NoConstraint> {
+pub trait DebugFunctor: HKT {
     /// `Debug`-format a `Self::Type<T>` container into `f`, given `T: Debug`.
     fn fmt_type<T: fmt::Debug>(fa: &Self::Type<T>, f: &mut fmt::Formatter<'_>) -> fmt::Result;
 }

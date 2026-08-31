@@ -19,7 +19,7 @@
 //! - [`assert_natural_iso_naturality`] — naturality with respect to `fmap`:
 //!   `to_target(F::fmap(fa, h)) == G::fmap(to_target(fa), h)`.
 
-use crate::{Functor, HKT, NaturalIso, Satisfies};
+use crate::{Functor, HKT, NaturalIso};
 
 /// Asserts the round-trip identity law for a Tier 3
 /// [`NaturalIso<F, G>`] impl in both directions independently.
@@ -39,7 +39,6 @@ where
     W: NaturalIso<F, G>,
     F: HKT,
     G: HKT,
-    T: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
     F::Type<T>: Clone + PartialEq + core::fmt::Debug,
     G::Type<T>: Clone + PartialEq + core::fmt::Debug,
 {
@@ -73,8 +72,6 @@ where
     W: NaturalIso<F, G>,
     F: HKT + Functor<F>,
     G: HKT + Functor<G>,
-    A: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-    B: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
     F::Type<A>: Clone,
     G::Type<B>: PartialEq + core::fmt::Debug,
     Func: FnMut(A) -> B + Clone,

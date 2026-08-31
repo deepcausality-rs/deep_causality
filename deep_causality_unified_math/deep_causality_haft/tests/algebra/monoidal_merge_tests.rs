@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT3Unbound, MonoidalMerge, NoConstraint, Satisfies};
+use deep_causality_haft::{HKT3Unbound, MonoidalMerge};
 
 // Simplified Triple for testing
 #[derive(Debug, PartialEq, Clone)]
@@ -11,16 +11,12 @@ struct Triple<A, B, C>(A, B, C);
 
 struct TripleWitness;
 impl HKT3Unbound for TripleWitness {
-    type Constraint = NoConstraint;
     type Type<A, B, C> = Triple<A, B, C>;
 }
 
 impl MonoidalMerge<TripleWitness> for TripleWitness {
     fn merge<A, B, C, F>(pa: Triple<A, A, A>, pb: Triple<B, B, B>, mut f: F) -> Triple<C, C, C>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         let c1 = f(pa.0, pb.0);
