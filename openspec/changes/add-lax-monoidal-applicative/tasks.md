@@ -1,14 +1,14 @@
 ## 1. The haft trait layer
 
-- [ ] 1.1 Create `deep_causality_haft/src/lax_monoidal/mod.rs` with module docs stating the endofunctor level and doc-linking `src/monoidal/` as the value-level cartesian sibling
-- [ ] 1.2 Add `Semigroupal<F: HKT>: Functor<F>` with required `zip_with` and provided `zip`, no `Clone` bound anywhere
-- [ ] 1.3 Add `LaxMonoidal<F: HKT>: Semigroupal<F>` with `unit() -> F::Type<()>`, documenting that a witness which would have to fabricate a context must implement `Semigroupal` alone
-- [ ] 1.4 Add `Compositional<F: HKT>: Monad<F>` and `Convolutional<F: HKT>: Semigroupal<F>` as empty markers, documenting the no-inference discipline and the coherence obligation the conjunction carries
-- [ ] 1.5 Add `MonoidalApplicative<F: HKT>: Functor<F> + Convolutional<F>` with `apply` as a provided method derived from `zip_with`
-- [ ] 1.6 Declare and re-export the module from `src/lib.rs`, beside the existing `SymMonoidal` re-export
-- [ ] 1.7 Add a reciprocal doc-link in `src/monoidal/mod.rs` pointing at the new module
-- [ ] 1.8 Add a `compile_fail` doctest proving a witness with `Semigroupal` but without `Convolutional` cannot reach `MonoidalApplicative`
-- [ ] 1.9 Confirm the crate compiles with no witness implementing the new traits yet
+- [x] 1.1 Create `deep_causality_haft/src/lax_monoidal/mod.rs` with module docs stating the endofunctor level and doc-linking `src/monoidal/` as the value-level cartesian sibling
+- [x] 1.2 Add `Semigroupal<F: HKT>: Functor<F>` with required `zip_with` and provided `zip`, no `Clone` bound anywhere
+- [x] 1.3 Add `LaxMonoidal<F: HKT>: Semigroupal<F>` with `unit() -> F::Type<()>`, documenting that a witness which would have to fabricate a context must implement `Semigroupal` alone
+- [x] 1.4 Add `Compositional<F: HKT>: Monad<F>` and `Convolutional<F: HKT>: Semigroupal<F>` as empty markers, documenting the no-inference discipline and the coherence obligation the conjunction carries
+- [x] 1.5 Add `MonoidalApplicative<F: HKT>: Functor<F> + Convolutional<F>` with `apply` as a provided method derived from `zip_with`
+- [x] 1.6 Declare and re-export the module from `src/lib.rs`, beside the existing `SymMonoidal` re-export
+- [x] 1.7 Add a reciprocal doc-link in `src/monoidal/mod.rs` pointing at the new module
+- [x] 1.8 Add a `compile_fail` doctest proving a witness with `Semigroupal` but without `Convolutional` cannot reach `MonoidalApplicative`
+- [x] 1.9 Confirm the crate compiles with no witness implementing the new traits yet
 
 ## 2. The Lean formalization
 
