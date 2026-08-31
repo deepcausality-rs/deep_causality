@@ -33,25 +33,43 @@ fn test_fmap_precision_conversion() {
 
 #[test]
 fn test_functor_identity_law() {
+    // Structural equality on the whole value. Comparing `as_slice()` through a `zip` reads only
+    // the core payloads, skips silently if the core counts differ, and cannot see `phys_dims`,
+    // `order` or the tracked canonical form.
     let tt = sample_f64();
-    let mapped = CausalTensorTrainWitness::fmap(tt.clone(), |x| x);
-    for (a, b) in tt.cores().iter().zip(mapped.cores()) {
-        assert_eq!(a.as_slice(), b.as_slice());
-    }
+    assert_eq!(CausalTensorTrainWitness::fmap(tt.clone(), |x: f64| x), tt);
+}
+
+#[test]
+fn test_functor_identity_law_preserves_the_canonical_form() {
+    // `fmap` sets `CanonicalForm::None` unconditionally, which is right for a general `f`
+    // because mapping entries does not preserve orthogonality. Under the identity it makes
+    // `fmap(id) != id`, so the functor identity law fails on any canonicalized train.
+    let tt = sample_f64().left_canonicalize().unwrap();
+    assert_eq!(CausalTensorTrainWitness::fmap(tt.clone(), |x: f64| x), tt);
 }
 
 #[test]
 fn test_functor_composition_law() {
+    // Both sides are checked against an independently computed expectation, not only against
+    // each other: two sides that share a defect agree while both being wrong.
     let tt = sample_f64();
     let f = |x: f64| x + 1.0;
     let g = |x: f64| x * 2.0;
 
     let composed = CausalTensorTrainWitness::fmap(tt.clone(), move |x| g(f(x)));
-    let staged = CausalTensorTrainWitness::fmap(CausalTensorTrainWitness::fmap(tt, f), g);
+    let staged = CausalTensorTrainWitness::fmap(CausalTensorTrainWitness::fmap(tt.clone(), f), g);
 
-    for (a, b) in composed.cores().iter().zip(staged.cores()) {
-        assert_eq!(a.as_slice(), b.as_slice());
-    }
+    // g(f(x)) = (x + 1) * 2, cores written out by hand.
+    let expected = CausalTensorTrain::from_cores(vec![
+        CausalTensor::new(vec![4.0, 6.0, 8.0, 10.0], vec![1, 2, 2]).unwrap(),
+        CausalTensor::new(vec![12.0, 14.0, 16.0, 18.0], vec![2, 2, 1]).unwrap(),
+    ])
+    .unwrap();
+    assert_eq!(composed, expected);
+    assert_eq!(staged, expected);
+    assert_eq!(composed.phys_dims(), tt.phys_dims());
+    assert_eq!(composed.order(), tt.order());
 }
 
 #[test]

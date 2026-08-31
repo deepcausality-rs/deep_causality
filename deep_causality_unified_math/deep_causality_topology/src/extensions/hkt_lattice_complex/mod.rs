@@ -22,7 +22,7 @@ use std::sync::Arc;
 /// Any lattice it invented would be the wrong one, so `bind(m, pure)` would not return `m` and
 /// monad right identity would fail by construction. `deep_causality_linear` set the precedent by
 /// implementing `Monad` only for `DenseVector`, the one container with no context to fabricate;
-/// see `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`.
+/// see `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md`.
 ///
 /// `CoMonad` is absent because `extract` needs a distinguished cell and `LatticeField` carries no
 /// cursor to name one.

@@ -63,17 +63,38 @@ impl Pure<DenseMatrixWitness> for DenseMatrixWitness {
 }
 
 impl Applicative<DenseMatrixWitness> for DenseMatrixWitness {
+    /// Pairs the functions with the values by position, broadcasting a `1 x 1` side.
+    ///
+    /// `pure` builds the `1 x 1`, so the applicative identity law `apply(pure(id), m) == m`
+    /// requires the single function to reach every entry of `m`, and interchange requires the
+    /// single value to reach every function. Requiring matching shapes made the identity law
+    /// panic on any matrix larger than `1 x 1`. The result takes the shape of whichever side is
+    /// not the `1 x 1`.
     fn apply<A, B, Func>(ff: DenseMatrix<Func>, fa: DenseMatrix<A>) -> DenseMatrix<B>
     where
+        A: Clone,
         Func: FnMut(A) -> B,
     {
-        let (r, c) = (fa.rows_pub(), fa.cols_pub());
-        let mut fns = ff.into_data().into_iter();
-        let mut out = alloc::vec::Vec::with_capacity(r * c);
-        for a in fa.into_data() {
-            let mut g = fns.next().expect("apply requires matching shapes");
-            out.push(g(a));
-        }
+        let (fr, fc) = (ff.rows_pub(), ff.cols_pub());
+        let (ar, ac) = (fa.rows_pub(), fa.cols_pub());
+        let mut fns = ff.into_data();
+        let vals = fa.into_data();
+
+        let (r, c, out): (usize, usize, alloc::vec::Vec<B>) = match (fns.len(), vals.len()) {
+            (1, _) => {
+                let g = &mut fns[0];
+                (ar, ac, vals.into_iter().map(g).collect())
+            }
+            (_, 1) => {
+                let a = vals.into_iter().next().expect("length checked as one");
+                (fr, fc, fns.iter_mut().map(|g| g(a.clone())).collect())
+            }
+            _ => (
+                ar,
+                ac,
+                fns.iter_mut().zip(vals).map(|(g, a)| g(a)).collect(),
+            ),
+        };
         DenseMatrix::from_vec(out, r, c).expect("apply preserves the element count")
     }
 }
@@ -89,7 +110,7 @@ impl Applicative<DenseMatrixWitness> for DenseMatrixWitness {
 // `deep_causality_sparse::CsrMatrixWitness` claims `Monad` and does not satisfy the law: its `bind`
 // flattens to `1 x count`, so `bind(m, pure)` turns a 2x2 into a 1x4. Verified by probe against the
 // published crate. That is a defect in the code being moved, recorded in
-// `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` and to be decided at task 4.11 rather than copied
+// `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` and to be decided at task 4.11 rather than copied
 // here.
 //
 // `DenseVectorWitness` does claim `Monad` and does satisfy the laws, because a vector's `bind` is

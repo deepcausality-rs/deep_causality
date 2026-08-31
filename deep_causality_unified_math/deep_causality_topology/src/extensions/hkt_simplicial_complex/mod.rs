@@ -3,12 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
-use crate::{Chain, SimplicialComplex};
-use deep_causality_haft::{Adjunction, Foldable, Functor, HKT, Pure};
+use crate::Chain;
+use deep_causality_haft::{Foldable, Functor, HKT};
 use deep_causality_linear::CsrMatrixWitness;
 use std::marker::PhantomData;
-use std::sync::Arc;
 
 /// # Why `NoConstraint`
 ///
@@ -71,112 +69,16 @@ impl<R> Foldable<ChainWitness<R>> for ChainWitness<R> {
 
 // No bound on `R`. Every operation here consumes the chain it descends into or shares the
 // context's complex through `Arc`, so the precision parameter is never cloned.
-impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>, usize)>
-    for ChainWitness<R>
-{
-    type Error = TopologyError;
-
-    fn unit<A>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A) -> Chain<R, Chain<R, A>>
-    where
-        A: Clone,
-        // We remove unnecessary recursive bounds if possible.
-    {
-        let (complex, grade) = ctx;
-
-        // Both chains are indexed by the same precision `R`, so the context's complex is shared
-        // rather than rebuilt. It used to be reconstructed twice with `..Default::default()`, once
-        // per nesting level, which dropped the Hodge ⋆ operators both times.
-        let inner_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(a);
-        let inner_chain = Chain::new(Arc::clone(complex), *grade, inner_weights);
-
-        let outer_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(inner_chain);
-        Chain::new(Arc::clone(complex), *grade, outer_weights)
-    }
-
-    /// # Errors
-    ///
-    /// Returns [`TopologyError`] when the outer chain stores no value, or when the inner chain it
-    /// holds stores none. CSR drops explicit zeros, so an all-zero chain is empty and reachable.
-    fn counit<B>(
-        _ctx: &(Arc<SimplicialComplex<R>>, usize),
-        lrb: Chain<R, Chain<R, B>>,
-    ) -> Result<B, Self::Error>
-    where
-        B: Clone,
-    {
-        // counit: Chain<Chain<B>> -> B
-        //
-        // `lrb` is owned, so both levels are taken apart rather than cloned. Cloning the inner
-        // `Chain<R, B>` would need `R: Clone` for a value that is discarded on the next line.
-        let (_, _, outer_values, _) = lrb.weights.into_parts();
-        let inner_chain = outer_values.into_iter().next().ok_or_else(|| {
-            TopologyError(TopologyErrorEnum::InvalidInput(
-                "Adjunction::counit: the outer chain stores no value, so there is no inner chain \
-                 to descend into"
-                    .into(),
-            ))
-        })?;
-
-        let (_, _, inner_values, _) = inner_chain.weights.into_parts();
-        inner_values.into_iter().next().ok_or_else(|| {
-            TopologyError(TopologyErrorEnum::InvalidInput(
-                "Adjunction::counit: the inner chain stores no value, so there is no B to return"
-                    .into(),
-            ))
-        })
-    }
-
-    fn left_adjunct<A, B, F>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A, f: F) -> Chain<R, B>
-    where
-        A: Clone,
-        F: FnMut(Chain<R, A>) -> B,
-    {
-        // left: a -> f(unit(a))
-        let wrapped = Self::unit(ctx, a);
-        Self::fmap(wrapped, f)
-    }
-
-    /// The right adjunct `(A -> Chain<B>) -> (Chain<A> -> B)`.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`TopologyError`] on a chain storing nothing, in either of two places, and the
-    /// message says which: `la` stores no value, so there is no `A` to apply `f` to, or the chain
-    /// `f` returns stores none, so there is no `B` to hand back.
-    ///
-    /// `B` carries no `Default`, so there is no value to return when there is nothing to return,
-    /// and fabricating one would be a lie about which element the adjunct selected. A chain is
-    /// empty when its weight matrix stores no entries, which `CsrMatrix::new()` produces and which
-    /// dropping an explicit zero also produces, so both arms are reachable and both are tested.
-    fn right_adjunct<A, B, F>(
-        _ctx: &(Arc<SimplicialComplex<R>>, usize),
-        la: Chain<R, A>,
-        f: F,
-    ) -> Result<B, Self::Error>
-    where
-        A: Clone,
-        B: Clone,
-        F: FnMut(A) -> Chain<R, B>,
-    {
-        // right: (A -> R<B>) -> (L<A> -> B)
-        let result_chain: Chain<R, Chain<R, B>> = Self::fmap(la, f);
-        let (_, _, outer_values, _) = result_chain.weights.into_parts();
-
-        let inner_chain = outer_values.into_iter().next().ok_or_else(|| {
-            TopologyError(TopologyErrorEnum::InvalidInput(
-                "Adjunction::right_adjunct was called on a Chain that stores nothing, so there \
-                 is no A to apply f to"
-                    .into(),
-            ))
-        })?;
-
-        let (_, _, inner_values, _) = inner_chain.weights.into_parts();
-        inner_values.into_iter().next().ok_or_else(|| {
-            TopologyError(TopologyErrorEnum::InvalidInput(
-                "Adjunction::right_adjunct: f returned a Chain that stores nothing, so there is \
-                 no B to return"
-                    .into(),
-            ))
-        })
-    }
-}
+// `Adjunction` is deliberately absent for this witness.
+//
+// It used to claim `Chain` is adjoint to itself, with `unit` building a one-entry chain of a
+// one-entry chain and `counit` taking the first weight of the first inner chain. That pair cannot
+// satisfy the defining bijection: `right_adjunct` after `left_adjunct` rebuilds a chain from a
+// single stored weight, so it agrees with the original only when the chain had one entry to begin
+// with. An `f` reading the whole chain, such as the sum of its weights, separates the two.
+//
+// The obstruction is structural, not a coding error: `unit` receives one value and must produce a
+// chain over the whole complex, so everything but that one entry is invented. `StokesAdjunction`
+// in `hkt_gauge::hkt_adjunction_stokes` is unaffected; it pairs two *different* functors,
+// `ExteriorDerivativeWitness` with `BoundaryWitness`, which is the adjunction Stokes' theorem
+// actually provides.

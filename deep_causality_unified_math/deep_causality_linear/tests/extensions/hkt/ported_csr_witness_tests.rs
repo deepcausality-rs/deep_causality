@@ -21,7 +21,7 @@
 //! Restoring them verbatim would enshrine a defect that is already on record:
 //!
 //! - `bind` flattens its result to `1 x count`, so `bind(m, pure)` turns a 2x2 into a 1x4 and monad
-//!   right identity fails. `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` states the finding, and
+//!   right identity fails. `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` states the finding, and
 //!   `DenseMatrixWitness` answers the same problem by declining `Monad` outright.
 //! - `counit` and `right_adjunct` are written in terms of that `bind`, so the `Adjunction` impl
 //!   turns on the same decision.
@@ -38,18 +38,23 @@
 //! `[10, 20]` extended with a sum gives `[30, 20]` under the sparse crop and `[30, 30]` under the
 //! dense rotation. Both satisfy `extend(extract) == id`; they differ in what `f` sees.
 
-use deep_causality_haft::HKT;
+use deep_causality_haft::{Functor, HKT};
 use deep_causality_linear::{CsrMatrix, CsrMatrixWitness};
 
 #[test]
 fn test_the_witness_projects_to_the_sparse_matrix_it_stands_for() {
-    // Every test in the source file opens by naming a CsrMatrix that the witness stands for. That
-    // much of the surface crossed the move, and it is the premise the other twelve build on.
+    // The projection itself is settled by the build: if `Type<f64>` were not `CsrMatrix<f64>`
+    // the annotation below would not compile, so asserting on `shape()` and `values()` of a
+    // value built by `from_triplets` reports nothing the compiler had not already refused.
+    // What is worth running is a *use* of the projection through a trait method.
     let matrix: <CsrMatrixWitness as HKT>::Type<f64> =
         CsrMatrix::from_triplets(1, 3, &[(0, 0, 1.0), (0, 1, 2.0), (0, 2, 3.0)]).unwrap();
 
-    assert_eq!(matrix.shape(), (1, 3));
-    assert_eq!(matrix.values(), &vec![1.0, 2.0, 3.0]);
+    let mapped = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(matrix.clone(), |x| x);
+    assert_eq!(
+        mapped, matrix,
+        "the witness maps the container it projects to"
+    );
 }
 
 // ---- restored: the traits the witness now carries -----------------------------------------------
@@ -104,10 +109,23 @@ mod restored {
     }
 
     #[test]
-    fn test_fold_sums_the_stored_entries() {
-        let sum =
-            <CsrMatrixWitness as Foldable<CsrMatrixWitness>>::fold(m(), 0.0, |acc, x| acc + x);
-        assert_eq!(sum, 6.0);
+    fn test_fold_visits_the_stored_entries_in_order() {
+        // A sum cannot see the decision this fold documents. The fixture is a 2x2 storing
+        // [1.0, 2.0, 3.0] with one structural zero, and a fold over the dense logical matrix
+        // [1.0, 2.0, 0.0, 3.0] also totals 6.0. Record what was visited instead.
+        let seen = <CsrMatrixWitness as Foldable<CsrMatrixWitness>>::fold(
+            m(),
+            Vec::new(),
+            |mut acc, x| {
+                acc.push(x);
+                acc
+            },
+        );
+        assert_eq!(
+            seen,
+            vec![1.0, 2.0, 3.0],
+            "folds the three stored entries row-major, never the structural zero"
+        );
     }
 
     #[test]
@@ -126,13 +144,31 @@ mod restored {
 
     #[test]
     fn test_apply_applies_pointwise() {
-        // `pure` is the only public way to build a CsrMatrix of function pointers, so this checks
-        // the single-entry case; the multi-entry path is exercised through `fmap` above.
+        // `fmap` reaches the multi-entry path that `pure` alone cannot build, so the pointwise
+        // behaviour is exercised on a matrix with more than one stored entry. The 1x1-against-1x1
+        // form this test used to have could not fail: with one function and one value the
+        // truncating `apply` has nothing to truncate, and only `values()` was asserted.
         let fns: CsrMatrix<fn(f64) -> f64> =
-            CsrMatrixWitness::pure((|x| x * 10.0) as fn(f64) -> f64);
-        let one = CsrMatrix::from_triplets(1, 1, &[(0, 0, 4.0)]).unwrap();
-        let applied = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::apply(fns, one);
-        assert_eq!(applied.values(), &vec![40.0]);
+            <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(m(), |_| {
+                (|x| x * 10.0) as fn(f64) -> f64
+            });
+        let applied = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::apply(fns, m());
+        assert_eq!(applied.values(), &vec![10.0, 20.0, 30.0]);
+        assert_eq!(applied.shape(), (2, 2));
+    }
+
+    #[test]
+    fn test_apply_satisfies_the_applicative_identity_law() {
+        // apply(pure(id), v) == v, with the CSR invariant checked alongside: the last row
+        // pointer must equal the number of stored values.
+        let idf: CsrMatrix<fn(f64) -> f64> = CsrMatrixWitness::pure((|x| x) as fn(f64) -> f64);
+        let out = <CsrMatrixWitness as Applicative<CsrMatrixWitness>>::apply(idf, m());
+        assert_eq!(out, m(), "applicative identity");
+        assert_eq!(
+            out.row_indices().last().copied(),
+            Some(out.values().len()),
+            "CSR row pointer must agree with values"
+        );
     }
 
     #[test]

@@ -16,13 +16,12 @@ use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, P
 
 /// HKT witness for [`CausalTensor`].
 ///
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `CausalTensor<T>` declares no bound on `T`, and the categorical operations implemented here
 /// do no arithmetic: `fmap`, `fold`, `pure`, `bind`, `extend` and `apply` move elements without
 /// computing on them. `fmap` maps `CausalTensor<A>` to `CausalTensor<B>` for unrelated `A` and
-/// `B`, so a tensor of labels maps as readily as a tensor of `f64`. `NoConstraint` states that
-/// accurately; it is not a placeholder for a bound that belongs here.
+/// `B`, so a tensor of labels maps as readily as a tensor of `f64`.
 ///
 /// The tensor operations that *do* compute carry their bounds on the impls that need them:
 /// `ConjugateScalar` for complex-aware algebra, `RealField + Zero + One + Sum + FromPrimitive`
@@ -30,6 +29,12 @@ use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, P
 /// enforces them and no downstream crate can satisfy them by declaration.
 ///
 /// See `openspec/notes/archive/hkt_gat/hkt_CausalTensor.md` for the measurement behind this.
+///
+/// # The elementwise applicative lives elsewhere
+///
+/// This witness carries `Monad`, so its `apply` is pinned to the cartesian product by the
+/// applicative/monad coherence law. [`ZipTensorWitness`](crate::ZipTensorWitness) stands for the
+/// same container and supplies the elementwise reading instead.
 pub struct CausalTensorWitness;
 
 impl HKT for CausalTensorWitness {
@@ -71,13 +76,24 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
     where
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
-        let mut result_data = Vec::with_capacity(m_a.len());
+        let shape = m_a.shape().to_vec();
+        let count = m_a.len();
+        let mut result_data = Vec::with_capacity(count);
         for a in m_a.into_vec() {
             let mb = f(a);
             result_data.extend(mb.into_vec());
         }
+        // When every `f(a)` contributed exactly one element the map was shape preserving, so the
+        // input's shape is the honest answer and `bind(m, pure) == m` holds. Unconditionally
+        // rebuilding as `[len]` collapsed every rank above one: a `[2, 3]` came back as `[6]`.
+        // When the counts differ the shape genuinely is not recoverable, and the flat `[len]` is
+        // the honest report of a concat-map.
         let len = result_data.len();
-        CausalTensor::from_vec(result_data, &[len])
+        if len == count {
+            CausalTensor::from_vec(result_data, &shape)
+        } else {
+            CausalTensor::from_vec(result_data, &[len])
+        }
     }
 }
 
@@ -110,6 +126,13 @@ impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
 }
 
 impl Applicative<CausalTensorWitness> for CausalTensorWitness {
+    /// The cartesian applicative: every function against every argument, function-major.
+    ///
+    /// This witness also carries [`Monad`], which owes the coherence law
+    /// `apply(ff, fa) == bind(ff, |f| fmap(fa, f))`. `bind` runs the continuation once per
+    /// function, so coherence admits only the cartesian product. The elementwise reading is a
+    /// genuinely different applicative and lives on [`ZipTensorWitness`](crate::ZipTensorWitness),
+    /// which carries no `Monad` and therefore owes no coherence.
     fn apply<A, B, Func>(f_ab: CausalTensor<Func>, f_a: CausalTensor<A>) -> CausalTensor<B>
     where
         A: Clone,
@@ -118,17 +141,23 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
         let shape = f_a.shape().to_vec();
         let funcs = f_ab.into_vec();
         let args = f_a.into_vec();
+        let n_funcs = funcs.len();
 
-        if funcs.len() == args.len() {
-            let data: Vec<B> = funcs.into_iter().zip(args).map(|(mut f, a)| f(a)).collect();
-            CausalTensor::from_vec(data, &shape)
-        } else if funcs.len() == 1 {
-            let f = funcs.into_iter().next().unwrap();
-            let data: Vec<B> = args.into_iter().map(f).collect();
+        let mut data: Vec<B> = Vec::with_capacity(n_funcs.saturating_mul(args.len()));
+        for mut f in funcs {
+            for a in args.iter() {
+                data.push(f(a.clone()));
+            }
+        }
+
+        // One function leaves the argument count unchanged, so the argument's shape survives and
+        // `apply(pure(id), t) == t` holds. Beyond that the cartesian product has no shape to
+        // inherit, and the flat `[len]` is both honest and what `bind` yields for the same inputs.
+        if n_funcs == 1 {
             CausalTensor::from_vec(data, &shape)
         } else {
-            // Return empty tensor on mismatch, as expected by tests
-            CausalTensor::from_vec(vec![], &[0])
+            let len = data.len();
+            CausalTensor::from_vec(data, &[len])
         }
     }
 }

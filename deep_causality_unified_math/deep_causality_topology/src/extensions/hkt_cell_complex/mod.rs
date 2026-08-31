@@ -24,7 +24,7 @@ use std::sync::Arc;
 /// wrong: `bind(m, pure)` would return a field over a fabricated complex rather than `m`, so monad
 /// right identity would fail by construction. This is the defect measured on
 /// `CausalMultiVectorWitness`, whose `pure` fabricates `Metric::Euclidean(0)`, recorded in
-/// `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`.
+/// `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md`.
 ///
 /// `deep_causality_linear` set the precedent: it implements `Monad` only for `DenseVector`, the one
 /// container with no context to fabricate. A missing instance is a smaller defect than an unlawful

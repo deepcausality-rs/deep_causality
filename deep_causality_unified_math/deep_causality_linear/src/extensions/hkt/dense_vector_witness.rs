@@ -47,23 +47,39 @@ impl Pure<DenseVectorWitness> for DenseVectorWitness {
 }
 
 impl Applicative<DenseVectorWitness> for DenseVectorWitness {
-    /// Pairs the functions with the values by position, and stops at the shorter of the two.
+    /// Pairs the functions with the values by position, broadcasting a one-element side.
     ///
-    /// `CsrMatrixWitness::apply` stops the same way. Demanding matching lengths made
-    /// `apply(pure(f), v)` — the left-hand side of the applicative identity law, where `pure`
-    /// builds a one-element vector — panic for every `v` of two entries or more.
+    /// A positional applicative's `pure` is conceptually the infinite repeat, which a finite
+    /// vector cannot hold; `pure` builds the one-element vector and `apply` broadcasts it. That
+    /// is what makes the laws hold here:
+    ///
+    /// - identity, `apply(pure(id), v) == v`, needs the single function to reach every element;
+    /// - interchange, `apply(u, pure(y)) == apply(pure(|f| f(y)), u)`, needs the single *value*
+    ///   to reach every function.
+    ///
+    /// Truncating to the shorter side satisfied neither: it turned `apply(pure(id), v)` into a
+    /// one-element vector for every `v` of two entries or more. Broadcasting the functions costs
+    /// no `Clone`, because one `FnMut` is called repeatedly; broadcasting the value uses the
+    /// `A: Clone` the trait already requires. Two sides that are both longer than one still pair
+    /// positionally and stop at the shorter.
     fn apply<A, B, Func>(ff: DenseVector<Func>, fa: DenseVector<A>) -> DenseVector<B>
     where
+        A: Clone,
         Func: FnMut(A) -> B,
     {
-        let mut fns = ff.into_data().into_iter();
-        let mut out = alloc::vec::Vec::new();
-        for a in fa.into_data() {
-            match fns.next() {
-                Some(mut g) => out.push(g(a)),
-                None => break,
+        let mut fns = ff.into_data();
+        let vals = fa.into_data();
+        let out: alloc::vec::Vec<B> = match (fns.len(), vals.len()) {
+            (1, _) => {
+                let g = &mut fns[0];
+                vals.into_iter().map(g).collect()
             }
-        }
+            (_, 1) => {
+                let a = vals.into_iter().next().expect("length checked as one");
+                fns.iter_mut().map(|g| g(a.clone())).collect()
+            }
+            _ => fns.iter_mut().zip(vals).map(|(g, a)| g(a)).collect(),
+        };
         DenseVector::from_vec(out)
     }
 }

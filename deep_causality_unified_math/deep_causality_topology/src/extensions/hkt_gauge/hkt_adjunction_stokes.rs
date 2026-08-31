@@ -335,7 +335,12 @@ impl StokesAdjunction {
             return Chain::new(ctx.complex_arc(), k - 1, empty_weights);
         }
 
-        let boundary_op = &boundary_ops[k];
+        // `boundary_operators[i]` holds the operator that maps `C_{i+1} -> C_i`, so the operator
+        // for a k-chain is at index `k - 1`. This is the convention `boundary_operator_impl`
+        // states: it returns `boundary_operators[k - 1]` and rejects `k == 0` outright. Reading
+        // index `k` here applied the *next* operator up, which for a 1-chain on a triangle meant
+        // dotting the chain against the triangle-to-edge matrix instead of the edge-to-vertex one.
+        let boundary_op = &boundary_ops[k - 1];
         let shape = boundary_op.shape();
         let nrows = shape.0; // num_(k-1)_simplices
 

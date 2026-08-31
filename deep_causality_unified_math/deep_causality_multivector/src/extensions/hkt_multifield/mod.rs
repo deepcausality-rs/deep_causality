@@ -93,7 +93,7 @@ where
 // `Applicative` and `Monad` remain absent. Both are writable in safe Rust on top of this `pure`,
 // but `pure` builds a one-cell field while a general `fa` has many, so `apply(pure(id), fa) == fa`
 // and `bind(m, pure) == m` hold only once shape reconciliation is settled. That is issue H1 in
-// `openspec/notes/unified_math/unified_math_gaps.md`; both are withheld until it is settled and
+// `openspec/notes/archive/unified_math/unified_math_gaps.md`; both are withheld until it is settled and
 // until law tests cover them.
 
 // ============================================================================

@@ -145,7 +145,7 @@ the `Dual` layer cannot, because `Dual` is not a functor.
 | `Arrow` | `calculus`, `tensor` |
 | `Traversable`, `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
 
-That table is the work list. `openspec/notes/unified_math/unified_math_gaps.md` carries the full
+That table is the work list. `openspec/notes/archive/unified_math/unified_math_gaps.md` carries the full
 analysis: which absences are real gaps and which are correct (a `Ratio<A> -> Ratio<B>` under an
 arbitrary `f` breaks coprimality, so `num_rational` is right to have none), what each costs, and a
 ranking from mechanical to design fork. Two findings there were measured by running code rather than
@@ -183,9 +183,9 @@ unchanged.
 
 | Document | What it holds |
 |---|---|
-| `openspec/notes/unified_math/unified_math_gaps.md` | Where the categorical layer stops, and the ranked work to close it |
-| `openspec/notes/unified_math/deep_causality_unified_math.md` | The assessment for this consolidation, and what it predicted against what happened |
-| `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` | Why the shaped witnesses stop at `Applicative` |
+| `openspec/notes/archive/unified_math/unified_math_gaps.md` | Where the categorical layer stops, and the ranked work to close it |
+| `openspec/notes/archive/unified_math/deep_causality_unified_math.md` | The assessment for this consolidation, and what it predicted against what happened |
+| `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` | Why the shaped witnesses stop at `Applicative` |
 | `openspec/changes/archive-notes.md` | Reading an archived change whose paths predate a move |
 | `examples/mathematics_examples/composable_multi_math/README.md` | Seven worked cross-crate compositions |
 | `lean/THEOREM_MAP.md` | Lean theorems and the Rust witnesses bound to them |

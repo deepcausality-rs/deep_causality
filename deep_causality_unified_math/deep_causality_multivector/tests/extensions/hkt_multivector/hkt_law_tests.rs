@@ -97,8 +97,21 @@ fn fmap_result_is_a_well_formed_multivector() {
     for (metric, len) in metrics() {
         let v = sample(metric, len, &mut rng);
         let mapped = <W as Functor<W>>::fmap(v, |x| x * 2.0);
+        // The metric must come from the INPUT. Re-validating the output against its own metric
+        // asks whether the value is consistent with itself, which it is by construction: an
+        // `fmap` that halved the coefficient count *and* rewrote the metric to match would pass.
+        assert_eq!(
+            mapped.metric(),
+            metric,
+            "fmap changed the algebra for {metric:?}"
+        );
+        assert_eq!(
+            mapped.data().len(),
+            len,
+            "fmap changed the coefficient count for {metric:?}"
+        );
         assert!(
-            CausalMultiVector::new(mapped.data().clone(), mapped.metric()).is_ok(),
+            CausalMultiVector::new(mapped.data().clone(), metric).is_ok(),
             "fmap produced a multivector the constructor rejects for {metric:?}"
         );
     }
@@ -162,11 +175,16 @@ fn foldable_visits_every_coefficient() {
     let mut rng = Rng::new(0x77);
     for (metric, len) in metrics() {
         let v = sample(metric, len, &mut rng);
-        let expected: f64 = v.data().iter().sum();
-        let sum = <W as Foldable<W>>::fold(v, 0.0, |acc, x| acc + x);
-        assert!(
-            (sum - expected).abs() < 1e-9,
-            "fold skipped coefficients for {metric:?}"
+        // A sum is invariant under reordering and under visiting a coefficient twice while
+        // skipping another of equal value. Record the traversal instead.
+        let expected: Vec<f64> = v.data().clone();
+        let visited = <W as Foldable<W>>::fold(v, Vec::new(), |mut acc, x| {
+            acc.push(x);
+            acc
+        });
+        assert_eq!(
+            visited, expected,
+            "fold visited the coefficients out of order for {metric:?}"
         );
     }
 }
