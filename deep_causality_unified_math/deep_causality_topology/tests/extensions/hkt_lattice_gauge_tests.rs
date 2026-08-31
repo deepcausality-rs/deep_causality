@@ -6,10 +6,10 @@
 // `LatticeGaugeField<G, D, M, R>` requires `R: RealField` at the struct level (because
 // its `lattice: Arc<LatticeComplex<D, R>>` field requires it). The `deep_causality_haft`
 // `HKT`/`Functor`/`Pure`/`Monad`/`Applicative` traits cannot be implemented on
-// `LatticeGaugeFieldWitness` on stable Rust without modifying haft — same situation as
-// `StrictCausalTensorWitness` in `deep_causality_tensor`. Tests for the dropped trait
-// impls are removed; tests for the inherent `map_field` / `scale_field` / `zip_with`
-// surface remain below.
+// `LatticeGaugeFieldWitness` on stable Rust without modifying haft. See the note in
+// `src/extensions/hkt_gauge/hkt_lattice_gauge.rs` for what actually blocks it. Tests for
+// the dropped trait impls are removed; tests for the inherent `map_field` /
+// `scale_field` / `zip_with` surface remain below.
 use deep_causality_topology::{
     ChainComplex, GaugeGroup, LatticeComplex, LatticeGaugeField, LatticeGaugeFieldWitness,
     TopologyError, TopologyErrorEnum,

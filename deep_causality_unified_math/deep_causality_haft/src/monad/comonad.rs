@@ -16,9 +16,8 @@ use crate::{Functor, HKT, Satisfies};
 /// # Unified Design
 ///
 /// This trait unifies the previous `CoMonad` and `BoundedComonad` traits into a single
-/// hierarchy using the constraint system. Types that need algebraic bounds (like
-/// `CausalTensor` needing `TensorData`) specify their constraint via the HKT's
-/// `Constraint` associated type.
+/// hierarchy using the constraint system. A type that needs algebraic bounds on its
+/// elements specifies them through the HKT's `Constraint` associated type.
 ///
 /// # Intuition & Analogy
 ///

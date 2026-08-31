@@ -6,9 +6,9 @@
 use crate::Chain;
 use std::fmt::{Debug, Display, Formatter};
 
-impl<T> Display for Chain<T>
+impl<R, G> Display for Chain<R, G>
 where
-    T: Debug + Display,
+    G: Debug + Display,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "Chain:")?;

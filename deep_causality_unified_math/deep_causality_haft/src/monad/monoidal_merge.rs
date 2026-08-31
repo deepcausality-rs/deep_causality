@@ -9,10 +9,20 @@ use crate::{HKT3Unbound, Satisfies};
 /// a third.
 ///
 /// # Category Theory
-/// Restricted to the diagonal $D(A) = P\langle A, A, A\rangle$, `merge` is `liftA2` — the
-/// structure map of a **lax monoidal functor**
-/// $$ D(A) \otimes D(B) \to D(A \otimes B) $$
-/// (McBride & Paterson 2008 §7; related to Day convolution).
+/// Restricted to the diagonal $D(A) = P\langle A, A, A\rangle$, `merge` is `liftA2`, the fused
+/// form of the structure map
+/// $$ \varphi : D(A) \otimes D(B) \to D(A \otimes B) $$
+/// (McBride & Paterson 2008 §7; related to Day convolution). The two are interdefinable:
+/// `merge(pa, pb, f) == fmap(zip(pa, pb), |(a, b)| f(a, b))` and
+/// `zip(pa, pb) == merge(pa, pb, |a, b| (a, b))`.
+///
+/// This is a **semigroupal** structure, not a lax monoidal one. A lax monoidal functor is a
+/// triple $(F, \varphi, \eta)$; this trait carries $\varphi$ alone. There is no unit
+/// $\eta : I \to D(I)$ anywhere in it and none is derivable from `merge`, so the unitality
+/// coherence conditions cannot be stated against this trait, only associativity and naturality.
+/// An earlier version of this docstring called it lax monoidal, which overclaimed by exactly the
+/// unit. See `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §4.1 for the split between the
+/// $\varphi$-only structure and the full $(\varphi, \eta)$ one.
 ///
 /// # Naming history
 /// This trait was previously named `Promonad`. In the categorical literature a *promonad* is
@@ -21,7 +31,7 @@ use crate::{HKT3Unbound, Satisfies};
 /// arrows*, JFP 19, 2009) — which this trait is not. It was renamed to say what it is; the
 /// former `fuse` operation (whose result type `C` was structurally undetermined — no lawful
 /// implementation existed for value-carrying carriers) was removed in the same change. See
-/// `openspec/notes/causal-algebra/haft-formalization-deviations.md`, D3/P-1.
+/// `openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`, D3/P-1.
 ///
 /// # Law (Informal)
 ///

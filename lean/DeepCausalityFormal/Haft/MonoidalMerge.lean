@@ -2,7 +2,7 @@
 SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 
-Haft — MonoidalMerge (lax-monoidal merge).
+Haft — MonoidalMerge (semigroupal merge).
 
 Rust source: `deep_causality_unified_math/deep_causality_haft/src/monad/monoidal_merge.rs` (trait
 `MonoidalMerge<P: HKT3Unbound>`, operation `merge`).
@@ -12,10 +12,17 @@ literature a promonad is a monad in the bicategory of profunctors / an identity-
 functor (Loregian, *(Co)end Calculus*, CUP 2021, §5.2; Jacobs, Heunen & Hasuo, *Categorical
 semantics for arrows*, JFP 19, 2009). Deviation D3 of the formalization audit; resolved by
 renaming (proposal P-1). Restricted to the diagonal `D A := P⟨A,A,A⟩`, `merge` is the binary
-lifting `liftA2` of a lax monoidal functor `D A ⊗ D B → D (A ⊗ B)` (McBride–Paterson 2008 §7;
+lifting `liftA2` of the structure map `φ : D A ⊗ D B → D (A ⊗ B)` (McBride–Paterson 2008 §7;
 related to Day convolution). The former `fuse : A → B → P⟨A,B,C⟩` operation — whose free `C`
 was structurally undetermined (every workspace implementation either panicked or discarded
 its inputs) — was removed in the same change.
+
+SCOPE: this is a *semigroupal* structure, not a lax monoidal one. A lax monoidal functor is a
+triple `(F, φ, η)`; `MonoidalMerge` carries `φ` alone, with no unit `η : I → D I` and none
+derivable from `merge`. So the unitality coherence conditions are not statable against this
+trait, and no theorem below asserts them; only naturality is in scope. The trait name predates
+this distinction and is kept for continuity. See
+`openspec/notes/archive/hkt_gat/monoidal-applicative.md` §4.1.
 
 What is lawful about `merge` is proved here on the diagonal Option carrier: `merge` is a
 *binatural* transformation — it commutes with `fmap` in both arguments.

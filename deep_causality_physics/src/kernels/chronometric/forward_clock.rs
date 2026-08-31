@@ -8,7 +8,7 @@
 //! Where `solve_gm` *inverts* the weak-field clock equation to recover `GM`, these kernels evaluate it
 //! *forward*: given a clock's dynamical state they return its proper-time rate, and the offset between two
 //! clocks. This is the missing forward `dτ/dt` primitive identified in the Gap-3 trajectory-axis
-//! feasibility study (`openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`,
+//! feasibility study (`openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`,
 //! FS-3), which validated it against the textbook GPS relativistic split (+45.7 / −7.2 / +38.5 µs/day).
 //!
 //! [`solve_gm_analytical_kernel`]: crate::solve_gm_analytical_kernel

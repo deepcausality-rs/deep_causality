@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Core — the F-3 command-input theorem: a command (`RelayTo`) on a singleton's INPUT channel yields a
 specific, named error — never a silent `None`, never a dropped signal (the F-3 resolution of
-`openspec/notes/causal-algebra/Causaloid-Formalization.md`).
+`openspec/notes/archive/causal-algebra/Causaloid-Formalization.md`).
 
 Statement of the gap (F-3, input/output asymmetry). A singleton denotes a Kleisli arrow on the
 VALUE sub-object of the effect: it consumes a value, not a control command. The old model left this

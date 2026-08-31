@@ -157,7 +157,7 @@ reduce `"mass"` accordingly, set `"ignited"`, add `−T/m·v̂` into the force c
 `add_aero_force`, and apply the A0 force-channel drag decrement through the existing
 Jarvinen–Adams kernels (`srp_thrust_coefficient`, `srp_preserved_drag_fraction`). The A0
 correlation is the **drag authority** per the measured de-risk verdict
-(`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER; the 2026-07-17 addendum
+(`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER; the 2026-07-17 addendum
 measured **both** coupling models on the same harness — the pinned-envelope imprint, which
 shields monotonically, and a momentum-carrying jet (`studies/srp_momentum_jet`), which reads as
 drag *augmentation* — and attributed the missing Jarvinen–Adams collapse to the harness

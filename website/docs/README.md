@@ -2,7 +2,7 @@
 
 Standalone Starlight site served at **https://docs.deepcausality.com** by its own
 Cloudflare Worker (`deepcausality-docs`), independent of the main website in
-`../web`. See `../../openspec/changes/migrate-docs-to-starlight/` for the full plan.
+`../web`. See `../../openspec/changes/archive/migrate-docs-to-starlight/` for the full plan.
 
 ## Commands
 

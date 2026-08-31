@@ -6,7 +6,7 @@ Quantum — the partial-trace foundation.
 
 The pinned Mathlib (v4.15.0) has `Matrix`, `trace`, and the Kronecker product, but **no partial
 trace**. Partial trace is the load-bearing operation of every quantum theorem in scope
-(`openspec/changes/add-quantum-crate`), so this file builds it from first principles on the
+(`openspec/changes/archive/2026-07-12-add-quantum-crate`), so this file builds it from first principles on the
 pair-indexed matrix model of a bipartite operator on `H_A ⊗ H_B` and proves its defining lemma
 library: linearity, the product identity `Tr_B(X ⊗ Y) = Tr(Y) • X`, and the bimodule law
 `Tr_B((Z ⊗ 1_B) · M) = Z · Tr_B(M)` (the Q-PTP boundary identity).

@@ -10,7 +10,7 @@
 /// A cut-cell registry stores only the [`CellClass::Cut`] (and, for bookkeeping, any
 /// explicitly recorded [`CellClass::Solid`]) cells; every cell absent from the registry is
 /// implicitly [`CellClass::Fluid`] and takes the existing uniform fast path. See
-/// `openspec/changes/add-cut-cells-and-immersed-boundaries` (CFD Stage 4, Group A).
+/// `openspec/changes/archive/2026-06-15-add-cut-cells-and-immersed-boundaries` (CFD Stage 4, Group A).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CellClass {
     /// Fully wetted: the cell lies entirely in the fluid region. Clipped volume equals the

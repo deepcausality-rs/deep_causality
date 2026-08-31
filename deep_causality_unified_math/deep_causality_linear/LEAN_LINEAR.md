@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Status as of 2026-08-25. This note summarizes the machine-checked formalization of the crate's 𝔽₂
 layer. It is the crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md).
 
 ## Summary
 
@@ -23,7 +23,7 @@ builds a quotient, and never checks that the first bracket is a nullity — it s
 that makes the whole homology path correct, and nothing in either crate's source states it.
 
 - **Lean proofs (L1):** one file,
-  [`lean/DeepCausalityFormal/Linear/RankNullity.lean`](../lean/DeepCausalityFormal/Linear/RankNullity.lean),
+  [`lean/DeepCausalityFormal/Linear/RankNullity.lean`](../../lean/DeepCausalityFormal/Linear/RankNullity.lean),
   carrying **4 theorems**. Every theorem is closed — **zero `sorry`**, and `#print axioms` reports
   only `propext`, `Classical.choice` and `Quot.sound` for each. The file is **Mathlib-backed**
   (`Mathlib.LinearAlgebra.Matrix.Rank`, `Mathlib.LinearAlgebra.FiniteDimensional.Lemmas`,
@@ -41,7 +41,7 @@ that makes the whole homology path correct, and nothing in either crate's source
   one.
 - **The bridge:** each theorem carries a shared id (`linear.gf2.rank_nullity`,
   `linear.gf2.nullity_is_count_minus_rank`, `linear.gf2.rank_le_cell_count`,
-  `linear.gf2.betti_from_ranks`) recorded in [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **4
+  `linear.gf2.betti_from_ranks`) recorded in [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — **4
   linear ids, all proved and witnessed**. CI (`.github/workflows/formalization.yml`) fails if any
   Lean id lacks a tagged Rust file or a manifest row; this crate is in that check's grep list
   because a witness exists for every id it carries.

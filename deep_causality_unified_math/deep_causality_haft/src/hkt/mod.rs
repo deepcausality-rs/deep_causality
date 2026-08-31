@@ -148,7 +148,8 @@ pub struct Placeholder;
 /// trait hierarchy** for both constrained and unconstrained types:
 ///
 /// - **Unconstrained types** (like `Vec<T>`) use `type Constraint = NoConstraint;`
-/// - **Constrained types** (like `CausalTensor<T>`) use `type Constraint = TensorDataConstraint;`
+/// - **Constrained types** name their own marker, e.g. `type Constraint = ScalarConstraint;`,
+///   and implement `Satisfies<ScalarConstraint>` for each admitted element type
 ///
 /// Note: The constraint is enforced at the trait method level (Functor, Monad, etc.),
 /// not at the `Type<T>` GAT level. This allows the GAT to be used with any type,
@@ -169,12 +170,25 @@ pub struct Placeholder;
 ///
 /// # For Constrained Types
 ///
-/// ```rust,ignore
-/// impl HKT for CausalTensorWitness {
-///     type Constraint = TensorDataConstraint;
-///     type Type<T> = CausalTensor<T>;
+/// ```rust
+/// use deep_causality_haft::{HKT, Satisfies};
+///
+/// pub struct ScalarConstraint;
+/// impl Satisfies<ScalarConstraint> for f64 {}
+///
+/// pub struct Wrapper<T>(pub T);
+/// pub struct WrapperWitness;
+///
+/// impl HKT for WrapperWitness {
+///     type Constraint = ScalarConstraint;
+///     type Type<T> = Wrapper<T>;
 /// }
 /// ```
+///
+/// The GAT takes no where-clause, so `<WrapperWitness as HKT>::Type<String>` is a nameable type.
+/// Nothing can be done with it: every method carries `T: Satisfies<Self::Constraint>`, so no
+/// operation admits a `String`. What the constraint buys is that the operations are checked; what
+/// it gives up is forbidding a type name on which nothing was callable anyway.
 ///
 /// # Type Parameters
 ///
@@ -186,12 +200,21 @@ pub trait HKT {
     /// The Generic Associated Type (GAT) that represents the type constructor.
     /// The `<T>` is the "hole" in the type constructor (e.g., `Option<T>`).
     ///
-    /// The where clause ensures constraint propagation at the type level,
-    /// enabling types with inherent bounds (like `CausalMultiField`) to
-    /// participate in the unified HKT system.
-    type Type<T>
-    where
-        T: Satisfies<Self::Constraint>;
+    /// The GAT carries **no** where-clause, and that is deliberate.
+    ///
+    /// It used to read `type Type<T> where T: Satisfies<Self::Constraint>`. To check a `bind` or an
+    /// `extend`, whose closure signature mentions the GAT at a generic `B`, rustc must normalise
+    /// `Self::Type<B>` and therefore discharge `B: Satisfies<Self::Constraint>`. It will not use the
+    /// method's own where-clause to do so, so the obligation fails for every constraint whose impl
+    /// has a premise, and only the unconditional `impl<T> Satisfies<NoConstraint> for T` got
+    /// through. The next-generation trait solver does not change this; measured on
+    /// `rustc 1.100.0-nightly`, the error merely moves from E0276/E0277 to E0271.
+    ///
+    /// Without the clause there is no obligation to discharge, and a constrained `Monad` or
+    /// `CoMonad` becomes writable. The constraint is still enforced, because every method keeps its
+    /// `Satisfies` bound; what is given up is naming `<W as HKT>::Type<T>` for an inadmissible `T`,
+    /// a type on which no operation was ever callable. See `openspec/notes/archive/hkt_gat/hkt_gat.md`.
+    type Type<T>;
 }
 
 // ----------------------------------------------------
@@ -427,10 +450,7 @@ pub trait HKT5<F1, F2, F3, F4> {
 pub trait HKT2Unbound {
     type Constraint: ?Sized;
     /// The Generic Associated Type representing F<A, B>
-    type Type<A, B>
-    where
-        A: Satisfies<Self::Constraint>,
-        B: Satisfies<Self::Constraint>;
+    type Type<A, B>;
 }
 
 /// Trait for a Higher-Kinded Type (HKT) with three generic parameters (Arity 3).
@@ -443,11 +463,7 @@ pub trait HKT2Unbound {
 /// * `State<S_in, S_out, A>` (Parametric State)
 pub trait HKT3Unbound {
     type Constraint: ?Sized;
-    type Type<A, B, C>
-    where
-        A: Satisfies<Self::Constraint>,
-        B: Satisfies<Self::Constraint>,
-        C: Satisfies<Self::Constraint>;
+    type Type<A, B, C>;
 }
 
 /// Trait for a Higher-Kinded Type (HKT) with four generic parameters (Arity 4).
@@ -460,12 +476,7 @@ pub trait HKT3Unbound {
 /// * `RiemannTensor<A, B, C, D>`
 pub trait HKT4Unbound {
     type Constraint: ?Sized;
-    type Type<A, B, C, D>
-    where
-        A: Satisfies<Self::Constraint>,
-        B: Satisfies<Self::Constraint>,
-        C: Satisfies<Self::Constraint>,
-        D: Satisfies<Self::Constraint>;
+    type Type<A, B, C, D>;
 }
 
 /// Trait for a Higher-Kinded Type (HKT) with five generic parameters (Arity 5).
@@ -478,13 +489,7 @@ pub trait HKT4Unbound {
 /// * `CyberneticLoop<S, B, C, A, E>`
 pub trait HKT5Unbound {
     type Constraint: ?Sized;
-    type Type<A, B, C, D, E>
-    where
-        A: Satisfies<Self::Constraint>,
-        B: Satisfies<Self::Constraint>,
-        C: Satisfies<Self::Constraint>,
-        D: Satisfies<Self::Constraint>,
-        E: Satisfies<Self::Constraint>;
+    type Type<A, B, C, D, E>;
 }
 
 /// Trait for a Higher-Kinded Type (HKT) with six generic parameters (Arity 6).
@@ -497,12 +502,5 @@ pub trait HKT5Unbound {
 /// * `Effect5Unbound<Fixed1, Fixed2, Fixed3, S_in, S_out, A>`
 pub trait HKT6Unbound {
     type Constraint: ?Sized;
-    type Type<A, B, C, D, E, F>
-    where
-        A: Satisfies<Self::Constraint>,
-        B: Satisfies<Self::Constraint>,
-        C: Satisfies<Self::Constraint>,
-        D: Satisfies<Self::Constraint>,
-        E: Satisfies<Self::Constraint>,
-        F: Satisfies<Self::Constraint>;
+    type Type<A, B, C, D, E, F>;
 }

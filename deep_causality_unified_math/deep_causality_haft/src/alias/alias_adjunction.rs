@@ -60,7 +60,7 @@ where
     ///
     /// See [`Adjunction::right_adjunct`] for full documentation.
     #[inline]
-    fn differentiate<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> B
+    fn differentiate<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> Result<B, Self::Error>
     where
         A: Satisfies<L::Constraint> + Clone,
         B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,

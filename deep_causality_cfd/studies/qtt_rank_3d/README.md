@@ -53,7 +53,7 @@ which turns the curved surface into an axis-aligned one and replaces `χ ~ √si
 Capturing the curved shock on a Cartesian QTT grid keeps storage sub-dense but gives back most of
 the compression win exactly where it is needed. This is the 3-D confirmation of the `qtt_rank_study`
 finding, that alignment is the lever, and of the dynamic `qtt_rank_nonlinear` finding, that forming
-shocks reach the structural rank. Analysis: `openspec/notes/plasma-blackout/gap-2/`.
+shocks reach the structural rank. Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** Burgers is a scalar model, not compressible Euler/NS. Explicit Euler with central
 differences is dispersive, so the measured χ includes some dispersive-oscillation rank on top of the

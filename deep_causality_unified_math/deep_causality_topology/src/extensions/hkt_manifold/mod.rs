@@ -29,6 +29,13 @@ use std::marker::PhantomData;
 // PART 1: Simplicial witness — `ManifoldWitness<C>` / `SimplicialManifoldWitness<C>`
 // ============================================================================
 
+/// # Why `NoConstraint`
+///
+/// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
+/// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
+/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
+/// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct ManifoldWitness<C>(PhantomData<C>);
 
 /// Textbook alias for the simplicial case.
@@ -42,10 +49,7 @@ where
         + deep_causality_num::FromPrimitive,
 {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Manifold<SimplicialComplex<C>, T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = Manifold<SimplicialComplex<C>, T>;
 }
 
 impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
@@ -142,11 +146,20 @@ where
         }
         let new_len = result_data.len();
         let new_tensor = CausalTensor::from_vec(result_data, &[new_len]);
+        // Preserve the focus. `bind(m, pure)` must return `m`, and a focus reset to `0` breaks the
+        // monad right identity law for every non-zero focus. This is the same reasoning the
+        // `extend` implementations carry: the context of the input is the context of the result.
+        //
+        // The focus indexes `m_a.data`, and `f` decides how many elements each input contributes,
+        // so the result may be shorter than the input. `Manifold::new` rejects a cursor at or past
+        // `data.len()`, and `extract`/`extend` read at the cursor, so the index is clamped to keep
+        // that invariant rather than handing on an index the data no longer has.
+        let cursor = m_a.cursor.min(new_len.saturating_sub(1));
         Manifold {
             complex: m_a.complex.clone(),
             data: new_tensor,
             metric: m_a.metric.clone(),
-            cursor: 0,
+            cursor,
         }
     }
 }
@@ -246,6 +259,13 @@ where
 // PART 2: Generic witness — `GenericManifoldWitness<K>` over any `CellularComplex`
 // ============================================================================
 
+/// # Why `NoConstraint`
+///
+/// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
+/// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
+/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
+/// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct GenericManifoldWitness<K>(PhantomData<K>);
 
 impl<K> HKT for GenericManifoldWitness<K>
@@ -253,10 +273,7 @@ where
     K: CellularComplex + Satisfies<NoConstraint>,
 {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Manifold<K, T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = Manifold<K, T>;
 }
 
 impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>

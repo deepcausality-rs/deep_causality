@@ -18,7 +18,7 @@
 //! * [`scoped_map`], the minimal in-house fork-join surface for few,
 //!   long, data-independent tasks such as counterfactual branch fan-outs:
 //!   an order-preserving parallel map over a slice on
-//!   [`std::thread::scope`] threads under the `parallel` feature, a plain
+//!   `std::thread::scope` threads under the `parallel` feature, a plain
 //!   inline map without it. No thread pool, no external dependency.
 //!
 //! # Feature levels
@@ -34,8 +34,8 @@
 //!
 //! # Why `parallel = ["std"]` stays
 //!
-//! The parallel arm of [`scoped_map`] calls [`std::thread::scope`] and
-//! [`std::thread::available_parallelism`], and neither exists in `core` or
+//! The parallel arm of [`scoped_map`] calls `std::thread::scope` and
+//! `std::thread::available_parallelism`, and neither exists in `core` or
 //! `alloc`. `parallel` therefore declares a dependency on `std`, and that
 //! declaration earns its place: it is what makes a bare `--features
 //! parallel` resolve to a working configuration, and what lets a

@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-07-10. This note summarizes the machine-checked formalization of the
 complex-number and quaternion algebras in this crate; it is the crate-local view of the program
 described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md) and
 [`deep_causality_unified_math/deep_causality_haft/LEAN_HAFT.md`](../deep_causality_haft/LEAN_HAFT.md).
 
@@ -31,7 +31,7 @@ Lean 4 and linked back to the Rust implementation by a per-theorem witness test:
   `Complex<f64>` / `Quaternion<f64>` types to the same statement at representative inputs (float
   comparisons use an epsilon tolerance).
 - **The bridge:** each theorem carries a shared id (e.g. `complex.norm.mul`,
-  `quaternion.noncomm`) recorded in [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) —
+  `quaternion.noncomm`) recorded in [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) —
   **9 ids (5 complex + 4 quaternion), all proved and witnessed**. CI
   (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
   placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a

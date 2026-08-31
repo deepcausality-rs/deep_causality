@@ -56,7 +56,7 @@ Properties relative to CG:
 
 This supersedes the planned CG preconditioner *on the periodic path only*.
 CG (eventually preconditioned) remains the solver for non-periodic and
-variable-grid geometries (`openspec/notes/cfd/variable-grid-geometry.md`),
+variable-grid geometries (`openspec/notes/archive/cfd/variable-grid-geometry.md`),
 where the Laplacian is not a convolution.
 
 ## 3. Why a dedicated crate

@@ -6,7 +6,7 @@
 //! Topology-only invariants extracted from a `HodgeDecomposition<R>`.
 //!
 //! `TopologicalInvariants<R>` is the pure-topology product of Block B1a of
-//! [`openspec/notes/3DCausalFluidDynamics.md`](../../../../openspec/notes/3DCausalFluidDynamics.md):
+//! [`openspec/notes/archive/cfd/3DCausalFluidDynamics.md`](../../../../../openspec/notes/archive/cfd/3DCausalFluidDynamics.md):
 //! given a manifold and the Hodge–Helmholtz decomposition of some k-form
 //! field on it, the invariants are the four Betti numbers `β_0..β_3` of the
 //! underlying chain complex plus the three component L2 norms

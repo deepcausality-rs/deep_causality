@@ -15,7 +15,7 @@
 //! `UnitEdge`, `Uniform`, `PerAxis`, and `PerEdge`.
 //!
 //! This is a deliberate correction to the original design note
-//! `openspec/notes/CubicalReggeCalculus.md` §3.R2, which proposed
+//! `openspec/changes/archive/2026-05-22-add-cubical-regge-calculus-core/CubicalReggeCalculus.md` §3.R2, which proposed
 //! `arctan2(lengths[j], lengths[i])` for the `PerAxis` case. The proposed formula
 //! conflated the dihedral angle between faces with the half-angle of a stretched
 //! cube's diagonal; for axis-aligned cubes those are different quantities and only
@@ -31,7 +31,7 @@
 //!    representation does not express. A future Gram-matrix-aware extension would
 //!    rewrite the dihedral closed forms here.
 //!
-//! See `openspec/changes/add-cubical-regge-calculus-core/tasks.md` §3 and §4.
+//! See `openspec/changes/archive/2026-05-22-add-cubical-regge-calculus-core/tasks.md` §3 and §4.
 
 use super::{CubicalReggeGeometry, Euclidean, Lorentzian, SignatureMarker};
 use crate::traits::neighborhood::CellId;

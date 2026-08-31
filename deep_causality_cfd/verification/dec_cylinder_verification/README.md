@@ -135,7 +135,7 @@ contrast **steady-flow artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652
 wall mis-estimates shear, and the body never sheds).
 
 A defensible accuracy claim needs a **grid-convergence study** (16→24→32/D, Richardson-extrapolated)
-plus `C_L,rms` / `θ_sep` / `C_pb` — sketched in `openspec/notes/cfd/cfd-validation-plan.md`.
+plus `C_L,rms` / `θ_sep` / `C_pb` — sketched in `openspec/notes/archive/cfd/cfd-validation-plan.md`.
 
 **Performance.** The aperture-resolved run is much slower than the staircase one, but the 16/D-vs-16/D
 comparison is misleading: the staircase reaches a *steady* state and then coasts (its warm-started CG

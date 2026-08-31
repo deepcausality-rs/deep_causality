@@ -8,11 +8,12 @@ use deep_causality_algebra::AbelianGroup;
 use deep_causality_linear::CsrMatrix;
 use std::sync::Arc;
 
-impl<T> Chain<T>
-where
-    T: AbelianGroup + Copy + PartialEq + Default + core::ops::Neg<Output = T>,
-{
+impl<R, G> Chain<R, G> {
     /// Creates a zero chain for a given complex and grade.
+    ///
+    /// The zero chain is the empty sparse pattern, so it stores no coefficient and needs nothing
+    /// of `G`. Requiring an algebraic structure here would keep the zero chain out of reach for
+    /// coefficient types that only ever ride along.
     ///
     /// # Arguments
     /// * `complex` - The simplicial complex the chain belongs to.
@@ -20,7 +21,7 @@ where
     ///
     /// # Returns
     /// A chain with all weights set to zero.
-    pub fn zero(complex: Arc<SimplicialComplex<T>>, grade: usize) -> Self {
+    pub fn zero(complex: Arc<SimplicialComplex<R>>, grade: usize) -> Self {
         let size = complex.skeletons[grade].simplices.len();
         // Chain is represented as a 1 x N sparse matrix (row vector)
         let weights = CsrMatrix::zero(1, size);
@@ -30,7 +31,12 @@ where
             weights,
         }
     }
+}
 
+impl<R, G> Chain<R, G>
+where
+    G: AbelianGroup + Copy + PartialEq + core::ops::Neg<Output = G>,
+{
     /// Adds two chains.
     ///
     /// # Panics
@@ -70,7 +76,7 @@ where
     }
 }
 
-impl<T> Chain<T> {
+impl<R, G> Chain<R, G> {
     fn check_compatibility(&self, rhs: &Self) {
         assert_eq!(self.grade, rhs.grade, "Chain grade mismatch");
         assert!(
@@ -80,16 +86,20 @@ impl<T> Chain<T> {
     }
 }
 
-impl<T> Chain<T>
+impl<R, G> Chain<R, G>
 where
-    T: Copy + PartialEq + core::ops::Add<Output = T>,
+    G: Clone + PartialEq + core::ops::Add<Output = G>,
 {
     /// Adds two chains with an explicit zero value for contextual sparsity.
+    ///
+    /// Bounded on `Clone` rather than `Copy`, matching
+    /// [`CsrMatrix::add_with_zero`](deep_causality_linear::CsrMatrix::add_with_zero), so a
+    /// coefficient group whose values are not `Copy` can still be summed.
     ///
     /// # Arguments
     /// * `rhs` - The chain to add.
     /// * `zero` - The value to treat as zero.
-    pub fn add_with_zero(&self, rhs: &Self, zero: T) -> Self {
+    pub fn add_with_zero(&self, rhs: &Self, zero: G) -> Self {
         self.check_compatibility(rhs);
         let weights = self
             .weights

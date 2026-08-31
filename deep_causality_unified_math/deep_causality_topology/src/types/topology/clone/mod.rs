@@ -7,7 +7,7 @@
 
 use crate::Topology;
 
-impl<T: Clone> Topology<T> {
+impl<R: Clone, G: Clone> Topology<R, G> {
     pub fn clone_shallow(&self) -> Self {
         self.clone()
     }

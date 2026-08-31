@@ -17,6 +17,17 @@ mathematical definition; it indexes a *family* of adjunctions, one per context v
 are per-fixed-context, which is what the model proves (the context is a fixed ambient parameter
 here — `S` plays that role structurally).
 
+Second Rust artifact: `counit` and `right_adjunct` return `Result<_, Self::Error>` on the Rust
+side, while they are total here. The two are not in conflict, and the difference is a property of
+the carriers rather than of the adjunction. `unit` and `left_adjunct` *build* a structure, so they
+are total everywhere. `counit` and `right_adjunct` *extract* a bare `B` from a container, and the
+Rust carriers — `Chain`, `CausalMultiVector`, `DifferentialForm` — can store nothing, which for a
+sparse `Chain` is reachable input because CSR drops explicit zeros. The model's carrier
+`L A = A × S` always holds an `A`, so extraction cannot fail and no error case arises to model.
+The laws below are therefore the laws of the `Ok` arm, and the Rust witness reads them that way:
+`right_adjunct (left_adjunct f) = Ok (f la)`. Before the `Error` associated type existed, the Rust
+side discharged the empty case by panicking; see `unified_math_gaps.md` item E3.
+
 Canonical model: the currying adjunction `(- × S) ⊣ (S → -)` — named in the Rust docstring
 itself ("Currying/Uncurrying") and the adjunction underlying the state monad. `L A = A × S`,
 `R B = S → B`.

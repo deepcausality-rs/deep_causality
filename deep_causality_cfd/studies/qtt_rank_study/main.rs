@@ -14,7 +14,7 @@
 //!    a curved bow shock from ~150 to ~5.
 //!
 //! It self-verifies: the gates below encode the findings and exit non-zero on regression.
-//! See `README.md` and `openspec/notes/plasma-blackout/gap-2/` for the analysis.
+//! See `README.md` and `openspec/notes/archive/cfd-plasma-blackout/gap-2/` for the analysis.
 
 use deep_causality_cfd::{quantize, quantize_2d};
 use deep_causality_tensor::{CausalTensor, Truncation};

@@ -45,7 +45,7 @@ inverse-square core left an untouched exact matrix exponential. The `[open]` con
 you split in physical space, Encke/Strang, and you do not express aero in the conformal algebra.
 B1's perturbation factoring holds, and Resolution 1 simplifies, since a physical-space split
 replaces a hand-set conformal-coupling law. Analysis:
-`openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
+`openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
 
 **Caveats.** The perturbation is a **mock** drag `−k·v`, not a real atmospheric model. It is chosen
 as the hard case because it is non-conservative, but a real aero force is state- and

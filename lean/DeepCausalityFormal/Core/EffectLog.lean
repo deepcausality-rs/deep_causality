@@ -17,7 +17,7 @@ Modeling (faithful to the Rust): `EffectLog` is a `Vec<LogEntry>`; `append` is e
 `Vec::append` (order-preserving concatenation, no dedup / cap / reorder). Its `PartialEq`
 compares the MESSAGE sequence only, quotienting away timestamps (`log_effect.rs:45-54`) — this is
 precisely what makes the value-level abstraction `List Λ` (Λ = opaque message label) faithful. See
-deviation D17 in `openspec/notes/causal-algebra/core-formalization-deviations.md`.
+deviation D17 in `openspec/notes/archive/causal-algebra/core-formalization-deviations.md`.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 

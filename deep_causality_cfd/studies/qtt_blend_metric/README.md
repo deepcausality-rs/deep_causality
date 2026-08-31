@@ -43,7 +43,7 @@ are compatibly oriented over the same `(ξ, η)` patch in front of the nose, on 
 **Conclusion.** The blend is valid and monotone in `λ`, so D8 can treat the coordinate as a tunable
 `MetricProvider` rather than a fixed choice. The Res-4 residual is closed. A partial blend is not a
 cheap middle ground, though: the rank payoff arrives above `λ ≈ 0.75`, so a tuner should expect to
-run near full fit. Analysis: `openspec/notes/plasma-blackout/gap-2/`.
+run near full fit. Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** This measures the **static** representability of a frozen analytic shock on the
 blended lattice. It says nothing about whether marching holds the alignment; that is the question

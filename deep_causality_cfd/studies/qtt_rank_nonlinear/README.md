@@ -38,7 +38,7 @@ alignment**, meaning a shock-aligned or body-fitted coordinate, which is the `qt
 and an **implicit / IMEX step** for stable dissipation within the diffusion CFL, which is gap **C3**.
 Neither is exercised here, because this study *captures on a fixed Cartesian grid on purpose*, to
 measure the cost of doing so. The shock-aligned confinement test is the next study, and both levers
-are Tier-B design commitments. Analysis: `openspec/notes/plasma-blackout/gap-2/`.
+are Tier-B design commitments. Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** Burgers is a scalar model, not the compressible Euler/NS system. Explicit Euler with
 central differences is the minimal honest shock-former, not a production scheme. 64² and 128² are

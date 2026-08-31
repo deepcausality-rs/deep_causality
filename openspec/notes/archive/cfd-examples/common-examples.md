@@ -20,7 +20,8 @@ aerodynamics over a real component stays out of this set.
 
 ## Group 1: precondition, the `deep_causality_file` crate
 
-> **STATUS: shipped (2026-07-03)** through `openspec/changes/add-cfd-file-io/`: the typed
+> **STATUS: shipped (2026-07-03)** through
+> `openspec/changes/archive/2026-07-03-add-cfd-file-io/`: the typed
 > table reader, the units-aware result-table writer, the sensor-trace loader, and the two-tier
 > snapshot/resume (checksummed container, `force_load` with reported warnings, world
 > fingerprint, bit-exact scalars, one-line `save_state_snapshot` on a paused march and
@@ -86,7 +87,8 @@ each example.
 
 ## Group 2: examples 1 to 3 (analytic anchors, existing solvers, small effort)
 
-> **STATUS: shipped (2026-07-03)** through `openspec/changes/add-cfd-study-dsl-and-examples/`,
+> **STATUS: shipped (2026-07-03)** through
+> `openspec/changes/archive/2026-07-05-add-cfd-study-dsl-and-examples/`,
 > together with the DSL review's S1 to S5 (sweep, Gates, run_owned, from_columns, duct_march).
 > Measured: the nozzle map's shocks land within 12 cells of the closed form and the supersonic
 > rows exit at M 2.12 vs design 2.197; the VIV sweep reads St 0.182 to 0.191 at Re 100 to 160

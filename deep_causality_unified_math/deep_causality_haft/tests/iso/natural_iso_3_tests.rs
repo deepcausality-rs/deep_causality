@@ -25,24 +25,14 @@ struct TripleWitness;
 
 impl HKT3Unbound for TripleWitness {
     type Constraint = NoConstraint;
-    type Type<A, B, C>
-        = Triple<A, B, C>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>;
+    type Type<A, B, C> = Triple<A, B, C>;
 }
 
 struct MyTripleWitness;
 
 impl HKT3Unbound for MyTripleWitness {
     type Constraint = NoConstraint;
-    type Type<A, B, C>
-        = MyTriple<A, B, C>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>;
+    type Type<A, B, C> = MyTriple<A, B, C>;
 }
 
 struct TripleMyTripleIso;

@@ -37,6 +37,6 @@ shock steepening into a near-discontinuity with dispersive Gibbs growth, and tha
 here; it remains OPEN for Tier-B. Testing it needs a nonlinear Burgers or compressible marcher,
 which did not exist when this study ran. So this study establishes the reassuring half, that linear
 transport plus rounding is rank-safe, and explicitly scopes the unresolved half.
-`qtt_rank_nonlinear` closes it. Analysis: `openspec/notes/plasma-blackout/gap-2/`.
+`qtt_rank_nonlinear` closes it. Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 See `output.txt` for the recorded reference output.

@@ -9,7 +9,7 @@
 //! diagonal in the Fourier basis, so `p̂_k = rhŝ_k / λ_k` with the constant (`k=0`) mode zeroed — which
 //! pins the singular Laplacian's null space *by construction*. The projection rests on `∇p` (unique
 //! despite the singular operator), so the non-uniqueness of `p` is irrelevant. (ARIZ resolution; see
-//! `openspec/notes/plasma-blackout/qtt-incompressible-2d-ariz.md`.) Tier-A solves the spectral step on
+//! `openspec/notes/archive/cfd-plasma-blackout/gap-1/gap-one-qtt-incompressible-2d-ariz.md`.) Tier-A solves the spectral step on
 //! the dequantized field; a QFT-MPO keeps it in QTT at scale.
 
 use super::codec::{dequantize_2d, quantize_2d};

@@ -28,6 +28,16 @@
 //! This module supplies the algebraic **substrate only**; the graph wiring that consumes `∇` for
 //! branch reconvergence is out of scope here (it is the deferred reconvergence-merge extension).
 //!
+//! # Not to be confused with the endofunctor-level structure
+//!
+//! Everything here lives at the level of **values**: `Δ`, `ε`, `∇`, `η` and `σ` act on `A`, and the
+//! product is the cartesian one. [`LaxMonoidal`](crate::LaxMonoidal) in `crate::lax_monoidal` is the
+//! monoidal structure one level up, on **endofunctors**, and it is deliberately *not* cartesian —
+//! it exists precisely to avoid requiring `Δ`. Both define a `unit`:
+//! [`SymMonoidal::unit`] is the [`Monoid`] identity `M::empty()`, while `LaxMonoidal::unit` is
+//! `η : I → F I`, the unit object lifted into a functor. They are unrelated maps that are both
+//! reachable from the crate root, so name the level when you mean one of them.
+//!
 //! Laws are machine-checked in `lean/DeepCausalityFormal/Haft/SymmetricMonoidal.lean`
 //! (`haft.monoidal.{comonoid_laws, merge_monoid_laws, symmetry}`) and witnessed in
 //! `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/monoidal_tests.rs`.

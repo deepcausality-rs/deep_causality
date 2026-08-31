@@ -69,7 +69,8 @@ Trait-by-trait, outside `haft` itself:
 |---|---|
 | `HKT`, `Functor`, `Applicative`, `Monad`, `CoMonad`, `Pure`, `Foldable` | `linear`, `tensor`, `multivector`, `topology` |
 | `Arrow` | `calculus`, `tensor` |
-| `Adjunction`, `MonoidalMerge`, `ParametricMonad`, `RiemannMap` | `topology` only, one impl each |
+| `MonoidalMerge`, `ParametricMonad`, `RiemannMap` | `topology` only, one impl each |
+| `Adjunction` | `topology` (two: `ChainWitness`, `StokesAdjunction`) and `multivector` (one) |
 | `Traversable` | none |
 | `NaturalTransformation` | none |
 | `Category`, `Kleisli` | none |
@@ -162,7 +163,7 @@ test.
 `Euler` and `Rk4`, but those are value-level arrows over plain functions. No Kleisli arrow is built
 over any of the four monads, so the monadic and the arrow layers do not meet.
 
-### 3.6 Two shipped monads violate right identity
+### 3.6 Shipped monads violate right identity (one of the two is now resolved)
 
 Measured, not read. Probe source and command in §6.
 
@@ -195,7 +196,13 @@ can rebuild an `m x n`. The crate's answer was to stop at `Applicative` and `CoM
 witnesses and implement `Monad` only for the unshaped `DenseVector`. That answer did not travel:
 `tensor`, `multivector` and `topology` all ship `Monad` on shaped containers.
 
-`ManifoldWitness<C>` also implements `Monad` and was not probed here.
+`ManifoldWitness<C>` also implements `Monad`. It was probed later, and it collapses the same way:
+a rank-2 manifold comes back rank 1, so the violation is the shaped-container one in H1 rather than
+anything specific to `Chain`.
+
+**Since this was written, `CausalMultiVectorWitness::Monad` has been removed**, because no metric
+choice satisfies both identity laws. Its violation is gone by construction, and the count in this
+section's heading is now one: `CausalTensorWitness`.
 
 ### 3.7 `homology` correctly has neither dependency
 
@@ -229,11 +236,40 @@ the algebra bound with it, and
 `openspec/changes/archive/2026-08-30-extract-homology-crate/design.md` rejects `ChainComplex<R>` on
 the merits.
 
-### 3.8 `right_adjunct` panics
+### 3.8 `right_adjunct` panicked — CLOSED
 
-`topology/src/extensions/hkt_simplicial_complex/mod.rs:147` ends `Adjunction::right_adjunct` with
-`panic!("Adjunction::right_adjunct resulted in empty chain.")`. The trait method returns `B`, so
-there is no error channel. An empty chain is reachable input.
+`Adjunction` now carries `type Error`, and **both** partial operations return
+`Result<_, Self::Error>`.
+
+The original entry named only `right_adjunct`. That was half the defect. `counit` has the identical
+shape: it extracts a bare `B` from a container that can be empty, reaching a panic through
+`CoMonad::extract`. Fixing one and leaving the other would have closed the row without closing the
+hole, so both moved. `unit` and `left_adjunct` stay total, and the trait documentation now says why:
+those two *build* structure where the other two *extract* from it.
+
+An empty chain really is reachable input rather than a corner case. CSR drops explicit zeros, so a
+chain whose weights are all zero stores nothing.
+
+The row's "signature change plus one call site" was wrong on both counts. There are **three**
+production impls, not one, which also corrects §2's claim that `Adjunction` is "topology only, one
+impl each":
+
+| Impl | Error type |
+|---|---|
+| `ChainWitness<R>` (topology) | `TopologyError` |
+| `StokesAdjunction` (topology) | `TopologyError` |
+| `CausalMultiVectorWitness` (multivector) | new `EmptyMultiVector` variant |
+
+Three test fixtures in `haft` use `core::convert::Infallible`, which states in the type that
+extraction from an identity functor cannot fail. `AliasAdjunction::differentiate` returns `Result`
+to match.
+
+Five `should_panic` tests became real `Err` assertions, and three new tests pin the reachable
+empty-chain cases. Panic paths across the three production impls: zero.
+
+The Lean statements did not change. The model is the currying adjunction, where `L A = A × S`
+always holds an `A`, so extraction cannot fail and no error case arises to model. `Adjunction.lean`
+records the deviation: the laws below it are the laws of the `Ok` arm.
 
 ## 4. Ranking
 
@@ -243,14 +279,59 @@ Mechanical work. No design decision, one crate touched, laws follow from the sha
 
 | # | Item | Gap | Why easy |
 |---|---|---|---|
-| E1 | `Functor`, `Applicative`, `Foldable` for `Complex`, `Quaternion`, `Octonion` | §3.1 | Fixed-arity products. No shape to lose, so no law to break. Constrained-witness pattern already exists |
-| E2 | `Functor` and `CoMonad` for `Dual` | §3.1 | Two fields; `extract = re`. See the caveat below |
-| E3 | `right_adjunct` returns `Result` instead of panicking | §3.8 | Signature change plus one call site |
-| E4 | Law tests for the four existing witnesses | §3.6 | The probe in §6 is the template. Cheap, and it pins the two known violations before anything is built on them |
+| E1 | ~~`Functor`, `Applicative`, `Foldable` for `Complex`, `Quaternion`, `Octonion`~~ **CLOSED** | §3.1 | Done via `MonoidalApplicative`, not `Applicative`; see the note below |
+| E2 | ~~`Functor` for `Dual`~~ **CLOSED** (`CoMonad` deferred) | §3.1 | Two fields. See the two caveats below |
+| E3 | ~~`right_adjunct` returns `Result` instead of panicking~~ **CLOSED** | §3.8 | Wider than this row assumed; see below |
+| E4 | Law tests for the four existing witnesses | §3.6 | Three of four are done; only `tensor` is missing, and it is not cheap. See below |
+
+**E1 and E2 closed** by `openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative`. Neither was closed the way
+this table anticipated, and the difference matters.
+
+E1 asked for `Applicative`, which remains impossible: `Applicative<F>: Functor<F> + Pure<F>`, and
+`pure` fills one slot from one moved value, so a fixed-arity product of arity ≥ 2 cannot have it
+without the diagonal. What the three types gained instead is `MonoidalApplicative`, whose `apply` is
+derived from the lax monoidal structure map and never invokes the diagonal. They also gained
+`Semigroupal`, `LaxMonoidal` and `Convolutional`. `Foldable` was already present.
+
+E2's `Functor` half is closed the same way, plus the monoidal stack, and it required dropping the
+struct-level bound on `Dual<T: Real>` — that bound killed the witness at the GAT, before any method.
+The `CoMonad` half is deferred; see the second caveat.
+
+The "why easy" column was wrong about both. Neither was mechanical, and the reason each was blocked
+turned out to be structural rather than local.
 
 Caveat on E2: the lawful `fmap` over `Dual` maps `re` and `du` independently, which is the pair
 functor and carries no chain rule. It is worth having for precision migration and for structural
 traversal. It is not forward-mode AD, and the docstring should say so.
+
+Second caveat on E2, and it narrows the item: **the `CoMonad` half is deferred.** `Dual<A> ≅ A^S`
+over the two-element index set, so lawful comonads correspond to monoid structures on `S`, and a
+two-element set with a chosen identity carries exactly two. Both were measured to satisfy all four
+comonad laws, so nothing in the type selects between them; a third shape that looks natural, handing
+both slots the same focus, is unlawful and fails the counit law. With two arbitrary-but-lawful
+candidates and no caller in the workspace wanting either, shipping one would lock a default into the
+public API with nothing to validate it against. The decision and its reasoning are recorded in
+`openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative/design.md`. If it is ever lifted, prefer the
+absorbing comultiplication over the swap.
+
+**E4 is three-quarters done, and the remainder is not an Easy item.** `linear` has
+`laws_tests.rs`; `multivector` has `hkt_law_tests.rs`, and its violation is gone by construction
+because the unlawful `Monad` impl was removed; `topology` gained `hkt_manifold_law_tests.rs` and
+`hkt_adjunction_law_tests.rs`, which is where the `ManifoldWitness::bind` cursor-reset defect was
+found. Only `tensor` has no law tests, and it is the one witness still carrying a live violation.
+
+Writing them means deciding what to assert. The functor, applicative and comonad laws pass and can
+be asserted plainly. Right identity does not:
+
+```
+shape [2, 3]    -> bind(m,pure) [6]   right identity holds: false
+shape [2, 2, 2] -> bind(m,pure) [8]   right identity holds: false
+shape [6]       -> bind(m,pure) [6]   right identity holds: true
+```
+
+Pinning that means writing a characterization test that asserts the wrong answer on purpose, which
+commits to H1's outcome before H1 has been argued. That is why the remainder sits with H1 rather
+than here.
 
 ### 4.2 Moderate
 
@@ -278,8 +359,10 @@ Design forks. Each one can be answered several ways and the answers are not equi
 E4 first. Law tests are the cheapest item and they fix the meaning of everything after: H1 cannot be
 argued without them, and M1 depends on the answer to H1.
 
-Then E3, which is local and cheap. Then E1 and E2, which widen the element layer and make the first
-genuinely new composition possible: a nested `fmap` over `CausalTensor<Complex<T>>` at both layers.
+E3 is closed, and it was neither local nor cheap: a trait-level associated type, three production
+impls, three test fixtures, an alias, and a recorded deviation in the Lean header. E1 and E2 are
+closed too, and they widen the element layer enough to make a nested `fmap` over
+`CausalTensor<Complex<T>>` work at both layers.
 
 M1 is the multiplier and should wait for H1. H2 is the largest single capability in the note and the
 one with a real fork in it; it wants its own change proposal, not a task in this one.

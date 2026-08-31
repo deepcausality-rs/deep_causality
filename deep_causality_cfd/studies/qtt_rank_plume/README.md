@@ -67,7 +67,7 @@ diverge; the corridor's branch-invariant flow columns are the explicit foil.
 **Conclusion.** Both M1 risks land **green**. Plume rank is viable, and viable cheaply under the
 blend metric. Forking is structurally O(1) with a continuation cost indistinguishable from an
 unforked march. Feeds the verdict in
-`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`.
+`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`.
 
 **Caveats.** Only structural breaks gate: fork sharing lost, rank saturating the representational
 ceiling, or an errored branch. Degraded-but-measured outcomes, such as a poor step-cost ratio or

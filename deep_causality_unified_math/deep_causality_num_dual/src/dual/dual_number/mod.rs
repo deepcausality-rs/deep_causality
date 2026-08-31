@@ -31,6 +31,20 @@ mod real;
 /// [`Field`](deep_causality_algebra::Field)/[`RealField`](deep_causality_algebra::RealField), because `ε` is a zero
 /// divisor (`ε·ε = 0`) and has no multiplicative inverse.
 ///
+/// # No struct-level bound
+///
+/// The struct is generic over `T` and carries **no** bound, matching `Complex`, `Quaternion`,
+/// `CausalTensor` and `CausalMultiVector`. The struct says what may be *stored*; the impls say what
+/// may be *computed*. Every arithmetic, analytic and algebra-tower impl names `T: Real` itself, so
+/// `Dual<f32>` and `Dual<f64>` behave exactly as before, and the nesting above is unaffected: it
+/// rests on `impl<T: Real + Div<Output = T>> Real for Dual<T>`, which keeps its own bound.
+///
+/// The bound had to go for the functor layer to exist at all. A struct bound is a well-formedness
+/// obligation on the *type*, so it propagates into the HKT projection `type Type<T> = Dual<T>` and
+/// makes `Dual<()>` and `Dual<(A, B)>` ill-formed — `Real`'s domain is neither closed under `×`
+/// nor possessed of the unit object, so `unit` and `zip` had no well-formed return type. See
+/// [`DualWitness`](crate::DualWitness).
+///
 /// # Examples
 ///
 /// ```
@@ -43,7 +57,7 @@ mod real;
 /// assert_eq!(y.derivative(), 27.0 + 2.0); // 3·3² + 2 = 29
 /// ```
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
-pub struct Dual<T: Real> {
+pub struct Dual<T> {
     /// The real part `a` — the function value.
     pub re: T,
     /// The infinitesimal coefficient `b` — the derivative carried in the `ε` channel.

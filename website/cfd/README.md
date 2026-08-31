@@ -59,7 +59,7 @@ project, not something this site should diverge on.
 
 ## Content rules
 
-From `openspec/notes/cfd-website/cfd-docs-website.md`:
+From `openspec/notes/archive/cfd-website/cfd-docs-website.md`:
 
 - **Facts are rooted in the crate. Authoring is for the prime audience.**
   Every claim on this site traces to `deep_causality_cfd` in this repo: a

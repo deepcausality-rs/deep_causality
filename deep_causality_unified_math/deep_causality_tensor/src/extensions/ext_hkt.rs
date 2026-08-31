@@ -16,14 +16,27 @@ use deep_causality_haft::{
 // HKT Witness Implementation
 // ============================================================================
 
+/// HKT witness for [`CausalTensor`].
+///
+/// # Why `NoConstraint`
+///
+/// `CausalTensor<T>` declares no bound on `T`, and the categorical operations implemented here
+/// do no arithmetic: `fmap`, `fold`, `pure`, `bind`, `extend` and `apply` move elements without
+/// computing on them. `fmap` maps `CausalTensor<A>` to `CausalTensor<B>` for unrelated `A` and
+/// `B`, so a tensor of labels maps as readily as a tensor of `f64`. `NoConstraint` states that
+/// accurately; it is not a placeholder for a bound that belongs here.
+///
+/// The tensor operations that *do* compute carry their bounds on the impls that need them:
+/// `ConjugateScalar` for complex-aware algebra, `RealField + Zero + One + Sum + FromPrimitive`
+/// for statistics and reductions, `Clone` for reshaping. Those name real traits, so the compiler
+/// enforces them and no downstream crate can satisfy them by declaration.
+///
+/// See `openspec/notes/archive/hkt_gat/hkt_CausalTensor.md` for the measurement behind this.
 pub struct CausalTensorWitness;
 
 impl HKT for CausalTensorWitness {
     type Constraint = NoConstraint;
-    type Type<T>
-        = CausalTensor<T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = CausalTensor<T>;
 }
 
 // ============================================================================

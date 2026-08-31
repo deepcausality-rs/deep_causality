@@ -1,9 +1,9 @@
 # DSL review: the five everyday examples drafted in today's CfdFlow
 
 Date: 2026-07-03. Status: **shipped**; S1 to S5 landed with examples 1 to 3 through
-`openspec/changes/add-cfd-study-dsl-and-examples/` (one scope correction recorded in that
-change's design D3: `run_owned` is MarchPipeline-only, because the uncertain config carries no
-mesh). Related:
+`openspec/changes/archive/2026-07-05-add-cfd-study-dsl-and-examples/` (one scope
+correction recorded in that change's design D3: `run_owned` is MarchPipeline-only,
+because the uncertain config carries no mesh). Related:
 [common-examples](../cfd-examples/common-examples.md), [cfd-roadmap](../cfd-plasma-retropulsion/cfd-roadmap.md).
 
 Method, per the review brief: draft all five everyday examples in the **current** DSL first,

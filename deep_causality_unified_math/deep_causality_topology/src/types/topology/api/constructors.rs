@@ -9,7 +9,7 @@ use crate::{SimplicialComplex, Topology, TopologyError};
 use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 
-impl<T> Topology<T> {
+impl<R, G> Topology<R, G> {
     /// Creates a new Topology field on a k-skeleton.
     ///
     /// # Arguments
@@ -22,9 +22,9 @@ impl<T> Topology<T> {
     /// * `Ok(Topology)` - A valid topology field
     /// * `Err(TopologyError)` - If validation fails
     pub fn new(
-        complex: Arc<SimplicialComplex<T>>,
+        complex: Arc<SimplicialComplex<R>>,
         grade: usize,
-        data: CausalTensor<T>,
+        data: CausalTensor<G>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
         Self::new_impl(complex, grade, data, cursor)

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, Functor, Monad, Pure};
+use deep_causality_haft::{Applicative, Functor, Pure};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
 // -----------------------------------------------------------------------------------------
@@ -15,7 +15,12 @@ use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Me
 // This example demonstrates how `CausalMultiVector` implements functional patterns:
 // - Functor: Safely transform coefficients without changing geometry.
 // - Applicative: Broadcast functions across vector structures.
-// - Monad: Chain operations that can change the dimensionality (e.g., Tensor Products).
+//
+// There is deliberately no Monad. A multivector holds exactly 2^dim coefficients, where dim comes
+// from its Metric, so an operation that changes the coefficient count changes the algebra it lives
+// in. `bind` cannot do that lawfully: its two identity laws demand the metric come from opposite
+// places, and `pure` has no metric of its own to reconcile them. The tensor product below is that
+// dimension-changing operation, written directly.
 //
 // This enables "Algebraic Programming" where complex physics pipelines are built from
 // small, verifiable, and reusable functional blocks.
@@ -45,8 +50,8 @@ fn main() {
     println!("Shifted Vector (+10): {:?}", shifted.data());
     assert_eq!(shifted.data(), &vec![11.0, 12.0, 13.0, 14.0]);
 
-    // 3. Monad: Tensor Product via Bind
-    println!("\n--- Monad (Bind / Tensor Product) ---");
+    // 3. Tensor product: an operation that changes the algebra
+    println!("\n--- Tensor Product (dimension-changing) ---");
     println!("Geometric Interpretation: Combining dimensions.");
 
     // Start with a 1D Euclidean vector (size 2: scalar, e1)
@@ -54,15 +59,16 @@ fn main() {
     let v1 = CausalMultiVector::new(vec![1.0, 2.0], m1).unwrap();
     println!("Vector A (1D): {:?}", v1.data());
 
-    // Bind function: For each coefficient in A, create a new 1D vector.
-    // This effectively creates a 2D structure (size 4).
-    // f(x) -> [x, -x]
-    let bind_fn = |x: f64| {
-        let m_inner = Metric::Euclidean(1);
-        CausalMultiVector::new(vec![x, -x], m_inner).unwrap()
-    };
-
-    let tensor_product = CausalMultiVectorWitness::bind(v1, bind_fn);
+    // For each coefficient x of A, produce [x, -x], then concatenate. Two coefficients each from
+    // two coefficients gives four, so the result lives in Cl(2) rather than Cl(1).
+    //
+    // This is why it is not `bind`. A monadic bind would have to pick one metric for the result,
+    // and neither the input's Cl(1) nor the closure's Cl(1) is the answer: the answer is Cl(2),
+    // which neither operand carries. The dimension is a property of the operation, so the operation
+    // states it.
+    let expanded: Vec<f64> = v1.data().iter().flat_map(|&x| [x, -x]).collect();
+    let tensor_product = CausalMultiVector::new(expanded, Metric::Euclidean(2))
+        .expect("four coefficients is exactly 2^2, the dimension of Cl(2)");
 
     println!(
         "Resulting Vector (Tensor Product): {:?}",
@@ -70,8 +76,6 @@ fn main() {
     );
     println!("Resulting Metric: {}", tensor_product.metric());
 
-    // Expected: [1.0, -1.0, 2.0, -2.0]
-    // Metric should be Euclidean(2) (1 + 1)
     assert_eq!(tensor_product.data(), &vec![1.0, -1.0, 2.0, -2.0]);
     assert_eq!(tensor_product.metric().dimension(), 2);
 

@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-07-10. This note summarizes the machine-checked formalization of the **main
 crate** — the Causaloid, the Collection, the graph-reasoning engine, and the Context hypergraph. It
 is the crate-local view of the program described in
-[`openspec/notes/causal-algebra/causaloid-formalization-roadmap.md`](../openspec/notes/archive/causal-algebra/causaloid-formalization-roadmap.md),
+[`openspec/notes/archive/causal-algebra/causaloid-formalization-roadmap.md`](../openspec/notes/archive/causal-algebra/causaloid-formalization-roadmap.md),
 mirroring [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md) and
 [`deep_causality_unified_math/deep_causality_haft/LEAN_HAFT.md`](../deep_causality_haft/LEAN_HAFT.md). The core-crate causal
 monad / Kleisli-arrow / free-monad laws this layer builds ON are in `LEAN_CORE.md`.

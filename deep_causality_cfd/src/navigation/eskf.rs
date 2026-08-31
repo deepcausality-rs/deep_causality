@@ -156,7 +156,7 @@ impl<R: RealField> NavFilter<R> {
     /// # Errors
     /// Rejects a `cov_diag` that is not a covariance diagonal: a non-finite entry, or a negative
     /// variance. A diagonal is symmetric by construction, so only finiteness and non-negativity are
-    /// checked here (see [`validate_covariance`]). Admitting a zero or negative variance here is what
+    /// checked here (see `validate_covariance`). Admitting a zero or negative variance here is what
     /// makes the degenerate measurement-update path reachable, so it is refused at the entry point.
     pub fn new(state: InsErrorState<R>, cov_diag: [R; NAV_STATES]) -> Result<Self, PhysicsError> {
         let cov = diag(&cov_diag);
@@ -280,8 +280,8 @@ impl<R: RealField> NavFilter<R> {
     ///
     /// Rejection is **atomic**: every check precedes any mutation, so a refused update leaves the state
     /// and covariance exactly as they were. This matters for the sequential per-axis folds in
-    /// [`ReentryNavEngine::correct_position`], where a rejection on one axis must not leave an earlier
-    /// axis half-applied.
+    /// [`ReentryNavEngine::correct_position`](crate::ReentryNavEngine::correct_position), where a
+    /// rejection on one axis must not leave an earlier axis half-applied.
     pub fn update_scalar(&mut self, h: [R; NAV_STATES], z: R, r: R) -> Result<(), PhysicsError> {
         // Guard the measurement itself: a non-finite `z` slips past the `r` and `s` guards (neither
         // reads `z`) and, via `x_new[i] = x[i] + k[i]·(z − h·x)`, writes `NaN` into every state
@@ -347,7 +347,7 @@ impl<R: RealField> NavFilter<R> {
     ///
     /// # Errors
     /// Rejects a `cov` that is not a covariance: a non-finite entry, an asymmetry beyond the
-    /// [`validate_covariance`] tolerance, or a negative variance on the diagonal. A snapshot carrying
+    /// `validate_covariance` tolerance, or a negative variance on the diagonal. A snapshot carrying
     /// such a matrix was already broken; failing loudly at restore is better than continuing from it
     /// (a non-symmetric or negative-variance covariance drives the measurement update to a `NaN`).
     pub fn restore(

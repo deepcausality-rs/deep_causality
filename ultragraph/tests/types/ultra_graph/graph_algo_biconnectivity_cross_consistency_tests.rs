@@ -5,7 +5,7 @@
 
 //! Cross-API consistency tests for the biconnectivity trio.
 //!
-//! Spec invariants (see `openspec/changes/add-biconnected-components`):
+//! Spec invariants (see `openspec/changes/archive/2026-05-26-add-biconnected-components`):
 //!   I1. v is articulation iff v appears in >= 2 biconnected components.
 //!   I2. {u, v} is a bridge iff some biconnected component has vertex set
 //!       exactly {u, v}.

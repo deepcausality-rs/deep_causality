@@ -86,18 +86,31 @@ pub trait Traversable<F: HKT>: Functor<F> + Foldable<F> {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
-    /// use deep_causality_haft::{Traversable, OptionWitness, VecWitness, HKT};
+    /// ```rust
+    /// use deep_causality_haft::{OptionWitness, ResultWitness, Traversable};
     ///
-    /// // Flipping Vec<Option<i32>> to Option<Vec<i32>>
-    /// let vec_opt = vec![Some(1), Some(2), Some(3)];
-    /// let sequenced: Option<Vec<i32>> = VecWitness::sequence::<i32, OptionWitness>(vec_opt);
-    /// assert_eq!(sequenced, Some(vec![1, 2, 3]));
+    /// // Flipping `Option<Result<i32, String>>` into `Result<Option<i32>, String>`.
+    /// let ok: Option<Result<i32, String>> = Some(Ok(5));
+    /// let flipped: Result<Option<i32>, String> =
+    ///     OptionWitness::sequence::<i32, ResultWitness<String>>(ok);
+    /// assert_eq!(flipped, Ok(Some(5)));
     ///
-    /// let vec_opt_with_none = vec![Some(1), None, Some(3)];
-    /// let sequenced_none: Option<Vec<i32>> = VecWitness::sequence::<i32, OptionWitness>(vec_opt_with_none);
-    /// assert_eq!(sequenced_none, None); // None propagates
+    /// // A failure in the inner context propagates outward.
+    /// let err: Option<Result<i32, String>> = Some(Err("boom".to_string()));
+    /// let flipped_err: Result<Option<i32>, String> =
+    ///     OptionWitness::sequence::<i32, ResultWitness<String>>(err);
+    /// assert_eq!(flipped_err, Err("boom".to_string()));
+    ///
+    /// // An empty outer structure succeeds, carrying nothing.
+    /// let none: Option<Result<i32, String>> = None;
+    /// let flipped_none: Result<Option<i32>, String> =
+    ///     OptionWitness::sequence::<i32, ResultWitness<String>>(none);
+    /// assert_eq!(flipped_none, Ok(None));
     /// ```
+    ///
+    /// The carriers here are `OptionWitness` and `ResultWitness`, the two witnesses that
+    /// implement this trait. `VecWitness` does not; see the note at the foot of
+    /// `extensions/hkt_vec_ext.rs` for why.
     fn sequence<A, M>(fa: F::Type<M::Type<A>>) -> M::Type<F::Type<A>>
     where
         M: Applicative<M> + HKT,

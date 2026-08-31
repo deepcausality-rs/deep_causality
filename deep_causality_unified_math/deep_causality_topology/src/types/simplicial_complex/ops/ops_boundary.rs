@@ -8,12 +8,20 @@ use core::fmt::Debug;
 use deep_causality_linear::CsrMatrix;
 use deep_causality_num::Num;
 
-impl<T> SimplicialComplex<T> {
+impl<R> SimplicialComplex<R> {
     /// Computes the boundary of a chain: ∂c
     /// Maps a k-chain to a (k-1)-chain.
-    pub fn boundary(&self, chain: &Chain<T>) -> Chain<T>
+    ///
+    /// The boundary operator has entries in `{-1, 0, 1}`, and `G: From<i8>` is what lets a
+    /// coefficient type receive those incidence signs. The `Num` bound is the wider numeric tower —
+    /// addition, subtraction, multiplication, division and remainder, over a zero and a one — so
+    /// the coefficient types this reaches are the numeric ones. A coefficient group carrying only
+    /// addition is outside it, even though the incidence sum uses nothing past `+` and `*`.
+    ///
+    /// It reads no geometry, which is why the complex's precision `R` is unconstrained here.
+    pub fn boundary<G>(&self, chain: &Chain<R, G>) -> Chain<R, G>
     where
-        T: Copy + Num + Default + From<i8> + Debug,
+        G: Copy + Num + Default + From<i8> + Debug,
     {
         if chain.grade == 0 {
             panic!("Cannot take boundary of 0-chain");
@@ -27,14 +35,14 @@ impl<T> SimplicialComplex<T> {
         // Manual mat-vec mul: v_out = M * v_in
         // Iterate over rows of M (simplices in k-1 skeleton)
         for r in 0..boundary_op.shape().0 {
-            let mut val = T::zero();
+            let mut val = G::zero();
             // Iterate over non-zero elements in this row of M
             let row_start = boundary_op.row_indices()[r];
             let row_end = boundary_op.row_indices()[r + 1];
 
             for i in row_start..row_end {
                 let c = boundary_op.col_indices()[i]; // This is a simplex in k skeleton
-                let m_val = T::from(boundary_op.values()[i]);
+                let m_val = G::from(boundary_op.values()[i]);
 
                 // Find corresponding value in input chain vector (which is a single-row sparse matrix)
                 let chain_row_start = chain.weights.row_indices()[0];
@@ -48,7 +56,7 @@ impl<T> SimplicialComplex<T> {
                 }
             }
 
-            if val != T::zero() {
+            if val != G::zero() {
                 new_triplets.push((0, r, val));
             }
         }
@@ -64,9 +72,9 @@ impl<T> SimplicialComplex<T> {
 
     /// Computes the coboundary (exterior derivative) of a cochain: dω
     /// Maps a k-cochain to a (k+1)-cochain.
-    pub fn coboundary(&self, chain: &Chain<T>) -> Chain<T>
+    pub fn coboundary<G>(&self, chain: &Chain<R, G>) -> Chain<R, G>
     where
-        T: Copy + Num + Default + From<i8>,
+        G: Copy + Num + Default + From<i8>,
     {
         if chain.grade >= self.skeletons.len() - 1 {
             panic!("Cannot take coboundary of max-dim chain");
@@ -79,13 +87,13 @@ impl<T> SimplicialComplex<T> {
 
         // Manual mat-vec mul
         for r in 0..coboundary_op.shape().0 {
-            let mut val = T::zero();
+            let mut val = G::zero();
             let row_start = coboundary_op.row_indices()[r];
             let row_end = coboundary_op.row_indices()[r + 1];
 
             for i in row_start..row_end {
                 let c = coboundary_op.col_indices()[i];
-                let m_val = T::from(coboundary_op.values()[i]);
+                let m_val = G::from(coboundary_op.values()[i]);
 
                 // Find corresponding value in input chain vector
                 let chain_row_start = chain.weights.row_indices()[0];
@@ -99,7 +107,7 @@ impl<T> SimplicialComplex<T> {
                 }
             }
 
-            if val != T::zero() {
+            if val != G::zero() {
                 new_triplets.push((0, r, val));
             }
         }

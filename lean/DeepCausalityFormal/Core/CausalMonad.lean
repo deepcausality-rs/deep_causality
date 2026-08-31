@@ -8,7 +8,7 @@ Rust source: `deep_causality_core/src/types/causal_effect_propagation_process/mo
 (`CausalEffectPropagationProcess`) and `src/traits/causal_monad/mod.rs` (`CausalMonad`).
 
 With precondition P2 of the Causal Algebra program enforced
-(`openspec/notes/causal-algebra/Formalization.md` §2; change `enforce-w-invariant`), the Rust
+(`openspec/notes/archive/causal-algebra/Formalization.md` §2; change `enforce-w-invariant`), the Rust
 carrier encodes value-XOR-error as ONE channel — so the W-invariant (`error ⇒ no value`) holds
 by construction and the invalid state the original walking skeleton had to exclude is
 unrepresentable.

@@ -6,42 +6,46 @@
 use crate::Topology;
 use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
-use std::sync::Arc;
+use std::marker::PhantomData;
 
-pub struct TopologyWitness;
+/// # Why `NoConstraint`
+///
+/// `Topology<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
+/// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
+/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
+/// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
+///
+/// # `fmap` preserves the complex
+///
+/// The complex is indexed by the precision parameter, which mapping the coefficients does not
+/// touch, so it is carried across and its Hodge ⋆ operators survive. This used to be false: a
+/// single parameter served both roles, `fmap` had to rebuild the complex with
+/// `..Default::default()`, and the functor identity law failed for any complex carrying geometry.
+pub struct TopologyWitness<R>(PhantomData<R>);
 
-impl HKT for TopologyWitness {
+impl<R> HKT for TopologyWitness<R> {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Topology<T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<G> = Topology<R, G>;
 }
 
-impl Functor<TopologyWitness> for TopologyWitness {
-    fn fmap<A, B, F>(fa: Topology<A>, f: F) -> Topology<B>
+impl<R> Functor<TopologyWitness<R>> for TopologyWitness<R> {
+    /// Maps the coefficients, carrying the complex across unchanged.
+    ///
+    /// The complex is indexed by the precision `R`, which this map does not touch, so it is shared
+    /// rather than rebuilt and its Hodge ⋆ operators survive. When the coefficient and the complex
+    /// shared one parameter, `fmap` had to construct a `SimplicialComplex<B>` from nothing and
+    /// dropped the geometry doing it, which broke `fmap(id, t) == t`.
+    fn fmap<A, B, F>(fa: Topology<R, A>, f: F) -> Topology<R, B>
     where
         A: Satisfies<NoConstraint>,
         B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
-        // Map Data
         let new_data = CausalTensorWitness::fmap(fa.data, f);
 
-        // Map Complex
-        // We cannot use fa.complex.map(f) because A might not be Clone, equality of A and B is not guaranteed,
-        // and Arc prevents consuming the inner value.
-        // Thus, we reconstruct the topological structure (skeletons/boundaries) which is invariant,
-        // and drop the geometric structure (hodge operators) which depends on A.
-        let new_complex = crate::SimplicialComplex::<B> {
-            skeletons: fa.complex.skeletons.clone(),
-            boundary_operators: fa.complex.boundary_operators.clone(),
-            coboundary_operators: fa.complex.coboundary_operators.clone(),
-            ..Default::default()
-        };
-
         Topology {
-            complex: Arc::new(new_complex),
+            complex: fa.complex,
             grade: fa.grade,
             data: new_data,
             cursor: fa.cursor,
@@ -49,8 +53,8 @@ impl Functor<TopologyWitness> for TopologyWitness {
     }
 }
 
-impl CoMonad<TopologyWitness> for TopologyWitness {
-    fn extract<A>(fa: &Topology<A>) -> A
+impl<R: Clone> CoMonad<TopologyWitness<R>> for TopologyWitness<R> {
+    fn extract<A>(fa: &Topology<R, A>) -> A
     where
         A: Satisfies<NoConstraint> + Clone,
     {
@@ -61,9 +65,9 @@ impl CoMonad<TopologyWitness> for TopologyWitness {
             .expect("Cursor OOB")
     }
 
-    fn extend<A, B, Func>(fa: &Topology<A>, mut f: Func) -> Topology<B>
+    fn extend<A, B, Func>(fa: &Topology<R, A>, mut f: Func) -> Topology<R, B>
     where
-        Func: FnMut(&Topology<A>) -> B,
+        Func: FnMut(&Topology<R, A>) -> B,
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
     {
@@ -79,17 +83,9 @@ impl CoMonad<TopologyWitness> for TopologyWitness {
             result_vec.push(val);
         }
 
-        // Reconstruct complex for B
-        // Preserve topology from A
-        let new_complex = crate::SimplicialComplex::<B> {
-            skeletons: fa.complex.skeletons.clone(),
-            boundary_operators: fa.complex.boundary_operators.clone(),
-            coboundary_operators: fa.complex.coboundary_operators.clone(),
-            ..Default::default()
-        };
-
         Topology {
-            complex: Arc::new(new_complex),
+            // Shared, not rebuilt: the geometry belongs to `R` and `extend` does not touch it.
+            complex: fa.complex.clone(),
             grade: fa.grade,
             data: CausalTensor::from_vec(result_vec, &shape),
             // Preserve the focus so `extend` satisfies the comonad laws (right

@@ -10,7 +10,7 @@ preserved-drag fraction from the cited Jarvinen–Adams correlation and applies 
 on the aero-force channel: derive the thrust and `C_T = srp_thrust_coefficient_kernel(T, q∞, S_ref)`,
 read `srp_preserved_drag_fraction_kernel(C_T)`, and scale the axial forebody drag on the channel by
 the preserved fraction. Per the measured de-risk verdict
-(`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER; the 2026-07-17 addendum measured
+(`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER; the 2026-07-17 addendum measured
 both coupling models and pinned the missing collapse to the harness, not the model class), this
 correlation is the **committed drag authority** in flight — not a field-contracted decrement. At a
 commanded throttle ≤ 0 (or absent) the stage MUST be strictly inert.

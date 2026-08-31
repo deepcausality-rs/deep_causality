@@ -110,10 +110,15 @@ fn test_bounded_adjunction_causal_multi_vector_unit() {
     assert_eq!(mv_mv_a.metric(), Metric::Euclidean(0));
     assert_eq!(mv_mv_a.data().len(), 1);
 
+    // The inner MV lives in Cl(ctx), so it holds 2^dim coefficients, all of them 'a'.
     let inner_mv = &mv_mv_a.data()[0];
     assert_eq!(inner_mv.metric(), ctx);
-    assert_eq!(inner_mv.data().len(), 1);
+    assert_eq!(inner_mv.data().len(), 1 << ctx.dimension());
     assert_eq!(inner_mv.data()[0], 42);
+
+    // Both layers are values the constructor accepts.
+    assert!(CausalMultiVector::new(inner_mv.data().clone(), inner_mv.metric()).is_ok());
+    assert!(CausalMultiVector::new(mv_mv_a.data().clone(), mv_mv_a.metric()).is_ok());
 }
 
 #[test]
@@ -123,7 +128,7 @@ fn test_bounded_adjunction_causal_multi_vector_counit() {
     let inner_mv = CausalMultiVector::new(vec![100], Metric::Euclidean(0)).unwrap();
     let lrb = CausalMultiVector::new(vec![inner_mv], Metric::Euclidean(0)).unwrap();
 
-    let b = CausalMultiVectorWitness::counit(&ctx, lrb);
+    let b = CausalMultiVectorWitness::counit(&ctx, lrb).expect("the multivector stores a value");
 
     // counit should flatten and extract the scalar value.
     assert_eq!(b, 100);
@@ -141,8 +146,8 @@ fn test_bounded_adjunction_causal_multi_vector_left_adjunct() {
     let result_mv = CausalMultiVectorWitness::left_adjunct(&ctx, a, f);
 
     // Expected: A scalar MV containing the result of f(unit(a)).
-    // unit(a) creates a MV with data=[5] and metric=Euclidean(1).
-    // fmap applies f to this inner MV, so f([5]) -> 5.
+    // unit(a) creates a MV with data=[5, 5] and metric=Euclidean(1).
+    // fmap applies f to this inner MV, so f([5, 5]) -> 5.
     // The resulting outer MV is a scalar MV containing 5.
     assert_eq!(result_mv.metric(), Metric::Euclidean(0));
     assert_eq!(result_mv.data(), &[5]);
@@ -164,10 +169,9 @@ fn test_bounded_adjunction_causal_multi_vector_right_adjunct() {
     //    f(4) -> MV([8])
     //    This results in an outer MV containing two inner MVs: MV<MV<i32>>
     //    The data is [MV([6]), MV([8])]
-    // 2. counit flattens this via `bind` and then `extract`s the first element.
-    //    bind flattens [MV([6]), MV([8])] -> MV([6, 8], metric=...)
-    //    extract gets the first element of the flattened data, which is 6.
-    let b = CausalMultiVectorWitness::right_adjunct(&ctx, la, f);
+    // 2. right_adjunct takes the first coefficient of the first inner MV, which is 6.
+    let b = CausalMultiVectorWitness::right_adjunct(&ctx, la, f)
+        .expect("both the input and the mapped multivector store a value");
 
     assert_eq!(b, 6);
 }

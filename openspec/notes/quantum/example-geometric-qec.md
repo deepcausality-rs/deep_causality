@@ -98,7 +98,7 @@ code in hand rather than for codes whose geometry cooperates.
 
 **The design consequence.** The cup product must be generic over `ChainComplex`. The torus is a test
 case; arbitrary complexes are the target. A cup product specialised to lattices would reproduce the
-toric code and reach nothing past it. This is written into `openspec/changes/add-cup-product` as a
+toric code and reach nothing past it. This is written into `openspec/changes/archive/2026-08-20-add-cup-product` as a
 requirement rather than left as an intention.
 
 **Why it is worth doing.** If the native gate set of an arbitrary CSS code is computable, then
@@ -214,7 +214,7 @@ Three examples, three amendments, which is the pattern a design should want:
 ## 6. The gap, now closed at the cup-product rung
 
 **Status, 2026-08-21.** Items 1 through 4 of §6.3 are delivered
-(`openspec/changes/add-cup-product`). `deep_causality_topology` now carries the binary and `n`-fold
+(`openspec/changes/archive/2026-08-20-add-cup-product`). `deep_causality_topology` now carries the binary and `n`-fold
 cup product, generic over `ChainComplex`, for both the simplicial and cubical families. What remains
 of this section is the reasoning that produced that scope and the rungs still above it, kept because
 the estimate it corrected is worth remembering.

@@ -8,9 +8,9 @@
 use crate::Topology;
 use core::fmt::{Display, Formatter};
 
-impl<T> Display for Topology<T>
+impl<R, G> Display for Topology<R, G>
 where
-    T: Display + Clone,
+    G: Display + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "CausalTopology:")?;

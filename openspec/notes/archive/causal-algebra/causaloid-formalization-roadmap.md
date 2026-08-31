@@ -295,9 +295,9 @@ Carrier: the probability `Verdict` (Stage 3). Wiring: the reified hypergraph (St
 | `docalc.rule1` / `rule2` / `rule3` | Pearl's three rules of do-calculus, sound against `d_separation` |
 | `docalc.counterfactual_twin` | counterfactuals via the twin-network construction (two surgered copies sharing exogenous nodes) |
 
-References: `openspec/notes/causal-do/` (Pearl, *Introduction to Do-Calculus*; *The Do-Calculus
-Revisited*). Everything classical and verifiable; the crate is thin because Stages 3–5 did the
-work. **[planned]**
+References: `openspec/notes/classical/classical-scm/` (Pearl, *Introduction to
+Do-Calculus*; *The Do-Calculus Revisited*). Everything classical and verifiable; the
+crate is thin because Stages 3–5 did the work. **[planned]**
 
 ## 7. `deep_causality_quantum` (Goal C + bonus)
 

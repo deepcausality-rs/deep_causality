@@ -7,14 +7,21 @@ use crate::Hypergraph;
 use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
+/// # Why `NoConstraint`
+///
+/// `Hypergraph<T>` carries no element bound, and the categorical operations here move elements
+/// without computing on them: `fmap` maps `A` to an unrelated `B`, and `extend` hands a cursor to a
+/// closure. Constraining the element type would forbid mapping a hypergraph of labels to one of scores, which is legitimate and
+/// works today. `NoConstraint` is the accurate statement, not a placeholder for a bound that
+/// belongs here.
+///
+/// Operations that do compute on elements live on the concrete types and carry real trait bounds
+/// there. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct HypergraphWitness;
 
 impl HKT for HypergraphWitness {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Hypergraph<T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = Hypergraph<T>;
 }
 
 impl Functor<HypergraphWitness> for HypergraphWitness {

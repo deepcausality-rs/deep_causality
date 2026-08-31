@@ -23,7 +23,7 @@ const K: f64 = 2.0;
 
 /// Constant-curvature components `R^d_abc = K(δ^d_a δ_bc − δ^d_b δ_ac)` — the maximally
 /// symmetric space with Euclidean g (do Carmo Ch. 4, Lemma 3.4).
-fn constant_curvature() -> CurvatureTensor<f64, f64, f64, f64, f64> {
+fn constant_curvature() -> CurvatureTensor<f64> {
     let delta = |i: usize, j: usize| if i == j { 1.0 } else { 0.0 };
     CurvatureTensor::from_generator(
         DIM,
@@ -34,7 +34,7 @@ fn constant_curvature() -> CurvatureTensor<f64, f64, f64, f64, f64> {
 }
 
 /// Arbitrary asymmetric components — linearity of `contract` must hold for these too.
-fn arbitrary_components() -> CurvatureTensor<f64, f64, f64, f64, f64> {
+fn arbitrary_components() -> CurvatureTensor<f64> {
     CurvatureTensor::from_generator(
         DIM,
         Metric::Euclidean(DIM),
@@ -90,7 +90,7 @@ fn test_curvature_bianchi_first() {
     }
 
     // The detector detects: a tensor violating the cyclic identity reports a violation.
-    let broken: CurvatureTensor<f64, f64, f64, f64, f64> = CurvatureTensor::from_generator(
+    let broken: CurvatureTensor<f64> = CurvatureTensor::from_generator(
         DIM,
         Metric::Euclidean(DIM),
         CurvatureSymmetry::None,

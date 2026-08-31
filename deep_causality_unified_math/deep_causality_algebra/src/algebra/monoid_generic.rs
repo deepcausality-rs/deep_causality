@@ -11,7 +11,7 @@
 //! carrier, an aggregation reducer — cannot be a monoid through them. `Monoid` is the generic
 //! structure: an identity constructor and an associative binary combine, with no arithmetic bound.
 //! It is the algebra the `Collection` causaloid folds its children through
-//! (see `openspec/notes/causal-algebra/algebraic-causaloid.md`, gap A1).
+//! (see `openspec/notes/archive/causal-algebra/algebraic-causaloid.md`, gap A1).
 
 /// A **monoid**: a set with an associative binary operation `combine` and an identity `empty`.
 ///

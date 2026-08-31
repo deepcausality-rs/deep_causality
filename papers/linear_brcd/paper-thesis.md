@@ -127,7 +127,7 @@ Two coupled contributions:
   CPDAG is present, is the offline analytics tool and the production RCA service.
   This required one small change to the CDL, which previously learned the CPDAG and
   discarded it; persisting it closes the loop (see
-  `openspec/notes/cdl-cpdag-cache.md`). With that change the offline/online split
+  `openspec/notes/archive/cdl-cpdag-cache.md`). With that change the offline/online split
   the paper only describes becomes an executable, measurable property of the
   system: a cold run (learn plus rank) against a warm run (load plus rank) on
   identical data isolates the structure-learning cost the production path avoids.
@@ -242,7 +242,7 @@ the continuous `n → 1000` axis is already covered (Sweep C, `paper-results.md`
   offline and persists it; with the persisted CPDAG supplied, it ranks online and
   pays only the cheap step. The split is a property of how the pipeline is run, not
   a claim about its types; persisting the learned CPDAG is the one change that
-  makes it real (see `openspec/notes/cdl-cpdag-cache.md`).
+  makes it real (see `openspec/notes/archive/cdl-cpdag-cache.md`).
 
 - **C1 is what gives the CDL a reason to exist beyond engineering.** A DSL alone is
   a systems artifact. Hosting a method with a new

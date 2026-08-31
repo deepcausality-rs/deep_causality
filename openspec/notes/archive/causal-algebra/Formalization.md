@@ -60,7 +60,7 @@ The whole program is sound only on a cleaned base. Both are currently **unmet** 
 
 - **(P1) Control‑free.** Remove `RelayTo` (a computed jump = a control effect; not algebraic, needs
   handlers) and `Map` from the core. Relocate to a separate handler layer / future work.
-- **(P2) Lawful carrier.** ✅ **Landed** (`openspec/changes/enforce-w-invariant`). The invariant
+- **(P2) Lawful carrier.** ✅ **Landed** (`openspec/changes/archive/2026-07-06-enforce-w-invariant`). The invariant
   **W: `error = Some ⇒ value = None`** is now enforced structurally: the carrier holds one private
   channel `outcome: Result<EffectValue<T>, Error>` (the `Either E (Maybe T)` encoding), with all
   fields private and construction through total constructors — the value‑AND‑error state is no
@@ -155,7 +155,7 @@ correct.
 
 | # | Item | Layer | Status |
 |---|---|---|---|
-| 1 | **Enforce W (P2)** — `Either E (Maybe T)` encoding / smart constructor; remove the representable‑invalid state | Rust | ✅ **done** (`openspec/changes/enforce-w-invariant`: carrier is `outcome: Result<EffectValue<T>, Error>`, all fields private; right‑identity/associativity/left‑zero now proved in `Core/CausalMonad.lean` + Kani + witnesses) |
+| 1 | **Enforce W (P2)** — `Either E (Maybe T)` encoding / smart constructor; remove the representable‑invalid state | Rust | ✅ **done** (`openspec/changes/archive/2026-07-06-enforce-w-invariant`: carrier is `outcome: Result<EffectValue<T>, Error>`, all fields private; right‑identity/associativity/left‑zero now proved in `Core/CausalMonad.lean` + Kani + witnesses) |
 | 2 | **Remove `RelayTo`/`Map` (P1)** from the core; isolate as handler/future work | Rust | gating |
 | 3 | Decide **context = Reader or State**; enforce it | Rust + math | open |
 | 4 | Lean model of cleaned `M`; `LawfulMonad` instance | L1 | not started |
