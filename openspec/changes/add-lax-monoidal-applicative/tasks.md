@@ -12,15 +12,15 @@
 
 ## 2. The Lean formalization
 
-- [ ] 2.1 Write `lean/DeepCausalityFormal/Haft/LaxMonoidal.lean`, self-contained with no imports, transcribing the `Option` carrier
-- [ ] 2.2 Prove `haft.lax_monoidal.naturality`, stated first and against `Semigroupal`
-- [ ] 2.3 Prove `haft.lax_monoidal.assoc` against `Semigroupal`, modulo the associator
-- [ ] 2.4 Prove `haft.lax_monoidal.unit_laws` against `LaxMonoidal`, modulo the unitors
-- [ ] 2.5 Add `haft.lax_monoidal.apply_agreement` to `Applicative.lean`, leaving its four existing laws byte-identical
-- [ ] 2.6 Add the four ids to the `### Haft layer` table of `lean/THEOREM_MAP.md`
-- [ ] 2.7 Add Rust witnesses in `deep_causality_haft/tests/formalization_lean/`, one test per id carrying a `THEOREM_MAP:` annotation
-- [ ] 2.8 Clear the deviation `Applicative.lean` reports: add the missing Composition law to the `Applicative` Rust docstring
-- [ ] 2.9 Verify `bazel test //lean:Haft` passes with no edit to `lean/BUILD.bazel`, and that each `haft.monoidal.*` id still greps to exactly one row
+- [x] 2.1 Write `lean/DeepCausalityFormal/Haft/LaxMonoidal.lean`, self-contained with no imports, transcribing the `Option` carrier
+- [x] 2.2 Prove `haft.lax_monoidal.naturality`, stated first and against `Semigroupal`
+- [x] 2.3 Prove `haft.lax_monoidal.assoc` against `Semigroupal`, modulo the associator
+- [x] 2.4 Prove `haft.lax_monoidal.unit_laws` against `LaxMonoidal`, modulo the unitors
+- [x] 2.5 Prove `haft.lax_monoidal.apply_agreement` in `LaxMonoidal.lean`, transcribing both sides locally since the file is self-contained; leave `Applicative.lean`'s theorems byte-identical
+- [x] 2.6 Add the four ids to the `### Haft layer` table of `lean/THEOREM_MAP.md`
+- [x] 2.7 Add Rust witnesses in `deep_causality_haft/tests/formalization_lean/`, one test per id carrying a `THEOREM_MAP:` annotation
+- [x] 2.8 Remove the stale DEVIATION NOTE from `Applicative.lean`'s header; the Composition law is already in the Rust docstring and deviations note D1 is marked RESOLVED, so no docstring edit is needed
+- [x] 2.9 Verify `bazel test //lean:Haft` passes with no edit to `lean/BUILD.bazel`, and that each `haft.monoidal.*` id still greps to exactly one row
 
 ## 3. Cayley-Dickson adoption, closing E1
 

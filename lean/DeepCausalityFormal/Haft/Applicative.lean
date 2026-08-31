@@ -12,9 +12,15 @@ Accepted theory: C. McBride & R. Paterson, *Applicative programming with effects
 2008 — an applicative functor satisfies FOUR laws: Identity, Composition, Homomorphism,
 Interchange, plus the functor-compatibility `fmap f x = pure f <*> x`.
 
-DEVIATION NOTE: the Rust docstring lists only three laws (Identity, Homomorphism, Interchange).
-The **Composition law is missing**, and functor-compatibility is unstated. All five are proved
-below for the Option carrier; the recommendation is to complete the docstring's law list.
+All five are proved below for the Option carrier, and the Rust docstring lists all five: the four
+laws numbered in order plus functor-compatibility. An earlier revision of this header reported the
+Composition law and functor-compatibility as missing from the docstring; that was deviation D1,
+recorded as RESOLVED (docs) in the deviations note, and the header claim is retired with it.
+
+The `apply` derived from the lax monoidal structure map is proved to agree with `optApply` below
+in `LaxMonoidal.lean`, under `haft.lax_monoidal.apply_agreement`. That is the obligation a witness
+takes on by implementing both `Applicative` and `MonoidalApplicative`; nothing in this file
+changes as a result.
 
 This file is self-contained (no imports) so it typechecks standalone with bare `lean`.
 
