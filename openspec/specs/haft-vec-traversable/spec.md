@@ -1,7 +1,7 @@
 # haft-vec-traversable Specification
 
 ## Purpose
-TBD - created by archiving change add-lax-monoidal-applicative. Update Purpose after archive.
+Why `VecWitness` has no `Traversable`, recorded as a decision rather than an absence. A `sequence` written through `zip_with` compiles and passes, but reaching it means moving the inner-witness bound from `Applicative` to `Semigroupal + Pure`, which trades sixteen admissible inner witnesses for one. The spec fixes the trait's contract, the documentation owed, and the precondition for revisiting.
 ## Requirements
 ### Requirement: `Traversable` keeps its `Applicative` inner bound, and `VecWitness` stays without it
 `Traversable::sequence` SHALL keep `M: Applicative<M> + HKT` as its inner-witness bound, and `VecWitness` SHALL NOT implement `Traversable` in this change. A `sequence` for `VecWitness` is writable through `Semigroupal::zip_with` and was measured to compile and pass, but only if the trait's bound moves to `M: Semigroupal<M> + Pure<M> + HKT`, and that move SHALL NOT be made here.

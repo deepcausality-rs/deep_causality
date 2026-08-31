@@ -123,6 +123,7 @@ import DeepCausalityFormal.Haft.Comonad
 import DeepCausalityFormal.Haft.Bifunctor
 import DeepCausalityFormal.Haft.Profunctor
 import DeepCausalityFormal.Haft.MonoidalMerge
+import DeepCausalityFormal.Haft.LaxMonoidal
 import DeepCausalityFormal.Haft.ParametricMonad
 import DeepCausalityFormal.Haft.Arrow
 import DeepCausalityFormal.Haft.ArrowChoice

@@ -3,10 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::{Chain, SimplicialComplex};
-use deep_causality_haft::{
-    Adjunction, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Adjunction, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies};
 use deep_causality_linear::CsrMatrixWitness;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -74,11 +73,13 @@ impl<R> Foldable<ChainWitness<R>> for ChainWitness<R> {
 // ----------------------------------------------------------------------------
 // Context: (Complex, Grade)
 
-// `R: Clone` because `counit` and `right_adjunct` extract a stored `Chain<R, B>`, which clones it,
-// and `Chain<R, B>: Clone` requires `R: Clone`.
-impl<R: Clone> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>, usize)>
+// No bound on `R`. Every operation here consumes the chain it descends into or shares the
+// context's complex through `Arc`, so the precision parameter is never cloned.
+impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>, usize)>
     for ChainWitness<R>
 {
+    type Error = TopologyError;
+
     fn unit<A>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A) -> Chain<R, Chain<R, A>>
     where
         A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
@@ -96,13 +97,37 @@ impl<R: Clone> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialCompl
         Chain::new(Arc::clone(complex), *grade, outer_weights)
     }
 
-    fn counit<B>(_ctx: &(Arc<SimplicialComplex<R>>, usize), lrb: Chain<R, Chain<R, B>>) -> B
+    /// # Errors
+    ///
+    /// Returns [`TopologyError`] when the outer chain stores no value, or when the inner chain it
+    /// holds stores none. CSR drops explicit zeros, so an all-zero chain is empty and reachable.
+    fn counit<B>(
+        _ctx: &(Arc<SimplicialComplex<R>>, usize),
+        lrb: Chain<R, Chain<R, B>>,
+    ) -> Result<B, Self::Error>
     where
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
     {
         // counit: Chain<Chain<B>> -> B
-        let inner_chain = <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&lrb.weights);
-        <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&inner_chain.weights)
+        //
+        // `lrb` is owned, so both levels are taken apart rather than cloned. Cloning the inner
+        // `Chain<R, B>` would need `R: Clone` for a value that is discarded on the next line.
+        let (_, _, outer_values, _) = lrb.weights.into_parts();
+        let inner_chain = outer_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::counit: the outer chain stores no value, so there is no inner chain \
+                 to descend into"
+                    .into(),
+            ))
+        })?;
+
+        let (_, _, inner_values, _) = inner_chain.weights.into_parts();
+        inner_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::counit: the inner chain stores no value, so there is no B to return"
+                    .into(),
+            ))
+        })
     }
 
     fn left_adjunct<A, B, F>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A, f: F) -> Chain<R, B>
@@ -118,20 +143,21 @@ impl<R: Clone> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialCompl
 
     /// The right adjunct `(A -> Chain<B>) -> (Chain<A> -> B)`.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// On a chain storing nothing, in either of two places, and the message says which.
+    /// Returns [`TopologyError`] on a chain storing nothing, in either of two places, and the
+    /// message says which: `la` stores no value, so there is no `A` to apply `f` to, or the chain
+    /// `f` returns stores none, so there is no `B` to hand back.
     ///
-    /// The signature returns `B` rather than an `Option<B>`, and `B` carries no `Default`, so
-    /// there is no value to return when there is nothing to return: an empty `Chain<A>` offers no
-    /// `A` to apply `f` to, and an `f` that yields an empty `Chain<B>` offers no `B` to extract.
-    /// Fabricating one would be a lie about which element the adjunct selected.
-    ///
-    /// This matches [`CoMonad::extract`] on `CsrMatrixWitness`, which panics on an empty matrix
-    /// for the same reason and is the counit this method is built on. A chain is empty when its
-    /// weight matrix stores no entries, which `CsrMatrix::new()` produces, so both arms are
-    /// reachable and both are tested.
-    fn right_adjunct<A, B, F>(_ctx: &(Arc<SimplicialComplex<R>>, usize), la: Chain<R, A>, f: F) -> B
+    /// `B` carries no `Default`, so there is no value to return when there is nothing to return,
+    /// and fabricating one would be a lie about which element the adjunct selected. A chain is
+    /// empty when its weight matrix stores no entries, which `CsrMatrix::new()` produces and which
+    /// dropping an explicit zero also produces, so both arms are reachable and both are tested.
+    fn right_adjunct<A, B, F>(
+        _ctx: &(Arc<SimplicialComplex<R>>, usize),
+        la: Chain<R, A>,
+        f: F,
+    ) -> Result<B, Self::Error>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
@@ -141,15 +167,21 @@ impl<R: Clone> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialCompl
         let result_chain: Chain<R, Chain<R, B>> = Self::fmap(la, f);
         let (_, _, outer_values, _) = result_chain.weights.into_parts();
 
-        let inner_chain = outer_values.into_iter().next().expect(
-            "Adjunction::right_adjunct cannot be called on a Chain that stores nothing: \
-             there is no A to apply f to",
-        );
+        let inner_chain = outer_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::right_adjunct was called on a Chain that stores nothing, so there \
+                 is no A to apply f to"
+                    .into(),
+            ))
+        })?;
 
         let (_, _, inner_values, _) = inner_chain.weights.into_parts();
-        inner_values.into_iter().next().expect(
-            "Adjunction::right_adjunct: f returned a Chain that stores nothing, \
-             so there is no B to return",
-        )
+        inner_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::right_adjunct: f returned a Chain that stores nothing, so there is \
+                 no B to return"
+                    .into(),
+            ))
+        })
     }
 }

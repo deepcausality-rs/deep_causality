@@ -42,7 +42,7 @@ space.
 **Conclusion.** The Stage-4 mechanism is re-pin **and** treat the front as an exact
 Rankine–Hugoniot interface: smooth on each side, fluxes never marched across it. Re-pinning is
 necessary but not sufficient. This pins down precisely which half of the Res-5 lever does the
-work. Analysis: `openspec/notes/plasma-blackout/gap-2/`.
+work. Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** Scalar Burgers again, not the compressible Euler/NS system. The tracked-interface
 case transports radially by construction, which is the idealisation an exact-RH interface would

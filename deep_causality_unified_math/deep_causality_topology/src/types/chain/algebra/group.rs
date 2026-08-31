@@ -8,11 +8,12 @@ use deep_causality_algebra::AbelianGroup;
 use deep_causality_linear::CsrMatrix;
 use std::sync::Arc;
 
-impl<R, G> Chain<R, G>
-where
-    G: AbelianGroup + Copy + PartialEq + Default + core::ops::Neg<Output = G>,
-{
+impl<R, G> Chain<R, G> {
     /// Creates a zero chain for a given complex and grade.
+    ///
+    /// The zero chain is the empty sparse pattern, so it stores no coefficient and needs nothing
+    /// of `G`. Requiring an algebraic structure here would keep the zero chain out of reach for
+    /// coefficient types that only ever ride along.
     ///
     /// # Arguments
     /// * `complex` - The simplicial complex the chain belongs to.
@@ -30,7 +31,12 @@ where
             weights,
         }
     }
+}
 
+impl<R, G> Chain<R, G>
+where
+    G: AbelianGroup + Copy + PartialEq + core::ops::Neg<Output = G>,
+{
     /// Adds two chains.
     ///
     /// # Panics
@@ -82,9 +88,13 @@ impl<R, G> Chain<R, G> {
 
 impl<R, G> Chain<R, G>
 where
-    G: Copy + PartialEq + core::ops::Add<Output = G>,
+    G: Clone + PartialEq + core::ops::Add<Output = G>,
 {
     /// Adds two chains with an explicit zero value for contextual sparsity.
+    ///
+    /// Bounded on `Clone` rather than `Copy`, matching
+    /// [`CsrMatrix::add_with_zero`](deep_causality_linear::CsrMatrix::add_with_zero), so a
+    /// coefficient group whose values are not `Copy` can still be summed.
     ///
     /// # Arguments
     /// * `rhs` - The chain to add.

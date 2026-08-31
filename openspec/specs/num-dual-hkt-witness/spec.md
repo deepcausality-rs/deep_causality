@@ -1,7 +1,7 @@
 # num-dual-hkt-witness Specification
 
 ## Purpose
-TBD - created by archiving change add-lax-monoidal-applicative. Update Purpose after archive.
+`DualWitness` and the struct-level bound that had to come off `Dual<T>` for it to exist at all. Covers the functor layer, the monoidal stack, the documentation that this `fmap` is the pair functor and not forward-mode differentiation, and the deliberate deferral of `CoMonad`, for which two comultiplications are lawful and nothing selects between them.
 ## Requirements
 ### Requirement: `Dual` carries no struct-level bound
 `deep_causality_num_dual` SHALL declare `pub struct Dual<T>` without a struct-level bound, matching `Complex`, `Quaternion`, `CausalTensor` and `CausalMultiVector`. Every arithmetic, analytic and algebra-tower impl SHALL keep its own `T: Real` bound, so what may be computed is unchanged and only what may be stored widens. The rustdoc SHALL state the storage-versus-computation split.

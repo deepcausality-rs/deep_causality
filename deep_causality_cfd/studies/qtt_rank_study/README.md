@@ -36,7 +36,7 @@ plus TT-SVD) and settles whether that assumption holds.
 **Conclusion.** The low-rank property is **not** automatic, but it **is** achievable by construction
 through a shock-aligned or body-fitted coordinate. Tier-B must commit to such a coordinate, meaning
 singularity confinement, rather than capturing on a fixed Cartesian grid. Analysis:
-`openspec/notes/plasma-blackout/gap-2/`.
+`openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** This measures *static* representability of frozen analytic profiles in isolation, with
 the codec's block bit-ordering. It does not test a live marched solution, which is `qtt_rank_dynamic`,

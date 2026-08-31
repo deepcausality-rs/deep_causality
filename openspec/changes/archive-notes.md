@@ -121,7 +121,7 @@ The design notes moved too, and archived changes link to them.
 |---|---|
 | `openspec/notes/linear/` | `openspec/notes/archive/linear/` |
 | `openspec/notes/homology/` | `openspec/notes/archive/homology/` |
-| `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` | `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` |
+| `openspec/notes/linear/HKT-LAW-FINDINGS.md` | `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` |
 | `specs/` | `openspec/` |
 
 ## 4. The unified-math consolidation, 2026-08-30

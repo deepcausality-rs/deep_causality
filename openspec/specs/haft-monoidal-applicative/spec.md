@@ -1,7 +1,7 @@
 # haft-monoidal-applicative Specification
 
 ## Purpose
-TBD - created by archiving change add-lax-monoidal-applicative. Update Purpose after archive.
+`MonoidalApplicative`, the applicative structure derived from the lax monoidal φ with an `apply` that needs no diagonal and therefore no `Clone`. It is gated on the `Convolutional` promise and sits beside `Applicative` rather than replacing it, which is what keeps the change additive and leaves the multiplicity-carrying witnesses on the cartesian applicative they require.
 ## Requirements
 ### Requirement: A diagonal-free applicative derived from the monoid structure
 `deep_causality_haft` SHALL provide `MonoidalApplicative<F: HKT>: Functor<F> + Convolutional<F>` whose `apply` is a provided method defined as `Self::zip_with(ff, fa, |mut f, a| f(a))`. Its `apply` SHALL bound `A`, `B` and `Func` by `Satisfies<F::Constraint>`, with `Func: FnMut(A) -> B`, and SHALL NOT require `Clone` on any of them. A witness SHALL be able to adopt the trait with an empty impl body once it has `zip_with` and the marker.

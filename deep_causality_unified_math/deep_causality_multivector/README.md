@@ -13,9 +13,9 @@ geometric algebra applications.
     * Geometric Product, Outer Product, Inner Product (Left Contraction).
     * Reversion, Squared Magnitude, Inverse, Dual.
     * Grade Projection.
-* **Higher-Kinded Types (HKT)**: Implements `Functor`, `Applicative`, and `Monad` (via `deep_causality_haft`) for
-  advanced functional patterns.
-    * `Monad::bind` implements the **Tensor Product** of algebras.
+* **Higher-Kinded Types (HKT)**: Implements `Functor`, `Pure`, `Applicative`, `Foldable`, `CoMonad`, and `Adjunction`
+  (via `deep_causality_haft`) for advanced functional patterns.
+    * There is deliberately no `Monad`. See [Higher-Kinded Types](#higher-kinded-types-hkt) for the reason.
 
 ## Pre-configured Algebras
 
@@ -176,43 +176,42 @@ fn main() {
 
 This crate implements HKT traits from `deep_causality_haft`.
 
-* **Functor**: Map a function over coefficients.
-* **Applicative**: Lift values and apply functions.
-* **Monad**: Tensor product of algebras.
+* **Functor**: Map a function over the coefficients, leaving the metric alone.
+* **Pure** and **Applicative**: Lift a value into $Cl(0)$ and broadcast a function over the coefficients.
+* **Foldable**: Reduce the coefficients to a summary value.
+* **CoMonad**: Read every coefficient in the context of the whole multivector.
+* **Adjunction**: Nest and collapse a multivector against a `Metric` context.
 
 ```rust
-
-use deep_causality_haft::{Applicative, Functor, Monad};
-use deep_causality_multivector::{CausalMultiVector, Metric, CausalMultiVectorWitness};
+use deep_causality_haft::{Applicative, Functor, Pure};
+use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
 fn main() {
-    println!("=== Higher-Kinded Types (HKT) with CausalMultiVector ===");
-
-    // 1. Functor: Mapping over coefficients
-    println!("\n--- Functor (Map) ---");
-    let v = CausalMultiVector::new_euclidean(vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-    println!("Original Vector: {:?}", v.data);
-
-    // Scale by 2.0 using fmap
+    // Functor: map over the coefficients.
+    let v = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], Metric::Euclidean(2)).unwrap();
     let scaled = CausalMultiVectorWitness::fmap(v.clone(), |x| x * 2.0);
-    println!("Scaled Vector (x2): {:?}", scaled.data);
-    assert_eq!(scaled.data, vec![2.0, 4.0, 6.0, 8.0]);
+    assert_eq!(scaled.data(), &vec![2.0, 4.0, 6.0, 8.0]);
 
-    // 2. Applicative: Broadcasting a function
-    println!("\n--- Applicative (Apply/Broadcast) ---");
-    // Create a "pure" function wrapped in a scalar multivector
+    // Applicative: broadcast one function across every coefficient.
     let pure_fn = CausalMultiVectorWitness::pure(|x: f64| x + 10.0);
-
-    // Apply it to our vector
-    let shifted = CausalMultiVectorWitness::apply(pure_fn, v.clone());
-    println!("Shifted Vector (+10): {:?}", shifted.data);
-    assert_eq!(shifted.data, vec![11.0, 12.0, 13.0, 14.0]);
-
-    // 3. Monad: Tensor Product via Bind    
-    //...
-    // See examples/hkt_usage.rs for full demonstration
+    let shifted = CausalMultiVectorWitness::apply(pure_fn, v);
+    assert_eq!(shifted.data(), &vec![11.0, 12.0, 13.0, 14.0]);
 }
 ```
+
+#### Why there is no Monad
+
+A `CausalMultiVector` holds exactly $2^N$ coefficients, where $N$ comes from its `Metric`, so the metric is not
+decoration: it fixes the length. `Monad::bind` receives one metric from its input and another from every `f(a)`, and the
+two identity laws demand opposite choices. Left identity, `bind(pure(a), f) == f(a)`, needs the metric taken from `f`'s
+result, because `pure(a)` carries only `Euclidean(0)`. Right identity, `bind(m, pure) == m`, needs the metric taken from
+the input, for the same reason. No metric choice satisfies both, so the instance is left out rather than shipped broken.
+
+`Pure` stays. `pure(x)` names $Cl(0)$, the one algebra reachable without inventing geometry, and its single coefficient
+is exactly $2^0$, so the value it builds is well formed.
+
+An operation that changes the algebra, such as a tensor product, therefore states its target metric itself. The
+`hkt_multivector.rs` example writes one out.
 
 ## Examples
 
@@ -221,7 +220,7 @@ fn main() {
 | `basic_multivector.rs`        | `CausalMultiVector` (`Euclidean(2)`)                 | Demonstrates basic geometric algebra operations (geometric, outer, inner product, inverse) in a 2D Euclidean space.                           |
 | `clifford_mhd_multivector.rs` | `CausalMultiVector` (`Euclidean(3)`, `Minkowski(4)`) | Simulates Lorentz force in plasma fusion using both Euclidean and Minkowski metrics for metric-agnostic calculations.                         |
 | `dixon_multivector.rs`        | `DixonAlgebra` (Cl_C(6))                             | Demonstrates operations within the Dixon Algebra, including basis vector construction, geometric products, and complex scalar multiplication. |
-| `hkt_multivector.rs`          | `CausalMultiVector` (`Euclidean`)                    | Demonstrates Higher-Kinded Types (HKT) including Functor, Applicative, and Monad implemented for `CausalMultiVector`.                         |
+| `hkt_multivector.rs`          | `CausalMultiVector` (`Euclidean`)                    | Demonstrates Higher-Kinded Types (HKT) for `CausalMultiVector`, and writes the dimension-changing tensor product directly, since `Monad` has no lawful instance. |
 | `pga3d_multivector.rs`        | `PGA3DMultiVector` (3D PGA)                          | Demonstrates 3D Projective Geometric Algebra (PGA) by creating a point, a translator (motor), and applying transformations.                   |
 
 ## Benchmarks

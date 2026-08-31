@@ -326,7 +326,7 @@ tell the two cases apart.
 
 - `src/utils_tests/hkt_law_utils.rs`: seeded generators seeding manifolds at every legal cursor,
   chains across grades and sparsity patterns, and graphs at every width, plus tolerance helpers.
-- `hkt_manifold_law_tests.rs`: nine laws, generated (functor identity and composition, monad left
+- `hkt_manifold_law_tests.rs`: ten laws, generated (functor identity and composition, monad left
   identity, right identity and associativity, applicative identity and homomorphism, comonad left
   identity, right identity and associativity).
 - `hkt_adjunction_law_tests.rs`: four laws for `ChainWitness`, including both adjunct round-trips,

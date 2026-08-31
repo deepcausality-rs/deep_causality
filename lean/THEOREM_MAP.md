@@ -245,7 +245,7 @@ Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
 
 ## Quantum — the partial-trace / Choi foundation and the B1 witness
 
-The `add-quantum-crate` change (`openspec/changes/add-quantum-crate`). The pinned Mathlib v4.15.0 has
+The `add-quantum-crate` change (`openspec/changes/archive/2026-07-12-add-quantum-crate`). The pinned Mathlib v4.15.0 has
 no partial trace and no Choi–Jamiołkowski layer, so both are built from first principles on the
 pair-indexed matrix model in `DeepCausalityFormal/Quantum/`. The headline is the B1 result: the
 unconditional `partial_trace_preservation` is **false** (`partial_trace_nonpreservation`, a witnessed
@@ -268,6 +268,6 @@ Rust witnesses in `deep_causality_quantum/tests/formalization_lean/{partial_trac
 The **CJ reconstruction isomorphism** `applyChoi (choiOf E) = E` and the QCM theorems
 (`quantum.no_influence`, `quantum.markov_commutativity`, `quantum.unitary_factorization`,
 `quantum.classical_embedding`, `quantum.cyclic_support`, `quantum.verdict.orthomodular`) are stated
-as deferred targets in `openspec/changes/add-quantum-crate`; the crate carries their numerical /
+as deferred targets in `openspec/changes/archive/2026-07-12-add-quantum-crate`; the crate carries their numerical /
 property-test witnesses today. The `/Quantum/` tree is exempt from the CI `sorry` gate while this
 foundation is extended.

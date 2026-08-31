@@ -45,7 +45,9 @@ impl LawRng {
         match self.next_u64() % 16 {
             0 => 0.0,
             1 => -0.0,
-            2 => f64::MIN_POSITIVE,
+            // `f64::MIN_POSITIVE` is the smallest positive *normal*, so it never reaches the
+            // subnormal path. `from_bits(1)` is the smallest positive subnormal, 5e-324.
+            2 => f64::from_bits(1),
             3 => mag * 1e12,
             _ => {
                 let unit = (self.next_u64() % 1_000_001) as f64 / 1_000_000.0;
@@ -99,7 +101,11 @@ pub fn path_complex<T>(n: usize) -> SimplicialComplex<T> {
 }
 
 /// Total simplices in [`path_complex`], which is the data length `Manifold::new` requires.
+///
+/// Carries the same precondition as [`path_complex`]. Below two vertices the count would describe
+/// a complex that cannot be built, and `2 * n - 1` underflows at `n == 0`.
 pub fn path_complex_len(n: usize) -> usize {
+    assert!(n >= 2, "a path complex needs at least two vertices");
     2 * n - 1
 }
 
@@ -155,9 +161,11 @@ pub fn graph_cases(seed: u64) -> Vec<Case<Graph<f64>>> {
 
 /// Chains over path complexes, across grades and sparsity patterns.
 ///
-/// The empty chain is included deliberately: it is the input on which `Adjunction::right_adjunct`
-/// and `CoMonad::extract` are documented to panic, and a suite that never builds one cannot
-/// establish that the panic is the only failure mode.
+/// Every generated chain stores at least one weight, and the assertion below keeps it that way.
+/// The empty chain is reachable input rather than a corner case, because CSR drops explicit zeros,
+/// but `Adjunction::right_adjunct` and `Adjunction::counit` answer it with an `Err` instead of a
+/// value. That case belongs in the tests written for it in `hkt_adjunction_law_tests`, not in a
+/// sweep whose assertions read a stored weight.
 pub fn chain_cases(seed: u64) -> Vec<Case<Chain<f64, f64>>> {
     let mut rng = LawRng::new(seed);
     let mut out = Vec::new();
@@ -188,8 +196,9 @@ pub fn chain_cases(seed: u64) -> Vec<Case<Chain<f64, f64>>> {
                     CsrMatrix::from_triplets(1, cols, &trips).expect("chain weight matrix");
                 // A CSR drops explicit zeros, so a generated `0.0` weight silently becomes a
                 // structural absence and the chain comes back empty. `Adjunction::right_adjunct`
-                // and `CoMonad::extract` are documented to panic on that input, so a law sweep must
-                // not contain it by accident; the dedicated panic tests cover it on purpose.
+                // and `Adjunction::counit` report that input as an error rather than returning a
+                // value, so a law sweep must not contain it by accident; the error paths are
+                // covered on purpose in `hkt_adjunction_law_tests`.
                 assert_eq!(
                     weights.values().len(),
                     trips.len(),
@@ -208,13 +217,17 @@ pub fn chain_cases(seed: u64) -> Vec<Case<Chain<f64, f64>>> {
 /// Equality that tolerates the float noise a lawful reassociation can introduce, and nothing more.
 ///
 /// `NaN` is never equal to itself, so a law that produces one is reported as a failure rather than
-/// silently passing an `assert!(x != x)`-shaped comparison.
+/// silently passing an `assert!(x != x)`-shaped comparison. An infinity against a finite value is
+/// reported the same way. Both tolerance terms evaluate to infinity there, and `inf <= inf` holds,
+/// so without the finiteness check an overflowed law result would compare equal to anything.
 pub fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
-    if a.is_nan() || b.is_nan() {
-        return false;
-    }
+    // Exact equality first: it settles `inf == inf` and `0.0 == -0.0` before any arithmetic runs.
     if a == b {
         return true;
+    }
+    // Catches `NaN` on either side as well, since `NaN` fails the equality above.
+    if !a.is_finite() || !b.is_finite() {
+        return false;
     }
     let diff = (a - b).abs();
     diff <= tol || diff <= tol * a.abs().max(b.abs())

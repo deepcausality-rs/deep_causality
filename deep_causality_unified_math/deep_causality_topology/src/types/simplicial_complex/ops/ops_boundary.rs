@@ -12,9 +12,13 @@ impl<R> SimplicialComplex<R> {
     /// Computes the boundary of a chain: ∂c
     /// Maps a k-chain to a (k-1)-chain.
     ///
-    /// The boundary operator has entries in `{-1, 0, 1}`, so it acts on any coefficient group that
-    /// can receive those incidence signs. It reads no geometry, which is why the complex's precision
-    /// `R` is unconstrained here.
+    /// The boundary operator has entries in `{-1, 0, 1}`, and `G: From<i8>` is what lets a
+    /// coefficient type receive those incidence signs. The `Num` bound is the wider numeric tower —
+    /// addition, subtraction, multiplication, division and remainder, over a zero and a one — so
+    /// the coefficient types this reaches are the numeric ones. A coefficient group carrying only
+    /// addition is outside it, even though the incidence sum uses nothing past `+` and `*`.
+    ///
+    /// It reads no geometry, which is why the complex's precision `R` is unconstrained here.
     pub fn boundary<G>(&self, chain: &Chain<R, G>) -> Chain<R, G>
     where
         G: Copy + Num + Default + From<i8> + Debug,

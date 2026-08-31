@@ -1,7 +1,7 @@
 # haft-lax-monoidal-formalization Specification
 
 ## Purpose
-TBD - created by archiving change add-lax-monoidal-applicative. Update Purpose after archive.
+The Lean proofs for the lax monoidal laws and their Rust witnesses: naturality and associativity stated against `Semigroupal`, the unit laws against `LaxMonoidal`, and the agreement between the derived and hand-written `apply`. Also fixes the theorem-id prefix, which must not collide with the `haft.monoidal.*` ids already held by the value-level symmetric-monoidal PROP.
 ## Requirements
 ### Requirement: The lax monoidal laws are proved in Lean under their own id prefix
 `lean/DeepCausalityFormal/Haft/LaxMonoidal.lean` SHALL prove the coherence laws over the `Option` carrier under the `haft.lax_monoidal.*` `THEOREM_MAP` prefix, with these four ids: `haft.lax_monoidal.naturality` for `zip(fmap(fa, f), fmap(fb, g)) = fmap(zip(fa, fb), f × g)`; `haft.lax_monoidal.assoc` for `zip(zip(fa, fb), fc) ≅ zip(fa, zip(fb, fc))` modulo the associator; `haft.lax_monoidal.unit_laws` for `zip(unit(), fa) ≅ fa` and `zip(fa, unit()) ≅ fa` modulo the unitors; and `haft.lax_monoidal.apply_agreement` for the equality of the derived `apply` with a hand-written one. The prefix SHALL NOT be `haft.monoidal.*`, which `SymmetricMonoidal.lean` already occupies, since the `theorem-map` job matches ids by `grep -Fl` and a shared prefix would match the wrong row and hide a missing entry.

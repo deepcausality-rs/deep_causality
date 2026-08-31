@@ -5,6 +5,14 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # How `deep_causality_topology` should enforce HKT and algebra bounds
 
+**Status: all ten tracker items closed; §§6, 7 and 12 describe the code BEFORE the fix.** The
+findings below were acted on, and §10 records the outcome of each. Sections 6 and 7 are kept in
+their original present tense as the record of what was found; the unsound `curvature` cast, the
+`GaugeFieldHKT` stubs and the `unsafe_code = "allow"` override they describe are all gone. §12's
+reproduction steps cannot be followed against this tree for the same reason: P1 uses the
+five-parameter `CurvatureTensor` API, which is now `CurvatureTensor<T>`, and the `Cargo.toml` block
+it quotes no longer exists. Read those sections as history.
+
 **Scope.** `deep_causality_topology`, cross-checked against `deep_causality_linear` and
 `deep_causality_multivector`, because topology's witnesses delegate into both and inherit their
 semantics. Fifteen topology witnesses, what each requires of its element type, where that requirement
@@ -128,6 +136,8 @@ functor they imply or remove them.
 
 ## 6. Population D: the three that need algebra
 
+> **Historical.** Describes the state before the fix. Every defect in this section was resolved; see §10.
+
 ### 6.1 `CurvatureTensorWitness` is unsound
 
 `RiemannMap::curvature` is generic in `A, B, C, D`, bounded only by `Satisfies<P::Constraint>`. With
@@ -240,6 +250,8 @@ The same file carries roughly twenty lines of working notes inside `map_field` a
 beta?"). Those are drafting artifacts, not documentation.
 
 ## 7. The unsafe exemption rests on the wrong diagnosis
+
+> **Historical.** The exemption is gone: the crate now carries `[lints] workspace = true` with no `unsafe_code` override, and the quoted `Cargo.toml` block no longer exists.
 
 `deep_causality_topology/Cargo.toml`:
 
@@ -431,6 +443,8 @@ should read §3 first: it cannot, in this crate or any other, until a constraint
 capability.
 
 ## 12. Reproducing
+
+> **Historical, and no longer runnable.** These steps reproduce the defects as they stood before the fix. P1 uses the five-parameter `CurvatureTensor<T, A, B, C, D>` API, which is now `CurvatureTensor<T>`, so it will not compile against this tree.
 
 A probe crate depending on the real crates by path.
 

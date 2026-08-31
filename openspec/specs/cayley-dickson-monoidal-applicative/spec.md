@@ -1,7 +1,7 @@
 # cayley-dickson-monoidal-applicative Specification
 
 ## Purpose
-TBD - created by archiving change add-lax-monoidal-applicative. Update Purpose after archive.
+The monoidal applicative stack on `ComplexWitness`, `QuaternionWitness` and `OctonionWitness`. Componentwise pairing is the only lawful φ for this family, which the spec requires be documented as forced rather than preferred, and the resulting `apply` reaches these fixed-arity products without the `pure` that their arity makes impossible.
 ## Requirements
 ### Requirement: The Cayley-Dickson witnesses gain the monoidal applicative stack
 `ComplexWitness`, `QuaternionWitness` and `OctonionWitness` in `deep_causality_num_complex` SHALL implement `Semigroupal`, `LaxMonoidal`, `Convolutional` and `MonoidalApplicative`, closing `unified_math_gaps.md` §4.1 item E1. `zip_with` SHALL pair components positionally, slot by slot, and `unit` SHALL return the all-`()` value. Neither SHALL require `Clone` on the payload, and neither SHALL name `RealField` or any arithmetic bound, since these operations move components without computing on them.

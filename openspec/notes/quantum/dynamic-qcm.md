@@ -110,7 +110,7 @@ Established lineage (Hsin–Kobayashi–Zhu, arXiv 2411.15848: KCL mathematics /
 
 ### 3.3 Gap inventory against the topology crate
 
-Have: chain complexes, cell complexes, Hodge theory, Betti numbers. **Since 2026-08-21 also the cup product**, binary and n-fold, generic over `ChainComplex`, for both the simplicial (Alexander–Whitney) and cubical (Serre) families — see `openspec/changes/add-cup-product`.
+Have: chain complexes, cell complexes, Hodge theory, Betti numbers. **Since 2026-08-21 also the cup product**, binary and n-fold, generic over `ChainComplex`, for both the simplicial (Alexander–Whitney) and cubical (Serre) families — see `openspec/changes/archive/2026-08-20-add-cup-product`.
 
 Missing (all classical algebraic topology with explicit lattice formulas in the papers):
 

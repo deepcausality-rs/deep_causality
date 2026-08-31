@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Fifty-three laws for the Higher-Order Abstract Functional Traits: functor, applicative, monad, comonad, bifunctor, profunctor, arrow, free monad, category, Kleisli, symmetric-monoidal, lax-monoidal, foldable, traversable, adjunction, and the effect system. These are the type-level laws behind [Higher-Kinded Types](/concepts/hkt/), proved in [`lean/DeepCausalityFormal/Haft/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Haft).
+Fifty-five laws for the Higher-Order Abstract Functional Traits: functor, applicative, monad, comonad, bifunctor, profunctor, arrow, free monad, cofree comonad, category, Kleisli, symmetric-monoidal, lax-monoidal, foldable, traversable, adjunction, and the effect system. These are the type-level laws behind [Higher-Kinded Types](/concepts/hkt/), proved in [`lean/DeepCausalityFormal/Haft/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Haft).
 
 Every row is `proved` in Lean. This layer has no per-row Rust-witness column: the witness tree `deep_causality_haft/tests/formalization_lean/` mirrors the Lean tree one-to-one (`Haft/Functor.lean` maps to `functor_tests.rs`), with one law-test per id carrying the id as a `THEOREM_MAP:` annotation.
 
@@ -31,6 +31,8 @@ Every row is `proved` in Lean. This layer has no per-row Rust-witness column: th
 | `haft.free_monad.assoc` | `bind (bind m f) g = bind m (λx. bind (f x) g)` | `Haft/FreeMonad.lean` | ✓ |
 | `haft.free_monad.lift_bind` | `bind (lift op) k` runs `k` under the operation node | `Haft/FreeMonad.lean` | ✓ |
 | `haft.free_monad.map_id` | `map id = id` (functor identity via right id) | `Haft/FreeMonad.lean` | ✓ |
+| `haft.cofree.comonad_laws` | cofree comonad coKleisli laws on `Cofree` (`extend extract = id`; `extract ∘ extend f = f`; assoc) — dual of the free monad, reusing `Comonad.lean`'s statements | `Haft/Cofree.lean` | ✓ |
+| `haft.cofree.unfold` | anamorphism (dual of `Free.fold`): `extract (unfold c s) = (c s).1`; the child unfolds the decremented seed | `Haft/Cofree.lean` | ✓ |
 | `haft.arrow.category_laws` | `id>>>f = f`; `f>>>id = f`; `>>>` associative | `Haft/Arrow.lean` | ✓ |
 | `haft.category.laws` | function category `Fun`: left/right identity + associativity of `compose` | `Haft/Category.lean` | ✓ |
 | `haft.kleisli.category_laws` | Kleisli category (`id=pure`, `compose=bind`): left/right identity + associativity, reducing to the monad laws | `Haft/Kleisli.lean` | ✓ |

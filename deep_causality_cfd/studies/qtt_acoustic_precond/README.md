@@ -37,7 +37,7 @@ an unbounded question, "does AMEn converge?", into a measurable perturbation bou
 **Conclusion.** The split plus closed-form core de-risks the implicit acoustic step. The AC-C
 degradation is the honest counterpart rather than a failure: it is precisely why shock-**fitting**
 (Res 5) pays twice. By keeping the interior smooth, fitting is what keeps the implicit solve cheap.
-Analysis: `openspec/notes/plasma-blackout/gap-2/`.
+Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** `ρ` is measured by power iteration on a model coefficient field, not on a live marched
 solution. A value below 1 gives geometric convergence but not a rate that survives an arbitrary

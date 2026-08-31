@@ -172,12 +172,21 @@ where
     }
 
     /// Computes S-matrix scattering: two in-states produce two out-states.
+    ///
+    /// # Panics
+    ///
+    /// If either in-state has a dimension other than the interaction tensor's, which
+    /// [`CurvatureTensor::contract`] rejects the same way. The contraction reads every component
+    /// index in `0..dim` on both in-states, so a shorter vector has no value to read there.
     fn scatter(
         interaction: &CurvatureTensor<T>,
         in_1: &TensorVector<T>,
         in_2: &TensorVector<T>,
     ) -> (TensorVector<T>, TensorVector<T>) {
         let dim = interaction.dim();
+        assert_eq!(in_1.dim(), dim, "in_1 dimension mismatch");
+        assert_eq!(in_2.dim(), dim, "in_2 dimension mismatch");
+
         let mut out_1 = vec![T::zero(); dim];
         let mut out_2 = vec![T::zero(); dim];
         let point_five: T = <T as From<f64>>::from(0.5);

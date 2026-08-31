@@ -1,7 +1,7 @@
 # haft-lax-monoidal Specification
 
 ## Purpose
-TBD - created by archiving change add-lax-monoidal-applicative. Update Purpose after archive.
+The lax monoidal structure on an endofunctor in `deep_causality_haft`: `Semigroupal`, carrying the structure map φ with `zip_with` as its primitive and `zip` derived, and `LaxMonoidal`, adding the unit η. The two are split because every context-carrying witness in the workspace has a lawful φ and no lawful η. Also fixes where these live and what they are called, so the endofunctor-level structure is not confused with the value-level cartesian `SymMonoidal` PROP that already occupies `src/monoidal/`.
 ## Requirements
 ### Requirement: A semigroupal structure whose primitive is `zip_with`
 `deep_causality_haft` SHALL provide `Semigroupal<F: HKT>: Functor<F>` carrying the lax monoidal structure map φ, with `zip_with` as the required method and `zip` as a provided method derived from it. `zip_with` SHALL take `fa: F::Type<A>`, `fb: F::Type<B>` and `f: Func` where `Func: FnMut(A, B) -> C`, bounding `A`, `B` and `C` by `Satisfies<F::Constraint>` and nothing else. It SHALL NOT require `Clone`, `Copy` or `Default` on any payload type. `zip` SHALL return `F::Type<(A, B)>` and SHALL additionally bound `(A, B): Satisfies<F::Constraint>`, since it is the only operation that constructs the tuple.

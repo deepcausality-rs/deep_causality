@@ -9,9 +9,15 @@ use deep_causality_haft::{
     Satisfies, Semigroupal,
 };
 
-/// HKT witness for [`Quaternion`], a functor over its component type.
+/// HKT witness for [`Quaternion`], a functor over its four component slots.
 ///
-/// See the module docs for why this stops at `Functor` and `Foldable`.
+/// Implements `Functor` and `Foldable`, plus the lax monoidal stack: `Semigroupal`,
+/// `LaxMonoidal`, `Convolutional` and `MonoidalApplicative`, which is where `apply` comes from.
+///
+/// `Pure`, `Applicative`, `Monad` and `CoMonad` are deliberately absent. Filling all four slots
+/// from one moved value is the diagonal, and `Pure::pure` cannot reach it under `NoConstraint`;
+/// `CoMonad::extend` has no canonical cursor to walk a product with. The module docs carry the
+/// argument in full.
 pub struct QuaternionWitness;
 
 impl HKT for QuaternionWitness {

@@ -7,7 +7,7 @@
 //!
 //! `Gf2Chain<W>` moved because it needs no complex to be well formed: its chain group is `𝔽₂^{n_k}`,
 //! identified by the pair `(degree, len)`, and every operation it offers belongs to that group. It
-//! is `Chain<T>` — which holds an `Arc<SimplicialComplex<T>>` — that is simplicial, and that one
+//! is `Chain<R, G>` — which holds an `Arc<SimplicialComplex<R>>` — that is simplicial, and that one
 //! stayed here.
 //!
 //! # This is a breaking change

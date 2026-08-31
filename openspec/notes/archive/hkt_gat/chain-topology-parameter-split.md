@@ -5,6 +5,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Scoping: `Chain<R, G>` and `Topology<R, G>`
 
+**Status: implemented.** The recommendation below was taken. The tree carries `Chain<R, G>`,
+`Topology<R, G>`, `ChainWitness<R>`, `TopologyWitness<R>`, `StokesContext<R>` and the
+`UniformChain<T>` / `UniformTopology<T>` aliases, and item 10 of `hkt_gat_topology.md` is marked
+done. The recommendation sections that follow are kept in their original tense as the record of the
+argument that was made at the time; read them as history, not as work outstanding.
+
 **Purpose.** Size the fix for item 10 of `hkt_gat_topology.md`: `fmap` drops the Hodge ⋆ operators,
 so the functor identity law fails for any complex carrying geometry. The cause is a conflated type
 parameter, not the `fmap` bodies.
@@ -73,10 +79,22 @@ difference is whether precision and coefficient share a parameter.
 
 ## 3. The finding that makes this cheap
 
-**No operation on `Chain` or `Topology` consumes the metric.** `hodge_star_operators()` is called in
-exactly three places workspace-wide, none of them in `Chain`, `Topology` or `cup_product`:
-`point_cloud/ops/op_triangulate_delaunay.rs`, `manifold/constructors/constructors_impl.rs`, and
-`regge_geometry/has_hodge_star.rs`.
+**No operation on `Chain` or `Topology` consumes the metric.** `hodge_star_operators()` has four
+production call sites workspace-wide, none of them in `Chain`, `Topology` or `cup_product`:
+
+| Call site | Crate |
+|---|---|
+| `kernels/mhd/ideal.rs:165` | `deep_causality_physics` |
+| `kernels/mhd/grmhd.rs:66` | `deep_causality_physics` |
+| `types/manifold/constructors/constructors_impl.rs:102` | `deep_causality_topology` |
+| `types/regge_geometry/has_hodge_star.rs:39` | `deep_causality_topology` |
+
+An earlier revision of this note said "exactly three places" and listed
+`point_cloud/ops/op_triangulate_delaunay.rs` among them. That was wrong twice: the point-cloud file
+mentions the accessor only in doc comments and never calls it, and the count missed the two MHD
+kernels entirely, which sit in a different crate. The conclusion is unchanged — the split stays
+cheap because none of the four touches `Chain` or `Topology` — but the blast radius crosses a crate
+boundary, which the original count hid.
 
 Every bound on every `Chain` impl is a coefficient bound:
 

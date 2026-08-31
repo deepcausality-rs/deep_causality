@@ -80,6 +80,7 @@ fn test_simplicial_complex_counit() {
     let chain_chain = ChainWitness::<f64>::unit(&(complex.clone(), 0), inner_val);
 
     let result = ChainWitness::<f64>::counit(&(complex, 0), chain_chain);
+    let result = result.expect("the chain stores a value");
     assert_eq!(result, 100.0);
 }
 
@@ -110,6 +111,7 @@ fn test_simplicial_complex_right_adjunct() {
     let ctx_complex = complex.clone();
     let result = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
 
+    let result = result.expect("the chain stores a value");
     assert_eq!(result, 20.0);
 }
 
@@ -136,14 +138,15 @@ fn test_simplicial_complex_right_adjunct_returns_inner_value() {
     };
 
     let result = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
+    let result = result.expect("the chain stores a value");
     assert_eq!(result, 5.0);
 }
 
 #[test]
-#[should_panic(expected = "f returned a Chain that stores nothing")]
-fn test_simplicial_complex_right_adjunct_panics_when_f_yields_an_empty_chain() {
+fn test_simplicial_complex_right_adjunct_reports_when_f_yields_an_empty_chain() {
     // Failure mode two of two: the input chain has a value, so `f` runs, but the chain `f`
-    // returns stores nothing. There is no `B` to return and `B` carries no `Default`.
+    // returns stores nothing. There is no `B` to return and `B` carries no `Default`, so this
+    // is reported through `Adjunction::Error` rather than panicked.
     let complex = create_simple_complex();
 
     let weights = CsrMatrix::from_triplets(1, 1, &[(0, 0, 1.0)]).expect("Matrix failed");
@@ -155,7 +158,12 @@ fn test_simplicial_complex_right_adjunct_panics_when_f_yields_an_empty_chain() {
         Chain::new(complex.clone(), 0, empty)
     };
 
-    let _ = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
+    let err = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f)
+        .expect_err("the chain f returns stores nothing, so there is no B");
+    assert!(
+        err.to_string().contains("no B to return"),
+        "the error should distinguish an empty output from an empty input, got: {err}"
+    );
 }
 
 #[test]
@@ -248,8 +256,7 @@ fn test_chain_foldable_fold_to_string() {
 }
 
 #[test]
-#[should_panic(expected = "cannot be called on a Chain that stores nothing")]
-fn test_simplicial_complex_right_adjunct_empty_outer_chain_panics() {
+fn test_simplicial_complex_right_adjunct_reports_an_empty_outer_chain() {
     // An input chain with no stored weight produces an outer `Chain<Chain<B, B>>` with nothing to
     // unpack, so `f` is never applied. The message distinguishes this from the case where `f`
     // ran and returned an empty chain: a caller seeing this one passed an empty chain in.
@@ -264,5 +271,10 @@ fn test_simplicial_complex_right_adjunct_empty_outer_chain_panics() {
         Chain::new(complex.clone(), 0, w_matrix)
     };
 
-    let _ = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f);
+    let err = ChainWitness::<f64>::right_adjunct(&(ctx_complex, 0), chain, f)
+        .expect_err("an empty input chain has no A to apply f to");
+    assert!(
+        err.to_string().contains("no A to apply f to"),
+        "the error should distinguish an empty input from an empty output, got: {err}"
+    );
 }

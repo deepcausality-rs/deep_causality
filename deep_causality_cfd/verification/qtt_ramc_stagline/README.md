@@ -77,4 +77,4 @@ surrogate diverged without it). This supersedes the first A/B's record.
 - RAM-C II flight experiment, NASA Langley (1970) — the canonical ionized-reentry electron-density dataset.
 - Park, "Nonequilibrium Hypersonic Aerothermodynamics," Wiley (1990); Gupta–Yos–Thompson–Lee, NASA RP-1232
   (1990) — the two-temperature model and the associative-ionization rate.
-- `openspec/notes/plasma-blackout/gap-2/` — the Tier-B design and the studies this milestone rests on.
+- `openspec/notes/archive/cfd-plasma-blackout/gap-2/` — the Tier-B design and the studies this milestone rests on.

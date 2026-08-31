@@ -207,7 +207,7 @@ The HKT **witness types** in `deep_causality_haft` exist only because Rust has n
 ## Related notes
 
 - [`algebraic-causaloid-assumptions.md`](algebraic-causaloid-assumptions.md) — **the hidden/implicit assumptions this note rests on**, tracked as OPEN/DECIDED. No claim here is "settled" while its assumption is still OPEN.
-- `openspec/notes/causaloid/` — this directory.
+- `openspec/notes/archive/causal-algebra/` — this directory.
 - `causal-arrow-generalization.md` — the Arrow ⊋ causal-monad thesis that Part 2 closes.
 - `deep_causality_num/README_ALGEBRA_TRAITS.md` — the existing numeric tower the A-gaps extend.
 - `deep_causality_num/README_ISOMORPHISM.md` — Tier-1/2/3 iso machinery; explains why `NaturalIso` is the *wrong* tool here (B5) and a one-way interpreter is the right one.

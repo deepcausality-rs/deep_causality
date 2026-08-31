@@ -166,7 +166,11 @@ Additive throughout, so there is no cutover and no rollback coordination.
 1. Land the four haft traits. Nothing implements them yet; the crate compiles unchanged.
 2. Land the Lean file and its Rust witnesses. CI's `theorem-map` job passes once both bridge sides exist.
 3. Adopt per witness, one at a time, each behind its own law tests: Cayley-Dickson family, then `Dual` after its struct bound comes off.
-4. Land `Traversable` for `VecWitness`, which depends only on the inner witness being `Semigroupal`.
+4. **Withdrawn.** `Traversable` for `VecWitness` was implemented, measured and reverted; see the
+   decision above. It is reachable only by moving `sequence`'s inner bound from `Applicative` to
+   `Semigroupal + Pure`, which costs sixteen admissible inner witnesses to gain one. Revisit only
+   after `Semigroupal` is adopted across the effect witnesses, `Box` and `LinkedList`, so the bound
+   can move without narrowing the trait's contract.
 5. Update the website formalization page's row count last, once the theorem ids are final.
 
 Rollback at any step is the removal of an unused trait or an unused impl.

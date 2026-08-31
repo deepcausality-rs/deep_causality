@@ -17,6 +17,10 @@ impl HKT for IdentityWitness {
 struct IdentityAdjunction;
 
 impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
+    // Extraction from an identity functor cannot fail: the carrier holds exactly one value, so
+    // there is no empty case. `Infallible` states that in the type rather than in a comment.
+    type Error = core::convert::Infallible;
+
     fn left_adjunct<A, B, F>(_ctx: &(), a: A, f: F) -> Identity<B>
     where
         A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
@@ -31,7 +35,7 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
         Identity(res_b)
     }
 
-    fn right_adjunct<A, B, F>(_ctx: &(), la: Identity<A>, mut f: F) -> B
+    fn right_adjunct<A, B, F>(_ctx: &(), la: Identity<A>, mut f: F) -> Result<B, Self::Error>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
@@ -43,7 +47,7 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
         // conceptually: unwrap(f(unwrap(la)))
         let a = la.0;
         let id_b = f(a);
-        id_b.0
+        Ok(id_b.0)
     }
 
     fn unit<A>(_ctx: &(), a: A) -> Identity<Identity<A>>
@@ -54,12 +58,12 @@ impl Adjunction<IdentityWitness, IdentityWitness, ()> for IdentityAdjunction {
         Identity(Identity(a))
     }
 
-    fn counit<B>(_ctx: &(), fa: Identity<Identity<B>>) -> B
+    fn counit<B>(_ctx: &(), fa: Identity<Identity<B>>) -> Result<B, Self::Error>
     where
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
         Identity<B>: Satisfies<NoConstraint>,
     {
-        fa.0.0
+        Ok(fa.0.0)
     }
 }
 
@@ -70,5 +74,5 @@ fn test_adjunction_identity() {
     assert_eq!(unit, Identity(Identity(42)));
 
     let counit = IdentityAdjunction::counit(&(), unit);
-    assert_eq!(counit, 42);
+    assert_eq!(counit, Ok(42));
 }

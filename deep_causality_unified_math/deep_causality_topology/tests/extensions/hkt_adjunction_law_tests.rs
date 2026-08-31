@@ -50,7 +50,8 @@ fn counit_after_unit_is_the_identity() {
                     ChainWitness<f64>,
                     ChainWitness<f64>,
                     Ctx,
-                >>::counit(&ctx, wrapped);
+                >>::counit(&ctx, wrapped)
+                .expect("unit builds a chain that stores a value, so counit finds one");
                 assert!(
                     approx_eq(back, a, TOL),
                     "counit(unit(a)) != a for n={n} grade={grade}: got {back}, want {a}"
@@ -64,8 +65,16 @@ fn counit_after_unit_is_the_identity() {
 fn right_adjunct_inverts_left_adjunct() {
     // right_adjunct(la, |a| left_adjunct(a, f)) == f(la).
     // This is the adjunction round-trip, and it is what the per-method tests cannot see.
+    //
+    // What the round trip pins down is the first stored weight, and only that. `right_adjunct`
+    // selects the first entry of the chain it is handed, and `left_adjunct` runs `f` over a chain
+    // `unit` built from a single value, so `f` has to be a function of that one weight for the two
+    // sides to be comparable at all. The sweep varies vertex count, grade and sparsity around that
+    // entry: it shows the selection stays on the first weight as the shape changes, not that the
+    // law holds for an `f` reading the rest of the chain. The context is the case's own complex
+    // and grade, so the two adjuncts and the chain agree about which complex they are over.
     for case in chain_cases(SEED ^ 1) {
-        let ctx = ctx_for(4, case.value.grade());
+        let ctx: Ctx = (Arc::clone(case.value.complex()), case.value.grade());
         let f = |c: Chain<f64, f64>| first_weight(&c) * 2.0 + 1.0;
 
         let round_trip = <ChainWitness<f64> as Adjunction<
@@ -76,7 +85,8 @@ fn right_adjunct_inverts_left_adjunct() {
             <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::left_adjunct(
                         &ctx, a, f,
                     )
-        });
+        })
+        .expect("the generated chain stores a value on both sides of the round trip");
 
         let direct = f(case.value.clone());
         assert!(
@@ -114,6 +124,7 @@ fn left_adjunct_inverts_right_adjunct() {
                 <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::right_adjunct(
                             &ctx, la, g,
                         )
+                        .expect("g builds a one-entry chain, so there is always a B")
             });
 
             let direct = g(a);
@@ -222,5 +233,88 @@ fn mapping_coefficients_leaves_the_precision_alone() {
     assert!(
         ints.complex().hodge_star_operators().is_ok(),
         "changing the coefficient type must not disturb the complex"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// The partial operations report rather than panic
+// ---------------------------------------------------------------------------
+
+/// An empty chain is reachable input, not a corner case: CSR drops explicit zeros, so a chain
+/// whose weights are all zero stores nothing. Before `Adjunction::Error` existed, both of these
+/// panicked.
+#[test]
+fn right_adjunct_reports_an_empty_input_chain() {
+    let complex = Arc::new(path_complex::<f64>(3));
+    let ctx: Ctx = (complex.clone(), 0);
+
+    // All-zero triplets: CSR stores no explicit entry, so the chain is empty.
+    let empty = Chain::new(
+        complex.clone(),
+        0,
+        CsrMatrix::<f64>::from_triplets(1, 3, &[(0, 0, 0.0)]).expect("zero-weight chain"),
+    );
+
+    let result =
+        <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::right_adjunct(
+            &ctx,
+            empty,
+            |a: f64| {
+                let w = CsrMatrix::from_triplets(1, 3, &[(0, 0, a)]).expect("one-entry chain");
+                Chain::new(complex.clone(), 0, w)
+            },
+        );
+
+    let err = result.expect_err("an empty input chain has no A to apply f to");
+    assert!(
+        err.to_string().contains("no A to apply f to"),
+        "the error should name what was missing, got: {err}"
+    );
+}
+
+/// The other half: the input is fine, but `f` returns a chain that stores nothing.
+#[test]
+fn right_adjunct_reports_an_empty_output_chain() {
+    let complex = Arc::new(path_complex::<f64>(3));
+    let ctx: Ctx = (complex.clone(), 0);
+
+    let la = Chain::new(
+        complex.clone(),
+        0,
+        CsrMatrix::from_triplets(1, 3, &[(0, 0, 2.5)]).expect("one-entry chain"),
+    );
+
+    let result =
+        <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::right_adjunct(
+            &ctx,
+            la,
+            |_a: f64| Chain::new(complex.clone(), 0, CsrMatrix::<f64>::new()),
+        );
+
+    let err = result.expect_err("an empty output chain has no B to return");
+    assert!(
+        err.to_string().contains("no B to return"),
+        "the error should name what was missing, got: {err}"
+    );
+}
+
+/// `counit` is partial for the same reason and now reports the same way.
+#[test]
+fn counit_reports_an_empty_outer_chain() {
+    let complex = Arc::new(path_complex::<f64>(3));
+    let ctx: Ctx = (complex.clone(), 0);
+
+    let empty_outer: Chain<f64, Chain<f64, f64>> = Chain::new(complex.clone(), 0, CsrMatrix::new());
+
+    let result =
+        <ChainWitness<f64> as Adjunction<ChainWitness<f64>, ChainWitness<f64>, Ctx>>::counit(
+            &ctx,
+            empty_outer,
+        );
+
+    let err = result.expect_err("an empty outer chain has no inner chain to descend into");
+    assert!(
+        err.to_string().contains("no inner chain"),
+        "the error should name what was missing, got: {err}"
     );
 }

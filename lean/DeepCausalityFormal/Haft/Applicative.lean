@@ -72,8 +72,7 @@ theorem opt_apply_interchange (u : Option (A → B)) (y : A) :
   cases u <;> rfl
 
 /-- Applicative Composition: `pure (∘) <*> u <*> v <*> w = u <*> (v <*> w)`
-    (McBride–Paterson 2008). **This law is absent from the Rust docstring** — the deviation this
-    file reports.
+    (McBride–Paterson 2008). Law 2 in the Rust docstring's numbering.
 
     THEOREM_MAP: `haft.applicative.laws` -/
 theorem opt_apply_composition (u : Option (B → C)) (v : Option (A → B)) (w : Option A) :

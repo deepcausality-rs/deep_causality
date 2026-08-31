@@ -46,9 +46,9 @@ Status: sequencing note across the three CFD documents. 2026-06-10.
 anything later. **Exit:** operator law tests green at f32/f64/Float106.
 
 *Status: **complete 2026-06-11*** — implemented as
-`openspec/changes/add-dec-solver-foundations`; exit criterion met (operator law
-tests green at all three precisions), plus the §6-style DEC-vs-pointwise
-cross-validation already wired in CI. G6 closed by empirical pinning rather
+`openspec/changes/archive/2026-06-11-add-dec-solver-foundations`; exit
+criterion met (operator law tests green at all three precisions), plus the
+§6-style DEC-vs-pointwise cross-validation already wired in CI. G6 closed by empirical pinning rather
 than deflation (see the change's design D6).
 
 ### Stage 1 — The periodic DEC-native solver
@@ -65,8 +65,8 @@ CI; Re-1600 dissipation curve at 64³–128³. **Strategic output:** the CFD com
 challenge entry and the seed of the CPC/AIAA software paper.
 
 *Status: **complete 2026-06-11*** — implemented as
-`openspec/changes/add-dec-periodic-ns-solver`. The solver lives in
-`deep_causality_physics::theories::fluid_dynamics::dec`
+`openspec/changes/archive/2026-06-11-add-dec-periodic-ns-solver`. The solver
+lives in `deep_causality_physics::theories::fluid_dynamics::dec`
 (`DecNsSolver`/`DecNsRate`, the `SolenoidalField` type-state step, run
 loops, seeding, diagnostics, two-convention pressure recovery); CI carries
 the 2D Taylor–Green convergence table (observed spatial order ≥ 1.9 at
@@ -122,7 +122,8 @@ Re 1000 via `examples/avionics_examples/dec_lid_cavity_re1000` (coarse centerlin
 gated in CI; the refinement trend runs in the example, per the tests-fast /
 examples-verify split). Re 10⁴ is deliberately held for the R1 graded-metric rung
 (`variable-grid-geometry.md` §R1) — a uniform mesh cannot resolve the Re-10⁴ boundary
-layer — now **in preparation** as `openspec/changes/add-graded-metrics` (per-axis
+layer — now **in preparation** as
+`openspec/changes/archive/2026-06-14-add-graded-metrics` (per-axis
 geometric/tanh stretching constructors on the existing four-level `PerEdge` metric;
 exact-structure-at-any-grading headline; independent of Stage 2, composes with Stage-4
 cut cells). A Stage 1 follow-up shipped alongside: `fix-dec-convective-instability`
@@ -151,7 +152,8 @@ causal mesh-adaptation indicator, which is the deferred R2 *companion* rung
 (`variable-grid-geometry.md` §R2), not part of the cut-cell core. The rung that does
 interact with Stage 4 is R1 graded metrics (axis-aligned wall-normal grading, kept
 first-class by the cut-cell constructors) — a separate axis from Stage 2. Proposal
-scaffold: `openspec/changes/add-cut-cells-and-immersed-boundaries`.
+scaffold:
+`openspec/changes/archive/2026-06-15-add-cut-cells-and-immersed-boundaries`.
 
 ### Stage 5 — Industrial scale-out
 **Source:** `causal_cfd.md` Phases 3–4; `3DCausalFluidDynamicsValidation.md` (to be

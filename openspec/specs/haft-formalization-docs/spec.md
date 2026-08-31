@@ -5,11 +5,11 @@
 The website formalization page for the Haft layer: a complete rendering of the `haft.*` rows of the `### Haft layer` table of `lean/THEOREM_MAP.md` (excluding the "Not yet on the map" planned ids), published (non-draft) at `/formalization/haft/` and linked from the formalization index.
 ## Requirements
 ### Requirement: Haft formalization page renders the complete theorem map
-The website page `website/docs/src/content/docs/formalization/haft.md` SHALL contain one table row for every `haft.*` id in the `### Haft layer` table of `lean/THEOREM_MAP.md` (53 rows), with columns `id`, `statement`, `Lean proof`, and `Test`, and SHALL NOT contain the planned ids from the "Not yet on the map" table (`haft.traversable.composition`, `haft.effect_unbound.laws`). The four `haft.lax_monoidal.*` ids added by this change SHALL appear as rows.
+The website page `website/docs/src/content/docs/formalization/haft.md` SHALL contain one table row for every `haft.*` id in the `### Haft layer` table of `lean/THEOREM_MAP.md` (55 rows), with columns `id`, `statement`, `Lean proof`, and `Test`, and SHALL NOT contain the planned ids from the "Not yet on the map" table (`haft.traversable.composition`, `haft.effect_unbound.laws`). The four `haft.lax_monoidal.*` ids added by this change SHALL appear as rows.
 
 #### Scenario: Every Haft-layer row is present and no planned id leaks in
 - **WHEN** the ids in the page's table are extracted and compared against the `haft.*` rows of the `### Haft layer` table
-- **THEN** the two sets are equal with exactly 53 entries, and neither planned id appears
+- **THEN** the two sets are equal with exactly 55 entries, and neither planned id appears
 
 #### Scenario: Cells match the source of truth
 - **WHEN** any row's Lean proof cell is compared against the corresponding map row's Lean-location cell
@@ -17,10 +17,10 @@ The website page `website/docs/src/content/docs/formalization/haft.md` SHALL con
 
 #### Scenario: Every id has a Rust witness despite the absent column
 - **WHEN** each page id is searched as a `THEOREM_MAP:` annotation in `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/`
-- **THEN** every one of the 53 ids is found
+- **THEN** every one of the 55 ids is found
 
 ### Requirement: Haft page follows the topology-page house style
-The page SHALL follow `topology.md`: no per-row Rust-witness column, with intro prose stating the law count (fifty-three), linking `lean/DeepCausalityFormal/Haft/` on GitHub, and stating the witness convention (mirrored test files in `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/`, one test per id carrying a `THEOREM_MAP:` annotation) so witnesses are findable without a column.
+The page SHALL follow `topology.md`: no per-row Rust-witness column, with intro prose stating the law count (fifty-five), linking `lean/DeepCausalityFormal/Haft/` on GitHub, and stating the witness convention (mirrored test files in `deep_causality_unified_math/deep_causality_haft/tests/formalization_lean/`, one test per id carrying a `THEOREM_MAP:` annotation) so witnesses are findable without a column.
 
 #### Scenario: Draft scaffolding removed
 - **WHEN** the finished page is inspected

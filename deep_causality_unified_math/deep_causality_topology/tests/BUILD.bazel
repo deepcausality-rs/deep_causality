@@ -44,6 +44,25 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "utils_tests",
+    srcs = glob([
+        "utils_tests/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_unified_math/deep_causality_topology",
+        # Internal deps
+        "//deep_causality_unified_math/deep_causality_homology",
+        "//deep_causality_unified_math/deep_causality_linear",
+        "//deep_causality_unified_math/deep_causality_tensor",
+    ],
+)
+
+rust_test_suite(
     name = "traits",
     srcs = glob([
         "traits/*_tests.rs",

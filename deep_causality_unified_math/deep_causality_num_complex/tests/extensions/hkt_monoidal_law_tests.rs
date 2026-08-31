@@ -17,6 +17,7 @@
 //! failure message carries the seed and iteration index, so a counterexample is reproducible.
 
 use deep_causality_haft::{Functor, LaxMonoidal, MonoidalApplicative, Semigroupal};
+use deep_causality_num_complex::utils_tests::utils_hkt_law_tests::LawRng;
 use deep_causality_num_complex::{
     Complex, ComplexWitness, Octonion, OctonionWitness, Quaternion, QuaternionWitness,
 };
@@ -24,31 +25,13 @@ use deep_causality_num_complex::{
 const ITERS: usize = 64;
 const SEED: u64 = 0x5EED_1A11;
 
-/// Deterministic generator, so a counterexample is reproducible from its seed.
-struct Rng(u64);
-impl Rng {
-    fn new(seed: u64) -> Self {
-        Self(seed ^ 0x9E37_79B9_7F4A_7C15)
-    }
-    fn next(&mut self) -> u64 {
-        self.0 = self
-            .0
-            .wrapping_mul(6364136223846793005)
-            .wrapping_add(1442695040888963407);
-        self.0 >> 11
-    }
-    fn small(&mut self) -> i64 {
-        (self.next() % 4001) as i64 - 2000
-    }
-}
-
-fn cx(rng: &mut Rng) -> Complex<i64> {
+fn cx(rng: &mut LawRng) -> Complex<i64> {
     Complex {
         re: rng.small(),
         im: rng.small(),
     }
 }
-fn quat(rng: &mut Rng) -> Quaternion<i64> {
+fn quat(rng: &mut LawRng) -> Quaternion<i64> {
     Quaternion {
         w: rng.small(),
         x: rng.small(),
@@ -56,7 +39,7 @@ fn quat(rng: &mut Rng) -> Quaternion<i64> {
         z: rng.small(),
     }
 }
-fn oct(rng: &mut Rng) -> Octonion<i64> {
+fn oct(rng: &mut LawRng) -> Octonion<i64> {
     Octonion {
         s: rng.small(),
         e1: rng.small(),
@@ -82,7 +65,7 @@ fn g(b: i64) -> i64 {
 
 #[test]
 fn zip_is_natural_in_both_arguments() {
-    let mut rng = Rng::new(SEED);
+    let mut rng = LawRng::new(SEED);
     for i in 0..ITERS {
         let (a, b) = (cx(&mut rng), cx(&mut rng));
         let lhs = ComplexWitness::zip(ComplexWitness::fmap(a, f), ComplexWitness::fmap(b, g));
@@ -117,7 +100,7 @@ fn zip_is_natural_in_both_arguments() {
 
 #[test]
 fn zip_associates_modulo_the_associator() {
-    let mut rng = Rng::new(SEED ^ 0xA55);
+    let mut rng = LawRng::new(SEED ^ 0xA55);
     for i in 0..ITERS {
         let (a, b, c) = (cx(&mut rng), cx(&mut rng), cx(&mut rng));
         let lhs = ComplexWitness::fmap(
@@ -151,7 +134,7 @@ fn zip_associates_modulo_the_associator() {
 
 #[test]
 fn unit_is_a_two_sided_identity_for_zip() {
-    let mut rng = Rng::new(SEED ^ 0x11);
+    let mut rng = LawRng::new(SEED ^ 0x11);
     for i in 0..ITERS {
         let a = cx(&mut rng);
         let left =
@@ -208,7 +191,7 @@ fn unit_is_a_two_sided_identity_for_zip() {
 
 #[test]
 fn zip_is_the_derived_form_of_zip_with() {
-    let mut rng = Rng::new(SEED ^ 0x22);
+    let mut rng = LawRng::new(SEED ^ 0x22);
     for i in 0..ITERS {
         let (a, b) = (cx(&mut rng), cx(&mut rng));
         assert_eq!(

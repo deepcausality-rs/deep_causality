@@ -11,6 +11,7 @@
 //!
 //! This is the foundation for conservation laws and integration theory.
 
+use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::types::chain::Chain;
 use crate::types::differential_form::DifferentialForm;
 use crate::{BaseTopology, SimplicialComplex};
@@ -42,7 +43,7 @@ impl HKT for ExteriorDerivativeWitness {
 #[derive(Debug, Clone, Copy, Default)]
 /// # Why `NoConstraint`
 ///
-/// `Chain<T>` carries no element bound, and the categorical operations here move elements without
+/// `Chain<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
 /// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
@@ -121,6 +122,8 @@ pub struct StokesAdjunction;
 impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<R>>
     for StokesAdjunction
 {
+    type Error = TopologyError;
+
     /// Unit: `A → R(L(A)) = Chain<DifferentialForm<A>>`
     ///
     /// Embeds a coefficient into a chain of forms.
@@ -149,7 +152,14 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
     /// Counit: `L(R(B)) = DifferentialForm<Chain<B>> → B`
     ///
     /// Extracts the integrated value from a form of chains.
-    fn counit<B>(_ctx: &StokesContext<R>, lrb: DifferentialForm<Chain<R, B>>) -> B
+    /// # Errors
+    ///
+    /// Returns [`TopologyError`] when the form carries no coefficient, or when the chain it holds
+    /// stores no weight, so there is no `B` to integrate to.
+    fn counit<B>(
+        _ctx: &StokesContext<R>,
+        lrb: DifferentialForm<Chain<R, B>>,
+    ) -> Result<B, Self::Error>
     where
         B: Satisfies<NoConstraint> + Clone,
         Chain<R, B>: Satisfies<NoConstraint>,
@@ -157,18 +167,24 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
         // Integration: collapse form of chains to scalar (B).
         // The counit evaluation doesn't strictly depend on the topological context
         // if we assume the form and chain already encode the necessary structure.
+        //
+        // The form is non-empty by construction, but that is an invariant of the constructors
+        // rather than of the type, so it is checked rather than indexed.
+        let chain = lrb.coefficients().as_slice().first().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::counit: the differential form carries no coefficient, so there is \
+                 no chain to integrate"
+                    .into(),
+            ))
+        })?;
 
-        // Extract first chain from the form coefficients
-        // Note: DifferentialForm cannot be empty by construction, so we can safely index [0].
-        let chain = &lrb.coefficients().as_slice()[0];
-
-        // Extract the first weight from the chain
-        if let Some(val) = chain.weights().values().first() {
-            return val.clone();
-        }
-
-        // Fallback/Panic if the chain is empty
-        panic!("Counit requires at least one value in the form's chain to evaluate")
+        chain.weights().values().first().cloned().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::counit: the form's chain stores no weight, so there is no B to \
+                 evaluate to"
+                    .into(),
+            ))
+        })
     }
 
     /// Left adjunct: (L(A) → B) → (A → R(B))
@@ -198,26 +214,41 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
     /// Right adjunct: (A → R(B)) → (L(A) → B)
     ///
     /// Given `g: A → Chain<B>`, produce `f: DifferentialForm<A> → B`
-    fn right_adjunct<A, B, Func>(_ctx: &StokesContext<R>, la: DifferentialForm<A>, mut f: Func) -> B
+    /// # Errors
+    ///
+    /// Returns [`TopologyError`] when the form carries no coefficient, so there is no `A` to apply
+    /// `f` to, or when the chain `f` returns stores no weight.
+    fn right_adjunct<A, B, Func>(
+        _ctx: &StokesContext<R>,
+        la: DifferentialForm<A>,
+        mut f: Func,
+    ) -> Result<B, Self::Error>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Clone,
         Chain<R, B>: Satisfies<NoConstraint>,
         Func: FnMut(A) -> Chain<R, B>,
     {
-        // Extract value 'a' from the form 'la'
-        // Note: DifferentialForm cannot be empty by construction.
-        let a = &la.coefficients().as_slice()[0];
+        // Extract value 'a' from the form 'la'. Non-empty by construction, but that is a
+        // constructor invariant rather than a type-level one, so it is checked.
+        let a = la.coefficients().as_slice().first().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::right_adjunct: the differential form carries no coefficient, so \
+                 there is no A to apply f to"
+                    .into(),
+            ))
+        })?;
 
         // Apply morphism g (here 'f') to get Chain<B>
         let chain = f(a.clone());
 
-        // Extract 'b' from the chain
-        if let Some(b) = chain.weights().values().first() {
-            return b.clone();
-        }
-
-        panic!("Right adjunct requires at least one value in the generated chain")
+        chain.weights().values().first().cloned().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::right_adjunct: f returned a Chain that stores no weight, so there \
+                 is no B to return"
+                    .into(),
+            ))
+        })
     }
 }
 
