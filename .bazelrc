@@ -65,8 +65,8 @@ build --incompatible_enable_cc_toolchain_resolution
 common --enable_platform_specific_config
 
 # Build targets for different hosts
-build:macos --extra_execution_platforms=//build/platforms:darwin-aarch64
-build:linux --extra_execution_platforms=//build/platforms:linux-x86_64
+build:macos --extra_execution_platforms=//bazel/platforms:darwin-aarch64
+build:linux --extra_execution_platforms=//bazel/platforms:linux-x86_64
 
 ###############################################################################
 ## Remote configuration
@@ -99,9 +99,9 @@ common:remote-shared --build_metadata=REPO_URL=https://github.com/deepcausality-
 #
 # The platform inherits @llvm//platforms:linux_x86_64, so it carries the libc
 # and cxxstdlib constraints the hermetic LLVM cc_toolchain resolves on.
-common:remote-shared --host_platform=//build/platforms:linux_x86_64_remote
-common:remote-shared --platforms=//build/platforms:linux_x86_64_remote
-common:remote-shared --extra_execution_platforms=//build/platforms:linux_x86_64_remote
+common:remote-shared --host_platform=//bazel/platforms:linux_x86_64_remote
+common:remote-shared --platforms=//bazel/platforms:linux_x86_64_remote
+common:remote-shared --extra_execution_platforms=//bazel/platforms:linux_x86_64_remote
 
 # Endpoints. The org subdomain serves BES, CAS and execution alike.
 common:remote-shared --bes_results_url=https://deepcausality-rs.buildbuddy.io/invocation/
