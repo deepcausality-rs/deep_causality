@@ -19,7 +19,7 @@
 //!
 //! # Algorithm layering
 //!
-//! Following the survey in `openspec/notes/fft/fft_state_of_the_art.md`,
+//! Following the survey in `openspec/notes/archive/fft/fft_state_of_the_art.md`,
 //! the planner composes, by length: hardcoded small-N kernels (2–32),
 //! an iterative mixed radix-4/radix-2 Stockham pipeline for larger powers
 //! of two (regular, auto-vectorizable access, no bit-reversal pass), and

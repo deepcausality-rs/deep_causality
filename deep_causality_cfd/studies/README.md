@@ -69,7 +69,7 @@ the imprint-fidelity follow-up (risk 1); it supersedes the pinned-envelope harne
 
 A third batch de-risks the **trajectory/timing** axis, Resolution 1's B1 perturbed-conformal split,
 before specifying the propagator. See
-`openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
+`openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
 
 | Study | Question | Finding |
 |---|---|---|

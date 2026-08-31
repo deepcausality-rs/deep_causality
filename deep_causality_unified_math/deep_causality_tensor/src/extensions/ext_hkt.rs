@@ -31,7 +31,7 @@ use deep_causality_haft::{
 /// for statistics and reductions, `Clone` for reshaping. Those name real traits, so the compiler
 /// enforces them and no downstream crate can satisfy them by declaration.
 ///
-/// See `openspec/notes/archive/hkt_CausalTensor.md` for the measurement behind this.
+/// See `openspec/notes/archive/hkt_gat/hkt_CausalTensor.md` for the measurement behind this.
 pub struct CausalTensorWitness;
 
 impl HKT for CausalTensorWitness {

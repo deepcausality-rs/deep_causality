@@ -64,7 +64,7 @@ pub const BODY_CY: f64 = 0.5;
 pub const CT_SWEEP: [f64; 7] = [0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0];
 
 // ── Regression gates, pinned from the FIRST measured run (2026-07-17; committed output.txt;
-//    re-pin rationale in openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md). The
+//    re-pin rationale in openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md). The
 //    originally anticipated Jarvinen–Adams structural gates (collapse < 0.10 by C_T ≈ 1, the
 //    sign-flip dip) did NOT hold on this harness — the static-obstruction imprint shields like
 //    a drag-reduction spike (monotone, partial) rather than collapsing the flowfield — so the

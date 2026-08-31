@@ -20,7 +20,7 @@ use ultragraph::{GraphTraversal, TopologicalGraphAlgorithms};
 /// that finishes within the bound is unaffected (fuel monotonicity). Machine-checked model:
 /// `core.causal_effect.relay_termination` in `lean/DeepCausalityFormal/Core/CausalEffect.lean`;
 /// closes the relay-termination item of
-/// `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2 Q3.
+/// `openspec/notes/archive/causal-algebra/algebraic-causaloid-assumptions.md` #2 Q3.
 pub const MAX_RELAY_ROUNDS: usize = 1024;
 
 /// Provides default implementations for monadic reasoning over `CausableGraph` items.

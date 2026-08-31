@@ -172,7 +172,7 @@ log-posterior before sorting (`np.exp(lp − max)`). When one fault dominates, t
 every other candidate to zero and collapses the lower ranks to index order. The Rust port sorts on
 the log-posterior, which the paper's `p(R | D)` (Eq. 3) implies and which does not underflow.
 Re-captured with that fix, Python and Rust agree on the full ranking. See
-`openspec/notes/brcd/brcd_python_ranking_bug.md`.
+`openspec/changes/archive/brcd/brcd_python_ranking_bug.md`.
 
 **BOSS score sign.** The port uses the higher-is-better BIC sign, the convention of causal-learn
 and of the BOSS the paper runs ("default setting of BOSS from causal-learn", Appendix D). The
@@ -180,4 +180,4 @@ vendored Python BOSS is sign-inverted: it learns the empty graph on a clean chai
 spurious edge on a collider, so its learned-CPDAG outputs can be wrong. A divergence from the
 Python learned-CPDAG result is evidence against the reference, not the port; confirm it by
 temporarily restoring the bug behind a test-only switch, never by shipping the wrong sign. See
-`openspec/notes/brcd/brcd_boss_sign_bug.md`.
+`openspec/changes/archive/brcd/brcd_boss_sign_bug.md`.

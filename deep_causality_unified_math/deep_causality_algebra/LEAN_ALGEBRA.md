@@ -9,7 +9,7 @@ Status as of 2026-08-23. This note summarizes the machine-checked formalization 
 trait tower** — the middle layer of the split numeric stack (`deep_causality_num` ←
 `deep_causality_algebra` ← `{num_complex, num_dual, num_rational}`). It is the crate-local view of
 the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_unified_math/deep_causality_num/LEAN_NUM.md`](../deep_causality_num/LEAN_NUM.md) and
 [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md).
 

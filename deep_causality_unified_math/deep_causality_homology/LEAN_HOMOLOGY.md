@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Status as of 2026-08-30. This note summarizes the machine-checked formalization of the crate's
 chain-complex layer. It is the crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
 
 ## Summary
 

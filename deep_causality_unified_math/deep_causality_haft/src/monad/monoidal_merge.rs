@@ -31,7 +31,7 @@ use crate::{HKT3Unbound, Satisfies};
 /// arrows*, JFP 19, 2009) — which this trait is not. It was renamed to say what it is; the
 /// former `fuse` operation (whose result type `C` was structurally undetermined — no lawful
 /// implementation existed for value-carrying carriers) was removed in the same change. See
-/// `openspec/notes/causal-algebra/haft-formalization-deviations.md`, D3/P-1.
+/// `openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`, D3/P-1.
 ///
 /// # Law (Informal)
 ///

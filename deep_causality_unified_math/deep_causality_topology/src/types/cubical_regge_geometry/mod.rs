@@ -69,7 +69,7 @@
 //! - **`regge_gradient(complex)`** and `metropolis_update` — action gradient and Markov
 //!   chain dynamics. Deferred to R6.
 //!
-//! See [`openspec/notes/CubicalReggeCalculus.md`](../../../../openspec/notes/CubicalReggeCalculus.md)
+//! See [`openspec/changes/archive/2026-05-22-add-cubical-regge-calculus-core/CubicalReggeCalculus.md`](../../../../openspec/changes/archive/2026-05-22-add-cubical-regge-calculus-core/CubicalReggeCalculus.md)
 //! for the full R1–R6 design note.
 
 pub mod curvature;

@@ -4,7 +4,7 @@
  */
 
 //! The #10 characterization corpus — the behavior-preservation gate for the Stage-4 graph-join
-//! change (`openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #10; design D7).
+//! change (`openspec/notes/archive/causal-algebra/algebraic-causaloid-assumptions.md` #10; design D7).
 //!
 //! Each test pins the EXACT observable output of `evaluate_subgraph_from_cause` — value channel,
 //! error channel, and the full ordered log-message sequence (timestamp-free via

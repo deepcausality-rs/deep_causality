@@ -70,5 +70,5 @@ witness (see `THEOREM_MAP.md`):
 
 The `Core` layer proves the causal-monad laws under preconditions P1/P2 (`core.causal_monad.*`); the
 remaining `LawfulMonad` / parity work is tracked in
-`../openspec/notes/causal-algebra/Formalization.md` and the "Not yet on the map" section of
+`../openspec/notes/archive/causal-algebra/Formalization.md` and the "Not yet on the map" section of
 `THEOREM_MAP.md`.

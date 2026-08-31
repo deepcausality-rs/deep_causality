@@ -213,7 +213,7 @@ pub trait HKT {
     /// Without the clause there is no obligation to discharge, and a constrained `Monad` or
     /// `CoMonad` becomes writable. The constraint is still enforced, because every method keeps its
     /// `Satisfies` bound; what is given up is naming `<W as HKT>::Type<T>` for an inadmissible `T`,
-    /// a type on which no operation was ever callable. See `openspec/notes/hkt_gat/hkt_gat.md`.
+    /// a type on which no operation was ever callable. See `openspec/notes/archive/hkt_gat/hkt_gat.md`.
     type Type<T>;
 }
 

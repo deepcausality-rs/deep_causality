@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-08-23. This note summarizes the machine-checked formalization of ℚ — the field of
 fractions of an integral domain, and the exact-arithmetic member of the numeric tower. It is the
 crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_unified_math/deep_causality_num_dual/LEAN_NUM_DUAL.md`](../deep_causality_num_dual/LEAN_NUM_DUAL.md)
 and [`deep_causality_unified_math/deep_causality_num_complex/LEAN_NUM_COMPLEX.md`](../deep_causality_num_complex/LEAN_NUM_COMPLEX.md).
 

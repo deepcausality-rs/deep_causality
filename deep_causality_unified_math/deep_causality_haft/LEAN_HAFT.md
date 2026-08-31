@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Status as of 2026-07-05. This note summarizes the machine-checked formalization of the haft
 crate; it is the crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
 
 ## Summary
 
@@ -39,7 +39,7 @@ docs, one misnamed trait, one unlawful reference implementation, two structural 
 `MonoidalMerge`, `fuse` removed), P-2 (`U: Default` dropped from `MonadEffect3/4/5::bind`),
 and P-3 (curvature laws stated at the concrete `CurvatureTensor` in
 `deep_causality_topology`). The full audit trail with per-deviation resolution status lives in
-[`openspec/notes/causal-algebra/haft-formalization-deviations.md`](../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md).
+[`openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`](../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md).
 
 ## How to check
 

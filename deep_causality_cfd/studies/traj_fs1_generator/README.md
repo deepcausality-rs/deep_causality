@@ -44,7 +44,7 @@ orbit: `a = 7038.0 km`, `e = 0.1323`, period 5876.0 s, `μ = EARTH_GM`.
 exponential. Resolution-1's B1 holds, with the concrete generator `Ω` supplied. The production 3-D,
 singularity-free, perturbation-ready form is **KS regularisation** (Stiefel–Scheifele), and the
 heavier Bars `(4,2)` packaging is **optional, not required**, which simplifies Resolution 1.
-Analysis: `openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
+Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
 
 **Caveats.** 2-D perifocal, the planar essence, and bound orbits only. The parabolic, hyperbolic,
 and full 3-D KS cases are the production generalisation and are not measured here. The independent

@@ -200,7 +200,7 @@ where
                             // Reconvergence: the merge (∇) of converging effects is a symmetric-
                             // monoidal generator over the effect monad, an extension of the single-
                             // input causaloid that is not yet defined (see
-                            // `openspec/notes/causal-algebra/algebraic-causaloid-assumptions.md` #2).
+                            // `openspec/notes/archive/causal-algebra/algebraic-causaloid-assumptions.md` #2).
                             // Fail loudly rather than silently pick one parent or guess a combine.
                             let keys: Vec<usize> = parents.keys().copied().collect();
                             return raise_from(

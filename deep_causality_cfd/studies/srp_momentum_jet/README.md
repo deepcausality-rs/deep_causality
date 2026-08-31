@@ -68,7 +68,7 @@ cap 24.
 **Conclusion.** Neither coupling model can host the collapse on this harness, so the **A0
 correlation channel keeps the drag authority**. The J–A miss is the recorded finding, not a
 regression; the structural bands gate the default configuration only, and
-`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md` with its addendum is the authority. This
+`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md` with its addendum is the authority. This
 study supersedes the reverted `verification/srp_drag_decrement/` pinned-envelope harness (see
 `reverted/README.md`).
 

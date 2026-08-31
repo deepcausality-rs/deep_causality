@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # THEOREM_MAP — Lean ↔ Rust traceability
 
 This is **the bridge**. There is no tool that converts a Lean proof into a Rust test
-(`openspec/notes/causal-algebra/Formalization.md` §3). Instead, each **property statement** is
+(`openspec/notes/archive/causal-algebra/Formalization.md` §3). Instead, each **property statement** is
 transcribed once per layer and linked here:
 
 - **Lean** *proves* the statement (deductive, unbounded, higher-order).
@@ -155,7 +155,7 @@ All Lean files under `DeepCausalityFormal/Haft/`; the Rust witnesses live in
 (`Haft/Functor.lean` ↔ `functor_tests.rs`, `Haft/EffectSystem.lean` ↔
 `effect_system_tests.rs`, …; `Haft/Hkt.lean` is a definitional bridge with no theorems and
 hence no test file). One `#[test]` per id, name pattern `test_<id>`. Citations per file;
-deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-deviations.md`.
+deviations recorded in `../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`.
 
 | id | statement | Lean | Lean location | Test | Kani |
 |---|---|---|---|---|---|

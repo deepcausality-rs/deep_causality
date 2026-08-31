@@ -29,7 +29,7 @@
 //! are already deps of multivector; no new transitive dep is
 //! introduced.
 //!
-//! See `openspec/changes/implement-isomorphism/specs/iso-multifield-tensor/spec.md`.
+//! See `openspec/changes/archive/2026-05-20-implement-isomorphism/specs/iso-multifield-tensor/spec.md`.
 
 use crate::CausalMultiField;
 use deep_causality_metric::Metric;

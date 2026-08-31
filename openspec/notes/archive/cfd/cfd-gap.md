@@ -1,7 +1,7 @@
 # CFD Gap Note: Closing the Solver Gap with the Uniform Math Already in Place
 
 Status: foundation note for a follow-up specification. Decisions resolved 2026-06-10.
-Related: `openspec/notes/arrow/causal-arrow-generalization.md` (the Arrow algebra this note builds on).
+Related: `openspec/changes/archive/arrow-notes/causal-arrow-generalization.md` (the Arrow algebra this note builds on).
 
 ## 0. Resolved decisions
 

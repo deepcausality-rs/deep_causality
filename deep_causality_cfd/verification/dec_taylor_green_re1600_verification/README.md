@@ -39,7 +39,7 @@ Re = U·L/ν = 1600,  U = 1,  L = 1/k   ⇒   ν = 1/(k·Re)
 The field is smooth at `t = 0`; vortex stretching steepens it until dissipation peaks near
 `t* ≈ 9` (in convective units `t* = t·k·U`). The shape of the `−dE*/dt*` curve — slow start,
 steep rise, peak, decay — is the recognizable signature reviewers compare against the published
-DNS reference (see `openspec/notes/cfd/references.md`).
+DNS reference (see `openspec/notes/archive/cfd/references.md`).
 
 ## How it works
 

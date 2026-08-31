@@ -208,12 +208,13 @@ timing gate (`compressible_carrier_timing`):
   (independent branch marches, the §6 pin) and component-level `scoped_map` inside the step
   (four independent component chains + eight flux encodes, ~3–4×).
 - **Tensor-crate-side** (gated behind
-  `openspec/notes/tensor-network/ACCELERATION-SOTA-FIRST.md`, whose own thesis — truncation,
+  `openspec/changes/deferred/tensor/ACCELERATION-SOTA-FIRST.md`, whose own thesis — truncation,
   not contraction, is the hot spot — the measured profile above now corroborates):
   randomized/sketched TT rounding.
 - **GPU: deferred** (user decision, 2026-07-17) — a single bond-≤64 train is latency-bound
   small-matrix work and FP64 rules out the local hardware; it wins only on **batched branch
   rosters** (batched GEMM/SVD) or 3-D/bond≥128, so revisit only at the batched-roster stage.
 
-Full ladder with per-lever magnitudes and the CFD-vs-tensor-crate split:
-`openspec/notes/cfd-roadmap/cfd-industry-scaling.md` §4a. **[plan]**
+Full ladder with per-lever magnitudes and the CFD-vs-tensor-crate split: not yet written. This
+pointed at `openspec/notes/cfd-roadmap/cfd-industry-scaling.md` §4a, which was never committed;
+git history has no record of the file. Treat the ladder above as the current statement. **[plan]**

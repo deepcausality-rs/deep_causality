@@ -24,7 +24,7 @@
 //! add no information. The honest framing is "two dispatch paths into the
 //! same concrete operations should agree."
 //!
-//! See `openspec/changes/implement-isomorphism/design.md` D7 for the
+//! See `openspec/changes/archive/2026-05-20-implement-isomorphism/design.md` D7 for the
 //! rationale.
 
 use deep_causality_core::{

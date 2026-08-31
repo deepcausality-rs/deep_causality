@@ -28,7 +28,7 @@
 //! - apply the **A0 drag decrement** — scale the axial drag already on the channel by the
 //!   Jarvinen–Adams preserved-drag fraction at this `C_T` (`srp_thrust_coefficient` →
 //!   `srp_preserved_drag_fraction`). Per the measured de-risk verdict
-//!   (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER; the 2026-07-17 addendum
+//!   (`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER; the 2026-07-17 addendum
 //!   measured both coupling models and pinned the missing collapse to the harness, not the model
 //!   class), the A0 correlation is the **committed drag authority**: an M3 marched-layer imprint
 //!   (the landed `ForcingRegion`), when composed for state realism, never replaces this closure.
@@ -484,7 +484,7 @@ impl<R: CfdScalar> PlumeNozzle<R> {
 /// `C_T = srp_thrust_coefficient_kernel(T, q∞, S_ref)`, read
 /// `srp_preserved_drag_fraction_kernel(C_T)`, and scale the axial forebody drag already on the
 /// aero-force channel by that preserved fraction. Per the measured de-risk verdict
-/// (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER — the addendum measured both
+/// (`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`, AMBER — the addendum measured both
 /// coupling models and pinned the missing Jarvinen–Adams collapse to the harness, not the model
 /// class), this correlation is the **committed drag authority** in flight; a marched-layer imprint is
 /// never the force-channel closure. The applied fraction is published as

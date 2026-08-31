@@ -96,7 +96,7 @@ fn main() {
     }
 
     // ── Regression gates (pinned from the FIRST measured run, 2026-07-17; see output.txt
-    //    and openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md for the pin provenance
+    //    and openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md for the pin provenance
     //    and the re-pin rationale) ──
 
     // R-A: the imprint shields monotonically — the preserved fraction is non-increasing in C_T.
