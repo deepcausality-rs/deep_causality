@@ -10,7 +10,7 @@ it, mark which monoid a witness is claiming with two first-class markers, and le
 This admits fixed-arity products into the applicative hierarchy without requiring `Clone` of anything
 that does not already have it.
 
-**Status.** **Implemented**, via `openspec/changes/add-lax-monoidal-applicative`. The traits, the
+**Status.** **Implemented**, via `openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative`. The traits, the
 Lean formalization, and adoption on the Cayley-Dickson types and `Dual` are all in. Two things in
 this note did *not* ship: the class B and C adoptions remain future work, and the `Traversable` for
 `Vec` in §6 finding 5 was implemented, measured and withdrawn — the required bound change takes

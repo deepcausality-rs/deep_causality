@@ -22,7 +22,7 @@ triple `(F, φ, η)`; `MonoidalMerge` carries `φ` alone, with no unit `η : I �
 derivable from `merge`. So the unitality coherence conditions are not statable against this
 trait, and no theorem below asserts them; only naturality is in scope. The trait name predates
 this distinction and is kept for continuity. See
-`openspec/notes/hkt_gat/monoidal-applicative.md` §4.1.
+`openspec/notes/archive/hkt_gat/monoidal-applicative.md` §4.1.
 
 What is lawful about `merge` is proved here on the diagonal Option carrier: `merge` is a
 *binatural* transformation — it commutes with `fmap` in both arguments.

@@ -60,7 +60,7 @@
 //! Should the deferral be lifted, prefer **absorbing**. **swap** makes `extend` observe a dual
 //! whose derivative channel holds a function value, which carries no meaning in forward-mode AD
 //! terms. The decision is recorded in
-//! `openspec/changes/add-lax-monoidal-applicative/design.md`.
+//! `openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative/design.md`.
 //!
 //! # Why `NoConstraint`
 //!

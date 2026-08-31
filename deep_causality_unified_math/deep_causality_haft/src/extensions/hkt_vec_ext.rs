@@ -164,5 +164,5 @@ impl CloneFunctor for VecWitness {
 //
 // Revisit only as part of a change that first adopts `Semigroupal` across those witnesses, so the
 // bound can move without narrowing the trait's contract. See
-// `openspec/notes/hkt_gat/monoidal-applicative.md` §6 finding 5 for the measurement. Until then,
+// `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §6 finding 5 for the measurement. Until then,
 // `OptionWitness` and `ResultWitness` are the only two `Traversable` carriers.

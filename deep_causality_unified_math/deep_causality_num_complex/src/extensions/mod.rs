@@ -37,7 +37,7 @@
 //!
 //! `Applicative<F>: Functor<F> + Pure<F>` and `Monad` names `Pure` too, so both stay out of reach.
 //! `MonoidalApplicative` reaches `apply` without them precisely because `zip_with` pairs slot with
-//! slot and never invokes the diagonal. See `openspec/notes/hkt_gat/monoidal-applicative.md`.
+//! slot and never invokes the diagonal. See `openspec/notes/archive/hkt_gat/monoidal-applicative.md`.
 //!
 //! `CoMonad::extract` could return the scalar part, but `extend` has no canonical cursor to walk
 //! over a product, so it is left out rather than guessed at.

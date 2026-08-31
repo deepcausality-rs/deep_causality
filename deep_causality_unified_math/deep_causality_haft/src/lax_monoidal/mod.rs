@@ -35,7 +35,7 @@
 //!
 //! So `pure` is a cartesian convenience rather than part of the monoid structure, and the traits
 //! here require no `Clone` of anything. See
-//! `openspec/notes/hkt_gat/monoidal-applicative.md` for the measurements behind that.
+//! `openspec/notes/archive/hkt_gat/monoidal-applicative.md` for the measurements behind that.
 //!
 //! # Why `φ` and `η` are split across two traits
 //!

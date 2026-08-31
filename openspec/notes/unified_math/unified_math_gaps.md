@@ -248,7 +248,7 @@ Mechanical work. No design decision, one crate touched, laws follow from the sha
 | E3 | `right_adjunct` returns `Result` instead of panicking | §3.8 | Signature change plus one call site |
 | E4 | Law tests for the four existing witnesses | §3.6 | The probe in §6 is the template. Cheap, and it pins the two known violations before anything is built on them |
 
-**E1 and E2 closed** by `openspec/changes/add-lax-monoidal-applicative`. Neither was closed the way
+**E1 and E2 closed** by `openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative`. Neither was closed the way
 this table anticipated, and the difference matters.
 
 E1 asked for `Applicative`, which remains impossible: `Applicative<F>: Functor<F> + Pure<F>`, and
@@ -275,7 +275,7 @@ comonad laws, so nothing in the type selects between them; a third shape that lo
 both slots the same focus, is unlawful and fails the counit law. With two arbitrary-but-lawful
 candidates and no caller in the workspace wanting either, shipping one would lock a default into the
 public API with nothing to validate it against. The decision and its reasoning are recorded in
-`openspec/changes/add-lax-monoidal-applicative/design.md`. If it is ever lifted, prefer the
+`openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative/design.md`. If it is ever lifted, prefer the
 absorbing comultiplication over the swap.
 
 ### 4.2 Moderate

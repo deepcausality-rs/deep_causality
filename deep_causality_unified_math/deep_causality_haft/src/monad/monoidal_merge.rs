@@ -21,7 +21,7 @@ use crate::{HKT3Unbound, Satisfies};
 /// $\eta : I \to D(I)$ anywhere in it and none is derivable from `merge`, so the unitality
 /// coherence conditions cannot be stated against this trait, only associativity and naturality.
 /// An earlier version of this docstring called it lax monoidal, which overclaimed by exactly the
-/// unit. See `openspec/notes/hkt_gat/monoidal-applicative.md` §4.1 for the split between the
+/// unit. See `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §4.1 for the split between the
 /// $\varphi$-only structure and the full $(\varphi, \eta)$ one.
 ///
 /// # Naming history
