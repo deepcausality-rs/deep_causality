@@ -267,10 +267,6 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
 Running that snippet prints:
 
 ```text 
---- Type-Encoded Effect System Example (Arity 5) ---
-
-Initial effect (pure 10): MyCustomEffectType5 { value: 10, f1: None, f2: [], f3: [], f4: [] }
-
 Process Steps: 
   Log (Step 1): Operation A: Multiplied by 2
   Log (Step 2): Operation B: Added 5

@@ -80,10 +80,25 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
     /// shape of what `f` returned. When those differ, no rule satisfies both.
     ///
     /// Right identity wins here, because `bind(m, pure) == m` is the law a caller is most likely
-    /// to rely on. The consequence is narrow and worth naming: for a one-function `ff` of shape
+    /// to rely on. Two consequences follow, both narrow and both worth naming.
+    ///
+    /// Coherence with `apply` parts company on the same input: for a one-function `ff` of shape
     /// `[1]` against a one-element `fa` of shape `[1, 1]`, `apply(ff, fa)` reports `[1, 1]` while
-    /// `bind(ff, |f| fmap(fa, f))` reports `[1]`. The data agrees; only the shape does not, and
-    /// only when both sides hold exactly one element under different shapes.
+    /// `bind(ff, |f| fmap(fa, f))` reports `[1]`. The data agrees; only the shape does not.
+    ///
+    /// Associativity parts company too, and it cannot be repaired while right identity holds.
+    /// Right identity forces "every step yielded one element, so keep the input's shape", and
+    /// that is exactly the branch the right-hand association takes. Binding a one-element `m` of
+    /// shape `[]` through an `f` that yields two elements and a `g` that yields one and then none
+    /// gives `[1]` down the left association and `[]` down the right. Making the singleton case
+    /// always take the step's shape would restore associativity and break `bind(m, pure) == m`
+    /// for every one-element tensor whose shape is not `[]`, which is the commoner input.
+    ///
+    /// All three corners share one cause: a tensor holding a single element can carry `[]`, `[1]`
+    /// or `[1, 1]`, and `bind` has to choose. This is the shaped-container question recorded as
+    /// H1 in `openspec/notes/archive/unified_math/unified_math_gaps.md`; withdrawing `Monad` from
+    /// this witness, as `deep_causality_linear` does for its shaped witnesses, is the other way
+    /// out and has not been taken.
     fn bind<A, B, Func>(m_a: CausalTensor<A>, mut f: Func) -> CausalTensor<B>
     where
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
@@ -105,10 +120,15 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
         }
         let len = result_data.len();
 
-        // A one-element input is exactly the left identity case, `bind(pure(a), f) == f(a)`, so
-        // the answer is `f(a)` including its shape. This is also what keeps `bind` coherent with
-        // `apply`: `apply` broadcasts a single function across `fa` and reports `fa`'s shape, and
+        // A one-element input whose single step yielded more than one element is the left
+        // identity case with room to disagree, `bind(pure(a), f) == f(a)`, so the answer is
+        // `f(a)` including its shape. This is also what keeps `bind` coherent with `apply`:
+        // `apply` broadcasts a single function across `fa` and reports `fa`'s shape, and
         // `bind(ff, |f| fmap(fa, f))` over a one-function `ff` has to agree with it.
+        //
+        // When the single step yields exactly one element this branch does not fire, and the
+        // input's shape is kept below. That is deliberate and it is what right identity needs;
+        // see the note on the impl for why the two cannot both be served.
         if count == 1 && len != 1 {
             let s = only_step_shape.expect("count is one, so the loop ran once");
             return CausalTensor::from_vec(result_data, &s);

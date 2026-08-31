@@ -20,9 +20,7 @@
 //!
 //! # Laws
 //!
-//! Implementers must satisfy, for every type `T` that satisfies both
-//! type, and for every function
-//! `h: T -> U`:
+//! Implementers must satisfy, for every type `T` and every function `h: T -> U`:
 //!
 //! 1. **Round-trip identity (per `T`)**:
 //!    - `to_source(to_target(fa)) == fa` for all `fa: F::Type<T>`

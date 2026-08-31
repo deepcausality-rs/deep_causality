@@ -14,9 +14,8 @@ use crate::HKT;
 ///
 /// # Element bounds
 ///
-/// The `fmap` function requires both input type `A` and output type `B` to satisfy the
-/// element type. Every type is admitted; the trait states no bound, and the operations here admit
-/// only the types for which the marker is implemented.
+/// `fmap` places no bound on `A` or `B`. A container of labels maps to one of scores as readily
+/// as one of floats maps to another.
 ///
 /// # Laws (Informal)
 ///

@@ -804,24 +804,23 @@ Delegation also narrows a public impl. The block is `impl<R, G> Topology<R, G>` 
 forces `R: RealField` onto it. The coefficient side is fine, `G: Field + Copy` already satisfies the
 free function's `R: CommutativeRing + Copy`.
 
-**An active spec forbids the chosen closure.** `openspec/specs/cup-product/spec.md:6-12` is a live,
-non-archived requirement titled *"Cochains are carried in the existing representation"*, whose
-normative sentence says the cup product *"MUST operate on the repository's established cochain
-representation, a flat slice of scalars indexed by cell index within a skeleton, and MUST NOT
-introduce a dedicated `Cochain` type."* The rationale is Decision 2 of the archived change: every
-physics and CFD call site would need conversion, a cost paid by existing code to benefit new code.
-**Closing this gap as written requires amending or superseding that requirement, not just writing
-code.** A spec that adds `Cochain<R>` without doing so contradicts a shipped MUST NOT.
+**A stale spec appears to forbid the chosen closure. It does not bind.**
+`openspec/specs/cup-product/spec.md:6-12` is an unarchived requirement titled *"Cochains are carried
+in the existing representation"*, whose normative sentence says the cup product *"MUST NOT introduce
+a dedicated `Cochain` type."* The author's ruling on 2026-08-31 is that this requirement is stale and
+was simply never archived, so it is not a constraint on this gap. **Archive it when this gap is
+picked up**, so the next reader does not stop where this sweep did.
 
-One fact bears on whether the requirement should be amended: neither cup product has a production
-caller. A workspace search finds only the module wiring, the re-export and the crate's own tests.
-Nothing in quantum, physics or CFD calls either. The conversion cost Decision 2 priced is, for the
-cup product specifically, currently zero.
+The evidence agrees with the ruling. Decision 2 of the archived change priced the requirement on
+conversion cost: every physics and CFD call site would need converting. That cost is now zero for
+the cup product. Neither implementation has a production caller anywhere in the workspace; a search
+finds only the module wiring, the re-export and the crate's own tests. Nothing in quantum, physics
+or CFD calls either one.
 
 **Chosen closure, in this order:** make `Topology::cup_product` delegate to the free function,
-handling the three deltas above, then resolve the spec conflict, then add `Cochain<R>` and thread it
-through. Unifying first means the new type is threaded through one implementation rather than two.
-Neither step has been taken: the method is still the second, hand-rolled implementation.
+handling the three deltas above, then add `Cochain<R>` and thread it through. Unifying first means
+the new type is threaded through one implementation rather than two. Neither step has been taken:
+the method is still the second, hand-rolled implementation.
 
 **Closure.** ~~Fold into G-05: one type carrying data and degree together, used by both the cup
 product and the gate layer.~~ **Void.** G-05 closed as `Gf2Chain<W>`, which is 𝔽₂-only and cannot
@@ -869,7 +868,7 @@ G-04  homology representatives             (homology; unblocked, G-05 shipped)  
        ├── G-07  retype the Haruna layer   (quantum; needs G-04, G-06, + a homology dep)
        └── G-09  logical equivalence       (quantum; needs G-04, + a homology dep)
 
-G-18  Cochain                              (topology, no deps)  <- blocked on a spec, not on code
+G-18  Cochain                              (topology, no deps)  <- independent root
 
 G-06  Circuit                              (quantum, no deps; 3 variants, 3 qubits() arms,
                                             3 simulator arms, and one validation fix)
@@ -879,8 +878,7 @@ G-13, G-14  correct the note               (design note)
 ```
 
 Three independent roots, not one chain. G-04 heads the gate-layer chain. G-18 stands alone now that
-G-05 has closed, and its blocker is `openspec/specs/cup-product/spec.md`, which forbids the type it
-asks for. G-06 depends on nothing and never did.
+G-05 has closed. G-06 depends on nothing and never did.
 
 ### What the remaining nine cost
 
@@ -896,8 +894,9 @@ rather than §7.5. G-16 is a soundness decision with a written rationale: whethe
 commutator is warrant to invoke an exact-hypothesis Lean theorem. Note that the trade is already
 being made at a hardcoded `1e-12` in a THEOREM_MAP-bound witness.
 
-**Blocked on a decision rather than on code.** G-18 needs the active cup-product spec amended before
-a `Cochain<R>` may be written, and the delegation step that precedes it flips three behaviours.
+**Mid effort, unblocked, with a stale spec to retire on the way.** G-18's delegation step flips
+three behaviours and narrows one public impl's bounds, and `openspec/specs/cup-product/spec.md`
+should be archived rather than obeyed.
 
 **Serious.** G-08 needs an 𝔽₂ linear solver written rather than parameterized, because `Gf2` reaches
 `Field` but not `Normed`, and it should not be built on `DualLatticeComplex` as it stands. G-09
@@ -912,11 +911,9 @@ signatures. The mathematics is quotient-basis extraction over bases that already
 things to get right are reading generators off **columns** rather than rows, and building the
 `[im | ker]` stacking by hand.
 
-**G-18 in parallel, starting with the spec rather than the code.** It is independent of G-04 and its
-first obstacle is not technical: `openspec/specs/cup-product/spec.md` says a `Cochain` type MUST NOT
-be introduced. Settle that requirement first. The argument for amending it is that neither cup
-product has a production caller today, so the conversion cost the requirement was written to avoid is
-currently zero.
+**G-18 in parallel.** It is independent of G-04. Archive
+`openspec/specs/cup-product/spec.md` on the way past: it forbids the type this gap adds, and it is
+stale rather than binding.
 
 **What the three designed examples need.** The calibration and crosstalk examples need none of G-01
 through G-09: two feasibility lenses reproduced their headline results on shipped APIs in scratch

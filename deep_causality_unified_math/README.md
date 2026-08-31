@@ -5,7 +5,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Unified Math
 
-Seventeen crates. One stack, seven tiers tall, rooted in three zero-dependency and zero unsafe.
+Seventeen crates. One stack, seven tiers tall, rooted in three zero-dependency leaves and
+terminating in `deep_causality_topology`. No crate in it contains a line of `unsafe`.
 
 
 Unified math grew from a small idea. Tensors and multivectors needed to compose, so they were given a shared higher-kinded interface. That interface turned out to want an algebra tower under it, the tower wanted numeric traits under that, and the composition kept finding new things it could reach: geometric algebra, discrete exterior calculus, chain complexes, spectral methods, uncertainty. 

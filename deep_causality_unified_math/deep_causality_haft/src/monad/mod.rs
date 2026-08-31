@@ -32,9 +32,7 @@ pub(crate) mod free_instances;
 ///
 /// # Element bounds
 ///
-/// The `bind` method requires types to satisfy the HKT's constraint. A witness that declares
-/// Every element type is admitted, because the trait states no bound on the types
-/// for which that marker is implemented.
+/// `bind` places no bound on the element types. Any `A` and any `B` are admitted.
 ///
 /// # Laws (Informal)
 ///
