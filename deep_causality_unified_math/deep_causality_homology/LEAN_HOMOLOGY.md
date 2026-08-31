@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Status as of 2026-08-30. This note summarizes the machine-checked formalization of the crate's
 chain-complex layer. It is the crate-local view of the program described in
-[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md).
 
 ## Summary
 
@@ -33,7 +33,7 @@ This crate is where the assumption became an obligation on implementors, so it i
 discharge belongs.
 
 - **Lean proofs (L1):** one file,
-  [`lean/DeepCausalityFormal/Homology/ChainCondition.lean`](../lean/DeepCausalityFormal/Homology/ChainCondition.lean),
+  [`lean/DeepCausalityFormal/Homology/ChainCondition.lean`](../../lean/DeepCausalityFormal/Homology/ChainCondition.lean),
   carrying **2 theorems** plus the rank–nullity lemma they stand on. Every theorem is closed —
   **zero `sorry`**. The file is **Mathlib-backed** (`Mathlib.LinearAlgebra.Matrix.ToLin`,
   `Mathlib.LinearAlgebra.Matrix.Rank`, `Mathlib.LinearAlgebra.Dimension.RankNullity`,
@@ -47,7 +47,7 @@ discharge belongs.
   under Miri against 2 milliseconds native.
 - **The bridge:** each theorem carries a shared id (`homology.chain.dd_zero_implies_range_le_ker`,
   `homology.chain.betti_from_dd_zero`) recorded in
-  [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **2 homology ids, both proved and witnessed**.
+  [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — **2 homology ids, both proved and witnessed**.
   CI (`.github/workflows/formalization.yml`) fails if any Lean id lacks a tagged Rust file or a
   manifest row; this crate is in that check's grep list.
 

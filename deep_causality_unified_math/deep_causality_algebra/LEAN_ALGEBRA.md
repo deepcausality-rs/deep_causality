@@ -9,7 +9,7 @@ Status as of 2026-08-23. This note summarizes the machine-checked formalization 
 trait tower** — the middle layer of the split numeric stack (`deep_causality_num` ←
 `deep_causality_algebra` ← `{num_complex, num_dual, num_rational}`). It is the crate-local view of
 the program described in
-[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_unified_math/deep_causality_num/LEAN_NUM.md`](../deep_causality_num/LEAN_NUM.md) and
 [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md).
 
@@ -35,7 +35,7 @@ discharged.
   `i64` for the Euclidean-domain laws, and the boolean/aggregation carriers for the monoid,
   semilattice, and verdict laws.
 - **The bridge:** each theorem carries a shared id (e.g. `algebra.euclidean.gcd_nonneg`) recorded
-  in [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **40 algebra ids, all proved and
+  in [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — **40 algebra ids, all proved and
   witnessed**. CI (`.github/workflows/formalization.yml`) runs `lake build`, a guard against
   unproven placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file
   or a manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in

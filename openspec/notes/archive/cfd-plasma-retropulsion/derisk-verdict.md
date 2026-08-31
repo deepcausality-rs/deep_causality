@@ -216,5 +216,5 @@ timing gate (`compressible_carrier_timing`):
   rosters** (batched GEMM/SVD) or 3-D/bond≥128, so revisit only at the batched-roster stage.
 
 Full ladder with per-lever magnitudes and the CFD-vs-tensor-crate split: not yet written. This
-pointed at `openspec/notes/cfd-roadmap/cfd-industry-scaling.md` §4a, which was never committed;
+pointed at a `cfd-industry-scaling` note under `notes/cfd-roadmap/`, which was never committed;
 git history has no record of the file. Treat the ladder above as the current statement. **[plan]**

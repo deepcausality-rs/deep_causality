@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Status as of 2026-07-05. This note summarizes the machine-checked formalization of the haft
 crate; it is the crate-local view of the program described in
-[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md).
 
 ## Summary
 
@@ -24,7 +24,7 @@ implementation by a per-theorem witness test:
   tree one-to-one (`Haft/Functor.lean` ↔ `functor_tests.rs`, …). Lean proves ∀; the witness
   pins the actual Rust implementation to the same statement at representative inputs.
 - **The bridge:** each theorem carries a shared id (e.g. `haft.monad.laws`) recorded in
-  [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — 28 haft ids, all proved and witnessed.
+  [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — 28 haft ids, all proved and witnessed.
   CI (`.github/workflows/formalization.yml`) runs `lake build`, the witness tests, and a
   consistency gate that fails if any Lean id lacks a Rust witness or a manifest row.
 - **Model fidelity:** the Lean carriers are the crate's own canonical instances
@@ -39,7 +39,7 @@ docs, one misnamed trait, one unlawful reference implementation, two structural 
 `MonoidalMerge`, `fuse` removed), P-2 (`U: Default` dropped from `MonadEffect3/4/5::bind`),
 and P-3 (curvature laws stated at the concrete `CurvatureTensor` in
 `deep_causality_topology`). The full audit trail with per-deviation resolution status lives in
-[`openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`](../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md).
+[`openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`](../../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md).
 
 ## How to check
 

@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-08-23. This note summarizes the machine-checked formalization of ℚ — the field of
 fractions of an integral domain, and the exact-arithmetic member of the numeric tower. It is the
 crate-local view of the program described in
-[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_unified_math/deep_causality_num_dual/LEAN_NUM_DUAL.md`](../deep_causality_num_dual/LEAN_NUM_DUAL.md)
 and [`deep_causality_unified_math/deep_causality_num_complex/LEAN_NUM_COMPLEX.md`](../deep_causality_num_complex/LEAN_NUM_COMPLEX.md).
 
@@ -19,7 +19,7 @@ a gcd and a Euclidean domain is what supplies one. Three groups of facts are for
 laws, the canonical-form invariants, and density.
 
 - **Lean proofs (L1):** one file,
-  [`lean/DeepCausalityFormal/Rational/Rational.lean`](../lean/DeepCausalityFormal/Rational/Rational.lean),
+  [`lean/DeepCausalityFormal/Rational/Rational.lean`](../../lean/DeepCausalityFormal/Rational/Rational.lean),
   carrying **8 theorems**. Every theorem is closed — **zero `sorry`**. The file is **Mathlib-backed**:
   the laws are stated on Mathlib's `ℚ` (`import Mathlib.Data.Rat.Cast.Defs`,
   `Mathlib.Algebra.Field.Basic`, `Mathlib.Tactic.Linarith`), so it is checked as part of
@@ -31,7 +31,7 @@ laws, the canonical-form invariants, and density.
   `Dual<f64>` witnesses, these are exact equalities, and several sweep a range of inputs rather
   than checking a single representative.
 - **The bridge:** each theorem carries a shared id (e.g. `rational.canonical.coprime`) recorded in
-  [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **8 rational ids, all proved and witnessed**.
+  [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — **8 rational ids, all proved and witnessed**.
   CI (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
   placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a
   manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in

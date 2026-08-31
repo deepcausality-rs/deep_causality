@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-07-10. This note summarizes the machine-checked formalization of the **num-core**
 crate — the base of the split numeric tower (`deep_causality_num` ← `deep_causality_algebra` ←
 `{num_complex, num_dual}`). It is the crate-local view of the program described in
-[`openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md) and
 [`deep_causality_unified_math/deep_causality_haft/LEAN_HAFT.md`](../deep_causality_haft/LEAN_HAFT.md).
 
@@ -33,7 +33,7 @@ linked back to the Rust implementation by a per-theorem witness test:
   (`i64`/`usize`/`f64` for the integer, identity, and cast laws; `Float106` limbs compared within a
   tight epsilon for the model laws).
 - **The bridge:** each theorem carries a shared id (e.g. `num.integer.euclidean`) recorded in
-  [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **10 num ids, all proved and witnessed**. CI
+  [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — **10 num ids, all proved and witnessed**. CI
   (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
   placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a
   manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in
