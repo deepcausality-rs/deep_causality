@@ -715,6 +715,7 @@ name = "deep_causality_num_dual"
 version = "0.1.6"
 dependencies = [
  "deep_causality_algebra",
+ "deep_causality_haft",
  "deep_causality_num",
 ]
 

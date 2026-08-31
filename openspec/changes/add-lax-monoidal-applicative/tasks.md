@@ -33,17 +33,17 @@
 
 ## 4. `Dual`, closing E2
 
-- [ ] 4.1 Change `src/dual/dual_number/mod.rs:46` from `pub struct Dual<T: Real>` to `pub struct Dual<T>`, and document the storage-versus-computation split in the rustdoc
-- [ ] 4.2 Add the `deep_causality_haft` dependency to `Cargo.toml`, including the `std` and `no-std` feature lists
-- [ ] 4.3 Add `//deep_causality_unified_math/deep_causality_haft` to `deps` in `BUILD.bazel` and in `tests/BUILD.bazel`
-- [ ] 4.4 Add `src/extensions/{mod.rs, hkt_dual.rs}` with `DualWitness` implementing `HKT` over `NoConstraint`, `Functor` and `Foldable`
-- [ ] 4.5 Do NOT implement `CoMonad`; document in the module docs that it is deferred, that two comultiplications are lawful with nothing selecting between them, and that no caller wants either
-- [ ] 4.6 Implement `Semigroupal`, `LaxMonoidal`, `Convolutional` and `MonoidalApplicative` for `DualWitness`
-- [ ] 4.7 Document that `fmap` maps `re` and `du` independently, is the pair functor, carries no chain rule, and is not forward-mode AD
-- [ ] 4.8 Declare and re-export the module from `src/lib.rs`
-- [ ] 4.9 Add law tests under `tests/extensions/`, including the swap-variant mutation test and a non-`Real` payload
-- [ ] 4.10 Verify `Dual<Dual<f64>>` and `Dual<Dual<Dual<f64>>>` still give correct second and third derivatives
-- [ ] 4.11 Verify `cargo check --workspace --all-targets` reports zero errors after the bound comes off
+- [x] 4.1 Change `src/dual/dual_number/mod.rs:46` from `pub struct Dual<T: Real>` to `pub struct Dual<T>`, and document the storage-versus-computation split in the rustdoc
+- [x] 4.2 Add the `deep_causality_haft` dependency to `Cargo.toml`, including the `std` and `no-std` feature lists
+- [x] 4.3 Add `//deep_causality_unified_math/deep_causality_haft` to `deps` in `BUILD.bazel` and in `tests/BUILD.bazel`
+- [x] 4.4 Add `src/extensions/{mod.rs, hkt_dual.rs}` with `DualWitness` implementing `HKT` over `NoConstraint`, `Functor` and `Foldable`
+- [x] 4.5 Do NOT implement `CoMonad`; document in the module docs that it is deferred, that two comultiplications are lawful with nothing selecting between them, and that no caller wants either
+- [x] 4.6 Implement `Semigroupal`, `LaxMonoidal`, `Convolutional` and `MonoidalApplicative` for `DualWitness`
+- [x] 4.7 Document that `fmap` maps `re` and `du` independently, is the pair functor, carries no chain rule, and is not forward-mode AD
+- [x] 4.8 Declare and re-export the module from `src/lib.rs`
+- [x] 4.9 Add law tests under `tests/extensions/`, including the swap-variant mutation test and a non-`Real` payload
+- [x] 4.10 Verify `Dual<Dual<f64>>` and `Dual<Dual<Dual<f64>>>` still give correct second and third derivatives
+- [x] 4.11 Verify `cargo check --workspace --all-targets` reports zero errors after the bound comes off
 
 ## 5. `Traversable` for `VecWitness`
 

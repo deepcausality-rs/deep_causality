@@ -45,3 +45,18 @@ rust_test_suite(
         "//deep_causality_unified_math/deep_causality_num_dual",
     ],
 )
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_num_dual",
+    ],
+)

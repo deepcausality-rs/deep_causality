@@ -2,9 +2,5 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-mod algebra_impls;
-mod dual;
-#[cfg(not(miri))]
-mod formalization_lean;
 #[cfg(test)]
-mod extensions;
+mod hkt_dual_tests;
