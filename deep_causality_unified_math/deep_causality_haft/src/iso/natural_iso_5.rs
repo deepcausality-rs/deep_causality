@@ -18,7 +18,7 @@
 //! parameters: round-trip per parameter tuple, plus naturality in any
 //! parameter that the surrounding code maps over.
 
-use crate::{HKT5Unbound, Satisfies};
+use crate::HKT5Unbound;
 
 /// Natural isomorphism between two arity-5 unbound HKT witnesses.
 ///
@@ -29,20 +29,8 @@ where
     G: HKT5Unbound,
 {
     /// Maps `F::Type<V, S, C, E, L>` to `G::Type<V, S, C, E, L>`.
-    fn to_target<V, S, C, E, L>(fa: F::Type<V, S, C, E, L>) -> G::Type<V, S, C, E, L>
-    where
-        V: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        S: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        C: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        E: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        L: Satisfies<F::Constraint> + Satisfies<G::Constraint>;
+    fn to_target<V, S, C, E, L>(fa: F::Type<V, S, C, E, L>) -> G::Type<V, S, C, E, L>;
 
     /// Reverse of [`to_target`](Self::to_target).
-    fn to_source<V, S, C, E, L>(ga: G::Type<V, S, C, E, L>) -> F::Type<V, S, C, E, L>
-    where
-        V: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        S: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        C: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        E: Satisfies<F::Constraint> + Satisfies<G::Constraint>,
-        L: Satisfies<F::Constraint> + Satisfies<G::Constraint>;
+    fn to_source<V, S, C, E, L>(ga: G::Type<V, S, C, E, L>) -> F::Type<V, S, C, E, L>;
 }

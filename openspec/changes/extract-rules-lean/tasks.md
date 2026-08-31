@@ -5,7 +5,7 @@ extraction proceeds.
 
 - [ ] 1.1 Decide the artifact host for the olean archive (object storage preferred over GitHub Releases; full Mathlib packs to 1,952 MB against a 2 GB asset cap) and record the decision in `design.md` Open Questions
 - [ ] 1.2 Upload `lake-oleans-leanprover-lean4-v4.32.0.tar.gz` (431 MB, sha256 `f00fefd9d85142f33beb5ee1a77e8812d10fdce0bca17b39f73557c0f1a23f6b`) and replace the `file://` URL in `lean/lake-lock.json`; the sha256 is unchanged because the pack is reproducible
-- [ ] 1.3 Verify `build/scripts/lean_lock.sh check` passes and `bazel build //lean/...` is green from a cold output base with the hosted URL
+- [ ] 1.3 Verify `scripts/lean_lock.sh check` passes and `bazel build //lean/...` is green from a cold output base with the hosted URL
 - [ ] 1.4 Confirm the `lean-closure` CI job passes on a PR
 
 ## 2. Decide identity and stand up the repository
@@ -39,7 +39,7 @@ extraction proceeds.
 
 - [x] 5.1 Move the reproducible archive packer into the ruleset, preserving the three reproducibility fixes (tar mtime/uid/gid, gzip mtime, and the gzip FNAME field that made the digest depend on the output path)
 - [ ] 5.2 Assert reproducibility in the ruleset's tests by packing twice to different output paths and comparing digests
-- [ ] 5.3 Keep the repin and drift-check scripts consumer-side in `build/scripts/`, adjusting them to the published rule surface
+- [ ] 5.3 Keep the repin and drift-check scripts consumer-side in `scripts/`, adjusting them to the published rule surface
 - [ ] 5.4 Document the pin format and the repack workflow for consumers who are not this repository
 
 ## 6. Test the guardrails, not the happy path

@@ -13,7 +13,7 @@ geometric algebra applications.
     * Geometric Product, Outer Product, Inner Product (Left Contraction).
     * Reversion, Squared Magnitude, Inverse, Dual.
     * Grade Projection.
-* **Higher-Kinded Types (HKT)**: Implements `Functor`, `Pure`, `Applicative`, `Foldable`, `CoMonad`, and `Adjunction`
+* **Higher-Kinded Types (HKT)**: Implements `Functor`, `Pure`, `Applicative`, `Foldable`, and `CoMonad`
   (via `deep_causality_haft`) for advanced functional patterns.
     * There is deliberately no `Monad`. See [Higher-Kinded Types](#higher-kinded-types-hkt) for the reason.
 
@@ -180,7 +180,6 @@ This crate implements HKT traits from `deep_causality_haft`.
 * **Pure** and **Applicative**: Lift a value into $Cl(0)$ and broadcast a function over the coefficients.
 * **Foldable**: Reduce the coefficients to a summary value.
 * **CoMonad**: Read every coefficient in the context of the whole multivector.
-* **Adjunction**: Nest and collapse a multivector against a `Metric` context.
 
 ```rust
 use deep_causality_haft::{Applicative, Functor, Pure};

@@ -4,7 +4,7 @@
  */
 
 use crate::{CdlError, CdlWarningLog};
-use deep_causality_haft::{HKT, HKT3, LogAppend, NoConstraint};
+use deep_causality_haft::{HKT, HKT3, LogAppend};
 
 use std::marker::PhantomData;
 
@@ -108,7 +108,6 @@ pub struct CdlEffectWitness<E, WLog>(PhantomData<(E, WLog)>);
 
 // Implement HKT
 impl<E, WLog> HKT for CdlEffectWitness<E, WLog> {
-    type Constraint = NoConstraint;
     type Type<T> = CdlEffect<T>;
 }
 

@@ -21,9 +21,9 @@
 # Usage
 # ---------------------------------------------------------------------------------------------
 #
-#   build/scripts/mutants.sh                       # the default set, below
-#   build/scripts/mutants.sh deep_causality_linear # one crate, all files
-#   build/scripts/mutants.sh deep_causality_linear src/algorithms/kernels.rs
+#   scripts/mutants.sh                       # the default set, below
+#   scripts/mutants.sh deep_causality_linear # one crate, all files
+#   scripts/mutants.sh deep_causality_linear src/algorithms/kernels.rs
 #
 # Equivalent mutants are excluded in //.cargo/mutants.toml, each with its reason. A survivor not
 # listed there is a real gap.
@@ -48,7 +48,7 @@ if ! command -v cargo-mutants >/dev/null 2>&1; then
     exit 1
 fi
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 CRATE="${1:-}"

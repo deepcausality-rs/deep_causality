@@ -4,8 +4,7 @@
  */
 
 use crate::{
-    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
-    NoConstraint, Pure, Satisfies,
+    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, Pure,
 };
 use alloc::collections::LinkedList;
 
@@ -13,14 +12,12 @@ use alloc::collections::LinkedList;
 /// for the `LinkedList<T>` type constructor. It allows `LinkedList` to be used with generic
 /// functional programming traits like `Functor`, `Applicative`, `Foldable`, and `Monad`.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `LinkedListWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `LinkedListWitness` places no bound on `T`.
 pub struct LinkedListWitness;
 
 impl HKT for LinkedListWitness {
-    type Constraint = NoConstraint;
-
     /// Specifies that `LinkedListWitness` represents the `LinkedList<T>` type constructor.
     type Type<T> = LinkedList<T>;
 }
@@ -30,8 +27,6 @@ impl Functor<LinkedListWitness> for LinkedListWitness {
     /// Implements the `fmap` operation for `LinkedList<T>`.
     fn fmap<A, B, Func>(m_a: LinkedList<A>, f: Func) -> LinkedList<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         m_a.into_iter().map(f).collect()
@@ -52,10 +47,7 @@ impl Foldable<LinkedListWitness> for LinkedListWitness {
 // Implementation of Pure for LinkedListWitness
 impl Pure<LinkedListWitness> for LinkedListWitness {
     /// Lifts a pure value into a `LinkedList` containing only that value.
-    fn pure<T>(value: T) -> LinkedList<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> LinkedList<T> {
         let mut list = LinkedList::new();
         list.push_back(value);
         list
@@ -67,9 +59,8 @@ impl Applicative<LinkedListWitness> for LinkedListWitness {
     /// Applies a list of functions to a list of values.
     fn apply<A, B, Func>(f_ab: LinkedList<Func>, f_a: LinkedList<A>) -> LinkedList<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         f_ab.into_iter()
             .flat_map(|mut f_val| {
@@ -86,8 +77,6 @@ impl Monad<LinkedListWitness> for LinkedListWitness {
     /// Implements the `bind` (or `flat_map`) operation for `LinkedList<T>`.
     fn bind<A, B, Func>(m_a: LinkedList<A>, f: Func) -> LinkedList<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> LinkedList<B>,
     {
         m_a.into_iter().flat_map(f).collect()

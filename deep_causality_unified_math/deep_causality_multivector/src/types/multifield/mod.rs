@@ -48,22 +48,33 @@ use deep_causality_tensor::CausalTensor;
 ///
 /// # Type Parameters
 ///
-/// * `T` - The scalar type (typically `f32` or `f64`).
+/// * `A` - The coefficient type carried in the tensor (typically `f32` or `f64`).
+/// * `S` - The scalar type of the grid spacing `dx`, defaulting to `A`.
+///
+/// The two are separate because spacing describes the grid rather than the field living on it,
+/// so a functorial map of the coefficients must leave it alone. `CausalMultiField<T>` still means
+/// what it always did: the default makes `S` equal `A`. Only the HKT witness instantiates them
+/// differently, mapping `A` while `S` stays fixed to the witness's own parameter.
 ///
 /// # Memory Layout
 ///
 /// Shape: `[Nx, Ny, Nz, Matrix_Dim, Matrix_Dim]`
 #[derive(Debug, Clone, PartialEq)]
-pub struct CausalMultiField<T> {
+pub struct CausalMultiField<A, S = A> {
     /// Storage: [Nx, Ny, Nz, Matrix_Dim, Matrix_Dim]
     /// Stored entirely in Matrix Isomorphism representation
-    pub(crate) data: CausalTensor<T>,
+    pub(crate) data: CausalTensor<A>,
 
     /// The metric signature of the underlying Clifford algebra
     pub(crate) metric: Metric,
 
-    /// Grid spacing for differential operators [dx, dy, dz]
-    pub(crate) dx: [T; 3],
+    /// Grid spacing for differential operators [dx, dy, dz].
+    ///
+    /// Typed by `S`. Spacing describes the *grid*, not the
+    /// field living on it, so a functorial map of the coefficients must leave it alone. When
+    /// `A` and `S` coincide, which is every use outside the HKT witness, `S` defaults to `A`
+    /// and `CausalMultiField<T>` means exactly what it did before.
+    pub(crate) dx: [S; 3],
 
     /// Grid shape [Nx, Ny, Nz]
     pub(crate) shape: [usize; 3],

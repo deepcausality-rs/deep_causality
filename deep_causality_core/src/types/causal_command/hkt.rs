@@ -4,10 +4,9 @@
  */
 
 use super::{CausalCommand, CausalCommandWitness};
-use deep_causality_haft::{Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Functor, HKT};
 
 impl HKT for CausalCommandWitness {
-    type Constraint = NoConstraint;
     type Type<T> = CausalCommand<T>;
 }
 
@@ -16,8 +15,6 @@ impl Functor<CausalCommandWitness> for CausalCommandWitness {
     /// Total, identity- and composition-preserving (the precondition `Free` needs of its functor).
     fn fmap<A, B, Func>(m_a: CausalCommand<A>, mut f: Func) -> CausalCommand<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         match m_a {

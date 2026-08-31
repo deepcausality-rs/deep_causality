@@ -61,20 +61,20 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 // The struct bound `R: RealField` is not what stops a witness here. `R` is not the
 // parameter a functor over this type would map; `M`, the matrix element, is, and `M`
 // carries no struct-level bound. A witness over `M` with `R` fixed compiles on stable
-// today, with the GAT where-clause still in place:
+// today:
 //
 //     pub struct LgfOverM<G: GaugeGroup, const D: usize, R: RealField>(PhantomData<(G, R)>);
 //     impl<G: GaugeGroup, const D: usize, R: RealField> HKT for LgfOverM<G, D, R> {
-//         type Constraint = NoConstraint;
-//         type Type<T> = LatticeGaugeField<G, D, T, R> where T: Satisfies<NoConstraint>;
+//         type Type<T> = LatticeGaugeField<G, D, T, R>;
 //     }
 //
 // What stops `Functor` is that `fmap` must rebuild each `LinkVariable<G, B, R>`, which
-// needs `B: Field + Copy + Default + PartialOrd + Debug`. The trait gives the body only
-// `B: Satisfies<F::Constraint>`, and `Satisfies` is an empty marker: it admits a type
-// without granting any capability over it, so the body cannot do the arithmetic. Dropping
-// the GAT where-clause does not change that, and neither does the next-generation trait
-// solver, measured on `rustc 1.100.0-nightly (bff8e12ff 2026-08-26)`.
+// needs `B: Field + Copy + Default + PartialOrd + Debug`. The trait gives the body no
+// bound on `B` at all, so the body cannot do the arithmetic. An earlier version of this
+// note blamed the element marker the trait used to carry; that marker is gone, and its
+// removal changed nothing here, because an empty marker never granted a capability
+// either. The next-generation trait solver does not change it, measured on
+// `rustc 1.100.0-nightly (bff8e12ff 2026-08-26)`.
 //
 // The inherent methods below are therefore the right design rather than a stopgap: they
 // name the real bounds, which the compiler enforces and no downstream crate can forge.

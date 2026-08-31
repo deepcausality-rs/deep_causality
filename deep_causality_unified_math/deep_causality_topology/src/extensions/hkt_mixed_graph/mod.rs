@@ -10,16 +10,16 @@
 //! higher-kinded-type machinery as `Graph` and `Hypergraph`.
 
 use crate::MixedGraph;
-use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{CoMonad, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// HKT witness for [`MixedGraph`]: `Type<T> = MixedGraph<T>`.
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `MixedGraph<T>` carries no element bound, and the categorical operations here move elements
 /// without computing on them: `fmap` maps `A` to an unrelated `B`, and `extend` hands a cursor to a
 /// closure. Constraining the element type would forbid mapping a graph of labels to a graph of scores, which is legitimate and
-/// works today. `NoConstraint` is the accurate statement, not a placeholder for a bound that
+/// works today. The absence is deliberate; it is not standing in for a bound that
 /// belongs here.
 ///
 /// Operations that do compute on elements live on the concrete types and carry real trait bounds
@@ -27,15 +27,12 @@ use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 pub struct MixedGraphWitness;
 
 impl HKT for MixedGraphWitness {
-    type Constraint = NoConstraint;
     type Type<T> = MixedGraph<T>;
 }
 
 impl Functor<MixedGraphWitness> for MixedGraphWitness {
     fn fmap<A, B, F>(fa: MixedGraph<A>, f: F) -> MixedGraph<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_data = CausalTensorWitness::fmap(fa.data, f);
@@ -51,7 +48,7 @@ impl Functor<MixedGraphWitness> for MixedGraphWitness {
 impl CoMonad<MixedGraphWitness> for MixedGraphWitness {
     fn extract<A>(fa: &MixedGraph<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.data
             .as_slice()
@@ -63,8 +60,7 @@ impl CoMonad<MixedGraphWitness> for MixedGraphWitness {
     fn extend<A, B, Func>(fa: &MixedGraph<A>, mut f: Func) -> MixedGraph<B>
     where
         Func: FnMut(&MixedGraph<A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         let size = fa.num_vertices;
         let shape = fa.data.shape().to_vec();

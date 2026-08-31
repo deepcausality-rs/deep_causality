@@ -5,8 +5,7 @@
 
 use crate::Dual;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
-    Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, Semigroupal,
 };
 
 /// HKT witness for [`Dual`], a functor over its component type.
@@ -16,7 +15,6 @@ use deep_causality_haft::{
 pub struct DualWitness;
 
 impl HKT for DualWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Dual<T>;
 }
 
@@ -27,8 +25,6 @@ impl Functor<DualWitness> for DualWitness {
     /// This is the pair functor and carries no chain rule; see the module docs.
     fn fmap<A, B, F>(fa: Dual<A>, mut f: F) -> Dual<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         Dual {
@@ -42,7 +38,6 @@ impl Foldable<DualWitness> for DualWitness {
     /// Folds over the channels in the order `re`, `du`.
     fn fold<A, B, F>(fa: Dual<A>, init: B, mut f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         let acc = f(init, fa.re);
@@ -61,9 +56,6 @@ impl Semigroupal<DualWitness> for DualWitness {
     /// `Dual { re: (fa.re, fb.du), du: (fa.du, fb.re) }` fails the left unit law.
     fn zip_with<A, B, C, F>(fa: Dual<A>, fb: Dual<B>, mut f: F) -> Dual<C>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         Dual {

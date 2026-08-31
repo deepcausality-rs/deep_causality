@@ -16,7 +16,7 @@ use deep_causality_num::{Gf2, NaturalNumber};
 ///
 /// # Why the name is not `Chain`
 ///
-/// `deep_causality_topology::Chain<T>` is a different object: a *weighted* simplicial chain holding
+/// `deep_causality_topology::Chain<R, G>` is a different object: a *weighted* simplicial chain holding
 /// an `Arc<SimplicialComplex<T>>` and a `CsrMatrix<T>` of ring-valued weights. This one has
 /// coefficients in 𝔽₂, one bit each, and needs no complex to be well formed. Two names for two
 /// things.

@@ -5,8 +5,17 @@
 
 //! HKT3 witness and trait implementations for GaugeField.
 //!
-//! This module provides MonoidalMerge and ParametricMonad implementations for GaugeField,
-//! enabling current-field coupling and gauge transformation operations.
+//! This module provides `GaugeFieldWitness` and the gauge-theoretic operators around it: the
+//! Stokes adjunction, curvature, and the lattice gauge action.
+//!
+//! `GaugeFieldWitness` carries inherent methods only. It implements no `deep_causality_haft`
+//! trait, and an earlier version of this line claiming an `HKT3Unbound` witness was wrong: no
+//! such impl exists in the crate. The reason it does not is below.
+//!
+//! It once carried `MonoidalMerge` and `ParametricMonad` impls as well. Both were laws-free
+//! stubs and were deleted in `7ec185d49`; the `MonoidalMerge` one is used as the worked
+//! cautionary example in `deep_causality_haft::lax_monoidal`. Do not reintroduce either
+//! without law tests.
 //!
 //! # Architectural Note
 //!
@@ -15,7 +24,7 @@
 //! uniform constraint for all three type parameters.
 //!
 //! We work around this by:
-//! 1. Implementing HKT3Unbound with NoConstraint (allowing any types)
+//! 1. Declaring the witness with no element bound, so any types are allowed
 //! 2. Providing type-safe operations through specialized methods
 //! 3. Using concrete GaugeField operations that enforce G: GaugeGroup at call sites
 

@@ -79,12 +79,9 @@ fn test_exterior_derivative_0_form() {
     let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
 
     assert_eq!(dform.degree(), 1);
-    assert_eq!(dform.coefficients().as_slice().len(), 3);
-
-    // Check first edge value roughly
-    // Exact values depend on builder sorting, but we expect non-zero derivative
-    let coeffs = dform.coefficients().as_slice();
-    assert!(coeffs.iter().any(|&x| x != 0.0));
+    // The comment above already derives the answer; assert it instead of "some entry is
+    // non-zero", which any wrong-but-non-zero result satisfies.
+    assert_eq!(dform.coefficients().as_slice(), &[1.0f64, 2.0, 1.0]);
 }
 
 #[test]
@@ -112,8 +109,12 @@ fn test_exterior_derivative_beyond_coboundary() {
 
     let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
 
-    // Should return zero form
+    // "Should return zero form" was asserted only as a degree. Assert the zero as well.
     assert_eq!(dform.degree(), 4);
+    assert!(
+        dform.coefficients().as_slice().iter().all(|&x| x == 0.0),
+        "a form beyond the coboundary range is zero"
+    );
 }
 
 #[test]
@@ -128,6 +129,10 @@ fn test_boundary_placeholder() {
 
     let boundary = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(boundary.grade(), 0);
+    assert!(
+        boundary.weights().values().is_empty(),
+        "an empty 1-chain has an empty boundary"
+    );
 }
 
 #[test]
@@ -135,12 +140,17 @@ fn test_boundary_0_chain() {
     let complex = simple_complex();
     let ctx = StokesContext::new(complex.clone());
 
-    // 0-chain (vertices) - boundary should be empty
-    let weights: CsrMatrix<f64> = CsrMatrix::new();
+    // A 0-chain that actually carries weight, so the k == 0 early return is exercised rather
+    // than an empty input trivially producing an empty output.
+    let weights = CsrMatrix::from_triplets(1, 3, &[(0, 0, 5.0f64)]).unwrap();
     let chain = Chain::new(Arc::new(complex), 0, weights);
 
     let boundary = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(boundary.grade(), 0);
+    assert!(
+        boundary.weights().values().is_empty(),
+        "the boundary of a 0-chain is empty"
+    );
 }
 
 #[test]
@@ -201,8 +211,11 @@ fn test_adjunction_unit() {
     // Unit: A → R(L(A)) = Chain<DifferentialForm<A>>
     let chain = <StokesAdjunction as Adjunction<_, _, StokesContext<f64>>>::unit(&ctx, 42.0f64);
 
-    // Should produce a chain of grade 0
+    // The grade alone never observes the value 42.0 reaching the chain.
     assert_eq!(chain.grade(), 0);
+    let form = &chain.weights().values()[0];
+    assert_eq!(form.degree(), 0);
+    assert_eq!(form.coefficients().as_slice(), &[42.0f64]);
 }
 
 #[test]
@@ -221,7 +234,10 @@ fn test_adjunction_left_adjunct() {
         },
     );
 
+    // `f` sums the coefficients of the form `unit` built, which is [5.0]. Asserting only the
+    // grade means the closure's result is never observed at all.
     assert_eq!(chain.grade(), 0);
+    assert_eq!(chain.weights().values(), &vec![5.0f64]);
 }
 
 #[test]
@@ -291,7 +307,10 @@ fn test_boundary_1_chain_non_trivial() {
 
     let bd = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(bd.grade(), 0);
-    // For a triangle, summing all edge boundaries with +1 weights yields a chain at vertices.
+    // d(e01) = v1 - v0, d(e02) = v2 - v0, d(e12) = v2 - v1. With unit weights the sum is
+    // -2*v0 + 0*v1 + 2*v2, so v1 cancels and only columns 0 and 2 carry weight.
+    assert_eq!(bd.weights().col_indices(), &vec![0usize, 2]);
+    assert_eq!(bd.weights().values(), &vec![-2.0f64, 2.0]);
 }
 
 #[test]
@@ -398,10 +417,9 @@ fn test_exterior_derivative_accumulates_signed_sum() {
     let form = DifferentialForm::from_coefficients(0, 2, vec![0.0, 10.0, 100.0]);
     let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
 
-    let coeffs = dform.coefficients().as_slice();
-    assert_eq!(coeffs.len(), 3);
-    // At least one edge derivative is non-zero -> the multiply-add ran.
-    assert!(coeffs.iter().any(|&x| x != 0.0));
+    // df(e01) = 10 - 0, df(e02) = 100 - 0, df(e12) = 100 - 10. "At least one is non-zero"
+    // is satisfied by any wrong answer that is not identically zero.
+    assert_eq!(dform.coefficients().as_slice(), &[10.0f64, 100.0, 90.0]);
 }
 
 #[test]
@@ -423,9 +441,11 @@ fn test_boundary_accumulates_signed_sum() {
 
     let bd = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(bd.grade(), 0);
-    // The boundary of a weighted edge chain yields vertex weights via the signed sum.
-    let vals = bd.weights().values();
-    assert!(vals.iter().any(|&x| x != 0.0));
+    // Weights 1, 2, 3 on e01, e02, e12:
+    //   1*(v1 - v0) + 2*(v2 - v0) + 3*(v2 - v1) = -3*v0 - 2*v1 + 5*v2
+    // `any(|x| x != 0.0)` is satisfied by any non-zero output at all, including a wrong one.
+    assert_eq!(bd.weights().col_indices(), &vec![0usize, 1, 2]);
+    assert_eq!(bd.weights().values(), &vec![-3.0f64, -2.0, 5.0]);
 }
 
 #[test]
@@ -448,9 +468,12 @@ fn test_boundary_partial_chain_misses_some_columns() {
 
     let bd = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(bd.grade(), 0);
-    // A single weighted edge contributes to its two endpoint vertices only.
-    let vals = bd.weights().values();
-    assert!(vals.iter().any(|&x| x != 0.0));
+    // A single weighted edge contributes to its two endpoint vertices only:
+    //   2*(v1 - v0) = -2*v0 + 2*v1, so exactly columns 0 and 1 are touched.
+    // The comment this test carried said as much, while the assertion allowed any non-zero
+    // output including one that touched all three columns.
+    assert_eq!(bd.weights().col_indices(), &vec![0usize, 1]);
+    assert_eq!(bd.weights().values(), &vec![-2.0f64, 2.0]);
 }
 
 #[test]
@@ -468,9 +491,10 @@ fn test_exterior_derivative_short_coefficients_skips_out_of_range_columns() {
     let form = DifferentialForm::from_coefficients(0, 2, vec![7.0]);
     let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
 
-    // Result is still a well-formed 1-form on the 3 edges.
+    // Result is still a well-formed 1-form on the 3 edges. Only vertex 0 is in range, so
+    //   df(e01) = 0 - 7 = -7, df(e02) = 0 - 7 = -7, df(e12) = 0 - 0 = 0.
     assert_eq!(dform.degree(), 1);
-    assert_eq!(dform.coefficients().as_slice().len(), 3);
+    assert_eq!(dform.coefficients().as_slice(), &[-7.0f64, -7.0, 0.0]);
     // Every entry is finite (only the in-range column 0 ever contributes).
     assert!(
         dform
@@ -482,11 +506,11 @@ fn test_exterior_derivative_short_coefficients_skips_out_of_range_columns() {
 }
 
 #[test]
-fn test_boundary_of_a_chain_supported_off_the_operator_columns_is_zero() {
-    // The inner accumulation looks each of the operator's column indices up in
-    // the chain's weight map. A chain whose only stored weight sits at an index
-    // the operator never names misses on every lookup, so no row accumulates and
-    // the resulting chain carries no stored entry.
+fn test_boundary_of_a_chain_weighted_on_a_single_named_edge() {
+    // A chain carrying a single weight on one edge. The name and this comment used to say the
+    // weight sat at an index the operator never names, so every lookup missed and the boundary
+    // came back empty. That was a description of the off-by-one in the operator lookup, not of
+    // the mathematics: column 2 is edge e12, which the boundary operator does name.
     let complex = simple_complex();
     let ctx = StokesContext::new(complex.clone());
 
@@ -495,8 +519,9 @@ fn test_boundary_of_a_chain_supported_off_the_operator_columns_is_zero() {
 
     let bd = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(bd.grade(), 0);
-    assert!(
-        bd.weights().values().is_empty(),
-        "no column was found, so every row's dot product stayed zero"
-    );
+    // Column 2 is edge e12, which the boundary operator does name: d(5*e12) = -5*v1 + 5*v2.
+    // The empty result this test used to assert, and the reasoning above it, describe a
+    // lookup that misses when it should hit.
+    assert_eq!(bd.weights().col_indices(), &vec![1usize, 2]);
+    assert_eq!(bd.weights().values(), &vec![-5.0f64, 5.0]);
 }

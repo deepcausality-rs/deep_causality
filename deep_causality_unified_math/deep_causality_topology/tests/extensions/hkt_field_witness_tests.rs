@@ -74,7 +74,7 @@ fn cell_field_fmap_changes_the_value_type() {
         labels.values(),
         &["1.9".to_string(), "2.9".to_string(), "3.1".to_string()]
     );
-    // A field of strings is legitimate, which is why the witness declares `NoConstraint`.
+    // A field of strings is legitimate, which the witness allows by placing no bound on the element.
 }
 
 #[test]

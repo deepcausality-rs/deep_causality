@@ -11,23 +11,19 @@
 //! the carrier here is a local witness over `Option` that does, transcribing the same φ and η.
 
 use deep_causality_haft::{
-    Convolutional, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint, Satisfies,
-    Semigroupal,
+    Convolutional, Functor, HKT, LaxMonoidal, MonoidalApplicative, Semigroupal,
 };
 
 /// A local witness over `Option`, carrying the same φ and η the Lean file transcribes.
 struct OptWitness;
 
 impl HKT for OptWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Option<T>;
 }
 
 impl Functor<OptWitness> for OptWitness {
     fn fmap<A, B, Func>(fa: Option<A>, f: Func) -> Option<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         fa.map(f)

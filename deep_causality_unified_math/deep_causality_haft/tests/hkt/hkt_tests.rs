@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT, HKT2, HKT3, HKT4, HKT5, NoConstraint, Placeholder};
+use deep_causality_haft::{HKT, HKT2, HKT3, HKT4, HKT5, Placeholder};
 
 // --- HKT (Arity 1) Tests ---
 
@@ -11,7 +11,6 @@ use deep_causality_haft::{HKT, HKT2, HKT3, HKT4, HKT5, NoConstraint, Placeholder
 struct TestOptionWitness;
 
 impl HKT for TestOptionWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Option<T>;
 }
 
@@ -28,7 +27,6 @@ fn test_hkt_option() {
 struct TestVecWitness;
 
 impl HKT for TestVecWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Vec<T>;
 }
 

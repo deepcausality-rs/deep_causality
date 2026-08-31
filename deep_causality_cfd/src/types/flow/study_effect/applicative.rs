@@ -6,16 +6,13 @@
 use crate::types::flow::study_effect::{StudyEffect, StudyEffectWitness};
 use crate::types::flow::study_error::StudyError;
 use crate::types::flow::study_warning::StudyWarningLog;
-use deep_causality_haft::{Applicative, LogAppend, NoConstraint, Pure, Satisfies};
+use deep_causality_haft::{Applicative, LogAppend, Pure};
 
 /// `pure`: lift a plain value into the effect with an empty warning log.
 impl Pure<StudyEffectWitness<StudyError, StudyWarningLog>>
     for StudyEffectWitness<StudyError, StudyWarningLog>
 {
-    fn pure<T>(value: T) -> StudyEffect<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> StudyEffect<T> {
         StudyEffect {
             inner: Ok(value),
             warnings: StudyWarningLog::default(),
@@ -32,8 +29,6 @@ impl Applicative<StudyEffectWitness<StudyError, StudyWarningLog>>
     where
         Func: FnMut(A) -> B,
         A: Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint>,
     {
         let mut merged = f_ab.warnings;
         merged.append(&mut m_a.warnings);

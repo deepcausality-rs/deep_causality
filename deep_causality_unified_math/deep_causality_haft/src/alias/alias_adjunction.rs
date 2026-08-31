@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Adjunction, HKT, Satisfies};
+use crate::{Adjunction, HKT};
 
 /// Alias trait for `Adjunction` providing more intuitive method names.
 ///
@@ -44,9 +44,7 @@ where
     #[inline]
     fn integrate<A, B, Func>(ctx: &Context, a: A, f: Func) -> R::Type<B>
     where
-        A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
-        B: Satisfies<R::Constraint>,
-        L::Type<A>: Satisfies<R::Constraint>,
+        A: Clone,
         Func: Fn(L::Type<A>) -> B,
     {
         Self::left_adjunct(ctx, a, f)
@@ -62,9 +60,8 @@ where
     #[inline]
     fn differentiate<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> Result<B, Self::Error>
     where
-        A: Satisfies<L::Constraint> + Clone,
-        B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
-        R::Type<B>: Satisfies<L::Constraint>,
+        A: Clone,
+        B: Clone,
         Func: FnMut(A) -> R::Type<B>,
     {
         Self::right_adjunct(ctx, la, f)

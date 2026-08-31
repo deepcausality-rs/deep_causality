@@ -29,14 +29,11 @@
 
 use crate::{CausalEffect, CausalEffectPropagationProcess, CausalityError, EffectLog};
 use core::marker::PhantomData;
-use deep_causality_haft::{
-    Applicative, Functor, HKT, HKT3, LogAppend, Monad, NoConstraint, Placeholder, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, Functor, HKT, HKT3, LogAppend, Monad, Placeholder, Pure};
 
 pub struct PropagatingEffectWitness<E, L>(Placeholder, PhantomData<E>, PhantomData<L>);
 
 impl<E, L> HKT for PropagatingEffectWitness<E, L> {
-    type Constraint = NoConstraint;
     type Type<T> = CausalEffectPropagationProcess<T, (), (), E, L>;
 }
 
@@ -47,8 +44,6 @@ impl<E, L> HKT3<E, L> for PropagatingEffectWitness<E, L> {
 impl Functor<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
     fn fmap<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
-        A: Satisfies<<Self as HKT>::Constraint>,
-        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> B,
     {
         // Total value functor. `Err` short-circuits (left zero; logs preserved). Otherwise the total
@@ -64,10 +59,7 @@ impl Functor<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
 }
 
 impl Pure<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
-    fn pure<T>(value: T) -> <Self as HKT>::Type<T>
-    where
-        T: Satisfies<<Self as HKT>::Constraint>,
-    {
+    fn pure<T>(value: T) -> <Self as HKT>::Type<T> {
         CausalEffectPropagationProcess::new(
             Ok(CausalEffect::value(value)),
             (),
@@ -83,9 +75,8 @@ impl Applicative<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
         mut f_a: <Self as HKT>::Type<A>,
     ) -> <Self as HKT>::Type<B>
     where
-        A: Satisfies<<Self as HKT>::Constraint> + Clone,
-        B: Satisfies<<Self as HKT>::Constraint>,
-        Func: Satisfies<<Self as HKT>::Constraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         let mut combined_logs = f_ab.logs;
         combined_logs.append(&mut f_a.logs);
@@ -109,8 +100,6 @@ impl Applicative<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
 impl Monad<Self> for PropagatingEffectWitness<CausalityError, EffectLog> {
     fn bind<A, B, Func>(m_a: <Self as HKT>::Type<A>, f: Func) -> <Self as HKT>::Type<B>
     where
-        A: Satisfies<<Self as HKT>::Constraint>,
-        B: Satisfies<<Self as HKT>::Constraint>,
         Func: FnOnce(A) -> <Self as HKT>::Type<B>,
     {
         match m_a.outcome {

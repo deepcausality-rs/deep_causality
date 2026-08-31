@@ -8,7 +8,6 @@ use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 fn triple_value<F>(m_a: F::Type<f64>) -> F::Type<f64>
 where
     F: Functor<F> + HKT,
-    f64: deep_causality_haft::Satisfies<F::Constraint>,
 {
     F::fmap(m_a, |x| x * 3.0)
 }

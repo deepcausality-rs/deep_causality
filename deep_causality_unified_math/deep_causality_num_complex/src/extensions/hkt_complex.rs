@@ -5,8 +5,7 @@
 
 use crate::Complex;
 use deep_causality_haft::{
-    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, NoConstraint,
-    Satisfies, Semigroupal,
+    Convolutional, Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, Semigroupal,
 };
 
 /// HKT witness for [`Complex`], a functor over its two component slots.
@@ -15,13 +14,12 @@ use deep_causality_haft::{
 /// `LaxMonoidal`, `Convolutional` and `MonoidalApplicative`, which is where `apply` comes from.
 ///
 /// `Pure`, `Applicative`, `Monad` and `CoMonad` are deliberately absent. Filling both slots from
-/// one moved value is the diagonal, and `Pure::pure` cannot reach it under `NoConstraint`;
+/// one moved value is the diagonal, and `Pure::pure` cannot reach it;
 /// `CoMonad::extend` has no canonical cursor to walk a product with. The module docs carry the
 /// argument in full.
 pub struct ComplexWitness;
 
 impl HKT for ComplexWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Complex<T>;
 }
 
@@ -30,8 +28,6 @@ impl Functor<ComplexWitness> for ComplexWitness {
     /// visits them in.
     fn fmap<A, B, F>(fa: Complex<A>, mut f: F) -> Complex<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         Complex {
@@ -45,7 +41,6 @@ impl Foldable<ComplexWitness> for ComplexWitness {
     /// Folds over the components in the order `re`, `im`.
     fn fold<A, B, F>(fa: Complex<A>, init: B, mut f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         let acc = f(init, fa.re);
@@ -63,9 +58,6 @@ impl Semigroupal<ComplexWitness> for ComplexWitness {
     /// two unit laws force `u = v = id`. See the module docs.
     fn zip_with<A, B, C, F>(fa: Complex<A>, fb: Complex<B>, mut f: F) -> Complex<C>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
         F: FnMut(A, B) -> C,
     {
         Complex {

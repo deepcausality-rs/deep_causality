@@ -5,7 +5,7 @@
 
 //! Tier 3 `NaturalIso2<F, G>` round-trip tests (arity-2 HKT2Unbound).
 
-use deep_causality_haft::{HKT2Unbound, NaturalIso2, NoConstraint, Satisfies};
+use deep_causality_haft::{HKT2Unbound, NaturalIso2};
 
 // =============================================================================
 // Fixtures
@@ -23,33 +23,23 @@ struct MyPair<A, B> {
 struct PairWitness;
 
 impl HKT2Unbound for PairWitness {
-    type Constraint = NoConstraint;
     type Type<A, B> = Pair<A, B>;
 }
 
 struct MyPairWitness;
 
 impl HKT2Unbound for MyPairWitness {
-    type Constraint = NoConstraint;
     type Type<A, B> = MyPair<A, B>;
 }
 
 struct PairMyPairIso;
 
 impl NaturalIso2<PairWitness, MyPairWitness> for PairMyPairIso {
-    fn to_target<A, B>(fa: Pair<A, B>) -> MyPair<A, B>
-    where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<A, B>(fa: Pair<A, B>) -> MyPair<A, B> {
         MyPair { a: fa.0, b: fa.1 }
     }
 
-    fn to_source<A, B>(ga: MyPair<A, B>) -> Pair<A, B>
-    where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<A, B>(ga: MyPair<A, B>) -> Pair<A, B> {
         Pair(ga.a, ga.b)
     }
 }

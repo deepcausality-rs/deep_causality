@@ -31,7 +31,7 @@
 /// and what makes the antisymmetry $R(u,v)w = -R(v,u)w$ statable at all.
 ///
 /// An earlier version made `curvature` generic in four independent type parameters bounded only by
-/// `Satisfies<P::Constraint>`. Under `NoConstraint` that admits every type, so the one real
+/// no element bound at all, so the one real
 /// implementation had to reinterpret its arguments through raw pointers to recover the concrete
 /// vector type. That made a safe function undefined behaviour for inputs its own signature
 /// accepted. Naming the space as an associated type removes the possibility: the implementation

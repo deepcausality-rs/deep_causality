@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Bifunctor, HKT2Unbound, HKT3Unbound, MonoidalMerge, NoConstraint};
+use crate::{Bifunctor, HKT2Unbound, HKT3Unbound, MonoidalMerge};
 
 // -----------------------------------------------------------------------------
 // Tuple 2 (Pair) Extensions
@@ -13,7 +13,6 @@ use crate::{Bifunctor, HKT2Unbound, HKT3Unbound, MonoidalMerge, NoConstraint};
 pub struct Tuple2Witness;
 
 impl HKT2Unbound for Tuple2Witness {
-    type Constraint = NoConstraint;
     type Type<A, B> = (A, B);
 }
 
@@ -35,7 +34,6 @@ impl Bifunctor<Tuple2Witness> for Tuple2Witness {
 pub struct Tuple3Witness;
 
 impl HKT3Unbound for Tuple3Witness {
-    type Constraint = NoConstraint;
     type Type<A, B, C> = (A, B, C);
 }
 

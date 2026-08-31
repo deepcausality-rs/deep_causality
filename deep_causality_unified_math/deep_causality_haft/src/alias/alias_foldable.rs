@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Foldable, HKT, Satisfies};
+use crate::{Foldable, HKT};
 
 /// Alias trait for `Foldable` providing more intuitive method names.
 ///
@@ -13,7 +13,6 @@ pub trait AliasFoldable<F: HKT>: Foldable<F> {
     #[inline]
     fn reduce<A, B, Func>(fa: F::Type<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<F::Constraint>,
         Func: FnMut(B, A) -> B,
     {
         Self::fold(fa, init, f)

@@ -8,7 +8,7 @@
 use deep_causality_haft::iso::test_support::{
     assert_natural_iso_naturality, assert_natural_iso_round_trip,
 };
-use deep_causality_haft::{Functor, HKT, NaturalIso, NoConstraint, OptionWitness, Satisfies};
+use deep_causality_haft::{Functor, HKT, NaturalIso, OptionWitness};
 
 // =============================================================================
 // Fixtures (inlined per Bazel `rust_test_suite` per-file model)
@@ -23,15 +23,12 @@ enum MyOption<T> {
 struct MyOptionWitness;
 
 impl HKT for MyOptionWitness {
-    type Constraint = NoConstraint;
     type Type<T> = MyOption<T>;
 }
 
 impl Functor<MyOptionWitness> for MyOptionWitness {
     fn fmap<A, B, Func>(m_a: MyOption<A>, mut f: Func) -> MyOption<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         match m_a {
@@ -45,20 +42,14 @@ impl Functor<MyOptionWitness> for MyOptionWitness {
 struct OptionMyOptionIso;
 
 impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
-    fn to_target<T>(fa: Option<T>) -> MyOption<T>
-    where
-        T: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<T>(fa: Option<T>) -> MyOption<T> {
         match fa {
             Some(t) => MyOption::MySome(t),
             None => MyOption::MyNone,
         }
     }
 
-    fn to_source<T>(ga: MyOption<T>) -> Option<T>
-    where
-        T: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<T>(ga: MyOption<T>) -> Option<T> {
         match ga {
             MyOption::MySome(t) => Some(t),
             MyOption::MyNone => None,
@@ -71,20 +62,14 @@ impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
 struct BrokenReverseIso;
 
 impl NaturalIso<OptionWitness, MyOptionWitness> for BrokenReverseIso {
-    fn to_target<T>(fa: Option<T>) -> MyOption<T>
-    where
-        T: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<T>(fa: Option<T>) -> MyOption<T> {
         match fa {
             Some(t) => MyOption::MySome(t),
             None => MyOption::MyNone,
         }
     }
 
-    fn to_source<T>(_ga: MyOption<T>) -> Option<T>
-    where
-        T: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<T>(_ga: MyOption<T>) -> Option<T> {
         None
     }
 }
@@ -95,17 +80,11 @@ impl NaturalIso<OptionWitness, MyOptionWitness> for BrokenReverseIso {
 struct LossyForwardIso;
 
 impl NaturalIso<OptionWitness, MyOptionWitness> for LossyForwardIso {
-    fn to_target<T>(_fa: Option<T>) -> MyOption<T>
-    where
-        T: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<T>(_fa: Option<T>) -> MyOption<T> {
         MyOption::MyNone
     }
 
-    fn to_source<T>(ga: MyOption<T>) -> Option<T>
-    where
-        T: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<T>(ga: MyOption<T>) -> Option<T> {
         match ga {
             MyOption::MySome(t) => Some(t),
             MyOption::MyNone => None,

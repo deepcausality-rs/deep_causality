@@ -25,8 +25,9 @@
 //! # Why `Pure`, `Applicative` and `Monad` are absent
 //!
 //! `Dual<A>` is a two-slot product, `A^S` for the two-element index set. Constructing one needs two
-//! values. `Pure::pure` receives one, by value, bounded only by `Satisfies`, an empty marker; an
-//! impl cannot add `Clone` (E0276) and a constraint marker cannot supply it (E0599). Filling both
+//! values. `Pure::pure` receives one, by value, and the trait declares no bound on it, so the body
+//! cannot duplicate it; an impl cannot add `Clone` of its own either, because that is stricter
+//! than the trait (E0276). Filling both
 //! slots from one moved value is the diagonal `Δ : A → A ⊗ A`, which in Rust *is* `Clone`. Since
 //! `Applicative<F>: Functor<F> + Pure<F>` and `Monad` names `Pure` too, both are out of reach for
 //! the same reason. [`MonoidalApplicative`] reaches `apply` without them, because `zip_with` pairs
@@ -62,7 +63,7 @@
 //! terms. The decision is recorded in
 //! `openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative/design.md`.
 //!
-//! # Why `NoConstraint`
+//! # Why the element type carries no bound
 //!
 //! These operations move components; they never compute with them. `fmap` maps `Dual<A>` to
 //! `Dual<B>` for unrelated `A` and `B`, and `zip_with` needs no arithmetic either. Everything that

@@ -5,12 +5,12 @@
 
 use crate::LatticeComplex;
 use deep_causality_algebra::RealField;
-use deep_causality_haft::{Foldable, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Foldable, Functor, HKT};
 use std::sync::Arc;
 
 /// HKT witness for [`LatticeField`], the functor over values on a lattice complex.
 ///
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `LatticeField<D, R, T>` carries no bound on its value type `T`, and the operations here move
 /// values without computing on them. The lattice's precision `R` is a separate parameter, so
@@ -22,14 +22,13 @@ use std::sync::Arc;
 /// Any lattice it invented would be the wrong one, so `bind(m, pure)` would not return `m` and
 /// monad right identity would fail by construction. `deep_causality_linear` set the precedent by
 /// implementing `Monad` only for `DenseVector`, the one container with no context to fabricate;
-/// see `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`.
+/// see `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md`.
 ///
 /// `CoMonad` is absent because `extract` needs a distinguished cell and `LatticeField` carries no
 /// cursor to name one.
 pub struct LatticeComplexWitness<const D: usize, R: RealField>(std::marker::PhantomData<R>);
 
 impl<const D: usize, R: RealField> HKT for LatticeComplexWitness<D, R> {
-    type Constraint = NoConstraint;
     type Type<T> = LatticeField<D, R, T>;
 }
 
@@ -72,8 +71,6 @@ impl<const D: usize, R: RealField> Functor<LatticeComplexWitness<D, R>>
     /// Maps the values, carrying the lattice across unchanged.
     fn fmap<A, B, F>(fa: LatticeField<D, R, A>, f: F) -> LatticeField<D, R, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         LatticeField {
@@ -88,7 +85,6 @@ impl<const D: usize, R: RealField> Foldable<LatticeComplexWitness<D, R>>
 {
     fn fold<A, B, F>(fa: LatticeField<D, R, A>, init: B, f: F) -> B
     where
-        A: Satisfies<NoConstraint>,
         F: FnMut(B, A) -> B,
     {
         fa.values.into_iter().fold(init, f)

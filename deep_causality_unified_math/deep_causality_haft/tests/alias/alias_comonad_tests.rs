@@ -3,22 +3,19 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{AliasCoMonad, CoMonad, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{AliasCoMonad, CoMonad, Functor, HKT};
 
 // Identity CoMonad
 #[derive(Debug, PartialEq, Clone)]
 struct Identity<T>(T);
 struct IdentityWitness;
 impl HKT for IdentityWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Identity<T>;
 }
 
 impl Functor<IdentityWitness> for IdentityWitness {
     fn fmap<A, B, Func>(m_a: Identity<A>, f: Func) -> Identity<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         // Identity Functor: just apply f to inner value
@@ -30,15 +27,14 @@ impl Functor<IdentityWitness> for IdentityWitness {
 impl CoMonad<IdentityWitness> for IdentityWitness {
     fn extract<A>(fa: &Identity<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.0.clone()
     }
 
     fn extend<A, B, F>(fa: &Identity<A>, mut f: F) -> Identity<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         F: FnMut(&Identity<A>) -> B,
     {
         Identity(f(fa))

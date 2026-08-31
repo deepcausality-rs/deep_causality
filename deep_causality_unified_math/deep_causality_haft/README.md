@@ -6,6 +6,18 @@
 Rust. This enables writing generic, abstract code that can operate over different container types like `Option<T>` and
 `Result<T, E>`.
 
+## Runnable examples
+
+The snippets in this document are written to teach one trait at a time and print their own output.
+The runnable examples take a domain problem instead, so their output differs from the snippets:
+
+```bash
+cargo run -p mathematics_examples --example haft_functor_examples        # data anonymization
+cargo run -p mathematics_examples --example haft_effect_system_examples  # audited transactions
+```
+
+`examples/mathematics_examples/applied_category_theory/README.md` lists all twelve.
+
 ## What are Higher-Kinded Types?
 
 In Rust, types like `Option<T>` and `Vec<T>` are generic over a type `T`. We can think of `Option` and `Vec` as "type
@@ -89,11 +101,7 @@ fn main() {
 }
 ```
 
-When you run the example via:
-
-`cargo run  --example haft_functor_example`
-
-You will see:
+Running that snippet prints:
 
 ```text 
 Original Option: Some(5)
@@ -256,17 +264,9 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
     println!("Sequenced outcome: {:?}", current_effect.value);
 ```
 
-When you run the example via:
-
-`cargo run  --example haft_effect_system_example`
-
-You will see:
+Running that snippet prints:
 
 ```text 
---- Type-Encoded Effect System Example (Arity 5) ---
-
-Initial effect (pure 10): MyCustomEffectType5 { value: 10, f1: None, f2: [], f3: [], f4: [] }
-
 Process Steps: 
   Log (Step 1): Operation A: Multiplied by 2
   Log (Step 2): Operation B: Added 5
@@ -396,25 +396,22 @@ The `deep_causality_haft::iso::test_support` module provides `assert_natural_iso
 ### Example: `NaturalIso` between `Option` and a structurally-equivalent twin
 
 ```rust,ignore
-use deep_causality_haft::{HKT, NaturalIso, NoConstraint, OptionWitness, Satisfies};
+use deep_causality_haft::{HKT, NaturalIso, OptionWitness};
 
 #[derive(Debug, Clone, PartialEq)]
 enum MyOption<T> { MySome(T), MyNone }
 
 struct MyOptionWitness;
 impl HKT for MyOptionWitness {
-    type Constraint = NoConstraint;
     type Type<T> = MyOption<T>;
 }
 
 struct OptionMyOptionIso;
 impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
-    fn to_target<T>(fa: Option<T>) -> MyOption<T>
-    where T: Satisfies<NoConstraint> + Satisfies<NoConstraint> {
+    fn to_target<T>(fa: Option<T>) -> MyOption<T> {
         match fa { Some(t) => MyOption::MySome(t), None => MyOption::MyNone }
     }
-    fn to_source<T>(ga: MyOption<T>) -> Option<T>
-    where T: Satisfies<NoConstraint> + Satisfies<NoConstraint> {
+    fn to_source<T>(ga: MyOption<T>) -> Option<T> {
         match ga { MyOption::MySome(t) => Some(t), MyOption::MyNone => None }
     }
 }

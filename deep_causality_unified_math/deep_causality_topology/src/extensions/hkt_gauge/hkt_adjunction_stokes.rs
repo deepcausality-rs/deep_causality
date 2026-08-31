@@ -16,7 +16,7 @@ use crate::types::chain::Chain;
 use crate::types::differential_form::DifferentialForm;
 use crate::{BaseTopology, SimplicialComplex};
 use deep_causality_haft::Pure; // Added Pure
-use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Adjunction, HKT};
 use deep_causality_linear::CsrMatrix;
 use deep_causality_linear::CsrMatrixWitness; // Added Witness
 use deep_causality_num::Float;
@@ -25,27 +25,26 @@ use std::sync::Arc;
 
 /// Witness for the exterior derivative d: Ω^k → Ω^(k+1).
 #[derive(Debug, Clone, Copy, Default)]
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `DifferentialForm<T>` carries no element bound, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct ExteriorDerivativeWitness;
 
 impl HKT for ExteriorDerivativeWitness {
-    type Constraint = NoConstraint;
     type Type<T> = DifferentialForm<T>;
 }
 
 /// Witness for the boundary operator ∂: C_k → C_(k-1).
 #[derive(Debug, Clone, Copy, Default)]
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Chain<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 ///
@@ -58,7 +57,6 @@ impl HKT for ExteriorDerivativeWitness {
 pub struct BoundaryWitness<R>(core::marker::PhantomData<R>);
 
 impl<R> HKT for BoundaryWitness<R> {
-    type Constraint = NoConstraint;
     type Type<G> = Chain<R, G>;
 }
 
@@ -130,8 +128,7 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
     /// Semantically, this maps a value `a` to a 0-chain where each vertex has the 0-form `a`.
     fn unit<A>(ctx: &StokesContext<R>, a: A) -> Chain<R, DifferentialForm<A>>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        DifferentialForm<A>: Satisfies<NoConstraint>,
+        A: Clone,
     {
         // Dimension of the complex
         let dim = ctx.dim();
@@ -161,8 +158,7 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
         lrb: DifferentialForm<Chain<R, B>>,
     ) -> Result<B, Self::Error>
     where
-        B: Satisfies<NoConstraint> + Clone,
-        Chain<R, B>: Satisfies<NoConstraint>,
+        B: Clone,
     {
         // Integration: collapse form of chains to scalar (B).
         // The counit evaluation doesn't strictly depend on the topological context
@@ -192,9 +188,7 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
     /// Given `f: DifferentialForm<A> → B`, produce `g: A → Chain<B>`
     fn left_adjunct<A, B, Func>(ctx: &StokesContext<R>, a: A, f: Func) -> Chain<R, B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        DifferentialForm<A>: Satisfies<NoConstraint>,
+        A: Clone,
         Func: Fn(DifferentialForm<A>) -> B,
     {
         // 1. Create a representative 0-form from 'a'
@@ -224,9 +218,8 @@ impl<R> Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<
         mut f: Func,
     ) -> Result<B, Self::Error>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Clone,
-        Chain<R, B>: Satisfies<NoConstraint>,
+        A: Clone,
+        B: Clone,
         Func: FnMut(A) -> Chain<R, B>,
     {
         // Extract value 'a' from the form 'la'. Non-empty by construction, but that is a
@@ -342,7 +335,12 @@ impl StokesAdjunction {
             return Chain::new(ctx.complex_arc(), k - 1, empty_weights);
         }
 
-        let boundary_op = &boundary_ops[k];
+        // `boundary_operators[i]` holds the operator that maps `C_{i+1} -> C_i`, so the operator
+        // for a k-chain is at index `k - 1`. This is the convention `boundary_operator_impl`
+        // states: it returns `boundary_operators[k - 1]` and rejects `k == 0` outright. Reading
+        // index `k` here applied the *next* operator up, which for a 1-chain on a triangle meant
+        // dotting the chain against the triangle-to-edge matrix instead of the edge-to-vertex one.
+        let boundary_op = &boundary_ops[k - 1];
         let shape = boundary_op.shape();
         let nrows = shape.0; // num_(k-1)_simplices
 

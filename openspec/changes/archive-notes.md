@@ -121,7 +121,8 @@ The design notes moved too, and archived changes link to them.
 |---|---|
 | `openspec/notes/linear/` | `openspec/notes/archive/linear/` |
 | `openspec/notes/homology/` | `openspec/notes/archive/homology/` |
-| `openspec/notes/linear/HKT-LAW-FINDINGS.md` | `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` |
+| `openspec/notes/linear/HKT-LAW-FINDINGS.md` | `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` |
+| `openspec/notes/unified_math/` | `openspec/notes/archive/unified_math/` |
 | `specs/` | `openspec/` |
 
 ## 4. The unified-math consolidation, 2026-08-30
@@ -146,7 +147,7 @@ The twelve crates that stayed at the root are `deep_causality`, `_algorithms`, `
 `ultragraph`. A path beginning with one of those is still correct as written.
 
 The assessment that preceded the move is
-`openspec/notes/unified_math/deep_causality_unified_math.md`.
+`openspec/notes/archive/unified_math/deep_causality_unified_math.md`.
 
 ## 5. Keeping this file true
 

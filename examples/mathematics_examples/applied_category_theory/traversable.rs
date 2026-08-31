@@ -5,9 +5,10 @@
 
 //! Traversable Example
 //!
-//! NOTE: VecWitness Traversable is currently disabled due to constraint system
-//! complexity. This example demonstrates OptionWitness and ResultWitness Traversable
-//! with simple manual flipping patterns.
+//! `VecWitness` carries no `Traversable`. The bound it would need admits only three of the
+//! nineteen inner witnesses the crate ships, which is why it was withheld rather than added;
+//! the "constraint system" an earlier version of this note blamed has since been removed
+//! outright. This example uses `OptionWitness` and `ResultWitness`.
 
 use deep_causality_haft::{Functor, OptionWitness};
 

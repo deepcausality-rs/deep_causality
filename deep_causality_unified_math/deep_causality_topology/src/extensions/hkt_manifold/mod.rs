@@ -9,7 +9,7 @@
 //! `Manifold<K, F>` has no struct-level bound on `F`), the witness types implement the
 //! full `deep_causality_haft` trait surface on stable Rust: `HKT`, `Functor`, `Foldable`,
 //! `Pure`, `Monad`, `CoMonad`, and (for the simplicial witness) `Applicative`. All impls
-//! use `T: Satisfies<NoConstraint>` only — no `RealField` bounds at the witness layer.
+//! carry no element bound at all, and no `RealField` bound at the witness layer.
 //!
 //! Cross-algebra composition is supported by design: `F` may be a scalar (`f64`, `f32`,
 //! `Float106`), a multivector from `deep_causality_multivector`, a tensor from
@@ -19,9 +19,7 @@
 use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::{Manifold, SimplicialComplex};
-use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
@@ -29,11 +27,11 @@ use std::marker::PhantomData;
 // PART 1: Simplicial witness — `ManifoldWitness<C>` / `SimplicialManifoldWitness<C>`
 // ============================================================================
 
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct ManifoldWitness<C>(PhantomData<C>);
@@ -44,11 +42,8 @@ pub type SimplicialManifoldWitness<C> = ManifoldWitness<C>;
 impl<C> HKT for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex,
-    C: Satisfies<NoConstraint>
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
-    type Constraint = NoConstraint;
     type Type<T> = Manifold<SimplicialComplex<C>, T>;
 }
 
@@ -56,18 +51,13 @@ impl<C> Functor<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone,
     <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint>
-        + Clone
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: Clone + deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     fn fmap<A, B, Func>(
         m_a: Manifold<SimplicialComplex<C>, A>,
         f: Func,
     ) -> Manifold<SimplicialComplex<C>, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         // Metric is preserved across fmap: under Option 2C, `K::Metric` is a single
@@ -85,13 +75,10 @@ where
 impl<C> Foldable<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex,
-    C: Satisfies<NoConstraint>
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     fn fold<A, B, Func>(fa: Manifold<SimplicialComplex<C>, A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.data.into_vec().into_iter().fold(init, f)
@@ -101,15 +88,9 @@ where
 impl<C> Pure<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Default,
-    C: Satisfies<NoConstraint>
-        + Default
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: Default + deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
-    fn pure<T>(value: T) -> Manifold<SimplicialComplex<C>, T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> Manifold<SimplicialComplex<C>, T> {
         let tensor = CausalTensor::from_vec(vec![value], &[1]);
         Manifold {
             complex: Default::default(),
@@ -124,19 +105,13 @@ impl<C> Monad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone + Default,
     <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint>
-        + Clone
-        + Default
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: Clone + Default + deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     fn bind<A, B, Func>(
         m_a: Manifold<SimplicialComplex<C>, A>,
         mut f: Func,
     ) -> Manifold<SimplicialComplex<C>, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
     {
         let mut result_data = Vec::with_capacity(m_a.data.len());
@@ -168,20 +143,15 @@ impl<C> Applicative<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone + Default,
     <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint>
-        + Clone
-        + Default
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: Clone + Default + deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     fn apply<A, B, Func>(
         f_ab: Manifold<SimplicialComplex<C>, Func>,
         f_a: Manifold<SimplicialComplex<C>, A>,
     ) -> Manifold<SimplicialComplex<C>, B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint> + FnMut(A) -> B,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
         let shape = f_a.data.shape().to_vec();
         let funcs = f_ab.data.into_vec();
@@ -208,14 +178,11 @@ impl<C> CoMonad<ManifoldWitness<C>> for ManifoldWitness<C>
 where
     SimplicialComplex<C>: ChainComplex + Clone,
     <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
-    C: Satisfies<NoConstraint>
-        + Clone
-        + deep_causality_algebra::RealField
-        + deep_causality_num::FromPrimitive,
+    C: Clone + deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
 {
     fn extract<A>(fa: &Manifold<SimplicialComplex<C>, A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         if fa.data.is_empty() {
             panic!("Cannot extract from empty Manifold");
@@ -233,8 +200,7 @@ where
     ) -> Manifold<SimplicialComplex<C>, B>
     where
         Func: FnMut(&Manifold<SimplicialComplex<C>, A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         let len = fa.data.len();
         let shape = fa.data.shape().to_vec();
@@ -259,32 +225,29 @@ where
 // PART 2: Generic witness — `GenericManifoldWitness<K>` over any `CellularComplex`
 // ============================================================================
 
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct GenericManifoldWitness<K>(PhantomData<K>);
 
 impl<K> HKT for GenericManifoldWitness<K>
 where
-    K: CellularComplex + Satisfies<NoConstraint>,
+    K: CellularComplex,
 {
-    type Constraint = NoConstraint;
     type Type<T> = Manifold<K, T>;
 }
 
 impl<K> Functor<GenericManifoldWitness<K>> for GenericManifoldWitness<K>
 where
-    K: CellularComplex + Satisfies<NoConstraint> + Clone,
+    K: CellularComplex + Clone,
     K::Metric: Clone,
 {
     fn fmap<A, B, Func>(m_a: Manifold<K, A>, f: Func) -> Manifold<K, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let new_data_tensor = CausalTensorWitness::fmap(m_a.data, f);

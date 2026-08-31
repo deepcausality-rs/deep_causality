@@ -319,7 +319,7 @@ bazel test  //...
 ```
 
 Every example is a Bazel binary — except `example_ml_rca` in `causal_discovery_examples`, which is
-deliberately Cargo-only (it is listed in `CARGO_ONLY` in `build/scripts/check_examples.sh`, so the
+deliberately Cargo-only (it is listed in `CARGO_ONLY` in `scripts/check_examples.sh`, so the
 example-coverage check does not expect a Bazel target for it). The two commands in the
 [Examples](#examples) section above therefore have Bazel equivalents:
 

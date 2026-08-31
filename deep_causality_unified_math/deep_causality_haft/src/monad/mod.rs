@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Functor, HKT, Pure, Satisfies};
+use crate::{Functor, HKT, Pure};
 
 pub(crate) mod comonad;
 pub(crate) mod monoidal_merge;
@@ -25,16 +25,14 @@ pub(crate) mod free_instances;
 ///
 /// Unlike the Haskell convention (`Monad: Applicative`), this trait extends `Functor + Pure`
 /// directly. A witness whose `Constraint` excludes function types cannot implement
-/// `Applicative`, because `apply` requires `Func: Satisfies<F::Constraint>`. Keeping `pure`
+/// `Applicative` for reasons of its own. Keeping `pure`
 /// in its own trait lets such a witness implement `Monad` regardless.
 ///
 /// Both `Applicative` and `Monad` share the same `pure` operation via the `Pure` trait.
 ///
-/// # Constraint Support
+/// # Element bounds
 ///
-/// The `bind` method requires types to satisfy the HKT's constraint. A witness that declares
-/// `NoConstraint` admits every element type; one that declares a marker admits only the types
-/// for which that marker is implemented.
+/// `bind` places no bound on the element types. Any `A` and any `B` are admitted.
 ///
 /// # Laws (Informal)
 ///
@@ -94,8 +92,6 @@ pub trait Monad<F: HKT>: Functor<F> + Pure<F> {
     /// ```
     fn bind<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> F::Type<B>;
 
     /// Flatten a nested structure into a single layer.
@@ -109,11 +105,7 @@ pub trait Monad<F: HKT>: Functor<F> + Pure<F> {
     /// # Returns
     ///
     /// A flattened effectful value (`F::Type<A>`).
-    fn join<A>(m_m_a: F::Type<F::Type<A>>) -> F::Type<A>
-    where
-        A: Satisfies<F::Constraint>,
-        F::Type<A>: Satisfies<F::Constraint>,
-    {
+    fn join<A>(m_m_a: F::Type<F::Type<A>>) -> F::Type<A> {
         Self::bind(m_m_a, |x| x)
     }
 }

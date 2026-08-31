@@ -5,7 +5,7 @@
 
 //! Tier 3 `NaturalIso4<F, G>` round-trip tests (arity-4 HKT4Unbound).
 
-use deep_causality_haft::{HKT4Unbound, NaturalIso4, NoConstraint, Satisfies};
+use deep_causality_haft::{HKT4Unbound, NaturalIso4};
 
 // =============================================================================
 // Fixtures
@@ -25,27 +25,19 @@ struct MyQuadruple<A, B, C, D> {
 struct QuadrupleWitness;
 
 impl HKT4Unbound for QuadrupleWitness {
-    type Constraint = NoConstraint;
     type Type<A, B, C, D> = Quadruple<A, B, C, D>;
 }
 
 struct MyQuadrupleWitness;
 
 impl HKT4Unbound for MyQuadrupleWitness {
-    type Constraint = NoConstraint;
     type Type<A, B, C, D> = MyQuadruple<A, B, C, D>;
 }
 
 struct QuadrupleMyQuadrupleIso;
 
 impl NaturalIso4<QuadrupleWitness, MyQuadrupleWitness> for QuadrupleMyQuadrupleIso {
-    fn to_target<A, B, C, D>(fa: Quadruple<A, B, C, D>) -> MyQuadruple<A, B, C, D>
-    where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<A, B, C, D>(fa: Quadruple<A, B, C, D>) -> MyQuadruple<A, B, C, D> {
         MyQuadruple {
             a: fa.0,
             b: fa.1,
@@ -54,13 +46,7 @@ impl NaturalIso4<QuadrupleWitness, MyQuadrupleWitness> for QuadrupleMyQuadrupleI
         }
     }
 
-    fn to_source<A, B, C, D>(ga: MyQuadruple<A, B, C, D>) -> Quadruple<A, B, C, D>
-    where
-        A: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<A, B, C, D>(ga: MyQuadruple<A, B, C, D>) -> Quadruple<A, B, C, D> {
         Quadruple(ga.a, ga.b, ga.c, ga.d)
     }
 }

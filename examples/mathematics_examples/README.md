@@ -20,6 +20,8 @@ cargo run -p mathematics_examples --example <example_name>
 ```
 mathematics_examples/
 ├── algebra/                 — multivector / Clifford-algebra examples + algebraic_scanner
+├── applied_category_theory/ — higher-kinded types: Functor, Monad, CoMonad, Adjunction, ...
+├── calculus/                — arrow-calculus operators (no folder README yet)
 ├── composable_multi_math/   — cross-crate composition (HKT + causal monad)
 ├── isomorphism/             — cross-crate bridges (tensor<->sparse, multifield, witness duality)
 ├── sparse/                  — CSR sparse-matrix examples
@@ -27,11 +29,13 @@ mathematics_examples/
 └── topology/                — graphs, manifolds, lattice gauge fields
 ```
 
-Each subfolder has its own README with the per-example table.
+Each subfolder has its own README with the per-example table, except `calculus/`, which
+holds a single example and is listed in the Cargo manifest only.
 
 | Subfolder | What's inside | Per-folder README |
 |-----------|---------------|-------------------|
 | [algebra](algebra/README.md) | Clifford / geometric algebra (`CausalMultiVector`, PGA, Dixon, Hopf, etc.) plus the `algebraic_scanner` study of complex structure in `Cl(p, q, r)` | [algebra/README.md](algebra/README.md) |
+| [applied_category_theory](applied_category_theory/README.md) | The higher-kinded type traits themselves: `Functor`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `Traversable`, `Bifunctor`, `Profunctor`, `Adjunction`, `ParametricMonad` and the effect system, each on a domain problem. Moved here from `deep_causality_haft/examples` | [applied_category_theory/README.md](applied_category_theory/README.md) |
 | [sparse](sparse/README.md) | Sparse matrix ops (`CsrMatrix`) and HKT integration | [sparse/README.md](sparse/README.md) |
 | [tensor](tensor/README.md) | `CausalTensor` construction, `EinSumOp`, Einstein-field index gymnastics, HKT (Functor / Applicative) | [tensor/README.md](tensor/README.md) |
 | [topology](topology/README.md) | Graphs, simplicial / cubical complexes, manifolds, differential forms, lattice gauge fields | [topology/README.md](topology/README.md) |
@@ -48,10 +52,14 @@ Each subfolder has its own README with the per-example table.
 | `deep_causality_metric` | Metric signatures (`Metric::Euclidean`, `Metric::Minkowski`) |
 | `deep_causality_tensor` | Tensor operations (`CausalTensor`, `EinSumOp`) |
 | `deep_causality_topology` | Discrete geometry (`Graph`, `SimplicialComplex`, `Manifold`, `LatticeGaugeField`) |
-| `deep_causality_sparse` | Sparse matrices (`CsrMatrix`) for boundary operators |
+| `deep_causality_linear` | Sparse `CsrMatrix` and dense matrices, used for boundary operators |
+| `deep_causality_calculus` | Arrow-native differentiation and integration |
 | `deep_causality_rand` | Random sampling for lattice gauge thermalization |
 | `deep_causality_haft` | Higher-kinded type traits (`Functor`, `Monad`, `CoMonad`, `Pure`) |
-| `deep_causality_num` | Numerical traits (`RealField`, `Complex`, `Float106`) |
+| `deep_causality_algebra` | The algebra tower (`Field`, `RealField`) the others bound against |
+| `deep_causality_num` | Numerical traits (`Float106`, casts and predicates) |
+| `deep_causality_num_complex` | Complex, quaternion and octonion number types |
+| `deep_causality_num_dual` | Dual numbers, forward-mode automatic differentiation |
 | `deep_causality_core` | `CausalEffectPropagationProcess` and witnesses |
 
 ---
@@ -120,9 +128,9 @@ rounding error.
 
 ## Adding New Examples
 
-1. Decide which subfolder fits: `algebra/`, `sparse/`, `tensor/`, `topology/`,
-   `composable_multi_math/` (cross-crate composition), or `isomorphism/`
-   (cross-crate `iso` bridges).
+1. Decide which subfolder fits: `algebra/`, `applied_category_theory/` (the `haft` traits
+   themselves), `calculus/`, `sparse/`, `tensor/`, `topology/`, `composable_multi_math/`
+   (cross-crate composition), or `isomorphism/` (cross-crate `iso` bridges).
 2. Create the source file (single-file examples) or directory (`<your_example>/main.rs`
    + `README.md`).
 3. Single-file examples: pick a descriptive snake_case name. Multi-file: same, but

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Adjunction, CoMonad};
+use deep_causality_haft::CoMonad;
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 
 // --- BoundedComonad Tests ---
@@ -39,12 +39,14 @@ fn test_comonad_causal_multi_vector_extend_scalar() {
 fn test_comonad_causal_multi_vector_extend_non_scalar_to_scalar() {
     let mv = CausalMultiVector::new(vec![1.0, 2.0, 3.0, 4.0], Metric::Euclidean(2)).unwrap();
     // Function that observes the context (the MV) and returns a summary value (sum of all coeffs)
-    let f = |mv_ctx: &CausalMultiVector<f64>| mv_ctx.data().iter().sum::<f64>();
+    // A sum is invariant under the very rotation `extend` performs, so it cannot see whether
+    // the focus moved, moved the wrong way, or never moved. Observe position instead.
+    let f = |mv_ctx: &CausalMultiVector<f64>| mv_ctx.data()[0] * 10.0 + mv_ctx.data()[1];
     let extended = CausalMultiVectorWitness::extend(&mv, f);
 
     assert_eq!(
         extended,
-        CausalMultiVector::new(vec![10.0, 10.0, 10.0, 10.0], mv.metric()).unwrap()
+        CausalMultiVector::new(vec![12.0, 23.0, 34.0, 41.0], mv.metric()).unwrap()
     );
 }
 
@@ -99,79 +101,3 @@ fn test_comonad_multivector_context_sensitivity() {
 }
 
 // --- BoundedAdjunction Tests ---
-
-#[test]
-fn test_bounded_adjunction_causal_multi_vector_unit() {
-    let ctx = Metric::Euclidean(1); // Context is a 2D Vector space (e0, e1)
-    let a = 42;
-    let mv_mv_a = CausalMultiVectorWitness::unit(&ctx, a);
-
-    // Expected: Outer MV is scalar, inner MV has the metric of the context.
-    assert_eq!(mv_mv_a.metric(), Metric::Euclidean(0));
-    assert_eq!(mv_mv_a.data().len(), 1);
-
-    // The inner MV lives in Cl(ctx), so it holds 2^dim coefficients, all of them 'a'.
-    let inner_mv = &mv_mv_a.data()[0];
-    assert_eq!(inner_mv.metric(), ctx);
-    assert_eq!(inner_mv.data().len(), 1 << ctx.dimension());
-    assert_eq!(inner_mv.data()[0], 42);
-
-    // Both layers are values the constructor accepts.
-    assert!(CausalMultiVector::new(inner_mv.data().clone(), inner_mv.metric()).is_ok());
-    assert!(CausalMultiVector::new(mv_mv_a.data().clone(), mv_mv_a.metric()).is_ok());
-}
-
-#[test]
-fn test_bounded_adjunction_causal_multi_vector_counit() {
-    let ctx = Metric::Euclidean(0); // Context is not used, but required by signature.
-    // Create a MV<MV<B>>
-    let inner_mv = CausalMultiVector::new(vec![100], Metric::Euclidean(0)).unwrap();
-    let lrb = CausalMultiVector::new(vec![inner_mv], Metric::Euclidean(0)).unwrap();
-
-    let b = CausalMultiVectorWitness::counit(&ctx, lrb).expect("the multivector stores a value");
-
-    // counit should flatten and extract the scalar value.
-    assert_eq!(b, 100);
-}
-
-#[test]
-fn test_bounded_adjunction_causal_multi_vector_left_adjunct() {
-    let ctx = Metric::Euclidean(1); // A 2-element vector space
-    let a = 5;
-
-    // f: MV<A> -> B
-    // A function that takes a multivector and extracts its scalar part.
-    let f = |mv_a: CausalMultiVector<i32>| mv_a.data()[0];
-
-    let result_mv = CausalMultiVectorWitness::left_adjunct(&ctx, a, f);
-
-    // Expected: A scalar MV containing the result of f(unit(a)).
-    // unit(a) creates a MV with data=[5, 5] and metric=Euclidean(1).
-    // fmap applies f to this inner MV, so f([5, 5]) -> 5.
-    // The resulting outer MV is a scalar MV containing 5.
-    assert_eq!(result_mv.metric(), Metric::Euclidean(0));
-    assert_eq!(result_mv.data(), &[5]);
-}
-
-#[test]
-fn test_bounded_adjunction_causal_multi_vector_right_adjunct() {
-    let ctx = Metric::Euclidean(0); // For counit part.
-    // la: L(A) -> MV<A>
-    let la = CausalMultiVector::new(vec![3, 4], Metric::Euclidean(1)).unwrap();
-
-    // f: A -> R(B) -> A -> MV<B>
-    // A function that takes a value and wraps it in a scalar MV.
-    let f = |val_a: i32| CausalMultiVector::new(vec![val_a * 2], Metric::Euclidean(0)).unwrap();
-
-    // right_adjunct = counit(fmap(la, f))
-    // 1. fmap(la, f) applies f to each element of la:
-    //    f(3) -> MV([6])
-    //    f(4) -> MV([8])
-    //    This results in an outer MV containing two inner MVs: MV<MV<i32>>
-    //    The data is [MV([6]), MV([8])]
-    // 2. right_adjunct takes the first coefficient of the first inner MV, which is 6.
-    let b = CausalMultiVectorWitness::right_adjunct(&ctx, la, f)
-        .expect("both the input and the mapped multivector store a value");
-
-    assert_eq!(b, 6);
-}

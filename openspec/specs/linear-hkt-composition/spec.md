@@ -17,7 +17,7 @@ composable in some pipelines and not others, which is worse than being uniformly
 flattens to `1 × count`, so `bind(m, pure)` turns a 2×2 into a 1×4 and monad right identity fails;
 `Adjunction`'s `counit` is written in terms of that `bind` and inherits the defect. The cause is
 structural, since `pure` must pick a shape for one value and a shaped container has no canonical one.
-The reasoning sits at the impl site and in `openspec/notes/unified_math/HKT-LAW-FINDINGS.md`.
+The reasoning sits at the impl site and in `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md`.
 
 **The bit-packed 𝔽₂ matrix is excluded, and the exclusion is structural.** `HKT` projects `Type<T>`
 to a container of `T`. `PackedGf2<W>` is generic in its *word* type and not in its element type,

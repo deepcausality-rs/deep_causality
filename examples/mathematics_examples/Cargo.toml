@@ -26,15 +26,7 @@ deep_causality_topology = { path = "../../deep_causality_unified_math/deep_causa
 
 
 # ============================================================================
-# calculus — arrow-calculus operators (deep_causality_calculus).
-# ============================================================================
-
-[[example]]
-name = "leibniz_dual_integration_examples"
-path = "calculus/leibniz_dual_integration.rs"
-
-# ============================================================================
-# algebra — multivector / Clifford algebra examples (deep_causality_multivector).
+# algebra — Clifford algebra examples (deep_causality_multivector).
 # ============================================================================
 
 [[example]]
@@ -68,6 +60,66 @@ path = "algebra/maxwell_multivector.rs"
 [[example]]
 name = "pga3d_multivector_examples"
 path = "algebra/pga3d_multivector.rs"
+
+# ============================================================================
+# applied_category_theory — higher kinded types (deep_causality_haft).
+# ============================================================================
+
+[[example]]
+name = "haft_adjunction_examples"
+path = "applied_category_theory/adjunction.rs"
+
+[[example]]
+name = "haft_applicative_examples"
+path = "applied_category_theory/applicative.rs"
+
+[[example]]
+name = "haft_bifunctor_examples"
+path = "applied_category_theory/bifunctor.rs"
+
+[[example]]
+name = "haft_comonad_examples"
+path = "applied_category_theory/comonad.rs"
+
+[[example]]
+name = "haft_effect_system_examples"
+path = "applied_category_theory/effect_system.rs"
+
+[[example]]
+name = "haft_foldable_examples"
+path = "applied_category_theory/foldable.rs"
+
+[[example]]
+name = "haft_functor_examples"
+path = "applied_category_theory/functor.rs"
+
+[[example]]
+name = "haft_monad_examples"
+path = "applied_category_theory/monad.rs"
+
+[[example]]
+name = "haft_parametric_monad_examples"
+path = "applied_category_theory/parametric_monad.rs"
+
+[[example]]
+name = "haft_profunctor_examples"
+path = "applied_category_theory/profunctor.rs"
+
+[[example]]
+name = "haft_traversable_examples"
+path = "applied_category_theory/traversable.rs"
+
+[[example]]
+name = "haft_unbound_examples"
+path = "applied_category_theory/unbound_haft.rs"
+
+# ============================================================================
+# calculus — arrow-calculus operators (deep_causality_calculus).
+# ============================================================================
+
+[[example]]
+name = "leibniz_dual_integration_examples"
+path = "calculus/leibniz_dual_integration.rs"
 
 # ============================================================================
 # composable_multi_math — cross-crate composition examples (HKT, monads, effect

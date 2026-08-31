@@ -52,22 +52,20 @@
 //! borrow. These trait instances are provided by the `haft-clone-functor` change alongside
 //! `Cofree`'s `Clone`.
 
-use crate::{
-    CloneFunctor, CoMonad, DebugFunctor, EqFunctor, Functor, HKT, NoConstraint, Satisfies,
-};
+use crate::{CloneFunctor, CoMonad, DebugFunctor, EqFunctor, Functor, HKT};
 use alloc::boxed::Box;
 use core::fmt;
 use core::marker::PhantomData;
 
 /// The cofree comonad on a functor `F`: `head :< f (Cofree f a)`.
 ///
-/// `F` is an [`HKT`] witness that is a [`Functor`] over the unconstrained (`NoConstraint`) universe.
+/// `F` is an [`HKT`] witness that is a [`Functor`] over the unconstrained universe.
 /// `Cofree<F, A>` is an annotated tree: every node carries a `head: A` label and an `F`-structure of
 /// child sub-trees. Fields are private; use [`new`](Cofree::new) / [`head`](Cofree::head) /
 /// [`tail`](Cofree::tail) / [`into_parts`](Cofree::into_parts).
 pub struct Cofree<F, A>
 where
-    F: HKT<Constraint = NoConstraint>,
+    F: HKT,
 {
     head: A,
     tail: F::Type<Box<Cofree<F, A>>>,
@@ -75,7 +73,7 @@ where
 
 impl<F, A> Cofree<F, A>
 where
-    F: HKT<Constraint = NoConstraint>,
+    F: HKT,
 {
     /// Construct a node from its label and its `F`-structure of sub-trees.
     #[inline]
@@ -113,7 +111,7 @@ where
 
 impl<F, A> Cofree<F, A>
 where
-    F: HKT<Constraint = NoConstraint> + Functor<F>,
+    F: HKT + Functor<F>,
 {
     /// The functor action, derived like `Free::map` (`Fn + Clone`, one copy per hole): relabel every
     /// node by `f`, preserving the tree shape.
@@ -238,9 +236,8 @@ pub struct CofreeWitness<F>(PhantomData<F>);
 
 impl<F> HKT for CofreeWitness<F>
 where
-    F: HKT<Constraint = NoConstraint>,
+    F: HKT,
 {
-    type Constraint = NoConstraint;
     type Type<T> = Cofree<F, T>;
 }
 
@@ -253,17 +250,15 @@ where
 /// the holes are visited in sequence. For a pure `f` the result is identical to the inherent `map`.
 impl<F> Functor<CofreeWitness<F>> for CofreeWitness<F>
 where
-    F: HKT<Constraint = NoConstraint> + Functor<F>,
+    F: HKT + Functor<F>,
 {
     fn fmap<A, B, Func>(m_a: Cofree<F, A>, mut f: Func) -> Cofree<F, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         fn go<F, A, B, Func>(c: Cofree<F, A>, f: &mut Func) -> Cofree<F, B>
         where
-            F: HKT<Constraint = NoConstraint> + Functor<F>,
+            F: HKT + Functor<F>,
             Func: FnMut(A) -> B,
         {
             let (head, tail) = c.into_parts();
@@ -282,24 +277,23 @@ where
 /// `&mut` through the depth-first traversal, so no `Clone` on it is required.
 impl<F> CoMonad<CofreeWitness<F>> for CofreeWitness<F>
 where
-    F: HKT<Constraint = NoConstraint> + Functor<F> + CloneFunctor,
+    F: HKT + Functor<F> + CloneFunctor,
 {
     fn extract<A>(fa: &Cofree<F, A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.head().clone()
     }
 
     fn extend<A, B, Func>(fa: &Cofree<F, A>, mut f: Func) -> Cofree<F, B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         Func: FnMut(&Cofree<F, A>) -> B,
     {
         fn go<F, A, B, Func>(fa: &Cofree<F, A>, f: &mut Func) -> Cofree<F, B>
         where
-            F: HKT<Constraint = NoConstraint> + Functor<F> + CloneFunctor,
+            F: HKT + Functor<F> + CloneFunctor,
             A: Clone,
             Func: FnMut(&Cofree<F, A>) -> B,
         {

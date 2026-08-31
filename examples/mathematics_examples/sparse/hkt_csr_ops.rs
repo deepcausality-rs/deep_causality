@@ -61,7 +61,7 @@ fn main() {
     // a gap came back with its entry moved from column 2 to column 1, silently.
     //
     // The operation itself is fine -- it is a flat-map into a new row, not a monadic bind -- so it
-    // is written directly. `openspec/notes/unified_math/HKT-LAW-FINDINGS.md` carries the measurement.
+    // is written directly. `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` carries the measurement.
     let expanded = expand_each(&pure_mat, |x| [x, x + 0.1]);
 
     println!("Expanded Matrix (each entry x -> x, x + 0.1):");

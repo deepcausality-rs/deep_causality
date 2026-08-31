@@ -4,6 +4,7 @@
  */
 pub(crate) mod ext_hkt;
 pub(crate) mod ext_hkt_tensor_train;
+pub(crate) mod ext_hkt_zip;
 pub(crate) mod ext_iso;
 pub(crate) mod ext_linear;
 pub(crate) mod ext_math;

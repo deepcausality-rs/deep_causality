@@ -35,7 +35,7 @@ use deep_causality_algebra::ConjugateScalar;
 /// neutral element under `+` / `*` against a train of *any* shape — the tensor-train analogue of
 /// `CausalTensor`'s broadcasting scalar zero. They let `CausalTensorTrain` be a genuine
 /// `deep_causality_num` `AddGroup` / `Module` / `Ring`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct CausalTensorTrain<T> {
     /// Cores `0..order`; core `k` has shape `[r_k, n_k, r_{k+1}]`. Empty for an identity.
     cores: Vec<CausalTensor<T>>,
@@ -45,6 +45,25 @@ pub struct CausalTensorTrain<T> {
     canonical: CanonicalForm,
     /// Whether this is an ordinary train or a shape-polymorphic algebraic identity.
     identity: Identity,
+}
+
+/// Equality on the tensor a train *represents*, which is its cores, their physical dimensions
+/// and whether it is an algebraic identity.
+///
+/// `canonical` is deliberately excluded. It records that the cores happen to be orthogonal, a
+/// cached fact *about* the cores rather than part of the value: two trains with identical cores
+/// denote the same tensor whether or not either has been canonicalized, and `CanonicalForm::None`
+/// is a conservative "not known to be canonical" rather than a claim that it is not.
+///
+/// Comparing it broke the functor identity law. `fmap` sets `CanonicalForm::None` unconditionally,
+/// which is correct because a general `f` does not preserve orthogonality, so `fmap(tt, id)` and
+/// `tt` differed on a canonicalized train while denoting the same tensor.
+impl<T: PartialEq> PartialEq for CausalTensorTrain<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.cores == other.cores
+            && self.phys_dims == other.phys_dims
+            && self.identity == other.identity
+    }
 }
 
 /// Whether a [`CausalTensorTrain`] is an ordinary train or one of the two algebraic identities.

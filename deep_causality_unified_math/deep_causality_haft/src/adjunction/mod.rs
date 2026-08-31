@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, Satisfies};
+use crate::HKT;
 
 /// The `Adjunction` trait defines a pair of adjoint functors `L` (Left) and `R` (Right)
 /// with an optional runtime `Context`.
@@ -88,8 +88,7 @@ where
     /// The value embedded in the `R<L<_>>` structure.
     fn unit<A>(ctx: &Context, a: A) -> R::Type<L::Type<A>>
     where
-        A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
-        L::Type<A>: Satisfies<R::Constraint>;
+        A: Clone;
 
     /// The Counit of the Adjunction: `L<R<B>> → B`
     ///
@@ -110,8 +109,7 @@ where
     /// Returns [`Self::Error`] when `lrb`, or the inner `R<B>` it holds, stores no value.
     fn counit<B>(ctx: &Context, lrb: L::Type<R::Type<B>>) -> Result<B, Self::Error>
     where
-        B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
-        R::Type<B>: Satisfies<L::Constraint>;
+        B: Clone;
 
     /// The Left Adjunct: `(L<A> → B) → (A → R<B>)`
     ///
@@ -128,9 +126,7 @@ where
     /// The result of applying the transformed function, yielding `R<B>`.
     fn left_adjunct<A, B, Func>(ctx: &Context, a: A, f: Func) -> R::Type<B>
     where
-        A: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
-        B: Satisfies<R::Constraint>,
-        L::Type<A>: Satisfies<R::Constraint>,
+        A: Clone,
         Func: Fn(L::Type<A>) -> B;
 
     /// The Right Adjunct: `(A → R<B>) → (L<A> → B)`
@@ -154,8 +150,7 @@ where
     /// stores no value.
     fn right_adjunct<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> Result<B, Self::Error>
     where
-        A: Satisfies<L::Constraint> + Clone,
-        B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
-        R::Type<B>: Satisfies<L::Constraint>,
+        A: Clone,
+        B: Clone,
         Func: FnMut(A) -> R::Type<B>;
 }

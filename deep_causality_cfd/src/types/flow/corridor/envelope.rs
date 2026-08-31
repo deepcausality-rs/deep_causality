@@ -7,7 +7,7 @@
 //! carries it.
 
 use crate::CfdScalar;
-use deep_causality_haft::{CyberneticLoop, HKT5Unbound, NoConstraint, Satisfies};
+use deep_causality_haft::{CyberneticLoop, HKT5Unbound};
 
 /// The optional powered-descent axes of a [`SafetyEnvelope`] (change
 /// `plasma-retropulsion-cfd-contracts`, capability `powered-descent-envelope`). Present only for a
@@ -133,7 +133,6 @@ pub(crate) struct GuidanceAgent<S, B, C, A, E>(pub S, pub B, pub C, pub A, pub E
 pub(crate) struct GuidanceWitness;
 
 impl HKT5Unbound for GuidanceWitness {
-    type Constraint = NoConstraint;
     type Type<S, B, C, A, E> = GuidanceAgent<S, B, C, A, E>;
 }
 
@@ -145,11 +144,6 @@ impl CyberneticLoop<GuidanceWitness> for GuidanceWitness {
         decide_fn: FDecide,
     ) -> Result<A, E>
     where
-        S: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        A: Satisfies<NoConstraint>,
-        E: Satisfies<NoConstraint>,
         FObserve: Fn(S, &C) -> B,
         FDecide: Fn(B, &C) -> A,
     {

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{HKT, Satisfies};
+use crate::HKT;
 use deep_causality_algebra::Monoid;
 
 /// The `Foldable` trait abstracts over data structures that can be reduced to a single summary value.
@@ -62,7 +62,6 @@ pub trait Foldable<F: HKT> {
     /// ```
     fn fold<A, B, Func>(fa: F::Type<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<F::Constraint>,
         Func: FnMut(B, A) -> B;
 
     /// Folds the structure into a monoid: maps each element into a `Monoid` `M` and combines the
@@ -94,7 +93,6 @@ pub trait Foldable<F: HKT> {
     /// *   `Func`: the element-to-monoid map `Fn(A) -> M`.
     fn fold_map<A, M, Func>(fa: F::Type<A>, f: Func) -> M
     where
-        A: Satisfies<F::Constraint>,
         M: Monoid,
         Func: Fn(A) -> M,
     {

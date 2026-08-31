@@ -10,7 +10,7 @@
 //! The Riemann curvature operator is a multilinear map `R: V ⊗ V ⊗ V → V` over **one** vector
 //! space. `CurvatureTensor` previously carried four phantom type parameters so it could be viewed
 //! through `HKT4Unbound`, and `RiemannMap::curvature` was generic in all four bounded only by
-//! `Satisfies<NoConstraint>`, which admits every type. The implementation then reinterpreted its
+//! no element bound at all. The implementation then reinterpreted its
 //! arguments as `TensorVector<T>` through raw pointers, which made a safe function undefined
 //! behaviour for inputs its own signature accepted.
 //!

@@ -4,15 +4,15 @@
  */
 
 use crate::Topology;
-use deep_causality_haft::{CoMonad, Functor, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{CoMonad, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Topology<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 ///
@@ -25,7 +25,6 @@ use std::marker::PhantomData;
 pub struct TopologyWitness<R>(PhantomData<R>);
 
 impl<R> HKT for TopologyWitness<R> {
-    type Constraint = NoConstraint;
     type Type<G> = Topology<R, G>;
 }
 
@@ -38,8 +37,6 @@ impl<R> Functor<TopologyWitness<R>> for TopologyWitness<R> {
     /// dropped the geometry doing it, which broke `fmap(id, t) == t`.
     fn fmap<A, B, F>(fa: Topology<R, A>, f: F) -> Topology<R, B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         F: FnMut(A) -> B,
     {
         let new_data = CausalTensorWitness::fmap(fa.data, f);
@@ -56,7 +53,7 @@ impl<R> Functor<TopologyWitness<R>> for TopologyWitness<R> {
 impl<R: Clone> CoMonad<TopologyWitness<R>> for TopologyWitness<R> {
     fn extract<A>(fa: &Topology<R, A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.data
             .as_slice()
@@ -68,8 +65,7 @@ impl<R: Clone> CoMonad<TopologyWitness<R>> for TopologyWitness<R> {
     fn extend<A, B, Func>(fa: &Topology<R, A>, mut f: Func) -> Topology<R, B>
     where
         Func: FnMut(&Topology<R, A>) -> B,
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
     {
         let size = fa.data.len();
         let shape = fa.data.shape().to_vec();

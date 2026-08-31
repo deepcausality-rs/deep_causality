@@ -4,16 +4,13 @@
  */
 
 use crate::types::dense_vector::DenseVector;
-use deep_causality_haft::{
-    Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
 
 /// The higher-kinded witness for [`DenseVector`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct DenseVectorWitness;
 
 impl HKT for DenseVectorWitness {
-    type Constraint = NoConstraint;
     type Type<T> = DenseVector<T>;
 }
 
@@ -23,8 +20,6 @@ impl HKT for DenseVectorWitness {
 impl Functor<DenseVectorWitness> for DenseVectorWitness {
     fn fmap<A, B, Func>(m_a: DenseVector<A>, f: Func) -> DenseVector<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         DenseVector::from_vec(m_a.into_data().into_iter().map(f).collect())
@@ -34,8 +29,6 @@ impl Functor<DenseVectorWitness> for DenseVectorWitness {
 impl Foldable<DenseVectorWitness> for DenseVectorWitness {
     fn fold<A, B, Func>(fa: DenseVector<A>, init: B, f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         fa.into_data().into_iter().fold(init, f)
@@ -48,32 +41,34 @@ impl Pure<DenseVectorWitness> for DenseVectorWitness {
     /// The laws do not settle the shape; something has to choose it, and choosing the same shape
     /// the existing witness chooses is what lets a value round-trip through `pure` then `extract`
     /// unchanged.
-    fn pure<T>(value: T) -> DenseVector<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> DenseVector<T> {
         DenseVector::from_vec(alloc::vec![value])
     }
 }
 
 impl Applicative<DenseVectorWitness> for DenseVectorWitness {
-    /// Pairs the functions with the values by position, and stops at the shorter of the two.
+    /// The cartesian applicative: every function against every value, function-major.
     ///
-    /// `CsrMatrixWitness::apply` stops the same way. Demanding matching lengths made
-    /// `apply(pure(f), v)` — the left-hand side of the applicative identity law, where `pure`
-    /// builds a one-element vector — panic for every `v` of two entries or more.
+    /// This witness also carries [`Monad`], whose `bind` is list concatenation, and that pins the
+    /// applicative. Coherence requires `apply(ff, fa) == bind(ff, |f| fmap(fa, f))`, and `bind`
+    /// runs the continuation once per function, so the only answer that agrees with it is the
+    /// cartesian product. The elementwise reading is a different applicative and lives on
+    /// [`ZipDenseVectorWitness`](crate::ZipDenseVectorWitness), which carries no `Monad` and so
+    /// owes no coherence.
+    ///
+    /// The identity law still holds: `pure` builds the one-element vector, so `apply(pure(id), v)`
+    /// runs one function across every element and returns `v`.
     fn apply<A, B, Func>(ff: DenseVector<Func>, fa: DenseVector<A>) -> DenseVector<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> B + Satisfies<NoConstraint>,
+        A: Clone,
+        Func: FnMut(A) -> B,
     {
-        let mut fns = ff.into_data().into_iter();
-        let mut out = alloc::vec::Vec::new();
-        for a in fa.into_data() {
-            match fns.next() {
-                Some(mut g) => out.push(g(a)),
-                None => break,
+        let fns = ff.into_data();
+        let vals = fa.into_data();
+        let mut out: alloc::vec::Vec<B> = alloc::vec::Vec::with_capacity(fns.len() * vals.len());
+        for mut g in fns {
+            for a in vals.iter() {
+                out.push(g(a.clone()));
             }
         }
         DenseVector::from_vec(out)
@@ -83,8 +78,6 @@ impl Applicative<DenseVectorWitness> for DenseVectorWitness {
 impl Monad<DenseVectorWitness> for DenseVectorWitness {
     fn bind<A, B, Func>(fa: DenseVector<A>, mut f: Func) -> DenseVector<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> DenseVector<B>,
     {
         let mut out = alloc::vec::Vec::new();
@@ -104,7 +97,7 @@ impl CoMonad<DenseVectorWitness> for DenseVectorWitness {
     /// would break `extend(extract) == id`.
     fn extract<A>(fa: &DenseVector<A>) -> A
     where
-        A: Satisfies<NoConstraint> + Clone,
+        A: Clone,
     {
         fa.as_slice()
             .first()
@@ -114,8 +107,7 @@ impl CoMonad<DenseVectorWitness> for DenseVectorWitness {
 
     fn extend<A, B, Func>(fa: &DenseVector<A>, mut f: Func) -> DenseVector<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
+        A: Clone,
         Func: FnMut(&DenseVector<A>) -> B,
     {
         // The same focus rule as the matrix: rotate position `i` to the front and apply `f` there,

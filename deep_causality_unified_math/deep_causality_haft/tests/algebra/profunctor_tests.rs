@@ -3,24 +3,23 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{HKT2Unbound, NoConstraint, Profunctor, Satisfies};
+use deep_causality_haft::{HKT2Unbound, Profunctor};
 
 // Local Function wrapper
 struct Function<I, O>(Box<dyn Fn(I) -> O>);
 struct FunctionWitness;
 
 impl HKT2Unbound for FunctionWitness {
-    type Constraint = NoConstraint;
     type Type<A, B> = Function<A, B>;
 }
 
 impl Profunctor<FunctionWitness> for FunctionWitness {
     fn dimap<A, B, C, D, F1, F2>(pab: Function<A, B>, f_pre: F1, f_post: F2) -> Function<C, D>
     where
-        A: 'static + Satisfies<NoConstraint>,
-        B: 'static + Satisfies<NoConstraint>,
-        C: 'static + Satisfies<NoConstraint>,
-        D: 'static + Satisfies<NoConstraint>,
+        A: 'static,
+        B: 'static,
+        C: 'static,
+        D: 'static,
         F1: FnMut(C) -> A + 'static,
         F2: FnMut(B) -> D + 'static,
     {

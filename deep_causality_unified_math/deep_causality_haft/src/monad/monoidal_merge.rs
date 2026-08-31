@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT3Unbound, Satisfies};
+use crate::HKT3Unbound;
 
 /// The `MonoidalMerge` trait models the "fusion" or "interaction" of two contexts to produce
 /// a third.
@@ -57,8 +57,5 @@ pub trait MonoidalMerge<P: HKT3Unbound> {
         f: F,
     ) -> P::Type<C, C, C>
     where
-        A: Satisfies<P::Constraint>,
-        B: Satisfies<P::Constraint>,
-        C: Satisfies<P::Constraint>,
         F: FnMut(A, B) -> C;
 }

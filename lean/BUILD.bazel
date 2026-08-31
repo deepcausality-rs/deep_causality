@@ -12,7 +12,7 @@
 #
 load("@rules_lean//lean:lean.bzl", "lean_test")
 
-# Generated from lake-manifest.json by `build/scripts/lean_lock.sh packages`.
+# Generated from lake-manifest.json by `scripts/lean_lock.sh packages`.
 #
 # Deliberately a LOCAL load, not `@lake_deps//:packages.bzl`: loading from an
 # external repo forces that repo to be fetched before this package can be

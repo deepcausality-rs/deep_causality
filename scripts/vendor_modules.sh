@@ -23,7 +23,7 @@ set -o pipefail
 # the CI repository cache.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 THIRDPARTY="${REPO_ROOT}/thirdparty/bzlmod"
 
 # Modules to vendor. rules_rust is deliberately absent: it is pinned to a fork

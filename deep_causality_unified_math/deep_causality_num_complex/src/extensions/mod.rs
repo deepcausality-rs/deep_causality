@@ -27,9 +27,9 @@
 //! **`pure` remains impossible, and for the reason the stack exists.** The applicative this yields
 //! is Reader on a finite index set, whose `pure` is the constant map `s ↦ a`. Filling `n` slots
 //! from one value is the diagonal `Δ : A → A ⊗ A`, which in Rust is `Clone`. `Pure::pure` receives
-//! one value by value, bounded only by `Satisfies`, an empty marker; an impl cannot add `Clone`
-//! (E0276), and a constraint marker cannot supply it (E0599). So a two-, four- or eight-slot value
-//! cannot be built from a single move:
+//! one value by value and the trait declares no bound on it, so the body has no way to duplicate
+//! it; an impl cannot add `Clone` of its own either, because that is stricter than the trait
+//! (E0276). So a two-, four- or eight-slot value cannot be built from a single move:
 //!
 //! ```text
 //! error[E0382]: use of moved value: `value`
@@ -42,7 +42,7 @@
 //! `CoMonad::extract` could return the scalar part, but `extend` has no canonical cursor to walk
 //! over a product, so it is left out rather than guessed at.
 //!
-//! # Why `NoConstraint`
+//! # Why the element type carries no bound
 //!
 //! These operations move components; they never compute with them. `fmap` maps `Complex<A>` to
 //! `Complex<B>` for unrelated `A` and `B`, so a complex of labels maps as readily as a complex of

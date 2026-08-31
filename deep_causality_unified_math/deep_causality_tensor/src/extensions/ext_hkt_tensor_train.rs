@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 use crate::CausalTensor;
 use crate::types::causal_tensor_network::canonical_form::CanonicalForm;
 use crate::types::causal_tensor_network::causal_tensor_train::CausalTensorTrain;
-use deep_causality_haft::{Foldable, Functor, HKT, NoConstraint, Pure, Satisfies};
+use deep_causality_haft::{Foldable, Functor, HKT, Pure};
 
 // ============================================================================
 // HKT Witness
@@ -28,7 +28,6 @@ use deep_causality_haft::{Foldable, Functor, HKT, NoConstraint, Pure, Satisfies}
 pub struct CausalTensorTrainWitness;
 
 impl HKT for CausalTensorTrainWitness {
-    type Constraint = NoConstraint;
     type Type<T> = CausalTensorTrain<T>;
 }
 
@@ -39,8 +38,6 @@ impl HKT for CausalTensorTrainWitness {
 impl Functor<CausalTensorTrainWitness> for CausalTensorTrainWitness {
     fn fmap<A, B, Func>(m_a: CausalTensorTrain<A>, mut f: Func) -> CausalTensorTrain<B>
     where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
         let new_cores: Vec<CausalTensor<B>> = m_a
@@ -64,7 +61,6 @@ impl Functor<CausalTensorTrainWitness> for CausalTensorTrainWitness {
 impl Foldable<CausalTensorTrainWitness> for CausalTensorTrainWitness {
     fn fold<A, B, Func>(fa: CausalTensorTrain<A>, init: B, mut f: Func) -> B
     where
-        A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
     {
         let mut acc = init;
@@ -82,10 +78,7 @@ impl Foldable<CausalTensorTrainWitness> for CausalTensorTrainWitness {
 // ============================================================================
 
 impl Pure<CausalTensorTrainWitness> for CausalTensorTrainWitness {
-    fn pure<T>(value: T) -> CausalTensorTrain<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> CausalTensorTrain<T> {
         let core = CausalTensor::from_vec(vec![value], &[1, 1, 1]);
         CausalTensorTrain::from_cores_raw(vec![core], CanonicalForm::None)
     }

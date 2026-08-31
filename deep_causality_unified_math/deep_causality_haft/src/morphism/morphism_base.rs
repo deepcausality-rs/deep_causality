@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT2Unbound, NoConstraint, Satisfies};
+use crate::HKT2Unbound;
 
 /// The explicit typed-arrow base: a family of arrows `P::Type<A, B>` (think `A → B`)
 /// with an identity arrow and the ability to apply an arrow to an input.
@@ -25,15 +25,10 @@ use crate::{HKT2Unbound, NoConstraint, Satisfies};
 /// [`Endomorphism`](crate::Endomorphism).
 pub trait Morphism<P: HKT2Unbound> {
     /// The identity arrow `A → A`.
-    fn identity<A>() -> P::Type<A, A>
-    where
-        A: Satisfies<P::Constraint>;
+    fn identity<A>() -> P::Type<A, A>;
 
     /// Apply an arrow to an input, producing the output.
-    fn apply<A, B>(arrow: &P::Type<A, B>, input: A) -> B
-    where
-        A: Satisfies<P::Constraint>,
-        B: Satisfies<P::Constraint>;
+    fn apply<A, B>(arrow: &P::Type<A, B>, input: A) -> B;
 }
 
 /// The canonical function-pointer carrier for [`Morphism`]: an arrow `A → B` is a plain
@@ -46,16 +41,12 @@ pub trait Morphism<P: HKT2Unbound> {
 pub struct FnMorphism;
 
 impl HKT2Unbound for FnMorphism {
-    type Constraint = NoConstraint;
     type Type<A, B> = fn(A) -> B;
 }
 
 impl Morphism<FnMorphism> for FnMorphism {
     #[inline]
-    fn identity<A>() -> <FnMorphism as HKT2Unbound>::Type<A, A>
-    where
-        A: Satisfies<NoConstraint>,
-    {
+    fn identity<A>() -> <FnMorphism as HKT2Unbound>::Type<A, A> {
         fn id<A>(a: A) -> A {
             a
         }
@@ -63,11 +54,7 @@ impl Morphism<FnMorphism> for FnMorphism {
     }
 
     #[inline]
-    fn apply<A, B>(arrow: &<FnMorphism as HKT2Unbound>::Type<A, B>, input: A) -> B
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-    {
+    fn apply<A, B>(arrow: &<FnMorphism as HKT2Unbound>::Type<A, B>, input: A) -> B {
         (*arrow)(input)
     }
 }

@@ -6,14 +6,13 @@
 //! Witness for `lean/DeepCausalityFormal/Haft/Signatures.lean` — the CyberneticLoop Kleisli
 //! factorization. (RiemannMap carries no equational theory; nothing to witness.)
 
-use deep_causality_haft::{CyberneticLoop, HKT5Unbound, NoConstraint, Satisfies};
+use deep_causality_haft::{CyberneticLoop, HKT5Unbound};
 
 // Mirror of the crate's canonical System carrier.
 #[derive(Debug, PartialEq, Clone)]
 struct System<S, C, A, F, M>(S, C, A, F, M);
 struct SystemWitness;
 impl HKT5Unbound for SystemWitness {
-    type Constraint = NoConstraint;
     type Type<S, C, A, F, M> = System<S, C, A, F, M>;
 }
 
@@ -25,11 +24,6 @@ impl CyberneticLoop<SystemWitness> for SystemWitness {
         decide_fn: FDecide,
     ) -> Result<A, E>
     where
-        S: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        A: Satisfies<NoConstraint>,
-        E: Satisfies<NoConstraint>,
         FObserve: Fn(S, &C) -> B,
         FDecide: Fn(B, &C) -> A,
     {

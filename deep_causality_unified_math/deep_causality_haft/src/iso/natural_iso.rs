@@ -20,9 +20,7 @@
 //!
 //! # Laws
 //!
-//! Implementers must satisfy, for every type `T` that satisfies both
-//! constraints `F::Constraint` and `G::Constraint`, and for every function
-//! `h: T -> U`:
+//! Implementers must satisfy, for every type `T` and every function `h: T -> U`:
 //!
 //! 1. **Round-trip identity (per `T`)**:
 //!    - `to_source(to_target(fa)) == fa` for all `fa: F::Type<T>`
@@ -34,7 +32,7 @@
 //! [`crate::iso::test_support::assert_natural_iso_round_trip`]; naturality
 //! is tested by [`crate::iso::test_support::assert_natural_iso_naturality`].
 
-use crate::{HKT, Satisfies};
+use crate::HKT;
 
 /// Natural isomorphism between two arity-1 HKT witnesses `F` and `G`.
 ///
@@ -45,12 +43,8 @@ where
     G: HKT,
 {
     /// Maps `F::Type<T>` to `G::Type<T>` while preserving structure.
-    fn to_target<T>(fa: F::Type<T>) -> G::Type<T>
-    where
-        T: Satisfies<F::Constraint> + Satisfies<G::Constraint>;
+    fn to_target<T>(fa: F::Type<T>) -> G::Type<T>;
 
     /// Reverse of [`to_target`](Self::to_target).
-    fn to_source<T>(ga: G::Type<T>) -> F::Type<T>
-    where
-        T: Satisfies<F::Constraint> + Satisfies<G::Constraint>;
+    fn to_source<T>(ga: G::Type<T>) -> F::Type<T>;
 }

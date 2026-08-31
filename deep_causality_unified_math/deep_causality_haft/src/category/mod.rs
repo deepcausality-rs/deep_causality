@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, Monad, NoConstraint, Pure};
+use crate::{HKT, Monad, Pure};
 use core::marker::PhantomData;
 
 /// A **category**: an identity morphism on every object and associative composition of compatible
@@ -75,16 +75,11 @@ impl Category for Fun {
 /// This is the typed semantic codomain the free-Arrow interpreter targets. Its category laws reduce
 /// to the monad laws (`haft.monad.*`): left identity to `bind(pure a, g) = g a`, right identity to
 /// `bind(m, pure) = m`, associativity to the monad associativity law.
-///
-/// SCOPING: `Kleisli` is a `Category` for monads whose HKT `Constraint` is [`NoConstraint`] (the
-/// unconstrained monads — `Option`, `Result`, `Vec`, and the effect monad). This keeps every object
-/// type an admissible object without threading a per-category object bound; constrained monads
-/// (e.g. `CausalTensor`) are out of scope for this categorical substrate.
 pub struct Kleisli<M>(PhantomData<M>);
 
 impl<M> Category for Kleisli<M>
 where
-    M: Monad<M> + HKT<Constraint = NoConstraint>,
+    M: Monad<M> + HKT,
 {
     type Hom<B> = M::Type<B>;
 

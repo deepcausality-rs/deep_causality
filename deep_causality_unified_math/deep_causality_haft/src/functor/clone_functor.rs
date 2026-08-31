@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, NoConstraint};
+use crate::HKT;
 
 /// Witness capability: an [`HKT`] functor whose `Type<T>` can be cloned whenever the payload
 /// `T: Clone`.
@@ -22,7 +22,7 @@ use crate::{HKT, NoConstraint};
 /// (`OptionWitness`, `VecWitness`, `BoxWitness`, `LinkedListWitness`, `VecDequeWitness`) implement it
 /// — the body delegates to the container's own `Clone`.
 ///
-/// Scoped to `HKT<Constraint = NoConstraint>` because `Free`/`Cofree` require it.
+/// Scoped to `HKT` because `Free`/`Cofree` require it.
 ///
 /// # Law
 ///
@@ -45,18 +45,17 @@ use crate::{HKT, NoConstraint};
 /// gives no `Clone` for its programs.
 ///
 /// ```compile_fail
-/// use deep_causality_haft::{Free, HKT, NoConstraint};
+/// use deep_causality_haft::{Free, HKT};
 ///
 /// struct NoClone;
 /// impl HKT for NoClone {
-///     type Constraint = NoConstraint;
 ///     type Type<T> = Option<T>;
 /// }
 ///
 /// let a: Free<NoClone, i32> = Free::Pure(1);
 /// let _ = a.clone(); // `NoClone: CloneFunctor` is not satisfied — does not compile.
 /// ```
-pub trait CloneFunctor: HKT<Constraint = NoConstraint> {
+pub trait CloneFunctor: HKT {
     /// Structurally clone a `Self::Type<T>` container, given `T: Clone`.
     fn clone_type<T: Clone>(fa: &Self::Type<T>) -> Self::Type<T>;
 }

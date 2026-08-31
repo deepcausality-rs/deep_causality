@@ -5,14 +5,11 @@
 
 use crate::types::cdl_effect::{CdlEffect, CdlEffectWitness};
 use crate::{CdlError, CdlWarningLog};
-use deep_causality_haft::{Applicative, LogAppend, NoConstraint, Pure, Satisfies};
+use deep_causality_haft::{Applicative, LogAppend, Pure};
 
 // Pure: lift a plain value into the effect context.
 impl Pure<CdlEffectWitness<CdlError, CdlWarningLog>> for CdlEffectWitness<CdlError, CdlWarningLog> {
-    fn pure<T>(value: T) -> CdlEffect<T>
-    where
-        T: Satisfies<NoConstraint>,
-    {
+    fn pure<T>(value: T) -> CdlEffect<T> {
         CdlEffect {
             inner: Ok(value),
             warnings: CdlWarningLog::default(),
@@ -31,8 +28,6 @@ impl Applicative<CdlEffectWitness<CdlError, CdlWarningLog>>
     where
         Func: FnMut(A) -> B,
         A: Clone,
-        B: Satisfies<NoConstraint>,
-        Func: Satisfies<NoConstraint>,
     {
         let mut combined_warnings = f_ab.warnings;
         // Append warnings from m_a

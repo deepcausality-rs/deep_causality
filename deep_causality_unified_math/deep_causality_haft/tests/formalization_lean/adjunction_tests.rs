@@ -5,7 +5,7 @@
 
 //! Witness for `lean/DeepCausalityFormal/Haft/Adjunction.lean` (Mac Lane, CWM §IV.1).
 
-use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
+use deep_causality_haft::{Adjunction, HKT};
 
 // The crate's canonical adjunction instance (Identity ⊣ Identity), mirroring
 // `tests/algebra/adjunction_tests.rs`. The Lean file proves the non-trivial currying
@@ -15,7 +15,6 @@ use deep_causality_haft::{Adjunction, HKT, NoConstraint, Satisfies};
 struct Idn<T>(T);
 struct IdnWitness;
 impl HKT for IdnWitness {
-    type Constraint = NoConstraint;
     type Type<T> = Idn<T>;
 }
 
@@ -27,25 +26,21 @@ impl Adjunction<IdnWitness, IdnWitness, ()> for IdnAdjunction {
 
     fn unit<A>(_ctx: &(), a: A) -> Idn<Idn<A>>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        Idn<A>: Satisfies<NoConstraint>,
+        A: Clone,
     {
         Idn(Idn(a))
     }
 
     fn counit<B>(_ctx: &(), lrb: Idn<Idn<B>>) -> Result<B, Self::Error>
     where
-        B: Satisfies<NoConstraint> + Clone,
-        Idn<B>: Satisfies<NoConstraint>,
+        B: Clone,
     {
         Ok(lrb.0.0)
     }
 
     fn left_adjunct<A, B, Func>(_ctx: &(), a: A, f: Func) -> Idn<B>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint>,
-        Idn<A>: Satisfies<NoConstraint>,
+        A: Clone,
         Func: Fn(Idn<A>) -> B,
     {
         Idn(f(Idn(a)))
@@ -53,9 +48,8 @@ impl Adjunction<IdnWitness, IdnWitness, ()> for IdnAdjunction {
 
     fn right_adjunct<A, B, Func>(_ctx: &(), la: Idn<A>, mut f: Func) -> Result<B, Self::Error>
     where
-        A: Satisfies<NoConstraint> + Clone,
-        B: Satisfies<NoConstraint> + Clone,
-        Idn<B>: Satisfies<NoConstraint>,
+        A: Clone,
+        B: Clone,
         Func: FnMut(A) -> Idn<B>,
     {
         Ok(f(la.0).0)

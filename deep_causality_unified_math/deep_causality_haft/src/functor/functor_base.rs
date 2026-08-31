@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{HKT, Satisfies};
+use crate::HKT;
 
 /// The `Functor` trait abstracts over types that can be mapped over.
 ///
@@ -12,11 +12,10 @@ use crate::{HKT, Satisfies};
 ///
 /// This trait is generic over `F`, which is a Higher-Kinded Type (HKT) witness.
 ///
-/// # Constraint Support
+/// # Element bounds
 ///
-/// The `fmap` function requires both input type `A` and output type `B` to satisfy the
-/// HKT's constraint. Under `NoConstraint` that admits every type; under a marker it admits
-/// only the types for which the marker is implemented.
+/// `fmap` places no bound on `A` or `B`. A container of labels maps to one of scores as readily
+/// as one of floats maps to another.
 ///
 /// # Laws (Informal)
 ///
@@ -68,7 +67,5 @@ pub trait Functor<F: HKT> {
     /// ```
     fn fmap<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B>
     where
-        A: Satisfies<F::Constraint>,
-        B: Satisfies<F::Constraint>,
         Func: FnMut(A) -> B;
 }

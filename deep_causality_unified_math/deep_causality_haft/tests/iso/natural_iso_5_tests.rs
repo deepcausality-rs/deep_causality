@@ -5,7 +5,7 @@
 
 //! Tier 3 `NaturalIso5<F, G>` round-trip tests (arity-5 HKT5Unbound).
 
-use deep_causality_haft::{HKT5Unbound, NaturalIso5, NoConstraint, Satisfies};
+use deep_causality_haft::{HKT5Unbound, NaturalIso5};
 
 // =============================================================================
 // Fixtures
@@ -26,28 +26,19 @@ struct MyQuintuple<V, S, C, E, L> {
 struct QuintupleWitness;
 
 impl HKT5Unbound for QuintupleWitness {
-    type Constraint = NoConstraint;
     type Type<V, S, C, E, L> = Quintuple<V, S, C, E, L>;
 }
 
 struct MyQuintupleWitness;
 
 impl HKT5Unbound for MyQuintupleWitness {
-    type Constraint = NoConstraint;
     type Type<V, S, C, E, L> = MyQuintuple<V, S, C, E, L>;
 }
 
 struct QuintupleMyQuintupleIso;
 
 impl NaturalIso5<QuintupleWitness, MyQuintupleWitness> for QuintupleMyQuintupleIso {
-    fn to_target<V, S, C, E, L>(fa: Quintuple<V, S, C, E, L>) -> MyQuintuple<V, S, C, E, L>
-    where
-        V: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        S: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        E: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        L: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_target<V, S, C, E, L>(fa: Quintuple<V, S, C, E, L>) -> MyQuintuple<V, S, C, E, L> {
         MyQuintuple {
             v: fa.0,
             s: fa.1,
@@ -57,14 +48,7 @@ impl NaturalIso5<QuintupleWitness, MyQuintupleWitness> for QuintupleMyQuintupleI
         }
     }
 
-    fn to_source<V, S, C, E, L>(ga: MyQuintuple<V, S, C, E, L>) -> Quintuple<V, S, C, E, L>
-    where
-        V: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        S: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        E: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-        L: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
-    {
+    fn to_source<V, S, C, E, L>(ga: MyQuintuple<V, S, C, E, L>) -> Quintuple<V, S, C, E, L> {
         Quintuple(ga.v, ga.s, ga.c, ga.e, ga.l)
     }
 }

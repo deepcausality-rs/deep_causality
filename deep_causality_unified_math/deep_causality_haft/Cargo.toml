@@ -25,7 +25,6 @@ exclude = [
     "papers/*",
 ]
 
-
 [features]
 default = ["std"]
 std = ["alloc", "deep_causality_algebra/std"]
@@ -36,54 +35,6 @@ no-std = ["alloc", "deep_causality_algebra/no-std"]
 path = "../deep_causality_algebra"
 version = "0.4"
 default-features = false
-
-[[example]]
-name = "haft_applicative"
-path = "examples/applicative.rs"
-
-[[example]]
-name = "haft_foldable"
-path = "examples/foldable.rs"
-
-[[example]]
-name = "haft_monad"
-path = "examples/monad.rs"
-
-[[example]]
-name = "haft_functor"
-path = "examples/functor.rs"
-
-[[example]]
-name = "haft_comonad"
-path = "examples/comonad.rs"
-
-[[example]]
-name = "haft_traversable"
-path = "examples/traversable.rs"
-
-[[example]]
-name = "haft_adjunction"
-path = "examples/adjunction.rs"
-
-[[example]]
-name = "haft_parametric_monad"
-path = "examples/parametric_monad.rs"
-
-[[example]]
-name = "haft_bifunctor"
-path = "examples/bifunctor.rs"
-
-[[example]]
-name = "haft_profunctor"
-path = "examples/profunctor.rs"
-
-[[example]]
-name = "haft_effect_system_example"
-path = "examples/effect_system.rs"
-
-[[example]]
-name = "haft_unbound_example"
-path = "examples/unbound_haft.rs"
 
 [lints]
 workspace = true

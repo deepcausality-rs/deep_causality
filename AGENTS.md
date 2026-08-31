@@ -257,7 +257,7 @@ vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded
 was a re-export shim over `deep_causality_linear`; 0.2.5 is its last crates.io release.
 
 The tier block below is derived from the `[dependencies]` tables of each member's
-`Cargo.toml`, dev- and build-dependencies excluded. `build/scripts/crates.sh` reads the
+`Cargo.toml`, dev- and build-dependencies excluded. `scripts/crates.sh` reads the
 same source for the build scripts, so a crate added to the workspace appears in both
 without an edit here.
 `deep_causality_cfd` was released to crates.io as 0.1.0 on 2026-08-12.
@@ -434,7 +434,7 @@ vanishes, or only at one well-behaved input. Watch for it when a test
 
 ### Mutation testing
 
-`build/scripts/mutants.sh` runs `cargo mutants`, which changes one expression at a time and re-runs
+`scripts/mutants.sh` runs `cargo mutants`, which changes one expression at a time and re-runs
 the tests. A mutant no test objects to is a decision nothing pins. It answers the question coverage
 cannot.
 
@@ -460,9 +460,9 @@ describe the equivalence in prose and leave the mutant in the report.
 
 Code examples under `examples/*` are exempt from the coverage requirement. They are runnable demonstrations, not library code, and are verified by running them (`cargo run -p <crate> --example <name>`, or `bazel run //examples/<package>:<name>`) rather than by unit tests. Do not add test files or test modules for example binaries.
 
-Every `[[example]]` also needs a `rust_binary` in its owning package's `BUILD.bazel`, because Bazel does not read `Cargo.toml`. Two places declare examples: the packages under `examples/`, and the library crates carrying their own verification harnesses and studies (`deep_causality_cfd/verification` and `studies`, `deep_causality_algorithms/verification`, `deep_causality_unified_math/deep_causality_haft/examples`, and others). In a library crate the example binaries sit below the `rust_library` under a `# Example binaries` comment and depend on `:<crate_name>`. A binary's `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set.
+Every `[[example]]` also needs a `rust_binary` in its owning package's `BUILD.bazel`, because Bazel does not read `Cargo.toml`. Two places declare examples: the packages under `examples/`, and the library crates carrying their own verification harnesses and studies (`deep_causality_cfd/verification` and `studies`, `deep_causality_algorithms/verification`, and others). In a library crate the example binaries sit below the `rust_library` under a `# Example binaries` comment and depend on `:<crate_name>`. A binary's `deps` list the crates that example's own sources reference, not the package-wide Cargo dependency set.
 
-`make check_examples` fails when a Cargo example has no Bazel target, across both locations. An example that is deliberately Cargo-only is listed in `build/scripts/check_examples.sh` with the reason recorded in the owning package's `BUILD.bazel`.
+`make check_examples` fails when a Cargo example has no Bazel target, across both locations. An example that is deliberately Cargo-only is listed in `scripts/check_examples.sh` with the reason recorded in the owning package's `BUILD.bazel`.
 
 An example that reads bundled data or records an output table resolves the path through a `manifest_dir()` helper rather than `env!("CARGO_MANIFEST_DIR")`. Under Bazel the compile-time manifest directory names a rustc sandbox that no longer exists when the binary runs, so the helper falls back to it only under Cargo and uses `BUILD_WORKSPACE_DIRECTORY` under `bazel run`. The helper lives in the example package's own lib (`paths::manifest_dir()`), or, for a library crate, in the shared example module next to the harnesses (`deep_causality_algorithms/verification/brcd/common.rs`) so it stays out of the published `src/`.
 
