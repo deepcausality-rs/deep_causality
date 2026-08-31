@@ -243,10 +243,26 @@ Mechanical work. No design decision, one crate touched, laws follow from the sha
 
 | # | Item | Gap | Why easy |
 |---|---|---|---|
-| E1 | `Functor`, `Applicative`, `Foldable` for `Complex`, `Quaternion`, `Octonion` | §3.1 | Fixed-arity products. No shape to lose, so no law to break. Constrained-witness pattern already exists |
-| E2 | `Functor` for `Dual` (`CoMonad` deferred) | §3.1 | Two fields. See the two caveats below |
+| E1 | ~~`Functor`, `Applicative`, `Foldable` for `Complex`, `Quaternion`, `Octonion`~~ **CLOSED** | §3.1 | Done via `MonoidalApplicative`, not `Applicative`; see the note below |
+| E2 | ~~`Functor` for `Dual`~~ **CLOSED** (`CoMonad` deferred) | §3.1 | Two fields. See the two caveats below |
 | E3 | `right_adjunct` returns `Result` instead of panicking | §3.8 | Signature change plus one call site |
 | E4 | Law tests for the four existing witnesses | §3.6 | The probe in §6 is the template. Cheap, and it pins the two known violations before anything is built on them |
+
+**E1 and E2 closed** by `openspec/changes/add-lax-monoidal-applicative`. Neither was closed the way
+this table anticipated, and the difference matters.
+
+E1 asked for `Applicative`, which remains impossible: `Applicative<F>: Functor<F> + Pure<F>`, and
+`pure` fills one slot from one moved value, so a fixed-arity product of arity ≥ 2 cannot have it
+without the diagonal. What the three types gained instead is `MonoidalApplicative`, whose `apply` is
+derived from the lax monoidal structure map and never invokes the diagonal. They also gained
+`Semigroupal`, `LaxMonoidal` and `Convolutional`. `Foldable` was already present.
+
+E2's `Functor` half is closed the same way, plus the monoidal stack, and it required dropping the
+struct-level bound on `Dual<T: Real>` — that bound killed the witness at the GAT, before any method.
+The `CoMonad` half is deferred; see the second caveat.
+
+The "why easy" column was wrong about both. Neither was mechanical, and the reason each was blocked
+turned out to be structural rather than local.
 
 Caveat on E2: the lawful `fmap` over `Dual` maps `re` and `du` independently, which is the pair
 functor and carries no chain rule. It is worth having for precision migration and for structural

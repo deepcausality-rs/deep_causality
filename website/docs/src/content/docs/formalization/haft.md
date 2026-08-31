@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-Forty-nine laws for the Higher-Order Abstract Functional Traits: functor, applicative, monad, comonad, bifunctor, profunctor, arrow, free monad, category, Kleisli, symmetric-monoidal, foldable, traversable, adjunction, and the effect system. These are the type-level laws behind [Higher-Kinded Types](/concepts/hkt/), proved in [`lean/DeepCausalityFormal/Haft/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Haft).
+Fifty-three laws for the Higher-Order Abstract Functional Traits: functor, applicative, monad, comonad, bifunctor, profunctor, arrow, free monad, category, Kleisli, symmetric-monoidal, lax-monoidal, foldable, traversable, adjunction, and the effect system. These are the type-level laws behind [Higher-Kinded Types](/concepts/hkt/), proved in [`lean/DeepCausalityFormal/Haft/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Haft).
 
 Every row is `proved` in Lean. This layer has no per-row Rust-witness column: the witness tree `deep_causality_haft/tests/formalization_lean/` mirrors the Lean tree one-to-one (`Haft/Functor.lean` maps to `functor_tests.rs`), with one law-test per id carrying the id as a `THEOREM_MAP:` annotation.
 
@@ -21,7 +21,11 @@ Every row is `proved` in Lean. This layer has no per-row Rust-witness column: th
 | `haft.bifunctor.laws` | `bimap id id = id`; composition; first/second decomposition | `Haft/Bifunctor.lean` | ✓ |
 | `haft.profunctor.laws` | `dimap id id = id`; contravariant-twist composition | `Haft/Profunctor.lean` | ✓ |
 | `haft.parametric_monad.laws` | Atkey indexed monad laws (IxState carrier) | `Haft/ParametricMonad.lean` | ✓ |
-| `haft.monoidal_merge.merge_naturality` | `merge` is binatural (lax-monoidal structure map; trait renamed from `Promonad`, D3/P-1) | `Haft/MonoidalMerge.lean` | ✓ |
+| `haft.monoidal_merge.merge_naturality` | `merge` is binatural (semigroupal structure map φ, no unit; trait renamed from `Promonad`, D3/P-1) | `Haft/MonoidalMerge.lean` | ✓ |
+| `haft.lax_monoidal.naturality` | `zip (fmap f fa) (fmap g fb) = fmap (f × g) (zip fa fb)` | `Haft/LaxMonoidal.lean` | ✓ |
+| `haft.lax_monoidal.assoc` | `zip (zip fa fb) fc ≅ zip fa (zip fb fc)` modulo the associator; `zip` derived from `zip_with` | `Haft/LaxMonoidal.lean` | ✓ |
+| `haft.lax_monoidal.unit_laws` | `zip unit fa ≅ fa` and `zip fa unit ≅ fa` modulo the unitors | `Haft/LaxMonoidal.lean` | ✓ |
+| `haft.lax_monoidal.apply_agreement` | the `apply` derived from `zip_with` equals the hand-written `Applicative::apply` | `Haft/LaxMonoidal.lean` | ✓ |
 | `haft.free_monad.left_id` | `bind (pure a) k = k a` (free monad on a functor) | `Haft/FreeMonad.lean` | ✓ |
 | `haft.free_monad.right_id` | `bind m pure = m` | `Haft/FreeMonad.lean` | ✓ |
 | `haft.free_monad.assoc` | `bind (bind m f) g = bind m (λx. bind (f x) g)` | `Haft/FreeMonad.lean` | ✓ |

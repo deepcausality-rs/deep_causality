@@ -63,10 +63,10 @@ four effect monads. See `design.md` and the note in `hkt_vec_ext.rs`.
 
 ## 6. Verification and documentation
 
-- [ ] 6.1 Confirm `VecWitness::apply` still accepts a `Func` that is `FnMut` and not `Clone`, and still returns the six-element cartesian product for two functions and three arguments
-- [ ] 6.2 Confirm `Applicative`, `Pure`, `Monad`, `Traversable`, `Arrow` and the effect system have unchanged signatures, and that all 22 existing `Applicative` impls are untouched
-- [ ] 6.3 Update `website/docs/src/content/docs/formalization/haft.md` to 53 rows and the spelled-out count to fifty-three
-- [ ] 6.4 Run `bazel test //...` and record the pass count
-- [ ] 6.5 Run clippy on `deep_causality_haft`, `deep_causality_num_complex` and `deep_causality_num_dual`, fixing rather than suppressing any lint
-- [ ] 6.6 Update `openspec/notes/unified_math/unified_math_gaps.md` to mark E1 and E2 closed
-- [ ] 6.7 Update `openspec/notes/hkt_gat/monoidal-applicative.md` status from proposed to implemented, retaining the survey and the measurements
+- [x] 6.1 Confirm `VecWitness::apply` still accepts a `Func` that is `FnMut` and not `Clone`, and still returns the six-element cartesian product for two functions and three arguments
+- [x] 6.2 Confirm `Applicative`, `Pure`, `Monad`, `Traversable`, `Arrow` and the effect system have unchanged signatures, and that all 22 existing `Applicative` impls are untouched
+- [x] 6.3 Update `website/docs/src/content/docs/formalization/haft.md` to 53 rows and the spelled-out count to fifty-three
+- [x] 6.4 Run `bazel test //...` and record the pass count
+- [x] 6.5 Run clippy on `deep_causality_haft`, `deep_causality_num_complex` and `deep_causality_num_dual`, fixing rather than suppressing any lint
+- [x] 6.6 Update `openspec/notes/unified_math/unified_math_gaps.md` to mark E1 and E2 closed
+- [x] 6.7 Update `openspec/notes/hkt_gat/monoidal-applicative.md` status from proposed to implemented, retaining the survey and the measurements

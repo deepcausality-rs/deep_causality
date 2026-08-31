@@ -10,7 +10,12 @@ it, mark which monoid a witness is claiming with two first-class markers, and le
 This admits fixed-arity products into the applicative hierarchy without requiring `Clone` of anything
 that does not already have it.
 
-**Status.** Proposed. Nothing implemented. Every compiler claim below was run; §9 reproduces them.
+**Status.** **Implemented**, via `openspec/changes/add-lax-monoidal-applicative`. The traits, the
+Lean formalization, and adoption on the Cayley-Dickson types and `Dual` are all in. Two things in
+this note did *not* ship: the class B and C adoptions remain future work, and the `Traversable` for
+`Vec` in §6 finding 5 was implemented, measured and withdrawn — the required bound change takes
+admissible inner applicatives from 19 to 3, losing every effect monad. The survey and the
+measurements below stand as written; every compiler claim was run, and §9 reproduces them.
 
 **Origin.** `unified_math_gaps.md` §4.1 item E1 asks for `Applicative` on the Cayley-Dickson types
 and item E2 for `Functor` and `CoMonad` on `Dual`. Neither can be written, and the reason turned out

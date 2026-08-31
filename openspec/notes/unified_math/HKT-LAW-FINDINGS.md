@@ -51,7 +51,7 @@ promise, and `linear-hkt-composition` states the consequence plainly: an HKT imp
 satisfy its laws is worse than no impl, because it composes and produces wrong answers only when a
 caller relies on the law.
 
-## Why it is hard rather than careless
+## Why it is hard
 
 `pure` must build a container holding one value, and a **shaped** container has no canonical shape to
 choose. Take `pure(a)` to be the `1 x 1` — the only defensible choice — and right identity then
