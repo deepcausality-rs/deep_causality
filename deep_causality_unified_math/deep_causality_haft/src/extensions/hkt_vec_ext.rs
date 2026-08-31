@@ -133,4 +133,24 @@ impl CloneFunctor for VecWitness {
     }
 }
 
-// NOTE: Traversable is not implmented for VecWitness
+// NOTE: `Traversable` is deliberately not implemented for `VecWitness`, and the reason is a
+// signature one rather than a mathematical one.
+//
+// The usual `sequence` for a list folds an accumulator through the inner applicative:
+//
+//     acc = M::apply(M::fmap(acc, |v| move |a| { v.push(a); v }), m_a)
+//
+// That puts a *function* inside `M`, so `Applicative::apply` requires the anonymous closure type
+// to satisfy `M::Constraint`:
+//
+//     error[E0277]: the trait bound `{closure@...}: Satisfies<<M as HKT>::Constraint>`
+//                   is not satisfied
+//
+// `sequence` cannot declare that, and an impl may not add the bound itself (E0276). The same fold
+// written against a `zip_with`-style structure map compiles and passes, because the combining
+// function never enters `M`:
+//
+//     acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v });
+//
+// See `openspec/notes/hkt_gat/monoidal-applicative.md` §6. Until that structure map exists,
+// `OptionWitness` and `ResultWitness` are the only two `Traversable` carriers.

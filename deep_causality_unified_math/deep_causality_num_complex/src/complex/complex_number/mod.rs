@@ -22,8 +22,17 @@ mod rotation;
 /// where `a` and `b` are real numbers, and `i` is the imaginary unit,
 /// satisfying the equation `i^2 = -1`.
 ///
-/// The `Complex` struct is generic over a type `T` that implements `RealField`,
-/// allowing it to work with different floating-point precisions (e.g., `f32` or `f64`).
+/// The `Complex` struct is generic over its component type `T` and carries **no struct-level
+/// bound**, matching `Quaternion`, `CausalTensor` and `CausalMultiVector`. The struct says what may
+/// be *stored*; the impls say what may be *computed*. Arithmetic, norms and the algebra tower all
+/// require `T: RealField` at their own impls, so `Complex<f32>` and `Complex<f64>` behave exactly as
+/// before.
+///
+/// Dropping the bound is what lets `Complex` nest: `Complex<Complex<f64>>` and
+/// `Complex<Quaternion<f64>>` are now well formed as data. Neither carries multiplication, because
+/// `impl<T: RealField> DivisionAlgebra<T> for Complex<T>` does not apply to them, and that is
+/// deliberate: complexifying the quaternions gives the biquaternions, which are not a division
+/// algebra, so that product needs a decision rather than an inherited formula.
 ///
 /// # Fields
 ///
@@ -42,7 +51,7 @@ mod rotation;
 /// assert_eq!(c2.im, -1.0);
 /// ```
 #[derive(Copy, Clone, PartialEq, Default, Debug)]
-pub struct Complex<T: RealField> {
+pub struct Complex<T> {
     pub re: T,
     pub im: T,
 }
