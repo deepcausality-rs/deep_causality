@@ -7,12 +7,10 @@ use alloc::format;
 
 use crate::QuantumError;
 use crate::types::qgates::bridge::metric_adjoint;
-use crate::types::qgates::gates_haruna;
 use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_algebra::RealField;
-use deep_causality_haft::Functor;
+use deep_causality_multivector::HilbertState;
 use deep_causality_multivector::MultiVector;
-use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, HilbertState};
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 
@@ -185,96 +183,4 @@ where
     R: RealField + FromPrimitive + core::iter::Sum,
 {
     born_probability_kernel(actual, ideal)
-}
-
-/// Implements Haruna's Logical S-Gate.
-pub fn haruna_s_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let field_complex =
-        CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_s(&field_complex)?;
-    Ok(HilbertState::<R>::from_multivector(result))
-}
-
-/// Implements Haruna's Logical Z-Gate.
-pub fn haruna_z_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let field_complex =
-        CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_z(&field_complex)?;
-    Ok(HilbertState::<R>::from_multivector(result))
-}
-
-/// Implements Haruna's Logical X-Gate.
-pub fn haruna_x_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let field_complex =
-        CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_x(&field_complex)?;
-    Ok(HilbertState::<R>::from_multivector(result))
-}
-
-/// Implements Haruna's Logical Hadamard Gate.
-pub fn haruna_hadamard_gate_kernel<R>(
-    field_a: &CausalMultiVector<R>,
-    field_b: &CausalMultiVector<R>,
-) -> Result<Operator<R>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let a_complex = CausalMultiVectorWitness::fmap(field_a.clone(), |x| Complex::new(x, R::zero()));
-    let b_complex = CausalMultiVectorWitness::fmap(field_b.clone(), |x| Complex::new(x, R::zero()));
-
-    if a_complex.metric() != b_complex.metric() {
-        return Err(QuantumError::MetricMismatch(format!(
-            "Metric mismatch in Haruna Hadamard: {:?} vs {:?}",
-            a_complex.metric(),
-            b_complex.metric()
-        )));
-    }
-
-    let result = gates_haruna::logical_hadamard(&a_complex, &b_complex)?;
-    Ok(HilbertState::<R>::from_multivector(result))
-}
-
-/// Implements Haruna's Logical CZ Gate.
-pub fn haruna_cz_gate_kernel<R>(
-    field_a1: &CausalMultiVector<R>,
-    field_a2: &CausalMultiVector<R>,
-) -> Result<Operator<R>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let a1_complex =
-        CausalMultiVectorWitness::fmap(field_a1.clone(), |x| Complex::new(x, R::zero()));
-    let a2_complex =
-        CausalMultiVectorWitness::fmap(field_a2.clone(), |x| Complex::new(x, R::zero()));
-
-    if a1_complex.metric() != a2_complex.metric() {
-        return Err(QuantumError::MetricMismatch(format!(
-            "Metric mismatch in Haruna CZ: {:?} vs {:?}",
-            a1_complex.metric(),
-            a2_complex.metric()
-        )));
-    }
-
-    let result = gates_haruna::logical_cz(&a1_complex, &a2_complex)?;
-    Ok(HilbertState::<R>::from_multivector(result))
-}
-
-/// Implements Haruna's Logical T-Gate.
-pub fn haruna_t_gate_kernel<R>(field: &CausalMultiVector<R>) -> Result<Operator<R>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let field_complex =
-        CausalMultiVectorWitness::fmap(field.clone(), |x| Complex::new(x, R::zero()));
-    let result = gates_haruna::logical_t(&field_complex)?;
-    Ok(HilbertState::<R>::from_multivector(result))
 }

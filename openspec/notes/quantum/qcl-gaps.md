@@ -20,11 +20,12 @@ therefore marked unresolved rather than confirmed. Everything else carries evide
 
 ## 0. Status
 
-Verified against the tree on **2026-08-31**. **Nine gaps are closed, nine are open.**
+Verified against the tree on **2026-08-31**. **Thirteen gaps are closed, five are open.**
 
 `add-linear-algebra-crate` closed G-01 and G-02. The category-A sweep then closed G-03, G-10, G-11,
 G-12, G-15 and G-17: everything that was unblocked, self-contained and small. `Gf2Chain<W>` closed
-G-05, which this register had not recorded until today.
+G-05, which this register had not recorded until today. G-06 closed on 2026-08-31: the gate alphabet
+now covers Table 1, and the coincident-index defect it uncovered is fixed.
 
 **`deep_causality_homology` now exists, and it is where G-04 and G-08 land.**
 The `extract-homology-crate` change moved the chain-complex layer out of `deep_causality_topology`
@@ -78,15 +79,13 @@ has an execution path — `sim.rs:162-223` dispatches every variant into a state
 each new gate needs a simulator arm too, and `C^{m-1}Z` needs a generic multi-control apply rather
 than a copy of `apply_cz`.
 
-**Nine open, verified today.** `homology_representatives` and `dual_representative` exist nowhere
+**Five open, verified today.** `homology_representatives` and `dual_representative` exist nowhere
 in the workspace, and a sweep of every `fn` name containing homolog, representat, cycle, cocycle,
 generat, basis or dual returns nothing that yields a homology class. There is no `Cochain`, and an
 active spec forbids adding one (see G-18). `logical_z` is still typed on `CausalMultiVector`
-(`gates_haruna.rs:137`); `GateOp` carries four of Table 1's seven gates and four it does not ask
-for; and `deep_causality_quantum` depends on none of `deep_causality_topology`,
-`deep_causality_linear` or `deep_causality_homology`. `Gf2Chain` has no first-party caller outside
-its own crate's tests and the topology re-export, so the 𝔽₂ stack is wired end to end for counting
-Betti numbers and nowhere wired for representatives.
+and `deep_causality_quantum` now depends on `deep_causality_homology`, which G-07 added. `Gf2Chain`
+has its first first-party caller: the Haruna gate layer. The 𝔽₂ stack is wired end to end for
+counting Betti numbers and for emitting logical gates, and nowhere wired for representatives.
 
 ### An open question about the layering, raised 2026-08-25
 
@@ -418,7 +417,7 @@ G-18's instruction to "fold into G-05" is void: the two need different types. G-
 stays at the head. R2, R3 and R5 are *available* now rather than *exercised*: `Gf2Chain` has no
 first-party caller outside its own tests and the topology shim.
 
-### G-06 — No circuit type
+### G-06 — No circuit type — **CLOSED**
 
 **Severity S2.** Blocks R7.
 
@@ -428,42 +427,51 @@ representation of a physical-gate sequence, which is what every Table 1 decompos
 **Closure.** `Circuit` as an ordered list of gate applications over named qubit indices, covering
 `S, CZ, H, T, CS†, CCZ, C^{m-1}Z`.
 
-**State on 2026-08-25: it needs extending, and the shortfall is measured.** `GateOp`
-(`qpu/circuit.rs:19-36`) carries `H, X, Y, Z, S, T, Cnot, Cz`. Against Table 1 that supplies four of
-the seven. Missing: `CS†`, `CCZ`, and `C^{m-1}Z` for general `m`. No adjoint form exists for any
-gate, so `S†` and `T†` are absent as well, and the multi-controlled case needs a control *list*
-rather than the fixed `{ control, target }` shape the two-qubit variants use. `QuantumCircuit`
-itself (`qpu/circuit.rs:59`) is a register width plus an ordered program and needs no change.
+**The shortfall, as it stood.** `GateOp` carried `H, X, Y, Z, S, T, Cnot, Cz`: four of Table 1's
+seven, plus four it does not ask for. Missing were `CS†`, `CCZ` and `C^{m-1}Z` for general `m`,
+and no adjoint existed for any gate. `QuantumCircuit` itself was a register width plus an ordered
+program and needed no change, which held.
 
-**The work is not only in the enum.** `GateOp` has an execution path: `sim.rs:162-223` dispatches
-every variant into a state-vector simulator through `apply_single` (`sim.rs:79`), `apply_cnot`
-(`:95`) and `apply_cz` (`:107`). So each new gate needs a variant, a `qubits()` arm (`circuit.rs:40`,
-match at `:41`), **and** a simulator implementation. `C^{m-1}Z` needs a generic multi-control apply
-rather than a copy of `apply_cz`; there is no multi-control kernel to vary.
+**Closure as built.** Five variants added: `Sdg`, `Tdg`, `Csdg`, `Ccz { q0, q1, q2 }` and
+`Cmz { qubits: Vec<usize> }`. `Cmz` is the general `C^{m-1}Z` over a symmetric list; `Cz` and `Ccz`
+are its two- and three-qubit cases, kept as fixed-arity variants because they carry no allocation
+and clone without one. `qubits()` moved from `match *self` to `match self`, which the `Vec` field
+forces.
 
-**A fourth obligation, not previously recorded, and it is a correctness one.**
-`QuantumCircuit::new`'s coincident-index validation reads `if qs.len() == 2 && qs[0] == qs[1]`
-(`circuit.rs:90`). It fires for two-qubit gates only. A `CCZ` or an `m`-control `C^{m-1}Z` yields
-`qs.len() >= 3` and bypasses the check entirely, so a duplicated control would be accepted and then
-mis-applied by the simulator with nothing raised. Closing G-06 means generalizing that check, not
-only adding variants.
+**One kernel replaced three, and the register had this backwards.** The register warned that
+`C^{m-1}Z` "needs a generic multi-control apply rather than a copy of `apply_cz`; there is no
+multi-control kernel to vary". True, and the wrong conclusion. Every gate being added is *diagonal
+in the computational basis*, so the arity is a runtime value rather than a new kernel per gate:
+`apply_diagonal_phase(state, qubits, phase)` folds the qubit list into a mask and multiplies the
+amplitude where `i & mask == mask`. It serves `Z`, `S`, `S†`, `T`, `T†`, `CZ`, `CS†`, `CCZ` and
+`C^{m-1}Z` alike. `apply_cz` is gone, and `Z`, `S` and `T` gave up their 8-line matrix literals.
+The simulator got smaller while gaining five gates.
 
-**Two further sizing facts.** The overlap with Table 1 is four in and four out, not four in and
-three missing: `X`, `Y`, `Z` and `Cnot` are variants Table 1 does not ask for, so `GateOp` is a
-partially overlapping alphabet rather than a subset. And of the absent adjoints, only `CS†` is a
-real expressivity gap: the simulator's own matrices give `S = diag(1, i)` (`sim.rs:202`) and
-`T = diag(1, e^{iπ/4})` (`:212`), so `S†` is three `S` ops and `T†` is seven `T` ops. Those two are
-circuit-length costs, not missing capability. Budget accordingly.
+**The fourth obligation was the correctness one, and it is fixed.**
+`QuantumCircuit::new` validated coincident indices with `if qs.len() == 2 && qs[0] == qs[1]`, which
+fired for two-qubit gates only. `Ccz{0, 0, 1}` would have been accepted and then acts as `Cz{0, 1}`,
+a different gate from the one written, with nothing raised. The check is now a scan over the whole
+index list at every arity, plus a rejection of an empty `Cmz`, whose mask would phase the entire
+register.
 
-**Both multi-qubit variants use the fixed shape `{ control, target }`** (`circuit.rs:33,35`), which
-cannot express a control list. `C^{m-1}Z` needs a new variant shape carrying `Vec<usize>` controls,
-which also splits the two-arm grouping in `qubits()` at `circuit.rs:48`. Note that `SimQpu::sample`
-caps at 24 qubits (`sim.rs:146-151`), so the one gate whose usefulness scales with register width is
-the one the in-process simulator will not exercise far.
+**Tested against published identities, not against this simulator.** A diagonal gate moves no
+amplitude, so it is invisible on a basis state; every test conjugates with `H` and lands on a
+deterministic basis state fixed by a relation from Nielsen & Chuang: `HZH = X`, `S = T²`, `Z = S²`,
+`T⁸ = I`, `(CS†)² = CZ`, and `CNOT = (I ⊗ H)·CZ·(I ⊗ H)` with its Toffoli and `C^{m-1}X` analogues.
+18 tests added across `circuit_tests.rs` and `sim_tests.rs`.
+
+**Four mutations, four failures.** Replacing `i & mask == mask` with `i & mask != 0`, the classic
+any-control-for-all-controls defect, fails 5 tests. Flipping `S†`'s phase sign fails 2, flipping
+`T†`'s fails 1, and reverting the validation fix to its two-qubit form fails 1. The suite
+discriminates.
+
+`SimQpu::sample` still caps at 24 qubits, so the one gate whose usefulness scales with register
+width is the one the in-process simulator will not exercise far. That is a simulator limit rather
+than a gap in the alphabet.
 
 **Owner:** `deep_causality_quantum`.
 
-### G-07 — The Haruna gate layer is typed on the wrong carrier
+### G-07 — The Haruna gate layer is typed on the wrong carrier — **CLOSED**
 
 **Severity S1.** This is friction F8 in the design note, and it is the one that produces confident
 wrong answers.
@@ -488,7 +496,55 @@ to represent `n` bits.
 **Closure.** Retype the layer to take a `Chain` and return a `Circuit`. The gate builders become pure
 combinatorics per Table 1: `S̄(γ) = Π S_{jₖ} · Π_{k₁<k₂} CZ_{j_{k₁}j_{k₂}}` and so on.
 
-**A dependency edge does not exist yet.** `deep_causality_quantum/Cargo.toml` depends on
+**Closure as built.** `gates_haruna.rs` takes `Gf2Chain<W>` and returns `Vec<GateOp>`. Each builder
+is the product Table 1 names, read from the paper rather than from this register:
+`Z̄` and `X̄` are transversal (rows 1 and 2); `S̄` is Eq. (3.17), transversal S plus CZ on every pair
+of the support; `T̄` is Eq. (3.59), transversal T plus CS† on every pair plus CCZ on every triple;
+`CZ̄` is the full Cartesian product of the two supports (§3.3); `H̄` is Eq. (3.27),
+`S̄(γ) · ∏H · S̄(γ̃) · ∏H · S̄(γ)`. `logical_multi_cz` is new and covers Table 1's row 6.
+
+**Two things the paper required that this register never recorded.** Both would have shipped as
+silent wrong answers.
+
+- **`CZ_{i,i} = Z_i`.** §3.3 defines the coincident case as `exp(iπ z_i z_i) = exp(iπ z_i) = Z_i`.
+  When `γ₁` and `γ₂` share a qubit, that factor is a single-qubit Z rather than a CZ. `logical_cz`
+  emits it. Without the reduction the gate would be wrong *and* the circuit would be rejected, since
+  G-06's validation refuses a gate naming one qubit twice.
+- **The `C^{m-1}Z` reduction rule**, from Table 1's caption: repeated controls drop to a
+  lower-control gate and a control coinciding with the target drops to Z, so `C³Z_{i,i,j,k} =
+  C²Z_{i,j,k}` and `C²Z_{i,i,i} = Z_i`. `logical_multi_cz` deduplicates each product tuple before
+  emitting, which is what makes overlapping supports well defined.
+
+**The global phase is returned rather than dropped.** Table 1's Hadamard carries `e^{-iπ/4}`, and a
+circuit type has nowhere to put it. `logical_hadamard` returns `(Vec<GateOp>, Complex<R>)`. A global
+phase is unobservable under computational-basis measurement and becomes a relative, observable one
+the moment the gate is used as a controlled operation, which is what the Appendix B arguments carry.
+The causal wrapper drops it and says so.
+
+**The carrier removal cascaded through two further layers.** `mechanics.rs` held six
+`haruna_*_gate_kernel` adapters from `CausalMultiVector` to `Operator`, and `wrappers.rs` held six
+causal wrappers over those. The kernels are gone, having nothing left to adapt, and the wrappers now
+call `gates_haruna` directly and carry `PropagatingEffect<Vec<GateOp>>`. With them went the Taylor
+`exp` and its non-convergence error: the paper's gates are combinatorics, so there is no series to
+diverge and the *"Taylor series did not converge within 64 terms"* symptom cannot recur.
+
+**The circuit types left the `qpu` feature gate.** `GateOp` and `QuantumCircuit` are plain data with
+no dependency of their own, and the always-on gate layer emits them, so gating them would have gated
+the logical gates too. `qpu` still gates what it was written for: the `QpuSampler` seam, `SimQpu`,
+and the optional `deep_causality_uncertain` edge. Verified with a `--no-default-features
+--features no-std` build.
+
+**Breaking, and versioned as such.** Six public functions changed signature and six were removed, so
+`deep_causality_quantum` goes 0.1.2 to **0.2.0**.
+
+**Tested against the paper, and mutated.** Every expected program is read off Table 1 or the equation
+it summarises, never off this implementation. Four mutations: routing T's pair factor through CZ
+instead of CS† fails 1 test; dropping the `CZ_{i,i}` reduction fails 3; conjugating the Hadamard with
+`supp(γ)` instead of `supp(γ̃)` fails 3; dropping the `C^{m-1}Z` deduplication fails 2.
+
+**The dependency edge, as built.** It goes to `deep_causality_homology`, in `Cargo.toml`,
+`BUILD.bazel` and `tests/BUILD.bazel`. There was no topology edge to remove: this crate never had
+one. Before the change `deep_causality_quantum/Cargo.toml` depended on
 `deep_causality`, `algebra`, `core`, `haft`, `metric`, `multivector`, `num`, `num_complex`, `tensor`
 and `uncertain`. Two of the ten are optional: `deep_causality` is gated on `qcm`, which is in
 `default`, and `deep_causality_uncertain` on `qpu`, which is not. So nine by default and ten with
@@ -635,7 +691,7 @@ restating it.
 
 **Owner:** `deep_causality_quantum`.
 
-### G-13 — The scalar bound table is over-tight in five of eight rows
+### G-13 — The scalar bound table is over-tight in five of eight rows — **CLOSED**
 
 **Severity S3.**
 
@@ -649,9 +705,39 @@ Copy` sufficed.
 **Closure.** Correct the five rows against the actual signatures. Not yet re-derived here, so the
 spec should re-check rather than copy.
 
-**Owner:** the design note, then the implementation.
+**Closure as built: the premise does not reproduce.** All eight rows were re-derived against the
+shipped signatures. The lens's headline, five rows over-tight in one direction, is not what the tree
+says:
 
-### G-14 — The `design` complexity claim is wrong
+- **One row is genuinely over-tight and relaxable.** Shot statistics and separation sit at
+  `RealField` where `Real + FromPrimitive` suffices, because the Bhattacharyya formula contains no
+  ratio and the surface touches no complex carrier. It is also the one row with no shipped signature
+  at all: `Bhattacharyya` appears in no `.rs` file in the workspace.
+- **Three rows are under-specified rather than over-tight.** Rotations, Born read-out and Verdicts
+  omit the `FromPrimitive`, `Default` and `Debug` that ship on every one of them.
+- **One row is not implementable as written.** `ComplexField<R>` appears nowhere in
+  `deep_causality_quantum`; every signature is a concrete `Complex<R>`. It cannot cheaply become
+  generic either, because `re` and `im` are public fields read directly while `ComplexField` exposes
+  only methods.
+- **One row contradicts §6.5 seventeen lines below it.** The table said costs need no scalar bound
+  and use `usize`; `Ledger<R>` carries `device_time`, `cost` and `bits` as `R` and binds
+  accumulation on `Real`.
+- **Two rows were correct.** Cochains at `CommutativeRing + Copy`, and tolerances at
+  `RealField + FromPrimitive`.
+
+**The load-bearing fact, which makes the table derivable rather than memorised.** Every impl for
+`Complex<T>` in `deep_causality_num_complex` is written `impl<T: RealField>`, `Zero` and `One`
+included, so `Complex<R>` reaches no algebraic structure below `RealField`. And `Real` has exactly
+two implementor families: the `Float` blanket, which also reaches `RealField`, and `Dual<T>`, which
+does not. So `Real` versus `RealField` on any row asks one question, does this surface admit dual
+numbers and stay differentiable, and any surface routed through `Complex` cannot. Four of the eight
+rows are pinned by the carrier rather than by their operations, which is why editing their `where`
+clauses would not have worked.
+
+**Owner:** the design note. There is no implementation half: the correction is to §6.4's table and
+the prose under it.
+
+### G-14 — The `design` complexity claim is wrong — **CLOSED**
 
 **Severity S3.**
 
@@ -661,10 +747,32 @@ formulation at the scale QCL operates on.
 
 **Closure.** Re-derive the algorithm, correct §10.3, and revisit §7.5. **Only §10.3 carries the
 claim**, at its line 693; §7.5 contains no complexity statement at all, just two
-`.design(MinCostCover { .. })` call sites that would change if the algorithm did. The benchmark
-plan's "sweep k from 4 to 20 to find the cliff" may be measuring a cliff that need not exist.
+`.design(MinCostCover { .. })` call sites that would change if the algorithm did.
 
-**Owner:** the design note, then the implementation.
+**Closure as built: the exponent is real, and it is in the wrong variable.** §8.8 of the liftback
+note formulates the stage as minimum-cost set cover whose universe is the `C(n,2)` hypothesis pairs
+and whose sets are the `k` experiments. Enumerating subsets of *experiments* costs `2^k`, which is
+where "exponential in k" came from. That is the wrong enumeration. The exact answer is a DP over
+subsets of the universe, `dp[S | cover(e)] = min(dp[S], dp[S] + cost(e))`, at `O(2^C(n,2) · k)`:
+**linear in k, exponential in n.** So the benchmark plan's "sweep k from 4 to 20 to find the cliff"
+sweeps an axis with no cliff on it. The cliff is in n and arrives near n = 7 or 8, where `C(n,2)`
+reaches 21 to 28.
+
+**And at this note's own scale the solve is not the cost.** §8.6 sizes the scan at `|E| × |H|` plant
+evolutions plus `|E| × C(|H|, 2)` closed-form coefficients, which is 120 and 120 for 40 depths and
+three hypotheses. The cover DP over the same numbers is `2^3 × 40 = 320` arithmetic steps against
+120 plant evolutions. The coverage-matrix build dominates, and it is what Tier 2 should measure.
+
+**The claim had four sites, not one.** `qcl-design-note.md` §10.3 carried the table row and the
+sweep instruction; `qcl-dsl-liftback.md` §8.8 and `example-crosstalk-attribution.md` §6 both said
+"exactly solvable by enumeration at the scale this operates on" without saying which enumeration,
+which is the ambiguity the wrong exponent grew out of. All four now name the universe.
+
+**There is no implementation half.** `MinCostCover`, `DesignObjective`, `DesignPlan` and a `design`
+stage appear in zero `.rs` files, and `deep_causality_quantum` has no `benches/`. This gap was
+entirely prose.
+
+**Owner:** the design note.
 
 ### G-15 — The orthomodular guard may be misplaced — **CLOSED**
 
@@ -855,42 +963,37 @@ CLOSED
   G-01  F₂ linear algebra                    deep_causality_linear
   G-02  betti via F₂ rank                    topology + linear
   G-03  LatticeComplex betti                 topology — closed form kept, now checked
+  G-05  Gf2Chain                             homology — not topology as proposed
+  G-06  the Table 1 gate alphabet            quantum — one diagonal kernel, plus a validation fix
+  G-07  the Haruna layer on Gf2Chain         quantum — plus the homology edge, 0.2.0  
   G-10  Stirling numbers                     num — both kinds, first one unsigned
   G-11  choi_compose                         quantum
   G-12  choi_identity                        quantum
+  G-13  the scalar bound table               design note — premise did not reproduce
+  G-14  the set-cover exponent               design note — linear in k, exponential in n    
   G-15  the verdict guard                    design note — rule 2 narrowed
   G-17  partial_trace non-preservation       quantum — documented
-  G-05  Gf2Chain                             homology — not topology as proposed
 
 OPEN
 G-04  homology representatives             (homology; unblocked, G-05 shipped)  <- start here
-  └── G-08  Poincaré-dual representative   (homology; needs a new 𝔽₂ solver)
-       ├── G-07  retype the Haruna layer   (quantum; needs G-04, G-06, + a homology dep)
-       └── G-09  logical equivalence       (quantum; needs G-04, + a homology dep)
+  ├── G-08  Poincaré-dual representative   (homology; needs an 𝔽₂ solve helper)
+  └── G-09  logical equivalence            (quantum; needs G-04; the edge now exists)
 
 G-18  Cochain                              (topology, no deps)  <- independent root
 
-G-06  Circuit                              (quantum, no deps; 3 variants, 3 qubits() arms,
-                                            3 simulator arms, and one validation fix)
-
 G-16  resolve the tolerance question       (quantum; blocks predict when predict is built)
-G-13, G-14  correct the note               (design note)
 ```
 
-Three independent roots, not one chain. G-04 heads the gate-layer chain. G-18 stands alone now that
-G-05 has closed. G-06 depends on nothing and never did.
+Two independent roots. G-04 heads the remaining chain, and G-09's wiring cost is now zero because
+G-07 paid for the `deep_causality_quantum` to `deep_causality_homology` edge. G-18 stands alone.
 
-### What the remaining nine cost
+### What the remaining six cost
 
 Sized against the tree, not estimated.
 
 **Mid effort, unblocked.** G-04 is the one to start: the bases, the `CsrMatrix<i8>` bridge and the
 chain type all ship, so the work is quotient-basis extraction for homology and cohomology, plus the
-`[im | ker]` stacking that has no primitive. G-06 needs three enum variants, three `qubits()` arms,
-three simulator implementations and a generalized coincident-index check. G-13 needs eight rows
-re-derived against real signatures, and the lens's finding is explicitly not to be copied. G-14 needs
-the set-cover algorithm re-derived at QCL's scale; the edit that follows is small, and lands in §10.3
-rather than §7.5. G-16 is a soundness decision with a written rationale: whether a Q-TOL-satisfied
+`[im | ker]` stacking that has no primitive. G-16 is a soundness decision with a written rationale: whether a Q-TOL-satisfied
 commutator is warrant to invoke an exact-hypothesis Lean theorem. Note that the trade is already
 being made at a hardcoded `1e-12` in a THEOREM_MAP-bound witness.
 
@@ -898,18 +1001,20 @@ being made at a hardcoded `1e-12` in a THEOREM_MAP-bound witness.
 three behaviours and narrows one public impl's bounds, and `openspec/specs/cup-product/spec.md`
 should be archived rather than obeyed.
 
-**Serious.** G-08 needs an 𝔽₂ linear solver written rather than parameterized, because `Gf2` reaches
-`Field` but not `Normed`, and it should not be built on `DualLatticeComplex` as it stands. G-09
-implements B.1 and B.3. G-07 rewrites 272 lines and six public functions off `CausalMultiVector` onto
-`Gf2Chain` and `Circuit`. All three additionally need the `deep_causality_quantum` to
-`deep_causality_homology` dependency edge, which does not exist, in both Cargo.toml and BUILD.bazel.
+**Serious.** G-08 needs an 𝔽₂ solve helper and should not be built on `DualLatticeComplex` as it
+stands. The helper is smaller than this register first claimed: `rref` is bounded on
+`M::Scalar: Field` (`deep_causality_linear/src/algorithms/elimination.rs:198`), `Gf2` reaches
+`Field`, and `PackedGf2` implements `RowOps`, so elimination over 𝔽₂ works today. Only the shipped
+`solve` (`algorithms/solve.rs:175`) is out of reach, being `NormedScalar`-bounded. A `solve_gf2` is
+`rref` on the augmented matrix plus a read-off. G-09 implements B.1 and B.3 over `Gf2Chain::inner`,
+and its dependency edge is already paid for.
 
 ### What to tackle next
 
-**G-04.** Its only blocker closed when `Gf2Chain<W>` shipped, and three gaps name its output in their
-signatures. The mathematics is quotient-basis extraction over bases that already exist; the two
-things to get right are reading generators off **columns** rather than rows, and building the
-`[im | ker]` stacking by hand.
+**G-04.** Three gaps name its output in their signatures, and it is the last root on the gate-layer
+chain. The mathematics is
+quotient-basis extraction over bases that already exist; the two things to get right are reading
+generators off **columns** rather than rows, and building the `[im | ker]` stacking by hand.
 
 **G-18 in parallel.** It is independent of G-04. Archive
 `openspec/specs/cup-product/spec.md` on the way past: it forbids the type this gap adds, and it is
@@ -917,8 +1022,8 @@ stale rather than binding.
 
 **What the three designed examples need.** The calibration and crosstalk examples need none of G-01
 through G-09: two feasibility lenses reproduced their headline results on shipped APIs in scratch
-crates. The geometric-QEC example needs G-04, G-08, G-06, G-07 and G-09, in roughly that order, plus
-the dependency edge. G-05 is no longer on that list.
+crates. The geometric-QEC example needs G-04, G-08 and G-09, in roughly that order. G-05, G-06 and
+G-07 are no longer on that list, and neither is the dependency edge.
 
 ---
 

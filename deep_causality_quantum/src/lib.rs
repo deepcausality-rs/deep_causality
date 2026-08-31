@@ -34,5 +34,4 @@ pub use crate::types::qgates::*;
 pub use crate::types::verdict::*;
 pub use crate::types::*;
 
-#[cfg(feature = "qpu")]
 pub use crate::types::qpu::*;

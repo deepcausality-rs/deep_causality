@@ -3,14 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::types::qgates::mechanics;
+use crate::types::qgates::{gates_haruna, mechanics};
+use crate::types::qpu::circuit::GateOp;
 use crate::{Gate, Operator};
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_multivector::CausalMultiVector;
+use deep_causality_homology::Gf2Chain;
 use deep_causality_multivector::HilbertState;
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::{FromPrimitive, NaturalNumber};
 
 /// Causal wrapper for [`mechanics::born_probability_kernel`].
 ///
@@ -59,74 +61,63 @@ where
     }
 }
 
-/// Causal wrapper for [`mechanics::haruna_s_gate_kernel`].
-pub fn haruna_s_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
-where
-    R: RealField + FromPrimitive + Debug,
-{
-    match mechanics::haruna_s_gate_kernel(field) {
+// ---------------------------------------------------------------------------
+// Haruna logical gates on the causal monad.
+//
+// These wrap `gates_haruna` rather than a `mechanics` kernel: the gate builders
+// are pure combinatorics over a chain's support and have no numeric kernel to
+// adapt. The value carried is the physical-gate program, `Vec<GateOp>`, which is
+// what Table 1's second column produces.
+// ---------------------------------------------------------------------------
+
+/// Causal wrapper for [`gates_haruna::logical_z`].
+pub fn haruna_z_gate<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> PropagatingEffect<Vec<GateOp>> {
+    PropagatingEffect::pure(gates_haruna::logical_z(gamma))
+}
+
+/// Causal wrapper for [`gates_haruna::logical_x`].
+pub fn haruna_x_gate<W: NaturalNumber>(
+    gamma_tilde: &Gf2Chain<W>,
+) -> PropagatingEffect<Vec<GateOp>> {
+    PropagatingEffect::pure(gates_haruna::logical_x(gamma_tilde))
+}
+
+/// Causal wrapper for [`gates_haruna::logical_s`].
+pub fn haruna_s_gate<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> PropagatingEffect<Vec<GateOp>> {
+    PropagatingEffect::pure(gates_haruna::logical_s(gamma))
+}
+
+/// Causal wrapper for [`gates_haruna::logical_t`].
+pub fn haruna_t_gate<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> PropagatingEffect<Vec<GateOp>> {
+    PropagatingEffect::pure(gates_haruna::logical_t(gamma))
+}
+
+/// Causal wrapper for [`gates_haruna::logical_cz`].
+pub fn haruna_cz_gate<W: NaturalNumber>(
+    gamma1: &Gf2Chain<W>,
+    gamma2: &Gf2Chain<W>,
+) -> PropagatingEffect<Vec<GateOp>> {
+    match gates_haruna::logical_cz(gamma1, gamma2) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }
 
-/// Causal wrapper for [`mechanics::haruna_z_gate_kernel`].
-pub fn haruna_z_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
+/// Causal wrapper for [`gates_haruna::logical_hadamard`].
+///
+/// The `e^{-iπ/4}` global phase Table 1 carries is dropped here, because a
+/// `PropagatingEffect` carries one value and the circuit is the one a caller
+/// runs. Call [`gates_haruna::logical_hadamard`] directly where the phase
+/// matters, which is whenever this gate becomes a controlled operation.
+pub fn haruna_hadamard_gate<W: NaturalNumber, R>(
+    gamma: &Gf2Chain<W>,
+    gamma_tilde: &Gf2Chain<W>,
+) -> PropagatingEffect<Vec<GateOp>>
 where
-    R: RealField + FromPrimitive + Debug,
+    R: RealField + FromPrimitive,
 {
-    match mechanics::haruna_z_gate_kernel(field) {
-        Ok(val) => PropagatingEffect::pure(val),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`mechanics::haruna_x_gate_kernel`].
-pub fn haruna_x_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
-where
-    R: RealField + FromPrimitive + Debug,
-{
-    match mechanics::haruna_x_gate_kernel(field) {
-        Ok(val) => PropagatingEffect::pure(val),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`mechanics::haruna_hadamard_gate_kernel`].
-pub fn haruna_hadamard_gate<R>(
-    field_a: &CausalMultiVector<R>,
-    field_b: &CausalMultiVector<R>,
-) -> PropagatingEffect<Operator<R>>
-where
-    R: RealField + FromPrimitive + Debug,
-{
-    match mechanics::haruna_hadamard_gate_kernel(field_a, field_b) {
-        Ok(val) => PropagatingEffect::pure(val),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`mechanics::haruna_cz_gate_kernel`].
-pub fn haruna_cz_gate<R>(
-    field_a1: &CausalMultiVector<R>,
-    field_a2: &CausalMultiVector<R>,
-) -> PropagatingEffect<Operator<R>>
-where
-    R: RealField + FromPrimitive + Debug,
-{
-    match mechanics::haruna_cz_gate_kernel(field_a1, field_a2) {
-        Ok(val) => PropagatingEffect::pure(val),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
-}
-
-/// Causal wrapper for [`mechanics::haruna_t_gate_kernel`].
-pub fn haruna_t_gate<R>(field: &CausalMultiVector<R>) -> PropagatingEffect<Operator<R>>
-where
-    R: RealField + FromPrimitive + Debug,
-{
-    match mechanics::haruna_t_gate_kernel(field) {
-        Ok(val) => PropagatingEffect::pure(val),
+    match gates_haruna::logical_hadamard::<W, R>(gamma, gamma_tilde) {
+        Ok((ops, _phase)) => PropagatingEffect::pure(ops),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

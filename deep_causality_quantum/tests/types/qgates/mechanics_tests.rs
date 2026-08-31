@@ -7,8 +7,7 @@ use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     QuantumError, apply_gate_kernel, born_probability_kernel, commutator_kernel,
-    expectation_value_kernel, fidelity_kernel, haruna_cz_gate_kernel, haruna_hadamard_gate_kernel,
-    haruna_s_gate_kernel, haruna_t_gate_kernel, haruna_x_gate_kernel, haruna_z_gate_kernel,
+    expectation_value_kernel, fidelity_kernel,
 };
 
 // Helper to create a normalized quantum state
@@ -25,15 +24,6 @@ fn create_test_state() -> HilbertState<f64> {
     ];
     let mv = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
     HilbertState::<f64>::from_multivector(mv)
-}
-
-// Helper to create a real-valued multivector field
-fn create_real_field() -> CausalMultiVector<f64> {
-    CausalMultiVector::new(
-        vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
-    )
-    .unwrap()
 }
 
 // =============================================================================
@@ -244,75 +234,6 @@ fn test_fidelity_kernel_identical_states() {
 
 // =============================================================================
 // Haruna Gate Kernel Tests
-// =============================================================================
-
-#[test]
-fn test_haruna_s_gate_kernel_valid() {
-    let field = create_real_field();
-    let result = haruna_s_gate_kernel(&field);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_haruna_z_gate_kernel_valid() {
-    let field = create_real_field();
-    let result = haruna_z_gate_kernel(&field);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_haruna_x_gate_kernel_valid() {
-    let field = create_real_field();
-    let result = haruna_x_gate_kernel(&field);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_haruna_hadamard_gate_kernel_valid() {
-    let field_a = create_real_field();
-    let field_b = create_real_field();
-    let result = haruna_hadamard_gate_kernel(&field_a, &field_b);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_haruna_hadamard_gate_kernel_dimension_error() {
-    let field_a = create_real_field();
-    let field_wrong = CausalMultiVector::new(vec![1.0, 0.0], Metric::Euclidean(1)).unwrap();
-    let result = haruna_hadamard_gate_kernel(&field_a, &field_wrong);
-    assert!(result.is_err());
-}
-
-#[test]
-fn test_haruna_cz_gate_kernel_valid() {
-    let field_a1 = create_real_field();
-    let field_a2 = create_real_field();
-    let result = haruna_cz_gate_kernel(&field_a1, &field_a2);
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_haruna_gate_kernels_error_on_overflowing_field() {
-    // An overflowing field has no finite logical gate; the kernels now surface a
-    // QuantumError instead of silently masking the failure as the identity gate.
-    let mut data = vec![0.0; 8];
-    data[1] = 1e8;
-    let field = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
-    assert!(haruna_s_gate_kernel(&field).is_err());
-    assert!(haruna_z_gate_kernel(&field).is_err());
-    assert!(haruna_x_gate_kernel(&field).is_err());
-    assert!(haruna_t_gate_kernel(&field).is_err());
-}
-
-#[test]
-fn test_haruna_t_gate_kernel_valid() {
-    let field = create_real_field();
-    let result = haruna_t_gate_kernel(&field);
-    assert!(result.is_ok());
-}
-
-// =============================================================================
-// Kernel guard paths
 // =============================================================================
 
 #[test]

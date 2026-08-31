@@ -395,24 +395,33 @@ that precision. See the project's standing position on
 pub type FloatType = Float106;   // or f64, or f32
 ```
 
-| Surface | Operations | Bound | Why not tighter or looser |
+| Surface | Operations | Bound as shipped | Why it sits there |
 |---|---|---|---|
-| Cochains, cup product | `+`, `−`, `×`, `0` | `CommutativeRing + Copy` | No division, ordering or analytic call |
-| Operators, CJ factors, gauge field | complex arithmetic | `ComplexField<R>`, `R: RealField` | Entries are genuinely complex; the real parameter carries the precision |
-| Rotations, gate synthesis | `sin`, `cos`, `sqrt`, `π` | `RealField` | Needs the analytic surface and division |
-| Born read-out, purity | real output against a spec | `Real` | Ordering yes, division no |
-| Tolerances (§3.3) | `ε`, `sqrt`, `+`, `×`, one division | `RealField + FromPrimitive` | What the shipped policies declare |
-| Verdicts | orthomodular lattice | `Verdict` on `Projection<R, D>` | §4; the carrier is the crate's, the trait is not |
-| Shot statistics, Bhattacharyya | `sqrt`, `log2`, ratios | `RealField` | Genuinely needs both halves |
-| Costs, shot counts, cover search | integer arithmetic | none | `usize` |
+| Cochains, cup product | `+`, `−`, `×`, `0` | `CommutativeRing + Copy` | No division, ordering or analytic call. The operation's floor, and what ships |
+| Operators, CJ factors, gauge field | complex arithmetic | `Complex<R>`, `R: RealField + FromPrimitive` | Fixed by the carrier, not by the operations. Every impl for `Complex<T>` in `deep_causality_num_complex` is written `impl<T: RealField>`, `Zero` included, so `Complex<R>` reaches no algebraic structure at all below it |
+| Rotations, gate synthesis | `sin`, `cos`, `sqrt`, `π`, one division | `RealField + FromPrimitive` | `sin`, `cos` and `sqrt` are on `Real`. What forces `RealField` is the `R::one() / n_r` in the Taylor `exp`; `π` arrives through `FromPrimitive::from_f64`, not `Real::pi()` |
+| Born read-out, purity | real output against a spec | `RealField + FromPrimitive + Default + Debug` | The operations need only `Real`: `+`, `*`, `−`, `abs`, `sqrt`, `clamp`, no division. The carrier is `Projection<R, D>` over `Complex<R>`, so row 2 pins this row too |
+| Tolerances (§3.3) | `ε`, `sqrt`, `+`, `×`, one division | `RealField + FromPrimitive` | What the shipped policies declare, and the division is real |
+| Verdicts | orthomodular lattice | `Verdict` on `Projection<R, D>`, `R: RealField + FromPrimitive + Default + Debug` | §4. `FromPrimitive` is forced transitively: `range_projector` calls `eigen_hermitian`, which binds `ConjugateScalar` |
+| Shot statistics, separation | `sqrt`, `log2`, ratios | `Real + FromPrimitive` suffices | The one row that is genuinely over-tight. The Bhattacharyya formula contains no ratio, and this surface touches no complex carrier, so the relaxation would compile. It has no shipped signature yet, so it is the row to write down carefully rather than to copy |
+| Costs, shot counts, cover search | accumulation, ratios, counting | `Real` for the ledger, `usize` for counts | §6.5's `Ledger<R>` carries `device_time`, `cost` and `bits` as `R` and binds accumulation on `Real`; only `shots`, `experiments` and `predictions` are integers |
 
 The discipline is one line: **bound at the weakest structure that carries the operation.** The cup
 product is the worked example: bound on `RealField`, relaxed to `CommutativeRing + Copy`, workspace
 compiles and 1471 tests pass unchanged.
 
+**And one line re-derives the rest of the table.** `Real` has two implementor families here: the
+`Float` blanket, which covers `f32`, `f64` and `Float106` and which also reaches `RealField`; and
+`Dual<T>`, which does not. So `Real` versus `RealField` on any row means exactly one thing: **does
+this surface admit dual numbers, and so stay differentiable?** Anything routed through `Complex`
+cannot, because the complex carrier requires `RealField` before it offers even `Zero`. That is why
+four of the eight rows sit at `RealField` regardless of what their function bodies do, and it is
+why relaxing them is not a matter of editing a `where` clause.
+
 Four things this does not license. No bound wider than the operation. No scalar parameter where there
-is no scalar. `Real` and `RealField` are not synonyms. Complex is not a precision;
-`ComplexField<R>` carries its precision in `R`.
+is no scalar. `Real` and `RealField` are not synonyms. And a bound the carrier forces should say so
+rather than be read as the operation's floor: rows 2, 4 and 6 are carrier-pinned, and a reader who
+takes them for operation floors will look for a relaxation that is not there.
 
 `CausalTensor::fmap<A, B>` changes the scalar *type* rather than the values, so a carrier can be
 lifted between precisions as an operation. Combined with §3.3, that lets the pipeline answer "is this
@@ -690,11 +699,24 @@ bounded-time claim needs allocations/tick = 0, which a timing harness does not s
 | `check_markov` per intersecting pair | pairs grow O(n²) in factors; `embed_on_legs` dominates |
 | `check_faithfulness` | `find_c3` is `C(m,3)²` over declared inputs and outputs |
 | `Projection::range_projector` | one `eigen_hermitian` per lattice join; the verdict fold is not free |
-| `design`, k experiments × n hypotheses | **exponential in k**: exhaustive bitmask over subsets |
+| `design`, k experiments × n hypotheses | **linear in k, exponential in n**: the exact cover is a DP over covered-pair subsets, `O(2^C(n,2) · k)`. Watch the coverage-matrix build, which dominates at this note's own scale |
 
-Three cliffs, not one. `design` needs a sweep of k from 4 to 20. `find_c3` needs a sweep of declared
-system counts, because its sextuple loop grows in a parameter the user chooses. The verdict fold
-needs measuring because §4 puts an eigendecomposition inside `adjudicate`.
+Three cliffs, not one. `design` needs a sweep of **n**, the hypothesis count, not of k. §8.8 of the
+liftback note formulates the stage as minimum-cost set cover whose universe is the `C(n,2)`
+hypothesis pairs and whose sets are the k experiments. Enumerating subsets of experiments costs
+`2^k`, which is where "exponential in k" came from, but it is the wrong enumeration: the exact
+answer is a DP over subsets of the *universe*, `dp[S | cover(e)] = min(dp[S], dp[S] + cost(e))`, at
+`O(2^C(n,2) · k)`. That is linear in k, so sweeping k from 4 to 20 finds no cliff. The cliff is in n
+and arrives around n = 7 or 8, where `C(n,2)` reaches 21 to 28 and `2^C(n,2)` stops being free.
+
+At this note's own numbers the solve is not the cost at all. §8.6 sizes the scan at `|E| × |H|`
+plant evolutions plus `|E| × C(|H|, 2)` closed-form coefficients, 120 and 120 for 40 depths and 3
+hypotheses. The cover DP over those same numbers is `2^3 × 40 = 320` arithmetic steps against 120
+plant evolutions. **Benchmark the coverage-matrix build, and sweep n to find the exponent.**
+
+`find_c3` needs a sweep of declared system counts, because its sextuple loop grows in a parameter
+the user chooses. The verdict fold needs measuring because §4 puts an eigendecomposition inside
+`adjudicate`.
 
 ### 10.4 Tier 3: the price of precision
 

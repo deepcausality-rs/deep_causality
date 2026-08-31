@@ -65,6 +65,7 @@ rust_test_suite(
         "//deep_causality_quantum",
         # Internal dependencies
         "//deep_causality_core",
+        "//deep_causality_unified_math/deep_causality_homology",
         "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_unified_math/deep_causality_num_complex",

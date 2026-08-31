@@ -104,13 +104,24 @@ fn apply_cnot(state: &mut [C], control: usize, target: usize) {
     }
 }
 
-fn apply_cz(state: &mut [C], control: usize, target: usize) {
-    let cb = 1usize << control;
-    let tb = 1usize << target;
-    for amp in state.iter_mut().enumerate() {
-        let (i, a) = amp;
-        if i & cb != 0 && i & tb != 0 {
-            *a = C::new(-a.re, -a.im);
+// Every diagonal gate in the alphabet is one operation at a different arity and
+// a different phase: multiply the amplitude by `phase` on exactly those basis
+// states with all of `qubits` set, and leave every other amplitude alone. `Z`,
+// `S`, `S†`, `T` and `T†` are the one-qubit cases; `CZ`, `CS†`, `CCZ` and
+// `C^{m-1}Z` are the multi-qubit ones. Folding the qubit list into a mask makes
+// the arity a runtime value, so `C^{m-1}Z` needs no kernel of its own.
+//
+// A mask of zero would phase the whole register, a global phase with no
+// observable effect. `QuantumCircuit::new` rejects an empty qubit list, so no
+// circuit reaches here with one.
+fn apply_diagonal_phase(state: &mut [C], qubits: &[usize], phase: C) {
+    let mut mask = 0usize;
+    for &q in qubits {
+        mask |= 1usize << q;
+    }
+    for (i, a) in state.iter_mut().enumerate() {
+        if i & mask == mask {
+            *a = phase.mul(*a);
         }
     }
 }
@@ -155,13 +166,16 @@ impl QpuSampler for SimQpu {
 
         let s = 1.0 / core::f64::consts::SQRT_2;
         let pi4 = core::f64::consts::FRAC_PI_4;
+        // e^{iπ/4}, the T phase. T† is its conjugate.
+        let (t_re, t_im) = (pi4.cos(), pi4.sin());
+        let minus_one = C::new(-1.0, 0.0);
         for op in circuit.ops() {
             // Exhaustive over all GateOp variants — no catch-all, so a new gate
             // must be handled explicitly rather than silently mis-applied.
-            match *op {
+            match op {
                 GateOp::H(q) => apply_single(
                     &mut state,
-                    q,
+                    *q,
                     [
                         C::new(s, 0.0),
                         C::new(s, 0.0),
@@ -171,7 +185,7 @@ impl QpuSampler for SimQpu {
                 ),
                 GateOp::X(q) => apply_single(
                     &mut state,
-                    q,
+                    *q,
                     [
                         C::new(0.0, 0.0),
                         C::new(1.0, 0.0),
@@ -181,7 +195,7 @@ impl QpuSampler for SimQpu {
                 ),
                 GateOp::Y(q) => apply_single(
                     &mut state,
-                    q,
+                    *q,
                     [
                         C::new(0.0, 0.0),
                         C::new(0.0, -1.0),
@@ -189,38 +203,23 @@ impl QpuSampler for SimQpu {
                         C::new(0.0, 0.0),
                     ],
                 ),
-                GateOp::Z(q) => apply_single(
-                    &mut state,
-                    q,
-                    [
-                        C::new(1.0, 0.0),
-                        C::new(0.0, 0.0),
-                        C::new(0.0, 0.0),
-                        C::new(-1.0, 0.0),
-                    ],
-                ),
-                GateOp::S(q) => apply_single(
-                    &mut state,
-                    q,
-                    [
-                        C::new(1.0, 0.0),
-                        C::new(0.0, 0.0),
-                        C::new(0.0, 0.0),
-                        C::new(0.0, 1.0),
-                    ],
-                ),
-                GateOp::T(q) => apply_single(
-                    &mut state,
-                    q,
-                    [
-                        C::new(1.0, 0.0),
-                        C::new(0.0, 0.0),
-                        C::new(0.0, 0.0),
-                        C::new(pi4.cos(), pi4.sin()),
-                    ],
-                ),
-                GateOp::Cnot { control, target } => apply_cnot(&mut state, control, target),
-                GateOp::Cz { control, target } => apply_cz(&mut state, control, target),
+                // The diagonal family, one kernel and one phase each.
+                GateOp::Z(q) => apply_diagonal_phase(&mut state, &[*q], minus_one),
+                GateOp::S(q) => apply_diagonal_phase(&mut state, &[*q], C::new(0.0, 1.0)),
+                GateOp::Sdg(q) => apply_diagonal_phase(&mut state, &[*q], C::new(0.0, -1.0)),
+                GateOp::T(q) => apply_diagonal_phase(&mut state, &[*q], C::new(t_re, t_im)),
+                GateOp::Tdg(q) => apply_diagonal_phase(&mut state, &[*q], C::new(t_re, -t_im)),
+                GateOp::Cnot { control, target } => apply_cnot(&mut state, *control, *target),
+                GateOp::Cz { control, target } => {
+                    apply_diagonal_phase(&mut state, &[*control, *target], minus_one)
+                }
+                GateOp::Csdg { control, target } => {
+                    apply_diagonal_phase(&mut state, &[*control, *target], C::new(0.0, -1.0))
+                }
+                GateOp::Ccz { q0, q1, q2 } => {
+                    apply_diagonal_phase(&mut state, &[*q0, *q1, *q2], minus_one)
+                }
+                GateOp::Cmz { qubits } => apply_diagonal_phase(&mut state, qubits, minus_one),
             }
         }
 
