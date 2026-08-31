@@ -5,7 +5,7 @@
 
 //! Exact two-body (Kepler) propagation as a **constant-generator matrix exponential** — the reusable core
 //! validated in the Gap-3 trajectory-axis feasibility study
-//! (`openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`, FS-1).
+//! (`openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`, FS-1).
 //!
 //! The bound inverse-square orbit is *exactly linear* under the eccentric-anomaly reparametrisation: in
 //! eccentric anomaly `s = E`, the recentred perifocal coordinate `Q = (a·cos E, b·sin E)` solves the

@@ -19,8 +19,9 @@ impl<T: RealField + FromPrimitive> ConjugateScalar for Complex<T> {
     fn modulus_squared(&self) -> T {
         ComplexField::norm_sqr(self)
     }
-    /// Delegates to the [`Normed`] impl, which computes `|z|` by the scaled form and so does not
-    /// overflow for a component near `T::MAX` or flush to zero for one near `T::MIN_POSITIVE`.
+    /// Delegates to the [`Normed`](deep_causality_algebra::Normed) impl, which computes `|z|` by
+    /// the scaled form and so does not overflow for a component near `T::MAX` or flush to zero for
+    /// one near `T::MIN_POSITIVE`.
     /// One body for the two traits.
     #[inline]
     fn modulus(&self) -> T {

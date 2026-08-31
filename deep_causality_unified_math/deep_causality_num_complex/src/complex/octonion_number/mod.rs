@@ -80,10 +80,7 @@ mod rotation;
 /// * `Clone`: Implements cloning behavior for `Octonion`.
 /// * `Default`: Provides a default (zero) value for `Octonion`.
 #[derive(Copy, Clone, PartialEq, PartialOrd, Default)]
-pub struct Octonion<F>
-where
-    F: RealField,
-{
+pub struct Octonion<F> {
     pub s: F,  // Scalar part
     pub e1: F, // Imaginary unit 1
     pub e2: F, // Imaginary unit 2

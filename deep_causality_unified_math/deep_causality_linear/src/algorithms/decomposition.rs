@@ -264,8 +264,9 @@ pub enum Truncation<R> {
 /// the input, because a `Q` with more columns than rows cannot have orthonormal columns.
 ///
 /// Bounded on `ConjugateScalar` rather than `RealField`, so it admits complex and dual scalars as
-/// well as real ones. See [`kernels`](crate::algorithms::kernels) for why that is the right bound
-/// and what reduces to what for a real scalar.
+/// well as real ones: the underlying kernel builds genuine Householder reflectors
+/// `H = I − β v vᴴ` with conjugated inner products, which reduce to the ordinary real Householder
+/// QR when the conjugation is the identity.
 ///
 /// # Errors
 ///

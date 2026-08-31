@@ -29,10 +29,7 @@ pub struct CausalTensorTrainWitness;
 
 impl HKT for CausalTensorTrainWitness {
     type Constraint = NoConstraint;
-    type Type<T>
-        = CausalTensorTrain<T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<T> = CausalTensorTrain<T>;
 }
 
 // ============================================================================

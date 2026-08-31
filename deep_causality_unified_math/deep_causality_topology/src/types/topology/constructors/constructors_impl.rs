@@ -9,12 +9,12 @@ use crate::{SimplicialComplex, Topology, TopologyError};
 use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 
-impl<T> Topology<T> {
+impl<R, G> Topology<R, G> {
     /// CPU implementation of Topology constructor.
     pub(crate) fn new_impl(
-        complex: Arc<SimplicialComplex<T>>,
+        complex: Arc<SimplicialComplex<R>>,
         grade: usize,
-        data: CausalTensor<T>,
+        data: CausalTensor<G>,
         cursor: usize,
     ) -> Result<Self, TopologyError> {
         // Validate grade

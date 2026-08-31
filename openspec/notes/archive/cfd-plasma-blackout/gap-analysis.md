@@ -299,7 +299,7 @@ provenance log are composition work — not missing primitives. **[holds under p
 > regression. The remainder of this section is the pre-build analysis, kept for the record.
 >
 > **Status update (2026-07-02, second change): carrier upgraded from surrogate to compressible.**
-> `openspec/changes/add-compressible-blackout-carrier/` hosted the 2-D compressible marcher behind
+> `openspec/changes/archive/2026-07-02-add-compressible-blackout-carrier/` hosted the 2-D compressible marcher behind
 > the same coupled-loop machinery (a shared `CoupledCarrier` seam; the QTT host bit-identical):
 > the flagship now flies **one continuous descent** — the truth trajectory selects the freestream
 > through an atmosphere schedule, the exact Rankine-Hugoniot jump is the shock-fitted inflow

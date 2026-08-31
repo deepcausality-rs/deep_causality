@@ -21,6 +21,10 @@ impl HKT for IdnWitness {
 
 struct IdnAdjunction;
 impl Adjunction<IdnWitness, IdnWitness, ()> for IdnAdjunction {
+    // Extraction from an identity functor cannot fail: the carrier holds exactly one value, so
+    // there is no empty case. `Infallible` states that in the type rather than in a comment.
+    type Error = core::convert::Infallible;
+
     fn unit<A>(_ctx: &(), a: A) -> Idn<Idn<A>>
     where
         A: Satisfies<NoConstraint> + Clone,
@@ -29,12 +33,12 @@ impl Adjunction<IdnWitness, IdnWitness, ()> for IdnAdjunction {
         Idn(Idn(a))
     }
 
-    fn counit<B>(_ctx: &(), lrb: Idn<Idn<B>>) -> B
+    fn counit<B>(_ctx: &(), lrb: Idn<Idn<B>>) -> Result<B, Self::Error>
     where
         B: Satisfies<NoConstraint> + Clone,
         Idn<B>: Satisfies<NoConstraint>,
     {
-        lrb.0.0
+        Ok(lrb.0.0)
     }
 
     fn left_adjunct<A, B, Func>(_ctx: &(), a: A, f: Func) -> Idn<B>
@@ -47,14 +51,14 @@ impl Adjunction<IdnWitness, IdnWitness, ()> for IdnAdjunction {
         Idn(f(Idn(a)))
     }
 
-    fn right_adjunct<A, B, Func>(_ctx: &(), la: Idn<A>, mut f: Func) -> B
+    fn right_adjunct<A, B, Func>(_ctx: &(), la: Idn<A>, mut f: Func) -> Result<B, Self::Error>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Clone,
         Idn<B>: Satisfies<NoConstraint>,
         Func: FnMut(A) -> Idn<B>,
     {
-        f(la.0).0
+        Ok(f(la.0).0)
     }
 }
 
@@ -63,18 +67,18 @@ impl Adjunction<IdnWitness, IdnWitness, ()> for IdnAdjunction {
 fn test_adjunction_triangles() {
     // Triangle on R: R(ε) ∘ η_R = id — R acts by post-composition, so the composite is
     // Idn(counit(unit(rb).0)) for the Identity adjunction.
+    // `counit` is partial in general, so the composite carries a `Result`. For this adjunction the
+    // error type is `Infallible`, which is the type-level statement that the `Ok` arm is the only
+    // one: `unwrap` here cannot fire.
     let rb = Idn(5);
     assert_eq!(
-        Idn(IdnAdjunction::counit(
-            &(),
-            IdnAdjunction::unit(&(), rb.clone()).0
-        )),
+        Idn(IdnAdjunction::counit(&(), IdnAdjunction::unit(&(), rb.clone()).0).unwrap()),
         rb
     );
     // Triangle on L: ε_L ∘ L(η) = id — for Identity the same composite, read on L.
     let la = Idn(7);
     assert_eq!(
-        Idn(IdnAdjunction::counit(&(), IdnAdjunction::unit(&(), la.0))),
+        Idn(IdnAdjunction::counit(&(), IdnAdjunction::unit(&(), la.0)).unwrap()),
         la
     );
 }
@@ -87,12 +91,13 @@ fn test_adjunction_adjunct_inverse() {
     for a in [2, -8] {
         let round =
             IdnAdjunction::right_adjunct(&(), Idn(a), |x| IdnAdjunction::left_adjunct(&(), x, f));
-        assert_eq!(round, f(Idn(a)));
+        // `right_adjunct` is partial in general; here it is total, so the law reads `= Ok(f la)`.
+        assert_eq!(round, Ok(f(Idn(a))));
     }
     let g = |a: i32| Idn(a + 9);
     for a in [2, -8] {
         let round = IdnAdjunction::left_adjunct(&(), a, |la: Idn<i32>| {
-            IdnAdjunction::right_adjunct(&(), la, g)
+            IdnAdjunction::right_adjunct(&(), la, g).unwrap()
         });
         assert_eq!(round, g(a));
     }

@@ -45,7 +45,7 @@ mod predicates;
 /// identity, associativity) hold **unconditionally** — including on errored carriers — and the
 /// error short-circuit is a left zero (`bind(raise e, f) = raise e`, `f` never runs). This is
 /// precondition P2 of the Causal Algebra program
-/// (`openspec/notes/causal-algebra/Formalization.md` §2), machine-checked in
+/// (`openspec/notes/archive/causal-algebra/Formalization.md` §2), machine-checked in
 /// `lean/DeepCausalityFormal/Core/CausalMonad.lean`.
 ///
 /// All fields are private; construct via [`new`](Self::new) (total — every representable state

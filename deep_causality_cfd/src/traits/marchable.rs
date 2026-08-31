@@ -12,7 +12,7 @@
 //! `run_owned`, which materializes a fresh geometry per case). The two **coupled** families take
 //! their coupling stack as a run-time argument, absent from the config; they march through the
 //! `Coupled` wrapper (which carries the stack), so `.couple(stack).march()` composes onto this
-//! same trait. See `openspec/notes/cfd-dsl/04-dsl-feasibility.md` (F2).
+//! same trait. See `openspec/notes/archive/cfd-dsl/04-dsl-feasibility.md` (F2).
 
 use crate::CfdScalar;
 use crate::solvers::dec::BoundaryZone;

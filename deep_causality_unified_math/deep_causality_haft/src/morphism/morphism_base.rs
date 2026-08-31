@@ -47,11 +47,7 @@ pub struct FnMorphism;
 
 impl HKT2Unbound for FnMorphism {
     type Constraint = NoConstraint;
-    type Type<A, B>
-        = fn(A) -> B
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>;
+    type Type<A, B> = fn(A) -> B;
 }
 
 impl Morphism<FnMorphism> for FnMorphism {

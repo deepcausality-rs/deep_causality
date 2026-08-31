@@ -8,7 +8,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 Status as of 2026-07-10. This note summarizes the machine-checked formalization of the dual-number
 crate — `R[ε]` with `ε² = 0`, the carrier for forward-mode automatic differentiation. It is the
 crate-local view of the program described in
-[`openspec/notes/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md),
+[`openspec/notes/archive/causal-algebra/Formalization.md`](../../openspec/notes/archive/causal-algebra/Formalization.md),
 mirroring [`deep_causality_core/LEAN_CORE.md`](../deep_causality_core/LEAN_CORE.md) and
 [`deep_causality_unified_math/deep_causality_haft/LEAN_HAFT.md`](../deep_causality_haft/LEAN_HAFT.md).
 
@@ -18,7 +18,7 @@ Every law of the crate's `Dual` number type is formalized in Lean 4 and linked b
 implementation by a per-theorem witness test:
 
 - **Lean proofs (L1):** one file,
-  [`lean/DeepCausalityFormal/Dual/Dual.lean`](../lean/DeepCausalityFormal/Dual/Dual.lean), carrying
+  [`lean/DeepCausalityFormal/Dual/Dual.lean`](../../lean/DeepCausalityFormal/Dual/Dual.lean), carrying
   **6 theorems**. Every theorem is closed — **zero `sorry`**. Unlike the core/haft layers, this file
   is **not** self-contained: it `import Mathlib.Algebra.DualNumber` and reuses Mathlib's
   `DualNumber R` (defined as `TrivSqZeroExt R R`), discharging each law by the corresponding Mathlib
@@ -31,7 +31,7 @@ implementation by a per-theorem witness test:
   `test_leibniz_product_rule`, `test_not_field_zero_divisor`). Lean proves ∀; the witness pins the
   crate's real `Dual` type to the same statement at representative inputs.
 - **The bridge:** each theorem carries a shared id (e.g. `dual.leibniz.product_rule`) recorded in
-  [`lean/THEOREM_MAP.md`](../lean/THEOREM_MAP.md) — **6 dual ids, all proved and witnessed**. CI
+  [`lean/THEOREM_MAP.md`](../../lean/THEOREM_MAP.md) — **6 dual ids, all proved and witnessed**. CI
   (`.github/workflows/formalization.yml`) runs `lake build`, a guard against unproven
   placeholders, and a consistency gate that fails if any Lean id lacks a tagged Rust file or a
   manifest row. It does not run the witness tests; `cargo llvm-cov --workspace` in

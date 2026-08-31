@@ -9,7 +9,7 @@ use deep_causality_topology::{PointCloud, Topology};
 use std::sync::Arc;
 
 /// Helper to create a simple topology
-fn create_simple_topology() -> Topology<f64> {
+fn create_simple_topology() -> Topology<f64, f64> {
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0], vec![3, 2]).unwrap();
     let metadata = CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap();
     let point_cloud = PointCloud::new(points, metadata, 0).unwrap();

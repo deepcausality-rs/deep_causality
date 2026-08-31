@@ -133,4 +133,36 @@ impl CloneFunctor for VecWitness {
     }
 }
 
-// NOTE: Traversable is not implmented for VecWitness
+// NOTE: `Traversable` is deliberately not implemented for `VecWitness`, and the reason is a
+// signature one rather than a mathematical one.
+//
+// The usual `sequence` for a list folds an accumulator through the inner applicative:
+//
+//     acc = M::apply(M::fmap(acc, |v| move |a| { v.push(a); v }), m_a)
+//
+// That puts a *function* inside `M`, so `Applicative::apply` requires the anonymous closure type
+// to satisfy `M::Constraint`:
+//
+//     error[E0277]: the trait bound `{closure@...}: Satisfies<<M as HKT>::Constraint>`
+//                   is not satisfied
+//
+// `sequence` cannot declare that, and an impl may not add the bound itself (E0276). The same fold
+// written against a `zip_with`-style structure map compiles and passes, because the combining
+// function never enters `M`:
+//
+//     acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v });
+//
+// The `zip_with` structure map now exists (`crate::Semigroupal`), and a `sequence` written
+// against it does compile and pass. It is still not implemented here, and that is a decision
+// rather than an omission: `sequence`'s inner-`M` bound would have to move from `Applicative` to
+// `Semigroupal + Pure`, and those two are substitutive rather than comparable. Measured, that
+// swap takes the witnesses admissible as the inner applicative from 19 down to 3, losing every
+// effect monad in the workspace — `StudyEffectWitness`, `CdlEffectWitness`,
+// `GraphGeneratableEffectWitness` and the `MyEffectHktWitness` family — along with `BoxWitness`,
+// `LinkedListWitness`, `ManifoldWitness`, `CausalTensorWitness` and `VecWitness` itself. One
+// carrier gained is not worth sixteen lost.
+//
+// Revisit only as part of a change that first adopts `Semigroupal` across those witnesses, so the
+// bound can move without narrowing the trait's contract. See
+// `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §6 finding 5 for the measurement. Until then,
+// `OptionWitness` and `ResultWitness` are the only two `Traversable` carriers.

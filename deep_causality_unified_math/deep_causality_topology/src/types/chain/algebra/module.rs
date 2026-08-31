@@ -6,7 +6,7 @@ use crate::types::chain::Chain;
 use deep_causality_algebra::{Module, Ring};
 use std::sync::Arc;
 
-impl<T> Chain<T> {
+impl<R, G> Chain<R, G> {
     /// Scales the chain by a scalar.
     ///
     /// # Arguments
@@ -16,7 +16,7 @@ impl<T> Chain<T> {
     /// A new chain with all weights scaled.
     pub fn scale<S>(&self, scalar: S) -> Self
     where
-        T: Module<S> + Copy,
+        G: Module<S> + Copy,
         S: Ring + Copy,
     {
         let weights = self.weights.scale(scalar);

@@ -7,8 +7,9 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::CausalMultiVector;
+use crate::CausalMultiVectorError;
 use deep_causality_haft::{
-    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, Monad, NoConstraint, Pure, Satisfies,
+    Adjunction, Applicative, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
 };
 use deep_causality_metric::Metric;
 
@@ -97,31 +98,22 @@ impl Foldable<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 }
 
 // ----------------------------------------------------------------------------
-// Monad
+// Monad: deliberately not implemented
 // ----------------------------------------------------------------------------
-impl Monad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
-    fn bind<A, B, Func>(ma: CausalMultiVector<A>, mut f: Func) -> CausalMultiVector<B>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        Func: FnMut(A) -> CausalMultiVector<B>,
-    {
-        let mut results = Vec::new();
-        let mut out_metric = ma.metric;
-
-        for a in ma.data {
-            let mb = f(a);
-            out_metric = mb.metric;
-            results.extend(mb.data);
-        }
-
-        CausalMultiVector {
-            data: results,
-            metric: out_metric,
-        }
-    }
-}
-
+//
+// A `CausalMultiVector` holds exactly `2^dim` coefficients, where `dim` comes from its `Metric`, so
+// the metric is not decoration: it fixes the length. `Pure::pure` receives one value and no metric,
+// and the only metric it can name without inventing geometry is `Euclidean(0)`, whose algebra
+// `Cl(0)` has exactly one coefficient. That value is well formed, which is why `Pure` stays.
+//
+// `bind` is what cannot be written. It receives a metric from its input and another from every
+// `f(a)`, and the two identity laws demand opposite choices:
+//
+//   left  identity, `bind(pure(a), f) == f(a)`, needs the metric taken from `f`'s result,
+//                   because `pure(a)` carries only `Euclidean(0)`;
+//   right identity, `bind(m, pure) == m`,       needs the metric taken from the input,
+//                   because `pure` supplies only `Euclidean(0)`.
+//
 // ----------------------------------------------------------------------------
 // CoMonad
 // ----------------------------------------------------------------------------
@@ -176,19 +168,24 @@ impl CoMonad<CausalMultiVectorWitness> for CausalMultiVectorWitness {
 impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
     for CausalMultiVectorWitness
 {
+    type Error = CausalMultiVectorError;
+
     fn unit<A>(ctx: &Metric, a: A) -> CausalMultiVector<CausalMultiVector<A>>
     where
         A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
     {
         // unit: a -> R(L(a))
-        // Inner MV: Context metric, contains 'a'.
-        let inner_data = vec![a];
+        // Inner MV: the context algebra Cl(ctx), which admits exactly 2^dim coefficients, so 'a'
+        // fills every blade. The scalar embedding, 'a' at index 0 and zeros elsewhere, would need a
+        // `Zero` bound the trait signature does not offer, and a one-coefficient value carrying a
+        // higher-dimensional metric is a value `CausalMultiVector::new` rejects.
+        let inner_data = vec![a; 1 << ctx.dimension()];
         let inner_mv = CausalMultiVector {
             data: inner_data,
             metric: *ctx,
         };
 
-        // Outer MV: Scalar metric, contains inner_mv.
+        // Outer MV: Cl(0), whose single coefficient holds inner_mv.
         let outer_data = vec![inner_mv];
         CausalMultiVector {
             data: outer_data,
@@ -196,15 +193,23 @@ impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
         }
     }
 
-    fn counit<B>(_ctx: &Metric, lrb: CausalMultiVector<CausalMultiVector<B>>) -> B
+    /// # Errors
+    ///
+    /// Returns [`CausalMultiVectorError::empty_multivector`] when the flattened multivector stores
+    /// no coefficient, so there is no scalar part to take.
+    fn counit<B>(
+        _ctx: &Metric,
+        lrb: CausalMultiVector<CausalMultiVector<B>>,
+    ) -> Result<B, Self::Error>
     where
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
     {
-        // counit: L(R(b)) -> b
-        // Flatten and extract.
-        let flattened =
-            <CausalMultiVectorWitness as Monad<CausalMultiVectorWitness>>::bind(lrb, |x| x);
-        <CausalMultiVectorWitness as CoMonad<CausalMultiVectorWitness>>::extract(&flattened)
+        // counit: L(R(b)) -> b. Flatten the nesting, then take the scalar part.
+        lrb.data
+            .into_iter()
+            .flat_map(|inner| inner.data.into_iter())
+            .next()
+            .ok_or_else(CausalMultiVectorError::empty_multivector)
     }
 
     fn left_adjunct<A, B, F>(ctx: &Metric, a: A, f: F) -> CausalMultiVector<B>
@@ -218,26 +223,28 @@ impl Adjunction<CausalMultiVectorWitness, CausalMultiVectorWitness, Metric>
         Self::fmap(unit_res, f)
     }
 
-    fn right_adjunct<A, B, F>(_ctx: &Metric, la: CausalMultiVector<A>, f: F) -> B
+    /// # Errors
+    ///
+    /// Returns [`CausalMultiVectorError::empty_multivector`] when `la` stores no coefficient, so
+    /// there is no `A` to apply `f` to, or when the multivector `f` returns stores none.
+    fn right_adjunct<A, B, F>(
+        _ctx: &Metric,
+        la: CausalMultiVector<A>,
+        f: F,
+    ) -> Result<B, Self::Error>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint>,
         F: FnMut(A) -> CausalMultiVector<B>,
     {
         // right: (A -> R<B>) -> (L<A> -> B)
-        // map la with f -> L<R<B>> (MV<MV<B>>)
-        // then extract manually to avoid Clone requirement of counit.
-        let mapped = Self::fmap(la, f);
-
-        // Destructure Outer MV
-        let mut outer_iter = mapped.data.into_iter();
-        if let Some(inner_mv) = outer_iter.next() {
-            // Destructure Inner MV
-            let mut inner_iter = inner_mv.data.into_iter();
-            if let Some(b) = inner_iter.next() {
-                return b;
-            }
-        }
-        panic!("Adjunction::right_adjunct resulted in empty MultiVector");
+        // map la with f -> L<R<B>> (MV<MV<B>>), then extract by hand so this does not inherit
+        // counit's `Clone` bound on B.
+        Self::fmap(la, f)
+            .data
+            .into_iter()
+            .next()
+            .and_then(|inner_mv| inner_mv.data.into_iter().next())
+            .ok_or_else(CausalMultiVectorError::empty_multivector)
     }
 }

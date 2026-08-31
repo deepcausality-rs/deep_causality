@@ -26,7 +26,7 @@ references used by the test suite; the planner never selects them.
 
 ## Algorithm layering
 
-Following the survey in `openspec/notes/fft/fft_state_of_the_art.md`:
+Following the survey in `openspec/notes/archive/fft/fft_state_of_the_art.md`:
 
 1. **Hardcoded small-N kernels** (lengths 1–32): in-place, scratch-free
    planner base cases.

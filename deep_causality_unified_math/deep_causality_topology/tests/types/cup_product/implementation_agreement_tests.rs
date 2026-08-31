@@ -6,9 +6,9 @@
 //! This crate computes the cup product twice, and these tests pin that the two agree.
 //!
 //! The free [`cup_product`] is generic over `K: ChainComplex` with `K::CellType: SplittableCell`,
-//! and takes its cochains apart into a slice and a degree each. `Topology<T>::cup_product` is a
+//! and takes its cochains apart into a slice and a degree each. `Topology<T, T>::cup_product` is a
 //! second, independent implementation: simplicial-only, extracting the Alexander–Whitney front and
-//! back faces by hand, and taking its cochains as whole `Topology<T>` values that already carry
+//! back faces by hand, and taking its cochains as whole `Topology<T, T>` values that already carry
 //! their grade.
 //!
 //! `Simplex` implements `SplittableCell`, so the generic function already covers everything the

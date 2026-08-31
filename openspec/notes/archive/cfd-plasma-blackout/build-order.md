@@ -107,8 +107,8 @@ revision at Stage 4 is expected.
 ## Related
 
 - [`plasma-blackout-corridor.md`](plasma-blackout-corridor.md) — the flagship this order builds toward.
-- `openspec/changes/add-plasma-blackout-corridor/` — the specification implementing this order (proposal /
-  design / tasks / seven capability specs).
+- `openspec/changes/archive/2026-07-02-add-plasma-blackout-corridor/` — the specification implementing this
+  order (proposal / design / tasks / seven capability specs).
 - [`gap-analysis.md`](gap-analysis.md) — the gap tracker (Gap 2 closed; Gaps 3/4 sequenced here).
 - [`gap-3/`](gap-3/) — the trajectory/timing resolutions + the three passed feasibility studies (FS-1/2/3).
 - [`tensor-network/ACCELERATION-SOTA-FIRST.md`](../../tensor-network/ACCELERATION-SOTA-FIRST.md) — GPU/parallel

@@ -24,10 +24,6 @@ exclude = [
     "papers/*",
 ]
 
-[lib]
-name = "deep_causality_topology"
-path = "src/lib.rs"
-
 [features]
 # Enables random number generator from the host OS for secure random numbers.
 # Enabling os-random adds an indirect depdency on getrandom and libc.
@@ -105,7 +101,5 @@ path = "../deep_causality_multivector"
 version = "0.6"
 
 
-[lints.rust]
-# Exempt from the workspace `unsafe_code = "forbid"` policy.
-# HKT fmap pointer-cast (rustc type-equality limitation) in hkt_gauge. Remove when the compiler limitation is resolved.
-unsafe_code = "allow"
+[lints]
+workspace = true

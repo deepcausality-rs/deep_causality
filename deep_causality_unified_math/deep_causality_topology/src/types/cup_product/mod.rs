@@ -23,7 +23,7 @@
 //!
 //! [`Topology::cup_product`](crate::Topology::cup_product) is the older,
 //! simplicial-only Alexander–Whitney product over a bundled
-//! `Topology<T>` cochain. It uses the same convention as this one. This module
+//! `Topology<R, G>` cochain. It uses the same convention as this one. This module
 //! adds what quantum error correction needs and that surface cannot express:
 //! the cubical case, genericity over [`CellularComplex`], and the `n`-fold form.
 //!

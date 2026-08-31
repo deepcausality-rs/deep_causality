@@ -424,7 +424,7 @@ where
     }
 
     /// The validity scan's measured `min |det J_λ|` over the closed `(ξ, η)` domain, and the floor
-    /// it was accepted against ([`DET_FLOOR_FRACTION`] of the geometric scale `dr × span_y`).
+    /// it was accepted against (`DET_FLOOR_FRACTION` of the geometric scale `dr × span_y`).
     ///
     /// Exposed so a study reporting the blend's validity margin reads the number the **shipped**
     /// scan measured, rather than recomputing the determinant algebra alongside it. A study that

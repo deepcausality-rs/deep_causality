@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # THEOREM_MAP — Lean ↔ Rust traceability
 
 This is **the bridge**. There is no tool that converts a Lean proof into a Rust test
-(`openspec/notes/causal-algebra/Formalization.md` §3). Instead, each **property statement** is
+(`openspec/notes/archive/causal-algebra/Formalization.md` §3). Instead, each **property statement** is
 transcribed once per layer and linked here:
 
 - **Lean** *proves* the statement (deductive, unbounded, higher-order).
@@ -155,7 +155,7 @@ All Lean files under `DeepCausalityFormal/Haft/`; the Rust witnesses live in
 (`Haft/Functor.lean` ↔ `functor_tests.rs`, `Haft/EffectSystem.lean` ↔
 `effect_system_tests.rs`, …; `Haft/Hkt.lean` is a definitional bridge with no theorems and
 hence no test file). One `#[test]` per id, name pattern `test_<id>`. Citations per file;
-deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-deviations.md`.
+deviations recorded in `../openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`.
 
 | id | statement | Lean | Lean location | Test | Kani |
 |---|---|---|---|---|---|
@@ -169,7 +169,11 @@ deviations recorded in `../openspec/notes/causal-algebra/haft-formalization-devi
 | `haft.bifunctor.laws` | `bimap id id = id`; composition; first/second decomposition | proved | `Haft/Bifunctor.lean` | ✓ | n/a |
 | `haft.profunctor.laws` | `dimap id id = id`; contravariant-twist composition | proved | `Haft/Profunctor.lean` | ✓ | n/a |
 | `haft.parametric_monad.laws` | Atkey indexed monad laws (IxState carrier) | proved | `Haft/ParametricMonad.lean` | ✓ | n/a |
-| `haft.monoidal_merge.merge_naturality` | `merge` is binatural (lax-monoidal structure map; trait renamed from `Promonad`, D3/P-1) | proved | `Haft/MonoidalMerge.lean` | ✓ | n/a |
+| `haft.monoidal_merge.merge_naturality` | `merge` is binatural (semigroupal structure map φ, no unit; trait renamed from `Promonad`, D3/P-1) | proved | `Haft/MonoidalMerge.lean` | ✓ | n/a |
+| `haft.lax_monoidal.naturality` | `zip (fmap f fa) (fmap g fb) = fmap (f × g) (zip fa fb)` | proved | `Haft/LaxMonoidal.lean` | ✓ | n/a |
+| `haft.lax_monoidal.assoc` | `zip (zip fa fb) fc ≅ zip fa (zip fb fc)` modulo the associator; `zip` derived from `zip_with` | proved | `Haft/LaxMonoidal.lean` | ✓ | n/a |
+| `haft.lax_monoidal.unit_laws` | `zip unit fa ≅ fa` and `zip fa unit ≅ fa` modulo the unitors | proved | `Haft/LaxMonoidal.lean` | ✓ | n/a |
+| `haft.lax_monoidal.apply_agreement` | the `apply` derived from `zip_with` equals the hand-written `Applicative::apply` | proved | `Haft/LaxMonoidal.lean` | ✓ | n/a |
 | `haft.free_monad.left_id` | `bind (pure a) k = k a` (free monad on a functor) | proved | `Haft/FreeMonad.lean` | ✓ | n/a |
 | `haft.free_monad.right_id` | `bind m pure = m` | proved | `Haft/FreeMonad.lean` | ✓ | n/a |
 | `haft.free_monad.assoc` | `bind (bind m f) g = bind m (λx. bind (f x) g)` | proved | `Haft/FreeMonad.lean` | ✓ | n/a |
@@ -241,7 +245,7 @@ Reference: do Carmo, *Riemannian Geometry*, Ch. 4.
 
 ## Quantum — the partial-trace / Choi foundation and the B1 witness
 
-The `add-quantum-crate` change (`openspec/changes/add-quantum-crate`). The pinned Mathlib v4.15.0 has
+The `add-quantum-crate` change (`openspec/changes/archive/2026-07-12-add-quantum-crate`). The pinned Mathlib v4.15.0 has
 no partial trace and no Choi–Jamiołkowski layer, so both are built from first principles on the
 pair-indexed matrix model in `DeepCausalityFormal/Quantum/`. The headline is the B1 result: the
 unconditional `partial_trace_preservation` is **false** (`partial_trace_nonpreservation`, a witnessed
@@ -264,6 +268,6 @@ Rust witnesses in `deep_causality_quantum/tests/formalization_lean/{partial_trac
 The **CJ reconstruction isomorphism** `applyChoi (choiOf E) = E` and the QCM theorems
 (`quantum.no_influence`, `quantum.markov_commutativity`, `quantum.unitary_factorization`,
 `quantum.classical_embedding`, `quantum.cyclic_support`, `quantum.verdict.orthomodular`) are stated
-as deferred targets in `openspec/changes/add-quantum-crate`; the crate carries their numerical /
+as deferred targets in `openspec/changes/archive/2026-07-12-add-quantum-crate`; the crate carries their numerical /
 property-test witnesses today. The `/Quantum/` tree is exempt from the CI `sorry` gate while this
 foundation is extended.

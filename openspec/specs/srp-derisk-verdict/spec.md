@@ -6,7 +6,7 @@ TBD - created by archiving change plasma-retropulsion-de-risk. Update Purpose af
 ### Requirement: A checked-in go/no-go verdict synthesizes the measurements
 
 The change SHALL record its outcome in a checked-in verdict note,
-`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`, authored from the measured runs and
+`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`, authored from the measured runs and
 carrying: the three risk answers with their measured numbers (imprint fidelity vs the
 correlation, fork economics of the plume-coupled state, rank behavior Cartesian vs blend
 metric), the pinned bands and where they were pinned, and a single **green / amber / red**

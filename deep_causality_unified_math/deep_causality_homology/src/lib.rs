@@ -59,7 +59,7 @@
 //!
 //! Both crates remain reachable transitively through `deep_causality_linear`. If a coefficient
 //! parameter is ever added — a `ChainComplex<R>` over a general ring, which
-//! `openspec/changes/extract-homology-crate/design.md` rejects on the merits — the algebra bound
+//! `openspec/changes/archive/2026-08-30-extract-homology-crate/design.md` rejects on the merits — the algebra bound
 //! arrives with it.
 
 #![cfg_attr(not(feature = "std"), no_std)]

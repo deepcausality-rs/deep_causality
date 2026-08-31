@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-// On `std` the inherent `f64::exp`/`ln` win method resolution. Without it they
-// do not exist, and the `Float` impl in `deep_causality_num` supplies them
-// (routed to libm), so the trait only needs to be in scope on `no_std`.
-#[cfg(not(feature = "std"))]
+// `exp`/`ln` are called through `Float` rather than as inherent methods: the
+// inherent `f64::exp`/`ln` only exist when `std` is linked, while the
+// `deep_causality_num` impl routes to libm without it. Fully qualified so the
+// same call compiles under both feature levels and the import is never dead.
 use deep_causality_num::Float;
 
 use crate::Open01;
@@ -28,7 +28,7 @@ impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
-            (-x * x / 2.0).exp()
+            Float::exp(-x * x / 2.0)
         }
         #[inline]
         fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
@@ -45,8 +45,8 @@ impl Distribution<f64> for StandardNormal {
                 let x_: f64 = rng.sample(Open01);
                 let y_: f64 = rng.sample(Open01);
 
-                x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
-                y = y_.ln();
+                x = Float::ln(x_) / ziggurat_tables::ZIG_NORM_R;
+                y = Float::ln(y_);
             }
 
             if u < 0.0 {

@@ -46,7 +46,7 @@ feasible with the existing constants. The linearising `s` and the proper
 time `τ` are **distinct clocks** and the spec must carry both, which is a conceptual fix to
 Resolution 1 rather than an implementation detail. Over a 3-minute reentry blackout the uncorrected
 clock drifts tens of metres, quantifying why the correction must be carried internally (B3).
-Analysis: `openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
+Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
 
 **Caveats.** The GPS split uses a circular orbit and an equatorial-radius geoid clock, the textbook
 idealisation, so agreement to sub-µs/day validates the kernel rather than a flight-grade timing

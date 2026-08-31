@@ -56,15 +56,29 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 // ============================================================================
 // HKT trait impls are intentionally deferred.
 //
-// `LatticeGaugeField<G, D, M, R>` requires `R: RealField` at the struct level
-// (because `lattice: Arc<LatticeComplex<D, R>>` requires it). The
-// `deep_causality_haft` `HKT`/`Functor`/`Pure`/`Monad`/`Applicative` traits
-// declare their inner-type bounds as `T: Satisfies<F::Constraint>`, and Rust's
-// "impl has stricter requirements than trait" rule rejects adding `R: RealField`
-// to the impl methods. Same situation as `StrictCausalTensorWitness` in
-// `deep_causality_tensor` — verified to compile on nightly with `-Znext-solver`;
-// stable unblock is gated on the next-generation trait solver stabilizing or on
-// `deep_causality_haft` growing a capability-bridging `Constraint` mechanism.
+// The blocker is a missing capability, not a struct-level bound and not the compiler.
+//
+// The struct bound `R: RealField` is not what stops a witness here. `R` is not the
+// parameter a functor over this type would map; `M`, the matrix element, is, and `M`
+// carries no struct-level bound. A witness over `M` with `R` fixed compiles on stable
+// today, with the GAT where-clause still in place:
+//
+//     pub struct LgfOverM<G: GaugeGroup, const D: usize, R: RealField>(PhantomData<(G, R)>);
+//     impl<G: GaugeGroup, const D: usize, R: RealField> HKT for LgfOverM<G, D, R> {
+//         type Constraint = NoConstraint;
+//         type Type<T> = LatticeGaugeField<G, D, T, R> where T: Satisfies<NoConstraint>;
+//     }
+//
+// What stops `Functor` is that `fmap` must rebuild each `LinkVariable<G, B, R>`, which
+// needs `B: Field + Copy + Default + PartialOrd + Debug`. The trait gives the body only
+// `B: Satisfies<F::Constraint>`, and `Satisfies` is an empty marker: it admits a type
+// without granting any capability over it, so the body cannot do the arithmetic. Dropping
+// the GAT where-clause does not change that, and neither does the next-generation trait
+// solver, measured on `rustc 1.100.0-nightly (bff8e12ff 2026-08-26)`.
+//
+// The inherent methods below are therefore the right design rather than a stopgap: they
+// name the real bounds, which the compiler enforces and no downstream crate can forge.
+// See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §3 and §6.3.
 //
 // The cross-algebra composition story is preserved on `Manifold` (see
 // `extensions/hkt_manifold/mod.rs`) — that is the central composition surface.
@@ -102,30 +116,17 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         F: FnMut(A) -> B,
     {
         let lattice = field.lattice_arc().clone();
-        // Beta is R. Wait, if we map scalars A->B (Matrix elements), do we change Beta?
-        // Beta is R. This function map_field transforms A to B.
-        // It keeps R fixed.
-        // If R depends on A/B underlying scalar, this might be tricky.
-        // For now, assume R is fixed (e.g. beta is a real couplings, independent of matrix repr).
+        // `f` maps the matrix element `A` to `B`. The coupling `beta` has type `R`, which this
+        // map leaves alone, so it carries over unchanged.
         let beta = *field.beta();
-        // But the previous implementation applied f to beta?
-        // "let beta = f(*field.beta());".
-        // This implies beta was type A?
-        // In LatticeGaugeField<G, D, T>, beta was T.
-        // Now beta is R.
-        // If map_field transforms M (A->B), it doesn't transform R.
-        // So beta remains as is.
 
-        let beta_new = beta; // Assuming R is Copy
-
-        // Transform all link variables
         let mut new_links = HashMap::with_capacity(field.links().len());
         for (cell, link) in field.links().iter() {
             let new_link = map_link_variable::<G, A, B, R, F>(link, &mut f);
             new_links.insert(cell.clone(), new_link);
         }
 
-        LatticeGaugeField::from_links_unchecked(lattice, new_links, beta_new, ())
+        LatticeGaugeField::from_links_unchecked(lattice, new_links, beta, ())
     }
 
     /// Combine two lattice gauge fields using a binary operation on scalars.
@@ -162,11 +163,9 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         }
 
         let lattice = field_a.lattice_arc().clone();
-        // Beta is R. zip_with operates on T (Matrix).
-        // In previous version, beta was T, so f was applied.
-        // Here beta is R. We can't apply f(&T, &T) -> T to R and R.
-        // So we just take beta from field_a? Or average?
-        // Usually zip_with assumes same structure.
+        // `f` combines matrix elements of type `T`; the coupling has type `R`, which `f` cannot
+        // be applied to. The two fields are required to share a lattice shape, so taking
+        // `field_a`'s coupling is the only reading that does not invent a value.
         let beta = *field_a.beta();
 
         // Combine link variables

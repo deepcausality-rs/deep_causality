@@ -131,10 +131,6 @@ impl<const D: usize> LatticeCell<D> {
     }
 }
 
-// Marker traits
-unsafe impl<const D: usize> Send for LatticeCell<D> {}
-unsafe impl<const D: usize> Sync for LatticeCell<D> {}
-
 impl<const D: usize> Cell for LatticeCell<D> {
     fn dim(&self) -> usize {
         self.cell_dim()

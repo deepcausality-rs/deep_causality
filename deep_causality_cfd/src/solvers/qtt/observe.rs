@@ -98,7 +98,7 @@ where
 ///
 /// A genuine `wall_heat_flux` belongs on the **DEC cut-cell path**, where the surface is real:
 /// `CutFaceFragment` carries a `(D−1)`-area and an outward unit normal, and
-/// [`viscous_surface_force`](crate::solvers::dec::surface_force) already integrates
+/// the DEC path's `viscous_surface_force` already integrates
 /// `∮ μ(∇u+∇uᵀ)·n dA` over those fragments. `q = −k ∮ ∇T·n dA` is the same contraction with a scalar
 /// in place of the tensor, so the diagnostic is close to a transcription of that one.
 ///

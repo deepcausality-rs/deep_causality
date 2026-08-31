@@ -59,8 +59,8 @@
 //! The synthesis specific to this crate: apply the `Iterator`-adapter encoding to the
 //! *complete* strong category and use the fluent builder as the camouflage layer for the
 //! Causal Arrow generalization — a well-typed fluent chain *is* a string diagram. See
-//! `openspec/notes/arrow/causal-arrow-generalization.md` §8 and
-//! `openspec/notes/arrow/causal-process-builder.md`.
+//! `openspec/changes/archive/arrow-notes/causal-arrow-generalization.md` §8 and
+//! `openspec/changes/archive/arrow-notes/causal-process-builder.md`.
 
 mod arrow_endo;
 #[cfg(feature = "alloc")]

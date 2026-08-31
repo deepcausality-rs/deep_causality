@@ -28,9 +28,8 @@ use crate::{HKT, Satisfies};
 ///
 /// # Constraint Support
 ///
-/// The `pure` function requires the value type to satisfy the HKT's constraint.
-/// This ensures type-safe lifting for constrained types like `CausalTensor<T>`
-/// where `T: TensorData`.
+/// The `pure` function requires the value type to satisfy the HKT's constraint, so a
+/// constrained witness cannot lift an element type its marker does not admit.
 ///
 /// # Type Parameters
 ///

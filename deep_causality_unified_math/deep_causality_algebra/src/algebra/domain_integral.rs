@@ -34,7 +34,7 @@ use crate::CommutativeRing;
 ///
 /// # What it excludes, and why that matters here
 ///
-/// `Dual<T>` is the case that makes this rung load-bearing rather than decorative. ℝ[ε] is a
+/// `Dual<T>` is the case that makes this rung load-bearing rather than decorative. `ℝ[ε]` is a
 /// commutative ring, but `ε · ε = 0` with `ε ≠ 0`, so ε is a zero divisor and cancellation fails.
 /// `Dual<T>` is therefore a `CommutativeRing` and **not** an `IntegralDomain` — the same reason it
 /// is not a `Field`.

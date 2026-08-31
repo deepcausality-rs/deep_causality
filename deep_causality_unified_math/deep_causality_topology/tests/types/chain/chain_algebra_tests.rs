@@ -61,7 +61,7 @@ fn test_chain_zero() {
     let complex = create_test_complex();
 
     // Create a zero chain on grade 1 (edges)
-    let zero_chain = Chain::<f64>::zero(Arc::clone(&complex), 1);
+    let zero_chain = Chain::<f64, f64>::zero(Arc::clone(&complex), 1);
 
     // Verify it has the right shape (1 x 3 for 3 edges)
     assert_eq!(zero_chain.weights().shape(), (1, 3));

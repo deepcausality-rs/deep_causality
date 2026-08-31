@@ -1,7 +1,7 @@
 # CFD Gap Note: Closing the Solver Gap with the Uniform Math Already in Place
 
 Status: foundation note for a follow-up specification. Decisions resolved 2026-06-10.
-Related: `openspec/notes/arrow/causal-arrow-generalization.md` (the Arrow algebra this note builds on).
+Related: `openspec/changes/archive/arrow-notes/causal-arrow-generalization.md` (the Arrow algebra this note builds on).
 
 ## 0. Resolved decisions
 
@@ -148,7 +148,7 @@ exposed one new operator gap. Four gaps remain, in dependency order.
 
 ### G1 — Wedge product and interior product on lattice cochains
 
-*Status: **closed 2026-06-11** by `openspec/changes/add-dec-solver-foundations` — antisymmetrized cubical cup-product wedge (Leibniz exact at machine precision on arbitrary cochains; graded anticommutativity exact) and the star-derived interior product (all 2D/3D sign pins exact on constants; Cartan and convective cross-validation at second order).*
+*Status: **closed 2026-06-11** by `openspec/changes/archive/2026-06-11-add-dec-solver-foundations` — antisymmetrized cubical cup-product wedge (Leibniz exact at machine precision on arbitrary cochains; graded anticommutativity exact) and the star-derived interior product (all 2D/3D sign pins exact on constants; Cartan and convective cross-validation at second order).*
 
 The convective term needs the contraction `i_u ω` of the vorticity 2-form with the
 velocity. The topology crate has `d`, `δ`, `⋆`, `Δ`, and the Hodge decomposition — but

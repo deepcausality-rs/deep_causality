@@ -56,6 +56,7 @@ pub(crate) mod functor;
 pub(crate) mod hkt;
 pub(crate) mod io;
 pub mod iso;
+pub(crate) mod lax_monoidal;
 pub(crate) mod monad;
 pub(crate) mod monoidal;
 pub(crate) mod morphism;
@@ -91,8 +92,16 @@ pub use crate::arrow::{ArrowCore, ArrowTerm, ArrowVal};
 // Category (named identity + composition; the Kleisli category of a monad, and the function category)
 pub use crate::category::{Category, Fun, Kleisli};
 
-// Symmetric-monoidal PROP (copy comonoid Δ/ε, merge monoid ∇/η, symmetry σ)
+// Symmetric-monoidal PROP (copy comonoid Δ/ε, merge monoid ∇/η, symmetry σ) — at the level of
+// *values*. Its cartesian `unit` is a Monoid identity; not to be confused with the endofunctor-level
+// `LaxMonoidal::unit` below.
 pub use crate::monoidal::SymMonoidal;
+
+// Lax monoidal structure on an endofunctor (φ via `zip_with`, η via `unit`), the two associativity
+// promises, and the Δ-free applicative derived from φ.
+pub use crate::lax_monoidal::{
+    Compositional, Convolutional, LaxMonoidal, MonoidalApplicative, Semigroupal,
+};
 
 // Natural transformations (the morphism between functors; the naturality square)
 pub use crate::natural_transformation::NaturalTransformation;

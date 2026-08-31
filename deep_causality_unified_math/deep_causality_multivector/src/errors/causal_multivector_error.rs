@@ -25,11 +25,23 @@ pub enum CausalMultiVectorErrorInner {
     ZeroMagnitude,
     /// Error when operations are performed on vectors with different metrics.
     MetricMismatch { left: Metric, right: Metric },
+    /// Error when an operation must extract a value from a multivector that stores none.
+    ///
+    /// Raised by the partial `Adjunction` operations, `counit` and `right_adjunct`, which return a
+    /// bare `B` taken out of the container. An empty multivector has no `B` to give.
+    EmptyMultiVector,
 }
 
 impl core::error::Error for CausalMultiVectorError {}
 
 impl CausalMultiVectorError {
+    /// Creates an EmptyMultiVector error, for an extraction from a multivector storing no value.
+    pub fn empty_multivector() -> Self {
+        Self {
+            inner: CausalMultiVectorErrorInner::EmptyMultiVector,
+        }
+    }
+
     /// Creates a DimensionMismatch error.
     pub fn dimension_mismatch(expected: usize, found: usize) -> Self {
         Self {
@@ -87,6 +99,12 @@ impl fmt::Display for CausalMultiVectorError {
                     f,
                     "Metric mismatch between operands: {:?} vs {:?}",
                     left, right
+                )
+            }
+            CausalMultiVectorErrorInner::EmptyMultiVector => {
+                write!(
+                    f,
+                    "Operation requires a multivector that stores at least one value"
                 )
             }
         }

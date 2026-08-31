@@ -37,7 +37,7 @@ construction"? Three marched viscous-Burgers cases answer it, each at two resolu
 coordinate does not stay aligned once the flux march moves the front, which makes Resolution 5's
 **feedback re-pinning (D9)** necessary rather than optional. `qtt_repin_marcher` carries the
 finding further and shows that re-pinning alone is still not sufficient. Analysis:
-`openspec/notes/plasma-blackout/gap-2/`.
+`openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** Viscous Burgers is a scalar shock-former, not compressible Euler/NS. 64² and 128² are
 small grids chosen for runtime, so the absolute bonds are lower bounds that grow with `L`. Two

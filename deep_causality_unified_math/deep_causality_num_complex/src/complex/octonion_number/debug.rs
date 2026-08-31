@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::RealField;
 use crate::complex::octonion_number::Octonion;
 use core::fmt::Debug;
 
@@ -37,7 +36,15 @@ use core::fmt::Debug;
 /// // }
 /// println!("{:?}", o);
 /// ```
-impl<F: RealField + Debug> Debug for Octonion<F> {
+///
+/// # Bound
+///
+/// `F: Debug` and nothing more. The body formats eight fields and performs no arithmetic, so a
+/// `RealField` bound here would be excess that the struct itself does not carry: `Octonion<F>` has
+/// no struct-level bound, precisely so it can hold a component type that is not a field. Bounding
+/// this impl on `RealField` would have made `Octonion<Label>` unprintable after an `fmap` into an
+/// unrelated payload type, which is the whole point of `OctonionWitness`.
+impl<F: Debug> Debug for Octonion<F> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Octonion")
             .field("s", &self.s)

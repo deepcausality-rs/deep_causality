@@ -26,26 +26,14 @@ struct QuadrupleWitness;
 
 impl HKT4Unbound for QuadrupleWitness {
     type Constraint = NoConstraint;
-    type Type<A, B, C, D>
-        = Quadruple<A, B, C, D>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint>;
+    type Type<A, B, C, D> = Quadruple<A, B, C, D>;
 }
 
 struct MyQuadrupleWitness;
 
 impl HKT4Unbound for MyQuadrupleWitness {
     type Constraint = NoConstraint;
-    type Type<A, B, C, D>
-        = MyQuadruple<A, B, C, D>
-    where
-        A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>,
-        C: Satisfies<NoConstraint>,
-        D: Satisfies<NoConstraint>;
+    type Type<A, B, C, D> = MyQuadruple<A, B, C, D>;
 }
 
 struct QuadrupleMyQuadrupleIso;

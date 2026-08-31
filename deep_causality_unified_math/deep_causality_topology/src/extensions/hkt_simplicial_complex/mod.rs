@@ -3,48 +3,53 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 use crate::{Chain, SimplicialComplex};
-use deep_causality_haft::{
-    Adjunction, CoMonad, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies,
-};
+use deep_causality_haft::{Adjunction, Foldable, Functor, HKT, NoConstraint, Pure, Satisfies};
 use deep_causality_linear::CsrMatrixWitness;
+use std::marker::PhantomData;
 use std::sync::Arc;
 
-pub struct ChainWitness;
+/// # Why `NoConstraint`
+///
+/// `Chain<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
+/// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
+/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
+/// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
+///
+/// # `fmap` preserves the complex
+///
+/// The complex is indexed by the precision parameter, which mapping the coefficients does not
+/// touch, so it is carried across and its Hodge ⋆ operators survive. This used to be false: a
+/// single parameter served both roles, `fmap` had to rebuild the complex with
+/// `..Default::default()`, and the functor identity law failed for any complex carrying geometry.
+pub struct ChainWitness<R>(PhantomData<R>);
 
-impl HKT for ChainWitness {
+impl<R> HKT for ChainWitness<R> {
     type Constraint = NoConstraint;
-    type Type<T>
-        = Chain<T>
-    where
-        T: Satisfies<NoConstraint>;
+    type Type<G> = Chain<R, G>;
 }
 
 // ----------------------------------------------------------------------------
 // Functor
 // ----------------------------------------------------------------------------
 
-impl Functor<ChainWitness> for ChainWitness {
-    fn fmap<A, B, Func>(fa: Chain<A>, f: Func) -> Chain<B>
+impl<R> Functor<ChainWitness<R>> for ChainWitness<R> {
+    /// Maps the coefficients, carrying the complex across unchanged.
+    ///
+    /// The complex is indexed by the precision `R`, which this map does not touch, so it is cloned
+    /// rather than rebuilt and its Hodge ⋆ operators survive. That is what makes `fmap(id, c) == c`
+    /// hold. When the coefficient and the complex shared one parameter, `fmap` had to construct a
+    /// `SimplicialComplex<B>` from nothing and dropped the geometry doing it.
+    fn fmap<A, B, Func>(fa: Chain<R, A>, f: Func) -> Chain<R, B>
     where
         A: Satisfies<NoConstraint>,
-        B: Satisfies<NoConstraint>, // Removed strict bounds
+        B: Satisfies<NoConstraint>,
         Func: FnMut(A) -> B,
     {
-        // Re-use CsrMatrix functor logic on weights to apply f(a) -> b
         let new_weights = <CsrMatrixWitness as Functor<CsrMatrixWitness>>::fmap(fa.weights, f);
-        // Structural copy without Hodge ⋆ or geometric data. The lazy accessor
-        // returns an Err("geometric data not available") if a consumer tries to
-        // read Hodge ⋆ from this functor-mapped complex; mapped chains are not
-        // intended to drive DEC pipelines.
-        let new_complex = SimplicialComplex::<B> {
-            skeletons: fa.complex.skeletons.clone(),
-            boundary_operators: fa.complex.boundary_operators.clone(),
-            coboundary_operators: fa.complex.coboundary_operators.clone(),
-            ..Default::default()
-        };
-
-        Chain::new(Arc::new(new_complex), fa.grade, new_weights)
+        Chain::new(fa.complex, fa.grade, new_weights)
     }
 }
 
@@ -52,8 +57,8 @@ impl Functor<ChainWitness> for ChainWitness {
 // Foldable
 // ----------------------------------------------------------------------------
 
-impl Foldable<ChainWitness> for ChainWitness {
-    fn fold<A, B, Func>(fa: Chain<A>, init: B, f: Func) -> B
+impl<R> Foldable<ChainWitness<R>> for ChainWitness<R> {
+    fn fold<A, B, Func>(fa: Chain<R, A>, init: B, f: Func) -> B
     where
         A: Satisfies<NoConstraint>,
         Func: FnMut(B, A) -> B,
@@ -68,57 +73,68 @@ impl Foldable<ChainWitness> for ChainWitness {
 // ----------------------------------------------------------------------------
 // Context: (Complex, Grade)
 
-impl<T> Adjunction<ChainWitness, ChainWitness, (Arc<SimplicialComplex<T>>, usize)> for ChainWitness
-where
-    T: Satisfies<NoConstraint>,
+// No bound on `R`. Every operation here consumes the chain it descends into or shares the
+// context's complex through `Arc`, so the precision parameter is never cloned.
+impl<R> Adjunction<ChainWitness<R>, ChainWitness<R>, (Arc<SimplicialComplex<R>>, usize)>
+    for ChainWitness<R>
 {
-    fn unit<A>(ctx: &(Arc<SimplicialComplex<T>>, usize), a: A) -> Chain<Chain<A>>
+    type Error = TopologyError;
+
+    fn unit<A>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A) -> Chain<R, Chain<R, A>>
     where
         A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
         // We remove unnecessary recursive bounds if possible.
     {
         let (complex, grade) = ctx;
 
-        // Inner Complex: Complex<A>.
-        // We construct a structural copy without hodge stars.
-        let complex_a = SimplicialComplex::<A> {
-            skeletons: complex.skeletons.clone(),
-            boundary_operators: complex.boundary_operators.clone(),
-            coboundary_operators: complex.coboundary_operators.clone(),
-            ..Default::default()
-        };
-        let arc_complex_a = Arc::new(complex_a);
-
+        // Both chains are indexed by the same precision `R`, so the context's complex is shared
+        // rather than rebuilt. It used to be reconstructed twice with `..Default::default()`, once
+        // per nesting level, which dropped the Hodge ⋆ operators both times.
         let inner_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(a);
-        let inner_chain = Chain::new(arc_complex_a.clone(), *grade, inner_weights);
-
-        // Outer Complex: Complex<Chain<A>>.
-        // Structural copy.
-        let complex_chain_a = SimplicialComplex::<Chain<A>> {
-            skeletons: complex.skeletons.clone(),
-            boundary_operators: complex.boundary_operators.clone(),
-            coboundary_operators: complex.coboundary_operators.clone(),
-            ..Default::default()
-        };
+        let inner_chain = Chain::new(Arc::clone(complex), *grade, inner_weights);
 
         let outer_weights = <CsrMatrixWitness as Pure<CsrMatrixWitness>>::pure(inner_chain);
-        Chain::new(Arc::new(complex_chain_a), *grade, outer_weights)
+        Chain::new(Arc::clone(complex), *grade, outer_weights)
     }
 
-    fn counit<B>(_ctx: &(Arc<SimplicialComplex<T>>, usize), lrb: Chain<Chain<B>>) -> B
+    /// # Errors
+    ///
+    /// Returns [`TopologyError`] when the outer chain stores no value, or when the inner chain it
+    /// holds stores none. CSR drops explicit zeros, so an all-zero chain is empty and reachable.
+    fn counit<B>(
+        _ctx: &(Arc<SimplicialComplex<R>>, usize),
+        lrb: Chain<R, Chain<R, B>>,
+    ) -> Result<B, Self::Error>
     where
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
     {
         // counit: Chain<Chain<B>> -> B
-        let inner_chain = <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&lrb.weights);
-        <CsrMatrixWitness as CoMonad<CsrMatrixWitness>>::extract(&inner_chain.weights)
+        //
+        // `lrb` is owned, so both levels are taken apart rather than cloned. Cloning the inner
+        // `Chain<R, B>` would need `R: Clone` for a value that is discarded on the next line.
+        let (_, _, outer_values, _) = lrb.weights.into_parts();
+        let inner_chain = outer_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::counit: the outer chain stores no value, so there is no inner chain \
+                 to descend into"
+                    .into(),
+            ))
+        })?;
+
+        let (_, _, inner_values, _) = inner_chain.weights.into_parts();
+        inner_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::counit: the inner chain stores no value, so there is no B to return"
+                    .into(),
+            ))
+        })
     }
 
-    fn left_adjunct<A, B, F>(ctx: &(Arc<SimplicialComplex<T>>, usize), a: A, f: F) -> Chain<B>
+    fn left_adjunct<A, B, F>(ctx: &(Arc<SimplicialComplex<R>>, usize), a: A, f: F) -> Chain<R, B>
     where
         A: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint>,
-        F: FnMut(Chain<A>) -> B,
+        F: FnMut(Chain<R, A>) -> B,
     {
         // left: a -> f(unit(a))
         let wrapped = Self::unit(ctx, a);
@@ -127,38 +143,45 @@ where
 
     /// The right adjunct `(A -> Chain<B>) -> (Chain<A> -> B)`.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// On a chain storing nothing, in either of two places, and the message says which.
+    /// Returns [`TopologyError`] on a chain storing nothing, in either of two places, and the
+    /// message says which: `la` stores no value, so there is no `A` to apply `f` to, or the chain
+    /// `f` returns stores none, so there is no `B` to hand back.
     ///
-    /// The signature returns `B` rather than an `Option<B>`, and `B` carries no `Default`, so
-    /// there is no value to return when there is nothing to return: an empty `Chain<A>` offers no
-    /// `A` to apply `f` to, and an `f` that yields an empty `Chain<B>` offers no `B` to extract.
-    /// Fabricating one would be a lie about which element the adjunct selected.
-    ///
-    /// This matches [`CoMonad::extract`] on `CsrMatrixWitness`, which panics on an empty matrix
-    /// for the same reason and is the counit this method is built on. A chain is empty when its
-    /// weight matrix stores no entries, which `CsrMatrix::new()` produces, so both arms are
-    /// reachable and both are tested.
-    fn right_adjunct<A, B, F>(_ctx: &(Arc<SimplicialComplex<T>>, usize), la: Chain<A>, f: F) -> B
+    /// `B` carries no `Default`, so there is no value to return when there is nothing to return,
+    /// and fabricating one would be a lie about which element the adjunct selected. A chain is
+    /// empty when its weight matrix stores no entries, which `CsrMatrix::new()` produces and which
+    /// dropping an explicit zero also produces, so both arms are reachable and both are tested.
+    fn right_adjunct<A, B, F>(
+        _ctx: &(Arc<SimplicialComplex<R>>, usize),
+        la: Chain<R, A>,
+        f: F,
+    ) -> Result<B, Self::Error>
     where
         A: Satisfies<NoConstraint> + Clone,
         B: Satisfies<NoConstraint> + Satisfies<NoConstraint> + Clone,
-        F: FnMut(A) -> Chain<B>,
+        F: FnMut(A) -> Chain<R, B>,
     {
         // right: (A -> R<B>) -> (L<A> -> B)
-        let result_chain: Chain<Chain<B>> = Self::fmap(la, f);
+        let result_chain: Chain<R, Chain<R, B>> = Self::fmap(la, f);
         let (_, _, outer_values, _) = result_chain.weights.into_parts();
 
-        let inner_chain = outer_values.into_iter().next().expect(
-            "Adjunction::right_adjunct cannot be called on a Chain that stores nothing: \
-             there is no A to apply f to",
-        );
+        let inner_chain = outer_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::right_adjunct was called on a Chain that stores nothing, so there \
+                 is no A to apply f to"
+                    .into(),
+            ))
+        })?;
 
         let (_, _, inner_values, _) = inner_chain.weights.into_parts();
-        inner_values.into_iter().next().expect(
-            "Adjunction::right_adjunct: f returned a Chain that stores nothing, \
-             so there is no B to return",
-        )
+        inner_values.into_iter().next().ok_or_else(|| {
+            TopologyError(TopologyErrorEnum::InvalidInput(
+                "Adjunction::right_adjunct: f returned a Chain that stores nothing, so there is \
+                 no B to return"
+                    .into(),
+            ))
+        })
     }
 }

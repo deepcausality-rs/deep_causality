@@ -27,14 +27,14 @@ below are the one-line summaries.
 | `qtt_rank_nonlinear` | Does a *forming* (nonlinear) shock stay low-rank? | In 1-D, yes: peak 8, cheap. A 2-D *curved* shock rises 7 → 20 dynamically, so the threat is **real**. Thickening could **not** be tested as a lever here: the explicit diffusion limit confines stable ν below 1.25 dx, so the scheme has no room to thicken, and the one over-thick run (ν = 6 dx) saturates to full rank because it violates that limit. That curvature sets the rank is `qtt_rank_study`'s finding, not this one. The candidate levers are coordinate alignment plus an implicit/IMEX step (C3). |
 | `qtt_rank_3d` | What is the **upper bound** of rank in 3-D (the avionics and space regime)? | A realistically-formed 3-D curved shock, via explicit Euler and central differences, has **χ ~ √side, unbounded**, running 45 → 135 over 16³ → 128³. The flat and body-fitted references read **χ ~ 6**, but they were encoded at 64³ only and not swept, so their constancy in resolution is inferred, not measured here. QTT storage still beats dense asymptotically, with a crossover near 64³, but the √side **solve** cost is what bites. A body-fitted coordinate is **mandatory** for 3-D tractability. |
 
-These feed the Tier-B analysis in `openspec/notes/plasma-blackout/gap-2/`. The corresponding Tier-A
-deliverable (`add-park2t-blackout-tier-a`) does **not** depend on them; they de-risk the *Tier-B*
-compressible marcher.
+These feed the Tier-B analysis in `openspec/notes/archive/cfd-plasma-blackout/gap-2/`. The
+corresponding Tier-A deliverable (`add-park2t-blackout-tier-a`) does **not** depend on them; they
+de-risk the *Tier-B* compressible marcher.
 
 ## Round 2 — de-risking the resolution-4/5/6 design nodes
 
 A second batch, run before the compressible build, tests the make-or-break claims behind the newer
-Tier-B resolutions (`openspec/notes/plasma-blackout/gap-2/`, resolutions 4–9).
+Tier-B resolutions (`openspec/notes/archive/cfd-plasma-blackout/gap-2/`, resolutions 4–9).
 
 | Study | Question | Finding |
 |---|---|---|
@@ -54,7 +54,7 @@ Rankine–Hugoniot interface, so fluxes are never marched across it and each sid
 ## Plasma-retropulsion de-risk — the SRP coupling measurements
 
 The front-loaded risk milestone of the plasma-retropulsion descent
-(`openspec/notes/cfd-plasma-retropulsion/`; verdict in `derisk-verdict.md`). `qtt_rank_plume`
+(`openspec/notes/archive/cfd-plasma-retropulsion/`; verdict in `derisk-verdict.md`). `qtt_rank_plume`
 measured fork economics and plume rank (roadmap M1 risks 2 and 3, both green). `srp_momentum_jet` is
 the imprint-fidelity follow-up (risk 1); it supersedes the pinned-envelope harness now parked at
 `reverted/srp_drag_decrement/`, which originally lived at `verification/srp_drag_decrement/` (see
@@ -69,7 +69,7 @@ the imprint-fidelity follow-up (risk 1); it supersedes the pinned-envelope harne
 
 A third batch de-risks the **trajectory/timing** axis, Resolution 1's B1 perturbed-conformal split,
 before specifying the propagator. See
-`openspec/notes/plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
+`openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
 
 | Study | Question | Finding |
 |---|---|---|

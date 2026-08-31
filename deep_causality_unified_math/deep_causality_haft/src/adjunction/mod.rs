@@ -55,6 +55,25 @@ where
     L: HKT,
     R: HKT,
 {
+    /// The error returned by the two **partial** operations, [`counit`](Adjunction::counit) and
+    /// [`right_adjunct`](Adjunction::right_adjunct).
+    ///
+    /// # Why two of the four are partial
+    ///
+    /// `unit` and `left_adjunct` *build* a structure, so they are total: whatever the input, there
+    /// is an `R<L<A>>` or an `R<B>` to return. `counit` and `right_adjunct` *extract* a bare `B`
+    /// from a container, and a container can be empty. For a shaped carrier that is reachable
+    /// input, not a corner case: a `Chain` whose weights are a sparse matrix storing no explicit
+    /// entry has nothing to extract, and CSR drops explicit zeros, so an all-zero chain is empty.
+    ///
+    /// Before this associated type existed, both operations resolved that by panicking. The return
+    /// type `B` left no other channel.
+    ///
+    /// Use [`core::convert::Infallible`] where extraction genuinely cannot fail, which is the case
+    /// for single-slot carriers such as an identity functor. That is not a cop-out; it states in
+    /// the type that the operation is total for that adjunction.
+    type Error;
+
     /// The Unit of the Adjunction: `A → R<L<A>>`
     ///
     /// Embeds a value into the Right-Left context.
@@ -83,8 +102,13 @@ where
     ///
     /// # Returns
     ///
-    /// The extracted value of type `B`.
-    fn counit<B>(ctx: &Context, lrb: L::Type<R::Type<B>>) -> B
+    /// The extracted value of type `B`, or [`Self::Error`] if either layer is empty and there is
+    /// therefore no `B` to extract.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] when `lrb`, or the inner `R<B>` it holds, stores no value.
+    fn counit<B>(ctx: &Context, lrb: L::Type<R::Type<B>>) -> Result<B, Self::Error>
     where
         B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,
         R::Type<B>: Satisfies<L::Constraint>;
@@ -121,8 +145,14 @@ where
     ///
     /// # Returns
     ///
-    /// The result of applying the transformed function, yielding B.
-    fn right_adjunct<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> B
+    /// The result of applying the transformed function, yielding `B`, or [`Self::Error`] if there
+    /// is no `A` to apply `f` to, or `f` returned an `R<B>` storing nothing.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] when `la` stores no value, or when the `R<B>` produced by `f`
+    /// stores no value.
+    fn right_adjunct<A, B, Func>(ctx: &Context, la: L::Type<A>, f: Func) -> Result<B, Self::Error>
     where
         A: Satisfies<L::Constraint> + Clone,
         B: Satisfies<L::Constraint> + Satisfies<R::Constraint> + Clone,

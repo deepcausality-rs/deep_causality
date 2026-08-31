@@ -63,8 +63,8 @@ Scope (what is proved end-to-end here, each bound to a Rust witness):
                  and trace preservation holds only at a stated boundary — with an explicit
                  counterexample and its value where it does not.
 Deviations from accepted category theory are recorded in
-`openspec/notes/causal-algebra/haft-formalization-deviations.md`; the full program and its
-remaining layers are described in `openspec/notes/causal-algebra/Formalization.md`.
+`openspec/notes/archive/causal-algebra/haft-formalization-deviations.md`; the full program and its
+remaining layers are described in `openspec/notes/archive/causal-algebra/Formalization.md`.
 
 Imports: keep to the exact minimum. Every Mathlib import pulls its whole transitive closure into
 the build, so import the narrowest module that still type-checks -- `Mathlib.Analysis.Quaternion`
@@ -123,6 +123,7 @@ import DeepCausalityFormal.Haft.Comonad
 import DeepCausalityFormal.Haft.Bifunctor
 import DeepCausalityFormal.Haft.Profunctor
 import DeepCausalityFormal.Haft.MonoidalMerge
+import DeepCausalityFormal.Haft.LaxMonoidal
 import DeepCausalityFormal.Haft.ParametricMonad
 import DeepCausalityFormal.Haft.Arrow
 import DeepCausalityFormal.Haft.ArrowChoice

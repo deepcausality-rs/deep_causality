@@ -69,7 +69,7 @@ pub const CT_SWEEP: [f64; 10] = [0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8
 //    They regress the measured structure — monotone drag AUGMENTATION with a frozen
 //    stagnation interface — which is the de-risk finding, not a physics truth claim: the
 //    J–A collapse needs jet penetration this harness's dissipation floor cannot carry
-//    (openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md is the authority). ──
+//    (openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md is the authority). ──
 
 /// R-A′: the annulus fraction is monotone non-decreasing in C_T (measured 1.031 → 3.614).
 /// Structural; enforced in `main.rs` at the default configuration only.

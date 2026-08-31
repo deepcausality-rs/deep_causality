@@ -11,9 +11,9 @@ use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 
-impl<T> Topology<T>
+impl<R, G> Topology<R, G>
 where
-    T: Field + Copy + Clone + Zero + Mul<Output = T> + Debug,
+    G: Field + Copy + Clone + Zero + Mul<Output = G> + Debug,
 {
     /// Computes the Cup Product `α ⌣ β` of a p-cochain and a q-cochain.
     ///
@@ -32,7 +32,7 @@ where
     ///
     /// # Returns
     /// A new `CausalTopology` of grade `p+q`.
-    pub fn cup_product(&self, other: &Topology<T>) -> Result<Topology<T>, TopologyError> {
+    pub fn cup_product(&self, other: &Topology<R, G>) -> Result<Topology<R, G>, TopologyError> {
         // 1. Determine Grades
         let p = self.grade;
         let q = other.grade;
@@ -57,7 +57,7 @@ where
             return Ok(Topology {
                 complex: self.complex.clone(),
                 grade: r,
-                data: CausalTensor::new(vec![T::zero(); zero_len], vec![zero_len]).unwrap(),
+                data: CausalTensor::new(vec![G::zero(); zero_len], vec![zero_len]).unwrap(),
                 cursor: 0,
             });
         }

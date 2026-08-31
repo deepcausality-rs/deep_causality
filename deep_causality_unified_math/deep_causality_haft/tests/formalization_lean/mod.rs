@@ -51,6 +51,8 @@ mod io_tests;
 #[cfg(test)]
 mod kleisli_tests;
 #[cfg(test)]
+mod lax_monoidal_tests;
+#[cfg(test)]
 mod monad_tests;
 #[cfg(test)]
 mod monoidal_merge_tests;

@@ -10,8 +10,8 @@
 //! uniformity levels (`UnitEdge`, `Uniform`, `PerAxis`, `PerEdge`) to evaluate that product
 //! at the lowest cost the level allows.
 //!
-//! See `openspec/changes/add-cubical-regge-calculus-core/tasks.md` §2 and
-//! `openspec/notes/CubicalReggeCalculus.md` §3.R1.
+//! See `openspec/changes/archive/2026-05-22-add-cubical-regge-calculus-core/tasks.md` §2 and
+//! `openspec/changes/archive/2026-05-22-add-cubical-regge-calculus-core/CubicalReggeCalculus.md` §3.R1.
 
 use super::{CubicalReggeGeometry, EdgeLengths, SignatureMarker};
 use crate::types::lattice_complex::{LatticeCell, LatticeComplex};

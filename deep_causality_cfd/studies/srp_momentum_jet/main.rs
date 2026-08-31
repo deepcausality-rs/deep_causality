@@ -6,7 +6,7 @@
 //! # SRP momentum jet — does a momentum-carrying jet recover the Jarvinen–Adams collapse?
 //!
 //! Follow-up study to the de-risk verification `srp_drag_decrement` and its recorded amber
-//! finding (`openspec/notes/cfd-plasma-retropulsion/derisk-verdict.md`): the verification's
+//! finding (`openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`): the verification's
 //! whole-envelope **pinned-state** plume (interior held at ambient pressure) shields the
 //! forebody monotonically but cannot produce the Jarvinen–Adams central-nozzle drag collapse —
 //! and the verdict names "a momentum-carrying jet interaction rather than a pinned obstruction

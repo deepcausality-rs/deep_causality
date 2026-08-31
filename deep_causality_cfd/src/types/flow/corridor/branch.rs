@@ -95,8 +95,9 @@ impl<R: CfdScalar> BranchAccumulator<R> {
 /// field (override with [`with_speed_field`](Self::with_speed_field)), takes the drag acceleration
 /// `D = (C_d·A/m)·q` **anti-parallel to the truth velocity**, and adds the lift `L = (L/D)·D`
 /// rotated about the velocity vector by the bank angle read from the field's control channel —
-/// the value [`CyberneticCorrect`] clamped at the **previous** step, so the actuation carries a
-/// one-step lag by construction (command at step `k` flies at step `k+1`). The lift-plane basis
+/// the value [`CyberneticCorrect`](crate::CyberneticCorrect) clamped at the **previous** step, so
+/// the actuation carries a one-step lag by construction (command at step `k` flies at step `k+1`).
+/// The lift-plane basis
 /// comes from the local radial at the truth position: zero bank puts the lift in the
 /// radial-velocity plane (pure in-plane lift-up); positive bank rotates it toward `v̂ × n̂`.
 /// The full 3-vector lands in the aero-force channel the trajectory kick reads.
@@ -104,7 +105,7 @@ impl<R: CfdScalar> BranchAccumulator<R> {
 /// Degenerate geometry falls back conservatively: without a `"speed"` field the stage writes a
 /// **zero** aero force (no dynamic pressure this step — an earlier step's force must not latch);
 /// without a 6-cell `"truth_state"` it writes the axis-aligned drag `[−D, 0, 0]` (the
-/// [`AeroForceCoupling`](super::AeroForceCoupling) behavior); with a vanishing velocity or a
+/// [`AeroForceCoupling`](crate::AeroForceCoupling) behavior); with a vanishing velocity or a
 /// velocity parallel to the radial (no lift plane) it writes pure drag. This is deliberately
 /// 3-DOF: attitude dynamics, trim, and control surfaces (6-DOF) are out of scope — there is no
 /// flight-data anchor to validate them against.
