@@ -5,8 +5,13 @@
 
 //! HKT3 witness and trait implementations for GaugeField.
 //!
-//! This module provides MonoidalMerge and ParametricMonad implementations for GaugeField,
-//! enabling current-field coupling and gauge transformation operations.
+//! This module provides the `HKT3Unbound` witness for `GaugeField` and the gauge-theoretic
+//! operators built on it: the Stokes adjunction, curvature, and the lattice gauge action.
+//!
+//! It once carried `MonoidalMerge` and `ParametricMonad` impls as well. Both were laws-free
+//! stubs and were deleted in `7ec185d49`; the `MonoidalMerge` one is used as the worked
+//! cautionary example in `deep_causality_haft::lax_monoidal`. Do not reintroduce either
+//! without law tests.
 //!
 //! # Architectural Note
 //!

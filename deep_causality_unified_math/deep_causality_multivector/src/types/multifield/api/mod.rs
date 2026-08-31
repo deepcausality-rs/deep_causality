@@ -6,7 +6,7 @@ use crate::CausalMultiField;
 use deep_causality_metric::Metric;
 use deep_causality_tensor::CausalTensor;
 
-impl<T> CausalMultiField<T> {
+impl<A, S> CausalMultiField<A, S> {
     /// Returns the metric signature of the algebra.
     #[inline]
     pub fn metric(&self) -> Metric {
@@ -15,7 +15,7 @@ impl<T> CausalMultiField<T> {
 
     /// Returns the grid spacing.
     #[inline]
-    pub fn dx(&self) -> &[T; 3] {
+    pub fn dx(&self) -> &[S; 3] {
         &self.dx
     }
 
@@ -42,7 +42,7 @@ impl<T> CausalMultiField<T> {
 
     /// Returns a reference to the underlying tensor.
     #[inline]
-    pub fn data(&self) -> &CausalTensor<T> {
+    pub fn data(&self) -> &CausalTensor<A> {
         &self.data
     }
 }
