@@ -48,7 +48,13 @@ use deep_causality_tensor::CausalTensor;
 ///
 /// # Type Parameters
 ///
-/// * `T` - The scalar type (typically `f32` or `f64`).
+/// * `A` - The coefficient type carried in the tensor (typically `f32` or `f64`).
+/// * `S` - The scalar type of the grid spacing `dx`, defaulting to `A`.
+///
+/// The two are separate because spacing describes the grid rather than the field living on it,
+/// so a functorial map of the coefficients must leave it alone. `CausalMultiField<T>` still means
+/// what it always did: the default makes `S` equal `A`. Only the HKT witness instantiates them
+/// differently, mapping `A` while `S` stays fixed to the witness's own parameter.
 ///
 /// # Memory Layout
 ///

@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 /// HKT witness for [`CellField`], the functor over values on a cell complex.
 ///
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `CellField<C, T>` carries no bound on its value type `T`, and the operations here move values
 /// without computing on them. `fmap` maps `A` to an unrelated `B`, so constraining `T` would forbid

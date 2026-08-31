@@ -16,9 +16,9 @@ use alloc::vec::Vec;
 /// By implementing `HKT` for `VecWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `Vec`, without knowing the inner type `T`.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `VecWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `VecWitness` places no bound on `T`.
 pub struct VecWitness;
 
 impl HKT for VecWitness {
@@ -128,15 +128,11 @@ impl CloneFunctor for VecWitness {
 //
 //     acc = M::apply(M::fmap(acc, |v| move |a| { v.push(a); v }), m_a)
 //
-// That puts a *function* inside `M`, so `Applicative::apply` requires the anonymous closure type
-// to satisfy `M::Constraint`:
-//
-//     error[E0277]: the trait bound `{closure@...}: Satisfies<<M as HKT>::Constraint>`
-//                   is not satisfied
-//
-// `sequence` cannot declare that, and an impl may not add the bound itself (E0276). The same fold
-// written against a `zip_with`-style structure map compiles and passes, because the combining
-// function never enters `M`:
+// That puts a *function* inside `M`. When the trait carried an element marker, `Applicative::apply`
+// required the anonymous closure type to satisfy it, `sequence` could not declare that, and an impl
+// could not add the bound itself (E0276). The marker is gone, so that particular obstruction is
+// gone with it. The fold written against a `zip_with`-style structure map remains the better form,
+// because the combining function never enters `M` at all:
 //
 //     acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v });
 //

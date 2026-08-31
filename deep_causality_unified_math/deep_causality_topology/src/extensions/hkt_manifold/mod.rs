@@ -9,7 +9,7 @@
 //! `Manifold<K, F>` has no struct-level bound on `F`), the witness types implement the
 //! full `deep_causality_haft` trait surface on stable Rust: `HKT`, `Functor`, `Foldable`,
 //! `Pure`, `Monad`, `CoMonad`, and (for the simplicial witness) `Applicative`. All impls
-//! use `T: Satisfies<NoConstraint>` only — no `RealField` bounds at the witness layer.
+//! carry no element bound at all, and no `RealField` bound at the witness layer.
 //!
 //! Cross-algebra composition is supported by design: `F` may be a scalar (`f64`, `f32`,
 //! `Float106`), a multivector from `deep_causality_multivector`, a tensor from
@@ -27,11 +27,11 @@ use std::marker::PhantomData;
 // PART 1: Simplicial witness — `ManifoldWitness<C>` / `SimplicialManifoldWitness<C>`
 // ============================================================================
 
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct ManifoldWitness<C>(PhantomData<C>);
@@ -225,11 +225,11 @@ where
 // PART 2: Generic witness — `GenericManifoldWitness<K>` over any `CellularComplex`
 // ============================================================================
 
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Manifold<K, F>`, which is unbounded in its field type `F` carries no element bound, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct GenericManifoldWitness<K>(PhantomData<K>);

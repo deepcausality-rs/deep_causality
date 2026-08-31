@@ -16,9 +16,9 @@ use alloc::boxed::Box;
 /// By implementing `HKT` for `BoxWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `Box`, without knowing the inner type `T`.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `BoxWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `BoxWitness` places no bound on `T`.
 pub struct BoxWitness;
 
 impl HKT for BoxWitness {

@@ -506,11 +506,11 @@ fn test_exterior_derivative_short_coefficients_skips_out_of_range_columns() {
 }
 
 #[test]
-fn test_boundary_of_a_chain_supported_off_the_operator_columns_is_zero() {
-    // The inner accumulation looks each of the operator's column indices up in
-    // the chain's weight map. A chain whose only stored weight sits at an index
-    // the operator never names misses on every lookup, so no row accumulates and
-    // the resulting chain carries no stored entry.
+fn test_boundary_of_a_chain_weighted_on_a_single_named_edge() {
+    // A chain carrying a single weight on one edge. The name and this comment used to say the
+    // weight sat at an index the operator never names, so every lookup missed and the boundary
+    // came back empty. That was a description of the off-by-one in the operator lookup, not of
+    // the mathematics: column 2 is edge e12, which the boundary operator does name.
     let complex = simple_complex();
     let ctx = StokesContext::new(complex.clone());
 

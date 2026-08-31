@@ -111,3 +111,4 @@ pub use crate::extensions::conversions::{
 pub use crate::extensions::hkt::csr_matrix_witness::CsrMatrixWitness;
 pub use crate::extensions::hkt::dense_matrix_witness::DenseMatrixWitness;
 pub use crate::extensions::hkt::dense_vector_witness::DenseVectorWitness;
+pub use crate::extensions::hkt::zip_dense_vector_witness::ZipDenseVectorWitness;

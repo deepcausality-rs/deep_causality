@@ -15,9 +15,9 @@ use crate::{
 /// By implementing `HKT` for `OptionWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `Option`, without knowing the inner type `T`.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `OptionWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `OptionWitness` places no bound on `T`.
 pub struct OptionWitness;
 
 impl HKT for OptionWitness {

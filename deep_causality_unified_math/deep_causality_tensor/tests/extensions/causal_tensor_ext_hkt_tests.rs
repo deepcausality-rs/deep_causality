@@ -66,6 +66,47 @@ fn test_applicative_causal_tensor_apply_non_scalar_func() {
     assert_eq!(result_tensor.shape(), &[6]);
 }
 
+#[test]
+fn test_applicative_causal_tensor_coherence_with_bind_rank_two() {
+    // The coherence law with a *single* function against a rank-2 argument. This is the case the
+    // 2-against-3 test above cannot reach: `apply` broadcasts the one function and reports the
+    // argument's shape, so `bind` over the one-element `ff` has to report it too rather than
+    // flattening to `[6]`.
+    let u: CausalTensor<fn(i32) -> i32> =
+        CausalTensor::from_vec(vec![(|x: i32| x * 2) as fn(i32) -> i32], &[1]);
+    let fa = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
+    let fa2 = fa.clone();
+
+    let via_apply = CausalTensorWitness::apply(u.clone(), fa);
+    let via_bind = CausalTensorWitness::bind(u, move |f: fn(i32) -> i32| {
+        CausalTensorWitness::fmap(fa2.clone(), f)
+    });
+    assert_eq!(via_apply, via_bind);
+    assert_eq!(via_apply.shape(), &[2, 3], "the argument's rank survives");
+    assert_eq!(via_apply.as_slice(), &[2, 4, 6, 8, 10, 12]);
+}
+
+#[test]
+fn test_monad_causal_tensor_bind_reports_a_concat_map_flatly() {
+    // A concat-map whose parts happen to total the input count is still a concat-map. Two
+    // elements in, one contributing two and the other none, sums back to two while the shape is
+    // gone; the result must say `[2]` rather than borrow the input's `[1, 2]`.
+    let m = CausalTensor::new(vec![1i32, 2], vec![1, 2]).unwrap();
+    let out = CausalTensorWitness::bind(m, |x: i32| {
+        if x == 1 {
+            CausalTensor::new(vec![x, x * 10], vec![2]).unwrap()
+        } else {
+            CausalTensor::new(Vec::<i32>::new(), vec![0]).unwrap()
+        }
+    });
+    assert_eq!(out.as_slice(), &[1, 10]);
+    assert_eq!(
+        out.shape(),
+        &[2],
+        "a concat-map does not inherit the input's shape"
+    );
+}
+
 // --- ZipTensorWitness: the elementwise applicative ---
 
 #[test]

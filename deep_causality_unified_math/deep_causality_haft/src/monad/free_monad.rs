@@ -39,7 +39,7 @@ use core::marker::PhantomData;
 
 /// The free monad on a functor `F`: `Pure a | Suspend (f (Free f a))`.
 ///
-/// `F` is an [`HKT`] witness that is a [`Functor`] over the unconstrained (`NoConstraint`)
+/// `F` is an [`HKT`] witness that is a [`Functor`] over the unconstrained
 /// universe — the functor of *operations*. `Free<F, A>` is a program tree whose leaves are pure
 /// `A` values and whose branches are `F`-shaped operation nodes.
 pub enum Free<F, A>

@@ -25,15 +25,15 @@ pub(crate) mod free_instances;
 ///
 /// Unlike the Haskell convention (`Monad: Applicative`), this trait extends `Functor + Pure`
 /// directly. A witness whose `Constraint` excludes function types cannot implement
-/// `Applicative`, because `apply` requires `Func: Satisfies<F::Constraint>`. Keeping `pure`
+/// `Applicative` for reasons of its own. Keeping `pure`
 /// in its own trait lets such a witness implement `Monad` regardless.
 ///
 /// Both `Applicative` and `Monad` share the same `pure` operation via the `Pure` trait.
 ///
-/// # Constraint Support
+/// # Element bounds
 ///
 /// The `bind` method requires types to satisfy the HKT's constraint. A witness that declares
-/// `NoConstraint` admits every element type; one that declares a marker admits only the types
+/// Every element type is admitted, because the trait states no bound on the types
 /// for which that marker is implemented.
 ///
 /// # Laws (Informal)

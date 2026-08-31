@@ -14,12 +14,12 @@ use deep_causality_haft::{CoMonad, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// HKT witness for [`MixedGraph`]: `Type<T> = MixedGraph<T>`.
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `MixedGraph<T>` carries no element bound, and the categorical operations here move elements
 /// without computing on them: `fmap` maps `A` to an unrelated `B`, and `extend` hands a cursor to a
 /// closure. Constraining the element type would forbid mapping a graph of labels to a graph of scores, which is legitimate and
-/// works today. `NoConstraint` is the accurate statement, not a placeholder for a bound that
+/// works today. The absence is deliberate; it is not standing in for a bound that
 /// belongs here.
 ///
 /// Operations that do compute on elements live on the concrete types and carry real trait bounds

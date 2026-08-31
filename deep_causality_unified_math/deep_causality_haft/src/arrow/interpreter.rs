@@ -40,7 +40,7 @@ impl<G> ArrowCore<G> {
     /// map preserves identity and composition. The strength combinators thread `M` over the two
     /// halves of a [`ArrowVal::Pair`].
     ///
-    /// `M` is scoped to the unconstrained (`NoConstraint`) universe, matching
+    /// `M` is scoped to the unconstrained universe, matching
     /// [`Kleisli<M>`](crate::Kleisli); `V: Clone` supports the copying `Fanout` and the
     /// `FnMut`-captured pass-through halves of `First`/`Second`/`Split`.
     pub fn interpret_kleisli<M, V, Phi>(

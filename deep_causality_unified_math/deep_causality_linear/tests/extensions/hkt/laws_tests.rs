@@ -223,15 +223,46 @@ fn test_matrix_applicative_identity() {
 }
 
 #[test]
-fn test_vector_applicative_applies_pointwise() {
+fn test_vector_applicative_is_cartesian() {
     use deep_causality_haft::Applicative;
-    // Distinct functions, so a zip that reversed or rotated the pairing is caught.
+    // `DenseVectorWitness` carries `Monad`, so coherence with its list-concatenation `bind` pins
+    // `apply` to the cartesian product, function-major.
     let fns: DenseVector<fn(i64) -> i64> =
         DenseVector::from_vec(vec![(|x| x * 10) as fn(i64) -> i64, |x| x * 100, |x| {
             x * 1000
         }]);
     let applied = DenseVectorWitness::apply(fns, vector());
+    assert_eq!(
+        applied.as_slice(),
+        &[10, 20, 30, 100, 200, 300, 1000, 2000, 3000]
+    );
+}
+
+#[test]
+fn test_zip_vector_applies_pointwise() {
+    use deep_causality_haft::MonoidalApplicative;
+    use deep_causality_linear::ZipDenseVectorWitness;
+    // The elementwise reading `DenseVectorWitness` cannot give without breaking coherence.
+    let fns: DenseVector<fn(i64) -> i64> =
+        DenseVector::from_vec(vec![(|x| x * 10) as fn(i64) -> i64, |x| x * 100, |x| {
+            x * 1000
+        }]);
+    let applied = ZipDenseVectorWitness::apply(fns, vector());
     assert_eq!(applied.as_slice(), &[10, 200, 3000]);
+}
+
+#[test]
+fn test_zip_vector_semigroupal_associativity() {
+    use deep_causality_haft::{Functor, Semigroupal};
+    use deep_causality_linear::ZipDenseVectorWitness;
+    let a = DenseVector::from_vec(vec![1i64, 2]);
+    let b = DenseVector::from_vec(vec![3i64, 4]);
+    let c = DenseVector::from_vec(vec![5i64, 6]);
+    let left =
+        ZipDenseVectorWitness::zip(ZipDenseVectorWitness::zip(a.clone(), b.clone()), c.clone());
+    let right = ZipDenseVectorWitness::zip(a, ZipDenseVectorWitness::zip(b, c));
+    let reassociated = ZipDenseVectorWitness::fmap(left, |((x, y), z)| (x, (y, z)));
+    assert_eq!(reassociated, right);
 }
 
 #[test]
@@ -263,4 +294,23 @@ fn test_matrix_extend_sees_each_position_in_turn() {
     use deep_causality_haft::CoMonad;
     let firsts = DenseMatrixWitness::extend(&matrix(), |m| m.as_slice()[0]);
     assert_eq!(firsts.as_slice(), &[1, 2, 3, 4]);
+}
+
+#[test]
+fn test_vector_applicative_monad_coherence() {
+    use deep_causality_haft::Applicative;
+    // `DenseVectorWitness` carries both `Monad` and `Applicative`, so it owes
+    // apply(ff, fa) == bind(ff, |f| fmap(fa, f)).
+    // `bind` is list concatenation, which runs the continuation once per function, so coherence
+    // admits only the cartesian applicative.
+    let fns: DenseVector<fn(i64) -> i64> =
+        DenseVector::from_vec(vec![(|x| x * 10) as fn(i64) -> i64, |x| x + 100]);
+    let fa = vector();
+    let fa2 = fa.clone();
+
+    let via_apply = DenseVectorWitness::apply(fns.clone(), fa);
+    let via_bind = DenseVectorWitness::bind(fns, move |f: fn(i64) -> i64| {
+        DenseVectorWitness::fmap(fa2.clone(), f)
+    });
+    assert_eq!(via_apply, via_bind);
 }

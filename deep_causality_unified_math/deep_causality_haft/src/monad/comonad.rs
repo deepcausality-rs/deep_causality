@@ -66,7 +66,6 @@ pub trait CoMonad<F: HKT>: Functor<F> {
     ///
     /// *   `A: Clone`: The extracted value must be clonable, as `extract` takes a reference
     ///     and returns an owned value, implying a copy.
-    /// *   `A: Satisfies<F::Constraint>`: The type must satisfy the HKT's constraint.
     ///
     /// # Examples
     ///

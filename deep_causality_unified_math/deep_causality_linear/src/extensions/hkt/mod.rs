@@ -29,3 +29,4 @@
 pub mod csr_matrix_witness;
 pub mod dense_matrix_witness;
 pub mod dense_vector_witness;
+pub mod zip_dense_vector_witness;

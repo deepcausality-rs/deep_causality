@@ -13,9 +13,9 @@ use alloc::collections::VecDeque;
 /// By implementing `HKT` for `VecDequeWitness`, we can write generic functions that operate
 /// on any type that has the "shape" of `VecDeque`, without knowing the inner type `T`.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `VecDequeWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `VecDequeWitness` places no bound on `T`.
 pub struct VecDequeWitness;
 
 impl HKT for VecDequeWitness {

@@ -62,7 +62,7 @@
 //! terms. The decision is recorded in
 //! `openspec/changes/archive/2026-08-31-add-lax-monoidal-applicative/design.md`.
 //!
-//! # Why `NoConstraint`
+//! # Why the element type carries no bound
 //!
 //! These operations move components; they never compute with them. `fmap` maps `Dual<A>` to
 //! `Dual<B>` for unrelated `A` and `B`, and `zip_with` needs no arithmetic either. Everything that

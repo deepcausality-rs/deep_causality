@@ -24,8 +24,10 @@ fn test_the_witnesses_are_defaultable() {
     // `Default` has to be *invoked* to be covered. The earlier form of this test wrote
     // `let _ = DenseMatrixWitness;`, a unit-struct literal that needs no `Default` impl at all,
     // so deleting `Default` from the derives left it green.
-    // Routed through a `Default`-bounded generic: this needs the impl to exist, where a bare
-    // `Witness::default()` on a unit struct is just the literal spelled differently.
+    // Routed through a `Default`-bounded generic. A bare `Witness::default()` would catch a
+    // missing impl just as well, since it resolves through the trait; the generic form is here
+    // because clippy's `default_constructed_unit_structs` fires on the direct call and suggests
+    // the bare literal, which would *not* catch it.
     fn defaulted<T: Default>() -> T {
         T::default()
     }

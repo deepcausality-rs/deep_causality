@@ -12,10 +12,10 @@ use crate::HKT;
 ///
 /// This trait is generic over `F`, which is a Higher-Kinded Type (HKT) witness.
 ///
-/// # Constraint Support
+/// # Element bounds
 ///
 /// The `fmap` function requires both input type `A` and output type `B` to satisfy the
-/// HKT's constraint. Under `NoConstraint` that admits every type; under a marker it admits
+/// element type. Every type is admitted; the trait states no bound, and the operations here admit
 /// only the types for which the marker is implemented.
 ///
 /// # Laws (Informal)

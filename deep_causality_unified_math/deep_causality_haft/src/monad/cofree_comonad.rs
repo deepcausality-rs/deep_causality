@@ -59,7 +59,7 @@ use core::marker::PhantomData;
 
 /// The cofree comonad on a functor `F`: `head :< f (Cofree f a)`.
 ///
-/// `F` is an [`HKT`] witness that is a [`Functor`] over the unconstrained (`NoConstraint`) universe.
+/// `F` is an [`HKT`] witness that is a [`Functor`] over the unconstrained universe.
 /// `Cofree<F, A>` is an annotated tree: every node carries a `head: A` label and an `F`-structure of
 /// child sub-trees. Fields are private; use [`new`](Cofree::new) / [`head`](Cofree::head) /
 /// [`tail`](Cofree::tail) / [`into_parts`](Cofree::into_parts).

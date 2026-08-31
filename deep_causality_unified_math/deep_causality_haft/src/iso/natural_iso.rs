@@ -21,7 +21,7 @@
 //! # Laws
 //!
 //! Implementers must satisfy, for every type `T` that satisfies both
-//! constraints `F::Constraint` and `G::Constraint`, and for every function
+//! type, and for every function
 //! `h: T -> U`:
 //!
 //! 1. **Round-trip identity (per `T`)**:

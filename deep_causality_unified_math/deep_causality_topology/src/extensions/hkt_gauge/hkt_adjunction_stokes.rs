@@ -25,11 +25,11 @@ use std::sync::Arc;
 
 /// Witness for the exterior derivative d: Ω^k → Ω^(k+1).
 #[derive(Debug, Clone, Copy, Default)]
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `DifferentialForm<T>` carries no element bound, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 pub struct ExteriorDerivativeWitness;
@@ -40,11 +40,11 @@ impl HKT for ExteriorDerivativeWitness {
 
 /// Witness for the boundary operator ∂: C_k → C_(k-1).
 #[derive(Debug, Clone, Copy, Default)]
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Chain<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 ///

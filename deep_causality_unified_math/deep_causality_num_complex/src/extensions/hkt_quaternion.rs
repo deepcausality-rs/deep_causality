@@ -14,7 +14,7 @@ use deep_causality_haft::{
 /// `LaxMonoidal`, `Convolutional` and `MonoidalApplicative`, which is where `apply` comes from.
 ///
 /// `Pure`, `Applicative`, `Monad` and `CoMonad` are deliberately absent. Filling all four slots
-/// from one moved value is the diagonal, and `Pure::pure` cannot reach it under `NoConstraint`;
+/// from one moved value is the diagonal, and `Pure::pure` cannot reach it;
 /// `CoMonad::extend` has no canonical cursor to walk a product with. The module docs carry the
 /// argument in full.
 pub struct QuaternionWitness;

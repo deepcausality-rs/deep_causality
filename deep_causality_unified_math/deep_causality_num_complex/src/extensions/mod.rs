@@ -42,7 +42,7 @@
 //! `CoMonad::extract` could return the scalar part, but `extend` has no canonical cursor to walk
 //! over a product, so it is left out rather than guessed at.
 //!
-//! # Why `NoConstraint`
+//! # Why the element type carries no bound
 //!
 //! These operations move components; they never compute with them. `fmap` maps `Complex<A>` to
 //! `Complex<B>` for unrelated `A` and `B`, so a complex of labels maps as readily as a complex of

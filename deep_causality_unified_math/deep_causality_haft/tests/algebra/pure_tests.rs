@@ -17,7 +17,6 @@ fn test_pure_option() {
 #[test]
 fn test_pure_result() {
     // ResultWitness requires type annotation for Error type usually, but Pure::pure returns F::Type<T>
-    // ResultWitness is HKT with Constraint=NoConstraint?
     // Let's check ResultWitness definition. It's usually ResultWitness<E>.
     // But in haft, it might be just ResultWitness if E is fixed or handled differently.
     // Looking at other tests: `ResultWitness` is used directly.

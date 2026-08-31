@@ -97,7 +97,7 @@ fn functor_composition() {
 }
 
 // ---------------------------------------------------------------------------
-// fmap changes the component type, which is what NoConstraint buys
+// fmap changes the component type, which an unbounded element admits
 // ---------------------------------------------------------------------------
 
 #[test]

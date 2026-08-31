@@ -10,9 +10,9 @@ use crate::{Applicative, Foldable, Functor, HKT, HKT2, Monad, Placeholder, Pure,
 /// It allows `Result` to be used with generic functional programming traits like `Functor`,
 /// `Applicative`, `Foldable`, and `Monad` by fixing one of its type parameters.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `ResultWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `ResultWitness` places no bound on `T`.
 pub struct ResultWitness<E>(Placeholder, E);
 
 impl<E> HKT2<E> for ResultWitness<E> {

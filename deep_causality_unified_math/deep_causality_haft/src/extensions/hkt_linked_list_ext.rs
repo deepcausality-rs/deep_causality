@@ -12,9 +12,9 @@ use alloc::collections::LinkedList;
 /// for the `LinkedList<T>` type constructor. It allows `LinkedList` to be used with generic
 /// functional programming traits like `Functor`, `Applicative`, `Foldable`, and `Monad`.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `LinkedListWitness` uses `NoConstraint`, meaning it works with any type `T`.
+/// `LinkedListWitness` places no bound on `T`.
 pub struct LinkedListWitness;
 
 impl HKT for LinkedListWitness {

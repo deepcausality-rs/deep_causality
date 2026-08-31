@@ -72,6 +72,18 @@ impl Pure<CausalTensorWitness> for CausalTensorWitness {
 }
 
 impl Monad<CausalTensorWitness> for CausalTensorWitness {
+    /// # One element, two shapes
+    ///
+    /// A container holding a single element can carry any shape whose extents multiply to one:
+    /// `[]`, `[1]`, `[1, 1]`. On such an input the two identity laws want different answers.
+    /// `bind(m, pure) == m` wants the *input's* shape, and `bind(pure(a), f) == f(a)` wants the
+    /// shape of what `f` returned. When those differ, no rule satisfies both.
+    ///
+    /// Right identity wins here, because `bind(m, pure) == m` is the law a caller is most likely
+    /// to rely on. The consequence is narrow and worth naming: for a one-function `ff` of shape
+    /// `[1]` against a one-element `fa` of shape `[1, 1]`, `apply(ff, fa)` reports `[1, 1]` while
+    /// `bind(ff, |f| fmap(fa, f))` reports `[1]`. The data agrees; only the shape does not, and
+    /// only when both sides hold exactly one element under different shapes.
     fn bind<A, B, Func>(m_a: CausalTensor<A>, mut f: Func) -> CausalTensor<B>
     where
         Func: FnMut(A) -> <Self as HKT>::Type<B>,
@@ -79,17 +91,34 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
         let shape = m_a.shape().to_vec();
         let count = m_a.len();
         let mut result_data = Vec::with_capacity(count);
+        let mut every_step_gave_one = true;
+        let mut only_step_shape: Option<Vec<usize>> = None;
         for a in m_a.into_vec() {
             let mb = f(a);
+            if mb.len() != 1 {
+                every_step_gave_one = false;
+            }
+            if count == 1 {
+                only_step_shape = Some(mb.shape().to_vec());
+            }
             result_data.extend(mb.into_vec());
         }
-        // When every `f(a)` contributed exactly one element the map was shape preserving, so the
-        // input's shape is the honest answer and `bind(m, pure) == m` holds. Unconditionally
-        // rebuilding as `[len]` collapsed every rank above one: a `[2, 3]` came back as `[6]`.
-        // When the counts differ the shape genuinely is not recoverable, and the flat `[len]` is
-        // the honest report of a concat-map.
         let len = result_data.len();
-        if len == count {
+
+        // A one-element input is exactly the left identity case, `bind(pure(a), f) == f(a)`, so
+        // the answer is `f(a)` including its shape. This is also what keeps `bind` coherent with
+        // `apply`: `apply` broadcasts a single function across `fa` and reports `fa`'s shape, and
+        // `bind(ff, |f| fmap(fa, f))` over a one-function `ff` has to agree with it.
+        if count == 1 && len != 1 {
+            let s = only_step_shape.expect("count is one, so the loop ran once");
+            return CausalTensor::from_vec(result_data, &s);
+        }
+
+        // Otherwise the shape survives only when the map was genuinely one-in-one-out. Testing
+        // `len == count` instead is too weak: `f` returning two elements for one input and none
+        // for another sums to the same total while being a concat-map, and would stamp the
+        // input's shape onto a result that no longer has it.
+        if every_step_gave_one {
             CausalTensor::from_vec(result_data, &shape)
         } else {
             CausalTensor::from_vec(result_data, &[len])

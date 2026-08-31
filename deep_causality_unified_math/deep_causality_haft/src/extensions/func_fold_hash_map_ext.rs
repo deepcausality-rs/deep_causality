@@ -13,9 +13,9 @@ use std::hash::Hash;
 /// It allows `HashMap` to be used with generic functional programming traits like `Functor`
 /// and `Foldable` by fixing one of its type parameters.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `HashMapWitness` uses `NoConstraint`, meaning it works with any value type `V`.
+/// `HashMapWitness` places no bound on the value type `V`.
 pub struct HashMapWitness<K>(Placeholder, K);
 
 impl<K> HKT2<K> for HashMapWitness<K> {

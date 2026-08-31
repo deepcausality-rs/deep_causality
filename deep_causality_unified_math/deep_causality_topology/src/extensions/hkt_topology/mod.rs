@@ -8,11 +8,11 @@ use deep_causality_haft::{CoMonad, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `Topology<R, G>` carries no bound on its coefficient group `G`, and the categorical operations here move elements without
 /// computing on them: `fmap` maps `A` to an unrelated `B`. Constraining the element type would
-/// forbid mappings that are legitimate and work today, so `NoConstraint` is the accurate statement
+/// forbid mappings that are legitimate and work today, so the witness places no bound on the element type
 /// rather than a placeholder. Operations that compute carry real trait bounds on the concrete
 /// types. See `openspec/notes/archive/hkt_gat/hkt_gat_topology.md` §4.
 ///

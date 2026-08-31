@@ -12,9 +12,9 @@ use alloc::collections::BTreeMap;
 /// It allows `BTreeMap` to be used with generic functional programming traits like `Functor`
 /// and `Foldable` by fixing one of its type parameters.
 ///
-/// # Constraint
+/// # Element bounds
 ///
-/// `BTreeMapWitness` uses `NoConstraint`, meaning it works with any value type `V`.
+/// `BTreeMapWitness` places no bound on the value type `V`.
 pub struct BTreeMapWitness<K>(Placeholder, K);
 
 impl<K> HKT2<K> for BTreeMapWitness<K> {

@@ -24,9 +24,9 @@ use crate::HKT;
 ///
 /// This allows `Monad` to be implemented without requiring `Applicative`,
 /// which is blocked for strict constrained witnesses due to the
-/// `Func: Satisfies<F::Constraint>` requirement in `Applicative::apply`.
+/// element bound that `Applicative::apply` used to carry.
 ///
-/// # Constraint Support
+/// # Element bounds
 ///
 /// The `pure` function requires the value type to satisfy the HKT's constraint, so a
 /// constrained witness cannot lift an element type its marker does not admit.

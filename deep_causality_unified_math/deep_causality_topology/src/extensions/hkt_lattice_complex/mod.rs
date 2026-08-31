@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 /// HKT witness for [`LatticeField`], the functor over values on a lattice complex.
 ///
-/// # Why `NoConstraint`
+/// # Why the element type carries no bound
 ///
 /// `LatticeField<D, R, T>` carries no bound on its value type `T`, and the operations here move
 /// values without computing on them. The lattice's precision `R` is a separate parameter, so

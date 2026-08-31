@@ -127,6 +127,20 @@ where
     ///
     /// The focus at `i` is the coefficient tensor rotated left by `i`, which puts cell `i` at
     /// position 0 where [`Self::extract`] reads.
+    ///
+    /// # Cost, and what a focus is not
+    ///
+    /// Quadratic in the coefficient count, by construction rather than by oversight. `f` takes
+    /// `&CausalMultiField<A>`, so every focus has to be a real field rather than a borrowed view,
+    /// and building one copies the whole buffer: `n` positions against an `n`-element clone. A
+    /// `CausalMultiField` holds grid cells times matrix dimension squared, so a large grid puts
+    /// this out of reach. Use the inherent operators for bulk work; `extend` is for small fields
+    /// and for the comonadic laws.
+    ///
+    /// The rotation also runs over the flat coefficient buffer, which interleaves grid cells with
+    /// the matrix coefficients inside each cell. That is what makes `extend(w, extract) == w`
+    /// hold, since `extract` reads flat position 0, but it means a focus is not a grid
+    /// neighbourhood and `f` should not read it as one.
     fn extend<A, C, Func>(fa: &CausalMultiField<A, T>, mut f: Func) -> CausalMultiField<C, T>
     where
         A: Clone,

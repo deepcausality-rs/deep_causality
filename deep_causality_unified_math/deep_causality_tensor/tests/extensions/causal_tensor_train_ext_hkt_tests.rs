@@ -41,10 +41,13 @@ fn test_functor_identity_law() {
 }
 
 #[test]
-fn test_functor_identity_law_preserves_the_canonical_form() {
-    // `fmap` sets `CanonicalForm::None` unconditionally, which is right for a general `f`
-    // because mapping entries does not preserve orthogonality. Under the identity it makes
-    // `fmap(id) != id`, so the functor identity law fails on any canonicalized train.
+fn test_functor_identity_law_holds_on_a_canonicalized_train() {
+    // `fmap` sets `CanonicalForm::None` unconditionally, which is right for a general `f`,
+    // because mapping entries does not preserve orthogonality. The identity law still holds
+    // because `PartialEq` treats the canonical form as a cached fact about the cores rather than
+    // part of the value, so a train that has been canonicalized still equals its own `fmap(id)`.
+    // The name says "holds on", not "preserves": the form is reset, and that is not a difference
+    // in the tensor denoted.
     let tt = sample_f64().left_canonicalize().unwrap();
     assert_eq!(CausalTensorTrainWitness::fmap(tt.clone(), |x: f64| x), tt);
 }
