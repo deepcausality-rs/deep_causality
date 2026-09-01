@@ -8,7 +8,7 @@ bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
-bazel_dep(name = "llvm", version = "0.8.17")
+bazel_dep(name = "llvm", version = "0.8.19")
 
 # Pinned by commit until the module is published to the
 # Bazel Central Registry; at that point this becomes a plain bazel_dep
@@ -61,7 +61,7 @@ register_toolchains("@rust_toolchains//:all")
 llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 
 # llvm_version matches the one Rust uses in the version declared in the previous step.
-llvm.version(llvm_version = "22.1.6")
+llvm.version(llvm_version = "22.1.8")
 use_repo(llvm, "llvm-project")
 
 toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
