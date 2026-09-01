@@ -53,7 +53,7 @@ deep_causality_discovery = { path = "deep_causality_discovery", version = "0.5" 
 deep_causality_ethos = { path = "deep_causality_ethos", version = "0.2" }
 deep_causality_fft = { path = "deep_causality_unified_math/deep_causality_fft", version = "0.1", default-features = false }
 deep_causality_file = { path = "deep_causality_file", version = "0.1" }
-deep_causality_haft = { path = "deep_causality_unified_math/deep_causality_haft", version = "0.4", default-features = false }
+deep_causality_haft = { path = "deep_causality_unified_math/deep_causality_haft", version = "0.5", default-features = false }
 deep_causality_homology = { path = "deep_causality_unified_math/deep_causality_homology", version = "0.1", default-features = false }
 deep_causality_linear = { path = "deep_causality_unified_math/deep_causality_linear", version = "0.1", default-features = false }
 deep_causality_metric = { path = "deep_causality_unified_math/deep_causality_metric", version = "0.2", default-features = false }
