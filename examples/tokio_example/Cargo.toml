@@ -11,8 +11,8 @@ publish = false
 
 
 [dependencies]
-deep_causality = { path = "../../deep_causality" }
-tokio = {version = "1", features = ["full"]}
+deep_causality = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
 
 [lints]
 workspace = true

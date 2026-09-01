@@ -33,14 +33,10 @@ alloc = []
 no-std = ["alloc", "deep_causality_num/no-std", "deep_causality_linear/no-std"]
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_linear]
-path = "../deep_causality_linear"
-version = "0.1.2"
-default-features = false
+workspace = true
 
 [lints]
 workspace = true

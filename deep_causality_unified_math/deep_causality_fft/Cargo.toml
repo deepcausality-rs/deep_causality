@@ -52,31 +52,23 @@ no-std = [
 parallel = ["std", "dep:rayon", "deep_causality_par/parallel"]
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_num_complex"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_par]
-path = "../../deep_causality_par"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.rayon]
-version = "1.11"
+workspace = true
 optional = true
 
 [dev-dependencies]
-criterion = { version = "0.8" }
+criterion = { workspace = true }
 
 [[bench]]
 name = "fft_benchmark"

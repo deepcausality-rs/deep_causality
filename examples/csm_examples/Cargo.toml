@@ -10,8 +10,8 @@ publish = false
 path = "no_lib.rs"
 
 [dependencies]
-deep_causality =  { path = "../../deep_causality" }
-deep_causality_ethos =  { path = "../../deep_causality_ethos" }
+deep_causality = { workspace = true }
+deep_causality_ethos = { workspace = true }
 
 [[example]]
 name = "csm_example"

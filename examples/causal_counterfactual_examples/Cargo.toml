@@ -10,10 +10,9 @@ publish = false
 path = "src/lib.rs"
 
 [dependencies]
-deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_calculus = { path = "../../deep_causality_unified_math/deep_causality_calculus" }
-deep_causality_haft = { path = "../../deep_causality_unified_math/deep_causality_haft" }
-
+deep_causality_core = { workspace = true, features = ["default"] }
+deep_causality_calculus = { workspace = true, features = ["default"] }
+deep_causality_haft = { workspace = true, features = ["default"] }
 
 [[example]]
 name = "counterfactual_treatment_effect"

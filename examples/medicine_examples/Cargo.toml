@@ -12,12 +12,12 @@ path = "no_lib.rs"
 
 
 [dependencies]
-deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_calculus = { path = "../../deep_causality_unified_math/deep_causality_calculus" }
-deep_causality_physics = { path = "../../deep_causality_physics" }
-deep_causality_tensor = { path = "../../deep_causality_unified_math/deep_causality_tensor" }
-deep_causality_topology = { path = "../../deep_causality_unified_math/deep_causality_topology" }
-deep_causality_num = { path = "../../deep_causality_unified_math/deep_causality_num" }
+deep_causality_core = { workspace = true, features = ["default"] }
+deep_causality_calculus = { workspace = true, features = ["default"] }
+deep_causality_physics = { workspace = true, features = ["default"] }
+deep_causality_tensor = { workspace = true, features = ["default"] }
+deep_causality_topology = { workspace = true }
+deep_causality_num = { workspace = true, features = ["default"] }
 
 [[example]]
 name = "aneurysm_risk"

@@ -32,43 +32,28 @@ alloc = []
 no-std = ["alloc", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_linear/no-std", "deep_causality_tensor/no-std", "deep_causality_metric/no-std"]
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_haft"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_num_complex"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_linear]
-path = "../deep_causality_linear"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_tensor"
-version = "0.5"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_metric]
-path = "../deep_causality_metric"
-version = "0.2"
-default-features = false
-
+workspace = true
 
 [dev-dependencies]
-criterion = { version = "0.8" }
+criterion = { workspace = true }
 
 [[bench]]
 name = "multivector_bench"

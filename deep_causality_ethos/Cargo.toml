@@ -37,13 +37,10 @@ exclude = [
 
 
 [dependencies.deep_causality]
-path = "../deep_causality"
-version = "0.15"
+workspace = true
 
 [dependencies.ultragraph]
-path = "../ultragraph"
-version = "0.9"
-
+workspace = true
 
 [lints]
 workspace = true

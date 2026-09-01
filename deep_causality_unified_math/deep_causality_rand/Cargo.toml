@@ -26,15 +26,10 @@ exclude = [
 
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
-default-features = false
-
+workspace = true
 
 [features]
 default = ["std"]
@@ -48,9 +43,8 @@ os-random = ["getrandom"]
 
 
 [dependencies.getrandom]
-version = "0.4"
+workspace = true
 optional = true
-
 
 [package.metadata.docs.rs]
 all-features = true

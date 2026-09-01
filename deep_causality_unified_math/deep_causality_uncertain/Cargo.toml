@@ -30,29 +30,26 @@ os-random = ["deep_causality_rand/os-random"]
 
 
 [dependencies.deep_causality_rand]
-path = "../deep_causality_rand"
-version = "0.2"
-
+workspace = true
 
 [package.metadata.docs.rs]
 all-features = true
 
 [dependencies.deep_causality_ast]
-path = "../deep_causality_ast"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dev-dependencies]
-rusty-fork = "0.3"
-criterion = {  version = "0.8" }
-
+rusty-fork = { workspace = true }
+criterion = { workspace = true }
 
 [[bench]]
 name = "uncertain_benchmarks"
