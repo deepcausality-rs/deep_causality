@@ -3,270 +3,279 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Haruna's gauge-field formalism for logical quantum gates, as circuits.
+//!
+//! Junichi Haruna, *Note on Logical Gates by Gauge Field Formalism of Quantum
+//! Error Correction*, arXiv:2511.15224 (2025). The paper is in this crate's
+//! `papers/` directory. Table 1 gives the physical-gate decomposition of each
+//! logical gate; §3 derives them.
+//!
+//! # The carrier is a bitset, not a multivector
+//!
+//! A logical operator here is supported on a set of physical qubits, and every
+//! gate in Table 1 is a product of physical gates ranging over that support, its
+//! pairs and its triples. So the input is a [`Gf2Chain`], whose `support`,
+//! `support_pairs` and `support_triples` are exactly the three index families
+//! the table needs, and the output is a list of [`GateOp`].
+//!
+//! Nothing here evaluates an operator. `a(γ)` is diagonal with integer
+//! eigenvalues, so the gauge-field expressions in Table 1's third column are the
+//! compact forms that make the Appendix B invariance proofs tractable; they are
+//! not the computational path. This module implements the second column.
+//!
+//! # Degree
+//!
+//! Every chain a gate takes is a 1-chain in the paper's construction: `γ ∈ H₁`
+//! for the electric side and `γ̃ ∈ H¹` for the magnetic one. The degree is
+//! carried but not checked here, because a caller composing gates over a code
+//! whose grading differs is doing something this module cannot adjudicate.
+
 use crate::QuantumError;
+use crate::types::qpu::circuit::GateOp;
+use alloc::vec::Vec;
 use core::f64::consts::PI;
-use deep_causality_algebra::{DivisionAlgebra, RealField};
-/// Haruna's Gauge Field Formalism for Logical Quantum Gates.
-///
-/// Based on "Note on Logical Gates by Gauge Field Formalism of Quantum Error Correction"
-/// by Junichi Haruna (2025).
-/// See: https://arxiv.org/abs/2511.15224
-use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{FromPrimitive, One};
+use deep_causality_algebra::RealField;
+use deep_causality_homology::Gf2Chain;
+use deep_causality_num::{FromPrimitive, NaturalNumber};
 use deep_causality_num_complex::Complex;
 
-/// Whether any component of `mv` has a non-finite real or imaginary part. Shared
-/// by the finiteness guards in `exp` and `logical_hadamard` (mirroring the checks
-/// in `apply_gate_kernel` / `commutator_kernel`) so a new post-product path cannot
-/// silently forget the guard.
-fn has_non_finite<R: RealField>(mv: &CausalMultiVector<Complex<R>>) -> bool {
-    mv.data()
-        .iter()
-        .any(|c| !c.re.is_finite() || !c.im.is_finite())
+/// The logical Z gate, Table 1 row 1: `Z̄(γ) = ∏_k Z_{i_k}` over `supp(γ)`.
+///
+/// Transversal Z on the support and nothing else.
+pub fn logical_z<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
+    gamma.support().map(GateOp::Z).collect()
 }
 
-/// Helper function to compute the exponential of a multivector: $e^A = \sum A^n/n!$
-/// Uses Taylor series expansion.
+/// The logical X gate, Table 1 row 2: `X̄(γ̃) = ∏_k X_{ĩ_k}` over `supp(γ̃)`.
+///
+/// Transversal X on the support and nothing else.
+pub fn logical_x<W: NaturalNumber>(gamma_tilde: &Gf2Chain<W>) -> Vec<GateOp> {
+    gamma_tilde.support().map(GateOp::X).collect()
+}
+
+/// The logical S gate, Table 1 row 3 and Eq. (3.17):
+///
+/// `S̄(γ) = ∏_{k} S_{j_k} · ∏_{k₁<k₂} CZ_{j_{k₁} j_{k₂}}`
+///
+/// Transversal S on the support, then CZ between every pair within it. The
+/// pairs are unordered and drawn from a single support, so no index repeats and
+/// the paper's `CZ_{i,i} = Z_i` reduction never fires here.
+pub fn logical_s<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
+    let mut ops: Vec<GateOp> = gamma.support().map(GateOp::S).collect();
+    ops.extend(gamma.support_pairs().map(|(a, b)| GateOp::Cz {
+        control: a,
+        target: b,
+    }));
+    ops
+}
+
+/// The logical T gate, Table 1 row 7 and Eq. (3.59):
+///
+/// `T̄(γ) = ∏_k T_{i_k} · ∏_{k₁<k₂} CS†_{k₁k₂} · ∏_{k₁<k₂<k₃} CCZ_{k₁k₂k₃}`
+///
+/// Transversal T on the support, controlled-S† between every pair within it,
+/// and CCZ among every triple. As with [`logical_s`], every index family is
+/// drawn from one support in strictly increasing order, so no index repeats.
+pub fn logical_t<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
+    let mut ops: Vec<GateOp> = gamma.support().map(GateOp::T).collect();
+    ops.extend(gamma.support_pairs().map(|(a, b)| GateOp::Csdg {
+        control: a,
+        target: b,
+    }));
+    ops.extend(gamma.support_triples().map(|(a, b, c)| GateOp::Ccz {
+        q0: a,
+        q1: b,
+        q2: c,
+    }));
+    ops
+}
+
+/// The logical CZ gate, Table 1 row 5 and Eq. (3.42):
+///
+/// `CZ̄(γ₁, γ₂) = ∏_{k,l} CZ_{i_k, j_l}` over `supp(γ₁) × supp(γ₂)`
+///
+/// The full Cartesian product, not the ordered pairs: the two supports are
+/// independent and every combination contributes.
+///
+/// # The supports may overlap, and then the paper's reduction fires
+///
+/// When `i_k == j_l` the physical gate is `CZ_{i,i}`, which the paper defines as
+/// `exp(iπ z_i z_i) = exp(iπ z_i) = Z_i`, a single-qubit Z. This function emits
+/// that `Z_i`. Emitting a `CZ` with both indices equal instead would be rejected
+/// by [`QuantumCircuit::new`](crate::QuantumCircuit::new), which refuses a gate
+/// naming one qubit twice, so the reduction is not an optimisation but the only
+/// correct output.
 ///
 /// # Errors
-/// Returns [`QuantumError::NonFiniteValue`] when the exponent's norm is
-/// non-finite or exceeds the overflow bound, or when the Taylor series overflows
-/// to a non-finite value during (or after) accumulation; returns
-/// [`QuantumError::CalculationError`] when the 64-term series does not converge to
-/// tolerance within the budget (the truncated sum would be silently inaccurate).
-/// An overflowing or non-convergent exponent has no reliable finite `exp`, so the
-/// failure is surfaced rather than masked as the identity operator — a real
-/// identity gate (`exp(0)`) is indistinguishable from such a fallback, which is
-/// exactly the ambiguity callers must not face.
-fn exp<R>(mv: &CausalMultiVector<Complex<R>>) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let small = R::from_f64(1e-15).expect("R::from_f64(1e-15)");
-    let tol = R::from_f64(1e-12).expect("R::from_f64(1e-12)");
-    let max_norm = R::from_f64(1e6).expect("R::from_f64(1e6)");
-
-    // Fast path: exp(0) = I. This is a genuine identity result, not a fallback.
-    if mv
-        .data()
-        .iter()
-        .all(|c| c.re.abs() < small && c.im.abs() < small)
-    {
-        return Ok(CausalMultiVector::scalar(Complex::one(), mv.metric()));
+///
+/// [`QuantumError::DimensionMismatch`] if the two chains have different lengths,
+/// since then they index different registers and the product is not defined.
+pub fn logical_cz<W: NaturalNumber>(
+    gamma1: &Gf2Chain<W>,
+    gamma2: &Gf2Chain<W>,
+) -> Result<Vec<GateOp>, QuantumError> {
+    if gamma1.len() != gamma2.len() {
+        return Err(QuantumError::DimensionMismatch(alloc::format!(
+            "logical_cz needs two chains over one register: lengths {} and {}",
+            gamma1.len(),
+            gamma2.len()
+        )));
     }
-
-    let metric = mv.metric();
-    let one_complex = Complex::<R>::one();
-    let mut term = CausalMultiVector::scalar(one_complex, metric);
-    let mut sum = term.clone();
-
-    let max_iters = 64;
-
-    // A huge exponent has no finite exp; reject it instead of masking as identity.
-    let mv_norm_sq: R = mv
-        .data()
-        .iter()
-        .map(|c| c.norm_sqr())
-        .fold(R::zero(), |acc, x| acc + x);
-    let mv_norm = mv_norm_sq.sqrt();
-    if !mv_norm.is_finite() || mv_norm > max_norm {
-        return Err(QuantumError::NonFiniteValue(
-            "Haruna gate exponent norm is non-finite or exceeds the overflow bound; \
-             the gate has no finite value"
-                .into(),
-        ));
-    }
-
-    for n in 1..=max_iters {
-        let n_r = R::from_f64(n as f64).expect("R::from_f64(n)");
-        let n_inv = Complex::new(R::one() / n_r, R::zero());
-        term = &term * mv;
-        term *= n_inv;
-
-        if has_non_finite(&term) {
-            return Err(QuantumError::NonFiniteValue(
-                "Haruna gate exp Taylor term overflowed to a non-finite value".into(),
-            ));
+    let right: Vec<usize> = gamma2.support().collect();
+    let mut ops = Vec::new();
+    for i in gamma1.support() {
+        for &j in &right {
+            if i == j {
+                ops.push(GateOp::Z(i));
+            } else {
+                ops.push(GateOp::Cz {
+                    control: i,
+                    target: j,
+                });
+            }
         }
+    }
+    Ok(ops)
+}
 
-        let prev = sum.clone();
-        sum += &term;
+/// The logical multi-controlled Z, Table 1 row 6:
+///
+/// `C^{m-1}Z̄(γ₁, …, γ_m) = ∏_{k₁,…,k_m} C^{m-1}Z_{i₁,…,i_m}`
+///
+/// over the Cartesian product of the `m` supports.
+///
+/// # The reduction rule is load-bearing here
+///
+/// The paper defines `C^{m-1}Z` so that repeated indices reduce: coincident
+/// controls drop to a lower-control gate, and a control coinciding with the
+/// target drops to a single-qubit Z. Its examples are `C³Z_{i,i,j,k} = C²Z_{i,j,k}`
+/// and `C²Z_{i,i,i} = CZ_{i,i} = Z_i`. Because the supports may overlap, a raw
+/// tuple can carry repeats, so this function deduplicates each tuple before
+/// emitting it. That is the paper's rule and also what
+/// [`QuantumCircuit::new`](crate::QuantumCircuit::new) requires, since it
+/// rejects a gate naming one qubit twice.
+///
+/// # Errors
+///
+/// [`QuantumError::DimensionMismatch`] if `chains` is empty, or if the chains do
+/// not all have the same length.
+pub fn logical_multi_cz<W: NaturalNumber>(
+    chains: &[&Gf2Chain<W>],
+) -> Result<Vec<GateOp>, QuantumError> {
+    let first = chains.first().ok_or_else(|| {
+        QuantumError::DimensionMismatch("logical_multi_cz needs at least one chain".into())
+    })?;
+    if let Some(bad) = chains.iter().find(|c| c.len() != first.len()) {
+        return Err(QuantumError::DimensionMismatch(alloc::format!(
+            "logical_multi_cz needs chains over one register: lengths {} and {}",
+            first.len(),
+            bad.len()
+        )));
+    }
 
-        let diff = &sum - &prev;
-        let delta_sq: R = diff
-            .data()
-            .iter()
-            .map(|c| c.norm_sqr())
-            .fold(R::zero(), |acc, x| acc + x);
-        let delta = delta_sq.sqrt();
+    let supports: Vec<Vec<usize>> = chains.iter().map(|c| c.support().collect()).collect();
+    if supports.iter().any(|s| s.is_empty()) {
+        return Ok(Vec::new());
+    }
 
-        if !delta.is_finite() {
-            return Err(QuantumError::NonFiniteValue(
-                "Haruna gate exp Taylor series overflowed to a non-finite value".into(),
-            ));
+    let mut ops = Vec::new();
+    let mut odometer = alloc::vec![0usize; supports.len()];
+    loop {
+        // One tuple of the Cartesian product, deduplicated per the paper's
+        // reduction rule. `dedup` after sorting would lose the tuple's order,
+        // which does not matter: C^{m-1}Z is symmetric in its indices.
+        let mut tuple: Vec<usize> = Vec::with_capacity(odometer.len());
+        for (axis, &pos) in odometer.iter().enumerate() {
+            let q = supports[axis][pos];
+            if !tuple.contains(&q) {
+                tuple.push(q);
+            }
         }
-        if delta < tol {
-            return Ok(sum);
+        ops.push(reduced_multi_cz(tuple));
+
+        // Advance the odometer over the supports, least significant axis first.
+        let mut axis = odometer.len();
+        loop {
+            if axis == 0 {
+                return Ok(ops);
+            }
+            axis -= 1;
+            odometer[axis] += 1;
+            if odometer[axis] < supports[axis].len() {
+                break;
+            }
+            odometer[axis] = 0;
         }
     }
+}
 
-    // Reaching here means the 64-term budget was exhausted WITHOUT `delta < tol`
-    // (convergence returns `Ok` inside the loop). The truncated partial sum is a
-    // non-converged Taylor series — for an exponent norm above ~16 it can be many
-    // orders of magnitude off — so surface it as a failure rather than a
-    // silently-wrong gate. A `sum` can also overflow to a non-finite value purely
-    // by accumulating finite terms; report that case distinctly.
-    if has_non_finite(&sum) {
-        return Err(QuantumError::NonFiniteValue(
-            "Haruna gate exp result is non-finite".into(),
-        ));
+/// The gate a deduplicated index tuple denotes, at the arity that survived the
+/// paper's reduction. One index is a Z, two a CZ, three a CCZ, and more the
+/// general form.
+fn reduced_multi_cz(tuple: Vec<usize>) -> GateOp {
+    match tuple.len() {
+        1 => GateOp::Z(tuple[0]),
+        2 => GateOp::Cz {
+            control: tuple[0],
+            target: tuple[1],
+        },
+        3 => GateOp::Ccz {
+            q0: tuple[0],
+            q1: tuple[1],
+            q2: tuple[2],
+        },
+        _ => GateOp::Cmz { qubits: tuple },
     }
-    Err(QuantumError::CalculationError(
-        "Haruna gate exp Taylor series did not converge within the 64-term budget \
-         to tolerance 1e-12; the exponent norm is too large (the field is outside \
-         the reliably-computable domain)"
-            .into(),
-    ))
 }
 
-/// Calculates the Logical Z gate: $Z(\gamma) = \exp(i \pi a(\gamma))$.
+/// The logical Hadamard, Table 1 row 4 and Eq. (3.27):
+///
+/// `H̄(γ) = e^{-iπ/4} · S̄(γ) · ∏_k H_{ĩ_k} · S̄(γ̃) · ∏_k H_{ĩ_k} · S̄(γ)`
+///
+/// The transversal Hadamards run over `supp(γ̃)`, conjugating the middle `S̄(γ̃)`
+/// into the X basis; the outer factors are `S̄(γ)` on the electric side.
+///
+/// # The global phase is returned, not discarded
+///
+/// `e^{-iπ/4}` is unobservable under a computational-basis measurement, so a
+/// circuit type has nowhere to put it. It stops being unobservable the moment
+/// this gate is used as a controlled operation, where a global phase becomes a
+/// relative one, and the paper's Appendix B invariance arguments carry it. So it
+/// comes back alongside the circuit and the caller decides.
 ///
 /// # Errors
-/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
-/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
-pub fn logical_z<R>(
-    a_gamma: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let pi = R::from_f64(PI).expect("R::from_f64(PI)");
-    let i_pi = Complex::new(R::zero(), pi);
-    let exponent = a_gamma.clone() * i_pi;
-    exp(&exponent)
-}
-
-/// Calculates the Logical X gate: $X(\tilde{\gamma}) = \exp(i \pi b(\tilde{\gamma}))$.
 ///
-/// # Errors
-/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
-/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
-pub fn logical_x<R>(
-    b_gamma_tilde: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
+/// [`QuantumError::DimensionMismatch`] if the two chains have different lengths.
+/// [`QuantumError::CalculationError`] if the scalar type cannot represent `π/4`.
+pub fn logical_hadamard<W, R>(
+    gamma: &Gf2Chain<W>,
+    gamma_tilde: &Gf2Chain<W>,
+) -> Result<(Vec<GateOp>, Complex<R>), QuantumError>
 where
+    W: NaturalNumber,
     R: RealField + FromPrimitive,
 {
-    let pi = R::from_f64(PI).expect("R::from_f64(PI)");
-    let i_pi = Complex::new(R::zero(), pi);
-    let exponent = b_gamma_tilde.clone() * i_pi;
-    exp(&exponent)
-}
-
-/// Calculates the Logical S gate: $S(\gamma) = \exp(i \frac{\pi}{2} a(\gamma)^2)$.
-///
-/// # Errors
-/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
-/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
-pub fn logical_s<R>(
-    a_gamma: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let pi_2 = R::from_f64(PI / 2.0).expect("R::from_f64(PI/2)");
-    let i_pi_2 = Complex::new(R::zero(), pi_2);
-    let a_sq = a_gamma.clone() * a_gamma.clone();
-    let exponent = a_sq * i_pi_2;
-    exp(&exponent)
-}
-
-/// Calculates the Logical Hadamard gate.
-///
-/// # Errors
-/// Propagates `exp`'s errors (via `logical_s` and the mid-factor), and returns
-/// [`QuantumError::NonFiniteValue`] if the post-exponential products overflow to a
-/// non-finite value.
-pub fn logical_hadamard<R>(
-    a_gamma: &CausalMultiVector<Complex<R>>,
-    b_gamma_tilde: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    // phase_scalar = exp(-i pi/4) = cos(-pi/4) + i sin(-pi/4)
-    let neg_pi_4 = R::from_f64(-PI / 4.0).expect("R::from_f64(-PI/4)");
-    let phase_scalar = Complex::new(neg_pi_4.cos(), neg_pi_4.sin());
-
-    let s_a = logical_s(a_gamma)?;
-
-    let pi_2 = R::from_f64(PI / 2.0).expect("R::from_f64(PI/2)");
-    let i_pi_2 = Complex::new(R::zero(), pi_2);
-    let b_sq = b_gamma_tilde.clone() * b_gamma_tilde.clone();
-    let mid = exp(&(b_sq * i_pi_2))?;
-
-    let step1 = &s_a * &mid;
-    let step2 = &step1 * &s_a;
-    // The post-exp geometric products can overflow to a non-finite value even when
-    // both exp factors are finite; backstop them (consistent with exp,
-    // apply_gate_kernel, and commutator_kernel).
-    let result = step2 * phase_scalar;
-    if has_non_finite(&result) {
-        return Err(QuantumError::NonFiniteValue(
-            "Haruna Hadamard gate produced a non-finite value".into(),
-        ));
+    if gamma.len() != gamma_tilde.len() {
+        return Err(QuantumError::DimensionMismatch(alloc::format!(
+            "logical_hadamard needs two chains over one register: lengths {} and {}",
+            gamma.len(),
+            gamma_tilde.len()
+        )));
     }
-    Ok(result)
-}
+    let neg_pi_4 = R::from_f64(-PI / 4.0).ok_or_else(|| {
+        QuantumError::CalculationError("scalar type cannot represent -π/4".into())
+    })?;
+    let phase = Complex::new(neg_pi_4.cos(), neg_pi_4.sin());
 
-/// Calculates the Logical CZ gate: $CZ(\gamma_1, \gamma_2) = \exp(i \pi a(\gamma_1) a(\gamma_2))$.
-///
-/// # Errors
-/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
-/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
-pub fn logical_cz<R>(
-    a_gamma1: &CausalMultiVector<Complex<R>>,
-    a_gamma2: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let pi = R::from_f64(PI).expect("R::from_f64(PI)");
-    let i_pi = Complex::new(R::zero(), pi);
-    let interaction = a_gamma1.clone() * a_gamma2.clone();
-    let exponent = interaction * i_pi;
-    exp(&exponent)
-}
+    let s_gamma = logical_s(gamma);
+    let hadamards: Vec<GateOp> = gamma_tilde.support().map(GateOp::H).collect();
 
-/// Calculates the Logical T gate.
-///
-/// # Errors
-/// Propagates `exp`'s errors: [`QuantumError::NonFiniteValue`] on overflow, or
-/// [`QuantumError::CalculationError`] if the Taylor series does not converge.
-pub fn logical_t<R>(
-    a_gamma: &CausalMultiVector<Complex<R>>,
-) -> Result<CausalMultiVector<Complex<R>>, QuantumError>
-where
-    R: RealField + FromPrimitive,
-{
-    let a = a_gamma.clone();
-    let a2 = &a * &a;
-    let a3 = &a2 * &a;
+    let mut ops = Vec::new();
+    ops.extend(s_gamma.iter().cloned());
+    ops.extend(hadamards.iter().cloned());
+    ops.extend(logical_s(gamma_tilde));
+    ops.extend(hadamards);
+    ops.extend(s_gamma);
 
-    let half = R::from_f64(0.5).expect("R::from_f64(0.5)");
-    let neg_three_quarters = R::from_f64(-0.75).expect("R::from_f64(-0.75)");
-
-    let c1 = Complex::new(half, R::zero());
-    let c2 = Complex::new(neg_three_quarters, R::zero());
-    let c3 = Complex::new(half, R::zero());
-
-    let term1 = a3 * c1;
-    let term2 = a2 * c2;
-    let term3 = a * c3;
-
-    let sum = term1 + term2 + term3;
-    let pi = R::from_f64(PI).expect("R::from_f64(PI)");
-    let i_pi = Complex::new(R::zero(), pi);
-
-    exp(&(sum * i_pi))
+    Ok((ops, phase))
 }

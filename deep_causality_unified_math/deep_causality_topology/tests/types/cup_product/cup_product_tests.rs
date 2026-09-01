@@ -22,16 +22,51 @@
 //! fundamental cycles, and the triple product of the three direction generators
 //! on a 3-torus is the pairing of the three fundamental cycles.
 
+use deep_causality_algebra::CommutativeRing;
 use deep_causality_topology::utils_tests::{
     delta, direction_cochain, lattice_index, max_abs_diff, pseudo_cochain, simplex_index,
     tetrahedron,
 };
 use deep_causality_topology::{
-    CellularComplex, ChainComplex, LatticeCell, LatticeComplex, Simplex, SplittableCell,
-    cup_product, cup_product_n,
+    CellularComplex, ChainComplex, Cochain, LatticeCell, LatticeComplex, Simplex, SplittableCell,
+    TopologyError, cup_product, cup_product_n,
 };
 
 const TOL: f64 = 1e-9;
+
+// ---------------------------------------------------------------------------
+// Slice-shaped adapters over the `Cochain` API.
+//
+// Every assertion below was verified against this crate's own boundary and
+// coboundary operators when the tests were written, against a cup product that
+// took bare slices and separate degrees. The production signature now takes
+// `Cochain`s, and these two adapters absorb that so the verified bodies did not
+// have to be rewritten to keep passing. `Cochain`'s own surface is exercised
+// directly in `cochain_api_tests` at the end of this file.
+// ---------------------------------------------------------------------------
+
+fn cup<K, R>(c: &K, a: &[R], p: usize, b: &[R], q: usize) -> Result<Vec<R>, TopologyError>
+where
+    K: CellularComplex,
+    K::CellType: SplittableCell,
+    R: CommutativeRing + Copy,
+{
+    cup_product(c, &Cochain::from_values(a, p), &Cochain::from_values(b, q))
+        .map(Cochain::into_values)
+}
+
+fn cup_n<K, R>(c: &K, factors: &[(&[R], usize)]) -> Result<Vec<R>, TopologyError>
+where
+    K: CellularComplex,
+    K::CellType: SplittableCell,
+    R: CommutativeRing + Copy,
+{
+    let owned: Vec<Cochain<R>> = factors
+        .iter()
+        .map(|(v, d)| Cochain::from_values(v, *d))
+        .collect();
+    cup_product_n(c, &owned).map(Cochain::into_values)
+}
 
 /// The Leibniz residual for one degree pair on any splittable complex:
 /// `|δ(α ∪ β) − (δα ∪ β + (−1)^p α ∪ δβ)|`, Chen & Tata Prop. 3.
@@ -41,9 +76,9 @@ where
 {
     let a = pseudo_cochain(c.num_cells(p), 11 + p as u64 * 7);
     let b = pseudo_cochain(c.num_cells(q), 23 + q as u64 * 13);
-    let lhs = delta(c, p + q, &cup_product(c, &a, p, &b, q).expect("cup"));
-    let t1 = cup_product(c, &delta(c, p, &a), p + 1, &b, q).expect("cup da b");
-    let t2 = cup_product(c, &a, p, &delta(c, q, &b), q + 1).expect("cup a db");
+    let lhs = delta(c, p + q, &cup(c, &a, p, &b, q).expect("cup"));
+    let t1 = cup(c, &delta(c, p, &a), p + 1, &b, q).expect("cup da b");
+    let t2 = cup(c, &a, p, &delta(c, q, &b), q + 1).expect("cup a db");
     let sgn = if p.is_multiple_of(2) { 1.0 } else { -1.0 };
     let rhs: Vec<f64> = t1.iter().zip(&t2).map(|(x, y)| x + sgn * y).collect();
     max_abs_diff(&lhs, &rhs)
@@ -76,7 +111,7 @@ fn simplicial_cup_reproduces_alexander_whitney() {
     a[e[&Simplex::new(vec![0, 1])]] = 3.0;
     b[e[&Simplex::new(vec![1, 2])]] = 5.0;
 
-    let out = cup_product(&c, &a, 1, &b, 1).expect("cup");
+    let out = cup(&c, &a, 1, &b, 1).expect("cup");
     assert_eq!(
         out[f[&Simplex::new(vec![0, 1, 2])]],
         15.0,
@@ -94,7 +129,7 @@ fn simplicial_cup_is_zero_where_the_split_misses() {
     let mut b = vec![0.0; c.num_cells(1)];
     a[e[&Simplex::new(vec![0, 1])]] = 3.0;
     b[e[&Simplex::new(vec![1, 2])]] = 5.0;
-    let out = cup_product(&c, &a, 1, &b, 1).expect("cup");
+    let out = cup(&c, &a, 1, &b, 1).expect("cup");
     assert_eq!(out[f[&Simplex::new(vec![0, 1, 3])]], 0.0);
 }
 
@@ -117,7 +152,7 @@ fn cubical_2d_cup_matches_the_published_formula() {
     let mut b = vec![0.0; c.num_cells(1)];
     a[e[&bottom]] = 2.0;
     b[e[&right]] = 7.0;
-    let out = cup_product(&c, &a, 1, &b, 1).expect("cup");
+    let out = cup(&c, &a, 1, &b, 1).expect("cup");
     let face = f[&LatticeCell::<2>::new([0, 0], 0b11)];
     assert_eq!(out[face], 14.0, "+a(bottom)*b(right)");
 
@@ -126,7 +161,7 @@ fn cubical_2d_cup_matches_the_published_formula() {
     let mut b2 = vec![0.0; c.num_cells(1)];
     a2[e[&left]] = 2.0;
     b2[e[&top]] = 7.0;
-    let out2 = cup_product(&c, &a2, 1, &b2, 1).expect("cup");
+    let out2 = cup(&c, &a2, 1, &b2, 1).expect("cup");
     assert_eq!(out2[face], -14.0, "-a(left)*b(top)");
 }
 
@@ -135,7 +170,7 @@ fn cubical_cup_output_has_the_summed_degree() {
     let c = LatticeComplex::<3, f64>::cubic_torus(3);
     let a = pseudo_cochain(c.num_cells(1), 1);
     let b = pseudo_cochain(c.num_cells(1), 2);
-    let out = cup_product(&c, &a, 1, &b, 1).expect("cup");
+    let out = cup(&c, &a, 1, &b, 1).expect("cup");
     assert_eq!(out.len(), c.num_cells(2));
 }
 
@@ -148,7 +183,7 @@ fn wrong_length_left_cochain_is_rejected() {
     let c = tetrahedron();
     let a = vec![0.0; c.num_cells(1) + 1];
     let b = pseudo_cochain(c.num_cells(1), 2);
-    assert!(cup_product(&c, &a, 1, &b, 1).is_err());
+    assert!(cup(&c, &a, 1, &b, 1).is_err());
 }
 
 #[test]
@@ -156,7 +191,7 @@ fn wrong_length_right_cochain_is_rejected() {
     let c = tetrahedron();
     let a = pseudo_cochain(c.num_cells(1), 1);
     let b = vec![0.0; c.num_cells(1) - 1];
-    assert!(cup_product(&c, &a, 1, &b, 1).is_err());
+    assert!(cup(&c, &a, 1, &b, 1).is_err());
 }
 
 #[test]
@@ -166,14 +201,14 @@ fn degree_sum_exceeding_the_complex_is_rejected() {
     let c = LatticeComplex::<2, f64>::square_torus(3);
     let a = pseudo_cochain(c.num_cells(1), 1);
     let b = pseudo_cochain(c.num_cells(2), 2);
-    assert!(cup_product(&c, &a, 1, &b, 2).is_err());
+    assert!(cup(&c, &a, 1, &b, 2).is_err());
 }
 
 #[test]
 fn n_fold_rejects_an_empty_factor_list() {
     let c = tetrahedron();
     let factors: [(&[f64], usize); 0] = [];
-    assert!(cup_product_n(&c, &factors).is_err());
+    assert!(cup_n(&c, &factors).is_err());
 }
 
 // --------------------------------------------------------------------------
@@ -219,8 +254,8 @@ fn associativity_holds_on_a_simplicial_complex() {
         pseudo_cochain(n, 5),
         pseudo_cochain(n, 7),
     );
-    let l = cup_product(&c, &cup_product(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
-    let r = cup_product(&c, &x, 1, &cup_product(&c, &y, 1, &z, 1).unwrap(), 2).unwrap();
+    let l = cup(&c, &cup(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
+    let r = cup(&c, &x, 1, &cup(&c, &y, 1, &z, 1).unwrap(), 2).unwrap();
     assert!(
         max_abs_diff(&l, &r) < TOL,
         "residual {:.3e}",
@@ -237,8 +272,8 @@ fn associativity_holds_on_a_cubic_torus() {
         pseudo_cochain(n, 5),
         pseudo_cochain(n, 7),
     );
-    let l = cup_product(&c, &cup_product(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
-    let r = cup_product(&c, &x, 1, &cup_product(&c, &y, 1, &z, 1).unwrap(), 2).unwrap();
+    let l = cup(&c, &cup(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
+    let r = cup(&c, &x, 1, &cup(&c, &y, 1, &z, 1).unwrap(), 2).unwrap();
     assert!(
         max_abs_diff(&l, &r) < TOL,
         "residual {:.3e}",
@@ -255,8 +290,8 @@ fn n_fold_agrees_with_the_left_fold() {
         pseudo_cochain(n, 5),
         pseudo_cochain(n, 7),
     );
-    let folded = cup_product(&c, &cup_product(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
-    let nfold = cup_product_n(
+    let folded = cup(&c, &cup(&c, &x, 1, &y, 1).unwrap(), 2, &z, 1).unwrap();
+    let nfold = cup_n(
         &c,
         &[(x.as_slice(), 1), (y.as_slice(), 1), (z.as_slice(), 1)],
     )
@@ -268,7 +303,7 @@ fn n_fold_agrees_with_the_left_fold() {
 fn n_fold_of_a_single_factor_returns_it_unchanged() {
     let c = tetrahedron();
     let x = pseudo_cochain(c.num_cells(1), 3);
-    let out = cup_product_n(&c, &[(x.as_slice(), 1)]).expect("n-fold");
+    let out = cup_n(&c, &[(x.as_slice(), 1)]).expect("n-fold");
     assert_eq!(out, x);
 }
 
@@ -282,7 +317,7 @@ fn triple_product_on_a_two_dimensional_complex_is_rejected() {
         pseudo_cochain(n, 7),
     );
     assert!(
-        cup_product_n(
+        cup_n(
             &c,
             &[(x.as_slice(), 1), (y.as_slice(), 1), (z.as_slice(), 1)]
         )
@@ -320,8 +355,8 @@ fn torus_pairing_is_the_intersection_number() {
     for l in [3, 4, 5] {
         let c = LatticeComplex::<2, f64>::square_torus(l);
         let (ax, ay) = (direction_cochain(&c, 0), direction_cochain(&c, 1));
-        let xy: f64 = cup_product(&c, &ax, 1, &ay, 1).unwrap().iter().sum();
-        let yx: f64 = cup_product(&c, &ay, 1, &ax, 1).unwrap().iter().sum();
+        let xy: f64 = cup(&c, &ax, 1, &ay, 1).unwrap().iter().sum();
+        let yx: f64 = cup(&c, &ay, 1, &ax, 1).unwrap().iter().sum();
         let l2 = (l * l) as f64;
         assert!((xy - l2).abs() < TOL, "L={l}: <x,y> = {xy}, expected {l2}");
         assert!(
@@ -337,7 +372,7 @@ fn a_torus_generator_has_no_self_intersection() {
     for l in [3, 4, 5] {
         let c = LatticeComplex::<2, f64>::square_torus(l);
         let ax = direction_cochain(&c, 0);
-        let xx: f64 = cup_product(&c, &ax, 1, &ax, 1).unwrap().iter().sum();
+        let xx: f64 = cup(&c, &ax, 1, &ax, 1).unwrap().iter().sum();
         assert!(xx.abs() < TOL, "L={l}: <x,x> = {xx}, expected 0");
     }
 }
@@ -349,8 +384,8 @@ fn graded_commutativity_holds_on_cohomology() {
     // to zero, so the sum of the difference must vanish.
     let c = LatticeComplex::<2, f64>::square_torus(4);
     let (ax, ay) = (direction_cochain(&c, 0), direction_cochain(&c, 1));
-    let xy: f64 = cup_product(&c, &ax, 1, &ay, 1).unwrap().iter().sum();
-    let yx: f64 = cup_product(&c, &ay, 1, &ax, 1).unwrap().iter().sum();
+    let xy: f64 = cup(&c, &ax, 1, &ay, 1).unwrap().iter().sum();
+    let yx: f64 = cup(&c, &ay, 1, &ax, 1).unwrap().iter().sum();
     assert!((xy + yx).abs() < TOL, "difference is not a coboundary");
 }
 
@@ -361,8 +396,8 @@ fn arbitrary_cochains_need_not_commute() {
     let c = LatticeComplex::<3, f64>::cubic_torus(3);
     let n = c.num_cells(1);
     let (x, y) = (pseudo_cochain(n, 31), pseudo_cochain(n, 37));
-    let xy = cup_product(&c, &x, 1, &y, 1).unwrap();
-    let yx = cup_product(&c, &y, 1, &x, 1).unwrap();
+    let xy = cup(&c, &x, 1, &y, 1).unwrap();
+    let yx = cup(&c, &y, 1, &x, 1).unwrap();
     assert!(
         max_abs_diff(&xy, &yx) > TOL,
         "expected the two orders to differ"
@@ -379,7 +414,7 @@ fn triple_product_of_the_generators_is_l_cubed() {
             direction_cochain(&c, 1),
             direction_cochain(&c, 2),
         );
-        let t: f64 = cup_product_n(
+        let t: f64 = cup_n(
             &c,
             &[(e0.as_slice(), 1), (e1.as_slice(), 1), (e2.as_slice(), 1)],
         )
@@ -404,7 +439,7 @@ fn triple_product_class_is_invariant_under_a_coboundary_shift() {
         direction_cochain(&c, 2),
     );
     let total = |a: &[f64]| -> f64 {
-        cup_product_n(&c, &[(a, 1), (e1.as_slice(), 1), (e2.as_slice(), 1)])
+        cup_n(&c, &[(a, 1), (e1.as_slice(), 1), (e2.as_slice(), 1)])
             .unwrap()
             .iter()
             .sum()
@@ -433,9 +468,9 @@ fn both_complex_families_resolve_through_the_same_generic_path() {
     {
         let a = pseudo_cochain(c.num_cells(1), 91);
         let b = pseudo_cochain(c.num_cells(1), 93);
-        let lhs = delta(c, 2, &cup_product(c, &a, 1, &b, 1).unwrap());
-        let t1 = cup_product(c, &delta(c, 1, &a), 2, &b, 1).unwrap();
-        let t2 = cup_product(c, &a, 1, &delta(c, 1, &b), 2).unwrap();
+        let lhs = delta(c, 2, &cup(c, &a, 1, &b, 1).unwrap());
+        let t1 = cup(c, &delta(c, 1, &a), 2, &b, 1).unwrap();
+        let t2 = cup(c, &a, 1, &delta(c, 1, &b), 2).unwrap();
         let rhs: Vec<f64> = t1.iter().zip(&t2).map(|(x, y)| x - y).collect();
         max_abs_diff(&lhs, &rhs)
     }
@@ -503,8 +538,8 @@ fn n_fold_of_two_factors_equals_the_binary_product() {
     let c = LatticeComplex::<3, f64>::cubic_torus(3);
     let n = c.num_cells(1);
     let (x, y) = (pseudo_cochain(n, 3), pseudo_cochain(n, 5));
-    let binary = cup_product(&c, &x, 1, &y, 1).expect("binary");
-    let nfold = cup_product_n(&c, &[(x.as_slice(), 1), (y.as_slice(), 1)]).expect("n-fold");
+    let binary = cup(&c, &x, 1, &y, 1).expect("binary");
+    let nfold = cup_n(&c, &[(x.as_slice(), 1), (y.as_slice(), 1)]).expect("n-fold");
     assert!(max_abs_diff(&binary, &nfold) < TOL);
 }
 
@@ -514,11 +549,11 @@ fn n_fold_validates_every_factor_length() {
     let good = pseudo_cochain(c.num_cells(1), 3);
     let bad = vec![0.0; c.num_cells(1) + 1];
     assert!(
-        cup_product_n(&c, &[(good.as_slice(), 1), (bad.as_slice(), 1)]).is_err(),
+        cup_n(&c, &[(good.as_slice(), 1), (bad.as_slice(), 1)]).is_err(),
         "a wrong-length factor must be rejected wherever it appears"
     );
     assert!(
-        cup_product_n(&c, &[(bad.as_slice(), 1), (good.as_slice(), 1)]).is_err(),
+        cup_n(&c, &[(bad.as_slice(), 1), (good.as_slice(), 1)]).is_err(),
         "including in first position"
     );
 }
@@ -545,7 +580,7 @@ fn binary_product_class_is_independent_of_the_representative() {
     let l = 4;
     let c = LatticeComplex::<2, f64>::square_torus(l);
     let (ax, ay) = (direction_cochain(&c, 0), direction_cochain(&c, 1));
-    let total = |a: &[f64]| -> f64 { cup_product(&c, a, 1, &ay, 1).unwrap().iter().sum() };
+    let total = |a: &[f64]| -> f64 { cup(&c, a, 1, &ay, 1).unwrap().iter().sum() };
     let before = total(&ax);
     let df = delta(&c, 0, &pseudo_cochain(c.num_cells(0), 77));
     let shifted: Vec<f64> = ax.iter().zip(&df).map(|(a, b)| a + b).collect();
@@ -561,7 +596,7 @@ fn a_zero_cochain_annihilates_the_product() {
     let c = tetrahedron();
     let zeros = vec![0.0; c.num_cells(1)];
     let x = pseudo_cochain(c.num_cells(1), 5);
-    let out = cup_product(&c, &zeros, 1, &x, 1).expect("cup");
+    let out = cup(&c, &zeros, 1, &x, 1).expect("cup");
     assert!(out.iter().all(|v| v.abs() < TOL));
 }
 
@@ -576,7 +611,7 @@ fn degree_zero_cup_acts_by_the_leading_vertex() {
     f[v[&Simplex::new(vec![0])]] = 4.0;
     let mut b = vec![0.0; c.num_cells(1)];
     b[e[&Simplex::new(vec![0, 1])]] = 6.0;
-    let out = cup_product(&c, &f, 0, &b, 1).expect("cup");
+    let out = cup(&c, &f, 0, &b, 1).expect("cup");
     assert_eq!(out[e[&Simplex::new(vec![0, 1])]], 24.0, "f([0]) * b([0,1])");
 }
 
@@ -591,8 +626,8 @@ fn degree_sum_that_overflows_is_rejected() {
     let c = tetrahedron();
     let a = pseudo_cochain(c.num_cells(1), 1);
     let b = pseudo_cochain(c.num_cells(1), 2);
-    assert!(cup_product(&c, &a, usize::MAX, &b, 1).is_err());
-    assert!(cup_product(&c, &a, 1, &b, usize::MAX).is_err());
+    assert!(cup(&c, &a, usize::MAX, &b, 1).is_err());
+    assert!(cup(&c, &a, 1, &b, usize::MAX).is_err());
 }
 
 #[test]
@@ -605,7 +640,7 @@ fn n_fold_rejects_a_first_factor_above_the_maximum_dimension() {
     let empty: Vec<f64> = Vec::new();
     assert_eq!(c.num_cells(99), 0, "the degree really does have no cells");
     assert!(
-        cup_product_n(&c, &[(empty.as_slice(), 99)]).is_err(),
+        cup_n(&c, &[(empty.as_slice(), 99)]).is_err(),
         "single factor above max_dim must be rejected"
     );
 }
@@ -616,8 +651,8 @@ fn the_two_apis_agree_on_an_out_of_range_degree() {
     let c = LatticeComplex::<2, f64>::square_torus(3);
     let empty: Vec<f64> = Vec::new();
     let a = pseudo_cochain(c.num_cells(0), 5);
-    let binary = cup_product(&c, &empty, 99, &a, 0).is_err();
-    let nfold = cup_product_n(&c, &[(empty.as_slice(), 99), (a.as_slice(), 0)]).is_err();
+    let binary = cup(&c, &empty, 99, &a, 0).is_err();
+    let nfold = cup_n(&c, &[(empty.as_slice(), 99), (a.as_slice(), 0)]).is_err();
     assert_eq!(
         binary, nfold,
         "binary and n-fold disagree on the grade contract"
@@ -650,7 +685,86 @@ fn simplicial_cup_skips_a_split_whose_partner_is_absent_from_the_complex() {
 
     let alpha = vec![3.0];
     let beta = vec![5.0];
-    let out = cup_product(&complex, &alpha, 1, &beta, 1).expect("cup");
+    let out = cup(&complex, &alpha, 1, &beta, 1).expect("cup");
 
     assert_eq!(out, vec![0.0]);
+}
+
+// ---------------------------------------------------------------------------
+// The `Cochain` surface itself, exercised without the slice adapters above.
+//
+// What this type buys is that a degree cannot be paired with the wrong values:
+// the binary product went from five parameters to three, and the n-fold form
+// from a slice of tuples paired by convention to a slice of one type. These
+// tests call the production signatures directly.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_cochain_carries_its_degree_through_the_product() {
+    let c = tetrahedron();
+    let a = Cochain::new(pseudo_cochain(c.num_cells(1), 3), 1);
+    let b = Cochain::new(pseudo_cochain(c.num_cells(1), 5), 1);
+
+    assert_eq!(a.degree(), 1);
+    assert_eq!(a.len(), c.num_cells(1));
+
+    let out = cup_product(&c, &a, &b).expect("1 ⌣ 1 on a tetrahedron");
+    // The result carries p + q without the caller having to track it.
+    assert_eq!(out.degree(), 2);
+    assert_eq!(out.len(), c.num_cells(2));
+}
+
+#[test]
+fn test_the_n_fold_form_takes_one_type_rather_than_tuples() {
+    let c = tetrahedron();
+    let factors: Vec<Cochain<f64>> = (0..3)
+        .map(|i| Cochain::new(pseudo_cochain(c.num_cells(1), 7 + i), 1))
+        .collect();
+
+    let out = cup_product_n(&c, &factors).expect("threefold product");
+    assert_eq!(out.degree(), 3);
+
+    // And it agrees with folding the binary form by hand, which is what
+    // associativity says it should.
+    let ab = cup_product(&c, &factors[0], &factors[1]).unwrap();
+    let abc = cup_product(&c, &ab, &factors[2]).unwrap();
+    assert_eq!(out.values(), abc.values());
+}
+
+#[test]
+fn test_a_wrong_length_is_caught_against_the_stated_degree() {
+    // The degree travels with the values, so the length check has something to
+    // check against without the caller passing the degree a second time.
+    let c = tetrahedron();
+    let short = Cochain::new(vec![1.0; c.num_cells(1) - 1], 1);
+    let ok = Cochain::new(pseudo_cochain(c.num_cells(1), 3), 1);
+    assert!(cup_product(&c, &short, &ok).is_err());
+    assert!(cup_product(&c, &ok, &short).is_err());
+}
+
+#[test]
+fn test_an_empty_factor_list_is_still_rejected() {
+    let c = tetrahedron();
+    let none: [Cochain<f64>; 0] = [];
+    assert!(cup_product_n(&c, &none).is_err());
+}
+
+#[test]
+fn test_a_single_factor_returns_unchanged() {
+    let c = tetrahedron();
+    let a = Cochain::new(pseudo_cochain(c.num_cells(1), 11), 1);
+    let out = cup_product_n(&c, std::slice::from_ref(&a)).expect("one factor");
+    assert_eq!(out.degree(), 1);
+    assert_eq!(out.values(), a.values());
+}
+
+#[test]
+fn test_values_round_trip_through_the_wrapper() {
+    // `from_values` takes the bare convention and `into_values` gives it back,
+    // so a caller holding a physics cochain converts without changing layout.
+    let raw = vec![1.0, 2.0, 3.0, 4.0];
+    let c = Cochain::from_values(&raw, 2);
+    assert_eq!(c.degree(), 2);
+    assert_eq!(c.values(), raw.as_slice());
+    assert_eq!(c.into_values(), raw);
 }

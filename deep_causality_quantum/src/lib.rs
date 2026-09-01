@@ -30,9 +30,9 @@ pub use crate::error::quantum_error::{QuantumError, QuantumErrorEnum};
 
 #[cfg(feature = "qcm")]
 pub use crate::types::qcm::*;
+pub use crate::types::qcode::*;
 pub use crate::types::qgates::*;
 pub use crate::types::verdict::*;
 pub use crate::types::*;
 
-#[cfg(feature = "qpu")]
 pub use crate::types::qpu::*;

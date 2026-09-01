@@ -3,125 +3,81 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Simplex, Skeleton, Topology, TopologyError};
+use crate::types::cochain::Cochain;
+use crate::types::cup_product::cup_product;
+use crate::{Topology, TopologyError, TopologyErrorEnum};
 use core::fmt::Debug;
 use core::ops::Mul;
-use deep_causality_algebra::Field;
+use deep_causality_algebra::{Field, RealField};
 use deep_causality_num::Zero;
 use deep_causality_tensor::CausalTensor;
 use std::sync::Arc;
 
 impl<R, G> Topology<R, G>
 where
+    R: RealField,
     G: Field + Copy + Clone + Zero + Mul<Output = G> + Debug,
 {
-    /// Computes the Cup Product `α ⌣ β` of a p-cochain and a q-cochain.
+    /// Computes the cup product `α ⌣ β` of a `p`-cochain and a `q`-cochain,
+    /// yielding a `(p+q)`-cochain.
     ///
-    /// The result is a (p+q)-cochain.
+    /// # This delegates
     ///
-    /// # Mathematical Definition (Alexander-Whitney)
-    /// For a (p+q)-simplex `σ = [v_0, ..., v_{p+q}]`, the cup product is:
+    /// The body is [`crate::cup_product`], which is generic over
+    /// [`CellularComplex`](crate::CellularComplex) and covers the cubical case
+    /// and the `n`-fold form as well. This method used to carry a second,
+    /// simplicial-only Alexander-Whitney implementation, extracting the front
+    /// and back faces by hand; the two were measured to agree bit-for-bit
+    /// before it was retired, and `tests/types/cup_product/implementation_agreement_tests.rs`
+    /// is the artefact of that measurement.
     ///
-    /// (α ⌣ β)(σ) = α([v_0, ..., v_p]) * β([v_p, ..., v_{p+q}])
-    ///
-    /// * `α` evaluates on the **Front Face** (first p+1 vertices).
-    /// * `β` evaluates on the **Back Face** (last q+1 vertices).
+    /// What this method adds over the free function is the pair of things a
+    /// free function taking one complex cannot express: it checks that both
+    /// operands live on the *same* complex, and it rewraps the result as a
+    /// [`Topology`] carrying that complex.
     ///
     /// # Arguments
-    /// * `other`: The q-cochain `β`. `self` is the p-cochain `α`.
     ///
-    /// # Returns
-    /// A new `CausalTopology` of grade `p+q`.
+    /// * `other`: the `q`-cochain `β`. `self` is the `p`-cochain `α`.
+    ///
+    /// # Errors
+    ///
+    /// [`TopologyErrorEnum::GenericError`] when the two operands are held
+    /// against different complexes.
+    ///
+    /// Two error paths changed when this began delegating, and both are
+    /// tightenings a caller should know about:
+    ///
+    /// * A grade sum past the complex's maximum dimension now returns
+    ///   [`TopologyErrorEnum::InvalidGradeOperation`]. It used to return `Ok`
+    ///   with a zero-filled cochain, which reported a cochain in a degree the
+    ///   complex does not have as a successful computation.
+    /// * A cochain whose length does not match its skeleton now returns
+    ///   [`TopologyErrorEnum::DimensionMismatch`]. It used to panic through
+    ///   `.expect("Data/Skeleton mismatch")`.
     pub fn cup_product(&self, other: &Topology<R, G>) -> Result<Topology<R, G>, TopologyError> {
-        // 1. Determine Grades
-        let p = self.grade;
-        let q = other.grade;
-        let r = p + q;
-
-        // 2. Validation
-        // Ensure both fields live on the same Complex
+        // The one precondition the free function cannot state, since it takes a
+        // single complex and these two carry their own.
         if !Arc::ptr_eq(&self.complex, &other.complex) {
-            return Err(TopologyError::GenericError("Complex Mismatch".to_string()));
+            return Err(TopologyError(TopologyErrorEnum::GenericError(
+                "Complex Mismatch".to_string(),
+            )));
         }
 
-        // If grade exceeds manifold dimension, the result is zero.
-        if r > self.complex.max_simplex_dimension() {
-            // Return a zero field of grade r (if valid grade) or empty
-            // Here we assume r is valid or return empty.
-            let zero_len = if r < self.complex.skeletons().len() {
-                self.complex.skeletons()[r].simplices().len()
-            } else {
-                0
-            };
+        let alpha = Cochain::from_values(self.data.as_slice(), self.grade);
+        let beta = Cochain::from_values(other.data.as_slice(), other.grade);
+        let product = cup_product(self.complex.as_ref(), &alpha, &beta)?;
 
-            return Ok(Topology {
-                complex: self.complex.clone(),
-                grade: r,
-                data: CausalTensor::new(vec![G::zero(); zero_len], vec![zero_len]).unwrap(),
-                cursor: 0,
-            });
-        }
-
-        // 3. Get Skeletons
-        let p_skeleton = &self.complex.skeletons()[p];
-        let q_skeleton = &self.complex.skeletons()[q];
-        let target_skeleton: &Skeleton = &self.complex.skeletons()[r];
-
-        let target_count = target_skeleton.simplices().len();
-        let mut result_values = Vec::with_capacity(target_count);
-
-        // 4. Iterate over every simplex in the target dimension (p+q)
-        for simplex in target_skeleton.simplices() {
-            // The vertices are assumed to be sorted by the Skeleton construction.
-            // vertices: [v0, v1, ..., vp, ..., v(p+q)]
-            let verts: &[usize] = simplex.vertices();
-
-            // Extract Faces based on Alexander-Whitney diagonal
-            // Front Face (alpha): 0..=p
-            let front_verts = verts[0..=p].to_vec();
-            let front_simplex = Simplex::new(front_verts);
-
-            // Back Face (beta): p..=r
-            let back_verts = verts[p..=r].to_vec();
-            let back_simplex = Simplex::new(back_verts);
-
-            // 5. Lookup Indices
-            // We need the index of these faces in their respective skeletons
-            // to retrieve the data from the CausalTensor.
-            let idx_alpha = p_skeleton
-                .get_index(&front_simplex)
-                .ok_or(TopologyError::SimplexNotFound())?;
-
-            let idx_beta = q_skeleton
-                .get_index(&back_simplex)
-                .ok_or(TopologyError::SimplexNotFound())?;
-
-            // 6. Fetch Values
-            // self.data is a CausalTensor.
-            let val_alpha = self
-                .data
-                .as_slice()
-                .get(idx_alpha)
-                .expect("Data/Skeleton mismatch");
-
-            let val_beta = other
-                .data
-                .as_slice()
-                .get(idx_beta)
-                .expect("Data/Skeleton mismatch");
-
-            // 7. Multiply (Geometric Product / Ring Product)
-            // (α ⌣ β)(σ) = α(front) * β(back)
-            let product = *val_alpha * *val_beta;
-
-            result_values.push(product);
-        }
-
-        // 8. Construct Result
+        let grade = product.degree();
+        let values = product.into_values();
+        let len = values.len();
         Ok(Topology {
             complex: self.complex.clone(),
-            grade: r,
-            data: CausalTensor::new(result_values, vec![target_count]).unwrap(),
+            grade,
+            // `CausalTensor::new` fails only on a shape/length disagreement, and
+            // the shape is this vector's own length.
+            data: CausalTensor::new(values, vec![len])
+                .expect("a rank-one tensor over its own length"),
             cursor: 0,
         })
     }

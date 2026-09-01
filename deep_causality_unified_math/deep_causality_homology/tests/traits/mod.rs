@@ -4,3 +4,4 @@
  */
 
 mod chain_complex_tests;
+mod representatives_tests;

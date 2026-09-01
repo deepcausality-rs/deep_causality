@@ -60,6 +60,7 @@ pub use extensions::hkt_gauge::hkt_adjunction_stokes::{
 // Re-export types
 pub use crate::types::cell_complex::{BoundaryOperator, CellComplex};
 pub use crate::types::chain::{Chain, UniformChain};
+pub use crate::types::cochain::Cochain;
 pub use crate::types::cup_product::{cup_product, cup_product_n};
 pub use crate::types::lattice_complex::dual_lattice_complex::DualLatticeComplex;
 pub use crate::types::lattice_complex::specialized::{

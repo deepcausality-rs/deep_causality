@@ -492,9 +492,12 @@ Consequences for the API:
 - The single-experiment case is a plan of length one, so §8.3's calibration result is unchanged and
   nothing is lost.
 - `DesignObjective` gains `MinCostCover { floor_bits }` alongside the three in §8.4.
-- Set cover is NP-hard in general and exactly solvable by enumeration at the scale this operates on.
-  Above a threshold the greedy cover is the standard fallback, and its logarithmic approximation
-  factor should be reported rather than hidden.
+- Set cover is NP-hard in general and exactly solvable at the scale this operates on, but enumerate
+  the right side. The universe is the `C(n,2)` pairs, not the k experiments: a DP over covered-pair
+  subsets is `O(2^C(n,2) · k)`, linear in the experiment count, where enumerating experiment subsets
+  would be `2^k`. With three hypotheses that is eight states. The exponent lives in n, and the
+  threshold above which greedy is needed is around n = 7 or 8, not a number of experiments. Report
+  greedy's logarithmic approximation factor rather than hiding it.
 - `Ambiguous` from §5 strengthens accordingly: not merely "no experiment separates this pair" but
   "no plan within the cost budget separates it," with the shot-count inversion of §8.5 still
   available per pair.

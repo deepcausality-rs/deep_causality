@@ -13,17 +13,47 @@ crate.
 revises the previous revision of this note, which counted three consumers and treated the shipped
 crate as a substrate QCL would call rather than as a consumer with opinions.
 
-**What changed in this revision.** The crate was read in full: 3980 lines of source plus
-[`LEAN_QUANTUM.md`](../../../deep_causality_quantum/LEAN_QUANTUM.md). Three things the previous
-revision asserted turn out to be wrong.
+**What changed in this revision (2026-08-31).** Every gap in
+[`qcl-gaps.md`](qcl-gaps.md) is now closed, all eighteen, and the mathematics crates were
+consolidated under `deep_causality_unified_math/`. This revision brings the note back in line with
+the tree. **Nothing below is a new design decision; the design held.** What changed is that the
+things it described as open are built, one of its open questions is answered, and the mathematics
+layer underneath it grew parameters the note was not yet written against:
+
+1. **F8 is closed, and not by the fix this note prescribed.** The Haruna gate layer takes a
+   `Gf2Chain` and returns a gate program. There is no gauge-field seam to check, because the gauge
+   field was never the computational path (§5, §6.2).
+2. **F9's guard is shipped.** `partial_trace_preservation_boundary` is a Rust function, not a
+   caveat, and it returns a bound rather than a boolean (§5.1).
+3. **§5.3's open question is answered.** Composition over a shared wire invokes no partial trace,
+   so the nesting question is narrower than F9 suggested.
+4. **§9 step 0 is done.** The scalar bound table was re-derived against shipped signatures, and its
+   premise did not survive (§6.4).
+5. **The algebra tower is complete over the number sets**, five plus two extensions, which is what
+   makes §6.4's table derivable rather than a list.
+6. **`fork` versus `either` has a type-level answer**, not a preference: `Either` is the coproduct
+   and a counterfactual fork is a product (§6.5).
+7. **`Complex<T>` is itself a functor**, so the precision lift on an operator is two `fmap`s rather
+   than one. §6.4's claim was exact for a real tensor and incomplete for the carrier QCL uses
+   (§6.4, §6.6).
+8. **The integers are a parameter now.** `IntType` sits beside `FloatType`, and they are different
+   kinds of knob: accuracy against headroom, `epsilon()` against overflow. §6.5's ledger hardcoded
+   three widths and no longer does; §7.1 names two parameters rather than one (§3.3, §6.4, §6.5,
+   §7.1).
+
+**Two of those are corrections to this note rather than news about the tree.** The precision claim
+in §6.4 and the hardcoded counts in §6.5 were wrong when written, not made wrong by later work.
+
+**What the revision before that changed.** The crate was read in full, then 3980 lines and now 4432,
+plus [`LEAN_QUANTUM.md`](../../../deep_causality_quantum/LEAN_QUANTUM.md). Three things its
+predecessor asserted turned out to be wrong.
 
 1. `freeze_quantum` **is** the validate half, already written, for one class of subject. The two
    checks listed as future work are shipped functions.
 2. The crate **does** contribute a verdict carrier. `Projection<R, D>` is an orthomodular lattice
    that fails distributivity, and it imposes a law on how QCL may combine verdicts (§4).
 3. `predict` cannot be embed-and-contract, because **partial trace does not preserve commutation**.
-   That is proved false in Lean with an explicit counterexample, and nothing at the call site says
-   so (§5.1).
+   That is proved false in Lean with an explicit counterexample (§5.1).
 
 ---
 
@@ -31,7 +61,7 @@ revision asserted turn out to be wrong.
 
 | Consumer | Status | Subject | What it contributed |
 |---|---|---|---|
-| **The shipped crate** | **3980 lines** | a CJ factorization over a frozen graph | The check-and-margin form (§3); the tolerance family (§3.3); the verdict boundary law (§4); transactional failure (§3.4) |
+| **The shipped crate** | **4432 lines** | a CJ factorization over a frozen graph | The check-and-margin form (§3); the tolerance family (§3.3); the verdict boundary law (§4); transactional failure (§3.4) |
 | `quantum_control_loop` | design | a device plant | The control stage sequence; `Ambiguous` as a required verdict; the experiment designer |
 | `crosstalk_attribution` | design | a plant with declared structures | `design` returns a plan, not an experiment; the validate-to-control hand-off |
 | `geometric_qec` | design | a chain complex | `validate` takes a code; the two halves are not uniformly applicable |
@@ -148,6 +178,13 @@ The crate carries four tolerance policies today, each chosen for what it is test
 All four are functions of `R::epsilon()`. Swapping `FloatType` from `f64` to `Float106` tightens
 every one of them by roughly fifteen orders of magnitude with no code change.
 
+**The family covers the real side and there is nothing to extend it with on the integer side.**
+Every policy above is a tolerance because ℝ has an `epsilon()` to derive one from. ℕ and ℤ have no
+analogue: a shot count is either right or overflowed, and overflow is a hard wrongness rather than a
+graded error. So the integer half of the pipeline does not get a looser tolerance, it gets **checked
+arithmetic** — which is what `NaturalNumber`'s `checked_difference` and `succ` return `Option` for.
+A design that reached for a tolerance on a count would be answering the wrong question.
+
 This is the concrete form of the commitment that precision is a parameter (§6.4), and it is stronger
 than running an adjudication twice and comparing, because the comparison lives inside the check. **A
 tolerance that does not move with the scalar was guessed.**
@@ -228,18 +265,24 @@ the Lean statement as future work. QCL builds on the Rust laws and should not cl
 | F5 | Shot noise absent, so decisions are `min_by` on exact reals | open; `ShotBudget`, and §3.3 for the other half |
 | F6 | A declared structure cannot be evaluated; `predict` was a hand-written lookup table | **half built**, §6.1 |
 | F7 | The experiment designer does not exist | open; §7.5 |
-| F8 | The topology-to-gate seam is unchecked and silently wrong | open, and it produces confident wrong answers |
-| **F9** | **Marginalisation is not commutation-preserving, and nothing at the call site says so** | **new, §5.1** |
+| F8 | The topology-to-gate seam is unchecked and silently wrong | **closed**, and the seam is gone rather than checked |
+| F9 | Marginalisation is not commutation-preserving, and nothing at the call site says so | **closed**; the guard ships, §5.1 |
 
-F8 remains sharp. A logical operator is a cochain indexed by edge; a Haruna gate wants a
-`CausalMultiVector` gauge field; no conversion exists, so the scratch code packed the cochain's sum
-into a multivector of unrelated dimension. The failure surfaced as a Taylor-series convergence
-complaint rather than a type error, and normalising the value to make it converge would have produced
-a confident, meaningless answer.
+**F8 closed by removing the seam, not by checking it.** The friction was that a logical operator is a
+cochain indexed by edge while the Haruna gate layer wanted a `CausalMultiVector` gauge field, with no
+conversion between them, so scratch code packed the cochain's sum into a multivector of unrelated
+dimension. That surfaced as a Taylor-series convergence complaint rather than a type error.
+
+Reading Haruna settled it: the gauge-field column of Table 1 is the compact form that makes the
+Appendix B invariance proofs tractable, and the **physical-gate column is the computational path**.
+`a(γ)` is diagonal with integer eigenvalues, so every gate is a product over `supp(γ)`, its pairs and
+its triples. The layer now takes a `Gf2Chain` and returns a `Vec<GateOp>`; there is no multivector,
+no Taylor series, and so no seam to get wrong. The remaining four frictions are ergonomics.
 
 ### 5.1 F9: partial trace does not preserve commutation
 
-This is new to this revision and it is the reason `predict` cannot be written the obvious way.
+This is the reason `predict` cannot be written the obvious way. The finding stands; what has changed
+since it was written is that the guard it asked for now exists.
 
 `LEAN_QUANTUM.md` records that `quantum.partial_trace_preservation` is **false**, refuted in Lean by
 an explicit counterexample: operators with `[X, Y] = 0` whose partial traces satisfy
@@ -247,20 +290,39 @@ an explicit counterexample: operators with `[X, Y] = 0` whose partial traces sat
 homomorphism. What holds is the **conditional** `partial_trace_preservation_boundary`: a boundary
 operator of the form `Z ⊗ 1_B` commuting with `M` forces `Z` to commute with `Tr_B(M)`.
 
-The API does not carry this. `partial_trace` in `operator_linalg.rs` documents its shape errors
-carefully and says nothing about preservation. So a `predict` that marginalises a validated
-factorization over the traced-out legs would produce a model **whose Markov property validate had
-certified and marginalisation silently destroyed**. That is F8's failure mode in a different seam:
-the answer arrives, and nothing marks it as unsound.
+The API used not to carry this: `partial_trace` documented its shape errors carefully and said
+nothing about preservation, so a `predict` marginalising a validated factorization would produce a
+model **whose Markov property validate had certified and marginalisation silently destroyed**. The
+answer arrives, and nothing marks it as unsound.
 
-Two consequences:
+**Both halves are now built.** `partial_trace`'s doc block carries the non-preservation, names the
+counterexample and points at the sound path, and that path is a function rather than a caveat.
 
-- **`intervene` and `predict` may marginalise only across a boundary**, where the operator has the
-  `Z ⊗ 1_B` form the conditional theorem requires. QCL should encode that as a precondition it
-  checks, not a caveat it documents.
+**And the ruling the conditional theorem needed is a factor, not a yes or a no.** The Lean
+hypothesis is exact equality over a `CommRing` with no epsilon, so a floating-point caller cannot
+discharge it: checking `‖[Z ⊗ 1_B, M]‖_F < τ` and then invoking the theorem substitutes an
+approximate premise into an exact-hypothesis result. The way past it is to stop needing the
+hypothesis. `quantum.partial_trace.commutator_transport` states
+
+```text
+Tr_B([Z ⊗ 1_B, M]) = [Z, Tr_B(M)]
+```
+
+**unconditionally**, and with `‖Tr_B(E)‖_F ≤ √(d_B)·‖E‖_F`, tight at `E = F ⊗ 1_B`, a residual of `ε`
+certifies `√(d_B)·ε` in the conclusion. Exactly zero in, exactly zero out, so the original theorem is
+the vanishing case. `partial_trace_preservation_boundary` returns that bound in a `BoundaryWarrant`,
+and it constructs `Z ⊗ 1_B` from the caller's `Z` so the form holds by construction rather than by
+check.
+
+Two consequences, both unchanged as design rules:
+
+- **`intervene` and `predict` may marginalise only across a boundary.** The precondition is checked
+  now, not documented, and what it returns is the amplified bound the caller must carry.
 - **The Markov report does not survive marginalisation.** A `Screened<R>` whose factorization is
   later traced has to re-run `check_markov` or carry an invalidated report. Carrying the old margins
-  forward would be the same class of error.
+  forward would be the same class of error. Note the sharper version the bound makes available: a
+  margin that survives marginalisation survives it *degraded by* `√(d_B)`, so a report could carry
+  the amplification rather than being discarded outright.
 
 ### 5.2 What F9 blocks, and what it does not
 
@@ -305,12 +367,23 @@ leg-ids gives the modelling convenience that motivates sub-models, needs no comp
 and produces a model the checker already accepts. `transmon(q3)` expanding to four nodes and four
 legs is code generation, not physics. That is the recommended reuse mechanism for v1.
 
-**Open, under investigation.** Whether a composed channel can inherit a Markov certificate from its
-parts turns on whether composition over a shared wire invokes a partial trace at all under this
-crate's input-major Choi convention. If it does, validating parts does not validate the whole and
-nesting buys no verification saving. If it does not, the question is narrower than F9 suggests. The
-crate has no composition function today, so this is a design boundary rather than a withdrawn
-capability.
+**Answered, and the answer is the favourable one.** This read: whether a composed channel can
+inherit a Markov certificate from its parts turns on whether composition over a shared wire invokes
+a partial trace at all under this crate's input-major Choi convention. It does not. `choi_compose`
+ships, and under that convention composition is
+
+```text
+J(F∘E)_{(a,c),(a',c')} = Σ_{b,b'} J(E)_{(a,b),(a',b')} · J(F)_{(b,c),(b',c')}
+```
+
+a plain double contraction over the shared wire, with **no partial transpose and no partial trace**.
+Verified to a maximum relative Frobenius residual of 3.198e-16 over 500 random CPTP pairs across ten
+dimension triples, with every transposed or conjugated variant wrong by O(1).
+
+So F9 does not bite on composition, and the question is the narrow one: whether the contraction
+preserves the commutation structure the Markov check certifies. That is a real question and it is
+open, but it is no longer the broad one this section posed, and the pivot it named has fallen the
+right way.
 
 ---
 
@@ -324,6 +397,8 @@ capability.
 | `FactorSupports` | `qcm/process_factors.rs` | ascending leg-ids per node, per-leg dimensions, `space_map` |
 | `FactorSupports::validate` | `qcm/process_factors.rs` | factor shape against declared support, overflow-checked |
 | `embed_on_legs`, `partial_trace` | `qgates/operator_linalg.rs` | lift onto a larger space; trace out (subject to F9) |
+| `partial_trace_preservation_boundary` | `qgates/operator_linalg.rs` | the §5.1 guard, returning the `√(d_B)` bound rather than a boolean |
+| `choi_compose`, `choi_identity` | `qgates/channel.rs` | channel composition as a plain contraction, and its unit |
 | `matrix_commutator`, `frobenius_norm`, `hermiticity_defect` | `qgates/operator_linalg.rs` | the operator metrics the checks compare |
 | `choi_from_kraus`, `kraus_from_choi`, `apply_kraus`, `apply_choi` | `qgates/channel.rs` | the CJ round-trip, both directions |
 | `check_completely_positive`, `check_trace_preserving` | `qgates/channel.rs` | the CPTP checks `Channel` should run once |
@@ -331,8 +406,14 @@ capability.
 | `FactorSupports::from_graph` | `qcm/process_factors.rs` | derive supports as `{Aᵢ} ∪ Pa(Aᵢ)` |
 | `Projection<R, D>` | `verdict/projection.rs` | the orthomodular verdict carrier of §4 |
 | `born_projective_probability`, `born_projective_prob` | `verdict/born.rs` | the measurement boundary where verdicts are extracted |
-| `logical_z/x/s/hadamard/cz/t` | `qgates/gates_haruna.rs` | the logical gate layer `geometric_qec` reaches for |
+| `logical_z/x/s/t/cz/hadamard`, `logical_multi_cz` | `qgates/gates_haruna.rs` | Table 1's gates, taking a `Gf2Chain` and emitting a `Vec<GateOp>` |
+| `LogicalPauli<W>`, `LogicalBasis<W>` | `qcode/` | B.1's logical-equivalence predicate, as inner products over bitsets |
+| `GateOp`, `QuantumCircuit` | `qpu/circuit.rs` | the physical-gate alphabet of Table 1, no longer behind the `qpu` feature |
 | `qgates/wrappers.rs` | 11 functions | **the F4 pattern, already written** |
+| `Gf2Chain<W>` | `deep_causality_homology` | a bit-packed chain carrying its degree: support, pairs, triples, the mod-2 pairing |
+| `homology_representatives`, `cohomology_representatives`, `dual_representative` | `deep_causality_homology`, on `ChainComplex` | `H_k` and `H^k` bases over 𝔽₂, and the Poincaré-dual pairing |
+| `Cochain<R>` | `deep_causality_topology` | the ring-valued dual, binding values to degree |
+| `GaugeField`, `LatticeGaugeField` | `deep_causality_topology`, `types/gauge/` | a genuine gauge connection over a manifold: U(1)/SU(3)/SO(3,1), Wilson loops, plaquettes, topological charge |
 
 Two of these change the plan.
 
@@ -367,13 +448,25 @@ supports it by key. What is **not** free is `predict`, for the reason in §5.1.
 | `Channel` | a bare Kraus slice | CPTP checked once at construction, via the shipped checks |
 | `QuantumPlant` | state and channel juggling | a sealed validated state that evolves in place |
 | `Observable` | ket → `Projection` → Born | a named projector carrying its own read-out |
-| `GaugeField` | the unchecked F8 seam | constructible **only** as `from_cochain(&complex, &cochain, degree)` |
 | `Tolerance<R>` | naked float comparison | the §3.3 family, generalised off the four shipped policies |
 | `Check<R>` / `CheckReport<R>` | pass/fail | the §3.1 form, generalised off `CommutatorCheck` |
-| `Boundary` | an unchecked `partial_trace` call | the `Z ⊗ 1_B` precondition of §5.1, checked |
 
-`GaugeField` and `Boundary` are the two that prevent wrong answers rather than verbose code. The
-rest are ergonomics.
+**Two rows left this table, and for opposite reasons.**
+
+`Boundary` **shipped**, as `partial_trace_preservation_boundary` (§5.1). It was one of the two that
+prevented wrong answers rather than verbose code.
+
+`GaugeField` was **withdrawn**, and the distinction matters because a gauge field is not
+unavailable. This table proposed a *new* type in this crate, constructible only as
+`from_cochain(&complex, &cochain, degree)`, to make the F8 seam checkable. That is not what closed
+F8: the seam was removed instead, because Haruna's construction never needed a gauge field to
+compute with (§5). Meanwhile `deep_causality_topology` ships a real `GaugeField<G, M, R>` and
+`LatticeGaugeField<G, D, M, R, S>` — a connection over a base manifold with a metric and a Lie-algebra
+valued tensor, carrying Wilson loops, plaquette and Symanzik actions, and topological charge. That is
+a gauge field in the QED/QCD/GR sense, not Haruna's `a(γ)`, and §8's second rule already says QCL
+does not own topology. **If QCL ever wants a gauge field it uses that one; it does not define one.**
+
+So everything remaining in this table is ergonomics. Both of the wrong-answer seams are shut.
 
 ### 6.3 The seal rule, which closes F3
 
@@ -395,29 +488,76 @@ that precision. See the project's standing position on
 pub type FloatType = Float106;   // or f64, or f32
 ```
 
-| Surface | Operations | Bound | Why not tighter or looser |
+**The tower under this is now complete over the number sets, and that is what makes the table below
+derivable rather than a list.** `deep_causality_algebra` covers **five sets and two extensions**:
+ℕ at `CommutativeSemiring`, ℤ at `CommutativeRing` and `EuclideanDomain`, ℚ and ℂ at `Field`, ℝ at
+`RealField`, then ℍ at `AssociativeDivisionAlgebra` and 𝕆 at `DivisionAlgebra`. The full trait
+hierarchy, the marker laws and the per-type implementation matrix are in
+[`README_ALGEBRA_TRAITS.md`](../../../deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md).
+
+Three of its facts decide rows below, and none of them is about QCL:
+
+- **The multiplicative column is what discriminates.** Every type in that matrix associates and
+  commutes additively; the structure is fixed by what happens under `×`. ℍ associates and does not
+  commute, 𝕆 does neither. QCL touches ℝ and ℂ only, so it lives entirely in the commutative part
+  and never meets the two extensions, which is why no QCL bound mentions them.
+- **The markers are hand-written, never blanket-implemented over `Num` or `Float`.** A marker exists
+  to record what the compiler cannot check, so granting it by inference would hand the promise to
+  any type meeting the structural bound. A QCL check that claims a law inherits that discipline:
+  state it per type, in the crate that owns the type.
+- **`Invertible` is what separates a `Field` from a ring that merely owns `/`.** `i64` has `Div` and
+  `1 / 5 == 0`. Without the marker the tower would conclude ℤ is a field, and a tolerance derived
+  from `R::epsilon()` over a non-field would be meaningless.
+
+| Surface | Operations | Bound as shipped | Why it sits there |
 |---|---|---|---|
-| Cochains, cup product | `+`, `−`, `×`, `0` | `CommutativeRing + Copy` | No division, ordering or analytic call |
-| Operators, CJ factors, gauge field | complex arithmetic | `ComplexField<R>`, `R: RealField` | Entries are genuinely complex; the real parameter carries the precision |
-| Rotations, gate synthesis | `sin`, `cos`, `sqrt`, `π` | `RealField` | Needs the analytic surface and division |
-| Born read-out, purity | real output against a spec | `Real` | Ordering yes, division no |
-| Tolerances (§3.3) | `ε`, `sqrt`, `+`, `×`, one division | `RealField + FromPrimitive` | What the shipped policies declare |
-| Verdicts | orthomodular lattice | `Verdict` on `Projection<R, D>` | §4; the carrier is the crate's, the trait is not |
-| Shot statistics, Bhattacharyya | `sqrt`, `log2`, ratios | `RealField` | Genuinely needs both halves |
-| Costs, shot counts, cover search | integer arithmetic | none | `usize` |
+| Cochains, cup product | `+`, `−`, `×`, `0` | `CommutativeRing + Copy` | No division, ordering or analytic call. The operation's floor, and what ships |
+| Operators, CJ factors, gauge field | complex arithmetic | `Complex<R>`, `R: RealField + FromPrimitive` | Fixed by the carrier, not by the operations. Every impl for `Complex<T>` in `deep_causality_num_complex` is written `impl<T: RealField>`, `Zero` included, so `Complex<R>` reaches no algebraic structure at all below it |
+| Rotations, gate synthesis | `sin`, `cos`, `sqrt`, `π`, one division | `RealField + FromPrimitive` | `sin`, `cos` and `sqrt` are on `Real`. What forces `RealField` is the `R::one() / n_r` in the Taylor `exp`; `π` arrives through `FromPrimitive::from_f64`, not `Real::pi()` |
+| Born read-out, purity | real output against a spec | `RealField + FromPrimitive + Default + Debug` | The operations need only `Real`: `+`, `*`, `−`, `abs`, `sqrt`, `clamp`, no division. The carrier is `Projection<R, D>` over `Complex<R>`, so row 2 pins this row too |
+| Tolerances (§3.3) | `ε`, `sqrt`, `+`, `×`, one division | `RealField + FromPrimitive` | What the shipped policies declare, and the division is real |
+| Verdicts | orthomodular lattice | `Verdict` on `Projection<R, D>`, `R: RealField + FromPrimitive + Default + Debug` | §4. `FromPrimitive` is forced transitively: `range_projector` calls `eigen_hermitian`, which binds `ConjugateScalar` |
+| Shot statistics, separation | `sqrt`, `log2`, ratios | `Real + FromPrimitive` suffices | The one row that is genuinely over-tight. The Bhattacharyya formula contains no ratio, and this surface touches no complex carrier, so the relaxation would compile. It has no shipped signature yet, so it is the row to write down carefully rather than to copy |
+| Costs, shot counts, cover search | accumulation, ratios, counting | `Real` for the ledger, `NaturalNumber` for counts | §6.5's `Ledger<R>` carries `device_time`, `cost` and `bits` as `R` and binds accumulation on `Real`. `shots`, `experiments` and `predictions` are counts, so they are ℕ and belong on `NaturalNumber` rather than on a hardcoded width |
 
 The discipline is one line: **bound at the weakest structure that carries the operation.** The cup
 product is the worked example: bound on `RealField`, relaxed to `CommutativeRing + Copy`, workspace
 compiles and 1471 tests pass unchanged.
 
+**And one line re-derives the rest of the table.** `Real` has two implementor families here: the
+`Float` blanket, which covers `f32`, `f64` and `Float106` and which also reaches `RealField`; and
+`Dual<T>`, which does not. So `Real` versus `RealField` on any row means exactly one thing: **does
+this surface admit dual numbers, and so stay differentiable?** Anything routed through `Complex`
+cannot, because the complex carrier requires `RealField` before it offers even `Zero`. That is why
+four of the eight rows sit at `RealField` regardless of what their function bodies do, and it is
+why relaxing them is not a matter of editing a `where` clause.
+
 Four things this does not license. No bound wider than the operation. No scalar parameter where there
-is no scalar. `Real` and `RealField` are not synonyms. Complex is not a precision;
-`ComplexField<R>` carries its precision in `R`.
+is no scalar. `Real` and `RealField` are not synonyms. And a bound the carrier forces should say so
+rather than be read as the operation's floor: rows 2, 4 and 6 are carrier-pinned, and a reader who
+takes them for operation floors will look for a relaxation that is not there.
+
+**And the integers are a parameter too, of a different kind.** `deep_causality_num` splits ℤ's
+representation into `Integer` over all the primitives, with `SignedInt` and `UnsignedInt` beside it,
+and `NaturalNumber` builds on `UnsignedInt` to give ℕ its own vocabulary: `succ`, `pred`, `monus`,
+`checked_difference`, `div_rem`, `gcd`, `lcm`. `deep_causality_core` names the alias
+`IntType = i64` next to `FloatType = f64`. So the same discipline applies on the integer axis, write
+against the bound and name the width once, and **the two knobs are not the same knob**: widening
+`FloatType` buys accuracy and its failure mode is rounding, bounded by `epsilon()`; widening
+`IntType` buys headroom and its failure mode is overflow, with no analogue of `epsilon()` to bound
+it. §3.3's tolerance family therefore has no integer member and should not grow one.
+
+**ℕ's missing `Sub` is a feature here.** ℕ is a `CommutativeSemiring` and stops before `AbelianGroup`,
+so `3 - 5` has no value and `NaturalNumber` exposes subtraction only as `checked_difference`,
+returning `None`, and `monus`, truncating to zero. A ledger draw-down is exactly that operation: an
+overdrawn shot budget should either report the shortfall or clamp, and the algebra supplies both
+without a hand-written guard.
 
 `CausalTensor::fmap<A, B>` changes the scalar *type* rather than the values, so a carrier can be
 lifted between precisions as an operation. Combined with §3.3, that lets the pipeline answer "is this
 verdict precision-limited?" about itself: run at two scalars and note that the tolerances moved with
-them.
+them. On a complex-valued operator the lift is two `fmap`s rather than one, because the element is
+`Complex<R>` and the parameter being lifted is its `R`; see §6.6.
 
 ### 6.5 The ledger
 
@@ -427,27 +567,118 @@ only channel both writable and threaded.**
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Ledger<R> {
-    shots: u64,        // taken on the device
-    experiments: u32,  // executed on hardware
-    predictions: u32,  // model evaluations; tracked, never billed
+pub struct Ledger<R, N> {
+    shots: N,          // taken on the device
+    experiments: N,    // executed on hardware
+    predictions: N,    // model evaluations; tracked, never billed
     device_time: R,    // accumulated, measured
     cost: R,           // what MinCostCover minimises
     bits: R,           // separation achieved so far
 }
 ```
 
-`Real` is `Copy`, so `Ledger<R>` is `Copy`; it holds no `Vec` and no `String`. `Default` is
+**The count fields take a parameter, and this note previously hardcoded them.** They read `u64`,
+`u32` and `u32`, three concrete widths in a design that insists everywhere else on writing against a
+bound and naming the width once. They are counts, so they are ℕ, so `N: NaturalNumber` is the bound
+and `IntType` names the width at the same single site `FloatType` is named (§7.1). The correction
+matters beyond tidiness for the reason §6.4 gives: an integer's failure mode is overflow, and
+overflow has no `epsilon()` to bound it, so the width is a decision rather than a default.
+
+`NaturalNumber` also supplies the draw-down. ℕ has no `Sub`, and `checked_difference` returning
+`None` on an overdrawn budget is the semantics a ledger wants, with `monus` as the clamping variant
+where a floor at zero is the right answer.
+
+`Real` is `Copy`, so `Ledger<R, N>` is `Copy`; it holds no `Vec` and no `String`. `Default` is
 hand-written from `R::zero()`, because `CausalMonad::pure` requires `State: Default` and deriving
 would impose a spurious `R: Default`. Accumulation binds on `Real`; only the ratio methods need
 `RealField`, which keeps dual numbers admissible so a cost model stays differentiable.
 
 **Three invariants.** *Increment only at the device boundary*: `observe` is the only stage touching
 `shots`, `experiments` and `device_time`, because a fork into three hypothesis worlds runs one
-experiment and two predictions. *Forking is QCL's, not core's*: `branch` and `either` route to one arm
-and move the state, so `fork` is built above core by cloning. *Do not merge forked ledgers with ∇*:
-the monoid typechecks and gives the wrong answer, because at a counterfactual fork exactly one branch
-was factual.
+experiment and two predictions. *Forking is QCL's, not core's*, for the reason below. *Do not merge
+forked ledgers with ∇*: the monoid typechecks and gives the wrong answer, because at a
+counterfactual fork exactly one branch was factual.
+
+**Why `fork` is not `either`, stated as the type rather than as a preference.** `Either<L, R>` lives
+in [`deep_causality_haft`](../../../deep_causality_unified_math/deep_causality_haft/src/either/mod.rs)
+and is the **coproduct**: a value is `Left` or `Right`, exactly one. It carries the arrow algebra's
+choice fragment (`ArrowChoice` in `arrow/choice.rs`) and it is what `CausalFlow`'s `branch`,
+`branch_with` and `either` are built on. `CausalFlow::either` consumes the flow, matches the
+coproduct, and runs **one** arm with the state moved into it.
+
+A counterfactual fork needs the opposite shape. Three hypothesis worlds are all live at once, each
+with its own copy of the ledger, and the whole point of `adjudicate` is that they are compared
+afterwards. That is a **product**, and no eliminator of a coproduct will produce one. So `fork` is
+built above core by cloning, and the reason is a type-level fact rather than a missing feature: it is
+not that core's routing is inconvenient for forking, it is that routing and forking are dual.
+
+`Either` is still the right carrier on the way *out*. An `adjudicate` that returns one surviving
+hypothesis against a residual ambiguity is a coproduct, and it should be that type rather than an
+ad-hoc enum.
+
+### 6.6 The HKT seam, and what QCL takes from it
+
+That `fmap` is not a convenience method. It is the composition seam the mathematics crates share, and
+it decides more of QCL's shape than the precision trick alone suggests. Composition across those
+crates runs through `deep_causality_haft`: a crate owning a container generic in its element declares
+a **witness** type, binds `type Type<T>` to the container, and implements the categorical traits
+against the witness. See
+[the unified-math README](../../../deep_causality_unified_math/README.md).
+
+**Three consequences for this design.**
+
+**A `CausalTensor<Complex<R>>` is the seam, not a coincidence.** A witness accepts any element type,
+including one another crate owns, so the operator carrier QCL uses throughout is an instance of the
+nesting mechanism. The same mechanism is what lets the scalar be swapped, so §6.4's precision claim
+and §6.1's operator carrier are the same fact seen twice.
+
+**And `Complex<T>` is itself a functor, which is what makes the precision lift actually work on that
+carrier.** `deep_causality_num_complex` declares `ComplexWitness`, `QuaternionWitness` and
+`OctonionWitness`, and each implements `HKT`, `Functor`, `Foldable`, `Semigroupal`, `LaxMonoidal`,
+`MonoidalApplicative` and `Convolutional`. `ComplexWitness::fmap` maps the two real slots,
+`re` and `im`, so `Complex<A> → Complex<B>` under any `f: A → B`.
+
+§6.4 states the precision lift as `CausalTensor::fmap<A, B>` changing the scalar type. That is exact
+for a real-valued tensor and incomplete for the carrier QCL actually uses, whose element is
+`Complex<R>` rather than `R`. Lifting the *real* parameter of a complex operator is a composition of
+two functors, the outer over cells and the inner over `re`/`im`:
+
+```rust
+let lifted: CausalTensor<Complex<Float106>> =
+    CausalTensorWitness::fmap(op, |z| ComplexWitness::fmap(z, lift));
+```
+
+That is worth stating because it is the difference between the claim being true of the note's
+example and true of its operators.
+
+**Two further facts about those instances.** `Complex` has no `Monad`, and should not: there is no
+`join` on a two-slot record that respects the identity laws, which is the same reason
+`CausalMultiVectorWitness` gave one up. And the applicative on offer is the **monoidal** route rather
+than the monadic one. `MonoidalApplicative` derives `apply` from `φ` and pairs slot with slot,
+consuming nothing twice, where the monadic route induces `ap(ff, fa) = bind(ff, |f| fmap(fa, f))` and
+re-runs the continuation once per function. For zipping two complex fields the monoidal route needs
+no `Clone`, which on operator-sized data is the difference that matters.
+
+The three Cayley-Dickson types carry the same instance set, 𝕆 included. Nothing there is surprising
+once stated: `fmap` never touches multiplication, so non-associativity costs the functor nothing.
+
+**`CausalTensor` carries the richest instance set of any crate here**, which bounds what a stage may
+assume. It implements `HKT`, `Functor`, `Foldable`, `Applicative`, `Pure`, `CoMonad`, `Monad`,
+`Semigroupal`, `MonoidalApplicative` and `Arrow`. Two measured facts about those instances matter to
+an operator pipeline, and both were found by running code rather than reading signatures:
+
+- **`CausalTensorWitness::bind` preserves the input's shape** when the map is shape-preserving, so a
+  `[2, 3]` no longer comes back `[6]`. For QCL that is load-bearing rather than tidy: an operator is
+  a shaped tensor, and a `bind` that flattened it would turn a matrix into a vector silently.
+- **`CausalMultiVectorWitness` gave up `Monad`**, because no metric choice satisfies both identity
+  laws. A reader who finds the retired multivector gate layer in this note's history should not
+  reach for `bind` over multivectors to revive it; the instance is absent by proof, not by omission.
+
+**QCL consumes the seam and does not extend it.** `deep_causality_quantum` sits outside
+`deep_causality_unified_math/`, declares no witness, and appears in none of the README's instance
+rows. That is the right position and it should stay: the categorical structure QCL threads is the
+causal monad's `PropagatingEffect`, which is §7.7's point, while the math-side instances are for
+element-wise work on the carriers. Conflating the two layers is how a `QclEffect` gets invented.
 
 ---
 
@@ -455,15 +686,20 @@ was factual.
 
 ### 7.1 One origin for configuration
 
-Every configuration comes from `QclBuilder::config()`, which is also the single site where the scalar
-is named:
+Every configuration comes from `QclBuilder::config()`, which is also the single site where the
+working types are named. There are **two**, because §6.4's two axes are independent:
 
 ```rust
-QclBuilder::config::<FloatType>()
+QclBuilder::config::<FloatType, IntType>()
 ```
 
-Every bound in §6.4 is discharged from that parameter, tolerances included. Swapping `FloatType`
-re-types the whole run, thresholds and all.
+Every bound in §6.4 is discharged from those parameters, tolerances included. Swapping `FloatType`
+re-types the whole run, thresholds and all. Swapping `IntType` re-types the ledger's counts, and
+buys headroom rather than accuracy: there is no threshold to move, because the failure it guards
+against is overflow rather than rounding.
+
+An earlier revision named one parameter here. That was correct while the counts were hardcoded and
+is not correct now that they are a bound (§6.5).
 
 ### 7.2 The config branches on the subject
 
@@ -505,7 +741,7 @@ invalidated report, not a stale one.
 **The QCM path.** Validate only; maps one-to-one onto `freeze_quantum`.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType>()
+let cfg = QclBuilder::config::<FloatType, IntType>()
     .over_model(graph, factors, supports)               // rejects an unfrozen graph
     .tolerance(Tolerance::q_tol().with_safety_factor(ft(8.0)))
     .declare_systems(&inputs, &outputs)
@@ -520,7 +756,7 @@ QclBuilder::validate(&cfg)
 **Calibration counterfactual.** Mechanism candidates, so `control` directly.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType>()
+let cfg = QclBuilder::config::<FloatType, IntType>()
     .over_plant(transmon)
     .evidence(Evidence::shots(1024).seed(20260821))     // selects the emergent modality, §1.1
     .baseline(Experiment::probe("check", excited_population, 1, cost = 1))
@@ -537,7 +773,7 @@ QclBuilder::control(&cfg)
     .gate(Spec::at_least(ft(0.999)).within(Tolerance::shot_noise()))
     .fork()                                             // one world per fault
     .design(MinCostCover { floor_bits: ft(5.0) })
-    .predict()                                          // no marginalisation without a Boundary, §5.1
+    .predict()                                          // marginalise only through the §5.1 boundary check
     .adjudicate()
     .finalize().print_results();
 ```
@@ -545,7 +781,7 @@ QclBuilder::control(&cfg)
 **Crosstalk attribution.** The only consumer running both halves.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType>()
+let cfg = QclBuilder::config::<FloatType, IntType>()
     .over_plant(two_qubit)
     .evidence(Evidence::shots(1024).seed(20260821))
     .baseline(Experiment::probe("passive", joint_error, 1, cost = 1))
@@ -576,14 +812,14 @@ QclBuilder::control(screened)                           // unreachable unscreene
 **Geometric QEC.** A code subject, validate only.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType>()
+let cfg = QclBuilder::config::<FloatType, IntType>()
     .over_code(LatticeComplex::<2, FloatType>::square_torus(4))
     .build()?;
 
 QclBuilder::validate(&cfg)
     .derive_code()                                      // [[32,2,4]]
     .check_ldpc_weights()
-    .check_class_invariance()                           // closes F8 via GaugeField::from_cochain
+    .check_class_invariance()                           // over the H_k basis; F8's seam is gone, §5
     .finalize().print_results();
 ```
 
@@ -637,20 +873,34 @@ lifting pattern. If a `QclEffect` type appears, something has gone wrong.
 
 ## 9. Sequencing
 
-0. **Fix the scalar bounds** (§6.4). Costs nothing; every layer below inherits what the carriers
-   declare.
+~~0. **Fix the scalar bounds** (§6.4).~~ **Done.** The table was re-derived against shipped
+   signatures and its premise did not survive: one row is over-tight, three are *under*-specified,
+   one is not implementable as written, and one contradicted §6.5. See §6.4.
+
+~~2. **`Boundary`, then `GaugeField::from_cochain`** (§6.2).~~ **Done and withdrawn respectively.**
+   `partial_trace_preservation_boundary` ships; the gauge-field seam was removed rather than checked.
+   Neither of the two wrong-answer seams is open, so nothing in the remaining sequence is load-bearing
+   for soundness.
+
+What is left, renumbered:
+
 1. **Generalise `Check<R>`, `CheckReport<R>` and `Tolerance<R>`** off the four shipped policies (§3).
-   Doing this first means no stage is ever written returning a boolean.
-2. **`Boundary`, then `GaugeField::from_cochain`** (§6.2). The two seams that produce confident wrong
-   answers. F9 first because `predict` depends on it.
-3. **Carriers** (§6.2), each under the seal rule of §6.3, and each with a `wrappers.rs`-style lift.
-4. **`ShotBudget`** (§6.2). Small, and it turns every downstream decision from a float comparison
+   Doing this first means no stage is ever written returning a boolean. Each new check inherits
+   §3.2's obligation to report what it examined, not only what passed.
+2. **Carriers** (§6.2), each under the seal rule of §6.3, and each with a `wrappers.rs`-style lift.
+3. **`ShotBudget`** (§6.2). Small, and it turns every downstream decision from a float comparison
    into a statistical one.
-5. **`Hypothesis` and `intervene`** (§6.1). Smaller than previously sequenced; the store, supports and
+4. **`Hypothesis` and `intervene`** (§6.1). Smaller than previously sequenced; the store, supports and
    embedding exist, so this is the `do` operation plus the boundary-checked contraction.
-6. **`design` and `adjudicate`**, the latter with the §4 commutation guard.
-7. **`QclBuilder::config`, then the stages** (§7), last, once at least two consumers run against the
+5. **`design` and `adjudicate`**, the latter with the §4 commutation guard, and the former sized off
+   §10.3's corrected exponent rather than the sweep it used to name.
+6. **`QclBuilder::config`, then the stages** (§7), last, once at least two consumers run against the
    layers beneath.
+
+**The prerequisites are done, and none of what remains is a gap.** Every item in
+[`qcl-gaps.md`](qcl-gaps.md) is closed, so the geometric-QEC example is no longer blocked on the
+substrate, and the six steps above are construction against settled designs rather than open
+questions.
 
 The failure mode to avoid is unchanged: writing the pipeline first and shaping examples to justify
 it. The ordering is the reverse, and it is now anchored on a running implementation rather than three
@@ -690,11 +940,24 @@ bounded-time claim needs allocations/tick = 0, which a timing harness does not s
 | `check_markov` per intersecting pair | pairs grow O(n²) in factors; `embed_on_legs` dominates |
 | `check_faithfulness` | `find_c3` is `C(m,3)²` over declared inputs and outputs |
 | `Projection::range_projector` | one `eigen_hermitian` per lattice join; the verdict fold is not free |
-| `design`, k experiments × n hypotheses | **exponential in k**: exhaustive bitmask over subsets |
+| `design`, k experiments × n hypotheses | **linear in k, exponential in n**: the exact cover is a DP over covered-pair subsets, `O(2^C(n,2) · k)`. Watch the coverage-matrix build, which dominates at this note's own scale |
 
-Three cliffs, not one. `design` needs a sweep of k from 4 to 20. `find_c3` needs a sweep of declared
-system counts, because its sextuple loop grows in a parameter the user chooses. The verdict fold
-needs measuring because §4 puts an eigendecomposition inside `adjudicate`.
+Three cliffs, not one. `design` needs a sweep of **n**, the hypothesis count, not of k. §8.8 of the
+liftback note formulates the stage as minimum-cost set cover whose universe is the `C(n,2)`
+hypothesis pairs and whose sets are the k experiments. Enumerating subsets of experiments costs
+`2^k`, which is where "exponential in k" came from, but it is the wrong enumeration: the exact
+answer is a DP over subsets of the *universe*, `dp[S | cover(e)] = min(dp[S], dp[S] + cost(e))`, at
+`O(2^C(n,2) · k)`. That is linear in k, so sweeping k from 4 to 20 finds no cliff. The cliff is in n
+and arrives around n = 7 or 8, where `C(n,2)` reaches 21 to 28 and `2^C(n,2)` stops being free.
+
+At this note's own numbers the solve is not the cost at all. §8.6 sizes the scan at `|E| × |H|`
+plant evolutions plus `|E| × C(|H|, 2)` closed-form coefficients, 120 and 120 for 40 depths and 3
+hypotheses. The cover DP over those same numbers is `2^3 × 40 = 320` arithmetic steps against 120
+plant evolutions. **Benchmark the coverage-matrix build, and sweep n to find the exponent.**
+
+`find_c3` needs a sweep of declared system counts, because its sextuple loop grows in a parameter
+the user chooses. The verdict fold needs measuring because §4 puts an eigendecomposition inside
+`adjudicate`.
 
 ### 10.4 Tier 3: the price of precision
 
@@ -712,11 +975,26 @@ ranking.
 
 ## 11. Sources
 
-**Shipped code this design wraps.** `deep_causality_quantum/src/`, 3980 lines, in particular
+**The composition seam and the tower underneath.**
+[`deep_causality_unified_math/README.md`](../../../deep_causality_unified_math/README.md) — the
+seventeen crates, the seven tiers, and the witness table §6.6 reads from.
+
+[`README_ALGEBRA_TRAITS.md`](../../../deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md)
+— the trait hierarchy, the five marker laws, and the per-type matrix over ℕ, ℤ, ℚ, ℝ, ℂ, ℍ and 𝕆
+that §6.4's bounds are read off.
+
+[`deep_causality_num/README.md`](../../../deep_causality_unified_math/deep_causality_num/README.md)
+— the representation half: `Integer`, `SignedInt`, `UnsignedInt` and `NaturalNumber`, and the
+`FloatType` / `IntType` split §7.1 takes its two parameters from.
+
+**Shipped code this design wraps.** `deep_causality_quantum/src/`, 4432 lines, in particular
 `types/qcm/{markov_freeze, faithfulness, process_factors, environment}.rs`,
 `types/qgates/{operator_linalg, channel, mechanics, wrappers, gates_haruna}.rs`,
-`types/verdict/{projection, born}.rs`, `types/density_matrix.rs`, `error/quantum_error.rs`, and
-`types/qpu/` behind the `qpu` feature.
+`types/verdict/{projection, born}.rs`, `types/qcode/`, `types/density_matrix.rs`,
+`error/quantum_error.rs`, and `types/qpu/`, whose `circuit.rs` is always compiled while the sampler
+seam stays behind the `qpu` feature. The mathematics crates it reaches sit under
+`deep_causality_unified_math/`, in particular `deep_causality_homology` for the chain layer and
+`deep_causality_topology` for the cup product and the gauge fields.
 
 **Verification status.** [`LEAN_QUANTUM.md`](../../../deep_causality_quantum/LEAN_QUANTUM.md) and
 `lean/THEOREM_MAP.md`, for what is proved, what is deferred, and the counterexample behind F9.

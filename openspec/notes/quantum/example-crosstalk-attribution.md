@@ -192,7 +192,8 @@ establishes it:
 - `design` returns a **`DesignPlan`**: an ordered set of experiments, their total cost, the pair each
   one resolves, and the pairs left uncovered if the family is insufficient.
 - The single-experiment case is the plan of length one, so nothing is lost.
-- Set cover is NP-hard in general and trivially exact by enumeration at the scale this operates on.
+- Set cover is NP-hard in general and trivially exact here by enumerating the `C(n,2)` pairs rather
+  than the experiments: the DP over covered-pair subsets is linear in the experiment count.
   Above a threshold the greedy cover is the standard fallback and its logarithmic factor should be
   reported rather than hidden.
 - `Ambiguous` becomes richer: not only "no experiment separates these two," but "no *plan* within the

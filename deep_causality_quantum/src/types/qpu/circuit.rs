@@ -15,6 +15,21 @@ use alloc::vec::Vec;
 
 /// A single reified gate over the migrated gate alphabet. Plain data — no
 /// function pointers, no amplitudes.
+///
+/// # The diagonal family
+///
+/// `Z`, `S`, `Sdg`, `T`, `Tdg`, `Cz`, `Csdg`, `Ccz` and `Cmz` are all diagonal
+/// in the computational basis: each multiplies an amplitude by a fixed phase
+/// when every qubit it names is set, and leaves the amplitude alone otherwise.
+/// One simulator kernel serves the whole family. `H`, `X`, `Y` and `Cnot` move
+/// amplitude between basis states and do not.
+///
+/// # Arity
+///
+/// [`Cmz`](GateOp::Cmz) is the general `C^{m-1}Z` over a symmetric qubit list.
+/// [`Cz`](GateOp::Cz) and [`Ccz`](GateOp::Ccz) are its two- and three-qubit
+/// cases, kept as fixed-arity variants because they carry no allocation and
+/// clone without one. Prefer them where the arity is known.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GateOp {
     /// Hadamard on a qubit.
@@ -23,31 +38,53 @@ pub enum GateOp {
     X(usize),
     /// Pauli-Y.
     Y(usize),
-    /// Pauli-Z (phase flip).
+    /// Pauli-Z (phase flip), `diag(1, -1)`.
     Z(usize),
     /// Phase gate `S = diag(1, i)`.
     S(usize),
+    /// `S† = diag(1, -i)`, the adjoint of [`S`](GateOp::S).
+    Sdg(usize),
     /// `T = diag(1, e^{iπ/4})`.
     T(usize),
+    /// `T† = diag(1, e^{-iπ/4})`, the adjoint of [`T`](GateOp::T).
+    Tdg(usize),
     /// Controlled-NOT.
     Cnot { control: usize, target: usize },
-    /// Controlled-Z.
+    /// Controlled-Z, `diag(1, 1, 1, -1)`. Symmetric in its two qubits.
     Cz { control: usize, target: usize },
+    /// Controlled-`S†`, `diag(1, 1, 1, -i)`. Symmetric in its two qubits.
+    Csdg { control: usize, target: usize },
+    /// Doubly-controlled Z, `diag(1, 1, 1, 1, 1, 1, 1, -1)`. Symmetric in all
+    /// three qubits, so the field names carry no control/target distinction.
+    Ccz { q0: usize, q1: usize, q2: usize },
+    /// `C^{m-1}Z` over `m = qubits.len()` qubits: negates the amplitude of the
+    /// single basis state with every named qubit set. Symmetric in the list,
+    /// which must be non-empty and free of repeats.
+    Cmz { qubits: Vec<usize> },
 }
 
 impl GateOp {
     /// The qubit indices this gate touches.
+    ///
+    /// For the symmetric multi-qubit gates the order is the order the variant
+    /// stores; nothing downstream reads position as meaning.
     pub fn qubits(&self) -> Vec<usize> {
-        match *self {
+        match self {
             GateOp::H(q)
             | GateOp::X(q)
             | GateOp::Y(q)
             | GateOp::Z(q)
             | GateOp::S(q)
-            | GateOp::T(q) => vec![q],
-            GateOp::Cnot { control, target } | GateOp::Cz { control, target } => {
-                vec![control, target]
+            | GateOp::Sdg(q)
+            | GateOp::T(q)
+            | GateOp::Tdg(q) => vec![*q],
+            GateOp::Cnot { control, target }
+            | GateOp::Cz { control, target }
+            | GateOp::Csdg { control, target } => {
+                vec![*control, *target]
             }
+            GateOp::Ccz { q0, q1, q2 } => vec![*q0, *q1, *q2],
+            GateOp::Cmz { qubits } => qubits.clone(),
         }
     }
 }
@@ -63,10 +100,10 @@ pub struct QuantumCircuit {
 }
 
 impl QuantumCircuit {
-    /// Builds a circuit, rejecting any out-of-range or (for two-qubit gates)
-    /// coincident qubit index with a typed [`QuantumError`]. The `measure` list
-    /// names the qubits read out in the computational basis (its order fixes the
-    /// outcome bit order, LSB first).
+    /// Builds a circuit, rejecting any out-of-range or repeated qubit index
+    /// within a gate with a typed [`QuantumError`]. The `measure` list names the
+    /// qubits read out in the computational basis (its order fixes the outcome
+    /// bit order, LSB first).
     pub fn new(
         num_qubits: usize,
         ops: Vec<GateOp>,
@@ -87,9 +124,24 @@ impl QuantumCircuit {
                     )));
                 }
             }
-            if qs.len() == 2 && qs[0] == qs[1] {
+            // A gate that names the same qubit twice is rejected at every
+            // arity, not just at two. A repeat in `Ccz` or `Cmz` would reduce
+            // the gate's control set silently: `Cmz{[0, 0, 1]}` acts as
+            // `Cz{0, 1}`, which is a different gate from the one written. The
+            // scan is quadratic in a list bounded by the register width.
+            for (i, &a) in qs.iter().enumerate() {
+                if qs[..i].contains(&a) {
+                    return Err(QuantumError::DimensionMismatch(format!(
+                        "gate {:?} names qubit {} more than once",
+                        op, a
+                    )));
+                }
+            }
+            // An empty control list phases the whole register by -1, a global
+            // phase with no observable effect and no way to express intent.
+            if qs.is_empty() {
                 return Err(QuantumError::DimensionMismatch(format!(
-                    "two-qubit gate {:?} has coincident control/target",
+                    "gate {:?} names no qubits",
                     op
                 )));
             }

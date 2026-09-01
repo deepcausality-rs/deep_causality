@@ -3,10 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_homology::Gf2Chain;
 use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    apply_gate, born_probability, commutator, expectation_value, fidelity, haruna_cz_gate,
+    GateOp, apply_gate, born_probability, commutator, expectation_value, fidelity, haruna_cz_gate,
     haruna_hadamard_gate, haruna_s_gate, haruna_t_gate, haruna_x_gate, haruna_z_gate,
 };
 
@@ -23,14 +24,6 @@ fn create_test_state() -> HilbertState<f64> {
     ];
     let mv = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
     HilbertState::<f64>::from_multivector(mv)
-}
-
-fn create_real_field() -> CausalMultiVector<f64> {
-    CausalMultiVector::new(
-        vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
-    )
-    .unwrap()
 }
 
 #[test]
@@ -145,93 +138,71 @@ fn test_fidelity_wrapper_error() {
     assert!(effect.is_err());
 }
 
-#[test]
-fn test_haruna_s_gate_wrapper_success() {
-    let field = create_real_field();
-    let effect = haruna_s_gate(&field);
-    assert!(effect.is_ok());
+// ---------------------------------------------------------------------------
+// Haruna logical gates on the causal monad.
+//
+// The wrappers carry the physical-gate program produced by Table 1's second
+// column. These tests check the monadic plumbing: that a well-formed chain
+// reaches `pure` with the same program the builder returns, and that a
+// mismatched pair reaches `from_error`. The gate contents themselves are pinned
+// against the paper in gates_haruna_tests.rs.
+// ---------------------------------------------------------------------------
+
+type C = Gf2Chain<u64>;
+
+/// A 6-qubit register with the given qubits in the support.
+fn chain(support: &[usize]) -> C {
+    C::from_support(6, 1, support).unwrap()
+}
+
+fn value_of(effect: deep_causality_core::PropagatingEffect<Vec<GateOp>>) -> Vec<GateOp> {
+    effect
+        .value_cloned()
+        .expect("the effect should carry a gate program")
 }
 
 #[test]
-fn test_haruna_z_gate_wrapper_success() {
-    let field = create_real_field();
-    let effect = haruna_z_gate(&field);
-    assert!(effect.is_ok());
+fn test_haruna_single_chain_wrappers_carry_the_program() {
+    let g = chain(&[0, 2]);
+    // Z and X are transversal, so the program is one gate per support element.
+    assert_eq!(value_of(haruna_z_gate(&g)).len(), 2);
+    assert_eq!(value_of(haruna_x_gate(&g)).len(), 2);
+    // S is 2 transversal + C(2,2) = 1 pair.
+    assert_eq!(value_of(haruna_s_gate(&g)).len(), 3);
+    // T is 2 transversal + 1 pair + 0 triples.
+    assert_eq!(value_of(haruna_t_gate(&g)).len(), 3);
 }
 
 #[test]
-fn test_haruna_x_gate_wrapper_success() {
-    let field = create_real_field();
-    let effect = haruna_x_gate(&field);
-    assert!(effect.is_ok());
+fn test_haruna_cz_wrapper_succeeds_on_matching_registers() {
+    let a = chain(&[0]);
+    let b = chain(&[3]);
+    assert_eq!(value_of(haruna_cz_gate(&a, &b)).len(), 1);
 }
 
 #[test]
-fn test_haruna_hadamard_gate_wrapper_success() {
-    let field_a = create_real_field();
-    let field_b = create_real_field();
-    let effect = haruna_hadamard_gate(&field_a, &field_b);
-    assert!(effect.is_ok());
+fn test_haruna_cz_wrapper_errors_on_mismatched_registers() {
+    let a = chain(&[0]);
+    let wrong = C::from_support(8, 1, &[3]).unwrap();
+    assert!(haruna_cz_gate(&a, &wrong).value().is_none());
 }
 
 #[test]
-fn test_haruna_hadamard_gate_wrapper_error() {
-    let field_a = create_real_field();
-    let field_b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
-
-    let effect = haruna_hadamard_gate(&field_a, &field_b);
-    assert!(effect.is_err());
+fn test_haruna_hadamard_wrapper_succeeds_and_drops_the_phase() {
+    let g = chain(&[0, 1]);
+    let gt = chain(&[2]);
+    // S(g) is 3 ops, H over supp(gt) is 1, S(gt) is 1, H again 1, S(g) again 3.
+    let ops = value_of(haruna_hadamard_gate::<u64, f64>(&g, &gt));
+    assert_eq!(ops.len(), 9);
 }
 
 #[test]
-fn test_haruna_cz_gate_wrapper_success() {
-    let field_a1 = create_real_field();
-    let field_a2 = create_real_field();
-    let effect = haruna_cz_gate(&field_a1, &field_a2);
-    assert!(effect.is_ok());
-}
-
-#[test]
-fn test_haruna_cz_gate_wrapper_error() {
-    let field_a1 = create_real_field();
-    let field_a2 = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
-
-    let effect = haruna_cz_gate(&field_a1, &field_a2);
-    assert!(effect.is_err());
-}
-
-#[test]
-fn test_haruna_t_gate_wrapper_success() {
-    let field = create_real_field();
-    let effect = haruna_t_gate(&field);
-    assert!(effect.is_ok());
-}
-
-/// A real field whose logical-gate exponent overflows the 1e6 norm bound, so the
-/// wrapped kernel returns an error — exercising the wrapper error arms that used
-/// to be unreachable when the logical gates masked overflow as the identity.
-fn overflowing_field() -> CausalMultiVector<f64> {
-    let mut data = vec![0.0; 8];
-    data[1] = 1e8;
-    CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap()
-}
-
-#[test]
-fn test_haruna_s_gate_wrapper_error() {
-    assert!(haruna_s_gate(&overflowing_field()).is_err());
-}
-
-#[test]
-fn test_haruna_z_gate_wrapper_error() {
-    assert!(haruna_z_gate(&overflowing_field()).is_err());
-}
-
-#[test]
-fn test_haruna_x_gate_wrapper_error() {
-    assert!(haruna_x_gate(&overflowing_field()).is_err());
-}
-
-#[test]
-fn test_haruna_t_gate_wrapper_error() {
-    assert!(haruna_t_gate(&overflowing_field()).is_err());
+fn test_haruna_hadamard_wrapper_errors_on_mismatched_registers() {
+    let g = chain(&[0]);
+    let wrong = C::from_support(8, 1, &[2]).unwrap();
+    assert!(
+        haruna_hadamard_gate::<u64, f64>(&g, &wrong)
+            .value()
+            .is_none()
+    );
 }

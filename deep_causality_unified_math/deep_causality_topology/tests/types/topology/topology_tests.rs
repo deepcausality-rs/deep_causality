@@ -115,10 +115,13 @@ fn test_topology_cup_product_rejects_complex_mismatch() {
 }
 
 #[test]
-fn test_topology_cup_product_overflow_grade_returns_zero_field() {
-    // Triangle complex has max simplex dimension 2 (a single 2-simplex).
-    // A 2 ⌣ 1 cup product produces grade r = 3, which exceeds the max → zero-length
-    // result tensor (no 3-skeleton on a triangle).
+fn test_topology_cup_product_overflow_grade_is_rejected() {
+    // A triangle complex has max simplex dimension 2, so 2 ⌣ 1 lands in grade 3, which the
+    // complex does not have.
+    //
+    // This asserted the opposite until `Topology::cup_product` began delegating to the free
+    // `cup_product`: the retired implementation returned `Ok` with a zero-length tensor, reporting
+    // a cochain in an absent degree as a successful computation. The shared body rejects it.
     let complex = Arc::new(create_triangle_complex());
 
     let data2 = CausalTensor::new(vec![7.0], vec![1]).unwrap();
@@ -127,14 +130,12 @@ fn test_topology_cup_product_overflow_grade_returns_zero_field() {
     let data1 = CausalTensor::new(vec![0.5, 1.5, 2.5], vec![3]).unwrap();
     let topo1 = Topology::new(complex.clone(), 1, data1, 0).unwrap();
 
-    let result = topo2.cup_product(&topo1).unwrap();
-    assert_eq!(result.grade(), 3);
-    // r=3 ≥ skeletons.len()=3 → zero_len = 0 (else branch).
-    assert_eq!(result.data().as_slice().len(), 0);
+    let err = topo2.cup_product(&topo1).unwrap_err();
+    assert!(err.to_string().contains("maximum dimension"), "{err}");
 }
 
 #[test]
-fn test_topology_cup_product_simplex_not_found_returns_error() {
+fn test_topology_cup_product_tolerates_a_complex_missing_a_face() {
     use deep_causality_linear::CsrMatrix;
     use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
 
@@ -171,16 +172,30 @@ fn test_topology_cup_product_simplex_not_found_returns_error() {
     let topo0 = Topology::new(complex.clone(), 0, data0, 0).unwrap();
     let topo2 = Topology::new(complex.clone(), 2, data2, 0).unwrap();
 
-    // 0 ⌣ 2: front face is [v0..v0]=[0] (in 0-skeleton, found), back face is [v0..v2]
-    // — but we want to trigger SimplexNotFound, so use 1 ⌣ 1 to hit a missing edge.
-    // 1 ⌣ 1 → r=2, sum over 2-simplices. For (0,1,2): front [0,1] (present), back [1,2]
-    // (MISSING from 1-skeleton). Triggers the `back` ok_or branch.
+    // 1 ⌣ 1 → r = 2, summing over 2-simplices. For (0,1,2) the front face [0,1] is present in the
+    // 1-skeleton and the back face [1,2] is missing, so this complex is malformed.
+    //
+    // This asserted `SimplexNotFound` until `Topology::cup_product` began delegating. The shared
+    // body skips a split whose partner is not in the complex rather than failing, and that skip is
+    // load-bearing elsewhere: on a lattice complex with a non-periodic axis, the cells at the
+    // boundary genuinely have no partner and must contribute zero rather than raise. Inheriting the
+    // generic body means inheriting that tolerance, so a malformed simplicial complex now yields
+    // zeros where it used to error.
+    //
+    // The trade is deliberate. Nothing in this crate constructs such a complex; `SimplicialComplex`
+    // builds its skeletons from its facets, so the missing face here had to be assembled by hand.
     let data1 = CausalTensor::new(vec![0.5, 1.5], vec![2]).unwrap();
     let topo1a = Topology::new(complex.clone(), 1, data1.clone(), 0).unwrap();
     let topo1b = Topology::new(complex.clone(), 1, data1, 0).unwrap();
-    let err = topo1a.cup_product(&topo1b).unwrap_err();
-    // SimplexNotFound is a wrapper struct around an inner enum; check via Display.
-    assert!(err.to_string().contains("Simplex not found"));
+
+    let out = topo1a
+        .cup_product(&topo1b)
+        .expect("the shared body skips an absent partner rather than failing");
+    assert_eq!(out.grade(), 2);
+    assert!(
+        out.data().as_slice().iter().all(|v| *v == 0.0),
+        "a split with no partner must contribute zero"
+    );
 
     drop(topo0);
     drop(topo2);

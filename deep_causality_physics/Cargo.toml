@@ -99,7 +99,7 @@ version = "0.5"
 
 [dependencies.deep_causality_topology]
 path = "../deep_causality_unified_math/deep_causality_topology"
-version = "0.8"
+version = "0.9"
 
 [dependencies.deep_causality_par]
 path = "../deep_causality_par"

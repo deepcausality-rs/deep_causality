@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_quantum"
-version = "0.1.2"
+version = "0.2.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -28,9 +28,9 @@ all-features = true
 
 [features]
 default = ["std", "qcm"]
-std = ["alloc", "deep_causality_algebra/std", "deep_causality_core/std", "deep_causality_haft/std", "deep_causality_metric/std", "deep_causality_multivector/std", "deep_causality_num/std", "deep_causality_num_complex/std", "deep_causality_tensor/std"]
+std = ["alloc", "deep_causality_algebra/std", "deep_causality_core/std", "deep_causality_haft/std", "deep_causality_homology/std", "deep_causality_linear/std", "deep_causality_metric/std", "deep_causality_multivector/std", "deep_causality_num/std", "deep_causality_num_complex/std", "deep_causality_num_rational/std", "deep_causality_tensor/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_algebra/no-std", "deep_causality_core/no-std", "deep_causality_haft/no-std", "deep_causality_metric/no-std", "deep_causality_multivector/no-std", "deep_causality_num/no-std", "deep_causality_num_complex/no-std", "deep_causality_tensor/no-std"]
+no-std = ["alloc", "deep_causality_algebra/no-std", "deep_causality_core/no-std", "deep_causality_haft/no-std", "deep_causality_homology/no-std", "deep_causality_linear/no-std", "deep_causality_metric/no-std", "deep_causality_multivector/no-std", "deep_causality_num/no-std", "deep_causality_num_complex/no-std", "deep_causality_num_rational/no-std", "deep_causality_tensor/no-std"]
 
 # The quantum causal-model slice: CausalStructure, the Markov freeze check and the
 # C3-exclusion faithfulness check. Pulls in `deep_causality` for the causal graph,
@@ -56,9 +56,19 @@ path = "../deep_causality_core"
 version = "0.11.1"
 default-features = false
 
+[dependencies.deep_causality_homology]
+path = "../deep_causality_unified_math/deep_causality_homology"
+version = "0.1"
+default-features = false
+
 [dependencies.deep_causality_haft]
 path = "../deep_causality_unified_math/deep_causality_haft"
 version = "0.4"
+default-features = false
+
+[dependencies.deep_causality_linear]
+path = "../deep_causality_unified_math/deep_causality_linear"
+version = "0.1.2"
 default-features = false
 
 [dependencies.deep_causality_metric]
@@ -74,6 +84,11 @@ default-features = false
 [dependencies.deep_causality_num]
 path = "../deep_causality_unified_math/deep_causality_num"
 version = "0.4"
+default-features = false
+
+[dependencies.deep_causality_num_rational]
+path = "../deep_causality_unified_math/deep_causality_num_rational"
+version = "0.1"
 default-features = false
 
 [dependencies.deep_causality_num_complex]

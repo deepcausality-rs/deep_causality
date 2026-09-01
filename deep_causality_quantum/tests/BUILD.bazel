@@ -52,6 +52,26 @@ rust_test_suite(
 # =============================================================================
 
 rust_test_suite(
+    name = "qcode",
+    srcs = glob([
+        "types/qcode/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        "//deep_causality_quantum",
+        # Internal dependencies
+        "//deep_causality_unified_math/deep_causality_homology",
+        "//deep_causality_unified_math/deep_causality_linear",
+        "//deep_causality_unified_math/deep_causality_num",
+        "//deep_causality_unified_math/deep_causality_num_rational",
+    ],
+)
+
+rust_test_suite(
     name = "qgates",
     srcs = glob([
         "types/qgates/*_tests.rs",
@@ -65,6 +85,7 @@ rust_test_suite(
         "//deep_causality_quantum",
         # Internal dependencies
         "//deep_causality_core",
+        "//deep_causality_unified_math/deep_causality_homology",
         "//deep_causality_unified_math/deep_causality_multivector",
         "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_unified_math/deep_causality_num_complex",
