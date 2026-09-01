@@ -4,9 +4,13 @@
  */
 
 use crate::QuantumError;
+use crate::types::qcode::diagonal_phase::DiagonalPhase;
 use crate::types::qcode::logical_pauli::LogicalPauli;
 use alloc::vec::Vec;
 use deep_causality_homology::{ChainComplex, Gf2Chain};
+use deep_causality_linear::{
+    MatrixBuild, MatrixView, PackedGf2, csr_to_packed_gf2_mod2, image_basis_gf2, rank_gf2,
+};
 use deep_causality_num::{Gf2, NaturalNumber};
 
 /// The logical operators of a CSS code at one grade: a basis of `H_k` and one of `H^k`.
@@ -19,6 +23,7 @@ use deep_causality_num::{Gf2, NaturalNumber};
 pub struct LogicalBasis<W> {
     homology: Vec<Gf2Chain<W>>,
     cohomology: Vec<Gf2Chain<W>>,
+    stabilizers: Vec<Gf2Chain<W>>,
     len: usize,
 }
 
@@ -38,9 +43,11 @@ impl<W: NaturalNumber> LogicalBasis<W> {
         let cohomology = complex
             .cohomology_representatives::<W>(k)
             .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))?;
+        let stabilizers = boundary_basis(complex, k)?;
         Ok(Self {
             homology,
             cohomology,
+            stabilizers,
             len: complex.num_cells(k),
         })
     }
@@ -53,6 +60,17 @@ impl<W: NaturalNumber> LogicalBasis<W> {
     /// The `H^k` representatives, the logical `X` generators.
     pub fn cohomology(&self) -> &[Gf2Chain<W>] {
         &self.cohomology
+    }
+
+    /// A basis of `im ∂ₖ₊₁`, the `Z`-stabilizer generators.
+    ///
+    /// A `k`-chain is a stabilizer exactly when it bounds, so the boundary space *is* the
+    /// stabilizer group and a basis of it generates that group. This is what makes the code space
+    /// nameable, and so what makes [`check_class_invariance`](Self::check_class_invariance)
+    /// decidable: without it, the only question this type could ask was commutation over the whole
+    /// Hilbert space, which is a strictly stronger and different condition.
+    pub fn stabilizers(&self) -> &[Gf2Chain<W>] {
+        &self.stabilizers
     }
 
     /// The number of encoded logical qubits, `k = dim H_k`.
@@ -124,4 +142,328 @@ impl<W: NaturalNumber> LogicalBasis<W> {
 fn pair<W: NaturalNumber>(a: &Gf2Chain<W>, b: &Gf2Chain<W>) -> Result<Gf2, QuantumError> {
     a.inner(b)
         .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))
+}
+
+impl<W: NaturalNumber> LogicalBasis<W> {
+    /// Whether a diagonal gate acts trivially on the code space: `U ~ I`.
+    ///
+    /// The generalisation of [`is_logically_trivial`](Self::is_logically_trivial) past the Paulis,
+    /// and the reason `S̄`, `T̄` and their relatives can be decided at all.
+    ///
+    /// # The Z half is free, so only the X half is a computation
+    ///
+    /// B.1 asks for commutation with every logical `Z̄(γ)` and every `X̄(γ̃)`. A diagonal operator
+    /// commutes with every `Z̄` automatically, both being diagonal, so the whole test is the `X̄`
+    /// half.
+    ///
+    /// # And the X half is an integer identity, not a matrix product
+    ///
+    /// `X̄(γ̃)` maps `|x⟩` to `|x ⊕ γ̃⟩`, so a diagonal `U` with phase `Q(|γ ∩ x|)/M` commutes with
+    /// it exactly when `Q(|γ ∩ (x ⊕ γ̃)|) ≡ Q(|γ ∩ x|)` for every `x`. Writing `c = |γ ∩ γ̃|`,
+    /// `k = |γ ∩ γ̃ ∩ x|` and `m = |(γ \ γ̃) ∩ x|`, the overlap moves as
+    /// `|γ ∩ (x ⊕ γ̃)| = m + c − k` against `|γ ∩ x| = m + k`, so the condition is
+    ///
+    /// ```text
+    /// Q(m + c − k) ≡ Q(m + k)   (mod M)   for k ∈ [0, c], m ∈ [0, |γ| − c]
+    /// ```
+    ///
+    /// Every such `(m, k)` is realised by some `x` and no others are, so the quantifier over `2ⁿ`
+    /// basis states collapses to a double loop bounded by the chain's **weight**. That is what makes
+    /// the check tractable on a code whose Hilbert space no simulator can hold.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] if the gate is over a register of a different width from
+    /// the code this basis came from.
+    pub fn is_diagonal_trivial(&self, gate: &DiagonalPhase<W>) -> Result<bool, QuantumError> {
+        if gate.chain().len() != self.len {
+            return Err(QuantumError::DimensionMismatch(alloc::format!(
+                "the gate is over {} qubits, the code over {}",
+                gate.chain().len(),
+                self.len
+            )));
+        }
+        for gamma_tilde in &self.cohomology {
+            if !commutes_with_x(gate, gamma_tilde)? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
+    }
+
+    /// Whether a diagonal gate acts on the homology **class** rather than on the representative:
+    /// `U(γ) ~ U(γ ⊕ b)` for every boundary `b`.
+    ///
+    /// This is Haruna's §3.1 result and the check `geometric_qec` runs. Eq. (3.20) is the shape of
+    /// the argument for `S̄`, and it generalises: two representatives of one class differ by a
+    /// boundary, and the claim is that the gates they induce differ by something logically trivial.
+    ///
+    /// # The question is triviality on the code space, not commutation on the whole space
+    ///
+    /// Eq. (3.20) decomposes `S(γ₁) = S(γ₂) · S(∂₂f) · exp(iπ a(γ₂) a(∂₂f))`. The last factor is a
+    /// *controlled* stabilizer, and the paper's own words for it are that it "behaves trivially on
+    /// the code space". It is not trivial on the whole Hilbert space, and it does not commute with
+    /// every `X̄` there. So the criterion cannot be commutation with the logical `X` generators: that
+    /// test rejects `S̄` and `T̄` while accepting `Z̄`, which is exactly the wrong answer and exactly
+    /// what a full-space quantifier produces.
+    ///
+    /// What is decided here instead is the direct statement. The ratio `U(γ ⊕ b) U(γ)†` is diagonal
+    /// with phase `Q(|(γ ⊕ b) ∩ x|)/M − Q(|γ ∩ x|)/M`, and it is the identity on the code space
+    /// exactly when that phase is a whole number of turns for every basis state `x` the code space
+    /// contains. Nothing about `H¹` enters; the cohomology basis is not consulted.
+    ///
+    /// # Which basis states the code space contains
+    ///
+    /// A `Z`-stabilizer `S_Z(s) = ∏_{i∈s} Z_i` has eigenvalue `(−1)^{|s ∩ x|}` on `|x⟩`, so the
+    /// computational basis states appearing in code states are those meeting every stabilizer
+    /// evenly. That is the only constraint that bears on a diagonal operator, which is why the
+    /// `X`-stabilizers are neither stored nor needed: they fix which *superpositions* are code
+    /// states, and a diagonal phase does not see a superposition.
+    ///
+    /// Of those constraints, this enumeration imposes the one that the shift itself carries,
+    /// `|b ∩ x|` even, and only when `b` genuinely lies in the stabilizer span. That is the factor
+    /// Eq. (3.20) turns on, and it is a **sound relaxation**: dropping the other stabilizers can only
+    /// enlarge the state set, so a pass here is a pass on the code space. It is also what keeps the
+    /// discrimination honest — shifting by a chain that is not a boundary imposes nothing, the odd
+    /// states come back, and the change of class is detected.
+    ///
+    /// # Why this is cheap
+    ///
+    /// The phase reads `x` only through two overlap counts, and both are determined by how many
+    /// qubits `x` holds in each of the three blocks `γ ∩ b`, `b \ γ` and `γ \ b`. Writing those
+    /// occupancies `p`, `q` and `r`:
+    ///
+    /// ```text
+    /// |γ ∩ x| = p + r      |(γ ⊕ b) ∩ x| = q + r      |b ∩ x| = p + q
+    /// ```
+    ///
+    /// so the quantifier over `2ⁿ` basis states collapses to a triple loop bounded by the two
+    /// chains' **weights**. That is what makes the check tractable on a code whose Hilbert space no
+    /// simulator can hold.
+    ///
+    /// The residual is exact. `Turns` is a rational, the question is whether a phase difference is a
+    /// whole number of turns, and no tolerance enters at any point.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] on a register-width mismatch, and
+    /// [`QuantumError::CalculationError`] if the block enumeration would exceed
+    /// [`ATOM_ENUMERATION_CAP`] states, which a code with very wide supports could reach.
+    pub fn check_class_invariance(
+        &self,
+        gate: &DiagonalPhase<W>,
+        boundaries: &[Gf2Chain<W>],
+    ) -> Result<ClassInvariance, QuantumError> {
+        let gamma = gate.chain();
+        if gamma.len() != self.len {
+            return Err(QuantumError::DimensionMismatch(alloc::format!(
+                "the gate is over {} qubits, the code over {}",
+                gamma.len(),
+                self.len
+            )));
+        }
+        let span = StabilizerSpan::new(&self.stabilizers, self.len)?;
+
+        let mut tested = 0usize;
+        let mut states_visited = 0u64;
+        for (boundary, b) in boundaries.iter().enumerate() {
+            let shifted = gate.shifted_by(b)?;
+            tested += 1;
+
+            // The three blocks the two overlap counts depend on. A qubit outside `γ ∪ b` moves
+            // neither count, so it carries no information for this test.
+            let both = gamma
+                .intersect(b)
+                .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))?
+                .weight() as u64;
+            let shift_only = b.weight() as u64 - both;
+            let gate_only = gamma.weight() as u64 - both;
+
+            let total = (both + 1) * (shift_only + 1) * (gate_only + 1);
+            if total > ATOM_ENUMERATION_CAP {
+                return Err(QuantumError::CalculationError(alloc::format!(
+                    "class-invariance enumeration would visit {total} states, over the cap of \
+                     {ATOM_ENUMERATION_CAP}"
+                )));
+            }
+
+            // A shift by a stabilizer is confined to the code space; a shift by anything else is
+            // not, and must be judged against every basis state.
+            let confined = span.contains(b)?;
+            for p in 0..=both {
+                for q in 0..=shift_only {
+                    if confined && (p + q) % 2 == 1 {
+                        continue;
+                    }
+                    for r in 0..=gate_only {
+                        states_visited += 1;
+                        // A phase is an element of ℝ/ℤ: two turns differing by a whole turn are
+                        // the same phase. So the test is that the difference is an integer, never
+                        // that the two rationals are equal — `3/2` and `1/2` are distinct
+                        // rationals and one phase.
+                        if !(shifted.phase_at(q + r) - gate.phase_at(p + r)).is_integer() {
+                            return Ok(ClassInvariance {
+                                holds: false,
+                                tested,
+                                states_visited,
+                                first_failure: Some(InvarianceWitness {
+                                    boundary,
+                                    shared: p,
+                                    shift_only: q,
+                                    gate_only: r,
+                                }),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        Ok(ClassInvariance {
+            holds: true,
+            tested,
+            states_visited,
+            first_failure: None,
+        })
+    }
+}
+
+/// A basis of `im ∂ₖ₊₁` as degree-`k` chains: the `Z`-stabilizer generators at grade `k`.
+fn boundary_basis<W: NaturalNumber, K: ChainComplex + ?Sized>(
+    complex: &K,
+    k: usize,
+) -> Result<Vec<Gf2Chain<W>>, QuantumError> {
+    // There is no grade past `usize::MAX`, so `im ∂ₖ₊₁` is trivial there.
+    let Some(next) = k.checked_add(1) else {
+        return Ok(Vec::new());
+    };
+    let d = csr_to_packed_gf2_mod2::<W>(&complex.boundary_matrix(next));
+    if d.cols() == 0 {
+        return Ok(Vec::new());
+    }
+    let image =
+        image_basis_gf2(&d).map_err(|e| QuantumError::CalculationError(alloc::format!("{e}")))?;
+    // Bases are stored down columns, never across rows.
+    (0..image.cols())
+        .map(|c| {
+            Gf2Chain::from_column(&image, c, k)
+                .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))
+        })
+        .collect()
+}
+
+/// The 𝔽₂ span of the stabilizer generators, with a membership test.
+///
+/// The generators arrive as a basis, so the span's rank is its column count and membership is one
+/// rank comparison: `b` lies in the span exactly when adjoining it adds no rank. Exact over 𝔽₂,
+/// where every non-zero element is its own inverse and the elimination divides by nothing.
+struct StabilizerSpan<W> {
+    columns: PackedGf2<W>,
+    rank: usize,
+}
+
+impl<W: NaturalNumber> StabilizerSpan<W> {
+    fn new(generators: &[Gf2Chain<W>], len: usize) -> Result<Self, QuantumError> {
+        let mut columns = PackedGf2::<W>::zeros(len, generators.len() + 1);
+        for (c, g) in generators.iter().enumerate() {
+            for r in g.support() {
+                columns
+                    .set(r, c, Gf2::ONE)
+                    .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))?;
+            }
+        }
+        Ok(Self {
+            columns,
+            rank: generators.len(),
+        })
+    }
+
+    /// Whether `b` lies in the span, so that every code state meets it evenly.
+    fn contains(&self, b: &Gf2Chain<W>) -> Result<bool, QuantumError> {
+        if b.len() != self.columns.rows() {
+            return Err(QuantumError::DimensionMismatch(alloc::format!(
+                "the shift is over {} qubits, the code over {}",
+                b.len(),
+                self.columns.rows()
+            )));
+        }
+        // The trailing column is scratch: write `b` into it, take the rank, wipe it again.
+        let mut work = self.columns.clone();
+        let last = self.rank;
+        for r in b.support() {
+            work.set(r, last, Gf2::ONE)
+                .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))?;
+        }
+        let rank =
+            rank_gf2(&work).map_err(|e| QuantumError::CalculationError(alloc::format!("{e}")))?;
+        Ok(rank == self.rank)
+    }
+}
+
+/// What a class-invariance check examined and concluded.
+///
+/// The counts are not decoration. A code whose boundary set is empty passes having examined
+/// nothing, which is a vacuous pass and must be visible as one. Both counts describe what was
+/// actually visited, not a total the run never reached: the check stops at the first failure, so on
+/// the failing path they are the work done up to that point.
+///
+/// There is no margin here, and there is not meant to be. The measured quantity is a phase in ℝ/ℤ
+/// and the question asked of it is integrality, which has no order: a failure is an obstruction, not
+/// a distance. A check whose quantity is a norm reports how close it came; a check whose quantity is
+/// exact reports what went wrong. This is the second kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ClassInvariance {
+    /// Whether every representative of every class induces the same logical action.
+    pub holds: bool,
+    /// How many shifts were examined.
+    pub tested: usize,
+    /// How many code-space occupancies were visited across those shifts.
+    pub states_visited: u64,
+    /// The first failure, if any.
+    pub first_failure: Option<InvarianceWitness>,
+}
+
+/// The basis state that witnessed a class-invariance failure.
+///
+/// Enough to reproduce the failure by hand: the shift that broke, and how many qubits the offending
+/// basis state holds in each of the three blocks the phase reads. The three occupancies determine
+/// both overlap counts, so they determine the phase, so they *are* the counterexample.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InvarianceWitness {
+    /// Index into the `boundaries` slice of the shift that failed.
+    pub boundary: usize,
+    /// `|γ ∩ b ∩ x|`, the occupancy of the block both chains cover.
+    pub shared: u64,
+    /// `|(b \ γ) ∩ x|`, the occupancy of the block only the shift covers.
+    pub shift_only: u64,
+    /// `|(γ \ b) ∩ x|`, the occupancy of the block only the gate's chain covers.
+    pub gate_only: u64,
+}
+
+/// The largest block-occupancy enumeration `check_class_invariance` will attempt per shift.
+pub const ATOM_ENUMERATION_CAP: u64 = 1 << 22;
+
+/// Whether a single-chain diagonal gate commutes with `X̄(gamma_tilde)`.
+///
+/// The `(m, k)` double loop derived on [`LogicalBasis::is_diagonal_trivial`].
+fn commutes_with_x<W: NaturalNumber>(
+    gate: &DiagonalPhase<W>,
+    gamma_tilde: &Gf2Chain<W>,
+) -> Result<bool, QuantumError> {
+    let overlap = gate
+        .chain()
+        .intersect(gamma_tilde)
+        .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))?;
+    let c = overlap.weight() as u64;
+    let w = gate.chain().weight() as u64;
+    for k in 0..=c {
+        for m in 0..=(w - c) {
+            // A phase is an element of ℝ/ℤ: two turns differing by a whole turn are the same
+            // phase. So the test is that the difference is an integer, never that the two
+            // rationals are equal — `3/2` and `1/2` are distinct rationals and one phase.
+            if !(gate.phase_at(m + c - k) - gate.phase_at(m + k)).is_integer() {
+                return Ok(false);
+            }
+        }
+    }
+    Ok(true)
 }

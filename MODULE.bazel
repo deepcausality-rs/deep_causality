@@ -44,8 +44,7 @@ local_path_override(
 )
 
 # Pinned by commit until the module is published to the
-# Bazel Central Registry; at that point this becomes a plain bazel_dep and the
-# git_override goes away.
+# Bazel Central Registry; at that point this becomes a plain bazel_dep
 bazel_dep(name = "rules_lean", version = "0.1.0")
 git_override(
     module_name = "rules_lean",
