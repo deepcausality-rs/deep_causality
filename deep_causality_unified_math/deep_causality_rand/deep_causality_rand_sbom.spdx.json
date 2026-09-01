@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-08-25T01:32:50Z",
+    "created": "2026-09-01T17:42:55Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_rand-515645fc-6547-44db-b0b6-9fb801e9e811",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_rand-f987eb3d-0178-4020-9ba6-35867a091143",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_rand",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "be5644a2bb15f4378275212a3073b4189002d798"
+          "checksumValue": "80ba6a9477c66460f24455c3696311d5587f6421"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,6 +26,23 @@
   ],
   "name": "deep_causality_rand",
   "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-r-efi-6.0.0",
+      "description": "UEFI Reference Specification Protocol Constants and Definitions",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/r-efi@6.0.0",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/r-efi/r-efi/wiki",
+      "licenseConcluded": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "licenseDeclared": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "name": "r-efi",
+      "versionInfo": "6.0.0"
+    },
     {
       "SPDXID": "SPDXRef-Package-getrandom-0.4.3",
       "description": "A small cross-platform library for retrieving random data from system source",
@@ -43,54 +60,22 @@
       "versionInfo": "0.4.3"
     },
     {
-      "SPDXID": "SPDXRef-Package-libc-0.2.189",
-      "description": "Raw FFI bindings to platform libraries like libc.",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libc@0.2.189",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "libc",
-      "versionInfo": "0.2.189"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.1",
-      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_algebra",
-      "versionInfo": "0.4.1"
+      "name": "deep_causality_num",
+      "versionInfo": "0.4.5"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.2.1",
+      "SPDXID": "SPDXRef-Package-deep--causality--rand-0.2.3",
       "description": "Random number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_rand",
-      "versionInfo": "0.2.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-libm-0.2.16",
-      "description": "libm in pure Rust",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/libm@0.2.16",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "libm",
-      "versionInfo": "0.2.16"
+      "versionInfo": "0.2.3"
     },
     {
       "SPDXID": "SPDXRef-Package-cfg-if-1.0.4",
@@ -109,52 +94,57 @@
       "versionInfo": "1.0.4"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.3",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.4.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-r-efi-6.0.0",
-      "description": "UEFI Reference Specification Protocol Constants and Definitions",
+      "SPDXID": "SPDXRef-Package-libc-0.2.189",
+      "description": "Raw FFI bindings to platform libraries like libc.",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/r-efi@6.0.0",
+          "referenceLocator": "pkg:cargo/libc@0.2.189",
           "referenceType": "purl"
         }
       ],
-      "homepage": "https://github.com/r-efi/r-efi/wiki",
-      "licenseConcluded": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
-      "licenseDeclared": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
-      "name": "r-efi",
-      "versionInfo": "6.0.0"
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "libc",
+      "versionInfo": "0.2.189"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libm-0.2.16",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.4.3"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-File-deep_causality_rand",
-      "relationshipType": "DESCRIBES",
-      "spdxElementId": "SPDXRef-DOCUMENT"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.1",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.1"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-cfg-if-1.0.4",
@@ -162,14 +152,29 @@
       "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.1"
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_rand",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.2.1",
+      "relatedSpdxElement": "SPDXRef-Package-getrandom-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--rand-0.2.3",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_rand"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libc-0.2.189",
@@ -177,14 +182,9 @@
       "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.3"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-r-efi-6.0.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-getrandom-0.4.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--rand-0.2.3"
     }
   ],
   "spdxVersion": "SPDX-2.3"

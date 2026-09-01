@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-08-30T07:22:51Z",
+    "created": "2026-09-01T17:42:54Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_homology-65cbf9a1-7d21-4ad9-9bcc-97a09cd503a5",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_homology-d6e676f7-90bb-4bfd-bfc4-571973934c09",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_homology",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "f434c9e89fea4d29cc3f671b48301c8f5e8ca586"
+          "checksumValue": "80ba6a9477c66460f24455c3696311d5587f6421"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -26,24 +26,6 @@
   ],
   "name": "deep_causality_homology",
   "packages": [
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--homology-0.1.0",
-      "description": "Chain complexes, boundary operators and homology over a chosen coefficient field, independent of any geometry.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_homology",
-      "versionInfo": "0.1.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.4",
-      "description": "Number utils for for deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num",
-      "versionInfo": "0.4.4"
-    },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.16",
       "description": "libm in pure Rust",
@@ -61,58 +43,91 @@
       "versionInfo": "0.2.16"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.4.3",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.5.1",
       "description": "HKT traits for for the deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_haft",
-      "versionInfo": "0.4.3"
+      "versionInfo": "0.5.1"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.2",
-      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
-      "name": "deep_causality_algebra",
-      "versionInfo": "0.4.2"
+      "name": "deep_causality_num",
+      "versionInfo": "0.4.5"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--linear-0.1.2",
+      "SPDXID": "SPDXRef-Package-deep--causality--linear-0.1.3",
       "description": "Linear algebra for the deep_causality crates: sparse, dense and bit-packed GF(2) matrices, vectors, and the algorithms over them.",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_linear",
-      "versionInfo": "0.1.2"
+      "versionInfo": "0.1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--homology-0.1.1",
+      "description": "Chain complexes, boundary operators and homology over a chosen coefficient field, independent of any geometry.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_homology",
+      "versionInfo": "0.1.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.4.3"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.4.3",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.4"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--linear-0.1.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--homology-0.1.0"
+      "spdxElementId": "SPDXRef-Package-deep--causality--homology-0.1.1"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.2",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.2"
+      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.3"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--homology-0.1.0",
-      "relationshipType": "GENERATED_FROM",
-      "spdxElementId": "SPDXRef-File-deep_causality_homology"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.5.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--homology-0.1.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.5.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.3"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_homology",
@@ -120,24 +135,9 @@
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.4",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.2"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--linear-0.1.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--homology-0.1.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.2",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.4.3"
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--homology-0.1.1",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_homology"
     }
   ],
   "spdxVersion": "SPDX-2.3"
