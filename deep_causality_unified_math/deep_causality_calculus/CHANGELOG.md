@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_calculus-v0.1.4...deep_causality_calculus-v0.1.5) - 2026-09-01
+
+### Other
+
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+
 ## [0.1.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_calculus-v0.1.2...deep_causality_calculus-v0.1.3) - 2026-07-14
 
 ### Added

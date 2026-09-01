@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.5.3...deep_causality_tensor-v0.6.0) - 2026-09-01
+
+### Fixed
+
+- *(unified_math)* [**breaking**] act on a review of the HKT law and constraint work
+- *(unified_math)* [**breaking**] rectify the HKT law tests and correct the defects they exposed
+
+### Other
+
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- Applied lints and fixes.
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated inbound links to archived notes
+- *(haft)* [**breaking**] drop the GAT where-clause from the HKT trait family
+- *(deep_causality_tensor)* delete the dead strict tensor witness
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.5.0...deep_causality_tensor-v0.5.1) - 2026-07-14
 
 ### Added

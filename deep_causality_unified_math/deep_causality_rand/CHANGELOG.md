@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.2...deep_causality_rand-v0.2.3) - 2026-09-01
+
+### Fixed
+
+- *(deep_causality_unified_math)* Applied a number of fixes and lint corrections.
+
+### Other
+
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(bazel)* migrate to rules_rs and delete the vendored crate tree
+
 ## [0.2.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.0...deep_causality_rand-v0.2.1) - 2026-07-14
 
 ### Added

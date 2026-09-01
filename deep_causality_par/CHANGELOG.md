@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_par-v0.1.3...deep_causality_par-v0.1.4) - 2026-09-01
+
+### Fixed
+
+- *(deep_causality_par)* Applied a number of fixes and lint corrections.
+
+### Other
+
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+
 ## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_par-v0.1.1...deep_causality_par-v0.1.2) - 2026-07-14
 
 ### Added

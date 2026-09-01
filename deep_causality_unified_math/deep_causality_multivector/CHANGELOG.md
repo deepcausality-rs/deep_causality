@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.6.1...deep_causality_multivector-v0.7.0) - 2026-09-01
+
+### Fixed
+
+- *(unified_math)* [**breaking**] act on a review of the HKT law and constraint work
+- *(unified_math)* [**breaking**] rectify the HKT law tests and correct the defects they exposed
+- *(deep_causality_multivector)* [**breaking**] close an unsound HKT witness and remove the repo's last unsafe exemption
+- *(unified_math)* close E3, add Adjunction::Error, and clear a review batch
+- *(deep_causality_unified_math)* Applied a number of fixes and lint corrections.
+
+### Other
+
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated inbound links to archived notes
+- *(deep_causality_topology)* [**breaking**] separate geometry from payload and drop two unlawful instances
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.5.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.5.3...deep_causality_multivector-v0.5.4) - 2026-07-14
 
 ### Added

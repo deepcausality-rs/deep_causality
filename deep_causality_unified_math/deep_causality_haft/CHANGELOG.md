@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.4.3...deep_causality_haft-v0.5.0) - 2026-09-01
+
+### Added
+
+- *(deep_causality_haft)* formalize the lax monoidal laws in Lean
+- *(haft)* add the lax monoidal structure on endofunctors
+- *(unified_math)* HKT witnesses for the Cayley-Dickson types
+
+### Fixed
+
+- *(deep_causality_haft)* bumped up version;
+- *(unified_math)* [**breaking**] act on a review of the HKT law and constraint work
+- *(unified_math)* close E3, add Adjunction::Error, and clear a review batch
+- *(deep_causality_topology)* [**breaking**] close an unsound HKT witness and test the laws that hid it
+
+### Other
+
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- Applied lints and fixes.
+- *(bazel)* [**breaking**] rename build/ to bazel/
+- *(examples)* [**breaking**] move the haft examples into mathematics_examples
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated paths in docs of relocated crates across the repo
+- *(openspec)* Updated inbound links to archived notes
+- *(openspec)* Archived specs and notes on lax monoidal applicative
+- *(haft)* record why VecWitness has no Traversable, with the measurement
+- *(haft)* [**breaking**] drop the GAT where-clause from the HKT trait family
+- *(deep_causality_topology)* [**breaking**] separate geometry from payload and drop two unlawful instances
+- *(deep_causality_tensor)* delete the dead strict tensor witness
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.4.0...deep_causality_haft-v0.4.1) - 2026-07-14
 
 ### Added

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.1...deep_causality_uncertain-v0.5.2) - 2026-09-01
+
+### Other
+
+- *(bazel)* compile the 71 tests Cargo ran and Bazel never saw
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.4.0...deep_causality_uncertain-v0.5.0) - 2026-07-14
 
 ### Added

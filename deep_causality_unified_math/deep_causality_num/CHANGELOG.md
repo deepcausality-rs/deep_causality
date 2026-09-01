@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.4...deep_causality_num-v0.4.5) - 2026-09-01
+
+### Fixed
+
+- *(deep_causality_unified_math)* Applied a number of fixes and lint corrections.
+
+### Other
+
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(openspec)* Updated paths in docs of relocated crates across the repo
+- *(openspec)* Updated inbound links to archived notes
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.0...deep_causality_num-v0.4.1) - 2026-07-14
 
 ### Added

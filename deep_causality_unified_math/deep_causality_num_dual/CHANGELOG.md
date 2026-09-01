@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_dual-v0.1.6...deep_causality_num_dual-v0.2.0) - 2026-09-01
+
+### Added
+
+- *(num_dual)* close E2 — drop the Dual struct bound, add DualWitness
+
+### Fixed
+
+- *(unified_math)* [**breaking**] act on a review of the HKT law and constraint work
+
+### Other
+
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- Applied lints and fixes.
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated paths in docs of relocated crates across the repo
+- *(openspec)* Updated inbound links to archived notes
+- *(openspec)* Archived specs and notes on lax monoidal applicative
+- *(haft)* record why VecWitness has no Traversable, with the measurement
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_dual-v0.1.3...deep_causality_num_dual-v0.1.4) - 2026-07-14
 
 ### Other

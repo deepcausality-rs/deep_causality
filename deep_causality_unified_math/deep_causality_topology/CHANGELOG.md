@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.8.0...deep_causality_topology-v0.9.0) - 2026-09-01
+
+### Added
+
+- *(homology,topology,quantum)* [**breaking**] close the last five QCL gaps
+
+### Fixed
+
+- *(unified_math)* [**breaking**] act on a review of the HKT law and constraint work
+- *(unified_math)* [**breaking**] rectify the HKT law tests and correct the defects they exposed
+- *(deep_causality_multivector)* [**breaking**] close an unsound HKT witness and remove the repo's last unsafe exemption
+- *(unified_math)* close E3, add Adjunction::Error, and clear a review batch
+- *(deep_causality_topology)* [**breaking**] close an unsound HKT witness and test the laws that hid it
+- *(ci,scripts)* derive crate lists from the workspace manifest
+
+### Other
+
+- *(bazel)* compile the 71 tests Cargo ran and Bazel never saw
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated paths in docs of relocated crates across the repo
+- *(openspec)* Updated inbound links to archived notes
+- *(haft)* [**breaking**] drop the GAT where-clause from the HKT trait family
+- *(deep_causality_topology)* [**breaking**] separate geometry from payload and drop two unlawful instances
+- *(deep_causality_tensor)* delete the dead strict tensor witness
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.7.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.7.0...deep_causality_topology-v0.7.1) - 2026-07-14
 
 ### Fixed
