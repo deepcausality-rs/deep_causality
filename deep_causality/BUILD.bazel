@@ -133,7 +133,7 @@ rust_test_suite(
         "tests/types/causal_types/causaloid/*_tests.rs",
     ]),
     tags = [
-        "causaloid_graph_tests",
+        "causaloid_tests",
         "unit-test",
     ],
     visibility = ["//visibility:public"],
@@ -636,6 +636,24 @@ rust_test_suite(
     name = "csm_types_csm_parameter",
     srcs = glob([
         "tests/types/csm_types/csm_parameter/*/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "traits_observable",
+    srcs = glob([
+        "tests/traits/observable/*_tests.rs",
     ]),
     tags = [
         "unit-test",

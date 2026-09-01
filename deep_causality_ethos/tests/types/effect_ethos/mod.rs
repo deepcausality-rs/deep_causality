@@ -9,4 +9,4 @@ mod effect_ethos_linking_tests;
 mod effect_ethos_norm_tests;
 mod effect_ethos_verdict_tests;
 mod effect_ethos_verify_graph_tests;
-mod verify_graph_bug_repro;
+mod verify_graph_bug_repro_tests;

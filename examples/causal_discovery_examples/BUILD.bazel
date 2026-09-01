@@ -106,7 +106,23 @@ rust_binary(
     ),
 )
 
-# `example_ml_rca` is Cargo-only.
-# candle-core is not vendored for Bazel: it pulls ~74 further crates, including
-# onig_sys (Oniguruma C library) and esaxx-rs (C++), both built via `cc`. The example
-# stays a Cargo-only target: `cargo run -p causal_discovery_examples --example example_ml_rca`.
+# candle-core is a plain `[dependencies]` entry of this package, so rules_rs resolves it
+# from Cargo.lock and it builds under Bazel like any other crate: 132 transitive crates,
+# with onig_sys (Oniguruma C) and esaxx-rs (C++) compiled through their build scripts.
+# Cargo puts a package's dependencies on every `[[example]]`, so every target here carries
+# it whether or not it uses it; that is Cargo's own graph, not something this file widens.
+
+rust_binary(
+    name = "example_ml_rca",
+    srcs = glob(["ml/ml_rca/**/*.rs"]),
+    crate_root = "ml/ml_rca/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":causal_discovery_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

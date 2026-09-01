@@ -15,6 +15,6 @@ mod honeycomb_lattice_tests;
 #[cfg(test)]
 mod lattice_cell_tests;
 #[cfg(test)]
-mod lattice_complex_test;
+mod lattice_complex_tests;
 #[cfg(test)]
 mod lattice_specialized_tests;

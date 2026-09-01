@@ -67,3 +67,21 @@ rust_test_suite(
         normal_dev = True,
     ),
 )
+
+rust_test_suite(
+    name = "hom",
+    srcs = glob([
+        "tests/hom/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num_rational",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

@@ -139,7 +139,7 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "data_loader",
+    name = "types_data_loader",
     srcs = glob([
         "tests/types/data_loader/*_tests.rs",
     ]),

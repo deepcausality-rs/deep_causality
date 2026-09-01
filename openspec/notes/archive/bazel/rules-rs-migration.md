@@ -1,5 +1,13 @@
 # Migrating to rules_rs
 
+> **Archived, unmodified.** This is the plan as written before implementation, kept as the record
+> of what was intended and why. It was archived by a rename, so its predictions were never
+> reconciled against what shipped, and a few are wrong: `llvm_version` was already 22.1.8 when the
+> note claimed 22.1.6, the `toolchains.toolchain` example predates the `extra_rustc_flags` block
+> that silences the darwin `-rtlib` diagnostic, and Stage 2 ended up absorbing the dependency
+> derivation this note assigned to Stage 3. For current state read MODULE.bazel and the BUILD
+> files; they are the source of truth.
+
 The Bazel build works, but it pays for that with three standing costs: a fork of rules_rust pinned
 by commit, 94 MB of vendored crate sources that have to be re-rendered by hand, and a dependency
 graph written twice, once in Cargo.toml and once in BUILD.bazel. rules_rs removes the reason for

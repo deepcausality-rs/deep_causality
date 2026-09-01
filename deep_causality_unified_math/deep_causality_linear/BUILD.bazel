@@ -77,7 +77,7 @@ rust_test_suite(
         "tests/formalization_lean/*_tests.rs",
     ]),
     tags = [
-        "unit-test",
+        "lean-test",
     ],
     visibility = ["//visibility:public"],
     deps = [

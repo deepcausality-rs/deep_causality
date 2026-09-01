@@ -9,4 +9,4 @@ mod cell_complex_boundary_tests;
 #[cfg(test)]
 mod cell_complex_homology_tests;
 #[cfg(test)]
-mod cell_complex_test;
+mod cell_complex_tests;
