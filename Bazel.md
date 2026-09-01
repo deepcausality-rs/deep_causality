@@ -45,11 +45,13 @@ bazel test //deep_causality/... --test_tag_filters=reasoning_types_tests
 To see all the individual tests that a test_suite expands to, run:
 
 ```bash 
-   bazel query 'tests(//deep_causality/tests:ctx_space_time_types_tests)'
+   bazel query 'tests(//deep_causality:ctx_space_time_types_tests)'
 ```
 
 Bazel queries the targets, filters the tests, and only runs those tests containing the tags.
-Tests targets and tags are defined in the Build.bazel file in the test folder of each crate. 
+Test targets and tags are defined in the BUILD.bazel file of each crate, alongside the library
+they test. Test sources still live in `tests/`, but that directory is no longer its own Bazel
+package, so the labels carry no `/tests` segment. 
 
 
 To explore all dependencies of a specific crate, run:

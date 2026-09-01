@@ -1,24 +1,26 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 rust_library(
     name = "deep_causality_haft",
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_features = [
         "std",
         "alloc",
     ],
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "HAFT",
         "HKT",
         "utils",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -33,4 +35,172 @@ rust_doc_test(
     crate = ":deep_causality_haft",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "algebra",
+    srcs = glob([
+        "tests/algebra/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "effect_system",
+    srcs = glob([
+        "tests/effect_system/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "tests/extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "tests/formalization_lean/*_tests.rs",
+    ]),
+    # `free_monad_tests` is gated behind `alloc` (it uses the alloc-only `Free`/`FreeWitness`);
+    # set the feature so it is compiled and run under Bazel, not silently skipped.
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "lean-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "hkt",
+    srcs = glob([
+        "tests/hkt/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "iso",
+    srcs = glob([
+        "tests/iso/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "either",
+    srcs = glob([
+        "tests/either/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "utils",
+    srcs = glob([
+        "tests/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "alias",
+    srcs = glob([
+        "tests/alias/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_haft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

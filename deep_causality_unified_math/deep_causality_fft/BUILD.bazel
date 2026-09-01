@@ -1,25 +1,23 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 rust_library(
     name = "deep_causality_fft",
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_features = [
         "std",
     ],
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "fft",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        # Internal crates
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_par",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -34,4 +32,130 @@ rust_doc_test(
     crate = ":deep_causality_fft",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "tests/errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "utils",
+    srcs = glob([
+        "tests/utils/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_fft_plan",
+    srcs = glob([
+        "tests/types/fft_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_fft_plan_nd",
+    srcs = glob([
+        "tests/types/fft_plan_nd/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_rfft_plan",
+    srcs = glob([
+        "tests/types/rfft_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_rfft_plan_nd",
+    srcs = glob([
+        "tests/types/rfft_plan_nd/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_dct_plan",
+    srcs = glob([
+        "tests/types/dct_plan/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_fft",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

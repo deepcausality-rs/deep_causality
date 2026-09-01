@@ -1,34 +1,25 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rs//rs:rust_test.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test")
 
 rust_library(
     name = "deep_causality_cfd",
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_features = [
         "std",
     ],
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "cfd",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_file",
-        "//deep_causality_par",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_unified_math/deep_causality_fft",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_unified_math/deep_causality_num_dual",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-        "//deep_causality_unified_math/deep_causality_uncertain",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -60,8 +51,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_num",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -71,8 +65,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_num",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -82,9 +79,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -94,9 +93,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -106,9 +107,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -118,11 +121,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-        "//deep_causality_unified_math/deep_causality_uncertain",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -132,8 +135,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -143,9 +149,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -155,9 +163,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -167,10 +177,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -180,8 +191,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -191,10 +205,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -204,8 +219,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -215,8 +233,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -226,8 +247,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -237,8 +261,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -248,8 +275,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -259,8 +289,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -270,8 +303,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -281,8 +317,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -292,8 +331,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -303,8 +345,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -314,8 +359,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -325,9 +373,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -337,9 +387,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -349,8 +401,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -360,8 +415,11 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -371,6 +429,355 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":deep_causality_cfd",
-        "//deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# tests mirror the src tree: tests/coordinate/, tests/navigation/,
+# tests/solvers/, tests/tensor_bridge/, tests/theories/, tests/types/.
+#
+# Each subtree is registered through its own mod.rs aggregator and shares
+# parent-module helpers (e.g. `super::run_march` in types/flow/mod.rs), so it
+# is compiled as a test binary rooted at that mod.rs rather than as standalone
+# per-file tests. The `*_tests.rs` glob does not match the mod.rs aggregators,
+# so each suite lists the mod.rs crate roots it needs explicitly.
+#
+# Subtrees that contain sub-folders are split into one suite per sub-folder,
+# named `<folder>_<subfolder>` (e.g. `solvers_dec`, `types_flow`). The suites
+# are kept in alphabetical order, matching the source tree.
+# =============================================================================
+
+rust_test(
+    name = "coordinate",
+    srcs = glob([
+        "tests/coordinate/*_tests.rs",
+    ]) + [
+        "tests/coordinate/mod.rs",
     ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/coordinate/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "navigation",
+    srcs = glob([
+        "tests/navigation/*_tests.rs",
+    ]) + [
+        "tests/navigation/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/navigation/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "solvers_dec",
+    srcs = glob([
+        "tests/solvers/dec/**/*_tests.rs",
+    ]) + [
+        "tests/solvers/dec/dec_ns_solver/mod.rs",
+        "tests/solvers/dec/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/solvers/dec/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "solvers_dec_config",
+    srcs = glob([
+        "tests/solvers/dec_config/**/*_tests.rs",
+    ]) + [
+        "tests/solvers/dec_config/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/solvers/dec_config/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "solvers_qtt",
+    srcs = glob([
+        "tests/solvers/qtt/**/*_tests.rs",
+    ]) + [
+        "tests/solvers/qtt/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/solvers/qtt/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "tensor_bridge",
+    srcs = glob([
+        "tests/tensor_bridge/*_tests.rs",
+    ]) + [
+        "tests/tensor_bridge/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/tensor_bridge/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "theories",
+    srcs = glob([
+        "tests/theories/*_tests.rs",
+    ]) + [
+        "tests/theories/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/theories/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "traits",
+    srcs = glob([
+        "tests/traits/*_tests.rs",
+    ]) + [
+        "tests/traits/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/traits/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "types",
+    srcs = [
+        "tests/types/ambient_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/types/ambient_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "types_keyed_table",
+    srcs = [
+        "tests/types/keyed_table_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/types/keyed_table_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "types_evidence_class",
+    srcs = [
+        "tests/types/evidence_class_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/types/evidence_class_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "types_ladder_outcome",
+    srcs = [
+        "tests/types/ladder_outcome_tests.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/types/ladder_outcome_tests.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "types_flow",
+    srcs = glob([
+        "tests/types/flow/**/*_tests.rs",
+    ]) + [
+        "tests/types/flow/compressible_march_run/mod.rs",
+        "tests/types/flow/corridor/mod.rs",
+        "tests/types/flow/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/types/flow/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test(
+    name = "types_flow_config",
+    srcs = glob([
+        "tests/types/flow_config/**/*_tests.rs",
+    ]) + [
+        "tests/types/flow_config/mod.rs",
+    ],
+    crate_features = [
+        "std",
+    ],
+    crate_root = "tests/types/flow_config/mod.rs",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_cfd",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

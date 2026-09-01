@@ -1,4 +1,6 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 # `os-random` gates the Lund string-fragmentation kernels. A Cargo workspace build
 # already enables it (resolver-2 unification via `physics_examples` and
@@ -9,35 +11,19 @@ rust_library(
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_features = [
         "std",
         "alloc",
         "os-random",
     ],
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "physics",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_fft",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_unified_math/deep_causality_num_dual",
-        "//deep_causality_par",
-        # `os-random` feature dep
-        "//deep_causality_unified_math/deep_causality_rand",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-        "//deep_causality_unified_math/deep_causality_uncertain",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -62,4 +48,545 @@ rust_doc_test(
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+# =============================================================================
+# constants/* test suites
+#
+# The src tree is organized as src/constants/<type>/, so the tests mirror it
+# at tests/constants/<type>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "constants",
+    srcs = glob([
+        "tests/constants/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# error/* test suites
+#
+# The src tree is organized as src/error/<type>/, so the tests mirror it
+# at tests/error/<type>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "error",
+    srcs = glob([
+        "tests/error/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# kernels/* test suites
+#
+# The src tree is organized as src/kernels/<domain>/, so the tests mirror it
+# at tests/kernels/<domain>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "kernels_astro",
+    srcs = glob([
+        "tests/kernels/astro/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_chronometric",
+    srcs = glob([
+        "tests/kernels/chronometric/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_condensed",
+    srcs = glob([
+        "tests/kernels/condensed/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_dynamics",
+    srcs = glob([
+        "tests/kernels/dynamics/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_em",
+    srcs = glob([
+        "tests/kernels/em/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_fluids",
+    srcs = glob([
+        "tests/kernels/fluids/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_hypersonic",
+    srcs = glob([
+        "tests/kernels/hypersonic/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_materials",
+    srcs = glob([
+        "tests/kernels/materials/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_mhd",
+    srcs = glob([
+        "tests/kernels/mhd/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_nuclear",
+    srcs = glob([
+        "tests/kernels/nuclear/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_photonics",
+    srcs = glob([
+        "tests/kernels/photonics/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_propulsion",
+    srcs = glob([
+        "tests/kernels/propulsion/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_quantum",
+    srcs = glob([
+        "tests/kernels/quantum/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_relativity",
+    srcs = glob([
+        "tests/kernels/relativity/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_thermodynamics",
+    srcs = glob([
+        "tests/kernels/thermodynamics/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "kernels_waves",
+    srcs = glob([
+        "tests/kernels/waves/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# quantities/* test suites
+#
+# The src tree is organized as src/quantities/<type>/, so the tests mirror it
+# at tests/quantities/<type>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "quantities",
+    srcs = glob([
+        "tests/quantities/*/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# theories/* test suites
+#
+# The src tree is organized as src/theories/<type>/, so the tests mirror it
+# at tests/theories/<type>/.
+# =============================================================================
+
+rust_test_suite(
+    name = "theories_electromagnetism",
+    srcs = glob([
+        "tests/theories/electromagnetism/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "theories_electroweak",
+    srcs = glob([
+        "tests/theories/electroweak/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "theories_general_relativity",
+    srcs = glob([
+        "tests/theories/general_relativity/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "theories_weak_force",
+    srcs = glob([
+        "tests/theories/weak_force/*_tests.rs",
+    ]),
+    crate_features = [
+        "std",
+        "alloc",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_physics",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

@@ -21,7 +21,7 @@ git_override(
 )
 
 ###############################################################################
-# Rules Rust
+# rules_rs for Rust
 # https://github.com/hermeticbuild/rules_rs
 ###############################################################################
 rules_rs_rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")

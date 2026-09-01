@@ -1,18 +1,21 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 rust_library(
     name = "ultragraph",
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "data_structures",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        # External crates
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -38,5 +41,47 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":ultragraph",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "error_tests",
+    srcs = glob([
+        "tests/errors/*_tests.rs",
+    ]),
+    tags = [
+        "ultragraph",
+        "unit-test",
     ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":ultragraph",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ultra_graph_tests",
+    srcs = glob([
+        "tests/types/ultra_graph/*_tests.rs",
+    ]),
+    tags = [
+        "ultragraph",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":ultragraph",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

@@ -1,4 +1,6 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
 
 rust_library(
     name = "causal_discovery_examples",
@@ -7,10 +9,11 @@ rust_library(
         "shared/cdl_data.rs",
         "shared/paths.rs",
     ],
+    aliases = aliases(),
     crate_root = "no_lib.rs",
+    lint_config = lint_config(),
     visibility = ["//visibility:public"],
-    deps = [
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_binary(
@@ -19,9 +22,13 @@ rust_binary(
     crate_root = "algos/mrmr/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algorithms",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":causal_discovery_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -30,9 +37,13 @@ rust_binary(
     crate_root = "algos/mrmr_cdl/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algorithms",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":causal_discovery_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -41,9 +52,13 @@ rust_binary(
     crate_root = "algos/surd/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_algorithms",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":causal_discovery_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -52,10 +67,13 @@ rust_binary(
     crate_root = "cdl/surd_discovery/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_discovery_examples",
-        "//deep_causality_discovery",
-        "//deep_causality_unified_math/deep_causality_num",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -64,9 +82,13 @@ rust_binary(
     crate_root = "cdl/brcd_discovery/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_discovery_examples",
-        "//deep_causality_discovery",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -75,10 +97,13 @@ rust_binary(
     crate_root = "cdl/brcd_boss_discovery/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_discovery_examples",
-        "//deep_causality_discovery",
-        "//deep_causality_unified_math/deep_causality_num",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 # `example_ml_rca` is Cargo-only.

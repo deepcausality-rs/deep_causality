@@ -1,24 +1,20 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 rust_library(
     name = "deep_causality_tensor",
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "data_structures",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_ast",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_unified_math/deep_causality_num_dual",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -33,4 +29,59 @@ rust_doc_test(
     crate = ":deep_causality_tensor",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "tests/errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_tensor",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "extensions",
+    srcs = glob([
+        "tests/extensions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_tensor",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "tests/types/causal_tensor/*_tests.rs",
+        "tests/types/causal_tensor_network/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_tensor",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

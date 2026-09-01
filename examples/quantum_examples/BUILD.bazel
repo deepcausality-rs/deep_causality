@@ -1,16 +1,16 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 
 rust_binary(
     name = "quantum_counterfactual",
     srcs = glob(["quantum_counterfactual/**/*.rs"]),
     crate_root = "quantum_counterfactual/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -18,11 +18,11 @@ rust_binary(
     srcs = glob(["quantum_geometric_tensor/**/*.rs"]),
     crate_root = "quantum_geometric_tensor/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -30,12 +30,11 @@ rust_binary(
     srcs = glob(["gauge_electroweak/**/*.rs"]),
     crate_root = "gauge_electroweak/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -43,12 +42,11 @@ rust_binary(
     srcs = glob(["topological_insulator/**/*.rs"]),
     crate_root = "topological_insulator/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -56,10 +54,11 @@ rust_binary(
     srcs = glob(["hopf_fibration_multivector/**/*.rs"]),
     crate_root = "hopf_fibration_multivector/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -67,12 +66,11 @@ rust_binary(
     srcs = glob(["ikkt_matrix_model/**/*.rs"]),
     crate_root = "ikkt_matrix_model/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_quantum",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -80,10 +78,9 @@ rust_binary(
     srcs = glob(["qcm_freeze_check/**/*.rs"]),
     crate_root = "qcm_freeze_check/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_quantum",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

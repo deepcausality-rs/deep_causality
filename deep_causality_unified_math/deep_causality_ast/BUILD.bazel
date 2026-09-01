@@ -1,16 +1,19 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 package(default_visibility = ["//visibility:public"])
 
 rust_library(
     name = "deep_causality_ast",
     srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "data_structures",
     ],
-    deps = [
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -25,4 +28,22 @@ rust_doc_test(
     crate = ":deep_causality_ast",
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "const_tree",
+    srcs = glob([
+        "tests/const_tree/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_ast",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )
