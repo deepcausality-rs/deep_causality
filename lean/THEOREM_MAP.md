@@ -259,7 +259,7 @@ Rust witnesses in `deep_causality_quantum/tests/formalization_lean/{partial_trac
 | id | statement | Lean | Lean location | Rust witness | Test |
 |---|---|---|---|---|---|
 | `quantum.partial_trace.add` | `Tr_B(M+N) = Tr_B M + Tr_B N` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_add` | `partial_trace_tests.rs :: test_partial_trace_linearity` | ✓ |
-| `quantum.partial_trace.sub` | `Tr_B(M−N) = Tr_B M − Tr_B N` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_sub` | `partial_trace_tests.rs :: test_partial_trace_transports_the_commutator_exactly` | ✓ |
+| `quantum.partial_trace.sub` | `Tr_B(M−N) = Tr_B M − Tr_B N` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_sub` | `partial_trace_tests.rs :: test_partial_trace_linearity` | ✓ |
 | `quantum.partial_trace.smul` | `Tr_B(c•M) = c•Tr_B M` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_smul` | `partial_trace_tests.rs :: test_partial_trace_linearity` | ✓ |
 | `quantum.partial_trace.kronecker` | `Tr_B(X⊗Y) = Tr(Y)•X` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_kron` | `partial_trace_tests.rs :: test_partial_trace_product_identity` | ✓ |
 | `quantum.partial_trace.bimodule` | `Tr_B((Z⊗1)·M) = Z·Tr_B M` | proved | `Quantum/PartialTrace.lean :: partialTraceRight_bimodule` | `partial_trace_tests.rs :: test_partial_trace_bimodule_law` | ✓ |

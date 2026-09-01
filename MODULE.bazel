@@ -10,39 +10,6 @@ bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
 bazel_dep(name = "llvm", version = "0.8.17")
 
-###############################################################################
-# Vendored module sources (thirdparty/bzlmod/<module>)
-
-# IMPORTANT: local_path_override pins the module at the vendored version and takes
-# it out of version resolution. If a future dependency needs a newer
-# bazel_skylib or platforms, MVS cannot resolve it -- re-vendor instead.
-# Re-vendor with: scripts/vendor_modules.sh
-###############################################################################
-local_path_override(
-    module_name = "aspect_bazel_lib",
-    path = "thirdparty/bzlmod/aspect_bazel_lib",
-)
-
-local_path_override(
-    module_name = "bazel_skylib",
-    path = "thirdparty/bzlmod/bazel_skylib",
-)
-
-local_path_override(
-    module_name = "platforms",
-    path = "thirdparty/bzlmod/platforms",
-)
-
-local_path_override(
-    module_name = "toolchains_buildbuddy",
-    path = "thirdparty/bzlmod/toolchains_buildbuddy",
-)
-
-local_path_override(
-    module_name = "llvm",
-    path = "thirdparty/bzlmod/llvm",
-)
-
 # Pinned by commit until the module is published to the
 # Bazel Central Registry; at that point this becomes a plain bazel_dep
 bazel_dep(name = "rules_lean", version = "0.1.0")

@@ -94,6 +94,7 @@ fn test_partial_trace_product_identity() {
 
 // THEOREM_MAP: quantum.partial_trace.add
 // THEOREM_MAP: quantum.partial_trace.smul
+// THEOREM_MAP: quantum.partial_trace.sub
 #[test]
 fn test_partial_trace_linearity() {
     // Lean: partialTraceRight_add, partialTraceRight_smul —
@@ -106,6 +107,14 @@ fn test_partial_trace_linearity() {
     let rhs = scale(&partial_trace(&m, &[2, 2], &[1]).unwrap(), alpha)
         + partial_trace(&n, &[2, 2], &[1]).unwrap();
     assert!(max_abs_diff(&lhs, &rhs) < 1e-12);
+
+    // Lean: partialTraceRight_sub — Tr_B(M − N) = Tr_B(M) − Tr_B(N). The subtractive form is
+    // the step that carries the trace through a commutator, so it is witnessed on its own
+    // rather than left to follow from additivity.
+    let sub_lhs = partial_trace(&(&m - &n), &[2, 2], &[1]).unwrap();
+    let sub_rhs =
+        &partial_trace(&m, &[2, 2], &[1]).unwrap() - &partial_trace(&n, &[2, 2], &[1]).unwrap();
+    assert!(max_abs_diff(&sub_lhs, &sub_rhs) < 1e-12);
 }
 
 // THEOREM_MAP: quantum.partial_trace.bimodule
