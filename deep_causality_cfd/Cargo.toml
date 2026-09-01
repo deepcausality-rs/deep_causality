@@ -62,78 +62,51 @@ parallel = [
 ]
 
 [dependencies.deep_causality_physics]
-path = "../deep_causality_physics"
-default-features = false
-version = "0.8"
+workspace = true
 
 [dependencies.deep_causality_calculus]
-path = "../deep_causality_unified_math/deep_causality_calculus"
-default-features = false
-version = "0.1"
+workspace = true
 
 [dependencies.deep_causality_core]
-path = "../deep_causality_core"
-version = "0.11"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_file]
-path = "../deep_causality_file"
-version = "0.1"
+workspace = true
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_unified_math/deep_causality_haft"
-default-features = false
-version = "0.4"
+workspace = true
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_unified_math/deep_causality_num"
-default-features = false
-version = "0.4"
+workspace = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_unified_math/deep_causality_algebra"
-default-features = false
-version = "0.4"
+workspace = true
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_unified_math/deep_causality_num_complex"
-default-features = false
-version = "0.1"
+workspace = true
 
 [dependencies.deep_causality_num_dual]
-path = "../deep_causality_unified_math/deep_causality_num_dual"
-default-features = false
-version = "0.1"
+workspace = true
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_unified_math/deep_causality_tensor"
-default-features = false
-version = "0.5"
+workspace = true
 
-# Std-only: the uncertain-inflow zone consumes `MaybeUncertain<R>` and its global
-# sample cache. Gated behind `std` so the `alloc`-only build stays uncertain-free.
 [dependencies.deep_causality_uncertain]
-path = "../deep_causality_unified_math/deep_causality_uncertain"
-version = "0.5"
+workspace = true
 optional = true
 
 [dependencies.deep_causality_topology]
-path = "../deep_causality_unified_math/deep_causality_topology"
-version = "0.9"
+workspace = true
 
 [dependencies.deep_causality_par]
-path = "../deep_causality_par"
-default-features = false
-version = "0.1"
+workspace = true
 
 [dependencies.deep_causality_fft]
-path = "../deep_causality_unified_math/deep_causality_fft"
-default-features = false
-version = "0.1"
+workspace = true
 
 [dev-dependencies]
-criterion = { version = "0.8" }
-tempfile = { version = "3", default-features = false }
+criterion = { workspace = true }
+tempfile = { workspace = true }
 
 [[bench]]
 name = "bench_dec_ns_march"

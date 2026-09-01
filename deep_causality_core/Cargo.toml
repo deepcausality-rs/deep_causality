@@ -30,7 +30,7 @@ alloc = ["deep_causality_haft/alloc"]
 no-std = ["alloc", "deep_causality_haft/no-std"]
 
 [dependencies]
-deep_causality_haft = { path = "../deep_causality_unified_math/deep_causality_haft", version = "0.4", default-features = false }
+deep_causality_haft = { workspace = true }
 
 [lints]
 workspace = true

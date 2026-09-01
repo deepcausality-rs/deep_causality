@@ -1,17 +1,15 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
 
 rust_library(
     name = "avionics_examples",
     srcs = glob(["src/**"]),
+    aliases = aliases(),
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_binary(
@@ -20,11 +18,13 @@ rust_binary(
     crate_root = "cfd/turbulence_flow/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":avionics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -33,11 +33,13 @@ rust_binary(
     crate_root = "navigation/magnav/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":avionics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -46,10 +48,13 @@ rust_binary(
     crate_root = "control/geometric_tcas/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":avionics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -58,10 +63,13 @@ rust_binary(
     crate_root = "control/hypersonic_2t/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":avionics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -70,9 +78,13 @@ rust_binary(
     crate_root = "control/flight_envelope_monitor/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality",
-        "//deep_causality_core",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":avionics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -81,13 +93,13 @@ rust_binary(
     crate_root = "navigation/ins_gnss_blackout/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_core",
-        "//deep_causality_file",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_physics",
-        "//thirdparty/crates:chrono",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -96,12 +108,13 @@ rust_binary(
     crate_root = "cfd/plasma_blackout/corridor/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_cfd",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -110,10 +123,13 @@ rust_binary(
     crate_root = "cfd/plasma_blackout/weather/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_cfd",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -122,11 +138,13 @@ rust_binary(
     crate_root = "cfd/plasma_blackout/retropulsion/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_cfd",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -135,11 +153,13 @@ rust_binary(
     crate_root = "cfd/flight_envelope_placard/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_cfd",
-        "//deep_causality_physics",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -148,10 +168,13 @@ rust_binary(
     crate_root = "cfd/nozzle_operating_map/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_cfd",
-        "//deep_causality_physics",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -160,8 +183,11 @@ rust_binary(
     crate_root = "cfd/viv_resonance_margin/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":avionics_examples",
-        "//deep_causality_cfd",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

@@ -8,7 +8,8 @@ bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
-bazel_dep(name = "llvm", version = "0.8.17")
+bazel_dep(name = "llvm", version = "0.8.19")
+bazel_dep(name = "rules_rs", version = "0.0.107")
 
 # Pinned by commit until the module is published to the
 # Bazel Central Registry; at that point this becomes a plain bazel_dep
@@ -20,38 +21,49 @@ git_override(
 )
 
 ###############################################################################
-# Rules Rust
-# Patched in a fork to fix doc-test issue with hermetic LLVM
-bazel_dep(name = "rules_rust", version = "0.73.0")
-
-# Remove when https://github.com/bazelbuild/rules_rust/pull/4220
-# lands and an updated version of rules_rust becomes available.
-git_override(
-    module_name = "rules_rust",
-    commit = "47a9fd98b40798e32183dc7d9051d5d9f35dca75",
-    remote = "https://github.com/marvin-hansen/rules_rust.git",
-)
-
+# rules_rs for Rust
+# https://github.com/hermeticbuild/rules_rs
 ###############################################################################
-# Rust toolchain
-# https://github.com/bazelbuild/rules_rust/releases
-###############################################################################
+rules_rs_rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
+use_repo(rules_rs_rules_rust, "rules_rust")
+
 RUST_EDITION = "2024"
 
 RUST_VERSION = "1.98.0"
 
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
-rust.toolchain(
+toolchains = use_extension("@rules_rs//rs/toolchains:module_extension.bzl", "toolchains")
+toolchains.toolchain(
     edition = RUST_EDITION,
-    extra_target_triples = [
-        "aarch64-unknown-linux-gnu",
-        "x86_64-unknown-linux-gnu",
-    ],
-    versions = [RUST_VERSION],
+    # Silences one clang driver diagnostic on every macOS link:
+    #   clang++: argument unused during compilation: '-rtlib=compiler-rt'
+    extra_rustc_flags = {
+        "aarch64-apple-darwin": ["-Clink-arg=-Wno-unused-command-line-argument"],
+        "x86_64-apple-darwin": ["-Clink-arg=-Wno-unused-command-line-argument"],
+    },
+    version = RUST_VERSION,
 )
-use_repo(rust, "rust_toolchains")
+use_repo(toolchains, "default_rust_toolchains")
 
-register_toolchains("@rust_toolchains//:all")
+register_toolchains("@default_rust_toolchains//...")
+
+# The triples for the RESOLVED dependency graph. rules_rs evaluates each crate's target-specific
+# dependencies once per triple, so a `[target.'cfg(unix)'.dependencies]` entry is
+# present in the graph whichever of these machines runs the build.
+RUST_PLATFORMS = [
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-unknown-linux-gnu",
+]
+
+crate = use_extension("@rules_rs//rs:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lock = "//:Cargo.lock",
+    cargo_toml = "//:Cargo.toml",
+    generate_lint_config = True,
+    platform_triples = RUST_PLATFORMS,
+)
+use_repo(crate, "crates")
 
 ###############################################################################
 # Hermetic LLVM toolchain
@@ -61,21 +73,41 @@ register_toolchains("@rust_toolchains//:all")
 llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 
 # llvm_version matches the one Rust uses in the version declared in the previous step.
-llvm.version(llvm_version = "22.1.6")
+llvm.version(llvm_version = "22.1.8")
 use_repo(llvm, "llvm-project")
 
-toolchain = use_extension("@llvm//extensions:toolchain.bzl", "toolchain")
-toolchain.exec(
-    arch = "x86_64",
-    os = "linux",
+# The macOS sysroot. The web.archive entry is a fallback in case the Apple URL returns 503.
+osx = use_extension("@llvm//extensions:osx.bzl", "osx")
+osx.from_archive(
+    sha256 = "5f044578cd78a3a9b9c965a42d56bad609ee5d252e1d4e6aa7c42fc3f35fee7b",
+    strip_prefix = "Payload/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk",
+    type = "pkg",
+    urls = [
+        "https://swcdn.apple.com/content/downloads/09/08/047-91568-A_Y1CFZWQCD4/4xekpyz43i26dbp4enxfro8eb1q7wiujh5/CLTools_macOSNMOS_SDK.pkg",
+        "https://web.archive.org/web/20260512015547id_/https://swcdn.apple.com/content/downloads/09/08/047-91568-A_Y1CFZWQCD4/4xekpyz43i26dbp4enxfro8eb1q7wiujh5/CLTools_macOSNMOS_SDK.pkg",
+    ],
 )
-toolchain.exec(
-    arch = "aarch64",
-    os = "linux",
-)
-use_repo(toolchain, "llvm_toolchains")
+osx.frameworks(names = [
+    "System",
+    "CoreFoundation",
+    "Foundation",
+    "Kernel",
+    "OSLog",
+    "Security",
+    "SystemConfiguration",
+])
 
-register_toolchains("@llvm_toolchains//:all")
+# `@llvm//toolchain:all`, not a per-exec-platform `@llvm_toolchains`: the repo
+# declares one cc toolchain per (exec, target) pair, each carrying its own
+# constraints, so Bazel selects by platform.
+register_toolchains("@llvm//toolchain:all")
+
+# --- RBE Toolchain and platforms  ----------------------------------
+# The remote platform (`linux_x86_64_remote`) is not registered here: .bazelrc sets it.
+register_execution_platforms(
+    "//bazel/platforms:linux-x86_64",
+    "//bazel/platforms:linux-aarch64",
+)
 
 ###############################################################################
 # BuildBuddy Rules for Remote build

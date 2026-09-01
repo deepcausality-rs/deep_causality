@@ -1,14 +1,16 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 
 rust_binary(
     name = "bernoulli_flow_network",
     srcs = glob(["bernoulli_flow_network/**/*.rs"]),
     crate_root = "bernoulli_flow_network/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -16,10 +18,11 @@ rust_binary(
     srcs = glob(["carnot_cycle_engine/**/*.rs"]),
     crate_root = "carnot_cycle_engine/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -27,13 +30,11 @@ rust_binary(
     srcs = glob(["event_horizon_probe/**/*.rs"]),
     crate_root = "event_horizon_probe/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -41,14 +42,11 @@ rust_binary(
     srcs = glob(["gauge_gr/**/*.rs"]),
     crate_root = "gauge_gr/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_dual",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -56,11 +54,11 @@ rust_binary(
     srcs = glob(["gauge_lattice_u1_2d/**/*.rs"]),
     crate_root = "gauge_lattice_u1_2d/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -68,11 +66,11 @@ rust_binary(
     srcs = glob(["gauge_em/**/*.rs"]),
     crate_root = "gauge_em/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -80,11 +78,11 @@ rust_binary(
     srcs = glob(["gauge_weak_force/**/*.rs"]),
     crate_root = "gauge_weak_force/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -92,13 +90,11 @@ rust_binary(
     srcs = glob(["geometric_tilt/**/*.rs"]),
     crate_root = "geometric_tilt/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -106,10 +102,11 @@ rust_binary(
     srcs = glob(["gravitational_wave/**/*.rs"]),
     crate_root = "gravitational_wave/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -117,13 +114,11 @@ rust_binary(
     srcs = glob(["grmhd/**/*.rs"]),
     crate_root = "grmhd/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -131,13 +126,11 @@ rust_binary(
     srcs = glob(["laser_resonator_stability/**/*.rs"]),
     crate_root = "laser_resonator_stability/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_physics",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -145,13 +138,11 @@ rust_binary(
     srcs = glob(["maxwell/**/*.rs"]),
     crate_root = "maxwell/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_physics",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -159,15 +150,9 @@ rust_binary(
     srcs = glob(["multi_physics_pipeline/**/*.rs"]),
     crate_root = "multi_physics_pipeline/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_physics",
-        "//deep_causality_quantum",
-        "//deep_causality_unified_math/deep_causality_rand",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

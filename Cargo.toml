@@ -24,11 +24,66 @@ members = [
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.97.1"
+rust-version = "1.98.0"
 license = "MIT"
 
 [workspace.dependencies]
-# Empty
+# Declared once here and inherited by every member with `{ workspace = true }`.
+# `default-features = false` appears wherever ANY member needs defaults off. A member's
+# own `default-features = false` is IGNORED unless the workspace entry sets it too, so
+# members that want the default set opt in with `features = ["default"]`.
+#
+# Internal constraints stay at two digits (`0.11`, not `0.11.1`) so a local patch release is
+# picked up without touching this file. release-plz preserves whatever precision it finds, so
+# a three-digit entry here would keep regenerating three-digit pins.
+#
+# Members never restate a version. They inherit with `{ workspace = true }`, adding only
+# `features` or `optional` where they differ.
+
+# Internal crates
+deep_causality = { path = "deep_causality", version = "0.15" }
+deep_causality_algebra = { path = "deep_causality_unified_math/deep_causality_algebra", version = "0.4", default-features = false }
+deep_causality_algorithms = { path = "deep_causality_algorithms", version = "0.4" }
+deep_causality_ast = { path = "deep_causality_unified_math/deep_causality_ast", version = "0.1", default-features = false }
+deep_causality_calculus = { path = "deep_causality_unified_math/deep_causality_calculus", version = "0.1", default-features = false }
+deep_causality_cfd = { path = "deep_causality_cfd", version = "0.1" }
+deep_causality_core = { path = "deep_causality_core", version = "0.11", default-features = false }
+deep_causality_data_structures = { path = "deep_causality_data_structures", version = "0.10" }
+deep_causality_discovery = { path = "deep_causality_discovery", version = "0.5" }
+deep_causality_ethos = { path = "deep_causality_ethos", version = "0.2" }
+deep_causality_fft = { path = "deep_causality_unified_math/deep_causality_fft", version = "0.1", default-features = false }
+deep_causality_file = { path = "deep_causality_file", version = "0.1" }
+deep_causality_haft = { path = "deep_causality_unified_math/deep_causality_haft", version = "0.4", default-features = false }
+deep_causality_homology = { path = "deep_causality_unified_math/deep_causality_homology", version = "0.1", default-features = false }
+deep_causality_linear = { path = "deep_causality_unified_math/deep_causality_linear", version = "0.1", default-features = false }
+deep_causality_metric = { path = "deep_causality_unified_math/deep_causality_metric", version = "0.2", default-features = false }
+deep_causality_multivector = { path = "deep_causality_unified_math/deep_causality_multivector", version = "0.6", default-features = false }
+deep_causality_num = { path = "deep_causality_unified_math/deep_causality_num", version = "0.4", default-features = false }
+deep_causality_num_complex = { path = "deep_causality_unified_math/deep_causality_num_complex", version = "0.1", default-features = false }
+deep_causality_num_dual = { path = "deep_causality_unified_math/deep_causality_num_dual", version = "0.1", default-features = false }
+deep_causality_num_rational = { path = "deep_causality_unified_math/deep_causality_num_rational", version = "0.1", default-features = false }
+deep_causality_par = { path = "deep_causality_par", version = "0.1", default-features = false }
+deep_causality_physics = { path = "deep_causality_physics", version = "0.8", default-features = false }
+deep_causality_quantum = { path = "deep_causality_quantum", version = "0.2" }
+deep_causality_rand = { path = "deep_causality_unified_math/deep_causality_rand", version = "0.2" }
+deep_causality_tensor = { path = "deep_causality_unified_math/deep_causality_tensor", version = "0.5", default-features = false }
+deep_causality_topology = { path = "deep_causality_unified_math/deep_causality_topology", version = "0.9" }
+deep_causality_uncertain = { path = "deep_causality_unified_math/deep_causality_uncertain", version = "0.5" }
+ultragraph = { path = "ultragraph", version = "0.9" }
+
+# External crates
+candle-core = { version = "0.11" }
+chrono = { version = "0.4" }
+criterion = { version = "0.8" }
+csv = { version = "1.4", default-features = false }
+getrandom = { version = "0.4" }
+libm = { version = "0.2" }
+parquet = { version = "59", default-features = false }
+rayon = { version = "1.12" }
+rusty-fork = { version = "0.3" }
+tempfile = { version = "3", default-features = false }
+tokio = { version = "1" }
+
 
 # Repo-wide lint policy.
 # Member crates opt in with `[lints] workspace = true`.

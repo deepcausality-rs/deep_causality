@@ -5,5 +5,5 @@
 mod cpdag_cache_tests;
 mod cpdag_csv_tests;
 mod csv_data_loader_tests;
-mod csv_exclude_bug_repro;
+mod csv_exclude_bug_repro_tests;
 mod parquet_data_loader_tests;

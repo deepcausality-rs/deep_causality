@@ -48,62 +48,58 @@ parallel = [
 ]
 
 [dependencies.deep_causality_calculus]
-path = "../deep_causality_unified_math/deep_causality_calculus"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_core]
-path = "../deep_causality_core"
-version = "0.11.1"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_unified_math/deep_causality_haft"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_metric]
-path = "../deep_causality_unified_math/deep_causality_metric"
-version = "0.2"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_multivector]
-path = "../deep_causality_unified_math/deep_causality_multivector"
-version = "0.6"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_unified_math/deep_causality_num"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_unified_math/deep_causality_algebra"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_unified_math/deep_causality_num_complex"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_num_dual]
-path = "../deep_causality_unified_math/deep_causality_num_dual"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_rand]
-path = "../deep_causality_unified_math/deep_causality_rand"
-version = "0.2"
+workspace = true
 optional = true
 
 [dependencies.deep_causality_linear]
-path = "../deep_causality_unified_math/deep_causality_linear"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_unified_math/deep_causality_tensor"
-version = "0.5"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_topology]
-path = "../deep_causality_unified_math/deep_causality_topology"
-version = "0.9"
+workspace = true
 
 [dependencies.deep_causality_par]
-path = "../deep_causality_par"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [lints]
 workspace = true

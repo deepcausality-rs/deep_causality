@@ -10,10 +10,10 @@ publish = false
 path = "no_lib.rs"
 
 [dependencies]
-deep_causality_core = { path = "../../deep_causality_core" }
-deep_causality_multivector = { path = "../../deep_causality_unified_math/deep_causality_multivector" }
-deep_causality_topology = { path = "../../deep_causality_unified_math/deep_causality_topology" }
-deep_causality_tensor = { path = "../../deep_causality_unified_math/deep_causality_tensor" }
+deep_causality_core = { workspace = true, features = ["default"] }
+deep_causality_multivector = { workspace = true, features = ["default"] }
+deep_causality_topology = { workspace = true }
+deep_causality_tensor = { workspace = true, features = ["default"] }
 
 [[example]]
 name = "hyperlens_example"

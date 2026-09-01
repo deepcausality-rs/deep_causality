@@ -1,13 +1,16 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 
 rust_binary(
     name = "hyperlens_example",
     srcs = glob(["hyperlens/**/*.rs"]),
     crate_root = "hyperlens/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -15,9 +18,9 @@ rust_binary(
     srcs = glob(["structural_health_monitor/**/*.rs"]),
     crate_root = "structural_health_monitor/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

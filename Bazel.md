@@ -45,11 +45,13 @@ bazel test //deep_causality/... --test_tag_filters=reasoning_types_tests
 To see all the individual tests that a test_suite expands to, run:
 
 ```bash 
-   bazel query 'tests(//deep_causality/tests:ctx_space_time_types_tests)'
+   bazel query 'tests(//deep_causality:ctx_space_time_types_tests)'
 ```
 
 Bazel queries the targets, filters the tests, and only runs those tests containing the tags.
-Tests targets and tags are defined in the Build.bazel file in the test folder of each crate. 
+Test targets and tags are defined in the BUILD.bazel file of each crate, alongside the library
+they test. Test sources still live in `tests/`, but that directory is no longer its own Bazel
+package, so the labels carry no `/tests` segment. 
 
 
 To explore all dependencies of a specific crate, run:
@@ -67,13 +69,14 @@ To find all reverse dependencies, i.e. packages that depends on a specific crate
 If you were to refactor the dcl_data_structures crate, the rdepds tell you
 upfront were its used and thus helps you to estimate upfront the blast radius of braking changes.
 
-To query available vendored external dependencies with Bazel, run:
+To query available external dependencies with Bazel, run:
 
 ```bash 
-    bazel query "kind('rust_library', //thirdparty/...)"
+    bazel query "kind('rust_library', @crates//...)"
 ```
 
-Note, these vendored external dependencies are shared across all crates.
+External crates are resolved from the registry by rules_rs and shared across all crates.
+They are pinned by `Cargo.lock`; there is no vendored source tree.
 
 To visualize all dependencies of the top level crate deep_causality, run
 

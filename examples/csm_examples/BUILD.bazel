@@ -1,13 +1,16 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 
 rust_binary(
     name = "csm_example",
     srcs = glob(["csm_basic/**/*.rs"]),
     crate_root = "csm_basic/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -15,9 +18,11 @@ rust_binary(
     srcs = glob(["csm_context/**/*.rs"]),
     crate_root = "csm_context/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -25,8 +30,9 @@ rust_binary(
     srcs = glob(["csm_effect_ethos/**/*.rs"]),
     crate_root = "csm_effect_ethos/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality",
-        "//deep_causality_ethos",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

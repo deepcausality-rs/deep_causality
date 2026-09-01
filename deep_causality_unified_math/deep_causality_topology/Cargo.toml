@@ -43,63 +43,49 @@ parallel = [
 ]
 
 [dependencies.rayon]
-version = "1.12"
+workspace = true
 optional = true
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_num_complex"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_par]
-path = "../../deep_causality_par"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_fft]
-path = "../deep_causality_fft"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_rand]
-path = "../deep_causality_rand"
-version = "0.2"
+workspace = true
 
 [dependencies.deep_causality_homology]
-path = "../deep_causality_homology"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_linear]
-path = "../deep_causality_linear"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_haft"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_tensor"
-version = "0.5"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_metric]
-path = "../deep_causality_metric"
-version = "0.2"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_multivector]
-path = "../deep_causality_multivector"
-version = "0.6"
-
+workspace = true
+features = ["default"]
 
 [lints]
 workspace = true

@@ -1,3 +1,0 @@
-load("//toolchain/bootstrap:bootstrap_binary.bzl", "bootstrap_binaries")
-
-bootstrap_binaries()

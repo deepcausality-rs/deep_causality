@@ -1,11 +1,14 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 
 rust_binary(
     name = "starter_example",
     srcs = glob(["src/**/*.rs"]),
     crate_root = "src/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

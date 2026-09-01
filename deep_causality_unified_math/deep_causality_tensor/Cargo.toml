@@ -32,44 +32,29 @@ alloc = []
 no-std = ["alloc", "deep_causality_ast/no-std", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_num_dual/no-std", "deep_causality_linear/no-std"]
 
 [dependencies.deep_causality_ast]
-path = "../deep_causality_ast"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_haft"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_num_complex"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_dual]
-path = "../deep_causality_num_dual"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_linear]
-path = "../deep_causality_linear"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dev-dependencies]
-criterion = { version = "0.8" }
-deep_causality_rand = { path = "../deep_causality_rand" }
-
+criterion = { workspace = true }
+deep_causality_rand = { workspace = true }
 
 [[bench]]
 name = "bench_causal_tensor"

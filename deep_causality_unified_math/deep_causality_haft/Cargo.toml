@@ -32,9 +32,7 @@ alloc = []
 no-std = ["alloc", "deep_causality_algebra/no-std"]
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_algebra"
-version = "0.4"
-default-features = false
+workspace = true
 
 [lints]
 workspace = true

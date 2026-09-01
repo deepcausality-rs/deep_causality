@@ -42,68 +42,44 @@ qcm = ["std", "dep:deep_causality"]
 qpu = ["dep:deep_causality_uncertain"]
 
 [dependencies.deep_causality]
-path = "../deep_causality"
-version = "0.15"
+workspace = true
 optional = true
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_unified_math/deep_causality_algebra"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_core]
-path = "../deep_causality_core"
-version = "0.11.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_homology]
-path = "../deep_causality_unified_math/deep_causality_homology"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_haft]
-path = "../deep_causality_unified_math/deep_causality_haft"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_linear]
-path = "../deep_causality_unified_math/deep_causality_linear"
-version = "0.1.2"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_metric]
-path = "../deep_causality_unified_math/deep_causality_metric"
-version = "0.2"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_multivector]
-path = "../deep_causality_unified_math/deep_causality_multivector"
-version = "0.6"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_unified_math/deep_causality_num"
-version = "0.4"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_rational]
-path = "../deep_causality_unified_math/deep_causality_num_rational"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_num_complex]
-path = "../deep_causality_unified_math/deep_causality_num_complex"
-version = "0.1"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_unified_math/deep_causality_tensor"
-version = "0.5"
-default-features = false
+workspace = true
 
 [dependencies.deep_causality_uncertain]
-path = "../deep_causality_unified_math/deep_causality_uncertain"
-version = "0.5"
+workspace = true
 optional = true
 
 [lints]

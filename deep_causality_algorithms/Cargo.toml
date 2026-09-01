@@ -27,35 +27,30 @@ exclude = [
 ]
 
 [dependencies.deep_causality_tensor]
-path = "../deep_causality_unified_math/deep_causality_tensor"
-version = "0.5"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_num]
-path = "../deep_causality_unified_math/deep_causality_num"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_algebra]
-path = "../deep_causality_unified_math/deep_causality_algebra"
-version = "0.4"
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_topology]
-path = "../deep_causality_unified_math/deep_causality_topology"
-version = "0.9"
+workspace = true
 
 [dependencies.deep_causality_rand]
-path = "../deep_causality_unified_math/deep_causality_rand"
-version = "0.2"
+workspace = true
 
-# Feature-conditional thread-safety marker (`MaybeParallel`): vacuous on serial
-# builds, `Send + Sync` when `parallel` is forwarded below. 
 [dependencies.deep_causality_par]
-path = "../deep_causality_par"
-version = "0.1"
+workspace = true
+features = ["default"]
 
 [dependencies.rayon]
-version = "1.12"
+workspace = true
 optional = true
-
 
 [features]
 default = []
@@ -69,7 +64,7 @@ parallel = ["dep:rayon", "deep_causality_par/parallel"]
 all-features = true
 
 [dev-dependencies]
-criterion = {  version = "0.8" }
+criterion = { workspace = true }
 
 [[bench]]
 name = "mrmr_benchmark"

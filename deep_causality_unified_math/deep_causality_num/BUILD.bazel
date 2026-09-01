@@ -1,22 +1,29 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 rust_library(
     name = "deep_causality_num",
     srcs = glob([
         "src/**",
     ]),
+    aliases = aliases(),
     crate_features = [
         "std",
         "libm_math",
     ],  # List of features to enable
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     tags = [
         "numerical_utils",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        # No external dependencies needed for std build
-    ],
+        # `libm` is optional behind `libm_math`, which is not in Cargo's `default` set, so
+        # all_crate_deps does not carry it. crate_features above enables the feature, so the
+        # dependency has to be named.
+        "@crates//:libm",
+    ] + all_crate_deps(normal = True),
 )
 
 rust_doc(
@@ -39,4 +46,190 @@ rust_doc_test(
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "casts",
+    srcs = glob([
+        "tests/casts/as_primitive/*_tests.rs",
+        "tests/casts/from_primitive/*_tests.rs",
+        "tests/casts/as_scalar/*_tests.rs",
+        "tests/casts/num_cast/*_tests.rs",
+        "tests/casts/to_float/*_tests.rs",
+        "tests/casts/to_primitive/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "float",
+    srcs = glob([
+        "tests/float/*_tests.rs",
+        "tests/float_option/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "float_double",
+    srcs = glob([
+        "tests/float_double/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "gf2",
+    srcs = glob([
+        "tests/gf2/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "identity",
+    srcs = glob([
+        "tests/identity/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "num",
+    srcs = glob([
+        "tests/num/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ops",
+    srcs = glob([
+        "tests/ops/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "combinatorics",
+    srcs = glob([
+        "tests/combinatorics/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "integer",
+    srcs = glob([
+        "tests/integer/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "formalization_lean",
+    srcs = glob([
+        "tests/formalization_lean/*_tests.rs",
+    ]),
+    tags = [
+        "lean-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
 )

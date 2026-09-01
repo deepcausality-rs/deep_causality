@@ -10,11 +10,9 @@ publish = false
 path = "no_lib.rs"
 
 [dependencies]
-deep_causality =  { path = "../../deep_causality" }
-deep_causality_core =  { path = "../../deep_causality_core" }
-deep_causality_rand =  { path = "../../deep_causality_unified_math/deep_causality_rand" }
-
-
+deep_causality = { workspace = true }
+deep_causality_core = { workspace = true, features = ["default"] }
+deep_causality_rand = { workspace = true }
 # --- Causaloid + Contextual-Alternation implementations ---
 
 [[example]]

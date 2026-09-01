@@ -1,4 +1,6 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
 
 rust_library(
     name = "mathematics_examples",
@@ -6,12 +8,11 @@ rust_library(
         "effect_helpers.rs",
         "no_lib.rs",
     ],
+    aliases = aliases(),
     crate_root = "no_lib.rs",
+    lint_config = lint_config(),
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_binary(
@@ -20,10 +21,13 @@ rust_binary(
     crate_root = "calculus/leibniz_dual_integration.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_unified_math/deep_causality_num_dual",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -32,8 +36,13 @@ rust_binary(
     crate_root = "algebra/basic_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -42,8 +51,13 @@ rust_binary(
     crate_root = "algebra/clifford_mhd_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -52,9 +66,13 @@ rust_binary(
     crate_root = "algebra/dixon_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -63,10 +81,13 @@ rust_binary(
     crate_root = "algebra/geometric_tilt_estimator.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -75,10 +96,13 @@ rust_binary(
     crate_root = "algebra/grmhd_integration.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -87,9 +111,13 @@ rust_binary(
     crate_root = "algebra/hkt_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -98,9 +126,13 @@ rust_binary(
     crate_root = "algebra/maxwell_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -109,8 +141,13 @@ rust_binary(
     crate_root = "algebra/pga3d_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -119,8 +156,13 @@ rust_binary(
     crate_root = "algebra/algebraic_scanner/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_multivector",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -129,12 +171,13 @@ rust_binary(
     crate_root = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -143,11 +186,13 @@ rust_binary(
     crate_root = "composable_multi_math/tensor_x_topology_laplacian/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -156,13 +201,13 @@ rust_binary(
     crate_root = "composable_multi_math/triple_hkt_stress_field/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -171,13 +216,13 @@ rust_binary(
     crate_root = "composable_multi_math/effect_kalman_predict_correct/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":mathematics_examples",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -186,12 +231,13 @@ rust_binary(
     crate_root = "composable_multi_math/effect_diffusion_on_manifold/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":mathematics_examples",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -200,14 +246,13 @@ rust_binary(
     crate_root = "composable_multi_math/effect_tensor_algebra_roundtrip/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":mathematics_examples",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -216,16 +261,13 @@ rust_binary(
     crate_root = "composable_multi_math/capstone_spinor_minkowski/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":mathematics_examples",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -234,9 +276,13 @@ rust_binary(
     crate_root = "isomorphism/tensor_sparse_memory_budget/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -245,10 +291,13 @@ rust_binary(
     crate_root = "isomorphism/multifield_data_pipeline/main.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -257,8 +306,13 @@ rust_binary(
     crate_root = "sparse/basic_csr_ops.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_linear",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -267,9 +321,13 @@ rust_binary(
     crate_root = "sparse/hkt_csr_ops.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_linear",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -278,9 +336,13 @@ rust_binary(
     crate_root = "tensor/applicative_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -289,8 +351,13 @@ rust_binary(
     crate_root = "tensor/basic_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -299,9 +366,13 @@ rust_binary(
     crate_root = "tensor/effect_system_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -310,8 +381,13 @@ rust_binary(
     crate_root = "tensor/ein_sum_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -320,9 +396,13 @@ rust_binary(
     crate_root = "tensor/einstein_field_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -331,9 +411,13 @@ rust_binary(
     crate_root = "tensor/functor_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -342,9 +426,13 @@ rust_binary(
     crate_root = "topology/basic_graph.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -353,9 +441,13 @@ rust_binary(
     crate_root = "topology/chain_algebra.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -364,9 +456,13 @@ rust_binary(
     crate_root = "topology/complex_operators.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -375,11 +471,13 @@ rust_binary(
     crate_root = "topology/cubical_heat_diffusion.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -388,10 +486,13 @@ rust_binary(
     crate_root = "topology/differential_field.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -400,10 +501,13 @@ rust_binary(
     crate_root = "topology/hkt_graph_convolution.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -412,10 +516,13 @@ rust_binary(
     crate_root = "topology/lattice_gauge_simulation.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_unified_math/deep_causality_rand",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -424,10 +531,13 @@ rust_binary(
     crate_root = "topology/manifold_analysis.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_tensor",
-        "//deep_causality_unified_math/deep_causality_topology",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -436,8 +546,13 @@ rust_binary(
     crate_root = "applied_category_theory/adjunction.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -446,8 +561,13 @@ rust_binary(
     crate_root = "applied_category_theory/applicative.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -456,8 +576,13 @@ rust_binary(
     crate_root = "applied_category_theory/bifunctor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -466,8 +591,13 @@ rust_binary(
     crate_root = "applied_category_theory/comonad.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -476,8 +606,13 @@ rust_binary(
     crate_root = "applied_category_theory/effect_system.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -486,8 +621,13 @@ rust_binary(
     crate_root = "applied_category_theory/foldable.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -496,8 +636,13 @@ rust_binary(
     crate_root = "applied_category_theory/functor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -506,8 +651,13 @@ rust_binary(
     crate_root = "applied_category_theory/monad.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -516,8 +666,13 @@ rust_binary(
     crate_root = "applied_category_theory/parametric_monad.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -526,8 +681,13 @@ rust_binary(
     crate_root = "applied_category_theory/profunctor.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -536,8 +696,13 @@ rust_binary(
     crate_root = "applied_category_theory/traversable.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -546,6 +711,11 @@ rust_binary(
     crate_root = "applied_category_theory/unbound_haft.rs",
     visibility = ["//visibility:public"],
     deps = [
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

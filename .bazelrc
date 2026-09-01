@@ -69,6 +69,16 @@ build:macos --extra_execution_platforms=//bazel/platforms:darwin-aarch64
 build:linux --extra_execution_platforms=//bazel/platforms:linux-x86_64
 
 ###############################################################################
+## Downloader rewrites
+##
+## rules_rs pins a zlib .deb that Ubuntu deletes from pool/main once a newer
+## point release supersedes it, which 404s every Linux fetch. The rewrites point
+## at Ubuntu's immutable snapshot archive, which serves the same bytes (both
+## pinned sha256 values still verify). See bazel/downloader.cfg.
+###############################################################################
+common --downloader_config=bazel/downloader.cfg
+
+###############################################################################
 ## Remote configuration
 ###############################################################################
 

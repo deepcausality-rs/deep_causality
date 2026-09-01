@@ -1,13 +1,15 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
 
 rust_library(
     name = "causal_counterfactual_examples",
     srcs = glob(["src/**"]),
+    aliases = aliases(),
     crate_root = "src/lib.rs",
+    lint_config = lint_config(),
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-    ],
+    deps = all_crate_deps(normal = True),
 )
 
 rust_binary(
@@ -16,9 +18,13 @@ rust_binary(
     crate_root = "counterfactual_treatment_effect/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_counterfactual_examples",
-        "//deep_causality_core",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -27,10 +33,13 @@ rust_binary(
     crate_root = "counterfactual_envelope_fault/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_counterfactual_examples",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -39,9 +48,13 @@ rust_binary(
     crate_root = "counterfactual_treatment_options/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_counterfactual_examples",
-        "//deep_causality_core",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -50,10 +63,13 @@ rust_binary(
     crate_root = "counterfactual_cascade_failure/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_counterfactual_examples",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -62,8 +78,11 @@ rust_binary(
     crate_root = "counterfactual_resection_intervention/main.rs",
     visibility = ["//visibility:public"],
     deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
         ":causal_counterfactual_examples",
-        "//deep_causality_unified_math/deep_causality_calculus",
-        "//deep_causality_core",
-    ],
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

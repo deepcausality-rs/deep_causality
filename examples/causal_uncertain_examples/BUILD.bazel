@@ -1,14 +1,16 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 
 rust_binary(
     name = "gps_navigation",
     srcs = glob(["gps_navigation/**/*.rs"]),
     crate_root = "gps_navigation/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_uncertain",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -16,11 +18,11 @@ rust_binary(
     srcs = glob(["sensor_processing/**/*.rs"]),
     crate_root = "sensor_processing/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_uncertain",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )
 
 rust_binary(
@@ -28,8 +30,9 @@ rust_binary(
     srcs = glob(["clinical_trial/**/*.rs"]),
     crate_root = "clinical_trial/main.rs",
     visibility = ["//visibility:public"],
-    deps = [
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_uncertain",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
 )

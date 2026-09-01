@@ -14,7 +14,7 @@ mod uncertain_arithmetic_tests;
 mod uncertain_comparison_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
-mod uncertain_default;
+mod uncertain_default_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 mod uncertain_logic_tests;
