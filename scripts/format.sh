@@ -8,7 +8,7 @@ set -o pipefail
 
 # Bazel file formatting (Installed via homebrew)
 # https://github.com/bazelbuild/buildtools
-buildifier -r MODULE.bazel BUILD.bazel thirdparty/BUILD.bazel
+buildifier -r MODULE.bazel BUILD.bazel
 source "$(dirname "${BASH_SOURCE[0]}")/crates.sh"
 for CRATE_DIR in "${DC_CRATE_DIRS[@]}"; do
     buildifier -r "$CRATE_DIR"/

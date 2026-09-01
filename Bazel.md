@@ -67,13 +67,14 @@ To find all reverse dependencies, i.e. packages that depends on a specific crate
 If you were to refactor the dcl_data_structures crate, the rdepds tell you
 upfront were its used and thus helps you to estimate upfront the blast radius of braking changes.
 
-To query available vendored external dependencies with Bazel, run:
+To query available external dependencies with Bazel, run:
 
 ```bash 
-    bazel query "kind('rust_library', //thirdparty/...)"
+    bazel query "kind('rust_library', @crates//...)"
 ```
 
-Note, these vendored external dependencies are shared across all crates.
+External crates are resolved from the registry by rules_rs and shared across all crates.
+They are pinned by `Cargo.lock`; there is no vendored source tree.
 
 To visualize all dependencies of the top level crate deep_causality, run
 

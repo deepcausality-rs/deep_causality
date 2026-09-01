@@ -336,7 +336,7 @@ rust_test(
         "//deep_causality_unified_math/deep_causality_topology",
         "//deep_causality_unified_math/deep_causality_uncertain",
         # External dependencies
-        "//thirdparty/crates:tempfile",
+        "@crates//:tempfile",
     ],
 )
 

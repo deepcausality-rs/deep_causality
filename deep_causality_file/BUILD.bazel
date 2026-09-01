@@ -16,7 +16,7 @@ rust_library(
         "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_unified_math/deep_causality_algebra",
         # External dependencies
-        "//thirdparty/crates:chrono",
+        "@crates//:chrono",
     ],
 )
 

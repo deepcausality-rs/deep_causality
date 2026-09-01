@@ -1,3 +1,0 @@
-# Ignore all sanitizer instrumentation for libc startup files.
-src:external/llvm+/3rd_party/libc/glibc/csu/elf-init-2.31.c
-src:external/llvm++musl+musl_libc/src/env/__libc_start_main.c

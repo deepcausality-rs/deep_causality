@@ -13,7 +13,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_unified_math/deep_causality_uncertain",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -32,7 +32,7 @@ rust_test_suite(
         # Internal dependencies
         "//deep_causality_unified_math/deep_causality_rand",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -51,7 +51,7 @@ rust_test_suite(
         # Float106 precision target
         "//deep_causality_unified_math/deep_causality_num",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -68,7 +68,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_unified_math/deep_causality_uncertain",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -85,7 +85,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_unified_math/deep_causality_uncertain",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -104,7 +104,7 @@ rust_test_suite(
         # Internal dependencies
         "//deep_causality_unified_math/deep_causality_rand",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -121,7 +121,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_unified_math/deep_causality_uncertain",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -141,7 +141,7 @@ rust_test_suite(
         # Internal dependencies
         "//deep_causality_unified_math/deep_causality_num",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -158,7 +158,7 @@ rust_test_suite(
         # Crate to test
         "//deep_causality_unified_math/deep_causality_uncertain",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -177,7 +177,7 @@ rust_test_suite(
         # Internal dependencies
         "//deep_causality_unified_math/deep_causality_num",
         # External dependencies
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -196,7 +196,7 @@ rust_test_suite(
         "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_unified_math/deep_causality_rand",
         "//deep_causality_unified_math/deep_causality_uncertain",
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )
 
@@ -215,6 +215,6 @@ rust_test_suite(
         "//deep_causality_unified_math/deep_causality_num",
         "//deep_causality_unified_math/deep_causality_rand",
         "//deep_causality_unified_math/deep_causality_uncertain",
-        "//thirdparty/crates:rusty-fork",
+        "@crates//:rusty-fork",
     ],
 )

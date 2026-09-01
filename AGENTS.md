@@ -250,8 +250,9 @@ consumers are `tensor` and `uncertain`, plus `deep_causality` itself.
 
 ## Project Dependencies
 
-Scope: the 29 library crates that are workspace members. Example crates (`examples/*`),
-vendored third-party crates (`thirdparty/crates/*`), and `yanked/*` are excluded.
+Scope: the 29 library crates that are workspace members. Example crates (`examples/*`)
+and `yanked/*` are excluded. Third-party crates are resolved from the registry by
+rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
 `yanked/` and are no longer workspace members, so all three are omitted. `deep_causality_sparse`
 was a re-export shim over `deep_causality_linear`; 0.2.5 is its last crates.io release.

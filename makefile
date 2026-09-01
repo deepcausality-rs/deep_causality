@@ -89,8 +89,3 @@ sbom:
 .PHONY: update
 update:
 	 @source scripts/update.sh
-
-
-.PHONY: vendor
-vendor:
-	@source scripts/vendor.sh

@@ -1,5 +1,0 @@
-load("//config:defs.bzl", "config_settings")
-
-package(default_visibility = ["//visibility:public"])
-
-config_settings()

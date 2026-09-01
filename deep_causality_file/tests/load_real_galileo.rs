@@ -10,8 +10,25 @@ use deep_causality_file::{read_clock_data, read_gnss_single_satellite, read_orbi
 use deep_causality_haft::IoAction;
 use std::path::PathBuf;
 
+/// The bundled GNSS fixture directory, resolved at run time.
+///
+/// `env!("CARGO_MANIFEST_DIR")` would embed the compile-time path, which under Bazel names a
+/// rustc sandbox that is gone by the time the test runs; rules_rs rejects the resulting
+/// artifact. Cargo exports `CARGO_MANIFEST_DIR` into the test process, so it is read there
+/// instead. Under `bazel test` neither variable is set and the fixtures are not declared as
+/// data, so the path does not resolve and the test skips, which is the behaviour it already had.
 fn data_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples/chronometric_examples/data/gnss")
+    const FIXTURES: &str = "examples/chronometric_examples/data/gnss";
+
+    if let Some(workspace_root) = std::env::var_os("BUILD_WORKSPACE_DIRECTORY") {
+        return PathBuf::from(workspace_root).join(FIXTURES);
+    }
+
+    if let Some(manifest_dir) = std::env::var_os("CARGO_MANIFEST_DIR") {
+        return PathBuf::from(manifest_dir).join("..").join(FIXTURES);
+    }
+
+    PathBuf::from(FIXTURES)
 }
 
 #[test]

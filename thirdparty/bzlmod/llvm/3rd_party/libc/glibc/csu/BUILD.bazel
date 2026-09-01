@@ -1,4 +1,0 @@
-exports_files([
-    "abi-note-2.31.S",
-    "elf-init-2.31.c",
-])

@@ -7,6 +7,6 @@ rust_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//deep_causality",
-        "//thirdparty/crates:tokio",
+        "@crates//:tokio",
     ],
 )
