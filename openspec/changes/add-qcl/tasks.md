@@ -91,15 +91,15 @@ until `bazel test //...` is green for it.
 
 ## 6. Design and adjudication
 
-- [ ] 6.1 Add `DesignPlan` carrying the ordered experiment set, total cost, the pair each resolves,
+- [x] 6.1 Add `DesignPlan` carrying the ordered experiment set, total cost, the pair each resolves,
       and any pairs left uncovered
-- [ ] 6.2 Add `design` under `MinCostCover`, solved as a DP over covered-pair subsets, with
+- [x] 6.2 Add `design` under `MinCostCover`, solved as a DP over covered-pair subsets, with
       `max_hypotheses` defaulting to 7 and `HypothesisCountExceeded { n, pairs }` above it (X-12)
-- [ ] 6.3 Add `adjudicate` with the §4 fold rule: projection-valued folds check commutation through
+- [x] 6.3 Add `adjudicate` with the §4 fold rule: projection-valued folds check commutation through
       `Projection::commutes_with`, read-outs against a real-valued spec do not
-- [ ] 6.4 Return the adjudication outcome as `Either`, one surviving hypothesis against a residual
+- [x] 6.4 Return the adjudication outcome as `Either`, one surviving hypothesis against a residual
       ambiguity
-- [ ] 6.5 Verify: the crosstalk case selects `{E1, E2}` at cost 2 over tomography at 200; a
+- [x] 6.5 Verify: the crosstalk case selects `{E1, E2}` at cost 2 over tomography at 200; a
       non-commuting projection fold yields `Ambiguous`; a threshold fold is not rejected by the guard
 
 ## 7. The pipeline

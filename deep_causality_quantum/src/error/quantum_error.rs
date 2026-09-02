@@ -69,6 +69,13 @@ pub enum QuantumErrorEnum {
         node_k: usize,
         detail: String,
     },
+    /// `design` was asked to cover more hypotheses than its cap. The exact
+    /// cover is a dynamic program over `2^C(n,2)` subsets of pairs: `2^15` at
+    /// n = 6, `2^28` at n = 8, `2^45` at n = 10. Above `max_hypotheses` the
+    /// solve is refused before the table is allocated, naming `n` and the
+    /// pair count. A later version may supply the greedy cover with its
+    /// logarithmic approximation factor reported; v1 does not.
+    HypothesisCountExceeded { n: usize, pairs: usize },
     /// A marginalisation was refused because its boundary warrant did not
     /// hold: the kept-factor operator `Z ⊗ 1_B` fails to commute with the
     /// operator being traced within the named tolerance, so nothing may be
@@ -164,6 +171,11 @@ impl QuantumError {
     }
 
     #[allow(non_snake_case)]
+    pub fn HypothesisCountExceeded(n: usize, pairs: usize) -> Self {
+        Self(QuantumErrorEnum::HypothesisCountExceeded { n, pairs })
+    }
+
+    #[allow(non_snake_case)]
     pub fn BoundaryNotHeld(msg: String) -> Self {
         Self(QuantumErrorEnum::BoundaryNotHeld(msg))
     }
@@ -237,6 +249,11 @@ impl Display for QuantumError {
                 f,
                 "Certificate Not Inherited: the parts' factors at nodes {} and {} do not certify the composite: {}",
                 node_j, node_k, detail
+            ),
+            QuantumErrorEnum::HypothesisCountExceeded { n, pairs } => write!(
+                f,
+                "Hypothesis Count Exceeded: {} hypotheses give {} pairs, above the design cap",
+                n, pairs
             ),
             QuantumErrorEnum::BoundaryNotHeld(msg) => write!(f, "Boundary Not Held: {}", msg),
             QuantumErrorEnum::NotInNormalizer { generator, detail } => write!(

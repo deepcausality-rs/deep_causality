@@ -8,6 +8,8 @@ mod carriers;
 mod decision;
 mod density_matrix_tests;
 #[cfg(test)]
+mod design;
+#[cfg(test)]
 mod evidence;
 mod qcm;
 mod qcode;

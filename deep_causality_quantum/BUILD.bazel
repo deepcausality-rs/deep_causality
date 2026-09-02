@@ -158,6 +158,28 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/design/* test suites — experiment design and adjudication
+# =============================================================================
+
+rust_test_suite(
+    name = "design",
+    srcs = glob([
+        "tests/types/design/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/decision/* test suites — the decision form
 # =============================================================================
 

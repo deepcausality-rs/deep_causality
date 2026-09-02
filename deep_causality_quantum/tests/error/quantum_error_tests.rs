@@ -56,6 +56,10 @@ fn test_display_covers_every_variant() {
             "Certificate Not Inherited: the parts' factors at nodes 2 and 5 do not certify the composite: see D9",
         ),
         (
+            QuantumError::HypothesisCountExceeded(10, 45),
+            "Hypothesis Count Exceeded: 10 hypotheses give 45 pairs, above the design cap",
+        ),
+        (
             QuantumError::BoundaryNotHeld("residual 0.3 > 1e-9".into()),
             "Boundary Not Held: residual 0.3 > 1e-9",
         ),

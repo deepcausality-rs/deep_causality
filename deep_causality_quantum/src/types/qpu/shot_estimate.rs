@@ -108,14 +108,29 @@ where
         self.shots
     }
 
-    /// The Bhattacharyya distance between two Bernoulli estimates, in bits:
-    /// `−log₂(√(pq) + √((1−p)(1−q)))`. Zero for equal estimates, unbounded as they separate.
+    /// The separation between two Bernoulli estimates at the shots they share, in bits: the
+    /// Bhattacharyya distance of the `n`-fold product, `n · (−log₂(√(pq) + √((1−p)(1−q))))`, at
+    /// `n` the smaller of the two shot counts. Zero for equal estimates, additive in the shots.
     pub fn separation_bits(&self, other: &Self) -> R {
-        let one = R::one();
-        let (p, q) = (self.estimate, other.estimate);
-        let bc = (p * q).sqrt() + ((one - p) * (one - q)).sqrt();
-        -bc.log2()
+        separation_bits(self.estimate, other.estimate, self.shots.min(other.shots))
     }
+}
+
+/// The per-shot Bhattacharyya distance between two Bernoulli distributions, in bits:
+/// `−log₂(√(pq) + √((1−p)(1−q)))` (Bhattacharyya, Bull. Calcutta Math. Soc. 35, 1943). Zero when
+/// `p = q`, and the coefficient inside the logarithm is the overlap of the two distributions.
+pub fn bhattacharyya_bits_per_shot<R: RealField>(p: R, q: R) -> R {
+    let one = R::one();
+    let bc = (p * q).sqrt() + ((one - p) * (one - q)).sqrt();
+    -bc.log2()
+}
+
+/// The separation of two Bernoulli read-outs at `shots` independent draws, in bits. The
+/// Bhattacharyya distance is additive over a product of independent samples, so this is `shots`
+/// times [`bhattacharyya_bits_per_shot`]; it is what a floor in bits is compared against.
+pub fn separation_bits<R: RealField + FromPrimitive>(p: R, q: R, shots: u64) -> R {
+    let n = R::from_u64(shots).unwrap_or_else(R::zero);
+    n * bhattacharyya_bits_per_shot(p, q)
 }
 
 impl<R> ShotEstimate<R>
