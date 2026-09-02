@@ -11,6 +11,8 @@ mod density_matrix_tests;
 mod design;
 #[cfg(test)]
 mod evidence;
+#[cfg(feature = "qcm")]
+mod pipeline;
 mod qcm;
 mod qcode;
 mod qgates;

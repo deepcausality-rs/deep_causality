@@ -69,6 +69,12 @@ pub enum QuantumErrorEnum {
         node_k: usize,
         detail: String,
     },
+    /// A structural candidate's causal structure contains a directed cycle.
+    /// Cyclic quantum causal models exist (Barrett, Lorenz & Oreshkov,
+    /// arXiv:2002.12157) and the C₃ criterion does not reject them, so this is
+    /// a scope decision made at `build()`, before any check runs, and it names
+    /// the limit rather than an obstruction.
+    CyclicStructureUnsupported(String),
     /// `design` was asked to cover more hypotheses than its cap. The exact
     /// cover is a dynamic program over `2^C(n,2)` subsets of pairs: `2^15` at
     /// n = 6, `2^28` at n = 8, `2^45` at n = 10. Above `max_hypotheses` the
@@ -171,6 +177,11 @@ impl QuantumError {
     }
 
     #[allow(non_snake_case)]
+    pub fn CyclicStructureUnsupported(msg: String) -> Self {
+        Self(QuantumErrorEnum::CyclicStructureUnsupported(msg))
+    }
+
+    #[allow(non_snake_case)]
     pub fn HypothesisCountExceeded(n: usize, pairs: usize) -> Self {
         Self(QuantumErrorEnum::HypothesisCountExceeded { n, pairs })
     }
@@ -250,6 +261,9 @@ impl Display for QuantumError {
                 "Certificate Not Inherited: the parts' factors at nodes {} and {} do not certify the composite: {}",
                 node_j, node_k, detail
             ),
+            QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
+                write!(f, "Cyclic Structure Unsupported: {}", msg)
+            }
             QuantumErrorEnum::HypothesisCountExceeded { n, pairs } => write!(
                 f,
                 "Hypothesis Count Exceeded: {} hypotheses give {} pairs, above the design cap",

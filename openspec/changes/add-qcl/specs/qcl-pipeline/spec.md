@@ -79,6 +79,13 @@ structured `QuantumError` and running no stage.
 The unfrozen-graph rejection is the precondition `FactorSupports::from_graph` already enforces, and
 `build()` enforces it for both graph bridges.
 
+*As built.* `.over_plant(plant, observables)` takes the plant and the observables it exposes
+together, so the observables' dimension is what `build()` checks the plant against. The candidate
+kind is a type: `.candidates(&[..])` marks the plant `Structural` and `.mechanisms(&[..])` marks it
+`Mechanisms`, and `build()` refuses a candidate of the other kind at runtime as well. A structural
+candidate's cycle is read off its supports, since under the flat convention every leg of a node's
+support that is itself a factor node is a parent; the model subject's cycle is read off its graph.
+
 The cyclic rejection is a scope decision and SHALL be reported as `CyclicStructureUnsupported`.
 Cyclic QCMs exist (Barrett, Lorenz & Oreshkov, arXiv:2002.12157), and the C₃ criterion does not
 reject them: the crosstalk example's cyclic H₄ satisfies C₃-exclusion under Definition 3.1, and its
@@ -115,6 +122,10 @@ the `CheckReport<R>`, and `control` SHALL accept a plant config or a `Screened<R
 
 A config carrying structural candidates therefore has no path into `control` that skips validation.
 
+*As built.* `QclBuilder::control` takes any `ControlSource`, and the two implementations are
+`&Config<.., PlantSubject<.., Mechanisms>>` and `&Screened<.., PlantSubject<.., Structural>>`. A
+structural config has no implementation, which is the compiler refusing the skipped screen.
+
 #### Scenario: Structural candidates cannot enter control unscreened
 
 - **WHEN** a config whose candidates are built by `Hypothesis::structural` is passed to
@@ -144,6 +155,15 @@ A failing stage SHALL leave the subject in its pre-stage state and SHALL carry t
 This is the behaviour `freeze_quantum` already has: the hook returns `CausalityGraphError`, so the
 structured error is recovered from a `RefCell` stash across that bridge, and the graph rolls back to
 its dynamic state on failure.
+
+*As built.* The model subject of a configuration takes a frozen graph, because `build()` requires
+one, and `validate` mutates nothing: its checks run on the frozen graph as it stands, so a failed
+validation leaves the subject exactly as built and the structured error is what `finalize`
+returns. The rollback scenario below is the shipped freeze's behaviour, reached through
+`QclBuilder::freeze_model` on a dynamic graph; the two entry points serve the two starting states.
+The pipeline module is compiled under the `qcm` feature, because candidates are `Hypothesis` values
+and the model subject reaches the causal graph; bare-metal reach for the plant path is a follow-up
+that splits the graph-dependent half of `Hypothesis` from the rest.
 
 #### Scenario: A rejected pair rolls the graph back and names itself
 

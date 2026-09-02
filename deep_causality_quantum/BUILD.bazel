@@ -180,6 +180,32 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/pipeline/* test suites — the QCL pipeline, over the qcm feature
+# =============================================================================
+
+rust_test_suite(
+    name = "pipeline",
+    srcs = glob([
+        "tests/types/pipeline/*_tests.rs",
+    ]),
+    crate_features = [
+        "qcm",
+        "qpu",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/decision/* test suites — the decision form
 # =============================================================================
 

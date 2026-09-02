@@ -56,6 +56,10 @@ fn test_display_covers_every_variant() {
             "Certificate Not Inherited: the parts' factors at nodes 2 and 5 do not certify the composite: see D9",
         ),
         (
+            QuantumError::CyclicStructureUnsupported("candidate 'cyclic'".into()),
+            "Cyclic Structure Unsupported: candidate 'cyclic'",
+        ),
+        (
             QuantumError::HypothesisCountExceeded(10, 45),
             "Hypothesis Count Exceeded: 10 hypotheses give 45 pairs, above the design cap",
         ),

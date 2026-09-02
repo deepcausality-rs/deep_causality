@@ -104,17 +104,17 @@ until `bazel test //...` is green for it.
 
 ## 7. The pipeline
 
-- [ ] 7.1 Add `Ledger<R, N>` with counts on `NaturalNumber`, `checked_difference` for the draw-down,
+- [x] 7.1 Add `Ledger<R, N>` with counts on `NaturalNumber`, `checked_difference` for the draw-down,
       and its three invariants
-- [ ] 7.2 Add `fork` above core by cloning, one live world per hypothesis with its own ledger
-- [ ] 7.3 Add `QclBuilder::config::<FloatType, NumberType>()` and the three subject constructors
-- [ ] 7.4 Enforce the `build()` preconditions, including rejecting an unfrozen graph and rejecting
+- [x] 7.2 Add `fork` above core by cloning, one live world per hypothesis with its own ledger
+- [x] 7.3 Add `QclBuilder::config::<FloatType, NumberType>()` and the three subject constructors
+- [x] 7.4 Enforce the `build()` preconditions, including rejecting an unfrozen graph and rejecting
       a cyclic structural candidate as `CyclicStructureUnsupported` before any check runs (X-3)
-- [ ] 7.5 Add the stages, named `check_markov`, `check_decomposable`, `check_ldpc_weights`,
+- [x] 7.5 Add the stages, named `check_markov`, `check_decomposable`, `check_ldpc_weights`,
       `check_class_invariance` and `check_clifford_action`, with `validate` terminating in
       `Screened<R>` and `control` accepting either a plant config or a `Screened<R>` (X-3)
-- [ ] 7.6 Make failure transactional, rolling back and carrying the structured `QuantumError`
-- [ ] 7.7 Verify: a structural config has no path into `control` that skips `validate`; a failed
+- [x] 7.6 Make failure transactional, rolling back and carrying the structured `QuantumError`
+- [x] 7.7 Verify: a structural config has no path into `control` that skips `validate`; a failed
       `validate` leaves nothing half-frozen
 
 ## 8. Consumers and close-out
