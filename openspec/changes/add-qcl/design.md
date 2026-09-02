@@ -199,9 +199,19 @@ would. Flag it rather than build on it.
 
 ## Migration Plan
 
-Additive throughout. No existing public function changes signature; the report-returning siblings of
-D5 are new names beside the existing ones. `deep_causality_quantum` is at 0.2.0 after the Haruna
-retyping, and this change is a minor bump rather than a breaking one.
+Additive except for two signatures, both forced by the corrections register. `haruna_hadamard_gate`
+returns `PropagatingEffect<LogicalProgram<R>>` rather than `PropagatingEffect<Vec<GateOp>>`, because
+X-11 requires the wrapper to carry the phase it used to drop and a list of gates has nowhere to put
+it. `logical_t` returns `Result<Vec<GateOp>, QuantumError>` rather than `Vec<GateOp>`, because X-13
+requires it to refuse above the tuple cap. Every other change is a new name beside an existing one:
+the report-returning siblings of D5, `logical_t_with_cap`, `logical_multi_cz_with_cap`,
+`check_clifford_action`, `clifford_conjugate`, the `x_stabilizers` accessor.
+
+`is_logically_trivial` keeps its signature and gains a new error path, `NotInNormalizer`, on inputs
+it previously answered wrongly. A caller that passed only logical operators sees no change.
+
+`deep_causality_quantum` goes from 0.2.1 to **0.3.0**, a minor bump on a 0.x crate for the two
+signature changes, with the workspace constraint moved to `0.3`.
 
 ### D9. A Markov certificate is inherited at two factors and nowhere else
 

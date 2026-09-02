@@ -11,4 +11,6 @@ mod faithfulness_tests;
 #[cfg(test)]
 mod markov_freeze_tests;
 #[cfg(test)]
+mod markov_report_tests;
+#[cfg(test)]
 mod process_factors_tests;

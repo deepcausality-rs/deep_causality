@@ -20,33 +20,33 @@ until `bazel test //...` is green for it.
 - [x] 1.5 Verify by mutation: dropping the code-space restriction, applying it unconditionally,
       flipping the integrality test to rational equality, and reading the wrong overlap each fail at
       least one test
-- [ ] 1.6 Derive the X-stabilizer generators in `from_complex` as a basis of `im δₖ₋₁`, and make
+- [x] 1.6 Derive the X-stabilizer generators in `from_complex` as a basis of `im δₖ₋₁`, and make
       `is_logically_trivial` check the normalizer precondition against both generator sets,
       returning `NotInNormalizer` with the offending generator (X-6)
-- [ ] 1.7 Carry `logical_hadamard`'s global phase on the emitted program as `global_phase`, populated
+- [x] 1.7 Carry `logical_hadamard`'s global phase on the emitted program as `global_phase`, populated
       by the causal wrapper rather than dropped (X-11)
-- [ ] 1.8 Add `check_clifford_action`: a symplectic tableau update over `GateOp` for `H`, `S` and
+- [x] 1.8 Add `check_clifford_action`: a symplectic tableau update over `GateOp` for `H`, `S` and
       `CZ`, refusing non-Clifford gates, deciding `Z̄(γ) ↔ X̄(γ̃)` through `LogicalBasis` up to phase
       (X-5)
-- [ ] 1.9 Make `logical_t` and `logical_multi_cz` report their tuple count and error above a
+- [x] 1.9 Make `logical_t` and `logical_multi_cz` report their tuple count and error above a
       configurable cap before allocating (X-13)
-- [ ] 1.10 Verify: `H̄` on the 3×3 torus swaps the logical Paulis; `S̄` and `CZ̄` agree between the
+- [x] 1.10 Verify: `H̄` on the 3×3 torus swaps the logical Paulis; `S̄` and `CZ̄` agree between the
       two stages; a `T` program is refused by the Clifford stage; an `X` on a stabilized qubit is
       `NotInNormalizer`
 
 ## 2. The decision form
 
-- [ ] 2.1 Add `Tolerance<R>` as a family with named members, each derived from `R::epsilon()`,
+- [x] 2.1 Add `Tolerance<R>` as a family with named members, each derived from `R::epsilon()`,
       generalising the four shipped policies; add no integer member
-- [ ] 2.2 Add `Check<R>` and `CheckReport<R>` carrying `(measured, threshold, margin, verdict)` plus
+- [x] 2.2 Add `Check<R>` and `CheckReport<R>` carrying `(measured, threshold, margin, verdict)` plus
       the count of items examined, generalising `CommutatorCheck` and `QuantumMarkovReport`
-- [ ] 2.3 Add report-returning siblings for `check_completely_positive` and `check_trace_preserving`,
+- [x] 2.3 Add report-returning siblings for `check_completely_positive` and `check_trace_preserving`,
       surfacing the spectrum and the defect they already compute; leave the existing signatures
-- [ ] 2.4 Add a report-returning sibling for `quantum_markov_check` that carries the whole report on
+- [x] 2.4 Add a report-returning sibling for `quantum_markov_check` that carries the whole report on
       the failure path rather than dropping it at the first failing pair
-- [ ] 2.5 Verify: a factorization with disjoint supports reports zero pairs tested and reads as a
+- [x] 2.5 Verify: a factorization with disjoint supports reports zero pairs tested and reads as a
       vacuous pass; a rejected candidate still reports its margins and its count
-- [ ] 2.6 Add the `Inherited | Rederived` provenance to the Markov `CheckReport<R>` and the
+- [x] 2.6 Add the `Inherited | Rederived` provenance to the Markov `CheckReport<R>` and the
       `CertificateNotInherited` error variant, with the failure variant following the provenance
       (X-2)
 

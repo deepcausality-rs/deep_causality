@@ -52,6 +52,18 @@ fn test_display_covers_every_variant() {
             "Not Faithfully Representable (C3 obstruction): g",
         ),
         (
+            QuantumError::CertificateNotInherited(2, 5, "see D9".into()),
+            "Certificate Not Inherited: the parts' factors at nodes 2 and 5 do not certify the composite: see D9",
+        ),
+        (
+            QuantumError::NotInNormalizer(4, "Z-stabilizer".into()),
+            "Not In Normalizer: anticommutes with stabilizer generator 4 (Z-stabilizer)",
+        ),
+        (
+            QuantumError::NonCliffordGate("T(2) at position 5".into()),
+            "Non-Clifford Gate: T(2) at position 5",
+        ),
+        (
             QuantumError::CalculationError("x".into()),
             "Calculation Error: x",
         ),

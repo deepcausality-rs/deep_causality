@@ -4,7 +4,7 @@
  */
 
 use crate::types::qgates::{gates_haruna, mechanics};
-use crate::types::qpu::circuit::GateOp;
+use crate::types::qpu::circuit::{GateOp, LogicalProgram};
 use crate::{Gate, Operator};
 use alloc::vec::Vec;
 use core::fmt::Debug;
@@ -88,8 +88,15 @@ pub fn haruna_s_gate<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> PropagatingEffect
 }
 
 /// Causal wrapper for [`gates_haruna::logical_t`].
+///
+/// Fallible since the tuple cap: a chain whose weight puts `C(w, 3)` above
+/// [`TUPLE_ENUMERATION_CAP`](gates_haruna::TUPLE_ENUMERATION_CAP) reaches
+/// `from_error` rather than allocating.
 pub fn haruna_t_gate<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> PropagatingEffect<Vec<GateOp>> {
-    PropagatingEffect::pure(gates_haruna::logical_t(gamma))
+    match gates_haruna::logical_t(gamma) {
+        Ok(val) => PropagatingEffect::pure(val),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
 }
 
 /// Causal wrapper for [`gates_haruna::logical_cz`].
@@ -105,19 +112,21 @@ pub fn haruna_cz_gate<W: NaturalNumber>(
 
 /// Causal wrapper for [`gates_haruna::logical_hadamard`].
 ///
-/// The `e^{-iπ/4}` global phase Table 1 carries is dropped here, because a
-/// `PropagatingEffect` carries one value and the circuit is the one a caller
-/// runs. Call [`gates_haruna::logical_hadamard`] directly where the phase
-/// matters, which is whenever this gate becomes a controlled operation.
+/// The value carried is a [`LogicalProgram`], the gate program together with
+/// the `e^{-iπ/4}` global phase Table 1 attaches. An earlier version of this
+/// wrapper dropped the phase, on the reasoning that a `PropagatingEffect`
+/// carries one value and the circuit is the one a caller runs. That foreclosed
+/// the exact form of the Clifford check and any controlled use of the gate, so
+/// the phase now travels with the program and the caller decides.
 pub fn haruna_hadamard_gate<W: NaturalNumber, R>(
     gamma: &Gf2Chain<W>,
     gamma_tilde: &Gf2Chain<W>,
-) -> PropagatingEffect<Vec<GateOp>>
+) -> PropagatingEffect<LogicalProgram<R>>
 where
-    R: RealField + FromPrimitive,
+    R: RealField + FromPrimitive + Debug,
 {
     match gates_haruna::logical_hadamard::<W, R>(gamma, gamma_tilde) {
-        Ok((ops, _phase)) => PropagatingEffect::pure(ops),
+        Ok((ops, phase)) => PropagatingEffect::pure(LogicalProgram::with_global_phase(ops, phase)),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }
 }

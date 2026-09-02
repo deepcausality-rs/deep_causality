@@ -13,10 +13,12 @@
 //! space is then a question about bitsets rather than about `2ⁿ × 2ⁿ` matrices, which is what makes
 //! this module small.
 
+pub(crate) mod clifford_action;
 pub(crate) mod diagonal_phase;
 pub(crate) mod logical_equivalence;
 pub(crate) mod logical_pauli;
 
+pub use clifford_action::*;
 pub use diagonal_phase::*;
 pub use logical_equivalence::*;
 pub use logical_pauli::*;

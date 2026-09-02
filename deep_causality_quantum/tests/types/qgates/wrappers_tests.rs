@@ -7,8 +7,9 @@ use deep_causality_homology::Gf2Chain;
 use deep_causality_multivector::{CausalMultiVector, HilbertState, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    GateOp, apply_gate, born_probability, commutator, expectation_value, fidelity, haruna_cz_gate,
-    haruna_hadamard_gate, haruna_s_gate, haruna_t_gate, haruna_x_gate, haruna_z_gate,
+    GateOp, LogicalProgram, apply_gate, born_probability, commutator, expectation_value, fidelity,
+    haruna_cz_gate, haruna_hadamard_gate, haruna_s_gate, haruna_t_gate, haruna_x_gate,
+    haruna_z_gate,
 };
 
 fn create_test_state() -> HilbertState<f64> {
@@ -188,12 +189,24 @@ fn test_haruna_cz_wrapper_errors_on_mismatched_registers() {
 }
 
 #[test]
-fn test_haruna_hadamard_wrapper_succeeds_and_drops_the_phase() {
+fn test_haruna_hadamard_wrapper_carries_the_program_and_its_phase() {
     let g = chain(&[0, 1]);
     let gt = chain(&[2]);
     // S(g) is 3 ops, H over supp(gt) is 1, S(gt) is 1, H again 1, S(g) again 3.
-    let ops = value_of(haruna_hadamard_gate::<u64, f64>(&g, &gt));
-    assert_eq!(ops.len(), 9);
+    let program = haruna_hadamard_gate::<u64, f64>(&g, &gt)
+        .value_cloned()
+        .expect("the effect should carry a program");
+    assert_eq!(program.len(), 9);
+    // Table 1's e^{-iπ/4}, kept rather than dropped.
+    let phase = program
+        .global_phase()
+        .expect("the Hadamard carries a phase");
+    let expected = std::f64::consts::FRAC_PI_4;
+    assert!((phase.re - expected.cos()).abs() < 1e-12);
+    assert!((phase.im + expected.sin()).abs() < 1e-12);
+    // And the diagonal programs carry none.
+    let diagonal = LogicalProgram::<f64>::from(value_of(haruna_s_gate(&g)));
+    assert!(diagonal.global_phase().is_none());
 }
 
 #[test]
