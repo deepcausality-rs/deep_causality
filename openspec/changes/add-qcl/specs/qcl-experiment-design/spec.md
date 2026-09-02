@@ -13,13 +13,14 @@ and every pair left uncovered. The crosstalk consumer's answer is a pair of inte
 single experiment cannot express one.
 
 The plan ranges over the hypotheses that survived `validate`, so a candidate rejected by
-`check_faithfulness` contributes no pair to the universe and costs no device time.
+`check_decomposable`, or at `build()` as cyclic, contributes no pair to the universe and costs no
+device time.
 
 #### Scenario: A plan names the interventions and what each one resolves
 
-- **WHEN** `crosstalk_attribution` declares four candidates, `check_faithfulness` rejects the cyclic
-  one as a `C₃`, and `.design(MinCostCover { floor_bits: ft(5.0) })` runs over `do_q1`, `do_q2`,
-  `echo_both` and `process_tomography`
+- **WHEN** `crosstalk_attribution` declares four candidates, `build()` rejects the cyclic one as
+  `CyclicStructureUnsupported`, and `.design(MinCostCover { floor_bits: ft(5.0) })` runs over
+  `do_q1`, `do_q2`, `echo_both` and `process_tomography`
 - **THEN** the returned `DesignPlan` lists `do_q1` and `do_q2` in order, reports the total cost of
   that list, and names for each entry the pair of the three surviving hypotheses it resolves
 
@@ -40,6 +41,12 @@ is the wrong enumeration and SHALL NOT be used.
 An experiment `e` covers the pair `(h_i, h_j)` when the predicted separation between the two
 hypotheses' read-outs at `e` reaches `MinCostCover`'s `floor_bits`.
 
+`MinCostCover` SHALL carry `max_hypotheses`, defaulting to 7, and `design` SHALL return
+`HypothesisCountExceeded { n, pairs }` when the surviving count exceeds it, before allocating the
+table. `2^C(n,2)` is `2^15` at n = 6, `2^28` at n = 8 and `2^45` at n = 10; the cliff is a decision
+rather than a benchmark observation, in the sense the ledger's `IntType` is, and the error's doc
+points at the heuristic a later version would supply.
+
 #### Scenario: The cover is optimal rather than greedy
 
 - **WHEN** an instance admits a greedy cover at cost 3 and an optimal cover at cost 2, with
@@ -55,9 +62,14 @@ hypotheses' read-outs at `e` reaches `MinCostCover`'s `floor_bits`.
 
 #### Scenario: Too many hypotheses fails loudly
 
-- **WHEN** a configuration screens more hypotheses than the declared cap on `n`
-- **THEN** `design` returns a structured error naming `n` and `C(n, 2)` before allocating the table,
-  rather than starting a solve it cannot finish
+- **WHEN** a configuration screens ten hypotheses against the default `max_hypotheses` of 7
+- **THEN** `design` returns `HypothesisCountExceeded { n: 10, pairs: 45 }` before allocating the
+  table, rather than starting a `2^45` solve it cannot finish
+
+#### Scenario: The cap is a parameter
+
+- **WHEN** `MinCostCover { max_hypotheses: 8, .. }` is configured and eight hypotheses survive
+- **THEN** `design` runs the `2^28` solve, because the caller raised the cap deliberately
 
 ### Requirement: Pairs no experiment resolves are reported
 

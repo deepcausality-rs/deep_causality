@@ -52,7 +52,7 @@ carries no probe family.
 #### Scenario: The model subject maps onto the shipped freeze
 
 - **WHEN** a config built with `.over_model(graph, factors, supports)` and `.declare_systems(&inputs,
-  &outputs)` runs `validate().check_markov().check_faithfulness()`
+  &outputs)` runs `validate().check_markov().check_decomposable()`
 - **THEN** the two checks are the two level checks `freeze_quantum` runs inside
   `freeze_verified_with_check`, the commutativity check over intersecting supports and C₃-exclusion
   over the frozen graph's reachability, with no probe family and no evidence policy in play
@@ -72,20 +72,35 @@ carries no probe family.
 
 ### Requirement: build() rejects the configurations that would answer unsoundly
 
-`build()` SHALL reject an unfrozen graph, a probe naming an observable the plant does not expose, a
-zero shot count, and an empty candidate set, returning a structured `QuantumError` and running no
-stage.
+`build()` SHALL reject an unfrozen graph, a cyclic structural candidate, a probe naming an
+observable the plant does not expose, a zero shot count, and an empty candidate set, returning a
+structured `QuantumError` and running no stage.
 
 The unfrozen-graph rejection is the precondition `FactorSupports::from_graph` already enforces, and
 `build()` enforces it for both graph bridges.
+
+The cyclic rejection is a scope decision and SHALL be reported as `CyclicStructureUnsupported`.
+Cyclic QCMs exist (Barrett, Lorenz & Oreshkov, arXiv:2002.12157), and the C₃ criterion does not
+reject them: the crosstalk example's cyclic H₄ satisfies C₃-exclusion under Definition 3.1, and its
+reachability on a cyclic graph is complete, which satisfies it more plainly still. So if a cyclic
+candidate is to be kept out of `validate` and `control`, `build()` has to do it, by decision, before
+any check runs, and the error has to name the scope limit rather than an obstruction.
 
 #### Scenario: An unfrozen graph is rejected before any check runs
 
 - **WHEN** `.over_model` is given a graph whose `is_frozen()` is `false`
 - **THEN** `build()` returns `QuantumErrorEnum::CalculationError` naming the frozen-graph
-  requirement, and no commutativity or faithfulness check runs, because `remove_node` tombstones a
-  slot without compacting, so a live node can hold an id past `number_nodes()` and its parent edges
-  would be dropped silently in a faithfulness gate
+  requirement, and no commutativity or decomposability check runs, because `remove_node` tombstones
+  a slot without compacting, so a live node can hold an id past `number_nodes()` and its parent
+  edges would be dropped silently in the C₃ gate
+
+#### Scenario: A cyclic structural candidate is rejected as scope, not as a C₃
+
+- **WHEN** a config's structural candidates include one whose frozen graph contains a directed
+  cycle
+- **THEN** `build()` returns `QuantumErrorEnum::CyclicStructureUnsupported` naming the candidate, no
+  check runs, and the message says cyclic causal structures are outside v1's scope rather than that
+  the structure fails a criterion
 
 #### Scenario: A vacuous or unreachable configuration is rejected
 
@@ -105,7 +120,7 @@ A config carrying structural candidates therefore has no path into `control` tha
 - **WHEN** a config whose candidates are built by `Hypothesis::structural` is passed to
   `QclBuilder::control` without running `validate`
 - **THEN** the program fails to compile, and `QclBuilder::control(screened)` on the `Screened<R>`
-  returned by `validate(&cfg).check_markov().check_faithfulness().finalize()` compiles
+  returned by `validate(&cfg).check_markov().check_decomposable().finalize()` compiles
 
 #### Scenario: A vacuous pass is visible in the screened report
 

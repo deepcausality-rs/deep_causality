@@ -33,6 +33,29 @@ generator and a hypothesis pair all fit one record. A margin at or below one acc
   `if threshold > R::zero()` branch, and the verdict rejects whenever the measured quantity is
   positive
 
+### Requirement: A Markov report carries the provenance of the factorization it certifies
+
+A `CheckReport<R>` produced by a Markov re-check after composition or marginalisation SHALL carry a
+provenance field, `factorization: Inherited | Rederived`, and a failure under `Inherited` SHALL be
+reported as `CertificateNotInherited` rather than `CommutatorNonZero`.
+
+The two failures mean different things. On rederived factors a non-commuting pair is the model's
+own defect. On inherited factors it says only that the parts' factors do not certify the composite;
+a Markov factorization for the composite may exist under the induced factor assignment, which v1
+does not construct. A report that did not distinguish them would reject a sound model with a message
+that reads as physics.
+
+#### Scenario: The provenance is readable from the report
+
+- **WHEN** a `Screened<R>` is produced by re-checking a composite on its parts' factors
+- **THEN** its report's provenance reads `Inherited`, and a report produced by checking a model's own
+  factorization reads `Rederived`
+
+#### Scenario: The failure variant follows the provenance
+
+- **WHEN** a pair fails under `Inherited`
+- **THEN** the error is `CertificateNotInherited`, and under `Rederived` it is `CommutatorNonZero`
+
 ### Requirement: No QCL stage returns a bare boolean
 
 Every QCL stage that decides SHALL return a `CheckReport<R>` or a type containing one, and SHALL NOT
@@ -44,7 +67,7 @@ an acceptance and its remaining headroom while `true` states neither.
 
 #### Scenario: Every stage signature carries the quantity it measured
 
-- **WHEN** `check_markov`, `check_cptp`, `check_faithfulness`, `check_class_invariance`,
+- **WHEN** `check_markov`, `check_cptp`, `check_decomposable`, `check_class_invariance`,
   `check_ldpc_weights`, `gate`, `design` or `adjudicate` is called through QCL
 - **THEN** each returns a value from which the measured quantity, the threshold, the margin and the
   examined count are readable

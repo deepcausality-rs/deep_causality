@@ -27,7 +27,7 @@ reachable in both builds, since the Markov, faithfulness and code checks spend n
 
 - **WHEN** the program drops the `.evidence(...)` call and runs `QclBuilder::validate` under default
   features
-- **THEN** it compiles and runs to a `Screened<R>`, because `check_markov`, `check_faithfulness`,
+- **THEN** it compiles and runs to a `Screened<R>`, because `check_markov`, `check_decomposable`,
   `check_ldpc_weights` and `check_class_invariance` take no shots
 
 ### Requirement: Shot statistics follow the scalar and never pin `f64`

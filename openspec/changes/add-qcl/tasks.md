@@ -20,6 +20,19 @@ until `bazel test //...` is green for it.
 - [x] 1.5 Verify by mutation: dropping the code-space restriction, applying it unconditionally,
       flipping the integrality test to rational equality, and reading the wrong overlap each fail at
       least one test
+- [ ] 1.6 Derive the X-stabilizer generators in `from_complex` as a basis of `im δₖ₋₁`, and make
+      `is_logically_trivial` check the normalizer precondition against both generator sets,
+      returning `NotInNormalizer` with the offending generator (X-6)
+- [ ] 1.7 Carry `logical_hadamard`'s global phase on the emitted program as `global_phase`, populated
+      by the causal wrapper rather than dropped (X-11)
+- [ ] 1.8 Add `check_clifford_action`: a symplectic tableau update over `GateOp` for `H`, `S` and
+      `CZ`, refusing non-Clifford gates, deciding `Z̄(γ) ↔ X̄(γ̃)` through `LogicalBasis` up to phase
+      (X-5)
+- [ ] 1.9 Make `logical_t` and `logical_multi_cz` report their tuple count and error above a
+      configurable cap before allocating (X-13)
+- [ ] 1.10 Verify: `H̄` on the 3×3 torus swaps the logical Paulis; `S̄` and `CZ̄` agree between the
+      two stages; a `T` program is refused by the Clifford stage; an `X` on a stabilized qubit is
+      `NotInNormalizer`
 
 ## 2. The decision form
 
@@ -33,6 +46,9 @@ until `bazel test //...` is green for it.
       the failure path rather than dropping it at the first failing pair
 - [ ] 2.5 Verify: a factorization with disjoint supports reports zero pairs tested and reads as a
       vacuous pass; a rejected candidate still reports its margins and its count
+- [ ] 2.6 Add the `Inherited | Rederived` provenance to the Markov `CheckReport<R>` and the
+      `CertificateNotInherited` error variant, with the failure variant following the provenance
+      (X-2)
 
 ## 3. Carriers
 
@@ -56,10 +72,14 @@ until `bazel test //...` is green for it.
 
 ## 5. Hypothesis and intervention
 
+- [x] 5.0 Correct `is_c3_block` to Definition 3.1 — sorted degrees `[2, 2, 3]` on rows and columns —
+      rewrite the module docs against Example 2.12, Theorem 3.2 and Remark 3.3, and hold the tests
+      to the paper and to Theorem 4.9(v) over all 512 small relations (X-16)
 - [ ] 5.1 Add `Hypothesis` as `{ name, ProcessFactors<R>, FactorSupports }` with its
       `CausalStructure` derived rather than stored
-- [ ] 5.2 Add `intervene(do(node ← factor))` as a keyed replacement followed by
-      `FactorSupports::validate`
+- [ ] 5.2 Add `intervene_mechanism(do(node ← factor))` as a keyed replacement followed by
+      `FactorSupports::validate`, documented as the mechanism-level intervention with
+      `intervene_instrument` reserved and not built (X-4)
 - [ ] 5.3 Add `predict` as model evaluation, contracting the factor network through `space_map` and
       `embed_on_legs`
 - [ ] 5.4 Gate every marginalisation on `partial_trace_preservation_boundary` and carry the returned
@@ -71,7 +91,8 @@ until `bazel test //...` is green for it.
 
 - [ ] 6.1 Add `DesignPlan` carrying the ordered experiment set, total cost, the pair each resolves,
       and any pairs left uncovered
-- [ ] 6.2 Add `design` under `MinCostCover`, solved as a DP over covered-pair subsets
+- [ ] 6.2 Add `design` under `MinCostCover`, solved as a DP over covered-pair subsets, with
+      `max_hypotheses` defaulting to 7 and `HypothesisCountExceeded { n, pairs }` above it (X-12)
 - [ ] 6.3 Add `adjudicate` with the §4 fold rule: projection-valued folds check commutation through
       `Projection::commutes_with`, read-outs against a real-valued spec do not
 - [ ] 6.4 Return the adjudication outcome as `Either`, one surviving hypothesis against a residual
@@ -85,9 +106,11 @@ until `bazel test //...` is green for it.
       and its three invariants
 - [ ] 7.2 Add `fork` above core by cloning, one live world per hypothesis with its own ledger
 - [ ] 7.3 Add `QclBuilder::config::<FloatType, IntType>()` and the three subject constructors
-- [ ] 7.4 Enforce the `build()` preconditions, including rejecting an unfrozen graph
-- [ ] 7.5 Add the stages, with `validate` terminating in `Screened<R>` and `control` accepting either
-      a plant config or a `Screened<R>`
+- [ ] 7.4 Enforce the `build()` preconditions, including rejecting an unfrozen graph and rejecting
+      a cyclic structural candidate as `CyclicStructureUnsupported` before any check runs (X-3)
+- [ ] 7.5 Add the stages, named `check_markov`, `check_decomposable`, `check_ldpc_weights`,
+      `check_class_invariance` and `check_clifford_action`, with `validate` terminating in
+      `Screened<R>` and `control` accepting either a plant config or a `Screened<R>` (X-3)
 - [ ] 7.6 Make failure transactional, rolling back and carrying the structured `QuantumError`
 - [ ] 7.7 Verify: a structural config has no path into `control` that skips `validate`; a failed
       `validate` leaves nothing half-frozen
@@ -95,10 +118,12 @@ until `bazel test //...` is green for it.
 ## 8. Consumers and close-out
 
 - [ ] 8.1 Express the QCM path against the shipped `freeze_quantum` callers
-- [ ] 8.2 Express the geometric-QEC path, running `derive_code`, `check_ldpc_weights` and
-      `check_class_invariance`
+- [ ] 8.2 Express the geometric-QEC path, running `derive_code`, `check_ldpc_weights`,
+      `check_class_invariance` and `check_clifford_action`, and stating that it is verified by exact
+      predicates and not simulated (X-7)
 - [ ] 8.3 Express the crosstalk path, the keystone that exercises the `validate` to `control`
-      hand-off
+      hand-off, with the cyclic H₄ rejected at `build()` and the `.adjudicate()` fold documented as
+      Boolean (X-3, X-10)
 - [ ] 8.4 Add a `rust_binary` in `BUILD.bazel` for every new Cargo example, and register every new
       test file in its `mod.rs` and in `tests/BUILD.bazel`
 - [ ] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,

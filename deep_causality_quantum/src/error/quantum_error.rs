@@ -46,8 +46,16 @@ pub enum QuantumErrorEnum {
         detail: String,
     },
     /// The declared causal structure contains a `C₃` sub-relation and therefore
-    /// has no traditional-circuit causally faithful decomposition
-    /// (van der Lugt & Lorenz, arXiv:2508.11762, Thm 3.2).
+    /// does not imply a unitary causally faithful decomposition in the
+    /// traditional circuit paradigm (van der Lugt & Lorenz, arXiv:2508.11762,
+    /// Definition 3.1 and Theorem 3.2).
+    ///
+    /// "Faithfully" is the Lorenz–Barrett sense: a circuit decomposition whose
+    /// connectivity equals the unitary's causal structure, `G_U = G_C`. It is not
+    /// Pearl's faithfulness, where a distribution has no independences beyond
+    /// those its graph implies. The structure is what is rejected; a particular
+    /// unitary with that structure may still decompose faithfully (Remark 3.3),
+    /// and every such unitary has a routed decomposition.
     NotFaithfullyRepresentable(String),
     /// Numerical conversion or general calculation failure.
     CalculationError(String),

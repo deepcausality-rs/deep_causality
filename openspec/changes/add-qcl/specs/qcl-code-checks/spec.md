@@ -84,8 +84,8 @@ different question, and widening or narrowing the state set cannot repair it.
 A diagonal ratio has phase `Q(|(γ ⊕ b) ∩ x|)/M − Q(|γ ∩ x|)/M`, so it is the identity on the code
 space exactly when that phase is a whole number of turns for every basis state the code space
 contains. Those are the states meeting every Z-stabilizer evenly. The X-stabilizers SHALL NOT be
-carried, because they fix which superpositions are code states and a diagonal phase does not see a
-superposition.
+consulted by this check, because they fix which superpositions are code states and a diagonal phase
+does not see a superposition; they are carried for the Pauli predicate's normalizer check.
 
 Of the Z-stabilizer constraints, the enumeration SHALL impose the one the shift itself carries,
 `|b ∩ x|` even, and SHALL impose it only when `b` lies in the stabilizer span. That is the factor
@@ -133,8 +133,9 @@ since a shift by a non-boundary then imposes nothing.
 ### Requirement: `LogicalBasis` derives the stabilizer generators it needs
 
 `LogicalBasis<W>::from_complex` SHALL derive the Z-stabilizer generators as a basis of `im ∂ₖ₊₁` and
-carry them, and SHALL expose them through an accessor. There SHALL NOT be a second constructor, and
-there SHALL NOT be an error path for a basis carrying no stabilizers.
+the X-stabilizer generators as a basis of `im δₖ₋₁`, SHALL carry both, and SHALL expose each through
+an accessor. There SHALL NOT be a second constructor, and there SHALL NOT be an error path for a
+basis carrying no stabilizers.
 
 `from_complex` already holds the chain complex, which is the only thing a stabilizer basis needs, so
 requiring a caller to supply the generators separately would add a way to build a basis that answers
@@ -144,9 +145,15 @@ The generators SHALL be an image basis rather than the raw `∂ₖ₊₁` column
 dependency per `(k+1)`-cycle, and a dependent generating set inflates the span test's cost without
 changing its answer.
 
-`is_logically_trivial` and `are_logically_equivalent` are untouched: B.1's commutation criterion over
-Paulis needs no stabilizer group, which is why the shipped doc block records that its precondition
-goes unchecked.
+`is_logically_trivial` SHALL check its normalizer precondition against the carried generators and
+SHALL return `QuantumError::NotInNormalizer` naming the offending generator when it fails. B.1's
+criterion decides triviality *of a logical operator*; an operator outside the normalizer commutes
+with the logical generators without acting trivially, because it leaves the code space instead. The
+shipped doc block recorded that the precondition was stated rather than checked because no
+stabilizer group was carried. One is carried now, and the check is two more loops of
+`Gf2Chain::inner`: a Pauli `(x, z)` is in the normalizer iff `⟨x, s⟩ = 0` for every Z-generator `s`
+and `⟨z, t⟩ = 0` for every X-generator `t`. Leaving the precondition stated once the data is present
+would be a silent wrong answer.
 
 #### Scenario: The generators are an independent basis of the boundaries
 
@@ -160,12 +167,24 @@ goes unchecked.
 - **THEN** `is_diagonal_trivial` accepts all three, which is Haruna Eq. (3.21) for the whole family
   rather than for `S̄` alone
 
-#### Scenario: The Pauli path is unchanged
+#### Scenario: The Pauli path is unchanged on the normalizer
 
 - **WHEN** a `LogicalBasis` decides `is_logically_trivial` for the `Z̄` Paulis over the torus's
   homology generators and its `∂₂` columns
 - **THEN** the answers match `is_diagonal_trivial` on the corresponding `DiagonalPhase::z` gates,
   which is the agreement `test_the_diagonal_predicate_agrees_with_the_pauli_one_on_z` already asserts
+
+#### Scenario: A Pauli outside the normalizer is refused rather than misjudged
+
+- **WHEN** `is_logically_trivial` is given a single-qubit `X` on a qubit that a Z-stabilizer covers
+- **THEN** it returns `NotInNormalizer` naming that stabilizer, rather than `Ok(true)`, which is what
+  the commutation criterion alone would answer for an operator that leaves the code space
+
+#### Scenario: The X-generators are an independent basis of the coboundaries
+
+- **WHEN** the 3×3 simplicial torus is read at grade 1
+- **THEN** the X-stabilizer count is `rank δ₀`, the rank equals the count, and every X-generator
+  pairs to zero with every Z-generator, which is `∂₁ ∘ ∂₂ = 0` read through the pairing
 
 ### Requirement: The phase arithmetic is exact, so the check carries no tolerance
 
@@ -204,8 +223,14 @@ involved, and SHALL NOT build, simulate or compare `2ⁿ × 2ⁿ` operators.
 
 The geometric-QEC consumer's subject is the 32-qubit code of `square_torus(4)`. `SimQpu::sample`
 refuses a circuit above 24 qubits and sits behind the `qpu` feature, so comparing unitaries decides
-nothing about that subject. The atom decomposition of `{γ, γ ⊕ b, γ̃}` is bounded by the union of
-those three supports, and `ATOM_ENUMERATION_CAP` at `1 << 22` bounds what the check attempts.
+nothing about that subject. The block decomposition of `{γ ∩ b, b \ γ, γ \ b}` is bounded by the two
+supports, and `ATOM_ENUMERATION_CAP` at `1 << 22` bounds what the check attempts.
+
+The consequence is stated so it is never overstated: the geometric-QEC path is **verified by exact
+𝔽₂ and rational predicates, and not simulated**. No gate that consumer emits is ever run through
+`SimQpu`, and the only dynamical evidence for any Haruna gate is the gate-alphabet identity tests on
+small registers. That is sufficient because the checks are combinatorial and exact, and a claim
+about this path SHALL NOT say "tested on the simulator".
 
 #### Scenario: A 32-qubit code is decided in the default build
 
@@ -216,10 +241,114 @@ those three supports, and `ATOM_ENUMERATION_CAP` at `1 << 22` bounds what the ch
 
 #### Scenario: A wide code fails loudly
 
-- **WHEN** the atom occupancy enumeration for one pair would visit more states than
+- **WHEN** the block occupancy enumeration for one shift would visit more states than
   `ATOM_ENUMERATION_CAP`
 - **THEN** the check returns `QuantumError::CalculationError` naming the state count and the cap, so
   the cost is reported and no run hangs
+
+#### Scenario: The verification claim names its kind
+
+- **WHEN** the geometric-QEC consumer reports its results
+- **THEN** it says the gates were verified by exact predicates and not simulated, and it names the
+  simulator's 24-qubit cap against the code's 32
+
+### Requirement: The class-invariance check covers the diagonal gates of Table 1, and says so
+
+`check_class_invariance` SHALL be documented as covering the diagonal gates of Table 1 — `Z̄`, `S̄`,
+`T̄`, `CZ̄`, `CS̄†`, `CC̄Z` and `C^{m−1}Z̄` — and SHALL NOT be described as covering "the Haruna gate
+layer". `H̄` is emitted by that layer and is not decided by this stage.
+
+"The Haruna gate layer" names the emitter, which produces every Table 1 gate. Read beside "every
+diagonal gate", it implies the rational check covers the whole layer, and it does not: `H̄` is
+neither a Pauli nor diagonal.
+
+#### Scenario: Coverage is stated where the check is described
+
+- **WHEN** a reader consults the documentation of `check_class_invariance`
+- **THEN** it lists the seven diagonal gates it decides and states that `H̄` is decided by
+  `check_clifford_action`
+
+### Requirement: `check_clifford_action` decides `H̄` on the symplectic side
+
+`check_clifford_action` SHALL propagate each logical Pauli generator through an emitted
+`Vec<GateOp>` as a symplectic 𝔽₂ update on `(x, z)`, and SHALL decide, through `LogicalBasis`, that
+the image of `Z̄(γ)` is logically equivalent to `X̄(γ̃)` and the image of `X̄(γ̃)` to `Z̄(γ)`, up to
+phase. It SHALL NOT build a state vector and SHALL carry no register-width limit.
+
+`H̄ = S̄(γ) · ∏H · S̄(γ̃) · ∏H · S̄(γ)` (Eq. 3.27) is built from `S`, `CZ` and `H`, all Clifford, so
+it is a Clifford circuit, and Clifford conjugation of a Pauli is a stabilizer-tableau update the
+crate already has the vector type for: `LogicalPauli<W>` is `(x, z)` over `Gf2Chain`. The
+symplectic actions are `H: (x, z) ↦ (z, x)` on its qubit, `S: (x, z) ↦ (x, z ⊕ x)`, and
+`CZ: (x, z) ↦ (x, z ⊕ x_swapped)`, with the phase tracked separately. This stage covers `Z̄`, `S̄`,
+`CZ̄` and `H̄`; it cannot cover `T̄`, `CS̄†` or `CC̄Z`, which are non-Clifford and remain with the
+diagonal check. Between the two stages every Table 1 gate is decided by exactly one exact predicate,
+and `Z̄`, `S̄` and `CZ̄` are decided by both, which is the cross-check.
+
+#### Scenario: The logical Hadamard swaps the logical Paulis
+
+- **WHEN** `logical_hadamard(γ, γ̃)` is emitted for a class of the 3×3 torus and its dual
+- **THEN** pushing `Z̄(γ)` through the program yields a Pauli `are_logically_equivalent` to `X̄(γ̃)`,
+  and pushing `X̄(γ̃)` yields one equivalent to `Z̄(γ)`, each up to phase
+
+#### Scenario: The diagonal Cliffords agree with the diagonal check
+
+- **WHEN** `logical_s(γ)` and `logical_cz(γ₁, γ₂)` are decided by both stages
+- **THEN** both accept, and the Clifford stage's image of `X̄(γ̃)` under `S̄` is `X̄(γ̃)` times
+  `Z̄(γ)^{⟨γ, γ̃⟩}` up to phase, which is Eq. (3.20)'s commutation relation read on the symplectic side
+
+#### Scenario: A non-Clifford program is refused, not misjudged
+
+- **WHEN** `check_clifford_action` is given a program containing `T`, `Csdg` or `Ccz`
+- **THEN** it returns a structured `QuantumError` naming the first non-Clifford gate, because the
+  tableau update is undefined for it, rather than propagating through a gate it cannot represent
+
+### Requirement: The emitted program carries its global phase
+
+The program `logical_hadamard` emits SHALL carry the global phase it returns as an optional
+`global_phase: Option<Complex<R>>` on the program, and the causal wrapper SHALL populate it rather
+than drop it.
+
+Table 1's Hadamard carries `e^{−iπ/4}`. A global phase is unobservable under computational-basis
+measurement and becomes a relative, observable one the moment the gate is used as a controlled
+operation, which is what the Appendix B arguments carry. `check_clifford_action` tests equivalence
+up to phase because the symplectic form is phase-blind; carrying the phase beside the program is
+what lets a later exact form of the test, or a controlled use, recover it.
+
+#### Scenario: The wrapper keeps the phase
+
+- **WHEN** the causal wrapper over `logical_hadamard` is called
+- **THEN** the `PropagatingEffect` it returns carries the program with `global_phase` set to the
+  `Complex<R>` the builder returned, and nothing about the phase is logged as dropped
+
+#### Scenario: Diagonal programs carry no phase
+
+- **WHEN** `logical_z`, `logical_s`, `logical_t`, `logical_cz` or `logical_multi_cz` emits a program
+- **THEN** its `global_phase` is `None`, because Table 1 attaches no global phase to those rows
+
+### Requirement: The non-Clifford builders report their tuple count and cap it
+
+`logical_t` and `logical_multi_cz` SHALL report the number of pair and triple tuples they emit over,
+and SHALL return a structured `QuantumError` naming the count and the cap when the count exceeds a
+configurable cap, before allocating the tuple list.
+
+`Gf2Chain::support_pairs` and `support_triples` materialise `C(w, 2)` and `C(w, 3)` tuples eagerly.
+On a toric code `w` is the lattice extent and the cost is nothing; on the qLDPC family the 𝔽₂ rank
+was fixed for, representatives can have weight in the tens to hundreds and `T̄` materialises `10⁵`
+to `10⁶` triples per gate. The cap follows the pattern the code-space enumeration uses: cost is
+reported before it is paid, and a run that would exceed it fails loudly rather than allocating.
+Making the iterators lazy is the alternative and is not chosen for v1.
+
+#### Scenario: A toric representative is under the cap
+
+- **WHEN** `logical_t` is emitted for a homology generator of `square_torus(4)`
+- **THEN** the program is emitted, and the tuple count it reports is `C(w, 2) + C(w, 3)` for the
+  generator's weight `w`
+
+#### Scenario: A wide representative fails loudly
+
+- **WHEN** `logical_t` is asked for a chain whose weight puts `C(w, 3)` above the configured cap
+- **THEN** it returns a structured `QuantumError` naming the count and the cap, and no tuple list is
+  allocated
 
 ### Requirement: A class-invariance failure is reported as a witness and two counts, never as a margin
 
