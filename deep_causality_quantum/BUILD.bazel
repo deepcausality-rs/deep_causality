@@ -114,6 +114,50 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/carriers/* test suites
+# =============================================================================
+
+rust_test_suite(
+    name = "carriers",
+    srcs = glob([
+        "tests/types/carriers/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/evidence/* test suites
+# =============================================================================
+
+rust_test_suite(
+    name = "evidence",
+    srcs = glob([
+        "tests/types/evidence/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/decision/* test suites — the decision form
 # =============================================================================
 

@@ -10,7 +10,9 @@
 
 use crate::QuantumError;
 use crate::types::qpu::circuit::{GateOp, QuantumCircuit};
-use crate::types::qpu::sampler::{CountHistogram, QpuSampler};
+use crate::types::qpu::histogram::CountHistogram;
+use crate::types::qpu::prng::SplitMix64;
+use crate::types::qpu::sampler::QpuSampler;
 use alloc::format;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -123,28 +125,6 @@ fn apply_diagonal_phase(state: &mut [C], qubits: &[usize], phase: C) {
         if i & mask == mask {
             *a = phase.mul(*a);
         }
-    }
-}
-
-// A deterministic splitmix64 PRNG → uniform f64 in [0, 1).
-struct SplitMix64 {
-    state: u64,
-}
-
-impl SplitMix64 {
-    fn new(seed: u64) -> Self {
-        Self { state: seed }
-    }
-    fn next_u64(&mut self) -> u64 {
-        self.state = self.state.wrapping_add(0x9E37_79B9_7F4A_7C15);
-        let mut z = self.state;
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-        z ^ (z >> 31)
-    }
-    fn next_f64(&mut self) -> f64 {
-        // 53-bit mantissa uniform in [0, 1).
-        (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
 }
 

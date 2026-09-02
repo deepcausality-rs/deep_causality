@@ -142,7 +142,14 @@ survive.
 
 ### D6. Two working types, and the tolerance family has no integer member
 
-`config::<FloatType, IntType>()`. Widening `FloatType` buys accuracy, bounded by `epsilon()`.
+`config::<FloatType, NumberType>()`. Widening `FloatType` buys accuracy, bounded by `epsilon()`.
+
+*Corrected while implementing the shot budget.* The second parameter was written `IntType`, and
+`IntType` is `i64`: ℤ, signed, for ring arithmetic, as `deep_causality_core`'s alias doc says. A
+count is bounded on `NaturalNumber`, which is unsigned, so `i64` cannot instantiate it and the
+parameter cannot be `IntType`. The alias doc names the unsigned one for exactly this use: "use
+`NumberType` for counting and indexing, which is what ℕ is for". Every count width in this change
+is `NumberType`, and the shot budget's tests name it once.
 Widening `IntType` buys headroom against overflow, which nothing bounds. So the §3.3 tolerance family
 covers the real side only, and the integer side gets checked arithmetic: `NaturalNumber`'s
 `checked_difference` returns `None` on an overdrawn budget and `monus` clamps, which is exactly a
@@ -162,7 +169,7 @@ and `2^45` at n = 10, and a caller with ten hypotheses would get a hang rather t
 `MinCostCover` carries `max_hypotheses`, default 7, and `design` returns
 `HypothesisCountExceeded { n, pairs }` above it before allocating the table, with a doc pointer to
 the heuristic a later version would supply. The cap is a decision in the sense D6 uses for
-`IntType`.
+`NumberType`.
 
 ### D8. The circuit data types are always compiled; the sampler seam stays gated
 

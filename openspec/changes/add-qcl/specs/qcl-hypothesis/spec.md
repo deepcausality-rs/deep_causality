@@ -247,7 +247,7 @@ forbidden.
 A hypothesis and the operations over it SHALL carry real quantities on the scalar parameter and
 counting quantities on `NaturalNumber`, and SHALL NOT mix them. The factor operators, the boundary
 warrant's residual and its amplified bound are real and follow `FloatType`. The node keys, the leg
-identifiers, the per-leg dimensions and the prediction count are ℕ and follow `IntType`.
+identifiers, the per-leg dimensions and the prediction count are ℕ and follow `NumberType`.
 
 A leg dimension SHALL be treated as a count rather than as a measurement: `space_map`'s dimensions
 multiply into a total that can overflow, and the shipped `FactorSupports::validate` is

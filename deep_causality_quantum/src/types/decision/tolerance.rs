@@ -23,6 +23,7 @@ use deep_causality_num::FromPrimitive;
 /// | `Validation` | `√ε` | `Projection::default_tolerance` |
 /// | `NumericalRank` | `D·ε·scale` | `Projection::range_projector` |
 /// | `State` | `√ε·max(1, ‖M‖_F)` | `DensityMatrix::with_tolerance` |
+/// | `ShotNoise` | `√(p(1−p)/n)` | the read-out decision over shots |
 ///
 /// The commutator member takes a pair of operators and answers through
 /// [`commutator_threshold`](Self::commutator_threshold); the other three take an operator's
@@ -65,6 +66,11 @@ pub enum Tolerance<R: RealField> {
         /// `R::epsilon()`.
         epsilon: R,
     },
+    /// `√(p(1−p)/n)`: the width of a sampled read-out, which reads from the budget rather than
+    /// from `R::epsilon()`. The one member whose input is a count, and the count is an *input*
+    /// to the width: the family stays over the real carrier, and there is still no integer
+    /// member.
+    ShotNoise,
 }
 
 impl<R> Tolerance<R>
@@ -104,6 +110,23 @@ where
         }
     }
 
+    /// The shot-noise member.
+    pub fn shot_noise() -> Self {
+        Self::ShotNoise
+    }
+
+    /// The shot-noise width `√(p(1−p)/n)` at an estimate `p` over `n` shots. `None` for every
+    /// other member, and `None` at zero shots, where there is no width.
+    pub fn shot_noise_width(&self, estimate: R, shots: u64) -> Option<R> {
+        match self {
+            Self::ShotNoise if shots > 0 => {
+                let n = R::from_u64(shots)?;
+                Some((estimate * (R::one() - estimate) / n).sqrt())
+            }
+            _ => None,
+        }
+    }
+
     /// The scalar's unit roundoff, which every member is a function of.
     pub fn epsilon(&self) -> R {
         R::epsilon()
@@ -117,6 +140,7 @@ where
             Self::Validation { .. } => "validation",
             Self::NumericalRank { .. } => "numerical-rank",
             Self::State { .. } => "state",
+            Self::ShotNoise => "shot-noise",
         }
     }
 
@@ -139,6 +163,7 @@ where
                 Some(*epsilon * d * clamped)
             }
             Self::State { .. } => Some(DensityMatrix::<R>::default_tolerance() * clamped),
+            Self::ShotNoise => None,
         }
     }
 

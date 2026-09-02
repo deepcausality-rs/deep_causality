@@ -44,7 +44,7 @@ hypotheses' read-outs at `e` reaches `MinCostCover`'s `floor_bits`.
 `MinCostCover` SHALL carry `max_hypotheses`, defaulting to 7, and `design` SHALL return
 `HypothesisCountExceeded { n, pairs }` when the surviving count exceeds it, before allocating the
 table. `2^C(n,2)` is `2^15` at n = 6, `2^28` at n = 8 and `2^45` at n = 10; the cliff is a decision
-rather than a benchmark observation, in the sense the ledger's `IntType` is, and the error's doc
+rather than a benchmark observation, in the sense the ledger's `NumberType` is, and the error's doc
 points at the heuristic a later version would supply.
 
 #### Scenario: The cover is optimal rather than greedy
@@ -157,7 +157,7 @@ unconditionally, and applying the guard there would reject sound folds.
 Every quantity the design stage carries SHALL be written against an algebraic bound and SHALL take
 its width from the run's parameters rather than from a literal type. A separation in bits and a cost
 are real, so they are `R` and follow `FloatType`; an experiment count, a shot count and the covered
-subsets of the dynamic program are ℕ, so they are bounded on `NaturalNumber` and follow `IntType`.
+subsets of the dynamic program are ℕ, so they are bounded on `NaturalNumber` and follow `NumberType`.
 
 The two axes are not interchangeable. `floor_bits` is compared against a measured separation and its
 comparison SHALL derive from the `Tolerance<R>` family, because both sides are real and the failure

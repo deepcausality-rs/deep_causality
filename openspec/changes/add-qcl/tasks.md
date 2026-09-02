@@ -52,22 +52,22 @@ until `bazel test //...` is green for it.
 
 ## 3. Carriers
 
-- [ ] 3.1 Add `QubitOperator` with named constructors, replacing hand-packed 2×2 tensors
-- [ ] 3.2 Add `Channel`, CPTP-checked once at construction through the shipped checks
-- [ ] 3.3 Add `QuantumPlant` as a sealed validated state that evolves in place
-- [ ] 3.4 Add `Observable` as a named projector carrying its own Born read-out
-- [ ] 3.5 Give each carrier a `wrappers.rs`-style lift into the causal monad
-- [ ] 3.6 Verify: no carrier exposes `&mut` to its validated interior, and each rejects a malformed
+- [x] 3.1 Add `QubitOperator` with named constructors, replacing hand-packed 2×2 tensors
+- [x] 3.2 Add `Channel`, CPTP-checked once at construction through the shipped checks
+- [x] 3.3 Add `QuantumPlant` as a sealed validated state that evolves in place
+- [x] 3.4 Add `Observable` as a named projector carrying its own Born read-out
+- [x] 3.5 Give each carrier a `wrappers.rs`-style lift into the causal monad
+- [x] 3.6 Verify: no carrier exposes `&mut` to its validated interior, and each rejects a malformed
       construction with a typed `QuantumError` rather than panicking
 
 ## 4. Evidence and the shot budget
 
-- [ ] 4.1 Add `ShotBudget` and `Evidence`, with shot statistics generic in the scalar rather than
+- [x] 4.1 Add `ShotBudget` and `Evidence`, with shot statistics generic in the scalar rather than
       pinned to `f64`
-- [ ] 4.2 Add the sampler that turns `born_projective_probability` into shots on the `DensityMatrix`
+- [x] 4.2 Add the sampler that turns `born_projective_probability` into shots on the `DensityMatrix`
       carrier, in the default build
-- [ ] 4.3 Make a config naming a shot budget a compile-time selection of the emergent modality
-- [ ] 4.4 Verify: the default build compiles without the `QpuSampler` seam; a run at two scalars
+- [x] 4.3 Make a config naming a shot budget a compile-time selection of the emergent modality
+- [x] 4.4 Verify: the default build compiles without the `QpuSampler` seam; a run at two scalars
       shows the tolerances moving with the scalar
 
 ## 5. Hypothesis and intervention
@@ -105,7 +105,7 @@ until `bazel test //...` is green for it.
 - [ ] 7.1 Add `Ledger<R, N>` with counts on `NaturalNumber`, `checked_difference` for the draw-down,
       and its three invariants
 - [ ] 7.2 Add `fork` above core by cloning, one live world per hypothesis with its own ledger
-- [ ] 7.3 Add `QclBuilder::config::<FloatType, IntType>()` and the three subject constructors
+- [ ] 7.3 Add `QclBuilder::config::<FloatType, NumberType>()` and the three subject constructors
 - [ ] 7.4 Enforce the `build()` preconditions, including rejecting an unfrozen graph and rejecting
       a cyclic structural candidate as `CyclicStructureUnsupported` before any check runs (X-3)
 - [ ] 7.5 Add the stages, named `check_markov`, `check_decomposable`, `check_ldpc_weights`,

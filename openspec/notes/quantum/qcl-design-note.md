@@ -647,9 +647,14 @@ pub struct Ledger<R, N> {
 **The count fields take a parameter, and this note previously hardcoded them.** They read `u64`,
 `u32` and `u32`, three concrete widths in a design that insists everywhere else on writing against a
 bound and naming the width once. They are counts, so they are ℕ, so `N: NaturalNumber` is the bound
-and `IntType` names the width at the same single site `FloatType` is named (§7.1). The correction
+and `NumberType` names the width at the same single site `FloatType` is named (§7.1). The correction
 matters beyond tidiness for the reason §6.4 gives: an integer's failure mode is overflow, and
 overflow has no `epsilon()` to bound it, so the width is a decision rather than a default.
+
+**And the alias is the unsigned one.** An earlier revision wrote `IntType` here. `IntType` is
+`i64`, ℤ for ring arithmetic, and cannot instantiate `NaturalNumber`, which is unsigned. The alias
+file names the counting one: `NumberType`, "which is what ℕ is for". Found when the shot budget was
+built against the bound and the signed alias would not compile.
 
 `NaturalNumber` also supplies the draw-down. ℕ has no `Sub`, and `checked_difference` returning
 `None` on an overdrawn budget is the semantics a ledger wants, with `monus` as the clamping variant
@@ -757,13 +762,14 @@ Every configuration comes from `QclBuilder::config()`, which is also the single 
 working types are named. There are **two**, because §6.4's two axes are independent:
 
 ```rust
-QclBuilder::config::<FloatType, IntType>()
+QclBuilder::config::<FloatType, NumberType>()
 ```
 
 Every bound in §6.4 is discharged from those parameters, tolerances included. Swapping `FloatType`
-re-types the whole run, thresholds and all. Swapping `IntType` re-types the ledger's counts, and
+re-types the whole run, thresholds and all. Swapping `NumberType` re-types the ledger's counts, and
 buys headroom rather than accuracy: there is no threshold to move, because the failure it guards
-against is overflow rather than rounding.
+against is overflow rather than rounding. It is the unsigned alias, because a count is ℕ and
+`NaturalNumber` is unsigned; `IntType` is ℤ and belongs to ring arithmetic (§6.5).
 
 An earlier revision named one parameter here. That was correct while the counts were hardcoded and
 is not correct now that they are a bound (§6.5).
@@ -808,7 +814,7 @@ invalidated report, not a stale one.
 **The QCM path.** Validate only; maps one-to-one onto `freeze_quantum`.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_model(graph, factors, supports)               // rejects an unfrozen graph
     .tolerance(Tolerance::q_tol().with_safety_factor(ft(8.0)))
     .declare_systems(&inputs, &outputs)
@@ -823,7 +829,7 @@ QclBuilder::validate(&cfg)
 **Calibration counterfactual.** Mechanism candidates, so `control` directly.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_plant(transmon)
     .evidence(Evidence::shots(1024).seed(20260821))     // selects the emergent modality, §1.1
     .baseline(Experiment::probe("check", excited_population, 1, cost = 1))
@@ -848,7 +854,7 @@ QclBuilder::control(&cfg)
 **Crosstalk attribution.** The only consumer running both halves.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_plant(two_qubit)
     .evidence(Evidence::shots(1024).seed(20260821))
     .baseline(Experiment::probe("passive", joint_error, 1, cost = 1))
@@ -879,7 +885,7 @@ QclBuilder::control(screened)                           // unreachable unscreene
 **Geometric QEC.** A code subject, validate only.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_code(LatticeComplex::<2, FloatType>::square_torus(4))
     .build()?;
 
@@ -1036,7 +1042,7 @@ and arrives around n = 7 or 8, where `C(n,2)` reaches 21 to 28 and `2^C(n,2)` st
 `2^C(n,2)` is `2^15` at n = 6, `2^28` at n = 8, `2^45` at n = 10, so the bound is a decision rather
 than a benchmark observation: `MinCostCover` carries `max_hypotheses`, default 7, and `design`
 returns `HypothesisCountExceeded { n, pairs }` above it before allocating the table, in the sense
-§6.5 uses for `IntType`. A caller with ten hypotheses gets an error, not a hang.
+§6.5 uses for `NumberType`. A caller with ten hypotheses gets an error, not a hang.
 
 At this note's own numbers the solve is not the cost at all. §8.6 sizes the scan at `|E| × |H|`
 plant evolutions plus `|E| × C(|H|, 2)` closed-form coefficients, 120 and 120 for 40 depths and 3
@@ -1073,7 +1079,7 @@ that §6.4's bounds are read off.
 
 [`deep_causality_num/README.md`](../../../deep_causality_unified_math/deep_causality_num/README.md)
 — the representation half: `Integer`, `SignedInt`, `UnsignedInt` and `NaturalNumber`, and the
-`FloatType` / `IntType` split §7.1 takes its two parameters from.
+`FloatType` / `IntType` split, and the `NumberType` alias for ℕ that §7.1's second parameter is.
 
 **Shipped code this design wraps.** `deep_causality_quantum/src/`, 4432 lines, in particular
 `types/qcm/{markov_freeze, faithfulness, process_factors, environment}.rs`,

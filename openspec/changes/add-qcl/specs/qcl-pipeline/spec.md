@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ### Requirement: Configuration has one origin naming two working types
 
-Every QCL configuration SHALL originate at `QclBuilder::config::<FloatType, IntType>()`, the single
+Every QCL configuration SHALL originate at `QclBuilder::config::<FloatType, NumberType>()`, the single
 site where the two working types are named.
 
 `FloatType` buys accuracy. Every tolerance in a run is discharged from it, as the shipped policies
@@ -26,7 +26,7 @@ from a hardcoded scalar, and no count field carries a hardcoded width.
 
 #### Scenario: The headroom parameter moves no threshold
 
-- **WHEN** `IntType` changes from `u32` to `u64` at the config site
+- **WHEN** `NumberType` changes from `u32` to `u64` at the config site
 - **THEN** the `Ledger<R, N>` count fields retype and every acceptance threshold is unchanged,
   because overflow has no `epsilon()` to derive a tolerance from
 

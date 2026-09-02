@@ -434,7 +434,7 @@ where
         .map_err(|e| QuantumError::DimensionMismatch(format!("{e}")))?;
 
     let hypothesis_residual = frobenius_norm(&matrix_commutator(&boundary, m)?);
-    let amplification = R::from_f64((d_b as f64).sqrt()).ok_or_else(|| {
+    let amplification = R::from_usize(d_b).map(|d| d.sqrt()).ok_or_else(|| {
         QuantumError::CalculationError("scalar type cannot represent √(d_B)".into())
     })?;
 
