@@ -56,6 +56,10 @@ fn test_display_covers_every_variant() {
             "Certificate Not Inherited: the parts' factors at nodes 2 and 5 do not certify the composite: see D9",
         ),
         (
+            QuantumError::BoundaryNotHeld("residual 0.3 > 1e-9".into()),
+            "Boundary Not Held: residual 0.3 > 1e-9",
+        ),
+        (
             QuantumError::NotInNormalizer(4, "Z-stabilizer".into()),
             "Not In Normalizer: anticommutes with stabilizer generator 4 (Z-stabilizer)",
         ),

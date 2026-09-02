@@ -69,6 +69,13 @@ pub enum QuantumErrorEnum {
         node_k: usize,
         detail: String,
     },
+    /// A marginalisation was refused because its boundary warrant did not
+    /// hold: the kept-factor operator `Z ⊗ 1_B` fails to commute with the
+    /// operator being traced within the named tolerance, so nothing may be
+    /// asserted about the traced commutator and no traced operator is
+    /// produced. The message carries the residual, the tolerance and the
+    /// amplification; `Hypothesis::boundary_warrant` returns them typed.
+    BoundaryNotHeld(String),
     /// A Pauli handed to the logical-equivalence predicate lies outside the
     /// code's normalizer: it anticommutes with the stabilizer generator named by
     /// `generator`, so it does not preserve the code space and the question of
@@ -157,6 +164,11 @@ impl QuantumError {
     }
 
     #[allow(non_snake_case)]
+    pub fn BoundaryNotHeld(msg: String) -> Self {
+        Self(QuantumErrorEnum::BoundaryNotHeld(msg))
+    }
+
+    #[allow(non_snake_case)]
     pub fn NotInNormalizer(generator: usize, detail: String) -> Self {
         Self(QuantumErrorEnum::NotInNormalizer { generator, detail })
     }
@@ -226,6 +238,7 @@ impl Display for QuantumError {
                 "Certificate Not Inherited: the parts' factors at nodes {} and {} do not certify the composite: {}",
                 node_j, node_k, detail
             ),
+            QuantumErrorEnum::BoundaryNotHeld(msg) => write!(f, "Boundary Not Held: {}", msg),
             QuantumErrorEnum::NotInNormalizer { generator, detail } => write!(
                 f,
                 "Not In Normalizer: anticommutes with stabilizer generator {} ({})",

@@ -75,17 +75,19 @@ until `bazel test //...` is green for it.
 - [x] 5.0 Correct `is_c3_block` to Definition 3.1 — sorted degrees `[2, 2, 3]` on rows and columns —
       rewrite the module docs against Example 2.12, Theorem 3.2 and Remark 3.3, and hold the tests
       to the paper and to Theorem 4.9(v) over all 512 small relations (X-16)
-- [ ] 5.1 Add `Hypothesis` as `{ name, ProcessFactors<R>, FactorSupports }` with its
+- [x] 5.1 Add `Hypothesis` as `{ name, ProcessFactors<R>, FactorSupports }` with its
       `CausalStructure` derived rather than stored
-- [ ] 5.2 Add `intervene_mechanism(do(node ← factor))` as a keyed replacement followed by
+- [x] 5.2 Add `intervene_mechanism(do(node ← factor))` as a keyed replacement followed by
       `FactorSupports::validate`, documented as the mechanism-level intervention with
       `intervene_instrument` reserved and not built (X-4)
-- [ ] 5.3 Add `predict` as model evaluation, contracting the factor network through `space_map` and
+- [x] 5.3 Add `predict` as model evaluation, contracting the factor network through `space_map` and
       `embed_on_legs`
-- [ ] 5.4 Gate every marginalisation on `partial_trace_preservation_boundary` and carry the returned
+- [x] 5.4 Gate every marginalisation on `partial_trace_preservation_boundary` and carry the returned
       `BoundaryWarrant` bound forward
-- [ ] 5.5 Verify: a `Screened<R>` whose factorization is marginalised carries an invalidated report
-      rather than a stale one
+- [x] 5.5 Verify: a `Screened<R>` whose factorization is marginalised carries an invalidated report
+      rather than a stale one — verified on `Hypothesis`, which drops its certificate on
+      `intervene_mechanism` and on `marginalise` and reports the prior margin degraded by `√(d_B)`;
+      `Screened<R>` in group 7 wraps a `Hypothesis` and inherits the behaviour
 
 ## 6. Design and adjudication
 

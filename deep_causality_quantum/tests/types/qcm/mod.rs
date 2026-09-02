@@ -9,6 +9,8 @@ mod environment_tests;
 #[cfg(test)]
 mod faithfulness_tests;
 #[cfg(test)]
+mod hypothesis_tests;
+#[cfg(test)]
 mod markov_freeze_tests;
 #[cfg(test)]
 mod markov_report_tests;
