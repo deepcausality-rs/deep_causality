@@ -12,6 +12,8 @@ Unified math grew from a small idea. Tensors and multivectors needed to compose,
 
 Every crate depends only on crates below it. The graph is drawn as its transitive reduction, so
 `tensor -> num` is omitted where `tensor -> linear -> haft -> algebra -> num` already implies it.
+Two edges leave the folder: `tensor` and `uncertain` both build on `deep_causality_ast`, which
+lives in `deep_causality_utils/` because `deep_causality` is its third consumer.
 
 
 ```
@@ -21,7 +23,7 @@ tier 4   calculus   fft   homology   tensor
 tier 3   linear   num_complex   num_dual   uncertain
 tier 2   haft   num_rational   rand
 tier 1   algebra
-tier 0   num   metric   ast
+tier 0   num   metric
 ```
 
 ![Dependency graph of the deep_causality mathematics crates: seven tiers, from the roots num and
@@ -38,13 +40,12 @@ Every one of the thirteen crates above tier 1 reaches `algebra`,
 so a change to the tower recompiles the whole stack. `num` and `algebra` are also the two
 crates that can never adopt `haft`, because `haft` depends on both.
 
-## The seventeen
+## The sixteen
 
 | Crate | Tier | What it holds |
 |---|---|---|
 | `deep_causality_num` | 0 | Numeric traits: casts, identity, float and integer predicates, and the lifts that make precision a parameter. The bottom of the workspace |
 | `deep_causality_metric` | 0 | Metric signatures `Cl(p, q, r)` and Lorentzian sign conventions, east coast and west coast |
-| `deep_causality_ast` | 0 | The expression AST the tensor and uncertainty layers build on |
 | `deep_causality_algebra` | 1 | Groups, rings, fields, algebras, and isomorphism markers |
 | `deep_causality_haft` | 2 | Applied category theory: HKT, functor, applicative, monad, foldable, arrow, and a type-encoded effect system |
 | `deep_causality_num_complex` | 2 | Complex, quaternion and octonion number types |

@@ -282,7 +282,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 |------------------------------------------------------------------------------|--------------------------------------------------------------|
 | [`deep_causality_data_structures`](deep_causality_data_structures/README.md) | Sliding-window, grid-array, and other specialised structures |
 | [`deep_causality_rand`](deep_causality_unified_math/deep_causality_rand/README.md)                       | RNG and statistical distributions                            |
-| [`deep_causality_ast`](deep_causality_unified_math/deep_causality_ast/README.md)                         | Generic abstract syntax tree                                 |
+| [`deep_causality_ast`](deep_causality_utils/deep_causality_ast/README.md)                         | Generic abstract syntax tree                                 |
 
 ---
 

@@ -14,7 +14,7 @@ Tone: Be respectful regardless of agreement. Its okay to disagree, correct, and 
 
 ## Golden Rules
 
-1) Never ever git commit. Prepare a commit message and ask the user t0 commit.
+1) Never ever git commit. Prepare a commit message and ask the user to commit.
 2) Never ever delete files or folders. Ask the user for permission.
 
 file mv and git mv (preserves history) is generally authorized.
@@ -182,27 +182,32 @@ The project is a monorepo containing 29 library crates.
 
 ### Directory layout
 
-Twelve crates sit at the repository root. The **seventeen mathematics crates live under
-`deep_causality_unified_math/`**, one directory per crate:
+Ten crates sit at the repository root. The **sixteen mathematics crates live under
+`deep_causality_unified_math/`** and the **three utility crates under
+`deep_causality_utils/`**, one directory per crate:
 
 ```
-deep_causality_unified_math/deep_causality_{algebra, ast, calculus, fft, haft, homology,
+deep_causality_unified_math/deep_causality_{algebra, calculus, fft, haft, homology,
                                             linear, metric, multivector, num, num_complex,
                                             num_dual, num_rational, rand, tensor, topology,
                                             uncertain}
+
+deep_causality_utils/deep_causality_{ast, file, par}
 ```
 
 Package names are unchanged, so every `use` statement, every `cargo -p <name>` and every crates.io
 entry reads exactly as before. Only paths moved: a Cargo path dependency into one of the sixteen is
-`../deep_causality_unified_math/deep_causality_x`, and a Bazel label is
-`//deep_causality_unified_math/deep_causality_x`. The crates that stayed at the root are
-`deep_causality`, `_algorithms`, `_cfd`, `_core`, `_data_structures`, `_discovery`, `_ethos`,
-`_file`, `_par`, `_physics`, `_quantum` and `ultragraph`.
+`../deep_causality_unified_math/deep_causality_x` and into one of the three is
+`../deep_causality_utils/deep_causality_x`; the Bazel labels are
+`//deep_causality_unified_math/deep_causality_x` and `//deep_causality_utils/deep_causality_x`.
+The crates that stayed at the root are `deep_causality`, `_algorithms`, `_cfd`, `_core`,
+`_data_structures`, `_discovery`, `_ethos`, `_physics`, `_quantum` and `ultragraph`.
 
-The groupings below are conceptual and cut across that split: `metric` and `ast` are filed under
-Core, `haft` under Functional Programming, and `homology` and `topology` under Topology and
-Physics, but all five live in `deep_causality_unified_math/`. `ast` sits there because its only
-consumers are `tensor` and `uncertain`, plus `deep_causality` itself.
+The groupings below are conceptual and cut across that split: `metric` is filed under Core, `haft`
+under Functional Programming, and `homology` and `topology` under Topology and Physics, but all
+four live in `deep_causality_unified_math/`. `ast`, `file` and `par` are filed under Core and Data
+Structures but live in `deep_causality_utils/`: none of the three is mathematics, and each is used
+by crates on both sides of the split.
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
