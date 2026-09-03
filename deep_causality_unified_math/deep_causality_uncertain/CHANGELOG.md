@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.2...deep_causality_uncertain-v0.5.3) - 2026-09-03
+
+### Added
+
+- *(deep_causality_num)* add the lift module and retire the inherent Float106::from_f64
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.4.0...deep_causality_uncertain-v0.5.0) - 2026-07-14
 
 ### Added

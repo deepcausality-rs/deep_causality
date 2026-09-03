@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.1.1...deep_causality_cfd-v0.2.0) - 2026-09-03
+
+### Added
+
+- *(deep_causality_num)* add the lift module and retire the inherent Float106::from_f64
+- *(homology,topology,quantum)* [**breaking**] close the last five QCL gaps
+- *(deep_causality_homology)* extract the chain-complex layer into deep_causality_homology
+
+### Fixed
+
+- *(unified_math)* close E3, add Adjunction::Error, and clear a review batch
+- *(deep_causality_cfd)* Applied a number of fixes and lint corrections.
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- trigger holesale auto-release.
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(bazel)* migrate to rules_rs and delete the vendored crate tree
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated inbound links to archived notes
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.1.0](https://github.com/deepcausality-rs/deep_causality/releases/tag/deep_causality_cfd-v0.1.0) - 2026-08-12
 
 ### Added

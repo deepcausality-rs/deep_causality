@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.5.2...deep_causality_discovery-v0.6.0) - 2026-09-03
+
+### Added
+
+- *(homology,topology,quantum)* [**breaking**] close the last five QCL gaps
+
+### Fixed
+
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- trigger holesale auto-release.
+- *(bazel)* compile the 71 tests Cargo ran and Bazel never saw
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(bazel)* migrate to rules_rs and delete the vendored crate tree
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.5.0...deep_causality_discovery-v0.5.1) - 2026-07-14
 
 ### Added
