@@ -45,12 +45,29 @@ Group 1 is done once and binds the rest. Groups 2, 3 and 6 are mutually independ
 - [ ] 3.5 **P3** Audit: drop the sign handling so negatives return `NaN`, replace the derivative denominator's `3` with `2`, square instead of cube-rooting in the derivative, and return the argument unchanged — confirm each is rejected
 - [ ] 3.6 **P4** Implement `cbrt` in the blanket by forwarding to `Float::cbrt`, and in `Dual` by the chain rule with no guard at the singularity
 - [ ] 3.7 **P4** Retire `signed_cbrt` in the coherent-structures kernel, replacing the sign branch over `powf` with a direct call
-- [ ] 3.8 **P4** Retire the bounded integer-floor scan in the DEC surface-force sampler, converting through `ToPrimitive`
+- [ ] 3.8 **P4** Retire the integer-floor stepping loop in the DEC surface-force sampler — unbounded, bidirectional, and carrying three silent `unwrap_or_else` substitutions — converting through `ToPrimitive` instead
 - [ ] 3.9 **P4** Remove the seven redundant `RealField + ToPrimitive` bound restatements
-- [ ] 3.10 **P4** Correct the two physics module comments claiming `rand` implements `Distribution` only for `f32` and `f64`, and route those two sampling sites through the existing `RealRng` bound so they sample at their working precision instead of at `f64` and lifting
-- [ ] 3.11 **P4** Enumerate every manifest naming `deep_causality_algebra` and record the breaking-change blast radius
-- [ ] 3.12 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
-- [ ] 3.13 Verify: `bazel test //...` is green, every retired site's existing tests pass unchanged, and no workaround from the retirement list remains
+- [ ] 3.10 **P4** Enumerate the implementors of `Real` and of `RealField`, and record which the additions oblige to change — the compatibility blast radius, not the dependent count
+- [ ] 3.11 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
+- [ ] 3.12 Verify: `bazel test //...` is green, every retired site's existing tests pass unchanged, and no workaround from the retirement list remains
+
+## 3b. Physics sampling precision
+
+Split out of group 3: this is `rand`/`Distribution` work with no relation to `cbrt` or `ToPrimitive`,
+and it is not the comment fix it was written as. The two module docs give a second reason for
+sampling at `f64` — that for a wider `R` "the sampling noise sits at the f64 floor anyway, so the
+lift does not lose meaningful entropy" — which is a claim about the physics, not about what `rand`
+can do. Acting on it changes the random stream, and therefore every seeded expectation downstream.
+
+- [ ] 3b.1 Confirm the two comments are stale: `rand` implements `Distribution<Float106>` for
+      `StandardUniform`, `Open01`, `OpenClosed01` and `StandardNormal`
+- [ ] 3b.2 Decide whether the entropy claim holds — whether Lund-model sampling at `Float106` is
+      distinguishable from sampling at `f64` and lifting. This is a physics question, not a
+      capability question, and it gates the rest of the group
+- [ ] 3b.3 If it does not hold: correct the comments only, and record that the `f64` sampling stays
+      for a stated reason rather than a stale one
+- [ ] 3b.4 If it holds: route both sites through `RealRng`, and record the stream change and every
+      seeded test whose expectations move with it
 
 ## 4. C2 — `deep_causality_stats`
 

@@ -53,7 +53,9 @@ mutually independent.
   and `min` are **dropped** from the assessment's list: the first has no caller outside
   `deep_causality_num` itself, and the other three are not mathematics a dual number can honour.
   Retire the workarounds the additions make unnecessary — otherwise the stage adds surface and
-  removes nothing. **BREAKING** for the nineteen manifests naming `deep_causality_algebra`.
+  removes nothing. Neither addition breaks an in-workspace implementor: `Real` has two impls, both
+  ours, and everything reaching `RealField` does so through `Float`, which already implies
+  `ToPrimitive`.
 - **C2 — `deep_causality_stats`.** A new crate at **tier 4** over `num`, `algebra` and `linear`.
   Not tier 3, which is arithmetically impossible over `linear`; and **no `rand` dependency**, since
   none of the functions with a consumer uses randomness. Absorbs the three entropy implementations,
@@ -122,10 +124,17 @@ workspace glob, but needs its own `Cargo.toml`, `BUILD.bazel`, `[lints] workspac
 in the root dependency table at two-digit precision, and additions to `AGENTS.md`'s tier block and
 `deep_causality_unified_math/README.md`.
 
-**Breaking.** `deep_causality_algebra` gains two trait obligations; nineteen manifests name it.
-`ultragraph`'s `PathfindingGraphAlgorithms` and `deep_causality_linear`'s `LinearErrorEnum` are both
-published, both public, and neither is `#[non_exhaustive]` — any addition to either is breaking and
-is called out where it arises.
+**Breaking.** `dag_sampling::mec_size` changes its return type. `ultragraph`'s
+`PathfindingGraphAlgorithms` and `deep_causality_linear`'s `LinearErrorEnum` are both published, both
+public, and neither is `#[non_exhaustive]` — any addition to either is breaking and is called out
+where it arises.
+
+`deep_causality_algebra`'s two trait additions are **not** in that category. Twelve manifests declare
+the crate as a dependency (seven crates, five examples). `Real` is implemented twice, both in this
+workspace; `RealField` once, by a blanket over `Float`, which already implies `ToPrimitive` through
+`NumCast`. So the `RealField` change strengthens a bound everything already satisfies, and the `Real`
+change is absorbed by the two impls we own. Only a downstream crate implementing `Real` directly —
+none known — would notice.
 
 **Behavioural.** C1 changes the orientation output of BRCD wherever R4 fires; the counterexample
 search in its first task is what establishes whether that is anywhere. C4's CSR matvec change turns a

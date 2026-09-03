@@ -12,10 +12,15 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 The assessment listed five methods. Four fail on inspection, each for its own reason, and adding them
 would grow a foundational trait's obligations for no caller.
 
-`hypot` fails the demand test: a search for `.hypot(` across every `src/` in the workspace returns
-hits only inside `deep_causality_num` itself. Its mathematics is unobjectionable — it is smooth away
-from the origin and its chain rule is ordinary — but nothing outside the crate that defines it wants
-it, and `AGENTS.md` forbids adding generalisation that was not requested.
+`hypot` has no caller: a search for `.hypot(` across the workspace returns hits only inside
+`deep_causality_num` itself. Its mathematics is unobjectionable — smooth away from the origin, with
+an ordinary chain rule — but nothing outside the crate that defines it wants it.
+
+`cbrt` has no caller either, and it is kept anyway, so the difference has to be stated rather than
+implied. What `cbrt` has that `hypot` does not is a site doing its job badly: `signed_cbrt`, a private
+helper computing `sign(x)·|x|^(1/3)` through `powf`, which returns `NaN` for a negative base and is
+therefore already broken under duals. `hypot` has no such site. The test is not "is there a caller"
+but "is there code doing this worse", and only `cbrt` passes it.
 
 `mul_add` is not an algebraic operation. Its entire purpose on a primitive float is a single rounding
 in place of two. A dual number's derivative component is `x.re·y.du + x.du·y.re + z.du`, a sum of two
@@ -76,8 +81,10 @@ the failure mode this change is elsewhere removing.
 `Scalar`, and nothing comes back. Callers work around it in two ways, and both are worse than the
 bound. `deep_causality_discovery` restates `RealField + ToPrimitive` and documents why; six further
 sites across physics and `num_complex` restate it without documenting. Where restating was not
-convenient, the workaround is arithmetic: `surface_force.rs` finds an integer floor by a bounded
-linear scan because there was `FromPrimitive` and no `ToPrimitive`.
+convenient, the workaround is arithmetic: `surface_force.rs` finds an integer floor by stepping one
+integer at a time, in both directions, with no bound on the number of steps — the distance from its
+starting guess to the answer. It also carries three `unwrap_or_else(R::one)` / `(R::zero)` silent
+substitutions in six lines, because the conversion it needs does not exist on the bound.
 
 The obligation is already satisfied. The blanket implementation requires `T: Float`, and
 `Float: NumCast: ToPrimitive`, so the supertrait needs no change to the blanket's where-clause and
@@ -117,25 +124,40 @@ The retirements are: `signed_cbrt` in the coherent-structures kernel, a sign bra
 
 #### Scenario: The floor scan is gone
 - **WHEN** the surface-force sampler is read after this change
-- **THEN** it converts through `ToPrimitive` and carries no bounded linear scan
+- **THEN** it converts through `ToPrimitive` in constant time, carries no stepping loop, and carries none of the three silent substitutions the loop needed
 
 #### Scenario: The retirements preserve behaviour
 - **WHEN** each retired site's existing tests run after replacement
 - **THEN** they pass unchanged, except where a test pinned the workaround's own defect, which is recorded
 
-### Requirement: The breaking change is stated for every crate that consumes the bound
+### Requirement: The blast radius of the two trait additions is established by inspection
 
-The stage SHALL record that adding trait obligations to `Real` and `RealField` is a breaking change for `deep_causality_algebra`'s dependents, and SHALL enumerate them.
+The stage SHALL record what the additions to `Real` and `RealField` break, established by enumerating implementors rather than by counting dependents.
 
-Nineteen manifests name `deep_causality_algebra`, including four root crates and one crate under
-`deep_causality_utils/`. The assessment said sixteen. The number matters because it is the release
-blast radius, and because the internal version constraints are two-digit, so the dependents inherit
-the bump without individual edits — a property worth confirming rather than assuming.
+Twelve manifests declare `deep_causality_algebra` as a dependency, seven crates and five examples.
+That number is the release blast radius and is not the compatibility blast radius, which is smaller:
 
-#### Scenario: The dependents are enumerated
+- `Real` is implemented twice, by a blanket over `Float` and by `Dual<T>`. Both are in this
+  workspace, so the new method is supplied by the same change that declares it.
+- `RealField` is implemented once, by a blanket requiring `Float`. `Float: NumCast` and
+  `NumCast: ToPrimitive`, so the added supertrait is already satisfied and no implementor changes.
+
+An external crate implementing `Real` directly would have to supply `cbrt`; none is known. Everything
+that reaches either trait through `Float` is unaffected.
+
+An earlier draft of this change called the stage breaking across nineteen manifests. Both figures
+were wrong and neither had been checked; the requirement is written this way so the next reader gets
+the enumeration rather than a count.
+
+#### Scenario: The implementors are enumerated, not the dependents
 - **WHEN** the stage's notes are read
-- **THEN** they list every manifest naming `deep_causality_algebra`
+- **THEN** they list every implementor of `Real` and of `RealField` in the workspace
+- **AND** they state which of them the additions oblige to change
 
-#### Scenario: The workspace builds after the bump
+#### Scenario: The already-satisfied supertrait is confirmed
+- **WHEN** `ToPrimitive` is added to `RealField`
+- **THEN** the blanket implementation compiles with no change to its where-clause
+
+#### Scenario: The workspace builds after the additions
 - **WHEN** `bazel test //...` runs after the trait change
 - **THEN** every dependent compiles and its tests pass

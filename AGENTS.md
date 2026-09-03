@@ -23,6 +23,10 @@ file mv and git mv (preserves history) is generally authorized.
 
 These guidelines favor correctness, clarity, and minimal diffs over speed. For trivial tasks, use judgment.
 
+1) check claims against the tree before writing them into docs or specs
+2) document what the code does, not its history or justification; 
+3) a negative control that returns zero may mean the control is miscalibrated,
+
 ### 1. Think Before You Code
 
 Do not silently guess.
@@ -412,6 +416,15 @@ Only when multiple crate (3 or more) have changed at once, you run:
 `make test`: Tests the entire mono-repo
 
 To rebuild and test the entire repo
+
+## Code documentation
+
+1) Document what the code does; never its history or justification;
+2) Use clear and exact language
+3) Verify each statement against the actual code
+4) Explain only non-obvios aspects or decisions. 
+5) Keep it conscise, and correct. 
+
 
 ## Code testing
 

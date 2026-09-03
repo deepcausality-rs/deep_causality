@@ -103,9 +103,19 @@ implementors something not all of them provide. `max` and `min` add no algebra o
 the trait already requires, and on `Dual` the derived lexicographic order makes them silently wrong
 at a real-part tie. The crate's own `Real` impl already avoids that order in `clamp` and `abs`.
 
-`cbrt` survives all three tests: a real consumer, an ordinary chain rule, and a genuine advantage
-over the workaround — `powf(1/3)` is `NaN` for a negative base, and under duals the workaround is
-already broken.
+`cbrt` is kept, but on narrower grounds than an earlier draft claimed. It has **no caller**: the site
+it replaces is `signed_cbrt`, a private seven-line helper with two call sites in one Cardano cubic
+solve, which computes `sign(x)·|x|^(1/3)` through `powf`. Calling that "a real consumer" applied a
+looser test than the one that killed `hypot`.
+
+What survives is measured. `cbrt` is exact on 200 of the first 200 perfect cubes where `powf(1/3)`
+manages 3, and differs by one to ten ULP elsewhere. But both call sites pass a computed discriminant
+that is never an exact cube, so the exactness result does not apply there and the realistic gain is
+about one ULP, inside a solve whose dominant error is cancellation in that same discriminant.
+
+The decision stands because the cost is near zero — two impl sites, no breakage — so even a thin
+benefit clears the bar, and a correct `cbrt` is what a future caller should find. The justification,
+not the decision, was what needed fixing.
 
 ### D5. Entropy takes base and zero policy as parameters
 
@@ -271,10 +281,15 @@ skipping out-of-range columns, root finders that stop returning unconverged iter
 caller whose base changes. Each is stated in its spec, gets its own test, and is recorded in the
 stage notes as a decision rather than absorbed into a refactor.
 
-**Breaking changes to published crates** → `deep_causality_algebra` gains two trait obligations and
-nineteen manifests name it; `LinearErrorEnum` and `ultragraph`'s pathfinding trait are public and
-neither is `#[non_exhaustive]`. The internal constraints are two-digit, so dependents inherit the
-bump without edits — a property to confirm on the first release rather than assume.
+**Breaking changes to published crates** → `dag_sampling::mec_size` changes its return type;
+`LinearErrorEnum` and `ultragraph`'s pathfinding trait are public and neither is
+`#[non_exhaustive]`. The internal constraints are two-digit, so dependents inherit the bump without
+edits — a property to confirm on the first release rather than assume.
+
+`deep_causality_algebra`'s additions are not breaking in this workspace: twelve manifests declare it,
+`Real` has two impls that we own, and `RealField`'s single blanket reaches it through `Float`, which
+already implies `ToPrimitive`. An earlier draft called this stage BREAKING across nineteen manifests;
+both the count and the characterisation were wrong, taken from a scoping report rather than checked.
 
 **The test burden is the larger half** → Measured src-to-test ratios in this workspace run 0.56 to
 1.42, median near 1.0. C2 is roughly 1500 source lines and 2700 test lines across 109 files. An

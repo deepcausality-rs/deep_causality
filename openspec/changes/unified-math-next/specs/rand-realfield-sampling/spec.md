@@ -54,10 +54,14 @@ draw from a high part and an independent scaled low part, precisely so the wide 
 entropy.
 
 The need behind the request is already met. The `RealRng` bound and the `Real`-bounded distribution
-wrappers let precision-generic code sample without naming `Float`, which is what the two physics call
-sites that sample at `f64` and lift should be using. Their module comments claim the crate implements
-`Distribution` only for `f32` and `f64`; that claim is false today, and correcting those comments and
-call sites needs no change to this crate at all.
+wrappers let precision-generic code sample without naming `Float`.
+
+Two physics call sites still sample at `f64` and lift, and their module comments say the crate
+implements `Distribution` only for `f32` and `f64`. That claim is stale. But those comments give a
+second reason — that for a wider `R` the sampling noise sits at the `f64` floor anyway, so the lift
+loses no meaningful entropy — and that is a claim about the physics, not about this crate. Whether
+those sites should change is therefore not a question this capability can answer, and acting on it
+would change a seeded random stream. It is tracked separately.
 
 #### Scenario: Precision-generic sampling works through the existing bound
 - **WHEN** code bounded on `R: RealField` with the sampling capability draws a uniform and a normal variate
@@ -67,9 +71,9 @@ call sites needs no change to this crate at all.
 - **WHEN** a uniform draw is taken at `Float106`
 - **THEN** it carries double-double mantissa entropy, not a widened single draw
 
-#### Scenario: The stale claims downstream are corrected
-- **WHEN** the physics sampling sites are read after this change
-- **THEN** they sample at their working precision through the capability bound, and no comment claims the crate supports only `f32` and `f64`
+#### Scenario: The crate's own capability is not misstated downstream
+- **WHEN** a consumer's documentation describes what this crate supports
+- **THEN** it does not claim `Distribution` is implemented only for `f32` and `f64`
 
 #### Scenario: The existing streams are unchanged
 - **WHEN** the `f64` and `f32` sampling paths run under a fixed seed after this change
