@@ -174,8 +174,8 @@ connected components, articulation points and bridges. Everything below exists i
 - **Combinatorics.** `num`'s combinatorics module holds two functions, `stirling_second` and
   `stirling_first_unsigned`. Factorials, combinations and `choose3` are written locally:
   `dag_sampling/combinatorics.rs:34,57`, `surd_utils/mod.rs:76`, `brcd_algo.rs:509`,
-  `deep_causality_quantum/src/types/qcm/hypothesis.rs:672` and
-  `.../pipeline/validate.rs:574` (identical `choose3` twice),
+  `deep_causality_quantum/src/types/qcm/hypothesis.rs:689` and
+  `.../pipeline/validate.rs:558` (identical `choose3` twice),
   `.../qgates/gates_haruna.rs:91,100,264-292` (tuple counts in `u128`, a hand-rolled odometer
   with quadratic dedup). The odometer walk also appears in CFD's spectral diffusion and
   topology's spectral Poisson (§3.3).

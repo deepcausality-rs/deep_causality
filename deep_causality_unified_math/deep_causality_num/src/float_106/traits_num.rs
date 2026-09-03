@@ -18,9 +18,33 @@ impl Float106 {
     /// The value is truncated as a whole before its halves are read, so a value such as
     /// `3 − 10⁻¹⁹`, held as `hi = 3` and a negative `lo`, truncates to 2 and not to 3. The low
     /// component is what makes the conversion exact past 2⁵³, where an `f64` alone would round.
-    fn integer_part(&self) -> Option<i128> {
+    fn integer_part_i128(&self) -> Option<i128> {
+        let min = Self::from_i128_exact(i128::MIN);
+        let max = Self::from_i128_exact(i128::MAX);
+        if *self < min || *self > max {
+            return None;
+        }
         let t = <Self as crate::Float>::trunc(*self);
+        if t == min {
+            return Some(i128::MIN);
+        }
+        if t == max {
+            return Some(i128::MAX);
+        }
         t.hi.to_i128()?.checked_add(t.lo.to_i128()?)
+    }
+
+    fn integer_part_u128(&self) -> Option<u128> {
+        let max = Self::from_u128_exact(u128::MAX);
+        if *self < <Self as From<f64>>::from(0.0) || *self > max {
+            return None;
+        }
+        let t = <Self as crate::Float>::trunc(*self);
+        if t == max {
+            return Some(u128::MAX);
+        }
+        let integer = t.hi.to_i128()?.checked_add(t.lo.to_i128()?)?;
+        u128::try_from(integer).ok()
     }
 
     /// An integer as a `Float106`, exact while the remainder past the high half fits an `f64`,
@@ -54,62 +78,62 @@ impl Float106 {
 impl ToPrimitive for Float106 {
     #[inline]
     fn to_isize(&self) -> Option<isize> {
-        isize::try_from(self.integer_part()?).ok()
+        isize::try_from(self.integer_part_i128()?).ok()
     }
 
     #[inline]
     fn to_i8(&self) -> Option<i8> {
-        i8::try_from(self.integer_part()?).ok()
+        i8::try_from(self.integer_part_i128()?).ok()
     }
 
     #[inline]
     fn to_i16(&self) -> Option<i16> {
-        i16::try_from(self.integer_part()?).ok()
+        i16::try_from(self.integer_part_i128()?).ok()
     }
 
     #[inline]
     fn to_i32(&self) -> Option<i32> {
-        i32::try_from(self.integer_part()?).ok()
+        i32::try_from(self.integer_part_i128()?).ok()
     }
 
     #[inline]
     fn to_i64(&self) -> Option<i64> {
-        i64::try_from(self.integer_part()?).ok()
+        i64::try_from(self.integer_part_i128()?).ok()
     }
 
     #[inline]
     fn to_i128(&self) -> Option<i128> {
-        self.integer_part()
+        self.integer_part_i128()
     }
 
     #[inline]
     fn to_usize(&self) -> Option<usize> {
-        usize::try_from(self.integer_part()?).ok()
+        usize::try_from(self.integer_part_u128()?).ok()
     }
 
     #[inline]
     fn to_u8(&self) -> Option<u8> {
-        u8::try_from(self.integer_part()?).ok()
+        u8::try_from(self.integer_part_u128()?).ok()
     }
 
     #[inline]
     fn to_u16(&self) -> Option<u16> {
-        u16::try_from(self.integer_part()?).ok()
+        u16::try_from(self.integer_part_u128()?).ok()
     }
 
     #[inline]
     fn to_u32(&self) -> Option<u32> {
-        u32::try_from(self.integer_part()?).ok()
+        u32::try_from(self.integer_part_u128()?).ok()
     }
 
     #[inline]
     fn to_u64(&self) -> Option<u64> {
-        u64::try_from(self.integer_part()?).ok()
+        u64::try_from(self.integer_part_u128()?).ok()
     }
 
     #[inline]
     fn to_u128(&self) -> Option<u128> {
-        u128::try_from(self.integer_part()?).ok()
+        self.integer_part_u128()
     }
 
     #[inline]

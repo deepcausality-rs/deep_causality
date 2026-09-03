@@ -295,7 +295,7 @@ prediction. A mechanism world with a prediction may be compared; nothing forbids
 ### Requirement: control has two paths to adjudicate, one per kind of candidate
 
 The control stage SHALL support two paths to `adjudicate`: mechanism candidates run
-`fork → observe → gate → adjudicate`, and structural candidates run
+`observe → fork → observe → gate → adjudicate`, and structural candidates run
 `observe → fork → predict → compare → adjudicate`.
 
 A mechanism world carries the plant evolved by its channel, so its evidence is a measurement of

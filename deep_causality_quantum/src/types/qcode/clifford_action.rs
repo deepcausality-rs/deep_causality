@@ -331,6 +331,9 @@ impl<W: NaturalNumber> LogicalBasis<W> {
     ///
     /// [`symplectic_dual_basis`] builds a `duals` satisfying the precondition from
     /// [`homology`](Self::homology) and [`cohomology`](Self::cohomology).
+    /// The public method validates the complete `k × k` pairing matrix on every call, then
+    /// checks at most `2(k - 1)` other logical Paulis. Pipeline callers should therefore call it
+    /// once per logical qubit only when they need each single-qubit action certified.
     ///
     /// # Errors
     ///
@@ -374,6 +377,11 @@ impl<W: NaturalNumber> LogicalBasis<W> {
         let pair = self.check_clifford_action(program, gamma, &duals[index])?;
 
         let zero = Gf2Chain::zeros(self.len(), gamma.degree());
+        // Pairings establish the logical coordinate, not preservation of the code space. A
+        // caller can supply an arbitrary chain with the right pairings, so validate the X
+        // representative itself before equivalence can cancel it against an image.
+        let x_target = LogicalPauli::new(duals[index].clone(), zero.clone())?;
+        let _ = self.is_logically_trivial(&x_target)?;
         let mut others_examined = 0;
         let mut others_fixed = true;
         'others: for j in (0..k).filter(|&j| j != index) {

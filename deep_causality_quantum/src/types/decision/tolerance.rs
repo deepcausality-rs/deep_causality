@@ -11,9 +11,9 @@ use deep_causality_num::FromPrimitive;
 
 /// The tolerance family: the policies the crate's checks derive their thresholds from, named.
 ///
-/// Every member but `ShotNoise` is a function of `R::epsilon()` and nothing else, so widening the
-/// scalar tightens each of them with no call site changing. A tolerance that did not move with
-/// the scalar was guessed. `ShotNoise` reads the estimate and the shot count it is asked about,
+/// The fixed `Validation`, `NumericalRank`, and `State` members are functions of `R::epsilon()`
+/// and nothing else, so widening the scalar tightens each of them with no call site changing.
+/// `Commutator` additionally exposes its condition and depth budgets. `ShotNoise` reads the estimate and the shot count it is asked about,
 /// and `R::epsilon()` plays no part in it: its width is set by the budget, not by the scalar. The
 /// members are the four policies the crate shipped before this type existed, each keeping the
 /// shape its own check needs, and the family delegates to those implementations rather than

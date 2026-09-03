@@ -139,7 +139,12 @@ fn test_the_pair_count_is_bounded_before_the_pairs_are_allocated() {
     match design(big, &none, raised).unwrap_err().0 {
         QuantumErrorEnum::HypothesisCountExceeded { n, pairs } => {
             assert_eq!(n, big);
-            assert_eq!(pairs, big * (big - 1) / 2);
+            assert_eq!(
+                pairs,
+                big.checked_mul(big - 1)
+                    .map(|twice| twice / 2)
+                    .unwrap_or(usize::MAX)
+            );
         }
         other => panic!("expected HypothesisCountExceeded, got {other:?}"),
     }

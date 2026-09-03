@@ -44,6 +44,11 @@ where
                 "cannot bridge an empty shot histogram".into(),
             ));
         }
+        if hits > total {
+            return Err(QuantumError::NormalizationError(format!(
+                "histogram reports {hits} hits from only {total} shots"
+            )));
+        }
         let n = R::from_u64(total).ok_or_else(|| {
             QuantumError::CalculationError(format!("scalar cannot represent {total} shots"))
         })?;

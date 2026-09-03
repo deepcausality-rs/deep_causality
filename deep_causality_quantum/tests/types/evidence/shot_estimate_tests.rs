@@ -39,6 +39,29 @@ impl ShotHistogram for WideHistogram {
     }
 }
 
+struct InconsistentHistogram;
+
+impl ShotHistogram for InconsistentHistogram {
+    fn total(&self) -> u64 {
+        1
+    }
+    fn num_bits(&self) -> usize {
+        1
+    }
+    fn count(&self, _: usize) -> u64 {
+        2
+    }
+    fn entries(&self) -> Vec<(usize, u64)> {
+        vec![(1, 2)]
+    }
+}
+
+#[test]
+fn test_an_inconsistent_foreign_histogram_is_rejected_not_panic() {
+    let err = ShotEstimate::<f64>::of_outcome(&InconsistentHistogram, 1).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::NormalizationError(_)));
+}
+
 #[test]
 fn test_of_bit_refuses_a_bit_beyond_the_outcome_width_before_shifting() {
     let h = WideHistogram;

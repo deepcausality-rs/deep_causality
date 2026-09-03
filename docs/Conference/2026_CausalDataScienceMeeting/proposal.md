@@ -147,7 +147,6 @@ website, and the classical-causality examples are public.
 
 Marvin Hansen is Director of the Center for Dynamic Causality and the creator of DeepCausality,
 which he has maintained since its admission to the Linux Foundation AI & Data sandbox in 2023.
-[Add one or two sentences on prior roles and industry background.]
 
 ### Links
 

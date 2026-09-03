@@ -6,6 +6,8 @@
 
 # Google Gemini CLI settings
 .gemini
+# Openai Codex
+.codex
 
 #  Code Coverage report
 coverage

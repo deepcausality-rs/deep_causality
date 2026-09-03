@@ -168,6 +168,13 @@ fn test_at_least_margin_agrees_with_the_verdict_under_slack() {
     assert_eq!(c.margin, 0.0);
 }
 
+#[test]
+fn test_at_least_orders_a_non_positive_effective_measurement_as_a_rejection() {
+    let rejected = Check::<f64>::at_least(CheckItem::Whole, -2.0, 1.0, 0.5);
+    assert!(!rejected.accepted);
+    assert!(rejected.margin.is_infinite() && rejected.margin.is_sign_positive());
+}
+
 fn nothing_measured_orders_worst<R>()
 where
     R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive + core::fmt::Debug,

@@ -634,7 +634,7 @@ where
         }
         supports.validate(&factors)?;
         let certificate = match (self.certificate(), other.certificate()) {
-            (Some(a), Some(b)) => {
+            (Some(a), Some(b)) if a.accepted() && b.accepted() => {
                 let (legs_a, _) = union_space(fa, sa)?;
                 let (legs_b, _) = union_space(fb, sb)?;
                 legs_a.is_disjoint(&legs_b).then(|| {

@@ -59,6 +59,12 @@ fn test_to_i128() {
     assert_eq!(ToPrimitive::to_i128(&x), Some(1000000000000000));
 }
 
+#[test]
+fn test_to_i128_accepts_the_exact_positive_boundary() {
+    let x = Float106::from_i128(i128::MAX).unwrap();
+    assert_eq!(x.to_i128(), Some(i128::MAX));
+}
+
 // =============================================================================
 // ToPrimitive Tests - Unsigned Integers
 // =============================================================================
@@ -97,6 +103,13 @@ fn test_to_u64() {
 fn test_to_u128() {
     let x = Float106::from(1e15);
     assert_eq!(ToPrimitive::to_u128(&x), Some(1000000000000000));
+}
+
+#[test]
+fn test_to_u128_accepts_the_exact_positive_boundary_and_rejects_negative_fraction() {
+    let x = Float106::from_u128(u128::MAX).unwrap();
+    assert_eq!(x.to_u128(), Some(u128::MAX));
+    assert_eq!(Float106::new(-0.5, 0.0).to_u64(), None);
 }
 
 // =============================================================================

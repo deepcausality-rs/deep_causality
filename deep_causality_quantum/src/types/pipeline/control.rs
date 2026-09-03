@@ -445,7 +445,16 @@ where
             return self;
         }
         let allowance = sigmas * baseline.standard_error();
-        let examined = usize::try_from(baseline.shots()).unwrap_or(usize::MAX);
+        let examined = match usize::try_from(baseline.shots()) {
+            Ok(examined) => examined,
+            Err(_) => {
+                self.fail(QuantumError::CalculationError(format!(
+                    "baseline shot count {} does not fit usize",
+                    baseline.shots()
+                )));
+                return self;
+            }
+        };
         for w in &mut self.worlds {
             let Some(prediction) = w.prediction else {
                 self.failure

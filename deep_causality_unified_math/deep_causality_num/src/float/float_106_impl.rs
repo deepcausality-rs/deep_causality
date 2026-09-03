@@ -135,11 +135,16 @@ impl Float for Float106 {
             Self::new(self.hi, self.lo.round())
         } else if (self.hi - self.hi.trunc()).abs() == 0.5 && self.lo != 0.0 {
             // The high half sits on a half; the low half says which side the value is on.
-            Self::from(if self.lo > 0.0 {
+            let rounded = if self.lo > 0.0 {
                 self.hi + 0.5
             } else {
                 self.hi - 0.5
-            })
+            };
+            if rounded == 0.0 && self.hi.is_sign_negative() {
+                Self::neg_zero()
+            } else {
+                Self::from(rounded)
+            }
         } else {
             Self::from(hi_round)
         }

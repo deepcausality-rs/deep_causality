@@ -67,7 +67,11 @@ mod f32_to_tests {
         f32,
         isize,
         f32::NEG_INFINITY,
-        None
+        if cfg!(target_pointer_width = "64") {
+            None
+        } else {
+            Some(isize::MAX)
+        }
     );
     test_to!(to_isize_zero, to_isize, f32, isize, 0.0, Some(0));
     test_to!(to_isize_neg_zero, to_isize, f32, isize, -0.0, Some(0));
@@ -380,7 +384,11 @@ mod f64_to_tests {
         f64,
         isize,
         isize::MAX as f64,
-        None
+        if cfg!(target_pointer_width = "64") {
+            None
+        } else {
+            Some(isize::MAX)
+        }
     );
     test_to!(
         to_isize_ok_min,
@@ -534,7 +542,14 @@ mod f64_to_tests {
     // Tests for to_i64
     test_to!(to_i64_ok, to_i64, f64, i64, 42.0, Some(42));
     test_to!(to_i64_fail_overflow, to_i64, f64, i64, f64::MAX, None);
-    test_to!(to_i64_ok_max, to_i64, f64, i64, i64::MAX as f64, None);
+    test_to!(
+        to_i64_fail_at_representational_max,
+        to_i64,
+        f64,
+        i64,
+        i64::MAX as f64,
+        None
+    );
     test_to!(
         to_i64_ok_min,
         to_i64,
@@ -691,11 +706,11 @@ mod f64_to_tests {
     );
     test_to!(to_u64_neg_zero, to_u64, f64, u64, -0.0, None); // Unsigned types cannot represent -0.0
 
-    // Tests for to_u128
+    // Largest representable doubles below the i64 and u64 upper boundaries.
     // `T::MAX as f64` rounds up to the power of two past the target, which the target cannot hold;
     // the largest double below it converts, the power of two is refused rather than saturated.
     test_to!(
-        to_i64_ok_largest_double,
+        to_i64_largest_representable_double,
         to_i64,
         f64,
         i64,
@@ -703,13 +718,14 @@ mod f64_to_tests {
         Some(9_223_372_036_854_774_784)
     );
     test_to!(
-        to_u64_ok_largest_double,
+        to_u64_largest_representable_double,
         to_u64,
         f64,
         u64,
         18_446_744_073_709_549_568.0,
         Some(18_446_744_073_709_549_568)
     );
+    // Tests for to_u128
     test_to!(
         to_u128_ok_largest_double,
         to_u128,

@@ -74,8 +74,10 @@ impl<R: RealField> Check<R> {
     pub fn at_least(item: CheckItem, measured: R, threshold: R, slack: R) -> Self {
         let effective = measured + slack;
         let accepted = effective >= threshold;
-        let margin = if threshold > R::zero() {
+        let margin = if threshold > R::zero() && effective > R::zero() {
             threshold / effective
+        } else if threshold > R::zero() {
+            threshold / R::zero()
         } else {
             R::zero()
         };
