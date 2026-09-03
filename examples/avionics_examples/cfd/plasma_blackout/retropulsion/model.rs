@@ -15,6 +15,7 @@ use deep_causality_cfd::{
     AtmosphereRow, CaseRun, CompressibleMarchConfig, CoupledField, FromTableRow, GateSeq, IoAction,
     KeyedTable, PhysicsError, Report, STOPPING_BURN_ALTITUDE_FIELD, StudyView, TableRow, read_rows,
 };
+use deep_causality_num::{Lift, lift};
 use std::path::PathBuf;
 
 // ── The weather table as an onboard artifact (closes M2 task 6.4) ───────────────────────────
@@ -147,7 +148,7 @@ pub fn day_belief(table: &KeyedTable<FloatType>, d_temp: FloatType) -> DayBelief
         drift_sd_m,
         onset_s: v[3],
         dwell_s: v[5],
-        margin_m: drift_mean_m + utils::ft(IGNITION_MARGIN_K) * drift_sd_m,
+        margin_m: drift_mean_m + lift::<FloatType>(IGNITION_MARGIN_K) * drift_sd_m,
         clamped: interp.clamped(),
     }
 }
@@ -155,7 +156,7 @@ pub fn day_belief(table: &KeyedTable<FloatType>, d_temp: FloatType) -> DayBelief
 /// The standard-day row an *uninformed* guidance assumes: the table read at dT = 0 regardless of
 /// what the day actually measured.
 pub fn standard_day_belief(table: &KeyedTable<FloatType>) -> DayBelief {
-    day_belief(table, utils::ft(0.0))
+    day_belief(table, lift(0.0))
 }
 
 // ── Worlds ──────────────────────────────────────────────────────────────────────────────────
@@ -202,7 +203,7 @@ pub fn trunk_world(
         "measured_day",
         steps,
         rho_scale,
-        &[("commanded_bank", utils::ft(0.0))],
+        &[("commanded_bank", lift(0.0))],
     )
 }
 
@@ -215,7 +216,7 @@ pub fn burn_trunk_world(
         "measured_day",
         steps,
         rho_scale,
-        &[("commanded_bank", utils::ft(0.0))],
+        &[("commanded_bank", lift(0.0))],
     )
 }
 
@@ -237,7 +238,7 @@ pub fn throttle_roster() -> Vec<ThrottleCase> {
         .iter()
         .map(|&(name, throttle)| ThrottleCase {
             name,
-            throttle: utils::ft(throttle),
+            throttle: lift(throttle),
         })
         .collect()
 }
@@ -258,7 +259,7 @@ pub fn branch_world(
         BRANCH_STEPS,
         rho_scale,
         &[
-            ("commanded_bank", utils::ft(0.0)),
+            ("commanded_bank", lift(0.0)),
             ("commanded_throttle", case.throttle),
             (FROZEN_DRAG_FRACTION_FIELD, fork_fraction),
         ],
@@ -447,8 +448,8 @@ pub fn score_branch(
         o1_fork: economics.map(|e| e.is_o1()).unwrap_or(false),
         bond_growth: report
             .bond_growth()
-            .map(|g| utils::ft(g as f64))
-            .unwrap_or_else(|| utils::ft(-1.0)),
+            .map(|g| g.lift())
+            .unwrap_or_else(|| lift(-1.0)),
         peak_bond: report.peak_bond(),
     })
 }
@@ -566,9 +567,9 @@ pub fn step_cost_ratio(
     branch_steps: usize,
 ) -> FloatType {
     if trunk_steps == 0 || branch_steps == 0 || trunk_s <= 0.0 {
-        return utils::ft(0.0);
+        return lift(0.0);
     }
-    (fan_out_s / utils::ft(branch_steps as f64)) / (trunk_s / utils::ft(trunk_steps as f64))
+    (fan_out_s / branch_steps.lift::<FloatType>()) / (trunk_s / trunk_steps.lift::<FloatType>())
 }
 
 // ── Gates ───────────────────────────────────────────────────────────────────────────────────
@@ -933,7 +934,7 @@ fn gate_cascade(v: &StudyView<'_, LegSet>) -> (bool, String) {
         return (false, "no leg witnesses were recorded".into());
     };
     (
-        l.regime_transitions >= utils::ft(MIN_REGIME_TRANSITIONS as f64),
+        l.regime_transitions >= MIN_REGIME_TRANSITIONS.lift::<FloatType>(),
         format!(
             "{:.0} regime transitions logged across the descent (at least {MIN_REGIME_TRANSITIONS}), \
              counted by the classifier rather than tallied from a rendered log",
@@ -1011,8 +1012,8 @@ fn gate_touchdown(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let Some(l) = v.rows().first() else {
         return (false, "no leg witnesses were recorded".into());
     };
-    let lo = utils::ft(CONTACT_SPEED_MS) - utils::ft(TOUCHDOWN_SINK_TOL);
-    let hi = utils::ft(CONTACT_SPEED_MS) + utils::ft(TOUCHDOWN_SINK_TOL);
+    let lo = lift::<FloatType>(CONTACT_SPEED_MS) - lift::<FloatType>(TOUCHDOWN_SINK_TOL);
+    let hi = lift::<FloatType>(CONTACT_SPEED_MS) + lift::<FloatType>(TOUCHDOWN_SINK_TOL);
     let tracked = l.descent_rate >= lo && l.descent_rate <= hi;
     (
         l.touchdown && tracked && l.propellant > PROPELLANT_FLOOR_KG,

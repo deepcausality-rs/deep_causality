@@ -11,11 +11,11 @@ use crate::constants::{
     CELLS_PER_D, CENTER_OFFSET_D, CENTER_X_D, CFL, CG_TOL, DIAMETER_M, LX_D, LY_D, MERGE_FLOOR,
     NU_AIR_M2_S, STEPS,
 };
-use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::{
     Body, CfdConfigBuilder, CfdFlow, Inflow, MarchConfig, Marchable, Mesh, Observe, Outflow,
     PhysicsError, Report, Seed, SlipWall,
 };
+use deep_causality_num::lift;
 use deep_causality_topology::HodgeDecomposeOptions;
 
 /// The wake-zone tuple of the validated isolated-cylinder setup: west inflow, east outflow,
@@ -65,17 +65,17 @@ pub fn wake_case(airspeed: &FloatType) -> Result<WakeCase, PhysicsError> {
             "airspeed must be finite and positive, got {v}"
         )));
     }
-    let reynolds = *airspeed * ft(DIAMETER_M) / ft(NU_AIR_M2_S);
+    let reynolds = *airspeed * lift::<FloatType>(DIAMETER_M) / lift::<FloatType>(NU_AIR_M2_S);
 
     let h_spec = 1.0 / CELLS_PER_D as f64;
     let nx = (LX_D / h_spec).round() as usize;
     let ny = (LY_D / h_spec).round() as usize;
-    let center = [ft(CENTER_X_D), ft(LY_D * 0.5 + CENTER_OFFSET_D)];
-    let nu = ft(1.0) / reynolds;
-    let dt = ft(CFL * h_spec);
+    let center = [lift(CENTER_X_D), lift(LY_D * 0.5 + CENTER_OFFSET_D)];
+    let nu = lift::<FloatType>(1.0) / reynolds;
+    let dt = lift(CFL * h_spec);
 
     let zones = (
-        Inflow::<2, FloatType>::new(0, false, ft(1.0))?,
+        Inflow::<2, FloatType>::new(0, false, lift(1.0))?,
         (
             Outflow::<2>::new(0, true)?,
             (SlipWall::<2>::new(1, false)?, SlipWall::<2>::new(1, true)?),
@@ -86,7 +86,7 @@ pub fn wake_case(airspeed: &FloatType) -> Result<WakeCase, PhysicsError> {
         .viscosity(nu)
         .time_step(dt)
         .cg_options(HodgeDecomposeOptions {
-            tolerance: Some(ft(CG_TOL)),
+            tolerance: Some(lift(CG_TOL)),
             // The verification harness's grid-scaled CG budget; the library default starves
             // finer grids.
             max_iterations: Some(30 * (nx + ny)),
@@ -97,15 +97,15 @@ pub fn wake_case(airspeed: &FloatType) -> Result<WakeCase, PhysicsError> {
     let config = CfdConfigBuilder::march::<2, FloatType>("viv-wake")
         .mesh(
             Mesh::box_domain([nx, ny])
-                .spacing(ft(h_spec))
-                .immersed(Body::disk(center, ft(0.5)).merge_floor(ft(MERGE_FLOOR))),
+                .spacing(lift(h_spec))
+                .immersed(Body::disk(center, lift(0.5)).merge_floor(lift(MERGE_FLOOR))),
         )
         .solver(solver)
         .zones(zones)
         .seed(Seed::UniformX { speed: 1.0 })
         .march_for(STEPS)
         // The wake probe: transverse velocity 1.5 D downstream of the body, on its centerline.
-        .observe(Observe::default().probe([center[0] + ft(1.5), center[1]]))
+        .observe(Observe::default().probe([center[0] + lift::<FloatType>(1.5), center[1]]))
         .build()?;
 
     Ok(WakeCase { config, dt })

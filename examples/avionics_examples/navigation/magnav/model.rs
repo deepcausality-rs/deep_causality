@@ -6,6 +6,7 @@
 use deep_causality_calculus::{DifferentiableField, Euler, Scalar};
 use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_haft::Arrow;
+use deep_causality_num::lift;
 use deep_causality_tensor::CausalTensor;
 use std::error::Error;
 use std::f64::consts::PI;
@@ -39,11 +40,11 @@ pub struct AnomalyField;
 impl DifferentiableField<2> for AnomalyField {
     fn run<S: Scalar>(&self, p: &[S; 2]) -> S {
         let (fx, fy) = (p[0], p[1]);
-        let c50 = S::from_f64(50.0).expect("constant lifts into the working scalar");
-        let c20 = S::from_f64(20.0).expect("constant lifts into the working scalar");
-        let c15 = S::from_f64(15.0).expect("constant lifts into the working scalar");
-        let c03 = S::from_f64(0.3).expect("constant lifts into the working scalar");
-        let c07 = S::from_f64(0.7).expect("constant lifts into the working scalar");
+        let c50 = lift::<S>(50.0);
+        let c20 = lift::<S>(20.0);
+        let c15 = lift::<S>(15.0);
+        let c03 = lift::<S>(0.3);
+        let c07 = lift::<S>(0.7);
         // Base trend + high-frequency spatial variation (a realistic crustal anomaly).
         fx.sin() * fy.cos() * c50 + (fx * c03).sin() * c20 + (fy * c07).cos() * c15
     }

@@ -11,10 +11,10 @@ use crate::constants::{
     AREA_MACH_BAND, CELLS, EXIT_AREA_M2, GAMMA, INLET_AREA_M2, LENGTH_M, NO_SHOCK_SENTINEL_M, T0_K,
     THROAT_AREA_M2,
 };
-use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::{
     CaseRun, DuctConfig, FittedNormalShock, GateSeq, PhysicsError, StudyView, TableRow,
 };
+use deep_causality_num::{Lift, lift};
 use deep_causality_physics::area_mach_ratio_kernel;
 
 /// One swept back pressure's reduced result, all in the working precision.
@@ -46,7 +46,7 @@ impl TableRow for MapRow {
         vec![
             self.p_ratio,
             self.mach_exit,
-            self.shock_x.unwrap_or(ft(NO_SHOCK_SENTINEL_M)),
+            self.shock_x.unwrap_or(lift(NO_SHOCK_SENTINEL_M)),
             self.cf,
         ]
     }
@@ -78,22 +78,22 @@ pub fn map_row(
     let sonic_x = x
         .iter()
         .zip(mach)
-        .find(|(_, m)| **m >= ft(1.0))
+        .find(|(_, m)| **m >= lift::<FloatType>(1.0))
         .map(|(xi, _)| *xi);
 
     // Shock-free rows: worst interior deviation from the area-Mach relation, same exclusions
     // as the duct-march verification (throat +-0.1 L, 0.05 L off each end).
     let area_mach_dev = if shock_x.is_none() {
-        let throat_x = ft(LENGTH_M) * ft(0.5);
-        let mut worst = ft(0.0);
+        let throat_x = lift::<FloatType>(LENGTH_M) * lift::<FloatType>(0.5);
+        let mut worst = lift::<FloatType>(0.0);
         for (xi, mi) in x.iter().zip(mach) {
-            if (xi - throat_x).abs() < ft(0.1) * ft(LENGTH_M)
-                || *xi < ft(0.05) * ft(LENGTH_M)
-                || *xi > ft(0.95) * ft(LENGTH_M)
+            if (xi - throat_x).abs() < lift::<FloatType>(0.1) * lift::<FloatType>(LENGTH_M)
+                || *xi < lift::<FloatType>(0.05) * lift::<FloatType>(LENGTH_M)
+                || *xi > lift::<FloatType>(0.95) * lift::<FloatType>(LENGTH_M)
             {
                 continue;
             }
-            let ratio = area_at(*xi) / ft(THROAT_AREA_M2);
+            let ratio = area_at(*xi) / lift::<FloatType>(THROAT_AREA_M2);
             let analytic = mach_from_area_ratio(ratio, *xi > throat_x);
             let dev = (mi - analytic).abs() / analytic;
             if dev > worst {
@@ -118,26 +118,28 @@ pub fn map_row(
 /// The duct's area at x, mirroring `DuctAreaProfile::ConvergingDiverging` exactly (parabolic
 /// on each side, smooth throat).
 pub fn area_at(x: FloatType) -> FloatType {
-    let x_t = ft(LENGTH_M) * ft(0.5);
+    let x_t = lift::<FloatType>(LENGTH_M) * lift::<FloatType>(0.5);
     if x <= x_t {
         let s = (x_t - x) / x_t;
-        ft(THROAT_AREA_M2) + (ft(INLET_AREA_M2) - ft(THROAT_AREA_M2)) * s * s
+        lift::<FloatType>(THROAT_AREA_M2)
+            + (lift::<FloatType>(INLET_AREA_M2) - lift::<FloatType>(THROAT_AREA_M2)) * s * s
     } else {
-        let s = (x - x_t) / (ft(LENGTH_M) - x_t);
-        ft(THROAT_AREA_M2) + (ft(EXIT_AREA_M2) - ft(THROAT_AREA_M2)) * s * s
+        let s = (x - x_t) / (lift::<FloatType>(LENGTH_M) - x_t);
+        lift::<FloatType>(THROAT_AREA_M2)
+            + (lift::<FloatType>(EXIT_AREA_M2) - lift::<FloatType>(THROAT_AREA_M2)) * s * s
     }
 }
 
 /// Invert the area-Mach relation on one branch by bisection.
 pub fn mach_from_area_ratio(area_ratio: FloatType, supersonic: bool) -> FloatType {
     let (mut lo, mut hi) = if supersonic {
-        (ft(1.0), ft(10.0))
+        (lift(1.0), lift(10.0))
     } else {
-        (ft(1.0e-4), ft(1.0))
+        (lift::<FloatType>(1.0e-4), lift::<FloatType>(1.0))
     };
     for _ in 0..200 {
-        let mid = (lo + hi) * ft(0.5);
-        let r = area_mach_ratio_kernel(mid, ft(GAMMA)).expect("area-Mach kernel");
+        let mid = (lo + hi) * lift::<FloatType>(0.5);
+        let r = area_mach_ratio_kernel(mid, lift(GAMMA)).expect("area-Mach kernel");
         let too_low = if supersonic {
             r < area_ratio
         } else {
@@ -149,27 +151,34 @@ pub fn mach_from_area_ratio(area_ratio: FloatType, supersonic: bool) -> FloatTyp
             hi = mid;
         }
     }
-    (lo + hi) * ft(0.5)
+    (lo + hi) * lift::<FloatType>(0.5)
 }
 
 /// Isentropic `p0/p` at Mach `m`.
 pub fn isen(m: FloatType) -> FloatType {
-    let g = ft(GAMMA);
-    (ft(1.0) + (g - ft(1.0)) / ft(2.0) * m * m).powf(g / (g - ft(1.0)))
+    let g = lift::<FloatType>(GAMMA);
+    (lift::<FloatType>(1.0) + (g - lift::<FloatType>(1.0)) / lift::<FloatType>(2.0) * m * m)
+        .powf(g / (g - lift::<FloatType>(1.0)))
 }
 
 /// The first critical back-pressure ratio: the subsonic solution at the exit area ratio.
 pub fn subsonic_exit_pressure_ratio() -> FloatType {
-    let m_exit = mach_from_area_ratio(ft(EXIT_AREA_M2) / ft(THROAT_AREA_M2), false);
-    ft(1.0) / isen(m_exit)
+    let m_exit = mach_from_area_ratio(
+        lift::<FloatType>(EXIT_AREA_M2) / lift::<FloatType>(THROAT_AREA_M2),
+        false,
+    );
+    lift::<FloatType>(1.0) / isen(m_exit)
 }
 
 /// The back-pressure ratio that parks the normal shock exactly at the exit plane.
 pub fn exit_shock_back_pressure_ratio() -> FloatType {
-    let shock = FittedNormalShock::<FloatType>::new(ft(GAMMA)).expect("shock model");
-    let m_design = mach_from_area_ratio(ft(EXIT_AREA_M2) / ft(THROAT_AREA_M2), true);
+    let shock = FittedNormalShock::<FloatType>::new(lift(GAMMA)).expect("shock model");
+    let m_design = mach_from_area_ratio(
+        lift::<FloatType>(EXIT_AREA_M2) / lift::<FloatType>(THROAT_AREA_M2),
+        true,
+    );
     let post = shock
-        .post_shock(ft(T0_K), ft(1.0e25), m_design)
+        .post_shock(lift(T0_K), lift(1.0e25), m_design)
         .expect("post-shock state");
     post.p_ratio / isen(m_design)
 }
@@ -178,23 +187,26 @@ pub fn exit_shock_back_pressure_ratio() -> FloatType {
 /// Rankine-Hugoniot across it, subsonic isentropic recovery to the exit; bisected on the
 /// monotone shock-station-to-exit-pressure relation.
 pub fn analytic_shock_position(back_pressure_ratio: FloatType) -> FloatType {
-    let shock = FittedNormalShock::<FloatType>::new(ft(GAMMA)).expect("shock model");
+    let shock = FittedNormalShock::<FloatType>::new(lift(GAMMA)).expect("shock model");
     let exit_pressure_for = |xs: FloatType| -> FloatType {
         let a_shock = area_at(xs);
-        let m1 = mach_from_area_ratio(a_shock / ft(THROAT_AREA_M2), true);
+        let m1 = mach_from_area_ratio(a_shock / lift::<FloatType>(THROAT_AREA_M2), true);
         let post = shock
-            .post_shock(ft(T0_K), ft(1.0e25), m1)
+            .post_shock(lift(T0_K), lift(1.0e25), m1)
             .expect("post-shock state");
         let t2_over_t1 = post.p_ratio / post.rho_ratio;
         let m2 = m1 * post.u_ratio / t2_over_t1.sqrt();
         let p02_over_p01 = post.p_ratio * isen(m2) / isen(m1);
-        let a_star2 = a_shock / area_mach_ratio_kernel(m2, ft(GAMMA)).expect("kernel");
-        let m_exit = mach_from_area_ratio(ft(EXIT_AREA_M2) / a_star2, false);
+        let a_star2 = a_shock / area_mach_ratio_kernel(m2, lift(GAMMA)).expect("kernel");
+        let m_exit = mach_from_area_ratio(lift::<FloatType>(EXIT_AREA_M2) / a_star2, false);
         p02_over_p01 / isen(m_exit)
     };
-    let (mut lo, mut hi) = (ft(LENGTH_M) * ft(0.55), ft(LENGTH_M) * ft(0.99));
+    let (mut lo, mut hi) = (
+        lift::<FloatType>(LENGTH_M) * lift::<FloatType>(0.55),
+        lift::<FloatType>(LENGTH_M) * lift::<FloatType>(0.99),
+    );
     for _ in 0..200 {
-        let mid = (lo + hi) * ft(0.5);
+        let mid = (lo + hi) * lift::<FloatType>(0.5);
         // A downstream shock loses more stagnation pressure and recovers less exit pressure.
         if exit_pressure_for(mid) > back_pressure_ratio {
             lo = mid;
@@ -202,7 +214,7 @@ pub fn analytic_shock_position(back_pressure_ratio: FloatType) -> FloatType {
             hi = mid;
         }
     }
-    (lo + hi) * ft(0.5)
+    (lo + hi) * lift::<FloatType>(0.5)
 }
 
 // ── The operating-map gating sequence ─────────────────────────────────────────────────────────
@@ -221,10 +233,10 @@ pub fn nozzle_gates() -> GateSeq<MapRow> {
 /// Every choked row crosses Mach 1 within the stated band of the throat.
 pub fn gate_choking(view: &StudyView<'_, MapRow>) -> (bool, String) {
     use crate::constants::SONIC_AT_THROAT_BAND_CELLS;
-    let h = ft(LENGTH_M) / ft(CELLS as f64);
-    let throat_x = ft(LENGTH_M) * ft(0.5);
+    let h = lift::<FloatType>(LENGTH_M) / CELLS.lift::<FloatType>();
+    let throat_x = lift::<FloatType>(LENGTH_M) * lift::<FloatType>(0.5);
     let first_critical = subsonic_exit_pressure_ratio();
-    let band = ft(SONIC_AT_THROAT_BAND_CELLS) * h;
+    let band = lift::<FloatType>(SONIC_AT_THROAT_BAND_CELLS) * h;
     for row in view.rows() {
         if row.p_ratio < first_critical {
             match row.sonic_x {
@@ -259,10 +271,10 @@ pub fn gate_choking(view: &StudyView<'_, MapRow>) -> (bool, String) {
 /// Every internal-shock row lands within the measured band of the closed-form shock position.
 pub fn gate_shock_position(view: &StudyView<'_, MapRow>) -> (bool, String) {
     use crate::constants::SHOCK_BAND_CELLS;
-    let h = ft(LENGTH_M) / ft(CELLS as f64);
+    let h = lift::<FloatType>(LENGTH_M) / CELLS.lift::<FloatType>();
     let first_critical = subsonic_exit_pressure_ratio();
     let shock_at_exit = exit_shock_back_pressure_ratio();
-    let band = ft(SHOCK_BAND_CELLS) * h;
+    let band = lift::<FloatType>(SHOCK_BAND_CELLS) * h;
     for row in view.rows() {
         let has_analytic_shock = row.p_ratio > shock_at_exit && row.p_ratio < first_critical;
         if has_analytic_shock {
@@ -301,7 +313,7 @@ pub fn gate_area_mach(view: &StudyView<'_, MapRow>) -> (bool, String) {
     for row in view.rows() {
         if row.shock_x.is_none()
             && let Some(dev) = row.area_mach_dev
-            && dev > ft(AREA_MACH_BAND)
+            && dev > lift::<FloatType>(AREA_MACH_BAND)
         {
             return (
                 false,
@@ -321,7 +333,7 @@ pub fn gate_area_mach(view: &StudyView<'_, MapRow>) -> (bool, String) {
 /// The thrust coefficient is finite and positive on every row.
 pub fn gate_thrust(view: &StudyView<'_, MapRow>) -> (bool, String) {
     for row in view.rows() {
-        if !(row.cf.is_finite() && row.cf > ft(0.0)) {
+        if !(row.cf.is_finite() && row.cf > lift::<FloatType>(0.0)) {
             return (
                 false,
                 format!("p_ratio {:.2}: Cf = {}", row.p_ratio, row.cf),

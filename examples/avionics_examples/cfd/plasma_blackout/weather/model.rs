@@ -15,11 +15,12 @@ use crate::constants::{
     MIN_ONSET_SPREAD_S, REACQ_ERR_MAX_M, STEPS, WALL_CLOCK_BUDGET_S, WEATHER,
 };
 use avionics_examples::shared::constants::DT_FLIGHT;
-use avionics_examples::shared::utils::{ft, norm3};
+use avionics_examples::shared::utils::norm3;
 use avionics_examples::shared::world;
 use deep_causality_cfd::{
     CompressibleMarchConfig, GateSeq, PhysicsError, Report, StudyView, TableRow,
 };
+use deep_causality_num::{Lift, lift};
 use std::path::PathBuf;
 
 // ── The case axis: weather conditions ─────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ fn world_cfg(
         name,
         world::weather_atmosphere(d_temp, rho_scale),
         STEPS,
-        &[("wx_bias_departure", ft(bias_departure(d_temp)))],
+        &[("wx_bias_departure", lift(bias_departure(d_temp)))],
     )
 }
 
@@ -133,9 +134,9 @@ impl TableRow for WorldRow {
     ];
     fn cells(&self) -> Vec<FloatType> {
         vec![
-            ft(self.d_temp),
-            ft(self.rho_scale),
-            ft(self.bias_departure),
+            lift(self.d_temp),
+            lift(self.rho_scale),
+            lift(self.bias_departure),
             self.onset_s,
             self.exit_s,
             self.dwell_s,
@@ -155,7 +156,7 @@ fn scalar0(report: &Report<FloatType>, name: &str) -> FloatType {
     report
         .series(name)
         .and_then(|s| s.first().copied())
-        .unwrap_or_else(|| ft(0.0))
+        .unwrap_or_else(|| lift(0.0))
 }
 
 /// The navigation metrics of one draw: (maximum drift while denied, terminal error), read from the
@@ -168,23 +169,23 @@ fn draw_metrics(report: &Report<FloatType>) -> (FloatType, FloatType) {
         (Some(nav), Some(truth)) if nav.len() >= 3 && truth.len() >= 3 => {
             norm3(core::array::from_fn(|i| nav[i] - truth[i]))
         }
-        _ => ft(f64::NAN),
+        _ => lift(f64::NAN),
     };
     (scalar0(report, "final_wx_drift_denied_max"), terminal)
 }
 
 /// Mean and sample standard deviation of a slice.
 fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
-    let n = ft(xs.len() as f64);
+    let n = xs.len().lift::<FloatType>();
     let mean = xs.iter().copied().sum::<FloatType>() / n;
     if xs.len() < 2 {
-        return (mean, ft(0.0));
+        return (mean, lift(0.0));
     }
     let var = xs
         .iter()
         .map(|&x| (x - mean) * (x - mean))
         .sum::<FloatType>()
-        / (n - ft(1.0));
+        / (n - lift::<FloatType>(1.0));
     (mean, deep_causality_algebra::Real::sqrt(var))
 }
 
@@ -199,7 +200,7 @@ pub fn world_row(
     draws: &[Report<FloatType>],
 ) -> Result<WorldRow, PhysicsError> {
     let reference = &draws[0];
-    let step_s = |scalar: &str| scalar0(reference, scalar) * ft(DT_FLIGHT);
+    let step_s = |scalar: &str| scalar0(reference, scalar) * lift::<FloatType>(DT_FLIGHT);
 
     let metrics: Vec<(FloatType, FloatType)> = draws.iter().map(draw_metrics).collect();
     let drifts: Vec<FloatType> = metrics.iter().map(|&(d, _)| d).collect();
@@ -212,7 +213,7 @@ pub fn world_row(
         .iter()
         .copied()
         .reduce(|a, x| if x.is_nan() || x > a { x } else { a })
-        .unwrap_or_else(|| ft(f64::NAN));
+        .unwrap_or_else(|| lift(f64::NAN));
 
     Ok(WorldRow {
         name: case.name,
@@ -296,11 +297,11 @@ fn gate_markers(v: &StudyView<'_, WorldRow>) -> (bool, String) {
 }
 
 fn gate_windows(v: &StudyView<'_, WorldRow>) -> (bool, String) {
-    let horizon_s = ft((STEPS - 1) as f64 * DT_FLIGHT);
+    let horizon_s = lift::<FloatType>((STEPS - 1) as f64 * DT_FLIGHT);
     (
         v.rows().iter().all(|r| {
-            r.onset_s > ft(0.0)
-                && r.dwell_s > ft(0.0)
+            r.onset_s > lift::<FloatType>(0.0)
+                && r.dwell_s > lift::<FloatType>(0.0)
                 && r.exit_s >= r.onset_s
                 && r.exit_s < horizon_s
         }),
@@ -313,24 +314,24 @@ fn gate_window_spread(v: &StudyView<'_, WorldRow>) -> (bool, String) {
         .rows()
         .iter()
         .map(|r| r.onset_s)
-        .fold(ft(f64::MIN), FloatType::max);
+        .fold(lift(f64::MIN), FloatType::max);
     let onset_lo = v
         .rows()
         .iter()
         .map(|r| r.onset_s)
-        .fold(ft(f64::MAX), FloatType::min);
+        .fold(lift(f64::MAX), FloatType::min);
     let dwell_hi = v
         .rows()
         .iter()
         .map(|r| r.dwell_s)
-        .fold(ft(f64::MIN), FloatType::max);
+        .fold(lift(f64::MIN), FloatType::max);
     let dwell_lo = v
         .rows()
         .iter()
         .map(|r| r.dwell_s)
-        .fold(ft(f64::MAX), FloatType::min);
+        .fold(lift(f64::MAX), FloatType::min);
     (
-        onset_hi - onset_lo >= ft(MIN_ONSET_SPREAD_S),
+        onset_hi - onset_lo >= lift::<FloatType>(MIN_ONSET_SPREAD_S),
         format!(
             "onset spread {:.1} s across the table (gate requires {:.0} s); dwell spread {:.1} s",
             onset_hi - onset_lo,
@@ -348,7 +349,7 @@ fn gate_cold_drift(v: &StudyView<'_, WorldRow>) -> (bool, String) {
         .find(|r| r.name == "polar_winter")
         .unwrap_or(standard);
     (
-        polar.drift_mean_m >= standard.drift_mean_m * ft(COLD_DRIFT_FACTOR_MIN),
+        polar.drift_mean_m >= standard.drift_mean_m * lift::<FloatType>(COLD_DRIFT_FACTOR_MIN),
         format!(
             "polar-winter mean blackout drift {:.2} m vs standard-day {:.2} m ({:.2}x; gate \
              requires {:.1}x from the thermal bias departure and the widened window)",
@@ -373,8 +374,8 @@ fn gate_cold_sigma(v: &StudyView<'_, WorldRow>) -> (bool, String) {
     let separation = polar.drift_mean_m - standard.drift_mean_m;
     (
         combined_sd.is_finite()
-            && combined_sd > ft(0.0)
-            && separation > combined_sd * ft(DRIFT_SIGNIFICANCE_SIGMA),
+            && combined_sd > lift::<FloatType>(0.0)
+            && separation > combined_sd * lift::<FloatType>(DRIFT_SIGNIFICANCE_SIGMA),
         format!(
             "polar-standard separation {:.2} m vs combined sigma {:.2} m ({:.1} sigma; gate \
              requires {:.0})",
@@ -390,7 +391,7 @@ fn gate_reacq(v: &StudyView<'_, WorldRow>) -> (bool, String) {
     (
         v.rows()
             .iter()
-            .all(|r| r.terminal_max_m < ft(REACQ_ERR_MAX_M)),
+            .all(|r| r.terminal_max_m < lift::<FloatType>(REACQ_ERR_MAX_M)),
         format!(
             "worst-draw terminal navigation error under {:.1} m across all {} descents",
             REACQ_ERR_MAX_M,
@@ -410,7 +411,7 @@ pub fn runtime_gates() -> GateSeq<FloatType> {
 fn gate_wall_clock(v: &StudyView<'_, FloatType>) -> (bool, String) {
     let elapsed_s = v.rows()[0];
     (
-        elapsed_s < ft(WALL_CLOCK_BUDGET_S),
+        elapsed_s < lift::<FloatType>(WALL_CLOCK_BUDGET_S),
         format!(
             "{elapsed_s:.1} s for the whole six-world table (budget {:.0} s)",
             WALL_CLOCK_BUDGET_S,

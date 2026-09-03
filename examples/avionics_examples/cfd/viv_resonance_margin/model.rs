@@ -9,8 +9,8 @@
 use crate::FloatType;
 use crate::constants::{DIAMETER_M, F_STRUCT_HZ, MARGIN_MIN, NU_AIR_M2_S, ST_BAND};
 use crate::model_config::WakeCase;
-use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::{CaseRun, GateSeq, PhysicsError, StudyView, TableRow, strouhal_number};
+use deep_causality_num::lift;
 use std::path::PathBuf;
 
 /// One swept airspeed's reduced result, all in the working precision.
@@ -60,7 +60,7 @@ pub fn margin_row(
     let dt = run.config().dt();
     let report = run.report();
 
-    let reynolds = airspeed * ft(DIAMETER_M) / ft(NU_AIR_M2_S);
+    let reynolds = airspeed * lift::<FloatType>(DIAMETER_M) / lift::<FloatType>(NU_AIR_M2_S);
     let probe = report.series("probe").ok_or_else(|| {
         PhysicsError::PhysicalInvariantBroken("viv-wake: no probe series in the report".into())
     })?;
@@ -69,11 +69,12 @@ pub fn margin_row(
     // geometric asymmetry; the Strouhal number is read from the second half only, the same
     // tail convention the verification harness uses.
     let tail = &probe[probe.len() / 2..];
-    let strouhal = strouhal_number(tail, dt, ft(1.0), ft(1.0));
+    let strouhal = strouhal_number(tail, dt, lift(1.0), lift(1.0));
 
     // Dimensionalize: the nondimensional St carries over, f_shed = St * V / D.
-    let f_shed_hz = strouhal * airspeed / ft(DIAMETER_M);
-    let margin = (ft(F_STRUCT_HZ) - f_shed_hz).abs() / ft(F_STRUCT_HZ);
+    let f_shed_hz = strouhal * airspeed / lift::<FloatType>(DIAMETER_M);
+    let margin =
+        (lift::<FloatType>(F_STRUCT_HZ) - f_shed_hz).abs() / lift::<FloatType>(F_STRUCT_HZ);
 
     Ok(MarginRow {
         airspeed,
@@ -100,10 +101,9 @@ pub fn gate_strouhal_band(view: &StudyView<'_, MarginRow>) -> (bool, String) {
     // A non-empty guard: an empty sweep must not pass a safety gate vacuously (`all` is true and
     // the `INFINITY` fold clears the placard on zero rows), which would mask a failed sweep.
     let ok = !view.rows().is_empty()
-        && view
-            .rows()
-            .iter()
-            .all(|r| r.strouhal >= ft(ST_BAND.0) && r.strouhal <= ft(ST_BAND.1));
+        && view.rows().iter().all(|r| {
+            r.strouhal >= lift::<FloatType>(ST_BAND.0) && r.strouhal <= lift::<FloatType>(ST_BAND.1)
+        });
     let (st_lo, st_hi) = view.rows().iter().fold(
         (FloatType::INFINITY, -FloatType::INFINITY),
         |(lo, hi), r| (lo.min(r.strouhal), hi.max(r.strouhal)),
@@ -127,7 +127,7 @@ pub fn gate_resonance_margin(view: &StudyView<'_, MarginRow>) -> (bool, String) 
         .iter()
         .fold(FloatType::INFINITY, |m, r| m.min(r.margin));
     (
-        !view.rows().is_empty() && min_margin >= ft(MARGIN_MIN),
+        !view.rows().is_empty() && min_margin >= lift::<FloatType>(MARGIN_MIN),
         format!(
             "min |f_struct - f_shed| / f_struct = {:.3}, placard minimum {MARGIN_MIN}",
             Into::<f64>::into(min_margin)
@@ -141,7 +141,7 @@ pub fn gate_finite_wake(view: &StudyView<'_, MarginRow>) -> (bool, String) {
         && view
             .rows()
             .iter()
-            .all(|r| r.f_shed_hz.is_finite() && r.strouhal > ft(0.0));
+            .all(|r| r.f_shed_hz.is_finite() && r.strouhal > lift::<FloatType>(0.0));
     (
         ok,
         format!(

@@ -30,7 +30,7 @@ mod model;
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::Either;
-use deep_causality_num::{FromPrimitive, ToPrimitive};
+use deep_causality_num::{lift, lift_count, to_count};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Check, CheckItem, CheckReport, CommutatorTolerance, DensityMatrix, MinCostCover, Projection,
@@ -41,7 +41,7 @@ use deep_causality_tensor::CausalTensor;
 use crate::constants::{AGREEMENT_SIGMAS, FLOOR_BITS, SEED, SHOTS};
 use crate::model::{
     e1_projector, e2_projector, experiments, h1_direct_q1_to_q2, h2_direct_q2_to_q1,
-    h3_common_bath, h4_cyclic, lift, plant, systems,
+    h3_common_bath, h4_cyclic, plant, systems,
 };
 
 /// The real working type. Switch it to
@@ -55,7 +55,7 @@ pub type NumberType = u64;
 pub type C = Complex<FloatType>;
 
 fn main() {
-    let floor_bits = lift(FLOOR_BITS);
+    let floor_bits: FloatType = lift(FLOOR_BITS);
     println!("=== Crosstalk attribution: direct cause or common cause ===");
     println!("shots: {SHOTS}   floor: {FLOOR_BITS} bits   seed: {SEED}\n");
 
@@ -142,7 +142,7 @@ fn main() {
             .map(|e| e.name.as_str())
             .collect::<Vec<_>>(),
         plan.total_cost(),
-        lift(200.0) / plan.total_cost()
+        lift::<FloatType>(200.0) / plan.total_cost()
     );
     println!(
         "    tightest pair separates at {:.1} bits against the floor; ledger cost {}",
@@ -150,7 +150,7 @@ fn main() {
         report.ledger.cost()
     );
     assert!(plan.is_complete());
-    assert_eq!(plan.total_cost(), lift(2.0));
+    assert_eq!(plan.total_cost(), lift::<FloatType>(2.0));
 
     // -- the first planned experiment, observed under H₁ ---------------------------------
     let first = &experiments()[plan.entries()[0].experiment];
@@ -208,10 +208,11 @@ fn main() {
 
 /// `shots` draws from a qubit whose excited population is `p`, through the shipped Born sampler.
 fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
-    let zero = lift(0.0);
+    let zero: FloatType = lift(0.0);
+    let one: FloatType = lift(1.0);
     let rho = DensityMatrix::new(CausalTensor::from_slice(
         &[
-            Complex::new(lift(1.0) - p, zero),
+            Complex::new(one - p, zero),
             Complex::new(zero, zero),
             Complex::new(zero, zero),
             Complex::new(p, zero),
@@ -220,7 +221,7 @@ fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
     ))
     .expect("a valid state");
     let excited = Projection::<FloatType, 2>::from_ket(&CausalTensor::from_slice(
-        &[Complex::new(zero, zero), Complex::new(lift(1.0), zero)],
+        &[Complex::new(zero, zero), Complex::new(one, zero)],
         &[2],
     ))
     .expect("a projector");
@@ -230,10 +231,8 @@ fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
 
 /// A world's predicted read-out, carried with the shot noise it would have at the planned shots.
 fn predicted_as_read_out(p: FloatType) -> ShotEstimate<FloatType> {
-    // `round` is inherent on `f64` and a `Real` method on `Float106`; the trait path serves both.
-    let ones = Real::round(p * FloatType::from_u64(SHOTS).expect("shots are representable"))
-        .to_u64()
-        .expect("a rounded count fits");
+    // The shots a probability names: rounded in the working type, then a count again.
+    let ones = to_count(p * lift_count::<FloatType>(SHOTS)).expect("a rounded count fits");
     let mut hist = deep_causality_quantum::CountHistogram::new(1);
     hist.record_n(1, ones);
     hist.record_n(0, SHOTS - ones);
@@ -247,7 +246,7 @@ fn agrees(
     observed: &ShotEstimate<FloatType>,
 ) -> CheckReport<FloatType> {
     let gap = Real::abs(prediction.estimate() - observed.estimate());
-    let allowance = lift(AGREEMENT_SIGMAS) * observed.standard_error();
+    let allowance = lift::<FloatType>(AGREEMENT_SIGMAS) * observed.standard_error();
     CheckReport::new(
         vec![Check::new(CheckItem::Whole, gap, allowance)],
         observed.shots() as usize,

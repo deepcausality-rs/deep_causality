@@ -11,6 +11,7 @@ use crate::model::{
     ASCENT_RATE, DESCENT_RATE, DiveProfile, DiverState, GF_HIGH, HALF_TIMES, ambient_pressure,
     cns_accumulation, estimate_ndl, find_ceiling, inspired_n2_pp, oxygen_pp, update_tissues,
 };
+use deep_causality_num::{Lift, lift};
 
 pub fn print_dive_table() {
     println!("=== Dive Table (10m - 50m) ===\n");
@@ -130,7 +131,7 @@ pub fn print_detailed_simulation(
             println!("  [{:>2.0}m] Ceiling: {:.1}m ✓", next_depth, ceil);
         }
 
-        let ascent_segment = (3.0 as FloatType).min(current_depth);
+        let ascent_segment = lift::<FloatType>(3.0).min(current_depth);
         let ascent_time = ascent_segment / ASCENT_RATE;
         current_depth -= ascent_segment;
 
@@ -159,7 +160,7 @@ pub fn print_detailed_simulation(
     let p_bottom = ambient_pressure(max_depth);
     let steps: Vec<(FloatType, FloatType)> = (0..=(max_depth as i32 / 10))
         .map(|i| {
-            let d = max_depth - (i as FloatType * 10.0);
+            let d = max_depth - (i.lift::<FloatType>() * 10.0);
             (d.max(0.0), ambient_pressure(d.max(0.0)))
         })
         .collect();

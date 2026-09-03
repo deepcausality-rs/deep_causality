@@ -8,8 +8,8 @@
 use deep_causality_core::{CausalFlow, PropagatingEffect};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision. Literals in this file would need wrapping
-/// in `FloatType::from(…)` to switch to `Float106`.
+/// or `Float106` for high precision. Literals in this file would need lifting
+/// through `deep_causality_num::lift` to switch to `Float106`.
 pub type FloatType = f64;
 
 /// A patient: covariates and a baseline blood pressure.

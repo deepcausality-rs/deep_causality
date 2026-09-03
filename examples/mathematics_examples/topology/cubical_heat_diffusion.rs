@@ -25,6 +25,7 @@
 
 use deep_causality_calculus::Euler;
 use deep_causality_haft::Arrow;
+use deep_causality_num::{Lift, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{CubicalComplex, Manifold, Moore};
 use std::ops::{Add, Mul};
@@ -44,7 +45,7 @@ fn main() {
 
     // Initial condition: 1.0 at the center cell, 0.0 elsewhere.
     let center = (top_n / 2) + (top_n / 2) * top_n;
-    let mut data = vec![0.0 as FloatType; cell_count];
+    let mut data = vec![lift::<FloatType>(0.0); cell_count];
     data[center] = 1.0;
 
     let manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> =
@@ -69,7 +70,7 @@ fn main() {
                 .map(|c| {
                     // Discrete Laplacian: Σ u[n] − k · u[c], where k = |Moore(c)|.
                     let acc: FloatType = neighbors[c].iter().map(|&nb| f.0[nb]).sum();
-                    acc - (neighbors[c].len() as FloatType) * f.0[c]
+                    acc - neighbors[c].len().lift::<FloatType>() * f.0[c]
                 })
                 .collect(),
         )
@@ -109,14 +110,14 @@ fn print_heatmap(values: &[FloatType], side: usize) {
     let max = values
         .iter()
         .cloned()
-        .fold(0.0 as FloatType, FloatType::max)
+        .fold(lift(0.0), FloatType::max)
         .max(1e-12);
     let ramp = [' ', '.', ':', '-', '+', '*', '#', '@'];
     for row in 0..side {
         let mut line = String::with_capacity(side * 2);
         for col in 0..side {
             let v = values[col + row * side];
-            let bucket = ((v / max) * (ramp.len() as FloatType - 1.0)).round() as usize;
+            let bucket = ((v / max) * (ramp.len().lift::<FloatType>() - 1.0)).round() as usize;
             let bucket = bucket.min(ramp.len() - 1);
             line.push(ramp[bucket]);
             line.push(' ');

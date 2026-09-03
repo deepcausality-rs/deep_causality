@@ -42,6 +42,7 @@ use deep_causality_cfd::{
     ReentryNavEngine, RegimeClassify, RetroThrust, SafetyEnvelope, ThrottleGuidance, TrajectoryNav,
     VibrationalLagStage,
 };
+use deep_causality_num::{Lift, lift};
 use deep_causality_physics::{EARTH_GM, EARTH_RADIUS};
 
 /// The baseline atmosphere as typed rows.
@@ -57,10 +58,10 @@ pub fn weather_atmosphere(d_temp: f64, rho_scale: f64) -> Vec<AtmosphereRow<Floa
         .map(|&(alt, n, t, a)| {
             let t_new = t + d_temp;
             AtmosphereRow {
-                altitude_m: utils::ft(alt),
-                n_tot: utils::ft(n * rho_scale),
-                temperature: utils::ft(t_new),
-                sound_speed: utils::ft(a) * Real::sqrt(utils::ft(t_new / t)),
+                altitude_m: lift(alt),
+                n_tot: lift(n * rho_scale),
+                temperature: lift(t_new),
+                sound_speed: lift::<FloatType>(a) * Real::sqrt(lift::<FloatType>(t_new / t)),
             }
         })
         .collect()
@@ -90,24 +91,24 @@ pub fn descent_world_with(
     constants: &[(&'static str, FloatType)],
     imprint: bool,
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    let schedule = DescentSchedule::new(rows, utils::ft(GAMMA_EFF))?;
+    let schedule = DescentSchedule::new(rows, lift(GAMMA_EFF))?;
     let n = 1usize << L;
-    let dx = utils::ft(1.0) / utils::ft(n as f64);
+    let dx = lift::<FloatType>(1.0) / n.lift::<FloatType>();
     let mut builder = CfdConfigBuilder::compressible_march::<FloatType>(name)
         .grid(L, L, dx, dx)
         .solver(
-            utils::ft(DT_SOLVER),
-            utils::ft(S_REF),
-            utils::ft(GAMMA_EFF),
+            lift(DT_SOLVER),
+            lift(S_REF),
+            lift(GAMMA_EFF),
             utils::trunc(),
         )
-        .flight_dt(utils::ft(DT_FLIGHT))
+        .flight_dt(lift(DT_FLIGHT))
         .seed_fn(|_, _| {
             (
-                utils::ft(SEED_RHO_HAT),
-                utils::ft(SEED_U_HAT),
-                utils::ft(0.0),
-                utils::ft(SEED_P_HAT),
+                lift(SEED_RHO_HAT),
+                lift(SEED_U_HAT),
+                lift(0.0),
+                lift(SEED_P_HAT),
             )
         })?
         .stop(MarchStop::Fixed(steps))
@@ -119,7 +120,7 @@ pub fn descent_world_with(
                 .blackout_dwell(),
         )
         .schedule(schedule)
-        .reference(utils::ft(T_REF), utils::ft(N_REF), utils::ft(U_REF));
+        .reference(lift(T_REF), lift(N_REF), lift(U_REF));
     for &(cname, value) in constants {
         builder = builder.publish_constant(cname, value);
     }
@@ -148,18 +149,18 @@ pub fn corridor_coupling(
     noise_draw: usize,
 ) -> impl PhysicsStage<2, FloatType> {
     let imu = ImuModel::new(
-        core::array::from_fn(|i| utils::ft(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
-        core::array::from_fn(|i| utils::ft(IMU_GYRO_BIAS[i])),
-        core::array::from_fn(|i| utils::ft(Q_DIAG[i])),
+        core::array::from_fn(|i| lift(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
+        core::array::from_fn(|i| lift(IMU_GYRO_BIAS[i])),
+        core::array::from_fn(|i| lift(Q_DIAG[i])),
     );
     Coupling::between_steps()
         .then(
             VibrationalLagStage::new(
-                utils::ft(T_VE_INITIAL),
-                utils::ft(FALLBACK_PRESSURE_ATM),
-                utils::ft(REDUCED_MASS_AMU),
-                utils::ft(THETA_VIB),
-                utils::ft(SHEATH_PEAK_AGE_S),
+                lift(T_VE_INITIAL),
+                lift(FALLBACK_PRESSURE_ATM),
+                lift(REDUCED_MASS_AMU),
+                lift(THETA_VIB),
+                lift(SHEATH_PEAK_AGE_S),
             )
             .with_pressure_field("pressure_atm"),
         )
@@ -171,36 +172,32 @@ pub fn corridor_coupling(
             // is the network's true Riccati timescale, and the carried arm
             // under-relaxes young sheath gas. The exposure is the transit-age
             // profile's observable peak, the same age the stagline gate reads.
-            FiniteRateIonizationStage::new(utils::ft(FALLBACK_N_TOT))
+            FiniteRateIonizationStage::new(lift(FALLBACK_N_TOT))
                 .with_density_field("n_tot")
-                .with_sheath_renewal(utils::ft(SHEATH_PEAK_AGE_S)),
+                .with_sheath_renewal(lift(SHEATH_PEAK_AGE_S)),
         )
         .then(FreestreamFeeds)
-        .then(RegimeClassify::new(utils::ft(L_CHAR), utils::trigger()))
+        .then(RegimeClassify::new(lift(L_CHAR), utils::trigger()))
         .then(
-            BankSteeredLift::new(
-                utils::ft(RHO_REF),
-                utils::ft(CDA_OVER_M),
-                utils::ft(L_OVER_D),
-            )
-            .with_speed_field("equivalent_airspeed"),
+            BankSteeredLift::new(lift(RHO_REF), lift(CDA_OVER_M), lift(L_OVER_D))
+                .with_speed_field("equivalent_airspeed"),
         )
         .then(SuttonGravesLoads)
         .then(TruthGnss { noise_draw })
         .then(
             TrajectoryNav::new(
-                core::array::from_fn(|i| utils::ft(Q_DIAG[i])),
-                utils::ft(GNSS_VAR),
-                utils::ft(OPTICAL_VAR),
+                core::array::from_fn(|i| lift(Q_DIAG[i])),
+                lift(GNSS_VAR),
+                lift(OPTICAL_VAR),
             )
             .with_imu(imu),
         )
         .then(CommandedBank)
         .then(WeatherTelemetry)
         .then(CyberneticCorrect::new(SafetyEnvelope::new(
-            utils::ft(MAX_HEAT_FLUX),
-            utils::ft(MAX_G_LOAD),
-            utils::ft(MAX_BANK_RAD),
+            lift(MAX_HEAT_FLUX),
+            lift(MAX_G_LOAD),
+            lift(MAX_BANK_RAD),
         )))
         .build()
 }
@@ -209,30 +206,30 @@ pub fn corridor_coupling(
 /// seeded with the standard-day priors and a 50-m-class initial INS error. Everything else is
 /// evolved from here; no station constants.
 pub fn initial_field() -> CoupledField<FloatType> {
-    let mut field = CoupledField::new(Ambient::new(utils::ft(0.01), utils::ft(0.0), None));
+    let mut field = CoupledField::new(Ambient::new(lift(0.01), lift(0.0), None));
     let r0 = [EARTH_RADIUS + TRUTH_ALTITUDE_0, 0.0, 0.0];
     field.set_scalar(
         "truth_state",
         Vec::from([
-            utils::ft(r0[0]),
-            utils::ft(r0[1]),
-            utils::ft(r0[2]),
-            utils::ft(TRUTH_V0[0]),
-            utils::ft(TRUTH_V0[1]),
-            utils::ft(TRUTH_V0[2]),
+            lift(r0[0]),
+            lift(r0[1]),
+            lift(r0[2]),
+            lift(TRUTH_V0[0]),
+            lift(TRUTH_V0[1]),
+            lift(TRUTH_V0[2]),
         ]),
     );
-    let nav_r0: [FloatType; 3] = core::array::from_fn(|i| utils::ft(r0[i] + NAV_INIT_ERR[i]));
-    let nav_v0: [FloatType; 3] = core::array::from_fn(|i| utils::ft(TRUTH_V0[i]));
+    let nav_r0: [FloatType; 3] = core::array::from_fn(|i| lift(r0[i] + NAV_INIT_ERR[i]));
+    let nav_v0: [FloatType; 3] = core::array::from_fn(|i| lift(TRUTH_V0[i]));
     let filter = NavFilter::new(
         InsErrorState::<FloatType>::zero(),
-        core::array::from_fn(|i| utils::ft(P0_DIAG[i])),
+        core::array::from_fn(|i| lift(P0_DIAG[i])),
     )
     .expect("P0_DIAG is a valid covariance diagonal (finite, non-negative variances)");
     field.set_nav(ReentryNavEngine::new(
         nav_r0,
         nav_v0,
-        utils::ft(EARTH_GM),
+        lift(EARTH_GM),
         filter,
     ));
     field
@@ -282,30 +279,29 @@ pub fn powered_descent_coupling_with(
     terminal: bool,
 ) -> impl PhysicsStage<2, FloatType> {
     let imu = ImuModel::new(
-        core::array::from_fn(|i| utils::ft(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
-        core::array::from_fn(|i| utils::ft(IMU_GYRO_BIAS[i])),
-        core::array::from_fn(|i| utils::ft(Q_DIAG[i])),
+        core::array::from_fn(|i| lift(IMU_ACCEL_BIAS[i] * imu_bias_departure)),
+        core::array::from_fn(|i| lift(IMU_GYRO_BIAS[i])),
+        core::array::from_fn(|i| lift(Q_DIAG[i])),
     );
     // The supersonic leg's burn is a *deceleration* burn — it flies the Jarvinen-Adams band to shed
     // entry velocity, and there is no landing site in its stopping-distance sense. Only the terminal
     // leg flies a stopping burn, so only it coasts to the ignition altitude first: applied earlier,
     // the hold-off would suppress the retropropulsion the whole example exists to show.
-    let guidance = ThrottleGuidance::new(utils::ft(RETRO_THRUST_N), utils::ft(G0)).with_corridor(
-        IgnitionCorridor::new(
-            utils::ft(IGNITION_MACH_MIN),
-            utils::ft(IGNITION_MACH_MAX),
-            utils::ft(IGNITION_Q_MIN),
-            utils::ft(IGNITION_Q_MAX),
+    let guidance =
+        ThrottleGuidance::new(lift(RETRO_THRUST_N), lift(G0)).with_corridor(IgnitionCorridor::new(
+            lift(IGNITION_MACH_MIN),
+            lift(IGNITION_MACH_MAX),
+            lift(IGNITION_Q_MIN),
+            lift(IGNITION_Q_MAX),
             margin_m,
-        ),
-    );
+        ));
     let guidance = if terminal {
         // Aimed at the touchdown plane the regime classifier calls the ground, so the vehicle
         // arrives stopped where the descent rate is actually sampled.
         guidance
             .with_stopping_burn(margin_m)
-            .with_target_altitude(utils::ft(TOUCHDOWN_ALTITUDE_M))
-            .with_contact_speed(utils::ft(CONTACT_SPEED_MS))
+            .with_target_altitude(lift(TOUCHDOWN_ALTITUDE_M))
+            .with_contact_speed(lift(CONTACT_SPEED_MS))
     } else {
         guidance
     };
@@ -314,57 +310,53 @@ pub fn powered_descent_coupling_with(
         // The SRP axes are released: they are bow-shock-interaction constraints and there is no
         // bow shock subsonically. See the terminal-envelope constants for the full reasoning.
         BurnEnvelope::new(
-            utils::ft(TERMINAL_THROTTLE_FLOOR),
-            utils::ft(THROTTLE_CEILING),
-            utils::ft(TERMINAL_MAX_CT),
-            utils::ft(IGNITION_Q_MIN),
-            utils::ft(IGNITION_Q_MAX),
-            utils::ft(PROPELLANT_FLOOR_KG),
-            utils::ft(TERMINAL_MAX_DESCENT_RATE),
+            lift(TERMINAL_THROTTLE_FLOOR),
+            lift(THROTTLE_CEILING),
+            lift(TERMINAL_MAX_CT),
+            lift(IGNITION_Q_MIN),
+            lift(IGNITION_Q_MAX),
+            lift(PROPELLANT_FLOOR_KG),
+            lift(TERMINAL_MAX_DESCENT_RATE),
         )
     } else {
         BurnEnvelope::new(
-            utils::ft(THROTTLE_FLOOR),
-            utils::ft(THROTTLE_CEILING),
-            utils::ft(MAX_CT),
-            utils::ft(IGNITION_Q_MIN),
-            utils::ft(IGNITION_Q_MAX),
-            utils::ft(PROPELLANT_FLOOR_KG),
-            utils::ft(MAX_DESCENT_RATE),
+            lift(THROTTLE_FLOOR),
+            lift(THROTTLE_CEILING),
+            lift(MAX_CT),
+            lift(IGNITION_Q_MIN),
+            lift(IGNITION_Q_MAX),
+            lift(PROPELLANT_FLOOR_KG),
+            lift(MAX_DESCENT_RATE),
         )
     };
     Coupling::between_steps()
         .then(
             VibrationalLagStage::new(
-                utils::ft(T_VE_INITIAL),
-                utils::ft(FALLBACK_PRESSURE_ATM),
-                utils::ft(REDUCED_MASS_AMU),
-                utils::ft(THETA_VIB),
-                utils::ft(SHEATH_PEAK_AGE_S),
+                lift(T_VE_INITIAL),
+                lift(FALLBACK_PRESSURE_ATM),
+                lift(REDUCED_MASS_AMU),
+                lift(THETA_VIB),
+                lift(SHEATH_PEAK_AGE_S),
             )
             .with_pressure_field("pressure_atm"),
         )
         .then(
-            FiniteRateIonizationStage::new(utils::ft(FALLBACK_N_TOT))
+            FiniteRateIonizationStage::new(lift(FALLBACK_N_TOT))
                 .with_density_field("n_tot")
-                .with_sheath_renewal(utils::ft(SHEATH_PEAK_AGE_S)),
+                .with_sheath_renewal(lift(SHEATH_PEAK_AGE_S)),
         )
         .then(FreestreamFeeds)
-        .then(FlightSensors::new(utils::ft(AIR_MEAN_MOLECULAR_MASS_KG)))
+        .then(FlightSensors::new(lift(AIR_MEAN_MOLECULAR_MASS_KG)))
         .then(
-            RegimeClassify::new(utils::ft(L_CHAR), utils::trigger()).with_flight_axes(
-                utils::ft(0.8),
-                utils::ft(1.2),
-                utils::ft(TOUCHDOWN_ALTITUDE_M),
+            RegimeClassify::new(lift(L_CHAR), utils::trigger()).with_flight_axes(
+                lift(0.8),
+                lift(1.2),
+                lift(TOUCHDOWN_ALTITUDE_M),
             ),
         )
         .then(
-            BankSteeredLift::new(
-                utils::ft(RHO_REF),
-                utils::ft(CDA_OVER_M),
-                utils::ft(L_OVER_D),
-            )
-            .with_speed_field("equivalent_airspeed"),
+            BankSteeredLift::new(lift(RHO_REF), lift(CDA_OVER_M), lift(L_OVER_D))
+                .with_speed_field("equivalent_airspeed"),
         )
         // Order is load-bearing: the plume decrement scales the along-velocity component of
         // the force channel, and the thrust term is also along −v̂ — so the decrement must be
@@ -380,29 +372,23 @@ pub fn powered_descent_coupling_with(
         // It is **state realism only** — the force-channel drag decrement is the A0 correlation with
         // or without it (the AMBER verdict).
         .then(
-            PlumeObstruction::new(utils::ft(RETRO_THRUST_N), utils::ft(PLUME_S_REF_M2))
-                .with_mach_band(utils::ft(IGNITION_MACH_MIN), utils::ft(IGNITION_MACH_MAX))
-                .with_geometry_mach_band(utils::ft(CORDELL_MACH_MIN), utils::ft(CORDELL_MACH_MAX))
+            PlumeObstruction::new(lift(RETRO_THRUST_N), lift(PLUME_S_REF_M2))
+                .with_mach_band(lift(IGNITION_MACH_MIN), lift(IGNITION_MACH_MAX))
+                .with_geometry_mach_band(lift(CORDELL_MACH_MIN), lift(CORDELL_MACH_MAX))
                 .with_plume_geometry(plume_nozzle()),
         )
-        .then(RetroThrust::new(
-            utils::ft(RETRO_THRUST_N),
-            utils::ft(RETRO_ISP_S),
-        ))
+        .then(RetroThrust::new(lift(RETRO_THRUST_N), lift(RETRO_ISP_S)))
         // Composed here on purpose: the force channel is summed (lift, the plume decrement, thrust)
         // and the guidance has not yet written the next step's command, so the witness records the
         // throttle the propulsion stages just flew rather than the one they will fly.
-        .then(AxialWitness::new(
-            utils::ft(RETRO_THRUST_N),
-            utils::ft(CDA_OVER_M),
-        ))
+        .then(AxialWitness::new(lift(RETRO_THRUST_N), lift(CDA_OVER_M)))
         .then(SuttonGravesLoads)
         .then(TruthGnss { noise_draw })
         .then(
             TrajectoryNav::new(
-                core::array::from_fn(|i| utils::ft(Q_DIAG[i])),
-                utils::ft(GNSS_VAR),
-                utils::ft(OPTICAL_VAR),
+                core::array::from_fn(|i| lift(Q_DIAG[i])),
+                lift(GNSS_VAR),
+                lift(OPTICAL_VAR),
             )
             .with_imu(imu),
         )
@@ -411,19 +397,15 @@ pub fn powered_descent_coupling_with(
         .then(WeatherTelemetry)
         .then(
             CyberneticCorrect::new(
-                SafetyEnvelope::new(
-                    utils::ft(MAX_HEAT_FLUX),
-                    utils::ft(MAX_G_LOAD),
-                    utils::ft(MAX_BANK_RAD),
-                )
-                .with_burn(burn),
+                SafetyEnvelope::new(lift(MAX_HEAT_FLUX), lift(MAX_G_LOAD), lift(MAX_BANK_RAD))
+                    .with_burn(burn),
             )
             .with_burn_sensing(
                 "q_inf",
                 "propellant",
                 "descent_rate",
-                utils::ft(RETRO_THRUST_N),
-                utils::ft(PLUME_S_REF_M2),
+                lift(RETRO_THRUST_N),
+                lift(PLUME_S_REF_M2),
             ),
         )
         .build()
@@ -439,8 +421,8 @@ pub fn powered_descent_coupling_with(
 /// could never trip, and the mass-aware thrust normalization would be frozen at its initial value.
 pub fn powered_initial_field() -> CoupledField<FloatType> {
     let mut field = initial_field();
-    field.set_scalar("mass", Vec::from([utils::ft(VEHICLE_MASS_KG)]));
-    field.set_scalar("propellant", Vec::from([utils::ft(PROPELLANT_KG)]));
+    field.set_scalar("mass", Vec::from([lift(VEHICLE_MASS_KG)]));
+    field.set_scalar("propellant", Vec::from([lift(PROPELLANT_KG)]));
     field
 }
 
@@ -457,36 +439,36 @@ pub fn terminal_descent_world(
     rows: Vec<AtmosphereRow<FloatType>>,
     steps: usize,
 ) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    let schedule = DescentSchedule::new(rows, utils::ft(GAMMA_TERMINAL))?
+    let schedule = DescentSchedule::new(rows, lift(GAMMA_TERMINAL))?
         .with_rebuild_budget(TERMINAL_REBUILD_BUDGET);
     let n = 1usize << L;
-    let dx = utils::ft(1.0) / utils::ft(n as f64);
+    let dx = lift::<FloatType>(1.0) / n.lift::<FloatType>();
     CfdConfigBuilder::compressible_march::<FloatType>(name)
         .grid(L, L, dx, dx)
         .solver(
-            utils::ft(DT_SOLVER),
-            utils::ft(S_REF_TERMINAL),
-            utils::ft(GAMMA_TERMINAL),
+            lift(DT_SOLVER),
+            lift(S_REF_TERMINAL),
+            lift(GAMMA_TERMINAL),
             utils::trunc(),
         )
-        .flight_dt(utils::ft(DT_FLIGHT))
+        .flight_dt(lift(DT_FLIGHT))
         .seed_fn(|_, _| {
             (
-                utils::ft(SEED_RHO_HAT_TERMINAL),
-                utils::ft(SEED_U_HAT_TERMINAL),
-                utils::ft(0.0),
-                utils::ft(SEED_P_HAT_TERMINAL),
+                lift(SEED_RHO_HAT_TERMINAL),
+                lift(SEED_U_HAT_TERMINAL),
+                lift(0.0),
+                lift(SEED_P_HAT_TERMINAL),
             )
         })?
         .stop(MarchStop::Fixed(steps))
         .observe(QttObserve::default().heat_flux())
         .schedule(schedule)
         .reference(
-            utils::ft(T_REF_TERMINAL),
-            utils::ft(N_REF_TERMINAL),
-            utils::ft(U_REF_TERMINAL),
+            lift(T_REF_TERMINAL),
+            lift(N_REF_TERMINAL),
+            lift(U_REF_TERMINAL),
         )
-        .publish_constant("commanded_bank", utils::ft(0.0))
+        .publish_constant("commanded_bank", lift(0.0))
         .build()
 }
 
@@ -495,16 +477,16 @@ pub fn terminal_descent_world(
 /// discipline pin that keeps a surprising result attributable to physics rather than extrapolation.
 pub fn plume_nozzle() -> PlumeNozzle<FloatType> {
     PlumeNozzle::new(
-        utils::ft(CHAMBER_PRESSURE_MAX),
-        utils::ft(CHAMBER_TEMPERATURE),
-        utils::ft(JET_R_SPECIFIC),
-        utils::ft(JET_GAMMA),
-        utils::ft(NOZZLE_EXIT_MACH),
-        utils::ft(NOZZLE_HALF_ANGLE_RAD),
-        utils::ft(NOZZLE_THROAT_D),
-        utils::ft(NOZZLE_EXIT_R),
-        utils::ft(NOZZLE_CONE_L),
-        utils::ft(PLUME_GAMMA_INF),
+        lift(CHAMBER_PRESSURE_MAX),
+        lift(CHAMBER_TEMPERATURE),
+        lift(JET_R_SPECIFIC),
+        lift(JET_GAMMA),
+        lift(NOZZLE_EXIT_MACH),
+        lift(NOZZLE_HALF_ANGLE_RAD),
+        lift(NOZZLE_THROAT_D),
+        lift(NOZZLE_EXIT_R),
+        lift(NOZZLE_CONE_L),
+        lift(PLUME_GAMMA_INF),
     )
     .expect("the nozzle constants sit inside the Cordell validity envelope")
 }
@@ -518,14 +500,14 @@ pub fn plume_nozzle() -> PlumeNozzle<FloatType> {
 /// nothing to measure. It never touches the drag closure.
 pub fn plume_imprint() -> PlumeImprint<FloatType> {
     PlumeImprint::new(
-        utils::ft(IMPRINT_THROTTLE_TOL),
+        lift(IMPRINT_THROTTLE_TOL),
         IMPRINT_MAX_REFRESHES,
-        utils::ft(IMPRINT_FACE_X),
-        utils::ft(IMPRINT_AXIS_Y),
-        utils::ft(IMPRINT_SMOOTHING_CELLS),
-        utils::ft(IMPRINT_DOMAIN_M),
-        core::array::from_fn(|i| utils::ft(IMPRINT_TARGET[i])),
-        utils::ft(IMPRINT_ETA),
+        lift(IMPRINT_FACE_X),
+        lift(IMPRINT_AXIS_Y),
+        lift(IMPRINT_SMOOTHING_CELLS),
+        lift(IMPRINT_DOMAIN_M),
+        core::array::from_fn(|i| lift(IMPRINT_TARGET[i])),
+        lift(IMPRINT_ETA),
     )
     .expect("the imprint constants describe a valid masked forcing region")
 }

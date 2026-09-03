@@ -9,6 +9,7 @@ use crate::model_types::{
     COUPLING_STRENGTH, Connectome, DT, FloatType, SEIZURE_THRESHOLD, SeizureResult, TIME_STEPS,
 };
 use deep_causality_calculus::{EndoArrow, Euler};
+use deep_causality_num::Lift;
 use std::f64::consts::PI;
 use std::ops::{Add, Mul};
 
@@ -30,9 +31,10 @@ impl Connectome {
         // frequency differences in the factual graph (seizure). With the
         // hub disconnected, the remaining periphery's coupling is too
         // weak to maintain synchronisation (stable).
-        let intrinsic_freq: Vec<FloatType> = (0..n).map(|i| 1.0 + 0.05 * i as FloatType).collect();
+        let intrinsic_freq: Vec<FloatType> =
+            (0..n).map(|i| 1.0 + 0.05 * i.lift::<FloatType>()).collect();
         let initial_phase: Vec<FloatType> = (0..n)
-            .map(|i| (i as FloatType * 0.5) % (2.0 * PI))
+            .map(|i| (i.lift::<FloatType>() * 0.5) % (2.0 * PI))
             .collect();
         Self {
             adj,
@@ -81,7 +83,7 @@ pub fn simulate_seizure(connectome: Connectome) -> SeizureResult {
         let d = (0..n)
             .map(|i| {
                 let coupling: FloatType = adj[i].iter().map(|&j| (p.0[j] - p.0[i]).sin()).sum();
-                freqs[i] + (COUPLING_STRENGTH / n as FloatType) * coupling
+                freqs[i] + (COUPLING_STRENGTH / n.lift::<FloatType>()) * coupling
             })
             .collect();
         Phases(d)
@@ -92,7 +94,7 @@ pub fn simulate_seizure(connectome: Connectome) -> SeizureResult {
 
     let sum_cos: FloatType = final_phases.0.iter().map(|p| p.cos()).sum();
     let sum_sin: FloatType = final_phases.0.iter().map(|p| p.sin()).sum();
-    let final_sync = (sum_cos.powi(2) + sum_sin.powi(2)).sqrt() / n as FloatType;
+    let final_sync = (sum_cos.powi(2) + sum_sin.powi(2)).sqrt() / n.lift::<FloatType>();
 
     SeizureResult {
         final_sync,

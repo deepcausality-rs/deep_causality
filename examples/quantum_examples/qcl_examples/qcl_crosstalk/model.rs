@@ -18,18 +18,12 @@
 
 use crate::constants::{BATH, Q1, Q2, SHOTS};
 use crate::{C, FloatType};
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::lift;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Experiment, FactorSupports, Hypothesis, Observable, ProcessFactors, Projection, QuantumPlant,
 };
 use deep_causality_tensor::CausalTensor;
-
-/// A configuration literal, lifted once into the working type. This is the boundary at which
-/// `f64` may appear: the model is written against `FloatType` from here on.
-pub fn lift(x: f64) -> FloatType {
-    <FloatType as FromPrimitive>::from_f64(x).expect("a configuration literal is representable")
-}
 
 fn c(re: f64) -> C {
     Complex::new(lift(re), lift(0.0))
@@ -131,8 +125,13 @@ pub fn e1_projector() -> Observable<FloatType, 4> {
 /// The experiment family, with the predicted read-out under each of H₁, H₂, H₃ in that order.
 pub fn experiments() -> Vec<Experiment<FloatType>> {
     let exp = |name: &str, cost: f64, predictions: [f64; 3]| {
-        Experiment::new(name, lift(cost), SHOTS, predictions.map(lift).to_vec())
-            .expect("a probability triple")
+        Experiment::new(
+            name,
+            lift(cost),
+            SHOTS,
+            predictions.map(lift::<FloatType>).to_vec(),
+        )
+        .expect("a probability triple")
     };
     vec![
         exp("E0 passive P(e1,e2)", 1.0, [0.04, 0.04, 0.04]),

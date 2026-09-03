@@ -10,8 +10,8 @@
 use deep_causality_core::PropagatingProcess;
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision. Literals in this crate would need wrapping
-/// in `FloatType::from(…)` to switch away from `f64`.
+/// or `Float106` for high precision. Literals in this crate would need lifting
+/// through `deep_causality_num::lift` to switch away from `f64`.
 pub type FloatType = f64;
 
 #[derive(Debug, Default, Clone)]

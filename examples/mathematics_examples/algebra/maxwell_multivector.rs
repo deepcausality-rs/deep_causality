@@ -4,6 +4,7 @@
  */
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric};
+use deep_causality_num::Lift;
 
 /// The plane-wave vector-potential component `A_x(t, z) = cos(ω(t − z))`, written once as a
 /// scalar-generic field so the tangent functor differentiates it. The same definition runs at
@@ -15,7 +16,7 @@ struct PlaneWavePotential {
 
 impl DifferentiableField<2> for PlaneWavePotential {
     fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
-        let omega = S::from_f64(self.omega as f64).expect("ω lifts into the working scalar");
+        let omega = self.omega.lift::<S>();
         (omega * (tz[0] - tz[1])).cos()
     }
 }

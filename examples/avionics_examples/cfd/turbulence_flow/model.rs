@@ -18,7 +18,7 @@
 use core::ops::{Add, Mul};
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{EndoArrow, Rk4, Scalar};
-use deep_causality_num::Float106;
+use deep_causality_num::{Float106, lift};
 
 /// A point in the convective-flow state space, generic over the working scalar `S`.
 #[derive(Clone, Copy, Default, Debug)]
@@ -70,11 +70,6 @@ impl Default for ConvectionParams {
             beta: 8.0 / 3.0,
         }
     }
-}
-
-/// Lift an exact `f64` constant into the working scalar `S` at whatever precision is in play.
-fn lift<S: Scalar>(x: f64) -> S {
-    S::from_f64(x).expect("constant lifts into the working scalar")
 }
 
 /// The convective rate field `dv/dt = f(v)` (the Lorenz right-hand side), as a closure over the

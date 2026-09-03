@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 deep_causality_core = { workspace = true, features = ["default"] }
+deep_causality_num = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_haft = { workspace = true, features = ["default"] }
 

@@ -18,6 +18,7 @@
 
 use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_linear::CsrMatrix;
+use deep_causality_num::lift;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -34,7 +35,7 @@ const N_VERTICES: usize = 9;
 const N_STEPS: usize = 6;
 // 2 alpha < 1 keeps the 1D explicit scheme stable.
 fn alpha() -> FloatType {
-    FloatType::from(0.25)
+    lift::<FloatType>(0.25)
 }
 
 fn main() {
@@ -42,8 +43,8 @@ fn main() {
     println!("Precision: {}\n", core::any::type_name::<FloatType>());
 
     // Initial bump centered at index 4.
-    let mut initial: Vec<FloatType> = vec![FloatType::from(0.0); N_VERTICES];
-    initial[4] = FloatType::from(8.0);
+    let mut initial: Vec<FloatType> = vec![lift::<FloatType>(0.0); N_VERTICES];
+    initial[4] = lift::<FloatType>(8.0);
     let manifold = build_manifold(initial);
     println!("t=0 phi: {:?}", snapshot(&manifold));
 
@@ -68,7 +69,7 @@ fn main() {
             let final_m = process.value_cloned().unwrap();
             let total: FloatType = snapshot(&final_m)
                 .into_iter()
-                .fold(FloatType::from(0.0), |acc, v| acc + v);
+                .fold(lift::<FloatType>(0.0), |acc, v| acc + v);
             println!(
                 "Total mass conserved (Neumann boundaries): sum phi = {}",
                 total
@@ -99,7 +100,7 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, Floa
     let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     let mut data = vertex_values;
-    data.extend(std::iter::repeat_n(FloatType::from(0.0), n_edges));
+    data.extend(std::iter::repeat_n(lift::<FloatType>(0.0), n_edges));
     let tensor = CausalTensor::new(data, vec![N_VERTICES + n_edges]).unwrap();
     Manifold::new(complex, tensor, 0).expect("manifold")
 }
@@ -109,8 +110,8 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, Floa
 fn diffuse_one_step(
     m: SimplicialManifold<f64, FloatType>,
 ) -> Process<SimplicialManifold<f64, FloatType>> {
-    let two = FloatType::from(2.0);
-    let zero = FloatType::from(0.0);
+    let two = lift::<FloatType>(2.0);
+    let zero = lift::<FloatType>(0.0);
     let a = alpha();
 
     let updated = ManifoldWitness::extend(&m, |w| {
@@ -139,7 +140,7 @@ fn diffuse_one_step(
         .data()
         .as_slice()
         .iter()
-        .fold(FloatType::from(0.0), |acc, &v| {
+        .fold(lift::<FloatType>(0.0), |acc, &v| {
             let av = v.abs();
             if av > acc { av } else { acc }
         });

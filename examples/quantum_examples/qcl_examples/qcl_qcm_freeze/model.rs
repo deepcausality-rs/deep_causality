@@ -9,16 +9,10 @@
 use crate::{C, FloatType};
 use deep_causality::utils_test::test_utils;
 use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::lift;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{FactorSupports, ProcessFactors};
 use deep_causality_tensor::CausalTensor;
-
-/// A configuration literal, lifted once into the working type. This is the boundary at which
-/// `f64` may appear: the model is written against `FloatType` from here on.
-fn lift(x: f64) -> FloatType {
-    <FloatType as FromPrimitive>::from_f64(x).expect("a configuration literal is representable")
-}
 
 fn c(re: f64, im: f64) -> C {
     Complex::new(lift(re), lift(im))

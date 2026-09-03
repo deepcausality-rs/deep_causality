@@ -11,6 +11,7 @@
 
 use crate::FloatType;
 use deep_causality_calculus::{DifferentiableArrow, Scalar};
+use deep_causality_num::lift;
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
@@ -105,12 +106,9 @@ pub struct SchreinerLoading {
 
 impl DifferentiableArrow for SchreinerLoading {
     fn run<S: Scalar>(&self, t: S) -> S {
-        let k =
-            S::from_f64(2.0_f64.ln() / self.half_time).expect("k lifts into the working scalar");
-        let p_initial =
-            S::from_f64(self.p_initial).expect("constant lifts into the working scalar");
-        let p_inspired =
-            S::from_f64(self.p_inspired).expect("constant lifts into the working scalar");
+        let k = lift::<S>(2.0_f64.ln() / self.half_time);
+        let p_initial = lift::<S>(self.p_initial);
+        let p_inspired = lift::<S>(self.p_inspired);
 
         p_inspired + (p_initial - p_inspired) * (-(k * t)).exp()
     }
