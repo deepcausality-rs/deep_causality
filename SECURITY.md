@@ -6,13 +6,13 @@
 
 # Security Policy
 
-## Supported Versions
+# CRA stewardship
 
-| Version | Supported          |
-|---------|--------------------|
-| 0.3.x   | :white_check_mark: |
-| 0.2.x   | :white_check_mark: |
-| < 0.2   | :x:                |
+CRA stewardship: LF AI & Data is supported under the Linux Foundation CRA stewardship framework. 
+The LF AI & Data Foundation’s CRA steward is The Linux Foundation and its policy is available at https://www.linuxfoundation.org/security. Most of the individual LF AI projects report up to the parent LF Projects, LLC but this can be checked on a per project basis in LFX PCC (see Operations->Project Definition->Legal 
+Details - or ask at support@linuxfoundation.org)
+
+Resources:[ Understanding the EU Cyber Resilience Act (CRA) (LFEL1001)](https://training.linuxfoundation.org/express-learning/understanding-the-eu-cyber-resilience-act-cra-lfel1001/) - Linux Foundation - Education, which is a free course that provides an in-depth look at the various roles and requirements for CRA compliance.
 
 ## Reporting a Vulnerability
 

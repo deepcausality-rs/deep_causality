@@ -25,7 +25,9 @@ executes a circuit against shots SHALL remain gated.
 - **WHEN** `deep_causality_quantum` is built with default features
 - **THEN** `GateOp` and `QuantumCircuit` are available, since `logical_z`, `logical_s`, `logical_t`,
   `logical_cz`, `logical_multi_cz` and `logical_hadamard` return gate programs over them and those
-  builders are not feature-gated
+  builders are not feature-gated; and `ShotHistogram`, `CountHistogram`, `sample_projector` and
+  `ShotEstimate` are available for the same reason, since the plant read-out draws seeded shots from
+  the shipped Born probability in every build while `QpuSampler` and `SimQpu` stay gated
 
 #### Scenario: The emergent seam is a trait, not an adapter
 
@@ -45,7 +47,7 @@ executes a circuit against shots SHALL remain gated.
 
 Every numeric surface in the crate SHALL be written against an algebraic bound and SHALL name a
 concrete width exactly once, through a type alias rather than a literal type. Three axes carry
-their own parameter, and they are not interchangeable: `FloatType` for the real axis, `IntType` for
+their own parameter, and they are not interchangeable: `FloatType` for the real axis, `NumberType` for
 the integer axis, and exact rationals where a quantity is a ratio of integers by construction.
 
 The real axis buys **accuracy**, and its failure mode is rounding bounded by `R::epsilon()`, which is
@@ -63,7 +65,7 @@ approximated, so that the question asked of it is decided rather than thresholde
 #### Scenario: Counts are ℕ and never a hardcoded width
 
 - **WHEN** a shot count, an experiment count or a prediction count is stored
-- **THEN** it is bounded on `NaturalNumber` and its width is named by `IntType`, and a draw-down uses
+- **THEN** it is bounded on `NaturalNumber` and its width is named by `NumberType`, and a draw-down uses
   `checked_difference` or `monus` rather than `Sub`, because ℕ is a `CommutativeSemiring` with no
   additive inverse
 

@@ -22,6 +22,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::lift;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 
@@ -33,8 +34,11 @@ fn main() {
     println!("=== Predict / Correct / Verify Inside the Causal Monad ===");
     println!("Precision: {}\n", core::any::type_name::<FloatType>());
 
-    let initial =
-        CausalTensor::new(vec![FloatType::from(1.0), FloatType::from(0.0)], vec![2]).unwrap();
+    let initial = CausalTensor::new(
+        vec![lift::<FloatType>(1.0), lift::<FloatType>(0.0)],
+        vec![2],
+    )
+    .unwrap();
     println!("Initial state x = {:?}\n", initial.as_slice());
 
     // predict -> correct -> verify, threaded through one monadic chain. The
@@ -59,7 +63,7 @@ fn main() {
 }
 
 fn deg_to_rad(deg: FloatType) -> FloatType {
-    deg * FloatType::pi() / FloatType::from(180.0)
+    deg * FloatType::pi() / lift::<FloatType>(180.0)
 }
 
 fn rotation_matrix_2d(theta: FloatType) -> CausalTensor<FloatType> {
@@ -70,7 +74,7 @@ fn rotation_matrix_2d(theta: FloatType) -> CausalTensor<FloatType> {
 
 fn predict(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
     // Predict: x' = F x. F is a 10-degree rotation as a stand-in for a model step.
-    let f = rotation_matrix_2d(deg_to_rad(FloatType::from(10.0)));
+    let f = rotation_matrix_2d(deg_to_rad(lift::<FloatType>(10.0)));
     // mat_mul expects shape [m,n] x [n,k]. Reshape state from [2] to [2,1].
     let x_col = CausalTensor::new(state.as_slice().to_vec(), vec![2, 1]).unwrap();
     let ast = EinSumOp::mat_mul(f, x_col);
@@ -86,11 +90,11 @@ fn predict(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
 fn correct(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
     // Correct: rotate by an additional -3 degrees via Clifford rotor.
     let metric = Metric::Euclidean(2);
-    let theta = deg_to_rad(FloatType::from(-3.0));
-    let half = theta / FloatType::from(2.0);
+    let theta = deg_to_rad(lift::<FloatType>(-3.0));
+    let half = theta / lift::<FloatType>(2.0);
     let c = half.cos();
     let sn = half.sin();
-    let zero = FloatType::from(0.0);
+    let zero = lift::<FloatType>(0.0);
     let rotor = CausalMultiVector::new(vec![c, zero, zero, -sn], metric).unwrap();
     let rotor_rev = CausalMultiVector::new(vec![c, zero, zero, sn], metric).unwrap();
 

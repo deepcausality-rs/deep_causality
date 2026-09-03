@@ -42,6 +42,7 @@ mod utils_print;
 use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{CfdFlow, MarchStop, PhysicsError, StudyError, StudyView, Verdict};
 use deep_causality_core::AlternatableContext;
+use deep_causality_num::lift;
 use std::cell::RefCell;
 use std::process::ExitCode;
 use std::time::Instant;
@@ -84,7 +85,7 @@ fn main() -> ExitCode {
         let onset = CfdFlow::march(&nominal)
             .couple(world::corridor_coupling(1.0, 0))
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from_field(world::initial_field())
             .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))
             .map_err(leg_err("leg: descent to blackout onset"))?;
@@ -130,13 +131,13 @@ fn main() -> ExitCode {
             .alternate_context(&committed_world)
             .couple(coupling())
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(onset.state())
             .until(|field, _| {
                 field
                     .scalar("flight_altitude")
                     .and_then(|a| a.first().copied())
-                    .is_some_and(|a| a <= utils::ft(61_000.0))
+                    .is_some_and(|a| a <= lift::<FloatType>(61_000.0))
             })
             .map_err(leg_err("leg: peak passage"))?;
         let leg2 = model::snapshot("peak passage 61 km (committed dwell)", &peak);
@@ -146,7 +147,7 @@ fn main() -> ExitCode {
             .alternate_context(&committed_world)
             .couple(coupling())
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(peak.state())
             .until(|field, _| field.regime().map(|r| !r.gnss_denied).unwrap_or(false))
             .map_err(leg_err("leg: flow-resolved exit"))?;
@@ -158,7 +159,7 @@ fn main() -> ExitCode {
             .march_with(MarchStop::Fixed(constants::REACQ_STEPS))
             .couple(coupling())
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(exit_pause.state())
             .until(|_, _| false)
             .map_err(leg_err("leg: reacquisition"))?;
@@ -174,7 +175,7 @@ fn main() -> ExitCode {
             leg3,
             leg4,
             rebuilds: onset.rebuilds() + peak.rebuilds() + exit_pause.rebuilds() + reacq.rebuilds(),
-            elapsed_s: utils::ft(clock.elapsed().as_secs_f64()),
+            elapsed_s: lift(clock.elapsed().as_secs_f64()),
             regime_log: rendered_log,
         }];
 

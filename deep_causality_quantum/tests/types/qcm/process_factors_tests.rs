@@ -52,6 +52,18 @@ fn test_factor_supports_declare_and_dims() {
 }
 
 #[test]
+fn test_declared_leg_dim_tells_a_registered_qubit_from_an_absent_leg() {
+    let mut fs = FactorSupports::new();
+    assert_eq!(fs.declared_leg_dim(5), None);
+    assert_eq!(fs.leg_dim(5), 2);
+    fs.declare(0, &[5]);
+    assert_eq!(fs.declared_leg_dim(5), Some(2));
+    fs.set_leg_dim(7, 3);
+    assert_eq!(fs.declared_leg_dim(7), Some(3));
+    assert_eq!(fs.declared_leg_dim(6), None);
+}
+
+#[test]
 fn test_validate_dimension_agreement() {
     let mut pf = ProcessFactors::<f64>::new();
     pf.insert(0, sigma_z()); // 2x2

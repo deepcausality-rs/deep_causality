@@ -28,6 +28,7 @@ A comprehensive numerical foundation library for the [DeepCausality project](htt
 provides:
 
 - **Cast Traits:** Safe primitive type conversions (`AsPrimitive`, `FromPrimitive`, `ToPrimitive`, `NumCast`)
+- **Lift Utilities:** The precision-boundary crossings for a program written against a `FloatType` alias: `lift` for an `f64` literal, `lift_count` for a `u64`, a `lift_<primitive>` for every primitive float and integer, `lower` back to `f64`, and `to_count` back to a rounded `u64`
 - **Identity Traits:** Zero and One with const variants for compile-time evaluation
 - **Float Types:** Standard floating-point abstractions plus `Float106` for double-double precision arithmetic
 - **Integer Traits:** Type-safe abstractions over the primitive integer types

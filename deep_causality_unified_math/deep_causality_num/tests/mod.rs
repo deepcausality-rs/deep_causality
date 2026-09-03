@@ -12,5 +12,6 @@ mod formalization_lean;
 mod gf2;
 mod identity;
 mod integer;
+mod lift;
 mod num;
 mod ops;

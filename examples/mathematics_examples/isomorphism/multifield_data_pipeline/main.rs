@@ -50,6 +50,7 @@
 
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, MultiFieldCarrier};
+use deep_causality_num::Lift;
 use deep_causality_tensor::CausalTensor;
 
 /// can be f32, f64, or f106;
@@ -95,7 +96,7 @@ fn main() {
     // Mock "loaded" data: a ramp from 0.0 to 1.0 across the tensor's flat
     // index space. Stands in for whatever a real loader would return.
     let raw: Vec<FloatType> = (0..element_count)
-        .map(|i| i as FloatType / element_count as FloatType)
+        .map(|i| i.lift::<FloatType>() / element_count.lift::<FloatType>())
         .collect();
     let tensor_in = CausalTensor::new(raw, underlying_shape.clone()).unwrap();
     println!(
@@ -175,7 +176,7 @@ fn main() {
     // Last element: input was (n-1)/n ≈ 0.992..., scaled by 2.0 ≈ 1.984...,
     // plus 0.5 ≈ 2.484...
     let last = final_tensor.data()[element_count - 1];
-    let n = element_count as FloatType;
+    let n = element_count.lift::<FloatType>();
     let expected_last: FloatType = ((n - 1.0) / n) * 2.0 + 0.5;
     assert!(
         (last - expected_last).abs() < 1e-5,

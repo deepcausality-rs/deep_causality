@@ -7,28 +7,30 @@ use crate::Float106;
 use core::fmt;
 use core::fmt::{LowerExp, UpperExp};
 
+/// Renders the value, honouring the formatter's precision, width, fill, alignment and sign flags.
+///
+/// A double-double carries about 32 significant digits, and `f64` formatting renders at most the
+/// 17 that survive rounding to `f64`. So `Display` shows the value to `f64` precision, which is
+/// what a caller writing `{:.3}` or `{:>10}` asks for, and `Debug` shows the two components
+/// exactly. The earlier rendering printed `hi+lo` and ignored every flag, which turned `{:.3}`
+/// into a surprise at the display boundary.
 impl fmt::Display for Float106 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // For display, show the sum as best as f64 can represent
-        // In practice, users wanting full precision should use hi/lo directly
-        if self.lo == 0.0 {
-            write!(f, "{}", self.hi)
-        } else {
-            write!(f, "{}+{}", self.hi, self.lo)
-        }
+        let value = self.hi + self.lo;
+        fmt::Display::fmt(&value, f)
     }
 }
 
 impl LowerExp for Float106 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Use hi component for exponential notation since it carries the magnitude
-        LowerExp::fmt(&self.hi, f)
+        let value = self.hi + self.lo;
+        LowerExp::fmt(&value, f)
     }
 }
 
 impl UpperExp for Float106 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Use hi component for exponential notation since it carries the magnitude
-        UpperExp::fmt(&self.hi, f)
+        let value = self.hi + self.lo;
+        UpperExp::fmt(&value, f)
     }
 }

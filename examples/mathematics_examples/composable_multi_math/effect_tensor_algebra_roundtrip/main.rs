@@ -22,7 +22,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::Float106;
+use deep_causality_num::{Float106, lift};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 
@@ -36,9 +36,9 @@ fn main() {
 
     let initial = CausalTensor::new(
         vec![
-            FloatType::from(3.0),
-            FloatType::from(4.0),
-            FloatType::from(0.0),
+            lift::<FloatType>(3.0),
+            lift::<FloatType>(4.0),
+            lift::<FloatType>(0.0),
         ],
         vec![3],
     )
@@ -46,7 +46,7 @@ fn main() {
     let initial_norm_sq: FloatType = initial
         .as_slice()
         .iter()
-        .fold(FloatType::from(0.0), |acc, &v| acc + v * v);
+        .fold(lift::<FloatType>(0.0), |acc, &v| acc + v * v);
     println!("Initial vector: {:?}", initial.as_slice());
     println!("Initial |v|^2 = {}\n", initial_norm_sq);
 
@@ -81,7 +81,7 @@ fn lift_to_algebra(v: CausalTensor<FloatType>) -> Process<CausalMultiVector<Floa
     if s.len() != 3 {
         return fail(format!("lift: expected length 3 vector, got {}", s.len()));
     }
-    let zero = FloatType::from(0.0);
+    let zero = lift::<FloatType>(0.0);
     // Cl(3,0) basis order: [1, e1, e2, e3, e12, e13, e23, e123]
     let coeffs = vec![zero, s[0], s[1], s[2], zero, zero, zero, zero];
     let mv = CausalMultiVector::new(coeffs, Metric::Euclidean(3)).unwrap();
@@ -92,11 +92,11 @@ fn lift_to_algebra(v: CausalTensor<FloatType>) -> Process<CausalMultiVector<Floa
 fn rotate_in_xy(v: CausalMultiVector<FloatType>) -> Process<CausalMultiVector<FloatType>> {
     // 90-degree rotation in the e1^e2 plane.
     let metric = Metric::Euclidean(3);
-    let theta = FloatType::pi() / FloatType::from(2.0);
-    let half = theta / FloatType::from(2.0);
+    let theta = FloatType::pi() / lift::<FloatType>(2.0);
+    let half = theta / lift::<FloatType>(2.0);
     let c = half.cos();
     let sn = half.sin();
-    let zero = FloatType::from(0.0);
+    let zero = lift::<FloatType>(0.0);
     let rotor =
         CausalMultiVector::new(vec![c, zero, zero, zero, -sn, zero, zero, zero], metric).unwrap();
     let rotor_rev =

@@ -156,7 +156,7 @@ fn constant_round_trip_exact_f32() {
 
 #[test]
 fn constant_round_trip_exact_float106() {
-    assert_constant_round_trip::<Float106>(Float106::from_f64(1e-29));
+    assert_constant_round_trip::<Float106>(Float106::from(1e-29));
 }
 
 #[test]

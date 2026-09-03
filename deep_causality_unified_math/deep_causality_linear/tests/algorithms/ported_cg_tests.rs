@@ -185,7 +185,7 @@ fn test_cg_converges_at_f32_precision() {
 #[test]
 fn test_cg_converges_at_float106_precision() {
     // A = [[4, 1], [1, 3]], b = [1, 2], exact solution = [1/11, 7/11].
-    let f = Float106::from_f64;
+    let f = <Float106 as From<f64>>::from;
     let a = [[f(4.0), f(1.0)], [f(1.0), f(3.0)]];
     let b = vec![f(1.0), f(2.0)];
     let apply = |v: &[Float106]| -> Vec<Float106> {

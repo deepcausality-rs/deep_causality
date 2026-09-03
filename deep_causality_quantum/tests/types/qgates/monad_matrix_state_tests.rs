@@ -24,7 +24,7 @@ type MatState = CausalTensor<CF>;
 type Proc = CausalEffectPropagationProcess<F, MatState, (), CausalityError, EffectLog>;
 
 fn f(x: f64) -> F {
-    Float106::from_f64(x)
+    Float106::from(x)
 }
 
 fn c(re: f64, im: f64) -> CF {

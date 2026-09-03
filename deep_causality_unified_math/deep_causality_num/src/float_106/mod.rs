@@ -78,14 +78,6 @@ impl Float106 {
         Self { hi: h, lo: l }
     }
 
-    /// Creates a `DoubleFloat` from a single `f64`.
-    ///
-    /// The low component is zero.
-    #[inline]
-    pub const fn from_f64(x: f64) -> Self {
-        Self { hi: x, lo: 0.0 }
-    }
-
     /// Creates a `DoubleFloat` from raw components without normalization.
     ///
     /// # Safety

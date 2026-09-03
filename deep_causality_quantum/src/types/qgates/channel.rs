@@ -18,6 +18,7 @@
 //! maps on complex matrices", Linear Algebra Appl. 10 (1975) 285–290.
 
 use crate::QuantumError;
+use crate::types::decision::{Check, CheckItem, CheckReport};
 use crate::types::qgates::operator_linalg::{
     hermiticity_defect, identity_matrix, partial_trace, square_dim,
 };
@@ -249,19 +250,17 @@ where
     Ok(CausalTensor::from_slice(&out, &[d_out, d_out]))
 }
 
-/// Complete positivity check: `E` is CP iff its Choi operator is PSD
-/// (spectrum ≥ −tol via the Hermitian eigendecomposition).
-pub fn check_completely_positive<R>(
-    choi: &CausalTensor<Complex<R>>,
-    tol: R,
-) -> Result<(), QuantumError>
+/// The Hermiticity defect of a Choi operator, after the shape and finiteness checks a positivity
+/// decision needs. Shared by both forms of the CP check so that neither restates the other.
+///
+/// PSD (hence CP) requires a finite Hermitian operator; `eigen_hermitian` would otherwise silently
+/// certify the Hermitian part of a non-Hermitian input, which is why the defect is decided before
+/// any spectrum is taken.
+fn cp_hermiticity_defect<R>(choi: &CausalTensor<Complex<R>>) -> Result<R, QuantumError>
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
-    validate_tolerance(tol)?;
     square_dim(choi)?;
-    // PSD (hence CP) requires a finite Hermitian operator; eigen_hermitian would
-    // otherwise silently certify the Hermitian part of a non-Hermitian input.
     if choi
         .as_slice()
         .iter()
@@ -271,39 +270,93 @@ where
             "Choi operator contains a non-finite entry".into(),
         ));
     }
-    let defect = hermiticity_defect(choi)?;
+    hermiticity_defect(choi)
+}
+
+/// The real spectrum of a Choi operator already known to be Hermitian within tolerance.
+fn cp_spectrum<R>(choi: &CausalTensor<Complex<R>>) -> Result<Vec<R>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    let (vals, _) = choi
+        .eigen_hermitian()
+        .map_err(|e| QuantumError::CalculationError(format!("eigen: {:?}", e)))?;
+    Ok(vals.into_iter().map(|lam| lam.re).collect())
+}
+
+/// Complete positivity check: `E` is CP iff its Choi operator is PSD
+/// (spectrum ≥ −tol via the Hermitian eigendecomposition).
+///
+/// Decides and discards. The sibling [`check_completely_positive_report`] keeps
+/// the defect and the spectrum it computed.
+pub fn check_completely_positive<R>(
+    choi: &CausalTensor<Complex<R>>,
+    tol: R,
+) -> Result<(), QuantumError>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    validate_tolerance(tol)?;
+    let defect = cp_hermiticity_defect(choi)?;
     if defect > tol {
         return Err(QuantumError::NonPositiveOperator(format!(
             "not completely positive: Choi is not Hermitian, defect {:?} > {:?}",
             defect, tol
         )));
     }
-    let (vals, _) = choi
-        .eigen_hermitian()
-        .map_err(|e| QuantumError::CalculationError(format!("eigen: {:?}", e)))?;
-    for lam in vals {
-        if lam.re < -tol {
+    for lam in cp_spectrum(choi)? {
+        if lam < -tol {
             return Err(QuantumError::NonCptpChannel(format!(
                 "not completely positive: Choi eigenvalue {:?} < 0",
-                lam.re
+                lam
             )));
         }
     }
     Ok(())
 }
 
-/// Trace-preservation check: `E` is TP iff `Tr_out(J) = I_in`, computed with
-/// the named-subset partial trace over the `out` leg.
-pub fn check_trace_preserving<R>(
+/// The report-returning form of [`check_completely_positive`].
+///
+/// The first record is the Hermiticity defect against `tol`, as [`CheckItem::Whole`]. Then one
+/// record per eigenvalue, as [`CheckItem::Index`], measuring `−λ` against `tol`: the shipped
+/// condition `λ < −tol` is exactly `−λ > tol`, so a comfortably positive spectrum reports negative
+/// margins and the worst record is the smallest eigenvalue. The examined count is the number of
+/// eigenvalues. A non-Hermitian input records only the defect, rejected, with nothing examined,
+/// since a spectrum taken through `eigen_hermitian` would certify the wrong operator.
+///
+/// `Err` is reserved for structural failures: a non-square or non-finite operator, an invalid
+/// tolerance, or an eigendecomposition that fails.
+pub fn check_completely_positive_report<R>(
+    choi: &CausalTensor<Complex<R>>,
+    tol: R,
+) -> Result<CheckReport<R>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    validate_tolerance(tol)?;
+    let defect = cp_hermiticity_defect(choi)?;
+    let mut checks = vec![Check::new(CheckItem::Whole, defect, tol)];
+    if defect > tol {
+        return Ok(CheckReport::new(checks, 0));
+    }
+    let spectrum = cp_spectrum(choi)?;
+    let examined = spectrum.len();
+    for (i, lam) in spectrum.into_iter().enumerate() {
+        checks.push(Check::new(CheckItem::Index(i), -lam, tol));
+    }
+    Ok(CheckReport::new(checks, examined))
+}
+
+/// `max |Tr_out(J) − I_in|`, after the dimension checks a trace-preservation decision needs.
+/// Shared by both forms of the TP check.
+fn tp_defect<R>(
     choi: &CausalTensor<Complex<R>>,
     d_in: usize,
     d_out: usize,
-    tol: R,
-) -> Result<(), QuantumError>
+) -> Result<R, QuantumError>
 where
     R: RealField + core::fmt::Debug,
 {
-    validate_tolerance(tol)?;
     let d = square_dim(choi)?;
     if d != d_in * d_out {
         return Err(QuantumError::DimensionMismatch(format!(
@@ -314,7 +367,7 @@ where
     }
     let tr_out = partial_trace(choi, &[d_in, d_out], &[1])?;
     let id = identity_matrix::<R>(d_in);
-    let defect = tr_out
+    Ok(tr_out
         .as_slice()
         .iter()
         .zip(id.as_slice())
@@ -323,7 +376,25 @@ where
             let di = a.im - b.im;
             (dr * dr + di * di).sqrt()
         })
-        .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+        .fold(R::zero(), |acc, x| if x > acc { x } else { acc }))
+}
+
+/// Trace-preservation check: `E` is TP iff `Tr_out(J) = I_in`, computed with
+/// the named-subset partial trace over the `out` leg.
+///
+/// Decides and discards. The sibling [`check_trace_preserving_report`] keeps the
+/// defect on the accepting path as well as the rejecting one.
+pub fn check_trace_preserving<R>(
+    choi: &CausalTensor<Complex<R>>,
+    d_in: usize,
+    d_out: usize,
+    tol: R,
+) -> Result<(), QuantumError>
+where
+    R: RealField + core::fmt::Debug,
+{
+    validate_tolerance(tol)?;
+    let defect = tp_defect(choi, d_in, d_out)?;
     if defect > tol {
         return Err(QuantumError::NonCptpChannel(format!(
             "not trace-preserving: max |Tr_out(J) − I| = {:?}",
@@ -331,6 +402,32 @@ where
         )));
     }
     Ok(())
+}
+
+/// The report-returning form of [`check_trace_preserving`].
+///
+/// One record, [`CheckItem::Whole`], measuring `max |Tr_out(J) − I_in|` against `tol`. The examined
+/// count is the number of entries of the `d_in × d_in` residual that the maximum ranged over,
+/// `d_in²`, which is why it exceeds the record count: the decision quantified over every entry
+/// and recorded the one that mattered.
+///
+/// `Err` is reserved for structural failures: a dimension mismatch, an invalid tolerance, or a
+/// partial trace that cannot be formed.
+pub fn check_trace_preserving_report<R>(
+    choi: &CausalTensor<Complex<R>>,
+    d_in: usize,
+    d_out: usize,
+    tol: R,
+) -> Result<CheckReport<R>, QuantumError>
+where
+    R: RealField + core::fmt::Debug,
+{
+    validate_tolerance(tol)?;
+    let defect = tp_defect(choi, d_in, d_out)?;
+    Ok(CheckReport::new(
+        vec![Check::new(CheckItem::Whole, defect, tol)],
+        d_in * d_in,
+    ))
 }
 
 /// The Choi operator of the identity channel on a `d`-dimensional space.

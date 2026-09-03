@@ -317,10 +317,12 @@ fn test_freeze_builtin_check_failure_is_calculation_error() {
 
 #[test]
 fn test_freeze_rejects_c3_structure() {
-    // A graph whose input→output reachability is the canonical C₃ (K_{3,3} minus
-    // a perfect matching) must be rejected at freeze once the declared structure
-    // is supplied. Empty factors make the commutativity check trivially pass, so
-    // the abort is attributable to the C₃ faithfulness check.
+    // A graph whose input→output reachability is C₃ must be rejected at freeze
+    // once the declared structure is supplied. C₃ is the causal structure of two
+    // commuting CNOTs (van der Lugt & Lorenz, arXiv:2508.11762, Example 2.12):
+    // `A₁ ↛ B₃`, `A₃ ↛ B₁`, and influence between all other systems — seven edges.
+    // Empty factors make the commutativity check trivially pass, so the abort is
+    // attributable to the C₃ check.
     let mut g = CausaloidGraph::new(0);
     let nodes: Vec<usize> = (0..6)
         .map(|i| {
@@ -328,8 +330,8 @@ fn test_freeze_rejects_c3_structure() {
                 .unwrap()
         })
         .collect();
-    // inputs {0,1,2} → outputs {3,4,5}; the non-edges form the diagonal matching.
-    for (i, o) in [(0, 4), (0, 5), (1, 3), (1, 5), (2, 3), (2, 4)] {
+    // inputs {0,1,2} → outputs {3,4,5}; the non-edges are (0,5) and (2,3).
+    for (i, o) in [(0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 4), (2, 5)] {
         g.add_edge(nodes[i], nodes[o]).unwrap();
     }
 

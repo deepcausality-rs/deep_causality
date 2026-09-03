@@ -12,6 +12,7 @@ use crate::model_types::{
 use causal_counterfactual_examples::math_utils;
 use deep_causality_core::{AlternatableValue, CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
+use deep_causality_num::lift;
 use std::collections::HashSet;
 
 /// A pragmatic, deterministic flow distributor for the cascade demo.
@@ -23,8 +24,8 @@ use std::collections::HashSet;
 /// share of flow is redistributed to its neighbours, which then exceed
 /// their own capacity in turn.
 pub fn solve_flow(cfg: &NetworkConfig, failed: &HashSet<u32>) -> FlowSolution {
-    let mut flows = vec![0.0 as FloatType; cfg.edges.len()];
-    let mut node_inflow = vec![0.0 as FloatType; cfg.n_nodes as usize];
+    let mut flows = vec![lift::<FloatType>(0.0); cfg.edges.len()];
+    let mut node_inflow = vec![lift::<FloatType>(0.0); cfg.n_nodes as usize];
     node_inflow[cfg.source as usize] = cfg.source_supply;
 
     // Topological order for this toy network is just node-id order (DAG by

@@ -20,6 +20,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::Functor;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::lift;
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// `f64` is the right precision here: the rotation result is a permutation of
@@ -32,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Precision: {}\n", core::any::type_name::<FloatType>());
 
     let metric = Metric::Euclidean(2);
-    let theta = FloatType::pi() / FloatType::from(2.0);
+    let theta = FloatType::pi() / lift::<FloatType>(2.0);
     let (rotor, rotor_rev) = build_rotor_pair(theta, metric);
 
     // 3x3 grid; every cell holds the unit vector e1.
@@ -70,10 +71,10 @@ fn build_rotor_pair(
     theta: FloatType,
     metric: Metric,
 ) -> (CausalMultiVector<FloatType>, CausalMultiVector<FloatType>) {
-    let half = theta / FloatType::from(2.0);
+    let half = theta / lift::<FloatType>(2.0);
     let c = half.cos();
     let s = half.sin();
-    let zero = FloatType::from(0.0);
+    let zero = lift::<FloatType>(0.0);
     // Cl(2,0) coefficient order: [1, e1, e2, e12]
     let r = CausalMultiVector::new(vec![c, zero, zero, -s], metric).unwrap();
     let r_rev = CausalMultiVector::new(vec![c, zero, zero, s], metric).unwrap();
@@ -81,8 +82,8 @@ fn build_rotor_pair(
 }
 
 fn unit_x(metric: Metric) -> CausalMultiVector<FloatType> {
-    let zero = FloatType::from(0.0);
-    let one = FloatType::from(1.0);
+    let zero = lift::<FloatType>(0.0);
+    let one = lift::<FloatType>(1.0);
     CausalMultiVector::new(vec![zero, one, zero, zero], metric).unwrap()
 }
 

@@ -24,6 +24,7 @@ pub struct LogicalBasis<W> {
     homology: Vec<Gf2Chain<W>>,
     cohomology: Vec<Gf2Chain<W>>,
     stabilizers: Vec<Gf2Chain<W>>,
+    x_stabilizers: Vec<Gf2Chain<W>>,
     len: usize,
 }
 
@@ -44,10 +45,12 @@ impl<W: NaturalNumber> LogicalBasis<W> {
             .cohomology_representatives::<W>(k)
             .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))?;
         let stabilizers = boundary_basis(complex, k)?;
+        let x_stabilizers = coboundary_basis(complex, k)?;
         Ok(Self {
             homology,
             cohomology,
             stabilizers,
+            x_stabilizers,
             len: complex.num_cells(k),
         })
     }
@@ -73,6 +76,27 @@ impl<W: NaturalNumber> LogicalBasis<W> {
         &self.stabilizers
     }
 
+    /// A basis of `im δₖ₋₁`, the `X`-stabilizer generators.
+    ///
+    /// The other half of the CSS code's stabilizer group. The diagonal check never consults
+    /// these, because a diagonal phase cannot see a superposition and the `X`-stabilizers fix only
+    /// which superpositions are code states. The Pauli predicate must: a Pauli with a `z` part
+    /// anticommutes with an `X`-stabilizer it meets oddly, and that is the normalizer condition
+    /// [`is_logically_trivial`](Self::is_logically_trivial) checks.
+    pub fn x_stabilizers(&self) -> &[Gf2Chain<W>] {
+        &self.x_stabilizers
+    }
+
+    /// The register width: the number of `k`-cells, which is the number of physical qubits.
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Whether the register is empty.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// The number of encoded logical qubits, `k = dim H_k`.
     pub fn num_logical_qubits(&self) -> usize {
         self.homology.len()
@@ -88,16 +112,21 @@ impl<W: NaturalNumber> LogicalBasis<W> {
     /// Symmetrically for `X̄(γ̃)` and `⟨z, γ̃⟩`. So `op` is trivial when both pairings vanish against
     /// every generator.
     ///
-    /// **The precondition is not checked here.** The criterion decides triviality *of a logical
-    /// operator*. An operator outside the code's normalizer commutes with the logical generators
-    /// without acting trivially on the code space, because it leaves the code space instead. A
-    /// caller passing an arbitrary Pauli gets an answer to the commutation question, which is the
-    /// one this crate can ask without a stabilizer group it does not carry.
+    /// **The precondition is checked.** The criterion decides triviality *of a logical operator*.
+    /// An operator outside the code's normalizer commutes with the logical generators without
+    /// acting trivially on the code space, because it leaves the code space instead, and the
+    /// commutation criterion alone would call it trivial. So the normalizer condition is tested
+    /// first: a Pauli `(x, z)` is in the normalizer iff `⟨x, s⟩ = 0` for every `Z`-generator `s`
+    /// and `⟨z, t⟩ = 0` for every `X`-generator `t`, two more loops of the same pairing. When this
+    /// type first shipped it carried no stabilizer group and the precondition was stated rather
+    /// than checked; once the generators were present, leaving it stated would have been a silent
+    /// wrong answer on exactly the operators the criterion cannot see.
     ///
     /// # Errors
     ///
     /// [`QuantumError::DimensionMismatch`] if `op` is over a register of a different width from the
-    /// complex this basis came from.
+    /// complex this basis came from, and [`QuantumError::NotInNormalizer`] naming the first
+    /// stabilizer generator `op` anticommutes with.
     pub fn is_logically_trivial(&self, op: &LogicalPauli<W>) -> Result<bool, QuantumError> {
         if op.len() != self.len {
             return Err(QuantumError::DimensionMismatch(alloc::format!(
@@ -106,6 +135,7 @@ impl<W: NaturalNumber> LogicalBasis<W> {
                 self.len
             )));
         }
+        self.check_normalizer(op)?;
         for gamma in &self.homology {
             if pair(op.x(), gamma)? == Gf2::ONE {
                 return Ok(false);
@@ -117,6 +147,27 @@ impl<W: NaturalNumber> LogicalBasis<W> {
             }
         }
         Ok(true)
+    }
+
+    /// The normalizer precondition: `op` commutes with every stabilizer generator.
+    fn check_normalizer(&self, op: &LogicalPauli<W>) -> Result<(), QuantumError> {
+        for (i, s) in self.stabilizers.iter().enumerate() {
+            if pair(op.x(), s)? == Gf2::ONE {
+                return Err(QuantumError::NotInNormalizer(
+                    i,
+                    alloc::format!("Z-stabilizer: |x ∩ s_{i}| is odd"),
+                ));
+            }
+        }
+        for (i, t) in self.x_stabilizers.iter().enumerate() {
+            if pair(op.z(), t)? == Gf2::ONE {
+                return Err(QuantumError::NotInNormalizer(
+                    i,
+                    alloc::format!("X-stabilizer: |z ∩ t_{i}| is odd"),
+                ));
+            }
+        }
+        Ok(())
     }
 
     /// Whether `a` and `b` act alike on the code space: `O₁ ~ O₂`.
@@ -336,16 +387,43 @@ fn boundary_basis<W: NaturalNumber, K: ChainComplex + ?Sized>(
     let Some(next) = k.checked_add(1) else {
         return Ok(Vec::new());
     };
-    let d = csr_to_packed_gf2_mod2::<W>(&complex.boundary_matrix(next));
-    if d.cols() == 0 {
+    image_basis_as_chains(
+        &csr_to_packed_gf2_mod2::<W>(&complex.boundary_matrix(next)),
+        k,
+    )
+}
+
+/// A basis of `im δₖ₋₁` as degree-`k` chains: the `X`-stabilizer generators at grade `k`.
+///
+/// `δₖ₋₁ = ∂ₖᵀ`, whose columns are indexed by the `(k−1)`-cells and are `k`-chains. At `k = 0`
+/// there is no `δ₋₁` and the `X` side is empty.
+fn coboundary_basis<W: NaturalNumber, K: ChainComplex + ?Sized>(
+    complex: &K,
+    k: usize,
+) -> Result<Vec<Gf2Chain<W>>, QuantumError> {
+    let Some(prev) = k.checked_sub(1) else {
+        return Ok(Vec::new());
+    };
+    image_basis_as_chains(
+        &csr_to_packed_gf2_mod2::<W>(&complex.coboundary_matrix(prev)),
+        k,
+    )
+}
+
+/// The column space of `m` as chains of the given degree, one per basis vector.
+fn image_basis_as_chains<W: NaturalNumber>(
+    m: &PackedGf2<W>,
+    degree: usize,
+) -> Result<Vec<Gf2Chain<W>>, QuantumError> {
+    if m.cols() == 0 {
         return Ok(Vec::new());
     }
     let image =
-        image_basis_gf2(&d).map_err(|e| QuantumError::CalculationError(alloc::format!("{e}")))?;
+        image_basis_gf2(m).map_err(|e| QuantumError::CalculationError(alloc::format!("{e}")))?;
     // Bases are stored down columns, never across rows.
     (0..image.cols())
         .map(|c| {
-            Gf2Chain::from_column(&image, c, k)
+            Gf2Chain::from_column(&image, c, degree)
                 .map_err(|e| QuantumError::DimensionMismatch(alloc::format!("{e}")))
         })
         .collect()

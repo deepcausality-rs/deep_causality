@@ -15,7 +15,7 @@ use deep_causality_rand::{
 };
 
 fn d(x: f64) -> Float106 {
-    Float106::from_f64(x)
+    Float106::from(x)
 }
 
 /// Standard-normal CDF `Φ(x) = ½·erfc(−x/√2)` at double-double precision (test oracle).

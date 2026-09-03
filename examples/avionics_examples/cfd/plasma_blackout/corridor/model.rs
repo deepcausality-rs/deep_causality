@@ -20,13 +20,14 @@ use crate::constants::{
 use avionics_examples::shared::constants::{
     CAP, COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L, RAMC_NE_REFERENCE,
 };
-use avionics_examples::shared::utils::{ft, norm3};
+use avionics_examples::shared::utils::norm3;
 use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{
     BranchAccumulator, BranchOutcome, CaseRun, CompressibleMarchConfig, CompressiblePause, GateSeq,
     PhysicsError, Report, StudyView, TableRow, max_bond, quantize_2d,
 };
 use deep_causality_haft::LogSize;
+use deep_causality_num::{Lift, lift};
 use deep_causality_tensor::CausalTensor;
 
 // ── The case axis: bank commands ──────────────────────────────────────────────────────────────
@@ -93,7 +94,8 @@ pub fn fine_candidates(coarse: &[BranchRow]) -> Result<Vec<BankCommand>, Physics
         .iter()
         .enumerate()
         .map(|(k, &name)| {
-            let offset = (k as FloatType - FINE_SPAN_STEPS as FloatType) * ft(FINE_STEP_DEG);
+            let offset = (k.lift::<FloatType>() - FINE_SPAN_STEPS.lift::<FloatType>())
+                * lift::<FloatType>(FINE_STEP_DEG);
             let deg = (winner.bank_deg + offset).clamp(lo, hi);
             BankCommand {
                 name,
@@ -193,14 +195,14 @@ pub fn aim_point(ballistic_terminal: [FloatType; 3]) -> [FloatType; 3] {
     [
         ballistic_terminal[0],
         ballistic_terminal[1],
-        ballistic_terminal[2] - ft(AIM_CROSS_RANGE_M),
+        ballistic_terminal[2] - lift::<FloatType>(AIM_CROSS_RANGE_M),
     ]
 }
 
 /// The terminal truth position on a branch report.
 pub fn terminal_position(report: &Report<FloatType>) -> [FloatType; 3] {
     let truth = report.series("final_truth_state").unwrap_or(&[]);
-    core::array::from_fn(|i| truth.get(i).copied().unwrap_or_else(|| ft(f64::NAN)))
+    core::array::from_fn(|i| truth.get(i).copied().unwrap_or_else(|| lift(f64::NAN)))
 }
 
 /// The collective reduction of a round: one row per branch, in case order. The shared aim point is
@@ -233,18 +235,18 @@ pub fn score_branches(
 fn score_one(cmd: &BankCommand, report: &Report<FloatType>, aim: [FloatType; 3]) -> BranchRow {
     let heat = report.series("heat_flux").unwrap_or(&[]);
     let wp = report.series("plasma_frequency").unwrap_or(&[]);
-    let band = ft(COMMS_BAND_RAD_S);
+    let band = lift::<FloatType>(COMMS_BAND_RAD_S);
     let mut acc = BranchAccumulator::new(utils::rad(cmd.deg));
     for (i, &q) in heat.iter().enumerate() {
         let denied = wp.get(i).is_some_and(|&w| w > band);
-        acc.observe(q, denied, ft(DT_FLIGHT));
+        acc.observe(q, denied, lift(DT_FLIGHT));
     }
     let dwell = report
         .series("blackout_dwell")
         .and_then(|d| d.first().copied())
-        .unwrap_or_else(|| ft(0.0));
-    let bias: [FloatType; 3] = core::array::from_fn(|i| ft(IMU_ACCEL_BIAS[i]));
-    let t2_miss_m = ft(0.5) * norm3(bias) * dwell * dwell;
+        .unwrap_or_else(|| lift::<FloatType>(0.0));
+    let bias: [FloatType; 3] = core::array::from_fn(|i| lift::<FloatType>(IMU_ACCEL_BIAS[i]));
+    let t2_miss_m = lift::<FloatType>(0.5) * norm3(bias) * dwell * dwell;
     let terminal = terminal_position(report);
     let outcome = acc.finish_at(terminal, aim);
     BranchRow {
@@ -261,7 +263,7 @@ fn score_one(cmd: &BankCommand, report: &Report<FloatType>, aim: [FloatType; 3])
         ne_peak: report
             .series("n_e")
             .map(utils::peak)
-            .unwrap_or_else(|| ft(0.0)),
+            .unwrap_or_else(|| lift(0.0)),
         report_final: (
             report.final_field().unwrap_or(&[]).to_vec(),
             report.series("final_n_tot").unwrap_or(&[]).to_vec(),
@@ -333,30 +335,30 @@ pub fn snapshot<S>(name: &str, pause: &CompressiblePause<'_, FloatType, S>) -> L
             let d: [FloatType; 3] = core::array::from_fn(|i| p[i] - truth[i]);
             utils::norm3(d)
         }
-        _ => ft(f64::NAN),
+        _ => lift(f64::NAN),
     };
     LegSnapshot {
         name: name.to_string(),
         steps: pause.step(),
         errored: pause.error().is_some(),
-        altitude_km: utils::scalar0(field, "flight_altitude") / ft(1000.0),
+        altitude_km: utils::scalar0(field, "flight_altitude") / lift::<FloatType>(1000.0),
         mach: utils::scalar0(field, "flight_mach"),
         regime_model: regime.map(|r| r.model.name()).unwrap_or("unclassified"),
-        knudsen: regime.map(|r| r.knudsen).unwrap_or_else(|| ft(f64::NAN)),
+        knudsen: regime.map(|r| r.knudsen).unwrap_or_else(|| lift(f64::NAN)),
         gnss_denied: regime.map(|r| r.gnss_denied).unwrap_or(false),
         ne_peak: field
             .scalar("n_e")
             .map(utils::peak)
-            .unwrap_or_else(|| ft(0.0)),
+            .unwrap_or_else(|| lift(0.0)),
         plasma_frequency: regime
             .map(|r| r.plasma_frequency)
-            .unwrap_or_else(|| ft(0.0)),
+            .unwrap_or_else(|| lift(0.0)),
         heat_flux: utils::scalar0(field, "heat_flux"),
         g_load: utils::scalar0(field, "g_load"),
         nav_err_m,
         nav_var: nav
             .map(|e| e.position_variance())
-            .unwrap_or_else(|| ft(0.0)),
+            .unwrap_or_else(|| lift(0.0)),
         log_entries: field.log().len(),
     }
 }
@@ -399,12 +401,12 @@ fn gate_steering(v: &StudyView<'_, BranchRow>) -> (bool, String) {
         core::array::from_fn(|i| coarse[committed].terminal[i] - coarse[zero_bank].terminal[i]);
     let divergence = norm3(sep);
     let misses: Vec<FloatType> = coarse.iter().map(|b| b.outcome.miss_distance).collect();
-    let hi = misses.iter().copied().fold(ft(f64::MIN), FloatType::max);
-    let lo = misses.iter().copied().fold(ft(f64::MAX), FloatType::min);
+    let hi = misses.iter().copied().fold(lift(f64::MIN), FloatType::max);
+    let lo = misses.iter().copied().fold(lift(f64::MAX), FloatType::min);
     let pass = coarse.len() >= 2
         && coarse.iter().all(|b| b.has_alternation_marker)
         && fine.iter().all(|b| b.has_alternation_marker)
-        && divergence > ft(DIVERGENCE_MIN_M)
+        && divergence > lift::<FloatType>(DIVERGENCE_MIN_M)
         && hi > lo;
     (
         pass,
@@ -443,7 +445,7 @@ fn gate_guidance(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     let committed = &fine[pick_committed(fine)];
     let committed_miss = committed.outcome.miss_distance;
     (
-        committed_miss * ft(MISS_IMPROVEMENT_FACTOR) <= ballistic_miss,
+        committed_miss * lift::<FloatType>(MISS_IMPROVEMENT_FACTOR) <= ballistic_miss,
         format!(
             "committed {:.1} deg lands {:.2} m off the aim vs the ballistic {:.2} m \
              ({:.1}x better; gate requires {MISS_IMPROVEMENT_FACTOR:.0}x)",
@@ -478,22 +480,22 @@ fn gate_refinement(v: &StudyView<'_, BranchRow>) -> (bool, String) {
     let lo = fine
         .iter()
         .map(|b| b.bank_deg)
-        .fold(ft(f64::MAX), FloatType::min);
+        .fold(lift(f64::MAX), FloatType::min);
     let hi = fine
         .iter()
         .map(|b| b.bank_deg)
-        .fold(ft(f64::MIN), FloatType::max);
+        .fold(lift(f64::MIN), FloatType::max);
     let brackets = lo < coarse_committed.bank_deg && hi > coarse_committed.bank_deg;
 
     // (b) The branches flew distinct worlds: the fine misses are not all the same value.
     let m_lo = fine
         .iter()
         .map(|b| b.outcome.miss_distance)
-        .fold(ft(f64::MAX), FloatType::min);
+        .fold(lift(f64::MAX), FloatType::min);
     let m_hi = fine
         .iter()
         .map(|b| b.outcome.miss_distance)
-        .fold(ft(f64::MIN), FloatType::max);
+        .fold(lift(f64::MIN), FloatType::max);
     let distinct = m_hi > m_lo;
 
     (
@@ -554,15 +556,15 @@ fn gate_window(v: &StudyView<'_, LegSet>) -> (bool, String) {
             l.leg1.steps,
             l.leg1.altitude_km,
             l.leg3.altitude_km,
-            dwell_steps as FloatType * ft(DT_FLIGHT),
+            dwell_steps.lift::<FloatType>() * lift::<FloatType>(DT_FLIGHT),
         ),
     )
 }
 
 fn gate_anchor(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let l = &v.rows()[0];
-    let ne_ok =
-        (ft(RAMC_NE_REFERENCE / 5.0)..=ft(RAMC_NE_REFERENCE * 5.0)).contains(&l.leg2.ne_peak);
+    let ne_ok = (lift::<FloatType>(RAMC_NE_REFERENCE / 5.0)..=lift(RAMC_NE_REFERENCE * 5.0))
+        .contains(&l.leg2.ne_peak);
     (
         ne_ok,
         format!(
@@ -583,7 +585,7 @@ fn gate_window_altitudes(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let (exit_lo, exit_hi) = EXIT_ALTITUDE_BAND_KM;
     let (ramc_lo, ramc_hi) = RAMC_EXIT_WINDOW_KM;
     (
-        (ft(exit_lo)..=ft(exit_hi)).contains(&l.leg3.altitude_km),
+        (lift::<FloatType>(exit_lo)..=lift(exit_hi)).contains(&l.leg3.altitude_km),
         format!(
             "flow-resolved exit at {:.1} km (pinned band [{exit_lo:.0}, {exit_hi:.0}] km) vs the \
              RAM-C II {ramc_lo:.0}-{ramc_hi:.0} km flight window: the probe's light ballistic \
@@ -625,10 +627,10 @@ fn gate_regime_change(v: &StudyView<'_, LegSet>) -> (bool, String) {
 fn gate_multiphysics(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let l = &v.rows()[0];
     (
-        l.leg2.ne_peak > ft(0.0)
-            && l.leg2.heat_flux > ft(0.0)
-            && l.leg2.g_load > ft(0.0)
-            && l.leg2.nav_var > ft(0.0),
+        l.leg2.ne_peak > lift::<FloatType>(0.0)
+            && l.leg2.heat_flux > lift::<FloatType>(0.0)
+            && l.leg2.g_load > lift::<FloatType>(0.0)
+            && l.leg2.nav_var > lift::<FloatType>(0.0),
         "evolved flow -> reacting plasma -> steered aero force -> loads -> navigation all live in \
          one coupling"
             .into(),
@@ -649,7 +651,7 @@ fn gate_rebuilds(v: &StudyView<'_, LegSet>) -> (bool, String) {
 fn gate_wall_clock(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let l = &v.rows()[0];
     (
-        l.elapsed_s < ft(WALL_CLOCK_BUDGET_S),
+        l.elapsed_s < lift::<FloatType>(WALL_CLOCK_BUDGET_S),
         format!(
             "{:.1} s elapsed (budget {WALL_CLOCK_BUDGET_S:.0} s)",
             l.elapsed_s

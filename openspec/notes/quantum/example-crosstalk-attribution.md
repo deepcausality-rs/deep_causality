@@ -216,28 +216,37 @@ input-to-output influence relation `CausalStructure` already carries. A fourth h
 physically reasonable and worth putting in the set: **H₄, a cyclic influence chain** where Q1 drives
 Q2, Q2 heats the bath, and the bath feeds back to Q1, each system also influencing itself.
 
-Running the crate's C₃-exclusion criterion over all four:
+Running the crate's C₃-exclusion criterion over all four, as corrected on 2026-09-02:
 
 ```
 H1  Q1->Q2 (direct)          passes
 H2  Q2->Q1 (direct)          passes
 H3  Q1<-B->Q2 (common)       passes
-H4  Q1->Q2->B->Q1 (cyclic)   REJECTED, C3 at inputs (0,1,2), outputs (3,4,5)
+H4  Q1->Q2->B->Q1 (cyclic)   passes the C₃ criterion; rejected at build() as cyclic
 ```
 
-H₄ is exactly `K₃,₃` minus a perfect matching: every input influences two of the three outputs and
-every output is influenced by two of the three inputs. Van der Lugt and Lorenz
-(arXiv:2508.11762) prove such a structure has no traditional-circuit causally faithful
-decomposition, so the freeze rejects it.
+**H₄ is not a `C₃`, and this section used to say it was.** H₄ as drawn is `K₃,₃` minus a perfect
+matching, the bipartite 6-cycle: every input influences two of the three outputs and every output
+is influenced by two of the three inputs. Van der Lugt and Lorenz's `C₃` (arXiv:2508.11762,
+Example 2.12) is the causal structure of two commuting CNOTs, which has *seven* edges: one input
+reaches every output, one output is reached by every input, and the two missing pairs share neither
+an input nor an output. Definition 3.1 excludes exactly that relation, and the 6-cycle satisfies
+the property — Theorem 4.9(v) admits it directly, since any two of its outputs share exactly one
+parent. The earlier result was computed against a faithful transcription of a wrong
+`is_c3_block`, which tested for the 6-cycle; the check is corrected and its tests are now held to
+the paper. The record is `qcl-corrections.md`, X-16.
 
-The operational consequence is the point. **H₄ never reaches the control pipeline.** No device time
-is spent discriminating a hypothesis that no circuit can faithfully realize, and the rejection names
-the obstruction rather than reporting a failed fit. A structure is screened out on a criterion
-published in August 2025, before a single shot is taken.
+Nor is the 6-cycle what reachability on a cyclic graph produces. `from_graph_reachability` takes
+the transitive closure, and on `Q1 → Q2 → B → Q1` every input reaches every output: the derived
+relation is complete, which satisfies C₃-exclusion more plainly still.
 
-This result was computed against a transcription of the crate's `is_c3_block`, not assumed. The
-Rust check should be run to confirm during implementation, but the algorithm is a 3-by-3 degree
-count and the transcription is faithful.
+So the C₃ criterion screens nothing here, and the operational consequence survives for a different
+reason. **Cyclic causal structures are out of scope for v1 by decision, not because they fail a
+check.** Cyclic QCMs exist (Barrett, Lorenz & Oreshkov, arXiv:2002.12157); the C₃ criterion is
+applied to acyclic influence relations, and a cyclic candidate is rejected at `build()` with
+`CyclicStructureUnsupported` before any check runs. H₄ still never reaches the control pipeline,
+and no device time is spent on it — but the rejection names a scope limit, not an obstruction, and
+a later version that admits cyclic structures would have to say what criterion replaces this one.
 
 ### 7.2 Control discriminates what survives
 
@@ -251,7 +260,7 @@ QclBuilder::build_validate(&cfg)
     .declare_factors()        // one Choi factorization per hypothesis
     .declare_supports()
     .check_markov()           // is each factorization a legal QCM?
-    .check_faithfulness()     // C3-exclusion: H4 rejected here
+    .check_decomposable()     // C3-exclusion; H4 was already rejected at build() as cyclic
     .validate_analyze()
     .finalize()
     .print_results();

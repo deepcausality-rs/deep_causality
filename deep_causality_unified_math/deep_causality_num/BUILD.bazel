@@ -49,6 +49,24 @@ rust_doc_test(
 )
 
 rust_test_suite(
+    name = "lift",
+    srcs = glob([
+        "tests/lift/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "casts",
     srcs = glob([
         "tests/casts/as_primitive/*_tests.rs",

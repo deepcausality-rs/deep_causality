@@ -23,6 +23,17 @@
 //! compact forms that make the Appendix B invariance proofs tractable; they are
 //! not the computational path. This module implements the second column.
 //!
+//! # The non-Clifford builders cap their tuple enumeration
+//!
+//! `Gf2Chain::support_pairs` and `support_triples` materialise `C(w, 2)` and
+//! `C(w, 3)` tuples before anything is emitted. On a toric code `w` is the
+//! lattice extent and the cost is nothing; on the qLDPC family the 𝔽₂ rank was
+//! fixed for, a representative can have weight in the tens to hundreds and `T̄`
+//! materialises `10⁵` to `10⁶` triples per gate. So [`logical_t`] and
+//! [`logical_multi_cz`] count first and refuse above [`TUPLE_ENUMERATION_CAP`],
+//! reporting the count and the cap, before allocating. The same discipline the
+//! code-space enumeration applies: cost is reported before it is paid.
+//!
 //! # Degree
 //!
 //! Every chain a gate takes is a 1-chain in the paper's construction: `γ ∈ H₁`
@@ -69,6 +80,36 @@ pub fn logical_s<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
     ops
 }
 
+/// The largest tuple enumeration [`logical_t`] and [`logical_multi_cz`] attempt
+/// by default. About a million tuples: under it, a weight-180 `T̄`; over it,
+/// the cost is reported rather than paid.
+pub const TUPLE_ENUMERATION_CAP: u64 = 1 << 20;
+
+/// `C(w, 2) + C(w, 3)`: the pair and triple tuples [`logical_t`] emits over for
+/// a chain of weight `w`. Saturates rather than overflowing, so a count that
+/// does not fit reads as "above any cap".
+pub fn t_tuple_count<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> u64 {
+    let w = gamma.weight() as u128;
+    let pairs = if w >= 2 { w * (w - 1) / 2 } else { 0 };
+    let triples = if w >= 3 { w * (w - 1) * (w - 2) / 6 } else { 0 };
+    u64::try_from(pairs + triples).unwrap_or(u64::MAX)
+}
+
+/// The number of tuples [`logical_multi_cz`] emits over: the product of the
+/// supports' weights. Saturates rather than overflowing. An empty support makes
+/// the product empty, so the count is zero wherever that chain sits, saturated
+/// prefix or not.
+pub fn multi_cz_tuple_count<W: NaturalNumber>(chains: &[&Gf2Chain<W>]) -> u64 {
+    if chains.iter().any(|c| c.weight() == 0) {
+        return 0;
+    }
+    chains
+        .iter()
+        .map(|c| c.weight() as u64)
+        .try_fold(1u64, |acc, w| acc.checked_mul(w))
+        .unwrap_or(u64::MAX)
+}
+
 /// The logical T gate, Table 1 row 7 and Eq. (3.59):
 ///
 /// `T̄(γ) = ∏_k T_{i_k} · ∏_{k₁<k₂} CS†_{k₁k₂} · ∏_{k₁<k₂<k₃} CCZ_{k₁k₂k₃}`
@@ -76,7 +117,32 @@ pub fn logical_s<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
 /// Transversal T on the support, controlled-S† between every pair within it,
 /// and CCZ among every triple. As with [`logical_s`], every index family is
 /// drawn from one support in strictly increasing order, so no index repeats.
-pub fn logical_t<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
+///
+/// # Errors
+///
+/// [`QuantumError::CalculationError`] naming the tuple count and the cap if
+/// [`t_tuple_count`] exceeds [`TUPLE_ENUMERATION_CAP`]. Nothing is allocated on
+/// that path.
+pub fn logical_t<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Result<Vec<GateOp>, QuantumError> {
+    logical_t_with_cap(gamma, TUPLE_ENUMERATION_CAP)
+}
+
+/// [`logical_t`] under an explicit cap on the tuple enumeration.
+///
+/// # Errors
+///
+/// As [`logical_t`], against `cap` rather than the default.
+pub fn logical_t_with_cap<W: NaturalNumber>(
+    gamma: &Gf2Chain<W>,
+    cap: u64,
+) -> Result<Vec<GateOp>, QuantumError> {
+    let count = t_tuple_count(gamma);
+    if count > cap {
+        return Err(QuantumError::CalculationError(alloc::format!(
+            "logical_t over a weight-{} chain would enumerate {count} tuples, above the cap of {cap}",
+            gamma.weight()
+        )));
+    }
     let mut ops: Vec<GateOp> = gamma.support().map(GateOp::T).collect();
     ops.extend(gamma.support_pairs().map(|(a, b)| GateOp::Csdg {
         control: a,
@@ -87,7 +153,7 @@ pub fn logical_t<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> Vec<GateOp> {
         q1: b,
         q2: c,
     }));
-    ops
+    Ok(ops)
 }
 
 /// The logical CZ gate, Table 1 row 5 and Eq. (3.42):
@@ -158,9 +224,23 @@ pub fn logical_cz<W: NaturalNumber>(
 /// # Errors
 ///
 /// [`QuantumError::DimensionMismatch`] if `chains` is empty, or if the chains do
-/// not all have the same length.
+/// not all have the same length; [`QuantumError::CalculationError`] naming the
+/// tuple count and the cap if [`multi_cz_tuple_count`] exceeds
+/// [`TUPLE_ENUMERATION_CAP`], before anything is allocated.
 pub fn logical_multi_cz<W: NaturalNumber>(
     chains: &[&Gf2Chain<W>],
+) -> Result<Vec<GateOp>, QuantumError> {
+    logical_multi_cz_with_cap(chains, TUPLE_ENUMERATION_CAP)
+}
+
+/// [`logical_multi_cz`] under an explicit cap on the tuple enumeration.
+///
+/// # Errors
+///
+/// As [`logical_multi_cz`], against `cap` rather than the default.
+pub fn logical_multi_cz_with_cap<W: NaturalNumber>(
+    chains: &[&Gf2Chain<W>],
+    cap: u64,
 ) -> Result<Vec<GateOp>, QuantumError> {
     let first = chains.first().ok_or_else(|| {
         QuantumError::DimensionMismatch("logical_multi_cz needs at least one chain".into())
@@ -170,6 +250,14 @@ pub fn logical_multi_cz<W: NaturalNumber>(
             "logical_multi_cz needs chains over one register: lengths {} and {}",
             first.len(),
             bad.len()
+        )));
+    }
+
+    let count = multi_cz_tuple_count(chains);
+    if count > cap {
+        return Err(QuantumError::CalculationError(alloc::format!(
+            "logical_multi_cz over {} chains would enumerate {count} tuples, above the cap of {cap}",
+            chains.len()
         )));
     }
 

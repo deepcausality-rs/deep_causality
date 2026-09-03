@@ -12,7 +12,7 @@ use deep_causality_num::{Float, Float106};
 // =============================================================================
 
 fn d(x: f64) -> Float106 {
-    Float106::from_f64(x)
+    Float106::from(x)
 }
 
 fn approx_eq(a: Float106, b: Float106, epsilon: f64) -> bool {

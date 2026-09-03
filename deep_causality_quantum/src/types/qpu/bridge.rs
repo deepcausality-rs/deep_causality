@@ -11,7 +11,8 @@
 
 use crate::QuantumError;
 use crate::types::qpu::circuit::QuantumCircuit;
-use crate::types::qpu::sampler::{QpuSampler, ShotHistogram};
+use crate::types::qpu::histogram::ShotHistogram;
+use crate::types::qpu::sampler::QpuSampler;
 use alloc::format;
 use core::fmt::Debug;
 use deep_causality_core::{

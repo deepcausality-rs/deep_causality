@@ -13,7 +13,29 @@ crate.
 revises the previous revision of this note, which counted three consumers and treated the shipped
 crate as a substrate QCL would call rather than as a consumer with opinions.
 
-**What changed in this revision (2026-08-31).** Every gap in
+**What changed in this revision (2026-09-03).** QCL shipped. The eight task groups of
+`openspec/changes/add-qcl` are implemented and verified, three consumer examples run under
+`examples/quantum_examples/qcl_examples/`, and §9 now records what was built and which of it has a
+proof. Two things the building changed beyond the corrections below: the count width is
+`NumberType`, not `IntType`, because a count is ℕ and `i64` cannot bound it (§6.5, §7.1); and a
+structural candidate's decomposability is decided on the structure its own supports encode, with no
+graph, because the crosstalk consumer's candidates each imply a structure of their own (§7.5). The
+rest of the design held.
+
+**What changed in the revision before (2026-09-02).** An external review produced
+[`qcl-corrections.md`](qcl-corrections.md), sixteen entries, and every one of them is applied here
+and in the `add-qcl` change. Two are corrections to soundness claims this note made: composition
+over a shared wire *is* marginalisation, so F9 applies to it and D9's re-check is what makes it sound
+(§5.3); and a failed re-check on inherited factors is a failure of the certificate rather than of
+the model (§5.1). One is a finding the review asked for and did not make: the shipped C₃ check
+tested for the bipartite 6-cycle, and the paper's `C₃` has seven edges, so the crosstalk example's
+cyclic candidate was "rejected" by a wrong shape and is not screened by C₃ at all (§1, §7.5, §7.6).
+The rest are scope, naming and coverage: `check_faithfulness` is `check_decomposable`, because the
+paper's "faithful" is Lorenz–Barrett's `G_U = G_C` and not Pearl's; `H̄` is emitted and was checked
+by nothing; `intervene` implements the mechanism-level intervention and now says so; and "one
+language" is one builder and one decision form, not one semantics.
+
+**What changed two revisions before (2026-08-31).** Every gap in
 [`qcl-gaps.md`](qcl-gaps.md) is now closed, all eighteen, and the mathematics crates were
 consolidated under `deep_causality_unified_math/`. This revision brings the note back in line with
 the tree. **Nothing below is a new design decision; the design held.** What changed is that the
@@ -69,8 +91,16 @@ predecessor asserted turned out to be wrong.
 The three designs were each implemented twice in scratch, once in Rust against shipped APIs and once
 in Python from published formulas, agreeing on all 16 checked quantities. The three faults read
 `0.980147 / 0.980159 / 0.980150` at one pulse and `0.086460 / 0.961136 / 0.847242` at nine; the three
-causal structures all fit `P(e₁)=P(e₂)=0.10, P(e₁,e₂)=0.04` and the cyclic fourth is rejected as a
-`C₃`; the toric family comes out `[[8,2,2]]` to `[[50,2,5]]` with Betti `[1,4,6,4,1]` on `T⁴`.
+causal structures all fit `P(e₁)=P(e₂)=0.10, P(e₁,e₂)=0.04` and the cyclic fourth is rejected as
+cyclic, at `build()`, by decision; the toric family comes out `[[8,2,2]]` to `[[50,2,5]]` with Betti
+`[1,4,6,4,1]` on `T⁴`.
+
+**The cyclic fourth used to be "rejected as a `C₃`", and it is not one.** The crosstalk design built
+H₄ as the bipartite 6-cycle and ran it through the crate's check, which rejected it. The check was
+testing for the wrong relation: van der Lugt & Lorenz's `C₃` is the causal structure of two
+commuting CNOTs, seven edges of nine (Example 2.12), and Definition 3.1 excludes exactly that
+relation. The 6-cycle satisfies the property, so a correct check accepts H₄. The check is corrected
+(X-16), and the cyclic candidate is screened by scope rather than by criterion (§7.6).
 
 **The problem QCL solves is not correctness. It is that correct code is unreasonably hard to write.**
 The crate is the evidence that the hard version is writable, and the source of the laws that keep the
@@ -123,6 +153,16 @@ a separate track.
 The four consumers do not share a computation. They share a **decision form**, and the crate already
 shipped its canonical shape.
 
+**And that is all they share.** The `qcm` layer — factorizations, the Markov condition, intervention
+— and the `qcode` layer — a chain complex, its logical basis, class invariance — sit side by side
+under one builder with no object connecting them. There is no representation of the physical-to-
+logical map as a thing the pipeline can query, and no stage asks whether a Markov factorization of a
+physical circuit induces one on the logical level. A reader of "a quantum causal language for QCM and
+Haruna gates" will assume that bridge exists. It does not, and v1 does not build it: relating the two
+subjects is a named non-goal of the `add-qcl` change, recorded as the future capability
+`qcl-abstraction`, whose raw material is the stabilizer generators `LogicalBasis` now carries and
+whose map is not yet a type.
+
 ### 3.1 The form
 
 `CommutatorCheck` records, per pair tested:
@@ -145,7 +185,7 @@ fits it:
 | Decision | Measured | Threshold | Source |
 |---|---|---|---|
 | `check_markov` | `‖[ρ_j, ρ_k]‖_F` | Q-TOL | shipped |
-| `check_faithfulness` | C₃ blocks found | zero | shipped |
+| `check_decomposable` | C₃ blocks found | zero | shipped, as `check_c3_exclusion` |
 | `check_cptp` | CP and TP defect | `check_completely_positive`, `check_trace_preserving` | shipped |
 | `check_class_invariance` | homology residual | tolerance | `geometric_qec` |
 | `check_ldpc_weights` | max row/column weight | declared bound | `geometric_qec` |
@@ -163,6 +203,12 @@ impose no commutativity obligation. A factorization whose factors never overlap 
 **zero pairs tested**, which is a vacuous pass and must be visible as one. `tested_pairs()` exists
 for that, and every check inherits the obligation: report how many items were examined, not only how
 many passed. A gate that examined nothing has not agreed with you.
+
+Zero tested pairs is also the *correct* result for a factorization whose parental sets never
+overlap, such as a chain `A → B → C`: Barrett–Lorenz–Oreshkov's commutation condition is non-trivial
+only where parental sets meet, and a chain has no such place. The count exists so that a reader can
+tell that case from a factorization that was never examined, not so that every zero reads as a
+defect.
 
 ### 3.3 Tolerance is a family, and every member is derived from the scalar
 
@@ -324,6 +370,18 @@ Two consequences, both unchanged as design rules:
   margin that survives marginalisation survives it *degraded by* `√(d_B)`, so a report could carry
   the amplification rather than being discarded outright.
 
+  **And a failed re-check on inherited factors is a failure of the certificate, not of the model.**
+  Barrett–Lorenz–Oreshkov's representation theorem is an existence statement: a unitary circuit with
+  broken wires induces a QCM that is Markov for the induced DAG, with the induced factors. Gluing two
+  such circuits gives a circuit, so a composite of two QCM-representable parts always *has* a Markov
+  factorization. It need not be Markov for the naive product of the parts' factors, which is what
+  re-running `check_markov` on the inherited `ProcessFactors` tests. So that failure says "this
+  factorization does not certify the composite", and a report that read it as "the composite is
+  non-Markov" would reject a sound model with a message that reads as physics. The re-check carries
+  a provenance, `Inherited` or `Rederived`, and a failure on inherited factors is
+  `CertificateNotInherited`, a different error from `CommutatorNonZero`. Constructing the induced
+  factorization from the parts' dilations is the open item behind this, recorded in the change.
+
 ### 5.2 What F9 blocks, and what it does not
 
 An earlier revision derived the flatness constraint from F9. That was too broad. Three things
@@ -367,23 +425,31 @@ leg-ids gives the modelling convenience that motivates sub-models, needs no comp
 and produces a model the checker already accepts. `transmon(q3)` expanding to four nodes and four
 legs is code generation, not physics. That is the recommended reuse mechanism for v1.
 
-**Answered, and the answer is the favourable one.** This read: whether a composed channel can
-inherit a Markov certificate from its parts turns on whether composition over a shared wire invokes
-a partial trace at all under this crate's input-major Choi convention. It does not. `choi_compose`
+**Answered, and not in the direction this section first took.** This read: whether a composed
+channel can inherit a Markov certificate from its parts turns on whether composition over a shared
+wire invokes a partial trace at all under this crate's input-major Choi convention. `choi_compose`
 ships, and under that convention composition is
 
 ```text
 J(F∘E)_{(a,c),(a',c')} = Σ_{b,b'} J(E)_{(a,b),(a',b')} · J(F)_{(b,c),(b',c')}
 ```
 
-a plain double contraction over the shared wire, with **no partial transpose and no partial trace**.
-Verified to a maximum relative Frobenius residual of 3.198e-16 over 500 random CPTP pairs across ten
-dimension triples, with every transposed or conjugated variant wrong by O(1).
+a plain double contraction over the shared wire, with no partial transpose and no partial trace
+*called*. Verified to a maximum relative Frobenius residual of 3.198e-16 over 500 random CPTP pairs
+across ten dimension triples, with every transposed or conjugated variant wrong by O(1). That figure
+establishes that `choi_compose` computes the right **channel**. It says nothing about the
+**factorization**, and the distinction is the whole point.
 
-So F9 does not bite on composition, and the question is the narrow one: whether the contraction
-preserves the commutation structure the Markov check certifies. That is a real question and it is
-open, but it is no longer the broad one this section posed, and the pivot it named has fallen the
-right way.
+**Composition over a shared wire is the marginalisation of the shared node.** The distinction between
+"a contraction" and "a partial trace" is representational, not mathematical. The formula above is the
+link product written in components: the gap register's C-2 already records that the partial
+transpose is the price of writing the contraction as a matrix product on the joint space, and the sum
+over `b, b'` is the partial trace. The operation eliminates the B legs. In QCM terms that is inserting
+the identity instrument at B and tracing it out, which is the operation F9 is about, whether or not
+a function named `partial_trace` runs. So F9 applies to composition, and the reason composition is
+sound in v1 is D9 of the change: the composite's Markov certificate is re-derived, not inherited. The
+two-factor fast path is the only case where inheritance is licensed, by hermiticity, and the reason
+is Lorenz (2022) footnote 11 rather than anything about the contraction.
 
 ---
 
@@ -436,9 +502,19 @@ pipeline stages.
 **F6 is half built.** The factor store, the supports, the embedding and the CPTP checks exist. So
 `Hypothesis` is a **factorization**, not a new type pairing a structure with a plant modification: a
 structural candidate is `{ name, ProcessFactors<R>, FactorSupports }`, and its `CausalStructure` is
-*derived* rather than stored beside it. `intervene(do(node ← factor))` is `factors.insert(node, f)`
-followed by `supports.validate(&factors)`; Pearl's cut is a factor replacement and the store already
-supports it by key. What is **not** free is `predict`, for the reason in §5.1.
+*derived* rather than stored beside it. `intervene_mechanism(do(node ← factor))` is
+`factors.insert(node, f)` followed by `supports.validate(&factors)`; Pearl's cut is a factor
+replacement and the store already supports it by key. What is **not** free is `predict`, for the
+reason in §5.1.
+
+**The operation is named for what it is, because a QCM has two interventions and they differ.** A
+node has an input and an output. The factor `ρ_{A|Pa(A)}` is the *mechanism* delivering A's input
+from its parents' outputs, and replacing it is the mechanism-level `do()`, the classical analogue.
+Barrett–Lorenz–Oreshkov's canonical intervention is the other one: it fixes the *instrument* at the
+node, what happens between A's input and A's output. `predict` differs under the two, and a probe is
+arguably the second, since a probe *is* an instrument choice. v1 supplies only the first, and models
+a probe as a mechanism replacement with that consequence stated where `predict` is specified;
+`intervene_instrument(node, instrument)` is the name reserved for the second.
 
 ### 6.2 What must be added
 
@@ -580,9 +656,14 @@ pub struct Ledger<R, N> {
 **The count fields take a parameter, and this note previously hardcoded them.** They read `u64`,
 `u32` and `u32`, three concrete widths in a design that insists everywhere else on writing against a
 bound and naming the width once. They are counts, so they are ℕ, so `N: NaturalNumber` is the bound
-and `IntType` names the width at the same single site `FloatType` is named (§7.1). The correction
+and `NumberType` names the width at the same single site `FloatType` is named (§7.1). The correction
 matters beyond tidiness for the reason §6.4 gives: an integer's failure mode is overflow, and
 overflow has no `epsilon()` to bound it, so the width is a decision rather than a default.
+
+**And the alias is the unsigned one.** An earlier revision wrote `IntType` here. `IntType` is
+`i64`, ℤ for ring arithmetic, and cannot instantiate `NaturalNumber`, which is unsigned. The alias
+file names the counting one: `NumberType`, "which is what ℕ is for". Found when the shot budget was
+built against the bound and the signed alias would not compile.
 
 `NaturalNumber` also supplies the draw-down. ℕ has no `Sub`, and `checked_difference` returning
 `None` on an overdrawn budget is the semantics a ledger wants, with `monus` as the clamping variant
@@ -690,13 +771,14 @@ Every configuration comes from `QclBuilder::config()`, which is also the single 
 working types are named. There are **two**, because §6.4's two axes are independent:
 
 ```rust
-QclBuilder::config::<FloatType, IntType>()
+QclBuilder::config::<FloatType, NumberType>()
 ```
 
 Every bound in §6.4 is discharged from those parameters, tolerances included. Swapping `FloatType`
-re-types the whole run, thresholds and all. Swapping `IntType` re-types the ledger's counts, and
+re-types the whole run, thresholds and all. Swapping `NumberType` re-types the ledger's counts, and
 buys headroom rather than accuracy: there is no threshold to move, because the failure it guards
-against is overflow rather than rounding.
+against is overflow rather than rounding. It is the unsigned alias, because a count is ℕ and
+`NaturalNumber` is unsigned; `IntType` is ℤ and belongs to ring arithmetic (§6.5).
 
 An earlier revision named one parameter here. That was correct while the counts were hardcoded and
 is not correct now that they are a bound (§6.5).
@@ -741,7 +823,7 @@ invalidated report, not a stale one.
 **The QCM path.** Validate only; maps one-to-one onto `freeze_quantum`.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_model(graph, factors, supports)               // rejects an unfrozen graph
     .tolerance(Tolerance::q_tol().with_safety_factor(ft(8.0)))
     .declare_systems(&inputs, &outputs)
@@ -749,14 +831,14 @@ let cfg = QclBuilder::config::<FloatType, IntType>()
 
 QclBuilder::validate(&cfg)
     .check_markov()                                     // ‖[ρ_j,ρ_k]‖_F vs Q-TOL, per intersecting pair
-    .check_faithfulness()                               // C₃-exclusion over derived reachability
+    .check_decomposable()                               // C₃-exclusion over derived reachability
     .finalize().print_results();                        // worst_margin, tested_pairs
 ```
 
 **Calibration counterfactual.** Mechanism candidates, so `control` directly.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_plant(transmon)
     .evidence(Evidence::shots(1024).seed(20260821))     // selects the emergent modality, §1.1
     .baseline(Experiment::probe("check", excited_population, 1, cost = 1))
@@ -781,7 +863,7 @@ QclBuilder::control(&cfg)
 **Crosstalk attribution.** The only consumer running both halves.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_plant(two_qubit)
     .evidence(Evidence::shots(1024).seed(20260821))
     .baseline(Experiment::probe("passive", joint_error, 1, cost = 1))
@@ -796,7 +878,7 @@ let cfg = QclBuilder::config::<FloatType, IntType>()
 
 let screened = QclBuilder::validate(&cfg)
     .check_markov()
-    .check_faithfulness()                               // rejects the cyclic C₃ before any shots
+    .check_decomposable()                               // C₃-exclusion; the cyclic candidate never reaches it, §7.6
     .finalize();                                        // -> Screened<FloatType>
 
 QclBuilder::control(screened)                           // unreachable unscreened
@@ -805,23 +887,30 @@ QclBuilder::control(screened)                           // unreachable unscreene
     .fork()
     .design(MinCostCover { floor_bits: ft(5.0) })       // {E1, E2} at cost 2 beats tomography at 200
     .predict()
-    .adjudicate()                                       // non-commuting projections fold to Ambiguous, §4
+    .adjudicate()                                       // Boolean fold: real-valued spec, §4 rule 2 does not apply
     .finalize().print_results();
 ```
 
 **Geometric QEC.** A code subject, validate only.
 
 ```rust
-let cfg = QclBuilder::config::<FloatType, IntType>()
+let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_code(LatticeComplex::<2, FloatType>::square_torus(4))
     .build()?;
 
 QclBuilder::validate(&cfg)
     .derive_code()                                      // [[32,2,4]]
     .check_ldpc_weights()
-    .check_class_invariance()                           // over the H_k basis; F8's seam is gone, §5
+    .check_class_invariance()                           // the diagonal gates of Table 1, over the code space
     .finalize().print_results();
 ```
+
+Verified by exact 𝔽₂ predicates; not simulated. `SimQpu` caps at 24 qubits, below this code's 32,
+so no gate this consumer emits is ever run through the simulator, and the only dynamical evidence for
+any Haruna gate is the gate-alphabet identity tests on small registers. The checks are combinatorial
+and exact, which is why that is enough; it is stated so that "tested on the simulator" is never
+added to a claim about this path. `H̄` is neither a Pauli nor diagonal and is covered by the Clifford
+check the change specifies, not by class invariance.
 
 The code pipeline has no probe family. Its selection over candidate complexes is scored against
 requirements rather than evidence, so it shares a shape with `design` and none of its content
@@ -841,9 +930,19 @@ refusing it. Recursion is wired below QCL; the flat convention is a QCM derivati
 is why it sits behind the `qcm` feature. So `.over_model` and structural `.over_plant` validation
 cannot reach bare metal, while `.over_plant` with mechanism candidates plus `control` can.
 
-**Faithfulness is C₃-exclusion only**, per van der Lugt & Lorenz (arXiv:2508.11762). The general
-routed and direct-sum Lorenz–Barrett hypothesis is open upstream. QCL names the scope it inherits and
-claims nothing wider.
+**Decomposability is C₃-exclusion only**, per van der Lugt & Lorenz (arXiv:2508.11762,
+Definition 3.1 and Theorem 3.2), and it is decidable by Theorem 4.9(v) directly from the relation.
+"Faithful" there is Lorenz–Barrett's `G_U = G_C`, a circuit decomposition whose connectivity equals
+the unitary's causal structure, and not Pearl's, which is why the stage is `check_decomposable` and
+not `check_faithfulness`. The general routed and direct-sum Lorenz–Barrett hypothesis is open
+upstream. QCL names the scope it inherits and claims nothing wider.
+
+**Cyclic causal structures are out of scope for v1 by decision, not because they fail a check.**
+Cyclic QCMs exist (Barrett, Lorenz & Oreshkov, arXiv:2002.12157). The C₃ criterion is applied to
+acyclic influence relations; a cyclic candidate is rejected at `build()` with
+`CyclicStructureUnsupported`, before the check runs. It has to be, because the criterion would not
+reject it: the crosstalk example's cyclic H₄ satisfies C₃-exclusion under Definition 3.1, and its
+reachability on a cyclic graph is complete, which satisfies it more plainly still.
 
 ### 7.7 The DSL adds ordering and naming, not a monad
 
@@ -871,40 +970,81 @@ lifting pattern. If a `QclEffect` type appears, something has gone wrong.
 
 ---
 
-## 9. Sequencing
+## 9. What shipped
 
-~~0. **Fix the scalar bounds** (§6.4).~~ **Done.** The table was re-derived against shipped
-   signatures and its premise did not survive: one row is over-tight, three are *under*-specified,
-   one is not implementable as written, and one contradicted §6.5. See §6.4.
+The six steps this section used to sequence are built, in the order it gave, plus the two that
+turned up on the way: the class-invariance decision the criterion needed, and the C₃ correction the
+verification found. Each landed as one task group of `openspec/changes/add-qcl`, each group green on
+`bazel test //...` before the next began, and each with its commit message at the boundary.
 
-~~2. **`Boundary`, then `GaugeField::from_cochain`** (§6.2).~~ **Done and withdrawn respectively.**
-   `partial_trace_preservation_boundary` ships; the gauge-field seam was removed rather than checked.
-   Neither of the two wrong-answer seams is open, so nothing in the remaining sequence is load-bearing
-   for soundness.
+| Group | What shipped | Where |
+|---|---|---|
+| 1 | `check_class_invariance` over the code space, the normalizer check, the Clifford tableau, the tuple cap | `qcode/` |
+| 2 | `Check<R>`, `CheckReport<R>`, `Tolerance<R>`, the report-returning check siblings, `Factorization` provenance | `decision/`, `channel.rs`, `markov_freeze.rs` |
+| 3 | `QubitOperator`, `Channel`, `QuantumPlant`, `Observable`, their lifts | `carriers/`, `wrappers.rs` |
+| 4 | `ShotHistogram` out of the gate, the Born sampler, `ShotEstimate`, `Evidence`, `ShotBudget` | `qpu/` |
+| 5 | `Hypothesis`, `intervene_mechanism`, `predict`, warrant-gated `marginalise`, `compose` | `qcm/hypothesis.rs` |
+| 6 | `design` as the exact pair cover, `adjudicate` under the verdict law, `Either` on the way out | `design/` |
+| 7 | `QclBuilder`, the three subjects, `build()`, `validate` → `Screened` → `control`, `Ledger` | `pipeline/` |
+| 8 | the three consumers | `examples/quantum_examples/qcl_examples/` |
 
-What is left, renumbered:
+**The three consumers, as they run.** The model path screens the same model the shipped freeze
+freezes and reports the same pair count and margin; a non-commuting model fails `validate` with the
+structured pair and leaves the frozen subject as built, and `freeze_model` on a dynamic graph rolls
+it back. The code path derives `[[32, 2]]` off the `4 × 4` torus, passes both LDPC weights at a
+bound of 4 and names the first offending Z check at 3, and accepts class invariance of `Z̄`, `S̄` and
+`T̄` on both classes and the Hadamard swap on both, all exact and none simulated. The crosstalk
+path refuses the cyclic candidate at `build()` by name, admits three by Markov and C₃, hands the
+screen into `control`, plans `{do(Q1), do(Q2)}` at cost 2 against tomography at 200, draws the first
+planned experiment from the Born sampler under H₁, and folds three Boolean verdicts to name H₁ the
+survivor a hundred bits clear of its rivals. Predictions and the plan are computed; the observation
+is sampled.
 
-1. **Generalise `Check<R>`, `CheckReport<R>` and `Tolerance<R>`** off the four shipped policies (§3).
-   Doing this first means no stage is ever written returning a boolean. Each new check inherits
-   §3.2's obligation to report what it examined, not only what passed.
-2. **Carriers** (§6.2), each under the seal rule of §6.3, and each with a `wrappers.rs`-style lift.
-3. **`ShotBudget`** (§6.2). Small, and it turns every downstream decision from a float comparison
-   into a statistical one.
-4. **`Hypothesis` and `intervene`** (§6.1). Smaller than previously sequenced; the store, supports and
-   embedding exist, so this is the `do` operation plus the boundary-checked contraction.
-5. **`design` and `adjudicate`**, the latter with the §4 commutation guard, and the former sized off
-   §10.3's corrected exponent rather than the sweep it used to name.
-6. **`QclBuilder::config`, then the stages** (§7), last, once at least two consumers run against the
-   layers beneath.
+### 9.1 What each check rests on
 
-**The prerequisites are done, and none of what remains is a gap.** Every item in
-[`qcl-gaps.md`](qcl-gaps.md) is closed, so the geometric-QEC example is no longer blocked on the
-substrate, and the six steps above are construction against settled designs rather than open
-questions.
+§8 rule 7 asks that a check claiming a theorem name its witness through `lean/THEOREM_MAP.md`, and
+that a check with no proof say so. This is that list.
 
-The failure mode to avoid is unchanged: writing the pipeline first and shaping examples to justify
-it. The ordering is the reverse, and it is now anchored on a running implementation rather than three
-designs alone.
+| Check | Rust witness | Lean | Status |
+|---|---|---|---|
+| `check_markov` | `quantum_markov_check_report`, `markov_certificate`; `markov_report_tests` | `quantum.markov_commutativity` | **deferred**; witnessed by tests, no proof |
+| `check_decomposable` | `CausalStructure::find_c3` against Definition 3.1; every relation on three inputs and three outputs against Theorem 4.9(v) | none | **no proof**; the theorem is van der Lugt & Lorenz 3.2, and the code follows the paper |
+| `marginalise`, the boundary warrant | `partial_trace_preservation_boundary`, `BoundaryWarrant` | `quantum.partial_trace.commutator_transport`, `quantum.partial_trace_preservation_boundary`, `quantum.partial_trace_nonpreservation` | **proved**; the transport is unconditional and the `√(d_B)` bound is what it buys |
+| `derive_code`, `k = β₁` | `betti_number_over(1, Gf2)` | `linear.gf2.betti_from_ranks`, `homology.chain.betti_from_dd_zero` | **proved** |
+| `check_ldpc_weights` | `check_ldpc_weights` | none | counting; nothing to prove |
+| `check_class_invariance` | `LogicalBasis::check_class_invariance`; `class_invariance_tests` with four mutations | none | **no proof**; Haruna Eq. (3.20) read on the code space, the three polynomials shown integral by hand, and the `(m, k)` condition brute-forced over 12288 cases |
+| `check_clifford_action` | `clifford_conjugate`, `check_clifford_action`; `clifford_action_tests` | none | **no proof**; the tableau rules are Nielsen & Chuang's, and `Z̄(γ)` was pushed through Eq. (3.32) by hand |
+| `Channel::from_kraus` | `check_completely_positive`, `check_trace_preserving` | `quantum.choi.apply_add`, `quantum.choi.apply_smul` | linearity of the Choi action **proved**; CP and TP themselves **no proof** |
+| `Observable::read_out` | `born_projective_probability` | none | **no proof** |
+| `adjudicate`, the projection fold | `Projection::commutes_with`, `Verdict::meet`, `Verdict::join` | `quantum.verdict.orthomodular`; `core.verdict.carriers` | orthomodularity **deferred** with Rust law tests; the Boolean carrier the read-out fold uses **proved** |
+| `design` | `design`; the greedy-trap and crosstalk instances | none | **no proof**; exact by construction as a DP over the pair universe |
+| `ShotEstimate`, `Spec` | `at_least`, `separation_bits` | none | **no proof**; the standard error and the Bhattacharyya distance are textbook |
+| `Ledger::draw_down` | `checked_difference`, `monus` | none | ℕ is a semiring; nothing to prove |
+
+Two of these are the ones to watch. The Markov commutativity check is the load-bearing soundness
+claim of the QCM path and it stands on tests, not on a theorem; `LEAN_QUANTUM.md` lists it as
+deferred, and that has not changed. The C₃ check now follows the publication exactly, which is
+worth saying because it did not before: the shipped test looked for the bipartite 6-cycle, accepted
+the paper's `C₃` and rejected a relation the paper admits, and was caught by the verification the
+corrections register asked for.
+
+### 9.2 What is left
+
+Nothing in the change. Three things outside it, each recorded where it belongs:
+
+- **The plant path on bare metal.** The pipeline module is compiled under `qcm` because its
+  candidates are `Hypothesis` values and that type's graph-dependent half reaches
+  `deep_causality`. Splitting the two halves is mechanical and is a follow-up (`qcl-pipeline`
+  spec, as built).
+- **The instrument-level intervention.** `intervene_instrument` is reserved and not built; a probe
+  is modelled as a factor replacement, and `predict` says so (corrections register X-4).
+- **The induced factorization of a composite.** A failed re-check on inherited factors is
+  reported as `CertificateNotInherited` rather than as physics, because the composite may be Markov
+  under a factorization v1 does not construct (X-2).
+
+The failure mode this section warned against, writing the pipeline first and shaping examples to
+justify it, did not happen: the pipeline was the seventh group of eight, and every stage it names
+was a function before it was a stage.
 
 ---
 
@@ -938,7 +1078,7 @@ bounded-time claim needs allocations/tick = 0, which a timing harness does not s
 | Benchmark | Watch for |
 |---|---|
 | `check_markov` per intersecting pair | pairs grow O(n²) in factors; `embed_on_legs` dominates |
-| `check_faithfulness` | `find_c3` is `C(m,3)²` over declared inputs and outputs |
+| `check_decomposable` | `find_c3` is `C(m,3)²` over declared inputs and outputs |
 | `Projection::range_projector` | one `eigen_hermitian` per lattice join; the verdict fold is not free |
 | `design`, k experiments × n hypotheses | **linear in k, exponential in n**: the exact cover is a DP over covered-pair subsets, `O(2^C(n,2) · k)`. Watch the coverage-matrix build, which dominates at this note's own scale |
 
@@ -949,6 +1089,10 @@ hypothesis pairs and whose sets are the k experiments. Enumerating subsets of ex
 answer is a DP over subsets of the *universe*, `dp[S | cover(e)] = min(dp[S], dp[S] + cost(e))`, at
 `O(2^C(n,2) · k)`. That is linear in k, so sweeping k from 4 to 20 finds no cliff. The cliff is in n
 and arrives around n = 7 or 8, where `C(n,2)` reaches 21 to 28 and `2^C(n,2)` stops being free.
+`2^C(n,2)` is `2^15` at n = 6, `2^28` at n = 8, `2^45` at n = 10, so the bound is a decision rather
+than a benchmark observation: `MinCostCover` carries `max_hypotheses`, default 7, and `design`
+returns `HypothesisCountExceeded { n, pairs }` above it before allocating the table, in the sense
+§6.5 uses for `NumberType`. A caller with ten hypotheses gets an error, not a hang.
 
 At this note's own numbers the solve is not the cost at all. §8.6 sizes the scan at `|E| × |H|`
 plant evolutions plus `|E| × C(|H|, 2)` closed-form coefficients, 120 and 120 for 40 depths and 3
@@ -985,7 +1129,7 @@ that §6.4's bounds are read off.
 
 [`deep_causality_num/README.md`](../../../deep_causality_unified_math/deep_causality_num/README.md)
 — the representation half: `Integer`, `SignedInt`, `UnsignedInt` and `NaturalNumber`, and the
-`FloatType` / `IntType` split §7.1 takes its two parameters from.
+`FloatType` / `IntType` split, and the `NumberType` alias for ℕ that §7.1's second parameter is.
 
 **Shipped code this design wraps.** `deep_causality_quantum/src/`, 4432 lines, in particular
 `types/qcm/{markov_freeze, faithfulness, process_factors, environment}.rs`,
@@ -1011,7 +1155,12 @@ seam stays behind the `qpu` feature. The mathematics crates it reaches sit under
 - Lorenz, R. (2022); Lorenz, R. & Barrett, J. (2021) — the quantum causal model the crate
   reconstructs, and the Markov condition Def 3.3 that `markov_freeze.rs` implements.
 - van der Lugt, T. & Lorenz, R. (2025). *Unitary causal decompositions.* arXiv:2508.11762 — the
-  C₃-exclusion criterion and the scope limit in §7.6.
+  C₃-exclusion criterion and the scope limit in §7.6. `C₃` is stated at Example 2.12, the property
+  at Definition 3.1, the equivalence at Theorem 3.2, the relation-level reformulation at
+  Theorem 4.9(v), and what the theorem does not say at Remark 3.3.
+- Barrett, J., Lorenz, R. & Oreshkov, O. (2021). *Cyclic quantum causal models.* Nat. Commun. 12,
+  885; arXiv:2002.12157, in `deep_causality_quantum/papers/` — the reason cyclic structures are a
+  scope decision rather than a failed check.
 - Birkhoff, G. & von Neumann, J. (1936) — the quantum logic `Projection` realises.
 - Nielsen, M. & Chuang, I. *Quantum Computation and Quantum Information* — the generalised Rabi
   formula and the depolarising channel behind the calibration example.

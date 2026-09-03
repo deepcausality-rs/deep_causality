@@ -627,9 +627,12 @@ impl<F: RealField + ToPrimitive> ToPrimitive for Octonion<F> {
     /// use deep_causality_num::{ToPrimitive};
     /// use deep_causality_num_complex::{Octonion};
     ///
+    /// // `u64::MAX as f64` rounds up to 2⁶⁴, which no `u64` holds, so it is refused; the largest
+    /// // double below it converts.
     /// let o = Octonion::new(u64::MAX as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    /// let val: Option<u64> = o.to_u64();
-    /// assert_eq!(val, Some(u64::MAX));
+    /// assert_eq!(o.to_u64(), None);
+    /// let o = Octonion::new(18_446_744_073_709_549_568.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    /// assert_eq!(o.to_u64(), Some(18_446_744_073_709_549_568));
     /// ```
     fn to_u64(&self) -> Option<u64> {
         self.s.to_u64()
@@ -645,10 +648,12 @@ impl<F: RealField + ToPrimitive> ToPrimitive for Octonion<F> {
     /// use deep_causality_num::{ToPrimitive};
     /// use deep_causality_num_complex::{Octonion};
     ///
+    /// // `u128::MAX as f64` rounds up to 2¹²⁸, which no `u128` holds, so it is refused; the
+    /// // largest double below it converts.
     /// let o = Octonion::new(u128::MAX as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    /// let val: Option<u128> = o.to_u128();
-    /// // Note: f64 can't represent all u128 values precisely.
-    /// assert_eq!(val, Some(u128::MAX));
+    /// assert_eq!(o.to_u128(), None);
+    /// let o = Octonion::new(1.0e30, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    /// assert_eq!(o.to_u128(), Some(1_000_000_000_000_000_019_884_624_838_656));
     /// ```
     fn to_u128(&self) -> Option<u128> {
         self.s.to_u128()

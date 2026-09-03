@@ -14,15 +14,15 @@ use rusty_fork::rusty_fork_test;
 rusty_fork_test! {
     #[test]
     fn test_from_value_constructor() {
-        let mu = MaybeUncertain::<Float106>::from_value(Float106::from_f64(42.0));
-        assert_eq!(mu.sample().unwrap(), Some(Float106::from_f64(42.0)));
+        let mu = MaybeUncertain::<Float106>::from_value(Float106::from(42.0));
+        assert_eq!(mu.sample().unwrap(), Some(Float106::from(42.0)));
     }
 
     #[test]
     fn test_from_uncertain_constructor() {
-        let u = Uncertain::<Float106>::point(Float106::from_f64(42.0));
+        let u = Uncertain::<Float106>::point(Float106::from(42.0));
         let mu = MaybeUncertain::<Float106>::from_uncertain(u);
-        assert_eq!(mu.sample().unwrap(), Some(Float106::from_f64(42.0)));
+        assert_eq!(mu.sample().unwrap(), Some(Float106::from(42.0)));
     }
 
     #[test]
@@ -33,18 +33,18 @@ rusty_fork_test! {
 
     #[test]
     fn test_from_bernoulli_and_uncertain_constructor() {
-        let u = Uncertain::<Float106>::point(Float106::from_f64(42.0));
+        let u = Uncertain::<Float106>::point(Float106::from(42.0));
         let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(1.0, u);
-        assert_eq!(mu.sample().unwrap(), Some(Float106::from_f64(42.0)));
+        assert_eq!(mu.sample().unwrap(), Some(Float106::from(42.0)));
 
-        let u2 = Uncertain::<Float106>::point(Float106::from_f64(42.0));
+        let u2 = Uncertain::<Float106>::point(Float106::from(42.0));
         let mu2 = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(0.0, u2);
         assert_eq!(mu2.sample().unwrap(), None);
     }
 
     #[test]
     fn test_is_some() {
-        let mu = MaybeUncertain::<Float106>::from_value(Float106::from_f64(42.0));
+        let mu = MaybeUncertain::<Float106>::from_value(Float106::from(42.0));
         assert!(mu.is_some().sample().unwrap());
     }
 
@@ -56,21 +56,21 @@ rusty_fork_test! {
 
     #[test]
     fn test_sample() {
-        let mu = MaybeUncertain::<Float106>::from_value(Float106::from_f64(123.0));
-        assert_eq!(mu.sample().unwrap(), Some(Float106::from_f64(123.0)));
+        let mu = MaybeUncertain::<Float106>::from_value(Float106::from(123.0));
+        assert_eq!(mu.sample().unwrap(), Some(Float106::from(123.0)));
     }
 
     #[test]
     fn test_lift_to_uncertain_success() {
-        let u = Uncertain::<Float106>::point(Float106::from_f64(42.0));
+        let u = Uncertain::<Float106>::point(Float106::from(42.0));
         let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(0.9, u);
         let result = mu.lift_to_uncertain(0.8, 0.95, 0.05, 100).unwrap();
-        assert_eq!(result.sample().unwrap(), Float106::from_f64(42.0));
+        assert_eq!(result.sample().unwrap(), Float106::from(42.0));
     }
 
     #[test]
     fn test_lift_to_uncertain_failure() {
-        let u = Uncertain::<Float106>::point(Float106::from_f64(42.0));
+        let u = Uncertain::<Float106>::point(Float106::from(42.0));
         let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(0.7, u);
         let result = mu.lift_to_uncertain(0.8, 0.95, 0.05, 100);
         assert!(matches!(result, Err(UncertainError::PresenceError(_))));
@@ -85,8 +85,8 @@ rusty_fork_test! {
 
     #[test]
     fn test_lift_to_uncertain_always_some() {
-        let mu = MaybeUncertain::<Float106>::from_value(Float106::from_f64(42.0));
+        let mu = MaybeUncertain::<Float106>::from_value(Float106::from(42.0));
         let result = mu.lift_to_uncertain(0.9, 0.95, 0.05, 100).unwrap();
-        assert_eq!(result.sample().unwrap(), Float106::from_f64(42.0));
+        assert_eq!(result.sample().unwrap(), Float106::from(42.0));
     }
 }

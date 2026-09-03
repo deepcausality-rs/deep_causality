@@ -48,7 +48,7 @@ impl Add<f64> for Float106 {
 
     #[inline]
     fn add(self, rhs: f64) -> Self::Output {
-        self + Self::from_f64(rhs)
+        self + Self::from(rhs)
     }
 }
 
@@ -57,7 +57,7 @@ impl Add<Float106> for f64 {
 
     #[inline]
     fn add(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) + rhs
+        Float106::from(self) + rhs
     }
 }
 
@@ -95,7 +95,7 @@ impl Sub<f64> for Float106 {
 
     #[inline]
     fn sub(self, rhs: f64) -> Self::Output {
-        self - Self::from_f64(rhs)
+        self - Self::from(rhs)
     }
 }
 
@@ -104,7 +104,7 @@ impl Sub<Float106> for f64 {
 
     #[inline]
     fn sub(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) - rhs
+        Float106::from(self) - rhs
     }
 }
 
@@ -186,6 +186,12 @@ impl Div for Float106 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
+        // The refinement multiplies the first quotient back by the divisor, and `inf · 0` is NaN,
+        // so a zero or non-finite divisor and a non-finite dividend are answered by the `f64`
+        // division alone: `±inf`, `0` or NaN, as IEEE 754 has them.
+        if rhs.hi == 0.0 || !rhs.hi.is_finite() || !self.hi.is_finite() {
+            return Self::from(self.hi / rhs.hi);
+        }
         // High-precision division using iterative refinement.
         // q1 = a.hi / b.hi
         let q1 = self.hi / rhs.hi;
@@ -208,6 +214,9 @@ impl Div<f64> for Float106 {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
+        if rhs == 0.0 || !rhs.is_finite() || !self.hi.is_finite() {
+            return Self::from(self.hi / rhs);
+        }
         // Optimized: single f64 divisor
         let q1 = self.hi / rhs;
         let (p1, p2) = two_prod(q1, rhs);
@@ -224,7 +233,7 @@ impl Div<Float106> for f64 {
 
     #[inline]
     fn div(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) / rhs
+        Float106::from(self) / rhs
     }
 }
 
@@ -256,7 +265,7 @@ impl Rem for Float106 {
         let n = div.hi.trunc();
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         let n = libm::trunc(div.hi);
-        self - (rhs * Self::from_f64(n))
+        self - (rhs * Self::from(n))
     }
 }
 
@@ -265,7 +274,7 @@ impl Rem<f64> for Float106 {
 
     #[inline]
     fn rem(self, rhs: f64) -> Self::Output {
-        self % Self::from_f64(rhs)
+        self % Self::from(rhs)
     }
 }
 
@@ -274,7 +283,7 @@ impl Rem<Float106> for f64 {
 
     #[inline]
     fn rem(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) % rhs
+        Float106::from(self) % rhs
     }
 }
 

@@ -12,19 +12,20 @@ use crate::model_types::{
 use causal_correction_examples::math_utils;
 use deep_causality_core::{CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
+use deep_causality_num::Lift;
 
 /// Offered load presented to the interface at `tick`, before any
 /// rate-limiting. Deterministic — a fixed sine jitter on the baseline plus a
 /// ramped volumetric surge after `attack_start_tick` — so the whole run is
 /// reproducible with no RNG, matching the other corrective examples.
 pub fn offered_load(tick: u32, cfg: &DetectorConfig) -> InterfaceTelemetry {
-    let jitter = cfg.baseline_jitter_mbps * (tick as FloatType * 0.7).sin();
+    let jitter = cfg.baseline_jitter_mbps * (tick.lift::<FloatType>() * 0.7).sin();
     let mut throughput = cfg.baseline_mbps + jitter;
 
     let under_attack = tick >= cfg.attack_start_tick;
     if under_attack {
         // Ramp to peak over four seconds, then hold the flood.
-        let ramp = ((tick - cfg.attack_start_tick) as FloatType / 4.0).min(1.0);
+        let ramp = ((tick - cfg.attack_start_tick).lift::<FloatType>() / 4.0).min(1.0);
         throughput += (cfg.attack_peak_mbps - cfg.baseline_mbps) * ramp;
     }
 
@@ -94,7 +95,7 @@ pub fn baseline_zscore(window: &ThroughputWindow, sample: FloatType) -> Option<F
     }
     let slice = window.slice().ok()?;
     let mean = math_utils::mean(slice);
-    let n = slice.len() as FloatType;
+    let n = slice.len().lift::<FloatType>();
     let variance = slice.iter().map(|&x| (x - mean).powi(2)).sum::<FloatType>() / (n - 1.0);
     let std = variance.sqrt();
     if std <= FloatType::EPSILON {

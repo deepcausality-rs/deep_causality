@@ -9,11 +9,11 @@
 
 use crate::FloatType;
 use crate::constants;
-use avionics_examples::shared::utils::ft;
 use deep_causality_algebra::Real;
 use deep_causality_cfd::{
     FittedNormalShock, FromTableRow, GateSeq, PhysicsError, StudyView, TableRow,
 };
+use deep_causality_num::lift;
 
 /// One Mach-altitude test point: the case axis, read from the matrix by column name.
 #[derive(Debug, Clone)]
@@ -77,11 +77,11 @@ impl TableRow for PlacardRow {
 pub fn atmosphere_at(alt_m: FloatType) -> Result<(FloatType, FloatType, FloatType), String> {
     let floor = constants::ATMOSPHERE[0].0;
     let ceiling = constants::ATMOSPHERE[constants::ATMOSPHERE.len() - 1].0;
-    if alt_m < ft(floor) || alt_m > ft(ceiling) {
+    if alt_m < lift::<FloatType>(floor) || alt_m > lift::<FloatType>(ceiling) {
         return Err(format!(
             "altitude {:.1} km is outside the atmosphere table ({:.0} to {:.0} km); \
              fix the matrix row or extend constants::ATMOSPHERE",
-            alt_m / ft(1000.0),
+            alt_m / lift::<FloatType>(1000.0),
             floor / 1000.0,
             ceiling / 1000.0
         ));
@@ -89,18 +89,20 @@ pub fn atmosphere_at(alt_m: FloatType) -> Result<(FloatType, FloatType, FloatTyp
     for pair in constants::ATMOSPHERE.windows(2) {
         let (a0, n0, temp0, c0) = pair[0];
         let (a1, n1, temp1, c1) = pair[1];
-        if alt_m <= ft(a1) {
-            let w = (alt_m - ft(a0)) / (ft(a1) - ft(a0));
+        if alt_m <= lift::<FloatType>(a1) {
+            let w =
+                (alt_m - lift::<FloatType>(a0)) / (lift::<FloatType>(a1) - lift::<FloatType>(a0));
             return Ok((
-                ft(n0) + w * (ft(n1) - ft(n0)),
-                ft(temp0) + w * (ft(temp1) - ft(temp0)),
-                ft(c0) + w * (ft(c1) - ft(c0)),
+                lift::<FloatType>(n0) + w * (lift::<FloatType>(n1) - lift::<FloatType>(n0)),
+                lift::<FloatType>(temp0)
+                    + w * (lift::<FloatType>(temp1) - lift::<FloatType>(temp0)),
+                lift::<FloatType>(c0) + w * (lift::<FloatType>(c1) - lift::<FloatType>(c0)),
             ));
         }
     }
     Err(format!(
         "altitude {:.1} km found no bracketing atmosphere rows (table not ascending?)",
-        alt_m / ft(1000.0)
+        alt_m / lift::<FloatType>(1000.0)
     ))
 }
 
@@ -118,29 +120,30 @@ pub fn placard_point(
 ) -> Result<PlacardRow, PhysicsError> {
     let (mach, alt_km) = (point.mach, point.alt_km);
     let here = format!("M {mach:.2} / {alt_km:.1} km");
-    let (n_inf, t_inf, a_inf) = atmosphere_at(alt_km * ft(1000.0))
+    let (n_inf, t_inf, a_inf) = atmosphere_at(alt_km * lift::<FloatType>(1000.0))
         .map_err(|e| PhysicsError::CalculationError(format!("grid point {here}: {e}")))?;
-    let rho_inf = n_inf * ft(constants::AIR_MEAN_MOLECULAR_MASS_KG);
+    let rho_inf = n_inf * lift::<FloatType>(constants::AIR_MEAN_MOLECULAR_MASS_KG);
     let v = mach * a_inf;
-    let q_pa = ft(0.5) * rho_inf * v * v;
+    let q_pa = lift::<FloatType>(0.5) * rho_inf * v * v;
 
-    let half_gm1 = ft(0.5) * (ft(constants::GAMMA) - ft(1.0));
-    let t0_k = if mach >= ft(1.0) {
+    let half_gm1 =
+        lift::<FloatType>(0.5) * (lift::<FloatType>(constants::GAMMA) - lift::<FloatType>(1.0));
+    let t0_k = if mach >= lift::<FloatType>(1.0) {
         let post = shock.post_shock(t_inf, n_inf, mach).map_err(|e| {
             PhysicsError::CalculationError(format!(
                 "grid point {here}: post-shock state failed: {e}"
             ))
         })?;
         let m2 = mach * post.u_ratio * Real::sqrt(t_inf / post.t2);
-        post.t2 * (ft(1.0) + half_gm1 * m2 * m2)
+        post.t2 * (lift::<FloatType>(1.0) + half_gm1 * m2 * m2)
     } else {
         // No shock below Mach 1: the isentropic stagnation temperature, the exact shock-free
         // limit of the branch above.
-        t_inf * (ft(1.0) + half_gm1 * mach * mach)
+        t_inf * (lift::<FloatType>(1.0) + half_gm1 * mach * mach)
     };
 
-    let qdot_w_m2 = ft(constants::SUTTON_GRAVES_K)
-        * Real::sqrt(rho_inf / ft(constants::NOSE_RADIUS_M))
+    let qdot_w_m2 = lift::<FloatType>(constants::SUTTON_GRAVES_K)
+        * Real::sqrt(rho_inf / lift::<FloatType>(constants::NOSE_RADIUS_M))
         * v
         * v
         * v;
@@ -148,9 +151,9 @@ pub fn placard_point(
     Ok(PlacardRow {
         mach,
         alt_km,
-        q_kpa: q_pa / ft(1000.0), // Pa -> kPa
+        q_kpa: q_pa / lift::<FloatType>(1000.0), // Pa -> kPa
         t0_k,
-        qdot_w_cm2: qdot_w_m2 / ft(1.0e4), // W/m² -> W/cm²
+        qdot_w_cm2: qdot_w_m2 / lift::<FloatType>(1.0e4), // W/m² -> W/cm²
     })
 }
 
@@ -170,7 +173,7 @@ pub fn gate_q_max(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
     if view.rows().is_empty() {
         return (false, "no grid points computed (empty matrix)".into());
     }
-    let q_max = ft(Q_MAX_PLACARD_KPA);
+    let q_max = lift::<FloatType>(Q_MAX_PLACARD_KPA);
     let offenders: Vec<String> = view
         .rows()
         .iter()
@@ -208,7 +211,7 @@ pub fn gate_stagnation_temperature(view: &StudyView<'_, PlacardRow>) -> (bool, S
     if view.rows().is_empty() {
         return (false, "no grid points computed (empty matrix)".into());
     }
-    let t0_max = ft(T0_MAX_PLACARD_K);
+    let t0_max = lift::<FloatType>(T0_MAX_PLACARD_K);
     let offenders: Vec<String> = view
         .rows()
         .iter()

@@ -12,6 +12,7 @@ use crate::QuantumError;
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
+use deep_causality_num_complex::Complex;
 
 /// A single reified gate over the migrated gate alphabet. Plain data — no
 /// function pointers, no amplitudes.
@@ -86,6 +87,84 @@ impl GateOp {
             GateOp::Ccz { q0, q1, q2 } => vec![*q0, *q1, *q2],
             GateOp::Cmz { qubits } => qubits.clone(),
         }
+    }
+}
+
+/// A logical gate as a physical-gate program, with the global phase the
+/// construction carries.
+///
+/// Every builder in `gates_haruna` emits a `Vec<GateOp>`; this is that program
+/// with one more field. Table 1's Hadamard is `e^{-iπ/4} · S̄(γ) · ∏H · S̄(γ̃) · ∏H ·
+/// S̄(γ)`, and the scalar in front has nowhere to live in a list of gates. It
+/// is unobservable under a computational-basis measurement and becomes a
+/// relative, observable phase the moment the gate is used as a controlled
+/// operation, which is what the paper's Appendix B invariance arguments carry.
+/// So the phase travels beside the program rather than being dropped at the
+/// wrapper: a check that decides equivalence up to phase can ignore it, and a
+/// later exact form of that check, or a controlled use, can recover it.
+///
+/// The diagonal gates of Table 1 attach no global phase, so their programs
+/// carry `None`; [`From<Vec<GateOp>>`] builds exactly that.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LogicalProgram<R> {
+    ops: Vec<GateOp>,
+    global_phase: Option<Complex<R>>,
+}
+
+impl<R> LogicalProgram<R> {
+    /// A program with no global phase.
+    pub fn new(ops: Vec<GateOp>) -> Self {
+        Self {
+            ops,
+            global_phase: None,
+        }
+    }
+
+    /// A program carrying the global phase its construction returned.
+    pub fn with_global_phase(ops: Vec<GateOp>, phase: Complex<R>) -> Self {
+        Self {
+            ops,
+            global_phase: Some(phase),
+        }
+    }
+
+    /// The gate program, in application order.
+    pub fn ops(&self) -> &[GateOp] {
+        &self.ops
+    }
+
+    /// The global phase, if the construction carries one.
+    pub fn global_phase(&self) -> Option<&Complex<R>> {
+        self.global_phase.as_ref()
+    }
+
+    /// The number of gates.
+    pub fn len(&self) -> usize {
+        self.ops.len()
+    }
+
+    /// Whether the program is empty.
+    pub fn is_empty(&self) -> bool {
+        self.ops.is_empty()
+    }
+
+    /// Consumes the program, returning its gates and dropping the phase.
+    pub fn into_ops(self) -> Vec<GateOp> {
+        self.ops
+    }
+}
+
+impl<R> From<Vec<GateOp>> for LogicalProgram<R> {
+    fn from(ops: Vec<GateOp>) -> Self {
+        Self::new(ops)
+    }
+}
+
+/// The empty program with no phase. Written by hand so that it places no bound
+/// on `R`, which a derive would.
+impl<R> Default for LogicalProgram<R> {
+    fn default() -> Self {
+        Self::new(Vec::new())
     }
 }
 

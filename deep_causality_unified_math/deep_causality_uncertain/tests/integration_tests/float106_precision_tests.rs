@@ -14,7 +14,7 @@ use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 /// `1/3` at double-double precision: its low limb is nonzero, so it is unrepresentable in
 /// f64 and exercises the precision-carrying path.
 fn one_third() -> Float106 {
-    Float106::from_f64(1.0) / Float106::from_f64(3.0)
+    Float106::from(1.0) / Float106::from(3.0)
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn float106_arithmetic_preserves_precision() {
 
 #[test]
 fn float106_normal_samples_are_finite_and_double_double() {
-    let u = Uncertain::<Float106>::normal(Float106::from_f64(0.0), Float106::from_f64(1.0));
+    let u = Uncertain::<Float106>::normal(Float106::from(0.0), Float106::from(1.0));
     let samples = u.take_samples(500).unwrap();
 
     assert!(samples.iter().all(|s| s.is_finite()), "all normal draws finite");
@@ -56,8 +56,8 @@ fn float106_normal_samples_are_finite_and_double_double() {
 
 #[test]
 fn float106_uniform_samples_in_range() {
-    let low = Float106::from_f64(10.0);
-    let high = Float106::from_f64(20.0);
+    let low = Float106::from(10.0);
+    let high = Float106::from(20.0);
     let u = Uncertain::<Float106>::uniform(low, high);
     for s in u.take_samples(500).unwrap() {
         assert!(s >= low && s < high, "uniform sample {s:?} out of [10, 20)");
@@ -66,7 +66,7 @@ fn float106_uniform_samples_in_range() {
 
 #[test]
 fn maybe_uncertain_float106_present_value_and_lift() {
-    let x = Float106::from_f64(2.0) / Float106::from_f64(7.0);
+    let x = Float106::from(2.0) / Float106::from(7.0);
     let m = MaybeUncertain::<Float106>::from_value(x);
 
     assert_eq!(m.sample().unwrap(), Some(x), "present value sampled losslessly");

@@ -28,9 +28,18 @@ been re-verified against the tree. What remains is six steps of construction aga
   operations, and each gets a `wrappers.rs`-style lift into the causal monad.
 - **`ShotBudget` and `Evidence`**, turning read-out decisions from float comparisons into statistical
   ones, and deciding how a runtime shot budget relates to the compile-time modality split.
-- **`Hypothesis` and `intervene`.** A structural candidate is a factorization
-  `{ name, ProcessFactors<R>, FactorSupports }`; `intervene(do(node ← factor))` is a keyed
-  replacement plus revalidation. `predict` marginalises only through the shipped boundary check.
+- **`Hypothesis` and `intervene_mechanism`.** A structural candidate is a factorization
+  `{ name, ProcessFactors<R>, FactorSupports }`; `intervene_mechanism(do(node ← factor))` is a
+  keyed replacement plus revalidation, named for the mechanism-level intervention it is, since a QCM
+  also has an instrument-level one that v1 does not supply. `predict` marginalises only through the
+  shipped boundary check, and a failed re-check on inherited factors reports
+  `CertificateNotInherited` rather than a physics failure.
+- **`check_decomposable`, and cyclic structures as scope.** The C₃-exclusion stage is named for
+  what it decides: whether a structure implies a unitary causally faithful decomposition in the
+  Lorenz–Barrett sense, `G_U = G_C`, which is not Pearl's faithfulness. A cyclic candidate is
+  rejected at `build()` as `CyclicStructureUnsupported`, by decision, because the criterion does not
+  reject it. And the shipped check is corrected to the paper's `C₃`: it tested for the bipartite
+  6-cycle, and Definition 3.1's relation has seven edges.
 - **`design` and `adjudicate`.** `design` returns a `DesignPlan` rather than one experiment, solved
   as minimum-cost set cover over the `C(n,2)` hypothesis pairs. `adjudicate` folds verdicts under the
   §4 rule: projection-valued folds check commutation, read-outs against a real-valued spec do not.
@@ -40,11 +49,14 @@ been re-verified against the tree. What remains is six steps of construction aga
 - **`QclBuilder`, the config and the stages.** One origin for configuration, naming two working types
   (`FloatType` for accuracy, `IntType` for headroom), branching on the subject, with `validate`
   terminating in a `Screened<R>` that `control` requires.
-- **A decision on `check_class_invariance`.** The predicate must quantify over the **code space**,
-  not the full Hilbert space. Measured: the full-space criterion decides Z̄ correctly on all 36
-  (boundary, generator) pairs of the 3×3 torus and rejects S̄ and T̄ immediately, because Haruna's
-  Eq. (3.21) closes on `S_Z(f)` acting as the identity *on the code space*. Deciding it needs the
-  stabilizer generators, which `LogicalBasis` does not currently carry.
+- **A decision on `check_class_invariance`, and coverage of Table 1.** The predicate quantifies
+  over the **code space**, not the full Hilbert space. Measured: the full-space criterion decides Z̄
+  correctly on all 36 (boundary, generator) pairs of the 3×3 torus and rejects S̄ and T̄
+  immediately, because Haruna's Eq. (3.21) closes on `S_Z(f)` acting as the identity *on the code
+  space*. Deciding it needs the stabilizer generators, which `LogicalBasis` now derives. That check
+  covers the diagonal gates of Table 1 and nothing else; `H̄`, neither Pauli nor diagonal, is
+  emitted and was checked by nothing, and gains a `check_clifford_action` stage on the symplectic
+  side, with the global phase `logical_hadamard` returns carried on the program rather than dropped.
 
 ## Capabilities
 
@@ -57,15 +69,18 @@ been re-verified against the tree. What remains is six steps of construction aga
   validated interior, each lifted into the causal monad by the crate's existing wrapper pattern.
 - `qcl-evidence`: `Evidence` and `ShotBudget`. Shot noise as a first-class source of uncertainty,
   and where a named shot budget sits against the verifiable/emergent split.
-- `qcl-hypothesis`: `Hypothesis` as a factorization with its `CausalStructure` derived, `intervene`
-  as a keyed factor replacement, and `predict` gated on the boundary check.
+- `qcl-hypothesis`: `Hypothesis` as a factorization with its `CausalStructure` derived,
+  `intervene_mechanism` as a keyed factor replacement, `check_decomposable` pinned to
+  Definition 3.1, `predict` gated on the boundary check, and the Markov certificate's provenance.
 - `qcl-experiment-design`: `design` returning a `DesignPlan` under `MinCostCover`, and `adjudicate`
   applying the verdict-fold rule that matches the kind of verdict a world carries.
 - `qcl-pipeline`: `QclBuilder::config` with its two working types, the three subject constructors,
   the `validate` → `Screened<R>` → `control` hand-off, transactional failure, and `Ledger<R, N>`
   with its three invariants.
-- `qcl-code-checks`: `derive_code`, `check_ldpc_weights`, and `check_class_invariance` decided over
-  the code space, with the stabilizer generators the decision requires.
+- `qcl-code-checks`: `derive_code`, `check_ldpc_weights`, `check_class_invariance` decided over
+  the code space with the stabilizer generators the decision requires, `check_clifford_action` for
+  `H̄`, the normalizer precondition on the Pauli predicate, and the tuple-count cap on the
+  non-Clifford builders.
 
 ### Modified Capabilities
 
@@ -91,5 +106,12 @@ tolerance. No new external dependency. The `qpu` feature keeps gating the sample
 theorem names its Rust witness through `lean/THEOREM_MAP.md`, and a check with no proof says so.
 
 **Out of scope.** Decoding, fault-tolerance claims, device models, graph traversal, topology
-ownership, and the benchmark suite of §10, whose framing changes now that the real-time loop is
-understood to be FPGA rather than QCL.
+ownership, cyclic causal structures, and the benchmark suite of §10, whose framing changes now that
+the real-time loop is understood to be FPGA rather than QCL.
+
+**Also out of scope, and worth naming because the title invites the assumption: relating the `qcm`
+and `qcode` subjects.** QCL v1 does not represent the code as an abstraction from a physical model
+to a logical one, and no stage reasons causally about encoded computation. The two subjects share
+the builder and the decision form and nothing else. `qcl-abstraction` is the name reserved for that
+capability; `LogicalBasis`'s stabilizer generators are its raw material, and the map itself is not
+yet a type.

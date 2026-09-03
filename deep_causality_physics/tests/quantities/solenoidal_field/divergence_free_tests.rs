@@ -79,5 +79,5 @@ fn both_paths_divergence_free_f32() {
 
 #[test]
 fn both_paths_divergence_free_float106() {
-    assert_both_paths_divergence_free::<Float106>(Float106::from_f64(1e-7));
+    assert_both_paths_divergence_free::<Float106>(Float106::from(1e-7));
 }

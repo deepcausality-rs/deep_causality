@@ -99,17 +99,15 @@ fn float106_accuracy() {
     let plan = DctPlan::<Float106>::new(n, DctType::II).unwrap();
     let x: Vec<Float106> = (0..n)
         .map(|i| {
-            let v = Float106::from_f64(i as f64);
-            let a = Float106::from_f64(0.37);
+            let v = Float106::from(i as f64);
+            let a = Float106::from(0.37);
             deep_causality_algebra::Real::sin(v * a)
         })
         .collect();
-    let mut out = vec![Float106::from_f64(0.0); n];
-    let mut rs = vec![Float106::from_f64(0.0); plan.scratch_real_len()];
-    let mut cs = vec![
-        Complex::new(Float106::from_f64(0.0), Float106::from_f64(0.0));
-        plan.scratch_complex_len()
-    ];
+    let mut out = vec![Float106::from(0.0); n];
+    let mut rs = vec![Float106::from(0.0); plan.scratch_real_len()];
+    let mut cs =
+        vec![Complex::new(Float106::from(0.0), Float106::from(0.0)); plan.scratch_complex_len()];
     plan.execute(&x, &mut out, &mut rs, &mut cs).unwrap();
     let reference = naive_dct_ii(&x);
     for (a, b) in out.iter().zip(reference.iter()) {

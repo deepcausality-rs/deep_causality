@@ -18,7 +18,10 @@ deep_causality_num = { workspace = true, features = ["default"] }
 deep_causality_num_complex = { workspace = true, features = ["default"] }
 deep_causality_algebra = { workspace = true, features = ["default"] }
 deep_causality_physics = { workspace = true, features = ["default"] }
+deep_causality_haft = { workspace = true, features = ["default"] }
+deep_causality_homology = { workspace = true, features = ["default"] }
 deep_causality_quantum = { workspace = true }
+deep_causality_topology = { workspace = true }
 deep_causality_tensor = { workspace = true, features = ["default"] }
 
 [[example]]
@@ -51,3 +54,15 @@ workspace = true
 [[example]]
 name = "qcm_freeze_check"
 path = "qcm_freeze_check/main.rs"
+
+[[example]]
+name = "qcl_qcm_freeze"
+path = "qcl_examples/qcl_qcm_freeze/main.rs"
+
+[[example]]
+name = "qcl_geometric_qec"
+path = "qcl_examples/qcl_geometric_qec/main.rs"
+
+[[example]]
+name = "qcl_crosstalk"
+path = "qcl_examples/qcl_crosstalk/main.rs"

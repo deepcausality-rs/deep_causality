@@ -13,8 +13,13 @@ by the compiler. The modality split is a compile-time guarantee, sampled read-ou
 emergent path, and a runtime rejection would erase the separation the feature gate enforces.
 
 The placement follows what ships. `src/types/qpu/mod.rs` compiles `circuit` in every build and gates
-`sampler`, `sim` and `bridge` on `qpu`; the evidence types join the gated group. `validate` stays
-reachable in both builds, since the Markov, faithfulness and code checks spend no device time.
+`sampler`, `sim` and `bridge` on `qpu`; the evidence types join the gated group. Three things leave
+it for the same reason the circuit data types did: `ShotHistogram` and `CountHistogram` are plain
+data with no dependency of their own, the Born sampler over the density-matrix carrier is a seeded
+draw from a shipped probability, and the scalar-generic estimator is arithmetic over counts. All
+three are compiled in every build, because the plant read-out needs them there. What selects the
+emergent modality is naming a budget. `validate` stays reachable in both builds, since the Markov,
+decomposability and code checks spend no device time.
 
 #### Scenario: A shot budget in a default build fails to compile
 
@@ -27,16 +32,21 @@ reachable in both builds, since the Markov, faithfulness and code checks spend n
 
 - **WHEN** the program drops the `.evidence(...)` call and runs `QclBuilder::validate` under default
   features
-- **THEN** it compiles and runs to a `Screened<R>`, because `check_markov`, `check_faithfulness`,
+- **THEN** it compiles and runs to a `Screened<R>`, because `check_markov`, `check_decomposable`,
   `check_ldpc_weights` and `check_class_invariance` take no shots
 
 ### Requirement: Shot statistics follow the scalar and never pin `f64`
 
-Shot statistics SHALL be generic over the scalar and bounded at `R: Real + FromPrimitive`, covering
-the point estimate, its standard error and every separation quantity derived from a histogram, and
-they SHALL NOT name `f64` outside a display or verdict boundary. The operations here are `sqrt`,
-`log2` and ratios over a surface with no complex carrier, so `Real` carries it and dual numbers stay
-admissible.
+Shot statistics SHALL be generic over the scalar and bounded at `R: RealField + FromPrimitive`,
+covering the point estimate, its standard error and every separation quantity derived from a
+histogram, and they SHALL NOT name `f64` outside a display or verdict boundary.
+
+The design note's §6.4 had this row at `Real + FromPrimitive`, on the reasoning that `sqrt`, `log2`
+and ratios touch no complex carrier so dual numbers should stay admissible. The premise fails on
+the first line of the estimator: `p = k / n` is a ratio, and `Real` in `deep_causality_algebra` is
+`CommutativeRing + PartialOrd + Neg + …` with no `Div`. Division arrives with `Field`, so the
+weakest structure that carries a frequency is `RealField`, and the row is corrected rather than
+worked around. Dual numbers are not admissible here, and the surface says so.
 
 Two shipped functions pin the scalar and are the pattern this requirement excludes.
 `shots_to_qubit_bernoulli` accumulates `ones as f64 / total as f64` and returns `Uncertain<bool>`;
@@ -108,10 +118,30 @@ reaches no shipped sampler; the draw from a probability to a count is what this 
 - **THEN** the sampler propagates the shipped `QuantumError::DimensionMismatch` from the Born call,
   draws zero shots, and leaves the shot count unchanged
 
+### Requirement: A count histogram refuses what it cannot hold
+
+`CountHistogram::new` SHALL return `Result` and refuse a width above `usize::BITS`, the bits an
+outcome carries, with `DimensionMismatch`. `record` and `record_n` SHALL return `Result`, SHALL
+refuse with `DimensionMismatch` an outcome that does not fit the width, that is an outcome at or
+above `2^num_bits` when `num_bits < usize::BITS`, and SHALL add to the outcome's count and to the
+total in checked arithmetic, refusing an overflow with `CalculationError`. A refused record SHALL
+leave the histogram unchanged.
+
+#### Scenario: An outcome beyond the width is refused and nothing is recorded
+
+- **WHEN** a two-qubit histogram holding one shot of outcome `3` is asked to record outcome `4`
+- **THEN** `record` returns `DimensionMismatch`, the total stays at one, and the entries stay
+  `[(3, 1)]`
+
+#### Scenario: A count that would overflow is refused and nothing is recorded
+
+- **WHEN** a histogram whose total is `u64::MAX` is asked to record one more shot of any outcome
+- **THEN** `record` returns `CalculationError`, and the outcome's count and the total are unchanged
+
 ### Requirement: A shot budget is reproducible and its draw-down is checked ℕ arithmetic
 
 `ShotBudget` SHALL carry a seed beside its count, SHALL bound the count on `NaturalNumber` with its
-width named once by `IntType`, and SHALL draw down through `checked_difference`, reporting the
+width named once by `NumberType`, and SHALL draw down through `checked_difference`, reporting the
 shortfall when a request exceeds what remains. A run repeated at the same seed, budget and subject
 SHALL produce the same histogram and the same verdict.
 

@@ -84,3 +84,39 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "qcl_qcm_freeze",
+    srcs = glob(["qcl_examples/qcl_qcm_freeze/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_qcm_freeze/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_binary(
+    name = "qcl_geometric_qec",
+    srcs = glob(["qcl_examples/qcl_geometric_qec/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_geometric_qec/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_binary(
+    name = "qcl_crosstalk",
+    srcs = glob(["qcl_examples/qcl_crosstalk/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_crosstalk/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

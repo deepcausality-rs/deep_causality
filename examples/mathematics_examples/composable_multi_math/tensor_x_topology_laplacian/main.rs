@@ -19,6 +19,7 @@
 
 use deep_causality_haft::CoMonad;
 use deep_causality_linear::CsrMatrix;
+use deep_causality_num::lift;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -37,14 +38,14 @@ fn main() {
     // A triangular bump on the vertex field.
     let phi: Vec<FloatType> = [0.0, 1.0, 2.0, 4.0, 2.0, 1.0, 0.0]
         .iter()
-        .map(|x| FloatType::from(*x))
+        .map(|x| lift::<FloatType>(*x))
         .collect();
     let manifold = build_line_manifold(phi.clone());
 
     println!("Vertex field phi: {:?}", phi);
 
-    let two = FloatType::from(2.0);
-    let zero = FloatType::from(0.0);
+    let two = lift::<FloatType>(2.0);
+    let zero = lift::<FloatType>(0.0);
 
     // Comonadic extension: at each cursor position, compute the stencil.
     let laplacian = ManifoldWitness::extend(&manifold, |w| {
@@ -107,7 +108,7 @@ fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64,
 
     // Data layout: vertex values first, then a zero per edge.
     let mut data_vec = vertex_values;
-    data_vec.extend(std::iter::repeat_n(FloatType::from(0.0), n_edges));
+    data_vec.extend(std::iter::repeat_n(lift::<FloatType>(0.0), n_edges));
     let data = CausalTensor::new(data_vec, vec![N_VERTICES + n_edges]).unwrap();
 
     Manifold::new(complex, data, 0).expect("manifold construction")

@@ -3,7 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+pub(crate) mod carriers;
+pub(crate) mod decision;
 pub(crate) mod density_matrix;
+pub(crate) mod design;
+#[cfg(feature = "qcm")]
+pub(crate) mod pipeline;
 #[cfg(feature = "qcm")]
 pub(crate) mod qcm;
 pub(crate) mod qcode;

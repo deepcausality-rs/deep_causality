@@ -10,10 +10,12 @@
 
 pub(crate) mod environment;
 pub(crate) mod faithfulness;
+pub(crate) mod hypothesis;
 pub(crate) mod markov_freeze;
 pub(crate) mod process_factors;
 
 pub use environment::*;
 pub use faithfulness::*;
+pub use hypothesis::*;
 pub use markov_freeze::*;
 pub use process_factors::*;

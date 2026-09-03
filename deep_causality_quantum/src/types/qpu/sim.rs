@@ -10,7 +10,9 @@
 
 use crate::QuantumError;
 use crate::types::qpu::circuit::{GateOp, QuantumCircuit};
-use crate::types::qpu::sampler::{CountHistogram, QpuSampler};
+use crate::types::qpu::histogram::CountHistogram;
+use crate::types::qpu::prng::SplitMix64;
+use crate::types::qpu::sampler::QpuSampler;
 use alloc::format;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -126,28 +128,6 @@ fn apply_diagonal_phase(state: &mut [C], qubits: &[usize], phase: C) {
     }
 }
 
-// A deterministic splitmix64 PRNG → uniform f64 in [0, 1).
-struct SplitMix64 {
-    state: u64,
-}
-
-impl SplitMix64 {
-    fn new(seed: u64) -> Self {
-        Self { state: seed }
-    }
-    fn next_u64(&mut self) -> u64 {
-        self.state = self.state.wrapping_add(0x9E37_79B9_7F4A_7C15);
-        let mut z = self.state;
-        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
-        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
-        z ^ (z >> 31)
-    }
-    fn next_f64(&mut self) -> f64 {
-        // 53-bit mantissa uniform in [0, 1).
-        (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
-    }
-}
-
 impl QpuSampler for SimQpu {
     type Shots = CountHistogram;
     type Calibration = SimCalibration;
@@ -225,7 +205,7 @@ impl QpuSampler for SimQpu {
 
         let measure = circuit.measure();
         let num_bits = measure.len();
-        let mut hist = CountHistogram::new(num_bits);
+        let mut hist = CountHistogram::new(num_bits)?;
         if shots == 0 {
             return Ok(hist);
         }
@@ -260,7 +240,7 @@ impl QpuSampler for SimQpu {
             // so binary-search it (same boundary as the old linear "first u < c"
             // scan), clamping the degenerate all-mass-below-u case to the last bin.
             let outcome = cum.partition_point(|&c| c <= u).min(num_outcomes - 1);
-            hist.record(outcome);
+            hist.record(outcome)?;
         }
 
         Ok(hist)

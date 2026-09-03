@@ -15,6 +15,7 @@ mod float_option;
 mod gf2;
 mod identity;
 mod integer;
+pub mod lift;
 mod num;
 
 // Alias types
@@ -47,6 +48,17 @@ pub use crate::identity::zero::{ConstZero, Zero};
 
 // Integer types
 pub use crate::integer::{Integer, NaturalNumber, SignedInt, UnsignedInt};
+
+// The precision-boundary crossings: every primitive float and integer into the working type,
+// and the working type back out to f64, f32 or a count.
+pub use crate::lift::{
+    Lift, Lower, lift, lift_count, lift_f32, lift_f64, lift_i8, lift_i16, lift_i32, lift_i64,
+    lift_i128, lift_isize, lift_u8, lift_u16, lift_u32, lift_u64, lift_u128, lift_usize, lower,
+    lower_f32, to_count, try_lift, try_lift_count, try_lift_f32, try_lift_f64, try_lift_i8,
+    try_lift_i16, try_lift_i32, try_lift_i64, try_lift_i128, try_lift_isize, try_lift_u8,
+    try_lift_u16, try_lift_u32, try_lift_u64, try_lift_u128, try_lift_usize, try_lower,
+    try_lower_f32,
+};
 
 // General numeric traits
 pub use crate::num::Num;

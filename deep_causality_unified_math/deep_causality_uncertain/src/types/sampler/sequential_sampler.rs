@@ -171,7 +171,7 @@ impl SequentialSampler {
                     // The threshold is f64-sourced (a documented boundary); widen it to the
                     // operand's precision so the *sample* keeps its double-double value.
                     SampledValue::DoubleFloat(o) => {
-                        SampledValue::Bool(op.apply(o, Float106::from_f64(*threshold)))
+                        SampledValue::Bool(op.apply(o, Float106::from(*threshold)))
                     }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
@@ -228,7 +228,7 @@ impl SequentialSampler {
                     // User `.map` closures are f64-typed (a documented boundary): apply at
                     // f64 then re-widen, preserving representation but not sub-f64 precision.
                     SampledValue::DoubleFloat(o) => {
-                        SampledValue::DoubleFloat(Float106::from_f64(func(o.to_f64())))
+                        SampledValue::DoubleFloat(Float106::from(func(o.to_f64())))
                     }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(

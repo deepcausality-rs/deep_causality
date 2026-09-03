@@ -4,4 +4,6 @@
  */
 
 mod class_invariance_tests;
+mod clifford_action_tests;
+mod css_code_tests;
 mod logical_equivalence_tests;

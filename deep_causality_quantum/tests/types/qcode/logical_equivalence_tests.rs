@@ -20,8 +20,9 @@
 
 use deep_causality_homology::utils_tests::reference_spaces;
 use deep_causality_homology::{ChainComplex, Gf2Chain};
-use deep_causality_linear::{MatrixView, csr_to_packed_gf2_mod2};
-use deep_causality_quantum::{LogicalBasis, LogicalPauli};
+use deep_causality_linear::{MatrixBuild, MatrixView, PackedGf2, csr_to_packed_gf2_mod2, rank_gf2};
+use deep_causality_num::Gf2;
+use deep_causality_quantum::{LogicalBasis, LogicalPauli, QuantumErrorEnum};
 
 type W = u64;
 type Chain = Gf2Chain<W>;
@@ -157,22 +158,92 @@ fn test_an_x_type_logical_operator_is_detected_through_the_homology_side() {
 }
 
 #[test]
-fn test_a_sphere_encodes_nothing_and_every_operator_is_trivial() {
+fn test_a_sphere_encodes_nothing_and_every_logical_operator_is_trivial() {
     // β₁(S²) = 0, so there is no logical space and the criterion has no generator to fail against.
-    // The predicate must say so rather than dividing by an empty basis.
+    // The predicate must say so rather than dividing by an empty basis. The operator has to be a
+    // logical one, though: a stabilizer, here a Z on a face boundary times an X on a vertex
+    // coboundary, which is in the normalizer by construction. An arbitrary X on a stabilized
+    // qubit is not, and is refused rather than misjudged (see the normalizer tests).
     let (sphere, _q, _f) = reference_spaces()
         .into_iter()
         .find(|(f, _, _)| f.name() == "sphere_2")
         .expect("the fixture set carries sphere_2");
     let b = LogicalBasis::<W>::from_complex(&sphere, 1).unwrap();
     assert_eq!(b.num_logical_qubits(), 0);
-    let n = sphere.num_cells(1);
-    let op = LogicalPauli::new(
-        Chain::from_support(n, 1, &[0]).unwrap(),
-        Chain::from_support(n, 1, &[1]).unwrap(),
+    let op = LogicalPauli::new(b.x_stabilizers()[0].clone(), b.stabilizers()[0].clone()).unwrap();
+    assert!(b.is_logically_trivial(&op).unwrap());
+}
+
+#[test]
+fn test_an_operator_outside_the_normalizer_is_refused_not_misjudged() {
+    // A single-qubit X on an edge that some face boundary covers anticommutes with that
+    // Z-stabilizer, so it leaves the code space. The commutation criterion alone would answer
+    // `true`, since a weight-one X pairs to zero with a homology generator it misses; the
+    // normalizer check answers with the obstruction instead.
+    let code = torus();
+    let b = basis();
+    let n = code.num_cells(1);
+    let covered = b.stabilizers()[0]
+        .support()
+        .next()
+        .expect("a face boundary has edges");
+    let x_on_edge = LogicalPauli::new(
+        Chain::from_support(n, 1, &[covered]).unwrap(),
+        Chain::zeros(n, 1),
     )
     .unwrap();
-    assert!(b.is_logically_trivial(&op).unwrap());
+    let err = b.is_logically_trivial(&x_on_edge).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::NotInNormalizer { .. }),
+        "expected NotInNormalizer, got {err:?}"
+    );
+
+    // And a Z on an edge some vertex coboundary covers anticommutes with an X-stabilizer.
+    let covered = b.x_stabilizers()[0]
+        .support()
+        .next()
+        .expect("a vertex coboundary has edges");
+    let z_on_edge = LogicalPauli::new(
+        Chain::zeros(n, 1),
+        Chain::from_support(n, 1, &[covered]).unwrap(),
+    )
+    .unwrap();
+    let err = b.is_logically_trivial(&z_on_edge).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::NotInNormalizer { .. }));
+}
+
+#[test]
+fn test_the_x_generators_are_an_independent_basis_of_the_coboundaries() {
+    // The X side of the stabilizer group. On the 3×3 torus `rank δ₀ = n₀ − β₀ = 9 − 1 = 8`, and
+    // every X-generator must pair to zero with every Z-generator: that is `∂₁ ∘ ∂₂ = 0` read
+    // through the pairing, `⟨∂₂ f, ∂₁ᵀ v⟩ = ⟨∂₁ ∂₂ f, v⟩`.
+    let code = torus();
+    let b = basis();
+    let x = b.x_stabilizers();
+    assert_eq!(x.len(), code.num_cells(0) - code.betti_number(0));
+
+    let n = code.num_cells(1);
+    let mut m = PackedGf2::<W>::zeros(n, x.len());
+    for (c, g) in x.iter().enumerate() {
+        for r in g.support() {
+            m.set(r, c, Gf2::ONE).unwrap();
+        }
+    }
+    assert_eq!(
+        rank_gf2(&m).unwrap(),
+        x.len(),
+        "the X-generators are independent"
+    );
+
+    for t in x {
+        for s in b.stabilizers() {
+            assert_eq!(
+                t.inner(s).unwrap(),
+                Gf2::ZERO,
+                "an X-generator met a Z-generator oddly"
+            );
+        }
+    }
 }
 
 #[test]

@@ -31,7 +31,7 @@ use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::Float106;
+use deep_causality_num::{Float106, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -76,20 +76,20 @@ fn main() {
     // Four small rapidities; the total boost is their sum.
     let rapidities: Vec<FloatType> = [0.10, 0.15, 0.20, 0.25]
         .iter()
-        .map(|x| FloatType::from(*x))
+        .map(|x| lift::<FloatType>(*x))
         .collect();
 
     let theta_total: FloatType = rapidities
         .iter()
-        .fold(FloatType::from(0.0), |acc, v| acc + *v);
+        .fold(lift::<FloatType>(0.0), |acc, v| acc + *v);
 
     println!("Path: {} vertices, {} edges", N_VERTICES, N_EDGES);
     println!("Rapidities per edge: {:?}", rapidities);
     println!("Expected total rapidity: {}\n", theta_total);
 
     // Initial spinor: pure timelike unit vector psi = e0.
-    let mut psi0 = vec![FloatType::from(0.0); 16];
-    psi0[I_E0] = FloatType::from(1.0);
+    let mut psi0 = vec![lift::<FloatType>(0.0); 16];
+    psi0[I_E0] = lift::<FloatType>(1.0);
     let psi = CausalMultiVector::new(psi0, Metric::Minkowski(4)).unwrap();
 
     // Topoligical manifold
@@ -131,7 +131,7 @@ fn build_path_manifold(rapidities: &[FloatType]) -> SimplicialManifold<f64, Floa
         vec![],
     );
 
-    let mut data = vec![FloatType::from(0.0); N_VERTICES];
+    let mut data = vec![lift::<FloatType>(0.0); N_VERTICES];
     data.extend_from_slice(rapidities);
     let tensor = CausalTensor::new(data, vec![N_VERTICES + N_EDGES]).unwrap();
     Manifold::new(complex, tensor, 0).expect("manifold")
@@ -151,7 +151,7 @@ fn read_edge_rapidity(m: &SimplicialManifold<f64, FloatType>, e: usize) -> Float
 /// Build the boost rotor for rapidity `theta` along the `e0^e1` plane.
 fn boost_rotor(theta: FloatType) -> (CausalMultiVector<FloatType>, CausalMultiVector<FloatType>) {
     let metric = Metric::Minkowski(4);
-    let half = theta / FloatType::from(2.0);
+    let half = theta / lift::<FloatType>(2.0);
     let c = half.cosh();
     let s = half.sinh();
 
@@ -159,12 +159,12 @@ fn boost_rotor(theta: FloatType) -> (CausalMultiVector<FloatType>, CausalMultiVe
     // boost convention `(t, x) -> (cosh(theta) t + sinh(theta) x, ...)`.
     // With bivector `e0^e1` (which squares to +1 in Cl(3,1)), the rotor
     // is `B = cosh(theta/2) - sinh(theta/2) * e0^e1`.
-    let mut b = vec![FloatType::from(0.0); 16];
+    let mut b = vec![lift::<FloatType>(0.0); 16];
     b[I_SCALAR] = c;
     b[I_E01] = -s;
     let rotor = CausalMultiVector::new(b, metric).unwrap();
 
-    let mut b_rev = vec![FloatType::from(0.0); 16];
+    let mut b_rev = vec![lift::<FloatType>(0.0); 16];
     b_rev[I_SCALAR] = c;
     b_rev[I_E01] = s; // reverse flips sign of grade-2
     let rotor_rev = CausalMultiVector::new(b_rev, metric).unwrap();
@@ -189,8 +189,8 @@ fn transport_across_edge(
     if !norm_sq.is_finite() {
         return fail(format!("edge {}: non-finite norm", e));
     }
-    let one = FloatType::from(1.0);
-    let tol = FloatType::from(1e-9);
+    let one = lift::<FloatType>(1.0);
+    let tol = lift::<FloatType>(1e-9);
     if (norm_sq - one).abs() > tol {
         return fail(format!(
             "edge {}: norm drift {} exceeds tolerance",

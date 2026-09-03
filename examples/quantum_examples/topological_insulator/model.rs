@@ -5,6 +5,7 @@
 
 use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar, quadrature};
+use deep_causality_num::{Lift, lift};
 use deep_causality_num_complex::Complex64;
 use std::f64::consts::PI;
 
@@ -84,9 +85,7 @@ impl DifferentiableField<2> for DComponent {
         match self.comp {
             0 => kx.sin(),
             1 => ky.sin(),
-            _ => {
-                S::from_f64(self.u).expect("u lifts into the working scalar") + kx.cos() + ky.cos()
-            }
+            _ => lift::<S>(self.u) + kx.cos() + ky.cos(),
         }
     }
 }
@@ -114,16 +113,16 @@ pub(crate) fn berry_curvature<S: Scalar>(u: f64, kx: S, ky: S) -> S {
     let triple = d[0] * cross[0] + d[1] * cross[1] + d[2] * cross[2];
     let norm2 = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
     let norm3 = norm2 * norm2.sqrt();
-    let half = S::from_f64(0.5).expect("½ lifts into the working scalar");
+    let half = lift::<S>(0.5);
     -(half * triple / norm3)
 }
 
 /// Chern number `C = (1/2π) ∫∫_BZ Ω dkx dky`, by nested composite-Simpson `quadrature` of the
 /// tangent-functor Berry curvature. Precision-generic: instantiate at `f64` or `Float106`.
 pub(crate) fn chern_quadrature<S: Scalar>(u: f64, n: usize) -> S {
-    let pi = S::from_f64(PI).expect("π lifts into the working scalar");
-    let neg_pi = S::from_f64(-PI).expect("−π lifts into the working scalar");
-    let two_pi = S::from_f64(2.0 * PI).expect("2π lifts into the working scalar");
+    let pi = lift::<S>(PI);
+    let neg_pi = lift::<S>(-PI);
+    let two_pi = lift::<S>(2.0 * PI);
     let integral = quadrature(
         |kx: S| quadrature(|ky: S| berry_curvature(u, kx, ky), neg_pi, pi, n),
         neg_pi,
@@ -165,9 +164,9 @@ pub(crate) fn finite<S: Scalar>(x: S) -> bool {
 /// Nearest integer in the small Chern range `{−3 … 3}`, without needing `Float::round` on the
 /// concrete scalar (so it stays precision-generic).
 pub(crate) fn nearest_int<S: Scalar>(x: S) -> i32 {
-    let half = S::from_f64(0.5).expect("½ lifts");
+    let half = lift::<S>(0.5);
     for c in -3..=3 {
-        let cc = S::from_f64(c as f64).expect("candidate lifts");
+        let cc = c.lift::<S>();
         if (x - cc).abs() < half {
             return c;
         }

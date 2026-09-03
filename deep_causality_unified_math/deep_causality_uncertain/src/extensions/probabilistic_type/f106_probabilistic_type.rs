@@ -22,7 +22,7 @@ impl FromSampledValue for Float106 {
         match value {
             SampledValue::DoubleFloat(d) => Ok(d),
             // An f64 sample widens losslessly into a Float106 (low limb zero).
-            SampledValue::Float(f) => Ok(Float106::from_f64(f)),
+            SampledValue::Float(f) => Ok(Float106::from(f)),
             _ => Err(UncertainError::UnsupportedTypeError(
                 "Expected Float106 SampledValue".to_string(),
             )),
@@ -32,7 +32,7 @@ impl FromSampledValue for Float106 {
 
 impl ProbabilisticType for Float106 {
     fn default_value() -> Self {
-        Float106::from_f64(0.0)
+        Float106::from(0.0)
     }
 }
 

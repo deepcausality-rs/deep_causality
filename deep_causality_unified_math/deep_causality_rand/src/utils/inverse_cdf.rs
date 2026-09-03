@@ -80,10 +80,10 @@ fn acklam(u: f64) -> f64 {
 /// The Halley step is `x ← x − 2(Φ−u) / (2φ + x(Φ−u))`. Cubic convergence takes the
 /// ~1e-9 seed below double-double epsilon in three iterations.
 fn refine_f106(u: Float106, x0: Float106) -> Float106 {
-    let half = Float106::from_f64(0.5);
-    let two = Float106::from_f64(2.0);
+    let half = Float106::from(0.5);
+    let two = Float106::from(2.0);
     let sqrt2 = two.sqrt();
-    let inv_sqrt_2pi = Float106::from_f64(1.0) / Float106::TWO_PI.sqrt();
+    let inv_sqrt_2pi = Float106::from(1.0) / Float106::TWO_PI.sqrt();
 
     let mut x = x0;
     for _ in 0..3 {
@@ -100,7 +100,7 @@ fn refine_f106(u: Float106, x0: Float106) -> Float106 {
 /// refinement, downcast), monotone and finite for all `u`.
 pub fn standard_normal_inverse_cdf(u: f64) -> f64 {
     let u_c = u.clamp(U_CLAMP_LO, U_CLAMP_HI);
-    refine_f106(Float106::from_f64(u_c), Float106::from_f64(acklam(u_c))).to_f64()
+    refine_f106(Float106::from(u_c), Float106::from(acklam(u_c))).to_f64()
 }
 
 /// Standard-normal quantile `Φ⁻¹(u)` at `Float106` precision. The Acklam seed is taken at
@@ -108,11 +108,11 @@ pub fn standard_normal_inverse_cdf(u: f64) -> f64 {
 pub fn standard_normal_inverse_cdf_f106(u: Float106) -> Float106 {
     let u_c = u.hi().clamp(U_CLAMP_LO, U_CLAMP_HI);
     let u_full = if u.hi() <= U_CLAMP_LO || u.hi() >= U_CLAMP_HI {
-        Float106::from_f64(u_c)
+        Float106::from(u_c)
     } else {
         u
     };
-    refine_f106(u_full, Float106::from_f64(acklam(u_c)))
+    refine_f106(u_full, Float106::from(acklam(u_c)))
 }
 
 /// Uniform quantile: `low + u·(high − low)`, exact at the value type's precision.

@@ -18,7 +18,7 @@
 
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt};
 use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::lift;
 
 mod model;
 
@@ -39,8 +39,8 @@ fn main() {
     };
 
     // Start just off the degenerate θ = 0 pole, then ascend the exact gradient.
-    let start = [ft(0.1), ft(0.1)];
-    let learning_rate = ft(0.6);
+    let start = [lift(0.1), lift(0.1)];
+    let learning_rate = lift(0.6);
 
     // The workflow is a CausalFlow chain: from a starting orientation, ascend; a non-finite
     // gradient short-circuits the error channel.
@@ -108,12 +108,6 @@ fn fail<T: Default + Clone + std::fmt::Debug>(msg: &str) -> PropagatingEffect<T>
 
 const TUMOR_RADIUS: f64 = 2.0; // cm
 const ASCENT_STEPS: usize = 12;
-
-/// Lift an exact `f64` constant into the working precision (fully qualified to dodge the inherent
-/// `from_f64` some scalars carry).
-fn ft(x: f64) -> FloatType {
-    <FloatType as FromPrimitive>::from_f64(x).expect("constant lifts into FloatType")
-}
 
 // Represents the 3D grid of the tumor
 struct TumorVolume {

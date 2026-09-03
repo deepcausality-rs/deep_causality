@@ -8,8 +8,8 @@
 
 use crate::FloatType;
 use crate::constants;
-use avionics_examples::shared::utils::ft;
 use deep_causality_cfd::FittedNormalShock;
+use deep_causality_num::lift;
 use deep_causality_physics::PhysicsError;
 use std::path::PathBuf;
 
@@ -32,5 +32,5 @@ pub fn table_path() -> PathBuf {
 
 /// The exact-Rankine-Hugoniot shock model at the study's effective gamma.
 pub fn shock_model() -> Result<FittedNormalShock<FloatType>, PhysicsError> {
-    FittedNormalShock::<FloatType>::new(ft(constants::GAMMA))
+    FittedNormalShock::<FloatType>::new(lift(constants::GAMMA))
 }

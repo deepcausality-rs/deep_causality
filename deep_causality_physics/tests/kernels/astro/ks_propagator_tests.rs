@@ -213,7 +213,7 @@ fn zero_perturbation_equals_exact_core() {
 // ── Float106 precision ──────────────────────────────────────────────────────────────────────────
 
 fn fp(x: f64) -> Float106 {
-    Float106::from_f64(x)
+    Float106::from(x)
 }
 fn fp3(a: [f64; 3]) -> [Float106; 3] {
     [fp(a[0]), fp(a[1]), fp(a[2])]

@@ -22,8 +22,9 @@
 
 use deep_causality_homology::Gf2Chain;
 use deep_causality_quantum::{
-    GateOp, QuantumCircuit, logical_cz, logical_hadamard, logical_multi_cz, logical_s, logical_t,
-    logical_x, logical_z,
+    GateOp, QuantumCircuit, QuantumErrorEnum, TUPLE_ENUMERATION_CAP, logical_cz, logical_hadamard,
+    logical_multi_cz, logical_multi_cz_with_cap, logical_s, logical_t, logical_t_with_cap,
+    logical_x, logical_z, multi_cz_tuple_count, t_tuple_count,
 };
 
 type C = Gf2Chain<u64>;
@@ -59,7 +60,7 @@ fn test_the_empty_chain_yields_the_empty_program() {
     assert!(logical_z(&chain(&[])).is_empty());
     assert!(logical_x(&chain(&[])).is_empty());
     assert!(logical_s(&chain(&[])).is_empty());
-    assert!(logical_t(&chain(&[])).is_empty());
+    assert!(logical_t(&chain(&[])).unwrap().is_empty());
 }
 
 // ---------------------------------------------------------------------------
@@ -115,7 +116,7 @@ fn test_logical_s_gate_counts_follow_the_binomials() {
 #[test]
 fn test_logical_t_matches_equation_3_59() {
     assert_eq!(
-        logical_t(&chain(&[0, 2, 3])),
+        logical_t(&chain(&[0, 2, 3])).unwrap(),
         vec![
             GateOp::T(0),
             GateOp::T(2),
@@ -159,7 +160,7 @@ fn test_logical_t_gate_counts_follow_the_binomials() {
     // |supp| + C(|supp|,2) + C(|supp|,3), which is the shape Eq. (3.59) fixes.
     for w in 1..=5usize {
         let support: Vec<usize> = (0..w).collect();
-        let ops = logical_t(&chain(&support));
+        let ops = logical_t(&chain(&support)).unwrap();
         let expected = w + binomial(w, 2) + binomial(w, 3);
         assert_eq!(ops.len(), expected, "weight {}", w);
     }
@@ -168,7 +169,7 @@ fn test_logical_t_gate_counts_follow_the_binomials() {
 #[test]
 fn test_logical_t_has_no_ccz_below_weight_three() {
     // C(2,3) = 0, so a weight-two chain gets no triple factor.
-    let ops = logical_t(&chain(&[1, 4]));
+    let ops = logical_t(&chain(&[1, 4])).unwrap();
     assert!(!ops.iter().any(|g| matches!(g, GateOp::Ccz { .. })));
 }
 
@@ -298,6 +299,20 @@ fn test_multi_cz_with_an_unsupported_chain_is_the_empty_program() {
     );
 }
 
+#[test]
+fn test_an_empty_support_after_a_saturated_product_still_counts_zero() {
+    // Twenty-two weight-eight chains multiply to 2^66, past u64::MAX, so the running product
+    // saturates. An empty support after them makes the Cartesian product empty all the same,
+    // and the program is the identity rather than a refusal above the cap.
+    let full = chain(&[0, 1, 2, 3, 4, 5, 6, 7]);
+    let empty = chain(&[]);
+    let mut chains: Vec<&C> = vec![&full; 22];
+    assert_eq!(multi_cz_tuple_count(&chains), u64::MAX);
+    chains.push(&empty);
+    assert_eq!(multi_cz_tuple_count(&chains), 0);
+    assert!(logical_multi_cz(&chains).unwrap().is_empty());
+}
+
 // ---------------------------------------------------------------------------
 // Eq. (3.27): the logical Hadamard and its global phase.
 // ---------------------------------------------------------------------------
@@ -368,7 +383,7 @@ fn test_every_gate_program_builds_a_valid_circuit() {
         logical_z(&g),
         logical_x(&gt),
         logical_s(&g),
-        logical_t(&g),
+        logical_t(&g).unwrap(),
         logical_cz(&g, &gt).unwrap(),
         // Overlapping supports, where the CZ_{i,i} reduction fires.
         logical_cz(&g, &g).unwrap(),
@@ -382,4 +397,64 @@ fn test_every_gate_program_builds_a_valid_circuit() {
             i
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// The tuple cap: cost is reported before it is paid.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_the_t_tuple_count_is_the_two_binomials() {
+    // C(w, 2) + C(w, 3) for the weights the earlier tests use, plus the two degenerate ones.
+    for w in 0..=6usize {
+        let support: Vec<usize> = (0..w).collect();
+        let expected = (binomial(w, 2) + binomial(w, 3)) as u64;
+        assert_eq!(t_tuple_count(&chain(&support)), expected, "weight {w}");
+    }
+}
+
+#[test]
+fn test_a_toric_representative_is_under_the_default_cap() {
+    // A weight-four chain is 6 + 4 tuples; the default cap is about a million.
+    let g = chain(&[0, 1, 2, 3]);
+    assert!(t_tuple_count(&g) < TUPLE_ENUMERATION_CAP);
+    assert_eq!(logical_t(&g).unwrap().len(), 4 + 6 + 4);
+}
+
+#[test]
+fn test_a_wide_representative_fails_loudly_before_allocating() {
+    // With the cap set below the count, the builder refuses and names both numbers. The
+    // register is small so the "wide" chain is only wide relative to the cap, which is the point:
+    // the guard is on the count, not on the register.
+    let g = chain(&[0, 1, 2, 3, 4]);
+    let count = t_tuple_count(&g);
+    assert_eq!(count, 10 + 10);
+    let err = logical_t_with_cap(&g, count - 1).unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::CalculationError(msg) => {
+            assert!(msg.contains(&count.to_string()), "names the count: {msg}");
+            assert!(
+                msg.contains(&(count - 1).to_string()),
+                "names the cap: {msg}"
+            );
+        }
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+    // Exactly at the cap is allowed.
+    assert!(logical_t_with_cap(&g, count).is_ok());
+}
+
+#[test]
+fn test_multi_cz_counts_the_cartesian_product_and_caps_it() {
+    let a = chain(&[0, 1, 2]);
+    let b = chain(&[3, 4]);
+    let c = chain(&[5, 6]);
+    assert_eq!(multi_cz_tuple_count(&[&a, &b, &c]), 3 * 2 * 2);
+    assert_eq!(logical_multi_cz(&[&a, &b, &c]).unwrap().len(), 12);
+    let err = logical_multi_cz_with_cap(&[&a, &b, &c], 11).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
+    assert_eq!(
+        logical_multi_cz_with_cap(&[&a, &b, &c], 12).unwrap().len(),
+        12
+    );
 }

@@ -20,7 +20,7 @@
 use deep_causality_calculus::{DifferentiableArrow, DifferentiateExt, Scalar};
 use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::lift;
 use deep_causality_physics::{Length, Mass, NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError};
 use deep_causality_physics::{escape_velocity, schwarzschild_radius, time_dilation_angle};
 
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Setup: Supermassive Black Hole (Sagittarius A* approx)
     let black_hole_mass =
-        Mass::<FloatType>::new(ft(M_KG)).map_err(|e: PhysicsError| e.to_string())?;
+        Mass::<FloatType>::new(lift(M_KG)).map_err(|e: PhysicsError| e.to_string())?;
     let rs_effect = schwarzschild_radius(&black_hole_mass);
     let r_s = rs_effect.value_cloned().unwrap().value();
 
@@ -52,9 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Initial State: Probe far away
     let initial_state = ProbeState {
-        distance: r_s * ft(100.0), // 100x Rs
-        velocity: ft(0.0),         // Starting from rest (freefall)
-        mass: ft(1000.0),          // 1000 kg probe
+        distance: r_s * lift::<FloatType>(100.0), // 100x Rs
+        velocity: lift(0.0),                      // Starting from rest (freefall)
+        mass: lift(1000.0),                       // 1000 kg probe
         status: "Approaching".to_string(),
     };
 
@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  [AD] tidal gradient −d²Φ/dr² = {:.3e} 1/s²", tidal);
 
         // Define the physics context based on state
-        let regime_check = if dist_ratio > ft(10.0) {
+        let regime_check = if dist_ratio > lift::<FloatType>(10.0) {
             "Newtonian"
         } else {
             "Relativistic"
@@ -101,15 +101,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  Escape Velocity required: {:.2e} m/s", v_esc);
 
                     // Cross-check: the autodiff gravity equals v_esc²/(2r) (both are GM/r²).
-                    let g_from_vesc = v_esc * v_esc / (ft(2.0) * state.distance);
+                    let g_from_vesc = v_esc * v_esc / (lift::<FloatType>(2.0) * state.distance);
                     println!("  [check] v_esc²/(2r)         = {:.3e} m/s²", g_from_vesc);
 
                     // B. Regime-Specific Logic
-                    if state.distance / r_s > ft(10.0) {
+                    if state.distance / r_s > lift::<FloatType>(10.0) {
                         // --- Newtonian Regime ---
                         // Simple freefall approximation v = sqrt(2GM/r) (which is v_esc)
                         let new_vel = v_esc;
-                        let new_dist = state.distance * ft(0.5); // Simulate falling
+                        let new_dist = state.distance * lift::<FloatType>(0.5); // Simulate falling
 
                         Ok(ProbeState {
                             distance: new_dist,
@@ -123,14 +123,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let metric = Metric::Minkowski(4);
 
                         // Probe 4-velocity (approx): a static observer e_t
-                        let mut static_vec = vec![ft(0.0); 16];
-                        static_vec[1] = ft(1.0);
+                        let mut static_vec = vec![lift::<FloatType>(0.0); 16];
+                        static_vec[1] = lift(1.0);
                         let t_static = CausalMultiVector::new(static_vec, metric).unwrap();
 
                         // Falling probe vector (gamma, gamma*v, 0, 0)
-                        let v_rel = ft(0.9);
-                        let gamma = ft(1.0) / fsqrt(ft(1.0) - v_rel * v_rel);
-                        let mut probe_vec = vec![ft(0.0); 16];
+                        let v_rel = lift::<FloatType>(0.9);
+                        let gamma =
+                            lift::<FloatType>(1.0) / fsqrt(lift::<FloatType>(1.0) - v_rel * v_rel);
+                        let mut probe_vec = vec![lift(0.0); 16];
                         probe_vec[1] = gamma;
                         probe_vec[2] = gamma * v_rel;
                         let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
@@ -142,16 +143,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));
 
                         // Check Horizon crossing
-                        if state.distance <= r_s * ft(1.1) {
+                        if state.distance <= r_s * lift::<FloatType>(1.1) {
                             Ok(ProbeState {
-                                distance: state.distance * ft(0.1),
-                                velocity: ft(2.99e8), // c
+                                distance: state.distance * lift::<FloatType>(0.1),
+                                velocity: lift(2.99e8), // c
                                 status: "EVENT HORIZON CROSSED".to_string(),
                                 mass: state.mass,
                             })
                         } else {
                             Ok(ProbeState {
-                                distance: state.distance * ft(0.5),
+                                distance: state.distance * lift::<FloatType>(0.5),
                                 velocity: v_esc,
                                 status: "Relativistic Plunge".to_string(),
                                 mass: state.mass,
@@ -179,13 +180,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Lift an exact `f64` constant into the working precision. The fully-qualified call forces the
-/// `FromPrimitive` trait method; some scalars (e.g. `Float106`) carry an inherent `from_f64` that
-/// would otherwise shadow it.
-fn ft(x: f64) -> FloatType {
-    <FloatType as FromPrimitive>::from_f64(x).expect("constant lifts into FloatType")
-}
-
 /// `sqrt` / `cosh` at the working precision through the `Real` elementary functions, so the call
 /// stays precision-generic instead of binding a concrete-type inherent method.
 fn fsqrt<S: Scalar>(x: S) -> S {
@@ -204,7 +198,7 @@ struct NewtonianPotential {
 
 impl DifferentiableArrow for NewtonianPotential {
     fn run<S: Scalar>(&self, r: S) -> S {
-        let gm = S::from_f64(self.gm).expect("GM lifts into the working scalar");
+        let gm = lift::<S>(self.gm);
         -(gm / r)
     }
 }

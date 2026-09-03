@@ -5,6 +5,7 @@
 
 use crate::{TUMOR_RADIUS, TumorVolume};
 use deep_causality_calculus::{DifferentiableField, Scalar};
+use deep_causality_num::{Lift, lift};
 
 pub(crate) fn build_mock_tumor(n: usize) -> TumorVolume {
     let mut voxels = Vec::with_capacity(n);
@@ -65,14 +66,14 @@ impl DifferentiableField<2> for Efficacy {
         let ey = theta.sin() * phi.sin();
         let ez = theta.cos();
 
-        let mut total = S::from_f64(0.0).expect("zero lifts into the working scalar");
+        let mut total = lift::<S>(0.0);
         for axis in &self.cell_axes {
-            let ax = S::from_f64(axis[0]).expect("axis lifts into the working scalar");
-            let ay = S::from_f64(axis[1]).expect("axis lifts into the working scalar");
-            let az = S::from_f64(axis[2]).expect("axis lifts into the working scalar");
+            let ax = lift::<S>(axis[0]);
+            let ay = lift::<S>(axis[1]);
+            let az = lift::<S>(axis[2]);
             total += (ex * ax + ey * ay + ez * az).abs();
         }
-        total / S::from_f64(self.cell_axes.len() as f64).expect("count lifts")
+        total / self.cell_axes.len().lift::<S>()
     }
 }
 

@@ -6,6 +6,7 @@
 use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
+use deep_causality_num::lift;
 use deep_causality_physics::MaxwellSolver;
 
 /// The plane-wave vector-potential component `A_x(t, z) = cos(ω(t − z))`, written once as a
@@ -18,7 +19,7 @@ struct PlaneWavePotential {
 
 impl DifferentiableField<2> for PlaneWavePotential {
     fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
-        let omega = S::from_f64(self.omega).expect("ω lifts into the working scalar");
+        let omega = lift::<S>(self.omega);
         (omega * (tz[0] - tz[1])).cos()
     }
 }

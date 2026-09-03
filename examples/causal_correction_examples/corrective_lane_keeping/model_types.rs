@@ -8,10 +8,11 @@
 #![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
 
 use deep_causality_core::PropagatingProcess;
+use deep_causality_num::Lift;
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision. Literals in this crate would need wrapping
-/// in `FloatType::from(…)` to switch away from `f64`.
+/// or `Float106` for high precision. Literals in this crate would need lifting
+/// through `deep_causality_num::lift` to switch away from `f64`.
 pub type FloatType = f64;
 
 /// Total number of simulation ticks (one tick = 0.1 s of real time).
@@ -21,7 +22,7 @@ pub const N_TICKS: u32 = 60;
 /// of centre. A slow constant drift plus a small sinusoid mimics a crowned
 /// road with crosswind gusts.
 pub fn drift_at(tick: u32) -> FloatType {
-    let t = tick as FloatType;
+    let t = tick.lift::<FloatType>();
     0.06 + 0.04 * (t / 3.0).sin()
 }
 

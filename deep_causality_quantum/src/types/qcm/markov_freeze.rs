@@ -12,6 +12,7 @@
 //! MAY be incomplete.
 
 use crate::QuantumError;
+use crate::types::decision::{Check, CheckItem, CheckReport, Factorization};
 use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
 use crate::types::qgates::operator_linalg::{embed_on_legs, frobenius_norm, matrix_commutator};
@@ -120,6 +121,18 @@ pub struct CommutatorCheck<R: RealField> {
     pub commutes: bool,
 }
 
+impl<R: RealField> From<&CommutatorCheck<R>> for Check<R> {
+    fn from(c: &CommutatorCheck<R>) -> Self {
+        Check {
+            item: CheckItem::Pair(c.node_j, c.node_k),
+            measured: c.norm,
+            threshold: c.threshold,
+            margin: c.margin,
+            accepted: c.commutes,
+        }
+    }
+}
+
 /// The instrumented report of a Markov check: one entry per intersecting-support
 /// factor pair.
 #[derive(Debug, Clone, Default)]
@@ -141,16 +154,14 @@ impl<R: RealField> QuantumMarkovReport<R> {
     }
 }
 
-/// Runs the quantum Markov commutativity check over the external factor store,
-/// pair by pair, on intersecting Hilbert supports only. Returns the instrumented
-/// report on success, or a [`QuantumError::CommutatorNonZero`] naming the first
-/// offending pair. Sound: it never accepts a pair whose commutator exceeds the
-/// Q-TOL threshold.
-pub fn quantum_markov_check<R>(
+/// The pair loop both forms share. Returns the report and whether its last entry
+/// rejected: the loop stops at the first non-commuting pair, so on the rejecting
+/// path the report carries every pair tested up to and including that one.
+fn markov_pairs<R>(
     factors: &ProcessFactors<R>,
     supports: &FactorSupports,
     tolerance: &CommutatorTolerance<R>,
-) -> Result<QuantumMarkovReport<R>, QuantumError>
+) -> Result<(QuantumMarkovReport<R>, bool), QuantumError>
 where
     R: RealField + FromPrimitive + Default,
 {
@@ -213,19 +224,137 @@ where
             });
 
             if !commutes {
-                return Err(QuantumError::CommutatorNonZero(
-                    node_j,
-                    node_k,
-                    format!(
-                        "‖[ρ_{}, ρ_{}]‖_F exceeds the Q-TOL threshold (margin > 1)",
-                        node_j, node_k
-                    ),
-                ));
+                return Ok((report, true));
             }
         }
     }
 
+    Ok((report, false))
+}
+
+/// Runs the quantum Markov commutativity check over the external factor store,
+/// pair by pair, on intersecting Hilbert supports only. Returns the instrumented
+/// report on success, or a [`QuantumError::CommutatorNonZero`] naming the first
+/// offending pair. Sound: it never accepts a pair whose commutator exceeds the
+/// Q-TOL threshold.
+///
+/// On the rejecting path the report is dropped with the error. The sibling
+/// [`quantum_markov_check_report`] keeps it, which is where a rejected candidate's
+/// margins and its count come from.
+pub fn quantum_markov_check<R>(
+    factors: &ProcessFactors<R>,
+    supports: &FactorSupports,
+    tolerance: &CommutatorTolerance<R>,
+) -> Result<QuantumMarkovReport<R>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default,
+{
+    let (report, rejected) = markov_pairs(factors, supports, tolerance)?;
+    if rejected {
+        let last = report
+            .checks
+            .last()
+            .expect("a rejecting loop recorded the rejecting pair");
+        return Err(QuantumError::CommutatorNonZero(
+            last.node_j,
+            last.node_k,
+            format!(
+                "‖[ρ_{}, ρ_{}]‖_F exceeds the Q-TOL threshold (margin > 1)",
+                last.node_j, last.node_k
+            ),
+        ));
+    }
     Ok(report)
+}
+
+/// The report-returning form of [`quantum_markov_check`], on the model's own factors.
+///
+/// Every pair tested is a [`Check`] with a [`CheckItem::Pair`], the examined count is
+/// the number of pairs, and a rejecting pair is the last record rather than an error.
+/// `Err` is reserved for structural failures: a `FactorSupports::validate` rejection
+/// or a shape mismatch in the embedding. To turn a rejection into the error the
+/// legacy form raises, pass the report to [`markov_certificate`].
+pub fn quantum_markov_check_report<R>(
+    factors: &ProcessFactors<R>,
+    supports: &FactorSupports,
+    tolerance: &CommutatorTolerance<R>,
+) -> Result<CheckReport<R>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default,
+{
+    quantum_markov_check_report_as(factors, supports, tolerance, Factorization::Rederived)
+}
+
+/// [`quantum_markov_check_report`] with the provenance of the factors stated.
+///
+/// A re-check after composition or marginalisation runs on factors inherited from
+/// the parts, and a failure there means something different from a failure on the
+/// model's own factors; see [`Factorization`] and [`markov_certificate`].
+pub fn quantum_markov_check_report_as<R>(
+    factors: &ProcessFactors<R>,
+    supports: &FactorSupports,
+    tolerance: &CommutatorTolerance<R>,
+    factorization: Factorization,
+) -> Result<CheckReport<R>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default,
+{
+    let (report, _) = markov_pairs(factors, supports, tolerance)?;
+    let checks: Vec<Check<R>> = report.checks.iter().map(Check::from).collect();
+    Ok(CheckReport::from_checks(checks).with_factorization(factorization))
+}
+
+/// The certificate a Markov report grants, or the error its first rejection means.
+///
+/// The failure variant follows the provenance. On `Rederived` factors a
+/// non-commuting pair is the model's own defect, [`QuantumError::CommutatorNonZero`].
+/// On `Inherited` factors it says only that the parts' factors do not certify the
+/// composite, [`QuantumError::CertificateNotInherited`], and the message says a
+/// Markov factorization for the composite may exist under a different factor
+/// assignment, because Barrett–Lorenz–Oreshkov's representation theorem guarantees
+/// one for the induced DAG with the induced factors. A report that did not
+/// distinguish the two would reject a sound model with a message that reads as
+/// physics.
+///
+/// # Errors
+///
+/// One of the two variants above on a rejection, and
+/// [`QuantumError::CalculationError`] if the rejecting record is not a pair, which
+/// a Markov report never produces.
+pub fn markov_certificate<R>(report: &CheckReport<R>) -> Result<(), QuantumError>
+where
+    R: RealField,
+{
+    let Some(rejecting) = report.first_rejection() else {
+        return Ok(());
+    };
+    let (node_j, node_k) = match rejecting.item {
+        CheckItem::Pair(j, k) => (j, k),
+        other => {
+            return Err(QuantumError::CalculationError(format!(
+                "a Markov report records pairs; found {other:?}"
+            )));
+        }
+    };
+    match report.factorization() {
+        Factorization::Rederived => Err(QuantumError::CommutatorNonZero(
+            node_j,
+            node_k,
+            format!(
+                "‖[ρ_{}, ρ_{}]‖_F exceeds the Q-TOL threshold (margin > 1)",
+                node_j, node_k
+            ),
+        )),
+        Factorization::Inherited => Err(QuantumError::CertificateNotInherited(
+            node_j,
+            node_k,
+            format!(
+                "‖[ρ_{}, ρ_{}]‖_F exceeds the Q-TOL threshold on the parts' factors; a Markov \
+                 factorization for the composite may exist under a different factor assignment",
+                node_j, node_k
+            ),
+        )),
+    }
 }
 
 /// Freezes `graph` with the built-in Stage-4 checks **and** the quantum Markov

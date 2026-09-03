@@ -1,0 +1,19 @@
+# Files excluded from secret scanning.
+# One regex per line, matched against the path with re.search().
+# Blank lines and lines starting with '#' are ignored.
+
+# Package/dependency lock files: content is hashes/checksums, not secrets.
+(^|/)pnpm-lock\.yaml$
+(^|/)Cargo\.lock$
+(^|/)MODULE\.bazel$
+(^|/)MODULE\.bazel\.lock$
+(^|/)lake-lock\.json$
+(^|/)lake-manifest\.json$
+(^|/)skills-lock\.json$
+
+# SBOM files: generated package manifests with hashes, not secrets.
+_sbom\.spdx\.json(\.sha)?$
+(^|/)sbom\.spdx$
+
+# Vendored Claude Code plugin/skill reference docs, not project source.
+^\.agents/

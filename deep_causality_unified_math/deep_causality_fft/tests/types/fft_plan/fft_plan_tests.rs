@@ -135,9 +135,9 @@ fn test_float106_accuracy_exceeds_f64() {
     let plan = FftPlan::<Float106>::new(n).unwrap();
     let mut data: Vec<Complex<Float106>> = (0..n)
         .map(|i| {
-            let x = Float106::from_f64(i as f64);
-            let a = Float106::from_f64(0.37);
-            let b = Float106::from_f64(0.11);
+            let x = Float106::from(i as f64);
+            let a = Float106::from(0.37);
+            let b = Float106::from(0.11);
             Complex::new(
                 deep_causality_algebra::Real::sin(x * a),
                 deep_causality_algebra::Real::cos(x * b),
@@ -146,7 +146,7 @@ fn test_float106_accuracy_exceeds_f64() {
         .collect();
     let reference = naive_dft(&data);
     let mut scratch =
-        vec![Complex::new(Float106::from_f64(0.0), Float106::from_f64(0.0)); plan.scratch_len()];
+        vec![Complex::new(Float106::from(0.0), Float106::from(0.0)); plan.scratch_len()];
     plan.execute(&mut data, &mut scratch).unwrap();
     for (a, b) in data.iter().zip(reference.iter()) {
         let dre = a.re - b.re;

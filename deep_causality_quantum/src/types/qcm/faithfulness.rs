@@ -3,18 +3,33 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The C₃-exclusion faithfulness criterion (van der Lugt & Lorenz,
-//! arXiv:2508.11762, Thm 3.2). A causal structure `G` — a bipartite relation
-//! between input and output systems — is faithfully representable by a
-//! traditional (non-routed) circuit **iff** it has the C₃-exclusion property:
-//! it contains no `C₃` sub-relation between three inputs and three outputs.
+//! The C₃-exclusion criterion (van der Lugt & Lorenz, arXiv:2508.11762,
+//! Definition 3.1 and Theorem 3.2). A causal structure `G` — a bipartite
+//! influence relation between input and output systems — implies unitary
+//! causally faithful decompositions **iff** it has the C₃-exclusion property:
+//! no 3×3 induced sub-relation is `C₃`.
 //!
-//! Up to relabelling there is a unique such obstruction: `C₃` is the bipartite
-//! 6-cycle `K_{3,3}` minus a perfect matching — a 3×3 induced sub-relation in
-//! which every one of the three inputs relates to exactly two of the three
-//! outputs and every output to exactly two of the inputs (canonically two
-//! commuting CNOTs, `U₃`). A `C₃`-containing structure provably has no
-//! traditional-circuit faithful decomposition and is rejected at freeze.
+//! "Faithful" is the Lorenz–Barrett sense throughout: a circuit decomposition
+//! whose connectivity equals the unitary's causal structure, `G_U = G_C`
+//! (Definition 2.11). It is not Pearl's, where the word names a distribution
+//! with no independences beyond those its graph implies. The two properties are
+//! unrelated and this module decides only the first.
+//!
+//! `C₃` is the causal structure of two commuting CNOTs (Example 2.12): exactly
+//! two input–output pairs carry no influence, and they share neither an input
+//! nor an output. Seven edges of nine, one input reaching every output and one
+//! output reached by every input. Up to relabelling it is the unique obstruction
+//! (Theorem 3.2, (iii) ⇒ (i) proved as Proposition 6.1), and the paper's
+//! Remark 3.3 fixes what the theorem does not say: a *particular* unitary whose
+//! structure is `C₃` may still decompose faithfully, and every unitary with
+//! structure inside `C₃` has a *routed* decomposition (Lorenz & Barrett,
+//! arXiv:2001.07774, Theorem 3). So the check rejects a structure rather than a
+//! unitary, and only for the traditional, non-routed circuit paradigm.
+//!
+//! This module once tested for a different relation, the bipartite 6-cycle
+//! `K₃,₃` minus a perfect matching, and so accepted the paper's `C₃` while
+//! rejecting a structure the paper admits. The record is
+//! `openspec/notes/quantum/qcl-corrections.md`, X-16.
 
 use crate::QuantumError;
 use alloc::collections::BTreeSet;
@@ -139,10 +154,9 @@ impl CausalStructure {
     /// Searches for a `C₃` sub-relation. Returns the witnessing three inputs and
     /// three outputs (each ascending) if one exists, else `None`.
     ///
-    /// A 3×3 induced sub-relation is a `C₃` iff every chosen input relates to
-    /// exactly two of the chosen outputs and every chosen output to exactly two
-    /// of the chosen inputs — which forces the three non-edges to form a perfect
-    /// matching, i.e. `K_{3,3}` minus a matching = the bipartite 6-cycle.
+    /// Definition 3.1 quantifies over every choice of three inputs and three
+    /// outputs, so the search is over the induced 3×3 blocks and each block is
+    /// decided by [`is_c3_block`](Self::is_c3_block).
     pub fn find_c3(&self) -> Option<([usize; 3], [usize; 3])> {
         let ins = &self.inputs;
         let outs = &self.outputs;
@@ -169,9 +183,20 @@ impl CausalStructure {
         None
     }
 
-    /// Whether the 3×3 induced block on `rows × cols` is a `C₃`: every row has
-    /// exactly two edges into `cols`, and every column exactly two edges from
-    /// `rows`.
+    /// Whether the 3×3 induced block on `rows × cols` is `C₃`.
+    ///
+    /// `C₃` has seven edges, and its two non-edges lie in distinct rows and
+    /// distinct columns (Example 2.12: `A₁ ↛ B₃` and `A₃ ↛ B₁`, influence
+    /// everywhere else). Read as degree sequences that is `{2, 2, 3}` on both
+    /// sides, and the reading is exact: seven edges force the row degrees to be
+    /// `{3, 2, 2}` or `{3, 3, 1}`, and only the first leaves the two non-edges in
+    /// different rows; the same on the columns. Checked against all 512 relations
+    /// on three inputs and three outputs, this agrees with isomorphism to `C₃`
+    /// and with Theorem 4.9(v) on every one.
+    ///
+    /// The 6-cycle, every degree exactly two, is not `C₃`. It has six edges and
+    /// Theorem 4.9(v) admits it: any two outputs share exactly one parent, so the
+    /// parent sets of overlapping output pairs are disjoint.
     fn is_c3_block(&self, rows: &[usize; 3], cols: &[usize; 3]) -> bool {
         let mut row_deg = [0u8; 3];
         let mut col_deg = [0u8; 3];
@@ -183,19 +208,24 @@ impl CausalStructure {
                 }
             }
         }
-        row_deg.iter().all(|&d| d == 2) && col_deg.iter().all(|&d| d == 2)
+        row_deg.sort_unstable();
+        col_deg.sort_unstable();
+        row_deg == [2, 2, 3] && col_deg == [2, 2, 3]
     }
 
-    /// The freeze-time faithfulness check: `Ok(())` if the structure is
-    /// C₃-exclusion (faithfully representable by a traditional circuit),
+    /// The freeze-time decomposability check: `Ok(())` if the structure has the
+    /// C₃-exclusion property and so implies unitary causally faithful
+    /// decompositions in the traditional circuit paradigm (Theorem 3.2),
     /// otherwise [`QuantumError::NotFaithfullyRepresentable`] identifying the C₃
-    /// obstruction.
+    /// obstruction. The error's "faithfully" is Lorenz–Barrett's `G_U = G_C`,
+    /// not Pearl's; see the module docs.
     pub fn check_c3_exclusion(&self) -> Result<(), QuantumError> {
         match self.find_c3() {
             None => Ok(()),
             Some((rows, cols)) => Err(QuantumError::NotFaithfullyRepresentable(format!(
                 "causal structure contains a C₃ sub-relation between inputs {:?} and outputs {:?}; \
-                 it has no traditional-circuit causally faithful decomposition",
+                 it does not imply a unitary causally faithful decomposition in the traditional \
+                 circuit paradigm (van der Lugt & Lorenz, Theorem 3.2)",
                 rows, cols
             ))),
         }

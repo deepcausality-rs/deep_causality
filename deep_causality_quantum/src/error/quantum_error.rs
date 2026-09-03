@@ -46,9 +46,59 @@ pub enum QuantumErrorEnum {
         detail: String,
     },
     /// The declared causal structure contains a `C₃` sub-relation and therefore
-    /// has no traditional-circuit causally faithful decomposition
-    /// (van der Lugt & Lorenz, arXiv:2508.11762, Thm 3.2).
+    /// does not imply a unitary causally faithful decomposition in the
+    /// traditional circuit paradigm (van der Lugt & Lorenz, arXiv:2508.11762,
+    /// Definition 3.1 and Theorem 3.2).
+    ///
+    /// "Faithfully" is the Lorenz–Barrett sense: a circuit decomposition whose
+    /// connectivity equals the unitary's causal structure, `G_U = G_C`. It is not
+    /// Pearl's faithfulness, where a distribution has no independences beyond
+    /// those its graph implies. The structure is what is rejected; a particular
+    /// unitary with that structure may still decompose faithfully (Remark 3.3),
+    /// and every such unitary has a routed decomposition.
     NotFaithfullyRepresentable(String),
+    /// A Markov re-check on a composite's *inherited* factors found a
+    /// non-commuting pair. This is a failure of the certificate, not of the
+    /// model: Barrett–Lorenz–Oreshkov's representation theorem gives every
+    /// composite of QCM-representable parts a Markov factorization for the
+    /// induced DAG with the induced factors, and the naive product of the
+    /// parts' factors need not be it. `CommutatorNonZero` is reserved for
+    /// factors that are the model's own.
+    CertificateNotInherited {
+        node_j: usize,
+        node_k: usize,
+        detail: String,
+    },
+    /// A structural candidate's causal structure contains a directed cycle.
+    /// Cyclic quantum causal models exist (Barrett, Lorenz & Oreshkov,
+    /// arXiv:2002.12157) and the C₃ criterion does not reject them, so this is
+    /// a scope decision made at `build()`, before any check runs, and it names
+    /// the limit rather than an obstruction.
+    CyclicStructureUnsupported(String),
+    /// `design` was asked to cover more hypotheses than its cap. The exact
+    /// cover is a dynamic program over `2^C(n,2)` subsets of pairs: `2^15` at
+    /// n = 6, `2^28` at n = 8, `2^45` at n = 10. Above `max_hypotheses` the
+    /// solve is refused before the table is allocated, naming `n` and the
+    /// pair count. A later version may supply the greedy cover with its
+    /// logarithmic approximation factor reported; v1 does not.
+    HypothesisCountExceeded { n: usize, pairs: usize },
+    /// A marginalisation was refused because its boundary warrant did not
+    /// hold: the kept-factor operator `Z ⊗ 1_B` fails to commute with the
+    /// operator being traced within the named tolerance, so nothing may be
+    /// asserted about the traced commutator and no traced operator is
+    /// produced. The message carries the residual, the tolerance and the
+    /// amplification; `Hypothesis::boundary_warrant` returns them typed.
+    BoundaryNotHeld(String),
+    /// A Pauli handed to the logical-equivalence predicate lies outside the
+    /// code's normalizer: it anticommutes with the stabilizer generator named by
+    /// `generator`, so it does not preserve the code space and the question of
+    /// whether it acts trivially there is not well-posed. `detail` says which
+    /// kind of generator, `Z` or `X`.
+    NotInNormalizer { generator: usize, detail: String },
+    /// A gate in a program handed to the Clifford tableau is not Clifford, so
+    /// its conjugation action on a Pauli is not a symplectic update and the
+    /// program cannot be pushed through. Names the gate and its position.
+    NonCliffordGate(String),
     /// Numerical conversion or general calculation failure.
     CalculationError(String),
 }
@@ -118,6 +168,40 @@ impl QuantumError {
     }
 
     #[allow(non_snake_case)]
+    pub fn CertificateNotInherited(node_j: usize, node_k: usize, detail: String) -> Self {
+        Self(QuantumErrorEnum::CertificateNotInherited {
+            node_j,
+            node_k,
+            detail,
+        })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn CyclicStructureUnsupported(msg: String) -> Self {
+        Self(QuantumErrorEnum::CyclicStructureUnsupported(msg))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn HypothesisCountExceeded(n: usize, pairs: usize) -> Self {
+        Self(QuantumErrorEnum::HypothesisCountExceeded { n, pairs })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn BoundaryNotHeld(msg: String) -> Self {
+        Self(QuantumErrorEnum::BoundaryNotHeld(msg))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn NotInNormalizer(generator: usize, detail: String) -> Self {
+        Self(QuantumErrorEnum::NotInNormalizer { generator, detail })
+    }
+
+    #[allow(non_snake_case)]
+    pub fn NonCliffordGate(msg: String) -> Self {
+        Self(QuantumErrorEnum::NonCliffordGate(msg))
+    }
+
+    #[allow(non_snake_case)]
     pub fn CalculationError(msg: String) -> Self {
         Self(QuantumErrorEnum::CalculationError(msg))
     }
@@ -168,6 +252,30 @@ impl Display for QuantumError {
             QuantumErrorEnum::NotFaithfullyRepresentable(msg) => {
                 write!(f, "Not Faithfully Representable (C3 obstruction): {}", msg)
             }
+            QuantumErrorEnum::CertificateNotInherited {
+                node_j,
+                node_k,
+                detail,
+            } => write!(
+                f,
+                "Certificate Not Inherited: the parts' factors at nodes {} and {} do not certify the composite: {}",
+                node_j, node_k, detail
+            ),
+            QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
+                write!(f, "Cyclic Structure Unsupported: {}", msg)
+            }
+            QuantumErrorEnum::HypothesisCountExceeded { n, pairs } => write!(
+                f,
+                "Hypothesis Count Exceeded: {} hypotheses give {} pairs, above the design cap",
+                n, pairs
+            ),
+            QuantumErrorEnum::BoundaryNotHeld(msg) => write!(f, "Boundary Not Held: {}", msg),
+            QuantumErrorEnum::NotInNormalizer { generator, detail } => write!(
+                f,
+                "Not In Normalizer: anticommutes with stabilizer generator {} ({})",
+                generator, detail
+            ),
+            QuantumErrorEnum::NonCliffordGate(msg) => write!(f, "Non-Clifford Gate: {}", msg),
             QuantumErrorEnum::CalculationError(msg) => write!(f, "Calculation Error: {}", msg),
         }
     }

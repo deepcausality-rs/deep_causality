@@ -114,6 +114,123 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/carriers/* test suites
+# =============================================================================
+
+rust_test_suite(
+    name = "carriers",
+    srcs = glob([
+        "tests/types/carriers/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/evidence/* test suites
+# =============================================================================
+
+rust_test_suite(
+    name = "evidence",
+    srcs = glob([
+        "tests/types/evidence/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/design/* test suites — experiment design and adjudication
+# =============================================================================
+
+rust_test_suite(
+    name = "design",
+    srcs = glob([
+        "tests/types/design/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/pipeline/* test suites — the QCL pipeline, over the qcm feature
+# =============================================================================
+
+rust_test_suite(
+    name = "pipeline",
+    srcs = glob([
+        "tests/types/pipeline/*_tests.rs",
+    ]),
+    crate_features = [
+        "qcm",
+        "qpu",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/decision/* test suites — the decision form
+# =============================================================================
+
+rust_test_suite(
+    name = "decision",
+    srcs = glob([
+        "tests/types/decision/*_tests.rs",
+    ]),
+    crate_features = [
+        "qcm",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/qgates/* test suites — the verifiable qgates tests
 # =============================================================================
 

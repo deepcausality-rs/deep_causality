@@ -1,0 +1,19 @@
+version = 1
+
+# Reuse annotations file.
+#
+# This file controls how reuse-tool finds copyright and license notices within
+# source files.
+#
+# See https://reuse.software and https://github.com/fsfe/reuse-tool for more
+# details.
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "The DeepCausality Authors and Contributors. All Rights Reserved."
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "website/web/dist/fonts/*.woff2"
+SPDX-FileCopyrightText = "The Geist and JetBrains Mono Authors"
+SPDX-License-Identifier = "OFL-1.1"

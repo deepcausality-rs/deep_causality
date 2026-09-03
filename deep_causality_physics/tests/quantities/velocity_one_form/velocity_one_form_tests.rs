@@ -188,5 +188,5 @@ fn rides_rk4_arrow_f32() {
 
 #[test]
 fn rides_rk4_arrow_float106() {
-    assert_rk4_decay::<Float106>(Float106::from_f64(1e-9));
+    assert_rk4_decay::<Float106>(Float106::from(1e-9));
 }

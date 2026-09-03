@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_quantum"
-version = "0.2.0"
+version = "0.3.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -81,6 +81,11 @@ workspace = true
 [dependencies.deep_causality_uncertain]
 workspace = true
 optional = true
+
+# The square torus of `LatticeComplex`: the two-logical-qubit fixture the Clifford check on one
+# qubit is tested against.
+[dev-dependencies.deep_causality_topology]
+workspace = true
 
 [lints]
 workspace = true

@@ -20,6 +20,7 @@
 //!    - APE Smearing
 //!    - Wilson Gradient Flow (computing t0 scale)
 
+use deep_causality_num::Lift;
 use deep_causality_num_complex::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{
@@ -108,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             count += 1;
         }
     }
-    let w_2x2_avg = w_2x2_sum / (count as FloatType * SU3::matrix_dim() as FloatType);
+    let w_2x2_avg = w_2x2_sum / (count.lift::<FloatType>() * SU3::matrix_dim().lift::<FloatType>());
     println!("    2x2 Wilson Loop:   {:.6}", w_2x2_avg);
 
     // Observable C: Polyakov Loop
@@ -120,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // If T=f64, it's already the value.
     println!(
         "    Polyakov Loop:     {:.6}",
-        poly_loop / SU3::matrix_dim() as FloatType
+        poly_loop / SU3::matrix_dim().lift::<FloatType>()
     );
 
     // 4. Advanced: Smearing

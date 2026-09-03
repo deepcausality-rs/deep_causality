@@ -56,6 +56,7 @@ use deep_causality_cfd::{
     IGNITION_LATCH_FIELD, MarchStop, PhysicsError, StudyError, StudyView, Verdict,
 };
 use deep_causality_haft::LogAddEntry;
+use deep_causality_num::lift;
 use std::cell::RefCell;
 use std::process::ExitCode;
 use std::time::Instant;
@@ -76,7 +77,7 @@ fn main() -> ExitCode {
 
         // ── Act 0: PLAN. The measured day interpolates the recorded dispersion table. ──────────
         let table = model::load_dispersion_table().map_err(leg_err("setup: weather table"))?;
-        let informed = model::day_belief(&table, utils::ft(constants::MEASURED_D_TEMP));
+        let informed = model::day_belief(&table, lift(constants::MEASURED_D_TEMP));
         let uninformed = model::standard_day_belief(&table);
         utils_print::print_plan(&informed, &uninformed);
 
@@ -102,7 +103,7 @@ fn main() -> ExitCode {
                 informed.margin_m,
             ))
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from_field(seed_field)
             .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))
             .map_err(leg_err("act 1: corridor to blackout onset"))?;
@@ -124,7 +125,7 @@ fn main() -> ExitCode {
                 informed.margin_m,
             ))
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(onset.state())
             .until(|field, _| {
                 // Pause inside the burn: the engine is lit and the plume is on the layer.
@@ -134,7 +135,7 @@ fn main() -> ExitCode {
                     .is_some_and(|v| v > 0.0)
             })
             .map_err(leg_err("act 2-3: coast, commit, burn"))?;
-        let trunk_s = utils::ft(trunk_clock.elapsed().as_secs_f64());
+        let trunk_s = lift(trunk_clock.elapsed().as_secs_f64());
         let trunk_steps = burn.step();
         utils_print::print_act("COAST + BURN — ignition corridor committed", &burn);
 
@@ -177,7 +178,7 @@ fn main() -> ExitCode {
             .gates(model::branch_gates())
             .verdict()?;
 
-        let fan_out_s = utils::ft(fan_out_clock.elapsed().as_secs_f64());
+        let fan_out_s = lift(fan_out_clock.elapsed().as_secs_f64());
         let committed_bond = bond_capture.into_inner();
         // Read for its side condition: a roster that captured no branch is a study failure.
         let _committed = committed_capture.into_inner().ok_or_else(|| {
@@ -201,7 +202,7 @@ fn main() -> ExitCode {
                 informed.margin_m,
             ))
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(burn.state())
             .until(|field, _| {
                 field
@@ -243,7 +244,7 @@ fn main() -> ExitCode {
                 true,
             ))
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(burn_out.state())
             .until(|field, _| field.regime().map(|r| r.touchdown).unwrap_or(false))
             .map_err(leg_err("act 4: terminal descent"))?;
@@ -260,7 +261,7 @@ fn main() -> ExitCode {
                 true,
             ))
             .trigger(utils::trigger())
-            .kappa(utils::ft(0.0))
+            .kappa(lift(0.0))
             .from(burn_out.state())
             .until(|field, _| field.regime().map(|r| r.touchdown).unwrap_or(false))
             .map_err(leg_err("act 4b: uninformed terminal descent"))?;
@@ -307,12 +308,12 @@ fn main() -> ExitCode {
             regime_transitions: terminal.regime_transitions(),
             // The onset is recorded as a step index; the table records seconds, so the compressed
             // flight step converts it.
-            onset_s: model::scalar0(f, "wx_onset_step") * utils::ft(DT_FLIGHT),
+            onset_s: model::scalar0(f, "wx_onset_step") * lift::<FloatType>(DT_FLIGHT),
             dwell_s: model::scalar0(f, "wx_dwell_s"),
             drift_denied_max_m: model::scalar0(f, "wx_drift_denied_max"),
             predicted_onset_s: informed.onset_s,
             predicted_dwell_s: informed.dwell_s,
-            elapsed_s: utils::ft(clock.elapsed().as_secs_f64()),
+            elapsed_s: lift(clock.elapsed().as_secs_f64()),
             step_cost_ratio: model::step_cost_ratio(
                 trunk_s,
                 trunk_steps,

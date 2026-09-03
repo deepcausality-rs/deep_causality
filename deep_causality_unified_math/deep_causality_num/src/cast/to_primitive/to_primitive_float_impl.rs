@@ -6,6 +6,17 @@
 use crate::ToPrimitive;
 use core::{f32, f64};
 
+// The first value each wide target cannot hold. `T::MAX as f64` rounds up to this power of two for
+// these targets, so a comparison against `MAX` admits the power of two itself and the `as` cast then
+// saturates; the bound has to be the power of two, and exclusive. The narrow targets keep their
+// exact maxima below.
+const BEYOND_I64: f64 = (1u128 << 63) as f64;
+const BEYOND_U64: f64 = (1u128 << 64) as f64;
+const BEYOND_I128: f64 = 1.701_411_834_604_692_3e38;
+const BEYOND_U128: f64 = 3.402_823_669_209_385e38;
+const BEYOND_ISIZE: f64 = (1u128 << (isize::BITS - 1)) as f64;
+const BEYOND_USIZE: f64 = (1u128 << usize::BITS) as f64;
+
 impl ToPrimitive for f32 {
     #[inline]
     fn to_isize(&self) -> Option<isize> {
@@ -13,7 +24,7 @@ impl ToPrimitive for f32 {
             return None;
         }
         let val_f64 = *self as f64;
-        if val_f64 < isize::MIN as f64 || val_f64 > isize::MAX as f64 {
+        if val_f64 < -BEYOND_ISIZE || val_f64 >= BEYOND_ISIZE {
             return None;
         }
         Some(val_f64 as isize)
@@ -61,7 +72,7 @@ impl ToPrimitive for f32 {
             return None;
         }
         let val_f64 = *self as f64;
-        if val_f64 < i64::MIN as f64 || val_f64 > i64::MAX as f64 {
+        if val_f64 < -BEYOND_I64 || val_f64 >= BEYOND_I64 {
             return None;
         }
         Some(val_f64 as i64)
@@ -73,7 +84,7 @@ impl ToPrimitive for f32 {
             return None;
         }
         let val_f64 = *self as f64;
-        if val_f64 < i128::MIN as f64 || val_f64 > i128::MAX as f64 {
+        if val_f64 < -BEYOND_I128 || val_f64 >= BEYOND_I128 {
             return None;
         }
         Some(val_f64 as i128)
@@ -85,7 +96,7 @@ impl ToPrimitive for f32 {
             return None;
         }
         let val_f64 = *self as f64;
-        if val_f64 > usize::MAX as f64 {
+        if val_f64 >= BEYOND_USIZE {
             return None;
         }
         Some(val_f64 as usize)
@@ -133,7 +144,7 @@ impl ToPrimitive for f32 {
             return None;
         }
         let val_f64 = *self as f64;
-        if val_f64 > u64::MAX as f64 {
+        if val_f64 >= BEYOND_U64 {
             return None;
         }
         Some(val_f64 as u64)
@@ -145,7 +156,7 @@ impl ToPrimitive for f32 {
             return None;
         }
         let val_f64 = *self as f64;
-        if val_f64 > u128::MAX as f64 {
+        if val_f64 >= BEYOND_U128 {
             return None;
         }
         Some(val_f64 as u128)
@@ -168,7 +179,7 @@ impl ToPrimitive for f64 {
         if self.is_nan() || self.is_infinite() {
             return None;
         }
-        if *self < isize::MIN as f64 || *self > isize::MAX as f64 {
+        if *self < -BEYOND_ISIZE || *self >= BEYOND_ISIZE {
             return None;
         }
         Some(*self as isize)
@@ -212,7 +223,7 @@ impl ToPrimitive for f64 {
         if self.is_nan() || self.is_infinite() {
             return None;
         }
-        if *self < i64::MIN as f64 || *self > i64::MAX as f64 {
+        if *self < -BEYOND_I64 || *self >= BEYOND_I64 {
             return None;
         }
         Some(*self as i64)
@@ -223,7 +234,7 @@ impl ToPrimitive for f64 {
         if self.is_nan() || self.is_infinite() {
             return None;
         }
-        if *self < i128::MIN as f64 || *self > i128::MAX as f64 {
+        if *self < -BEYOND_I128 || *self >= BEYOND_I128 {
             return None;
         }
         Some(*self as i128)
@@ -234,7 +245,7 @@ impl ToPrimitive for f64 {
         if self.is_nan() || self.is_infinite() || self.is_sign_negative() {
             return None;
         }
-        if *self > usize::MAX as f64 {
+        if *self >= BEYOND_USIZE {
             return None;
         }
         Some(*self as usize)
@@ -278,7 +289,7 @@ impl ToPrimitive for f64 {
         if self.is_nan() || self.is_infinite() || self.is_sign_negative() {
             return None;
         }
-        if *self > u64::MAX as f64 {
+        if *self >= BEYOND_U64 {
             return None;
         }
         Some(*self as u64)
@@ -289,7 +300,7 @@ impl ToPrimitive for f64 {
         if self.is_nan() || self.is_infinite() || self.is_sign_negative() {
             return None;
         }
-        if *self > u128::MAX as f64 {
+        if *self >= BEYOND_U128 {
             return None;
         }
         Some(*self as u128)

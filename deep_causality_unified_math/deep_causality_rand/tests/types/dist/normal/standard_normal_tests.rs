@@ -100,8 +100,8 @@ mod f106_tests {
         const NUM_SAMPLES: usize = 100_000;
         let samples: Vec<Float106> = (0..NUM_SAMPLES).map(|_| distr.sample(&mut rng)).collect();
 
-        let n = Float106::from_f64(NUM_SAMPLES as f64);
-        let zero = Float106::from_f64(0.0);
+        let n = Float106::from(NUM_SAMPLES as f64);
+        let zero = Float106::from(0.0);
         let mean = samples.iter().copied().fold(zero, |a, b| a + b) / n;
         let variance = samples
             .iter()
@@ -110,13 +110,13 @@ mod f106_tests {
             / n;
         let std_dev = variance.sqrt();
 
-        let tol = Float106::from_f64(0.02);
+        let tol = Float106::from(0.02);
         assert!(
             mean.abs() < tol,
             "Float106 normal mean {mean:?} not close to 0"
         );
         assert!(
-            (std_dev - Float106::from_f64(1.0)).abs() < tol,
+            (std_dev - Float106::from(1.0)).abs() < tol,
             "Float106 normal std dev {std_dev:?} not close to 1"
         );
     }

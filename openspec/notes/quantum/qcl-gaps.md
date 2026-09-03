@@ -22,6 +22,16 @@ therefore marked unresolved rather than confirmed. Everything else carries evide
 
 Verified against the tree on **2026-08-31**. **All eighteen gaps are closed.**
 
+**Corrections applied on 2026-09-02.** An external review of this register, the design note and the
+`add-qcl` change produced [`qcl-corrections.md`](qcl-corrections.md). Nothing in it reopens a gap.
+What it adds here is recorded at the gap it touches: G-02 and G-05 (the eager tuple shape meets the
+qLDPC target, X-13), G-06 (the geometric-QEC gates are verified algebraically and never simulated,
+X-7), G-07 (`H̄` is emitted and checked by nothing, X-5; its dropped global phase needs a home,
+X-11), and G-09 (the normalizer precondition is checkable now that the stabilizers are carried,
+X-6). One correction was found by the review's own unverified item: the shipped C₃ check tested for
+the wrong relation (X-16). It is not a gap in this register's sense, since the machinery existed and
+was wrong rather than missing, and it is fixed in code.
+
 `add-linear-algebra-crate` closed G-01 and G-02. The category-A sweep then closed G-03, G-10, G-11,
 G-12, G-15 and G-17: everything that was unblocked, self-contained and small. `Gf2Chain<W>` closed
 G-05, which this register had not recorded until today. G-06 closed on 2026-08-31: the gate alphabet
@@ -289,6 +299,11 @@ discriminate. Both were run rather than reasoned about.
 `deep_causality_linear` for the two ranks underneath. **Note:** this was a pre-existing correctness
 risk independent of QCL.
 
+**The code family this was fixed for has a cost elsewhere.** The 𝔽₂ rank exists *for* qLDPC codes,
+whose representatives can have weight in the tens to hundreds. G-05's pair and triple iterators
+materialise `C(w, 2)` and `C(w, 3)` tuples eagerly, which is nothing on a toric code and `10⁵` to
+`10⁶` tuples per `T̄` on the family this gap was closed for. Recorded at G-05; the change caps it.
+
 ### G-03 — `LatticeComplex::betti_number` never reads the boundary matrices — **CLOSED**
 
 **Severity S2.** **Closed** as a checked fast path.
@@ -429,7 +444,13 @@ this gap specified, and an implementor reading the old text would get them wrong
   `TopologyError` to `HomologyError`, released as topology 0.8.0.
 - `support_pairs` and `support_triples` return `Vec::into_iter`, not lazy iterators. Both collect
   the support and materialize the full tuple list first, so a weight-`w` chain allocates `C(w,2)`
-  and `C(w,3)` up front. Correct, and the wrong shape for a large support.
+  and `C(w,3)` up front. Correct, and the wrong shape for a large support. **The shape is
+  acceptable on the toric fixtures, where `w` is the lattice extent, and a known cost on the qLDPC
+  family G-02 was fixed for, where `T̄` on a weight-`w` representative materialises `C(w,3)` triples
+  before emitting anything.** The `add-qcl` change takes the same route D1 takes for the code-space
+  enumeration: `logical_t` and `logical_multi_cz` report the tuple count and error above a
+  configurable cap, so the cost is reported before it is paid. Making the iterators lazy is the
+  alternative and is not chosen for v1.
 
 **The bit arithmetic is not in this type.** `Gf2Chain` delegates all five operations to
 `PackedGf2Vector<W>` in `deep_causality_linear`
@@ -503,6 +524,14 @@ discriminates.
 width is the one the in-process simulator will not exercise far. That is a simulator limit rather
 than a gap in the alphabet.
 
+**Read together with §7.5 of the design note, that cap means the geometric-QEC consumer's gates are
+never simulated.** Its subject is the 32-qubit `square_torus(4)`, above the cap, so the 18 identity
+tests on small registers are the only dynamical evidence for any Haruna gate. That is sufficient,
+because D1 of the change and the Clifford check beside it make every Table 1 gate's verification
+combinatorial and exact; it is recorded so that no claim about that path ever says "tested on the
+simulator". A `square_torus(3)` variant, `[[18, 2, 3]]`, would put one member of the family under
+the cap if a dynamical cross-check is ever wanted.
+
 **Owner:** `deep_causality_quantum`.
 
 ### G-07 — The Haruna gate layer is typed on the wrong carrier — **CLOSED**
@@ -554,6 +583,19 @@ circuit type has nowhere to put it. `logical_hadamard` returns `(Vec<GateOp>, Co
 phase is unobservable under computational-basis measurement and becomes a relative, observable one
 the moment the gate is used as a controlled operation, which is what the Appendix B arguments carry.
 The causal wrapper drops it and says so.
+
+**That drop forecloses the check `H̄` needs, and the change reverses it.** `H̄` is the one Table 1
+gate the layer emits and nothing decides: it is neither a Pauli, so G-09's predicate does not reach
+it, nor diagonal, so the class-invariance check of the `add-qcl` change does not either. It is,
+however, a Clifford circuit — `S̄(γ) · ∏H · S̄(γ̃) · ∏H · S̄(γ)` is built from `S`, `CZ` and `H` — so
+its action on a logical Pauli is a symplectic 𝔽₂ update on `(x, z)`, a stabilizer-tableau
+computation the crate already has the vector type for. The change specifies a `check_clifford_action`
+stage that pushes each logical generator through the emitted program and tests, through
+`LogicalBasis`, that `Z̄(γ)` lands on `X̄(γ̃)` and back, up to phase. It cannot cover `T̄`, `CS̄†` or
+`CC̄Z`, which are non-Clifford and stay with the diagonal check, and it cross-checks `Z̄`, `S̄` and
+`CZ̄` by an independent route. Between the two, every Table 1 gate is decided by exactly one exact
+predicate. For the check to be exact rather than up-to-phase, the phase has to travel: the emitted
+program gains an optional `global_phase`, the wrapper populates it, and the drop above is retired.
 
 **The carrier removal cascaded through two further layers.** `mechanics.rs` held six
 `haruna_*_gate_kernel` adapters from `CausalMultiVector` to `Operator`, and `wrappers.rs` held six
@@ -675,8 +717,18 @@ symplectic form, `{ x: Gf2Chain, z: Gf2Chain }`, with `compose` adding the two v
 symplectic pair fixes a Pauli only up to phase, while B.1's matrix-element definition is
 phase-sensitive. And the criterion decides triviality *of a logical operator*: an operator outside
 the normalizer commutes with the logical generators without acting trivially, because it leaves the
-code space instead. This crate carries no stabilizer group, so that precondition is stated at the
-method rather than checked.
+code space instead. When this closed, the crate carried no stabilizer group, so that precondition was
+stated at the method rather than checked.
+
+**The second limit no longer holds, and leaving it stated would be a silent wrong answer.**
+`LogicalBasis::from_complex` now derives the Z-stabilizer generators as a basis of `im ∂₂`, because
+the class-invariance decision of the `add-qcl` change needs them. Once the generators are present the
+normalizer precondition is two more loops of `Gf2Chain::inner`: a Pauli `(x, z)` is in the normalizer
+iff `⟨x, s⟩ = 0` for every Z-generator `s` and `⟨z, t⟩ = 0` for every X-generator `t`. The change
+therefore derives the X-generators too, a basis of `im δ₀`, and `is_logically_trivial` returns
+`NotInNormalizer` with the offending generator when the check fails. The diagonal check does not
+consult the X-generators, because a diagonal phase cannot see a superposition; the Pauli check must,
+because a Pauli with a `z` part anticommutes with an X-stabilizer it meets oddly.
 
 **Tested on the toric code, against two external facts.** The complex is the 2-torus fixture, whose
 `β₁ = 2` over 𝔽₂ is Hatcher's and is why the toric code encodes two logical qubits (Kitaev, 2003).
@@ -1181,3 +1233,6 @@ and the dependency edge with them, so what remains for it is the example itself.
 - `deep_causality_quantum/src/` (3980 lines), `deep_causality_unified_math/deep_causality_topology/src/`,
   `deep_causality_unified_math/deep_causality_multivector/README.md`, `deep_causality_unified_math/deep_causality_num/src/integer/`.
 - [`qcl-design-note.md`](qcl-design-note.md) for the design these gaps are measured against.
+- [`qcl-corrections.md`](qcl-corrections.md) for the review that produced the 2026-09-02 entries
+  above, and for X-16, the corrected C₃ relation, verified against van der Lugt & Lorenz
+  (arXiv:2508.11762) Example 2.12, Definition 3.1 and Theorem 4.9(v).

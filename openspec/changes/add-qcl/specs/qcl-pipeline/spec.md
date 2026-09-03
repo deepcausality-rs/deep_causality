@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ### Requirement: Configuration has one origin naming two working types
 
-Every QCL configuration SHALL originate at `QclBuilder::config::<FloatType, IntType>()`, the single
+Every QCL configuration SHALL originate at `QclBuilder::config::<FloatType, NumberType>()`, the single
 site where the two working types are named.
 
 `FloatType` buys accuracy. Every tolerance in a run is discharged from it, as the shipped policies
@@ -26,7 +26,7 @@ from a hardcoded scalar, and no count field carries a hardcoded width.
 
 #### Scenario: The headroom parameter moves no threshold
 
-- **WHEN** `IntType` changes from `u32` to `u64` at the config site
+- **WHEN** `NumberType` changes from `u32` to `u64` at the config site
 - **THEN** the `Ledger<R, N>` count fields retype and every acceptance threshold is unchanged,
   because overflow has no `epsilon()` to derive a tolerance from
 
@@ -52,7 +52,7 @@ carries no probe family.
 #### Scenario: The model subject maps onto the shipped freeze
 
 - **WHEN** a config built with `.over_model(graph, factors, supports)` and `.declare_systems(&inputs,
-  &outputs)` runs `validate().check_markov().check_faithfulness()`
+  &outputs)` runs `validate().check_markov().check_decomposable()`
 - **THEN** the two checks are the two level checks `freeze_quantum` runs inside
   `freeze_verified_with_check`, the commutativity check over intersecting supports and C₃-exclusion
   over the frozen graph's reachability, with no probe family and no evidence policy in play
@@ -72,20 +72,42 @@ carries no probe family.
 
 ### Requirement: build() rejects the configurations that would answer unsoundly
 
-`build()` SHALL reject an unfrozen graph, a probe naming an observable the plant does not expose, a
-zero shot count, and an empty candidate set, returning a structured `QuantumError` and running no
-stage.
+`build()` SHALL reject an unfrozen graph, a cyclic structural candidate, a probe naming an
+observable the plant does not expose, a zero shot count, and an empty candidate set, returning a
+structured `QuantumError` and running no stage.
 
 The unfrozen-graph rejection is the precondition `FactorSupports::from_graph` already enforces, and
 `build()` enforces it for both graph bridges.
+
+*As built.* `.over_plant(plant, observables)` takes the plant and the observables it exposes
+together, so the observables' dimension is what `build()` checks the plant against. The candidate
+kind is a type: `.candidates(&[..])` marks the plant `Structural` and `.mechanisms(&[..])` marks it
+`Mechanisms`, and `build()` refuses a candidate of the other kind at runtime as well. A structural
+candidate's cycle is read off its supports, since under the flat convention every leg of a node's
+support that is itself a factor node is a parent; the model subject's cycle is read off its graph.
+
+The cyclic rejection is a scope decision and SHALL be reported as `CyclicStructureUnsupported`.
+Cyclic QCMs exist (Barrett, Lorenz & Oreshkov, arXiv:2002.12157), and the C₃ criterion does not
+reject them: the crosstalk example's cyclic H₄ satisfies C₃-exclusion under Definition 3.1, and its
+reachability on a cyclic graph is complete, which satisfies it more plainly still. So if a cyclic
+candidate is to be kept out of `validate` and `control`, `build()` has to do it, by decision, before
+any check runs, and the error has to name the scope limit rather than an obstruction.
 
 #### Scenario: An unfrozen graph is rejected before any check runs
 
 - **WHEN** `.over_model` is given a graph whose `is_frozen()` is `false`
 - **THEN** `build()` returns `QuantumErrorEnum::CalculationError` naming the frozen-graph
-  requirement, and no commutativity or faithfulness check runs, because `remove_node` tombstones a
-  slot without compacting, so a live node can hold an id past `number_nodes()` and its parent edges
-  would be dropped silently in a faithfulness gate
+  requirement, and no commutativity or decomposability check runs, because `remove_node` tombstones
+  a slot without compacting, so a live node can hold an id past `number_nodes()` and its parent
+  edges would be dropped silently in the C₃ gate
+
+#### Scenario: A cyclic structural candidate is rejected as scope, not as a C₃
+
+- **WHEN** a config's structural candidates include one whose frozen graph contains a directed
+  cycle
+- **THEN** `build()` returns `QuantumErrorEnum::CyclicStructureUnsupported` naming the candidate, no
+  check runs, and the message says cyclic causal structures are outside v1's scope rather than that
+  the structure fails a criterion
 
 #### Scenario: A vacuous or unreachable configuration is rejected
 
@@ -100,12 +122,19 @@ the `CheckReport<R>`, and `control` SHALL accept a plant config or a `Screened<R
 
 A config carrying structural candidates therefore has no path into `control` that skips validation.
 
+*As built.* `QclBuilder::control` takes any `ControlSource`, and the two implementations are
+`&Config<.., PlantSubject<.., Mechanisms>>` and `&Screened<.., PlantSubject<.., Structural>>`. A
+structural config has no implementation, which is the compiler refusing the skipped screen. The
+structural plant's `check_decomposable(inputs, outputs)` screens each candidate on the structure
+its own supports encode, and `check_decomposable_with(graph, ..)` is there for candidates whose
+structure lives in a graph.
+
 #### Scenario: Structural candidates cannot enter control unscreened
 
 - **WHEN** a config whose candidates are built by `Hypothesis::structural` is passed to
   `QclBuilder::control` without running `validate`
 - **THEN** the program fails to compile, and `QclBuilder::control(screened)` on the `Screened<R>`
-  returned by `validate(&cfg).check_markov().check_faithfulness().finalize()` compiles
+  returned by `validate(&cfg).check_markov().check_decomposable().finalize()` compiles
 
 #### Scenario: A vacuous pass is visible in the screened report
 
@@ -129,6 +158,15 @@ A failing stage SHALL leave the subject in its pre-stage state and SHALL carry t
 This is the behaviour `freeze_quantum` already has: the hook returns `CausalityGraphError`, so the
 structured error is recovered from a `RefCell` stash across that bridge, and the graph rolls back to
 its dynamic state on failure.
+
+*As built.* The model subject of a configuration takes a frozen graph, because `build()` requires
+one, and `validate` mutates nothing: its checks run on the frozen graph as it stands, so a failed
+validation leaves the subject exactly as built and the structured error is what `finalize`
+returns. The rollback scenario below is the shipped freeze's behaviour, reached through
+`QclBuilder::freeze_model` on a dynamic graph; the two entry points serve the two starting states.
+The pipeline module is compiled under the `qcm` feature, because candidates are `Hypothesis` values
+and the model subject reaches the causal graph; bare-metal reach for the plant path is a follow-up
+that splits the graph-dependent half of `Hypothesis` from the rest.
 
 #### Scenario: A rejected pair rolls the graph back and names itself
 
@@ -176,18 +214,38 @@ under ∇, because at a counterfactual fork exactly one branch was factual.
 
 ### Requirement: fork is built above core, because a counterfactual fork is a product
 
-`fork` SHALL produce one live world per candidate, each holding its own cloned `Ledger<R, N>`, and
-SHALL NOT be built on `Either` or `CausalFlow::either`.
+`fork` SHALL produce one live world per candidate, each holding its own cloned `Ledger<R, N>` and
+no read-out and no verdict, SHALL fail with `CalculationError` when there is no candidate to fork,
+and SHALL NOT be built on `Either` or `CausalFlow::either`.
 
 `Either<L, R>` in `deep_causality_haft` is the coproduct, and `CausalFlow::either` consumes the flow
 and runs one arm with the state moved into it. `Either` is the carrier on the way out, where
 `adjudicate` returns one surviving hypothesis against a residual ambiguity.
+
+*As built.* A world inherits the ledger and nothing else. The root keeps its read-out and verdict
+as the baseline, and a world's evidence comes from `observe` and `gate` after the fork, or from
+`compare`, so a world evolved by a mechanism is never adjudicated on a measurement of the
+unevolved plant. A screen that admitted no candidate, or a config that declared none, leaves
+nothing to fork; `fork` fails naming which, rather than producing no worlds for `finalize` to
+report as success.
 
 #### Scenario: Three candidates give three live worlds
 
 - **WHEN** `fork` runs on a screened config holding three admitted hypotheses
 - **THEN** all three worlds are live simultaneously, each carrying an independent copy of the ledger,
   and none of the three states was moved into an arm
+
+#### Scenario: A world inherits the ledger and no evidence
+
+- **WHEN** `observe` and `gate` run on the root and `fork` follows
+- **THEN** every world's ledger equals the root's, every world's read-out and verdict are absent,
+  and `gate` on the worlds before `observe` fails with `CalculationError` naming `observe`
+
+#### Scenario: A fork with no candidate is refused
+
+- **WHEN** `control` takes a screen that admitted no candidate and `fork` runs
+- **THEN** `finalize` returns `CalculationError` naming that the screen admitted none or the config
+  declared none, and no world exists
 
 #### Scenario: Forked ledgers are compared rather than joined
 
@@ -199,3 +257,63 @@ and runs one arm with the state moved into it. `Either` is the carrier on the wa
 
 - **WHEN** `adjudicate` resolves to one surviving hypothesis, or leaves a residual ambiguity
 - **THEN** the result is an `Either` from `deep_causality_haft` rather than an ad-hoc enum
+
+### Requirement: compare turns predictions into evidence against the root's read-out
+
+`compare(sigmas)` SHALL give every forked world a read-out and a verdict from its prediction: the
+read-out is `ShotEstimate::from_probability(prediction, baseline.shots())`, and the verdict is one
+`Check` of `|prediction − baseline.estimate()|` against `sigmas · baseline.standard_error()`,
+examined over the baseline's shots, where the baseline is the root's read-out taken by `observe`
+before `fork`.
+
+The prediction is carried with the shot noise it would have at the baseline's shots, so
+`adjudicate` separates worlds by their predictions, and a world's verdict holds when its prediction
+agrees with the observation. `compare` refuses, with `CalculationError` naming the missing step, a
+`sigmas` that is not finite or is negative, a root with no read-out, no worlds, and a world with no
+prediction. A mechanism world with a prediction may be compared; nothing forbids it.
+
+#### Scenario: A prediction becomes a read-out at the baseline's shots
+
+- **WHEN** `observe(o, n)` runs on the root, `fork` and `predict(o)` follow, and `compare(3)` runs
+- **THEN** every world's read-out has the world's prediction as its estimate and `n` as its shots,
+  and its verdict examined `n` items and accepted exactly when the prediction lies within three
+  standard errors of the root's estimate
+
+#### Scenario: A missing step is named
+
+- **WHEN** `compare` runs before `predict`, before `fork`, without a root read-out, or with a NaN
+  or negative `sigmas`
+- **THEN** `finalize` returns `CalculationError` whose message names `predict`, `fork`, `observe`
+  or `sigmas` respectively
+
+#### Scenario: A mechanism world may be compared
+
+- **WHEN** a mechanism config runs `observe → fork → predict → compare → adjudicate`
+- **THEN** each world's prediction is judged against the root's read-out, and the world whose
+  channel leaves the read-out unchanged survives
+
+### Requirement: control has two paths to adjudicate, one per kind of candidate
+
+The control stage SHALL support two paths to `adjudicate`: mechanism candidates run
+`observe → fork → observe → gate → adjudicate`, and structural candidates run
+`observe → fork → predict → compare → adjudicate`.
+
+A mechanism world carries the plant evolved by its channel, so its evidence is a measurement of
+that plant after the fork. A structural world carries the plant unchanged, so a measurement after
+the fork would read the same in every world; the root is measured once as the baseline, and the
+worlds are told apart by what each model predicts for it.
+
+#### Scenario: The mechanism path adjudicates each world on its own measurement
+
+- **WHEN** a mechanism config with a flipping and an identity channel runs `observe` on the root,
+  then `fork → observe → gate(at_least 0.9) → adjudicate`
+- **THEN** the flipping world's read-out is its own evolved plant's rather than the root's, its
+  ledger counts two experiments to the root's one, and it is the survivor
+
+#### Scenario: The structural path selects the candidate whose prediction matches the plant
+
+- **WHEN** two structural candidates whose predictions differ enter `control` through the screen,
+  the plant is prepared so one candidate's prediction is its Born read-out, and
+  `observe → fork → predict → compare → adjudicate` runs
+- **THEN** that candidate is the survivor, its verdict accepted and the other's rejected, and the
+  separation credited to the ledger is between the two predictions at the observed shots

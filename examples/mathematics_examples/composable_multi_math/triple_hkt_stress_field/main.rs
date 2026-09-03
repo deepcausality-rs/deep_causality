@@ -29,6 +29,7 @@ use deep_causality_haft::CoMonad;
 use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
+use deep_causality_num::Lift;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -329,7 +330,7 @@ fn mesh_centroid() -> [FloatType; 3] {
         c[1] += v[1];
         c[2] += v[2];
     }
-    let n = N_VERTICES as FloatType;
+    let n = N_VERTICES.lift::<FloatType>();
     [c[0] / n, c[1] / n, c[2] / n]
 }
 

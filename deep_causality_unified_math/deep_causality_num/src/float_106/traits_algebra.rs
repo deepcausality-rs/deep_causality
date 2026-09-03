@@ -21,7 +21,7 @@ use crate::{Num, One, Zero};
 impl Zero for Float106 {
     #[inline]
     fn zero() -> Self {
-        Self::from_f64(0.0)
+        Self::from(0.0)
     }
 
     #[inline]
@@ -33,7 +33,7 @@ impl Zero for Float106 {
 impl One for Float106 {
     #[inline]
     fn one() -> Self {
-        Self::from_f64(1.0)
+        Self::from(1.0)
     }
 
     #[inline]

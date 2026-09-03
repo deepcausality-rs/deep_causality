@@ -4,6 +4,7 @@
  */
 
 use deep_causality_haft::{CoMonad, Functor};
+use deep_causality_num::Lift;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, GraphWitness};
 
@@ -84,7 +85,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // 4. Compute Average
-        let count = 1.0 + neighbors.len() as FloatType;
+        let count = 1.0 + neighbors.len().lift::<FloatType>();
         (current_val + sum_neighbors) / count
     };
 

@@ -37,8 +37,9 @@ mod constants;
 mod model;
 mod utils_print;
 
-use avionics_examples::shared::{utils, world};
+use avionics_examples::shared::world;
 use deep_causality_cfd::{CfdFlow, PhysicsError, StudyError, StudyView, Verdict};
+use deep_causality_num::lift;
 use std::process::ExitCode;
 use std::time::Instant;
 
@@ -85,7 +86,7 @@ fn main() -> ExitCode {
 
         // The wall-clock gate is the caller's: the study cannot see the wall clock, which times the
         // whole program. Merge it into the table verdict so the run still ends in one report.
-        let elapsed = utils::ft(clock.elapsed().as_secs_f64());
+        let elapsed = lift(clock.elapsed().as_secs_f64());
         Ok(table.merge(model::runtime_gates().check(&StudyView::of(&[elapsed]))))
     })();
 

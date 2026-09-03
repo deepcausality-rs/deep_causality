@@ -195,7 +195,7 @@ fn stencils_match_generic_float106() {
 
     let u = random_cochain::<Float106>(n1, 59);
     let x = random_cochain::<Float106>(n1, 61);
-    let mut omega = vec![Float106::from_f64(0.0); n2];
+    let mut omega = vec![Float106::from(0.0); n2];
     tables.apply_d1(&u, &mut omega).unwrap();
     let generic = m.exterior_derivative_of(&u, 1);
     for (a, b) in omega.iter().zip(generic.as_slice().iter()) {
@@ -204,9 +204,9 @@ fn stencils_match_generic_float106() {
     }
 
     let (pre_len, wedge_len) = tables.convective_scratch_lens();
-    let mut pre = vec![Float106::from_f64(0.0); pre_len];
-    let mut wb = vec![Float106::from_f64(0.0); wedge_len];
-    let mut conv = vec![Float106::from_f64(0.0); n1];
+    let mut pre = vec![Float106::from(0.0); pre_len];
+    let mut wb = vec![Float106::from(0.0); wedge_len];
+    let mut conv = vec![Float106::from(0.0); n1];
     tables
         .apply_convective(&omega, &x, &mut pre, &mut wb, &mut conv)
         .unwrap();
