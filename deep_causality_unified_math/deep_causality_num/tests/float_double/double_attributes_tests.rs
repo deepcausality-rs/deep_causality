@@ -19,7 +19,7 @@ fn test_is_nan_true() {
 
 #[test]
 fn test_is_nan_false_normal() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert!(!x.is_nan());
 }
 
@@ -31,7 +31,7 @@ fn test_is_nan_false_infinity() {
 
 #[test]
 fn test_is_nan_false_zero() {
-    let x = Float106::from_f64(0.0);
+    let x = Float106::from(0.0);
     assert!(!x.is_nan());
 }
 
@@ -53,7 +53,7 @@ fn test_is_infinite_neg_inf() {
 
 #[test]
 fn test_is_infinite_false_normal() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert!(!x.is_infinite());
 }
 
@@ -65,7 +65,7 @@ fn test_is_infinite_false_nan() {
 
 #[test]
 fn test_is_infinite_false_zero() {
-    let x = Float106::from_f64(0.0);
+    let x = Float106::from(0.0);
     assert!(!x.is_infinite());
 }
 
@@ -75,19 +75,19 @@ fn test_is_infinite_false_zero() {
 
 #[test]
 fn test_is_finite_true_normal() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert!(x.is_finite());
 }
 
 #[test]
 fn test_is_finite_true_zero() {
-    let x = Float106::from_f64(0.0);
+    let x = Float106::from(0.0);
     assert!(x.is_finite());
 }
 
 #[test]
 fn test_is_finite_true_negative() {
-    let x = Float106::from_f64(-42.0);
+    let x = Float106::from(-42.0);
     assert!(x.is_finite());
 }
 
@@ -115,19 +115,19 @@ fn test_is_finite_false_nan() {
 
 #[test]
 fn test_is_sign_positive_true() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert!(x.is_sign_positive());
 }
 
 #[test]
 fn test_is_sign_positive_false() {
-    let x = Float106::from_f64(-42.0);
+    let x = Float106::from(-42.0);
     assert!(!x.is_sign_positive());
 }
 
 #[test]
 fn test_is_sign_positive_zero() {
-    let x = Float106::from_f64(0.0);
+    let x = Float106::from(0.0);
     assert!(x.is_sign_positive());
 }
 
@@ -143,19 +143,19 @@ fn test_is_sign_positive_pos_inf() {
 
 #[test]
 fn test_is_sign_negative_true() {
-    let x = Float106::from_f64(-42.0);
+    let x = Float106::from(-42.0);
     assert!(x.is_sign_negative());
 }
 
 #[test]
 fn test_is_sign_negative_false() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert!(!x.is_sign_negative());
 }
 
 #[test]
 fn test_is_sign_negative_neg_zero() {
-    let x = Float106::from_f64(-0.0);
+    let x = Float106::from(-0.0);
     assert!(x.is_sign_negative());
 }
 

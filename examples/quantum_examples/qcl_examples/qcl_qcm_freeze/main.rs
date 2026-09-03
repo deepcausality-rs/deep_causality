@@ -30,7 +30,7 @@ use deep_causality_quantum::{
 use crate::model::{diagonal, factors_on_shared_leg, sigma_x, sigma_z, two_node_graph};
 
 /// The real working type. Every tolerance in the run derives from its `epsilon()`; switch it to
-/// `f32` or `Float106` and the thresholds move with it. `f64` appears only at the display boundary.
+/// `f32`, `f64`, or `Float106` and the thresholds move with it. `f64` appears only at the display boundary.
 pub type FloatType = Float106;
 
 /// The count working type. ℕ, unsigned; widening it buys headroom and moves no threshold.

@@ -129,13 +129,13 @@ impl QmcSampler {
                 DistributionEnum::Point(v) => (*v).into_sampled_value(),
                 DistributionEnum::Normal(params) => {
                     let u = self.coordinate(current_node_id, index)?;
-                    let z = standard_normal_inverse_cdf_f106(Float106::from_f64(u));
+                    let z = standard_normal_inverse_cdf_f106(Float106::from(u));
                     SampledValue::DoubleFloat(params.mean + params.std_dev * z)
                 }
                 DistributionEnum::Uniform(params) => {
                     let u = self.coordinate(current_node_id, index)?;
                     SampledValue::DoubleFloat(uniform_inverse_cdf(
-                        Float106::from_f64(u),
+                        Float106::from(u),
                         params.low,
                         params.high,
                     ))
@@ -199,7 +199,7 @@ impl QmcSampler {
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(op.apply(o, *threshold)),
                     SampledValue::DoubleFloat(o) => {
-                        SampledValue::Bool(op.apply(o, Float106::from_f64(*threshold)))
+                        SampledValue::Bool(op.apply(o, Float106::from(*threshold)))
                     }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
@@ -254,7 +254,7 @@ impl QmcSampler {
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(func(o)),
                     SampledValue::DoubleFloat(o) => {
-                        SampledValue::DoubleFloat(Float106::from_f64(func(o.to_f64())))
+                        SampledValue::DoubleFloat(Float106::from(func(o.to_f64())))
                     }
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(

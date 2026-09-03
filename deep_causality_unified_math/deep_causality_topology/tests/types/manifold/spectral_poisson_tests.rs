@@ -226,7 +226,7 @@ fn spectral_projection_annihilates_gradients_at_float106() {
     let phi0 = random_cochain::<Float106>(n0, 23);
 
     let total: usize = (0..=2).map(|k| lattice.num_cells(k)).sum();
-    let mut data = vec![Float106::from_f64(0.0); total];
+    let mut data = vec![Float106::from(0.0); total];
     data[..n0].copy_from_slice(&phi0);
     let tensor = CausalTensor::new(data, vec![total]).unwrap();
     let metric: CubicalReggeGeometry<2, Float106> = CubicalReggeGeometry::unit();

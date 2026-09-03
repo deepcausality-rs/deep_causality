@@ -28,7 +28,8 @@ use crate::constants::{LDPC_BOUND, LDPC_BOUND_TOO_TIGHT};
 use crate::model::square_torus;
 
 /// The real working type; only the lattice complex's coordinates and the report margins carry it,
-/// since every check on the code is exact over 𝔽₂.
+/// since every check on the code is exact over 𝔽₂. Switch it to
+/// `f32`, `f64`, or `Float106` to define the precision level.
 pub type FloatType = f64;
 
 /// The count working type.

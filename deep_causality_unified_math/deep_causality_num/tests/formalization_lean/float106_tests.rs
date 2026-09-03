@@ -31,8 +31,8 @@ fn assert_close(a: Float106, b: Float106) {
 #[test]
 fn test_float106_add_comm() {
     // Commutativity of addition: a + b = b + a.
-    let a = Float106::from_f64(3.25);
-    let b = Float106::from_f64(-7.5);
+    let a = Float106::from(3.25);
+    let b = Float106::from(-7.5);
     assert_close(a + b, b + a);
 }
 
@@ -40,8 +40,8 @@ fn test_float106_add_comm() {
 #[test]
 fn test_float106_mul_comm() {
     // Commutativity of multiplication: a * b = b * a.
-    let a = Float106::from_f64(3.25);
-    let b = Float106::from_f64(-7.5);
+    let a = Float106::from(3.25);
+    let b = Float106::from(-7.5);
     assert_close(a * b, b * a);
 }
 
@@ -49,8 +49,8 @@ fn test_float106_mul_comm() {
 #[test]
 fn test_float106_distrib() {
     // Left distributivity: a * (b + c) = a * b + a * c.
-    let a = Float106::from_f64(3.25);
-    let b = Float106::from_f64(-7.5);
-    let c = Float106::from_f64(2.0);
+    let a = Float106::from(3.25);
+    let b = Float106::from(-7.5);
+    let c = Float106::from(2.0);
     assert_close(a * (b + c), a * b + a * c);
 }

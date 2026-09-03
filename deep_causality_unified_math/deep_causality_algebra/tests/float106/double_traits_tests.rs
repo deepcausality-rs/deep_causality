@@ -25,7 +25,7 @@ fn test_zero_trait() {
 
 #[test]
 fn test_zero_set_zero() {
-    let mut x = Float106::from_f64(42.0);
+    let mut x = <Float106 as From<f64>>::from(42.0);
     x.set_zero();
     assert!(x.is_zero());
 }
@@ -40,7 +40,7 @@ fn test_one_trait() {
 
 #[test]
 fn test_one_set_one() {
-    let mut x = Float106::from_f64(42.0);
+    let mut x = <Float106 as From<f64>>::from(42.0);
     x.set_one();
     assert!(x.is_one());
 }
@@ -70,34 +70,40 @@ fn test_float_trait_bound() {
 #[test]
 fn test_is_nan() {
     assert!(<Float106 as Float>::nan().is_nan());
-    assert!(!Float106::from_f64(1.0).is_nan());
+    assert!(!<Float106 as From<f64>>::from(1.0).is_nan());
 }
 
 #[test]
 fn test_is_infinite() {
     assert!(<Float106 as Float>::infinity().is_infinite());
     assert!(<Float106 as Float>::neg_infinity().is_infinite());
-    assert!(!Float106::from_f64(1.0).is_infinite());
+    assert!(!<Float106 as From<f64>>::from(1.0).is_infinite());
 }
 
 #[test]
 fn test_is_finite() {
-    assert!(Float106::from_f64(1.0).is_finite());
+    assert!(<Float106 as From<f64>>::from(1.0).is_finite());
     assert!(!<Float106 as Float>::infinity().is_finite());
     assert!(!<Float106 as Float>::nan().is_finite());
 }
 
 #[test]
 fn test_is_normal() {
-    assert!(Float106::from_f64(1.0).is_normal());
-    assert!(!Float106::from_f64(0.0).is_normal());
+    assert!(<Float106 as From<f64>>::from(1.0).is_normal());
+    assert!(!<Float106 as From<f64>>::from(0.0).is_normal());
 }
 
 #[test]
 fn test_classify() {
     use core::num::FpCategory;
-    assert_eq!(Float106::from_f64(1.0).classify(), FpCategory::Normal);
-    assert_eq!(Float106::from_f64(0.0).classify(), FpCategory::Zero);
+    assert_eq!(
+        <Float106 as From<f64>>::from(1.0).classify(),
+        FpCategory::Normal
+    );
+    assert_eq!(
+        <Float106 as From<f64>>::from(0.0).classify(),
+        FpCategory::Zero
+    );
     assert_eq!(
         <Float106 as Float>::infinity().classify(),
         FpCategory::Infinite
@@ -118,25 +124,25 @@ fn test_numcast_trait_bound() {
 
 #[test]
 fn test_to_f64() {
-    let x = Float106::from_f64(42.5);
+    let x = <Float106 as From<f64>>::from(42.5);
     assert_eq!(ToPrimitive::to_f64(&x), Some(42.5));
 }
 
 #[test]
 fn test_to_f32() {
-    let x = Float106::from_f64(42.5);
+    let x = <Float106 as From<f64>>::from(42.5);
     assert_eq!(ToPrimitive::to_f32(&x), Some(42.5_f32));
 }
 
 #[test]
 fn test_to_i64() {
-    let x = Float106::from_f64(42.0);
+    let x = <Float106 as From<f64>>::from(42.0);
     assert_eq!(ToPrimitive::to_i64(&x), Some(42));
 }
 
 #[test]
 fn test_to_u64() {
-    let x = Float106::from_f64(42.0);
+    let x = <Float106 as From<f64>>::from(42.0);
     assert_eq!(ToPrimitive::to_u64(&x), Some(42));
 }
 
@@ -208,28 +214,28 @@ fn test_real_field_bound() {
 
 #[test]
 fn test_conjugate() {
-    let x = Float106::from_f64(5.0);
+    let x = <Float106 as From<f64>>::from(5.0);
     // For reals, conjugate is identity
     assert_eq!(x.conjugate(), x);
 }
 
 #[test]
 fn test_norm_sqr() {
-    let x = Float106::from_f64(3.0);
+    let x = <Float106 as From<f64>>::from(3.0);
     let norm_sq = x.norm_sqr();
     assert_eq!(norm_sq.hi(), 9.0);
 }
 
 #[test]
 fn test_inverse() {
-    let x = Float106::from_f64(4.0);
+    let x = <Float106 as From<f64>>::from(4.0);
     let inv = x.inverse();
     assert_eq!(inv.hi(), 0.25);
 }
 
 #[test]
 fn test_inverse_identity() {
-    let x = Float106::from_f64(4.0);
+    let x = <Float106 as From<f64>>::from(4.0);
     let product = x * x.inverse();
     assert!((product.hi() - 1.0).abs() < 1e-14);
 }
@@ -240,14 +246,14 @@ fn test_inverse_identity() {
 
 #[test]
 fn test_copy() {
-    let x = Float106::from_f64(42.0);
+    let x = <Float106 as From<f64>>::from(42.0);
     let y = x; // Copy
     assert_eq!(x, y);
 }
 
 #[test]
 fn test_clone() {
-    let x = Float106::from_f64(42.0);
+    let x = <Float106 as From<f64>>::from(42.0);
     #[allow(clippy::clone_on_copy)]
     let y = x.clone();
     assert_eq!(x, y);
@@ -266,7 +272,7 @@ fn test_default() {
 
 #[test]
 fn test_debug() {
-    let x = Float106::from_f64(42.0);
+    let x = <Float106 as From<f64>>::from(42.0);
     let debug_str = format!("{:?}", x);
     assert!(debug_str.contains("DoubleFloat"));
     assert!(debug_str.contains("42"));
@@ -274,7 +280,7 @@ fn test_debug() {
 
 #[test]
 fn test_display() {
-    let x = Float106::from_f64(42.0);
+    let x = <Float106 as From<f64>>::from(42.0);
     let display_str = format!("{}", x);
     assert!(display_str.contains("42"));
 }
@@ -282,7 +288,7 @@ fn test_display() {
 #[test]
 fn test_trig() {
     let angle_val = 0.5_f64;
-    let angle = Float106::from_f64(angle_val);
+    let angle = <Float106 as From<f64>>::from(angle_val);
 
     // sin
     let s = Real::sin(angle);

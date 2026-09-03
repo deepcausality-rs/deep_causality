@@ -152,7 +152,7 @@ fn convention_identity_f32() {
 
 #[test]
 fn convention_identity_float106() {
-    assert_convention_identity::<Float106>(Float106::from_f64(1e-12));
+    assert_convention_identity::<Float106>(Float106::from(1e-12));
 }
 
 /// On the fully periodic Stage-1 lattice the diagnostic's grade-0 solve

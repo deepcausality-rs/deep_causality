@@ -23,7 +23,7 @@ use deep_causality_uncertain::{QmcSampler, Uncertain, UncertainError, seed_sampl
 use rusty_fork::rusty_fork_test;
 
 fn f106(x: f64) -> Float106 {
-    Float106::from_f64(x)
+    Float106::from(x)
 }
 
 // =============================================================================

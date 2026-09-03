@@ -193,8 +193,8 @@ mod f106_tests {
 
     #[test]
     fn test_new_and_range() {
-        let low = Float106::from_f64(10.0);
-        let high = Float106::from_f64(20.0);
+        let low = Float106::from(10.0);
+        let high = Float106::from(20.0);
         let uniform = Uniform::<Float106>::new(low, high).unwrap();
         let mut rng = rng();
         for _ in 0..1000 {
@@ -213,17 +213,17 @@ mod f106_tests {
 
     #[test]
     fn test_sample_distribution_mean() {
-        let low = Float106::from_f64(10.0);
-        let high = Float106::from_f64(20.0);
+        let low = Float106::from(10.0);
+        let high = Float106::from(20.0);
         let uniform = Uniform::<Float106>::new(low, high).unwrap();
         let mut rng = rng();
         const NUM_SAMPLES: usize = 100_000;
-        let zero = Float106::from_f64(0.0);
+        let zero = Float106::from(0.0);
         let sum = (0..NUM_SAMPLES).fold(zero, |acc, _| acc + uniform.sample(&mut rng));
-        let mean = sum / Float106::from_f64(NUM_SAMPLES as f64);
-        let expected = Float106::from_f64(15.0);
+        let mean = sum / Float106::from(NUM_SAMPLES as f64);
+        let expected = Float106::from(15.0);
         assert!(
-            (mean - expected).abs() < Float106::from_f64(0.05),
+            (mean - expected).abs() < Float106::from(0.05),
             "Float106 uniform mean {mean:?} not close to 15"
         );
     }

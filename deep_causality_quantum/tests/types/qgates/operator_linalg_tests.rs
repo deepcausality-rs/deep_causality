@@ -223,7 +223,7 @@ fn test_embed_on_legs_rejects_mismatches() {
 fn test_counterexample_and_eigen_at_float106() {
     type F = Float106;
     type CF = Complex<F>;
-    let f = Float106::from_f64;
+    let f = <Float106 as From<f64>>::from;
     let cf = |re: f64, im: f64| Complex::new(f(re), f(im));
 
     let m2 = |d: [[(f64, f64); 2]; 2]| -> CausalTensor<CF> {

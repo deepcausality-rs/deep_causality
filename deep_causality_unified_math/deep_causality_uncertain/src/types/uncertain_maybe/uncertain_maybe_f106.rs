@@ -32,7 +32,7 @@ impl MaybeUncertain<Float106> {
     pub fn always_none() -> Self {
         Self {
             is_present: Uncertain::<bool>::point(false),
-            value: Uncertain::<Float106>::point(Float106::from_f64(0.0)),
+            value: Uncertain::<Float106>::point(Float106::from(0.0)),
         }
     }
 

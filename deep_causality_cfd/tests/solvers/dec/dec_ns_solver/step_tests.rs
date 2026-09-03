@@ -86,7 +86,7 @@ fn step_divergence_free_f32() {
 
 #[test]
 fn step_divergence_free_float106() {
-    assert_step_divergence_free::<Float106>(Float106::from_f64(1e-8));
+    assert_step_divergence_free::<Float106>(Float106::from(1e-8));
 }
 
 /// The zero state with `ν = 0` and no body force is a fixed point: both

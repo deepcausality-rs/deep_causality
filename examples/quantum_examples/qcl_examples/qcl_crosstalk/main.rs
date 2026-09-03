@@ -44,7 +44,8 @@ use crate::model::{
     h3_common_bath, h4_cyclic, lift, plant, systems,
 };
 
-/// The real working type.
+/// The real working type. Switch it to
+/// `f32`, `f64`, or `Float106`  to define the precision level.
 pub type FloatType = f64;
 
 /// The count working type.

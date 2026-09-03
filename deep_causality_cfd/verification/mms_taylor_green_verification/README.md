@@ -158,8 +158,9 @@ reference is read at the same instant the march arrives.
 ## Notes for the curious
 
 - `Float106` is a double-double type with roughly 32 decimal digits. Some of its methods are
-  inherent and shadow the corresponding traits, so the example reaches `from_f64`, `abs` and `max`
-  through fully-qualified or `Scalar`-bounded helpers to stay precision-generic.
+  inherent and shadow the corresponding traits, so the example reaches `abs` and `max` through
+  fully-qualified or `Scalar`-bounded helpers to stay precision-generic; `from_f64` is the
+  `FromPrimitive` trait method alone, the inherent one having been retired.
 - The kernel is `deep_causality_physics::incompressible_ns_rhs_kernel`, which composes the
   convective, pressure and viscous sub-kernels. The wider fluid-dynamics set
   (vorticity, strain rate, Q-criterion, and related diagnostics) lives in the same crate.

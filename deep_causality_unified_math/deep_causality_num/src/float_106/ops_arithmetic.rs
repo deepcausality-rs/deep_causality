@@ -48,7 +48,7 @@ impl Add<f64> for Float106 {
 
     #[inline]
     fn add(self, rhs: f64) -> Self::Output {
-        self + Self::from_f64(rhs)
+        self + Self::from(rhs)
     }
 }
 
@@ -57,7 +57,7 @@ impl Add<Float106> for f64 {
 
     #[inline]
     fn add(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) + rhs
+        Float106::from(self) + rhs
     }
 }
 
@@ -95,7 +95,7 @@ impl Sub<f64> for Float106 {
 
     #[inline]
     fn sub(self, rhs: f64) -> Self::Output {
-        self - Self::from_f64(rhs)
+        self - Self::from(rhs)
     }
 }
 
@@ -104,7 +104,7 @@ impl Sub<Float106> for f64 {
 
     #[inline]
     fn sub(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) - rhs
+        Float106::from(self) - rhs
     }
 }
 
@@ -224,7 +224,7 @@ impl Div<Float106> for f64 {
 
     #[inline]
     fn div(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) / rhs
+        Float106::from(self) / rhs
     }
 }
 
@@ -256,7 +256,7 @@ impl Rem for Float106 {
         let n = div.hi.trunc();
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]
         let n = libm::trunc(div.hi);
-        self - (rhs * Self::from_f64(n))
+        self - (rhs * Self::from(n))
     }
 }
 
@@ -265,7 +265,7 @@ impl Rem<f64> for Float106 {
 
     #[inline]
     fn rem(self, rhs: f64) -> Self::Output {
-        self % Self::from_f64(rhs)
+        self % Self::from(rhs)
     }
 }
 
@@ -274,7 +274,7 @@ impl Rem<Float106> for f64 {
 
     #[inline]
     fn rem(self, rhs: Float106) -> Self::Output {
-        Float106::from_f64(self) % rhs
+        Float106::from(self) % rhs
     }
 }
 

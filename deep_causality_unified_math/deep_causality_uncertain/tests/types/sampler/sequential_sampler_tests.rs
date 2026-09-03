@@ -480,7 +480,7 @@ fn test_conditional_op() {
 // =============================================================================
 
 fn f106(x: f64) -> Float106 {
-    Float106::from_f64(x)
+    Float106::from(x)
 }
 
 fn dfloat(x: f64) -> UncertainNode {

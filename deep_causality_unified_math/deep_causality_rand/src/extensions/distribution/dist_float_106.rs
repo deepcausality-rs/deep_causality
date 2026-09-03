@@ -56,7 +56,7 @@ impl Distribution<Float106> for StandardNormal {
     /// Box–Muller in double-double precision: an honest ~104-bit normal draw using the
     /// `Real` transcendentals (`ln`, `sqrt`, `cos`) over the double-double uniforms above.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Float106 {
-        let two = Float106::from_f64(2.0);
+        let two = Float106::from(2.0);
         // u1 in (0, 1) keeps ln() finite and non-positive; u2 in [0, 1) is the angle fraction.
         let u1: Float106 = Open01.sample(rng);
         let u2: Float106 = StandardUniform.sample(rng);

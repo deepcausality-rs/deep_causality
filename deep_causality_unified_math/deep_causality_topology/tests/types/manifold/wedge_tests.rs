@@ -276,7 +276,7 @@ fn wedge_laws_hold_on_2d_torus_f32() {
 
 #[test]
 fn wedge_laws_hold_on_2d_torus_float106() {
-    let tol = Float106::from_f64(1e-25);
+    let tol = Float106::from(1e-25);
     assert_wedge_laws_on(|| LatticeComplex::<2, Float106>::square_torus(4), tol);
 }
 

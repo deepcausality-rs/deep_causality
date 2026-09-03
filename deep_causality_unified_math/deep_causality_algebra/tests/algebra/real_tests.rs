@@ -73,8 +73,8 @@ fn concrete_scalars_are_realfield() {
 
 #[test]
 fn float106_real_surface() {
-    let four = Float106::from_f64(4.0);
-    let two = Float106::from_f64(2.0);
+    let four = Float106::from(4.0);
+    let two = Float106::from(2.0);
     let diff = <Float106 as Real>::sqrt(four) - two;
-    assert!(diff.abs() < Float106::from_f64(1e-12));
+    assert!(diff.abs() < Float106::from(1e-12));
 }

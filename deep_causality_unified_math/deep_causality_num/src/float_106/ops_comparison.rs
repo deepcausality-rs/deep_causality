@@ -73,13 +73,13 @@ impl PartialOrd for Float106 {
 impl PartialOrd<f64> for Float106 {
     #[inline]
     fn partial_cmp(&self, other: &f64) -> Option<Ordering> {
-        self.partial_cmp(&Self::from_f64(*other))
+        self.partial_cmp(&Self::from(*other))
     }
 }
 
 impl PartialOrd<Float106> for f64 {
     #[inline]
     fn partial_cmp(&self, other: &Float106) -> Option<Ordering> {
-        Float106::from_f64(*self).partial_cmp(other)
+        Float106::from(*self).partial_cmp(other)
     }
 }

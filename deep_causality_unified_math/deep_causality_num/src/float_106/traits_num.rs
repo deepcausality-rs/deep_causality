@@ -91,72 +91,72 @@ impl ToPrimitive for Float106 {
 impl FromPrimitive for Float106 {
     #[inline]
     fn from_i64(n: i64) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_u64(n: u64) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_isize(n: isize) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_i8(n: i8) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_i16(n: i16) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_i32(n: i32) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_i128(n: i128) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_usize(n: usize) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_u8(n: u8) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_u16(n: u16) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_u32(n: u32) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_u128(n: u128) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_f32(n: f32) -> Option<Self> {
-        Some(Self::from_f64(n as f64))
+        Some(<Self as From<f64>>::from(n as f64))
     }
 
     #[inline]
     fn from_f64(n: f64) -> Option<Self> {
-        Some(Self::from_f64(n))
+        Some(<Self as From<f64>>::from(n))
     }
 }
 
@@ -167,7 +167,7 @@ impl FromPrimitive for Float106 {
 impl NumCast for Float106 {
     #[inline]
     fn from<T: ToPrimitive>(n: T) -> Option<Self> {
-        n.to_f64().map(Self::from_f64)
+        n.to_f64().map(<Self as From<f64>>::from)
     }
 }
 
@@ -179,24 +179,24 @@ use core::iter::{Product, Sum};
 
 impl Sum for Float106 {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Self::from_f64(0.0), |acc, x| acc + x)
+        iter.fold(<Self as From<f64>>::from(0.0), |acc, x| acc + x)
     }
 }
 
 impl<'a> Sum<&'a Float106> for Float106 {
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.fold(Self::from_f64(0.0), |acc, x| acc + *x)
+        iter.fold(<Self as From<f64>>::from(0.0), |acc, x| acc + *x)
     }
 }
 
 impl Product for Float106 {
     fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Self::from_f64(1.0), |acc, x| acc * x)
+        iter.fold(<Self as From<f64>>::from(1.0), |acc, x| acc * x)
     }
 }
 
 impl<'a> Product<&'a Float106> for Float106 {
     fn product<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.fold(Self::from_f64(1.0), |acc, x| acc * *x)
+        iter.fold(<Self as From<f64>>::from(1.0), |acc, x| acc * *x)
     }
 }

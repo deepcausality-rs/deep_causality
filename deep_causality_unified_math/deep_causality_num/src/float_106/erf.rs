@@ -28,7 +28,7 @@ impl Float106 {
             return Self::nan();
         }
         if self.hi == 0.0 && self.lo == 0.0 {
-            return Self::from_f64(0.0);
+            return Self::from(0.0);
         }
 
         let ax = self.abs();
@@ -37,7 +37,7 @@ impl Float106 {
         } else {
             // erf(|x|) = 1 − erfc(|x|); the subtraction loses only the few digits
             // by which erf falls short of 1, leaving the result well above f64.
-            Self::from_f64(1.0) - erfc_tail(ax)
+            Self::from(1.0) - erfc_tail(ax)
         };
 
         if self.is_sign_negative() {
@@ -55,12 +55,12 @@ impl Float106 {
 
         // x ≤ 0: erf(x) ≤ 0, so `1 − erf(x)` is a sum of non-negatives — no cancellation.
         if self.hi <= 0.0 {
-            return Self::from_f64(1.0) - self.erf();
+            return Self::from(1.0) - self.erf();
         }
 
         if self.hi < SERIES_TAIL_CROSSOVER {
             // erfc < ~0.34 here, so `1 − erf` loses at most a fraction of a digit.
-            Self::from_f64(1.0) - erf_series(self)
+            Self::from(1.0) - erf_series(self)
         } else {
             erfc_tail(self)
         }
@@ -70,26 +70,26 @@ impl Float106 {
 /// `2/√π` at double-double precision (derived from [`Float106::PI`] to avoid a hand-split literal).
 #[inline]
 fn two_over_sqrt_pi() -> Float106 {
-    Float106::from_f64(2.0) / Float106::PI.sqrt()
+    Float106::from(2.0) / Float106::PI.sqrt()
 }
 
 /// `1/√π` at double-double precision.
 #[inline]
 fn inv_sqrt_pi() -> Float106 {
-    Float106::from_f64(1.0) / Float106::PI.sqrt()
+    Float106::from(1.0) / Float106::PI.sqrt()
 }
 
 /// `erf(ax)` for `ax ≥ 0` via the all-positive series (Abramowitz & Stegun 7.1.6).
 fn erf_series(ax: Float106) -> Float106 {
     let x2 = ax * ax;
-    let two_x2 = x2 * Float106::from_f64(2.0);
+    let two_x2 = x2 * Float106::from(2.0);
 
     // n = 0 term is `x`; term_n = term_{n-1} · 2x² / (2n+1).
     let mut term = ax;
     let mut sum = ax;
     let mut n: u32 = 1;
     loop {
-        term = term * two_x2 / Float106::from_f64((2 * n + 1) as f64);
+        term = term * two_x2 / Float106::from((2 * n + 1) as f64);
         sum += term;
         if term.abs().hi < sum.abs().hi * 1e-34 {
             break;
@@ -106,16 +106,16 @@ fn erf_series(ax: Float106) -> Float106 {
 /// `erfc(x)` for `x ≥ 1.5` via the continued fraction (A&S 7.1.14), modified-Lentz evaluated.
 fn erfc_tail(x: Float106) -> Float106 {
     // Guards against a zero denominator/numerator in the recurrence (Lentz's "tiny").
-    let tiny = Float106::from_f64(1e-300);
-    let one = Float106::from_f64(1.0);
+    let tiny = Float106::from(1e-300);
+    let one = Float106::from(1.0);
 
     // Continued fraction f = x + a₁/(x + a₂/(x + …)), with aᵢ = i/2 and every bᵢ = x.
     let mut f = x;
     let mut c = f;
-    let mut d = Float106::from_f64(0.0);
+    let mut d = Float106::from(0.0);
     let mut i: u32 = 1;
     loop {
-        let a = Float106::from_f64(i as f64 * 0.5);
+        let a = Float106::from(i as f64 * 0.5);
 
         d = x + a * d;
         if d.hi == 0.0 {

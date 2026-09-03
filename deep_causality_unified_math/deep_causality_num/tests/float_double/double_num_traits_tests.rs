@@ -13,49 +13,49 @@ use deep_causality_num::{Float106, FromPrimitive, ToPrimitive};
 
 #[test]
 fn test_to_isize() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert_eq!(ToPrimitive::to_isize(&x), Some(42));
 }
 
 #[test]
 fn test_to_isize_negative() {
-    let x = Float106::from_f64(-42.0);
+    let x = Float106::from(-42.0);
     assert_eq!(ToPrimitive::to_isize(&x), Some(-42));
 }
 
 #[test]
 fn test_to_i8() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert_eq!(ToPrimitive::to_i8(&x), Some(42));
 }
 
 #[test]
 fn test_to_i8_negative() {
-    let x = Float106::from_f64(-42.0);
+    let x = Float106::from(-42.0);
     assert_eq!(ToPrimitive::to_i8(&x), Some(-42));
 }
 
 #[test]
 fn test_to_i16() {
-    let x = Float106::from_f64(1000.0);
+    let x = Float106::from(1000.0);
     assert_eq!(ToPrimitive::to_i16(&x), Some(1000));
 }
 
 #[test]
 fn test_to_i32() {
-    let x = Float106::from_f64(100000.0);
+    let x = Float106::from(100000.0);
     assert_eq!(ToPrimitive::to_i32(&x), Some(100000));
 }
 
 #[test]
 fn test_to_i64() {
-    let x = Float106::from_f64(1e15);
+    let x = Float106::from(1e15);
     assert_eq!(ToPrimitive::to_i64(&x), Some(1000000000000000));
 }
 
 #[test]
 fn test_to_i128() {
-    let x = Float106::from_f64(1e15);
+    let x = Float106::from(1e15);
     assert_eq!(ToPrimitive::to_i128(&x), Some(1000000000000000));
 }
 
@@ -65,37 +65,37 @@ fn test_to_i128() {
 
 #[test]
 fn test_to_usize() {
-    let x = Float106::from_f64(42.0);
+    let x = Float106::from(42.0);
     assert_eq!(ToPrimitive::to_usize(&x), Some(42));
 }
 
 #[test]
 fn test_to_u8() {
-    let x = Float106::from_f64(200.0);
+    let x = Float106::from(200.0);
     assert_eq!(ToPrimitive::to_u8(&x), Some(200));
 }
 
 #[test]
 fn test_to_u16() {
-    let x = Float106::from_f64(60000.0);
+    let x = Float106::from(60000.0);
     assert_eq!(ToPrimitive::to_u16(&x), Some(60000));
 }
 
 #[test]
 fn test_to_u32() {
-    let x = Float106::from_f64(4000000000.0);
+    let x = Float106::from(4000000000.0);
     assert_eq!(ToPrimitive::to_u32(&x), Some(4000000000));
 }
 
 #[test]
 fn test_to_u64() {
-    let x = Float106::from_f64(1e15);
+    let x = Float106::from(1e15);
     assert_eq!(ToPrimitive::to_u64(&x), Some(1000000000000000));
 }
 
 #[test]
 fn test_to_u128() {
-    let x = Float106::from_f64(1e15);
+    let x = Float106::from(1e15);
     assert_eq!(ToPrimitive::to_u128(&x), Some(1000000000000000));
 }
 
@@ -105,13 +105,13 @@ fn test_to_u128() {
 
 #[test]
 fn test_to_f32() {
-    let x = Float106::from_f64(42.5);
+    let x = Float106::from(42.5);
     assert_eq!(ToPrimitive::to_f32(&x), Some(42.5_f32));
 }
 
 #[test]
 fn test_to_f64() {
-    let x = Float106::from_f64(42.5);
+    let x = Float106::from(42.5);
     assert_eq!(ToPrimitive::to_f64(&x), Some(42.5_f64));
 }
 
@@ -224,9 +224,9 @@ fn test_from_f64_primitive() {
 #[test]
 fn test_sum_owned() {
     let values = vec![
-        Float106::from_f64(1.0),
-        Float106::from_f64(2.0),
-        Float106::from_f64(3.0),
+        Float106::from(1.0),
+        Float106::from(2.0),
+        Float106::from(3.0),
     ];
     let sum: Float106 = values.into_iter().sum();
     assert!((sum.hi() - 6.0).abs() < 1e-14);
@@ -235,9 +235,9 @@ fn test_sum_owned() {
 #[test]
 fn test_sum_borrowed() {
     let values = [
-        Float106::from_f64(1.0),
-        Float106::from_f64(2.0),
-        Float106::from_f64(3.0),
+        Float106::from(1.0),
+        Float106::from(2.0),
+        Float106::from(3.0),
     ];
     let sum: Float106 = values.iter().sum();
     assert!((sum.hi() - 6.0).abs() < 1e-14);
@@ -257,9 +257,9 @@ fn test_sum_empty() {
 #[test]
 fn test_product_owned() {
     let values = vec![
-        Float106::from_f64(2.0),
-        Float106::from_f64(3.0),
-        Float106::from_f64(4.0),
+        Float106::from(2.0),
+        Float106::from(3.0),
+        Float106::from(4.0),
     ];
     let product: Float106 = values.into_iter().product();
     assert!((product.hi() - 24.0).abs() < 1e-14);
@@ -268,9 +268,9 @@ fn test_product_owned() {
 #[test]
 fn test_product_borrowed() {
     let values = [
-        Float106::from_f64(2.0),
-        Float106::from_f64(3.0),
-        Float106::from_f64(4.0),
+        Float106::from(2.0),
+        Float106::from(3.0),
+        Float106::from(4.0),
     ];
     let product: Float106 = values.iter().product();
     assert!((product.hi() - 24.0).abs() < 1e-14);

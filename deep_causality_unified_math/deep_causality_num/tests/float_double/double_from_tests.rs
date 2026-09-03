@@ -161,21 +161,21 @@ fn test_from_u64_zero() {
 
 #[test]
 fn test_to_f64_positive() {
-    let x = Float106::from_f64(42.5);
+    let x = Float106::from(42.5);
     let y: f64 = x.into();
     assert!((y - 42.5).abs() < EPSILON);
 }
 
 #[test]
 fn test_to_f64_negative() {
-    let x = Float106::from_f64(-42.5);
+    let x = Float106::from(-42.5);
     let y: f64 = x.into();
     assert!((y - (-42.5)).abs() < EPSILON);
 }
 
 #[test]
 fn test_to_f64_zero() {
-    let x = Float106::from_f64(0.0);
+    let x = Float106::from(0.0);
     let y: f64 = x.into();
     assert_eq!(y, 0.0);
 }
@@ -186,21 +186,21 @@ fn test_to_f64_zero() {
 
 #[test]
 fn test_to_f32_positive() {
-    let x = Float106::from_f64(42.5);
+    let x = Float106::from(42.5);
     let y: f32 = x.into();
     assert!((y - 42.5_f32).abs() < 1e-6);
 }
 
 #[test]
 fn test_to_f32_negative() {
-    let x = Float106::from_f64(-42.5);
+    let x = Float106::from(-42.5);
     let y: f32 = x.into();
     assert!((y - (-42.5_f32)).abs() < 1e-6);
 }
 
 #[test]
 fn test_to_f32_zero() {
-    let x = Float106::from_f64(0.0);
+    let x = Float106::from(0.0);
     let y: f32 = x.into();
     assert_eq!(y, 0.0_f32);
 }

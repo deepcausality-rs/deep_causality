@@ -132,7 +132,7 @@ fn two_form_contraction_signs_2d_f32() {
 
 #[test]
 fn two_form_contraction_signs_2d_float106() {
-    assert_2d_two_form_contraction::<Float106>(Float106::from_f64(1e-28));
+    assert_2d_two_form_contraction::<Float106>(Float106::from(1e-28));
 }
 
 /// 2D, k = 1 (odd k(D−k) branch): i_X ω = X¹ω₁ + X²ω₂ (a 0-form).

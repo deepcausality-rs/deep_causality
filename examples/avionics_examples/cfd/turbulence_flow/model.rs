@@ -118,18 +118,18 @@ pub fn run<S: Scalar>(
 /// Lift an `f32` flow state into `Float106` (exact, since `f32 ⊂ f64 ⊂ Float106`).
 pub fn f32_to_106(v: Vec3<f32>) -> Vec3<Float106> {
     Vec3 {
-        x: Float106::from_f64(v.x as f64),
-        y: Float106::from_f64(v.y as f64),
-        z: Float106::from_f64(v.z as f64),
+        x: Float106::from(v.x as f64),
+        y: Float106::from(v.y as f64),
+        z: Float106::from(v.z as f64),
     }
 }
 
 /// Lift an `f64` flow state into `Float106` (exact).
 pub fn f64_to_106(v: Vec3<f64>) -> Vec3<Float106> {
     Vec3 {
-        x: Float106::from_f64(v.x),
-        y: Float106::from_f64(v.y),
-        z: Float106::from_f64(v.z),
+        x: Float106::from(v.x),
+        y: Float106::from(v.y),
+        z: Float106::from(v.z),
     }
 }
 
@@ -149,7 +149,7 @@ pub fn forecast_horizon(
     sample_dt: f64,
     threshold: f64,
 ) -> Option<f64> {
-    let thr = Float106::from_f64(threshold);
+    let thr = Float106::from(threshold);
     traj.iter()
         .zip(reference)
         .position(|(a, b)| distance(*a, *b) > thr)
