@@ -1,0 +1,3 @@
+# Lines excluded from scanning.
+# One regex per line, matched against the source line with re.search().
+# Blank lines and lines starting with '#' are ignored.
