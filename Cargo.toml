@@ -79,7 +79,6 @@ rusty-fork = { version = "0.3" }
 tempfile = { version = "3", default-features = false }
 tokio = { version = "1" }
 
-
 # Repo-wide lint policy.
 # Member crates opt in with `[lints] workspace = true`.
 [workspace.lints.rust]
