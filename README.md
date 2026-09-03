@@ -393,7 +393,10 @@ Implemented research:
 
 ## 👮 Security
 
-See [SECURITY.md](SECURITY.md) for security policies.
+CRA stewardship: The DeepCausality project is under the Linux Foundation CRA stewardship framework
+to comply wiht the EU Cyber Resilience Act (CRA).
+
+See [SECURITY.md](SECURITY.md) for security policies and details.
 
 ---
 
