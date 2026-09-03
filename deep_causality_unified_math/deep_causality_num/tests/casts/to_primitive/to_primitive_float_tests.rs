@@ -67,11 +67,7 @@ mod f32_to_tests {
         f32,
         isize,
         f32::NEG_INFINITY,
-        if cfg!(target_pointer_width = "64") {
-            None
-        } else {
-            Some(isize::MAX)
-        }
+None
     );
     test_to!(to_isize_zero, to_isize, f32, isize, 0.0, Some(0));
     test_to!(to_isize_neg_zero, to_isize, f32, isize, -0.0, Some(0));
