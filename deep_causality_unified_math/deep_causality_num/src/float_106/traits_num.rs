@@ -43,8 +43,12 @@ impl Float106 {
         if t == max {
             return Some(u128::MAX);
         }
-        let integer = t.hi.to_i128()?.checked_add(t.lo.to_i128()?)?;
-        u128::try_from(integer).ok()
+        let integer = if t.hi == max.hi {
+            u128::MAX.checked_add_signed(t.lo.to_i128()?.checked_add(1)?)?
+        } else {
+            t.hi.to_u128()?.checked_add_signed(t.lo.to_i128()?)?
+        };
+        Some(integer)
     }
 
     /// An integer as a `Float106`, exact while the remainder past the high half fits an `f64`,
