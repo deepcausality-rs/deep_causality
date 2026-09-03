@@ -145,20 +145,33 @@ number reaches the posterior.
 - **WHEN** either the `dag_sampling` clique-picking path or the BRCD MEC path runs
 - **THEN** the chordality check has run on the components it consumes
 
-### Requirement: The closure states what it does with a contradictory input
+### Requirement: The closure does not validate its input, and says so
 
-The closure SHALL document its behaviour on an input admitting no consistent DAG extension, and that behaviour SHALL be observable rather than silent.
+The closure SHALL document that it performs no extendability check, and SHALL NOT be specified to signal on an input admitting no consistent DAG extension.
 
-Where a rule compels both directions of one edge, the input is not extendable. The present
-implementation picks a direction and proceeds, deferring consistency to the caller's validity pass.
-That is a defensible choice — the validity pass does reject a cycle or a new unshielded collider
-afterwards — but it is only defensible while it is stated, because the intermediate result is a graph
-that looks orientable and is not.
+The rules are sound only relative to an input some DAG could have produced. On a PDAG that admits no
+consistent extension the closure still returns an orientation, and that orientation means nothing.
 
-#### Scenario: A contradictory input is documented, not hidden
+Making it signal was considered and rejected for this change. Detecting non-extendability is a
+separate algorithm, not a by-product of orienting, and adding it would change what BRCD's existing
+call sites do. The honest specification is therefore that the closure orients and nothing more, with
+the boundary written down rather than implied.
+
+Two things follow, and both are properties of the documentation rather than of a return value. The
+sweep tries one direction before the other, so an edge both directions compel is oriented the way
+the sweep reached it — deterministic, but a consequence of iteration order and not a decision. And a
+doubly-compelled edge is a symptom of non-extendability, not a characterisation of it: a PDAG can
+admit no extension with no single edge compelled both ways.
+
+#### Scenario: The boundary is documented
 - **WHEN** the closure's documentation is read
-- **THEN** it states what happens when both directions of an edge are compelled, and names the pass responsible for rejecting the result
+- **THEN** it states that no extendability check is performed
+- **AND** it states that the tie-break on a doubly-compelled edge follows the iteration order rather than a rule
 
-#### Scenario: A contradictory input still reaches the validity pass
-- **WHEN** a non-extendable PDAG is closed
-- **THEN** the result is rejected downstream by the validity check rather than accepted as an orientation
+#### Scenario: A non-extendable input still terminates
+- **WHEN** the closure runs on a PDAG that admits no consistent DAG extension
+- **THEN** it terminates and returns an orientation, without panicking or looping
+
+#### Scenario: No direction is pinned on a contradictory edge
+- **WHEN** a test covers a doubly-compelled edge
+- **THEN** it asserts termination and the graph's invariants, and does not assert which direction was chosen

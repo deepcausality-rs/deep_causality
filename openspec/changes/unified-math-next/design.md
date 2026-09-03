@@ -87,6 +87,11 @@ result — recorded with its bound, and not mistaken for a proof.
 prerequisite for the fix, and an exhaustive small-graph search is decisive within its bound and
 cheap.
 
+**Result, recorded 2026-09-04.** No difference, over 3.8 million augmented graphs to five vertices.
+R4 never fires on this family; nor does R3. The four controls that make that negative result
+meaningful — including a positive control proving R4 *can* fire on its own configuration — are in
+`notes/c1-meek.md`. C1's justification is therefore latency and generality, not a live defect.
+
 ### D4. `Real` gains `cbrt` and nothing else
 
 Four of the assessment's five methods fail, each on its own ground, and the grounds are different

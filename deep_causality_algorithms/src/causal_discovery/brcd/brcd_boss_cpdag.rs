@@ -12,13 +12,12 @@
 //! 1. build the skeleton (undirected) from the DAG;
 //! 2. orient every **unshielded collider** `a → c ← b` (with `a`, `b`
 //!    non-adjacent) — the only genuinely new pass;
-//! 3. close under Meek rules ([`crate::brcd::brcd_meek::meek_complete`]).
+//! 3. close under Meek rules (`MixedGraph::meek_complete`).
 //!
 //! The result is identical to `dag2cpdag`: edges compelled in every member of
 //! the Markov equivalence class stay directed; edges that reverse across the
 //! class are left undirected.
 
-use crate::brcd::brcd_meek::meek_complete;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
@@ -98,7 +97,7 @@ pub fn dag_to_cpdag(parents: &[Vec<usize>]) -> Result<MixedGraph<()>, BrcdError>
     }
 
     // Close under Meek to compel every further-forced edge.
-    meek_complete(&mut graph);
+    graph.meek_complete();
     Ok(graph)
 }
 

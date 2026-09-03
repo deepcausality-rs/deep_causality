@@ -9,7 +9,7 @@ The assessment in [`unified_math_next.md`](../../notes/unified_math/unified_math
 `deep_causality_unified_math/` against its four consumers and ranked nine areas of work. A
 sixteen-agent verification sweep then re-read every claim against the tree. It confirmed most of the
 duplication, refuted a third of the ranking's premises, and turned up something the assessment did
-not look for: **three of the findings are live defects, not untidiness.**
+not look for: **findings that are defects rather than untidiness.**
 
 The largest is in the Meek orientation rules. `brcd_meek.rs:13-24` omits Meek's R4 and defends the
 omission on one precondition — that the graph carries no orientation outside its v-structures. BRCD's
@@ -17,9 +17,16 @@ own paper, [Algorithm 1](../../../deep_causality_algorithms/papers/30078_Root_Ca
 falsifies that precondition on line 3: it adds `F → R` as a directed arc, then applies Meek to the
 result, and the prose fixes a cut configuration first. Both are background knowledge in Meek's sense,
 which is exactly the hypothesis R1–R3 do not cover. The paper's Corollary 4.2 — *Completeness of
-Algorithm 1* — rests on that closure being complete, so an incomplete closure yields under-oriented
-PDAGs presented as I-CPDAGs, and the error flows through the clique-picking MEC size into
-`p(G|R) = Q_i/T` and out into the ranked root causes. It stays plausible the whole way.
+Algorithm 1* — rests on that closure being complete, so an incomplete closure would yield
+under-oriented PDAGs presented as I-CPDAGs, and the error would flow through the clique-picking MEC
+size into `p(G|R) = Q_i/T` and out into the ranked root causes, staying plausible the whole way.
+
+A search has since measured whether it does. Over 3.8 million augmented graphs — every labelled DAG
+to five vertices, augmented and cut as Algorithm 1 does — **R1–R3 always reaches the maximally
+oriented PDAG, so R4 never fires**. The defect is latent, not live, and the change says so; the
+result and its four controls are in [`notes/c1-meek.md`](notes/c1-meek.md). What remains true is that
+the docstring's stated precondition is false, that the closure is moving into a general-purpose graph
+type whose other callers are not bound by BRCD's shapes, and that a bound is not a proof.
 
 Two smaller defects share a shape: `vector_norm_l2` is a naive `Σ modulus_squared` that returns
 `inf` for a representable norm, and quantum open-codes the same direct form in at least four places —

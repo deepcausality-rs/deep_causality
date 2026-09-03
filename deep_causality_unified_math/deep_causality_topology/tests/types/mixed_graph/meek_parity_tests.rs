@@ -3,7 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algorithms::brcd::brcd_meek::meek_complete;
+//! The R1-R3 closure, which is what the Python reference applies.
+//!
+//! These cases came with the closure when it moved from `deep_causality_algorithms`. They target
+//! `meek_complete_r1_r3` rather than the default closure, so a change in R4 cannot silently move
+//! the parity behaviour.
+
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{EdgeKind, MixedGraph};
 
@@ -19,7 +24,7 @@ fn r1_orients_to_avoid_new_collider() {
     let mut g = graph(3);
     g.add_arc(0, 1).unwrap();
     g.add_undirected(1, 2).unwrap();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edge_kind(1, 2), Some(EdgeKind::Directed));
     assert_eq!(g.parents(2), vec![1]);
 }
@@ -31,7 +36,7 @@ fn r2_orients_to_avoid_cycle() {
     g.add_arc(0, 1).unwrap();
     g.add_arc(1, 2).unwrap();
     g.add_undirected(0, 2).unwrap();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edge_kind(0, 2), Some(EdgeKind::Directed));
     assert!(g.parents(2).contains(&0));
 }
@@ -45,7 +50,7 @@ fn r3_orients_common_child() {
     g.add_undirected(0, 1).unwrap();
     g.add_undirected(0, 2).unwrap();
     g.add_undirected(0, 3).unwrap();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edge_kind(0, 1), Some(EdgeKind::Directed));
     assert!(g.parents(1).contains(&0));
 }
@@ -59,7 +64,7 @@ fn orientation_propagates_across_passes() {
     g.add_arc(0, 1).unwrap();
     g.add_undirected(1, 2).unwrap();
     g.add_undirected(2, 3).unwrap();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edge_kind(1, 2), Some(EdgeKind::Directed));
     assert_eq!(g.edge_kind(2, 3), Some(EdgeKind::Directed));
     assert_eq!(g.parents(3), vec![2]);
@@ -73,7 +78,7 @@ fn fully_directed_dag_is_unchanged() {
     g.add_arc(1, 2).unwrap();
     g.add_arc(0, 2).unwrap();
     let before = g.edges().clone();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edges(), &before);
 }
 
@@ -82,7 +87,7 @@ fn unforced_undirected_edge_stays_undirected() {
     // A lone undirected edge with no compelling structure remains undirected.
     let mut g = graph(2);
     g.add_undirected(0, 1).unwrap();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edge_kind(0, 1), Some(EdgeKind::Undirected));
 }
 
@@ -92,8 +97,8 @@ fn completion_is_idempotent() {
     g.add_arc(0, 1).unwrap();
     g.add_undirected(1, 2).unwrap();
     g.add_undirected(2, 3).unwrap();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     let once = g.edges().clone();
-    meek_complete(&mut g);
+    g.meek_complete_r1_r3();
     assert_eq!(g.edges(), &once);
 }

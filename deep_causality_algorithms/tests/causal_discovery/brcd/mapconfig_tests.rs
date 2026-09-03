@@ -507,7 +507,7 @@ fn mapprune_accepts_du_above_full_path_cap() {
     // (uncapped) counter for the structure-only weight.
     let pruned = find_map_configs::<f64, (), _>(&cpdag, &[0], |g| {
         let aug = augmented_graph(g, &[0])?;
-        Ok(poly_mec_size::<f64, ()>(&aug))
+        poly_mec_size::<f64, ()>(&aug)
     })
     .expect("finder must accept du beyond the full-path cap");
     assert!(!pruned.configs.is_empty(), "expected >= 1 valid config");

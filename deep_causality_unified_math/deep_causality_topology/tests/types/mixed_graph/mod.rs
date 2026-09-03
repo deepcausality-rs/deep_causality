@@ -6,6 +6,12 @@
 #[cfg(test)]
 mod acyclicity_tests;
 #[cfg(test)]
+mod chordality_tests;
+#[cfg(test)]
+mod meek_parity_tests;
+#[cfg(test)]
+mod meek_tests;
+#[cfg(test)]
 mod mixed_graph_tests;
 #[cfg(test)]
 mod mutation_tests;

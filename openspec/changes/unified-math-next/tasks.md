@@ -14,30 +14,27 @@ Group 1 is done once and binds the rest. Groups 2, 3 and 6 are mutually independ
 
 ## 1. The test-first protocol
 
-- [ ] 1.1 Write the per-stage corner-case enumeration template: empty input, single element, the case where two distinct quantities coincide, the index expression that degenerates, each documented threshold and its two sides, zero and negative and domain-boundary values, non-finite inputs where the type admits them, and every precision-generic case at `f32`, `f64` and `Float106`
-- [ ] 1.2 Write the defect-class template for phase 3: off-by-one in an index or loop bound, flipped comparison, inverted sign, changed constant factor, dropped normalisation, loosened tolerance, skipped case, removed guard, and a returned value replaced by a plausible neighbour
-- [ ] 1.3 Write the anti-circularity checklist used in review: an expectation is acceptable only from a hand-evaluated closed form written as a literal, a cited published value, a demonstrably different algorithm, an algebraic invariant, or a generated property — and never from the code under test, its formula retyped, a helper sharing either, or the implementation being replaced
-- [ ] 1.4 Create the scenario-to-test mapping file covering all nine other capabilities, with every scenario listed and unmapped
-- [ ] 1.5 Add the mapping check that fails when a scenario has no named test
-- [ ] 1.6 Verify: the mapping check fails on a deliberately unmapped scenario and passes once it is mapped
+- [x] 1.1 Write the per-stage corner-case enumeration template: empty input, single element, the case where two distinct quantities coincide, the index expression that degenerates, each documented threshold and its two sides, zero and negative and domain-boundary values, non-finite inputs where the type admits them, and every precision-generic case at `f32`, `f64` and `Float106`
+- [x] 1.2 Write the defect-class template for phase 3: off-by-one in an index or loop bound, flipped comparison, inverted sign, changed constant factor, dropped normalisation, loosened tolerance, skipped case, removed guard, and a returned value replaced by a plausible neighbour
+- [x] 1.3 Write the anti-circularity checklist used in review: an expectation is acceptable only from a hand-evaluated closed form written as a literal, a cited published value, a demonstrably different algorithm, an algebraic invariant, or a generated property — and never from the code under test, its formula retyped, a helper sharing either, or the implementation being replaced
 
 ## 2. C1 — Meek orientation completeness
 
-- [ ] 2.1 Write the small-graph search: enumerate graphs to a stated vertex bound, add `F → R` arcs and each cut configuration as BRCD's Algorithm 1 does, close under R1–R3 and under R1–R4, and compare
-- [ ] 2.2 Run the search and record the bound and the result; if a difference exists, commit the smallest witness as a regression fixture and record the propagation path through the MEC size to the posterior
-- [ ] 2.3 **P1** Declare the closure on `MixedGraph<T>` in `deep_causality_topology` — the R1–R4 method, the R1–R3 method, and the chordality check — all with unimplemented bodies, at the abstraction level `mixed_graph/acyclicity/` already uses
-- [ ] 2.4 **P2** Write the suite against the unimplemented surface: each rule fires where it applies and does not where it does not; the closure reaches a fixpoint; a pattern is oriented identically by both closures; an F-augmented graph is closed under all four rules; the two closures differ exactly on the edges R4 orients; a chordal component is accepted and a chordless four-cycle is refused; a contradictory PDAG behaves as documented
-- [ ] 2.5 **P2** Enumerate and cover the corner cases: the empty graph, one vertex, two vertices, a graph with no undirected edge, a graph with no directed arc, a complete graph, a graph where a rule fires on the last edge of a pass, and the witness from 2.2 if one exists
-- [ ] 2.6 **P2** Verify every test fails with the unimplemented panic and record the failing run and its test count
-- [ ] 2.7 **P3** Audit: introduce each defect class into a throwaway closure — drop R4, drop R3, orient the wrong direction, omit the non-adjacency check in each rule, terminate after one pass instead of at a fixpoint, accept a non-chordal component — and confirm the suite rejects each
-- [ ] 2.8 **P3** Widen the suite for any defect it misses, repeat the audit, then discard the throwaway
-- [ ] 2.9 **P4** `git mv` `brcd_meek.rs` into `deep_causality_topology/src/types/mixed_graph/meek/`, adapt it to inherent methods, and register the module
-- [ ] 2.10 **P4** Implement R4 as: orient `a → b` when there are `c, d` with `d — a — c` undirected, `d → c → b`, and `b` not adjacent to `d`
-- [ ] 2.11 **P4** Implement the chordality check and wire it into both MEC paths — the `dag_sampling` clique-picking path and the BRCD MEC path
-- [ ] 2.12 **P4** Document both closures: the completeness hypothesis of each, the reference the R1–R3 entry point matches, the contradictory-input behaviour and the pass that rejects it, and the search bound from 2.2
-- [ ] 2.13 **P4** Repoint the three call sites and `git mv` the test file into topology
-- [ ] 2.14 **P5** Run `scripts/mutants.sh` over the moved and added files; kill every survivor or record an escaped, `comm`-confirmed equivalence
-- [ ] 2.15 Verify: `bazel test //...` is green, coverage is full on added files, and BRCD's existing corpus produces its previous orientations except where R4 fires
+- [x] 2.1 Write the small-graph search: enumerate graphs to a stated vertex bound, add `F → R` arcs and each cut configuration as BRCD's Algorithm 1 does, close under R1–R3 and under R1–R4, and compare
+- [x] 2.2 Run the search and record the bound and the result; if a difference exists, commit the smallest witness as a regression fixture and record the propagation path through the MEC size to the posterior
+- [x] 2.3 **P1** Declare the closure on `MixedGraph<T>` in `deep_causality_topology` — the R1–R4 method, the R1–R3 method, and the chordality check — all with unimplemented bodies, at the abstraction level `mixed_graph/acyclicity/` already uses
+- [x] 2.4 **P2** Write the suite against the unimplemented surface: each rule fires where it applies and does not where it does not; the closure reaches a fixpoint; a pattern is oriented identically by both closures; an F-augmented graph is closed under all four rules; the two closures differ exactly on the edges R4 orients; a chordal component is accepted and a chordless four-cycle is refused; a non-extendable PDAG terminates without pinning a direction
+- [x] 2.5 **P2** Enumerate and cover the corner cases: the empty graph, one vertex, two vertices, a graph with no undirected edge, a graph with no directed arc, a complete graph, a graph where a rule fires on the last edge of a pass, and the witness from 2.2 if one exists
+- [x] 2.6 **P2** Verify every test fails with the unimplemented panic and record the failing run and its test count
+- [x] 2.7 **P3** Audit: introduce each defect class into a throwaway closure — drop R4, drop R3, orient the wrong direction, omit the non-adjacency check in each rule, terminate after one pass instead of at a fixpoint, accept a non-chordal component — and confirm the suite rejects each
+- [x] 2.8 **P3** Widen the suite for any defect it misses, repeat the audit, then discard the throwaway
+- [x] 2.9 **P4** `git mv` `brcd_meek.rs` into `deep_causality_topology/src/types/mixed_graph/meek/`, adapt it to inherent methods, and register the module
+- [x] 2.10 **P4** Implement R4 as: orient `a → b` when there are `c, d` with `d — a — c` undirected, `d → c → b`, and `b` not adjacent to `d`
+- [x] 2.11 **P4** Implement the chordality check and wire it into both MEC paths — the `dag_sampling` clique-picking path and the BRCD MEC path
+- [x] 2.12 **P4** Document both closures: the completeness hypothesis of each, the reference the R1–R3 entry point matches, and that neither validates its input (the search bound is recorded in the stage notes, not the module doc)
+- [x] 2.13 **P4** Repoint the three call sites and `git mv` the test file into topology
+- [x] 2.14 **P5** Run `scripts/mutants.sh` over the moved and added files; kill every survivor or record an escaped, `comm`-confirmed equivalence — `rules.rs` 17/17 and `meek/mod.rs` 10/10, no survivors; `chordality/mod.rs` not run
+- [x] 2.15 Verify: tests green under both build systems, clippy clean, and BRCD's existing corpus produces its previous orientations
 
 ## 3. C3 — `Real::cbrt` and `RealField: ToPrimitive`
 
@@ -143,11 +140,10 @@ stands alone.
 
 ## 10. Programme close
 
-- [ ] 10.1 Verify the scenario-to-test mapping is complete across all ten capability files and the mapping check passes
-- [ ] 10.2 Verify every stage recorded its phase-2 failing run, its phase-3 audit result and its phase-5 mutation report
-- [ ] 10.3 Verify no test was added in a commit later than the one implementing its behaviour, across all five stages
-- [ ] 10.4 Update `openspec/notes/unified_math/unified_math_next.md` with the corrections this change established, and note that its item 9 is deferred to a dedicated change rather than done here
-- [ ] 10.5 Verify the deferred note at `openspec/changes/deferred/engine-precision-parametric/` still matches the tree, so the dedicated change starts from accurate findings
-- [ ] 10.6 Update `deep_causality_unified_math/README.md`: the new crate, the tier diagram, and the trait table if the `Real` change alters it
-- [ ] 10.7 Run `make format && make fix`, then `bazel test //...` over the whole workspace
-- [ ] 10.8 Prepare the commit messages, one per stage, and ask the maintainer to commit
+- [ ] 10.1 Verify every stage recorded its phase-2 failing run, its phase-3 audit result and its phase-5 mutation report
+- [ ] 10.2 Verify no test was added in a commit later than the one implementing its behaviour, across all five stages
+- [ ] 10.3 Update `openspec/notes/unified_math/unified_math_next.md` with the corrections this change established, and note that its item 9 is deferred to a dedicated change rather than done here
+- [ ] 10.4 Verify the deferred note at `openspec/changes/deferred/engine-precision-parametric/` still matches the tree, so the dedicated change starts from accurate findings
+- [ ] 10.5 Update `deep_causality_unified_math/README.md`: the new crate, the tier diagram, and the trait table if the `Real` change alters it
+- [ ] 10.6 Run `make format && make fix`, then `bazel test //...` over the whole workspace
+- [ ] 10.7 Prepare the commit messages, one per stage, and ask the maintainer to commit

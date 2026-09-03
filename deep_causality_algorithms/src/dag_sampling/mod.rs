@@ -73,7 +73,9 @@ pub use count::{count_amos, count_chordal};
 pub use graph::Graph;
 pub use sample::{representative_dag, sample_dag};
 
+use crate::causal_discovery::brcd::brcd_error::BrcdError;
 use crate::dag_sampling::graph::Graph as InternalGraph;
+use crate::dag_sampling::sample::validate_cpdag;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_topology::MixedGraph;
@@ -98,18 +100,18 @@ use deep_causality_topology::MixedGraph;
 /// factor of one). Vertices incident to no undirected edge contribute a factor of
 /// one as well.
 ///
-/// # Precondition
+/// # Errors
 ///
-/// `graph`'s undirected subgraph is assumed to be a valid CPDAG chain structure —
-/// every connected component chordal. This is **not** checked; an input that
-/// violates the assumption may yield a wrong count (the same contract as
-/// `brcd_mec`).
-pub fn mec_size<T: RealField + FromPrimitive, N>(graph: &MixedGraph<N>) -> T {
+/// * [`BrcdErrorEnum::NotACpdag`] if any edge is bidirected or partially oriented, or a chain
+///   component is not chordal. The count is defined only on chordal components.
+/// * [`BrcdErrorEnum::NotAcyclic`] if the arc projection contains a cycle.
+pub fn mec_size<T: RealField + FromPrimitive, N>(graph: &MixedGraph<N>) -> Result<T, BrcdError> {
+    validate_cpdag(graph)?;
     let n = graph.num_vertices();
     // Build the internal undirected graph over all vertices. Isolated vertices
     // become singleton components (AMO count 1), so they are neutral in the
     // product — matching brcd_mec, which simply skips them.
     let edges: Vec<(usize, usize)> = graph.undirected_edges();
     let g = InternalGraph::from_edge_list(edges, n);
-    count_chordal::<T>(&g)
+    Ok(count_chordal::<T>(&g))
 }

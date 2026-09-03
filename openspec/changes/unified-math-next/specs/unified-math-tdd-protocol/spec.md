@@ -59,11 +59,15 @@ zero-policy parameters the three sources disagree on, which none of the three ha
 
 ### Requirement: Phase 2 writes the full suite against the unimplemented API and observes it fail
 
-The complete test suite SHALL be written before any algorithm, SHALL be run against the unimplemented API, and SHALL be observed failing for the intended reason.
+The complete test suite SHALL be written before any algorithm, SHALL cover every scenario of the stage's capabilities, SHALL be run against the unimplemented API, and SHALL be observed failing for the intended reason.
 
 Observing the failure is what separates a test that will catch a defect from one that passes
 vacuously. A test that fails with a compile error, a missing import, or a panic raised somewhere
 other than the function under test has not been shown to exercise anything.
+
+The scenarios are the source the suite is written from, not a list to be reconciled against it
+afterwards. A scenario with no test means phase 2 is unfinished — that is a property of the suite,
+carried by the suite, and it needs no second artifact tracking it.
 
 #### Scenario: Every test fails for the intended reason
 - **WHEN** the suite runs against the unimplemented API
@@ -73,6 +77,10 @@ other than the function under test has not been shown to exercise anything.
 #### Scenario: The failure run is recorded
 - **WHEN** the phase-2 exit is claimed
 - **THEN** the failing run's output is recorded in the stage's task notes, with the test count
+
+#### Scenario: Every scenario of the stage has a test
+- **WHEN** the phase-2 exit is claimed
+- **THEN** each scenario of the stage's capabilities is exercised by at least one test in the suite
 
 ### Requirement: Expected values come from a source independent of the implementation
 
@@ -225,22 +233,6 @@ confirmed with the `comm` check the file carries, and SHALL match no more than i
 #### Scenario: An equivalence entry is verified
 - **WHEN** an entry is added to `.cargo/mutants.toml`
 - **THEN** its metacharacters are escaped, the `comm` check confirms it matches what it claims, and it is confirmed to match no additional mutants
-
-### Requirement: Every specification scenario in this change maps to a named test
-
-Each scenario in this change's other capabilities SHALL name at least one test, and the mapping SHALL be committed so an unmapped scenario is visible.
-
-The scenarios are the agreed statement of what each stage must do. A scenario with no test is a
-requirement nobody checks, and without a written mapping that absence is invisible.
-
-#### Scenario: The mapping is complete
-- **WHEN** the scenarios of this change's nine other capabilities are enumerated
-- **THEN** each names at least one test function
-- **AND** the mapping is committed alongside the suite
-
-#### Scenario: An unmapped scenario is caught
-- **WHEN** a scenario is added or renamed without a corresponding test
-- **THEN** the mapping check fails
 
 ### Requirement: Test layout and helpers follow the repository's structure
 

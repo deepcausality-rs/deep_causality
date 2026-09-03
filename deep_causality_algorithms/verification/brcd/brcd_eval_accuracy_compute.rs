@@ -579,7 +579,7 @@ fn full_valid_configs(cpdag: &MixedGraph<()>, rc: usize) -> Option<usize> {
 fn mapprune_evals(cpdag: &MixedGraph<()>, rc: usize) -> usize {
     find_map_configs::<f64, (), _>(cpdag, &[rc], |g| {
         let aug = augmented_graph(g, &[rc])?;
-        Ok(poly_mec_size::<f64, ()>(&aug))
+        poly_mec_size::<f64, ()>(&aug)
     })
     .expect("finder")
     .evals

@@ -14,6 +14,7 @@
 //! chordal graphs (`n` in 3..=10) whose class fits under the oracle's enumeration
 //! bound. A `Float106` instantiation is checked against the same oracle.
 
+use deep_causality_algorithms::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use deep_causality_algorithms::brcd::brcd_mec::{MEC_ENUM_BOUND, mec_size as oracle_mec_size};
 use deep_causality_algorithms::dag_sampling::{
     Graph, count_amos, count_chordal, mec_size as cp_mec_size,
@@ -57,7 +58,7 @@ fn anchor_six_node_graph_counts_54() {
         (4, 5),
     ];
     let g = undirected_graph(6, &edges);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 54);
     assert_eq!(oracle_mec_size(&g), Ok(54));
 }
@@ -80,7 +81,7 @@ fn anchor_nine_node_two_components_counts_108() {
         (7, 8),
     ];
     let g = undirected_graph(9, &edges);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 108);
     assert_eq!(oracle_mec_size(&g), Ok(108));
 }
@@ -90,7 +91,7 @@ fn anchor_nine_node_two_components_counts_108() {
 #[test]
 fn empty_graph_counts_one() {
     let g = undirected_graph(3, &[]);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 1);
     assert_eq!(oracle_mec_size(&g), Ok(1));
 }
@@ -98,7 +99,7 @@ fn empty_graph_counts_one() {
 #[test]
 fn single_edge_counts_two() {
     let g = undirected_graph(2, &[(0, 1)]);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 2);
     assert_eq!(oracle_mec_size(&g), Ok(2));
 }
@@ -106,7 +107,7 @@ fn single_edge_counts_two() {
 #[test]
 fn path_of_three_counts_three() {
     let g = undirected_graph(3, &[(0, 1), (1, 2)]);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 3);
     assert_eq!(oracle_mec_size(&g), Ok(3));
 }
@@ -114,7 +115,7 @@ fn path_of_three_counts_three() {
 #[test]
 fn triangle_counts_six() {
     let g = undirected_graph(3, &[(0, 1), (1, 2), (0, 2)]);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 6);
     assert_eq!(oracle_mec_size(&g), Ok(6));
 }
@@ -123,7 +124,7 @@ fn triangle_counts_six() {
 fn complete_four_counts_twentyfour() {
     // K4 is chordal; 4! = 24 acyclic moral orientations.
     let g = undirected_graph(4, &[(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 24);
     assert_eq!(oracle_mec_size(&g), Ok(24));
 }
@@ -135,7 +136,7 @@ fn complete_five_counts_onetwenty() {
         .flat_map(|a| ((a + 1)..5).map(move |b| (a, b)))
         .collect();
     let g = undirected_graph(5, &edges);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(round(cp), 120);
     assert_eq!(oracle_mec_size(&g), Ok(120));
 }
@@ -145,7 +146,7 @@ fn two_triangles_sharing_an_edge() {
     // Chordal: triangles {0,1,2} and {1,2,3} share edge 1-2. AMO count is 8.
     let edges = [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3)];
     let g = undirected_graph(4, &edges);
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     let oracle = oracle_mec_size(&g).unwrap();
     assert_eq!(round(cp), oracle as i128);
 }
@@ -282,7 +283,7 @@ fn random_chordal_graphs_match_oracle() {
             continue;
         }
 
-        let cp: f64 = cp_mec_size(&g);
+        let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
         assert_eq!(
             round(cp),
             oracle as i128,
@@ -341,8 +342,8 @@ fn float106_matches_f64_and_oracle() {
     for &(n, edges) in cases {
         let g = undirected_graph(n, edges);
         let oracle = oracle_mec_size(&g).unwrap() as i128;
-        let cp_f64: f64 = cp_mec_size(&g);
-        let cp_f106: Float106 = cp_mec_size(&g);
+        let cp_f64: f64 = cp_mec_size(&g).expect("a valid CPDAG");
+        let cp_f106: Float106 = cp_mec_size(&g).expect("a valid CPDAG");
         assert_eq!(
             round(cp_f64),
             oracle,
@@ -382,10 +383,44 @@ fn closed_form_complete_minus_two_adjacent_edges() {
         oracle, 32,
         "enumeration oracle for K5 minus two adjacent edges"
     );
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(
         round(cp),
         oracle as i128,
         "clique-picking must match the oracle"
     );
+}
+
+/// The counter is defined only on chordal components, so a chordless cycle is refused rather than
+/// counted. Both entry points agree, which they did not before the check existed: the
+/// clique-picking count returned a number and the enumerator returned `Ok(0)`.
+#[test]
+fn a_non_chordal_component_is_refused_by_both_counters() {
+    let data = CausalTensor::new(vec![(); 4], vec![4]).unwrap();
+    let mut g: MixedGraph<()> = MixedGraph::new(4, data, 0).unwrap();
+    for i in 0..4 {
+        g.add_undirected(i, (i + 1) % 4).unwrap();
+    }
+    assert_eq!(
+        cp_mec_size::<f64, ()>(&g),
+        Err(BrcdError(BrcdErrorEnum::NotACpdag))
+    );
+    assert_eq!(
+        oracle_mec_size(&g),
+        Err(BrcdError(BrcdErrorEnum::NotACpdag))
+    );
+}
+
+/// A chordal component still counts, so the check rejects only what it should.
+#[test]
+fn a_chordal_component_is_still_counted() {
+    let data = CausalTensor::new(vec![(); 4], vec![4]).unwrap();
+    let mut g: MixedGraph<()> = MixedGraph::new(4, data, 0).unwrap();
+    for i in 0..4 {
+        g.add_undirected(i, (i + 1) % 4).unwrap();
+    }
+    g.add_undirected(0, 2).unwrap(); // the chord
+    let cp = cp_mec_size::<f64, ()>(&g).expect("a chordal component is a valid CPDAG");
+    let oracle = oracle_mec_size(&g).expect("likewise");
+    assert!((cp - oracle as f64).abs() < 0.5, "cp={cp} oracle={oracle}");
 }

@@ -520,11 +520,9 @@ fn shuffle<R: Rng>(slice: &mut [usize], rng: &mut R) {
 /// the returned graph.
 ///
 /// # Errors
-/// * [`BrcdErrorEnum::NotACpdag`] if any edge is bidirected or partially oriented.
+/// * [`BrcdErrorEnum::NotACpdag`] if any edge is bidirected or partially oriented, or a chain
+///   component is not chordal.
 /// * [`BrcdErrorEnum::NotAcyclic`] if the arc projection contains a cycle.
-///
-/// # Preconditions
-/// Each chain component is assumed chordal (a valid CPDAG); this is not checked.
 pub fn sample_dag<T, N, R>(graph: &MixedGraph<N>, rng: &mut R) -> Result<MixedGraph<N>, BrcdError>
 where
     T: RealField + FromPrimitive,
@@ -621,7 +619,7 @@ where
 
 /// Validates that every edge is a directed arc or an undirected edge and that the
 /// arc projection is acyclic (same check as `brcd_mec`).
-fn validate_cpdag<N>(graph: &MixedGraph<N>) -> Result<(), BrcdError> {
+pub(super) fn validate_cpdag<N>(graph: &MixedGraph<N>) -> Result<(), BrcdError> {
     for edge in graph.edges().values() {
         match edge.kind() {
             EdgeKind::Directed | EdgeKind::Undirected => {}
@@ -630,6 +628,11 @@ fn validate_cpdag<N>(graph: &MixedGraph<N>) -> Result<(), BrcdError> {
     }
     if graph.has_cycle() {
         return Err(BrcdError(BrcdErrorEnum::NotAcyclic));
+    }
+    // Clique-picking and the AMO enumeration are both defined only on chordal components, so a
+    // non-chordal chain component is not a CPDAG and the count it would produce has no meaning.
+    if graph.undirected_projection_is_chordal().is_err() {
+        return Err(BrcdError(BrcdErrorEnum::NotACpdag));
     }
     Ok(())
 }

@@ -46,8 +46,8 @@
 //! The input is expected to be a valid CPDAG: every edge is either a directed
 //! arc or an undirected edge (no bidirected/circle endpoints), the arc
 //! projection is acyclic, and each chain component is chordal. Bidirected or
-//! partially-oriented edges yield [`BrcdErrorEnum::NotACpdag`]; a cyclic arc
-//! projection yields [`BrcdErrorEnum::NotAcyclic`].
+//! partially-oriented edges yield [`BrcdErrorEnum::NotACpdag`], as does a non-chordal chain
+//! component; a cyclic arc projection yields [`BrcdErrorEnum::NotAcyclic`].
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use deep_causality_rand::Rng;
@@ -118,6 +118,12 @@ fn validate_cpdag<N>(graph: &MixedGraph<N>) -> Result<(), BrcdError> {
     }
     if graph.has_cycle() {
         return Err(BrcdError(BrcdErrorEnum::NotAcyclic));
+    }
+    // Chordal chain components are part of being a CPDAG, and the AMO enumeration is defined only
+    // on them. Without this, `mec_size` multiplies by an empty AMO count and returns `Ok(0)` — a
+    // class size no CPDAG has — while `build_member` on the same input returns `NotACpdag`.
+    if graph.undirected_projection_is_chordal().is_err() {
+        return Err(BrcdError(BrcdErrorEnum::NotACpdag));
     }
     Ok(())
 }
