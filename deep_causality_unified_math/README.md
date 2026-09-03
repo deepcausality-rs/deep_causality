@@ -40,7 +40,7 @@ Every one of the thirteen crates above tier 1 reaches `algebra`,
 so a change to the tower recompiles the whole stack. `num` and `algebra` are also the two
 crates that can never adopt `haft`, because `haft` depends on both.
 
-## The sixteen
+## The math crates
 
 | Crate | Tier | What it holds |
 |---|---|---|
