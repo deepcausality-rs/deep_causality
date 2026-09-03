@@ -328,3 +328,24 @@ fn test_into_f64() {
 // Note: Reference operation impls exist but are trivial passthrough
 // to owned operations, so we don't test them separately to avoid
 // clippy::op_ref warnings.
+
+// Division follows IEEE 754 where the double-double refinement cannot go.
+
+#[test]
+fn test_division_by_zero_is_infinite_with_the_sign_of_the_dividend() {
+    let q = Float106::from(1.0) / Float106::from(0.0);
+    assert!(q.is_infinite() && q > Float106::from(0.0));
+    let q = Float106::from(-1.0) / Float106::from(0.0);
+    assert!(q.is_infinite() && q < Float106::from(0.0));
+    let q = Float106::from(1.0) / 0.0;
+    assert!(q.is_infinite() && q > Float106::from(0.0));
+    assert!((Float106::from(0.0) / Float106::from(0.0)).is_nan());
+}
+
+#[test]
+fn test_division_by_infinity_is_zero_and_of_infinity_is_infinite() {
+    let inf = Float106::from(f64::INFINITY);
+    assert_eq!(Float106::from(3.0) / inf, Float106::from(0.0));
+    assert!((inf / Float106::from(2.0)).is_infinite());
+    assert!((inf / inf).is_nan());
+}

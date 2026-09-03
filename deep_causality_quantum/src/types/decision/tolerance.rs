@@ -11,11 +11,13 @@ use deep_causality_num::FromPrimitive;
 
 /// The tolerance family: the policies the crate's checks derive their thresholds from, named.
 ///
-/// Every member is a function of `R::epsilon()` and nothing else, so widening the scalar tightens
-/// every one of them with no call site changing. A tolerance that did not move with the scalar
-/// was guessed. The members are the four policies the crate shipped before this type existed,
-/// each keeping the shape its own check needs, and the family delegates to those implementations
-/// rather than restating them.
+/// Every member but `ShotNoise` is a function of `R::epsilon()` and nothing else, so widening the
+/// scalar tightens each of them with no call site changing. A tolerance that did not move with
+/// the scalar was guessed. `ShotNoise` reads the estimate and the shot count it is asked about,
+/// and `R::epsilon()` plays no part in it: its width is set by the budget, not by the scalar. The
+/// members are the four policies the crate shipped before this type existed, each keeping the
+/// shape its own check needs, and the family delegates to those implementations rather than
+/// restating them.
 ///
 /// | Member | Value | Where it ships |
 /// |---|---|---|
@@ -116,8 +118,12 @@ where
     }
 
     /// The shot-noise width `√(p(1−p)/n)` at an estimate `p` over `n` shots. `None` for every
-    /// other member, and `None` at zero shots, where there is no width.
+    /// other member, `None` at zero shots, and `None` at an estimate that is not finite or lies
+    /// outside `[0, 1]`: none of those has a width.
     pub fn shot_noise_width(&self, estimate: R, shots: u64) -> Option<R> {
+        if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
+            return None;
+        }
         match self {
             Self::ShotNoise if shots > 0 => {
                 let n = R::from_u64(shots)?;
@@ -127,7 +133,7 @@ where
         }
     }
 
-    /// The scalar's unit roundoff, which every member is a function of.
+    /// The scalar's unit roundoff, which every member but `ShotNoise` is a function of.
     pub fn epsilon(&self) -> R {
         R::epsilon()
     }
@@ -151,7 +157,8 @@ where
     /// by `dim` and by `max(1, scale)`, where `scale` is the largest eigenvalue as
     /// `range_projector` uses it. `State` multiplies `√ε` by `max(1, scale)`, where `scale` is the
     /// Frobenius norm as `DensityMatrix::with_tolerance` uses it. The commutator member answers
-    /// `None`, because its threshold is a function of a pair.
+    /// `None`, because its threshold is a function of a pair, and `NumericalRank` answers `None`
+    /// when `dim` does not fit `R`.
     pub fn threshold(&self, dim: usize, scale: R) -> Option<R> {
         let clamped = if scale > R::one() { scale } else { R::one() };
         match self {
@@ -159,7 +166,7 @@ where
             Self::Commutator(_) => None,
             Self::Validation { epsilon } => Some(epsilon.sqrt()),
             Self::NumericalRank { epsilon } => {
-                let d = R::from_usize(dim).unwrap_or_else(R::one);
+                let d = R::from_usize(dim)?;
                 Some(*epsilon * d * clamped)
             }
             Self::State { .. } => Some(DensityMatrix::<R>::default_tolerance() * clamped),

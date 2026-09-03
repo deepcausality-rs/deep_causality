@@ -273,30 +273,39 @@ adds.
 - **THEN** validation reports the overflow as a typed error rather than wrapping, because a count
   has no `epsilon()` and a wrapped dimension would silently mis-shape every factor
 
-### Requirement: A composed factorization inherits a Markov certificate only at two factors
+### Requirement: A composed factorization inherits a Markov certificate only over disjoint legs
 
-A `CheckReport<R>` certifying the quantum Markov condition SHALL NOT transfer to a composite
-factorization of more than two factors. Composing two validated parts and carrying the parts'
-certificates forward SHALL be rejected, and the composite SHALL re-run `check_markov`.
+A `CheckReport<R>` certifying the quantum Markov condition SHALL transfer to a composite
+factorization only when both parts carry a certificate and the parts' leg sets are disjoint. In
+every other case the parts' certificates SHALL NOT transfer, and the composite SHALL re-run
+`check_markov`.
 
-**The literature leaves this open, and QCL claims no more than the literature does.** Def 3.3 of the
-quantum Markov condition requires the factors to commute pairwise, and Lorenz (2022) records at
-footnote 11 that while pairwise commutation is a simple consequence of hermiticity in the two-factor
-case, *commutativity of the factors does not follow from the hermiticity of `σ` when there are more
-than two factors*. Lorenz & Barrett (arXiv:2001.07774) leave the general case to future work,
-naming the missing ingredient as results in operator algebra "pertaining to sets of three or more
-pairwise commuting algebras". An inheritance rule beyond two factors would assert that theorem.
+**A part's certificate covers the pairs inside that part and no others.** A cross pair, one factor
+from each part, was measured by neither report, so an inheritance rule has to supply that pair's
+commutation from somewhere. On disjoint legs it is supplied by construction: two operators embedded
+on disjoint tensor legs commute with zero commutator, whatever the number of factors. On a shared
+leg nothing supplies it. Two certified single-factor parts carrying `σx` and `σz` on one shared leg
+do not commute, and a rule that inherited there would certify a composite that fails the check.
 
-**At exactly two factors the inheritance is sound and SHALL be available as a fast path**, because
-there the commutation relation follows from the hermiticity of the composite. A composite of two
-factors MAY carry the certificate forward; every other arity re-checks.
+**The literature leaves the general case open, and QCL claims no more than the literature does.**
+Def 3.3 of the quantum Markov condition requires the factors to commute pairwise, and Lorenz (2022)
+records at footnote 11 that while pairwise commutation is a simple consequence of hermiticity in the
+two-factor case, *commutativity of the factors does not follow from the hermiticity of `σ` when
+there are more than two factors*. Lorenz & Barrett (arXiv:2001.07774) leave the general case to
+future work, naming the missing ingredient as results in operator algebra "pertaining to sets of
+three or more pairwise commuting algebras". An inheritance rule resting on hermiticity would assert
+that theorem, and `compose` checks no hermiticity in any case, so the factor count licenses nothing.
+
+**Over disjoint legs the inheritance is sound and SHALL be available as a fast path.** The
+composite's report is the parts' reports folded and marked `Inherited`. Parts that share a leg
+re-check whatever their arity.
 
 **Composition over a shared wire is the marginalisation of the shared node**, so the F9 guard
 applies to it. `choi_compose` is a double contraction over the shared wire, verified to a relative
 Frobenius residual of 3.198e-16 over 500 random CPTP pairs, and that figure establishes that it
 computes the right *channel*, not that it preserves the *factorization*. The sum over the shared
 indices is the partial trace whether or not a function of that name runs. What makes composition
-sound in v1 is this requirement: the certificate is re-derived, not inherited.
+sound in v1 is this requirement: over a shared leg the certificate is re-derived, not inherited.
 
 **A failed re-check on inherited factors SHALL be reported as `CertificateNotInherited`**, distinct
 from `CommutatorNonZero`, and the report SHALL carry the factorization's provenance as `Inherited` or
@@ -307,17 +316,25 @@ the re-check tests. The failure therefore says "this factorization does not cert
 and the message SHALL say that a Markov factorization for the composite may exist under a different
 factor assignment. Constructing that induced factorization is not built in v1.
 
-#### Scenario: A three-factor composite re-runs the check
+#### Scenario: A composite over a shared leg re-runs the check
 
-- **WHEN** two validated factorizations compose into a factorization of three or more factors
+- **WHEN** two certified factorizations compose and their leg sets share a leg
 - **THEN** the parts' reports do not transfer, `check_markov` runs on the composite, and the
   composite's own report is what `Screened<R>` carries
 
-#### Scenario: A two-factor composite may carry its certificate
+#### Scenario: Non-commuting factors on a shared leg are caught by the re-run
 
-- **WHEN** a composite has exactly two factors and both parts validated
-- **THEN** the certificate transfers without re-running the check, and the report records that it
-  was inherited under the two-factor rule rather than measured on the composite
+- **WHEN** two single-factor parts, each certified on its own, compose on one shared leg carrying
+  `σx` and `σz`
+- **THEN** the composite carries no certificate, and `check_markov` on the composite rejects the
+  pair
+
+#### Scenario: A composite over disjoint legs may carry its certificate
+
+- **WHEN** both parts are certified and their leg sets are disjoint
+- **THEN** the certificate transfers without re-running the check, whatever the number of factors,
+  and the report records that it was inherited under the disjoint-legs rule rather than measured
+  on the composite
 
 #### Scenario: An inherited certificate is distinguishable from a measured one
 
@@ -327,8 +344,8 @@ factor assignment. Constructing that induced factorization is not built in v1.
 
 #### Scenario: A failed re-check on inherited factors is a certificate failure, not a physics one
 
-- **WHEN** a three-factor composite is re-checked on the parts' inherited `ProcessFactors` and a
-  pair fails to commute
+- **WHEN** a composite is re-checked on the parts' inherited `ProcessFactors` and a pair fails to
+  commute
 - **THEN** the error is `CertificateNotInherited` naming the pair, the report's provenance reads
   `Inherited`, and the message says a Markov factorization for the composite may exist under a
   different factor assignment, so a sound model is not rejected with a message that reads as physics

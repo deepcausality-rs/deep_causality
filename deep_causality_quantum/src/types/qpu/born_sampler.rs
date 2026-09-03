@@ -42,12 +42,12 @@ where
 {
     let p = born_projective_probability(rho, projection)?;
     let mut rng = SplitMix64::new(seed);
-    let mut hist = CountHistogram::new(1);
+    let mut hist = CountHistogram::new(1)?;
     for _ in 0..shots {
         let u = R::from_f64(rng.next_f64()).ok_or_else(|| {
             QuantumError::CalculationError("scalar cannot represent a uniform sample".into())
         })?;
-        hist.record(usize::from(u < p));
+        hist.record(usize::from(u < p))?;
     }
     Ok(hist)
 }

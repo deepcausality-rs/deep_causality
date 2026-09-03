@@ -6,12 +6,12 @@
 //! The precision-boundary crossings, at the three shipped scalars and every primitive source.
 
 use deep_causality_num::{
-    Float106, Lift, Lower, lift, lift_count, lift_f32, lift_f64, lift_i8, lift_i16, lift_i32,
-    lift_i64, lift_i128, lift_isize, lift_u8, lift_u16, lift_u32, lift_u64, lift_u128, lift_usize,
-    lower, lower_f32, to_count, try_lift, try_lift_count, try_lift_f32, try_lift_f64, try_lift_i8,
-    try_lift_i16, try_lift_i32, try_lift_i64, try_lift_i128, try_lift_isize, try_lift_u8,
-    try_lift_u16, try_lift_u32, try_lift_u64, try_lift_u128, try_lift_usize, try_lower,
-    try_lower_f32,
+    Float106, Lift, Lower, ToPrimitive, lift, lift_count, lift_f32, lift_f64, lift_i8, lift_i16,
+    lift_i32, lift_i64, lift_i128, lift_isize, lift_u8, lift_u16, lift_u32, lift_u64, lift_u128,
+    lift_usize, lower, lower_f32, to_count, try_lift, try_lift_count, try_lift_f32, try_lift_f64,
+    try_lift_i8, try_lift_i16, try_lift_i32, try_lift_i64, try_lift_i128, try_lift_isize,
+    try_lift_u8, try_lift_u16, try_lift_u32, try_lift_u64, try_lift_u128, try_lift_usize,
+    try_lower, try_lower_f32,
 };
 
 #[test]
@@ -107,6 +107,13 @@ fn test_wide_integers_round_beyond_the_mantissa() {
     assert_eq!(wide, 9_007_199_254_740_992.0);
     let signed: f64 = lift_i128(-(just_beyond as i128));
     assert_eq!(signed, -9_007_199_254_740_992.0);
+    // Float106 holds the same integers exactly and hands them back exactly.
+    assert_eq!(
+        lift_u128::<Float106>(just_beyond).to_u128(),
+        Some(just_beyond)
+    );
+    assert_eq!(lift_u64::<Float106>(u64::MAX).to_u64(), Some(u64::MAX));
+    assert_eq!(lift_i64::<Float106>(i64::MIN).to_i64(), Some(i64::MIN));
     // 2^53 itself is exact.
     assert_eq!(lift_u64::<f64>(1 << 53), 9_007_199_254_740_992.0);
     assert_eq!(lift_u128::<f64>(u128::MAX), u128::MAX as f64);
@@ -144,6 +151,13 @@ fn test_a_real_rounds_back_to_a_count() {
     assert_eq!(to_count(f64::NAN), None);
     assert_eq!(to_count(f64::INFINITY), None);
     assert_eq!(to_count(1e30f64), None, "does not fit");
+    // The first value past u64 is refused rather than saturated, at every scalar.
+    assert_eq!(to_count(18_446_744_073_709_551_616.0f64), None);
+    assert_eq!(to_count(lift_u128::<Float106>(1u128 << 64)), None);
+    assert_eq!(to_count(lift_u64::<Float106>(u64::MAX)), Some(u64::MAX));
+    // A count past 2⁵³ survives the round trip through Float106.
+    let n = (1u64 << 53) + 1;
+    assert_eq!(to_count(lift_count::<Float106>(n)), Some(n));
 }
 
 #[test]

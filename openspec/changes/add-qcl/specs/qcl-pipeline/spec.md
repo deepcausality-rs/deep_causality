@@ -214,18 +214,38 @@ under ∇, because at a counterfactual fork exactly one branch was factual.
 
 ### Requirement: fork is built above core, because a counterfactual fork is a product
 
-`fork` SHALL produce one live world per candidate, each holding its own cloned `Ledger<R, N>`, and
-SHALL NOT be built on `Either` or `CausalFlow::either`.
+`fork` SHALL produce one live world per candidate, each holding its own cloned `Ledger<R, N>` and
+no read-out and no verdict, SHALL fail with `CalculationError` when there is no candidate to fork,
+and SHALL NOT be built on `Either` or `CausalFlow::either`.
 
 `Either<L, R>` in `deep_causality_haft` is the coproduct, and `CausalFlow::either` consumes the flow
 and runs one arm with the state moved into it. `Either` is the carrier on the way out, where
 `adjudicate` returns one surviving hypothesis against a residual ambiguity.
+
+*As built.* A world inherits the ledger and nothing else. The root keeps its read-out and verdict
+as the baseline, and a world's evidence comes from `observe` and `gate` after the fork, or from
+`compare`, so a world evolved by a mechanism is never adjudicated on a measurement of the
+unevolved plant. A screen that admitted no candidate, or a config that declared none, leaves
+nothing to fork; `fork` fails naming which, rather than producing no worlds for `finalize` to
+report as success.
 
 #### Scenario: Three candidates give three live worlds
 
 - **WHEN** `fork` runs on a screened config holding three admitted hypotheses
 - **THEN** all three worlds are live simultaneously, each carrying an independent copy of the ledger,
   and none of the three states was moved into an arm
+
+#### Scenario: A world inherits the ledger and no evidence
+
+- **WHEN** `observe` and `gate` run on the root and `fork` follows
+- **THEN** every world's ledger equals the root's, every world's read-out and verdict are absent,
+  and `gate` on the worlds before `observe` fails with `CalculationError` naming `observe`
+
+#### Scenario: A fork with no candidate is refused
+
+- **WHEN** `control` takes a screen that admitted no candidate and `fork` runs
+- **THEN** `finalize` returns `CalculationError` naming that the screen admitted none or the config
+  declared none, and no world exists
 
 #### Scenario: Forked ledgers are compared rather than joined
 
@@ -237,3 +257,63 @@ and runs one arm with the state moved into it. `Either` is the carrier on the wa
 
 - **WHEN** `adjudicate` resolves to one surviving hypothesis, or leaves a residual ambiguity
 - **THEN** the result is an `Either` from `deep_causality_haft` rather than an ad-hoc enum
+
+### Requirement: compare turns predictions into evidence against the root's read-out
+
+`compare(sigmas)` SHALL give every forked world a read-out and a verdict from its prediction: the
+read-out is `ShotEstimate::from_probability(prediction, baseline.shots())`, and the verdict is one
+`Check` of `|prediction − baseline.estimate()|` against `sigmas · baseline.standard_error()`,
+examined over the baseline's shots, where the baseline is the root's read-out taken by `observe`
+before `fork`.
+
+The prediction is carried with the shot noise it would have at the baseline's shots, so
+`adjudicate` separates worlds by their predictions, and a world's verdict holds when its prediction
+agrees with the observation. `compare` refuses, with `CalculationError` naming the missing step, a
+`sigmas` that is not finite or is negative, a root with no read-out, no worlds, and a world with no
+prediction. A mechanism world with a prediction may be compared; nothing forbids it.
+
+#### Scenario: A prediction becomes a read-out at the baseline's shots
+
+- **WHEN** `observe(o, n)` runs on the root, `fork` and `predict(o)` follow, and `compare(3)` runs
+- **THEN** every world's read-out has the world's prediction as its estimate and `n` as its shots,
+  and its verdict examined `n` items and accepted exactly when the prediction lies within three
+  standard errors of the root's estimate
+
+#### Scenario: A missing step is named
+
+- **WHEN** `compare` runs before `predict`, before `fork`, without a root read-out, or with a NaN
+  or negative `sigmas`
+- **THEN** `finalize` returns `CalculationError` whose message names `predict`, `fork`, `observe`
+  or `sigmas` respectively
+
+#### Scenario: A mechanism world may be compared
+
+- **WHEN** a mechanism config runs `observe → fork → predict → compare → adjudicate`
+- **THEN** each world's prediction is judged against the root's read-out, and the world whose
+  channel leaves the read-out unchanged survives
+
+### Requirement: control has two paths to adjudicate, one per kind of candidate
+
+The control stage SHALL support two paths to `adjudicate`: mechanism candidates run
+`fork → observe → gate → adjudicate`, and structural candidates run
+`observe → fork → predict → compare → adjudicate`.
+
+A mechanism world carries the plant evolved by its channel, so its evidence is a measurement of
+that plant after the fork. A structural world carries the plant unchanged, so a measurement after
+the fork would read the same in every world; the root is measured once as the baseline, and the
+worlds are told apart by what each model predicts for it.
+
+#### Scenario: The mechanism path adjudicates each world on its own measurement
+
+- **WHEN** a mechanism config with a flipping and an identity channel runs `observe` on the root,
+  then `fork → observe → gate(at_least 0.9) → adjudicate`
+- **THEN** the flipping world's read-out is its own evolved plant's rather than the root's, its
+  ledger counts two experiments to the root's one, and it is the survivor
+
+#### Scenario: The structural path selects the candidate whose prediction matches the plant
+
+- **WHEN** two structural candidates whose predictions differ enter `control` through the screen,
+  the plant is prepared so one candidate's prediction is its Born read-out, and
+  `observe → fork → predict → compare → adjudicate` runs
+- **THEN** that candidate is the survivor, its verdict accepted and the other's rejected, and the
+  separation credited to the ledger is between the two predictions at the observed shots

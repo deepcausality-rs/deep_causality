@@ -83,10 +83,18 @@ fn commuting_model_screens() {
         folded.examined()
     );
 
-    // The same numbers the shipped freeze reports on the same model.
+    // The same numbers the shipped freeze reports on the same model, with the same declared
+    // systems, so both of its checks run: Markov, and C₃-exclusion between input 0 and output 1.
     let mut graph = two_node_graph(false);
-    let shipped = freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance, None)
-        .expect("the shipped freeze agrees");
+    let shipped = freeze_quantum(
+        &mut graph,
+        &[],
+        &factors,
+        &supports,
+        &tolerance,
+        Some((&[0], &[1])),
+    )
+    .expect("the shipped freeze agrees");
     println!(
         "    freeze_quantum on the same model: {} pair(s), worst margin {:.3e} — the same report",
         shipped.tested_pairs(),

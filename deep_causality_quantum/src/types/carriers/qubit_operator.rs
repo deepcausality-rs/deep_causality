@@ -6,7 +6,7 @@
 use crate::QuantumError;
 use crate::types::decision::Tolerance;
 use alloc::format;
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{ComplexField, Normed, RealField};
 use deep_causality_haft::Functor;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::{Complex, ComplexWitness};
@@ -37,18 +37,6 @@ pub struct QubitOperator<R: RealField> {
     matrix: CausalTensor<Complex<R>>,
 }
 
-fn c<R: RealField>(re: R, im: R) -> Complex<R> {
-    Complex::new(re, im)
-}
-
-fn conj<R: RealField>(a: Complex<R>) -> Complex<R> {
-    Complex::new(a.re, -a.im)
-}
-
-fn cmul<R: RealField>(a: Complex<R>, b: Complex<R>) -> Complex<R> {
-    Complex::new(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re)
-}
-
 impl<R> QubitOperator<R>
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
@@ -62,32 +50,57 @@ where
     /// `I`.
     pub fn identity() -> Self {
         let (z, o) = (R::zero(), R::one());
-        Self::from_entries([c(o, z), c(z, z), c(z, z), c(o, z)])
+        Self::from_entries([
+            Complex::new(o, z),
+            Complex::new(z, z),
+            Complex::new(z, z),
+            Complex::new(o, z),
+        ])
     }
 
     /// `X = [[0, 1], [1, 0]]`.
     pub fn pauli_x() -> Self {
         let (z, o) = (R::zero(), R::one());
-        Self::from_entries([c(z, z), c(o, z), c(o, z), c(z, z)])
+        Self::from_entries([
+            Complex::new(z, z),
+            Complex::new(o, z),
+            Complex::new(o, z),
+            Complex::new(z, z),
+        ])
     }
 
     /// `Y = [[0, −i], [i, 0]]`.
     pub fn pauli_y() -> Self {
         let (z, o) = (R::zero(), R::one());
-        Self::from_entries([c(z, z), c(z, -o), c(z, o), c(z, z)])
+        Self::from_entries([
+            Complex::new(z, z),
+            Complex::new(z, -o),
+            Complex::new(z, o),
+            Complex::new(z, z),
+        ])
     }
 
     /// `Z = [[1, 0], [0, −1]]`.
     pub fn pauli_z() -> Self {
         let (z, o) = (R::zero(), R::one());
-        Self::from_entries([c(o, z), c(z, z), c(z, z), c(-o, z)])
+        Self::from_entries([
+            Complex::new(o, z),
+            Complex::new(z, z),
+            Complex::new(z, z),
+            Complex::new(-o, z),
+        ])
     }
 
     /// `H = [[1, 1], [1, −1]] / √2`.
     pub fn hadamard() -> Self {
         let z = R::zero();
         let h = R::one() / (R::one() + R::one()).sqrt();
-        Self::from_entries([c(h, z), c(h, z), c(h, z), c(-h, z)])
+        Self::from_entries([
+            Complex::new(h, z),
+            Complex::new(h, z),
+            Complex::new(h, z),
+            Complex::new(-h, z),
+        ])
     }
 
     /// `R_axis(θ) = cos(θ/2)·I − i·sin(θ/2)·σ_axis`.
@@ -104,9 +117,24 @@ where
         let half = angle / (R::one() + R::one());
         let (cs, sn, z) = (half.cos(), half.sin(), R::zero());
         Ok(match axis {
-            Axis::X => Self::from_entries([c(cs, z), c(z, -sn), c(z, -sn), c(cs, z)]),
-            Axis::Y => Self::from_entries([c(cs, z), c(-sn, z), c(sn, z), c(cs, z)]),
-            Axis::Z => Self::from_entries([c(cs, -sn), c(z, z), c(z, z), c(cs, sn)]),
+            Axis::X => Self::from_entries([
+                Complex::new(cs, z),
+                Complex::new(z, -sn),
+                Complex::new(z, -sn),
+                Complex::new(cs, z),
+            ]),
+            Axis::Y => Self::from_entries([
+                Complex::new(cs, z),
+                Complex::new(-sn, z),
+                Complex::new(sn, z),
+                Complex::new(cs, z),
+            ]),
+            Axis::Z => Self::from_entries([
+                Complex::new(cs, -sn),
+                Complex::new(z, z),
+                Complex::new(z, z),
+                Complex::new(cs, sn),
+            ]),
         })
     }
 
@@ -123,10 +151,10 @@ where
         }
         let (z, o) = (R::zero(), R::one());
         Ok(Self::from_entries([
-            c(o, z),
-            c(z, z),
-            c(z, z),
-            c(theta.cos(), theta.sin()),
+            Complex::new(o, z),
+            Complex::new(z, z),
+            Complex::new(z, z),
+            Complex::new(theta.cos(), theta.sin()),
         ]))
     }
 
@@ -169,20 +197,20 @@ where
         Ok(candidate)
     }
 
-    /// `max |U U† − I|` over the four entries: zero for a unitary, up to rounding.
+    /// `max |U U† − I|` over the four entries: zero for a unitary, up to rounding. The modulus
+    /// is taken through `Normed::modulus`, whose scaled form does not overflow on a large entry.
     pub fn unitarity_defect(&self) -> R {
         let u = self.matrix.as_slice();
         let mut worst = R::zero();
         for i in 0..2 {
             for j in 0..2 {
                 // (U U†)_ij = Σ_k U_ik · conj(U_jk)
-                let mut acc = c(R::zero(), R::zero());
+                let mut acc = Complex::new(R::zero(), R::zero());
                 for k in 0..2 {
-                    let t = cmul(u[i * 2 + k], conj(u[j * 2 + k]));
-                    acc = c(acc.re + t.re, acc.im + t.im);
+                    acc += u[i * 2 + k] * u[j * 2 + k].conjugate();
                 }
                 let target = if i == j { R::one() } else { R::zero() };
-                let d = ((acc.re - target) * (acc.re - target) + acc.im * acc.im).sqrt();
+                let d = Complex::new(acc.re - target, acc.im).modulus();
                 if d > worst {
                     worst = d;
                 }

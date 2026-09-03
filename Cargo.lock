@@ -769,6 +769,7 @@ dependencies = [
  "deep_causality_num_complex",
  "deep_causality_num_rational",
  "deep_causality_tensor",
+ "deep_causality_topology",
  "deep_causality_uncertain",
 ]
 

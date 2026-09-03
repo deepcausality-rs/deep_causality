@@ -19,6 +19,12 @@ The shape is taken from the shipped `CommutatorCheck<R>` in
 generalise that pair over the item identifier, so a pair of graph nodes, an eigenvalue index, a code
 generator and a hypothesis pair all fit one record. A margin at or below one accepts.
 
+A check where more is better, `Check::at_least`, accepts when `measured + slack ≥ threshold` and
+carries the margin `threshold / (measured + slack)`, so that the slack enters the margin as it
+enters the verdict and a margin at or below one is again exactly an acceptance. With nothing
+measured and no slack against a positive threshold the margin is infinite, which orders that record
+above every finite one in `worst()`; with a zero threshold the margin is zero.
+
 #### Scenario: A passing decision reports its distance from the edge
 
 - **WHEN** a QCL stage accepts after comparing eleven items, the largest of their margins being 0.87
@@ -32,6 +38,15 @@ generator and a hypothesis pair all fit one record. A margin at or below one acc
   both are zero, which is the convention `quantum_markov_check` already applies in its
   `if threshold > R::zero()` branch, and the verdict rejects whenever the measured quantity is
   positive
+
+#### Scenario: A more-is-better check agrees with its own verdict
+
+- **WHEN** a separation of 4.9 bits is checked against a floor of 5 bits with a slack of 0.2
+- **THEN** the check accepts and its margin is `5 / 5.1`, below one
+- **WHEN** two worlds separate by nothing at all and a third pair separates by 1e-9 bits, against
+  the same floor
+- **THEN** the unseparated pair carries an infinite margin and is the record `worst()` returns, at
+  `f32`, `f64` and `Float106` alike
 
 ### Requirement: A Markov report carries the provenance of the factorization it certifies
 

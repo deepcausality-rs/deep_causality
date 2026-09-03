@@ -205,7 +205,7 @@ impl QpuSampler for SimQpu {
 
         let measure = circuit.measure();
         let num_bits = measure.len();
-        let mut hist = CountHistogram::new(num_bits);
+        let mut hist = CountHistogram::new(num_bits)?;
         if shots == 0 {
             return Ok(hist);
         }
@@ -240,7 +240,7 @@ impl QpuSampler for SimQpu {
             // so binary-search it (same boundary as the old linear "first u < c"
             // scan), clamping the degenerate all-mass-below-u case to the last bin.
             let outcome = cum.partition_point(|&c| c <= u).min(num_outcomes - 1);
-            hist.record(outcome);
+            hist.record(outcome)?;
         }
 
         Ok(hist)

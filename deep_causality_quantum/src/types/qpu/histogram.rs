@@ -10,7 +10,9 @@
 //! `QpuSampler` seam that draws them from a circuit stays behind the `qpu` feature; this is the
 //! same split the circuit data types received when the Haruna layer began emitting them.
 
+use crate::QuantumError;
 use alloc::collections::BTreeMap;
+use alloc::format;
 use alloc::vec::Vec;
 
 /// A classical measurement histogram: outcome bitstrings (packed LSB-first over
@@ -39,27 +41,67 @@ pub struct CountHistogram {
 
 impl CountHistogram {
     /// An empty histogram over `num_bits` measured qubits.
-    pub fn new(num_bits: usize) -> Self {
-        Self {
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] when `num_bits` exceeds `usize::BITS`, the width an
+    /// outcome carries.
+    pub fn new(num_bits: usize) -> Result<Self, QuantumError> {
+        if num_bits > usize::BITS as usize {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "a histogram over {num_bits} qubits exceeds the {} bits an outcome carries",
+                usize::BITS
+            )));
+        }
+        Ok(Self {
             counts: BTreeMap::new(),
             total: 0,
             num_bits,
-        }
+        })
     }
 
     /// Records one shot with the given outcome.
-    pub fn record(&mut self, outcome: usize) {
-        *self.counts.entry(outcome).or_insert(0) += 1;
-        self.total += 1;
+    ///
+    /// # Errors
+    ///
+    /// As [`record_n`](Self::record_n) at `n = 1`.
+    pub fn record(&mut self, outcome: usize) -> Result<(), QuantumError> {
+        self.record_n(outcome, 1)
     }
 
-    /// Records `n` shots of the given outcome at once.
-    pub fn record_n(&mut self, outcome: usize, n: u64) {
-        if n == 0 {
-            return;
+    /// Records `n` shots of the given outcome at once. On any error nothing is recorded.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] when `outcome` does not fit the histogram's width,
+    /// that is when `num_bits < usize::BITS` and `outcome ≥ 2^num_bits`;
+    /// [`QuantumError::CalculationError`] when the outcome's count or the total would overflow a
+    /// `u64`.
+    pub fn record_n(&mut self, outcome: usize, n: u64) -> Result<(), QuantumError> {
+        if self.num_bits < usize::BITS as usize && outcome >= 1usize << self.num_bits {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "outcome {outcome} does not fit {} measured qubits",
+                self.num_bits
+            )));
         }
-        *self.counts.entry(outcome).or_insert(0) += n;
-        self.total += n;
+        if n == 0 {
+            return Ok(());
+        }
+        let count = self.counts.get(&outcome).copied().unwrap_or(0);
+        let count = count.checked_add(n).ok_or_else(|| {
+            QuantumError::CalculationError(format!(
+                "recording {n} more shots of outcome {outcome} overflows its count of {count}"
+            ))
+        })?;
+        let total = self.total.checked_add(n).ok_or_else(|| {
+            QuantumError::CalculationError(format!(
+                "recording {n} more shots overflows the total of {}",
+                self.total
+            ))
+        })?;
+        self.counts.insert(outcome, count);
+        self.total = total;
+        Ok(())
     }
 }
 

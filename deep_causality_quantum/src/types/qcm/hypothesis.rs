@@ -28,9 +28,10 @@
 //! `quantum_markov_check` measures `‖[ρ_j, ρ_k]‖_F` over the factors it is given, so its margins
 //! describe the store as it stood. An intervention replaces a factor and a marginalisation traces
 //! one away; both drop the certificate, and a stage that needs one runs the check again. A
-//! composite of exactly two certified factors may inherit, marked `Inherited`, because there
-//! pairwise commutation follows from the hermiticity Def 3.3 assumes of the composite; at any other
-//! arity the literature has no theorem and neither does this type.
+//! composite of two certified parts inherits, marked `Inherited`, only when the parts' leg sets
+//! are disjoint: each part's certificate covers the pairs inside that part, and a cross pair on
+//! disjoint legs commutes by construction. Parts that share a leg leave the cross pair unverified,
+//! so their composite carries no certificate.
 
 use crate::QuantumError;
 use crate::types::carriers::Channel;
@@ -245,10 +246,7 @@ where
         G: CausableGraph<T>,
     {
         let structure = self.structure(graph, inputs, outputs)?;
-        structure.check_c3_exclusion()?;
-        let blocks = choose3(structure.inputs().len()) * choose3(structure.outputs().len());
-        let check = Check::new(CheckItem::Whole, R::zero(), R::zero());
-        Ok(CheckReport::new(vec![check], blocks))
+        decomposability_report(&structure)
     }
 
     /// The causal structure the supports encode, with no graph in sight.
@@ -313,10 +311,7 @@ where
         outputs: &[usize],
     ) -> Result<CheckReport<R>, QuantumError> {
         let structure = self.structure_from_supports(inputs, outputs)?;
-        structure.check_c3_exclusion()?;
-        let blocks = choose3(structure.inputs().len()) * choose3(structure.outputs().len());
-        let check = Check::new(CheckItem::Whole, R::zero(), R::zero());
-        Ok(CheckReport::new(vec![check], blocks))
+        decomposability_report(&structure)
     }
 
     /// The Markov check on the factors as they stand, returning the hypothesis carrying its
@@ -444,7 +439,8 @@ where
     ///
     /// The errors of [`joint_operator`](Self::joint_operator);
     /// [`QuantumError::DimensionMismatch`] if `instrument` is not square of the joint dimension;
-    /// [`QuantumError::NonFiniteValue`] if the trace has a non-negligible imaginary part.
+    /// [`QuantumError::NonFiniteValue`] if the trace is not finite, or has a non-negligible
+    /// imaginary part.
     pub fn evaluate(&self, instrument: &CausalTensor<Complex<R>>) -> Result<R, QuantumError> {
         let joint = self.joint_operator()?;
         let d = square_dim(&joint)?;
@@ -468,6 +464,12 @@ where
                 re += a.re * b.re - a.im * b.im;
                 im += a.re * b.im + a.im * b.re;
             }
+        }
+        // A NaN compares false against every threshold, so the finiteness test runs first.
+        if !re.is_finite() || !im.is_finite() {
+            return Err(QuantumError::NonFiniteValue(format!(
+                "model evaluation is not finite (re {re:?}, im {im:?})"
+            )));
         }
         if im.abs() > R::epsilon().sqrt() {
             return Err(QuantumError::NonFiniteValue(format!(
@@ -589,18 +591,19 @@ where
 
     /// The composite of two structural candidates over disjoint node keys.
     ///
-    /// The factor stores and support registries are unioned. A certificate is inherited only when
-    /// the composite has exactly two factors and both parts were certified: there, pairwise
-    /// commutation follows from the hermiticity Def 3.3 assumes of the composite, and the
-    /// inherited certificate is the parts' reports folded and marked `Inherited`. At any other
-    /// arity the composite carries no certificate and a stage that needs one re-runs the check,
-    /// because Lorenz (2022) footnote 11 and Lorenz & Barrett leave that case open.
+    /// The factor stores and support registries are unioned; a leg both registries name must
+    /// carry one dimension. A certificate is inherited only when both parts are certified and
+    /// their leg sets are disjoint. Each part's certificate covers the pairs inside that part, and
+    /// on disjoint legs every cross pair commutes by construction, so the parts' reports folded
+    /// and marked `Inherited` certify the composite. Parts that share a leg leave the cross pair
+    /// unverified whatever their arity: the composite carries no certificate, and a stage that
+    /// needs one runs [`check_markov`](Self::check_markov) on the composite.
     ///
     /// # Errors
     ///
     /// [`QuantumError::CalculationError`] if either is a mechanism candidate or the node keys
-    /// overlap; [`QuantumError::DimensionMismatch`] if the two registries disagree on a leg's
-    /// dimension.
+    /// overlap; [`QuantumError::DimensionMismatch`] if the two registries register a leg at
+    /// different dimensions, or the union fails validation.
     pub fn compose(&self, other: &Self) -> Result<Self, QuantumError> {
         let (fa, sa) = self.structural_parts()?;
         let (fb, sb) = other.structural_parts()?;
@@ -617,8 +620,9 @@ where
                 let legs = registry.support(node).expect("validated at construction");
                 for &leg in legs {
                     let dim = registry.leg_dim(leg);
-                    let known = supports.leg_dim(leg);
-                    if supports.support(node).is_none() && known != dim && known != 2 {
+                    if let Some(known) = supports.declared_leg_dim(leg)
+                        && known != dim
+                    {
                         return Err(QuantumError::DimensionMismatch(format!(
                             "cannot compose: leg {leg} has dimension {known} in one part and {dim} in the other"
                         )));
@@ -628,18 +632,21 @@ where
                 supports.declare(node, legs);
             }
         }
+        supports.validate(&factors)?;
         let certificate = match (self.certificate(), other.certificate()) {
-            (Some(a), Some(b)) if factors.len() == 2 => Some(
-                a.clone()
-                    .fold(b.clone())
-                    .with_factorization(Factorization::Inherited),
-            ),
+            (Some(a), Some(b)) => {
+                let (legs_a, _) = union_space(fa, sa)?;
+                let (legs_b, _) = union_space(fb, sb)?;
+                legs_a.is_disjoint(&legs_b).then(|| {
+                    a.clone()
+                        .fold(b.clone())
+                        .with_factorization(Factorization::Inherited)
+                })
+            }
             _ => None,
         };
-        let name = format!("{}∘{}", self.name, other.name);
-        Self::structural(name.clone(), factors.clone(), supports.clone())?;
         Ok(Self {
-            name,
+            name: format!("{}∘{}", self.name, other.name),
             candidate: Candidate::Structural {
                 factors,
                 supports,
@@ -665,6 +672,17 @@ fn union_space<R: RealField>(
     }
     let space = supports.space_map(&union);
     Ok((union, space))
+}
+
+/// The decomposability report for a discovered structure: `check_c3_exclusion`, then one whole
+/// check at zero over the `C(m, 3) · C(n, 3)` blocks the search ranged over.
+fn decomposability_report<R: RealField>(
+    structure: &CausalStructure,
+) -> Result<CheckReport<R>, QuantumError> {
+    structure.check_c3_exclusion()?;
+    let blocks = choose3(structure.inputs().len()) * choose3(structure.outputs().len());
+    let check = Check::new(CheckItem::Whole, R::zero(), R::zero());
+    Ok(CheckReport::new(vec![check], blocks))
 }
 
 /// `C(n, 3)`, the number of three-element subsets, as the block count a `C₃` search ranges over.

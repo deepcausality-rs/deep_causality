@@ -148,3 +148,45 @@ fn test_the_worst_record_is_the_one_closest_to_rejecting() {
     assert_eq!(report.worst().unwrap().item, CheckItem::Index(1));
     assert_eq!(report.worst_margin(), Some(-0.1));
 }
+
+// `at_least`: the margin agrees with the verdict, slack included, and nothing measured orders worst.
+
+#[test]
+fn test_at_least_margin_agrees_with_the_verdict_under_slack() {
+    // Below the floor on its own, admitted by the slack: accepted, and the margin says so.
+    let c = Check::<f64>::at_least(CheckItem::Whole, 4.9, 5.0, 0.2);
+    assert!(c.accepted);
+    assert!(c.margin < 1.0);
+    assert!((c.margin - 5.0 / 5.1).abs() < 1e-12);
+    // Short even with the slack: rejected, margin above one.
+    let c = Check::<f64>::at_least(CheckItem::Whole, 4.0, 5.0, 0.2);
+    assert!(!c.accepted);
+    assert!(c.margin > 1.0);
+    // A zero threshold accepts with a zero margin, as `new` does.
+    let c = Check::<f64>::at_least(CheckItem::Whole, 0.0, 0.0, 0.0);
+    assert!(c.accepted);
+    assert_eq!(c.margin, 0.0);
+}
+
+fn nothing_measured_orders_worst<R>()
+where
+    R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive + core::fmt::Debug,
+{
+    let lift = |x: f64| R::from_f64(x).expect("representable");
+    let zero = Check::<R>::at_least(CheckItem::Pair(0, 1), lift(0.0), lift(5.0), lift(0.0));
+    let tiny = Check::<R>::at_least(CheckItem::Pair(0, 2), lift(1e-9), lift(5.0), lift(0.0));
+    assert!(zero.margin.is_infinite(), "{:?}", zero.margin);
+    assert!(!zero.accepted && !tiny.accepted);
+    let report = CheckReport::from_checks(vec![tiny, zero]);
+    assert_eq!(
+        report.worst().expect("two records").item,
+        CheckItem::Pair(0, 1)
+    );
+}
+
+#[test]
+fn test_nothing_measured_orders_worst_at_every_scalar() {
+    nothing_measured_orders_worst::<f32>();
+    nothing_measured_orders_worst::<f64>();
+    nothing_measured_orders_worst::<deep_causality_num::Float106>();
+}

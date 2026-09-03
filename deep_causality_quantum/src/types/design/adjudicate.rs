@@ -162,6 +162,9 @@ pub struct Adjudication<R: RealField, const D: usize> {
 /// propositions in a Boolean algebra, so no commutation test runs, and a world's verdict holds
 /// when its report accepted something.
 ///
+/// The pairwise separation report is measured before the commutation test, so a non-commuting
+/// fold carries the report over every pair it examined rather than a vacuous one.
+///
 /// A survivor is a lone world whose verdict holds and whose read-out separates from every other
 /// world's by at least `floor_bits`, the shot-scaled Bhattacharyya distance compared with the
 /// state member of the tolerance family as slack. Anything else is the residual ambiguity, which
@@ -169,8 +172,9 @@ pub struct Adjudication<R: RealField, const D: usize> {
 ///
 /// # Errors
 ///
-/// [`QuantumError::CalculationError`] on no worlds, or on worlds carrying verdicts of both kinds,
-/// since one fold cannot serve two lattices.
+/// [`QuantumError::CalculationError`] on a `floor_bits` that is not finite or is negative, on no
+/// worlds, or on worlds carrying verdicts of both kinds, since one fold cannot serve two
+/// lattices.
 pub fn adjudicate<R, const D: usize>(
     worlds: &[World<R, D>],
     floor_bits: R,
@@ -178,6 +182,11 @@ pub fn adjudicate<R, const D: usize>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
+    if !floor_bits.is_finite() || floor_bits < R::zero() {
+        return Err(QuantumError::CalculationError(format!(
+            "adjudicate needs a finite, non-negative floor in bits, got {floor_bits:?}"
+        )));
+    }
     if worlds.is_empty() {
         return Err(QuantumError::CalculationError(
             "adjudicate needs at least one world".into(),
@@ -195,6 +204,25 @@ where
         )));
     }
     let n = worlds.len();
+
+    // Separation over every pair, at the taken shots. Measured before the commutation test, so
+    // a non-commuting fold still reports what it examined.
+    let slack = Tolerance::<R>::state()
+        .threshold(1, floor_bits)
+        .expect("the state member answers the single-operator form");
+    let mut checks = Vec::new();
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let sep = worlds[i].read_out.separation_bits(&worlds[j].read_out);
+            checks.push(Check::at_least(
+                CheckItem::Pair(i, j),
+                sep,
+                floor_bits,
+                slack,
+            ));
+        }
+    }
+    let report = CheckReport::from_checks(checks);
 
     // The projection path: commutation first, then the lattice fold.
     let mut commutation_pairs_tested = 0usize;
@@ -214,7 +242,7 @@ where
                     return Ok(Adjudication {
                         worlds_folded: n,
                         commutation_pairs_tested,
-                        report: CheckReport::vacuous(),
+                        report,
                         fold: None,
                         outcome: Either::Right(Ambiguity::NonCommuting {
                             pair: (i, j),
@@ -234,24 +262,6 @@ where
             });
         fold = Some(ProjectionFold { meet, join });
     }
-
-    // Separation over every pair, at the taken shots.
-    let slack = Tolerance::<R>::state()
-        .threshold(1, floor_bits)
-        .expect("the state member answers the single-operator form");
-    let mut checks = Vec::new();
-    for i in 0..n {
-        for j in (i + 1)..n {
-            let sep = worlds[i].read_out.separation_bits(&worlds[j].read_out);
-            checks.push(Check::at_least(
-                CheckItem::Pair(i, j),
-                sep,
-                floor_bits,
-                slack,
-            ));
-        }
-    }
-    let report = CheckReport::from_checks(checks);
 
     let holds = |w: &World<R, D>| match &w.verdict {
         WorldVerdict::Projection(p) => p.rank() > 0,

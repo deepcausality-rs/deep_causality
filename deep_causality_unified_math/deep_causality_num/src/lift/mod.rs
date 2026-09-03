@@ -42,7 +42,8 @@
 //! An `f64` literal is exact in `f64` and in `Float106`, and is rounded into `f32`. That is the
 //! point of the parameter: the literal is written once at `f64`, the widest form a source file can
 //! hold, and the working type decides what survives. An integer lifts exactly while it fits the
-//! target's mantissa and rounds beyond it; `i128` and `u128` values above 2⁵³ round into `f64`.
+//! target's mantissa and rounds beyond it: values above 2⁵³ round into `f64`, and `Float106`
+//! holds every `u64` and `i64` exactly and every integer below 2¹⁰⁶.
 //!
 //! # Panics
 //!

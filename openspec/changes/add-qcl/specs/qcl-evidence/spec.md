@@ -118,6 +118,26 @@ reaches no shipped sampler; the draw from a probability to a count is what this 
 - **THEN** the sampler propagates the shipped `QuantumError::DimensionMismatch` from the Born call,
   draws zero shots, and leaves the shot count unchanged
 
+### Requirement: A count histogram refuses what it cannot hold
+
+`CountHistogram::new` SHALL return `Result` and refuse a width above `usize::BITS`, the bits an
+outcome carries, with `DimensionMismatch`. `record` and `record_n` SHALL return `Result`, SHALL
+refuse with `DimensionMismatch` an outcome that does not fit the width, that is an outcome at or
+above `2^num_bits` when `num_bits < usize::BITS`, and SHALL add to the outcome's count and to the
+total in checked arithmetic, refusing an overflow with `CalculationError`. A refused record SHALL
+leave the histogram unchanged.
+
+#### Scenario: An outcome beyond the width is refused and nothing is recorded
+
+- **WHEN** a two-qubit histogram holding one shot of outcome `3` is asked to record outcome `4`
+- **THEN** `record` returns `DimensionMismatch`, the total stays at one, and the entries stay
+  `[(3, 1)]`
+
+#### Scenario: A count that would overflow is refused and nothing is recorded
+
+- **WHEN** a histogram whose total is `u64::MAX` is asked to record one more shot of any outcome
+- **THEN** `record` returns `CalculationError`, and the outcome's count and the total are unchanged
+
 ### Requirement: A shot budget is reproducible and its draw-down is checked ℕ arithmetic
 
 `ShotBudget` SHALL carry a seed beside its count, SHALL bound the count on `NaturalNumber` with its

@@ -6,6 +6,8 @@
 #![cfg(feature = "qcm")]
 
 #[cfg(test)]
+mod control_tests;
+#[cfg(test)]
 mod ledger_tests;
 #[cfg(test)]
 mod pipeline_tests;

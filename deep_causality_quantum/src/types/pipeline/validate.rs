@@ -15,11 +15,11 @@ use crate::types::qcm::markov_freeze::{
     quantum_markov_check_report,
 };
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
+use crate::types::qcode::clifford_action::symplectic_dual_basis;
 use crate::types::qcode::css_code::{CssCode, LdpcWeights, check_ldpc_weights, derive_code};
 use crate::types::qcode::diagonal_phase::DiagonalPhase;
 use crate::types::qcode::logical_equivalence::LogicalBasis;
 use crate::types::qgates::gates_haruna::logical_hadamard;
-use alloc::format;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -340,39 +340,14 @@ where
     /// between the declared systems. A candidate containing a `C₃` is not admitted. Each
     /// structural candidate implies a structure of its own, and the supports carry it, so no
     /// graph is needed here.
-    pub fn check_decomposable(mut self, inputs: &[usize], outputs: &[usize]) -> Self {
-        if self.failure.is_some() {
-            return self;
-        }
-        let pool: Vec<Hypothesis<R>> = if self.stages.is_empty() {
-            self.cfg.subject().candidates().to_vec()
-        } else {
-            core::mem::take(&mut self.admitted)
-        };
-        let mut admitted = Vec::new();
-        let mut folded = CheckReport::vacuous();
-        for h in pool {
-            match h.check_decomposable_from_supports(inputs, outputs) {
-                Ok(report) => {
-                    folded = folded.fold(report);
-                    admitted.push(h);
-                }
-                Err(QuantumError(crate::QuantumErrorEnum::NotFaithfullyRepresentable(_))) => {}
-                Err(e) => {
-                    self.fail(e);
-                    return self;
-                }
-            }
-        }
-        self.admitted = admitted;
-        self.record("check_decomposable", folded);
-        self
+    pub fn check_decomposable(self, inputs: &[usize], outputs: &[usize]) -> Self {
+        self.screen_decomposable(|h| h.check_decomposable_from_supports(inputs, outputs))
     }
 
     /// C₃-exclusion for every admitted candidate over `graph`'s reachability between the declared
     /// systems, for candidates whose structure lives in a graph rather than in their supports.
     pub fn check_decomposable_with<T, G>(
-        mut self,
+        self,
         graph: &G,
         inputs: &[usize],
         outputs: &[usize],
@@ -380,6 +355,17 @@ where
     where
         T: Clone,
         G: CausableGraph<T>,
+    {
+        self.screen_decomposable(|h| h.check_decomposable(graph, inputs, outputs))
+    }
+
+    /// The decomposability stage over one per-candidate check. The pool is every candidate when
+    /// this is the first stage and the admitted set otherwise; a candidate `check` rejects as
+    /// `NotFaithfullyRepresentable` is not admitted, any other error is the stage's failure, and
+    /// the reports of the admitted fold into one record.
+    fn screen_decomposable<F>(mut self, check: F) -> Self
+    where
+        F: Fn(&Hypothesis<R>) -> Result<CheckReport<R>, QuantumError>,
     {
         if self.failure.is_some() {
             return self;
@@ -392,7 +378,7 @@ where
         let mut admitted = Vec::new();
         let mut folded = CheckReport::vacuous();
         for h in pool {
-            match h.check_decomposable(graph, inputs, outputs) {
+            match check(&h) {
                 Ok(report) => {
                     folded = folded.fold(report);
                     admitted.push(h);
@@ -514,7 +500,13 @@ where
         self
     }
 
-    /// The Clifford check of `H̄` on every logical qubit, against a dual cochain.
+    /// The Clifford check of `H̄` on every logical qubit, each against its symplectic dual and
+    /// with the other logical qubits required fixed.
+    ///
+    /// The duals come from `symplectic_dual_basis`, so `⟨γ_i, γ̃_j⟩ = δ_ij`: the `H̄` built on
+    /// `(γ_i, γ̃_i)` is a gate on qubit `i` alone, and `check_clifford_action_on_qubit` decides
+    /// it as one, pushing every other logical generator through the program as well. A degenerate
+    /// pairing is the stage's failure, as the `CalculationError` the construction raises.
     pub fn check_clifford_action(mut self) -> Self {
         if self.failure.is_some() {
             return self;
@@ -527,31 +519,23 @@ where
                 return self;
             }
         };
+        let duals = match symplectic_dual_basis(basis.homology(), basis.cohomology()) {
+            Ok(d) => d,
+            Err(e) => {
+                self.fail(e);
+                return self;
+            }
+        };
         let mut checks = Vec::new();
-        for gamma in basis.homology() {
-            let dual = match complex.dual_representative::<Word>(gamma, 1) {
-                Ok(Some(d)) => d,
-                Ok(None) => {
-                    self.fail(QuantumError::CalculationError(
-                        "a homology class pairs to zero with every cocycle; the pairing is \
-                         degenerate on it"
-                            .into(),
-                    ));
-                    return self;
-                }
-                Err(e) => {
-                    self.fail(QuantumError::CalculationError(format!("{e}")));
-                    return self;
-                }
-            };
-            let program = match logical_hadamard::<Word, R>(gamma, &dual) {
+        for (index, (gamma, dual)) in basis.homology().iter().zip(&duals).enumerate() {
+            let program = match logical_hadamard::<Word, R>(gamma, dual) {
                 Ok((ops, _phase)) => ops,
                 Err(e) => {
                     self.fail(e);
                     return self;
                 }
             };
-            match basis.check_clifford_action(&program, gamma, &dual) {
+            match basis.check_clifford_action_on_qubit(&program, index, &duals) {
                 Ok(r) => {
                     let measured = if r.holds { R::zero() } else { R::one() };
                     checks.push(Check::new(

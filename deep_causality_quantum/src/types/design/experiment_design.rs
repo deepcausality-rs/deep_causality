@@ -224,9 +224,12 @@ impl<R: RealField> DesignPlan<R> {
 /// # Errors
 ///
 /// [`QuantumError::HypothesisCountExceeded`] naming `n` and `C(n, 2)` when `n` exceeds
-/// `objective.max_hypotheses`, before the table is allocated; [`QuantumError::DimensionMismatch`]
-/// if an experiment predicts for a different number of hypotheses; [`QuantumError::CalculationError`]
-/// if fewer than two hypotheses are offered, since there is then no pair to cover.
+/// `objective.max_hypotheses` or `C(n, 2)` exceeds the pair mask, before the pairs or the table
+/// are allocated; `C(n, 2)` is computed in checked arithmetic, and an overflow is reported as
+/// `usize::MAX` pairs. [`QuantumError::CalculationError`] if fewer than two hypotheses are
+/// offered, since there is then no pair to cover, or if `objective.floor_bits` is not finite or is
+/// negative. [`QuantumError::DimensionMismatch`] if an experiment predicts for a different number
+/// of hypotheses.
 pub fn design<R>(
     hypotheses: usize,
     experiments: &[Experiment<R>],
@@ -241,14 +244,18 @@ where
             "design needs at least two hypotheses to discriminate, got {n}"
         )));
     }
-    let pairs: Vec<(usize, usize)> = (0..n)
-        .flat_map(|i| ((i + 1)..n).map(move |j| (i, j)))
-        .collect();
-    let p = pairs.len();
-    if n > objective.max_hypotheses {
-        return Err(QuantumError::HypothesisCountExceeded(n, p));
+    if !objective.floor_bits.is_finite() || objective.floor_bits < R::zero() {
+        return Err(QuantumError::CalculationError(format!(
+            "design needs a finite, non-negative floor in bits, got {:?}",
+            objective.floor_bits
+        )));
     }
-    if p > usize::BITS as usize - 1 {
+    // `C(n, 2)` in checked arithmetic: an overflow is a count above any cap.
+    let p = match n.checked_mul(n - 1) {
+        Some(twice) => twice / 2,
+        None => return Err(QuantumError::HypothesisCountExceeded(n, usize::MAX)),
+    };
+    if n > objective.max_hypotheses || p > usize::BITS as usize - 1 {
         return Err(QuantumError::HypothesisCountExceeded(n, p));
     }
     for e in experiments {
@@ -261,6 +268,11 @@ where
             )));
         }
     }
+
+    let pairs: Vec<(usize, usize)> = (0..n)
+        .flat_map(|i| ((i + 1)..n).map(move |j| (i, j)))
+        .collect();
+    debug_assert_eq!(pairs.len(), p);
 
     // Coverage masks and, per pair, the best separation any experiment achieves.
     let slack = Tolerance::<R>::state()

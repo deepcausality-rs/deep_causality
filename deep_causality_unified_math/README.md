@@ -378,72 +378,42 @@ between crates, because there was nothing to convert.
 
 ## Mixed precision as a parameter
 
-Mixed precision comes downt to deciding a fundamental engineering trade-off:
+Mixed precision comes down to one engineering trade-off: higher precision costs time and memory,
+lower precision saves both, and the right choice differs from one part of a simulation to the
+next. Library authors used to make that choice once for everyone, as well as they could, and a
+program inherited it with no way to revise it per part. With precision as a parameter the program
+author makes the choice, and makes it per part.
 
-Higher precison that is slower and needs more memory vs lower precision that is faster
-and uses less memory.
-
-Historically, the decision was made for you by library authors based on best effort to reduce compromises.
-Sometimes the decision was right, and in other cases, the decisin had to be revised for any number of reasons. 
-
-In unified math, you, the program author decides the trade-off for each one 
-of your use cases because not every part of a simulation requires the same precision,
-and the parameter lets each part determines its own precision level. 
-
-The three computations below are bound by three different limits that affect precision.
+The three computations below are bound by three different limits.
 
 - **Noise-bound.** A Monte Carlo integral from a hundred thousand stored draws. Its error is the
   statistical 1/√n, near 9e-4, and rounding sits many orders below that at any precision. Extra
-  bits buy nothing here. In this case, `f32` saves memory because precision is identical at all float types.
+  bits buy nothing here, and `f32` buys memory.
 - **Mesh-bound.** A second derivative by a central difference on a fixed step. Truncation costs
   h²/12 and rounding costs ε/h². `f32` loses the value to the second; `Float106` cannot improve
-  on the first. `f64` is the sweet spot where both balance.
-- **Reference-bound.** The telescoping series from "Precision as a parameter earns a digit
-  for roughly every three bits of mantissa, and it is the kind of calculation where higher precision delivers better results.
+  on the first. `f64` is where the two balance.
+- **Reference-bound.** The telescoping series from "Precision as a parameter". It earns a digit
+  for roughly every three bits of mantissa, and it is the kind of calculation a reference value is
+  made of.
 
-However, in some cases it is simply not known if a certain precision level meets the error level requirements of the program.
-The program below tests each functions at 3 different precison levels and then picks the precision level that meets the error level requirements. Then, the aforementioned engineering trade-off can be decided and each part of a simulation can be parametrized to its optimal precision level to balance precsion and performance per stage. 
+Which precision a part needs is often not known in advance. The program below measures each part
+at all three precisions against its closed form, states an error budget per part, and picks the
+narrowest precision whose error meets the budget. The composition that follows is written at the
+picked precisions, and an assertion ties it to the pick, so a changed budget fails loudly rather
+than drifting.
 
 ```rust
 use deep_causality_algebra::{Real, Scalar};
 use deep_causality_num::{Float106, Lift, ToPrimitive, lift, lift_count, lower};
 use deep_causality_rand::{Distribution, Rng, StandardUniform, Xoshiro256};
 
-/// The master precision, where all the parts meet. It must be no narrower than the widest part.
+/// The master precision, where the parts meet. It must be no narrower than the widest part.
 type Master = Float106;
 
 const SAMPLES: u64 = 100_000;
 const SEED: u64 = 7;
 const STEP: f64 = 1e-3;
 const TERMS: u64 = 1_000_000;
-
-fn main() {
-    println!("            noise-bound  mesh-bound  reference-bound");
-    for (name, [a, b, c]) in [
-        ("f32     ", errors_at::<f32>()),
-        ("f64     ", errors_at::<f64>()),
-        ("Float106", errors_at::<Float106>()),
-    ] {
-        println!("{name}    {a:>9.1e}   {b:>9.1e}   {c:>9.1e}");
-    }
-
-    // The pick: each part at the precision its error budget asks for.
-    let (integral, bytes) = monte_carlo::<f32>(SAMPLES, SEED);
-    let curvature = second_derivative::<f64>(STEP);
-    let reference = series::<Float106>(TERMS);
-
-    // They meet at the master precision. Each crossing is a lift; nothing is thrown away.
-    let total: Master = integral.lift::<Master>() + curvature.lift::<Master>() + reference;
-    let one: Master = lift(1.0);
-    let exact: Master = one / lift_count::<Master>(3) - Real::sin(one) + one
-        - one / lift_count::<Master>(TERMS + 1);
-    println!(
-        "\ncomposed at the master precision: error {:.1e}",
-        lower(Real::abs(total - exact))
-    );
-    let widest = bytes / core::mem::size_of::<f32>() * core::mem::size_of::<Float106>();
-    println!("the draws took {bytes} bytes at f32; {widest} at Float106");
-}
 
 /// Noise-bound: a Monte Carlo estimate of ∫₀¹ x² dx from stored draws. The statistical error
 /// is about 1/√n and buries rounding at every precision. Returns the estimate and the bytes
@@ -495,6 +465,57 @@ where
     ]
 }
 
+/// The error each part is allowed: the requirement the pick is made against.
+const BUDGET: [f64; 3] = [1e-3, 1e-6, 1e-24];
+
+/// The cheapest precision whose error meets the budget, reading the rows from narrow to wide.
+fn pick(errors: [[f64; 3]; 3], part: usize) -> &'static str {
+    ["f32", "f64", "Float106"]
+        .into_iter()
+        .zip(errors)
+        .find(|(_, row)| row[part] <= BUDGET[part])
+        .map_or("none", |(name, _)| name)
+}
+
+fn main() {
+    let errors = [
+        errors_at::<f32>(),
+        errors_at::<f64>(),
+        errors_at::<Float106>(),
+    ];
+    println!("            noise-bound  mesh-bound  reference-bound");
+    for (name, [a, b, c]) in ["f32     ", "f64     ", "Float106"].into_iter().zip(errors) {
+        println!("{name}    {a:>9.1e}   {b:>9.1e}   {c:>9.1e}");
+    }
+    let picks = [pick(errors, 0), pick(errors, 1), pick(errors, 2)];
+    println!(
+        "budget      {:>9.0e}   {:>9.0e}   {:>9.0e}",
+        BUDGET[0], BUDGET[1], BUDGET[2]
+    );
+    println!(
+        "pick        {:>9}   {:>9}   {:>9}",
+        picks[0], picks[1], picks[2]
+    );
+
+    // The pick, written out: each part at the precision the table selected. The assertion ties
+    // the code below to the selection above, so a changed budget fails here rather than silently.
+    assert_eq!(picks, ["f32", "f64", "Float106"]);
+    let (integral, bytes) = monte_carlo::<f32>(SAMPLES, SEED);
+    let curvature = second_derivative::<f64>(STEP);
+    let reference = series::<Float106>(TERMS);
+
+    // They meet at the master precision. Each crossing is a lift; nothing is thrown away.
+    let total: Master = integral.lift::<Master>() + curvature.lift::<Master>() + reference;
+    let one: Master = lift(1.0);
+    let exact: Master = one / lift_count::<Master>(3) - Real::sin(one) + one
+        - one / lift_count::<Master>(TERMS + 1);
+    println!(
+        "\ncomposed at the master precision: error {:.1e}",
+        lower(Real::abs(total - exact))
+    );
+    let widest = bytes / core::mem::size_of::<f32>() * core::mem::size_of::<Float106>();
+    println!("the draws took {bytes} bytes at f32; {widest} at Float106");
+}
 ```
 
 | | noise-bound | mesh-bound | reference-bound |
@@ -502,19 +523,21 @@ where
 | `f32` | `5.9e-4` | `1.3e-1` | `1.5e-4` |
 | `f64` | `5.8e-4` | `7.0e-8` | `4.8e-14` |
 | `Float106` | `9.3e-4` | `7.0e-8` | `9.8e-31` |
+| budget | `1e-3` | `1e-6` | `1e-24` |
+| pick | `f32` | `f64` | `Float106` |
 
-The noise-bound column does not move with precision: all three rows sit inside
-the 1/√n band, and which of them lands closest is the luck of the stream, since the `Float106`
-sampler consumes more random bits per draw and walks a different sequence. The mesh-bound column
-moves once, from `f32` to `f64`, and then stops. The reference-bound column moves with every row,
-by ten digits and then by seventeen.
+The noise-bound column does not move with precision: all three rows sit inside the 1/√n band, and
+which of them lands closest is the luck of the stream, since the `Float106` sampler consumes more
+random bits per draw and walks a different sequence. The mesh-bound column moves once, from `f32`
+to `f64`, and then stops. The reference-bound column moves with every row, by ten digits and then
+by seventeen. The budgets turn those columns into a pick: the narrowest precision that meets each
+one.
 
-The pick reads off the table: `f32` for the draws, `f64` for the difference, `Float106` for the
-series. The composed value lands at 5.9e-4, which is the noise-bound part's own error, and the
-draws took 400 000 bytes where `Float106` would have taken 1 600 000. The master precision has
-one job, to be no narrower than the widest contributor, so that the crossings lose nothing. The
-accuracy of the composed value is then set by its parts, each at the precision its physics asked
-for. That is the trade-off made explicit: a precision chosen per part against a requirement.
+The composed value lands at 5.9e-4, which is the noise-bound part's own error, and the draws took
+400 000 bytes where `Float106` would have taken 1 600 000. The master precision has one job, to be
+no narrower than the widest contributor, so that the crossings lose nothing. The accuracy of the
+composed value is then set by its parts, each at the precision its physics asked for. That is the
+trade-off made explicit: a precision chosen per part against a requirement.
 
 ## Economic impact
 

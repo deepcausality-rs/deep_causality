@@ -430,6 +430,13 @@ where
     T: Clone,
 {
     fn check(&self) -> Result<(), QuantumError> {
+        if self.factors.is_empty() {
+            return Err(QuantumError::CalculationError(
+                "the model subject has no factors; a factorization with no factor cannot be \
+                 evaluated"
+                    .into(),
+            ));
+        }
         if !self.graph.is_frozen() {
             return Err(QuantumError::CalculationError(
                 "the model subject requires a frozen graph (dense node ids); freeze the graph \

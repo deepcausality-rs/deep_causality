@@ -6,14 +6,89 @@
 //! Shot statistics at the pipeline's scalar, and the read-out decision as a margin over shots.
 
 use deep_causality_quantum::{
-    CheckItem, CheckVerdict, CountHistogram, QuantumErrorEnum, ShotEstimate, Tolerance,
+    CheckItem, CheckVerdict, CountHistogram, QuantumErrorEnum, ShotEstimate, ShotHistogram,
+    Tolerance,
 };
 
 fn histogram(ones: u64, zeros: u64) -> CountHistogram {
-    let mut h = CountHistogram::new(1);
-    h.record_n(1, ones);
-    h.record_n(0, zeros);
+    let mut h = CountHistogram::new(1).unwrap();
+    h.record_n(1, ones).unwrap();
+    h.record_n(0, zeros).unwrap();
     h
+}
+
+/// A histogram claiming a width no outcome carries, as a foreign `ShotHistogram` impl may.
+struct WideHistogram;
+
+impl ShotHistogram for WideHistogram {
+    fn total(&self) -> u64 {
+        4
+    }
+    fn num_bits(&self) -> usize {
+        128
+    }
+    fn count(&self, outcome: usize) -> u64 {
+        match outcome {
+            0 => 1,
+            usize::MAX => 3,
+            _ => 0,
+        }
+    }
+    fn entries(&self) -> Vec<(usize, u64)> {
+        vec![(0, 1), (usize::MAX, 3)]
+    }
+}
+
+#[test]
+fn test_of_bit_refuses_a_bit_beyond_the_outcome_width_before_shifting() {
+    let h = WideHistogram;
+    let bits = usize::BITS as usize;
+    for beyond in [bits, bits + 1, 127] {
+        let err = ShotEstimate::<f64>::of_bit(&h, beyond).unwrap_err();
+        assert!(
+            matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)),
+            "bit {beyond}: {err:?}"
+        );
+    }
+    // The last bit an outcome carries reads as usual.
+    let top = ShotEstimate::<f64>::of_bit(&h, bits - 1).unwrap();
+    assert_eq!(top.shots(), 4);
+    assert!((top.estimate() - 0.75).abs() < 1e-15);
+}
+
+#[test]
+fn test_an_estimate_from_a_probability_carries_the_bernoulli_width() {
+    let e = ShotEstimate::<f64>::from_probability(0.64, 1000).unwrap();
+    let counted = ShotEstimate::<f64>::of_outcome(&histogram(640, 360), 1).unwrap();
+    assert_eq!(e.shots(), 1000);
+    assert!((e.estimate() - counted.estimate()).abs() < 1e-15);
+    assert!((e.standard_error() - counted.standard_error()).abs() < 1e-15);
+    // The endpoints have zero width.
+    let zero = ShotEstimate::<f64>::from_probability(0.0, 10).unwrap();
+    let one = ShotEstimate::<f64>::from_probability(1.0, 10).unwrap();
+    assert_eq!(zero.standard_error(), 0.0);
+    assert_eq!(one.standard_error(), 0.0);
+    // Zero shots have no width, and off the probability axis there is no estimate.
+    assert!(matches!(
+        ShotEstimate::<f64>::from_probability(0.5, 0).unwrap_err().0,
+        QuantumErrorEnum::NormalizationError(_)
+    ));
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -0.1, 1.1] {
+        assert!(
+            matches!(
+                ShotEstimate::<f64>::from_probability(bad, 10)
+                    .unwrap_err()
+                    .0,
+                QuantumErrorEnum::NonFiniteValue(_)
+            ),
+            "estimate {bad}"
+        );
+    }
+    // A probability-stated estimate separates from a counted one exactly as two counted ones do.
+    assert_eq!(
+        e.separation_bits(&counted),
+        counted.separation_bits(&counted)
+    );
 }
 
 #[test]
@@ -35,7 +110,7 @@ fn test_the_estimate_and_its_standard_error() {
 
 #[test]
 fn test_an_empty_histogram_is_not_a_probability() {
-    let h = CountHistogram::new(1);
+    let h = CountHistogram::new(1).unwrap();
     let err = ShotEstimate::<f64>::of_outcome(&h, 1).unwrap_err();
     match err.0 {
         QuantumErrorEnum::NormalizationError(msg) => {

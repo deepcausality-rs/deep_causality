@@ -19,8 +19,9 @@ use deep_causality_homology::{ChainComplex, Gf2Chain};
 use deep_causality_num::Gf2;
 use deep_causality_quantum::{
     DiagonalPhase, GateOp, LogicalBasis, LogicalPauli, QuantumErrorEnum, clifford_conjugate,
-    logical_cz, logical_hadamard, logical_s, logical_t,
+    logical_cz, logical_hadamard, logical_s, logical_t, symplectic_dual_basis,
 };
+use deep_causality_topology::LatticeComplex;
 
 type W = u64;
 type Chain = Gf2Chain<W>;
@@ -360,4 +361,225 @@ fn test_the_diagonal_cliffords_agree_with_the_diagonal_check() {
         b.are_logically_equivalent(&image, &x2_bar.compose(&z_bar).unwrap())
             .unwrap()
     );
+}
+
+// ---------------------------------------------------------------------------
+// H̄ on one qubit of two: the symplectic dual basis, and what the pair check cannot see.
+// ---------------------------------------------------------------------------
+
+/// The `[[32, 2]]` toric code the geometric example runs: the square torus with `L = 4`.
+fn square_basis() -> LogicalBasis<W> {
+    LogicalBasis::from_complex(&LatticeComplex::<2, f64>::square_torus(4), 1).unwrap()
+}
+
+/// The pairing matrix `⟨γ_i, d_j⟩` of a basis's homology generators against a list of cochains.
+fn pairing_matrix(b: &LogicalBasis<W>, duals: &[Chain]) -> Vec<Vec<Gf2>> {
+    b.homology()
+        .iter()
+        .map(|g| duals.iter().map(|d| g.inner(d).unwrap()).collect())
+        .collect()
+}
+
+fn identity_2() -> Vec<Vec<Gf2>> {
+    vec![vec![Gf2::ONE, Gf2::ZERO], vec![Gf2::ZERO, Gf2::ONE]]
+}
+
+#[test]
+fn test_the_symplectic_dual_basis_pairs_as_the_identity() {
+    // On both two-qubit codes: ⟨γ_i, γ̃_j⟩ = δ_ij. Each dual is a sum of cohomology generators, so
+    // it is a cocycle and X̄(γ̃_j) is a logical operator: in the normalizer, and not trivial.
+    for b in [basis(), square_basis()] {
+        assert_eq!(b.num_logical_qubits(), 2);
+        let duals = symplectic_dual_basis(b.homology(), b.cohomology()).unwrap();
+        assert_eq!(duals.len(), 2);
+        assert_eq!(pairing_matrix(&b, &duals), identity_2());
+        let zero = Chain::zeros(b.len(), 1);
+        for d in &duals {
+            let x_bar = LogicalPauli::new(d.clone(), zero.clone()).unwrap();
+            assert!(
+                !b.is_logically_trivial(&x_bar).unwrap(),
+                "a dual is a logical X, in the normalizer and not a stabilizer"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_the_dual_basis_does_not_depend_on_the_cohomology_basis_chosen() {
+    // Any invertible change of the cohomology basis spans the same cocycles, and the dual basis
+    // is the unique one in that span pairing as the identity, so the same chains come back. The
+    // swapped basis is the case where the elimination has to pivot.
+    let b = square_basis();
+    let c = b.cohomology();
+    let reference = symplectic_dual_basis(b.homology(), c).unwrap();
+    let mixed = c[0].add(&c[1]).unwrap();
+    for skewed in [
+        vec![c[1].clone(), c[0].clone()],
+        vec![mixed.clone(), c[1].clone()],
+        vec![c[0].clone(), mixed.clone()],
+        vec![mixed.clone(), c[0].clone()],
+    ] {
+        let duals = symplectic_dual_basis(b.homology(), &skewed).unwrap();
+        assert_eq!(pairing_matrix(&b, &duals), identity_2());
+        assert_eq!(duals, reference, "the duals depend on H¹, not on its basis");
+    }
+}
+
+#[test]
+fn test_the_inverse_is_read_down_its_columns_on_a_hand_checked_pairing() {
+    // γ = (e₀, e₁), c = (e₀ + e₁, e₁): M = [[1, 0], [1, 1]] and M⁻¹ = M over 𝔽₂. Reading M⁻¹ down
+    // its columns gives γ̃₀ = c₀ + c₁ = e₀ and γ̃₁ = c₁ = e₁; reading it across rows would give
+    // γ̃₁ = c₀ + c₁ as well, which pairs to one with γ₀.
+    let e = |i: usize| Chain::from_support(3, 1, &[i]).unwrap();
+    let c0 = e(0).add(&e(1)).unwrap();
+    let duals = symplectic_dual_basis(&[e(0), e(1)], &[c0, e(1)]).unwrap();
+    assert_eq!(duals, vec![e(0), e(1)]);
+    // The swapped pairing M = [[0, 1], [1, 0]] needs a pivot exchange and inverts to itself.
+    let duals = symplectic_dual_basis(&[e(0), e(1)], &[e(1), e(0)]).unwrap();
+    assert_eq!(duals, vec![e(0), e(1)]);
+}
+
+#[test]
+fn test_a_singular_pairing_is_an_error_rather_than_a_panic() {
+    // Two independent generators against cochains that both read e₀: M = [[1, 1], [0, 0]].
+    let e = |i: usize| Chain::from_support(3, 1, &[i]).unwrap();
+    let err = symplectic_dual_basis(&[e(0), e(1)], &[e(0), e(0)]).unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::CalculationError(msg) => {
+            assert!(msg.contains("singular") && msg.contains("rank 1"), "{msg}")
+        }
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+    // A generator pairing to zero with everything is the same failure at rank 0.
+    let err = symplectic_dual_basis(&[e(2)], &[e(0)]).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
+    // A pairing that is not square is a shape error, and a register mismatch is one too.
+    assert!(matches!(
+        symplectic_dual_basis(&[e(0), e(1)], &[e(0)]).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+    let wide = Chain::from_support(4, 1, &[0]).unwrap();
+    assert!(matches!(
+        symplectic_dual_basis(&[e(0)], &[wide]).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+    // No logical qubits: no duals, and no error.
+    assert!(symplectic_dual_basis::<W>(&[], &[]).unwrap().is_empty());
+}
+
+#[test]
+fn test_the_logical_hadamard_on_each_qubit_fixes_the_other() {
+    // On the square torus, H̄ built on (γ_i, γ̃_i) from the dual basis swaps its own pair and
+    // leaves both logical generators of the other qubit where they were.
+    let b = square_basis();
+    let duals = symplectic_dual_basis(b.homology(), b.cohomology()).unwrap();
+    for index in 0..2 {
+        let (program, _) = logical_hadamard::<W, f64>(&b.homology()[index], &duals[index]).unwrap();
+        let report = b
+            .check_clifford_action_on_qubit(&program, index, &duals)
+            .unwrap();
+        assert!(
+            report.z_to_x && report.x_to_z,
+            "qubit {index}: the pair was not swapped"
+        );
+        assert_eq!(
+            report.others_examined, 2,
+            "Z̄ and X̄ of the other qubit were both examined"
+        );
+        assert!(
+            report.others_fixed,
+            "qubit {index}: H̄ moved the other qubit"
+        );
+        assert!(report.holds);
+        assert_eq!(report.gates_applied, program.len());
+    }
+}
+
+#[test]
+fn test_a_dual_meeting_the_other_generator_passes_the_pair_check_and_is_refused_on_the_basis() {
+    // γ̃₀ + γ̃₁ pairs to one with γ₀ and with γ₁. Haruna's derivation needs only ⟨γ, γ̃⟩ = 1, so the
+    // pair check passes; the program it builds moves Z̄(γ₁), which the pair check never reads.
+    let b = square_basis();
+    let duals = symplectic_dual_basis(b.homology(), b.cohomology()).unwrap();
+    let gamma = &b.homology()[0];
+    let other = &b.homology()[1];
+    let bad = duals[0].add(&duals[1]).unwrap();
+    assert_eq!(gamma.inner(&bad).unwrap(), Gf2::ONE);
+    assert_eq!(other.inner(&bad).unwrap(), Gf2::ONE);
+    let (program, _) = logical_hadamard::<W, f64>(gamma, &bad).unwrap();
+
+    // The pair check accepts it, having examined no other qubit.
+    let pair = b.check_clifford_action(&program, gamma, &bad).unwrap();
+    assert!(pair.holds && pair.z_to_x && pair.x_to_z);
+    assert_eq!(pair.others_examined, 0);
+    assert!(pair.others_fixed, "vacuously: nothing else was examined");
+
+    // The program is a gate on two qubits: Z̄(γ₁) comes back as X̄(γ̃) Z̄(γ₀) Z̄(γ₁), up to phase.
+    let zero = Chain::zeros(b.len(), 1);
+    let z1 = LogicalPauli::new(zero.clone(), other.clone()).unwrap();
+    let image = clifford_conjugate(&z1, &program).unwrap();
+    assert!(!b.are_logically_equivalent(&image, &z1).unwrap());
+    let expected = LogicalPauli::new(bad.clone(), gamma.add(other).unwrap()).unwrap();
+    assert!(b.are_logically_equivalent(&image, &expected).unwrap());
+
+    // The basis-aware check refuses the dual before pushing anything through.
+    let mut bad_duals = duals.clone();
+    bad_duals[0] = bad;
+    let err = b
+        .check_clifford_action_on_qubit(&program, 0, &bad_duals)
+        .unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::CalculationError(msg) => {
+            assert!(msg.contains("⟨γ_1, γ̃_0⟩ = 1"), "{msg}")
+        }
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_hadamard_on_both_qubits_is_not_a_hadamard_on_one() {
+    // H̄₀ then H̄₁, each on its own dual: the pair on qubit 0 is swapped, so the pair check passes,
+    // and qubit 1 is swapped too, which only the basis-aware check sees.
+    let b = square_basis();
+    let duals = symplectic_dual_basis(b.homology(), b.cohomology()).unwrap();
+    let (mut program, _) = logical_hadamard::<W, f64>(&b.homology()[0], &duals[0]).unwrap();
+    program.extend(
+        logical_hadamard::<W, f64>(&b.homology()[1], &duals[1])
+            .unwrap()
+            .0,
+    );
+    let pair = b
+        .check_clifford_action(&program, &b.homology()[0], &duals[0])
+        .unwrap();
+    assert!(pair.holds, "the pair check cannot see the second qubit");
+
+    let report = b
+        .check_clifford_action_on_qubit(&program, 0, &duals)
+        .unwrap();
+    assert!(report.z_to_x && report.x_to_z);
+    assert!(!report.others_fixed);
+    assert!(!report.holds);
+    assert_eq!(
+        report.others_examined, 1,
+        "stopped at Z̄(γ₁), the first generator that moved"
+    );
+}
+
+#[test]
+fn test_the_basis_aware_check_refuses_a_wrong_index_or_dual_count() {
+    let b = square_basis();
+    let duals = symplectic_dual_basis(b.homology(), b.cohomology()).unwrap();
+    let (program, _) = logical_hadamard::<W, f64>(&b.homology()[0], &duals[0]).unwrap();
+    assert!(matches!(
+        b.check_clifford_action_on_qubit(&program, 2, &duals)
+            .unwrap_err()
+            .0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
+    assert!(matches!(
+        b.check_clifford_action_on_qubit(&program, 0, &duals[..1])
+            .unwrap_err()
+            .0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
 }

@@ -299,6 +299,20 @@ fn test_multi_cz_with_an_unsupported_chain_is_the_empty_program() {
     );
 }
 
+#[test]
+fn test_an_empty_support_after_a_saturated_product_still_counts_zero() {
+    // Twenty-two weight-eight chains multiply to 2^66, past u64::MAX, so the running product
+    // saturates. An empty support after them makes the Cartesian product empty all the same,
+    // and the program is the identity rather than a refusal above the cap.
+    let full = chain(&[0, 1, 2, 3, 4, 5, 6, 7]);
+    let empty = chain(&[]);
+    let mut chains: Vec<&C> = vec![&full; 22];
+    assert_eq!(multi_cz_tuple_count(&chains), u64::MAX);
+    chains.push(&empty);
+    assert_eq!(multi_cz_tuple_count(&chains), 0);
+    assert!(logical_multi_cz(&chains).unwrap().is_empty());
+}
+
 // ---------------------------------------------------------------------------
 // Eq. (3.27): the logical Hadamard and its global phase.
 // ---------------------------------------------------------------------------

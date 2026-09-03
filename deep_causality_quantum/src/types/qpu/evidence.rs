@@ -132,10 +132,15 @@ impl<N: NaturalNumber> ShotBudget<N> {
 
     /// `request` shots drawn down, as the draw and the budget after it. The receiver is unchanged.
     ///
+    /// The draw seed mixes the run seed with the full width of the shots spent so far: the low
+    /// and the high 64-bit halves of the count enter under distinct odd constants, so two ledgers
+    /// that differ only above `2^64` shots draw at different seeds.
+    ///
     /// # Errors
     ///
     /// [`QuantumError::CalculationError`] naming the request, the remainder and the shortfall when
     /// `request` exceeds what remains. `checked_difference` decides it, and nothing is recorded.
+    /// The same variant if the spent count does not fit a `u128`.
     pub fn draw(&self, request: N) -> Result<(Draw<N>, Self), QuantumError>
     where
         N: ToPrimitive + core::fmt::Debug,
@@ -148,10 +153,19 @@ impl<N: NaturalNumber> ShotBudget<N> {
                 request.monus(self.remaining)
             )));
         };
-        let spent_so_far = self.spent.to_u64().unwrap_or(u64::MAX);
+        let spent_so_far = self.spent.to_u128().ok_or_else(|| {
+            QuantumError::CalculationError(format!(
+                "spent shot count {:?} does not fit a u128",
+                self.spent
+            ))
+        })?;
+        // The two halves of the count; the cast keeps the low 64 bits by design.
+        let low = spent_so_far as u64;
+        let high = (spent_so_far >> 64) as u64;
         let seed = SplitMix64::new(
             self.seed
-                .wrapping_add(spent_so_far.wrapping_mul(0x9E37_79B9_7F4A_7C15)),
+                .wrapping_add(low.wrapping_mul(0x9E37_79B9_7F4A_7C15))
+                .wrapping_add(high.wrapping_mul(0xBF58_476D_1CE4_E5B9)),
         )
         .next_u64();
         let after = Self {

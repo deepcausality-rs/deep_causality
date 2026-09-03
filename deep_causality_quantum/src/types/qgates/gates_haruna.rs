@@ -96,8 +96,13 @@ pub fn t_tuple_count<W: NaturalNumber>(gamma: &Gf2Chain<W>) -> u64 {
 }
 
 /// The number of tuples [`logical_multi_cz`] emits over: the product of the
-/// supports' weights. Saturates rather than overflowing.
+/// supports' weights. Saturates rather than overflowing. An empty support makes
+/// the product empty, so the count is zero wherever that chain sits, saturated
+/// prefix or not.
 pub fn multi_cz_tuple_count<W: NaturalNumber>(chains: &[&Gf2Chain<W>]) -> u64 {
+    if chains.iter().any(|c| c.weight() == 0) {
+        return 0;
+    }
     chains
         .iter()
         .map(|c| c.weight() as u64)

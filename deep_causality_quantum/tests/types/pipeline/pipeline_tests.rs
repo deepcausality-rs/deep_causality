@@ -20,6 +20,7 @@ use deep_causality_quantum::{
     QubitOperator, ScreenStatus, Spec,
 };
 use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::LatticeComplex;
 
 type C = Complex<f64>;
 type Count = u64;
@@ -547,4 +548,130 @@ fn test_a_failing_stage_is_sticky_and_carries_its_cause() {
         .finalize()
         .unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
+}
+
+// ---------------------------------------------------------------------------
+// The decomposability stage on structural candidates: by supports, and by a graph.
+// ---------------------------------------------------------------------------
+
+/// Example 2.12's `C₃` as parent → child edges on six nodes, inputs `0..3` and outputs `3..6`.
+const C3_EDGES: &[(usize, usize)] = &[(0, 3), (0, 4), (1, 3), (1, 4), (1, 5), (2, 4), (2, 5)];
+
+/// `K₃,₃` on the same systems, which is `C₃`-free.
+const K33_EDGES: &[(usize, usize)] = &[
+    (0, 3),
+    (0, 4),
+    (0, 5),
+    (1, 3),
+    (1, 4),
+    (1, 5),
+    (2, 3),
+    (2, 4),
+    (2, 5),
+];
+
+/// A structural candidate whose supports encode `edges`: a child's support carries its parents.
+/// Every factor is `σ_z` on each of its legs, so every pair commutes.
+fn structural_from_edges(name: &str, edges: &[(usize, usize)]) -> Hypothesis<f64> {
+    let mut pf = ProcessFactors::new();
+    let mut fs = FactorSupports::new();
+    for n in 0..6 {
+        let mut legs = vec![n];
+        legs.extend(edges.iter().filter(|(_, c)| *c == n).map(|(p, _)| *p));
+        let factor = legs
+            .iter()
+            .skip(1)
+            .fold(sigma_z(), |acc, _| acc.kronecker(&sigma_z()).unwrap());
+        pf.insert(n, factor);
+        fs.declare(n, &legs);
+    }
+    Hypothesis::structural(name, pf, fs).unwrap()
+}
+
+#[test]
+fn test_structural_candidates_are_screened_for_c3_by_their_own_supports() {
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .candidates(&[
+            structural_from_edges("c3", C3_EDGES),
+            structural_from_edges("k33", K33_EDGES),
+        ])
+        .build()
+        .unwrap();
+    let screened = QclBuilder::validate(&cfg)
+        .check_decomposable(&[0, 1, 2], &[3, 4, 5])
+        .finalize()
+        .unwrap();
+    let names: Vec<&str> = screened.admitted().iter().map(|h| h.name()).collect();
+    assert_eq!(names, vec!["k33"], "the C₃ candidate is not admitted");
+    assert_eq!(screened.stages()[0].0, "check_decomposable");
+    assert_eq!(
+        screened.stages()[0].1.examined(),
+        1,
+        "one 3 × 3 block, from the admitted candidate alone"
+    );
+    assert_eq!(screened.report().unwrap().verdict(), CheckVerdict::Accepted);
+}
+
+#[test]
+fn test_structural_candidates_are_screened_for_c3_by_a_graph() {
+    // Against a graph the structure is the graph's, so both candidates share one verdict. After
+    // check_markov the pool is the admitted set rather than every candidate, and a declared
+    // system the graph does not hold is the stage's failure rather than a rejection.
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .candidates(&[
+            structural_from_edges("c3", C3_EDGES),
+            structural_from_edges("k33", K33_EDGES),
+        ])
+        .build()
+        .unwrap();
+    let rejecting = graph(6, C3_EDGES, true);
+    let screened = QclBuilder::validate(&cfg)
+        .check_decomposable_with(&rejecting, &[0, 1, 2], &[3, 4, 5])
+        .finalize()
+        .unwrap();
+    assert!(screened.admitted().is_empty());
+    assert_eq!(screened.stages()[0].1.verdict(), CheckVerdict::Vacuous);
+
+    let accepting = graph(6, K33_EDGES, true);
+    let screened = QclBuilder::validate(&cfg)
+        .check_markov(&CommutatorTolerance::default())
+        .check_decomposable_with(&accepting, &[0, 1, 2], &[3, 4, 5])
+        .finalize()
+        .unwrap();
+    assert_eq!(screened.admitted().len(), 2);
+    assert_eq!(screened.stages()[1].0, "check_decomposable");
+    assert_eq!(
+        screened.stages()[1].1.examined(),
+        2,
+        "one block per candidate"
+    );
+
+    let e = err(QclBuilder::validate(&cfg)
+        .check_decomposable_with(&accepting, &[0, 1, 9], &[3, 4, 5])
+        .finalize());
+    assert!(matches!(e.0, QuantumErrorEnum::CalculationError(_)));
+}
+
+// ---------------------------------------------------------------------------
+// The code subject on the square torus: H̄ on one qubit of two.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_the_code_subject_decides_each_hadamard_on_one_qubit_of_the_square_torus() {
+    // The [[32, 2]] toric code the geometric example runs. Each H̄ is built on its symplectic
+    // dual and checked with the other qubit required fixed: two records, both exact passes.
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_code(LatticeComplex::<2, f64>::square_torus(4))
+        .build()
+        .unwrap();
+    let screened = QclBuilder::validate(&cfg)
+        .check_clifford_action()
+        .finalize()
+        .unwrap();
+    assert_eq!(screened.stages().len(), 1);
+    assert_eq!(screened.stages()[0].0, "check_clifford_action");
+    assert_eq!(screened.stages()[0].1.examined(), 2);
+    assert_eq!(screened.report().unwrap().verdict(), CheckVerdict::Accepted);
 }

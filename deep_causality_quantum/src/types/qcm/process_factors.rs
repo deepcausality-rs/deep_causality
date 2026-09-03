@@ -117,6 +117,13 @@ impl FactorSupports {
         self.leg_dims.get(&leg).copied().unwrap_or(2)
     }
 
+    /// The dimension `leg` was registered at, by a declaration or [`Self::set_leg_dim`], or
+    /// `None` if nothing has named the leg. [`Self::leg_dim`] answers `2` for a registered qubit
+    /// and for an absent leg alike; this query tells the two apart.
+    pub fn declared_leg_dim(&self, leg: usize) -> Option<usize> {
+        self.leg_dims.get(&leg).copied()
+    }
+
     /// The product of the leg dimensions on `node`'s support — the expected
     /// matrix dimension of that node's factor.
     pub fn support_dim(&self, node: usize) -> Option<usize> {

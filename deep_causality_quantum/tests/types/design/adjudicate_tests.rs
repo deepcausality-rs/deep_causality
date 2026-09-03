@@ -8,7 +8,8 @@
 use deep_causality_haft::Either;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    Ambiguity, CheckVerdict, CountHistogram, Projection, ShotEstimate, World, adjudicate,
+    Ambiguity, CheckItem, CheckVerdict, CountHistogram, Projection, QuantumErrorEnum, ShotEstimate,
+    World, adjudicate,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -19,9 +20,9 @@ fn ket(a: f64, b: f64) -> CausalTensor<C> {
 }
 
 fn estimate(ones: u64, total: u64) -> ShotEstimate<f64> {
-    let mut h = CountHistogram::new(1);
-    h.record_n(1, ones);
-    h.record_n(0, total - ones);
+    let mut h = CountHistogram::new(1).unwrap();
+    h.record_n(1, ones).unwrap();
+    h.record_n(0, total - ones).unwrap();
     ShotEstimate::of_outcome(&h, 1).unwrap()
 }
 
@@ -55,6 +56,36 @@ fn test_non_commuting_verdicts_fold_to_ambiguous_and_declare_no_survivor() {
         }
         other => panic!("expected NonCommuting, got {other:?}"),
     }
+    // The separation report is measured before the commutation test, so it is the real one.
+    assert_eq!(a.report.examined(), 1);
+    assert_eq!(a.report.verdict(), CheckVerdict::Accepted);
+    let record = &a.report.checks()[0];
+    assert_eq!(record.item, CheckItem::Pair(0, 1));
+    let sep = estimate(900, 1024).separation_bits(&estimate(100, 1024));
+    assert_eq!(record.measured, sep);
+    assert_eq!(record.threshold, 5.0);
+}
+
+#[test]
+fn test_a_floor_that_is_not_a_finite_non_negative_number_is_refused_first() {
+    let worlds = [
+        read_out_world("a", 1023, 1024, 0.999),
+        read_out_world("b", 500, 1024, 0.999),
+    ];
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
+        match adjudicate(&worlds, bad).unwrap_err().0 {
+            QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("floor"), "{msg}"),
+            other => panic!("expected CalculationError, got {other:?}"),
+        }
+    }
+    // Before anything else: an empty fork at a bad floor names the floor, not the emptiness.
+    let empty: [World<f64, 2>; 0] = [];
+    match adjudicate(&empty, f64::NAN).unwrap_err().0 {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("floor"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+    // A zero floor is a finite, non-negative number and runs.
+    assert!(adjudicate(&worlds, 0.0).is_ok());
 }
 
 #[test]

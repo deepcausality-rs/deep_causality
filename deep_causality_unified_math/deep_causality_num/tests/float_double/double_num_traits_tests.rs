@@ -282,3 +282,69 @@ fn test_product_empty() {
     let product: Float106 = values.into_iter().product();
     assert_eq!(product.hi(), 1.0);
 }
+
+// The integer crossings are exact past 2⁵³ in both directions.
+
+#[test]
+fn test_from_u64_keeps_every_bit() {
+    let just_past = (1u64 << 53) + 1;
+    let x = Float106::from_u64(just_past).unwrap();
+    assert_eq!(x.to_u64(), Some(just_past));
+    let max = Float106::from_u64(u64::MAX).unwrap();
+    assert_eq!(max.to_u64(), Some(u64::MAX));
+    assert_eq!(max.to_u128(), Some(u64::MAX as u128));
+    assert_eq!(Float106::from_u64(0).unwrap().to_u64(), Some(0));
+}
+
+#[test]
+fn test_from_i64_keeps_every_bit_and_the_sign() {
+    for n in [
+        i64::MIN,
+        i64::MIN + 1,
+        -((1i64 << 53) + 1),
+        -1,
+        0,
+        1,
+        (1i64 << 53) + 1,
+        i64::MAX,
+    ] {
+        let x = Float106::from_i64(n).unwrap();
+        assert_eq!(x.to_i64(), Some(n), "{n}");
+        assert_eq!(x.to_i128(), Some(n as i128), "{n}");
+    }
+}
+
+#[test]
+fn test_from_u128_is_exact_below_two_to_the_106() {
+    for n in [(1u128 << 100) + 1, (1u128 << 105) + 12345, 1u128 << 106] {
+        let x = Float106::from_u128(n).unwrap();
+        assert_eq!(x.to_u128(), Some(n), "{n}");
+    }
+    let x = Float106::from_u128(u128::MAX).unwrap();
+    assert!(ToPrimitive::to_f64(&x).unwrap() >= 3.4e38);
+    assert_eq!(
+        Float106::from_i128(i128::MIN).unwrap().to_i128(),
+        Some(i128::MIN)
+    );
+}
+
+#[test]
+fn test_integer_conversion_truncates_the_whole_value() {
+    // hi = 3, lo just below zero: the value is below 3 and truncates to 2.
+    let x = Float106::new(3.0, -1e-19);
+    assert_eq!(x.to_u64(), Some(2));
+    assert_eq!(x.to_i32(), Some(2));
+    // hi = 2, lo just above one: the value is 3.0000…1 and truncates to 3.
+    let y = Float106::new(2.0, 1.0 + 1e-17);
+    assert_eq!(y.to_u64(), Some(3));
+    assert_eq!(Float106::from(-0.5).to_i8(), Some(0));
+    assert_eq!(Float106::from(-1.5).to_u8(), None);
+    assert_eq!(Float106::from(300.0).to_u8(), None);
+}
+
+#[test]
+fn test_to_f64_carries_the_low_half() {
+    let y = Float106::new(1.0, 2e-16);
+    assert_eq!(ToPrimitive::to_f64(&y), Some(1.0 + 2e-16));
+    assert_eq!(ToPrimitive::to_f64(&Float106::new(1.0, 1e-17)), Some(1.0));
+}

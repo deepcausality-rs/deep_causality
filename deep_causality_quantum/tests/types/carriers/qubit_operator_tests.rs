@@ -158,6 +158,30 @@ fn test_the_precision_lift_composes_two_functors_and_re_validates_at_the_target(
 }
 
 #[test]
+fn test_the_unitarity_check_conjugates_and_names_the_defect() {
+    let c = |re: f64, im: f64| Complex::new(re, im);
+    // i·X is unitary only because U† conjugates: without the conjugate the (0, 0) entry of
+    // UU† would be i·i = −1 and the defect 2.
+    let ix = CausalTensor::from_slice(
+        &[c(0.0, 0.0), c(0.0, 1.0), c(0.0, 1.0), c(0.0, 0.0)],
+        &[2, 2],
+    );
+    let op = QubitOperator::from_matrix(ix).unwrap();
+    assert!(op.unitarity_defect() <= f64::EPSILON);
+    // 2i·X has UU† = 4I: the defect is |4 − 1| = 3 on the diagonal, and the refusal names it.
+    let two_ix = CausalTensor::from_slice(
+        &[c(0.0, 0.0), c(0.0, 2.0), c(0.0, 2.0), c(0.0, 0.0)],
+        &[2, 2],
+    );
+    match QubitOperator::from_matrix(two_ix).unwrap_err().0 {
+        QuantumErrorEnum::NonPositiveOperator(msg) => {
+            assert!(msg.contains("= 3.0 >"), "names the defect: {msg}")
+        }
+        other => panic!("expected NonPositiveOperator, got {other:?}"),
+    }
+}
+
+#[test]
 fn test_the_default_is_the_identity() {
     assert_eq!(QubitOperator::<f64>::default(), QubitOperator::identity());
 }

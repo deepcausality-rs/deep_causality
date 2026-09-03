@@ -116,14 +116,17 @@ and `worst_margin` expose, generalised by `Check<R>` and `CheckReport<R>`.
 `adjudicate` SHALL test `Projection::commutes_with` on every pair of projection-valued verdicts
 before combining them, because `Projection<R, D>` is orthomodular and fails distributivity outside
 the commuting family. A fold whose projections do not all pairwise commute SHALL return `Ambiguous`,
-naming the offending pair and the number of pairs tested.
+naming the offending pair and the number of pairs tested. The pairwise separation report is
+measured before the commutation test, so the `Ambiguous` result carries the report over every pair
+of worlds rather than a vacuous one.
 
 #### Scenario: Non-commuting verdicts fold to Ambiguous
 
 - **WHEN** two forked worlds carry the rank-1 projections onto `|0⟩` and `|+⟩`, whose commutator
   defect exceeds `Projection::default_tolerance`
-- **THEN** `adjudicate` returns `Ambiguous` naming that pair and the pairs-tested count, and declares
-  no surviving hypothesis
+- **THEN** `adjudicate` returns `Ambiguous` naming that pair and the pairs-tested count, declares
+  no surviving hypothesis, and its report carries the one pair's separation at the taken shots
+  against `floor_bits`, with an examined count of one
 
 #### Scenario: A commuting fold answers
 

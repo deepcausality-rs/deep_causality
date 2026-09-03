@@ -20,7 +20,10 @@
 //! | [`QuantumPlant`] | state and channel juggling | a density matrix, re-validated after each evolution |
 //! | [`Observable`] | ket → projector → Born, written out each time | a rank-1 Hermitian idempotent |
 //!
-//! Every carrier is generic in its scalar and names no width. The bound is `R: RealField`, and
+//! Every carrier is generic in its scalar. [`Observable`] carries its width as the const parameter
+//! `D` and exposes it through `dim()`; the other three name no width, since a [`QubitOperator`] is
+//! `2 × 2` by definition and a [`Channel`] or a [`QuantumPlant`] takes its dimension from the
+//! operators it holds. The bound is `R: RealField`, and
 //! that bound comes from the carrier rather than from its operations: every impl for `Complex<T>`
 //! in `deep_causality_num_complex` is written `impl<T: RealField>`, so a carrier holding
 //! `Complex<R>` reaches no algebraic structure below it. A reader looking for a relaxation to

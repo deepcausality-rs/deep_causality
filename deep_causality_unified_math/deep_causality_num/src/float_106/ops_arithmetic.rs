@@ -186,6 +186,12 @@ impl Div for Float106 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
+        // The refinement multiplies the first quotient back by the divisor, and `inf · 0` is NaN,
+        // so a zero or non-finite divisor and a non-finite dividend are answered by the `f64`
+        // division alone: `±inf`, `0` or NaN, as IEEE 754 has them.
+        if rhs.hi == 0.0 || !rhs.hi.is_finite() || !self.hi.is_finite() {
+            return Self::from(self.hi / rhs.hi);
+        }
         // High-precision division using iterative refinement.
         // q1 = a.hi / b.hi
         let q1 = self.hi / rhs.hi;
@@ -208,6 +214,9 @@ impl Div<f64> for Float106 {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
+        if rhs == 0.0 || !rhs.is_finite() || !self.hi.is_finite() {
+            return Self::from(self.hi / rhs);
+        }
         // Optimized: single f64 divisor
         let q1 = self.hi / rhs;
         let (p1, p2) = two_prod(q1, rhs);

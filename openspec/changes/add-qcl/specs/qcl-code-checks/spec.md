@@ -284,6 +284,65 @@ symplectic actions are `H: (x, z) ↦ (z, x)` on its qubit, `S: (x, z) ↦ (x, z
 diagonal check. Between the two stages every Table 1 gate is decided by exactly one exact predicate,
 and `Z̄`, `S̄` and `CZ̄` are decided by both, which is the cross-check.
 
+The dual SHALL come from a symplectic dual basis, not from any cocycle that pairs to one with `γ`.
+The stage SHALL form the 𝔽₂ pairing matrix `M[i][j] = ⟨γ_i, c_j⟩` of the homology basis against
+the cohomology basis, invert it over 𝔽₂, and set `γ̃_j = Σ_i (M⁻¹)[i][j] · c_i`, so that
+`⟨γ_i, γ̃_j⟩ = δ_ij`. `M` is `k × k` for `k` logical qubits, so the elimination does not grow with
+the register. A singular `M` SHALL be a `CalculationError` naming the degenerate pairing.
+
+The reason is that the pair check reads two images and nothing else. Haruna's derivation of
+Eq. (3.32) goes through for any `γ̃` with `⟨γ, γ̃⟩ = 1`, so a cocycle that also meets a second
+generator `γ_j` builds a program that swaps `Z̄(γ)` and `X̄(γ̃)` and moves `Z̄(γ_j)` to
+`X̄(γ̃) Z̄(γ) Z̄(γ_j)`: the middle `S̄(γ̃)` attaches `γ̃` because `⟨γ_j, γ̃⟩ = 1` and the last `S̄(γ)`
+attaches `γ` because `⟨γ̃, γ⟩ = 1`. On a code with more than one logical qubit the pair check alone
+accepts a gate on two qubits as a gate on one.
+
+For each logical qubit the stage SHALL decide the check against the whole basis, through
+`LogicalBasis::check_clifford_action_on_qubit`. That check SHALL refuse a `duals` that does not pair
+with the homology basis as the identity, SHALL decide `Z̄(γ_i) ↦ X̄(γ̃_i)` and `X̄(γ̃_i) ↦ Z̄(γ_i)`
+as the pair check does, and SHALL push `Z̄(γ_j)` and `X̄(γ̃_j)` for every other logical qubit `j`
+through the program and require each to be logically equivalent to itself. The report SHALL record
+whether the other generators were fixed and how many were examined, and `holds` SHALL require them
+fixed. The two-argument pair check SHALL remain and SHALL be documented as deciding the pair alone,
+with its examined count of other generators at zero so the vacuous condition is visible.
+
+#### Scenario: The dual basis pairs as the identity
+
+- **WHEN** the symplectic dual basis is built from the homology and cohomology bases of the 3×3
+  simplicial torus and of `square_torus(4)`, and again from a cohomology basis under an invertible
+  change
+- **THEN** `⟨γ_i, γ̃_j⟩ = δ_ij` on every pair, each dual is a logical `X` in the normalizer, and the
+  duals are the same chains under every choice of cohomology basis
+
+#### Scenario: The logical Hadamard on one qubit fixes the other
+
+- **WHEN** `logical_hadamard(γ_i, γ̃_i)` is emitted on `square_torus(4)` for each of its two logical
+  qubits, with `γ̃_i` from the dual basis
+- **THEN** the basis-aware check reports the pair swapped, the two logical generators of the other
+  qubit examined and fixed, and `holds == true`, and the code stage records one accepted check per
+  logical qubit
+
+#### Scenario: A dual meeting the other generator is refused where the pair check accepts it
+
+- **WHEN** `γ̃₀ + γ̃₁`, which pairs to one with `γ₀` and with `γ₁`, is handed to
+  `logical_hadamard(γ₀, ·)` and the program is checked both ways
+- **THEN** the pair check reports `holds == true` having examined no other generator, the program
+  moves `Z̄(γ₁)` to `X̄(γ̃) Z̄(γ₀) Z̄(γ₁)`, and the basis-aware check returns `CalculationError`
+  naming `⟨γ_1, γ̃_0⟩ = 1`
+
+#### Scenario: A program on both qubits is not a Hadamard on one
+
+- **WHEN** `H̄₀` followed by `H̄₁`, each on its own dual, is checked on qubit 0
+- **THEN** the pair check accepts, and the basis-aware check reports the pair swapped,
+  `others_fixed == false` at the first generator that moved, and `holds == false`
+
+#### Scenario: A degenerate pairing is an error
+
+- **WHEN** the construction is handed generators whose pairing matrix is singular, or two bases of
+  different counts
+- **THEN** it returns `CalculationError` naming the singular pairing in the first case and
+  `DimensionMismatch` in the second, and panics in neither
+
 #### Scenario: The logical Hadamard swaps the logical Paulis
 
 - **WHEN** `logical_hadamard(γ, γ̃)` is emitted for a class of the 3×3 torus and its dual

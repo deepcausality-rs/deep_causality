@@ -60,6 +60,38 @@ where
         })
     }
 
+    /// An estimate stated as a probability, carrying the Bernoulli standard error `√(p(1−p)/n)`
+    /// it would have at `shots`. A predicted read-out is a probability before it is a count, and
+    /// this is how the control stage carries one beside a sampled estimate.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NormalizationError`] at zero shots, where there is no standard error;
+    /// [`QuantumError::NonFiniteValue`] on an estimate that is not finite or lies outside
+    /// `[0, 1]`; [`QuantumError::CalculationError`] if `R` cannot represent `shots`.
+    pub fn from_probability(estimate: R, shots: u64) -> Result<Self, QuantumError> {
+        if shots == 0 {
+            return Err(QuantumError::NormalizationError(
+                "an estimate over zero shots has no standard error".into(),
+            ));
+        }
+        if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
+            return Err(QuantumError::NonFiniteValue(
+                "an estimate must be a finite probability in [0, 1]".into(),
+            ));
+        }
+        let n = R::from_u64(shots).ok_or_else(|| {
+            QuantumError::CalculationError(format!("scalar cannot represent {shots} shots"))
+        })?;
+        let one = R::one();
+        let standard_error = (estimate * (one - estimate) / n).sqrt();
+        Ok(Self {
+            estimate,
+            standard_error,
+            shots,
+        })
+    }
+
     /// The frequency of one outcome.
     ///
     /// # Errors
@@ -75,13 +107,20 @@ where
     /// # Errors
     ///
     /// [`QuantumError::NormalizationError`] on an empty histogram;
-    /// [`QuantumError::DimensionMismatch`] on a bit beyond the measured width.
+    /// [`QuantumError::DimensionMismatch`] on a bit beyond the measured width, or beyond the
+    /// `usize::BITS` an outcome carries, before any outcome is shifted by it.
     pub fn of_bit<H: ShotHistogram>(hist: &H, bit_index: usize) -> Result<Self, QuantumError> {
         if bit_index >= hist.num_bits() {
             return Err(QuantumError::DimensionMismatch(format!(
                 "bit index {} ≥ measured qubits {}",
                 bit_index,
                 hist.num_bits()
+            )));
+        }
+        if bit_index >= usize::BITS as usize {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "bit index {bit_index} ≥ the {} bits an outcome carries",
+                usize::BITS
             )));
         }
         let ones: u64 = hist

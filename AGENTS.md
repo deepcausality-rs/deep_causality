@@ -521,7 +521,7 @@ due to the particularities of modelling numerical properties in Rust.
 
 Every single test files must be registered to the correspoding mod file and that module must be registered with its higher up module. ensure the corrext #[cfg(test)] annotation is set for each registeres test file. 
 
-Also, ensure the folder modules are correctly declared in the Bazel configration undre crate_name/tests/BUILD.bazel. 
+Also, ensure the folder modules are correctly declared in the Bazel configration undre crate_name/BUILD.bazel. 
 
 The tests folder replicates the exact src folder structure, for for example:
 

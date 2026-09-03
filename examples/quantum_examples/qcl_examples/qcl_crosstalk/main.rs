@@ -154,7 +154,15 @@ fn main() {
 
     // -- the first planned experiment, observed under H₁ ---------------------------------
     let first = &experiments()[plan.entries()[0].experiment];
-    let truth = 0usize; // H₁ is the world the observation is drawn from.
+    // H₁ is the world the observation is drawn from. Predictions are indexed by hypothesis
+    // position, the convention `design` and `Experiment` share, so the position is looked up by
+    // name rather than assumed.
+    let truth = report
+        .worlds
+        .iter()
+        .position(|w| w.name().starts_with("H1"))
+        .expect("H1 is a candidate");
+    assert_eq!(first.predictions().len(), report.worlds.len());
     let observed = observe_under(first.predictions()[truth]);
     println!(
         "\n[{}] observed {:.3} ± {:.3} over {} shots, drawn from the Born sampler at H1's prediction",
@@ -233,9 +241,9 @@ fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
 fn predicted_as_read_out(p: FloatType) -> ShotEstimate<FloatType> {
     // The shots a probability names: rounded in the working type, then a count again.
     let ones = to_count(p * lift_count::<FloatType>(SHOTS)).expect("a rounded count fits");
-    let mut hist = deep_causality_quantum::CountHistogram::new(1);
-    hist.record_n(1, ones);
-    hist.record_n(0, SHOTS - ones);
+    let mut hist = deep_causality_quantum::CountHistogram::new(1).expect("a one-bit histogram");
+    hist.record_n(1, ones).expect("a count that fits");
+    hist.record_n(0, SHOTS - ones).expect("a count that fits");
     ShotEstimate::of_outcome(&hist, 1).expect("a non-empty histogram")
 }
 

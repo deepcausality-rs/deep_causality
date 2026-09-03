@@ -71,6 +71,26 @@ fn test_the_draw_down_is_checked_arithmetic_and_exhausts_exactly() {
 }
 
 #[test]
+fn test_the_draw_seed_reads_the_full_width_of_the_spent_count() {
+    // Two ledgers whose spent counts agree in their low 64 bits and differ above 2^64: one has
+    // spent 2^64 shots, the other 2^65. Their next draws are seeded differently, and a ledger
+    // replayed at the same count reproduces its seed.
+    let seed = 20260821;
+    let next_seed_after = |spent: u128| {
+        let budget = ShotBudget::<u128>::new(spent + 10, seed).unwrap();
+        let (_, after) = budget.draw(spent).unwrap();
+        assert_eq!(after.spent(), spent);
+        after.draw(10).unwrap().0.seed
+    };
+    let at_2_64 = next_seed_after(1u128 << 64);
+    let at_2_65 = next_seed_after(1u128 << 65);
+    assert_ne!(at_2_64, at_2_65);
+    assert_eq!(at_2_64, next_seed_after(1u128 << 64));
+    // And a count below 2^64 still differs from both.
+    assert_ne!(next_seed_after(0), at_2_64);
+}
+
+#[test]
 fn test_two_runs_at_one_seed_agree_exactly() {
     let rho = DensityMatrix::from_ket(&ket(0.6, 0.8)).unwrap();
     let p = Projection::<f64, 2>::from_ket(&ket(0., 1.)).unwrap();

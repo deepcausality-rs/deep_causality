@@ -104,13 +104,15 @@ impl Float for Float106 {
         self.hi.classify()
     }
 
+    /// Rounding keeps both halves. When the high half is already integral the low half decides,
+    /// and the result is renormalised rather than summed into one `f64`, so an integer past 2⁵³
+    /// survives; when the high half is not integral its distance to the nearest integer exceeds
+    /// the low half, so the high half alone decides.
     #[inline]
     fn floor(self) -> Self {
         let hi_floor = self.hi.floor();
         if hi_floor == self.hi {
-            // hi is integer, check lo
-            let lo_floor = self.lo.floor();
-            Self::new(hi_floor + lo_floor, 0.0)
+            Self::new(self.hi, self.lo.floor())
         } else {
             Self::from(hi_floor)
         }
@@ -120,8 +122,7 @@ impl Float for Float106 {
     fn ceil(self) -> Self {
         let hi_ceil = self.hi.ceil();
         if hi_ceil == self.hi {
-            let lo_ceil = self.lo.ceil();
-            Self::new(hi_ceil + lo_ceil, 0.0)
+            Self::new(self.hi, self.lo.ceil())
         } else {
             Self::from(hi_ceil)
         }
@@ -131,21 +132,26 @@ impl Float for Float106 {
     fn round(self) -> Self {
         let hi_round = self.hi.round();
         if hi_round == self.hi {
-            let lo_round = self.lo.round();
-            Self::new(hi_round + lo_round, 0.0)
+            Self::new(self.hi, self.lo.round())
+        } else if (self.hi - self.hi.trunc()).abs() == 0.5 && self.lo != 0.0 {
+            // The high half sits on a half; the low half says which side the value is on.
+            Self::from(if self.lo > 0.0 {
+                self.hi + 0.5
+            } else {
+                self.hi - 0.5
+            })
         } else {
             Self::from(hi_round)
         }
     }
 
+    /// Toward zero: the floor of a non-negative value and the ceiling of a negative one.
     #[inline]
     fn trunc(self) -> Self {
-        let hi_trunc = self.hi.trunc();
-        if hi_trunc == self.hi {
-            let lo_trunc = self.lo.trunc();
-            Self::new(hi_trunc + lo_trunc, 0.0)
+        if self.hi.is_sign_negative() {
+            self.ceil()
         } else {
-            Self::from(hi_trunc)
+            self.floor()
         }
     }
 

@@ -3,10 +3,41 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The tolerance family. Every member is a function of `R::epsilon()`, so the one property that
-//! matters is that widening the scalar tightens every member with no call site changing.
+//! The tolerance family. Every member but the shot-noise one is a function of `R::epsilon()`, so
+//! the one property that matters is that widening the scalar tightens each of them with no call
+//! site changing; the shot-noise member reads the estimate and the shots instead.
 
 use deep_causality_quantum::{DensityMatrix, Tolerance};
+
+#[test]
+fn test_the_shot_noise_width_exists_on_the_probability_axis_only() {
+    let t = Tolerance::<f64>::shot_noise();
+    assert!(t.shot_noise_width(0.5, 100).is_some());
+    assert_eq!(t.shot_noise_width(0.0, 100), Some(0.0));
+    assert_eq!(t.shot_noise_width(1.0, 100), Some(0.0));
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -0.1, 1.1] {
+        assert_eq!(t.shot_noise_width(bad, 100), None, "estimate {bad}");
+    }
+    // The other members have no width to give, whatever the estimate.
+    assert_eq!(
+        Tolerance::<f64>::validation().shot_noise_width(0.5, 100),
+        None
+    );
+}
+
+#[test]
+fn test_the_numerical_rank_threshold_carries_the_dimension() {
+    // The dimension enters as itself: a fallback that replaced it with one would be visible at
+    // any dimension above one.
+    let eps = f64::EPSILON;
+    let t = Tolerance::<f64>::numerical_rank();
+    assert_eq!(t.threshold(1, 1.0), Some(eps));
+    assert_eq!(t.threshold(1024, 1.0), Some(eps * 1024.0));
+    assert_eq!(
+        t.threshold(1 << 40, 3.0),
+        Some(eps * (1u64 << 40) as f64 * 3.0)
+    );
+}
 
 #[test]
 fn test_every_member_is_derived_from_epsilon() {

@@ -350,6 +350,29 @@ fn test_predict_intervenes_then_evaluates_and_leaves_the_receiver_alone() {
     ));
 }
 
+#[test]
+fn test_a_non_finite_trace_is_refused_rather_than_returned() {
+    // A NaN compares false against every threshold, so the imaginary-part gate alone would pass
+    // it through as a number. A NaN in the factor and an infinity in the instrument both stop.
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    let mut nan = ProcessFactors::<f64>::new();
+    nan.insert(0, diag(f64::NAN, 0.3));
+    let h = Hypothesis::structural("nan", nan, fs.clone()).unwrap();
+    match h.evaluate(&ket0_proj()).unwrap_err().0 {
+        QuantumErrorEnum::NonFiniteValue(msg) => assert!(msg.contains("not finite"), "{msg}"),
+        other => panic!("expected NonFiniteValue, got {other:?}"),
+    }
+
+    let mut finite = ProcessFactors::<f64>::new();
+    finite.insert(0, diag(0.7, 0.3));
+    let h = Hypothesis::structural("one", finite, fs).unwrap();
+    assert!(matches!(
+        h.evaluate(&diag(f64::INFINITY, 0.0)).unwrap_err().0,
+        QuantumErrorEnum::NonFiniteValue(_)
+    ));
+}
+
 // ---------------------------------------------------------------------------
 // Marginalisation, gated on the boundary warrant.
 // ---------------------------------------------------------------------------
@@ -441,7 +464,7 @@ fn test_a_failed_warrant_refuses_the_marginalisation_and_traces_nothing() {
 }
 
 // ---------------------------------------------------------------------------
-// Composition and the two-factor inheritance rule.
+// Composition and the disjoint-legs inheritance rule.
 // ---------------------------------------------------------------------------
 
 fn single(name: &str, node: usize, leg: usize, factor: CausalTensor<C>) -> Hypothesis<f64> {
@@ -456,30 +479,34 @@ fn single(name: &str, node: usize, leg: usize, factor: CausalTensor<C>) -> Hypot
 }
 
 #[test]
-fn test_a_two_factor_composite_inherits_and_a_three_factor_one_does_not() {
+fn test_a_composite_over_disjoint_legs_inherits_whatever_its_arity() {
     let a = single("a", 0, 0, sigma_z());
     let b = single("b", 1, 1, diag(2.0, 5.0));
     let ab = a.compose(&b).unwrap();
     assert_eq!(ab.name(), "a∘b");
     assert_eq!(ab.factors().unwrap().len(), 2);
-    let inherited = ab.certificate().expect("two certified factors inherit");
+    let inherited = ab
+        .certificate()
+        .expect("certified parts on disjoint legs inherit");
     assert_eq!(inherited.factorization(), Factorization::Inherited);
     assert!(
         inherited.is_vacuous(),
         "two disjoint single factors tested no pair"
     );
 
+    // A third certified factor on a leg of its own: every cross pair commutes by construction,
+    // so the composite inherits at three factors as it did at two.
     let c3 = single("c", 2, 2, sigma_x());
     let abc = ab.compose(&c3).unwrap();
     assert_eq!(abc.factors().unwrap().len(), 3);
-    assert!(
-        abc.certificate().is_none(),
-        "three factors re-run the check"
+    assert_eq!(
+        abc.certificate().map(|r| r.factorization()),
+        Some(Factorization::Inherited)
     );
 
     // Overlapping keys cannot compose.
     assert!(a.compose(&a).is_err());
-    // An uncertified part yields no certificate even at two factors.
+    // An uncertified part yields no certificate even on disjoint legs.
     let plain = Hypothesis::structural(
         "p",
         {
@@ -495,6 +522,58 @@ fn test_a_two_factor_composite_inherits_and_a_three_factor_one_does_not() {
     )
     .unwrap();
     assert!(a.compose(&plain).unwrap().certificate().is_none());
+}
+
+#[test]
+fn test_certified_parts_sharing_a_leg_compose_without_a_certificate() {
+    // σx and σz, each certified alone, on one shared leg. Neither part's report covers the cross
+    // pair, so the composite inherits nothing, and the check on the composite rejects that pair.
+    let a = single("a", 0, 0, sigma_x());
+    let b = single("b", 1, 0, sigma_z());
+    let ab = a.compose(&b).unwrap();
+    assert_eq!(ab.factors().unwrap().len(), 2);
+    assert!(ab.certificate().is_none());
+    let checked = ab.check_markov(&CommutatorTolerance::default()).unwrap();
+    let report = checked.certificate().unwrap();
+    assert_eq!(report.verdict(), CheckVerdict::Rejected);
+    assert_eq!(report.factorization(), Factorization::Rederived);
+    assert!(matches!(
+        markov_certificate(report).unwrap_err().0,
+        QuantumErrorEnum::CommutatorNonZero {
+            node_j: 0,
+            node_k: 1,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn test_compose_rejects_a_leg_registered_at_two_dimensions() {
+    // Part A registers leg 5 at dimension 2 explicitly, part B at dimension 4. A registered qubit
+    // is not an absent leg, and the mismatch is refused in either order.
+    let mut pa = ProcessFactors::<f64>::new();
+    pa.insert(0, sigma_z());
+    let mut sa = FactorSupports::new();
+    sa.declare(0, &[5]);
+    sa.set_leg_dim(5, 2);
+    let a = Hypothesis::structural("a", pa, sa).unwrap();
+
+    let mut pb = ProcessFactors::<f64>::new();
+    pb.insert(1, mat(vec![c(1.); 16], 4));
+    let mut sb = FactorSupports::new();
+    sb.declare(1, &[5]);
+    sb.set_leg_dim(5, 4);
+    let b = Hypothesis::structural("b", pb, sb).unwrap();
+
+    for (x, y) in [(&a, &b), (&b, &a)] {
+        match x.compose(y).unwrap_err().0 {
+            QuantumErrorEnum::DimensionMismatch(msg) => assert!(
+                msg.contains("cannot compose") && msg.contains("leg 5"),
+                "{msg}"
+            ),
+            other => panic!("expected DimensionMismatch, got {other:?}"),
+        }
+    }
 }
 
 #[test]

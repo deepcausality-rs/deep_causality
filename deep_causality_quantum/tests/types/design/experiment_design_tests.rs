@@ -117,6 +117,51 @@ fn test_too_many_hypotheses_fails_loudly_before_the_table() {
 }
 
 #[test]
+fn test_the_pair_count_is_bounded_before_the_pairs_are_allocated() {
+    // `C(usize::MAX, 2)` overflows: the count is checked first and reads as above any cap, so
+    // no pair list is built.
+    let none: Vec<Experiment<f64>> = vec![];
+    match design(usize::MAX, &none, MinCostCover::new(5.0))
+        .unwrap_err()
+        .0
+    {
+        QuantumErrorEnum::HypothesisCountExceeded { n, pairs } => {
+            assert_eq!(n, usize::MAX);
+            assert_eq!(pairs, usize::MAX);
+        }
+        other => panic!("expected HypothesisCountExceeded, got {other:?}"),
+    }
+    // A count that fits a usize but not the pair mask is refused with its exact pair count,
+    // under a cap raised above it, and still before the pairs are allocated: at 2^20
+    // hypotheses that list would hold about 5.5e11 entries.
+    let big = 1usize << 20;
+    let raised = MinCostCover::new(5.0).with_max_hypotheses(usize::MAX);
+    match design(big, &none, raised).unwrap_err().0 {
+        QuantumErrorEnum::HypothesisCountExceeded { n, pairs } => {
+            assert_eq!(n, big);
+            assert_eq!(pairs, big * (big - 1) / 2);
+        }
+        other => panic!("expected HypothesisCountExceeded, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_floor_that_is_not_a_finite_non_negative_number_is_refused() {
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
+        match design(3, &crosstalk(), MinCostCover::new(bad))
+            .unwrap_err()
+            .0
+        {
+            QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("floor"), "{msg}"),
+            other => panic!("expected CalculationError, got {other:?}"),
+        }
+    }
+    // A zero floor is a finite, non-negative number: every pair with any separation is covered.
+    let plan = design(3, &crosstalk(), MinCostCover::new(0.0)).unwrap();
+    assert!(plan.is_complete());
+}
+
+#[test]
 fn test_the_cap_is_a_parameter() {
     // Seven hypotheses run at the default cap and are refused at a cap of six.
     let seven: Vec<f64> = vec![A, B, C, A, B, C, 0.5];

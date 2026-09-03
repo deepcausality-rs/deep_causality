@@ -36,7 +36,7 @@ fn test_qubit_bernoulli_bridge() {
 
 #[test]
 fn test_bernoulli_bridge_rejects_empty_and_bad_index() {
-    let empty = CountHistogram::new(2);
+    let empty = CountHistogram::new(2).unwrap();
     assert!(shots_to_qubit_bernoulli(&empty, 0).is_err());
     let hist = SimQpu::new(1).sample(&bell(), 10).unwrap();
     assert!(shots_to_qubit_bernoulli(&hist, 2).is_err()); // only 2 measured qubits
@@ -61,7 +61,7 @@ fn test_observable_bridge_parity() {
 
 #[test]
 fn test_observable_bridge_rejects_empty() {
-    let empty = CountHistogram::new(1);
+    let empty = CountHistogram::new(1).unwrap();
     assert!(shots_to_observable(&empty, |_| 0.0).is_err());
 }
 

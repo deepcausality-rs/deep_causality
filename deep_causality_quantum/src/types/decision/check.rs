@@ -62,18 +62,20 @@ impl<R: RealField> Check<R> {
     }
 
     /// A check where more is better: accepts when `measured + slack ≥ threshold`, with the margin
-    /// `threshold / measured` so that at or below one still accepts and the worst record is still
-    /// the largest margin. A separation in bits against a floor is this shape.
+    /// `threshold / (measured + slack)`, so that a margin at or below one is exactly an
+    /// acceptance and the worst record is still the largest margin. A separation in bits against
+    /// a floor is this shape.
     ///
     /// `slack` is the rounding allowance on the comparison, drawn from the tolerance family by
-    /// the caller. With a zero measurement and a positive threshold the margin is the threshold
-    /// itself, mirroring the zero-threshold convention of [`new`](Self::new).
+    /// the caller, and it enters the margin as it enters the verdict. With nothing measured and
+    /// no slack against a positive threshold the margin is infinite, which orders that record
+    /// above every finite one in [`CheckReport::worst`]; with a zero threshold the margin is
+    /// zero, mirroring the zero-threshold convention of [`new`](Self::new).
     pub fn at_least(item: CheckItem, measured: R, threshold: R, slack: R) -> Self {
-        let accepted = measured + slack >= threshold;
-        let margin = if measured > R::zero() {
-            threshold / measured
-        } else if threshold > R::zero() {
-            threshold
+        let effective = measured + slack;
+        let accepted = effective >= threshold;
+        let margin = if threshold > R::zero() {
+            threshold / effective
         } else {
             R::zero()
         };

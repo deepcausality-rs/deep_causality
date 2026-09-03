@@ -220,7 +220,7 @@ it previously answered wrongly. A caller that passed only logical operators sees
 `deep_causality_quantum` goes from 0.2.1 to **0.3.0**, a minor bump on a 0.x crate for the two
 signature changes, with the workspace constraint moved to `0.3`.
 
-### D9. A Markov certificate is inherited at two factors and nowhere else
+### D9. A Markov certificate is inherited over disjoint legs and nowhere else
 
 The question was whether the Choi contraction preserves the commutation structure `check_markov`
 certifies. **The literature leaves it open and says so**, which settles what QCL may claim.
@@ -234,9 +234,14 @@ missing ingredient as results in operator algebra "pertaining to sets of three o
 commuting algebras" — precisely the theory an inheritance proof would need. §8 rule 7 forbids
 claiming a theorem the tree does not have, and this is one the framework's own authors do not have.
 
-So the default is **do not inherit; re-run `check_markov` on the composite**, with a sound fast path
-at exactly two factors, where hermiticity does give commutation. An inherited certificate records
-that it was inherited, so a reader cannot mistake it for pairs tested on the composite.
+A part's certificate covers the pairs inside that part. A cross pair, one factor from each part, was
+measured by neither, so an inheritance rule has to supply that pair's commutation from somewhere.
+Hermiticity of the composite does not: `compose` checks none, and at more than two factors it would
+not imply commutation in any case. Disjoint legs do: two operators embedded on disjoint tensor legs
+commute with zero commutator, whatever their number. So the default is **do not inherit; re-run
+`check_markov` on the composite**, with a sound fast path when both parts are certified and their
+leg sets are disjoint. An inherited certificate records that it was inherited, so a reader cannot
+mistake it for pairs tested on the composite.
 
 The trade is verification cost against soundness. Re-checking costs `O(n²)` in the factors with
 `embed_on_legs` dominating, paid at freeze time rather than per tick, which is the cheap axis for a
@@ -249,8 +254,8 @@ double contraction over the shared wire, verified to a maximum relative Frobeniu
 *channel*, which is a different claim from preserving the *factorization*. The sum over the shared
 indices is the partial trace, whether or not a function of that name runs; in QCM terms it inserts
 the identity instrument at the shared node and traces it out. So F9 applies to composition, and the
-reason composition is sound in v1 is this decision: the certificate is re-derived, not inherited,
-with the two-factor fast path the only licensed inheritance.
+reason composition is sound in v1 is this decision: over a shared leg the certificate is re-derived,
+not inherited, with the disjoint-legs fast path the only licensed inheritance.
 
 **A failed re-check on inherited factors is a failure of the certificate, not of the model.**
 Barrett–Lorenz–Oreshkov's representation theorem is an existence statement: a unitary circuit with

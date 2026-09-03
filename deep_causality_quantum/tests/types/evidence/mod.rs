@@ -6,4 +6,6 @@
 #[cfg(test)]
 mod born_sampler_tests;
 #[cfg(test)]
+mod histogram_tests;
+#[cfg(test)]
 mod shot_estimate_tests;

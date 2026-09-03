@@ -88,10 +88,10 @@ fn test_zero_shots_is_an_empty_histogram() {
 
 #[test]
 fn test_the_histogram_is_plain_data_in_the_default_build() {
-    let mut h = CountHistogram::new(2);
-    h.record(3);
-    h.record_n(1, 4);
-    h.record_n(0, 0);
+    let mut h = CountHistogram::new(2).unwrap();
+    h.record(3).unwrap();
+    h.record_n(1, 4).unwrap();
+    h.record_n(0, 0).unwrap();
     assert_eq!(h.total(), 5);
     assert_eq!(h.count(1), 4);
     assert_eq!(h.count(2), 0);
