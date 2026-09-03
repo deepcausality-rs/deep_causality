@@ -251,6 +251,74 @@ where
         Ok(CheckReport::new(vec![check], blocks))
     }
 
+    /// The causal structure the supports encode, with no graph in sight.
+    ///
+    /// Under the flat convention `support(A) = {A} ∪ Pa(A)`, every leg of a node's support that is
+    /// itself a factor node is a parent of that node, so the supports carry the DAG and its
+    /// reachability. Input `i` influences output `o` when `o` is reachable from `i` along child
+    /// edges, or `i == o`. This is what lets a structural candidate be screened for
+    /// decomposability without an external graph, which matters when each candidate implies a
+    /// structure of its own.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::CalculationError`] on a mechanism candidate.
+    pub fn structure_from_supports(
+        &self,
+        inputs: &[usize],
+        outputs: &[usize],
+    ) -> Result<CausalStructure, QuantumError> {
+        let (factors, supports) = self.structural_parts()?;
+        let nodes: BTreeSet<usize> = factors.nodes().collect();
+        let children = |node: usize| -> Vec<usize> {
+            nodes
+                .iter()
+                .copied()
+                .filter(|&child| {
+                    child != node
+                        && supports
+                            .support(child)
+                            .is_some_and(|legs| legs.contains(&node))
+                })
+                .collect()
+        };
+        let out_set: BTreeSet<usize> = outputs.iter().copied().collect();
+        let mut structure = CausalStructure::new(inputs, outputs);
+        for &i in inputs {
+            let mut seen = BTreeSet::new();
+            let mut stack = vec![i];
+            while let Some(node) = stack.pop() {
+                if !seen.insert(node) {
+                    continue;
+                }
+                if out_set.contains(&node) {
+                    structure.add_influence(i, node);
+                }
+                stack.extend(children(node));
+            }
+        }
+        Ok(structure)
+    }
+
+    /// The decomposability gate on the structure the supports encode; see
+    /// [`check_decomposable`](Self::check_decomposable) for the report and the rejection.
+    ///
+    /// # Errors
+    ///
+    /// As [`structure_from_supports`](Self::structure_from_supports), and
+    /// `NotFaithfullyRepresentable` on a `C₃`.
+    pub fn check_decomposable_from_supports(
+        &self,
+        inputs: &[usize],
+        outputs: &[usize],
+    ) -> Result<CheckReport<R>, QuantumError> {
+        let structure = self.structure_from_supports(inputs, outputs)?;
+        structure.check_c3_exclusion()?;
+        let blocks = choose3(structure.inputs().len()) * choose3(structure.outputs().len());
+        let check = Check::new(CheckItem::Whole, R::zero(), R::zero());
+        Ok(CheckReport::new(vec![check], blocks))
+    }
+
     /// The Markov check on the factors as they stand, returning the hypothesis carrying its
     /// certificate. The receiver is unchanged.
     ///

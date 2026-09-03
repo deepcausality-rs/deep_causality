@@ -21,6 +21,13 @@ stored structure can never disagree with the factorization it is supposed to des
 Mechanism candidates are the other constructor. A mechanism declares no factorization, so it exposes
 no derived structure and reaches `control` without passing through the structural checks.
 
+*As built.* The structure is derived two ways, and neither is stored. `structure(graph, inputs,
+outputs)` reads a frozen graph's reachability, for the model subject. `structure_from_supports`
+reads the supports alone: under the flat convention a leg of a node's support that is itself a
+factor node is a parent, so the supports carry the DAG and its reachability, and a structural
+candidate can be screened for decomposability with no graph in sight. The crosstalk consumer needs
+the second, because each of its candidates implies a structure of its own.
+
 #### Scenario: A structural candidate carries factors and supports, and no structure field
 
 - **WHEN** `Hypothesis::structural("Q1->Q2", factors, supports)` is constructed

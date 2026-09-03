@@ -336,8 +336,41 @@ where
         self
     }
 
+    /// C₃-exclusion for every admitted candidate over the structure its own supports encode,
+    /// between the declared systems. A candidate containing a `C₃` is not admitted. Each
+    /// structural candidate implies a structure of its own, and the supports carry it, so no
+    /// graph is needed here.
+    pub fn check_decomposable(mut self, inputs: &[usize], outputs: &[usize]) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        let pool: Vec<Hypothesis<R>> = if self.stages.is_empty() {
+            self.cfg.subject().candidates().to_vec()
+        } else {
+            core::mem::take(&mut self.admitted)
+        };
+        let mut admitted = Vec::new();
+        let mut folded = CheckReport::vacuous();
+        for h in pool {
+            match h.check_decomposable_from_supports(inputs, outputs) {
+                Ok(report) => {
+                    folded = folded.fold(report);
+                    admitted.push(h);
+                }
+                Err(QuantumError(crate::QuantumErrorEnum::NotFaithfullyRepresentable(_))) => {}
+                Err(e) => {
+                    self.fail(e);
+                    return self;
+                }
+            }
+        }
+        self.admitted = admitted;
+        self.record("check_decomposable", folded);
+        self
+    }
+
     /// C₃-exclusion for every admitted candidate over `graph`'s reachability between the declared
-    /// systems. A candidate containing a `C₃` is not admitted.
+    /// systems, for candidates whose structure lives in a graph rather than in their supports.
     pub fn check_decomposable_with<T, G>(
         mut self,
         graph: &G,

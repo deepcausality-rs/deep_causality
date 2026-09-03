@@ -19,12 +19,27 @@ fn test_display_lo_zero() {
 }
 
 #[test]
-fn test_display_lo_nonzero() {
+fn test_display_renders_the_value_not_its_halves() {
+    // A `lo` below f64 resolution does not show: Display renders the value to f64 precision and
+    // Debug is where the two components are.
     let x = Float106::new(42.0, 1e-20);
-    let s = format!("{}", x);
-    // Should show "hi+lo" format
-    assert!(s.contains("42"));
-    assert!(s.contains("+"));
+    assert_eq!(format!("{}", x), "42");
+    assert!(!format!("{}", x).contains('+'));
+    assert!(format!("{:?}", x).contains("lo"));
+}
+
+#[test]
+fn test_display_honours_precision_width_and_sign() {
+    // The flags a caller writes at the display boundary reach the number.
+    let x = Float106::from_f64(0.37695);
+    assert_eq!(format!("{:.3}", x), "0.377");
+    assert_eq!(format!("{:.1}", x), "0.4");
+    assert_eq!(format!("{:>8.2}", x), "    0.38");
+    assert_eq!(format!("{:<8.2}|", x), "0.38    |");
+    assert_eq!(format!("{:+.2}", x), "+0.38");
+    let big = Float106::from_f64(1234.5);
+    assert_eq!(format!("{:.3e}", big), "1.234e3");
+    assert_eq!(format!("{:.0}", big), "1234");
 }
 
 #[test]

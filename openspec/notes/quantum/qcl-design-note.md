@@ -13,7 +13,16 @@ crate.
 revises the previous revision of this note, which counted three consumers and treated the shipped
 crate as a substrate QCL would call rather than as a consumer with opinions.
 
-**What changed in this revision (2026-09-02).** An external review produced
+**What changed in this revision (2026-09-03).** QCL shipped. The eight task groups of
+`openspec/changes/add-qcl` are implemented and verified, three consumer examples run under
+`examples/quantum_examples/qcl_examples/`, and §9 now records what was built and which of it has a
+proof. Two things the building changed beyond the corrections below: the count width is
+`NumberType`, not `IntType`, because a count is ℕ and `i64` cannot bound it (§6.5, §7.1); and a
+structural candidate's decomposability is decided on the structure its own supports encode, with no
+graph, because the crosstalk consumer's candidates each imply a structure of their own (§7.5). The
+rest of the design held.
+
+**What changed in the revision before (2026-09-02).** An external review produced
 [`qcl-corrections.md`](qcl-corrections.md), sixteen entries, and every one of them is applied here
 and in the `add-qcl` change. Two are corrections to soundness claims this note made: composition
 over a shared wire *is* marginalisation, so F9 applies to it and D9's re-check is what makes it sound
@@ -26,7 +35,7 @@ paper's "faithful" is Lorenz–Barrett's `G_U = G_C` and not Pearl's; `H̄` is e
 by nothing; `intervene` implements the mechanism-level intervention and now says so; and "one
 language" is one builder and one decision form, not one semantics.
 
-**What changed in the revision before (2026-08-31).** Every gap in
+**What changed two revisions before (2026-08-31).** Every gap in
 [`qcl-gaps.md`](qcl-gaps.md) is now closed, all eighteen, and the mathematics crates were
 consolidated under `deep_causality_unified_math/`. This revision brings the note back in line with
 the tree. **Nothing below is a new design decision; the design held.** What changed is that the
@@ -961,40 +970,81 @@ lifting pattern. If a `QclEffect` type appears, something has gone wrong.
 
 ---
 
-## 9. Sequencing
+## 9. What shipped
 
-~~0. **Fix the scalar bounds** (§6.4).~~ **Done.** The table was re-derived against shipped
-   signatures and its premise did not survive: one row is over-tight, three are *under*-specified,
-   one is not implementable as written, and one contradicted §6.5. See §6.4.
+The six steps this section used to sequence are built, in the order it gave, plus the two that
+turned up on the way: the class-invariance decision the criterion needed, and the C₃ correction the
+verification found. Each landed as one task group of `openspec/changes/add-qcl`, each group green on
+`bazel test //...` before the next began, and each with its commit message at the boundary.
 
-~~2. **`Boundary`, then `GaugeField::from_cochain`** (§6.2).~~ **Done and withdrawn respectively.**
-   `partial_trace_preservation_boundary` ships; the gauge-field seam was removed rather than checked.
-   Neither of the two wrong-answer seams is open, so nothing in the remaining sequence is load-bearing
-   for soundness.
+| Group | What shipped | Where |
+|---|---|---|
+| 1 | `check_class_invariance` over the code space, the normalizer check, the Clifford tableau, the tuple cap | `qcode/` |
+| 2 | `Check<R>`, `CheckReport<R>`, `Tolerance<R>`, the report-returning check siblings, `Factorization` provenance | `decision/`, `channel.rs`, `markov_freeze.rs` |
+| 3 | `QubitOperator`, `Channel`, `QuantumPlant`, `Observable`, their lifts | `carriers/`, `wrappers.rs` |
+| 4 | `ShotHistogram` out of the gate, the Born sampler, `ShotEstimate`, `Evidence`, `ShotBudget` | `qpu/` |
+| 5 | `Hypothesis`, `intervene_mechanism`, `predict`, warrant-gated `marginalise`, `compose` | `qcm/hypothesis.rs` |
+| 6 | `design` as the exact pair cover, `adjudicate` under the verdict law, `Either` on the way out | `design/` |
+| 7 | `QclBuilder`, the three subjects, `build()`, `validate` → `Screened` → `control`, `Ledger` | `pipeline/` |
+| 8 | the three consumers | `examples/quantum_examples/qcl_examples/` |
 
-What is left, renumbered:
+**The three consumers, as they run.** The model path screens the same model the shipped freeze
+freezes and reports the same pair count and margin; a non-commuting model fails `validate` with the
+structured pair and leaves the frozen subject as built, and `freeze_model` on a dynamic graph rolls
+it back. The code path derives `[[32, 2]]` off the `4 × 4` torus, passes both LDPC weights at a
+bound of 4 and names the first offending Z check at 3, and accepts class invariance of `Z̄`, `S̄` and
+`T̄` on both classes and the Hadamard swap on both, all exact and none simulated. The crosstalk
+path refuses the cyclic candidate at `build()` by name, admits three by Markov and C₃, hands the
+screen into `control`, plans `{do(Q1), do(Q2)}` at cost 2 against tomography at 200, draws the first
+planned experiment from the Born sampler under H₁, and folds three Boolean verdicts to name H₁ the
+survivor a hundred bits clear of its rivals. Predictions and the plan are computed; the observation
+is sampled.
 
-1. **Generalise `Check<R>`, `CheckReport<R>` and `Tolerance<R>`** off the four shipped policies (§3).
-   Doing this first means no stage is ever written returning a boolean. Each new check inherits
-   §3.2's obligation to report what it examined, not only what passed.
-2. **Carriers** (§6.2), each under the seal rule of §6.3, and each with a `wrappers.rs`-style lift.
-3. **`ShotBudget`** (§6.2). Small, and it turns every downstream decision from a float comparison
-   into a statistical one.
-4. **`Hypothesis` and `intervene`** (§6.1). Smaller than previously sequenced; the store, supports and
-   embedding exist, so this is the `do` operation plus the boundary-checked contraction.
-5. **`design` and `adjudicate`**, the latter with the §4 commutation guard, and the former sized off
-   §10.3's corrected exponent rather than the sweep it used to name.
-6. **`QclBuilder::config`, then the stages** (§7), last, once at least two consumers run against the
-   layers beneath.
+### 9.1 What each check rests on
 
-**The prerequisites are done, and none of what remains is a gap.** Every item in
-[`qcl-gaps.md`](qcl-gaps.md) is closed, so the geometric-QEC example is no longer blocked on the
-substrate, and the six steps above are construction against settled designs rather than open
-questions.
+§8 rule 7 asks that a check claiming a theorem name its witness through `lean/THEOREM_MAP.md`, and
+that a check with no proof say so. This is that list.
 
-The failure mode to avoid is unchanged: writing the pipeline first and shaping examples to justify
-it. The ordering is the reverse, and it is now anchored on a running implementation rather than three
-designs alone.
+| Check | Rust witness | Lean | Status |
+|---|---|---|---|
+| `check_markov` | `quantum_markov_check_report`, `markov_certificate`; `markov_report_tests` | `quantum.markov_commutativity` | **deferred**; witnessed by tests, no proof |
+| `check_decomposable` | `CausalStructure::find_c3` against Definition 3.1; every relation on three inputs and three outputs against Theorem 4.9(v) | none | **no proof**; the theorem is van der Lugt & Lorenz 3.2, and the code follows the paper |
+| `marginalise`, the boundary warrant | `partial_trace_preservation_boundary`, `BoundaryWarrant` | `quantum.partial_trace.commutator_transport`, `quantum.partial_trace_preservation_boundary`, `quantum.partial_trace_nonpreservation` | **proved**; the transport is unconditional and the `√(d_B)` bound is what it buys |
+| `derive_code`, `k = β₁` | `betti_number_over(1, Gf2)` | `linear.gf2.betti_from_ranks`, `homology.chain.betti_from_dd_zero` | **proved** |
+| `check_ldpc_weights` | `check_ldpc_weights` | none | counting; nothing to prove |
+| `check_class_invariance` | `LogicalBasis::check_class_invariance`; `class_invariance_tests` with four mutations | none | **no proof**; Haruna Eq. (3.20) read on the code space, the three polynomials shown integral by hand, and the `(m, k)` condition brute-forced over 12288 cases |
+| `check_clifford_action` | `clifford_conjugate`, `check_clifford_action`; `clifford_action_tests` | none | **no proof**; the tableau rules are Nielsen & Chuang's, and `Z̄(γ)` was pushed through Eq. (3.32) by hand |
+| `Channel::from_kraus` | `check_completely_positive`, `check_trace_preserving` | `quantum.choi.apply_add`, `quantum.choi.apply_smul` | linearity of the Choi action **proved**; CP and TP themselves **no proof** |
+| `Observable::read_out` | `born_projective_probability` | none | **no proof** |
+| `adjudicate`, the projection fold | `Projection::commutes_with`, `Verdict::meet`, `Verdict::join` | `quantum.verdict.orthomodular`; `core.verdict.carriers` | orthomodularity **deferred** with Rust law tests; the Boolean carrier the read-out fold uses **proved** |
+| `design` | `design`; the greedy-trap and crosstalk instances | none | **no proof**; exact by construction as a DP over the pair universe |
+| `ShotEstimate`, `Spec` | `at_least`, `separation_bits` | none | **no proof**; the standard error and the Bhattacharyya distance are textbook |
+| `Ledger::draw_down` | `checked_difference`, `monus` | none | ℕ is a semiring; nothing to prove |
+
+Two of these are the ones to watch. The Markov commutativity check is the load-bearing soundness
+claim of the QCM path and it stands on tests, not on a theorem; `LEAN_QUANTUM.md` lists it as
+deferred, and that has not changed. The C₃ check now follows the publication exactly, which is
+worth saying because it did not before: the shipped test looked for the bipartite 6-cycle, accepted
+the paper's `C₃` and rejected a relation the paper admits, and was caught by the verification the
+corrections register asked for.
+
+### 9.2 What is left
+
+Nothing in the change. Three things outside it, each recorded where it belongs:
+
+- **The plant path on bare metal.** The pipeline module is compiled under `qcm` because its
+  candidates are `Hypothesis` values and that type's graph-dependent half reaches
+  `deep_causality`. Splitting the two halves is mechanical and is a follow-up (`qcl-pipeline`
+  spec, as built).
+- **The instrument-level intervention.** `intervene_instrument` is reserved and not built; a probe
+  is modelled as a factor replacement, and `predict` says so (corrections register X-4).
+- **The induced factorization of a composite.** A failed re-check on inherited factors is
+  reported as `CertificateNotInherited` rather than as physics, because the composite may be Markov
+  under a factorization v1 does not construct (X-2).
+
+The failure mode this section warned against, writing the pipeline first and shaping examples to
+justify it, did not happen: the pipeline was the seventh group of eight, and every stage it names
+was a function before it was a stage.
 
 ---
 

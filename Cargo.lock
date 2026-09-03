@@ -1656,12 +1656,15 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
+ "deep_causality_haft",
+ "deep_causality_homology",
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_num_complex",
  "deep_causality_physics",
  "deep_causality_quantum",
  "deep_causality_tensor",
+ "deep_causality_topology",
 ]
 
 [[package]]

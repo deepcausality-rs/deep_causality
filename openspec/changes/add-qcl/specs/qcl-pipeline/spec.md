@@ -124,7 +124,10 @@ A config carrying structural candidates therefore has no path into `control` tha
 
 *As built.* `QclBuilder::control` takes any `ControlSource`, and the two implementations are
 `&Config<.., PlantSubject<.., Mechanisms>>` and `&Screened<.., PlantSubject<.., Structural>>`. A
-structural config has no implementation, which is the compiler refusing the skipped screen.
+structural config has no implementation, which is the compiler refusing the skipped screen. The
+structural plant's `check_decomposable(inputs, outputs)` screens each candidate on the structure
+its own supports encode, and `check_decomposable_with(graph, ..)` is there for candidates whose
+structure lives in a graph.
 
 #### Scenario: Structural candidates cannot enter control unscreened
 

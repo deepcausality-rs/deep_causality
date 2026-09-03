@@ -119,16 +119,16 @@ until `bazel test //...` is green for it.
 
 ## 8. Consumers and close-out
 
-- [ ] 8.1 Express the QCM path against the shipped `freeze_quantum` callers
-- [ ] 8.2 Express the geometric-QEC path, running `derive_code`, `check_ldpc_weights`,
+- [x] 8.1 Express the QCM path against the shipped `freeze_quantum` callers
+- [x] 8.2 Express the geometric-QEC path, running `derive_code`, `check_ldpc_weights`,
       `check_class_invariance` and `check_clifford_action`, and stating that it is verified by exact
       predicates and not simulated (X-7)
-- [ ] 8.3 Express the crosstalk path, the keystone that exercises the `validate` to `control`
+- [x] 8.3 Express the crosstalk path, the keystone that exercises the `validate` to `control`
       hand-off, with the cyclic H₄ rejected at `build()` and the `.adjudicate()` fold documented as
       Boolean (X-3, X-10)
-- [ ] 8.4 Add a `rust_binary` in `BUILD.bazel` for every new Cargo example, and register every new
+- [x] 8.4 Add a `rust_binary` in `BUILD.bazel` for every new Cargo example, and register every new
       test file in its `mod.rs` and in `tests/BUILD.bazel`
-- [ ] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
+- [x] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
       `cargo fmt --check` clean, `openspec validate --specs` green
-- [ ] 8.6 Update `qcl-design-note.md` §9 to record what shipped, and name each check's Rust witness
+- [x] 8.6 Update `qcl-design-note.md` §9 to record what shipped, and name each check's Rust witness
       through `lean/THEOREM_MAP.md` or say it has no proof
