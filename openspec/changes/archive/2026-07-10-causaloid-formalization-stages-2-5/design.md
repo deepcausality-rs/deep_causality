@@ -118,7 +118,7 @@ uniqueness is not claimed (assumption #6's correct scoping).
 **D10 — The bridge extension is a grep-list edit plus a new witness mirror.** The CI gate's
 crate list in `.github/workflows/formalization.yml` gains `deep_causality`;
 `deep_causality/tests/formalization_lean/` mirrors the core convention (one `<mechanism>_tests.rs`
-per new Core Lean file, `mod.rs` + `BUILD.bazel` registration, one `#[test]` per id). Alternative
+per new Core Lean file, `float_bfloat16` + `BUILD.bazel` registration, one `#[test]` per id). Alternative
 considered: putting causaloid witnesses in `deep_causality_core` — rejected: the witnesses must
 exercise the real `Causaloid`, which lives in the main crate.
 

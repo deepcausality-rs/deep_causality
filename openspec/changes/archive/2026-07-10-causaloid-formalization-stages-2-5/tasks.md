@@ -13,7 +13,7 @@
 - [x] 1.5 Rust: reconvergent-join test with two distinct Λ decorations — lookup by edge identity,
       enumeration-order-free
 - [x] 1.6 Create the main-crate witness mirror `deep_causality/tests/formalization_lean/`
-      (`mod.rs`, `BUILD.bazel`) with `causaloid_tests.rs` witnessing both Stage-2 ids
+      (`float_bfloat16`, `BUILD.bazel`) with `causaloid_tests.rs` witnessing both Stage-2 ids
 - [x] 1.7 Extend the CI gate: add `deep_causality` to the Rust-witness search scope in
       `.github/workflows/formalization.yml` (D10)
 - [x] 1.8 Add THEOREM_MAP rows for `core.causaloid.{fixpoint,inversion}`; traceability + clippy

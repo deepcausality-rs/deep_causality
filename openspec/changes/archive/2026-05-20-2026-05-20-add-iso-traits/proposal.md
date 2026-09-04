@@ -61,7 +61,7 @@ This change adds **foundation traits only** in two crates. Concrete iso instance
 **Affected modules:**
 
 - `deep_causality_num/src/iso/` (new module tree):
-  - `mod.rs` — re-exports for Tier 1 + Tier 2.
+  - `float_bfloat16` — re-exports for Tier 1 + Tier 2.
   - `group_iso.rs`, `ring_iso.rs`, `field_iso.rs`, `algebra_iso.rs`, `division_algebra_iso.rs` — Tier 1 marker subtraits.
   - `witness/mod.rs` — re-exports for Tier 2.
   - `witness/iso.rs` — `Iso<S, T>` trait.
@@ -74,7 +74,7 @@ This change adds **foundation traits only** in two crates. Concrete iso instance
 - `deep_causality_num/tests/iso/` (new) — property-test files mirroring `src/iso/` per the project convention.
 - `deep_causality_num/tests/BUILD.bazel` — register the test files.
 - `deep_causality_haft/src/iso/` (new module tree):
-  - `mod.rs` — re-exports.
+  - `float_bfloat16` — re-exports.
   - `natural_iso.rs` — `NaturalIso<F, G>`.
   - `natural_iso_5.rs` — `NaturalIso5<F, G>`.
   - `test_support.rs` — naturality-property helpers, `#[cfg(test)]`-gated.

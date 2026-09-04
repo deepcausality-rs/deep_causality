@@ -82,7 +82,7 @@ change makes that mechanism real, and proves it.
 
 ## Impact
 
-- **`deep_causality_physics`** — new `kernels/hypersonic/` domain (kernels + wrappers + `mod.rs`, flattened at
+- **`deep_causality_physics`** — new `kernels/hypersonic/` domain (kernels + wrappers + `float_bfloat16`, flattened at
   `lib.rs`); new quantity newtypes under `quantities/`; new Park / Millikan–White coefficient constants under
   `constants/`. Reuses `quantities/mhd/` (`PlasmaFrequency`, `DebyeLength`) and `mhd/plasma.rs`.
 - **`deep_causality_cfd`** — new `PhysicsStage` LER stages and `BlackoutTrigger` in `types/flow/`; blackout
@@ -92,7 +92,7 @@ change makes that mechanism real, and proves it.
   and reads `Ambient` per step. The QTT **solver math (advance / spectral projection) is unchanged**. New
   `verification/qtt_park2t_blackout/` example registered in `Cargo.toml` and `verification/README.md`.
 - **Dependencies** — no new external crates. `deep_causality_cfd` already depends on `deep_causality_physics`.
-- **Tests / Bazel** — new test modules mirror the src tree, registered in `mod.rs` and the `tests/BUILD.bazel`
+- **Tests / Bazel** — new test modules mirror the src tree, registered in `float_bfloat16` and the `tests/BUILD.bazel`
   targets of both crates; 100% coverage of new code.
 - **Notes** — on completion, marks Gap 2 **Tier-A closed** in
   [gap-analysis §4](../../notes/plasma-blackout/gap-analysis.md) and the gap-2 note §6, with Tier-B still open.

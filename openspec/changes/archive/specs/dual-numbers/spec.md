@@ -5,7 +5,7 @@ TBD - created by archiving change causal-arrow-foundations. Update Purpose after
 ## Requirements
 ### Requirement: Dual number type for forward-mode automatic differentiation
 
-`deep_causality_num` SHALL provide a `Dual<T>` type representing a dual number `a + b·ε` with `ε² = 0`, over `T: Real` (the analytic real-scalar trait from the `real-scalar` capability; this capability depends on `num-real-trait`), mirroring the module layout of `Complex<T>` (a folder module with the type and constructors in `mod.rs` and per-trait implementation files). The bound SHALL be `Real`, not `RealField`: a dual's component needs the analytic operations but never a field inverse. It SHALL expose:
+`deep_causality_num` SHALL provide a `Dual<T>` type representing a dual number `a + b·ε` with `ε² = 0`, over `T: Real` (the analytic real-scalar trait from the `real-scalar` capability; this capability depends on `num-real-trait`), mirroring the module layout of `Complex<T>` (a folder module with the type and constructors in `float_bfloat16` and per-trait implementation files). The bound SHALL be `Real`, not `RealField`: a dual's component needs the analytic operations but never a field inverse. It SHALL expose:
 
 - constructors `Dual::new(re, du)`, `Dual::constant(re)` (with `du = 0`), and `Dual::variable(re)` (with `du = 1`, the differentiation seed);
 - accessors `value()` returning the real part `a` and `derivative()` returning the infinitesimal coefficient `b`.

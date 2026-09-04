@@ -236,9 +236,9 @@ confirmed with the `comm` check the file carries, and SHALL match no more than i
 
 ### Requirement: Test layout and helpers follow the repository's structure
 
-Every stage's suite SHALL mirror its source tree file for file, SHALL register each test module upward through its `mod.rs` chain, SHALL declare every test directory to Bazel, and SHALL place shared helpers under `src/utils_tests/` rather than inside `tests/`.
+Every stage's suite SHALL mirror its source tree file for file, SHALL register each test module upward through its `float_bfloat16` chain, SHALL declare every test directory to Bazel, and SHALL place shared helpers under `src/utils_tests/` rather than inside `tests/`.
 
-A test file absent from its `mod.rs` compiles and never runs; a directory absent from Bazel is
+A test file absent from its `float_bfloat16` compiles and never runs; a directory absent from Bazel is
 invisible to the primary gate. Both failures are silent — the suite appears to pass. A helper placed
 inside `tests/` builds under Cargo and fails under Bazel, which cannot reach it; placed under `src`
 it is library code, so the coverage requirement applies and it needs its own tests.

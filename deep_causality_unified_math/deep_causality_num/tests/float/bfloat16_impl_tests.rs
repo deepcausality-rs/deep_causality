@@ -8,7 +8,7 @@
 //! Expected values are derived in the comment beside each assertion from a published constant
 //! and the bf16 grid: in `[2^k, 2^(k+1))` the step is `2^(k-7)`, and the nearest grid point is
 //! the answer. Where a family is checked, the reference is the exact `f64` result rounded once by
-//! `round_from_f64`, which `tests/bfloat16/bfloat16_tests.rs` establishes independently.
+//! `round_from_f64`, which `tests/float_bfloat16/bfloat16_tests.rs` establishes independently.
 
 use core::num::FpCategory;
 use deep_causality_num::{BFloat16, Float};

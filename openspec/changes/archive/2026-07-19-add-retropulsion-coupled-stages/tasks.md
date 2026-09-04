@@ -45,7 +45,7 @@
       assert the ordered regime cascade appears in provenance (aero → thrust-dominated, the Mach
       crossings under thrust, burn↔coast), the applied decrement is inside M1's band, and no step
       captured an error (integrity)
-- [x] 4.2 Register new/edited test files in their `mod.rs` chain and the `tests/BUILD.bazel` globs
+- [x] 4.2 Register new/edited test files in their `float_bfloat16` chain and the `tests/BUILD.bazel` globs
       (`bazel test //deep_causality_cfd/...`)
 
 ## 5. Verification and PR preparation (SDD)

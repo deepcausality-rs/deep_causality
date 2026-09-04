@@ -2,7 +2,7 @@
 
 > **Gate:** This stage MUST be completed in full, verified, signed off, and committed before any task in Part B begins. See "Stage gates" at the end.
 
-- [x] 1.1 Create `deep_causality_core/tests/iso/` with `mod.rs` and `effect_process_consistency_tests.rs`. No source-tree changes.
+- [x] 1.1 Create `deep_causality_core/tests/iso/` with `float_bfloat16` and `effect_process_consistency_tests.rs`. No source-tree changes.
 - [x] 1.2 `fmap_same_type_agrees_across_witnesses` test asserts `EffectW::fmap(val, |x| x * 2) == ProcessW::fmap(val, |x| x * 2)` on shared carrier.
 - [x] 1.3 `fmap_type_changing_agrees_across_witnesses` test for `|x: i32| x % 2 == 0`.
 - [x] 1.4 `bind_agrees_across_witnesses` test pins consistency between the two `Monad::bind` impls. Bonus: also added `pure_agrees_across_witnesses` for the `Pure::pure` lift.

@@ -5,6 +5,7 @@
 mod casts;
 mod combinatorics;
 mod float;
+mod float_bfloat16;
 mod float_double;
 mod float_option;
 #[cfg(not(miri))]

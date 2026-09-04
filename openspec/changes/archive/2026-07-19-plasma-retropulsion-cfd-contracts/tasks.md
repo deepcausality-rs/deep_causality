@@ -46,7 +46,7 @@
       lift + thrust + decrement, `"ignited"` set); published `"commanded_throttle"` lands on
       the field each step (mirroring the `commanded_bank` test); propulsion scalars survive a
       pause snapshot
-- [x] 3.5 Register any new test files in their `mod.rs` chain and verify the
+- [x] 3.5 Register any new test files in their `float_bfloat16` chain and verify the
       `tests/BUILD.bazel` suite globs pick them up (`bazel test //deep_causality_cfd/...`)
 
 ## 4. Inheritance-guard harness (deep_causality_cfd)

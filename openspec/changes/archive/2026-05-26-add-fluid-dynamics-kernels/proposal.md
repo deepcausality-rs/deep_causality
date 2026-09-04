@@ -48,7 +48,7 @@ This change is **non-breaking**: it adds modules, free functions, and newtypes. 
 - **Affected crate:** `deep_causality_physics` only. No changes to `deep_causality_topology`, `deep_causality_core`, or any other crate. No new external dependencies.
 - **Affected files (new):**
   - `deep_causality_physics/src/kernels/fluids/` — new submodules `governing.rs`, `constitutive.rs`, `kinematics.rs`, `dimensionless.rs`, `turbulence.rs`, `coherent_structures.rs`, `compressible.rs`, `boundary_layer.rs`, `ideal_flow.rs` (one file per kernel group, sub-split per AGENTS.md if any file exceeds reasonable size).
-  - `deep_causality_physics/src/theories/fluid_dynamics/` — new module with `incompressible_ns.rs`, `compressible_ns.rs`, `euler.rs`, `stokes.rs`, `mod.rs`.
+  - `deep_causality_physics/src/theories/fluid_dynamics/` — new module with `incompressible_ns.rs`, `compressible_ns.rs`, `euler.rs`, `stokes.rs`, `float_bfloat16`.
   - `deep_causality_physics/src/kernels/fluids/quantities.rs` — appended with three new newtypes (`KinematicViscosity`, `SpecificEnthalpy`, `WallShearStress`) following the existing concatenated-quantities convention in the same file.
   - `deep_causality_physics/tests/kernels/fluids/` and `deep_causality_physics/tests/theories/fluid_dynamics/` — tests mirroring the src tree per AGENTS.md §"Test structure". New unit newtype tests append to the existing `tests/kernels/fluids/quantities_tests.rs`.
 - **Affected files (modified):**

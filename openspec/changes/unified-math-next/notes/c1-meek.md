@@ -89,7 +89,7 @@ test result: FAILED. 1617 passed; 26 failed; 1 ignored
 ```
 
 Files: `tests/types/mixed_graph/meek_tests.rs` (14), `chordality_tests.rs` (12), both registered in
-`mod.rs`. The Bazel suite globs `tests/types/mixed_graph/*_tests.rs`, so no BUILD edit was needed.
+`float_bfloat16`. The Bazel suite globs `tests/types/mixed_graph/*_tests.rs`, so no BUILD edit was needed.
 
 ### Corner-case enumeration
 

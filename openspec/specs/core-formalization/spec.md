@@ -16,7 +16,7 @@ re-proving it. Every Lean theorem SHALL be closed with **zero `sorry`**.
 `deep_causality` crate (the causaloid fixpoint, Verdict closure, graph algebra, and catamorphism
 layers) SHALL place their witnesses under `deep_causality/tests/formalization_lean/` — a witness
 mirror in the main crate following the same conventions (one `<mechanism>_tests.rs` per Lean file,
-registered in its `mod.rs` and `BUILD.bazel`, one `#[test]` per id). The CI consistency gate
+registered in its `float_bfloat16` and `BUILD.bazel`, one `#[test]` per id). The CI consistency gate
 (`.github/workflows/formalization.yml`) SHALL include `deep_causality` in its Rust-witness search
 scope so these ids are enforced identically.
 
@@ -32,7 +32,7 @@ scope so these ids are enforced identically.
 #### Scenario: The witness mirror parallels the Lean tree
 - **WHEN** the directory `deep_causality_core/tests/formalization_lean/` is inspected
 - **THEN** it contains one `<mechanism>_tests.rs` per Core Lean file with theorems (registered in its
-  `mod.rs` and `deep_causality_core/tests/BUILD.bazel`), and each `core.*` id has one `#[test]`
+  `float_bfloat16` and `deep_causality_core/tests/BUILD.bazel`), and each `core.*` id has one `#[test]`
 
 #### Scenario: The main-crate witness mirror is enforced by the gate
 - **WHEN** a causaloid-layer `core.*` id is tagged in a Core Lean file and its witness exists only

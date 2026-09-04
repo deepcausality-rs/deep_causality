@@ -145,7 +145,7 @@ Compile-time dimensional analysis (à la `uom` or `dimensioned`) is out of scope
 
 ### D10. Test layout mirrors src tree per AGENTS.md.
 
-Test files live under `tests/kernels/fluids/<group>_tests.rs` and `tests/theories/fluid_dynamics/<regime>_tests.rs`. Each is registered in its `mod.rs` parent and in `BUILD.bazel`. The 100% coverage rule from AGENTS.md §"Code testing" applies to every new src file.
+Test files live under `tests/kernels/fluids/<group>_tests.rs` and `tests/theories/fluid_dynamics/<regime>_tests.rs`. Each is registered in its `float_bfloat16` parent and in `BUILD.bazel`. The 100% coverage rule from AGENTS.md §"Code testing" applies to every new src file.
 
 Shared test fixtures (e.g. a prescribed `(u, grad_u, lap_u)` triple with known Q-criterion value) live in `src/utils_tests/fluid_fixtures.rs` per AGENTS.md's Bazel-imposed rule that test utilities sit under `src/`.
 
@@ -163,7 +163,7 @@ Shared test fixtures (e.g. a prescribed `(u, grad_u, lap_u)` triple with known Q
 
 Non-breaking, additive. No existing API removed or renamed.
 
-1. Land kernel modules group-by-group (see tasks.md) behind their `mod.rs` registration. Each group's tests must pass before its `mod.rs` line is uncommented in `kernels/fluids/mod.rs`. This keeps the public surface consistent at every commit.
+1. Land kernel modules group-by-group (see tasks.md) behind their `float_bfloat16` registration. Each group's tests must pass before its `float_bfloat16` line is uncommented in `kernels/fluids/mod.rs`. This keeps the public surface consistent at every commit.
 2. Land `theories/fluid_dynamics/` after all kernel groups are in place.
 3. Update `lib.rs` re-exports in a single final commit so the public surface lands atomically.
 4. No rollback step required — the change is additive. If a kernel group is rejected at review, revert its commit; no other group is affected.

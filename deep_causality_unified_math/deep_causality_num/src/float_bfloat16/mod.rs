@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The `bfloat16` floating-point format: the top sixteen bits of an IEEE 754 binary32.
+//! The `float_bfloat16` floating-point format: the top sixteen bits of an IEEE 754 binary32.
 //!
 //! | Field | Bits | Same as `f32` |
 //! |-------|------|---------------|

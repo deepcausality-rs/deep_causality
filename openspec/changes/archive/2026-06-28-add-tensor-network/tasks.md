@@ -5,7 +5,7 @@
 - [x] 1.3 Implement Householder `qr` returning orthonormal `Q` and upper-triangular `R`
 - [x] 1.4 Apply the layered scalar-bound discipline: SVD/QR kernels bound on **`Scalar`** (`Real + Div + FromPrimitive`, admits `Dual` for Stage-4 AD with no body change), `Truncation` on **`Real`**; all magnitude comparisons via `.abs()` on the real scalar; every division guarded by a checked-nonzero pivot; no concrete float literal in lib code. (The complex `Normed`+`ComplexField` Hermitian kernel is Stage 4; the real kernel deliberately carries the minimal `Scalar` bound so that path is instantiation-only.)
 - [x] 1.5 Reference numerics validated against embedded known values (diagonal singular values, golden-ratio 2×2) plus orthogonality residuals `‖UᵀU − I‖ ≤ √ε·16` and `Q R = A` / `U S Vt = A` reconstruction, all at `f32`, `f64`, `Float106`
-- [x] 1.6 Register new test files in their `mod.rs` chain and the `types` `rust_test_suite` glob in `tests/BUILD.bazel`; `cargo test -p deep_causality_tensor` green (36 integration + 381 lib + 25 doctests), clippy clean, formatted
+- [x] 1.6 Register new test files in their `float_bfloat16` chain and the `types` `rust_test_suite` glob in `tests/BUILD.bazel`; `cargo test -p deep_causality_tensor` green (36 integration + 381 lib + 25 doctests), clippy clean, formatted
 
 ## 2. Stage 1 — Tensor-train state (`tensor-train`)
 
@@ -22,7 +22,7 @@
 - [x] 2.11 Implement the full algebra tower — `Zero`/`One` with a **total shape-polymorphic identity** (order-0 absorbing `0`/`1`, mirroring `CausalTensor`'s broadcasting scalar zero), value operators `Add`/`Sub`/`Neg`/`Mul<T>`/`MulAssign<T>`/`Mul<Self>`, and the markers → `AddGroup`/`AbelianGroup`/`Module`/`Ring` derive by blanket impl. Lawful (`a+0=a`, `a*1=a`), total (no panics on the identity), verified via generic `Module<f64>`/`Ring` bounds. `Field`/`InvMonoid` deliberately not implemented (a train has no multiplicative inverse).
 - [x] 2.12 Add `CausalTensorTrainWitness` (`extensions/ext_hkt_tensor_train.rs`) implementing `Functor`/`Foldable`/`Pure` over core storage only
 - [x] 2.13 Wire `lib.rs` re-exports (`TensorTrain`, `CausalTensorTrain`, `Truncation`, `CanonicalForm`, `CausalTensorTrainWitness`)
-- [x] 2.14 Mirror tests (round-trip, compression accuracy, ops vs dense, marginalize vs `sum_axes`, canonical orthonormality, round compression, algebra laws + markers, functor laws, QTT, error paths) at `f32`/`f64`/`Float106`; registered in `mod.rs` + covered by `tests/BUILD.bazel` globs. Full workspace builds; clippy clean.
+- [x] 2.14 Mirror tests (round-trip, compression accuracy, ops vs dense, marginalize vs `sum_axes`, canonical orthonormality, round compression, algebra laws + markers, functor laws, QTT, error paths) at `f32`/`f64`/`Float106`; registered in `float_bfloat16` + covered by `tests/BUILD.bazel` globs. Full workspace builds; clippy clean.
 
 ## 3. Stage 2a — Matrix-product operator (`tensor-train-operator`)
 
@@ -62,7 +62,7 @@
 
 ## 7. Benchmarks and finalization
 
-- [x] 7.1 Added `bench_svd_qr.rs` (Stage 0) + `bench_tensor_train_core.rs` (Stage 1) under `benches/benchmarks/causal_tensor_network_type/`, registered in its `mod.rs` and the `criterion_main!` set. Measured (48×48): `svd_truncated` ≈ 1.4 ms, `qr` similar; core ops (`norm`/`inner`/`add`/`hadamard`/`eval`/`marginalize`) in µs.
+- [x] 7.1 Added `bench_svd_qr.rs` (Stage 0) + `bench_tensor_train_core.rs` (Stage 1) under `benches/benchmarks/causal_tensor_network_type/`, registered in its `float_bfloat16` and the `criterion_main!` set. Measured (48×48): `svd_truncated` ≈ 1.4 ms, `qr` similar; core ops (`norm`/`inner`/`add`/`hadamard`/`eval`/`marginalize`) in µs.
 - [x] 7.2 Added `bench_tensor_train_operator.rs` (`mpo_from_dense`/`mpo_apply`/`mpo_compose`/`integrate`), `bench_tensor_train_cross.rs` (`cross_build`), `bench_tensor_train_solve.rs` (`amen_linear`/`als_fit`/`dmrg3s_eigen`/`tdvp_step`).
 - [x] 7.3 Each §7.1 algorithm has a matching benchmark; the full network suite runs in **seconds** (`mpo_apply` ≈ 4 µs, `tt_cross` ≈ 39 µs, `amen_linear` ≈ 5 µs, `als_fit` ≈ 6.8 µs, `dmrg3s_eigen` ≈ 35 µs, `tdvp_step` ≈ tens of µs).
 - [x] 7.4 `cargo fmt` + `clippy --all-targets` clean (lib, tests, benches); `unsafe_code = "forbid"` holds (crate-level), no `dyn`, no lib-code macros (only `criterion_group!`/`criterion_main!` in benches), no concrete float literals in lib code (thresholds derive from `T::epsilon()`/`from_primitive`).

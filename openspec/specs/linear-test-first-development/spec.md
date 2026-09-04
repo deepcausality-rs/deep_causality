@@ -161,9 +161,9 @@ neighbouring math crates: **`utils_tests`**.
 - **AND** coverage over `src/utils_tests/` meets the crate's coverage requirement
 
 ### Requirement: Test layout mirrors the source tree and is registered in both build systems
-The suite SHALL mirror the `src` tree file for file, SHALL register every test module upward through its `mod.rs` chain, and SHALL declare every test directory in `tests/BUILD.bazel`.
+The suite SHALL mirror the `src` tree file for file, SHALL register every test module upward through its `float_bfloat16` chain, and SHALL declare every test directory in `tests/BUILD.bazel`.
 
-A test file that is not registered in its `mod.rs` compiles and never runs, and a directory absent
+A test file that is not registered in its `float_bfloat16` compiles and never runs, and a directory absent
 from `tests/BUILD.bazel` is invisible to the primary gate. Both failures are silent: the suite
 appears to pass.
 

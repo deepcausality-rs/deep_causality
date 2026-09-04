@@ -14,7 +14,7 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
 - [x] 0.2 `gradient_x` / `gradient_y` / `gradient_z` / `laplacian_3d` + a divergence helper
   (`tensor_bridge/operators.rs`), hand-built via `from_cores` shift operators + the stencil algebra (the 2-D
   pattern extended). Tests: each matches its analytic derivative to scheme order; bounded rank on smooth input.
-- [x] 0.3 Register test modules in `mod.rs` + `tests/BUILD.bazel`; crate-root imports; 100% coverage.
+- [x] 0.3 Register test modules in `float_bfloat16` + `tests/BUILD.bazel`; crate-root imports; 100% coverage.
 
 ## 0.5 `MetricProvider` seam — body-fit as data, not a code path (D8, `coordinate/`)
 
@@ -135,7 +135,7 @@ and a valid standalone deliverable. Stages 5–6 carry the named open-research n
   `unsafe`/lib-macros; crate-root imports (the one intra-crate `tensor_bridge::operators` path is a documented
   `pub(crate)` lift helper); lib float literals only via `R::from_f64` / `R::one()/two/four` (no bare
   literals); dynamic-by-construction (metric/flux/EOS from state); new lib code covered (every public method +
-  error path tested); tests registered in `mod.rs`, Bazel test targets are glob-covered, verification examples
+  error path tested); tests registered in `float_bfloat16`, Bazel test targets are glob-covered, verification examples
   cargo-only (consistent with `qtt_sod`).
 - [x] 7.3 `openspec validate add-cfd-compressible-qtt-marcher --strict` **passes**.
 - [x] 7.4 Notes updated: `gap-2/tier-b-compressible-marcher.md` §1a now reads **Stages 0–6 built and gated**

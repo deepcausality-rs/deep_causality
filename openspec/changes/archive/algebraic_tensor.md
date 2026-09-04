@@ -61,7 +61,7 @@ Implement the `deep_causality_num` traits where possible.
 ### Directory Structure
 `deep_causality_tensor/src/types/causal_tensor/`
 -   `algebra/`
-    -   `mod.rs`: Module definition.
+    -   `float_bfloat16`: Module definition.
     -   `group.rs`: Group methods.
     -   `ring.rs`: Ring methods.
     -   `module.rs`: Module methods.

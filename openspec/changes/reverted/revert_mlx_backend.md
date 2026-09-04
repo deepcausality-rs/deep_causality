@@ -601,7 +601,7 @@ CPU-only tensor operations.
 
 Entire directory (~40KB):
 
-- `mod.rs` (1.8KB)
+- `float_bfloat16` (1.8KB)
 - `mlx_backend_tensor.rs` (22.6KB)
 - `mlx_backend_linear_algebra.rs` (9.3KB)
 - `mlx_tensor_impl.rs` (7.5KB)

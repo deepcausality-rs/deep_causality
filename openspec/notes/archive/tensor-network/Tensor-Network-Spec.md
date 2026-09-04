@@ -78,7 +78,7 @@ mis-scoped; see §3.7 for the corrected analysis and the bound that admits them.
 
 The crate puts **operation traits in `src/traits/`** (e.g. `Tensor` in `src/traits/tensor.rs`) and
 **concrete types in `src/types/`** (e.g. `CausalTensor` in `src/types/causal_tensor/`). The
-tensor-network module follows that split exactly. One type per folder module; `mod.rs` holds the type +
+tensor-network module follows that split exactly. One type per folder module; `float_bfloat16` holds the type +
 inherent constructors; each operation/trait-impl group in its own file; tests mirror the tree with the
 `_tests` suffix.
 
@@ -136,7 +136,7 @@ src/extensions/                # crate-level HKT witnesses (next to CausalTensor
 ```
 
 Tests mirror this under `tests/traits/...` and `tests/types/causal_tensor_network/...`, registered in each
-`mod.rs` and in `tests/BUILD.bazel`. Shared fixtures go in `src/utils_tests/` (Bazel cannot read helpers
+`float_bfloat16` and in `tests/BUILD.bazel`. Shared fixtures go in `src/utils_tests/` (Bazel cannot read helpers
 from the tests tree, and they must be covered).
 
 ---
@@ -708,7 +708,7 @@ error type, no `dyn Error` beyond the existing `impl Error`. New variants, each 
 ## 10. Testing strategy (100 % coverage of added code, mirror tree)
 
 Per `AGENTS.md`: tests mirror src under `tests/traits/...` and `tests/types/causal_tensor_network/...` with the
-`_tests` suffix, registered in each `mod.rs` and `tests/BUILD.bazel`. Shared fixtures in
+`_tests` suffix, registered in each `float_bfloat16` and `tests/BUILD.bazel`. Shared fixtures in
 `src/utils_tests/`.
 
 **Precision coverage.** Every test class below runs at **`f32`, `f64`, and `Float106`** (a generic

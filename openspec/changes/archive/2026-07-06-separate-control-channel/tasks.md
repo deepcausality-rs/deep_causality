@@ -22,7 +22,7 @@
 
 ## 4. Carrier outcome = `Result<CausalEffect<V>, Error>`
 
-- [x] 4.1 Rewire `mod.rs` (outcome field, `new`/`into_parts`/`into_value`, `bind` continuation takes `CausalEffect`, `fmap`, constructors + `relay_to`, `from_effect`/`from_effect_with_log`).
+- [x] 4.1 Rewire `float_bfloat16` (outcome field, `new`/`into_parts`/`into_value`, `bind` continuation takes `CausalEffect`, `fmap`, constructors + `relay_to`, `from_effect`/`from_effect_with_log`).
 - [x] 4.2 `getters.rs` (`value`/`value_cloned`/`effect` → `&CausalEffect`/`command_target`), `hkt.rs` (panic-free total fmap/apply), `alternatable_value.rs`; predicates/display/explain unchanged (Result-based).
 - [x] 4.3 `causal_flow` facade (`steps`/`branch`/`iterate`/`construction`/`mod` `ok_leaf`): match value/none/command via accessors.
 - [x] 4.4 Core green: 198 tests + 18 new `CausalEffect` tests + doctests; clippy clean; W-invariant preserved.

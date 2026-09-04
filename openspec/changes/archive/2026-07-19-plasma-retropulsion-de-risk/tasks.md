@@ -17,7 +17,7 @@
 - [x] 2.3 Tests: interior converges toward the target to the penalization floor while the
       exterior evolves; forced state stays under the truncation cap; **bit-identity — the same
       world marched N steps with `None` forcing matches the pre-change marcher exactly**
-- [x] 2.4 Register new test files in their `mod.rs` chain; verify Bazel suite globs pick them
+- [x] 2.4 Register new test files in their `float_bfloat16` chain; verify Bazel suite globs pick them
       up (`bazel test //deep_causality_cfd/...`)
 
 ## 3. Drag contraction observable (solvers/qtt)

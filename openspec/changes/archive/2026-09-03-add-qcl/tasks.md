@@ -127,7 +127,7 @@ until `bazel test //...` is green for it.
       hand-off, with the cyclic H₄ rejected at `build()` and the `.adjudicate()` fold documented as
       Boolean (X-3, X-10)
 - [x] 8.4 Add a `rust_binary` in `BUILD.bazel` for every new Cargo example, and register every new
-      test file in its `mod.rs` and in `tests/BUILD.bazel`
+      test file in its `float_bfloat16` and in `tests/BUILD.bazel`
 - [x] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
       `cargo fmt --check` clean, `openspec validate --specs` green
 - [x] 8.6 Update `qcl-design-note.md` §9 to record what shipped, and name each check's Rust witness

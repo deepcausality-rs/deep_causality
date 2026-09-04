@@ -120,7 +120,7 @@ The issue asked that every open and known issue of the reference crate be fixed 
 
 | Check | Result |
 |---|---|
-| `cargo test -p deep_causality_num` | 3 838 passed (the `bfloat16` and `float` suites included) |
+| `cargo test -p deep_causality_num` | 3 838 passed (the `float_bfloat16` and `float` suites included) |
 | `cargo test -p deep_causality_algebra` | 330 passed |
 | `cargo clippy --all-targets --all-features -- -D warnings`, both crates | clean |
 | `cargo build --no-default-features --features libm_math -p deep_causality_num` | builds |

@@ -302,7 +302,7 @@ For every `*_kernel` introduced under `deep_causality_physics::kernels::fluids::
 
 ### Requirement: Test discipline and AGENTS.md conformance
 
-Every new source file SHALL achieve 100% test coverage per AGENTS.md §"Code testing". Tests SHALL live under `deep_causality_physics/tests/kernels/fluids/<group>_tests.rs` mirroring the src tree, with each test file registered in its parent `mod.rs` and in `deep_causality_physics/tests/BUILD.bazel`. No `#[allow(dead_code)]` or `#[allow(clippy::...)]` suppressions are permitted to close coverage or lint gates.
+Every new source file SHALL achieve 100% test coverage per AGENTS.md §"Code testing". Tests SHALL live under `deep_causality_physics/tests/kernels/fluids/<group>_tests.rs` mirroring the src tree, with each test file registered in its parent `float_bfloat16` and in `deep_causality_physics/tests/BUILD.bazel`. No `#[allow(dead_code)]` or `#[allow(clippy::...)]` suppressions are permitted to close coverage or lint gates.
 
 #### Scenario: Coverage tooling reports 100% on every new src file
 

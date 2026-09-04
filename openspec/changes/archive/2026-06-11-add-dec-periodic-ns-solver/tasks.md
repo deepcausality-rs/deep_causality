@@ -95,7 +95,7 @@ f32, f64, and Float106 wherever a numeric gate exists.
   model (`R: RealField` structs, `FloatType` switch), causal-flow staged;
   a code example with no embedded tests, verified by running it at a
   small resolution — the library suite gates correctness.
-- [x] 4.6 Register all new test files in their `mod.rs` chain with
+- [x] 4.6 Register all new test files in their `float_bfloat16` chain with
   `#[cfg(test)]`, and extend the Bazel test suites
   (`deep_causality_physics/tests/BUILD.bazel`, example build files) for the
   new folders.
