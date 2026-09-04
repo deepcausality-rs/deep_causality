@@ -245,6 +245,45 @@ fn test_mul_add_is_correctly_rounded() {
 }
 
 #[test]
+fn test_mul_add_leaves_an_already_odd_sum_alone() {
+    // The kernel nudges the f64 sum toward the error only when the sum's significand is even; a
+    // sum that is already odd carries the sticky information and must be left as it is. Reaching
+    // that branch needs an addend far enough below the product to make the f64 addition inexact,
+    // yet large enough to reach the sum's lowest bit.
+    //
+    // (17/16)^2 = 289/256 = 1 + 33 * 2^-8, and 33 is odd, so the product lands exactly on the
+    // bf16 midpoint between 1.125 (stored significand 0010000, even) and 1.1328125 (0010001,
+    // odd). The product of two 5-bit significands is exact in f64, so the midpoint is exact.
+    let a = BFloat16::from_bits(0x3F88);
+    assert_eq!(a.to_f64(), 17.0 / 16.0);
+    assert_eq!(a.to_f64() * a.to_f64(), 289.0 / 256.0);
+
+    // 3 * 2^-54 is three quarters of an f64 ulp of the midpoint. The f64 sum therefore rounds up
+    // to midpoint + 1 ulp, whose lowest bit is set, and leaves a negative error term behind.
+    // Were the odd sum nudged anyway, it would go back down to the midpoint exactly and the tie
+    // rule would pick the even neighbour 1.125 — the wrong side of the exact result.
+    let c = BFloat16::round_from_f64(3.0 * 2f64.powi(-54));
+    assert_eq!(c.to_f64(), 3.0 * 2f64.powi(-54));
+
+    assert_eq!(
+        Float::mul_add(a, a, c).to_bits(),
+        0x3F91,
+        "289/256 + 3 * 2^-54 is above the midpoint and rounds up to 1.1328125"
+    );
+    // The two other sides of the same threshold: the exact tie, and the same step below it.
+    assert_eq!(
+        Float::mul_add(a, a, BFloat16::ZERO).to_bits(),
+        0x3F90,
+        "the exact tie 289/256 rounds to even"
+    );
+    assert_eq!(
+        Float::mul_add(a, a, -c).to_bits(),
+        0x3F90,
+        "289/256 - 3 * 2^-54 is below the midpoint and rounds down to 1.125"
+    );
+}
+
+#[test]
 fn test_mul_add_agrees_with_a_single_rounding_over_a_window() {
     // For operands in [1, 4) the products are multiples of 2^-14 below 16 and the sums below 32,
     // so a * b + c is exact in f64 and one rounding of it is the correctly rounded answer.

@@ -26,7 +26,7 @@
 //! | B | Single element | `traits_num_tests::test_sum_and_product_of_one_element_are_that_element` |
 //! | C | Two quantities coincide | every `*_ties_go_to_even` test; `traits_num_tests::test_sum_is_not_product`; `ops_comparison_tests::test_signed_zeros_compare_equal` |
 //! | D | Index expression degenerates | `traits_num_tests::test_from_integers_at_the_eight_bit_boundary` (the shift is zero at exactly 8 bits and one at 9); `bfloat16_tests::test_round_from_f32_ties_go_to_even` (the tie bias with the kept bit 0 and 1) |
-//! | E | Each threshold, both sides | `bfloat16_tests::test_round_from_f32_overflows_to_infinity_at_the_ieee_threshold`, `test_round_from_f32_at_the_subnormal_boundary`, `test_round_from_f64_handles_the_subnormal_tie_and_its_neighbours`; `float/bfloat16_impl_tests::test_round_half_away_from_zero_both_sides` |
+//! | E | Each threshold, both sides | `bfloat16_tests::test_round_from_f32_overflows_to_infinity_at_the_ieee_threshold`, `test_round_from_f32_at_the_subnormal_boundary`, `test_round_from_f64_handles_the_subnormal_tie_and_its_neighbours`; `float/bfloat16_impl_tests::test_round_half_away_from_zero_both_sides`, `test_mul_add_leaves_an_already_odd_sum_alone` |
 //! | F | Zero | `ops_arithmetic_tests::test_div_special_values`, `test_mul_special_values`; `traits_algebra_tests::test_negative_zero_is_zero`; `float/bfloat16_impl_tests::test_sqrt`, `test_ln_and_logs` |
 //! | G | Negative | `float/bfloat16_impl_tests::test_sqrt` (NaN), `test_cbrt_is_real_for_negative_input`, `test_powf`, `test_inverse_hyperbolic` |
 //! | H | Exact domain boundary | `float/bfloat16_impl_tests::test_inverse_trigonometric_at_the_domain_boundary`, `test_inverse_hyperbolic`; `constants_tests::test_range_constants` |

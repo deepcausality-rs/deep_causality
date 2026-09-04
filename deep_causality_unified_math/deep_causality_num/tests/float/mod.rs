@@ -8,6 +8,12 @@
 // itself is correct and runs under normal CI.
 #[cfg(test)]
 #[cfg(not(miri))]
+mod bfloat16_impl_tests;
+// Disabled under Miri: software-emulated floats produce different last-bit
+// results for transcendental ops, so exact equality cannot hold. The test
+// itself is correct and runs under normal CI.
+#[cfg(test)]
+#[cfg(not(miri))]
 mod float_32_tests;
 // Disabled under Miri: software-emulated floats produce different last-bit
 // results for transcendental ops, so exact equality cannot hold. The test
