@@ -5,7 +5,7 @@
 
 use crate::algebra::operator::{Additive, Multiplicative, Operator};
 
-use crate::Float106;
+use crate::{BFloat16, Float106};
 
 /// Marker trait: Promises that `(a * b) * c == a * (b * c)`.
 ///
@@ -28,7 +28,7 @@ use crate::Float106;
 /// `deep_causality_sparse` stops at [`AbelianGroup`](crate::AbelianGroup) and carries none of the
 /// multiplicative markers.
 ///
-/// For `f32`, `f64` and `Float106` the promise covers the finite values. See the scope note on
+/// For `f32`, `f64`, `BFloat16` and `Float106` the promise covers the finite values. See the scope note on
 /// [`Annihilating`](crate::Annihilating).
 ///
 /// # Why these are written out one by one
@@ -47,6 +47,7 @@ pub trait Associative<O: Operator> {}
 impl Associative<Multiplicative> for f32 {}
 impl Associative<Multiplicative> for f64 {}
 impl Associative<Multiplicative> for Float106 {}
+impl Associative<Multiplicative> for BFloat16 {}
 
 // The integers. ℤ is a commutative ring, so all three laws hold.
 impl Associative<Multiplicative> for i8 {}
@@ -73,6 +74,7 @@ impl Associative<Multiplicative> for usize {}
 impl Associative<Additive> for f32 {}
 impl Associative<Additive> for f64 {}
 impl Associative<Additive> for Float106 {}
+impl Associative<Additive> for BFloat16 {}
 
 // The integers, ℤ.
 impl Associative<Additive> for i8 {}

@@ -67,6 +67,7 @@ impl IntegralDomain for isize {}
 impl IntegralDomain for f32 {}
 impl IntegralDomain for f64 {}
 impl IntegralDomain for crate::Float106 {}
+impl IntegralDomain for crate::BFloat16 {}
 
 // 𝔽₂. A field has no zero divisors, and 1 ≠ 0 holds because the field has two elements. Stated
 // per type rather than granted by a blanket over `Field`, so that a future field does not inherit

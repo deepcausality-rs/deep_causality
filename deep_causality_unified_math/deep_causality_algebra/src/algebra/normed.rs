@@ -48,7 +48,7 @@ pub trait Normed {
 
 /// A real field element is its own real type; its squared modulus is `x²` and scaling is plain
 /// multiplication. Bounding on [`RealField`](RealField) covers every primitive float
-/// (`f32` / `f64` / `Float106`, via the `impl<T: Float> RealField for T` tower) in one blanket — no
+/// (`f32` / `f64` / `BFloat16` / `Float106`, via the `impl<T: Float> RealField for T` tower) in one blanket — no
 /// per-type impls, no macro. `Complex` is unordered, hence not a `RealField`, so this does not
 /// overlap the `Complex<T>` impl below; `num` can prove that disjointness because it owns
 /// `RealField` and `Complex` together (a downstream crate could not).

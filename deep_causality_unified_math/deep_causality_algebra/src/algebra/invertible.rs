@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Float106;
+use crate::{BFloat16, Float106};
 
 /// Marker trait: promises that `Div` computes the true **multiplicative inverse**, so that
 /// `a * (Self::one() / a) == Self::one()` for every non-zero `a`.
@@ -33,6 +33,7 @@ pub trait Invertible {}
 impl Invertible for f32 {}
 impl Invertible for f64 {}
 impl Invertible for Float106 {}
+impl Invertible for BFloat16 {}
 
 // 𝔽₂. The single non-zero element is `1`, and `1 · (1 / 1) = 1`, so field division holds exactly.
 // Unlike the reals, no rounding qualifies the promise: the whole of the law is one case, and it is

@@ -11,7 +11,7 @@ use crate::{Field, FromPrimitive, Normed};
 /// This is a pure **trait composition**: it adds no methods of its own, it just names the
 /// conjunction [`Field`] + [`Normed`] + [`FromPrimitive`] + `Copy` and lets a single blanket
 /// implementation cover every type that already satisfies all four. Both the real fields
-/// (`f32`/`f64`/`Float106`) and `Complex<T>` qualify; the real modulus and the real scalar type are
+/// (`f32`/`f64`/`BFloat16`/`Float106`) and `Complex<T>` qualify; the real modulus and the real scalar type are
 /// read through [`Normed`] (`Self::Real` is a [`RealField`](crate::RealField)).
 ///
 /// # Relationship to [`ConjugateScalar`](crate::ConjugateScalar)

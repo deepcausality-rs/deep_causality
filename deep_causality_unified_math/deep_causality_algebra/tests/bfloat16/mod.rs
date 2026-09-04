@@ -8,4 +8,6 @@
 #[cfg(test)]
 mod bfloat16_algebra_tests;
 #[cfg(test)]
+mod bfloat16_normed_tests;
+#[cfg(test)]
 mod bfloat16_traits_tests;

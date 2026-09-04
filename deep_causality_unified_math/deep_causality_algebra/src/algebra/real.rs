@@ -21,7 +21,7 @@ use core::ops::{AddAssign, MulAssign, Neg, SubAssign};
 ///
 /// [`RealField`](crate::RealField) is exactly a `Real` that is also a `Field`
 /// (`RealField: Real + Field`), so every `RealField` value is a `Real` value, and
-/// the concrete real scalars `f32`, `f64`, and `Float106` all implement `Real`.
+/// the concrete real scalars `f32`, `f64`, `BFloat16`, and `Float106` all implement `Real`.
 ///
 /// Bound generic numeric code on `Real` (rather than `RealField`) when it needs only
 /// the analytic operations; such code then also accepts non-field analytic types
