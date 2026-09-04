@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ### Requirement: Every stage runs the same five-phase cycle in order
 
-Each of the five stages SHALL pass through phases 1 to 5 in order, and SHALL NOT begin a phase before the previous phase's exit condition is met.
+Each of the four stages SHALL pass through phases 1 to 5 in order, and SHALL NOT begin a phase before the previous phase's exit condition is met.
 
 The five phases are: (1) a compiling API with unimplemented bodies; (2) the full test suite, written
 against that API and observed failing; (3) an audit of the suite against deliberate defects and
@@ -18,7 +18,7 @@ The order is the point. A test written after the code it checks tends to encode 
 rather than what it should do, and a suite that has never been shown to reject a wrong implementation
 has not been shown to do anything. This generalises
 [`linear-test-first-development`](../../../specs/linear-test-first-development/spec.md), which applied
-the same cycle to one crate, to a programme of five stages — including the stages that port or move
+the same cycle to one crate, to a programme of four stages — including the stages that port or move
 existing code, where the temptation to skip straight to phase 4 is strongest.
 
 #### Scenario: A stage's phase order is auditable after the fact

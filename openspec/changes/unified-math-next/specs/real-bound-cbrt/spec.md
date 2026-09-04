@@ -134,8 +134,8 @@ The retirements are: `signed_cbrt` in the coherent-structures kernel, a sign bra
 
 The stage SHALL record what the additions to `Real` and `RealField` break, established by enumerating implementors rather than by counting dependents.
 
-Twelve manifests declare `deep_causality_algebra` as a dependency, seven crates and five examples.
-That number is the release blast radius and is not the compatibility blast radius, which is smaller:
+Twenty-five manifests declare `deep_causality_algebra` as a dependency. That number is the release
+blast radius and is not the compatibility blast radius, which is far smaller:
 
 - `Real` is implemented twice, by a blanket over `Float` and by `Dual<T>`. Both are in this
   workspace, so the new method is supplied by the same change that declares it.
@@ -145,9 +145,10 @@ That number is the release blast radius and is not the compatibility blast radiu
 An external crate implementing `Real` directly would have to supply `cbrt`; none is known. Everything
 that reaches either trait through `Float` is unaffected.
 
-An earlier draft of this change called the stage breaking across nineteen manifests. Both figures
-were wrong and neither had been checked; the requirement is written this way so the next reader gets
-the enumeration rather than a count.
+Two earlier drafts gave this as a dependent count, nineteen and then twelve, and both were wrong —
+the second from a grep that matched only lines beginning with the crate name. The requirement is
+written as an enumeration of implementors precisely because the count was the wrong instrument, and
+counting it wrong twice is what demonstrated that.
 
 #### Scenario: The implementors are enumerated, not the dependents
 - **WHEN** the stage's notes are read

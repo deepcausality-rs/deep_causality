@@ -92,9 +92,9 @@ pair, where `H(X|Y) = H(X)`, and a deterministic dependence, where `H(X|Y) = 0`.
 
 Log-sum-exp SHALL be computed by subtracting the maximum before exponentiating, SHALL guard the non-finite cases, and SHALL be verified at magnitudes where the naive form overflows or underflows.
 
-Four copies exist today — three of the slice form and one two-term `logaddexp`, which is a distinct
-function — and all use the max-shift with the same non-finite guard. They agree, so this is the
-cleanest of the absorptions, and its test is the one that must not be circular: comparing against a
+Four exist today: two slice-shaped free functions in BRCD, a two-term `logaddexp` which is a distinct
+function, and a method on `CausalTensor` which D7 leaves where it is. Three are absorbed. All use the
+max-shift with the same non-finite guard, so this is the cleanest of the absorptions, and its test is the one that must not be circular: comparing against a
 naive `ln(Σ exp(x))` is a valid oracle only in the range where the naive form is accurate, and the
 cases that matter are outside it.
 
@@ -136,13 +136,21 @@ where these are used. A single function that silently picks one would be wrong f
 
 ### Requirement: Pearson correlation states its missing-data policy and its degenerate cases
 
-Pearson correlation SHALL state how it treats missing observations, and SHALL return a typed error rather than a `NaN` when either input has zero variance.
+Pearson correlation SHALL state how it treats missing observations, and SHALL preserve the absorbed implementation's zero-variance behaviour rather than replacing it with a typed error.
 
 The implementation being absorbed performs pairwise deletion and computes in `f64` behind a generic
-signature — the second of which this crate removes by construction. The zero-variance case is the
-one that matters: the correlation is undefined there, and returning `NaN` propagates into an
-F-statistic that the same module guards with a `1e12` sentinel. A typed error at the source removes
-the need for the sentinel.
+signature — the second of which this crate removes by construction.
+
+An earlier draft required a typed error on zero variance, on the ground that the current code returns
+`NaN` which then propagates into an F-statistic guarded by a `1e12` sentinel. That was wrong on both
+halves. Zero variance returns `Ok((0.0, n))`, not `NaN` (`mrmr_utils.rs:101-102`), and the sentinel
+guards a different case entirely — perfect correlation, `|1 − r²| < 1e-9` (`:145-147`). The two
+degenerate cases were conflated.
+
+The consequence of getting this wrong would have been a behaviour change, not a tidy-up: a constant
+column today contributes zero relevance and zero redundancy and selection continues, where a typed
+error would abort `mrmr_features_selector`. The migration's own rule is that each call site keeps its
+existing numerical semantics, so the zero-variance convention is preserved and documented.
 
 #### Scenario: A known correlation is reproduced
 - **WHEN** correlation is computed over a small sample with a correlation known in closed form
@@ -152,9 +160,10 @@ the need for the sentinel.
 - **WHEN** one input is an exact positive affine transform of the other
 - **THEN** the result is one to the precision in use, and does not exceed one
 
-#### Scenario: Zero variance is refused
+#### Scenario: Zero variance yields a defined, documented value
 - **WHEN** either input is constant
-- **THEN** a typed error is returned rather than a `NaN`
+- **THEN** the correlation is zero and the effective sample size is returned, matching the absorbed implementation
+- **AND** the documentation states that this is a convention, not a computed correlation
 
 #### Scenario: The missing-data policy is applied as stated
 - **WHEN** observations are missing in either input

@@ -76,18 +76,30 @@ dependency.
 Every call site the crate absorbs SHALL have its local implementation removed, and the stage SHALL NOT be complete while a superseded copy remains.
 
 Adding a crate that nothing uses is worse than not adding it: the duplication survives and the
-workspace grows a dependency. The absorbed sites are the three entropy implementations, the four
-log-sum-exp copies including the two-term form, the three Gaussian log-density sites, the two ridge
-forms, the logistic IRLS, Pearson, the descriptive statistics on slices, and the two binning
-routines.
+workspace grows a dependency.
+
+The absorbed set is bounded by D7, which keeps `tensor`'s own copies where they are. So it is: two of
+the three entropy implementations plus physics's, **three** of the four log-sum-exp copies (the
+fourth is `tensor`'s `CausalTensorStatsExt::logsumexp`), **two** of the three Gaussian log-density
+sites (the third is `tensor`'s), the two ridge forms, the logistic IRLS, Pearson, the descriptive
+statistics on slices, and the two binning routines.
+
+An earlier draft listed all four log-sum-exp and all three Gaussian sites and then required that "no
+second implementation remains", which D7 makes unsatisfiable. The carve-out is stated here rather
+than discovered at verification time.
 
 Where a call site's bound cannot be met by the new crate — the physics kernel carries a
 `MaybeParallel` bound the crate deliberately does not — the local wrapper stays and only its
 mathematics is delegated.
 
-#### Scenario: No superseded copy survives
+#### Scenario: No superseded copy survives outside tensor
 - **WHEN** the workspace is searched for the absorbed computations after migration
-- **THEN** each resolves to `deep_causality_stats`, and no second implementation remains
+- **THEN** each resolves to `deep_causality_stats`, except `tensor`'s log-sum-exp and Gaussian log-density, which D7 keeps
+
+#### Scenario: The dense solve the absorbed fits depend on is given a home
+- **WHEN** the ridge fits and the logistic gate move to the crate
+- **THEN** `brcd_linalg`'s dense LU either moves with them or is recorded as retained, and the choice states whether the crate's solve is LU or Cholesky
+- **AND** the reason is recorded, because `brcd_linalg`'s own doc says partial pivoting rather than Cholesky is deliberate for parity with the reference's `numpy.linalg.solve`, and a Cholesky that floors a non-positive pivot drifts the rankings
 
 #### Scenario: A retained wrapper delegates its mathematics
 - **WHEN** a call site keeps a local wrapper for a bound the crate does not carry

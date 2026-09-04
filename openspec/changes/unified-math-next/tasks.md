@@ -3,14 +3,28 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
-Five stages, one per group after the protocol. Every stage runs the same five phases in order —
+Four stages, one per group after the protocol. Every stage runs the same five phases in order —
 **P1** an API with unimplemented bodies, **P2** the suite written against it and observed failing,
 **P3** the suite audited against deliberate defects, **P4** implementation, **P5** mutation testing —
 and no phase starts before the previous one's exit condition is met. A phase-4 task is blocked until
 its group's phase-3 task is checked.
 
-Group 1 is done once and binds the rest. Groups 2, 3 and 6 are mutually independent; groups 4, 5 and
-7 want group 3 first. No group is done until `bazel test //...` is green for it.
+Group 1 is done once and binds the rest. Groups 2 and 3 are independent of each other; groups 4, 5
+and 6 want group 3 first. No group is done until `bazel test //...` is green for it.
+
+The verdict-carrier stage was cut on 2026-09-04: it had no consumer once the engine work was
+deferred, and its stated justification did not survive checking. See
+`openspec/changes/deferred/num-verdict-algebra/`.
+
+## 0. Precondition: reconcile the tier documentation
+
+The stats crate adds a row to tables that disagree with each other and with the manifests today.
+Adding a row first bakes four existing errors in.
+
+- [ ] 0.1 Reconcile the three tier representations in `deep_causality_unified_math/README.md` — the ASCII block, the markdown crate table, and `graph.png` — against the manifests. The block and the figure put `calculus` and `fft` at tier 4 and `num_complex`/`num_dual` at 3; the table puts them at 3 and 2
+- [ ] 0.2 Correct `AGENTS.md`'s tier block, which omits the `deep_causality_haft` dependency that `num_complex` and `num_dual` both declare, and places both at a tier its own stated derivation contradicts
+- [ ] 0.3 Regenerate `graph.png` by the recipe in `Bazel.md`, and confirm it writes where the README expects rather than to the repository root
+- [ ] 0.4 Verify: all three representations and `AGENTS.md` agree with the manifests, checked by deriving the tiers from `Cargo.toml` rather than by reading them
 
 ## 1. The test-first protocol
 
@@ -101,66 +115,47 @@ can do. Acting on it changes the random stream, and therefore every seeded expec
 - [ ] 5.10 Verify: a previously `f64`-internal path called at `Float106` now carries `Float106` accuracy on an input whose exact result is known, and the same path at `f64` is unchanged
 - [ ] 5.11 Record every changed result with its reason; confirm no consumer test was edited to make a failure disappear
 
-## 6. C5 — the verdict carrier at every scalar
+## 6. C4 — `linear` adoption
 
-The engine's numeric aliases are **not** touched by this change. Unpinning them, and any question
-about `ScalarValue`, is deferred to a change of its own; the findings are recorded at
-`openspec/changes/deferred/engine-precision-parametric/`. What remains here is the carrier gap, which
-stands alone.
+- [ ] 6.1 **P1** Declare the scaled-form `vector_norm_l2` and a `to_row_major` override on `CsrMatrix` with unimplemented bodies
+- [ ] 6.2 **P2** Write the defect suite: a vector with a component near the type's maximum returning a finite correct norm; one with components near the minimum positive value not underflowing to zero; the ordinary range unchanged; all three cases at all three precisions; a `CsrMatrix` decomposed sparse and dense agreeing on eigenvalues
+- [ ] 6.3 **P2** Verify the tests fail — the overflow test against today's implementation fails by returning infinity, which is the defect
+- [ ] 6.4 **P3** Audit: drop the scaling factor, scale by the smaller component instead of the larger, omit the zero-maximum guard — confirm each is rejected
+- [ ] 6.5 **P4** Implement both fixes. The conversion override fixes every `MatrixView` algorithm at once — `eigen_hermitian`, `qr`, `svd`, `cholesky` — and is latent: no caller passes a `CsrMatrix` to any of them today
+- [ ] 6.6 Build the classified inventory of every hand-rolled linear-algebra site across the nine consumer crates and `examples/`, each marked replace, replace-with-care or keep, with its reason
+- [ ] 6.7 **P1–P4** Replace the *replace* class through the five phases: the open-coded complex modulus and multiplication across ten files, the five copies of the entrywise max-modulus residual collapsed to one, and the cofactor inverses where a general path is no slower. Quantum's Frobenius norm is **not** in this class — delegating it buys nothing, since `modulus_squared` is the same direct form
+- [ ] 6.8 **P1–P4** Add the finiteness guard in `markov_pairs`, the one place an overflowing Frobenius norm changes a decision: it feeds `CommutatorTolerance::threshold` unguarded, so entries above about `1.34e154` send the threshold to infinity
+- [ ] 6.8 **P4** Handle the *replace-with-care* class one at a time: benchmark the 17-state filter kit before and after and revert on regression; change the ideal-MHD CSR matvec from a silent column skip to a typed error and pin the new behaviour with a test
+- [ ] 6.9 **P4** Record a reason at each *keep* site — the closed-form symmetric 3×3 eigensolver and the written-out 3×3 products — so the next reader does not re-litigate it
+- [ ] 6.10 **P1–P4** Collapse the three open-coded reachability pre-passes in `deep_causality` onto one, preserving each site's behaviour including the not-frozen error and the out-of-range start
+- [ ] 6.11 **P4** Add the missing dependency edges the replacements need, in manifests and Bazel targets
+- [ ] 6.12 **P4** Record as breaking, with implementors and matchers enumerated, any variant added to `LinearErrorEnum` or any method added to `ultragraph`'s pathfinding trait; update both implementors in the same change
+- [ ] 6.13 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
+- [ ] 6.14 Verify: `bazel test //...` is green, every classified site is resolved, and each behaviour change is recorded with its old and new behaviour
 
-- [ ] 6.1 **P1** Declare `Verdict` instances for `f32` and `Float106` in `deep_causality_algebra` beside the trait, with unimplemented bodies, taking no new dependency edge
-- [ ] 6.2 **P2** Write the suite: the bounded-lattice and complement laws at both new scalars; the three scalars agreeing on values exactly representable in all of them; `complement = 1 − p` at each; the existing `bool`, `f64`, probability and uncertain carriers unaffected
-- [ ] 6.3 **P2** Cover the corner cases: `bottom` and `top` at each scalar, complement involution, absorption and De Morgan at the lattice bounds, and a value at the unit-interval boundary
-- [ ] 6.4 **P2** Verify every test fails with the unimplemented panic and record the run
-- [ ] 6.5 **P3** Audit: swap meet and join, return `p` instead of `1 − p`, exchange bottom and top, and clamp the complement to the wrong bound — confirm the suite rejects each
-- [ ] 6.6 **P4** Implement both instances and register them in the Bazel-run verdict law tests
-- [ ] 6.7 **P4** Correct the `num-verdict-algebra` spec's owning crate from `deep_causality_num` to `deep_causality_algebra`, where the trait moved during the numeric crate split
-- [ ] 6.8 **P5** Run `scripts/mutants.sh` over the added files and resolve every survivor
-- [ ] 6.9 Verify: `bazel test //...` is green, coverage is full on the added files, and no alias in `deep_causality_core` or `deep_causality` was modified
+## 7. C6 — solver convergence reporting
 
-## 7. C4 — `linear` adoption
+Cut down from an operator family (~3100 LOC) to the defect it was justified by. A generic scalar root
+finder would replace 55 lines; the three bisections already validate their brackets and already
+return typed errors, with caps they cannot reach; dual-number Newton has no caller. What remains is
+that four solvers return an unconverged iterate in silence.
 
-- [ ] 7.1 **P1** Declare the scaled-form `vector_norm_l2` and the sparse-aware conversion for `eigen_hermitian` with unimplemented bodies
-- [ ] 7.2 **P2** Write the defect suite: a vector with a component near the type's maximum returning a finite correct norm; one with components near the minimum positive value not underflowing to zero; the ordinary range unchanged; all three cases at all three precisions; a `CsrMatrix` decomposed sparse and dense agreeing on eigenvalues
-- [ ] 7.3 **P2** Verify the tests fail — the overflow test against today's implementation fails by returning infinity, which is the defect
-- [ ] 7.4 **P3** Audit: drop the scaling factor, scale by the smaller component instead of the larger, omit the zero-maximum guard — confirm each is rejected
-- [ ] 7.5 **P4** Implement both fixes; document the conversion cost wherever densification remains
-- [ ] 7.6 Build the classified inventory of every hand-rolled linear-algebra site across the nine consumer crates and `examples/`, each marked replace, replace-with-care or keep, with its reason
-- [ ] 7.7 **P1–P4** Replace the *replace* class through the five phases: quantum's Frobenius norm, the open-coded complex modulus and multiplication across ten files, the five copies of the entrywise max-modulus residual collapsed to one, and the cofactor inverses where a general path is no slower
-- [ ] 7.8 **P4** Handle the *replace-with-care* class one at a time: benchmark the 17-state filter kit before and after and revert on regression; change the ideal-MHD CSR matvec from a silent column skip to a typed error and pin the new behaviour with a test
-- [ ] 7.9 **P4** Record a reason at each *keep* site — the closed-form symmetric 3×3 eigensolver and the written-out 3×3 products — so the next reader does not re-litigate it
-- [ ] 7.10 **P1–P4** Collapse the three open-coded reachability pre-passes in `deep_causality` onto one, preserving each site's behaviour including the not-frozen error and the out-of-range start
-- [ ] 7.11 **P4** Add the missing dependency edges the replacements need, in manifests and Bazel targets
-- [ ] 7.12 **P4** Record as breaking, with implementors and matchers enumerated, any variant added to `LinearErrorEnum` or any method added to `ultragraph`'s pathfinding trait; update both implementors in the same change
-- [ ] 7.13 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
-- [ ] 7.14 Verify: `bazel test //...` is green, every classified site is resolved, and each behaviour change is recorded with its old and new behaviour
+- [ ] 7.1 **P1** Declare the non-convergence error path for each of the four sites, with unimplemented bodies where a body is needed: `radiative.rs`, `two_body.rs`, `ks_propagator.rs`, `brcd_gate.rs`
+- [ ] 7.2 **P2** Write the suite: each of the four driven to its cap returns its typed error; each converged path is unchanged; and the Kepler case `e = 0.9999, M = 1e-6` returns the root, taken from an independent bisection rather than from the solver under test
+- [ ] 7.3 **P2** Verify every test fails for the intended reason and record the run
+- [ ] 7.4 **P3** Audit: return the last iterate anyway, invert the convergence test, error before the cap, and accept a residual that is not small — confirm each is rejected
+- [ ] 7.5 **P4** Measure and record, per site, whether its non-convergence is reachable at the inputs its callers supply. The electroweak solver converges in 5 of 20 iterations at its shipped constants, so it is latent; mark each of the four live or latent
+- [ ] 7.6 **P4** Implement the signalling. Where the step test runs out but the residual is already satisfied — `two_body` at high eccentricity — widen the stopping test rather than erroring, so a correct answer is not turned into a failure
+- [ ] 7.7 **P4** Record as breaking any variant added to `PhysicsErrorEnum` or `BrcdErrorEnum`; neither is `#[non_exhaustive]`. Record whether a kernel that does not allocate today now does, since every numerical `PhysicsErrorEnum` variant carries a `String`
+- [ ] 7.8 **P5** Run `scripts/mutants.sh` over the edited files and resolve every survivor
+- [ ] 7.9 Verify: `bazel test //...` is green, `deep_causality_calculus`' public surface is unchanged, and every converged path produces its previous value
 
-## 8. C6 — root finding
+## 8. Programme close
 
-- [ ] 8.1 **P1** Declare bisection, Newton with a supplied derivative, Newton over dual numbers, and a fixed-point iteration in `deep_causality_calculus`, at the abstraction level the existing integration and differentiation operators use, with unimplemented bodies and a convergence-reporting result type
-- [ ] 8.2 **P2** Write the suite: each finder converging to a root known in closed form; non-convergence returning a typed error carrying its iteration count and residual; a converged result reporting its cost; bisection refusing an unbracketed interval, a degenerate interval, and finding a root exactly on an endpoint; Newton refusing a zero derivative and reaching its cap where it diverges; the two Newton forms agreeing after each is independently checked against a closed form
-- [ ] 8.3 **P2** Enumerate and cover the corner cases, at all three precisions
-- [ ] 8.4 **P2** Verify every test fails for the intended reason
-- [ ] 8.5 **P3** Audit: return the last iterate instead of erroring on non-convergence, invert the bracket check, halve toward the wrong endpoint, drop the derivative from Newton's update, and compare against the wrong tolerance — confirm each is rejected
-- [ ] 8.6 **P4** Implement all four with no heap allocation on the working path
-- [ ] 8.7 **P4** Verify the crate builds with default features disabled and the no-std feature selected, with every finder present
-- [ ] 8.8 **P5** Run `scripts/mutants.sh` over the crate and resolve every survivor
-- [ ] 8.9 Verify: the operators are in, the crate's suite is green at full coverage, and no shipped kernel has changed
-
-## 9. C6 — kernel migration
-
-- [ ] 9.1 Fix the electroweak radiative-correction solver's silent non-convergence — the one live defect in this stage — and pin the error path with a test
-- [ ] 9.2 Migrate the three bisections, the two Newton iterations and the remaining fixed point onto the shared operators, one at a time
-- [ ] 9.3 **P4** Update each migrated kernel's caller to propagate or handle the typed error, with a test covering that path
-- [ ] 9.4 Record for each kernel its name, its old failure behaviour and its new one
-- [ ] 9.5 Verify: `bazel test //...` is green and every migrated kernel's existing tests pass or have a recorded, deliberate change
-
-## 10. Programme close
-
-- [ ] 10.1 Verify every stage recorded its phase-2 failing run, its phase-3 audit result and its phase-5 mutation report
-- [ ] 10.2 Verify no test was added in a commit later than the one implementing its behaviour, across all five stages
-- [ ] 10.3 Update `openspec/notes/unified_math/unified_math_next.md` with the corrections this change established, and note that its item 9 is deferred to a dedicated change rather than done here
-- [ ] 10.4 Verify the deferred note at `openspec/changes/deferred/engine-precision-parametric/` still matches the tree, so the dedicated change starts from accurate findings
-- [ ] 10.5 Update `deep_causality_unified_math/README.md`: the new crate, the tier diagram, and the trait table if the `Real` change alters it
-- [ ] 10.6 Run `make format && make fix`, then `bazel test //...` over the whole workspace
-- [ ] 10.7 Prepare the commit messages, one per stage, and ask the maintainer to commit
+- [ ] 8.1 Verify every stage recorded its phase-2 failing run, its phase-3 audit result and its phase-5 mutation report
+- [ ] 8.2 Verify no test was added in a commit later than the one implementing its behaviour, across all four stages
+- [ ] 8.3 Update `openspec/notes/unified_math/unified_math_next.md` with the corrections this change established, and note that its item 9 is deferred to a dedicated change rather than done here
+- [ ] 8.4 Verify the deferred notes at `openspec/changes/deferred/engine-precision-parametric/` and `.../num-verdict-algebra/` still match the tree, so the dedicated changes start from accurate findings
+- [ ] 8.5 Update `deep_causality_unified_math/README.md`: the new crate, the tier diagram, and the trait table if the `Real` change alters it
+- [ ] 8.6 Run `make format && make fix`, then `bazel test //...` over the whole workspace
+- [ ] 8.7 Prepare the commit messages, one per stage, and ask the maintainer to commit

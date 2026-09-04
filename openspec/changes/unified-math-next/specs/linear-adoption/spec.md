@@ -35,29 +35,40 @@ applies unchanged to a vector of any length.
 - **WHEN** the overflow and underflow cases are run at `f32`, `f64` and `Float106`
 - **THEN** each returns a finite, correct norm at its own extremes
 
-### Requirement: The Hermitian eigendecomposition does not silently densify a sparse matrix
+### Requirement: A sparse matrix converts to row-major by walking its stored entries
 
-`eigen_hermitian` SHALL either avoid densifying a sparse input or state in its documentation that it does so and at what cost, and SHALL NOT convert through the generic element accessor.
+`CsrMatrix` SHALL override `MatrixView::to_row_major` so that conversion visits each stored entry once, rather than probing every position through `get`.
 
-The dense cyclic Jacobi path reaches a `CsrMatrix` through the `MatrixView` default, which has no
-row-major override, so densification runs the element accessor `n²` times — each call a search
-within a compressed row. A caller passing a sparse matrix to a function that accepts one has no
-signal that the cost is quadratic in accessor calls rather than linear in stored entries.
+The defect is not in any one algorithm. `MatrixView::to_row_major` has a default that calls
+`get(i, j)` for every position in the shape, and `CsrMatrix::get` answers by scanning that row's
+stored range. `CsrMatrix` does not override the default, so conversion costs a scan per position
+rather than one pass over the stored entries.
 
-The minimum acceptable outcome is that the cost is stated. The better outcome is a row-major
-conversion that walks the stored entries once.
+Every algorithm taking a `MatrixView` goes through that door — `eigen_hermitian` (which is simply
+`m.to_row_major()`), `qr`, `svd`, `cholesky`, `matrix_norm_frobenius`. One override fixes the class.
 
-#### Scenario: Densification walks the stored entries
-- **WHEN** a `CsrMatrix` is offered to the eigendecomposition
-- **THEN** conversion visits each stored entry once rather than probing every position
+An earlier draft of this change specified this as a flaw in `eigen_hermitian`. That was the wrong
+place: the eigensolver does nothing but ask for a row-major copy.
 
-#### Scenario: The result is unchanged by the conversion path
-- **WHEN** the same matrix is decomposed in sparse and dense form
-- **THEN** the eigenvalues agree to the precision in use
+**Latent, and fixed anyway.** No caller passes a `CsrMatrix` to any of those algorithms today. The
+reasoning is the same one the Meek stage used for R4: the type is general-purpose, its callers are
+not fixed, and a bound is not a proof.
 
-#### Scenario: The cost is documented where it remains
-- **WHEN** the function's documentation is read
-- **THEN** it states the conversion behaviour and its cost for a sparse input
+#### Scenario: Conversion walks the stored entries
+- **WHEN** a `CsrMatrix` is converted to row-major
+- **THEN** the cost is proportional to its stored entries and its shape, not to a scan per position
+
+#### Scenario: The result is unchanged
+- **WHEN** the same sparse matrix is converted before and after the override
+- **THEN** the row-major buffer is identical, including the zeros at unstored positions
+
+#### Scenario: Every MatrixView algorithm benefits
+- **WHEN** a `CsrMatrix` is offered to `eigen_hermitian`, `qr`, `svd` or `cholesky`
+- **THEN** each reaches its dense path through the override
+
+#### Scenario: The latency is recorded, not overstated
+- **WHEN** the stage's notes are read
+- **THEN** they record that no caller passes a sparse matrix to these algorithms today
 
 ### Requirement: Each hand-rolled site is classified before it is replaced
 
@@ -67,15 +78,17 @@ Every hand-rolled linear-algebra site SHALL be classified as replace, replace-wi
 not carelessness — it is what existed at the time. That also means a blanket replacement is wrong.
 Three cases genuinely differ:
 
-- **Replace.** A duplicate of something the crate does at least as well: the Frobenius norm in
-  quantum, the open-coded complex modulus, the cofactor inverses in general relativity where a
-  general path is no slower.
+- **Replace.** A duplicate of something the crate does at least as well: the open-coded complex
+  modulus and multiplication, the five-copy residual idiom, the cofactor inverses in general
+  relativity where a general path is no slower.
 - **Replace-with-care.** A change in performance or in behaviour. A fixed-size stack-allocated
   17×17 filter kit moved onto a heap matrix type may be slower, and that must be measured rather
   than assumed. A CSR matrix-vector product that silently skips out-of-range columns, replaced by one
   that returns an error, is a behaviour change on a shipped path.
 - **Keep.** The hand-rolled version is right. A closed-form symmetric 3×3 eigensolver is faster than
-  a general Hermitian decomposition, and a 3×3 product written out beats a general one.
+  a general Hermitian decomposition; a 3×3 product written out beats a general one; and quantum's
+  Frobenius norm folds a slice where the crate's walks a `MatrixView` by fallible `get`, for the same
+  arithmetic.
 
 #### Scenario: Every site carries a classification
 - **WHEN** the inventory is reviewed
@@ -111,24 +124,35 @@ shipped solver does when it meets malformed input.
 `deep_causality_quantum` SHALL use `deep_causality_num_complex`'s operators and `Normed::modulus` rather than open-coding complex arithmetic on the real and imaginary components.
 
 The crate depends on `num_complex` already and open-codes complex multiplication, conjugation, trace
-accumulation and modulus across ten files. The modulus is the one with consequences: every
-hand-rolled `(dr*dr + di*di).sqrt()` uses the direct form, while the crate's `Normed::modulus` uses
-the scaled form for the reason its doc comment states.
+accumulation and modulus across ten files. The entrywise max-modulus residual idiom appears five
+times and collapses to one helper.
 
-The entrywise max-modulus residual idiom appears five times and collapses to one helper once the
-modulus is shared.
+Two corrections to an earlier draft, both of which narrow this. `QubitOperator::unitarity_defect`
+already uses `Normed::modulus`, with a doc comment giving exactly the overflow reason — so the crate
+is not unaware of the scaled form, and one site is already migrated. And delegating the Frobenius
+norm to `deep_causality_linear` is not a numerical improvement, because `modulus_squared` is the same
+direct form; only `modulus` is scaled.
+
+The one place an overflow actually changes an answer is not in the five residual sites at all. In
+`markov_pairs`, `frobenius_norm` of a caller-supplied factor feeds `CommutatorTolerance::threshold`
+with no finiteness guard, so entries above about `1.34e154` send the norm to infinity and the
+threshold with it. That is the site worth fixing, and it is a guard rather than a delegation.
 
 #### Scenario: The residual idiom exists once
 - **WHEN** the quantum sources are searched for the entrywise max-modulus residual
 - **THEN** one implementation is found and the five call sites reach it
 
-#### Scenario: The Frobenius norm is not duplicated
-- **WHEN** quantum's Frobenius norm is read
-- **THEN** it delegates to `deep_causality_linear`'s implementation through the existing `MatrixView` bridge
+#### Scenario: The Frobenius norm is left where it is
+- **WHEN** quantum's Frobenius norm is read after this change
+- **THEN** it is unchanged, because delegating it buys nothing: `Normed::modulus_squared` is `re² + im²`, the same direct form quantum already folds over a slice, and the scaled form lives only in `modulus`
 
 #### Scenario: Modulus results are unchanged in the ordinary range
 - **WHEN** the migrated sites run against their existing tests
 - **THEN** every result matches to the precision in use
+
+#### Scenario: The threshold path refuses a non-finite norm
+- **WHEN** `markov_pairs` is given a factor whose Frobenius norm overflows
+- **THEN** a typed error is returned rather than a threshold derived from infinity
 
 ### Requirement: The three reachability pre-passes in the causality engine collapse onto one
 

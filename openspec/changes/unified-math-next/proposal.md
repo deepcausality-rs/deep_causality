@@ -40,8 +40,7 @@ will need and leaves the aliases alone.
 
 ## What Changes
 
-Five stages plus one small carrier addition. Each is independently shippable; C1, C3 and C5 are
-mutually independent.
+Four stages. Each is independently shippable; C1 and C3 are independent of each other.
 
 - **C1 — Meek completeness.** Move the Meek closure from `deep_causality_algorithms` into
   `deep_causality_topology` beside `acyclicity`, as inherent methods on `MixedGraph<T>`. Add R4, so
@@ -67,14 +66,6 @@ mutually independent.
   *keep* rather than migrated wholesale. Fix `vector_norm_l2`'s overflow and `eigen_hermitian`'s
   silent densification of a `CsrMatrix`. Collapse the three open-coded reachability pre-passes in
   `deep_causality` onto one.
-- **C5 — the verdict carrier at every scalar.** Add the missing `Verdict` instances at `f32` and
-  `Float106` beside the trait in `deep_causality_algebra`. Two implementations, no new dependency
-  edge. **Unpinning the engine's numeric aliases is deferred** to a change of its own: the aliases in
-  `deep_causality_core` and `deep_causality` stay exactly as they are, and `ScalarValue` is not
-  touched. They are an early expression of precision-as-a-parameter and reworking them is a design
-  question, not a mechanical unpinning. The findings from this investigation are recorded at
-  [`changes/deferred/engine-precision-parametric/`](../deferred/engine-precision-parametric/spec.md)
-  so the dedicated change starts from them.
 - **C6 — root finding in `calculus`.** Bisection, Newton over an explicit or dual-number derivative,
   and a fixed point that signals non-convergence instead of returning its last iterate. `no_std`
   throughout.
@@ -108,10 +99,6 @@ one crate to a five-stage programme.
 
 ### Modified Capabilities
 
-- `num-verdict-algebra`: gains `f32` and `Float106` verdict instances, and its owning crate is
-  corrected from `deep_causality_num` to `deep_causality_algebra`, where the trait moved during the
-  numeric crate split. Only `bool`, `f64`, the probability carrier and `Uncertain` are instantiated
-  today, and that gap is the prerequisite the deferred alias work will need on day one.
 - `rand-realfield-sampling`: gains `shuffle` on the `Rng` trait, against two verbatim Fisher–Yates
   duplicates. The capability already specifies the `RealRng` layer, so the assessment's call for
   "blanket `Distribution` impls over `RealField`" is **withdrawn** — it cannot compile (E0119 against
@@ -129,12 +116,17 @@ in the root dependency table at two-digit precision, and additions to `AGENTS.md
 public, and neither is `#[non_exhaustive]` — any addition to either is breaking and is called out
 where it arises.
 
-`deep_causality_algebra`'s two trait additions are **not** in that category. Twelve manifests declare
-the crate as a dependency (seven crates, five examples). `Real` is implemented twice, both in this
-workspace; `RealField` once, by a blanket over `Float`, which already implies `ToPrimitive` through
-`NumCast`. So the `RealField` change strengthens a bound everything already satisfies, and the `Real`
-change is absorbed by the two impls we own. Only a downstream crate implementing `Real` directly —
-none known — would notice.
+`deep_causality_algebra`'s two trait additions are **not** in that category, and the dependent count
+is beside the point. `Real` is implemented twice, both in this workspace; `RealField` once, by a
+blanket over `Float`, which already implies `ToPrimitive` through `NumCast`. So the `RealField`
+change strengthens a bound everything already satisfies, and the `Real` change is absorbed by the two
+impls we own. Only a downstream crate implementing `Real` directly — none known — would notice.
+
+Two earlier drafts of this paragraph gave a dependent count as evidence, and both were wrong: first
+nineteen, then twelve. The real figure is twenty-five, and the twelve came from a grep matching only
+lines that begin with the crate name, missing `[dependencies.deep_causality_algebra]` sections. The
+count is omitted here rather than corrected a third time, because it was never the number that
+mattered — the implementor count is. Task 3.10 produces that.
 
 **Behavioural.** C1 changes the orientation output of BRCD wherever R4 fires; the counterexample
 search in its first task is what establishes whether that is anywhere. C4's CSR matvec change turns a
@@ -152,8 +144,10 @@ consumers. `deep_causality_core` is **not** touched — its aliases are deferred
 **Not done here, and why.** PageRank, Louvain, spectral clustering, k-means, the retrieval family
 (BM25, TF-IDF, RRF, MMR, HNSW, LSH), cubic splines, matrix exponential/logarithm/square root, the
 Beta/Gamma/Dirichlet/Student-t samplers, a big-integer type, and `partial_trace`'s move into `tensor`
-all have no consumer in this repository. Unpinning the engine's numeric aliases and narrowing
-`ScalarValue` are deferred to a dedicated change rather than excluded. Interpolation's out-of-range policies are left divergent
+all have no consumer in this repository. Unpinning the engine's numeric aliases, narrowing
+`ScalarValue`, and instantiating the verdict carrier at `f32` and `Float106` are deferred to
+dedicated changes rather than excluded — the last of those because reasoning goes through
+`Aggregatable`, which lives in `deep_causality` and is a second, unspecified pin. Interpolation's out-of-range policies are left divergent
 because the divergence is contractual: the `clamped` marker is a requirement of
 [`weather-table-consumption`](../../specs/weather-table-consumption/spec.md) and SRP's rejection gates
 a shipped march step. Structural similarity of causal chains, the topology boost, the Bayesian

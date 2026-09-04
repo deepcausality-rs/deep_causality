@@ -3,6 +3,57 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
+# Deferred: the verdict carrier at f32 and Float106
+
+**Status.** Cut from `unified-math-next` on 2026-09-04, by the maintainer's decision. It follows
+[`engine-precision-parametric`](../engine-precision-parametric/spec.md), whose deferral removed its
+only consumer.
+
+**Why it was cut.** Three reasons, the second of which makes the requirement below wrong as written.
+
+*No consumer.* With the engine's aliases untouched, nothing in the workspace wants an `f32` or
+`Float106` causal model. The change's own D6 rule — only functions with a caller get built — forbids it.
+
+*The stated pin was not the pin.* `design.md` D10 called the missing `Verdict` instances "the binding
+pin on the engine: the aggregation output type has nowhere to land". Reasoning actually goes through
+`Aggregatable: Verdict`, which lives in `deep_causality`, not `deep_causality_algebra`, and carries
+its own required `aggregate` method. The two traits are instantiated differently today:
+
+| Trait | Implemented for |
+|---|---|
+| `Verdict` (algebra) | `bool`, `f64`, `Prob`, `Uncertain<bool>`, `Uncertain<f64>` |
+| `Aggregatable` (deep_causality) | `bool`, `f64`, `UncertainBool`, `UncertainF64` |
+
+`Prob` has `Verdict` and no `Aggregatable`. That asymmetry is already in the tree, and it is the proof
+that a `Verdict` instance alone does not make a carrier usable for reasoning. Adding the two instances
+as specified would have produced two more carriers in exactly `Prob`'s position.
+
+*It would have added duplication.* A usable `f32` carrier needs an `Aggregatable` impl in
+`deep_causality` as well, and `f64`'s is roughly thirty lines of probability semantics — `product()`
+for `All`, inclusion-exclusion for `Any`/`None` — that hardcodes `0.5` in its `Some(k)` branch while
+ignoring the `threshold` parameter it is passed. An `f32` version is a near-verbatim copy; a blanket
+impl cannot subsume them because `bool`'s is structurally different. A change whose purpose is
+removing duplication would have created a three-way copy.
+
+`Float106` needs more still: `deep_causality` does not depend on `deep_causality_num`, so its
+`Aggregatable` impl requires a new dependency edge. Placing the `Verdict` instances in `algebra` was
+meant to avoid that edge; it does not, because the second impl has to live in `deep_causality`
+regardless.
+
+**Also recorded here, unfixed.** The published `num-verdict-algebra` spec still says
+`deep_causality_num` provides the `Verdict` trait. It moved to `deep_causality_algebra` during the
+numeric crate split (`algebra/src/algebra/verdict.rs:20`). Correcting a stale spec was not worth a
+capability of its own in this change; it belongs with this work.
+
+**What a future change needs to decide.** Whether `Aggregatable` should stay a hand-written impl per
+carrier, or become a blanket over a bound that `bool` can also satisfy — and what the ignored
+`threshold` parameter and the hardcoded `0.5` are supposed to mean.
+
+---
+
+The requirements below were drafted for `unified-math-next` and are retained as a starting draft.
+They specify only the `Verdict` half and are therefore incomplete; see above.
+
 ## MODIFIED Requirements
 
 ### Requirement: A verdict carrier with meet, join, and complement

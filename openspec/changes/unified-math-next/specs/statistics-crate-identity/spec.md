@@ -92,7 +92,7 @@ than through an ad-hoc conversion, and no function carries a local lift helper.
 
 ### Requirement: The crate's scope excludes functions with no consumer
 
-The crate SHALL implement only functions with a caller in this workspace at the time of writing, and SHALL NOT implement cross-entropy, mutual information, Kullback–Leibler divergence, Jensen–Shannon divergence, Hellinger distance or the Bhattacharyya coefficient.
+The crate SHALL implement only functions with a caller in this workspace at the time of writing, and SHALL NOT implement cross-entropy, mutual information, Kullback–Leibler divergence, Jensen–Shannon divergence or Hellinger distance.
 
 The assessment's function list mixes two kinds of entry. Some replace code that exists several times
 over. Others were proposed because a statistics crate conventionally has them, or because a future
@@ -108,9 +108,20 @@ quantities. It stays out because what SURD computes is specific mutual informati
 leak over marginalised tensor axes, which is not the slice-shaped general function, and building the
 general one would leave SURD's version in place beside it.
 
+The Bhattacharyya coefficient is **removed from the exclusion list**, because the stated ground was
+wrong. It does have a consumer: `deep_causality_quantum/src/types/qpu/shot_estimate.rs:166` defines
+`bhattacharyya_bits_per_shot`, cited to Bhattacharyya (1943), consumed by `separation_bits` and by a
+live chain with tests and an example. It is excluded on the same ground as mutual information
+instead — quantum computes the two-outcome Bernoulli case in bits, inline, which is not the
+slice-shaped general coefficient — and that distinction is recorded rather than an absence asserted.
+
 #### Scenario: The excluded functions are absent
 - **WHEN** the crate's public surface is enumerated
-- **THEN** it contains none of the six named functions
+- **THEN** it contains none of the five named functions, nor a general Bhattacharyya coefficient
+
+#### Scenario: An exclusion states its real ground
+- **WHEN** a function is excluded
+- **THEN** the reason given is either that no code does its job, or that the code doing its job is a different shape — never an unchecked assertion that no caller exists
 
 #### Scenario: Each shipped function names its caller
 - **WHEN** the crate's function list is reviewed
@@ -119,3 +130,29 @@ general one would leave SURD's version in place beside it.
 #### Scenario: A later addition is justified by a caller
 - **WHEN** a function is proposed for the crate after this change
 - **THEN** it is accepted only with a named consumer
+
+### Requirement: The stage states that it adds more source than it removes
+
+The stage SHALL record that it is a net increase in source lines, and SHALL justify itself on what it unifies rather than on what it deletes.
+
+The absorbed code is roughly 780 lines under D7's carve-out. The crate is estimated at about 1500
+source lines, because it adds what the copies do not have: base, zero-policy and normalisation
+parameters, a typed error enum, one-type-per-module scaffolding and full rustdoc. **So the stage adds
+on the order of 700 net source lines, plus its tests.**
+
+That is defensible, and it is not what "absorbs the duplication" sounds like. The justification is
+the three-way entropy divergence in base, normalisation and zero policy — a semantic disagreement
+between shipped implementations, which one parameterised function resolves — not a line count.
+
+The test estimate needs the same honesty. An earlier draft gave 2700 test lines against 1500 source
+and cited measured ratios of 0.56 to 1.42 in the same breath; 2700/1500 is 1.80, outside the band it
+appealed to. Either figure may be right, but they are not both right, and the phase-2 gate exists to
+make that visible before implementation rather than after.
+
+#### Scenario: The accounting is stated
+- **WHEN** the stage's notes are read
+- **THEN** they give the absorbed line count, the crate's line count, and the net difference
+
+#### Scenario: The estimate agrees with its own calibration
+- **WHEN** the test estimate is compared with the repository's measured source-to-test ratios
+- **THEN** it falls inside the range, or the stage records why this crate is an exception

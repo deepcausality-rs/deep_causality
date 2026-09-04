@@ -33,7 +33,6 @@ no deletions without asking.
 
 - Close the three defects, each with a test that fails before the fix.
 - Retire duplication that has a consumer, and only where retiring it is an improvement.
-- Add the verdict-carrier instances the engine will need before it can be made precision-parametric.
 - Run one test-first cycle over every stage, ports included.
 
 **Non-Goals:**
@@ -174,19 +173,23 @@ were deliberately removed from the algebra hierarchy during the numeric crate sp
 break the shipped `u64` and `i64` time types — which are the existing evidence that the engine's
 genericity works at all.
 
-### D10. The verdict carrier is instantiated now, ahead of the work that needs it
+### D10. The verdict carrier is deferred with the work that needed it
 
-The missing `f32` and `Float106` verdict instances are the binding pin on the engine: the aggregation
-output type has nowhere to land, so no amount of genericity upstream would let a model reason at
-another precision. Unpinning anything first would produce code generic in a parameter no carrier
-satisfies.
+An earlier draft kept the missing `Verdict` instances at `f32` and `Float106` in this change, on the
+ground that they were "the binding pin" on the engine and stood alone. Both halves were wrong.
 
-The unpinning itself is deferred (D13), and the instances are still worth adding here. They are two
-implementations beside the trait, they close a real gap in `num-verdict-algebra` on their own terms,
-and they remove the first obstacle from the deferred change's path.
+Reasoning goes through `Aggregatable: Verdict`, which lives in `deep_causality`, not
+`deep_causality_algebra`, and has its own required method. `Prob` already holds `Verdict` without
+`Aggregatable`, which is the standing proof that a `Verdict` instance alone does not make a carrier
+usable. So the instances would not have unblocked anything, and with the engine deferred (D13) they
+had no consumer at all.
 
-The instances go in `deep_causality_algebra`, beside the trait, because `deep_causality` does not
-depend on `deep_causality_num` and placing them there would need a new dependency edge for no gain.
+They would also have added duplication to a change that exists to remove it: `f64`'s `Aggregatable`
+is thirty lines of probability semantics that a `f32` copy would repeat almost verbatim, and `bool`'s
+differs structurally enough that no blanket subsumes them.
+
+Cut on the maintainer's decision; the findings are in
+`openspec/changes/deferred/num-verdict-algebra/`.
 
 ### D11. The blanket `Distribution` is withdrawn
 
@@ -205,7 +208,7 @@ those sites needs no change to `rand` at all.
 ### D12. The test-first cycle binds ports as well as new code
 
 The five phases — unimplemented API, failing suite, defect audit, implementation, mutation — are the
-generalisation of `linear-test-first-development` from one crate to five stages. The part that matters
+generalisation of `linear-test-first-development` from one crate to four stages. The part that matters
 most is that it binds the stages that move existing code, where the temptation to paste the
 implementation and write tests after is strongest, and where a test written after a port encodes the
 port's fidelity to its origin including that origin's defects.
@@ -262,12 +265,39 @@ than inferable only from the source. The suite pins the base directly, with a un
 quantity, and rejected because it would leave the workspace computing entropy in two bases for no
 reason a caller could see.
 
+### D14b. Groups 4 to 8 were re-scoped after their claims were checked
+
+An audit of the claims behind the remaining groups refuted or partly refuted 46 of them. Four changed
+the work rather than a number.
+
+**The root-finding operator family is cut to a defect fix.** It was ~3100 lines against 55 a generic
+scalar finder could replace. The three bisections already validate their brackets and already return
+typed errors, with caps unreachable at 54–66 iterations against 200. Dual-number Newton has no
+caller, which D6 forbids. Two of the drafted requirements contradicted each other — "SHALL NOT return
+its last iterate" against "match the crate's existing abstraction", where the existing abstraction is
+a `(S, bool)` returning exactly that. What survives is that four solvers, not one, return an
+unconverged iterate in silence.
+
+**The `eigen_hermitian` item moves to where the defect is.** It is not a flaw in the eigensolver,
+which only calls `to_row_major`; it is a missing override on `CsrMatrix`, which fixes `qr`, `svd`,
+`cholesky` and the Frobenius norm at the same time. Latent, and fixed for the reason R4 was.
+
+**The Frobenius delegation is dropped.** `Normed::modulus_squared` is `re² + im²`, the same direct
+form quantum already folds over a slice; only `modulus` is scaled. Delegating buys no numerical
+improvement and costs a fallible trait call per element. The one place an overflow changes a decision
+is `markov_pairs`, which needs a guard, not a delegation.
+
+**The statistics stage states its accounting.** It absorbs ~780 lines and adds ~1500, so it is a net
+increase of ~700 source lines. Its justification is the three-way entropy divergence, not a line
+count. Two of its claims were wrong: Pearson's zero-variance returns `Ok((0.0, n))` rather than
+`NaN`, so the drafted typed-error requirement would have changed mRMR's behaviour; and the
+Bhattacharyya coefficient does have a consumer, so its exclusion needed a different ground.
+
 ### D15. Stages are independently shippable, and three are mutually independent
 
-C1, C3 and C5 touch disjoint code and can land in any order — C5 having shrunk to two trait
-implementations in `algebra`. C2 and C4 want C3 first, because `ToPrimitive` removes workarounds
-inside their scope. C6 is last because it is the largest and least urgent, with its one real defect —
-the silent non-convergence — extractable as a standalone fix.
+C1 and C3 touch disjoint code and can land in any order. C2 and C4 want C3 first, because
+`ToPrimitive` removes workarounds inside their scope. C6 is last because it is the largest and least
+urgent, with its one real defect — the silent non-convergence — extractable as a standalone fix.
 
 ## Risks / Trade-offs
 
@@ -286,10 +316,10 @@ stage notes as a decision rather than absorbed into a refactor.
 `#[non_exhaustive]`. The internal constraints are two-digit, so dependents inherit the bump without
 edits — a property to confirm on the first release rather than assume.
 
-`deep_causality_algebra`'s additions are not breaking in this workspace: twelve manifests declare it,
-`Real` has two impls that we own, and `RealField`'s single blanket reaches it through `Float`, which
-already implies `ToPrimitive`. An earlier draft called this stage BREAKING across nineteen manifests;
-both the count and the characterisation were wrong, taken from a scoping report rather than checked.
+`deep_causality_algebra`'s additions are not breaking in this workspace: `Real` has two impls that we
+own, and `RealField`'s single blanket reaches it through `Float`, which already implies
+`ToPrimitive`. The dependent count was given twice as evidence — nineteen, then twelve — and was
+wrong both times; it is twenty-five, and it was never the relevant number. The implementor count is.
 
 **The test burden is the larger half** → Measured src-to-test ratios in this workspace run 0.56 to
 1.42, median near 1.0. C2 is roughly 1500 source lines and 2700 test lines across 109 files. An
@@ -305,10 +335,11 @@ silently both ways, so each is escaped and confirmed with the `comm` check.
 publish. The release ordering follows the tier order, and the new crate is released after the
 `algebra` bump it depends on.
 
-**Five stages is still a large change** → The repository's archive holds 212 changes, most of them
+**Four stages is still a large change** → The repository's archive holds 212 changes, most of them
 small. This one is a programme, and the mitigation is that each stage is independently shippable and
-independently archivable in its task group, rather than one commit at the end. The engine-alias work
-was the sixth and is deferred, which removes the largest design unknown from the programme.
+independently archivable in its task group, rather than one commit at the end. Two stages have been
+deferred out of it — the engine aliases and the verdict carrier — which removes the largest design
+unknown and the one piece with no consumer.
 
 ## Migration Plan
 
@@ -319,8 +350,7 @@ was the sixth and is deferred, which removes the largest design unknown from the
 3. **C2** — the statistics crate, then consumer migration gated on its suite being green.
 4. **C4** — `linear` adoption, classified per site; the two `linear` defects first, since consumers
    will start depending on the fixed behaviour.
-5. **C5** — the two verdict-carrier instances in `algebra`. Independent of everything else.
-6. **C6** — root finders, landing without touching a kernel; kernel migration is a separate task.
+5. **C6** — root finders, landing without touching a kernel; kernel migration is a separate task.
 
 Rollback is per stage. Each is a distinct task group whose tests pass on their own, so an abandoned
 stage leaves the others standing.
