@@ -40,7 +40,9 @@
 //!
 //! # Checks on the result
 //!
-//! - `verify_cpdag_construction`: production R1–R3 equals the definition on every pattern of a DAG.
+//! - `verify_cpdag_construction`: both production closures, and the shipped `dag_to_cpdag`, equal
+//!   the definition on every pattern of a DAG. The oracle is built from the *unclosed* pattern, so
+//!   an over-orientation is detectable and not assumed away.
 //! - `positive_control_r4`: production R4 fires on a configuration the definition compels and
 //!   production R1–R3 misses.
 //! - Negative control: the no-rule closure (the identity) differs from the definition on a large
@@ -61,6 +63,7 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 use deep_causality_algorithms::brcd::brcd_augment::{augmented_graph, get_configurations_multi};
+use deep_causality_algorithms::brcd::brcd_boss_cpdag::dag_to_cpdag;
 use deep_causality_algorithms::brcd::brcd_validity::{
     baseline_parents, has_new_unshielded_collider_any,
 };
@@ -374,11 +377,12 @@ fn enumerate_dags(n: usize) -> Vec<Pdag> {
     out
 }
 
-/// The CPDAG of a DAG: its skeleton, its v-structures, closed under the production R1–R3 rules —
-/// the same closure `dag_to_cpdag` uses.
+/// The *pattern* of a DAG: its skeleton with its v-structures oriented, and **no rule applied**.
 ///
-/// `verify_cpdag_construction` checks the result against the oracle.
-fn cpdag_of(dag: &Pdag) -> Pdag {
+/// This is what `dag_to_cpdag` builds before it calls `meek_complete`, and it is the input
+/// `verify_cpdag_construction` hands the oracle — an unclosed graph, so the oracle is free to
+/// disagree with the closure in either direction.
+fn pattern_of(dag: &Pdag) -> Pdag {
     let mut p = Pdag::empty(dag.n);
     for i in 0..dag.n {
         for j in (i + 1)..dag.n {
@@ -391,7 +395,12 @@ fn cpdag_of(dag: &Pdag) -> Pdag {
         p.orient(a, c);
         p.orient(b, c);
     }
-    meek_r1_r3(&p)
+    p
+}
+
+/// The CPDAG of a DAG: its pattern, closed under the production rules.
+fn cpdag_of(dag: &Pdag) -> Pdag {
+    meek_r1_r3(&pattern_of(dag))
 }
 
 /// Every undirected edge with **at least one** endpoint in `targets` — the set
@@ -483,20 +492,73 @@ struct Stats {
 fn verify_cpdag_construction(n: usize) -> Result<usize, String> {
     let mut checked = 0;
     for dag in enumerate_dags(n) {
-        let cpdag = cpdag_of(&dag);
-        let truth = maximally_oriented(&cpdag)
-            .ok_or_else(|| format!("a CPDAG admitted no extension: {}", cpdag.render()))?;
-        if truth != cpdag {
-            return Err(format!(
-                "R1-R3 is incomplete on the pattern of {} — closure {} vs definition {}",
-                dag.render(),
-                cpdag.render(),
-                truth.render()
+        // The oracle is given the UNCLOSED pattern. Handing it the closure's own output instead
+        // would make the check a tautology in one direction: a consistent extension preserves every
+        // arc of its input, so an edge the closure had already over-oriented would be taken as
+        // given and could never be reported as free.
+        let pattern = pattern_of(&dag);
+        let truth = maximally_oriented(&pattern)
+            .ok_or_else(|| format!("a pattern admitted no extension: {}", pattern.render()))?;
+
+        // Both shipped closures must land exactly on the definition: no edge left free that it
+        // compels, and no edge oriented that it leaves free.
+        for (rule, closure) in [
+            ("R1-R3", meek_r1_r3(&pattern)),
+            ("R1-R4", meek_r1_r4(&pattern)),
+        ] {
+            if closure != truth {
+                return Err(disagreement(rule, &dag, &pattern, &closure, &truth));
+            }
+        }
+
+        // The same check end to end through the shipped `dag_to_cpdag`, which builds the pattern
+        // itself and closes it with `meek_complete`.
+        let parents: Vec<Vec<usize>> = (0..dag.n).map(|v| dag.parents(v)).collect();
+        let shipped = dag_to_cpdag(&parents)
+            .map_err(|e| format!("dag_to_cpdag failed on {}: {e:?}", dag.render()))?;
+        let shipped = from_mixed(&shipped);
+        if shipped != truth {
+            return Err(disagreement(
+                "dag_to_cpdag",
+                &dag,
+                &pattern,
+                &shipped,
+                &truth,
             ));
         }
+
         checked += 1;
     }
     Ok(checked)
+}
+
+/// Names the first edge on which a closure and the definition disagree, and which way.
+fn disagreement(rule: &str, dag: &Pdag, pattern: &Pdag, closure: &Pdag, truth: &Pdag) -> String {
+    let mut detail = String::from("the graphs differ but no undirected edge of the pattern does");
+    for (u, v) in pattern.undirected_edges() {
+        let (got, want) = (closure.cell(u, v), truth.cell(u, v));
+        if got == want {
+            continue;
+        }
+        detail = match (got, want) {
+            (Cell::Undirected, _) => {
+                format!("UNDER-oriented: {u}-{v} left free, the definition compels it")
+            }
+            (_, Cell::Undirected) => {
+                format!("OVER-oriented: {u}-{v} oriented, the definition leaves it free")
+            }
+            _ => format!("REVERSED: {u}-{v} oriented against the definition"),
+        };
+        break;
+    }
+    format!(
+        "{rule} disagrees with the definition on the pattern of {} — {detail}\n  \
+         pattern:    {}\n  closure:    {}\n  definition: {}",
+        dag.render(),
+        pattern.render(),
+        closure.render(),
+        truth.render()
+    )
 }
 
 /// Checks the production R4 on the configuration it exists for: `a — b`, `a — c`, `a — d`
@@ -714,7 +776,7 @@ fn main() {
         "Production Meek closures vs the maximally oriented PDAG, on Algorithm 1's configurations.\n"
     );
 
-    print!("R1-R3 equals the definition on every pattern ... ");
+    print!("closures equal the definition on every pattern ... ");
     for n in 2..=4 {
         match verify_cpdag_construction(n) {
             Ok(count) => print!("n={n}: {count} ok  "),

@@ -53,10 +53,15 @@ all passing:
 
 | Check | Result | What a failure would have meant |
 |---|---|---|
-| R1–R3 equals the definition on every *pattern* (n ≤ 4: 3, 25, 543 DAGs) | pass | The harness is wrong — this is a theorem |
+| Both shipped closures, and `dag_to_cpdag` end to end, equal the definition on every *pattern* (n ≤ 4: 3, 25, 543 DAGs) | pass | The harness is wrong — this is a theorem |
 | **Positive control**: R4 fires on its own canonical configuration, the definition compels it, R1–R3 misses it | pass | The shipped R4 can never fire, making "R4 never fires" vacuous |
 | **Negative control**: the no-rule closure differs from the definition | 2 125 636 inputs | The comparison detects nothing |
 | **Soundness**: R4 never orients an edge the definition leaves free | 0 violations | The shipped closure is unsound |
+
+The oracle for that first row is given the *unclosed* pattern, not the closure's own output. A
+consistent extension preserves every arc of its input, so feeding it a closed graph would take an
+over-oriented edge as given and could only ever report under-orientation. On the unclosed pattern the
+row covers both directions.
 
 The first control attempt used R1–R2 as the deliberately-incomplete closure and returned zero — which
 looked like a broken comparison and was not. R1–R2 is *also* complete on this family, so R3 never
