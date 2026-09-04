@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Float106;
+use crate::{BFloat16, Float106};
 
 /// Marker trait: Promises that `a * (b + c) == (a * b) + (a * c)`.
 ///
@@ -24,7 +24,7 @@ use crate::Float106;
 /// One absence is structural. `CsrMatrix<T>` in `deep_causality_sparse` stops at
 /// [`AbelianGroup`](crate::AbelianGroup) and carries none of the multiplicative markers.
 ///
-/// For `f32`, `f64` and `Float106` the promise covers the finite values. See the scope note on
+/// For `f32`, `f64`, `BFloat16` and `Float106` the promise covers the finite values. See the scope note on
 /// [`Annihilating`](crate::Annihilating).
 ///
 /// # Why these are written out one by one
@@ -43,6 +43,7 @@ pub trait Distributive {}
 impl Distributive for f32 {}
 impl Distributive for f64 {}
 impl Distributive for Float106 {}
+impl Distributive for BFloat16 {}
 
 // The integers. ℤ is a commutative ring, so all three laws hold.
 impl Distributive for i8 {}

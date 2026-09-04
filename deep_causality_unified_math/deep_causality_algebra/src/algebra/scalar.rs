@@ -19,7 +19,7 @@ use core::ops::Div;
 /// - `Div` lets `Dual` itself be a `Real`, so the tangent functor **nests** (`Dual<Dual<…>>` gives
 ///   higher derivatives).
 /// - [`FromPrimitive`](crate::FromPrimitive) is the precision-safe constant lift: a model raises
-///   its literal constants into the working scalar at any precision (`f32` / `f64` / `Float106`,
+///   its literal constants into the working scalar at any precision (`f32` / `f64` / `BFloat16` / `Float106`,
 ///   and `Dual` over each via the blanket impl in this crate). `From<f64>` is deliberately *not*
 ///   used, because `f32` does not implement it.
 ///

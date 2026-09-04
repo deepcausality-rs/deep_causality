@@ -257,16 +257,24 @@ fn longer_undirected_path_excludes_every_collider() {
 }
 
 #[test]
-fn non_chordal_cycle_is_not_a_cpdag_for_member_building() {
-    // A chordless 4-cycle 0 — 1 — 2 — 3 — 0 is not chordal, so it admits no acyclic
-    // moral orientation covering all four edges: `enumerate_amos` returns an empty
-    // set. `mec_size` reports size 0; the member builders reject it as NotACpdag.
+fn non_chordal_cycle_is_not_a_cpdag() {
+    // A chordless 4-cycle 0 — 1 — 2 — 3 — 0 admits no acyclic moral orientation covering all four
+    // edges, so it is not a CPDAG. Every entry point rejects it the same way.
+    //
+    // `mec_size` used to return `Ok(0)` here, because it multiplied by an empty AMO count while the
+    // member builders returned `NotACpdag` for the same input. No CPDAG has an equivalence class of
+    // size zero — every one has at least itself — so the count was not a small class but a wrong
+    // answer, and it disagreed with its own neighbours in this file.
     let mut g = graph(4);
     g.add_undirected(0, 1).unwrap();
     g.add_undirected(1, 2).unwrap();
     g.add_undirected(2, 3).unwrap();
     g.add_undirected(3, 0).unwrap();
-    assert_eq!(mec_size(&g), Ok(0));
+    assert_eq!(
+        mec_size(&g),
+        Err(BrcdError(BrcdErrorEnum::NotACpdag)),
+        "a non-chordal chain component is not a CPDAG, and a class size of zero is not a class"
+    );
     assert_eq!(
         representative_dag(&g).err(),
         Some(BrcdError(BrcdErrorEnum::NotACpdag))

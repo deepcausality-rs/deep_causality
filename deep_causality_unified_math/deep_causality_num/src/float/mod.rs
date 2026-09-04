@@ -6,6 +6,7 @@ use crate::{Num, NumCast};
 use core::num::FpCategory;
 use core::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 
+mod bfloat16_impl;
 mod float_106_impl;
 mod float_32_impl;
 mod float_64_impl;

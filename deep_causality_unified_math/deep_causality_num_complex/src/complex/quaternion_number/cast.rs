@@ -73,7 +73,7 @@ impl<T: RealField + FromPrimitive> FromPrimitive for Quaternion<T> {
 }
 
 // ToPrimitive
-impl<F: RealField + ToPrimitive> ToPrimitive for Quaternion<F> {
+impl<F: RealField> ToPrimitive for Quaternion<F> {
     /// Converts the scalar part (`w`) of the quaternion to an `isize`.
     /// Returns `None` if the conversion is not possible (e.g., `NaN`, `Infinity`, or out of range).
     ///

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Field, Float106};
+use crate::{BFloat16, Field, Float106};
 
 /// The **characteristic** of a ring: the least `n > 0` with `n · 1 = 0`, or `0` when no such `n`
 /// exists.
@@ -150,10 +150,14 @@ impl Characteristic for f64 {
 impl Characteristic for Float106 {
     const CHARACTERISTIC: u32 = 0;
 }
+impl Characteristic for BFloat16 {
+    const CHARACTERISTIC: u32 = 0;
+}
 
 impl DivisibleByIntegers for f32 {}
 impl DivisibleByIntegers for f64 {}
 impl DivisibleByIntegers for Float106 {}
+impl DivisibleByIntegers for BFloat16 {}
 
 // ℤ. Not a field, so it reaches neither refinement — but characteristic is a property of any ring
 // with unity, and ℤ has characteristic zero. Stated because the trait means what it says.

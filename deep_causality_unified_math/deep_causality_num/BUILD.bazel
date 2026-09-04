@@ -109,6 +109,24 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "float_bfloat16",
+    srcs = glob([
+        "tests/float_bfloat16/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_num",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "float_double",
     srcs = glob([
         "tests/float_double/*_tests.rs",

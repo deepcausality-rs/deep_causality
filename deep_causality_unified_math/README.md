@@ -12,8 +12,9 @@ Unified math grew from a small idea. Tensors and multivectors needed to compose,
 
 Every crate depends only on crates below it. The graph is drawn as its transitive reduction, so
 `tensor -> num` is omitted where `tensor -> linear -> haft -> algebra -> num` already implies it.
-Two edges leave the folder: `tensor` and `uncertain` both build on `deep_causality_ast`, which
-lives in `deep_causality_utils/` because `deep_causality` is its third consumer.
+Two dependencies leave the folder, over four edges: `deep_causality_ast`, which `tensor` and
+`uncertain` build on, and `deep_causality_par`, which `fft` and `topology` build on. Both live in
+`deep_causality_utils/`; `ast` is there because `deep_causality` is its third consumer.
 
 
 ```
@@ -36,25 +37,29 @@ tensors, to topology at tier 6. The longest chain is highlighted.](graph.png)
 | Crate | Tier | What it holds                                                                                                                             |
 |---|---|-------------------------------------------------------------------------------------------------------------------------------------------|
 | `deep_causality_num` | 0 | Numeric traits: casts, identity, float and integer predicates, and the lifts that make precision a parameter. The bottom of the workspace |
-| `deep_causality_metric` | 0 | Metric signatures `Cl(p, q, r)` and Lorentzian sign conventions, east coast and west coast                                                |
-| `deep_causality_algebra` | 1 | Groups, rings, fields, algebras, and isomorphism markers                                                                                  |
-| `deep_causality_haft` | 2 | Applied category theory: HKT, functor, applicative, monad, foldable, arrow, and a type-encoded effect system                              |
-| `deep_causality_num_complex` | 2 | Complex, quaternion and octonion number types                                                                                             |
-| `deep_causality_num_dual` | 2 | Dual numbers, forward-mode automatic differentiation                                                                                      |
-| `deep_causality_num_rational` | 2 | Exact rationals over the integers                                                                                                         |
-| `deep_causality_rand` | 2 | Random number generators and statistical distributions                                                                                    |
-| `deep_causality_calculus` | 3 | Arrow-native differentiation and integration operators                                                                                    |
-| `deep_causality_fft` | 3 | Fast Fourier transform: FFT, rFFT, N-dimensional                                                                                          |
-| `deep_causality_linear` | 3 | Sparse CSR, dense and bit-packed 𝔽₂ matrices and vectors; eliminations, decompositions, conjugate gradient, etc.                          |
-| `deep_causality_uncertain` | 3 | A first-order type for uncertain programming                                                                                              |
-| `deep_causality_homology` | 4 | Chain complexes, boundary operators and homology over a chosen coefficient field. No geometry                                             |
-| `deep_causality_tensor` | 4 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack                                                                 |
-| `deep_causality_multivector` | 5 | Multivectors for geometric algebra.                                                                                                       |
-| `deep_causality_topology` | 6 | Cell complexes, manifolds, discrete exterior calculus, gauge fields, differential geometry                                                |
+| `deep_causality_metric` | 0 | Metric signatures `Cl(p, q, r)` and Lorentzian sign conventions, east coast and west coast |
+| `deep_causality_algebra` | 1 | Groups, rings, fields, algebras, and isomorphism markers |
+| `deep_causality_haft` | 2 | Applied category theory: HKT, functor, applicative, monad, foldable, arrow, and a type-encoded effect system |
+| `deep_causality_num_rational` | 2 | Exact rationals over the integers |
+| `deep_causality_rand` | 2 | Random number generators and statistical distributions |
+| `deep_causality_linear` | 3 | Sparse CSR, dense and bit-packed 𝔽₂ matrices and vectors; eliminations, decompositions, conjugate gradient, etc. |
+| `deep_causality_num_complex` | 3 | Complex, quaternion and octonion number types |
+| `deep_causality_num_dual` | 3 | Dual numbers, forward-mode automatic differentiation |
+| `deep_causality_uncertain` | 3 | A first-order type for uncertain programming |
+| `deep_causality_calculus` | 4 | Arrow-native differentiation and integration operators |
+| `deep_causality_fft` | 4 | Fast Fourier transform: FFT, rFFT, N-dimensional |
+| `deep_causality_homology` | 4 | Chain complexes, boundary operators and homology over a chosen coefficient field. No geometry |
+| `deep_causality_tensor` | 4 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
+| `deep_causality_multivector` | 5 | Multivectors for geometric algebra. |
+| `deep_causality_topology` | 6 | Cell complexes, manifolds, discrete exterior calculus, gauge fields, differential geometry |
 
-Nothing here has a **required** external Only four crates have optional external depenedencies: `num` for
-`libm`, `rand` for `getrandom`, and `fft` and `topology` for `rayon`. All four sit behind features gates
-that are disabled by default.
+`num_complex` and `num_dual` sit a tier above `num_rational` because they ship higher-kinded
+witnesses over their number types and so depend on `haft`, which `num_rational` does not. That lifts
+`calculus` and `fft` with them.
+
+Nothing here has a **required** external dependency. Four crates have an optional one: `num` for
+`libm`, `rand` for `getrandom`, and `fft` and `topology` for `rayon`. All four sit behind feature
+gates that are disabled by default.
 
 ## How they compose
 

@@ -290,7 +290,7 @@ where
         // Polynomial-time Clique-Picking MEC sizing + uniform sampling
         // (`dag_sampling`). The MEC size is exact; the sampled member's likelihood
         // is Markov-equivalence-invariant, so the ranking is preserved.
-        sizes.push(mec_size::<T, ()>(&aug));
+        sizes.push(mec_size::<T, ()>(&aug)?);
         dags.push(sample_dag::<T, (), _>(&aug, &mut rng)?);
     }
     let total = sizes.iter().fold(T::zero(), |a, &s| a + s);
@@ -356,7 +356,7 @@ where
     N: Clone,
 {
     let aug = augmented_graph(config, combo)?;
-    let size = mec_size::<T, ()>(&aug);
+    let size = mec_size::<T, ()>(&aug)?;
     let rep = representative_dag::<()>(&aug)?;
     let mut log_lik = T::zero();
     for node in 0..rep.num_vertices() {

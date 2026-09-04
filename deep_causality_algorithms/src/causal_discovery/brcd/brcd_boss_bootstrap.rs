@@ -288,7 +288,7 @@ fn transpose_int(columns: &[Vec<usize>], idxs: &[usize], n: usize) -> Vec<Vec<us
 
 /// Rounds each column to non-negative integer states and infers its cardinality
 /// `K = max_state + 1` (mirrors the driver's discrete binning).
-fn build_discrete<T: RealField + ToPrimitive>(
+fn build_discrete<T: RealField>(
     columns: &[Vec<T>],
 ) -> Result<(Vec<Vec<usize>>, Vec<usize>), BrcdError> {
     let mut ints = Vec::with_capacity(columns.len());

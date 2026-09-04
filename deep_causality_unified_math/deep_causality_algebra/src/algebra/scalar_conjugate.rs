@@ -10,7 +10,7 @@ use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 /// numerical linear algebra cares about: real fields, dual numbers (forward-mode AD), and complex.
 ///
 /// `deep_causality_num` splits its scalar tower along orderability: [`Real`](crate::Real) /
-/// [`Scalar`] cover ordered analytic scalars (`f32`/`f64`/`Float106`, and `Dual` for AD), while
+/// [`Scalar`] cover ordered analytic scalars (`f32`/`f64`/`BFloat16`/`Float106`, and `Dual` for AD), while
 /// complex numbers are unordered and live under [`Normed`](crate::Normed) / [`ComplexField`](crate::ComplexField). Those
 /// worlds are incomparable, so no single stock bound covers them. `ConjugateScalar` is the bridge: it
 /// names exactly the capabilities a Hermitian SVD / QR / inner-product / norm kernel needs —
@@ -79,7 +79,7 @@ pub trait ConjugateScalar:
 }
 
 /// Real fields: conjugation is the identity, the modulus is `x²`, the real type is `Self`. The
-/// `RealField` blanket covers `f32`/`f64`/`Float106` in one impl.
+/// `RealField` blanket covers `f32`/`f64`/`BFloat16`/`Float106` in one impl.
 impl<T: RealField + FromPrimitive> ConjugateScalar for T {
     type Real = T;
     #[inline]

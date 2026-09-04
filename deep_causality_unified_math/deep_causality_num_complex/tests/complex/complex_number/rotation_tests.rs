@@ -4,14 +4,13 @@
  */
 
 use deep_causality_algebra::{RealField, Rotation};
-use deep_causality_num::ToPrimitive;
 use deep_causality_num_complex::Complex;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 // Helper for approximate floating point comparison
 const EPSILON: f64 = 1e-9;
 
-fn assert_complex_approx_eq<T: RealField + ToPrimitive>(a: Complex<T>, b: Complex<T>) {
+fn assert_complex_approx_eq<T: RealField>(a: Complex<T>, b: Complex<T>) {
     let a_re = a.re.to_f64().unwrap();
     let a_im = a.im.to_f64().unwrap();
     let b_re = b.re.to_f64().unwrap();

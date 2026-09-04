@@ -21,7 +21,7 @@ use core::ops::{AddAssign, MulAssign, Neg, SubAssign};
 ///
 /// [`RealField`](crate::RealField) is exactly a `Real` that is also a `Field`
 /// (`RealField: Real + Field`), so every `RealField` value is a `Real` value, and
-/// the concrete real scalars `f32`, `f64`, and `Float106` all implement `Real`.
+/// the concrete real scalars `f32`, `f64`, `BFloat16`, and `Float106` all implement `Real`.
 ///
 /// Bound generic numeric code on `Real` (rather than `RealField`) when it needs only
 /// the analytic operations; such code then also accepts non-field analytic types
@@ -95,6 +95,20 @@ pub trait Real:
     /// assert_eq!(4.0f64.sqrt(), 2.0);
     /// ```
     fn sqrt(self) -> Self;
+
+    /// Computes the real cube root of a number.
+    ///
+    /// Defined for negative arguments, where the cube root is real and negative.
+    /// That is what separates it from `powf(1/3)`, which returns `NaN` for a
+    /// negative base because a non-integer power of a negative number is not real.
+    /// # Example
+    /// ```
+    /// use deep_causality_algebra::Real;
+    /// assert_eq!(27.0f64.cbrt(), 3.0);
+    /// assert_eq!((-27.0f64).cbrt(), -3.0);
+    /// assert!((-27.0f64).powf(1.0 / 3.0).is_nan());
+    /// ```
+    fn cbrt(self) -> Self;
 
     /// Computes the absolute value of a number.
     /// # Example
@@ -321,6 +335,10 @@ where
     #[inline]
     fn sqrt(self) -> Self {
         Float::sqrt(self)
+    }
+    #[inline]
+    fn cbrt(self) -> Self {
+        Float::cbrt(self)
     }
     #[inline]
     fn abs(self) -> Self {

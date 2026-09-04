@@ -57,7 +57,7 @@ fn undirected_graph(n: usize, edges: &[(usize, usize)]) -> MixedGraph<()> {
 fn exercise(n: usize, edges: &[(usize, usize)], seed: u64) -> i128 {
     let g = undirected_graph(n, edges);
     let oracle = oracle_mec_size(&g).expect("oracle size");
-    let cp: f64 = cp_mec_size(&g);
+    let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
     assert_eq!(
         cp.round() as i128,
         oracle as i128,
@@ -293,7 +293,7 @@ fn equal_to_vec_distinct_same_length_battery() {
         let edges = random_connected_chordal(&mut rng, n);
         let g = undirected_graph(n, &edges);
         let oracle = oracle_mec_size(&g).expect("oracle");
-        let cp: f64 = cp_mec_size(&g);
+        let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
         assert_eq!(cp.round() as i128, oracle as i128, "trial {trial}");
     }
 }
@@ -355,7 +355,7 @@ fn rejection_sampling_permutation_stress() {
 
         // Cross-check the counter against the exact oracle on this random graph.
         let oracle = oracle_mec_size(&g).expect("oracle size");
-        let cp: f64 = cp_mec_size(&g);
+        let cp: f64 = cp_mec_size(&g).expect("a valid CPDAG");
         assert_eq!(
             cp.round() as i128,
             oracle as i128,

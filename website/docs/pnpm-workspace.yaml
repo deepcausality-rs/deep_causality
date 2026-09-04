@@ -5,6 +5,7 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@rolldown/binding-darwin-x64@1.2.5'
   - '@rolldown/binding-linux-arm64-gnu@1.2.5'
+  - astro@7.3.1
 # pnpm settings live here, not in package.json.
 #
 # pnpm 11 no longer reads the `pnpm` field from package.json (it warns
@@ -28,4 +29,4 @@ onlyBuiltDependencies:
 # NOTE: overrides must live here. pnpm 11 no longer reads the `pnpm` field from
 # package.json, so an override placed there is silently ignored.
 overrides:
-  '@astrojs/markdown-satteri': 0.3.6
+  '@astrojs/markdown-satteri': 0.4.0

@@ -71,7 +71,7 @@ impl<T: RealField + FromPrimitive> FromPrimitive for Complex<T> {
 }
 
 // ToPrimitive
-impl<T: RealField + ToPrimitive> ToPrimitive for Complex<T> {
+impl<T: RealField> ToPrimitive for Complex<T> {
     fn to_isize(&self) -> Option<isize> {
         self.re.to_isize()
     }

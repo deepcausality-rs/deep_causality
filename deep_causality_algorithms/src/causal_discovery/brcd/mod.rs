@@ -10,7 +10,7 @@
 //!
 //! * **Structural operations** over the typed-endpoint
 //!   [`deep_causality_topology::MixedGraph`], carrying no floating-point scalars
-//!   — Meek orientation (PDAG → CPDAG completion, [`brcd_meek`]), the
+//!   — Meek orientation (PDAG → CPDAG completion, `MixedGraph::meek_complete`), the
 //!   unshielded-collider validity check ([`brcd_validity`]), and Markov-
 //!   equivalence-class sizing + uniform DAG sampling ([`brcd_mec`]).
 //! * **Numeric estimator primitives**, generic over `T: RealField` — the
@@ -75,7 +75,6 @@ pub mod brcd_gate;
 pub mod brcd_gaussian;
 pub mod brcd_mapconfig;
 pub mod brcd_mec;
-pub mod brcd_meek;
 pub mod brcd_result;
 pub mod brcd_validity;
 

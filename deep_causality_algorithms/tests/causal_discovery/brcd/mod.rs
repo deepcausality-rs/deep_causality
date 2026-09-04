@@ -42,8 +42,6 @@ mod mapconfig_tests;
 #[cfg(not(miri))]
 mod mec_tests;
 #[cfg(test)]
-mod meek_tests;
-#[cfg(test)]
 #[cfg(not(miri))]
 mod update_tests;
 #[cfg(test)]

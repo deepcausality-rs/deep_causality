@@ -17,10 +17,12 @@ use std::collections::BTreeMap;
 
 mod acyclicity;
 mod api;
+mod chordality;
 mod clone;
 mod constructors;
 mod display;
 mod getters;
+mod meek;
 mod mixed_graph_ops;
 mod queries;
 mod topology;

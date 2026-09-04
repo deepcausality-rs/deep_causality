@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Float106;
+use crate::{BFloat16, Float106};
 
 /// Marker trait: promises that zero **annihilates** under multiplication, so that
 /// `0 * a == a * 0 == 0` for every `a`.
@@ -27,7 +27,7 @@ use crate::Float106;
 ///
 /// # Scope: the finite floats
 ///
-/// The intended model of `f32`, `f64` and `Float106` is ℝ. `NaN` and the infinities are artifacts
+/// The intended model of `f32`, `f64`, `BFloat16` and `Float106` is ℝ. `NaN` and the infinities are artifacts
 /// of the machine representation rather than real numbers, and every law in this tower is asserted
 /// over the finite values. Annihilation is the plainest case: `0.0 * f64::NAN` is `NaN`, and so is
 /// `0.0 * f64::INFINITY`, neither of which is zero.
@@ -60,6 +60,7 @@ pub trait Annihilating {}
 impl Annihilating for f32 {}
 impl Annihilating for f64 {}
 impl Annihilating for Float106 {}
+impl Annihilating for BFloat16 {}
 
 // The integers. Here the law is derivable, but the marker is still stated so that `ℤ` and `ℕ`
 // present the same surface and generic semiring code accepts both.

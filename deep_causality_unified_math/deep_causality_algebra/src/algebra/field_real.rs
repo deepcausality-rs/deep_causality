@@ -6,14 +6,14 @@ use crate::AddGroup;
 use crate::algebra::operator::{Additive, Multiplicative};
 use crate::{
     AbelianGroup, Annihilating, Associative, Commutative, Distributive, Field, Float, Invertible,
-    Real,
+    Real, ToPrimitive,
 };
 
 /// An ordered `Field` that is also an analytic real scalar.
 ///
-/// `RealField` is exactly a [`Real`] that is also a [`Field`]: it adds field
-/// invertibility (a total multiplicative inverse / division) on top of the analytic
-/// surface (ordering, `sqrt`/`exp`/`ln`/`sin`/…, constants) provided by [`Real`].
+/// `RealField` is a [`Real`] that is also a [`Field`], and converts back to a primitive: it adds
+/// field invertibility (a total multiplicative inverse / division) and `ToPrimitive` on top of the
+/// analytic surface (ordering, `sqrt`/`exp`/`ln`/`sin`/…, constants) provided by [`Real`].
 ///
 /// All analytic operations are declared on [`Real`] and inherited here via the
 /// supertrait, so every existing `T: RealField` bound resolves the same method set
@@ -22,7 +22,13 @@ use crate::{
 /// claiming `Field`/`RealField`.
 ///
 /// This trait abstracts over concrete floating-point types like `f32` and `f64`.
-pub trait RealField: Real + Field {}
+///
+/// `ToPrimitive` makes the crossing back to a primitive part of the bound, matching the
+/// `FromPrimitive` that [`Scalar`](crate::Scalar) already supplies in the other direction.
+/// Code bounded on `RealField` converts a scalar to `f64` or to an integer without restating
+/// the bound. The obligation costs nothing: the blanket implementation below requires `Float`,
+/// and `Float: NumCast: ToPrimitive`, so every implementor already satisfies it.
+pub trait RealField: Real + Field + ToPrimitive {}
 
 // A number is an Abelian group under addition exactly when it has additive inverses, and
 // `Neg` is the witness for those. That bound is load-bearing rather than incidental: the

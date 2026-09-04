@@ -34,6 +34,25 @@ rust_doc_test(
 
 # Example binaries (Cargo `[[example]]` targets).
 
+# Drives the production Meek closures (`MixedGraph::meek_complete` / `meek_complete_r1_r3`) and
+# BRCD's own configuration enumeration against an independent oracle — the maximally oriented PDAG,
+# computed by enumerating consistent DAG extensions. It carries its own graph type for the oracle
+# only; it states no orientation rule of its own.
+rust_binary(
+    name = "verification_meek_r4",
+    srcs = [
+        "verification/brcd/verification_meek_r4.rs",
+    ],
+    crate_root = "verification/brcd/verification_meek_r4.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":deep_causality_algorithms",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
 rust_binary(
     name = "verification_base",
     srcs = [
