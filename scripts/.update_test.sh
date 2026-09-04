@@ -6,7 +6,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-command cargo update
+: # cargo update stubbed for test
 
 # ---------------------------------------------------------------------------------------------
 # Websites

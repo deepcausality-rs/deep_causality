@@ -35,7 +35,7 @@ import sys
 
 
 def read_manifests(root):
-    """Return {crate: {"deps": set, "opt": set, "path": str}} for every workspace member.
+    """Return {crate: {"deps": set, "path": str}} for every workspace member.
 
     ``cargo metadata`` is the resolver rather than a regex over the manifests. It reports the
     *real* package name of a renamed dependency (``foo = { package = "bar" }``), and it reports
@@ -68,8 +68,7 @@ def read_manifests(root):
         runtime = [d for d in pkg["dependencies"] if d["kind"] is None]
         crates[pkg["name"]] = {
             "deps": {d["name"] for d in runtime},
-            "opt": {d["name"] for d in runtime if d["optional"]},
-            "path": os.path.relpath(pkg["manifest_path"], root),
+            "path": os.path.relpath(pkg["manifest_path"], root).replace(os.sep, "/"),
         }
     return crates
 
