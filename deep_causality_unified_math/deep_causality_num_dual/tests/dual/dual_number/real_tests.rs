@@ -322,3 +322,182 @@ fn test_cbrt_second_derivative_through_nested_duals() {
         y.derivative().derivative()
     );
 }
+
+// --- The derivative seed ---------------------------------------------------------------------
+//
+// Every test above uses `Dual::variable`, whose ε component is 1. At a seed of 1 a factor and a
+// divisor of `du` are the same operation, so `f'(a) * self.du` and `f'(a) / self.du` agree on
+// every one of them and neither is pinned. A seed other than 1 separates them, and is the case a
+// caller differentiating along a direction actually supplies.
+
+/// `f(a + kε) = f(a) + k·f'(a)·ε`, so the ε component scales linearly with the seed.
+#[test]
+fn test_derivative_scales_with_the_seed() {
+    const SEED: f64 = 2.5;
+    let a = 0.4_f64;
+    let cases: [(&str, Dual<f64>, f64); 9] = [
+        ("sin", Dual::new(a, SEED).sin(), a.cos()),
+        ("cos", Dual::new(a, SEED).cos(), -a.sin()),
+        ("tan", Dual::new(a, SEED).tan(), 1.0 / (a.cos() * a.cos())),
+        ("sinh", Dual::new(a, SEED).sinh(), a.cosh()),
+        ("cosh", Dual::new(a, SEED).cosh(), a.sinh()),
+        ("tanh", Dual::new(a, SEED).tanh(), 1.0 - a.tanh() * a.tanh()),
+        ("exp", Dual::new(a, SEED).exp(), a.exp()),
+        ("ln", Dual::new(a, SEED).ln(), 1.0 / a),
+        (
+            "cbrt",
+            Dual::new(a, SEED).cbrt(),
+            1.0 / (3.0 * a.cbrt() * a.cbrt()),
+        ),
+    ];
+    for (name, got, slope) in cases {
+        assert!(
+            (got.derivative() - SEED * slope).abs() < TOL,
+            "{name}: derivative {}, expected {} * {slope}",
+            got.derivative(),
+            SEED
+        );
+    }
+}
+
+/// A seed of zero makes the ε channel vanish whatever the slope is, which distinguishes a
+/// multiplication by `du` from a division by it in the other direction.
+#[test]
+fn test_a_zero_seed_yields_a_zero_derivative() {
+    let a = 0.4_f64;
+    for got in [
+        Dual::new(a, 0.0).sin(),
+        Dual::new(a, 0.0).cos(),
+        Dual::new(a, 0.0).sinh(),
+        Dual::new(a, 0.0).cosh(),
+        Dual::new(a, 0.0).tanh(),
+        Dual::new(a, 0.0).exp(),
+    ] {
+        assert_eq!(got.derivative(), 0.0);
+    }
+}
+
+/// `atan2` mixes both arguments' seeds, so its quotient rule needs each of the four terms
+/// exercised with a seed the others do not share.
+#[test]
+fn test_atan2_quotient_rule_with_distinct_seeds() {
+    // d/dt atan2(y, x) = (x·y' − y·x') / (x² + y²)
+    let (y, x) = (3.0_f64, 4.0_f64);
+    let (dy, dx) = (2.0_f64, 5.0_f64);
+    let got = Dual::new(y, dy).atan2(Dual::new(x, dx));
+    let want = (x * dy - y * dx) / (x * x + y * y);
+    assert!((got.value() - y.atan2(x)).abs() < TOL);
+    assert!(
+        (got.derivative() - want).abs() < TOL,
+        "derivative {} expected {want}",
+        got.derivative()
+    );
+    // The numerator is a difference: swapping the two products changes the sign of the result.
+    let swapped = (y * dx - x * dy) / (x * x + y * y);
+    assert!(
+        (want - swapped).abs() > TOL,
+        "the two terms must not be interchangeable"
+    );
+}
+
+// --- Predicates and the non-smooth operations ------------------------------------------------
+
+#[test]
+fn test_is_nan_distinguishes_a_finite_dual() {
+    assert!(!Dual::new(1.0_f64, 2.0).is_nan());
+    assert!(!Dual::variable(0.0_f64).is_nan());
+    assert!(<Dual<f64> as Real>::nan().is_nan());
+    // The real part decides it; a NaN carried only in the ε channel is not a NaN value.
+    assert!(Dual::new(f64::NAN, 0.0_f64).is_nan());
+}
+
+#[test]
+fn test_is_infinite_and_is_finite_distinguish_a_finite_dual() {
+    assert!(!Dual::new(1.0_f64, 2.0).is_infinite());
+    assert!(Dual::new(1.0_f64, 2.0).is_finite());
+    assert!(Dual::new(f64::INFINITY, 0.0_f64).is_infinite());
+    assert!(!Dual::new(f64::INFINITY, 0.0_f64).is_finite());
+    assert!(!<Dual<f64> as Real>::nan().is_infinite());
+}
+
+#[test]
+fn test_clamp_at_its_two_boundaries() {
+    let lo = Dual::new(-1.0_f64, 10.0);
+    let hi = Dual::new(1.0_f64, 20.0);
+    // Strictly inside: a passthrough, derivative intact.
+    let inside = Dual::new(0.0_f64, 7.0).clamp(lo, hi);
+    assert_eq!(inside.value(), 0.0);
+    assert_eq!(inside.derivative(), 7.0);
+    // Exactly on a boundary is inside, not clamped: the value passes through with its own
+    // derivative rather than picking up the bound's.
+    let on_low = Dual::new(-1.0_f64, 7.0).clamp(lo, hi);
+    assert_eq!(on_low.value(), -1.0);
+    assert_eq!(
+        on_low.derivative(),
+        7.0,
+        "a value equal to the lower bound is not clamped"
+    );
+    let on_high = Dual::new(1.0_f64, 7.0).clamp(lo, hi);
+    assert_eq!(on_high.value(), 1.0);
+    assert_eq!(
+        on_high.derivative(),
+        7.0,
+        "a value equal to the upper bound is not clamped"
+    );
+    // Outside: the bound is returned, carrying the bound's derivative.
+    assert_eq!(Dual::new(-5.0_f64, 7.0).clamp(lo, hi).derivative(), 10.0);
+    assert_eq!(Dual::new(5.0_f64, 7.0).clamp(lo, hi).derivative(), 20.0);
+}
+
+#[test]
+fn test_abs_at_zero_takes_the_positive_branch() {
+    // |x| is not differentiable at zero. The implementation branches on `re < 0`, so at exactly
+    // zero the derivative passes through unchanged rather than being negated.
+    let at_zero = Dual::new(0.0_f64, 3.0).abs();
+    assert_eq!(at_zero.value(), 0.0);
+    assert_eq!(at_zero.derivative(), 3.0, "zero is not negative");
+    assert_eq!(Dual::new(2.0_f64, 3.0).abs().derivative(), 3.0);
+    assert_eq!(Dual::new(-2.0_f64, 3.0).abs().derivative(), -3.0);
+    assert_eq!(Dual::new(-2.0_f64, 3.0).abs().value(), 2.0);
+}
+
+#[test]
+fn test_the_step_functions_return_their_value_and_drop_the_derivative() {
+    // floor, ceil and round are piecewise constant, so the ε channel is zero, and the value is
+    // the step itself rather than a default.
+    for (x, fl, ce, ro) in [
+        (2.7_f64, 2.0, 3.0, 3.0),
+        (-2.7, -3.0, -2.0, -3.0),
+        (2.5, 2.0, 3.0, 3.0),
+        (-2.5, -3.0, -2.0, -3.0),
+        (2.0, 2.0, 2.0, 2.0),
+    ] {
+        let d = Dual::new(x, 5.0);
+        assert_eq!(d.floor().value(), fl, "floor({x})");
+        assert_eq!(d.ceil().value(), ce, "ceil({x})");
+        assert_eq!(d.round().value(), ro, "round({x})");
+        assert_eq!(d.floor().derivative(), 0.0);
+        assert_eq!(d.ceil().derivative(), 0.0);
+        assert_eq!(d.round().derivative(), 0.0);
+    }
+}
+
+#[test]
+fn test_log10_uses_base_ten() {
+    // The base is assembled arithmetically, so a wrong assembly would show up as a wrong slope:
+    // d/dx log₁₀ x = 1/(x·ln 10), which differs from the base-2 and natural cases at the same x.
+    let a = 7.0_f64;
+    let d = Dual::new(a, 1.0).log10();
+    assert!((d.value() - a.log10()).abs() < TOL);
+    assert!((d.derivative() - 1.0 / (a * 10.0_f64.ln())).abs() < TOL);
+    assert!(
+        (d.derivative() - 1.0 / (a * 2.0_f64.ln())).abs() > TOL,
+        "not base 2"
+    );
+    assert!(
+        (d.derivative() - 1.0 / a).abs() > TOL,
+        "not the natural log"
+    );
+    // log10 of an exact power of ten.
+    assert!((Dual::variable(1000.0_f64).log10().value() - 3.0).abs() < TOL);
+}

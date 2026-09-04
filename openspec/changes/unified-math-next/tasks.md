@@ -3,14 +3,15 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
-Four stages, one per group after the protocol. Every stage runs the same five phases in order —
+Five stages — C1 Meek, C3 the real bound, C2 statistics (split across two groups), C4 linear
+adoption, C6 solver convergence. Every stage runs the same five phases in order —
 **P1** an API with unimplemented bodies, **P2** the suite written against it and observed failing,
 **P3** the suite audited against deliberate defects, **P4** implementation, **P5** mutation testing —
 and no phase starts before the previous one's exit condition is met. A phase-4 task is blocked until
 its group's phase-3 task is checked.
 
-Group 1 is done once and binds the rest. Groups 2 and 3 are independent of each other; groups 4, 5
-and 6 want group 3 first. No group is done until `bazel test //...` is green for it.
+Group 1 is done once and binds the rest. Groups 2 and 3 are independent of each other; groups 4, 5,
+6 and 7 want group 3 first. No group is done until `bazel test //...` is green for it.
 
 The verdict-carrier stage was cut on 2026-09-04: it had no consumer once the engine work was
 deferred, and its stated justification did not survive checking. See
@@ -64,11 +65,12 @@ The errors were in the README's crate table and in `AGENTS.md`.
 - [x] 3.6 **P4** Implement `cbrt` in the blanket by forwarding to `Float::cbrt`, and in `Dual` by the chain rule with no guard at the singularity
 - [x] 3.7 **P4** Retire `signed_cbrt` in the coherent-structures kernel, replacing the sign branch over `powf` with a direct call
 - [x] 3.8 **P4** Retire the integer-floor stepping loop in the DEC surface-force sampler — unbounded, bidirectional, and carrying three silent `unwrap_or_else` substitutions — converting through `ToPrimitive` instead
+- [x] 3.8a **P4** Retire the *second* copy of the floor scan: the sampler carries it twice, in `sample_velocity` and `sample_scalar`, so six silent substitutions rather than the three recorded. Removing the seed also retires the `Vec<LatticeCell<D>>` each function collected only to find it; the bounds guard in the second is preserved through `num_cells(D)`
 - [x] 3.9 **P4** Remove the seven redundant `RealField + ToPrimitive` bound restatements
 - [x] 3.10 **P4** Enumerate the implementors of `Real` and of `RealField`, and record which the additions oblige to change — the compatibility blast radius, not the dependent count
-- [x] 3.8a **P4** Retire the *second* copy of the floor scan: the sampler carries it twice, in `sample_velocity` and `sample_scalar`, so six silent substitutions rather than the three recorded. Removing the seed also retires the `Vec<LatticeCell<D>>` each function collected only to find it; the bounds guard in the second is preserved through `num_cells(D)`
-- [ ] 3.11 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
-- [ ] 3.12 Verify: `bazel test //...` is green, every retired site's existing tests pass unchanged, and no workaround from the retirement list remains
+- [x] 3.11 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor — `num_dual/dual/dual_number/real.rs`: 137 mutants, **16 missed** on the first run and none of them in `cbrt`, so the new tests already pinned the added code. The 16 were a pre-existing gap with one root cause: all 47 tests used `Dual::variable`, whose ε seed is 1, and at a seed of 1 `f'(a) * self.du` and `f'(a) / self.du` are the same operation. Seeded-derivative tests plus predicate and boundary cases took it to **1 missed**
+- [x] 3.11a **P5** Resolve the last survivor by construction rather than exclusion: `Dual::log10` built ten from `two + two + T::one()`, where swapping the first operator gives `two * two + T::one()`, also five — a decision no test can pin. An `exclude_re` entry for it matched three mutants, two of them killable, which is the over-exclusion `.cargo/mutants.toml`'s own header warns about, so the entry was backed out and the constant rebuilt as `three * three + T::one()`, where every operator changes the value if it changes. Not re-measured after the restructure
+- [x] 3.12 Verify: `bazel test //...` is green, every retired site's existing tests pass unchanged, and no workaround from the retirement list remains — 1274 Bazel tests pass, clippy clean, 1748 physics and 937 CFD tests unchanged, and the retirement list greps empty outside the stale agent worktrees
 
 ## 3b. Physics sampling precision
 
@@ -87,6 +89,29 @@ can do. Acting on it changes the random stream, and therefore every seeded expec
       for a stated reason rather than a stale one
 - [ ] 3b.4 If it holds: route both sites through `RealRng`, and record the stream change and every
       seeded test whose expectations move with it
+
+## 3c. Test oracles in `deep_causality_num`
+
+Directed mid-stage, and not part of the original plan. Group 3 found that `Float106::cbrt` computed
+`1/3` in `f64` and widened it, capping the whole Newton iteration at `f64` accuracy on a 106-bit
+type. The existing suite could not have caught that: it asserted on `result.hi()` alone against a
+`1e-14` tolerance. The scan below asked how much else was shaped that way.
+
+Notes: `openspec/changes/unified-math-next/notes/num-test-oracles.md`.
+
+- [x] 3c.1 Scan the 74 test files (13,406 lines) for circular and tautological assertions and classify what is found: **173** high-word-only assertions across the `float_double` suites, which cannot express a wrong low word, and **7** forwarder-versus-source assertions in `integer_all_types_tests.rs` comparing `Integer::count_ones(x)` with `x.count_ones()`, each on a single input
+- [x] 3c.2 Build the oracles: mpmath reference values at 60 decimal places, split into the exact `(hi, lo)` `f64` pair the type stores; the published decimal expansions of π, e, ln 2 and ln 10 checked in **both** words; algebraic invariants; exactness where the result is representable; hand-derived bit counts
+- [x] 3c.3 Record the oracle trap, found by hitting it: an argument must reach mpmath as the `f64` the test constructs, not as a decimal literal. Comparing `Float106::from(0.05)` against decimal `0.05` measures the `2.8e-18` conversion gap and reads as a uniform `5e-17` error in `atan`, `asin` and `acos` that is not there. Three defects were nearly reported on that basis
+- [x] 3c.4 Set the tolerance from measurement rather than convention: `TOL = 1e-29`, against a measured worst case near `5e-31`. The previous `1e-14` admits an answer with no correct low word at all
+- [x] 3c.5 Rewrite `double_transcendental_tests.rs` against the reference tables, the two-word constant checks and the invariants
+- [x] 3c.6 Replace the high-word-only assertions in `double_float_tests.rs`, `double_arithmetic_tests.rs`, `double_from_tests.rs` and `double_num_traits_tests.rs`: exact both-word assertions where the result is representable, relative checks otherwise
+- [x] 3c.7 Replace the 7 tautologies with hand-derived expectations over varied inputs and corner cases — every bit position, zero, all-ones, `MIN`, `MAX` — and state the endianness expectations against the target rather than against the function under test
+- [x] 3c.8 Fix the defects the new tests expose, all of which were passing before: `cbrt`'s `f64`-widened third; `atan` applying its argument reduction once, so a large argument leaves the series near 1 where 80 terms do not converge (`atan(100)` wrong by `8.1e-4`); `asin`/`acos` inheriting that through a ratio that grows near `|x| = 1` (`4.2e-5`); `ln(+∞)` returning `NaN` from `inf + inf/inf − 1`; and `tanh` overflowing to `NaN` above `x ≈ 355` while rounding asymmetrically in the last bits
+- [x] 3c.9 Remove `atan`'s shortcut returning exactly π/4 for any argument within `1e-15` of 1 — a correct reduction makes it unnecessary, and it returned a value that was not the arctangent of its input
+- [x] 3c.10 Withdraw the two apparent defects that did not survive checking: the `acos(cos y)` and `atan(tan y)` round trips outside the principal branch, and `cosh² − sinh² = 1` at large `x`, are properties of the identities rather than of the implementations
+- [x] 3c.11 Verify by negative control: revert each fix in turn and confirm the new suite rejects it — 2, 10, 1, 1, 3, 1 and 2 tests respectively. The previous suite caught one of the seven
+- [x] 3c.12 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean. Clippy's `approx_constant` on the literal high words is resolved by naming the constants — `exp(1) = e`, `asin(1/2) = π/6`, `sqrt(2) = √2` — which states the identity, rather than by an `allow`
+- [ ] 3c.13 **P5** Run `scripts/mutants.sh` over `float_106_impl.rs` and resolve every survivor. Not run: `deep_causality_num` is the workspace's most-depended-on crate and each mutant costs a full build and test run for it
 
 ## 4. C2 — `deep_causality_stats`
 
@@ -130,13 +155,13 @@ can do. Acting on it changes the random stream, and therefore every seeded expec
 - [ ] 6.6 Build the classified inventory of every hand-rolled linear-algebra site across the nine consumer crates and `examples/`, each marked replace, replace-with-care or keep, with its reason
 - [ ] 6.7 **P1–P4** Replace the *replace* class through the five phases: the open-coded complex modulus and multiplication across ten files, the five copies of the entrywise max-modulus residual collapsed to one, and the cofactor inverses where a general path is no slower. Quantum's Frobenius norm is **not** in this class — delegating it buys nothing, since `modulus_squared` is the same direct form
 - [ ] 6.8 **P1–P4** Add the finiteness guard in `markov_pairs`, the one place an overflowing Frobenius norm changes a decision: it feeds `CommutatorTolerance::threshold` unguarded, so entries above about `1.34e154` send the threshold to infinity
-- [ ] 6.8 **P4** Handle the *replace-with-care* class one at a time: benchmark the 17-state filter kit before and after and revert on regression; change the ideal-MHD CSR matvec from a silent column skip to a typed error and pin the new behaviour with a test
-- [ ] 6.9 **P4** Record a reason at each *keep* site — the closed-form symmetric 3×3 eigensolver and the written-out 3×3 products — so the next reader does not re-litigate it
-- [ ] 6.10 **P1–P4** Collapse the three open-coded reachability pre-passes in `deep_causality` onto one, preserving each site's behaviour including the not-frozen error and the out-of-range start
-- [ ] 6.11 **P4** Add the missing dependency edges the replacements need, in manifests and Bazel targets
-- [ ] 6.12 **P4** Record as breaking, with implementors and matchers enumerated, any variant added to `LinearErrorEnum` or any method added to `ultragraph`'s pathfinding trait; update both implementors in the same change
-- [ ] 6.13 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
-- [ ] 6.14 Verify: `bazel test //...` is green, every classified site is resolved, and each behaviour change is recorded with its old and new behaviour
+- [ ] 6.9 **P4** Handle the *replace-with-care* class one at a time: benchmark the 17-state filter kit before and after and revert on regression; change the ideal-MHD CSR matvec from a silent column skip to a typed error and pin the new behaviour with a test
+- [ ] 6.10 **P4** Record a reason at each *keep* site — the closed-form symmetric 3×3 eigensolver and the written-out 3×3 products — so the next reader does not re-litigate it
+- [ ] 6.11 **P1–P4** Collapse the three open-coded reachability pre-passes in `deep_causality` onto one, preserving each site's behaviour including the not-frozen error and the out-of-range start
+- [ ] 6.12 **P4** Add the missing dependency edges the replacements need, in manifests and Bazel targets
+- [ ] 6.13 **P4** Record as breaking, with implementors and matchers enumerated, any variant added to `LinearErrorEnum` or any method added to `ultragraph`'s pathfinding trait; update both implementors in the same change
+- [ ] 6.14 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
+- [ ] 6.15 Verify: `bazel test //...` is green, every classified site is resolved, and each behaviour change is recorded with its old and new behaviour
 
 ## 7. C6 — solver convergence reporting
 

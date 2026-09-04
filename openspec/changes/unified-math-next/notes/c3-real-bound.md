@@ -90,3 +90,26 @@ code carried no bound; the behaviour did.
 `cargo check --workspace --all-targets`: 0 errors, 0 warnings.
 `cargo clippy --workspace --all-targets`: 0 errors, 0 warnings.
 `bazel test //...`: 1274 tests pass.
+
+## Phase 5 — mutation (task 3.11)
+
+`num_dual/dual/dual_number/real.rs`, 137 mutants: **16 missed**, then **1**.
+
+None of the 16 were in `cbrt`. The added code was already pinned by the phase-2 suite; the
+survivors were a pre-existing gap in the rest of the `Real` implementation, with a single cause.
+All 47 tests in the file used `Dual::variable`, whose ε seed is 1, and at a seed of 1
+`f'(a) * self.du` and `f'(a) / self.du` are the same operation — so the seed-multiplication in
+`sin`, `cos`, `sinh`, `cosh`, `tanh` and `atan2` was never exercised. Tests at a seed of 2.5 and
+of 0, plus boundary cases for `clamp`, `abs` at zero, the step functions and the predicates,
+killed 15 of the 16.
+
+The last survivor was equivalent: `Dual::log10` built ten from `two + two + T::one()`, and
+swapping the first operator gives `two * two + T::one()`, which is also five. An `exclude_re`
+entry for it matched three mutants rather than one — the other two being killable — which is the
+over-exclusion `.cargo/mutants.toml`'s header warns about and checks for with `comm`. The entry
+was backed out and the constant rebuilt as `three * three + T::one()`, where no operator swap
+reproduces the value. Removed by construction rather than excluded; not re-measured afterwards.
+
+`float_106_impl.rs` was not mutation-tested. `deep_causality_num` is the most-depended-on crate in
+the workspace and every mutant costs a full build and test run for it; the file's accuracy defects
+are instead pinned by the reverted-fix controls in `num-test-oracles.md`.

@@ -118,9 +118,13 @@ impl<T: Real + Div<Output = T>> Real for Dual<T> {
     #[inline]
     fn log10(self) -> Self {
         // d/dx log₁₀ x = 1 / (x · ln 10)
+        //
+        // Ten is built as 3² + 1 rather than 2 + 2 + 1 doubled: in the latter, swapping the
+        // first operator gives 2 * 2 + 1, which is also five, so that spelling contains a
+        // decision no test can pin. Every operator here changes the constant if it changes.
         let two = T::one() + T::one();
-        let five = two + two + T::one();
-        let ten = two * five;
+        let three = two + T::one();
+        let ten = three * three + T::one();
         Self::new(self.re.log10(), self.du / (self.re * ten.ln()))
     }
 
