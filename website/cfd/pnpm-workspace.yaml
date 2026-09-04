@@ -12,11 +12,12 @@ minimumReleaseAgeExclude:
   - '@shikijs/primitive@4.4.3'
   - '@shikijs/themes@4.4.3'
   - '@shikijs/types@4.4.3'
-  - miniflare@5.20260804.0-alpha
+  - miniflare@5.20260804.0-alpha || 5.20260903.0-alpha
   - shiki@4.4.3
-  - wrangler@4.120.1
+  - wrangler@4.120.1 || 4.129.0
   - '@rolldown/binding-darwin-x64@1.2.5'
   - '@rolldown/binding-linux-arm64-gnu@1.2.5'
+  - astro@7.3.1
 
 # pnpm settings live here, not in package.json.
 #
@@ -49,5 +50,5 @@ onlyBuiltDependencies:
 # copy and hands them to the highlighter astro instantiates from its own copy;
 # those two must be the same shiki. Force one version, which satisfies ^4.0.2.
 overrides:
-  '@astrojs/markdown-satteri': 0.3.6
+  '@astrojs/markdown-satteri': 0.4.0
   shiki: 4.4.3
