@@ -1,6 +1,6 @@
 ## 1. Type and module scaffold
 
-- [x] 1.1 Create `deep_causality_topology/src/types/mixed_graph/` with a folder-based module layout mirroring `graph` (`float_bfloat16`, `constructors`, `getters`, `mixed_graph_ops`, `api`, `clone`, `display`, `topology`).
+- [x] 1.1 Create `deep_causality_topology/src/types/mixed_graph/` with a folder-based module layout mirroring `graph` (`mod.rs`, `constructors`, `getters`, `mixed_graph_ops`, `api`, `clone`, `display`, `topology`).
 - [x] 1.2 Define the `Mark` enum (`Tail`, `Arrow`, `Circle`) and an `Edge` value holding the marks at the lower- and higher-indexed endpoints. Define the `MixedGraph<T>` struct: node count, the canonical-pair edge map `BTreeMap<(usize, usize), Edge>` (single source of truth, key = `(min, max)`), node payload `CausalTensor<T>`, and the comonadic `cursor: usize`. Document the canonical-pair encoding and the order-agnostic accessor.
 - [x] 1.3 Register the module in `types/mod.rs` and export `MixedGraph`, `Mark`, and `Edge` from `lib.rs`. Confirm the crate builds.
 

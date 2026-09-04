@@ -46,14 +46,14 @@ deep_causality_num/src/complex/
 ### Phase 1: Source Code Restructuring
 
 1. **Delete Obsolete Files:**
-    - Within `deep_causality_num/src/complex/complex_number/`: Delete all `.rs` files except for `float_bfloat16` and
+    - Within `deep_causality_num/src/complex/complex_number/`: Delete all `.rs` files except for `mod.rs` and
       `identity.rs`. This includes `float.rs`, `part_ord.rs`, `complex_number_impl.rs`, `arithmetic.rs`, etc.
 
 2. **Create New Files:**
     - Within `deep_causality_num/src/complex/complex_number/`, create the new files: `complex_impl.rs`, `algebra.rs`,
       `ops.rs`, `cast.rs`, and `fmt.rs`.
 
-3. **Update `float_bfloat16`:**
+3. **Update `mod.rs`:**
     - Remove the `ComplexNumber` trait definition.
     - Update module declarations to match the new file structure.
     - **Important:** The `impl<F> Num for Complex<F>` will be removed, as `Complex` will no longer support the `Rem`
@@ -61,7 +61,7 @@ deep_causality_num/src/complex/
 
 ### Phase 2: Core `Complex<T>` Refactoring
 
-1. **Update Struct Definition (`float_bfloat16`):**
+1. **Update Struct Definition (`mod.rs`):**
     - Modify the `Complex<T>` struct to use the `RealField` generic bound. Ensure `PartialOrd` is not derived.
    ```rust
    // In deep_causality_num/src/complex/complex_number/mod.rs

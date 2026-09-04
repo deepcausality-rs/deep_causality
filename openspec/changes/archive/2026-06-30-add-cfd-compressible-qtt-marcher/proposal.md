@@ -110,7 +110,7 @@ convergence. Each is gated; the design records D8–D10 and the revised risks/op
   splits off a closed-form constant-coefficient inverse, so the bare-AMEn-convergence risk is discharged into a
   measurable perturbation bound).
 - **Dependencies** — no new external crates.
-- **Tests / Bazel** — new test modules mirror the src tree, registered in `float_bfloat16` and `tests/BUILD.bazel`;
+- **Tests / Bazel** — new test modules mirror the src tree, registered in `mod.rs` and `tests/BUILD.bazel`;
   100% coverage of new library code; examples are coverage-exempt.
 - **Constraints** — static dispatch, no `dyn`/`unsafe`/lib-macros; crate-root imports; lib float literals
   confined to `constants/` mapping via `from_f64`; the dynamic-by-construction invariant

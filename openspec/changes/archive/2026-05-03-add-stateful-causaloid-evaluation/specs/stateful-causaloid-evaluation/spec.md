@@ -306,7 +306,7 @@ their existing implementations. All existing tests in the repository's
 This change SHALL add unit test files mirroring the source tree, covering
 the stateful singleton, collection, and graph evaluation paths under
 `deep_causality/tests/`. Each test file SHALL be registered in its
-corresponding `float_bfloat16` per AGENTS.md test conventions, and SHALL include
+corresponding `mod.rs` per AGENTS.md test conventions, and SHALL include
 scenarios for:
 
 - happy-path state evolution across one and across multiple steps,
@@ -347,7 +347,7 @@ organization, safety, and visibility:
 - One trait per file under `src/traits/.../`.
 - One impl per file under `src/types/.../`.
 - Test files mirror the source tree under `tests/...` and are registered
-  in their `float_bfloat16` files with `#[cfg(test)]`.
+  in their `mod.rs` files with `#[cfg(test)]`.
 - No `unsafe` is introduced.
 - No macros are introduced in `src/`.
 - No prelude file is introduced.

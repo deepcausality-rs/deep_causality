@@ -19,7 +19,7 @@ Each section below ends with an explicit `Gate` checkbox that asserts all four p
 ## 2. Shared undirected-view helper
 
 - [x] 2.1 Add private helper module `ultragraph/src/types/storage/graph_csm/graph_csm_biconnectivity_common.rs` exposing a function that builds a symmetric CSR adjacency `(offsets: Vec<usize>, targets: Vec<usize>, edge_id: Vec<usize>)` from `self.forward_edges`, dropping self-loops and deduplicating parallel reverse edges. Each entry in `targets` carries a stable `edge_id` so paired half-edges share an id (used for parent-edge tracking in bridges / biconnected components).
-- [x] 2.2 Register the new module in the `graph_csm` `float_bfloat16`.
+- [x] 2.2 Register the new module in the `graph_csm` `mod.rs`.
 - [x] 2.3 Unit-test the helper directly (it lives in `src/`, so per `AGENTS.md` it must reach 100% coverage): empty graph, isolated vertices only, self-loop only, single directed edge, both directions stored, multi-edges in input, mixed.
 - [x] 2.4 **Gate**: `build` + `test` + `clippy -D warnings` + `fmt --check` all green.
 
@@ -63,13 +63,13 @@ Each section below ends with an explicit `Gate` checkbox that asserts all four p
 
 ## 8. Tests
 
-- [x] 8.1 Create test directory `ultragraph/tests/types/storage/graph_csm/` (matching src layout if not already present); add `float_bfloat16` files at each level and register them up to the crate test root.
+- [x] 8.1 Create test directory `ultragraph/tests/types/storage/graph_csm/` (matching src layout if not already present); add `mod.rs` files at each level and register them up to the crate test root.
 - [x] 8.2 Add `graph_csm_algo_articulation_points_tests.rs` covering every scenario in `specs/ultragraph-biconnectivity/spec.md` under "articulation_points API" plus: K4 (no articulation), star graph (center is articulation), self-loop-only graph (empty result), disconnected graph.
 - [x] 8.3 Add `graph_csm_algo_bridges_tests.rs` covering every "bridges API" scenario plus: K4 (no bridges), star graph (every edge is a bridge), parallel-edge input verifying canonical `(min, max)` form.
 - [x] 8.4 Add `graph_csm_algo_biconnected_components_tests.rs` covering every "biconnected_components API" scenario plus: K4 (single component `{0,1,2,3}`), nested-cycle graph, ensure isolated vertices excluded.
 - [x] 8.5 Add a `graph_csm_algo_biconnectivity_cross_consistency_tests.rs` that, for each fixture used above, asserts the two cross-API invariants from the spec ("articulation iff in ≥2 components", "bridge iff 2-vertex component"). Use a small property-style loop over the fixture set; do not introduce a new dependency (use plain Rust assertions).
 - [x] 8.6 Add an UltraGraph-facade test verifying the three forwarders return the same values as calling the underlying `CsmGraph` directly.
-- [x] 8.7 Register every new test file in the corresponding `float_bfloat16` with `#[cfg(test)]` and in `ultragraph/tests/BUILD.bazel`.
+- [x] 8.7 Register every new test file in the corresponding `mod.rs` with `#[cfg(test)]` and in `ultragraph/tests/BUILD.bazel`.
 - [x] 8.8 **Gate**: `build` + `test` + `clippy -D warnings` + `fmt --check` all green; smoke tests from §§3.5/4.5/5.6 either superseded (remove if duplicated) or retained.
 
 ## 9. Final verification

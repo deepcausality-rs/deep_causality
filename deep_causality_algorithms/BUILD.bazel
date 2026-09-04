@@ -34,9 +34,10 @@ rust_doc_test(
 
 # Example binaries (Cargo `[[example]]` targets).
 
-# Self-contained: it carries its own graph type and its own transcription of the Meek rules, so
-# that it can judge the library's closure rather than agree with it. It therefore depends on the
-# crate only for the Cargo/Bazel parity the repository requires, not for any of its own logic.
+# Drives the production Meek closures (`MixedGraph::meek_complete` / `meek_complete_r1_r3`) and
+# BRCD's own configuration enumeration against an independent oracle — the maximally oriented PDAG,
+# computed by enumerating consistent DAG extensions. It carries its own graph type for the oracle
+# only; it states no orientation rule of its own.
 rust_binary(
     name = "verification_meek_r4",
     srcs = [

@@ -15,7 +15,7 @@
 //! Chordality is the precondition of clique-picking, which counts acyclic moral orientations and is
 //! defined only on a chordal graph.
 
-use crate::{MixedGraph, TopologyError, TopologyErrorEnum};
+use crate::{EdgeKind, MixedGraph, TopologyError, TopologyErrorEnum};
 use std::collections::VecDeque;
 
 impl<T> MixedGraph<T> {
@@ -44,7 +44,10 @@ impl<T> MixedGraph<T> {
             for i in 0..neighbors.len() {
                 for j in (i + 1)..neighbors.len() {
                     let (u, w) = (neighbors[i], neighbors[j]);
-                    if self.is_adjacent(u, w) {
+                    // Only an undirected edge is a chord of the projection: `is_adjacent` would
+                    // also count directed, bidirected and partially directed edges, which the
+                    // projection does not contain.
+                    if self.edge_kind(u, w) == Some(EdgeKind::Undirected) {
                         continue;
                     }
                     // Excluding v and its other neighbours keeps the path from taking a shortcut

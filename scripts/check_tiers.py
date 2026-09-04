@@ -5,8 +5,8 @@
 
 Three places state the tier of a crate: the tier block in ``AGENTS.md``, and the ASCII block and
 the crate table in ``deep_causality_unified_math/README.md``. This derives the tiers from the
-``[dependencies]`` tables of the workspace members and compares, so the documents are checked
-rather than read.
+runtime dependencies of the workspace members, as reported by ``cargo metadata``, and compares,
+so the documents are checked rather than read.
 
 A crate's tier is ``1 + max(tier of its internal dependencies)``, or 0 when it has none.
 Dev- and build-dependencies are excluded, matching what ``AGENTS.md`` says it lists.
@@ -16,6 +16,10 @@ The two documents scope their tiers differently and are checked against their ow
 sixteen crates under ``deep_causality_unified_math/`` alone. The same crate therefore holds
 different tier numbers in the two, which is correct.
 
+Both scopes are checked in both directions. A workspace member outside ``examples/`` that no
+tier block names fails just as loudly as a documented crate whose tier has drifted, so adding a
+crate without documenting it cannot pass.
+
 ``graph.png`` is not checked here. It is a rendering, and its tiers are verified by eye against
 this output.
 
@@ -23,59 +27,49 @@ Usage: python3 scripts/check_tiers.py [repo-root]
 Exit status is 0 when every representation agrees with the manifests, 1 otherwise.
 """
 
-import glob
+import json
 import os
 import re
+import subprocess
 import sys
-
-DEP_SECTION = re.compile(r"^\[([^\]]+)\]")
-DEP_ENTRY = re.compile(r"^([A-Za-z0-9_\-]+)\s*=")
-OPTIONAL = re.compile(r"optional\s*=\s*true")
 
 
 def read_manifests(root):
-    """Return {crate: {"deps": set, "opt": set, "path": str}} for every workspace member."""
-    members = re.search(
-        r"members\s*=\s*\[(.*?)\]", open(os.path.join(root, "Cargo.toml")).read(), re.S
-    ).group(1)
+    """Return {crate: {"deps": set, "opt": set, "path": str}} for every workspace member.
 
-    paths = set()
-    for pattern in re.findall(r'"([^"]+)"', members):
-        for hit in glob.glob(os.path.join(root, pattern, "Cargo.toml")):
-            if "/yanked/" in hit or "/reverted/" in hit or "/.claude/" in hit:
-                continue
-            paths.add(hit)
+    ``cargo metadata`` is the resolver rather than a regex over the manifests. It reports the
+    *real* package name of a renamed dependency (``foo = { package = "bar" }``), and it reports
+    dependencies declared under ``[target.'cfg(...)'.dependencies]`` — two spellings a
+    section-and-key regex silently misreads or drops, either of which would let the tier check
+    pass on an incomplete graph. ``--no-deps --offline`` restricts it to the workspace's own
+    manifests, so it needs neither the network nor a registry index.
+
+    Only runtime dependencies count (``kind`` is null); dev- and build-dependencies are excluded,
+    matching what ``AGENTS.md`` says it lists.
+    """
+    command = ["cargo", "metadata", "--no-deps", "--offline", "--format-version", "1"]
+    try:
+        out = subprocess.run(
+            command, cwd=root, check=True, capture_output=True, text=True
+        ).stdout
+    except OSError as e:
+        sys.exit(f"cannot run `{' '.join(command)}`: {e}")
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"`{' '.join(command)}` failed with status {e.returncode}:\n{e.stderr}")
+
+    meta = json.loads(out)
+    members = set(meta["workspace_members"])
+    root = os.path.abspath(root)
 
     crates = {}
-    for path in sorted(paths):
-        text = open(path).read()
-        name = re.search(r'^\s*name\s*=\s*"([^"]+)"', text, re.M)
-        if not name:
+    for pkg in meta["packages"]:
+        if pkg["id"] not in members:
             continue
-        section, deps, opt = None, set(), set()
-        for line in text.splitlines():
-            stripped = line.strip()
-            header = DEP_SECTION.match(stripped)
-            if header:
-                section = header.group(1)
-                continue
-            # Both spellings occur: `foo = { ... }` under [dependencies], and a
-            # [dependencies.foo] section of its own. Missing the second reads as absence.
-            if section == "dependencies":
-                entry = DEP_ENTRY.match(stripped)
-                if entry:
-                    deps.add(entry.group(1))
-                    if OPTIONAL.search(stripped):
-                        opt.add(entry.group(1))
-            elif section and section.startswith("dependencies.") and section.count(".") == 1:
-                dep = section.split(".", 1)[1]
-                deps.add(dep)
-                if OPTIONAL.match(stripped):
-                    opt.add(dep)
-        crates[name.group(1)] = {
-            "deps": deps,
-            "opt": opt,
-            "path": os.path.relpath(path, root),
+        runtime = [d for d in pkg["dependencies"] if d["kind"] is None]
+        crates[pkg["name"]] = {
+            "deps": {d["name"] for d in runtime},
+            "opt": {d["name"] for d in runtime if d["optional"]},
+            "path": os.path.relpath(pkg["manifest_path"], root),
         }
     return crates
 
@@ -123,14 +117,18 @@ def main():
         if not cond:
             failures.append(message)
 
-    # AGENTS.md: the library crates of the whole workspace.
+    # AGENTS.md: the library crates of the whole workspace — every workspace member that is not
+    # an example. Checked in both directions, so a crate added to the workspace without an
+    # AGENTS.md entry fails here instead of being quietly left out of the derived graph.
     agents = parse_agents_block(open(os.path.join(root, "AGENTS.md")).read())
-    scope = set(agents)
+    library = {n for n, c in manifests.items() if not c["path"].startswith("examples/")}
     check(
-        scope <= set(manifests),
-        f"AGENTS.md lists non-members: {sorted(scope - set(manifests))}",
+        set(agents) == library,
+        f"AGENTS.md scope differs from the workspace library members: "
+        f"undocumented={sorted(library - set(agents))} "
+        f"not a library member={sorted(set(agents) - library)}",
     )
-    scope &= set(manifests)
+    scope = set(agents) & set(manifests)
     derived = tiers(manifests, scope)
     for name, (tier, deps) in agents.items():
         if name not in manifests:

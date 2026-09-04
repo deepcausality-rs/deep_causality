@@ -135,3 +135,28 @@ fn a_complete_graph_is_chordal() {
     }
     assert!(g.undirected_projection_is_chordal().is_ok());
 }
+
+#[test]
+fn two_directed_diagonals_do_not_repair_an_undirected_four_cycle() {
+    // The undirected projection of 0 — 1 — 2 — 3 — 0 with both diagonals directed (0 → 2 and
+    // 1 → 3) is still the chordless 4-cycle: a directed edge is not a chord of the projection.
+    let mut g = chordless_cycle(4);
+    g.add_arc(0, 2).unwrap();
+    g.add_arc(1, 3).unwrap();
+    assert!(g.undirected_projection_is_chordal().is_err());
+    let witness = g
+        .find_chordless_cycle()
+        .expect("the projection is still the 4-cycle 0-1-2-3");
+    assert_eq!(witness.len(), 4);
+}
+
+#[test]
+fn a_bidirected_diagonal_is_not_a_chord() {
+    // Same shape, with the diagonals bidirected instead of directed. Neither kind is in the
+    // undirected projection, so the 4-cycle remains chordless there.
+    let mut g = chordless_cycle(4);
+    g.add_bidirected(0, 2).unwrap();
+    g.add_bidirected(1, 3).unwrap();
+    assert!(g.undirected_projection_is_chordal().is_err());
+    assert_eq!(g.find_chordless_cycle().map(|c| c.len()), Some(4));
+}

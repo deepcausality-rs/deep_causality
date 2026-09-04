@@ -127,7 +127,7 @@ Depends on R4 (specifically R4.3's per-cell volume machinery, which R5 reuses fo
 ### R5.7 Block R5 gates
 
 - [x] R5.7.1 `cargo build -p deep_causality_topology` clean; `cargo clippy --all-targets -- -D warnings` clean across the entire workspace (one needless-typing and three `0 * D` index lints fixed at root cause per `feedback_clippy_lints`).
-- [x] R5.7.2 100% coverage on every new file: `signature.rs`, `metric_tensor.rs`, `light_cone_violation.rs`, all 4 new test files plus extensions to `has_hodge_star.rs` / `curvature.rs` / `float_bfloat16`.
+- [x] R5.7.2 100% coverage on every new file: `signature.rs`, `metric_tensor.rs`, `light_cone_violation.rs`, all 4 new test files plus extensions to `has_hodge_star.rs` / `curvature.rs` / `mod.rs`.
 - [x] R5.7.3 R5-G3 Review — user to commit.
 
 **Block R5 summary:** ~6 new source files, ~20 new tests (911 total topology tests), generic-over-S `HasHodgeStar` impl, Lorentzian-only Wick-rotated action, light-cone validation at construction time. Full workspace test + clippy regression clean.

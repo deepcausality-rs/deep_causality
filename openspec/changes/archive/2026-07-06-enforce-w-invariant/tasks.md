@@ -5,7 +5,7 @@
 - [x] 1.3 Rewrite inherent `bind` (error arm returns `self` reassembled verbatim — right identity structural; `Ok` arm passes the inner `EffectValue` to the continuation, D4), `bind_or_error`, and `fmap` (preserve `RelayTo`/`Map` → `ValueNotAvailable` arm with a P1-seam comment, D5)
 - [x] 1.4 Update accessor surface in `getters.rs` (`outcome()`, `value() -> Option<&EffectValue<Value>>`, `error() -> Option<&Error>`) and widen `is_ok`/`is_err` in `predicates.rs` to all `State`/`Context` (D3)
 - [x] 1.5 Adapt the carrier's remaining trait/impl files: `display.rs`, `explain.rs`, `intervenable.rs`, `alternatable_value.rs`, `alternatable_state.rs`, `alternatable_context.rs`, `hkt.rs`, and the `CausalMonad` trait impl in `traits/causal_monad/mod.rs` (update its right-identity docs: now unconditional)
-- [x] 1.6 Adapt the two alias-carrier HKT witnesses (`propagating_effect/hkt.rs`, `propagating_process/hkt.rs`) and the `causal_flow` module (`branch.rs`, `iterate.rs`, `steps.rs`, `terminals.rs`, `construction.rs`, `float_bfloat16`)
+- [x] 1.6 Adapt the two alias-carrier HKT witnesses (`propagating_effect/hkt.rs`, `propagating_process/hkt.rs`) and the `causal_flow` module (`branch.rs`, `iterate.rs`, `steps.rs`, `terminals.rs`, `construction.rs`, `mod.rs`)
 - [x] 1.7 `cargo build -p deep_causality_core` compiles; fix all remaining src sites the compiler surfaces
 
 ## 2. Core tests green

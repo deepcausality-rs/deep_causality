@@ -123,7 +123,7 @@
 
 | File                     | Purpose                  | Lines |
 |--------------------------|--------------------------|-------|
-| `float_bfloat16`                 | Struct + Constructors    | 229   |
+| `mod.rs`                 | Struct + Constructors    | 229   |
 | `getters.rs`             | Accessors                | 81    |
 | `display.rs`             | Debug/Display            | 23    |
 | `ops_plague.rs`          | Plaquette computation    | 190   |

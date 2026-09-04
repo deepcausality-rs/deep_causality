@@ -26,5 +26,5 @@
 ## 5. Finalize
 
 - [x] 5.1 `cargo fmt`; clippy `--all-targets` clean (fix, don't suppress); `cargo test -p deep_causality_cfd` green. No `unsafe`/`dyn`/lib-code macros; lib float literals confined to mask/observable mapping (`from_f64`).
-- [x] 5.2 Register new test modules in their `float_bfloat16` and the Bazel `tests/` target; import crate types from the crate root.
+- [x] 5.2 Register new test modules in their `mod.rs` and the Bazel `tests/` target; import crate types from the crate root.
 - [x] 5.3 `openspec validate add-cfd-qtt-immersed-body --strict` passes; update `gap-one-cfd-tensor-bridge.md` §6 and `gap-analysis.md` §4 — **Gap 1 closed** (solver core + immersed body + surface observables), residual flagship physics (electron density, reacting heat flux) handed to **Gap 2**.

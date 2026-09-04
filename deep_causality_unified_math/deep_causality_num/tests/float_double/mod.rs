@@ -23,6 +23,8 @@ mod double_float_tests;
 #[cfg(test)]
 mod double_from_tests;
 #[cfg(test)]
+mod double_neg_zero_tests;
+#[cfg(test)]
 mod double_num_traits_tests;
 #[cfg(test)]
 mod double_ops_tests;

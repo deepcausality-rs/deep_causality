@@ -144,7 +144,7 @@ Optimizing for performance is crucial for a numerical library, especially for op
 
 Following the convention established by the `Complex` type, the `Quaternion` implementation will be organized into a dedicated module within `deep_causality_num/src/`.
 
-*   **Module Structure**: A new folder `src/quaternion/` will be created, containing `float_bfloat16` and separate files for logical groupings of implementations, such as:
+*   **Module Structure**: A new folder `src/quaternion/` will be created, containing `mod.rs` and separate files for logical groupings of implementations, such as:
     *   `src/quaternion/arithmetic.rs` (for `Add`, `Sub`, `Mul`, `Div`, `Rem` traits)
     *   `src/quaternion/arithmetic_assign.rs` (for `AddAssign`, `SubAssign`, `MulAssign`, `DivAssign`, `RemAssign` traits)
     *   `src/quaternion/quaternion_number.rs` (for `QuaternionNumber` trait methods like `norm_sqr`, `norm`, `arg`, `conj`)

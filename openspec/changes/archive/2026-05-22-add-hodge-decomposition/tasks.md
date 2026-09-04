@@ -39,7 +39,7 @@
   - [x] 3.4.8 Compute `h = ω − α − β` (the harmonic residual).
   - [x] 3.4.9 Wrap in `HodgeDecomposition::new(α, β, h, k)` and return `Ok(...)`.
 - [x] 3.5 Register the new module file in `src/types/manifold/differential/mod.rs`.
-- [x] 3.6 Create `tests/types/manifold/differential/hodge_decomposition_impl_tests.rs`. Register in the corresponding `float_bfloat16` and `tests/BUILD.bazel`.
+- [x] 3.6 Create `tests/types/manifold/differential/hodge_decomposition_impl_tests.rs`. Register in the corresponding `mod.rs` and `tests/BUILD.bazel`.
 - [x] 3.7 Unit tests covering every input-validation branch (`GradeOutOfRange`, `DimensionMismatch`, `MissingMetric`, `Nonconvergence` triggered by an artificially low iteration cap).
 - [x] 3.8 Unit tests for the CG solver (if landed in this change set): convergence on a small symmetric positive-definite system; singular-kernel projection on a known-rank-deficient system; behaviour at the iteration cap.
 - [x] 3.9 Smoke test: decompose a trivial pure-exact 1-form on a `LatticeComplex<2>` and verify each component's L2 norm matches the analytic expectation (exact ≈ ‖field‖, co-exact ≈ 0, harmonic ≈ 0). Full property tests live in H3.

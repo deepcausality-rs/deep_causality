@@ -282,7 +282,7 @@ Apply same pattern to:
 5. Update `api/geometry.rs` to dispatch to `geometry/`
 6. Create `geometry/geometry_mlx.rs` (feature-gated stub)
 7. Repeat for `differential/`, `covariance/`, trait folders
-8. Update `float_bfloat16` to re-export API
+8. Update `mod.rs` to re-export API
 
 ### Step 2: Test & Verify
 
@@ -339,7 +339,7 @@ This keeps related implementations **visually adjacent** for easier maintenance.
 
 ## mod.rs Content Guidelines
 
-Each `float_bfloat16` file has a specific purpose. Follow these patterns:
+Each `mod.rs` file has a specific purpose. Follow these patterns:
 
 ### Type Root mod.rs (e.g., `manifold/mod.rs`)
 

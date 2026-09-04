@@ -174,7 +174,7 @@ impl CpuBackend {
 * **Backing:** `mlx_rs::array`
 * **Precision:**
     * `f32`: Native.
-    * `f16`/`float_bfloat16`: Native.
+    * `f16`/`bfloat16`: Native.
     * `f64`: **Not Supported** (panics in strict mode).
     * `Complex64`: Simulated as `Complex32` (f32/f32) or interleaved buffers.
 * **Role:** High-performance production runs on Mac Studio/MacBook Pro.

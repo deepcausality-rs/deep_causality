@@ -70,7 +70,7 @@ impl<F: RealField> Octonion<F> {
 
 ### Step 3: Implement Algebraic Traits
 
-Create a new file `deep_causality_num/src/complex/octonion_number/algebra.rs` and add it to the `float_bfloat16` of the `octonion_number` module. In this file, implement the correct algebraic traits for `Octonion`.
+Create a new file `deep_causality_num/src/complex/octonion_number/algebra.rs` and add it to the `mod.rs` of the `octonion_number` module. In this file, implement the correct algebraic traits for `Octonion`.
 
 #### 3.1. Marker Traits
 

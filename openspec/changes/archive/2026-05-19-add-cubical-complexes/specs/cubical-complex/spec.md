@@ -59,4 +59,4 @@ The source layout SHALL move from `src/types/lattice/` to `src/types/cubical_com
 
 - **WHEN** an engineer looks for tests covering `CubicalComplex`
 - **THEN** they find them under `tests/types/cubical_complex/` with file names matching source files plus the `_tests` suffix
-- **AND** every test file is registered in its parent `float_bfloat16` with `#[cfg(test)]`
+- **AND** every test file is registered in its parent `mod.rs` with `#[cfg(test)]`

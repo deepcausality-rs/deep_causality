@@ -119,7 +119,7 @@ Every regime function under `theories::fluid_dynamics::` SHALL express its retur
 
 ### Requirement: Test discipline and AGENTS.md conformance
 
-Every new source file under `deep_causality_physics/src/theories/fluid_dynamics/` SHALL achieve 100% test coverage per AGENTS.md §"Code testing". Tests SHALL live under `deep_causality_physics/tests/theories/fluid_dynamics/<regime>_tests.rs` mirroring the src tree, with each test file registered in its parent `float_bfloat16` and in `deep_causality_physics/tests/BUILD.bazel`. No `#[allow(dead_code)]` or `#[allow(clippy::...)]` suppressions are permitted.
+Every new source file under `deep_causality_physics/src/theories/fluid_dynamics/` SHALL achieve 100% test coverage per AGENTS.md §"Code testing". Tests SHALL live under `deep_causality_physics/tests/theories/fluid_dynamics/<regime>_tests.rs` mirroring the src tree, with each test file registered in its parent `mod.rs` and in `deep_causality_physics/tests/BUILD.bazel`. No `#[allow(dead_code)]` or `#[allow(clippy::...)]` suppressions are permitted.
 
 #### Scenario: Coverage tooling reports 100% on every new theory file
 

@@ -23,7 +23,7 @@ re-proving it. Every Lean theorem SHALL be closed with **zero `sorry`**.
 #### Scenario: The witness mirror parallels the Lean tree
 - **WHEN** the directory `deep_causality_core/tests/formalization_lean/` is inspected
 - **THEN** it contains one `<mechanism>_tests.rs` per Core Lean file with theorems (registered in its
-  `float_bfloat16` and `deep_causality_core/tests/BUILD.bazel`), and each `core.*` id has one `#[test]`
+  `mod.rs` and `deep_causality_core/tests/BUILD.bazel`), and each `core.*` id has one `#[test]`
 
 ### Requirement: The causal monad is verified as a lawful monad
 The `CausalEffectPropagationProcess` carrier SHALL be proven a lawful monad: left identity, right

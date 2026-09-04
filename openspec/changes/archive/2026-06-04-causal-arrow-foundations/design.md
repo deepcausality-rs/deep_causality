@@ -8,7 +8,7 @@ This is stage 1 of the Causal Arrow program. The two source notes are authoritat
 Current state, verified against the source tree:
 
 - `deep_causality_haft` already has `Functor`, `Applicative`, `Monad`, `CoMonad`, `Bifunctor`, `Profunctor`, `Promonad`, `CyberneticLoop`, `Adjunction`, plus the witness/HKT machinery (`HKT`, `HKT2Unbound … HKT6Unbound`, `Satisfies`, `Placeholder`). It has **no** `Morphism` (typed-arrow base) and **no** iteration/fixpoint primitive. The crate convention: one trait per file under `src/traits/`, parameterized by a witness `P: HKTnUnbound`, methods as associated functions over `P::Type<…>`, registered in `traits/mod.rs`, re-exported from `lib.rs`.
-- `deep_causality_num` has the full algebra tower (`Field`, `RealField`, `Ring`, `CommutativeRing`, `Module`, `Algebra`, `Zero`, `One`, monoids) and the hypercomplex types `Complex`, `Quaternion`, `Octonion`, each a folder module (`float_bfloat16` + per-trait files `arithmetic.rs`, `ops.rs`, `ops_shared.rs`, `algebra.rs`, `identity.rs`, `cast.rs`, `display.rs`). It has **no** dual numbers.
+- `deep_causality_num` has the full algebra tower (`Field`, `RealField`, `Ring`, `CommutativeRing`, `Module`, `Algebra`, `Zero`, `One`, monoids) and the hypercomplex types `Complex`, `Quaternion`, `Octonion`, each a folder module (`mod.rs` + per-trait files `arithmetic.rs`, `ops.rs`, `ops_shared.rs`, `algebra.rs`, `identity.rs`, `cast.rs`, `display.rs`). It has **no** dual numbers.
 
 Constraints (from `AGENTS.md`): `unsafe_code = "forbid"`; static dispatch only, no `dyn`/trait objects; no external numeric crates; no macros in `src/`; one type per module; tests mirror the `src/` tree with a `_tests` suffix and register in the Bazel `BUILD.bazel`; 100% coverage on new code; the two writing guides bind all prose.
 
@@ -85,7 +85,7 @@ No concrete precision aliases (`Dual32`/`Dual64`): they would defeat the precisi
 
 The bound sits **on the struct**, mirroring `Complex<T: RealField>`'s style (verified in `complex_number/mod.rs`); the parameter stays named `T` and is bounded by `Real` (`Real` is the bound, not the parameter name). The bound is **`Real`, not `RealField`** (see "Bound choice" below): a dual's component needs the analytic operations (`exp`/`ln`/`sin`/…) but never a field inverse, so `Real` is the honest, minimal requirement. `f32`/`f64` satisfy `Real` (via `RealField: Real + Field`).
 
-Folder module `src/dual/dual_number/` mirroring `src/complex/complex_number/`: `float_bfloat16` (type + constructors + accessors), `arithmetic.rs`, `ops.rs`, `ops_shared.rs`, `algebra.rs`, `identity.rs`, `real.rs` (the `impl Real for Dual`), `cast.rs`, `display.rs`.
+Folder module `src/dual/dual_number/` mirroring `src/complex/complex_number/`: `mod.rs` (type + constructors + accessors), `arithmetic.rs`, `ops.rs`, `ops_shared.rs`, `algebra.rs`, `identity.rs`, `real.rs` (the `impl Real for Dual`), `cast.rs`, `display.rs`.
 
 - **Constructors / accessors:** `Dual::new(re, du)`; `Dual::constant(re)` (`du = 0`); `Dual::variable(re)` (`du = 1`, the AD seed); `value()` → `re`; `derivative()` → `du`.
 - **Arithmetic (the AD rules fall out of the ops):**

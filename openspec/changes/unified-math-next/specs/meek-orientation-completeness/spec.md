@@ -125,13 +125,13 @@ under R1–R3 and under R1–R4, and compares.
 
 An operation that requires a chordal component SHALL verify chordality and return a typed error when it does not hold, rather than proceeding on an unchecked assumption.
 
-The clique-picking MEC-size computation is defined only on chordal components. Today chordality is
-assumed and never checked, in both the `dag_sampling` path and the BRCD MEC path. That assumption is
-coupled to the closure: an incomplete closure is one way a component that should be chordal is not,
-so fixing R4 without checking chordality leaves the other half of the same failure surface open.
+The clique-picking MEC-size computation is defined only on chordal components. The `dag_sampling`
+path assumes chordality and never checks it. The BRCD MEC path detects it only indirectly: an empty
+AMO enumeration is the signal, because a chordal chain component always has at least one AMO. Neither
+path states the precondition as a check that names what failed.
 
-A non-chordal component reaching clique-picking produces a number rather than a complaint, and that
-number reaches the posterior.
+A non-chordal component reaching clique-picking on the unchecked path produces a number rather than a
+complaint, and that number reaches the posterior.
 
 #### Scenario: A chordal component is accepted
 - **WHEN** a chordal component is offered to an operation that requires chordality

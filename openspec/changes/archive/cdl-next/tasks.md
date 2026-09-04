@@ -48,7 +48,7 @@
 
 ## 9. Tests
 
-- [x] 9.1 Migrate existing tests to the new surface; rename test files to mirror sources; update `float_bfloat16` registrations (Bazel globs auto-pick).
+- [x] 9.1 Migrate existing tests to the new surface; rename test files to mirror sources; update `mod.rs` registrations (Bazel globs auto-pick).
 - [x] 9.2 SURD regression (full chain → SURD-variant report).
 - [x] 9.3 CPDAG round-trip + malformed-content rejection.
 - [x] 9.4 Config-builder tests (file-exists error, optional/required fields, getters).

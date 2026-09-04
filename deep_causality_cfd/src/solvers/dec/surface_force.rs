@@ -175,22 +175,27 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
     Ok(force)
 }
 
-/// Multilinear interpolation of the vertex velocity field at the physical point `p` (lattice
-/// coordinates `position · dx`). Corners outside the domain contribute the no-slip zero.
-fn sample_velocity<const D: usize, R: DecNsScalar>(
-    velocity: &BTreeMap<[usize; D], [R; D]>,
+/// The per-axis decomposition of a physical point into the multilinear stencil both samplers use:
+/// `lo[j]` is the lattice index of the cell's lower corner along axis `j`, `frac[j]` the fractional
+/// offset within that cell.
+///
+/// Floor of `p[j]/dx[j]`, clamped at zero. `floor` is total on `R`, and `to_usize` truncates a
+/// non-negative value to exactly that floor, so the two together are the constant-time form of the
+/// step-at-a-time search this used to run outward from `base[j]`. A coordinate with no
+/// representable floor — non-finite, or beyond `usize` — falls to the origin cell, which is where
+/// the search also left a negative coordinate.
+///
+/// [`sample_velocity`] and [`sample_scalar`] differ only in what an *absent* corner contributes
+/// (the no-slip zero for the velocity, the wall value for the scalar). Which corners they read must
+/// not differ, so that decision is made here once rather than in each sampler.
+fn cell_and_fraction<const D: usize, R: DecNsScalar>(
     p: &[R; D],
     dx: &[R; D],
-) -> [R; D] {
+) -> ([usize; D], [R; D]) {
     let mut lo = [0usize; D];
     let mut frac = [R::zero(); D];
     for j in 0..D {
         let g = p[j] / dx[j];
-        // Floor of `g`, clamped at zero. `floor` is total on R, and `to_usize` truncates a
-        // non-negative value to exactly that floor, so the two together are the constant-time
-        // form of the step-at-a-time search this used to run outward from `base[j]`.
-        // A `g` with no representable floor — non-finite, or beyond `usize` — falls to the
-        // origin cell, which is where the search also left a negative coordinate.
         let f = g.floor();
         let (k, k_r) = if f >= R::zero() {
             match f.to_usize() {
@@ -203,6 +208,17 @@ fn sample_velocity<const D: usize, R: DecNsScalar>(
         lo[j] = k;
         frac[j] = g - k_r;
     }
+    (lo, frac)
+}
+
+/// Multilinear interpolation of the vertex velocity field at the physical point `p` (lattice
+/// coordinates `position · dx`). Corners outside the domain contribute the no-slip zero.
+fn sample_velocity<const D: usize, R: DecNsScalar>(
+    velocity: &BTreeMap<[usize; D], [R; D]>,
+    p: &[R; D],
+    dx: &[R; D],
+) -> [R; D] {
+    let (lo, frac) = cell_and_fraction(p, dx);
 
     let mut out = [R::zero(); D];
     for corner in 0..(1usize << D) {
@@ -361,37 +377,17 @@ pub fn wall_heat_flux<const D: usize, R: DecNsScalar>(
     Ok(flux)
 }
 
-/// Multilinear interpolation of the vertex temperature field at the physical point `p`, by the same
-/// bounded floor search [`sample_velocity`] uses. Corners outside the domain contribute the wall
-/// value rather than zero — for a scalar, zero is a temperature, not a natural "absent" state, and
-/// using it would fabricate a gradient at a domain edge.
+/// Multilinear interpolation of the vertex temperature field at the physical point `p`, over the
+/// same [`cell_and_fraction`] stencil [`sample_velocity`] uses. Corners outside the domain
+/// contribute the wall value rather than zero — for a scalar, zero is a temperature, not a natural
+/// "absent" state, and using it would fabricate a gradient at a domain edge.
 fn sample_scalar<const D: usize, R: DecNsScalar>(
     temperature: &BTreeMap<[usize; D], R>,
     p: &[R; D],
     dx: &[R; D],
     fallback: R,
 ) -> R {
-    let mut lo = [0usize; D];
-    let mut frac = [R::zero(); D];
-    for j in 0..D {
-        let g = p[j] / dx[j];
-        // Floor of `g`, clamped at zero. `floor` is total on R, and `to_usize` truncates a
-        // non-negative value to exactly that floor, so the two together are the constant-time
-        // form of the step-at-a-time search this used to run outward from `base[j]`.
-        // A `g` with no representable floor — non-finite, or beyond `usize` — falls to the
-        // origin cell, which is where the search also left a negative coordinate.
-        let f = g.floor();
-        let (k, k_r) = if f >= R::zero() {
-            match f.to_usize() {
-                Some(k) => (k, f),
-                None => (0usize, R::zero()),
-            }
-        } else {
-            (0usize, R::zero())
-        };
-        lo[j] = k;
-        frac[j] = g - k_r;
-    }
+    let (lo, frac) = cell_and_fraction(p, dx);
 
     let mut out = R::zero();
     for corner in 0..(1usize << D) {

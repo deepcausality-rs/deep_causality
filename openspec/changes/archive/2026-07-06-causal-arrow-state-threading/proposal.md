@@ -26,7 +26,7 @@ the Lean model already describes. Full plan: `openspec/notes/causal-algebra/caus
   stateless via `|a, _, _|`). `CausalLift::In = (A, S, Option<C>)`; `KleisliCompose::run` threads
   `P`'s `(value, state, context)` into `Q` via `and_then`; the `CausalArrow` marker and builder
   (`causal_arrow`, `.next`) use this stage. Add `run_value(a) = run((a, (), None))` for `S = C = ()`.
-- Add `CausalFlow::from_parts` (the general constructor / arrow unit `η`). Update `float_bfloat16`/`compose.rs`
+- Add `CausalFlow::from_parts` (the general constructor / arrow unit `η`). Update `mod.rs`/`compose.rs`
   docs so the state/context-threading claim is now true.
 - **Prove it here:** author `lean/DeepCausalityFormal/Core/CausalArrow.lean`, reducing the arrow laws
   to the monad theorems already proved.
@@ -53,7 +53,7 @@ the Lean model already describes. Full plan: `openspec/notes/causal-algebra/caus
   The value-only DSL (`and_then`/`next`, ~125 callers) is preserved; state-threading is purely
   additive.
 - **Files** (`deep_causality_core/src/types/causal_arrow/` + `causal_flow/`): `lift.rs`, `compose.rs`,
-  `builder.rs`, `float_bfloat16`; `causal_flow/steps.rs`, `causal_flow/construction.rs`; `lib.rs` re-exports;
+  `builder.rs`, `mod.rs`; `causal_flow/steps.rs`, `causal_flow/construction.rs`; `lib.rs` re-exports;
   `tests/types/causal_arrow/*`.
 - **Deviation ledger:** D2 upgrades from "Fixed (value-only, `S=C=()` scope)" to "Fixed — full state-
   threading Kleisli arrow of the causal monad (Option B)."

@@ -22,18 +22,29 @@ Exhaustive over labelled DAGs, at `(n, k)` = (3,1), (4,1), (5,1), (3,2), (4,2), 
 | | |
 |---|---|
 | DAGs enumerated | 88 979 |
-| augmented graphs (CPDAG + `F → R` + an oriented cut) | 4 679 566 |
-| with a consistent DAG extension | 3 811 158 |
-| without one, skipped | 868 408 |
+| cut configurations enumerated | 11 053 704 |
+| rejected by BRCD's validity pass | 6 496 522 |
+| valid but without a consistent DAG extension, skipped | 132 414 |
+| valid, extendable, searched | 4 424 768 |
 | **inputs where R1–R3 under-orients** | **0** |
+
+The configuration population is BRCD's own: the harness enumerates every undirected edge incident on
+a target the way `incident_undirected_edges` does, and admits only what `is_valid_configuration`
+accepts. It proves that parity rather than asserting it — for every `(CPDAG, R)` the accepted set is
+required to match `get_configurations_multi` edge for edge.
 
 ### Why the oracle is not R4
 
 The obvious harness diffs the R1–R3 closure against the R1–R4 closure, and inherits every risk in how
-R4 is transcribed — the literature differs on whether `a — d` must be undirected. So the oracle is
-the definition instead: an edge is compelled when every consistent DAG extension agrees on it, and
+R4 is read — the literature differs on whether `a — d` must be undirected. So the oracle is the
+definition instead: an edge is compelled when every consistent DAG extension agrees on it, and
 orienting every compelled edge gives the maximally oriented PDAG. That needs no orientation rule at
 all. R4 enters only as the hypothesis under test.
+
+The closure under test is the shipped one. The harness calls `meek_complete` and
+`meek_complete_r1_r3` on `MixedGraph` and carries no rules of its own, so a divergence in production
+is a failure here. It also closes the un-augmented configuration, as BRCD does, and separately checks
+that adding `F → r` leaves the closure unchanged.
 
 ### Controls
 
@@ -43,9 +54,9 @@ all passing:
 | Check | Result | What a failure would have meant |
 |---|---|---|
 | R1–R3 equals the definition on every *pattern* (n ≤ 4: 3, 25, 543 DAGs) | pass | The harness is wrong — this is a theorem |
-| **Positive control**: R4 fires on its own canonical configuration, the definition compels it, R1–R3 misses it | pass | R4 as transcribed can never fire, making "R4 never fires" vacuous |
-| **Negative control**: the no-rule closure differs from the definition | 2 601 552 inputs | The comparison detects nothing |
-| **Soundness**: R4 never orients an edge the definition leaves free | 0 violations | The transcription is unsound |
+| **Positive control**: R4 fires on its own canonical configuration, the definition compels it, R1–R3 misses it | pass | The shipped R4 can never fire, making "R4 never fires" vacuous |
+| **Negative control**: the no-rule closure differs from the definition | 2 125 636 inputs | The comparison detects nothing |
+| **Soundness**: R4 never orients an edge the definition leaves free | 0 violations | The shipped closure is unsound |
 
 The first control attempt used R1–R2 as the deliberately-incomplete closure and returned zero — which
 looked like a broken comparison and was not. R1–R2 is *also* complete on this family, so R3 never
@@ -89,7 +100,7 @@ test result: FAILED. 1617 passed; 26 failed; 1 ignored
 ```
 
 Files: `tests/types/mixed_graph/meek_tests.rs` (14), `chordality_tests.rs` (12), both registered in
-`float_bfloat16`. The Bazel suite globs `tests/types/mixed_graph/*_tests.rs`, so no BUILD edit was needed.
+`mod.rs`. The Bazel suite globs `tests/types/mixed_graph/*_tests.rs`, so no BUILD edit was needed.
 
 ### Corner-case enumeration
 

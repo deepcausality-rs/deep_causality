@@ -5,6 +5,19 @@
 use crate::{Float, Float106};
 use core::num::FpCategory;
 
+/// Whether a value carries a negative sign, negative zero included.
+///
+/// `hi < 0.0` is false for `-0.0`, so every sign test written that way silently turned a
+/// negative zero into a positive one. The high word carries the sign of every canonical
+/// value — `Float106::new` normalises `lo` to zero whenever the sum is zero, so a signed
+/// zero is `(±0.0, ±0.0)` — and `is_sign_negative` reads it. The low word is consulted
+/// only for the non-canonical pairs `Float106::from_raw` admits, where `hi` may be `+0.0`
+/// while `lo` holds the value; the previous tests already carried that clause.
+#[inline]
+fn is_negative(x: Float106) -> bool {
+    x.hi.is_sign_negative() || (x.hi == 0.0 && x.lo < 0.0)
+}
+
 impl Float for Float106 {
     #[inline]
     fn nan() -> Self {
@@ -165,25 +178,24 @@ impl Float for Float106 {
         self - self.trunc()
     }
 
+    /// `abs(-0.0)` is `+0.0`: taking a magnitude clears the sign bit, it does not keep it.
     #[inline]
     fn abs(self) -> Self {
-        if self.hi < 0.0 || (self.hi == 0.0 && self.lo < 0.0) {
-            -self
-        } else {
-            self
-        }
+        if is_negative(self) { -self } else { self }
     }
 
+    /// `1.0` for a positive value, `+0.0` included, and `-1.0` for a negative one, `-0.0`
+    /// included, as the trait documents and as `f32`, `f64` and `BFloat16` return. The
+    /// branch this replaced answered `0.0` for both zeros, so neither sign of zero got the
+    /// documented answer.
     #[inline]
     fn signum(self) -> Self {
         if self.is_nan() {
             Self::nan()
-        } else if self.hi > 0.0 || (self.hi == 0.0 && self.lo > 0.0) {
-            Self::from(1.0)
-        } else if self.hi < 0.0 || (self.hi == 0.0 && self.lo < 0.0) {
+        } else if is_negative(self) {
             Self::from(-1.0)
         } else {
-            Self::from(0.0)
+            Self::from(1.0)
         }
     }
 
@@ -242,11 +254,13 @@ impl Float for Float106 {
     }
 
     fn sqrt(self) -> Self {
+        // sqrt(±0) = ±0. The zero test comes first because `-0.0 < 0.0` is false, so a
+        // negative zero is not the NaN case; returning `Self::from(0.0)` dropped its sign.
+        if self.hi == 0.0 {
+            return self;
+        }
         if self.hi < 0.0 {
             return Self::nan();
-        }
-        if self.hi == 0.0 {
-            return Self::from(0.0);
         }
 
         // Newton-Raphson iteration: x_{n+1} = 0.5 * (x_n + a/x_n)
@@ -346,10 +360,18 @@ impl Float for Float106 {
     }
 
     fn to_degrees(self) -> Self {
+        // Scaling ±0 gives ±0. The double-double product renormalises through
+        // `quick_two_sum`, and `-0.0 + 0.0` is `+0.0`, so the sign has to be short-circuited.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         self * Self::from(180.0) / Self::PI
     }
 
     fn to_radians(self) -> Self {
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         self * Self::PI / Self::from(180.0)
     }
 
@@ -385,11 +407,12 @@ impl Float for Float106 {
     }
 
     fn cbrt(self) -> Self {
+        // cbrt(±0) = ±0; the cube root is odd, so the sign of a zero survives it.
         if self.hi == 0.0 {
-            return Self::from(0.0);
+            return self;
         }
 
-        let sign = if self.hi < 0.0 {
+        let sign = if is_negative(self) {
             Self::from(-1.0)
         } else {
             Self::from(1.0)
@@ -423,6 +446,10 @@ impl Float for Float106 {
     }
 
     fn tan(self) -> Self {
+        // tan(±0) = ±0. The quotient ±0/1 renormalises to +0, so the sign is taken directly.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         self.sin() / self.cos()
     }
 
@@ -453,6 +480,10 @@ impl Float for Float106 {
 
     fn atan(self) -> Self {
         if self.is_nan() {
+            return self;
+        }
+        // atan(±0) = ±0. The series below sums `-0.0 + 0.0`, which is `+0.0`.
+        if self.hi == 0.0 && self.lo == 0.0 {
             return self;
         }
         let one = Self::from(1.0);
@@ -519,6 +550,19 @@ impl Float for Float106 {
             }
         }
 
+        // atan2(±0, y) with y non-zero and not NaN: ±0 for a positive y, ±π for a negative
+        // one. The quotient below is a signed zero whose sign the division normalisation
+        // drops, so the sign is read off the numerator here instead.
+        if self.hi == 0.0 && self.lo == 0.0 && !other.hi.is_nan() {
+            return if other.hi > 0.0 {
+                self
+            } else if is_negative(self) {
+                -Self::PI
+            } else {
+                Self::PI
+            };
+        }
+
         let ratio = self / other;
         let atan_ratio = ratio.atan();
 
@@ -533,6 +577,12 @@ impl Float for Float106 {
     }
 
     fn sin_cos(self) -> (Self, Self) {
+        // sin(±0) = ±0 and cos(±0) = 1. The reduction below runs ±0 through a remainder and
+        // a subtraction, and `-0.0 + 0.0` is `+0.0`, so the sign is returned directly.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return (self, Self::from(1.0));
+        }
+
         // Range reduction to [-π, π]
         let reduced = self % Self::TWO_PI;
         let x = if reduced.hi > Self::PI.hi {
@@ -590,6 +640,10 @@ impl Float for Float106 {
     }
 
     fn exp_m1(self) -> Self {
+        // exp_m1(±0) = ±0; the series adds `-0.0 + 0.0` and loses the sign.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         // For small x, use Taylor series directly
         if self.abs().hi < 0.5 {
             let mut sum = self;
@@ -608,6 +662,10 @@ impl Float for Float106 {
     }
 
     fn ln_1p(self) -> Self {
+        // ln_1p(±0) = ±0; the series adds `-0.0 + 0.0` and loses the sign.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         // For small x, use Taylor series directly
         if self.abs().hi < 0.5 {
             let mut sum = self;
@@ -627,9 +685,10 @@ impl Float for Float106 {
 
     fn sinh(self) -> Self {
         // sinh(x) = (e^x - e^{-x}) / 2
-        if !self.hi.is_finite() {
-            // sinh(±inf) = ±inf, sinh(NaN) = NaN. Without this the subtraction below meets a
-            // NaN from the opposite-signed exponential and loses the sign.
+        if !self.hi.is_finite() || (self.hi == 0.0 && self.lo == 0.0) {
+            // sinh(±inf) = ±inf, sinh(NaN) = NaN, sinh(±0) = ±0. Without the first the
+            // subtraction below meets a NaN from the opposite-signed exponential and loses
+            // the sign; without the second it evaluates `(1 - 1) / 2`, a positive zero.
             return self;
         }
         let exp_x = self.exp();
@@ -662,7 +721,9 @@ impl Float for Float106 {
             return self;
         }
         let one = Self::from(1.0);
-        let negative = self.hi < 0.0;
+        // `self.hi < 0.0` is false for `-0.0`, so tanh(-0.0) came back as `+0.0`; tanh is odd
+        // and IEEE 754 requires tanh(-0.0) = -0.0.
+        let negative = is_negative(self);
         let magnitude = self.abs();
         let result = if magnitude.hi.is_infinite() {
             one
@@ -678,6 +739,10 @@ impl Float for Float106 {
     }
 
     fn asinh(self) -> Self {
+        // asinh(±0) = ±0; the formula below evaluates ln(±0 + 1) = +0 and loses the sign.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         // asinh(x) = ln(x + sqrt(x^2 + 1))
         (self + (self * self + Self::from(1.0)).sqrt()).ln()
     }
@@ -691,6 +756,10 @@ impl Float for Float106 {
     }
 
     fn atanh(self) -> Self {
+        // atanh(±0) = ±0; the formula below evaluates 0.5·ln(1) = +0 and loses the sign.
+        if self.hi == 0.0 && self.lo == 0.0 {
+            return self;
+        }
         // atanh(x) = 0.5 * ln((1+x)/(1-x)) for |x| < 1
         if self.hi.abs() >= 1.0 {
             if self.hi == 1.0 {
@@ -709,10 +778,10 @@ impl Float for Float106 {
     }
 
     fn copysign(self, sign: Self) -> Self {
-        if sign.hi.is_sign_positive() {
-            self.abs()
-        } else {
+        if is_negative(sign) {
             -self.abs()
+        } else {
+            self.abs()
         }
     }
 }

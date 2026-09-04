@@ -237,10 +237,10 @@ the live one; core's `lib.rs` re-exports the aliases publicly, so any dispositio
 breaking change to a published crate; and `IntType` exists only in core, so it has no counterpart in
 the live set. Those findings are recorded in the deferred note rather than acted on here.
 
-What survives into this change is the one piece that stands alone and does not depend on the design
-question: the missing `Verdict` instances at `f32` and `Float106`. They are two implementations in
-`deep_causality_algebra` beside the trait, they close a real gap in `num-verdict-algebra`, and they
-are the prerequisite the deferred change will need on day one.
+Nothing from this item survives into this change. An earlier draft carried the missing `Verdict`
+instances at `f32` and `Float106` forward on the ground that they stood alone; D10 records why that
+was wrong and why they were cut with the rest. They are a prerequisite the deferred change will need
+on day one, and they are recorded there.
 
 *Alternative considered:* keeping the loader-genericity work here, since the discovery loaders parse
 into an `f64` tensor and could serve the algorithms crates at higher precision without any engine

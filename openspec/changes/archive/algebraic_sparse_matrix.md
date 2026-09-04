@@ -484,7 +484,7 @@ let c = test_group(a, b); // Should compile
 ```
 
 ### Phase 6: Integration and Documentation (Week 3)
-- [ ] Update `float_bfloat16` to re-export algebra
+- [ ] Update `mod.rs` to re-export algebra
 - [ ] Add comprehensive documentation
 - [ ] Create examples in `examples/` directory
 - [ ] Update `README.md`

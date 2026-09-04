@@ -12,7 +12,7 @@ operator dispatch.
 The geometry is already representation-complete for this. `CubicalReggeGeometry<D, R, S>`
 stores edge lengths as a four-level union `UnitEdge | Uniform | PerAxis | PerEdge { Vec<R> }`,
 and `cell_volume` / `top_cell_volume` / the star diagonal already dispatch all four
-(`float_bfloat16`, `volumes.rs`, `has_hodge_star.rs`). Cut cells add a *per-cell volume/aperture
+(`mod.rs`, `volumes.rs`, `has_hodge_star.rs`). Cut cells add a *per-cell volume/aperture
 override*, consumed by the same code paths.
 
 The solver substrate is also in place: the constrained Leray projection, the no-slip

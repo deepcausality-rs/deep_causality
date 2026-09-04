@@ -13,7 +13,7 @@ For the project overview see [README.md](./README.md).
 
 Kernels live under `src/kernels/<domain>/`. Each domain ships pure computation kernels, monadic
 wrappers (`wrappers.rs`), and domain-specific quantity newtypes (`quantities.rs`). The table below
-lists the source files (excluding `float_bfloat16`, `quantities.rs`, and `wrappers.rs`) shipped under each
+lists the source files (excluding `mod.rs`, `quantities.rs`, and `wrappers.rs`) shipped under each
 domain and a short description of what each one covers.
 
 | Domain | Source files | Coverage |

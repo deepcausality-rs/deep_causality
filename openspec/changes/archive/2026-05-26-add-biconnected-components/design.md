@@ -6,7 +6,7 @@ Issue #581 asks for three new structural decompositions — articulation points,
 
 Constraints from `AGENTS.md` and the existing crate layout:
 
-- One algorithm per file under `ultragraph/src/types/storage/graph_csm/`; tests mirror the path under `ultragraph/tests/`, registered in the corresponding `float_bfloat16` and in `ultragraph/tests/BUILD.bazel`.
+- One algorithm per file under `ultragraph/src/types/storage/graph_csm/`; tests mirror the path under `ultragraph/tests/`, registered in the corresponding `mod.rs` and in `ultragraph/tests/BUILD.bazel`.
 - No `unsafe`, no `dyn`, no macros in `src/`, no new external dependencies.
 - 100% line coverage on added code.
 

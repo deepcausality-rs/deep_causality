@@ -91,8 +91,8 @@ NaN inputs. Both were corrected together, and the defect is row 4 above so it st
 
 ## Phase 5: mutation testing
 
-Pending: `cargo mutants -p deep_causality_num --file 'src/bfloat16/*.rs' --file
-'src/float/bfloat16_impl.rs' -j 8`; the result is recorded below when the run completes.
+Pending: `cargo mutants -p deep_causality_num --file 'src/float_bfloat16/*.rs' --file
+'src/float/bfloat16_impl.rs' -j 8`; the result is recorded below when the run completes. Not yet run.
 
 ## The half-rs inventory
 
@@ -120,12 +120,12 @@ The issue asked that every open and known issue of the reference crate be fixed 
 
 | Check | Result |
 |---|---|
-| `cargo test -p deep_causality_num` | 3 838 passed (the `float_bfloat16` and `float` suites included) |
-| `cargo test -p deep_causality_algebra` | 330 passed |
+| `cargo test -p deep_causality_num` | 3 875 passed (the `float_bfloat16` and `float` suites included) |
+| `cargo test -p deep_causality_algebra` | 382 passed |
 | `cargo clippy --all-targets --all-features -- -D warnings`, both crates | clean |
 | `cargo build --no-default-features --features libm_math -p deep_causality_num` | builds |
 | `cargo check --workspace` | passes |
-| `bazel test` on `num:bfloat16`, `num:float`, `algebra:bfloat16` | 17 of 17 pass |
+| `bazel test` on `num:float_bfloat16`, `num:float`, `algebra:bfloat16` | 18 of 18 pass |
 | `buildifier -mode=check -lint=warn` on both `BUILD.bazel` files | clean |
 | Defect audit, 24 defects | every one caught by a subject test; tree restored byte for byte |
 

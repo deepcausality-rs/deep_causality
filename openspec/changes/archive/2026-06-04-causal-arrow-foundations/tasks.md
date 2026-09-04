@@ -15,7 +15,7 @@
 
 > Prerequisite (landed): `num-real-trait` (the `Real` trait + `RealField: Real + Field` + the Float-blanket tower).
 
-- [x] 3.1 Folder module `src/dual/dual_number/` mirroring `src/complex/complex_number/`. `float_bfloat16`: `pub struct Dual<T: Real> { re, du }`; constructors `new`/`constant`/`variable`; accessors `value`/`derivative`; `#[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]`. **No `Dual32`/`Dual64` aliases** — `Dual` stays generic over the precision parameter (concrete aliases would defeat the precision-as-a-parameter design).
+- [x] 3.1 Folder module `src/dual/dual_number/` mirroring `src/complex/complex_number/`. `mod.rs`: `pub struct Dual<T: Real> { re, du }`; constructors `new`/`constant`/`variable`; accessors `value`/`derivative`; `#[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]`. **No `Dual32`/`Dual64` aliases** — `Dual` stays generic over the precision parameter (concrete aliases would defeat the precision-as-a-parameter design).
 - [x] 3.2 `arithmetic.rs`: `Add`/`Sub`/`Mul`/`Neg`/`Div` + `AddAssign`/`SubAssign`/`MulAssign` + scalar `Mul<T>`/`MulAssign<T>` + `Sum`/`Product`, by the dual rules. **`Div` is implemented but NOT `DivAssign`**: that keeps `Dual` out of `InvMonoid`/`Field` (their blankets require both), so the zero-divisor `ε` cannot be falsely treated as invertible.
 - [x] 3.3 `identity.rs`: `Zero`/`One`.
 - [x] 3.4 `algebra.rs`: markers `Associative`/`Commutative`/`Distributive` + `AbelianGroup`. `Ring`/`AssociativeRing`/`CommutativeRing`/`Module<T>` come from the existing blanket impls (no explicit impl needed). **Not** `Field`/`RealField` (documented zero-divisor reason).

@@ -17,12 +17,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
   `pub const … : f64` with cited comments; register in `constants/mod.rs`. Reuse the existing
   `BOLTZMANN_CONSTANT`, `ELEMENTARY_CHARGE`, `VACUUM_ELECTRIC_PERMITTIVITY`, `ELECTRON_MASS`.
 - [x] 1.4 Tests (`tests/` mirror, f64): each constructor accepts valid input and rejects each out-of-range
-  case with the correct `PhysicsError` variant; round-trip accessor equals input. Register in `float_bfloat16` +
+  case with the correct `PhysicsError` variant; round-trip accessor equals input. Register in `mod.rs` +
   `tests/BUILD.bazel`.
 
 ## 2. Pointwise Park-2T kernels + wrappers (`deep_causality_physics/src/kernels/hypersonic/`)
 
-- [x] 2.1 Create the `kernels/hypersonic/` domain (`float_bfloat16`, `wrappers.rs`) and flatten at `lib.rs`
+- [x] 2.1 Create the `kernels/hypersonic/` domain (`mod.rs`, `wrappers.rs`) and flatten at `lib.rs`
   (`pub use crate::kernels::hypersonic::*;`).
 - [x] 2.2 `vibrational_relaxation_kernel<R>` — Landau–Teller increment toward `T_tr` with Millikan–White
   `τ_vt` (the LER closed-form: `T_ve' = T_tr − (T_tr − T_ve)·exp(−Δt/τ_vt)`); pure `fn<R: RealField +
@@ -46,7 +46,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
   a tolerance set wide enough to absorb the named Tier-A biases — the ~2× two-temperature-lumping
   over-prediction (Farbar–Boyd–Martin 2013) and the Gupta-vs-Park rate-set sensitivity — with the tolerance
   justified in a comment (anchors: RAM-C II, *Fluid Dynamics* 2022, Aiken–Carter–Boyd 2025), not hand-tuned.
-  Register in `float_bfloat16` + `tests/BUILD.bazel`.
+  Register in `mod.rs` + `tests/BUILD.bazel`.
 
 ## 3. LER stage mechanism + state-derived temperature (`deep_causality_cfd/src/types/flow/`)
 
@@ -67,7 +67,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 - [x] 3.5 Tests (f64): LER helper equals the analytic exponential to round-off; stays bounded/monotone at
   `τ = dt/1000` (explicit Euler diverges); static `(A,B)` composition type-checks with no `dyn`;
   `IonizationStage` produces `α ≠ α_eq` under a fast temperature ramp and `α → α_eq` as it slows. Register in
-  `float_bfloat16` + `tests/BUILD.bazel`.
+  `mod.rs` + `tests/BUILD.bazel`.
 
 ## 4. Coupling-seam generalization + blackout trigger + observables (`deep_causality_cfd`)
 
@@ -91,7 +91,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 - [x] 4.3 Tests (f64): trigger raises the flag above the band and not below; the march run emits the `n_e`,
   plasma-frequency, and dwell series; counterfactual path-dependence — two histories reaching a comparable
   endpoint via different temperature ramps yield different `n_e`/dwell (the strengthened dynamic test).
-  Register in `float_bfloat16` + `tests/BUILD.bazel`.
+  Register in `mod.rs` + `tests/BUILD.bazel`.
 
 ## 5. Self-verifying verification example (`deep_causality_cfd/verification/qtt_park2t_blackout/`)
 
@@ -122,7 +122,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 - [x] 6.2 Confirm constraints: static dispatch only, no `dyn`/`unsafe`/lib-macros; crate-root imports; lib
   float literals confined to `constants/` mapping via `from_f64`; no magic numbers / hardcoded schedules /
   fabricated proxies in kernels or stages (the dynamic-by-construction invariant); 100% coverage of new code;
-  every new test module registered in `float_bfloat16` and `tests/BUILD.bazel` for both crates.
+  every new test module registered in `mod.rs` and `tests/BUILD.bazel` for both crates.
 - [x] 6.3 `openspec validate add-park2t-blackout-tier-a --strict` passes.
 - [x] 6.4 Mark **Gap 2 Tier-A closed** in `openspec/notes/plasma-blackout/gap-analysis.md` §4 Gap 2 and the
   gap-2 note §6; point Tier-B (compressible QTT marcher, reacting `*_rhs`, multi-mode relaxation, shock-rank

@@ -109,7 +109,7 @@ stateless ergonomics (`causal_arrow(|x| …)`) are retained with zero regression
    tests — a reusable stateful pipeline threads accumulated state; left/right id; assoc; error
    short-circuit preserves state.
 9. `Core/CausalArrow.lean` + Rust witnesses + THEOREM_MAP rows; bare-`lean` typecheck.
-10. Update `float_bfloat16` / `compose.rs` docs — the state/context-threading claim is now true and precise.
+10. Update `mod.rs` / `compose.rs` docs — the state/context-threading claim is now true and precise.
 11. Verify: `bazel test //...`; bare-`lean` on the new file.
 
 ## 7. Deviation-ledger update

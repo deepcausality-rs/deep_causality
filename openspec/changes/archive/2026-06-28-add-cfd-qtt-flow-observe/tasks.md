@@ -24,5 +24,5 @@
 ## 4. Finalize
 
 - [x] 4.1 `cargo fmt`; clippy `--all-targets` clean (fix, don't suppress); `cargo test -p deep_causality_cfd` green. No `unsafe`/`dyn`/lib-code macros; lib float literals confined to seed/observable mapping (`from_f64`), not magic constants.
-- [x] 4.2 Register the new test modules in their `float_bfloat16` and the Bazel `tests/` target; import all crate types from the crate root.
+- [x] 4.2 Register the new test modules in their `mod.rs` and the Bazel `tests/` target; import all crate types from the crate root.
 - [x] 4.3 `openspec validate add-cfd-qtt-flow-observe --strict` passes; `gap-one-cfd-tensor-bridge.md` §6 updated (step 6 done, immersed-body observables next).

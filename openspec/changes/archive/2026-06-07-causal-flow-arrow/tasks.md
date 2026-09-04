@@ -4,7 +4,7 @@
   `ArrowChoice` and the CDL). One type, one module: `deep_causality_haft/src/either/mod.rs` with the enum,
   constructors, and predicates (`is_left` / `is_right`); derive `Debug`, `Clone`, `PartialEq`. Re-export
   from the `haft` crate root. `deep_causality_core` imports it from `haft` (already a dependency).
-- [x] 1.2 Register `deep_causality_haft/tests/either/either_tests.rs` in its `float_bfloat16` chain and in
+- [x] 1.2 Register `deep_causality_haft/tests/either/either_tests.rs` in its `mod.rs` chain and in
   `deep_causality_haft/tests/BUILD.bazel`.
 
 ## 2. The Causal Arrow (reusable pipeline value + composition)
@@ -65,7 +65,7 @@
 - [x] 5.5 `next` parity: composing pipelines via `next` equals the hand-written chain; `next` short-circuits.
 - [x] 5.6 Error-path coverage: every short-circuit and non-convergence branch in the new modules is
   exercised.
-- [x] 5.7 Registered every new test file in its `float_bfloat16` chain and in `tests/BUILD.bazel` (added
+- [x] 5.7 Registered every new test file in its `mod.rs` chain and in `tests/BUILD.bazel` (added
   `types_causal_arrow` and `types_causal_flow` suites).
 
 ## 6. Showcase — rewrite the loop-using examples (output preserved) — NEXT STAGE

@@ -1,6 +1,6 @@
 ## 1. Scaffolding and registration (compiles empty)
 
-- [x] 1.1 Create `src/kernels/propulsion/` with `float_bfloat16` and topic files
+- [x] 1.1 Create `src/kernels/propulsion/` with `mod.rs` and topic files
       (`performance.rs`, `nozzle.rs`, `srp.rs`, `plume.rs`, `descent.rs`, `wrappers.rs`), SPDX
       headers and `//!` module docs
 - [x] 1.2 Register the chain: `kernels/mod.rs` (`pub(crate) mod propulsion;`),

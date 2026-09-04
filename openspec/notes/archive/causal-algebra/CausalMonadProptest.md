@@ -212,7 +212,7 @@ short-circuit branch of every law is exercised.
 
 Mirror the source tree (AGENTS.md): add
 `core/tests/types/causal_monad/causal_monad_law_tests.rs` beside the existing
-`causal_monad_tests.rs`, registered in that directory's `float_bfloat16`. With the §3 fix in place these
+`causal_monad_tests.rs`, registered in that directory's `mod.rs`. With the §3 fix in place these
 can be plain external `tests/` (no in-crate access needed — `==` already compares log messages).
 Each law is one `#[test]` that loops N seeded cases (e.g. 1_000) and asserts with `==`, printing
 the seed on failure so any counterexample reproduces.

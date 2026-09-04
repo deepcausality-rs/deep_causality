@@ -3,15 +3,31 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Compares the Meek closures against the definition of a compelled edge, on the graphs BRCD's
-//! Algorithm 1 builds.
+//! Compares BRCD's **production** Meek closures against the definition of a compelled edge, on the
+//! graphs BRCD's Algorithm 1 builds.
+//!
+//! # What is under test
+//!
+//! The shipped closures, not a transcription of them:
+//! [`MixedGraph::meek_complete_r1_r3`](deep_causality_topology::MixedGraph::meek_complete_r1_r3) and
+//! [`MixedGraph::meek_complete`](deep_causality_topology::MixedGraph::meek_complete). This file
+//! contains no copy of the four rules, so an omission in the shipped R4 cannot pass here.
 //!
 //! # What is enumerated
 //!
-//! For each vertex count up to the bound: every labelled DAG, its CPDAG, and then — as Algorithm 1
-//! does — for each candidate root-cause set `R` of size `k`, the CPDAG augmented with `F → r` for
-//! every `r ∈ R`, under each orientation of the edge cut between `R` and `V \ R`. Inputs admitting
-//! no consistent DAG extension are skipped, since an orientation of one means nothing.
+//! For each vertex count up to the bound: every labelled DAG and its CPDAG. Then, for each
+//! candidate root-cause set `R` of size `k`, exactly what
+//! [`get_configurations_multi`] enumerates — every orientation of **every undirected edge incident
+//! on any target**, including the edges internal to `R`, kept only when production's validity pass
+//! accepts it (Meek-complete, acyclic, no new unshielded collider at a target).
+//!
+//! The enumeration is checked against `get_configurations_multi` itself on every `(CPDAG, R)`: the
+//! accepted set must match production's, edge for edge. A mismatch is a harness bug and exits
+//! non-zero, so the population cannot silently drift from Algorithm 1's.
+//!
+//! The graph production actually Meek-closes is the CPDAG with those edges oriented — the F-node is
+//! added afterwards by [`augmented_graph`] and the closure is never re-run. That is checked too: the
+//! F-augmented graph must be a fixpoint of the production closure.
 //!
 //! # The oracle
 //!
@@ -24,14 +40,16 @@
 //!
 //! # Checks on the result
 //!
-//! - `verify_cpdag_construction`: R1–R3 equals the definition on every pattern of a DAG.
-//! - `positive_control_r4`: R4 fires on a configuration the definition compels and R1–R3 misses.
-//! - `Rules::None`: the no-rule closure differs from the definition, so the comparison detects
-//!   under-orientation where it exists.
-//! - Soundness: R4 never orients an edge the definition leaves free.
+//! - `verify_cpdag_construction`: production R1–R3 equals the definition on every pattern of a DAG.
+//! - `positive_control_r4`: production R4 fires on a configuration the definition compels and
+//!   production R1–R3 misses.
+//! - Negative control: the no-rule closure (the identity) differs from the definition on a large
+//!   population, so the comparison detects under-orientation where it exists.
+//! - Soundness: production R1–R4 never orients an edge the definition leaves free.
+//! - Every witness R1–R3 leaves must be recovered by production R1–R4.
 //!
-//! Any of the four failing exits non-zero, because the headline count is uninterpretable without
-//! all of them.
+//! Any of these failing exits non-zero, because the headline count is uninterpretable without all of
+//! them.
 //!
 //! Run with:
 //! ```bash
@@ -41,6 +59,13 @@
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
+
+use deep_causality_algorithms::brcd::brcd_augment::{augmented_graph, get_configurations_multi};
+use deep_causality_algorithms::brcd::brcd_validity::{
+    baseline_parents, has_new_unshielded_collider_any,
+};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::MixedGraph;
 
 /// The state of the pair `(i, j)` with `i < j`.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -54,6 +79,9 @@ enum Cell {
 }
 
 /// A partially directed graph on `n` labelled vertices, stored by unordered pair.
+///
+/// This is the oracle's representation only: it carries no orientation rule. Every closure goes
+/// through the production `MixedGraph` (see `meek_r1_r3` / `meek_r1_r4`).
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct Pdag {
     n: usize,
@@ -131,10 +159,6 @@ impl Pdag {
         (0..self.n).filter(|&u| self.has_arc(v, u)).collect()
     }
 
-    fn undirected_neighbors(&self, v: usize) -> Vec<usize> {
-        (0..self.n).filter(|&u| self.is_undirected(v, u)).collect()
-    }
-
     fn undirected_edges(&self) -> Vec<(usize, usize)> {
         let mut out = Vec::new();
         for i in 0..self.n {
@@ -208,91 +232,63 @@ impl Pdag {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The orientation rules, transcribed from Meek (1995). Used for the closure under test, never as
-// the oracle.
+// The bridge to production. Every orientation rule this file exercises lives behind these two
+// functions; nothing here re-states a rule.
 // ---------------------------------------------------------------------------------------------
 
-/// R1: there is `c → a` with `c` not adjacent to `b`.
-fn r1(g: &Pdag, a: usize, b: usize) -> bool {
-    g.parents(a).into_iter().any(|c| !g.is_adjacent(c, b))
-}
-
-/// R2: there is a directed path `a → c → b`.
-fn r2(g: &Pdag, a: usize, b: usize) -> bool {
-    let parents_b: BTreeSet<usize> = g.parents(b).into_iter().collect();
-    g.children(a).into_iter().any(|c| parents_b.contains(&c))
-}
-
-/// R3: there are `c → b` and `d → b` with `a — c`, `a — d` undirected and `c`, `d` non-adjacent.
-fn r3(g: &Pdag, a: usize, b: usize) -> bool {
-    let parents_b = g.parents(b);
-    let und_a: BTreeSet<usize> = g.undirected_neighbors(a).into_iter().collect();
-    for x in 0..parents_b.len() {
-        for y in (x + 1)..parents_b.len() {
-            let (c, d) = (parents_b[x], parents_b[y]);
-            if und_a.contains(&c) && und_a.contains(&d) && !g.is_adjacent(c, d) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-/// R4: there are `c`, `d` with `a — d` and `a — c` undirected, `d → c`, `c → b`, and `b` not
-/// adjacent to `d`.
-fn r4(g: &Pdag, a: usize, b: usize) -> bool {
-    for d in g.undirected_neighbors(a) {
-        for c in g.undirected_neighbors(a) {
-            if c == d {
-                continue;
-            }
-            if g.has_arc(d, c) && g.has_arc(c, b) && !g.is_adjacent(b, d) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-/// Which rules a closure applies. `R1R2` exists only as a negative control: it is deliberately
-/// incomplete, so a search that reports no difference under it is not searching.
-#[derive(Copy, Clone, PartialEq, Eq)]
-enum Rules {
-    /// No rules: the closure is the identity. Differs from the definition wherever the definition
-    /// compels anything.
-    None,
-    R1R2,
-    R1R3,
-    R1R4,
-}
-
-/// Closes `g` under the supplied rules to a fixpoint.
-fn close_with(g: &Pdag, rules: Rules) -> Pdag {
-    let mut g = g.clone();
-    loop {
-        let mut changed = false;
-        for (u, v) in g.undirected_edges() {
-            if !g.is_undirected(u, v) {
-                continue;
-            }
-            let forces = |x: usize, y: usize, g: &Pdag| match rules {
-                Rules::None => false,
-                Rules::R1R2 => r1(g, x, y) || r2(g, x, y),
-                Rules::R1R3 => r1(g, x, y) || r2(g, x, y) || r3(g, x, y),
-                Rules::R1R4 => r1(g, x, y) || r2(g, x, y) || r3(g, x, y) || r4(g, x, y),
+/// The same graph as a `MixedGraph`, the type the production closure operates on.
+fn to_mixed(p: &Pdag) -> MixedGraph<()> {
+    let data = CausalTensor::new(vec![(); p.n], vec![p.n])
+        .expect("a unit payload of length n is a valid 1-D tensor");
+    let mut g = MixedGraph::<()>::new(p.n, data, 0).expect("n >= 1 with a matching payload");
+    for i in 0..p.n {
+        for j in (i + 1)..p.n {
+            let added = match p.cell(i, j) {
+                Cell::Absent => Ok(()),
+                Cell::Undirected => g.add_undirected(i, j),
+                Cell::Forward => g.add_arc(i, j),
+                Cell::Backward => g.add_arc(j, i),
             };
-            if forces(u, v, &g) {
-                g.orient(u, v);
-                changed = true;
-            } else if forces(v, u, &g) {
-                g.orient(v, u);
-                changed = true;
-            }
-        }
-        if !changed {
-            return g;
+            added.expect("each unordered pair is written exactly once");
         }
     }
+    g
+}
+
+/// The inverse of `to_mixed`, for the oracle's comparisons. Only directed and undirected edges
+/// occur here: BRCD builds no bidirected or circle endpoints.
+fn from_mixed(g: &MixedGraph<()>) -> Pdag {
+    let mut p = Pdag::empty(g.num_vertices());
+    for (u, v) in g.undirected_edges() {
+        p.set_cell(u, v, Cell::Undirected);
+    }
+    for (u, v) in g.arcs() {
+        p.set_cell(u, v, Cell::Forward);
+    }
+    p
+}
+
+/// The production R1–R3 closure.
+fn meek_r1_r3(p: &Pdag) -> Pdag {
+    let mut g = to_mixed(p);
+    g.meek_complete_r1_r3();
+    from_mixed(&g)
+}
+
+/// The production R1–R4 closure.
+fn meek_r1_r4(p: &Pdag) -> Pdag {
+    let mut g = to_mixed(p);
+    g.meek_complete();
+    from_mixed(&g)
+}
+
+/// The edge content of a graph: its arcs and its undirected edges, both in ascending canonical
+/// order. Two `MixedGraph`s with the same signature are the same partially directed graph.
+type Signature = (Vec<(usize, usize)>, Vec<(usize, usize)>);
+
+/// The edge content of a graph, for comparing two `MixedGraph`s by structure alone.
+fn signature(g: &MixedGraph<()>) -> Signature {
+    (g.arcs(), g.undirected_edges())
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -378,10 +374,10 @@ fn enumerate_dags(n: usize) -> Vec<Pdag> {
     out
 }
 
-/// The CPDAG of a DAG: its skeleton, its v-structures, closed under the rules.
+/// The CPDAG of a DAG: its skeleton, its v-structures, closed under the production R1–R3 rules —
+/// the same closure `dag_to_cpdag` uses.
 ///
-/// Uses the restricted closure, which is complete for a pattern; `verify_cpdag_construction`
-/// checks that against the oracle.
+/// `verify_cpdag_construction` checks the result against the oracle.
 fn cpdag_of(dag: &Pdag) -> Pdag {
     let mut p = Pdag::empty(dag.n);
     for i in 0..dag.n {
@@ -395,32 +391,21 @@ fn cpdag_of(dag: &Pdag) -> Pdag {
         p.orient(a, c);
         p.orient(b, c);
     }
-    close_with(&p, Rules::R1R3)
+    meek_r1_r3(&p)
 }
 
-/// Adds the proxy node `F` with `F → r` for each `r ∈ R`, as Algorithm 1 line 3 does. `F` is the
-/// new last vertex.
-fn augment_with_f(cpdag: &Pdag, roots: &[usize]) -> Pdag {
-    let n = cpdag.n + 1;
-    let f = cpdag.n;
-    let mut g = Pdag::empty(n);
-    for i in 0..cpdag.n {
-        for j in (i + 1)..cpdag.n {
-            g.set_cell(i, j, cpdag.cell(i, j));
-        }
-    }
-    for &r in roots {
-        g.set_cell(f, r, Cell::Forward);
-    }
-    g
-}
-
-/// The undirected edges with exactly one endpoint in `roots` — the cut Algorithm 1 orients.
-fn cut_edges(g: &Pdag, roots: &[usize]) -> Vec<(usize, usize)> {
-    let in_r: BTreeSet<usize> = roots.iter().copied().collect();
-    g.undirected_edges()
+/// Every undirected edge with **at least one** endpoint in `targets` — the set
+/// `brcd_augment::incident_undirected_edges` collects, in the same ascending canonical order, so
+/// bit `i` of a configuration selects the same edge here as it does in production.
+///
+/// Note the `||`: an edge with *both* endpoints in `targets` is enumerated too. Restricting this to
+/// the cut (exactly one endpoint in `targets`) would make the search miss part of Algorithm 1's
+/// configuration space.
+fn incident_undirected_edges(p: &Pdag, targets: &[usize]) -> Vec<(usize, usize)> {
+    let target_set: BTreeSet<usize> = targets.iter().copied().collect();
+    p.undirected_edges()
         .into_iter()
-        .filter(|&(u, v)| in_r.contains(&u) != in_r.contains(&v))
+        .filter(|&(a, b)| target_set.contains(&a) || target_set.contains(&b))
         .collect()
 }
 
@@ -459,33 +444,42 @@ struct Witness {
 
 struct Stats {
     dags: usize,
-    augmented: usize,
-    extendable: usize,
+    /// Raw orientations of the incident undirected edges, before any filter.
+    configurations: usize,
+    /// Of those, the ones production's validity pass rejects (cyclic after Meek completion, or a
+    /// new unshielded collider at a target). These never reach Algorithm 1's downstream.
+    rejected_invalid: usize,
+    /// Production-valid configurations that still admit no consistent DAG extension, so an
+    /// orientation of them means nothing. Reported, not searched.
     non_extendable: usize,
+    /// The searched population: production-valid and extendable.
+    extendable: usize,
     witnesses: usize,
     r4_recovered_all: usize,
-    /// Negative control: inputs the no-rule closure under-orients. Zero here would mean the
-    /// comparison detects nothing, and the headline result would be meaningless.
-    control_witnesses: usize,
-    /// Inputs R1-R2 alone under-orients — that is, where R3 does real work.
-    r3_needed: usize,
-    /// Inputs where adding R4 changes the closure at all.
-    r4_fires: usize,
-    /// Inputs that still carry an undirected edge after the cut is oriented. If this is near zero
-    /// the search is vacuous: there is nothing left for any rule to orient.
+    /// Inputs that still carry an undirected edge after the incident edges are oriented. If this is
+    /// near zero the search is vacuous: there is nothing left for any rule to orient.
     with_free_edge: usize,
-    /// Inputs where the definition compels something the input did not already fix. This is the
-    /// population in which a rule can possibly be incomplete.
+    /// Inputs where the definition compels something the input did not already fix. This is both
+    /// the population in which a rule can possibly be incomplete and the negative control: the
+    /// no-rule closure is the identity, so this is exactly the count of inputs it under-orients.
     oracle_orients_something: usize,
-    /// Of those, the ones where R1-R3 also oriented something.
+    /// Of those, the ones where production R1-R3 also oriented something.
     r1r3_orients_something: usize,
-    /// Inputs where R4 orients an edge the definition does not compel. Any is a transcription bug.
+    /// Inputs where adding R4 changes the production closure at all.
+    r4_fires: usize,
+    /// Inputs where production R1-R4 orients an edge the definition does not compel. Any is a bug
+    /// in the shipped rules.
     r4_unsound: usize,
     r4_unsound_example: Option<String>,
+    /// Configurations whose F-node-augmented graph is not a fixpoint of the production closure.
+    /// Algorithm 1 never re-closes after augmenting, so any of these would be an under-oriented
+    /// graph handed to `mec_size`.
+    f_augment_compels: usize,
+    f_augment_example: Option<String>,
 }
 
-/// For the pattern of a DAG, the R1–R3 closure equals the maximally oriented PDAG. A failure here
-/// is a bug in this file.
+/// For the pattern of a DAG, the production R1–R3 closure equals the maximally oriented PDAG. A
+/// failure here is a bug in the shipped closure or in this file.
 fn verify_cpdag_construction(n: usize) -> Result<usize, String> {
     let mut checked = 0;
     for dag in enumerate_dags(n) {
@@ -505,12 +499,12 @@ fn verify_cpdag_construction(n: usize) -> Result<usize, String> {
     Ok(checked)
 }
 
-/// Checks R4 on the configuration it exists for: `a — b`, `a — c`, `a — d` undirected, `d → c → b`,
-/// `b` and `d` non-adjacent.
+/// Checks the production R4 on the configuration it exists for: `a — b`, `a — c`, `a — d`
+/// undirected, `d → c → b`, `b` and `d` non-adjacent.
 ///
 /// The definition compels `a → b` here: an extension orienting `b → a` is forced to `c → a` and
 /// `d → a` to avoid a cycle, and `b → a ← d` is then a new unshielded collider. Asserts that the
-/// definition compels it, that R1–R3 does not orient it, and that R1–R4 does.
+/// definition compels it, that production R1–R3 does not orient it, and that production R1–R4 does.
 fn positive_control_r4() -> Result<(), String> {
     let (a, b, c, d) = (0usize, 1usize, 2usize, 3usize);
     let mut p = Pdag::empty(4);
@@ -527,17 +521,17 @@ fn positive_control_r4() -> Result<(), String> {
             truth.render()
         ));
     }
-    let restricted = close_with(&p, Rules::R1R3);
+    let restricted = meek_r1_r3(&p);
     if restricted.has_arc(a, b) {
         return Err(format!(
             "R1-R3 already orients a->b, so this configuration does not isolate R4: {}",
             restricted.render()
         ));
     }
-    let full = close_with(&p, Rules::R1R4);
+    let full = meek_r1_r4(&p);
     if !full.has_arc(a, b) {
         return Err(format!(
-            "R4 AS TRANSCRIBED DOES NOT FIRE on its own configuration — the rule is mis-stated: {}",
+            "THE PRODUCTION R4 DOES NOT FIRE on its own configuration — the shipped rule is wrong: {}",
             full.render()
         ));
     }
@@ -551,28 +545,91 @@ fn positive_control_r4() -> Result<(), String> {
     Ok(())
 }
 
-fn search(n: usize, k: usize, stats: &mut Stats, witnesses: &mut Vec<Witness>) {
+/// The population mismatch a `(CPDAG, R)` can report: the harness's accepted configurations must be
+/// exactly `get_configurations_multi`'s.
+fn cross_check_population(
+    cpdag: &MixedGraph<()>,
+    roots: &[usize],
+    accepted: &mut Vec<Signature>,
+) -> Result<(), String> {
+    let production = get_configurations_multi(cpdag, roots)
+        .map_err(|e| format!("get_configurations_multi failed: {e:?}"))?;
+    let mut produced: Vec<_> = production.iter().map(signature).collect();
+    produced.sort();
+    accepted.sort();
+    if &produced != accepted {
+        return Err(format!(
+            "the harness enumerated {} configurations, get_configurations_multi {} — \
+             the searched population is not Algorithm 1's",
+            accepted.len(),
+            produced.len()
+        ));
+    }
+    Ok(())
+}
+
+fn search(
+    n: usize,
+    k: usize,
+    stats: &mut Stats,
+    witnesses: &mut Vec<Witness>,
+) -> Result<(), String> {
     for dag in enumerate_dags(n) {
         stats.dags += 1;
         let cpdag = cpdag_of(&dag);
+        let cpdag_graph = to_mixed(&cpdag);
 
         for roots in subsets_of_size(n, k) {
-            let augmented = augment_with_f(&cpdag, &roots);
-            let cut = cut_edges(&augmented, &roots);
+            let incident = incident_undirected_edges(&cpdag, &roots);
+            let baseline = baseline_parents(&cpdag_graph, &roots);
+            let mut accepted = Vec::new();
 
-            for mask in 0u32..(1u32 << cut.len()) {
-                let mut input = augmented.clone();
-                for (bit, &(u, v)) in cut.iter().enumerate() {
-                    if mask >> bit & 1 == 1 {
-                        input.orient(u, v);
+            for combo in 0u32..(1u32 << incident.len()) {
+                stats.configurations += 1;
+
+                // Production's bit convention: bit i clear orients (a, b), set orients (b, a).
+                let mut input = cpdag.clone();
+                for (bit, &(a, b)) in incident.iter().enumerate() {
+                    if combo >> bit & 1 == 0 {
+                        input.orient(a, b);
                     } else {
-                        input.orient(v, u);
+                        input.orient(b, a);
                     }
                 }
-                stats.augmented += 1;
+
+                // Production's closure, then production's validity pass. A rejected configuration
+                // never reaches Algorithm 1's downstream, so it is not part of the population.
+                let mut completed = to_mixed(&input);
+                completed.meek_complete();
+                if completed.has_cycle()
+                    || has_new_unshielded_collider_any(&completed, &roots, &baseline)
+                {
+                    stats.rejected_invalid += 1;
+                    continue;
+                }
+                accepted.push(signature(&completed));
+
+                // Algorithm 1 adds the F-node after the closure and never re-closes. Check that
+                // costs nothing: the augmented graph must already be a fixpoint.
+                let augmented = augmented_graph(&completed, &roots)
+                    .map_err(|e| format!("augmented_graph failed: {e:?}"))?;
+                let mut augmented_closed = augmented.clone();
+                augmented_closed.meek_complete();
+                if signature(&augmented_closed) != signature(&augmented) {
+                    stats.f_augment_compels += 1;
+                    if stats.f_augment_example.is_none() {
+                        stats.f_augment_example = Some(format!(
+                            "config {} with roots {:?} — F-augmented graph is not closed: {} becomes {}",
+                            input.render(),
+                            roots,
+                            from_mixed(&augmented).render(),
+                            from_mixed(&augmented_closed).render()
+                        ));
+                    }
+                }
 
                 let Some(truth) = maximally_oriented(&input) else {
-                    // Algorithm 1 can produce these; BRCD's validity pass rejects them.
+                    // Production's validity pass accepts these; they still pin no orientation.
                     stats.non_extendable += 1;
                     continue;
                 };
@@ -581,34 +638,30 @@ fn search(n: usize, k: usize, stats: &mut Stats, witnesses: &mut Vec<Witness>) {
                 if !input.undirected_edges().is_empty() {
                     stats.with_free_edge += 1;
                 }
+                // Negative control and incompleteness population in one: the no-rule closure is the
+                // identity, so `truth != input` is exactly "the no-rule closure under-orients".
                 if truth != input {
                     stats.oracle_orients_something += 1;
                 }
-                if close_with(&input, Rules::R1R3) != input {
+
+                let restricted = meek_r1_r3(&input);
+                let full = from_mixed(&completed);
+
+                if restricted != input {
                     stats.r1r3_orients_something += 1;
                 }
-
-                // Negative control: no rules at all, through the same comparison.
-                if close_with(&input, Rules::None) != truth {
-                    stats.control_witnesses += 1;
-                }
-                // How much of the work each rule tier actually does on this family.
-                if close_with(&input, Rules::R1R2) != truth {
-                    stats.r3_needed += 1;
-                }
-
-                // Soundness of the R4 transcription: the closure may not orient an edge the
-                // definition leaves free. An over-orientation is a wrong rule, not a finding.
-                let full = close_with(&input, Rules::R1R4);
-                if full != close_with(&input, Rules::R1R3) {
+                if full != restricted {
                     stats.r4_fires += 1;
                 }
+
+                // Soundness: the closure may not orient an edge the definition leaves free. An
+                // over-orientation is a wrong rule, not a finding about completeness.
                 for (u, v) in input.undirected_edges() {
                     if truth.is_undirected(u, v) && !full.is_undirected(u, v) {
                         stats.r4_unsound += 1;
                         if stats.r4_unsound_example.is_none() {
                             stats.r4_unsound_example = Some(format!(
-                                "input {} — R4 oriented {}-{}, the definition leaves it free (closure {})",
+                                "input {} — the closure oriented {}-{}, the definition leaves it free (closure {})",
                                 input.render(),
                                 u,
                                 v,
@@ -619,7 +672,6 @@ fn search(n: usize, k: usize, stats: &mut Stats, witnesses: &mut Vec<Witness>) {
                     }
                 }
 
-                let restricted = close_with(&input, Rules::R1R3);
                 if restricted == truth {
                     continue;
                 }
@@ -649,28 +701,35 @@ fn search(n: usize, k: usize, stats: &mut Stats, witnesses: &mut Vec<Witness>) {
                     });
                 }
             }
+
+            cross_check_population(&cpdag_graph, &roots, &mut accepted)
+                .map_err(|e| format!("n={n} k={k} dag {} roots {roots:?}: {e}", dag.render()))?;
         }
     }
+    Ok(())
 }
 
 fn main() {
-    println!("Meek closures vs the maximally oriented PDAG, on Algorithm 1's augmented graphs.\n");
+    println!(
+        "Production Meek closures vs the maximally oriented PDAG, on Algorithm 1's configurations.\n"
+    );
 
     print!("R1-R3 equals the definition on every pattern ... ");
     for n in 2..=4 {
         match verify_cpdag_construction(n) {
             Ok(count) => print!("n={n}: {count} ok  "),
             Err(e) => {
-                println!("\nHARNESS BUG: {e}");
+                println!("\nFAILED: {e}");
                 std::process::exit(1);
             }
         }
     }
+    println!();
     print!("R4 fires on its own configuration ... ");
     match positive_control_r4() {
         Ok(()) => println!("ok"),
         Err(e) => {
-            println!("\nHARNESS BUG: {e}");
+            println!("\nFAILED: {e}");
             std::process::exit(1);
         }
     }
@@ -678,29 +737,33 @@ fn main() {
 
     let mut stats = Stats {
         dags: 0,
-        augmented: 0,
-        extendable: 0,
+        configurations: 0,
+        rejected_invalid: 0,
         non_extendable: 0,
+        extendable: 0,
         witnesses: 0,
         r4_recovered_all: 0,
-        control_witnesses: 0,
-        r3_needed: 0,
-        r4_fires: 0,
         with_free_edge: 0,
         oracle_orients_something: 0,
         r1r3_orients_something: 0,
+        r4_fires: 0,
         r4_unsound: 0,
         r4_unsound_example: None,
+        f_augment_compels: 0,
+        f_augment_example: None,
     };
     let mut witnesses = Vec::new();
 
     // The bound. Vertex counts are exhaustive; `k` is the number of root causes Algorithm 1
-    // ranges over. n=5 with k=2 is where the augmented-graph count stops being cheap.
+    // ranges over.
     let bound: &[(usize, usize)] = &[(3, 1), (4, 1), (5, 1), (3, 2), (4, 2), (5, 2), (5, 3)];
 
     for &(n, k) in bound {
         let before = stats.witnesses;
-        search(n, k, &mut stats, &mut witnesses);
+        if let Err(e) = search(n, k, &mut stats, &mut witnesses) {
+            println!("HARNESS BUG: {e}");
+            std::process::exit(1);
+        }
         println!(
             "n={n} k={k}: {} witnesses",
             stats.witnesses.saturating_sub(before)
@@ -708,82 +771,109 @@ fn main() {
     }
 
     println!("\n--- searched ---");
-    println!("DAGs enumerated:            {}", stats.dags);
-    println!("augmented graphs:           {}", stats.augmented);
-    println!("  with a consistent extension: {}", stats.extendable);
-    println!("  without one (skipped):       {}", stats.non_extendable);
+    println!("DAGs enumerated:                   {}", stats.dags);
+    println!(
+        "cut configurations enumerated:     {}",
+        stats.configurations
+    );
+    println!(
+        "  rejected by BRCD's validity pass:   {}",
+        stats.rejected_invalid
+    );
+    println!(
+        "  valid but not extendable (skipped): {}",
+        stats.non_extendable
+    );
+    println!(
+        "  valid and extendable (searched):     {}",
+        stats.extendable
+    );
 
     println!("\n--- is the search non-vacuous? ---");
     println!(
-        "inputs with a free edge after the cut: {}",
+        "inputs with a free edge after orienting the incident set: {}",
         stats.with_free_edge
     );
     println!(
-        "inputs the definition orients further: {}",
+        "inputs the definition orients further:                    {}",
         stats.oracle_orients_something
     );
     println!(
-        "inputs R1-R3 orients further:          {}",
+        "inputs production R1-R3 orients further:                  {}",
         stats.r1r3_orients_something
     );
 
     println!("\n--- harness checks ---");
     println!(
         "negative control (no rules): {} under-oriented inputs",
-        stats.control_witnesses
+        stats.oracle_orients_something
     );
-    if stats.control_witnesses == 0 {
+    if stats.oracle_orients_something == 0 {
         println!("CONTROL FAILED: the comparison detects no incompleteness even where it exists.");
         println!("The headline result below means nothing. Fix the harness.");
         std::process::exit(1);
     }
     println!(
-        "R4 transcription soundness: {} over-orientations",
+        "production R1-R4 soundness:  {} over-orientations",
         stats.r4_unsound
     );
-    println!("\n--- which rules do work on this family ---");
     println!(
-        "inputs where R3 is needed (R1-R2 falls short): {}",
-        stats.r3_needed
+        "F-augmented graph is closed: {} counterexamples",
+        stats.f_augment_compels
     );
     println!(
-        "inputs where R4 changes the closure at all:    {}",
+        "inputs where R4 changes the production closure: {}",
         stats.r4_fires
     );
+
+    let mut failed = false;
     if let Some(example) = &stats.r4_unsound_example {
-        println!("R4 AS TRANSCRIBED IS UNSOUND — it compels an edge the definition does not:");
+        println!(
+            "\nTHE PRODUCTION CLOSURE IS UNSOUND — it compels an edge the definition does not:"
+        );
         println!("  {example}");
-        std::process::exit(1);
+        failed = true;
+    }
+    if let Some(example) = &stats.f_augment_example {
+        println!("\nTHE F-AUGMENTED GRAPH IS NOT CLOSED — Algorithm 1 hands `mec_size` an");
+        println!("under-oriented PDAG, so the equivalence-class size is over-counted:");
+        println!("  {example}");
+        failed = true;
     }
 
     println!("\n--- result ---");
     if stats.witnesses == 0 {
-        println!("R1-R3 reached the maximally oriented PDAG on every extendable input.");
+        println!("Production R1-R3 reached the maximally oriented PDAG on every searched input.");
         println!("R4 changed no orientation up to this bound.");
     } else {
         println!(
-            "{} of {} extendable inputs are under-oriented by R1-R3.",
+            "{} of {} searched inputs are under-oriented by production R1-R3.",
             stats.witnesses, stats.extendable
         );
         println!(
-            "R4 recovers the full orientation on {} of them.",
+            "Production R1-R4 recovers the full orientation on {} of them.",
             stats.r4_recovered_all
         );
         if stats.r4_recovered_all < stats.witnesses {
             println!(
-                "On {} it does not — so either the R4 transcription in this file is wrong, or",
+                "On {} it does not — the shipped closure does not reach the maximally oriented",
                 stats.witnesses - stats.r4_recovered_all
             );
-            println!("more than R4 is missing. Resolve before implementing the rule.");
+            println!("PDAG on inputs Algorithm 1 constructs. This is a production defect.");
+            failed = true;
         }
         for (idx, w) in witnesses.iter().enumerate() {
             println!("\nwitness {} (n={}, roots={:?})", idx + 1, w.n, w.roots);
             println!("  source DAG:      {}", w.dag);
-            println!("  augmented input: {}", w.input);
+            println!("  configuration:   {}", w.input);
             println!("  R1-R3 closure:   {}", w.r1r3);
             println!("  definition:      {}", w.truth);
             println!("  left undirected: {:?}", w.missed);
             println!("  R4 recovers it:  {}", w.r4_recovers);
         }
+    }
+
+    if failed {
+        std::process::exit(1);
     }
 }

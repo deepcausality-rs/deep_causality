@@ -15,7 +15,7 @@ Doc-only, zero risk, and it makes the invariant the rest of the change depends o
 - [x] 2.4 Implement it for `LatticeCell<D>`, returning `C(k, p)` terms, one per choice of front axes, each carrying the shuffle sign against the cell's ascending axis order
 - [x] 2.5 Add tests for both implementations: term counts, left and right cell identity, sign values against Chen & Tata Eq. (26), the published 2-D example from their Fig. 1 and Fig. 4, and the empty result beyond the cell dimension
 - [x] 2.6 Verify `Cell` is untouched: `impl Cell for Simplex`, `impl Cell for LatticeCell<D>` and `impl Cell for HoneycombCell` compile unmodified, and no `: Cell` bound anywhere in the workspace changes
-- [x] 2.7 Register test files in `float_bfloat16` and `BUILD.bazel`
+- [x] 2.7 Register test files in `mod.rs` and `BUILD.bazel`
 
 ## 3. The binary cup product
 
@@ -25,7 +25,7 @@ Doc-only, zero risk, and it makes the invariant the rest of the change depends o
 - [x] 3.4 Add a unit test that the simplicial case reproduces `α([v₀,v₁]) · β([v₁,v₂])` on a single 2-simplex
 - [x] 3.5 Add a unit test that the cubical case reproduces Serre's formula on one face of a `LatticeComplex<2, f64>`, checking both the front-axis terms and their signs by hand
 - [x] 3.6 Add error-path tests for both rejection cases
-- [x] 3.7 Register test files in `float_bfloat16` and `BUILD.bazel`
+- [x] 3.7 Register test files in `mod.rs` and `BUILD.bazel`
 
 ## 4. The algebraic laws
 
@@ -37,7 +37,7 @@ This group is the acceptance gate. A cubical sign error is invisible without it.
 - [x] 4.4 Add a negative test confirming the two orderings are permitted to differ on arbitrary cochains, so the previous test is not passing trivially
 - [x] 4.5 If any sign convention proves inconsistent with the shipped boundary operators, fix the splitting implementation rather than the test, and record the resolved convention in the module documentation
 - [x] 4.6 Run at least one law test on a hand-built `SimplicialComplex` rather than on a torus, so genericity over `ChainComplex` is executed rather than asserted
-- [x] 4.7 Register test files in `float_bfloat16` and `BUILD.bazel`
+- [x] 4.7 Register test files in `mod.rs` and `BUILD.bazel`
 
 ## 5. The n-fold product and multi-controlled actions
 
@@ -47,7 +47,7 @@ This group is the acceptance gate. A cubical sign error is invisible without it.
 - [x] 5.4 Add a triple-product test on `cubic_torus(L)` yielding a 3-cochain, and confirm the same request on a two-dimensional complex returns the degree-exceeds-dimension error
 - [x] 5.5 Add the triple-product verification on `cubic_torus(L)`: assert the three direction cochains are cocycles, that `∫ e₀ ∪ e₁ ∪ e₂ = L³`, and that the integral is unchanged when an input is shifted by a coboundary
 - [x] 5.6 Document in the module rustdoc that this crate delivers the cup product only: gate construction lives in `deep_causality_quantum`, which does not depend on this crate, and emitting fault-tolerant circuits is out of scope entirely
-- [x] 5.7 Register test files in `float_bfloat16` and `BUILD.bazel`
+- [x] 5.7 Register test files in `mod.rs` and `BUILD.bazel`
 
 ## 6. Verification and follow-through
 

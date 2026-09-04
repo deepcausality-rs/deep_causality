@@ -2,7 +2,7 @@
 
 > **Gate:** This stage MUST be completed, verified, signed off by the user, and committed before any task in stage 2 begins. See "Stage gates" at the end of this file.
 
-- [x] 1.1 Create the new module tree under `deep_causality_num/src/iso/`. Files: `float_bfloat16` (re-exports), `group_iso.rs`, `ring_iso.rs`, `field_iso.rs`, `algebra_iso.rs`, `division_algebra_iso.rs`, `test_support.rs`. **Deviation:** `test_support.rs` is `pub mod` (not `#[cfg(test)]`-gated) per the existing `src/utils_tests/` convention; Bazel can't see `tests/` from `src/` so coverage-counting test utilities must live in `src/`.
+- [x] 1.1 Create the new module tree under `deep_causality_num/src/iso/`. Files: `mod.rs` (re-exports), `group_iso.rs`, `ring_iso.rs`, `field_iso.rs`, `algebra_iso.rs`, `division_algebra_iso.rs`, `test_support.rs`. **Deviation:** `test_support.rs` is `pub mod` (not `#[cfg(test)]`-gated) per the existing `src/utils_tests/` convention; Bazel can't see `tests/` from `src/` so coverage-counting test utilities must live in `src/`.
 - [x] 1.2 Declare `pub trait GroupIso<T> where Self: Group + From<T>, T: Group + From<Self> {}` in `src/iso/group_iso.rs`. Empty body. Doc comment explains the marker promise.
 - [x] 1.3 Declare `pub trait RingIso<T>: GroupIso<T> where Self: Ring + From<T>, T: Ring + From<Self> {}` in `src/iso/ring_iso.rs`. **Note:** the `From` bounds must be re-stated in the where-clause (Rust subtrait rules) — original spec omitted this.
 - [x] 1.4 Declare `pub trait FieldIso<T>: RingIso<T> where Self: Field + From<T>, T: Field + From<Self> {}` in `src/iso/field_iso.rs`. Empty body.
@@ -54,7 +54,7 @@
 
 > **Gate:** Stage B MUST be signed off and committed before any task here begins. Stage C is structurally independent of Stages A and B (it touches a different crate), but the sequencing keeps each stage's diff localized.
 
-- [x] 3.1 Create the new module tree under `deep_causality_haft/src/iso/`. Files: `float_bfloat16` (re-exports), `natural_iso.rs`, `natural_iso_5.rs`, `test_support.rs`.
+- [x] 3.1 Create the new module tree under `deep_causality_haft/src/iso/`. Files: `mod.rs` (re-exports), `natural_iso.rs`, `natural_iso_5.rs`, `test_support.rs`.
 - [x] 3.2 `NaturalIso<F, G>` declared in `src/iso/natural_iso.rs` with `to_target` / `to_source` taking `F::Type<T>` and `G::Type<T>`. Bounds: `T: Satisfies<F::Constraint> + Satisfies<G::Constraint>` (the codebase's HKT machinery uses `Satisfies` rather than bare generics). Doc comment explains why `From`/`Into` cannot apply at this level and documents both round-trip and naturality laws.
 - [x] 3.3 `NaturalIso5<F, G>` declared in `src/iso/natural_iso_5.rs` over `HKT5Unbound` (the all-free 5-parameter trait — `HKT5<F1, F2, F3, F4>` only has one free hole, which doesn't match the 5-named-parameter shape the design called for). Each of `V, S, C, E, L` carries the `Satisfies<F::Constraint> + Satisfies<G::Constraint>` bound. **Deviation:** uses `HKT5Unbound` rather than `HKT5`; matches the per-parameter design intent.
 - [x] 3.4 `src/iso/test_support.rs` is `pub mod` (not `#[cfg(test)]`-gated) to match the convention established by Stages A and B (Bazel cannot see `tests/` from `src/`). Exports `assert_natural_iso_round_trip<W, F, G, T>(fa, ga)` — takes independent `fa` and `ga` (round-trip in both directions independently, per the same fix applied to Tier 1/Tier 2 helpers) — and `assert_natural_iso_naturality<W, F, G, A, B, Func>(fa, h)` against the caller's `Functor` impl.

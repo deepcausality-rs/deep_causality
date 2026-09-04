@@ -3,7 +3,7 @@ coverage of all added or edited files — including every error variant, every
 `Err`/rejection branch, every periodic-vs-open and default-vs-override code path, and
 the `Debug`/`Display`/`PartialEq` trait impls of new types. Unreachable code is the
 only exemption and must be annotated and justified. Every test file is registered in
-its `float_bfloat16` chain with `#[cfg(test)]` and in `tests/BUILD.bazel`.
+its `mod.rs` chain with `#[cfg(test)]` and in `tests/BUILD.bazel`.
 
 ## 1. G1+G4 — Wedge product, interior product, pinned conventions (deep_causality_topology)
 

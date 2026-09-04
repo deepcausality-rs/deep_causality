@@ -28,7 +28,7 @@ _None._ No existing requirements change; this is additive.
 - **Source files added** (one algorithm per module, per `AGENTS.md`):
   - `ultragraph/src/types/storage/graph_csm/graph_csm_algo_biconnectivity.rs` (or a sibling module of the existing `graph_csm_algo_structural.rs`)
   - Trait extension in `ultragraph/src/traits/graph_algo_structural.rs` (additive method signatures with no default body, or a new sibling trait if symmetry with existing groupings prefers it — decided in `design.md`).
-- **Tests:** new files under `ultragraph/tests/` mirroring the src layout, registered in the corresponding `float_bfloat16` and in `ultragraph/tests/BUILD.bazel`. 100% line coverage of the new code, per project policy.
+- **Tests:** new files under `ultragraph/tests/` mirroring the src layout, registered in the corresponding `mod.rs` and in `ultragraph/tests/BUILD.bazel`. 100% line coverage of the new code, per project policy.
 - **Public API:** new methods on `CsmGraph` re-exported from `ultragraph::lib.rs` via the existing trait export path. No removals, no signature changes to existing items.
 - **Dependencies:** none added. Pure-Rust, no `unsafe`, no macros in `src/`, static dispatch only — consistent with crate conventions.
 - **Downstream consumers** (`deep_causality`, ServiceRadar integration): unblocks per-delta structural recompute; no required migration.
