@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.11...deep_causality_ethos-v0.3.0) - 2026-09-03
+
+### Other
+
+- Added CRA compliance notice to README.md and SECURITY.md
+- *(workspace)* move ast, file and par into deep_causality_utils
+- trigger holesale auto-release.
+- *(bazel)* compile the 71 tests Cargo ran and Bazel never saw
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(build)* [**breaking**] move build/scripts to the repository root
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.2.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.9...deep_causality_ethos-v0.2.10) - 2026-08-12
 
 ### Added

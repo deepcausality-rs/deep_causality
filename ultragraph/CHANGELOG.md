@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.4...ultragraph-v0.10.0) - 2026-09-03
+
+### Fixed
+
+- *(unified_math)* close E3, add Adjunction::Error, and clear a review batch
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- trigger holesale auto-release.
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.9.3](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.2...ultragraph-v0.9.3) - 2026-07-14
 
 ### Fixed

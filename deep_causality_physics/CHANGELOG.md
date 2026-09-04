@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.2...deep_causality_physics-v0.9.0) - 2026-09-03
+
+### Added
+
+- *(deep_causality_num)* add the lift module and retire the inherent Float106::from_f64
+- *(homology,topology,quantum)* [**breaking**] close the last five QCL gaps
+
+### Fixed
+
+- *(deep_causality_topology)* [**breaking**] close an unsound HKT witness and test the laws that hid it
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- trigger holesale auto-release.
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(openspec)* Updated inbound links to archived notes
+- *(deep_causality_topology)* [**breaking**] separate geometry from payload and drop two unlawful instances
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.8.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.0...deep_causality_physics-v0.8.1) - 2026-08-12
 
 ### Added

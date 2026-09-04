@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.5...deep_causality_num-v0.5.0) - 2026-09-03
+
+### Added
+
+- *(deep_causality_num)* add the lift module and retire the inherent Float106::from_f64
+- *(deep_causality_quantum)* add the three QCL consumer examples and close out add-qcl
+
+### Fixed
+
+- *(deep_causality_quantum)* resolve the QCL review findings, with the Float106 defects beneath them
+
+### Other
+
+- Fixed PR review issues.
+- Update deep_causality_unified_math/deep_causality_num/tests/casts/to_primitive/to_primitive_float_tests.rs
+- Update deep_causality_unified_math/deep_causality_num/src/float_106/traits_num.rs
+- Fixed PR review issues.
+- *(workspace)* follow deep_causality_num to 0.5 in the dependency table
+- *(examples)* lift through deep_causality_num instead of hand-rolled helpers
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.0...deep_causality_num-v0.4.1) - 2026-07-14
 
 ### Added
