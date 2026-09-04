@@ -19,12 +19,16 @@ deferred, and its stated justification did not survive checking. See
 ## 0. Precondition: reconcile the tier documentation
 
 The stats crate adds a row to tables that disagree with each other and with the manifests today.
-Adding a row first bakes four existing errors in.
+Adding a row first bakes the existing errors in.
 
-- [ ] 0.1 Reconcile the three tier representations in `deep_causality_unified_math/README.md` — the ASCII block, the markdown crate table, and `graph.png` — against the manifests. The block and the figure put `calculus` and `fft` at tier 4 and `num_complex`/`num_dual` at 3; the table puts them at 3 and 2
-- [ ] 0.2 Correct `AGENTS.md`'s tier block, which omits the `deep_causality_haft` dependency that `num_complex` and `num_dual` both declare, and places both at a tier its own stated derivation contradicts
-- [ ] 0.3 Regenerate `graph.png` by the recipe in `Bazel.md`, and confirm it writes where the README expects rather than to the repository root
-- [ ] 0.4 Verify: all three representations and `AGENTS.md` agree with the manifests, checked by deriving the tiers from `Cargo.toml` rather than by reading them
+Of the four representations, two were already correct: the README's ASCII block and `graph.png`.
+The errors were in the README's crate table and in `AGENTS.md`.
+
+- [x] 0.1 Reconcile the three tier representations in `deep_causality_unified_math/README.md` — the ASCII block, the markdown crate table, and `graph.png` — against the manifests. Four table rows were wrong: `num_complex` and `num_dual` at 2 rather than 3, `calculus` and `fft` at 3 rather than 4. The table is now sorted by the corrected tier, and states why the two number types sit above `num_rational`
+- [x] 0.1a Correct two further README claims found while checking: "Two edges leave the folder" counts only `ast`, omitting `par`, which `fft` and `topology` both require — two dependencies leave, over four edges; and the sentence introducing the optional external dependencies was broken mid-clause
+- [x] 0.2 Correct `AGENTS.md`'s tier block, which omits the `deep_causality_haft` dependency that `num_complex` and `num_dual` both declare, and places both at a tier its own stated derivation contradicts. Regenerated from the manifests rather than hand-patched. This also fixed a fifth error the task did not record: `quantum`'s dependency list omitted `homology`, `linear` and `num_rational`
+- [x] 0.3 `graph.png` needs no regeneration: it is rendered from the artifact at `https://claude.ai/code/artifact/7808f976-a88c-42e3-a919-9c85c5795360`, which already carries the derived tiers, and it agrees with the manifests. The `Bazel.md:84` recipe this task pointed at is a generic `bazel query rdeps(//..., //deep_causality_haft, 1) | dot` for reverse dependencies of `haft` — it produces a different graph and was never this figure's source
+- [x] 0.4 Verify: all three representations and `AGENTS.md` agree with the manifests, checked by deriving the tiers from `Cargo.toml` rather than by reading them — `scripts/check_tiers.py`, run against a reintroduction of each fixed defect to confirm it fails
 
 ## 1. The test-first protocol
 
