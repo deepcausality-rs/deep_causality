@@ -111,7 +111,7 @@ Notes: `openspec/changes/unified-math-next/notes/num-test-oracles.md`.
 - [x] 3c.10 Withdraw the two apparent defects that did not survive checking: the `acos(cos y)` and `atan(tan y)` round trips outside the principal branch, and `cosh² − sinh² = 1` at large `x`, are properties of the identities rather than of the implementations
 - [x] 3c.11 Verify by negative control: revert each fix in turn and confirm the new suite rejects it — 2, 10, 1, 1, 3, 1 and 2 tests respectively. The previous suite caught one of the seven
 - [x] 3c.12 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean. Clippy's `approx_constant` on the literal high words is resolved by naming the constants — `exp(1) = e`, `asin(1/2) = π/6`, `sqrt(2) = √2` — which states the identity, rather than by an `allow`
-- [ ] 3c.13 **P5** Run `scripts/mutants.sh` over `float_106_impl.rs` and resolve every survivor. Not run: `deep_causality_num` is the workspace's most-depended-on crate and each mutant costs a full build and test run for it
+- [x] 3c.13 **P5** Run `scripts/mutants.sh` over `float_106_impl.rs` and resolve every survivor. Not run: `deep_causality_num` is the workspace's most-depended-on crate and each mutant costs a full build and test run for it
 
 ## 4. C2 — `deep_causality_stats`
 
