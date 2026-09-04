@@ -435,7 +435,7 @@ impl<T: RealField + FromPrimitive> FromPrimitive for Octonion<T> {
 ///
 /// Each `to_*` method attempts to convert the octonion's scalar part into
 /// the target primitive type.
-impl<F: RealField + ToPrimitive> ToPrimitive for Octonion<F> {
+impl<F: RealField> ToPrimitive for Octonion<F> {
     /// Converts the scalar part of the `Octonion` to an `isize`.
     ///
     /// # Returns

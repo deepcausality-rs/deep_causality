@@ -55,6 +55,16 @@ impl<T: Real + Div<Output = T>> Real for Dual<T> {
     }
 
     #[inline]
+    fn cbrt(self) -> Self {
+        // d/dx ∛x = 1 / (3·∛x²). Real and defined for a negative argument, unlike
+        // powf(1/3). At re = 0 the derivative is unbounded and the division produces the
+        // infinity rather than a guard substituting a finite value, as `sqrt` does above.
+        let c = self.re.cbrt();
+        let three = T::one() + T::one() + T::one();
+        Self::new(c, self.du / (c * c * three))
+    }
+
+    #[inline]
     fn abs(self) -> Self {
         // d/dx |x| = sign(x)
         if self.re < T::zero() {

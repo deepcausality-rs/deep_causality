@@ -161,8 +161,8 @@ where
 
     // Real cube roots u₁, u₂ of (−q_d/2 ± √disc).
     let sqrt_disc = disc.sqrt();
-    let u1 = signed_cbrt(-q_d * half + sqrt_disc, third);
-    let u2 = signed_cbrt(-q_d * half - sqrt_disc, third);
+    let u1 = (-q_d * half + sqrt_disc).cbrt();
+    let u2 = (-q_d * half - sqrt_disc).cbrt();
 
     // Complex part of the eigenvalue pair: ±(√3 / 2) · (u₁ − u₂).
     let sqrt_3_over_2 = three.sqrt() * half;
@@ -193,15 +193,6 @@ fn sym_3x3_add<R: RealField>(a: &[[R; 3]; 3], b: &[[R; 3]; 3]) -> [[R; 3]; 3] {
         }
     }
     out
-}
-
-/// Real cube root that preserves sign: `signed_cbrt(x) = sign(x) · |x|^(1/3)`.
-fn signed_cbrt<R: RealField>(x: R, one_third: R) -> R {
-    if x >= R::zero() {
-        x.powf(one_third)
-    } else {
-        -((-x).powf(one_third))
-    }
 }
 
 /// Eigenvalues of a real symmetric 3×3 matrix, sorted descending.

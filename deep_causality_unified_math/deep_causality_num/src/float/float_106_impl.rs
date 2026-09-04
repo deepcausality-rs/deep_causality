@@ -311,6 +311,10 @@ impl Float for Float106 {
             }
             return Self::nan();
         }
+        if self.hi.is_infinite() {
+            // ln(+inf) = +inf. The iteration below would evaluate inf + inf/inf - 1 = NaN.
+            return Self::infinity();
+        }
         if self.hi == 1.0 && self.lo == 0.0 {
             return Self::from(0.0);
         }
@@ -396,7 +400,10 @@ impl Float for Float106 {
         let x0 = abs_self.hi.cbrt();
         let mut x = Self::from(x0);
 
-        let third = Self::from(1.0 / 3.0);
+        // 1/3 is not representable, so `Self::from(1.0 / 3.0)` would round it to f64 first and
+        // widen a value whose low word is zero, capping the iteration below at f64 accuracy.
+        // Dividing in double-double keeps the extra bits.
+        let third = Self::from(1.0) / Self::from(3.0);
         x = (x * Self::from(2.0) + abs_self / (x * x)) * third;
         x = (x * Self::from(2.0) + abs_self / (x * x)) * third;
 
@@ -445,39 +452,59 @@ impl Float for Float106 {
     }
 
     fn atan(self) -> Self {
-        // For atan(1), use known value π/4
-        if (self.hi() - 1.0).abs() < 1e-15 && self.lo().abs() < 1e-30 {
-            return Self::FRAC_PI_4;
+        if self.is_nan() {
+            return self;
         }
-        if (self.hi() + 1.0).abs() < 1e-15 && self.lo().abs() < 1e-30 {
-            return -Self::FRAC_PI_4;
+        let one = Self::from(1.0);
+        if self.hi.is_infinite() {
+            return if self.hi > 0.0 {
+                Self::FRAC_PI_2
+            } else {
+                -Self::FRAC_PI_2
+            };
         }
 
-        // Use argument reduction: atan(x) = 2*atan(x/(1+sqrt(1+x^2)))
-        // This reduces |x| to improve Taylor series convergence
-        let x = self;
-        let x2 = x * x;
-        let sqrt_term = (Self::from(1.0) + x2).sqrt();
-        let reduced = x / (Self::from(1.0) + sqrt_term);
+        // |x| > 1 goes through the reciprocal: atan(x) = ±π/2 − atan(1/x). This brings every
+        // argument into [−1, 1] before the series, and keeps `x * x` below from overflowing.
+        if self.abs().hi > 1.0 {
+            let inner = (one / self).atan();
+            return if self.hi > 0.0 {
+                Self::FRAC_PI_2 - inner
+            } else {
+                -Self::FRAC_PI_2 - inner
+            };
+        }
 
-        // Taylor series for reduced argument (converges faster)
-        let y = reduced;
+        // Halve until the series argument is small: atan(x) = 2·atan(x / (1 + √(1 + x²))).
+        // The series converges as y², so a single halving is not enough — an argument left
+        // near 1 needs thousands of terms, far more than the loop below runs, and the sum is
+        // then truncated rather than converged. Four halvings take |y| under 1/16, where
+        // fifteen terms reach the type's precision.
+        let mut y = self;
+        let mut doublings = 0u32;
+        while y.abs().hi > 0.0625 {
+            y = y / (one + (one + y * y).sqrt());
+            doublings += 1;
+        }
+
+        // atan(y) = y − y³/3 + y⁵/5 − …
         let y2 = y * y;
         let mut sum = y;
         let mut term = y;
-
         for i in 1..80 {
             let n = 2 * i + 1;
             term = -term * y2;
             let contribution = term / Self::from(n as f64);
             sum += contribution;
-            if contribution.abs().hi < 1e-33 {
+            if contribution.abs().hi < 1e-35 {
                 break;
             }
         }
 
-        // Undo the argument reduction: multiply by 2
-        sum * Self::from(2.0)
+        for _ in 0..doublings {
+            sum *= Self::from(2.0);
+        }
+        sum
     }
 
     fn atan2(self, other: Self) -> Self {
@@ -600,6 +627,11 @@ impl Float for Float106 {
 
     fn sinh(self) -> Self {
         // sinh(x) = (e^x - e^{-x}) / 2
+        if !self.hi.is_finite() {
+            // sinh(±inf) = ±inf, sinh(NaN) = NaN. Without this the subtraction below meets a
+            // NaN from the opposite-signed exponential and loses the sign.
+            return self;
+        }
         let exp_x = self.exp();
         let exp_neg_x = (-self).exp();
         (exp_x - exp_neg_x) * Self::from(0.5)
@@ -607,16 +639,42 @@ impl Float for Float106 {
 
     fn cosh(self) -> Self {
         // cosh(x) = (e^x + e^{-x}) / 2
+        if self.hi.is_nan() {
+            return self;
+        }
+        if self.hi.is_infinite() {
+            // cosh is even, so both infinities give +inf.
+            return Self::infinity();
+        }
         let exp_x = self.exp();
         let exp_neg_x = (-self).exp();
         (exp_x + exp_neg_x) * Self::from(0.5)
     }
 
     fn tanh(self) -> Self {
-        // tanh(x) = sinh(x) / cosh(x) = (e^{2x} - 1) / (e^{2x} + 1)
-        let exp_2x = (self * Self::from(2.0)).exp();
+        // tanh(x) = (e^{2x} - 1) / (e^{2x} + 1), evaluated on |x| and signed afterwards.
+        //
+        // Taken directly on a signed argument the quotient is neither exactly odd — the two
+        // sign branches round differently in the last bits — nor total: for x above about 355
+        // the numerator and denominator both overflow and the quotient is NaN, where the true
+        // value has already saturated at 1. Both are avoided by reducing to the positive half.
+        if self.hi.is_nan() {
+            return self;
+        }
         let one = Self::from(1.0);
-        (exp_2x - one) / (exp_2x + one)
+        let negative = self.hi < 0.0;
+        let magnitude = self.abs();
+        let result = if magnitude.hi.is_infinite() {
+            one
+        } else {
+            let exp_2a = (magnitude * Self::from(2.0)).exp();
+            if exp_2a.hi.is_infinite() {
+                one
+            } else {
+                (exp_2a - one) / (exp_2a + one)
+            }
+        };
+        if negative { -result } else { result }
     }
 
     fn asinh(self) -> Self {

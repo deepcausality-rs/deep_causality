@@ -165,3 +165,160 @@ fn test_nested_duals_give_second_derivative() {
     assert_eq!(y.derivative().value(), 32.0); // first derivative
     assert_eq!(y.derivative().derivative(), 48.0); // second derivative
 }
+
+// --- cbrt ---------------------------------------------------------------------------------
+//
+// d/dx x^(1/3) = 1/(3·x^(2/3)). Every expected derivative below is that closed form evaluated
+// by hand at a point where it is a ratio of small integers, written as a literal. The
+// central-difference test is an independent numerical check on the same quantity.
+
+#[test]
+fn test_cbrt_derivative_at_a_perfect_cube() {
+    // x = 8: cbrt = 2, and 1/(3·8^(2/3)) = 1/(3·4) = 1/12.
+    let y = Dual::variable(8.0_f64).cbrt();
+    assert!((y.value() - 2.0).abs() < TOL);
+    assert!((y.derivative() - 1.0 / 12.0).abs() < TOL);
+
+    // x = 27: cbrt = 3, and 1/(3·27^(2/3)) = 1/(3·9) = 1/27.
+    let y = Dual::variable(27.0_f64).cbrt();
+    assert!((y.value() - 3.0).abs() < TOL);
+    assert!((y.derivative() - 1.0 / 27.0).abs() < TOL);
+
+    // x = 1: cbrt = 1, derivative 1/3.
+    let y = Dual::variable(1.0_f64).cbrt();
+    assert!((y.value() - 1.0).abs() < TOL);
+    assert!((y.derivative() - 1.0 / 3.0).abs() < TOL);
+
+    // x = 1/8: cbrt = 1/2, and 1/(3·(1/8)^(2/3)) = 1/(3·(1/4)) = 4/3.
+    let y = Dual::variable(0.125_f64).cbrt();
+    assert!((y.value() - 0.5).abs() < TOL);
+    assert!((y.derivative() - 4.0 / 3.0).abs() < TOL);
+}
+
+#[test]
+fn test_cbrt_derivative_at_a_negative_argument() {
+    // x = -8: cbrt = -2. The derivative is 1/(3·(-8)^(2/3)) = 1/(3·4) = 1/12, positive —
+    // cbrt increases through the negative half too.
+    let y = Dual::variable(-8.0_f64).cbrt();
+    assert!((y.value() + 2.0).abs() < TOL, "value was {}", y.value());
+    assert!(
+        (y.derivative() - 1.0 / 12.0).abs() < TOL,
+        "derivative was {}",
+        y.derivative()
+    );
+
+    // x = -27: cbrt = -3, derivative 1/27.
+    let y = Dual::variable(-27.0_f64).cbrt();
+    assert!((y.value() + 3.0).abs() < TOL);
+    assert!((y.derivative() - 1.0 / 27.0).abs() < TOL);
+    assert!(y.derivative() > 0.0, "cbrt is increasing at x = -27");
+}
+
+/// The reason `powf(1/3)` cannot serve as the dual cube root: it is `NaN` on the negative half,
+/// so both components are lost.
+#[test]
+fn test_cbrt_negative_argument_is_not_nan_where_powf_is() {
+    let y = Dual::variable(-8.0_f64).cbrt();
+    assert!(!y.value().is_nan());
+    assert!(!y.derivative().is_nan());
+
+    let viapowf = Dual::variable(-8.0_f64).powf(Dual::constant(1.0 / 3.0));
+    assert!(
+        viapowf.value().is_nan(),
+        "powf(1/3) is real on the negative half"
+    );
+}
+
+/// An independent check on the derivative: a central difference of the value channel, which
+/// shares no code with the ε channel.
+#[test]
+fn test_cbrt_derivative_matches_a_central_difference() {
+    for x in [-27.0_f64, -3.5, -0.5, 0.5, 3.5, 27.0, 1000.0] {
+        let h = 1e-6 * x.abs();
+        let numeric = (Real::cbrt(x + h) - Real::cbrt(x - h)) / (2.0 * h);
+        let dual = Dual::variable(x).cbrt().derivative();
+        assert!(
+            (dual - numeric).abs() <= 1e-6 * numeric.abs(),
+            "at x = {x}: dual {dual}, central difference {numeric}"
+        );
+    }
+}
+
+/// The crate's convention is to let the arithmetic produce the infinity rather than intercept
+/// it. `sqrt` already does this at the same point, and is asserted alongside so the two cannot
+/// drift apart.
+#[test]
+fn test_cbrt_at_zero_yields_an_infinite_derivative() {
+    let y = Dual::variable(0.0_f64).cbrt();
+    assert_eq!(y.value(), 0.0);
+    assert!(
+        y.derivative().is_infinite(),
+        "derivative was {}",
+        y.derivative()
+    );
+    assert!(y.derivative() > 0.0);
+
+    let s = Dual::variable(0.0_f64).sqrt();
+    assert!(s.derivative().is_infinite(), "sqrt sets the convention");
+}
+
+/// A constant at zero divides 0 by 0, so the ε channel is NaN rather than zero. That is not a
+/// special case of cbrt: `sqrt` does the same at the same point, for the same reason, and both
+/// are asserted here so the shared convention stays visible.
+#[test]
+fn test_cbrt_of_a_constant_zero_gives_nan_as_sqrt_does() {
+    let y = Dual::constant(0.0_f64).cbrt();
+    assert_eq!(y.value(), 0.0);
+    assert!(y.derivative().is_nan(), "derivative was {}", y.derivative());
+
+    let s = Dual::constant(0.0_f64).sqrt();
+    assert!(s.derivative().is_nan(), "sqrt sets the convention");
+}
+
+/// The chain rule composes: d/dx cbrt(u(x)) = u'(x)/(3·cbrt(u)²). At u = x², x = 3:
+/// u = 9, cbrt(9) = 9^(1/3), u' = 6, so the derivative is 6/(3·9^(2/3)) = 2/9^(2/3).
+#[test]
+fn test_cbrt_composes_under_the_chain_rule() {
+    let x = Dual::variable(3.0_f64);
+    let y = (x * x).cbrt();
+    assert!((y.value() - 9.0_f64.cbrt()).abs() < TOL);
+    let want = 2.0 / 9.0_f64.powf(2.0 / 3.0);
+    assert!(
+        (y.derivative() - want).abs() < TOL,
+        "derivative was {}",
+        y.derivative()
+    );
+}
+
+/// cbrt is odd on duals as it is on reals, in both components.
+#[test]
+fn test_cbrt_is_odd_on_duals() {
+    for x in [0.5_f64, 2.0, 8.0, 100.0] {
+        let pos = Dual::variable(x).cbrt();
+        let neg = Dual::variable(-x).cbrt();
+        assert!(
+            (neg.value() + pos.value()).abs() < TOL,
+            "value oddness at {x}"
+        );
+        // The derivative is even, being a function of x^(2/3).
+        assert!(
+            (neg.derivative() - pos.derivative()).abs() < TOL,
+            "derivative parity at {x}"
+        );
+    }
+}
+
+/// Duals nest, so the second derivative is available. d²/dx² x^(1/3) = -(2/9)·x^(-5/3).
+/// At x = 8: -(2/9)·8^(-5/3) = -(2/9)·(1/32) = -1/144.
+#[test]
+fn test_cbrt_second_derivative_through_nested_duals() {
+    let x = Dual::variable(Dual::variable(8.0_f64));
+    let y = x.cbrt();
+    assert!((y.value().value() - 2.0).abs() < TOL);
+    assert!((y.value().derivative() - 1.0 / 12.0).abs() < TOL);
+    assert!(
+        (y.derivative().derivative() + 1.0 / 144.0).abs() < TOL,
+        "second derivative was {}",
+        y.derivative().derivative()
+    );
+}

@@ -8,7 +8,7 @@ extern crate core;
 
 // Private re-exports of `deep_causality_num` core symbols so that the moved
 // `algebra` and `iso` modules keep resolving them through `crate::` paths.
-use deep_causality_num::{Float, Float106, FromPrimitive, One, Zero};
+use deep_causality_num::{Float, Float106, FromPrimitive, One, ToPrimitive, Zero};
 
 mod algebra;
 pub mod hom;

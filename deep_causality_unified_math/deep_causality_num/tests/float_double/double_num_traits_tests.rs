@@ -7,6 +7,19 @@
 
 use deep_causality_num::{Float106, FromPrimitive, ToPrimitive};
 
+/// Both words of an exactly representable result.
+///
+/// Every value converted or accumulated in this file is exact in the high word — a small
+/// integer, a dyadic fraction, or an integer bound — so the low word must be exactly zero.
+/// A tolerance on the high word alone accepts any low word, including a wrong one.
+fn assert_exact(got: Float106, want: f64) {
+    assert_eq!(got.hi(), want, "high word");
+    assert_eq!(
+        got.lo(),
+        0.0,
+        "low word must be exactly zero for an exactly representable result"
+    );
+}
 // =============================================================================
 // ToPrimitive Tests - Signed Integers
 // =============================================================================
@@ -221,7 +234,7 @@ fn test_from_u128() {
 #[test]
 fn test_from_f32() {
     let x = Float106::from_f32(42.5_f32).unwrap();
-    assert!((x.hi() - 42.5).abs() < 1e-6);
+    assert_exact(x, 42.5);
 }
 
 #[test]
@@ -242,7 +255,7 @@ fn test_sum_owned() {
         Float106::from(3.0),
     ];
     let sum: Float106 = values.into_iter().sum();
-    assert!((sum.hi() - 6.0).abs() < 1e-14);
+    assert_exact(sum, 6.0);
 }
 
 #[test]
@@ -253,7 +266,7 @@ fn test_sum_borrowed() {
         Float106::from(3.0),
     ];
     let sum: Float106 = values.iter().sum();
-    assert!((sum.hi() - 6.0).abs() < 1e-14);
+    assert_exact(sum, 6.0);
 }
 
 #[test]
@@ -275,7 +288,7 @@ fn test_product_owned() {
         Float106::from(4.0),
     ];
     let product: Float106 = values.into_iter().product();
-    assert!((product.hi() - 24.0).abs() < 1e-14);
+    assert_exact(product, 24.0);
 }
 
 #[test]
@@ -286,7 +299,7 @@ fn test_product_borrowed() {
         Float106::from(4.0),
     ];
     let product: Float106 = values.iter().product();
-    assert!((product.hi() - 24.0).abs() < 1e-14);
+    assert_exact(product, 24.0);
 }
 
 #[test]

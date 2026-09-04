@@ -9,7 +9,6 @@
 
 use crate::PhysicsError;
 use deep_causality_algebra::RealField;
-use deep_causality_num::ToPrimitive;
 use deep_causality_tensor::CausalTensor;
 
 /// Operations for the Weak Force — SU(2)_L gauge theory.
@@ -35,7 +34,7 @@ use deep_causality_tensor::CausalTensor;
 /// ```
 pub trait WeakFieldOps<S>
 where
-    S: RealField + ToPrimitive + Clone + From<f64> + Into<f64>,
+    S: RealField + Clone + From<f64> + Into<f64>,
 {
     /// Creates a new Weak Interaction Field (SU(2)) with West Coast metric.
     fn new_field(

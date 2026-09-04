@@ -8,7 +8,31 @@
 use core::num::FpCategory;
 use deep_causality_num::{Float, Float106};
 
-const EPSILON: f64 = 1e-14;
+/// Both words of an exactly representable result.
+///
+/// Every expectation rewritten to use this is a value the type holds exactly — a small integer,
+/// a dyadic fraction, or an exact root or logarithm — so the low word must be exactly zero.
+/// Comparing only the high word against a tolerance, as this file did, accepts any low word at
+/// all; that is how an implementation capped at `f64` accuracy passes a test on a 106-bit type.
+fn assert_exact(got: Float106, want: f64) {
+    assert_eq!(got.hi(), want, "high word");
+    assert_eq!(
+        got.lo(),
+        0.0,
+        "low word must be exactly zero for an exactly representable result"
+    );
+}
+
+/// Relative error, for the results that are not exactly representable.
+fn rel_err(got: Float106, want: Float106) -> f64 {
+    if want == Float106::from(0.0) {
+        return f64::from(<Float106 as Float>::abs(got));
+    }
+    f64::from(<Float106 as Float>::abs(got - want) / <Float106 as Float>::abs(want))
+}
+
+/// The relative accuracy `Float106` delivers; see `double_transcendental_tests`.
+const TOL: f64 = 1e-29;
 
 // =============================================================================
 // Special Values Tests
@@ -133,55 +157,63 @@ fn test_classify_nan() {
 #[test]
 fn test_floor() {
     let x = Float106::from(3.7);
-    assert!((Float::floor(x).hi() - 3.0).abs() < EPSILON);
+    assert_exact(Float::floor(x), 3.0);
 }
 
 #[test]
 fn test_floor_negative() {
     let x = Float106::from(-3.3);
-    assert!((Float::floor(x).hi() - (-4.0)).abs() < EPSILON);
+    assert_exact(Float::floor(x), -4.0);
 }
 
 #[test]
 fn test_ceil() {
     let x = Float106::from(3.3);
-    assert!((Float::ceil(x).hi() - 4.0).abs() < EPSILON);
+    assert_exact(Float::ceil(x), 4.0);
 }
 
 #[test]
 fn test_ceil_negative() {
     let x = Float106::from(-3.7);
-    assert!((Float::ceil(x).hi() - (-3.0)).abs() < EPSILON);
+    assert_exact(Float::ceil(x), -3.0);
 }
 
 #[test]
 fn test_round() {
     let x = Float106::from(3.5);
-    assert!((Float::round(x).hi() - 4.0).abs() < EPSILON);
+    assert_exact(Float::round(x), 4.0);
 }
 
 #[test]
 fn test_round_down() {
     let x = Float106::from(3.4);
-    assert!((Float::round(x).hi() - 3.0).abs() < EPSILON);
+    assert_exact(Float::round(x), 3.0);
 }
 
 #[test]
 fn test_trunc() {
     let x = Float106::from(3.9);
-    assert!((Float::trunc(x).hi() - 3.0).abs() < EPSILON);
+    assert_exact(Float::trunc(x), 3.0);
 }
 
 #[test]
 fn test_trunc_negative() {
     let x = Float106::from(-3.9);
-    assert!((Float::trunc(x).hi() - (-3.0)).abs() < EPSILON);
+    assert_exact(Float::trunc(x), -3.0);
 }
 
 #[test]
 fn test_fract() {
+    // 3.7 is not representable, so the fractional part is not the f64 0.7 either: it is
+    // whatever remains after the integer part is removed from the stored value. The defining
+    // property is the split itself, which is exact.
     let x = Float106::from(3.7);
-    assert!((Float::fract(x).hi() - 0.7).abs() < EPSILON);
+    assert_eq!(Float::fract(x), x - Float106::from(3.0));
+    assert_eq!(Float::trunc(x) + Float::fract(x), x);
+    for v in [3.7_f64, -3.7, 0.5, -0.5, 42.0, 0.0] {
+        let d = Float106::from(v);
+        assert_eq!(Float::trunc(d) + Float::fract(d), d, "trunc+fract at {v}");
+    }
 }
 
 // =============================================================================
@@ -191,25 +223,25 @@ fn test_fract() {
 #[test]
 fn test_abs() {
     let x = Float106::from(-42.0);
-    assert!((Float::abs(x).hi() - 42.0).abs() < EPSILON);
+    assert_exact(Float::abs(x), 42.0);
 }
 
 #[test]
 fn test_abs_positive() {
     let x = Float106::from(42.0);
-    assert!((Float::abs(x).hi() - 42.0).abs() < EPSILON);
+    assert_exact(Float::abs(x), 42.0);
 }
 
 #[test]
 fn test_signum_positive() {
     let x = Float106::from(42.0);
-    assert!((Float::signum(x).hi() - 1.0).abs() < EPSILON);
+    assert_exact(Float::signum(x), 1.0);
 }
 
 #[test]
 fn test_signum_negative() {
     let x = Float106::from(-42.0);
-    assert!((Float::signum(x).hi() - (-1.0)).abs() < EPSILON);
+    assert_exact(Float::signum(x), -1.0);
 }
 
 #[test]
@@ -246,35 +278,35 @@ fn test_mul_add() {
     let b = Float106::from(4.0);
     // x * a + b = 2 * 3 + 4 = 10
     let result = Float::mul_add(x, a, b);
-    assert!((result.hi() - 10.0).abs() < EPSILON);
+    assert_exact(result, 10.0);
 }
 
 #[test]
 fn test_recip() {
     let x = Float106::from(4.0);
     let result = Float::recip(x);
-    assert!((result.hi() - 0.25).abs() < EPSILON);
+    assert_exact(result, 0.25);
 }
 
 #[test]
 fn test_powi_positive() {
     let x = Float106::from(2.0);
     let result = Float::powi(x, 3);
-    assert!((result.hi() - 8.0).abs() < EPSILON);
+    assert_exact(result, 8.0);
 }
 
 #[test]
 fn test_powi_negative() {
     let x = Float106::from(2.0);
     let result = Float::powi(x, -2);
-    assert!((result.hi() - 0.25).abs() < EPSILON);
+    assert_exact(result, 0.25);
 }
 
 #[test]
 fn test_powi_zero() {
     let x = Float106::from(42.0);
     let result = Float::powi(x, 0);
-    assert!((result.hi() - 1.0).abs() < EPSILON);
+    assert_exact(result, 1.0);
 }
 
 #[test]
@@ -282,28 +314,28 @@ fn test_powf() {
     let x = Float106::from(2.0);
     let n = Float106::from(3.0);
     let result = Float::powf(x, n);
-    assert!((result.hi() - 8.0).abs() < 1e-10);
+    assert_exact(result, 8.0);
 }
 
 #[test]
 fn test_sqrt() {
     let x = Float106::from(9.0);
     let result = Float::sqrt(x);
-    assert!((result.hi() - 3.0).abs() < EPSILON);
+    assert_exact(result, 3.0);
 }
 
 #[test]
 fn test_cbrt() {
     let x = Float106::from(27.0);
     let result = Float::cbrt(x);
-    assert!((result.hi() - 3.0).abs() < 1e-10);
+    assert_exact(result, 3.0);
 }
 
 #[test]
 fn test_cbrt_negative() {
     let x = Float106::from(-8.0);
     let result = Float::cbrt(x);
-    assert!((result.hi() - (-2.0)).abs() < 1e-10);
+    assert_exact(result, -2.0);
 }
 
 #[test]
@@ -311,7 +343,7 @@ fn test_hypot() {
     let x = Float106::from(3.0);
     let y = Float106::from(4.0);
     let result = Float::hypot(x, y);
-    assert!((result.hi() - 5.0).abs() < EPSILON);
+    assert_exact(result, 5.0);
 }
 
 // =============================================================================
@@ -322,21 +354,21 @@ fn test_hypot() {
 fn test_exp() {
     let x = Float106::from(0.0);
     let result = Float::exp(x);
-    assert!((result.hi() - 1.0).abs() < EPSILON);
+    assert_exact(result, 1.0);
 }
 
 #[test]
 fn test_exp2() {
     let x = Float106::from(3.0);
     let result = Float::exp2(x);
-    assert!((result.hi() - 8.0).abs() < 1e-10);
+    assert_exact(result, 8.0);
 }
 
 #[test]
 fn test_ln() {
+    // ln(1) is exactly zero, not merely small.
     let x = Float106::from(1.0);
-    let result = Float::ln(x);
-    assert!(result.hi().abs() < EPSILON);
+    assert_exact(Float::ln(x), 0.0);
 }
 
 #[test]
@@ -344,21 +376,32 @@ fn test_log() {
     let x = Float106::from(8.0);
     let base = Float106::from(2.0);
     let result = Float::log(x, base);
-    assert!((result.hi() - 3.0).abs() < 1e-10);
+    assert_exact(result, 3.0);
 }
 
 #[test]
 fn test_log2() {
+    // log2(8) is 3, reached through a logarithm ratio rather than exactly, so the low word
+    // carries a rounding at the type's resolution.
     let x = Float106::from(8.0);
     let result = Float::log2(x);
-    assert!((result.hi() - 3.0).abs() < 1e-10);
+    assert_eq!(result.hi(), 3.0);
+    assert!(rel_err(result, Float106::from(3.0)) <= TOL);
+    // Exact powers of two across a range.
+    for k in 1..20 {
+        let p = Float106::from((1u64 << k) as f64);
+        assert!(
+            rel_err(Float::log2(p), Float106::from(k as f64)) <= TOL,
+            "log2(2^{k})"
+        );
+    }
 }
 
 #[test]
 fn test_log10() {
     let x = Float106::from(1000.0);
     let result = Float::log10(x);
-    assert!((result.hi() - 3.0).abs() < 1e-10);
+    assert_exact(result, 3.0);
 }
 
 // =============================================================================
@@ -370,7 +413,7 @@ fn test_max() {
     let x = Float106::from(3.0);
     let y = Float106::from(5.0);
     let result = Float::max(x, y);
-    assert!((result.hi() - 5.0).abs() < EPSILON);
+    assert_exact(result, 5.0);
 }
 
 #[test]
@@ -378,7 +421,7 @@ fn test_min() {
     let x = Float106::from(3.0);
     let y = Float106::from(5.0);
     let result = Float::min(x, y);
-    assert!((result.hi() - 3.0).abs() < EPSILON);
+    assert_exact(result, 3.0);
 }
 
 #[test]
@@ -387,7 +430,7 @@ fn test_clamp_via_float() {
     let min = Float106::from(0.0);
     let max = Float106::from(10.0);
     let result = Float::clamp(x, min, max);
-    assert!((result.hi() - 10.0).abs() < EPSILON);
+    assert_exact(result, 10.0);
 }
 
 // =============================================================================
@@ -400,7 +443,7 @@ fn test_clamp_below_min() {
     let min = Float106::from(0.0);
     let max = Float106::from(10.0);
     let result = Float::clamp(x, min, max);
-    assert!((result.hi() - 0.0).abs() < EPSILON);
+    assert_exact(result, 0.0);
 }
 
 #[test]
@@ -409,7 +452,7 @@ fn test_clamp_in_range() {
     let min = Float106::from(0.0);
     let max = Float106::from(10.0);
     let result = Float::clamp(x, min, max);
-    assert!((result.hi() - 3.0).abs() < EPSILON);
+    assert_exact(result, 3.0);
 }
 
 #[test]
@@ -422,7 +465,7 @@ fn test_signum_nan() {
 fn test_signum_neg_zero_lo() {
     // hi == 0 && lo < 0 path
     let x = Float106::new(0.0, -1.0e-30);
-    assert!((Float::signum(x).hi() - (-1.0)).abs() < EPSILON);
+    assert_exact(Float::signum(x), -1.0);
 }
 
 #[test]
@@ -501,28 +544,28 @@ fn test_ln_negative_nan() {
 fn test_max_nan_first() {
     let nan = <Float106 as Float>::nan();
     let y = Float106::from(2.0);
-    assert!((Float::max(nan, y).hi() - 2.0).abs() < EPSILON);
+    assert_exact(Float::max(nan, y), 2.0);
 }
 
 #[test]
 fn test_max_nan_second() {
     let x = Float106::from(2.0);
     let nan = <Float106 as Float>::nan();
-    assert!((Float::max(x, nan).hi() - 2.0).abs() < EPSILON);
+    assert_exact(Float::max(x, nan), 2.0);
 }
 
 #[test]
 fn test_min_nan_first() {
     let nan = <Float106 as Float>::nan();
     let y = Float106::from(2.0);
-    assert!((Float::min(nan, y).hi() - 2.0).abs() < EPSILON);
+    assert_exact(Float::min(nan, y), 2.0);
 }
 
 #[test]
 fn test_min_nan_second() {
     let x = Float106::from(2.0);
     let nan = <Float106 as Float>::nan();
-    assert!((Float::min(x, nan).hi() - 2.0).abs() < EPSILON);
+    assert_exact(Float::min(x, nan), 2.0);
 }
 
 #[test]
@@ -705,28 +748,53 @@ fn test_tan_basic() {
 
 #[test]
 fn test_to_degrees() {
-    let x = Float106::from(core::f64::consts::PI);
-    assert!((Float::to_degrees(x).hi() - 180.0).abs() < 1e-10);
+    // π at the type's own precision converts to exactly 180 degrees.
+    assert_exact(Float::to_degrees(Float106::PI), 180.0);
+    assert_exact(Float::to_degrees(Float106::TWO_PI), 360.0);
+    assert_exact(Float::to_degrees(Float106::FRAC_PI_2), 90.0);
+    assert_exact(Float::to_degrees(Float106::from(0.0)), 0.0);
+
+    // The f64 π is not π: it is short by about 1.22e-16, and the conversion reports that
+    // rather than rounding it away. A tolerance of 1e-14 here would hide the difference
+    // between the two constants, which is the whole reason the wide type exists.
+    let f64_pi = Float106::from(core::f64::consts::PI);
+    let degrees = Float::to_degrees(f64_pi);
+    assert_eq!(degrees.hi(), 180.0);
+    assert!(
+        degrees.lo() < 0.0,
+        "the f64 pi is below pi, so its degree measure is below 180"
+    );
+    assert!(degrees != Float106::from(180.0));
 }
 
 #[test]
 fn test_to_radians() {
-    let x = Float106::from(180.0);
-    assert!((Float::to_radians(x).hi() - core::f64::consts::PI).abs() < 1e-10);
+    // 180 degrees is π at the full precision of the type, not merely to f64.
+    let r = Float::to_radians(Float106::from(180.0));
+    assert_eq!(r.hi(), Float106::PI.hi());
+    assert!(rel_err(r, Float106::PI) <= TOL);
+    // Round trip, over a spread of angles including the negative and zero cases.
+    for deg in [0.0_f64, 30.0, 45.0, 90.0, 180.0, 360.0, -90.0, -270.0] {
+        let d = Float106::from(deg);
+        assert!(
+            rel_err(Float::to_degrees(Float::to_radians(d)), d) <= TOL,
+            "round trip at {deg}"
+        );
+    }
 }
 
 #[test]
 fn test_copysign_positive_sign() {
     let x = Float106::from(-3.0);
     let s = Float106::from(2.0);
-    assert!((Float::copysign(x, s).hi() - 3.0).abs() < EPSILON);
+    assert_exact(Float::copysign(x, s), 3.0);
 }
 
 #[test]
 fn test_copysign_negative_sign() {
     let x = Float106::from(3.0);
     let s = Float106::from(-2.0);
-    assert!((Float::copysign(x, s).hi() - (-3.0)).abs() < EPSILON);
+    assert_exact(Float::copysign(x, s), -3.0);
 }
 
 #[test]
@@ -744,26 +812,26 @@ fn test_floor_integer_input() {
     // Triggers the hi_floor == hi branch
     let x = Float106::new(3.0, 0.7);
     let r = Float::floor(x);
-    assert!((r.hi() - 3.0).abs() < EPSILON);
+    assert_exact(r, 3.0);
 }
 
 #[test]
 fn test_ceil_integer_input() {
     let x = Float106::new(3.0, 0.3);
     let r = Float::ceil(x);
-    assert!((r.hi() - 4.0).abs() < EPSILON);
+    assert_exact(r, 4.0);
 }
 
 #[test]
 fn test_round_integer_input() {
     let x = Float106::new(3.0, 0.6);
     let r = Float::round(x);
-    assert!((r.hi() - 4.0).abs() < EPSILON);
+    assert_exact(r, 4.0);
 }
 
 #[test]
 fn test_trunc_integer_input() {
     let x = Float106::new(3.0, 0.8);
     let r = Float::trunc(x);
-    assert!((r.hi() - 3.0).abs() < EPSILON);
+    assert_exact(r, 3.0);
 }

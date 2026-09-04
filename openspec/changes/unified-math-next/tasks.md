@@ -56,16 +56,17 @@ The errors were in the README's crate table and in `AGENTS.md`.
 
 ## 3. C3 — `Real::cbrt` and `RealField: ToPrimitive`
 
-- [ ] 3.1 **P1** Declare `Real::cbrt` and add `ToPrimitive` to `RealField`'s supertraits, with the blanket and `Dual` bodies unimplemented; confirm the blanket's where-clause needs no change because `Float: NumCast: ToPrimitive`
-- [ ] 3.2 **P2** Write the suite: `cbrt` on a positive, a negative and a zero argument at each of the three scalars; the dual chain rule `b/(3·cbrt(a)²)`; the negative-argument case that `powf(1/3)` returns `NaN` for; the infinite dual component at zero, matching `sqrt`'s existing behaviour at the same point; `RealField` code converting to a primitive without restating the bound; `Dual` still not implementing `RealField`
-- [ ] 3.3 **P2** Cover the corner cases: `cbrt` of exact cubes at each precision, of a value near the type's maximum and minimum positive, of a negative zero, and of a non-finite input
-- [ ] 3.4 **P2** Verify every test fails for the intended reason and record the run
-- [ ] 3.5 **P3** Audit: drop the sign handling so negatives return `NaN`, replace the derivative denominator's `3` with `2`, square instead of cube-rooting in the derivative, and return the argument unchanged — confirm each is rejected
-- [ ] 3.6 **P4** Implement `cbrt` in the blanket by forwarding to `Float::cbrt`, and in `Dual` by the chain rule with no guard at the singularity
-- [ ] 3.7 **P4** Retire `signed_cbrt` in the coherent-structures kernel, replacing the sign branch over `powf` with a direct call
-- [ ] 3.8 **P4** Retire the integer-floor stepping loop in the DEC surface-force sampler — unbounded, bidirectional, and carrying three silent `unwrap_or_else` substitutions — converting through `ToPrimitive` instead
-- [ ] 3.9 **P4** Remove the seven redundant `RealField + ToPrimitive` bound restatements
-- [ ] 3.10 **P4** Enumerate the implementors of `Real` and of `RealField`, and record which the additions oblige to change — the compatibility blast radius, not the dependent count
+- [x] 3.1 **P1** Declare `Real::cbrt` and add `ToPrimitive` to `RealField`'s supertraits, with the blanket and `Dual` bodies unimplemented; confirm the blanket's where-clause needs no change because `Float: NumCast: ToPrimitive`
+- [x] 3.2 **P2** Write the suite: `cbrt` on a positive, a negative and a zero argument at each of the three scalars; the dual chain rule `b/(3·cbrt(a)²)`; the negative-argument case that `powf(1/3)` returns `NaN` for; the infinite dual component at zero, matching `sqrt`'s existing behaviour at the same point; `RealField` code converting to a primitive without restating the bound; `Dual` still not implementing `RealField`
+- [x] 3.3 **P2** Cover the corner cases: `cbrt` of exact cubes at each precision, of a value near the type's maximum and minimum positive, of a negative zero, and of a non-finite input
+- [x] 3.4 **P2** Verify every test fails for the intended reason and record the run
+- [x] 3.5 **P3** Audit: drop the sign handling so negatives return `NaN`, replace the derivative denominator's `3` with `2`, square instead of cube-rooting in the derivative, and return the argument unchanged — confirm each is rejected
+- [x] 3.6 **P4** Implement `cbrt` in the blanket by forwarding to `Float::cbrt`, and in `Dual` by the chain rule with no guard at the singularity
+- [x] 3.7 **P4** Retire `signed_cbrt` in the coherent-structures kernel, replacing the sign branch over `powf` with a direct call
+- [x] 3.8 **P4** Retire the integer-floor stepping loop in the DEC surface-force sampler — unbounded, bidirectional, and carrying three silent `unwrap_or_else` substitutions — converting through `ToPrimitive` instead
+- [x] 3.9 **P4** Remove the seven redundant `RealField + ToPrimitive` bound restatements
+- [x] 3.10 **P4** Enumerate the implementors of `Real` and of `RealField`, and record which the additions oblige to change — the compatibility blast radius, not the dependent count
+- [x] 3.8a **P4** Retire the *second* copy of the floor scan: the sampler carries it twice, in `sample_velocity` and `sample_scalar`, so six silent substitutions rather than the three recorded. Removing the seed also retires the `Vec<LatticeCell<D>>` each function collected only to find it; the bounds guard in the second is preserved through `num_cells(D)`
 - [ ] 3.11 **P5** Run `scripts/mutants.sh` over the added and edited files and resolve every survivor
 - [ ] 3.12 Verify: `bazel test //...` is green, every retired site's existing tests pass unchanged, and no workaround from the retirement list remains
 

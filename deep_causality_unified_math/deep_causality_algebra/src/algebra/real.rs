@@ -96,6 +96,20 @@ pub trait Real:
     /// ```
     fn sqrt(self) -> Self;
 
+    /// Computes the real cube root of a number.
+    ///
+    /// Defined for negative arguments, where the cube root is real and negative.
+    /// That is what separates it from `powf(1/3)`, which returns `NaN` for a
+    /// negative base because a non-integer power of a negative number is not real.
+    /// # Example
+    /// ```
+    /// use deep_causality_algebra::Real;
+    /// assert_eq!(27.0f64.cbrt(), 3.0);
+    /// assert_eq!((-27.0f64).cbrt(), -3.0);
+    /// assert!((-27.0f64).powf(1.0 / 3.0).is_nan());
+    /// ```
+    fn cbrt(self) -> Self;
+
     /// Computes the absolute value of a number.
     /// # Example
     /// ```
@@ -321,6 +335,10 @@ where
     #[inline]
     fn sqrt(self) -> Self {
         Float::sqrt(self)
+    }
+    #[inline]
+    fn cbrt(self) -> Self {
+        Float::cbrt(self)
     }
     #[inline]
     fn abs(self) -> Self {

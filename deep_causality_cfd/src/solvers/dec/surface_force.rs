@@ -14,10 +14,9 @@
 //! neither is on the per-step hot path.
 
 use alloc::collections::BTreeMap;
-use alloc::vec::Vec;
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{CutCellRegistry, LatticeCell, LatticeComplex, Manifold};
+use deep_causality_topology::{CutCellRegistry, LatticeComplex, Manifold};
 
 use crate::solvers::dec::DecNsScalar;
 use deep_causality_physics::PhysicsError;
@@ -126,13 +125,8 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
         .map(|(vertex, v)| (*vertex.position(), *v))
         .collect();
 
-    // The top cells (D-cells) in registry-key order, so a `CellId` resolves to its base position
-    // (the start vertex for the multilinear sample's floor search).
-    let cells: Vec<LatticeCell<D>> = complex.iter_cells(D).collect();
-
     let mut force = [R::zero(); D];
-    for (&cell_id, cut) in registry.iter() {
-        let base = *cells[cell_id].position();
+    for (_, cut) in registry.iter() {
         for fragment in cut.fragments() {
             let area = fragment.area();
             let centroid = fragment.centroid();
@@ -164,7 +158,7 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
             for (i, s) in sample.iter_mut().enumerate() {
                 *s = centroid[i] + delta_h * n[i];
             }
-            let u_sample = sample_velocity(&velocity, &base, &sample, &dx);
+            let u_sample = sample_velocity(&velocity, &sample, &dx);
 
             // u·n (the wall-normal component of the sampled velocity).
             let mut u_dot_n = R::zero();
@@ -182,12 +176,9 @@ pub fn viscous_surface_force<const D: usize, R: DecNsScalar>(
 }
 
 /// Multilinear interpolation of the vertex velocity field at the physical point `p` (lattice
-/// coordinates `position · dx`). The floor of each grid coordinate is found by a short bounded
-/// search seeded at the cut cell's `base` vertex (the sample sits within ~one cell of it), so no
-/// real-to-integer cast is needed. Corners outside the domain contribute the no-slip zero.
+/// coordinates `position · dx`). Corners outside the domain contribute the no-slip zero.
 fn sample_velocity<const D: usize, R: DecNsScalar>(
     velocity: &BTreeMap<[usize; D], [R; D]>,
-    base: &[usize; D],
     p: &[R; D],
     dx: &[R; D],
 ) -> [R; D] {
@@ -195,16 +186,22 @@ fn sample_velocity<const D: usize, R: DecNsScalar>(
     let mut frac = [R::zero(); D];
     for j in 0..D {
         let g = p[j] / dx[j];
-        // Floor of `g`, found by stepping from `base[j]` (clamped at 0).
-        let mut k = base[j];
-        while R::from_usize(k + 1).unwrap_or_else(R::one) <= g {
-            k += 1;
-        }
-        while k > 0 && R::from_usize(k).unwrap_or_else(R::zero) > g {
-            k -= 1;
-        }
+        // Floor of `g`, clamped at zero. `floor` is total on R, and `to_usize` truncates a
+        // non-negative value to exactly that floor, so the two together are the constant-time
+        // form of the step-at-a-time search this used to run outward from `base[j]`.
+        // A `g` with no representable floor — non-finite, or beyond `usize` — falls to the
+        // origin cell, which is where the search also left a negative coordinate.
+        let f = g.floor();
+        let (k, k_r) = if f >= R::zero() {
+            match f.to_usize() {
+                Some(k) => (k, f),
+                None => (0usize, R::zero()),
+            }
+        } else {
+            (0usize, R::zero())
+        };
         lo[j] = k;
-        frac[j] = g - R::from_usize(k).unwrap_or_else(R::zero);
+        frac[j] = g - k_r;
     }
 
     let mut out = [R::zero(); D];
@@ -317,14 +314,13 @@ pub fn wall_heat_flux<const D: usize, R: DecNsScalar>(
         .map(|(vertex, &t)| (*vertex.position(), t))
         .collect();
 
-    let cells: Vec<LatticeCell<D>> = complex.iter_cells(D).collect();
+    let num_top_cells = complex.num_cells(D);
 
     let mut flux = R::zero();
     for (&cell_id, cut) in registry.iter() {
-        let Some(cell) = cells.get(cell_id) else {
+        if cell_id >= num_top_cells {
             continue;
-        };
-        let base = *cell.position();
+        }
         for fragment in cut.fragments() {
             let area = fragment.area();
             let centroid = fragment.centroid();
@@ -354,7 +350,7 @@ pub fn wall_heat_flux<const D: usize, R: DecNsScalar>(
             for (i, s) in sample.iter_mut().enumerate() {
                 *s = centroid[i] + delta_h * n[i];
             }
-            let t_sample = sample_scalar(&temperature, &base, &sample, &dx, t_wall);
+            let t_sample = sample_scalar(&temperature, &sample, &dx, t_wall);
 
             // ∂T/∂n from the wall to the first fluid sample, then Fourier's law. With n outward,
             // a fluid colder than the wall gives ∂T/∂n < 0 and hence q > 0 — heat leaving the wall.
@@ -371,7 +367,6 @@ pub fn wall_heat_flux<const D: usize, R: DecNsScalar>(
 /// using it would fabricate a gradient at a domain edge.
 fn sample_scalar<const D: usize, R: DecNsScalar>(
     temperature: &BTreeMap<[usize; D], R>,
-    base: &[usize; D],
     p: &[R; D],
     dx: &[R; D],
     fallback: R,
@@ -380,15 +375,22 @@ fn sample_scalar<const D: usize, R: DecNsScalar>(
     let mut frac = [R::zero(); D];
     for j in 0..D {
         let g = p[j] / dx[j];
-        let mut k = base[j];
-        while R::from_usize(k + 1).unwrap_or_else(R::one) <= g {
-            k += 1;
-        }
-        while k > 0 && R::from_usize(k).unwrap_or_else(R::zero) > g {
-            k -= 1;
-        }
+        // Floor of `g`, clamped at zero. `floor` is total on R, and `to_usize` truncates a
+        // non-negative value to exactly that floor, so the two together are the constant-time
+        // form of the step-at-a-time search this used to run outward from `base[j]`.
+        // A `g` with no representable floor — non-finite, or beyond `usize` — falls to the
+        // origin cell, which is where the search also left a negative coordinate.
+        let f = g.floor();
+        let (k, k_r) = if f >= R::zero() {
+            match f.to_usize() {
+                Some(k) => (k, f),
+                None => (0usize, R::zero()),
+            }
+        } else {
+            (0usize, R::zero())
+        };
         lo[j] = k;
-        frac[j] = g - R::from_usize(k).unwrap_or_else(R::zero);
+        frac[j] = g - k_r;
     }
 
     let mut out = R::zero();
