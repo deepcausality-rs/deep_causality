@@ -4,8 +4,9 @@ version = "0.4.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 description = "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality."
 documentation = "https://docs.rs/deep_causality_algebra"

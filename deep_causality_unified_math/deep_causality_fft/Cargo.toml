@@ -4,8 +4,9 @@ version = "0.1.4"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate."
 documentation = "https://docs.rs/deep_causality"

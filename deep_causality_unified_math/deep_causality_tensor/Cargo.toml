@@ -1,11 +1,12 @@
 [package]
 name = "deep_causality_tensor"
 version = "0.5.4"
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Tensor data structure for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"

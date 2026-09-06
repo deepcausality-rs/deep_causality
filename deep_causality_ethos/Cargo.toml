@@ -7,12 +7,11 @@ version = "0.2.11"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-readme = "../README.md"
+repository = { workspace = true }
+homepage = { workspace = true}
 
 description = "Programmable ethics for DeepCausality."
 documentation = "https://docs.rs/deep_causality"
-homepage = "https://deepcausality.com/about/"
-repository = "https://github.com/deepcausality/deep_causality.rs"
 keywords = ["causality", "causal-graph", "causal-reasoning", "graph"]
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 categories = [

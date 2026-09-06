@@ -4,7 +4,9 @@ version = "0.11.2"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-repository = "https://github.com/deepcausality/deep_causality.rs"
+repository = { workspace = true }
+homepage = { workspace = true}
+
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Core types for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"

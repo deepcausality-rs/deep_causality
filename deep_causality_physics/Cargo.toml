@@ -4,7 +4,8 @@ version = "0.8.2"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-repository = "https://github.com/deepcausality/deep_causality.rs"
+repository = { workspace = true }
+homepage = { workspace = true }
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Standard library of physics formulas and engineering primitives for DeepCausality."
 documentation = "https://docs.rs/deep_causality"

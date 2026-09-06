@@ -4,8 +4,9 @@ version = "0.5.2"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 description = "A First-Order Type for Uncertain Programming for the DeepCausality project.'"
 documentation = "https://docs.rs/deep_causality"

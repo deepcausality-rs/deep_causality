@@ -4,8 +4,9 @@ version = "0.1.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Arrow-native differentiation and integration operators (the tangent functor over Dual, endomorphism iteration over endo-arrows, and quadrature) for the deep_causality project."
 documentation = "https://docs.rs/deep_causality"

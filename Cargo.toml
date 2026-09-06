@@ -26,6 +26,8 @@ members = [
 edition = "2024"
 rust-version = "1.98.0"
 license = "MIT"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+homepage = "https://deepcausality.com/"
 
 [workspace.dependencies]
 # Declared once here and inherited by every member with `{ workspace = true }`.

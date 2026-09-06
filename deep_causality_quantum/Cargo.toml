@@ -4,7 +4,9 @@ version = "0.3.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-repository = "https://github.com/deepcausality/deep_causality.rs"
+repository = { workspace = true }
+homepage = { workspace = true}
+
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Quantum causal models on the causal monad: quantum-information kernels, gates, and the operator layer for DeepCausality."
 documentation = "https://docs.rs/deep_causality"
