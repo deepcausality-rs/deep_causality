@@ -6,7 +6,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-command cargo update
+command echo ""
+command echo "Checking cargo update"
+command cargo upgrade
+
+command echo ""
+command echo "Checking for rustup stable update"
+command rustup update stable
 
 # ---------------------------------------------------------------------------------------------
 # Websites
