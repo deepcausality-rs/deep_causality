@@ -17,6 +17,24 @@ Cloudflare Worker (`deepcausality-docs`), independent of the main website in
 The site is also built under Bazel: `bazel build //website/docs:build` runs the
 same `astro build` hermetically and writes `dist/` to `bazel-bin/website/docs/`.
 
+## Architecture map
+
+`public/architecture.html` is a standalone interactive diagram of the
+29-crate workspace, served at `/architecture.html` and linked from
+[Overview -> Architecture](src/content/docs/overview/architecture.md). It is a
+generated artifact, like the PDF, and is committed.
+
+The source is `scripts/workspace-architecture.json`: a typed specification of
+nodes, boundaries, relationships, and cards, rendered by the `archify` tool.
+Every node names the repository files it stands for, and the renderer verifies
+each of those paths against the repository before writing the page, so a node
+that outlives its source fails the render instead of shipping a stale claim.
+
+To update the map, edit the specification, re-render it over
+`public/architecture.html`, and commit both files. Note that the page
+carries its own header, theme switch, and legend; the docs site sets
+`X-Frame-Options: DENY`, so link to it rather than embedding it in an iframe.
+
 ## Single PDF (local only)
 
 `pnpm pdf` runs `scripts/build-pdf.sh`, which renders the whole documentation
