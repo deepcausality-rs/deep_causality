@@ -109,6 +109,59 @@ mathematics is delegated.
 - **WHEN** a consumer is migrated
 - **THEN** its manifest declares `deep_causality_stats` through the workspace table, and its Bazel target lists it
 
+### Requirement: The examples migrate with the library crates
+
+The eight hand-rolled statistics sites in `examples/` SHALL be migrated in this stage, and the stage SHALL NOT be complete while an example computes a statistic the crate provides.
+
+The examples are where a reader learns what the workspace considers idiomatic, so a hand-rolled
+mean there teaches the opposite of what the crate is for. No earlier draft of this stage mentioned
+them, and the inventory in `notes/c2-site-inventory.md` lists them.
+
+Two of the eight are the same file. `causal_correction_examples/src/math_utils.rs` and
+`causal_counterfactual_examples/src/math_utils.rs` are byte-identical, so one migration retires
+both, and the duplication itself is the argument.
+
+Example code carries conventions library code does not: the per-example `FloatType` alias rather
+than a raw `f64`, and the lift utilities rather than a local conversion helper. A migration that
+introduces a raw float into an example has replaced one problem with another.
+
+#### Scenario: No example computes a statistic the crate provides
+- **WHEN** the example crates are searched after migration
+- **THEN** each of the eight sites resolves to `deep_causality_stats`
+
+#### Scenario: The identical pair is retired together
+- **WHEN** the two `math_utils.rs` files are compared
+- **THEN** neither retains a local `mean`
+
+#### Scenario: The example conventions survive the migration
+- **WHEN** a migrated example is read
+- **THEN** it names `FloatType` rather than a concrete float, and carries no local lift helper
+- **AND** its manifest and Bazel target declare the new dependency
+
+### Requirement: A site the crate does not serve is kept with its reason recorded
+
+A call site whose computation the crate does not provide SHALL be left in place with the reason recorded at the site, and SHALL NOT be counted as an unresolved duplicate.
+
+Two sites match a statistical name without matching a statistical function, and the completeness
+check has to distinguish them from work not yet done.
+
+`deep_causality_quantum`'s `qpu/bridge.rs` computes a frequency-weighted mean and `n − 1` variance
+over `(outcome, count)` pairs, deliberately avoiding one sample per shot. A weighted mean is a
+different function from a slice mean, and this one is `f64` at both ends: the counts arrive as
+`usize` and the result feeds `Uncertain::normal(f64, f64)`. No other caller wants a weighted form,
+so adding one would breach the rule that the crate implements only functions with a caller.
+
+`tensor`'s `CausalTensorStatsExt::conditional_variance` is a Schur complement over a covariance
+block with a ridge on the parent diagonal. It shares the word variance and nothing else.
+
+#### Scenario: The kept sites are enumerated, not discovered
+- **WHEN** the completeness check of the previous requirement runs
+- **THEN** these two are listed as kept with their grounds, and neither counts against it
+
+#### Scenario: The reason is readable at the site
+- **WHEN** either site is read after this stage
+- **THEN** a comment states why it is not the crate's function
+
 ### Requirement: Migration makes the previously f64-internal paths precision-generic
 
 Call sites that computed in `f64` behind a generic signature SHALL compute in their caller's scalar after migration.

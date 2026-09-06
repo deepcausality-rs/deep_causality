@@ -116,19 +116,26 @@ cases that matter are outside it.
 
 ### Requirement: Descriptive statistics state their degrees of freedom
 
-Mean, variance and standard deviation SHALL state whether they apply Bessel's correction, and both forms SHALL be available where both have a caller.
+Mean, variance and standard deviation SHALL state whether they apply Bessel's correction, and only the corrected form SHALL be built.
 
-The absorbed sites include a Bessel-corrected variance in BRCD and an unbiased variance in quantum's
-bridge. The distinction is one degree of freedom and it changes the answer on small samples, which is
-where these are used. A single function that silently picks one would be wrong for the other caller.
+An earlier draft required both forms, on the ground that "the absorbed sites include a
+Bessel-corrected variance in BRCD and an unbiased variance in quantum's bridge". Those are the same
+form under two names: Bessel's correction is what makes the estimator unbiased, and both sites
+divide by `n − 1`. Reading two names as two functions is where the requirement came from.
 
-#### Scenario: The two variance forms differ as their definitions require
-- **WHEN** both variance forms are computed over the same sample of size `n`
-- **THEN** their ratio is `n/(n-1)` to the precision in use
+Every variance in the workspace is the corrected form — `variance_ddof1`, `standard_deviation`,
+`standard_deviation_qmc`, `uncertain_f64.rs:19` and `bridge.rs:97`. There is no population `÷n`
+caller, so building that form would breach this change's own rule that the crate implements only
+functions with a caller. It is a one-line addition whenever one appears.
+
+#### Scenario: Only the corrected form is built
+- **WHEN** the crate's variance surface is enumerated
+- **THEN** it offers the `n − 1` form, its documentation says so, and no population `÷n` variance is present
 
 #### Scenario: A single-element sample is handled
-- **WHEN** the Bessel-corrected variance is computed over one element
+- **WHEN** the corrected variance is computed over one element
 - **THEN** a typed error is returned rather than a division by zero
+- **AND** the stage records this as a behaviour change, because `variance_ddof1` returns `T::one()` there today and that sentinel feeds a Gaussian density
 
 #### Scenario: The mean matches a hand-computed value
 - **WHEN** the mean is computed over a small literal sample

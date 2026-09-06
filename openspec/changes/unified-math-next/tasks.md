@@ -127,13 +127,29 @@ Notes: `openspec/changes/unified-math-next/notes/num-test-oracles.md`.
 
 ## 4. C2 — `deep_causality_stats`
 
+The site inventory is established: 31 sites, 23 in library crates and 8 in examples, in
+`notes/c2-site-inventory.md`. The stage's justification survives contact with the code — three
+shipped entropy implementations disagree on base, normalisation and zero policy at once, and two
+of them disagree on the unit of the answer.
+
+- [x] 4.0 Establish the inventory by scanning every source file in all 29 library crates and all 16
+      example crates, for named statistical functions and for the inline idioms that carry no such
+      name. Recorded in `notes/c2-site-inventory.md` with the divergence table
 - [ ] 4.1 **P1** Scaffold the crate at `deep_causality_unified_math/deep_causality_stats` with its manifest, `BUILD.bazel`, `[lints] workspace = true`, README, error type and `src/utils_tests/`; declare dependencies on `num`, `algebra` and `linear` only
-- [ ] 4.2 **P1** Declare the full public surface with unimplemented bodies: entropy and conditional entropy taking a base and a zero policy, log-sum-exp and the two-term form, mean and both variance forms, Pearson, ridge in materialised and streaming forms, logistic IRLS, the Gaussian log-density, and equal-width and equal-frequency binning — every signature generic in its scalar, none naming a concrete float
+- [ ] 4.2 **P1** Declare the full public surface with unimplemented bodies: entropy and conditional entropy taking a base and a zero policy, log-sum-exp and the two-term form, mean, the corrected `n−1` variance, Pearson, ridge in materialised and streaming forms, logistic IRLS, the Gaussian log-density, and equal-width and equal-frequency binning — every signature generic in its scalar, none naming a concrete float
+- [ ] 4.2a **P1** Do **not** declare a population `÷n` variance. An earlier draft of 4.2 asked for
+      "both variance forms"; every variance in the workspace is the corrected `n−1` form —
+      `variance_ddof1`, `standard_deviation`, `standard_deviation_qmc`, `uncertain_f64.rs:19` and
+      `bridge.rs:97`. There is no `÷n` caller, so building one would break 4.3 and the identity
+      spec's rule that the crate implements only functions with a caller in this workspace
+- [ ] 4.2b **P1** Declare one log-sum-exp for the three slice sites and one two-term `logaddexp`.
+      All four shipped copies agree semantically, including the empty case, so no parameter is
+      needed to reproduce any of them
 - [ ] 4.3 **P1** Confirm the excluded functions are absent: cross-entropy, mutual information, KL divergence, Jensen–Shannon divergence, Hellinger distance and the Bhattacharyya coefficient
 - [ ] 4.4 **P2** Write the entropy suite: uniform against `log2 n`; a degenerate distribution at exactly zero; the two bases differing by exactly `ln 2`; the two zero policies differing on an entry positive but below epsilon; empty and negative inputs refused with typed errors; conditional entropy equal to `H(X)` under independence and to zero under deterministic dependence, and never negative
 - [ ] 4.5 **P2** Write the log-sum-exp suite: agreement with the naive form inside its safe range, finiteness where the naive form overflows, accuracy where it underflows, and the documented outcome for infinite and empty inputs
 - [ ] 4.6 **P2** Write the regression suite: ridge against a closed-form solution, monotone coefficient-norm decrease under increasing penalty, agreement between the materialised and streaming forms over the filtered design, a rank-deficient design refused at zero penalty; IRLS non-convergence returning a typed error with its iteration count, and separable data never returning an unbounded coefficient as success
-- [ ] 4.7 **P2** Write the remaining suites: descriptive statistics with the `n/(n-1)` ratio between variance forms and a typed error on a one-element corrected variance; Pearson against a closed form, exact at perfect correlation, refusing zero variance, applying its stated missing-data policy; the Gaussian log-density against a closed form, integrating to one, refusing a non-positive scale, with the variance-or-deviation parameterisation pinned by a case where the two differ; binning's edge convention at every boundary, the maximum in the last bin, a constant column handled explicitly, and equal-frequency balance when `k` divides `n`
+- [ ] 4.7 **P2** Write the remaining suites: descriptive statistics with a typed error on a one-element corrected variance — a **behaviour change**, since `variance_ddof1` returns `T::one()` for `len < 2` and that sentinel feeds a Gaussian density, so it is carried into 5.4a and recorded under 5.11 rather than absorbed silently here; Pearson against a closed form, exact at perfect correlation, refusing zero variance, applying its stated missing-data policy; the Gaussian log-density against a closed form, integrating to one, refusing a non-positive scale, with the variance-or-deviation parameterisation pinned by a case where the two differ; binning's edge convention at every boundary, the maximum in the last bin, a constant column handled explicitly, and equal-frequency balance when `k` divides `n`
 - [ ] 4.8 **P2** Enumerate and cover the corner cases, and run every numeric test at all three precisions
 - [ ] 4.9 **P2** Verify every test fails with the unimplemented panic and record the run and test count
 - [ ] 4.10 **P3** Audit: drop Bessel's correction, change the entropy base, skip at epsilon instead of zero, remove the max-shift from log-sum-exp, drop the ridge penalty term, halve the Gaussian normalisation, place the maximum one bin past the end, and invert the IRLS convergence test — confirm each is rejected
@@ -148,12 +164,17 @@ Notes: `openspec/changes/unified-math-next/notes/num-test-oracles.md`.
 - [ ] 5.1 Confirm 4.15 is checked; no task in this group starts before it is
 - [ ] 5.2 Migrate SURD's `T` and `Option<T>` entropy and conditional-entropy paths onto one shared implementation, the `Option` path supplying its presence policy as a parameter, with each path selecting the parameters that reproduce its current output
 - [ ] 5.3 Verify: both SURD paths produce identical outputs to their pre-migration values on the existing corpus, and their existing tests pass unchanged
-- [ ] 5.4 Migrate BRCD: both ridge forms, the logistic gate, the Gaussian log-density, log-sum-exp at its three sites, and the mean and Bessel-corrected variance
+- [ ] 5.4 Migrate BRCD: both ridge forms, the logistic gate, the Gaussian log-density, log-sum-exp at its **four** sites — `brcd_algo.rs:540`, `brcd_boss_bootstrap.rs:325`, `ext_stats.rs:154` and the two-term `brcd_gaussian.rs:631` `logaddexp`, which an earlier count missed — and the mean and corrected variance
+- [ ] 5.4a Record the one behaviour change the BRCD migration carries: `variance_ddof1` returns `T::one()` for a slice shorter than two, and that sentinel feeds a Gaussian density. The crate returns a typed error there instead. Find every path that can reach it with fewer than two observations, state what each now does, and pin the new outcome with a test
+- [ ] 5.4b Confirm the `linear` substitution is real: `fit_ridge` solves its normal equations through `brcd_linalg`'s local `solve_linear`, so the migrated ridge changes which solver runs. Record whether the result moves at `f64`, and whether the LU-versus-Cholesky decision recorded in the linear-adoption spec applies here
 - [ ] 5.5 Migrate mRMR's Pearson, and confirm it now computes in the caller's scalar rather than internally in `f64`
 - [ ] 5.6 Migrate the discovery binning routines
 - [ ] 5.7 Migrate the physics entropy kernel to bits, make its name state its base, update its existing tests which pin the nats result, and keep its parallel wrapper for the `MaybeParallel` bound the crate does not carry
-- [ ] 5.8 Migrate quantum's mean and unbiased variance where the surface admits it, and record where it does not because the function is `f64` by construction at both ends
-- [ ] 5.9 Verify: no superseded implementation remains anywhere in the workspace, and every migrated call site resolves to the crate
+- [ ] 5.8 Do **not** migrate quantum's mean and variance; record why. `qpu/bridge.rs:92-107` computes a *frequency-weighted* mean and `n−1` variance over `(outcome, count)` pairs, deliberately avoiding one sample per shot. That is a different function from a slice mean, and it is `f64` at both ends — counts arrive as `usize`, the result feeds `Uncertain::normal(f64, f64)`. No other caller wants a weighted form, so adding one to the crate would break the identity spec's caller rule
+- [ ] 5.8a Leave `ext_stats.rs:81` `conditional_variance` where it is: a Schur complement over a covariance block with a ridge on the parent diagonal, not a descriptive statistic. Record the reason at the site so the next reader does not re-litigate it
+- [ ] 5.8b Migrate the eight example sites, which no earlier version of this group mentioned: `causal_correction_examples/src/math_utils.rs:15` and `causal_counterfactual_examples/src/math_utils.rs:15` — **byte-identical files**, so one migration retires both; `corrective_ddos_detector/model.rs:99`; `plasma_blackout/weather/model.rs:178` `mean_sd`; `ml_rca/model.rs:92` and `:102`; `clinical_trial/model.rs:194`; and the Granger pair at `granger/main.rs:116` and `granger/model.rs:85`
+- [ ] 5.8c Check the examples' migration against the example conventions before landing it: the `FloatType` alias rather than a raw `f64`, and the lift utilities rather than a local helper. An example that gains a `deep_causality_stats` dependency needs it in its manifest and its Bazel target
+- [ ] 5.9 Verify: every one of the 31 sites in `notes/c2-site-inventory.md` is resolved — migrated, or deliberately kept with its reason recorded at the site (the two in 5.8 and 5.8a, plus the D7 tensor carve-out). Re-run the inventory scan and confirm it returns nothing unaccounted for
 - [ ] 5.10 Verify: a previously `f64`-internal path called at `Float106` now carries `Float106` accuracy on an input whose exact result is known, and the same path at `f64` is unchanged
 - [ ] 5.11 Record every changed result with its reason; confirm no consumer test was edited to make a failure disappear
 
