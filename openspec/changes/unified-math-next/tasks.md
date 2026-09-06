@@ -80,15 +80,27 @@ sampling at `f64` — that for a wider `R` "the sampling noise sits at the f64 f
 lift does not lose meaningful entropy" — which is a claim about the physics, not about what `rand`
 can do. Acting on it changes the random stream, and therefore every seeded expectation downstream.
 
-- [ ] 3b.1 Confirm the two comments are stale: `rand` implements `Distribution<Float106>` for
-      `StandardUniform`, `Open01`, `OpenClosed01` and `StandardNormal`
-- [ ] 3b.2 Decide whether the entropy claim holds — whether Lund-model sampling at `Float106` is
-      distinguishable from sampling at `f64` and lifting. This is a physics question, not a
-      capability question, and it gates the rest of the group
-- [ ] 3b.3 If it does not hold: correct the comments only, and record that the `f64` sampling stays
-      for a stated reason rather than a stale one
-- [ ] 3b.4 If it holds: route both sites through `RealRng`, and record the stream change and every
-      seeded test whose expectations move with it
+- [x] 3b.1 Confirm the two comments are stale: `rand` implements `Distribution<Float106>` for
+      `StandardUniform`, `Open01`, `OpenClosed01` and `StandardNormal` — all four are in
+      `dist_float_106.rs`, so both comments are wrong about the capability
+- [x] 3b.2 Decide whether the entropy claim holds — whether Lund-model sampling at `Float106` is
+      distinguishable from sampling at `f64` and lifting. **It holds.** There are five draw sites,
+      not the two this task assumed. Three produce discrete outputs — a flavour index, a bool, an
+      accept/reject bit — where bits below `2^-53` change the outcome only on a set of measure
+      ~`1e-16`. The fourth is an affine map onto the bounded interval `[0.01, 0.99]`, which neither
+      amplifies nor compresses, and carries no singular transform and no granularity-set tail. The
+      fifth is the Gaussian, where the wider draw is the *narrower* one: the `f64` `StandardNormal`
+      is a ziggurat with the Marsaglia tail algorithm and unbounded reach, while the `Float106`
+      path is Box–Muller over an `Open01` with a `2^-53` floor, capping `|z|` at a measured
+      **8.5717**. Both caps sit past `P ≈ 1e-17`
+- [x] 3b.3 Correct the comments only, and record that the `f64` sampling stays for a stated reason
+      rather than a stale one — both module docs plus the `generate_transverse_momentum` doc, which
+      repeated the stale claim a third time. Physics tests unchanged at 1748, clippy clean
+- [x] 3b.4 Not taken: the entropy claim holds, so the sites are not rerouted. Recorded here because
+      the cost is part of the finding — a `Float106` stream is not a refinement of the `f64` one. A
+      `Float106` uniform consumes two `f64` draws and its normal four, so rerouting would replace
+      every seeded sequence rather than extend it, and nothing instantiates these kernels at
+      `Float106` today (`generic_real_field_tests.rs` covers `f32` and `f64` only)
 
 ## 3c. Test oracles in `deep_causality_num`
 

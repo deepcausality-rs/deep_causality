@@ -12,11 +12,18 @@
 //!
 //! The key relation is: p+ * p- = m²_T
 //!
-//! Internally these data carriers are generic over `R: RealField`. Random
-//! sampling in `sample_z` still happens at f64 via `deep_causality_rand`
-//! (its `Standard` / `StandardNormal` distributions only implement
-//! `Distribution` for `f32` and `f64`), with sampled uniforms lifted into `R`
-//! via `R::from_f64` at the RNG boundary.
+//! Internally these data carriers are generic over `R: RealField`. Random sampling in `sample_z`
+//! happens at `f64` and is lifted into `R` via `R::from_f64` at the RNG boundary.
+//!
+//! That is a choice, not a limitation: `deep_causality_rand` implements `Distribution<Float106>`
+//! for `StandardUniform`, `Open01`, `OpenClosed01` and `StandardNormal`. Sampling wider changes
+//! nothing here. Both draws feed a rejection loop on the bounded interval `[0.01, 0.99]` — the
+//! first through the affine map `z_min + (z_max - z_min) * u`, which neither amplifies nor
+//! compresses, and the second into an accept/reject comparison whose output is one bit. An `f64`
+//! uniform resolves `2^-53`, so the induced spacing in `z` is about `1.1e-16` and uniform across
+//! the interval, with no singular transform and no tail whose reach the granularity sets. Finer
+//! draws would move an accept/reject decision only where the comparison falls within `1e-16` of
+//! its threshold.
 
 use crate::FourMomentum;
 use crate::real_from_f64;
