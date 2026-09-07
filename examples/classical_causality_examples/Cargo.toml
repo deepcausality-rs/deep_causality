@@ -11,6 +11,7 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality = { workspace = true }
+deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_rand = { workspace = true }
 # --- Causaloid + Contextual-Alternation implementations ---

@@ -6,6 +6,9 @@
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
 use deep_causality_tensor::CausalTensor;
 
+/// The working type, as every other example in this crate declares it.
+pub type FloatType = f64;
+
 fn main() {
     // 1. Prepare your data with some missing values (None)
     let data = vec![
@@ -35,7 +38,11 @@ fn main() {
 
     // 2. Run the feature selector
     // Select 2 features, with the target variable in column 3.
-    let selected_features_with_scores = mrmr_features_selector(&tensor, 3, 3).unwrap();
+    // The scalar is named here rather than inferred: the selector's bound is
+    // `T: Into<Option<F>>`, which a `CausalTensor<Option<FloatType>>` satisfies for more than one
+    // `F`, so the target has to be stated.
+    let selected_features_with_scores =
+        mrmr_features_selector::<_, FloatType>(&tensor, 3, 3).unwrap();
 
     // 3. Interpret the results
     println!("Selected features and their normalized scores (Generic MRMR):");

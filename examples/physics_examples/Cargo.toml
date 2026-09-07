@@ -13,6 +13,7 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality = { workspace = true }
+deep_causality_stats = { workspace = true, features = ["std"] }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_physics = { workspace = true, features = ["default", "os-random"] }

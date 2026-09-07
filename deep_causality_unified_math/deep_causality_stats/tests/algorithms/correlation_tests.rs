@@ -61,7 +61,7 @@
 // The bound is `RealField`, and `Real`'s analytic surface (`abs`, `is_nan`, `is_finite`) and
 // `ToPrimitive`'s `to_f64` reach these tests through its supertraits, so neither name is imported
 // separately.
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{Real, RealField};
 use deep_causality_num::lift;
 use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_stats::utils_tests::lift_array;
@@ -1119,4 +1119,63 @@ fn test_one_pair_is_refused() {
         Err(StatsError(StatsErrorEnum::InsufficientSamples(_))) => {}
         other => panic!("one pair has no dispersion to relate, got {other:?}"),
     }
+}
+
+/// The correlation is computed in the caller's scalar, so a wider scalar buys more correct digits.
+///
+/// This is the property the migration was for. mRMR's Pearson accumulated in `f64` behind a
+/// generic signature, so a `Float106` caller got `f64` accuracy and no way to tell. The shipped
+/// `pearson` accumulates in `T`, and this measures the difference against an oracle neither
+/// precision can reach.
+///
+/// The oracle is exact. For `x = (1, 2, 3, 4, 5)` and `y = (2, 4, 7, 8, 9)` the centred sums are
+/// `Sxy = 18`, `Sxx = 10`, `Syy = 34` over the rationals, so `r² = 324/340 = 81/85` **exactly** and
+/// `r = √(81/85)`. Evaluated to sixty decimal places that is
+/// `0.976187060183952774000240806304295746061426416923555012612586`, which is thirty digits beyond
+/// what `f64` can hold and comfortably past `Float106`'s thirty-two.
+#[test]
+fn test_pearson_carries_the_callers_precision() {
+    const X: [f64; 5] = [1.0, 2.0, 3.0, 4.0, 5.0];
+    const Y: [f64; 5] = [2.0, 4.0, 7.0, 8.0, 9.0];
+    // The first thirty-four digits of √(81/85), which bracket both precisions.
+    const EXACT: &str = "0.9761870601839527740002408063042957";
+
+    let (r64, _) = pearson(&lift_array::<f64>(&X), &lift_array::<f64>(&Y)).expect("a clean pair");
+    let (r106, _) =
+        pearson(&lift_array::<Float106>(&X), &lift_array::<Float106>(&Y)).expect("a clean pair");
+
+    // Agreement with the oracle, measured as the number of leading decimal digits that match.
+    fn matching_digits(value: &str, exact: &str) -> usize {
+        value
+            .chars()
+            .zip(exact.chars())
+            .take_while(|(a, b)| a == b)
+            .filter(|(a, _)| a.is_ascii_digit())
+            .count()
+    }
+
+    let digits_64 = matching_digits(&format!("{r64:.34}"), EXACT);
+    let digits_106 = matching_digits(&format!("{:.34}", r106.to_f64()), EXACT);
+
+    // `f64` cannot do better than its own ~16 significant digits.
+    assert!(
+        digits_64 >= 15,
+        "f64 should reach about sixteen digits, matched {digits_64}"
+    );
+
+    // The wide computation, read back at `f64`, must be at least as good — the point being that the
+    // accumulation happened in `Float106`, so the error is the *conversion's*, not the algorithm's.
+    assert!(
+        digits_106 >= digits_64,
+        "the Float106 accumulation must not be worse than the f64 one: {digits_106} vs {digits_64}"
+    );
+
+    // And the square is exact rationally, so `r²·85` is 81 to within the working precision.
+    let eighty_five = lift::<Float106>(85.0);
+    let eighty_one = lift::<Float106>(81.0);
+    let residual = Real::abs(r106 * r106 * eighty_five - eighty_one);
+    assert!(
+        residual <= lift::<Float106>(F106.native),
+        "r² = 81/85 exactly, so r²·85 − 81 should vanish at Float106: {residual:?}"
+    );
 }

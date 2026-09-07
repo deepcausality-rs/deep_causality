@@ -133,11 +133,11 @@ Pairwise deletion and the surviving-pair count SHALL remain. Zero variance SHALL
 
 The mRMR selector, Pearson helper and F-statistic helper SHALL replace their legacy Float bounds with RealField + FromPrimitive. Discovery's MrmrFeatureSelector and both SurdCleaned CDL implementations SHALL remove the Float bounds inherited from mRMR; existing Precision bounds already supply the numeric requirements where present. Other algorithms SHALL be checked for explicit or indirect Float constraints, selecting Real for analytic operations without field division and RealField for real-field computations.
 
-Float remains a low-level num capability. The existing FloatOption trait itself requires Float and cannot be retained as mRMR's input bound while claiming this migration is complete. A real-scalar presence adapter SHALL live in algebra, use Real for NaN detection, and support both scalar and Option inputs. It SHALL preserve None and treat both NaN and Some(NaN) as missing, while passing infinities through to the statistics validation. The existing num adapter remains available for compatibility; num SHALL NOT depend on algebra.
+Float remains a low-level num capability. The existing FloatOption trait itself requires Float and SHALL be removed from mRMR's bounds without introducing a replacement trait. The implementation SHALL use ordinary Option values and standard Copy + Into<Option<F>> bounds to accept both scalar and optional inputs. It SHALL preserve None and filter NaN/Some(NaN) locally while passing infinities to the statistics validation. Neither a RealOption trait nor a num dependency on algebra SHALL be introduced.
 
 #### Scenario: Optional input does not reintroduce Float
 - **WHEN** mRMR accepts plain or optional real scalars
-- **THEN** its numeric and presence-adapter bounds do not require Float
+- **THEN** its numeric and standard option-conversion bounds do not require Float
 - **AND** tests cover finite values, None, NaN, Some(NaN) and both infinities
 
 #### Scenario: The numeric abstraction is compile-checked

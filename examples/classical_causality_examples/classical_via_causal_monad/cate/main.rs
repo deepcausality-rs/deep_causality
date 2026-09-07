@@ -52,7 +52,7 @@ fn main() {
         .map(|p| individual_treatment_effect(p))
         .collect();
 
-    let cate = ites.iter().sum::<f64>() / ites.len() as f64;
+    let cate = deep_causality_stats::mean(&ites).unwrap_or(0.0);
     println!("\n--- CATE = mean(ITE over subgroup) = {:.2} ---", cate);
     println!(
         "Interpretation: for the over-{AGE_THRESHOLD} subgroup, administering the drug is\n\

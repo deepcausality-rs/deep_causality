@@ -81,12 +81,12 @@ fn shipping_predictor_logic(
         return PropagatingProcess::pure(100.0);
     }
 
-    let avg_shipping: f64 =
-        shipping_activities.iter().sum::<f64>() / shipping_activities.len() as f64;
+    // Guarded non-empty just above, so the refusal cannot fire.
+    let avg_shipping: f64 = deep_causality_stats::mean(&shipping_activities).unwrap_or(0.0);
 
     let mut oil_price_effect = 0.0;
     if !oil_prices.is_empty() {
-        let avg_oil = oil_prices.iter().sum::<f64>() / oil_prices.len() as f64;
+        let avg_oil = deep_causality_stats::mean(&oil_prices).unwrap_or(0.0);
         // Simple model: higher avg oil price slightly decreases the next shipping activity value.
         oil_price_effect = (avg_oil - 50.0) * 0.5; // 50 is a baseline oil price
     }

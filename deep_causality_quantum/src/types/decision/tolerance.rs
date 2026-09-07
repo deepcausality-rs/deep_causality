@@ -8,6 +8,7 @@ use crate::types::density_matrix::DensityMatrix;
 use crate::types::qcm::markov_freeze::CommutatorTolerance;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_stats::bernoulli_standard_error;
 
 /// The tolerance family: the policies the crate's checks derive their thresholds from, named.
 ///
@@ -125,10 +126,10 @@ where
             return None;
         }
         match self {
-            Self::ShotNoise if shots > 0 => {
-                let n = R::from_u64(shots)?;
-                Some((estimate * (R::one() - estimate) / n).sqrt())
-            }
+            // The same `√(p(1−p)/n)` `ShotEstimate` reports, from the one implementation in
+            // `deep_causality_stats`. The range and shot guards above already narrow the input to
+            // what it accepts, so a refusal here would be a scalar that cannot hold the count.
+            Self::ShotNoise if shots > 0 => bernoulli_standard_error(estimate, shots).ok(),
             _ => None,
         }
     }

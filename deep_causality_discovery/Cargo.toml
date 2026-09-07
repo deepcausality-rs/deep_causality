@@ -43,6 +43,14 @@ features = ["default"]
 workspace = true
 features = ["default"]
 
+[dependencies.deep_causality_par]
+workspace = true
+features = ["default"]
+
+[dependencies.deep_causality_stats]
+workspace = true
+features = ["std"]
+
 [dependencies.deep_causality_tensor]
 workspace = true
 features = ["default"]
@@ -66,7 +74,7 @@ path = "examples/brcd_cache_cold_vs_warm.rs"
 [features]
 default = []
 # Enables parallel execution of the SURD algorithm by passing the feature to the algorithms crate.
-parallel = ["deep_causality_algorithms/parallel"]
+parallel = ["deep_causality_algorithms/parallel", "deep_causality_par/parallel"]
 
 [lints]
 workspace = true

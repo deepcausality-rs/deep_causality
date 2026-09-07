@@ -6,6 +6,7 @@
 use crate::{ProbabilisticType, QmcSampler, Uncertain, UncertainError};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{MeanAccumulator, StatsError, std_dev};
 
 // Precision-generic Monte-Carlo statistics. Unlike the sampling surface (which needs only
 // `ProbabilisticType`), these reduce many samples into one scalar, so they require the value
@@ -18,14 +19,15 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
         if num_samples == 0 {
             return Ok(T::zero());
         }
-        let mut sum = T::zero();
+        // `MeanAccumulator` rather than collecting into a slice and calling `mean`: a Monte-Carlo
+        // estimator's whole point is that it can take a great many draws, and holding them all to
+        // average them would turn constant memory into `num_samples`. The accumulator folds left to
+        // right exactly as `mean` does, so the answer is the same to the last bit.
+        let mut acc = MeanAccumulator::new();
         for i in 0..num_samples {
-            sum += self.sample_with_index(i as u64)?;
+            acc.push(self.sample_with_index(i as u64)?);
         }
-        let n = T::from_usize(num_samples).ok_or_else(|| {
-            UncertainError::SamplingError("sample count does not fit the value type".to_string())
-        })?;
-        Ok(sum / n)
+        acc.mean().map_err(sampling_error)
     }
 
     /// Estimates the (sample) standard deviation from `num_samples` draws, using the
@@ -39,26 +41,7 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
             .map(|i| self.sample_with_index(i as u64))
             .collect::<Result<Vec<T>, UncertainError>>()?;
 
-        let count_err = || {
-            UncertainError::SamplingError("sample count does not fit the value type".to_string())
-        };
-        let n = T::from_usize(num_samples).ok_or_else(count_err)?;
-        let n_minus_one = T::from_usize(num_samples - 1).ok_or_else(count_err)?;
-
-        let mut sum = T::zero();
-        for &x in &samples {
-            sum += x;
-        }
-        let mean = sum / n;
-
-        let mut variance = T::zero();
-        for &x in &samples {
-            let d = x - mean;
-            variance += d * d;
-        }
-        variance /= n_minus_one;
-
-        Ok(variance.sqrt())
+        std_dev(&samples).map_err(sampling_error)
     }
 
     /// Quasi-Monte-Carlo expected value: averages `num_samples` Sobol draws (digitally shifted
@@ -70,14 +53,11 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
             return Ok(T::zero());
         }
         let sampler = QmcSampler::new(self, Some(seed))?;
-        let mut sum = T::zero();
+        let mut acc = MeanAccumulator::new();
         for i in 0..num_samples {
-            sum += self.sample_with_index_qmc(i as u64, &sampler)?;
+            acc.push(self.sample_with_index_qmc(i as u64, &sampler)?);
         }
-        let n = T::from_usize(num_samples).ok_or_else(|| {
-            UncertainError::SamplingError("sample count does not fit the value type".to_string())
-        })?;
-        Ok(sum / n)
+        acc.mean().map_err(sampling_error)
     }
 
     /// Quasi-Monte-Carlo (sample) standard deviation over `num_samples` Sobol draws (digitally
@@ -96,25 +76,15 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
             .map(|i| self.sample_with_index_qmc(i as u64, &sampler))
             .collect::<Result<Vec<T>, UncertainError>>()?;
 
-        let count_err = || {
-            UncertainError::SamplingError("sample count does not fit the value type".to_string())
-        };
-        let n = T::from_usize(num_samples).ok_or_else(count_err)?;
-        let n_minus_one = T::from_usize(num_samples - 1).ok_or_else(count_err)?;
-
-        let mut sum = T::zero();
-        for &x in &samples {
-            sum += x;
-        }
-        let mean = sum / n;
-
-        let mut variance = T::zero();
-        for &x in &samples {
-            let d = x - mean;
-            variance += d * d;
-        }
-        variance /= n_minus_one;
-
-        Ok(variance.sqrt())
+        std_dev(&samples).map_err(sampling_error)
     }
+}
+
+/// Maps a refusal from the statistics crate onto this crate's sampling error.
+///
+/// Both callers short-circuit `num_samples <= 1` before drawing anything, so the refusals that can
+/// reach here are the ones a sampler cannot produce — an empty draw list, or a count the value type
+/// cannot hold. The message is carried through rather than replaced, since it says which.
+fn sampling_error(error: StatsError) -> UncertainError {
+    UncertainError::SamplingError(error.to_string())
 }

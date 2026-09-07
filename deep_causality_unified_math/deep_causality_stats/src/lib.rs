@@ -68,16 +68,24 @@ pub mod utils_tests;
 
 pub use crate::algorithms::binning::{bin_equal_frequency, bin_equal_width};
 pub use crate::algorithms::correlation::{pearson, pearson_pairwise_complete};
+pub use crate::algorithms::covariance::{column_means, conditional_variance, covariance_matrix};
 pub use crate::algorithms::density::gaussian_log_density;
 pub use crate::algorithms::entropy::{conditional_entropy, entropy};
 pub use crate::algorithms::log_sum_exp::{log_add_exp, log_sum_exp};
 pub use crate::algorithms::logistic::{fit_logistic, sigmoid};
-pub use crate::algorithms::moments::{mean, std_dev, variance};
+pub use crate::algorithms::moments::{
+    mean, population_std_dev, population_variance, std_dev, variance,
+};
+pub use crate::algorithms::proportion::{bernoulli_proportion, bernoulli_standard_error};
 pub use crate::algorithms::ridge::{fit_ridge, fit_ridge_streaming};
 pub use crate::errors::stats_error::{StatsError, StatsErrorEnum};
 pub use crate::types::entropy_config::EntropyConfig;
 pub use crate::types::log_base::LogBase;
+pub use crate::types::logistic_config::LogisticConfig;
 pub use crate::types::logistic_fit::LogisticFit;
+pub use crate::types::mean_accumulator::MeanAccumulator;
 pub use crate::types::normalisation::Normalisation;
+pub use crate::types::penalisation::Penalisation;
+pub use crate::types::ridge_config::RidgeConfig;
 pub use crate::types::ridge_fit::RidgeFit;
 pub use crate::types::zero_policy::ZeroPolicy;

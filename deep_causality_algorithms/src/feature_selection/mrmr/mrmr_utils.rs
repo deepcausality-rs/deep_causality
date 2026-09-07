@@ -4,13 +4,15 @@
  */
 
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
-use deep_causality_num::{Float, FloatOption};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{StatsErrorEnum, pearson_pairwise_complete};
 use deep_causality_tensor::CausalTensor;
 
 /// Calculates the Pearson correlation coefficient between two columns of a `CausalTensor`.
 ///
-/// This function is generic over any type `T` that implements `FloatOption<F>`,
-/// where `F` is a float type (`f32` or `f64`). It handles missing data (represented
+/// This function is generic over any type `T` that implements `Into<Option<F>>`,
+/// where `F` is a real-field scalar. It handles missing data (represented
 /// by `None` or `NaN` values) using pairwise deletion.
 ///
 /// # Arguments
@@ -32,8 +34,8 @@ pub(super) fn pearson_correlation<T, F>(
     col_b_idx: usize,
 ) -> Result<(f64, f64), MrmrError>
 where
-    T: FloatOption<F>,
-    F: Float,
+    T: Copy + Into<Option<F>>,
+    F: RealField + FromPrimitive,
 {
     let shape = tensor.shape();
     if shape.len() != 2 {
@@ -51,64 +53,36 @@ where
         ));
     }
 
-    let mut sum_a: f64 = 0.0;
-    let mut sum_b: f64 = 0.0;
-    let mut sum_sq_a: f64 = 0.0;
-    let mut sum_sq_b: f64 = 0.0;
-    let mut sum_prod: f64 = 0.0;
-    let mut n: f64 = 0.0;
-
-    for i in 0..n_rows {
-        let a_option = tensor
-            .get(&[i, col_a_idx])
-            .ok_or_else(|| {
-                MrmrError::CalculationError("Failed to get value from tensor".to_string())
-            })?
-            .to_option();
-        let b_option = tensor
-            .get(&[i, col_b_idx])
-            .ok_or_else(|| {
-                MrmrError::CalculationError("Failed to get value from tensor".to_string())
-            })?
-            .to_option();
-
-        if let (Some(a_val), Some(b_val)) = (a_option, b_option) {
-            // Convert to f64 for calculation to maintain precision
-            let a = a_val.to_f64().ok_or_else(|| {
-                MrmrError::CalculationError("Failed to cast float to f64".to_string())
-            })?;
-            let b = b_val.to_f64().ok_or_else(|| {
-                MrmrError::CalculationError("Failed to cast float to f64".to_string())
-            })?;
-            sum_a += a;
-            sum_b += b;
-            sum_sq_a += a * a;
-            sum_sq_b += b * b;
-            sum_prod += a * b;
-            n += 1.0;
+    let mut a = Vec::with_capacity(n_rows);
+    let mut b = Vec::with_capacity(n_rows);
+    for row in 0..n_rows {
+        let left: Option<F> = (*tensor.get(&[row, col_a_idx]).ok_or_else(|| {
+            MrmrError::CalculationError("Failed to get value from tensor".to_string())
+        })?)
+        .into();
+        let right: Option<F> = (*tensor.get(&[row, col_b_idx]).ok_or_else(|| {
+            MrmrError::CalculationError("Failed to get value from tensor".to_string())
+        })?)
+        .into();
+        a.push(left.filter(|value| !value.is_nan()));
+        b.push(right.filter(|value| !value.is_nan()));
+    }
+    let (r, n) = pearson_pairwise_complete(&a, &b).map_err(|error| match error.kind() {
+        StatsErrorEnum::EmptyInput(_) | StatsErrorEnum::InsufficientSamples(_) => {
+            MrmrError::SampleTooSmall(2)
         }
-    }
-
-    if n < 2.0 {
-        // Correlation is not well-defined for less than 2 samples.
-        return Err(MrmrError::SampleTooSmall(2));
-    }
-
-    let numerator = sum_prod - (sum_a * sum_b) / n;
-    let denominator_a = sum_sq_a - (sum_a * sum_a) / n;
-    let denominator_b = sum_sq_b - (sum_b * sum_b) / n;
-
-    if denominator_a <= 0.0 || denominator_b <= 0.0 {
-        return Ok((0.0, n));
-    }
-
-    Ok((numerator / (denominator_a.sqrt() * denominator_b.sqrt()), n))
+        _ => MrmrError::CalculationError(error.to_string()),
+    })?;
+    let r = r.to_f64().ok_or_else(|| {
+        MrmrError::CalculationError("Failed to convert correlation to f64".to_string())
+    })?;
+    Ok((r, n as f64))
 }
 
 /// Calculates the F-statistic between a feature and a target column.
 ///
-/// This function is generic over any type `T` that implements `FloatOption<F>`,
-/// where `F` is a float type (`f32` or `f64`). It uses `pearson_correlation`
+/// This function is generic over any type `T` that implements `Into<Option<F>>`,
+/// where `F` is a real-field scalar. It uses `pearson_correlation`
 /// to handle missing data via pairwise deletion.
 ///
 /// # Arguments
@@ -130,8 +104,8 @@ pub(super) fn f_statistic<T, F>(
     target_idx: usize,
 ) -> Result<f64, MrmrError>
 where
-    T: FloatOption<F>,
-    F: Float,
+    T: Copy + Into<Option<F>>,
+    F: RealField + FromPrimitive,
 {
     let (r, n) = pearson_correlation(tensor, feature_idx, target_idx)?;
 

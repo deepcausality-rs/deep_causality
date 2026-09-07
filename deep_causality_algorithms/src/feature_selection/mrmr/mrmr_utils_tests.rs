@@ -7,6 +7,28 @@ use crate::mrmr::mrmr_utils;
 use deep_causality_tensor::CausalTensor;
 
 #[test]
+fn pearson_large_offset_retains_affine_correlation() {
+    // A positive affine relationship has correlation one, independent of offset.
+    let tensor = CausalTensor::new(
+        vec![1e12, 3.0, 1e12 + 1.0, 5.0, 1e12 + 2.0, 7.0, 1e12 + 3.0, 9.0],
+        vec![4, 2],
+    )
+    .unwrap();
+    let (r, n) = mrmr_utils::pearson_correlation(&tensor, 0, 1).unwrap();
+    assert!((r - 1.0).abs() < 1e-14);
+    assert_eq!(n, 4.0);
+}
+
+#[test]
+fn pearson_infinity_is_a_calculation_error() {
+    let tensor = CausalTensor::new(vec![1.0, 2.0, 2.0, f64::INFINITY], vec![2, 2]).unwrap();
+    assert!(matches!(
+        mrmr_utils::pearson_correlation(&tensor, 0, 1),
+        Err(MrmrError::CalculationError(_))
+    ));
+}
+
+#[test]
 fn test_pearson_correlation() {
     let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 4.0, 3.0, 2.0, 1.0];
     let shape = vec![2, 5];

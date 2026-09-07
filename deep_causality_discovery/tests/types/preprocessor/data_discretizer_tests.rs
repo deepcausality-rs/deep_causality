@@ -122,10 +122,11 @@ fn test_data_discretizer_equal_width_strategy_less_than_two_bins() {
     let config = PreprocessConfig::new(BinningStrategy::EqualWidth, 1, ColumnSelector::All); // Less than 2 bins
 
     let result = discretizer.process(tensor, &config);
-    assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err(),
-        PreprocessError::ConfigError("Number of bins must be at least 2".to_string())
+    // The variant is the contract; the wording now comes from `deep_causality_stats`, so pinning
+    // the exact string would assert which crate phrased the refusal rather than what it refuses.
+    assert!(
+        matches!(result, Err(PreprocessError::ConfigError(_))),
+        "a bin count below two is a configuration error, got {result:?}"
     );
 }
 
@@ -194,9 +195,10 @@ fn test_data_discretizer_equal_frequency_strategy_less_than_two_bins() {
     let config = PreprocessConfig::new(BinningStrategy::EqualFrequency, 1, ColumnSelector::All); // Less than 2 bins
 
     let result = discretizer.process(tensor, &config);
-    assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err(),
-        PreprocessError::ConfigError("Number of bins must be at least 2".to_string())
+    // The variant is the contract; the wording now comes from `deep_causality_stats`, so pinning
+    // the exact string would assert which crate phrased the refusal rather than what it refuses.
+    assert!(
+        matches!(result, Err(PreprocessError::ConfigError(_))),
+        "a bin count below two is a configuration error, got {result:?}"
     );
 }

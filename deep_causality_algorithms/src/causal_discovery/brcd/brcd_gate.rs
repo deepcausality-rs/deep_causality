@@ -24,9 +24,9 @@
 //! the reference's behaviour and its empirical-prior fallback).
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
-use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{LogisticConfig, Penalisation, fit_logistic, sigmoid};
 
 /// Configuration for the logistic-gate fit.
 #[derive(Debug, Clone, Copy)]
@@ -117,97 +117,46 @@ pub fn fit_logistic_gate<T: RealField + FromPrimitive>(
         });
     }
 
-    // IRLS / Newton on θ = (bias, weights), with the design row z_i = [1, x_i].
-    let dim = p + 1;
-    let mut theta = vec![T::zero(); dim];
+    // The IRLS core is `deep_causality_stats::fit_logistic`. Three adaptations, each of which is
+    // this gate's contract rather than the crate's:
+    //
+    // 1. The crate fits one coefficient per design column and has no intercept of its own, so the
+    //    ones-column that was implicit in `θ = (bias, weights)` is now written into the design.
+    // 2. That column is exempted from the penalty — `Penalisation::Excluding(0)` — which is what
+    //    keeps this a port of sklearn's default rather than a different objective. Penalising it
+    //    would shrink the fitted odds toward even and discard the base rate.
+    // 3. The crate refuses to return an unconverged iterate; this gate returned its last one. The
+    //    refusal is propagated, because `gate_probabilities` already answers a failed gate with the
+    //    empirical base rate — which is a better estimate than a half-finished Newton step.
+    let design: Vec<Vec<T>> = rows
+        .iter()
+        .map(|row| {
+            let mut z = Vec::with_capacity(p + 1);
+            z.push(T::one());
+            z.extend_from_slice(row);
+            z
+        })
+        .collect();
+    let labels: Vec<T> = y
+        .iter()
+        .map(|&v| if v { T::one() } else { T::zero() })
+        .collect();
 
-    for _ in 0..config.max_iter {
-        // Gradient g = Zᵀ(π − y) + Λθ and Hessian H = ZᵀWZ + Λ, where
-        // W = diag(π_i(1−π_i)) and Λ penalizes the weights but not the intercept.
-        let mut grad = vec![T::zero(); dim];
-        let mut hess = vec![T::zero(); dim * dim];
-
-        for (row, &label) in rows.iter().zip(y.iter()) {
-            let eta = theta[0] + dot(&theta[1..], row);
-            let pi = sigmoid(eta);
-            let w = pi * (T::one() - pi);
-            let resid = pi - if label { T::one() } else { T::zero() };
-
-            // z_i = [1, row...]; accumulate gradient and Hessian.
-            accumulate_row(&mut grad, &mut hess, dim, row, resid, w);
-        }
-
-        // Ridge on the weights (indices 1..dim), intercept untouched.
-        for a in 1..dim {
-            grad[a] += config.ridge * theta[a];
-            hess[a * dim + a] += config.ridge;
-        }
-
-        // Newton step: solve H·step = grad, then θ ← θ − step.
-        solve_linear(&mut hess, &mut grad, dim);
-        let mut max_step = T::zero();
-        for a in 0..dim {
-            theta[a] -= grad[a];
-            let s = grad[a].abs();
-            if s > max_step {
-                max_step = s;
-            }
-        }
-        if theta.iter().any(|t| !t.is_finite()) {
-            return Err(BrcdError(BrcdErrorEnum::SingularSystem));
-        }
-        if max_step < config.tol {
-            break;
-        }
-    }
+    let fit = fit_logistic(
+        &design,
+        &labels,
+        &LogisticConfig::new(config.ridge, config.max_iter, config.tol)
+            .with_penalisation(Penalisation::Excluding(0)),
+    )
+    .map_err(|_| BrcdError(BrcdErrorEnum::SingularSystem))?;
 
     Ok(LogisticGate {
-        bias: theta[0],
-        weights: theta[1..].to_vec(),
+        bias: fit.beta[0],
+        weights: fit.beta[1..].to_vec(),
     })
 }
 
 // --- helpers ----------------------------------------------------------------
-
-/// Adds row `i`'s contribution to the gradient and Hessian, with the implicit
-/// intercept column `z_i[0] = 1`.
-fn accumulate_row<T: RealField>(
-    grad: &mut [T],
-    hess: &mut [T],
-    dim: usize,
-    row: &[T],
-    resid: T,
-    w: T,
-) {
-    // z_a is 1 for a == 0, else row[a-1].
-    let z = |a: usize| if a == 0 { T::one() } else { row[a - 1] };
-    for a in 0..dim {
-        let za = z(a);
-        grad[a] += za * resid;
-        let zaw = za * w;
-        for b in 0..dim {
-            hess[a * dim + b] += zaw * z(b);
-        }
-    }
-}
-
-/// Dot product of `a` and `b` (truncated to the shorter length).
-fn dot<T: RealField>(a: &[T], b: &[T]) -> T {
-    a.iter()
-        .zip(b.iter())
-        .fold(T::zero(), |acc, (&x, &y)| acc + x * y)
-}
-
-/// Numerically-stable logistic sigmoid `1 / (1 + e^{−x})`.
-fn sigmoid<T: RealField>(x: T) -> T {
-    let one = T::one();
-    if x >= T::zero() {
-        one / (one + (-x).exp())
-    } else {
-        let e = x.exp();
-        e / (one + e)
-    }
-}
 
 /// `logit(p) = ln(p / (1 − p))`, with `p` clamped away from `0` and `1` so the
 /// result is finite.

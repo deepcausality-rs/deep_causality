@@ -5,7 +5,7 @@
 
 //! The seam that lets `deep_causality_linear`'s algorithms read a `CausalTensor` in place.
 //!
-//! # Why the impl is here and nowhere else
+//! # Why the impl is here
 //!
 //! [`MatrixView`] is `deep_causality_linear`'s and [`CausalTensor`] is this crate's, so a third
 //! crate writing this impl fails E0117 with both halves foreign. Writing it in
@@ -13,12 +13,8 @@
 //! other way — `CausalTensor::svd` calls into `deep_causality_linear`, so the edge is fixed as
 //! tensor → linear and the reverse would close a cycle. This module is the only place it can live.
 //!
-//! # What it buys
-//!
 //! The decompositions are generic over the read trait, so they run against a tensor's own buffer.
 //! No rank-2 tensor is built to call them and no dense matrix is built to hold the copy.
-//!
-//! # A tensor of rank other than two is not a matrix
 //!
 //! `rows` and `cols` return `usize` and cannot report an error, so a tensor that is not
 //! two-dimensional has to present *as* something. It presents as `0 × 1`: empty, and not square.

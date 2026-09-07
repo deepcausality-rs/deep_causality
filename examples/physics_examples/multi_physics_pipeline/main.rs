@@ -200,12 +200,14 @@ fn stage_thermalization(
     // Use diffused result if valid, otherwise use initial average
     let avg_temp = match heat_result.value() {
         Some(final_temp) => {
-            let avg = final_temp.data().iter().sum::<FloatType>() / 10.0;
+            // Ten cells, so neither mean can refuse; dispatched rather than divided by a
+            // literal, which silently decouples from the cell count if the grid changes.
+            let avg = deep_causality_stats::mean(final_temp.data().as_slice()).unwrap_or(0.0);
             if avg.abs() > 1.0 {
                 avg.abs()
             } else {
                 // Fallback: use initial temperature average
-                initial_temp.iter().sum::<FloatType>() / 10.0
+                deep_causality_stats::mean(&initial_temp).unwrap_or(0.0)
             }
         }
         _ => temp_scale * 0.9, // Slight cooling

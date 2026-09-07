@@ -29,9 +29,12 @@
 
 use crate::causal_discovery::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::causal_discovery::brcd::brcd_gate::{GateConfig, fit_logistic_gate};
-use crate::causal_discovery::brcd::brcd_linalg::solve_linear;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{
+    RidgeConfig, fit_ridge as stats_fit_ridge, fit_ridge_streaming as stats_fit_ridge_streaming,
+    gaussian_log_density,
+};
 use std::borrow::Cow;
 
 /// Default ridge `λ` for the conditional-mean fit (matches `brcd.py`'s `1e-4`).
@@ -100,36 +103,29 @@ pub fn fit_ridge<T: RealField + FromPrimitive>(
         return Err(BrcdError(BrcdErrorEnum::DimensionMismatch));
     }
 
-    // Normal equations: XtX = XᵀX + λI (p × p), Xty = Xᵀy (p).
-    let mut xtx = vec![T::zero(); p * p];
-    let mut xty = vec![T::zero(); p];
-    for (row, &yi) in x.iter().zip(y.iter()) {
-        for a in 0..p {
-            xty[a] += row[a] * yi;
-            let ra = row[a];
-            for b in 0..p {
-                xtx[a * p + b] += ra * row[b];
-            }
+    // The fit itself is `deep_causality_stats::fit_ridge`. The penalty reaches every column, the
+    // intercept included, which is `_fit_ridge`'s behaviour and the crate's default — so unlike the
+    // logistic gate this needs no `Penalisation`. What does not carry over is the variance floor:
+    // the crate reports `rss / dof` as it stands, and BRCD's callers read `σ²` as the scale of a
+    // normal density, where a zero would send the log-density to infinity on a perfect fit.
+    let fit = stats_fit_ridge(x, y, &RidgeConfig::new(ridge)).map_err(ridge_error)?;
+    Ok(RidgeFit {
+        beta: fit.beta,
+        sigma2: floor(fit.sigma2, from_f64::<T>(VARIANCE_FLOOR)),
+    })
+}
+
+/// Maps a ridge refusal onto BRCD's error, preserving the distinctions its callers already make.
+fn ridge_error(error: deep_causality_stats::StatsError) -> BrcdError {
+    match error.kind() {
+        deep_causality_stats::StatsErrorEnum::EmptyInput(_) => BrcdError(BrcdErrorEnum::EmptyData),
+        deep_causality_stats::StatsErrorEnum::DimensionMismatch(_) => {
+            BrcdError(BrcdErrorEnum::DimensionMismatch)
         }
+        // A vanishing pivot, a non-finite coefficient, or a non-finite observation the caller did
+        // not filter: all of them are the degenerate design `SingularSystem` already names.
+        _ => BrcdError(BrcdErrorEnum::SingularSystem),
     }
-    for a in 0..p {
-        xtx[a * p + a] += ridge;
-    }
-
-    // Solve in place; xty becomes β.
-    solve_linear(&mut xtx, &mut xty, p);
-    let beta = xty;
-
-    // Residual variance with dof = max(n − p, 1), floored.
-    let mut rss = T::zero();
-    for (row, &yi) in x.iter().zip(y.iter()) {
-        let r = yi - dot(&beta, row);
-        rss += r * r;
-    }
-    let dof = t_usize::<T>(n.saturating_sub(p).max(1));
-    let sigma2 = floor(rss / dof, from_f64::<T>(VARIANCE_FLOOR));
-
-    Ok(RidgeFit { beta, sigma2 })
 }
 
 /// Returns the effective transform after the `log → log1p → yeojohnson`
@@ -486,46 +482,30 @@ fn fit_ridge_streaming<T: RealField + FromPrimitive>(
     min_finite: usize,
 ) -> Option<RidgeFit<T>> {
     let p = parents_t.first().map_or(0, Vec::len) + 1;
-    let mut xtx = vec![T::zero(); p * p];
-    let mut xty = vec![T::zero(); p];
-    let mut design = vec![T::zero(); p];
-    design[0] = T::one();
 
-    let mut count = 0usize;
-    for &i in idxs {
-        if z_all[i].is_finite() && parents_t[i].iter().all(|v| v.is_finite()) {
-            design[1..].copy_from_slice(&parents_t[i]);
-            let yi = z_all[i];
-            for a in 0..p {
-                xty[a] += design[a] * yi;
-                let ra = design[a];
-                for b in 0..p {
-                    xtx[a * p + b] += ra * design[b];
-                }
-            }
-            count += 1;
-        }
-    }
+    // The rows are a *re-iterable* view over storage this function does not own: an index list into
+    // `z_all` and `parents_t`, filtered to the finite rows, with the intercept column prepended as
+    // each row is yielded. Nothing is materialised — the crate reads the source twice, once to
+    // accumulate `XᵀX`/`Xᵀy` and once to form the residuals, and holds only the `p × p` normal
+    // matrix in between. That is the property this function exists for, and it is why the shipped
+    // signature takes `IntoIterator + Clone` rather than a once-consumable iterator.
+    let finite = |i: usize| z_all[i].is_finite() && parents_t[i].iter().all(|v| v.is_finite());
+    let count = idxs.iter().filter(|&&i| finite(i)).count();
     if count <= min_finite {
         return None;
     }
-    for a in 0..p {
-        xtx[a * p + a] += ridge;
-    }
-    solve_linear(&mut xtx, &mut xty, p);
-    let beta = xty;
+    let rows = idxs.iter().filter(move |&&i| finite(i)).map(move |&i| {
+        let mut design = Vec::with_capacity(p);
+        design.push(T::one());
+        design.extend_from_slice(&parents_t[i]);
+        (design, z_all[i])
+    });
 
-    let mut rss = T::zero();
-    for &i in idxs {
-        if z_all[i].is_finite() && parents_t[i].iter().all(|v| v.is_finite()) {
-            design[1..].copy_from_slice(&parents_t[i]);
-            let r = z_all[i] - dot(&beta, &design);
-            rss += r * r;
-        }
-    }
-    let dof = t_usize::<T>(count.saturating_sub(p).max(1));
-    let sigma2 = floor(rss / dof, from_f64::<T>(VARIANCE_FLOOR));
-    Some(RidgeFit { beta, sigma2 })
+    let fit = stats_fit_ridge_streaming(rows, &RidgeConfig::new(ridge), p).ok()?;
+    Some(RidgeFit {
+        beta: fit.beta,
+        sigma2: floor(fit.sigma2, from_f64::<T>(VARIANCE_FLOOR)),
+    })
 }
 
 /// Per-row gate probability `π(F = 1 | parents)` via the logistic gate, with the
@@ -554,35 +534,55 @@ fn gate_probabilities<T: RealField + FromPrimitive>(
 
 /// Per-row normal log-density `logpdf(zᵢ; μᵢ, σ²)` on the residual `zᵢ − μᵢ`.
 ///
-/// Computes the same value as `CausalTensorStatsExt::gaussian_log_density(0, σ²)`
-/// — identical variance floor (`1e-12`), constants, and operation order — but
-/// inline, so it allocates only the output vector instead of round-tripping the
-/// residuals through two `CausalTensor`s per call.
+/// Delegates to `deep_causality_stats::gaussian_log_density`, keeping BRCD's `1e-12` variance
+/// floor in front of it so a non-positive or non-finite `σ²` is floored here rather than refused
+/// there. Two consequences, both deliberate. The shipped form distributes the `−½` where this
+/// factored it out, so results can differ in the last place. And it takes one row at a time, so
+/// `log(2πσ²)` is evaluated per row rather than hoisted out of the loop — if that shows up in a
+/// BRCD profile, the answer is a slice-shaped density in the statistics crate, not a second copy
+/// of the scalar one here.
 fn logpdf_rows<T: RealField + FromPrimitive>(z: &[T], mu: &[T], sigma2: T) -> Vec<T> {
     let var = density_variance(sigma2);
-    let half = from_f64::<T>(0.5);
-    let two = from_f64::<T>(2.0);
-    let log_two_pi_var = (two * T::pi() * var).ln();
     z.iter()
         .zip(mu.iter())
-        .map(|(&zi, &mi)| {
-            let diff = zi - mi;
-            -half * (log_two_pi_var + (diff * diff) / var)
-        })
+        .map(|(&zi, &mi)| logpdf_one(zi, mi, var))
         .collect()
 }
 
 /// Single-row normal log-density `logpdf(z; μ, σ²)`, inline (no allocation).
 ///
-/// Hot path: the F-as-parent branch calls this once per row, so building a
-/// one-element `CausalTensor` here would allocate `n` times per family.
+/// The F-as-parent branch calls this once per row. It is already scalar-shaped, so the delegation
+/// is exact: same arguments, same variance floor in front of it.
 fn single_logpdf<T: RealField + FromPrimitive>(z: T, mu: T, sigma2: T) -> T {
-    let var = density_variance(sigma2);
-    let half = from_f64::<T>(0.5);
-    let two = from_f64::<T>(2.0);
-    let log_two_pi_var = (two * T::pi() * var).ln();
-    let diff = z - mu;
-    -half * (log_two_pi_var + (diff * diff) / var)
+    logpdf_one(z, mu, density_variance(sigma2))
+}
+
+/// One row's log-density against an already-floored variance.
+///
+/// **Why this is not a bare delegation.** BRCD scores a non-finite row rather than refusing the
+/// batch that contains it, and the mixture branch depends on that: a NaN parent must leave its own
+/// row non-finite while the finite rows still score, which
+/// `mixture_with_nonfinite_parent_falls_back_to_the_prior_gate` pins. The shipped density refuses a
+/// non-finite argument instead — a defensible contract for a general-purpose function, and the
+/// wrong one here.
+///
+/// So the finite case delegates and the non-finite case is answered from the limit the arithmetic
+/// it replaces took, rather than by keeping a second copy of the formula: a NaN residual gives NaN,
+/// and an infinite residual sends `(z − μ)² / σ²` to `+∞` and the density to `−∞`.
+fn logpdf_one<T: RealField + FromPrimitive>(z: T, mu: T, var: T) -> T {
+    match gaussian_log_density(z, mu, var) {
+        Ok(value) => value,
+        Err(_) => {
+            let diff = z - mu;
+            if diff.is_nan() {
+                T::nan()
+            } else {
+                // `ln 0` is BRCD's spelling of −∞ throughout; `RealField` carries no
+                // `neg_infinity`, which belongs to `Float` and is deliberately out of scope here.
+                T::zero().ln()
+            }
+        }
+    }
 }
 
 /// The variance used by the normal density: the fit's `σ²` when positive, else
@@ -627,13 +627,13 @@ fn apply_parent_transform<T: RealField + FromPrimitive>(
     Ok(Cow::Owned(transformed))
 }
 
-/// Two-term `log(eᵃ + eᵇ)`, stable against overflow (brcd.py `_logsumexp2`).
+/// Two-term `log(eᵃ + eᵇ)`, delegated to `deep_causality_stats` (brcd.py `_logsumexp2`).
+///
+/// Bit-identical to the form it replaces. This computed `m + (e^(a−m) + e^(b−m)).ln()` where `m` is
+/// the larger, so one of the two exponentials is `e⁰`; the shipped form writes that term as the
+/// exact `1` it always is and evaluates one exponential instead of two.
 fn logaddexp<T: RealField>(a: T, b: T) -> T {
-    let m = if a >= b { a } else { b };
-    if !m.is_finite() {
-        return m;
-    }
-    m + ((a - m).exp() + (b - m).exp()).ln()
+    deep_causality_stats::log_add_exp(a, b)
 }
 
 /// Clamps a probability into `(ε, 1 − ε)` so its log is finite.
@@ -657,36 +657,37 @@ fn dot<T: RealField>(a: &[T], b: &[T]) -> T {
         .fold(T::zero(), |acc, (&x, &y)| acc + x * y)
 }
 
-/// Sample mean.
+/// Sample mean; `0` for the empty slice.
+///
+/// Delegates to `deep_causality_stats::mean`, keeping BRCD's empty-slice sentinel in front of it.
+/// The crate refuses an empty sample; this returns zero, as it did before, because the callers use
+/// the mean as a constant expert prediction and a family with no rows in a regime must still score.
+/// Neither implementation guards non-finite values, so a NaN observation still yields a NaN mean.
 fn mean<T: RealField + FromPrimitive>(v: &[T]) -> T {
-    if v.is_empty() {
-        return T::zero();
-    }
-    v.iter().fold(T::zero(), |acc, &x| acc + x) / t_usize::<T>(v.len())
+    deep_causality_stats::mean(v).unwrap_or_else(|_| T::zero())
 }
 
 /// Sample variance with Bessel's correction; `1` when fewer than two values
 /// (matching `brcd.py`'s fallback).
+///
+/// Delegates to `deep_causality_stats::variance`, which is the same two-pass form, and keeps the
+/// sentinel in front of it. The crate refuses a sample shorter than two with a typed error, which
+/// is the better contract for a general-purpose statistic and the wrong one here: BRCD's callers
+/// read this variance as a scale for a normal density, and `brcd.py` supplies `1` there so a
+/// single-row regime scores against a unit variance rather than failing the family. Seven call
+/// sites reach it that way, all in this file, and
+/// `f_in_parents_single_row_regime_uses_unit_variance` pins the result.
+///
+/// The sentinel is applied to every refusal, not only to the short sample. The others —
+/// `EmptyInput`, and a count the scalar cannot hold — are unreachable for the shipped scalars, and
+/// an empty slice already meant `1` here before the delegation.
 fn variance_ddof1<T: RealField + FromPrimitive>(v: &[T]) -> T {
-    if v.len() < 2 {
-        return T::one();
-    }
-    let m = mean(v);
-    let ss = v.iter().fold(T::zero(), |acc, &x| {
-        let d = x - m;
-        acc + d * d
-    });
-    ss / t_usize::<T>(v.len() - 1)
+    deep_causality_stats::variance(v).unwrap_or_else(|_| T::one())
 }
 
 /// Returns `x` if it exceeds `floor`, else `floor`.
 fn floor<T: RealField>(x: T, floor: T) -> T {
     if x > floor { x } else { floor }
-}
-
-/// `T` from a `usize`.
-fn t_usize<T: FromPrimitive>(n: usize) -> T {
-    <T as FromPrimitive>::from_usize(n).expect("count is representable in every RealField")
 }
 
 /// `T` from an `f64` constant.

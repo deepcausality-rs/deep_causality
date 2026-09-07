@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_uncertain"
-version = "0.5.2"
+version = "0.5.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -29,6 +29,10 @@ exclude = [
 # Disabled by default to use native Rust prng instead.
 os-random = ["deep_causality_rand/os-random"]
 
+
+[dependencies.deep_causality_stats]
+workspace = true
+features = ["std"]
 
 [dependencies.deep_causality_rand]
 workspace = true

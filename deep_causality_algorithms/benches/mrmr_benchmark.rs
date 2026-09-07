@@ -40,7 +40,7 @@ fn mrmr_benchmark(c: &mut Criterion) {
     group.bench_function("mrmr_features_selector", |b| {
         let tensor = generate_test_tensor(rows, cols);
         b.iter(|| {
-            mrmr_features_selector(&tensor, num_features_to_select, target_col).unwrap();
+            mrmr_features_selector::<_, f64>(&tensor, num_features_to_select, target_col).unwrap();
         });
     });
 
@@ -48,7 +48,7 @@ fn mrmr_benchmark(c: &mut Criterion) {
     group.bench_function("mrmr_features_selector_cdl", |b| {
         let tensor = generate_test_tensor_cdl(rows, cols);
         b.iter(|| {
-            mrmr_features_selector(&tensor, num_features_to_select, target_col).unwrap();
+            mrmr_features_selector::<_, f64>(&tensor, num_features_to_select, target_col).unwrap();
         });
     });
 

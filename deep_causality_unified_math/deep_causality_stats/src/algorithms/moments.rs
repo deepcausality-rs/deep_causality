@@ -78,3 +78,46 @@ where
 {
     Ok(variance(xs)?.sqrt())
 }
+
+/// The population variance: `Σ(xᵢ − x̄)² / n`.
+///
+/// The uncorrected form, dividing by `n` rather than `n − 1`. It is the variance *of the sample
+/// itself*, treated as the whole population, rather than an estimate of the variance of a
+/// population the sample was drawn from.
+///
+/// # When this is the one you want
+///
+/// Standardising features to zero mean and unit scale: the divisor cancels out of the
+/// standardisation, and the population form is the convention every library uses there. Also any
+/// case where the data *is* the population — every measurement in a run, rather than a draw from
+/// something larger.
+///
+/// Unlike [`variance`], a single observation is not refused: a population of one has zero spread,
+/// which is a fact about it rather than a missing estimate. Only the empty sample is refused,
+/// because there is nothing to take the variance of.
+pub fn population_variance<T>(xs: &[T]) -> Result<T, StatsError>
+where
+    T: RealField + FromPrimitive,
+{
+    if xs.is_empty() {
+        return Err(StatsError::EmptyInput(
+            "the variance of no observations is undefined",
+        ));
+    }
+    // Two passes, for the reason `variance` takes two: forming the mean first keeps `Σxᵢ²` out of
+    // the computation, so a small spread around a large mean survives.
+    let m = mean(xs)?;
+    let ss = xs.iter().fold(T::zero(), |acc, &x| {
+        let d = x - m;
+        acc + d * d
+    });
+    Ok(ss / count::<T>(xs.len())?)
+}
+
+/// The population standard deviation: the square root of [`population_variance`].
+pub fn population_std_dev<T>(xs: &[T]) -> Result<T, StatsError>
+where
+    T: RealField + FromPrimitive,
+{
+    Ok(population_variance(xs)?.sqrt())
+}

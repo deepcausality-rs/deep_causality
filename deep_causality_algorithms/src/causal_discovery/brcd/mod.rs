@@ -78,8 +78,6 @@ pub mod brcd_mec;
 pub mod brcd_result;
 pub mod brcd_validity;
 
-pub(crate) mod brcd_linalg;
-
 // Driver entry point and its public types (the recommended access path).
 pub use brcd_algo::brcd_run;
 pub use brcd_boss_bootstrap::{BootstrapConfig, brcd_run_bootstrap};

@@ -13,6 +13,7 @@ path = "src/lib.rs"
 chrono = { workspace = true }
 #
 deep_causality_num = { workspace = true, features = ["default"] }
+deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_algebra = { workspace = true, features = ["default"] }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_physics = { workspace = true, features = ["default", "os-random"] }

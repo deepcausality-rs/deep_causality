@@ -6,6 +6,7 @@
 //! Logistic regression by iteratively reweighted least squares.
 
 use crate::errors::stats_error::StatsError;
+use crate::types::logistic_config::LogisticConfig;
 use crate::types::logistic_fit::LogisticFit;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -40,9 +41,7 @@ pub fn sigmoid<T: Scalar>(x: T) -> T {
 pub fn fit_logistic<T>(
     x: &[Vec<T>],
     y: &[T],
-    penalty: T,
-    max_iterations: usize,
-    tolerance: T,
+    config: &LogisticConfig<T>,
 ) -> Result<LogisticFit<T>, StatsError>
 where
     T: RealField + FromPrimitive,
@@ -68,7 +67,7 @@ where
             "a non-finite observation has no logistic fit",
         ));
     }
-    if !penalty.is_finite() || !tolerance.is_finite() {
+    if !config.penalty.is_finite() || !config.tolerance.is_finite() {
         return Err(StatsError::NonFiniteInput(
             "a non-finite penalty or tolerance does not define a stopping test",
         ));
@@ -83,6 +82,13 @@ where
         ));
     }
 
+    if !config.penalisation.fits_width(p) {
+        return Err(StatsError::DimensionMismatch(
+            "the column exempted from the penalty lies outside the design",
+        ));
+    }
+    let exempt = config.penalisation.exempt();
+
     let mut beta = vec![T::zero(); p];
 
     // Newton / IRLS on the ridge-penalised log-likelihood:
@@ -92,7 +98,7 @@ where
     // The weights vanish as a fitted probability saturates, so `H` loses rank exactly where the
     // likelihood flattens. That is the separable case, and it surfaces here as a vanishing pivot
     // rather than as an arbitrarily large step returned as an estimate.
-    for iteration in 1..=max_iterations {
+    for iteration in 1..=config.max_iterations {
         let mut grad = vec![T::zero(); p];
         let mut hess = vec![T::zero(); p * p];
 
@@ -112,9 +118,14 @@ where
                 }
             }
         }
+        // The penalty reaches every column but the exempted one. Shrinking an intercept toward
+        // zero shrinks the fitted odds toward even, so a design that carries a ones-column and
+        // wants the base rate preserved names that column in `Penalisation::Excluding`.
         for a in 0..p {
-            grad[a] -= penalty * beta[a];
-            hess[a * p + a] += penalty;
+            if exempt != Some(a) {
+                grad[a] -= config.penalty * beta[a];
+                hess[a * p + a] += config.penalty;
+            }
         }
 
         // The Newton step goes through `deep_causality_linear`, as the ridge solve does. The
@@ -161,7 +172,7 @@ where
                 "the iterate left the representable range: the likelihood has no finite maximum here",
             ));
         }
-        if largest <= tolerance {
+        if largest <= config.tolerance {
             return Ok(LogisticFit {
                 beta,
                 iterations: iteration,
@@ -170,7 +181,7 @@ where
     }
 
     Err(StatsError::NotConverged(
-        max_iterations,
+        config.max_iterations,
         "the step never fell below the tolerance",
     ))
 }

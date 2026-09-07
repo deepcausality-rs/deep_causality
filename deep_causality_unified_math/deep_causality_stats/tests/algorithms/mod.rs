@@ -24,4 +24,6 @@ mod moments_f64_tests;
 #[cfg(test)]
 mod moments_float106_tests;
 #[cfg(test)]
+mod proportion_tests;
+#[cfg(test)]
 mod ridge_tests;

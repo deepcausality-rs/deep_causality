@@ -12,12 +12,12 @@ use std::collections::HashSet;
 use std::hash::Hash;
 
 /// Arithmetic mean of an `f64` slice. Returns `NaN` for the empty slice.
+///
+/// Dispatches to `deep_causality_stats::mean`, keeping the `NaN` this module's callers rely on:
+/// the crate refuses an empty sample with a typed error, which is the right contract for a
+/// statistic and the wrong one for a print helper that has to render something.
 pub fn mean(xs: &[f64]) -> f64 {
-    if xs.is_empty() {
-        f64::NAN
-    } else {
-        xs.iter().sum::<f64>() / xs.len() as f64
-    }
+    deep_causality_stats::mean(xs).unwrap_or(f64::NAN)
 }
 
 /// Collect a `HashSet` into a sorted `Vec`. Useful for deterministic

@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{EntropyConfig, Normalisation, ZeroPolicy, entropy};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// Helper function to unravel a flat index into multi-dimensional coordinates.
@@ -132,7 +134,7 @@ pub fn sum_axes_option_f64<T: RealField + Default>(
 /// # Returns
 /// A `Result` containing a `T` representing the calculated entropy, or a `CausalTensorError`
 /// if the operation fails.
-pub(crate) fn entropy_nvars_cdl<T: RealField + Default>(
+pub(crate) fn entropy_nvars_cdl<T: RealField + FromPrimitive + Default>(
     p: &CausalTensor<Option<T>>,
     axes: &[usize],
 ) -> Result<T, CausalTensorError> {
@@ -144,33 +146,33 @@ pub(crate) fn entropy_nvars_cdl<T: RealField + Default>(
 
     let marginal = sum_axes_option_f64(p, &axes_to_sum_out)?;
 
-    let zero = T::zero();
-    let eps = T::epsilon();
-
-    // Normalize the marginal distribution based on the sum of its Some values.
-    let sum_of_marginals: T = marginal
+    let present: Vec<T> = marginal
         .as_slice()
         .iter()
-        .filter_map(|&x| x)
-        .fold(zero, |acc, v| acc + v);
-
-    if sum_of_marginals.abs() < eps {
-        return Ok(zero); // If all probabilities are zero or None, entropy is 0.
+        .filter_map(|&value| value)
+        .collect();
+    if present.is_empty() {
+        // Every entry is absent, so there is no distribution to take the entropy of. That is
+        // `EmptyInput`, not zero: an entropy of zero asserts a certain outcome, which is a
+        // different claim from having observed nothing at all. The empty slice is handed to the
+        // shipped `entropy` rather than short-circuited, so the refusal has one definition.
+        return entropy(&present, &EntropyConfig::bits()).map_err(super::stats_error);
     }
-
-    let entropy = marginal.as_slice().iter().fold(zero, |acc, &prob_opt| {
-        if let Some(prob) = prob_opt {
-            let normalized_prob = prob / sum_of_marginals;
-            if normalized_prob > eps {
-                acc - normalized_prob * normalized_prob.log2()
-            } else {
-                acc
-            }
-        } else {
-            acc // Ignore None values for entropy calculation
-        }
-    });
-    Ok(entropy)
+    // Validate before the low-mass fallback so invalid entries cannot cancel or disappear.
+    if present
+        .iter()
+        .any(|value| !value.is_finite() || *value < T::zero())
+    {
+        return entropy(&present, &EntropyConfig::bits()).map_err(super::stats_error);
+    }
+    let mass = present.iter().fold(T::zero(), |sum, &value| sum + value);
+    if mass < T::epsilon() {
+        return Ok(T::zero());
+    }
+    let config = EntropyConfig::bits()
+        .with_normalisation(Normalisation::BySum { floor: T::zero() })
+        .with_zero_policy(ZeroPolicy::SkipBelow(T::epsilon()));
+    entropy(&present, &config).map_err(super::stats_error)
 }
 
 /// Calculates the conditional Shannon entropy H(X | Y) for `CausalTensor<Option<T>>`.
@@ -186,7 +188,7 @@ pub(crate) fn entropy_nvars_cdl<T: RealField + Default>(
 /// # Returns
 /// A `Result` containing a `T` representing the calculated conditional entropy,
 /// or a `CausalTensorError` if the operation fails.
-pub(crate) fn cond_entropy_cdl<T: RealField + Default>(
+pub(crate) fn cond_entropy_cdl<T: RealField + FromPrimitive + Default>(
     p: &CausalTensor<Option<T>>,
     target_axes: &[usize],
     cond_axes: &[usize],

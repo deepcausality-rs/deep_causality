@@ -7,7 +7,6 @@ mod combinatorics;
 mod float;
 mod float_bfloat16;
 mod float_double;
-mod float_option;
 #[cfg(not(miri))]
 mod formalization_lean;
 mod gf2;

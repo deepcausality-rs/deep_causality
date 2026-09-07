@@ -134,6 +134,20 @@ impl From<deep_causality_metric::MetricError> for PhysicsError {
     }
 }
 
+impl From<deep_causality_stats::StatsError> for PhysicsError {
+    fn from(error: deep_causality_stats::StatsError) -> Self {
+        use deep_causality_stats::StatsErrorEnum;
+        let message = format!("{error}");
+        match error.kind() {
+            StatsErrorEnum::EmptyInput(_) | StatsErrorEnum::DimensionMismatch(_) => {
+                Self::DimensionMismatch(message)
+            }
+            StatsErrorEnum::NegativeProbability(_) => Self::NormalizationError(message),
+            _ => Self::NumericalInstability(message),
+        }
+    }
+}
+
 impl Display for PhysicsError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match &self.0 {

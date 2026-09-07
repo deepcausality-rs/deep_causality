@@ -536,17 +536,13 @@ fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
     out
 }
 
-/// Stable `log(Σ eˣ)` over a slice, shifted by the max for numerical stability.
+/// Stable `log(Σ eˣ)` over a slice, delegated to `deep_causality_stats`.
+///
+/// The shipped reduction is term-for-term what this held: `−∞` for the empty slice, a saturated
+/// non-finite maximum returned as-is, and the max shift otherwise. Kept as a named local so the
+/// call sites read the same and `neg_inf` keeps its one meaning here.
 fn logsumexp_slice<T: RealField>(vals: &[T]) -> T {
-    if vals.is_empty() {
-        return neg_inf::<T>();
-    }
-    let max = vals.iter().fold(vals[0], |a, &b| if b > a { b } else { a });
-    if !max.is_finite() {
-        return max;
-    }
-    let sum = vals.iter().fold(T::zero(), |acc, &v| acc + (v - max).exp());
-    max + sum.ln()
+    deep_causality_stats::log_sum_exp(vals)
 }
 
 /// Ranks the candidates by descending log-posterior and reports the max-shifted

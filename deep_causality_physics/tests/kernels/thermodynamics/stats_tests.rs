@@ -6,7 +6,7 @@
 use deep_causality_physics::{
     AmountOfSubstance, Energy, Pressure, Temperature, Volume, boltzmann_factor_kernel,
     carnot_efficiency_kernel, heat_capacity_kernel, ideal_gas_law_kernel,
-    partition_function_kernel, shannon_entropy_kernel,
+    partition_function_kernel, shannon_entropy_bits_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -87,21 +87,21 @@ fn test_boltzmann_factor_kernel_ground_state() {
 }
 
 // =============================================================================
-// shannon_entropy_kernel Tests
+// shannon_entropy_bits_kernel Tests
 // =============================================================================
 
 #[test]
-fn test_shannon_entropy_kernel_uniform() {
+fn test_shannon_entropy_bits_kernel_uniform() {
     // Uniform distribution has max entropy
     let probs: CausalTensor<f64> =
         CausalTensor::new(vec![0.25, 0.25, 0.25, 0.25], vec![4]).unwrap();
 
-    let result = shannon_entropy_kernel(&probs);
+    let result = shannon_entropy_bits_kernel(&probs);
     assert!(result.is_ok());
 
     let h = result.unwrap();
-    // H = -4 * (0.25 * ln(0.25)) = ln(4) ≈ 1.386
-    assert!((h - 1.386).abs() < 0.01, "Expected ~1.386, got {}", h);
+    // Four equiprobable outcomes carry log2(4) = 2 bits.
+    assert!((h - 2.0).abs() < 1e-14, "Expected 2 bits, got {}", h);
 }
 
 // =============================================================================
@@ -168,19 +168,19 @@ fn test_boltzmann_factor_kernel_error() {
 }
 
 // =============================================================================
-// shannon_entropy_kernel Tests (Error Case)
+// shannon_entropy_bits_kernel Tests (Error Case)
 // =============================================================================
 
 #[test]
-fn test_shannon_entropy_kernel_error() {
+fn test_shannon_entropy_bits_kernel_error() {
     // Negative probability
     let probs = CausalTensor::new(vec![0.5, -0.1], vec![2]).unwrap();
-    let result = shannon_entropy_kernel(&probs);
+    let result = shannon_entropy_bits_kernel(&probs);
     assert!(result.is_err());
 
     // Empty tensor
     let empty_probs: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
-    let result_empty = shannon_entropy_kernel(&empty_probs);
+    let result_empty = shannon_entropy_bits_kernel(&empty_probs);
     assert!(result_empty.is_err());
 }
 

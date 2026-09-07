@@ -6,17 +6,31 @@
 use crate::CausalTensor;
 use crate::CausalTensorError;
 use alloc::format;
-use alloc::string::ToString;
-use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{
+    StatsError, StatsErrorEnum, column_means, conditional_variance, covariance_matrix,
+    gaussian_log_density, log_sum_exp,
+};
 
 /// Descriptive-statistics extension for a two-dimensional [`CausalTensor`].
 ///
 /// The tensor is interpreted as a data matrix whose **rows are observations**
 /// and whose **columns are variables**. Both methods are generic over any real
 /// field `T` and use Bessel's correction (`ddof = 1`) for the covariance.
+///
+/// Every statistic here comes from `deep_causality_stats`; what remains is the axis work — reading
+/// a row-major matrix as observations and variables, and handing the result back as a tensor. That
+/// is the line the statistics crate is drawn along: it owns the reductions over slices, and the
+/// container that has axes owns the naming of them.
+///
+/// This reverses design decision **D7**, which kept five implementations here because delegating
+/// would move `tensor` to tier 5, `multivector` to 6 and `topology` to 7. That renumbering is real
+/// and has been done. The judgement changed because five duplicated statistics are a maintenance
+/// surface that grows, and consolidating them is worth a row moving in a table. There was never a
+/// cycle to prevent it: `deep_causality_stats` reaches only `num`, `algebra`, `haft` and `linear`,
+/// none of which reach `tensor`.
 pub trait CausalTensorStatsExt<T> {
     /// Computes the per-column (per-variable) sample means.
     ///
@@ -92,89 +106,18 @@ where
 {
     fn sample_mean(&self) -> Result<CausalTensor<T>, CausalTensorError> {
         let (n, k) = observations_shape(self)?;
-        let data = self.as_slice();
-
-        let n_t =
-            <T as FromPrimitive>::from_usize(n).ok_or(CausalTensorError::InvalidParameter(
-                "observation count is not representable in the tensor's field".to_string(),
-            ))?;
-
-        let mut means = vec![T::zero(); k];
-        for row in 0..n {
-            let base = row * k;
-            for (col, mean) in means.iter_mut().enumerate() {
-                *mean += data[base + col];
-            }
-        }
-        for mean in means.iter_mut() {
-            *mean /= n_t;
-        }
-
+        let means = column_means(self.as_slice(), n, k).map_err(stats_error)?;
         Ok(CausalTensor::from_slice(&means, &[k]))
     }
 
     fn sample_covariance(&self) -> Result<CausalTensor<T>, CausalTensorError> {
         let (n, k) = observations_shape(self)?;
-        if n < 2 {
-            // Bessel's correction divides by `n - 1`; with a single observation
-            // (or none) that divisor is zero or negative and the statistic is
-            // undefined.
-            return Err(CausalTensorError::InvalidParameter(format!(
-                "sample covariance needs at least 2 observations, got {n}"
-            )));
-        }
-
-        let data = self.as_slice();
-        let means = self.sample_mean()?;
-        let means = means.as_slice();
-
-        let denom =
-            <T as FromPrimitive>::from_usize(n - 1).ok_or(CausalTensorError::InvalidParameter(
-                "observation count is not representable in the tensor's field".to_string(),
-            ))?;
-
-        let mut cov = vec![T::zero(); k * k];
-        for row in 0..n {
-            let base = row * k;
-            for i in 0..k {
-                let di = data[base + i] - means[i];
-                for j in 0..k {
-                    let dj = data[base + j] - means[j];
-                    cov[i * k + j] += di * dj;
-                }
-            }
-        }
-        for entry in cov.iter_mut() {
-            *entry /= denom;
-        }
-
+        let cov = covariance_matrix(self.as_slice(), n, k).map_err(stats_error)?;
         Ok(CausalTensor::from_slice(&cov, &[k, k]))
     }
 
     fn logsumexp(&self) -> T {
-        let xs = self.as_slice();
-        if xs.is_empty() {
-            // The empty sum is 0, and log(0) = −∞.
-            return T::zero().ln();
-        }
-
-        let max = xs
-            .iter()
-            .copied()
-            .fold(xs[0], |acc, x| if x > acc { x } else { acc });
-
-        // With an infinite (or NaN) maximum the shift `x - max` is undefined;
-        // the saturated maximum is the only meaningful answer.
-        if !max.is_finite() {
-            return max;
-        }
-
-        let sum = xs
-            .iter()
-            .copied()
-            .fold(T::zero(), |acc, x| acc + (x - max).exp());
-
-        max + sum.ln()
+        log_sum_exp(self.as_slice())
     }
 
     fn gaussian_log_density(
@@ -185,26 +128,19 @@ where
         if self.is_empty() {
             return Ok(CausalTensor::from_slice(&[], self.shape()));
         }
-
+        // The floor stays here rather than moving into the statistics crate. That crate refuses a
+        // non-positive variance, which is the right contract for a density asked about one; this
+        // method's contract is to return a finite density for every element it is handed.
         let var = if variance > T::zero() {
             variance
         } else {
             variance_floor::<T>()
         };
-        let half =
-            <T as FromPrimitive>::from_f64(0.5).expect("0.5 is representable in every RealField");
-        let two =
-            <T as FromPrimitive>::from_f64(2.0).expect("2.0 is representable in every RealField");
-        let log_two_pi_var = (two * T::pi() * var).ln();
-
         let new_data: Vec<T> = self
             .as_slice()
             .iter()
-            .map(|&x| {
-                let diff = x - mean;
-                -half * (log_two_pi_var + (diff * diff) / var)
-            })
-            .collect();
+            .map(|&x| gaussian_log_density(x, mean, var).map_err(stats_error))
+            .collect::<Result<Vec<T>, CausalTensorError>>()?;
         Ok(CausalTensor::from_slice(&new_data, self.shape()))
     }
 
@@ -219,54 +155,26 @@ where
             return Err(CausalTensorError::DimensionMismatch);
         }
         let m = shape[0];
-
-        let entry = |i: usize, j: usize| -> Result<T, CausalTensorError> {
-            self.get(&[i, j])
-                .copied()
-                .ok_or(CausalTensorError::IndexOutOfBounds)
-        };
-
+        // Index bounds are checked here rather than left to the statistics crate. They are the axis
+        // work this wrapper owns, and `IndexOutOfBounds` says what went wrong where the crate's
+        // coarser `DimensionMismatch` would not. The crate keeps its own guard as a second line.
         if target >= m || !parents.iter().all(|&p| p < m) {
             return Err(CausalTensorError::IndexOutOfBounds);
         }
+        conditional_variance(self.as_slice(), m, target, parents, ridge).map_err(stats_error)
+    }
+}
 
-        let sigma_yy = entry(target, target)?;
-
-        let k = parents.len();
-        if k == 0 {
-            // No parents: the conditional variance is the marginal variance.
-            return Ok(sigma_yy);
-        }
-
-        // Extract Σ_yP (target-to-parent covariances) and Σ_PP (parent block),
-        // adding the ridge to the parent block's diagonal.
-        let mut sigma_yp = vec![T::zero(); k];
-        for (slot, &p) in sigma_yp.iter_mut().zip(parents.iter()) {
-            *slot = entry(target, p)?;
-        }
-
-        let mut sigma_pp = vec![T::zero(); k * k];
-        for (i, &pi) in parents.iter().enumerate() {
-            for (j, &pj) in parents.iter().enumerate() {
-                let mut v = entry(pi, pj)?;
-                if i == j {
-                    v += ridge;
-                }
-                sigma_pp[i * k + j] = v;
-            }
-        }
-
-        // Solve (Σ_PP + λI) z = Σ_Py via Cholesky, then form Σ_yP · z.
-        cholesky_in_place(&mut sigma_pp, k);
-        let mut z = sigma_yp.clone();
-        cholesky_solve_in_place(&sigma_pp, &mut z, k);
-
-        let mut reduction = T::zero();
-        for i in 0..k {
-            reduction += sigma_yp[i] * z[i];
-        }
-
-        Ok(sigma_yy - reduction)
+/// Maps a refusal from the statistics crate onto this crate's error.
+///
+/// `CausalTensorError` is the coarser of the two — it has no variant for "too few observations" or
+/// "rank deficient" — so those distinctions fold onto `InvalidParameter`, where they read as what
+/// they are: something wrong with the numbers rather than with the tensor's shape.
+fn stats_error(error: StatsError) -> CausalTensorError {
+    match error.kind() {
+        StatsErrorEnum::EmptyInput(_) => CausalTensorError::EmptyTensor,
+        StatsErrorEnum::DimensionMismatch(_) => CausalTensorError::DimensionMismatch,
+        other => CausalTensorError::InvalidParameter(format!("{other:?}")),
     }
 }
 
@@ -277,60 +185,6 @@ where
     T: RealField + FromPrimitive,
 {
     <T as FromPrimitive>::from_f64(1e-12).expect("1e-12 is representable in every RealField")
-}
-
-/// Overwrites the lower triangle of `a` (row-major `k × k`) with its Cholesky
-/// factor `L`. A non-positive pivot is floored to `T::epsilon()` so the
-/// factorization always completes (ridge regularization normally prevents this).
-fn cholesky_in_place<T>(a: &mut [T], k: usize)
-where
-    T: RealField,
-{
-    for j in 0..k {
-        // Diagonal: L[j,j] = sqrt(a[j,j] − Σ_{p<j} L[j,p]²).
-        let mut diag = a[j * k + j];
-        for p in 0..j {
-            let l_jp = a[j * k + p];
-            diag -= l_jp * l_jp;
-        }
-        let pivot = if diag > T::zero() { diag } else { T::epsilon() };
-        let l_jj = pivot.sqrt();
-        a[j * k + j] = l_jj;
-
-        // Below-diagonal: L[i,j] = (a[i,j] − Σ_{p<j} L[i,p] L[j,p]) / L[j,j].
-        for i in (j + 1)..k {
-            let mut s = a[i * k + j];
-            for p in 0..j {
-                s -= a[i * k + p] * a[j * k + p];
-            }
-            a[i * k + j] = s / l_jj;
-        }
-    }
-}
-
-/// Solves `(L Lᵀ) x = b` in place, given the lower Cholesky factor `l`
-/// (row-major `k × k`). On entry `b` holds the right-hand side; on return it
-/// holds the solution `x`.
-fn cholesky_solve_in_place<T>(l: &[T], b: &mut [T], k: usize)
-where
-    T: RealField,
-{
-    // Forward substitution: L y = b.
-    for i in 0..k {
-        let mut s = b[i];
-        for p in 0..i {
-            s -= l[i * k + p] * b[p];
-        }
-        b[i] = s / l[i * k + i];
-    }
-    // Back substitution: Lᵀ x = y.
-    for i in (0..k).rev() {
-        let mut s = b[i];
-        for p in (i + 1)..k {
-            s -= l[p * k + i] * b[p];
-        }
-        b[i] = s / l[i * k + i];
-    }
 }
 
 /// Validates that `tensor` is a non-empty 2-D matrix and returns `(rows, cols)`.

@@ -321,17 +321,12 @@ fn shape_2d<T>(t: &CausalTensor<T>) -> Result<(usize, usize), BrcdError> {
     }
 }
 
-/// Stable `log(Σ eˣ)` over a slice, shifted by the max.
+/// Stable `log(Σ eˣ)` over a slice, delegated to `deep_causality_stats`.
+///
+/// This was a second copy of the reduction in `brcd_algo.rs`, identical line for line, and both now
+/// resolve to the same shipped implementation.
 fn logsumexp<T: RealField>(vals: &[T]) -> T {
-    if vals.is_empty() {
-        return T::zero().ln();
-    }
-    let max = vals.iter().fold(vals[0], |a, &b| if b > a { b } else { a });
-    if !max.is_finite() {
-        return max;
-    }
-    let sum = vals.iter().fold(T::zero(), |acc, &v| acc + (v - max).exp());
-    max + sum.ln()
+    deep_causality_stats::log_sum_exp(vals)
 }
 
 fn from_usize<T: FromPrimitive>(n: usize) -> T {

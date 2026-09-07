@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_quantum"
-version = "0.3.0"
+version = "0.3.1"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -76,6 +76,10 @@ workspace = true
 
 [dependencies.deep_causality_num_complex]
 workspace = true
+
+[dependencies.deep_causality_stats]
+workspace = true
+features = ["std"]
 
 [dependencies.deep_causality_tensor]
 workspace = true

@@ -6,7 +6,9 @@
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use crate::mrmr::mrmr_result::MrmrResult;
 use crate::mrmr::mrmr_utils;
-use deep_causality_num::{Float, FloatOption};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
 use std::collections::HashSet;
 
@@ -95,8 +97,12 @@ pub fn mrmr_features_selector<T, F>(
     target_col: usize,
 ) -> Result<MrmrResult, MrmrError>
 where
-    T: FloatOption<F>,
-    F: Float,
+    // `MaybeParallel` because the `parallel` feature shares `&CausalTensor<T>` across rayon
+    // workers. It resolves to `Send + Sync` only when that feature is on and is vacuous otherwise,
+    // so a serial build is not made to prove thread-safety it never uses — which a bare `Sync`
+    // would have demanded of every caller.
+    T: Copy + Into<Option<F>> + MaybeParallel,
+    F: RealField + FromPrimitive,
 {
     let shape = tensor.shape();
     if shape.len() != 2 {

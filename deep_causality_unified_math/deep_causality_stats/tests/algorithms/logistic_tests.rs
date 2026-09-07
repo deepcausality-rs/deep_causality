@@ -81,7 +81,9 @@ const FIT_F106: Fit = Fit {
     converged: 1e-8,
 };
 
-use deep_causality_stats::{LogisticFit, StatsError, StatsErrorEnum, fit_logistic, sigmoid};
+use deep_causality_stats::{
+    LogisticConfig, LogisticFit, Penalisation, StatsError, StatsErrorEnum, fit_logistic, sigmoid,
+};
 
 // ---------------------------------------------------------------------------
 // Small utilities. None of these calls a function under test.
@@ -447,7 +449,11 @@ fn check_fit_converges<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg:
     let x = design::<T, 2>(&OVERLAP_X);
     let y = lift_array::<T>(&OVERLAP_Y);
     let fit = expect_fit(
-        fit_logistic(&x, &y, lift::<T>(0.01), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(0.01), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "well-separated but overlapping data at a small penalty",
     );
 
@@ -506,7 +512,11 @@ fn check_fit_satisfies_the_score_equation<T: RealField + FromPrimitive + core::f
     let x = design::<T, 2>(&OVERLAP_X);
     let y = lift_array::<T>(&OVERLAP_Y);
     let fit = expect_fit(
-        fit_logistic(&x, &y, T::zero(), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(T::zero(), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "overlapping data at zero penalty",
     );
 
@@ -562,7 +572,11 @@ fn check_iterations_monotone_in_tolerance<T: RealField + FromPrimitive + core::f
     let mut previous = 0usize;
     for &tolerance in &[1e-1, 1e-2, 1e-3, 1e-4] {
         let fit = expect_fit(
-            fit_logistic(&x, &y, penalty, 200, lift::<T>(tolerance)),
+            fit_logistic(
+                &x,
+                &y,
+                &LogisticConfig::new(penalty, 200, lift::<T>(tolerance)),
+            ),
             "overlapping data at a reachable tolerance",
         );
         assert!(
@@ -595,7 +609,7 @@ fn check_non_convergence<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cf
 
     for &cap in &[1usize, 2] {
         let variant = expect_error(
-            fit_logistic(&x, &y, penalty, cap, tolerance),
+            fit_logistic(&x, &y, &LogisticConfig::new(penalty, cap, tolerance)),
             "a cap below what the tolerance needs",
         );
         match variant {
@@ -611,7 +625,7 @@ fn check_non_convergence<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cf
 
     // Above the cap: the same data and the same tolerance, with room to converge.
     let fit = expect_fit(
-        fit_logistic(&x, &y, penalty, 200, tolerance),
+        fit_logistic(&x, &y, &LogisticConfig::new(penalty, 200, tolerance)),
         "the same fit given room to converge",
     );
     // Both smaller caps failed at this tolerance, so a converged fit must have needed more
@@ -644,7 +658,11 @@ fn check_zero_iteration_cap<T: RealField + FromPrimitive + core::fmt::Debug>(fit
     let x = design::<T, 2>(&OVERLAP_X);
     let y = lift_array::<T>(&OVERLAP_Y);
     let variant = expect_error(
-        fit_logistic(&x, &y, lift::<T>(0.01), 0, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(0.01), 0, lift::<T>(fit_cfg.tolerance)),
+        ),
         "a cap of zero iterations",
     );
     match variant {
@@ -674,7 +692,11 @@ fn check_separable_at_zero_penalty<T: RealField + FromPrimitive + core::fmt::Deb
     let x = design::<T, 2>(&SEPARABLE_X);
     let y = lift_array::<T>(&SEPARABLE_Y);
     let variant = expect_error(
-        fit_logistic(&x, &y, T::zero(), 50, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(T::zero(), 50, lift::<T>(fit_cfg.tolerance)),
+        ),
         "perfectly separable data at zero penalty",
     );
     match variant {
@@ -702,7 +724,11 @@ fn check_separable_under_penalty<T: RealField + FromPrimitive + core::fmt::Debug
     let x = design::<T, 2>(&SEPARABLE_X);
     let y = lift_array::<T>(&SEPARABLE_Y);
     let fit = expect_fit(
-        fit_logistic(&x, &y, lift::<T>(1.0), 200, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(1.0), 200, lift::<T>(fit_cfg.tolerance)),
+        ),
         "perfectly separable data at a penalty of one",
     );
     assert_eq!(
@@ -774,9 +800,7 @@ fn check_penalty_shrinks_the_norm<T: RealField + FromPrimitive + core::fmt::Debu
             fit_logistic(
                 &x,
                 &y,
-                lift::<T>(penalty),
-                200,
-                lift::<T>(fit_cfg.tolerance),
+                &LogisticConfig::new(lift::<T>(penalty), 200, lift::<T>(fit_cfg.tolerance)),
             ),
             "overlapping data at an increasing penalty",
         );
@@ -810,7 +834,11 @@ fn check_empty_design<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg: 
     let no_rows: Vec<Vec<T>> = Vec::new();
     let no_labels: Vec<T> = Vec::new();
     let variant = expect_error(
-        fit_logistic(&no_rows, &no_labels, penalty, 100, tolerance),
+        fit_logistic(
+            &no_rows,
+            &no_labels,
+            &LogisticConfig::new(penalty, 100, tolerance),
+        ),
         "a design with no observations",
     );
     match variant {
@@ -825,7 +853,11 @@ fn check_empty_design<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg: 
     let no_columns: Vec<Vec<T>> = vec![Vec::new(), Vec::new()];
     let two_labels = lift_array::<T>(&[0.0, 1.0]);
     let variant = expect_error(
-        fit_logistic(&no_columns, &two_labels, penalty, 100, tolerance),
+        fit_logistic(
+            &no_columns,
+            &two_labels,
+            &LogisticConfig::new(penalty, 100, tolerance),
+        ),
         "a design with no columns",
     );
     match variant {
@@ -846,7 +878,11 @@ fn check_length_mismatch<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cf
     let x = design::<T, 2>(&[[1.0, -1.0], [1.0, 0.0], [1.0, 1.0]]);
     let y = lift_array::<T>(&[0.0, 1.0]);
     let variant = expect_error(
-        fit_logistic(&x, &y, lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "three rows against two labels",
     );
     match variant {
@@ -873,7 +909,11 @@ fn check_ragged_rows<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg: F
     ];
     let y = lift_array::<T>(&[0.0, 1.0, 1.0]);
     let variant = expect_error(
-        fit_logistic(&x, &y, lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "a ragged design",
     );
     match variant {
@@ -897,7 +937,11 @@ fn check_label_domain<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg: 
     let x = design::<T, 2>(&OVERLAP_X);
     let y = lift_array::<T>(&OVERLAP_Y);
     let fit = expect_fit(
-        fit_logistic(&x, &y, lift::<T>(1.0), 200, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(1.0), 200, lift::<T>(fit_cfg.tolerance)),
+        ),
         "labels at exactly 0 and exactly 1",
     );
     assert_eq!(
@@ -917,9 +961,7 @@ fn check_label_domain<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg: 
         fit_logistic(
             &x,
             &negative,
-            lift::<T>(1.0),
-            100,
-            lift::<T>(fit_cfg.tolerance),
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
         ),
         "a label of -1",
     );
@@ -934,9 +976,7 @@ fn check_label_domain<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg: 
         fit_logistic(
             &x,
             &above_one,
-            lift::<T>(1.0),
-            100,
-            lift::<T>(fit_cfg.tolerance),
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
         ),
         "a label of 2",
     );
@@ -961,7 +1001,11 @@ fn check_non_finite_input<T: RealField + FromPrimitive + core::fmt::Debug>(fit_c
     let mut x = design::<T, 2>(&OVERLAP_X);
     x[2][1] = lift::<T>(f64::NAN);
     let variant = expect_error(
-        fit_logistic(&x, &y, lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "a NaN design entry",
     );
     match variant {
@@ -976,9 +1020,7 @@ fn check_non_finite_input<T: RealField + FromPrimitive + core::fmt::Debug>(fit_c
         fit_logistic(
             &x,
             &infinite,
-            lift::<T>(1.0),
-            100,
-            lift::<T>(fit_cfg.tolerance),
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
         ),
         "an infinite label",
     );
@@ -1001,7 +1043,11 @@ fn check_single_observation<T: RealField + FromPrimitive + core::fmt::Debug>(fit
     let x: Vec<Vec<T>> = vec![lift_array::<T>(&[1.0])];
     let y = lift_array::<T>(&[1.0]);
     let fit = expect_fit(
-        fit_logistic(&x, &y, lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "a single observation at a penalty of one",
     );
     assert_eq!(
@@ -1052,7 +1098,11 @@ fn check_rank_deficient<T: RealField + FromPrimitive + core::fmt::Debug>(fit_cfg
     let x = design::<T, 2>(&[[1.0, 1.0], [1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]);
     let y = lift_array::<T>(&[0.0, 1.0, 0.0, 1.0]);
     let variant = expect_error(
-        fit_logistic(&x, &y, T::zero(), 100, lift::<T>(fit_cfg.tolerance)),
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(T::zero(), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
         "a design with two identical columns at zero penalty",
     );
     match variant {
@@ -1088,7 +1138,11 @@ fn check_overflow_reach<T: RealField + FromPrimitive + core::fmt::Debug>(tol: Pr
         [1.0, huge],
     ]);
     let y = lift_array::<T>(&[0.0, 0.0, 1.0, 1.0]);
-    match fit_logistic(&x, &y, lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)) {
+    match fit_logistic(
+        &x,
+        &y,
+        &LogisticConfig::new(lift::<T>(1.0), 100, lift::<T>(fit_cfg.tolerance)),
+    ) {
         Ok(fit) => {
             for coefficient in &fit.beta {
                 assert!(
@@ -1123,7 +1177,7 @@ fn fit_logistic_refuses_a_non_finite_penalty_with_a_finite_tolerance() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, 0.0], vec![1.0, 1.0], vec![1.0, 2.0]];
     let y = vec![0.0, 1.0, 1.0];
     let variant = expect_error(
-        fit_logistic(&x, &y, f64::NAN, 100, 1e-9),
+        fit_logistic(&x, &y, &LogisticConfig::new(f64::NAN, 100, 1e-9)),
         "a NaN penalty with a usable tolerance",
     );
     match variant {
@@ -1137,11 +1191,82 @@ fn fit_logistic_refuses_a_non_finite_tolerance_with_a_finite_penalty() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, 0.0], vec![1.0, 1.0], vec![1.0, 2.0]];
     let y = vec![0.0, 1.0, 1.0];
     let variant = expect_error(
-        fit_logistic(&x, &y, 1.0, 100, f64::INFINITY),
+        fit_logistic(&x, &y, &LogisticConfig::new(1.0, 100, f64::INFINITY)),
         "an infinite tolerance with a usable penalty",
     );
     match variant {
         StatsErrorEnum::NonFiniteInput(_) => {}
         other => panic!("a non-finite tolerance must be NonFiniteInput, got {other:?}"),
     }
+}
+
+/// An exempt intercept preserves the base rate; a penalised one does not.
+///
+/// On an intercept-only design the logistic MLE is the sample proportion exactly: with
+/// `y = (1, 1, 1, 0)` the fitted probability is `3/4`, whatever the penalty, *provided the penalty
+/// does not reach the intercept*. Penalising it shrinks the log-odds toward zero, which is the
+/// probability toward `1/2`, so the same fit comes back strictly below `3/4` and the base rate is
+/// lost. That is the whole content of the convention, on the smallest design that shows it.
+///
+/// `sigmoid(β₀)` is the fitted probability here because the design is the single ones-column.
+fn check_exempt_intercept_keeps_the_base_rate<T: RealField + FromPrimitive + core::fmt::Debug>(
+    fit_cfg: Fit,
+) {
+    let x = design::<T, 1>(&[[1.0], [1.0], [1.0], [1.0]]);
+    let y = lift_array::<T>(&[1.0, 1.0, 1.0, 0.0]);
+    let penalty = lift::<T>(1.0);
+    let tolerance = lift::<T>(fit_cfg.tolerance);
+
+    let exempt = expect_fit(
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(penalty, 200, tolerance)
+                .with_penalisation(Penalisation::Excluding(0)),
+        ),
+        "an intercept-only design with the intercept exempt",
+    );
+    let pi_exempt = sigmoid(exempt.beta[0]);
+    let three_quarters = lift::<T>(0.75);
+    assert!(
+        close(pi_exempt, three_quarters, lift::<T>(fit_cfg.converged)),
+        "an exempt intercept fits the sample proportion 3/4 exactly, got {pi_exempt:?}"
+    );
+
+    let penalised = expect_fit(
+        fit_logistic(&x, &y, &LogisticConfig::new(penalty, 200, tolerance)),
+        "the same design with the intercept penalised",
+    );
+    let pi_penalised = sigmoid(penalised.beta[0]);
+    let half = lift::<T>(0.5);
+    assert!(
+        pi_penalised < pi_exempt && pi_penalised > half,
+        "a penalised intercept is pulled from the base rate toward one half: \
+         exempt {pi_exempt:?}, penalised {pi_penalised:?}"
+    );
+}
+
+#[test]
+fn test_fit_logistic_exempt_intercept_keeps_the_base_rate() {
+    check_exempt_intercept_keeps_the_base_rate::<f64>(FIT_F64);
+    check_exempt_intercept_keeps_the_base_rate::<Float106>(FIT_F106);
+}
+
+/// Exempting a column the design does not have is refused, as it is for ridge.
+#[test]
+fn test_fit_logistic_exempt_column_outside_the_design_is_refused() {
+    let x = design::<f64, 2>(&[[1.0, 2.0], [1.0, 3.0], [1.0, 4.0]]);
+    let y = lift_array::<f64>(&[1.0, 0.0, 1.0]);
+    let variant = expect_error(
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(1.0, 100, 1e-10).with_penalisation(Penalisation::Excluding(2)),
+        ),
+        "an exempt column past the design width",
+    );
+    assert!(
+        matches!(variant, StatsErrorEnum::DimensionMismatch(_)),
+        "an exempt column past the design width is a shape error, got {variant:?}"
+    );
 }

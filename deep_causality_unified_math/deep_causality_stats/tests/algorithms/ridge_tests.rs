@@ -50,7 +50,9 @@ use deep_causality_num::lift;
 use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_stats::utils_tests::lift_array;
 use deep_causality_stats::utils_tests::precision::{F32, F64, F106};
-use deep_causality_stats::{RidgeFit, StatsError, StatsErrorEnum, fit_ridge, fit_ridge_streaming};
+use deep_causality_stats::{
+    Penalisation, RidgeConfig, RidgeFit, StatsError, StatsErrorEnum, fit_ridge, fit_ridge_streaming,
+};
 
 /// Lifts a list of `f64` rows into a design matrix in the working scalar.
 fn design<T: FromPrimitive>(rows: &[&[f64]]) -> Vec<Vec<T>> {
@@ -133,7 +135,7 @@ fn assert_close<T: RealField + FromPrimitive>(actual: T, expected: f64, tol: f64
 fn check_one_column_closed_form<T: RealField + FromPrimitive>(tol: f64) {
     let x = design::<T>(&[&[1.0], &[2.0], &[3.0]]);
     let y = lift_array::<T>(&[2.0, 4.0, 6.0]);
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(2.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(2.0))));
 
     assert_eq!(fit.beta.len(), 1, "one column in, one coefficient out");
     assert_close(fit.beta[0], 1.75, tol, "beta = 28/16");
@@ -166,7 +168,7 @@ fn check_single_observation<T: RealField + FromPrimitive>(tol: f64, zero_tol: f6
     let x = design::<T>(&[&[2.0]]);
     let y = lift_array::<T>(&[6.0]);
 
-    let unpenalised = fit_of(fit_ridge(&x, &y, T::zero()));
+    let unpenalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
     assert_close(unpenalised.beta[0], 3.0, tol, "beta = 12/4");
     assert_close(
         unpenalised.sigma2,
@@ -175,7 +177,7 @@ fn check_single_observation<T: RealField + FromPrimitive>(tol: f64, zero_tol: f6
         "an exact fit has no residual",
     );
 
-    let penalised = fit_of(fit_ridge(&x, &y, lift::<T>(2.0)));
+    let penalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(2.0))));
     assert_close(penalised.beta[0], 2.0, tol, "beta = 12/6");
     assert_close(penalised.sigma2, 4.0, tol, "sigma2 = 4/1 on the dof floor");
 }
@@ -208,7 +210,7 @@ fn test_fit_ridge_single_observation_single_column() {
 fn check_exactly_determined<T: RealField + FromPrimitive>(tol: f64, zero_tol: f64) {
     let x = design::<T>(&[&[1.0, 1.0], &[1.0, 2.0]]);
     let y = lift_array::<T>(&[-1.0, -5.0]);
-    let fit = fit_of(fit_ridge(&x, &y, T::zero()));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
 
     assert_eq!(fit.beta.len(), 2);
     assert_close(fit.beta[0], 3.0, tol, "generator beta_1");
@@ -251,7 +253,7 @@ fn check_identity_design<T: RealField + FromPrimitive>(tol: f64, zero_tol: f64) 
     let x = design::<T>(&[&[1.0, 0.0], &[0.0, 1.0]]);
     let y = lift_array::<T>(&[5.0, 7.0]);
 
-    let unpenalised = fit_of(fit_ridge(&x, &y, T::zero()));
+    let unpenalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
     assert_close(unpenalised.beta[0], 5.0, tol, "identity design returns y");
     assert_close(unpenalised.beta[1], 7.0, tol, "identity design returns y");
     assert_close(
@@ -261,7 +263,7 @@ fn check_identity_design<T: RealField + FromPrimitive>(tol: f64, zero_tol: f64) 
         "interpolation, no residual",
     );
 
-    let penalised = fit_of(fit_ridge(&x, &y, T::one()));
+    let penalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert_close(penalised.beta[0], 2.5, tol, "5/(1+1)");
     assert_close(penalised.beta[1], 3.5, tol, "7/(1+1)");
     assert_close(penalised.sigma2, 18.5, tol, "18.5/1");
@@ -310,11 +312,11 @@ fn shrinkage_design<T: FromPrimitive>() -> (Vec<Vec<T>>, Vec<T>) {
 fn check_penalty_hits_every_column<T: RealField + FromPrimitive>(tol: f64) {
     let (x, y) = shrinkage_design::<T>();
 
-    let unpenalised = fit_of(fit_ridge(&x, &y, T::zero()));
+    let unpenalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
     assert_close(unpenalised.beta[0], 0.0, tol, "intercept at lambda 0");
     assert_close(unpenalised.beta[1], 1.1, tol, "slope 22/20 at lambda 0");
 
-    let penalised = fit_of(fit_ridge(&x, &y, T::one()));
+    let penalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert_close(penalised.beta[0], 0.2, tol, "intercept 11/55 at lambda 1");
     assert_close(penalised.beta[1], 1.0, tol, "slope 55/55 at lambda 1");
 }
@@ -348,7 +350,7 @@ fn check_monotone_shrinkage<T: RealField + FromPrimitive>(margin: f64) {
     let norms: Vec<T> = penalties
         .iter()
         .map(|&lambda| {
-            let fit = fit_of(fit_ridge(&x, &y, lift::<T>(lambda)));
+            let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(lambda))));
             norm(&fit.beta)
         })
         .collect();
@@ -394,7 +396,7 @@ fn test_fit_ridge_coefficient_norm_shrinks_monotonically() {
 fn check_underdetermined_dof_floor<T: RealField + FromPrimitive>(tol: f64) {
     let x = design::<T>(&[&[1.0, 2.0]]);
     let y = lift_array::<T>(&[3.0]);
-    let fit = fit_of(fit_ridge(&x, &y, T::one()));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
 
     assert_eq!(fit.beta.len(), 2);
     assert_close(fit.beta[0], 0.5, tol, "beta_1 from the 2x2 solve");
@@ -424,7 +426,7 @@ fn test_fit_ridge_underdetermined_dof_floor() {
 fn check_perfect_fit<T: RealField + FromPrimitive>(tol: f64, zero_tol: f64) {
     let x = design::<T>(&[&[1.0, 1.0], &[1.0, 2.0], &[1.0, 3.0]]);
     let y = lift_array::<T>(&[3.0, 5.0, 7.0]);
-    let fit = fit_of(fit_ridge(&x, &y, T::zero()));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
 
     assert_close(fit.beta[0], 1.0, tol, "intercept");
     assert_close(fit.beta[1], 2.0, tol, "slope");
@@ -459,7 +461,7 @@ fn test_fit_ridge_perfect_fit_has_zero_residual() {
 fn check_zero_response<T: RealField + FromPrimitive>(zero_tol: f64) {
     let x = design::<T>(&[&[1.0, 1.0], &[1.0, 2.0], &[1.0, 3.0]]);
     let y = lift_array::<T>(&[0.0, 0.0, 0.0]);
-    let fit = fit_of(fit_ridge(&x, &y, T::one()));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
 
     for &b in &fit.beta {
         assert!(
@@ -504,21 +506,21 @@ fn check_rank_deficient<T: RealField + FromPrimitive>(tol: f64, symmetry_tol: f6
     let y = lift_array::<T>(&[1.0, 2.0, 3.0]);
 
     // At exactly the documented threshold: refused.
-    let err = err_of(fit_ridge(&x, &y, T::zero()));
+    let err = err_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
     assert!(
         matches!(err, StatsErrorEnum::RankDeficient(_)),
         "a duplicated column at zero penalty has no unique solution"
     );
 
     // Just above it: accepted, and symmetric in the two identical columns.
-    let just_above = fit_of(fit_ridge(&x, &y, lift::<T>(1e-3)));
+    let just_above = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(1e-3))));
     assert!(
         (just_above.beta[0] - just_above.beta[1]).abs() <= lift::<T>(symmetry_tol),
         "identical columns must receive identical coefficients"
     );
 
     // Well above it: the hand-solved value.
-    let penalised = fit_of(fit_ridge(&x, &y, T::one()));
+    let penalised = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert_close(penalised.beta[0], 0.4827586206896552, tol, "14/29");
     assert_close(penalised.beta[1], 0.4827586206896552, tol, "14/29");
     assert!(
@@ -557,11 +559,11 @@ fn check_negative_penalty<T: RealField + FromPrimitive>(tol: f64) {
     let x = design::<T>(&[&[2.0]]);
     let y = lift_array::<T>(&[6.0]);
 
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(-2.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(-2.0))));
     assert_close(fit.beta[0], 6.0, tol, "12/(4-2)");
     assert_close(fit.sigma2, 36.0, tol, "RSS 36 over the dof floor of 1");
 
-    let err = err_of(fit_ridge(&x, &y, lift::<T>(-4.0)));
+    let err = err_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(-4.0))));
     assert!(
         matches!(err, StatsErrorEnum::RankDeficient(_)),
         "a penalty that cancels the design leaves no unique solution"
@@ -595,7 +597,7 @@ fn check_sigma2_non_negative<T: RealField + FromPrimitive>() {
         let x = design::<T>(rows);
         let y = lift_array::<T>(response);
         for lambda in [0.5, 1.0, 4.0, 32.0] {
-            let fit = fit_of(fit_ridge(&x, &y, lift::<T>(lambda)));
+            let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(lambda))));
             assert!(
                 fit.sigma2 >= T::zero(),
                 "a residual variance is a sum of squares over a positive divisor"
@@ -624,7 +626,7 @@ fn test_fit_ridge_sigma2_is_never_negative() {
 fn check_empty_design<T: RealField + FromPrimitive>() {
     let x: Vec<Vec<T>> = Vec::new();
     let y: Vec<T> = Vec::new();
-    let err = err_of(fit_ridge(&x, &y, T::one()));
+    let err = err_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert!(matches!(err, StatsErrorEnum::EmptyInput(_)));
 }
 
@@ -640,13 +642,13 @@ fn test_fit_ridge_rejects_empty_design() {
 fn check_response_length_mismatch<T: RealField + FromPrimitive>() {
     let x = design::<T>(&[&[1.0], &[2.0], &[3.0]]);
     let y = lift_array::<T>(&[1.0, 2.0]);
-    let err = err_of(fit_ridge(&x, &y, T::one()));
+    let err = err_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert!(matches!(err, StatsErrorEnum::DimensionMismatch(_)));
 
     // And the other direction: more responses than rows.
     let x_short = design::<T>(&[&[1.0], &[2.0]]);
     let y_long = lift_array::<T>(&[1.0, 2.0, 3.0]);
-    let err = err_of(fit_ridge(&x_short, &y_long, T::one()));
+    let err = err_of(fit_ridge(&x_short, &y_long, &RidgeConfig::new(T::one())));
     assert!(matches!(err, StatsErrorEnum::DimensionMismatch(_)));
 }
 
@@ -661,13 +663,13 @@ fn test_fit_ridge_rejects_response_length_mismatch() {
 fn check_ragged_rows<T: RealField + FromPrimitive>() {
     let x = design::<T>(&[&[1.0, 2.0], &[3.0], &[4.0, 5.0]]);
     let y = lift_array::<T>(&[1.0, 2.0, 3.0]);
-    let err = err_of(fit_ridge(&x, &y, T::one()));
+    let err = err_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert!(matches!(err, StatsErrorEnum::DimensionMismatch(_)));
 
     // A long row is the same defect in the other direction.
     let x_long = design::<T>(&[&[1.0, 2.0], &[3.0, 4.0, 5.0]]);
     let y2 = lift_array::<T>(&[1.0, 2.0]);
-    let err = err_of(fit_ridge(&x_long, &y2, T::one()));
+    let err = err_of(fit_ridge(&x_long, &y2, &RidgeConfig::new(T::one())));
     assert!(matches!(err, StatsErrorEnum::DimensionMismatch(_)));
 }
 
@@ -689,7 +691,7 @@ fn test_fit_ridge_rejects_ragged_rows() {
 fn check_zero_width_design<T: RealField + FromPrimitive>() {
     let x: Vec<Vec<T>> = vec![Vec::new(), Vec::new(), Vec::new()];
     let y = lift_array::<T>(&[1.0, 2.0, 3.0]);
-    let err = err_of(fit_ridge(&x, &y, T::one()));
+    let err = err_of(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
     assert!(matches!(
         err,
         StatsErrorEnum::EmptyInput(_) | StatsErrorEnum::DimensionMismatch(_)
@@ -728,18 +730,18 @@ fn check_non_finite_not_laundered<T: RealField + FromPrimitive>() {
         let x = design::<T>(&[&[1.0, 1.0], &[1.0, 2.0], &[1.0, 3.0]]);
         let mut y = lift_array::<T>(&[1.0, 2.0, 3.0]);
         y[1] = bad;
-        assert_not_laundered(fit_ridge(&x, &y, T::one()));
+        assert_not_laundered(fit_ridge(&x, &y, &RidgeConfig::new(T::one())));
 
         // In the design.
         let mut x2 = design::<T>(&[&[1.0, 1.0], &[1.0, 2.0], &[1.0, 3.0]]);
         x2[2][1] = bad;
         let y2 = lift_array::<T>(&[1.0, 2.0, 3.0]);
-        assert_not_laundered(fit_ridge(&x2, &y2, T::one()));
+        assert_not_laundered(fit_ridge(&x2, &y2, &RidgeConfig::new(T::one())));
 
         // In the penalty.
         let x3 = design::<T>(&[&[1.0, 1.0], &[1.0, 2.0], &[1.0, 3.0]]);
         let y3 = lift_array::<T>(&[1.0, 2.0, 3.0]);
-        assert_not_laundered(fit_ridge(&x3, &y3, bad));
+        assert_not_laundered(fit_ridge(&x3, &y3, &RidgeConfig::new(bad)));
     }
 }
 
@@ -781,7 +783,7 @@ fn test_fit_ridge_non_finite_input_is_not_laundered() {
 fn check_extremes<T: RealField + FromPrimitive>(safe: f64, over: f64, under: f64, tol: f64) {
     let x = design::<T>(&[&[safe]]);
     let y = lift_array::<T>(&[safe]);
-    let fit = fit_of(fit_ridge(&x, &y, T::zero()));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
     assert_close(
         fit.beta[0],
         1.0,
@@ -792,7 +794,7 @@ fn check_extremes<T: RealField + FromPrimitive>(safe: f64, over: f64, under: f64
     for scale in [over, under] {
         let x = design::<T>(&[&[scale]]);
         let y = lift_array::<T>(&[scale]);
-        match fit_ridge(&x, &y, T::zero()) {
+        match fit_ridge(&x, &y, &RidgeConfig::new(T::zero())) {
             Err(_) => {}
             Ok(fit) => assert!(
                 !fit.beta[0].is_finite() || (fit.beta[0] - T::one()).abs() <= lift::<T>(tol),
@@ -827,7 +829,11 @@ fn test_fit_ridge_at_the_types_own_extremes() {
 fn check_streaming_closed_form<T: RealField + FromPrimitive>(tol: f64) {
     let x = design::<T>(&[&[1.0], &[2.0], &[3.0]]);
     let y = lift_array::<T>(&[2.0, 4.0, 6.0]);
-    let fit = fit_of(fit_ridge_streaming(stream_rows(&x, &y), lift::<T>(2.0), 1));
+    let fit = fit_of(fit_ridge_streaming(
+        stream_rows(&x, &y),
+        &RidgeConfig::new(lift::<T>(2.0)),
+        1,
+    ));
 
     assert_eq!(fit.beta.len(), 1);
     assert_close(fit.beta[0], 1.75, tol, "beta = 28/16, streamed");
@@ -864,8 +870,12 @@ fn check_forms_agree<T: RealField + FromPrimitive>(tol: f64) {
 
     for lambda in [0.0, 0.25, 1.0, 8.0] {
         let penalty = lift::<T>(lambda);
-        let dense = fit_of(fit_ridge(&x, &y, penalty));
-        let streamed = fit_of(fit_ridge_streaming(stream_rows(&x, &y), penalty, 3));
+        let dense = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(penalty)));
+        let streamed = fit_of(fit_ridge_streaming(
+            stream_rows(&x, &y),
+            &RidgeConfig::new(penalty),
+            3,
+        ));
 
         assert_eq!(dense.beta.len(), streamed.beta.len());
         for (a, b) in dense.beta.iter().zip(streamed.beta.iter()) {
@@ -916,13 +926,13 @@ fn check_forms_agree_when_filtered<T: RealField + FromPrimitive>(tol: f64) {
         .collect();
 
     let penalty = lift::<T>(0.5);
-    let dense = fit_of(fit_ridge(&kept, &kept_y, penalty));
+    let dense = fit_of(fit_ridge(&kept, &kept_y, &RidgeConfig::new(penalty)));
 
     let streamed = fit_of(fit_ridge_streaming(
         stream_rows(&all, &response)
             .into_iter()
             .filter(|(_, yi)| *yi != sentinel),
-        penalty,
+        &RidgeConfig::new(penalty),
         2,
     ));
 
@@ -949,7 +959,7 @@ fn test_fit_ridge_streaming_agrees_over_a_filtered_design() {
 /// An empty stream is the streaming form's version of an empty design (corner row A).
 fn check_streaming_empty<T: RealField + FromPrimitive>() {
     let rows: Vec<(Vec<T>, T)> = Vec::new();
-    let err = err_of(fit_ridge_streaming(rows, T::one(), 2));
+    let err = err_of(fit_ridge_streaming(rows, &RidgeConfig::new(T::one()), 2));
     assert!(matches!(err, StatsErrorEnum::EmptyInput(_)));
 }
 
@@ -967,14 +977,14 @@ fn check_streaming_row_width<T: RealField + FromPrimitive>() {
         (lift_array::<T>(&[1.0, 2.0]), lift::<T>(1.0)),
         (lift_array::<T>(&[3.0]), lift::<T>(2.0)),
     ];
-    let err = err_of(fit_ridge_streaming(short, T::one(), 2));
+    let err = err_of(fit_ridge_streaming(short, &RidgeConfig::new(T::one()), 2));
     assert!(matches!(err, StatsErrorEnum::DimensionMismatch(_)));
 
     let long: Vec<(Vec<T>, T)> = vec![
         (lift_array::<T>(&[1.0, 2.0]), lift::<T>(1.0)),
         (lift_array::<T>(&[3.0, 4.0, 5.0]), lift::<T>(2.0)),
     ];
-    let err = err_of(fit_ridge_streaming(long, T::one(), 2));
+    let err = err_of(fit_ridge_streaming(long, &RidgeConfig::new(T::one()), 2));
     assert!(matches!(err, StatsErrorEnum::DimensionMismatch(_)));
 }
 
@@ -992,7 +1002,7 @@ fn test_fit_ridge_streaming_rejects_row_width_disagreement() {
 /// accepts either and rejects a success.
 fn check_streaming_zero_columns<T: RealField + FromPrimitive>() {
     let rows: Vec<(Vec<T>, T)> = vec![(Vec::new(), lift::<T>(1.0)), (Vec::new(), lift::<T>(2.0))];
-    let err = err_of(fit_ridge_streaming(rows, T::one(), 0));
+    let err = err_of(fit_ridge_streaming(rows, &RidgeConfig::new(T::one()), 0));
     assert!(matches!(
         err,
         StatsErrorEnum::EmptyInput(_) | StatsErrorEnum::DimensionMismatch(_)
@@ -1014,10 +1024,18 @@ fn check_streaming_rank_deficient<T: RealField + FromPrimitive>(tol: f64) {
     let x = design::<T>(&[&[1.0, 1.0], &[2.0, 2.0], &[3.0, 3.0]]);
     let y = lift_array::<T>(&[1.0, 2.0, 3.0]);
 
-    let err = err_of(fit_ridge_streaming(stream_rows(&x, &y), T::zero(), 2));
+    let err = err_of(fit_ridge_streaming(
+        stream_rows(&x, &y),
+        &RidgeConfig::new(T::zero()),
+        2,
+    ));
     assert!(matches!(err, StatsErrorEnum::RankDeficient(_)));
 
-    let fit = fit_of(fit_ridge_streaming(stream_rows(&x, &y), T::one(), 2));
+    let fit = fit_of(fit_ridge_streaming(
+        stream_rows(&x, &y),
+        &RidgeConfig::new(T::one()),
+        2,
+    ));
     assert_close(fit.beta[0], 0.4827586206896552, tol, "14/29, streamed");
     assert_close(fit.beta[1], 0.4827586206896552, tol, "14/29, streamed");
 }
@@ -1065,7 +1083,7 @@ fn pivot_design<T: RealField + FromPrimitive>() -> Vec<Vec<T>> {
 fn check_pivoting_recovers_the_generator<T: RealField + FromPrimitive>(tol: f64) {
     let x = pivot_design::<T>();
     let y = lift_array::<T>(&PIVOT_Y);
-    let fit = fit_of(fit_ridge(&x, &y, T::zero()));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(T::zero())));
 
     // The generator, recovered exactly: the oracle reports 2, −1, 3, −2 as exact integers.
     assert_close(fit.beta[0], 2.0, tol, "pivoting beta_1");
@@ -1082,7 +1100,7 @@ fn check_pivoting_recovers_the_generator<T: RealField + FromPrimitive>(tol: f64)
 fn check_pivoting_matches_the_exact_penalised_solution<T: RealField + FromPrimitive>(tol: f64) {
     let x = pivot_design::<T>();
     let y = lift_array::<T>(&PIVOT_Y);
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(1.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(1.0))));
 
     // λ = 1, from the oracle: 1653/2329, −512/2329, 5003/2329, −4507/4658.
     assert_close(
@@ -1115,7 +1133,7 @@ fn check_pivoting_matches_the_exact_penalised_solution<T: RealField + FromPrimit
 fn check_pivoting_at_a_larger_penalty<T: RealField + FromPrimitive>(tol: f64) {
     let x = pivot_design::<T>();
     let y = lift_array::<T>(&PIVOT_Y);
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(4.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(4.0))));
 
     // λ = 4, from the oracle: 843/10807, 2107/10807, 16076/10807, −4130/10807.
     assert_close(
@@ -1180,7 +1198,7 @@ fn test_fit_ridge_pivoting_at_a_larger_penalty() {
 fn test_fit_ridge_ragged_rows_alone_are_refused() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, 2.0], vec![3.0]];
     let y = vec![1.0, 2.0];
-    let variant = err_of(fit_ridge(&x, &y, 0.0));
+    let variant = err_of(fit_ridge(&x, &y, &RidgeConfig::new(0.0)));
     assert!(
         matches!(variant, StatsErrorEnum::DimensionMismatch(_)),
         "a ragged design is a dimension mismatch, got {variant:?}"
@@ -1192,7 +1210,7 @@ fn test_fit_ridge_ragged_rows_alone_are_refused() {
 fn test_fit_ridge_zero_columns_with_consistent_rows_are_refused() {
     let x: Vec<Vec<f64>> = vec![vec![], vec![]];
     let y = vec![1.0, 2.0];
-    let variant = err_of(fit_ridge(&x, &y, 0.0));
+    let variant = err_of(fit_ridge(&x, &y, &RidgeConfig::new(0.0)));
     assert!(
         matches!(variant, StatsErrorEnum::DimensionMismatch(_)),
         "a design with no columns has nothing to fit, got {variant:?}"
@@ -1206,7 +1224,7 @@ fn test_fit_ridge_zero_columns_with_consistent_rows_are_refused() {
 fn test_fit_ridge_non_finite_design_with_finite_response() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, f64::NAN], vec![1.0, 2.0]];
     let y = vec![1.0, 2.0];
-    let variant = err_of(fit_ridge(&x, &y, 0.0));
+    let variant = err_of(fit_ridge(&x, &y, &RidgeConfig::new(0.0)));
     assert!(
         matches!(variant, StatsErrorEnum::NonFiniteInput(_)),
         "a NaN in the design is refused even when every response is finite, got {variant:?}"
@@ -1218,7 +1236,7 @@ fn test_fit_ridge_non_finite_design_with_finite_response() {
 fn test_fit_ridge_finite_design_with_non_finite_response() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, 1.0], vec![1.0, 2.0]];
     let y = vec![1.0, f64::INFINITY];
-    let variant = err_of(fit_ridge(&x, &y, 0.0));
+    let variant = err_of(fit_ridge(&x, &y, &RidgeConfig::new(0.0)));
     assert!(
         matches!(variant, StatsErrorEnum::NonFiniteInput(_)),
         "an infinite response is refused even when the design is clean, got {variant:?}"
@@ -1242,7 +1260,7 @@ fn test_fit_ridge_pivot_search_finds_the_largest_magnitude_row() {
     let x: Vec<Vec<f64>> = vec![vec![1.0, 3.0], vec![0.0, 1.0]];
     // y = X · (2, -1) = (2·1 + 3·(-1), 2·0 + 1·(-1)) = (-1, -1)
     let y = vec![-1.0, -1.0];
-    let fit = fit_of(fit_ridge(&x, &y, 0.0));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(0.0)));
     assert_close(fit.beta[0], 2.0, F64.solve, "pivot search beta_1");
     assert_close(fit.beta[1], -1.0, F64.solve, "pivot search beta_2");
 }
@@ -1272,7 +1290,7 @@ fn test_fit_ridge_pivot_search_finds_the_largest_magnitude_row() {
 fn check_pivot_swap_the_answer_depends_on<T: RealField + FromPrimitive>(tol: f64) {
     let x = design::<T>(&[&[1.0, 2.0], &[0.0, 1.0], &[0.0, 1.0]]);
     let y = lift_array::<T>(&[1.0, 1.0, 1.0]);
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(-1.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(-1.0))));
     assert_close(fit.beta[0], 0.75, tol, "swap-dependent beta_1");
     assert_close(fit.beta[1], 0.5, tol, "swap-dependent beta_2");
     assert_close(fit.sigma2, 1.0625, tol, "swap-dependent sigma2");
@@ -1311,7 +1329,7 @@ fn check_pivot_swap_at_the_second_column<T: RealField + FromPrimitive>(tol: f64)
         &[1.0, 0.0, 3.0],
     ]);
     let y = lift_array::<T>(&[40.0, 80.0, 40.0, 40.0]);
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(-1.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(-1.0))));
     assert_close(fit.beta[0], 20.0, tol, "second-column swap beta_1");
     assert_close(fit.beta[1], -7.0, tol, "second-column swap beta_2");
     assert_close(fit.beta[2], 18.0, tol, "second-column swap beta_3");
@@ -1355,7 +1373,7 @@ fn check_pivot_reaches_past_the_next_row<T: RealField + FromPrimitive>(tol: f64)
         &[3.0, 0.0, 1.0, 3.0],
     ]);
     let y = lift_array::<T>(&[-6.0, -6.0, -6.0, 0.0, -3.0]);
-    let fit = fit_of(fit_ridge(&x, &y, lift::<T>(-3.0)));
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(-3.0))));
     assert_close(fit.beta[0], -4.0, tol, "reaching pivot beta_1");
     assert_close(fit.beta[1], -5.0, tol, "reaching pivot beta_2");
     assert_close(fit.beta[2], 3.0, tol, "reaching pivot beta_3");
@@ -1367,4 +1385,58 @@ fn test_fit_ridge_pivot_reaches_past_the_next_row() {
     check_pivot_reaches_past_the_next_row::<f32>(F32.solve);
     check_pivot_reaches_past_the_next_row::<f64>(F64.solve);
     check_pivot_reaches_past_the_next_row::<Float106>(F106.solve);
+}
+
+/// The exempt column is not shrunk, on a design where the difference is exactly checkable.
+///
+/// An intercept-only design reduces the normal equations to a scalar: `XᵀX = n`, `Xᵀy = Σy`, so
+/// `β = Σy / (n + λ)` when the penalty reaches the column and `β = Σy / n` when it does not. With
+/// `y = (1, 2, 3, 4)` and `λ = 1` that is `10/5 = 2` against `10/4 = 5/2` — both exact in binary,
+/// and far enough apart that no tolerance question arises.
+///
+/// The exempt fit is the sample mean, which is the point of the convention: the intercept is free
+/// to carry the level of `y`, and the penalty acts only on the shape.
+fn check_penalisation_exempts_a_column<T: RealField + FromPrimitive>(tol: f64) {
+    let x = design::<T>(&[&[1.0], &[1.0], &[1.0], &[1.0]]);
+    let y = lift_array::<T>(&[1.0, 2.0, 3.0, 4.0]);
+    let penalty = lift::<T>(1.0);
+
+    let all = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(penalty)));
+    assert_close(all.beta[0], 2.0, tol, "penalised intercept");
+
+    let exempt = fit_of(fit_ridge(
+        &x,
+        &y,
+        &RidgeConfig::new(penalty).with_penalisation(Penalisation::Excluding(0)),
+    ));
+    assert_close(
+        exempt.beta[0],
+        2.5,
+        tol,
+        "exempt intercept is the sample mean",
+    );
+}
+
+#[test]
+fn test_fit_ridge_penalisation_exempts_a_column() {
+    check_penalisation_exempts_a_column::<f32>(F32.solve);
+    check_penalisation_exempts_a_column::<f64>(F64.solve);
+    check_penalisation_exempts_a_column::<Float106>(F106.solve);
+}
+
+/// Exempting a column the design does not have is a caller error, not a silent no-op: it means the
+/// caller believes the intercept sits somewhere it does not.
+#[test]
+fn test_fit_ridge_exempt_column_outside_the_design_is_refused() {
+    let x = design::<f64>(&[&[1.0, 2.0], &[1.0, 3.0], &[1.0, 4.0]]);
+    let y = lift_array::<f64>(&[1.0, 2.0, 3.0]);
+    let err = err_of(fit_ridge(
+        &x,
+        &y,
+        &RidgeConfig::new(1.0).with_penalisation(Penalisation::Excluding(2)),
+    ));
+    assert!(
+        matches!(err, StatsErrorEnum::DimensionMismatch(_)),
+        "an exempt column past the design width is a shape error, got {err:?}"
+    );
 }
