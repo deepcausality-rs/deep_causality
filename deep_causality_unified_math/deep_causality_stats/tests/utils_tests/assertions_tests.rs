@@ -179,7 +179,16 @@ fn assert_no_finite_answer_refuses_only_an_invented_finite_value() {
         mean(&nan_sample),
         "a mean over a NaN"
     )));
-    // A typed refusal is equally acceptable.
+    // The documented refusal is equally acceptable, and is the arm no shipped call site reaches:
+    // the moments carry no non-finite guard, so they return a non-finite `Ok` rather than refusing.
+    // Nothing else exercises this branch, so it is fed directly.
+    assert!(!panics(|| assert_no_finite_answer::<f64>(
+        Err(StatsError::NonFiniteInput(
+            "a non-finite observation has no mean"
+        )),
+        "the documented refusal"
+    )));
+    // Any OTHER refusal is not.
     let empty: Vec<f64> = Vec::new();
     assert!(panics(move || assert_no_finite_answer(
         mean(&empty),
