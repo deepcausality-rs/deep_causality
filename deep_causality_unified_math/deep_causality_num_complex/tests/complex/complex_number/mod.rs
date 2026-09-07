@@ -29,6 +29,8 @@ mod identity_tests;
 #[cfg(test)]
 mod neg_tests;
 #[cfg(test)]
+mod normed_nonfinite_tests;
+#[cfg(test)]
 mod num_cast_tests;
 #[cfg(test)]
 mod ordering_tests;

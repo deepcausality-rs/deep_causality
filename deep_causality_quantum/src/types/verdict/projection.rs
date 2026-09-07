@@ -18,7 +18,9 @@
 //! (see [`crate::verdict::born`]).
 
 use crate::QuantumError;
-use crate::types::qgates::operator_linalg::{hermiticity_defect, identity_matrix, square_dim};
+use crate::types::qgates::operator_linalg::{
+    hermiticity_defect, identity_matrix, max_modulus, square_dim,
+};
 use alloc::format;
 use alloc::vec;
 use deep_causality_algebra::{RealField, Verdict};
@@ -76,12 +78,7 @@ where
         let p2 = p
             .matmul(&p)
             .map_err(|e| QuantumError::CalculationError(format!("matmul: {:?}", e)))?;
-        let defect = p2
-            .as_slice()
-            .iter()
-            .zip(p.as_slice())
-            .map(|(a, b)| ((a.re - b.re) * (a.re - b.re) + (a.im - b.im) * (a.im - b.im)).sqrt())
-            .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+        let defect = max_modulus(p2.as_slice().iter().zip(p.as_slice()).map(|(a, b)| *a - *b));
         if defect > tol {
             return Err(QuantumError::NonPositiveOperator(format!(
                 "operator is not idempotent (‖P²−P‖ = {:?})",
@@ -173,14 +170,12 @@ where
         match self.p.matmul(&other.p) {
             Ok(pq) => {
                 let tol = Self::default_tolerance();
-                let defect = pq
-                    .as_slice()
-                    .iter()
-                    .zip(self.p.as_slice())
-                    .map(|(a, b)| {
-                        ((a.re - b.re) * (a.re - b.re) + (a.im - b.im) * (a.im - b.im)).sqrt()
-                    })
-                    .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+                let defect = max_modulus(
+                    pq.as_slice()
+                        .iter()
+                        .zip(self.p.as_slice())
+                        .map(|(a, b)| *a - *b),
+                );
                 defect <= tol
             }
             Err(_) => false,
@@ -195,14 +190,8 @@ where
         match (pq, qp) {
             (Ok(a), Ok(b)) => {
                 let tol = Self::default_tolerance();
-                let defect = a
-                    .as_slice()
-                    .iter()
-                    .zip(b.as_slice())
-                    .map(|(x, y)| {
-                        ((x.re - y.re) * (x.re - y.re) + (x.im - y.im) * (x.im - y.im)).sqrt()
-                    })
-                    .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+                let defect =
+                    max_modulus(a.as_slice().iter().zip(b.as_slice()).map(|(x, y)| *x - *y));
                 defect <= tol
             }
             _ => false,

@@ -20,6 +20,8 @@ mod integer_tests;
 #[cfg(test)]
 mod kernels_tests;
 #[cfg(test)]
+mod norms_scaled_tests;
+#[cfg(test)]
 mod norms_tests;
 #[cfg(test)]
 mod ported_cg_tests;

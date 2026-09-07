@@ -20,7 +20,7 @@
 use crate::QuantumError;
 use crate::types::decision::{Check, CheckItem, CheckReport};
 use crate::types::qgates::operator_linalg::{
-    hermiticity_defect, identity_matrix, partial_trace, square_dim,
+    hermiticity_defect, identity_matrix, max_modulus, partial_trace, square_dim,
 };
 use alloc::format;
 use alloc::vec;
@@ -367,16 +367,13 @@ where
     }
     let tr_out = partial_trace(choi, &[d_in, d_out], &[1])?;
     let id = identity_matrix::<R>(d_in);
-    Ok(tr_out
-        .as_slice()
-        .iter()
-        .zip(id.as_slice())
-        .map(|(a, b)| {
-            let dr = a.re - b.re;
-            let di = a.im - b.im;
-            (dr * dr + di * di).sqrt()
-        })
-        .fold(R::zero(), |acc, x| if x > acc { x } else { acc }))
+    Ok(max_modulus(
+        tr_out
+            .as_slice()
+            .iter()
+            .zip(id.as_slice())
+            .map(|(a, b)| *a - *b),
+    ))
 }
 
 /// Trace-preservation check: `E` is TP iff `Tr_out(J) = I_in`, computed with

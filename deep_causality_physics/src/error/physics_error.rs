@@ -134,6 +134,27 @@ impl From<deep_causality_metric::MetricError> for PhysicsError {
     }
 }
 
+impl From<deep_causality_linear::LinearError> for PhysicsError {
+    /// Maps a linear-algebra refusal onto this crate's error.
+    ///
+    /// `PhysicsError` has no shape vocabulary of its own, so a mismatched shape or a bad index
+    /// reads as `DimensionMismatch` and everything else — a singular system, a vanishing pivot —
+    /// as `NumericalInstability`, which is what those are from a kernel's point of view.
+    fn from(error: deep_causality_linear::LinearError) -> Self {
+        use deep_causality_linear::LinearErrorEnum;
+        let message = format!("{error}");
+        match error.kind() {
+            LinearErrorEnum::IndexOutOfBounds { .. }
+            | LinearErrorEnum::ShapeMismatch { .. }
+            | LinearErrorEnum::InnerDimensionMismatch { .. }
+            | LinearErrorEnum::LengthMismatch { .. }
+            | LinearErrorEnum::NotSquare { .. }
+            | LinearErrorEnum::EmptyMatrix => Self::DimensionMismatch(message),
+            _ => Self::NumericalInstability(message),
+        }
+    }
+}
+
 impl From<deep_causality_stats::StatsError> for PhysicsError {
     fn from(error: deep_causality_stats::StatsError) -> Self {
         use deep_causality_stats::StatsErrorEnum;

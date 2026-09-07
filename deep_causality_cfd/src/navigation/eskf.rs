@@ -27,6 +27,18 @@ use deep_causality_physics::PhysicsError;
 pub const NAV_STATES: usize = 17;
 
 // ── small fixed-size dense linear algebra (generic over the square size, clippy-clean) ────────────
+//
+// **Kept, and measured rather than assumed** (unified-math-next task 6.9). These duplicate
+// `deep_causality_linear`'s dense matrix operations, and the crate is the right home for linear
+// algebra in general — but not at this size. At `M = 17`, `DenseMatrix`'s multiply measured
+// **4.3× slower** than the stack-allocated form below: 2416 ns/op against 561 ns/op over 200 000
+// repetitions on an M3 Max. The gap is the same with the operands pre-built, so it is not
+// construction cost; and the crate's `Mul` takes `self` by value, so a filter loop would have to
+// clone both operands every step on top of that.
+//
+// `predict` calls `mat_mul` twice and `update` twice more, per step, per filter. The stage's rule
+// is that a performance-sensitive replacement is measured and a regression reverts it, so these
+// stay. Revisit if `DenseMatrix` gains a small-matrix path or a borrowing multiply.
 
 fn mat_mul<R: RealField, const M: usize>(a: &[[R; M]; M], b: &[[R; M]; M]) -> [[R; M]; M] {
     core::array::from_fn(|i| {

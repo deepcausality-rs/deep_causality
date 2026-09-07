@@ -149,22 +149,15 @@ where
 
         let is_writer = |idx: usize| state_writers.contains(&idx);
 
-        // The ancestor cone of `start`, inclusive.
+        // The ancestor cone of `start`, inclusive. One of three pre-passes that open-coded this
+        // traversal; they now share `reachable_mask`.
         let cone = |start: usize| -> Vec<bool> {
-            let mut seen = vec![false; n_nodes];
-            seen[start] = true;
-            let mut stack = vec![start];
-            while let Some(node) = stack.pop() {
-                if let Ok(parents) = self.get_graph().inbound_edges(node) {
-                    for p in parents {
-                        if !seen[p] {
-                            seen[p] = true;
-                            stack.push(p);
-                        }
-                    }
-                }
-            }
-            seen
+            crate::traits::causable_graph::reachable_mask(
+                self.get_graph(),
+                start,
+                n_nodes,
+                crate::traits::causable_graph::Reach::Ancestors,
+            )
         };
 
         for join in 0..n_nodes {

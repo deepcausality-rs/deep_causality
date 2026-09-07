@@ -267,6 +267,12 @@ fn columns_of<T: RealField>(t: &CausalTensor<T>, n: usize, p: usize) -> Vec<Vec<
 }
 
 /// Builds the `n` parent feature rows from the chosen continuous columns.
+///
+/// **Kept out of `deep_causality_linear`** (unified-math-next task 6.10), and a verbatim duplicate
+/// of `brcd_algo.rs`'s function of the same name. The name says transpose, but this selects a
+/// subset of columns and gathers them into rows — an index projection with no arithmetic, and its
+/// `transpose_int` sibling does the same over `usize`. There is no linear algebra here to move; the
+/// duplication is real and de-duplicates *within* `algorithms`.
 fn transpose<T: RealField>(columns: &[Vec<T>], idxs: &[usize], n: usize) -> Vec<Vec<T>> {
     if idxs.is_empty() {
         return Vec::new();

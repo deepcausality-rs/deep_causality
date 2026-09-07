@@ -119,3 +119,14 @@ fn test_the_matrix_one_and_inf_norms_of_large_entries_are_finite() {
     assert_eq!(matrix_norm_l1(&m).unwrap(), 1e308);
     assert_eq!(matrix_norm_inf(&m).unwrap(), 1e308);
 }
+
+#[test]
+fn test_the_modulus_of_a_real_is_its_absolute_value() {
+    // Pins the bridge the scaled Euclidean norm is written against: for a real scalar `modulus` is
+    // `abs`, exact at every magnitude, which is why the scaled form's ratio cannot overflow.
+    assert_eq!(deep_causality_algebra::Normed::modulus(&-3.5f64), 3.5);
+    assert_eq!(
+        deep_causality_algebra::Normed::modulus(&f64::MIN_POSITIVE),
+        f64::MIN_POSITIVE
+    );
+}

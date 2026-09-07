@@ -8,9 +8,7 @@ rust_library(
         "src/**",
     ]),
     aliases = aliases(),
-    # The Bazel build enables the emergent `qpu` seam so the whole crate is
-    # compiled and tested; the default *cargo* build stays verifiable-only
-    # (`default = []`), which is the modality guarantee the spec states.
+    # Sets the qpu feature. Howver, optional deps have to decalred under all_crate_deps below
     crate_features = [
         "qcm",
         "qpu",
@@ -21,26 +19,8 @@ rust_library(
         "quantum",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        # NOT all_crate_deps: this crate's Cargo `default` set is empty, and all_crate_deps
-        # resolves optional dependencies against the DEFAULT features. `qcm` and `qpu` (enabled
-        # in crate_features above) gate `deep_causality` and `deep_causality_uncertain`, which
-        # all_crate_deps then declares as edges without emitting `--extern` for them, so the
-        # crate fails to compile. Re-listing them alongside all_crate_deps is rejected as a
-        # duplicate label, so the full list is written out here.
-        "//deep_causality",
-        "//deep_causality_core",
-        "//deep_causality_unified_math/deep_causality_algebra",
-        "//deep_causality_unified_math/deep_causality_haft",
-        "//deep_causality_unified_math/deep_causality_homology",
-        "//deep_causality_unified_math/deep_causality_linear",
-        "//deep_causality_unified_math/deep_causality_metric",
-        "//deep_causality_unified_math/deep_causality_multivector",
-        "//deep_causality_unified_math/deep_causality_num",
-        "//deep_causality_unified_math/deep_causality_num_complex",
-        "//deep_causality_unified_math/deep_causality_num_rational",
-        "//deep_causality_unified_math/deep_causality_stats",
-        "//deep_causality_unified_math/deep_causality_tensor",
+    deps = all_crate_deps(normal = True) + [
+        # enables `deep_causality_quantum/qpu`
         "//deep_causality_unified_math/deep_causality_uncertain",
     ],
 )

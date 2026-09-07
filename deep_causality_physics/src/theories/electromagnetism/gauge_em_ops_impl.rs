@@ -306,6 +306,11 @@ where
 }
 
 /// Computes the dot product of two 3D vectors
+/// **Kept** (unified-math-next task 6.10). This looks like a duplicate of
+/// `deep_causality_linear`'s inner product, and it is not: the operands are
+/// `CausalMultiVector`s, so this is geometric algebra rather than matrix algebra. Its home, if it
+/// ever moves, is `deep_causality_multivector` — which sits *above* `linear`, so moving it down
+/// would invert the dependency.
 fn dot_product_3d<S>(a: &CausalMultiVector<S>, b: &CausalMultiVector<S>) -> S
 where
     S: RealField + Clone + From<f64> + Default,
@@ -325,6 +330,8 @@ where
 }
 
 /// Computes the cross product of two 3D vectors
+/// **Kept**, for the reason given on [`dot_product_3d`]: the operands are multivectors, and the
+/// cross product is the Hodge dual of their wedge rather than a matrix operation.
 fn cross_product_3d<S>(
     a: &CausalMultiVector<S>,
     b: &CausalMultiVector<S>,

@@ -6,7 +6,6 @@ use crate::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
-use deep_causality_linear::CsrMatrix;
 use deep_causality_multivector::MultiVector;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
@@ -106,8 +105,25 @@ where
 /// *   `b_manifold` - Manifold containing the magnetic flux 2-form $B$.
 ///
 /// # Returns
-/// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change of B (2-form), i.e., $-\partial_t B$.
-///     Wait, the equation is $\partial_t B = \dots$. The function returns $\partial_t B$.
+/// *   `Result<CausalTensor<R>, PhysicsError>` — the rate of change of `B`, a 2-form.
+///
+/// # Domain, and the Hodge-star convention this needs
+///
+/// **Three dimensions only.** The chain applies `hodge_star_operators()[2]` twice: once as `⋆` on
+/// 2-forms and once as `⋆` on `(n−1)`-forms. Those are the same operator exactly when `2 = n − 1`.
+/// In 2D the second application would need `⋆` on 1-forms, so the identity above does not close.
+///
+/// **The operators must be degree-changing.** This kernel needs `⋆₂ : Λ² → Λ¹`, shape `(n₁, n₂)`,
+/// and `d₁ : Λ¹ → Λ²`, shape `(n₂, n₁)`. `deep_causality_topology` ships the *diagonal* lumped-mass
+/// star instead — `⋆_k : Cᵏ(primal) → D^(n−k)(dual)`, shape `(n_k, n_k)` — which is the standard DEC
+/// operator and the one the sibling `grmhd` kernel uses correctly. The two are related by a
+/// transport step, `⋆̃_k = transport_(dual→primal) ∘ ⋆_k`, which this kernel does not perform.
+///
+/// The shapes are therefore checked up front rather than assumed. Against a complex built from real
+/// geometry the check refuses, and that refusal is correct: the operator supplied is not the one
+/// this formulation needs. Reformulating it onto the crate's discrete interior product —
+/// `Manifold::interior_product`, which implements the same star–wedge identity *with* the transport
+/// — is tracked separately.
 pub fn ideal_induction_kernel<R>(
     v_manifold: &SimplicialManifold<R, R>,
     b_manifold: &SimplicialManifold<R, R>,
@@ -119,11 +135,17 @@ where
     let complex = v_manifold.complex();
     let skeletons = complex.skeletons();
 
-    // Need at least 0, 1, 2 skeletons
-    if skeletons.len() < 3 {
-        return Err(PhysicsError::DimensionMismatch(
-            "Manifold must be at least 2D (preferably 3D) for induction".into(),
-        ));
+    // Three dimensions, not "at least two". The identity `i_v B = ⋆(v ∧ ⋆B)` closes only when the
+    // two stars are the same operator, which needs `2 = n − 1`. The previous bound admitted 2D
+    // complexes whose algebra this chain cannot serve.
+    if skeletons.len() < 4 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "ideal induction needs a 3D complex: the identity i_v B = *(v ^ *B) applies * on \
+             2-forms and on (n-1)-forms as one operator, which holds only at n = 3. This complex \
+             has {} skeletons, so it is {}-dimensional",
+            skeletons.len(),
+            skeletons.len().saturating_sub(1)
+        )));
     }
 
     let n0 = skeletons[0].simplices().len();
@@ -170,7 +192,17 @@ where
         ));
     }
     let h_star_2 = &hodge_ops[2];
-    let star_b_data = apply_csr_real(h_star_2, b_slice);
+    // `⋆₂ : Λ² → Λ¹` has shape `(n1, n2)`. The crate's diagonal star is `(n2, n2)`; checking here
+    // names the mismatch instead of letting it surface three steps later as a length error.
+    if h_star_2.shape() != (n1, n2) {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "ideal induction needs a degree-changing Hodge star on 2-forms, shape ({n1}, {n2}) \
+             mapping 2-forms to 1-forms; hodge_star_operators()[2] has shape {:?}. The diagonal \
+             lumped-mass star this crate builds is ({n2}, {n2}) and preserves degree",
+            h_star_2.shape()
+        )));
+    }
+    let star_b_data = h_star_2.vec_mult(b_slice)?;
 
     // 4. Compute Wedge Product: v ^ star_b
     // v: 1-form, star_b: 1-form -> Result: 2-form
@@ -178,7 +210,7 @@ where
 
     // 5. Compute Interior Product proxy: iv_b = star(v ^ star_b)
     // wedge_data is 2-form. star maps to 1-form.
-    let iv_b_data = apply_csr_real(h_star_2, &wedge_data);
+    let iv_b_data = h_star_2.vec_mult(&wedge_data)?;
 
     // 6. Compute Exterior Derivative: d(iv_b)
     // iv_b is 1-form. d maps to 2-form.
@@ -189,7 +221,15 @@ where
         ));
     }
     let d_1 = &complex.coboundary_operators()[1];
-    let dt_b_neg_data = apply_csr_i8(d_1, &iv_b_data);
+    // `d₁ : Λ¹ → Λ²` has shape `(n2, n1)`.
+    if d_1.shape() != (n2, n1) {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "ideal induction needs the coboundary on 1-forms with shape ({n2}, {n1}); \
+             coboundary_operators()[1] has shape {:?}",
+            d_1.shape()
+        )));
+    }
+    let dt_b_neg_data = d_1.vec_mult_real(&iv_b_data)?;
 
     // 7. Result
     // Returns the 2-form part of the change.
@@ -198,65 +238,6 @@ where
 }
 
 // --- Helper Functions ---
-
-/// Multiplies a CsrMatrix<R> (Hodge star operator carrying manifold scalars) by a dense
-/// vector &[R].
-fn apply_csr_real<R: RealField>(matrix: &CsrMatrix<R>, vector: &[R]) -> Vec<R> {
-    let (rows, _cols) = matrix.shape();
-    let mut result = vec![R::zero(); rows];
-
-    let row_indices = matrix.row_indices();
-    let col_indices = matrix.col_indices();
-    let values = matrix.values();
-
-    for i in 0..rows {
-        let start = row_indices[i];
-        let end = row_indices[i + 1];
-        let mut sum = R::zero();
-        for idx in start..end {
-            let col = col_indices[idx];
-            let val = values[idx];
-            if col < vector.len() {
-                sum += val * vector[col];
-            }
-        }
-        result[i] = sum;
-    }
-    result
-}
-
-/// Multiplies a CsrMatrix<i8> (pure ±1 orientation signs from coboundary/boundary
-/// operators on a simplicial complex) by a dense vector &[R].
-///
-/// The coboundary operators are intrinsically integer: their entries are only the
-/// orientation signs of how (k-1)-simplices bound k-simplices in the complex. They
-/// carry no measurement and never need a higher numeric type than i8, so we keep
-/// them stored as `CsrMatrix<i8>` and lift the sign into R only at the
-/// multiplication site.
-fn apply_csr_i8<R: RealField + FromPrimitive>(matrix: &CsrMatrix<i8>, vector: &[R]) -> Vec<R> {
-    let (rows, _cols) = matrix.shape();
-    let mut result = vec![R::zero(); rows];
-
-    let row_indices = matrix.row_indices();
-    let col_indices = matrix.col_indices();
-    let values = matrix.values();
-
-    for i in 0..rows {
-        let start = row_indices[i];
-        let end = row_indices[i + 1];
-        let mut sum = R::zero();
-        for idx in start..end {
-            let col = col_indices[idx];
-            let val_i8 = values[idx];
-            if col < vector.len() {
-                let val = R::from_f64(val_i8 as f64).expect("R::from_f64(i8) failed");
-                sum += val * vector[col];
-            }
-        }
-        result[i] = sum;
-    }
-    result
-}
 
 /// Computes the Wedge Product of two 1-forms on a Simplicial Complex.
 /// Result is a 2-form.
@@ -280,6 +261,20 @@ where
     }
     let edges = skeletons[1].simplices();
     let faces = skeletons[2].simplices();
+
+    // Both operands are 1-forms, so both are indexed by edge. Checked rather than defaulted: the
+    // body below reads `alpha` and `beta` at edge indices, and reading a short slice with
+    // `.get(i).unwrap_or(&zero)` would turn a wrong-length operand into a plausible answer with
+    // some terms silently dropped. That is how the degree mismatch above stayed invisible.
+    if alpha.len() != edges.len() || beta.len() != edges.len() {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "wedge of two 1-forms: both operands are indexed by edge, so both must have length \
+             {}; got {} and {}",
+            edges.len(),
+            alpha.len(),
+            beta.len()
+        )));
+    }
 
     // Build Edge Lookup Map: (min(u,v), max(u,v)) -> edge_index
     let mut edge_map = HashMap::with_capacity(edges.len());
@@ -307,10 +302,12 @@ where
         let e12_idx = edge_map.get(&(v1, v2));
 
         if let (Some(&idx01), Some(&idx12)) = (e01_idx, e12_idx) {
-            let val_alpha_01 = *alpha.get(idx01).unwrap_or(&zero);
-            let val_beta_12 = *beta.get(idx12).unwrap_or(&zero);
-            let val_beta_01 = *beta.get(idx01).unwrap_or(&zero);
-            let val_alpha_12 = *alpha.get(idx12).unwrap_or(&zero);
+            // Direct indexing: `edge_map` only ever holds indices below `edges.len()`, and both
+            // operands were checked against that length above.
+            let val_alpha_01 = alpha[idx01];
+            let val_beta_12 = beta[idx12];
+            let val_beta_01 = beta[idx01];
+            let val_alpha_12 = alpha[idx12];
 
             // \alpha \wedge \beta = \alpha \cup \beta - \beta \cup \alpha
             let term1 = val_alpha_01 * val_beta_12;

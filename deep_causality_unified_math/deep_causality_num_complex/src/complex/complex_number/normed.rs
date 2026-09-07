@@ -29,6 +29,28 @@ impl<T: RealField> Normed for Complex<T> {
     #[inline]
     fn modulus(&self) -> T {
         let (a, b) = (self.re.abs(), self.im.abs());
+        // The non-finite components are decided before the ordering and before the ratio, because
+        // the scaled form gets both wrong if they reach it.
+        //
+        // A `NaN` cannot be ranked: `NaN > 0` is false, so a `NaN` beside a zero would be sorted
+        // into `min` and the zero-maximum guard below would return a finite **zero** — swallowing
+        // it. That is worse than an unhelpful number, because a residual compared against a
+        // tolerance would then report no defect at all.
+        //
+        // Two infinities give `∞/∞` for the ratio, so a modulus that is genuinely infinite would
+        // come back `NaN`.
+        //
+        // Both answers here agree with what `modulus_squared` gives, which is the property that
+        // keeps the two members of this trait consistent.
+        if a.is_nan() || b.is_nan() {
+            return T::nan();
+        }
+        if a.is_infinite() {
+            return a;
+        }
+        if b.is_infinite() {
+            return b;
+        }
         let (max, min) = if a > b { (a, b) } else { (b, a) };
         if max == T::zero() {
             return T::zero();

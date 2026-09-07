@@ -350,3 +350,50 @@ impl<T> Default for CsrMatrix<T> {
         }
     }
 }
+
+impl CsrMatrix<i8> {
+    /// The matrix–vector product of a sign matrix with a vector of reals.
+    ///
+    /// The mixed-scalar case: a `CsrMatrix<i8>` whose entries are orientation signs, against a
+    /// vector carrying measurements. Discrete exterior calculus produces exactly this shape — a
+    /// coboundary operator records only how a `(k−1)`-simplex bounds a `k`-simplex, so its entries
+    /// are `±1` and never need a wider type, and keeping them in `i8` is a memory-locality decision
+    /// rather than a numerical one. The sign is lifted into `R` at the multiplication, which is the
+    /// last moment it can be.
+    ///
+    /// Separate from [`vec_mult`](Self::vec_mult) because that one is homogeneous: it needs
+    /// `T: CommutativeSemiring` and returns `Vec<T>`, and there is no `i8` answer to a product with
+    /// a vector of `R`.
+    ///
+    /// # Errors
+    ///
+    /// [`LinearError::LengthMismatch`] if the vector's length is not the column count. The callers
+    /// this was lifted from dropped such a term instead, which turns a shape error into a plausible
+    /// wrong answer.
+    ///
+    /// [`LinearError::Overflow`] if a stored sign is not representable in `R`. No real scalar in
+    /// this workspace reaches that — every one of them holds the whole `i8` range — and the
+    /// alternative was a new `LinearErrorEnum` variant, which is a breaking change to a public enum
+    /// that is not `#[non_exhaustive]`. An existing variant meaning "a value did not fit" is the
+    /// better trade for a branch nothing can take. The code it replaces panicked here.
+    pub fn vec_mult_real<R>(&self, vector: &[R]) -> Result<Vec<R>, LinearError>
+    where
+        R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
+    {
+        let (r, c) = self.shape;
+        if vector.len() != c {
+            return Err(LinearError::LengthMismatch(c, vector.len()));
+        }
+        let mut out = Vec::with_capacity(r);
+        for i in 0..r {
+            let mut acc = R::zero();
+            for k in self.row_indices[i]..self.row_indices[i + 1] {
+                let sign = R::from_i8(self.values[k])
+                    .ok_or_else(|| LinearError::Overflow("CsrMatrix::<i8>::vec_mult_real"))?;
+                acc += sign * vector[self.col_indices[k]];
+            }
+            out.push(acc);
+        }
+        Ok(out)
+    }
+}

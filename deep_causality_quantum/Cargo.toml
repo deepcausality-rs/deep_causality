@@ -79,7 +79,6 @@ workspace = true
 
 [dependencies.deep_causality_stats]
 workspace = true
-features = ["std"]
 
 [dependencies.deep_causality_tensor]
 workspace = true

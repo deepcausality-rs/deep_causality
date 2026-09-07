@@ -17,4 +17,6 @@ mod monad_matrix_state_tests;
 #[cfg(test)]
 mod operator_linalg_tests;
 #[cfg(test)]
+mod operator_residual_tests;
+#[cfg(test)]
 mod wrappers_tests;

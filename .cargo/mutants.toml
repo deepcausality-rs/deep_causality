@@ -67,6 +67,44 @@ exclude_re = [
     "replace > with >= in log_add_exp",
     "replace > with >= in fit_logistic",
 
+    # `Complex`'s scaled modulus orders its two components with `if a > b { (a, b) } else { (b, a) }`
+    # before dividing the smaller by the larger. Same argument: on a tie the two branches select
+    # different *branches* and produce the same *pair*, since `a == b` makes `(a, b)` and `(b, a)`
+    # the same value. The ratio, and therefore the modulus, is identical either way.
+    "replace > with >= in <impl Normed for Complex<T>>::modulus",
+
+    # `max_modulus`'s reduction, `if m > acc { m } else { acc }`. Same argument as `log_sum_exp`'s
+    # max scan above: what is written is the maximum itself and never its index, so on a tie the
+    # value the mutant selects equals the one it replaces.
+    "replace > with >= in max_modulus",
+
+    # Two guards in `ideal_induction_kernel`'s private wedge helper that no caller can reach.
+    # `wedge_product_1form_1form` is private, and its only caller validates first: the kernel
+    # requires a 3D complex, so `skeletons.len() >= 4` where the helper's own check reads `< 3`,
+    # and it checks the operator shapes, so both operands are length `n1` by construction before
+    # the helper's length check runs. Both branches are defensive and unreachable from outside,
+    # which is why no test can kill a mutant in them. The guards stay: the helper is private today
+    # and its precondition is a property of one call site rather than of the function.
+    "replace < with == in wedge_product_1form_1form",
+    "replace < with <= in wedge_product_1form_1form",
+    "replace .. with && in wedge_product_1form_1form",
+
+    # Two guards in `ideal_induction_kernel`'s private wedge helper that no caller can reach.
+    # `wedge_product_1form_1form` is private and its only caller validates first: the kernel
+    # requires a 3D complex (so `skeletons.len() >= 4` when the helper's own check reads `< 3`),
+    # and it checks the operator shapes, so both operands are length `n1` by construction before
+    # the helper's length check runs. Both branches are defensive and unreachable from outside,
+    # which is why no test can kill a mutant in them. The guards stay: the helper is private today
+    # and its precondition is a property of one call site rather than of the function.
+    "replace < with == in wedge_product_1form_1form",
+    "replace < with <= in wedge_product_1form_1form",
+    "replace \\|\\| with && in wedge_product_1form_1form",
+
+    # `CsrMatrix::zero()` versus `Default::default()`. `Zero::zero` returns `CsrMatrix::new()`,
+    # and `Default::default()` builds the same struct field for field -- three empty vectors and
+    # the shape `(0, 0)`. The two are the same value, so no test can separate them.
+    "replace <impl Zero for CsrMatrix<T>>::zero -> Self with Default::default",
+
     # `EntropyConfig::bits()` versus `Default::default()`. The default IS bits, SkipZero and
     # Normalisation::None — stated on the type and asserted in `entropy_config_tests` — so the
     # constructor and the derive return the same value by construction. No test can separate them,

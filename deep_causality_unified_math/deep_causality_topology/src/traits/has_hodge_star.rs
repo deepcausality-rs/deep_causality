@@ -46,8 +46,21 @@ pub trait HasHodgeStar<R: RealField> {
 
     /// Return the Hodge ⋆ on grade-`k` forms as a sparse matrix.
     ///
-    /// Rows correspond to (n − k)-cells of `complex`; columns to k-cells. Diagonal
-    /// entries are the dual / primal cell-volume ratios.
+    /// **Square: `n_k × n_k`, indexed by k-cells on both axes.** The discrete ⋆ maps primal
+    /// k-cochains to *dual* `(n − k)`-cochains, and dual `(n − k)`-cells are in bijection with
+    /// primal k-cells — so the dual cochain is indexed by the primal k-cells it came from, and the
+    /// matrix is square and diagonal, with entries the dual / primal cell-volume ratios.
+    ///
+    /// An earlier version of this comment said "rows correspond to (n − k)-cells", which describes
+    /// a degree-*changing* operator of shape `n_{n−k} × n_k`. No implementor returns that, and the
+    /// same paragraph's claim that the entries are diagonal contradicts it, since a non-square
+    /// matrix has no diagonal in that sense. The error is invisible on a cubical lattice, where
+    /// `n_k = n_{D−k}` by binomial symmetry, and wrong on a simplicial complex, where it is not.
+    ///
+    /// A caller that wants a *primal* `(n − k)`-cochain needs `⋆` followed by a transport from the
+    /// dual cells back onto the primal ones — see `Manifold::interior_product`, which performs
+    /// exactly that step before feeding a primal wedge. That composite is a different operator from
+    /// this one and is not vended here.
     ///
     /// Cache-rich implementors return `Cow::Borrowed` (zero copy). Compute-on-demand
     /// implementors return `Cow::Owned`.
