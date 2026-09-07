@@ -5,176 +5,245 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## ADDED Requirements
 
-### Requirement: Migration begins only after the crate's own suite is green
+### Requirement: Migration follows the completed statistics crate gate
 
-No consumer SHALL be repointed at `deep_causality_stats` until the crate's own suite passes at the repository's coverage requirement.
+Consumer migration SHALL begin only after task 4.15 is complete. The recorded coverage exceptions in 4.16 SHALL remain explicit; the gate SHALL NOT be described as measured full coverage.
 
-Migrating call sites against an implementation that is still moving mixes two failure sources: a
-broken consumer and a broken library. Sequencing them makes a post-migration failure unambiguously a
-migration failure. This is the rule `linear-consumer-migration` already established for the linear
-crate, applied here for the same reason.
+#### Scenario: The prerequisite is satisfied
+- **WHEN** a consumer migration begins
+- **THEN** the stats suite has passed under Cargo and Bazel, with the coverage exceptions recorded
+- **AND** affected consumer tests establish a baseline before their implementation changes
 
-#### Scenario: Migration is gated
-- **WHEN** the first consumer call site is repointed
-- **THEN** the crate's own suite is already green at full coverage
+### Requirement: Cargo declares dependencies and rules-rs supplies them to Bazel
 
-#### Scenario: A post-migration failure is attributable
-- **WHEN** a consumer fails to build or its tests fail after migration
-- **THEN** the crate's suite is known to have been passing beforehand
+Each migrated consumer SHALL declare `deep_causality_stats` through the workspace Cargo dependency and select its required features explicitly. The workspace declaration disables default features.
 
-### Requirement: Each migrated call site keeps its existing numerical semantics
+Existing Bazel targets obtain Cargo dependencies through `all_crate_deps(...)` from `@crates//:defs.bzl`. Library targets use normal dependencies; example binaries also select normal development dependencies. Migration SHALL use this rules-rs mechanism rather than add duplicate explicit stats labels to targets. D7 prohibits a stats dependency in tensor.
 
-Every migrated call site SHALL select the parameters that reproduce its current behaviour, and any change in its result SHALL be recorded as a deliberate decision rather than absorbed as a side effect.
+#### Scenario: A consumer gains its first stats call
+- **WHEN** the dependency is added to the consumer's Cargo manifest and the repository's dependency resolution is refreshed as required
+- **THEN** the existing target macro supplies that dependency to Bazel
+- **AND** Cargo and Bazel both resolve the migrated call
 
-The three entropy implementations disagree on base, on normalisation and on zero policy. The
-parameterised replacement can reproduce any of them, so migration is a choice of parameters, not a
-convergence. A caller whose result changes is a caller whose behaviour changed, and that is a
-decision about that caller's mathematics — for physics, whose kernel is decided here to move
-from nats to bits — not something to be settled by whichever implementation was absorbed first.
+#### Scenario: Tensor remains independent
+- **WHEN** dependency declarations are checked
+- **THEN** tensor has no dependency on stats
 
-The physics change is the one deliberate result change in this stage. It alters a published kernel's
-value by a factor of `ln 2`, it brings all three call sites into agreement on what they compute, and
-it makes the name accurate. Its one internal caller is its own causal wrapper.
+### Requirement: Tests define migration behavior before implementation
 
-#### Scenario: SURD's results are unchanged
-- **WHEN** the SURD entropy and conditional entropy paths run after migration
-- **THEN** their outputs are identical to the pre-migration outputs on the existing test corpus
+Each library migration SHALL establish tests for its numerical contract, boundary cases and error mapping before replacing arithmetic. New shared APIs SHALL first have a declared surface with unimplemented bodies, followed by failing tests and a test review before implementation.
 
-#### Scenario: The CDL variant keeps its normalisation
-- **WHEN** the `Option`-carrying SURD variant runs after migration
-- **THEN** it still normalises by the sum of its present entries and still returns zero when that sum is below epsilon
+Expected numerical values SHALL come from closed forms, published results or independent calculations. Where no published result is used, calculated reference fixtures SHALL retain a reproducible Python derivation using appropriate precision. The migrated implementation SHALL NOT generate its own expected values.
 
-#### Scenario: A changed result is a recorded decision
-- **WHEN** any migrated call site produces a different value than before
-- **THEN** the change is recorded with the reason, and the caller's own tests are updated deliberately rather than to make a failure disappear
+#### Scenario: A numerical result changes
+- **WHEN** a migration changes an output
+- **THEN** the comparison records the old value, new value, independent reference and applicable tolerance
+- **AND** the result is classified as rounding drift or an intentional contract change
+- **AND** existing expected values are not replaced merely to make the migration pass
 
-#### Scenario: The physics kernel computes in bits after migration
-- **WHEN** the physics entropy kernel is migrated
-- **THEN** it computes in bits, so a uniform distribution on `n` outcomes yields `log2 n`
-- **AND** its name states its base, so the base is readable at the call site
-- **AND** its existing tests, which pin the nats result, are changed deliberately alongside it
+#### Scenario: Policy branches are tested
+- **WHEN** a library wrapper introduces error mapping, a threshold or a fallback
+- **THEN** tests exercise each applicable branch, including values on both sides of thresholds and at equality
+- **AND** targeted mutation testing checks meaningful arithmetic and policy branches after implementation
 
-### Requirement: The two SURD implementations converge on one code path
+### Requirement: SURD shares entropy arithmetic while preserving tensor and presence policies
 
-The `T` and `Option<T>` SURD paths SHALL share one entropy and one conditional-entropy implementation after migration, differing only in how they present their input.
+Both SURD paths SHALL delegate entropy arithmetic to stats in bits. Marginalization remains in algorithms. Conditional entropy may retain its existing subtraction of two delegated entropies; it need not repeat marginalization to call the slice-shaped stats `conditional_entropy`.
 
-The two files carry near-identical implementations of the same mathematics, differing in their
-element type. That duplication is the largest single block this stage retires, and leaving both
-pointed at the new crate without collapsing them would keep the divergence risk while adding a
-dependency.
+The plain path uses no additional normalization and skips zero probabilities. The optional path filters absent values, preserves its all-absent zero result, preserves the strict `sum.abs() < epsilon` mass check for valid probabilities, and includes only normalized probabilities strictly greater than epsilon. Stats' `BySum` check uses `sum <= floor`; passing epsilon as its floor without adaptation does not reproduce the caller's equality boundary.
 
-#### Scenario: One implementation serves both paths
-- **WHEN** the SURD sources are read after migration
-- **THEN** both paths reach the same entropy implementation, with the `Option` path supplying its presence policy as a parameter
+The four helper signatures SHALL carry the stats-required `FromPrimitive` bound. Algorithms SHALL map `StatsError` locally to `CausalTensorError`; it cannot implement a foreign `From` trait for two foreign error types. Tensor SHALL NOT gain a dependency to host a conversion.
 
-#### Scenario: The collapse preserves both behaviours
-- **WHEN** each path's existing tests run after the collapse
-- **THEN** both pass unchanged
+#### Scenario: Valid optional inputs preserve their policies
+- **WHEN** optional marginals contain absent entries, zero mass, or positive mass below, equal to and above epsilon
+- **THEN** presence filtering and the existing strict mass threshold are preserved
+- **AND** normalized entries below, equal to and above epsilon follow the existing strict inclusion threshold
 
-### Requirement: Absorbed duplicates are removed, not left in place
+#### Scenario: Invalid probabilities receive a mapped error
+- **WHEN** a marginal contains a negative or non-finite probability
+- **THEN** it produces a mapped error rather than silently dropping the invalid entry
+- **AND** this stricter validation is recorded separately from rounding drift
 
-Every call site the crate absorbs SHALL have its local implementation removed, and the stage SHALL NOT be complete while a superseded copy remains.
+#### Scenario: The existing corpus remains numerically consistent
+- **WHEN** SURD's existing corpus is evaluated after migration
+- **THEN** results agree within its established numerical tolerances
+- **AND** differences from per-term log2 versus a final division by ln(2) are recorded without requiring bit identity
 
-Adding a crate that nothing uses is worse than not adding it: the duplication survives and the
-workspace grows a dependency.
+#### Scenario: Public and helper empty cases are distinguished
+- **WHEN** empty-input tests are reviewed
+- **THEN** public driver rejection is distinguished from the optional helper's all-absent zero result
+- **AND** the latter remains zero without passing an empty slice to stats
 
-The absorbed set is bounded by D7, which keeps `tensor`'s own copies where they are. So it is: two of
-the three entropy implementations plus physics's, **three** of the four log-sum-exp copies (the
-fourth is `tensor`'s `CausalTensorStatsExt::logsumexp`), **two** of the three Gaussian log-density
-sites (the third is `tensor`'s), the two ridge forms, the logistic IRLS, Pearson, the descriptive
-statistics on slices, and the two binning routines.
+### Requirement: BRCD reductions preserve model-specific policies
 
-An earlier draft listed all four log-sum-exp and all three Gaussian sites and then required that "no
-second implementation remains", which D7 makes unsatisfiable. The carve-out is stated here rather
-than discovered at verification time.
+BRCD SHALL delegate its three log-sum-exp computations, two Gaussian log-density computations, slice mean and corrected variance to stats. Tensor's corresponding computations are excluded by D7.
 
-Where a call site's bound cannot be met by the new crate — the physics kernel carries a
-`MaybeParallel` bound the crate deliberately does not — the local wrapper stays and only its
-mathematics is delegated.
+Density calls SHALL pass variance, not standard deviation. BRCD's variance floor and fitted residual-variance floor of 1e-12 SHALL remain caller policies. Its empty mean of zero and variance of one for fewer than two observations SHALL remain explicit wrapper policies. Invalid-input error mappings SHALL be tested rather than replaced with unconditional unwraps.
 
-#### Scenario: No superseded copy survives outside tensor
-- **WHEN** the workspace is searched for the absorbed computations after migration
-- **THEN** each resolves to `deep_causality_stats`, except `tensor`'s log-sum-exp and Gaussian log-density, which D7 keeps
+#### Scenario: Degenerate regimes preserve the reference contract
+- **WHEN** a BRCD regime has zero or one observation at an existing sentinel-bearing call site
+- **THEN** its documented zero-mean and unit-variance fallbacks remain
+- **AND** the existing single-row unit-variance regression test continues to pass
 
-#### Scenario: The dense solve the absorbed fits depend on is given a home
-- **WHEN** the ridge fits and the logistic gate move to the crate
-- **THEN** `brcd_linalg`'s dense LU either moves with them or is recorded as retained, and the choice states whether the crate's solve is LU or Cholesky
-- **AND** the reason is recorded, because `brcd_linalg`'s own doc says partial pivoting rather than Cholesky is deliberate for parity with the reference's `numpy.linalg.solve`, and a Cholesky that floors a non-positive pivot drifts the rankings
+#### Scenario: Gaussian parameterization is preserved
+- **WHEN** a BRCD density is evaluated
+- **THEN** the model's variance-floor policy is applied before calling stats
+- **AND** a positive non-unit variance fixture detects accidental variance-to-standard-deviation conversion
 
-#### Scenario: A retained wrapper delegates its mathematics
-- **WHEN** a call site keeps a local wrapper for a bound the crate does not carry
-- **THEN** the wrapper contains no arithmetic of its own beyond the parallelism it exists for
+#### Scenario: Log-sum-exp edge cases remain covered
+- **WHEN** the three BRCD replacements run on ordinary, empty where applicable, and non-finite inputs
+- **THEN** tests establish compatibility with the shipped stats functions for each case
 
-#### Scenario: The dependency edges are added where needed
-- **WHEN** a consumer is migrated
-- **THEN** its manifest declares `deep_causality_stats` through the workspace table, and its Bazel target lists it
+### Requirement: BRCD fitting migration preserves objectives and resource behavior
 
-### Requirement: The examples migrate with the library crates
+Materialized ridge SHALL delegate to stats and retain a local prediction adapter where required. The shared solver is `deep_causality_linear::solve`, LU with partial pivoting. Model variance floors remain outside the shared fit.
 
-The eight hand-rolled statistics sites in `examples/` SHALL be migrated in this stage, and the stage SHALL NOT be complete while an example computes a statistic the crate provides.
+The shipped stats streaming entry collects its iterator into a vector. An adapter from BRCD's shared columns and row indices alone therefore does not preserve BRCD's streaming memory behavior. Streaming migration SHALL first provide a shared path that avoids retaining the full design, with the API and tests specified before implementation; until then the existing consumer path remains.
 
-The examples are where a reader learns what the workspace considers idiomatic, so a hand-rolled
-mean there teaches the opposite of what the crate is for. No earlier draft of this stage mentioned
-them, and the inventory in `notes/c2-site-inventory.md` lists them.
+BRCD logistic leaves the intercept unpenalized, whereas the shipped stats fit penalizes every coefficient. Its boolean labels, stopping rule and last-iterate return at the iteration cap also require explicit adaptation. Migration SHALL NOT substitute a different objective or silently change convergence behavior. Any shared API extension SHALL preserve the existing stats entry's contract and receive tests before implementation. Sigmoid can migrate independently.
 
-Two of the eight are the same file. `causal_correction_examples/src/math_utils.rs` and
-`causal_counterfactual_examples/src/math_utils.rs` are byte-identical, so one migration retires
-both, and the duplication itself is the argument.
+#### Scenario: Ridge retains numerical fidelity
+- **WHEN** materialized and streaming ridge are migrated
+- **THEN** independent non-diagonal pivoting fixtures verify coefficients, predictions and residual variance
+- **AND** BRCD reference-parity tests pass within their established tolerances
+- **AND** the streaming path does not retain a full materialized design
 
-Example code carries conventions library code does not: the per-example `FloatType` alias rather
-than a raw `f64`, and the lift utilities rather than a local conversion helper. A migration that
-introduces a raw float into an example has replaced one problem with another.
+#### Scenario: Logistic compatibility is a prerequisite
+- **WHEN** the BRCD logistic fit is delegated
+- **THEN** tests already pin its unpenalized intercept, label conversion, stopping criterion, iteration cap and singular-system behavior
+- **AND** the shared implementation reproduces those policies through an explicitly specified API
 
-#### Scenario: No example computes a statistic the crate provides
-- **WHEN** the example crates are searched after migration
-- **THEN** each of the eight sites resolves to `deep_causality_stats`
+#### Scenario: Remaining local solve users determine cleanup
+- **WHEN** a fit is migrated
+- **THEN** the remaining users of brcd_linalg are checked before removing its implementation
+- **AND** any retained module documentation accurately describes LU with partial pivoting
 
-#### Scenario: The identical pair is retired together
-- **WHEN** the two `math_utils.rs` files are compared
-- **THEN** neither retains a local `mean`
+### Requirement: mRMR delegates pairwise-complete Pearson in the working scalar
 
-#### Scenario: The example conventions survive the migration
-- **WHEN** a migrated example is read
-- **THEN** it names `FloatType` rather than a concrete float, and carries no local lift helper
-- **AND** its manifest and Bazel target declare the new dependency
+mRMR SHALL use `pearson_pairwise_complete` with the required `RealField + FromPrimitive` bounds. `Float` supplies arithmetic but does not imply the algebraic law bounds of `RealField`.
 
-### Requirement: A site the crate does not serve is kept with its reason recorded
+Pairwise deletion and the surviving-pair count SHALL remain. Zero variance SHALL continue to produce zero correlation. The perfect-correlation F-statistic sentinel is a separate policy and SHALL remain tested. Existing public f64 result boundaries SHALL remain unless separately redesigned; the precision claim applies to arithmetic before that conversion.
 
-A call site whose computation the crate does not provide SHALL be left in place with the reason recorded at the site, and SHALL NOT be counted as an unresolved duplicate.
+#### Scenario: Pearson delegates in the working scalar
+- **WHEN** mRMR evaluates two columns
+- **THEN** it uses stats' pairwise-complete Pearson in the caller's scalar
+- **AND** any conversion to the existing public f64 result occurs after that computation
 
-Two sites match a statistical name without matching a statistical function, and the completeness
-check has to distinguish them from work not yet done.
+### Requirement: Algorithm consumers use algebraic numeric bounds
 
-`deep_causality_quantum`'s `qpu/bridge.rs` computes a frequency-weighted mean and `n − 1` variance
-over `(outcome, count)` pairs, deliberately avoiding one sample per shot. A weighted mean is a
-different function from a slice mean, and this one is `f64` at both ends: the counts arrive as
-`usize` and the result feeds `Uncertain::normal(f64, f64)`. No other caller wants a weighted form,
-so adding one would breach the rule that the crate implements only functions with a caller.
+The mRMR selector, Pearson helper and F-statistic helper SHALL replace their legacy Float bounds with RealField + FromPrimitive. Discovery's MrmrFeatureSelector and both SurdCleaned CDL implementations SHALL remove the Float bounds inherited from mRMR; existing Precision bounds already supply the numeric requirements where present. Other algorithms SHALL be checked for explicit or indirect Float constraints, selecting Real for analytic operations without field division and RealField for real-field computations.
 
-`tensor`'s `CausalTensorStatsExt::conditional_variance` is a Schur complement over a covariance
-block with a ridge on the parent diagonal. It shares the word variance and nothing else.
+Float remains a low-level num capability. The existing FloatOption trait itself requires Float and cannot be retained as mRMR's input bound while claiming this migration is complete. A real-scalar presence adapter SHALL live in algebra, use Real for NaN detection, and support both scalar and Option inputs. It SHALL preserve None and treat both NaN and Some(NaN) as missing, while passing infinities through to the statistics validation. The existing num adapter remains available for compatibility; num SHALL NOT depend on algebra.
 
-#### Scenario: The kept sites are enumerated, not discovered
-- **WHEN** the completeness check of the previous requirement runs
-- **THEN** these two are listed as kept with their grounds, and neither counts against it
+#### Scenario: Optional input does not reintroduce Float
+- **WHEN** mRMR accepts plain or optional real scalars
+- **THEN** its numeric and presence-adapter bounds do not require Float
+- **AND** tests cover finite values, None, NaN, Some(NaN) and both infinities
 
-#### Scenario: The reason is readable at the site
-- **WHEN** either site is read after this stage
-- **THEN** a comment states why it is not the crate's function
+#### Scenario: The numeric abstraction is compile-checked
+- **WHEN** a generic caller is declared using RealField + FromPrimitive and the necessary nonnumeric container bounds only
+- **THEN** it can call mRMR without adding Float
+- **AND** discovery's selector and cleaned CDL entry points compile with their corresponding algebraic bounds
 
-### Requirement: Migration makes the previously f64-internal paths precision-generic
+#### Scenario: The algorithm sweep is complete
+- **WHEN** runtime sources in algorithms and the affected discovery call chain are checked
+- **THEN** no Float trait import or bound remains in that scope
+- **AND** enum variants such as parquet Field::Float are not mistaken for numeric trait usage
+- **AND** stale bound documentation is corrected against the implemented interfaces
 
-Call sites that computed in `f64` behind a generic signature SHALL compute in their caller's scalar after migration.
+#### Scenario: FloatOption has no remaining consumers
+- **WHEN** a post-migration workspace search finds no FloatOption consumers beyond its own definition, implementations, re-export and dedicated tests
+- **THEN** FloatOption and its dedicated support code are flagged for removal with their file locations and public API impact
+- **AND** speculative compatibility alone is not a reason to retain it
+- **AND** removal is reported for follow-up rather than performed by the usage check
 
-Two of the absorbed implementations take a generic parameter and compute internally in `f64`. That is
-the stack's precision thesis broken quietly: a caller working at `Float106` receives a result
-computed at half its precision, with nothing in the signature to say so. Migration to a
-scalar-generic crate fixes it as a consequence, and the suite pins the fix rather than assuming it.
+#### Scenario: Missing and degenerate columns retain their policies
+- **WHEN** columns contain missing pairs, too few valid pairs, constant values or perfect correlation
+- **THEN** each case exercises its corresponding existing policy or mapped stats error
+- **AND** constant columns are not confused with perfect correlation
 
-#### Scenario: A wide-precision caller gets wide-precision arithmetic
-- **WHEN** a migrated path is called at `Float106` on an input whose exact result is known
-- **THEN** the result carries `Float106` accuracy, materially better than the same computation at `f64`
+#### Scenario: Precision improves before the public conversion
+- **WHEN** Pearson is computed at Float106 on a fixture with an independently known result
+- **THEN** intermediate arithmetic retains Float106 accuracy
+- **AND** the test separately identifies the final public f64 conversion
 
-#### Scenario: The narrow paths are unchanged
-- **WHEN** a migrated path is called at `f64` after migration
-- **THEN** its result matches the pre-migration result to the precision in use
+#### Scenario: Changed numerical behavior is explicit
+- **WHEN** centered accumulation differs from the former raw-sums calculation or non-finite input is rejected
+- **THEN** tests and migration notes identify the difference and its reference result
+
+### Requirement: Discovery adopts the shared binning contract explicitly
+
+Discovery SHALL delegate equal-width and equal-frequency binning and migrate compatible mean imputation. Error conversion SHALL preserve useful preprocessing context.
+
+Shared binning rejects empty data, fewer than two bins, more bins than observations and non-finite entries. Existing discovery helpers already reject fewer than two bins and NaN; newly rejected cases include empty input, excess bins and infinities.
+
+Equal-frequency binning SHALL adopt stats' tied-block largest-share assignment, with ties between shares assigned to the lower bin. Its rank boundaries differ from discovery's rounded partition boundaries. Equal-width migration SHALL test rounding at boundaries and the change from an epsilon-based constant-range check to an exact check; value identity is not assumed.
+
+#### Scenario: Binning policy changes are visible
+- **WHEN** fixtures contain repeated values, an observation count not divisible by the bin count, near-constant ranges or values on bin edges
+- **THEN** expected assignments follow the shared contract
+- **AND** old and new assignments are recorded for changed fixtures
+
+#### Scenario: Invalid binning input maps to preprocessing errors
+- **WHEN** input is empty, contains NaN or infinity, or has an invalid bin count
+- **THEN** the appropriate preprocessing error is returned and tested
+
+#### Scenario: Mean imputation retains its missing-data policy
+- **WHEN** mean imputation is migrated
+- **THEN** extraction of valid observations and the all-missing-column policy are tested before delegation
+
+### Requirement: Physics entropy exposes bits in both public names
+
+The physics entropy kernel and causal wrapper SHALL be renamed to state bits and SHALL delegate to stats with `EntropyConfig::bits()`. Their bounds SHALL include `FromPrimitive`. Physics SHALL provide an appropriate `StatsError` conversion to its own error type.
+
+#### Scenario: The published unit is bits
+- **WHEN** a uniform distribution over four outcomes is evaluated through either public entry
+- **THEN** entropy is two bits
+- **AND** both names, callers and documentation identify bits
+- **AND** the public rename and unit change are recorded as breaking
+
+#### Scenario: Invalid probabilities are reported
+- **WHEN** input contains negative or non-finite probabilities
+- **THEN** physics returns the mapped error
+- **AND** changed validation behavior is documented and tested
+
+### Requirement: The inventory distinguishes compatible reductions from retained computations
+
+Every inventory entry SHALL identify its actual source, owning package, computation, migration disposition and verification. Totals SHALL be derived from entries using a stated counting unit, not from stale section headings.
+
+D7 retains all tensor statistics. Quantum's shot bridge retains its frequency-weighted reduction over usize outcomes and u64 counts without expanding one sample per shot. Candle tensor operations and lazy Uncertain expression reductions remain in their respective execution models. Population variance SHALL NOT be replaced by corrected variance.
+
+Uncertain's plain-slice `from_samples`, its other statistics helpers and discovery mean imputation SHALL receive explicit dispositions based on their actual implementations. A plain-slice helper cannot inherit the weighted bridge's exclusion merely because both return Uncertain. Any proposed uncertainty dependency change SHALL include its derived tier effects and its empty, singleton and non-finite policies before implementation.
+
+#### Scenario: Completeness is source-based
+- **WHEN** migration completeness is checked
+- **THEN** every inventory entry is migrated or explicitly retained with its mathematical or architectural reason
+- **AND** no superseded local arithmetic remains at migrated sites
+- **AND** retained implementations are not counted as unresolved duplicates
+
+### Requirement: Compatible examples migrate with the library consumers
+
+Compatible example reductions SHALL delegate to stats, including both separate math_utils files, DDoS, weather, Granger, CATE, ML score and chronometric sites. The population-variance standardizer SHALL have an explicit retained disposition unless a separately specified population API is added.
+
+Each owning Cargo package SHALL gain the dependency when needed. Existing scalar aliases and shared-helper types SHALL be respected. Example code SHALL use existing lift utilities rather than introduce conversion helpers.
+
+#### Scenario: Example edge conventions are explicit
+- **WHEN** a helper previously returned NaN for empty input or zero standard deviation for one observation
+- **THEN** its migration explicitly preserves that wrapper policy or records an approved interface change
+- **AND** it does not silently replace sample variance with population variance or vice versa
+
+#### Scenario: Examples are verified by execution
+- **WHEN** an example migration is complete
+- **THEN** the affected example runs under its supported build workflow
+- **AND** no unit-test modules are added to example binaries
+
+### Requirement: Group completion verifies consumers and dependency documentation
+
+Group completion SHALL require affected Cargo tests, workspace Bazel tests, formatting and lint checks, unused-dependency checks for changed consumers, affected example execution and reconciliation of dependency documentation.
+
+#### Scenario: The group closes
+- **WHEN** group 5 is marked complete
+- **THEN** `bazel test //...` passes and changed consumers have no unused stats dependency
+- **AND** the inventory, task list and spec agree on completed and retained sites
+- **AND** changed numerical results and any verification limitations are recorded
+- **AND** dependency tiers and documentation agree with the manifests
