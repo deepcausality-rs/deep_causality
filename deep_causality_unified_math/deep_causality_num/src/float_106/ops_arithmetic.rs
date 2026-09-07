@@ -34,6 +34,14 @@ impl Add for Float106 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
+        // A non-finite operand has no low word to correct, and the error-compensation terms below
+        // evaluate `inf - inf` on one: `two_sum` would return a correct high word beside a NaN
+        // low word, which `is_nan` (a high-word test) does not report and which contaminates
+        // every later operation. The high words alone give the IEEE answer. Same guard, and same
+        // reason, as `Div` below.
+        if !self.hi.is_finite() || !rhs.hi.is_finite() {
+            return Self::from_raw(self.hi + rhs.hi, 0.0);
+        }
         // Sloppy addition: O(1) algorithm with ~2^-104 relative error
         let (s1, s2) = two_sum(self.hi, rhs.hi);
         let t1 = self.lo + rhs.lo;
@@ -130,6 +138,11 @@ impl Mul for Float106 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
+        // See `Add`: `two_prod` on a non-finite operand produces a NaN low word beside a correct
+        // high word. The high words alone give the IEEE answer, `inf · 0 = NaN` included.
+        if !self.hi.is_finite() || !rhs.hi.is_finite() {
+            return Self::from_raw(self.hi * rhs.hi, 0.0);
+        }
         // C = A * B
         // p1, p2 = two_prod(a.hi, b.hi)
         let (p1, p2) = two_prod(self.hi, rhs.hi);

@@ -39,6 +39,12 @@ All four take the max shift, return the max when it is non-finite, and agree on 
 - `brcd_gaussian.rs:86` `fit_ridge` — normal equations, solved by `brcd_linalg`'s local
   `solve_linear`, not by `deep_causality_linear`. This is what justifies the `linear` dependency:
   the migration is a substitution, not a re-export.
+
+  **Held to, after first being missed.** The crate's own ridge shipped with a local
+  `solve_symmetric` — the same defect one level up, and `cargo machete` caught it: the declared
+  `deep_causality_linear` dependency was unused, leaving the tier-4 SHALL unbacked. Both solve
+  sites, the ridge normal equations and the logistic Newton step, now call
+  `deep_causality_linear::solve`. Recorded under task 4.14b; not for group 6 to re-litigate.
 - `brcd_gaussian.rs:481` `fit_ridge_streaming`
 - `brcd_gate.rs:91` `fit_logistic_gate` (IRLS), `brcd_gate.rs:202` `sigmoid`
 

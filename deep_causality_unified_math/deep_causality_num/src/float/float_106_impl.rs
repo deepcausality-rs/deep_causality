@@ -31,17 +31,21 @@ impl Float for Float106 {
 
     #[inline]
     fn infinity() -> Self {
+        // The low word is a correction to the high word, and an infinity has none. Setting it to
+        // an infinity too makes the value unusable in arithmetic: the low lane then evaluates
+        // `inf - inf`, so `x - infinity()` is NaN in the low word and contaminates the result.
         Self {
             hi: f64::INFINITY,
-            lo: f64::INFINITY,
+            lo: 0.0,
         }
     }
 
     #[inline]
     fn neg_infinity() -> Self {
+        // See `infinity`: the low word carries no correction to an infinity
         Self {
             hi: f64::NEG_INFINITY,
-            lo: f64::NEG_INFINITY,
+            lo: 0.0,
         }
     }
 

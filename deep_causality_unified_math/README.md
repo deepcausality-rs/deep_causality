@@ -20,7 +20,7 @@ Two dependencies leave the folder, over four edges: `deep_causality_ast`, which 
 ```
 tier 6   topology
 tier 5   multivector
-tier 4   calculus   fft   homology   tensor
+tier 4   calculus   fft   homology   stats   tensor
 tier 3   linear   num_complex   num_dual   uncertain
 tier 2   haft   num_rational   rand
 tier 1   algebra
@@ -29,7 +29,7 @@ tier 0   num   metric
 
 ![Dependency graph of the deep_causality mathematics crates: seven tiers, from the roots num and
 metric at tier 0 up through algebra and haft, then linear algebra and the number types, then
-tensors, to topology at tier 6. The longest chain is highlighted.](graph.png)
+tensors and statistics, to topology at tier 6. The longest chain is highlighted.](graph.png)
 
 
 ## The math crates
@@ -49,6 +49,7 @@ tensors, to topology at tier 6. The longest chain is highlighted.](graph.png)
 | `deep_causality_calculus` | 4 | Arrow-native differentiation and integration operators |
 | `deep_causality_fft` | 4 | Fast Fourier transform: FFT, rFFT, N-dimensional |
 | `deep_causality_homology` | 4 | Chain complexes, boundary operators and homology over a chosen coefficient field. No geometry |
+| `deep_causality_stats` | 4 | Descriptive and information statistics over slices: entropy, log-sum-exp, moments, Pearson, ridge, logistic IRLS, Gaussian log-density, binning |
 | `deep_causality_tensor` | 4 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
 | `deep_causality_multivector` | 5 | Multivectors for geometric algebra. |
 | `deep_causality_topology` | 6 | Cell complexes, manifolds, discrete exterior calculus, gauge fields, differential geometry |

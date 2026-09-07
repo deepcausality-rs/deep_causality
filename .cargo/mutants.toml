@@ -50,6 +50,29 @@
 # real gap.
 
 exclude_re = [
+    # `if x < lo { lo = x }` and `if x > hi { hi = x }` versus `<=` / `>=` in the min and max scan
+    # of `bin_equal_width`, and `if q > last { last } else { q }` in its clamp. All three write a
+    # VALUE and never an index, so on a tie the branch a mutant takes stores the number the other
+    # branch would have stored. Same argument as the norm reductions above.
+    "replace < with <= in bin_equal_width",
+    "replace > with >= in bin_equal_width",
+
+    # `if x > acc { x } else { acc }` versus `>=` in a maximum reduction, and the two-argument
+    # `if a > b { (a, b) } else { (b, a) }` that orders a pair. On a tie the two branches do
+    # different things and produce the same VALUE, because what is written is the maximum itself
+    # and never its index: the value a tie overwrites equals the one it replaces. Applies to
+    # `log_sum_exp`'s max scan, `log_add_exp`'s ordering, and `fit_logistic`'s largest-step
+    # reduction. Same argument as `vector_norm_inf` above.
+    "replace > with >= in log_sum_exp",
+    "replace > with >= in log_add_exp",
+    "replace > with >= in fit_logistic",
+
+    # `EntropyConfig::bits()` versus `Default::default()`. The default IS bits, SkipZero and
+    # Normalisation::None — stated on the type and asserted in `entropy_config_tests` — so the
+    # constructor and the derive return the same value by construction. No test can separate them,
+    # and one that could would be asserting that the documented default is not the default.
+    "replace EntropyConfig<T>::bits -> Self with Default::default\\(\\)",
+
     # `if m > best { best = m }` versus `>=` in a maximum reduction. On a tie the two do different
     # things: `>` keeps the incumbent, `>=` overwrites it. They are the same function anyway,
     # because these three return the maximum VALUE and never its index, and the value a tie writes
