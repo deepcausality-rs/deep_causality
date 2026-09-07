@@ -81,7 +81,14 @@ tokio = { version = "1" }
 unsafe_code = "forbid"
 # `cfg(kani)` is set only by the Kani driver (`cargo kani`); register it so the
 # `#![cfg(kani)]`-gated proof harnesses do not trip the `unexpected_cfgs` lint.
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+# `cfg(feature, values(any()))` covers the Bazel build: cargo derives the legal
+# feature values from each `[features]` table on its own, but rules_rs forwards
+# only the list written here, so without this entry every `#[cfg(feature = ...)]`
+# in the workspace is an unexpected cfg under `bazel build`.
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(kani)',
+    'cfg(feature, values(any()))',
+] }
 
 # Optimize all crates
 [profile.release]

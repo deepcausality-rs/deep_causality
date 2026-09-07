@@ -10,8 +10,10 @@ rust_library(
     aliases = aliases(),
     # Sets the qpu feature. Howver, optional deps have to decalred under all_crate_deps below
     crate_features = [
+        "alloc",
         "qcm",
         "qpu",
+        "std",
     ],
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
@@ -29,8 +31,10 @@ rust_doc(
     name = "doc",
     crate = ":deep_causality_quantum",
     crate_features = [
+        "alloc",
         "qcm",
         "qpu",
+        "std",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -40,8 +44,10 @@ rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_quantum",
     crate_features = [
+        "alloc",
         "qcm",
         "qpu",
+        "std",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],

@@ -9,6 +9,9 @@ rust_library(
     ]),
     aliases = aliases(),
     crate_root = "src/lib.rs",
+    crate_features = [
+        "parallel",
+    ],
     lint_config = lint_config(),
     tags = [
         "data_structures",
@@ -20,6 +23,9 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_topology",
+    crate_features = [
+        "parallel",
+    ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -27,6 +33,9 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_topology",
+    crate_features = [
+        "parallel",
+    ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

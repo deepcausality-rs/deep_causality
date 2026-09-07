@@ -11,6 +11,7 @@ rust_library(
     ]),
     aliases = aliases(),
     crate_features = [
+        "parallel",
         "std",
     ],
     crate_root = "src/lib.rs",
@@ -26,6 +27,7 @@ rust_doc(
     name = "doc",
     crate = ":deep_causality_cfd",
     crate_features = [
+        "parallel",
         "std",
     ],
     tags = ["doc"],
@@ -36,6 +38,7 @@ rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_cfd",
     crate_features = [
+        "parallel",
         "std",
     ],
     tags = ["doc-test"],

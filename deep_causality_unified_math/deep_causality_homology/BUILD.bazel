@@ -9,6 +9,7 @@ rust_library(
     ]),
     aliases = aliases(),
     crate_features = [
+        "alloc",
         "std",
     ],
     crate_root = "src/lib.rs",
@@ -24,6 +25,10 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_homology",
+    crate_features = [
+        "alloc",
+        "std",
+    ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -31,6 +36,10 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_homology",
+    crate_features = [
+        "alloc",
+        "std",
+    ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

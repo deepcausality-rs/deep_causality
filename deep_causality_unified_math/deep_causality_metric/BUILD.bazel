@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_library", "rust_test_suite")
 
 rust_library(
     name = "deep_causality_metric",
@@ -6,8 +6,8 @@ rust_library(
         "src/**/*.rs",
     ]),
     crate_features = [
-        "std",
         "alloc",
+        "std",
     ],
     crate_root = "src/lib.rs",
     tags = [
@@ -22,8 +22,8 @@ rust_doc(
     name = "doc",
     crate = ":deep_causality_metric",
     crate_features = [
-        "std",
         "alloc",
+        "std",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -33,9 +33,54 @@ rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_metric",
     crate_features = [
-        "std",
         "alloc",
+        "std",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "conventions",
+    srcs = glob([
+        "tests/conventions/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_metric",
+    ],
+)
+
+rust_test_suite(
+    name = "errors",
+    srcs = glob([
+        "tests/errors/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_metric",
+    ],
+)
+
+rust_test_suite(
+    name = "types",
+    srcs = glob([
+        "tests/types/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_metric",
+    ],
 )

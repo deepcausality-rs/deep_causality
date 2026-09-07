@@ -9,8 +9,8 @@ rust_library(
     ]),
     aliases = aliases(),
     crate_features = [
-        "std",
         "alloc",
+        "std",
     ],  #
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
@@ -25,8 +25,8 @@ rust_doc(
     name = "doc",
     crate = ":deep_causality_core",
     crate_features = [
-        "std",
         "alloc",
+        "std",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -36,8 +36,8 @@ rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_core",
     crate_features = [
-        "std",
         "alloc",
+        "std",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],

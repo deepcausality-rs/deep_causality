@@ -10,7 +10,6 @@ rust_library(
     aliases = aliases(),
     crate_features = [
         "std",
-        "libm_math",
     ],  # List of features to enable
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
@@ -31,7 +30,6 @@ rust_doc(
     crate = ":deep_causality_num",
     crate_features = [
         "std",
-        "libm_math",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -42,7 +40,6 @@ rust_doc_test(
     crate = ":deep_causality_num",
     crate_features = [
         "std",
-        "libm_math",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
