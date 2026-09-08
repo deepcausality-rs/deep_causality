@@ -5,23 +5,6 @@
 # The workspace's crate list, read from the root Cargo.toml.
 #
 # ---------------------------------------------------------------------------------------------
-# Why this exists
-# ---------------------------------------------------------------------------------------------
-#
-# Four scripts used to carry the same list by hand: sbom.sh, miri.sh, check.sh and format.sh. By
-# the time this replaced them all four had drifted, and each was missing a *different* set:
-#
-#   sbom.sh    28 entries, missing deep_causality_linear, deep_causality_quantum
-#   miri.sh    27 entries, missing deep_causality_linear, _num_rational, _quantum
-#   check.sh   27 entries, missing deep_causality_linear, _num_rational, _quantum
-#   format.sh  28 entries, missing deep_causality_linear, _num_rational
-#
-# Nothing failed when a crate was missing — the loop simply skipped it. A crate could be added to
-# the workspace and go unformatted, unaudited, and shipped without an SBOM, and the only signal
-# was its absence from a list nobody reads. Cargo.toml is the one place a crate cannot be missing
-# from and still exist, so it is the one place to read.
-#
-# ---------------------------------------------------------------------------------------------
 # Usage
 # ---------------------------------------------------------------------------------------------
 #

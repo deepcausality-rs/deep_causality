@@ -238,6 +238,48 @@ exclude_re = [
 # as `NumericalInstability` rather than returning it. Both survive today, so the guard's boundary
 # is an open gap: closing it needs an input that lands the discriminant on zero, which is a test to
 # write and not a regex to add. Excluding it under the tolerance argument would have buried that.
+#
+# `read_sp3.rs:67:23: replace < with ==` and `replace < with <=` in `parse_orbit_data` — the SP3
+# loop's `if line.len() < 2 { continue; }`. The guard is a cheap early-out over a file whose blank
+# lines outnumber its records, not a correctness gate: every line it lets through on the mutant is
+# rejected again a few lines later. At length 0 neither `starts_with('*')` nor `starts_with('P')`
+# matches; at length 1, `"*"` reaches `parts.len() < 7` and `"P"` reaches `parts.len() < 2`; at
+# length 2, `"P "` and `"*a"` do the same, and `"PE"` takes the compact branch, where
+# `&parts[0][1..]` is `"E"` and fails the satellite comparison. The `else` branch cannot slice out
+# of bounds either, since it is only reached when `parts[0]` starts with `'P'` and is not `"P"`,
+# so it is at least two bytes.
+#
+# `read_sp3.rs:113:36: replace < with <=` — the position branch's `if parts.len() < 2`. The two
+# differ only at `parts.len() == 2` (`"P E14"`), where the original proceeds with
+# `coord_start_index = 2` and is stopped four lines on by `parts.len() < coord_start_index + 3`.
+# Skipped either way, nothing pushed.
+#
+# Measured rather than argued: `test_short_and_degenerate_lines_are_ignored` feeds every one of
+# those shapes — empty, `"*"`, `"P"`, `"P "`, `"PE"`, `"*a"`, and three truncated `P E14` records —
+# around two complete ones, and all three mutants still pass the suite with it in place.
+#
+# They are left in the report because no regex reaches them alone.
+# `replace < with <= in parse_orbit_data` also names `74:28` and `123:36`, and
+# `replace < with == in parse_orbit_data` also names `74:28`, `113:36` and `123:36`. Those are the
+# guards that do gate correctness — the epoch field count and the coordinate field count — and the
+# suite kills every one of them. Excluding three equivalent mutants would cost between two and
+# three working tripwires.
+#
+# `scoped_map.rs:56:20: replace <= with > in scoped_map` — reported MISSED by
+# `scripts/mutants.sh deep_causality_par` and CAUGHT by the same run with `--features parallel`.
+# It is a gap in neither. `cargo mutants` parses the source without evaluating `cfg`, and line 56
+# is the `if threads <= 1` early-out inside the crate's `#[cfg(feature = "parallel")]` arm. The
+# default-feature build never compiles that line, so mutating its text changes nothing and the
+# suite passes; the parallel build does compile it, and
+# `the_work_is_partitioned_into_one_chunk_per_core` fails on it, because inverting the guard
+# returns the inline map and collapses 4099 elements onto a single thread.
+#
+# It is left in the report because a mutant's description carries no configuration, so the
+# exclusion would take the parallel run's kill with it. The measurement is the pair of runs: the
+# crate has three mutants, and none survives a build that actually compiles it.
+#
+# Note that the script runs the default features. Mutation-testing the parallel arm needs
+# `cargo mutants -p deep_causality_par --features parallel`.
 
 # Two entries used to be in the array above and were exactly that mistake.
 # `replace \+ with \* in solve_least_squares` argued for one loop bound and excluded nine mutants,

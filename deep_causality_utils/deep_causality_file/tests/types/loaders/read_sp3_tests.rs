@@ -237,6 +237,33 @@ fn test_a_position_line_before_any_epoch_is_dropped() {
 }
 
 #[test]
+fn test_short_and_degenerate_lines_are_ignored() {
+    // The loop's two length guards. Every line here is shorter than a record or truncated in a
+    // way that leaves no coordinates, so each must be dropped without disturbing the two real
+    // records around them, and without indexing past the end of a split.
+    let f = write_sp3(&format!(
+        "\n\
+         *\n\
+         P\n\
+         P \n\
+         PE\n\
+         *a\n\
+         {EPOCH}\
+         P E14  1.0  2.0  3.0\n\
+         P E14\n\
+         P E14  4.0\n\
+         P E14  4.0  5.0\n\
+         PE14  7.0  8.0  9.0\n"
+    ));
+    let orbits = run(f.path(), "E14").unwrap();
+    // Only the two complete records survive: the standard form and the compact one.
+    assert_eq!(orbits.len(), 2);
+    assert_eq!(orbits[0].x_m(), 1000.0);
+    assert_eq!(orbits[1].x_m(), 7000.0);
+    assert_eq!(orbits[1].z_m(), 9000.0);
+}
+
+#[test]
 fn test_missing_file_is_io_error() {
     let err = run(Path::new("/no/such/path.sp3"), "E14").unwrap_err();
     assert!(format!("{err}").contains("I/O error"));
