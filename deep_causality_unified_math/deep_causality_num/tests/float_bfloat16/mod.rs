@@ -11,7 +11,7 @@
 //!
 //! # Where the expected values come from
 //!
-//! The suite follows `openspec/changes/unified-math-next/tdd/`. No expected value is produced by
+//! The suite follows `openspec/changes/archive/2026-09-08-unified-math-next/tdd/`. No expected value is produced by
 //! the code under test. Each bit pattern is derived by hand from the format — 8 significant bits,
 //! the binary32 exponent range, subnormals kept, round to nearest with ties to even — and the
 //! derivation stands in a comment beside the assertion. `bfloat16_tests.rs` also carries an

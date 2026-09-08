@@ -1,10 +1,8 @@
-<!--
-SPDX-License-Identifier: MIT
-Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
--->
+# unified-math-tdd-protocol Specification
 
-## ADDED Requirements
-
+## Purpose
+TBD - created by archiving change unified-math-next. Update Purpose after archive.
+## Requirements
 ### Requirement: Every stage runs the same five-phase cycle in order
 
 Each of the four stages SHALL pass through phases 1 to 5 in order, and SHALL NOT begin a phase before the previous phase's exit condition is met.
@@ -243,6 +241,15 @@ invisible to the primary gate. Both failures are silent — the suite appears to
 inside `tests/` builds under Cargo and fails under Bazel, which cannot reach it; placed under `src`
 it is library code, so the coverage requirement applies and it needs its own tests.
 
+**An in-src `#[cfg(test)]` module is the third way to be invisible, and it is not a directory**, so
+declaring test directories does not cover it. Such a module needs a `rust_test(crate = ...)` target
+of its own; without one it runs under `cargo test` and not under `bazel test //...`. This was found
+false in this programme rather than predicted: **no crate had such a target, and 75 tests across
+eight crates had never been executed by the authoritative command** — among them the five that had
+been added *because* mutation testing found a function unpinned. These modules cannot simply move to
+`tests/`: each exercises a private or `pub(crate)` item, and relocating them would mean widening the
+public API in order to test it.
+
 #### Scenario: Structure mirrors the source
 - **WHEN** a source file `src/a/b.rs` is added by a stage
 - **THEN** its tests are at `tests/a/b_tests.rs`
@@ -251,6 +258,11 @@ it is library code, so the coverage requirement applies and it needs its own tes
 - **WHEN** the suite runs
 - **THEN** the executed test count matches the number of test functions in the tree under both build systems
 
+#### Scenario: In-src test modules are declared to Bazel
+- **WHEN** a crate carries an in-src `#[cfg(test)]` module
+- **THEN** its `BUILD.bazel` declares a `rust_test` target on the library crate, and `bazel test //...` executes those tests
+
 #### Scenario: Helpers are reachable and tested
 - **WHEN** a stage adds a shared helper
 - **THEN** it is under `src/utils_tests/`, `bazel test` resolves it from a clean output base, and it carries its own tests
+

@@ -39,7 +39,7 @@
 //!    observation never lands in a lower bin. That is what makes the exactly-divisible case's index
 //!    vector forced rather than merely counted.
 //!
-//! # Corner-case enumeration (`openspec/changes/unified-math-next/tdd/corner-cases.md`)
+//! # Corner-case enumeration (`openspec/changes/archive/2026-09-08-unified-math-next/tdd/corner-cases.md`)
 //!
 //! | Row | Covered by |
 //! |-----|------------|

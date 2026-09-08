@@ -35,7 +35,7 @@
 //! * A label outside `{0, 1}` is refused under `NegativeProbability`, the crate's one variant
 //!   for an input that is not a valid probability. The enum carries no label-specific variant.
 //!
-//! # Corner-case enumeration (`openspec/changes/unified-math-next/tdd/corner-cases.md`)
+//! # Corner-case enumeration (`openspec/changes/archive/2026-09-08-unified-math-next/tdd/corner-cases.md`)
 //!
 //! | # | Class | Covered by |
 //! |---|---|---|

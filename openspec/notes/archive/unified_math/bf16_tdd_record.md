@@ -5,7 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # `BFloat16` (issue #769): TDD record
 
-The record the protocol in `openspec/changes/unified-math-next/tdd/` asks each stage to keep,
+The record the protocol in `openspec/changes/archive/2026-09-08-unified-math-next/tdd/` asks each stage to keep,
 for the `BFloat16` type in `deep_causality_num` and its law markers in `deep_causality_algebra`.
 Branch `feature/bf16`, 2026-09-04.
 

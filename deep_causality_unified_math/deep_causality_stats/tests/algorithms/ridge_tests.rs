@@ -1058,7 +1058,7 @@ fn test_fit_ridge_streaming_rank_deficient_design() {
 //
 // The design is six rows by four columns, chosen so the elimination performs exactly one row swap
 // at the first column. Expected values are derived in
-// `openspec/changes/unified-math-next/notes/c2-oracles/ridge_pivoting.py`, which solves
+// `openspec/changes/archive/2026-09-08-unified-math-next/notes/c2-oracles/ridge_pivoting.py`, which solves
 // `(XᵀX + λI)β = Xᵀy` over `fractions.Fraction` — exact rational arithmetic, sharing no code with
 // the Rust — and reports the swap count.
 
