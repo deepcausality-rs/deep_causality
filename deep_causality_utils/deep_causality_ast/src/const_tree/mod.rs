@@ -73,7 +73,8 @@ impl<T> ConstTree<T> {
     /// Creates a new `ConstTree` with a root node and a given set of children.
     ///
     /// The `children` argument can be any type that can be converted into an iterator
-    /// over `ConstTree<T>`, such as a `Vec<ConstTree<T>>` or a slice `&[ConstTree<T>]`.
+    /// yielding `ConstTree<T>` by value, such as a `Vec<ConstTree<T>>`, an array, or an
+    /// adapted iterator. A slice does not qualify: `&[ConstTree<T>]` iterates by reference.
     ///
     /// # Example
     /// ```

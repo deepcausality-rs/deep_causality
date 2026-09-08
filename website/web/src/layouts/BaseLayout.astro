@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import FoundationBadge from '../components/FoundationBadge.astro';
 import { getCollection } from 'astro:content';
 import { GITHUB_URL, DISCORD_URL } from '../consts';
 
@@ -150,6 +151,7 @@ const featuredPosts = (await getCollection('blog', ({ data }) => !data.draft))
           <h4>DeepCausality</h4>
           <p>An open-source Rust framework for dynamic causality. Hosted as a sandbox project at
           the <a href="https://lfaidata.foundation/">Linux Foundation for AI &amp; Data</a>.</p>
+          {Astro.url.pathname === "/" && <FoundationBadge />}
         </div>
       </div>
     </footer>
