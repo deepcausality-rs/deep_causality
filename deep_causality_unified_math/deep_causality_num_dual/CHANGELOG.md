@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_dual-v0.1.7...deep_causality_num_dual-v0.1.8) - 2026-09-08
+
+### Added
+
+- *(num,algebra)* add Real::cbrt and RealField: ToPrimitive, and replace the
+
+### Fixed
+
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+
+### Other
+
+- *(Cargo)* Updated metadata in all crates.
+- *(num_dual)* close the derivative-seed gap in the Real implementation
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_dual-v0.1.3...deep_causality_num_dual-v0.1.4) - 2026-07-14
 
 ### Other

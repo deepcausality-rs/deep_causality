@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.4.3...deep_causality_algorithms-v0.4.5) - 2026-09-08
+
+### Added
+
+- *(deep_causality_linear)* move the fixed-size dense forms in, and close the C4 adoption
+- *(num,algebra)* add Real::cbrt and RealField: ToPrimitive, and replace the
+- *(topology)* move the Meek closure into MixedGraph, add R4 and a chordality check
+- *(homology,topology,quantum)* [**breaking**] close the last five QCL gaps
+
+### Fixed
+
+- *(deep_causality_unified_math)* close audited correctness holes across the unified_math stack
+- *(deep_causality_linear)* scale the Euclidean norms and adopt the crate across consumers
+- *(deep_causality_algorithms)* give the pattern oracle an unclosed input
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- *(deep_causality_stats)* [**breaking**] centralize workspace statistics in the stats crate
+- *(Cargo)* Updated metadata in all crates.
+- Fixed multiple issues raised by raview
+- Added BRCD paper
+- trigger holesale auto-release.
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(bazel)* migrate to rules_rs and delete the vendored crate tree
+- *(openspec)* Updated inbound links to archived notes
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.4.1...deep_causality_algorithms-v0.4.2) - 2026-08-12
 
 ### Added

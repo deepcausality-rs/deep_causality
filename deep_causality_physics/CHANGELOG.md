@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.2...deep_causality_physics-v0.8.3) - 2026-09-08
+
+### Added
+
+- *(deep_causality_linear)* move the fixed-size dense forms in, and close the C4 adoption
+- *(num,algebra)* add Real::cbrt and RealField: ToPrimitive, and replace the
+- *(deep_causality_num)* add the lift module and retire the inherent Float106::from_f64
+- *(homology,topology,quantum)* [**breaking**] close the last five QCL gaps
+
+### Fixed
+
+- *(deep_causality_physics)* code lints and fixes.
+- *(deep_causality_physics)* Fixed ks_propagator.rs that failed on CI.
+- *(deep_causality_physics)* make the fictitious-time inversion converge on both platforms
+- *(deep_causality_unified_math)* close audited correctness holes across the unified_math stack
+- *(deep_causality_physics)* [**breaking**] report non-convergence instead of returning the last iterate
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+- *(deep_causality_linear)* scale the Euclidean norms and adopt the crate across consumers
+- *(deep_causality_topology)* [**breaking**] close an unsound HKT witness and test the laws that hid it
+- *(deep_causality_homology)* correct a mis-versioned breaking change and 42 review findings
+
+### Other
+
+- *(deep_causality_stats)* [**breaking**] centralize workspace statistics in the stats crate
+- *(Cargo)* Updated metadata in all crates.
+- *(deep_causality_physics)* state why Lund sampling stays at f64
+- Fixed multiple issues raised by raview
+- *(deep_causality_num)* internal package refactoring.
+- trigger holesale auto-release.
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(openspec)* Updated inbound links to archived notes
+- *(deep_causality_topology)* [**breaking**] separate geometry from payload and drop two unlawful instances
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.8.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.0...deep_causality_physics-v0.8.1) - 2026-08-12
 
 ### Added

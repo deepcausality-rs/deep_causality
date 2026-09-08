@@ -3,7 +3,7 @@
 
 [package]
 name = "deep_causality_cfd"
-version = "0.1.1"
+version = "0.2.0"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }

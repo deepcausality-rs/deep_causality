@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.15.2...deep_causality-v0.16.0) - 2026-09-08
+
+### Added
+
+- *(deep_causality_linear)* move the fixed-size dense forms in, and close the C4 adoption
+
+### Fixed
+
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+- *(deep_causality_linear)* scale the Euclidean norms and adopt the crate across consumers
+
+### Other
+
+- *(Cargo)* Updated metadata in all crates.
+- Added CRA compliance notice to README.md and SECURITY.md
+- *(workspace)* move ast, file and par into deep_causality_utils
+- trigger holesale auto-release.
+- *(bazel)* compile the 71 tests Cargo ran and Bazel never saw
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+- *(build)* [**breaking**] move build/scripts to the repository root
+- *(deep_causality_haft)* [**breaking**] remove the HKT Constraint system and the Satisfies marker
+- *(openspec)* Updated inbound links to archived notes
+- consolidate the mathematics crates under deep_causality_unified_math/
+
 ## [0.15.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.15.0...deep_causality-v0.15.1) - 2026-08-12
 
 ### Added

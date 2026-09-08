@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_par-v0.1.3...deep_causality_par-v0.1.4) - 2026-09-08
+
+### Fixed
+
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+
+### Other
+
+- *(Cargo)* Updated metadata in all crates.
+- *(workspace)* move ast, file and par into deep_causality_utils
+
 ## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_par-v0.1.1...deep_causality_par-v0.1.2) - 2026-07-14
 
 ### Added

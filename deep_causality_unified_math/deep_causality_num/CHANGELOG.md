@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.0...deep_causality_num-v0.5.1) - 2026-09-08
+
+### Added
+
+- *(deep_causality_stats)* add descriptive and information statistics at tier 4
+- *(num,algebra)* add Real::cbrt and RealField: ToPrimitive, and replace the
+
+### Fixed
+
+- *(deep_causality_unified_math)* close audited correctness holes across the unified_math stack
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+- *(deep_causality_algorithms)* give the pattern oracle an unclosed input
+
+### Other
+
+- *(openspec)* Archived specs and notes for unified_math_next.
+- *(deep_causality_stats)* [**breaking**] centralize workspace statistics in the stats crate
+- *(Cargo)* Updated metadata in all crates.
+- Fixed multiple issues raised by raview
+- *(deep_causality_num)* run the BFloat16 suite in both build systems
+- *(deep_causality_num)* internal package refactoring.
+- Added BFloat16
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.0...deep_causality_num-v0.4.1) - 2026-07-14
 
 ### Added

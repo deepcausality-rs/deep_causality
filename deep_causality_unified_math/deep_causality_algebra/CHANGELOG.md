@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.4.3...deep_causality_algebra-v0.5.0) - 2026-09-08
+
+### Added
+
+- *(deep_causality_algebra)* put BFloat16 in the algebra tower
+- *(num,algebra)* add Real::cbrt and RealField: ToPrimitive, and replace the
+
+### Fixed
+
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+
+### Other
+
+- *(Cargo)* Updated metadata in all crates.
+- Fixed multiple issues raised by raview
+- Added BFloat16
+
 ## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.1.1...deep_causality_algebra-v0.2.0) - 2026-07-14
 
 ### Added

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.9.1...deep_causality_topology-v0.10.0) - 2026-09-08
+
+### Added
+
+- *(deep_causality_linear)* move the fixed-size dense forms in, and close the C4 adoption
+- *(topology)* move the Meek closure into MixedGraph, add R4 and a chordality check
+
+### Fixed
+
+- *(deep_causality_unified_math)* close audited correctness holes across the unified_math stack
+- *(deep_causality_physics)* [**breaking**] report non-convergence instead of returning the last iterate
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+- *(deep_causality_linear)* scale the Euclidean norms and adopt the crate across consumers
+
+### Other
+
+- *(openspec)* Archived specs and notes for unified_math_next.
+- *(Cargo)* Updated metadata in all crates.
+- Fixed multiple issues raised by raview
+
 ## [0.7.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.7.0...deep_causality_topology-v0.7.1) - 2026-07-14
 
 ### Fixed

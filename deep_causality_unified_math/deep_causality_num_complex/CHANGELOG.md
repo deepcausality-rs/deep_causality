@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.8...deep_causality_num_complex-v0.1.9) - 2026-09-08
+
+### Added
+
+- *(num,algebra)* add Real::cbrt and RealField: ToPrimitive, and replace the
+
+### Fixed
+
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+- *(deep_causality_linear)* scale the Euclidean norms and adopt the crate across consumers
+- *(deep_causality_quantum)* resolve the QCL review findings, with the Float106 defects beneath them
+
+### Other
+
+- *(Cargo)* Updated metadata in all crates.
+
 ## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.3...deep_causality_num_complex-v0.1.4) - 2026-07-14
 
 ### Added

@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_homology-v0.1.1...deep_causality_homology-v0.1.2) - 2026-09-08
+## [0.1.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_rational-v0.1.4...deep_causality_num_rational-v0.1.5) - 2026-09-08
 
 ### Fixed
 
+- *(deep_causality_unified_math)* close audited correctness holes across the unified_math stack
 - *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
 
 ### Other
 
 - *(Cargo)* Updated metadata in all crates.
-- Updated Rust depencies to the latest version.

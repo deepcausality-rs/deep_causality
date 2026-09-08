@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.11...deep_causality_ethos-v0.2.12) - 2026-09-08
+
+### Fixed
+
+- *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+
+### Other
+
+- *(Cargo)* Updated metadata in all crates.
+- trigger holesale auto-release.
+- *(bazel)* compile the 71 tests Cargo ran and Bazel never saw
+- *(cargo)* hoist every dependency into [workspace.dependencies]
+- *(bazel)* merge test BUILD files and derive deps from Cargo
+
 ## [0.2.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.9...deep_causality_ethos-v0.2.10) - 2026-08-12
 
 ### Added
