@@ -97,7 +97,10 @@ where
 ///
 /// # Arguments
 /// *   `v_manifold` - Manifold carrying the velocity field $v$ as a 1-form.
-/// *   `b_manifold` - Manifold carrying the magnetic flux 2-form $B$.
+/// *   `b_manifold` - Manifold carrying the magnetic flux 2-form $B$. **Its complex must equal
+///     `v_manifold`'s**; a call whose two manifolds disagree is refused, because the whole
+///     computation is performed on `v_manifold`'s complex and a 2-form measured on other geometry
+///     would be silently reinterpreted on it.
 ///
 /// # Returns
 /// *   `Result<CausalTensor<R>, PhysicsError>` — $\partial_t B$, a 2-form.
@@ -151,6 +154,30 @@ where
             skeletons.len(),
             skeletons.len().saturating_sub(1)
         )));
+    }
+
+    // The two cochains must live on the *same* complex. The signature takes two independent
+    // manifolds, and every offset below — the slice bounds, the Whitney interpolation, the
+    // coboundary — is read off `v_manifold`'s complex alone, so a `b_manifold` carrying a
+    // different complex has its 2-form reinterpreted on geometry it was never measured against.
+    // Simplex counts do not catch that: two meshes with the same connectivity and different vertex
+    // positions agree on every count, and the mixed call then returns a plausible number for
+    // physics that is not being computed. Measured on two tetrahedron pairs differing only in one
+    // vertex: flux freezing demands `∂ₜB = 0` exactly for a uniform field in a uniform flow, and
+    // the mixed call returned `1.34`.
+    //
+    // The comparison is structural and therefore linear in the size of the mesh — skeletons,
+    // both operator sets, and the coordinates. That is the same order as the contraction below,
+    // so it is a constant-factor cost rather than a new one; a timestep loop that calls this per
+    // step with one manifold can hoist the check if it ever shows up in a profile. It reads
+    // `SimplicialComplex`'s own `PartialEq`, which deliberately excludes the lazily-populated
+    // Hodge ⋆ cache, so two equal complexes never differ by cache state alone.
+    if v_manifold.complex() != b_manifold.complex() {
+        return Err(PhysicsError::DimensionMismatch(
+            "ideal induction reads the velocity 1-form and the magnetic 2-form on one complex; \
+             the two manifolds carry different complexes"
+                .into(),
+        ));
     }
 
     let n0 = skeletons[0].simplices().len();

@@ -189,6 +189,12 @@ impl From<deep_causality_topology::TopologyError> for PhysicsError {
 }
 
 impl From<deep_causality_stats::StatsError> for PhysicsError {
+    /// Maps a statistics refusal onto this crate's error.
+    ///
+    /// `NotConverged` crosses the boundary as [`PhysicsErrorEnum::NotConverged`] rather than
+    /// falling into the catch-all. Both crates draw the same line — an iterative fit that ran out
+    /// of iterations is retryable at a wider cap, an unstable computation is not — and collapsing
+    /// the two here would throw away the only classification a caller can act on.
     fn from(error: deep_causality_stats::StatsError) -> Self {
         use deep_causality_stats::StatsErrorEnum;
         let message = format!("{error}");
@@ -197,6 +203,7 @@ impl From<deep_causality_stats::StatsError> for PhysicsError {
                 Self::DimensionMismatch(message)
             }
             StatsErrorEnum::NegativeProbability(_) => Self::NormalizationError(message),
+            StatsErrorEnum::NotConverged { .. } => Self::NotConverged(message),
             _ => Self::NumericalInstability(message),
         }
     }

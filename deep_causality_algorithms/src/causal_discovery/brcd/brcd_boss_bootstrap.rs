@@ -35,6 +35,7 @@ use crate::brcd::brcd_boss_learn::boss_learn;
 use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
+use crate::brcd::brcd_project::{transpose, transpose_int};
 use crate::brcd::brcd_result::BrcdResult;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
 use crate::dag_sampling::sample_dag;
@@ -263,32 +264,6 @@ fn columns_of<T: RealField>(t: &CausalTensor<T>, n: usize, p: usize) -> Vec<Vec<
     let data = t.as_slice();
     (0..p)
         .map(|j| (0..n).map(|i| data[i * p + j]).collect())
-        .collect()
-}
-
-/// Builds the `n` parent feature rows from the chosen continuous columns.
-///
-/// **Kept out of `deep_causality_linear`** (unified-math-next task 6.10), and a verbatim duplicate
-/// of `brcd_algo.rs`'s function of the same name. The name says transpose, but this selects a
-/// subset of columns and gathers them into rows — an index projection with no arithmetic, and its
-/// `transpose_int` sibling does the same over `usize`. There is no linear algebra here to move; the
-/// duplication is real and de-duplicates *within* `algorithms`.
-fn transpose<T: RealField>(columns: &[Vec<T>], idxs: &[usize], n: usize) -> Vec<Vec<T>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&c| columns[c][i]).collect())
-        .collect()
-}
-
-/// Builds the `n` parent configuration rows from the chosen integer columns.
-fn transpose_int(columns: &[Vec<usize>], idxs: &[usize], n: usize) -> Vec<Vec<usize>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&c| columns[c][i]).collect())
         .collect()
 }
 

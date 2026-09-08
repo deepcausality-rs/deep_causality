@@ -1096,3 +1096,59 @@ fn test_eigen_symmetric_3x3_at_the_boundary_where_the_cubic_has_a_triple_root() 
         assert!((v - 4.0).abs() < 1e-8, "{e:?}");
     }
 }
+
+#[test]
+fn test_eigen_symmetric_3x3_survives_both_ends_of_the_scalar_range() {
+    // `p1` and `p2` are sums of squares of the entries, so they leave `f64`'s range long before the
+    // entries do. Measured before the matrix was normalised, on this fixture:
+    //
+    //   * at `1e200` the squares overflowed and the answer was `[inf, NaN, -inf]`;
+    //   * at `1e-200` they underflowed to zero, `p1 == 0` sent the call down the *diagonal* branch,
+    //     and it returned the diagonal `(9, 3, 2)·1e-200` — finite, plausible, and not the
+    //     spectrum.
+    //
+    // The oracle is a closed form, not the implementation: `diag(2) ⊕ [[3,4],[4,9]]` has the
+    // isolated eigenvalue 2, and the 2×2 block has trace 12 and determinant `3·9 − 4·4 = 11`, so
+    // the block's eigenvalues solve `λ² − 12λ + 11 = 0`, giving 11 and 1. The spectrum is
+    // therefore `(11, 2, 1)` exactly, and it is homogeneous of degree one in the matrix, so at
+    // scale `s` it is `(11s, 2s, 1s)`. Every scale here keeps all three inside the normal range.
+    let m: [[f64; 3]; 3] = [[2.0, 0.0, 0.0], [0.0, 3.0, 4.0], [0.0, 4.0, 9.0]];
+    for s in [
+        1e-300f64, 1e-200, 1e-160, 1e-8, 1.0, 1e8, 1e160, 1e200, 1e300,
+    ] {
+        let scaled: [[f64; 3]; 3] = core::array::from_fn(|i| core::array::from_fn(|j| s * m[i][j]));
+        let e = eigen_symmetric_3x3(&scaled).unwrap();
+        assert!(e.iter().all(|x| x.is_finite()), "s = {s:e} gave {e:?}");
+        for (got, want) in e.iter().zip([11.0 * s, 2.0 * s, 1.0 * s]) {
+            assert!(
+                (got - want).abs() <= 1e-12 * want.abs(),
+                "s = {s:e}: got {e:?}, closed form gives (11, 2, 1)·{s:e}"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_eigen_symmetric_3x3_is_scale_equivariant_over_the_whole_range() {
+    // The equivariance the suite already checks over five decades, run over the full exponent
+    // range instead. `λ(αM) = α·λ(M)` is exact mathematics, so the only thing that can break it is
+    // the arithmetic leaving its range — which is precisely what the normalisation removes.
+    let mut rng = Lcg::new(0x5EED_0011);
+    for _ in 0..50 {
+        let m = rng.sym3();
+        let base = eigen_symmetric_3x3(&m).unwrap();
+        for alpha in [1e-280f64, 1e-150, 1e-40, 1e40, 1e150, 1e280] {
+            let scaled: [[f64; 3]; 3] =
+                core::array::from_fn(|i| core::array::from_fn(|j| alpha * m[i][j]));
+            let e = eigen_symmetric_3x3(&scaled).unwrap();
+            for i in 0..3 {
+                let want = alpha * base[i];
+                assert!(
+                    (e[i] - want).abs() <= 1e-9 * want.abs(),
+                    "α={alpha:e}, i={i}: {} vs {want}",
+                    e[i]
+                );
+            }
+        }
+    }
+}

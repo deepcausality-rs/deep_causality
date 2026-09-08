@@ -17,13 +17,23 @@ use deep_causality_linear::{DenseMatrix, DenseVector, solve};
 use deep_causality_num::FromPrimitive;
 
 /// Validates a row-major data matrix and returns `(observations, variables)`.
+///
+/// The cell count is formed with `checked_mul` because both factors are the caller's and neither
+/// is bounded by the slice: `observations · variables` for a stated shape wider than the address
+/// space panics on the multiply in a debug build and wraps in a release one, and a wrapped product
+/// that happens to match the data length would admit a shape whose indexing runs off the end.
 fn shape<T>(data: &[T], observations: usize, variables: usize) -> Result<(), StatsError> {
     if observations == 0 || variables == 0 {
         return Err(StatsError::EmptyInput(
             "a data matrix needs at least one observation and one variable",
         ));
     }
-    if data.len() != observations * variables {
+    let cells = observations.checked_mul(variables).ok_or_else(|| {
+        StatsError::DimensionMismatch(
+            "the stated observation and variable counts overflow a usize: no matrix has that shape",
+        )
+    })?;
+    if data.len() != cells {
         return Err(StatsError::DimensionMismatch(
             "the data length is not the product of the stated observation and variable counts",
         ));
@@ -119,7 +129,21 @@ where
 /// collinear. It is the caller's, not a default: a ridge large enough to matter also biases the
 /// result toward the marginal variance.
 ///
+/// # The parents are a set
+///
+/// A repeated parent, and the target among its own parents, are both refused. Neither is a
+/// harmless spelling of a smaller set. A parent listed twice puts a duplicated row and column into
+/// `Σ_PP`, which is exactly singular, so at `ridge = 0` it is refused as collinear and at any
+/// positive ridge it is *solvable* and answers something other than the same parent listed once —
+/// so the number returned would depend on how many times the caller named a variable rather than
+/// on which variables were named. Conditioning the target on itself is degenerate in the same way:
+/// the residual is zero by definition, and at a positive ridge this returns a strictly positive
+/// number instead. Both are caller errors that an index check alone cannot see.
+///
 /// # Errors
+///
+/// [`StatsError::DimensionMismatch`] when an index lies outside the matrix, when a parent is
+/// repeated, or when the target is among the parents.
 ///
 /// [`StatsError::RankDeficient`] when the parent block cannot be solved at the ridge given — which
 /// at `ridge = 0` means exactly collinear parents. That is a refusal where an implementation that
@@ -138,6 +162,24 @@ where
     if target >= variables || parents.iter().any(|&p| p >= variables) {
         return Err(StatsError::DimensionMismatch(
             "a target or parent index lies outside the covariance matrix",
+        ));
+    }
+    if parents.contains(&target) {
+        return Err(StatsError::DimensionMismatch(
+            "the target is among its own parents: the variance of a variable given itself is zero \
+             by definition, and a positive ridge would return a positive number for it",
+        ));
+    }
+    // Quadratic in the parent count, which is the number of parents of one node in a causal graph.
+    // A set would allocate to say the same thing.
+    if parents
+        .iter()
+        .enumerate()
+        .any(|(i, p)| parents[..i].contains(p))
+    {
+        return Err(StatsError::DimensionMismatch(
+            "a parent is listed twice: the parent block is then singular, and at a positive ridge \
+             the answer would depend on how many times a variable was named",
         ));
     }
     let sigma_yy = covariance[target * variables + target];

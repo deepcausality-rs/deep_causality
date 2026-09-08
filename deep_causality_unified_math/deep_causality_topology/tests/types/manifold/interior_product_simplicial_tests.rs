@@ -460,3 +460,56 @@ fn test_a_degenerate_tetrahedron_is_refused() {
         "got {err}"
     );
 }
+
+#[test]
+fn test_a_top_cell_that_is_not_a_tetrahedron_is_refused() {
+    // `Skeleton::new` records the grade separately from the vertex lists and checks neither
+    // against the other, so a caller assembling skeletons by hand can put a cell of any arity in
+    // the 3-skeleton — and `Manifold::new` accepts this one: a five-vertex entry beside a proper
+    // tetrahedron passes both the orientation check and the link condition.
+    //
+    // The Whitney basis is defined on four vertices, so such a cell cannot be interpolated on.
+    // Skipping it returned a 1-cochain missing that cell's contribution: on this mesh the second
+    // cell is the only one touching edge `(1, 4)`, and the skipped result was off the closed form
+    // `(B × V) · (p_b − p_a)` by `4.96` there while every other edge looked right. Refused
+    // instead, because a partial answer that carries no mark of being partial is worse than none.
+    let (tets, coords) = two_tets();
+    let proper = tet_complex(&tets, &coords);
+
+    // Same 0-, 1- and 2-skeletons; the second tetrahedron is recorded with five vertices.
+    let skeletons = vec![
+        Skeleton::new(0, proper.skeletons()[0].simplices().clone()),
+        Skeleton::new(1, proper.skeletons()[1].simplices().clone()),
+        Skeleton::new(2, proper.skeletons()[2].simplices().clone()),
+        Skeleton::new(
+            3,
+            vec![
+                Simplex::new(vec![0, 1, 2, 3]),
+                Simplex::new(vec![0, 1, 2, 3, 4]),
+            ],
+        ),
+    ];
+    let flat: Vec<f64> = coords.iter().flatten().copied().collect();
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::with_geometry(skeletons, Vec::new(), Vec::new(), flat, 3);
+    let n1 = complex.skeletons()[1].simplices().len();
+    let n2 = complex.skeletons()[2].simplices().len();
+    let m = manifold(complex);
+
+    let err = m
+        .interior_product(&tensor(vec![1.0; n1]), &tensor(vec![1.0; n2]), 2)
+        .unwrap_err();
+    assert!(
+        matches!(err.0, TopologyErrorEnum::InvalidInput(_)),
+        "got {err}"
+    );
+    let msg = format!("{err}");
+    assert!(msg.contains("5 vertices"), "unexpected message: {msg}");
+
+    // The control: the same mesh with both cells recorded properly is accepted.
+    let ok = manifold(tet_complex(&tets, &coords));
+    assert!(
+        ok.interior_product(&tensor(vec![1.0; n1]), &tensor(vec![1.0; n2]), 2)
+            .is_ok()
+    );
+}

@@ -697,3 +697,57 @@ fn test_ideal_induction_refuses_a_degenerate_tetrahedron() {
     let msg = format!("{}", ideal_induction_kernel(&m, &m).unwrap_err());
     assert!(msg.contains("degenerate"), "unexpected message: {msg}");
 }
+
+#[test]
+fn test_ideal_induction_refuses_two_manifolds_over_different_complexes() {
+    // The kernel reads `n0/n1/n2`, the Whitney interpolation and the coboundary from
+    // `v_manifold`'s complex, and slices `b_manifold`'s data with those offsets. Matching simplex
+    // counts do not make the two interchangeable: the meshes below share their connectivity and
+    // differ only in where vertex 4 sits, so every count agrees while every face area and edge
+    // vector does not, and the 2-form measured on one is meaningless on the other.
+    //
+    // The oracle is flux freezing, the same invariant
+    // `test_a_uniform_field_in_a_uniform_flow_does_not_change` uses: a uniform `B` carried by a
+    // uniform `v` has `i_v B` constant, and `d` of a constant 1-form is zero on every face, so
+    // `∂ₜB = 0` exactly. Before the complexes were compared, this call returned `Ok` with a
+    // largest component of `1.34` — a plausible number for physics that is not being computed.
+    let v = [0.4, -1.3, 2.1];
+    let b = [1.7, 0.9, -0.6];
+    let (tets, coords_a) = two_tets();
+    let coords_b = vec![
+        coords_a[0],
+        coords_a[1],
+        coords_a[2],
+        coords_a[3],
+        [2.4, 1.9, 1.3], // the one vertex that moves
+    ];
+
+    let complex_a = geo_complex(&tets, &coords_a);
+    let complex_b = geo_complex(&tets, &coords_b);
+    let counts = |c: &SimplicialComplex<f64>| {
+        c.skeletons()
+            .iter()
+            .map(|s| s.simplices().len())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        counts(&complex_a),
+        counts(&complex_b),
+        "the fixture is only interesting if the length checks cannot tell the two apart"
+    );
+
+    let ma = geo_manifold(complex_a, &coords_a, v, b);
+    let mb = geo_manifold(complex_b, &coords_b, v, b);
+
+    let msg = format!("{}", ideal_induction_kernel(&ma, &mb).unwrap_err());
+    assert!(
+        msg.contains("different complexes"),
+        "unexpected message: {msg}"
+    );
+
+    // The control: the same call on one complex is accepted and returns the invariant's zero.
+    let dt_b = ideal_induction_kernel(&ma, &ma).unwrap();
+    for (i, x) in dt_b.as_slice().iter().enumerate() {
+        assert!(x.abs() < 1e-12, "face {i}: expected zero, got {x}");
+    }
+}

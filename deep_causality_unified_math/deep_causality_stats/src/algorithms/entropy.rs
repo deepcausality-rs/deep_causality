@@ -26,18 +26,31 @@ pub fn entropy<T>(p: &[T], config: &EntropyConfig<T>) -> Result<T, StatsError>
 where
     T: RealField + FromPrimitive,
 {
-    let (total, scale) = prepare(p, config)?;
+    let (total, rescale, scale) = prepare(p, config)?;
     if total {
         return Ok(T::zero());
     }
-    Ok(surprisal_sum(p, config, scale))
+    Ok(surprisal_sum(p, config, rescale, scale))
 }
 
 /// Validates the input and resolves the normalisation.
 ///
-/// Returns `(degenerate, scale)`: `degenerate` when the distribution carries no mass and the
-/// entropy is zero, otherwise `scale` is the divisor every entry passes through.
-fn prepare<T>(p: &[T], config: &EntropyConfig<T>) -> Result<(bool, T), StatsError>
+/// Returns `(degenerate, rescale, scale)`: `degenerate` when the distribution carries no mass and
+/// the entropy is zero, otherwise every entry passes through `raw / rescale / scale`.
+///
+/// # Why the divisor comes in two parts
+///
+/// `H` is invariant under a positive scaling of the weights, which is the whole point of
+/// normalising by the sum — and the sum is the one quantity in this function that can leave the
+/// type while every weight is inside it. Two weights at `1e308` are ordinary `f64`s whose entropy
+/// is exactly one bit; their sum is `+∞`, every entry divided by it is zero, and the answer comes
+/// back as zero entropy from a distribution that has the most a two-outcome distribution can have.
+///
+/// So an overflowing sum is re-formed through the largest weight: `rescale` is that weight and
+/// `scale` is the sum of the weights divided by it, which lies in `[1, n]`. On the ordinary path
+/// `rescale` is one, and division by one is exact in binary floating point, so nothing about the
+/// ordinary answer changes.
+fn prepare<T>(p: &[T], config: &EntropyConfig<T>) -> Result<(bool, T, T), StatsError>
 where
     T: RealField + FromPrimitive,
 {
@@ -61,22 +74,32 @@ where
     }
 
     match config.normalisation {
-        Normalisation::None => Ok((false, T::one())),
+        Normalisation::None => Ok((false, T::one(), T::one())),
         Normalisation::BySum { floor } => {
             let sum = p.iter().fold(T::zero(), |acc, &x| acc + x);
             // No mass to measure: there is no distribution here, and dividing by a sum this
             // small would manufacture one out of rounding.
             if sum <= floor {
-                Ok((true, T::one()))
-            } else {
-                Ok((false, sum))
+                return Ok((true, T::one(), T::one()));
             }
+            if sum.is_finite() {
+                return Ok((false, T::one(), sum));
+            }
+            // The mass is beyond the type's reach although every weight is inside it. The largest
+            // weight is strictly positive here: entries are non-negative and an all-zero slice
+            // sums to zero, which is finite.
+            let largest = p.iter().fold(T::zero(), |m, &x| if x > m { x } else { m });
+            let scaled = p.iter().fold(T::zero(), |acc, &x| acc + x / largest);
+            Ok((false, largest, scaled))
         }
     }
 }
 
 /// `−Σ pᵢ log pᵢ` over the entries the zero policy keeps.
-fn surprisal_sum<T>(p: &[T], config: &EntropyConfig<T>, scale: T) -> T
+///
+/// Every entry passes through `raw / rescale / scale`; see [`prepare`] for why the divisor arrives
+/// in two parts, and why dividing twice costs the ordinary path nothing.
+fn surprisal_sum<T>(p: &[T], config: &EntropyConfig<T>, rescale: T, scale: T) -> T
 where
     T: RealField + FromPrimitive,
 {
@@ -88,10 +111,19 @@ where
     };
 
     let acc = p.iter().fold(T::zero(), |acc, &raw| {
-        let q = raw / scale;
+        let q = raw / rescale / scale;
+        // `lim(p → 0) p·log p = 0`, so an entry at zero contributes nothing whatever the policy
+        // says. The test is outside the policy rather than inside `SkipBelow`, because a
+        // *negative* threshold admits the exact zeros — it is the reading of "omit entries at or
+        // below the threshold" that omits none of them — and `0 · ln 0` is `0 · (−∞)`, which is a
+        // `NaN` and not the limit. A caller passing a negative threshold is saying "keep
+        // everything", not "return me a NaN".
+        if q <= T::zero() {
+            return acc;
+        }
         let keep = match config.zero_policy {
-            // `lim(p → 0) p·log p = 0`, so an entry at the cutoff contributes nothing.
-            ZeroPolicy::SkipZero => q > T::zero(),
+            // An entry at the cutoff contributes nothing, by the same limit.
+            ZeroPolicy::SkipZero => true,
             ZeroPolicy::SkipBelow(threshold) => q > threshold,
         };
         if keep { acc - q * q.ln() } else { acc }

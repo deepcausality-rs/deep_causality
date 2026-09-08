@@ -228,3 +228,101 @@ fn test_the_state_is_periodic_across_the_mean_anomaly_wrap() {
         }
     }
 }
+
+// =============================================================================
+// Kepler at f32: the stopping test has to be in units of the scalar's own resolution
+//
+// `solve_kepler` used a fixed absolute tolerance of `1e-15`. That is about `4.5` ulp at `f64` and
+// eight decades below anything `f32` arithmetic can produce: with `E` and `M` both `O(1)` radians,
+// the residual's floor at `f32` is a few times `1.19e-7`. So an `f32` iterate that solves the
+// equation to the last bit the type holds failed the step test *and* the residual test, and came
+// back as `NotConverged`.
+//
+// The oracle is the same bisection as above, run in `f64` — a different arithmetic as well as a
+// different algorithm, so nothing about the `f32` path can flatter it.
+// =============================================================================
+
+/// The `f32` twin of [`periapsis_orbit`].
+fn periapsis_orbit_f32(a: f32, e: f32) -> TwoBodyPropagator<f32> {
+    let gm = 1.0f32;
+    let rp = a * (1.0 - e);
+    let vp = (gm * (1.0 + e) / rp).sqrt();
+    TwoBodyPropagator::from_state([rp, 0.0], [0.0, vp], gm).unwrap()
+}
+
+#[test]
+fn test_kepler_converges_at_f32_where_the_absolute_tolerance_refused_a_correct_iterate() {
+    // `a = 2, e = 0.9, M = 0.25` is the measured case: `f64` converges on its seventh step and
+    // `f32` returned `NotConverged` — not because the iterate was wrong, but because `1e-15` is
+    // unreachable in `f32`. The `f64` control below is what makes that unambiguous.
+    let (a, e, m) = (2.0f32, 0.9f32, 0.25f32);
+
+    let orbit64 = periapsis_orbit(a as f64, e as f64);
+    orbit64
+        .propagate((m as f64) / orbit64.mean_motion())
+        .expect("the f64 control converges, so the case is not genuinely hard");
+
+    let orbit = periapsis_orbit_f32(a, e);
+    let (position, _) = orbit
+        .propagate(m / orbit.mean_motion())
+        .expect("an f32 iterate that solves the equation to f32 resolution must be accepted");
+
+    // The independent root, and the position it defines, both in f64.
+    let root = kepler_root_by_bisection(m as f64, e as f64);
+    let want_x = (a as f64) * (root.cos() - e as f64);
+    let want_y = (a as f64) * (1.0 - (e as f64) * (e as f64)).sqrt() * root.sin();
+
+    // `f32` carries about seven decimal digits; `1e-5` absolute against an orbit of size 2 is a
+    // few dozen ulp, which is what a solve at this eccentricity can hold.
+    assert!(
+        (position[0] as f64 - want_x).abs() < 1e-5,
+        "x: got {}, bisection gives {want_x}",
+        position[0]
+    );
+    assert!(
+        (position[1] as f64 - want_y).abs() < 1e-5,
+        "y: got {}, bisection gives {want_y}",
+        position[1]
+    );
+}
+
+#[test]
+fn test_kepler_agrees_with_the_bisection_at_f32_across_eccentricities() {
+    // The same sweep as the `f64` case, run in the narrower scalar. Every one of these is a case
+    // the fixed tolerance could only pass by luck — when the `f32` residual happened to round to
+    // exactly zero — and `e = 0.9` is one where it did not.
+    for (a, e, m) in [
+        (1.0f32, 0.1f32, 0.7f32),
+        (1.0, 0.5, 1.0),
+        (2.0, 0.9, 0.25),
+        (1.0, 0.3, 2.0),
+        (1.0, 0.99, 0.01),
+    ] {
+        let orbit = periapsis_orbit_f32(a, e);
+        let (position, _) = orbit
+            .propagate(m / orbit.mean_motion())
+            .unwrap_or_else(|err| panic!("e={e}, M={m}: {err}"));
+        let root = kepler_root_by_bisection(m as f64, e as f64);
+        let want_x = (a as f64) * (root.cos() - e as f64);
+        let want_y = (a as f64) * (1.0 - (e as f64) * (e as f64)).sqrt() * root.sin();
+        assert!(
+            (position[0] as f64 - want_x).abs() < 1e-5
+                && (position[1] as f64 - want_y).abs() < 1e-5,
+            "e={e}, M={m}: got {position:?}, bisection gives ({want_x}, {want_y})"
+        );
+    }
+}
+
+#[test]
+fn test_the_f32_refusal_still_fires_where_there_is_no_root_to_find() {
+    // The other half of the change: widening the tolerance to the scalar's resolution must not
+    // turn the refusal into a rubber stamp. A perfectly circular orbit has no defined periapsis,
+    // so `from_state` produces a `NaN` mean anomaly and every Newton step is `NaN`; neither the
+    // step test nor the residual test can be met at any tolerance, and the call must still fail.
+    let orbit = periapsis_orbit_f32(1.0, 0.0);
+    assert_eq!(orbit.eccentricity(), 0.0, "the orbit itself is well formed");
+    let err = orbit
+        .propagate(0.7)
+        .expect_err("a NaN mean anomaly must not come back as a position");
+    assert!(format!("{err}").contains("did not converge"), "got {err}");
+}

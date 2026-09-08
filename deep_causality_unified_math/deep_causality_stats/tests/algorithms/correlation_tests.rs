@@ -763,6 +763,85 @@ fn test_tiny_magnitudes_preserve_perfect_correlation() {
 }
 
 // -------------------------------------------------------------------------------------------
+// Row J, one step further out: the centred sums themselves leave the type.
+//
+// The two tests above are scaled so that `Σdx²` and `Σdy²` stay representable and only their
+// *product* does not. Past that there is a second band, where the sums of squares are the things
+// that go: with dx = [-1.5, -0.5, 0.5, 1.5]·s,
+//
+//   f32   (max 3.4e38, min normal 1.2e-38): s = 1e30   → 2.25s²  = 2.3e60  → +inf
+//                                            s = 1e-30  → 2.25s²  = 2.3e-60 → 0
+//   f64   (max 1.8e308, min normal 2.2e-308): s = 1e200  → 2.25s² = 2.3e400 → +inf
+//                                              s = 1e-200 → 2.25s² = 2.3e-400 → 0
+//   Float106 carries an f64 exponent, so it takes the f64 scales.
+//
+// The answer is the same invariant `r = 1`: `r` is unchanged by a positive scaling of either
+// sample, and the scale is the only thing that differs from the fixture used above. Two distinct
+// wrong answers are on offer here and both are worse than an error: `Σdx² = +∞` divides `∞` by
+// `∞` and returns `NaN`, and `Σdx² = 0` reaches the zero-variance exit and returns `Ok(0)` — the
+// documented answer for a *constant* column — for a sample that is perfectly correlated.
+// -------------------------------------------------------------------------------------------
+
+#[test]
+fn test_overflowing_centred_sums_preserve_perfect_correlation() {
+    check_extreme_magnitudes::<f32>(1e30, F32.native);
+    check_extreme_magnitudes::<f64>(1e200, F64.native);
+    check_extreme_magnitudes::<Float106>(1e200, F106.native);
+}
+
+#[test]
+fn test_underflowing_centred_sums_preserve_perfect_correlation() {
+    check_extreme_magnitudes::<f32>(1e-30, F32.native);
+    check_extreme_magnitudes::<f64>(1e-200, F64.native);
+    check_extreme_magnitudes::<Float106>(1e-200, F106.native);
+}
+
+/// The zero-variance convention, at a constant column the *sum* of which is not representable.
+///
+/// Provenance: this function's documented answer for a constant column, quoted in `pearson`'s doc:
+///
+/// > When either sample has zero variance the correlation is undefined ... and this returns
+/// > `Ok((0, n))` rather than an error.
+///
+/// A column of three copies of the type's maximum is constant, so that is the answer. It is also a
+/// column whose left-to-right sum is `+∞`, and a mean taken from that sum centres the column on
+/// nothing: every deviation is then `MAX − ∞ = −∞`, `Σdx²` is `+∞`, and `r` comes back as `NaN`
+/// from a column that carries no information at all.
+fn check_constant_column_at_the_type_maximum<T>(max: f64)
+where
+    T: RealField + FromPrimitive,
+{
+    let constant = lift_array::<T>(&[max, max, max]);
+    let varying = lift_array::<T>(&[1.0, 2.0, 3.0]);
+
+    let (r, n) = expect_ok(pearson(&constant, &varying), "a constant column at MAX");
+    assert!(
+        r == lift::<T>(0.0),
+        "a constant column returned {:?}, not the documented zero",
+        r.to_f64().unwrap_or(f64::NAN)
+    );
+    assert_eq!(n, 3, "the count is the number of pairs used");
+
+    // The same both ways round: the convention is about either sample, not about the first.
+    let (r, _) = expect_ok(
+        pearson(&varying, &constant),
+        "a constant second column at MAX",
+    );
+    assert!(
+        r == lift::<T>(0.0),
+        "a constant second column returned {:?}, not the documented zero",
+        r.to_f64().unwrap_or(f64::NAN)
+    );
+}
+
+#[test]
+fn test_constant_column_at_the_type_maximum_is_ok_zero() {
+    check_constant_column_at_the_type_maximum::<f32>(F32.max_finite);
+    check_constant_column_at_the_type_maximum::<f64>(F64.max_finite);
+    check_constant_column_at_the_type_maximum::<Float106>(F106.max_finite);
+}
+
+// -------------------------------------------------------------------------------------------
 // pearson_pairwise_complete
 // -------------------------------------------------------------------------------------------
 

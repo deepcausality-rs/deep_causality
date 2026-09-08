@@ -249,6 +249,12 @@ where
 /// of the resulting characteristic cubic off `acos`. The diagonal case is returned directly,
 /// because the normalisation divides by a quantity that vanishes there.
 ///
+/// The matrix is first divided by its largest entry magnitude and the three roots multiplied back
+/// by it, because the cubic's coefficients are sums of squares of the entries: without that, a
+/// finite matrix near either end of the scalar's range overflows them to infinity or underflows
+/// them to zero and the spectrum comes back `NaN` or plainly wrong. The full spectral range is
+/// therefore usable, not just the square-representable middle of it.
+///
 /// # Accuracy, and where it is worst
 ///
 /// About `ε` relative for a well-separated spectrum, and about **`√ε`** where two eigenvalues
@@ -285,29 +291,51 @@ where
     let two_pi_over_3: T = constant(2.0 * core::f64::consts::PI / 3.0)?;
 
     // Only the upper triangle is read, so the result is the spectrum of the symmetric completion.
-    let p1 = m[0][1] * m[0][1] + m[0][2] * m[0][2] + m[1][2] * m[1][2];
+    //
+    // Divide it by its largest magnitude before anything is squared. `p1` and `p2` are sums of
+    // squares of the entries, so an entry near either end of the scalar's range takes them out of
+    // it — `p1` overflows to infinity and every eigenvalue comes back `NaN`, or it underflows to
+    // zero and the wrong spectrum comes back finite — from a matrix whose own eigenvalues are
+    // perfectly representable. Measured at `f64` on `[[2,1,0],[1,2,0],[0,0,3]]`, whose spectrum is
+    // `(3, 3, 1)`: scaled by `1e160` it returned `[inf, NaN, -inf]`, and scaled by `1e-200` it
+    // returned `(3, 2, 2)·1e-200`. The spectrum is homogeneous of degree one, `λ(M/s) = λ(M)/s`,
+    // so the cubic runs on `M/s` and the three roots are multiplied back by `s` at the end.
+    let scale = max_magnitude_6(m);
+    if scale == T::zero() {
+        // Every entry read is zero, so the symmetric completion is the zero matrix.
+        return Ok([T::zero(); 3]);
+    }
+    let a00 = m[0][0] / scale;
+    let a11 = m[1][1] / scale;
+    let a22 = m[2][2] / scale;
+    let a01 = m[0][1] / scale;
+    let a02 = m[0][2] / scale;
+    let a12 = m[1][2] / scale;
+
+    let p1 = a01 * a01 + a02 * a02 + a12 * a12;
     if p1 == T::zero() {
-        // Diagonal: the normalisation below divides by a quantity that vanishes here.
+        // Diagonal: the normalisation below divides by a quantity that vanishes here. The original
+        // entries are returned rather than the rescaled ones, so this branch stays exact.
         let mut e = [m[0][0], m[1][1], m[2][2]];
         sort_desc_3(&mut e);
         return Ok(e);
     }
 
-    let q = (m[0][0] + m[1][1] + m[2][2]) * third; // the mean eigenvalue
-    let d00 = m[0][0] - q;
-    let d11 = m[1][1] - q;
-    let d22 = m[2][2] - q;
+    let q = (a00 + a11 + a22) * third; // the mean eigenvalue of the normalised matrix
+    let d00 = a00 - q;
+    let d11 = a11 - q;
+    let d22 = a22 - q;
     let p2 = d00 * d00 + d11 * d11 + d22 * d22 + two * p1;
     let p = (p2 / six).sqrt();
 
-    // B = (M − qI)/p, whose determinant is twice the cosine of three times the angle wanted.
+    // B = (A − qI)/p, whose determinant is twice the cosine of three times the angle wanted.
     let inv_p = T::one() / p;
     let b00 = d00 * inv_p;
     let b11 = d11 * inv_p;
     let b22 = d22 * inv_p;
-    let b01 = m[0][1] * inv_p;
-    let b02 = m[0][2] * inv_p;
-    let b12 = m[1][2] * inv_p;
+    let b01 = a01 * inv_p;
+    let b02 = a02 * inv_p;
+    let b12 = a12 * inv_p;
     let det_b = b00 * (b11 * b22 - b12 * b12) - b01 * (b01 * b22 - b12 * b02)
         + b02 * (b01 * b12 - b11 * b02);
 
@@ -324,13 +352,26 @@ where
 
     let eig1 = q + two * p * phi.cos();
     let eig3 = q + two * p * (phi + two_pi_over_3).cos();
-    // The third from the trace rather than a third cosine: `Σλ = tr(M)` holds exactly, so this is
+    // The third from the trace rather than a third cosine: `Σλ = tr(A)` holds exactly, so this is
     // the better-conditioned of the two ways to get it.
     let eig2 = three * q - eig1 - eig3;
 
-    let mut e = [eig1, eig2, eig3];
+    // Back out of the normalisation. `scale` is positive, so the ordering is unaffected by it.
+    let mut e = [eig1 * scale, eig2 * scale, eig3 * scale];
     sort_desc_3(&mut e);
     Ok(e)
+}
+
+/// The largest magnitude among the six entries [`eigen_symmetric_3x3`] reads.
+fn max_magnitude_6<T: RealField>(m: &[[T; 3]; 3]) -> T {
+    let mut max = T::zero();
+    for x in [m[0][0], m[1][1], m[2][2], m[0][1], m[0][2], m[1][2]] {
+        let a = x.abs();
+        if a > max {
+            max = a;
+        }
+    }
+    max
 }
 
 /// Sorts three values in descending order. Three comparisons, which is the sorting-network optimum

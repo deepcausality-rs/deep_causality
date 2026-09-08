@@ -82,9 +82,22 @@ fn binning_error(error: StatsError) -> PreprocessError {
 
 /// Equal-width bins, delegated to `deep_causality_stats`.
 ///
-/// Value-identical to the implementation it replaces: both take `floor((x − lo) / width · bins)`
-/// and clamp the maximum down into the last bin, so every bin is `[lower, upper)` except the last,
-/// which is closed.
+/// Same partition as the implementation it replaces — every bin is `[lower, upper)` except the
+/// last, which is closed by clamping the maximum down into it — but **not value-identical**, in
+/// three ways.
+///
+/// The quotient is formed differently. The shipped routine scales, `floor((x − lo) / (hi − lo) ·
+/// bins)`; the replaced one divided by a pre-rounded width, `floor((x − lo) / fl((hi − lo) / bins))`.
+/// A value within a rounding of a bin edge can therefore land one bin over: for the column
+/// `[0.0, 0.7, 2.1]` in three bins, `0.7` is bin 1 here and was bin 0 before.
+///
+/// A near-constant column is treated as the column it is. The replaced code collapsed a range
+/// below `T::epsilon()` to a single bin; the shipped routine does that only for a range of exactly
+/// zero, so `[0.0, 1e-17]` in two bins is `[0, 1]` here and was `[0, 0]` before.
+///
+/// Two inputs are refused rather than answered. An empty column, and `bins > observations` — the
+/// same refusal the equal-frequency path carries, since both share one validation. The refusal is
+/// deliberate (unified-math-next task 5.10a) and the caller sees it as a `ConfigError`.
 fn bin_equal_width<T: Precision>(data: &[T], num_bins: usize) -> Result<Vec<T>, PreprocessError> {
     deep_causality_stats::bin_equal_width(data, num_bins).map_err(binning_error)
 }

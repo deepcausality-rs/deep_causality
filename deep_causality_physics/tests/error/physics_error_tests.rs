@@ -222,3 +222,40 @@ fn test_from_metric_error() {
         other => panic!("Wrong variant: {:?}", other),
     }
 }
+
+#[test]
+fn test_from_stats_error_keeps_not_converged_as_not_converged() {
+    // `StatsErrorEnum::NotConverged` and `PhysicsErrorEnum::NotConverged` draw the same line: an
+    // iterative fit that ran out of iterations is retryable at a wider cap, an unstable
+    // computation is not. The catch-all arm used to collapse the first into the second, which
+    // erased the only classification a caller can act on.
+    let err: PhysicsError =
+        PhysicsError::from(deep_causality_stats::StatsError::NotConverged(25, "IRLS"));
+    match err.0 {
+        PhysicsErrorEnum::NotConverged(m) => {
+            // The stats `Display` carries the iteration count, and it must survive the crossing.
+            assert!(m.contains("25"), "the iteration count was dropped: {m}");
+            assert!(m.contains("IRLS"), "the detail was dropped: {m}");
+        }
+        other => panic!("Wrong variant: {:?}", other),
+    }
+}
+
+#[test]
+fn test_from_stats_error_maps_the_other_classes_unchanged() {
+    // The arms that were already right, pinned so the new one cannot be widened by accident.
+    use deep_causality_stats::StatsError;
+
+    let shape: PhysicsError = PhysicsError::from(StatsError::DimensionMismatch("x vs y"));
+    assert!(matches!(shape.0, PhysicsErrorEnum::DimensionMismatch(_)));
+
+    let empty: PhysicsError = PhysicsError::from(StatsError::EmptyInput("no rows"));
+    assert!(matches!(empty.0, PhysicsErrorEnum::DimensionMismatch(_)));
+
+    let prob: PhysicsError = PhysicsError::from(StatsError::NegativeProbability("p < 0"));
+    assert!(matches!(prob.0, PhysicsErrorEnum::NormalizationError(_)));
+
+    // Still the catch-all: a rank-deficient design is not a cap that can be raised.
+    let rank: PhysicsError = PhysicsError::from(StatsError::RankDeficient("singular design"));
+    assert!(matches!(rank.0, PhysicsErrorEnum::NumericalInstability(_)));
+}

@@ -5,6 +5,7 @@
 
 //! Pearson product-moment correlation.
 
+use crate::algorithms::moments::{max_abs_deviation, mean};
 use crate::errors::stats_error::StatsError;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
@@ -18,6 +19,9 @@ use deep_causality_num::FromPrimitive;
 /// and this returns `Ok((0, n))` rather than an error. That is the absorbed implementation's
 /// convention, preserved deliberately: its caller ranks features by `|r|` and a zero rank means
 /// "carries no information", which is the right answer for a constant column.
+///
+/// A sample whose *centred sums* leave the type is not that case and does not take that exit; see
+/// the reach note on [`correlate`].
 pub fn pearson<T>(x: &[T], y: &[T]) -> Result<(T, usize), StatsError>
 where
     T: RealField + FromPrimitive,
@@ -31,6 +35,19 @@ where
 }
 
 /// The shared body, over slices already reduced to the complete pairs.
+///
+/// # Reach
+///
+/// `r` is invariant under a positive scaling of either sample, and that is what makes the extremes
+/// answerable rather than merely survivable. The centred sums `Σdx²`, `Σdy²` and `Σdx·dy` leave the
+/// type at both ends well before `r` does: deviations near `1e200` square past `f64`'s maximum, and
+/// deviations near `1e-200` square to zero. Either would come back as a `NaN` or as the
+/// zero-variance sentinel, and both are wrong for a sample whose correlation is exactly one.
+///
+/// So the direct sums are formed first, because they are the accurate form, and where they
+/// saturate or collapse the deviations are divided by the largest of them before accumulating. The
+/// scaled sums lie in `[1, n]`, the scale cancels out of `r`, and only the extremes pay the extra
+/// rounding.
 fn correlate<T>(x: &[T], y: &[T]) -> Result<(T, usize), StatsError>
 where
     T: RealField + FromPrimitive,
@@ -52,15 +69,14 @@ where
     }
 
     let n = x.len();
-    let n_t = T::from_usize(n).ok_or_else(|| {
-        StatsError::ConversionFailed("a pair count is not representable in the working scalar")
-    })?;
 
     // Centred sums, in two passes. Forming the means first keeps the computation away from the
     // `Σx² − (Σx)²/n` form, which cancels catastrophically when the mean is large next to the
-    // dispersion.
-    let mean_x = x.iter().fold(T::zero(), |a, &v| a + v) / n_t;
-    let mean_y = y.iter().fold(T::zero(), |a, &v| a + v) / n_t;
+    // dispersion. `mean` is the same left-to-right sum over the count, and carries its own reach:
+    // a column of `f64::MAX` has a representable mean, and an infinite one here would centre the
+    // column on nothing and return `NaN` where the documented answer is zero.
+    let mean_x = mean(x)?;
+    let mean_y = mean(y)?;
 
     let mut sxy = T::zero();
     let mut sxx = T::zero();
@@ -73,29 +89,59 @@ where
         syy += dy * dy;
     }
 
-    // Zero variance in either sample: the denominator vanishes and `r` is undefined. The absorbed
-    // implementation's convention is preserved deliberately — see this function's doc.
-    if sxx <= T::zero() || syy <= T::zero() {
+    let usable = sxx.is_finite() && syy.is_finite() && sxy.is_finite();
+    if usable && sxx > T::zero() && syy > T::zero() {
+        return Ok((ratio(sxy, sxx, syy), n));
+    }
+
+    // Either a constant column, or centred sums that left the type. The largest deviation
+    // separates the two: it is zero exactly when the column never varied.
+    let scale_x = max_abs_deviation(x, mean_x);
+    let scale_y = max_abs_deviation(y, mean_y);
+    if scale_x <= T::zero() || scale_y <= T::zero() {
+        // Zero variance in one of the samples: the denominator vanishes and `r` is undefined. The
+        // absorbed implementation's convention is preserved deliberately — see `pearson`'s doc.
         return Ok((T::zero(), n));
     }
-    // One square root where the product is representable, two where it is not.
-    //
-    // `(sxx · syy).sqrt()` rounds once, and for `y = ax + b` the product is an exact square, so a
-    // perfectly correlated sample returns exactly ±1. The three-rounding form
-    // `sqrt(sxx) · sqrt(syy)` returns `0.9999999999999998` there instead.
-    //
-    // But the product leaves the representable range at magnitudes each factor survives, at both
-    // ends: centred sums near `1e200` square past the maximum, and denormal ones square to zero,
-    // which would divide by it. So the exact form is used where the product is finite and
-    // non-zero, and the scaled form — which cannot do either, because each root is taken before
-    // the multiply — where it is not. Only the extremes pay the extra rounding.
+
+    let mut txy = T::zero();
+    let mut txx = T::zero();
+    let mut tyy = T::zero();
+    for (&xi, &yi) in x.iter().zip(y.iter()) {
+        let dx = (xi - mean_x) / scale_x;
+        let dy = (yi - mean_y) / scale_y;
+        txy += dx * dy;
+        txx += dx * dx;
+        tyy += dy * dy;
+    }
+    if txx <= T::zero() || tyy <= T::zero() {
+        return Ok((T::zero(), n));
+    }
+    Ok((ratio(txy, txx, tyy), n))
+}
+
+/// `sxy / √(sxx · syy)`, with one square root where the product is representable and two where it
+/// is not.
+///
+/// `(sxx · syy).sqrt()` rounds once, and for `y = ax + b` the product is an exact square, so a
+/// perfectly correlated sample returns exactly ±1. The three-rounding form
+/// `sqrt(sxx) · sqrt(syy)` returns `0.9999999999999998` there instead.
+///
+/// But the product leaves the representable range at magnitudes each factor survives, at both
+/// ends: centred sums near `1e200` square past the maximum, and denormal ones square to zero,
+/// which would divide by it. So the exact form is used where the product is finite and non-zero,
+/// and the scaled form — which cannot do either, because each root is taken before the multiply —
+/// where it is not. Only the extremes pay the extra rounding.
+fn ratio<T>(sxy: T, sxx: T, syy: T) -> T
+where
+    T: RealField,
+{
     let product = sxx * syy;
-    let r = if product.is_finite() && product > T::zero() {
+    if product.is_finite() && product > T::zero() {
         sxy / product.sqrt()
     } else {
         (sxy / sxx.sqrt()) / syy.sqrt()
-    };
-    Ok((r, n))
+    }
 }
 
 /// Pearson's `r` over the pairs where both samples are present.

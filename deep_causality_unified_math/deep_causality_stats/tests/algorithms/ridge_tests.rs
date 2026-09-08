@@ -1440,3 +1440,38 @@ fn test_fit_ridge_exempt_column_outside_the_design_is_refused() {
         "an exempt column past the design width is a shape error, got {err:?}"
     );
 }
+
+// ---------------------------------------------------------------------------------------------
+// A stated column count with no normal matrix
+// ---------------------------------------------------------------------------------------------
+
+/// Provenance: an arithmetic fact about `usize`, and this crate's refusal contract for a shape
+/// that does not exist.
+///
+/// The normal matrix is `columns × columns`, and in the streaming form `columns` is the caller's
+/// word rather than a length read off a design that has to fit in memory. `2³³` squared is `2⁶⁶`,
+/// which no `usize` holds: the product panics on overflow in a debug build and wraps to zero in a
+/// release one, and a wrapped count sizes the normal matrix to nothing while `columns²` indices
+/// are written into it. Neither is a refusal, and a stated shape that cannot exist is exactly what
+/// `DimensionMismatch` is for.
+///
+/// A width the design does not carry is refused the same way, so the two refusals are shown to be
+/// about the shape rather than about the arithmetic having been reached at all.
+#[test]
+#[cfg(target_pointer_width = "64")]
+fn test_fit_ridge_streaming_refuses_a_column_count_whose_square_has_no_usize() {
+    let rows: Vec<(Vec<f64>, f64)> = vec![(vec![1.0], 1.0), (vec![2.0], 3.0)];
+    let config = RidgeConfig::new(1.0_f64);
+
+    for width in [1usize << 33, 1usize << 40, usize::MAX] {
+        let err = err_of(fit_ridge_streaming(rows.clone(), &config, width));
+        assert!(
+            matches!(err, StatsErrorEnum::DimensionMismatch(_)),
+            "a width of {width} has no normal matrix; expected DimensionMismatch, got {err:?}"
+        );
+    }
+
+    // The one-column design the fixture actually carries still fits.
+    let fit = fit_of(fit_ridge_streaming(rows, &config, 1));
+    assert_eq!(fit.beta.len(), 1, "a one-column design has one coefficient");
+}

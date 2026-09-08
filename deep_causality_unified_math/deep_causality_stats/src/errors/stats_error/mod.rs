@@ -141,5 +141,9 @@ impl fmt::Display for StatsError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for StatsError {}
+// Unconditional, not gated on `std`. The crate builds `no_std` under `no-std`, and gating the
+// impl there would leave `StatsError` implementing no error trait at all: a no-std caller could
+// not put it behind `dyn Error`, and `?` into an error type with a blanket `From<E: Error>` would
+// stop compiling with the feature flag rather than with the code. `deep_causality_linear`, which
+// this crate depends on, states the same rule beside `LinearError`.
+impl core::error::Error for StatsError {}

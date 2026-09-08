@@ -35,6 +35,7 @@ use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
 use crate::brcd::brcd_mapconfig::find_map_configs;
+use crate::brcd::brcd_project::{transpose, transpose_int};
 use crate::brcd::brcd_result::BrcdResult;
 use crate::dag_sampling::{mec_size, representative_dag, sample_dag};
 use deep_causality_algebra::RealField;
@@ -482,32 +483,6 @@ fn build_discrete<T: RealField + FromPrimitive + ToPrimitive>(
         cards.push(max_state + 1);
     }
     Ok((ints, cards))
-}
-
-/// Builds the `n_total` parent feature rows from the chosen continuous columns.
-///
-/// **Kept out of `deep_causality_linear`** (unified-math-next task 6.10). The name says transpose,
-/// but this selects a subset of columns and gathers them into rows — an index projection over a
-/// column store, with no arithmetic at all. Its `transpose_int` sibling does the same over `usize`.
-/// There is no linear algebra here to move. The four copies across this file and
-/// `brcd_boss_bootstrap.rs` are a real duplication and de-duplicate *within* `algorithms`.
-fn transpose<T: RealField>(columns: &[Vec<T>], idxs: &[usize], n: usize) -> Vec<Vec<T>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&p| columns[p][i]).collect())
-        .collect()
-}
-
-/// Builds the `n_total` parent configuration rows from the chosen integer columns.
-fn transpose_int(columns: &[Vec<usize>], idxs: &[usize], n: usize) -> Vec<Vec<usize>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&p| columns[p][i]).collect())
-        .collect()
 }
 
 /// All `k`-subsets of `0..n` in ascending lexicographic order (matching

@@ -1762,3 +1762,125 @@ fn skip_zero_keeps_a_sub_epsilon_entry_f64() {
 fn skip_zero_keeps_a_sub_epsilon_entry_f106() {
     check_skip_zero_keeps_a_sub_epsilon_entry::<Float106>(F106.epsilon);
 }
+
+// ---------------------------------------------------------------------------------------------
+// A zero policy that omits nothing, and a normalising sum that leaves the type
+// ---------------------------------------------------------------------------------------------
+
+/// `SkipBelow` with a *negative* threshold.
+///
+/// Provenance: hand evaluation of `H = −Σ pᵢ log2 pᵢ` on `[1/2, 1/2, 0]`. The two halves give
+/// `−2·(1/2)·log2(1/2) = 2·(1/2)·1 = 1` bit; the zero entry gives `lim(p → 0) p·log p = 0`, which
+/// is the limit the zero policy exists to encode and is what makes `H` continuous at the corner of
+/// the simplex. The threshold does not enter the answer: it names which entries are omitted, and
+/// omitting an entry that contributes zero changes nothing.
+///
+/// A negative threshold is the reading of "omit entries at or below the threshold" that omits
+/// none of them — the entries are probabilities, so none is negative and none is at or below it.
+/// The exact zeros are then *kept*, and `0 · ln 0` is `0 · (−∞)`, which is a `NaN` and not the
+/// limit. The whole answer is lost to it: a `NaN` added to the running sum stays there, so an
+/// otherwise ordinary distribution comes back with no entropy at all rather than with one bit.
+///
+/// The `-0.0` case is the same corner reached from the other side: it is not less than zero, so
+/// the input passes the negative-probability check, and it is not greater than a negative
+/// threshold either.
+fn check_negative_threshold_keeps_the_limit_at_zero<T>(tol: T)
+where
+    T: Real + RealField + FromPrimitive + Debug + Default,
+{
+    for threshold in [-0.5, -1e-30, -0.0] {
+        let config =
+            EntropyConfig::<T>::bits().with_zero_policy(ZeroPolicy::SkipBelow(lift(threshold)));
+
+        let p = lift_array::<T>(&[0.5, 0.5, 0.0]);
+        let h = entropy(&p, &config).expect("a distribution with a zero entry has an entropy");
+        assert!(
+            approx_eq(h, lift::<T>(1.0), tol),
+            "SkipBelow({threshold}) on [1/2, 1/2, 0] gave {h:?}, not the 1 bit the two halves carry"
+        );
+
+        // Several zeros, and a zero in the leading position, so no ordering hides the corner.
+        let padded = lift_array::<T>(&[0.0, 0.5, 0.0, 0.5, 0.0]);
+        let h = entropy(&padded, &config).expect("padding with zeros does not remove the entropy");
+        assert!(
+            approx_eq(h, lift::<T>(1.0), tol),
+            "SkipBelow({threshold}) on [0, 1/2, 0, 1/2, 0] gave {h:?}, not 1 bit"
+        );
+    }
+}
+
+#[test]
+fn negative_threshold_keeps_the_limit_at_zero_f32() {
+    check_negative_threshold_keeps_the_limit_at_zero::<f32>(lift(F32.native));
+}
+
+#[test]
+fn negative_threshold_keeps_the_limit_at_zero_f64() {
+    check_negative_threshold_keeps_the_limit_at_zero::<f64>(lift(F64.native));
+}
+
+#[test]
+fn negative_threshold_keeps_the_limit_at_zero_f106() {
+    check_negative_threshold_keeps_the_limit_at_zero::<Float106>(lift(F106.native));
+}
+
+/// `Normalisation::BySum` where the weights are finite and their sum is not.
+///
+/// Provenance: hand evaluation of `H = −Σ pᵢ log2 pᵢ` on the normalised weights, plus the scale
+/// invariance that `BySum` exists to provide — `H(w) = H(c·w)` for every `c > 0`, because the
+/// weights are divided by their own sum before the surprisal is taken.
+///
+/// * `k` equal weights normalise to the uniform distribution on `k`, whose entropy is `log2 k`.
+///   Two weights give exactly 1 bit; three give `log2 3 = 1.584962500721156` (the published
+///   constant, cited here rather than computed).
+///
+/// The weights are each the type's own maximum, so every one of them is an ordinary number of the
+/// type and their sum is `+∞`. Dividing by that sum sends every entry to zero, and an entropy of
+/// zero is then returned for the distribution that carries the *most* entropy a `k`-outcome
+/// distribution can — the exact opposite of the answer.
+fn check_by_sum_where_the_sum_overflows<T>(max_finite: f64, tol: T)
+where
+    T: Real + RealField + FromPrimitive + Debug + Default,
+{
+    let config =
+        EntropyConfig::<T>::bits().with_normalisation(Normalisation::BySum { floor: lift(0.0) });
+
+    let two = lift_array::<T>(&[max_finite, max_finite]);
+    let h = entropy(&two, &config).expect("two equal weights are a distribution");
+    assert!(
+        approx_eq(h, lift::<T>(1.0), tol),
+        "two equal weights at MAX gave {h:?}, not the 1 bit of a fair coin"
+    );
+
+    let three = lift_array::<T>(&[max_finite, max_finite, max_finite]);
+    let h = entropy(&three, &config).expect("three equal weights are a distribution");
+    // log2 3 = 1.584962500721156, a published constant.
+    assert!(
+        approx_eq(h, lift::<T>(1.584_962_500_721_156), tol),
+        "three equal weights at MAX gave {h:?}, not log2 3"
+    );
+
+    // Unequal weights, so the answer is not the uniform one by accident: 1 and 3 parts of the
+    // mass are 1/4 and 3/4, and H(1/4, 3/4) = 2/4 + (3/4)·log2(4/3) = 0.8112781244591328.
+    let uneven = lift_array::<T>(&[max_finite / 3.0, max_finite]);
+    let h = entropy(&uneven, &config).expect("two unequal weights are a distribution");
+    assert!(
+        approx_eq(h, lift::<T>(0.811_278_124_459_132_8), tol),
+        "weights in the ratio 1:3 gave {h:?}, not H(1/4, 3/4)"
+    );
+}
+
+#[test]
+fn by_sum_where_the_sum_overflows_f32() {
+    check_by_sum_where_the_sum_overflows::<f32>(F32.max_finite, lift(F32.native));
+}
+
+#[test]
+fn by_sum_where_the_sum_overflows_f64() {
+    check_by_sum_where_the_sum_overflows::<f64>(F64.max_finite, lift(F64.native));
+}
+
+#[test]
+fn by_sum_where_the_sum_overflows_f106() {
+    check_by_sum_where_the_sum_overflows::<Float106>(F106.max_finite, lift(F106.literal));
+}

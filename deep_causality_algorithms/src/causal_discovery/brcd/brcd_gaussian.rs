@@ -474,15 +474,17 @@ fn fit_expert_guarded<T: RealField + FromPrimitive>(
     }
 }
 
-/// Streaming ridge fit over the finite rows of `idxs`: accumulates `XᵀX + λI` and
-/// `Xᵀz` directly from each finite row's `[1, parents]` design using one reused
-/// buffer, solves in place, and returns the floored residual variance. Returns
-/// `None` when at most `min_finite` rows are finite (the caller's fallback).
+/// Ridge fit over the finite rows of `idxs`: accumulates `XᵀX + λI` and `Xᵀz` from each finite
+/// row's `[1, parents]` design, solves, and returns the floored residual variance. Returns `None`
+/// when at most `min_finite` rows are finite (the caller's fallback).
 ///
-/// Bit-identical to `fit_ridge` over `finite_design(...)`: same finite filter,
-/// accumulation order, ridge, solve, and residual pass — but it allocates only
-/// the `p×p` normal-equations buffers instead of one `Vec` per design row, which
-/// dominated the per-family cost.
+/// The design matrix is never held whole — the crate reads the row source twice, once to
+/// accumulate the normal equations and once to form the residuals, and keeps only the `p × p`
+/// buffers in between. **Each row is still allocated**, and twice, because the shipped signature
+/// takes `IntoIterator<Item = (Vec<T>, T)> + Clone` and so owns every row it is handed. The
+/// hand-rolled fit this replaced copied each row into a single buffer it reused across the whole
+/// fit and allocated nothing per row. Removing the per-row allocation needs a borrowed-row entry
+/// point in `deep_causality_stats`; it cannot be done from this side.
 fn fit_ridge_streaming<T: RealField + FromPrimitive>(
     idxs: &[usize],
     z_all: &[T],
@@ -494,10 +496,10 @@ fn fit_ridge_streaming<T: RealField + FromPrimitive>(
 
     // The rows are a *re-iterable* view over storage this function does not own: an index list into
     // `z_all` and `parents_t`, filtered to the finite rows, with the intercept column prepended as
-    // each row is yielded. Nothing is materialised — the crate reads the source twice, once to
-    // accumulate `XᵀX`/`Xᵀy` and once to form the residuals, and holds only the `p × p` normal
-    // matrix in between. That is the property this function exists for, and it is why the shipped
-    // signature takes `IntoIterator + Clone` rather than a once-consumable iterator.
+    // each row is yielded. The design is never materialised as a whole, which is why the shipped
+    // signature takes `IntoIterator + Clone` rather than a once-consumable iterator — but the
+    // item type is owned, so this closure heap-allocates one `Vec` per finite row and the crate's
+    // two passes run it twice per fit. See the note on this function.
     let finite = |i: usize| z_all[i].is_finite() && parents_t[i].iter().all(|v| v.is_finite());
     let count = idxs.iter().filter(|&&i| finite(i)).count();
     if count <= min_finite {

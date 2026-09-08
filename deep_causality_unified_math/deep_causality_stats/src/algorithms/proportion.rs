@@ -54,8 +54,23 @@ where
 /// A proportion and its standard error from counts: `p̂ = hits / trials`.
 ///
 /// Separate from [`bernoulli_standard_error`] because the counts carry information the proportion
-/// alone does not — `hits > trials` is a caller error that `p̂ > 1` can only report after the
-/// division has already lost which count was wrong.
+/// alone does not, and it carries it in two places.
+///
+/// The first is the refusal: `hits > trials` is a caller error that `p̂ > 1` can only report after
+/// the division has already lost which count was wrong.
+///
+/// The second is accuracy, at a scalar narrower than the counts. Converting each count separately
+/// and dividing rounds twice, and the two roundings do not cancel: at `BFloat16`, which carries
+/// eight significant bits, `257 / 259` becomes `256 / 260` and the quotient lands four places from
+/// the correctly rounded one. So the ratio is formed from the counts and rounded once wherever the
+/// scalar cannot hold them exactly — and where it can, which is every scalar as wide as the counts
+/// are, the exact route is kept rather than routed through an `f64` that would *lose* precision
+/// for `Float106`.
+///
+/// The complement `1 − p̂` is formed from the counts for the same reason, and it is the one that
+/// matters most: 1001 of 1002 rounds to exactly one at `BFloat16`, correctly, and `1 − 1` is zero,
+/// so a standard error taken from the rounded proportion is zero for a sample that plainly has
+/// one. `(trials − hits) / trials` is `1/1002` there, and the width comes back as `1.0e-3`.
 pub fn bernoulli_proportion<T>(hits: u64, trials: u64) -> Result<(T, T), StatsError>
 where
     T: RealField + FromPrimitive,
@@ -73,9 +88,29 @@ where
     let n = T::from_u64(trials).ok_or_else(|| {
         StatsError::ConversionFailed("a trial count is not representable in the working scalar")
     })?;
-    let k = T::from_u64(hits).ok_or_else(|| {
-        StatsError::ConversionFailed("a hit count is not representable in the working scalar")
-    })?;
-    let p = k / n;
-    Ok((p, bernoulli_standard_error(p, trials)?))
+    let p = quotient::<T>(hits, trials)?;
+    let q = quotient::<T>(trials - hits, trials)?;
+    Ok((p, (p * q / n).sqrt()))
+}
+
+/// `numerator / denominator`, rounded into `T` once.
+///
+/// Both counts convert exactly when the scalar's significand is at least as wide as they are, and
+/// then the quotient carries a single rounding already. Where one of them does not — a count past
+/// `2^8` at `BFloat16`, past `2^24` at `f32` — the division is taken at `f64` first, which holds
+/// every count under `2^53` exactly, and the result is rounded into `T` once. That double rounding
+/// is innocuous for these targets: the intermediate carries more than twice the significand bits
+/// of either, which is the condition under which rounding twice agrees with rounding once
+/// (S. A. Figueroa, *When is double rounding innocuous?*, ACM SIGNUM Newsletter 30(3), 1995).
+fn quotient<T>(numerator: u64, denominator: u64) -> Result<T, StatsError>
+where
+    T: RealField + FromPrimitive,
+{
+    let exact = |v: u64| T::from_u64(v).filter(|t| t.to_u64() == Some(v));
+    if let (Some(a), Some(b)) = (exact(numerator), exact(denominator)) {
+        return Ok(a / b);
+    }
+    T::from_f64(numerator as f64 / denominator as f64).ok_or_else(|| {
+        StatsError::ConversionFailed("a count is not representable in the working scalar")
+    })
 }

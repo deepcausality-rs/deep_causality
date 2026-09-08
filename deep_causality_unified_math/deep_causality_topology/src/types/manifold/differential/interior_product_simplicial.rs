@@ -93,7 +93,8 @@ where
     /// * [`TopologyError::DimensionMismatch`] when `x_flat` is not a 1-cochain of length
     ///   `n₁`, or `omega` is not a 2-cochain of length `n₂`.
     /// * [`TopologyError::InvalidInput`] when the complex carries no coordinates, when the
-    ///   ambient dimension is not three, or when a tetrahedron is degenerate.
+    ///   ambient dimension is not three, when a cell of the 3-skeleton is not a tetrahedron, or
+    ///   when a tetrahedron is degenerate.
     pub fn interior_product(
         &self,
         x_flat: &CausalTensor<R>,
@@ -195,8 +196,24 @@ where
 
         for tet in skeletons[DIM].simplices() {
             let tv = tet.vertices();
+            // Every cell of the 3-skeleton has to be a tetrahedron: the Whitney basis below is
+            // defined on four vertices and nothing else. `Skeleton::new` records the grade
+            // separately from the vertex list and validates neither against the other, so a
+            // caller assembling skeletons by hand can put a cell of any arity here and
+            // `Manifold::new` will accept it — a five-vertex entry alongside a proper tetrahedron
+            // passes both the orientation and the link-condition checks. Skipping it would return
+            // a 1-cochain that is simply missing that cell's contribution; measured on a
+            // two-tetrahedron mesh whose second cell was recorded with five vertices, the result
+            // was off the closed form by `4.96` on the edge that cell alone touches. So it is
+            // refused.
             if tv.len() != DIM + 1 {
-                continue;
+                return Err(TopologyError(TopologyErrorEnum::InvalidInput(format!(
+                    "the 3-skeleton holds {tv:?}, which has {} vertices: the simplicial interior \
+                     product interpolates with Whitney forms on tetrahedra, so every cell of the \
+                     top skeleton must have {} of them",
+                    tv.len(),
+                    DIM + 1
+                ))));
             }
             let mut points = [[R::zero(); DIM]; 4];
             for (slot, &vertex) in points.iter_mut().zip(tv.iter()) {

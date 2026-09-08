@@ -65,7 +65,7 @@ use core::fmt::Debug;
 // it brings both method sets to a generic parameter without naming them again here.
 use deep_causality_algebra::RealField;
 use deep_causality_num::lift;
-use deep_causality_num::{Float106, FromPrimitive};
+use deep_causality_num::{BFloat16, Float106, FromPrimitive};
 use deep_causality_stats::utils_tests::lift_array;
 use deep_causality_stats::utils_tests::precision::{F32, F64, F106};
 use deep_causality_stats::{StatsErrorEnum, bin_equal_frequency, bin_equal_width};
@@ -985,4 +985,128 @@ fn test_equal_frequency_reaches_the_types_extremes() {
     case_frequency_extremes::<f32>(precision_f32());
     case_frequency_extremes::<f64>(precision_f64());
     case_frequency_extremes::<Float106>(precision_f106());
+}
+
+// ---------------------------------------------------------------------------------------------
+// Row J, the case the header deferred: a span from −MAX to +MAX
+//
+// The suite's header says this span was left unasserted because "the docs do not say whether that
+// is refused or computed in a wider intermediate, so the suite does not invent an answer". The
+// documentation now says: it is computed, through halved endpoints. So the answer is no longer
+// invented, and the case is asserted here.
+// ---------------------------------------------------------------------------------------------
+
+/// Provenance: the documented half-open convention, applied to a range whose two endpoints are the
+/// type's own extremes.
+///
+/// With `lo = −MAX` and `hi = +MAX`, two bins split the range at its midpoint, which is zero.
+/// `[lo, 0)` is bin 0 and `[0, hi]` is bin 1 — the lower bin is half-open, so a value *at* the
+/// midpoint belongs to the bin above it, and the upper bin is closed, so the maximum falls inside
+/// the range rather than one bin past its end. That gives `−MAX → 0`, `0 → 1`, `MAX → 1`.
+///
+/// Every observation is finite and each has a bin. What is not representable is `hi − lo`, which
+/// is `2·MAX`: the quotient `(x − lo) / (hi − lo)` is then `∞/∞` at the maximum, and the
+/// observation that *defines* the top of the range comes back as a `NaN` bin index — an entry that
+/// is neither in `[0, bins)` nor comparable to anything, from a column of three ordinary numbers.
+fn case_width_spans_both_extrema<T: RealField + FromPrimitive + Debug>(p: Precision<T>) {
+    let zero = lift::<T>(0.0);
+    let one = lift::<T>(1.0);
+    let data = [-p.huge, zero, p.huge];
+
+    let out = bin_equal_width(&data, 2).expect("three finite observations bin into two bins");
+    assert_eq!(out.len(), 3, "one index per observation");
+    assert_eq!(out[0], zero, "the minimum belongs to the first bin");
+    assert_eq!(
+        out[1], one,
+        "the midpoint belongs to the bin above it under the half-open convention"
+    );
+    assert_eq!(
+        out[2], one,
+        "the maximum belongs to the last bin, which is closed"
+    );
+
+    // Four bins over the same span, so the split points are at ±MAX/2 as well as at zero, and a
+    // NaN quotient would have more places to hide. Only the range's own membership is asserted:
+    // an interior value at this span sits inside the rounding of the endpoints.
+    let counts_seen = counts(
+        &bin_equal_width(&[-p.huge, -p.huge / lift::<T>(2.0), p.huge], 3)
+            .expect("three finite observations bin into three bins"),
+        3,
+    );
+    assert_eq!(
+        counts_seen.iter().sum::<usize>(),
+        3,
+        "every observation landed in a bin"
+    );
+}
+
+#[test]
+fn test_equal_width_spans_both_extrema() {
+    case_width_spans_both_extrema::<f32>(precision_f32());
+    case_width_spans_both_extrema::<f64>(precision_f64());
+    case_width_spans_both_extrema::<Float106>(precision_f106());
+}
+
+// ---------------------------------------------------------------------------------------------
+// A bin count the scalar cannot name
+// ---------------------------------------------------------------------------------------------
+
+/// Provenance: the `BFloat16` format, and this crate's own refusal contract for a conversion that
+/// cannot be made.
+///
+/// `BFloat16` carries eight significand bits, so the spacing of its values in `[256, 512)` is 2:
+/// 256 and 258 are values of the type, 257 is not, and a conversion of 257 rounds to 256.
+///
+/// The two functions name different numbers in the working scalar, so each is given the fixture
+/// that makes it name 257.
+///
+/// * `bin_equal_width` divides the range into `bins` intervals, so it converts the bin *count*. A
+///   caller asking for 257 bins cannot be given them — every boundary would be computed from a
+///   count of 256 — and a count the scalar merely approximates is not a count it holds.
+/// * `bin_equal_frequency` computes its indices in `usize` and converts only the ones it uses, so
+///   the count alone is not enough: it needs a sample where bin 257 is actually occupied. 300
+///   distinct values into 300 bins puts one observation in each, so it is. The failure that would
+///   otherwise follow is a *collision*: bins 256 and 257 would carry the same label, and two
+///   distinct bins would be indistinguishable in the output.
+///
+/// A count of 256 is asserted alongside each, from the same data, so the refusal is shown to be
+/// about representability rather than about the size of the count.
+#[test]
+fn test_bin_count_the_scalar_cannot_represent_is_refused() {
+    // 257 observations at 0, 1, ..., 256. Every one is a value of the type: the spacing below 256
+    // is 1 or finer.
+    let dense: Vec<BFloat16> = (0..=256).map(|i| lift(i as f64)).collect();
+
+    let err = bin_equal_width(&dense, 257)
+        .expect_err("257 is not a BFloat16 value, so 257 equal-width bins have no name");
+    assert!(
+        matches!(err.0, StatsErrorEnum::ConversionFailed(_)),
+        "expected StatsErrorEnum::ConversionFailed, got {err:?}"
+    );
+    let out = bin_equal_width(&dense, 256).expect("256 is a BFloat16 value");
+    assert_eq!(out.len(), 257, "one index per observation");
+
+    // 300 strictly increasing values, taken by scanning the integers upward and keeping each one
+    // that is a new value of the type. No ties, so equal-frequency binning into 300 bins puts one
+    // observation in each and reaches bin 257.
+    let mut distinct: Vec<BFloat16> = Vec::new();
+    let mut i = 0u32;
+    while distinct.len() < 300 {
+        let v: BFloat16 = lift(i as f64);
+        if distinct.last().map(|&last| v > last).unwrap_or(true) {
+            distinct.push(v);
+        }
+        i += 1;
+    }
+
+    let err = bin_equal_frequency(&distinct, 300)
+        .expect_err("bin 257 is occupied, and 257 is not a BFloat16 value");
+    assert!(
+        matches!(err.0, StatsErrorEnum::ConversionFailed(_)),
+        "expected StatsErrorEnum::ConversionFailed, got {err:?}"
+    );
+    // 256 bins over the same 300 observations: the largest index used is 255, which the type
+    // holds, so nothing is refused.
+    let out = bin_equal_frequency(&distinct, 256).expect("every index used is a BFloat16 value");
+    assert_eq!(out.len(), 300, "one index per observation");
 }

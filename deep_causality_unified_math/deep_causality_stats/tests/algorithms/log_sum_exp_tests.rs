@@ -1043,3 +1043,107 @@ fn log_add_exp_identity_and_non_finite_f64() {
 fn log_add_exp_identity_and_non_finite_f106() {
     log_add_exp_identity_and_non_finite::<Float106>();
 }
+
+// ---------------------------------------------------------------------------------------------
+// 20. A NaN beside an infinity: permutation invariance where the two saturating rules meet
+// ---------------------------------------------------------------------------------------------
+
+/// Provenance: allow-list item 4 (a sum over a set does not depend on the order of the set),
+/// combined with the reading section 8 already fixes — `NaN` propagates.
+///
+/// The running maximum cannot carry that invariant on its own. Every comparison against a `NaN` is
+/// false, so a `NaN` is kept as the maximum when it arrives first and dropped when a larger value
+/// arrives before it. With every entry finite the two readings agree anyway, because the shifted
+/// `NaN` reaches the sum and propagates from there. With an infinity present they do not: one
+/// order saturates on the `NaN` and the other on the infinity, and the same multiset then has two
+/// answers depending on how it was written down.
+///
+/// Both orders are asserted for `+∞` and for `−∞`, and the reading asserted is the one section 8
+/// already states for `[NaN, +∞]`.
+fn nan_beside_an_infinity_is_permutation_invariant<T: RealField + FromPrimitive>() {
+    for infinity in [f64::INFINITY, f64::NEG_INFINITY] {
+        let nan_first = log_sum_exp(&lift_array::<T>(&[f64::NAN, infinity]));
+        let nan_last = log_sum_exp(&lift_array::<T>(&[infinity, f64::NAN]));
+        assert!(
+            nan_first.is_nan(),
+            "[NaN, {infinity}] did not propagate the NaN"
+        );
+        assert!(
+            nan_last.is_nan(),
+            "[{infinity}, NaN] did not propagate the NaN: the answer depends on the input order"
+        );
+
+        // With a finite entry between them, so the maximum is not the first element either way.
+        let a = log_sum_exp(&lift_array::<T>(&[f64::NAN, 1.0, infinity]));
+        let b = log_sum_exp(&lift_array::<T>(&[infinity, 1.0, f64::NAN]));
+        assert!(a.is_nan() && b.is_nan(), "the three-entry orders disagree");
+    }
+
+    // Two infinities of opposite sign around the NaN, in both orders.
+    let a = log_sum_exp(&lift_array::<T>(&[
+        f64::NEG_INFINITY,
+        f64::NAN,
+        f64::INFINITY,
+    ]));
+    let b = log_sum_exp(&lift_array::<T>(&[
+        f64::INFINITY,
+        f64::NAN,
+        f64::NEG_INFINITY,
+    ]));
+    assert!(
+        a.is_nan() && b.is_nan(),
+        "a NaN between two infinities depends on the input order"
+    );
+}
+
+#[test]
+fn nan_beside_an_infinity_is_permutation_invariant_f32() {
+    nan_beside_an_infinity_is_permutation_invariant::<f32>();
+}
+
+#[test]
+fn nan_beside_an_infinity_is_permutation_invariant_f64() {
+    nan_beside_an_infinity_is_permutation_invariant::<f64>();
+}
+
+#[test]
+fn nan_beside_an_infinity_is_permutation_invariant_f106() {
+    nan_beside_an_infinity_is_permutation_invariant::<Float106>();
+}
+
+/// Provenance: allow-list item 4. `e^a + e^b = e^b + e^a`, so the two-term form is symmetric at
+/// every pair of arguments, the non-finite ones included.
+///
+/// Section 15 asserts the symmetry at `(NaN, 1)`, where both orders reach the same branch. The
+/// pair that separates them is `(NaN, ±∞)`: `a > b` is false when either is a `NaN`, so the larger
+/// of `(NaN, +∞)` is the infinity and the larger of `(+∞, NaN)` is the `NaN`, and a rule that
+/// saturates on the larger answers `+∞` one way round and `NaN` the other.
+fn log_add_exp_is_symmetric_at_a_nan_beside_an_infinity<T: RealField + FromPrimitive>() {
+    let nan = lift::<T>(f64::NAN);
+    for infinity in [f64::INFINITY, f64::NEG_INFINITY] {
+        let inf = lift::<T>(infinity);
+        assert!(
+            log_add_exp(nan, inf).is_nan(),
+            "log_add_exp(NaN, {infinity}) did not propagate the NaN"
+        );
+        assert!(
+            log_add_exp(inf, nan).is_nan(),
+            "log_add_exp({infinity}, NaN) did not propagate the NaN: the two orders disagree"
+        );
+    }
+}
+
+#[test]
+fn log_add_exp_is_symmetric_at_a_nan_beside_an_infinity_f32() {
+    log_add_exp_is_symmetric_at_a_nan_beside_an_infinity::<f32>();
+}
+
+#[test]
+fn log_add_exp_is_symmetric_at_a_nan_beside_an_infinity_f64() {
+    log_add_exp_is_symmetric_at_a_nan_beside_an_infinity::<f64>();
+}
+
+#[test]
+fn log_add_exp_is_symmetric_at_a_nan_beside_an_infinity_f106() {
+    log_add_exp_is_symmetric_at_a_nan_beside_an_infinity::<Float106>();
+}

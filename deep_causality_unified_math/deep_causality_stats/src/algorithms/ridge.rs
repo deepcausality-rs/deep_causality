@@ -94,7 +94,8 @@ where
     }
     let exempt = config.penalisation.exempt();
 
-    let mut xtx = vec![T::zero(); p * p];
+    let cells = square(p)?;
+    let mut xtx = vec![T::zero(); cells];
     let mut xty = vec![T::zero(); p];
     let mut n = 0usize;
 
@@ -178,6 +179,20 @@ where
     })
 }
 
+/// `columns²`, the size of the normal matrix, or a typed error when that count does not exist.
+///
+/// The width is stated by the caller in the streaming form and read from the first row in the
+/// materialised one, and neither is bounded by anything the multiply can rely on. An unchecked
+/// `columns · columns` panics on overflow in a debug build and wraps in a release one, and a
+/// wrapped count would size the normal matrix to a fraction of the indices written into it.
+fn square(columns: usize) -> Result<usize, StatsError> {
+    columns.checked_mul(columns).ok_or_else(|| {
+        StatsError::DimensionMismatch(
+            "the column count squared overflows a usize: no normal matrix has that shape",
+        )
+    })
+}
+
 /// Fits the same model without materialising the design.
 ///
 /// For a caller whose design is larger than it wants in memory, or is filtered as it goes: the row
@@ -204,12 +219,9 @@ where
     T: RealField + FromPrimitive,
     I: IntoIterator<Item = (Vec<T>, T)> + Clone,
 {
-    // Each pass rebuilds its rows from the caller's source. The `Vec` a row arrives in is dropped
-    // as soon as it has been accumulated, so the peak is one row, not the design.
-    let mut xtx = vec![T::zero(); columns * columns];
-    let mut xty = vec![T::zero(); columns];
-    let mut n = 0usize;
-
+    // Every check first, then the allocation. The normal matrix is `columns²`, and `columns` is
+    // the caller's word rather than a length read off the design, so the shape has to be found
+    // valid before anything is sized from it.
     if columns == 0 {
         return Err(StatsError::DimensionMismatch(
             "a design with no columns has nothing to fit",
@@ -227,6 +239,13 @@ where
         ));
     }
     let exempt = config.penalisation.exempt();
+
+    // Each pass rebuilds its rows from the caller's source. The `Vec` a row arrives in is dropped
+    // as soon as it has been accumulated, so the peak is one row, not the design.
+    let cells = square(columns)?;
+    let mut xtx = vec![T::zero(); cells];
+    let mut xty = vec![T::zero(); columns];
+    let mut n = 0usize;
 
     for (row, yi) in rows.clone() {
         if row.len() != columns {

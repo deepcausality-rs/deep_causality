@@ -181,7 +181,16 @@ where
         let two_pi = two * R::pi();
         // Wrap M into [0, 2π) via floor (no rem_euclid on the generic field).
         let m = m - two_pi * (m / two_pi).floor();
-        let tol = Self::lit(1e-15)?;
+        // The stopping test is set in units of the working scalar's own resolution, not as an
+        // absolute constant. `E` and `M` are both `O(1)` radians after the wrap above, so the
+        // floor the residual can reach is a small multiple of `ε`: about `6e-8` at `f32` against
+        // `2e-16` at `f64`. A fixed `1e-15` therefore sits below anything `f32` arithmetic can
+        // produce, and an iterate that solves the equation to the last bit the type has would
+        // still be refused — measured at `a = 2, e = 0.9, M = 0.25`, where `f64` converges and
+        // `f32` returned `NotConverged`. Eight ulp keeps `f64` where it was (`1.8e-15` against the
+        // old `1e-15`, so the `e = 0.9999` case below still exhausts the step test) and puts the
+        // narrower scalars inside their own noise floor.
+        let tol = Self::lit(8.0)? * R::epsilon();
         let mut ea = m;
         for _ in 0..100 {
             let d = (ea - e * ea.sin() - m) / (R::one() - e * ea.cos());

@@ -61,11 +61,11 @@ exclude_re = [
     # `if a > b { (a, b) } else { (b, a) }` that orders a pair. On a tie the two branches do
     # different things and produce the same VALUE, because what is written is the maximum itself
     # and never its index: the value a tie overwrites equals the one it replaces. Applies to
-    # `log_sum_exp`'s max scan, `log_add_exp`'s ordering, and `fit_logistic`'s largest-step
-    # reduction. Same argument as `vector_norm_inf` above.
+    # `log_sum_exp`'s max scan and `log_add_exp`'s ordering. Same argument as `vector_norm_inf`
+    # above. `fit_logistic`'s largest-step reduction is the same shape and is NOT excluded here,
+    # for the reason recorded in the section below.
     "replace > with >= in log_sum_exp",
     "replace > with >= in log_add_exp",
-    "replace > with >= in fit_logistic",
 
     # `sort_desc_3`'s three-comparison network, `if a[k] < a[k+1] { swap }` versus `<=`. On a tie
     # the `<=` branch swaps two equal values, which is not observable: the array is of values and
@@ -89,44 +89,30 @@ exclude_re = [
     # value the mutant selects equals the one it replaces.
     "replace > with >= in max_modulus",
 
-    # `solve_kepler`'s mean-anomaly wrap, `m - 2π·floor(m/2π)`. Mutating the `-` to `+` or the `/`
-    # to `*` changes which whole multiple of 2π is removed, and nothing else: whatever integer `k`
-    # comes out, `M → M ± 2πk` sends the root `E → E ± 2πk`, because Kepler's equation is 2π-periodic
-    # in both. The position `(a(cos E − e), a√(1−e²)·sin E)` depends on `E` only through `sin` and
-    # `cos`, so it is unchanged. The wrap is there to give Newton a starting point near the root, not
-    # to change the answer, and no assertion on the state can separate the variants. Confirmed by
-    # applying both against a periodicity test that propagates up to 3.75 periods.
-    "replace - with \\+ in TwoBodyPropagator<R>::solve_kepler",
-    "replace / with \\* in TwoBodyPropagator<R>::solve_kepler",
+    # Two `solve_kepler` entries used to sit here for the mean-anomaly wrap. **Both are removed, and
+    # the equivalence argument behind them no longer holds.** It read: mutating the wrap's `-` to `+`
+    # or its `/` to `*` changes only which whole multiple of 2π is removed, and `M → M ± 2πk` sends
+    # the root `E → E ± 2πk`, so a position depending on `E` only through `sin` and `cos` cannot tell
+    # the difference.
+    #
+    # Two things were wrong with that. The narrower one: neither pattern is confined to the wrap.
+    # `replace - with \\+ in ...solve_kepler` matches **six** mutants — the wrap at `183:19`, and
+    # Newton's residual `ea − e·sin ea − m` and its update at `196` and `211`, which are the
+    # iteration's actual arithmetic and were never argued for. `replace / with \\* ...` matches two,
+    # the wrap's division and Newton's `f / f'`.
+    #
+    # The wider one: **all eight are caught today.** Measured, after the suite gained the `f32`
+    # convergence cases — `cargo mutants -p deep_causality_physics -F` on both patterns reports
+    # `8 mutants tested: 8 caught`. Whatever was true of the old suite, no mutant here is equivalent
+    # against the present one, and excluding them would hide eight working tripwires.
 
     # Tolerance comparisons `if x.abs() < tol` mutated to `<=`: the tie is the single point
-    # `x.abs() == tol`, which no finite input reaches for a tolerance of `1e-15` against a residual
-    # that is either many orders below it or many above. Applies to `solve_kepler`'s step and
-    # residual tests and to `solve_w_mass`'s two convergence comparisons.
+    # `x.abs() == tol`, which no finite input reaches against a residual that is either many orders
+    # below the tolerance or many above. Applies to `solve_kepler`'s step and residual tests, whose
+    # tolerance is `8·R::epsilon()` — scaled, not the fixed `1e-15` it once was, so that an `f32`
+    # iterate can reach it at all. `solve_w_mass`'s convergence test is the same shape and is NOT excluded here,
+    # for the reason recorded in the section below.
     "replace < with <= in TwoBodyPropagator<R>::solve_kepler",
-    "replace < with <= in solve_w_mass",
-
-    # Two guards in `ideal_induction_kernel`'s private wedge helper that no caller can reach.
-    # `wedge_product_1form_1form` is private, and its only caller validates first: the kernel
-    # requires a 3D complex, so `skeletons.len() >= 4` where the helper's own check reads `< 3`,
-    # and it checks the operator shapes, so both operands are length `n1` by construction before
-    # the helper's length check runs. Both branches are defensive and unreachable from outside,
-    # which is why no test can kill a mutant in them. The guards stay: the helper is private today
-    # and its precondition is a property of one call site rather than of the function.
-    "replace < with == in wedge_product_1form_1form",
-    "replace < with <= in wedge_product_1form_1form",
-    "replace .. with && in wedge_product_1form_1form",
-
-    # Two guards in `ideal_induction_kernel`'s private wedge helper that no caller can reach.
-    # `wedge_product_1form_1form` is private and its only caller validates first: the kernel
-    # requires a 3D complex (so `skeletons.len() >= 4` when the helper's own check reads `< 3`),
-    # and it checks the operator shapes, so both operands are length `n1` by construction before
-    # the helper's length check runs. Both branches are defensive and unreachable from outside,
-    # which is why no test can kill a mutant in them. The guards stay: the helper is private today
-    # and its precondition is a property of one call site rather than of the function.
-    "replace < with == in wedge_product_1form_1form",
-    "replace < with <= in wedge_product_1form_1form",
-    "replace \\|\\| with && in wedge_product_1form_1form",
 
     # `CsrMatrix::zero()` versus `Default::default()`. `Zero::zero` returns `CsrMatrix::new()`,
     # and `Default::default()` builds the same struct field for field -- three empty vectors and
@@ -218,8 +204,9 @@ exclude_re = [
 #
 # These are equivalent for the reasons below, and each is left in the report because no regex
 # reaches it alone. `exclude_re` matches the mutant's description, not its line, and every pattern
-# broad enough to catch one of these also catches a dozen of its neighbours that the suite does
-# kill. Hiding a caught mutant costs a tripwire, which is worth more than a tidy report.
+# broad enough to catch one of these also catches a neighbour that is not equivalent — one the
+# suite kills, or one it does not kill and should. Hiding either costs a tripwire, which is worth
+# more than a tidy report.
 #
 # `small.rs:326:35: replace + with - in eigen_symmetric_3x3` — the second root is taken at
 # `phi + 2π/3` and the third recovered from the trace. The three roots of the characteristic cubic
@@ -229,6 +216,28 @@ exclude_re = [
 # against cyclic Jacobi and all three characteristic invariants, which is what it would break if the
 # root set had moved. Left in the report because `replace \+ with - in eigen_symmetric_3x3` matches
 # thirteen mutants in that function and the suite kills the other twelve.
+#
+# `logistic.rs:165:18: replace > with >= in fit_logistic` — the Newton loop's largest-step scan,
+# `if m > largest { largest = m }`. The same argument as `log_sum_exp`'s max scan above: what is
+# written is the step magnitude itself and never its index, so on a tie the value the mutant
+# selects equals the one it replaces. Confirmed by running it; it survives.
+#
+# It is left in the report because `replace > with >= in fit_logistic` also names
+# `logistic.rs:78:45`, the label validation `v < T::zero() || v > one`, where `>=` refuses the
+# valid boundary label `y == 1` — a probability, and the label every fit in the suite uses. That
+# one is CAUGHT. The two mutants have the same description, so no regex takes the reduction
+# without taking the validation's tripwire with it, and the tripwire is worth more.
+#
+# `radiative.rs:150:32: replace < with <= in solve_w_mass` — the fixed point's convergence test,
+# `(mw_new - mw).abs() < target_accuracy`. The tie is the single point `1e-6`, the same argument
+# as `solve_kepler`'s tolerance comparisons above.
+#
+# It is left in the report because the same description also names `radiative.rs:140:25`, the
+# quadratic's discriminant guard `if discriminant < 0`, and that one is NOT equivalent: at
+# `discriminant == 0` the quadratic has the double root `M_W² = M_Z²/2`, which the mutant refuses
+# as `NumericalInstability` rather than returning it. Both survive today, so the guard's boundary
+# is an open gap: closing it needs an input that lands the discriminant on zero, which is a test to
+# write and not a regex to add. Excluding it under the tolerance argument would have buried that.
 
 # Two entries used to be in the array above and were exactly that mistake.
 # `replace \+ with \* in solve_least_squares` argued for one loop bound and excluded nine mutants,

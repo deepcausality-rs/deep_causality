@@ -34,13 +34,23 @@ impl Add for Float106 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        // A non-finite operand has no low word to correct, and the error-compensation terms below
-        // evaluate `inf - inf` on one: `two_sum` would return a correct high word beside a NaN
-        // low word, which `is_nan` (a high-word test) does not report and which contaminates
-        // every later operation. The high words alone give the IEEE answer. Same guard, and same
-        // reason, as `Div` below.
-        if !self.hi.is_finite() || !rhs.hi.is_finite() {
-            return Self::from_raw(self.hi + rhs.hi, 0.0);
+        // The guard is on the *sum*, not on the operands. A non-finite operand has no low word to
+        // correct, and the error-compensation terms below evaluate `inf - inf` on one: `two_sum`
+        // would return a correct high word beside a NaN low word, which `is_nan` (a high-word
+        // test) does not report and which contaminates every later operation. Two finite high
+        // words that overflow reach the same place — `two_sum(MAX, MAX)` gives `(inf, NaN)`, and
+        // `quick_two_sum` then turns the high word into NaN as well — so testing the operands
+        // alone let an overflow through as NaN where IEEE 754 §7.4 gives an infinity. Testing the
+        // sum covers both, and the high words alone give the IEEE answer. Same reason as the
+        // guard in `Div` below.
+        //
+        // One case is answered by an infinity that the exact sum does not require: when the high
+        // words overflow by no more than the low words could pull back, the exact value can still
+        // be finite. The correction is at most `ulp(hi)`, so this is confined to the last binade,
+        // and recovering it would cost a scaled path on every addition.
+        let hi_sum = self.hi + rhs.hi;
+        if !hi_sum.is_finite() {
+            return Self::from_raw(hi_sum, 0.0);
         }
         // Sloppy addition: O(1) algorithm with ~2^-104 relative error
         let (s1, s2) = two_sum(self.hi, rhs.hi);
@@ -138,10 +148,18 @@ impl Mul for Float106 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        // See `Add`: `two_prod` on a non-finite operand produces a NaN low word beside a correct
-        // high word. The high words alone give the IEEE answer, `inf · 0 = NaN` included.
-        if !self.hi.is_finite() || !rhs.hi.is_finite() {
-            return Self::from_raw(self.hi * rhs.hi, 0.0);
+        // Guarded on the *product*, for the reason `Add` is guarded on the sum. `two_prod` on a
+        // non-finite operand produces a NaN low word beside a correct high word; two finite high
+        // words whose product overflows do the same, because the FMA error term evaluates
+        // `a·b − inf = −inf` and `quick_two_sum(inf, −inf)` is NaN. The high words alone give the
+        // IEEE answer in both cases, `inf · 0 = NaN` included.
+        //
+        // As in `Add`, an overflow the low words could have pulled back is answered with the
+        // infinity. The correction `a.hi·b.lo + a.lo·b.hi` is bounded by `ulp(a.hi·b.hi)`, so the
+        // band where the exact product is still finite is the last binade.
+        let hi_prod = self.hi * rhs.hi;
+        if !hi_prod.is_finite() {
+            return Self::from_raw(hi_prod, 0.0);
         }
         // C = A * B
         // p1, p2 = two_prod(a.hi, b.hi)
@@ -160,6 +178,13 @@ impl Mul<f64> for Float106 {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
+        // Same guard as `Mul<Self>`, which this had none of: a non-finite operand *or* a product
+        // that overflows both leave `two_prod` with a NaN error term, and the whole result went
+        // out as NaN — `Float106::from(2.0) * f64::INFINITY` among them.
+        let hi_prod = self.hi * rhs;
+        if !hi_prod.is_finite() {
+            return Self::from_raw(hi_prod, 0.0);
+        }
         // Optimized: single f64 multiply
         let (p1, p2) = two_prod(self.hi, rhs);
         let t = p2 + self.lo * rhs;
@@ -200,14 +225,16 @@ impl Div for Float106 {
 
     fn div(self, rhs: Self) -> Self::Output {
         // The refinement multiplies the first quotient back by the divisor, and `inf · 0` is NaN,
-        // so a zero or non-finite divisor and a non-finite dividend are answered by the `f64`
-        // division alone: `±inf`, `0` or NaN, as IEEE 754 has them.
-        if rhs.hi == 0.0 || !rhs.hi.is_finite() || !self.hi.is_finite() {
-            return Self::from(self.hi / rhs.hi);
-        }
-        // High-precision division using iterative refinement.
-        // q1 = a.hi / b.hi
+        // so a zero or non-finite divisor, a non-finite dividend, and a quotient that overflows
+        // are all answered by the `f64` division alone: `±inf`, `0` or NaN, as IEEE 754 has them.
+        // The overflow belongs with the rest for the reason it does in `Add` and `Mul` — finite
+        // operands reach `two_prod(inf, b.hi)` and come back NaN — and, as there, an overflow the
+        // low words could have pulled back is answered with the infinity.
         let q1 = self.hi / rhs.hi;
+        if rhs.hi == 0.0 || !rhs.hi.is_finite() || !self.hi.is_finite() || !q1.is_finite() {
+            return Self::from(q1);
+        }
+        // High-precision division using iterative refinement, from `q1 = a.hi / b.hi`.
 
         // r = a - q1 * b
         // Compute (a.hi - q1 * b.hi) carefully using two_prod
@@ -227,11 +254,11 @@ impl Div<f64> for Float106 {
     type Output = Self;
 
     fn div(self, rhs: f64) -> Self::Output {
-        if rhs == 0.0 || !rhs.is_finite() || !self.hi.is_finite() {
-            return Self::from(self.hi / rhs);
-        }
-        // Optimized: single f64 divisor
+        // Optimized: single f64 divisor. Same guard as `Div<Self>`, overflow included.
         let q1 = self.hi / rhs;
+        if rhs == 0.0 || !rhs.is_finite() || !self.hi.is_finite() || !q1.is_finite() {
+            return Self::from(q1);
+        }
         let (p1, p2) = two_prod(q1, rhs);
         let s = self.hi - p1;
         let t = (s - p2) + self.lo;
@@ -274,6 +301,14 @@ impl Rem for Float106 {
     fn rem(self, rhs: Self) -> Self::Output {
         // r = a - n * b, where n = trunc(a / b)
         let div = self / rhs;
+        // `n` is the whole answer here, and a quotient outside the type has no `trunc`. IEEE 754
+        // §5.3.1 puts a finite remainder under `|b|` on every finite pair, but this identity
+        // cannot reach it once `a / b` leaves the range: carrying the infinity through gives
+        // `a - inf = -inf`, a definite and wrong remainder. NaN says there is no answer, which is
+        // the true state of this algorithm on such a pair.
+        if !div.hi.is_finite() {
+            return Self::from_raw(f64::NAN, 0.0);
+        }
         #[cfg(feature = "std")]
         let n = div.hi.trunc();
         #[cfg(all(not(feature = "std"), feature = "libm_math"))]

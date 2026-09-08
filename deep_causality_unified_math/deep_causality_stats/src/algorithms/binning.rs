@@ -12,7 +12,7 @@
 use crate::errors::stats_error::StatsError;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::{FromPrimitive, ToPrimitive};
 
 /// Bins by dividing the observed range into `bins` intervals of equal width.
 ///
@@ -21,6 +21,15 @@ use deep_causality_num::FromPrimitive;
 ///
 /// Fewer than two bins is refused: one bin is not a discretisation, and zero is not a partition.
 /// A non-finite observation is refused, because it has no place on the range.
+///
+/// # A span the range cannot hold
+///
+/// Observations reaching both ends of the type — `f64::MIN` and `f64::MAX` in one column — are
+/// each finite, and each has a bin, but `hi − lo` between them is `+∞`. The quotient
+/// `(x − lo) / (hi − lo)` is then `∞/∞` at the maximum, so the observation that defines the top of
+/// the range comes back as a `NaN` bin index. Halving both endpoints first is exact in binary
+/// floating point and brings the span back inside the type, and the quotient is unchanged by it,
+/// so the halved form is used exactly where the direct one overflows.
 pub fn bin_equal_width<T>(data: &[T], bins: usize) -> Result<Vec<T>, StatsError>
 where
     T: RealField + FromPrimitive,
@@ -38,12 +47,22 @@ where
         }
     }
 
-    let width = hi - lo;
+    let span = hi - lo;
     // A constant column has no range to divide. Not an error: a constant is a legitimate column,
     // and every observation belongs to the same bin.
-    if width <= T::zero() {
+    if span <= T::zero() {
         return Ok(alloc::vec![T::zero(); n]);
     }
+
+    // The span overflows only where the observations reach both ends of the type. Halving is exact
+    // above the subnormals, and a column that wide has nothing near them.
+    let two = T::one() + T::one();
+    let halve = !span.is_finite();
+    let (origin, width) = if halve {
+        (lo / two, hi / two - lo / two)
+    } else {
+        (lo, span)
+    };
 
     let bins_t = index::<T>(bins)?;
     let last = index::<T>(bins - 1)?;
@@ -52,7 +71,8 @@ where
         // Half-open `[lower, upper)` for every bin, so a value on an interior edge belongs to the
         // bin above it. The last bin is closed, which the clamp supplies: the maximum's quotient
         // is exactly `bins`, one past the end, and it belongs in `bins - 1`.
-        let q = ((x - lo) / width * bins_t).floor();
+        let scaled = if halve { x / two } else { x };
+        let q = ((scaled - origin) / width * bins_t).floor();
         out.push(if q > last { last } else { q });
     }
     Ok(out)
@@ -85,10 +105,24 @@ where
 }
 
 /// A bin index on the real axis, or a typed error when the scalar cannot hold it.
-fn index<T: FromPrimitive>(i: usize) -> Result<T, StatsError> {
-    T::from_usize(i).ok_or_else(|| {
+///
+/// "Cannot hold it" means cannot hold it *exactly*. `from_usize` rounds rather than refusing, and a
+/// rounded bin count is a different partition from the one asked for: `BFloat16` carries eight
+/// significant bits, so 257 arrives as 256, and a caller asking for 257 equal-width bins would
+/// silently get the boundaries of 256 of them. The round trip back to `usize` is what separates a
+/// count the scalar represents from one it merely approximates.
+fn index<T: FromPrimitive + ToPrimitive>(i: usize) -> Result<T, StatsError> {
+    let v = T::from_usize(i).ok_or_else(|| {
         StatsError::ConversionFailed("a bin index is not representable in the working scalar")
-    })
+    })?;
+    if v.to_usize() == Some(i) {
+        Ok(v)
+    } else {
+        Err(StatsError::ConversionFailed(
+            "a bin index is not representable in the working scalar: it would round to a \
+             different count and partition the range differently",
+        ))
+    }
 }
 
 /// Bins so that each bin holds as near as possible the same number of observations.

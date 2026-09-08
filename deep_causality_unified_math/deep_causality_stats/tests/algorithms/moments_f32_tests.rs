@@ -26,7 +26,7 @@ use deep_causality_stats::utils_tests::lift_array;
 use deep_causality_stats::utils_tests::oracles::pairwise_variance_oracle;
 use deep_causality_stats::utils_tests::precision::F32;
 use deep_causality_stats::utils_tests::samples::FAMILY;
-use deep_causality_stats::{mean, std_dev, variance};
+use deep_causality_stats::{mean, population_variance, std_dev, variance};
 
 /// Provenance: closed form by hand. `2+4+4+4+5+5+7+9 = 40` over `n = 8`, so the mean is
 /// `40/8 = 5`, written as the literal `5.0` and exact in binary at all three precisions.
@@ -544,4 +544,85 @@ fn test_non_finite_infinities() {
     assert_no_finite_answer(mean(&constant_infinite), "mean([+inf, +inf])");
     assert_no_finite_answer(variance(&constant_infinite), "variance([+inf, +inf])");
     assert_no_finite_answer(std_dev(&constant_infinite), "std_dev([+inf, +inf])");
+}
+
+// -------------------------------------------------------------------------------------------
+// Reach: an intermediate that leaves the type where the answer does not.
+//
+// The reductions below are the whole computation, not a step in it: `mean` sums and divides, and
+// the variance sums squared deviations and divides. Each sum can leave the type on a sample whose
+// answer is comfortably inside it, and an infinity returned there is a property of the
+// intermediate rather than of the type.
+// -------------------------------------------------------------------------------------------
+
+/// Provenance: an algebraic invariant — the mean of a constant sample is that constant, for every
+/// sample size. No arithmetic is retyped: the expectation is one of the inputs.
+///
+/// The sample is `[MAX, MAX]` at the type's own maximum, so the left-to-right sum is `2·MAX`,
+/// which is `+∞` in every one of the four scalars, while the answer `MAX` is by construction the
+/// largest value the type holds. `MAX` three times says the same thing where the sum saturates
+/// before the last addend rather than at it.
+#[test]
+fn test_mean_of_a_constant_sample_at_the_type_maximum() {
+    let max = lift::<f32>(F32.max_finite);
+
+    let two = [max, max];
+    assert_exact(
+        mean(&two).expect("the mean of two observations is defined"),
+        max,
+        "mean([MAX, MAX])",
+    );
+
+    let three = [max, max, max];
+    assert_exact(
+        mean(&three).expect("the mean of three observations is defined"),
+        max,
+        "mean([MAX, MAX, MAX])",
+    );
+}
+
+/// Provenance: closed forms by hand, over a sample built from the type's own reach.
+///
+/// `v` is `0.8·√MAX`, so `v²` is `0.64·MAX` — inside the type — while `2v²` is `1.28·MAX`, which
+/// is not. Both reductions below therefore overflow while forming their sum of squares, and both
+/// answers are `v²`:
+///
+/// * `variance([−v, 0, v])`: the mean is `0`, the deviations are `[−v, 0, v]`, and
+///   `Σd² / (n − 1) = (v² + 0 + v²) / 2 = v²`.
+/// * `population_variance([−v, v])`: the mean is `0` again, and `Σd² / n = (v² + v²) / 2 = v²`.
+///
+/// The expectation is written as `v * v`, which is a product of one operand and not the
+/// implementation's reduction; it is representable by the construction of `v`.
+#[test]
+fn test_variance_where_the_sum_of_squares_overflows_but_the_answer_does_not() {
+    let v = lift::<f32>(F32.max_finite).sqrt() * lift::<f32>(0.8);
+    let want = v * v;
+    assert!(
+        want.is_finite(),
+        "the fixture is wrong: v² must be representable, got {:?}",
+        want.to_f64()
+    );
+    assert!(
+        !(want + want).is_finite(),
+        "the fixture is wrong: 2v² must not be representable, got {:?}",
+        (want + want).to_f64()
+    );
+
+    let symmetric = [-v, lift::<f32>(0.0), v];
+    let got = variance(&symmetric).expect("three observations are enough");
+    assert!(
+        got.is_finite(),
+        "variance([-v, 0, v]) returned {:?}; the answer v² is representable",
+        got.to_f64()
+    );
+    assert_close(got, want, F32.native, "variance([-v, 0, v]) is v²");
+
+    let pair = [-v, v];
+    let got = population_variance(&pair).expect("two observations are enough");
+    assert!(
+        got.is_finite(),
+        "population_variance([-v, v]) returned {:?}; the answer v² is representable",
+        got.to_f64()
+    );
+    assert_close(got, want, F32.native, "population_variance([-v, v]) is v²");
 }

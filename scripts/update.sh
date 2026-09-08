@@ -8,7 +8,17 @@ set -o pipefail
 
 command echo ""
 command echo "Checking cargo update"
-command cargo upgrade
+
+# `cargo upgrade` is `cargo-edit`, which no Rust toolchain ships and `scripts/install_deps.sh` does
+# not install. Under `set -o errexit` a bare call ends `make update` on "no such subcommand", and
+# the website updates below — the part that most often has work to do — never run. Skipped with an
+# actionable message instead, the same way pnpm is below.
+if command -v cargo-upgrade >/dev/null 2>&1; then
+    command cargo upgrade
+else
+    command echo "cargo-upgrade not found; skipping the Rust dependency update."
+    command echo "Install it with: cargo install cargo-edit --locked"
+fi
 
 command echo ""
 command echo "Checking for rustup stable update"

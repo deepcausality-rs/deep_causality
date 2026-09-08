@@ -8,6 +8,8 @@ mod binning_tests;
 #[cfg(test)]
 mod correlation_tests;
 #[cfg(test)]
+mod covariance_tests;
+#[cfg(test)]
 mod density_tests;
 #[cfg(test)]
 mod entropy_tests;
