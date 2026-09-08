@@ -28,6 +28,7 @@ use crate::PhysicsError;
 use crate::VelocityGradient;
 use crate::kernels::fluids::kinematics::velocity_gradient_invariants_kernel;
 use deep_causality_algebra::RealField;
+use deep_causality_linear::{eigen_symmetric_3x3, trace_of_square_3x3};
 use deep_causality_num::FromPrimitive;
 
 /// Q-criterion: `Q = 0.5 · (‖Ω‖² − ‖S‖²) = −0.5 · tr(∇u · ∇u)`.
@@ -42,17 +43,7 @@ where
     let half = R::from_f64(0.5)
         .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into()))?;
     let g = grad_u.value();
-    // tr(G²) = Σ_{i,j} G_ij · G_ji
-    let tr_g_squared = g[0][0] * g[0][0]
-        + g[0][1] * g[1][0]
-        + g[0][2] * g[2][0]
-        + g[1][0] * g[0][1]
-        + g[1][1] * g[1][1]
-        + g[1][2] * g[2][1]
-        + g[2][0] * g[0][2]
-        + g[2][1] * g[1][2]
-        + g[2][2] * g[2][2];
-    Ok(-half * tr_g_squared)
+    Ok(-half * trace_of_square_3x3(g))
 }
 
 /// Δ-criterion (Chong, Perry & Cantwell 1990; generalized form): the
@@ -197,77 +188,24 @@ fn sym_3x3_add<R: RealField>(a: &[[R; 3]; 3], b: &[[R; 3]; 3]) -> [[R; 3]; 3] {
 
 /// Eigenvalues of a real symmetric 3×3 matrix, sorted descending.
 ///
-/// Closed-form Smith (1961) algorithm: handles the diagonal case directly,
-/// otherwise reduces to the cubic on the trace-shifted, normalised matrix.
+/// **Moved into `deep_causality_linear`** (`unified-math-next` task 6.7) as
+/// [`eigen_symmetric_3x3`]; this is the dispatch. The closed-form Smith (1961) algorithm is linear
+/// algebra and belonged in the linear-algebra crate, where the general `eigen_hermitian` already
+/// lives and where the two can be compared against each other — which is how the crate's suite
+/// checks this one, over 200 generated symmetric matrices.
+///
+/// # The accuracy note that came with the move
+///
+/// The closed form is about `√ε` accurate where two eigenvalues coincide, against `ε` for a
+/// well-separated spectrum: the eigenvalues come off an `acos` whose derivative is unbounded at a
+/// repeated root. That matters here rather than in general — `λ₂ = 0` is exactly the vortex /
+/// non-vortex boundary [`lambda2_kernel`] reports on, and it is a degenerate-spectrum question. A
+/// caller needing the boundary resolved more finely than `√ε·‖M‖` wants
+/// `deep_causality_linear::eigen_hermitian`, which is backward stable and does not lose half its
+/// digits there.
 fn symmetric_3x3_eigenvalues<R>(m: &[[R; 3]; 3]) -> Result<[R; 3], PhysicsError>
 where
     R: RealField + FromPrimitive,
 {
-    let third = R::from_f64(1.0 / 3.0)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(1/3) failed".into()))?;
-    let half = R::from_f64(0.5)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(0.5) failed".into()))?;
-    let two = R::from_f64(2.0)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2.0) failed".into()))?;
-    let six = R::from_f64(6.0)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(6.0) failed".into()))?;
-    let three = R::from_f64(3.0)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(3.0) failed".into()))?;
-    let two_pi_over_3 = R::from_f64(2.0 * core::f64::consts::PI / 3.0)
-        .ok_or_else(|| PhysicsError::NumericalInstability("R::from_f64(2π/3) failed".into()))?;
-
-    let p1 = m[0][1] * m[0][1] + m[0][2] * m[0][2] + m[1][2] * m[1][2];
-    if p1 == R::zero() {
-        // Diagonal matrix; eigenvalues are the diagonal entries.
-        let mut e = [m[0][0], m[1][1], m[2][2]];
-        sort_desc_3(&mut e);
-        return Ok(e);
-    }
-
-    let q = (m[0][0] + m[1][1] + m[2][2]) * third; // trace / 3
-    let d00 = m[0][0] - q;
-    let d11 = m[1][1] - q;
-    let d22 = m[2][2] - q;
-    let p2 = d00 * d00 + d11 * d11 + d22 * d22 + two * p1;
-    let p = (p2 / six).sqrt();
-    // B = (1/p) (M − q·I)
-    let inv_p = R::one() / p;
-    let b00 = d00 * inv_p;
-    let b11 = d11 * inv_p;
-    let b22 = d22 * inv_p;
-    let b01 = m[0][1] * inv_p;
-    let b02 = m[0][2] * inv_p;
-    let b12 = m[1][2] * inv_p;
-    // det(B)
-    let det_b = b00 * (b11 * b22 - b12 * b12) - b01 * (b01 * b22 - b12 * b02)
-        + b02 * (b01 * b12 - b11 * b02);
-    let mut r_val = det_b * half;
-    // Clamp r into [-1, 1] to absorb floating-point overshoot before acos.
-    if r_val < -R::one() {
-        r_val = -R::one();
-    }
-    if r_val > R::one() {
-        r_val = R::one();
-    }
-    let phi = r_val.acos() * third;
-
-    let eig1 = q + two * p * phi.cos();
-    let eig3 = q + two * p * (phi + two_pi_over_3).cos();
-    let eig2 = three * q - eig1 - eig3;
-
-    let mut e = [eig1, eig2, eig3];
-    sort_desc_3(&mut e);
-    Ok(e)
-}
-
-fn sort_desc_3<R: RealField>(a: &mut [R; 3]) {
-    if a[0] < a[1] {
-        a.swap(0, 1);
-    }
-    if a[1] < a[2] {
-        a.swap(1, 2);
-    }
-    if a[0] < a[1] {
-        a.swap(0, 1);
-    }
+    Ok(eigen_symmetric_3x3(m)?)
 }

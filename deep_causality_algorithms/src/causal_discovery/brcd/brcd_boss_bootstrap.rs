@@ -35,6 +35,7 @@ use crate::brcd::brcd_boss_learn::boss_learn;
 use crate::brcd::brcd_config::{BrcdConfig, FamilyKind};
 use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
+use crate::brcd::brcd_project::{transpose, transpose_int};
 use crate::brcd::brcd_result::BrcdResult;
 use crate::brcd::{BrcdError, BrcdErrorEnum};
 use crate::dag_sampling::sample_dag;
@@ -266,26 +267,6 @@ fn columns_of<T: RealField>(t: &CausalTensor<T>, n: usize, p: usize) -> Vec<Vec<
         .collect()
 }
 
-/// Builds the `n` parent feature rows from the chosen continuous columns.
-fn transpose<T: RealField>(columns: &[Vec<T>], idxs: &[usize], n: usize) -> Vec<Vec<T>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&c| columns[c][i]).collect())
-        .collect()
-}
-
-/// Builds the `n` parent configuration rows from the chosen integer columns.
-fn transpose_int(columns: &[Vec<usize>], idxs: &[usize], n: usize) -> Vec<Vec<usize>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&c| columns[c][i]).collect())
-        .collect()
-}
-
 /// Rounds each column to non-negative integer states and infers its cardinality
 /// `K = max_state + 1` (mirrors the driver's discrete binning).
 fn build_discrete<T: RealField>(
@@ -321,17 +302,12 @@ fn shape_2d<T>(t: &CausalTensor<T>) -> Result<(usize, usize), BrcdError> {
     }
 }
 
-/// Stable `log(Σ eˣ)` over a slice, shifted by the max.
+/// Stable `log(Σ eˣ)` over a slice, delegated to `deep_causality_stats`.
+///
+/// This was a second copy of the reduction in `brcd_algo.rs`, identical line for line, and both now
+/// resolve to the same shipped implementation.
 fn logsumexp<T: RealField>(vals: &[T]) -> T {
-    if vals.is_empty() {
-        return T::zero().ln();
-    }
-    let max = vals.iter().fold(vals[0], |a, &b| if b > a { b } else { a });
-    if !max.is_finite() {
-        return max;
-    }
-    let sum = vals.iter().fold(T::zero(), |acc, &v| acc + (v - max).exp());
-    max + sum.ln()
+    deep_causality_stats::log_sum_exp(vals)
 }
 
 fn from_usize<T: FromPrimitive>(n: usize) -> T {

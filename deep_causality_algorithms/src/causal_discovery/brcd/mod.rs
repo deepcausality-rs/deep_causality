@@ -43,10 +43,12 @@
 //!    here:
 //!    * the normal log-density is evaluated inline rather than through a
 //!      `CausalTensor` round-trip ([`brcd_gaussian`]); and
-//!    * the ridge fit streams the normal equations `XᵀX + λI`, `Xᵀz` from each
-//!      row's `[1, parents]` design through a single reused buffer instead of
-//!      materializing the design matrix as a `Vec<Vec<_>>` — eliminating roughly
-//!      one heap allocation per row per fit, which was the dominant cost.
+//!    * the ridge fit accumulates the normal equations `XᵀX + λI`, `Xᵀz` from each
+//!      row's `[1, parents]` design without ever materializing the design matrix as
+//!      a `Vec<Vec<_>>`. It does still allocate each row: `deep_causality_stats`
+//!      takes owned rows and reads the source twice, so there are two allocations
+//!      per finite row per fit where the hand-rolled fit reused one buffer and made
+//!      none (see `brcd_gaussian::fit_ridge_streaming`).
 //!
 //!    Because the families are independent, this phase runs in parallel across CPU
 //!    cores with `rayon` when the crate is built with the **`parallel`** feature
@@ -75,10 +77,9 @@ pub mod brcd_gate;
 pub mod brcd_gaussian;
 pub mod brcd_mapconfig;
 pub mod brcd_mec;
+mod brcd_project;
 pub mod brcd_result;
 pub mod brcd_validity;
-
-pub(crate) mod brcd_linalg;
 
 // Driver entry point and its public types (the recommended access path).
 pub use brcd_algo::brcd_run;

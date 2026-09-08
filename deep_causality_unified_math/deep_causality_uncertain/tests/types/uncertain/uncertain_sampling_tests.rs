@@ -25,9 +25,28 @@ fn test_from_sample() {
 
 #[test]
 fn test_from_sample_empty() {
+    // An empty sample is a point at zero — the degenerate answer this crate supplies where
+    // `deep_causality_stats::mean` refuses. Asserting the value rather than `is_ok()`, which was
+    // true for every possible sentinel and so said nothing about which one is returned.
     let u = Uncertain::from_samples(&[]);
-    let result = u.sample_with_index(0);
-    assert!(result.is_ok());
+    assert_eq!(u.sample_with_index(0).unwrap(), 0.0);
+    assert_eq!(u.sample_with_index(7).unwrap(), 0.0, "a point does not vary");
+}
+
+#[test]
+fn test_from_sample_single_observation_has_zero_spread() {
+    // One observation has no dispersion to estimate: `std_dev` says so with `InsufficientSamples`
+    // and this crate answers zero, because a summary must summarise whatever it is handed.
+    //
+    // Pinned by *variation*, not by `is_ok()`: a normal with zero standard deviation returns its
+    // mean at every index, so a non-zero sentinel would show up as two different draws. Nothing
+    // else in the suite reached this branch — the empty case returns before it, and every other
+    // fixture has two or more samples.
+    let u = Uncertain::from_samples(&[7.0]);
+    let first = u.sample_with_index(0).unwrap();
+    let later = u.sample_with_index(11).unwrap();
+    assert_eq!(first, 7.0, "the single observation is the mean");
+    assert_eq!(later, 7.0, "zero spread means every draw is the mean");
 }
 
 #[test]

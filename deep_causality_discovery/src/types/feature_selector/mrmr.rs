@@ -5,9 +5,11 @@
 
 use crate::{FeatureSelectError, FeatureSelectorConfig};
 use crate::{FeatureSelector, Precision};
+use deep_causality_algebra::RealField;
 use deep_causality_algorithms::feature_selection::mrmr::{MrmrError, MrmrResult};
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
-use deep_causality_num::{Float, FloatOption};
+use deep_causality_num::FromPrimitive;
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// A concrete implementation of the `FeatureSelector` trait that uses the MRMR algorithm.
@@ -15,8 +17,7 @@ pub struct MrmrFeatureSelector;
 
 impl<T> FeatureSelector<T> for MrmrFeatureSelector
 where
-    T: Precision + Float,
-    Option<T>: FloatOption<T>,
+    T: Precision,
 {
     fn select(
         &self,
@@ -57,9 +58,11 @@ impl MrmrFeatureSelector {
         config: &crate::MrmrConfig,
     ) -> Result<MrmrResult, MrmrError>
     where
-        T: Float,
-        Option<T>: FloatOption<T>,
+        // The same `MaybeParallel` the selector itself takes: vacuous on a serial build, and
+        // `Send + Sync` when `parallel` is on, where rayon shares the tensor across workers. The
+        // element type here is `Option<T>`, so the bound has to be stated on `T`.
+        T: RealField + FromPrimitive + MaybeParallel,
     {
-        mrmr_features_selector(tensor, config.num_features(), config.target_col())
+        mrmr_features_selector::<_, T>(tensor, config.num_features(), config.target_col())
     }
 }

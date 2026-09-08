@@ -137,19 +137,12 @@ where
 
         'rounds: loop {
             // Reachability pre-pass: only `round_start` and its descendants can fire.
-            let mut reachable = vec![false; n_nodes];
-            reachable[round_start] = true;
-            let mut stack = vec![round_start];
-            while let Some(node) = stack.pop() {
-                if let Ok(children) = self.get_graph().outbound_edges(node) {
-                    for c in children {
-                        if !reachable[c] {
-                            reachable[c] = true;
-                            stack.push(c);
-                        }
-                    }
-                }
-            }
+            let reachable = crate::traits::causable_graph::reachable_mask(
+                self.get_graph(),
+                round_start,
+                n_nodes,
+                crate::traits::causable_graph::Reach::Descendants,
+            );
 
             let mut pending = vec![0usize; n_nodes];
             let mut fired: Vec<BTreeMap<usize, PropagatingProcess<V, S, C>>> =

@@ -349,3 +349,146 @@ fn test_division_by_infinity_is_zero_and_of_infinity_is_infinite() {
     assert!((inf / Float106::from(2.0)).is_infinite());
     assert!((inf / inf).is_nan());
 }
+
+// Overflow of the high-word sum. The operands are finite, so the non-finite guard in `Add` does
+// not fire, but the sum is not representable.
+
+#[test]
+fn test_addition_overflowing_finite_operands_is_infinite_not_nan() {
+    // Oracle: IEEE 754-2019 §7.4. `f64::MAX + f64::MAX` overflows, and in the default
+    // round-to-nearest mode an overflow delivers an infinity carrying the sign of the exact
+    // result. `f64` itself is the independent implementation of that rule, and both low words are
+    // zero, so the double-double sum has exactly the same exact value as the `f64` sum.
+    let overflow = f64::MAX + f64::MAX;
+    assert!(overflow.is_infinite() && overflow > 0.0, "f64 oracle");
+
+    let a = d(f64::MAX);
+    let b = d(f64::MAX);
+    let sum = a + b;
+    assert!(
+        sum.is_infinite() && sum > Float106::zero(),
+        "a finite pair whose sum overflows must give +inf, got hi={} lo={}",
+        sum.hi(),
+        sum.lo()
+    );
+
+    // The negative side, and the mixed pair whose exact sum is representable, both follow the
+    // same rule: -inf, and 0 without an intermediate overflow.
+    let neg = d(-f64::MAX) + d(-f64::MAX);
+    assert!(
+        neg.is_infinite() && neg < Float106::zero(),
+        "got hi={} lo={}",
+        neg.hi(),
+        neg.lo()
+    );
+    assert_eq!((d(f64::MAX) + d(-f64::MAX)).hi(), 0.0);
+}
+
+#[test]
+fn test_subtraction_overflowing_finite_operands_is_infinite_not_nan() {
+    // `Sub` is `self + (-rhs)` and negation is exact, so it inherits `Add`'s guard rather than
+    // carrying one. Pinned rather than assumed, and pinned on all three forms, because that
+    // inheritance is the whole reason `Sub` needs no guard of its own. Same IEEE 754 §7.4 oracle.
+    for (tag, diff) in [
+        ("Float106 - Float106", d(f64::MAX) - d(-f64::MAX)),
+        ("Float106 - f64", d(f64::MAX) - (-f64::MAX)),
+        ("f64 - Float106", f64::MAX - d(-f64::MAX)),
+    ] {
+        assert_eq!(diff.hi(), f64::INFINITY, "{tag} high word");
+        assert_eq!(diff.lo(), 0.0, "{tag} low word");
+    }
+    let neg = d(-f64::MAX) - d(f64::MAX);
+    assert_eq!(neg.hi(), f64::NEG_INFINITY);
+    assert_eq!(neg.lo(), 0.0);
+}
+
+// The same defect in the remaining error-free transforms: `two_prod`'s FMA error term is
+// `a·b − inf = −inf` on an overflowing product, and the division's refinement multiplies its
+// first quotient back by the divisor. Both then reach `quick_two_sum(inf, −inf)`, which is NaN.
+
+#[test]
+fn test_multiplication_overflowing_finite_operands_is_infinite_not_nan() {
+    // Oracle: IEEE 754-2019 §7.4 — an overflow under round-to-nearest delivers an infinity with
+    // the sign of the exact result. `f64` is the independent implementation of that rule, and
+    // every operand below has a zero low word, so the double-double product has the same exact
+    // value as the `f64` product.
+    assert!((1e200_f64 * 1e200_f64).is_infinite(), "f64 oracle");
+
+    for (tag, got, want) in [
+        ("1e200 · 1e200", d(1e200) * d(1e200), f64::INFINITY),
+        ("−1e200 · 1e200", d(-1e200) * d(1e200), f64::NEG_INFINITY),
+        ("MAX · 2", d(f64::MAX) * d(2.0), f64::INFINITY),
+    ] {
+        assert_eq!(got.hi(), want, "{tag} high word");
+        assert_eq!(got.lo(), 0.0, "{tag} low word");
+    }
+
+    // The two answers the guard must not disturb. `inf · 0` is §7.2 invalid, so NaN; and a product
+    // below the range underflows to zero (§7.5) without ever reaching the guard.
+    assert!((d(f64::INFINITY) * d(0.0)).is_nan());
+    assert_eq!((d(1e-200) * d(1e-200)).hi(), 0.0);
+}
+
+#[test]
+fn test_multiplication_by_f64_guards_non_finite_operands_and_overflow() {
+    // This form had no guard at all, so it failed on a plain non-finite operand as well as on an
+    // overflow: `Float106::from(2.0) * f64::INFINITY` was NaN where §7.4 and §6.1 both give +inf.
+    assert!((2.0_f64 * f64::INFINITY).is_infinite(), "f64 oracle");
+
+    for (tag, got, want) in [
+        ("1e200 · 1e200", d(1e200) * 1e200_f64, f64::INFINITY),
+        ("MAX · 2", d(f64::MAX) * 2.0_f64, f64::INFINITY),
+        ("2 · inf", d(2.0) * f64::INFINITY, f64::INFINITY),
+        ("inf · 2", d(f64::INFINITY) * 2.0_f64, f64::INFINITY),
+        // `f64 * Float106` delegates here, so it is the same guard seen from the other side.
+        (
+            "f64 lhs: 1e200 · 1e200",
+            1e200_f64 * d(1e200),
+            f64::INFINITY,
+        ),
+    ] {
+        assert_eq!(got.hi(), want, "{tag} high word");
+        assert_eq!(got.lo(), 0.0, "{tag} low word");
+    }
+
+    // §7.2 invalid operations stay NaN.
+    assert!((d(f64::INFINITY) * 0.0_f64).is_nan());
+    assert!((d(2.0) * f64::NAN).is_nan());
+}
+
+#[test]
+fn test_division_overflowing_finite_operands_is_infinite_not_nan() {
+    // Oracle: IEEE 754-2019 §7.4 again, on the quotient rather than the sum or product.
+    assert!((f64::MAX / 1e-200).is_infinite(), "f64 oracle");
+
+    for (tag, got, want) in [
+        ("MAX / 1e-200", d(f64::MAX) / d(1e-200), f64::INFINITY),
+        ("1e300 / 1e-300", d(1e300) / d(1e-300), f64::INFINITY),
+        ("−1e300 / 1e-300", d(-1e300) / d(1e-300), f64::NEG_INFINITY),
+        ("f64 divisor", d(f64::MAX) / 1e-200_f64, f64::INFINITY),
+        ("f64 dividend", 1e300_f64 / d(1e-300), f64::INFINITY),
+    ] {
+        assert_eq!(got.hi(), want, "{tag} high word");
+        assert_eq!(got.lo(), 0.0, "{tag} low word");
+    }
+
+    // The guard's existing cases are unchanged: a quotient below the range underflows to zero.
+    assert_eq!((d(1e-300) / d(1e300)).hi(), 0.0);
+}
+
+#[test]
+fn test_remainder_of_an_out_of_range_quotient_has_no_answer() {
+    // `Rem` is `a − trunc(a/b)·b`, and `trunc` has nothing to return once `a/b` leaves the range.
+    // IEEE 754-2019 §5.3.1 does put a finite remainder under `|b|` on every finite pair, so NaN is
+    // not the standard's answer — it is the honest report that this identity cannot reach it.
+    // Carrying the quotient's infinity through would give `a − inf = −inf`, a definite and wrong
+    // remainder, which is why the quotient is checked before it is used.
+    //
+    // Unlike its neighbours this pins an answer that did not change: the unguarded `Rem` reached
+    // NaN by accident, through the NaN its unguarded `Div` handed back. It is here because fixing
+    // `Div` alone turns this into `−inf`, measured.
+    assert!((d(1e300) % d(1e-300)).is_nan());
+    // The cases that were already NaN by the same route stay NaN: §7.2 makes both invalid.
+    assert!((d(1.0) % d(0.0)).is_nan());
+    assert!((d(f64::INFINITY) % d(2.0)).is_nan());
+}

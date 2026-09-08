@@ -16,7 +16,8 @@ use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{ComplexField, Normed, RealField};
+use deep_causality_linear::vector_norm_l2;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
@@ -54,8 +55,7 @@ where
     let s = op.as_slice();
     let mut tr = Complex::new(R::zero(), R::zero());
     for i in 0..d {
-        let c = s[i * d + i];
-        tr = Complex::new(tr.re + c.re, tr.im + c.im);
+        tr += s[i * d + i];
     }
     Ok(tr)
 }
@@ -65,10 +65,37 @@ pub fn frobenius_norm<R>(op: &CausalTensor<Complex<R>>) -> R
 where
     R: RealField,
 {
-    op.as_slice()
-        .iter()
-        .fold(R::zero(), |acc, c| acc + c.re * c.re + c.im * c.im)
-        .sqrt()
+    // The Frobenius norm is the two-norm of the entries read as one vector, which is what the
+    // crate's scaled form takes. Folding `re² + im²` here reached infinity above about `1.34e154`
+    // for a norm that is representable — and `markov_pairs` fed exactly that to a commutator
+    // threshold, so the overflow decided a check rather than merely reporting oddly.
+    vector_norm_l2(op.as_slice())
+}
+
+/// The largest modulus over a sequence of complex numbers, or zero over an empty one.
+///
+/// The entrywise residual this crate takes five times: `max_i |x_i|`, where the `x_i` are usually
+/// the differences between two operators that should agree. Each of those five sites open-coded
+/// `sqrt(dr² + di²)` and folded a maximum over it; this is that reduction, once, over
+/// [`Normed::modulus`](deep_causality_algebra::Normed::modulus) — which factors the larger component
+/// out and so does not overflow for a modulus that is representable.
+///
+/// Takes an iterator rather than two slices because the fifth site does not zip two slices: the
+/// Hermiticity defect pairs an entry with the conjugate of its transpose, which is an index
+/// pairing, not a positional one.
+///
+/// A `NaN` entry never compares greater than the running maximum, so it is skipped rather than
+/// propagated — the behaviour every one of the five call sites already had, since each folded with
+/// `if x > acc`.
+pub fn max_modulus<R, I>(entries: I) -> R
+where
+    R: RealField,
+    I: Iterator<Item = Complex<R>>,
+{
+    entries.fold(R::zero(), |acc, z| {
+        let m = z.modulus();
+        if m > acc { m } else { acc }
+    })
 }
 
 /// The Hermiticity defect `max_ij |M_ij − conj(M_ji)|` (zero iff `M = Mᴴ`).
@@ -78,20 +105,12 @@ where
 {
     let d = square_dim(op)?;
     let s = op.as_slice();
-    let mut max = R::zero();
-    for i in 0..d {
-        for j in 0..d {
-            let a = s[i * d + j];
-            let b = s[j * d + i];
-            let dr = a.re - b.re;
-            let di = a.im + b.im;
-            let m = (dr * dr + di * di).sqrt();
-            if m > max {
-                max = m;
-            }
-        }
-    }
-    Ok(max)
+    // `M_ij − conj(M_ji)`: the conjugate is why the imaginary parts add where a plain difference
+    // would subtract them. This is the one of the five residual sites whose pairing is by index
+    // rather than by position, which is why `max_modulus` takes an iterator and not two slices.
+    Ok(max_modulus((0..d).flat_map(|i| {
+        (0..d).map(move |j| s[i * d + j] - ComplexField::conjugate(&s[j * d + i]))
+    })))
 }
 
 /// The `d×d` complex identity matrix.
@@ -231,8 +250,7 @@ where
             let mut acc = Complex::new(R::zero(), R::zero());
             for t in 0..d_tr {
                 let t_off = offset(&traced_legs, t);
-                let c = s[(row_base + t_off) * d + (col_base + t_off)];
-                acc = Complex::new(acc.re + c.re, acc.im + c.im);
+                acc += s[(row_base + t_off) * d + (col_base + t_off)];
             }
             out[rk * d_keep + ck] = acc;
         }

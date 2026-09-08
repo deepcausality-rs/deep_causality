@@ -114,7 +114,7 @@ fn main() {
 
     // 4. Aggregate and Conclude
     if !ites.is_empty() {
-        let cate: f64 = ites.iter().sum::<f64>() / ites.len() as f64;
+        let cate: f64 = deep_causality_stats::mean(&ites).unwrap_or(0.0);
         println!("\n--- CATE Calculation Result ---");
         println!(
             "The Conditional Average Treatment Effect (CATE) for patients over 65 is: {:.2}",

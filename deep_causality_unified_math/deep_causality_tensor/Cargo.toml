@@ -1,11 +1,12 @@
 [package]
 name = "deep_causality_tensor"
-version = "0.5.4"
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
+version = "0.5.5"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Tensor data structure for for deep_causality crate."
 documentation = "https://docs.rs/deep_causality"
@@ -27,14 +28,17 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc", "deep_causality_ast/std", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_num_dual/std", "deep_causality_linear/std"]
+std = ["alloc", "deep_causality_ast/std", "deep_causality_haft/std", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_num_complex/std", "deep_causality_num_dual/std", "deep_causality_linear/std", "deep_causality_stats/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_ast/no-std", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_num_dual/no-std", "deep_causality_linear/no-std"]
+no-std = ["alloc", "deep_causality_ast/no-std", "deep_causality_haft/no-std", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_num_complex/no-std", "deep_causality_num_dual/no-std", "deep_causality_linear/no-std", "deep_causality_stats/no-std"]
 
 [dependencies.deep_causality_ast]
 workspace = true
 
 [dependencies.deep_causality_haft]
+workspace = true
+
+[dependencies.deep_causality_stats]
 workspace = true
 
 [dependencies.deep_causality_num]

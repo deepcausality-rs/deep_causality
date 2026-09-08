@@ -7,7 +7,6 @@ use crate::{LorentzianMetric, PhysicsError};
 use core::fmt::Debug;
 use core::iter::Sum;
 use deep_causality_algebra::RealField;
-use deep_causality_linear::CsrMatrix;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::SimplicialManifold;
@@ -98,79 +97,20 @@ where
 
     // 4. Compute J = ★d★F (codifferential of F)
     // Step 4a: ★F (apply Hodge star to 2-form). Hodge ops carry R (manifold scalar).
-    let star_f = apply_csr_real(&hodge_ops[2], &f_2form);
+    let star_f = hodge_ops[2].vec_mult(&f_2form)?;
 
     // Step 4b: d(★F) (apply coboundary / exterior derivative).
     // Coboundary operators are CsrMatrix<i8>: their entries are pure ±1 (orientation
     // signs from the simplicial complex's incidence structure). They carry no
     // measurement and never need higher precision than i8, so we keep them as i8
     // and lift the i8 → R conversion only at multiply-time.
-    let d_star_f = apply_csr_i8(&coboundary_ops[2], &star_f);
+    let d_star_f = coboundary_ops[2].vec_mult_real(&star_f)?;
 
     // Step 4c: ★(d★F) (apply Hodge star to get 1-form)
-    let j_data = apply_csr_real(&hodge_ops[3], &d_star_f);
+    let j_data = hodge_ops[3].vec_mult(&d_star_f)?;
 
     let len = j_data.len();
     CausalTensor::new(j_data, vec![len]).map_err(PhysicsError::from)
-}
-
-/// Helper: Apply a CSR matrix carrying R values to an R vector.
-#[allow(clippy::needless_range_loop)]
-fn apply_csr_real<R>(matrix: &CsrMatrix<R>, vec: &[R]) -> Vec<R>
-where
-    R: RealField,
-{
-    let n_rows = matrix.shape().0;
-    let mut result = vec![R::zero(); n_rows];
-
-    for row in 0..n_rows {
-        let row_start = matrix.row_indices()[row];
-        let row_end = matrix.row_indices()[row + 1];
-
-        for idx in row_start..row_end {
-            let col = matrix.col_indices()[idx];
-            let val = matrix.values()[idx];
-            if col < vec.len() {
-                result[row] += val * vec[col];
-            }
-        }
-    }
-
-    result
-}
-
-/// Helper: Apply a CSR matrix of pure orientation signs (i8) to an R vector.
-///
-/// The coboundary/boundary operators of a simplicial complex are intrinsically
-/// integer (±1) — they only carry the orientation of how (k-1)-simplices bound
-/// k-simplices. We keep them as `CsrMatrix<i8>` for memory locality and convert
-/// the small i8 sign into R only at the multiplication site.
-#[allow(clippy::needless_range_loop)]
-fn apply_csr_i8<R>(matrix: &CsrMatrix<i8>, vec: &[R]) -> Vec<R>
-where
-    R: RealField + FromPrimitive,
-{
-    let n_rows = matrix.shape().0;
-    let mut result = vec![R::zero(); n_rows];
-
-    for row in 0..n_rows {
-        let row_start = matrix.row_indices()[row];
-        let row_end = matrix.row_indices()[row + 1];
-
-        for idx in row_start..row_end {
-            let col = matrix.col_indices()[idx];
-            let val_i8 = matrix.values()[idx];
-            // i8 -> R via f64 detour (RealField does not implement From<i8> directly;
-            // FromPrimitive::from_f64 is the existing carve-out convention for lifting
-            // numeric literals into R across the crate).
-            let val = R::from_f64(val_i8 as f64).expect("R::from_f64(i8) failed");
-            if col < vec.len() {
-                result[row] += val * vec[col];
-            }
-        }
-    }
-
-    result
 }
 
 /// Calculates the electromagnetic stress-energy tensor $T^{\mu\nu}_{EM}$.

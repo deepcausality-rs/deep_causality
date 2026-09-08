@@ -79,12 +79,12 @@ where
     }
 }
 
-/// Causal wrapper for [`stats::shannon_entropy_kernel`].
-pub fn shannon_entropy<R>(probs: &CausalTensor<R>) -> PropagatingEffect<R>
+/// Causal wrapper for [`stats::shannon_entropy_bits_kernel`].
+pub fn shannon_entropy_bits<R>(probs: &CausalTensor<R>) -> PropagatingEffect<R>
 where
-    R: RealField + MaybeParallel + core::iter::Sum + Default + Debug,
+    R: RealField + FromPrimitive + MaybeParallel + core::iter::Sum + Default + Debug,
 {
-    match stats::shannon_entropy_kernel(probs) {
+    match stats::shannon_entropy_bits_kernel(probs) {
         Ok(val) => PropagatingEffect::pure(val),
         Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
     }

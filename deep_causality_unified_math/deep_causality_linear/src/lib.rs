@@ -90,6 +90,12 @@ pub use crate::algorithms::decomposition::{
     svd, svd_sorted, svd_truncated,
 };
 
+// Fixed-size dense forms, moved in from the consumers that had open-coded them
+pub use crate::algorithms::small::{
+    determinant_3x3, determinant_4x4, dot, dot_n, double_dot_3x3, eigen_symmetric_3x3, inverse_3x3,
+    inverse_4x4, mat3_vec, trace_of_square_3x3,
+};
+
 // Norms, defined once. The `DenseVector` methods of the same names delegate to the vector forms.
 pub use crate::algorithms::norms::{
     matrix_norm_frobenius, matrix_norm_inf, matrix_norm_l1, vector_norm_inf, vector_norm_l1,

@@ -9,14 +9,28 @@
 //!
 //! # Precision boundary
 //!
-//! The internal arithmetic on physical quantities (masses, transverse momenta) is
-//! generic over `R: RealField`. The Monte Carlo sampling itself, however, comes
-//! from `deep_causality_rand` — whose `StandardNormal` / `Standard` distributions
-//! only implement `Distribution` for `f32` and `f64`. We therefore sample the
-//! pseudo-random values at `f64` precision and lift them into `R` via
-//! `R::from_f64` at the boundary; for `R = f64` this is a no-op, for higher-
-//! precision `R` the sampling noise sits at the f64 floor anyway, so the lift
-//! does not lose meaningful entropy.
+//! The internal arithmetic on physical quantities (masses, transverse momenta) is generic over
+//! `R: RealField`. The Monte Carlo draws are taken at `f64` and lifted into `R` via `R::from_f64`
+//! at the boundary; for `R = f64` that is a no-op.
+//!
+//! Sampling wider is available and is not used. `deep_causality_rand` implements
+//! `Distribution<Float106>` for `StandardUniform`, `Open01`, `OpenClosed01` and `StandardNormal`.
+//! The three draws here do not benefit from it:
+//!
+//! - **Flavour selection** scales a uniform by the weight total and walks the cumulative weights.
+//!   The output is a discrete index, so bits below `2^-53` change it only when the scaled draw
+//!   lands within about `1e-16` of a weight boundary.
+//! - **The vector/pseudoscalar choice** compares a uniform against a fixed fraction and returns a
+//!   bool, with the same measure argument.
+//! - **Transverse momentum** is a Gaussian, and here the wider draw is the narrower one. The `f64`
+//!   `StandardNormal` is a ziggurat with the Marsaglia tail algorithm, whose reach is unbounded.
+//!   The `Float106` implementation is Box–Muller, `radius = sqrt(-2·ln u1)` over an `Open01` whose
+//!   floor is `2^-53`, so it cannot exceed `|z| ≈ 8.57`. Both caps sit past `P ≈ 1e-17`, beyond
+//!   reach at any feasible sample count, so neither is a reason to prefer the other.
+//!
+//! A `Float106` stream is also not a refinement of the `f64` one: a `Float106` uniform consumes
+//! two `f64` draws and its normal four, so switching would replace every seeded sequence rather
+//! than extend it.
 
 use crate::kernels::nuclear::pdg::{pdg_mass, quark_masses};
 use crate::real_from_f64;
@@ -132,10 +146,10 @@ where
 
 /// Generate transverse momentum according to Gaussian distribution.
 ///
-/// Returns (px, py) in the target field `R`. The Gaussian is sampled as a
-/// **unit** normal at f64 via `deep_causality_rand::Normal` (which only supports
-/// `f32` / `f64`), lifted into `R`, then scaled by the field-typed width `sigma`
-/// — so the physical width never leaves `R`.
+/// Returns (px, py) in the target field `R`. The Gaussian is sampled as a **unit** normal at f64
+/// via `deep_causality_rand::Normal`, lifted into `R`, then scaled by the field-typed width
+/// `sigma` — so the physical width never leaves `R`. See the module docs for why the draw stays
+/// at f64 when a `Float106` normal exists.
 pub fn generate_transverse_momentum<R, RNG>(rng: &mut RNG, sigma: R) -> (R, R)
 where
     R: RealField + FromPrimitive,

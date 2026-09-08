@@ -1,0 +1,46 @@
+[package]
+name = "deep_causality_stats"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
+
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
+description = "Descriptive and information statistics over slices, generic in the scalar."
+documentation = "https://docs.rs/deep_causality_stats"
+categories = ["development-tools", "mathematics"]
+keywords = ["statistics", "entropy", "regression", "correlation"]
+# Exclude all bazel files as these conflict with Bazel workspace when vendored.
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/*",
+    "tests/**/*",
+    "papers/*",
+]
+
+[features]
+default = ["std"]
+std = ["alloc", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_linear/std"]
+alloc = []
+no-std = ["alloc", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_linear/no-std"]
+
+[dependencies.deep_causality_num]
+workspace = true
+
+[dependencies.deep_causality_algebra]
+workspace = true
+
+[dependencies.deep_causality_linear]
+workspace = true
+
+[lints]
+workspace = true

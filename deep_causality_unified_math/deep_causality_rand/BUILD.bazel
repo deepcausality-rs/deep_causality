@@ -13,7 +13,10 @@ rust_library(
     ]),
     aliases = aliases(),
     crate_features = [
+        "alloc",
+        "getrandom",
         "os-random",
+        "std",
     ],
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
@@ -27,6 +30,12 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_rand",
+    crate_features = [
+        "alloc",
+        "getrandom",
+        "os-random",
+        "std",
+    ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -34,6 +43,12 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_rand",
+    crate_features = [
+        "alloc",
+        "getrandom",
+        "os-random",
+        "std",
+    ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )
@@ -97,6 +112,12 @@ rust_test_suite(
     srcs = glob([
         "tests/types/rand/*_tests.rs",
     ]),
+    # Every case in `os_random_rng_tests.rs` is gated on `os-random`, which the
+    # library above is built with. Without it here the file yields an empty test
+    # binary that reports success.
+    crate_features = [
+        "os-random",
+    ],
     tags = [
         "unit-test",
     ],

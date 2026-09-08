@@ -7,7 +7,9 @@ version = "0.1.1"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-repository = "https://github.com/deepcausality/deep_causality.rs"
+repository = { workspace = true }
+homepage = { workspace = true}
+
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Counterfactual Computational fluid dynamics solvers and the Flow DSL."
 documentation = "https://docs.rs/deep_causality"
@@ -39,6 +41,7 @@ std = [
     "deep_causality_core/std",
     "deep_causality_num/std",
     "deep_causality_algebra/std",
+    "deep_causality_linear/std",
     "deep_causality_num_complex/std",
     "deep_causality_num_dual/std",
     "deep_causality_physics/std",
@@ -80,6 +83,9 @@ workspace = true
 workspace = true
 
 [dependencies.deep_causality_algebra]
+workspace = true
+
+[dependencies.deep_causality_linear]
 workspace = true
 
 [dependencies.deep_causality_num_complex]

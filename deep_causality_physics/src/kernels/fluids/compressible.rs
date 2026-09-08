@@ -18,6 +18,7 @@ use crate::Speed;
 use crate::Temperature;
 use crate::{Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress};
 use deep_causality_algebra::RealField;
+use deep_causality_linear::{dot_n, double_dot_3x3};
 use deep_causality_num::FromPrimitive;
 
 /// Ideal-gas speed of sound `a = √(γ · R_s · T)`.
@@ -268,21 +269,9 @@ where
     }
 
     // Φ = τ : ∇u
-    let tv = tau.value();
-    let gv = grad_u.value();
-    let phi = tv[0][0] * gv[0][0]
-        + tv[0][1] * gv[0][1]
-        + tv[0][2] * gv[0][2]
-        + tv[1][0] * gv[1][0]
-        + tv[1][1] * gv[1][1]
-        + tv[1][2] * gv[1][2]
-        + tv[2][0] * gv[2][0]
-        + tv[2][1] * gv[2][1]
-        + tv[2][2] * gv[2][2];
+    let phi = double_dot_3x3(tau.value(), grad_u.value());
 
-    let grad_t_norm_sq = grad_temperature[0] * grad_temperature[0]
-        + grad_temperature[1] * grad_temperature[1]
-        + grad_temperature[2] * grad_temperature[2];
+    let grad_t_norm_sq = dot_n(grad_temperature, grad_temperature);
 
     Ok(phi / t + thermal_conductivity * grad_t_norm_sq / (t * t))
 }

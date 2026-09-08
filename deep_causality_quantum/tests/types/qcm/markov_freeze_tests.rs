@@ -411,3 +411,89 @@ fn test_freeze_rejects_out_of_range_faithfulness_id() {
     assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
     assert!(!g.is_frozen());
 }
+
+// =============================================================================
+// Non-finite and extreme factors: the check fails safe.
+//
+// Task 6.8 was drafted to add a finiteness guard here, on the reasoning that an
+// overflowing Frobenius norm feeds `CommutatorTolerance::threshold` unguarded and
+// sends the threshold to infinity. That cause was removed upstream: `frobenius_norm`
+// now delegates to the scaled Euclidean norm, so it returns the true norm wherever
+// one is representable.
+//
+// What remains was measured rather than assumed, and no guard is warranted:
+//
+//   * The threshold is `safety · (norm_j·budget_k + norm_k·budget_j + 2γ·norm_j·norm_k)`,
+//     so it overflows only when its own true value is unrepresentable — and in that
+//     regime any finite commutator passes under the true value too, so the verdict
+//     does not change.
+//   * A non-finite factor makes the comparison `norm <= threshold` false, because
+//     every comparison against `NaN` is false. The pair is therefore *rejected*, which
+//     is the conservative direction.
+//
+// These tests pin that, so a later change cannot quietly turn a refusal into a pass.
+// =============================================================================
+
+#[test]
+fn test_a_nan_factor_is_rejected_rather_than_admitted() {
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(
+        0,
+        mat(vec![c(f64::NAN, 0.), c(0., 0.), c(0., 0.), c(1., 0.)], 2),
+    );
+    pf.insert(1, sigma_x());
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    let err = quantum_markov_check(&pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CommutatorNonZero { .. }),
+        "a NaN factor must not be admitted; got {:?}",
+        err.0
+    );
+}
+
+#[test]
+fn test_an_infinite_factor_is_rejected_rather_than_admitted() {
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(
+        0,
+        mat(
+            vec![c(f64::INFINITY, 0.), c(0., 0.), c(0., 0.), c(1., 0.)],
+            2,
+        ),
+    );
+    pf.insert(1, sigma_x());
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    let err = quantum_markov_check(&pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CommutatorNonZero { .. }),
+        "an infinite factor must not be admitted; got {:?}",
+        err.0
+    );
+}
+
+#[test]
+fn test_a_huge_but_finite_noncommuting_pair_is_still_rejected() {
+    // Entries at 1e200: the Frobenius norms are finite under the scaled form, and their
+    // product overflows the threshold. The pair genuinely does not commute, and the
+    // verdict is unchanged by that overflow.
+    let s = 1e200f64;
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, mat(vec![c(s, 0.), c(1., 0.), c(1., 0.), c(s, 0.)], 2));
+    pf.insert(1, mat(vec![c(s, 0.), c(0., 0.), c(0., 0.), c(-s, 0.)], 2));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+
+    let err = quantum_markov_check(&pf, &fs, &CommutatorTolerance::default()).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CommutatorNonZero { .. }),
+        "got {:?}",
+        err.0
+    );
+}

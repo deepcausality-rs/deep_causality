@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    Length, Mass, escape_velocity, orbital_velocity, schwarzschild_radius,
+    Length, Mass, escape_velocity, escape_velocity_kernel, orbital_velocity, schwarzschild_radius,
 };
 
 // =============================================================================
@@ -45,7 +45,13 @@ fn test_escape_velocity_wrapper_success() {
     let radius = Length::<f64>::new(6.371e6).unwrap();
 
     let effect = escape_velocity(&mass, &radius);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        escape_velocity_kernel(&mass, &radius).unwrap(),
+        "escape_velocity must carry the value its kernel produced"
+    );
 
     let speed = effect.value_cloned().unwrap();
     assert!(speed.value() > 0.0);

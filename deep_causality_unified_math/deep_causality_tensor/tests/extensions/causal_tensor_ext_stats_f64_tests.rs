@@ -178,6 +178,35 @@ fn gaussian_log_density_is_elementwise() {
 }
 
 #[test]
+fn gaussian_log_density_distinguishes_the_variance_from_the_standard_deviation() {
+    // Every other fixture in this file uses `variance = 1`, where σ and σ² are the same number —
+    // so none of them can tell a delegation that passes the variance from one that passes the
+    // standard deviation. Corner class C, and it is why this test exists.
+    //
+    // At x = μ the density is −½·log(2πσ²). With σ² = 4 that is −½·(log 2π + log 4) ≈ −1.612;
+    // passing σ = 2 instead would give −½·(log 2π + log 2) ≈ −1.266.
+    let t = CausalTensor::<f64>::new(vec![3.0], vec![1, 1]).unwrap();
+    let dens = t.gaussian_log_density(3.0, 4.0).unwrap();
+    let expected = -0.5 * (2.0 * PI * 4.0).ln();
+    assert!(
+        (dens.as_slice()[0] - expected).abs() < EPS,
+        "got {}, expected {expected}",
+        dens.as_slice()[0]
+    );
+
+    // And away from the mean, where the quadratic term also divides by the variance:
+    // −½·(log(2π·4) + 2²/4) = −1.6121 − 0.5.
+    let t = CausalTensor::<f64>::new(vec![5.0], vec![1, 1]).unwrap();
+    let dens = t.gaussian_log_density(3.0, 4.0).unwrap();
+    let expected = -0.5 * ((2.0 * PI * 4.0).ln() + 4.0 / 4.0);
+    assert!(
+        (dens.as_slice()[0] - expected).abs() < EPS,
+        "got {}, expected {expected}",
+        dens.as_slice()[0]
+    );
+}
+
+#[test]
 fn gaussian_log_density_floors_zero_variance() {
     let t = CausalTensor::<f64>::new(vec![0.5], vec![1, 1]).unwrap();
     let dens = t.gaussian_log_density(0.0, 0.0).unwrap();

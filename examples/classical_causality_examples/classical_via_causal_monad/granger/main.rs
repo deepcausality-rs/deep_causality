@@ -113,8 +113,10 @@ fn predict_shipping(
     PropagatingProcess::with_state(next, state, Some(series))
 }
 
+/// The mean, dispatched to `deep_causality_stats`. The fixtures below are never empty, so the
+/// crate's refusal on an empty slice cannot fire; `0.0` keeps this a total function anyway.
 fn mean(xs: &[f64]) -> f64 {
-    xs.iter().sum::<f64>() / xs.len() as f64
+    deep_causality_stats::mean(xs).unwrap_or(0.0)
 }
 
 /// Factual time-series: four quarters of (oil_price, shipping_activity).

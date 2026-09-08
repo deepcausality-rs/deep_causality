@@ -123,7 +123,21 @@ The design notes moved too, and archived changes link to them.
 | `openspec/notes/homology/` | `openspec/notes/archive/homology/` |
 | `openspec/notes/linear/HKT-LAW-FINDINGS.md` | `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` |
 | `openspec/notes/unified_math/` | `openspec/notes/archive/unified_math/` |
+| `openspec/notes/simplicial_hodge_star/` | `openspec/notes/test_audit/topology/simplicial_hodge_star/` |
 | `specs/` | `openspec/` |
+
+The `unified_math/` row now covers the whole directory. It was written when three of its five files
+moved; `unified_math_next.md` and `bf16_tdd_record.md` were added to the live directory afterwards
+and followed them on 2026-09-08, when `unified-math-next` was archived. The directory is empty.
+
+`simplicial_hodge_star/` never had a live life of its own: it was written during `unified-math-next`
+task 6.7u and filed under `test_audit/topology/` in the same week, so the archived documents naming
+it at the top level — `tasks.md` at 6.7u.1 and 6.15, and `notes/c4-site-inventory.md` — record the
+path it was written with rather than one it ever kept.
+
+`openspec/notes/test_audit/` itself still resolves, but its contents moved down one level into
+`physics/` and `topology/` when the second finding arrived. An archived document pointing at the
+directory lands in the right place and finds two subfolders rather than the `README.md` it expected.
 
 ## 4. The unified-math consolidation, 2026-08-30
 

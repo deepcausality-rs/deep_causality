@@ -52,6 +52,47 @@ where
         }
         Ok(T::zero())
     }
+
+    /// Fills a dense buffer by walking the stored entries, rather than probing every position.
+    ///
+    /// The default reads each of `rows * cols` positions through [`get`](MatrixView::get), and
+    /// `get` answers by scanning that row's stored range — so the default costs a scan per
+    /// position, where one pass over the stored entries suffices. Every dense kernel taking a
+    /// `MatrixView` enters through this door: `eigen_hermitian` is nothing but a row-major copy
+    /// followed by a symmetric eigensolve, and `qr`, `svd` and `cholesky` all begin by
+    /// materialising the same buffer. One override serves the class.
+    ///
+    /// No caller passes a `CsrMatrix` to any of those algorithms today. It is overridden anyway:
+    /// the type is general-purpose, its callers are not fixed, and the cost of the default is a
+    /// property of the pair rather than of any one call site.
+    ///
+    /// # Errors
+    ///
+    /// [`LinearError::overflow`] if `rows * cols` exceeds a `usize`. A sparse matrix can hold such
+    /// a shape in three words — `CsrMatrix::with_capacity(2, usize::MAX, 0)` — and the dense buffer
+    /// it asks for here cannot exist. The default reached the same shape with a saturated capacity
+    /// hint and pushed until the allocator gave out; a typed refusal says what was wrong instead.
+    fn to_row_major(&self) -> Result<alloc::vec::Vec<T>, LinearError> {
+        let (rows, cols) = self.shape();
+        let n = rows
+            .checked_mul(cols)
+            .ok_or_else(|| LinearError::Overflow("CsrMatrix::to_row_major"))?;
+        let mut out = alloc::vec![T::zero(); n];
+        for i in 0..rows {
+            let (start, end) = (self.row_indices()[i], self.row_indices()[i + 1]);
+            for k in start..end {
+                let j = self.col_indices()[k];
+                // The CSR invariant keeps every stored column inside the shape. Checking costs one
+                // comparison per stored entry and turns a broken invariant into a typed error
+                // rather than a write past the end of the buffer.
+                if j >= cols {
+                    return Err(LinearError::IndexOutOfBounds((i, j), (rows, cols)));
+                }
+                out[i * cols + j] = self.values()[k].clone();
+            }
+        }
+        Ok(out)
+    }
 }
 
 impl<T> MatrixBuild for CsrMatrix<T>

@@ -5,8 +5,9 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Frequency, Mass, MomentOfInertia, angular_momentum, kalman_filter_linear, kinetic_energy,
-    rotational_kinetic_energy, torque,
+    Frequency, Mass, MomentOfInertia, angular_momentum, angular_momentum_kernel,
+    generalized_master_equation_kernel, kalman_filter_linear, kalman_filter_linear_kernel,
+    kinetic_energy, rotational_kinetic_energy, torque, torque_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -64,7 +65,13 @@ fn test_torque_wrapper_success() {
     .unwrap();
 
     let effect = torque(&radius, &force);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        torque_kernel(&radius, &force).unwrap(),
+        "torque must carry the value its kernel produced"
+    );
 }
 
 // =============================================================================
@@ -85,9 +92,21 @@ fn test_angular_momentum_wrapper_success() {
     .unwrap();
 
     let effect = angular_momentum(&radius, &momentum);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        angular_momentum_kernel(&radius, &momentum).unwrap(),
+        "angular_momentum must carry the value its kernel produced"
+    );
     let effect = angular_momentum(&radius, &momentum);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        angular_momentum_kernel(&radius, &momentum).unwrap(),
+        "angular_momentum must carry the value its kernel produced"
+    );
 }
 
 // =============================================================================
@@ -106,7 +125,13 @@ fn test_kalman_filter_linear_wrapper_success() {
     let q = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
 
     let effect = kalman_filter_linear(&x_pred, &p_pred, &measurement, &h, &r, &q);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        kalman_filter_linear_kernel(&x_pred, &p_pred, &measurement, &h, &r, &q).unwrap(),
+        "kalman_filter_linear must carry the value its kernel produced"
+    );
 
     let (x_new, p_new) = effect.value_cloned().unwrap();
     // Verify state was updated towards measurement (12.0)
@@ -172,8 +197,13 @@ fn test_generalized_master_equation_wrapper_success() {
 
     // Test simple identity/zero op case
     let effect = generalized_master_equation(&state, &history, None, &mk);
-
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        generalized_master_equation_kernel(&state, &history, None, &mk).unwrap(),
+        "generalized_master_equation must carry the value its kernel produced"
+    );
     let res = effect.value_cloned().unwrap();
     assert_eq!(res.len(), 1);
     assert_eq!(res[0].value(), 0.0);

@@ -182,19 +182,19 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 29 library crates.
+The project is a monorepo containing 30 library crates.
 
 ### Directory layout
 
-Ten crates sit at the repository root. The **sixteen mathematics crates live under
+Ten crates sit at the repository root. The **seventeen mathematics crates live under
 `deep_causality_unified_math/`** and the **three utility crates under
 `deep_causality_utils/`**, one directory per crate:
 
 ```
 deep_causality_unified_math/deep_causality_{algebra, calculus, fft, haft, homology,
                                             linear, metric, multivector, num, num_complex,
-                                            num_dual, num_rational, rand, tensor, topology,
-                                            uncertain}
+                                            num_dual, num_rational, rand, stats, tensor,
+                                            topology, uncertain}
 
 deep_causality_utils/deep_causality_{ast, file, par}
 ```
@@ -259,7 +259,7 @@ by crates on both sides of the split.
 
 ## Project Dependencies
 
-Scope: the 29 library crates that are workspace members. Example crates (`examples/*`)
+Scope: the 30 library crates that are workspace members. Example crates (`examples/*`)
 and `yanked/*` are excluded. Third-party crates are resolved from the registry by
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
@@ -303,53 +303,58 @@ Tier 3
   deep_causality_linear       → deep_causality_algebra, deep_causality_haft, deep_causality_num
   deep_causality_num_complex  → deep_causality_algebra, deep_causality_haft, deep_causality_num
   deep_causality_num_dual     → deep_causality_algebra, deep_causality_haft, deep_causality_num
-  deep_causality_uncertain    → deep_causality_algebra, deep_causality_ast, deep_causality_num,
-                                deep_causality_rand
 
 Tier 4
-  deep_causality              → deep_causality_algebra, deep_causality_ast, deep_causality_core,
-                                deep_causality_data_structures, deep_causality_haft,
-                                deep_causality_uncertain, ultragraph
   deep_causality_calculus     → deep_causality_algebra, deep_causality_haft, deep_causality_num,
                                 deep_causality_num_dual
   deep_causality_fft          → deep_causality_algebra, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_par
   deep_causality_homology     → deep_causality_linear, deep_causality_num
-  deep_causality_tensor       → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
-                                deep_causality_linear, deep_causality_num,
-                                deep_causality_num_complex, deep_causality_num_dual
+  deep_causality_stats        → deep_causality_algebra, deep_causality_linear, deep_causality_num
 
 Tier 5
-  deep_causality_ethos        → deep_causality, ultragraph
+  deep_causality_tensor       → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
+                                deep_causality_linear, deep_causality_num,
+                                deep_causality_num_complex, deep_causality_num_dual,
+                                deep_causality_stats
+  deep_causality_uncertain    → deep_causality_algebra, deep_causality_ast, deep_causality_num,
+                                deep_causality_rand, deep_causality_stats
+
+Tier 6
+  deep_causality              → deep_causality_algebra, deep_causality_ast, deep_causality_core,
+                                deep_causality_data_structures, deep_causality_haft,
+                                deep_causality_uncertain, ultragraph
   deep_causality_multivector  → deep_causality_algebra, deep_causality_haft, deep_causality_linear,
                                 deep_causality_metric, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_tensor
 
-Tier 6
+Tier 7
+  deep_causality_ethos        → deep_causality, ultragraph
   deep_causality_quantum      → deep_causality (opt), deep_causality_algebra, deep_causality_core,
                                 deep_causality_haft, deep_causality_homology, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
                                 deep_causality_num, deep_causality_num_complex,
-                                deep_causality_num_rational, deep_causality_tensor,
-                                deep_causality_uncertain (opt)
+                                deep_causality_num_rational, deep_causality_stats,
+                                deep_causality_tensor, deep_causality_uncertain (opt)
   deep_causality_topology     → deep_causality_algebra, deep_causality_fft, deep_causality_haft,
                                 deep_causality_homology, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
                                 deep_causality_num, deep_causality_num_complex, deep_causality_par,
                                 deep_causality_rand, deep_causality_tensor
 
-Tier 7
+Tier 8
   deep_causality_algorithms   → deep_causality_algebra, deep_causality_num, deep_causality_par,
-                                deep_causality_rand, deep_causality_tensor, deep_causality_topology
+                                deep_causality_rand, deep_causality_stats, deep_causality_tensor,
+                                deep_causality_topology
   deep_causality_physics      → deep_causality_algebra, deep_causality_calculus,
                                 deep_causality_core, deep_causality_haft, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
                                 deep_causality_num, deep_causality_num_complex,
-                                deep_causality_num_dual, deep_causality_par,
-                                deep_causality_rand (opt), deep_causality_tensor,
+                                deep_causality_num_dual, deep_causality_par, deep_causality_rand
+                                (opt), deep_causality_stats, deep_causality_tensor,
                                 deep_causality_topology
 
-Tier 8
+Tier 9
   deep_causality_cfd          → deep_causality_algebra, deep_causality_calculus,
                                 deep_causality_core, deep_causality_fft, deep_causality_file,
                                 deep_causality_haft, deep_causality_num, deep_causality_num_complex,
@@ -357,8 +362,8 @@ Tier 8
                                 deep_causality_tensor, deep_causality_topology,
                                 deep_causality_uncertain (opt)
   deep_causality_discovery    → deep_causality_algebra, deep_causality_algorithms,
-                                deep_causality_haft, deep_causality_num, deep_causality_tensor,
-                                deep_causality_topology
+                                deep_causality_haft, deep_causality_num, deep_causality_par,
+                                deep_causality_stats, deep_causality_tensor, deep_causality_topology
 ```
 
 Internal dev-only dependency (tests/benches, not part of any published runtime):

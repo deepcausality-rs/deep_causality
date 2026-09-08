@@ -25,6 +25,7 @@ use alloc::format;
 use alloc::vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_stats::bernoulli_proportion;
 
 /// A Bernoulli point estimate from a histogram, with its standard error and the shots behind it.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -49,17 +50,13 @@ where
                 "histogram reports {hits} hits from only {total} shots"
             )));
         }
-        let n = R::from_u64(total).ok_or_else(|| {
-            QuantumError::CalculationError(format!("scalar cannot represent {total} shots"))
-        })?;
-        let k = R::from_u64(hits).ok_or_else(|| {
-            QuantumError::CalculationError(format!("scalar cannot represent {hits} hits"))
-        })?;
-        let p = k / n;
-        let one = R::one();
-        let standard_error = (p * (one - p) / n).sqrt();
+        // The proportion and its width come from `deep_causality_stats`; the guards above stay
+        // because they name which count was wrong, which `p > 1` can no longer say once the
+        // division has happened.
+        let (estimate, standard_error) = bernoulli_proportion::<R>(hits, total)
+            .map_err(|e| QuantumError::CalculationError(format!("shot proportion: {e}")))?;
         Ok(Self {
-            estimate: p,
+            estimate,
             standard_error,
             shots: total,
         })

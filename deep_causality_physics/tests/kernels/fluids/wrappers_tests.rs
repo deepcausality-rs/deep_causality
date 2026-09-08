@@ -6,25 +6,30 @@
 use deep_causality_physics::{
     Density, KinematicViscosity, Length, Pressure, ReynoldsStress, SpecificEnthalpy, Speed,
     StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, ViscousStress,
-    VorticityVector, WallShearStress, area_mach_ratio, bernoulli_pressure, bernoulli_total_head,
-    bond_number, capillary_number, circulation, continuity_rhs, convective_acceleration,
-    delta_criterion, dissipation_rate, dynamic_pressure, eckert_number, eddy_viscosity_boussinesq,
-    enstrophy_density, entropy_production_rate, friction_velocity, froude_number, grashof_number,
-    helicity_density, hydrostatic_pressure, integral_length_scale, isentropic_density_ratio,
-    isentropic_pressure_ratio, isentropic_temperature_ratio, kinetic_energy_density,
-    knudsen_number, kolmogorov_length, kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift,
-    lambda2, lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
+    VorticityVector, WallShearStress, area_mach_ratio, area_mach_ratio_kernel, bernoulli_pressure,
+    bernoulli_total_head, bond_number, capillary_number, circulation, continuity_rhs,
+    convective_acceleration, delta_criterion, dissipation_rate, dynamic_pressure,
+    dynamic_pressure_kernel, eckert_number, eddy_viscosity_boussinesq,
+    eddy_viscosity_boussinesq_kernel, enstrophy_density, entropy_production_rate,
+    friction_velocity, froude_number, grashof_number, helicity_density, hydrostatic_pressure,
+    integral_length_scale, isentropic_density_ratio, isentropic_density_ratio_kernel,
+    isentropic_pressure_ratio, isentropic_pressure_ratio_kernel, isentropic_temperature_ratio,
+    isentropic_temperature_ratio_kernel, kinetic_energy_density, knudsen_number, kolmogorov_length,
+    kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift, lambda2, lambda2_kernel,
+    lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
     newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
     power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
-    q_criterion, rayleigh_number, reynolds_number, reynolds_stress, richardson_number,
-    rotation_rate_tensor, scalar_advection_diffusion, schmidt_number, skin_friction_coefficient,
-    specific_enthalpy, speed_of_sound_ideal_gas, strain_rate_tensor, stream_function_2d,
-    strouhal_number, swirling_strength, taylor_microscale, total_enthalpy,
-    total_pressure_isentropic, total_temperature_isentropic, turbulent_kinetic_energy,
-    velocity_gradient_invariants, velocity_potential_2d, viscous_diffusion,
+    q_criterion, q_criterion_kernel, rayleigh_number, reynolds_number, reynolds_number_kernel,
+    reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
+    schmidt_number, skin_friction_coefficient, skin_friction_coefficient_kernel, specific_enthalpy,
+    speed_of_sound_ideal_gas, strain_rate_tensor, stream_function_2d, strouhal_number,
+    swirling_strength, swirling_strength_kernel, taylor_microscale, total_enthalpy,
+    total_pressure_isentropic, total_temperature_isentropic, total_temperature_isentropic_kernel,
+    turbulent_kinetic_energy, turbulent_kinetic_energy_kernel, velocity_gradient_invariants,
+    velocity_potential_2d, velocity_potential_2d_kernel, viscous_diffusion,
     viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
-    vorticity_from_gradient, vorticity_transport, wall_shear_stress_newtonian, weber_number,
-    y_plus,
+    viscous_sublayer_velocity_kernel, vorticity_from_gradient, vorticity_transport,
+    wall_shear_stress_newtonian, weber_number, y_plus,
 };
 
 // =============================================================================
@@ -278,7 +283,13 @@ fn test_reynolds_number_wrapper() {
     let l = Length::<f64>::new(0.1).unwrap();
     let nu = KinematicViscosity::<f64>::new(1.0e-3).unwrap();
     let effect = reynolds_number(&u, &l, &nu);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        reynolds_number_kernel(&u, &l, &nu).unwrap(),
+        "reynolds_number must carry the value its kernel produced"
+    );
     assert!((effect.value_cloned().unwrap() - 200.0).abs() < 1e-10);
 }
 
@@ -412,7 +423,13 @@ fn test_nusselt_number_wrapper() {
 fn test_turbulent_kinetic_energy_wrapper() {
     let u = Velocity3::<f64>::new([3.0, 4.0, 0.0]).unwrap();
     let effect = turbulent_kinetic_energy(&u);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        turbulent_kinetic_energy_kernel(&u).unwrap(),
+        "turbulent_kinetic_energy must carry the value its kernel produced"
+    );
     assert!((effect.value_cloned().unwrap() - 12.5).abs() < 1e-12);
 }
 
@@ -511,7 +528,13 @@ fn test_eddy_viscosity_boussinesq_wrapper_success() {
     ])
     .unwrap();
     let effect = eddy_viscosity_boussinesq(&r, &s, k);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        eddy_viscosity_boussinesq_kernel(&r, &s, k).unwrap(),
+        "eddy_viscosity_boussinesq must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -530,7 +553,13 @@ fn test_q_criterion_wrapper() {
     let g =
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = q_criterion(&g);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        q_criterion_kernel(&g).unwrap(),
+        "q_criterion must carry the value its kernel produced"
+    );
     assert!((effect.value_cloned().unwrap() - 1.0).abs() < 1e-12);
 }
 
@@ -546,7 +575,13 @@ fn test_lambda2_wrapper() {
     let g =
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = lambda2(&g);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        lambda2_kernel(&g).unwrap(),
+        "lambda2 must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!(v < 0.0);
 }
@@ -556,7 +591,13 @@ fn test_swirling_strength_wrapper() {
     let g =
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     let effect = swirling_strength(&g);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        swirling_strength_kernel(&g).unwrap(),
+        "swirling_strength must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!((v - 1.0).abs() < 1e-12);
 }
@@ -600,7 +641,13 @@ fn test_total_pressure_isentropic_wrapper() {
 fn test_total_temperature_isentropic_wrapper() {
     let t = Temperature::<f64>::new(300.0).unwrap();
     let effect = total_temperature_isentropic(&t, 1.0_f64, 1.4);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        total_temperature_isentropic_kernel(&t, 1.0_f64, 1.4).unwrap(),
+        "total_temperature_isentropic must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!((v.value() - 360.0).abs() < 1e-6);
 }
@@ -683,7 +730,13 @@ fn test_y_plus_wrapper_error_path() {
 #[test]
 fn test_viscous_sublayer_velocity_wrapper() {
     let effect = viscous_sublayer_velocity(3.0_f64);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        viscous_sublayer_velocity_kernel(3.0_f64),
+        "viscous_sublayer_velocity must carry the value its kernel produced"
+    );
     assert_eq!(effect.value_cloned().unwrap(), 3.0);
 }
 
@@ -703,7 +756,13 @@ fn test_skin_friction_coefficient_wrapper() {
     let rho = Density::<f64>::new(1.0).unwrap();
     let u_inf = Speed::<f64>::new(10.0).unwrap();
     let effect = skin_friction_coefficient(&tau, &rho, &u_inf);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        skin_friction_coefficient_kernel(&tau, &rho, &u_inf).unwrap(),
+        "skin_friction_coefficient must carry the value its kernel produced"
+    );
     assert!((effect.value_cloned().unwrap() - 0.01).abs() < 1e-12);
 }
 
@@ -725,7 +784,13 @@ fn test_dynamic_pressure_wrapper() {
     let rho = Density::<f64>::new(1.225).unwrap();
     let u = Speed::<f64>::new(20.0).unwrap();
     let effect = dynamic_pressure(&rho, &u);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        dynamic_pressure_kernel(&rho, &u).unwrap(),
+        "dynamic_pressure must carry the value its kernel produced"
+    );
     assert!((effect.value_cloned().unwrap().value() - 245.0).abs() < 1e-12);
 }
 
@@ -757,7 +822,13 @@ fn test_stream_function_2d_wrapper() {
 #[test]
 fn test_velocity_potential_2d_wrapper() {
     let effect = velocity_potential_2d(2.0_f64, 3.0, 1.0, 1.0);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        velocity_potential_2d_kernel(2.0_f64, 3.0, 1.0, 1.0),
+        "velocity_potential_2d must carry the value its kernel produced"
+    );
     assert_eq!(effect.value_cloned().unwrap(), 5.0);
 }
 
@@ -993,7 +1064,13 @@ fn test_newtonian_viscous_stress_with_bulk_wrapper_error_path() {
 #[test]
 fn test_isentropic_pressure_ratio_wrapper() {
     let effect = isentropic_pressure_ratio(2.0_f64, 1.4);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        isentropic_pressure_ratio_kernel(2.0_f64, 1.4).unwrap(),
+        "isentropic_pressure_ratio must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!((v - 1.8_f64.powf(3.5)).abs() < 1e-9);
 }
@@ -1006,7 +1083,13 @@ fn test_isentropic_pressure_ratio_wrapper_error_path() {
 #[test]
 fn test_isentropic_temperature_ratio_wrapper() {
     let effect = isentropic_temperature_ratio(2.0_f64, 1.4);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        isentropic_temperature_ratio_kernel(2.0_f64, 1.4).unwrap(),
+        "isentropic_temperature_ratio must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!((v - 1.8).abs() < 1e-12);
 }
@@ -1019,7 +1102,13 @@ fn test_isentropic_temperature_ratio_wrapper_error_path() {
 #[test]
 fn test_isentropic_density_ratio_wrapper() {
     let effect = isentropic_density_ratio(1.0_f64, 1.4);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        isentropic_density_ratio_kernel(1.0_f64, 1.4).unwrap(),
+        "isentropic_density_ratio must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!((v - 1.2_f64.powf(2.5)).abs() < 1e-9);
 }
@@ -1032,7 +1121,13 @@ fn test_isentropic_density_ratio_wrapper_error_path() {
 #[test]
 fn test_area_mach_ratio_wrapper() {
     let effect = area_mach_ratio(2.0_f64, 1.4);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        area_mach_ratio_kernel(2.0_f64, 1.4).unwrap(),
+        "area_mach_ratio must carry the value its kernel produced"
+    );
     let v = effect.value_cloned().unwrap();
     assert!((v - 1.6875).abs() < 1e-9);
 }
@@ -1040,4 +1135,319 @@ fn test_area_mach_ratio_wrapper() {
 #[test]
 fn test_area_mach_ratio_wrapper_error_path() {
     assert!(area_mach_ratio(0.0_f64, 1.4).is_err());
+}
+
+// =============================================================================
+// Delegation, against the independent oracle
+//
+// Every wrapper below used to be tested by `assert!(f(..).is_ok())` and nothing else. That is
+// satisfied by any implementation that returns `Ok` of anything: replacing `weber_number`'s body
+// with `PropagatingEffect::pure(R::zero())` — reporting zero for every input in the world — passed
+// the whole of this file.
+//
+// A wrapper's job is to carry the kernel's value into a `PropagatingEffect` and its error into a
+// failed one, so the test is that the value arrives intact, over the same diverse inputs the
+// kernels are checked on. The expectations come from `scripts/physics_oracles.py`, which evaluates
+// the textbook definitions in 50-digit decimal, so this is not the kernel's formula retyped.
+// =============================================================================
+
+/// Relative agreement with the oracle; the wrapper adds no arithmetic of its own.
+#[track_caller]
+fn wrapper_close(got: f64, want: f64, case: &str) {
+    let scale = want.abs().max(1.0);
+    assert!(
+        (got - want).abs() <= 1e-14 * scale,
+        "{case}: wrapper gave {got:.17e}, oracle {want:.17e}"
+    );
+}
+
+/// `(u, L, nu, expected)`
+const REYNOLDS: &[[f64; 4]] = &[
+    [1e-06, 1e-06, 1e-06, 1e-06],
+    [0.001, 0.001, 1.5e-05, 0.06666666666666667],
+    [1.0, 0.01, 1e-06, 10000.0],
+    [10.0, 2.5, 1.5e-05, 1666666.6666666667],
+    [250.0, 60.0, 1.46e-05, 1027397260.2739726],
+    [7800.0, 10.0, 0.0001, 780000000.0],
+    [100000.0, 1000.0, 1e-07, 1000000000000000.0],
+    [0.037, 0.0089, 2.3e-06, 143.17391304347825],
+];
+
+/// `(u, a, expected)`
+const MACH: &[[f64; 3]] = &[
+    [0.001, 340.29, 2.9386699579770196e-06],
+    [34.029, 340.29, 0.1],
+    [340.29, 340.29, 1.0],
+    [680.58, 340.29, 2.0],
+    [1701.45, 340.29, 5.0],
+    [7800.0, 295.0, 26.440677966101696],
+    [10000.0, 0.01, 1000000.0],
+];
+
+/// `(u, g, L, expected)`
+const FROUDE: &[[f64; 4]] = &[
+    [0.001, 9.80665, 0.001, 0.01009809988551276],
+    [0.5, 9.80665, 0.1, 0.5049049942756381],
+    [10.0, 9.80665, 2.5, 2.0196199771025523],
+    [3.0, 1.62, 100.0, 0.23570226039551584],
+    [15.0, 24.79, 1.0, 3.012679939775216],
+    [1000.0, 9.80665, 1000000.0, 0.3193299567810587],
+    [2.7, 3.72, 0.35, 2.366237169223285],
+];
+
+/// `(rho, u, L, sigma, expected)`
+const WEBER: &[[f64; 5]] = &[
+    [1000.0, 2.0, 0.001, 0.072, 55.55555555555556],
+    [1.225, 100.0, 0.05, 0.072, 8506.944444444445],
+    [13546.0, 0.5, 0.002, 0.4865, 13.921891058581705],
+    [789.0, 10.0, 0.0001, 0.0223, 353.8116591928251],
+    [1000.0, 0.001, 1e-06, 0.072, 1.3888888888888889e-08],
+    [1.0, 10000.0, 1000.0, 0.001, 100000000000000.0],
+];
+
+/// `(nu, alpha, expected)`
+const PRANDTL: &[[f64; 3]] = &[
+    [1.5e-05, 2.2e-05, 0.6818181818181818],
+    [1e-06, 1.43e-07, 6.993006993006993],
+    [1.1e-07, 4.3e-05, 0.0025581395348837207],
+    [0.0009, 8.6e-08, 10465.116279069767],
+    [1e-09, 1e-09, 1.0],
+    [1000.0, 0.001, 1000000.0],
+];
+
+/// `(u, L, alpha, expected)`
+const PECLET: &[[f64; 4]] = &[
+    [1e-06, 1e-06, 1e-07, 1e-05],
+    [1.0, 0.01, 1.43e-07, 69930.06993006993],
+    [10.0, 2.5, 2.2e-05, 1136363.6363636365],
+    [250.0, 60.0, 2.2e-05, 681818181.8181819],
+    [10000.0, 1000.0, 1e-08, 1000000000000000.0],
+];
+
+/// `(f, L, u, expected)`
+const STROUHAL: &[[f64; 4]] = &[
+    [0.2, 1.0, 1.0, 0.2],
+    [120.0, 0.01, 10.0, 0.12],
+    [0.001, 1000.0, 1.0, 1.0],
+    [5.0, 0.05, 1.2, 0.20833333333333334],
+    [1000000.0, 1e-06, 0.001, 1000.0],
+];
+
+/// `(lam, L, expected)`
+const KNUDSEN: &[[f64; 3]] = &[
+    [6.8e-08, 1.0, 6.8e-08],
+    [6.8e-08, 1e-06, 0.068],
+    [0.001, 0.001, 1.0],
+    [1.0, 1e-09, 1000000000.0],
+    [1e-12, 1000.0, 1e-15],
+];
+
+/// `(g, beta, dT, L, u, expected)`
+const RICHARDSON: &[[f64; 6]] = &[
+    [9.80665, 0.0034, 10.0, 1.0, 1.0, 0.3334261],
+    [9.80665, 0.000207, 50.0, 0.1, 0.01, 101.4988275],
+    [1.62, 0.001, 100.0, 10.0, 5.0, 0.0648],
+    [9.80665, 1e-06, 0.001, 0.001, 1000.0, 9.80665e-18],
+];
+
+/// `(g, beta, dT, L, nu, alpha, expected)`
+const RAYLEIGH: &[[f64; 7]] = &[
+    [
+        9.80665,
+        0.0034,
+        10.0,
+        0.1,
+        1.5e-05,
+        2.2e-05,
+        1010382.1212121212,
+    ],
+    [
+        9.80665,
+        0.000207,
+        20.0,
+        0.05,
+        1e-06,
+        1.43e-07,
+        35489100.52447552,
+    ],
+    [1.62, 0.001, 5.0, 2.0, 0.0001, 1e-05, 64800000.0],
+    [9.80665, 1e-05, 0.01, 0.001, 0.001, 0.001, 9.80665e-10],
+];
+
+/// `(g, beta, dT, L, nu, expected)`
+const GRASHOF: &[[f64; 6]] = &[
+    [9.80665, 0.0034, 10.0, 0.1, 1.5e-05, 1481893.7777777778],
+    [9.80665, 0.000207, 20.0, 0.05, 1e-06, 5074941.375],
+    [1.62, 0.001, 5.0, 2.0, 0.0001, 6480000.0],
+    [24.79, 0.0001, 1000.0, 100.0, 0.01, 24790000000.0],
+];
+
+/// `(u, cp, dT, expected)`
+const ECKERT: &[[f64; 4]] = &[
+    [2000.0, 1004.0, 3000.0, 1.3280212483399734],
+    [10.0, 4184.0, 1.0, 0.02390057361376673],
+    [0.001, 1000.0, 1000.0, 1e-12],
+    [7800.0, 1004.0, 20000.0, 3.0298804780876494],
+    [10000.0, 0.001, 0.001, 100000000000000.0],
+];
+
+/// `(nu, Dm, expected)`
+const SCHMIDT: &[[f64; 3]] = &[
+    [1.5e-05, 2e-05, 0.75],
+    [1e-06, 1.5e-09, 666.6666666666666],
+    [1e-09, 0.001, 1e-06],
+    [0.0009, 1e-10, 9000000.0],
+];
+
+/// `(alpha, Dm, expected)`
+const LEWIS: &[[f64; 3]] = &[
+    [2.2e-05, 2e-05, 1.1],
+    [1.43e-07, 1.5e-09, 95.33333333333333],
+    [0.001, 1e-09, 1000000.0],
+    [1e-09, 0.001, 1e-06],
+];
+
+/// `(tau, u, L, expected)`
+const STOKES: &[[f64; 4]] = &[
+    [0.001, 10.0, 0.1, 0.1],
+    [1e-06, 1.0, 0.001, 0.001],
+    [1.0, 1000.0, 0.01, 100000.0],
+    [1e-09, 0.001, 1000.0, 1e-15],
+];
+
+/// `(mu, u, sigma, expected)`
+const CAPILLARY: &[[f64; 4]] = &[
+    [0.001, 0.01, 0.072, 0.0001388888888888889],
+    [1.5e-05, 100.0, 0.072, 0.020833333333333332],
+    [1.0, 1e-06, 0.0223, 4.484304932735426e-05],
+    [0.1, 1.0, 0.4865, 0.20554984583761562],
+    [1e-06, 1000000.0, 0.001, 1000.0],
+];
+
+/// `(rho, g, L, sigma, expected)`
+const BOND: &[[f64; 5]] = &[
+    [1000.0, 9.80665, 0.01, 0.072, 13.620347222222222],
+    [1000.0, 9.80665, 0.001, 0.072, 0.13620347222222223],
+    [13546.0, 9.80665, 0.005, 0.4865, 6.826355647482014],
+    [789.0, 1.62, 0.02, 0.0223, 22.92699551569507],
+    [1.0, 24.79, 1000.0, 0.001, 24790000000.0],
+];
+
+/// `(h, L, k, expected)`
+const NUSSELT: &[[f64; 4]] = &[
+    [10.0, 1.0, 0.0257, 389.10505836575874],
+    [1000.0, 0.05, 0.6, 83.33333333333333],
+    [0.001, 0.001, 1000.0, 1e-09],
+    [100000.0, 10.0, 401.0, 2493.7655860349128],
+    [25.0, 0.3, 0.14, 53.57142857142857],
+];
+
+#[test]
+fn test_the_dimensionless_wrappers_carry_the_value_not_merely_an_ok() {
+    // One assertion per row of every table: 100-odd inputs across all eighteen wrappers.
+    for [u, l, v, want] in REYNOLDS {
+        let e = reynolds_number(
+            &Speed::new(*u).unwrap(),
+            &Length::new(*l).unwrap(),
+            &KinematicViscosity::new(*v).unwrap(),
+        );
+        wrapper_close(e.value_cloned().unwrap(), *want, "reynolds_number");
+    }
+    for [u, a, want] in MACH {
+        let e = mach_number(&Speed::new(*u).unwrap(), &Speed::new(*a).unwrap());
+        wrapper_close(e.value_cloned().unwrap(), *want, "mach_number");
+    }
+    for [u, g, l, want] in FROUDE {
+        let e = froude_number(&Speed::new(*u).unwrap(), *g, &Length::new(*l).unwrap());
+        wrapper_close(e.value_cloned().unwrap(), *want, "froude_number");
+    }
+    for [rho, u, l, s, want] in WEBER {
+        let e = weber_number(
+            &Density::new(*rho).unwrap(),
+            &Speed::new(*u).unwrap(),
+            &Length::new(*l).unwrap(),
+            *s,
+        );
+        wrapper_close(e.value_cloned().unwrap(), *want, "weber_number");
+    }
+    for [v, alpha, want] in PRANDTL {
+        let e = prandtl_number(&KinematicViscosity::new(*v).unwrap(), *alpha);
+        wrapper_close(e.value_cloned().unwrap(), *want, "prandtl_number");
+    }
+    for [u, l, alpha, want] in PECLET {
+        let e = peclet_number(&Speed::new(*u).unwrap(), &Length::new(*l).unwrap(), *alpha);
+        wrapper_close(e.value_cloned().unwrap(), *want, "peclet_number");
+    }
+    for [f, l, u, want] in STROUHAL {
+        let e = strouhal_number(*f, &Length::new(*l).unwrap(), &Speed::new(*u).unwrap());
+        wrapper_close(e.value_cloned().unwrap(), *want, "strouhal_number");
+    }
+    for [lam, l, want] in KNUDSEN {
+        let e = knudsen_number(*lam, &Length::new(*l).unwrap());
+        wrapper_close(e.value_cloned().unwrap(), *want, "knudsen_number");
+    }
+    for [g, b, dt, l, u, want] in RICHARDSON {
+        let e = richardson_number(
+            *g,
+            *b,
+            *dt,
+            &Length::new(*l).unwrap(),
+            &Speed::new(*u).unwrap(),
+        );
+        wrapper_close(e.value_cloned().unwrap(), *want, "richardson_number");
+    }
+    for [g, b, dt, l, v, alpha, want] in RAYLEIGH {
+        let e = rayleigh_number(
+            *g,
+            *b,
+            *dt,
+            &Length::new(*l).unwrap(),
+            &KinematicViscosity::new(*v).unwrap(),
+            *alpha,
+        );
+        wrapper_close(e.value_cloned().unwrap(), *want, "rayleigh_number");
+    }
+    for [g, b, dt, l, v, want] in GRASHOF {
+        let e = grashof_number(
+            *g,
+            *b,
+            *dt,
+            &Length::new(*l).unwrap(),
+            &KinematicViscosity::new(*v).unwrap(),
+        );
+        wrapper_close(e.value_cloned().unwrap(), *want, "grashof_number");
+    }
+    for [u, cp, dt, want] in ECKERT {
+        let e = eckert_number(&Speed::new(*u).unwrap(), *cp, *dt);
+        wrapper_close(e.value_cloned().unwrap(), *want, "eckert_number");
+    }
+    for [v, dm, want] in SCHMIDT {
+        let e = schmidt_number(&KinematicViscosity::new(*v).unwrap(), *dm);
+        wrapper_close(e.value_cloned().unwrap(), *want, "schmidt_number");
+    }
+    for [alpha, dm, want] in LEWIS {
+        let e = lewis_number(*alpha, *dm);
+        wrapper_close(e.value_cloned().unwrap(), *want, "lewis_number");
+    }
+    for [tau, u, l, want] in STOKES {
+        let e = particle_stokes_number(*tau, &Speed::new(*u).unwrap(), &Length::new(*l).unwrap());
+        wrapper_close(e.value_cloned().unwrap(), *want, "particle_stokes_number");
+    }
+    for [mu, u, s, want] in CAPILLARY {
+        let e = capillary_number(&Viscosity::new(*mu).unwrap(), &Speed::new(*u).unwrap(), *s);
+        wrapper_close(e.value_cloned().unwrap(), *want, "capillary_number");
+    }
+    for [rho, g, l, s, want] in BOND {
+        let e = bond_number(
+            &Density::new(*rho).unwrap(),
+            *g,
+            &Length::new(*l).unwrap(),
+            *s,
+        );
+        wrapper_close(e.value_cloned().unwrap(), *want, "bond_number");
+    }
+    for [h, l, k, want] in NUSSELT {
+        let e = nusselt_number(*h, &Length::new(*l).unwrap(), *k);
+        wrapper_close(e.value_cloned().unwrap(), *want, "nusselt_number");
+    }
 }

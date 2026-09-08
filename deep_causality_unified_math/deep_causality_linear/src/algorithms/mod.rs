@@ -11,4 +11,5 @@ pub mod gf2;
 pub mod integer;
 pub mod kernels;
 pub mod norms;
+pub mod small;
 pub mod solve;

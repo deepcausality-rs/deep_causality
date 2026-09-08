@@ -1,0 +1,622 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "DeepCausality Workspace Architecture",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": "architecture.html",
+    "repository": {
+      "url": "https://github.com/marvin-hansen/deep_causality",
+      "revision": "79103335bd4c0c6f23f927dfcc768028938033dc"
+    },
+    "views": [
+      {
+        "id": "reasoning-run",
+        "label": "Primary path",
+        "focus": [
+          "author",
+          "dc",
+          "core",
+          "haft",
+          "algebra",
+          "num"
+        ],
+        "note": "One reasoning run: build a model, evaluate it, carry the effect down to the numeric floor."
+      },
+      {
+        "id": "math-tower",
+        "label": "Unified math tower",
+        "focus": [
+          "haft",
+          "algebra",
+          "num",
+          "numtower",
+          "compute",
+          "geometry"
+        ],
+        "note": "Sixteen crates in a strict seven-tier DAG, every layer under the same higher-kinded interface."
+      },
+      {
+        "id": "domain-layer",
+        "label": "Domain crates",
+        "focus": [
+          "cfd",
+          "physics",
+          "quantum",
+          "discovery",
+          "geometry",
+          "compute"
+        ],
+        "note": "Fluid dynamics, physics, quantum and discovery all sit on the same tower."
+      },
+      {
+        "id": "boundaries",
+        "label": "Crate boundaries",
+        "focus": [
+          "dc",
+          "haft",
+          "utils",
+          "ext",
+          "stores"
+        ],
+        "note": "Ten crates at the repository root, sixteen under unified_math, three under utils, six from crates.io."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      56,
+      56
+    ],
+    "cols": 5,
+    "cellW": 160,
+    "cellH": 60,
+    "gapX": 100,
+    "gapY": 58
+  },
+  "components": [
+    {
+      "id": "ethos",
+      "type": "security",
+      "label": "deep_causality_ethos",
+      "sublabel": "EffectEthos · Teloid",
+      "tag": "deontic verdict",
+      "row": 0,
+      "col": 0,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_ethos/src/types/effect_ethos/mod.rs",
+          "line": 27,
+          "label": "EffectEthos"
+        }
+      ]
+    },
+    {
+      "id": "stores",
+      "type": "database",
+      "label": "ultragraph · data_structures",
+      "sublabel": "directed graph · windows",
+      "tag": "tier 0",
+      "row": 0,
+      "col": 1,
+      "size": [
+        210,
+        60
+      ],
+      "sources": [
+        {
+          "path": "ultragraph/src/lib.rs",
+          "label": "graph backend"
+        },
+        {
+          "path": "deep_causality_data_structures/src/lib.rs",
+          "label": "ArrayGrid · SlidingWindow"
+        }
+      ]
+    },
+    {
+      "id": "numtower",
+      "type": "backend",
+      "label": "Numbers & uncertainty",
+      "sublabel": "num_complex · num_dual",
+      "tag": "6 crates",
+      "row": 0,
+      "col": 4,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_unified_math/deep_causality_uncertain/src/lib.rs",
+          "label": "Uncertain<T>"
+        }
+      ]
+    },
+    {
+      "id": "dc",
+      "type": "backend",
+      "label": "deep_causality",
+      "sublabel": "Causaloid · Context · CSM",
+      "tag": "v0.15.2",
+      "row": 1,
+      "col": 0,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality/src/types/causal_types/causaloid/mod.rs",
+          "line": 119,
+          "label": "Causaloid::new"
+        },
+        {
+          "path": "deep_causality/src/traits/causable_graph/graph_reasoning/mod.rs",
+          "line": 117,
+          "label": "graph reasoning engine"
+        },
+        {
+          "path": "deep_causality/src/types/csm_types/csm/eval.rs",
+          "line": 91,
+          "label": "CSM fires the action"
+        }
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "deep_causality_core",
+      "sublabel": "PropagatingEffect carrier",
+      "tag": "no_std",
+      "row": 1,
+      "col": 1,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_core/src/types/causal_effect_propagation_process/mod.rs",
+          "line": 55,
+          "label": "4-channel carrier"
+        },
+        {
+          "path": "deep_causality_core/src/types/propagating_effect/mod.rs",
+          "line": 17,
+          "label": "PropagatingEffect alias"
+        }
+      ]
+    },
+    {
+      "id": "haft",
+      "type": "backend",
+      "label": "deep_causality_haft",
+      "sublabel": "HKT · Monad · Arrow",
+      "row": 1,
+      "col": 2,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_unified_math/deep_causality_haft/src/lib.rs",
+          "label": "categorical substrate"
+        }
+      ]
+    },
+    {
+      "id": "algebra",
+      "type": "backend",
+      "label": "deep_causality_algebra",
+      "sublabel": "Field · Ring · Verdict",
+      "row": 1,
+      "col": 3,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_unified_math/deep_causality_algebra/src/lib.rs",
+          "label": "algebraic tower"
+        }
+      ]
+    },
+    {
+      "id": "num",
+      "type": "backend",
+      "label": "deep_causality_num",
+      "sublabel": "Float · Float106 · lift",
+      "tag": "tier 0",
+      "row": 1,
+      "col": 4,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_unified_math/deep_causality_num/src/lib.rs",
+          "label": "numeric floor"
+        }
+      ]
+    },
+    {
+      "id": "ext",
+      "type": "external",
+      "label": "crates.io",
+      "sublabel": "csv · parquet · chrono",
+      "tag": "+3 optional",
+      "row": 2,
+      "col": 0,
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "author",
+      "type": "external",
+      "label": "Model author",
+      "sublabel": "examples/* · 16 packages",
+      "row": 2,
+      "col": 1,
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "geometry",
+      "type": "backend",
+      "label": "Geometry & topology",
+      "sublabel": "topology · multivector",
+      "tag": "3 crates",
+      "row": 2,
+      "col": 2,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_unified_math/deep_causality_topology/src/lib.rs",
+          "label": "manifolds + DEC"
+        }
+      ]
+    },
+    {
+      "id": "compute",
+      "type": "backend",
+      "label": "Compute kernels",
+      "sublabel": "linear · tensor · fft",
+      "tag": "4 crates",
+      "row": 2,
+      "col": 3,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_unified_math/deep_causality_tensor/src/lib.rs",
+          "label": "CausalTensor + TT stack"
+        }
+      ]
+    },
+    {
+      "id": "utils",
+      "type": "backend",
+      "label": "deep_causality_utils/*",
+      "sublabel": "ast · file · par",
+      "tag": "3 crates",
+      "row": 3,
+      "col": 0,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_utils/deep_causality_file/src/lib.rs",
+          "label": "IoAction loaders"
+        }
+      ]
+    },
+    {
+      "id": "cfd",
+      "type": "backend",
+      "label": "deep_causality_cfd",
+      "sublabel": "CfdFlow DSL · DEC · QTT",
+      "row": 3,
+      "col": 1,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_cfd/src/types/flow/cfd_flow.rs",
+          "line": 115,
+          "label": "CfdFlow::march"
+        }
+      ]
+    },
+    {
+      "id": "physics",
+      "type": "backend",
+      "label": "deep_causality_physics",
+      "sublabel": "415 kernels · 16 domains",
+      "row": 3,
+      "col": 2,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_physics/src/lib.rs",
+          "label": "kernel re-exports"
+        }
+      ]
+    },
+    {
+      "id": "quantum",
+      "type": "backend",
+      "label": "deep_causality_quantum",
+      "sublabel": "density matrices · gates",
+      "row": 3,
+      "col": 3,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_quantum/src/lib.rs",
+          "label": "quantum types"
+        }
+      ]
+    },
+    {
+      "id": "discovery",
+      "type": "backend",
+      "label": "Causal discovery",
+      "sublabel": "CDL · SURD · MRMR · BRCD",
+      "tag": "2 crates",
+      "row": 3,
+      "col": 4,
+      "size": [
+        160,
+        60
+      ],
+      "sources": [
+        {
+          "path": "deep_causality_discovery/src/types/cdl/mod.rs",
+          "line": 31,
+          "label": "typestate pipeline"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Causal framework — repository root",
+      "wraps": [
+        "ethos",
+        "stores",
+        "dc",
+        "core"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "deep_causality_unified_math/ — 16 crates, 7 tiers",
+      "wraps": [
+        "numtower",
+        "haft",
+        "algebra",
+        "num",
+        "geometry",
+        "compute"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Domain crates — repository root",
+      "wraps": [
+        "cfd",
+        "physics",
+        "quantum",
+        "discovery"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "deep_causality_utils/",
+      "wraps": [
+        "utils"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "author-builds",
+      "from": "author",
+      "to": "dc",
+      "label": "builds model",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "dc-evaluates",
+      "from": "dc",
+      "to": "core",
+      "label": "evaluate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-binds",
+      "from": "core",
+      "to": "haft",
+      "label": "bind · Free",
+      "variant": "emphasis"
+    },
+    {
+      "id": "haft-bounds",
+      "from": "haft",
+      "to": "algebra",
+      "label": "Field bounds",
+      "variant": "emphasis"
+    },
+    {
+      "id": "algebra-floats",
+      "from": "algebra",
+      "to": "num",
+      "label": "Float casts",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dc-proposes",
+      "from": "dc",
+      "to": "ethos",
+      "label": "proposed action",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -22
+    },
+    {
+      "id": "dc-stores",
+      "from": "dc",
+      "to": "stores",
+      "label": "graph · windows",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "geometry-hkt",
+      "from": "geometry",
+      "to": "haft",
+      "label": "HKT bounds",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "compute-algebra",
+      "from": "compute",
+      "to": "algebra",
+      "label": "Scalar bounds",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "geometry-kernels",
+      "from": "geometry",
+      "to": "compute",
+      "label": "tensors"
+    },
+    {
+      "id": "numtower-floats",
+      "from": "numtower",
+      "to": "num",
+      "label": "Float traits",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "physics-manifolds",
+      "from": "physics",
+      "to": "geometry",
+      "label": "manifolds",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "quantum-tensors",
+      "from": "quantum",
+      "to": "compute",
+      "label": "linear · tensor",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "discovery-numeric",
+      "from": "discovery",
+      "to": "num",
+      "label": "numeric traits",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "cfd-kernels",
+      "from": "cfd",
+      "to": "physics",
+      "label": "kernels"
+    },
+    {
+      "id": "cfd-io",
+      "from": "cfd",
+      "to": "utils",
+      "label": "file IO"
+    },
+    {
+      "id": "utils-chrono",
+      "from": "utils",
+      "to": "ext",
+      "label": "chrono",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -28
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Primary path",
+      "items": [
+        "Causaloid + Context, built by the author",
+        "Kahn-ordered walk, 1024-round relay budget",
+        "Carrier: value XOR error, state, log"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Crate boundaries",
+      "items": [
+        "29 library crates, 16 example packages",
+        "Root 10 · unified_math 16 · utils 3",
+        "Package names stay flat when nested"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Internal dependencies",
+      "items": [
+        "Nine strictly acyclic tiers, num at tier 0",
+        "Only ast and par leave unified_math/",
+        "cfd and discovery sit at the top, tier 8"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "External dependencies",
+      "items": [
+        "7 of 29 crates use crates.io; 22 use none",
+        "Required: csv, parquet, chrono",
+        "Optional: libm, getrandom, rayon"
+      ]
+    }
+  ]
+}

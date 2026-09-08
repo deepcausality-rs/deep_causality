@@ -35,6 +35,7 @@ use crate::brcd::brcd_dirichlet::dirichlet_logdensity;
 use crate::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use crate::brcd::brcd_gaussian::{GaussianFamilyConfig, gaussian_family_logdensity};
 use crate::brcd::brcd_mapconfig::find_map_configs;
+use crate::brcd::brcd_project::{transpose, transpose_int};
 use crate::brcd::brcd_result::BrcdResult;
 use crate::dag_sampling::{mec_size, representative_dag, sample_dag};
 use deep_causality_algebra::RealField;
@@ -484,26 +485,6 @@ fn build_discrete<T: RealField + FromPrimitive + ToPrimitive>(
     Ok((ints, cards))
 }
 
-/// Builds the `n_total` parent feature rows from the chosen continuous columns.
-fn transpose<T: RealField>(columns: &[Vec<T>], idxs: &[usize], n: usize) -> Vec<Vec<T>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&p| columns[p][i]).collect())
-        .collect()
-}
-
-/// Builds the `n_total` parent configuration rows from the chosen integer columns.
-fn transpose_int(columns: &[Vec<usize>], idxs: &[usize], n: usize) -> Vec<Vec<usize>> {
-    if idxs.is_empty() {
-        return Vec::new();
-    }
-    (0..n)
-        .map(|i| idxs.iter().map(|&p| columns[p][i]).collect())
-        .collect()
-}
-
 /// All `k`-subsets of `0..n` in ascending lexicographic order (matching
 /// `itertools.combinations`).
 fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
@@ -536,17 +517,13 @@ fn combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
     out
 }
 
-/// Stable `log(Σ eˣ)` over a slice, shifted by the max for numerical stability.
+/// Stable `log(Σ eˣ)` over a slice, delegated to `deep_causality_stats`.
+///
+/// The shipped reduction is term-for-term what this held: `−∞` for the empty slice, a saturated
+/// non-finite maximum returned as-is, and the max shift otherwise. Kept as a named local so the
+/// call sites read the same and `neg_inf` keeps its one meaning here.
 fn logsumexp_slice<T: RealField>(vals: &[T]) -> T {
-    if vals.is_empty() {
-        return neg_inf::<T>();
-    }
-    let max = vals.iter().fold(vals[0], |a, &b| if b > a { b } else { a });
-    if !max.is_finite() {
-        return max;
-    }
-    let sum = vals.iter().fold(T::zero(), |acc, &v| acc + (v - max).exp());
-    max + sum.ln()
+    deep_causality_stats::log_sum_exp(vals)
 }
 
 /// Ranks the candidates by descending log-posterior and reports the max-shifted

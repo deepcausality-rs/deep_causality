@@ -20,7 +20,7 @@ use avionics_examples::shared::world;
 use deep_causality_cfd::{
     CompressibleMarchConfig, GateSeq, PhysicsError, Report, StudyView, TableRow,
 };
-use deep_causality_num::{Lift, lift};
+use deep_causality_num::lift;
 use std::path::PathBuf;
 
 // ── The case axis: weather conditions ─────────────────────────────────────────────────────────
@@ -176,17 +176,9 @@ fn draw_metrics(report: &Report<FloatType>) -> (FloatType, FloatType) {
 
 /// Mean and sample standard deviation of a slice.
 fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
-    let n = xs.len().lift::<FloatType>();
-    let mean = xs.iter().copied().sum::<FloatType>() / n;
-    if xs.len() < 2 {
-        return (mean, lift(0.0));
-    }
-    let var = xs
-        .iter()
-        .map(|&x| (x - mean) * (x - mean))
-        .sum::<FloatType>()
-        / (n - lift::<FloatType>(1.0));
-    (mean, deep_causality_algebra::Real::sqrt(var))
+    let mean = deep_causality_stats::mean(xs).unwrap_or(FloatType::NAN);
+    let sd = deep_causality_stats::std_dev(xs).unwrap_or_else(|_| lift(0.0));
+    (mean, sd)
 }
 
 /// The ensemble reduction: one condition's finished draw set (the reference draw first) collapses

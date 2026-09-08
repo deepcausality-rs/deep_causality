@@ -59,11 +59,13 @@ path = "cfd/viv_resonance_margin/main.rs"
 
 [dependencies]
 deep_causality = { workspace = true }
+deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_cfd = { workspace = true, features = ["parallel"] }
 deep_causality_num = { workspace = true, features = ["default"] }
 deep_causality_algebra = { workspace = true, features = ["default"] }
+deep_causality_linear = { workspace = true, features = ["std"] }
 deep_causality_haft = { workspace = true, features = ["default"] }
 deep_causality_tensor = { workspace = true, features = ["default"] }
 deep_causality_multivector = { workspace = true, features = ["default"] }

@@ -9,6 +9,7 @@ use super::FloatType;
 use super::constants::{CAP, COMMS_BAND_RAD_S};
 use deep_causality_algebra::Real;
 use deep_causality_cfd::{BlackoutTrigger, CfdScalar, CoupledField};
+use deep_causality_linear::vector_norm_l2;
 use deep_causality_num::lift;
 use deep_causality_tensor::Truncation;
 use std::process::exit;
@@ -44,8 +45,12 @@ pub fn peak<R: CfdScalar>(xs: &[R]) -> R {
 }
 
 /// The Euclidean norm of a 3-vector in the working precision.
+///
+/// Dispatches to `deep_causality_linear::vector_norm_l2` (`unified-math-next` task 6.7), which
+/// factors the largest component out before squaring instead of summing the squares and then
+/// taking the root.
 pub fn norm3(v: [FloatType; 3]) -> FloatType {
-    Real::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+    vector_norm_l2(&v)
 }
 
 /// The first cell of a named scalar, or zero when the field is absent.

@@ -2,7 +2,7 @@
 title: Literature
 description: The main scholarly works DeepCausality and the Effect Propagation Process build upon, from process philosophy and monadic composition to Pearl's SCM and Hardy's causaloid.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 This page collects the main publications that shaped DeepCausality, grouped by the contribution each one made to the framework. It is adapted from the Precedent section of the [EPP monograph](https://github.com/deepcausality-rs/deep_causality/tree/main/papers).

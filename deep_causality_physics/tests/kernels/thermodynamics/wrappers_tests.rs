@@ -5,7 +5,7 @@
 
 use deep_causality_physics::{
     AmountOfSubstance, Energy, Pressure, Temperature, Volume, boltzmann_factor, carnot_efficiency,
-    heat_capacity, heat_diffusion, ideal_gas_law, partition_function, shannon_entropy,
+    heat_capacity, heat_diffusion, ideal_gas_law, partition_function, shannon_entropy_bits,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -103,14 +103,14 @@ fn test_boltzmann_factor_wrapper_error() {
 fn test_shannon_entropy_wrapper_success() {
     let probs = CausalTensor::new(vec![0.25, 0.25, 0.25, 0.25], vec![4]).unwrap();
 
-    let effect = shannon_entropy(&probs);
+    let effect = shannon_entropy_bits(&probs);
     assert!(effect.is_ok());
 }
 
 #[test]
 fn test_shannon_entropy_wrapper_error() {
     let probs = CausalTensor::new(vec![-0.1], vec![1]).unwrap(); // Negative prob
-    let effect = shannon_entropy(&probs);
+    let effect = shannon_entropy_bits(&probs);
     assert!(effect.is_err());
 }
 

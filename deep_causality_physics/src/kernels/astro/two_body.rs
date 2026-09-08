@@ -181,15 +181,41 @@ where
         let two_pi = two * R::pi();
         // Wrap M into [0, 2π) via floor (no rem_euclid on the generic field).
         let m = m - two_pi * (m / two_pi).floor();
-        let tol = Self::lit(1e-15)?;
+        // The stopping test is set in units of the working scalar's own resolution, not as an
+        // absolute constant. `E` and `M` are both `O(1)` radians after the wrap above, so the
+        // floor the residual can reach is a small multiple of `ε`: about `6e-8` at `f32` against
+        // `2e-16` at `f64`. A fixed `1e-15` therefore sits below anything `f32` arithmetic can
+        // produce, and an iterate that solves the equation to the last bit the type has would
+        // still be refused — measured at `a = 2, e = 0.9, M = 0.25`, where `f64` converges and
+        // `f32` returned `NotConverged`. Eight ulp keeps `f64` where it was (`1.8e-15` against the
+        // old `1e-15`, so the `e = 0.9999` case below still exhausts the step test) and puts the
+        // narrower scalars inside their own noise floor.
+        let tol = Self::lit(8.0)? * R::epsilon();
         let mut ea = m;
         for _ in 0..100 {
             let d = (ea - e * ea.sin() - m) / (R::one() - e * ea.cos());
             ea -= d;
             if d.abs() < tol {
-                break;
+                return Ok(ea);
             }
         }
-        Ok(ea)
+        // The step test ran out. That is not the same as a wrong answer, and at high eccentricity
+        // it routinely happens with the root already in hand: at `e = 0.9999, M = 1e-6` this
+        // reaches the cap with `E = 0.00884630818017913` against an independent bisection's
+        // `0.00884630818017610` — a relative error of `3.4e-13` and a residual of `1e-18`. Newton's
+        // step stops contracting there long before the equation stops being satisfied, because
+        // `1 − e·cos E` is near zero and the correction is dominated by rounding.
+        //
+        // So the acceptance is on the residual, which is what the caller actually asked for, and
+        // the refusal is reserved for an iterate that solves neither test.
+        let residual = ea - e * ea.sin() - m;
+        if residual.abs() < tol {
+            return Ok(ea);
+        }
+        Err(PhysicsError::NotConverged(
+            "Kepler's equation did not converge in 100 iterations: neither the step test nor the \
+             residual test was met"
+                .into(),
+        ))
     }
 }

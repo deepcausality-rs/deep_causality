@@ -9,10 +9,11 @@
 
 use deep_causality_physics::{
     Acceleration, Area, Density, FlowBranch, Force, Length, Mass, Pressure, Temperature,
-    choked_mass_flow, cordell_braun_plume_boundary, ignition_altitude, inverse_area_mach,
-    jarvinen_adams_baseline_axial_coefficient, momentum_flux_ratio, nozzle_exit_state,
-    prandtl_meyer, propellant_mass_flow, srp_flow_regime_margin, srp_jet_edge_mach,
-    srp_post_bow_shock_total_pressure, srp_preserved_drag_fraction, srp_terminal_shock_mach,
+    choked_mass_flow, cordell_braun_plume_boundary, cordell_braun_plume_boundary_kernel,
+    ignition_altitude, inverse_area_mach, jarvinen_adams_baseline_axial_coefficient,
+    momentum_flux_ratio, nozzle_exit_state, prandtl_meyer, propellant_mass_flow,
+    srp_flow_regime_margin, srp_jet_edge_mach, srp_post_bow_shock_total_pressure,
+    srp_post_bow_shock_total_pressure_kernel, srp_preserved_drag_fraction, srp_terminal_shock_mach,
     srp_thrust_coefficient, srp_total_axial_force_coefficient, stopping_distance,
     suicide_burn_deceleration, tsiolkovsky_delta_v,
 };
@@ -180,7 +181,14 @@ fn test_plume_wrappers() {
         .is_ok()
     );
     let pt_1 = srp_post_bow_shock_total_pressure(Pressure::new(P_INF).unwrap(), M_INF, GAMMA);
-    assert!(pt_1.is_ok());
+    // Delegation, not merely success: `assert!(pt_1.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        pt_1.value_cloned().unwrap(),
+        srp_post_bow_shock_total_pressure_kernel(Pressure::new(P_INF).unwrap(), M_INF, GAMMA)
+            .unwrap(),
+        "srp_post_bow_shock_total_pressure must carry the value its kernel produced"
+    );
     assert!(!srp_post_bow_shock_total_pressure(Pressure::new(P_INF).unwrap(), 0.5, GAMMA).is_ok());
     let pt_1_val = *pt_1.value().unwrap();
     assert!(srp_terminal_shock_mach(Pressure::new(1.0e7_f64).unwrap(), pt_1_val, GAMMA).is_ok());
@@ -221,7 +229,27 @@ fn test_plume_boundary_wrapper() {
         M_INF,
         GAMMA,
     );
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        cordell_braun_plume_boundary_kernel(
+            Pressure::new(6060.2_f64 * P_INF).unwrap(),
+            Temperature::new(294.0).unwrap(),
+            287.0,
+            GAMMA,
+            m_exit,
+            half,
+            Length::new(d_throat).unwrap(),
+            Length::new(r_exit).unwrap(),
+            Length::new(l_cone).unwrap(),
+            Pressure::new(P_INF).unwrap(),
+            M_INF,
+            GAMMA
+        )
+        .unwrap(),
+        "cordell_braun_plume_boundary must carry the value its kernel produced"
+    );
     let bad = cordell_braun_plume_boundary(
         Pressure::new(6060.2_f64 * P_INF).unwrap(),
         Temperature::new(294.0).unwrap(),

@@ -73,20 +73,19 @@ pub fn build_training_set(
 
 /// Column-wise mean and standard deviation over the given rows.
 pub fn fit_standardizer(rows: &[Vec<f64>]) -> (Vec<f64>, Vec<f64>) {
-    let n = rows.len() as f64;
-    let mut mean = vec![0.0; N_FEATURES];
-    for r in rows {
-        for (m, &v) in mean.iter_mut().zip(r.iter()) {
-            *m += v / n;
-        }
-    }
-    let mut var = vec![0.0; N_FEATURES];
-    for r in rows {
-        for (j, &v) in r.iter().enumerate() {
-            var[j] += (v - mean[j]).powi(2) / n;
-        }
-    }
-    let std = var.iter().map(|v| v.sqrt()).collect();
+    // Column-wise, through the statistics crate. The standard deviation is the **population**
+    // form — the divisor cancels out of a standardisation, and `÷n` is the convention there —
+    // which is why `population_std_dev` exists rather than `std_dev`.
+    let flat: Vec<f64> = rows.iter().flat_map(|r| r.iter().copied()).collect();
+    let mean = deep_causality_stats::column_means(&flat, rows.len(), N_FEATURES)
+        .expect("the training rows are non-empty and rectangular");
+    let std: Vec<f64> = (0..N_FEATURES)
+        .map(|j| {
+            let column: Vec<f64> = rows.iter().map(|r| r[j]).collect();
+            deep_causality_stats::population_std_dev(&column)
+                .expect("the training rows are non-empty")
+        })
+        .collect();
     (mean, std)
 }
 

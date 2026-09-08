@@ -37,6 +37,14 @@ pub enum PhysicsErrorEnum {
     Singularity(String),
     /// Numerical instability detected (NaN, loss of precision).
     NumericalInstability(String),
+    /// An iterative solver reached its iteration cap without meeting its stopping test.
+    ///
+    /// Distinct from [`NumericalInstability`](Self::NumericalInstability) on purpose. The solvers
+    /// that raise this already use that variant for a different failure — a negative discriminant
+    /// in the electroweak fixed point — and a caller that wants to retry with a wider cap or a
+    /// different starting point needs to tell the two apart. The message carries the cap and the
+    /// residual that was still outstanding.
+    NotConverged(String),
     /// General calculation error.
     CalculationError(String),
     /// Metric convention error (wraps MetricError from metric crate).
@@ -91,6 +99,11 @@ impl PhysicsError {
     }
 
     #[allow(non_snake_case)]
+    pub fn NotConverged(msg: String) -> Self {
+        Self(PhysicsErrorEnum::NotConverged(msg))
+    }
+
+    #[allow(non_snake_case)]
     pub fn NumericalInstability(msg: String) -> Self {
         Self(PhysicsErrorEnum::NumericalInstability(msg))
     }
@@ -134,6 +147,68 @@ impl From<deep_causality_metric::MetricError> for PhysicsError {
     }
 }
 
+impl From<deep_causality_linear::LinearError> for PhysicsError {
+    /// Maps a linear-algebra refusal onto this crate's error.
+    ///
+    /// `PhysicsError` has no shape vocabulary of its own, so a mismatched shape or a bad index
+    /// reads as `DimensionMismatch` and everything else — a singular system, a vanishing pivot —
+    /// as `NumericalInstability`, which is what those are from a kernel's point of view.
+    fn from(error: deep_causality_linear::LinearError) -> Self {
+        use deep_causality_linear::LinearErrorEnum;
+        let message = format!("{error}");
+        match error.kind() {
+            LinearErrorEnum::IndexOutOfBounds { .. }
+            | LinearErrorEnum::ShapeMismatch { .. }
+            | LinearErrorEnum::InnerDimensionMismatch { .. }
+            | LinearErrorEnum::LengthMismatch { .. }
+            | LinearErrorEnum::NotSquare { .. }
+            | LinearErrorEnum::EmptyMatrix => Self::DimensionMismatch(message),
+            _ => Self::NumericalInstability(message),
+        }
+    }
+}
+
+impl From<deep_causality_topology::TopologyError> for PhysicsError {
+    /// Maps a topology refusal onto this crate's error.
+    ///
+    /// Added with the induction kernel's move onto `Manifold::interior_product`
+    /// (`unified-math-next` task 6.7u). Shape and grade complaints read as `DimensionMismatch`;
+    /// a degenerate tetrahedron, a missing metric or an absent coordinate slab are all
+    /// `CalculationError`, since from a kernel's point of view the operator could not be formed.
+    fn from(error: deep_causality_topology::TopologyError) -> Self {
+        use deep_causality_topology::TopologyErrorEnum;
+        let message = format!("{error}");
+        match error.0 {
+            TopologyErrorEnum::DimensionMismatch(_)
+            | TopologyErrorEnum::InvalidGradeOperation(_)
+            | TopologyErrorEnum::IndexOutOfBounds(_)
+            | TopologyErrorEnum::SimplexNotFound => Self::DimensionMismatch(message),
+            _ => Self::CalculationError(message),
+        }
+    }
+}
+
+impl From<deep_causality_stats::StatsError> for PhysicsError {
+    /// Maps a statistics refusal onto this crate's error.
+    ///
+    /// `NotConverged` crosses the boundary as [`PhysicsErrorEnum::NotConverged`] rather than
+    /// falling into the catch-all. Both crates draw the same line — an iterative fit that ran out
+    /// of iterations is retryable at a wider cap, an unstable computation is not — and collapsing
+    /// the two here would throw away the only classification a caller can act on.
+    fn from(error: deep_causality_stats::StatsError) -> Self {
+        use deep_causality_stats::StatsErrorEnum;
+        let message = format!("{error}");
+        match error.kind() {
+            StatsErrorEnum::EmptyInput(_) | StatsErrorEnum::DimensionMismatch(_) => {
+                Self::DimensionMismatch(message)
+            }
+            StatsErrorEnum::NegativeProbability(_) => Self::NormalizationError(message),
+            StatsErrorEnum::NotConverged { .. } => Self::NotConverged(message),
+            _ => Self::NumericalInstability(message),
+        }
+    }
+}
+
 impl Display for PhysicsError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match &self.0 {
@@ -151,6 +226,9 @@ impl Display for PhysicsError {
             PhysicsErrorEnum::Singularity(msg) => write!(f, "Singularity: {}", msg),
             PhysicsErrorEnum::NumericalInstability(msg) => {
                 write!(f, "Numerical Instability: {}", msg)
+            }
+            PhysicsErrorEnum::NotConverged(msg) => {
+                write!(f, "Solver did not converge: {}", msg)
             }
             PhysicsErrorEnum::CalculationError(msg) => write!(f, "Calculation Error: {}", msg),
             PhysicsErrorEnum::MetricConventionError(msg) => {

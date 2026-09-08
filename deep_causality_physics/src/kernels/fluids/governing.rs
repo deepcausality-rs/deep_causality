@@ -22,6 +22,7 @@ use crate::{
     ViscousStress, VorticityVector,
 };
 use deep_causality_algebra::RealField;
+use deep_causality_linear::double_dot_3x3;
 use deep_causality_num::FromPrimitive;
 
 // =============================================================================
@@ -227,17 +228,7 @@ pub fn viscous_dissipation_rate_kernel<R>(tau: &ViscousStress<R>, grad_u: &Veloc
 where
     R: RealField,
 {
-    let t = tau.value();
-    let g = grad_u.value();
-    t[0][0] * g[0][0]
-        + t[0][1] * g[0][1]
-        + t[0][2] * g[0][2]
-        + t[1][0] * g[1][0]
-        + t[1][1] * g[1][1]
-        + t[1][2] * g[1][2]
-        + t[2][0] * g[2][0]
-        + t[2][1] * g[2][1]
-        + t[2][2] * g[2][2]
+    double_dot_3x3(tau.value(), grad_u.value())
 }
 
 /// Reversible pressure work `p · ∇·u` (W/m³).

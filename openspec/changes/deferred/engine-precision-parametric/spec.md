@@ -40,7 +40,11 @@ are the prerequisite this change will need on day one.
 - `deep_causality` does not depend on `deep_causality_num`, so a `Float106` instance cannot be
   written there without a new dependency edge.
 - Routing the engine's geometry through `deep_causality_physics` for its constants is precluded:
-  `deep_causality` is tier 4 and physics is tier 7.
+  `deep_causality` is tier 6 and physics is tier 8. (Those were tier 4 and tier 7 when this note
+  was written; the `unified-math-next` statistics stage moved `uncertain` 3→5, `tensor` 4→5,
+  `multivector` 5→6 and `topology` 6→7, and every consumer above them shifted by two. The
+  *argument* is unaffected — physics still sits above the engine, so the preclusion stands — but
+  the numbers are refreshed so the dedicated change starts from the tree as it is.)
 
 **The open question this change must answer first.** Which of the two alias sets is the real one.
 
@@ -196,8 +200,10 @@ helper would be as pinned as the copies. `AGENTS.md` is explicit that unrelated 
 refactored and neighbouring issues are not fixed inside another task's scope.
 
 There is a further reason specific to one of them. The assessment proposed routing the geometry
-through `deep_causality_physics` for its constants. That is impossible: `deep_causality` is tier 4
-and `deep_causality_physics` is tier 7, so the edge would invert the dependency graph.
+through `deep_causality_physics` for its constants. That is impossible: `deep_causality` is tier 6
+and `deep_causality_physics` is tier 8, so the edge would invert the dependency graph. (Tiers 4 and 7
+when this was written; see the note above on the renumbering. The gap, and so the preclusion, is
+unchanged.)
 
 #### Scenario: The norms are untouched
 - **WHEN** the engine's space and spacetime metric implementations are read after this change

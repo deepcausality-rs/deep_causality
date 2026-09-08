@@ -192,3 +192,23 @@ fn test_the_read_trait_agrees_with_the_inherent_accessor() {
         }
     }
 }
+
+#[test]
+fn test_set_replaces_only_the_named_position_not_its_row_or_column() {
+    // The guard is `i == row && j == col`. Every prior `set` test wrote into a matrix where no
+    // other stored entry shared the target's row or column, so `&&` and `||` behaved alike and a
+    // mutant swapping them survived. Here (1,1) has stored neighbours at (1,2) — same row — and
+    // (2,1) — same column, so widening the guard would overwrite all three.
+    let mut m: CsrMatrix<f64> =
+        CsrMatrix::from_triplets(3, 3, &[(0, 0, 1.0), (1, 1, 2.0), (1, 2, 3.0), (2, 1, 4.0)])
+            .unwrap();
+    m.set(1, 1, 99.0).unwrap();
+    assert_eq!(m.get(1, 1).unwrap(), 99.0, "the named position is written");
+    assert_eq!(m.get(1, 2).unwrap(), 3.0, "same row, must be untouched");
+    assert_eq!(m.get(2, 1).unwrap(), 4.0, "same column, must be untouched");
+    assert_eq!(
+        m.get(0, 0).unwrap(),
+        1.0,
+        "unrelated entry, must be untouched"
+    );
+}

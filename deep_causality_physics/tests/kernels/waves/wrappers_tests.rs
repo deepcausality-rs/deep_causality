@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{Frequency, Length, Speed, doppler_effect_approaching, wave_speed};
+use deep_causality_physics::{
+    Frequency, Length, Speed, doppler_effect_approaching, wave_speed, wave_speed_kernel,
+};
 
 #[test]
 fn test_wave_speed_wrapper_success() {
@@ -11,7 +13,13 @@ fn test_wave_speed_wrapper_success() {
     let lambda = Length::<f64>::new(0.775).unwrap();
 
     let effect = wave_speed(&f, &lambda);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        wave_speed_kernel(&f, &lambda).unwrap(),
+        "wave_speed must carry the value its kernel produced"
+    );
 
     let v = effect.value_cloned().unwrap();
     assert!((v.value() - 341.0).abs() < 1.0);

@@ -8,7 +8,11 @@ pub mod ks_constraint_tests;
 #[cfg(test)]
 pub mod ks_propagator_tests;
 #[cfg(test)]
+mod ks_reachability_tests;
+#[cfg(test)]
 pub mod mechanics_tests;
+#[cfg(test)]
+mod solver_convergence_tests;
 #[cfg(test)]
 pub mod two_body_tests;
 #[cfg(test)]

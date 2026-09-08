@@ -37,23 +37,27 @@ fn test_mrmr_feature_selector_with_option_f64_tensor() {
     let selector = MrmrFeatureSelector;
     let result_tensor = selector.select(tensor, &config).unwrap();
 
-    // Expected selected features from deep_causality_algorithms::mrmr::select_features are [2, 0]
-    // This means the new tensor should contain columns F2 and F0 in that order.
-    let expected_data = vec![
-        Some(3.0),
-        Some(1.0), // F2, F0 for row 0
-        Some(6.0),
-        Some(2.0), // F2, F0 for row 1
-        Some(9.0),
-        Some(3.0), // F2, F0 for row 2
-        Some(12.0),
-        Some(4.0), // F2, F0 for row 3
-    ];
-    let expected_shape = vec![4, 2];
-    let expected_tensor = CausalTensor::new(expected_data, expected_shape).unwrap();
+    // The selected PAIR is determined; the order within it is not. `F2 = 3·F0` exactly, and Pearson
+    // is invariant under a positive scaling, so both columns carry the identical F-statistic —
+    // `38809/3` over the exact rationals, against `2306332/1303 ≈ 1770` for F1. Which of the two
+    // tied columns is emitted first is decided by rounding, so asserting an order would be pinning
+    // noise. Mirrors the sibling assertion in
+    // `deep_causality_algorithms::mrmr::test_mrmr_select_features`.
+    assert_eq!(result_tensor.shape(), &[4, 2]);
 
-    assert_eq!(result_tensor.as_slice(), expected_tensor.as_slice());
-    assert_eq!(result_tensor.shape(), expected_tensor.shape());
+    let columns: Vec<Vec<Option<f64>>> = (0..2)
+        .map(|c| {
+            (0..4)
+                .map(|r| result_tensor.as_slice()[r * 2 + c])
+                .collect()
+        })
+        .collect();
+    let f0 = vec![Some(1.0), Some(2.0), Some(3.0), Some(4.0)];
+    let f2 = vec![Some(3.0), Some(6.0), Some(9.0), Some(12.0)];
+    assert!(
+        columns.contains(&f0) && columns.contains(&f2),
+        "expected the tied pair {{F0, F2}} in either order, got {columns:?}"
+    );
 }
 
 #[test]

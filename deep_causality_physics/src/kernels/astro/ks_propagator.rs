@@ -24,6 +24,7 @@
 
 use crate::PhysicsError;
 use deep_causality_algebra::RealField;
+use deep_causality_linear::dot_n;
 use deep_causality_num::FromPrimitive;
 
 /// An exact 3-D two-body (Kepler) propagator via KS regularisation, built from a single physical
@@ -180,21 +181,80 @@ where
         Ok((t, radius))
     }
 
-    /// Invert `t(s) = dt` by a monotone Newton iteration (`dt/ds = |u|² > 0`).
+    /// Invert `t(s) = dt` by a bracketed Newton iteration (`dt/ds = |u|² > 0`).
+    ///
+    /// # Two convergence tests, because each is unreachable in the other's regime
+    ///
+    /// The Newton step is `d = (t − dt) / radius`, so the step test and the residual test differ by
+    /// a factor of `radius` and neither covers the whole input space:
+    ///
+    /// * **Near periapsis of an eccentric orbit** `radius` is small, so `d` is inflated and the
+    ///   step test asks for an accuracy the arithmetic cannot deliver. Measured on
+    ///   `e = 0.9999, a = 7000 km`, where the periapsis radius is **700 m**: the step test was
+    ///   unreachable by factors of 9 to 1700 while `t` was already correct to the last bit.
+    /// * **On a large, slow orbit** `radius` is huge — `1e9 m` — so a step of `1e-15` corresponds
+    ///   to a *time* residual of `1e-6 s`, and the residual test is the one that cannot be met.
+    ///
+    /// Accepting on **either** covers both, and each is a sound statement of convergence on its own:
+    /// one says the root has stopped moving, the other that `t(s)` equals `dt` to working precision.
+    ///
+    /// Newton proposals are constrained to a bracket of the root. The bracket follows directly
+    /// from the monotonicity of `t(s)`, and its bisection fallback makes convergence independent of
+    /// last-bit differences in the platform implementations of `sin` and `cos`.
     fn solve_fictitious_time(&self, dt: R) -> Result<R, PhysicsError> {
         let two = Self::lit(2.0)?;
         let c_lin = (self.aa + self.bb) / two; // the s-average of |u|²; exact asymptotic slope
         let mut s = dt / c_lin;
-        let tol = Self::lit(1e-15)?;
+        // Scaled by the scalar's own precision, as `two_body::solve_kepler` is: a fixed `1e-15` is
+        // below what `f32` can reach at all and meaningless in `BFloat16`.
+        let tol = Self::lit(8.0)? * R::epsilon();
+        let bound = tol * (dt.abs() + R::one());
+
+        // `t(s)` is strictly monotone. Keep every Newton proposal inside a bracket so a last-bit
+        // difference in sin/cos cannot send it into a different oscillation.
+        let zero = R::zero();
+        let mut lower = if dt >= zero { zero } else { s };
+        let mut upper = if dt >= zero { s } else { zero };
+        let mut lower_t = self.t_and_radius(lower)?.0;
+        let mut upper_t = self.t_and_radius(upper)?.0;
+        while lower_t > dt {
+            upper = lower;
+            lower *= two;
+            lower_t = self.t_and_radius(lower)?.0;
+        }
+        while upper_t < dt {
+            lower = upper;
+            upper *= two;
+            upper_t = self.t_and_radius(upper)?.0;
+        }
+
         for _ in 0..100 {
             let (t, radius) = self.t_and_radius(s)?;
+            let residual = (t - dt).abs();
+            if residual <= bound {
+                return Ok(s);
+            }
+            if t < dt {
+                lower = s;
+            } else {
+                upper = s;
+            }
             let d = (t - dt) / radius;
-            s -= d;
+            let newton = s - d;
+            s = if newton <= lower || newton >= upper {
+                (lower + upper) / two
+            } else {
+                newton
+            };
             if d.abs() < tol * (s.abs() + R::one()) {
-                break;
+                return Ok(s);
             }
         }
-        Ok(s)
+        Err(PhysicsError::NotConverged(
+            "the fictitious-time inversion t(s) = dt did not converge in 100 iterations: no \
+             iterate inverted t(s) = dt to the working tolerance"
+                .into(),
+        ))
     }
 
     /// KS lift `r → u` with a gauge choice that keeps the pivot component large (Stiefel–Scheifele).
@@ -229,8 +289,13 @@ where
         ]
     }
 
+    /// The inner product of two KS 4-vectors.
+    ///
+    /// Dispatches to `deep_causality_linear::dot_n` (`unified-math-next` task 6.7). The
+    /// const-generic form rather than the slice form, because `[R; 4]` already proves the lengths
+    /// agree and the slice form's refusal would be an error arm no input here can reach.
     fn dot4(x: &[R; 4], y: &[R; 4]) -> R {
-        x[0] * y[0] + x[1] * y[1] + x[2] * y[2] + x[3] * y[3]
+        dot_n(x, y)
     }
 
     fn lit(x: f64) -> Result<R, PhysicsError> {

@@ -1,6 +1,7 @@
 load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
 load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rs//rs:rust_test.bzl", "rust_test")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
 rust_library(
@@ -236,6 +237,28 @@ rust_test_suite(
         # Crate to test
         ":deep_causality_algorithms",
     ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# The crate's own in-src `#[cfg(test)]` modules — `surd_utils_tests` and `mrmr_utils_tests`.
+#
+# They exercise `pub(crate)` helpers that the `tests/` tree cannot reach, so they cannot be moved
+# there without widening the public API purely for testing. Without this target they run under
+# `cargo test` and **not** under `bazel test //...`, which is the command this repository treats as
+# authoritative — 27 tests that the canonical run never executed (`unified-math-next` task 5.19).
+rust_test(
+    name = "lib_unit_tests",
+    crate = ":deep_causality_algorithms",
+    crate_features = [
+        "default",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
         normal = True,
         normal_dev = True,
     ),

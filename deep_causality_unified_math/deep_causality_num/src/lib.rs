@@ -12,7 +12,6 @@ mod combinatorics;
 mod float;
 mod float_106;
 mod float_bfloat16;
-mod float_option;
 mod gf2;
 mod identity;
 mod integer;
@@ -35,7 +34,6 @@ pub use crate::cast::to_primitive::ToPrimitive;
 pub use crate::float::Float;
 pub use crate::float_106::Float106;
 pub use crate::float_bfloat16::BFloat16;
-pub use crate::float_option::FloatOption;
 
 // Finite field types
 pub use crate::combinatorics::{stirling_first_unsigned, stirling_second};

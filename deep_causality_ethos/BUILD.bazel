@@ -8,9 +8,6 @@ rust_library(
         "src/**",
     ]),
     aliases = aliases(),
-    crate_features = [
-        "std",
-    ],
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
     tags = [

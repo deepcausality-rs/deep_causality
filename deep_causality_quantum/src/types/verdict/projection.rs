@@ -18,10 +18,13 @@
 //! (see [`crate::verdict::born`]).
 
 use crate::QuantumError;
-use crate::types::qgates::operator_linalg::{hermiticity_defect, identity_matrix, square_dim};
+use crate::types::qgates::operator_linalg::{
+    hermiticity_defect, identity_matrix, max_modulus, square_dim,
+};
 use alloc::format;
 use alloc::vec;
-use deep_causality_algebra::{RealField, Verdict};
+use deep_causality_algebra::{ComplexField, RealField, Verdict};
+use deep_causality_linear::vector_norm_sq;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
@@ -76,12 +79,7 @@ where
         let p2 = p
             .matmul(&p)
             .map_err(|e| QuantumError::CalculationError(format!("matmul: {:?}", e)))?;
-        let defect = p2
-            .as_slice()
-            .iter()
-            .zip(p.as_slice())
-            .map(|(a, b)| ((a.re - b.re) * (a.re - b.re) + (a.im - b.im) * (a.im - b.im)).sqrt())
-            .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+        let defect = max_modulus(p2.as_slice().iter().zip(p.as_slice()).map(|(a, b)| *a - *b));
         if defect > tol {
             return Err(QuantumError::NonPositiveOperator(format!(
                 "operator is not idempotent (‖P²−P‖ = {:?})",
@@ -125,9 +123,7 @@ where
             )));
         }
         let ks = ket.as_slice();
-        let norm_sq = ks
-            .iter()
-            .fold(R::zero(), |acc, c| acc + c.re * c.re + c.im * c.im);
+        let norm_sq = vector_norm_sq(ks);
         if norm_sq <= R::epsilon() {
             return Err(QuantumError::NormalizationError(
                 "cannot project onto a (near-)zero ket".into(),
@@ -137,12 +133,8 @@ where
         let mut data = vec![c_zero::<R>(); D * D];
         for i in 0..D {
             for j in 0..D {
-                let a = ks[i];
-                let b = ks[j];
-                data[i * D + j] = Complex::new(
-                    (a.re * b.re + a.im * b.im) * inv,
-                    (a.im * b.re - a.re * b.im) * inv,
-                );
+                // a · conj(b) / ⟨ψ|ψ⟩
+                data[i * D + j] = ks[i] * ks[j].conjugate() * inv;
             }
         }
         Self::new(CausalTensor::from_slice(&data, &[D, D]))
@@ -173,14 +165,12 @@ where
         match self.p.matmul(&other.p) {
             Ok(pq) => {
                 let tol = Self::default_tolerance();
-                let defect = pq
-                    .as_slice()
-                    .iter()
-                    .zip(self.p.as_slice())
-                    .map(|(a, b)| {
-                        ((a.re - b.re) * (a.re - b.re) + (a.im - b.im) * (a.im - b.im)).sqrt()
-                    })
-                    .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+                let defect = max_modulus(
+                    pq.as_slice()
+                        .iter()
+                        .zip(self.p.as_slice())
+                        .map(|(a, b)| *a - *b),
+                );
                 defect <= tol
             }
             Err(_) => false,
@@ -195,14 +185,8 @@ where
         match (pq, qp) {
             (Ok(a), Ok(b)) => {
                 let tol = Self::default_tolerance();
-                let defect = a
-                    .as_slice()
-                    .iter()
-                    .zip(b.as_slice())
-                    .map(|(x, y)| {
-                        ((x.re - y.re) * (x.re - y.re) + (x.im - y.im) * (x.im - y.im)).sqrt()
-                    })
-                    .fold(R::zero(), |acc, x| if x > acc { x } else { acc });
+                let defect =
+                    max_modulus(a.as_slice().iter().zip(b.as_slice()).map(|(x, y)| *x - *y));
                 defect <= tol
             }
             _ => false,
@@ -244,12 +228,8 @@ where
             for i in 0..D {
                 let vi = vs[i * D + idx];
                 for j in 0..D {
-                    let vj = vs[j * D + idx];
-                    // vi * conj(vj)
-                    let re = vi.re * vj.re + vi.im * vj.im;
-                    let im = vi.im * vj.re - vi.re * vj.im;
-                    let cur = proj[i * D + j];
-                    proj[i * D + j] = Complex::new(cur.re + re, cur.im + im);
+                    // v vᴴ, one entry: vᵢ · conj(vⱼ).
+                    proj[i * D + j] += vi * vs[j * D + idx].conjugate();
                 }
             }
         }
@@ -276,7 +256,7 @@ where
     fn join(self, other: Self) -> Self {
         let mut sum = self.p.as_slice().to_vec();
         for (s, o) in sum.iter_mut().zip(other.p.as_slice()) {
-            *s = Complex::new(s.re + o.re, s.im + o.im);
+            *s += *o;
         }
         let sum = CausalTensor::from_slice(&sum, &[D, D]);
         Self::range_projector(&sum)
@@ -295,7 +275,7 @@ where
         let id = identity_matrix::<R>(D);
         let mut data = id.as_slice().to_vec();
         for (d, p) in data.iter_mut().zip(self.p.as_slice()) {
-            *d = Complex::new(d.re - p.re, d.im - p.im);
+            *d -= *p;
         }
         Self {
             p: CausalTensor::from_slice(&data, &[D, D]),

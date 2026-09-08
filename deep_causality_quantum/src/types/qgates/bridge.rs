@@ -23,7 +23,7 @@
 use crate::{QuantumError, QuantumOps};
 use alloc::format;
 use alloc::vec::Vec;
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{ComplexField, RealField};
 use deep_causality_multivector::{CausalMultiVector, HilbertState, MultiVector};
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
@@ -43,10 +43,11 @@ where
         .enumerate()
         .map(|(idx, c)| {
             let k = (idx as u32).count_ones() as usize;
+            // The sign of the reversion on a grade-`k` blade, applied to the conjugate.
             if (k * (k + 1) / 2).is_multiple_of(2) {
-                Complex::new(c.re, -c.im)
+                c.conjugate()
             } else {
-                Complex::new(-c.re, c.im)
+                -c.conjugate()
             }
         })
         .collect();

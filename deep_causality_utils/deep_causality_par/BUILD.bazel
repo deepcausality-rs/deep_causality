@@ -8,6 +8,11 @@ rust_library(
         "src/**",
     ]),
     aliases = aliases(),
+    crate_features = [
+        "alloc",
+        "parallel",
+        "std",
+    ],
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
     tags = [
@@ -20,6 +25,11 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_par",
+    crate_features = [
+        "alloc",
+        "parallel",
+        "std",
+    ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -27,6 +37,11 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_par",
+    crate_features = [
+        "alloc",
+        "parallel",
+        "std",
+    ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

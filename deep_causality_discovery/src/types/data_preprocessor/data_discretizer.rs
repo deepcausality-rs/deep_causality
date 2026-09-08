@@ -7,7 +7,7 @@ use crate::Precision;
 use crate::errors::PreprocessError;
 use crate::traits::data_preprocessor::DataPreprocessor;
 use crate::types::config::{BinningStrategy, ColumnSelector, PreprocessConfig};
-use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{StatsError, StatsErrorEnum};
 use deep_causality_tensor::CausalTensor;
 
 /// A concrete implementation of `DataPreprocessor` that discretizes continuous data into bins.
@@ -69,116 +69,55 @@ impl<T: Precision> DataPreprocessor<T> for DataDiscretizer {
     }
 }
 
-fn bin_equal_width<T: Precision>(data: &[T], num_bins: usize) -> Result<Vec<T>, PreprocessError> {
-    if num_bins < 2 {
-        return Err(PreprocessError::ConfigError(
-            "Number of bins must be at least 2".to_string(),
-        ));
+/// Maps a refusal from the statistics crate onto this crate's preprocessing error.
+///
+/// The split follows what a caller can act on. A bin count the data cannot support is a
+/// configuration mistake; everything else is a property of the column being binned.
+fn binning_error(error: StatsError) -> PreprocessError {
+    match error.kind() {
+        StatsErrorEnum::InvalidBinCount(message) => PreprocessError::ConfigError(message.clone()),
+        _ => PreprocessError::BinningError(error.to_string()),
     }
-
-    if data.iter().any(|&x| x.is_nan()) {
-        return Err(PreprocessError::BinningError(
-            "Cannot bin data containing NaN values. Use MissingValueImputer first.".to_string(),
-        ));
-    }
-
-    let zero = T::zero();
-    let min = data
-        .iter()
-        .copied()
-        .reduce(|a, b| if b < a { b } else { a })
-        .unwrap_or(zero);
-    let max = data
-        .iter()
-        .copied()
-        .reduce(|a, b| if b > a { b } else { a })
-        .unwrap_or(zero);
-
-    if (max - min).abs() < T::epsilon() {
-        // All values are the same, return a vector of zeros (single bin)
-        return Ok(vec![zero; data.len()]);
-    }
-
-    let n_bins_t =
-        <T as FromPrimitive>::from_usize(num_bins).expect("num_bins is representable in RealField");
-    let bin_width = (max - min) / n_bins_t;
-    let mut binned_data = Vec::with_capacity(data.len());
-
-    for &val in data {
-        let mut bin_index = ((val - min) / bin_width).floor().to_usize().unwrap_or(0);
-        if bin_index >= num_bins {
-            bin_index = num_bins - 1; // Clamp to last bin
-        }
-        binned_data.push(
-            <T as FromPrimitive>::from_usize(bin_index)
-                .expect("bin index is representable in RealField"),
-        );
-    }
-
-    Ok(binned_data)
 }
 
+/// Equal-width bins, delegated to `deep_causality_stats`.
+///
+/// Same partition as the implementation it replaces — every bin is `[lower, upper)` except the
+/// last, which is closed by clamping the maximum down into it — but **not value-identical**, in
+/// three ways.
+///
+/// The quotient is formed differently. The shipped routine scales, `floor((x − lo) / (hi − lo) ·
+/// bins)`; the replaced one divided by a pre-rounded width, `floor((x − lo) / fl((hi − lo) / bins))`.
+/// A value within a rounding of a bin edge can therefore land one bin over: for the column
+/// `[0.0, 0.7, 2.1]` in three bins, `0.7` is bin 1 here and was bin 0 before.
+///
+/// A near-constant column is treated as the column it is. The replaced code collapsed a range
+/// below `T::epsilon()` to a single bin; the shipped routine does that only for a range of exactly
+/// zero, so `[0.0, 1e-17]` in two bins is `[0, 1]` here and was `[0, 0]` before.
+///
+/// Two inputs are refused rather than answered. An empty column, and `bins > observations` — the
+/// same refusal the equal-frequency path carries, since both share one validation. The refusal is
+/// deliberate (unified-math-next task 5.10a) and the caller sees it as a `ConfigError`.
+fn bin_equal_width<T: Precision>(data: &[T], num_bins: usize) -> Result<Vec<T>, PreprocessError> {
+    deep_causality_stats::bin_equal_width(data, num_bins).map_err(binning_error)
+}
+
+/// Equal-frequency bins, delegated to `deep_causality_stats`.
+///
+/// **This changes results on tied values**, and the change is the point. The implementation it
+/// replaces sliced sorted *positions* — bin `i` took ranks `[round(i·n/k), round((i+1)·n/k))` — so
+/// equal observations landed in different bins purely by where they fell in the sort. The shipped
+/// routine keeps a block of equal values together and gives the whole block the bin holding the
+/// largest share of its ranks, ties to the lower bin. Two observations of the same value now always
+/// receive the same bin, which is what a caller reading a discretised column expects.
+///
+/// The rank-to-bin map differs even without ties: `round(i·n/k)` against the shipped
+/// `floor(r·k/n)`. The two agree exactly when `k` divides `n` and can differ by one rank otherwise.
 fn bin_equal_frequency<T: Precision>(
     data: &[T],
     num_bins: usize,
 ) -> Result<Vec<T>, PreprocessError> {
-    if num_bins < 2 {
-        return Err(PreprocessError::ConfigError(
-            "Number of bins must be at least 2".to_string(),
-        ));
-    }
-
-    if data.iter().any(|&x| x.is_nan()) {
-        return Err(PreprocessError::BinningError(
-            "Cannot bin data containing NaN values. Use MissingValueImputer first.".to_string(),
-        ));
-    }
-    let n = data.len();
-    if n == 0 {
-        return Ok(Vec::new());
-    }
-
-    let zero = T::zero();
-    let min = data
-        .iter()
-        .copied()
-        .reduce(|a, b| if b < a { b } else { a })
-        .unwrap_or(zero);
-    let max = data
-        .iter()
-        .copied()
-        .reduce(|a, b| if b > a { b } else { a })
-        .unwrap_or(zero);
-    if (max - min).abs() < T::epsilon() {
-        // All values are the same, assign them all to the first bin (0.0)
-        return Ok(vec![zero; n]);
-    }
-
-    let mut indices: Vec<usize> = (0..n).collect();
-    // Sort indices based on the data values, handling potential NaNs
-    indices.sort_by(|&a, &b| {
-        data[a]
-            .partial_cmp(&data[b])
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
-
-    let mut binned_data = vec![zero; n];
-    let step = n as f64 / num_bins as f64;
-
-    for i in 0..num_bins {
-        let start_k = (i as f64 * step).round() as usize;
-        let end_k = ((i + 1) as f64 * step).round() as usize;
-        let bin_label =
-            <T as FromPrimitive>::from_usize(i).expect("bin index is representable in RealField");
-
-        // Iterate over the relevant slice of sorted indices
-        for &original_index in &indices[start_k..end_k.min(n)] {
-            // Use the index to assign the bin number to the correct position in the final output
-            binned_data[original_index] = bin_label;
-        }
-    }
-
-    Ok(binned_data)
+    deep_causality_stats::bin_equal_frequency(data, num_bins).map_err(binning_error)
 }
 
 #[cfg(test)]
@@ -188,22 +127,42 @@ mod tests {
     use super::{PreprocessError, bin_equal_frequency};
 
     #[test]
-    fn test_bin_equal_frequency_empty_data() {
+    fn test_bin_equal_frequency_empty_data_is_refused() {
+        // Behaviour change on delegation: an empty column used to come back as an empty vector,
+        // which reads as "binned successfully into nothing". It is now refused. The column carries
+        // no observations, so there is no partition to report, and the empty `Ok` was the more
+        // misleading of the two answers. Unreachable through the public preprocessor, which only
+        // ever passes a column of `n_rows` values.
         let data: Vec<f64> = vec![];
-        let num_bins = 2;
-        let result = bin_equal_frequency(&data, num_bins).unwrap();
-        assert!(result.is_empty());
+        let result = bin_equal_frequency(&data, 2);
+        assert!(
+            matches!(result, Err(PreprocessError::BinningError(_))),
+            "an empty column has no partition, got {result:?}"
+        );
     }
 
     #[test]
     fn test_bin_equal_frequency_less_than_two_bins() {
+        // The variant survives the delegation — a bin count the data cannot support is still a
+        // `ConfigError`, because it is the caller's configuration rather than the column's content.
+        // Only the wording comes from the statistics crate now, so the assertion is on the variant.
         let data = vec![1.0_f64, 2.0, 3.0];
-        let num_bins = 1;
-        let result = bin_equal_frequency(&data, num_bins);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err(),
-            PreprocessError::ConfigError("Number of bins must be at least 2".to_string())
+        let result = bin_equal_frequency(&data, 1);
+        assert!(
+            matches!(result, Err(PreprocessError::ConfigError(_))),
+            "a bin count below two is a configuration error, got {result:?}"
+        );
+    }
+
+    #[test]
+    fn test_bin_equal_frequency_more_bins_than_observations() {
+        // New refusal the delegation brings: `n` observations support at most `n` non-empty bins,
+        // so asking for more is a configuration error rather than a silent set of empty bins.
+        let data = vec![1.0_f64, 2.0, 3.0];
+        let result = bin_equal_frequency(&data, 5);
+        assert!(
+            matches!(result, Err(PreprocessError::ConfigError(_))),
+            "more bins than observations is a configuration error, got {result:?}"
         );
     }
 

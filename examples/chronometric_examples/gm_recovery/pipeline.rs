@@ -249,7 +249,9 @@ where
 
 pub fn stage_aggregate<R>(est: GmEstimates<R>) -> Result<GmReport<R>, CausalityError>
 where
-    R: RealField + From<f64> + Default + Debug,
+    // `FromPrimitive` because the statistics come from `deep_causality_stats`, which lifts its
+    // observation counts onto the working scalar rather than narrowing them through `f64`.
+    R: RealField + FromPrimitive + From<f64> + Default + Debug,
 {
     let outlier_sigma = R::from(MAD_OUTLIER_SIGMA);
     let filtered = apply_mad_filter(&est.estimates, outlier_sigma);
@@ -258,19 +260,12 @@ where
         return Err(err("stage_aggregate: MAD filter rejected all estimates"));
     }
 
-    let n_r = R::from(n as f64);
-    let mut sum = R::zero();
-    for v in &filtered {
-        sum += *v;
-    }
-    let mean = sum / n_r;
-
-    let mut sq = R::zero();
-    for v in &filtered {
-        let d = *v - mean;
-        sq += d * d;
-    }
-    let std_dev = (sq / n_r).sqrt();
+    // The population forms: `filtered` is the whole set of surviving estimates, not a draw from a
+    // larger one, so the divisor is `n`. Non-empty by the check above, so neither can refuse.
+    let mean =
+        deep_causality_stats::mean(&filtered).map_err(|e| err(&format!("stage_aggregate: {e}")))?;
+    let std_dev = deep_causality_stats::population_std_dev(&filtered)
+        .map_err(|e| err(&format!("stage_aggregate: {e}")))?;
 
     let mut sorted = filtered.clone();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal));

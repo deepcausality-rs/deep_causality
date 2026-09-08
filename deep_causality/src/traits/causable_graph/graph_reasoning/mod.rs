@@ -184,19 +184,12 @@ where
             // Reachability pre-pass: only `round_start` and its descendants can fire. Every in-wire
             // from a non-descendant is thereby resolved `Inactive` up front (it is never counted in
             // `pending`), which is what keeps mid-graph starts and abandoned relay cones deadlock-free.
-            let mut reachable = vec![false; n_nodes];
-            reachable[round_start] = true;
-            let mut stack = vec![round_start];
-            while let Some(node) = stack.pop() {
-                if let Ok(children) = self.get_graph().outbound_edges(node) {
-                    for c in children {
-                        if !reachable[c] {
-                            reachable[c] = true;
-                            stack.push(c);
-                        }
-                    }
-                }
-            }
+            let reachable = crate::traits::causable_graph::reachable_mask(
+                self.get_graph(),
+                round_start,
+                n_nodes,
+                crate::traits::causable_graph::Reach::Descendants,
+            );
 
             // Wire-slot bookkeeping. `pending[n]` counts the *reachable* parents of `n` not yet
             // resolved; a wire from an unreachable parent is pre-resolved `Inactive` (not counted).

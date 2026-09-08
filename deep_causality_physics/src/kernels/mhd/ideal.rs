@@ -6,12 +6,10 @@ use crate::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
-use deep_causality_linear::CsrMatrix;
 use deep_causality_multivector::MultiVector;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{SimplicialComplex, SimplicialManifold};
-use std::collections::HashMap;
+use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the characteristic speed of Alfven waves.
 /// $$ v_A = \frac{B}{\sqrt{\mu_0 \rho}} $$
@@ -91,23 +89,54 @@ where
 /// Calculates the time evolution of the magnetic field (Frozen-in flux).
 /// $$ \frac{\partial \mathbf{B}}{\partial t} = \nabla \times (\mathbf{v} \times \mathbf{B}) $$
 ///
-/// **Geometric Algebra Implementation**:
-/// In the language of differential forms/GA on a Manifold:
+/// **Discrete exterior calculus implementation**:
 /// $$ \partial_t B = -d(i_v B) $$
-/// where $B$ is a 2-form (flux), $v$ is a vector field (represented as a 1-form),
-/// $i_v$ is interior product (contraction), and $d$ is exterior derivative.
-///
-/// This implementation relies on the identity:
-/// $$ i_v B = \star (v \wedge \star B) $$
-/// (valid for 3D manifolds where $v$ and $\star B$ are 1-forms).
+/// where $B$ is a 2-form (flux through faces), $v$ is a vector field carried as a 1-form
+/// (circulation along edges), $i_v$ is the interior product (contraction), and $d$ is the exterior
+/// derivative — here the complex's own coboundary on 1-forms.
 ///
 /// # Arguments
-/// *   `v_manifold` - Manifold containing the velocity field $v$ (1-form).
-/// *   `b_manifold` - Manifold containing the magnetic flux 2-form $B$.
+/// *   `v_manifold` - Manifold carrying the velocity field $v$ as a 1-form.
+/// *   `b_manifold` - Manifold carrying the magnetic flux 2-form $B$. **Its complex must equal
+///     `v_manifold`'s**; a call whose two manifolds disagree is refused, because the whole
+///     computation is performed on `v_manifold`'s complex and a 2-form measured on other geometry
+///     would be silently reinterpreted on it.
 ///
 /// # Returns
-/// *   `Result<CausalTensor<f64>, PhysicsError>` - Rate of change of B (2-form), i.e., $-\partial_t B$.
-///     Wait, the equation is $\partial_t B = \dots$. The function returns $\partial_t B$.
+/// *   `Result<CausalTensor<R>, PhysicsError>` — $\partial_t B$, a 2-form.
+///
+/// # The contraction is the crate's, not this kernel's
+///
+/// The interior product is [`deep_causality_topology::SimplicialManifold::interior_product`]
+/// (`unified-math-next` task 6.7u). This kernel previously open-coded the star–wedge identity
+/// `i_v B = ⋆(v ∧ ⋆B)` against `hodge_star_operators()[2]`, and that chain could not be made to
+/// work: it needs a **degree-changing** star `Λ² → Λ¹`, and what the crate vends is the square
+/// diagonal one. The shape check refused every complex built from real geometry, which was correct
+/// and left the kernel unusable in its own domain.
+///
+/// The replacement does not repair that chain, it takes the other standard route. The crate's
+/// simplicial contraction interpolates both cochains with **Whitney forms** on each tetrahedron and
+/// contracts the reconstructed vector fields, which needs no Hodge star at all — and is exact for
+/// constant fields, which is the property its tests pin.
+///
+/// That matters here beyond convenience, because the star this kernel used to reach for is wrong at
+/// intermediate grades: `build_lumped_mass_hodge_star` returns the dual/primal volume ratio only at
+/// `k = 0` and `k = n`, and the primal volume `|σ|` in between. On a regular tetrahedron scaled by
+/// `h`, `⋆₂` measures as `O(h²)` where a Hodge star on 2-forms in three dimensions must scale as
+/// `O(h⁻¹)`. Any formulation composing it would have returned a plausible number that is wrong by a
+/// factor of `h³`. That defect is recorded separately; this kernel no longer depends on it.
+///
+/// # Sign convention
+///
+/// `i_v B = (B × V)♭`, read off the components of the contraction, so `−d(i_v B)` is `∇×(v × B)` —
+/// the induction equation as written above. The previous implementation returned `+d(i_v B)` from a
+/// chain whose wedge order was also reversed, and no test could tell, because no in-domain input
+/// ever reached the arithmetic.
+///
+/// # Domain
+///
+/// **Three dimensions only.** A 2-form on a 3-complex contracts to a 1-form; the same identity in
+/// two dimensions is a different operator on different skeletons.
 pub fn ideal_induction_kernel<R>(
     v_manifold: &SimplicialManifold<R, R>,
     b_manifold: &SimplicialManifold<R, R>,
@@ -115,14 +144,39 @@ pub fn ideal_induction_kernel<R>(
 where
     R: RealField + FromPrimitive + Default + PartialEq + Debug,
 {
-    // 1. Validation
     let complex = v_manifold.complex();
     let skeletons = complex.skeletons();
 
-    // Need at least 0, 1, 2 skeletons
-    if skeletons.len() < 3 {
+    if skeletons.len() < 4 {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "ideal induction needs a 3D complex: a 2-form contracts to a 1-form only there. This \
+             complex has {} skeletons, so it is {}-dimensional",
+            skeletons.len(),
+            skeletons.len().saturating_sub(1)
+        )));
+    }
+
+    // The two cochains must live on the *same* complex. The signature takes two independent
+    // manifolds, and every offset below — the slice bounds, the Whitney interpolation, the
+    // coboundary — is read off `v_manifold`'s complex alone, so a `b_manifold` carrying a
+    // different complex has its 2-form reinterpreted on geometry it was never measured against.
+    // Simplex counts do not catch that: two meshes with the same connectivity and different vertex
+    // positions agree on every count, and the mixed call then returns a plausible number for
+    // physics that is not being computed. Measured on two tetrahedron pairs differing only in one
+    // vertex: flux freezing demands `∂ₜB = 0` exactly for a uniform field in a uniform flow, and
+    // the mixed call returned `1.34`.
+    //
+    // The comparison is structural and therefore linear in the size of the mesh — skeletons,
+    // both operator sets, and the coordinates. That is the same order as the contraction below,
+    // so it is a constant-factor cost rather than a new one; a timestep loop that calls this per
+    // step with one manifold can hoist the check if it ever shows up in a profile. It reads
+    // `SimplicialComplex`'s own `PartialEq`, which deliberately excludes the lazily-populated
+    // Hodge ⋆ cache, so two equal complexes never differ by cache state alone.
+    if v_manifold.complex() != b_manifold.complex() {
         return Err(PhysicsError::DimensionMismatch(
-            "Manifold must be at least 2D (preferably 3D) for induction".into(),
+            "ideal induction reads the velocity 1-form and the magnetic 2-form on one complex; \
+             the two manifolds carry different complexes"
+                .into(),
         ));
     }
 
@@ -130,13 +184,9 @@ where
     let n1 = skeletons[1].simplices().len();
     let n2 = skeletons[2].simplices().len();
 
-    // Verify data lengths (Manifold enforces this on creation, but checks are cheap).
-    //
-    // Both manifolds are checked, and against the same complex. `n0`, `n1` and `n2` come from
-    // `v_manifold`'s complex, and the slices below index BOTH buffers with offsets derived from
-    // them. The signature takes two independent manifolds, so a `b_manifold` built over a smaller
-    // complex is a legal call; without this check it indexed past the end of `b_manifold`'s buffer
-    // and panicked, where every other malformed input here returns `DimensionMismatch`.
+    // Both manifolds are checked, and against the same complex: the signature takes two
+    // independent manifolds, so a `b_manifold` built over a smaller complex is a legal call and
+    // must be refused rather than indexed past.
     if v_manifold.data().len() < n0 + n1 + n2 {
         return Err(PhysicsError::DimensionMismatch(
             "v_manifold data too small".into(),
@@ -148,179 +198,34 @@ where
         ));
     }
 
-    // 2. Extract Data Slices
-    // v is 1-form: offset = n0, len = n1
-    let v_offset = n0;
-    let v_slice = &v_manifold.data().as_slice()[v_offset..v_offset + n1];
+    // v is the 1-form at offset n0; B is the 2-form at offset n0 + n1.
+    let v_slice = &v_manifold.data().as_slice()[n0..n0 + n1];
+    let b_slice = &b_manifold.data().as_slice()[n0 + n1..n0 + n1 + n2];
 
-    // B is 2-form: offset = n0 + n1, len = n2
-    let b_offset = n0 + n1;
-    let b_slice = &b_manifold.data().as_slice()[b_offset..b_offset + n2];
+    let v_form = CausalTensor::new(v_slice.to_vec(), vec![n1])?;
+    let b_form = CausalTensor::new(b_slice.to_vec(), vec![n2])?;
 
-    // 3. Compute Hodge Star of B (star_b)
-    // star_b: 2-form -> 1-form (in 3D)
-    // Using hodge_star_operators[2]. The accessor is fallible.
-    // degenerate input geometry surfaces throgh the error type.
-    let hodge_ops = complex
-        .hodge_star_operators()
-        .map_err(|e| PhysicsError::CalculationError(format!("Hodge ⋆ unavailable: {}", e)))?;
-    if hodge_ops.len() <= 2 {
-        return Err(PhysicsError::CalculationError(
-            "Hodge star operator for 2-forms not available".into(),
-        ));
-    }
-    let h_star_2 = &hodge_ops[2];
-    let star_b_data = apply_csr_real(h_star_2, b_slice);
+    // i_v B, a 1-form.
+    let i_v_b = v_manifold.interior_product(&v_form, &b_form, 2)?;
 
-    // 4. Compute Wedge Product: v ^ star_b
-    // v: 1-form, star_b: 1-form -> Result: 2-form
-    let wedge_data = wedge_product_1form_1form(v_slice, &star_b_data, complex)?;
-
-    // 5. Compute Interior Product proxy: iv_b = star(v ^ star_b)
-    // wedge_data is 2-form. star maps to 1-form.
-    let iv_b_data = apply_csr_real(h_star_2, &wedge_data);
-
-    // 6. Compute Exterior Derivative: d(iv_b)
-    // iv_b is 1-form. d maps to 2-form.
-    // Use coboundary_operators[1].
+    // d(i_v B), a 2-form, through the complex's own coboundary on 1-forms.
     if complex.coboundary_operators().len() <= 1 {
         return Err(PhysicsError::CalculationError(
             "Coboundary operator for 1-forms not available".into(),
         ));
     }
     let d_1 = &complex.coboundary_operators()[1];
-    let dt_b_neg_data = apply_csr_i8(d_1, &iv_b_data);
-
-    // 7. Result
-    // Returns the 2-form part of the change.
-    let result_len = dt_b_neg_data.len();
-    CausalTensor::new(dt_b_neg_data, vec![result_len]).map_err(PhysicsError::from)
-}
-
-// --- Helper Functions ---
-
-/// Multiplies a CsrMatrix<R> (Hodge star operator carrying manifold scalars) by a dense
-/// vector &[R].
-fn apply_csr_real<R: RealField>(matrix: &CsrMatrix<R>, vector: &[R]) -> Vec<R> {
-    let (rows, _cols) = matrix.shape();
-    let mut result = vec![R::zero(); rows];
-
-    let row_indices = matrix.row_indices();
-    let col_indices = matrix.col_indices();
-    let values = matrix.values();
-
-    for i in 0..rows {
-        let start = row_indices[i];
-        let end = row_indices[i + 1];
-        let mut sum = R::zero();
-        for idx in start..end {
-            let col = col_indices[idx];
-            let val = values[idx];
-            if col < vector.len() {
-                sum += val * vector[col];
-            }
-        }
-        result[i] = sum;
+    if d_1.shape() != (n2, n1) {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "ideal induction needs the coboundary on 1-forms with shape ({n2}, {n1}); \
+             coboundary_operators()[1] has shape {:?}",
+            d_1.shape()
+        )));
     }
-    result
-}
+    let d_i_v_b = d_1.vec_mult_real(i_v_b.as_slice())?;
 
-/// Multiplies a CsrMatrix<i8> (pure ±1 orientation signs from coboundary/boundary
-/// operators on a simplicial complex) by a dense vector &[R].
-///
-/// The coboundary operators are intrinsically integer: their entries are only the
-/// orientation signs of how (k-1)-simplices bound k-simplices in the complex. They
-/// carry no measurement and never need a higher numeric type than i8, so we keep
-/// them stored as `CsrMatrix<i8>` and lift the sign into R only at the
-/// multiplication site.
-fn apply_csr_i8<R: RealField + FromPrimitive>(matrix: &CsrMatrix<i8>, vector: &[R]) -> Vec<R> {
-    let (rows, _cols) = matrix.shape();
-    let mut result = vec![R::zero(); rows];
-
-    let row_indices = matrix.row_indices();
-    let col_indices = matrix.col_indices();
-    let values = matrix.values();
-
-    for i in 0..rows {
-        let start = row_indices[i];
-        let end = row_indices[i + 1];
-        let mut sum = R::zero();
-        for idx in start..end {
-            let col = col_indices[idx];
-            let val_i8 = values[idx];
-            if col < vector.len() {
-                let val = R::from_f64(val_i8 as f64).expect("R::from_f64(i8) failed");
-                sum += val * vector[col];
-            }
-        }
-        result[i] = sum;
-    }
-    result
-}
-
-/// Computes the Wedge Product of two 1-forms on a Simplicial Complex.
-/// Result is a 2-form.
-///
-/// Formula used (Cup Product):
-/// $(\alpha \cup \beta)([0,1,2]) = \alpha([0,1]) \cdot \beta([1,2])$
-/// Wedge Product $\alpha \wedge \beta = \alpha \cup \beta - \beta \cup \alpha$.
-fn wedge_product_1form_1form<R>(
-    alpha: &[R],
-    beta: &[R],
-    complex: &SimplicialComplex<R>,
-) -> Result<Vec<R>, PhysicsError>
-where
-    R: RealField,
-{
-    let skeletons = complex.skeletons();
-    if skeletons.len() < 3 {
-        return Err(PhysicsError::DimensionMismatch(
-            "Complex must have 2-simplices".into(),
-        ));
-    }
-    let edges = skeletons[1].simplices();
-    let faces = skeletons[2].simplices();
-
-    // Build Edge Lookup Map: (min(u,v), max(u,v)) -> edge_index
-    let mut edge_map = HashMap::with_capacity(edges.len());
-    for (idx, edge_simplex) in edges.iter().enumerate() {
-        let verts = edge_simplex.vertices();
-        if verts.len() >= 2 {
-            edge_map.insert((verts[0], verts[1]), idx);
-        }
-    }
-
-    let zero = R::zero();
-    let mut result = Vec::with_capacity(faces.len());
-
-    for face in faces {
-        let verts = face.vertices(); // Sorted [v0, v1, v2]
-        if verts.len() != 3 {
-            result.push(zero);
-            continue;
-        }
-        let v0 = verts[0];
-        let v1 = verts[1];
-        let v2 = verts[2];
-
-        let e01_idx = edge_map.get(&(v0, v1));
-        let e12_idx = edge_map.get(&(v1, v2));
-
-        if let (Some(&idx01), Some(&idx12)) = (e01_idx, e12_idx) {
-            let val_alpha_01 = *alpha.get(idx01).unwrap_or(&zero);
-            let val_beta_12 = *beta.get(idx12).unwrap_or(&zero);
-            let val_beta_01 = *beta.get(idx01).unwrap_or(&zero);
-            let val_alpha_12 = *alpha.get(idx12).unwrap_or(&zero);
-
-            // \alpha \wedge \beta = \alpha \cup \beta - \beta \cup \alpha
-            let term1 = val_alpha_01 * val_beta_12;
-            let term2 = val_beta_01 * val_alpha_12;
-
-            result.push(term1 - term2);
-        } else {
-            result.push(zero);
-        }
-    }
-
-    Ok(result)
+    // ∂ₜB = −d(i_v B).
+    let dt_b: Vec<R> = d_i_v_b.into_iter().map(|x| R::zero() - x).collect();
+    let len = dt_b.len();
+    CausalTensor::new(dt_b, vec![len]).map_err(PhysicsError::from)
 }

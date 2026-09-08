@@ -107,14 +107,20 @@ fn test_entropy_nvars_marginal_path_with_zero_entry() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn test_entropy_nvars_cdl_all_none_returns_zero() {
-    // A marginal whose Some values sum to (effectively) zero must short-circuit
-    // to entropy 0 via the `sum_of_marginals.abs() < eps` guard.
+fn test_entropy_nvars_cdl_all_none_is_empty_input() {
+    // Behaviour change, decided with the migration: a marginal in which every entry is absent has
+    // no distribution to take the entropy of, and is refused rather than answered with zero. Zero
+    // is the entropy of a certain outcome, which is a different statement from having observed
+    // nothing. Distinct from the low-mass case below, where values are present but sum under
+    // epsilon, and which still returns zero.
     let data: Vec<Option<f64>> = vec![None, None, None, None];
     let p = CausalTensor::new(data, vec![2, 2]).unwrap();
 
-    let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
-    assert_eq!(h, 0.0);
+    let err = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap_err();
+    assert!(
+        err.to_string().to_lowercase().contains("empty"),
+        "an all-absent marginal is EmptyInput, got: {err}"
+    );
 }
 
 #[test]
@@ -124,6 +130,40 @@ fn test_entropy_nvars_cdl_all_zero_returns_zero() {
 
     let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
     assert_eq!(h, 0.0);
+}
+
+#[test]
+fn test_entropy_nvars_cdl_discards_mass_below_epsilon_after_normalising() {
+    // The CDL path is the one place in the workspace that uses `ZeroPolicy::SkipBelow(ε)` rather
+    // than `SkipZero`, and the difference only shows on an entry that is positive but, once the
+    // distribution is normalised, lands below `f64::EPSILON`. Nothing else in this suite has one,
+    // so the choice between the two policies was unpinned.
+    //
+    // `(1, 1e-17)` normalises to about `(1, 1e-17)`. The first term contributes `−1·log₂1 = 0`, so
+    // the whole entropy is the second — and under `SkipBelow(ε)` that term is numerical residue
+    // rather than mass, so it is dropped and the answer is exactly zero. Under `SkipZero` it would
+    // be counted, at `−1e-17·log₂(1e-17) ≈ 5.6e-16`.
+    let data: Vec<Option<f64>> = vec![Some(1.0), Some(1e-17)];
+    let p = CausalTensor::new(data, vec![2]).unwrap();
+
+    let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
+    assert_eq!(
+        h, 0.0,
+        "normalised mass below epsilon is residue, not a symbol"
+    );
+}
+
+#[test]
+fn test_entropy_nvars_cdl_counts_mass_above_epsilon() {
+    // The other side of the same threshold, so the test above cannot be satisfied by a policy that
+    // simply discards every small entry. `(1, 1e-6)` normalises to about `(1, 1e-6)`, and
+    // `−1e-6·log₂(1e-6) ≈ 1.99e-5` — small, above epsilon, and counted.
+    let data: Vec<Option<f64>> = vec![Some(1.0), Some(1e-6)];
+    let p = CausalTensor::new(data, vec![2]).unwrap();
+
+    let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
+    assert!(h > 1e-5, "mass above epsilon must contribute, got {h}");
+    assert!(h < 3e-5, "and it is the only contribution, got {h}");
 }
 
 // ---------------------------------------------------------------------------
@@ -169,4 +209,40 @@ fn test_broadcast_to_cdl_higher_rank_source_errors() {
 
     let result = surd_utils_cdl::broadcast_to_cdl(&tensor, &target_shape);
     assert!(matches!(result, Err(CausalTensorError::ShapeMismatch)));
+}
+#[test]
+fn entropy_rejects_invalid_probabilities() {
+    for value in [-0.5, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let plain = deep_causality_tensor::CausalTensor::new(vec![value, 0.5], vec![2]).unwrap();
+        assert!(matches!(
+            super::entropy_nvars(&plain, &[0]),
+            Err(deep_causality_tensor::CausalTensorError::InvalidParameter(
+                _
+            ))
+        ));
+        let optional =
+            deep_causality_tensor::CausalTensor::new(vec![Some(value), Some(0.5)], vec![2])
+                .unwrap();
+        assert!(matches!(
+            super::surd_utils_cdl::entropy_nvars_cdl(&optional, &[0]),
+            Err(deep_causality_tensor::CausalTensorError::InvalidParameter(
+                _
+            ))
+        ));
+    }
+}
+
+#[test]
+fn optional_entropy_strict_mass_boundary() {
+    let eps = f64::EPSILON;
+    for (mass, expected) in [(eps / 2.0, 0.0), (eps, 1.0), (eps * 2.0, 1.0)] {
+        // Two equally likely outcomes have one bit, unless the caller's mass guard fires.
+        let p = deep_causality_tensor::CausalTensor::new(
+            vec![Some(mass / 2.0), None, Some(mass / 2.0)],
+            vec![3],
+        )
+        .unwrap();
+        let h = super::surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
+        assert!((h - expected).abs() < 1e-14);
+    }
 }

@@ -15,6 +15,7 @@
 use crate::PhysicsError;
 use crate::{RotationRateTensor, StrainRateTensor, Velocity3, VelocityGradient, VorticityVector};
 use deep_causality_algebra::RealField;
+use deep_causality_linear::{determinant_3x3, trace_of_square_3x3};
 use deep_causality_num::FromPrimitive;
 
 /// Strain-rate tensor `S = 0.5 · (∇u + ∇uᵀ)`.
@@ -110,23 +111,12 @@ where
     let trace_a = g[0][0] + g[1][1] + g[2][2];
     let p = -trace_a;
 
-    // tr(A^2) = sum_{i,j} A_{ij} * A_{ji}, unrolled for the 3x3 case.
-    let trace_a_squared = g[0][0] * g[0][0]
-        + g[0][1] * g[1][0]
-        + g[0][2] * g[2][0]
-        + g[1][0] * g[0][1]
-        + g[1][1] * g[1][1]
-        + g[1][2] * g[2][1]
-        + g[2][0] * g[0][2]
-        + g[2][1] * g[1][2]
-        + g[2][2] * g[2][2];
-    let q = half * (p * p - trace_a_squared);
+    // tr(A²) = Σ_{i,j} A_ij · A_ji. Note the transposed second index: this is not Σ A_ij², which
+    // is the same number for a symmetric `A` and a different one for the general velocity gradient.
+    let q = half * (p * p - trace_of_square_3x3(g));
 
-    // R = -det(A), 3x3 determinant by cofactor expansion along row 0
-    let det_a = g[0][0] * (g[1][1] * g[2][2] - g[1][2] * g[2][1])
-        - g[0][1] * (g[1][0] * g[2][2] - g[1][2] * g[2][0])
-        + g[0][2] * (g[1][0] * g[2][1] - g[1][1] * g[2][0]);
-    let r = -det_a;
+    // R = −det(A).
+    let r = -determinant_3x3(g);
 
     Ok((p, q, r))
 }

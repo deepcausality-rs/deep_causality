@@ -10,33 +10,34 @@ Unified math grew from a small idea. Tensors and multivectors needed to compose,
 
 ## The stack
 
-Every crate depends only on crates below it. The graph is drawn as its transitive reduction, so
+The dependency graph is drawn as its transitive reduction, so
 `tensor -> num` is omitted where `tensor -> linear -> haft -> algebra -> num` already implies it.
 Two dependencies leave the folder, over four edges: `deep_causality_ast`, which `tensor` and
 `uncertain` build on, and `deep_causality_par`, which `fft` and `topology` build on. Both live in
-`deep_causality_utils/`; `ast` is there because `deep_causality` is its third consumer.
+`deep_causality_utils/`; 
 
 
 ```
-tier 6   topology
-tier 5   multivector
-tier 4   calculus   fft   homology   tensor
-tier 3   linear   num_complex   num_dual   uncertain
+tier 7   topology
+tier 6   multivector
+tier 5   tensor   uncertain
+tier 4   calculus   fft   homology   stats
+tier 3   linear   num_complex   num_dual
 tier 2   haft   num_rational   rand
 tier 1   algebra
 tier 0   num   metric
 ```
 
-![Dependency graph of the deep_causality mathematics crates: seven tiers, from the roots num and
+![Dependency graph of the deep_causality mathematics crates: eight tiers, from the roots num and
 metric at tier 0 up through algebra and haft, then linear algebra and the number types, then
-tensors, to topology at tier 6. The longest chain is highlighted.](graph.png)
+statistics, then tensors, to topology at tier 7. The longest chain is highlighted.](graph.png)
 
 
 ## The math crates
 
 | Crate | Tier | What it holds                                                                                                                             |
 |---|---|-------------------------------------------------------------------------------------------------------------------------------------------|
-| `deep_causality_num` | 0 | Numeric traits: casts, identity, float and integer predicates, and the lifts that make precision a parameter. The bottom of the workspace |
+| `deep_causality_num` | 0 | Numeric traits: casts, identity, float and integer predicates, the two software scalars `Float106` and `BFloat16`, and the lifts that make precision a parameter. The bottom of the workspace |
 | `deep_causality_metric` | 0 | Metric signatures `Cl(p, q, r)` and Lorentzian sign conventions, east coast and west coast |
 | `deep_causality_algebra` | 1 | Groups, rings, fields, algebras, and isomorphism markers |
 | `deep_causality_haft` | 2 | Applied category theory: HKT, functor, applicative, monad, foldable, arrow, and a type-encoded effect system |
@@ -45,17 +46,23 @@ tensors, to topology at tier 6. The longest chain is highlighted.](graph.png)
 | `deep_causality_linear` | 3 | Sparse CSR, dense and bit-packed 𝔽₂ matrices and vectors; eliminations, decompositions, conjugate gradient, etc. |
 | `deep_causality_num_complex` | 3 | Complex, quaternion and octonion number types |
 | `deep_causality_num_dual` | 3 | Dual numbers, forward-mode automatic differentiation |
-| `deep_causality_uncertain` | 3 | A first-order type for uncertain programming |
 | `deep_causality_calculus` | 4 | Arrow-native differentiation and integration operators |
 | `deep_causality_fft` | 4 | Fast Fourier transform: FFT, rFFT, N-dimensional |
 | `deep_causality_homology` | 4 | Chain complexes, boundary operators and homology over a chosen coefficient field. No geometry |
-| `deep_causality_tensor` | 4 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
-| `deep_causality_multivector` | 5 | Multivectors for geometric algebra. |
-| `deep_causality_topology` | 6 | Cell complexes, manifolds, discrete exterior calculus, gauge fields, differential geometry |
+| `deep_causality_stats` | 4 | Descriptive and information statistics over slices: entropy, log-sum-exp, moments, Pearson, covariance, ridge, logistic IRLS, Gaussian log-density, proportions, binning |
+| `deep_causality_tensor` | 5 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
+| `deep_causality_uncertain` | 5 | A first-order type for uncertain programming |
+| `deep_causality_multivector` | 6 | Multivectors for geometric algebra. |
+| `deep_causality_topology` | 7 | Cell complexes, manifolds, discrete exterior calculus, gauge fields, differential geometry |
 
 `num_complex` and `num_dual` sit a tier above `num_rational` because they ship higher-kinded
 witnesses over their number types and so depend on `haft`, which `num_rational` does not. That lifts
 `calculus` and `fft` with them.
+
+`tensor` and `uncertain` sit above `stats` because both take their statistics from it rather than
+carrying their own: `tensor` reads a matrix as observations and variables and hands the reduction
+over, `uncertain` summarises its samples the same way. That lift carries `multivector` and
+`topology` up with them, and puts `stats` on the longest chain.
 
 Nothing here has a **required** external dependency. Four crates have an optional one: `num` for
 `libm`, `rand` for `getrandom`, and `fft` and `topology` for `rayon`. All four sit behind feature
@@ -140,16 +147,40 @@ shape preserving, so a `[2, 3]` no longer comes back `[6]`.
 ## Precision as a parameter
 
 Every crate above `num` is generic in its scalar. The tower's bounds, `Real`, `RealField` and
-`Scalar`, are what a tensor, a manifold or a multivector asks of its element, and the three shipped
-real fields `f32`, `f64` and `Float106` all satisfy them. A program therefore names its working type
-once and writes everything else against the name:
+`Scalar`, are what a tensor, a manifold or a multivector asks of its element, and the four shipped
+real fields all satisfy them. A program therefore names its working type once and writes everything
+else against the name:
 
 ```rust
 type FloatType = f64;
 ```
 
 Switch the alias and the arithmetic of the whole program changes precision. Nothing else moves,
-provided nothing else was ever spelled `f64`.
+provided nothing else was ever spelled `f64`. The four it can be switched to:
+
+| Type | Size | Significand | Exponent | Machine ε | Decimal digits | Largest finite | Smallest normal |
+|---|---|---|---|---|---|---|---|
+| `BFloat16` | 2 bytes | 8 bits | 8 bits | `7.8e-3` | 2 | `3.39e38` | `1.18e-38` |
+| `f32` | 4 bytes | 24 bits | 8 bits | `1.2e-7` | 7 | `3.40e38` | `1.18e-38` |
+| `f64` | 8 bytes | 53 bits | 11 bits | `2.2e-16` | 16 | `1.80e308` | `2.23e-308` |
+| `Float106` | 16 bytes | 106 bits | 11 bits | `4.9e-32` | 31 | `1.80e308` | `2.23e-308` |
+
+`f32` and `f64` are the hardware types. The other two are built in `deep_causality_num` and reach
+the tower through the same `Float` blanket implementations, so a program written against
+`FloatType` runs at any of the four.
+
+`Float106` is the unevaluated sum of two `f64` values, which buys a 106-bit significand — about
+thirty-one digits — at `f64`'s exponent range, for roughly two to four times the cost of an `f64`
+operation. `BFloat16` is the top sixteen bits of an `f32`: the same eight exponent bits, seven
+stored significand bits, half the memory, two decimal digits. Its arithmetic computes in `f32` and
+rounds once, and that double rounding is harmless for `+`, `-`, `*`, `/` and `sqrt`, because the
+intermediate's 24 bits meet the `2p + 2` those operations need at `p = 8`. A slice of `BFloat16` is
+byte-compatible with the `bf16` buffers accelerators exchange.
+
+Precision is the significand and range is the exponent, and the two move independently. The ε column
+spans nine orders of magnitude across the four; the range takes two values, `3.4e38` for `BFloat16`
+and `f32`, `1.8e308` for `f64` and `Float106`. `BFloat16` therefore holds the magnitudes `f32` holds
+and resolves fewer of them, and `Float106` resolves more than `f64` over the same magnitudes.
 
 Three kinds of number cross the boundary of that type. A configuration literal sits in the source as
 `f64`, the widest form a source file can hold. A count, such as a shot count or a lattice side,
@@ -158,7 +189,7 @@ obvious spellings each fail on one of the shipped scalars: `x as FloatType` cast
 only, so it stops compiling the day the alias becomes `Float106`, and `FloatType::from(0.5)`
 compiles for `f64` and `Float106` but not for `f32`, which has no `From<f64>`. The `lift` module in
 `deep_causality_num` writes the crossings once, over `FromPrimitive` and `ToPrimitive`, which
-all three scalars implement.
+all four scalars implement.
 
 | Crossing | Function | From | To |
 |---|---|---|---|
@@ -173,7 +204,7 @@ the same crossings as methods, so an integer of any width reads as `n.lift::<Flo
 
 The program below sums a million terms of a series whose value is known in closed form, so the
 rounding the loop accumulates can be measured in the working type and read out as digits. Each
-index is a count lifted onto the real axis. The program compiles unchanged at all three precisions.
+index is a count lifted onto the real axis. The program compiles unchanged at all four precisions.
 
 ```rust
 use deep_causality_algebra::{Real, Scalar};
@@ -220,15 +251,20 @@ fn main() {
 
 | `FloatType` | error after a million terms | correct digits |
 |---|---|---|
+| `BFloat16` | `3.1e-2` | 2 |
 | `f32` | `1.5e-4` | 4 |
 | `f64` | `4.8e-14` | 13 |
 | `Float106` | `9.8e-31` | 30 |
 
-Three things can be read off that table.
+Four things can be read off that table.
 
-- `f32` stops adding early. A term below half a unit in the last place of a sum near one vanishes
-  on addition, and 1/(k(k+1)) falls below that once k passes four thousand, so the rest of the
-  series is dropped and the sum stalls four digits short.
+- `BFloat16` stops adding at k = 23. Two decimal digits leave a unit in the last place near
+  `4e-3`, and the twenty-third term is the first to fall below half of one, so 999 978 of the
+  million terms are absorbed into a sum that stops at `0.96875` and never moves again. The error is
+  the tail they would have contributed.
+- `f32` stops adding early for the same reason, further along. A term below half a unit in the last
+  place of a sum near one vanishes on addition, and 1/(k(k+1)) falls below that once k passes four
+  thousand, so the rest of the series is dropped and the sum stalls four digits short.
 - `f64` keeps every term but rounds on each of a million additions. The roundings partly cancel
   and leave 4.8e-14, thirteen digits.
 - `Float106` runs the same loop on a 106-bit mantissa and lands at 9.8e-31, thirty digits. The
@@ -248,7 +284,7 @@ bind it first under an annotation. Inside a generic function the target is the t
 
 The examples under `examples/` are written this way. Each keeps its alias in `main.rs`, none carries
 a conversion helper of its own, and the three QCL examples under `examples/quantum_examples/`
-run at all three precisions.
+run at `f32`, `f64` and `Float106`.
 
 ## Precision across composition
 
@@ -402,7 +438,7 @@ The three computations below are bound by three different limits.
   made of.
 
 Which precision a part needs is often not known in advance. The program below measures each part
-at all three precisions against its closed form, states an error budget per part, and picks the
+at `f32`, `f64` and `Float106` against its closed form, states an error budget per part, and picks the
 narrowest precision whose error meets the budget. The composition that follows is written at the
 picked precisions, and an assertion ties it to the pick, so a changed budget fails loudly rather
 than drifting.

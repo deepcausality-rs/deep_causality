@@ -5,7 +5,7 @@
 
 use crate::Precision;
 use crate::errors::PreprocessError;
-use deep_causality_num::FromPrimitive;
+use deep_causality_stats::MeanAccumulator;
 use deep_causality_tensor::CausalTensor;
 
 /// A pre-processor for handling missing numerical data in a `CausalTensor`.
@@ -45,31 +45,27 @@ impl MissingValueImputer {
         let mut data = tensor.as_slice().to_vec();
 
         for c in 0..n_cols {
-            let mut sum = T::zero();
-            let mut count = 0usize;
+            // `MeanAccumulator` rather than `mean` over a slice: the present values are found in
+            // the same pass that records the missing ones, and a column is not contiguous in a
+            // row-major matrix, so a slice would have to be built to be thrown away.
+            let mut present = MeanAccumulator::<T>::new();
             let mut missing_indices = Vec::new();
 
-            // First pass: find missing values and calculate sum of non-missing
+            // First pass: find missing values and accumulate the non-missing.
             for r in 0..n_rows {
                 let index = r * n_cols + c;
                 if data[index].is_nan() {
                     missing_indices.push(index);
                 } else {
-                    sum += data[index];
-                    count += 1;
+                    present.push(data[index]);
                 }
             }
 
             // If there are missing values in this column, impute them.
             if !missing_indices.is_empty() {
-                let mean = if count > 0 {
-                    sum / <T as FromPrimitive>::from_usize(count)
-                        .expect("count is representable in RealField")
-                } else {
-                    // If a column consists entirely of NaN, default to zero.
-                    T::zero()
-                };
-
+                // A column that is entirely NaN has no mean to impute from; zero is this
+                // preprocessor's answer, where the statistics crate refuses with `EmptyInput`.
+                let mean = present.mean().unwrap_or_else(|_| T::zero());
                 for index in missing_indices {
                     data[index] = mean;
                 }

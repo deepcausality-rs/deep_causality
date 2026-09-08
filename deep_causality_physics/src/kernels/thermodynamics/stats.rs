@@ -144,38 +144,18 @@ where
     Probability::<R>::new(factor)
 }
 
-/// Calculates Shannon Entropy: $H = -\sum p_i \ln(p_i)$.
-///
-/// # Arguments
-/// * `probs` - Probability distribution (Tensor).
-///
-/// # Returns
-/// * `Result<f64, PhysicsError>` - Entropy in nats.
-pub fn shannon_entropy_kernel<R>(probs: &CausalTensor<R>) -> Result<R, PhysicsError>
+/// Shannon entropy in bits, without renormalizing the probabilities.
+/// Rejects empty input, negative probabilities and non-finite entries.
+pub fn shannon_entropy_bits_kernel<R>(probs: &CausalTensor<R>) -> Result<R, PhysicsError>
 where
-    R: RealField + MaybeParallel + Sum,
+    R: RealField + FromPrimitive + MaybeParallel + Sum,
 {
-    let data = probs.as_slice();
-
-    if data.is_empty() {
-        return Err(PhysicsError::DimensionMismatch(
-            "Probability tensor is empty".into(),
-        ));
-    }
-
-    if data.iter().any(|&p| p < R::zero()) {
-        return Err(PhysicsError::NormalizationError(
-            "Negative probability in Shannon Entropy".into(),
-        ));
-    }
-
-    let entropy: R = data
-        .iter()
-        .filter(|&&p| p > R::zero()) // lim x->0 x log x = 0. Exclude 0 and negative.
-        .map(|&p| -p * p.ln())
-        .sum();
-
-    Ok(entropy)
+    let config = deep_causality_stats::EntropyConfig {
+        base: deep_causality_stats::LogBase::Bits,
+        zero_policy: deep_causality_stats::ZeroPolicy::SkipZero,
+        normalisation: deep_causality_stats::Normalisation::None,
+    };
+    deep_causality_stats::entropy(probs.as_slice(), &config).map_err(PhysicsError::from)
 }
 
 /// Calculates Heat Capacity: $C = \frac{dE}{dT}$.

@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
+use deep_causality_stats::{EntropyConfig, StatsError, entropy};
 use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
 use std::cmp::Ordering;
 
@@ -108,7 +110,7 @@ pub(crate) fn combinations<T: Copy>(pool: &[T], r: usize) -> Vec<Vec<T>> {
 ///
 /// The input tensor `p` is assumed to be a joint probability distribution.
 /// This function computes the entropy of the marginal distribution over the specified `axes`.
-pub fn entropy_nvars<T: RealField + Default>(
+pub fn entropy_nvars<T: RealField + FromPrimitive + Default>(
     p: &CausalTensor<T>,
     axes: &[usize],
 ) -> Result<T, CausalTensorError> {
@@ -119,37 +121,22 @@ pub fn entropy_nvars<T: RealField + Default>(
         .filter(|ax| !axes.contains(ax))
         .collect();
 
-    let zero = T::zero();
-
     if axes_to_sum_out.is_empty() {
-        // Optimization: If not summing over any axes, calculate entropy directly on the slice
-        // to avoid cloning the entire tensor.
-        let entropy = p.as_slice().iter().fold(zero, |acc, &prob| {
-            if prob > zero {
-                acc - prob * prob.log2()
-            } else {
-                acc
-            }
-        });
-        Ok(entropy)
+        entropy(p.as_slice(), &EntropyConfig::bits()).map_err(stats_error)
     } else {
-        // Calculate the marginal distribution by summing out the specified axes.
         let marginal = p.sum_axes(&axes_to_sum_out)?;
-        let entropy = marginal.as_slice().iter().fold(zero, |acc, &prob| {
-            if prob > zero {
-                acc - prob * prob.log2()
-            } else {
-                acc
-            }
-        });
-        Ok(entropy)
+        entropy(marginal.as_slice(), &EntropyConfig::bits()).map_err(stats_error)
     }
+}
+
+fn stats_error(error: StatsError) -> CausalTensorError {
+    CausalTensorError::InvalidParameter(error.to_string())
 }
 
 /// Calculates the conditional Shannon entropy H(X | Y).
 ///
 /// Uses the formula: H(X | Y) = H(X, Y) - H(Y).
-pub fn cond_entropy<T: RealField + Default>(
+pub fn cond_entropy<T: RealField + FromPrimitive + Default>(
     p: &CausalTensor<T>,
     target_axes: &[usize],
     cond_axes: &[usize],

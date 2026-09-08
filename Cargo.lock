@@ -80,9 +80,11 @@ dependencies = [
  "deep_causality_core",
  "deep_causality_file",
  "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_physics",
+ "deep_causality_stats",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
@@ -186,6 +188,7 @@ dependencies = [
  "deep_causality_data_structures",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_stats",
 ]
 
 [[package]]
@@ -196,6 +199,7 @@ dependencies = [
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_stats",
 ]
 
 [[package]]
@@ -208,6 +212,7 @@ dependencies = [
  "deep_causality_discovery",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_stats",
  "deep_causality_tensor",
 ]
 
@@ -259,6 +264,7 @@ dependencies = [
  "deep_causality_file",
  "deep_causality_num",
  "deep_causality_physics",
+ "deep_causality_stats",
 ]
 
 [[package]]
@@ -320,6 +326,7 @@ dependencies = [
  "deep_causality",
  "deep_causality_core",
  "deep_causality_rand",
+ "deep_causality_stats",
 ]
 
 [[package]]
@@ -542,13 +549,15 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algorithms"
-version = "0.4.3"
+version = "0.4.5"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
+ "deep_causality_linear",
  "deep_causality_num",
  "deep_causality_par",
  "deep_causality_rand",
+ "deep_causality_stats",
  "deep_causality_tensor",
  "deep_causality_topology",
  "rayon",
@@ -579,6 +588,7 @@ dependencies = [
  "deep_causality_fft",
  "deep_causality_file",
  "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_num",
  "deep_causality_num_complex",
  "deep_causality_num_dual",
@@ -614,7 +624,9 @@ dependencies = [
  "deep_causality_algorithms",
  "deep_causality_haft",
  "deep_causality_num",
+ "deep_causality_par",
  "deep_causality_rand",
+ "deep_causality_stats",
  "deep_causality_tensor",
  "deep_causality_topology",
  "parquet",
@@ -698,7 +710,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "libm",
 ]
@@ -735,7 +747,7 @@ version = "0.1.3"
 
 [[package]]
 name = "deep_causality_physics"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
@@ -749,13 +761,14 @@ dependencies = [
  "deep_causality_num_dual",
  "deep_causality_par",
  "deep_causality_rand",
+ "deep_causality_stats",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
 
 [[package]]
 name = "deep_causality_quantum"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "deep_causality",
  "deep_causality_algebra",
@@ -768,6 +781,7 @@ dependencies = [
  "deep_causality_num",
  "deep_causality_num_complex",
  "deep_causality_num_rational",
+ "deep_causality_stats",
  "deep_causality_tensor",
  "deep_causality_topology",
  "deep_causality_uncertain",
@@ -783,8 +797,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "deep_causality_stats"
+version = "0.1.0"
+dependencies = [
+ "deep_causality_algebra",
+ "deep_causality_linear",
+ "deep_causality_num",
+]
+
+[[package]]
 name = "deep_causality_tensor"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -795,6 +818,7 @@ dependencies = [
  "deep_causality_num_complex",
  "deep_causality_num_dual",
  "deep_causality_rand",
+ "deep_causality_stats",
 ]
 
 [[package]]
@@ -818,13 +842,14 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
  "deep_causality_ast",
  "deep_causality_num",
  "deep_causality_rand",
+ "deep_causality_stats",
  "rusty-fork",
 ]
 
@@ -1566,6 +1591,7 @@ dependencies = [
  "deep_causality_physics",
  "deep_causality_quantum",
  "deep_causality_rand",
+ "deep_causality_stats",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]

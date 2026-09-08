@@ -6,7 +6,7 @@
 use deep_causality_physics::{
     AmountOfSubstance, Energy, Pressure, Temperature, Volume, boltzmann_factor_kernel,
     carnot_efficiency_kernel, heat_capacity_kernel, ideal_gas_law_kernel,
-    partition_function_kernel, shannon_entropy_kernel,
+    partition_function_kernel, shannon_entropy_bits_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -87,21 +87,55 @@ fn test_boltzmann_factor_kernel_ground_state() {
 }
 
 // =============================================================================
-// shannon_entropy_kernel Tests
+// shannon_entropy_bits_kernel Tests
 // =============================================================================
 
 #[test]
-fn test_shannon_entropy_kernel_uniform() {
+fn test_shannon_entropy_bits_kernel_uniform() {
     // Uniform distribution has max entropy
     let probs: CausalTensor<f64> =
         CausalTensor::new(vec![0.25, 0.25, 0.25, 0.25], vec![4]).unwrap();
 
-    let result = shannon_entropy_kernel(&probs);
+    let result = shannon_entropy_bits_kernel(&probs);
     assert!(result.is_ok());
 
     let h = result.unwrap();
-    // H = -4 * (0.25 * ln(0.25)) = ln(4) ≈ 1.386
-    assert!((h - 1.386).abs() < 0.01, "Expected ~1.386, got {}", h);
+    // Four equiprobable outcomes carry log2(4) = 2 bits.
+    assert!((h - 2.0).abs() < 1e-14, "Expected 2 bits, got {}", h);
+}
+
+#[test]
+fn test_shannon_entropy_bits_kernel_does_not_renormalise_its_input() {
+    // The kernel's contract is `Normalisation::None`: the caller states that the input is a
+    // distribution, and the kernel measures what it is given. Pinned because every other fixture in
+    // this file already sums to one, where normalising and not normalising are the same operation —
+    // so nothing here could tell a `BySum` delegation from a `None` one.
+    //
+    // `p = (0.5, 0.25)` sums to 0.75. Measured as given:
+    //   H = −(0.5·log₂0.5 + 0.25·log₂0.25) = −(0.5·(−1) + 0.25·(−2)) = 0.5 + 0.5 = 1 bit exactly.
+    // Normalised first it would be (2/3, 1/3), whose entropy is 0.9183 bits — a different number,
+    // and a different claim about the caller's data.
+    let probs: CausalTensor<f64> = CausalTensor::new(vec![0.5, 0.25], vec![2]).unwrap();
+    let h = shannon_entropy_bits_kernel(&probs).expect("a sub-unit sum is not an error here");
+    assert!((h - 1.0).abs() < 1e-15, "expected exactly 1 bit, got {h}");
+}
+
+#[test]
+fn test_shannon_entropy_bits_kernel_counts_a_probability_far_below_epsilon() {
+    // The other half of the config: `ZeroPolicy::SkipZero` skips an entry that is **exactly** zero
+    // and nothing else. A threshold policy — `SkipBelow(ε)`, which the SURD path deliberately does
+    // use — would drop this entry and report zero, and no other fixture in this file has an entry
+    // between zero and ε to tell the two apart.
+    //
+    // p = (1, 1e-20): the first term is −1·log₂1 = 0, so the whole entropy is the second,
+    // −1e-20·log₂(1e-20) = 1e-20 · 66.44 ≈ 6.64e-19. Small, but not zero — and it is the answer.
+    let probs: CausalTensor<f64> = CausalTensor::new(vec![1.0, 1e-20], vec![2]).unwrap();
+    let h = shannon_entropy_bits_kernel(&probs).expect("a tiny positive probability is admissible");
+    assert!(h > 0.0, "a positive probability must contribute, got {h}");
+    assert!(
+        (h - 6.6438e-19).abs() < 1e-22,
+        "expected about 6.644e-19 bits, got {h}"
+    );
 }
 
 // =============================================================================
@@ -168,19 +202,19 @@ fn test_boltzmann_factor_kernel_error() {
 }
 
 // =============================================================================
-// shannon_entropy_kernel Tests (Error Case)
+// shannon_entropy_bits_kernel Tests (Error Case)
 // =============================================================================
 
 #[test]
-fn test_shannon_entropy_kernel_error() {
+fn test_shannon_entropy_bits_kernel_error() {
     // Negative probability
     let probs = CausalTensor::new(vec![0.5, -0.1], vec![2]).unwrap();
-    let result = shannon_entropy_kernel(&probs);
+    let result = shannon_entropy_bits_kernel(&probs);
     assert!(result.is_err());
 
     // Empty tensor
     let empty_probs: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
-    let result_empty = shannon_entropy_kernel(&empty_probs);
+    let result_empty = shannon_entropy_bits_kernel(&empty_probs);
     assert!(result_empty.is_err());
 }
 

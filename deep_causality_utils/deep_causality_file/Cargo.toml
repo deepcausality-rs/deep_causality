@@ -4,7 +4,9 @@ version = "0.1.4"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-repository = "https://github.com/deepcausality/deep_causality.rs"
+repository = { workspace = true }
+homepage = { workspace = true}
+
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "File and receiver-data (RINEX GNSS SP3/CLK) loaders over the haft IO monad for DeepCausality"
 documentation = "https://docs.rs/deep_causality_file"

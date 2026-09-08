@@ -89,12 +89,20 @@ impl Detector {
     }
 
     /// Mean anomaly score over a set of rows.
+    ///
+    /// An empty batch is an error, not a score. The caller feeds this the two halves of a split
+    /// and takes the midpoint of the two answers as its gate threshold, so a batch that scored
+    /// nothing would move the threshold while looking like a reading.
     pub fn mean_score(&self, rows: &[Vec<f64>], dev: &Device) -> Result<f64, candle_core::Error> {
-        let mut acc = 0.0;
+        // `MeanAccumulator` rather than collecting: `score_row` is fallible, so a slice would have
+        // to be built through a `Result` collect first, and the rows are scored one at a time
+        // anyway.
+        let mut acc = deep_causality_stats::MeanAccumulator::<f64>::new();
         for r in rows {
-            acc += self.score_row(r, dev)?;
+            acc.push(self.score_row(r, dev)?);
         }
-        Ok(acc / rows.len() as f64)
+        acc.mean()
+            .map_err(|e| candle_core::Error::Msg(format!("mean anomaly score: {e}")))
     }
 }
 

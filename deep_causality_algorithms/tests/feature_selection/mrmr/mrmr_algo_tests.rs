@@ -7,13 +7,6 @@ use deep_causality_algorithms::feature_selection::mrmr;
 use deep_causality_algorithms::mrmr::MrmrError;
 use deep_causality_tensor::CausalTensor;
 
-// Skipped under Miri: this test asserts the exact selection order [F2, F0].
-// MRMR picks the most-relevant feature first, then the least-redundant. When
-// two candidates have nearly equal scores (as here), Miri's soft-float
-// emulation drifts the comparison by ~1 ULP and flips the order to [F0, F2].
-// The selected set is correct in both cases; only the ordering is unstable
-// at the precision boundary. Test is correct and passes under normal CI.
-#[cfg_attr(miri, ignore)]
 #[test]
 fn test_mrmr_select_features() {
     let data = vec![
@@ -24,13 +17,15 @@ fn test_mrmr_select_features() {
     let selected_features_with_scores = mrmr::mrmr_features_selector(&tensor, 2, 3).unwrap();
 
     // Extract indices for assertion
-    let selected_features: Vec<usize> = selected_features_with_scores
+    let mut selected_features: Vec<usize> = selected_features_with_scores
         .iter()
         .map(|(idx, _score)| *idx)
         .collect();
 
-    // Based on calculation, F2 is most relevant, then F0 is chosen due to lower redundancy.
-    assert_eq!(selected_features, vec![2, 0]);
+    // F2 = 3*F0: both have F = 38809/3 (exact rational oracle).
+    // Their ordering is a floating-point tie; the selected pair is determined.
+    selected_features.sort_unstable();
+    assert_eq!(selected_features, vec![0, 2]);
 
     // Verify scores are valid numbers and normalized
     for (_, score) in selected_features_with_scores {
@@ -147,11 +142,7 @@ fn test_select_features_nan_score_error() {
 
 #[test]
 fn test_first_feature_relevance_not_finite() {
-    // An infinite value in the target column makes EVERY feature's relevance
-    // (F-statistic) non-finite, so the very first feature scanned trips the
-    // first-feature `relevance.is_finite()` guard. `f64::INFINITY` is not `NaN`,
-    // so `FloatOption::to_option` passes it through into the Pearson sums (NaN
-    // mapping only catches NaN), producing a non-finite F-statistic.
+    // Infinite observations are rejected by the shared statistics validation.
     let data = vec![
         // F0,  F1,  Target
         1.0,
@@ -169,22 +160,18 @@ fn test_first_feature_relevance_not_finite() {
     ];
     let tensor = CausalTensor::new(data, vec![4, 3]).unwrap();
     let result = mrmr::mrmr_features_selector(&tensor, 1, 2);
-    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
+    assert!(matches!(result, Err(MrmrError::CalculationError(_))));
     assert!(
         result
             .unwrap_err()
             .to_string()
-            .contains("Relevance score for feature")
+            .contains("non-finite observation")
     );
 }
 
 #[test]
 fn test_iteration_relevance_not_finite() {
-    // The first feature is finite/relevant and is selected; a *later* feature has
-    // a non-finite relevance because the target value it correlates against is
-    // infinite only on a row where that feature also varies. Here F0 is cleanly
-    // relevant (selected first), and F1's relevance becomes non-finite due to the
-    // infinite target entry, tripping the iteration-loop relevance guard.
+    // An infinite target is rejected before a relevance score is returned.
     let data = vec![
         // F0,    F1,  Target
         1.0,
@@ -203,20 +190,18 @@ fn test_iteration_relevance_not_finite() {
     let tensor = CausalTensor::new(data, vec![4, 3]).unwrap();
     // Request both features; F0 selected first (finite), F1 evaluated in the loop.
     let result = mrmr::mrmr_features_selector(&tensor, 2, 2);
-    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
-    let msg = result.unwrap_err().to_string();
+    assert!(matches!(result, Err(MrmrError::CalculationError(_))));
     assert!(
-        msg.contains("not finite"),
-        "expected a non-finite score error, got: {msg}"
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("non-finite observation")
     );
 }
 
 #[test]
 fn test_iteration_correlation_not_finite() {
-    // First feature finite/selected; for a later feature the *correlation* with an
-    // already-selected feature is non-finite (an infinite value in the candidate
-    // feature column, distinct from the target), tripping the redundancy/
-    // correlation finiteness guard inside the selection loop.
+    // An infinite candidate observation is rejected before score normalization.
     let data = vec![
         // F0,    F1 (relevant target proxy), F2 (has inf), Target
         1.0,
@@ -241,11 +226,12 @@ fn test_iteration_correlation_not_finite() {
     // entry so its correlation/redundancy with F1 (or its own relevance) is
     // non-finite, exercising a finiteness guard in the iteration loop.
     let result = mrmr::mrmr_features_selector(&tensor, 3, 3);
-    assert!(matches!(result, Err(MrmrError::FeatureScoreError(_))));
-    let msg = result.unwrap_err().to_string();
+    assert!(matches!(result, Err(MrmrError::CalculationError(_))));
     assert!(
-        msg.contains("not finite"),
-        "expected a non-finite score error, got: {msg}"
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("non-finite observation")
     );
 }
 

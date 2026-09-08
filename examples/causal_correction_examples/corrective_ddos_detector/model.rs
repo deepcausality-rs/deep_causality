@@ -9,7 +9,6 @@ use crate::model_types::{
     DetectorConfig, DetectorProcess, DetectorState, FloatType, InterfaceTelemetry, THROTTLE_OFF,
     THROTTLE_ON, ThrottleState, ThroughputWindow, nominal_detector_config,
 };
-use causal_correction_examples::math_utils;
 use deep_causality_core::{CausalEffect, EffectLog};
 use deep_causality_haft::LogAddEntry;
 use deep_causality_num::Lift;
@@ -94,10 +93,10 @@ pub fn baseline_zscore(window: &ThroughputWindow, sample: FloatType) -> Option<F
         return None;
     }
     let slice = window.slice().ok()?;
-    let mean = math_utils::mean(slice);
-    let n = slice.len().lift::<FloatType>();
-    let variance = slice.iter().map(|&x| (x - mean).powi(2)).sum::<FloatType>() / (n - 1.0);
-    let std = variance.sqrt();
+    // The window is `filled()`, so it carries `WINDOW_SIZE` samples and neither statistic can
+    // refuse for want of observations; the corrected `n − 1` form is what this z-score wants.
+    let mean = deep_causality_stats::mean(slice).ok()?;
+    let std = deep_causality_stats::std_dev(slice).ok()?;
     if std <= FloatType::EPSILON {
         // A perfectly flat baseline has no spread: anything off it is maximally
         // anomalous, anything on it is normal.

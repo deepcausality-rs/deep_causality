@@ -212,7 +212,7 @@ fn both_closures_agree_on_the_pattern_of_a_dag() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Corner cases, from the enumeration in openspec/changes/unified-math-next/tdd/corner-cases.md
+// Corner cases, from the enumeration in openspec/changes/archive/2026-09-08-unified-math-next/tdd/corner-cases.md
 // ---------------------------------------------------------------------------------------------
 
 // `MixedGraph::new` refuses zero vertices, so one vertex is the smallest constructible case.

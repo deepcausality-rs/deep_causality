@@ -17,6 +17,8 @@ use alloc::format;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec;
+use deep_causality_algebra::Normed;
+use deep_causality_num_complex::Complex;
 
 /// The calibration surfaced to the context channel by `qpu_effect`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -53,30 +55,11 @@ impl SimQpu {
     }
 }
 
-// A complex amplitude as a plain pair (avoids leaning on operator ergonomics).
-#[derive(Clone, Copy)]
-struct C {
-    re: f64,
-    im: f64,
-}
-
-impl C {
-    fn new(re: f64, im: f64) -> Self {
-        Self { re, im }
-    }
-    fn add(self, o: C) -> C {
-        C::new(self.re + o.re, self.im + o.im)
-    }
-    fn mul(self, o: C) -> C {
-        C::new(
-            self.re * o.re - self.im * o.im,
-            self.re * o.im + self.im * o.re,
-        )
-    }
-    fn norm_sq(self) -> f64 {
-        self.re * self.re + self.im * self.im
-    }
-}
+// The state-vector amplitude type. Was a private `struct C` re-deriving complex addition,
+// multiplication and squared modulus; it is now `Complex<f64>`, whose operators are the same
+// arithmetic and whose `modulus_squared` is the same `re² + im²` (`unified-math-next` task 6.7).
+// The alias keeps the call sites below reading as they did.
+type C = Complex<f64>;
 
 fn apply_single(state: &mut [C], q: usize, m: [C; 4]) {
     let bit = 1usize << q;
@@ -87,8 +70,8 @@ fn apply_single(state: &mut [C], q: usize, m: [C; 4]) {
             let j = i | bit;
             let a0 = state[i];
             let a1 = state[j];
-            state[i] = m[0].mul(a0).add(m[1].mul(a1));
-            state[j] = m[2].mul(a0).add(m[3].mul(a1));
+            state[i] = m[0] * a0 + m[1] * a1;
+            state[j] = m[2] * a0 + m[3] * a1;
         }
         i += 1;
     }
@@ -123,7 +106,7 @@ fn apply_diagonal_phase(state: &mut [C], qubits: &[usize], phase: C) {
     }
     for (i, a) in state.iter_mut().enumerate() {
         if i & mask == mask {
-            *a = phase.mul(*a);
+            *a = phase * *a;
         }
     }
 }
@@ -221,7 +204,7 @@ impl QpuSampler for SimQpu {
                     outcome |= 1 << k;
                 }
             }
-            probs[outcome] += amp.norm_sq();
+            probs[outcome] += amp.modulus_squared();
         }
 
         // Cumulative distribution for inverse-CDF sampling.

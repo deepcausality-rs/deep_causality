@@ -24,3 +24,5 @@ mod ported_getters_tests;
 mod ported_mod_tests;
 #[cfg(test)]
 mod ported_ops_tests;
+#[cfg(test)]
+mod vec_mult_real_tests;

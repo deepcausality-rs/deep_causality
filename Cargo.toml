@@ -14,26 +14,21 @@ members = [
     "deep_causality_physics",
     "deep_causality_quantum",
     "ultragraph",
-    # Unified math: All the mathematics crates
     "deep_causality_unified_math/*",
-    # Misc. util crates
     "deep_causality_utils/*",
-    # All code examples
-    "examples/*",
+    "examples/*",  # All code examples
 ]
 
 [workspace.package]
 edition = "2024"
 rust-version = "1.98.0"
 license = "MIT"
+repository = "https://github.com/deepcausality/deep_causality.rs"
+homepage = "https://deepcausality.com/"
 
 [workspace.dependencies]
 # Declared once here and inherited by every member with `{ workspace = true }`.
 # `default-features = false` appears wherever ANY member needs defaults off.
-# Crates that want the default set opt in with `features = ["default"]`.
-#
-# Internal constraints stay at two digits (`0.11`) so a local patch release is
-# picked up without touching this file. release-plz preserves whatever verion it finds in a crate.
 
 # Internal crates
 deep_causality = { path = "deep_causality", version = "0.15" }
@@ -61,6 +56,7 @@ deep_causality_par = { path = "deep_causality_utils/deep_causality_par", version
 deep_causality_physics = { path = "deep_causality_physics", version = "0.8", default-features = false }
 deep_causality_quantum = { path = "deep_causality_quantum", version = "0.3" }
 deep_causality_rand = { path = "deep_causality_unified_math/deep_causality_rand", version = "0.2" }
+deep_causality_stats = { path = "deep_causality_unified_math/deep_causality_stats", version = "0.1", default-features = false }
 deep_causality_tensor = { path = "deep_causality_unified_math/deep_causality_tensor", version = "0.5", default-features = false }
 deep_causality_topology = { path = "deep_causality_unified_math/deep_causality_topology", version = "0.9" }
 deep_causality_uncertain = { path = "deep_causality_unified_math/deep_causality_uncertain", version = "0.5" }
@@ -85,7 +81,14 @@ tokio = { version = "1" }
 unsafe_code = "forbid"
 # `cfg(kani)` is set only by the Kani driver (`cargo kani`); register it so the
 # `#![cfg(kani)]`-gated proof harnesses do not trip the `unexpected_cfgs` lint.
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+# `cfg(feature, values(any()))` covers the Bazel build: cargo derives the legal
+# feature values from each `[features]` table on its own, but rules_rs forwards
+# only the list written here, so without this entry every `#[cfg(feature = ...)]`
+# in the workspace is an unexpected cfg under `bazel build`.
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(kani)',
+    'cfg(feature, values(any()))',
+] }
 
 # Optimize all crates
 [profile.release]

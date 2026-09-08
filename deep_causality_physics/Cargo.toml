@@ -1,10 +1,11 @@
 [package]
 name = "deep_causality_physics"
-version = "0.8.2"
+version = "0.8.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-repository = "https://github.com/deepcausality/deep_causality.rs"
+repository = { workspace = true }
+homepage = { workspace = true }
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Standard library of physics formulas and engineering primitives for DeepCausality."
 documentation = "https://docs.rs/deep_causality"
@@ -74,6 +75,10 @@ features = ["default"]
 [dependencies.deep_causality_algebra]
 workspace = true
 features = ["default"]
+
+[dependencies.deep_causality_stats]
+workspace = true
+features = ["std"]
 
 [dependencies.deep_causality_num_complex]
 workspace = true

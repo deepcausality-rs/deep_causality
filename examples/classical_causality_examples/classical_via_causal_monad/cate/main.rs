@@ -47,12 +47,20 @@ fn main() {
     );
     println!();
 
+    // No patient in the subgroup means no individual treatment effect to average, and `E[·]` over
+    // an empty set is not a treatment effect of zero — it is no answer at all. Refused here rather
+    // than at the mean, so the reason is the empty subgroup and not a statistic that declined.
+    if subgroup.is_empty() {
+        println!("No patient is over {AGE_THRESHOLD}: this subgroup has no CATE to estimate.");
+        return;
+    }
+
     let ites: Vec<f64> = subgroup
         .iter()
         .map(|p| individual_treatment_effect(p))
         .collect();
 
-    let cate = ites.iter().sum::<f64>() / ites.len() as f64;
+    let cate = deep_causality_stats::mean(&ites).expect("the subgroup is non-empty");
     println!("\n--- CATE = mean(ITE over subgroup) = {:.2} ---", cate);
     println!(
         "Interpretation: for the over-{AGE_THRESHOLD} subgroup, administering the drug is\n\

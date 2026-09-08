@@ -1,11 +1,12 @@
 [package]
 name = "deep_causality_uncertain"
-version = "0.5.2"
+version = "0.5.3"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true}
 
-repository = "https://github.com/deepcausality/deep_causality.rs"
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>", ]
 description = "A First-Order Type for Uncertain Programming for the DeepCausality project.'"
 documentation = "https://docs.rs/deep_causality"
@@ -28,6 +29,10 @@ exclude = [
 # Disabled by default to use native Rust prng instead.
 os-random = ["deep_causality_rand/os-random"]
 
+
+[dependencies.deep_causality_stats]
+workspace = true
+features = ["std"]
 
 [dependencies.deep_causality_rand]
 workspace = true
