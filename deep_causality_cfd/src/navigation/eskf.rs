@@ -21,6 +21,7 @@
 use super::ins_error_state::InsErrorState;
 use alloc::format;
 use deep_causality_algebra::RealField;
+use deep_causality_linear::dot_n;
 use deep_causality_physics::PhysicsError;
 
 /// The error-state dimension (17 = INS 15-state + clock bias/drift).
@@ -54,8 +55,13 @@ fn mat_add<R: RealField, const M: usize>(a: &[[R; M]; M], b: &[[R; M]; M]) -> [[
 fn mat_vec<R: RealField, const M: usize>(a: &[[R; M]; M], v: &[R; M]) -> [R; M] {
     core::array::from_fn(|i| (0..M).fold(R::zero(), |s, k| s + a[i][k] * v[k]))
 }
+/// Dispatches to `deep_causality_linear::dot_n` (`unified-math-next` task 6.7).
+///
+/// The inner product moves even though the matrix kit above stays: 6.9's measurement was about
+/// `DenseMatrix`'s heap allocation and by-value `Mul`, neither of which `dot_n` has — it is the
+/// same fold over the same const-generic arrays, in one place instead of four.
 fn dot<R: RealField, const M: usize>(a: &[R; M], b: &[R; M]) -> R {
-    (0..M).fold(R::zero(), |s, k| s + a[k] * b[k])
+    dot_n(a, b)
 }
 fn diag<R: RealField, const M: usize>(d: &[R; M]) -> [[R; M]; M] {
     core::array::from_fn(|i| core::array::from_fn(|j| if i == j { d[i] } else { R::zero() }))

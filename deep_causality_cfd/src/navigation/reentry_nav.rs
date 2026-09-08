@@ -23,6 +23,7 @@
 
 use super::eskf::NavFilter;
 use deep_causality_algebra::RealField;
+use deep_causality_linear::vector_norm_l2;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Quaternion;
 use deep_causality_physics::{
@@ -237,12 +238,15 @@ impl<R: RealField + FromPrimitive> ReentryNavEngine<R> {
     }
 }
 
+/// The Euclidean norm of a 3-vector, in the scaled form (`unified-math-next` task 6.7).
+///
+/// It was `(x² + y² + z²).sqrt()`, which overflows where the answer does not.
 fn norm<R: RealField>(v: [R; 3]) -> R {
-    (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt()
+    vector_norm_l2(&v)
 }
 
 /// Rotate a 3-vector by a 3×3 matrix: `m · v`. Used to carry the body-frame specific force into the nav
 /// frame via the nominal attitude's DCM.
 fn mat3_vec<R: RealField>(m: &[[R; 3]; 3], v: [R; 3]) -> [R; 3] {
-    core::array::from_fn(|i| m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2])
+    deep_causality_linear::mat3_vec(m, &v)
 }

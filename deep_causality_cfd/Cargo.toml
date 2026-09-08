@@ -41,6 +41,7 @@ std = [
     "deep_causality_core/std",
     "deep_causality_num/std",
     "deep_causality_algebra/std",
+    "deep_causality_linear/std",
     "deep_causality_num_complex/std",
     "deep_causality_num_dual/std",
     "deep_causality_physics/std",
@@ -82,6 +83,9 @@ workspace = true
 workspace = true
 
 [dependencies.deep_causality_algebra]
+workspace = true
+
+[dependencies.deep_causality_linear]
 workspace = true
 
 [dependencies.deep_causality_num_complex]

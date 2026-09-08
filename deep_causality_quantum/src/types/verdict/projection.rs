@@ -23,7 +23,8 @@ use crate::types::qgates::operator_linalg::{
 };
 use alloc::format;
 use alloc::vec;
-use deep_causality_algebra::{RealField, Verdict};
+use deep_causality_algebra::{ComplexField, RealField, Verdict};
+use deep_causality_linear::vector_norm_sq;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
@@ -122,9 +123,7 @@ where
             )));
         }
         let ks = ket.as_slice();
-        let norm_sq = ks
-            .iter()
-            .fold(R::zero(), |acc, c| acc + c.re * c.re + c.im * c.im);
+        let norm_sq = vector_norm_sq(ks);
         if norm_sq <= R::epsilon() {
             return Err(QuantumError::NormalizationError(
                 "cannot project onto a (near-)zero ket".into(),
@@ -134,12 +133,8 @@ where
         let mut data = vec![c_zero::<R>(); D * D];
         for i in 0..D {
             for j in 0..D {
-                let a = ks[i];
-                let b = ks[j];
-                data[i * D + j] = Complex::new(
-                    (a.re * b.re + a.im * b.im) * inv,
-                    (a.im * b.re - a.re * b.im) * inv,
-                );
+                // a · conj(b) / ⟨ψ|ψ⟩
+                data[i * D + j] = ks[i] * ks[j].conjugate() * inv;
             }
         }
         Self::new(CausalTensor::from_slice(&data, &[D, D]))
@@ -233,12 +228,8 @@ where
             for i in 0..D {
                 let vi = vs[i * D + idx];
                 for j in 0..D {
-                    let vj = vs[j * D + idx];
-                    // vi * conj(vj)
-                    let re = vi.re * vj.re + vi.im * vj.im;
-                    let im = vi.im * vj.re - vi.re * vj.im;
-                    let cur = proj[i * D + j];
-                    proj[i * D + j] = Complex::new(cur.re + re, cur.im + im);
+                    // v vᴴ, one entry: vᵢ · conj(vⱼ).
+                    proj[i * D + j] += vi * vs[j * D + idx].conjugate();
                 }
             }
         }
@@ -265,7 +256,7 @@ where
     fn join(self, other: Self) -> Self {
         let mut sum = self.p.as_slice().to_vec();
         for (s, o) in sum.iter_mut().zip(other.p.as_slice()) {
-            *s = Complex::new(s.re + o.re, s.im + o.im);
+            *s += *o;
         }
         let sum = CausalTensor::from_slice(&sum, &[D, D]);
         Self::range_projector(&sum)
@@ -284,7 +275,7 @@ where
         let id = identity_matrix::<R>(D);
         let mut data = id.as_slice().to_vec();
         for (d, p) in data.iter_mut().zip(self.p.as_slice()) {
-            *d = Complex::new(d.re - p.re, d.im - p.im);
+            *d -= *p;
         }
         Self {
             p: CausalTensor::from_slice(&data, &[D, D]),

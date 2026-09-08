@@ -38,6 +38,10 @@ features = ["default"]
 workspace = true
 features = ["default"]
 
+[dependencies.deep_causality_linear]
+workspace = true
+features = ["std"]
+
 [dependencies.deep_causality_stats]
 workspace = true
 features = ["std"]

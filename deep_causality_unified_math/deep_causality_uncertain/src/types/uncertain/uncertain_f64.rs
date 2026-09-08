@@ -19,6 +19,12 @@ impl Uncertain<f64> {
         if samples.is_empty() {
             return Self::point(0.0);
         }
+        // `unwrap_or` here is unreachable and kept only as a total expression: `mean` refuses
+        // exactly one input, the empty slice, and the guard above has already returned for it.
+        // Recorded rather than removed because a defect audit of this delegation
+        // (`unified-math-next` task 5.19) found no test could distinguish the sentinel — which is
+        // the correct outcome for a branch no input reaches, and worth saying so that the next
+        // reader does not go looking for the missing test.
         let mean = deep_causality_stats::mean(samples).unwrap_or(0.0);
         // A single sample has no dispersion to estimate; `std_dev` says so with
         // `InsufficientSamples`, and zero is what that means for a summary.

@@ -6,7 +6,7 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{ComplexField, RealField};
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
@@ -54,7 +54,7 @@ impl<R: RealField> QuantumOps<R> for CausalMultiVector<Complex<R>> {
         let conjugated_data = reverted
             .data()
             .iter()
-            .map(|c| Complex::new(c.re, -c.im))
+            .map(|c| c.conjugate())
             .collect::<Vec<_>>();
         CausalMultiVector::new(conjugated_data, reverted.metric()).unwrap_or_else(|_| {
             CausalMultiVector::new(

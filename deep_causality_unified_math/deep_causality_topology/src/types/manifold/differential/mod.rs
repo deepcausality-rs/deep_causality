@@ -14,6 +14,7 @@ mod exterior;
 mod hodge;
 pub(super) mod hodge_decomposition_impl;
 mod interior_product;
+mod interior_product_simplicial;
 mod laplacian;
 mod leray;
 mod neumann_poisson;

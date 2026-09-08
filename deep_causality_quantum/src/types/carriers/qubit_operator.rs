@@ -210,7 +210,7 @@ where
                     acc += u[i * 2 + k] * u[j * 2 + k].conjugate();
                 }
                 let target = if i == j { R::one() } else { R::zero() };
-                let d = Complex::new(acc.re - target, acc.im).modulus();
+                let d = (acc - target).modulus();
                 if d > worst {
                     worst = d;
                 }

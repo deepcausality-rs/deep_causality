@@ -71,6 +71,15 @@ pub struct RidgeFit<T> {
 
 impl<T: RealField> RidgeFit<T> {
     /// Predicts the mean for one design row (intercept column included).
+    ///
+    /// # A design row of the wrong width is truncated, not refused
+    ///
+    /// Stated because it was previously only implied by a `zip`. A row shorter than `beta` drops
+    /// the trailing coefficients and a longer one drops the trailing features; either way the
+    /// answer is a prediction from a *different* model than the one that was fitted, and it comes
+    /// back as an ordinary `T` with nothing to distinguish it. Callers inside this module always
+    /// build the row from the same parent set the fit was built from, so the widths agree; a
+    /// caller that does not should check its own widths.
     pub fn predict(&self, design_row: &[T]) -> T {
         dot(&self.beta, design_row)
     }
@@ -651,10 +660,22 @@ fn design_row<T: RealField>(features: &[T]) -> Vec<T> {
 }
 
 /// Dot product over the shorter length.
+///
+/// Dispatches to `deep_causality_linear::dot` (`unified-math-next` task 6.7), with the truncation
+/// moved in front of the call rather than dropped.
+///
+/// The crate **refuses** a length mismatch, which is the right contract for an inner product and
+/// not the one this call site can honour: [`RidgeFit::predict`] returns `T` and has nowhere to put
+/// a refusal, and widening it to `Result` breaks a public API this stage is not otherwise breaking.
+/// So the truncation stays — but it is now written down here, in two visible slice bounds, instead
+/// of hiding inside a `zip` where nobody reading `predict` would find it. `predict`'s own docstring
+/// states the consequence.
+///
+/// The `unwrap_or_else` arm cannot be reached: both operands are cut to the same `n` on the line
+/// above, so the crate's length check passes by construction.
 fn dot<T: RealField>(a: &[T], b: &[T]) -> T {
-    a.iter()
-        .zip(b.iter())
-        .fold(T::zero(), |acc, (&x, &y)| acc + x * y)
+    let n = a.len().min(b.len());
+    deep_causality_linear::dot(&a[..n], &b[..n]).unwrap_or_else(|_| T::zero())
 }
 
 /// Sample mean; `0` for the empty slice.
@@ -664,6 +685,12 @@ fn dot<T: RealField>(a: &[T], b: &[T]) -> T {
 /// the mean as a constant expert prediction and a family with no rows in a regime must still score.
 /// Neither implementation guards non-finite values, so a NaN observation still yields a NaN mean.
 fn mean<T: RealField + FromPrimitive>(v: &[T]) -> T {
+    // The zero is reachable but cannot reach an answer, which a defect audit of this delegation
+    // established (`unified-math-next` task 5.19): the only caller that can hand this an empty
+    // slice is `fit_expert_guarded` on an empty regime with no parents, and an empty regime scores
+    // no rows — so the model built from the sentinel is discarded before anything is written. The
+    // sentinel is kept because `fit_expert_guarded` has no empty guard of its own and a panic here
+    // would be worse than a value nothing reads.
     deep_causality_stats::mean(v).unwrap_or_else(|_| T::zero())
 }
 

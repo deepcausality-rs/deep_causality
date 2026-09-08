@@ -55,8 +55,7 @@ where
     let s = op.as_slice();
     let mut tr = Complex::new(R::zero(), R::zero());
     for i in 0..d {
-        let c = s[i * d + i];
-        tr = Complex::new(tr.re + c.re, tr.im + c.im);
+        tr += s[i * d + i];
     }
     Ok(tr)
 }
@@ -251,8 +250,7 @@ where
             let mut acc = Complex::new(R::zero(), R::zero());
             for t in 0..d_tr {
                 let t_off = offset(&traced_legs, t);
-                let c = s[(row_base + t_off) * d + (col_base + t_off)];
-                acc = Complex::new(acc.re + c.re, acc.im + c.im);
+                acc += s[(row_base + t_off) * d + (col_base + t_off)];
             }
             out[rk * d_keep + ck] = acc;
         }

@@ -67,6 +67,17 @@ exclude_re = [
     "replace > with >= in log_add_exp",
     "replace > with >= in fit_logistic",
 
+    # `sort_desc_3`'s three-comparison network, `if a[k] < a[k+1] { swap }` versus `<=`. On a tie
+    # the `<=` branch swaps two equal values, which is not observable: the array is of values and
+    # carries no index. `NaN` does not separate them either — both `NaN < x` and `NaN <= x` are
+    # false, so the two forms take the same branch there too.
+    "replace < with <= in sort_desc_3",
+
+    # `eigen_symmetric_3x3`'s `acos` clamp, `if r < -1 { r = -1 }` and `if r > 1 { r = 1 }` versus
+    # `<=` / `>=`. At exactly `±1` the assignment writes the value the variable already holds.
+    "replace < with <= in eigen_symmetric_3x3",
+    "replace > with >= in eigen_symmetric_3x3",
+
     # `Complex`'s scaled modulus orders its two components with `if a > b { (a, b) } else { (b, a) }`
     # before dividing the smaller by the larger. Same argument: on a tie the two branches select
     # different *branches* and produce the same *pair*, since `a == b` makes `(a, b)` and `(b, a)`
@@ -210,6 +221,15 @@ exclude_re = [
 # broad enough to catch one of these also catches a dozen of its neighbours that the suite does
 # kill. Hiding a caught mutant costs a tripwire, which is worth more than a tidy report.
 #
+# `small.rs:326:35: replace + with - in eigen_symmetric_3x3` — the second root is taken at
+# `phi + 2π/3` and the third recovered from the trace. The three roots of the characteristic cubic
+# sit at `phi`, `phi + 2π/3` and `phi − 2π/3`, so the mutant computes a different *member* of the
+# same three and the trace recovers whichever one is left over; the returned array is sorted, so
+# the output is identical. Confirmed rather than argued: the mutant passes the 200-matrix agreement
+# against cyclic Jacobi and all three characteristic invariants, which is what it would break if the
+# root set had moved. Left in the report because `replace \+ with - in eigen_symmetric_3x3` matches
+# thirteen mutants in that function and the suite kills the other twelve.
+
 # Two entries used to be in the array above and were exactly that mistake.
 # `replace \+ with \* in solve_least_squares` argued for one loop bound and excluded nine mutants,
 # eight of them the index arithmetic `k * n + i`, `i * n + j` and `lf[i * n + i]`, which change the

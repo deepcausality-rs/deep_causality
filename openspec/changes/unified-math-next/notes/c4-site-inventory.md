@@ -153,3 +153,45 @@ Two behaviours must survive the collapse, both currently implicit:
   **panics**. The spec requires the collapsed version match the pre-collapse behaviour "rather than a
   newly introduced error"; the pre-collapse behaviour is a panic, and whether to keep it is a decision
   for the maintainer rather than something to settle silently while collapsing.
+
+## G. Disposition — every site, resolved
+
+Added when task 6.7 closed. Sections A and B are complete; C, D and E were resolved earlier.
+
+| Class | Sites | Disposition |
+|---|---|---|
+| **A. replace** | 5 max-modulus residuals, `frobenius_norm` | migrated onto `max_modulus` and `vector_norm_l2` (6.7a) |
+| | 2 `apply_csr_real` | `CsrMatrix::vec_mult` (6.7d) |
+| | ~12 quantum complex-arithmetic sites | **20 across 9 files**, all migrated to `Complex`'s operators, `ComplexField::conjugate`, `Normed::modulus` and `vector_norm_sq` (6.7s) |
+| | 3 `[R; 3]` Euclidean norms | `vector_norm_l2` — a correctness change, not a consolidation: each was `(x² + y² + z²).sqrt()` (6.7r) |
+| **B. move-in** | `dot` (4 callers) | `dot` + `dot_n` in `algorithms/small.rs`; the three fixed-array callers take `dot_n` (6.7p) |
+| | `determinant_3x3`, `trace_of_square`, `double_dot` | moved and dispatched (6.7p, 6.7q) |
+| | `csr_i8_vec_mult` | moved as `CsrMatrix::vec_mult_real` (6.7d) |
+| | `eigen_symmetric_3x3` | moved; the caller is a dispatch that carries the `√ε` accuracy note (6.7q) |
+| | `inverse_3x3`, `inverse_4x4` | moved; each caller keeps its own near-singularity threshold (6.7p, 6.7q) |
+| | `mat3_vec` | moved and dispatched (6.7r) |
+| **C. replace-with-care** | eskf `mat_mul` / `mat_vec` | **kept** on a 4.31× measurement (6.9). Its `dot` did migrate — 6.9's reason was `DenseMatrix`'s allocation and by-value `Mul`, which `dot_n` does not have |
+| | `apply_csr_real` behaviour change | migrated, with the new `LengthMismatch` refusal pinned (6.7d) |
+| **D. keep** | all | each carries its reason at the site (6.10) |
+
+### Two corrections to this document
+
+* The quantum complex-arithmetic count was **"roughly a dozen"**; the sweep that closed it found **20 sites across 9 files**. The three the inventory missed are `qgates/gates.rs`'s `dag`, `qgates/bridge.rs`'s reversion signs, and `carriers/qubit_operator.rs`'s unitarity defect.
+* `eigen_symmetric_3x3` was listed as "1 caller, plus the general `eigen_hermitian` path it becomes a fast case of". The second half is **withdrawn**: `eigen_hermitian` returns eigen*vectors* as well as eigenvalues, and Smith's closed form gives only the values, so it cannot serve as a fast case without a second algorithm for the vectors. The two now sit side by side, and the closed form's `√ε` accuracy at a degenerate spectrum — which `eigen_hermitian` does not share — is a further reason to keep them distinct rather than to dispatch between them.
+
+### The induction kernel, closed
+
+`ideal_induction_kernel` is the one site section A could not resolve by replacement, because the
+operator it wanted does not exist. Task 6.7u closes it by changing the formulation rather than the
+call: the contraction moves to `Manifold::interior_product`, implemented for simplicial complexes by
+**Whitney interpolation**, which needs no Hodge star.
+
+That was forced rather than preferred. The star–wedge route 6.7i proposed needs `⋆₂` on a simplicial
+complex, and the crate's simplicial `⋆` returns the dual/primal ratio only at the endpoint grades —
+`|σ|` in between, measured as `O(h²)` for `⋆₂` where a Hodge star on 2-forms must be `O(h⁻¹)`. See
+`openspec/notes/simplicial_hodge_star/`. So 6.7i's "needs a simplicial wedge and primal transport"
+was an undercount: it also needed a Hodge star that is not there.
+
+### Two dependency edges added
+
+`cfd → linear` and `algorithms → linear`, plus `avionics_examples → linear`. Neither is a tier change: `cfd → physics → linear` and `algorithms → stats → linear` both already existed.

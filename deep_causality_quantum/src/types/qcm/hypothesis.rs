@@ -456,15 +456,13 @@ where
         // Tr(σ τ) = Σ_ij σ_ij τ_ji.
         let s = joint.as_slice();
         let t = instrument.as_slice();
-        let (mut re, mut im) = (R::zero(), R::zero());
+        let mut tr = Complex::new(R::zero(), R::zero());
         for i in 0..d {
             for j in 0..d {
-                let a = s[i * d + j];
-                let b = t[j * d + i];
-                re += a.re * b.re - a.im * b.im;
-                im += a.re * b.im + a.im * b.re;
+                tr += s[i * d + j] * t[j * d + i];
             }
         }
+        let (re, im) = (tr.re, tr.im);
         // A NaN compares false against every threshold, so the finiteness test runs first.
         if !re.is_finite() || !im.is_finite() {
             return Err(QuantumError::NonFiniteValue(format!(

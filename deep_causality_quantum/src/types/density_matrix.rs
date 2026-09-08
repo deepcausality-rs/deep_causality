@@ -13,7 +13,8 @@ use crate::types::qgates::operator_linalg::{
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{ComplexField, Normed, RealField};
+use deep_causality_linear::vector_norm_sq;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
@@ -97,7 +98,11 @@ where
         }
 
         let tr = matrix_trace(&matrix)?;
-        let tr_defect = ((tr.re - R::one()) * (tr.re - R::one()) + tr.im * tr.im).sqrt();
+        // |Tr(ρ) − 1|, through the scaled modulus (`unified-math-next` task 6.7). The open-coded
+        // `√(re² + im²)` it replaces squares before it roots, so it reported `inf` for a defect
+        // that is representable — on a quantity compared against a tolerance, that is a rejection
+        // where the answer was finite.
+        let tr_defect = (tr - Complex::new(R::one(), R::zero())).modulus();
         if tr_defect > eps {
             return Err(QuantumError::NonUnitTrace(format!(
                 "trace = ({:?}, {:?})",
@@ -130,9 +135,7 @@ where
                 "ket contains a non-finite entry".into(),
             ));
         }
-        let norm_sq = ks
-            .iter()
-            .fold(R::zero(), |acc, c| acc + c.re * c.re + c.im * c.im);
+        let norm_sq = vector_norm_sq(ks);
         if norm_sq <= R::epsilon() {
             return Err(QuantumError::NormalizationError(
                 "cannot form a state from a (near-)zero ket".into(),
@@ -143,13 +146,8 @@ where
         let mut data = vec![Complex::new(R::zero(), R::zero()); d * d];
         for i in 0..d {
             for j in 0..d {
-                let a = ks[i];
-                let b = ks[j];
                 // a · conj(b) / ⟨ψ|ψ⟩
-                data[i * d + j] = Complex::new(
-                    (a.re * b.re + a.im * b.im) * inv,
-                    (a.im * b.re - a.re * b.im) * inv,
-                );
+                data[i * d + j] = ks[i] * ks[j].conjugate() * inv;
             }
         }
         Self::new(CausalTensor::from_slice(&data, &[d, d]))
@@ -205,7 +203,7 @@ where
             }
             let a = acc.as_mut().expect("initialized above");
             for (o, v) in a.iter_mut().zip(pure.matrix.as_slice()) {
-                *o = Complex::new(o.re + *p * v.re, o.im + *p * v.im);
+                *o += *v * *p;
             }
         }
         Self::new(CausalTensor::from_slice(
@@ -227,11 +225,7 @@ where
             )));
         }
         let inv = R::one() / tr.re;
-        let data: Vec<Complex<R>> = choi
-            .as_slice()
-            .iter()
-            .map(|c| Complex::new(c.re * inv, c.im * inv))
-            .collect();
+        let data: Vec<Complex<R>> = choi.as_slice().iter().map(|c| *c * inv).collect();
         Self::new(CausalTensor::from_slice(&data, &[d, d]))
     }
 }
@@ -253,11 +247,9 @@ impl<R: RealField> DensityMatrix<R> {
     /// The purity `Tr(ρ²)` — `1` exactly for a pure state, `1/d` for the
     /// maximally mixed state.
     pub fn purity(&self) -> R {
-        // Tr(ρ²) = Σ_ij ρ_ij·ρ_ji = Σ_ij |ρ_ij|² for Hermitian ρ.
-        self.matrix
-            .as_slice()
-            .iter()
-            .fold(R::zero(), |acc, c| acc + c.re * c.re + c.im * c.im)
+        // Tr(ρ²) = Σ_ij ρ_ij·ρ_ji = Σ_ij |ρ_ij|² for Hermitian ρ — the squared Euclidean norm of
+        // the entries read as one vector, which is what the crate's `vector_norm_sq` takes.
+        vector_norm_sq(self.matrix.as_slice())
     }
 
     /// Whether the state is pure within `tol`: `|Tr(ρ²) − 1| ≤ tol`.

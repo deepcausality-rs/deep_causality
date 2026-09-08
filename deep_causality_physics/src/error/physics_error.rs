@@ -168,6 +168,26 @@ impl From<deep_causality_linear::LinearError> for PhysicsError {
     }
 }
 
+impl From<deep_causality_topology::TopologyError> for PhysicsError {
+    /// Maps a topology refusal onto this crate's error.
+    ///
+    /// Added with the induction kernel's move onto `Manifold::interior_product`
+    /// (`unified-math-next` task 6.7u). Shape and grade complaints read as `DimensionMismatch`;
+    /// a degenerate tetrahedron, a missing metric or an absent coordinate slab are all
+    /// `CalculationError`, since from a kernel's point of view the operator could not be formed.
+    fn from(error: deep_causality_topology::TopologyError) -> Self {
+        use deep_causality_topology::TopologyErrorEnum;
+        let message = format!("{error}");
+        match error.0 {
+            TopologyErrorEnum::DimensionMismatch(_)
+            | TopologyErrorEnum::InvalidGradeOperation(_)
+            | TopologyErrorEnum::IndexOutOfBounds(_)
+            | TopologyErrorEnum::SimplexNotFound => Self::DimensionMismatch(message),
+            _ => Self::CalculationError(message),
+        }
+    }
+}
+
 impl From<deep_causality_stats::StatsError> for PhysicsError {
     fn from(error: deep_causality_stats::StatsError) -> Self {
         use deep_causality_stats::StatsErrorEnum;

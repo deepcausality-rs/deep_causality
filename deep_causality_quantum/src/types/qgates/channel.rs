@@ -25,18 +25,10 @@ use crate::types::qgates::operator_linalg::{
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
-use deep_causality_algebra::RealField;
+use deep_causality_algebra::{ComplexField, RealField};
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
-
-fn cmul<R: RealField>(a: Complex<R>, b: Complex<R>) -> Complex<R> {
-    Complex::new(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re)
-}
-
-fn conj<R: RealField>(a: Complex<R>) -> Complex<R> {
-    Complex::new(a.re, -a.im)
-}
 
 /// Rejects a non-finite or negative validation tolerance. A NaN/∞ `tol` makes
 /// every `defect > tol` and `eigenvalue < -tol` comparison vacuously false, which
@@ -84,12 +76,10 @@ where
                 let a = ks[jj * d_in + i]; // K[j, i]
                 for k in 0..d_in {
                     for l in 0..d_out {
-                        let b = conj(ks[l * d_in + k]); // conj(K[l, k])
+                        let b = ks[l * d_in + k].conjugate(); // conj(K[l, k])
                         let row = i * d_out + jj;
                         let col = k * d_out + l;
-                        let v = cmul(a, b);
-                        let cur = j[row * d + col];
-                        j[row * d + col] = Complex::new(cur.re + v.re, cur.im + v.im);
+                        j[row * d + col] += a * b;
                     }
                 }
             }
@@ -160,7 +150,7 @@ where
         for i in 0..d_in {
             for jj in 0..d_out {
                 let v = vs[(i * d_out + jj) * d + idx];
-                k_data[jj * d_in + i] = Complex::new(v.re * scale, v.im * scale);
+                k_data[jj * d_in + i] = v * scale;
             }
         }
         kraus.push(CausalTensor::from_slice(&k_data, &[d_out, d_in]));
@@ -205,7 +195,7 @@ where
             .and_then(|krho| krho.matmul(&k.dagger()?))
             .map_err(|e| QuantumError::CalculationError(format!("matmul: {:?}", e)))?;
         for (o, v) in out.iter_mut().zip(t.as_slice()) {
-            *o = Complex::new(o.re + v.re, o.im + v.im);
+            *o += *v;
         }
     }
     Ok(CausalTensor::from_slice(&out, &[d_out, d_out]))
@@ -240,8 +230,7 @@ where
             let mut acc = Complex::new(R::zero(), R::zero());
             for i in 0..d_in {
                 for k in 0..d_in {
-                    let v = cmul(rs[i * d_in + k], js[(i * d_out + jj) * d + (k * d_out + l)]);
-                    acc = Complex::new(acc.re + v.re, acc.im + v.im);
+                    acc += rs[i * d_in + k] * js[(i * d_out + jj) * d + (k * d_out + l)];
                 }
             }
             out[jj * d_out + l] = acc;
@@ -523,11 +512,8 @@ where
                     let mut acc = Complex::new(R::zero(), R::zero());
                     for b in 0..d_b {
                         for bp in 0..d_b {
-                            let v = cmul(
-                                es[(a * d_b + b) * de + (ap * d_b + bp)],
-                                fs[(b * d_c + c) * df + (bp * d_c + cp)],
-                            );
-                            acc = Complex::new(acc.re + v.re, acc.im + v.im);
+                            acc += es[(a * d_b + b) * de + (ap * d_b + bp)]
+                                * fs[(b * d_c + c) * df + (bp * d_c + cp)];
                         }
                     }
                     out[(a * d_c + c) * n + (ap * d_c + cp)] = acc;

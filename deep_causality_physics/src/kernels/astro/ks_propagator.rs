@@ -24,6 +24,7 @@
 
 use crate::PhysicsError;
 use deep_causality_algebra::RealField;
+use deep_causality_linear::dot_n;
 use deep_causality_num::FromPrimitive;
 
 /// An exact 3-D two-body (Kepler) propagator via KS regularisation, built from a single physical
@@ -240,8 +241,13 @@ where
         ]
     }
 
+    /// The inner product of two KS 4-vectors.
+    ///
+    /// Dispatches to `deep_causality_linear::dot_n` (`unified-math-next` task 6.7). The
+    /// const-generic form rather than the slice form, because `[R; 4]` already proves the lengths
+    /// agree and the slice form's refusal would be an error arm no input here can reach.
     fn dot4(x: &[R; 4], y: &[R; 4]) -> R {
-        x[0] * y[0] + x[1] * y[1] + x[2] * y[2] + x[3] * y[3]
+        dot_n(x, y)
     }
 
     fn lit(x: f64) -> Result<R, PhysicsError> {

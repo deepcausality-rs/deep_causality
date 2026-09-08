@@ -35,6 +35,7 @@ mod hodge_decomposition_property_tests;
 #[cfg(test)]
 mod hodge_decomposition_tests;
 #[cfg(test)]
+mod interior_product_simplicial_tests;
 mod interior_product_tests;
 #[cfg(test)]
 mod leray_constrained_tests;

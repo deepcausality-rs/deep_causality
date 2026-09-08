@@ -32,6 +32,7 @@
 //!   2nd ed., Artech House (2013) — the error-state (ψ-angle) INS model and the `t²`/`t³` drift laws.
 
 use deep_causality_algebra::RealField;
+use deep_causality_linear::vector_norm_l2;
 
 /// The 17-element strapdown-INS error state carried through the filter.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -181,10 +182,11 @@ where
     }
 
     /// The Euclidean norm of the position error — the scalar drift the closed-loop gate reads.
+    ///
+    /// Dispatches to `deep_causality_linear::vector_norm_l2` (`unified-math-next` task 6.7), which
+    /// factors the largest component out before squaring — so the gate reads a finite drift where
+    /// the open-coded `(x² + y² + z²).sqrt()` would have reported `inf`.
     pub fn position_error_norm(&self) -> R {
-        (self.position[0] * self.position[0]
-            + self.position[1] * self.position[1]
-            + self.position[2] * self.position[2])
-            .sqrt()
+        vector_norm_l2(&self.position)
     }
 }

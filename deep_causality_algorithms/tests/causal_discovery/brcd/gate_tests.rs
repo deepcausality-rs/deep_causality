@@ -30,6 +30,41 @@ fn symmetric_two_point_fit_matches_the_closed_form() {
 }
 
 #[test]
+fn the_intercept_is_exempt_from_the_ridge_penalty() {
+    // `Penalisation::Excluding(0)` is what keeps this a port of sklearn's default rather than a
+    // different objective, and nothing else in this file could tell it from `AllColumns`: every
+    // other fixture is balanced, and on a balanced set the unpenalised intercept is zero anyway —
+    // which is exactly where penalising it changes nothing.
+    //
+    // Here the feature carries no information (every row is x = 0), so the weight is pinned at zero
+    // by the penalty and the whole fit is the intercept. Eight positives against two negatives:
+    //
+    //   * exempt      → the intercept maximises the plain likelihood, b = logit(0.8) = ln 4, so the
+    //                   gate at x = 0 is the base rate, 0.8 exactly.
+    //   * penalised   → b solves 8 − 10·σ(b) − b = 0, giving b ≈ 0.897 and a gate of ≈ 0.711 —
+    //                   the base rate discarded and the odds shrunk toward even.
+    let rows = vec![vec![0.0]; 10];
+    let y = [true, true, true, true, true, true, true, true, false, false];
+    let g = fit(&rows, &y);
+
+    assert!(
+        (g.predict_proba(&[0.0]) - 0.8).abs() < 1e-4,
+        "the gate at x = 0 must be the base rate 0.8, got {}",
+        g.predict_proba(&[0.0])
+    );
+    assert!(
+        (g.bias() - 4.0_f64.ln()).abs() < 1e-4,
+        "the intercept must be logit(0.8) = ln 4, got {}",
+        g.bias()
+    );
+    assert!(
+        g.weights()[0].abs() < 1e-9,
+        "an uninformative feature is shrunk to zero, got {}",
+        g.weights()[0]
+    );
+}
+
+#[test]
 fn separable_data_orders_probabilities_by_feature() {
     // A cleanly separable 1-D set: negatives on the left, positives on the right.
     let rows = vec![

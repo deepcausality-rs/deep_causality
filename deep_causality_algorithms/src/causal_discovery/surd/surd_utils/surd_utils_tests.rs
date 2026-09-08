@@ -132,6 +132,40 @@ fn test_entropy_nvars_cdl_all_zero_returns_zero() {
     assert_eq!(h, 0.0);
 }
 
+#[test]
+fn test_entropy_nvars_cdl_discards_mass_below_epsilon_after_normalising() {
+    // The CDL path is the one place in the workspace that uses `ZeroPolicy::SkipBelow(ε)` rather
+    // than `SkipZero`, and the difference only shows on an entry that is positive but, once the
+    // distribution is normalised, lands below `f64::EPSILON`. Nothing else in this suite has one,
+    // so the choice between the two policies was unpinned.
+    //
+    // `(1, 1e-17)` normalises to about `(1, 1e-17)`. The first term contributes `−1·log₂1 = 0`, so
+    // the whole entropy is the second — and under `SkipBelow(ε)` that term is numerical residue
+    // rather than mass, so it is dropped and the answer is exactly zero. Under `SkipZero` it would
+    // be counted, at `−1e-17·log₂(1e-17) ≈ 5.6e-16`.
+    let data: Vec<Option<f64>> = vec![Some(1.0), Some(1e-17)];
+    let p = CausalTensor::new(data, vec![2]).unwrap();
+
+    let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
+    assert_eq!(
+        h, 0.0,
+        "normalised mass below epsilon is residue, not a symbol"
+    );
+}
+
+#[test]
+fn test_entropy_nvars_cdl_counts_mass_above_epsilon() {
+    // The other side of the same threshold, so the test above cannot be satisfied by a policy that
+    // simply discards every small entry. `(1, 1e-6)` normalises to about `(1, 1e-6)`, and
+    // `−1e-6·log₂(1e-6) ≈ 1.99e-5` — small, above epsilon, and counted.
+    let data: Vec<Option<f64>> = vec![Some(1.0), Some(1e-6)];
+    let p = CausalTensor::new(data, vec![2]).unwrap();
+
+    let h = surd_utils_cdl::entropy_nvars_cdl(&p, &[0]).unwrap();
+    assert!(h > 1e-5, "mass above epsilon must contribute, got {h}");
+    assert!(h < 3e-5, "and it is the only contribution, got {h}");
+}
+
 // ---------------------------------------------------------------------------
 // surd_utils_cdl: shape-mismatch error branches
 // ---------------------------------------------------------------------------

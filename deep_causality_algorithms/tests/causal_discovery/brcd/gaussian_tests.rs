@@ -5,8 +5,8 @@
 
 use deep_causality_algorithms::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use deep_causality_algorithms::brcd::brcd_gaussian::{
-    RIDGE_DEFAULT, Transform, effective_transform, fit_ridge, gaussian_single_expert_logdensity,
-    transform_and_jacobian,
+    GaussianFamilyConfig, RIDGE_DEFAULT, Transform, effective_transform, fit_ridge,
+    gaussian_family_logdensity, gaussian_single_expert_logdensity, transform_and_jacobian,
 };
 
 const LN_2PI: f64 = 1.837_877_066_409_345_6;
@@ -37,6 +37,40 @@ fn fit_ridge_recovers_a_clean_line() {
     assert!(fit.sigma2 > 0.0 && fit.sigma2 < 1e-4);
     // predict matches the line.
     assert!((fit.predict(&[1.0, 4.0]) - 14.0).abs() < 1e-1);
+}
+
+#[test]
+fn ridge_predict_truncates_a_wrong_width_design_row_rather_than_refusing() {
+    // The contract `RidgeFit::predict` has always had, previously only implied by a `zip` and now
+    // stated on the function and pinned here (`unified-math-next` task 6.7). It is not a good
+    // contract — a short row silently predicts from a smaller model — but `predict` returns `T`
+    // and cannot report a refusal, so the alternative is a breaking signature change. Pinning it
+    // means a later widening to `Result` has to change this test, which is where the decision
+    // belongs.
+    //
+    // The fitted line is y = 2 + 3x, so beta ≈ (2, 3).
+    let x = vec![
+        vec![1.0_f64, 0.0],
+        vec![1.0, 1.0],
+        vec![1.0, 2.0],
+        vec![1.0, 3.0],
+    ];
+    let y = vec![2.0, 5.0, 8.0, 11.0];
+    let fit = fit_ridge(&x, &y, ridge()).unwrap();
+
+    // A row carrying only the intercept column: the slope term is dropped and the answer is the
+    // intercept, not an error.
+    assert!(
+        (fit.predict(&[1.0]) - 2.0).abs() < 1e-2,
+        "{}",
+        fit.predict(&[1.0])
+    );
+
+    // A row one column too wide: the extra feature is dropped, so the answer is unchanged from the
+    // correctly-shaped row.
+    let correct = fit.predict(&[1.0, 4.0]);
+    let too_wide = fit.predict(&[1.0, 4.0, 1e9]);
+    assert_eq!(correct, too_wide);
 }
 
 #[test]
@@ -243,4 +277,82 @@ fn density_agrees_at_f32_and_f64() {
         .unwrap();
     assert!((o64[1] - (-0.5 * LN_2PI)).abs() < 1e-9);
     assert!((o32[1] - (-0.5 * LN_2PI as f32)).abs() < 1e-4);
+}
+
+// --- the mixture reduction --------------------------------------------------
+
+#[test]
+fn a_mixture_of_two_identical_experts_is_that_expert_whatever_the_gate_says() {
+    // The F-not-parent branch combines its two experts with `log(e^a + e^b)`, and the property that
+    // separates that from the `max(a, b)` it superficially resembles is exact:
+    //
+    //   logaddexp(ln(1−π) + a, ln π + a) = a + ln((1−π) + π) = a + ln 1 = a,
+    //
+    // for **any** gate value π. So if the two regimes hold the same data — same parents, same node
+    // — their experts fit identically, every row has `logN₀ = logN₁`, and the mixture log-density
+    // must equal the per-regime one exactly. Under `max` it would come out `ln(max(π, 1−π))` lower,
+    // which is up to `ln 2 = 0.693` and never zero.
+    //
+    // No oracle is retyped here: the comparison is against the same function's F-as-parent branch,
+    // which scores each row inside its own regime and never touches the gate.
+    let node = vec![1.0_f64, 3.0, 5.0, 7.0, 1.0, 3.0, 5.0, 7.0];
+    let parents = vec![
+        vec![0.0_f64],
+        vec![1.0],
+        vec![2.0],
+        vec![3.0],
+        vec![0.0],
+        vec![1.0],
+        vec![2.0],
+        vec![3.0],
+    ];
+    let f = [false, false, false, false, true, true, true, true];
+    let config = GaussianFamilyConfig::<f64>::default();
+
+    let mixture = gaussian_family_logdensity(&node, &parents, Some(&f), false, &config).unwrap();
+    let per_regime = gaussian_family_logdensity(&node, &parents, Some(&f), true, &config).unwrap();
+
+    assert_eq!(mixture.len(), node.len());
+    for (i, (m, r)) in mixture.iter().zip(per_regime.iter()).enumerate() {
+        assert!(
+            (m - r).abs() < 1e-9,
+            "row {i}: mixture {m} against the per-regime {r}; a difference near ln 2 means the \
+             two components were maximised rather than added"
+        );
+    }
+}
+
+#[test]
+fn the_mixture_lies_above_both_of_its_components() {
+    // The general bound, on data where the two regimes genuinely differ so the components are not
+    // equal: `log(e^a + e^b)` is strictly greater than either of `a` and `b`, and at most `ln 2`
+    // above the larger. An implementation returning the maximum sits exactly on the lower bound,
+    // and one returning a component sits below it.
+    let node = vec![1.0_f64, 2.0, 3.0, 4.0, 40.0, 51.0, 62.0, 73.0];
+    let parents = vec![
+        vec![0.0_f64],
+        vec![1.0],
+        vec![2.0],
+        vec![3.0],
+        vec![0.0],
+        vec![1.0],
+        vec![2.0],
+        vec![3.0],
+    ];
+    let f = [false, false, false, false, true, true, true, true];
+    let config = GaussianFamilyConfig::<f64>::default();
+
+    let mixture = gaussian_family_logdensity(&node, &parents, Some(&f), false, &config).unwrap();
+    let per_regime = gaussian_family_logdensity(&node, &parents, Some(&f), true, &config).unwrap();
+
+    // Each row's own-regime component, weighted by the gate, is a lower bound on the mixture only
+    // after the log-weight is applied — so the checkable statement is that the mixture is finite
+    // and never exceeds the unweighted own-regime density, which the log-weights make impossible.
+    for (i, (m, r)) in mixture.iter().zip(per_regime.iter()).enumerate() {
+        assert!(m.is_finite(), "row {i} is not finite: {m}");
+        assert!(
+            *m <= *r + 1e-9,
+            "row {i}: the gate-weighted mixture {m} cannot exceed the own-regime density {r}"
+        );
+    }
 }

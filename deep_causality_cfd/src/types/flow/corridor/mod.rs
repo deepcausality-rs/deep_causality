@@ -44,6 +44,7 @@ pub use regime::{
 pub use trajectory_nav::TrajectoryNav;
 
 use crate::CfdScalar;
+use deep_causality_linear::{dot_n, vector_norm_l2};
 
 /// The peak (maximum) of a scalar field, or `0` for an empty field.
 pub(crate) fn peak<R: CfdScalar>(xs: &[R]) -> R {
@@ -53,13 +54,21 @@ pub(crate) fn peak<R: CfdScalar>(xs: &[R]) -> R {
 }
 
 /// The Euclidean norm of a 3-vector.
+///
+/// Dispatches to `deep_causality_linear::vector_norm_l2` (`unified-math-next` task 6.7). It was
+/// `dot3(x, x).sqrt()`, which is the unscaled form: it squares before it takes the root, so a
+/// component near `R::MAX` returns `inf` for a norm that is representable and one near
+/// `R::MIN_POSITIVE` flushes to zero for a norm that is not. The crate's form factors the largest
+/// modulus out first and does neither.
 pub(crate) fn norm3<R: CfdScalar>(x: [R; 3]) -> R {
-    dot3(x, x).sqrt()
+    vector_norm_l2(&x)
 }
 
 /// The dot product of two 3-vectors.
+///
+/// `dot_n` rather than `dot`, because `[R; 3]` already proves the lengths agree.
 pub(crate) fn dot3<R: CfdScalar>(a: [R; 3], b: [R; 3]) -> R {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+    dot_n(&a, &b)
 }
 
 /// A 3-vector scaled by `s`.
