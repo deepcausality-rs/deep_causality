@@ -219,12 +219,12 @@ where
         let mut upper_t = self.t_and_radius(upper)?.0;
         while lower_t > dt {
             upper = lower;
-            lower = lower * two;
+            lower *= two;
             lower_t = self.t_and_radius(lower)?.0;
         }
         while upper_t < dt {
             lower = upper;
-            upper = upper * two;
+            upper *= two;
             upper_t = self.t_and_radius(upper)?.0;
         }
 
