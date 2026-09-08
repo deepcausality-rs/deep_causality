@@ -7,20 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_stats-v0.1.0) - 2026-09-08
+## [0.1.4](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_linear-v0.1.3...deep_causality_linear-v0.1.4) - 2026-09-08
 
 ### Added
 
-- *(deep_causality_stats)* Added SBOM and CHANGELOG.md
-- *(deep_causality_stats)* add descriptive and information statistics at tier 4
+- *(deep_causality_linear)* move the fixed-size dense forms in, and close the C4 adoption
 
 ### Fixed
 
 - *(deep_causality_unified_math)* close audited correctness holes across the unified_math stack
 - *(Bazel)* align crate features with cargo's resolution and recover 161 unrun tests
+- *(deep_causality_linear)* scale the Euclidean norms and adopt the crate across consumers
 
 ### Other
 
-- *(openspec)* Archived specs and notes for unified_math_next.
-- *(deep_causality_stats)* [**breaking**] centralize workspace statistics in the stats crate
-- *(deep_causality_stats)* improved some corner case testing.
+- *(Cargo)* Updated metadata in all crates.
