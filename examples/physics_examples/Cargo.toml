@@ -17,7 +17,7 @@ deep_causality_stats = { workspace = true, features = ["std"] }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_physics = { workspace = true, features = ["default", "os-random"] }
-deep_causality_quantum = { workspace = true }
+deep_causality_quantum = { workspace = true , features = ["default"]}
 deep_causality_multivector = { workspace = true, features = ["default"] }
 deep_causality_tensor = { workspace = true, features = ["default"] }
 deep_causality_topology = { workspace = true }
