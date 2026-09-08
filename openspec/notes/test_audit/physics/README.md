@@ -20,6 +20,8 @@ in passing, and what a dedicated change would have to take on.
 |---|---|
 | `physics-inventory.md` | The full per-file inventory for `deep_causality_physics`: 1751 tests across 190 files, classified, with the worst files ranked and the calibration recorded |
 | `audit_tests.py` | The scanner that produced it. Re-runnable; prints the class counts and writes the per-site inventory to `/tmp/audit_inv.json` |
+| `audit_tests_v2.py` | Risk-first scanner for answer-blind observations, optional assertions, unexplained oracles, discarded results, and degenerate fixtures; writes `/tmp/physics_test_audit_v2.json` |
+| `agentic-audit-comparison.md` | Rerun results for the current 1766-test tree, differences from the original scanner, manually checked findings, limitations, and repair order |
 
 ## The finding in one line
 
