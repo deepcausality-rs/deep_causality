@@ -181,7 +181,7 @@ where
         Ok((t, radius))
     }
 
-    /// Invert `t(s) = dt` by a monotone Newton iteration (`dt/ds = |u|² > 0`).
+    /// Invert `t(s) = dt` by a bracketed Newton iteration (`dt/ds = |u|² > 0`).
     ///
     /// # Two convergence tests, because each is unreachable in the other's regime
     ///
@@ -198,17 +198,9 @@ where
     /// Accepting on **either** covers both, and each is a sound statement of convergence on its own:
     /// one says the root has stopped moving, the other that `t(s)` equals `dt` to working precision.
     ///
-    /// The previous version tested only the step inside the loop and fell back to the residual once,
-    /// at whatever iterate the exhausted loop happened to land on. That made the outcome depend on
-    /// the last bits of `sin` and `cos`: the sweep in `ks_reachability_tests` converged on
-    /// macOS/aarch64 and reported `NotConverged` for `e = 0.9999, a = 7e6` on the Linux/x86_64 CI,
-    /// the two libms differing in nothing else.
-    ///
-    /// Measured over that sweep's 108 combinations after the change: **no case reaches the cap**,
-    /// 95 return on the residual and 13 on the step, and the deepest takes 80 iterations. Before
-    /// it, four cases exhausted all 100 and were decided by a residual evaluated at whichever
-    /// iterate the oscillation ended on — the margin there was a factor of five, which is about
-    /// two bits, and two bits is what a different `sin` costs.
+    /// Newton proposals are constrained to a bracket of the root. The bracket follows directly
+    /// from the monotonicity of `t(s)`, and its bisection fallback makes convergence independent of
+    /// last-bit differences in the platform implementations of `sin` and `cos`.
     fn solve_fictitious_time(&self, dt: R) -> Result<R, PhysicsError> {
         let two = Self::lit(2.0)?;
         let c_lin = (self.aa + self.bb) / two; // the s-average of |u|²; exact asymptotic slope
@@ -218,41 +210,45 @@ where
         let tol = Self::lit(8.0)? * R::epsilon();
         let bound = tol * (dt.abs() + R::one());
 
-        let mut best_s = s;
-        let mut best_residual: Option<R> = None;
+        // `t(s)` is strictly monotone. Keep every Newton proposal inside a bracket so a last-bit
+        // difference in sin/cos cannot send it into a different oscillation.
+        let zero = R::zero();
+        let mut lower = if dt >= zero { zero } else { s };
+        let mut upper = if dt >= zero { s } else { zero };
+        let mut lower_t = self.t_and_radius(lower)?.0;
+        let mut upper_t = self.t_and_radius(upper)?.0;
+        while lower_t > dt {
+            upper = lower;
+            lower = lower * two;
+            lower_t = self.t_and_radius(lower)?.0;
+        }
+        while upper_t < dt {
+            lower = upper;
+            upper = upper * two;
+            upper_t = self.t_and_radius(upper)?.0;
+        }
 
         for _ in 0..100 {
             let (t, radius) = self.t_and_radius(s)?;
             let residual = (t - dt).abs();
-            if best_residual.is_none_or(|b| residual < b) {
-                best_residual = Some(residual);
-                best_s = s;
-            }
             if residual <= bound {
                 return Ok(s);
             }
+            if t < dt {
+                lower = s;
+            } else {
+                upper = s;
+            }
             let d = (t - dt) / radius;
-            s -= d;
+            let newton = s - d;
+            s = if newton <= lower || newton >= upper {
+                (lower + upper) / two
+            } else {
+                newton
+            };
             if d.abs() < tol * (s.abs() + R::one()) {
                 return Ok(s);
             }
-        }
-
-        // The loop tests `s₀ … s₉₉`; the hundredth update produces an `s₁₀₀` it never evaluates,
-        // and for a slowly-converging case that is the best iterate of all. Fold it in before
-        // deciding — leaving it out turned four converging cases into refusals.
-        let (t, _) = self.t_and_radius(s)?;
-        let residual = (t - dt).abs();
-        if best_residual.is_none_or(|b| residual < b) {
-            best_residual = Some(residual);
-            best_s = s;
-        }
-
-        // The cap is reached only when no iterate inverted `t(s) = dt` to working precision. The
-        // best one is still the best available answer, so it is accepted on the same test rather
-        // than the arbitrary last one; the refusal is reserved for a run where even that fails.
-        if best_residual.is_some_and(|b| b <= bound) {
-            return Ok(best_s);
         }
         Err(PhysicsError::NotConverged(
             "the fictitious-time inversion t(s) = dt did not converge in 100 iterations: no \
