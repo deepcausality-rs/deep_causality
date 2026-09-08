@@ -77,3 +77,34 @@ fn package_accessors_expose_what_was_stored() {
     assert_eq!(package.section("grid").expect("grid").version(), 3);
     assert!(package.section("absent").is_none());
 }
+
+#[test]
+fn the_encoded_bytes_are_little_endian_ieee_patterns() {
+    // Every other codec test is a `read_bits(write_bits(x)) == x` round trip, which any pair of
+    // mutually inverse encodings satisfies — a big-endian pair included. Pin the bytes.
+    let mut buf = Vec::new();
+    1.0_f64.write_bits(&mut buf);
+    assert_eq!(buf, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F]);
+
+    let mut buf = Vec::new();
+    (-2.0_f32).write_bits(&mut buf);
+    assert_eq!(buf, [0x00, 0x00, 0x00, 0xC0]);
+
+    // Float106 is the two f64 limbs in order, high then low.
+    let mut buf = Vec::new();
+    Float106::from_raw(1.0, 0.5).write_bits(&mut buf);
+    assert_eq!(
+        buf,
+        [
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F, // hi = 1.0
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x3F, // lo = 0.5
+        ]
+    );
+
+    // And decoding is the same layout read back, not merely the inverse of whatever was written.
+    let mut offset = 0;
+    let back = Float106::read_bits(&buf, &mut offset).expect("reads");
+    assert_eq!(back.hi(), 1.0);
+    assert_eq!(back.lo(), 0.5);
+    assert_eq!(offset, 16);
+}

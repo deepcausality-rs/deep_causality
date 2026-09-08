@@ -123,3 +123,38 @@ fn a_single_column_table_parses() {
     assert_eq!(table.columns()[0].unit(), "Pa");
     assert_eq!(table.rows()[0][0], 101_325.0);
 }
+
+#[test]
+fn an_empty_column_name_is_an_error() {
+    let (_d, path) = write_temp("mach,,alt_km\n1.0,2.0,3.0\n");
+    let err = read_table::<f64>(&path)
+        .run()
+        .expect_err("empty column name");
+    assert!(err.to_string().contains("empty column name"), "{err}");
+}
+
+#[test]
+fn a_units_row_below_the_first_data_row_is_an_error() {
+    // The units row annotates the header, so it is only meaningful before any data row.
+    let (_d, path) = write_temp("mach,alt_km\n1.0,2.0\n#units,-,km\n");
+    let err = read_table::<f64>(&path).run().expect_err("late units row");
+    let msg = err.to_string();
+    assert!(msg.contains("directly after the header"), "{msg}");
+    assert!(msg.contains("row 3"), "{msg}");
+}
+
+#[test]
+fn blank_lines_and_comments_do_not_shift_the_reported_row_number() {
+    // The module's stated contract: insignificant lines vanish before row counting, so an error
+    // row is stable under reformatting. The same bad cell is reported as row 3 either way.
+    let (_d, plain) = write_temp("a,b\n1.0,2.0\n3.0,bad\n");
+    let err = read_table::<f64>(&plain).run().expect_err("bad cell");
+    assert!(err.to_string().contains("row 3"), "{err}");
+
+    let (_d, spaced) = write_temp("a,b\n\n# a note\n1.0,2.0\n\n# another note\n\n3.0,bad\n");
+    let err = read_table::<f64>(&spaced).run().expect_err("bad cell");
+    assert!(
+        err.to_string().contains("row 3"),
+        "row number shifted by insignificant lines: {err}"
+    );
+}

@@ -4,7 +4,7 @@
  */
 
 //! Integration test: the IO-monad loaders parse the real Galileo E14 SP3/CLK products bundled with
-//! the chronometric examples. Skips gracefully if the data fixtures are not present.
+//! the chronometric examples.
 
 use deep_causality_file::{read_clock_data, read_gnss_single_satellite, read_orbit_data};
 use deep_causality_haft::IoAction;
@@ -14,18 +14,24 @@ use std::path::PathBuf;
 ///
 /// `env!("CARGO_MANIFEST_DIR")` would embed the compile-time path, which under Bazel names a
 /// rustc sandbox that is gone by the time the test runs; rules_rs rejects the resulting
-/// artifact. Cargo exports `CARGO_MANIFEST_DIR` into the test process, so it is read there
-/// instead. Under `bazel test` neither variable is set and the fixtures are not declared as
-/// data, so the path does not resolve and the test skips, which is the behaviour it already had.
+/// artifact. Both runners therefore export the location into the test process instead: Bazel as
+/// `TEST_SRCDIR`/`TEST_WORKSPACE` naming the runfiles tree that carries
+/// `//examples/chronometric_examples:gnss_e14_fixtures`, and Cargo as `CARGO_MANIFEST_DIR`.
 fn data_dir() -> PathBuf {
     const FIXTURES: &str = "examples/chronometric_examples/data/gnss";
 
-    if let Some(workspace_root) = std::env::var_os("BUILD_WORKSPACE_DIRECTORY") {
-        return PathBuf::from(workspace_root).join(FIXTURES);
+    if let (Some(srcdir), Some(workspace)) = (
+        std::env::var_os("TEST_SRCDIR"),
+        std::env::var_os("TEST_WORKSPACE"),
+    ) {
+        return PathBuf::from(srcdir).join(workspace).join(FIXTURES);
     }
 
     if let Some(manifest_dir) = std::env::var_os("CARGO_MANIFEST_DIR") {
-        return PathBuf::from(manifest_dir).join("..").join(FIXTURES);
+        return PathBuf::from(manifest_dir)
+            .join("..")
+            .join("..")
+            .join(FIXTURES);
     }
 
     PathBuf::from(FIXTURES)
@@ -36,13 +42,11 @@ fn data_dir() -> PathBuf {
 fn loads_e14_clock_and_orbit_from_real_data() {
     let clk = data_dir().join("gbm18770.clk");
     let sp3 = data_dir().join("gbm18770.sp3");
-    if !clk.exists() || !sp3.exists() {
-        eprintln!(
-            "skipping: Galileo fixtures not present at {}",
-            data_dir().display()
-        );
-        return;
-    }
+    // The fixtures are tracked in git and declared as Bazel test data, so absence is a broken
+    // runner, not a reason to pass: an earlier version returned here and reported success while
+    // exercising nothing.
+    assert!(clk.exists(), "missing fixture {}", clk.display());
+    assert!(sp3.exists(), "missing fixture {}", sp3.display());
 
     // Lazy IO descriptions — nothing reads until `.run()`.
     let clocks = read_clock_data::<f64>(&clk, "E14").run().expect("clk load");

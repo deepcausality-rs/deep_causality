@@ -6,6 +6,7 @@
 use chrono::NaiveDate;
 use deep_causality_file::{DataLoadingError, OrbitData, ReadOrbitData, read_orbit_data};
 use deep_causality_haft::IoAction;
+use std::fs;
 use std::io::Write;
 use std::path::Path;
 use tempfile::NamedTempFile;
@@ -186,6 +187,56 @@ fn test_invalid_z_coordinate_is_parse_error() {
 }
 
 #[test]
+fn test_each_epoch_line_re_dates_the_records_that_follow_it() {
+    // Every other fixture holds one epoch and one P line, so neither the re-assignment of the
+    // current epoch nor the accumulation of more than one record is observed. The times are
+    // also distinct in hour, minute and second, which the shared 0:0:0 EPOCH cannot pin.
+    let f = write_sp3(
+        "*  2016  7  1  1  2  3.00000000\n\
+         P E14  1.0  2.0  3.0\n\
+         P E18  9.0  9.0  9.0\n\
+         *  2016  7  1  4  5  6.00000000\n\
+         P E14  4.0  5.0  6.0\n",
+    );
+    let orbits = run(f.path(), "E14").unwrap();
+    assert_eq!(orbits.len(), 2);
+
+    assert_eq!(
+        orbits[0].timestamp(),
+        NaiveDate::from_ymd_opt(2016, 7, 1)
+            .unwrap()
+            .and_hms_opt(1, 2, 3)
+            .unwrap()
+    );
+    assert_eq!(orbits[0].x_m(), 1000.0);
+    assert_eq!(orbits[0].y_m(), 2000.0);
+    assert_eq!(orbits[0].z_m(), 3000.0);
+
+    assert_eq!(
+        orbits[1].timestamp(),
+        NaiveDate::from_ymd_opt(2016, 7, 1)
+            .unwrap()
+            .and_hms_opt(4, 5, 6)
+            .unwrap()
+    );
+    assert_eq!(orbits[1].x_m(), 4000.0);
+    assert_eq!(orbits[1].y_m(), 5000.0);
+    assert_eq!(orbits[1].z_m(), 6000.0);
+}
+
+#[test]
+fn test_a_position_line_before_any_epoch_is_dropped() {
+    // `current_time` starts unset, so a P line that precedes the first epoch has no timestamp
+    // to carry and must not be emitted with a substituted one.
+    let f = write_sp3(&format!(
+        "P E14  7.0  8.0  9.0\n{EPOCH}P E14  1.0  2.0  3.0\n"
+    ));
+    let orbits = run(f.path(), "E14").unwrap();
+    assert_eq!(orbits.len(), 1);
+    assert_eq!(orbits[0].x_m(), 1000.0);
+}
+
+#[test]
 fn test_missing_file_is_io_error() {
     let err = run(Path::new("/no/such/path.sp3"), "E14").unwrap_err();
     assert!(format!("{err}").contains("I/O error"));
@@ -193,5 +244,30 @@ fn test_missing_file_is_io_error() {
 
 #[test]
 fn test_read_orbit_data_returns_lazy_action() {
-    let _action: ReadOrbitData<f64> = read_orbit_data::<f64>("unread.sp3", "E14");
+    // Constructing the action performs no IO: the description is built while the path is absent,
+    // and the saved action still reads the file that is created afterwards.
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("late.sp3");
+    let action: ReadOrbitData<f64> = read_orbit_data::<f64>(&path, "E14");
+    fs::write(
+        &path,
+        format!("{EPOCH}P E14  12345.678901  -23456.789012  3456.789012\n"),
+    )
+    .unwrap();
+
+    let orbits = action
+        .run()
+        .expect("reads the file created after description");
+    assert_eq!(orbits.len(), 1);
+    assert_eq!(
+        orbits[0].timestamp(),
+        NaiveDate::from_ymd_opt(2016, 7, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+    );
+    // SP3 kilometres, converted to metres (x1000).
+    assert!((orbits[0].x_m() - 12_345_678.901).abs() < 1e-3);
+    assert!((orbits[0].y_m() - (-23_456_789.012)).abs() < 1e-3);
+    assert!((orbits[0].z_m() - 3_456_789.012).abs() < 1e-3);
 }

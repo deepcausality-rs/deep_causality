@@ -38,11 +38,25 @@ fn test_composed_loader_runs_both_reads() {
 
 #[test]
 fn test_composed_loader_short_circuits_on_clock_error() {
-    // The clock read runs first; its failure short-circuits before the orbit read.
-    let sp3 = sp3_fixture();
+    // Both files are unreadable, and both would report "I/O error", so the message alone cannot
+    // say which read ran. The sp3 here fails with a distinguishable parse error instead: seeing
+    // the clock's I/O error is then evidence the clock read ran first and short-circuited.
+    let sp3 = write_file(".sp3", "*  2016  13  1  0  0  0.0\n");
     let action = read_gnss_single_satellite::<f64>("/no/such/file.clk", sp3.path(), "E14");
     let err = action.run().unwrap_err();
-    assert!(format!("{err}").contains("I/O error"));
+    let msg = format!("{err}");
+    assert!(msg.contains("I/O error"), "{msg}");
+    assert!(
+        !msg.contains("epoch date"),
+        "the orbit read must not run: {msg}"
+    );
+
+    // The other order: a readable clock and a malformed sp3 surfaces the orbit error.
+    let clk = clk_fixture();
+    let err = read_gnss_single_satellite::<f64>(clk.path(), sp3.path(), "E14")
+        .run()
+        .unwrap_err();
+    assert!(format!("{err}").contains("epoch date"), "{err}");
 }
 
 #[test]

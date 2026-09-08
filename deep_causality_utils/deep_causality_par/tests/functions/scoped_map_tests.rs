@@ -4,11 +4,13 @@
  */
 
 //! The scoped fork-join map: order preservation, equivalence with the
-//! sequential map, borrow-friendly closures, and edge sizes. The same
-//! assertions hold with and without the `parallel` feature — run the suite
-//! in both modes.
+//! sequential map, borrow-friendly closures, edge sizes, and where the work
+//! runs. Every assertion but the last test's holds with and without the
+//! `parallel` feature — run the suite in both modes.
 
 use deep_causality_par::scoped_map;
+use std::collections::HashSet;
+use std::thread;
 
 #[test]
 fn empty_slice_yields_empty_vec() {
@@ -64,4 +66,31 @@ fn more_items_than_cores_still_covers_every_element() {
     assert_eq!(out.len(), items.len());
     assert_eq!(out.first(), Some(&1));
     assert_eq!(out.last(), Some(&4099));
+}
+
+#[test]
+fn the_work_runs_off_the_calling_thread_under_the_parallel_feature() {
+    // Both paths return the same values by construction, so no value oracle can tell them
+    // apart: an implementation that never spawns passes every other test in this file.
+    // Observe where each element was computed instead.
+    let items: Vec<usize> = (0..256).collect();
+    let caller = thread::current().id();
+    let ids = scoped_map(&items, |_| thread::current().id());
+    assert_eq!(ids.len(), items.len());
+    let distinct: HashSet<thread::ThreadId> = ids.iter().copied().collect();
+
+    let cores = thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
+    if cfg!(feature = "parallel") && cores > 1 {
+        // One scoped thread per chunk, and the caller only joins.
+        assert!(
+            distinct.len() > 1,
+            "fan-out collapsed onto {} thread(s)",
+            distinct.len()
+        );
+        assert!(!distinct.contains(&caller), "work ran on the calling thread");
+    } else {
+        // Serial build, or a machine with one core: the inline map, on this thread.
+        assert_eq!(distinct.len(), 1);
+        assert!(distinct.contains(&caller));
+    }
 }

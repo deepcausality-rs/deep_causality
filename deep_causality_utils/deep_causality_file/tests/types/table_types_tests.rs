@@ -12,9 +12,15 @@ fn construction_validates_rectangularity() {
     let cols = vec![TableColumn::new("a", ""), TableColumn::new("b", "K")];
     assert!(NumericTable::new(cols.clone(), vec![vec![1.0_f64, 2.0]]).is_some());
     assert!(NumericTable::<f64>::new(cols.clone(), vec![vec![1.0]]).is_none());
-    let empty = NumericTable::<f64>::new(cols, vec![]).expect("no rows is fine");
+    let empty = NumericTable::<f64>::new(cols.clone(), vec![]).expect("no rows is fine");
     assert!(empty.is_empty());
     assert_eq!(empty.len(), 0);
+
+    // The populated side of the same predicates: without it, `is_empty` could return a constant.
+    let filled = NumericTable::new(cols, vec![vec![1.0_f64, 2.0], vec![3.0, 4.0]])
+        .expect("two rectangular rows");
+    assert!(!filled.is_empty());
+    assert_eq!(filled.len(), 2);
 }
 
 #[test]
@@ -31,6 +37,9 @@ fn a_column_with_a_delimiter_is_not_serialization_safe() {
     assert!(!TableColumn::new("a,b", "").is_delimiter_safe());
     assert!(!TableColumn::new("x", "m,s").is_delimiter_safe());
     assert!(!TableColumn::new("x\n", "").is_delimiter_safe());
+    // The third disjunct: a lone carriage return, in either field.
+    assert!(!TableColumn::new("x\r", "").is_delimiter_safe());
+    assert!(!TableColumn::new("x", "m\r").is_delimiter_safe());
 }
 
 #[test]

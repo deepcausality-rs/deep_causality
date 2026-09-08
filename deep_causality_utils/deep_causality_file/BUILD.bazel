@@ -106,6 +106,7 @@ rust_test_suite(
 rust_test_suite(
     name = "integration",
     srcs = ["tests/load_real_galileo.rs"],
+    data = ["//examples/chronometric_examples:gnss_e14_fixtures"],
     tags = [
         "unit-test",
     ],
