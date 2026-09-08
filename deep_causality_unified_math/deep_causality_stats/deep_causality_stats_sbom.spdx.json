@@ -1,0 +1,154 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "creationInfo": {
+    "created": "2026-09-08T10:47:06Z",
+    "creators": [
+      "Tool: cargo-sbom-v0.10.0"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_stats-bcce8b15-df77-42af-b294-312d122ccc74",
+  "files": [
+    {
+      "SPDXID": "SPDXRef-File-deep_causality_stats",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "4c2b9e600bf7f92a2ce9e639f44c460a39348aba"
+        }
+      ],
+      "fileName": "./Cargo.lock",
+      "fileTypes": [
+        "SOURCE",
+        "TEXT"
+      ]
+    }
+  ],
+  "name": "deep_causality_stats",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--linear-0.1.3",
+      "description": "Linear algebra for the deep_causality crates: sparse, dense and bit-packed GF(2) matrices, vectors, and the algorithms over them.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_linear",
+      "versionInfo": "0.1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-libm-0.2.16",
+      "description": "libm in pure Rust",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/libm@0.2.16",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "libm",
+      "versionInfo": "0.2.16"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.5.1",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.5.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.5.1",
+      "description": "Number utils for for deep_causality crate.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num",
+      "versionInfo": "0.5.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--stats-0.1.0",
+      "description": "Descriptive and information statistics over slices, generic in the scalar.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_stats",
+      "versionInfo": "0.1.0"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.5.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.5.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_stats",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--linear-0.1.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--stats-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--stats-0.1.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_stats"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--stats-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.5.1"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.5.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--linear-0.1.3"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.5.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--stats-0.1.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.5.1",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.3"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}
