@@ -1,0 +1,70 @@
+---
+title: Rank the likely causes of a microservice incident from telemetry
+domain: Service reliability
+summary: Analyze 44 service metrics from normal and anomalous operation with a supplied causal graph, then report a ranked set of candidate root causes.
+order: 2
+category: foundations
+source: examples/causal_discovery_examples/cdl/brcd_discovery/main.rs
+crates:
+  - deep_causality_discovery
+  - deep_causality_algorithms
+further:
+  - label: Causal Discovery Language
+    href: /docs/concepts/cdl/
+  - label: Connect anomaly detection to causal investigation
+    href: https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_discovery_examples/ml/ml_rca
+---
+
+An incident changes latency, workload, CPU, and memory across several services. The largest change
+is not necessarily the initiating fault. This example compares normal and anomalous telemetry using
+a supplied causal graph to rank candidate root-cause metrics.
+
+The bundled RCAEval Sock Shop case contains 44 service metrics, two observation windows, a causal
+graph, and an expected ranking. The BRCD algorithm uses those inputs to compute candidate rankings
+and posterior weights. The supplied case’s expected leading metric is `shipping_latency`.
+
+## Configure and run the analysis
+
+The paths below refer to the bundled normal, anomalous, and graph CSV files. `FloatType` is `f64`
+in the example. This is the configuration and execution excerpt from `main.rs`:
+
+```rust
+let config = CdlConfigBuilder::build_brcd_config()
+    .with_normal_path(&normal_path)
+    .with_anomalous_path(&anomalous_path)
+    .with_brcd_config(BrcdConfig::<FloatType>::continuous(0))
+    .with_cpdag_path(&cpdag_path)
+    .build()
+    .expect("Sock Shop carts_cpu_1 data files exist");
+
+CdlBuilder::build_brcd(&config)
+    .brcd_load_input()
+    .brcd_discover()
+    .brcd_analyze()
+    .finalize()
+    .print_results();
+```
+
+The library handles data loading, causal ranking, analysis, and report construction. Typed stages
+control the order of operations, while errors propagate through the pipeline. The graph is an input
+to this example; a [companion example](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/causal_discovery_examples/cdl/brcd_boss_discovery/main.rs)
+learns it from data using BOSS.
+
+## Run it
+
+From the repository root:
+
+```bash
+cargo run -p causal_discovery_examples --example example_brcd_discovery
+```
+
+The case files are already in `examples/causal_discovery_examples/data/sock-shop-2/carts_cpu_1/`.
+The output is a root-cause analysis report. Its ranking depends on the supplied graph, observations,
+and algorithm assumptions; it gives an engineer candidates to investigate.
+
+## Add an anomaly detector
+
+The [Candle integration example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/causal_discovery_examples/ml/ml_rca)
+puts a learned anomaly detector in front of this analysis. A `PropagatingProcess` gates escalation
+on the detector score and carries the resulting verdict and decision log. That separates the
+question “is something wrong?” from “where should we investigate?”

@@ -4,11 +4,13 @@
  */
 
 //! The scoped fork-join map: order preservation, equivalence with the
-//! sequential map, borrow-friendly closures, and edge sizes. The same
-//! assertions hold with and without the `parallel` feature — run the suite
-//! in both modes.
+//! sequential map, borrow-friendly closures, edge sizes, and where the work
+//! runs. Every assertion but the last test's holds with and without the
+//! `parallel` feature — run the suite in both modes.
 
 use deep_causality_par::scoped_map;
+use std::collections::HashSet;
+use std::thread;
 
 #[test]
 fn empty_slice_yields_empty_vec() {
@@ -59,9 +61,52 @@ fn fallible_tasks_collect_like_a_sequential_map() {
 
 #[test]
 fn more_items_than_cores_still_covers_every_element() {
+    // 4099 is prime, so the last chunk is ragged on every core count. Comparing the whole vector
+    // rather than its length and its two ends leaves no interior slot unobserved.
     let items: Vec<i64> = (0..4099).collect();
-    let out = scoped_map(&items, |&x| x + 1);
-    assert_eq!(out.len(), items.len());
-    assert_eq!(out.first(), Some(&1));
-    assert_eq!(out.last(), Some(&4099));
+    let sequential: Vec<i64> = items.iter().map(|&x| x + 1).collect();
+    assert_eq!(scoped_map(&items, |&x| x + 1), sequential);
+}
+
+#[test]
+fn the_work_is_partitioned_into_one_chunk_per_core() {
+    // Both paths return the same values by construction, so no value oracle can tell them apart:
+    // an implementation that never spawns, or one that spawns a thread per element, passes every
+    // other test in this file. Observe where each element was computed instead.
+    let items: Vec<usize> = (0..4099).collect();
+    let caller = thread::current().id();
+    let ids = scoped_map(&items, |_| thread::current().id());
+    assert_eq!(ids.len(), items.len());
+    let distinct: HashSet<thread::ThreadId> = ids.iter().copied().collect();
+
+    let threads = thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1)
+        .min(items.len());
+
+    if cfg!(feature = "parallel") && threads > 1 {
+        // One scoped thread per contiguous chunk, and the caller only joins. A live thread's id
+        // is unique, so the distinct count is the chunk count exactly, not an estimate.
+        let chunk = items.len().div_ceil(threads);
+        assert_eq!(
+            distinct.len(),
+            items.len().div_ceil(chunk),
+            "one thread per chunk"
+        );
+        // The contract the chunk size exists to keep: the fan-out is bounded by the core count,
+        // however the partition is computed.
+        assert!(
+            distinct.len() <= threads,
+            "spawned {} threads on {threads} cores",
+            distinct.len()
+        );
+        assert!(
+            !distinct.contains(&caller),
+            "work ran on the calling thread"
+        );
+    } else {
+        // Serial build, or a machine with one core: the inline map, on this thread.
+        assert_eq!(distinct.len(), 1);
+        assert!(distinct.contains(&caller));
+    }
 }

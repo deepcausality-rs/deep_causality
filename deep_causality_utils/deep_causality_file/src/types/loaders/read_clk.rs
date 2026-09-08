@@ -66,12 +66,21 @@ where
             let sat_id = parts[1];
 
             if sat_id == target_sat {
-                let year = parts[2].parse::<i32>().unwrap_or(0);
-                let month = parts[3].parse::<u32>().unwrap_or(0);
-                let day = parts[4].parse::<u32>().unwrap_or(0);
-                let hour = parts[5].parse::<u32>().unwrap_or(0);
-                let min = parts[6].parse::<u32>().unwrap_or(0);
-                let sec = parts[7].parse::<f64>().unwrap_or(0.0) as u32;
+                // A date or time field that does not parse makes the record malformed, so it is
+                // skipped like any other. Substituting 0 would date the sample at year 0 or at
+                // midnight, which a consumer cannot tell apart from a real reading.
+                let fields = (
+                    parts[2].parse::<i32>(),
+                    parts[3].parse::<u32>(),
+                    parts[4].parse::<u32>(),
+                    parts[5].parse::<u32>(),
+                    parts[6].parse::<u32>(),
+                    parts[7].parse::<f64>(),
+                );
+                let (Ok(year), Ok(month), Ok(day), Ok(hour), Ok(min), Ok(sec)) = fields else {
+                    continue;
+                };
+                let sec = sec as u32;
 
                 let time = match NaiveDate::from_ymd_opt(year, month, day)
                     .and_then(|d| d.and_hms_opt(hour, min, sec))

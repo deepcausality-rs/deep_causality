@@ -58,6 +58,28 @@ fn a_column_name_with_a_delimiter_is_rejected_before_writing() {
 }
 
 #[test]
+fn a_delimiter_in_a_later_column_is_found_too() {
+    // The refusal scans every column. Tested only on a one-column table, a check that looked at
+    // the first column alone would pass, and the offending name would reach the file.
+    let dir = tempfile::tempdir().expect("tempdir");
+    let path = dir.path().join("bad_third.csv");
+    let table = NumericTable::new(
+        vec![
+            TableColumn::new("ok", "-"),
+            TableColumn::new("fine", "K"),
+            TableColumn::new("third", "kg,m"),
+        ],
+        vec![vec![1.0_f64, 2.0, 3.0]],
+    )
+    .expect("rectangular");
+    let err = write_table(&path, table)
+        .run()
+        .expect_err("delimiter in the third column's unit");
+    assert!(err.to_string().contains("third"), "names the column: {err}");
+    assert!(!path.exists(), "no corrupt file is written");
+}
+
+#[test]
 fn the_write_is_lazy_until_run() {
     let dir = tempfile::tempdir().expect("tempdir");
     let path = dir.path().join("lazy.csv");

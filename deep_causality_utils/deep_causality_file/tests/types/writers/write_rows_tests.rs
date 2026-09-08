@@ -59,6 +59,45 @@ fn write_rows_emits_schema_header_and_units() {
     assert_eq!(lines.next().unwrap(), "#units,-,-,-");
 }
 
+/// A schema whose three units are all different, so the emitted `#units` row pins the
+/// column order. With `MapRow`'s three identical "-" units, any permutation reads the same.
+#[derive(Debug, Clone, PartialEq)]
+struct UnitfulRow {
+    alt: f64,
+    speed: f64,
+    press: f64,
+}
+
+impl TableRow for UnitfulRow {
+    type Scalar = f64;
+    const SCHEMA: &'static [(&'static str, &'static str)] =
+        &[("alt", "km"), ("speed", "m/s"), ("press", "kPa")];
+    fn cells(&self) -> Vec<f64> {
+        vec![self.alt, self.speed, self.press]
+    }
+}
+
+#[test]
+fn the_units_row_follows_the_schema_column_order() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("unitful.csv");
+    write_rows(
+        &path,
+        vec![UnitfulRow {
+            alt: 1.0,
+            speed: 2.0,
+            press: 3.0,
+        }],
+    )
+    .run()
+    .unwrap();
+
+    let text = std::fs::read_to_string(&path).unwrap();
+    let mut lines = text.lines();
+    assert_eq!(lines.next().unwrap(), "alt,speed,press");
+    assert_eq!(lines.next().unwrap(), "#units,km,m/s,kPa");
+}
+
 /// A row whose `cells()` disagrees with its `SCHEMA` width — the writer must reject it.
 #[derive(Debug, Clone)]
 struct WrongWidthRow;

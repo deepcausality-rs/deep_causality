@@ -1,7 +1,7 @@
 ---
-title: Flight-envelope monitor for a safety-critical aircraft
+title: Assess stall, overspeed, and terrain risk from aircraft sensor data
 domain: Aerospace
-summary: A five-stage PropagatingProcess that fuses sensor health, folds risk, runs a Kalman update, and walks an envelope hypergraph.
+summary: Combine sensor health, state estimation, and interacting flight-envelope checks into one aircraft risk assessment.
 order: 4
 category: aerospace
 crates:
@@ -14,7 +14,7 @@ further:
     href: /docs/concepts/causaloid/
 ---
 
-This example lives at [`flight_envelope_monitor`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/flight_envelope_monitor) in the repo. It is the most direct demonstration of `PropagatingProcess` with non-trivial state and context: five sequential `bind` calls thread a `FlightState` and an `AircraftConfig` through every step.
+This example lives at [`flight_envelope_monitor`](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/control/flight_envelope_monitor) in the repo. It is the most direct demonstration of `PropagatingProcess` with non-trivial state and context: five sequential `bind` calls thread a `FlightState` and an `AircraftConfig` through every step.
 
 ## The chain
 

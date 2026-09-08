@@ -26,3 +26,15 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+# The Galileo E14 products that `//deep_causality_utils/deep_causality_file:integration` parses.
+# The files live in this package, so the filegroup that carries them into that test's runfiles is
+# declared here.
+filegroup(
+    name = "gnss_e14_fixtures",
+    srcs = [
+        "data/gnss/gbm18770.clk",
+        "data/gnss/gbm18770.sp3",
+    ],
+    visibility = ["//visibility:public"],
+)

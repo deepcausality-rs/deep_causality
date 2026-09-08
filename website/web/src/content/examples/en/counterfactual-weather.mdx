@@ -1,0 +1,75 @@
+---
+title: Measure how weather changes navigation error during re-entry
+domain: Counterfactual simulation
+summary: Run 48 descents across six atmospheric conditions, compare navigation error during GPS blackout, and retain the baseline, audit trail, and acceptance checks for every condition.
+order: 1
+category: aerospace
+source: examples/avionics_examples/cfd/plasma_blackout/weather/main.rs
+crates:
+  - deep_causality_cfd
+  - deep_causality_physics
+  - deep_causality_par
+further:
+  - label: Weather study walkthrough
+    href: https://cfd.deepcausality.com/tutorial/stage-2-weather/
+  - label: Full example and recorded results
+    href: https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples/cfd/plasma_blackout/weather
+---
+
+How much does navigation accuracy change when the same vehicle flies through a different atmosphere?
+During re-entry, ionized gas can block satellite navigation. The vehicle then depends on its inertial
+sensors until the signal returns. Temperature and density affect the blackout window, while temperature
+also changes the accelerometer’s modeled bias.
+
+This study holds a baseline vehicle description fixed and substitutes six atmospheric conditions.
+Each condition runs eight deterministic receiver-noise draws, for 48 simulated descents. The output
+is a table of blackout timing, navigation drift, and error after signal reacquisition, including
+variation across draws.
+
+## The study expression
+
+This excerpt from `main.rs` assembles the simulation campaign. The physics and navigation models
+live in the shared example code; the flow manages the baseline substitutions, concurrent runs,
+reduction, output, and acceptance checks.
+
+```rust
+let table = CfdFlow::study("weather-dispersion table")
+    .save_log(audit_dir.join("weather.audit"))
+    .cases(model::weather_cases())
+    .baseline(model::standard_day)
+    .alternate(model::weather_world)
+    .ensemble(constants::MC_DRAWS)
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)
+    .reduce_ensemble(model::world_row)
+    .inspect(utils_print::print_rows)
+    .record(&table_path)
+    .gates(model::weather_gates())
+    .verdict()?;
+```
+
+## What the composition provides
+
+- **An explicit comparison baseline.** Each atmosphere is substituted from the declared standard day.
+  The log records the context alternation so a result remains traceable to its condition.
+- **Coupled computation.** Each descent combines compressible flow, ionization, satellite-signal
+  availability, and inertial navigation. The weather affects both blackout duration and instrument bias.
+- **A statistical result.** The eight draws per condition reduce to means, scatter, and worst-case draws.
+- **Executable acceptance checks.** Gates check table integrity, provenance, blackout behavior,
+  weather-dependent drift, and reacquisition. The driver also checks runtime and returns a failure
+  exit code when a gate fails.
+
+The physics has a RAM-C II flight reference anchor. Other atmospheric conditions are extrapolations
+from that anchor; this study varies temperature and density, rather than a complete weather profile.
+
+## Run it
+
+From the repository root:
+
+```bash
+cargo run --release -p avionics_examples --example plasma_blackout_weather
+```
+
+The run prints the dispersion table and gate verdicts, and writes the table and per-branch audit logs.
+The [example README](https://github.com/deepcausality-rs/deep_causality/blob/main/examples/avionics_examples/cfd/plasma_blackout/weather/README.md)
+contains the recorded results and model assumptions.

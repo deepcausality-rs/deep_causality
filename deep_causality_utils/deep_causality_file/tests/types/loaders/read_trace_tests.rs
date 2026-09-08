@@ -87,3 +87,48 @@ fn a_trace_needs_at_least_one_channel() {
         .expect_err("no channel");
     assert!(err.to_string().contains("at least one channel"), "{err}");
 }
+
+#[test]
+fn an_empty_channel_name_is_an_error() {
+    let (_d, path) = write_temp("t,,b\n0.0,1.0,2.0\n");
+    let err = read_sensor_trace::<f64>(&path)
+        .run()
+        .expect_err("empty column name");
+    assert!(err.to_string().contains("empty column name"), "{err}");
+}
+
+#[test]
+fn a_units_row_below_the_first_data_row_is_an_error() {
+    // The units row carries the column units, so it is only meaningful before any sample row.
+    let (_d, path) = write_temp("t,a\n0.0,1.0\n#units,s,V\n");
+    let err = read_sensor_trace::<f64>(&path)
+        .run()
+        .expect_err("late units row");
+    let msg = err.to_string();
+    assert!(msg.contains("directly after the header"), "{msg}");
+    assert!(msg.contains("row 3"), "{msg}");
+}
+
+#[test]
+fn a_units_row_with_too_few_cells_is_an_error() {
+    // Two columns need the "#units" marker plus two unit cells; this row supplies one.
+    let (_d, path) = write_temp("t,a\n#units,s\n0.0,1.0\n");
+    let err = read_sensor_trace::<f64>(&path)
+        .run()
+        .expect_err("short units row");
+    let msg = err.to_string();
+    assert!(msg.contains("one unit per column"), "{msg}");
+    assert!(msg.contains("2 columns, got 1 unit cells"), "{msg}");
+}
+
+#[test]
+fn a_ragged_row_is_an_error_naming_the_counts() {
+    let (_d, path) = write_temp("t,a\n0.0,1.0,2.0\n");
+    let err = read_sensor_trace::<f64>(&path).run().expect_err("ragged");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("ragged row: 3 cells, header has 2 columns"),
+        "{msg}"
+    );
+    assert!(msg.contains("row 2"), "{msg}");
+}

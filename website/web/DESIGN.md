@@ -462,7 +462,7 @@ The only three-tier grid on the site:
 
 The trailing `2fr` holds the contributor paragraph, capped at `52ch`. This is the site's only use of the 1024px breakpoint (§4).
 
-Top edge: a 1px `--line-1` divider, nothing more. Background `--bg-0`, no top shadow, no large brand mark. Links hover to `--fg-0`.
+Top edge: a 1px `--line-1` divider, nothing more. Background `--bg-0`, no top shadow, no large brand mark. On the homepage, the existing DeepCausality column includes the LF AI & Data Sandbox badge below its description. The shared `FoundationBadge.astro` also appears in the About page’s Linux Foundation section. The unchanged white SVG is 180px wide on a blue-black backing in both themes, with intrinsic dimensions to reserve its space. The footer grid and homepage sections retain their existing layout. Links hover to `--fg-0`.
 
 Email capture: none.
 
@@ -585,9 +585,12 @@ Two defects live in `blog/index.astro` and should be fixed when that file is nex
 
 `about`, `community`, `accessibility`, and `overview` carry **zero scoped CSS**. They rely entirely on the `.static-page` and `.prose` rules in `global.css`. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
 
-`overview/index.astro` is the exception and the warning. At 479 lines it introduces a private `.dc-*` diagram vocabulary — bands with a 2px accent left rail, chips, `▼` flow arrows — used on no other page. It is internally consistent, but it is a parallel design system, and it breaks one convention outright: `.dc-diagram` uses `--radius-sm` where every other framed panel uses `--radius-md`.
-
-Do not extend `.dc-*`. If those diagram primitives are needed elsewhere, promote them into `global.css` as shared idioms first.
+`overview/index.astro` introduces effect propagation through the ML-gated service
+root-cause analysis example. Its scoped diagram uses a semantic figure and an ordered four-stage
+flow, with shared reticle corners, panel radius, and theme tokens. Steps stack on phones
+and form two columns at 720px. The gate step explains the healthy and escalation branches. The caption
+links to the worked example; the surrounding prose distinguishes the process pipeline from
+optional Causaloid and Context structures.
 
 There are no monograph pages. The earlier spec for an academic register with a PDF download band and a BibTeX citation block was never built and is removed.
 
@@ -714,7 +717,7 @@ The panel appears to catch light along its upper edge. This does not contradict 
 
 **Debt.** Four verbatim copies (CausalStack, Explainer, ExampleGrid, JoinCommunity) plus a `--bg-2` 80% variant in ExampleDetail. This should be one `.panel` utility in `global.css`.
 
-`--radius-md` is part of the convention. `overview/index.astro` uses `--radius-sm` for `.dc-diagram` and is wrong.
+`--radius-md` is part of the convention, including the overview flow diagram.
 
 ### 12.5 L-bracket corner accents
 
@@ -722,7 +725,7 @@ Distinct from reticles. Corner marks framing a **code surface** rather than a wh
 
 Canonical: **10×10 pseudo-elements**, `border-width: 1px 0 0 1px` and `0 1px 1px 0`.
 
-**Debt.** Three implementations of one motif: pseudo-elements at 10px in `ExampleGrid` and `overview`, and SVG data-URI masks at 14px in `ExampleDetail`. The first two share an identical colour expression, so they were copied. Collapse all three into a `.corner-brackets` utility beside `.reticle`.
+**Debt.** Two implementations of one motif: pseudo-elements at 10px in `ExampleGrid`, and SVG data-URI masks at 14px in `ExampleDetail`. A shared `.corner-brackets` utility beside `.reticle` could unify them.
 
 ### 12.6 Text arrows and separators
 

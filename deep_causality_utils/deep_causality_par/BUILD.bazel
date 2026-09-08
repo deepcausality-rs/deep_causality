@@ -51,6 +51,13 @@ rust_test_suite(
     srcs = glob([
         "tests/functions/*_tests.rs",
     ]),
+    # Match the features `:deep_causality_par` above is built with, so that a test's own
+    # `cfg!(feature = "parallel")` describes the library it is linked against.
+    crate_features = [
+        "alloc",
+        "parallel",
+        "std",
+    ],
     tags = [
         "unit-test",
     ],
@@ -69,6 +76,13 @@ rust_test_suite(
     srcs = glob([
         "tests/traits/*_tests.rs",
     ]),
+    # Match the features `:deep_causality_par` above is built with, so that a test's own
+    # `cfg!(feature = "parallel")` describes the library it is linked against.
+    crate_features = [
+        "alloc",
+        "parallel",
+        "std",
+    ],
     tags = [
         "unit-test",
     ],
@@ -76,6 +90,75 @@ rust_test_suite(
     deps = [
         # Crate to test
         ":deep_causality_par",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# The serial configuration. `deep_causality_par` above is built with `parallel`, so without this
+# target no Bazel test ever compiles the `#[cfg(not(feature = "parallel"))]` arms of `scoped_map`
+# and `MaybeParallel` — replacing either with `unimplemented!()` left `bazel test //...` green.
+# The crate name is shared, so the same test sources link against whichever library the suite
+# names, and `scoped_map_tests` documents that the suite runs in both modes.
+rust_library(
+    name = "deep_causality_par_serial",
+    srcs = glob([
+        "src/**",
+    ]),
+    aliases = aliases(),
+    crate_features = [
+        "alloc",
+        "std",
+    ],
+    crate_name = "deep_causality_par",
+    crate_root = "src/lib.rs",
+    lint_config = lint_config(),
+    tags = [
+        "par",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True),
+)
+
+rust_test_suite(
+    name = "functions_serial",
+    srcs = glob([
+        "tests/functions/*_tests.rs",
+    ]),
+    crate_features = [
+        "alloc",
+        "std",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test, without `parallel`.
+        ":deep_causality_par_serial",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "traits_serial",
+    srcs = glob([
+        "tests/traits/*_tests.rs",
+    ]),
+    crate_features = [
+        "alloc",
+        "std",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test, without `parallel`.
+        ":deep_causality_par_serial",
     ] + all_crate_deps(
         normal = True,
         normal_dev = True,
