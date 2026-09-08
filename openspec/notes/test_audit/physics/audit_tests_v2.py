@@ -244,9 +244,13 @@ def has_informative_assertion(assertions: list[tuple[int, str]]) -> bool:
         expression = args[0] if args else call
         if ERROR_PREDICATE.search(expression):
             return True
-        without_weak = WEAK_PREDICATE.sub("", expression)
-        without_weak = re.sub(r"[\s()!&|]", "", without_weak)
-        if without_weak:
+        if re.match(r"\s*!", expression) and re.search(r"\.(?:is_ok|is_some)\s*\(", expression):
+            return True
+        if WEAK_PREDICATE.search(expression):
+            if re.search(r"==|!=|<=|>=|(?<!-)[<>]", expression):
+                return True
+            continue
+        else:
             return True
     return False
 
@@ -272,7 +276,10 @@ def assertion_is_inside_if(code: str, position: int) -> bool:
 
 
 def has_asserting_helper(code: str, helpers: set[str]) -> bool:
-    return any(re.search(rf"\b{re.escape(name)}\s*(?:::\s*<[^>]*>)?\s*\(", code) for name in helpers)
+    opening = code.find("{")
+    executable = code[opening + 1 :] if opening >= 0 else code
+    calls = set(re.findall(r"\b([A-Za-z_]\w*)\s*(?:::\s*<[^>]*>)?\s*\(", executable))
+    return not calls.isdisjoint(helpers)
 
 
 def asserting_helpers(sources: dict[Path, str]) -> set[str]:
@@ -413,6 +420,14 @@ def classify(test: TestCase, helpers: set[str]) -> set[str]:
         if ARITHMETIC.search(match.group(1)):
             derived = True
             break
+    if not derived:
+        for _, call in assertions:
+            args = macro_arguments(call)
+            expression = args[0] if args else ""
+            inline = re.search(r"-\s*\(([^)]*[+*/][^)]*)\)\s*\)?\s*\.abs\s*\(\s*\)", expression)
+            if inline and ARITHMETIC.search(inline.group(1)):
+                derived = True
+                break
     if derived:
         flags.add("derived-oracle")
         if not context_has_provenance:
