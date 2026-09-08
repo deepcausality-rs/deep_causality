@@ -12,65 +12,67 @@ export interface Example {
 
 export const examples: Example[] = [
   {
-    slug: 'pearl-counterfactual',
-    domain: 'Counterfactuals',
-    headline: 'Pearl Rung-3: surgically intervene on a value mid-chain.',
-    source: 'examples/starter_example/src/main.rs',
-    snippet: `use deep_causality_core::{Intervenable, PropagatingEffect};
+    slug: 'service-root-cause',
+    domain: 'Service reliability',
+    headline: 'Rank the likely causes of a microservice incident from telemetry data.',
+    source: 'examples/causal_discovery_examples/cdl/brcd_discovery/main.rs',
+    snippet: `use deep_causality_discovery::*;
 
-// Factual chain: nicotine → tar → cancer.
-let factual = PropagatingEffect::pure(0.8_f64)
-    .bind(|nic, _, _| PropagatingEffect::pure(nicotine_to_tar(nic.into_value().unwrap_or_default())))
-    .bind(|tar, _, _| PropagatingEffect::pure(tar_to_cancer(tar.into_value().unwrap_or_default())));
+// Normal and incident telemetry, plus a supplied causal graph.
+let config = CdlConfigBuilder::build_brcd_config()
+    .with_normal_path(&normal_path)
+    .with_anomalous_path(&anomalous_path)
+    .with_brcd_config(BrcdConfig::<FloatType>::continuous(0))
+    .with_cpdag_path(&cpdag_path)
+    .build()
+    .expect("Sock Shop carts_cpu_1 data files exist");
 
-// Counterfactual: same start, but intervene on tar mid-chain.
-let counterfactual = PropagatingEffect::pure(0.8_f64)
-    .bind(|nic, _, _| PropagatingEffect::pure(nicotine_to_tar(nic.into_value().unwrap_or_default())))
-    .intervene(0.1)
-    .bind(|tar, _, _| PropagatingEffect::pure(tar_to_cancer(tar.into_value().unwrap_or_default())));
-
-// factual − counterfactual = total causal impact (Rung-3).
-let risk = |e| e.value.into_value().unwrap();
-println!("Impact: {:.3}", risk(factual) - risk(counterfactual));`,
+// Build and run causal discovery
+CdlBuilder::build_brcd(&config)
+    .brcd_load_input()
+    .brcd_discover()
+    .brcd_analyze()
+    .finalize()
+    .print_results();`,
   },
   {
-    slug: 'sensor-monitoring-csm',
-    domain: 'Sensor monitoring',
-    headline: 'A Causal State Machine wired to three real-time sensors.',
-    source: 'examples/csm_examples/csm_basic/main.rs',
-    snippet: `use deep_causality::{CSM, CausalState, PropagatingEffect};
-
-// 1) Each sensor has a default reading that bootstraps the CSM.
-let default_data: PropagatingEffect<f64> = PropagatingEffect::pure(0.0);
-
-// 2) A CausalState pairs a sensor ID with its activation Causaloid.
-let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(),
-    get_smoke_sensor_causaloid(), None);
-let fire_cs  = CausalState::new(FIRE_SENSOR, 1, default_data.clone(),
-    get_fire_sensor_causaloid(), None);
-
-// 3) The CSM wires each state to the action it should fire on activation.
-let csm = CSM::new(&[(&smoke_cs, &get_smoke_alert_action()),
-                     (&fire_cs,  &get_fire_alert_action())]);
-
-// 4) Feed live evidence in; the CSM dispatches the matching action.
-let evidence: PropagatingEffect<f64> = PropagatingEffect::pure(smoke_data[i]);
-csm.eval_single_state(SMOKE_SENSOR, &evidence)?;`,
+    slug: 'counterfactual-weather',
+    domain: 'Navigation',
+    headline: 'Measure how weather changes navigation error.',
+    source: 'examples/avionics_examples/cfd/plasma_blackout/weather/main.rs',
+    snippet: `use deep_causality_cfd::*;
+    
+//Six atmospheres × eight receiver-noise draws: 48 simulated descents.
+let table = CfdFlow::study("weather-dispersion table")
+    .save_log(audit_dir.join("weather.audit"))
+    .cases(model::weather_cases())
+    .baseline(model::standard_day)
+    // Generate alteranate worlds 
+    .alternate(model::weather_world)
+    .ensemble(constants::MC_DRAWS)
+    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .march_for(constants::STEPS, world::initial_field)
+    // Collect counterfactual results from alteranate worlds 
+    .reduce_ensemble(model::world_row)
+    .inspect(utils_print::print_rows)
+    .record(&table_path)
+    .gates(model::weather_gates())
+    .verdict()?;`,
   },
   {
     slug: 'aerospace-flight-envelope',
     domain: 'Aerospace',
-    headline: 'Five-stage PropagatingProcess for a flight-envelope monitor.',
-    source: 'examples/avionics_examples/flight_envelope_monitor/main.rs',
-    snippet: `// Seed the chain with a typed propagating process: value, state,
+    headline: 'Assess stall, overspeed, and terrain risk from aircraft sensor data.',
+    source: 'examples/avionics_examples/control/flight_envelope_monitor/main.rs',
+    snippet: `use deep_causality::*;
+// Seed the chain with a typed propagating process: value, state,
 // context, error channel, and an append-only audit log all live together.
-let initial: FlightProcess<SensorReading> = PropagatingProcess {
-    value: EffectValue::Value(reading),
-    state: FlightState::default(),
-    context: Some(config),
-    error: None,
-    logs: EffectLog::new(),
-};
+let initial: FlightProcess<SensorReading> = PropagatingProcess::new(
+    Ok(CausalEffect::value(reading)),
+    FlightState::default(),
+    Some(config),
+    EffectLog::new(),
+);
 
 // CausalFlow threads state and context through all five stages;
 CausalFlow::from(initial)
@@ -107,7 +109,7 @@ if let Some(r) = pipeline.value.into_value() {
   {
     slug: 'physics-maxwell',
     domain: 'Physics',
-    headline: 'Maxwell field derivation as a four-step CausalFlow chain.',
+    headline: 'Calculate an electromagnetic wave’s fields and energy flow.',
     source: 'examples/physics_examples/maxwell/main.rs',
     snippet: `use deep_causality::PropagatingEffect;
 use deep_causality_core::CausalFlow;
@@ -129,7 +131,7 @@ let final_state = result.value.into_value().unwrap_or_default();`,
   },
   {
     slug: 'async-event-inference',
-    domain: 'Async / Tokio',
+    domain: 'Model Serving',
     headline: 'Background causal inference on a Tokio task.',
     source: 'examples/tokio_example/src/main.rs',
     snippet: `use crate::handler::EventHandler;
