@@ -191,10 +191,21 @@ where
             let d = (t - dt) / radius;
             s -= d;
             if d.abs() < tol * (s.abs() + R::one()) {
-                break;
+                return Ok(s);
             }
         }
-        Ok(s)
+        // As in `two_body::solve_kepler`: the step running out is not the same as the answer being
+        // wrong, so accept an iterate that already inverts `t(s) = dt` to the working tolerance and
+        // reserve the refusal for one that satisfies neither test.
+        let (t, _) = self.t_and_radius(s)?;
+        if (t - dt).abs() < tol * (dt.abs() + R::one()) {
+            return Ok(s);
+        }
+        Err(PhysicsError::NotConverged(
+            "the fictitious-time inversion t(s) = dt did not converge in 100 iterations: neither \
+             the step test nor the residual test was met"
+                .into(),
+        ))
     }
 
     /// KS lift `r → u` with a gauge choice that keeps the pivot component large (Stiefel–Scheifele).

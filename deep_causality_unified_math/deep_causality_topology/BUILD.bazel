@@ -8,10 +8,10 @@ rust_library(
         "src/**",
     ]),
     aliases = aliases(),
-    crate_root = "src/lib.rs",
     crate_features = [
         "parallel",
     ],
+    crate_root = "src/lib.rs",
     lint_config = lint_config(),
     tags = [
         "data_structures",

@@ -519,3 +519,49 @@ combinatorics surface of `num`, the method set of `Real`, the `Distribution` imp
 `openspec/notes/archive/unified_math/unified_math_gaps.md` for the categorical layer's gaps, and
 `deep_causality_unified_math/README.md` for the stack's current shape and its precision
 sections.
+
+---
+
+## Corrections established by the `unified-math-next` change
+
+Appended on completion of that change. Each is a claim in this document that implementation
+disproved, or a finding it could not have had. The body above is left as written so the correction
+and what it corrects can both be read.
+
+**Item 9 is deferred, not done.** Making the causality engine precision-parametric was cut from the
+change and is now two dedicated notes, both re-verified against the tree at close:
+`openspec/changes/deferred/engine-precision-parametric/` and `.../num-verdict-algebra/`. The reason
+is in the first: which of the *two* alias sets is the real one is an open question, and eleven of
+them are unused workspace-wide. That is a decision, not an implementation.
+
+**The statistics stage's own numbers were wrong twice.** Pearson's zero-variance case returns
+`Ok((0.0, n))` rather than `NaN`, so the drafted typed-error requirement would have *changed* mRMR's
+behaviour rather than preserved it; and the Bhattacharyya coefficient does have a consumer, so
+excluding it needed a different ground than "unused".
+
+**Design decision D7 was reversed.** It kept five duplicated statistics in `tensor` because
+delegating would move `tensor` to tier 5, `multivector` to 6 and `topology` to 7. The renumbering was
+real and has been done. There was never a cycle to prevent it: `stats` reaches only `num`, `algebra`,
+`haft` and `linear`, none of which reach `tensor`. Consolidation was judged worth a row moving in a
+table.
+
+**The tier count is now eight, and `stats` sits on the longest chain** —
+`num → algebra → haft → linear → stats → tensor → multivector → topology`. Any tier number quoted in
+the body above predates that.
+
+**Four defects were found that this document does not name**, all by implementing what it did:
+
+* `deep_causality_linear::vector_norm_l2` and `matrix_norm_frobenius` overflowed for norms that are
+  representable, and underflowed to zero at the bottom.
+* `Normed::modulus` for `Complex` returned **`0.0`** for `NaN + 0i` — the zero-maximum guard swallowed
+  the `NaN` — and `NaN` for two infinities.
+* `ideal_induction_kernel` uses the Hodge star with the wrong convention, treating a
+  degree-preserving diagonal operator as degree-changing. Three silent-default idioms and an all-zero
+  fixture kept it invisible.
+* `HasHodgeStar`'s documented contract contradicted both its implementors, and is the likely source
+  of the previous item.
+
+**A fifth is filed separately.** The `deep_causality_physics` test suite was audited while closing
+C6: 6.6% of its tests assert nothing about the answer and 90% test a single hand-chosen input. The
+evidence, the proof that it matters, and the case for a dedicated change are in
+`openspec/notes/test_audit/`.

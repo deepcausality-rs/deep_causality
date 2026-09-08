@@ -187,9 +187,26 @@ where
             let d = (ea - e * ea.sin() - m) / (R::one() - e * ea.cos());
             ea -= d;
             if d.abs() < tol {
-                break;
+                return Ok(ea);
             }
         }
-        Ok(ea)
+        // The step test ran out. That is not the same as a wrong answer, and at high eccentricity
+        // it routinely happens with the root already in hand: at `e = 0.9999, M = 1e-6` this
+        // reaches the cap with `E = 0.00884630818017913` against an independent bisection's
+        // `0.00884630818017610` — a relative error of `3.4e-13` and a residual of `1e-18`. Newton's
+        // step stops contracting there long before the equation stops being satisfied, because
+        // `1 − e·cos E` is near zero and the correction is dominated by rounding.
+        //
+        // So the acceptance is on the residual, which is what the caller actually asked for, and
+        // the refusal is reserved for an iterate that solves neither test.
+        let residual = ea - e * ea.sin() - m;
+        if residual.abs() < tol {
+            return Ok(ea);
+        }
+        Err(PhysicsError::NotConverged(
+            "Kepler's equation did not converge in 100 iterations: neither the step test nor the \
+             residual test was met"
+                .into(),
+        ))
     }
 }

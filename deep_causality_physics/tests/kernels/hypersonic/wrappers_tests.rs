@@ -5,12 +5,15 @@
 
 use deep_causality_physics::{
     ElectronTemperature, EquilibriumConstant, IonizationFraction, NO_IONIZATION_ENERGY_EV,
-    THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate,
-    dissociation_equilibrium_fraction, electron_density, electron_impact_ionization_n_rate,
-    electron_impact_ionization_o_rate, finite_rate_ionization_fixed_point,
-    n2_dissociation_equilibrium, no_dissociative_recombination_rate, o2_dissociation_equilibrium,
-    park2t_ionization_surrogate, rankine_hugoniot_temperature, recovery_temperature,
-    saha_ionization_fraction, vibrational_relaxation,
+    THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate, arrhenius_rate_kernel,
+    dissociation_equilibrium_fraction, electron_density, electron_density_kernel,
+    electron_impact_ionization_n_rate, electron_impact_ionization_o_rate,
+    finite_rate_ionization_fixed_point, n2_dissociation_equilibrium,
+    no_dissociative_recombination_rate, o2_dissociation_equilibrium, park2t_ionization_surrogate,
+    park2t_ionization_surrogate_kernel, rankine_hugoniot_temperature,
+    rankine_hugoniot_temperature_kernel, recovery_temperature, recovery_temperature_kernel,
+    saha_ionization_fraction, saha_ionization_fraction_kernel, vibrational_relaxation,
+    vibrational_relaxation_kernel,
 };
 
 #[test]
@@ -18,7 +21,13 @@ fn test_vibrational_relaxation_wrapper() {
     let t_ve = VibrationalTemperature::<f64>::new(300.0).unwrap();
     let t_tr = Temperature::<f64>::new(7000.0).unwrap();
     let ok = vibrational_relaxation(t_ve, t_tr, 1.0, 14.0, THETA_VIB_N2, 1.0);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 14.0, THETA_VIB_N2, 1.0).unwrap(),
+        "vibrational_relaxation must carry the value its kernel produced"
+    );
     if let Some(v) = ok.value() {
         assert!((v.value() - 7000.0).abs() < 1.0);
     } else {
@@ -33,7 +42,13 @@ fn test_vibrational_relaxation_wrapper() {
 fn test_arrhenius_rate_wrapper() {
     let t = Temperature::<f64>::new(7000.0).unwrap();
     let ok = arrhenius_rate(t, 9.03e9, 0.5, 32400.0);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        arrhenius_rate_kernel(t, 9.03e9, 0.5, 32400.0).unwrap(),
+        "arrhenius_rate must carry the value its kernel produced"
+    );
     if let Some(v) = ok.value() {
         assert!(v.value() > 0.0);
     } else {
@@ -47,7 +62,13 @@ fn test_arrhenius_rate_wrapper() {
 fn test_saha_wrapper() {
     let t = Temperature::<f64>::new(8000.0).unwrap();
     let ok = saha_ionization_fraction(t, 1.0e22, NO_IONIZATION_ENERGY_EV, 2.0);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        saha_ionization_fraction_kernel(t, 1.0e22, NO_IONIZATION_ENERGY_EV, 2.0).unwrap(),
+        "saha_ionization_fraction must carry the value its kernel produced"
+    );
     let err = saha_ionization_fraction(t, 0.0, NO_IONIZATION_ENERGY_EV, 2.0);
     assert!(!err.is_ok());
 }
@@ -56,7 +77,13 @@ fn test_saha_wrapper() {
 fn test_surrogate_wrapper() {
     let t = Temperature::<f64>::new(8000.0).unwrap();
     let ok = park2t_ionization_surrogate(t, 1.0e22);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        park2t_ionization_surrogate_kernel(t, 1.0e22).unwrap(),
+        "park2t_ionization_surrogate must carry the value its kernel produced"
+    );
     if let Some(v) = ok.value() {
         assert!(v.value() > 0.0);
     } else {
@@ -70,7 +97,13 @@ fn test_surrogate_wrapper() {
 fn test_electron_density_wrapper() {
     let alpha = IonizationFraction::<f64>::new(0.01).unwrap();
     let ok = electron_density(alpha, 1.0e22);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        electron_density_kernel(alpha, 1.0e22).unwrap(),
+        "electron_density must carry the value its kernel produced"
+    );
     let err = electron_density(alpha, -1.0);
     assert!(!err.is_ok());
 }
@@ -79,7 +112,13 @@ fn test_electron_density_wrapper() {
 fn test_rankine_hugoniot_wrapper() {
     let t_inf = Temperature::<f64>::new(200.0).unwrap();
     let ok = rankine_hugoniot_temperature(t_inf, 25.0, 1.4);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        rankine_hugoniot_temperature_kernel(t_inf, 25.0, 1.4).unwrap(),
+        "rankine_hugoniot_temperature must carry the value its kernel produced"
+    );
     if let Some(v) = ok.value() {
         assert!(v.value() > 1.0e4);
     } else {
@@ -93,7 +132,13 @@ fn test_rankine_hugoniot_wrapper() {
 fn test_recovery_temperature_wrapper() {
     let t_post = Temperature::<f64>::new(24500.0).unwrap();
     let ok = recovery_temperature(t_post, 2000.0, 1004.0);
-    assert!(ok.is_ok());
+    // Delegation, not merely success: `assert!(ok.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        ok.value_cloned().unwrap(),
+        recovery_temperature_kernel(t_post, 2000.0, 1004.0).unwrap(),
+        "recovery_temperature must carry the value its kernel produced"
+    );
     let err = recovery_temperature(Temperature::<f64>::new(300.0).unwrap(), 2000.0, 1004.0);
     assert!(!err.is_ok());
 }

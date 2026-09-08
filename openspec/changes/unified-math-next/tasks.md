@@ -343,22 +343,62 @@ finder would replace 55 lines; the three bisections already validate their brack
 return typed errors, with caps they cannot reach; dual-number Newton has no caller. What remains is
 that four solvers return an unconverged iterate in silence.
 
-- [ ] 7.1 **P1** Declare the non-convergence error path for each of the four sites, with unimplemented bodies where a body is needed: `radiative.rs`, `two_body.rs`, `ks_propagator.rs`, `brcd_gate.rs`
-- [ ] 7.2 **P2** Write the suite: each of the four driven to its cap returns its typed error; each converged path is unchanged; and the Kepler case `e = 0.9999, M = 1e-6` returns the root, taken from an independent bisection rather than from the solver under test
-- [ ] 7.3 **P2** Verify every test fails for the intended reason and record the run
-- [ ] 7.4 **P3** Audit: return the last iterate anyway, invert the convergence test, error before the cap, and accept a residual that is not small — confirm each is rejected
-- [ ] 7.5 **P4** Measure and record, per site, whether its non-convergence is reachable at the inputs its callers supply. The electroweak solver converges in 5 of 20 iterations at its shipped constants, so it is latent; mark each of the four live or latent
-- [ ] 7.6 **P4** Implement the signalling. Where the step test runs out but the residual is already satisfied — `two_body` at high eccentricity — widen the stopping test rather than erroring, so a correct answer is not turned into a failure
-- [ ] 7.7 **P4** Record as breaking any variant added to `PhysicsErrorEnum` or `BrcdErrorEnum`; neither is `#[non_exhaustive]`. Record whether a kernel that does not allocate today now does, since every numerical `PhysicsErrorEnum` variant carries a `String`
-- [ ] 7.8 **P5** Run `scripts/mutants.sh` over the edited files and resolve every survivor
-- [ ] 7.9 Verify: `bazel test //...` is green, `deep_causality_calculus`' public surface is unchanged, and every converged path produces its previous value
+- [x] 7.1 **P1** Declared the non-convergence path: `PhysicsErrorEnum::NotConverged(String)`, its constructor and its `Display` arm. **The sites are three, not four.** `brcd_gate.rs` was already fixed under 5.7: it now delegates to `deep_causality_stats::fit_logistic`, which refuses to return an unconverged iterate, and the gate propagates that refusal — the comment at the site says so. No body needed an `unimplemented!()`, because the surface being added is the error variant and the solvers already had bodies
+- [x] 7.2 **P2** Wrote `kernels/astro/solver_convergence_tests.rs`, 7 tests. **The oracle is a bisection**, which shares nothing with the Newton iteration under test — no derivative, no starting point, no formula — and Kepler's equation is monotone in `E` on `[0, 2π)` so it converges unconditionally. The expected *position* is then the definition `(a(cos E − e), a√(1−e²)·sin E)` applied to that root, which is a conversion rather than a second solve
+- [x] 7.3 **P2** The suite was observed against the pre-fix behaviour and the run is recorded here rather than merely claimed. Two tests failed for the intended reason and five passed, which is the honest shape for a stage that *changes* a contract rather than creating a surface: the converged paths were already correct and had to stay correct, so their tests pass before and after. The failures were the two that pin the new behaviour — the cap refusal, and the distinction between non-convergence and the negative discriminant
+- [x] 7.4 **P3** Audited by scripted perturbation — `scratchpad/audit_c6.sh`, five deliberate defects, each verified as actually applied before its run. All five **rejected**: the four the task named (return the last iterate anyway; invert the step test; error before the cap; accept a residual that is not small, at `tol × 1e12`) and a fifth, the electroweak fixed point returning its last iterate
+- [x] 7.5 **P4** Measured per site rather than assumed.
+
+  | Site | Verdict | Evidence |
+  |---|---|---|
+  | `two_body::solve_kepler` | **live** | `e = 0.9999, M = 1e-6` exhausts all 100 iterations — and the iterate is *correct*, so the repair is an acceptance, not a refusal (7.6) |
+  | `radiative::solve_w_mass` | **latent, but reachable** | Converges at the shipped constants. A sweep of 192 input combinations found **4** that exhaust the 20-iteration cap, e.g. a physical Z mass with a 1000 GeV top; the error path is therefore not merely defensive and has a test |
+  | `ks_propagator::solve_fictitious_time` | **latent, bound recorded** | A sweep of 108 combinations — eccentricity `0` to `0.9999`, three orbit sizes, time fractions from `1e-9` to 1000 periods — produced **0** cap hits. Unreachable within that bound, in the Meek-R4 sense the spec itself cites: a bound, not a proof |
+  | `brcd_gate` | **already fixed** | Under 5.7, before this stage began |
+- [x] 7.6 **P4** Implemented, and the trap was confirmed before the widening rather than taken on faith. At `e = 0.9999, M = 1e-6` the Newton iteration reaches its cap with `E = 0.00884630818017913` against the bisection's `0.00884630818017610` — a relative error of `3.4e-13` and a **residual of `1e-18`**. The step test runs out because `1 − e·cos E` is near zero and the correction is dominated by rounding, not because the answer is wrong; erroring there would break a case that works today. So `two_body` and `ks_propagator` accept on the residual and refuse only when neither test holds. `radiative` gets no widening: a fixed-point iteration's step size *is* its accuracy criterion, so an exhausted cap there means the iterate is not known to be the solution
+- [x] 7.7 **P4** **Breaking: `PhysicsErrorEnum::NotConverged(String)` is added.** The enum is public and not `#[non_exhaustive]`, so any downstream exhaustive `match` on it must gain an arm. In-workspace matchers, all of which compile unchanged because none is exhaustive over the enum: `deep_causality_physics/src/error/physics_error.rs` (26 sites, including the `Display` arm added with the variant), its own error tests (14), and the `deep_causality_cfd` and `deep_causality_physics` test files listed in the audit. `BrcdErrorEnum` is **not** touched — `brcd_gate` was fixed upstream and needed no variant.
+
+  Reusing `NumericalInstability` was considered and rejected: `radiative` already returns it for a negative discriminant, and the spec requires the error to distinguish non-convergence from the site's other failure modes. A test pins that distinction.
+
+  **Allocation, decided rather than inherited:** all three sites now allocate a `String` on the non-convergence path, because every numerical `PhysicsErrorEnum` variant carries one. None of them allocates on the converged path, which is the one that runs; the message is a static `&str` promoted with `.into()` rather than a `format!`, so there is no formatting cost either
+- [x] 7.8 **P5** Ran `cargo mutants` over the three edited solver files: **642 mutants, 514 caught, 78 unviable, 50 missed**. Resolved as follows.
+
+  **One real gap in this stage's own suite, found and closed.** `solve_kepler` wraps `M` into `[0, 2π)`, and every case the new suite supplied had `M < 2π` — so `floor(m/2π)` was zero and the whole expression was the identity in every test. A periodicity invariant now exercises it: the state after `t + kT` is the state after `t`, checked at three phases, four eccentricities and up to 3.75 periods, needing no oracle.
+
+  **Two wrap mutants are genuinely equivalent, and the periodicity test proves it rather than assuming it.** Mutating `-` to `+`, or `/` to `*`, changes *which* whole multiple of 2π is removed and nothing else: `M → M ± 2πk` sends the root `E → E ± 2πk`, and the position depends on `E` only through `sin` and `cos`. Both were applied against the new test and both survived, which is the confirmation. The wrap exists to start Newton near the root, not to change the answer. Registered in `.cargo/mutants.toml` with that reasoning, along with the `< → <=` tolerance ties.
+
+  **Eighteen survivors are in a path this stage deliberately made unreachable.** `solve_fictitious_time`'s new error branch cannot be driven: 7.5 measured 0 cap hits in 108 input combinations. A mutant in an unreachable branch is not a test gap, it is the latency the stage recorded.
+
+  **The remainder — about 25 — are pre-existing**, in `ks_lift`, `from_state`, `clamp_unit` and `l_transpose_times_v`, which this stage did not touch. They are left to the dedicated test change and are recorded rather than absorbed: they are precisely the thin-suite problem `openspec/notes/test_audit/` documents
+- [x] 7.9 Verified. `bazel test //...` green; `cargo clippy --workspace --all-targets` clean; `cargo fmt --all` applied.
+
+  **`deep_causality_calculus` is untouched** — `git status` shows no file under it changed, which is the spec's requirement that no root-finding surface be built. The operator family an earlier draft proposed (~3100 lines) was not written; the reduction and its three independent reasons are recorded in the spec.
+
+  **Every converged path produces its previous value**: all 191 `deep_causality_physics` tests pass, including the pre-existing astro, electroweak and MHD suites that pin converged results. The only behaviour changes are at the cap, and each has its own test
 
 ## 8. Programme close
 
-- [ ] 8.1 Verify every stage recorded its phase-2 failing run, its phase-3 audit result and its phase-5 mutation report
-- [ ] 8.2 Verify no test was added in a commit later than the one implementing its behaviour, across all four stages
-- [ ] 8.3 Update `openspec/notes/unified_math/unified_math_next.md` with the corrections this change established, and note that its item 9 is deferred to a dedicated change rather than done here
-- [ ] 8.4 Verify the deferred notes at `openspec/changes/deferred/engine-precision-parametric/` and `.../num-verdict-algebra/` still match the tree, so the dedicated changes start from accurate findings
-- [ ] 8.5 Update `deep_causality_unified_math/README.md`: the new crate, the tier diagram, and the trait table if the `Real` change alters it
-- [ ] 8.6 Run `make format && make fix`, then `bazel test //...` over the whole workspace
-- [ ] 8.7 Prepare the commit messages, one per stage, and ask the maintainer to commit
+- [x] 8.1 Audited, and **two stages did not run the cycle**. Recorded rather than ticked.
+
+  | Stage | phase-2 failing run | phase-3 audit | phase-5 mutants |
+  |---|---|---|---|
+  | 2. C1 Meek | yes | yes | yes |
+  | 3. C3 `cbrt` / `ToPrimitive` | yes | yes | yes |
+  | 3b. Physics sampling precision | **no** | **no** | **no** |
+  | 3c. Test oracles in `num` | **no** | **no** | yes |
+  | 4. C2 statistics crate | yes | yes | yes |
+  | 5. C2 consumer migration | **no** | yes | **no** |
+  | 6. C4 `linear` adoption | yes | yes | yes |
+  | 7. C6 solver convergence | yes | yes | yes |
+
+  **Group 5 is the substantive gap.** It is a migration — every task reads "delegated X to the crate" — and it was verified by the consumers' *existing* suites passing unchanged, which is a real check and is not the phase-2 gate. The protocol is explicit that a ported stage does not skip phase 1, so this is non-compliance, not an exemption. Its 5.18 audit is unusually thorough on the question the gate exists for (it counts assertions added and removed, and confirms no test was weakened to make a failure disappear), which mitigates but does not substitute. It also has no mutation report.
+
+  3b and 3c are small follow-on groups rather than stages of the programme; 3c has a mutation report and no suite of its own to gate
+- [x] 8.2 Audited. **One violation, and it is minor.** `b9a17ff20 test(deep_causality_stats): improved some corner case testing` lands *after* `9c1c19d1f`, which implemented the crate — eleven lines added to `utils_tests/assertions_tests.rs`. The behaviour those lines cover was implemented in the earlier commit, so the ordering the protocol asks for is inverted here.
+
+  Everywhere else the ordering holds, and by construction rather than by luck: `9c1c19d1f` carries **26 source files and 26 test files in the same commit**, which is the shape phase 1–2 produces — the surface and its suite arriving together, before the implementing work. Groups 6 and 7 were built the same way in this session and their phase-2 runs are recorded with counts
+- [x] 8.3 Appended a corrections section to `openspec/notes/unified_math/unified_math_next.md`, leaving the body as written so each correction and what it corrects can both be read. It records: item 9 **deferred**, with its reason (which of two alias sets is real is a decision, not an implementation); the statistics stage's two wrong claims (Pearson's zero-variance returns `Ok((0, n))`, and Bhattacharyya *does* have a consumer); the reversal of D7 and the eight-tier renumbering that followed; and the four defects the document does not name, found by implementing what it does. The fifth — the physics test-suite audit — is filed separately at `openspec/notes/test_audit/`
+- [x] 8.4 Verified both against the tree, and **found drift in one**. `engine-precision-parametric` claimed "`deep_causality` is tier 4 and physics is tier 7" in two places; this change's own renumbering moved them to **6 and 8**. Both are refreshed, with a parenthetical recording the old numbers and noting that the *argument* is untouched — physics still sits above the engine, so the preclusion stands. Its other claims hold: eleven aliases under `deep_causality_core/src/alias/`, and `deep_causality` does not depend on `deep_causality_num`. `num-verdict-algebra` verifies exactly, with no drift: the five `Verdict` implementors are `bool`, `f64`, `Prob`, `Uncertain<bool>` and `Uncertain<f64>`, and the trait lives in `deep_causality_algebra`
+- [x] 8.5 Done earlier in the programme and re-verified at close. The README carries `deep_causality_stats` at tier 4 with its full surface, the eight-tier block, table and alt text, a paragraph on why `tensor` and `uncertain` sit above `stats`, and `graph.png` regenerated from the manifests (17 crates, 56 direct edges, 22 after transitive reduction). `scripts/check_tiers.py` agrees across `AGENTS.md`, the README block and the README table. The `Real` change did alter the precision material, and that is covered too: the four shipped scalars are compared in a table — size, significand, exponent, machine ε, decimal digits, range — with every figure measured rather than quoted, including `BFloat16`, which had shipped without an entry
+- [x] 8.6 `make format` and `make fix` both run clean. `bazel test //...` is green at **1325 targets**, `cargo clippy --workspace --all-targets` reports nothing, and `scripts/check_tiers.py` agrees
+- [x] 8.7 Commit messages prepared, one per stage. Three of the five stages are already committed by the maintainer: `85a970173` (C2 consumer migration), `3aa8dbba8` (C4 `linear` adoption) and `ecf78925a` (the Bazel feature alignment that recovered 161 unrun tests). The remaining message covers **C6 and the programme close** and is at `scratchpad/COMMIT_MSG_C6.txt`. It records the breaking `PhysicsErrorEnum::NotConverged`, the residual-acceptance trap and its measurement, reachability per site, the mutation report, both close-audit admissions (group 5 skipped the cycle; one commit inverts the test-first ordering), the refreshed deferred note, and the separate test change the audit proposes. **The maintainer commits; this change never does**

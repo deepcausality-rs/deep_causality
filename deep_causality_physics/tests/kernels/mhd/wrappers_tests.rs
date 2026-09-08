@@ -6,9 +6,10 @@
 use deep_causality_metric::EastCoastMetric;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Density, Diffusivity, Mass, PhysicalField, Speed, Temperature, alfven_speed, debye_length,
-    energy_momentum_tensor_em, ideal_induction, larmor_radius, magnetic_pressure,
-    magnetic_reconnection_rate, relativistic_current, resistive_diffusion,
+    Density, Diffusivity, Mass, PhysicalField, Speed, Temperature, alfven_speed,
+    alfven_speed_kernel, debye_length, energy_momentum_tensor_em, ideal_induction, larmor_radius,
+    magnetic_pressure, magnetic_reconnection_rate, magnetic_reconnection_rate_kernel,
+    relativistic_current, resistive_diffusion,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -25,7 +26,13 @@ fn test_alfven_speed_wrapper_success() {
     let rho = Density::<f64>::new(1.0).unwrap();
 
     let result = alfven_speed(&b, &rho, 1.0);
-    assert!(result.is_ok());
+    // Delegation, not merely success: `assert!(result.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        result.value_cloned().unwrap(),
+        alfven_speed_kernel(&b, &rho, 1.0).unwrap(),
+        "alfven_speed must carry the value its kernel produced"
+    );
 
     if let Some(va) = result.value() {
         assert!(va.value() > 0.0);
@@ -44,7 +51,13 @@ fn test_alfven_speed_wrapper_with_physical_values() {
     let mu0 = 4.0 * std::f64::consts::PI * 1e-7;
 
     let result = alfven_speed(&b, &rho, mu0);
-    assert!(result.is_ok());
+    // Delegation, not merely success: `assert!(result.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        result.value_cloned().unwrap(),
+        alfven_speed_kernel(&b, &rho, mu0).unwrap(),
+        "alfven_speed must carry the value its kernel produced"
+    );
 
     // v_A = B / sqrt(mu0 * rho) ≈ 1 / sqrt(4*pi*1e-7 * 1000) ≈ 28.2 m/s
     if let Some(va) = result.value() {
@@ -94,7 +107,13 @@ fn test_magnetic_reconnection_rate_wrapper_success() {
     let va = alfven_speed(&b, &rho, 1.0).value_cloned().unwrap();
 
     let result = magnetic_reconnection_rate(va, 100.0);
-    assert!(result.is_ok());
+    // Delegation, not merely success: `assert!(result.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        result.value_cloned().unwrap(),
+        magnetic_reconnection_rate_kernel(va, 100.0).unwrap(),
+        "magnetic_reconnection_rate must carry the value its kernel produced"
+    );
 
     // v_in = v_A / sqrt(S) = 1.0 / 10.0 = 0.1
     if let Some(v) = result.value() {
@@ -112,7 +131,13 @@ fn test_magnetic_reconnection_rate_wrapper_high_lundquist() {
 
     // High Lundquist number → slow reconnection
     let result = magnetic_reconnection_rate(va, 10000.0);
-    assert!(result.is_ok());
+    // Delegation, not merely success: `assert!(result.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        result.value_cloned().unwrap(),
+        magnetic_reconnection_rate_kernel(va, 10000.0).unwrap(),
+        "magnetic_reconnection_rate must carry the value its kernel produced"
+    );
 
     if let Some(v) = result.value() {
         // v_A ≈ 10, S = 10000, v_in = 10/100 = 0.1

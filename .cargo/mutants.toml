@@ -78,6 +78,23 @@ exclude_re = [
     # value the mutant selects equals the one it replaces.
     "replace > with >= in max_modulus",
 
+    # `solve_kepler`'s mean-anomaly wrap, `m - 2π·floor(m/2π)`. Mutating the `-` to `+` or the `/`
+    # to `*` changes which whole multiple of 2π is removed, and nothing else: whatever integer `k`
+    # comes out, `M → M ± 2πk` sends the root `E → E ± 2πk`, because Kepler's equation is 2π-periodic
+    # in both. The position `(a(cos E − e), a√(1−e²)·sin E)` depends on `E` only through `sin` and
+    # `cos`, so it is unchanged. The wrap is there to give Newton a starting point near the root, not
+    # to change the answer, and no assertion on the state can separate the variants. Confirmed by
+    # applying both against a periodicity test that propagates up to 3.75 periods.
+    "replace - with \\+ in TwoBodyPropagator<R>::solve_kepler",
+    "replace / with \\* in TwoBodyPropagator<R>::solve_kepler",
+
+    # Tolerance comparisons `if x.abs() < tol` mutated to `<=`: the tie is the single point
+    # `x.abs() == tol`, which no finite input reaches for a tolerance of `1e-15` against a residual
+    # that is either many orders below it or many above. Applies to `solve_kepler`'s step and
+    # residual tests and to `solve_w_mass`'s two convergence comparisons.
+    "replace < with <= in TwoBodyPropagator<R>::solve_kepler",
+    "replace < with <= in solve_w_mass",
+
     # Two guards in `ideal_induction_kernel`'s private wedge helper that no caller can reach.
     # `wedge_product_1form_1form` is private, and its only caller validates first: the kernel
     # requires a 3D complex, so `skeletons.len() >= 4` where the helper's own check reads `< 3`,

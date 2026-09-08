@@ -5,8 +5,8 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    chronometric_volume, einstein_tensor, geodesic_deviation, spacetime_interval,
-    time_dilation_angle,
+    chronometric_volume, chronometric_volume_kernel, einstein_tensor, geodesic_deviation,
+    spacetime_interval, time_dilation_angle,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -160,5 +160,11 @@ fn test_chronometric_volume_wrapper_success() {
     .unwrap();
 
     let effect = chronometric_volume(&a, &b, &c);
-    assert!(effect.is_ok());
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when
+    // a wrapper discarded its kernel's answer and returned a constant.
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        chronometric_volume_kernel(&a, &b, &c).unwrap(),
+        "chronometric_volume must carry the value its kernel produced"
+    );
 }

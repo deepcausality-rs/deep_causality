@@ -37,6 +37,14 @@ pub enum PhysicsErrorEnum {
     Singularity(String),
     /// Numerical instability detected (NaN, loss of precision).
     NumericalInstability(String),
+    /// An iterative solver reached its iteration cap without meeting its stopping test.
+    ///
+    /// Distinct from [`NumericalInstability`](Self::NumericalInstability) on purpose. The solvers
+    /// that raise this already use that variant for a different failure — a negative discriminant
+    /// in the electroweak fixed point — and a caller that wants to retry with a wider cap or a
+    /// different starting point needs to tell the two apart. The message carries the cap and the
+    /// residual that was still outstanding.
+    NotConverged(String),
     /// General calculation error.
     CalculationError(String),
     /// Metric convention error (wraps MetricError from metric crate).
@@ -88,6 +96,11 @@ impl PhysicsError {
     #[allow(non_snake_case)]
     pub fn Singularity(msg: String) -> Self {
         Self(PhysicsErrorEnum::Singularity(msg))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn NotConverged(msg: String) -> Self {
+        Self(PhysicsErrorEnum::NotConverged(msg))
     }
 
     #[allow(non_snake_case)]
@@ -186,6 +199,9 @@ impl Display for PhysicsError {
             PhysicsErrorEnum::Singularity(msg) => write!(f, "Singularity: {}", msg),
             PhysicsErrorEnum::NumericalInstability(msg) => {
                 write!(f, "Numerical Instability: {}", msg)
+            }
+            PhysicsErrorEnum::NotConverged(msg) => {
+                write!(f, "Solver did not converge: {}", msg)
             }
             PhysicsErrorEnum::CalculationError(msg) => write!(f, "Calculation Error: {}", msg),
             PhysicsErrorEnum::MetricConventionError(msg) => {

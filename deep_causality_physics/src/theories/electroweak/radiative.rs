@@ -111,6 +111,7 @@ where
 
     let mut delta_r_weak = <T as From<f64>>::from(0.0);
     let mut sin2_eff = <T as From<f64>>::from(0.0);
+    let mut converged = false;
     // let mut sin2_on_shell; // Removed unused variable warning if detected, but it's used in loop.
 
     for _ in 0..max_iters {
@@ -148,10 +149,21 @@ where
         // Check convergence
         if (mw_new - mw).abs() < target_accuracy {
             mw = mw_new;
+            converged = true;
             break;
         }
 
         mw = mw_new;
+    }
+
+    // Unlike the two Newton solves in `kernels/astro`, there is no second test to fall back on: a
+    // fixed-point iteration's step size *is* its accuracy criterion, so an exhausted cap here means
+    // the iterate is not known to be the solution. It is refused rather than returned.
+    if !converged {
+        return Err(PhysicsError::NotConverged(alloc::format!(
+            "the electroweak W-mass fixed point did not converge in {max_iters} iterations to the \
+             target accuracy 1e-6"
+        )));
     }
 
     // 3. Reconstruct Standard Delta R (referenced to alpha(0)) for UI Consistency
