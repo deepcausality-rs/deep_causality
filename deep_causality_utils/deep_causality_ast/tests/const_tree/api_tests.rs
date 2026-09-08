@@ -67,3 +67,19 @@ fn test_modification_methods() {
     assert_eq!(child_values(&original), vec![11, 12, 13]);
     assert!(original.remove_child(3).is_none());
 }
+
+#[test]
+fn test_add_child_on_a_leaf_and_replace_children_with_none() {
+    // The two boundaries the three-child fixture cannot reach: growing from empty, and
+    // shrinking back to empty.
+    let leaf = ConstTree::new(1);
+    assert!(leaf.is_leaf());
+    let grown = leaf.add_child(ConstTree::new(2));
+    assert!(leaf.is_leaf(), "the original is untouched");
+    assert_eq!(child_values(&grown), vec![2]);
+
+    let emptied = grown.replace_children(Vec::new());
+    assert!(emptied.is_leaf());
+    assert_eq!(*emptied.value(), 1, "the root value survives");
+    assert_eq!(child_values(&grown), vec![2], "the original is untouched");
+}

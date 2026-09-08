@@ -46,8 +46,11 @@ fn test_with_children_accepts_any_by_value_iterator() {
 
 #[test]
 fn test_with_value_shares_the_children_rather_than_copying_them() {
-    // `with_value` is documented O(1) precisely because the children are shared. Comparing the
-    // two child slices by value cannot see the difference: a deep copy compares equal.
+    // `with_value` is documented O(1) precisely because the children are shared. No test
+    // observed the sharing; they compared the two child slices by value, which a copy would
+    // also satisfy. The signature happens to force sharing today — there is no `T: Clone` here,
+    // so only the `Arc` handles can be cloned — which makes this a guard on the bound rather
+    // than on the body: adding `T: Clone` would make a silent deep copy expressible.
     let original = ConstTree::with_children(
         1,
         vec![
@@ -63,6 +66,20 @@ fn test_with_value_shares_the_children_rather_than_copying_them() {
     for (a, b) in original.children().iter().zip(renamed.children()) {
         assert!(a.ptr_eq(b), "child subtree was copied, not shared");
     }
+}
+
+#[test]
+fn test_with_value_converts_through_into() {
+    // `with_value` takes `V: Into<T>`, not `T`. Every other call passes a `T`, where the
+    // conversion is the identity and the bound is unobserved.
+    let tree: ConstTree<String> = ConstTree::with_children(
+        String::from("root"),
+        vec![ConstTree::new(String::from("child"))],
+    );
+    let renamed = tree.with_value("renamed");
+    assert_eq!(renamed.value(), "renamed");
+    assert_eq!(tree.value(), "root");
+    assert_eq!(renamed.children()[0].value(), "child");
 }
 
 #[test]

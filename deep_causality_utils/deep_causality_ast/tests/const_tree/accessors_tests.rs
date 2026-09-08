@@ -115,3 +115,27 @@ fn test_search() {
     assert!(tree.contains(&40));
     assert!(!tree.contains(&99));
 }
+
+#[test]
+fn test_find_all_is_lazy_and_can_match_nothing() {
+    let tree = ConstTree::with_children(
+        10,
+        vec![
+            ConstTree::with_children(20, vec![ConstTree::new(40)]),
+            ConstTree::new(30),
+        ],
+    );
+
+    // A predicate nothing satisfies yields an empty iterator, not every node and not a panic.
+    assert_eq!(tree.find_all(|v| *v > 100).count(), 0);
+    // One that everything satisfies yields the whole tree in pre-order.
+    let all: Vec<_> = tree.find_all(|_| true).map(|n| *n.value()).collect();
+    assert_eq!(all, vec![10, 20, 40, 30]);
+    // And it is an iterator, so it can be stopped early rather than materialised.
+    let first_two: Vec<_> = tree
+        .find_all(|v| *v > 15)
+        .take(2)
+        .map(|n| *n.value())
+        .collect();
+    assert_eq!(first_two, vec![20, 40]);
+}

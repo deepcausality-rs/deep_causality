@@ -59,3 +59,18 @@ fn test_equality_is_sensitive_to_child_order_and_to_shape() {
     // And a differing child count at equal prefixes.
     assert_ne!(ab, ConstTree::with_children(0, vec![ConstTree::new(1)]));
 }
+
+/// `Eq` is a marker with no methods, so only a bound can require it. Nothing in the suite did,
+/// which means `impl<T: Eq> Eq for ConstTree<T>` could have been deleted unnoticed.
+fn requires_total_equality<T: Eq>(a: &T, b: &T) -> bool {
+    a == b
+}
+
+#[test]
+fn test_the_tree_is_totally_equatable_when_its_values_are() {
+    let a = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    let b = ConstTree::with_children(1, vec![ConstTree::new(2)]);
+    let c = ConstTree::with_children(1, vec![ConstTree::new(3)]);
+    assert!(requires_total_equality(&a, &b));
+    assert!(!requires_total_equality(&a, &c));
+}
