@@ -182,29 +182,81 @@ where
     }
 
     /// Invert `t(s) = dt` by a monotone Newton iteration (`dt/ds = |u|² > 0`).
+    ///
+    /// # Two convergence tests, because each is unreachable in the other's regime
+    ///
+    /// The Newton step is `d = (t − dt) / radius`, so the step test and the residual test differ by
+    /// a factor of `radius` and neither covers the whole input space:
+    ///
+    /// * **Near periapsis of an eccentric orbit** `radius` is small, so `d` is inflated and the
+    ///   step test asks for an accuracy the arithmetic cannot deliver. Measured on
+    ///   `e = 0.9999, a = 7000 km`, where the periapsis radius is **700 m**: the step test was
+    ///   unreachable by factors of 9 to 1700 while `t` was already correct to the last bit.
+    /// * **On a large, slow orbit** `radius` is huge — `1e9 m` — so a step of `1e-15` corresponds
+    ///   to a *time* residual of `1e-6 s`, and the residual test is the one that cannot be met.
+    ///
+    /// Accepting on **either** covers both, and each is a sound statement of convergence on its own:
+    /// one says the root has stopped moving, the other that `t(s)` equals `dt` to working precision.
+    ///
+    /// The previous version tested only the step inside the loop and fell back to the residual once,
+    /// at whatever iterate the exhausted loop happened to land on. That made the outcome depend on
+    /// the last bits of `sin` and `cos`: the sweep in `ks_reachability_tests` converged on
+    /// macOS/aarch64 and reported `NotConverged` for `e = 0.9999, a = 7e6` on the Linux/x86_64 CI,
+    /// the two libms differing in nothing else.
+    ///
+    /// Measured over that sweep's 108 combinations after the change: **no case reaches the cap**,
+    /// 95 return on the residual and 13 on the step, and the deepest takes 80 iterations. Before
+    /// it, four cases exhausted all 100 and were decided by a residual evaluated at whichever
+    /// iterate the oscillation ended on — the margin there was a factor of five, which is about
+    /// two bits, and two bits is what a different `sin` costs.
     fn solve_fictitious_time(&self, dt: R) -> Result<R, PhysicsError> {
         let two = Self::lit(2.0)?;
         let c_lin = (self.aa + self.bb) / two; // the s-average of |u|²; exact asymptotic slope
         let mut s = dt / c_lin;
-        let tol = Self::lit(1e-15)?;
+        // Scaled by the scalar's own precision, as `two_body::solve_kepler` is: a fixed `1e-15` is
+        // below what `f32` can reach at all and meaningless in `BFloat16`.
+        let tol = Self::lit(8.0)? * R::epsilon();
+        let bound = tol * (dt.abs() + R::one());
+
+        let mut best_s = s;
+        let mut best_residual: Option<R> = None;
+
         for _ in 0..100 {
             let (t, radius) = self.t_and_radius(s)?;
+            let residual = (t - dt).abs();
+            if best_residual.is_none_or(|b| residual < b) {
+                best_residual = Some(residual);
+                best_s = s;
+            }
+            if residual <= bound {
+                return Ok(s);
+            }
             let d = (t - dt) / radius;
             s -= d;
             if d.abs() < tol * (s.abs() + R::one()) {
                 return Ok(s);
             }
         }
-        // As in `two_body::solve_kepler`: the step running out is not the same as the answer being
-        // wrong, so accept an iterate that already inverts `t(s) = dt` to the working tolerance and
-        // reserve the refusal for one that satisfies neither test.
+
+        // The loop tests `s₀ … s₉₉`; the hundredth update produces an `s₁₀₀` it never evaluates,
+        // and for a slowly-converging case that is the best iterate of all. Fold it in before
+        // deciding — leaving it out turned four converging cases into refusals.
         let (t, _) = self.t_and_radius(s)?;
-        if (t - dt).abs() < tol * (dt.abs() + R::one()) {
-            return Ok(s);
+        let residual = (t - dt).abs();
+        if best_residual.is_none_or(|b| residual < b) {
+            best_residual = Some(residual);
+            best_s = s;
+        }
+
+        // The cap is reached only when no iterate inverted `t(s) = dt` to working precision. The
+        // best one is still the best available answer, so it is accepted on the same test rather
+        // than the arbitrary last one; the refusal is reserved for a run where even that fails.
+        if best_residual.is_some_and(|b| b <= bound) {
+            return Ok(best_s);
         }
         Err(PhysicsError::NotConverged(
-            "the fictitious-time inversion t(s) = dt did not converge in 100 iterations: neither \
-             the step test nor the residual test was met"
+            "the fictitious-time inversion t(s) = dt did not converge in 100 iterations: no \
+             iterate inverted t(s) = dt to the working tolerance"
                 .into(),
         ))
     }
