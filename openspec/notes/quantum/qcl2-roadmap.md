@@ -5,8 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # QCL-2: Road map from the proposed QCL to abstraction-based causal reasoning
 
-**What this is.** A staged plan from QCL as proposed (`proposal.md`, `design.md`,
-`qcl-design-note.md`, all 2026-08-31) to a second-generation QCL that represents the relation between
+**What this is.** A staged plan to a second-generation QCL that represents the relation between
 a physical process and its logical description as a first-class object, and reasons across it. The
 theoretical basis is Lorenz & Tull, *Causal and Compositional Abstraction* (arXiv:2602.16612, Feb
 2026), read in full for this plan. The engineering basis is the shipped `deep_causality_quantum`

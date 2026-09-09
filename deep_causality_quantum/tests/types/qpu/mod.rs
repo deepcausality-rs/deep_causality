@@ -9,4 +9,6 @@ mod circuit_tests;
 #[cfg(all(test, feature = "qpu"))]
 mod evidence_tests;
 #[cfg(all(test, feature = "qpu"))]
+mod sampler_tests;
+#[cfg(all(test, feature = "qpu"))]
 mod sim_tests;
