@@ -114,7 +114,9 @@ fn test_a_non_hermitian_input_records_the_defect_and_examines_no_spectrum() {
     assert_eq!(report.examined(), 0);
     assert_eq!(report.verdict(), CheckVerdict::Rejected);
     assert!(matches!(
-        check_completely_positive(&non_hermitian, TOL).unwrap_err().0,
+        check_completely_positive(&non_hermitian, TOL)
+            .unwrap_err()
+            .0,
         QuantumErrorEnum::NonPositiveOperator(_)
     ));
 }
@@ -142,7 +144,11 @@ fn test_a_non_tp_family_reports_its_defect_and_the_shipped_form_still_errs() {
     let report = check_trace_preserving_report(&j, 2, 2, TOL).unwrap();
     assert_eq!(report.verdict(), CheckVerdict::Rejected);
     let record = &report.checks()[0];
-    assert!((record.measured - 0.75).abs() < 1e-12, "defect {}", record.measured);
+    assert!(
+        (record.measured - 0.75).abs() < 1e-12,
+        "defect {}",
+        record.measured
+    );
     assert!(record.margin > 1.0);
     assert_eq!(report.examined(), 4);
     assert!(check_trace_preserving(&j, 2, 2, TOL).is_err());

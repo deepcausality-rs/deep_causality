@@ -5,6 +5,10 @@
 #[cfg(test)]
 mod bridge_tests;
 #[cfg(test)]
+mod carrier_wrappers_tests;
+#[cfg(test)]
+mod channel_report_tests;
+#[cfg(test)]
 mod channel_tests;
 #[cfg(test)]
 mod gates_haruna_tests;
