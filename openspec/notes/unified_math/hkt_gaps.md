@@ -184,8 +184,77 @@ These are not container gaps, and they set how much any container witness is wor
 | Trait | Implementers on `main` | Note |
 |---|---|---|
 | `Traversable` | `OptionWitness`, `ResultWitness<E>`, `VecWitness` in `haft`; `DenseVectorWitness` in `linear`; `CausalTensorWitness` in `tensor` | **closed** by `add-hkt-traversable-cochain`. Five carriers, up from two. The composition law is not tested and cannot be: a `Compose<M, N>` applicative needs `N::Type<A>: Clone` on a method-level parameter. A Writer-style carrier substitutes for it, catching the one defect class it would have caught — a traversal visiting elements in the wrong order while returning the right result |
-| `NaturalTransformation` | the `OptionToVec` fixture in `haft` only | archived M2. `Chain`'s functor still delegates to `CsrMatrixWitness::fmap` as a call rather than a typed transformation |
+| `NaturalTransformation` | the `OptionToVec` fixture in `haft` only | archived M2, **re-measured 2026-09-13 and re-scoped**; see §5.1. The `Chain` example this row used to give is a category error, the matrix conversions cannot take the trait, and the transformations that can have no caller |
 | `Kleisli` | none | archived H3, and it depended on H1; `linear`'s `DenseVector` and `tensor` both hold a `Monad` now |
+
+### 5.1 Errata: what `NaturalTransformation` can and cannot be given
+
+Measured on `main` on 2026-09-13, by writing the impls rather than reading the signatures. The row
+above used to name one motivating example and imply the work was mechanical. Neither held.
+
+**The `Chain` example was a category error.** The row said "`Chain`'s functor still delegates to
+`CsrMatrixWitness::fmap` as a call rather than a typed transformation". That call is
+`CsrMatrix<A> -> CsrMatrix<B>`: a functor map inside one witness, not an `F<A> -> G<A>` between two.
+It is not a natural transformation and cannot be retyped as one.
+
+**The matrix conversions cannot take the trait.** `linear/src/extensions/conversions.rs` holds the
+only pair of conversions between two witnessed containers, `csr_to_dense` and `dense_to_csr`.
+Writing `impl NaturalTransformation<CsrMatrixWitness, DenseMatrixWitness>` fails:
+
+```
+error[E0277]: the trait bound `A: CommutativeSemiring` is not satisfied
+error[E0277]: the trait bound `A: Copy` is not satisfied
+error[E0277]: can't compare `A` with `A`
+```
+
+`transform<A>` admits every `A`; the conversions need `T: CommutativeSemiring + Copy + PartialEq`.
+The bound is intrinsic, not incidental: densifying materialises structural zeros
+(`vec![T::zero(); r * c]`) and sparsifying tests against zero. A conversion that *invents* elements
+cannot be parametric in them, which is exactly why `OptionToVec` — which only moves what it was
+handed — needs no bounds. This is the same shape as the `Compose<M, N>` obstruction recorded
+against the composition law: a method-level `A` that neither the trait nor an impl can constrain.
+
+The other cross-container functions fail earlier. `csr_i8_to_dense_i64` changes the element
+(`i8 -> i64`), so it is not an `F<A> -> G<A>` at all, and the `PackedGf2` pair is generic in the
+storage word, which §4 already records.
+
+**What can take the trait, and does.** Three bound-free extractions —
+`CausalTensor<A> -> Vec<A>` (`into_vec`, `to_vec`) and `Cochain<A> -> Vec<A>` (`into_values`) — and,
+more interestingly, the **forgetful maps on the effect carriers**. `StudyEffect<T>` in
+`deep_causality_cfd` is `Result<T, StudyError>` plus a warning log; `CdlEffect<T>` in
+`deep_causality_discovery` is `Result<T, CdlError>` plus a warning log. The map that drops the log
+is a natural transformation to `ResultWitness<E>`, it needs no bounds because it only moves the
+payload, and both were implemented and checked: the naturality square holds and `transform` accepts
+a `String` payload as readily as a scalar.
+
+`GraphGeneratableEffect<T, E, L>` is *not* in that family. It holds `value: Option<T>` and
+`error: Option<E>` separately, so `value: None, error: None` is representable and meaningless, and a
+total transformation to `Result` has to decide what that state maps to. That is a question about
+the type's invariant, not about this trait.
+
+**Why it is still not worth building.** The measurement that settles it is the absence of a caller,
+counted rather than assumed:
+
+| Site | Count |
+|---|---|
+| `StudyEffect` lowerings in `deep_causality_cfd/src` | 1 — `Study::verdict`, and it *keeps* the warnings rather than forgetting them, so the forgetful map is the wrong tool there |
+| `CdlEffect` lowerings in `deep_causality_discovery/src` | 0 |
+| the same in that crate's tests | 51 |
+| other `into_parts()` calls in `cfd/src` | 2, both on `LerayProjection`, an unrelated type |
+
+The remaining `.inner` reads in `discovery` are inside its own `Functor`, `Monad` and `Applicative`
+impls: the functor's machinery, not a lowering an NT would replace. So an implementation would add
+two law-tested morphisms that no production path calls, and would adopt at one site that wants the
+opposite behaviour.
+
+**The precondition to revisit.** `NaturalTransformation` has no consumer in the trait sense either:
+nothing in the workspace takes one as a parameter. Its docstring names the consumer it was designed
+for — transporting a Kleisli interpretation along `F => G`, so a term interpreted once can be
+retargeted at a different effect carrier — and `ArrowCore::interpret_kleisli` lands a term in
+`Kleisli<M>` for a fixed `M` with no way to move it. Build the transport combinator, or find a
+production path that genuinely wants to forget its warnings, and the impls become worth having on
+the same afternoon. Until then the finding is: the trait is sound, the effect carriers are its
+natural instances, and nothing needs them yet.
 
 ## 6. Ranking
 
@@ -196,7 +265,7 @@ These are not container gaps, and they set how much any container witness is wor
 | 3 | `CausalTensorTrainOperator` witness | **not easy** — see the §3.2 errata | resolving the `Truncation<T::Real>` field, a design decision |
 | 4 | ~~`Cochain` witness~~ **closed**; `CochainWitness` carries `Functor` and `Foldable`, matching `ChainWitness`, and declines `Pure` | easy | nothing |
 | 5 | `rand` carrier type and `Functor` | moderate | item 2 |
-| 6 | `NaturalTransformation` for the existing conversions | moderate | nothing |
+| 6 | `NaturalTransformation` — re-scoped to the effect carriers; see §5.1 | easy once wanted | **a consumer**: the Kleisli transport combinator, or a production path that forgets warnings. Not "nothing" |
 
 Items 3 and 4 were filed as one change; item 4 shipped and item 3 was deferred once its cost was measured. Item 1 should precede item 2, because a witness on
 `Uncertain` without a `Traversable` on the containers around it leaves the uncertainty a payload,
