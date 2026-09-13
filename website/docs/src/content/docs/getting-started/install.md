@@ -36,7 +36,7 @@ Reach for one of these when the umbrella is broader than you need:
 - [`deep_causality_ethos`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_ethos): the Effect Ethos and its Teloids.
 - [`deep_causality_uncertain`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_uncertain): a first-order type for uncertain values.
 
-The math stack is a set of crates that layer on each other. [Uniform Math](/concepts/uniform-math/) is the map; the short version:
+The math stack is a set of crates that layer on each other. [Unified Math](/concepts/uniform-math/) is the map; the short version:
 
 - Foundation: [`deep_causality_num`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num) (representation traits), [`deep_causality_algebra`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algebra) (the trait tower), [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) (higher-kinded types), [`deep_causality_metric`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_metric) (metric signatures), [`deep_causality_par`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_utils/deep_causality_par) (parallelism primitives).
 - Number types: [`deep_causality_num_complex`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num_complex), [`deep_causality_num_dual`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num_dual), [`deep_causality_num_rational`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_num_rational).

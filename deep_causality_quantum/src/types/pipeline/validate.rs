@@ -4,9 +4,12 @@
  */
 
 use crate::QuantumError;
+use crate::types::abstraction::{Abstraction, QcModel};
+use crate::types::circuit_model::{CircuitModel, NumericCaps};
 use crate::types::decision::{Check, CheckItem, CheckReport};
 use crate::types::pipeline::config::{
-    CodeSubject, Config, ModelSubject, PlantSubject, QclBuilder, Structural,
+    CircuitSubject, CodeSubject, Config, ModelSubject, PlantSubject, QclBuilder, ScreenOrigin,
+    Structural, SubjectOrigin,
 };
 use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::hypothesis::{Hypothesis, Marginalised};
@@ -94,6 +97,29 @@ impl<R: RealField, N: NaturalNumber, S> Screened<R, N, S> {
     /// Whether the report is current.
     pub fn status(&self) -> ScreenStatus<R> {
         self.status
+    }
+}
+
+impl<R: RealField, N: NaturalNumber, S: SubjectOrigin> Screened<R, N, S> {
+    /// Where the screened subject's factorization came from.
+    pub fn origin(&self) -> ScreenOrigin {
+        S::origin()
+    }
+
+    /// Admits the screen into an abstraction, which needs a compositional model.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NoCompositionalModel`] unless the origin is a circuit: a process operator
+    /// without its circuit is the marginal of a compositional model and not one itself (Lorenz &
+    /// Tull, Example 62), so it validates as in v1 and stops.
+    pub fn require_compositional(&self) -> Result<(), QuantumError> {
+        match self.origin() {
+            ScreenOrigin::Circuit => Ok(()),
+            other => Err(QuantumError::NoCompositionalModel(alloc::format!(
+                "{other:?}"
+            ))),
+        }
     }
 }
 
@@ -300,6 +326,151 @@ where
 }
 
 // ---------------------------------------------------------------------------
+// The circuit subject: the dilation's factorization, screened as a model would be.
+// ---------------------------------------------------------------------------
+
+impl<'c, R, N> Validate<'c, R, N, CircuitSubject<R>>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+    N: NaturalNumber,
+{
+    /// The Markov commutativity check on the dilation's factors, provenance `Rederived`.
+    pub fn check_markov(mut self, tolerance: &CommutatorTolerance<R>) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        let dilated = match self.cfg.subject().model().dilation() {
+            Ok(d) => d,
+            Err(e) => {
+                self.fail(e);
+                return self;
+            }
+        };
+        match quantum_markov_check_report(dilated.factors(), dilated.supports(), tolerance) {
+            Ok(report) => {
+                if let Err(e) = markov_certificate(&report) {
+                    self.fail(e);
+                }
+                self.record("check_markov", report);
+            }
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+
+    /// C₃-exclusion over the structure the dilation's supports encode, between the declared node
+    /// systems. Both lists must be non-empty and name nodes of the dilation; an empty list or a
+    /// node outside it is the stage's failure.
+    pub fn check_decomposable(mut self, inputs: &[usize], outputs: &[usize]) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        if inputs.is_empty() || outputs.is_empty() {
+            self.fail(QuantumError::CalculationError(
+                "check_decomposable needs at least one input and one output node".into(),
+            ));
+            return self;
+        }
+        let result = self
+            .cfg
+            .subject()
+            .model()
+            .dilation()
+            .and_then(|d| {
+                let n = d.legs().len();
+                match inputs.iter().chain(outputs).find(|&&node| node >= n) {
+                    Some(bad) => Err(QuantumError::CalculationError(alloc::format!(
+                        "check_decomposable names node {bad}, but the dilation has {n} nodes"
+                    ))),
+                    None => d.hypothesis("circuit"),
+                }
+            })
+            .and_then(|h| h.check_decomposable_from_supports(inputs, outputs));
+        match result {
+            Ok(report) => self.record("check_decomposable", report),
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+}
+
+impl<'c, R, N> Validate<'c, R, N, CircuitSubject<R>>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+    N: NaturalNumber,
+{
+    /// Definition 49's structural precheck of an abstraction whose low-level model is the screened
+    /// circuit, before any operator is formed. A partition that is not simple is the stage's
+    /// failure, naming the offending pair.
+    pub fn check_alignment_structure<H: QcModel<R>>(
+        mut self,
+        abstraction: &Abstraction<R, CircuitModel<R>, H>,
+        partition: &[Vec<usize>],
+    ) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        if abstraction.low() != self.cfg.subject().model() {
+            self.fail(QuantumError::CalculationError(
+                "the abstraction's low-level model is not the screened circuit".into(),
+            ));
+            return self;
+        }
+        match abstraction.check_alignment_structure(partition) {
+            Ok(structure) => {
+                self.record("check_alignment_structure", structure.report());
+                if let Some((x, y)) = structure.simple_witness {
+                    self.fail(QuantumError::CalculationError(alloc::format!(
+                        "the partition is not simple: α({x}) meets π({y}); scope {:?}",
+                        structure.scope
+                    )));
+                }
+            }
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+
+    /// The numeric naturality check of an abstraction whose low-level model is the screened
+    /// circuit. A rejected square is the stage's failure, naming the query.
+    pub fn check_naturality<H: QcModel<R>>(
+        mut self,
+        abstraction: &Abstraction<R, CircuitModel<R>, H>,
+        caps: &NumericCaps,
+    ) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        if abstraction.low() != self.cfg.subject().model() {
+            self.fail(QuantumError::CalculationError(
+                "the abstraction's low-level model is not the screened circuit".into(),
+            ));
+            return self;
+        }
+        match abstraction.check_naturality(caps) {
+            Ok(naturality) => {
+                if let Some(rejected) = naturality.report.first_rejection() {
+                    let CheckItem::Index(i) = rejected.item else {
+                        unreachable!("naturality records are indexed")
+                    };
+                    self.fail(QuantumError::CalculationError(alloc::format!(
+                        "the naturality square for {:?} does not commute: residual {:?} in {} \
+                         against {:?}",
+                        abstraction.signature().queries()[i],
+                        rejected.measured,
+                        naturality.norm,
+                        rejected.threshold
+                    )));
+                }
+                self.record("check_naturality", naturality.report);
+            }
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // The plant subject with structural candidates: each candidate screened, the admitted kept.
 // ---------------------------------------------------------------------------
 
@@ -340,14 +511,20 @@ where
     /// between the declared systems. A candidate containing a `C₃` is not admitted. Each
     /// structural candidate implies a structure of its own, and the supports carry it, so no
     /// graph is needed here.
-    pub fn check_decomposable(self, inputs: &[usize], outputs: &[usize]) -> Self {
+    pub fn check_decomposable(mut self, inputs: &[usize], outputs: &[usize]) -> Self {
+        if self.failure.is_none() && (inputs.is_empty() || outputs.is_empty()) {
+            self.fail(QuantumError::CalculationError(
+                "check_decomposable needs at least one input and one output system".into(),
+            ));
+            return self;
+        }
         self.screen_decomposable(|h| h.check_decomposable_from_supports(inputs, outputs))
     }
 
     /// C₃-exclusion for every admitted candidate over `graph`'s reachability between the declared
     /// systems, for candidates whose structure lives in a graph rather than in their supports.
     pub fn check_decomposable_with<T, G>(
-        self,
+        mut self,
         graph: &G,
         inputs: &[usize],
         outputs: &[usize],
@@ -356,6 +533,12 @@ where
         T: Clone,
         G: CausableGraph<T>,
     {
+        if self.failure.is_none() && (inputs.is_empty() || outputs.is_empty()) {
+            self.fail(QuantumError::CalculationError(
+                "check_decomposable needs at least one input and one output system".into(),
+            ));
+            return self;
+        }
         self.screen_decomposable(|h| h.check_decomposable(graph, inputs, outputs))
     }
 

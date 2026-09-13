@@ -52,4 +52,4 @@ L1 is deliberately bounded, and the map is honest about its edges.
 ## Related reading
 
 - [`lean/README.md`](https://github.com/deepcausality-rs/deep_causality/blob/main/lean/README.md): how to build and check the proofs locally.
-- [The Axiom](/concepts/axiom/) and [Uniform Math](/concepts/uniform-math/): the concepts these proofs stand under.
+- [The Axiom](/concepts/axiom/) and [Unified Math](/concepts/uniform-math/): the concepts these proofs stand under.

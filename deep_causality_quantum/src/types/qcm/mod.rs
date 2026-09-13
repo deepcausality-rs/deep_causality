@@ -8,12 +8,14 @@
 //! commutativity check wired to the engine freeze hook, the C₃-exclusion
 //! faithfulness check, and the immutable environmental preparation.
 
+pub(crate) mod dilation;
 pub(crate) mod environment;
 pub(crate) mod faithfulness;
 pub(crate) mod hypothesis;
 pub(crate) mod markov_freeze;
 pub(crate) mod process_factors;
 
+pub use dilation::*;
 pub use environment::*;
 pub use faithfulness::*;
 pub use hypothesis::*;

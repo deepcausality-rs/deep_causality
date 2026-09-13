@@ -123,6 +123,72 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/abstraction/* test suites — abstractions between compositional models
+# =============================================================================
+
+rust_test_suite(
+    name = "abstraction",
+    srcs = glob([
+        "tests/types/abstraction/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/circuit_model/* test suites — compositional models in QC and their two semantics
+# =============================================================================
+
+rust_test_suite(
+    name = "circuit_model",
+    srcs = glob([
+        "tests/types/circuit_model/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# utils_tests/* test suites — the shared fixtures compiled into the library
+# =============================================================================
+
+rust_test_suite(
+    name = "utils_tests",
+    srcs = glob([
+        "tests/utils_tests/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/evidence/* test suites
 # =============================================================================
 

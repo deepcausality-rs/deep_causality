@@ -3,7 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
+mod abstraction;
+#[cfg(test)]
 mod carriers;
+#[cfg(test)]
+mod circuit_model;
 #[cfg(test)]
 mod decision;
 mod density_matrix_tests;

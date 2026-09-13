@@ -71,6 +71,8 @@ if is_active {
 
 `is_active` is delegated to the `CsmEvaluable` trait. A deterministic effect resolves to `true` or `false` directly; an uncertain effect runs its hypothesis test against the state's `UncertainParameter`. Anything that is not a value (relay, error, none) is treated as inactive and fires nothing.
 
+Read `fire_action_with_ethos_check` as a name the refactor left behind. The helper fires the action directly; the [Effect Ethos](/concepts/effect-ethos/) moved to its own crate, so an application that wants a policy gate calls `evaluate_action` itself before firing.
+
 ## When to reach for it
 
 A CSM fits whenever the question "should this fire?" has to follow a causal verdict rather than a fixed threshold. Common shapes:

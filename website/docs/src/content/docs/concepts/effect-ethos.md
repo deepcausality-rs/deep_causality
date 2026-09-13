@@ -1,6 +1,6 @@
 ---
 title: Effect Ethos
-description: The deontic guardrail that intercepts every action the Causal State Machine proposes before it executes.
+description: The deontic guardrail an application places in front of the actions a Causal State Machine proposes.
 sidebar:
   order: 4
 ---
@@ -13,9 +13,9 @@ DeepCausality separates reasoning from action by design:
 
 1. **Reasoning**: a Causaloid (Singleton, Collection, or hypergraph) and the Causal Monad produce a `PropagatingEffect`. This is the inference layer. It answers "what is the case?"
 2. **Action proposal**: the CSM reads the propagating effect, evaluates which of its registered causal states have become active, and constructs a `ProposedAction` for each active state. This is the bridge between inference and the outside world. It answers "what to do next?"
-3. **Action verification**: the Effect Ethos intercepts every proposed action before it fires. It evaluates the proposal against a graph of Teloids and returns a `Verdict`. This is the guardrail layer. It answers "is the system *allowed* to do that here, now, under these rules?"
+3. **Action verification**: the Effect Ethos evaluates a proposed action against a graph of Teloids and returns a `Verdict`. This is the guardrail layer. It answers "is the system *allowed* to do that here, now, under these rules?"
 
-The Effect Ethos is what safeguards the CSM. An action that the CSM would otherwise fire does not fire if the Ethos returns an impermissible verdict.
+The Effect Ethos is what safeguards the CSM, and the application wires the two together. The Ethos lives in its own crate, `deep_causality_ethos`, and the core CSM fires an active state's action directly. A deployment that needs the guardrail calls `evaluate_action` before firing and acts on the verdict.
 
 ## The Origin of the Effect Ethos
 
@@ -25,7 +25,7 @@ The realization was that every action the system is about to take needs an indep
 
 The answer came from Olson, Salas-Damian, and Forbus at Northwestern University in [*A Defeasible Deontic Calculus for Resolving Norm Conflicts*](https://github.com/deepcausality-rs/deep_causality/blob/main/docs/papers/ddic.pdf). The paper introduces the Defeasible Deontic Inheritance Calculus (DDIC): a formalism for resolving a continuous stream of possibly conflicting norms. It defines the three deontic modalities (Obligatory, Optional, Impermissible), characterizes the three conflict types (direct, indirect, intersecting), and proves that three resolution heuristics (Lex Specialis, Lex Posterior, Lex Superior) are sufficient to axiomatize conflict resolution under deontic inheritance. The paper goes further and shows that one widely used multi-agent strategy is a red herring once defeasance is modeled correctly.
 
-The Effect Ethos is an implementation of DDIC inside DeepCausality. A `Teloid` is one norm tuple from the calculus. The `TeloidGraph` carries the inheritance and defeasance edges DDIC requires. `evaluate_action` runs the activation, conflict detection, and resolution steps from the paper, in the order DDIC prescribes, and returns a `Verdict` whose justification field is the audit trail the formalism implies. The mapping is intentional. DDIC gave a theoretically justified axiomatization of norm conflict detection and resolution; the Effect Ethos makes it runnable, embeds it in a typed context, and wires it to the Causal State Machine so that every proposed action passes through the calculus before it executes.
+The Effect Ethos is an implementation of DDIC inside DeepCausality. A `Teloid` is one norm tuple from the calculus. The `TeloidGraph` carries the inheritance and defeasance edges DDIC requires. `evaluate_action` runs the activation, conflict detection, and resolution steps from the paper, in the order DDIC prescribes, and returns a `Verdict` whose justification field is the audit trail the formalism implies. The mapping is intentional. DDIC gave a theoretically justified axiomatization of norm conflict detection and resolution; the Effect Ethos makes it runnable and embeds it in a typed context, so an application can pass every proposed action through the calculus before it executes.
 
 
 ## The problem the Ethos solves
@@ -62,7 +62,7 @@ The [Teleology preprint](https://github.com/deepcausality-rs/deep_causality/blob
 
 ## Building an Ethos
 
-Norms are added through `add_deterministic_norm` (for deterministic Causaloid conditions) or `add_uncertain_norm` (for `Uncertain` predicates). Inheritance and defeasance edges between Teloids are wired up with `link_inheritance` and `link_defeasance`. Before the Ethos can be queried by a CSM, it must be `freeze()`'d. Freezing finalizes the Teloid graph the same way it finalizes a Causaloid graph, switching the underlying [`ultragraph`](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph) backend to its query-optimized CSR form.
+Norms are added through `add_deterministic_norm` (for deterministic Causaloid conditions) or `add_uncertain_norm` (for `Uncertain` predicates). Inheritance and defeasance edges between Teloids are wired up with `link_inheritance` and `link_defeasance`. Before the Ethos can be queried, it must be both frozen and verified. `freeze()` finalizes the Teloid graph the same way it finalizes a Causaloid graph, switching the underlying [`ultragraph`](https://github.com/deepcausality-rs/deep_causality/tree/main/ultragraph) backend to its query-optimized CSR form. `verify_graph()` then checks the frozen graph for cycles and sets the verified flag. `evaluate_action` rejects a graph that is not verified, and any later edit clears the flag, so a modified Ethos must be verified again.
 
 ```rust
 use deep_causality_ethos::EffectEthos;
@@ -71,13 +71,14 @@ let mut ethos: EffectEthos<_, _, _, _, _, _, _> = EffectEthos::new();
 // ethos.add_deterministic_norm(...);
 // ethos.link_inheritance(general_id, specific_id);
 ethos.freeze();
+ethos.verify_graph()?; // rejects a cyclic graph; evaluate_action requires this
 ```
 
 The full API is on [docs.rs](https://docs.rs/deep_causality_ethos).
 
 ## Evaluating a proposed action
 
-The CSM hands a `ProposedAction` to the Ethos along with the current Context and the scope tags that apply to the proposal. The Ethos returns a `Verdict`:
+The caller hands a `ProposedAction` to the Ethos along with the current Context and the scope tags that apply to the proposal. The Ethos returns a `Verdict`:
 
 ```rust
 use deep_causality_ethos::{DeonticInferable, TeloidModal};

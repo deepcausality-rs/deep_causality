@@ -25,10 +25,16 @@ extern crate alloc;
 
 pub(crate) mod error;
 pub(crate) mod types;
+// Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
+// because they are not API.
+#[doc(hidden)]
+pub mod utils_tests;
 
 pub use crate::error::quantum_error::{QuantumError, QuantumErrorEnum};
 
+pub use crate::types::abstraction::*;
 pub use crate::types::carriers::*;
+pub use crate::types::circuit_model::*;
 pub use crate::types::decision::*;
 pub use crate::types::design::*;
 #[cfg(feature = "qcm")]

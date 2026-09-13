@@ -5,3 +5,4 @@
 mod error;
 mod formalization_lean;
 mod types;
+mod utils_tests;

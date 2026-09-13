@@ -675,3 +675,106 @@ fn test_the_code_subject_decides_each_hadamard_on_one_qubit_of_the_square_torus(
     assert_eq!(screened.stages()[0].1.examined(), 2);
     assert_eq!(screened.report().unwrap().verdict(), CheckVerdict::Accepted);
 }
+
+#[test]
+fn test_check_ldpc_weights_derives_the_code_when_no_stage_did() {
+    // `derive_code` is optional before `check_ldpc_weights`: the stage derives the code
+    // itself when none is present. The result must match the explicit two-stage run
+    // except for the extra stage record.
+    let torus = || {
+        reference_spaces()
+            .into_iter()
+            .find(|(f, _, _)| f.name() == "torus_2")
+            .unwrap()
+            .0
+    };
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_code(torus())
+        .build()
+        .unwrap();
+
+    let implicit = QclBuilder::validate(&cfg).check_ldpc_weights(6);
+    assert!(implicit.code().is_some(), "the code was derived");
+    let implicit_report = implicit.ldpc().unwrap().report.clone();
+    let implicit_stages: Vec<String> = implicit
+        .finalize()
+        .unwrap()
+        .stages()
+        .iter()
+        .map(|(n, _)| n.to_string())
+        .collect();
+    assert_eq!(
+        implicit_stages,
+        vec!["derive_code", "check_ldpc_weights"],
+        "the implicit derivation records the same stage the explicit call would"
+    );
+
+    let explicit = QclBuilder::validate(&cfg)
+        .derive_code()
+        .check_ldpc_weights(6);
+    // The same weights either way; only the stage list differs.
+    assert_eq!(implicit_report, explicit.ldpc().unwrap().report);
+    // Both routes reach the same two stages, so calling `derive_code` first is a
+    // no-op rather than a second derivation.
+    let explicit_stages: Vec<String> = explicit
+        .finalize()
+        .unwrap()
+        .stages()
+        .iter()
+        .map(|(n, _)| n.to_string())
+        .collect();
+    assert_eq!(implicit_stages, explicit_stages);
+}
+
+#[test]
+fn test_a_failed_stage_short_circuits_the_ones_that_follow_it() {
+    // A bound the X checks exceed rejects at `check_ldpc_weights`. Every later stage
+    // must then be a no-op: no further stage record appears, and `finalize` reports
+    // the first failure rather than a later one.
+    let torus = reference_spaces()
+        .into_iter()
+        .find(|(f, _, _)| f.name() == "torus_2")
+        .unwrap()
+        .0;
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_code(torus)
+        .build()
+        .unwrap();
+
+    let rejected = QclBuilder::validate(&cfg).check_ldpc_weights(3);
+    assert!(rejected.ldpc().unwrap().report.first_rejection().is_some());
+
+    // A rejected weight report is a recorded verdict, not a stage failure, so the
+    // stages after it still run and the screen carries the rejection.
+    let screened = QclBuilder::validate(&cfg)
+        .check_ldpc_weights(3)
+        .check_class_invariance()
+        .finalize();
+    match screened {
+        Ok(s) => assert_eq!(
+            s.report().unwrap().verdict(),
+            CheckVerdict::Rejected,
+            "the screen carries the rejection"
+        ),
+        Err(e) => panic!("a rejected weight bound is a verdict, not an error: {e:?}"),
+    }
+}
+
+#[test]
+fn test_a_bound_no_check_exceeds_accepts_the_weights() {
+    // The other end of the bound range: a bound above every row and column weight.
+    let torus = reference_spaces()
+        .into_iter()
+        .find(|(f, _, _)| f.name() == "torus_2")
+        .unwrap()
+        .0;
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_code(torus)
+        .build()
+        .unwrap();
+    let generous = QclBuilder::validate(&cfg).check_ldpc_weights(64);
+    assert!(
+        generous.ldpc().unwrap().report.first_rejection().is_none(),
+        "no check exceeds 64"
+    );
+}

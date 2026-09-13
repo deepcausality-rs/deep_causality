@@ -611,7 +611,7 @@ conservation budgets. Its parts are bound the way the three computations above w
 | assimilation working set | 10 model states at `f64` |
 | ensemble statistics | mean and spread of 20 fields at `f64` |
 | reference budgets | 4 budgets × 100 levels per member |
-| `Float106` cost per operation | 10 to 20 × `f64`, so it is spent on reductions and never on fields |
+| `Float106` cost per operation | 2 to 4 × `f64`, so it is spent on reductions and never on fields |
 | instance headroom | 10 % of node memory for the operating system, MPI and I/O |
 | the run | one assimilation cycle and its 40 forecasts: 1 hour at `f64`, of which the members take 80 % and the assimilation and I/O 20 % |
 | `f32` time on the members | 40 % less than `f64`, transferred from ECMWF's measurement on the IFS (Váňa et al., 2017) |

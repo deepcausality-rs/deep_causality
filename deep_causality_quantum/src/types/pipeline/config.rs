@@ -5,6 +5,7 @@
 
 use crate::QuantumError;
 use crate::types::carriers::{Observable, QuantumPlant};
+use crate::types::circuit_model::CircuitModel;
 use crate::types::design::Experiment;
 use crate::types::qcm::hypothesis::Hypothesis;
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
@@ -136,6 +137,67 @@ impl<K> CodeSubject<K> {
     }
 }
 
+/// A compositional model in QC: the circuit is the stored object, and its dilation is what the
+/// structural stages screen. The one subject that can enter an abstraction.
+#[derive(Clone)]
+pub struct CircuitSubject<R: RealField> {
+    model: CircuitModel<R>,
+}
+
+impl<R: RealField> CircuitSubject<R> {
+    /// The circuit model.
+    pub fn model(&self) -> &CircuitModel<R> {
+        &self.model
+    }
+}
+
+/// Where a screened subject's factorization came from.
+///
+/// A configuration built over a circuit records `Circuit`, and only that origin can enter an
+/// abstraction (Lorenz & Tull, arXiv:2602.16612, Example 62: a bare process operator is the marginal
+/// of a compositional model and not one itself). The others keep v1's checks and stop there.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ScreenOrigin {
+    /// A factorization handed in as a marginal over a frozen graph.
+    Marginal,
+    /// A plant with structural or mechanism candidates.
+    Plant,
+    /// A chain complex.
+    Code,
+    /// A circuit model with its dilation.
+    Circuit,
+}
+
+/// The origin a subject type reports.
+pub trait SubjectOrigin {
+    /// The origin.
+    fn origin() -> ScreenOrigin;
+}
+
+impl<R: RealField, G, T> SubjectOrigin for ModelSubject<R, G, T> {
+    fn origin() -> ScreenOrigin {
+        ScreenOrigin::Marginal
+    }
+}
+
+impl<R: RealField, const D: usize, K> SubjectOrigin for PlantSubject<R, D, K> {
+    fn origin() -> ScreenOrigin {
+        ScreenOrigin::Plant
+    }
+}
+
+impl<K> SubjectOrigin for CodeSubject<K> {
+    fn origin() -> ScreenOrigin {
+        ScreenOrigin::Code
+    }
+}
+
+impl<R: RealField> SubjectOrigin for CircuitSubject<R> {
+    fn origin() -> ScreenOrigin {
+        ScreenOrigin::Circuit
+    }
+}
+
 /// A configuration under construction.
 pub struct ConfigBuilder<R: RealField, N: NaturalNumber, S> {
     subject: S,
@@ -188,6 +250,12 @@ impl<R: RealField, N: NaturalNumber> ConfigBuilder<R, N, NoSubject> {
     /// A chain complex.
     pub fn over_code<K: ChainComplex>(self, complex: K) -> ConfigBuilder<R, N, CodeSubject<K>> {
         self.with_subject(CodeSubject { complex })
+    }
+
+    /// A circuit model. `build()` refuses a grouping whose induced DAG has a cycle and a model the
+    /// dilation cannot take; `.over_model` remains for a caller who holds only the marginal.
+    pub fn over_circuit(self, model: CircuitModel<R>) -> ConfigBuilder<R, N, CircuitSubject<R>> {
+        self.with_subject(CircuitSubject { model })
     }
 
     fn with_subject<S>(self, subject: S) -> ConfigBuilder<R, N, S> {
@@ -464,6 +532,27 @@ where
             ));
         }
         Ok(())
+    }
+}
+
+impl<R> BuildSubject for CircuitSubject<R>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    fn check(&self) -> Result<(), QuantumError> {
+        if self.model.boxes().is_empty() {
+            return Err(QuantumError::CalculationError(
+                "the circuit subject has no boxes; an empty circuit has nothing to screen".into(),
+            ));
+        }
+        if self.model.induced_dag().has_cycle() {
+            return Err(QuantumError::CyclicStructureUnsupported(
+                "the circuit's grouping wires a node into another and back; cyclic causal \
+                 structures are outside scope by decision, not because they fail a criterion"
+                    .into(),
+            ));
+        }
+        self.model.dilation().map(|_| ())
     }
 }
 

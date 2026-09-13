@@ -137,4 +137,4 @@ The verbs are identical across both forms. The type parameters decide whether th
 
 ## Where to look next
 
-[Causal Monad](/concepts/causal-monad/) is the `pure`/`bind` algebra this DSL is sugar over. [Effect Propagation Process](/concepts/effect-propagation-process/) is the carrier both operate on. [Counterfactuals](/concepts/counterfactuals/) covers `intervene` and Pearl's Ladder in full. For the hands-on introduction, start with [Hello, Causal Flow](/getting-started/hello-causal-flow/).
+[Causal Monad](/concepts/causal-monad/) is the `pure`/`bind` algebra this DSL is sugar over. [Effect Propagation Process](/concepts/effect-propagation-process/) is the carrier both operate on. [Counterfactuals](/concepts/counterfactuals/) covers the `Alternatable` family and Pearl's Ladder in full. For the hands-on introduction, start with [Hello, Causal Flow](/getting-started/hello-causal-flow/).

@@ -53,5 +53,5 @@ Three edges, stated rather than glossed.
 ## Related reading
 
 - [`LEAN_LINEAR.md`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_linear/LEAN_LINEAR.md): the crate-local view of this layer.
-- [Uniform Math](/concepts/uniform-math/): where `deep_causality_linear` sits in the math stack.
+- [Unified Math](/concepts/uniform-math/): where `deep_causality_linear` sits in the math stack.
 - [Topology](/formalization/topology/): the curvature laws proved at the concrete `CurvatureTensor`.

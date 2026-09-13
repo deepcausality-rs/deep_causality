@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-Forty laws for the abstract-algebra trait tower: monoid and commutative-monoid, group and abelian-group, ring and commutative-ring, field and real-field, module and algebra over a ring, division algebra, conjugation (`star`), norm, semilattice, the verdict lattice, and the Euclidean domain that carries exact integer arithmetic. Proved in [`lean/DeepCausalityFormal/Algebra/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Algebra) and checked by law-tests in `deep_causality_algebra/tests/formalization_lean/`. These are the laws the [Uniform Math](/concepts/uniform-math/) surface relies on.
+Forty laws for the abstract-algebra trait tower: monoid and commutative-monoid, group and abelian-group, ring and commutative-ring, field and real-field, module and algebra over a ring, division algebra, conjugation (`star`), norm, semilattice, the verdict lattice, and the Euclidean domain that carries exact integer arithmetic. Proved in [`lean/DeepCausalityFormal/Algebra/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Algebra) and checked by law-tests in `deep_causality_algebra/tests/formalization_lean/`. These are the laws the [Unified Math](/concepts/uniform-math/) surface relies on.
 
 Every row is `proved` in Lean. The **Lean proof** and **Rust witness** cells give the file and theorem/test name, relative to the directories above.
 

@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Ten laws for the numeric foundation, proved in [`lean/DeepCausalityFormal/Num/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Num) and checked by law-tests in `deep_causality_num/tests/formalization_lean/`. These types underpin the [Uniform Math](/concepts/uniform-math/) surface.
+Ten laws for the numeric foundation, proved in [`lean/DeepCausalityFormal/Num/`](https://github.com/deepcausality-rs/deep_causality/tree/main/lean/DeepCausalityFormal/Num) and checked by law-tests in `deep_causality_num/tests/formalization_lean/`. These types underpin the [Unified Math](/concepts/uniform-math/) surface.
 
 Every row is `proved` in Lean. The **Lean proof** and **Rust witness** cells give the file and theorem/test name, relative to the directories above.
 

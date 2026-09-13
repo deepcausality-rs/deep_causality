@@ -76,6 +76,30 @@ fn test_display_covers_every_variant() {
             "Non-Clifford Gate: T(2) at position 5",
         ),
         (
+            QuantumError::NoCompositionalModel("Marginal".into()),
+            "No Compositional Model: a Marginal subject is the marginal of a compositional model and not one itself; only a circuit subject, whose dilation carries the model, can enter an abstraction",
+        ),
+        (
+            QuantumError::NaturalityDimensionExceeded(18, 2, 1 << 40, 1 << 24),
+            "Naturality Dimension Exceeded: a channel from 18 to 2 qubits has a composite Choi of 1099511627776 entries, above the cap of 16777216",
+        ),
+        (
+            QuantumError::KrausFamilyExceeded(8192, 4096),
+            "Kraus Family Exceeded: 8192 operators, above the cap of 4096",
+        ),
+        (
+            QuantumError::NoPropagationNormalForm(1, 0),
+            "No Propagation Normal Form: layer 1 is a non-diagonal Clifford layer following the non-Clifford remainder left by layer 0; the propagated error is neither a Pauli nor diagonal and has no normal form of polynomial size",
+        ),
+        (
+            QuantumError::NotParallelisable(0, 0, 1),
+            "Not Parallelisable: interchange set 0 holds nodes 0 and 1, joined by the directed path 0 → 1",
+        ),
+        (
+            QuantumError::SectionNotInverse(2, "residual 0.2 above 0.001".into()),
+            "Section Not Inverse: entry 2: residual 0.2 above 0.001",
+        ),
+        (
             QuantumError::CalculationError("x".into()),
             "Calculation Error: x",
         ),
@@ -137,4 +161,24 @@ fn test_eq_and_clone() {
     let b = a.clone();
     assert_eq!(a, b);
     assert_ne!(a, QuantumError::NonFiniteValue("inf".into()));
+}
+
+#[test]
+fn test_dimension_variant_carries_its_counts() {
+    let err = QuantumError::NaturalityDimensionExceeded(8, 2, 1 << 20, 1 << 24);
+    match &err.0 {
+        QuantumErrorEnum::NaturalityDimensionExceeded { n, k, entries, cap } => {
+            assert_eq!((*n, *k), (8, 2));
+            assert_eq!(*entries, 1 << 20);
+            assert_eq!(*cap, 1 << 24);
+        }
+        other => panic!("expected NaturalityDimensionExceeded, got {:?}", other),
+    }
+    let err = QuantumError::KrausFamilyExceeded(3, 2);
+    match &err.0 {
+        QuantumErrorEnum::KrausFamilyExceeded { operators, cap } => {
+            assert_eq!((*operators, *cap), (3, 2));
+        }
+        other => panic!("expected KrausFamilyExceeded, got {:?}", other),
+    }
 }

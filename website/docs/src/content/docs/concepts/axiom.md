@@ -90,13 +90,13 @@ Each recovery is implemented twice. The first carries context, state, and audit 
 
 Causal reasoning rests on a distinction between *seeing* and *doing*. To observe that two quantities move together measures correlation, which cannot separate a cause from a coincidence. An *intervention* settles the matter. It forces a variable to a chosen value, cuts it off from whatever ordinarily sets it, and lets the chain run. Only this isolates one factor as the driver of another, and because the strength of a cause is the size of the change its intervention produces, the same operation measures how strongly causes act and ranks competing ones.
 
-Judea Pearl gave this idea its formal machinery. His *do-operator*, written `do(x)`, together with the surrounding do-calculus, separated doing from seeing inside a rigorous algebra of causation, work for which he received the Turing Award. In the EPP that operator is a single method, `intervene`, applied at any point in a chain. The factual and counterfactual runs share one structure; a single call distinguishes them, and the substitution enters the log.
+Judea Pearl gave this idea its formal machinery. His *do-operator*, written `do(x)`, together with the surrounding do-calculus, separated doing from seeing inside a rigorous algebra of causation, work for which he received the Turing Award. In the EPP that operator is a single method, `alternate_value`, applied at any point in a chain. The factual and counterfactual runs share one structure; a single call distinguishes them, and the substitution enters the log.
 
 ```rust
 use deep_causality::{CausalFlow, PropagatingEffect};
 
 // Chain: blood pressure → wall shear stress → arterial fatigue. The factual run
-// and each counterfactual share one structure; a single .intervene distinguishes
+// and each counterfactual share one structure; a single .alternate_value distinguishes
 // them and records do(...) in the audit log.
 fn run_factual(baseline_bp: f64) -> PropagatingEffect<CycleSummary> {
     CausalFlow::value(baseline_bp)
