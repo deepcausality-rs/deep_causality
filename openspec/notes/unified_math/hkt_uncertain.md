@@ -1,0 +1,551 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+-->
+
+# Lifting `uncertain` and `rand` into the unified math stack
+
+**Scope.** `deep_causality_uncertain` and `deep_causality_rand`, read on `main` at `0809f3724` on
+2026-09-13. Two questions: can each crate take precision as a parameter the way the rest of the
+stack does, and can each join the HKT composition surface. Breaking the public API is allowed.
+
+**Not in scope.** New distributions. Performance beyond the arithmetic shown. The physics, CFD,
+quantum and discovery consumers, except as migration cost.
+
+**Method.** Every public type, trait and global in both crates was read from source. The
+`haft` trait signatures the retrofit has to satisfy were read from `haft/src`. Consumer call
+sites were counted by grep across the workspace. Effort figures are the author's estimates and
+say so.
+
+**Companion.** `openspec/notes/unified_math/hkt_gaps.md` §3.1 and §3.4 name these two crates as
+gaps. §0 and B2 of this note say what that note should now say instead, and stage 4 in §4
+updates it.
+
+---
+
+## 0. Verdict
+
+- **Precision as a parameter: feasible for both, moderate effort, and the risk is lower than a
+  first read suggests.** `rand` is three quarters there already, with `f32`, `f64` and `Float106`
+  behind one `RealRng` bound and the duplication confined to six per-type files. `uncertain` is
+  not: its whole engine runs through a closed three-variant enum that exists, by its own
+  docstring, so that a global static cache can stay non-generic. That assumption predates unified
+  math and no longer holds anywhere else in the stack; every other crate is generic in its scalar
+  and holds no scalar in a static. The crate has already half-abandoned it at its own boundary,
+  it costs 56 variant match arms today, and it pins CFD's generic scalar to `f64` and `Float106`
+  through the bound it forces. Making the graph generic in its scalar is the retrofit, and the
+  generic version is smaller than what it replaces.
+- **Decision: the global sample cache is removed, not made generic.** It caches only the root,
+  it leaks one entry per draw with nothing ever clearing it, and its production branch is the one
+  branch the test suite never runs. The one property it provides, that the same index returns the
+  same value, is had without storage by deriving every leaf draw from the session seed, the sample
+  index and the leaf's identity. B5 records the decision and what it removes.
+- **An HKT witness on the lazy computation graph: not feasible against `haft` as written.**
+  `Functor::fmap` hands the witness an `FnMut(A) -> B` with no `'static`, `Send` or `Sync`
+  bound and no bound on `B`, and `Pure::pure` hands it one `T` with no `Clone`. A lazy graph has
+  to store the closure and produce `T` on every sample; it cannot do either under those
+  signatures. This is why the `FmapOp` and `BindOp` arms exist and no builder feeds them. The
+  archived note's "the coding is small" was wrong; the block is at the trait signature, and it
+  blocks every lazily evaluated container, not this one.
+- **A strict particle carrier is feasible, lawful, and is what `Traversable` needs.** A
+  `Particles<T>` holding `n` draws is an ordinary container: `fmap` maps, `apply` zips with
+  broadcast, `bind` runs per particle, and the laws hold by equality. It is also the shape a
+  `CausalTensor<Uncertain<R>>` has to take before it can become an `Uncertain<CausalTensor<R>>`,
+  so it is the payoff the whole exercise is for. The lazy graph stays, precision-generic, as
+  the thing that builds distributions, drives quasi-Monte Carlo and adaptive testing, and
+  materialises particles on demand.
+- **`rand` needs no witness.** Its `Map<D, F, T, S>` is a correct zero-cost functor over a
+  trait, and the only carrier worth having is the particle type in `uncertain`. §3.4 of the gap
+  note resolves as "no witness in `rand`".
+- **`MaybeParallel` replaces the nine hardcoded `Send + Sync` bounds** and trims the signature
+  blocker to its irreducible part, `'static` on a stored closure and `Clone` on a lazy constant.
+  It also gives the particle carrier a parallel `fmap` through `scoped_map` for free.
+
+---
+
+## 1. The two crates today
+
+### 1.1 `deep_causality_uncertain`
+
+3,273 lines of source, 46 test files, 253 tests. Depends on `stats`, `rand`, `ast`, `num`,
+`algebra`; not on `haft`.
+
+**The value type.** `Uncertain<T: ProbabilisticType>` is an id from a global atomic counter, a
+`ConstTree<UncertainNodeContent>` from `deep_causality_ast`, and a `PhantomData<T>`
+(`types/uncertain/mod.rs:32-36`). The tree is untyped. The scalar lives in the node arms:
+`DistributionF64`, `DistributionF106`, `DistributionBool` (`uncertain_node_content/mod.rs:46-49`).
+
+**The closed precision dispatcher.** `SampledValue` is `Float(f64) | DoubleFloat(Float106) | Bool(bool)`
+(`types/cache/sampled_value.rs:19-27`), and its docstring states the design decision:
+the precision is "a variant rather than a type parameter, so the computation graph, the global
+sample cache (a `static`), and the sampler all stay non-generic". `ProbabilisticType` is
+implemented for exactly `bool`, `f64`, `Float106` and `SampledValue`. There is no `f32` and no
+`BFloat16`. Adding a scalar today means a new enum variant, a new `DistributionEnum` arm, new
+sampler match arms in two samplers, a new `ProbabilisticType` impl, and new alias files.
+
+**The HKT arms nothing feeds.** `PureOp`, `FmapOp { func: Arc<dyn SampledFmapFn>, .. }`,
+`ApplyOp`, `BindOp { func: Arc<dyn SampledBindFn>, .. }` (`uncertain_node_content/mod.rs:51-66`).
+`SampledFmapFn` is `Fn(SampledValue) -> SampledValue + Send + Sync + 'static`. No public
+constructor produces any of the four. The only `map` is a method on `Uncertain<f64>`
+(`uncertain_f64.rs:48`), and there is no `bind` on any instantiation.
+
+**What is already generic.** `UncertainReal` gives one generic impl for `point`, `normal` and
+`uniform` over `f64` and `Float106` (`uncertain_real.rs`), and the `Float106` file is thirteen
+lines. The statistics go through `deep_causality_stats`. That part of the crate was retrofitted
+already and shows the shape the rest should take.
+
+**Where `f64` leaks.** Every comparison takes an `f64` threshold regardless of `T`:
+`greater_than`, `less_than`, `equals`, `approx_eq`, `within_range`
+(`uncertain_op_comparison.rs:14-80`) and the `ComparisonOp { threshold: f64 }` node. The function
+nodes are `Fn(f64) -> f64` and `Fn(f64) -> bool` (`uncertain_node_content/mod.rs:83-87`), and the
+sequential sampler narrows a `DoubleFloat` to `f64` to feed them (`sequential_sampler.rs:256`).
+`bernoulli(p: f64)`, `probability_exceeds(threshold: f64, confidence: f64)`,
+`estimate_probability -> f64` (`uncertain_bool.rs:23-113`), and `MaybeUncertain`'s
+`prob_some: f64` and `threshold_prob_some: f64`. A `Float106` value compared against an `f64`
+threshold is the precision leak the stack's alias discipline exists to prevent.
+
+**Global state.** `NEXT_UNCERTAIN_ID` (atomic), `GLOBAL_SAMPLE_CACHE` (a `OnceLock` static,
+`thread_local!` under test, `global_cache.rs:112-116`), `SAMPLER_SEED` (thread-local
+`Option<Xoshiro256>`, `sampler_seed.rs:23-25`), the sample-index counter, and `rand`'s thread
+RNG. Every `sample()` goes through the cache keyed by `(id, sample_index, SamplerKind)`
+(`uncertain_sampling.rs:21-53`). The cache is what makes `x.sample_with_index(3)` and
+`(x + 1).sample_with_index(3)` consistent across two calls, and it is why the value type must be
+non-generic: a `static` cannot be generic in `R`.
+
+**Sharing semantics.** Node identity is the `Arc` allocation address
+(`ast/const_tree/accessors.rs:60`), and both samplers memoize by it within one sample, so `x + x`
+draws `x` once. Any redesign has to keep that.
+
+**Quasi-Monte Carlo.** `QmcSampler::new` runs a pre-pass that assigns every non-point
+distribution leaf a Sobol dimension and rejects `BindOp` and branch-divergent `ConditionalOp`
+(`qmc_sampler.rs:10-16, 327-332`). The rejection is correct: QMC needs a static number of
+stochastic dimensions.
+
+**`MaybeUncertain`.** A second struct with its own per-type files (`mod.rs` 54 lines, `bool` 62,
+`f106` 70, `f64` 120) rather than `Uncertain<Option<T>>`.
+
+**Consumers.** `deep_causality` core (context nodes `DataUncertainF64` and `DataUncertainBool`),
+`deep_causality_cfd` (inflow uncertainty and flow config), `deep_causality_quantum` (one QPU
+file), three examples. How they spell the type: `UncertainBool` 32 sites, `Uncertain<f64>` 29,
+`UncertainF64` 18, `MaybeUncertain<R>` 12, `Uncertain<bool>` 4, `Uncertain<R>` 2. CFD is already
+generic in `R`; core pins `f64` and `bool`. Methods called: `normal`, `uniform`, `conditional`,
+`bernoulli`, `from_samples`, `sample`, `expected_value`, `expected_value_qmc`,
+`standard_deviation`, `estimate_probability`, `probability_exceeds`, `lift_to_uncertain`,
+`implicit_conditional`, `to_bool`, `is_some`, `is_none`.
+
+### 1.2 `deep_causality_rand`
+
+2,293 lines, 157 tests. Depends on `num` and `algebra`; not on `haft`.
+
+**The traits.** `RngCore` (three methods, object-safe), `Rng: RngCore` (only default methods;
+the sole impl is `impl<T: Rng> Rng for &mut T`, `traits/rng.rs:9`), `Distribution<T>` with
+`sample`, `sample_iter` and `map`, `SampleUniform` / `UniformSampler`, `SampleRange<T>`, `Fill`,
+and `RealRng: RealField + Sized` with a blanket over `T: RealField + SampleUniform + RandFloat`
+where `StandardNormal: Distribution<T>` (`traits/real_rng.rs`). `RealRng` is the bound the rest
+of the stack should ask for, and it already covers `f32`, `f64` and `Float106`.
+
+**Where the duplication is.** Six per-type extension files: `dist_float_32.rs`,
+`dist_float_64.rs`, `dist_float_106.rs`, `uniform_f32.rs`, `uniform_f64.rs`, `uniform_f106.rs`,
+plus three integer uniform files. `Float106` draws two words and joins them (`dist_float_106.rs:25`)
+and takes its normal from the inverse CDF (`:55`) where `f64` uses the ziggurat.
+
+**Where `f64` is hardcoded.** `Rng::random_bool(p: f64)` (`rng.rs:41`), `SampleRange` implemented
+for `Range<f32>` and `Range<f64>` only (`sample_range.rs`), `SobolSequence::coordinate -> f64`
+and `point(&mut [f64])` at 32-bit fixed-point resolution (`sobol.rs:27, 76-95`), `Bernoulli::new(p: f64)`
+with 64-bit fixed-point storage (`bernoulli/mod.rs:36-93`), and the ziggurat `StandardNormal`
+in `f64` (`standard_normal.rs`).
+
+**`BFloat16`.** Zero files mention it.
+
+**The functor.** `Map<D, F, T, S>` (`types/map/mod.rs:9`) is a struct of a distribution and a
+closure, monomorphised, and `Distribution<S>` for it is four lines. It is a functor written by
+hand and a good one. It cannot be an `HKT` witness because a witness binds one type parameter
+and `Map` has four, and because `Distribution` is a trait rather than a type constructor.
+
+**Global state.** A thread-local `Xoshiro256` behind `rng()` (`lib.rs:53-54, 91`), which is the
+same shape as the standard library's.
+
+**Consumers.** `topology` (gauge fields, heavily), `algorithms` (BRCD, DAG sampling),
+`physics` (Lund), `tensor`, `discovery`, `data_structures`, `ultragraph`, three example crates.
+They use `Rng`, `Xoshiro256`, `Distribution::sample` and the named distributions. None uses
+`Map` in a way a generic cleanup would break.
+
+---
+
+## 2. Blockers and resolutions
+
+| # | Blocker | Crate | Class | Resolution in one line |
+|---|---|---|---|---|
+| B1 | The closed `SampledValue` enum, held in place by a global static cache | uncertain | legacy decision | a node tree generic in `R`; the cache goes (B5) |
+| B2 | `haft`'s `Functor`, `Pure`, `Applicative`, `Monad` signatures cannot feed a lazy graph | uncertain, haft | structural | a strict `Particles<T>` carrier takes the witness; the lazy graph stays Arrow-shaped; `MaybeParallel` trims the bounds but `'static` and `Clone` remain |
+| B3 | Struct bound `T: ProbabilisticType` | uncertain | mechanical | drop to impls; the trait dissolves into `R: RealRng` and `bool` |
+| B4 | `f64` thresholds, function nodes and probabilities | uncertain | mechanical | everything in `R`; `f64` only at the display boundary |
+| B5 | Five globals, one of them a leaking, root-only cache with an untested production branch | uncertain, rand | decision taken | remove the cache; index-addressed draws from (seed, index, leaf id); a `SampleSession` value; zero globals owned by `uncertain` |
+| B6 | QMC needs static structure, and Sobol resolves 32 bits | uncertain, rand | inherent | a structure descriptor; state the 32-bit cap as a limit `Float106` cannot lift |
+| B7 | Six per-type files in `rand` | rand | mechanical | one generic impl over `RandFloat`; normal path chosen by significand width |
+| B8 | No `BFloat16` in `rand` | rand | optional | draw `f32`, round once; note the half-open edge |
+| B9 | `MaybeUncertain` as a parallel type | uncertain | design | `Uncertain<Option<R>>` and `Particles<Option<T>>` |
+| B10 | Core pins `f64` and `bool` at 79 sites; CFD is generic but inherits the `ProbabilisticType` bound | consumers | migration | keep the aliases; CFD compiles at `f32` the day B1 lands |
+
+### B1. The closed precision dispatcher
+
+**Block.** `SampledValue` carries precision as a variant so that `GLOBAL_SAMPLE_CACHE`, a
+`static`, can hold it. A `static` cannot be generic, so as long as the cache is global the value
+type cannot be a type parameter, and every scalar costs a variant in three enums and two samplers.
+
+**Why the assumption no longer holds.** Only one of its three clauses is a Rust constraint: a
+`static` cannot be generic. The other two, that the graph and the sampler stay non-generic, follow
+from choosing a global static cache in the first place, and that choice predates unified math.
+Nothing else in the stack holds a scalar in a static; every other crate lets the program's alias
+reach the bottom. The crate itself has moved on at its edges: `UncertainReal` gives generic
+constructors, `Sampler<T>` is generic in name, and the docstring concedes the boundary types are
+generic and convert at the edge. The enum survives on the inside only because the static needs it.
+It has a cost today: 56 match arms on its variants across `src/`, 58 of them inside the two
+samplers, which a tree generic in `R` reduces to `Real` and `Bool`. And it has a consumer cost:
+`deep_causality_cfd` bounds its uncertain march config on `CfdScalar + ProbabilisticType`
+(`types/flow_config/uncertain_march_config.rs:21`), so a CFD run at `f32` with uncertain inflow
+does not compile, at the one crate that models uncertainty. Once the cache is gone (B5) the
+enum has no reason left.
+
+**Resolution.** Make the tree generic: `ConstTree<Node<R>>` with
+`enum Sample<R> { Real(R), Bool(bool) }` and one `Distribution(DistributionEnum<R>)` arm in place
+of three. The distributions come from `rand` through `R: RealRng`, which already serves `f32`,
+`f64` and `Float106` and would serve `BFloat16` after B8. `Uncertain<f32>` then exists on the day
+the tree compiles, with no new files.
+
+The cache does not move; it goes, and B5 says why and what replaces it. A `SampleSession<R>`
+the caller owns holds the seed, the sample counter and, for QMC, the Sobol sequence. `sample()`
+on an `Uncertain<R>` takes `&mut SampleSession<R>`; the zero-argument `sample()` the core context
+nodes call builds a session on the thread RNG that `rand` already keeps, so `uncertain` owns no
+global of its own.
+
+**Breaks.** `SampledValue`, `ProbabilisticType`, `IntoSampledValue`, `FromSampledValue`,
+`with_global_cache`, `GlobalSampleCache`, `SamplerKind` leave the public API. `seed_sampler` and
+`clear_sampler_seed` become `SampleSession::seeded(seed)`.
+
+### B2. The trait signatures and the lazy graph
+
+**Block.** The signatures in `haft/src`:
+
+```rust
+fn fmap<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B> where Func: FnMut(A) -> B;
+fn pure<T>(value: T) -> F::Type<T>;
+fn apply<A, B, Func>(f_ab: F::Type<Func>, f_a: F::Type<A>) -> F::Type<B> where A: Clone, Func: FnMut(A) -> B;
+fn bind<A, B, Func>(m_a: F::Type<A>, f: Func) -> F::Type<B> where Func: FnMut(A) -> F::Type<B>;
+```
+
+An impl may not add bounds the trait does not have. A lazy `Uncertain<B>` has to store `f` and
+call it once per sample, which needs `Fn + Send + Sync + 'static`; it has to return a `T` from
+`pure` on every sample, which needs `Clone`; and it has to memoize a `B` by node id, which needs
+`'static`. None is available. The existing `FmapOp` arm asks for exactly the bounds the trait
+withholds, which is why it has no builder. Every witness on the surface today is eager: tensors,
+vectors, matrices, multivectors, manifolds, `Option`, `Result`. The surface is a surface for data,
+and the lazy graph is a program.
+
+Three ways out were weighed.
+
+1. **Change `haft`.** Add the bounds to the four traits. Every witness in the stack and every
+   caller would carry `'static + Send + Sync` closures for the benefit of one crate. Rejected.
+2. **A second trait family for lazy containers.** `LazyFunctor` and friends with the stronger
+   bounds. Principled, but it is a second surface, and the point of the stack is one. Rejected
+   for now; the `Arrow` trait already covers the function-shaped case and is the right home for
+   the graph's own composition (see the design in §3).
+3. **A strict carrier.** `Particles<T>` holds `n` draws as a `Vec<T>` and takes the witness.
+   `fmap` maps the vector. `pure` is one particle that broadcasts, the way a scalar broadcasts
+   against a tensor. `apply` zips with broadcast. `bind` runs the continuation per particle and
+   takes the diagonal, so `n` in gives `n` out. Right identity, left identity and associativity
+   then hold by equality, not by sampling, and `fold` is the ordinary fold. **Recommended.**
+
+The particle representation keeps the sharing semantics that the id-memo gives the graph:
+`x + x` on particles zips index against index, so the two uses of `x` are the same draw, and two
+independent materialisations are two independent draws. Correlation is by particle index, which
+is what the cache key `(id, sample_index)` encodes today.
+
+**What `MaybeParallel` changes here.** `deep_causality_par` makes thread safety a feature: with
+`parallel` the trait is a `Send + Sync` alias, without it the trait is vacuous. Topology and fft
+already bound their scalars on it. The nine hardcoded `Send + Sync` sites in `uncertain` (the
+`ProbabilisticType` supertrait, `SampledFmapFn`, `SampledBindFn`, both function-node arms, the
+two `map` bounds) take `MaybeParallel` instead, so serial builds carry no thread-safety bound on
+the graph at all. That removes two of the bounds a stored closure would need. It does not remove
+the other two. `'static` stays, because `HKT` binds one type slot and no lifetime slot, so a
+borrowed closure cannot live in the container. `Clone` on `pure` stays, because a lazy constant
+has to hand out its value on every sample. The `FnMut` against `Fn` mismatch is removable by
+interior mutability, a `RefCell` in serial builds and a `Mutex` under the feature, which is
+exactly the split `MaybeParallel` expresses. Two of four bounds gone, and the two that remain are
+enough to keep the lazy graph off the surface. The carrier stands.
+
+What the carrier gives up: laziness, the QMC pre-pass, and the adaptive sample count that
+`probability_exceeds` uses through the sequential probability ratio test. None of those is lost,
+because the lazy graph keeps them and the carrier is what the graph produces on request:
+`Uncertain<R>::materialize(&mut session, n) -> Particles<R>`. The two types divide the work.
+The graph composes distributions; the carrier composes samples.
+
+**The memory arithmetic.** A `Particles<Float106>` at `n = 10 000` is 160 KB. A
+`CausalTensor<Particles<R>>` over a million cells at `f64` is 80 GB, and after `sequence` it is
+ten thousand tensors of 8 MB, the same 80 GB. Particles at field size do not fit, and the lazy
+graph is why one does not materialise a field. The working pattern is: materialise the inputs
+that carry uncertainty (an inflow speed, a material constant, a handful of numbers), traverse
+them into one `Particles<Input>`, run the solve per particle, and reduce with `stats` as the
+particles stream. `sequence` and `bind` on `Particles` are what make the per-particle solve one
+`fmap`.
+
+### B3. The struct bound
+
+`Uncertain<T: ProbabilisticType>` must become `Uncertain<T>`, with the bounds on impl blocks. The
+`Constraint` slot that would have carried the bound no longer exists on `HKT` (`hkt_gaps.md` §7),
+and `Dual` made the same move. `ProbabilisticType` then has no job: real values ask for
+`R: RealRng`, booleans are `bool`, and the `Into`/`From` conversions through `SampledValue` go
+with the enum.
+
+### B4. The `f64` leaks
+
+All of `uncertain_op_comparison.rs`, the `ComparisonOp` threshold, both `FunctionOp` arms,
+`bernoulli`, `probability_exceeds`, `estimate_probability`, and the two `MaybeUncertain`
+probabilities take `R` or return `R`. A probability is a ratio of two counts, so it is
+`lift_count::<R>(hits) / lift_count::<R>(n)`, and it reaches `println!` through `lower`. The
+Bernoulli parameter is the one place `f64` may stay: `rand` stores it as 64-bit fixed point, so
+no `R` wider than `f64` changes the draw. Offer `bernoulli_from<R: ToPrimitive>` for symmetry.
+
+### B5. Global state, and the decision to remove the cache
+
+Five globals today: `NEXT_UNCERTAIN_ID`, `GLOBAL_SAMPLE_CACHE`, the thread-local `SAMPLER_SEED`
+slot, the sample-index source, and `rand`'s thread RNG. After the change, `uncertain` owns none;
+the thread RNG in `rand` remains, as it does for the standard library.
+
+**What the cache was read to do, against what it does.** Three findings from reading
+`types/cache/global_cache.rs` against its callers.
+
+- It caches only the root. The two samplers never consult it below the root
+  (`types/sampler/*.rs` contains no reference to it); within one draw they memoize by node
+  identity in a per-call map, and that map is what keeps `x + x` on one draw. The global cache
+  therefore does not make `x.sample_with_index(3)` and `(x + 1).sample_with_index(3)` agree,
+  which is what its shape suggests. Two roots are two keys.
+- It leaks by design. `sample()` draws its index as a random `u64` from the RNG
+  (`sampler_seed.rs:49-55`), `sample_with_index` inserts one entry under it, and nothing in
+  `src/` calls `clear`. Every plain draw adds an entry that is never read again and never freed;
+  `expected_value` over ten thousand samples adds ten thousand of them for the life of the process.
+- Its production branch is untested by construction. Under `cfg(test)` the `OnceLock` static
+  becomes a `thread_local!` so the suite can run in parallel (`global_cache.rs:112-116`), so the
+  global that ships is the one branch the 253 tests never execute. Thirty-eight call sites across
+  six test files exist to manage that state.
+
+**What it buys.** One property: `sample_with_index(i)` on the same root returns the same value
+on a second call. The sequential probability ratio test (`sprt_eval.rs:57`) and the QMC
+estimators (`uncertain_bool.rs:109`) rely on it, and `SamplerKind` is in the key so Monte Carlo
+and QMC draws at the same `(id, i)` are never cross-served.
+
+**Decision.** Remove the cache and obtain the property by construction. Every leaf draw is
+derived from three inputs and nothing else: the session seed, the sample index, and the leaf's
+identity, the `Arc` address `ConstTree` already exposes. A leaf's generator for one draw is
+`Xoshiro256::from_seed(mix(seed, index, leaf_id))`, a few nanoseconds of hashing per leaf per
+draw. The QMC path already works this way, since a Sobol point is a function of its index and
+dimension alone; the Monte Carlo path joins it.
+
+What that gives, in order of weight:
+
+1. The same index gives the same draw for every tree that shares the leaf, not only for the same
+   root. That is stronger than today, and it is the correlation-by-index rule `Particles`
+   uses, so the graph and the carrier agree on what an index means.
+2. No lock, no static, no `RwLock` double-check, no `cfg(test)` split, no leak. The `SampleSession`
+   is a value: constructed per test, dropped at the end, nothing shared.
+3. Parallel materialisation partitions by index range and shares nothing, which is what lets
+   `Particles::materialize` fan out under `scoped_map` with no synchronisation in the sampler.
+4. `SamplerKind` leaves the key because there is no key; a session is either Monte Carlo or QMC
+   by construction.
+5. The `MaybeUncertain` difficulty dissolves. Its presence and value channels are sampled today
+   at two separately drawn global indices (`uncertain_maybe_f64.rs:45-50`), so keeping them in
+   step was the cache's hardest job. Under the generic tree the pair is one tree over an `Option`,
+   sampled at one index, and there are no two channels to reconcile.
+
+**What is removed from the public API.** `GlobalSampleCache`, `with_global_cache`, `SamplerKind`,
+`seed_sampler`, `clear_sampler_seed`. `SampleSession::seeded(seed)` and `SampleSession::qmc(seed)`
+replace the last two. The per-call memo inside the samplers stays; it is a cost saving, not a
+correctness device.
+
+**What the simplification removes from `src/`.** The cache module, the seed slot, the
+`SamplerKind` enum, the `cfg(test)` duplication, and the 56 variant arms that the enum in B1
+carried. The generic tree, the session, and the index-addressed generator replace them with less
+code than they take out, which is the author's expectation and the first thing stage 2 should
+measure.
+
+### B6. Quasi-Monte Carlo
+
+Two facts, one design and one inherent.
+
+The design one: QMC needs a static number of stochastic dimensions, so `bind` is unsupported
+there, and the pre-pass says so today. Under the generic tree nothing changes; the pre-pass runs
+over `Node<R>` the same way. Under `Particles`, QMC is a materialisation strategy:
+`materialize_qmc(n, seed)` fills the particles from Sobol points once, and the carrier's
+`bind` is ordinary per-particle evaluation with no static-structure question at all. The fork
+the archived note worried about dissolves: `bind` lives on the carrier, and the graph keeps its
+guard.
+
+The inherent one: `SobolSequence::coordinate` is 32-bit fixed point (`sobol.rs:27, 91`). A
+`Float106` QMC estimate therefore carries at most 32 bits of stratification per coordinate.
+That is not a defect, since QMC's value is in the low-discrepancy layout and not in the
+per-coordinate resolution, but it means the QMC path gains nothing from `Float106` until the
+direction numbers move to 64 bits. State it in the docstring; do not fix it in this change.
+
+### B7. The six per-type files in `rand`
+
+`RandFloat` already exists and `RealRng` already blankets over it. Finish the move: one
+`impl<T: RandFloat> Distribution<T> for StandardUniform` where `RandFloat` supplies the
+significand width and the bits-to-float step; `Float106` keeps its two-word constructor as its
+impl of that step. One `impl<T: RandFloat + RealField> SampleRange<T> for Range<T>` replaces the
+`f32` and `f64` copies. `StandardNormal` picks its path by significand width: at or below 53
+bits, the `f64` ziggurat then a narrowing that is exact for `f32` and `BFloat16`; above, the
+inverse CDF in `T`, which is what `Float106` does now.
+
+Add `impl<R: RngCore + ?Sized> Rng for R {}` in place of `impl<T: Rng> Rng for &mut T`, so a
+`&mut dyn RngCore` is an `Rng`. `Rng` has only default methods, so the blanket is legal, and it
+lets the session hold its generator behind one type.
+
+**Breaks.** None for consumers that call `sample`, `random`, `random_range` and the named
+distributions. The `RandFloat` trait becomes public, which it half is already.
+
+### B8. `BFloat16`
+
+Draw an `f32` and round once, which is how `BFloat16` arithmetic already computes. For the
+half-open uniform, rounding can carry a sample onto the upper bound; reject and redraw. The value
+is low: a two-digit scalar is not a sampling type anyone asks for, and it exists in `num` for
+accelerator buffers. Do it for completeness after B7 makes it a one-line impl, or leave it and
+say why.
+
+### B9. `MaybeUncertain`
+
+Under the generic tree, `MaybeUncertain<R>` is `Uncertain<Option<R>>` with `is_some` as a map
+and `lift_to_uncertain` as a conditional against a threshold in `R`. Under the carrier it is
+`Particles<Option<T>>` for free. The 306 lines across four files become one impl block. The alias
+`MaybeUncertain<R>` stays as a type alias so CFD's twelve sites compile unchanged.
+
+### B10. Consumers
+
+| Consumer | Sites | Change |
+|---|---|---|
+| `deep_causality` core context nodes | 79 pinned to `f64` and `bool` | keep `UncertainF64`, `UncertainBool`, `MaybeUncertainF64` as aliases; `sample()` uses the default session |
+| `deep_causality_cfd` | 14, already `Uncertain<R>` and `MaybeUncertain<R>` | none beyond the alias |
+| `deep_causality_quantum` | 1 file | alias |
+| three examples | constructors and `expected_value` | alias; one example gains a `Particles` demonstration |
+| `rand` consumers | `topology`, `algorithms`, `physics`, `tensor`, `discovery`, `data_structures`, `ultragraph` | none; B7 is additive at the call site |
+
+---
+
+## 3. The target design
+
+Three layers, each with one job.
+
+```
+rand        primitives: RngCore, Rng, Distribution<T>, RealRng, Sobol.  Generic in R. No haft.
+uncertain   Uncertain<R>: the lazy graph. Builds distributions, draws every leaf from
+            (seed, index, leaf id), drives QMC and adaptive testing, materialises
+            particles. Arrow-shaped. No globals.
+            SampleSession<R>: a value the caller owns; seed, counter, optional Sobol.
+            Particles<T>: the strict carrier. Witness: Functor, Foldable, Pure,
+            Applicative, Monad. Laws by equality. fmap fans out through scoped_map
+            under the parallel feature; bounds are MaybeParallel, never Send + Sync.
+linear,     Traversable on DenseVectorWitness and CausalTensorWitness, so a
+tensor      container of Particles becomes Particles of a container.
+```
+
+The path a consumer walks:
+
+```rust
+type FloatType = f64;
+
+let inflow: Uncertain<FloatType> = Uncertain::normal(lift(1.0), lift(0.05));
+let viscosity: Uncertain<FloatType> = Uncertain::uniform(lift(0.9e-3), lift(1.1e-3));
+
+let mut session = SampleSession::<FloatType>::seeded(7);
+let inputs: DenseVector<Particles<FloatType>> = DenseVector::from_vec(vec![
+    inflow.materialize(&mut session, 10_000),
+    viscosity.materialize(&mut session, 10_000),
+]);
+
+// linear: Traversable. particles of a vector, not a vector of particles.
+let per_particle: Particles<DenseVector<FloatType>> =
+    DenseVectorWitness::sequence::<FloatType, ParticlesWitness>(inputs);
+
+// one fmap runs the solve ten thousand times; stats reduces the result.
+let drag: Particles<FloatType> = ParticlesWitness::fmap(per_particle, |v| solve(&v));
+println!("{:.3e}", lower(drag.mean()));
+```
+
+Every type in that block takes the alias. Switch it to `Float106` and the draws, the solve and
+the mean widen together, which is the claim the rest of the stack already makes and these two
+crates cannot make today.
+
+`Uncertain<R>` keeps its own composition as an `Arrow`, the way `calculus` composes `Diff`,
+`Euler` and `Rk4`: `run(&self, session) -> R`, `compose`, `first`, `split`. That is static
+dispatch over structs holding closures with whatever bounds they need, which is what a lazy graph
+is. The `FmapOp`, `ApplyOp` and `BindOp` arms either become the `Arrow` combinators or are deleted;
+they should not stay as dead arms.
+
+---
+
+## 4. Staging
+
+Four changes, each shippable alone. Effort is the author's estimate for one engineer.
+
+| Stage | Change | Breaks | Tests to carry | Effort |
+|---|---|---|---|---|
+| 1 | `rand` generic cleanup: B7, the `Rng` blanket, optional B8 | none at call sites | 157 | 2 to 3 days |
+| 2 | `uncertain` precision as a parameter and the cache removal: B1, B3, B4, B5, B9, the `MaybeParallel` substitution; `Uncertain<f32>` appears and CFD compiles at `f32` | the public enum, the traits, the cache and seed functions, `SamplerKind` | 253, with the 38 cache and seed sites across six files rewritten against a session | 1 to 2 weeks, and the crate should come out smaller |
+| 3 | `Particles<T>` and its witness with law tests, parallel `fmap` through `scoped_map`; `Traversable` for `DenseVector` and `CausalTensor` | none; additive | new law tests, the `haft` law-test shape, one seeded test that materialisation agrees serial and parallel | 1 week |
+| 4 | Consumers: aliases in core, one example, `hkt_gaps.md` updated | none after the aliases | consumer suites | 2 days |
+
+Stage 2 before stage 3, because `Particles<R>` materialised from a graph that is still `f64`
+under the hood would be generic in name only. Stage 3 is where the `Traversable` item M1 from the
+archived note lands, and it needs nothing from stage 2 except the carrier's scalar.
+
+---
+
+## 5. What is not solved
+
+- QMC resolution stays at 32 bits per coordinate (B6).
+- A `Particles` field at simulation size does not fit in memory (B2, the arithmetic). The lazy
+  graph is the answer and the note says how to use it.
+- The zero-argument `sample()` the core context nodes call still needs an index and a seed from
+  somewhere, and it takes them from `rand`'s thread RNG. That is the one global left in the
+  path, it is `rand`'s and not `uncertain`'s, and a later change should thread a session through
+  the context so that a causal model's draws are reproducible from one seed.
+- `Uncertain<R>` gets no `haft` witness. That is a statement about lazy containers and the
+  surface, not a deferral, and §2 B2 records why.
+
+---
+
+## 6. Reproducing
+
+From the workspace root:
+
+```bash
+# the closed dispatcher and the arms nothing feeds
+grep -n "enum SampledValue" -A8 deep_causality_unified_math/deep_causality_uncertain/src/types/cache/sampled_value.rs
+grep -rn "PureOp\|FmapOp\|BindOp" deep_causality_unified_math/deep_causality_uncertain/src --include=*.rs
+
+# the cache: root-only, never cleared, random index per draw, cfg(test) split
+grep -n "global_cache\|GLOBAL_SAMPLE_CACHE" deep_causality_unified_math/deep_causality_uncertain/src/types/sampler/*.rs
+grep -rn "\.clear()" deep_causality_unified_math/deep_causality_uncertain/src --include=*.rs
+grep -n "next_sample_index" -A6 deep_causality_unified_math/deep_causality_uncertain/src/types/sampler/sampler_seed.rs
+grep -n "cfg(test)\|cfg(not(test))" deep_causality_unified_math/deep_causality_uncertain/src/types/cache/global_cache.rs
+grep -rn "with_global_cache\|seed_sampler\|clear_sampler_seed" deep_causality_unified_math/deep_causality_uncertain/tests --include=*.rs | wc -l
+
+# the Send + Sync sites MaybeParallel replaces
+grep -rn "Send + Sync" deep_causality_unified_math/deep_causality_uncertain/src --include=*.rs
+
+# the f64 leaks
+grep -rn "f64" deep_causality_unified_math/deep_causality_uncertain/src --include=*.rs | grep -v "Float106\|uncertain_f64\|f64_probabilistic"
+
+# the haft signatures the retrofit has to satisfy
+for f in functor/functor_base.rs pure/mod.rs applicative/mod.rs monad/mod.rs traversable/mod.rs; do
+  awk '/^pub trait/{p=1} p' deep_causality_unified_math/deep_causality_haft/src/$f | grep -v "^\s*///" | head -12
+done
+
+# rand's per-type files and hard f64
+ls deep_causality_unified_math/deep_causality_rand/src/extensions/{distribution,uniform}
+grep -rn "f64" deep_causality_unified_math/deep_causality_rand/src/traits --include=*.rs
+grep -rln "BFloat16" deep_causality_unified_math/deep_causality_rand | wc -l
+
+# consumer spellings
+grep -rhoE "(Maybe)?Uncertain<[A-Za-z0-9_]+>|UncertainF64|UncertainBool|MaybeUncertainF64" \
+  deep_causality/src deep_causality_cfd/src deep_causality_quantum/src examples/causal_uncertain_examples --include=*.rs | sort | uniq -c
+```
