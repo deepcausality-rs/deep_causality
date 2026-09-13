@@ -57,7 +57,7 @@
 
 </div>
 
-# DeepCausality: Dynamic Causality
+# Dynamic Causality for a Dynamic World
 
 DeepCausality is the reference implementation of the **Effect Propagation Process (EPP)**, a single axiomatic foundation
 for dynamic causality based on Whitehead's process metaphysics, with the consequence that the resulting framework is
