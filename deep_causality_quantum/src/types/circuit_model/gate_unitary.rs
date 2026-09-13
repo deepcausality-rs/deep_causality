@@ -13,6 +13,10 @@ use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
+/// The widest gate a unitary is formed for: a `2^12 × 2^12` matrix is the numeric semantics'
+/// default entry cap, and a wider `Cmz` would allocate before any cap could refuse it.
+pub const MAX_GATE_QUBITS: usize = 12;
+
 /// The unitary matrix of one gate over its qubits in ascending order, the first qubit most
 /// significant, which is the row-major leg order `embed_on_legs` and the numeric semantics use.
 ///
@@ -24,7 +28,8 @@ use deep_causality_tensor::CausalTensor;
 /// # Errors
 ///
 /// [`QuantumError::CalculationError`] if the scalar cannot represent `1/√2` or `π/4`;
-/// [`QuantumError::DimensionMismatch`] if a gate names a qubit twice.
+/// [`QuantumError::DimensionMismatch`] if a gate names a qubit twice or acts on more than
+/// [`MAX_GATE_QUBITS`] qubits, before any matrix is formed.
 pub fn gate_unitary<R>(op: &GateOp) -> Result<(Vec<usize>, CausalTensor<Complex<R>>), QuantumError>
 where
     R: RealField + FromPrimitive,
@@ -47,6 +52,14 @@ where
     if qubits.len() != before {
         return Err(QuantumError::DimensionMismatch(alloc::format!(
             "gate {op:?} names a qubit more than once"
+        )));
+    }
+    if qubits.len() > MAX_GATE_QUBITS {
+        return Err(QuantumError::DimensionMismatch(alloc::format!(
+            "gate {op:?} acts on {} qubits, above the limit of {MAX_GATE_QUBITS}; its matrix would \
+             have 2^{} entries",
+            qubits.len(),
+            2 * qubits.len()
         )));
     }
 

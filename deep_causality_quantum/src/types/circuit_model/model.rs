@@ -68,8 +68,26 @@ where
         }
         let mut classical_writer: Vec<Option<BoxId>> = vec![None; wires.len()];
         let mut encoded: BTreeSet<WireId> = BTreeSet::new();
+        // The first box to touch each quantum wire: an encoder prepares fresh lines, so a wire an
+        // earlier box touched cannot be one of its outputs.
+        let mut first_touch: Vec<Option<BoxId>> = vec![None; wires.len()];
         for (b, bx) in boxes.iter().enumerate() {
             check_box(&wires, b, bx)?;
+            if let CircuitBox::Encoder { outputs, .. } = bx
+                && let Some((w, first)) = outputs
+                    .iter()
+                    .find_map(|&w| first_touch.get(w).copied().flatten().map(|f| (w, f)))
+            {
+                return Err(QuantumError::DimensionMismatch(format!(
+                    "box {b} (encoder) prepares wire {w}, which box {first} touched before it; an \
+                     encoder prepares fresh lines"
+                )));
+            }
+            for &w in bx.quantum_wires() {
+                if first_touch[w].is_none() {
+                    first_touch[w] = Some(b);
+                }
+            }
             if let Some(w) = bx.classical_write() {
                 if let Some(first) = classical_writer[w] {
                     return Err(QuantumError::DimensionMismatch(format!(
@@ -486,6 +504,29 @@ where
                     states[bad].as_slice().len()
                 )));
             }
+            let tol = Tolerance::<R>::state()
+                .threshold(d, R::one())
+                .unwrap_or_else(|| R::epsilon().sqrt());
+            for (i, s) in states.iter().enumerate() {
+                if s.as_slice()
+                    .iter()
+                    .any(|a| !a.re.is_finite() || !a.im.is_finite())
+                {
+                    return Err(QuantumError::NonFiniteValue(format!(
+                        "box {b} (encoder): state {i} has a non-finite amplitude"
+                    )));
+                }
+                let norm = s
+                    .as_slice()
+                    .iter()
+                    .fold(R::zero(), |acc, a| acc + a.re * a.re + a.im * a.im)
+                    .sqrt();
+                if (norm - R::one()).abs() > tol {
+                    return Err(QuantumError::NormalizationError(format!(
+                        "box {b} (encoder): state {i} has norm {norm:?}, not one within {tol:?}"
+                    )));
+                }
+            }
         }
         CircuitBox::Unitary { wires: ws, program } => {
             quantum_dim(ws)?;
@@ -527,6 +568,7 @@ where
                     k.shape()
                 )));
             }
+            check_trace_preserving(b, "kraus", kraus.iter(), d)?;
         }
         CircuitBox::Instrument {
             wires: ws,
@@ -541,7 +583,7 @@ where
                     kraus.len()
                 )));
             }
-            check_instrument(b, kraus, d)?;
+            check_trace_preserving(b, "instrument", kraus.iter().flatten(), d)?;
         }
         CircuitBox::Measurement { wires: ws, outcome } => {
             let d = quantum_dim(ws)?;
@@ -556,38 +598,53 @@ where
     Ok(())
 }
 
-/// Joint trace preservation of an instrument: `Σ_y Σ_k K†K = I` within the state tolerance.
-fn check_instrument<R>(
+/// Trace preservation of a Kraus family, `Σ K†K = I` within the state tolerance, over every
+/// operator of a Kraus box or every outcome family of an instrument. Non-finite entries are
+/// refused first, since a non-finite defect passes no comparison.
+fn check_trace_preserving<'a, R>(
     b: BoxId,
-    kraus: &[Vec<CausalTensor<deep_causality_num_complex::Complex<R>>>],
+    kind: &str,
+    kraus: impl Iterator<Item = &'a CausalTensor<deep_causality_num_complex::Complex<R>>>,
     d: usize,
 ) -> Result<(), QuantumError>
 where
-    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+    R: RealField + FromPrimitive + Default + core::fmt::Debug + 'a,
 {
     let mut sum = identity_matrix::<R>(d) - identity_matrix::<R>(d);
-    for family in kraus {
-        for k in family {
-            let shape = k.shape();
-            if shape.len() != 2 || shape[0] != d || shape[1] != d {
-                return Err(QuantumError::DimensionMismatch(format!(
-                    "box {b} (instrument): a Kraus operator has shape {shape:?}, its wires imply {d} × {d}"
-                )));
-            }
-            let kk = k
-                .dagger()
-                .and_then(|kd| kd.matmul(k))
-                .map_err(|e| QuantumError::CalculationError(format!("matmul: {e:?}")))?;
-            sum = sum + kk;
+    for k in kraus {
+        let shape = k.shape();
+        if shape.len() != 2 || shape[0] != d || shape[1] != d {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "box {b} ({kind}): a Kraus operator has shape {shape:?}, its wires imply {d} × {d}"
+            )));
         }
+        if k.as_slice()
+            .iter()
+            .any(|a| !a.re.is_finite() || !a.im.is_finite())
+        {
+            return Err(QuantumError::NonFiniteValue(format!(
+                "box {b} ({kind}): a Kraus operator has a non-finite entry"
+            )));
+        }
+        let kk = k
+            .dagger()
+            .and_then(|kd| kd.matmul(k))
+            .map_err(|e| QuantumError::CalculationError(format!("matmul: {e:?}")))?;
+        sum = sum + kk;
     }
     let defect = frobenius_norm(&(sum - identity_matrix::<R>(d)));
     let tol = Tolerance::<R>::state()
         .threshold(d, R::one())
         .unwrap_or_else(|| R::epsilon().sqrt());
+    if !defect.is_finite() {
+        return Err(QuantumError::NonFiniteValue(format!(
+            "box {b} ({kind}): ‖Σ K†K − I‖_F is not finite"
+        )));
+    }
     if defect > tol {
+        let jointly = if kind == "instrument" { "jointly " } else { "" };
         return Err(QuantumError::CalculationError(format!(
-            "box {b} (instrument) is not jointly trace-preserving: ‖Σ K†K − I‖_F = {defect:?} exceeds {tol:?}"
+            "box {b} ({kind}) is not {jointly}trace-preserving: ‖Σ K†K − I‖_F = {defect:?} exceeds {tol:?}"
         )));
     }
     Ok(())

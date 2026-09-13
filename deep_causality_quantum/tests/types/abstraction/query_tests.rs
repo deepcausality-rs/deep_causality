@@ -15,7 +15,9 @@ fn chain_dag() -> InducedDag {
 fn test_interchange_on_a_chain_is_refused_by_name() {
     let err = QuerySignature::new(&chain_dag(), vec![Query::Inc(vec![vec![0, 1]])]).unwrap_err();
     match err.0 {
-        QuantumErrorEnum::NotParallelisable(msg) => assert!(msg.contains("0 → 1"), "{msg}"),
+        QuantumErrorEnum::NotParallelisable { set, from, to } => {
+            assert_eq!((set, from, to), (0, 0, 1))
+        }
         other => panic!("{other:?}"),
     }
     // Two parallelisable singletons are fine; a node in two sets is not.

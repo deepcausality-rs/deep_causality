@@ -76,8 +76,8 @@ fn test_display_covers_every_variant() {
             "Non-Clifford Gate: T(2) at position 5",
         ),
         (
-            QuantumError::NoCompositionalModel("bare marginal".into()),
-            "No Compositional Model: bare marginal",
+            QuantumError::NoCompositionalModel("Marginal".into()),
+            "No Compositional Model: a Marginal subject is the marginal of a compositional model and not one itself; only a circuit subject, whose dilation carries the model, can enter an abstraction",
         ),
         (
             QuantumError::NaturalityDimensionExceeded(18, 2, 1 << 40, 1 << 24),
@@ -88,16 +88,16 @@ fn test_display_covers_every_variant() {
             "Kraus Family Exceeded: 8192 operators, above the cap of 4096",
         ),
         (
-            QuantumError::NoPropagationNormalForm("layer 1".into()),
-            "No Propagation Normal Form: layer 1",
+            QuantumError::NoPropagationNormalForm(1, 0),
+            "No Propagation Normal Form: layer 1 is a non-diagonal Clifford layer following the non-Clifford remainder left by layer 0; the propagated error is neither a Pauli nor diagonal and has no normal form of polynomial size",
         ),
         (
-            QuantumError::NotParallelisable("X -> Y".into()),
-            "Not Parallelisable: X -> Y",
+            QuantumError::NotParallelisable(0, 0, 1),
+            "Not Parallelisable: interchange set 0 holds nodes 0 and 1, joined by the directed path 0 → 1",
         ),
         (
-            QuantumError::SectionNotInverse("residual 0.2".into()),
-            "Section Not Inverse: residual 0.2",
+            QuantumError::SectionNotInverse(2, "residual 0.2 above 0.001".into()),
+            "Section Not Inverse: entry 2: residual 0.2 above 0.001",
         ),
         (
             QuantumError::CalculationError("x".into()),

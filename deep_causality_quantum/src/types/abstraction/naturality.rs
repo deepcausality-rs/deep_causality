@@ -90,7 +90,7 @@ where
         }
         let mut checks = Vec::with_capacity(queries.len());
         let mut entries: u64 = 0;
-        let mut worst = (R::zero(), 1usize, 1usize);
+        let mut worst = (R::zero(), 1usize, 1usize, Vec::new(), Vec::new());
         for (i, high) in all.iter().enumerate() {
             if !queries.contains(high) {
                 continue;
@@ -103,7 +103,13 @@ where
                 .threshold(dim, R::one())
                 .unwrap_or_else(|| R::epsilon().sqrt());
             if residual >= worst.0 {
-                worst = (residual, left.d_in(), left.d_out());
+                worst = (
+                    residual,
+                    left.d_in(),
+                    left.d_out(),
+                    left.classical_in().to_vec(),
+                    left.classical_out().to_vec(),
+                );
             }
             checks.push(Check::new(CheckItem::Index(i), residual, tolerance));
         }
@@ -111,7 +117,9 @@ where
             report: CheckReport::from_checks(checks),
             path: SemanticsPath::Numeric,
             norm: FROBENIUS_ON_CHOI,
-            bound: DiamondBound::from_frobenius(worst.0, worst.1, worst.2),
+            bound: DiamondBound::from_frobenius_blocks(
+                worst.0, worst.1, worst.2, &worst.3, &worst.4,
+            ),
             entries,
         })
     }

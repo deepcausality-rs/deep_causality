@@ -117,8 +117,7 @@ impl<R: RealField, N: NaturalNumber, S: SubjectOrigin> Screened<R, N, S> {
         match self.origin() {
             ScreenOrigin::Circuit => Ok(()),
             other => Err(QuantumError::NoCompositionalModel(alloc::format!(
-                "a {other:?} subject is the marginal of a compositional model and not one itself; \
-                 only a circuit subject, whose dilation carries the model, can enter an abstraction"
+                "{other:?}"
             ))),
         }
     }
@@ -512,14 +511,20 @@ where
     /// between the declared systems. A candidate containing a `C₃` is not admitted. Each
     /// structural candidate implies a structure of its own, and the supports carry it, so no
     /// graph is needed here.
-    pub fn check_decomposable(self, inputs: &[usize], outputs: &[usize]) -> Self {
+    pub fn check_decomposable(mut self, inputs: &[usize], outputs: &[usize]) -> Self {
+        if self.failure.is_none() && (inputs.is_empty() || outputs.is_empty()) {
+            self.fail(QuantumError::CalculationError(
+                "check_decomposable needs at least one input and one output system".into(),
+            ));
+            return self;
+        }
         self.screen_decomposable(|h| h.check_decomposable_from_supports(inputs, outputs))
     }
 
     /// C₃-exclusion for every admitted candidate over `graph`'s reachability between the declared
     /// systems, for candidates whose structure lives in a graph rather than in their supports.
     pub fn check_decomposable_with<T, G>(
-        self,
+        mut self,
         graph: &G,
         inputs: &[usize],
         outputs: &[usize],
@@ -528,6 +533,12 @@ where
         T: Clone,
         G: CausableGraph<T>,
     {
+        if self.failure.is_none() && (inputs.is_empty() || outputs.is_empty()) {
+            self.fail(QuantumError::CalculationError(
+                "check_decomposable needs at least one input and one output system".into(),
+            ));
+            return self;
+        }
         self.screen_decomposable(|h| h.check_decomposable(graph, inputs, outputs))
     }
 

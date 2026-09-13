@@ -62,8 +62,9 @@ fn test_a_section_that_inverts_its_channel_is_admitted() {
 fn test_a_section_that_does_not_invert_is_refused_with_the_residual() {
     let err = TypeAlignment::new(vec![(vec![0], vec![0], h(), id())]).unwrap_err();
     match err.0 {
-        QuantumErrorEnum::SectionNotInverse(msg) => {
-            assert!(msg.contains("2.828427124746"), "√8, {msg}")
+        QuantumErrorEnum::SectionNotInverse { entry, detail } => {
+            assert_eq!(entry, 0);
+            assert!(detail.contains("2.828427124746"), "√8, {detail}");
         }
         other => panic!("{other:?}"),
     }

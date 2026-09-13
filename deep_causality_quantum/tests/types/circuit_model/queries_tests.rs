@@ -184,7 +184,14 @@ fn test_interchange_feeds_the_copy_and_discards_the_main_input() {
 fn test_interchange_refuses_a_chain_and_bad_nodes() {
     let m = chain(true);
     let err = m.interchanged(&[vec![0, 1]]).unwrap_err();
-    assert!(matches!(err.0, QuantumErrorEnum::NotParallelisable(ref msg) if msg.contains("0 → 1")));
+    assert!(matches!(
+        err.0,
+        QuantumErrorEnum::NotParallelisable {
+            set: 0,
+            from: 0,
+            to: 1
+        }
+    ));
     assert!(matches!(
         m.interchanged(&[vec![4]]).unwrap_err().0,
         QuantumErrorEnum::DimensionMismatch(_)

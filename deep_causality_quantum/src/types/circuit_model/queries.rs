@@ -15,7 +15,7 @@ use crate::types::carriers::Channel;
 use crate::types::circuit_model::circuit_box::CircuitBox;
 use crate::types::circuit_model::model::CircuitModel;
 use crate::types::circuit_model::wire::{BoxId, NodeId, WireId, WireType};
-use alloc::collections::BTreeSet;
+use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -192,7 +192,8 @@ where
     ///
     /// # Errors
     ///
-    /// [`QuantumError::DimensionMismatch`] if a wire is not a quantum wire of the model.
+    /// [`QuantumError::DimensionMismatch`] if a wire is not a quantum wire of the model or not
+    /// one of its declared outputs.
     pub fn observed(&self, observed: &[WireId]) -> Result<Self, QuantumError> {
         let mut wires = self.wires().to_vec();
         let mut boxes = self.boxes().to_vec();
@@ -206,6 +207,11 @@ where
                         "wire {w} is not a quantum wire of the model"
                     )));
                 }
+            }
+            if !self.outputs().contains(&w) {
+                return Err(QuantumError::DimensionMismatch(format!(
+                    "wire {w} is not a declared output of the model; Observe measures output wires"
+                )));
             }
             wires.push(WireType::Classical {
                 outcomes: self.wires()[w].cardinality(),
@@ -289,8 +295,9 @@ where
     /// # Errors
     ///
     /// [`QuantumError::NotParallelisable`] if two nodes of one set are joined by a directed path;
-    /// [`QuantumError::DimensionMismatch`] on a node out of range; the errors of
-    /// [`new`](Self::new).
+    /// [`QuantumError::DimensionMismatch`] on a node out of range, a node in two sets, or a node
+    /// whose box writes a classical wire, since the copy would write its private outcome wire and
+    /// the main wire would stay unwritten; the errors of [`new`](Self::new).
     pub fn interchanged(&self, sets: &[Vec<NodeId>]) -> Result<Self, QuantumError> {
         self.interchanged_with_map(sets).map(|(m, _)| m)
     }
@@ -306,7 +313,8 @@ where
         sets: &[Vec<NodeId>],
     ) -> Result<(Self, Vec<(WireId, WireId)>), QuantumError> {
         let dag = self.induced_dag();
-        for set in sets {
+        let mut named: BTreeSet<NodeId> = BTreeSet::new();
+        for (i, set) in sets.iter().enumerate() {
             for &n in set {
                 if n >= self.nodes().len() {
                     return Err(QuantumError::DimensionMismatch(format!(
@@ -314,13 +322,25 @@ where
                         self.nodes().len()
                     )));
                 }
+                if !named.insert(n) {
+                    return Err(QuantumError::DimensionMismatch(format!(
+                        "node {n} appears in two interchange sets"
+                    )));
+                }
+                for &b in &self.nodes()[n] {
+                    if let Some(w) = self.boxes()[b].classical_write() {
+                        return Err(QuantumError::DimensionMismatch(format!(
+                            "node {n} holds box {b} ({}), which writes classical wire {w}; an \
+                             interchange set holds quantum-only nodes",
+                            self.boxes()[b].kind()
+                        )));
+                    }
+                }
             }
             for &a in set {
                 for &b in set {
                     if a != b && dag.reaches(a, b) {
-                        return Err(QuantumError::NotParallelisable(format!(
-                            "nodes {a} and {b} of one interchange set are joined by the path {a} → {b}"
-                        )));
+                        return Err(QuantumError::NotParallelisable(i, a, b));
                     }
                 }
             }
@@ -330,7 +350,8 @@ where
         let mut nodes: Vec<Vec<BoxId>> = Vec::new();
         let mut inputs: Vec<WireId> = self.inputs().to_vec();
         let mut renamed: Vec<(WireId, WireId)> = Vec::new();
-        // Swaps to insert at the position of each replaced box: (main wire, copy wire).
+        // Swaps to insert at the position of a replaced box: (main wire, copy wire). One swap per
+        // wire of a replaced node, placed at the node's last box on that wire.
         let mut swaps_at: Vec<Vec<(WireId, WireId)>> = vec![Vec::new(); self.boxes().len()];
         let mut replaced: BTreeSet<BoxId> = BTreeSet::new();
         for set in sets {
@@ -349,6 +370,8 @@ where
                 wires.len() - 1
             };
             let mut copy_boxes: Vec<(BoxId, CircuitBox<R>)> = Vec::new();
+            // Per (node, wire): the last box of the node on that wire and the wire's copy.
+            let mut last_on_wire: BTreeMap<(NodeId, WireId), (BoxId, WireId)> = BTreeMap::new();
             for (b, bx) in self.boxes().iter().enumerate() {
                 let node = self.node_of(b).expect("validated");
                 if !prefix.contains(&node) {
@@ -374,9 +397,12 @@ where
                 if members.contains(&node) {
                     replaced.insert(b);
                     for &w in bx.quantum_wires() {
-                        swaps_at[b].push((w, lookup(w)));
+                        last_on_wire.insert((node, w), (b, lookup(w)));
                     }
                 }
+            }
+            for ((_, w), (b, c)) in last_on_wire {
+                swaps_at[b].push((w, c));
             }
             for &w in self.inputs() {
                 if let Some(c) = copy[w] {

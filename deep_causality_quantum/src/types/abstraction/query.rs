@@ -82,9 +82,7 @@ impl QuerySignature {
                             }
                             for &b in set {
                                 if a != b && dag.reaches(a, b) {
-                                    return Err(QuantumError::NotParallelisable(format!(
-                                        "interchange set {i} holds nodes {a} and {b}, joined by the directed path {a} → {b}"
-                                    )));
+                                    return Err(QuantumError::NotParallelisable(i, a, b));
                                 }
                             }
                         }

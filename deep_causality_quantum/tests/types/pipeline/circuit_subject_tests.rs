@@ -141,7 +141,7 @@ fn test_a_model_subject_cannot_enter_an_abstraction() {
     assert_eq!(screened.origin(), ScreenOrigin::Marginal);
     let err = screened.require_compositional().unwrap_err();
     assert!(
-        matches!(err.0, QuantumErrorEnum::NoCompositionalModel(ref m) if m.contains("Marginal"))
+        matches!(err.0, QuantumErrorEnum::NoCompositionalModel { ref origin } if origin == "Marginal")
     );
 }
 

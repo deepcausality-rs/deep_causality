@@ -21,8 +21,9 @@ pub struct HandBuiltComplex {
 
 impl HandBuiltComplex {
     /// A complex from its cell counts per grade and its boundary matrices `∂₁, …, ∂_top` as
-    /// `(row, column, coefficient)` triplets. Panics on a malformed matrix, because a fixture that
-    /// does not build is a defect in the test and not a run-time condition.
+    /// `(row, column, coefficient)` triplets. Panics on a malformed matrix or when some
+    /// `∂ₖ ∂ₖ₊₁` is not zero, because a fixture that is not a chain complex is a defect in the
+    /// test and not a run-time condition.
     pub fn new(cells: Vec<usize>, boundaries: &[&[(usize, usize, i8)]]) -> Self {
         assert_eq!(
             boundaries.len() + 1,
@@ -35,6 +36,17 @@ impl HandBuiltComplex {
             let m = CsrMatrix::from_triplets(cells[k], cells[k + 1], triplets)
                 .unwrap_or_else(|e| panic!("∂_{} is not well formed: {e}", k + 1));
             mats.push(m);
+        }
+        for k in 1..mats.len().saturating_sub(1) {
+            let product = mats[k]
+                .mat_mult(&mats[k + 1])
+                .unwrap_or_else(|e| panic!("∂_{k} ∂_{} cannot be formed: {e}", k + 1));
+            if product.values().iter().any(|v| *v != 0) {
+                panic!(
+                    "∂_{k} ∂_{} is not zero; the fixture is not a chain complex",
+                    k + 1
+                );
+            }
         }
         Self {
             cells,
@@ -63,6 +75,11 @@ impl ChainComplex for HandBuiltComplex {
     }
 
     fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>> {
-        Cow::Owned(self.boundary_matrix(k + 1).transpose())
+        match k.checked_add(1) {
+            Some(next) => Cow::Owned(self.boundary_matrix(next).transpose()),
+            None => Cow::Owned(
+                CsrMatrix::from_triplets(0, self.num_cells(k), &[]).expect("an empty matrix"),
+            ),
+        }
     }
 }

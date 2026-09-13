@@ -148,27 +148,24 @@ where
             .map(|&w| self.wires()[w].cardinality())
             .collect();
 
-        // Both caps, before anything is allocated. The entry cap here is on the working storage,
-        // one register state vector per input basis state; the Choi operator is capped where it is
-        // formed, in `QcMorphism::choi_blocks`, since the program's own Choi is never formed.
-        let entries = (d_total as u64).saturating_mul(d_in as u64);
-        if entries > caps.max_entries {
-            return Err(QuantumError::NaturalityDimensionExceeded(
-                ceil_log2(d_in),
-                ceil_log2(d_out),
-                entries,
-                caps.max_entries,
-            ));
-        }
+        // Both caps, before anything is allocated. The entry cap is on the working storage, one
+        // register state vector per input basis state per classical branch; the Choi operator is
+        // capped where it is formed, in `QcMorphism::choi_blocks`, since the program's own Choi is
+        // never formed. Every later branch expansion is checked against the same register.
+        let register = Register {
+            dims: &dims,
+            strides: &strides,
+            per_branch: (d_total as u64).saturating_mul(d_in as u64),
+            n: ceil_log2(d_in),
+            k: ceil_log2(d_out),
+            caps,
+        };
         let initial_branches = in_counts
             .iter()
             .fold(1u64, |a, &c| a.saturating_mul(c as u64));
-        if initial_branches > caps.max_operators {
-            return Err(QuantumError::KrausFamilyExceeded(
-                initial_branches,
-                caps.max_operators,
-            ));
-        }
+        register.check_branches(initial_branches)?;
+        // The assembled family has one operator per branch and traced basis state.
+        register.check_operators(initial_branches.saturating_mul(d_traced as u64))?;
 
         // Initial branches: one per classical-input assignment, each carrying the input basis.
         let zero = Complex::new(R::zero(), R::zero());
@@ -223,31 +220,35 @@ where
                 }
                 CircuitBox::Channel { channel, .. } => {
                     let kraus = QcMorphism::from_channel(channel)?.kraus();
-                    branches =
-                        branch_over(branches, &kraus, None, &dims, &strides, &positions, caps)?;
+                    branches = branch_over(&branches, &kraus, None, &positions, &register)?;
                 }
                 CircuitBox::Kraus { kraus, .. } => {
-                    branches =
-                        branch_over(branches, kraus, None, &dims, &strides, &positions, caps)?;
+                    branches = branch_over(&branches, kraus, None, &positions, &register)?;
                 }
                 CircuitBox::Instrument { outcome, kraus, .. } => {
+                    // Every outcome family opens its branches: the whole count is checked before
+                    // the first is formed.
+                    let opened = kraus
+                        .iter()
+                        .fold(0u64, |a, fam| a.saturating_add(fam.len() as u64))
+                        .saturating_mul(branches.len() as u64);
+                    register.check_branches(opened)?;
                     let mut next: Vec<Branch<R>> = Vec::new();
                     for (y, fam) in kraus.iter().enumerate() {
                         let mut tagged = branch_over(
-                            branches.iter().map(clone_branch).collect(),
+                            &branches,
                             fam,
                             Some((*outcome, y)),
-                            &dims,
-                            &strides,
                             &positions,
-                            caps,
+                            &register,
                         )?;
                         next.append(&mut tagged);
-                        check_branch_cap(next.len(), caps)?;
                     }
                     branches = next;
                 }
                 CircuitBox::Measurement { outcome, .. } => {
+                    register
+                        .check_branches((branches.len() as u64).saturating_mul(d_box as u64))?;
                     let mut next: Vec<Branch<R>> = Vec::new();
                     for y in 0..d_box {
                         // `|0⟩⟨y|`: keep the amplitude where the wires read `y`, move it to `|0⟩`.
@@ -255,16 +256,13 @@ where
                         m[y] = one;
                         let k = CausalTensor::from_slice(&m, &[d_box, d_box]);
                         let mut tagged = branch_over(
-                            branches.iter().map(clone_branch).collect(),
+                            &branches,
                             &[k],
                             Some((*outcome, y)),
-                            &dims,
-                            &strides,
                             &positions,
-                            caps,
+                            &register,
                         )?;
                         next.append(&mut tagged);
-                        check_branch_cap(next.len(), caps)?;
                     }
                     branches = next;
                 }
@@ -290,7 +288,9 @@ where
             }
         }
 
-        // Assemble the morphism: for each branch and each traced index, one Kraus operator.
+        // Assemble the morphism: for each branch and each traced index, one Kraus operator; the
+        // family's size is checked before the first operator is formed.
+        register.check_operators((branches.len() as u64).saturating_mul(d_traced as u64))?;
         let mut qc = QcMorphism::new(d_in, d_out, in_counts.clone(), out_counts)?;
         let compose = |digits: &[(usize, usize)]| -> usize {
             digits.iter().map(|&(p, v)| v * strides[p]).sum()
@@ -345,44 +345,70 @@ fn clone_branch<R: Clone>(b: &Branch<R>) -> Branch<R> {
     }
 }
 
-fn check_branch_cap(count: usize, caps: &NumericCaps) -> Result<(), QuantumError> {
-    if count as u64 > caps.max_operators {
-        return Err(QuantumError::KrausFamilyExceeded(
-            count as u64,
-            caps.max_operators,
-        ));
+/// The register an evaluation runs on, with what one classical branch costs and the caps every
+/// branch expansion is checked against.
+struct Register<'a> {
+    dims: &'a [usize],
+    strides: &'a [usize],
+    /// Entries one branch holds: the register dimension times the input basis size.
+    per_branch: u64,
+    /// Input and output qubit counts, for the error.
+    n: usize,
+    k: usize,
+    caps: &'a NumericCaps,
+}
+
+impl Register<'_> {
+    /// Refuses `count` branches when their storage exceeds the entry cap or their number the
+    /// operator cap.
+    fn check_branches(&self, count: u64) -> Result<(), QuantumError> {
+        let entries = count.saturating_mul(self.per_branch);
+        if entries > self.caps.max_entries {
+            return Err(QuantumError::NaturalityDimensionExceeded(
+                self.n,
+                self.k,
+                entries,
+                self.caps.max_entries,
+            ));
+        }
+        self.check_operators(count)
     }
-    Ok(())
+
+    /// Refuses a Kraus family of `count` operators above the operator cap.
+    fn check_operators(&self, count: u64) -> Result<(), QuantumError> {
+        if count > self.caps.max_operators {
+            return Err(QuantumError::KrausFamilyExceeded(
+                count,
+                self.caps.max_operators,
+            ));
+        }
+        Ok(())
+    }
 }
 
 /// Every branch times every operator of a family, tagging the outcome wire when given. The count
-/// is checked before the products are formed.
-#[allow(clippy::too_many_arguments)]
+/// is checked against both caps before the products are formed.
 fn branch_over<R>(
-    branches: Vec<Branch<R>>,
+    branches: &[Branch<R>],
     family: &[CausalTensor<Complex<R>>],
     tag: Option<(WireId, usize)>,
-    dims: &[usize],
-    strides: &[usize],
     positions: &[usize],
-    caps: &NumericCaps,
+    register: &Register<'_>,
 ) -> Result<Vec<Branch<R>>, QuantumError>
 where
     R: RealField,
 {
     let count = (branches.len() as u64).saturating_mul(family.len() as u64);
-    if count > caps.max_operators {
-        return Err(QuantumError::KrausFamilyExceeded(count, caps.max_operators));
-    }
+    register.check_branches(count)?;
     let mut out = Vec::with_capacity(count as usize);
     for br in branches {
         for k in family {
-            let mut nb = clone_branch(&br);
+            let mut nb = clone_branch(br);
             if let Some((w, y)) = tag {
                 nb.values[w] = Some(y);
             }
             for col in &mut nb.cols {
-                apply_small(col, dims, strides, positions, k);
+                apply_small(col, register.dims, register.strides, positions, k);
             }
             out.push(nb);
         }

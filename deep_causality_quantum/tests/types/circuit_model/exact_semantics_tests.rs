@@ -230,9 +230,14 @@ fn test_program_outside_the_normal_form_is_refused_by_name() {
     )
     .unwrap();
     let err = program.conjugate(&pauli(3, &[0], &[])).unwrap_err();
-    match err.0 {
-        QuantumErrorEnum::NoPropagationNormalForm(msg) => {
-            assert!(msg.contains("layer 1") && msg.contains("layer 0"), "{msg}")
+    match err.0.clone() {
+        QuantumErrorEnum::NoPropagationNormalForm { layer, after } => {
+            assert_eq!((layer, after), (1, 0));
+            let shown = format!("{err}");
+            assert!(
+                shown.contains("layer 1") && shown.contains("layer 0"),
+                "{shown}"
+            );
         }
         other => panic!("{other:?}"),
     }

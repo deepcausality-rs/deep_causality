@@ -89,8 +89,8 @@ impl<W: NaturalNumber> ExactProgram<W> {
     /// # Errors
     ///
     /// [`QuantumError::NonCliffordGate`] if a Clifford layer holds a non-Clifford gate;
-    /// [`QuantumError::DimensionMismatch`] if a gate names a qubit beyond the register or a
-    /// diagonal layer's blocks are over another register.
+    /// [`QuantumError::DimensionMismatch`] if a gate names a qubit beyond the register, names no
+    /// qubit or a qubit more than once, or a diagonal layer's blocks are over another register.
     pub fn new(num_qubits: usize, layers: Vec<ExactLayer<W>>) -> Result<Self, QuantumError> {
         for (i, layer) in layers.iter().enumerate() {
             match layer {
@@ -101,9 +101,23 @@ impl<W: NaturalNumber> ExactProgram<W> {
                                 "layer {i}: {op:?} is not Clifford; carry it as a diagonal layer"
                             )));
                         }
-                        if let Some(q) = op.qubits().into_iter().find(|&q| q >= num_qubits) {
+                        let mut qubits = op.qubits();
+                        if qubits.is_empty() {
+                            return Err(QuantumError::DimensionMismatch(format!(
+                                "layer {i}: {op:?} names no qubit"
+                            )));
+                        }
+                        if let Some(q) = qubits.iter().copied().find(|&q| q >= num_qubits) {
                             return Err(QuantumError::DimensionMismatch(format!(
                                 "layer {i}: {op:?} names qubit {q} on a {num_qubits}-qubit register"
+                            )));
+                        }
+                        let count = qubits.len();
+                        qubits.sort_unstable();
+                        qubits.dedup();
+                        if qubits.len() != count {
+                            return Err(QuantumError::DimensionMismatch(format!(
+                                "layer {i}: {op:?} names a qubit more than once"
                             )));
                         }
                     }
@@ -204,12 +218,10 @@ impl<W: NaturalNumber> ExactProgram<W> {
             match layer {
                 ExactLayer::Clifford(ops) => {
                     if !remainder.is_constant() && !ops.iter().all(is_diagonal_gate) {
-                        return Err(QuantumError::NoPropagationNormalForm(format!(
-                            "layer {i} is a non-diagonal Clifford layer following the non-Clifford \
-                             remainder left by layer {}: the propagated error is neither a Pauli \
-                             nor diagonal and has no normal form of polynomial size",
-                            last_non_clifford.unwrap_or(i)
-                        )));
+                        return Err(QuantumError::NoPropagationNormalForm(
+                            i,
+                            last_non_clifford.unwrap_or(i),
+                        ));
                     }
                     current = clifford_conjugate(&current, ops)?;
                 }

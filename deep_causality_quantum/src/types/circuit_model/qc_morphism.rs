@@ -250,12 +250,15 @@ where
     /// Sequential composition: `self` then `next`. The classical outputs of `self` feed the
     /// classical inputs of `next` in order; the quantum output of `self` is the quantum input of
     /// `next`. The composite's Kraus operators are the products `N · S` over every matched pair of
-    /// blocks, and the operator count is checked against the cap before any product is formed.
+    /// blocks, and both the operator count and the storage they take are checked against the caps
+    /// before any product is formed.
     ///
     /// # Errors
     ///
     /// [`QuantumError::DimensionMismatch`] on a quantum or classical type mismatch;
-    /// [`QuantumError::KrausFamilyExceeded`] above the operator cap.
+    /// [`QuantumError::KrausFamilyExceeded`] above the operator cap;
+    /// [`QuantumError::NaturalityDimensionExceeded`] when the composite's operators would hold
+    /// more entries than the entry cap.
     pub fn then(&self, next: &Self, caps: &NumericCaps) -> Result<Self, QuantumError> {
         if self.d_out != next.d_in {
             return Err(QuantumError::DimensionMismatch(format!(
@@ -280,6 +283,7 @@ where
         if count > caps.max_operators {
             return Err(QuantumError::KrausFamilyExceeded(count, caps.max_operators));
         }
+        check_storage_cap(count, self.d_in, next.d_out, caps)?;
         let mut out = Self::new(
             self.d_in,
             next.d_out,
@@ -312,22 +316,28 @@ where
     ///
     /// # Errors
     ///
-    /// [`QuantumError::KrausFamilyExceeded`] above the operator cap; the Kronecker's shape errors.
+    /// [`QuantumError::KrausFamilyExceeded`] above the operator cap;
+    /// [`QuantumError::NaturalityDimensionExceeded`] when the products would hold more entries
+    /// than the entry cap; [`QuantumError::DimensionMismatch`] when the composite dimension
+    /// overflows; the Kronecker's shape errors.
     pub fn tensor(&self, other: &Self, caps: &NumericCaps) -> Result<Self, QuantumError> {
         let count = self.operator_count().saturating_mul(other.operator_count());
         if count > caps.max_operators {
             return Err(QuantumError::KrausFamilyExceeded(count, caps.max_operators));
         }
+        let overflow = || {
+            QuantumError::DimensionMismatch(
+                "the dimensions of a parallel composition overflow usize".into(),
+            )
+        };
+        let d_in = self.d_in.checked_mul(other.d_in).ok_or_else(overflow)?;
+        let d_out = self.d_out.checked_mul(other.d_out).ok_or_else(overflow)?;
+        check_storage_cap(count, d_in, d_out, caps)?;
         let mut classical_in = self.classical_in.clone();
         classical_in.extend(&other.classical_in);
         let mut classical_out = self.classical_out.clone();
         classical_out.extend(&other.classical_out);
-        let mut out = Self::new(
-            self.d_in * other.d_in,
-            self.d_out * other.d_out,
-            classical_in,
-            classical_out,
-        )?;
+        let mut out = Self::new(d_in, d_out, classical_in, classical_out)?;
         for ((xa, ya), ka) in &self.blocks {
             for ((xb, yb), kb) in &other.blocks {
                 let mut x = xa.clone();
@@ -512,6 +522,28 @@ fn check_values(values: &[usize], counts: &[usize], side: &str) -> Result<(), Qu
 }
 
 /// The smallest `n` with `2^n ≥ d`.
+/// Refuses a family of `count` operators of `d_out × d_in` entries above the entry cap, before
+/// any of them is formed.
+fn check_storage_cap(
+    count: u64,
+    d_in: usize,
+    d_out: usize,
+    caps: &NumericCaps,
+) -> Result<(), QuantumError> {
+    let entries = count
+        .saturating_mul(d_out as u64)
+        .saturating_mul(d_in as u64);
+    if entries > caps.max_entries {
+        return Err(QuantumError::NaturalityDimensionExceeded(
+            ceil_log2(d_in),
+            ceil_log2(d_out),
+            entries,
+            caps.max_entries,
+        ));
+    }
+    Ok(())
+}
+
 pub(crate) fn ceil_log2(d: usize) -> usize {
     let mut n = 0usize;
     while (1usize << n) < d {
@@ -523,7 +555,11 @@ pub(crate) fn ceil_log2(d: usize) -> usize {
 /// The index map of a leg permutation: `map[old]` is the position of the basis state `old` over
 /// `dims` after the legs are reordered so that `order[k]` is the `k`-th leg, first leg most
 /// significant.
-fn leg_index_map(dims: &[usize], order: &[usize], d: usize) -> Result<Vec<usize>, QuantumError> {
+pub(crate) fn leg_index_map(
+    dims: &[usize],
+    order: &[usize],
+    d: usize,
+) -> Result<Vec<usize>, QuantumError> {
     let product: usize = dims.iter().product();
     if product != d || order.len() != dims.len() {
         return Err(QuantumError::DimensionMismatch(format!(

@@ -102,8 +102,8 @@ pub enum QuantumErrorEnum {
     /// An abstraction constructor was handed a process operator without its
     /// circuit. A bare `ProcessFactors` store is the marginal of a compositional
     /// model and not one itself (Lorenz & Tull, arXiv:2602.16612, Example 62),
-    /// so it validates as in v1 and cannot enter an abstraction.
-    NoCompositionalModel(String),
+    /// so it validates as in v1 and cannot enter an abstraction. Carries the subject's origin.
+    NoCompositionalModel { origin: String },
     /// The numeric semantics would form a composite Choi operator of
     /// `2^(2n + 2k)` entries above its cap: `n` and `k` are the input and output
     /// qubit counts (rounded up from the dimensions), `entries` the count it
@@ -120,15 +120,18 @@ pub enum QuantumErrorEnum {
     KrausFamilyExceeded { operators: u64, cap: u64 },
     /// A fault was asked to propagate through a program with no normal form of
     /// polynomial size: two non-Clifford layers separated by a non-diagonal
-    /// Clifford. Names the layers. The propagator refuses rather than expanding.
-    NoPropagationNormalForm(String),
-    /// An interchange query named sets that are not parallelisable: a directed
-    /// path joins two members of one set (Lorenz & Tull §7.2). Names the path.
-    NotParallelisable(String),
-    /// A type alignment's section does not invert its channel: `τ_X ∘ E_X`
-    /// differs from the identity by more than the state tolerance. Carries the
-    /// residual and the tolerance.
-    SectionNotInverse(String),
+    /// Clifford. `layer` is the non-diagonal Clifford layer and `after` the
+    /// non-Clifford layer whose remainder precedes it. The propagator refuses
+    /// rather than expanding.
+    NoPropagationNormalForm { layer: usize, after: usize },
+    /// An interchange query named sets that are not parallelisable: the directed
+    /// path `from → to` joins two members of interchange set `set` (Lorenz &
+    /// Tull §7.2).
+    NotParallelisable { set: usize, from: usize, to: usize },
+    /// A type alignment's section does not invert its channel: for alignment
+    /// entry `entry`, `‖τ_X ∘ E_X − id‖_F` exceeds the state tolerance; `detail`
+    /// states the residual and the tolerance.
+    SectionNotInverse { entry: usize, detail: String },
     /// Numerical conversion or general calculation failure.
     CalculationError(String),
 }
@@ -232,8 +235,8 @@ impl QuantumError {
     }
 
     #[allow(non_snake_case)]
-    pub fn NoCompositionalModel(msg: String) -> Self {
-        Self(QuantumErrorEnum::NoCompositionalModel(msg))
+    pub fn NoCompositionalModel(origin: String) -> Self {
+        Self(QuantumErrorEnum::NoCompositionalModel { origin })
     }
 
     #[allow(non_snake_case)]
@@ -247,18 +250,18 @@ impl QuantumError {
     }
 
     #[allow(non_snake_case)]
-    pub fn NoPropagationNormalForm(msg: String) -> Self {
-        Self(QuantumErrorEnum::NoPropagationNormalForm(msg))
+    pub fn NoPropagationNormalForm(layer: usize, after: usize) -> Self {
+        Self(QuantumErrorEnum::NoPropagationNormalForm { layer, after })
     }
 
     #[allow(non_snake_case)]
-    pub fn NotParallelisable(msg: String) -> Self {
-        Self(QuantumErrorEnum::NotParallelisable(msg))
+    pub fn NotParallelisable(set: usize, from: usize, to: usize) -> Self {
+        Self(QuantumErrorEnum::NotParallelisable { set, from, to })
     }
 
     #[allow(non_snake_case)]
-    pub fn SectionNotInverse(msg: String) -> Self {
-        Self(QuantumErrorEnum::SectionNotInverse(msg))
+    pub fn SectionNotInverse(entry: usize, detail: String) -> Self {
+        Self(QuantumErrorEnum::SectionNotInverse { entry, detail })
     }
 
     #[allow(non_snake_case)]
@@ -336,9 +339,11 @@ impl Display for QuantumError {
                 generator, detail
             ),
             QuantumErrorEnum::NonCliffordGate(msg) => write!(f, "Non-Clifford Gate: {}", msg),
-            QuantumErrorEnum::NoCompositionalModel(msg) => {
-                write!(f, "No Compositional Model: {}", msg)
-            }
+            QuantumErrorEnum::NoCompositionalModel { origin } => write!(
+                f,
+                "No Compositional Model: a {} subject is the marginal of a compositional model and not one itself; only a circuit subject, whose dilation carries the model, can enter an abstraction",
+                origin
+            ),
             QuantumErrorEnum::NaturalityDimensionExceeded { n, k, entries, cap } => write!(
                 f,
                 "Naturality Dimension Exceeded: a channel from {} to {} qubits has a composite Choi of {} entries, above the cap of {}",
@@ -349,12 +354,18 @@ impl Display for QuantumError {
                 "Kraus Family Exceeded: {} operators, above the cap of {}",
                 operators, cap
             ),
-            QuantumErrorEnum::NoPropagationNormalForm(msg) => {
-                write!(f, "No Propagation Normal Form: {}", msg)
-            }
-            QuantumErrorEnum::NotParallelisable(msg) => write!(f, "Not Parallelisable: {}", msg),
-            QuantumErrorEnum::SectionNotInverse(msg) => {
-                write!(f, "Section Not Inverse: {}", msg)
+            QuantumErrorEnum::NoPropagationNormalForm { layer, after } => write!(
+                f,
+                "No Propagation Normal Form: layer {} is a non-diagonal Clifford layer following the non-Clifford remainder left by layer {}; the propagated error is neither a Pauli nor diagonal and has no normal form of polynomial size",
+                layer, after
+            ),
+            QuantumErrorEnum::NotParallelisable { set, from, to } => write!(
+                f,
+                "Not Parallelisable: interchange set {} holds nodes {} and {}, joined by the directed path {} → {}",
+                set, from, to, from, to
+            ),
+            QuantumErrorEnum::SectionNotInverse { entry, detail } => {
+                write!(f, "Section Not Inverse: entry {}: {}", entry, detail)
             }
             QuantumErrorEnum::CalculationError(msg) => write!(f, "Calculation Error: {}", msg),
         }

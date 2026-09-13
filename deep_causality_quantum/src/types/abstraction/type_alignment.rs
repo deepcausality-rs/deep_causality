@@ -163,9 +163,12 @@ where
                 .threshold(tau.d_out() * tau.d_out(), R::one())
                 .unwrap_or_else(|| R::epsilon().sqrt());
             if residual > tolerance {
-                return Err(QuantumError::SectionNotInverse(format!(
-                    "entry {i}: ‖τ ∘ E − id‖_F = {residual:?} exceeds the state tolerance {tolerance:?}"
-                )));
+                return Err(QuantumError::SectionNotInverse(
+                    i,
+                    format!(
+                        "‖τ ∘ E − id‖_F = {residual:?} exceeds the state tolerance {tolerance:?}"
+                    ),
+                ));
             }
             out.push(AlignmentEntry {
                 side,

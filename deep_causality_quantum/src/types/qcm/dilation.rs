@@ -29,6 +29,7 @@
 //! fixture.
 
 use crate::QuantumError;
+use crate::types::circuit_model::qc_morphism::leg_index_map;
 use crate::types::circuit_model::{
     CircuitBox, CircuitModel, NodeId, NumericCaps, QcMorphism, WireId, gate_unitary,
 };
@@ -144,12 +145,25 @@ where
     ///
     /// # Errors
     ///
-    /// [`QuantumError::DimensionMismatch`] if an override is not `d_A² × d_A²`, and the embedding's
+    /// [`QuantumError::CalculationError`] when the joint operator on the union of the legs would
+    /// have more entries than [`DILATION_ENTRY_CAP`], before anything is embedded, since the
+    /// per-factor cap bounds each factor on its own support only;
+    /// [`QuantumError::DimensionMismatch`] if an override is not `d_A² × d_A²`; the embedding's
     /// errors.
     pub fn joint_instrument(
         &self,
         overrides: &BTreeMap<NodeId, CausalTensor<Complex<R>>>,
     ) -> Result<CausalTensor<Complex<R>>, QuantumError> {
+        let dimension = self.legs.iter().fold(1u64, |acc, leg| {
+            acc.saturating_mul((leg.d as u64).saturating_mul(leg.d as u64))
+        });
+        let entries = dimension.saturating_mul(dimension);
+        if entries > DILATION_ENTRY_CAP {
+            return Err(QuantumError::CalculationError(format!(
+                "the joint instrument on the union of the legs has dimension {dimension} and would \
+                 have {entries} entries, above the dilation cap of {DILATION_ENTRY_CAP}"
+            )));
+        }
         let all: BTreeSet<usize> = (0..self.legs.len()).collect();
         let space = self.supports.space_map(&all);
         let mut joint: Option<CausalTensor<Complex<R>>> = None;
@@ -457,7 +471,8 @@ where
             CircuitBox::Unitary { wires, program } => {
                 for op in program {
                     let (local, m) = gate_unitary::<R>(op)?;
-                    let gate_wires: BTreeSet<usize> = local.iter().map(|&q| wires[q]).collect();
+                    let in_gate_order: Vec<WireId> = local.iter().map(|&q| wires[q]).collect();
+                    let (gate_wires, m) = in_ascending_wire_order(&m, &in_gate_order, &space)?;
                     let embedded = embed_on_legs(&m, &gate_wires, &space)?;
                     for k in &mut family {
                         *k = embedded.matmul(k).map_err(|e| {
@@ -496,14 +511,14 @@ fn compose_kraus<R>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
-    let box_wires: BTreeSet<usize> = wires.iter().copied().collect();
     let count = (family.len() as u64).saturating_mul(kraus.len() as u64);
     if count > caps.max_operators {
         return Err(QuantumError::KrausFamilyExceeded(count, caps.max_operators));
     }
     let mut next = Vec::with_capacity(count as usize);
     for k in kraus {
-        let embedded = embed_on_legs(k, &box_wires, space)?;
+        let (box_wires, k) = in_ascending_wire_order(k, wires, space)?;
+        let embedded = embed_on_legs(&k, &box_wires, space)?;
         for f in &family {
             next.push(
                 embedded
@@ -513,4 +528,47 @@ where
         }
     }
     Ok(next)
+}
+
+/// An operator given on legs in a box's wire order, permuted to ascending wire order, which is the
+/// order `embed_on_legs` reads its legs in. A box may list its wires in any order, the first being
+/// its most significant leg; the numeric semantics reads that order and the dilation must agree.
+fn in_ascending_wire_order<R>(
+    op: &CausalTensor<Complex<R>>,
+    wires: &[WireId],
+    space: &BTreeMap<usize, usize>,
+) -> Result<(BTreeSet<WireId>, CausalTensor<Complex<R>>), QuantumError>
+where
+    R: RealField,
+{
+    let dims: Vec<usize> = wires
+        .iter()
+        .map(|w| {
+            space.get(w).copied().ok_or_else(|| {
+                QuantumError::DimensionMismatch(format!("wire {w} is not on the node's leg"))
+            })
+        })
+        .collect::<Result<_, _>>()?;
+    let d: usize = dims.iter().product();
+    if op.shape() != [d, d] {
+        return Err(QuantumError::DimensionMismatch(format!(
+            "an operator of shape {:?} on wires {wires:?} of dimension {d}",
+            op.shape()
+        )));
+    }
+    let legs: BTreeSet<WireId> = wires.iter().copied().collect();
+    let mut order: Vec<usize> = (0..wires.len()).collect();
+    order.sort_by_key(|&i| wires[i]);
+    if order.iter().enumerate().all(|(k, &i)| k == i) {
+        return Ok((legs, op.clone()));
+    }
+    let map = leg_index_map(&dims, &order, d)?;
+    let src = op.as_slice();
+    let mut data = vec![Complex::new(R::zero(), R::zero()); d * d];
+    for r in 0..d {
+        for c in 0..d {
+            data[map[r] * d + map[c]] = src[r * d + c];
+        }
+    }
+    Ok((legs, CausalTensor::from_slice(&data, &[d, d])))
 }

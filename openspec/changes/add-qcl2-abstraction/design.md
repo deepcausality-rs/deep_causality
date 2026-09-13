@@ -357,8 +357,10 @@ real quantity follows `FloatType`, as `add-qcl` D6 has it. Configuration literal
 ### D16. Fresh inputs carry the output type, and the logical measurement query is deferred
 
 An `Open` query replaces a mechanism's outputs by fresh inputs, so a fresh wire has the type of the
-output it replaces. `TypeAlignment::extended` therefore copies output-side entries to the fresh
-wires as entries for both sides and never copies input-side ones. For a code in the Example 58
+output it replaces. `TypeAlignment::extended` therefore takes the query: for `Open` it copies
+output-side entries to the fresh wires as entries for both sides and never copies input-side ones;
+for `Inc`, whose fresh wires are copies of the model's inputs and carry the input type, it copies
+input-side entries with their side and never output-side ones. For a code in the Example 58
 shape this makes `Open(S̄) ↦ Open(π(S̄))` typed: the opened low-level query has the logical inputs
 and `n` fresh physical inputs, the latter aligned through the recovery, and both sides of the
 square read `Tr_k ⊗ τ`. The opened square on `[[8,2,2]]` is a ten-qubit register and the default
