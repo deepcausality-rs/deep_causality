@@ -4,7 +4,7 @@
  */
 
 use crate::types::dense_vector::DenseVector;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Traversable};
 
 /// The higher-kinded witness for [`DenseVector`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -85,6 +85,43 @@ impl Monad<DenseVectorWitness> for DenseVectorWitness {
             out.extend(f(a).into_data());
         }
         DenseVector::from_vec(out)
+    }
+}
+
+impl Traversable<DenseVectorWitness> for DenseVectorWitness {
+    /// Flips `DenseVector<M<A>>` into `M<DenseVector<A>>` by folding an accumulator through `M`
+    /// from left to right, so the effects run in index order and the result keeps that order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// index order is the one reported. The empty vector yields `M::pure` of the empty vector.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones — quadratic — for an `n`-element input. The clone is
+    /// forced by [`Applicative::apply`]'s `Func: FnMut` bound, not by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out,
+    /// and this witness's own cartesian `apply` does invoke it once per element. An `A: Copy`
+    /// bound would not help, because the cloned value is the accumulator `Vec`, never `Copy`.
+    fn sequence<A, M>(fa: DenseVector<M::Type<A>>) -> M::Type<DenseVector<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let mut acc: M::Type<alloc::vec::Vec<A>> = M::pure(alloc::vec::Vec::new());
+        for m_a in fa.into_data() {
+            acc = M::apply(
+                M::fmap(acc, |v: alloc::vec::Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        M::fmap(acc, DenseVector::from_vec)
     }
 }
 

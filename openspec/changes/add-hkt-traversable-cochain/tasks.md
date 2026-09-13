@@ -29,11 +29,11 @@ are green; the user commits.
 
 ## 3. `deep_causality_linear` — `Traversable` for `DenseVectorWitness`
 
-- [ ] 3.1 Phase 1: declare the impl in `src/extensions/hkt/dense_vector_witness.rs` with an `unimplemented!()` body; confirm it builds.
-- [ ] 3.2 Phase 2: write the law suite in `tests/extensions/hkt/witness_tests.rs` covering the same laws and corner rows as 2.2, plus `DenseVectorWitness` itself as the cartesian inner applicative. Observe it fail; record the run.
-- [ ] 3.3 Phase 3: run the defect audit as in 2.3; discard the throwaway.
-- [ ] 3.4 Phase 4: implement the fold, draining through the crate-internal `into_data()`. Document the clone cost.
-- [ ] 3.5 Run `cargo test -p deep_causality_linear`; prepare the commit message.
+- [x] 3.1 Phase 1: declare the impl in `src/extensions/hkt/dense_vector_witness.rs` with an `unimplemented!()` body; confirm it builds.
+- [x] 3.2 Phase 2: write the law suite in `tests/extensions/hkt/witness_tests.rs` covering the same laws and corner rows as 2.2, plus `DenseVectorWitness` itself as the cartesian inner applicative. Observe it fail; record the run.
+- [x] 3.3 Phase 3: run the defect audit as in 2.3; discard the throwaway.
+- [x] 3.4 Phase 4: implement the fold, draining through the crate-internal `into_data()`. Document the clone cost.
+- [x] 3.5 Run `cargo test -p deep_causality_linear`; prepare the commit message.
 
 ## 4. `deep_causality_tensor` — `Traversable` for `CausalTensorWitness`
 
