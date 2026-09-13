@@ -8,6 +8,8 @@ mod born_sampler_tests;
 #[cfg(test)]
 mod histogram_tests;
 #[cfg(test)]
+mod logical_program_tests;
+#[cfg(test)]
 mod prng_tests;
 #[cfg(test)]
 mod shot_estimate_tests;

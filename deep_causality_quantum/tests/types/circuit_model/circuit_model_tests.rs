@@ -589,3 +589,246 @@ fn test_instrument_with_a_non_finite_kraus_entry_is_refused() {
     );
     assert!(model(op([1.0, 0.0, 0.0, 0.0])).is_ok());
 }
+
+/// The declared input and output lists are checked independently of the boxes: a wire out of
+/// range, of the wrong kind, prepared by an encoder, or named twice is refused with the wire
+/// named.
+#[test]
+fn test_declared_input_must_be_a_free_quantum_wire() {
+    let dim_msg = |e: deep_causality_quantum::QuantumError| match e.0 {
+        QuantumErrorEnum::DimensionMismatch(m) => m,
+        other => panic!("expected DimensionMismatch, got {other:?}"),
+    };
+
+    // A classical wire cannot be a declared input.
+    let msg = dim_msg(
+        CircuitModel::<f64>::ungrouped(
+            vec![WireType::qubit(), WireType::bit()],
+            vec![],
+            vec![1],
+            vec![0],
+        )
+        .unwrap_err(),
+    );
+    assert!(msg.contains("not a quantum wire"), "{msg}");
+    assert!(msg.contains('1'), "{msg}");
+
+    // A wire index past the end is refused by the same arm.
+    let msg = dim_msg(
+        CircuitModel::<f64>::ungrouped(vec![WireType::qubit()], vec![], vec![9], vec![0])
+            .unwrap_err(),
+    );
+    assert!(msg.contains("not a quantum wire"), "{msg}");
+    assert!(msg.contains('9'), "{msg}");
+
+    // Index 0 of a one-wire model is the boundary the two refusals above sit next to.
+    assert!(
+        CircuitModel::<f64>::ungrouped(vec![WireType::qubit()], vec![], vec![0], vec![0]).is_ok()
+    );
+}
+
+#[test]
+fn test_an_encoded_wire_cannot_also_be_declared_free() {
+    // The encoder prepares wire 0, so wire 0 is not a free input of the model.
+    let msg = match CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::Classical { outcomes: 2 }],
+        vec![CircuitBox::Encoder {
+            input: 1,
+            outputs: vec![0],
+            states: vec![ket(&[1.0, 0.0]), ket(&[0.0, 1.0])],
+        }],
+        vec![0],
+        vec![0],
+    )
+    .unwrap_err()
+    .0
+    {
+        QuantumErrorEnum::DimensionMismatch(m) => m,
+        other => panic!("expected DimensionMismatch, got {other:?}"),
+    };
+    assert!(msg.contains("prepared by an encoder"), "{msg}");
+    assert!(msg.contains('0'), "{msg}");
+}
+
+#[test]
+fn test_a_wire_declared_twice_is_refused_on_both_the_input_and_the_output_list() {
+    let twice_in = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![],
+        vec![0, 0],
+        vec![1],
+    )
+    .unwrap_err();
+    assert!(
+        matches!(twice_in.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("input twice")),
+        "{twice_in:?}"
+    );
+
+    let twice_out = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![],
+        vec![0],
+        vec![1, 1],
+    )
+    .unwrap_err();
+    assert!(
+        matches!(twice_out.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("output twice")),
+        "{twice_out:?}"
+    );
+
+    // Two distinct wires on either list are accepted, so the refusals above are the
+    // repeat and not the list length.
+    assert!(
+        CircuitModel::<f64>::ungrouped(
+            vec![WireType::qubit(), WireType::qubit()],
+            vec![],
+            vec![0, 1],
+            vec![0, 1],
+        )
+        .is_ok()
+    );
+}
+
+#[test]
+fn test_a_declared_output_out_of_range_is_refused() {
+    let err = CircuitModel::<f64>::ungrouped(vec![WireType::qubit()], vec![], vec![0], vec![5])
+        .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("not a wire of the model") && m.contains('5')),
+        "{err:?}"
+    );
+}
+
+/// `glue` re-maps every box variant's wires onto the composite's numbering. The second model's
+/// wires are renumbered, so each arm of the re-map has to carry the box's own wire fields across;
+/// a variant whose arm dropped a field would surface here as a wire that did not move.
+#[test]
+fn test_glue_remaps_the_wires_of_every_box_variant() {
+    let p0 = CausalTensor::new(
+        vec![
+            C::new(1., 0.),
+            C::new(0., 0.),
+            C::new(0., 0.),
+            C::new(0., 0.),
+        ],
+        vec![2, 2],
+    )
+    .unwrap();
+    let p1 = CausalTensor::new(
+        vec![
+            C::new(0., 0.),
+            C::new(0., 0.),
+            C::new(0., 0.),
+            C::new(1., 0.),
+        ],
+        vec![2, 2],
+    )
+    .unwrap();
+
+    // The first model: one qubit out, produced by a unitary.
+    let first = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit()],
+        vec![unitary(&[0], vec![GateOp::H(0)])],
+        vec![],
+        vec![0],
+    )
+    .unwrap();
+
+    // The second model holds one of each remaining variant on its own numbering:
+    // wire 0 the joined qubit, 1 a second qubit, 2 the encoder's classical input,
+    // 3 the instrument's outcome and 4 the measurement's outcome.
+    let second = CircuitModel::<f64>::ungrouped(
+        vec![
+            WireType::qubit(),
+            WireType::qubit(),
+            WireType::Classical { outcomes: 2 },
+            WireType::bit(),
+            WireType::bit(),
+        ],
+        vec![
+            CircuitBox::Encoder {
+                input: 2,
+                outputs: vec![1],
+                states: vec![ket(&[1.0, 0.0]), ket(&[0.0, 1.0])],
+            },
+            CircuitBox::Channel {
+                wires: vec![0],
+                channel: Channel::unitary(&QubitOperator::hadamard()).unwrap(),
+            },
+            CircuitBox::Kraus {
+                wires: vec![1],
+                kraus: vec![QubitOperator::<f64>::pauli_x().matrix().clone()],
+            },
+            CircuitBox::Instrument {
+                wires: vec![1],
+                outcome: 3,
+                kraus: vec![vec![p0], vec![p1]],
+            },
+            CircuitBox::Measurement {
+                wires: vec![0],
+                outcome: 4,
+            },
+        ],
+        vec![0],
+        vec![1],
+    )
+    .unwrap();
+
+    let glued = first.glue(&second, &[(0, 0)]).unwrap();
+
+    // One shared line plus the second model's other four wires.
+    assert_eq!(glued.wires().len(), 5);
+    assert_eq!(glued.boxes().len(), 6);
+    // The joined wire keeps the first model's index; the rest are appended in order,
+    // so the second model's wire 1 becomes 1, wire 2 becomes 2, and so on. Here that
+    // is the identity on indices, which alone would not prove the re-map ran — the
+    // wire *kinds* below do, since they were pushed from `other` in wire order.
+    assert_eq!(glued.wires()[2].cardinality(), 2);
+    assert!(glued.wires()[0].is_quantum());
+    assert!(glued.wires()[1].is_quantum());
+
+    // Every variant survived the copy with its wires intact.
+    let kinds: Vec<&str> = glued.boxes().iter().map(|b| b.kind()).collect();
+    assert_eq!(
+        kinds,
+        vec![
+            "unitary",
+            "encoder",
+            "channel",
+            "kraus",
+            "instrument",
+            "measurement"
+        ]
+    );
+
+    // The composite's declared lists follow the documented rule: the joined input of
+    // `other` is consumed, and `self`'s joined output is replaced by `other`'s.
+    assert_eq!(glued.inputs(), &[] as &[usize]);
+    assert_eq!(glued.outputs(), &[1]);
+}
+
+#[test]
+fn test_glue_offsets_the_second_model_node_grouping() {
+    // `other`'s boxes are appended, so its node members shift by `self.boxes().len()`.
+    let first = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit()],
+        vec![
+            unitary(&[0], vec![GateOp::H(0)]),
+            unitary(&[0], vec![GateOp::X(0)]),
+        ],
+        vec![],
+        vec![0],
+    )
+    .unwrap();
+    let second = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit()],
+        vec![unitary(&[0], vec![GateOp::Z(0)])],
+        vec![0],
+        vec![0],
+    )
+    .unwrap();
+    let glued = first.glue(&second, &[(0, 0)]).unwrap();
+    assert_eq!(glued.boxes().len(), 3);
+    // Three ungrouped boxes become three singleton nodes, the last one the offset copy.
+    assert_eq!(glued.nodes(), &[vec![0], vec![1], vec![2]]);
+}

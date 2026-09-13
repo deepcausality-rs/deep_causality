@@ -221,3 +221,106 @@ fn test_a_failure_short_circuits_with_its_structured_cause() {
     let plant = plant_from_ket(&three).value_cloned().unwrap();
     assert!(observable_read_out(&obs, &plant).value().is_none());
 }
+
+#[test]
+fn test_qubit_phase_lifts_a_value_and_short_circuits_on_a_non_finite_angle() {
+    // Zero, a negative angle and a positive one all lift to a value: the wrapper
+    // does not quietly restrict the domain of the kernel it adapts.
+    for theta in [0.0f64, -core::f64::consts::FRAC_PI_2, core::f64::consts::PI] {
+        assert!(
+            qubit_phase(theta).value().is_some(),
+            "phase {theta} should lift"
+        );
+    }
+    // Only a non-representable angle reaches the error channel.
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let effect = qubit_phase(bad);
+        assert!(effect.value().is_none(), "phase {bad} must not lift");
+        assert!(effect.is_err());
+    }
+}
+
+#[test]
+fn test_from_matrix_refuses_a_non_unitary_before_it_can_reach_channel_unitary() {
+    // `QubitOperator` validates at construction, so `channel_unitary` has no
+    // non-unitary input to refuse: the guard sits one layer down. Pinning it here
+    // records where the refusal actually happens.
+    let bad = QubitOperator::<f64>::from_matrix(CausalTensor::from_slice(
+        &[c(2., 0.), c(0., 0.), c(0., 0.), c(1., 0.)],
+        &[2, 2],
+    ));
+    assert!(bad.is_err(), "a non-unitary matrix is no qubit operator");
+
+    // Every shipped operator is unitary and lifts to a channel.
+    for op in [
+        QubitOperator::<f64>::identity(),
+        QubitOperator::<f64>::pauli_x(),
+        QubitOperator::<f64>::pauli_y(),
+        QubitOperator::<f64>::pauli_z(),
+        QubitOperator::<f64>::hadamard(),
+    ] {
+        assert!(channel_unitary(&op).value().is_some());
+    }
+}
+
+#[test]
+fn test_channel_compose_short_circuits_when_the_dimensions_disagree() {
+    // A qubit channel and a qutrit channel do not compose.
+    let qubit = channel_unitary(&QubitOperator::<f64>::pauli_x())
+        .value_cloned()
+        .expect("a qubit channel");
+    let id3 = CausalTensor::from_slice(
+        &[
+            c(1., 0.),
+            c(0., 0.),
+            c(0., 0.),
+            c(0., 0.),
+            c(1., 0.),
+            c(0., 0.),
+            c(0., 0.),
+            c(0., 0.),
+            c(1., 0.),
+        ],
+        &[3, 3],
+    );
+    let qutrit = channel_from_kraus(&[id3])
+        .value_cloned()
+        .expect("a qutrit channel");
+    let effect = channel_compose(&qubit, &qutrit);
+    assert!(effect.value().is_none(), "2 and 3 do not compose");
+    assert!(effect.is_err());
+
+    // The same channel composed with itself does, so the refusal above is the
+    // dimension check and not a wrapper that never succeeds.
+    assert!(channel_compose(&qubit, &qubit).value().is_some());
+}
+
+#[test]
+fn test_plant_evolve_short_circuits_when_the_channel_does_not_fit_the_plant() {
+    let three = CausalTensor::from_slice(&[c(1., 0.), c(0., 0.), c(0., 0.)], &[3]);
+    let qutrit_plant = plant_from_ket(&three).value_cloned().expect("a plant");
+    let qubit_channel = channel_unitary(&QubitOperator::<f64>::pauli_x())
+        .value_cloned()
+        .expect("a channel");
+    let effect = plant_evolve(&qutrit_plant, &qubit_channel);
+    assert!(effect.value().is_none());
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_plant_from_ket_short_circuits_on_a_zero_ket() {
+    // The zero vector has no ray to normalize.
+    let effect = plant_from_ket(&ket(0., 0.));
+    assert!(effect.value().is_none());
+    assert!(effect.is_err());
+}
+
+#[test]
+fn test_observable_from_ket_short_circuits_when_the_ket_does_not_match_the_dimension() {
+    // `D` is 2 but the ket has three amplitudes.
+    let three = CausalTensor::from_slice(&[c(1., 0.), c(0., 0.), c(0., 0.)], &[3]);
+    let effect: deep_causality_core::PropagatingEffect<Observable<f64, 2>> =
+        observable_from_ket("mismatched", &three);
+    assert!(effect.value().is_none());
+    assert!(effect.is_err());
+}

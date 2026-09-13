@@ -108,3 +108,27 @@ fn test_sampling_the_read_out_converges_on_the_born_value() {
     let se = (0.64 * 0.36 / 4096.0_f64).sqrt();
     assert!((freq - 0.64).abs() < 4.0 * se, "freq {freq}, se {se}");
 }
+
+#[test]
+fn test_default_is_the_zero_projection_under_an_empty_name() {
+    // The causal monad needs a `Default` for every value it carries; the zero
+    // projection is the one that claims nothing.
+    let obs = Observable::<f64, 2>::default();
+    assert_eq!(obs.name(), "");
+    assert_eq!(obs.dim(), 2);
+    // The zero projector reads out zero on any plant, so the default carries no
+    // accidental verdict.
+    let ground =
+        QuantumPlant::from_ket(&CausalTensor::from_slice(&[c(1., 0.), c(0., 0.)], &[2])).unwrap();
+    assert_eq!(obs.read_out(&ground).unwrap(), 0.0);
+    assert_eq!(obs.projection(), &Projection::zero());
+}
+
+#[test]
+fn test_default_at_a_larger_dimension_is_still_the_zero_projection() {
+    // The dimension is a const parameter, so the default must follow it rather
+    // than being fixed at the qubit case.
+    let obs = Observable::<f64, 4>::default();
+    assert_eq!(obs.dim(), 4);
+    assert_eq!(obs.name(), "");
+}

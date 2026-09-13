@@ -401,3 +401,105 @@ fn test_cmz_at_one_qubit_is_z() {
         1,
     );
 }
+
+#[test]
+fn test_x_flips_the_register_deterministically() {
+    // X|0⟩ = |1⟩ on every qubit: a deterministic outcome, so every shot agrees.
+    let c = QuantumCircuit::new(1, vec![GateOp::X(0)], vec![0]).unwrap();
+    let h = SimQpu::new(7).sample(&c, 128).unwrap();
+    assert_eq!(h.count(1), 128);
+    assert_eq!(h.count(0), 0);
+
+    // XX = I returns the register to |0⟩, so the gate is an involution and not a
+    // constant "always 1".
+    let twice = QuantumCircuit::new(1, vec![GateOp::X(0), GateOp::X(0)], vec![0]).unwrap();
+    assert_eq!(SimQpu::new(7).sample(&twice, 128).unwrap().count(0), 128);
+}
+
+#[test]
+fn test_x_acts_only_on_its_target_qubit() {
+    // Flipping qubit 1 of three leaves qubits 0 and 2 in |0⟩: outcome bit 1 only.
+    let c = QuantumCircuit::new(3, vec![GateOp::X(1)], vec![0, 1, 2]).unwrap();
+    let h = SimQpu::new(11).sample(&c, 64).unwrap();
+    assert_eq!(h.count(0b010), 64);
+}
+
+#[test]
+fn test_y_flips_the_register_like_x_in_the_computational_basis() {
+    // Y|0⟩ = i|1⟩. The phase is invisible to a basis measurement, so the counts
+    // match X; the phase itself is pinned by the interference test below.
+    let c = QuantumCircuit::new(1, vec![GateOp::Y(0)], vec![0]).unwrap();
+    let h = SimQpu::new(3).sample(&c, 128).unwrap();
+    assert_eq!(h.count(1), 128);
+    assert_eq!(h.count(0), 0);
+
+    // YY = I (up to a global phase), so the register returns to |0⟩.
+    let twice = QuantumCircuit::new(1, vec![GateOp::Y(0), GateOp::Y(0)], vec![0]).unwrap();
+    assert_eq!(SimQpu::new(3).sample(&twice, 128).unwrap().count(0), 128);
+}
+
+#[test]
+fn test_y_carries_the_imaginary_phase_that_distinguishes_it_from_x() {
+    // H X H = Z leaves |0⟩ in |0⟩; H Y H = −Y maps |0⟩ to a state that measures
+    // 0 and 1 with equal weight. Same counts for X and Y in the bare basis, so
+    // only this interference sandwich separates the real kernel from the
+    // imaginary one — a test that would survive Y being mis-coded as X is no test.
+    let hxh =
+        QuantumCircuit::new(1, vec![GateOp::H(0), GateOp::X(0), GateOp::H(0)], vec![0]).unwrap();
+    let h = SimQpu::new(5).sample(&hxh, 256).unwrap();
+    assert_eq!(h.count(0), 256, "H X H should act as Z and leave |0⟩");
+
+    // H Y H = −Y, so it carries |0⟩ to −i|1⟩ and measures 1 with certainty. The two
+    // sandwiches therefore land on opposite deterministic outcomes: were the Y kernel
+    // coded with X's real entries, this circuit would read 0 like the one above.
+    let hyh =
+        QuantumCircuit::new(1, vec![GateOp::H(0), GateOp::Y(0), GateOp::H(0)], vec![0]).unwrap();
+    let h = SimQpu::new(5).sample(&hyh, 256).unwrap();
+    assert_eq!(
+        h.count(1),
+        256,
+        "H Y H should act as −Y and carry |0⟩ to |1⟩"
+    );
+    assert_eq!(h.count(0), 0);
+}
+
+#[test]
+fn test_x_and_y_agree_on_counts_but_the_pair_xy_is_a_phase_not_identity() {
+    // X then Y returns the register to |0⟩ (XY = iZ, diagonal), which is what
+    // separates the ordered pair from a double flip.
+    let c = QuantumCircuit::new(1, vec![GateOp::X(0), GateOp::Y(0)], vec![0]).unwrap();
+    assert_eq!(SimQpu::new(13).sample(&c, 100).unwrap().count(0), 100);
+}
+
+#[test]
+fn test_with_name_labels_the_device_and_keeps_the_seed() {
+    let sim = SimQpu::with_name(99, "test-device");
+    let cal = sim.calibration();
+    assert_eq!(cal.name, "test-device");
+    assert_eq!(cal.seed, 99);
+}
+
+#[test]
+fn test_default_calibration_carries_the_crate_label() {
+    let cal = SimQpu::new(0).calibration();
+    assert_eq!(cal.name, "deep_causality_quantum::SimQpu");
+    assert_eq!(cal.seed, 0);
+}
+
+#[test]
+fn test_calibration_reports_the_seed_it_was_built_with() {
+    // Zero and the maximum are the ends of the seed range; both are recorded verbatim.
+    assert_eq!(SimQpu::new(0).calibration().seed, 0);
+    assert_eq!(SimQpu::new(u64::MAX).calibration().seed, u64::MAX);
+    assert_eq!(SimQpu::new(1).calibration().seed, 1);
+}
+
+#[test]
+fn test_a_named_simulator_samples_as_an_unnamed_one_with_the_same_seed() {
+    // The label is metadata: it must not perturb the draw.
+    let named = SimQpu::with_name(42, "labelled")
+        .sample(&bell(), 500)
+        .unwrap();
+    let plain = SimQpu::new(42).sample(&bell(), 500).unwrap();
+    assert_eq!(named, plain);
+}

@@ -13,8 +13,8 @@ use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
 use deep_causality_haft::Either;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    Channel, CommutatorTolerance, FactorSupports, Hypothesis, Observable, ProcessFactors,
-    QclBuilder, QuantumErrorEnum, QuantumPlant, QubitOperator, Spec,
+    Channel, CommutatorTolerance, FactorSupports, Hypothesis, Mechanisms, Observable, PlantSubject,
+    ProcessFactors, QclBuilder, QuantumErrorEnum, QuantumPlant, QubitOperator, Spec,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -387,4 +387,157 @@ fn test_a_model_subject_with_no_factors_fails_at_build() {
     };
     let msg = calculation_message(err);
     assert!(msg.contains("no factors"), "{msg}");
+}
+
+// ---------------------------------------------------------------------------
+// The observable index, and the accessors a world exposes
+// ---------------------------------------------------------------------------
+
+fn dimension_message(e: deep_causality_quantum::QuantumError) -> String {
+    match e.0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => msg,
+        other => panic!("expected DimensionMismatch, got {other:?}"),
+    }
+}
+
+fn two_mechanism_config()
+-> deep_causality_quantum::Config<f64, Count, PlantSubject<f64, 2, Mechanisms>> {
+    QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[
+            mechanism("flip", QubitOperator::pauli_x()),
+            mechanism("keep", QubitOperator::identity()),
+        ])
+        .build()
+        .unwrap()
+}
+
+#[test]
+fn test_observe_refuses_an_observable_the_plant_does_not_expose() {
+    let cfg = two_mechanism_config();
+    // Exactly one observable is declared, so index 0 is the only valid one; 1 is the
+    // first past the end and a large index is well past it.
+    for bad in [1usize, 7, usize::MAX] {
+        let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+            .observe(bad, 16)
+            .finalize()
+            .unwrap_err();
+        let msg = dimension_message(err);
+        assert!(msg.contains(&bad.to_string()), "{msg}");
+        assert!(
+            msg.contains('1'),
+            "the count of declared observables: {msg}"
+        );
+    }
+}
+
+#[test]
+fn test_observe_accepts_the_last_valid_observable_index() {
+    // The boundary the refusal above sits next to: index 0 of one observable works.
+    let cfg = two_mechanism_config();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 16)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.ledger.shots(), 16);
+}
+
+#[test]
+fn test_predict_before_fork_is_refused() {
+    let cfg = two_mechanism_config();
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 16)
+        .predict(0)
+        .finalize()
+        .unwrap_err();
+    let msg = calculation_message(err);
+    assert!(msg.contains("fork"), "{msg}");
+}
+
+#[test]
+fn test_predict_refuses_an_observable_the_plant_does_not_expose() {
+    let cfg = two_mechanism_config();
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 16)
+        .fork()
+        .predict(4)
+        .finalize()
+        .unwrap_err();
+    let msg = dimension_message(err);
+    assert!(msg.contains('4'), "{msg}");
+}
+
+#[test]
+fn test_a_world_names_its_candidate_and_carries_its_own_plant() {
+    let cfg = two_mechanism_config();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .fork()
+        .finalize()
+        .unwrap();
+    let names: Vec<&str> = report.worlds.iter().map(|w| w.name()).collect();
+    assert_eq!(names, vec!["flip", "keep"]);
+
+    // `flip` evolves the ground plant by σ_x and `keep` by the identity, so the two
+    // worlds hold different plants and only `keep` still holds the root's.
+    let flip = &report.worlds[0];
+    let keep = &report.worlds[1];
+    assert_ne!(flip.plant(), keep.plant());
+    assert_eq!(keep.plant(), &plant_ground());
+    assert_eq!(flip.plant(), &plant_with_population(1.0));
+}
+
+#[test]
+fn test_zero_shots_is_refused_because_an_empty_histogram_carries_no_estimate() {
+    // The zero end of the shot range. An observation of nothing has no frequency to
+    // bridge to a probability, so the stage refuses rather than recording a vacuous
+    // read-out.
+    let cfg = two_mechanism_config();
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 0)
+        .finalize()
+        .unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::NormalizationError(msg) => {
+            assert!(msg.contains("empty"), "{msg}")
+        }
+        other => panic!("expected NormalizationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_one_shot_is_the_smallest_observation_that_is_accepted() {
+    // The first accepted value above the refused zero.
+    let cfg = two_mechanism_config();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 1)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.ledger.shots(), 1);
+    assert_eq!(report.ledger.experiments(), 1);
+}
+
+#[test]
+fn test_a_shot_count_the_width_cannot_hold_is_refused_by_the_ledger() {
+    // The ledger counts shots on `N`. At `u8` the counter saturates at 255, so two
+    // observations of 200 shots overflow it, and the guard on `observed` reports the
+    // width rather than wrapping the total to 145. The same program at `u64` runs.
+    let cfg = QclBuilder::config::<f64, u8>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[mechanism("keep", QubitOperator::identity())])
+        .build()
+        .unwrap();
+    let err = QclBuilder::control::<f64, u8, 2, _>(&cfg)
+        .observe(0, 200)
+        .observe(0, 200)
+        .finalize()
+        .unwrap_err();
+    let msg = calculation_message(err);
+    assert!(msg.contains("overflow"), "{msg}");
+
+    // One observation of 200 fits, so the refusal above is the sum and not the value.
+    let ok = QclBuilder::control::<f64, u8, 2, _>(&cfg)
+        .observe(0, 200)
+        .finalize()
+        .unwrap();
+    assert_eq!(ok.ledger.shots(), 200u8);
 }

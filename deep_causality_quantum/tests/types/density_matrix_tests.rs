@@ -170,3 +170,56 @@ fn test_from_choi_rejects_non_positive_trace() {
         QuantumErrorEnum::NonUnitTrace(_)
     ));
 }
+
+// ---------------------------------------------------------------------------
+// with_tolerance: the tolerance argument across its range
+// ---------------------------------------------------------------------------
+
+/// The maximally mixed qubit, a valid density matrix at any tolerance.
+fn mixed() -> CausalTensor<C> {
+    mat(vec![c(0.5, 0.), c(0., 0.), c(0., 0.), c(0.5, 0.)], 2)
+}
+
+#[test]
+fn test_with_tolerance_refuses_a_negative_tolerance() {
+    // A negative tolerance admits nothing and is a caller error, not a strict check.
+    for bad in [-1e-12, -1.0, -f64::MAX] {
+        let err = DensityMatrix::with_tolerance(mixed(), bad).unwrap_err();
+        match err.0 {
+            QuantumErrorEnum::CalculationError(msg) => {
+                assert!(msg.contains("non-negative"), "{msg}")
+            }
+            other => panic!("expected CalculationError for {bad}, got {other:?}"),
+        }
+    }
+}
+
+#[test]
+fn test_with_tolerance_refuses_a_non_finite_tolerance() {
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let err = DensityMatrix::with_tolerance(mixed(), bad).unwrap_err();
+        match err.0 {
+            QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("finite"), "{msg}"),
+            other => panic!("expected CalculationError for {bad}, got {other:?}"),
+        }
+    }
+}
+
+#[test]
+fn test_with_tolerance_accepts_zero_on_an_exactly_valid_matrix() {
+    // Zero is the strictest admissible tolerance, and the boundary the negative
+    // values above sit just below. The mixed state is exact in binary floating
+    // point, so it survives a zero slack.
+    let dm = DensityMatrix::with_tolerance(mixed(), 0.0).unwrap();
+    assert_eq!(dm.dim(), 2);
+}
+
+#[test]
+fn test_a_generous_tolerance_admits_what_a_strict_one_refuses() {
+    // Trace 1.01: off by 0.01, so a 1e-12 slack refuses it and a 0.1 slack admits it.
+    // Asserting both directions pins the tolerance as a real threshold rather than
+    // an argument the checks ignore.
+    let off = mat(vec![c(0.51, 0.), c(0., 0.), c(0., 0.), c(0.5, 0.)], 2);
+    assert!(DensityMatrix::with_tolerance(off.clone(), 1e-12).is_err());
+    assert!(DensityMatrix::with_tolerance(off, 0.1).is_ok());
+}
