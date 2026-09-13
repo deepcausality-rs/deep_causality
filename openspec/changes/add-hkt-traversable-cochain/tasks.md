@@ -55,9 +55,31 @@ are green; the user commits.
 
 ## 6. Phase 5 — mutation testing
 
-- [ ] 6.1 Run `scripts/mutants.sh <crate> <file>` for each of the four new impl files. The script wraps `cargo mutants -p <crate> --file <dir>/<file> -j 8` and already handles the `deep_causality_unified_math/` path prefix. Do not run it crate-wide.
-- [ ] 6.2 For each surviving mutant, add the test that kills it, or record it in `.cargo/mutants.toml` with the measurement that settles it — never a bare assertion that it is fine.
-- [ ] 6.3 Verify each new `.cargo/mutants.toml` entry with the `comm` check the file carries, confirming the pattern matches neither more nor less than it argues for.
+- [x] 6.1 Run `scripts/mutants.sh <crate> <file>` for each of the four new impl files. The script wraps `cargo mutants -p <crate> --file <dir>/<file> -j 8` and already handles the `deep_causality_unified_math/` path prefix. Do not run it crate-wide.
+- [x] 6.2 **No survivors — nothing to record.** For each surviving mutant, add the test that kills it, or record it in `.cargo/mutants.toml` with the measurement that settles it — never a bare assertion that it is fine.
+- [x] 6.3 **No new entries, so no check to run.** Verify each new `.cargo/mutants.toml` entry with the `comm` check the file carries, confirming the pattern matches neither more nor less than it argues for.
+
+### Phase-5 result, recorded because the headline overstates it
+
+| crate / witness | caught | missed | unviable |
+|---|---|---|---|
+| `haft` / `VecWitness` | 5 | 0 | 25 |
+| `linear` / `DenseVectorWitness` | 4 | 0 | 39 |
+| `tensor` / `CausalTensorWitness` | 6 | 0 | 35 |
+| `topology` / `CochainWitness` | 0 | 0 | 5 |
+
+Zero survivors, but **no caught mutant lies inside the `sequence` or `CochainWitness` code this
+change wrote**. The 15 caught ones are all in pre-existing neighbours — `bind`, `apply`, `eq_type`,
+`shifted_view`. Every mutant generated *for* `sequence` (7 in haft, 13 in linear, 13 in tensor) came
+back unviable: they are whole-function replacements such as
+`replace ...::sequence -> M::Type<CausalTensor<A>> with Type::new()`, and `M::Type<_>` is an
+unresolved GAT projection, so none compile. `CochainWitness`'s five were unviable for the same
+class of reason (E0061 on `Cochain::new` arity, E0277 on an unbound `B: Default`).
+
+So phase 5 confirms the surrounding code still works and contributes **no signal on the new code**.
+The verification that bites is the phase-3 audit, which produced semantically valid wrong
+implementations the tool cannot express: reversed accumulator, dropped element, reversed effect
+order, degree-from-length, skip-first. Each turned its suite red before any implementation existed.
 
 ## 7. Formalization — Lean proofs for the sequential `sequence`
 
@@ -65,20 +87,20 @@ are green; the user commits.
 - [x] 7.0b Add the three rows to `lean/THEOREM_MAP.md`: `haft.traversable.list.{identity, naturality, length_preserved}`. **Done.**
 - [x] 7.0c Confirm `//lean:Haft` globs the new file and passes. **Done — `bazel test //lean:Haft --nocache_test_results` PASSED (1/1, genuine run), and `bazel test //lean:proofs --nocache_test_results` passes 11/11 namespaces.**
 - [x] 7.0c-audit Vacuity audit of the three theorems, to the same standard phase 3 sets for tests. Two defective folds (prepend-instead-of-append, drop-the-element) were machine-checked with `by decide`: the correct fold satisfies identity on a concrete input, both defects violate it, and the dropping fold also violates length preservation. `#print axioms` reports `propext` / `Quot.sound` only, `seq_naturality` constructive, no `sorry`. **Done.**
-- [ ] 7.0d Once the Rust impls land, add `tests/formalization_lean/traversable_list_tests.rs` in `deep_causality_haft` as the Rust witness the new file's header names, following the `THEOREM_MAP:` annotation convention of the existing `traversable_tests.rs`. Update the three map rows' witness column to point at it.
-- [ ] 7.0e Confirm no `MODULE.bazel` `cache_roots` edit is needed — the file adds no Mathlib import — and that the theorem-map CI accepts the three new ids.
+- [x] 7.0d Once the Rust impls land, add `tests/formalization_lean/traversable_list_tests.rs` in `deep_causality_haft` as the Rust witness the new file's header names, following the `THEOREM_MAP:` annotation convention of the existing `traversable_tests.rs`. Update the three map rows' witness column to point at it.
+- [x] 7.0e Confirm no `MODULE.bazel` `cache_roots` edit is needed — the file adds no Mathlib import — and that the theorem-map CI accepts the three new ids.
 
 ## 8. Documentation and the deferred gap
 
-- [ ] 8.1 Update the trait table in `deep_causality_unified_math/README.md:135`. That row bundles `Traversable` with `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor` and `Profunctor` under "none", so split it: `Traversable` gets its own row naming `linear` and `tensor` (the table lists implementers *outside* `haft`, so `VecWitness` does not appear there), and the remaining five keep "none". Also add `Functor`/`Foldable` for `topology`'s new `CochainWitness` if that row does not already cover it.
-- [ ] 8.2 Update `openspec/notes/unified_math/hkt_gaps.md` §5 and §6: item 1 closed, item 4 closed, with the witnesses named.
-- [ ] 8.3 Add the gap-3 errata to `hkt_gaps.md` §3.2: the "afternoon" estimate is wrong, `round_policy: Truncation<<T as ConjugateScalar>::Real>` is the obstruction, dropping the struct bound yields 27 errors all resolving to that field, and the `Dual` precedent does not transfer because `Dual` had no field naming an associated type of its own parameter.
-- [ ] 8.4 Correct the `Constraint`-slot documentation drift recorded in `hkt_gaps.md` §7 only if it touches the `Traversable` text this change edits; otherwise leave it to its own change and say so.
-- [ ] 8.5 Decide and record whether the new witnesses' law tests carry `THEOREM_MAP:` annotations. `lean/THEOREM_MAP.md:210-211` binds `haft.traversable.identity` and `haft.traversable.naturality` to `Haft/Traversable.lean`, and those Lean theorems are stated over the trait, not per witness — so the new tests are additional Rust witnesses to existing theorems, not new theorem ids. Confirm with the theorem-map CI (`build/scripts/crates.sh` derives the crate list) before adding or omitting annotations.
+- [x] 8.1 Update the trait table in `deep_causality_unified_math/README.md:135`. That row bundles `Traversable` with `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor` and `Profunctor` under "none", so split it: `Traversable` gets its own row naming `linear` and `tensor` (the table lists implementers *outside* `haft`, so `VecWitness` does not appear there), and the remaining five keep "none". Also add `Functor`/`Foldable` for `topology`'s new `CochainWitness` if that row does not already cover it.
+- [x] 8.2 Update `openspec/notes/unified_math/hkt_gaps.md` §5 and §6: item 1 closed, item 4 closed, with the witnesses named.
+- [x] 8.3 Add the gap-3 errata to `hkt_gaps.md` §3.2: the "afternoon" estimate is wrong, `round_policy: Truncation<<T as ConjugateScalar>::Real>` is the obstruction, dropping the struct bound yields 27 errors all resolving to that field, and the `Dual` precedent does not transfer because `Dual` had no field naming an associated type of its own parameter.
+- [x] 8.4 Correct the `Constraint`-slot documentation drift recorded in `hkt_gaps.md` §7 only if it touches the `Traversable` text this change edits; otherwise leave it to its own change and say so.
+- [x] 8.5 Decide and record whether the new witnesses' law tests carry `THEOREM_MAP:` annotations. `lean/THEOREM_MAP.md:210-211` binds `haft.traversable.identity` and `haft.traversable.naturality` to `Haft/Traversable.lean`, and those Lean theorems are stated over the trait, not per witness — so the new tests are additional Rust witnesses to existing theorems, not new theorem ids. Confirm with the theorem-map CI (`build/scripts/crates.sh` derives the crate list) before adding or omitting annotations.
 
 ## 9. Workspace verification
 
-- [ ] 9.1 Run `make format && make fix`; fix clippy findings by rewriting rather than suppressing.
-- [ ] 9.2 Run `bazel test //...` and confirm the workspace is green.
-- [ ] 9.3 Confirm full line coverage of every added file, per the standing repository requirement.
-- [ ] 9.4 Verify each scenario in the two new spec files and the delta spec is exercised by at least one test, and record where.
+- [x] 9.1 Run `make format && make fix`; fix clippy findings by rewriting rather than suppressing.
+- [x] 9.2 Run `bazel test //...` and confirm the workspace is green.
+- [x] 9.3 Confirm full line coverage of every added file, per the standing repository requirement.
+- [x] 9.4 Verify each scenario in the two new spec files and the delta spec is exercised by at least one test, and record where.

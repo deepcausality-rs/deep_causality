@@ -132,7 +132,8 @@ about `1.7e-31` at `Float106`.
 | `Semigroupal`, `MonoidalApplicative` | `num_complex`, `num_dual`, `tensor` |
 | `Adjunction` | `topology` |
 | `Arrow` | `calculus`, `tensor` |
-| `Traversable`, `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
+| `Traversable` | `linear`, `tensor` |
+| `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
 
 That table is the work list. `openspec/notes/archive/unified_math/unified_math_gaps.md` carries the full
 analysis: which absences are real gaps and which are correct (a `Ratio<A> -> Ratio<B>` under an

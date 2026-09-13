@@ -107,9 +107,17 @@ The operator is `cores: Vec<CausalTensor<T>>` plus two dimension vectors. Its si
 `f64` operator becomes a `Float106` reference operator without a second constructor, and the
 train and operator read uniformly at a call site that already maps the train.
 
-**What blocks it.** The struct bound `T: ConjugateScalar`. Drop it to the impls, as `Dual` did.
+**What blocks it.** *Corrected 2026-09-13, measured rather than estimated.* Not the struct bound
+alone. `CausalTensorTrainOperator<T>` holds `round_policy: Truncation<<T as ConjugateScalar>::Real>`,
+and the associated type `T::Real` does not exist without the bound. Dropping `T: ConjugateScalar`
+yields 28 compiler errors and every one resolves to that single field. `Dual` carried no field
+naming an associated type of its own parameter, so the precedent does not transfer.
 
-**Cost.** An afternoon. `fmap` delegates core by core to `CausalTensorWitness::fmap`; `fold`
+Resolving it means either changing how the rounding policy is stored or introducing a bound-free
+core carrier and converting at the boundary — a design decision on a live type with an `Arrow`
+realization, not a mechanical bound move.
+
+**Cost.** *Not* an afternoon. `fmap` delegates core by core to `CausalTensorWitness::fmap`; `fold`
 folds across cores. Stop at `Functor` and `Foldable`. `Pure` has no defensible rank structure to
 pick for an operator, and the train's `Pure` is already the weakest claim in that file.
 
@@ -175,7 +183,7 @@ These are not container gaps, and they set how much any container witness is wor
 
 | Trait | Implementers on `main` | Note |
 |---|---|---|
-| `Traversable` | `OptionWitness`, `ResultWitness<E>` in `haft` only | archived M1. It was gated on H1, and H1 is now settled per crate, so `Traversable` for `DenseVectorWitness` and `CausalTensorWitness` is unblocked. It is the multiplier: without `sequence`, nesting composes layers and nothing reorders them, and §3.1 pays off only with it |
+| `Traversable` | `OptionWitness`, `ResultWitness<E>`, `VecWitness` in `haft`; `DenseVectorWitness` in `linear`; `CausalTensorWitness` in `tensor` | **closed** by `add-hkt-traversable-cochain`. Five carriers, up from two. The composition law is not tested and cannot be: a `Compose<M, N>` applicative needs `N::Type<A>: Clone` on a method-level parameter. A Writer-style carrier substitutes for it, catching the one defect class it would have caught — a traversal visiting elements in the wrong order while returning the right result |
 | `NaturalTransformation` | the `OptionToVec` fixture in `haft` only | archived M2. `Chain`'s functor still delegates to `CsrMatrixWitness::fmap` as a call rather than a typed transformation |
 | `Kleisli` | none | archived H3, and it depended on H1; `linear`'s `DenseVector` and `tensor` both hold a `Monad` now |
 
@@ -183,14 +191,14 @@ These are not container gaps, and they set how much any container witness is wor
 
 | # | Item | Class | Depends on |
 |---|---|---|---|
-| 1 | `Traversable` for `DenseVectorWitness` and `CausalTensorWitness` | moderate | nothing; H1 is settled |
+| 1 | ~~`Traversable` for `DenseVectorWitness` and `CausalTensorWitness`~~ **closed**; `VecWitness` closed with it | moderate | nothing; H1 is settled |
 | 2 | `Uncertain` witness and public `bind`, split by sampler | hard | its own change proposal; item 1 for the payoff |
-| 3 | `CausalTensorTrainOperator` witness | easy | dropping one struct bound |
-| 4 | `Cochain` witness | easy | nothing |
+| 3 | `CausalTensorTrainOperator` witness | **not easy** — see the §3.2 errata | resolving the `Truncation<T::Real>` field, a design decision |
+| 4 | ~~`Cochain` witness~~ **closed**; `CochainWitness` carries `Functor` and `Foldable`, matching `ChainWitness`, and declines `Pure` | easy | nothing |
 | 5 | `rand` carrier type and `Functor` | moderate | item 2 |
 | 6 | `NaturalTransformation` for the existing conversions | moderate | nothing |
 
-Items 3 and 4 fit one change together. Item 1 should precede item 2, because a witness on
+Items 3 and 4 were filed as one change; item 4 shipped and item 3 was deferred once its cost was measured. Item 1 should precede item 2, because a witness on
 `Uncertain` without a `Traversable` on the containers around it leaves the uncertainty a payload,
 which is where it is today.
 
@@ -204,6 +212,11 @@ and `haft/src/lax_monoidal/mod.rs:64-66` records that `Satisfies` and the associ
 are gone. Two comments inside `haft` (`monad/comonad.rs:20`, `monad/mod.rs:27`) still mention the
 slot as well. The project website pages and those two comments need the same one-line correction:
 a witness admits every element type, and a container that needs a bound puts it on its impls.
+
+`add-hkt-traversable-cochain` deliberately left this open: it touches none of the four sites, and
+the drift is a documentation change of its own rather than a rider on an implementation change.
+The note at the foot of `hkt_vec_ext.rs` was rewritten by that change and does state the removal
+correctly, so the five sites listed above are the whole of what remains.
 
 ## 8. Reproducing
 
