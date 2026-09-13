@@ -1,12 +1,12 @@
 ---
 /**
- * Sub-projects. Three entries, each with its lockup, a plain summary, its
+ * Sub-projects. Two entries, each with its lockup, a plain summary, its
  * current status, and a link to where the work actually lives.
  *
  * The rows are label-plus-content with a fixed first column, which is the
  * site's generalization for this shape (web_design/03-space-layout.md). The
  * lockups are wide, so they take the fixed column and the prose takes the
- * `1fr`; three narrow cards side by side would shrink the artwork to nothing.
+ * `1fr`; narrow cards side by side would shrink the artwork to nothing.
  *
  * Each logo ships as two files rather than one recoloured by CSS. The variants
  * are separate artwork, each drawn in its own theme's tokens, so the swap is on
@@ -14,7 +14,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
-import { CFD_URL, QUANTUM_URL, DEEPBRAIN_URL, CAUSAL_CENTER_URL, GITHUB_URL } from '../consts';
+import { CFD_URL, QUANTUM_URL, GITHUB_URL } from '../consts';
 
 const projects = [
   {
@@ -47,26 +47,11 @@ const projects = [
     href: QUANTUM_URL,
     hrefLabel: 'quantum.deepcausality.com',
   },
-  {
-    slug: 'deepbrain',
-    name: 'DeepCausality Deep Brain',
-    descriptor: 'Dynamic knowledge',
-    logo: '/img/project-logos/deepcausality-deepbrain',
-    logoH: 278,
-    body: [
-      'Deep Brain addresses the static-snapshot problem: database systems treat knowledge as discrete snapshots frozen in time, while a research corpus evolves continuously with no natural snapshot boundary. Over a project measured in years, decisions and the invalidations that overturn them both get lost in a commit log.',
-      'The approach makes decisions first-class objects, turns invalidations and characterised gaps into queryable structures, and treats the relationship between content and the conditions of its validity as a structure in its own right. The stated goal is a knowledge substrate in which staleness is structurally impossible. It is the epistemic counterpart of the effect propagation process.',
-    ],
-    status: 'Research programme, architecture published',
-    crate: null,
-    href: DEEPBRAIN_URL,
-    hrefLabel: 'causalcenter.com/research/dynamic-knowledge',
-  },
 ];
 
 const title = 'Projects — DeepCausality';
 const description =
-  'The DeepCausality sub-projects: counterfactual fluid dynamics, quantum causal models, and the Deep Brain dynamic-knowledge research programme.';
+  'The DeepCausality sub-projects: counterfactual fluid dynamics and quantum causal models.';
 ---
 <BaseLayout title={title} description={description}>
   <SiteHeader />
@@ -74,12 +59,11 @@ const description =
   <article class="projects-page">
     <header class="ph">
       <p class="eyebrow">Projects</p>
-      <h1>Three sub-projects</h1>
+      <h1>Two sub-projects</h1>
       <p class="lede">
-        The core library is a framework for causal reasoning. These three take it
-        somewhere specific: into a solver, into quantum information, and into the
-        way a research corpus keeps its own knowledge current. Each has its own
-        site and its own pace.
+        The core library is a framework for causal reasoning. These two take it
+        somewhere specific: into a solver and into quantum information. Each has
+        its own site and its own pace.
       </p>
     </header>
 
@@ -133,11 +117,7 @@ const description =
 
     <footer class="pfoot">
       <p>
-        Deep Brain is a research programme at the
-        <a href={CAUSAL_CENTER_URL}>Center for Dynamic Causality</a> rather than a
-        crate in this repository, which is why its link leaves deepcausality.com.
-        The other two are crates in the
-        <a href={GITHUB_URL}>monorepo</a> and ship from it.
+        Both are crates in the <a href={GITHUB_URL}>monorepo</a> and ship from it.
       </p>
     </footer>
   </article>
