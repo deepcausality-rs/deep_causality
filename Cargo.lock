@@ -528,7 +528,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.16.0"
+version = "0.16.1"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_ast"
-version = "0.1.13"
+version = "0.1.14"
 
 [[package]]
 name = "deep_causality_calculus"
@@ -655,7 +655,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_file"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "chrono",
  "deep_causality_algebra",

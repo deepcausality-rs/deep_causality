@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_file-v0.1.5...deep_causality_file-v0.1.6) - 2026-09-13
+
+### Other
+
+- *(deep_causality_par)* Pin the fan-out, the serial bound, and the untested configuration
+- *(deep_causality_file)* Repair the three audited test defects and close the gaps behind them
+
 ## [0.1.5](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_file-v0.1.4...deep_causality_file-v0.1.5) - 2026-09-08
 
 ### Other
