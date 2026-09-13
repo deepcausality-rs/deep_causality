@@ -260,7 +260,7 @@ def rig_volume(mat, ramp_colors, hot_color, em_gain=None):
     level.label = "PLASMA level"
     level.outputs[0].default_value = 0.0
     # density * level
-    dens_link = next(l for l in nt.links if l.to_node == pv and l.to_socket.name == "Density")
+    dens_link = next(link for link in nt.links if link.to_node == pv and link.to_socket.name == "Density")
     md = nodes.new("ShaderNodeMath")
     md.operation = "MULTIPLY"
     md.name = "DENS_x_LEVEL"
@@ -273,7 +273,7 @@ def rig_volume(mat, ramp_colors, hot_color, em_gain=None):
     nt.links.remove(dens_link)
     nt.links.new(md.outputs[0], pv.inputs["Density"])
     # emission strength * level^1.4  (glow rises faster than the density)
-    em_link = next(l for l in nt.links if l.to_node == pv and l.to_socket.name == "Emission Strength")
+    em_link = next(link for link in nt.links if link.to_node == pv and link.to_socket.name == "Emission Strength")
     pw = nodes.new("ShaderNodeMath")
     pw.operation = "POWER"
     pw.inputs[1].default_value = 1.4
@@ -291,7 +291,7 @@ def rig_volume(mat, ramp_colors, hot_color, em_gain=None):
     nt.links.remove(em_link)
     nt.links.new(me.outputs[0], pv.inputs["Emission Strength"])
     # colour: mix ramp colour toward hot at high level
-    col_link = next(l for l in nt.links if l.to_node == pv and l.to_socket.name == "Emission Color")
+    col_link = next(link for link in nt.links if link.to_node == pv and link.to_socket.name == "Emission Color")
     mix = nodes.new("ShaderNodeMix")
     mix.data_type = "RGBA"
     mix.name = "HOT_MIX"
