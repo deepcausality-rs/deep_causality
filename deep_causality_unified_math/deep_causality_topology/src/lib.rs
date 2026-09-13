@@ -23,6 +23,7 @@ pub use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 
 // Re-export extensions
 pub use crate::extensions::hkt_cell_complex::{CellComplexWitness, CellField};
+pub use crate::extensions::hkt_cochain::CochainWitness;
 pub use crate::extensions::hkt_graph::GraphWitness;
 pub use crate::extensions::hkt_hypergraph::HypergraphWitness;
 pub use crate::extensions::hkt_lattice_complex::{LatticeComplexWitness, LatticeField};

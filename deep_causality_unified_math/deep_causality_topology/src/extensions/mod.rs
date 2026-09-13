@@ -4,6 +4,7 @@
  */
 
 pub mod hkt_cell_complex;
+pub mod hkt_cochain;
 pub mod hkt_gauge;
 pub mod hkt_graph;
 pub mod hkt_hypergraph;

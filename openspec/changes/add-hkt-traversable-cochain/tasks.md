@@ -46,12 +46,12 @@ are green; the user commits.
 
 ## 5. `deep_causality_topology` — `CochainWitness`
 
-- [ ] 5.1 Phase 1: create `src/extensions/hkt_cochain/mod.rs` (the sibling modules are alphabetical, so it sorts first, before `hkt_cell_complex`) declaring `CochainWitness`, its `HKT` binding, and `Functor` and `Foldable` impls with `unimplemented!()` bodies. Add `pub mod hkt_cochain;` to `src/extensions/mod.rs`, matching the ten existing `hkt_*` siblings, and export `CochainWitness` from `lib.rs`. `Cochain` itself is already exported at `lib.rs:63`. Confirm it builds.
-- [ ] 5.2 Phase 2: write the suite in `tests/extensions/hkt_cochain_tests.rs` — functor identity and composition, fold/fmap consistency, degree preservation including degree 0, index-order mapping and folding over three distinct values, the empty cochain folding to its initial accumulator, and an input whose degree differs from its value count. Observe it fail; record the run.
-- [ ] 5.3 Phase 3: defect audit — degree reset to 0, degree taken from the value count, values reversed, fold skipping the first value. Confirm each turns the suite red; discard the throwaway.
-- [ ] 5.4 Phase 4: implement `fmap` mapping `values` and carrying `degree` through, and `fold` folding `values` in index order.
-- [ ] 5.5 Record on the witness why `Pure` is declined: a cochain carries a degree, `pure` receives one value and no degree, and `ChainWitness` claims no `Pure` either.
-- [ ] 5.6 Register the test file in `tests/extensions/mod.rs` with `#[cfg(test)]`. `BUILD.bazel` already globs `tests/extensions/*_tests.rs`, so no edit is needed there. Run `cargo test -p deep_causality_topology`; prepare the commit message.
+- [x] 5.1 Phase 1: create `src/extensions/hkt_cochain/mod.rs` (the sibling modules are alphabetical, so it sorts first, before `hkt_cell_complex`) declaring `CochainWitness`, its `HKT` binding, and `Functor` and `Foldable` impls with `unimplemented!()` bodies. Add `pub mod hkt_cochain;` to `src/extensions/mod.rs`, matching the ten existing `hkt_*` siblings, and export `CochainWitness` from `lib.rs`. `Cochain` itself is already exported at `lib.rs:63`. Confirm it builds.
+- [x] 5.2 Phase 2: write the suite in `tests/extensions/hkt_cochain_tests.rs` — functor identity and composition, fold/fmap consistency, degree preservation including degree 0, index-order mapping and folding over three distinct values, the empty cochain folding to its initial accumulator, and an input whose degree differs from its value count. Observe it fail; record the run.
+- [x] 5.3 Phase 3: defect audit — degree reset to 0, degree taken from the value count, values reversed, fold skipping the first value. Confirm each turns the suite red; discard the throwaway.
+- [x] 5.4 Phase 4: implement `fmap` mapping `values` and carrying `degree` through, and `fold` folding `values` in index order.
+- [x] 5.5 Record on the witness why `Pure` is declined: a cochain carries a degree, `pure` receives one value and no degree, and `ChainWitness` claims no `Pure` either.
+- [x] 5.6 Register the test file in `tests/extensions/mod.rs` with `#[cfg(test)]`. `BUILD.bazel` already globs `tests/extensions/*_tests.rs`, so no edit is needed there. Run `cargo test -p deep_causality_topology`; prepare the commit message.
 
 ## 6. Phase 5 — mutation testing
 

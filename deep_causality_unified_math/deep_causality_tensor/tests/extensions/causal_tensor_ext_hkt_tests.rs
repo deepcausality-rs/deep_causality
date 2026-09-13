@@ -406,7 +406,6 @@ fn test_comonad_causal_tensor_extend_topology_check() {
     );
 }
 
-
 // --- Traversable for CausalTensorWitness ---
 //
 // Corner rows are enumerated in
@@ -573,7 +572,10 @@ fn test_traversable_tensor_cartesian_inner_applicative() {
     );
     let r = CausalTensorWitness::sequence::<i32, CausalTensorWitness>(t);
     let got: Vec<Vec<i32>> = r.as_slice().iter().map(|d| d.as_slice().to_vec()).collect();
-    assert_eq!(got, vec![vec![1, 10], vec![1, 20], vec![2, 10], vec![2, 20]]);
+    assert_eq!(
+        got,
+        vec![vec![1, 10], vec![1, 20], vec![2, 10], vec![2, 20]]
+    );
 }
 
 /// C8 — `BoxWitness` as the inner carrier.
@@ -623,11 +625,11 @@ fn test_traversable_tensor_naturality_law() {
         CausalTensor::from_vec(vec![Ident(1), Ident(2), Ident(3), Ident(4)], &[2, 2]),
         CausalTensor::from_vec(Vec::<Ident<i32>>::new(), &[0]),
     ] {
-        let lhs: Option<CausalTensor<i32>> =
-            phi(CausalTensorWitness::sequence::<i32, IdentWitness>(xs.clone()));
-        let rhs: Option<CausalTensor<i32>> = CausalTensorWitness::sequence::<i32, OptionWitness>(
-            CausalTensorWitness::fmap(xs, phi),
+        let lhs: Option<CausalTensor<i32>> = phi(
+            CausalTensorWitness::sequence::<i32, IdentWitness>(xs.clone()),
         );
+        let rhs: Option<CausalTensor<i32>> =
+            CausalTensorWitness::sequence::<i32, OptionWitness>(CausalTensorWitness::fmap(xs, phi));
         assert_eq!(lhs, rhs);
     }
 }

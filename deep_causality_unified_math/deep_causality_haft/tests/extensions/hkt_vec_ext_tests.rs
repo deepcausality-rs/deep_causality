@@ -265,11 +265,7 @@ fn test_traversable_vec_box_inner_applicative() {
 /// return the same values and be caught only here.
 #[test]
 fn test_traversable_vec_effect_order_is_left_to_right() {
-    let v = vec![
-        Logged(1, vec![1]),
-        Logged(2, vec![2]),
-        Logged(3, vec![3]),
-    ];
+    let v = vec![Logged(1, vec![1]), Logged(2, vec![2]), Logged(3, vec![3])];
     let r = VecWitness::sequence::<i32, LoggedWitness>(v);
     assert_eq!(r.0, vec![1, 2, 3], "values");
     assert_eq!(r.1, vec![1, 2, 3], "effects run left to right");
@@ -292,10 +288,7 @@ fn test_traversable_vec_naturality_law() {
     fn phi<T>(i: Ident<T>) -> Option<T> {
         Some(i.0)
     }
-    for xs in [
-        vec![Ident(1), Ident(2), Ident(3)],
-        Vec::<Ident<i32>>::new(),
-    ] {
+    for xs in [vec![Ident(1), Ident(2), Ident(3)], Vec::<Ident<i32>>::new()] {
         let lhs: Option<Vec<i32>> = phi(VecWitness::sequence::<i32, IdentWitness>(xs.clone()));
         let rhs: Option<Vec<i32>> =
             VecWitness::sequence::<i32, OptionWitness>(VecWitness::fmap(xs, phi));

@@ -12,7 +12,9 @@
 use deep_causality_haft::{
     Applicative, BoxWitness, Functor, HKT, OptionWitness, Pure, ResultWitness, Traversable,
 };
-use deep_causality_linear::{CsrMatrixWitness, DenseMatrixWitness, DenseVector, DenseVectorWitness};
+use deep_causality_linear::{
+    CsrMatrixWitness, DenseMatrixWitness, DenseVector, DenseVectorWitness,
+};
 
 #[test]
 fn test_the_witnesses_are_zero_sized() {
@@ -38,7 +40,6 @@ fn test_the_witnesses_are_defaultable() {
     assert_eq!(defaulted::<DenseVectorWitness>(), DenseVectorWitness);
     assert_eq!(defaulted::<CsrMatrixWitness>(), CsrMatrixWitness);
 }
-
 
 // --- Traversable for DenseVectorWitness ---
 //
@@ -184,7 +185,10 @@ fn test_traversable_dense_vector_cartesian_inner_applicative() {
     ]);
     let r = DenseVectorWitness::sequence::<i32, DenseVectorWitness>(v);
     let got: Vec<Vec<i32>> = r.as_slice().iter().map(|d| d.as_slice().to_vec()).collect();
-    assert_eq!(got, vec![vec![1, 10], vec![1, 20], vec![2, 10], vec![2, 20]]);
+    assert_eq!(
+        got,
+        vec![vec![1, 10], vec![1, 20], vec![2, 10], vec![2, 20]]
+    );
 }
 
 /// C8 — `BoxWitness` as the inner carrier, one of the sixteen a `Semigroupal` bound move
@@ -231,11 +235,11 @@ fn test_traversable_dense_vector_naturality_law() {
         DenseVector::from_vec(vec![Ident(1), Ident(2), Ident(3)]),
         DenseVector::from_vec(Vec::<Ident<i32>>::new()),
     ] {
-        let lhs: Option<DenseVector<i32>> =
-            phi(DenseVectorWitness::sequence::<i32, IdentWitness>(xs.clone()));
-        let rhs: Option<DenseVector<i32>> = DenseVectorWitness::sequence::<i32, OptionWitness>(
-            DenseVectorWitness::fmap(xs, phi),
-        );
+        let lhs: Option<DenseVector<i32>> = phi(DenseVectorWitness::sequence::<i32, IdentWitness>(
+            xs.clone(),
+        ));
+        let rhs: Option<DenseVector<i32>> =
+            DenseVectorWitness::sequence::<i32, OptionWitness>(DenseVectorWitness::fmap(xs, phi));
         assert_eq!(lhs, rhs);
     }
 }
