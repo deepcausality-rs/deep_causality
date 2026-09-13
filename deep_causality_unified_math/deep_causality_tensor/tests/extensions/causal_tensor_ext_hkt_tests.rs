@@ -3,7 +3,10 @@
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
+use deep_causality_haft::{
+    Applicative, BoxWitness, CoMonad, Foldable, Functor, HKT, Monad, OptionWitness, Pure,
+    ResultWitness, Traversable,
+};
 use deep_causality_haft::{MonoidalApplicative, Semigroupal};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
 
@@ -401,4 +404,230 @@ fn test_comonad_causal_tensor_extend_topology_check() {
         extended, expected,
         "Topology check failed: Shift/Wrap-around logic is incorrect"
     );
+}
+
+
+// --- Traversable for CausalTensorWitness ---
+//
+// Corner rows are enumerated in
+// `openspec/changes/add-hkt-traversable-cochain/corner-cases.md`; the ids (C1..C9, T1..T4, L1..L2)
+// in the test names below refer to that table.
+
+/// The Identity applicative, required by the *accepted* identity law; the trait docstring's own
+/// phrasing is vacuous.
+#[derive(Debug, PartialEq, Clone)]
+struct Ident<T>(T);
+struct IdentWitness;
+impl HKT for IdentWitness {
+    type Type<T> = Ident<T>;
+}
+impl Functor<IdentWitness> for IdentWitness {
+    fn fmap<A, B, Func>(m_a: Ident<A>, mut f: Func) -> Ident<B>
+    where
+        Func: FnMut(A) -> B,
+    {
+        Ident(f(m_a.0))
+    }
+}
+impl Pure<IdentWitness> for IdentWitness {
+    fn pure<T>(value: T) -> Ident<T> {
+        Ident(value)
+    }
+}
+impl Applicative<IdentWitness> for IdentWitness {
+    fn apply<A, B, Func>(f_ab: Ident<Func>, f_a: Ident<A>) -> Ident<B>
+    where
+        A: Clone,
+        Func: FnMut(A) -> B,
+    {
+        let mut f = f_ab.0;
+        Ident(f(f_a.0))
+    }
+}
+
+/// A Writer-style carrier recording the order in which `apply` combines its arguments — the
+/// substitute for the untestable composition law.
+#[derive(Debug, PartialEq, Clone)]
+struct Logged<T>(T, Vec<i32>);
+struct LoggedWitness;
+impl HKT for LoggedWitness {
+    type Type<T> = Logged<T>;
+}
+impl Functor<LoggedWitness> for LoggedWitness {
+    fn fmap<A, B, Func>(m_a: Logged<A>, mut f: Func) -> Logged<B>
+    where
+        Func: FnMut(A) -> B,
+    {
+        Logged(f(m_a.0), m_a.1)
+    }
+}
+impl Pure<LoggedWitness> for LoggedWitness {
+    fn pure<T>(value: T) -> Logged<T> {
+        Logged(value, Vec::new())
+    }
+}
+impl Applicative<LoggedWitness> for LoggedWitness {
+    fn apply<A, B, Func>(f_ab: Logged<Func>, f_a: Logged<A>) -> Logged<B>
+    where
+        A: Clone,
+        Func: FnMut(A) -> B,
+    {
+        let mut log = f_ab.1;
+        log.extend(f_a.1);
+        let mut f = f_ab.0;
+        Logged(f(f_a.0), log)
+    }
+}
+
+/// C3, T4 — every element succeeds, order is kept, and the rank-2 shape survives. The only row
+/// where a flattening defect is visible.
+#[test]
+fn test_traversable_tensor_rank2_shape_survives() {
+    let t = CausalTensor::from_vec((1..=6).map(Some).collect::<Vec<Option<i32>>>(), &[2, 3]);
+    let r = CausalTensorWitness::sequence::<i32, OptionWitness>(t).expect("all present");
+    assert_eq!(r.shape(), &[2, 3], "shape");
+    assert_eq!(r.as_slice(), &[1, 2, 3, 4, 5, 6], "order");
+}
+
+/// T2 — a zero-extent shape has no elements but is not `[0]`; distinct from C1.
+#[test]
+fn test_traversable_tensor_zero_extent_shape_survives() {
+    let t: CausalTensor<Option<i32>> = CausalTensor::from_vec(Vec::new(), &[0, 3]);
+    let r = CausalTensorWitness::sequence::<i32, OptionWitness>(t).expect("empty succeeds");
+    assert_eq!(r.shape(), &[0, 3]);
+}
+
+/// T1 — the rank-0 shape. Shape and length disagree: a `[len]` defect returns `[1]`.
+#[test]
+fn test_traversable_tensor_rank0_shape_survives() {
+    let t = CausalTensor::from_vec(vec![Some(7)], &[]);
+    let r = CausalTensorWitness::sequence::<i32, OptionWitness>(t).expect("present");
+    assert_eq!(r.shape(), &[] as &[usize]);
+    assert_eq!(r.as_slice(), &[7]);
+}
+
+/// T3, C2 — one element *and* a non-empty shape. Separates T1 from the bare single-element case:
+/// both hold one element and differ exactly on the shape a defect would fabricate.
+#[test]
+fn test_traversable_tensor_single_element_shape_survives() {
+    let t = CausalTensor::from_vec(vec![Some(9)], &[1]);
+    let r = CausalTensorWitness::sequence::<i32, OptionWitness>(t).expect("present");
+    assert_eq!(r.shape(), &[1]);
+    assert_eq!(r.as_slice(), &[9]);
+}
+
+/// C1 — an empty tensor succeeds, carrying nothing.
+#[test]
+fn test_traversable_tensor_empty_is_pure_empty() {
+    let t: CausalTensor<Option<i32>> = CausalTensor::from_vec(Vec::new(), &[0]);
+    let r = CausalTensorWitness::sequence::<i32, OptionWitness>(t).expect("empty succeeds");
+    assert!(r.as_slice().is_empty());
+}
+
+/// C5 — a failure neither first nor last collapses the whole tensor.
+#[test]
+fn test_traversable_tensor_interior_failure_collapses() {
+    let mut v: Vec<Option<i32>> = (1..=6).map(Some).collect();
+    v[3] = None;
+    let t = CausalTensor::from_vec(v, &[2, 3]);
+    assert!(CausalTensorWitness::sequence::<i32, OptionWitness>(t).is_none());
+}
+
+/// C6 — a failure in the last position still fails.
+#[test]
+fn test_traversable_tensor_last_error_still_fails() {
+    let mut v: Vec<Option<i32>> = (1..=4).map(Some).collect();
+    v[3] = None;
+    let t = CausalTensor::from_vec(v, &[2, 2]);
+    assert!(CausalTensorWitness::sequence::<i32, OptionWitness>(t).is_none());
+}
+
+/// C4, C7 — two distinct errors; the first in index order is reported.
+#[test]
+fn test_traversable_tensor_first_error_wins() {
+    let t = CausalTensor::from_vec(
+        vec![
+            Ok::<i32, String>(1),
+            Err("first".to_string()),
+            Err("second".to_string()),
+            Ok(4),
+        ],
+        &[2, 2],
+    );
+    assert_eq!(
+        CausalTensorWitness::sequence::<i32, ResultWitness<String>>(t).err(),
+        Some("first".to_string())
+    );
+}
+
+/// C8 — a shaped inner applicative. `CausalTensorWitness`'s `apply` is cartesian, pinned by its
+/// `Monad`, so the fold must delegate to it.
+#[test]
+fn test_traversable_tensor_cartesian_inner_applicative() {
+    let t = CausalTensor::from_vec(
+        vec![
+            CausalTensor::from_vec(vec![1, 2], &[2]),
+            CausalTensor::from_vec(vec![10, 20], &[2]),
+        ],
+        &[2],
+    );
+    let r = CausalTensorWitness::sequence::<i32, CausalTensorWitness>(t);
+    let got: Vec<Vec<i32>> = r.as_slice().iter().map(|d| d.as_slice().to_vec()).collect();
+    assert_eq!(got, vec![vec![1, 10], vec![1, 20], vec![2, 10], vec![2, 20]]);
+}
+
+/// C8 — `BoxWitness` as the inner carrier.
+#[test]
+fn test_traversable_tensor_box_inner_applicative() {
+    let t = CausalTensor::from_vec(vec![Box::new(1), Box::new(2)], &[2]);
+    let r = CausalTensorWitness::sequence::<i32, BoxWitness>(t);
+    assert_eq!(r.as_slice(), &[1, 2]);
+    assert_eq!(r.shape(), &[2]);
+}
+
+/// C9 — effect order. A right-to-left traversal returns the same values and the same shape, and
+/// is caught only here.
+#[test]
+fn test_traversable_tensor_effect_order_is_left_to_right() {
+    let t = CausalTensor::from_vec(
+        vec![
+            Logged(1, vec![1]),
+            Logged(2, vec![2]),
+            Logged(3, vec![3]),
+            Logged(4, vec![4]),
+        ],
+        &[2, 2],
+    );
+    let r = CausalTensorWitness::sequence::<i32, LoggedWitness>(t);
+    assert_eq!(r.0.as_slice(), &[1, 2, 3, 4], "values");
+    assert_eq!(r.0.shape(), &[2, 2], "shape");
+    assert_eq!(r.1, vec![1, 2, 3, 4], "effects run left to right");
+}
+
+/// L1 — identity at the Identity applicative, over four distinct elements in a rank-2 shape.
+#[test]
+fn test_traversable_tensor_identity_law() {
+    let t = CausalTensor::from_vec(vec![Ident(1), Ident(2), Ident(3), Ident(4)], &[2, 2]);
+    let r = CausalTensorWitness::sequence::<i32, IdentWitness>(t);
+    assert_eq!(r.0.as_slice(), &[1, 2, 3, 4]);
+    assert_eq!(r.0.shape(), &[2, 2]);
+}
+
+/// L2 — naturality across the applicative morphism `phi: Ident -> Option`.
+#[test]
+fn test_traversable_tensor_naturality_law() {
+    fn phi<T>(i: Ident<T>) -> Option<T> {
+        Some(i.0)
+    }
+    for xs in [
+        CausalTensor::from_vec(vec![Ident(1), Ident(2), Ident(3), Ident(4)], &[2, 2]),
+        CausalTensor::from_vec(Vec::<Ident<i32>>::new(), &[0]),
+    ] {
+        let lhs: Option<CausalTensor<i32>> =
+            phi(CausalTensorWitness::sequence::<i32, IdentWitness>(xs.clone()));
+        let rhs: Option<CausalTensor<i32>> = CausalTensorWitness::sequence::<i32, OptionWitness>(
+            CausalTensorWitness::fmap(xs, phi),
+        );
+        assert_eq!(lhs, rhs);
+    }
 }

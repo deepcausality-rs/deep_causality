@@ -37,12 +37,12 @@ are green; the user commits.
 
 ## 4. `deep_causality_tensor` — `Traversable` for `CausalTensorWitness`
 
-- [ ] 4.1 Phase 1: declare the impl in `src/extensions/ext_hkt.rs` with an `unimplemented!()` body; confirm it builds.
-- [ ] 4.2 Phase 2: write the law suite in `tests/extensions/causal_tensor_ext_hkt_tests.rs` covering the laws, the corner rows, and shape preservation at `[2, 3]`, `[0, 3]`, `[1]` and `[]`. Observe it fail; record the run.
-- [ ] 4.3 Phase 3: defect audit, including the shape-specific defects — the result shape replaced by `[len]`, and the shape read after the drain rather than before. Confirm each turns the suite red; discard the throwaway.
-- [ ] 4.4 Phase 4: implement the fold, capturing the shape before `into_vec()` and moving it into the rebuilding closure.
-- [ ] 4.5 Document on the impl why `sequence` preserves shape where `bind` must choose, so the two docstrings in the file do not read as inconsistent.
-- [ ] 4.6 Run `cargo test -p deep_causality_tensor`; prepare the commit message.
+- [x] 4.1 Phase 1: declare the impl in `src/extensions/ext_hkt.rs` with an `unimplemented!()` body; confirm it builds.
+- [x] 4.2 Phase 2: write the law suite in `tests/extensions/causal_tensor_ext_hkt_tests.rs` covering the laws, the corner rows, and shape preservation at `[2, 3]`, `[0, 3]`, `[1]` and `[]`. Observe it fail; record the run.
+- [x] 4.3 Phase 3: defect audit, including the shape-specific defects — the result shape replaced by `[len]`, and the shape read after the drain rather than before. Confirm each turns the suite red; discard the throwaway.
+- [x] 4.4 Phase 4: implement the fold, capturing the shape before `into_vec()` and moving it into the rebuilding closure.
+- [x] 4.5 Document on the impl why `sequence` preserves shape where `bind` must choose, so the two docstrings in the file do not read as inconsistent.
+- [x] 4.6 Run `cargo test -p deep_causality_tensor`; prepare the commit message.
 
 ## 5. `deep_causality_topology` — `CochainWitness`
 

@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Traversable};
 
 // ============================================================================
 // HKT Witness Implementation
@@ -143,6 +143,56 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
         } else {
             CausalTensor::from_vec(result_data, &[len])
         }
+    }
+}
+
+impl Traversable<CausalTensorWitness> for CausalTensorWitness {
+    /// Flips `CausalTensor<M<A>>` into `M<CausalTensor<A>>`, folding an accumulator through `M`
+    /// from left to right so the effects run in index order and the result keeps that order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// index order is the one reported.
+    ///
+    /// # The input's shape survives
+    ///
+    /// A `[2, 3]` comes back `[2, 3]`, not a flat `[6]`. Unlike [`Monad::bind`] on this witness,
+    /// `sequence` has no shape to choose: `bind`'s continuation may return any number of elements,
+    /// so a one-element input leaves the two identity laws wanting different shapes, while
+    /// `sequence` is one-in-one-out by construction and the input's shape is the only defensible
+    /// answer. The `bind` corner cases documented above are therefore not an inconsistency with
+    /// this impl; they arise from a choice `sequence` never faces.
+    ///
+    /// The shape is read before `into_vec` consumes the tensor — the borrow checker enforces that
+    /// ordering rather than leaving it to a convention.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones — quadratic — for an `n`-element tensor. The clone is
+    /// forced by [`Applicative::apply`]'s `Func: FnMut` bound, not by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out,
+    /// and this witness's own cartesian `apply` does invoke it once per element. An `A: Copy`
+    /// bound would not help, because the cloned value is the accumulator `Vec`, never `Copy`.
+    fn sequence<A, M>(fa: CausalTensor<M::Type<A>>) -> M::Type<CausalTensor<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let shape = fa.shape().to_vec();
+        let mut acc: M::Type<Vec<A>> = M::pure(Vec::new());
+        for m_a in fa.into_vec() {
+            acc = M::apply(
+                M::fmap(acc, |v: Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        M::fmap(acc, move |v| CausalTensor::from_vec(v, &shape))
     }
 }
 
