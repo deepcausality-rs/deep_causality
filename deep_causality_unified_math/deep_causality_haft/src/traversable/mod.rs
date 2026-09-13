@@ -108,9 +108,24 @@ pub trait Traversable<F: HKT>: Functor<F> + Foldable<F> {
     /// assert_eq!(flipped_none, Ok(None));
     /// ```
     ///
-    /// The carriers here are `OptionWitness` and `ResultWitness`, the two witnesses that
-    /// implement this trait. `VecWitness` does not; see the note at the foot of
-    /// `extensions/hkt_vec_ext.rs` for why.
+    /// A sequential carrier flips the same way, one element at a time, and an empty container
+    /// succeeds carrying nothing:
+    ///
+    /// ```rust
+    /// use deep_causality_haft::{OptionWitness, Traversable, VecWitness};
+    ///
+    /// let all: Vec<Option<i32>> = vec![Some(1), Some(2), Some(3)];
+    /// assert_eq!(
+    ///     VecWitness::sequence::<i32, OptionWitness>(all),
+    ///     Some(vec![1, 2, 3])
+    /// );
+    ///
+    /// // One failing element collapses the whole traversal.
+    /// let partial: Vec<Option<i32>> = vec![Some(1), None, Some(3)];
+    /// assert_eq!(VecWitness::sequence::<i32, OptionWitness>(partial), None);
+    /// ```
+    ///
+    /// `VecWitness`'s fold is quadratic in element clones; see its impl for why.
     fn sequence<A, M>(fa: F::Type<M::Type<A>>) -> M::Type<F::Type<A>>
     where
         M: Applicative<M> + HKT,

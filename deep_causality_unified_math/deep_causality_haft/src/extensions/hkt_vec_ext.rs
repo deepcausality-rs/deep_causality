@@ -5,6 +5,7 @@
 
 use crate::{
     Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, Pure,
+    Traversable,
 };
 use alloc::vec;
 use alloc::vec::Vec;
@@ -121,32 +122,71 @@ impl CloneFunctor for VecWitness {
     }
 }
 
-// NOTE: `Traversable` is deliberately not implemented for `VecWitness`, and the reason is a
-// signature one rather than a mathematical one.
+// Implementation of Traversable for VecWitness
+impl Traversable<VecWitness> for VecWitness {
+    /// Flips `Vec<M<A>>` into `M<Vec<A>>` by folding an accumulator through `M` from left to
+    /// right, so the effects run in index order and the result keeps that order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// index order is the one reported. The empty vector yields `M::pure(Vec::new())`.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones — quadratic — for an `n`-element input. The clone is
+    /// forced by [`Applicative::apply`]'s `Func: FnMut` bound, not by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out,
+    /// and the cartesian carriers do invoke it once per element. An `A: Copy` bound would not help,
+    /// because the cloned value is the accumulator `Vec`, which is never `Copy`.
+    fn sequence<A, M>(fa: alloc::vec::Vec<M::Type<A>>) -> M::Type<alloc::vec::Vec<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let mut acc: M::Type<Vec<A>> = M::pure(Vec::new());
+        for m_a in fa {
+            acc = M::apply(
+                M::fmap(acc, |v: Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        acc
+    }
+}
+
+// NOTE: `VecWitness` implements `Traversable` through the `apply`-based accumulator fold above.
+// It did not always, and the reason it does now is a change of premise rather than of preference.
 //
-// The usual `sequence` for a list folds an accumulator through the inner applicative:
+// The fold puts an anonymous closure inside `M`:
 //
 //     acc = M::apply(M::fmap(acc, |v| move |a| { v.push(a); v }), m_a)
 //
-// That puts a *function* inside `M`. When the trait carried an element marker, `Applicative::apply`
-// required the anonymous closure type to satisfy it, `sequence` could not declare that, and an impl
-// could not add the bound itself (E0276). The marker is gone, so that particular obstruction is
-// gone with it. The fold written against a `zip_with`-style structure map remains the better form,
-// because the combining function never enters `M` at all:
+// While `HKT` carried an associated `Constraint` and every method carried a
+// `T: Satisfies<F::Constraint>` bound, `Applicative::apply` required that closure type to satisfy
+// the witness constraint, `sequence` could not declare it, and an impl could not add it (E0276).
+// That closed this route. `Satisfies` and the associated `Constraint` have since been removed —
+// `HKT` is now `type Type<T>;` alone, and `lax_monoidal/mod.rs` records the removal — so the
+// obstruction is gone and the fold compiles.
 //
-//     acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v });
-//
-// The `zip_with` structure map now exists (`crate::Semigroupal`), and a `sequence` written
-// against it does compile and pass. It is still not implemented here, and that is a decision
-// rather than an omission: `sequence`'s inner-`M` bound would have to move from `Applicative` to
-// `Semigroupal + Pure`, and those two are substitutive rather than comparable. Measured, that
-// swap takes the witnesses admissible as the inner applicative from 19 down to 3, losing every
-// effect monad in the workspace — `StudyEffectWitness`, `CdlEffectWitness`,
+// The alternative route, a fold written against `Semigroupal::zip_with`, is still rejected, and
+// the measurement that rejects it still stands: it needs `sequence`'s inner-`M` bound moved from
+// `Applicative` to `Semigroupal + Pure`, and those are substitutive rather than comparable.
+// Measured, that swap takes the witnesses admissible as the inner applicative from 19 down to 3,
+// losing every effect monad in the workspace — `StudyEffectWitness`, `CdlEffectWitness`,
 // `GraphGeneratableEffectWitness` and the `MyEffectHktWitness` family — along with `BoxWitness`,
-// `LinkedListWitness`, `ManifoldWitness`, `CausalTensorWitness` and `VecWitness` itself. One
-// carrier gained is not worth sixteen lost.
+// `LinkedListWitness`, `ManifoldWitness` and `CausalTensorWitness`. The `apply` route needs no
+// such move, so the bound stays at `Applicative` and nothing is lost. See
+// `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §6 finding 5 for that measurement.
 //
-// Revisit only as part of a change that first adopts `Semigroupal` across those witnesses, so the
-// bound can move without narrowing the trait's contract. See
-// `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §6 finding 5 for the measurement. Until then,
-// `OptionWitness` and `ResultWitness` are the only two `Traversable` carriers.
+// One law is not tested here and cannot be: composition. It needs a `Compose<M, N>` applicative
+// with `Type<T> = M<N<T>>`, whose `apply` would require `N::Type<A>: Clone` — a bound on a
+// method-level parameter that neither the trait nor an impl can state. The defect class it would
+// have caught is a traversal that visits elements in the wrong order while still returning the
+// right result; `test_traversable_vec_effect_order_is_left_to_right` catches that instead, using a
+// carrier that records the order in which `apply` runs.
