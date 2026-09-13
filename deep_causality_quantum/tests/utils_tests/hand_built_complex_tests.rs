@@ -85,3 +85,27 @@ fn test_a_zero_boundary_square_builds_and_the_top_coboundary_is_empty() {
     assert_eq!(complex.coboundary_matrix(usize::MAX).shape(), (0, 0));
     assert_eq!(complex.boundary_matrix(usize::MAX).shape(), (0, 0));
 }
+
+/// (F) A valid complex whose boundary product accumulates past `i8`.
+///
+/// 300 edges run between two vertices; the 2-cell is bounded by the first 150 with `+1` and the
+/// last 150 with `−1`, so `∂₁ ∂₂ = 0` exactly. The running sum inside the product reaches ±150
+/// before the cancelling terms arrive, which overflows an `i8` accumulator — a panic in debug and a
+/// wrapped, wrongly-accepted product in release. The validation widens before multiplying, so the
+/// fixture builds.
+#[test]
+fn test_a_complex_whose_partial_sums_exceed_i8_builds() {
+    const N: usize = 300;
+    let mut d1: Vec<(usize, usize, i8)> = Vec::with_capacity(2 * N);
+    for j in 0..N {
+        d1.push((0, j, -1));
+        d1.push((1, j, 1));
+    }
+    let d2: Vec<(usize, usize, i8)> = (0..N)
+        .map(|i| (i, 0, if i < N / 2 { 1 } else { -1 }))
+        .collect();
+
+    let complex = HandBuiltComplex::new(vec![2, N, 1], &[&d1, &d2]);
+    assert_eq!(complex.num_cells(1), N);
+    assert_eq!(complex.max_dim(), 2);
+}

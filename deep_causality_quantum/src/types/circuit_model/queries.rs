@@ -315,7 +315,11 @@ where
         let dag = self.induced_dag();
         let mut named: BTreeSet<NodeId> = BTreeSet::new();
         for (i, set) in sets.iter().enumerate() {
-            for &n in set {
+            // Deduplicated first: a node repeated inside one set is the same node, and the
+            // rewiring below reads each set as a `BTreeSet` anyway. Only a node shared *between*
+            // sets is ambiguous, which is what `named` detects.
+            let members: BTreeSet<NodeId> = set.iter().copied().collect();
+            for &n in &members {
                 if n >= self.nodes().len() {
                     return Err(QuantumError::DimensionMismatch(format!(
                         "node {n} does not exist: the model has {} nodes",
@@ -337,8 +341,8 @@ where
                     }
                 }
             }
-            for &a in set {
-                for &b in set {
+            for &a in &members {
+                for &b in &members {
                     if a != b && dag.reaches(a, b) {
                         return Err(QuantumError::NotParallelisable(i, a, b));
                     }

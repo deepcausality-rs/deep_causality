@@ -15,7 +15,7 @@
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Axis, Channel, CircuitBox, CircuitModel, NumericCaps, QcMorphism, QuantumErrorEnum,
-    QubitOperator, WireType, apply_kraus, swap_channel,
+    QubitOperator, Query, QuerySignature, WireType, apply_kraus, swap_channel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -267,6 +267,23 @@ fn test_interchange_refuses_a_node_shared_between_sets() {
     )
     .unwrap();
     assert!(two.interchanged(&[vec![0], vec![1]]).is_ok());
+}
+
+/// A node repeated *inside* one interchange set is the same node, not a collision. The rewiring
+/// reads each set as a `BTreeSet`, and `QuerySignature::new` accepts the repeat, so the method
+/// accepts it too and produces the model the deduplicated set produces.
+#[test]
+fn test_interchange_accepts_a_node_repeated_within_one_set() {
+    let m = chain(true);
+    let once = m.interchanged(&[vec![0]]).expect("the singleton set");
+    let twice = m
+        .interchanged(&[vec![0, 0]])
+        .expect("a repeat inside one set is the same set");
+    assert_eq!(once, twice);
+
+    // The signature agrees, which is the contract the method is holding to.
+    let dag = m.induced_dag();
+    assert!(QuerySignature::new(&dag, vec![Query::Inc(vec![vec![0, 0]])]).is_ok());
 }
 
 /// An interchange set holding a node that writes a classical wire is refused: the copy would

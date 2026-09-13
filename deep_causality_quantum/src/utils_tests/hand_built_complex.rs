@@ -38,8 +38,16 @@ impl HandBuiltComplex {
             mats.push(m);
         }
         for k in 1..mats.len().saturating_sub(1) {
-            let product = mats[k]
-                .mat_mult(&mats[k + 1])
+            // Widened to `i32` before multiplying. `mat_mult` accumulates in the entry type, so an
+            // `i8` product overflows once a row of ∂ₖ and a column of ∂ₖ₊₁ share more than 127
+            // same-sign terms — which a valid complex may, since only the *total* has to cancel,
+            // not every partial sum. That panics in debug and wraps in release, so the check would
+            // reject a sound fixture or accept an unsound one. Entries are in {−1, 0, 1} and the
+            // dimensions here are small, so `i32` cannot overflow in turn.
+            let left = mats[k].clone().map_values(i32::from);
+            let right = mats[k + 1].clone().map_values(i32::from);
+            let product = left
+                .mat_mult(&right)
                 .unwrap_or_else(|e| panic!("∂_{k} ∂_{} cannot be formed: {e}", k + 1));
             if product.values().iter().any(|v| *v != 0) {
                 panic!(

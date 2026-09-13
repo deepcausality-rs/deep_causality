@@ -521,7 +521,6 @@ fn check_values(values: &[usize], counts: &[usize], side: &str) -> Result<(), Qu
     Ok(())
 }
 
-/// The smallest `n` with `2^n ≥ d`.
 /// Refuses a family of `count` operators of `d_out × d_in` entries above the entry cap, before
 /// any of them is formed.
 fn check_storage_cap(
@@ -544,6 +543,7 @@ fn check_storage_cap(
     Ok(())
 }
 
+/// The smallest `n` with `2^n ≥ d`.
 pub(crate) fn ceil_log2(d: usize) -> usize {
     let mut n = 0usize;
     while (1usize << n) < d {

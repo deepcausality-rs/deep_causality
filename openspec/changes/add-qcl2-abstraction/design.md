@@ -354,7 +354,7 @@ Every cap and every count is ℕ on `NumberType`, every dimension product is `ch
 real quantity follows `FloatType`, as `add-qcl` D6 has it. Configuration literals enter through
 `lift`; `f64` appears at the display boundary and nowhere else.
 
-### D16. Fresh inputs carry the output type, and the logical measurement query is deferred
+### D16. Fresh inputs carry the type of what they replace, and the logical measurement query is deferred
 
 An `Open` query replaces a mechanism's outputs by fresh inputs, so a fresh wire has the type of the
 output it replaces. `TypeAlignment::extended` therefore takes the query: for `Open` it copies
