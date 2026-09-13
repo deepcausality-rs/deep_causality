@@ -209,6 +209,9 @@ deviations recorded in `../openspec/notes/archive/causal-algebra/haft-formalizat
 | `haft.foldable.fold_map_monoid_coherence` | `fold_map(xs ++ ys, f) = fold_map(xs,f).combine(fold_map(ys,f))` (monoid homomorphism) | proved | `Haft/Foldable.lean` | ✓ | n/a |
 | `haft.traversable.identity` | `sequence` at Identity applicative = id | proved | `Haft/Traversable.lean` | ✓ | n/a |
 | `haft.traversable.naturality` | applicative morphisms commute with `sequence` | proved | `Haft/Traversable.lean` | ✓ | n/a |
+| `haft.traversable.list.identity` | `sequence` at Identity applicative = id, for the *sequential* accumulator fold (`VecWitness`, `DenseVectorWitness`, `CausalTensorWitness`); an induction, not an instance of the `Option` case | proved | `Haft/TraversableList.lean` | ✓ | n/a |
+| `haft.traversable.list.naturality` | applicative morphisms commute with the sequential `sequence`; needs `preserves_apply`, which the fold calls and `Option`'s `sequence` does not | proved | `Haft/TraversableList.lean` | ✓ | n/a |
+| `haft.traversable.list.length_preserved` | `sequence` preserves the element count — the formal content of `CausalTensorWitness::sequence`'s shape claim | proved | `Haft/TraversableList.lean` | ✓ | n/a |
 | `haft.natural_iso.laws` | round-trip + naturality (`Option ≅ Unit ⊕ ·`) | proved | `Haft/NaturalIso.lean` | ✓ | n/a |
 | `haft.either.coproduct_universal` | `[f,g]` exists and is unique | proved | `Haft/Either.lean` | ✓ | n/a |
 | `haft.effect3.monad_laws` | monad laws + raise-left-zero (sum carrier) | proved | `Haft/EffectSystem.lean` | ✓ | n/a |
