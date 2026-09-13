@@ -185,11 +185,13 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
     ///
     /// # Errors
     ///
-    /// The emitters' errors.
+    /// [`QuantumError::DimensionMismatch`] if the gate names a logical qubit the code does not
+    /// have; the emitters' errors.
     pub fn exact_program<R>(&self, gate: &LogicalGate) -> Result<ExactProgram<W>, QuantumError>
     where
         R: RealField + FromPrimitive,
     {
+        self.check_gate(gate)?;
         match self.expected_gauge(gate) {
             Some(g) => Ok(ExactProgram::diagonal(g?)),
             None => ExactProgram::clifford(self.basis().len(), self.program::<R>(gate)?),
@@ -330,8 +332,9 @@ where
             let tolerance = Tolerance::<R>::state()
                 .threshold(dim, R::one())
                 .unwrap_or_else(|| R::epsilon().sqrt());
-            let tolerated = residual < tolerance;
-            checks.push(Check::new(CheckItem::Index(i), residual, tolerance));
+            let check = Check::new(CheckItem::Index(i), residual, tolerance);
+            let tolerated = check.accepted;
+            checks.push(check);
             records.push(FaultRecord {
                 fault: fault.clone(),
                 tolerated,

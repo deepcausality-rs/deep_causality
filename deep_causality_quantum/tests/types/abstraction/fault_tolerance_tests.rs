@@ -432,3 +432,24 @@ fn test_the_faulted_model_inserts_one_node_at_the_location() {
     .unwrap_err();
     assert!(matches!(bad.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("node 7")));
 }
+
+/// Every record's verdict is the verdict of its check, so `holds` and `tolerated` agree on the
+/// numeric path; the boundary case, a residual equal to the tolerance, is not constructible from
+/// a Pauli fault, so the agreement is pinned record by record.
+#[test]
+fn test_numeric_records_agree_with_their_checks() {
+    let caps = NumericCaps::default();
+    let a = two_wire_abstraction();
+    let set = FaultSet::declared(&[
+        Fault::new(Some(0), vec![(1, PauliKind::Z)]).unwrap(),
+        Fault::new(Some(0), vec![(0, PauliKind::X)]).unwrap(),
+    ]);
+    let r = a.check_fault_tolerance(&set, &caps).unwrap();
+    for (rec, check) in r.records.iter().zip(r.report.checks()) {
+        assert_eq!(rec.tolerated, check.accepted, "{}", rec.fault);
+        assert_eq!(rec.residual, check.measured);
+        assert_eq!(rec.witness.is_none(), check.accepted);
+    }
+    assert_eq!(r.holds(), r.tolerated() == r.count);
+    assert!(!r.holds());
+}

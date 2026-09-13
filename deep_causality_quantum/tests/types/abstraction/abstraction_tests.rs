@@ -16,9 +16,9 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    Abstraction, Axis, Channel, CheckVerdict, CircuitBox, CircuitModel, FROBENIUS_ON_CHOI, GateOp,
-    NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, Query, SemanticsPath, StructureScope,
-    TypeAlignment, WireType,
+    Abstraction, AlignmentSide, Axis, Channel, CheckVerdict, CircuitBox, CircuitModel,
+    FROBENIUS_ON_CHOI, GateOp, NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, Query,
+    SemanticsPath, StructureScope, TypeAlignment, WireType,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -359,4 +359,134 @@ fn test_scope_is_equivalent_only_when_both_sides_are_classical() {
     let s = circuit.check_alignment_structure(&[vec![0]]).unwrap();
     assert_eq!(s.scope, StructureScope::Necessary);
     assert!(s.simple && s.extra_simple && s.full);
+}
+
+/// `square_with` takes any high-level query that is well formed on `H`, in or out of the
+/// signature, and refuses a malformed one with the signature's own error.
+#[test]
+fn test_square_with_takes_any_well_formed_high_query() {
+    let caps = NumericCaps::default();
+    let a = Abstraction::new(
+        low(GateOp::X(1)),
+        high(),
+        alignment(),
+        vec![(Query::Open(vec![0]), Query::Open(vec![0]))],
+    )
+    .unwrap();
+    assert!(a.image(&Query::Io).is_none());
+    let (left, right) = a.square_with(&Query::Io, &Query::Io, &caps).unwrap();
+    assert!(left.frobenius_distance(&right, &caps).unwrap().0 < 1e-12);
+    let err = a
+        .square_with(&Query::Inc(vec![vec![0], vec![0]]), &Query::Io, &caps)
+        .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("two interchange sets")),
+        "{err:?}"
+    );
+    let err = a
+        .square_with(&Query::Open(vec![9]), &Query::Io, &caps)
+        .unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
+}
+
+/// An opened query with a classical input: the encoder reads bit 1 and prepares wire 0, the
+/// rotation on wire 0 is opened, so the query runs from the fresh wire 2 and the classical bit.
+/// The concrete form carries the bit as a free classical input beside the prepared state.
+#[test]
+fn test_concrete_do_carries_the_classical_inputs_of_an_opened_query() {
+    let caps = NumericCaps::default();
+    let ket = |a: f64, b: f64| CausalTensor::from_slice(&[C::new(a, 0.0), C::new(b, 0.0)], &[2]);
+    let model = || {
+        CircuitModel::<f64>::ungrouped(
+            vec![WireType::qubit(), WireType::bit()],
+            vec![
+                CircuitBox::Encoder {
+                    input: 1,
+                    outputs: vec![0],
+                    states: vec![ket(1.0, 0.0), ket(0.0, 1.0)],
+                },
+                ry(0, 0.7),
+            ],
+            vec![],
+            vec![0],
+        )
+        .unwrap()
+    };
+    let identity = QcMorphism::<f64>::identity(2).unwrap();
+    let a = Abstraction::new(
+        model(),
+        model(),
+        TypeAlignment::new(vec![(vec![0], vec![0], identity.clone(), identity)]).unwrap(),
+        vec![(Query::Open(vec![1]), Query::Open(vec![1]))],
+    )
+    .unwrap();
+    let (left, right) = a.square(&Query::Open(vec![1]), &caps).unwrap();
+    assert_eq!(left.classical_in(), &[2]);
+    assert!(left.frobenius_distance(&right, &caps).unwrap().0 < 1e-12);
+    let state = [C::new(0.0, 0.0), C::new(1.0, 0.0)];
+    let (left, right) = a.concrete_do(&Query::Open(vec![1]), &state, &caps).unwrap();
+    assert_eq!((left.d_in(), left.d_out()), (1, 2));
+    assert_eq!(left.classical_in(), &[2]);
+    assert_eq!(left.classical_out(), &[]);
+    assert!(left.frobenius_distance(&right, &caps).unwrap().0 < 1e-12);
+    // The prepared |1⟩ on the fresh wire is the output for either value of the bit.
+    let (blocks, _) = left.choi_blocks(&caps).unwrap();
+    assert_eq!(blocks.len(), 2);
+    for x in 0..2 {
+        let j = blocks.get(&(vec![x], vec![])).unwrap();
+        assert!((j.as_slice()[3].re - 1.0).abs() < 1e-12, "bit {x}: {j:?}");
+    }
+}
+
+/// A sided alignment in the shape of Example 58 under an interchange: the low-level model takes
+/// wire 0 as input and prepares wire 1, the input side aligns by the identity and the output side
+/// through `Tr_B`. `Inc({0})` copies the input on both levels; the copies align through the
+/// copied input entry, and the square commutes since the interchanged output is the copy's
+/// rotation on either level.
+#[test]
+fn test_a_sided_alignment_squares_an_interchange_query() {
+    let caps = NumericCaps::default();
+    let identity = QcMorphism::<f64>::identity(2).unwrap();
+    let low = CircuitModel::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![
+            ry_block(0.7),
+            CircuitBox::Unitary {
+                wires: vec![0, 1],
+                program: vec![GateOp::X(1)],
+            },
+        ],
+        vec![0],
+        vec![0, 1],
+    )
+    .unwrap();
+    let sided = TypeAlignment::new_sided(vec![
+        (
+            AlignmentSide::Input,
+            (vec![0], vec![0], identity.clone(), identity),
+        ),
+        (
+            AlignmentSide::Output,
+            (vec![0], vec![0, 1], trace_b(), prepare_b()),
+        ),
+    ])
+    .unwrap();
+    let inc = Query::Inc(vec![vec![0]]);
+    let a = Abstraction::new(
+        low,
+        high(),
+        sided,
+        vec![(Query::Io, Query::Io), (inc.clone(), inc.clone())],
+    )
+    .unwrap();
+    let (left, right) = a.square(&inc, &caps).unwrap();
+    assert_eq!((left.d_in(), left.d_out()), (4, 2));
+    assert!(
+        left.frobenius_distance(&right, &caps).unwrap().0 < 1e-12,
+        "{}",
+        left.frobenius_distance(&right, &caps).unwrap().0
+    );
+    let r = a.check_naturality(&caps).unwrap();
+    assert_eq!(r.report.examined(), 2);
+    assert_eq!(r.report.verdict(), CheckVerdict::Accepted);
 }

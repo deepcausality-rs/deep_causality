@@ -55,3 +55,33 @@ fn test_wrong_boundary_count_panics() {
 fn test_out_of_range_triplet_panics() {
     let _ = HandBuiltComplex::new(vec![1, 1], &[&[(5, 0, 1)]]);
 }
+
+/// Two edges on two vertices with a face whose boundary is only one of them: `∂₁ ∂₂` has the
+/// entries `(±1, ∓1)` and the fixture is refused.
+#[test]
+#[should_panic(expected = "not a chain complex")]
+fn test_a_nonzero_boundary_square_panics() {
+    let _ = HandBuiltComplex::new(
+        vec![2, 2, 1],
+        &[
+            &[(0, 0, -1), (1, 0, 1), (0, 1, -1), (1, 1, 1)],
+            &[(0, 0, 1)],
+        ],
+    );
+}
+
+/// The same cells with the face bounded by both edges in opposite orientation: `∂₁ ∂₂ = 0`.
+#[test]
+fn test_a_zero_boundary_square_builds_and_the_top_coboundary_is_empty() {
+    let complex = HandBuiltComplex::new(
+        vec![2, 2, 1],
+        &[
+            &[(0, 0, -1), (1, 0, 1), (0, 1, -1), (1, 1, 1)],
+            &[(0, 0, 1), (1, 0, -1)],
+        ],
+    );
+    assert_eq!(complex.max_dim(), 2);
+    assert_eq!(complex.coboundary_matrix(2).shape(), (0, 1));
+    assert_eq!(complex.coboundary_matrix(usize::MAX).shape(), (0, 0));
+    assert_eq!(complex.boundary_matrix(usize::MAX).shape(), (0, 0));
+}

@@ -114,3 +114,28 @@ fn test_repeated_qubit_is_refused() {
     .unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
 }
+
+#[test]
+fn test_cmz_wider_than_the_gate_limit_is_refused_before_allocating() {
+    use deep_causality_quantum::MAX_GATE_QUBITS;
+    assert_eq!(
+        MAX_GATE_QUBITS, 12,
+        "a 2^12 × 2^12 matrix is the default entry cap"
+    );
+    // One past the limit: refused by name, no matrix formed.
+    let wide: Vec<usize> = (0..=MAX_GATE_QUBITS).collect();
+    let err = gate_unitary::<f64>(&GateOp::Cmz { qubits: wide }).unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => {
+            assert!(msg.contains("13") && msg.contains("12"), "{msg}")
+        }
+        other => panic!("{other:?}"),
+    }
+    // A repeated qubit past the limit is still the repeat error: the count is of distinct qubits.
+    let mut repeated: Vec<usize> = (0..MAX_GATE_QUBITS).collect();
+    repeated.push(0);
+    let err = gate_unitary::<f64>(&GateOp::Cmz { qubits: repeated }).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("more than once"))
+    );
+}

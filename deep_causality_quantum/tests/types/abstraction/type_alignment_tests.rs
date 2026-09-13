@@ -12,7 +12,7 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    AlignmentSide, NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, TypeAlignment,
+    AlignmentSide, NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, Query, TypeAlignment,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -158,16 +158,22 @@ fn id_on(_: usize) -> (QcMorphism<f64>, QcMorphism<f64>) {
 #[test]
 fn test_extension_follows_a_renaming_as_a_whole() {
     let a = TypeAlignment::new(vec![(vec![0], vec![0, 1], trace_b(), prepare_b())]).unwrap();
-    let ext = a.extended(&[(0, 5)], &[(0, 7), (1, 8)]).unwrap();
+    let open = Query::Open(vec![0]);
+    let ext = a.extended(&[(0, 5)], &[(0, 7), (1, 8)], &open).unwrap();
     assert_eq!(ext.entries().len(), 2);
     assert_eq!(ext.entries()[1].high(), &[5]);
     assert_eq!(ext.entries()[1].low(), &[7, 8]);
-    let partial = a.extended(&[(0, 5)], &[(0, 7)]).unwrap_err();
+    let partial = a.extended(&[(0, 5)], &[(0, 7)], &open).unwrap_err();
     assert!(
         matches!(partial.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("only in part"))
     );
-    let untouched = a.extended(&[(3, 4)], &[]).unwrap();
+    let untouched = a.extended(&[(3, 4)], &[], &open).unwrap();
     assert_eq!(untouched.entries().len(), 1);
+    // A query that renames nothing leaves the alignment as it is.
+    let io = a
+        .extended(&[(0, 5)], &[(0, 7), (1, 8)], &Query::Io)
+        .unwrap();
+    assert_eq!(io.entries().len(), 1);
 }
 
 /// Sided entries: the input side aligns wire 0 by the identity and the output side aligns the same
@@ -251,7 +257,9 @@ fn test_extension_copies_output_entries_to_fresh_wires_on_both_sides() {
         ),
     ])
     .unwrap();
-    let e = a.extended(&[(0, 1)], &[(0, 2), (1, 3)]).unwrap();
+    let e = a
+        .extended(&[(0, 1)], &[(0, 2), (1, 3)], &Query::Open(vec![0]))
+        .unwrap();
     assert_eq!(e.entries().len(), 3);
     let fresh = &e.entries()[2];
     assert_eq!(fresh.side(), AlignmentSide::Any);
@@ -268,4 +276,169 @@ fn test_extension_copies_output_entries_to_fresh_wires_on_both_sides() {
     // The original input entry still answers the original wire and only that.
     assert_eq!(e.low_for_side(&[0], AlignmentSide::Input).unwrap(), vec![0]);
     assert!(e.low_for_side(&[1, 0], AlignmentSide::Input).is_ok());
+}
+
+/// A wire listed twice within one entry names no type; both sides are checked.
+#[test]
+fn test_a_wire_repeated_within_an_entry_is_refused() {
+    let high_twice =
+        TypeAlignment::new(vec![(vec![0, 0], vec![0, 1], trace_b(), prepare_b())]).unwrap_err();
+    assert!(
+        matches!(high_twice.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("high-level wire 0")),
+        "{high_twice:?}"
+    );
+    let low_twice =
+        TypeAlignment::new(vec![(vec![0], vec![1, 1], trace_b(), prepare_b())]).unwrap_err();
+    assert!(
+        matches!(low_twice.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("low-level wire 1")),
+        "{low_twice:?}"
+    );
+}
+
+/// `Tr` on one qubit as a channel `2 → 1`, Kraus operators `⟨0|` and `⟨1|`.
+fn trace_one() -> QcMorphism<f64> {
+    let zero = C::new(0.0, 0.0);
+    let one = C::new(1.0, 0.0);
+    QcMorphism::from_kraus(&[
+        CausalTensor::from_slice(&[one, zero], &[1, 2]),
+        CausalTensor::from_slice(&[zero, one], &[1, 2]),
+    ])
+    .unwrap()
+}
+
+/// `|0⟩` on one qubit as a channel `1 → 2`.
+fn prepare_one() -> QcMorphism<f64> {
+    let zero = C::new(0.0, 0.0);
+    let one = C::new(1.0, 0.0);
+    QcMorphism::from_kraus(&[CausalTensor::from_slice(&[one, zero], &[2, 1])]).unwrap()
+}
+
+/// Entries whose low-level wires interleave, high 0 ↔ low (0, 2) through `Tr_B` and
+/// high 1 ↔ low 1 through `H`: the assembled `τ` runs from low legs (0, 1, 2) ascending, so it is
+/// `id ⊗ H ⊗ Tr`, and its section is `id ⊗ H ⊗ |0⟩`; the whole-entry order (0, 2, 1) would put
+/// the trace on the middle leg.
+#[test]
+fn test_interleaved_entries_are_assembled_per_wire_leg() {
+    let caps = NumericCaps::default();
+    let a = TypeAlignment::new(vec![
+        (vec![0], vec![0, 2], trace_b(), prepare_b()),
+        (vec![1], vec![1], h(), h()),
+    ])
+    .unwrap();
+    assert_eq!(a.low_for(&[0, 1]).unwrap(), vec![0, 1, 2]);
+    let tau = a.tau_for(&[0, 1], &caps).unwrap();
+    assert_eq!((tau.d_in(), tau.d_out()), (8, 4));
+    let expect = id()
+        .tensor(&h(), &caps)
+        .unwrap()
+        .tensor(&trace_one(), &caps)
+        .unwrap();
+    let wrong = id()
+        .tensor(&trace_one(), &caps)
+        .unwrap()
+        .tensor(&h(), &caps)
+        .unwrap();
+    assert!(tau.frobenius_distance(&wrong, &caps).unwrap().0 > 1.0);
+    assert!(
+        tau.frobenius_distance(&expect, &caps).unwrap().0 < 1e-12,
+        "{}",
+        tau.frobenius_distance(&expect, &caps).unwrap().0
+    );
+    let section = a.section_for(&[0, 1], &caps).unwrap();
+    let expect_section = id()
+        .tensor(&h(), &caps)
+        .unwrap()
+        .tensor(&prepare_one(), &caps)
+        .unwrap();
+    assert!(
+        section
+            .frobenius_distance(&expect_section, &caps)
+            .unwrap()
+            .0
+            < 1e-12
+    );
+    // The same wires on the high side: high (0, 2) ↔ low (0, 2) through H ⊗ H and high 1 ↔ low 1
+    // through the identity; the high legs come out ascending as well.
+    let hh = h().tensor(&h(), &caps).unwrap();
+    let b = TypeAlignment::new(vec![
+        (vec![0, 2], vec![0, 2], hh.clone(), hh),
+        (vec![1], vec![1], id(), id()),
+    ])
+    .unwrap();
+    let tau = b.tau_for(&[0, 1, 2], &caps).unwrap();
+    let expect = h()
+        .tensor(&id(), &caps)
+        .unwrap()
+        .tensor(&h(), &caps)
+        .unwrap();
+    assert!(tau.frobenius_distance(&expect, &caps).unwrap().0 < 1e-12);
+}
+
+/// An interleaving entry whose dimension does not split into equal legs, `6 → 3` on two wires,
+/// is refused when it must be split and answered when it need not be.
+#[test]
+fn test_an_interleaving_entry_of_unequal_leg_dimensions_is_refused() {
+    let caps = NumericCaps::default();
+    let zero = C::new(0.0, 0.0);
+    let one = C::new(1.0, 0.0);
+    // τ: 6 → 3 traces a qubit beside a qutrit; E: 3 → 6 prepares it in |0⟩.
+    let mut k0 = vec![zero; 3 * 6];
+    let mut k1 = vec![zero; 3 * 6];
+    let mut e = vec![zero; 6 * 3];
+    for i in 0..3 {
+        k0[i * 6 + 2 * i] = one;
+        k1[i * 6 + 2 * i + 1] = one;
+        e[(2 * i) * 3 + i] = one;
+    }
+    let tau = QcMorphism::from_kraus(&[
+        CausalTensor::from_slice(&k0, &[3, 6]),
+        CausalTensor::from_slice(&k1, &[3, 6]),
+    ])
+    .unwrap();
+    let section = QcMorphism::from_kraus(&[CausalTensor::from_slice(&e, &[6, 3])]).unwrap();
+    let a = TypeAlignment::new(vec![
+        (vec![0], vec![0, 2], tau, section),
+        (vec![1], vec![1], id(), id()),
+    ])
+    .unwrap();
+    assert_eq!(a.tau_for(&[0], &caps).unwrap().d_in(), 6);
+    let err = a.tau_for(&[0, 1], &caps).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("interleaves")),
+        "{err:?}"
+    );
+}
+
+/// Extension along an interchange: a copy of a model input carries the input type, so the
+/// input-side entry is copied with its side and the output-side entry is not.
+#[test]
+fn test_extension_copies_input_entries_to_the_copies_of_an_interchange() {
+    let a = TypeAlignment::new_sided(vec![
+        (AlignmentSide::Input, (vec![0], vec![0], id(), id())),
+        (
+            AlignmentSide::Output,
+            (vec![0], vec![0, 1], trace_b(), prepare_b()),
+        ),
+    ])
+    .unwrap();
+    let e = a
+        .extended(&[(0, 1)], &[(0, 2)], &Query::Inc(vec![vec![0]]))
+        .unwrap();
+    assert_eq!(e.entries().len(), 3);
+    let copy = &e.entries()[2];
+    assert_eq!(copy.side(), AlignmentSide::Input);
+    assert_eq!(copy.high(), &[1]);
+    assert_eq!(copy.low(), &[2]);
+    assert_eq!(
+        e.low_for_side(&[0, 1], AlignmentSide::Input).unwrap(),
+        vec![0, 2]
+    );
+    assert!(e.low_for_side(&[1], AlignmentSide::Output).is_err());
+    // The same renaming read as an opening is refused: the output entry is renamed in part.
+    let err = a
+        .extended(&[(0, 1)], &[(0, 2)], &Query::Open(vec![0]))
+        .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("only in part"))
+    );
 }

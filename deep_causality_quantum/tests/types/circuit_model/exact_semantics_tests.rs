@@ -306,3 +306,56 @@ fn test_construction_errors_and_gate_classification() {
         target: 1
     }));
 }
+
+#[test]
+fn test_clifford_layer_refuses_coincident_and_empty_gates() {
+    // `CZ(0, 0)` is not a gate; the tableau rule would pass it as the identity.
+    for op in [
+        GateOp::Cz {
+            control: 0,
+            target: 0,
+        },
+        GateOp::Cnot {
+            control: 1,
+            target: 1,
+        },
+        GateOp::Cmz { qubits: vec![] },
+        GateOp::Cmz { qubits: vec![1, 1] },
+    ] {
+        let err = ExactProgram::<W>::clifford(2, vec![op.clone()]).unwrap_err();
+        assert!(
+            matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)),
+            "{op:?}: {err}"
+        );
+    }
+    // The same gates on distinct qubits are accepted, and the coincident one is caught in any
+    // layer position, with the layer named.
+    assert!(
+        ExactProgram::<W>::clifford(
+            2,
+            vec![
+                GateOp::Cz {
+                    control: 0,
+                    target: 1
+                },
+                GateOp::Cmz { qubits: vec![1, 0] }
+            ]
+        )
+        .is_ok()
+    );
+    let err = ExactProgram::<W>::new(
+        2,
+        vec![
+            ExactLayer::Clifford(vec![GateOp::H(0)]),
+            ExactLayer::Clifford(vec![GateOp::Cz {
+                control: 1,
+                target: 1,
+            }]),
+        ],
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("layer 1")),
+        "{err}"
+    );
+}

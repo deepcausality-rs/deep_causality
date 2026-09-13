@@ -99,7 +99,8 @@ impl AlignmentStructure {
 /// # Errors
 ///
 /// [`QuantumError::DimensionMismatch`] if the partition has other than one block per high-level
-/// vertex, names a low-level vertex twice or out of range, or an input is out of range.
+/// vertex, a block is empty, a low-level vertex is named twice or out of range, or an input is
+/// out of range. A low-level vertex in no block is allowed: `π` need not be onto.
 pub fn check_alignment_structure(
     low: &InducedDag,
     high: &InducedDag,
@@ -115,12 +116,20 @@ pub fn check_alignment_structure(
         )));
     }
     let mut seen: BTreeSet<NodeId> = BTreeSet::new();
-    let blocks: Vec<BTreeSet<NodeId>> = partition
-        .iter()
-        .map(|b| b.iter().copied().collect::<BTreeSet<_>>())
-        .collect();
-    for (x, b) in blocks.iter().enumerate() {
-        for &z in b {
+    let mut blocks: Vec<BTreeSet<NodeId>> = Vec::with_capacity(n);
+    for (x, b) in partition.iter().enumerate() {
+        if b.is_empty() {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "block {x} holds no low-level vertex"
+            )));
+        }
+        let block: BTreeSet<NodeId> = b.iter().copied().collect();
+        if block.len() != b.len() {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "block {x} names a low-level vertex twice: {b:?}"
+            )));
+        }
+        for &z in &block {
             if z >= low.num_vertices() {
                 return Err(QuantumError::DimensionMismatch(format!(
                     "block {x} names low-level vertex {z}, but the low-level model has {} vertices",
@@ -133,6 +142,7 @@ pub fn check_alignment_structure(
                 )));
             }
         }
+        blocks.push(block);
     }
     if let Some(&bad) = high_inputs.iter().find(|&&i| i >= n) {
         return Err(QuantumError::DimensionMismatch(format!(

@@ -155,7 +155,8 @@ where
 
     fn query_wire_map(&self, query: &Query) -> Result<Vec<(WireId, WireId)>, QuantumError> {
         match query {
-            Query::Io | Query::Observe(_) | Query::Fault(_) => Ok(Vec::new()),
+            Query::Io => Ok(Vec::new()),
+            Query::Observe(_) | Query::Fault(_) => self.query_model(query).map(|_| Vec::new()),
             Query::Open(nodes) => self.opened_with_map(nodes).map(|(_, m)| m),
             Query::Inc(sets) => self.interchanged_with_map(sets).map(|(_, m)| m),
         }

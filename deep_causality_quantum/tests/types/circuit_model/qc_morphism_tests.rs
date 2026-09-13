@@ -262,3 +262,71 @@ fn test_tensor_order_against_the_kronecker_product() {
         assert!((a.re - b.re).abs() < 1e-15 && (a.im - b.im).abs() < 1e-15);
     }
 }
+
+#[test]
+fn test_then_and_tensor_refuse_products_above_the_entry_cap_before_forming_them() {
+    // `Z · Z`: one operator of 2 × 2, four entries. A cap of three refuses it, four admits it.
+    let zc = QcMorphism::from_kraus(&[z()]).unwrap();
+    let three = NumericCaps {
+        max_entries: 3,
+        max_operators: 1 << 12,
+    };
+    let err = zc.then(&zc, &three).unwrap_err();
+    assert!(matches!(
+        err.0,
+        QuantumErrorEnum::NaturalityDimensionExceeded {
+            n: 1,
+            k: 1,
+            entries: 4,
+            cap: 3
+        }
+    ));
+    let four = NumericCaps {
+        max_entries: 4,
+        max_operators: 1 << 12,
+    };
+    assert!(zc.then(&zc, &four).is_ok());
+    // `I₂ ⊗ I₂`: one operator of 4 × 4, sixteen entries. Fifteen refuses, sixteen admits.
+    let id2 = QcMorphism::<f64>::identity(2).unwrap();
+    let fifteen = NumericCaps {
+        max_entries: 15,
+        max_operators: 1 << 12,
+    };
+    let err = id2.tensor(&id2, &fifteen).unwrap_err();
+    assert!(matches!(
+        err.0,
+        QuantumErrorEnum::NaturalityDimensionExceeded {
+            n: 2,
+            k: 2,
+            entries: 16,
+            cap: 15
+        }
+    ));
+    let sixteen = NumericCaps {
+        max_entries: 16,
+        max_operators: 1 << 12,
+    };
+    assert!(id2.tensor(&id2, &sixteen).is_ok());
+    // Two scalar blocks each side: `then` matches blocks on the middle value, so the composite has
+    // two operators of one entry; `tensor` pairs every block with every block, four operators.
+    let one = || CausalTensor::from_slice(&[C::new(1.0, 0.0)], &[1, 1]);
+    let mut flip = QcMorphism::<f64>::new(1, 1, vec![2], vec![2]).unwrap();
+    flip.push(vec![0], vec![1], vec![one()]).unwrap();
+    flip.push(vec![1], vec![0], vec![one()]).unwrap();
+    let one_entry = NumericCaps {
+        max_entries: 1,
+        max_operators: 1 << 12,
+    };
+    assert!(matches!(
+        flip.then(&flip, &one_entry).unwrap_err().0,
+        QuantumErrorEnum::NaturalityDimensionExceeded { entries: 2, .. }
+    ));
+    let three_entries = NumericCaps {
+        max_entries: 3,
+        max_operators: 1 << 12,
+    };
+    assert!(matches!(
+        flip.tensor(&flip, &three_entries).unwrap_err().0,
+        QuantumErrorEnum::NaturalityDimensionExceeded { entries: 4, .. }
+    ));
+}

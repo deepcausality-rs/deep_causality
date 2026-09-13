@@ -182,3 +182,44 @@ fn test_partition_shape_errors() {
         QuantumErrorEnum::DimensionMismatch(_)
     ));
 }
+
+/// A block that repeats a vertex or holds none is not a block of a partition; a partition that
+/// leaves a low-level vertex in no block is one, since the paper's `π` need not be onto.
+#[test]
+fn test_a_repeated_or_empty_block_is_refused_and_partial_cover_is_not() {
+    let (low, high) = example_54();
+    let repeated = check_alignment_structure(
+        &low,
+        &high,
+        &[vec![0, 0], vec![1], vec![3]],
+        &[2],
+        StructureScope::Equivalent,
+    )
+    .unwrap_err();
+    assert!(
+        matches!(repeated.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("block 0") && m.contains("twice")),
+        "{repeated:?}"
+    );
+    let empty = check_alignment_structure(
+        &low,
+        &high,
+        &[vec![0], vec![], vec![3]],
+        &[2],
+        StructureScope::Equivalent,
+    )
+    .unwrap_err();
+    assert!(
+        matches!(empty.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("block 1") && m.contains("no low-level vertex")),
+        "{empty:?}"
+    );
+    // Vertex Z = 2 lies in no block: Example 54's own partition.
+    let partial = check_alignment_structure(
+        &low,
+        &high,
+        &[vec![0], vec![1], vec![3]],
+        &[2],
+        StructureScope::Equivalent,
+    )
+    .unwrap();
+    assert!(partial.simple);
+}

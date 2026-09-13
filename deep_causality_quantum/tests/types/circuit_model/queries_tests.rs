@@ -198,3 +198,116 @@ fn test_interchange_refuses_a_chain_and_bad_nodes() {
         "|10⟩ ↦ |01⟩"
     );
 }
+
+/// A node whose boxes are grouped so that two of them act on one wire is interchanged with one
+/// swap on that wire, placed after the node's last box. The copy of the chain runs `R_y(0.7)` then
+/// `R_y(0.9)` on the copy's input, so the main output reads `|1⟩` with `sin²(0.8)` on a copy input
+/// of `|0⟩` and `cos²(0.8)` on `|1⟩`; the main input is discarded. Two swaps would cancel and hand
+/// the untouched main input back.
+#[test]
+fn test_interchange_of_a_node_with_two_boxes_on_one_wire_swaps_once() {
+    let m = CircuitModel::<f64>::new(
+        vec![WireType::qubit()],
+        vec![ry(0, 0.7), ry(0, 0.9)],
+        vec![vec![0, 1]],
+        vec![0],
+        vec![0],
+    )
+    .unwrap();
+    let inc = m.interchanged(&[vec![0]]).unwrap();
+    let swaps = inc
+        .boxes()
+        .iter()
+        .filter(|b| b.quantum_wires().len() == 2)
+        .count();
+    assert_eq!(swaps, 1, "one swap per wire of the node: {:?}", inc.boxes());
+    assert_eq!(inc.inputs(), &[0, 1]);
+    let sem = inc.numeric_semantics(&caps()).unwrap();
+    assert_eq!((sem.d_in(), sem.d_out()), (4, 2));
+    let family = block(&sem);
+    let rho = ket(&[0.0, 1.0]).kronecker(&ket(&[1.0, 0.0])).unwrap();
+    let out = apply_kraus(&family, &rho).unwrap();
+    assert!(
+        (out.as_slice()[3].re - 0.8f64.sin().powi(2)).abs() < 1e-12,
+        "main |1⟩, copy |0⟩: {}",
+        out.as_slice()[3].re
+    );
+    let rho = ket(&[1.0, 0.0]).kronecker(&ket(&[0.0, 1.0])).unwrap();
+    let out = apply_kraus(&family, &rho).unwrap();
+    assert!(
+        (out.as_slice()[3].re - 0.8f64.cos().powi(2)).abs() < 1e-12,
+        "main |0⟩, copy |1⟩: {}",
+        out.as_slice()[3].re
+    );
+}
+
+/// A node that appears in two interchange sets is refused, as `QuerySignature::new` refuses it;
+/// the method is public and must hold the same contract on its own.
+#[test]
+fn test_interchange_refuses_a_node_shared_between_sets() {
+    let m = chain(true);
+    let err = m.interchanged(&[vec![0], vec![0]]).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref msg) if msg.contains("node 0")),
+        "{err}"
+    );
+    // Disjoint singletons on a two-wire model are fine.
+    let two = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![ry(0, 0.7), ry(1, 0.9)],
+        vec![0, 1],
+        vec![0, 1],
+    )
+    .unwrap();
+    assert!(two.interchanged(&[vec![0], vec![1]]).is_ok());
+}
+
+/// An interchange set holding a node that writes a classical wire is refused: the copy would
+/// write the outcome on its private wire while the main wire is never written. The measurement
+/// outcome here is no declared output, so nothing else would have caught it.
+#[test]
+fn test_interchange_refuses_a_set_holding_a_classical_writer() {
+    let m = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::bit()],
+        vec![
+            ry(0, 0.7),
+            CircuitBox::Measurement {
+                wires: vec![0],
+                outcome: 1,
+            },
+        ],
+        vec![0],
+        vec![0],
+    )
+    .unwrap();
+    let err = m.interchanged(&[vec![1]]).unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => assert!(
+            msg.contains("node 1") && msg.contains("box 1") && msg.contains("classical wire 1"),
+            "{msg}"
+        ),
+        other => panic!("{other:?}"),
+    }
+    // The quantum-only node of the same model is still interchangeable.
+    assert!(m.interchanged(&[vec![0]]).is_ok());
+}
+
+/// Observing a quantum wire that is not a declared output is refused: `Observe(O)` measures
+/// output wires, and a traced wire has no place among the outputs for its outcome to take.
+#[test]
+fn test_observing_a_wire_that_is_not_an_output_is_refused() {
+    let m = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![ry(0, 0.7), ry(1, 0.9)],
+        vec![0, 1],
+        vec![0],
+    )
+    .unwrap();
+    let err = m.observed(&[1]).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref msg) if msg.contains("wire 1") && msg.contains("output")),
+        "{err}"
+    );
+    let ok = m.observed(&[0]).unwrap();
+    assert_eq!(ok.outputs(), &[2]);
+}

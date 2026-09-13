@@ -2,8 +2,10 @@
 
 A render brief for the counterfactual fork in
 `examples/avionics_examples/cfd/plasma_blackout/corridor`. Every number below is traced to `output.txt`,
-`corridor_branches.csv`,
-`corridor/constants.rs`, or `avionics_examples::shared::constants`. Nothing is invented; the one reconstruction is
+`corridor_branches.csv`, `corridor/constants.rs` (the sweep: `BRANCH_STEPS`, `BANK_ANGLES_DEG`,
+`AIM_CROSS_RANGE_M`), or `avionics_examples::shared::constants` at
+`examples/avionics_examples/src/shared/constants.rs` (the vehicle, atmosphere, flight physics, navigation and
+envelope; cited below as `shared::constants::NAME`). Nothing is invented; the one reconstruction is
 derived and verified in §7, and the non-physical framing choices are named in §9.
 
 ---
@@ -28,7 +30,7 @@ is forked 17 ways.
 
 The blackout is *marginal here*. The L1 critical density is
 
-    n_crit = ε₀ mₑ ω² / e² = 3.080e16 m⁻³   (ω = COMMS_BAND_RAD_S = 9.899e9 rad/s)
+    n_crit = ε₀ mₑ ω² / e² = 3.080e16 m⁻³   (ω = shared::constants::COMMS_BAND_RAD_S = 9.899e9 rad/s)
 
 so `n_e / n_crit = 1.062`. The sheath cuts the link by **6 %**. The render must not show a blaze: at this station the
 sheath is thin and marginal. The 61 km peak passage is 796× denser (2.600e19 m⁻³) and is a different picture entirely.
@@ -38,16 +40,16 @@ sheath is thin and marginal. The 61 km peak passage is 796× denser (2.600e19 m�
 The flow, chemistry and Knudsen number in this example are all driven by RAM-C II probe scales, so that is the body to
 model.
 
-| Parameter                      | Value                            | Source                 |
-|--------------------------------|----------------------------------|------------------------|
-| Nose radius `R_n`              | 0.1524 m (the 6-inch hemisphere) | `NOSE_RADIUS_M`        |
-| Forebody characteristic length | 0.30 m                           | `L_CHAR`               |
-| Cone half-angle                | 9°                               | RAM-C II configuration |
-| Body length                    | 1.30 m                           | RAM-C II configuration |
-| Sphere/cone tangency           | x = 0.1286 m, r = 0.1505 m       | derived                |
-| Base radius                    | 0.3361 m (0.672 m diameter)      | derived                |
+| Parameter                      | Value                            | Source                             |
+|--------------------------------|----------------------------------|------------------------------------|
+| Nose radius `R_n`              | 0.1524 m (the 6-inch hemisphere) | `shared::constants::NOSE_RADIUS_M` |
+| Forebody characteristic length | 0.30 m                           | `shared::constants::L_CHAR`        |
+| Cone half-angle                | 9°                               | RAM-C II configuration             |
+| Body length                    | 1.30 m                           | RAM-C II configuration             |
+| Sphere/cone tangency           | x = 0.1286 m, r = 0.1505 m       | derived                            |
+| Base radius                    | 0.3361 m (0.672 m diameter)      | derived                            |
 
-**Flag.** `CDA_OVER_M`, `VEHICLE_MASS_KG` and `VEHICLE_CD` describe a *different* body — a 4.23 m lifting aeroshell at
+**Flag.** `CDA_OVER_M`, `VEHICLE_MASS_KG` and `VEHICLE_CD` (all in `shared::constants`) describe a *different* body — a 4.23 m lifting aeroshell at
 β ≈ 172 kg/m². The corridor's Sutton-Graves heating runs on the 0.1524 m RAM-C nose while its trajectory runs on the
 4.23 m capsule's ballistic bundle. That is a documented modelling seam, not a render decision; the render takes the
 probe because the probe is what the plasma physics describes.
@@ -59,7 +61,7 @@ km and 61 km rows: `n ≈ 3.6e20 m⁻³`, `T_tr ≈ 210 K`. Flight speed `V = M�
 
 ## 4. Shock layer
 
-Strong normal shock on the effective-gamma closure, `GAMMA_EFF = 1.1`:
+Strong normal shock on the effective-gamma closure, `shared::constants::GAMMA_EFF = 1.1`:
 
     ρ₂/ρ₁ = (γ+1)/(γ−1) = 21.0
     Δ ≈ 0.78 · R_n · (ρ₁/ρ₂) = 5.66 mm      (Δ/R_n = 0.037)
@@ -85,22 +87,22 @@ The wake carries the recombining plasma the RAM-C reflectometers actually sample
 ## 5. Navigation state
 
 Link DENIED; the 17-state ESKF is dead-reckoning on a tactical-grade accelerometer bias
-(`IMU_ACCEL_BIAS = [2.0e-2, −1.4e-2, 1.0e-2]` m/s²), error growing as t². At the fork the error is 0.1823 m; by the 61
+(`shared::constants::IMU_ACCEL_BIAS = [2.0e-2, −1.4e-2, 1.0e-2]` m/s²), error growing as t². At the fork the error is 0.1823 m; by the 61
 km passage it is 1.5637 m.
 
 ## 6. The fork
 
 `run_until` pauses the march; the paused state is forked in O (1) by copy-on-write, once per candidate bank command.
-Each branch flies **BRANCH_STEPS = 100** steps at
-`DT_FLIGHT = 0.1 s` → a **10.0 s dwell**, i.e. 79.0 km of true downrange.
+Each branch flies **BRANCH_STEPS = 100** steps (`corridor/constants.rs`) at
+`shared::constants::DT_FLIGHT = 0.1 s` → a **10.0 s dwell**, i.e. 79.0 km of true downrange.
 
-* Coarse round: 0, 5, 10, 15, 20, 40 deg (`BANK_ANGLES_DEG`)
+* Coarse round: 0, 5, 10, 15, 20, 40 deg (`corridor/constants.rs`, `BANK_ANGLES_DEG`)
 * Fine round: 11 candidates at 0.5 deg spacing, 7.5 → 12.5 deg
 * **17 branches total**, each in its own alternated world (`!!ContextAlternation!!`)
-* The 40 deg command exceeds `MAX_BANK_RAD = 0.5` (28.648 deg). `CyberneticCorrect`
+* The 40 deg command exceeds `shared::constants::MAX_BANK_RAD = 0.5` (28.648 deg). `CyberneticCorrect`
   clamps it every step, so it flies at 28.648 deg and overshoots to a 28.881 m miss. The render should show both the
   clamped path and, distinctly, where the unclamped command would have gone — the gate is the difference between them.
-* Aim point: the ballistic terminal offset `AIM_CROSS_RANGE_M = 20.0` m cross-range.
+* Aim point: the ballistic terminal offset `AIM_CROSS_RANGE_M = 20.0` m cross-range (`corridor/constants.rs`).
 * Committed branch: **11.5 deg, miss 2.0699 m** (minimum trajectory-derived miss).
 
 ## 7. The reachable set — derived, then verified

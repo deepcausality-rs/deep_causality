@@ -267,3 +267,35 @@ fn test_an_abstraction_over_another_circuit_is_refused_by_both_stages() {
         );
     }
 }
+
+/// The decomposability stage refuses a boundary that names no system or a node the dilation does
+/// not have, rather than deriving an empty structure and accepting it.
+#[test]
+fn test_an_empty_or_out_of_range_boundary_is_a_stage_failure() {
+    let cfg = QclBuilder::config::<FloatType, NumberType>()
+        .over_circuit(chain())
+        .build()
+        .unwrap();
+    for (inputs, outputs, needle) in [
+        (vec![], vec![1], "input"),
+        (vec![0], vec![], "output"),
+        (vec![0], vec![7], "node 7"),
+        (vec![9], vec![1], "node 9"),
+    ] {
+        let err = QclBuilder::validate(&cfg)
+            .check_decomposable(&inputs, &outputs)
+            .finalize()
+            .err()
+            .unwrap_or_else(|| panic!("{inputs:?} → {outputs:?} was accepted"));
+        assert!(
+            matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains(needle)),
+            "{inputs:?} → {outputs:?}: {err:?}"
+        );
+    }
+    assert!(
+        QclBuilder::validate(&cfg)
+            .check_decomposable(&[0], &[1])
+            .finalize()
+            .is_ok()
+    );
+}

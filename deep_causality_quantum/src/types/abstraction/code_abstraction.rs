@@ -32,6 +32,7 @@ use crate::types::qgates::gates_haruna::{
 };
 use crate::types::qgates::operator_linalg::identity_matrix;
 use crate::types::qpu::circuit::GateOp;
+use alloc::collections::BTreeSet;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec;
@@ -126,29 +127,40 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
         let basis = LogicalBasis::<W>::from_complex(complex, 1)?;
         let code = derive_code::<W, K>(complex)?;
         let duals = symplectic_dual_basis(basis.homology(), basis.cohomology())?;
-        let k = basis.num_logical_qubits();
-        for g in &gates {
-            if let Some(q) = g.qubits().into_iter().find(|&q| q >= k) {
-                return Err(QuantumError::DimensionMismatch(format!(
-                    "{} names logical qubit {q}, but the code encodes {k}",
-                    g.name()
-                )));
-            }
-            if let LogicalGate::Cz(i, j) = g
-                && i == j
-            {
-                return Err(QuantumError::DimensionMismatch(format!(
-                    "{} names one logical qubit twice",
-                    g.name()
-                )));
-            }
-        }
-        Ok(Self {
+        let me = Self {
             basis,
             code,
             duals,
             gates,
-        })
+        };
+        for g in &me.gates {
+            me.check_gate(g)?;
+        }
+        Ok(me)
+    }
+
+    /// Whether a gate names logical qubits the code has, each once.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] otherwise.
+    pub(crate) fn check_gate(&self, gate: &LogicalGate) -> Result<(), QuantumError> {
+        let k = self.basis.num_logical_qubits();
+        if let Some(q) = gate.qubits().into_iter().find(|&q| q >= k) {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "{} names logical qubit {q}, but the code encodes {k}",
+                gate.name()
+            )));
+        }
+        if let LogicalGate::Cz(i, j) = gate
+            && i == j
+        {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "{} names one logical qubit twice",
+                gate.name()
+            )));
+        }
+        Ok(())
     }
 
     /// Every Table 1 gate on every logical qubit, and `CZ̄` on each pair.
@@ -195,11 +207,13 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
     ///
     /// # Errors
     ///
-    /// The emitters' errors, including `logical_t`'s tuple cap.
+    /// [`QuantumError::DimensionMismatch`] if the gate names a logical qubit the code does not
+    /// have; the emitters' errors, including `logical_t`'s tuple cap.
     pub fn program<R>(&self, gate: &LogicalGate) -> Result<Vec<GateOp>, QuantumError>
     where
         R: RealField + FromPrimitive,
     {
+        self.check_gate(gate)?;
         let gamma = |i: usize| &self.basis.homology()[i];
         Ok(match gate {
             LogicalGate::Z(i) => logical_z(gamma(*i)),
@@ -228,18 +242,21 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
 
     /// One gate's exact verdict for a given physical program, which need not be the emitted one:
     /// a diagonal gate holds when the program read back as a [`GaugeFieldGate`] equals `O_k` on the
-    /// gate's blocks; `X̄` holds when its Pauli lies in the normalizer, is not a stabilizer, and
-    /// pairs with the logical `Z̄`s as the dual basis prescribes; `H̄` holds when the tableau swaps
-    /// `Z̄(γ)` and `X̄(γ̃)` and fixes the other logical qubits.
+    /// gate's blocks; `X̄(γ̃ᵢ)` holds when the program is a Pauli program whose Pauli lies in the
+    /// normalizer, is not a stabilizer, anticommutes with `Z̄(γᵢ)` and commutes with every other
+    /// logical `Z̄` and every logical `X̄`; `H̄` holds when the tableau swaps `Z̄(γ)` and `X̄(γ̃)` and
+    /// fixes the other logical qubits.
     ///
     /// # Errors
     ///
-    /// The basis's structural errors; a failing square is a verdict, not an error.
+    /// [`QuantumError::DimensionMismatch`] if the gate names a logical qubit the code does not
+    /// have; the basis's structural errors. A failing square is a verdict, not an error.
     pub fn check_gate_program(
         &self,
         gate: &LogicalGate,
         program: &[GateOp],
     ) -> Result<GateNaturality, QuantumError> {
+        self.check_gate(gate)?;
         let n = self.basis.len();
         let (holds, witness) = match gate {
             LogicalGate::Z(_) | LogicalGate::S(_) | LogicalGate::T(_) | LogicalGate::Cz(_, _) => {
@@ -258,27 +275,17 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
                     Err(e) => (false, Some(format!("{e}"))),
                 }
             }
-            LogicalGate::X(i) => {
-                let zero = Gf2Chain::zeros(n, self.duals[*i].degree());
-                let pauli = LogicalPauli::new(self.duals[*i].clone(), zero)?;
-                match self.basis.is_logically_trivial(&pauli) {
-                    Ok(true) => (false, Some("X̄ is a stabilizer".into())),
+            LogicalGate::X(i) => match self.program_as_pauli(program) {
+                Err(witness) => (false, Some(witness)),
+                Ok(pauli) => match self.basis.is_logically_trivial(&pauli) {
+                    Ok(true) => (false, Some("the program's Pauli is a stabilizer".into())),
                     Ok(false) => {
-                        let mut bad = None;
-                        for (j, g) in self.basis.homology().iter().enumerate() {
-                            let p = g
-                                .inner(&self.duals[*i])
-                                .map_err(|e| QuantumError::DimensionMismatch(format!("{e}")))?;
-                            if p != Gf2::new(j == *i) {
-                                bad = Some(format!("⟨γ_{j}, γ̃_{i}⟩ = {p}"));
-                                break;
-                            }
-                        }
+                        let bad = self.x_bar_pairing_witness(&pauli, *i)?;
                         (bad.is_none(), bad)
                     }
                     Err(e) => (false, Some(format!("{e}"))),
-                }
-            }
+                },
+            },
             LogicalGate::H(i) => {
                 match self
                     .basis
@@ -303,6 +310,74 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
             program_len: program.len(),
             witness,
         })
+    }
+
+    /// A program of `X`, `Y` and `Z` gates as the Pauli it multiplies out to, each gate toggling
+    /// its qubit's bit in the `X` or `Z` part. The error is the witness: a gate that is not a Pauli
+    /// or names a qubit outside the register.
+    fn program_as_pauli(&self, program: &[GateOp]) -> Result<LogicalPauli<W>, String> {
+        let n = self.basis.len();
+        let mut xs: BTreeSet<usize> = BTreeSet::new();
+        let mut zs: BTreeSet<usize> = BTreeSet::new();
+        let toggle = |set: &mut BTreeSet<usize>, q: usize| {
+            if !set.remove(&q) {
+                set.insert(q);
+            }
+        };
+        for op in program {
+            let (q, x, z) = match op {
+                GateOp::X(q) => (*q, true, false),
+                GateOp::Y(q) => (*q, true, true),
+                GateOp::Z(q) => (*q, false, true),
+                other => {
+                    return Err(format!(
+                        "{other:?} is not a Pauli gate; X̄ reads Pauli programs only"
+                    ));
+                }
+            };
+            if q >= n {
+                return Err(format!("{op:?} names qubit {q} on a {n}-qubit register"));
+            }
+            if x {
+                toggle(&mut xs, q);
+            }
+            if z {
+                toggle(&mut zs, q);
+            }
+        }
+        let degree = self.basis.homology().first().map_or(1, Gf2Chain::degree);
+        let support = |set: &BTreeSet<usize>| {
+            let list: Vec<usize> = set.iter().copied().collect();
+            Gf2Chain::from_support(n, degree, &list).map_err(|e| format!("{e}"))
+        };
+        LogicalPauli::new(support(&xs)?, support(&zs)?).map_err(|e| format!("{e}"))
+    }
+
+    /// The first pairing at which a Pauli in the normalizer fails to be `X̄(γ̃ᵢ)` up to
+    /// stabilizers: `⟨γⱼ, x⟩ = δᵢⱼ` against every logical `Z̄(γⱼ)` and `⟨γ̃ⱼ, z⟩ = 0` against
+    /// every logical `X̄(γ̃ⱼ)`.
+    fn x_bar_pairing_witness(
+        &self,
+        pauli: &LogicalPauli<W>,
+        i: usize,
+    ) -> Result<Option<String>, QuantumError> {
+        let inner = |a: &Gf2Chain<W>, b: &Gf2Chain<W>| {
+            a.inner(b)
+                .map_err(|e| QuantumError::DimensionMismatch(format!("{e}")))
+        };
+        for (j, gamma) in self.basis.homology().iter().enumerate() {
+            let p = inner(gamma, pauli.x())?;
+            if p != Gf2::new(j == i) {
+                return Ok(Some(format!("⟨γ_{j}, x⟩ = {p}")));
+            }
+        }
+        for (j, dual) in self.duals.iter().enumerate() {
+            let p = inner(dual, pauli.z())?;
+            if p != Gf2::ZERO {
+                return Ok(Some(format!("⟨γ̃_{j}, z⟩ = {p}")));
+            }
+        }
+        Ok(None)
     }
 
     /// The exact naturality check over the signature, each gate against its emitted program.

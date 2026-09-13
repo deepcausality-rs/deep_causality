@@ -360,9 +360,16 @@ where
     }
 
     /// C₃-exclusion over the structure the dilation's supports encode, between the declared node
-    /// systems.
+    /// systems. Both lists must be non-empty and name nodes of the dilation; an empty list or a
+    /// node outside it is the stage's failure.
     pub fn check_decomposable(mut self, inputs: &[usize], outputs: &[usize]) -> Self {
         if self.failure.is_some() {
+            return self;
+        }
+        if inputs.is_empty() || outputs.is_empty() {
+            self.fail(QuantumError::CalculationError(
+                "check_decomposable needs at least one input and one output node".into(),
+            ));
             return self;
         }
         let result = self
@@ -370,7 +377,15 @@ where
             .subject()
             .model()
             .dilation()
-            .and_then(|d| d.hypothesis("circuit"))
+            .and_then(|d| {
+                let n = d.legs().len();
+                match inputs.iter().chain(outputs).find(|&&node| node >= n) {
+                    Some(bad) => Err(QuantumError::CalculationError(alloc::format!(
+                        "check_decomposable names node {bad}, but the dilation has {n} nodes"
+                    ))),
+                    None => d.hypothesis("circuit"),
+                }
+            })
             .and_then(|h| h.check_decomposable_from_supports(inputs, outputs));
         match result {
             Ok(report) => self.record("check_decomposable", report),

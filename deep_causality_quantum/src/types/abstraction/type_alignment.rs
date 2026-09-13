@@ -10,6 +10,7 @@
 //! types are tensor products of the entries (Eq. 14).
 
 use crate::QuantumError;
+use crate::types::abstraction::query::Query;
 use crate::types::circuit_model::{NumericCaps, QcMorphism, WireId};
 use crate::types::decision::Tolerance;
 use alloc::collections::BTreeSet;
@@ -96,7 +97,8 @@ where
     ///
     /// [`QuantumError::SectionNotInverse`] carrying the residual and the tolerance when
     /// `τ_X ∘ E_X` differs from the identity; [`QuantumError::DimensionMismatch`] when a channel's
-    /// dimensions disagree with its section's, or a wire appears in two entries.
+    /// dimensions disagree with its section's, a wire appears twice in one entry, or a wire
+    /// appears in two entries.
     pub fn new(entries: Vec<AlignmentSpec<R>>) -> Result<Self, QuantumError> {
         Self::new_sided(
             entries
@@ -121,6 +123,14 @@ where
         for (i, (side, (mut high, mut low, tau, section))) in entries.into_iter().enumerate() {
             high.sort_unstable();
             low.sort_unstable();
+            for (level, wires) in [("high", &high), ("low", &low)] {
+                if let Some(w) = wires.windows(2).find(|pair| pair[0] == pair[1]) {
+                    return Err(QuantumError::DimensionMismatch(format!(
+                        "entry {i}: {level}-level wire {} appears twice in one type",
+                        w[0]
+                    )));
+                }
+            }
             for (other_side, other_high, other_low) in &placed {
                 if !side.covers(*other_side) {
                     continue;
@@ -175,7 +185,14 @@ where
 
     /// The alignment extended along a query's renamings: for every entry whose high-level wires
     /// were all renamed, an entry on the fresh names with the same `τ` and `E`, provided the aligned
-    /// low-level wires were all renamed too. This is `π` applied to the opened type.
+    /// low-level wires were all renamed too. This is `π` applied to the query's type. `query` is
+    /// the query the renamings come from; the high-level and low-level query of one square are of
+    /// one kind. A fresh input of an `Open` query replaces the outputs of an opened mechanism and
+    /// carries the output type: output-side entries are copied as entries for both sides, since
+    /// the fresh wire can be an output of the opened model too, and input-side entries are not
+    /// copied. A fresh input of an `Inc` query is a copy of a model input and carries the input
+    /// type: input-side entries are copied with their side and output-side entries are not. The
+    /// other queries rename nothing and the alignment is returned as it is.
     ///
     /// # Errors
     ///
@@ -184,18 +201,26 @@ where
         &self,
         high_map: &[(WireId, WireId)],
         low_map: &[(WireId, WireId)],
+        query: &Query,
     ) -> Result<Self, QuantumError> {
+        let fresh = match query {
+            Query::Open(_) => AlignmentSide::Output,
+            Query::Inc(_) => AlignmentSide::Input,
+            Query::Io | Query::Observe(_) | Query::Fault(_) => return Ok(self.clone()),
+        };
         let rename = |map: &[(WireId, WireId)], w: WireId| {
             map.iter().find(|(o, _)| *o == w).map(|(_, n)| *n)
         };
         let mut entries = self.entries.clone();
         for e in &self.entries {
-            // A fresh input replaces the outputs of an opened mechanism, so it carries the output
-            // type: input-side entries are never copied, and a copied output-side entry serves
-            // both sides of the opened query.
-            if e.side == AlignmentSide::Input {
+            if !e.side.covers(fresh) {
                 continue;
             }
+            let side = if fresh == AlignmentSide::Output {
+                AlignmentSide::Any
+            } else {
+                e.side
+            };
             let high_hits = e
                 .high
                 .iter()
@@ -231,7 +256,7 @@ where
             high.sort_unstable();
             low.sort_unstable();
             entries.push(AlignmentEntry {
-                side: AlignmentSide::Any,
+                side,
                 high,
                 low,
                 tau: e.tau.clone(),
@@ -355,8 +380,15 @@ where
         Ok(entries)
     }
 
-    /// Tensor the covering entries in high-wire order, then permute both sides to ascending wire
-    /// order.
+    /// Tensor the covering entries in stored order, then permute both sides to ascending wire
+    /// order. An entry whose wires interleave with another entry's is split into one leg per
+    /// wire, which needs its wires to share one dimension; an entry whose wires do not interleave
+    /// is one leg whatever its wires' dimensions.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::CalculationError`] if an entry interleaves and its dimension is not the
+    /// power of one leg dimension over its wires.
     fn assemble(
         &self,
         high: &[WireId],
@@ -381,17 +413,68 @@ where
             });
         }
         let morphism = acc.expect("at least one entry");
-        // Legs as tensored: entry by entry. Each entry's channel is one leg of its full dimension.
-        let high_dims: Vec<usize> = entries.iter().map(|e| e.tau.d_out()).collect();
-        let low_dims: Vec<usize> = entries.iter().map(|e| e.tau.d_in()).collect();
-        let high_order = ascending_order(entries.iter().map(|e| e.high[0]).collect());
-        let low_order = ascending_order(entries.iter().map(|e| e.low[0]).collect());
+        let (high_dims, high_order) = legs(
+            &entries
+                .iter()
+                .map(|e| (e.high.as_slice(), e.tau.d_out()))
+                .collect::<Vec<_>>(),
+        )?;
+        let (low_dims, low_order) = legs(
+            &entries
+                .iter()
+                .map(|e| (e.low.as_slice(), e.tau.d_in()))
+                .collect::<Vec<_>>(),
+        )?;
         if section {
             morphism.permute_legs(&high_dims, &high_order, &low_dims, &low_order)
         } else {
             morphism.permute_legs(&low_dims, &low_order, &high_dims, &high_order)
         }
     }
+}
+
+/// The legs of tensored entries, each `(wires ascending, dimension)`, in tensored order, and the
+/// order that sorts them by wire: one leg per entry whose wires are contiguous among all the
+/// entries' wires, and one leg per wire, of the dimension's `m`-th root over `m` wires, where an
+/// entry interleaves with another.
+fn legs(entries: &[(&[WireId], usize)]) -> Result<(Vec<usize>, Vec<usize>), QuantumError> {
+    let all: BTreeSet<WireId> = entries
+        .iter()
+        .flat_map(|(w, _)| w.iter().copied())
+        .collect();
+    let mut dims = Vec::new();
+    let mut keys = Vec::new();
+    for (wires, dim) in entries {
+        let (first, last) = match (wires.first(), wires.last()) {
+            (Some(&f), Some(&l)) => (f, l),
+            _ => continue,
+        };
+        let contiguous = all.range(first..=last).count() == wires.len();
+        if contiguous {
+            dims.push(*dim);
+            keys.push(first);
+            continue;
+        }
+        let Some(root) = equal_leg_dim(*dim, wires.len()) else {
+            return Err(QuantumError::CalculationError(format!(
+                "the aligned type {wires:?} interleaves with another entry and its dimension {dim} does not split into {} equal legs",
+                wires.len()
+            )));
+        };
+        for &w in *wires {
+            dims.push(root);
+            keys.push(w);
+        }
+    }
+    Ok((dims, ascending_order(keys)))
+}
+
+/// `d` such that `d^m = dim`, when there is one.
+fn equal_leg_dim(dim: usize, m: usize) -> Option<usize> {
+    if m == 1 {
+        return Some(dim);
+    }
+    (1..=dim).find(|d| d.checked_pow(m as u32) == Some(dim))
 }
 
 /// The order that sorts `keys` ascending: `order[k]` is the index of the `k`-th smallest key.

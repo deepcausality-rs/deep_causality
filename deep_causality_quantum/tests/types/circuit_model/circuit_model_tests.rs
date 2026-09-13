@@ -447,3 +447,145 @@ fn test_mis_dimensioned_kraus_box_names_the_wire_and_the_box() {
     assert_eq!(ok.boxes()[0].kind(), "kraus");
     assert_eq!(ok.boxes()[0].quantum_wires(), &[0]);
 }
+
+/// An encoder prepares fresh lines. One whose output an earlier box touched is refused with the
+/// box and the wire named; the same encoder before the box, or on a wire the box never touches,
+/// is accepted.
+#[test]
+fn test_encoder_on_a_wire_an_earlier_box_touched_is_refused() {
+    let h = || CircuitBox::Channel {
+        wires: vec![0],
+        channel: Channel::unitary(&QubitOperator::hadamard()).unwrap(),
+    };
+    let enc = |out: usize| CircuitBox::Encoder {
+        input: 2,
+        outputs: vec![out],
+        states: vec![ket(&[1.0, 0.0]), ket(&[0.0, 1.0])],
+    };
+    let wires = || vec![WireType::qubit(), WireType::qubit(), WireType::bit()];
+    let err =
+        CircuitModel::<f64>::ungrouped(wires(), vec![h(), enc(0)], vec![], vec![0]).unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => assert!(
+            msg.contains("box 1") && msg.contains("encoder") && msg.contains("wire 0"),
+            "{msg}"
+        ),
+        other => panic!("{other:?}"),
+    }
+    assert!(CircuitModel::<f64>::ungrouped(wires(), vec![enc(0), h()], vec![], vec![0]).is_ok());
+    assert!(CircuitModel::<f64>::ungrouped(wires(), vec![h(), enc(1)], vec![], vec![0, 1]).is_ok());
+}
+
+/// A Kraus box must satisfy `Σ K†K = I`. A lone projector and a scaled unitary are refused with
+/// the box named; the amplitude-damping family, which is trace-preserving but not unitary, and a
+/// two-operator Pauli mixture are accepted.
+#[test]
+fn test_kraus_box_must_be_trace_preserving() {
+    let op = |entries: [f64; 4]| {
+        CausalTensor::from_slice(
+            &entries.iter().map(|&a| C::new(a, 0.0)).collect::<Vec<_>>(),
+            &[2, 2],
+        )
+    };
+    let model = |kraus: Vec<CausalTensor<C>>| {
+        CircuitModel::<f64>::ungrouped(
+            vec![WireType::qubit()],
+            vec![CircuitBox::Kraus {
+                wires: vec![0],
+                kraus,
+            }],
+            vec![0],
+            vec![0],
+        )
+    };
+    let projector = model(vec![op([1.0, 0.0, 0.0, 0.0])]).unwrap_err();
+    assert!(
+        matches!(projector.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("box 0") && m.contains("trace-preserving")),
+        "{projector}"
+    );
+    let s = 0.9 / 2f64.sqrt();
+    let scaled = model(vec![op([s, s, s, -s])]).unwrap_err();
+    assert!(
+        matches!(scaled.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("trace-preserving")),
+        "{scaled}"
+    );
+    let damping = model(vec![
+        op([1.0, 0.0, 0.0, 0.7f64.sqrt()]),
+        op([0.0, 0.3f64.sqrt(), 0.0, 0.0]),
+    ]);
+    assert!(damping.is_ok(), "{damping:?}");
+    let r = 0.5f64.sqrt();
+    let mixture = model(vec![op([0.0, r, r, 0.0]), op([r, 0.0, 0.0, -r])]);
+    assert!(mixture.is_ok(), "{mixture:?}");
+    let nan = model(vec![op([1.0, f64::NAN, 0.0, 1.0])]).unwrap_err();
+    assert!(
+        matches!(nan.0, QuantumErrorEnum::NonFiniteValue(ref m) if m.contains("box 0")),
+        "{nan}"
+    );
+}
+
+/// Every prepared state of an encoder is a finite unit ket. A state of norm `√0.72`, and one
+/// with a NaN amplitude, are refused with the box and the state named; a unit ket with unequal
+/// real amplitudes is accepted.
+#[test]
+fn test_encoder_states_must_be_finite_unit_kets() {
+    let model = |states: Vec<CausalTensor<C>>| {
+        CircuitModel::<f64>::ungrouped(
+            vec![WireType::qubit(), WireType::bit()],
+            vec![CircuitBox::Encoder {
+                input: 1,
+                outputs: vec![0],
+                states,
+            }],
+            vec![],
+            vec![0],
+        )
+    };
+    let short = model(vec![ket(&[1.0, 0.0]), ket(&[0.6, 0.6])]).unwrap_err();
+    assert!(
+        matches!(short.0, QuantumErrorEnum::NormalizationError(ref m) if m.contains("box 0") && m.contains("state 1")),
+        "{short}"
+    );
+    let nan = model(vec![ket(&[f64::NAN, 0.0]), ket(&[0.0, 1.0])]).unwrap_err();
+    assert!(
+        matches!(nan.0, QuantumErrorEnum::NonFiniteValue(ref m) if m.contains("box 0") && m.contains("state 0")),
+        "{nan}"
+    );
+    let ok = model(vec![ket(&[0.6, 0.8]), ket(&[0.0, 1.0])]);
+    assert!(ok.is_ok(), "{ok:?}");
+}
+
+/// An instrument with a non-finite Kraus entry is refused before the trace-preservation
+/// comparison, which a NaN defect would pass.
+#[test]
+fn test_instrument_with_a_non_finite_kraus_entry_is_refused() {
+    let op = |entries: [f64; 4]| {
+        CausalTensor::from_slice(
+            &entries.iter().map(|&a| C::new(a, 0.0)).collect::<Vec<_>>(),
+            &[2, 2],
+        )
+    };
+    let model = |first: CausalTensor<C>| {
+        CircuitModel::<f64>::ungrouped(
+            vec![WireType::qubit(), WireType::bit()],
+            vec![CircuitBox::Instrument {
+                wires: vec![0],
+                outcome: 1,
+                kraus: vec![vec![first], vec![op([0.0, 0.0, 0.0, 1.0])]],
+            }],
+            vec![0],
+            vec![0, 1],
+        )
+    };
+    let nan = model(op([1.0, f64::NAN, 0.0, 0.0])).unwrap_err();
+    assert!(
+        matches!(nan.0, QuantumErrorEnum::NonFiniteValue(ref m) if m.contains("box 0") && m.contains("instrument")),
+        "{nan}"
+    );
+    let inf = model(op([f64::INFINITY, 0.0, 0.0, 0.0])).unwrap_err();
+    assert!(
+        matches!(inf.0, QuantumErrorEnum::NonFiniteValue(_)),
+        "{inf}"
+    );
+    assert!(model(op([1.0, 0.0, 0.0, 0.0])).is_ok());
+}

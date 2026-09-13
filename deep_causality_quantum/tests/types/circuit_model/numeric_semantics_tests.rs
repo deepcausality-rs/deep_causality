@@ -409,3 +409,164 @@ fn test_kraus_box_agrees_with_apply_kraus_on_one_qubit() {
     );
     assert!(close(&through, &expect));
 }
+
+fn basis_encoder() -> CircuitBox<f64> {
+    CircuitBox::Encoder {
+        input: 1,
+        outputs: vec![0],
+        states: vec![re(&[1.0, 0.0], &[2]), re(&[0.0, 1.0], &[2])],
+    }
+}
+
+#[test]
+fn test_entry_cap_counts_every_classical_input_branch() {
+    // An encoder on a two-valued classical input opens two branches before any box runs. Each
+    // branch owns `d_total · d_in = 2 · 1` entries, four in all: a cap of three refuses the
+    // evaluation with that count, a cap of four admits it.
+    let model = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::bit()],
+        vec![basis_encoder()],
+        vec![],
+        vec![0],
+    )
+    .unwrap();
+    let three = NumericCaps {
+        max_entries: 3,
+        max_operators: 1 << 12,
+    };
+    let err = model.numeric_semantics(&three).unwrap_err();
+    assert!(
+        matches!(
+            err.0,
+            QuantumErrorEnum::NaturalityDimensionExceeded {
+                n: 0,
+                k: 1,
+                entries: 4,
+                cap: 3
+            }
+        ),
+        "{err}"
+    );
+    let four = NumericCaps {
+        max_entries: 4,
+        max_operators: 1 << 12,
+    };
+    assert_eq!(model.numeric_semantics(&four).unwrap().blocks().len(), 2);
+}
+
+#[test]
+fn test_entry_cap_counts_the_branches_a_measurement_opens() {
+    // One qubit in, measured: two branches of `d_total · d_in = 2 · 2` entries, eight in all. A
+    // cap of seven admits the initial branch and must refuse the measurement's second one.
+    let model = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::bit()],
+        vec![CircuitBox::Measurement {
+            wires: vec![0],
+            outcome: 1,
+        }],
+        vec![0],
+        vec![1],
+    )
+    .unwrap();
+    let seven = NumericCaps {
+        max_entries: 7,
+        max_operators: 1 << 12,
+    };
+    let err = model.numeric_semantics(&seven).unwrap_err();
+    assert!(
+        matches!(
+            err.0,
+            QuantumErrorEnum::NaturalityDimensionExceeded {
+                n: 1,
+                k: 0,
+                entries: 8,
+                cap: 7
+            }
+        ),
+        "{err}"
+    );
+    let eight = NumericCaps {
+        max_entries: 8,
+        max_operators: 1 << 12,
+    };
+    assert_eq!(model.numeric_semantics(&eight).unwrap().blocks().len(), 2);
+    // The same count through an instrument with two one-operator families.
+    let p0 = re(&[1.0, 0.0, 0.0, 0.0], &[2, 2]);
+    let p1 = re(&[0.0, 0.0, 0.0, 1.0], &[2, 2]);
+    let instrument = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::bit()],
+        vec![CircuitBox::Instrument {
+            wires: vec![0],
+            outcome: 1,
+            kraus: vec![vec![p0], vec![p1]],
+        }],
+        vec![0],
+        vec![1],
+    )
+    .unwrap();
+    assert!(matches!(
+        instrument.numeric_semantics(&seven).unwrap_err().0,
+        QuantumErrorEnum::NaturalityDimensionExceeded { entries: 8, .. }
+    ));
+    assert!(instrument.numeric_semantics(&eight).is_ok());
+}
+
+#[test]
+fn test_operator_cap_counts_the_traced_basis_states() {
+    // Two qubits in, none kept: the trace is four Kraus operators from one branch. A cap of three
+    // refuses the family with that count, a cap of four admits it.
+    let model = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![],
+        vec![0, 1],
+        vec![],
+    )
+    .unwrap();
+    let three = NumericCaps {
+        max_entries: 1 << 24,
+        max_operators: 3,
+    };
+    let err = model.numeric_semantics(&three).unwrap_err();
+    assert!(
+        matches!(
+            err.0,
+            QuantumErrorEnum::KrausFamilyExceeded {
+                operators: 4,
+                cap: 3
+            }
+        ),
+        "{err}"
+    );
+    let four = NumericCaps {
+        max_entries: 1 << 24,
+        max_operators: 4,
+    };
+    assert_eq!(model.numeric_semantics(&four).unwrap().operator_count(), 4);
+    // A measurement doubles the branches after the initial check: two branches times two traced
+    // basis states is four operators, above a cap of three that the one initial branch passed.
+    let measured = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::bit()],
+        vec![CircuitBox::Measurement {
+            wires: vec![0],
+            outcome: 1,
+        }],
+        vec![0],
+        vec![1],
+    )
+    .unwrap();
+    let err = measured.numeric_semantics(&three).unwrap_err();
+    assert!(
+        matches!(
+            err.0,
+            QuantumErrorEnum::KrausFamilyExceeded {
+                operators: 4,
+                cap: 3
+            }
+        ),
+        "{err}"
+    );
+    assert_eq!(
+        measured.numeric_semantics(&four).unwrap().operator_count(),
+        4
+    );
+}

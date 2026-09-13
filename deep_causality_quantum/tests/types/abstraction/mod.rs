@@ -10,5 +10,6 @@ mod diamond_bound_tests;
 mod fault_set_tests;
 mod fault_tolerance_tests;
 mod ideal_recovery_tests;
+mod qc_model_tests;
 mod query_tests;
 mod type_alignment_tests;

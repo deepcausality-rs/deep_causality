@@ -9,21 +9,33 @@
 #                                sheath abates to the 47 km exit
 #
 # Run inside Blender (MCP exec or Text editor) or headless:
-#   blender -b --python build_corridor_sequence.py -- <old_blend> <out_blend>
+#   blender -b --python build_corridor_sequence.py [-- <old_blend> [<out_blend>]]
+# With no arguments the asset file is plasma_blackout_corridor.blend beside this script and the
+# output is corridor_sequence.blend beside it.
 import bpy
 import math
+import os
 import sys
 from mathutils import Vector
 
 # ---------------------------------------------------------------- config
-OLD_BLEND = globals().get("OLD_BLEND", "/Users/marvin/RustroverProjects/dcl/deep_causality/corridor_render/plasma_blackout_corridor.blend")
-OUT_BLEND = globals().get("OUT_BLEND", "/Users/marvin/RustroverProjects/dcl/deep_causality/corridor_render/corridor_sequence.blend")
+# The directory the defaults resolve against: this script's own, or, when the body is run from the
+# Text editor or over MCP exec without a `__file__`, the open .blend's, else the cwd.
+HERE = (os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals()
+        else os.path.dirname(bpy.data.filepath) if bpy.data.filepath else os.getcwd())
+OLD_BLEND = globals().get("OLD_BLEND", os.path.join(HERE, "plasma_blackout_corridor.blend"))
+OUT_BLEND = globals().get("OUT_BLEND", os.path.join(HERE, "corridor_sequence.blend"))
 PREVIEW_PCT = int(globals().get("PREVIEW_PCT", 30))
 SAMPLES = int(globals().get("SAMPLES", 32))
 if "--" in sys.argv:
     a = sys.argv[sys.argv.index("--") + 1:]
     if len(a) > 0: OLD_BLEND = a[0]
     if len(a) > 1: OUT_BLEND = a[1]
+if not os.path.isfile(OLD_BLEND):
+    raise FileNotFoundError(
+        f"asset file not found: {OLD_BLEND} "
+        "(expected plasma_blackout_corridor.blend beside build_corridor_sequence.py; "
+        "pass another path as the first argument after '--')")
 
 FPS = 24
 F_END = 1440

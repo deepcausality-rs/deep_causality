@@ -278,3 +278,128 @@ fn test_code_alignment_lists_all_physical_qubits_on_the_output_side() {
     assert_eq!(low.boxes()[0].kind(), "kraus");
     assert_eq!(low.boxes()[1].kind(), "unitary");
 }
+
+/// A gate naming a logical qubit the code does not have is refused by every method that takes a
+/// gate, as the constructor refuses it, rather than indexing past the basis.
+#[test]
+fn test_a_gate_outside_the_code_is_refused_by_every_gate_method() {
+    let complex = torus(3);
+    let ca = CodeAbstraction::<W>::new(&complex, vec![LogicalGate::Z(0)]).unwrap();
+    let faults = deep_causality_quantum::FaultSet::pauli_weight(
+        &[0, 1],
+        Some(0),
+        1,
+        deep_causality_quantum::FAULT_SET_CAP,
+    )
+    .unwrap();
+    for gate in [
+        LogicalGate::Z(5),
+        LogicalGate::X(2),
+        LogicalGate::S(7),
+        LogicalGate::T(2),
+        LogicalGate::H(3),
+        LogicalGate::Cz(0, 4),
+        LogicalGate::Cz(1, 1),
+    ] {
+        let program = ca.program::<f64>(&gate).unwrap_err();
+        assert!(
+            matches!(program.0, QuantumErrorEnum::DimensionMismatch(_)),
+            "{}: {program:?}",
+            gate.name()
+        );
+        let checked = ca.check_gate_program(&gate, &[]).unwrap_err();
+        assert!(
+            matches!(checked.0, QuantumErrorEnum::DimensionMismatch(_)),
+            "{}: {checked:?}",
+            gate.name()
+        );
+        let exact = ca.exact_program::<f64>(&gate).unwrap_err();
+        assert!(
+            matches!(exact.0, QuantumErrorEnum::DimensionMismatch(_)),
+            "{}: {exact:?}",
+            gate.name()
+        );
+        let tolerance = ca.check_fault_tolerance::<f64>(&gate, &faults).unwrap_err();
+        assert!(
+            matches!(tolerance.0, QuantumErrorEnum::DimensionMismatch(_)),
+            "{}: {tolerance:?}",
+            gate.name()
+        );
+    }
+    // A gate inside the code but outside the signature is still answered.
+    assert!(ca.program::<f64>(&LogicalGate::X(1)).is_ok());
+}
+
+/// `X̄`'s verdict is read off the supplied program: the program must be a Pauli program whose
+/// Pauli anticommutes with `Z̄(γᵢ)` alone and commutes with every other logical operator, up to
+/// stabilizers. The emitted program of the other logical qubit, `Z̄(γ₀)` itself, a Pauli carrying
+/// an extra `Z̄(γ₁)`, and a Hadamard all fail; the emitted program with an X-stabilizer appended
+/// still holds.
+#[test]
+fn test_x_bar_verdict_is_read_off_the_supplied_program() {
+    let complex = torus(3);
+    let ca =
+        CodeAbstraction::<W>::new(&complex, vec![LogicalGate::X(0), LogicalGate::X(1)]).unwrap();
+    let x0 = ca.program::<f64>(&LogicalGate::X(0)).unwrap();
+    let x1 = ca.program::<f64>(&LogicalGate::X(1)).unwrap();
+    assert!(
+        ca.check_gate_program(&LogicalGate::X(0), &x0)
+            .unwrap()
+            .holds
+    );
+    assert!(
+        ca.check_gate_program(&LogicalGate::X(1), &x1)
+            .unwrap()
+            .holds
+    );
+
+    let other = ca.check_gate_program(&LogicalGate::X(0), &x1).unwrap();
+    assert!(!other.holds, "X̄(γ̃₁) handed in as X̄(γ̃₀)");
+    assert!(
+        other.witness.as_deref().unwrap().contains("⟨γ_0, x⟩ = 0"),
+        "{:?}",
+        other.witness
+    );
+
+    let z0 = ca.program::<f64>(&LogicalGate::Z(0)).unwrap();
+    let z_as_x = ca.check_gate_program(&LogicalGate::X(0), &z0).unwrap();
+    assert!(!z_as_x.holds, "Z̄(γ₀) handed in as X̄(γ̃₀)");
+
+    let mut x0_z1 = x0.clone();
+    x0_z1.extend(ca.program::<f64>(&LogicalGate::Z(1)).unwrap());
+    let carrying = ca.check_gate_program(&LogicalGate::X(0), &x0_z1).unwrap();
+    assert!(!carrying.holds, "X̄(γ̃₀) Z̄(γ₁) carries a second logical");
+    assert!(
+        carrying
+            .witness
+            .as_deref()
+            .unwrap()
+            .contains("⟨γ̃_1, z⟩ = 1"),
+        "{:?}",
+        carrying.witness
+    );
+
+    let hadamard = ca
+        .check_gate_program(&LogicalGate::X(0), &[GateOp::H(0)])
+        .unwrap();
+    assert!(!hadamard.holds);
+    assert!(
+        hadamard.witness.as_deref().unwrap().contains("not a Pauli"),
+        "{:?}",
+        hadamard.witness
+    );
+
+    let outside = ca
+        .check_gate_program(&LogicalGate::X(0), &[GateOp::X(99)])
+        .unwrap();
+    assert!(!outside.holds);
+    assert!(outside.witness.is_some());
+
+    let mut with_stabilizer = x0.clone();
+    with_stabilizer.extend(ca.code().x_generators()[0].support().map(GateOp::X));
+    let still = ca
+        .check_gate_program(&LogicalGate::X(0), &with_stabilizer)
+        .unwrap();
+    assert!(still.holds, "{:?}", still.witness);
+    assert_eq!(still.program_len, with_stabilizer.len());
+}

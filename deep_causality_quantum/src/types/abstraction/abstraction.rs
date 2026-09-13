@@ -153,24 +153,30 @@ where
         self.square_with(high, low_q, caps)
     }
 
-    /// The two sides of the square for a high-level query against an explicit low-level query,
-    /// which need not be the signature's image: the fault-tolerance check asks the high-level `Io`
-    /// against every faulted low-level query.
+    /// The two sides of the square for a high-level query against an explicit low-level query.
+    /// Neither need be in the signature: the high-level query is any query well formed on `H`,
+    /// the low-level one any query well formed on `L`. The fault-tolerance check asks the
+    /// high-level `Io` against every faulted low-level query.
     ///
     /// # Errors
     ///
-    /// As [`square`](Self::square).
+    /// The queries' construction errors on their models, as [`QuerySignature::new`] reports them;
+    /// [`QuantumError::CalculationError`] if a type is not aligned or the square is ill-typed; the
+    /// semantics' caps.
     pub fn square_with(
         &self,
         high: &Query,
         low_q: &Query,
         caps: &NumericCaps,
     ) -> Result<(QcMorphism<R>, QcMorphism<R>), QuantumError> {
+        QuerySignature::new(&self.high.induced_dag(), alloc::vec![high.clone()])?;
+        QuerySignature::new(&self.low.induced_dag(), alloc::vec![low_q.clone()])?;
         let th = self.high.query_type(high)?;
         let tl = self.low.query_type(low_q)?;
         let alignment = self.alignment.extended(
             &self.high.query_wire_map(high)?,
             &self.low.query_wire_map(low_q)?,
+            high,
         )?;
         for (side, high_wires, low_wires) in [
             (AlignmentSide::Input, &th.quantum_in, &tl.quantum_in),
@@ -209,9 +215,10 @@ where
 
     /// The concrete, upward form of an `Open` query (Proposition 18): both sides of the square,
     /// each a morphism from the low-level input type, composed with the low-level sharp state
-    /// `E(s)`, computed on demand. `state` is a ket on the high-level input type of the opened
-    /// query; its low-level image is the section applied to it, and on the right side
-    /// `τ ∘ E(s) = s` recovers the high-level concrete query `⟦Q⟧_H ∘ s`.
+    /// `E(s)`, computed on demand. `state` is a ket on the quantum part of the high-level input
+    /// type of the opened query; its low-level image is the section applied to it, and on the
+    /// right side `τ ∘ E(s) = s` recovers the high-level concrete query `⟦Q⟧_H ∘ s`. The classical
+    /// inputs of the opened query stay free: both sides carry them as classical inputs.
     ///
     /// # Errors
     ///
@@ -244,11 +251,18 @@ where
         let alignment = self.alignment.extended(
             &self.high.query_wire_map(high)?,
             &self.low.query_wire_map(low_q)?,
+            high,
         )?;
-        let low_state = sharp.then(
+        let mut low_state = sharp.then(
             &alignment.section_for_side(&th.quantum_in, AlignmentSide::Input, caps)?,
             caps,
         )?;
+        if !th.classical_in_counts.is_empty() {
+            low_state = low_state.tensor(
+                &QcMorphism::classical_identity(&th.classical_in_counts)?,
+                caps,
+            )?;
+        }
         Ok((low_state.then(&left, caps)?, low_state.then(&right, caps)?))
     }
 }

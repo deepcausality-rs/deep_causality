@@ -438,3 +438,127 @@ fn test_opening_on_the_circuit_equals_mechanism_replacement_on_the_dilation() {
     .unwrap();
     assert!(report.accepted());
 }
+
+/// `CNOT` with the control on wire 1 and the target on wire 0, wire 0 most significant: the
+/// hand-written permutation `|01⟩ ↔ |11⟩`, indices 1 and 3.
+fn cnot_control_wire_one() -> CausalTensor<C> {
+    let mut data = vec![C::new(0.0, 0.0); 16];
+    data[0] = C::new(1.0, 0.0);
+    data[2 * 4 + 2] = C::new(1.0, 0.0);
+    data[3 * 4 + 1] = C::new(1.0, 0.0);
+    data[4 + 3] = C::new(1.0, 0.0);
+    CausalTensor::from_slice(&data, &[4, 4])
+}
+
+/// Node 0 sets wire 1; node 1 is `middle`, a box listing its wires as `[1, 0]`; node 2 is the
+/// identity on wire 0, whose instrument the test replaces with the projector onto `|1⟩`.
+fn descending_wire_model(middle: CircuitBox<f64>) -> CircuitModel<f64> {
+    CircuitModel::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![
+            CircuitBox::Unitary {
+                wires: vec![1],
+                program: vec![GateOp::X(0)],
+            },
+            middle,
+            CircuitBox::Unitary {
+                wires: vec![0],
+                program: vec![],
+            },
+        ],
+        vec![],
+        vec![0, 1],
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_box_wires_listed_in_descending_order_keep_their_leg_order() {
+    // The box's first wire is its most significant leg, whatever its number: `CNOT` with the
+    // control on wire 1 flips wire 0 once node 0 has set wire 1, so wire 0 reads `|1⟩` with
+    // probability one. Read in ascending order the control would be wire 0, which is never set,
+    // and the probability would be zero.
+    let p1 = CausalTensor::from_slice(
+        &[
+            C::new(0.0, 0.0),
+            C::new(0.0, 0.0),
+            C::new(0.0, 0.0),
+            C::new(1.0, 0.0),
+        ],
+        &[2, 2],
+    );
+    let mut overrides = BTreeMap::new();
+    overrides.insert(2usize, choi_from_kraus(&[p1]).unwrap());
+    let (_, forward) = deep_causality_quantum::gate_unitary::<f64>(&GateOp::Cnot {
+        control: 0,
+        target: 1,
+    })
+    .unwrap();
+    let boxes = [
+        CircuitBox::Unitary {
+            wires: vec![1, 0],
+            program: vec![GateOp::Cnot {
+                control: 0,
+                target: 1,
+            }],
+        },
+        CircuitBox::Kraus {
+            wires: vec![1, 0],
+            kraus: vec![forward.clone()],
+        },
+        CircuitBox::Channel {
+            wires: vec![1, 0],
+            channel: Channel::from_kraus(&[forward]).unwrap(),
+        },
+    ];
+    let expected = choi_from_kraus(&[cnot_control_wire_one()]).unwrap();
+    for middle in boxes {
+        let kind = middle.kind();
+        let model = descending_wire_model(middle);
+        let d = model.dilation().unwrap();
+        assert_eq!(d.legs()[1].wires(), &[0, 1], "the leg itself is ascending");
+        let instrument = d.instruments().get(&1).unwrap();
+        for (a, b) in instrument.as_slice().iter().zip(expected.as_slice()) {
+            assert!(
+                (a.re - b.re).abs() < 1e-12 && (a.im - b.im).abs() < 1e-12,
+                "{kind}: the instrument is not the Choi of CNOT with control wire 1"
+            );
+        }
+        let p = d.predict(&d.joint_instrument(&overrides).unwrap()).unwrap();
+        assert!((p - 1.0).abs() < 1e-12, "{kind}: {p}");
+        // The Kraus semantics reads the same order: `|00⟩ ↦ |11⟩`.
+        let sem = model.numeric_semantics(&NumericCaps::default()).unwrap();
+        let k = &sem.blocks().get(&(vec![], vec![])).unwrap()[0];
+        assert!((k.as_slice()[3].re - 1.0).abs() < 1e-12, "{kind}");
+    }
+}
+
+#[test]
+fn test_joint_instrument_refuses_a_union_above_the_entry_cap() {
+    // Seven independent one-qubit nodes: every factor is 4 × 4 and the dilation forms, but the
+    // union of the legs has dimension 4^7 = 16384 and the joint instrument would have 2^28
+    // entries, above the cap of 2^24.
+    let n = 7;
+    let boxes: Vec<CircuitBox<f64>> = (0..n)
+        .map(|w| CircuitBox::Channel {
+            wires: vec![w],
+            channel: Channel::unitary(&QubitOperator::rotation(Axis::Y, 0.7).unwrap()).unwrap(),
+        })
+        .collect();
+    let model =
+        CircuitModel::ungrouped(vec![WireType::qubit(); n], boxes, vec![], (0..n).collect())
+            .unwrap();
+    let d = model.dilation().unwrap();
+    assert_eq!(d.factors().len(), n);
+    let err = d.joint_instrument(&BTreeMap::new()).unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::CalculationError(msg) => {
+            let entries = 1u64 << 28;
+            assert!(
+                msg.contains(&entries.to_string()) && msg.contains("dilation cap"),
+                "{msg}"
+            );
+        }
+        other => panic!("{other:?}"),
+    }
+}

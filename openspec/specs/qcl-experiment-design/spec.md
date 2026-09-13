@@ -45,6 +45,15 @@ is the wrong enumeration and SHALL NOT be used.
 An experiment `e` covers the pair `(h_i, h_j)` when the predicted separation between the two
 hypotheses' read-outs at `e` reaches `MinCostCover`'s `floor_bits`.
 
+When some pair is covered by no offered experiment, the target of the solve is the coverable set:
+the union, over the offered experiments, of the pairs each one covers at `floor_bits`. `design`
+SHALL return the minimum-cost list of experiments whose covered pairs together equal the coverable
+set, and SHALL list every other pair as uncovered. The empty zero-cost plan is returned only when
+the coverable set is empty. Between covers of equal cost the relaxation order decides: the table is
+swept over states in ascending order and, within a state, over experiments in declared order; a
+state's cost is replaced only by a strictly smaller candidate, so the cover met first stands; the
+chosen experiments are listed in declared order.
+
 `MinCostCover` SHALL carry `max_hypotheses`, defaulting to 7, and `design` SHALL return
 `HypothesisCountExceeded { n, pairs }` when the surviving count exceeds it, before allocating the
 table. `2^C(n,2)` is `2^15` at n = 6, `2^28` at n = 8 and `2^45` at n = 10; the cliff is a decision
@@ -75,6 +84,13 @@ points at the heuristic a later version would supply.
 - **WHEN** `MinCostCover { max_hypotheses: 8, .. }` is configured and eight hypotheses survive
 - **THEN** `design` runs the `2^28` solve, because the caller raised the cap deliberately
 
+#### Scenario: A partial cover targets the coverable pairs
+
+- **WHEN** four hypotheses are screened, no offered experiment separates the pair `(2, 3)`, and
+  some offered experiment covers each of the other five pairs, at a minimum total cost of 4
+- **THEN** `design` returns the cost-4 plan over those five pairs rather than the empty zero-cost
+  plan, and lists `(2, 3)` as uncovered
+
 ### Requirement: Pairs no experiment resolves are reported
 
 `DesignPlan` SHALL list every hypothesis pair that no offered experiment resolves at `floor_bits`,
@@ -89,9 +105,9 @@ A partial cover is a plan with an uncovered list rather than a failure.
 
 #### Scenario: A partial cover is returned with its gap
 
-- **WHEN** four of five pairs are covered at total cost 4 and the fifth is separated by no offered
-  experiment
-- **THEN** `design` returns the cost-4 plan, lists the fifth pair as uncovered, and returns `Ok`
+- **WHEN** four hypotheses are screened, five of the six pairs are covered at total cost 4 and the
+  sixth, `(2, 3)`, is separated by no offered experiment
+- **THEN** `design` returns the cost-4 plan, lists `(2, 3)` as uncovered, and returns `Ok`
 
 ### Requirement: design and adjudicate report a measured quantity, a threshold and a count
 
