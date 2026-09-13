@@ -6,7 +6,9 @@
 Pure post-process: the render is untouched. Sizes are fractions of the frame height, so the
 same script serves the 30% preview and the 1080p final.
 """
-import csv, os, sys
+import csv
+import os
+import sys
 from concurrent.futures import ProcessPoolExecutor
 from PIL import Image, ImageDraw, ImageFont
 
@@ -39,7 +41,8 @@ def draw_hud(im, alt, plasma, rf):
     f_stat = ImageFont.truetype(FONT_BOLD, int(8.5 * u))
     lx = x0 + int(7 * u)
     row_h = (bh - int(10 * u)) / 3.0
-    bar_x0 = x0 + int(0.50 * bw); bar_x1 = x1 - int(7 * u)
+    bar_x0 = x0 + int(0.50 * bw)
+    bar_x1 = x1 - int(7 * u)
     bar_h = int(6.5 * u)
 
     def row(i, label, value_txt, bar=None, bar_col=None, status=None, status_col=None):
@@ -119,7 +122,9 @@ def wrap(d, text, font, width):
     for w in words:
         t = (cur + " " + w).strip()
         if d.textlength(t, font=font) <= width: cur = t
-        else: lines.append(cur); cur = w
+        else:
+            lines.append(cur)
+            cur = w
     if cur: lines.append(cur)
     return lines
 
@@ -144,22 +149,28 @@ def draw_caption(ov, anchor, f):
     lh = int(11 * u)
     bh = pad_in + int(13 * u) + len(lines) * lh + (int(14 * u) if prog is not None else 0) + pad_in
     y0 = y_top + int(6 * u)
-    layer = Image.new("RGBA", ov.size, (0, 0, 0, 0)); ld = ImageDraw.Draw(layer)
+    layer = Image.new("RGBA", ov.size, (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
     ld.rounded_rectangle((x0, y0, x0 + bw, y0 + bh), radius=int(6 * u), fill=(8, 12, 20, 200), outline=(*col, 110), width=max(1, int(1.2 * u)))
     ld.text((x0 + pad_in, y0 + pad_in), title, font=f_t, fill=(*col, 255))
     y = y0 + pad_in + int(13 * u)
     for ln in lines:
-        ld.text((x0 + pad_in, y), ln, font=f_d, fill=(225, 230, 240, 255)); y += lh
+        ld.text((x0 + pad_in, y), ln, font=f_d, fill=(225, 230, 240, 255))
+        y += lh
     if prog is not None:
         pct = f"{int(prog * 100)} %"
         pw = ld.textlength(pct, font=f_d)
-        by = y + int(5 * u); bx0 = x0 + pad_in; bx1 = x0 + bw - pad_in - int(pw) - int(5 * u)   # bar, then the % to its right
+        # bar, then the % to its right
+        by = y + int(5 * u)
+        bx0 = x0 + pad_in
+        bx1 = x0 + bw - pad_in - int(pw) - int(5 * u)
         ld.rounded_rectangle((bx0, by, bx1, by + int(6 * u)), radius=int(3 * u), fill=(255, 255, 255, 40))
         bx = bx0 + int((bx1 - bx0) * prog)
         if bx > bx0 + 1: ld.rounded_rectangle((bx0, by, bx, by + int(6 * u)), radius=int(3 * u), fill=(*col, 255))
         ld.text((bx1 + int(5 * u), by - int(3 * u)), pct, font=f_d, fill=(*col, 255))
     if alpha < 1.0:
-        a = layer.split()[3].point(lambda v: int(v * alpha)); layer.putalpha(a)
+        a = layer.split()[3].point(lambda v: int(v * alpha))
+        layer.putalpha(a)
     ov.alpha_composite(layer)
 
 def render_frame(im, alt, plasma, rf, f):

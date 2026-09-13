@@ -10,7 +10,9 @@
 #
 # Run inside Blender (MCP exec or Text editor) or headless:
 #   blender -b --python build_corridor_sequence.py -- <old_blend> <out_blend>
-import bpy, math, sys, os
+import bpy
+import math
+import sys
 from mathutils import Vector
 
 # ---------------------------------------------------------------- config
@@ -51,7 +53,9 @@ def set_interp(mode):
 
 def kf(idb, path, frame, value, index=-1):
     if index >= 0:
-        v = list(getattr(idb, path)); v[index] = value; setattr(idb, path, v)
+        v = list(getattr(idb, path))
+        v[index] = value
+        setattr(idb, path, v)
     else:
         setattr(idb, path, value)
     idb.keyframe_insert(path, frame=frame, index=index)
@@ -75,9 +79,12 @@ def link_to(obj, coll):
 def emission_mat(name, color, strength):
     m = bpy.data.materials.new(name)
     if not m.use_nodes: m.use_nodes = True
-    nt = m.node_tree; nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial"); em = nt.nodes.new("ShaderNodeEmission")
-    em.inputs["Color"].default_value = (*color, 1); em.inputs["Strength"].default_value = strength
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (*color, 1)
+    em.inputs["Strength"].default_value = strength
     nt.links.new(em.outputs[0], out.inputs["Surface"])
     return m
 
@@ -85,24 +92,36 @@ def ghost_mat(name, color, strength, fac):
     """Mix(Transparent, Emission) -- fac 0 = invisible, 1 = solid emission."""
     m = bpy.data.materials.new(name)
     if not m.use_nodes: m.use_nodes = True
-    nt = m.node_tree; nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial"); mix = nt.nodes.new("ShaderNodeMixShader")
-    tr = nt.nodes.new("ShaderNodeBsdfTransparent"); em = nt.nodes.new("ShaderNodeEmission")
-    mix.name = "MIX"; em.name = "EM"
-    em.inputs["Color"].default_value = (*color, 1); em.inputs["Strength"].default_value = strength
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    em = nt.nodes.new("ShaderNodeEmission")
+    mix.name = "MIX"
+    em.name = "EM"
+    em.inputs["Color"].default_value = (*color, 1)
+    em.inputs["Strength"].default_value = strength
     mix.inputs["Fac"].default_value = fac
-    nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(em.outputs[0], mix.inputs[2])
+    nt.links.new(tr.outputs[0], mix.inputs[1])
+    nt.links.new(em.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
     m.blend_method = "BLEND"
     return m
 
 def mesh_obj(name, bm_fn, loc, mat, coll):
     import bmesh
-    me = bpy.data.meshes.new(name); bm = bmesh.new(); bm_fn(bm); bm.to_mesh(me); bm.free()
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bm_fn(bm)
+    bm.to_mesh(me)
+    bm.free()
     for p in me.polygons: p.use_smooth = True
     me.materials.append(mat)
-    o = bpy.data.objects.new(name, me); o.location = loc
-    coll.objects.link(o); o.parent = bpy.data.objects["FLIGHT"]
+    o = bpy.data.objects.new(name, me)
+    o.location = loc
+    coll.objects.link(o)
+    o.parent = bpy.data.objects["FLIGHT"]
     return o
 
 def sphere(name, r, loc, mat, coll, seg=24):
@@ -110,7 +129,7 @@ def sphere(name, r, loc, mat, coll, seg=24):
     return mesh_obj(name, lambda bm: bmesh.ops.create_uvsphere(bm, u_segments=seg, v_segments=seg // 2, radius=r), loc, mat, coll)
 
 def torus(name, R, r, loc, mat, coll, segs=64, rings=12):
-    import bmesh, math
+    import bmesh
     def fn(bm):
         verts = []
         for i in range(segs):
@@ -126,11 +145,18 @@ def torus(name, R, r, loc, mat, coll, segs=64, rings=12):
     return mesh_obj(name, fn, loc, mat, coll)
 
 def track_cam(name, lens, target, coll):
-    cd = bpy.data.cameras.new(name); cd.lens = lens; cd.clip_start = 0.1; cd.clip_end = 2.0e7
+    cd = bpy.data.cameras.new(name)
+    cd.lens = lens
+    cd.clip_start = 0.1
+    cd.clip_end = 2.0e7
     cd.sensor_width = 36
-    cam = bpy.data.objects.new(name, cd); coll.objects.link(cam); cam.parent = bpy.data.objects["FLIGHT"]
-    c = cam.constraints.new("TRACK_TO"); c.target = target
-    c.track_axis = "TRACK_NEGATIVE_Z"; c.up_axis = "UP_Y"
+    cam = bpy.data.objects.new(name, cd)
+    coll.objects.link(cam)
+    cam.parent = bpy.data.objects["FLIGHT"]
+    c = cam.constraints.new("TRACK_TO")
+    c.target = target
+    c.track_axis = "TRACK_NEGATIVE_Z"
+    c.up_axis = "UP_Y"
     return cam
 
 # ---------------------------------------------------------------- fresh scene
@@ -154,8 +180,12 @@ if missing: print("WARNING missing from old blend:", missing)
 
 scene.world = bpy.data.worlds["Space"]
 
-C_probe = new_coll("probe"); C_sheath = new_coll("sheath"); C_env = new_coll("environment")
-C_branches = new_coll("branches"); C_markers = new_coll("markers"); C_cams = new_coll("cameras")
+C_probe = new_coll("probe")
+C_sheath = new_coll("sheath")
+C_env = new_coll("environment")
+C_branches = new_coll("branches")
+C_markers = new_coll("markers")
+C_cams = new_coll("cameras")
 
 for coll_ in (bpy.data.objects, bpy.data.curves, bpy.data.meshes, bpy.data.materials, bpy.data.lights, bpy.data.cameras, bpy.data.worlds, bpy.data.node_groups):
     for idb in coll_:
@@ -175,12 +205,15 @@ for o in bpy.data.objects:
     elif n.startswith("FORK"):
         link_to(o, C_markers)
 
-ROOT = bpy.data.objects.new("ROOT", None); ROOT.empty_display_size = 2.0
+ROOT = bpy.data.objects.new("ROOT", None)
+ROOT.empty_display_size = 2.0
 scene.collection.objects.link(ROOT)
 ROOT.rotation_euler = (math.radians(90), 0, 0)   # asset frame: down = -Y  ->  world: down = -Z
 # FLIGHT: the vehicle frame, pitched nose-down by the flight-path angle so the descent reads
-FLIGHT = bpy.data.objects.new("FLIGHT", None); FLIGHT.empty_display_size = 2.0
-scene.collection.objects.link(FLIGHT); FLIGHT.parent = ROOT
+FLIGHT = bpy.data.objects.new("FLIGHT", None)
+FLIGHT.empty_display_size = 2.0
+scene.collection.objects.link(FLIGHT)
+FLIGHT.parent = ROOT
 PITCH_DEG = float(globals().get("PITCH_DEG", 24.0))
 FLIGHT.rotation_euler = (0, 0, math.radians(PITCH_DEG))   # +Z rotation tips the -X nose toward -Y (down)
 ENV_NAMES = ("Earth", "Sun", "Earthshine")
@@ -199,7 +232,8 @@ WAKE = bpy.data.objects["PlasmaSheath_wake"]
 EM_GAIN = float(globals().get("EM_GAIN", 14.0))
 DENS_GAIN = float(globals().get("DENS_GAIN", 3.0))
 def rig_volume(mat, ramp_colors, hot_color, em_gain=None):
-    nt = mat.node_tree; nodes = nt.nodes
+    nt = mat.node_tree
+    nodes = nt.nodes
     pv = next(n for n in nodes if n.type == "PRINCIPLED_VOLUME")
     ramp = next(n for n in nodes if n.type == "VALTORGB")
     # red-orange ramp: nose (x=0) white-yellow, flank orange, tail deep red
@@ -207,34 +241,58 @@ def rig_volume(mat, ramp_colors, hot_color, em_gain=None):
     while len(els) > 1: els.remove(els[-1])
     els[0].position, els[0].color = ramp_colors[0]
     for pos, col in ramp_colors[1:]:
-        e = els.new(pos); e.color = col
-    level = nodes.new("ShaderNodeValue"); level.name = "PLASMA"; level.label = "PLASMA level"
+        e = els.new(pos)
+        e.color = col
+    level = nodes.new("ShaderNodeValue")
+    level.name = "PLASMA"
+    level.label = "PLASMA level"
     level.outputs[0].default_value = 0.0
     # density * level
     dens_link = next(l for l in nt.links if l.to_node == pv and l.to_socket.name == "Density")
-    md = nodes.new("ShaderNodeMath"); md.operation = "MULTIPLY"; md.name = "DENS_x_LEVEL"
-    dg = nodes.new("ShaderNodeMath"); dg.operation = "MULTIPLY"; dg.inputs[1].default_value = DENS_GAIN
+    md = nodes.new("ShaderNodeMath")
+    md.operation = "MULTIPLY"
+    md.name = "DENS_x_LEVEL"
+    dg = nodes.new("ShaderNodeMath")
+    dg.operation = "MULTIPLY"
+    dg.inputs[1].default_value = DENS_GAIN
     nt.links.new(level.outputs[0], dg.inputs[0])
-    nt.links.new(dens_link.from_socket, md.inputs[0]); nt.links.new(dg.outputs[0], md.inputs[1])
-    nt.links.remove(dens_link); nt.links.new(md.outputs[0], pv.inputs["Density"])
+    nt.links.new(dens_link.from_socket, md.inputs[0])
+    nt.links.new(dg.outputs[0], md.inputs[1])
+    nt.links.remove(dens_link)
+    nt.links.new(md.outputs[0], pv.inputs["Density"])
     # emission strength * level^1.4  (glow rises faster than the density)
     em_link = next(l for l in nt.links if l.to_node == pv and l.to_socket.name == "Emission Strength")
-    pw = nodes.new("ShaderNodeMath"); pw.operation = "POWER"; pw.inputs[1].default_value = 1.4
+    pw = nodes.new("ShaderNodeMath")
+    pw.operation = "POWER"
+    pw.inputs[1].default_value = 1.4
     nt.links.new(level.outputs[0], pw.inputs[0])
-    gain = nodes.new("ShaderNodeMath"); gain.operation = "MULTIPLY"; gain.inputs[1].default_value = (em_gain or EM_GAIN); gain.name = "EM_GAIN"
+    gain = nodes.new("ShaderNodeMath")
+    gain.operation = "MULTIPLY"
+    gain.inputs[1].default_value = (em_gain or EM_GAIN)
+    gain.name = "EM_GAIN"
     nt.links.new(pw.outputs[0], gain.inputs[0])
-    me = nodes.new("ShaderNodeMath"); me.operation = "MULTIPLY"; me.name = "EM_x_LEVEL"
-    nt.links.new(em_link.from_socket, me.inputs[0]); nt.links.new(gain.outputs[0], me.inputs[1])
-    nt.links.remove(em_link); nt.links.new(me.outputs[0], pv.inputs["Emission Strength"])
+    me = nodes.new("ShaderNodeMath")
+    me.operation = "MULTIPLY"
+    me.name = "EM_x_LEVEL"
+    nt.links.new(em_link.from_socket, me.inputs[0])
+    nt.links.new(gain.outputs[0], me.inputs[1])
+    nt.links.remove(em_link)
+    nt.links.new(me.outputs[0], pv.inputs["Emission Strength"])
     # colour: mix ramp colour toward hot at high level
     col_link = next(l for l in nt.links if l.to_node == pv and l.to_socket.name == "Emission Color")
-    mix = nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.name = "HOT_MIX"
-    heat = nodes.new("ShaderNodeMath"); heat.operation = "MULTIPLY"; heat.inputs[1].default_value = 0.6
+    mix = nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.name = "HOT_MIX"
+    heat = nodes.new("ShaderNodeMath")
+    heat.operation = "MULTIPLY"
+    heat.inputs[1].default_value = 0.6
     heat.use_clamp = True
     nt.links.new(level.outputs[0], heat.inputs[0])
     nt.links.new(heat.outputs[0], mix.inputs["Factor"])
-    nt.links.new(col_link.from_socket, mix.inputs[6]); mix.inputs[7].default_value = (*hot_color, 1)
-    nt.links.remove(col_link); nt.links.new(mix.outputs[2], pv.inputs["Emission Color"])
+    nt.links.new(col_link.from_socket, mix.inputs[6])
+    mix.inputs[7].default_value = (*hot_color, 1)
+    nt.links.remove(col_link)
+    nt.links.new(mix.outputs[2], pv.inputs["Emission Color"])
     pv.inputs["Anisotropy"].default_value = 0.2
     return level.outputs[0]
 
@@ -248,7 +306,8 @@ WAKE_LEVEL = rig_volume(bpy.data.materials["Sheath_wake"],
 # the wake's axial falloff was mapped over 0..1.3 (the body), but the wake mesh spans x = 1.3..10.3
 # in its own object space, so the whole wake evaluated to zero. Map it over the wake itself.
 _mr = next(n for n in bpy.data.materials["Sheath_wake"].node_tree.nodes if n.type == "MAP_RANGE" and n.name == "Map Range")
-_mr.inputs["From Min"].default_value = 1.3; _mr.inputs["From Max"].default_value = 10.3
+_mr.inputs["From Min"].default_value = 1.3
+_mr.inputs["From Max"].default_value = 10.3
 
 # plasma level over the descent (0 = none, 0.35 = marginal onset, 1.3 = 61 km peak)
 PLASMA_KEYS = [(1, 0.0), (90, 0.02), (180, 0.10), (250, 0.22), (F_ONSET, 0.36), (F_CUT2 - 1, 0.40),
@@ -280,28 +339,49 @@ for mname, base in (("HeatShield_RadEq", 0.34), ("NoseCap_Be_RadEq", 0.52), ("Ha
 
 # ---------------------------------------------------------------- Earth surface + atmosphere shell
 _en = bpy.data.materials["Earth_surface"].node_tree.nodes
-_noise = next(n for n in _en if n.type == "TEX_NOISE"); _noise.inputs["Scale"].default_value = 70.0; _noise.inputs["Detail"].default_value = 10.0
+_noise = next(n for n in _en if n.type == "TEX_NOISE")
+_noise.inputs["Scale"].default_value = 70.0
+_noise.inputs["Detail"].default_value = 10.0
 _er = next(n for n in _en if n.type == "VALTORGB").color_ramp
 for e, (pos, col) in zip(_er.elements, [(0.30, (0.04, 0.12, 0.32, 1)), (0.48, (0.06, 0.18, 0.42, 1)), (0.55, (0.16, 0.24, 0.18, 1)),
                                         (0.60, (0.30, 0.30, 0.20, 1)), (0.66, (0.70, 0.72, 0.74, 1)), (0.74, (0.95, 0.96, 0.98, 1)), (1.0, (1, 1, 1, 1))]):
-    e.position = pos; e.color = col
+    e.position = pos
+    e.color = col
 ATMO_MAT = bpy.data.materials.new("Atmosphere_shell")
 if not ATMO_MAT.use_nodes: ATMO_MAT.use_nodes = True
-_nt = ATMO_MAT.node_tree; _nt.nodes.clear()
-_out = _nt.nodes.new("ShaderNodeOutputMaterial"); _mix = _nt.nodes.new("ShaderNodeMixShader")
-_tr = _nt.nodes.new("ShaderNodeBsdfTransparent"); _em = _nt.nodes.new("ShaderNodeEmission")
-_lw = _nt.nodes.new("ShaderNodeLayerWeight"); _pw = _nt.nodes.new("ShaderNodeMath"); _pw.operation = "POWER"
-_lw.inputs["Blend"].default_value = 0.08; _pw.inputs[1].default_value = 5.0
-_em.inputs["Color"].default_value = (0.30, 0.52, 1.0, 1); _em.inputs["Strength"].default_value = 2.5
-_nt.links.new(_lw.outputs["Facing"], _pw.inputs[0]); _nt.links.new(_pw.outputs[0], _mix.inputs["Fac"])
-_nt.links.new(_tr.outputs[0], _mix.inputs[1]); _nt.links.new(_em.outputs[0], _mix.inputs[2]); _nt.links.new(_mix.outputs[0], _out.inputs["Surface"])
+_nt = ATMO_MAT.node_tree
+_nt.nodes.clear()
+_out = _nt.nodes.new("ShaderNodeOutputMaterial")
+_mix = _nt.nodes.new("ShaderNodeMixShader")
+_tr = _nt.nodes.new("ShaderNodeBsdfTransparent")
+_em = _nt.nodes.new("ShaderNodeEmission")
+_lw = _nt.nodes.new("ShaderNodeLayerWeight")
+_pw = _nt.nodes.new("ShaderNodeMath")
+_pw.operation = "POWER"
+_lw.inputs["Blend"].default_value = 0.08
+_pw.inputs[1].default_value = 5.0
+_em.inputs["Color"].default_value = (0.30, 0.52, 1.0, 1)
+_em.inputs["Strength"].default_value = 2.5
+_nt.links.new(_lw.outputs["Facing"], _pw.inputs[0])
+_nt.links.new(_pw.outputs[0], _mix.inputs["Fac"])
+_nt.links.new(_tr.outputs[0], _mix.inputs[1])
+_nt.links.new(_em.outputs[0], _mix.inputs[2])
+_nt.links.new(_mix.outputs[0], _out.inputs["Surface"])
 ATMO_MAT.blend_method = "BLEND"
 import bmesh as _bm
-_me = bpy.data.meshes.new("Atmosphere"); _b = _bm.new(); _bm.ops.create_uvsphere(_b, u_segments=192, v_segments=96, radius=R_EARTH + 100.0e3); _b.to_mesh(_me); _b.free()
+_me = bpy.data.meshes.new("Atmosphere")
+_b = _bm.new()
+_bm.ops.create_uvsphere(_b, u_segments=192, v_segments=96, radius=R_EARTH + 100.0e3)
+_b.to_mesh(_me)
+_b.free()
 for _p in _me.polygons: _p.use_smooth = True
 _me.materials.append(ATMO_MAT)
-ATMO = bpy.data.objects.new("Atmosphere", _me); C_env.objects.link(ATMO); ATMO.parent = EARTH
-ATMO.visible_shadow = False; ATMO.visible_diffuse = False; ATMO.visible_glossy = False
+ATMO = bpy.data.objects.new("Atmosphere", _me)
+C_env.objects.link(ATMO)
+ATMO.parent = EARTH
+ATMO.visible_shadow = False
+ATMO.visible_diffuse = False
+ATMO.visible_glossy = False
 
 # ---------------------------------------------------------------- altitude (Earth centre sits at -Y)
 ALT_KEYS = [(1, 90.0e3), (F_ONSET, 73.2e3), (F_CUT3 - 1, 73.2e3), (F_PEAK, 61.0e3), (F_EXIT, 47.0e3), (F_END, 46.2e3)]
@@ -309,7 +389,8 @@ for f, alt in ALT_KEYS:
     kf(EARTH, "location", f, -(R_EARTH + alt), 1)
 # slow ground drift under the vehicle (downrange, purely cosmetic)
 set_interp("LINEAR")
-kf(EARTH, "rotation_euler", 1, 0.0, 2); kf(EARTH, "rotation_euler", F_END, 0.12, 2)
+kf(EARTH, "rotation_euler", 1, 0.0, 2)
+kf(EARTH, "rotation_euler", F_END, 0.12, 2)
 
 # ---------------------------------------------------------------- branches
 GHOST_COARSE = ghost_mat("Ghost_coarse", (0.40, 0.68, 1.0), 1.3, 0.0)
@@ -319,10 +400,15 @@ COMMIT_MAT = ghost_mat("Committed", (1.0, 0.72, 0.28), 10.0, 0.0)
 
 def curve_setup(o, mat, depth):
     d = o.data
-    d.materials.clear(); d.materials.append(mat)
-    d.bevel_depth = depth; d.bevel_resolution = 4; d.use_fill_caps = True
-    d.bevel_factor_mapping_end = "RESOLUTION"; d.bevel_factor_mapping_start = "RESOLUTION"
-    d.bevel_factor_start = 0.0; d.bevel_factor_end = 0.0
+    d.materials.clear()
+    d.materials.append(mat)
+    d.bevel_depth = depth
+    d.bevel_resolution = 4
+    d.use_fill_caps = True
+    d.bevel_factor_mapping_end = "RESOLUTION"
+    d.bevel_factor_mapping_start = "RESOLUTION"
+    d.bevel_factor_start = 0.0
+    d.bevel_factor_end = 0.0
 
 def draw(o, f0, f1):
     set_interp("LINEAR")
@@ -341,10 +427,13 @@ refused = bpy.data.objects["branch_coarse_40.0deg_UNCLAMPED_ghost"]
 committed = fine_objs[COMMITTED]
 
 for b, o in coarse_objs.items():
-    curve_setup(o, GHOST_COARSE, 0.7); draw(o, F_COARSE0, F_COARSE1)
+    curve_setup(o, GHOST_COARSE, 0.7)
+    draw(o, F_COARSE0, F_COARSE1)
 for b, o in fine_objs.items():
-    curve_setup(o, GHOST_FINE if b != COMMITTED else COMMIT_MAT, 0.5); draw(o, F_FINE0, F_FINE1)
-curve_setup(refused, GHOST_REFUSED, 0.4); draw(refused, F_COARSE0, F_COARSE1)
+    curve_setup(o, GHOST_FINE if b != COMMITTED else COMMIT_MAT, 0.5)
+    draw(o, F_FINE0, F_FINE1)
+curve_setup(refused, GHOST_REFUSED, 0.4)
+draw(refused, F_COARSE0, F_COARSE1)
 committed.data.bevel_depth = 0.7
 
 # terminal markers
@@ -359,13 +448,19 @@ for b, o in fine_objs.items():
                          TERM_FINE if b != COMMITTED else TERM_COMMIT, C_branches), F_FINE1, b == COMMITTED))
 set_interp("BEZIER")
 for o, f_land, is_commit in terms:
-    kf(o, "scale", 1, (0.001,) * 3); kf(o, "scale", f_land - 2, (0.001,) * 3)
-    kf(o, "scale", f_land + 8, (1.4,) * 3); kf(o, "scale", f_land + 16, (1.0,) * 3)
+    kf(o, "scale", 1, (0.001,) * 3)
+    kf(o, "scale", f_land - 2, (0.001,) * 3)
+    kf(o, "scale", f_land + 8, (1.4,) * 3)
+    kf(o, "scale", f_land + 16, (1.0,) * 3)
     if not is_commit:
-        kf(o, "scale", F_FADE0, (1.0,) * 3); kf(o, "scale", F_FADE1, (0.001,) * 3)
+        kf(o, "scale", F_FADE0, (1.0,) * 3)
+        kf(o, "scale", F_FADE1, (0.001,) * 3)
     else:
-        kf(o, "scale", F_COMMIT, (1.0,) * 3); kf(o, "scale", F_COMMIT + 10, (1.8,) * 3); kf(o, "scale", F_COMMIT + 24, (1.3,) * 3)
-        kf(o, "scale", F_PUSH0 + 60, (1.3,) * 3); kf(o, "scale", F_PUSH1, (0.001,) * 3)
+        kf(o, "scale", F_COMMIT, (1.0,) * 3)
+        kf(o, "scale", F_COMMIT + 10, (1.8,) * 3)
+        kf(o, "scale", F_COMMIT + 24, (1.3,) * 3)
+        kf(o, "scale", F_PUSH0 + 60, (1.3,) * 3)
+        kf(o, "scale", F_PUSH1, (0.001,) * 3)
 
 # material visibility over the study: appear translucent, commit goes solid, others fade
 def vis(mat, keys):
@@ -383,15 +478,20 @@ vis(TERM_COMMIT, [(1, 0.0), (F_FINE1 - 3, 0.0), (F_FINE1 + 6, 0.7), (F_COMMIT - 
                   (F_PUSH0 + 80, 1.0), (F_PUSH1, 0.0)])
 # the committed branch after commit: emission strength ramps up as it solidifies
 em = COMMIT_MAT.node_tree.nodes["EM"].inputs["Strength"]
-kf_sock(em, F_COMMIT - 4, 1.6); kf_sock(em, F_COMMIT + 12, 10.0)
+kf_sock(em, F_COMMIT - 4, 1.6)
+kf_sock(em, F_COMMIT + 12, 10.0)
 
 # ---------------------------------------------------------------- markers: fork ring + aim point
 FORK_MAT = ghost_mat("Fork_ring", (0.45, 0.85, 1.0), 6.0, 0.0)
-FORK.data.materials.clear(); FORK.data.materials.append(FORK_MAT)
+FORK.data.materials.clear()
+FORK.data.materials.append(FORK_MAT)
 FORK.scale = (2.6, 1.3, 1.3)   # ring around the vehicle at the fork point
-kf(FORK, "scale", 1, (0.001,) * 3); kf(FORK, "scale", F_ONSET - 1, (0.001,) * 3)
-kf(FORK, "scale", F_ONSET + 6, (3.4, 1.7, 1.7)); kf(FORK, "scale", F_ONSET + 18, (2.6, 1.3, 1.3))
-kf(FORK, "scale", F_PUSH1 - 30, (2.6, 1.3, 1.3)); kf(FORK, "scale", F_PUSH1, (0.001,) * 3)
+kf(FORK, "scale", 1, (0.001,) * 3)
+kf(FORK, "scale", F_ONSET - 1, (0.001,) * 3)
+kf(FORK, "scale", F_ONSET + 6, (3.4, 1.7, 1.7))
+kf(FORK, "scale", F_ONSET + 18, (2.6, 1.3, 1.3))
+kf(FORK, "scale", F_PUSH1 - 30, (2.6, 1.3, 1.3))
+kf(FORK, "scale", F_PUSH1, (0.001,) * 3)
 vis(FORK_MAT, [(1, 0.0), (F_ONSET - 1, 0.0), (F_ONSET + 4, 1.0), (F_ONSET + 40, 0.55), (F_PUSH1 - 30, 0.55), (F_PUSH1, 0.0)])
 
 AIM = Vector((-158.03, 0.0, -20.0))
@@ -401,20 +501,28 @@ aim_ring.rotation_euler = (0, math.radians(90), 0)   # face the fork (ring norma
 aim_core = sphere("AIM_core", 0.5, AIM, AIM_MAT, C_markers)
 vis(AIM_MAT, [(1, 0.0), (F_CUT2 - 1, 0.0), (F_CUT2 + 12, 1.0), (F_PUSH0 + 60, 1.0), (F_PUSH1, 0.0)])
 for o in (aim_ring, aim_core):
-    kf(o, "scale", F_PUSH0 + 60, (1.0,) * 3); kf(o, "scale", F_PUSH1, (0.001,) * 3)
+    kf(o, "scale", F_PUSH0 + 60, (1.0,) * 3)
+    kf(o, "scale", F_PUSH1, (0.001,) * 3)
 
 # ---------------------------------------------------------------- RF pulses: removed (read as projectiles)
 # ---------------------------------------------------------------- cameras
 def target(name, loc):
-    e = bpy.data.objects.new(name, None); e.empty_display_size = 0.5; e.location = loc
-    C_cams.objects.link(e); e.parent = bpy.data.objects["FLIGHT"]; return e
+    e = bpy.data.objects.new(name, None)
+    e.empty_display_size = 0.5
+    e.location = loc
+    C_cams.objects.link(e)
+    e.parent = bpy.data.objects["FLIGHT"]
+    return e
 
 set_interp("BEZIER")
 # cut 1: front three-quarter, slow dolly in, the nose and the forming sheath
 T1 = target("T1", (2.5, 0.0, 0.0))
 CAM1 = track_cam("CAM1_entry", 50, T1, C_cams)
-kf(CAM1, "location", 1, (-16.0, 13.0, 14.0)); kf(CAM1, "location", F_ONSET, (-8.0, 6.5, 8.0)); kf(CAM1, "location", F_CUT2, (-7.6, 6.2, 7.6))
-kf(T1, "location", 1, (3.0, 0.2, 0.0)); kf(T1, "location", F_CUT2, (2.0, 0.0, 0.2))
+kf(CAM1, "location", 1, (-16.0, 13.0, 14.0))
+kf(CAM1, "location", F_ONSET, (-8.0, 6.5, 8.0))
+kf(CAM1, "location", F_CUT2, (-7.6, 6.2, 7.6))
+kf(T1, "location", 1, (3.0, 0.2, 0.0))
+kf(T1, "location", F_CUT2, (2.0, 0.0, 0.2))
 
 # cut 2: wide fan, then push back into the vehicle
 T2 = target("T2", (-40.0, -2.0, -8.0))
@@ -430,7 +538,9 @@ kf(T2, "location", F_COARSE1, (-78.0, -6.0, -16.0))
 kf(T2, "location", F_FINE1, (-80.0, -6.0, -16.0))
 kf(T2, "location", F_PUSH0, (-70.0, -5.0, -14.0))
 kf(T2, "location", F_PUSH1, (2.5, 0.0, 0.2))
-kf(CAM2.data, "lens", F_CUT2, 35.0); kf(CAM2.data, "lens", F_PUSH0, 35.0); kf(CAM2.data, "lens", F_PUSH1, 50.0)
+kf(CAM2.data, "lens", F_CUT2, 35.0)
+kf(CAM2.data, "lens", F_PUSH0, 35.0)
+kf(CAM2.data, "lens", F_PUSH1, 50.0)
 
 # cut 3: rear three-quarter through the peak (the wake blaze), orbit forward as it abates
 T3 = target("T3", (4.5, 0.0, 0.0))
@@ -439,11 +549,14 @@ kf(CAM3, "location", F_CUT3, (14.0, 9.0, 11.0))
 kf(CAM3, "location", F_PEAK, (10.0, 8.5, 13.0))
 kf(CAM3, "location", F_PEAK + 140, (-4.0, 8.0, 13.0))
 kf(CAM3, "location", F_END, (-9.0, 7.0, 7.5))
-kf(T3, "location", F_CUT3, (5.0, 0.0, 0.0)); kf(T3, "location", F_PEAK, (5.5, 0.0, 0.0)); kf(T3, "location", F_END, (2.5, 0.0, 0.2))
+kf(T3, "location", F_CUT3, (5.0, 0.0, 0.0))
+kf(T3, "location", F_PEAK, (5.5, 0.0, 0.0))
+kf(T3, "location", F_END, (2.5, 0.0, 0.2))
 
 scene.camera = CAM1
 for f, cam in ((1, CAM1), (F_CUT2, CAM2), (F_CUT3, CAM3)):
-    m = scene.timeline_markers.new(cam.name, frame=f); m.camera = cam
+    m = scene.timeline_markers.new(cam.name, frame=f)
+    m.camera = cam
 
 # ---------------------------------------------------------------- render settings
 scene.frame_start, scene.frame_end = 1, F_END
