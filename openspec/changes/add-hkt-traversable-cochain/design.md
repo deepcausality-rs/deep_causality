@@ -78,10 +78,36 @@ moving `sequence`'s inner bound to `Semigroupal + Pure`, which is substitutive w
 rather than weaker: measured, that takes admissible inner witnesses from 19 to 3 and loses every
 effect monad in the workspace. The `apply` fold needs no such move, so the trade is unnecessary.
 
-**Consequence to state, not hide.** `A: Clone` is on the trait, and the accumulator clones the
-`Vec` once per element, so `sequence` is O(n²) in moves for an n-element container. Correct and
-lawful, and the honest characterisation is "not the fold to use in a hot loop". Recorded on each
-impl. Optimising it means a bound the trait does not carry, and does not belong in this change.
+**Consequence to state, not hide.** The accumulator is cloned once per step, and at step `k` it
+holds `k` elements, so the fold performs `n(n-1)/2` element clones — O(n²) — for an n-element
+container. Correct and lawful, and the honest characterisation is "not the fold to use in a hot
+loop". Recorded on each impl.
+
+**The clone is forced by `FnMut`, not by `A: Clone`, and it is not removable.** Three candidate
+removals were tried against the tree; the measurement matters because the obvious reading of the
+cost blames the wrong bound.
+
+- *Move the accumulator into the closure.* Fails: `Applicative::apply` requires
+  `Func: FnMut(A) -> B`, an `FnMut` may be invoked repeatedly, and a closure that moves its
+  captured `Vec` out is `FnOnce`. Measured — E0525, "this closure implements `FnOnce`, not
+  `FnMut`".
+- *Take the accumulator out on first call (`Option::take`).* Compiles and satisfies `FnMut`, and
+  it passes for `Option` and `Result`, which invoke the closure once. It is **wrong** for the
+  cartesian carriers: `VecWitness`, `DenseVectorWitness` and `CausalTensorWitness` invoke the
+  closure once per element and legitimately need the accumulator again. Measured — the cartesian
+  test panics on the second invocation. Since a shaped inner applicative is a supported carrier
+  (its own requirement in the spec), this is a correctness failure, not a trade.
+- *An `A: Copy` bound.* Changes nothing. The cloned value is the accumulator `Vec<A>`, which is
+  never `Copy` whatever `A` is. `A: Clone` is not the binding constraint and tightening it to
+  `Copy` would narrow the trait for no gain.
+
+So the cost is inherent to expressing `sequence` through `apply` while the cartesian carriers are
+admissible. Removing it means either an `FnOnce`-shaped apply — a signature change to
+`Applicative`, which the Non-Goals exclude — or the `Semigroupal` route this decision already
+rejected on the 19→3 measurement. Both are larger than this change; neither is taken here.
+
+Nothing regresses: no caller in the workspace sequences a shaped container today, the only
+`::sequence::<` occurrences outside tests being the trait's own doctest.
 
 ### Decision 2: the `haft-vec-traversable` prohibition lapsed with its premise
 
@@ -146,7 +172,7 @@ the policy is stored, or add a bound-free core carrier and convert. Both are lar
 change and neither should be picked in passing. The note is corrected so the next reader does not
 re-derive the same wrong estimate.
 
-### Decision 6: laws are the independent oracle, and each impl owes the same three
+### Decision 6: laws are the independent oracle, and two of the three are testable
 
 `unified-math-tdd-protocol` requires an expectation obtained independently of the code under test.
 Category theory supplies one directly: the laws are stated in the literature (McBride & Paterson,
@@ -159,7 +185,56 @@ Per container witness:
    `Option -> Result` is the morphism used.
 2. **Identity** — `sequence` at the identity applicative returns the structure unchanged. The
    trait's docstring warns that the weaker phrasing is vacuous; the identity applicative is used.
-3. **Composition** — sequencing a composite equals composing the sequenced results.
+3. ~~**Composition**~~ — **excluded, and not merely deferred.** Testing it needs a composite
+   applicative `Compose<M, N>` with `Type<T> = M<N<T>>`. Measured against the tree: its `Functor`
+   and `Pure` are writable, but `apply` for the composite requires `N::Type<A>: Clone`, and `A` is
+   a method-level parameter of `Applicative::apply`, so neither the trait nor the impl can state
+   that bound (E0277, then E0425 when the impl tries). This is the Rust counterpart of the Lean
+   deferral, and it means the earlier plan to "test composition in Rust at concrete carriers" was
+   wrong: there is no composite carrier to test at.
+
+   **A `CloneApplicative` capability does not fix this, and the reason is worth recording.** The
+   `CloneFunctor` precedent is structurally apt — it puts the bound on the method's own parameter,
+   which is the shape needed — but it does not transfer. `CloneFunctor` works because `clone_type`
+   is the *sole consumer* of its bound: the witness does the cloning. `Compose::apply` consumes
+   nothing; it delegates to `M::apply`, whose `A: Clone` is instantiated at `N::Type<A>` and needs
+   a genuine `Clone` impl on that type. A witness capability cannot discharge a where-clause that a
+   *different* generic function imposes. Measured: adding `N: CloneApplicative` leaves the same
+   E0277 unchanged.
+
+   The placement that does work is a GAT bound on `HKT` — `type Type<T>: Clone where T: Clone` —
+   verified to compile and to compose recursively through `Comp<M, N>`. It is rejected on cost and
+   on precedent: it would bind all 80 `type Type<T>` sites, and it is precisely the construction
+   `CloneFunctor` and `EqFunctor` were introduced to avoid, both docstrings recording that such a
+   projection bound overflows the trait solver (`E0275`) on `Free` and `Cofree`. Lifting the
+   composition law is therefore its own change, not a workaround inside this one.
+
+   **What the missing law actually costs.** Measured rather than assumed, because "a law we cannot
+   test" is worth exactly the defects it would have caught. There is one class, and it is real but
+   narrow: a traversal that visits the elements in the wrong order *while still producing the right
+   result*. A right-to-left fold that un-reverses at the end is the canonical instance. Three
+   machine-checked facts, in `lean/` scratch proofs run for this analysis:
+
+   - `seq idOps xs = seqRevEff idOps xs` — the identity law **cannot** distinguish them, because at
+     the Identity applicative there are no effects whose order could differ.
+   - their lengths agree, so `length_preserved` cannot distinguish them either.
+   - against a Writer-style carrier that logs each application, they **do** differ: the correct
+     fold logs `[1, 2, 3]`, the defective one `[3, 2, 1]`, while their *values* are identical.
+
+   So the gap is specifically **effect order**, not value correctness. Its practical weight depends
+   on whether any carrier can observe order, and one can: `StudyEffect` in `deep_causality_cfd`
+   accumulates a warning log by `merged.append(&mut m_a.warnings)` in application order. Sequencing
+   a container over that witness with a wrongly-ordered fold would emit warnings in the wrong order
+   — a diagnostic defect, not a numerical one. Every other applicative in the workspace either
+   short-circuits (`Option`, `Result`) or is order-insensitive in the relevant sense.
+
+   Two things bound the exposure. The impls here are written as a single left-to-right `for` loop
+   over the drained container, so the defect would have to be introduced deliberately; and the
+   order-preservation scenario already required by this spec pins the *result* order, which
+   coincides with effect order for this fold shape. The residual risk is a future reimplementation
+   that preserves result order while changing traversal order. That is what the composition law
+   would have caught, and it is what a Writer-carrier test should catch instead: recommended as the
+   substitute, and cheaper than the law.
 
 Plus per witness: short-circuit on the first failing element, order preservation, and for the
 tensor, shape preservation.
@@ -187,14 +262,29 @@ accumulator fold over many elements, and their laws are inductions with a *gener
 accumulator*: the accumulator is not invariant across a step, so the statement has to quantify
 over it. Nothing in the `Option` file implies them. Decision 8 records what was added.
 
-**The composition law is Rust-only here, and that is deliberate.** `lean/THEOREM_MAP.md` binds
-`haft.traversable.identity` and `haft.traversable.naturality` to `Haft/Traversable.lean` as
-proved, and lists `haft.traversable.composition` under "Not yet on the map", blocked on
-"lawful-applicative hypotheses for `M`, `N` (scaling)". This change tests composition in Rust at
-concrete carriers, which is tractable, and does not attempt the Lean proof. The two existing
-theorem ids are stated over the trait rather than per witness, so the new tests are additional
-Rust witnesses to existing theorems and introduce no new theorem id — task 7.5 confirms that
-against the theorem-map CI rather than assuming it.
+**The composition law is blocked in Rust as well as in Lean, for the same underlying reason.**
+`lean/THEOREM_MAP.md` binds `haft.traversable.identity` and `haft.traversable.naturality` to
+`Haft/Traversable.lean` as proved, and lists `haft.traversable.composition` under "Not yet on the
+map", blocked on "lawful-applicative hypotheses for `M`, `N` (scaling)". An earlier draft of this
+document claimed composition was "Rust-only here, tractable at concrete carriers". That was wrong
+and is corrected: there is no composite carrier to test at, because `Compose<M, N>::apply` cannot
+be written against `Applicative` (see law 3 above). Neither language gets the law in this change.
+
+The two existing theorem ids are stated over the trait rather than per witness, so the new tests
+are additional Rust witnesses to existing theorems and introduce no new theorem id — task 8.5
+confirms that against the theorem-map CI rather than assuming it.
+
+### Decision 7: file placement follows each crate's existing tree
+
+| Crate | Impl | Tests |
+|---|---|---|
+| `haft` | `src/extensions/hkt_vec_ext.rs` | `tests/extensions/hkt_vec_ext_tests.rs` |
+| `linear` | `src/extensions/hkt/dense_vector_witness.rs` | `tests/extensions/hkt/witness_tests.rs` |
+| `tensor` | `src/extensions/ext_hkt.rs` | `tests/extensions/causal_tensor_ext_hkt_tests.rs` |
+| `topology` | `src/extensions/hkt_cochain/mod.rs` (new) | `tests/extensions/hkt_cochain_tests.rs` (new) |
+
+Each `Traversable` impl joins the file already holding its witness's other impls, per one-type-one-module.
+New test files are registered in their `mod.rs` with `#[cfg(test)]` and in the crate's `BUILD.bazel`.
 
 ### Decision 8: the Lean proofs are a new file, and they strengthen the morphism record
 
@@ -237,18 +327,6 @@ Composition stays deferred, as it is for `Option`: `THEOREM_MAP.md` lists
 `haft.traversable.composition` as blocked on lawful-applicative hypotheses for both `M` and `N`.
 This change does not lift that, and does not add a `.list` variant of it.
 
-### Decision 7: file placement follows each crate's existing tree
-
-| Crate | Impl | Tests |
-|---|---|---|
-| `haft` | `src/extensions/hkt_vec_ext.rs` | `tests/extensions/hkt_vec_ext_tests.rs` |
-| `linear` | `src/extensions/hkt/dense_vector_witness.rs` | `tests/extensions/hkt/witness_tests.rs` |
-| `tensor` | `src/extensions/ext_hkt.rs` | `tests/extensions/causal_tensor_ext_hkt_tests.rs` |
-| `topology` | `src/extensions/hkt_cochain/mod.rs` (new) | `tests/extensions/hkt_cochain_tests.rs` (new) |
-
-Each `Traversable` impl joins the file already holding its witness's other impls, per one-type-one-module.
-New test files are registered in their `mod.rs` with `#[cfg(test)]` and in the crate's `BUILD.bazel`.
-
 ## Risks / Trade-offs
 
 **[Contradicting a live spec sets a precedent for overriding requirements on convenience]** →
@@ -259,7 +337,11 @@ and is corrected rather than inherited.
 
 **[The O(n²) clone makes `sequence` unusable on a large tensor and someone finds out in production]**
 → Stated on each impl docstring and in the spec, not left to be discovered. No caller in the
-workspace uses `sequence` on a shaped container today, so nothing regresses.
+workspace uses `sequence` on a shaped container today, so nothing regresses. Three removals were
+measured and all three fail — see Decision 1: moving the accumulator breaks `FnMut` (E0525),
+`Option::take` breaks the cartesian carriers at runtime, and `A: Copy` is irrelevant because the
+cloned value is a `Vec`. The cost is inherent to the `apply` route, not an oversight to be tidied
+away later.
 
 **[Law tests pass vacuously — the failure mode `AGENTS.md` documents]** → Phase 3 of the protocol
 is mandatory here: deliberate defects (a reversed accumulator, a dropped element, the tensor's

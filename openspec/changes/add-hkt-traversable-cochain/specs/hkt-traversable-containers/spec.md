@@ -26,18 +26,33 @@ categorical impls.
 `sequence` SHALL traverse the container in index order and SHALL preserve that order in the result, so that a successful `sequence` returns the same elements, in the same positions, that the input carried.
 
 The fold accumulates through `Applicative::apply`, keeping the inner bound at `Applicative`. The
-accumulator clones once per element, so `sequence` is O(n²) in moves for an n-element container;
-this SHALL be recorded on each impl's docstring rather than left for a caller to discover.
+accumulator is cloned once per step and holds `k` elements at step `k`, so the fold performs
+`n(n-1)/2` element clones — O(n²) — for an n-element container. This SHALL be recorded on each
+impl's docstring rather than left for a caller to discover, and the docstring SHALL attribute it
+to `apply`'s `Func: FnMut` bound rather than to `A: Clone`: an `FnMut` may be invoked repeatedly,
+so the closure cannot move its captured accumulator out, and the cartesian carriers do invoke it
+once per element. `A: Copy` would not help, because the cloned value is the accumulator `Vec`,
+which is never `Copy`.
 
 #### Scenario: Order survives a multi-element traversal
 
 - **WHEN** a container of at least three distinct successful elements is sequenced
 - **THEN** the result carries those elements in their original positions
 
-#### Scenario: The cost is documented
+#### Scenario: The cost is documented with its actual cause
 
 - **WHEN** each new `Traversable` impl's docstring is read
-- **THEN** it states that the accumulator clones once per element and that the fold is quadratic in moves
+- **THEN** it states that the fold is quadratic in element clones, and names `apply`'s `FnMut` bound as the reason the accumulator cannot be moved instead
+
+#### Scenario: An accumulator that is moved rather than cloned is rejected at compile time
+
+- **WHEN** the fold is written to move its captured accumulator out instead of cloning it
+- **THEN** it fails to compile, because such a closure is `FnOnce` and `apply` requires `FnMut`
+
+#### Scenario: An accumulator taken on first use breaks the cartesian carriers
+
+- **WHEN** the fold takes the accumulator out of an `Option` slot on first invocation to avoid the clone
+- **THEN** sequencing over a cartesian inner applicative fails at the second invocation, so the clone is required for correctness and not merely for convenience
 
 ### Requirement: A failing element short-circuits the whole traversal, and the first failure wins
 `sequence` SHALL return the inner applicative's failure when any element carries one, SHALL report the **first** such element in index order, and SHALL NOT return a partial structure.
@@ -100,13 +115,42 @@ inconsistency.
 - **WHEN** the `Traversable` impl's docstring is read
 - **THEN** it states why `sequence` preserves shape where `bind` must choose one
 
-### Requirement: Each implementation satisfies the naturality, identity and composition laws
-Each new `Traversable` impl SHALL be shown to satisfy the three laws stated on the trait, tested against the laws as an implementation-independent oracle rather than against a retyped copy of the implementation.
+### Requirement: Each implementation satisfies the naturality and identity laws
+Each new `Traversable` impl SHALL be shown to satisfy the naturality and identity laws, tested against the laws as an implementation-independent oracle rather than against a retyped copy of the implementation.
 
 The laws are McBride & Paterson, JFP 18(1) 2008 §3, already cited on the trait. A law is a property
 of every correct implementation, so a law test cannot be satisfied by restating what the code does.
 The identity law SHALL be tested at the identity applicative, not by the weaker phrasing the trait's
 docstring records as vacuous.
+
+**The composition law is excluded, because it is not expressible against the current trait.**
+Testing it needs a composite applicative witness `Compose<M, N>` with `Type<T> = M<N<T>>`. Its
+`Functor` and `Pure` are writable — measured — but its `apply` is not: implementing
+`apply` for the composite requires `N::Type<A>: Clone`, and `A` is a *method* parameter of
+`Applicative::apply`, so neither the trait nor the impl can state that bound (measured: E0277 on
+the bound, then E0425 when the impl tries to add it). This is the same shape as the Lean deferral,
+which records `haft.traversable.composition` as blocked on "lawful-applicative hypotheses for `M`,
+`N`". Any suite claiming to test composition SHALL NOT do so by asserting a weaker property under
+the composition name.
+
+The suite SHALL instead pin **effect order** with a Writer-style carrier whose `apply` accumulates a
+log, because that is the one defect class the absent law would have caught: a traversal that visits
+elements in the wrong order while still returning the right result is provably invisible to the
+identity and length laws, and visible to an order-observing carrier.
+
+A `CloneApplicative` witness capability, modelled on [`CloneFunctor`](../../../../deep_causality_unified_math/deep_causality_haft/src/functor/clone_functor.rs),
+SHALL NOT be adopted as the workaround. It was measured and does not resolve the obstruction, for a
+reason that generalises: `CloneFunctor` works because `clone_type` is the *sole consumer* of its own
+bound — the witness performs the clone itself. `Compose::apply` consumes nothing; it delegates to
+`M::apply`, whose `A: Clone` is instantiated at `N::Type<A>` and must be discharged by a real `Clone`
+impl on that type. A witness method cannot satisfy a where-clause another generic function imposes.
+
+The one placement that does work is a GAT bound on `HKT` itself
+(`type Type<T>: Clone where T: Clone`), which was verified to compile and to compose recursively.
+It SHALL NOT be adopted here: it would bind all 80 `type Type<T>` sites in the workspace, and it is
+the exact construction `CloneFunctor` and `EqFunctor` exist to avoid — their docstrings record that
+a projection bound of that shape overflows the trait solver (`E0275`) on the recursive carriers
+`Free` and `Cofree`.
 
 #### Scenario: Naturality holds across an applicative morphism
 
@@ -118,10 +162,15 @@ docstring records as vacuous.
 - **WHEN** a container is sequenced at an applicative whose `Type<T>` is `T`
 - **THEN** the result is the original container unchanged
 
-#### Scenario: Composition holds
+#### Scenario: Effect order is pinned by a carrier that observes it
 
-- **WHEN** a container is sequenced through a composite of two applicatives, and separately by composing the two sequenced results
-- **THEN** the two results are equal
+- **WHEN** a multi-element container is sequenced over an applicative whose `apply` accumulates a log in application order
+- **THEN** the log records the elements left to right, which is the defect class the absent composition law would otherwise have caught
+
+#### Scenario: The composition law is recorded as blocked rather than silently dropped
+
+- **WHEN** the law suite is reviewed against the three laws the trait's docstring states
+- **THEN** composition is absent, and the suite or the impl records that a `Compose<M, N>` applicative cannot be written because `apply` would need `N::Type<A>: Clone` on a method-level parameter
 
 #### Scenario: Every law is exercised at more than one element
 
