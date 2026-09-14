@@ -68,6 +68,27 @@ pub trait Collectable<F: HKT> {
     /// *   `T`: the element type.
     /// *   `I`: anything iterable over `T`, so a caller can pass a `Vec`, a slice's iterator, a
     ///     map, or a lazily generated sequence without collecting it first.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deep_causality_haft::{Collectable, Foldable, VecWitness};
+    ///
+    /// let xs: Vec<i32> = VecWitness::collect([1, 2, 3, 4]);
+    /// assert_eq!(xs, vec![1, 2, 3, 4]);
+    ///
+    /// // A sequence that was never a collection: no intermediate `Vec` is built.
+    /// let squares: Vec<i32> = VecWitness::collect((0..4).map(|i| i * i));
+    /// assert_eq!(squares, vec![0, 1, 4, 9]);
+    ///
+    /// // The round-trip law, on a fold that is not commutative.
+    /// let folded = VecWitness::fold(VecWitness::collect([1, 2, 3]), 0, |acc, x| acc * 2 + x);
+    /// assert_eq!(folded, [1, 2, 3].into_iter().fold(0, |acc, x| acc * 2 + x));
+    ///
+    /// // Nothing collected is the empty structure, not a failure.
+    /// let none: Vec<i32> = VecWitness::collect(Vec::new());
+    /// assert!(none.is_empty());
+    /// ```
     fn collect<T, I>(items: I) -> F::Type<T>
     where
         I: IntoIterator<Item = T>;

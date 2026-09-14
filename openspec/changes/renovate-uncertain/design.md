@@ -110,8 +110,9 @@ pub trait Collectable<F: HKT> {
 }
 ```
 
-`deep_causality_linear` implements it for `DenseVectorWitness`, `deep_causality_tensor` for
-`CausalTensorWitness` (rank 1). `uncertain` therefore depends on **`haft` only** and stays at tier 5.
+`deep_causality_haft` implements it for its own `VecWitness`, `deep_causality_linear` for
+`DenseVectorWitness`, and `deep_causality_tensor` for `CausalTensorWitness` (rank 1). `uncertain`
+therefore depends on **`haft` only** and stays at tier 5.
 
 *Alternatives considered:*
 

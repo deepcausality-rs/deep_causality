@@ -4,8 +4,8 @@
  */
 
 use deep_causality_haft::{
-    Applicative, BoxWitness, Foldable, Functor, HKT, Monad, OptionWitness, Pure, ResultWitness,
-    Traversable, VecWitness,
+    Applicative, BoxWitness, Collectable, Foldable, Functor, HKT, Monad, OptionWitness, Pure,
+    ResultWitness, Traversable, VecWitness,
 };
 
 // --- Applicative Tests ---
@@ -294,4 +294,57 @@ fn test_traversable_vec_naturality_law() {
             VecWitness::sequence::<i32, OptionWitness>(VecWitness::fmap(xs, phi));
         assert_eq!(lhs, rhs);
     }
+}
+
+// --- Collectable Tests ---
+
+#[test]
+fn test_collectable_vec_preserves_order() {
+    let v: Vec<i32> = VecWitness::collect([10, 20, 30, 40]);
+    assert_eq!(v, vec![10, 20, 30, 40]);
+}
+
+#[test]
+fn test_collectable_vec_empty_sequence() {
+    let v: Vec<i32> = VecWitness::collect(Vec::new());
+    assert!(v.is_empty());
+    // Folding the empty structure returns the initial accumulator unchanged.
+    assert_eq!(VecWitness::fold(v, 7, |acc, x| acc + x), 7);
+}
+
+/// L1 — round trip: collecting a sequence and folding the result is folding the sequence.
+///
+/// The fold is `acc * 2 + x`, which is not commutative, so a reversed or off-by-one order
+/// cannot cancel out the way a sum would.
+#[test]
+fn test_collectable_vec_round_trip_law() {
+    for xs in [vec![1, 2, 3, 4, 5], Vec::<i32>::new(), vec![9]] {
+        let through_structure =
+            VecWitness::fold(VecWitness::collect(xs.clone()), 0, |acc, x| acc * 2 + x);
+        let direct = xs.into_iter().fold(0, |acc, x| acc * 2 + x);
+        assert_eq!(through_structure, direct);
+    }
+}
+
+#[test]
+fn test_collectable_vec_from_a_lazy_sequence() {
+    // `IntoIterator` rather than `Vec`: a sequence that was never a collection needs no
+    // intermediate one.
+    let v: Vec<i32> = VecWitness::collect((0..4).map(|i| i * i));
+    assert_eq!(v, vec![0, 1, 4, 9]);
+}
+
+#[test]
+fn test_collectable_vec_element_type_carries_no_bound() {
+    let v: Vec<&str> = VecWitness::collect(["a", "b", "c"]);
+    assert_eq!(v, vec!["a", "b", "c"]);
+}
+
+/// `pure` and `collect` agree on one value here, unlike on a carrier with a shape: a `Vec` has
+/// no rank to distinguish a scalar from a run of length one.
+#[test]
+fn test_collectable_vec_one_value_matches_pure() {
+    let collected: Vec<i32> = VecWitness::collect([42]);
+    let pured: Vec<i32> = VecWitness::pure(42);
+    assert_eq!(collected, pured);
 }

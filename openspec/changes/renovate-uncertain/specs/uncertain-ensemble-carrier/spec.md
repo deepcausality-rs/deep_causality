@@ -37,7 +37,7 @@ type is introduced, which is what `sampling-hkt-composition` requires.
 
 ### Requirement: Building a rank-1 container from a sequence is a haft capability
 
-`deep_causality_haft` SHALL provide a capability that builds `F::Type<T>` from a sequence of `T`, and `deep_causality_linear` and `deep_causality_tensor` SHALL implement it for their rank-1 witnesses.
+`deep_causality_haft` SHALL provide a capability that builds `F::Type<T>` from a sequence of `T`, and `deep_causality_haft`, `deep_causality_linear` and `deep_causality_tensor` SHALL implement it for their rank-1 witnesses.
 
 No existing haft trait can do this. `Foldable` consumes a structure, `Pure` builds a one-element
 one, and `Semigroupal::zip_with` pairs two without extending either. All of haft's capability traits
@@ -54,9 +54,9 @@ keeps `deep_causality_uncertain` dependent on `haft` alone, so the crate gains n
 `linear` or `tensor` and its dependency tier does not change. This follows the placement already
 settled for `DiagonalTraversable`.
 
-#### Scenario: Both rank-1 witnesses implement it
+#### Scenario: Every rank-1 witness implements it
 
-- **WHEN** `Collectable` is instantiated at `DenseVectorWitness` and at `CausalTensorWitness`
+- **WHEN** `Collectable` is instantiated at `VecWitness`, at `DenseVectorWitness` and at `CausalTensorWitness`
 - **THEN** each returns a container of the given values in the given order, and the tensor result has rank 1 with extent equal to the number of values
 
 #### Scenario: The empty sequence is accepted
