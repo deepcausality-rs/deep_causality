@@ -11,6 +11,7 @@ mod errors;
 mod extensions;
 mod traits;
 mod types;
+mod utils;
 
 // Algos
 pub use crate::algos::hypothesis::sprt_eval;
@@ -37,8 +38,12 @@ pub use crate::types::distribution::DistributionEnum;
 pub use crate::types::distribution_parameters::BernoulliParams;
 pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
+pub use crate::types::leaf_ordinals::LeafOrdinals;
+pub use crate::types::sample_session::SampleSession;
 pub use crate::types::sampler::qmc_sampler::QmcSampler;
 pub use crate::types::sampler::sampler_seed::{clear_sampler_seed, seed_sampler};
 pub use crate::types::sampler::sequential_sampler::SequentialSampler;
 pub use crate::types::uncertain::Uncertain;
 pub use crate::types::uncertain_maybe::MaybeUncertain;
+// Utils
+pub use crate::utils::seed_mix::draw_seed;

@@ -11,18 +11,18 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## 2. The session and index-addressed draws
 
-- [ ] 2.1 Write the seed-mixing kernel `mix(seed, index, ordinal) -> u64` with literal provenance: state the construction and its source, and pin corner rows (zero seed, zero index, zero ordinal, maximal values, and the three arguments pairwise swapped) against literal expected values. Verify: swapping any two arguments changes the result.
-- [ ] 2.2 Add `SampleSession<R>` with `seeded(seed)` and `qmc(seed)` constructors, holding the seed, the sample counter and the optional Sobol sequence. No global is touched from it.
-- [ ] 2.3 Add the ordinal pre-pass: one deterministic traversal assigning each distinct node an ordinal, deduping by node identity within that traversal. Verify by test that the pointer never reaches the generator — build two structurally identical trees separately, draw both at the same index under equal seeds, and assert the draws are equal.
-- [ ] 2.4 Route `SequentialSampler` leaf draws through `Xoshiro256::from_seed(mix(..))` instead of the ambient RNG, keeping the existing per-call memo that makes `x + x` one draw. Verify: `x + x == 2 * x` at every index.
-- [ ] 2.5 Add `Uncertain::sample_at(&self, &mut SampleSession<R>, index)` beside the existing `sample_with_index`, with the cache still present but unused by the new path. Verify: a seeded session reproduces its own vector across two processes.
-- [ ] 2.6 Verify the QMC path agrees: a QMC session at a given index yields the same value as `QmcSampler` does today for that Sobol point, since dimension assignment already worked this way.
+- [x] 2.1 Write the seed-mixing kernel `mix(seed, index, ordinal) -> u64` with literal provenance: state the construction and its source, and pin corner rows (zero seed, zero index, zero ordinal, maximal values, and the three arguments pairwise swapped) against literal expected values. Verify: swapping any two arguments changes the result.
+- [x] 2.2 Add `SampleSession` with `seeded(seed)`, `qmc(seed)` and `from_entropy()` constructors, holding the seed, the sample counter and the mode. It carries no scalar parameter and no Sobol sequence — see design D10. No global is touched from it except `from_entropy`, which draws one seed.
+- [x] 2.3 Add the ordinal pre-pass: one deterministic traversal assigning each distinct node an ordinal, deduping by node identity within that traversal. Verify by test that the pointer never reaches the generator — build two structurally identical trees separately, draw both at the same index under equal seeds, and assert the draws are equal.
+- [x] 2.4 Route `SequentialSampler` leaf draws through `Xoshiro256::from_seed(mix(..))` instead of the ambient RNG, keeping the existing per-call memo that makes `x + x` one draw. Verify: `x + x == 2 * x` at every index.
+- [x] 2.5 Add `Uncertain::sample_at(&self, &mut SampleSession, index)` beside the existing `sample_with_index`, with the cache still present but unused by the new path. Verify: a seeded session reproduces its own vector across two processes.
+- [x] 2.6 Verify the QMC path agrees: a QMC session at a given index yields the same value as `QmcSampler` does today for that Sobol point, since dimension assignment already worked this way.
 
 ## 3. Removing the globals
 
 - [ ] 3.1 Move every draw call site onto the session, then delete `types/cache/` (`GlobalSampleCache`, `with_global_cache`, `SamplerKind`, `SampleCacheKey`) and `seed_sampler` / `clear_sampler_seed` / `SAMPLER_SEED`. **Ask before deleting** — Golden Rule 2.
 - [ ] 3.2 Rewrite the cache-and-seed call sites against a session: 38 originally, plus the 24 seeds task 3.4 added, across ten test files.
-- [ ] 3.3 Convert the 24 `rusty_fork_test!` invocations to ordinary tests and drop `rusty-fork` from the dev-dependencies. Verify: the suite passes with `--test-threads` at the default and at 1.
+- [ ] 3.3 Convert the 24 `rusty_fork_test!` invocations to ordinary tests and drop `rusty-fork` from the dev-dependencies. **Measured ahead of time:** with the forks stripped, 300 runs at `--test-threads=16` fail only in `types::cache::cache_tests`, and 0 of 300 fail once those are excluded — so the fork protects the cache tests alone, and they go with the cache in 3.1. Also drop the 17 `cfg(not(miri))` gates the fork forced, which currently hide whole modules from Miri. Verify: the suite passes at `--test-threads` 1, default and 16.
 - [x] 3.4 Fix the flaky presence-gate test by seeding it. The assertion stays exact — no wider tolerance, no larger budget. Verify: 100 consecutive runs agree.
 - [ ] 3.5 Verify no mutable global remains: `src/` contains no `static mut`, no `OnceLock`, no `thread_local!`, and `NEXT_UNCERTAIN_ID` is gone or justified in place.
 - [ ] 3.6 Group close-out: `cargo test -p deep_causality_uncertain`, `make format && make fix`, and a commit message.
@@ -56,7 +56,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 - [x] 7.1 Add `Collectable<F: HKT>` to `deep_causality_haft` beside `Foldable`, with the rationale recorded at the trait: `Foldable` consumes, `Pure` builds one element, `Semigroupal` pairs without extending, so nothing existing can build a rank-1 container from a sequence.
 - [x] 7.2 Implement it for `DenseVectorWitness` in `deep_causality_linear` and for `CausalTensorWitness` (rank 1) in `deep_causality_tensor`. Verify the empty case returns the empty container for both.
-- [ ] 7.3 Add `Uncertain::materialize<W>(&self, &mut SampleSession<R>, n)`. Verify: instantiating at both witnesses from one signature yields the same `n` values in the same order.
+- [ ] 7.3 Add `Uncertain::materialize<W>(&self, &mut SampleSession, n)`. Verify: instantiating at both witnesses from one signature yields the same `n` values in the same order.
 - [ ] 7.4 Add `deep_causality_haft` to `deep_causality_uncertain`'s dependencies and verify the crate names neither `deep_causality_linear` nor `deep_causality_tensor`, and that its tier is unchanged.
 - [ ] 7.5 Write the correlation test with **exact values**, not a count: materialise two quantities from one session, zip them through `ZipDenseVectorWitness`, and assert the i-th pair is the i-th draw of each. A count cannot tell a correct diagonal from an off-by-one one.
 - [ ] 7.6 Document the composition surface: the zip witnesses and `sequence_zip` for correlated draws, the cartesian `Traversable::sequence` named as the hazard with its measured 50⁴ result, and the memory arithmetic that says not to materialise a field.

@@ -3,119 +3,129 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{Uncertain, UncertainError, sprt_eval};
-use rusty_fork::rusty_fork_test;
+use deep_causality_uncertain::{Uncertain, UncertainError, seed_sampler, sprt_eval};
 
-rusty_fork_test! {
-    #[test]
-    fn test_evaluate_hypothesis_always_true() {
-        // Create an Uncertain<bool> that always samples true
-        let ub = Uncertain::<bool>::point(true);
-        let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 100, 0).unwrap();
-        assert!(result, "Should accept H1 for always true");
+/// Every test below that gates on a sampled decision installs this seed first.
+///
+/// `evaluate_hypothesis` runs a sequential probability ratio test, and failing to reach a verdict
+/// within the sample budget is an ordinary outcome of that test rather than a defect in it.
+/// Unseeded, `test_evaluate_hypothesis_confidence_effect` failed 2 of 400 runs. The assertions are
+/// unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
+
+#[test]
+fn test_evaluate_hypothesis_always_true() {
+    // Create an Uncertain<bool> that always samples true
+    let ub = Uncertain::<bool>::point(true);
+    let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 100, 0).unwrap();
+    assert!(result, "Should accept H1 for always true");
+}
+
+#[test]
+fn test_evaluate_hypothesis_always_false() {
+    // Create an Uncertain<bool> that always samples false
+    let ub = Uncertain::<bool>::point(false);
+    let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 100, 0).unwrap();
+    assert!(!result, "Should accept H0 for always false");
+}
+
+#[test]
+fn test_evaluate_hypothesis_fallback_true() {
+    seed_sampler(SEED);
+    // Samples are 60% true, threshold 0.5, but max_samples is too low for SPRT to conclude
+    let ub = Uncertain::<bool>::bernoulli(0.6);
+    let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 1000, 0).unwrap(); // Increased max_samples
+    assert!(result, "Should fallback to true (0.6 > 0.5)");
+}
+
+#[test]
+fn test_evaluate_hypothesis_fallback_false() {
+    seed_sampler(SEED);
+    // Samples are 40% true, threshold 0.5, but max_samples is too low for SPRT to conclude
+    let ub = Uncertain::<bool>::bernoulli(0.4);
+    let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 1000, 0).unwrap(); // Increased max_samples
+    assert!(!result, "Should fallback to false (0.4 <= 0.5)");
+}
+
+#[test]
+fn test_evaluate_hypothesis_error_propagation() {
+    // Test error propagation from sampling
+    let invalid_bernoulli = Uncertain::<bool>::bernoulli(2.0); // Invalid p
+    let result = sprt_eval::evaluate_hypothesis(&invalid_bernoulli, 0.5, 0.95, 0.01, 10, 0);
+    assert!(result.is_err());
+    match result.err().unwrap() {
+        UncertainError::BernoulliDistributionError(_) => (),
+        _ => panic!("Expected BernoulliDistributionError"),
     }
+}
 
-    #[test]
-    fn test_evaluate_hypothesis_always_false() {
-        // Create an Uncertain<bool> that always samples false
-        let ub = Uncertain::<bool>::point(false);
-        let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 100, 0).unwrap();
-        assert!(!result, "Should accept H0 for always false");
-    }
+#[test]
+fn test_evaluate_hypothesis_threshold_boundaries() {
+    let ub_high = Uncertain::<bool>::point(true);
+    let ub_low = Uncertain::<bool>::point(false);
 
-    #[test]
-    fn test_evaluate_hypothesis_fallback_true() {
-        // Samples are 60% true, threshold 0.5, but max_samples is too low for SPRT to conclude
-        let ub = Uncertain::<bool>::bernoulli(0.6);
-        let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 1000, 0).unwrap(); // Increased max_samples
-        assert!(result, "Should fallback to true (0.6 > 0.5)");
-    }
+    // Threshold 0.0
+    assert!(sprt_eval::evaluate_hypothesis(&ub_high, 0.0, 0.95, 0.01, 10, 0).unwrap());
+    assert!(!sprt_eval::evaluate_hypothesis(&ub_low, 0.0, 0.95, 0.01, 10, 0).unwrap());
 
-    #[test]
-    fn test_evaluate_hypothesis_fallback_false() {
-        // Samples are 40% true, threshold 0.5, but max_samples is too low for SPRT to conclude
-        let ub = Uncertain::<bool>::bernoulli(0.4);
-        let result = sprt_eval::evaluate_hypothesis(&ub, 0.5, 0.95, 0.01, 1000, 0).unwrap(); // Increased max_samples
-        assert!(!result, "Should fallback to false (0.4 <= 0.5)");
-    }
+    // Threshold 1.0
+    // The hypothesis is p > 1.0, which is impossible for p=1.0, so this should be false.
+    assert!(!sprt_eval::evaluate_hypothesis(&ub_high, 1.0, 0.95, 0.01, 10, 0).unwrap());
+    // This case is tricky: if p0 is 1.0 - epsilon, and actual is 0.0, it should be false.
+    assert!(!sprt_eval::evaluate_hypothesis(&ub_low, 1.0, 0.95, 0.01, 10, 0).unwrap());
+}
 
-    #[test]
-    fn test_evaluate_hypothesis_error_propagation() {
-        // Test error propagation from sampling
-        let invalid_bernoulli = Uncertain::<bool>::bernoulli(2.0); // Invalid p
-        let result = sprt_eval::evaluate_hypothesis(&invalid_bernoulli, 0.5, 0.95, 0.01, 10, 0);
-        assert!(result.is_err());
-        match result.err().unwrap() {
-            UncertainError::BernoulliDistributionError(_) => (),
-            _ => panic!("Expected BernoulliDistributionError"),
-        }
-    }
+#[allow(clippy::bool_comparison)]
+#[test]
+fn test_evaluate_hypothesis_epsilon_effect() {
+    seed_sampler(SEED);
+    // Test with a distribution that's exactly on the threshold
+    let ub_50_50 = Uncertain::<bool>::bernoulli(0.5);
 
-    #[test]
-    fn test_evaluate_hypothesis_threshold_boundaries() {
-        let ub_high = Uncertain::<bool>::point(true);
-        let ub_low = Uncertain::<bool>::point(false);
+    // With a very small epsilon, it's hard to conclude, might hit max_samples
+    let result_small_epsilon =
+        sprt_eval::evaluate_hypothesis(&ub_50_50, 0.5, 0.95, 0.0001, 100, 0).unwrap();
+    // The outcome here depends on random samples, so we can't assert true/false deterministically.
+    // We just ensure it doesn't panic and returns a bool.
+    assert!((result_small_epsilon == true) || (result_small_epsilon == false));
 
-        // Threshold 0.0
-        assert!(sprt_eval::evaluate_hypothesis(&ub_high, 0.0, 0.95, 0.01, 10, 0).unwrap());
-        assert!(!sprt_eval::evaluate_hypothesis(&ub_low, 0.0, 0.95, 0.01, 10, 0).unwrap());
+    // With a large epsilon, it might conclude faster or fallback more easily
+    let result_large_epsilon =
+        sprt_eval::evaluate_hypothesis(&ub_50_50, 0.5, 0.95, 0.4, 10, 0).unwrap();
+    assert!((result_large_epsilon == true) || (result_large_epsilon == false));
+}
 
-        // Threshold 1.0
-        // The hypothesis is p > 1.0, which is impossible for p=1.0, so this should be false.
-        assert!(!sprt_eval::evaluate_hypothesis(&ub_high, 1.0, 0.95, 0.01, 10, 0).unwrap());
-        // This case is tricky: if p0 is 1.0 - epsilon, and actual is 0.0, it should be false.
-        assert!(!sprt_eval::evaluate_hypothesis(&ub_low, 1.0, 0.95, 0.01, 10, 0).unwrap());
-    }
+#[test]
+fn test_evaluate_hypothesis_confidence_effect() {
+    seed_sampler(SEED);
+    let ub_60 = Uncertain::<bool>::bernoulli(0.6);
 
-    #[allow(clippy::bool_comparison)]
-    #[test]
-    fn test_evaluate_hypothesis_epsilon_effect() {
-        // Test with a distribution that's exactly on the threshold
-        let ub_50_50 = Uncertain::<bool>::bernoulli(0.5);
+    // High confidence requires more samples or stronger evidence
+    let result_high_conf =
+        sprt_eval::evaluate_hypothesis(&ub_60, 0.5, 0.99, 0.01, 1000, 0).unwrap();
+    assert!(
+        result_high_conf,
+        "Should conclude true with high confidence"
+    );
 
-        // With a very small epsilon, it's hard to conclude, might hit max_samples
-        let result_small_epsilon =
-            sprt_eval::evaluate_hypothesis(&ub_50_50, 0.5, 0.95, 0.0001, 100, 0).unwrap();
-        // The outcome here depends on random samples, so we can't assert true/false deterministically.
-        // We just ensure it doesn't panic and returns a bool.
-        assert!((result_small_epsilon == true) || (result_small_epsilon == false));
+    // Low confidence makes it easier to conclude, but requires sufficient samples to be stable.
+    // Increased max_samples to 500 to make the test robust with random sampling.
+    let result_low_conf = sprt_eval::evaluate_hypothesis(&ub_60, 0.5, 0.70, 0.01, 500, 0).unwrap();
+    assert!(result_low_conf, "Should conclude true with low confidence");
+}
 
-        // With a large epsilon, it might conclude faster or fallback more easily
-        let result_large_epsilon =
-            sprt_eval::evaluate_hypothesis(&ub_50_50, 0.5, 0.95, 0.4, 10, 0).unwrap();
-        assert!((result_large_epsilon == true) || (result_large_epsilon == false));
-    }
+#[allow(clippy::bool_comparison)]
+#[test]
+fn test_evaluate_hypothesis_initial_sample_index() {
+    seed_sampler(SEED);
+    // Test that initial_sample_index is used correctly
+    let ub_bernoulli = Uncertain::<bool>::bernoulli(0.8);
 
-    #[test]
-    fn test_evaluate_hypothesis_confidence_effect() {
-        let ub_60 = Uncertain::<bool>::bernoulli(0.6);
+    // If we start sampling from index 100, the results should still be consistent
+    let result1 = sprt_eval::evaluate_hypothesis(&ub_bernoulli, 0.5, 0.95, 0.01, 50, 0).unwrap();
+    let result2 = sprt_eval::evaluate_hypothesis(&ub_bernoulli, 0.5, 0.95, 0.01, 50, 100).unwrap();
 
-        // High confidence requires more samples or stronger evidence
-        let result_high_conf =
-            sprt_eval::evaluate_hypothesis(&ub_60, 0.5, 0.99, 0.01, 1000, 0).unwrap();
-        assert!(
-            result_high_conf,
-            "Should conclude true with high confidence"
-        );
-
-        // Low confidence makes it easier to conclude, but requires sufficient samples to be stable.
-        // Increased max_samples to 500 to make the test robust with random sampling.
-        let result_low_conf = sprt_eval::evaluate_hypothesis(&ub_60, 0.5, 0.70, 0.01, 500, 0).unwrap();
-        assert!(result_low_conf, "Should conclude true with low confidence");
-    }
-
-    #[allow(clippy::bool_comparison)]
-    #[test]
-    fn test_evaluate_hypothesis_initial_sample_index() {
-        // Test that initial_sample_index is used correctly
-        let ub_bernoulli = Uncertain::<bool>::bernoulli(0.8);
-
-        // If we start sampling from index 100, the results should still be consistent
-        let result1 = sprt_eval::evaluate_hypothesis(&ub_bernoulli, 0.5, 0.95, 0.01, 50, 0).unwrap();
-        let result2 = sprt_eval::evaluate_hypothesis(&ub_bernoulli, 0.5, 0.95, 0.01, 50, 100).unwrap();
-
-        // Due to randomness, we can't assert exact equality, but they should both lean towards true
-        assert!((result1 == true) || (result1 == false));
-        assert!((result2 == true) || (result2 == false));
-    }
+    // Due to randomness, we can't assert exact equality, but they should both lean towards true
+    assert!((result1 == true) || (result1 == false));
+    assert!((result2 == true) || (result2 == false));
 }

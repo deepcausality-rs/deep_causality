@@ -15,8 +15,6 @@ fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
     );
 }
 
-use rusty_fork::rusty_fork_test;
-
 /// Every test below that observes a draw installs this seed first.
 ///
 /// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
@@ -25,10 +23,9 @@ use rusty_fork::rusty_fork_test;
 /// assertions are unchanged; only the entropy source is.
 const SEED: u64 = 0x5EED_2026;
 
-rusty_fork_test! {
-    #[test]
-    fn integration_test_sensor_fusion_and_aggregation() {
-        seed_sampler(SEED);
+#[test]
+fn integration_test_sensor_fusion_and_aggregation() {
+    seed_sampler(SEED);
     // Scenario: Two sensors measure a value, each with some noise.
     // We combine their readings by averaging and estimate the combined value's properties.
 
@@ -48,7 +45,9 @@ rusty_fork_test! {
 
     // Estimate the expected value (mean) of the combined reading
     let num_samples_expected_value = 10000;
-    let estimated_mean = combined_reading.expected_value(num_samples_expected_value).expect("Expected value calculation failed");
+    let estimated_mean = combined_reading
+        .expected_value(num_samples_expected_value)
+        .expect("Expected value calculation failed");
 
     // The theoretical mean of the average of two independent normal distributions
     // is the average of their means.
@@ -59,7 +58,9 @@ rusty_fork_test! {
 
     // Estimate the standard deviation of the combined reading
     let num_samples_std_dev = 10000;
-    let estimated_std_dev = combined_reading.standard_deviation(num_samples_std_dev).expect("Expected value calculation failed");
+    let estimated_std_dev = combined_reading
+        .standard_deviation(num_samples_std_dev)
+        .expect("Expected value calculation failed");
 
     // The theoretical variance of the average of two independent normal distributions
     // is (Var1 + Var2) / n^2, where n=2.
@@ -69,11 +70,10 @@ rusty_fork_test! {
 
     // Assert that the estimated standard deviation is close to the theoretical combined std_dev
     assert_approx_eq(estimated_std_dev, theoretical_combined_std_dev, 0.1); // Allow some tolerance
-
 }
 
 #[test]
-fn integration_test_decision_making_under_uncertainty(){
+fn integration_test_decision_making_under_uncertainty() {
     seed_sampler(SEED);
     // Scenario: A system needs to decide if a condition is true, given uncertain inputs.
 
@@ -97,12 +97,16 @@ fn integration_test_decision_making_under_uncertainty(){
     // Decision 1: Use to_bool with high confidence.
     // For this scenario, input_a_doubled (mean 30) is generally greater than input_b (mean 25).
     // So, with high confidence, the condition should be true.
-    let decision_high_confidence = condition.to_bool(0.99, 0.95, 0.05, 1000).expect("Expected value calculation failed");
+    let decision_high_confidence = condition
+        .to_bool(0.99, 0.95, 0.05, 1000)
+        .expect("Expected value calculation failed");
     assert!(decision_high_confidence);
 
     // Decision 2: Use probability_exceeds with a threshold.
     // What is the probability that the condition is true?
-    let estimated_prob_condition_true = condition.estimate_probability(10000).expect("Expected value calculation failed");
+    let estimated_prob_condition_true = condition
+        .estimate_probability(10000)
+        .expect("Expected value calculation failed");
 
     // Since input_a_doubled (mean 30) is generally higher than input_b (mean 25),
     // the probability of (A*2 > B) should be significantly greater than 0.5.
@@ -115,7 +119,8 @@ fn integration_test_decision_making_under_uncertainty(){
 
     let condition_false = input_a_doubled.lt_uncertain(&input_c); // (A*2) < C (20-40 vs 50)
 
-    let decision_false_high_confidence = condition_false.to_bool(0.99, 0.95, 0.05, 1000).expect("Expected value calculation failed");
+    let decision_false_high_confidence = condition_false
+        .to_bool(0.99, 0.95, 0.05, 1000)
+        .expect("Expected value calculation failed");
     assert!(decision_false_high_confidence);
-}
 }

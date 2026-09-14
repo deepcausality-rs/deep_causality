@@ -51,6 +51,24 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "utils",
+    srcs = glob([
+        "tests/utils/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "errors",
     srcs = glob([
         "tests/errors/*_tests.rs",
@@ -144,6 +162,42 @@ rust_test_suite(
     name = "types_distribution_param",
     srcs = glob([
         "tests/types/distribution_parameters/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_leaf_ordinals",
+    srcs = glob([
+        "tests/types/leaf_ordinals/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_sample_session",
+    srcs = glob([
+        "tests/types/sample_session/*_tests.rs",
     ]),
     tags = [
         "unit-test",

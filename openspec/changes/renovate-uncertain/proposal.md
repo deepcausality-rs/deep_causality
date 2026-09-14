@@ -21,8 +21,8 @@ The cost is measured, not argued:
   `DistributionEnum<Float106>::sample` have byte-identical bodies. `f32` and `BFloat16` cannot be
   used at all.
 - **It pins a downstream generic crate.** `deep_causality_cfd` bounds its uncertain march on
-  `CfdScalar + ProbabilisticType` at ten sites, so a CFD run at `f32` with uncertain inflow does not
-  compile — at the one crate that models uncertainty.
+  `ProbabilisticType` at sixteen bound occurrences across eight files, so a CFD run at `f32` with
+  uncertain inflow does not compile — at the one crate that models uncertainty.
 - **The cache does not do what its shape suggests.** It is consulted only at the root
   (`types/sampler/` contains zero references to it); within a draw the samplers memoize by node
   identity in a per-call map, and that map is what keeps `x + x` on one draw.
@@ -33,9 +33,9 @@ The cost is measured, not argued:
   `thread_local!`, so the global that ships is the one branch the suite never executes.
 - **The globals are visible in the test suite.** 24 `rusty_fork_test!` invocations across 20 files,
   and a whole dev-dependency on `rusty-fork`, exist to isolate state the crate should not have.
-- **The suite is flaky today.** `uncertain_maybe_f106_tests::test_lift_to_uncertain_success` failed
-  2 of 12 consecutive runs: it gates an unseeded SPRT at p = 0.9 against a 0.8 threshold with a
-  100-sample budget, and the sampler's default entropy source is the OS.
+- **The suite is flaky today.** Five tests failed across ~360 runs, and 41 sampled-decision call
+  sites were exposed with not one of them seeded. They gate unseeded sequential probability ratio
+  tests — p = 0.9 against a 0.8 threshold on a 100-sample budget — against the OS entropy source.
 
 Separately, the crate carries four HKT node arms — `PureOp`, `FmapOp`, `ApplyOp`, `BindOp` — that no
 public constructor produces. They were an attempt at categorical composition that could not be
@@ -52,9 +52,10 @@ renovation." This is that renovation.
 
 - **BREAKING** `GlobalSampleCache`, `with_global_cache`, `SamplerKind`, `seed_sampler` and
   `clear_sampler_seed` leave the public API.
-- A `SampleSession<R>` value the caller owns replaces them: it holds the seed, the sample counter
-  and, for QMC, the Sobol sequence. `SampleSession::seeded(seed)` and `SampleSession::qmc(seed)`
-  replace the two seed functions.
+- A `SampleSession` value the caller owns replaces them: it holds the seed, the sample counter
+  and the mode. `SampleSession::seeded(seed)` and `SampleSession::qmc(seed)` replace the two seed
+  functions. It carries no scalar parameter, so one session can drive draws at several scalars and
+  correlate them by index.
 - Every leaf draw becomes a pure function of (session seed, sample index, leaf ordinal). The ordinal
   is assigned by one deterministic pre-pass, which is exactly what the QMC sampler already does for
   Sobol dimensions. Reproducibility stops being a cache property and becomes a construction
@@ -80,7 +81,7 @@ renovation." This is that renovation.
   `MaybeUncertain` probabilities. `f64` survives only at the display boundary.
 - `MaybeUncertain<R>` keeps its name and its twelve CFD call sites, and is reimplemented over the
   generic tree rather than as four per-type files.
-- `deep_causality_cfd` drops `+ ProbabilisticType` from ten bounds and compiles at `f32`.
+- `deep_causality_cfd` drops `+ ProbabilisticType` from sixteen bound occurrences and compiles at `f32`.
 
 **Goal 3 — categorical composition.**
 

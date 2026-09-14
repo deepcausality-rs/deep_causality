@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ### Requirement: The sampler's state is a value the caller owns
 
-`deep_causality_uncertain` SHALL own no global mutable state, and every input a draw depends on SHALL be reachable from a `SampleSession<R>` the caller constructs, holds and drops.
+`deep_causality_uncertain` SHALL own no global mutable state, and every input a draw depends on SHALL be reachable from a `SampleSession` the caller constructs, holds and drops.
 
 Five globals exist today: `NEXT_UNCERTAIN_ID`, `GLOBAL_SAMPLE_CACHE`, the thread-local
 `SAMPLER_SEED` slot, the sample-index source, and `deep_causality_rand`'s thread RNG. After this

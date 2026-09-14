@@ -20,7 +20,6 @@
 
 use deep_causality_num::Float106;
 use deep_causality_uncertain::{QmcSampler, Uncertain, UncertainError, seed_sampler};
-use rusty_fork::rusty_fork_test;
 
 fn f106(x: f64) -> Float106 {
     Float106::from(x)
@@ -147,8 +146,6 @@ fn test_f106_branch_leaf_collection() {
 // Batch estimators and cache (process-isolated)
 // =============================================================================
 
-rusty_fork_test! {
-
 #[test]
 fn test_expected_value_qmc_matches_mean() {
     let u = Uncertain::normal(5.0, 2.0);
@@ -186,7 +183,10 @@ fn test_qmc_converges_faster_than_mc() {
 fn test_standard_deviation_qmc_is_nonzero() {
     let u = Uncertain::normal(0.0, 1.0);
     let sd = u.standard_deviation_qmc(512, 7).unwrap();
-    assert!(sd > 0.0, "QMC standard deviation should be a positive estimate");
+    assert!(
+        sd > 0.0,
+        "QMC standard deviation should be a positive estimate"
+    );
     assert!((sd - 1.0).abs() < 0.3, "QMC sd {sd} not near 1.0");
 }
 
@@ -216,7 +216,11 @@ fn test_mc_and_qmc_caches_do_not_collide() {
 #[test]
 fn test_qmc_batch_rejects_dynamic_tree() {
     let cond = Uncertain::<bool>::bernoulli(0.5);
-    let u = Uncertain::conditional(cond, Uncertain::normal(0.0, 1.0), Uncertain::normal(9.0, 1.0));
+    let u = Uncertain::conditional(
+        cond,
+        Uncertain::normal(0.0, 1.0),
+        Uncertain::normal(9.0, 1.0),
+    );
     assert!(u.expected_value_qmc(64, 1).is_err());
 }
 
@@ -300,7 +304,11 @@ fn test_qmc_samples_f106_distributions_arithmetic_and_negation() {
     let neg = -normal;
     let s2 = QmcSampler::new(&neg, None).unwrap();
     let nv = neg.sample_with_index_qmc(0, &s2).unwrap();
-    assert!((nv.to_f64() + 3.0).abs() < 1e-9, "f106 negation gave {}", nv.to_f64());
+    assert!(
+        (nv.to_f64() + 3.0).abs() < 1e-9,
+        "f106 negation gave {}",
+        nv.to_f64()
+    );
 
     let s3 = QmcSampler::new(&uniform, None).unwrap();
     let uv = uniform.sample_with_index_qmc(0, &s3).unwrap();
@@ -315,7 +323,10 @@ fn test_qmc_memoizes_a_shared_leaf() {
     let u = n.clone() + n;
     let sampler = QmcSampler::new(&u, None).unwrap();
     let v = u.sample_with_index_qmc(0, &sampler).unwrap();
-    assert!((v - 4.0).abs() < 1e-9, "shared leaf summed to {v}, expected 4.0");
+    assert!(
+        (v - 4.0).abs() < 1e-9,
+        "shared leaf summed to {v}, expected 4.0"
+    );
 }
 
 #[test]
@@ -337,5 +348,3 @@ fn test_qmc_coordinate_errors_on_a_foreign_leaf() {
     let err = b.sample_with_index_qmc(0, &sampler_a).unwrap_err();
     assert!(matches!(err, UncertainError::SamplingError(_)));
 }
-
-} // rusty_fork_test!

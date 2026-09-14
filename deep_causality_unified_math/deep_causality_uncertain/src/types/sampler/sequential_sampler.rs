@@ -3,13 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::LeafOrdinals;
+use crate::types::sampler::leaf_draws::{AddressedDraws, AmbientDraws, LeafDraws};
 use crate::{
     DistributionEnum, IntoSampledValue, LogicalOperator, ProbabilisticType, SampledValue, Sampler,
     UncertainError, UncertainNodeContent,
 };
 use deep_causality_ast::ConstTree;
 use deep_causality_num::Float106;
-use deep_causality_rand::Rng;
 use std::collections::HashMap;
 
 /// A basic, single-threaded sampler.
@@ -44,9 +45,45 @@ impl<T: ProbabilisticType> Sampler<T> for SequentialSampler {
         // Draw from the seeded RNG when `seed_sampler` is in effect on this thread, else the
         // OS-entropy thread RNG. Branching keeps each arm monomorphic over its concrete RNG.
         crate::types::sampler::sampler_seed::with_seed_slot(|slot| match slot {
-            Some(rng) => self.evaluate_node(root_node, &mut context, rng),
-            None => self.evaluate_node(root_node, &mut context, &mut deep_causality_rand::rng()),
+            Some(rng) => self.evaluate_node(root_node, &mut context, &mut AmbientDraws { rng }),
+            None => self.evaluate_node(
+                root_node,
+                &mut context,
+                &mut AmbientDraws {
+                    rng: &mut deep_causality_rand::rng(),
+                },
+            ),
         })
+    }
+}
+
+impl SequentialSampler {
+    /// Evaluates `root_node` at one address: sample `index` of the session seeded `session_seed`,
+    /// with `ordinals` assigning a slot to every drawing leaf of that same graph.
+    ///
+    /// Each drawing leaf gets its own generator, seeded from the three numbers and nothing else, so
+    /// the value at a leaf does not depend on how many leaves preceded it in the traversal. Two
+    /// graphs sharing a leaf therefore agree about it at a given index.
+    ///
+    /// The per-call memo still runs, so a leaf reached twice within one sample is drawn once —
+    /// `x + x` is twice one draw rather than the sum of two.
+    ///
+    /// `ordinals` must have been built from this graph. A drawing leaf without one is reported
+    /// rather than drawn from elsewhere.
+    pub(crate) fn sample_addressed(
+        &self,
+        root_node: &ConstTree<UncertainNodeContent>,
+        ordinals: &LeafOrdinals,
+        session_seed: u64,
+        index: u64,
+    ) -> Result<SampledValue, UncertainError> {
+        let mut context: HashMap<usize, SampledValue> = HashMap::new();
+        let mut draws = AddressedDraws {
+            seed: session_seed,
+            index,
+            ordinals,
+        };
+        self.evaluate_node(root_node, &mut context, &mut draws)
     }
 }
 
@@ -78,7 +115,7 @@ impl SequentialSampler {
         &self,
         node: &ConstTree<UncertainNodeContent>,
         context: &mut HashMap<usize, SampledValue>,
-        rng: &mut impl Rng,
+        draws: &mut impl LeafDraws,
     ) -> Result<SampledValue, UncertainError> {
         let current_node_id = node.get_id();
 
@@ -90,12 +127,9 @@ impl SequentialSampler {
             UncertainNodeContent::Value(v) => (*v).into_sampled_value(),
             UncertainNodeContent::DistributionF64(dist) => match dist {
                 DistributionEnum::Point(v) => (*v).into_sampled_value(),
-                DistributionEnum::Normal(params) => SampledValue::Float(
-                    (DistributionEnum::Normal(*params) as DistributionEnum<f64>).sample(rng)?,
-                ),
-                DistributionEnum::Uniform(params) => SampledValue::Float(
-                    (DistributionEnum::Uniform(*params) as DistributionEnum<f64>).sample(rng)?,
-                ),
+                DistributionEnum::Normal(_) | DistributionEnum::Uniform(_) => {
+                    SampledValue::Float(draws.draw_f64(current_node_id, dist)?)
+                }
                 _ => {
                     return Err(UncertainError::UnsupportedTypeError(
                         "Expected f64 distribution".into(),
@@ -104,14 +138,9 @@ impl SequentialSampler {
             },
             UncertainNodeContent::DistributionF106(dist) => match dist {
                 DistributionEnum::Point(v) => (*v).into_sampled_value(),
-                DistributionEnum::Normal(params) => SampledValue::DoubleFloat(
-                    (DistributionEnum::Normal(*params) as DistributionEnum<Float106>)
-                        .sample(rng)?,
-                ),
-                DistributionEnum::Uniform(params) => SampledValue::DoubleFloat(
-                    (DistributionEnum::Uniform(*params) as DistributionEnum<Float106>)
-                        .sample(rng)?,
-                ),
+                DistributionEnum::Normal(_) | DistributionEnum::Uniform(_) => {
+                    SampledValue::DoubleFloat(draws.draw_f106(current_node_id, dist)?)
+                }
                 _ => {
                     return Err(UncertainError::UnsupportedTypeError(
                         "Expected Float106 distribution".into(),
@@ -120,9 +149,9 @@ impl SequentialSampler {
             },
             UncertainNodeContent::DistributionBool(dist) => match dist {
                 DistributionEnum::Point(v) => (*v).into_sampled_value(),
-                DistributionEnum::Bernoulli(params) => SampledValue::Bool(
-                    (DistributionEnum::Bernoulli(*params) as DistributionEnum<bool>).sample(rng)?,
-                ),
+                DistributionEnum::Bernoulli(_) => {
+                    SampledValue::Bool(draws.draw_bool(current_node_id, dist)?)
+                }
                 _ => {
                     return Err(UncertainError::UnsupportedTypeError(
                         "Expected bool distribution".into(),
@@ -131,21 +160,21 @@ impl SequentialSampler {
             },
             UncertainNodeContent::PureOp { value } => (*value).into_sampled_value(),
             UncertainNodeContent::FmapOp { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let operand_val = self.evaluate_node(operand, context, draws)?;
                 func.call(operand_val)
             }
             UncertainNodeContent::ApplyOp { func, arg } => {
-                let arg_val = self.evaluate_node(arg, context, rng)?;
+                let arg_val = self.evaluate_node(arg, context, draws)?;
                 func.call(arg_val)
             }
             UncertainNodeContent::BindOp { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let operand_val = self.evaluate_node(operand, context, draws)?;
                 let new_tree = func.call(operand_val);
-                self.evaluate_node(&new_tree, context, rng)?
+                self.evaluate_node(&new_tree, context, draws)?
             }
             UncertainNodeContent::ArithmeticOp { op, lhs, rhs } => {
-                let lhs_val = self.evaluate_node(lhs, context, rng)?;
-                let rhs_val = self.evaluate_node(rhs, context, rng)?;
+                let lhs_val = self.evaluate_node(lhs, context, draws)?;
+                let rhs_val = self.evaluate_node(rhs, context, draws)?;
                 match (lhs_val, rhs_val) {
                     (SampledValue::Float(l), SampledValue::Float(r)) => {
                         SampledValue::Float(op.apply(l, r))
@@ -165,7 +194,7 @@ impl SequentialSampler {
                 threshold,
                 operand,
             } => {
-                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let operand_val = self.evaluate_node(operand, context, draws)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(op.apply(o, *threshold)),
                     // The threshold is f64-sourced (a documented boundary); widen it to the
@@ -183,7 +212,7 @@ impl SequentialSampler {
             UncertainNodeContent::LogicalOp { op, operands } => {
                 let mut vals = Vec::with_capacity(operands.len());
                 for operand_node in operands {
-                    match self.evaluate_node(operand_node, context, rng)? {
+                    match self.evaluate_node(operand_node, context, draws)? {
                         SampledValue::Bool(b) => vals.push(b),
                         _ => {
                             return Err(UncertainError::UnsupportedTypeError(
@@ -222,7 +251,7 @@ impl SequentialSampler {
                 SampledValue::Bool(result)
             }
             UncertainNodeContent::FunctionOpF64 { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let operand_val = self.evaluate_node(operand, context, draws)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(func(o)),
                     // User `.map` closures are f64-typed (a documented boundary): apply at
@@ -238,7 +267,7 @@ impl SequentialSampler {
                 }
             }
             UncertainNodeContent::NegationOp { operand } => {
-                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let operand_val = self.evaluate_node(operand, context, draws)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Float(-o),
                     SampledValue::DoubleFloat(o) => SampledValue::DoubleFloat(-o),
@@ -250,7 +279,7 @@ impl SequentialSampler {
                 }
             }
             UncertainNodeContent::FunctionOpBool { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, rng)?;
+                let operand_val = self.evaluate_node(operand, context, draws)?;
                 match operand_val {
                     SampledValue::Float(o) => SampledValue::Bool(func(o)),
                     SampledValue::DoubleFloat(o) => SampledValue::Bool(func(o.to_f64())),
@@ -266,7 +295,7 @@ impl SequentialSampler {
                 if_true,
                 if_false,
             } => {
-                let condition_val = match self.evaluate_node(condition, context, rng)? {
+                let condition_val = match self.evaluate_node(condition, context, draws)? {
                     SampledValue::Bool(b) => b,
                     _ => {
                         return Err(UncertainError::UnsupportedTypeError(
@@ -276,9 +305,9 @@ impl SequentialSampler {
                 };
 
                 if condition_val {
-                    self.evaluate_node(if_true, context, rng)
+                    self.evaluate_node(if_true, context, draws)
                 } else {
-                    self.evaluate_node(if_false, context, rng)
+                    self.evaluate_node(if_false, context, draws)
                 }?
             }
         };

@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## Context
 
-`deep_causality_uncertain` is 3,285 lines of source and 247 tests, read on `main` at `7c63468d1`.
+`deep_causality_uncertain` is 3,285 lines of source and 247 tests.
 Its value type is an id from a global atomic counter plus a `ConstTree<UncertainNodeContent>` and a
 `PhantomData<T>`. The tree is untyped; the scalar lives in three node arms
 (`DistributionF64`, `DistributionF106`, `DistributionBool`) and in a three-variant `SampledValue`.
@@ -94,7 +94,7 @@ convention exists to remove, and every per-type fact this crate needs is derivab
 `materialize` is generic over the witness:
 
 ```rust
-pub fn materialize<W>(&self, session: &mut SampleSession<R>, n: usize)
+pub fn materialize<W>(&self, session: &mut SampleSession, n: usize)
     -> Result<W::Type<R>, UncertainError>
 where
     W: Collectable<W> + HKT;
@@ -164,7 +164,7 @@ left as dead arms. They asked for `Send + Sync + 'static` on a stored closure, w
 container traits withhold; the Arrow layer is where a stored function belongs, and it is now
 occupied.
 
-*Alternative considered:* `type In = (&mut SampleSession<R>, u64)`. Rejected: an associated type that
+*Alternative considered:* `type In = (&mut SampleSession, u64)`. Rejected: an associated type that
 borrows forces a lifetime onto every composite, and `run(&self, ..)` cannot mutate through `&self`
 anyway.
 
@@ -196,6 +196,27 @@ two channels to reconcile.
 unseeded SPRT at true p = 0.9 against a 0.8 threshold with a 100-sample budget can fail to accept
 within budget. The fix is a seeded session, which the renovation makes the ordinary way to write the
 test. The assertion stays exact.
+
+### D10. The session carries no scalar parameter and no Sobol sequence
+
+`SampleSession` holds a seed, a sample counter and a mode. That is all a draw's address needs, and
+both of the things the proposal originally put in it turned out not to belong.
+
+**No `<R>`.** Seed, counter and mode are integers; the scalar appears nowhere in the type, so the
+parameter would be `PhantomData` for its own sake. Dropping it buys something real rather than
+merely costing nothing: one session can drive an `Uncertain<f64>` and an `Uncertain<Float106>` and
+correlate them at the same index, which is exactly the mixed-precision input case the ensemble
+carrier exists for. Under `SampleSession<R>` those two would need separate sessions and could not
+share an index.
+
+**No Sobol sequence.** `SobolSequence::new(dim)` needs the dimension count, and that is a property
+of the tree rather than of the session: `QmcSampler::new` computes it by a pre-pass that assigns
+each stochastic leaf a dimension, so one session driving two differently shaped trees would need
+two sequences. The session holds the mode and the seed; a QMC session's seed is what the per-tree
+digital shift is derived from, which is what `QmcSampler::new(uncertain, Some(seed))` already takes.
+
+The counter also replaces today's *random* sample index with a sequential one, so `take_samples(n)`
+draws at indices `0..n` and a fresh session replays exactly rather than approximately.
 
 ## Risks / Trade-offs
 

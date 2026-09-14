@@ -6,6 +6,8 @@ pub mod cache;
 pub mod computation;
 pub mod distribution;
 pub mod distribution_parameters;
+pub mod leaf_ordinals;
+pub mod sample_session;
 pub mod sampler;
 pub mod uncertain;
 pub mod uncertain_maybe;

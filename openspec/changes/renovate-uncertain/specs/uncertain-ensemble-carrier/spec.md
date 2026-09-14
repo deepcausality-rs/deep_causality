@@ -10,7 +10,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 `Uncertain<R>` SHALL expose a single `materialize` whose carrier is a type parameter, and SHALL NOT declare a container type of its own to hold an ensemble.
 
 ```rust
-pub fn materialize<W>(&self, session: &mut SampleSession<R>, n: usize)
+pub fn materialize<W>(&self, session: &mut SampleSession, n: usize)
     -> Result<W::Type<R>, UncertainError>
 where
     W: Collectable<W> + HKT;
