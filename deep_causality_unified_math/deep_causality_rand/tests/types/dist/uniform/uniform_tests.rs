@@ -103,7 +103,10 @@ macro_rules! uniform_int_tests {
                 let sample = Uniform::<$ty, UnsignedKind>::new(10, 20)
                     .unwrap()
                     .sample(&mut rng);
-                assert_eq!(sample, 13, "the rejected word was folded back instead of redrawn");
+                assert_eq!(
+                    sample, 13,
+                    "the rejected word was folded back instead of redrawn"
+                );
             }
 
             #[test]

@@ -28,7 +28,7 @@
 
 use deep_causality_discovery::{BrcdConfig, BrcdLoaderConfig, CdlBuilder, CdlConfigBuilder};
 use deep_causality_rand::{Distribution, Rng, Xoshiro256};
-use deep_causality_stats::{Normal, RandomExt};
+use deep_causality_stats::Normal;
 use std::fs;
 use std::io::Write;
 use std::time::Instant;

@@ -5,8 +5,8 @@
 
 use crate::types::dense_vector::DenseVector;
 use deep_causality_haft::{
-    Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal,
-    Traversable,
+    Applicative, CoMonad, Collectable, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure,
+    Semigroupal, Traversable,
 };
 
 /// The higher-kinded witness for [`DenseVector`].
@@ -35,6 +35,20 @@ impl Foldable<DenseVectorWitness> for DenseVectorWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.into_data().into_iter().fold(init, f)
+    }
+}
+
+impl Collectable<DenseVectorWitness> for DenseVectorWitness {
+    /// Collects the values into a vector of the same length, in iteration order.
+    ///
+    /// A vector carries no shape beyond its length, so the sequence determines the result
+    /// completely and nothing is left to decide. An empty iterator gives the empty vector, which
+    /// `fold` then returns the initial accumulator for.
+    fn collect<T, I>(items: I) -> DenseVector<T>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        DenseVector::from_vec(items.into_iter().collect())
     }
 }
 

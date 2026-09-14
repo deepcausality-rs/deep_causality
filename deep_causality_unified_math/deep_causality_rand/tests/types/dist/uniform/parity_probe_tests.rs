@@ -44,7 +44,10 @@ fn every_float_in_the_tower_draws_from_a_range() {
         ("BFloat16", in_range::<BFloat16>(10.0, 20.0)),
     ] {
         assert!(ok, "{name}: a draw left [low, high)");
-        assert_eq!(on_high, 0, "{name}: {on_high} draws reached the exclusive bound");
+        assert_eq!(
+            on_high, 0,
+            "{name}: {on_high} draws reached the exclusive bound"
+        );
     }
 }
 
@@ -52,12 +55,30 @@ fn every_float_in_the_tower_draws_from_a_range() {
 fn every_unsigned_in_the_tower_draws_from_a_range() {
     let mut g = Xoshiro256::from_seed(7);
     // u8, u16 and u128 had no sampler at all before; none is named in the crate now.
-    assert!((0..200).all(|_| { let v: u8 = g.random_range(10u8..20); (10..20).contains(&v) }));
-    assert!((0..200).all(|_| { let v: u16 = g.random_range(10u16..20); (10..20).contains(&v) }));
-    assert!((0..200).all(|_| { let v: u32 = g.random_range(10u32..20); (10..20).contains(&v) }));
-    assert!((0..200).all(|_| { let v: u64 = g.random_range(10u64..20); (10..20).contains(&v) }));
-    assert!((0..200).all(|_| { let v: u128 = g.random_range(10u128..20); (10..20).contains(&v) }));
-    assert!((0..200).all(|_| { let v: usize = g.random_range(10usize..20); (10..20).contains(&v) }));
+    assert!((0..200).all(|_| {
+        let v: u8 = g.random_range(10u8..20);
+        (10..20).contains(&v)
+    }));
+    assert!((0..200).all(|_| {
+        let v: u16 = g.random_range(10u16..20);
+        (10..20).contains(&v)
+    }));
+    assert!((0..200).all(|_| {
+        let v: u32 = g.random_range(10u32..20);
+        (10..20).contains(&v)
+    }));
+    assert!((0..200).all(|_| {
+        let v: u64 = g.random_range(10u64..20);
+        (10..20).contains(&v)
+    }));
+    assert!((0..200).all(|_| {
+        let v: u128 = g.random_range(10u128..20);
+        (10..20).contains(&v)
+    }));
+    assert!((0..200).all(|_| {
+        let v: usize = g.random_range(10usize..20);
+        (10..20).contains(&v)
+    }));
 }
 
 #[test]
@@ -66,7 +87,10 @@ fn the_usize_defect_is_gone() {
     // returned only its bottom 2^32. Measured then: 200 000 draws never exceeded 4 294 942 982.
     let mut g = Xoshiro256::from_seed(7);
     let hi = 1usize << 40;
-    let max = (0..50_000).map(|_| g.random_range(0usize..hi)).max().unwrap();
+    let max = (0..50_000)
+        .map(|_| g.random_range(0usize..hi))
+        .max()
+        .unwrap();
     assert!(
         max > (1usize << 32),
         "the widest of 50 000 draws over 2^40 was {max}, still inside 2^32"

@@ -9,8 +9,8 @@ use alloc::vec::Vec;
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
 use deep_causality_haft::{
-    Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal,
-    Traversable,
+    Applicative, CoMonad, Collectable, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure,
+    Semigroupal, Traversable,
 };
 
 // ============================================================================
@@ -65,6 +65,25 @@ impl Foldable<CausalTensorWitness> for CausalTensorWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.into_vec().into_iter().fold(init, f)
+    }
+}
+
+impl Collectable<CausalTensorWitness> for CausalTensorWitness {
+    /// Collects the values into the rank-1 tensor of that length, in iteration order.
+    ///
+    /// Rank 1 rather than the rank 0 [`Pure`] builds: a flat sequence carries no shape, and one
+    /// value collected is a run of length one rather than a scalar. A caller wanting higher rank
+    /// reshapes afterwards, where the extents are known.
+    ///
+    /// The length is taken from the collected data, so the shape and the data cannot disagree and
+    /// the fallible constructor behind `from_vec` cannot reject them.
+    fn collect<T, I>(items: I) -> CausalTensor<T>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let data: Vec<T> = items.into_iter().collect();
+        let len = data.len();
+        CausalTensor::from_vec(data, &[len])
     }
 }
 

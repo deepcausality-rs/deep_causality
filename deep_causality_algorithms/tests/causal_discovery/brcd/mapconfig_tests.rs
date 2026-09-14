@@ -23,7 +23,7 @@ use deep_causality_algorithms::brcd::brcd_mapconfig::find_map_configs;
 use deep_causality_algorithms::brcd::brcd_mec::mec_size;
 use deep_causality_algorithms::brcd::brcd_run;
 use deep_causality_rand::{Distribution, Rng, Xoshiro256};
-use deep_causality_stats::{Normal, RandomExt};
+use deep_causality_stats::Normal;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
 

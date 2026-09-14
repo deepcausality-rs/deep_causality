@@ -54,8 +54,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## 7. The ensemble carrier
 
-- [ ] 7.1 Add `Collectable<F: HKT>` to `deep_causality_haft` beside `Foldable`, with the rationale recorded at the trait: `Foldable` consumes, `Pure` builds one element, `Semigroupal` pairs without extending, so nothing existing can build a rank-1 container from a sequence.
-- [ ] 7.2 Implement it for `DenseVectorWitness` in `deep_causality_linear` and for `CausalTensorWitness` (rank 1) in `deep_causality_tensor`. Verify the empty case returns the empty container for both.
+- [x] 7.1 Add `Collectable<F: HKT>` to `deep_causality_haft` beside `Foldable`, with the rationale recorded at the trait: `Foldable` consumes, `Pure` builds one element, `Semigroupal` pairs without extending, so nothing existing can build a rank-1 container from a sequence.
+- [x] 7.2 Implement it for `DenseVectorWitness` in `deep_causality_linear` and for `CausalTensorWitness` (rank 1) in `deep_causality_tensor`. Verify the empty case returns the empty container for both.
 - [ ] 7.3 Add `Uncertain::materialize<W>(&self, &mut SampleSession<R>, n)`. Verify: instantiating at both witnesses from one signature yields the same `n` values in the same order.
 - [ ] 7.4 Add `deep_causality_haft` to `deep_causality_uncertain`'s dependencies and verify the crate names neither `deep_causality_linear` nor `deep_causality_tensor`, and that its tier is unchanged.
 - [ ] 7.5 Write the correlation test with **exact values**, not a count: materialise two quantities from one session, zip them through `ZipDenseVectorWitness`, and assert the i-th pair is the i-th draw of each. A count cannot tell a correct diagonal from an off-by-one one.

@@ -26,7 +26,6 @@ pub trait RandUnsigned: NaturalNumber + Num + FromPrimitive + Debug {}
 /// Blanket: the tower is the only entry requirement.
 impl<T: NaturalNumber + Num + FromPrimitive + Debug> RandUnsigned for T {}
 
-
 impl<T: RandUnsigned> SampleUniform<UnsignedKind> for T {
     type Sampler = UniformUnsigned<T>;
 }
