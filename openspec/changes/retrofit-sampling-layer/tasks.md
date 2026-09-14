@@ -491,9 +491,18 @@ Independent of groups 1–5; it closes a gap that exists today for `ZipTensorWit
 
 ## 8. Close-out
 
-- [ ] 8.1 `bazel test //...` green across the workspace.
-- [ ] 8.2 Coverage on every changed file; any miss explained rather than excused.
-- [ ] 8.3 `openspec validate retrofit-sampling-layer --strict`.
-- [ ] 8.4 Prepare the final batch commit message, naming the breaking changes for the release
+- [x] 8.1 `bazel test //...` green across the workspace. **1 390 tests pass** at `0ada8bdce`.
+- [x] 8.2 Coverage on every changed file; any miss explained rather than excused. Recorded in
+      `notes/coverage.md`: twelve files at 100%, the rest at 92-99%, and every miss named.
+
+      Two are worth carrying out of this change. The four residual lines across `poisson`,
+      `bernoulli` and `sobol` are `Unexecuted instantiation` placeholders — `llvm-cov` counts each
+      monomorphisation, and `Poisson<_>` is not one that runs — so the region figures are the truer
+      reading. And `rng.rs`'s three uncovered lines are `Rng::fill`, which **no test can reach**:
+      `Fill` has no implementors anywhere in the workspace, so the method is uncallable. That is
+      dead public surface rather than a coverage gap, it predates this change, and removing it is
+      not a close-out's decision to make.
+- [x] 8.3 `openspec validate retrofit-sampling-layer --strict` — valid.
+- [x] 8.4 Prepare the final batch commit message, naming the breaking changes for the release
       notes: distributions moving `rand` → `stats`, the `StandardUniform` split, the `Rng::random`
       split, the retyped `f64` surface, and the `RealRng` removal.
