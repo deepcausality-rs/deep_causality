@@ -102,25 +102,45 @@ proved this the hard way: it cut `uncertain`'s two word-draw sites and the repai
 
 ## 3. Precision as a parameter in `stats`
 
-- [ ] 3.1 Phase 1. Declare `RandWidth` with its four impls; declare the blanket
-      `impl<T: RealField + FromPrimitive + RandWidth> Distribution<T> for StandardUniform` and the
-      generic `StandardNormal`; delete `dist_float_32.rs`, `dist_float_64.rs`,
-      `dist_float_common.rs`. Bodies `unimplemented!()`. Build; **confirm no E0119**.
-- [ ] 3.2 Phase 2. Suite: uniform mean within 0.02 of 0.5 and `E[x²]` within 0.02 of 1/3 at `f32`,
-      `f64`, `Float106`; normal variance within 0.05 of 1 at the same three; `BFloat16` draws a
-      uniform and a finite normal; **more than half of 200 `Float106` draws differ from their own
-      `f64` round trip**; at least 1 000 draws per scalar all in `[0, 1)`; a `BFloat16` mean over a
-      count small enough to avoid saturation is within 0.05 of 0.5. Run; record.
-- [ ] 3.3 Phase 3. Defect audit: (a) a single-word draw for `Float106` — **must** fail the low-limb
-      scenario; this is the load-bearing test of the group, since every moment test passes without
-      it; (b) `WORDS = 1` for `Float106`, the same defect via the constant; (c) `StandardNormal`
-      computing Box–Muller in `f64` and widening — must fail at `Float106`; (d) a narrow scalar
-      clamped to the largest value below 1 rather than redrawn — confirm an atom-of-mass check
-      exists and add one if not.
-- [ ] 3.4 Phase 4. Implement. Phase 5: mutation testing on the uniform and normal bodies; the
-      redraw loop and the word-count loop are the interesting targets.
-- [ ] 3.5 Record the line delta against the 2 293-line `rand` baseline. Clippy clean. Prepare the
-      group-3 commit message.
+- [x] 3.1 Phase 1. `RandWidth` declared with four impls; `StandardUniform`, `Open01`,
+      `OpenClosed01` and `StandardNormal` each declared as one blanket over
+      `RealField + FromPrimitive + RandWidth`, bodies `unimplemented!()`. **No E0119** — and it
+      cannot return, because `stats` owns no word sampler to collide with. Deleted the three
+      per-type files, the shared bit kernels, and the ziggurat sampler and tables: **12 per-type
+      implementations become 4 generic ones**. `cargo` and `bazel` both build; 30 failures, all
+      the phase-1 panic at the two declared sites.
+- [x] 3.2 Phase 2. `tests/types/distr/unit_interval/precision_tests.rs`, 10 tests. Observed
+      failing: **501 passed, 39 failed**, and all 39 are the `unimplemented!()` panic at the four
+      declared bodies — `StandardUniform` 18, `Open01` 7, `OpenClosed01` 5, `StandardNormal` 9.
+      No compile error, no panic from elsewhere. Recorded in `notes/tdd-group-3.md`.
+- [x] 3.3 Phase 3. Defect audit. (a) single-word draw → **1 failure**, the low-limb test at
+      `0/200`; 539 of 540 tests passed with a `Float106` that was secretly an `f64`, which is the
+      measured argument for the requirement. (b) `WORDS = 1` → 2 failures, cause and consequence.
+      (c) Box–Muller narrowed through `f64` → caught by `test_double_double_entropy`, a suite moved
+      in group 2. (d) clamp instead of redraw → **survived**; the suite was repaired.
+- [x] 3.3b The missing atom-of-mass check, added and calibrated by measurement over 200 000
+      `BFloat16` draws: the most frequent value takes 0.00429 of them when redrawn and 0.00584 when
+      clamped, a 36% excess on one point. The test asserts below 0.005. Re-running defect (d)
+      against it now fails, so the gap is closed rather than noted.
+- [x] 3.4b Phase 5. Mutation testing: first run 4 missed, all repaired, and **none was a lazily
+      written test**. Three were one dead statement — the `scale` update was the loop's last line
+      and `WORDS <= 2`, so it was never read, making every mutation of it equivalent; fixed by
+      deepening before use rather than after. One was `Open01`'s zero guard at probability
+      `2^-53`, unreachable by sampling; closed with an all-zero generator. The last was `+=` to
+      `-=` on the second limb, a `1e-16` shift no distributional test can see; closed with
+      scripted words asserting `hi + lo * 2^-53` exactly. All verified to fail under their mutant.
+      15 timeouts are unsatisfiable rejection loops — caught, not survived.
+- [x] 3.4 Phase 4. Implemented: **546 passed, 0 failed**. Four generic bodies replace twelve
+      per-type implementations. An implementation change the audit prompted — the intermediate
+      moved into `f64` and converted once — is kept for being right by construction, but the
+      docstring records that the measurement I expected to justify it **did not move**, rather
+      than implying a fix that was not one.
+- [x] 3.5 Line delta measured across the pair, which is the meaningful figure since the move
+      shifted mass between them: `rand` 2293 → **1396**, `stats` 2788 → **3499**, combined
+      5081 → **4895**. **186 lines net removed** while gaining `BFloat16` sampling and precision
+      as a parameter. Clippy clean after fixing two `manual_assign_op` sites and one unused import
+      — fixed, never `#[allow]`ed. `no_std` builds. Consumers at baseline: `rand` 101,
+      `uncertain` 248, `topology` 1697, `physics` 1775. Commit message prepared.
 
 ## 4. Seven distributions
 

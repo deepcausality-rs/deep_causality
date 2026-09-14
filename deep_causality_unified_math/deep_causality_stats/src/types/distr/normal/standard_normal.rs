@@ -3,66 +3,46 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-// `exp`/`ln` are called through `Float` rather than as inherent methods: the
-// inherent `f64::exp`/`ln` only exist when `std` is linked, while the
-// `deep_causality_num` impl routes to libm without it. Fully qualified so the
-// same call compiles under both feature levels and the import is never dead.
-use deep_causality_num::Float;
+//! The standard normal, written once and generic in the scalar.
 
-use crate::Open01;
-use crate::utils::{ziggurat_sampler, ziggurat_tables};
+use crate::{Open01, RandWidth, StandardUniform};
+use deep_causality_algebra::{Real, RealField};
+use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
-#[derive(Clone, Copy, Debug)]
+/// The standard normal distribution `N(0, 1)`.
+#[derive(Clone, Copy, Debug, Default)]
 pub struct StandardNormal;
 
-impl Distribution<f32> for StandardNormal {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
-        let x: f64 = self.sample(rng);
-        x as f32
-    }
-}
-
-impl Distribution<f64> for StandardNormal {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        #[inline]
-        fn pdf(x: f64) -> f64 {
-            Float::exp(-x * x / 2.0)
-        }
-        #[inline]
-        fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
-            // compute a random number in the tail by hand
-
-            // strange initial conditions, because the loop is not
-            // do-while, so the condition should be true on the first
-            // run, they get overwritten anyway (0 < 1, so these are
-            // good).
-            let mut x = 1.0f64;
-            let mut y = 0.0f64;
-
-            while -2.0 * y < x * x {
-                let x_: f64 = rng.sample(Open01);
-                let y_: f64 = rng.sample(Open01);
-
-                x = Float::ln(x_) / ziggurat_tables::ZIG_NORM_R;
-                y = Float::ln(y_);
-            }
-
-            if u < 0.0 {
-                x - ziggurat_tables::ZIG_NORM_R
-            } else {
-                ziggurat_tables::ZIG_NORM_R - x
-            }
-        }
-
-        ziggurat_sampler::ziggurat(
-            rng,
-            true, // this is symmetric
-            &ziggurat_tables::ZIG_NORM_X,
-            &ziggurat_tables::ZIG_NORM_F,
-            pdf,
-            zero_case,
-        )
+/// Box–Muller in the caller's scalar.
+///
+/// This replaces an `f64` ziggurat that `f32` narrowed from and `Float106` could not use at all —
+/// which is why the double-double needed its own hand-written Box–Muller beside it. One body now
+/// serves every scalar, and the transcendentals come from `Real`, so a wide scalar is computed at
+/// its own precision rather than widened from a narrow intermediate.
+///
+/// The ziggurat is faster at `f64`, avoiding two transcendentals per draw. Trading it away is a
+/// real cost and not a free simplification; it is the right trade here because a ziggurat cannot
+/// serve a scalar wider than the table it is built from, and precision as a parameter is the point
+/// of this crate. A specialised `f64` path can return behind this same generic surface later, as a
+/// measured optimisation rather than a starting assumption.
+///
+/// It also removes an unbounded loop. The ziggurat's tail is a rejection sampler with no iteration
+/// cap, so on a degenerate generator it does not terminate; Box–Muller has no rejection on its
+/// main path.
+impl<T> Distribution<T> for StandardNormal
+where
+    T: RealField + FromPrimitive + RandWidth,
+    Open01: Distribution<T>,
+    StandardUniform: Distribution<T>,
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
+        let two = T::from_u64(2).expect("2 is representable in every supported scalar");
+        // `u1` from the open interval: `ln(0)` is an infinity no check on the result would catch.
+        let u1: T = Open01.sample(rng);
+        let u2: T = StandardUniform.sample(rng);
+        let radius = Real::sqrt(-two * Real::ln(u1));
+        let theta = two * T::pi() * u2;
+        radius * Real::cos(theta)
     }
 }

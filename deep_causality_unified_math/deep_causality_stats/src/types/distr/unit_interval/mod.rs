@@ -5,9 +5,5 @@
 
 //! The unit-interval distributions: uniform on `[0, 1)` and its open variants.
 
-pub mod dist_float_106;
-pub mod dist_float_32;
-pub mod dist_float_64;
 pub mod standard_uniform;
-
-pub(crate) mod dist_float_common;
+pub mod unit_draws;

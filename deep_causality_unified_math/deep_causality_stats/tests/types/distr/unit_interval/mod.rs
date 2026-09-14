@@ -14,3 +14,6 @@ mod dist_float_32_tests;
 mod dist_float_64_tests;
 #[cfg(test)]
 mod standard_uniform_tests;
+#[cfg(test)]
+#[cfg(not(miri))]
+mod precision_tests;

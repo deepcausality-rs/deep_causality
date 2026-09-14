@@ -4,6 +4,3 @@
  */
 
 pub mod inverse_cdf;
-
-pub(crate) mod ziggurat_sampler;
-pub(crate) mod ziggurat_tables;
