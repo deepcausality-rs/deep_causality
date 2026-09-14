@@ -11,7 +11,7 @@ Put sampling on the composition surface the rest of unified math uses, and recor
 measurement rather than analogy — which categorical structures an ensemble carries, which it must
 withhold, and why the monoidal reading is the meaningful one for correlated draws.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: The sampling carrier is an existing witnessed container
 
@@ -115,9 +115,15 @@ in `errors/uncertain_error.rs`; and all four inverse-CDF functions in
 `types/sampler/qmc_sampler.rs`. Every one of those is distribution mathematics, and after the move
 every one comes from `stats`.
 
-What remains of `rand` in that crate is entropy and nothing else: `Xoshiro256` and `rng()` in
-`sampler_seed.rs` and `sequential_sampler.rs`, and `SobolSequence` with `MAX_SOBOL_DIM` in the QMC
-sampler. Those are correct dependencies on a source of numbers.
+What remains of `rand` in that crate is entropy and range sampling: `Xoshiro256` and `rng()` in
+`sampler_seed.rs` and `sequential_sampler.rs`, `SobolSequence` with `MAX_SOBOL_DIM` in the QMC
+sampler, and `Uniform<X>` with `UniformDistributionError` in the distribution enum. Those are
+correct dependencies on a source of numbers.
+
+`Uniform<X>` is the one that looks like a distribution and is not. It is built on `SampleUniform`,
+which can only be implemented in the crate that owns it, so it cannot move — the `stats-sampling`
+capability records the same ruling from the other side. Range sampling is entropy wearing an
+interval, and naming the entropy crate to reach it is truthful rather than a leftover.
 
 The crate is next in line for its own renovation, and this change does not enter it beyond the
 import moves and the two word-draw call sites. `SampledValue`, the global sample cache and the lazy
@@ -127,9 +133,10 @@ graph belong to that renovation.
 - **WHEN** `deep_causality_uncertain`'s sources are read after the migration
 - **THEN** every distribution type, distribution error and inverse-CDF function is imported from `deep_causality_stats`
 
-#### Scenario: What remains of rand is entropy
+#### Scenario: What remains of rand is entropy and range sampling
 - **WHEN** the same sources are searched for `deep_causality_rand`
-- **THEN** every remaining reference is to a generator, the thread RNG, or the Sobol sequence
+- **THEN** every remaining reference is to a generator, the thread RNG, the Sobol sequence, or the range sampler `Uniform<X>` and its error
+- **AND** no shaped distribution, distribution error or inverse-CDF function is among them
 
 #### Scenario: The word draws say so
 - **WHEN** `types/sampler/sampler_seed.rs` is read

@@ -12,7 +12,7 @@ densities today and cannot draw from them; this capability puts the samplers bes
 under the scalar bound the crate already uses, and states what each distribution guarantees —
 including the ones whose usual guarantees do not exist.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Distributions live beside the densities they belong to
 
@@ -199,6 +199,12 @@ ones. The bias is negligible for small `n` and real for large ones, and it is in
 that only checks the result is in range. The distribution SHALL be free of modulo bias, by
 rejection or by an equivalent method, and SHALL say which it uses.
 
+How negligible, measured, because it decides what a test can assert: the relative excess is `1/k`
+where `k = floor(2^64 / n)` copies of the range fit in a word. At `n = 7` that is one part in
+`2^61` — around `4e-19`, which no sample size can resolve. A uniformity test at a small range is
+therefore a test of the block map, not of modulo bias; only a range that is an appreciable fraction
+of the word can separate the two.
+
 This is what lets `deep_causality_topology` reach `stats` alone. Its Regge Metropolis step draws a
 Gaussian length change and picks an edge; the first is already a distribution and the second becomes
 one here.
@@ -210,6 +216,14 @@ one here.
 #### Scenario: The draw never leaves its range
 - **WHEN** draws are taken over ranges of 1, 2 and 1000
 - **THEN** every result lies inside the range, and a range of 1 always returns its single value
+
+#### Scenario: A range near the word size is uniform
+- **WHEN** draws are taken over a range for which `2^64 mod n` is half the range
+- **THEN** half of them fall below `2^64 mod n`, where `w % n` would put two thirds there
+
+#### Scenario: A word from the short block is redrawn
+- **WHEN** the sampler is driven by a generator whose first word lies in the range's short block
+- **THEN** that word is discarded and a second is drawn, because dropping the rejection moves each index by at most one part in `2^64` and no frequency test at any sample size can see it
 
 #### Scenario: Modulo bias is absent by construction
 - **WHEN** the implementation is read
