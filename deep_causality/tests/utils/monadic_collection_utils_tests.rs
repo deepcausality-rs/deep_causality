@@ -111,14 +111,14 @@ fn test_aggregate_uncertain_bool() {
     // We check via to_bool for simplicity or just success
     let val = res.unwrap().into_value().unwrap();
     // Assuming to_bool logic or point logic holds
-    assert!(val.to_bool(0.5, 0.95, 0.05, 100).unwrap());
+    assert!(val.to_bool_from_entropy(0.5, 0.95, 0.05, 100).unwrap());
 
     // Any
     let inputs = vec![ev_false.clone(), ev_true.clone()];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::Any, threshold);
     assert!(res.is_ok());
     let val = res.unwrap().into_value().unwrap();
-    assert!(val.to_bool(0.5, 0.95, 0.05, 100).unwrap());
+    assert!(val.to_bool_from_entropy(0.5, 0.95, 0.05, 100).unwrap());
 
     // None
     let inputs = vec![ev_false.clone(), ev_false.clone()];
@@ -126,7 +126,7 @@ fn test_aggregate_uncertain_bool() {
         monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::None, threshold);
     assert!(res.is_ok());
     let val = res.unwrap().into_value().unwrap();
-    assert!(val.to_bool(0.5, 0.95, 0.05, 100).unwrap());
+    assert!(val.to_bool_from_entropy(0.5, 0.95, 0.05, 100).unwrap());
 
     // Some(k)
     let inputs = vec![ev_true.clone(), ev_true.clone(), ev_false.clone()];
@@ -134,7 +134,7 @@ fn test_aggregate_uncertain_bool() {
         monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::Some(2), threshold);
     assert!(res.is_ok());
     let val = res.unwrap().into_value().unwrap();
-    assert!(val.to_bool(0.5, 0.95, 0.05, 100).unwrap());
+    assert!(val.to_bool_from_entropy(0.5, 0.95, 0.05, 100).unwrap());
 }
 
 #[test]

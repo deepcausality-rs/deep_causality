@@ -28,7 +28,7 @@ fn present_sample_resolves_to_its_value_and_updates_last_good() {
     let mut last_good = 0.0;
     let sample = MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(3.0, 0.01));
 
-    let (value, dropout) = source.resolve(&sample, &mut last_good).unwrap();
+    let (value, dropout) = source.resolve(&sample, &mut last_good, 0).unwrap();
     assert!(!dropout, "a present sample must not be a dropout");
     assert!(
         (value - 3.0).abs() < 0.1,
@@ -46,7 +46,7 @@ fn dropout_returns_last_good_and_records_at_default_verbosity() {
     let mut last_good = 2.5; // a prior present value.
     let absent = MaybeUncertain::<f64>::always_none();
 
-    let (value, dropout) = source.resolve(&absent, &mut last_good).unwrap();
+    let (value, dropout) = source.resolve(&absent, &mut last_good, 0).unwrap();
     assert!(dropout, "an absent sample must be a dropout");
     assert_eq!(value, 2.5, "a dropout returns the last-good value");
     assert_eq!(last_good, 2.5, "a dropout must not change the last-good");
@@ -96,7 +96,7 @@ fn present_but_non_finite_mean_is_a_dropout() {
     let mut last_good = 4.0; // a prior present value.
     let nan_sample = MaybeUncertain::<f64>::from_uncertain(Uncertain::<f64>::point(f64::NAN));
 
-    let (value, dropout) = source.resolve(&nan_sample, &mut last_good).unwrap();
+    let (value, dropout) = source.resolve(&nan_sample, &mut last_good, 0).unwrap();
     assert!(dropout, "a non-finite mean must be treated as a dropout");
     assert_eq!(value, 4.0, "a dropout returns the last-good value");
     assert_eq!(last_good, 4.0, "a dropout must not change the last-good");
@@ -113,9 +113,9 @@ fn qmc_collapse_resolves_present_sample_reproducibly() {
     let sample = MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(3.0, 0.05));
 
     let mut lg1 = 0.0;
-    let (v1, d1) = source.resolve(&sample, &mut lg1).unwrap();
+    let (v1, d1) = source.resolve(&sample, &mut lg1, 0).unwrap();
     let mut lg2 = 0.0;
-    let (v2, d2) = source.resolve(&sample, &mut lg2).unwrap();
+    let (v2, d2) = source.resolve(&sample, &mut lg2, 0).unwrap();
 
     assert!(!d1 && !d2, "a present sample must not be a dropout");
     assert!(
@@ -152,7 +152,7 @@ fn qmc_collapse_of_ineligible_sample_returns_error() {
     let sample = MaybeUncertain::<f64>::from_uncertain(dynamic);
 
     let mut last_good = 0.0;
-    let err = source.resolve(&sample, &mut last_good).unwrap_err();
+    let err = source.resolve(&sample, &mut last_good, 0).unwrap_err();
     assert!(
         format!("{err}").to_lowercase().contains("static")
             || format!("{err}").to_lowercase().contains("qmc"),

@@ -137,7 +137,7 @@ pub fn validate_stage(
         match result {
             Ok(u) => {
                 state.healthy_count += 1;
-                let std_dev = u.standard_deviation(100).unwrap_or(0.0);
+                let std_dev = u.standard_deviation_from_entropy(100).unwrap_or(0.0);
                 state.total_uncertainty += std_dev;
                 if std_dev > high_thr {
                     high_uncertainty_sensors.push(id.clone());
@@ -189,7 +189,7 @@ pub fn fusion_stage(
         logs.add_entry("stage3.fusion: no healthy temperature sensors");
     } else if temps.len() == 1 {
         let (id, u) = temps[0];
-        let mean = u.expected_value(SAMPLES).unwrap_or(f64::NAN);
+        let mean = u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN);
         state.fused_temp = Some(mean);
         logs.add_entry(&format!(
             "stage3.fusion: single sensor {id} → {mean:.1}°C (no redundancy)"
@@ -199,8 +199,10 @@ pub fn fusion_stage(
         let mut total_weight = 0.0;
         let mut values: Vec<f64> = Vec::new();
         for (_, u) in &temps {
-            let mean = u.expected_value(SAMPLES).unwrap_or(f64::NAN);
-            let std = u.standard_deviation(SAMPLES).unwrap_or(f64::NAN);
+            let mean = u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN);
+            let std = u
+                .standard_deviation_from_entropy(SAMPLES)
+                .unwrap_or(f64::NAN);
             let weight = 1.0 / (std + 0.1);
             weighted_sum += mean * weight;
             total_weight += weight;
@@ -252,7 +254,7 @@ pub fn anomaly_stage(
     let mut logs = EffectLog::new();
     for (id, result) in processed.0.iter() {
         let Ok(u) = result else { continue };
-        let mean = u.expected_value(SAMPLES).unwrap_or(f64::NAN);
+        let mean = u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN);
         let Some(bands) = band_for(id, &config) else {
             continue;
         };
@@ -283,15 +285,23 @@ pub fn fallback_stage(
     if state.healthy_count == 0 {
         logs.add_entry("stage5.fallback: no healthy sensors — falling back to historical model");
         let historical = Uncertain::normal(22.0, 3.0);
-        state.fused_temp = Some(historical.expected_value(SAMPLES).unwrap_or(f64::NAN));
+        state.fused_temp = Some(
+            historical
+                .expected_value_from_entropy(SAMPLES)
+                .unwrap_or(f64::NAN),
+        );
     }
 
     if let (Some(Ok(temp)), Some(Ok(pressure))) = (
         processed.0.get("temp_1").map(|r| r.as_ref()),
         processed.0.get("pressure_1").map(|r| r.as_ref()),
     ) {
-        let t = temp.expected_value(SAMPLES).unwrap_or(f64::NAN);
-        let p = pressure.expected_value(SAMPLES).unwrap_or(f64::NAN);
+        let t = temp
+            .expected_value_from_entropy(SAMPLES)
+            .unwrap_or(f64::NAN);
+        let p = pressure
+            .expected_value_from_entropy(SAMPLES)
+            .unwrap_or(f64::NAN);
         let expected_t = 20.0 + (p - 1013.25) * 0.02;
         let diff = (t - expected_t).abs();
         if diff > 10.0 {

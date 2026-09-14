@@ -19,7 +19,9 @@
 //!     `And` / `Or` / `Not` / `XOR` at the correct arity.
 
 use deep_causality_num::Float106;
-use deep_causality_uncertain::{QmcSampler, Uncertain, UncertainError, seed_sampler};
+use deep_causality_uncertain::{QmcSampler, SampleSession, Uncertain, UncertainError};
+
+const SEED: u64 = 0x5EED_2026;
 
 fn f106(x: f64) -> Float106 {
     Float106::from(x)
@@ -84,7 +86,7 @@ fn test_accept_conditional_sharing_leaves() {
 fn test_over_dimension_tree_is_rejected() {
     // MAX_SOBOL_DIM is 16; a sum of 17 independent normals needs 17 stochastic dimensions.
     let mut u = Uncertain::normal(0.0, 1.0);
-    for _ in 0..16 {
+    for __i in 0..16 {
         u = u + Uncertain::normal(0.0, 1.0);
     }
     let err = QmcSampler::new(&u, None).unwrap_err();
@@ -163,12 +165,12 @@ fn test_qmc_reproducible_with_same_seed() {
 
 #[test]
 fn test_qmc_converges_faster_than_mc() {
+    let session = SampleSession::seeded(SEED);
     // Uniform(0,1) has true mean 0.5. QMC error is far below MC at equal N.
     let u = Uncertain::uniform(0.0, 1.0);
     const N: usize = 4096;
 
-    seed_sampler(42);
-    let mc = u.expected_value(N).unwrap();
+    let mc = u.expected_value(&session, N).unwrap();
     let qmc = u.expected_value_qmc(N, 42).unwrap();
 
     let mc_err = (mc - 0.5).abs();
@@ -195,22 +197,6 @@ fn test_estimate_probability_qmc() {
     let u = Uncertain::<bool>::bernoulli(0.3);
     let p = u.estimate_probability_qmc(1024, 99).unwrap();
     assert!((p - 0.3).abs() < 0.03, "QMC probability {p} not near 0.3");
-}
-
-#[test]
-fn test_mc_and_qmc_caches_do_not_collide() {
-    seed_sampler(7);
-    let u = Uncertain::normal(0.0, 10.0);
-    let sampler = QmcSampler::new(&u, Some(123)).unwrap();
-
-    let mc = u.sample_with_index(3).unwrap();
-    let qmc = u.sample_with_index_qmc(3, &sampler).unwrap();
-
-    // Each sampler re-reads its own cached value; neither overwrites the other.
-    assert_eq!(mc, u.sample_with_index(3).unwrap());
-    assert_eq!(qmc, u.sample_with_index_qmc(3, &sampler).unwrap());
-    // The two draws are independent and overwhelmingly distinct.
-    assert_ne!(mc, qmc);
 }
 
 #[test]

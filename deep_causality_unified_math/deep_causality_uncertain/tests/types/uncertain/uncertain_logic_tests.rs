@@ -10,10 +10,10 @@ fn test_uncertain_bool_bitand() {
     let t = Uncertain::<bool>::point(true);
     let f = Uncertain::<bool>::point(false);
 
-    assert!((t.clone() & t.clone()).sample().unwrap());
-    assert!(!(t.clone() & f.clone()).sample().unwrap());
-    assert!(!(f.clone() & t.clone()).sample().unwrap());
-    assert!(!(f.clone() & f.clone()).sample().unwrap());
+    assert!((t.clone() & t.clone()).sample_from_entropy().unwrap());
+    assert!(!(t.clone() & f.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() & t.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() & f.clone()).sample_from_entropy().unwrap());
 }
 
 #[test]
@@ -21,10 +21,10 @@ fn test_uncertain_bool_bitor() {
     let t = Uncertain::<bool>::point(true);
     let f = Uncertain::<bool>::point(false);
 
-    assert!((t.clone() | t.clone()).sample().unwrap());
-    assert!((t.clone() | f.clone()).sample().unwrap());
-    assert!((f.clone() | t.clone()).sample().unwrap());
-    assert!(!(f.clone() | f.clone()).sample().unwrap());
+    assert!((t.clone() | t.clone()).sample_from_entropy().unwrap());
+    assert!((t.clone() | f.clone()).sample_from_entropy().unwrap());
+    assert!((f.clone() | t.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() | f.clone()).sample_from_entropy().unwrap());
 }
 
 #[test]
@@ -32,8 +32,8 @@ fn test_uncertain_bool_not() {
     let t = Uncertain::<bool>::point(true);
     let f = Uncertain::<bool>::point(false);
 
-    assert!(!(!t).sample().unwrap());
-    assert!((!f).sample().unwrap());
+    assert!(!(!t).sample_from_entropy().unwrap());
+    assert!((!f).sample_from_entropy().unwrap());
 }
 
 #[test]
@@ -41,8 +41,8 @@ fn test_uncertain_bool_bitxor() {
     let t = Uncertain::<bool>::point(true);
     let f = Uncertain::<bool>::point(false);
 
-    assert!(!(t.clone() ^ t.clone()).sample().unwrap());
-    assert!((t.clone() ^ f.clone()).sample().unwrap());
-    assert!((f.clone() ^ t.clone()).sample().unwrap());
-    assert!(!(f.clone() ^ f.clone()).sample().unwrap());
+    assert!(!(t.clone() ^ t.clone()).sample_from_entropy().unwrap());
+    assert!((t.clone() ^ f.clone()).sample_from_entropy().unwrap());
+    assert!((f.clone() ^ t.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() ^ f.clone()).sample_from_entropy().unwrap());
 }

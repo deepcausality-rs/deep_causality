@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{Uncertain, seed_sampler};
+use deep_causality_uncertain::{SampleSession, Uncertain};
 
 // Helper for approximate equality for f64
 fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
@@ -25,7 +25,7 @@ const SEED: u64 = 0x5EED_2026;
 
 #[test]
 fn integration_test_sensor_fusion_and_aggregation() {
-    seed_sampler(SEED);
+    let session = SampleSession::seeded(SEED);
     // Scenario: Two sensors measure a value, each with some noise.
     // We combine their readings by averaging and estimate the combined value's properties.
 
@@ -46,7 +46,7 @@ fn integration_test_sensor_fusion_and_aggregation() {
     // Estimate the expected value (mean) of the combined reading
     let num_samples_expected_value = 10000;
     let estimated_mean = combined_reading
-        .expected_value(num_samples_expected_value)
+        .expected_value(&session, num_samples_expected_value)
         .expect("Expected value calculation failed");
 
     // The theoretical mean of the average of two independent normal distributions
@@ -59,7 +59,7 @@ fn integration_test_sensor_fusion_and_aggregation() {
     // Estimate the standard deviation of the combined reading
     let num_samples_std_dev = 10000;
     let estimated_std_dev = combined_reading
-        .standard_deviation(num_samples_std_dev)
+        .standard_deviation(&session, num_samples_std_dev)
         .expect("Expected value calculation failed");
 
     // The theoretical variance of the average of two independent normal distributions
@@ -74,7 +74,7 @@ fn integration_test_sensor_fusion_and_aggregation() {
 
 #[test]
 fn integration_test_decision_making_under_uncertainty() {
-    seed_sampler(SEED);
+    let session = SampleSession::seeded(SEED);
     // Scenario: A system needs to decide if a condition is true, given uncertain inputs.
 
     // Input A: Uniformly distributed value
@@ -98,14 +98,14 @@ fn integration_test_decision_making_under_uncertainty() {
     // For this scenario, input_a_doubled (mean 30) is generally greater than input_b (mean 25).
     // So, with high confidence, the condition should be true.
     let decision_high_confidence = condition
-        .to_bool(0.99, 0.95, 0.05, 1000)
+        .to_bool(&session, 0.99, 0.95, 0.05, 1000)
         .expect("Expected value calculation failed");
     assert!(decision_high_confidence);
 
     // Decision 2: Use probability_exceeds with a threshold.
     // What is the probability that the condition is true?
     let estimated_prob_condition_true = condition
-        .estimate_probability(10000)
+        .estimate_probability(&session, 10000)
         .expect("Expected value calculation failed");
 
     // Since input_a_doubled (mean 30) is generally higher than input_b (mean 25),
@@ -120,7 +120,7 @@ fn integration_test_decision_making_under_uncertainty() {
     let condition_false = input_a_doubled.lt_uncertain(&input_c); // (A*2) < C (20-40 vs 50)
 
     let decision_false_high_confidence = condition_false
-        .to_bool(0.99, 0.95, 0.05, 1000)
+        .to_bool(&session, 0.99, 0.95, 0.05, 1000)
         .expect("Expected value calculation failed");
     assert!(decision_false_high_confidence);
 }

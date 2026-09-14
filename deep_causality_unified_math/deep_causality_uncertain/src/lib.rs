@@ -27,7 +27,6 @@ pub use crate::traits::probabilistic::{FromSampledValue, IntoSampledValue, Proba
 pub use crate::traits::sampler::Sampler;
 pub use crate::traits::uncertain_real::UncertainReal;
 // Types
-pub use crate::types::cache::{GlobalSampleCache, SampledValue, SamplerKind, with_global_cache};
 pub use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;
 pub use crate::types::computation::operator::comparison_operator::ComparisonOperator;
 pub use crate::types::computation::operator::logical_operator::LogicalOperator;
@@ -40,8 +39,8 @@ pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
 pub use crate::types::leaf_ordinals::LeafOrdinals;
 pub use crate::types::sample_session::SampleSession;
+pub use crate::types::sampled_value::SampledValue;
 pub use crate::types::sampler::qmc_sampler::QmcSampler;
-pub use crate::types::sampler::sampler_seed::{clear_sampler_seed, seed_sampler};
 pub use crate::types::sampler::sequential_sampler::SequentialSampler;
 pub use crate::types::uncertain::Uncertain;
 pub use crate::types::uncertain_maybe::MaybeUncertain;

@@ -75,6 +75,16 @@ where
 
     /// Opt into a variance-reduced **Quasi-Monte-Carlo collapse** of the present sample (delegated;
     /// the SPRT presence gate stays Monte-Carlo). See [`UncertainBoundarySource::with_qmc_collapse`].
+    /// Makes the presence gate reproducible from `base_seed` and the step index.
+    ///
+    /// Forwards to [`UncertainBoundarySource::with_gate_seed`]. Without it the gate's draws come
+    /// from host entropy, which is the right default for a production march and the wrong one for
+    /// a verification run that has to be bit-identical across invocations.
+    pub fn with_gate_seed(mut self, base_seed: u64) -> Self {
+        self.source = self.source.with_gate_seed(base_seed);
+        self
+    }
+
     pub fn with_qmc_collapse(mut self, base_seed: u64) -> Self {
         self.source = self.source.with_qmc_collapse(base_seed);
         self

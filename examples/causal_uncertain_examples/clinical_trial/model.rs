@@ -106,7 +106,7 @@ pub fn presence_stage(cohort: TrialCohort) -> TrialCohort {
             let p_present = p
                 .reduction
                 .is_some()
-                .estimate_probability(SAMPLES)
+                .estimate_probability_from_entropy(SAMPLES)
                 .unwrap_or(f64::NAN)
                 * 100.0;
             println!(
@@ -125,7 +125,7 @@ pub fn lift_stage(cohort: TrialCohort) -> Result<LiftedCohort, CausalityError> {
     fn lift_arm(arm: &[Patient], label: &str) -> Vec<Uncertain<f64>> {
         let mut lifted: Vec<Uncertain<f64>> = Vec::new();
         for p in arm {
-            match p.reduction.clone().lift_to_uncertain(
+            match p.reduction.clone().lift_to_uncertain_from_entropy(
                 p.min_presence,
                 LIFT_CONFIDENCE,
                 LIFT_EPSILON,
@@ -166,10 +166,10 @@ pub fn aggregate_stage(lifted: LiftedCohort) -> ArmAverages {
 
     let aspirin_mean = aspirin_aggregate
         .as_ref()
-        .map(|u| u.expected_value(SAMPLES).unwrap_or(f64::NAN));
+        .map(|u| u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN));
     let control_mean = control_aggregate
         .as_ref()
-        .map(|u| u.expected_value(SAMPLES).unwrap_or(f64::NAN));
+        .map(|u| u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN));
 
     println!("\n[Stage 4] Per-arm averages");
     println!(
@@ -210,12 +210,17 @@ pub fn verdict_stage(avgs: ArmAverages) -> ArmAverages {
 
     let aspirin_better = aspirin.greater_than(control_mean);
     let confidence = aspirin_better
-        .estimate_probability(SAMPLES)
+        .estimate_probability_from_entropy(SAMPLES)
         .unwrap_or(f64::NAN)
         * 100.0;
     println!("   P(Aspirin > Control): {confidence:.1}%");
 
-    match aspirin_better.probability_exceeds(0.9, LIFT_CONFIDENCE, LIFT_EPSILON, SAMPLES) {
+    match aspirin_better.probability_exceeds_from_entropy(
+        0.9,
+        LIFT_CONFIDENCE,
+        LIFT_EPSILON,
+        SAMPLES,
+    ) {
         Ok(true) => {
             println!("   ✅ Aspirin reduces headache pain within uncertainty bounds.")
         }

@@ -7,8 +7,6 @@
 #[cfg(not(miri))]
 mod qmc_sampler_tests;
 #[cfg(test)]
-mod sampler_seed_tests;
-#[cfg(test)]
 // Disabled under Miri: Miri's soft-float emulation drifts by ~1 ULP (got 0.9999999996 vs 1)
 #[cfg(not(miri))]
 mod sequential_sampler_tests;

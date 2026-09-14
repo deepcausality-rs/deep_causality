@@ -48,12 +48,24 @@ impl MaybeUncertain<Float106> {
     }
 
     /// Sample: `Some(Float106)` if present, else `None`.
-    pub fn sample(&self) -> Result<Option<Float106>, UncertainError> {
-        if self.is_present.sample()? {
-            Ok(Some(self.value.sample()?))
+    pub fn sample(
+        &self,
+        session: &mut crate::SampleSession,
+    ) -> Result<Option<Float106>, UncertainError> {
+        // Both channels are drawn at one index. They were drawn at two separately chosen global
+        // indices before, which made keeping them in step the cache's hardest job; at one index
+        // there are no two channels to reconcile.
+        let index = session.next_index();
+        if self.is_present.sample_at(session, index)? {
+            Ok(Some(self.value.sample_at(session, index)?))
         } else {
             Ok(None)
         }
+    }
+
+    /// As [`Self::sample`], with no session of the caller's own.
+    pub fn sample_from_entropy(&self) -> Result<Option<Float106>, UncertainError> {
+        self.sample(&mut crate::SampleSession::from_entropy())
     }
 
     /// The probability of being present.

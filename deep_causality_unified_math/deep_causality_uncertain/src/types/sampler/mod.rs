@@ -4,5 +4,4 @@
  */
 pub(crate) mod leaf_draws;
 pub(crate) mod qmc_sampler;
-pub(crate) mod sampler_seed;
 pub(crate) mod sequential_sampler;

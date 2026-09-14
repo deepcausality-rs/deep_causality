@@ -30,7 +30,7 @@ fn test_qubit_bernoulli_bridge() {
     let hist = SimQpu::new(0xC0FFEE).sample(&bell(), 4000).unwrap();
     // Qubit 0 is ~50/50 in a Bell state.
     let u = shots_to_qubit_bernoulli(&hist, 0).unwrap();
-    let p_true = u.estimate_probability(1000).unwrap();
+    let p_true = u.estimate_probability_from_entropy(1000).unwrap();
     assert!((0.4..0.6).contains(&p_true), "p(true) = {}", p_true);
 }
 
@@ -55,7 +55,7 @@ fn test_observable_bridge_parity() {
         }
     })
     .unwrap();
-    let mean = obs.expected_value(1000).unwrap();
+    let mean = obs.expected_value_from_entropy(1000).unwrap();
     assert!((mean - 1.0).abs() < 1e-9, "parity mean = {}", mean);
 }
 

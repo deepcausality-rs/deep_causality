@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_uncertain"
-version = "0.5.3"
+version = "0.5.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -53,7 +53,6 @@ workspace = true
 features = ["default"]
 
 [dev-dependencies]
-rusty-fork = { workspace = true }
 criterion = { workspace = true }
 
 [[bench]]

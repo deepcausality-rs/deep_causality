@@ -42,6 +42,7 @@ pub struct UncertainBoundarySource<R> {
     /// (`expected_value_qmc`) seeded from this base, instead of the default Monte-Carlo mean.
     /// `None` = Monte-Carlo (unchanged). See [`Self::with_qmc_collapse`].
     qmc_collapse_seed: Option<u64>,
+    gate_seed: Option<u64>,
 }
 
 impl<R> UncertainBoundarySource<R>
@@ -61,6 +62,7 @@ where
             default_value,
             verbosity: DropoutVerbosity::EachDropout,
             qmc_collapse_seed: None,
+            gate_seed: None,
         }
     }
 
@@ -102,6 +104,19 @@ where
     /// The sensor's value channel must be QMC-eligible (a statically-structured `Uncertain` of at
     /// most [`MAX_SOBOL_DIM`](deep_causality_uncertain) leaves); otherwise the collapse returns the
     /// `UncertainError` from `expected_value_qmc`.
+    /// Makes the presence gate reproducible from `base_seed` and the step.
+    ///
+    /// The gate is a sequential probability ratio test, so it draws. Without this the draws come
+    /// from host entropy and a run cannot be replayed; with it, `base_seed` and the step index
+    /// determine every gate decision in the march.
+    ///
+    /// This replaces a process-wide `seed_sampler` call, which set a thread-local slot that any
+    /// other caller on the same thread could displace.
+    pub fn with_gate_seed(mut self, base_seed: u64) -> Self {
+        self.gate_seed = Some(base_seed);
+        self
+    }
+
     pub fn with_qmc_collapse(mut self, base_seed: u64) -> Self {
         self.qmc_collapse_seed = Some(base_seed);
         self
@@ -127,6 +142,12 @@ where
     /// updates `last_good` and returns `(value, false)`; on a dropout (presence error or a
     /// non-finite mean) it returns `(last_good, true)` without changing `last_good`.
     ///
+    /// `step` is the index of this sample in the march. It selects the QMC digital shift, so a
+    /// run is reproducible from the configured base seed and the step alone. It replaces the
+    /// `Uncertain` id this used to add, which came from a process-wide allocation counter: the
+    /// shift then depended on how many uncertain values the whole program had built beforehand,
+    /// which is reproducible only for a program that builds nothing else.
+    ///
     /// # Errors
     /// `UncertainError` for a sampling/gate failure that is **not** a presence error (those are
     /// dropouts, not errors).
@@ -134,24 +155,31 @@ where
         &self,
         sample: &MaybeUncertain<R>,
         last_good: &mut R,
+        step: u64,
     ) -> Result<(R, bool), UncertainError> {
+        // One session per step. Seeded when the caller asked for reproducibility, from entropy
+        // otherwise; either way the seed is this value's own rather than something ambient.
+        let gate = match self.gate_seed {
+            Some(base) => deep_causality_uncertain::SampleSession::seeded(base.wrapping_add(step)),
+            None => deep_causality_uncertain::SampleSession::from_entropy(),
+        };
+
         match sample.lift_to_uncertain(
+            &gate,
             self.threshold,
             self.confidence,
             self.epsilon,
             self.max_samples,
         ) {
             Ok(present) => {
-                // Opt-in QMC collapse uses a per-sample reproducible Sobol shift, `base + id`
+                // Opt-in QMC collapse uses a per-step reproducible Sobol shift, `base + step`
                 // with wrapping addition (not an XOR digital shift), so each step is an
                 // independent randomized-QMC realization; default is the MC mean.
-                // each step is an independent randomized-QMC realization; default is the MC mean.
                 let collapsed = match self.qmc_collapse_seed {
-                    Some(base) => present.expected_value_qmc(
-                        self.collapse_samples,
-                        base.wrapping_add(present.id() as u64),
-                    ),
-                    None => present.expected_value(self.collapse_samples),
+                    Some(base) => {
+                        present.expected_value_qmc(self.collapse_samples, base.wrapping_add(step))
+                    }
+                    None => present.expected_value_from_entropy(self.collapse_samples),
                 };
                 match collapsed {
                     Ok(mean) if mean.is_finite() => {

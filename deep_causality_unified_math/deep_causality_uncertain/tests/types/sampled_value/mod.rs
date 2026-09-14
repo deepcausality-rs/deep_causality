@@ -3,6 +3,4 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 #[cfg(test)]
-mod complex_operations_tests;
-#[cfg(test)]
-mod float106_precision_tests;
+mod sampled_value_tests;

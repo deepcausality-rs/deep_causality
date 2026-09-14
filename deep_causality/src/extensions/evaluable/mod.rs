@@ -21,15 +21,20 @@ impl CsmEvaluable for bool {
 impl CsmEvaluable for UncertainBool {
     fn is_active(&self, params: Option<&UncertainParameter>) -> Result<bool, CausalityError> {
         if let Some(p) = params {
-            self.probability_exceeds(p.threshold(), p.confidence(), p.epsilon(), p.max_samples())
-                .map_err(|e| {
-                    CausalityError(CausalityErrorEnum::Custom(format!(
-                        "Failed to evaluate uncertain boolean: {}",
-                        e
-                    )))
-                })
+            self.probability_exceeds_from_entropy(
+                p.threshold(),
+                p.confidence(),
+                p.epsilon(),
+                p.max_samples(),
+            )
+            .map_err(|e| {
+                CausalityError(CausalityErrorEnum::Custom(format!(
+                    "Failed to evaluate uncertain boolean: {}",
+                    e
+                )))
+            })
         } else {
-            self.implicit_conditional().map_err(|e| {
+            self.implicit_conditional_from_entropy().map_err(|e| {
                 CausalityError(CausalityErrorEnum::Custom(format!(
                     "Failed to evaluate uncertain boolean: {}",
                     e
@@ -48,7 +53,7 @@ impl CsmEvaluable for UncertainF64 {
         if let Some(p) = params {
             let comparison = self.greater_than(p.threshold());
             comparison
-                .probability_exceeds(0.5, p.confidence(), p.epsilon(), p.max_samples())
+                .probability_exceeds_from_entropy(0.5, p.confidence(), p.epsilon(), p.max_samples())
                 .map_err(|e| {
                     CausalityError(CausalityErrorEnum::Custom(format!(
                         "Failed to evaluate uncertain float: {}",

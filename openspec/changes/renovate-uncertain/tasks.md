@@ -20,11 +20,11 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## 3. Removing the globals
 
-- [ ] 3.1 Move every draw call site onto the session, then delete `types/cache/` (`GlobalSampleCache`, `with_global_cache`, `SamplerKind`, `SampleCacheKey`) and `seed_sampler` / `clear_sampler_seed` / `SAMPLER_SEED`. **Ask before deleting** — Golden Rule 2.
-- [ ] 3.2 Rewrite the cache-and-seed call sites against a session: 38 originally, plus the 24 seeds task 3.4 added, across ten test files.
-- [ ] 3.3 Convert the 24 `rusty_fork_test!` invocations to ordinary tests and drop `rusty-fork` from the dev-dependencies. **Measured ahead of time:** with the forks stripped, 300 runs at `--test-threads=16` fail only in `types::cache::cache_tests`, and 0 of 300 fail once those are excluded — so the fork protects the cache tests alone, and they go with the cache in 3.1. Also drop the 17 `cfg(not(miri))` gates the fork forced, which currently hide whole modules from Miri. Verify: the suite passes at `--test-threads` 1, default and 16.
+- [x] 3.1 Move every draw call site onto the session, then delete `types/cache/` (`GlobalSampleCache`, `with_global_cache`, `SamplerKind`, `SampleCacheKey`) and `seed_sampler` / `clear_sampler_seed` / `SAMPLER_SEED`. **Ask before deleting** — Golden Rule 2.
+- [x] 3.2 Rewrite the cache-and-seed call sites against a session: 38 originally, plus the 24 seeds task 3.4 added, across ten test files.
+- [x] 3.3 Remove the last three `rusty_fork_test!` blocks and drop `rusty-fork` from the dev-dependencies. **Already cut from 24 blocks in 20 files to 3 in 3.** The rule the measurement established: the fork is needed only where a test reaches into the global sample cache directly — `cache_tests`, `uncertain_sampling_tests` and `uncertain_statistics_tests` all call `with_global_cache` to clear it and insert entries pinning what a statistic reads. All three go with the cache in 3.1, and with them three of the five `cfg(not(miri))` gates. The other two, in `types/sampler/mod.rs`, cite Miri's soft-float drift and are unrelated — leave them. Verified at 0 failures in 500 runs at `--test-threads=16`, 80 at 1 and 80 at the default.
 - [x] 3.4 Fix the flaky presence-gate test by seeding it. The assertion stays exact — no wider tolerance, no larger budget. Verify: 100 consecutive runs agree.
-- [ ] 3.5 Verify no mutable global remains: `src/` contains no `static mut`, no `OnceLock`, no `thread_local!`, and `NEXT_UNCERTAIN_ID` is gone or justified in place.
+- [x] 3.5 Verify no mutable global remains: `src/` contains no `static mut`, no `OnceLock`, no `thread_local!`, and `NEXT_UNCERTAIN_ID` is gone or justified in place.
 - [ ] 3.6 Group close-out: `cargo test -p deep_causality_uncertain`, `make format && make fix`, and a commit message.
 
 ## 4. Precision as a parameter
@@ -47,9 +47,9 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## 6. Consumers
 
-- [ ] 6.1 Drop `+ ProbabilisticType` from the sixteen `deep_causality_cfd` bound occurrences across 8 files (measured; the earlier figure of ten came from a truncated listing). Verify: the uncertain march compiles at `f32`, which it could not before — that compile is the test.
-- [ ] 6.2 Update the two `deep_causality_quantum` files that name the removed bound.
-- [ ] 6.3 Verify the 45 alias call sites in `deep_causality` need no edit, and that the four aliases still resolve.
+- [x] 6.1 Drop `+ ProbabilisticType` from the sixteen `deep_causality_cfd` bound occurrences across 8 files (measured; the earlier figure of ten came from a truncated listing). Verify: the uncertain march compiles at `f32`, which it could not before — that compile is the test.
+- [x] 6.2 Update the two `deep_causality_quantum` files that name the removed bound.
+- [x] 6.3 Verify the 45 alias call sites in `deep_causality` need no edit, and that the four aliases still resolve.
 - [ ] 6.4 Update the three example crates that construct uncertain values; check `cargo run` for each, since examples are verified by running rather than by unit tests.
 
 ## 7. The ensemble carrier

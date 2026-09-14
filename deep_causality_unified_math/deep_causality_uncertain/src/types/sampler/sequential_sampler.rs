@@ -39,21 +39,19 @@ impl<T: ProbabilisticType> Sampler<T> for SequentialSampler {
         root_node: &ConstTree<UncertainNodeContent>,
         _sample_index: u64,
     ) -> Result<SampledValue, UncertainError> {
-        // `_sample_index` is unused: this sampler draws from a stateful RNG, so the index only
-        // serves as the global-cache tag (applied by the caller), not as a draw selector.
+        // `_sample_index` is unused on this path: a stateful generator has no notion of an
+        // index. `sample_addressed` is the one that takes the index seriously.
         let mut context: HashMap<usize, SampledValue> = HashMap::new();
-        // Draw from the seeded RNG when `seed_sampler` is in effect on this thread, else the
-        // OS-entropy thread RNG. Branching keeps each arm monomorphic over its concrete RNG.
-        crate::types::sampler::sampler_seed::with_seed_slot(|slot| match slot {
-            Some(rng) => self.evaluate_node(root_node, &mut context, &mut AmbientDraws { rng }),
-            None => self.evaluate_node(
-                root_node,
-                &mut context,
-                &mut AmbientDraws {
-                    rng: &mut deep_causality_rand::rng(),
-                },
-            ),
-        })
+        // Host entropy, straight through. There is no seed slot to consult any more: a draw that
+        // is meant to be reproducible goes through `sample_addressed`, where the seed is the
+        // caller's and arrives in the signature.
+        self.evaluate_node(
+            root_node,
+            &mut context,
+            &mut AmbientDraws {
+                rng: &mut deep_causality_rand::rng(),
+            },
+        )
     }
 }
 

@@ -6,7 +6,6 @@
 use crate::{ProbabilisticType, UncertainNodeContent};
 
 use std::marker::PhantomData;
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 use deep_causality_ast::ConstTree;
 
@@ -24,13 +23,9 @@ mod uncertain_sampling;
 mod uncertain_statistics;
 mod uncertain_verdict;
 
-// A single static counter for all Uncertain instances to generate unique IDs.
-static NEXT_UNCERTAIN_ID: AtomicUsize = AtomicUsize::new(0);
-
 /// A type representing a value with inherent uncertainty, modeled as a probability distribution.
 #[derive(Clone, Debug)]
 pub struct Uncertain<T: ProbabilisticType> {
-    id: usize,
     root_node: ConstTree<UncertainNodeContent>,
     _phantom: PhantomData<T>,
 }
@@ -39,7 +34,6 @@ impl<T: ProbabilisticType> Uncertain<T> {
     /// Creates a new `Uncertain` value from a computation graph represented by a root node.
     fn from_root_node(root_node: UncertainNodeContent) -> Self {
         Self {
-            id: NEXT_UNCERTAIN_ID.fetch_add(1, Ordering::Relaxed),
             root_node: ConstTree::new(root_node),
             _phantom: PhantomData,
         }
@@ -55,10 +49,6 @@ impl<T: ProbabilisticType> Uncertain<T> {
 }
 
 impl<T: ProbabilisticType + Copy> Uncertain<T> {
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
     /// The root of this value's computation graph. Crate-internal: a [`QmcSampler`](crate::QmcSampler)
     /// is built from an `&Uncertain<T>` via [`QmcSampler::new`](crate::QmcSampler::new), so callers
     /// never need the raw root.

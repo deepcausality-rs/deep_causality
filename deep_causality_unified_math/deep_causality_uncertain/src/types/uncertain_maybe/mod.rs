@@ -34,14 +34,19 @@ impl<T: ProbabilisticType> MaybeUncertain<T> {
     /// * `max_samples` — SPRT sampling budget.
     pub fn lift_to_uncertain(
         &self,
+        session: &crate::SampleSession,
         threshold_prob_some: f64,
         confidence_level: f64,
         epsilon: f64,
         max_samples: usize,
     ) -> Result<Uncertain<T>, UncertainError> {
-        let is_present =
-            self.is_present
-                .to_bool(threshold_prob_some, confidence_level, epsilon, max_samples)?;
+        let is_present = self.is_present.to_bool(
+            session,
+            threshold_prob_some,
+            confidence_level,
+            epsilon,
+            max_samples,
+        )?;
 
         if is_present {
             Ok(self.value.clone())
@@ -50,5 +55,22 @@ impl<T: ProbabilisticType> MaybeUncertain<T> {
                 "Insufficient evidence for presence".to_string(),
             ))
         }
+    }
+
+    /// As [`Self::lift_to_uncertain`], with no session of the caller's own.
+    pub fn lift_to_uncertain_from_entropy(
+        &self,
+        threshold_prob_some: f64,
+        confidence_level: f64,
+        epsilon: f64,
+        max_samples: usize,
+    ) -> Result<Uncertain<T>, UncertainError> {
+        self.lift_to_uncertain(
+            &crate::SampleSession::from_entropy(),
+            threshold_prob_some,
+            confidence_level,
+            epsilon,
+            max_samples,
+        )
     }
 }

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ProbabilisticType, QmcSampler, Uncertain, UncertainError};
+use crate::{ProbabilisticType, QmcSampler, SampleSession, Uncertain, UncertainError};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_stats::{MeanAccumulator, StatsError, std_dev};
@@ -14,8 +14,16 @@ use deep_causality_stats::{MeanAccumulator, StatsError, std_dev};
 // `Uncertain<bool>`, where a mean is meaningless. `FromPrimitive` supplies the sample-count
 // divisor at the value type's precision (no narrowing through `f64`).
 impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
-    /// Estimates the expected value (mean) by averaging `num_samples` draws.
-    pub fn expected_value(&self, num_samples: usize) -> Result<T, UncertainError> {
+    /// Estimates the expected value (mean) by averaging `num_samples` draws under `session`.
+    ///
+    /// The draws are taken at indices `0..num_samples`, so the estimate is a function of the
+    /// session's seed and the count alone: asking twice gives the same answer, and a session
+    /// rebuilt from the same seed reproduces it in a later process.
+    pub fn expected_value(
+        &self,
+        session: &SampleSession,
+        num_samples: usize,
+    ) -> Result<T, UncertainError> {
         if num_samples == 0 {
             return Ok(T::zero());
         }
@@ -23,25 +31,40 @@ impl<T: ProbabilisticType + RealField + FromPrimitive> Uncertain<T> {
         // estimator's whole point is that it can take a great many draws, and holding them all to
         // average them would turn constant memory into `num_samples`. The accumulator folds left to
         // right exactly as `mean` does, so the answer is the same to the last bit.
+        let ordinals = crate::LeafOrdinals::from_root_node(&self.root_node);
         let mut acc = MeanAccumulator::new();
         for i in 0..num_samples {
-            acc.push(self.sample_with_index(i as u64)?);
+            acc.push(self.sample_at_with(session, i as u64, &ordinals)?);
         }
         acc.mean().map_err(sampling_error)
     }
 
+    /// Estimates the expected value with no session of the caller's own.
+    ///
+    /// See [`Uncertain::sample_from_entropy`]: the estimate cannot be reproduced afterwards.
+    pub fn expected_value_from_entropy(&self, num_samples: usize) -> Result<T, UncertainError> {
+        self.expected_value(&SampleSession::from_entropy(), num_samples)
+    }
+
     /// Estimates the (sample) standard deviation from `num_samples` draws, using the
     /// `(n − 1)` Bessel-corrected denominator.
-    pub fn standard_deviation(&self, num_samples: usize) -> Result<T, UncertainError> {
+    pub fn standard_deviation(
+        &self,
+        session: &SampleSession,
+        num_samples: usize,
+    ) -> Result<T, UncertainError> {
         if num_samples <= 1 {
             return Ok(T::zero());
         }
 
-        let samples: Vec<T> = (0..num_samples)
-            .map(|i| self.sample_with_index(i as u64))
-            .collect::<Result<Vec<T>, UncertainError>>()?;
+        let samples = self.samples_from(session, num_samples)?;
 
         std_dev(&samples).map_err(sampling_error)
+    }
+
+    /// Estimates the standard deviation with no session of the caller's own.
+    pub fn standard_deviation_from_entropy(&self, num_samples: usize) -> Result<T, UncertainError> {
+        self.standard_deviation(&SampleSession::from_entropy(), num_samples)
     }
 
     /// Quasi-Monte-Carlo expected value: averages `num_samples` Sobol draws (digitally shifted

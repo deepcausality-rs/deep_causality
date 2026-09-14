@@ -188,7 +188,8 @@ where
     // 1. Presence-gated collapse of the sensor sample to a scalar inflow R, through the
     //    cross-domain uncertain boundary source (which owns the gate, collapse, and fallback).
     let source = zone.source();
-    let (inflow, dropout) = match source.resolve(&context.stream[step], &mut last_good) {
+    let (inflow, dropout) = match source.resolve(&context.stream[step], &mut last_good, step as u64)
+    {
         Ok(resolved) => resolved,
         Err(e) => {
             let state = InflowMarchState {

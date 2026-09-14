@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError, seed_sampler};
+use deep_causality_uncertain::{MaybeUncertain, SampleSession, Uncertain, UncertainError};
 
 /// Every test below that observes a draw installs this seed first.
 ///
@@ -15,12 +15,13 @@ const SEED: u64 = 0x5EED_2026;
 
 #[test]
 fn test_from_uncertain() {
+    let session = SampleSession::seeded(SEED);
     let uncertain_true = Uncertain::<bool>::point(true);
     let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_true.clone());
     assert!(
         maybe_uncertain
             .is_some()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 
@@ -29,18 +30,19 @@ fn test_from_uncertain() {
     assert!(
         maybe_uncertain
             .is_some()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 }
 
 #[test]
 fn test_from_value() {
+    let session = SampleSession::seeded(SEED);
     let maybe_uncertain_true = MaybeUncertain::<bool>::from_value(true);
     assert!(
         maybe_uncertain_true
             .is_some()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 
@@ -48,18 +50,19 @@ fn test_from_value() {
     assert!(
         maybe_uncertain_false
             .is_some()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 }
 
 #[test]
 fn test_always_none() {
+    let session = SampleSession::seeded(SEED);
     let maybe_uncertain = MaybeUncertain::<bool>::always_none();
     assert!(
         !maybe_uncertain
             .is_some()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
     // The value field is a dummy in this case, so we don't assert its specific value
@@ -67,7 +70,7 @@ fn test_always_none() {
 
 #[test]
 fn test_from_bernoulli_and_uncertain() {
-    seed_sampler(SEED);
+    let session = SampleSession::seeded(SEED);
     let present_value_dist = Uncertain::<bool>::point(true);
     let maybe_uncertain =
         MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.8, present_value_dist.clone());
@@ -76,8 +79,12 @@ fn test_from_bernoulli_and_uncertain() {
     // For 100% coverage, we need to ensure the bernoulli branch is taken.
     // This is hard to test deterministically without mocking, so we'll rely on sampling.
     let mut num_some = 0;
-    for _ in 0..1000 {
-        if maybe_uncertain.is_some().sample().unwrap() {
+    for __i in 0..1000 {
+        if maybe_uncertain
+            .is_some()
+            .sample_at(&session, __i as u64)
+            .unwrap()
+        {
             num_some += 1;
         }
     }
@@ -87,8 +94,12 @@ fn test_from_bernoulli_and_uncertain() {
     let maybe_uncertain_false =
         MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.2, present_value_dist_false.clone());
     let mut num_some_false = 0;
-    for _ in 0..1000 {
-        if maybe_uncertain_false.is_some().sample().unwrap() {
+    for __i in 0..1000 {
+        if maybe_uncertain_false
+            .is_some()
+            .sample_at(&session, __i as u64)
+            .unwrap()
+        {
             num_some_false += 1;
         }
     }
@@ -97,13 +108,13 @@ fn test_from_bernoulli_and_uncertain() {
 
 #[test]
 fn test_sample() -> Result<(), UncertainError> {
-    seed_sampler(SEED);
+    let mut session = SampleSession::seeded(SEED);
     // Test case 1: is_present is true, value is true
     let maybe_uncertain_true = MaybeUncertain::<bool>::from_value(true);
     let mut num_true_samples = 0;
     let mut num_none_samples = 0;
-    for _ in 0..1000 {
-        match maybe_uncertain_true.sample()? {
+    for __i in 0..1000 {
+        match maybe_uncertain_true.sample(&mut session)? {
             Some(true) => num_true_samples += 1,
             None => num_none_samples += 1,
             _ => {}
@@ -116,8 +127,8 @@ fn test_sample() -> Result<(), UncertainError> {
     let maybe_uncertain_false = MaybeUncertain::<bool>::from_value(false);
     num_true_samples = 0;
     num_none_samples = 0;
-    for _ in 0..1000 {
-        match maybe_uncertain_false.sample()? {
+    for __i in 0..1000 {
+        match maybe_uncertain_false.sample(&mut session)? {
             Some(false) => num_true_samples += 1,
             None => num_none_samples += 1,
             _ => {}
@@ -130,8 +141,8 @@ fn test_sample() -> Result<(), UncertainError> {
     let maybe_uncertain_none = MaybeUncertain::<bool>::always_none();
     num_true_samples = 0;
     num_none_samples = 0;
-    for _ in 0..1000 {
-        match maybe_uncertain_none.sample()? {
+    for __i in 0..1000 {
+        match maybe_uncertain_none.sample(&mut session)? {
             Some(_) => num_true_samples += 1,
             None => num_none_samples += 1,
         }
@@ -145,8 +156,8 @@ fn test_sample() -> Result<(), UncertainError> {
         MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.5, present_value_dist);
     num_true_samples = 0;
     num_none_samples = 0;
-    for _ in 0..1000 {
-        match maybe_uncertain_bernoulli.sample()? {
+    for __i in 0..1000 {
+        match maybe_uncertain_bernoulli.sample(&mut session)? {
             Some(true) => num_true_samples += 1,
             None => num_none_samples += 1,
             _ => {}
@@ -160,6 +171,7 @@ fn test_sample() -> Result<(), UncertainError> {
 
 #[test]
 fn test_is_some() {
+    let session = SampleSession::seeded(SEED);
     let uncertain_true = Uncertain::<bool>::point(true);
     let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_true.clone());
     assert_eq!(maybe_uncertain.is_some(), uncertain_true);
@@ -168,19 +180,20 @@ fn test_is_some() {
     assert!(
         !maybe_uncertain_none
             .is_some()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 }
 
 #[test]
 fn test_is_none() {
+    let session = SampleSession::seeded(SEED);
     let uncertain_true = Uncertain::<bool>::point(true);
     let maybe_uncertain = MaybeUncertain::<bool>::from_uncertain(uncertain_true.clone());
     assert!(
         !maybe_uncertain
             .is_none()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 
@@ -188,23 +201,24 @@ fn test_is_none() {
     assert!(
         maybe_uncertain_none
             .is_none()
-            .to_bool(0.5, 0.95, 0.05, 1000)
+            .to_bool(&session, 0.5, 0.95, 0.05, 1000)
             .unwrap()
     );
 }
 
 #[test]
 fn test_lift_to_uncertain() -> Result<(), UncertainError> {
-    seed_sampler(SEED);
+    let session = SampleSession::seeded(SEED);
     // Test case 1: is_present is true, should lift successfully
     let uncertain_true_value = Uncertain::<bool>::point(true);
     let maybe_uncertain_present = MaybeUncertain::<bool>::from_value(true);
-    let lifted_uncertain = maybe_uncertain_present.lift_to_uncertain(0.5, 0.95, 0.05, 1000)?;
+    let lifted_uncertain =
+        maybe_uncertain_present.lift_to_uncertain(&session, 0.5, 0.95, 0.05, 1000)?;
     assert_eq!(lifted_uncertain, uncertain_true_value);
 
     // Test case 2: is_present is false, should return PresenceError
     let maybe_uncertain_absent = MaybeUncertain::<bool>::always_none();
-    let result = maybe_uncertain_absent.lift_to_uncertain(0.5, 0.95, 0.05, 1000);
+    let result = maybe_uncertain_absent.lift_to_uncertain(&session, 0.5, 0.95, 0.05, 1000);
     assert!(matches!(result, Err(UncertainError::PresenceError(_))));
 
     // Test case 3: is_present is bernoulli, and passes threshold
@@ -212,13 +226,14 @@ fn test_lift_to_uncertain() -> Result<(), UncertainError> {
     let maybe_uncertain_bernoulli_pass =
         MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.9, present_value_dist.clone());
     let lifted_uncertain_bernoulli_pass =
-        maybe_uncertain_bernoulli_pass.lift_to_uncertain(0.5, 0.95, 0.05, 1000)?;
+        maybe_uncertain_bernoulli_pass.lift_to_uncertain(&session, 0.5, 0.95, 0.05, 1000)?;
     assert_eq!(lifted_uncertain_bernoulli_pass, present_value_dist);
 
     // Test case 4: is_present is bernoulli, and fails threshold
     let maybe_uncertain_bernoulli_fail =
         MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.1, present_value_dist);
-    let result_fail = maybe_uncertain_bernoulli_fail.lift_to_uncertain(0.5, 0.95, 0.05, 1000);
+    let result_fail =
+        maybe_uncertain_bernoulli_fail.lift_to_uncertain(&session, 0.5, 0.95, 0.05, 1000);
     assert!(matches!(result_fail, Err(UncertainError::PresenceError(_))));
 
     Ok(())

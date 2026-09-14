@@ -42,13 +42,39 @@ impl Uncertain<bool> {
     /// `Ok(bool)` if a decision can be made, or `Err(UncertainError)` if the test fails or cannot conclude.
     pub fn to_bool(
         &self,
+        session: &crate::SampleSession,
         threshold: f64,
         confidence: f64,
         epsilon: f64,       // 0.05
         max_samples: usize, // 1000
     ) -> Result<bool, UncertainError> {
         // We pass sample_index 0 as the decision is based on the overall distribution, not a specific sample.
-        sprt_eval::evaluate_hypothesis(self, threshold, confidence, epsilon, max_samples, 0)
+        sprt_eval::evaluate_hypothesis(
+            self,
+            session,
+            threshold,
+            confidence,
+            epsilon,
+            max_samples,
+            0,
+        )
+    }
+
+    /// As [`Self::to_bool`], with no session of the caller's own.
+    pub fn to_bool_from_entropy(
+        &self,
+        threshold: f64,
+        confidence: f64,
+        epsilon: f64,
+        max_samples: usize,
+    ) -> Result<bool, UncertainError> {
+        self.to_bool(
+            &crate::SampleSession::from_entropy(),
+            threshold,
+            confidence,
+            epsilon,
+            max_samples,
+        )
     }
 
     /// Determines if the probability of the uncertain boolean being true exceeds a given threshold.
@@ -65,30 +91,76 @@ impl Uncertain<bool> {
     /// `Ok(bool)` indicating whether the probability exceeds the threshold, or `Err(UncertainError)`.
     pub fn probability_exceeds(
         &self,
+        session: &crate::SampleSession,
         threshold: f64,
         confidence: f64,
         epsilon: f64, // 0.05
         max_samples: usize,
     ) -> Result<bool, UncertainError> {
-        sprt_eval::evaluate_hypothesis(self, threshold, confidence, epsilon, max_samples, 0)
+        sprt_eval::evaluate_hypothesis(
+            self,
+            session,
+            threshold,
+            confidence,
+            epsilon,
+            max_samples,
+            0,
+        )
+    }
+
+    /// As [`Self::probability_exceeds`], with no session of the caller's own.
+    pub fn probability_exceeds_from_entropy(
+        &self,
+        threshold: f64,
+        confidence: f64,
+        epsilon: f64,
+        max_samples: usize,
+    ) -> Result<bool, UncertainError> {
+        self.probability_exceeds(
+            &crate::SampleSession::from_entropy(),
+            threshold,
+            confidence,
+            epsilon,
+            max_samples,
+        )
     }
 
     /// Evaluates an implicit conditional, typically checking if the probability of true exceeds 0.5.
     ///
     /// This is a convenience method that calls `probability_exceeds` with default parameters:
     /// `threshold = 0.5`, `confidence = 0.95`, `epsilon = 0.05`, `max_samples = 1000`.
-    pub fn implicit_conditional(&self) -> Result<bool, UncertainError> {
-        self.probability_exceeds(0.5, 0.95, 0.05, 1000)
+    pub fn implicit_conditional(
+        &self,
+        session: &crate::SampleSession,
+    ) -> Result<bool, UncertainError> {
+        self.probability_exceeds(session, 0.5, 0.95, 0.05, 1000)
+    }
+
+    /// As [`Self::implicit_conditional`], with no session of the caller's own.
+    pub fn implicit_conditional_from_entropy(&self) -> Result<bool, UncertainError> {
+        self.implicit_conditional(&crate::SampleSession::from_entropy())
     }
 
     /// Estimates the probability that this condition is true by taking multiple samples.
-    pub fn estimate_probability(&self, num_samples: usize) -> Result<f64, UncertainError> {
-        let samples = self.take_samples(num_samples)?;
+    pub fn estimate_probability(
+        &self,
+        session: &crate::SampleSession,
+        num_samples: usize,
+    ) -> Result<f64, UncertainError> {
+        let samples = self.samples_from(session, num_samples)?;
         if samples.is_empty() {
             Ok(0.0)
         } else {
             Ok(samples.iter().filter(|&&x| x).count() as f64 / samples.len() as f64)
         }
+    }
+
+    /// As [`Self::estimate_probability`], with no session of the caller's own.
+    pub fn estimate_probability_from_entropy(
+        &self,
+        num_samples: usize,
+    ) -> Result<f64, UncertainError> {
+        self.estimate_probability(&crate::SampleSession::from_entropy(), num_samples)
     }
 
     /// Quasi-Monte-Carlo estimate of `P(true)` over `num_samples` Sobol draws (digitally shifted

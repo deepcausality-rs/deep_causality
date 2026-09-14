@@ -173,6 +173,7 @@ pub fn build_uncertain_config(
     let zone = UncertainInflowZone::new(1, true, 0, ft(U_BULK))
         .with_presence_gate(0.5, 0.95, 0.05, PRESENCE_SAMPLES)
         .with_collapse_samples(COLLAPSE_SAMPLES)
+        .with_gate_seed(SAMPLER_SEED)
         .with_qmc_collapse(QMC_COLLAPSE_SEED)
         .with_verbosity(DropoutVerbosity::EachDropout);
 

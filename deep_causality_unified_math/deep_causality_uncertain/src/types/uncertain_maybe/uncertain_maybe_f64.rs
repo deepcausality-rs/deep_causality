@@ -42,12 +42,24 @@ impl MaybeUncertain<f64> {
     }
 
     /// Samples the `MaybeUncertain` value, returning `Some(f64)` if present or `None` if absent.
-    pub fn sample(&self) -> Result<Option<f64>, UncertainError> {
-        if self.is_present.sample()? {
-            Ok(Some(self.value.sample()?))
+    pub fn sample(
+        &self,
+        session: &mut crate::SampleSession,
+    ) -> Result<Option<f64>, UncertainError> {
+        // Both channels are drawn at one index. They were drawn at two separately chosen global
+        // indices before, which made keeping them in step the cache's hardest job; at one index
+        // there are no two channels to reconcile.
+        let index = session.next_index();
+        if self.is_present.sample_at(session, index)? {
+            Ok(Some(self.value.sample_at(session, index)?))
         } else {
             Ok(None)
         }
+    }
+
+    /// As [`Self::sample`], with no session of the caller's own.
+    pub fn sample_from_entropy(&self) -> Result<Option<f64>, UncertainError> {
+        self.sample(&mut crate::SampleSession::from_entropy())
     }
 
     /// Returns an `Uncertain<bool>` representing the probability of the value being present.

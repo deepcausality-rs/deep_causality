@@ -154,7 +154,7 @@ fn the_index_counter_wraps_rather_than_panicking() {
     // Reaching 2^64 draws is not a scenario, but a debug-build overflow panic in a sampler is a
     // worse outcome than a wrap, and the address is a hash of the index either way.
     let mut session = SampleSession::seeded(SEED);
-    for _ in 0..3 {
+    for __i in 0..3 {
         session.next_index();
     }
     assert_eq!(session.position(), 3);

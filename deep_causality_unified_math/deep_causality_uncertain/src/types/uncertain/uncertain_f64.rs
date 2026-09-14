@@ -34,13 +34,14 @@ impl Uncertain<f64> {
 
     pub fn estimate_probability_exceeds(
         &self,
+        session: &crate::SampleSession,
         threshold: f64,
         num_samples: usize,
     ) -> Result<f64, UncertainError> {
         if num_samples == 0 {
             return Ok(0.0);
         }
-        let samples = self.take_samples(num_samples)?;
+        let samples = self.samples_from(session, num_samples)?;
         let count = samples.iter().filter(|&&s| s > threshold).count();
         Ok(count as f64 / num_samples as f64)
     }

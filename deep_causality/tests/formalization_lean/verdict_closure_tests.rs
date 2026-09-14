@@ -133,25 +133,37 @@ fn test_verdict_carriers() {
     use deep_causality_uncertain::{UncertainBool, UncertainF64};
     let t = UncertainBool::point(true);
     let f = UncertainBool::point(false);
-    assert!(!t.meet(f).sample().expect("sample"));
+    assert!(!t.meet(f).sample_from_entropy().expect("sample"));
     let t = UncertainBool::point(true);
     let f = UncertainBool::point(false);
-    assert!(t.join(f).sample().expect("sample"));
+    assert!(t.join(f).sample_from_entropy().expect("sample"));
     let f = UncertainBool::point(false);
-    assert!(f.complement().sample().expect("sample"));
-    assert!(!UncertainBool::bottom().sample().expect("sample"));
-    assert!(UncertainBool::top().sample().expect("sample"));
+    assert!(f.complement().sample_from_entropy().expect("sample"));
+    assert!(
+        !UncertainBool::bottom()
+            .sample_from_entropy()
+            .expect("sample")
+    );
+    assert!(UncertainBool::top().sample_from_entropy().expect("sample"));
 
     let a = UncertainF64::point(0.3);
     let b = UncertainF64::point(0.8);
-    assert_eq!(a.meet(b).sample().expect("sample"), 0.3);
+    assert_eq!(a.meet(b).sample_from_entropy().expect("sample"), 0.3);
     let a = UncertainF64::point(0.3);
     let b = UncertainF64::point(0.8);
-    assert_eq!(a.join(b).sample().expect("sample"), 0.8);
+    assert_eq!(a.join(b).sample_from_entropy().expect("sample"), 0.8);
     let a = UncertainF64::point(0.3);
-    assert!((a.complement().sample().expect("sample") - 0.7).abs() < 1e-12);
-    assert_eq!(UncertainF64::bottom().sample().expect("sample"), 0.0);
-    assert_eq!(UncertainF64::top().sample().expect("sample"), 1.0);
+    assert!((a.complement().sample_from_entropy().expect("sample") - 0.7).abs() < 1e-12);
+    assert_eq!(
+        UncertainF64::bottom()
+            .sample_from_entropy()
+            .expect("sample"),
+        0.0
+    );
+    assert_eq!(
+        UncertainF64::top().sample_from_entropy().expect("sample"),
+        1.0
+    );
 }
 
 /// THEOREM_MAP: core.verdict.perm_invariance

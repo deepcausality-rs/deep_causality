@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Uncertain, UncertainError};
+use crate::{LeafOrdinals, SampleSession, Uncertain, UncertainError};
 
 /// Implements the Sequential Probability Ratio Test (SPRT) to evaluate a hypothesis
 /// about an uncertain boolean value.
@@ -21,6 +21,7 @@ use crate::{Uncertain, UncertainError};
 /// - `max_samples`: The maximum number of samples to draw before making a fallback decision.
 pub fn evaluate_hypothesis(
     uncertain_bool: &Uncertain<bool>,
+    session: &SampleSession,
     threshold: f64,
     confidence: f64,
     epsilon: f64,
@@ -40,6 +41,10 @@ pub fn evaluate_hypothesis(
     let p0 = (threshold - epsilon).clamp(0.0, 1.0 - f64::EPSILON); // Null hypothesis probability
     let p1 = (threshold + epsilon).clamp(f64::EPSILON, 1.0); // Alternative hypothesis probability
 
+    // Assigned once: the graph does not change while the test runs, and the loop draws up to
+    // `max_samples` times.
+    let ordinals = LeafOrdinals::new(uncertain_bool);
+
     let mut successes = 0;
     let mut samples_drawn = 0;
 
@@ -53,8 +58,11 @@ pub fn evaluate_hypothesis(
         } // Avoid infinite loop if max_samples is reached
 
         for _ in 0..current_batch_size {
-            let sample_result =
-                uncertain_bool.sample_with_index(initial_sample_index + samples_drawn as u64)?; // Get a sample
+            let sample_result = uncertain_bool.sample_at_with(
+                session,
+                initial_sample_index + samples_drawn as u64,
+                &ordinals,
+            )?;
             if sample_result {
                 successes += 1;
             }

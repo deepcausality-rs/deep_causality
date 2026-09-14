@@ -174,7 +174,7 @@ impl Aggregatable for UncertainBool {
             AggregateLogic::Some(k) => {
                 let bools: Result<Vec<bool>, _> = u_bools
                     .iter()
-                    .map(|u| u.to_bool(threshold, 0.95, 0.05, 1000))
+                    .map(|u| u.to_bool_from_entropy(threshold, 0.95, 0.05, 1000))
                     .collect();
                 let true_count = bools
                     .map_err(|e| CausalityError::new(CausalityErrorEnum::Custom(e.to_string())))?
