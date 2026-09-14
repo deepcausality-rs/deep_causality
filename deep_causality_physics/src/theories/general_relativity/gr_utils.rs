@@ -5,14 +5,14 @@
 use crate::PhysicsError;
 use deep_causality_algebra::Field;
 use deep_causality_linear::{determinant_3x3, determinant_4x4, inverse_3x3, inverse_4x4};
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 
 /// Computes the inverse of a 4x4 matrix, extracting it from a potentially larger tensor (e.g. 4x6 connection).
 /// Returns error if determinant is near zero (singular metric).
 pub(crate) fn invert_4x4<T>(t: &CausalTensor<T>) -> Result<[T; 16], PhysicsError>
 where
-    T: Field + Float + Copy + From<f64> + Into<f64>,
+    T: Field + Float + Copy + FromPrimitive + Into<f64>,
 {
     let shape = t.shape();
     let data = t.as_slice();
@@ -42,7 +42,7 @@ where
     // "Near singular" is a statement about *this metric* — a coordinate chart breaking down, an
     // horizon being approached — not a property of the matrix, and the crate refuses only an
     // exactly zero determinant for that reason (`unified-math-next` task 6.7).
-    let eps = <T as From<f64>>::from(1e-12);
+    let eps = lift::<T>(1e-12);
     if determinant_4x4(&block).abs() < eps {
         return Err(PhysicsError::NumericalInstability(
             "Metric determinant is near zero (singular)".into(),
@@ -60,11 +60,11 @@ where
 /// Computes the inverse of a 3x3 matrix.
 pub(crate) fn invert_3x3<T>(m: [[T; 3]; 3]) -> Result<[[T; 3]; 3], PhysicsError>
 where
-    T: Field + Float + Copy + From<f64> + Into<f64>,
+    T: Field + Float + Copy + FromPrimitive + Into<f64>,
 {
     // As above: the `1e-14` near-singularity threshold is this solver's judgement about its own
     // spatial metric and stays at the call site; the crate refuses only an exact zero.
-    let eps = <T as From<f64>>::from(1e-14);
+    let eps = lift::<T>(1e-14);
     if determinant_3x3(&m).abs() < eps {
         return Err(PhysicsError::NumericalInstability(
             "Singular spatial metric (det ~ 0)".to_string(),

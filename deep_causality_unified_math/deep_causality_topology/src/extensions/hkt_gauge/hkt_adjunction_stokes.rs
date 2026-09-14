@@ -19,7 +19,7 @@ use deep_causality_haft::Pure; // Added Pure
 use deep_causality_haft::{Adjunction, HKT};
 use deep_causality_linear::CsrMatrix;
 use deep_causality_linear::CsrMatrixWitness; // Added Witness
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -260,7 +260,7 @@ impl StokesAdjunction {
         form: &DifferentialForm<T>,
     ) -> DifferentialForm<T>
     where
-        T: Float + Default + From<f64>,
+        T: Float + Default + FromPrimitive,
     {
         let k = form.degree();
         let dim = ctx.dim();

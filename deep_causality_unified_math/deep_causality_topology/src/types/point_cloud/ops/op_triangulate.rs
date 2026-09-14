@@ -32,7 +32,7 @@ pub(super) fn find_duplicate_points<T>(
     dim: usize,
 ) -> Option<(usize, usize)>
 where
-    T: Float + Sum + From<f64> + PartialOrd + Copy,
+    T: Float + Sum + PartialOrd + Copy,
 {
     if num_points < 2 {
         return None;
@@ -98,7 +98,7 @@ pub(super) fn ambient_dim(shape: &[usize], caller: &str) -> Result<usize, Topolo
 
 impl<T, D> PointCloud<T, D>
 where
-    T: Float + Sum + From<f64> + Zero + PartialOrd + Copy,
+    T: Float + Sum + Zero + PartialOrd + Copy,
 {
     /// Builds a Vietoris-Rips simplicial complex from the point cloud at the
     /// given connectivity radius. Two vertices form an edge iff their Euclidean

@@ -120,8 +120,16 @@ fn the_probability_is_stated_at_the_callers_scalar() {
         "0.25 is exact in both scalars, so both must quantise to the same probability"
     );
 
-    assert!(Bernoulli::new(1.0f32).unwrap().sample(&mut Xoshiro256::from_seed(1)));
-    assert!(!Bernoulli::new(0.0f32).unwrap().sample(&mut Xoshiro256::from_seed(1)));
+    assert!(
+        Bernoulli::new(1.0f32)
+            .unwrap()
+            .sample(&mut Xoshiro256::from_seed(1))
+    );
+    assert!(
+        !Bernoulli::new(0.0f32)
+            .unwrap()
+            .sample(&mut Xoshiro256::from_seed(1))
+    );
 }
 
 #[test]

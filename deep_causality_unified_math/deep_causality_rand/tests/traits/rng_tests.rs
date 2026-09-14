@@ -54,7 +54,10 @@ fn an_impossible_event_never_happens() {
     // replaced compared `word / u64::MAX <= p`, which is `0 <= 0` on a zero word — so a
     // probability-zero event fired once in every `2^64` draws. No sampling test reaches that;
     // a zero generator reaches it on the first draw.
-    assert!(!ZeroRng.random_bool(0.0), "an event of probability zero occurred");
+    assert!(
+        !ZeroRng.random_bool(0.0),
+        "an event of probability zero occurred"
+    );
 
     let mut g = Xoshiro256::from_seed(0x5EED_2026);
     for _ in 0..10_000 {
@@ -65,11 +68,17 @@ fn an_impossible_event_never_happens() {
 #[test]
 fn a_certain_event_always_happens() {
     // The other endpoint, which the largest word must not spoil.
-    assert!(MaxRng.random_bool(1.0), "an event of probability one did not occur");
+    assert!(
+        MaxRng.random_bool(1.0),
+        "an event of probability one did not occur"
+    );
 
     let mut g = Xoshiro256::from_seed(0x5EED_2026);
     for _ in 0..10_000 {
-        assert!(g.random_bool(1.0), "an event of probability one did not occur");
+        assert!(
+            g.random_bool(1.0),
+            "an event of probability one did not occur"
+        );
     }
 }
 
@@ -78,7 +87,10 @@ fn the_probability_is_honoured_in_between() {
     let mut g = Xoshiro256::from_seed(0x5EED_2026);
     let n = 200_000;
     let hits = (0..n).filter(|_| g.random_bool(0.25)).count() as f64 / n as f64;
-    assert!((hits - 0.25).abs() < 0.005, "p = 0.25 fired {hits} of the time");
+    assert!(
+        (hits - 0.25).abs() < 0.005,
+        "p = 0.25 fired {hits} of the time"
+    );
 }
 
 #[test]
@@ -93,7 +105,10 @@ fn the_probability_is_taken_at_the_callers_scalar() {
     let mut g = Xoshiro256::from_seed(0x5EED_2026);
     let n = 100_000;
     let hits = (0..n).filter(|_| g.random_bool(0.25f32)).count() as f64 / n as f64;
-    assert!((hits - 0.25).abs() < 0.01, "p = 0.25 at f32 fired {hits} of the time");
+    assert!(
+        (hits - 0.25).abs() < 0.01,
+        "p = 0.25 at f32 fired {hits} of the time"
+    );
 }
 
 #[test]

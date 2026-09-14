@@ -4,7 +4,10 @@
  */
 
 use crate::types::dense_vector::DenseVector;
-use deep_causality_haft::{Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal, Traversable};
+use deep_causality_haft::{
+    Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal,
+    Traversable,
+};
 
 /// The higher-kinded witness for [`DenseVector`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

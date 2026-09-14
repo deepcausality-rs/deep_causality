@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use core::fmt::Debug;
+use deep_causality_num::FromPrimitive;
 
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -26,7 +27,7 @@ pub fn solve_gm_analytical<R>(
     body: &CentralBody<R>,
 ) -> PropagatingEffect<R>
 where
-    R: RealField + From<f64> + Default + Debug,
+    R: RealField + FromPrimitive + Default + Debug,
 {
     match solve_gm_analytical_kernel(coord_a, coord_b, body) {
         Ok(gm) => PropagatingEffect::pure(gm),

@@ -82,7 +82,10 @@ fn a_single_category_always_wins() {
 fn a_zero_weight_is_never_drawn() {
     // A cumulative scan comparing with `<=` rather than `<` can select a zero-weight category,
     // which no frequency tolerance would notice at a low enough weight.
-    let d = expect_accepted(Categorical::new(vec![1.0f64, 0.0, 1.0]), "a zero in the middle");
+    let d = expect_accepted(
+        Categorical::new(vec![1.0f64, 0.0, 1.0]),
+        "a zero in the middle",
+    );
     let f = frequencies(&d, 100_000, SUITE_SEED);
     assert_eq!(f[1], 0.0, "a zero-weight category was drawn");
     assert_near(f[0], 0.5, 0.05, "index 0");
@@ -118,15 +121,25 @@ fn the_last_category_is_reachable() {
 fn a_degenerate_weight_vector_is_refused() {
     expect_refused(Categorical::<f64>::new(vec![]), "no weights");
     expect_refused(Categorical::new(vec![1.0f64, -1.0]), "a negative weight");
-    expect_refused(Categorical::new(vec![0.0f64, 0.0]), "weights summing to zero");
+    expect_refused(
+        Categorical::new(vec![0.0f64, 0.0]),
+        "weights summing to zero",
+    );
     expect_refused(Categorical::new(vec![1.0f64, f64::NAN]), "a NaN weight");
-    expect_refused(Categorical::new(vec![1.0f64, f64::INFINITY]), "an infinite weight");
+    expect_refused(
+        Categorical::new(vec![1.0f64, f64::INFINITY]),
+        "an infinite weight",
+    );
 }
 
 #[test]
 fn the_weights_are_kept_verbatim() {
     let d = expect_accepted(Categorical::new(vec![1.0f64, 3.0, 6.0]), "weights");
-    assert_eq!(d.weights(), &[1.0, 3.0, 6.0], "the constructor altered the weights");
+    assert_eq!(
+        d.weights(),
+        &[1.0, 3.0, 6.0],
+        "the constructor altered the weights"
+    );
     assert_eq!(d.len(), 3);
     assert!(!d.is_empty());
 }
@@ -178,11 +191,13 @@ fn the_rounding_fallback_returns_the_last_category() {
     // `[0.3, 0.7]` is writing the most ordinary pair of probabilities there is. A mutation to
     // `weights.len() - 1` hands that caller index 2 or 3 for two categories, which is a panic in
     // whatever array they index with it.
-    let d = expect_accepted(Categorical::new(vec![0.3f64, 0.7]), "two ordinary probabilities");
+    let d = expect_accepted(
+        Categorical::new(vec![0.3f64, 0.7]),
+        "two ordinary probabilities",
+    );
     let i: usize = d.sample(&mut MaxRng);
     assert_eq!(
         i, 1,
         "the rounding fallback returned {i}, which is not the last of two categories"
     );
 }
-

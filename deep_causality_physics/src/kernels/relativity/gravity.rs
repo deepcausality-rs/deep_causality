@@ -5,7 +5,7 @@
 
 use crate::error::PhysicsError;
 use deep_causality_algebra::Field;
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 
 // Kernels
@@ -25,7 +25,7 @@ pub fn einstein_tensor_kernel<T>(
     metric: &CausalTensor<T>,
 ) -> Result<CausalTensor<T>, PhysicsError>
 where
-    T: Field + Float + From<f64>,
+    T: Field + Float + FromPrimitive,
 {
     // Validate ranks and shapes
     if ricci.num_dim() != 2 || metric.num_dim() != 2 {
@@ -50,7 +50,7 @@ where
     }
 
     // 0.5 * R
-    let half_scalar = scalar * <T as From<f64>>::from(0.5);
+    let half_scalar = scalar * lift::<T>(0.5);
 
     // (0.5 * R) * g_uv
     // Manual scalar multiplication since Mul<T> is not implemented for generic T
@@ -80,7 +80,7 @@ pub fn geodesic_deviation_kernel<T>(
     n: &[T],
 ) -> Result<Vec<T>, PhysicsError>
 where
-    T: Field + Float + From<f64>,
+    T: Field + Float + FromPrimitive,
 {
     // A^u = - R^u_vrs U^v n^r U^s
     // Direct contraction without einsum for generic T
@@ -144,7 +144,7 @@ pub fn geodesic_integrator_kernel<T>(
     num_steps: usize,
 ) -> Result<Vec<(Vec<T>, Vec<T>)>, PhysicsError>
 where
-    T: Field + Float + From<f64> + Copy,
+    T: Field + Float + FromPrimitive + Copy,
 {
     // Validate inputs
     if initial_position.len() != initial_velocity.len() {
@@ -216,7 +216,7 @@ where
         let u_mid1: Vec<T> = u
             .iter()
             .zip(k1_u.iter())
-            .map(|(v, k)| *v + <T as From<f64>>::from(0.5) * *k)
+            .map(|(v, k)| *v + lift::<T>(0.5) * *k)
             .collect();
         let a2 = compute_acceleration(&u_mid1);
         let k2_x: Vec<T> = u_mid1.iter().map(|&v| v * dt).collect();
@@ -226,7 +226,7 @@ where
         let u_mid2: Vec<T> = u
             .iter()
             .zip(k2_u.iter())
-            .map(|(v, k)| *v + <T as From<f64>>::from(0.5) * *k)
+            .map(|(v, k)| *v + lift::<T>(0.5) * *k)
             .collect();
         let a3 = compute_acceleration(&u_mid2);
         let k3_x: Vec<T> = u_mid2.iter().map(|&v| v * dt).collect();
@@ -240,16 +240,10 @@ where
 
         // Update
         for i in 0..dim {
-            x[i] += (k1_x[i]
-                + <T as From<f64>>::from(2.0) * k2_x[i]
-                + <T as From<f64>>::from(2.0) * k3_x[i]
-                + k4_x[i])
-                / <T as From<f64>>::from(6.0);
-            u[i] += (k1_u[i]
-                + <T as From<f64>>::from(2.0) * k2_u[i]
-                + <T as From<f64>>::from(2.0) * k3_u[i]
-                + k4_u[i])
-                / <T as From<f64>>::from(6.0);
+            x[i] += (k1_x[i] + lift::<T>(2.0) * k2_x[i] + lift::<T>(2.0) * k3_x[i] + k4_x[i])
+                / lift::<T>(6.0);
+            u[i] += (k1_u[i] + lift::<T>(2.0) * k2_u[i] + lift::<T>(2.0) * k3_u[i] + k4_u[i])
+                / lift::<T>(6.0);
         }
 
         // Check for numerical instability

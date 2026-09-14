@@ -14,8 +14,8 @@
 //! collide with the integer bindings beside it, which is the same `E0119` that shaped the whole
 //! retrofit. They are one line each and carry no logic.
 
-use crate::types::distr::uniform::{RandFloat, UniformFloat};
 use crate::SampleUniform;
+use crate::types::distr::uniform::{RandFloat, UniformFloat};
 use deep_causality_num::Float106;
 
 impl RandFloat for f32 {}

@@ -8,7 +8,10 @@ use alloc::vec::Vec;
 
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
-use deep_causality_haft::{Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal, Traversable};
+use deep_causality_haft::{
+    Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal,
+    Traversable,
+};
 
 // ============================================================================
 // HKT Witness Implementation

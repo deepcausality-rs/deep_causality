@@ -49,9 +49,7 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_num::{Float, FromPrimitive};
-use deep_causality_stats::{
-    Distribution, Normal, RandWidth, Rng, StandardUniform, UniformInt,
-};
+use deep_causality_stats::{Distribution, Normal, RandWidth, Rng, StandardUniform, UniformInt};
 
 /// Outcome of a single Metropolis-Hastings step.
 #[derive(Debug, Clone, PartialEq)]

@@ -11,7 +11,7 @@
 use crate::traits::cellular_complex::CellularComplex;
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
-use deep_causality_num::{FromPrimitive, ToPrimitive};
+use deep_causality_num::{FromPrimitive, ToPrimitive, lift};
 // use deep_causality_tensor::TensorData; // Removed
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -39,12 +39,12 @@ pub struct FlowParams<R> {
     pub method: FlowMethod,
 }
 
-impl<R: RealField + From<f64>> FlowParams<R> {
+impl<R: RealField + FromPrimitive> FlowParams<R> {
     /// Default flow parameters.
     pub fn default_params() -> Self {
         Self {
-            epsilon: R::from(0.01),
-            t_max: R::from(1.0),
+            epsilon: lift(0.01),
+            t_max: lift(1.0),
             method: FlowMethod::RungeKutta3,
         }
     }

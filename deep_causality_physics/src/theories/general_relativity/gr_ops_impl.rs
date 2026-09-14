@@ -16,7 +16,7 @@ use crate::{
 use deep_causality_algebra::Field;
 use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::GaugeFieldWitness;
 use deep_causality_topology::{
@@ -25,7 +25,7 @@ use deep_causality_topology::{
 
 impl<S> GrOps<S> for GR<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64> + Copy + deep_causality_algebra::RealField,
+    S: Field + Float + Clone + FromPrimitive + Into<f64> + Copy + deep_causality_algebra::RealField,
 {
     fn ricci_tensor(&self) -> Result<CausalTensor<S>, PhysicsError> {
         let lie_fs = self.field_strength();
@@ -333,8 +333,8 @@ where
             if !neighbors.is_empty() {
                 for n_idx in &neighbors {
                     let gamma_n = extract_spatial_metric(*n_idx);
-                    let weight = S::one() / <S as From<f64>>::from(neighbors.len() as f64);
-                    let half = <S as From<f64>>::from(0.5);
+                    let weight = S::one() / lift::<S>(neighbors.len() as f64);
+                    let half = lift::<S>(0.5);
 
                     for k in 0..3 {
                         for i in 0..3 {
@@ -396,7 +396,7 @@ where
                         }
                     }
 
-                    let weight = S::one() / <S as From<f64>>::from(neighbors.len() as f64);
+                    let weight = S::one() / lift::<S>(neighbors.len() as f64);
                     for i in 0..3 {
                         for j in 0..3 {
                             partial_div[i] += (t_n[j][i] - t_tensor[j][i]) * weight;
@@ -419,7 +419,7 @@ where
             // -------------------------------------------------------------------------
             // 4. ASSEMBLE MOMENTUM CONSTRAINT
             // -------------------------------------------------------------------------
-            let eight_pi = <S as From<f64>>::from(8.0 * std::f64::consts::PI);
+            let eight_pi = lift::<S>(8.0 * std::f64::consts::PI);
 
             for i in 0..3 {
                 let j_i = match matter_momentum {

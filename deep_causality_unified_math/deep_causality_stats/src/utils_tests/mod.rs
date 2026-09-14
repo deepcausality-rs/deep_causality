@@ -15,10 +15,10 @@
 //! assertions and the independent oracles.
 
 pub mod assertions;
-pub mod sampling;
 pub mod oracles;
 pub mod precision;
 pub mod samples;
+pub mod sampling;
 
 use alloc::vec::Vec;
 use deep_causality_num::{FromPrimitive, lift};

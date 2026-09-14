@@ -9,7 +9,10 @@
 //! (`q(u) = √2 · erfinv(2u − 1)`) and split into double-double `(hi, lo)` components.
 
 use deep_causality_num::{Float, Float106};
-use deep_causality_stats::{bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106, uniform_inverse_cdf};
+use deep_causality_stats::{
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
+    uniform_inverse_cdf,
+};
 
 fn d(x: f64) -> Float106 {
     Float106::from(x)

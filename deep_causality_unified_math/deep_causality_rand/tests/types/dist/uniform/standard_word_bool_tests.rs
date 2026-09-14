@@ -56,7 +56,10 @@ fn standard_bool_yields_both_values() {
             saw_false = true;
         }
     }
-    assert!(saw_true && saw_false, "a constant Boolean body passes nothing");
+    assert!(
+        saw_true && saw_false,
+        "a constant Boolean body passes nothing"
+    );
 }
 
 #[test]
@@ -78,13 +81,19 @@ fn the_rng_methods_reach_their_own_samplers() {
     let word: u64 = g.random_word();
     let mut g2 = Xoshiro256::from_seed(SEED);
     let direct: u64 = StandardWord.sample(&mut g2);
-    assert_eq!(word, direct, "Rng::random_word must delegate to StandardWord");
+    assert_eq!(
+        word, direct,
+        "Rng::random_word must delegate to StandardWord"
+    );
 
     let mut g3 = Xoshiro256::from_seed(SEED);
     let flag = g3.random_boolean();
     let mut g4 = Xoshiro256::from_seed(SEED);
     let direct_flag = StandardBool.sample(&mut g4);
-    assert_eq!(flag, direct_flag, "Rng::random_boolean must delegate to StandardBool");
+    assert_eq!(
+        flag, direct_flag,
+        "Rng::random_boolean must delegate to StandardBool"
+    );
 }
 
 #[test]

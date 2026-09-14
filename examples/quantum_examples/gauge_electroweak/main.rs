@@ -16,7 +16,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::Float106;
+use deep_causality_num::{Float106, lift};
 use deep_causality_physics::ElectroweakParams;
 
 // =============================================================================
@@ -28,7 +28,7 @@ type FloatType = Float106;
 /// Macro to convert f64 literals to target FloatType
 macro_rules! flt {
     ($x:expr) => {
-        <FloatType as From<f64>>::from($x)
+        lift::<FloatType>($x)
     };
 }
 

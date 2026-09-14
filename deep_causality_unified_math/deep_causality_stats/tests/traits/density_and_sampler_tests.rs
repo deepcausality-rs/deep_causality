@@ -10,7 +10,9 @@
 //! could express "sample, then score the sample", which is the shape every importance-weighting,
 //! sequential-Monte-Carlo and MCMC-diagnostic algorithm takes.
 
-use deep_causality_stats::{Distribution, Normal, StandardNormal, Xoshiro256, gaussian_log_density};
+use deep_causality_stats::{
+    Distribution, Normal, StandardNormal, Xoshiro256, gaussian_log_density,
+};
 
 #[test]
 fn a_draw_can_be_scored_by_its_own_density() {

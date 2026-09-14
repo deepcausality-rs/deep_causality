@@ -74,7 +74,12 @@ where
         mean.abs() < 0.02,
         "{scalar}: StandardNormal mean {mean} is not near zero"
     );
-    assert_near(var, 1.0, 0.05, &format!("{scalar}: StandardNormal variance"));
+    assert_near(
+        var,
+        1.0,
+        0.05,
+        &format!("{scalar}: StandardNormal variance"),
+    );
 
     let normal = Normal::<T>::new(lift(3.0), lift(2.0))
         .unwrap_or_else(|e| panic!("{scalar}: Normal refused a valid pair: {e}"));
@@ -145,7 +150,10 @@ where
         &format!("{scalar}: Categorical weight-2 share"),
     );
 
-    let poisson = expect_accepted(Poisson::<T>::new(lift(4.0)), &format!("{scalar}: Poisson(4)"));
+    let poisson = expect_accepted(
+        Poisson::<T>::new(lift(4.0)),
+        &format!("{scalar}: Poisson(4)"),
+    );
     let (mean, var) = moments::<u64, _>(&poisson, N, SUITE_SEED);
     assert_near(mean, 4.0, TOL, &format!("{scalar}: Poisson mean"));
     assert_near(var, 4.0, 0.05, &format!("{scalar}: Poisson variance"));

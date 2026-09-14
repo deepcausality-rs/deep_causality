@@ -51,7 +51,10 @@ pub trait DiagonalTraversable<F: HKT> {
     /// # An empty structure
     ///
     /// A structure with no slots leaves nothing to zip, and the result is the seed as given.
-    fn sequence_zip<A, M>(fa: F::Type<M::Type<A>>, seed: M::Type<F::Type<A>>) -> M::Type<F::Type<A>>
+    fn sequence_zip<A, M>(
+        fa: F::Type<M::Type<A>>,
+        seed: M::Type<F::Type<A>>,
+    ) -> M::Type<F::Type<A>>
     where
         M: Semigroupal<M> + HKT;
 }

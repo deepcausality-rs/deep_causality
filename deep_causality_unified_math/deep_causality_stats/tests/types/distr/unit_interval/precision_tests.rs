@@ -106,7 +106,11 @@ fn the_width_constant_is_declared_per_scalar() {
     assert_eq!(<f32 as RandWidth>::WORDS, 1);
     assert_eq!(<f64 as RandWidth>::WORDS, 1);
     assert_eq!(<BFloat16 as RandWidth>::WORDS, 1);
-    assert_eq!(<Float106 as RandWidth>::WORDS, 2, "a double-double needs two");
+    assert_eq!(
+        <Float106 as RandWidth>::WORDS,
+        2,
+        "a double-double needs two"
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -365,5 +369,8 @@ fn the_limbs_compose_to_the_exact_expected_value() {
     let lo = (w2 >> 11) as f64 * scale;
     let expected = Float106::from(hi) + Float106::from(lo) * Float106::from(scale);
 
-    assert_eq!(v, expected, "the two limbs did not compose as hi + lo * 2^-53");
+    assert_eq!(
+        v, expected,
+        "the two limbs did not compose as hi + lo * 2^-53"
+    );
 }

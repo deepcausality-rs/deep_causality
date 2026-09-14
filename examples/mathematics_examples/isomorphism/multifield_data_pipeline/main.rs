@@ -123,7 +123,7 @@ fn main() {
 
     // Element-wise scaling. Any tensor function with this signature plugs
     // straight in — that's the value of the generic helper.
-    let scaled = map_underlying_tensor(field, |t| &t * lift::<FloatType>(2.0));
+    let scaled = map_underlying_tensor(field, |t| lift::<FloatType>(2.0) * &t);
     println!(
         "  scaled the underlying tensor by 2.0; multifield metadata preserved: \
          metric={:?}, dx={:?}, shape={:?}",
@@ -133,7 +133,7 @@ fn main() {
     );
 
     // Chain a second transform. Same generic helper.
-    let shifted = map_underlying_tensor(scaled, |t| &t + lift::<FloatType>(0.5));
+    let shifted = map_underlying_tensor(scaled, |t| lift::<FloatType>(0.5) + &t);
     println!(
         "  added 0.5 element-wise; multifield metadata still preserved: \
          metric={:?}, dx={:?}, shape={:?}",

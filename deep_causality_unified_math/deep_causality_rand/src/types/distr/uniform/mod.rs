@@ -5,10 +5,10 @@
 
 pub mod standard_word;
 
+use crate::StandardWord;
 use crate::{
     Distribution, Rng, SampleBorrow, SampleUniform, UniformDistributionError, UniformSampler,
 };
-use crate::StandardWord;
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
@@ -88,7 +88,8 @@ pub trait RandFloat: RealField + FromPrimitive {
         let mut acc = Self::from_f64(word(rng)).expect("a unit value converts to every scalar");
         let mut scale = Self::from_f64(WORD_SCALE).expect("2^-53 converts to every scalar");
         for _ in 1..Self::WORDS {
-            acc += Self::from_f64(word(rng)).expect("a unit value converts to every scalar") * scale;
+            acc +=
+                Self::from_f64(word(rng)).expect("a unit value converts to every scalar") * scale;
             scale *= Self::from_f64(WORD_SCALE).expect("2^-53 converts to every scalar");
         }
         acc

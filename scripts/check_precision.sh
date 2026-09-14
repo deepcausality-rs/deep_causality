@@ -31,12 +31,8 @@ TARGETS="deep_causality_num::Float106 f32 f64"
 # <example name>:<precision> pairs that are known not to build, each with the reason. These are
 # library bounds rather than example defects; the reason also lives in the example's alias
 # docstring. Remove the entry when the bound is fixed, and the gate starts enforcing it again.
-#
-#   differential_field_examples:f32
-#       `PointCloud::triangulate` (and the curvature/gauge surface around it) bounds its scalar
-#       on `From<f64>`. `f32` is the one shipped scalar with no `From<f64>` impl. 46 sites across
-#       8 files in `deep_causality_topology` use that bound where `FromPrimitive` is meant.
-EXCLUDED="differential_field_examples:f32"
+# Empty: nothing is currently excluded.
+EXCLUDED=""
 
 status=0
 checked=0

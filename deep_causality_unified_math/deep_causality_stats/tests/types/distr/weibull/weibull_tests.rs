@@ -6,11 +6,11 @@
 //! The Weibull distribution, checked against its closed form.
 
 use deep_causality_num::Float106;
+use deep_causality_rand::Distribution;
 use deep_causality_stats::utils_tests::sampling::{
     SUITE_SEED, ZeroRng, assert_guards_against_zero, assert_near, draws, expect_accepted,
     expect_refused, lift, moments, quantile, sorted_draws,
 };
-use deep_causality_rand::Distribution;
 use deep_causality_stats::{Exponential, Weibull};
 
 const N: u64 = 200_000;
@@ -24,7 +24,12 @@ fn the_mean_at_shape_two_is_lambda_root_pi_over_two() {
     // `mean = λ·Γ(1 + 1/k)`; at `k = 2` that is `λ·Γ(1.5) = λ·√π/2 = 0.8862`.
     let d = expect_accepted(Weibull::new(2.0f64, 1.0f64), "k 2, lambda 1");
     let (mean, _) = moments::<f64, _>(&d, N, SUITE_SEED);
-    assert_near(mean, std::f64::consts::PI.sqrt() / 2.0, 0.01, "Weibull(2, 1) mean");
+    assert_near(
+        mean,
+        std::f64::consts::PI.sqrt() / 2.0,
+        0.01,
+        "Weibull(2, 1) mean",
+    );
 }
 
 #[test]
@@ -73,7 +78,12 @@ fn at_shape_one_it_is_the_exponential() {
     let (em, ev) = moments::<f64, _>(&e, N, SUITE_SEED);
 
     assert_near(wm, em, 0.02, "Weibull(1, 2) mean against Exponential(0.5)");
-    assert_near(wv, ev, 0.05, "Weibull(1, 2) variance against Exponential(0.5)");
+    assert_near(
+        wv,
+        ev,
+        0.05,
+        "Weibull(1, 2) variance against Exponential(0.5)",
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -83,7 +93,10 @@ fn at_shape_one_it_is_the_exponential() {
 #[test]
 fn every_draw_is_finite_and_non_negative() {
     let d = expect_accepted(Weibull::new(1.5f64, 1.0f64), "k 1.5");
-    for (i, x) in draws::<f64, _>(&d, 10_000, SUITE_SEED).into_iter().enumerate() {
+    for (i, x) in draws::<f64, _>(&d, 10_000, SUITE_SEED)
+        .into_iter()
+        .enumerate()
+    {
         assert!(x.is_finite(), "draw {i} was {x}");
         assert!(x >= 0.0, "draw {i} was negative: {x}");
     }

@@ -107,7 +107,8 @@ fn test_shift_different_seeds_differ() {
     let a = SobolSequence::new_shifted(4, 1).unwrap();
     let b = SobolSequence::new_shifted(4, 2).unwrap();
     // At least one coordinate over a small batch must differ.
-    let differ = (0..32u64).any(|idx| (0..4).any(|d| a.coordinate::<f64>(idx, d) != b.coordinate::<f64>(idx, d)));
+    let differ = (0..32u64)
+        .any(|idx| (0..4).any(|d| a.coordinate::<f64>(idx, d) != b.coordinate::<f64>(idx, d)));
     assert!(differ, "different seeds produced identical sequences");
 }
 

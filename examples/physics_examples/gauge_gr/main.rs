@@ -14,7 +14,7 @@
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float, Float106};
+use deep_causality_num::{Float, Float106, lift};
 use deep_causality_num_dual::Dual;
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
@@ -30,10 +30,10 @@ type FloatType = Float106;
 type GRTheory = GR<FloatType>;
 
 /// Macro to convert f64 literals to FloatType
-/// This enables writing `flt!(1.0)` instead of `<FloatType as From<f64>>::from(1.0)`
+/// This enables writing `flt!(1.0)` instead of `lift::<FloatType>(1.0)`
 macro_rules! float_from_f64 {
     ($x:expr) => {
-        <FloatType as From<f64>>::from($x)
+        lift::<FloatType>($x)
     };
 }
 

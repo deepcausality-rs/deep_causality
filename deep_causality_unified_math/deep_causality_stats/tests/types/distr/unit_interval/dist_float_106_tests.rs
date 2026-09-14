@@ -4,8 +4,8 @@
  */
 
 use deep_causality_num::{Float106, One, Zero};
-use deep_causality_rand::types::Xoshiro256;
 use deep_causality_rand::Distribution;
+use deep_causality_rand::types::Xoshiro256;
 use deep_causality_stats::{Open01, OpenClosed01, StandardUniform};
 
 #[test]

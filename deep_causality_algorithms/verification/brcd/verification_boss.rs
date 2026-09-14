@@ -29,9 +29,9 @@
 mod common;
 
 use common::{Report, load_csv, load_expected, manifest_dir, tensor};
-use deep_causality_stats::RandomExt;
 use deep_causality_algorithms::brcd::{BossConfig, BrcdConfig, boss_learn, brcd_run};
 use deep_causality_rand::{Rng, Xoshiro256};
+use deep_causality_stats::RandomExt;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::EdgeKind;
 use std::f64::consts::TAU;

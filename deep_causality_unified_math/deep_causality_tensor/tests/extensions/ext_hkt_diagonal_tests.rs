@@ -30,7 +30,9 @@ fn field() -> CausalTensor<CausalTensor<i32>> {
 /// An ensemble of `n` empty fields: the accumulator the traversal builds into.
 fn seed(n: usize) -> CausalTensor<CausalTensor<i32>> {
     CausalTensor::from_vec(
-        (0..n).map(|_| CausalTensor::from_vec(Vec::new(), &[0])).collect(),
+        (0..n)
+            .map(|_| CausalTensor::from_vec(Vec::new(), &[0]))
+            .collect(),
         &[n],
     )
 }
@@ -65,14 +67,15 @@ fn the_cartesian_traversal_is_a_different_operation() {
         .collect();
     let small = CausalTensor::from_vec(cells, &[2, 2]);
 
-    let cartesian =
-        CausalTensorWitness::sequence::<i32, CausalTensorWitness>(small.clone());
+    let cartesian = CausalTensorWitness::sequence::<i32, CausalTensorWitness>(small.clone());
     assert_eq!(cartesian.len(), 81, "the cartesian traversal returns n^4");
 
     let diagonal = CausalTensorWitness::sequence_zip::<i32, ZipTensorWitness>(
         small,
         CausalTensor::from_vec(
-            (0..n).map(|_| CausalTensor::from_vec(Vec::new(), &[0])).collect(),
+            (0..n)
+                .map(|_| CausalTensor::from_vec(Vec::new(), &[0]))
+                .collect(),
             &[n],
         ),
     );
@@ -107,9 +110,17 @@ fn ragged_cells_truncate_the_ensemble_and_not_the_structure() {
 
     let out = CausalTensorWitness::sequence_zip::<i32, ZipTensorWitness>(ragged, seed(DRAWS));
 
-    assert_eq!(out.shape(), &[20], "the ensemble truncated to the shortest cell");
+    assert_eq!(
+        out.shape(),
+        &[20],
+        "the ensemble truncated to the shortest cell"
+    );
     for (i, f) in out.as_slice().iter().enumerate() {
-        assert_eq!(f.shape(), &[2, 2], "field {i} lost a cell to the truncation");
+        assert_eq!(
+            f.shape(),
+            &[2, 2],
+            "field {i} lost a cell to the truncation"
+        );
         let want: Vec<i32> = (0..4).map(|k| (k * 100 + i) as i32).collect();
         assert_eq!(f.as_slice(), want.as_slice(), "field {i} mispaired");
     }
@@ -131,14 +142,13 @@ fn a_seed_shorter_than_the_cells_bounds_the_ensemble() {
 fn a_single_cell_field_is_the_ensemble_itself() {
     // The degenerate structure: one cell, so each field holds one value and the result is the
     // original run wrapped one deep.
-    let one = CausalTensor::from_vec(
-        vec![CausalTensor::from_vec(vec![7, 8, 9], &[3])],
-        &[1],
-    );
+    let one = CausalTensor::from_vec(vec![CausalTensor::from_vec(vec![7, 8, 9], &[3])], &[1]);
     let out = CausalTensorWitness::sequence_zip::<i32, ZipTensorWitness>(
         one,
         CausalTensor::from_vec(
-            (0..3).map(|_| CausalTensor::from_vec(Vec::new(), &[0])).collect(),
+            (0..3)
+                .map(|_| CausalTensor::from_vec(Vec::new(), &[0]))
+                .collect(),
             &[3],
         ),
     );

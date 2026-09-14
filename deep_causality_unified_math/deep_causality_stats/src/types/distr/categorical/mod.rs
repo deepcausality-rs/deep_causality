@@ -59,7 +59,6 @@ where
         }
         Ok(Self { weights, total })
     }
-
 }
 
 /// Accessors. These need no algebra, so they are not behind the `RealField` bound — a caller

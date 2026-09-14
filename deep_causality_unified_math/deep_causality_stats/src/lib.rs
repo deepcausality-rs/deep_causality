@@ -139,11 +139,11 @@ pub use crate::types::distr::cauchy::Cauchy;
 pub use crate::types::distr::exponential::Exponential;
 pub use crate::types::distr::log_normal::LogNormal;
 pub use crate::types::distr::normal::Normal;
-pub use crate::types::distr::uniform_int::UniformInt;
-pub use crate::types::distr::poisson::{MAX_ITERATIONS, MAX_RATE, Poisson};
-pub use crate::types::distr::weibull::Weibull;
 pub use crate::types::distr::normal::standard_normal::StandardNormal;
+pub use crate::types::distr::poisson::{MAX_ITERATIONS, MAX_RATE, Poisson};
+pub use crate::types::distr::uniform_int::UniformInt;
 pub use crate::types::distr::unit_interval::standard_uniform::StandardUniform;
+pub use crate::types::distr::weibull::Weibull;
 pub use crate::types::range::{Open01, OpenClosed01};
 pub use crate::utils::inverse_cdf::{
     bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,

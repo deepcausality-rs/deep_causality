@@ -48,7 +48,10 @@ fn other_awkward_sizes_are_uniform_too() {
         let want = 1.0 / n as f64;
         for (i, p) in f.iter().enumerate() {
             let rel = (p - want).abs() / want;
-            assert!(rel < 0.02, "range {n}, index {i} took {p}, {rel} away from {want}");
+            assert!(
+                rel < 0.02,
+                "range {n}, index {i} took {p}, {rel} away from {want}"
+            );
         }
     }
 }

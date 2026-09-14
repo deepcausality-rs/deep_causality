@@ -5,9 +5,11 @@
 
 #[cfg(test)]
 #[cfg(not(miri))]
-mod random_ext_tests;
-#[cfg(test)]
-#[cfg(not(miri))]
 mod density_and_sampler_tests;
 #[cfg(test)]
 mod generic_sampling_tests;
+#[cfg(test)]
+#[cfg(not(miri))]
+mod random_ext_tests;
+#[cfg(test)]
+mod probe_eps_tmp;

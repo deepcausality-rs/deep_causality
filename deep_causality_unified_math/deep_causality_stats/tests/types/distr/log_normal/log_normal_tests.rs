@@ -6,11 +6,11 @@
 //! The log-normal distribution, checked against its closed form.
 
 use deep_causality_num::Float106;
+use deep_causality_stats::LogNormal;
 use deep_causality_stats::utils_tests::sampling::{
     SUITE_SEED, assert_near, draws, expect_accepted, expect_refused, lift, moments, quantile,
     sorted_draws,
 };
-use deep_causality_stats::LogNormal;
 
 const N: u64 = 200_000;
 
@@ -49,7 +49,12 @@ fn a_non_zero_mu_shifts_the_median_multiplicatively() {
     // rather than before fails here.
     let d = expect_accepted(LogNormal::new(1.0f64, 0.25f64), "mu 1, sigma 0.25");
     let xs = sorted_draws::<f64, _>(&d, N, SUITE_SEED);
-    assert_near(quantile(&xs, 0.5), std::f64::consts::E, 0.02, "median = e^1");
+    assert_near(
+        quantile(&xs, 0.5),
+        std::f64::consts::E,
+        0.02,
+        "median = e^1",
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -62,7 +67,10 @@ fn every_draw_is_strictly_positive() {
     // statistical one — it means the exponential was not applied — so this is asserted on **every**
     // draw rather than on a moment, which would average the failure away.
     let d = expect_accepted(LogNormal::new(0.0f64, 1.0f64), "mu 0, sigma 1");
-    for (i, x) in draws::<f64, _>(&d, 20_000, SUITE_SEED).into_iter().enumerate() {
+    for (i, x) in draws::<f64, _>(&d, 20_000, SUITE_SEED)
+        .into_iter()
+        .enumerate()
+    {
         assert!(x > 0.0, "draw {i} was {x}, outside the support (0, inf)");
         assert!(x.is_finite(), "draw {i} was {x}");
     }
@@ -80,8 +88,11 @@ fn the_logarithm_of_a_draw_is_normal() {
         .collect();
 
     let log_mean = logs.iter().sum::<f64>() / logs.len() as f64;
-    let log_var =
-        logs.iter().map(|x| (x - log_mean) * (x - log_mean)).sum::<f64>() / logs.len() as f64;
+    let log_var = logs
+        .iter()
+        .map(|x| (x - log_mean) * (x - log_mean))
+        .sum::<f64>()
+        / logs.len() as f64;
 
     assert_near(log_mean, mu, 0.02, "mean of ln(X)");
     assert_near(log_var, sigma * sigma, 0.05, "variance of ln(X)");

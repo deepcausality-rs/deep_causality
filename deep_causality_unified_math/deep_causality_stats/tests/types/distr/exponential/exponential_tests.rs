@@ -42,7 +42,12 @@ fn the_rate_is_the_rate_and_not_the_scale() {
     // gives a mean of 0.25 and the scale reading a mean of 4.
     let d = expect_accepted(Exponential::new(4.0f64), "rate 4");
     let (mean, _) = moments::<f64, _>(&d, N, SUITE_SEED);
-    assert_near(mean, 0.25, 0.01, "Exponential(4) mean under the rate reading");
+    assert_near(
+        mean,
+        0.25,
+        0.01,
+        "Exponential(4) mean under the rate reading",
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -75,7 +80,10 @@ fn every_draw_is_finite_and_non_negative() {
     // on a *mean* would catch, because one infinity poisons the mean into `NaN` and a `NaN`
     // comparison is false rather than loud.
     let d = expect_accepted(Exponential::new(1.0f64), "rate 1");
-    for (i, x) in draws::<f64, _>(&d, 10_000, SUITE_SEED).into_iter().enumerate() {
+    for (i, x) in draws::<f64, _>(&d, 10_000, SUITE_SEED)
+        .into_iter()
+        .enumerate()
+    {
         assert!(x.is_finite(), "draw {i} was {x}");
         assert!(x >= 0.0, "draw {i} was negative: {x}");
     }
@@ -111,7 +119,10 @@ fn a_non_positive_rate_is_refused() {
 fn a_non_finite_rate_is_refused() {
     expect_refused(Exponential::new(f64::NAN), "a NaN rate");
     expect_refused(Exponential::new(f64::INFINITY), "an infinite rate");
-    expect_refused(Exponential::new(f64::NEG_INFINITY), "a negative infinite rate");
+    expect_refused(
+        Exponential::new(f64::NEG_INFINITY),
+        "a negative infinite rate",
+    );
 }
 
 #[test]

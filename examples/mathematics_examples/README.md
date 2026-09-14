@@ -164,7 +164,6 @@ rounding error.
    - a container that pins its own coefficients, as in
      `SimplicialManifold<f64, FloatType>`. Both parameters take the alias.
 
-   Two asymmetries are the library's, not yours. `scalar * tensor` is implemented per
-   primitive scalar, so write `&tensor * scalar`, which is generic. And a threshold
-   belongs in the working type: `lift::<FloatType>(8.0) * <FloatType as Real>::epsilon()`
-   moves with the alias where `1e-6` does not.
+   A threshold belongs in the working type too:
+   `lift::<FloatType>(8.0) * <FloatType as Real>::epsilon()` moves with the alias where
+   `1e-6` does not.

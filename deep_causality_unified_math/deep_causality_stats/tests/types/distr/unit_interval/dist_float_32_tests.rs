@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::types::Xoshiro256;
 use deep_causality_rand::Distribution;
+use deep_causality_rand::types::Xoshiro256;
 use deep_causality_stats::{Open01, OpenClosed01, StandardUniform};
 
 #[test]

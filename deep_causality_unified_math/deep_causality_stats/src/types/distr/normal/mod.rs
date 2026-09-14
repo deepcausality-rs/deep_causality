@@ -6,8 +6,8 @@
 pub mod standard_normal;
 
 use crate::{NormalDistributionError, StandardNormal};
-use deep_causality_rand::{Distribution, Rng};
 use deep_causality_algebra::Real;
+use deep_causality_rand::{Distribution, Rng};
 
 /// A normal distribution, parameterised by mean and standard deviation.
 ///

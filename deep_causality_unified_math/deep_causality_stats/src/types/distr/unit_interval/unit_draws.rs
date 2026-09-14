@@ -59,8 +59,8 @@ where
         // the loop runs `WORDS - 1` times and the last write is never read — which makes every
         // mutation of it equivalent and so untestable. Mutation testing found exactly that.
         scale *= word_scale;
-        acc += T::from_f64(word_unit_f64(rng)).expect("a unit value converts to every scalar")
-            * scale;
+        acc +=
+            T::from_f64(word_unit_f64(rng)).expect("a unit value converts to every scalar") * scale;
     }
     acc
 }

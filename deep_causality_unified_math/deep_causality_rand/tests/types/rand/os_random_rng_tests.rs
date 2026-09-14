@@ -231,4 +231,3 @@ fn test_os_random_rng_map_u32_to_u64() {
     let val: u64 = mapped_dist.sample(&mut rng);
     assert_ne!(val, 0, "Mapped u32 to u64 should produce a non-zero value");
 }
-

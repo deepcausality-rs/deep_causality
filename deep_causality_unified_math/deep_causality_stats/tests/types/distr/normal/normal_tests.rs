@@ -45,7 +45,10 @@ fn a_zero_coefficient_of_variation_is_a_degenerate_normal() {
     let mut g = Xoshiro256::from_seed(SUITE_SEED);
     for _ in 0..100 {
         let x: f64 = n.sample(&mut g);
-        assert_eq!(x, 10.0, "a zero-width normal drew something other than its mean");
+        assert_eq!(
+            x, 10.0,
+            "a zero-width normal drew something other than its mean"
+        );
     }
 }
 

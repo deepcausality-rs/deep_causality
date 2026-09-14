@@ -10,12 +10,7 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 
 /// `f64` is the right precision for this diffusion demo: short stepping, small triangle. Switch
-/// to `Float106` for higher-precision Laplacian conservation.
-///
-/// `f32` does not compile here. `PointCloud::triangulate` bounds its scalar on `From<f64>`, and
-/// `f32` is the one shipped scalar without that impl, which is why `deep_causality_num::lift`
-/// goes through `FromPrimitive` instead. The bound is in `deep_causality_topology`, not in this
-/// example; `scripts/check_precision.sh` carries the exclusion.
+/// to `f32` or `Float106`; the Laplacian, the Regge metric and the Euler step all follow.
 pub type FloatType = f64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
