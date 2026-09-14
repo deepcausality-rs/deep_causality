@@ -15,6 +15,7 @@
 //! assertions and the independent oracles.
 
 pub mod assertions;
+pub mod sampling;
 pub mod oracles;
 pub mod precision;
 pub mod samples;

@@ -158,148 +158,167 @@ each other after that, except that 4H follows 4E, whose in-range and rejection t
 
 ### 4A. Exponential — and the shared harness
 
-- [ ] 4A.1 Phase 1. `Exponential<T>` with `new(rate) -> Result`, body `unimplemented!()`. Alongside
-      it the harness the other five reuse: a deterministic word source, a moment helper taking a
-      sample count and a tolerance, and a parameter-rejection helper.
-- [ ] 4A.2 Phase 2. Mean of 200 000 draws at rate 2 within 1% of 0.5. Variance within 5% of
-      `1/λ² = 0.25`. Drawn at `f32`, `f64`, `Float106`. Rejection: non-positive rate, `NaN` rate,
-      infinite rate. The `ln(u)` guard: 10 000 draws, none infinite or `NaN`. Run against the
-      unimplemented API; record the failing output and count in `notes/tdd-group-4a.md`.
-- [ ] 4A.3 Phase 3. Defect audit — write each, confirm rejection, record which test caught it:
-      (a) `-ln(1-u)/λ` where `u` comes from a half-open draw that can be 0 — must fail the
-      `ln(u)` guard, not the mean, since `1-u` reaching 1 gives `ln(1) = 0` and a spuriously
-      finite result while `u = 0` gives an infinity; (b) `-ln(u)*λ` instead of `/λ` — must fail
-      the mean at any rate other than 1, which is why the test uses rate 2; (c) a constructor
-      accepting rate 0.
-- [ ] 4A.4 Phase 4. Implement. Phase 5: `scripts/mutants.sh` on the module; survivors get a
-      verdict, equivalents go to `.cargo/mutants.toml` with a reason.
-- [ ] 4A.5 Clippy clean. Prepare the 4A commit message.
+- [x] 4A.1 Phase 1. `Exponential<T>` declared with `unimplemented!()` bodies. Harness added to the
+      crate's **existing** `utils_tests` module rather than a parallel one: `SUITE_SEED`, `draws`,
+      `moments`, `sorted_draws`, `quantile`, `assert_near`, `expect_refused`, `expect_accepted`,
+      `lift`. `StatsError` is reused rather than adding a seventh error type — it already carries
+      `NonPositiveScale`, `NonFiniteInput`, `NegativeProbability` and `EmptyInput`.
+- [x] 4A.2 Phase 2. 10 tests written, observed failing: **1 passed, 9 failed**, all 9 the
+      phase-1 panic. The single pass is the harness determinism check, which must pass while the
+      distribution does not. Adds memorylessness, which characterises the exponential among all
+      continuous distributions and which a right-mean/wrong-shape sampler fails.
+- [x] 4A.3 Phase 3. Defect audit, with a **correction to this task**. (a) as written is not a
+      defect: with `u` in `[0, 1)`, `1 - u` is in `(0, 1]` and the logarithm is always finite.
+      Written and run — 10 passed, 0 failed. The real hazard is the other direction, `-ln(u)` from
+      the half-open draw, and it **survived** the whole suite including the 10 000-draw finiteness
+      check, because a zero draw sits at probability `2^-53`. An inverse-CDF guard cannot be
+      tested by sampling. Closed with `ZeroRng`, promoted into the shared harness for the other
+      six suites. (b) `*λ` for `/λ` → 4 failures. (c) rate 0 accepted → 1 failure.
+- [x] 4A.4 Phase 4. Implemented: **557 passed, 0 failed** crate-wide.
+- [x] 4A.4b Phase 5. Mutation testing: **2 caught, 0 missed**, 3 unviable. No survivors.
+- [x] 4A.5 Clippy clean. Prepare the 4A commit message.
 
 ### 4B. LogNormal
 
-- [ ] 4B.1 Phase 1. `LogNormal<T>` with `new(mu, sigma) -> Result`, body `unimplemented!()`.
-- [ ] 4B.2 Phase 2. Mean of 200 000 draws at `(0, 0.5)` within 1% of `e^{σ²/2} = e^0.125 =
+- [x] 4B.1 Phase 1. `LogNormal<T>` with `new(mu, sigma) -> Result`, body `unimplemented!()`.
+- [x] 4B.2 Phase 2. Mean of 200 000 draws at `(0, 0.5)` within 1% of `e^{σ²/2} = e^0.125 =
       1.1331`. Every draw strictly positive — the support is `(0, ∞)`, and a non-positive value is
       a structural failure rather than a statistical one, so this is asserted on **every** draw
       rather than on a moment. Median within 2% of `e^μ`. All three scalars. Rejection:
       non-positive sigma, non-finite mu or sigma. Run; record.
-- [ ] 4B.3 Phase 3. Defect audit: (a) returning the underlying normal without exponentiating —
+- [x] 4B.3 Phase 3. Defect audit: (a) returning the underlying normal without exponentiating —
       must fail the positivity assertion on roughly half the draws; (b) `e^{μ + σZ}` with sigma
       applied before the mean shift as `e^{σ(μ + Z)}` — must fail the mean while leaving the
       median plausible at `μ = 0`, which is why the test uses a non-zero `σ`; (c) the mean asserted
       against `e^μ` rather than `e^{μ+σ²/2}`, the textbook confusion between the median and the
       mean of a lognormal — confirm the suite distinguishes them.
-- [ ] 4B.4 Phase 4. Implement. Phase 5: mutation testing.
-- [ ] 4B.5 Clippy clean. Prepare the 4B commit message.
+- [x] 4B.4 Phase 4. Implement. Phase 5: mutation testing.
+- [x] 4B.5 Clippy clean. Prepare the 4B commit message.
 
 ### 4C. Cauchy — quantiles only
 
-- [ ] 4C.1 Phase 1. `Cauchy<T>` with `new(location, scale) -> Result`, body `unimplemented!()`.
-- [ ] 4C.2 Phase 2. Median of 20 000 standard draws within 0.05 of 0. Interquartile range within
+- [x] 4C.1 Phase 1. `Cauchy<T>` with `new(location, scale) -> Result`, body `unimplemented!()`.
+- [x] 4C.2 Phase 2. Median of 20 000 standard draws within 0.05 of 0. Interquartile range within
       0.1 of 2. Location and scale recovered from a shifted, scaled instance. All three scalars.
       Rejection: non-positive scale, non-finite parameters. Run; record.
-- [ ] 4C.3 Phase 3, and the audit that justifies the whole approach. Defect audit:
+- [x] 4C.3 Phase 3, and the audit that justifies the whole approach. Defect audit:
       (a) `tan(π·u)` instead of `tan(π(u − ½))` — a half-turn offset that leaves the *distribution*
       correct but the **median** wrong, so it is caught by 4C.2 and would be invisible to any
       moment test; (b) scale applied additively rather than multiplicatively — must fail the IQR;
       (c) **a mean-based test written deliberately** — run it across at least five seeds and record
       that it passes on some and fails on others. That instability is the evidence for the
       prohibition below, and recording it is the point of the exercise.
-- [ ] 4C.4 The test module contains **no** assertion on a sample mean or variance, and its
+- [x] 4C.4 The test module contains **no** assertion on a sample mean or variance, and its
       docstring states why: the Cauchy distribution has neither, the defining integrals diverge, a
       sample mean does not converge but wanders with a Cauchy distribution of its own. Such a test
       is meaningless rather than merely weak, and it survives review while failing intermittently
       on a seed change. Cite the 4C.3(c) measurement.
-- [ ] 4C.5 Phase 4. Implement. Phase 5: mutation testing.
-- [ ] 4C.6 Clippy clean. Prepare the 4C commit message.
+- [x] 4C.5 Phase 4. Implement. Phase 5: mutation testing.
+- [x] 4C.6 Clippy clean. Prepare the 4C commit message.
 
 ### 4D. Weibull
 
-- [ ] 4D.1 Phase 1. `Weibull<T>` with `new(shape, scale) -> Result`, body `unimplemented!()`.
-- [ ] 4D.2 Phase 2. Mean of 200 000 draws at `(k=2, λ=1)` within 1% of `λ·Γ(1 + 1/k) =
+- [x] 4D.1 Phase 1. `Weibull<T>` with `new(shape, scale) -> Result`, body `unimplemented!()`.
+- [x] 4D.2 Phase 2. Mean of 200 000 draws at `(k=2, λ=1)` within 1% of `λ·Γ(1 + 1/k) =
       sqrt(pi)/2 = 0.8862`. A second parameter pair at `k = 1`, where the Weibull **is** the
       exponential with rate `1/λ`, cross-checked against 4A's closed form — the one place a
       second implementation is a legitimate oracle, because the identity is analytic rather than a
       reimplementation. Every draw non-negative. All three scalars. Rejection: non-positive shape
       or scale, non-finite parameters. The `ln(u)` guard. Run; record.
-- [ ] 4D.3 Phase 3. Defect audit: (a) the exponent inverted, `^k` for `^(1/k)` — must fail the
+- [x] 4D.3 Phase 3. Defect audit: (a) the exponent inverted, `^k` for `^(1/k)` — must fail the
       mean at `k = 2` and pass at `k = 1`, which is why both are tested; (b) scale applied inside
       the power rather than outside; (c) the `k = 1` case disagreeing with the exponential.
-- [ ] 4D.4 Phase 4. Implement. Phase 5: mutation testing.
-- [ ] 4D.5 Clippy clean. Prepare the 4D commit message.
+- [x] 4D.4 Phase 4. Implement. Phase 5: mutation testing.
+- [x] 4D.5 Clippy clean. Prepare the 4D commit message.
 
 ### 4E. Categorical
 
-- [ ] 4E.1 Phase 1. `Categorical<T>` with `new(weights) -> Result`, body `unimplemented!()`.
-- [ ] 4E.2 Phase 2. Weights `1:3:6` give frequencies within 0.01 of `0.1`, `0.3`, `0.6` over
+- [x] 4E.1 Phase 1. `Categorical<T>` with `new(weights) -> Result`, body `unimplemented!()`.
+- [x] 4E.2 Phase 2. Weights `1:3:6` give frequencies within 0.01 of `0.1`, `0.3`, `0.6` over
       200 000 draws. **Unnormalised** weights give the same frequencies as their normalised
       counterparts — the sampler normalises, the caller does not have to. A single-weight vector
       always returns index 0. A weight of exactly zero is never selected. Every returned index is
       in range. All three scalars. Rejection: empty vector, any negative weight, weights summing
       to zero, any non-finite weight. Run; record.
-- [ ] 4E.3 Phase 3. Defect audit: (a) scanning without dividing by the weight total — must fail on
+- [x] 4E.3 Phase 3. Defect audit: (a) scanning without dividing by the weight total — must fail on
       the unnormalised case and pass on the normalised one, which is why both are tested;
       (b) an off-by-one returning `i+1` — must fail the in-range assertion on the last index;
       (c) a zero-weight category selected when the cumulative comparison uses `<=` rather than `<`;
       (d) floating-point drift on the final category, where the accumulated remainder can leave the
       last comparison marginal — confirm the fallback returns the last index rather than panicking.
-- [ ] 4E.4 Phase 4. Implement. Phase 5: mutation testing.
-- [ ] 4E.5 Clippy clean. Prepare the 4E commit message.
+- [x] 4E.4 Phase 4. Implement. Phase 5: mutation testing.
+- [x] 4E.5 Clippy clean. Prepare the 4E commit message.
 
 ### 4F. Poisson — and its domain
 
-- [ ] 4F.1 Phase 1. `Poisson<T>` with `new(lambda) -> Result`, body `unimplemented!()`. The
+- [x] 4F.1 Phase 1. `Poisson<T>` with `new(lambda) -> Result`, body `unimplemented!()`. The
       declaration states the algorithm's valid range in its docstring from the outset, since the
       range is part of the contract rather than an implementation detail.
-- [ ] 4F.2 Phase 2. Mean within 1% and variance within 5% of `lambda` at `lambda = 3`, over
+- [x] 4F.2 Phase 2. Mean within 1% and variance within 5% of `lambda` at `lambda = 3`, over
       200 000 draws — the Poisson's mean and variance are equal, and a sampler that gets the mean
       right while getting the variance wrong is a common failure, so both are asserted.
       `lambda = 0` gives every draw `0`. Every draw is a non-negative integer. All three scalars.
       Run; record.
-- [ ] 4F.3 Phase 2b, the domain. A `lambda` beyond the documented range — including one large
+- [x] 4F.3 Phase 2b, the domain. A `lambda` beyond the documented range — including one large
       enough that `exp(-lambda)` underflows to zero at the working scalar, which is near 700 at
       `f64` and far sooner at `f32` — returns an error or a correct value. It does **not** loop
       indefinitely. The test carries a timeout or an iteration cap so a regression fails rather
       than hangs the suite.
-- [ ] 4F.4 Phase 3. Defect audit: (a) `p < l` for `p <= l` in the termination comparison —
+- [x] 4F.4 Phase 3. Defect audit: (a) `p < l` for `p <= l` in the termination comparison —
       determine whether the suite distinguishes them and **record the verdict either way**; if it
       does not, say so rather than inventing a test that appears to; (b) returning `k+1` for `k`,
       an off-by-one that shifts the mean by exactly 1 and is caught at `lambda = 3` but would hide
       at large `lambda`; (c) the underflow case looping — must be caught by 4F.3's cap.
-- [ ] 4F.5 Phase 4. Implement, either refusing an out-of-range `lambda` or switching method.
+- [x] 4F.5 Phase 4. Implement, either refusing an out-of-range `lambda` or switching method.
       Which of the two is an implementation decision; that one of them happens is not.
       Phase 5: mutation testing, with the termination loop as the target of interest.
-- [ ] 4F.6 Clippy clean. Prepare the 4F commit message.
+- [x] 4F.6 Clippy clean. Prepare the 4F commit message.
 
 ### 4H. Discrete uniform — unweighted choice over a range
 
 Ordered after 4E because it shares the in-range and rejection tests, and because Categorical's
 cumulative scan is the weighted sibling of the same operation.
 
-- [ ] 4H.1 Phase 1. `UniformInt` with `new(range) -> Result`, body `unimplemented!()`. The
+- [x] 4H.1 Phase 1. `UniformInt` with `new(range) -> Result`, body `unimplemented!()`. The
       docstring names the method used to avoid modulo bias from the outset, since freedom from bias
       is the contract rather than an implementation detail.
-- [ ] 4H.2 Phase 2. 200 000 draws over a range of **7** — a size dividing no power of two, so a
-      biased implementation shows — give each index within 1% of `1/7`. Ranges of 1, 2 and 1000
-      always return in-range values, and a range of 1 always returns its single value. Rejection:
-      empty range, inverted range. Run; record in `notes/tdd-group-4h.md`.
-- [ ] 4H.3 Phase 3. Defect audit: (a) **`next_u64() % n`**, the hand-written form this replaces —
-      the low residues occur once more often than the high ones, so it must fail the uniformity
-      test at a range of 7 while passing every in-range assertion. This is the defect the whole
-      distribution exists to remove, and the audit is the evidence that the test detects it;
+- [x] 4H.2 Phase 2. 700 000 draws over a range of **7** give each index within 1% of `1/7`. Ranges
+      of 1, 2 and 1000 always return in-range values, and a range of 1 always returns its single
+      value. Rejection: the empty range. Run; record in `notes/tdd-group-4h.md`.
+
+      **Corrected while writing 4H.3.** This task and 4H.3(a) were drafted on the premise that a
+      uniformity test at range 7 detects modulo bias. It does not, and the audit measured why:
+      `2^64 / 7` is `2^61`, so `w % 7` over-weights the low residues by one part in `2^61` —
+      4e-19 relative, below any feasible sample size. Range 7 still earns its place as an awkward
+      size for a block-based map, but it is not the bias test. Two tests were added that do detect
+      the defect, and both are recorded under 4H.3.
+- [x] 4H.3 Phase 3. Defect audit: (a) **`next_u64() % n`**, the hand-written form this replaces;
       (b) an off-by-one giving `1..=n` instead of `0..n`; (c) a rejection loop that retries on the
-      wrong condition and silently narrows the range.
-- [ ] 4H.4 Phase 4. Implement. Phase 5: mutation testing, with the rejection condition as the
+      wrong condition and silently narrows the range; (d) the `usize` draw written separately from
+      the `u64` draw; (e) the rejection dropped entirely.
+
+      Defect (a) needs a range where the bias exists: at `len = 12 297 829 382 473 034 411` one
+      whole copy of the range fits in a word and half a second, so modulo puts 2/3 of its mass in
+      the lower half against a uniform 1/2. Defect (e) is statistically invisible at every range —
+      it moves each index by at most one part in `2^64` — so it is caught deterministically
+      instead, by a scripted generator whose first word falls in the short block and must be
+      thrown away.
+- [x] 4H.4 Phase 4. Implement. Phase 5: mutation testing, with the rejection condition as the
       target of interest.
-- [ ] 4H.5 Clippy clean. Prepare the 4H commit message.
+- [x] 4H.5 Clippy clean. Prepare the 4H commit message.
 
 ### 4G. Group close-out
 
-- [ ] 4G.1 All seven run at `f32`, `f64` and `Float106` in one table-driven test, so a scalar
+- [x] 4G.1 All seven run at `f32`, `f64` and `Float106` in one table-driven test, so a scalar
       added later is one row rather than seven edits. `UniformInt` returns an index rather than a
-      scalar, so it is exercised for its generator-precision independence rather than its own.
-- [ ] 4G.2 Confirm `stats`'s suite is at or above its 1.1 baseline plus the new tests.
-- [ ] 4G.3 Clippy clean across the crate. Prepare the group-4 summary commit message.
+      scalar, so it is exercised for its generator-precision independence rather than its own —
+      the table asserts its index sequence is identical at all three scalars.
+- [x] 4G.2 Confirm `stats`'s suite is at or above its 1.1 baseline plus the new tests. **624
+      against a baseline of 467.** Recorded in `notes/baselines.md`.
+- [x] 4G.3 Clippy clean across the crate. Prepare the group-4 summary commit message.
+- [x] 4G.4 Phase 5 for the whole group, batched onto a green tree: 140 mutants, 75 caught, 31
+      unviable, 20 timed out, 14 survived. Four survivors were real gaps and are closed; the rest
+      are exact equivalences. Recorded in `notes/mutation-group-4.md`.
 
 ## 5. Consumers, and the `uncertain` migration
 
