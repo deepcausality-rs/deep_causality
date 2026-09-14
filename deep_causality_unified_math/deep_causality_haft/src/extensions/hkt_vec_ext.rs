@@ -4,7 +4,8 @@
  */
 
 use crate::{
-    Applicative, CloneFunctor, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad, Pure,
+    Applicative, CloneFunctor, Collectable, DebugFunctor, EqFunctor, Foldable, Functor, HKT, Monad,
+    Pure, Traversable,
 };
 use alloc::vec;
 use alloc::vec::Vec;
@@ -83,6 +84,20 @@ impl Foldable<VecWitness> for VecWitness {
     }
 }
 
+// Implementation of Collectable for VecWitness
+impl Collectable<VecWitness> for VecWitness {
+    /// Collects a sequence of values into a `Vec`, in iteration order.
+    ///
+    /// The inverse direction to [`Foldable::fold`] above, and on this carrier it is the identity
+    /// on `Vec`: a `Vec` is already the sequence, so `collect` is what `fold` undoes.
+    fn collect<T, I>(items: I) -> <VecWitness as HKT>::Type<T>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        items.into_iter().collect()
+    }
+}
+
 // Implementation of Monad for VecWitness
 impl Monad<VecWitness> for VecWitness {
     /// Implements the `bind` (or `flat_map`) operation for `Vec<T>`.
@@ -121,32 +136,40 @@ impl CloneFunctor for VecWitness {
     }
 }
 
-// NOTE: `Traversable` is deliberately not implemented for `VecWitness`, and the reason is a
-// signature one rather than a mathematical one.
-//
-// The usual `sequence` for a list folds an accumulator through the inner applicative:
-//
-//     acc = M::apply(M::fmap(acc, |v| move |a| { v.push(a); v }), m_a)
-//
-// That puts a *function* inside `M`. When the trait carried an element marker, `Applicative::apply`
-// required the anonymous closure type to satisfy it, `sequence` could not declare that, and an impl
-// could not add the bound itself (E0276). The marker is gone, so that particular obstruction is
-// gone with it. The fold written against a `zip_with`-style structure map remains the better form,
-// because the combining function never enters `M` at all:
-//
-//     acc = M::zip_with(acc, m_a, |mut v, a| { v.push(a); v });
-//
-// The `zip_with` structure map now exists (`crate::Semigroupal`), and a `sequence` written
-// against it does compile and pass. It is still not implemented here, and that is a decision
-// rather than an omission: `sequence`'s inner-`M` bound would have to move from `Applicative` to
-// `Semigroupal + Pure`, and those two are substitutive rather than comparable. Measured, that
-// swap takes the witnesses admissible as the inner applicative from 19 down to 3, losing every
-// effect monad in the workspace — `StudyEffectWitness`, `CdlEffectWitness`,
-// `GraphGeneratableEffectWitness` and the `MyEffectHktWitness` family — along with `BoxWitness`,
-// `LinkedListWitness`, `ManifoldWitness`, `CausalTensorWitness` and `VecWitness` itself. One
-// carrier gained is not worth sixteen lost.
-//
-// Revisit only as part of a change that first adopts `Semigroupal` across those witnesses, so the
-// bound can move without narrowing the trait's contract. See
-// `openspec/notes/archive/hkt_gat/monoidal-applicative.md` §6 finding 5 for the measurement. Until then,
-// `OptionWitness` and `ResultWitness` are the only two `Traversable` carriers.
+// Implementation of Traversable for VecWitness
+impl Traversable<VecWitness> for VecWitness {
+    /// Flips `Vec<M<A>>` into `M<Vec<A>>` by folding an accumulator through `M` from left to
+    /// right, so the effects run in index order and the result keeps that order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// index order is the one reported. The empty vector yields `M::pure(Vec::new())`.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones — quadratic — for an `n`-element input. The clone is
+    /// forced by [`Applicative::apply`]'s `Func: FnMut` bound, not by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out,
+    /// and the cartesian carriers do invoke it once per element. An `A: Copy` bound would not help,
+    /// because the cloned value is the accumulator `Vec`, which is never `Copy`.
+    fn sequence<A, M>(fa: alloc::vec::Vec<M::Type<A>>) -> M::Type<alloc::vec::Vec<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let mut acc: M::Type<Vec<A>> = M::pure(Vec::new());
+        for m_a in fa {
+            acc = M::apply(
+                M::fmap(acc, |v: Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        acc
+    }
+}

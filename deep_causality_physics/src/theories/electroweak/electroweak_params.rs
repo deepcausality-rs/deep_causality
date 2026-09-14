@@ -6,6 +6,7 @@ use crate::{
     ALPHA_EM_MZ, EM_COUPLING, FERMI_CONSTANT, GEV2_TO_NB, GEV2_TO_PB, HIGGS_MASS, HIGGS_VEV,
     PhysicsError, SIN2_THETA_W, TOP_MASS, W_MASS, Z_MASS,
 };
+use deep_causality_num::{FromPrimitive, lift};
 
 use crate::theories::electroweak::radiative::{RadiativeCorrections, solve_w_mass};
 use deep_causality_algebra::RealField;
@@ -48,7 +49,7 @@ pub struct ElectroweakParams<T> {
 
 impl<T> ElectroweakParams<T>
 where
-    T: RealField + From<f64>,
+    T: RealField + FromPrimitive,
 {
     pub fn new(sin2_theta_w: T, higgs_vev: T, g: T, g_prime: T) -> Self {
         Self {
@@ -61,16 +62,16 @@ where
     }
 
     pub fn standard_model() -> Self {
-        let sin2 = <T as From<f64>>::from(SIN2_THETA_W);
-        let one = <T as From<f64>>::from(1.0);
+        let sin2 = lift::<T>(SIN2_THETA_W);
+        let one = lift::<T>(1.0);
         let cos2 = one - sin2;
         let sin_theta = sin2.sqrt();
         let cos_theta = cos2.sqrt();
-        let e = <T as From<f64>>::from(EM_COUPLING);
+        let e = lift::<T>(EM_COUPLING);
 
         Self {
             sin2_theta_w: sin2,
-            higgs_vev: <T as From<f64>>::from(HIGGS_VEV),
+            higgs_vev: lift::<T>(HIGGS_VEV),
             g: e / sin_theta,
             g_prime: e / cos_theta,
             corrections: None,
@@ -84,15 +85,15 @@ where
     /// - M_Z ≈ 91.19 GeV (PDG Input)
     pub fn standard_model_precision() -> Self {
         // Use PDG values as input for precision calculation
-        let mz = <T as From<f64>>::from(Z_MASS); // 91.1876
-        let top = <T as From<f64>>::from(TOP_MASS); // 172.5
+        let mz = lift::<T>(Z_MASS); // 91.1876
+        let top = lift::<T>(TOP_MASS); // 172.5
 
         // Critical: Use ALPHA_EM_MZ (High Energy) for Mass Solver
-        let alpha_mz = <T as From<f64>>::from(ALPHA_EM_MZ);
+        let alpha_mz = lift::<T>(ALPHA_EM_MZ);
         // Use ALPHA_EM (Low Energy) for Delta R reporting
-        let alpha_0 = <T as From<f64>>::from(crate::constants::ALPHA_EM);
+        let alpha_0 = lift::<T>(crate::constants::ALPHA_EM);
 
-        let gf = <T as From<f64>>::from(FERMI_CONSTANT); // 1.166e-5
+        let gf = lift::<T>(FERMI_CONSTANT); // 1.166e-5
 
         // Solve for M_W using one-loop corrections (High Energy Input)
         let corrections = solve_w_mass(mz, top, alpha_mz, alpha_0, gf).unwrap_or_else(|_| {
@@ -107,7 +108,7 @@ where
         let mw = corrections.w_mass_corrected;
 
         // Derive effective mixing angle from the physical masses
-        let one = <T as From<f64>>::from(1.0);
+        let one = lift::<T>(1.0);
         let sin2_on_shell = one - (mw * mw) / (mz * mz);
 
         let cos2 = one - sin2_on_shell;
@@ -120,8 +121,8 @@ where
         // This gives the physical High-Energy coupling (~0.665)
         // rather than the tree-level fitted coupling (~0.653)
         let delta_r = corrections.delta_r;
-        let vev = <T as From<f64>>::from(HIGGS_VEV);
-        let g_coupling = (<T as From<f64>>::from(2.0) * mw / vev) * (one - delta_r).sqrt();
+        let vev = lift::<T>(HIGGS_VEV);
+        let g_coupling = (lift::<T>(2.0) * mw / vev) * (one - delta_r).sqrt();
 
         // g' = g * tan(theta)
         let g_prime_coupling = g_coupling * tan_theta;
@@ -136,8 +137,8 @@ where
     }
 
     pub fn with_mixing_angle(sin2_theta_w: T) -> Result<Self, PhysicsError> {
-        let zero = <T as From<f64>>::from(0.0);
-        let one = <T as From<f64>>::from(1.0);
+        let zero = lift::<T>(0.0);
+        let one = lift::<T>(1.0);
         if sin2_theta_w <= zero || sin2_theta_w >= one {
             return Err(PhysicsError::DimensionMismatch(
                 "sin²θ_W must be in (0, 1)".into(),
@@ -146,11 +147,11 @@ where
         let cos2 = one - sin2_theta_w;
         let sin_theta = sin2_theta_w.sqrt();
         let cos_theta = cos2.sqrt();
-        let e = <T as From<f64>>::from(EM_COUPLING);
+        let e = lift::<T>(EM_COUPLING);
 
         Ok(Self {
             sin2_theta_w,
-            higgs_vev: <T as From<f64>>::from(HIGGS_VEV),
+            higgs_vev: lift::<T>(HIGGS_VEV),
             g: e / sin_theta,
             g_prime: e / cos_theta,
             corrections: None,
@@ -161,7 +162,7 @@ where
         self.sin2_theta_w
     }
     pub fn cos2_theta_w(&self) -> T {
-        <T as From<f64>>::from(1.0) - self.sin2_theta_w
+        lift::<T>(1.0) - self.sin2_theta_w
     }
     pub fn sin_theta_w(&self) -> T {
         self.sin2_theta_w.sqrt()
@@ -194,22 +195,22 @@ where
             c.w_mass_corrected
         } else {
             // Otherwise tree level
-            self.g * self.higgs_vev / <T as From<f64>>::from(2.0)
+            self.g * self.higgs_vev / lift::<T>(2.0)
         }
     }
 
     pub fn z_mass_computed(&self) -> T {
         if self.corrections.is_some() {
             // For precision mode, we started with Z mass fixed
-            <T as From<f64>>::from(Z_MASS)
+            lift::<T>(Z_MASS)
         } else {
             self.w_mass_computed() / self.cos_theta_w()
         }
     }
 
     pub fn rho_parameter(&self) -> T {
-        let mw = <T as From<f64>>::from(W_MASS);
-        let mz = <T as From<f64>>::from(Z_MASS);
+        let mw = lift::<T>(W_MASS);
+        let mz = lift::<T>(Z_MASS);
         (mw * mw) / (mz * mz * self.cos2_theta_w())
     }
 
@@ -225,30 +226,30 @@ where
     }
 
     pub fn higgs_quartic(&self) -> T {
-        let mh = <T as From<f64>>::from(HIGGS_MASS);
-        (mh * mh) / (<T as From<f64>>::from(2.0) * self.higgs_vev * self.higgs_vev)
+        let mh = lift::<T>(HIGGS_MASS);
+        (mh * mh) / (lift::<T>(2.0) * self.higgs_vev * self.higgs_vev)
     }
 
     pub fn fermion_mass(&self, yukawa: T) -> T {
-        yukawa * self.higgs_vev / <T as From<f64>>::from(2.0).sqrt()
+        yukawa * self.higgs_vev / lift::<T>(2.0).sqrt()
     }
     pub fn yukawa_coupling(&self, mass: T) -> T {
-        <T as From<f64>>::from(2.0).sqrt() * mass / self.higgs_vev
+        lift::<T>(2.0).sqrt() * mass / self.higgs_vev
     }
 
     pub fn neutrino_electron_cross_section(
         &self,
         center_of_mass_energy: T,
     ) -> Result<T, PhysicsError> {
-        if center_of_mass_energy <= <T as From<f64>>::from(0.0) {
+        if center_of_mass_energy <= lift::<T>(0.0) {
             return Err(PhysicsError::DimensionMismatch(
                 "Energy must be positive".into(),
             ));
         }
         let s = center_of_mass_energy * center_of_mass_energy;
-        let gf = <T as From<f64>>::from(FERMI_CONSTANT);
-        let sigma = gf * gf * s / <T as From<f64>>::from(PI);
-        Ok(sigma * <T as From<f64>>::from(GEV2_TO_PB))
+        let gf = lift::<T>(FERMI_CONSTANT);
+        let sigma = gf * gf * s / lift::<T>(PI);
+        Ok(sigma * lift::<T>(GEV2_TO_PB))
     }
 
     /// Computes the partial width for Z → f f̄ decay.
@@ -277,28 +278,28 @@ where
 
         // One-Loop Effective Rho Parameter
         let rho_eff = if let Some(c) = self.corrections {
-            <T as From<f64>>::from(1.0) + c.delta_rho
+            lift::<T>(1.0) + c.delta_rho
         } else {
-            <T as From<f64>>::from(1.0)
+            lift::<T>(1.0)
         };
 
         // Vector and axial-vector couplings
         // g_V = I_3 - 2 Q sin²θ_eff
         let g_a = i3;
-        let g_v = i3 - <T as From<f64>>::from(2.0) * q * sin2;
+        let g_v = i3 - lift::<T>(2.0) * q * sin2;
 
         // Color factor N_c = 3 for quarks, 1 for leptons
         let nc = if is_quark {
-            <T as From<f64>>::from(3.0)
+            lift::<T>(3.0)
         } else {
-            <T as From<f64>>::from(1.0)
+            lift::<T>(1.0)
         };
 
         // QCD correction factor for quarks (1 + α_s/π + ...) ≈ 1.04
         let qcd_factor = if is_quark {
-            <T as From<f64>>::from(1.038)
+            lift::<T>(1.038)
         } else {
-            <T as From<f64>>::from(1.0)
+            lift::<T>(1.0)
         };
 
         // =====================================================================
@@ -308,10 +309,8 @@ where
         // Pre-factor = (N_c · sqrt(2) · G_F · M_Z^3) / (12 · pi)
         // =====================================================================
         let prefactor = nc
-            * (<T as From<f64>>::from(2.0).sqrt()
-                * <T as From<f64>>::from(FERMI_CONSTANT)
-                * mz.powf(<T as From<f64>>::from(3.0)))
-            / (<T as From<f64>>::from(12.0) * <T as From<f64>>::from(PI));
+            * (lift::<T>(2.0).sqrt() * lift::<T>(FERMI_CONSTANT) * mz.powf(lift::<T>(3.0)))
+            / (lift::<T>(12.0) * lift::<T>(PI));
 
         prefactor * rho_eff * (g_v * g_v + g_a * g_a) * qcd_factor
     }
@@ -329,21 +328,13 @@ where
     pub fn z_total_width_computed(&self) -> T {
         // 1. Invisible Width (3 generations of Neutrinos)
         // Neutrinos have I3 = 1/2, Q = 0.
-        let gamma_nu = <T as From<f64>>::from(3.0)
-            * self.z_partial_width_fermion(
-                false,
-                <T as From<f64>>::from(0.5),
-                <T as From<f64>>::from(0.0),
-            );
+        let gamma_nu =
+            lift::<T>(3.0) * self.z_partial_width_fermion(false, lift::<T>(0.5), lift::<T>(0.0));
 
         // 2. Leptonic Width (3 generations: e, μ, τ)
         // Charged leptons have I3 = -1/2, Q = -1.
-        let gamma_l = <T as From<f64>>::from(3.0)
-            * self.z_partial_width_fermion(
-                false,
-                <T as From<f64>>::from(-0.5),
-                <T as From<f64>>::from(-1.0),
-            );
+        let gamma_l =
+            lift::<T>(3.0) * self.z_partial_width_fermion(false, lift::<T>(-0.5), lift::<T>(-1.0));
 
         // 3. Hadronic Width (5 flavors: u, d, s, c, b)
         // Quarks include a color factor of 3 and QCD corrections.
@@ -358,20 +349,12 @@ where
     /// Top quark is too heavy for Z decay ($M_t > M_Z/2$).
     pub fn z_hadronic_width_computed(&self) -> T {
         // Up-type (u, c): I3 = 1/2, Q = 2/3
-        let gamma_u = <T as From<f64>>::from(2.0)
-            * self.z_partial_width_fermion(
-                true,
-                <T as From<f64>>::from(0.5),
-                <T as From<f64>>::from(2.0 / 3.0),
-            );
+        let gamma_u = lift::<T>(2.0)
+            * self.z_partial_width_fermion(true, lift::<T>(0.5), lift::<T>(2.0 / 3.0));
 
         // Down-type (d, s, b): I3 = -1/2, Q = -1/3
-        let gamma_d = <T as From<f64>>::from(3.0)
-            * self.z_partial_width_fermion(
-                true,
-                <T as From<f64>>::from(-0.5),
-                <T as From<f64>>::from(-1.0 / 3.0),
-            );
+        let gamma_d = lift::<T>(3.0)
+            * self.z_partial_width_fermion(true, lift::<T>(-0.5), lift::<T>(-1.0 / 3.0));
 
         gamma_u + gamma_d
     }
@@ -390,7 +373,7 @@ where
         center_of_mass_energy: T,
         _width: T, // Ignored in favor of computed width
     ) -> Result<T, PhysicsError> {
-        if center_of_mass_energy <= <T as From<f64>>::from(0.0) {
+        if center_of_mass_energy <= lift::<T>(0.0) {
             return Err(PhysicsError::DimensionMismatch(
                 "Energy must be positive".into(),
             ));
@@ -402,17 +385,12 @@ where
 
         // Comute widths from first principles
         let gamma_z = self.z_total_width_computed();
-        let gamma_ee = self.z_partial_width_fermion(
-            false,
-            <T as From<f64>>::from(-0.5),
-            <T as From<f64>>::from(-1.0),
-        );
+        let gamma_ee = self.z_partial_width_fermion(false, lift::<T>(-0.5), lift::<T>(-1.0));
         let gamma_had = self.z_hadronic_width_computed();
 
         // Relativistic Breit-Wigner with s-dependent width
-        let denominator =
-            (s - mz2).powf(<T as From<f64>>::from(2.0)) + s * s * gamma_z * gamma_z / mz2;
-        if denominator.abs() < <T as From<f64>>::from(1e-30) {
+        let denominator = (s - mz2).powf(lift::<T>(2.0)) + s * s * gamma_z * gamma_z / mz2;
+        if denominator.abs() < lift::<T>(1e-30) {
             return Err(PhysicsError::NumericalInstability(
                 "Singularity in cross section".into(),
             ));
@@ -420,20 +398,19 @@ where
 
         // Cross-section in GeV⁻²
         let sigma_gev2 =
-            <T as From<f64>>::from(12.0) * <T as From<f64>>::from(PI) * gamma_ee * gamma_had * s
-                / (mz2 * denominator);
+            lift::<T>(12.0) * lift::<T>(PI) * gamma_ee * gamma_had * s / (mz2 * denominator);
 
-        Ok(sigma_gev2 * <T as From<f64>>::from(GEV2_TO_NB))
+        Ok(sigma_gev2 * lift::<T>(GEV2_TO_NB))
     }
 
     pub fn w_mass(&self) -> T {
-        <T as From<f64>>::from(W_MASS)
+        lift::<T>(W_MASS)
     }
     pub fn z_mass(&self) -> T {
-        <T as From<f64>>::from(Z_MASS)
+        lift::<T>(Z_MASS)
     }
     pub fn top_yukawa(&self) -> T {
-        self.yukawa_coupling(<T as From<f64>>::from(TOP_MASS))
+        self.yukawa_coupling(lift::<T>(TOP_MASS))
     }
 
     // =========================================================================
@@ -452,7 +429,7 @@ where
         let mu_squared = lambda * self.higgs_vev * self.higgs_vev;
         let phi2 = phi_magnitude * phi_magnitude;
 
-        (<T as From<f64>>::from(0.0) - mu_squared) * phi2 + lambda * phi2 * phi2
+        (lift::<T>(0.0) - mu_squared) * phi2 + lambda * phi2 * phi2
     }
 
     /// Verifies the minimum of the Higgs potential is at v/√2.
@@ -463,15 +440,15 @@ where
     /// ```
     /// Returns true if the VEV satisfies the potential minimum condition.
     pub fn symmetry_breaking_verified(&self) -> bool {
-        let v_over_sqrt2 = self.higgs_vev / <T as From<f64>>::from(2.0).sqrt();
-        let epsilon = <T as From<f64>>::from(1e-6);
+        let v_over_sqrt2 = self.higgs_vev / lift::<T>(2.0).sqrt();
+        let epsilon = lift::<T>(1e-6);
 
         // At the minimum, derivative should be zero
         // dV/d|φ| = -2μ²|φ| + 4λ|φ|³ = 0
         // Solution: |φ| = √(μ²/(2λ)) = v/√2
         let lambda = self.higgs_quartic();
         let mu_squared = lambda * self.higgs_vev * self.higgs_vev;
-        let computed_vev = (mu_squared / (<T as From<f64>>::from(2.0) * lambda)).sqrt();
+        let computed_vev = (mu_squared / (lift::<T>(2.0) * lambda)).sqrt();
 
         (computed_vev - v_over_sqrt2).abs() < epsilon * v_over_sqrt2
     }
@@ -503,7 +480,7 @@ where
     pub fn gauge_boson_masses(&self) -> (T, T, T) {
         let m_w = self.w_mass_computed();
         let m_z = self.z_mass_computed();
-        let m_a = <T as From<f64>>::from(0.0); // Photon remains massless
+        let m_a = lift::<T>(0.0); // Photon remains massless
 
         (m_w, m_z, m_a)
     }
@@ -516,7 +493,7 @@ where
     /// ```
     /// In the Standard Model at tree level, ρ = 1 exactly.
     pub fn rho_deviation(&self) -> T {
-        (self.rho_parameter() - <T as From<f64>>::from(1.0)).abs()
+        (self.rho_parameter() - lift::<T>(1.0)).abs()
     }
     /// Returns the effective ρ parameter including Veltman screening.
     ///
@@ -526,9 +503,9 @@ where
     /// ```
     pub fn rho_effective(&self) -> T {
         if let Some(c) = self.corrections {
-            <T as From<f64>>::from(1.0) + c.delta_rho
+            lift::<T>(1.0) + c.delta_rho
         } else {
-            <T as From<f64>>::from(1.0)
+            lift::<T>(1.0)
         }
     }
 

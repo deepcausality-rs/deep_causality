@@ -4,7 +4,10 @@
  */
 
 use crate::types::dense_vector::DenseVector;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
+use deep_causality_haft::{
+    Applicative, CoMonad, Collectable, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure,
+    Semigroupal, Traversable,
+};
 
 /// The higher-kinded witness for [`DenseVector`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -32,6 +35,20 @@ impl Foldable<DenseVectorWitness> for DenseVectorWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.into_data().into_iter().fold(init, f)
+    }
+}
+
+impl Collectable<DenseVectorWitness> for DenseVectorWitness {
+    /// Collects the values into a vector of the same length, in iteration order.
+    ///
+    /// A vector carries no shape beyond its length, so the sequence determines the result
+    /// completely and nothing is left to decide. An empty iterator gives the empty vector, which
+    /// `fold` then returns the initial accumulator for.
+    fn collect<T, I>(items: I) -> DenseVector<T>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        DenseVector::from_vec(items.into_iter().collect())
     }
 }
 
@@ -88,6 +105,43 @@ impl Monad<DenseVectorWitness> for DenseVectorWitness {
     }
 }
 
+impl Traversable<DenseVectorWitness> for DenseVectorWitness {
+    /// Flips `DenseVector<M<A>>` into `M<DenseVector<A>>` by folding an accumulator through `M`
+    /// from left to right, so the effects run in index order and the result keeps that order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// index order is the one reported. The empty vector yields `M::pure` of the empty vector.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones — quadratic — for an `n`-element input. The clone is
+    /// forced by [`Applicative::apply`]'s `Func: FnMut` bound, not by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out,
+    /// and this witness's own cartesian `apply` does invoke it once per element. An `A: Copy`
+    /// bound would not help, because the cloned value is the accumulator `Vec`, never `Copy`.
+    fn sequence<A, M>(fa: DenseVector<M::Type<A>>) -> M::Type<DenseVector<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let mut acc: M::Type<alloc::vec::Vec<A>> = M::pure(alloc::vec::Vec::new());
+        for m_a in fa.into_data() {
+            acc = M::apply(
+                M::fmap(acc, |v: alloc::vec::Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        M::fmap(acc, DenseVector::from_vec)
+    }
+}
+
 impl CoMonad<DenseVectorWitness> for DenseVectorWitness {
     /// The `(0, 0)` entry.
     ///
@@ -131,4 +185,29 @@ fn shifted_view<A: Clone>(fa: &DenseVector<A>, index: usize) -> DenseVector<A> {
         out.push(s[(i + index) % n].clone());
     }
     DenseVector::from_vec(out)
+}
+
+impl DiagonalTraversable<DenseVectorWitness> for DenseVectorWitness {
+    /// Zips each slot's run into the accumulator in index order.
+    ///
+    /// A vector carries no shape beyond its length, so unlike the tensor impl there is nothing to
+    /// restore afterwards and the fold is the whole operation. An empty vector leaves nothing to
+    /// zip and the seed is returned as given — with no [`Pure`] there is nothing else it could be.
+    fn sequence_zip<A, M>(
+        fa: DenseVector<M::Type<A>>,
+        seed: M::Type<DenseVector<A>>,
+    ) -> M::Type<DenseVector<A>>
+    where
+        M: Semigroupal<M> + HKT,
+    {
+        let mut acc = seed;
+        for cell in fa.into_data() {
+            acc = M::zip_with(acc, cell, |slot, a| {
+                let mut values = slot.into_data();
+                values.push(a);
+                DenseVector::from_vec(values)
+            });
+        }
+        acc
+    }
 }

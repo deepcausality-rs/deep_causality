@@ -115,3 +115,57 @@ rust_test_suite(
         normal_dev = True,
     ),
 )
+
+rust_test_suite(
+    name = "distr",
+    srcs = glob([
+        "tests/types/distr/*/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_stats",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "traits",
+    srcs = glob([
+        "tests/traits/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_stats",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "utils",
+    srcs = glob([
+        "tests/utils/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_stats",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

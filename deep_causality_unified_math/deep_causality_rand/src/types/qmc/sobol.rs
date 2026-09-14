@@ -14,7 +14,7 @@
 //! unscrambled), which uses the Joe–Kuo `new-joe-kuo-6.21201` set — so the generated points
 //! match a widely used reference implementation bit-for-bit.
 
-use crate::{RngCore, RngError, Xoshiro256};
+use crate::{RandScalar, RngCore, RngError, Xoshiro256};
 use alloc::format;
 
 /// Maximum dimension supported by the embedded direction-number table.
@@ -70,10 +70,25 @@ impl SobolSequence {
         self.dim
     }
 
-    /// The coordinate of point `index` in dimension `dim_index` (`0..dim`), in `[0, 1)`.
+    /// The coordinate of point `index` in dimension `dim_index` (`0..dim`), in `[0, 1)`, at the
+    /// caller's scalar.
     ///
     /// `index` must be `< 2^32`; the 32-bit generator's period is `2^32`.
-    pub fn coordinate(&self, index: u64, dim_index: usize) -> f64 {
+    ///
+    /// # The resolution is fixed at `2^-32`, whatever scalar holds it
+    ///
+    /// This is the exception to precision as a parameter, and it is a property of the sequence
+    /// rather than of the scalar. The value is a 32-bit integer scaled by `2^-32`, so it takes one
+    /// of `2^32` values and no more: asking for it at `Float106` does not refine it, and two
+    /// coordinates that agree to 32 bits are the same number in every scalar wide enough to hold
+    /// them. The scalar chosen is a matter of what the caller's arithmetic runs in, not of how
+    /// much of the sequence they receive.
+    ///
+    /// Below 32 bits the choice does cost something: `f32` keeps 24 significand bits, so it
+    /// rounds away the low 8 bits of every coordinate and the sequence's low-discrepancy
+    /// structure degrades with it. That is a real trade-off and the reason this returns at the
+    /// caller's scalar rather than picking one.
+    pub fn coordinate<T: RandScalar>(&self, index: u64, dim_index: usize) -> T {
         debug_assert!(dim_index < self.dim, "dimension index out of range");
         debug_assert!(index < (1u64 << BITS), "index exceeds the 2^32 period");
 
@@ -88,11 +103,13 @@ impl SobolSequence {
             bits &= bits - 1; // clear the lowest set bit
         }
 
-        (value ^ self.shift[dim_index]) as f64 * INV_TWO_POW_32
+        // Formed in `f64`, where a 32-bit integer times `2^-32` is exact, and converted once.
+        T::from_f64((value ^ self.shift[dim_index]) as f64 * INV_TWO_POW_32)
+            .expect("a value in [0, 1) converts to every supported scalar")
     }
 
-    /// Fills `out[0..dim]` with the coordinates of point `index`.
-    pub fn point(&self, index: u64, out: &mut [f64]) {
+    /// Fills `out[0..dim]` with the coordinates of point `index`, at the caller's scalar.
+    pub fn point<T: RandScalar>(&self, index: u64, out: &mut [T]) {
         debug_assert!(out.len() >= self.dim, "output slice shorter than dim");
         for (d, slot) in out.iter_mut().enumerate().take(self.dim) {
             *slot = self.coordinate(index, d);

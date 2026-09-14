@@ -11,7 +11,7 @@
 //! in `ops_metropolis.rs`.
 
 use deep_causality_num_complex::Complex;
-use deep_causality_rand::types::Xoshiro256;
+use deep_causality_stats::Xoshiro256;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     CellularComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1,

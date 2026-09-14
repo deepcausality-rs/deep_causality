@@ -48,8 +48,8 @@ use super::{CubicalReggeGeometry, EdgeLengths, Euclidean};
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::{Float, FromPrimitive};
-use deep_causality_rand::{Distribution, Normal, Rng, StandardUniform};
+use deep_causality_num::Float;
+use deep_causality_stats::{Distribution, Normal, RandScalar, Rng, StandardUniform, UniformInt};
 
 /// Outcome of a single Metropolis-Hastings step.
 #[derive(Debug, Clone, PartialEq)]
@@ -84,9 +84,9 @@ pub enum RejectReason<R: RealField> {
 
 impl<const D: usize, R> CubicalReggeGeometry<D, R, Euclidean>
 where
-    R: RealField + FromPrimitive + Float,
-    StandardUniform: Distribution<R>,
-    deep_causality_rand::StandardNormal: Distribution<R>,
+    // One bound. `RandScalar` is blanket over the algebra, so this says "any scalar the sampling
+    // layer works at" without naming a distribution's implementation or a list of types.
+    R: RandScalar + Float,
 {
     /// One single-edge Metropolis-Hastings step on a `PerEdge` geometry.
     ///
@@ -118,8 +118,13 @@ where
             "Metropolis update requires at least one edge"
         );
 
-        // Snapshot the per-edge length buffer pointer; panic if not PerEdge.
-        let edge_id = (rng.next_u64() as usize) % num_edges;
+        // A uniform index, drawn rather than folded. `w % n` is the form this replaces: it is
+        // unbiased only when `n` divides a power of two, and at a lattice edge count it is off by
+        // `n / 2^64` — too small to measure and still the wrong operation to write by hand at
+        // every call site.
+        let edge_id: usize = UniformInt::new(num_edges as u64)
+            .expect("num_edges > 0 is asserted above")
+            .sample(rng);
         let current_length = match &self.edge_lengths {
             EdgeLengths::PerEdge { lengths } => *lengths
                 .get(edge_id)

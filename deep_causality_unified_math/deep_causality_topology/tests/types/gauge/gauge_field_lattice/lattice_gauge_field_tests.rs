@@ -332,7 +332,7 @@ fn test_lattice_gauge_field_try_t2_energy() {
 #[test]
 fn test_lattice_gauge_field_try_random() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let field: Result<LatticeGaugeField<U1, 2, Complex<f64>, f64>, _> =
         LatticeGaugeField::try_random(lattice.clone(), 6.0, &mut rng);
@@ -346,7 +346,7 @@ fn test_lattice_gauge_field_try_random() {
 #[test]
 fn test_lattice_gauge_field_random_convenience() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::random(lattice, 6.0, &mut rng);
@@ -356,7 +356,7 @@ fn test_lattice_gauge_field_random_convenience() {
 #[test]
 fn test_lattice_gauge_field_random_vs_identity_differ() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let identity: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 6.0);
@@ -449,7 +449,7 @@ fn test_lattice_gauge_field_try_average_polyakov_loop() {
 #[test]
 fn test_lattice_gauge_field_metropolis_sweep_f64() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, 6.0);
@@ -465,7 +465,7 @@ fn test_lattice_gauge_field_metropolis_sweep_f64() {
 #[test]
 fn test_lattice_gauge_field_metropolis_update_f64() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice.clone(), 6.0);
@@ -489,7 +489,7 @@ fn test_lattice_gauge_field_metropolis_update_f64() {
 #[test]
 fn test_lattice_gauge_field_gauge_transform_action_invariance() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, 6.0);
@@ -620,7 +620,7 @@ fn test_lattice_gauge_field_try_improved_action_random() {
     use deep_causality_topology::ActionCoeffs;
 
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     // Use try_random to get a non-trivial field
     let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::try_random(lattice, 6.0, &mut rng).unwrap();
@@ -645,7 +645,7 @@ fn test_metropolis_sweep_empty_lattice() {
     let mut field: LatticeGaugeField<U1, 1, Complex<f64>, f64, ()> =
         LatticeGaugeField::from_links_unchecked(lattice, links, 1.0, ());
 
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let rate = field.try_metropolis_sweep(0.1, &mut rng);
 
     assert!(rate.is_ok());
@@ -655,7 +655,7 @@ fn test_metropolis_sweep_empty_lattice() {
 #[test]
 fn test_metropolis_high_epsilon_acceptance() {
     let lattice = create_test_lattice();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, 6.0);
 

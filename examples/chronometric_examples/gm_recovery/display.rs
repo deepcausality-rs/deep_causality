@@ -6,6 +6,7 @@
 //! Display utilities for the GM recovery example.
 
 use core::fmt::{Display, LowerExp};
+use deep_causality_num::FromPrimitive;
 
 use deep_causality_algebra::RealField;
 
@@ -23,7 +24,7 @@ use crate::pipeline::GmReport;
 /// and `Float106`.
 pub fn print_gm_report<R>(report: &GmReport<R>)
 where
-    R: RealField + LowerExp + Display + From<f64> + Into<f64>,
+    R: RealField + LowerExp + Display + FromPrimitive + Into<f64>,
 {
     // Cast to f64 just for the human-readable percentage column. Native
     // Float106 Display would render both double-double components as a

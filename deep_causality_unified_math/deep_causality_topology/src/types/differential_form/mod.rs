@@ -8,6 +8,7 @@
 //! A differential k-form is an antisymmetric tensor field that can be integrated
 //! over k-dimensional submanifolds.
 
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
@@ -111,11 +112,11 @@ impl<T: Clone + Default> DifferentialForm<T> {
     /// * `dim` - The manifold dimension
     pub fn zero(degree: usize, dim: usize) -> Self
     where
-        T: From<f64>,
+        T: FromPrimitive,
     {
         // For a k-form, we have C(n,k) independent components
         let num_components = binomial(dim, degree).max(1);
-        let data = vec![T::from(0.0); num_components];
+        let data = vec![lift::<T>(0.0); num_components];
         let coefficients = CausalTensor::from_vec(data, &[num_components]);
 
         Self {

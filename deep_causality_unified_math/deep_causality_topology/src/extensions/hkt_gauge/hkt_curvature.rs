@@ -72,7 +72,7 @@
 use crate::CurvatureTensor;
 use deep_causality_algebra::Field;
 use deep_causality_haft::RiemannMap;
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive, lift};
 // use deep_causality_tensor::CausalTensor; // Removed unused
 use std::marker::PhantomData;
 
@@ -156,7 +156,7 @@ impl<T> From<TensorVector<T>> for Vec<T> {
 
 impl<T> RiemannMap for CurvatureTensorWitness<T>
 where
-    T: Field + Float + Clone + From<f64> + Into<f64> + Copy + PartialOrd,
+    T: Field + Float + Clone + FromPrimitive + Copy + PartialOrd,
 {
     type Tensor = CurvatureTensor<T>;
     type Vector = TensorVector<T>;
@@ -189,7 +189,7 @@ where
 
         let mut out_1 = vec![T::zero(); dim];
         let mut out_2 = vec![T::zero(); dim];
-        let point_five: T = <T as From<f64>>::from(0.5);
+        let point_five: T = lift(0.5);
 
         for (c, out1_val) in out_1.iter_mut().enumerate() {
             for (d, out2_val) in out_2.iter_mut().enumerate() {

@@ -11,6 +11,7 @@ use crate::types::loaders::read_sp3::read_orbit_data;
 use crate::{ClockData, DataLoadingError, GnssDataResult, OrbitData};
 use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
+use deep_causality_num::FromPrimitive;
 use std::path::Path;
 
 /// Describe (but do not perform) reading one satellite's clock **and** orbit series. The two file
@@ -22,7 +23,7 @@ pub fn read_gnss_single_satellite<R>(
     target_sat: &str,
 ) -> impl IoAction<Output = (Vec<ClockData<R>>, Vec<OrbitData<R>>), Error = DataLoadingError>
 where
-    R: RealField + From<f64> + 'static,
+    R: RealField + FromPrimitive + 'static,
 {
     let sp3 = sp3_path.as_ref().to_path_buf();
     let sat = target_sat.to_string();
@@ -51,7 +52,7 @@ impl DataManager {
         target_sat: &str,
     ) -> GnssDataResult<R>
     where
-        R: RealField + From<f64>,
+        R: RealField + FromPrimitive,
         P: AsRef<Path>,
     {
         let clocks = read_clock_data::<R>(clk_path, target_sat).run()?;
@@ -66,7 +67,7 @@ impl DataManager {
         target_sat: &str,
     ) -> Result<Vec<ClockData<R>>, DataLoadingError>
     where
-        R: RealField + From<f64>,
+        R: RealField + FromPrimitive,
         P: AsRef<Path>,
     {
         read_clock_data::<R>(clk_path, target_sat).run()
@@ -79,7 +80,7 @@ impl DataManager {
         target_sat: &str,
     ) -> Result<Vec<OrbitData<R>>, DataLoadingError>
     where
-        R: RealField + From<f64>,
+        R: RealField + FromPrimitive,
         P: AsRef<Path>,
     {
         read_orbit_data::<R>(sp3_path, target_sat).run()

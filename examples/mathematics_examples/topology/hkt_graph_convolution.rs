@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{CoMonad, Functor};
-use deep_causality_num::Lift;
+use deep_causality_num::{Lift, lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, GraphWitness};
 
@@ -46,7 +46,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initial Signal (e.g., Heat, Voltage, or Feature Vector)
     // Node 0 is "Hot" (10.0), others are "Cold" (0.0)
-    let initial_data = CausalTensor::new(vec![10.0, 0.0, 0.0, 0.0], vec![4])?;
+    let zero = lift::<FloatType>(0.0);
+    let initial_data = CausalTensor::new(vec![lift::<FloatType>(10.0), zero, zero, zero], vec![4])?;
     let mut graph = Graph::new(num_nodes, initial_data, 0)?;
 
     // Add edges manually
@@ -76,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let neighbors = g.neighbors(cursor).unwrap_or(&EMPTY_VEC);
 
         // 3. Sum neighbor values
-        let mut sum_neighbors = 0.0;
+        let mut sum_neighbors = lift::<FloatType>(0.0);
         let data_slice = g.data().as_slice();
         for &n_idx in neighbors {
             if let Some(&val) = data_slice.get(n_idx) {
@@ -85,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // 4. Compute Average
-        let count = 1.0 + neighbors.len().lift::<FloatType>();
+        let count = lift::<FloatType>(1.0) + neighbors.len().lift::<FloatType>();
         (current_val + sum_neighbors) / count
     };
 
@@ -99,7 +100,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Apply a ReLU-like activation or just scale it.
     // Let's say we want to amplify weak signals: if x < 1.0 { 0.0 } else { x * 1.1 }
     println!("\n--- Step 2: Activation (Functor) ---");
-    let step2_graph = GraphWitness::fmap(step1_graph, |x| if x < 0.1 { 0.0 } else { x });
+    let threshold = lift::<FloatType>(0.1);
+    let step2_graph = GraphWitness::fmap(step1_graph, move |x| {
+        if x < threshold {
+            lift::<FloatType>(0.0)
+        } else {
+            x
+        }
+    });
     print_graph_state(&step2_graph);
 
     // 5. Another Diffusion Step
@@ -111,6 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn print_graph_state(g: &Graph<FloatType>) {
-    let data = g.data().as_slice();
+    // The display boundary: `f64` appears here and nowhere else.
+    let data: Vec<f64> = g.data().as_slice().iter().map(|&v| lower(v)).collect();
     println!("Node Values: {:?}", data);
 }

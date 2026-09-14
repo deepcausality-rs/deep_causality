@@ -17,7 +17,8 @@ mod common;
 
 use common::{Report, cpdag};
 use deep_causality_algorithms::brcd::{BrcdConfig, brcd_run};
-use deep_causality_rand::{Distribution, Normal, Xoshiro256};
+use deep_causality_rand::{Distribution, Xoshiro256};
+use deep_causality_stats::Normal;
 use deep_causality_tensor::CausalTensor;
 
 /// Linear-Gaussian chain `X = εx`, `Y = y_intercept + 1.5·X + εy`, `Z = 2·Y + εz`.

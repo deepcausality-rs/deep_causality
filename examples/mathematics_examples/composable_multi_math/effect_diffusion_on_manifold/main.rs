@@ -16,9 +16,10 @@
 //! - `CausalEffectPropagationProcessWitness::pure` and `bind`
 //! - Monadic short-circuit on numerical instability
 
+use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::lift;
+use deep_causality_num::{lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -46,7 +47,7 @@ fn main() {
     let mut initial: Vec<FloatType> = vec![lift::<FloatType>(0.0); N_VERTICES];
     initial[4] = lift::<FloatType>(8.0);
     let manifold = build_manifold(initial);
-    println!("t=0 phi: {:?}", snapshot(&manifold));
+    println!("t=0 phi: {:?}", shown(&manifold));
 
     let mut process: Process<SimplicialManifold<FloatType, FloatType>> =
         ProcessWitness::pure(manifold);
@@ -58,7 +59,7 @@ fn main() {
         }
         // Peek at the current value without consuming the chain.
         if let Some(m) = process.value() {
-            println!("t={} phi: {:?}", step, snapshot(m));
+            println!("t={} phi: {:?}", step, shown(m));
         }
     }
 
@@ -81,7 +82,7 @@ fn main() {
     println!("Both abstractions act on the same value at different layers.");
 }
 
-fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, FloatType> {
+fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType, FloatType> {
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();
     let skeleton_0 = Skeleton::new(0, vertices);
     let edges: Vec<Simplex> = (0..N_VERTICES - 1)
@@ -108,8 +109,8 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, Floa
 /// One explicit Euler step of the heat equation. Returns a new manifold whose
 /// vertex values are `phi + alpha * Delta phi`.
 fn diffuse_one_step(
-    m: SimplicialManifold<f64, FloatType>,
-) -> Process<SimplicialManifold<f64, FloatType>> {
+    m: SimplicialManifold<FloatType, FloatType>,
+) -> Process<SimplicialManifold<FloatType, FloatType>> {
     let two = lift::<FloatType>(2.0);
     let zero = lift::<FloatType>(0.0);
     let a = alpha();
@@ -141,12 +142,17 @@ fn diffuse_one_step(
         .as_slice()
         .iter()
         .fold(lift::<FloatType>(0.0), |acc, &v| {
-            let av = v.abs();
+            let av = Real::abs(v);
             if av > acc { av } else { acc }
         });
-    ok(updated, format!("step ok: max |phi| = {}", max_abs))
+    ok(updated, format!("step ok: max |phi| = {}", lower(max_abs)))
 }
 
-fn snapshot(m: &SimplicialManifold<f64, FloatType>) -> Vec<FloatType> {
+fn snapshot(m: &SimplicialManifold<FloatType, FloatType>) -> Vec<FloatType> {
     m.data().as_slice()[..N_VERTICES].to_vec()
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn shown(m: &SimplicialManifold<FloatType, FloatType>) -> Vec<f64> {
+    snapshot(m).into_iter().map(lower).collect()
 }

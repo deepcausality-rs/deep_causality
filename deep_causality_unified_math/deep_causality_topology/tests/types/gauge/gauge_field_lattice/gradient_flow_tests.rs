@@ -51,7 +51,7 @@ fn test_try_find_t0_success() {
 
     // Identity field has E(t)=0, so t^2 E(t) = 0. Never reaches 0.3.
     // We need a random field to start with non-zero energy.
-    let mut rng = deep_causality_rand::types::Xoshiro256::new();
+    let mut rng = deep_causality_stats::Xoshiro256::new();
     field = LatticeGaugeField::try_random(field.lattice().clone().into(), 1.0, &mut rng).unwrap();
 
     let params = FlowParams {
@@ -94,7 +94,7 @@ fn test_try_find_t0_failure_msg() {
 fn test_try_flow_euler() {
     let shape = [2, 2];
     let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
-    let mut rng = deep_causality_rand::types::Xoshiro256::new();
+    let mut rng = deep_causality_stats::Xoshiro256::new();
     let field =
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_random(lattice.clone(), 1.0, &mut rng)
             .unwrap();
@@ -114,7 +114,7 @@ fn test_try_flow_euler() {
 fn test_try_flow_rk3() {
     let shape = [2, 2];
     let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
-    let mut rng = deep_causality_rand::types::Xoshiro256::new();
+    let mut rng = deep_causality_stats::Xoshiro256::new();
     let field =
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_random(lattice, 1.0, &mut rng).unwrap();
 
@@ -207,7 +207,7 @@ fn test_try_energy_density_identity_is_zero() {
 fn test_try_energy_density_random_positive() {
     let shape = [3, 3];
     let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
-    let mut rng = deep_causality_rand::types::Xoshiro256::new();
+    let mut rng = deep_causality_stats::Xoshiro256::new();
     let field =
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_random(lattice, 1.0, &mut rng).unwrap();
 

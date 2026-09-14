@@ -42,14 +42,14 @@ statistics, then tensors, to topology at tier 7. The longest chain is highlighte
 | `deep_causality_algebra` | 1 | Groups, rings, fields, algebras, and isomorphism markers |
 | `deep_causality_haft` | 2 | Applied category theory: HKT, functor, applicative, monad, foldable, arrow, and a type-encoded effect system |
 | `deep_causality_num_rational` | 2 | Exact rationals over the integers |
-| `deep_causality_rand` | 2 | Random number generators and statistical distributions |
+| `deep_causality_rand` | 2 | Entropy: generators, the raw machine word, the Boolean draw, Sobol, and range sampling. States no density |
 | `deep_causality_linear` | 3 | Sparse CSR, dense and bit-packed 𝔽₂ matrices and vectors; eliminations, decompositions, conjugate gradient, etc. |
 | `deep_causality_num_complex` | 3 | Complex, quaternion and octonion number types |
 | `deep_causality_num_dual` | 3 | Dual numbers, forward-mode automatic differentiation |
 | `deep_causality_calculus` | 4 | Arrow-native differentiation and integration operators |
 | `deep_causality_fft` | 4 | Fast Fourier transform: FFT, rFFT, N-dimensional |
 | `deep_causality_homology` | 4 | Chain complexes, boundary operators and homology over a chosen coefficient field. No geometry |
-| `deep_causality_stats` | 4 | Descriptive and information statistics over slices: entropy, log-sum-exp, moments, Pearson, covariance, ridge, logistic IRLS, Gaussian log-density, proportions, binning |
+| `deep_causality_stats` | 4 | Statistics over slices — entropy, log-sum-exp, moments, Pearson, covariance, ridge, logistic IRLS, Gaussian log-density, proportions, binning — and the distributions, which are defined by the densities and moments that live here |
 | `deep_causality_tensor` | 5 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
 | `deep_causality_uncertain` | 5 | A first-order type for uncertain programming |
 | `deep_causality_multivector` | 6 | Multivectors for geometric algebra. |
@@ -132,7 +132,8 @@ about `1.7e-31` at `Float106`.
 | `Semigroupal`, `MonoidalApplicative` | `num_complex`, `num_dual`, `tensor` |
 | `Adjunction` | `topology` |
 | `Arrow` | `calculus`, `tensor` |
-| `Traversable`, `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
+| `Traversable` | `linear`, `tensor` |
+| `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
 
 That table is the work list. `openspec/notes/archive/unified_math/unified_math_gaps.md` carries the full
 analysis: which absences are real gaps and which are correct (a `Ratio<A> -> Ratio<B>` under an
@@ -207,7 +208,7 @@ rounding the loop accumulates can be measured in the working type and read out a
 index is a count lifted onto the real axis. The program compiles unchanged at all four precisions.
 
 ```rust
-use deep_causality_algebra::{Real, Scalar};
+use deep_causality_algebra::{Real, RealField, Scalar};
 use deep_causality_num::{lift, lift_count, lower, to_count};
 
 /// The working type. Switch it to `f32` or `deep_causality_num::Float106`; nothing below changes.
@@ -446,7 +447,7 @@ than drifting.
 ```rust
 use deep_causality_algebra::{Real, Scalar};
 use deep_causality_num::{Float106, Lift, ToPrimitive, lift, lift_count, lower};
-use deep_causality_rand::{Distribution, Rng, StandardUniform, Xoshiro256};
+use deep_causality_stats::{RandWidth, RandomExt, Xoshiro256};
 
 /// The master precision, where the parts meet. It must be no narrower than the widest part.
 type Master = Float106;
@@ -459,10 +460,7 @@ const TERMS: u64 = 1_000_000;
 /// Noise-bound: a Monte Carlo estimate of ∫₀¹ x² dx from stored draws. The statistical error
 /// is about 1/√n and buries rounding at every precision. Returns the estimate and the bytes
 /// the draws occupied.
-fn monte_carlo<S: Scalar>(samples: u64, seed: u64) -> (S, usize)
-where
-    StandardUniform: Distribution<S>,
-{
+fn monte_carlo<S: Scalar + RealField + RandWidth>(samples: u64, seed: u64) -> (S, usize) {
     let mut rng = Xoshiro256::from_seed(seed);
     let draws: Vec<S> = (0..samples).map(|_| rng.random::<S>()).collect();
     let bytes = core::mem::size_of_val(draws.as_slice());
@@ -493,10 +491,7 @@ fn series<S: Scalar>(terms: u64) -> S {
 
 /// The three errors against closed forms, all at one precision. `lower` asks for `ToPrimitive`,
 /// which `Scalar` does not carry.
-fn errors_at<S: Scalar + ToPrimitive>() -> [f64; 3]
-where
-    StandardUniform: Distribution<S>,
-{
+fn errors_at<S: Scalar + RealField + RandWidth + ToPrimitive>() -> [f64; 3] {
     let one = lift::<S>(1.0);
     let error = |value: S, exact: S| lower(Real::abs(value - exact));
     [

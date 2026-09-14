@@ -21,7 +21,7 @@
 //!
 //! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
 
-use deep_causality_num::{Float, Float106};
+use deep_causality_num::{Float, Float106, lift};
 use deep_causality_num_complex::Complex;
 use deep_causality_topology::{CubicalComplex, LatticeGaugeField, U1};
 use std::sync::Arc;
@@ -36,7 +36,7 @@ type FloatType = Float106;
 /// Macro to convert f64 literals to FloatType
 macro_rules! flt {
     ($x:expr) => {
-        <FloatType as From<f64>>::from($x)
+        lift::<FloatType>($x)
     };
 }
 

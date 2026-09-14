@@ -7,6 +7,8 @@ mod adjunction_stokes_tests;
 #[cfg(test)]
 mod hkt_adjunction_law_tests;
 #[cfg(test)]
+mod hkt_cochain_tests;
+#[cfg(test)]
 mod hkt_curvature_tests;
 #[cfg(test)]
 mod hkt_field_witness_tests;

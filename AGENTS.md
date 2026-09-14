@@ -237,7 +237,9 @@ by crates on both sides of the split.
 * `deep_causality_num_complex`: Complex, quaternion, and octonion number types.
 * `deep_causality_num_dual`: Dual number type (forward-mode automatic differentiation).
 * `deep_causality_num_rational`: Exact rational number type over the integers.
-* `deep_causality_rand`: Random number generator and statistical distributions.
+* `deep_causality_rand`: Entropy — generators, the word and Boolean draws, range sampling, Sobol.
+  States no distribution.
+* `deep_causality_stats`: Statistical distributions, densities, moments and estimators.
 * `deep_causality_linear`: Linear algebra — sparse (CSR), dense and bit-packed 𝔽₂ matrices, vectors,
   eliminations, decompositions, conjugate gradient, and an exact integer path.
 * `deep_causality_tensor`: N-index tensors, broadcasting, Einstein summation, and the
@@ -269,9 +271,9 @@ was a re-export shim over `deep_causality_linear`; 0.2.5 is its last crates.io r
 The tier block below is derived from the `[dependencies]` tables of each member's
 `Cargo.toml`, dev- and build-dependencies excluded. `scripts/crates.sh` reads the
 same source for the build scripts, so a crate added to the workspace appears in both
-without an edit here. `scripts/check_tiers.py` re-derives the tiers and compares them
-against this block and the two in `deep_causality_unified_math/README.md`; run it after
-adding a crate or changing a dependency.
+without an edit here. After adding a crate or changing a dependency, re-derive the tiers from
+the `Cargo.toml` files and update this block and the tier block in
+`deep_causality_unified_math/README.md` by hand.
 `deep_causality_cfd` was released to crates.io as 0.1.0 on 2026-08-12.
 
 ### Internal Dependencies
@@ -310,7 +312,8 @@ Tier 4
   deep_causality_fft          → deep_causality_algebra, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_par
   deep_causality_homology     → deep_causality_linear, deep_causality_num
-  deep_causality_stats        → deep_causality_algebra, deep_causality_linear, deep_causality_num
+  deep_causality_stats        → deep_causality_algebra, deep_causality_linear, deep_causality_num,
+                                deep_causality_rand
 
 Tier 5
   deep_causality_tensor       → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
@@ -340,12 +343,12 @@ Tier 7
                                 deep_causality_homology, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
                                 deep_causality_num, deep_causality_num_complex, deep_causality_par,
-                                deep_causality_rand, deep_causality_tensor
+                                deep_causality_stats, deep_causality_tensor
 
 Tier 8
-  deep_causality_algorithms   → deep_causality_algebra, deep_causality_num, deep_causality_par,
-                                deep_causality_rand, deep_causality_stats, deep_causality_tensor,
-                                deep_causality_topology
+  deep_causality_algorithms   → deep_causality_algebra, deep_causality_linear, deep_causality_num,
+                                deep_causality_par, deep_causality_rand, deep_causality_stats,
+                                deep_causality_tensor, deep_causality_topology
   deep_causality_physics      → deep_causality_algebra, deep_causality_calculus,
                                 deep_causality_core, deep_causality_haft, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
@@ -357,10 +360,10 @@ Tier 8
 Tier 9
   deep_causality_cfd          → deep_causality_algebra, deep_causality_calculus,
                                 deep_causality_core, deep_causality_fft, deep_causality_file,
-                                deep_causality_haft, deep_causality_num, deep_causality_num_complex,
-                                deep_causality_num_dual, deep_causality_par, deep_causality_physics,
-                                deep_causality_tensor, deep_causality_topology,
-                                deep_causality_uncertain (opt)
+                                deep_causality_haft, deep_causality_linear, deep_causality_num,
+                                deep_causality_num_complex, deep_causality_num_dual,
+                                deep_causality_par, deep_causality_physics, deep_causality_tensor,
+                                deep_causality_topology, deep_causality_uncertain (opt)
   deep_causality_discovery    → deep_causality_algebra, deep_causality_algorithms,
                                 deep_causality_haft, deep_causality_num, deep_causality_par,
                                 deep_causality_stats, deep_causality_tensor, deep_causality_topology
@@ -368,10 +371,10 @@ Tier 9
 
 Internal dev-only dependency (tests/benches, not part of any published runtime):
 * `deep_causality_rand` is a dev-dependency of `deep_causality_data_structures`,
-  `deep_causality_discovery`, `deep_causality_linear`, `deep_causality_tensor`, and
-  `ultragraph`.
+  `deep_causality_discovery`, `deep_causality_tensor`, and `ultragraph`.
 * `deep_causality_num_complex` and `deep_causality_num_rational` are dev-dependencies of
   `deep_causality_linear`.
+* `deep_causality_topology` is a dev-dependency of `deep_causality_quantum`.
 
 ### External Dependencies
 
@@ -381,18 +384,19 @@ The other 23 library crates have no external runtime dependencies.
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
 | `deep_causality_num` | `libm` | optional — `libm_math` / `no-std` feature |
-| `deep_causality_rand` | `getrandom`, `chacha20poly1305`, `zeroize` | all optional — `aead-random` / `os-random` features |
+| `deep_causality_rand` | `getrandom` | optional — `os-random` feature |
 | `deep_causality_algorithms` | `rayon` | optional — `parallel` feature |
 | `deep_causality_fft` | `rayon` | optional — `parallel` feature |
+| `deep_causality_topology` | `rayon` | optional — `parallel` feature |
 | `deep_causality_discovery` | `csv`, `parquet` | required (runtime) |
 | `deep_causality_file` | `chrono` | required (runtime) |
 
 External dev-only dependencies (tests/benches, not part of any published runtime):
 * `criterion` — benchmarks in `deep_causality`, `deep_causality_algorithms`,
   `deep_causality_cfd`, `deep_causality_data_structures`, `deep_causality_fft`,
-  `deep_causality_multivector`, `deep_causality_linear`,
-  `deep_causality_tensor`, `deep_causality_uncertain`, `ultragraph`.
-* `tempfile` — `deep_causality_discovery` tests.
+  `deep_causality_multivector`, `deep_causality_tensor`, `deep_causality_uncertain`,
+  `ultragraph`.
+* `tempfile` — `deep_causality_cfd`, `deep_causality_discovery` and `deep_causality_file` tests.
 * `rusty-fork` — `deep_causality_uncertain` tests.
 
 
@@ -602,10 +606,8 @@ Coding style:
 * Prefer functional style i.e. map, flatmap, filter when dealing with collections
 
 Safety and security style:
-* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. Every crate opts in with `[lints]` and `workspace = true` in its own `Cargo.toml` — new crates MUST include this.
-* Exemptions are rare and must be documented. A crate that genuinely needs `unsafe` opts out with a local `[lints.rust] unsafe_code = "allow"` carrying a comment that explains the irreducible reason. The only current exemptions are:
-  * `deep_causality_rand` — CPU cycle-counter entropy (RDTSC / cntvct_el0) mixed into the `aead-random` CSPRNG seed for hardware-RNG backdoor resistance; no safe stable API exists.
-  * `deep_causality_multivector` and `deep_causality_topology` — HKT `fmap` pointer-cast standing in for `A == T`, working around a rustc type-equality limitation. To be removed when the compiler limitation is resolved or the HKT `fmap` is redesigned.
-  Do not add a new exemption without a documented, irreducible justification; prefer a safe redesign (e.g. a structure-preserving map, `AtomicU64` over `static mut`).
+* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 46 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
+* There are no exemptions. No manifest in the workspace sets `unsafe_code` locally, and `forbid` cannot be lifted by an inner `allow`, so the policy holds by construction: an `unsafe` block anywhere in a member is a compile error, not a review finding.
+* A crate that genuinely cannot avoid `unsafe` would opt out with a local `[lints.rust] unsafe_code = "allow"` carrying a comment giving the irreducible reason. Do not add one without that justification; prefer a safe redesign (e.g. a structure-preserving map, `AtomicU64` over `static mut`).
 * Avoid macros in all lib code i.e. everything under /src. However, macros for testing are permissible when using sparingly i.e. for bulk testing many types implementing the same trait. 
 * Avoid the introduction of external crates unless it is necessary for testing.

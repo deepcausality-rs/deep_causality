@@ -12,6 +12,7 @@ use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, Real, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
+use deep_causality_stats::RandomExt;
 use std::fmt::Debug;
 
 // ============================================================================
@@ -65,7 +66,7 @@ impl<
         rng: &mut RngType,
     ) -> Result<bool, TopologyError>
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: RandomField + DivisionAlgebra<R> + Field + ComplexField<R>,
         R: RealField,
     {
@@ -147,7 +148,7 @@ impl<
         rng: &mut RngType,
     ) -> Result<f64, TopologyError>
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: RandomField + DivisionAlgebra<R> + Field + ComplexField<R>,
         R: RealField,
     {
@@ -181,7 +182,7 @@ impl<
         rng: &mut RngType,
     ) -> Result<LinkVariable<G, M, R>, TopologyError>
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: RandomField + DivisionAlgebra<R> + Field + ComplexField<R>,
         R: RealField,
     {

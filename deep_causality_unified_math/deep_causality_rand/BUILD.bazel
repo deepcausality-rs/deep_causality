@@ -150,24 +150,6 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "extensions",
-    srcs = glob([
-        "tests/extensions/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_rand",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
     name = "traits",
     srcs = glob([
         "tests/traits/*_tests.rs",

@@ -1,6 +1,8 @@
 /// Defines operations between a scalar and a tensor (e.g., `scalar + tensor`).
+mod op_scalar_tensor_bfloat16;
 mod op_scalar_tensor_f32;
 mod op_scalar_tensor_f64;
+mod op_scalar_tensor_float106;
 mod op_scalar_tensor_i128;
 mod op_scalar_tensor_i16;
 mod op_scalar_tensor_i32;

@@ -3,48 +3,68 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Entropy: generators, and the draws that are properties of bits rather than of a distribution.
+//!
+//! # This crate makes no distributional claim
+//!
+//! What it supplies is a source of numbers — `Xoshiro256`, an OS-entropy thread generator, a Sobol
+//! sequence — together with the draws that are facts about the bits themselves: a raw machine word
+//! ([`StandardWord`]), a Boolean ([`StandardBool`]), and a value uniform over a range
+//! ([`Uniform`]). None of those is a density. Nothing here states a mean, a variance or a moment,
+//! and nothing here should.
+//!
+//! The shaped distributions — normal, exponential, Cauchy, Weibull, log-normal, Poisson,
+//! categorical, the unit-interval draws and their inverse-CDF transforms — are mathematics and
+//! live in `deep_causality_stats`, beside the densities and moments that define them. A crate that
+//! wants to draw from one depends on `stats`, which re-exports the generator traits by name so
+//! that no second dependency is needed to spell a bound.
+//!
+//! # The split is a coherence fact, not a preference
+//!
+//! A blanket `impl<T: RealField> Distribution<T> for StandardUniform` is `error[E0119]` against the
+//! `u64`, `u32` and `bool` implementations that a generator must also provide: coherence cannot
+//! prove `u64` will never be a real field. Separating *what a word is* from *what a number is
+//! distributed as* removes the overlap rather than working around it, and the crate boundary is
+//! where that separation is cheapest — `stats` has no reason to sample a machine word.
+//!
+//! `Uniform<X>` stays here for the mirror reason: it is built on [`SampleUniform`], which can only
+//! be implemented in the crate that owns it. Range sampling is entropy wearing an interval.
+//!
+//! # Precision
+//!
+//! The float draws are generic in the scalar under [`RandScalar`], with one body and no per-type
+//! implementation. The exceptions are documented at the item that has them: the Sobol coordinate
+//! is fixed at `2^-32` by its direction-number table, and that is a property of the sequence rather
+//! than of the scalar holding it.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 
 mod errors;
-mod extensions;
 mod traits;
 pub mod types;
-mod utils;
 
 // Errors
-pub use crate::errors::bernoulli_error::BernoulliDistributionError;
-pub use crate::errors::normal_error::NormalDistributionError;
 pub use crate::errors::rng_error::RngError;
 pub use crate::errors::uniform_error::UniformDistributionError;
-// Extensions
 
 // Traits
 pub use crate::traits::distribution::Distribution;
 pub use crate::traits::fill::Fill;
-pub use crate::traits::real_rng::RealRng;
 pub use crate::traits::rng::Rng;
 pub use crate::traits::rng_core::RngCore;
 pub use crate::traits::sample_borrow::SampleBorrow;
 pub use crate::traits::sample_range::SampleRange;
-pub use crate::traits::sample_uniform::{SampleUniform, UniformSampler};
-// Inverse-CDF transforms
-pub use crate::utils::inverse_cdf::{
-    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
-    uniform_inverse_cdf,
-};
+pub use crate::traits::sample_uniform::{FloatKind, SampleUniform, UniformSampler, UnsignedKind};
+
 // Types
 pub use crate::types::Xoshiro256;
-pub use crate::types::distr::bernoulli::Bernoulli;
-pub use crate::types::distr::normal::Normal;
-pub use crate::types::distr::normal::standard_normal::StandardNormal;
-pub use crate::types::distr::uniform::standard_uniform::StandardUniform;
-pub use crate::types::distr::uniform::{Uniform, UniformFloat};
+pub use crate::types::distr::uniform::standard_word::{StandardBool, StandardWord};
+pub use crate::types::distr::uniform::*;
 pub use crate::types::iter::Iter;
 pub use crate::types::map::Map;
 pub use crate::types::qmc::sobol::{MAX_SOBOL_DIM, SobolSequence};
-pub use crate::types::range::{Open01, OpenClosed01};
 
 #[cfg(all(feature = "std", not(feature = "os-random")))]
 use core::cell::RefCell;

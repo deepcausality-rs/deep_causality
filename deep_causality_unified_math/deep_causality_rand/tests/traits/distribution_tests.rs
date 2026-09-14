@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::{Distribution, Rng, RngCore, StandardUniform};
+use deep_causality_rand::{Distribution, Rng, RngCore, StandardWord};
 
 // Mock Rng for deterministic testing
 struct MockRng {
@@ -83,9 +83,9 @@ fn test_distribution_map() {
 }
 
 #[test]
-fn test_distribution_map_with_standard_uniform() {
+fn test_distribution_map_with_standard_word() {
     let mut rng = MockRng::new(vec![10, 20, 30]);
-    let dist = StandardUniform;
+    let dist = StandardWord;
     let mapped_dist = dist.map(|x: u32| x as f32 / 100.0);
 
     let sample = mapped_dist.sample(&mut rng);

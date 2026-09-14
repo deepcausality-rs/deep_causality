@@ -48,8 +48,9 @@ pub(crate) fn with_seed_slot<R>(closure: impl FnOnce(Option<&mut Xoshiro256>) ->
 /// [`Uncertain::take_samples`](crate::Uncertain).
 pub(crate) fn next_sample_index() -> u64 {
     use deep_causality_rand::Rng;
+    // A sample index is a machine word, not a real number, so it comes from the word sampler.
     with_seed_slot(|slot| match slot {
-        Some(rng) => rng.random::<u64>(),
-        None => deep_causality_rand::rng().random::<u64>(),
+        Some(rng) => rng.random_word::<u64>(),
+        None => deep_causality_rand::rng().random_word::<u64>(),
     })
 }

@@ -29,7 +29,7 @@ use chronometric_examples::{ClockData, OrbitData};
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, CausalityErrorEnum};
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_physics::{
     CentralBody, EARTH_GM, EARTH_J2, EARTH_MASS_KG, EARTH_RADIUS_EQUATORIAL,
     NEWTONIAN_CONSTANT_OF_GRAVITATION, SpaceTimeCoordinate, solve_gm_analytical,
@@ -117,7 +117,7 @@ pub struct GmReport<R: RealField> {
 
 pub fn stage_load<R>(inputs: DatasetInputs) -> Result<LoadedDataset<R>, CausalityError>
 where
-    R: RealField + From<f64> + Default + Debug,
+    R: RealField + FromPrimitive + Default + Debug,
 {
     if inputs.datasets.is_empty() {
         return Err(err("stage_load: no datasets specified"));
@@ -166,7 +166,7 @@ where
 
 pub fn stage_align<R>(dataset: LoadedDataset<R>) -> Result<CoordinateSet<R>, CausalityError>
 where
-    R: RealField + From<f64> + Into<f64> + FromPrimitive + Default + Debug,
+    R: RealField + FromPrimitive + Into<f64> + FromPrimitive + Default + Debug,
 {
     let coords = interpolate_space_time(&dataset.clocks, &dataset.orbits);
     if coords.len() < 2 {
@@ -180,7 +180,7 @@ where
 
 pub fn stage_pair<R>(set: CoordinateSet<R>) -> Result<PairSet<R>, CausalityError>
 where
-    R: RealField + From<f64> + Default + Debug,
+    R: RealField + FromPrimitive + Default + Debug,
 {
     let coords = &set.coords;
     if coords.len() <= PAIR_WINDOW_SIZE {
@@ -196,7 +196,7 @@ where
     // pair geometries spanning the full dataset rather than anchoring every
     // pair to the first few coordinates (the all-pairs failure mode at
     // multi-day scales).
-    let min_sep = R::from(MIN_RADIAL_SEPARATION_M);
+    let min_sep = lift::<R>(MIN_RADIAL_SEPARATION_M);
     let mut pairs = Vec::with_capacity(coords.len() / PAIR_STEP_SIZE);
     let mut i = 0usize;
     while i + PAIR_WINDOW_SIZE < coords.len() && pairs.len() < MAX_PAIRS {
@@ -218,14 +218,14 @@ where
 
 pub fn stage_solve_gm<R>(set: PairSet<R>) -> Result<GmEstimates<R>, CausalityError>
 where
-    R: RealField + From<f64> + Default + Debug,
+    R: RealField + FromPrimitive + Default + Debug,
 {
     let body = CentralBody::<R>::new(
-        R::from(EARTH_GM),
-        R::from(EARTH_RADIUS_EQUATORIAL),
-        R::from(EARTH_J2),
+        lift::<R>(EARTH_GM),
+        lift::<R>(EARTH_RADIUS_EQUATORIAL),
+        lift::<R>(EARTH_J2),
     );
-    let upper_bound = R::from(1.0e16);
+    let upper_bound = lift::<R>(1.0e16);
 
     let mut estimates = Vec::with_capacity(set.pairs.len());
     for (a, b) in &set.pairs {
@@ -251,9 +251,9 @@ pub fn stage_aggregate<R>(est: GmEstimates<R>) -> Result<GmReport<R>, CausalityE
 where
     // `FromPrimitive` because the statistics come from `deep_causality_stats`, which lifts its
     // observation counts onto the working scalar rather than narrowing them through `f64`.
-    R: RealField + FromPrimitive + From<f64> + Default + Debug,
+    R: RealField + FromPrimitive + Default + Debug,
 {
-    let outlier_sigma = R::from(MAD_OUTLIER_SIGMA);
+    let outlier_sigma = lift::<R>(MAD_OUTLIER_SIGMA);
     let filtered = apply_mad_filter(&est.estimates, outlier_sigma);
     let n = filtered.len();
     if n == 0 {
@@ -270,21 +270,21 @@ where
     let mut sorted = filtered.clone();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal));
     let median = if n.is_multiple_of(2) {
-        let two = R::from(2.0);
+        let two = lift::<R>(2.0);
         (sorted[n / 2 - 1] + sorted[n / 2]) / two
     } else {
         sorted[n / 2]
     };
 
-    let reference_gm = R::from(EARTH_GM);
+    let reference_gm = lift::<R>(EARTH_GM);
     let gm_rel_err = ((mean - reference_gm) / reference_gm).abs();
 
     // Derive planetary mass: M = GM / G. The framework recovers GM from clock
     // time-dilation measurements; dividing through Newton's gravitational
     // constant yields Earth's mass in kg — "weighing the planet by clock."
-    let g = R::from(NEWTONIAN_CONSTANT_OF_GRAVITATION);
+    let g = lift::<R>(NEWTONIAN_CONSTANT_OF_GRAVITATION);
     let recovered_mass = mean / g;
-    let reference_mass = R::from(EARTH_MASS_KG);
+    let reference_mass = lift::<R>(EARTH_MASS_KG);
     let mass_rel_err = ((recovered_mass - reference_mass) / reference_mass).abs();
 
     Ok(GmReport {

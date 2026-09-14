@@ -71,6 +71,7 @@ use crate::dag_sampling::utils::inverse_permutation;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_rand::Rng;
+use deep_causality_stats::RandomExt;
 use deep_causality_topology::{EdgeKind, MixedGraph};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 

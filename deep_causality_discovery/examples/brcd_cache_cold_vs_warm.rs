@@ -27,7 +27,8 @@
 //!   cargo run --release -p deep_causality_discovery --example brcd_cache_cold_vs_warm
 
 use deep_causality_discovery::{BrcdConfig, BrcdLoaderConfig, CdlBuilder, CdlConfigBuilder};
-use deep_causality_rand::{Distribution, Normal, Rng, Xoshiro256};
+use deep_causality_rand::{Distribution, Rng, Xoshiro256};
+use deep_causality_stats::Normal;
 use std::fs;
 use std::io::Write;
 use std::time::Instant;

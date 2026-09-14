@@ -10,7 +10,7 @@
 
 use deep_causality_algebra::Field;
 use deep_causality_metric::Metric;
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 
 /// Symmetry properties of curvature tensors.
@@ -123,7 +123,7 @@ where
 
 impl<T> CurvatureTensor<T>
 where
-    T: Field + Copy + Default + PartialOrd + Float + From<f64> + Into<f64>,
+    T: Field + Copy + Default + PartialOrd + Float + FromPrimitive,
 {
     /// Creates a flat (zero curvature) tensor with Minkowski metric.
     pub fn flat(dim: usize) -> Self {
@@ -134,7 +134,7 @@ where
     pub fn flat_with_metric(dim: usize, metric: Metric) -> Self {
         let shape = vec![dim, dim, dim, dim];
         let total = dim * dim * dim * dim;
-        let data: Vec<T> = (0..total).map(|_| <T as From<f64>>::from(0.0)).collect();
+        let data: Vec<T> = (0..total).map(|_| lift::<T>(0.0)).collect();
         let components = CausalTensor::from_vec(data, &shape);
 
         Self {
@@ -215,15 +215,17 @@ where
 
 impl<T> CurvatureTensor<T>
 where
-    T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd + Float + FromPrimitive,
 {
     /// Checks if the tensor is flat (all zero).
     pub fn is_flat(&self) -> bool {
-        let eps: f64 = f64::EPSILON;
-        self.components.as_slice().iter().all(|x| {
-            let val: f64 = (*x).into();
-            val.abs() < eps
-        })
+        // The threshold is the working type's own resolution. A fixed `f64::EPSILON` is too
+        // tight for `f32` and too loose for `Float106`.
+        let eps = <T as Float>::epsilon();
+        self.components
+            .as_slice()
+            .iter()
+            .all(|x| Float::abs(*x) < eps)
     }
 
     /// Gets component R^d_abc using row-major indexing.
@@ -241,7 +243,7 @@ where
 
 impl<T> CurvatureTensor<T>
 where
-    T: Field + Copy + PartialOrd + Float + From<f64> + Into<f64>,
+    T: Field + Copy + PartialOrd + Float + FromPrimitive,
 {
     /// Contracts the curvature tensor with three vectors: R(u,v)w.
     ///
@@ -261,11 +263,11 @@ where
         assert_eq!(v.len(), self.dim, "v dimension mismatch");
         assert_eq!(w.len(), self.dim, "w dimension mismatch");
 
-        let mut result: Vec<T> = (0..self.dim).map(|_| <T as From<f64>>::from(0.0)).collect();
+        let mut result: Vec<T> = (0..self.dim).map(|_| lift::<T>(0.0)).collect();
 
         // (R(u,v)w)^d = R^d_abc u^a v^b w^c
         for (d, res_val) in result.iter_mut().enumerate() {
-            let mut sum = <T as From<f64>>::from(0.0);
+            let mut sum = lift::<T>(0.0);
             for (a, u_val) in u.iter().enumerate() {
                 for (b, v_val) in v.iter().enumerate() {
                     for (c, w_val) in w.iter().enumerate() {
@@ -284,13 +286,11 @@ where
     ///
     /// Returns a dim×dim matrix as a flat vector in row-major order.
     pub fn ricci_tensor(&self) -> Vec<T> {
-        let mut ricci: Vec<T> = (0..self.dim * self.dim)
-            .map(|_| <T as From<f64>>::from(0.0))
-            .collect();
+        let mut ricci: Vec<T> = (0..self.dim * self.dim).map(|_| lift::<T>(0.0)).collect();
 
         for mu in 0..self.dim {
             for nu in 0..self.dim {
-                let mut sum = <T as From<f64>>::from(0.0);
+                let mut sum = lift::<T>(0.0);
                 for rho in 0..self.dim {
                     // R_μν = R^ρ_μρν
                     sum += self.get(rho, mu, rho, nu);
@@ -305,11 +305,11 @@ where
     /// Computes the Ricci scalar R = g^μν R_μν.
     pub fn ricci_scalar(&self) -> T {
         let ricci = self.ricci_tensor();
-        let mut scalar = <T as From<f64>>::from(0.0);
+        let mut scalar = lift::<T>(0.0);
 
         for mu in 0..self.dim {
             // Get metric component g^μμ (inverse metric diagonal for Minkowski-like)
-            let g_inv = <T as From<f64>>::from(self.metric.sign_of_sq(mu) as f64);
+            let g_inv = lift::<T>(self.metric.sign_of_sq(mu) as f64);
             scalar += g_inv * ricci[mu * self.dim + mu];
         }
 
@@ -320,7 +320,7 @@ where
     ///
     /// This is a curvature invariant useful for detecting singularities.
     pub fn kretschmann_scalar(&self) -> T {
-        let mut k = <T as From<f64>>::from(0.0);
+        let mut k = lift::<T>(0.0);
 
         for a in 0..self.dim {
             for b in 0..self.dim {
@@ -359,7 +359,7 @@ where
     /// For Schwarzschild spacetime: K = 48M²/r⁶
     pub fn kretschmann_scalar_with_metric(&self, inverse_metric: &[T]) -> T {
         let dim = self.dim;
-        let zero = <T as From<f64>>::from(0.0);
+        let zero = lift::<T>(0.0);
 
         // Validate inverse metric size
         if inverse_metric.len() != dim * dim {
@@ -429,7 +429,7 @@ where
                         for e in 0..dim {
                             // g_de from metric (diagonal assumption for Minkowski-like)
                             let g_de = if d == e {
-                                <T as From<f64>>::from(self.metric.sign_of_sq(d) as f64)
+                                lift::<T>(self.metric.sign_of_sq(d) as f64)
                             } else {
                                 zero
                             };
@@ -457,18 +457,16 @@ where
     pub fn einstein_tensor(&self) -> Vec<T> {
         let ricci = self.ricci_tensor();
         let r = self.ricci_scalar();
-        let half = <T as From<f64>>::from(0.5);
-        let mut einstein: Vec<T> = (0..self.dim * self.dim)
-            .map(|_| <T as From<f64>>::from(0.0))
-            .collect();
+        let half = lift::<T>(0.5);
+        let mut einstein: Vec<T> = (0..self.dim * self.dim).map(|_| lift::<T>(0.0)).collect();
 
         for mu in 0..self.dim {
             for nu in 0..self.dim {
                 // g_μν for Minkowski-like metrics
                 let g_munu = if mu == nu {
-                    <T as From<f64>>::from(self.metric.sign_of_sq(mu) as f64)
+                    lift::<T>(self.metric.sign_of_sq(mu) as f64)
                 } else {
-                    <T as From<f64>>::from(0.0)
+                    lift::<T>(0.0)
                 };
                 einstein[mu * self.dim + nu] = ricci[mu * self.dim + nu] - half * g_munu * r;
             }
@@ -492,22 +490,18 @@ where
         let n = self.dim;
         if n < 3 {
             // Weyl tensor is identically zero in dimensions < 3
-            return (0..n * n * n * n)
-                .map(|_| <T as From<f64>>::from(0.0))
-                .collect();
+            return (0..n * n * n * n).map(|_| lift::<T>(0.0)).collect();
         }
 
         let ricci = self.ricci_tensor();
         let r = self.ricci_scalar();
 
-        let mut weyl: Vec<T> = (0..n * n * n * n)
-            .map(|_| <T as From<f64>>::from(0.0))
-            .collect();
+        let mut weyl: Vec<T> = (0..n * n * n * n).map(|_| lift::<T>(0.0)).collect();
 
         // Prefactors
-        let factor1 = <T as From<f64>>::from(2.0 / (n as f64 - 2.0));
-        let factor2 = <T as From<f64>>::from(2.0 / ((n as f64 - 1.0) * (n as f64 - 2.0)));
-        let half = <T as From<f64>>::from(0.5);
+        let factor1 = lift::<T>(2.0 / (n as f64 - 2.0));
+        let factor2 = lift::<T>(2.0 / ((n as f64 - 1.0) * (n as f64 - 2.0)));
+        let half = lift::<T>(0.5);
 
         for a in 0..n {
             for b in 0..n {
@@ -518,24 +512,24 @@ where
 
                         // Metric components (using our stored metric for diagonal)
                         let g_ac = if a == c {
-                            <T as From<f64>>::from(self.metric.sign_of_sq(a) as f64)
+                            lift::<T>(self.metric.sign_of_sq(a) as f64)
                         } else {
-                            <T as From<f64>>::from(0.0)
+                            lift::<T>(0.0)
                         };
                         let g_bd = if b == d {
-                            <T as From<f64>>::from(self.metric.sign_of_sq(b) as f64)
+                            lift::<T>(self.metric.sign_of_sq(b) as f64)
                         } else {
-                            <T as From<f64>>::from(0.0)
+                            lift::<T>(0.0)
                         };
                         let g_ad = if a == d {
-                            <T as From<f64>>::from(self.metric.sign_of_sq(a) as f64)
+                            lift::<T>(self.metric.sign_of_sq(a) as f64)
                         } else {
-                            <T as From<f64>>::from(0.0)
+                            lift::<T>(0.0)
                         };
                         let g_bc = if b == c {
-                            <T as From<f64>>::from(self.metric.sign_of_sq(b) as f64)
+                            lift::<T>(self.metric.sign_of_sq(b) as f64)
                         } else {
-                            <T as From<f64>>::from(0.0)
+                            lift::<T>(0.0)
                         };
 
                         // Ricci components
@@ -566,7 +560,7 @@ where
     ///
     /// Returns the maximum violation (should be ~0 for valid Riemann tensors).
     pub fn check_bianchi_identity(&self) -> T {
-        let mut max_violation = <T as From<f64>>::from(0.0);
+        let mut max_violation = lift::<T>(0.0);
 
         for a in 0..self.dim {
             for b in 0..self.dim {

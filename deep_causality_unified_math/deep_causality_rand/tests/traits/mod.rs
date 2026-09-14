@@ -4,5 +4,6 @@
  */
 mod distribution_tests;
 mod rng_core_tests;
+mod rng_tests;
 mod sample_borrow_tests;
 mod sample_range_tests;

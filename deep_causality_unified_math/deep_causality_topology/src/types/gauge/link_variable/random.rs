@@ -3,29 +3,68 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::RealField;
+use deep_causality_num::Float106;
 use deep_causality_num_complex::Complex;
-use deep_causality_rand::Rng;
+use deep_causality_stats::{Distribution, RandScalar, Rng, StandardUniform};
 
 /// A trait for generating random field elements uniformly.
 ///
-/// This trait bridges the gap between `deep_causality_rand` and algebraic types,
-/// allowing generic generation of both real (`f64`) and complex (`Complex<f64>`)
-/// scalars with components in the range [-0.5, 0.5].
+/// Generic generation of both real and complex scalars with components in the range `[-0.5, 0.5]`.
+///
+/// The draw comes from `deep_causality_stats`, which owns the distributions; the machine words
+/// behind it are the entropy crate's business and this crate no longer names that crate at all.
 pub trait RandomField {
     /// Generate a random value with components in the range [-0.5, 0.5].
     fn generate_uniform<R: Rng>(rng: &mut R) -> Self;
 }
 
-impl RandomField for f64 {
+/// The body, written once for every scalar.
+///
+/// A centred unit draw: `StandardUniform` on `[0, 1)` less one half. It is a `stats` draw at the
+/// caller's scalar rather than an `f64` draw that everything else is converted from, so a lattice
+/// at `Float106` gets a proposal with a double-double's worth of entropy behind it instead of a
+/// widened `f64`.
+#[inline]
+fn centred_unit<T, R>(rng: &mut R) -> T
+where
+    T: RandScalar,
+    R: Rng + ?Sized,
+{
+    let u: T = StandardUniform.sample(rng);
+    u - T::from_f64(0.5).expect("one half converts to every supported scalar")
+}
+
+// The three impls below are what coherence leaves. A blanket `impl<T: RealField> RandomField for T`
+// would collide with the `Complex<T>` impl beneath it: the compiler cannot prove that `Complex<T>`
+// will never be a real field, so the two impls overlap as far as it can tell. The same rule keeps
+// `SampleUniform`'s bindings in the entropy crate. What matters is that the *body* is written
+// once — these are bindings, not implementations, and adding a scalar is one line.
+
+impl RandomField for f32 {
+    #[inline]
     fn generate_uniform<R: Rng>(rng: &mut R) -> Self {
-        // rng.random returns [0, 1), so output is [-0.5, 0.5)
-        rng.random::<f64>() - 0.5
+        centred_unit(rng)
+    }
+}
+
+impl RandomField for f64 {
+    #[inline]
+    fn generate_uniform<R: Rng>(rng: &mut R) -> Self {
+        centred_unit(rng)
+    }
+}
+
+impl RandomField for Float106 {
+    #[inline]
+    fn generate_uniform<R: Rng>(rng: &mut R) -> Self {
+        centred_unit(rng)
     }
 }
 
 impl<T> RandomField for Complex<T>
 where
-    T: RandomField + deep_causality_algebra::RealField + Copy,
+    T: RandomField + RealField + Copy,
 {
     fn generate_uniform<R: Rng>(rng: &mut R) -> Self {
         // Generate random real and imaginary parts

@@ -5,6 +5,7 @@
 
 use crate::{AdmOps, PhysicsError};
 use deep_causality_algebra::Field;
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
@@ -15,7 +16,7 @@ use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64>,
+    S: Field + Clone + FromPrimitive + Into<f64>,
 {
     /// Spatial metric γ_ij (3x3 tensor)
     spatial_metric: CausalTensor<S>,
@@ -35,14 +36,14 @@ where
 
 impl<S> Default for AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64> + Default,
+    S: Field + Clone + FromPrimitive + Into<f64> + Default,
 {
     fn default() -> Self {
-        let zero = <S as From<f64>>::from(0.0);
+        let zero = lift::<S>(0.0);
         Self {
             spatial_metric: CausalTensor::zeros(&[3, 3]),
             extrinsic_curvature: CausalTensor::zeros(&[3, 3]),
-            lapse: CausalTensor::from_vec(vec![<S as From<f64>>::from(1.0)], &[1]),
+            lapse: CausalTensor::from_vec(vec![lift::<S>(1.0)], &[1]),
             shift: CausalTensor::zeros(&[3]),
             spatial_ricci_scalar: zero,
             spatial_christoffel: None,
@@ -53,7 +54,7 @@ where
 
 impl<S> AdmState<S>
 where
-    S: Field + Clone + From<f64> + Into<f64> + Copy,
+    S: Field + Clone + FromPrimitive + Into<f64> + Copy,
 {
     pub fn spatial_metric(&self) -> &CausalTensor<S> {
         &self.spatial_metric
@@ -151,7 +152,7 @@ where
             ));
         }
 
-        let one = <S as From<f64>>::from(1.0);
+        let one = lift::<S>(1.0);
         let inv_det = one / det;
 
         let i00 = inv_det * (g11 * g22 - g12 * g21);
@@ -170,7 +171,7 @@ where
 
 impl<S> AdmOps<S> for AdmState<S>
 where
-    S: Field + Clone + Copy + From<f64> + Into<f64>,
+    S: Field + Clone + Copy + FromPrimitive + Into<f64>,
 {
     fn hamiltonian_constraint(
         &self,
@@ -218,7 +219,7 @@ where
             None => S::zero(),
         };
 
-        let pi_16 = <S as From<f64>>::from(16.0 * std::f64::consts::PI);
+        let pi_16 = lift::<S>(16.0 * std::f64::consts::PI);
         let h = r + (k_mixed_trace * k_mixed_trace) - k_sq_contracted - pi_16 * rho;
 
         Ok(CausalTensor::from_vec(vec![h], &[1]))
@@ -306,7 +307,7 @@ where
                 None => S::zero(),
             };
 
-            let pi_8 = <S as From<f64>>::from(8.0 * std::f64::consts::PI);
+            let pi_8 = lift::<S>(8.0 * std::f64::consts::PI);
             *m_i = conn_term - pi_8 * j_i;
         }
 
@@ -317,7 +318,7 @@ where
         let inv_gamma = self.inverse_spatial_metric()?;
         let k_tensor = self.extrinsic_curvature.as_slice();
 
-        let zero = <S as From<f64>>::from(0.0);
+        let zero = lift::<S>(0.0);
         let mut k = zero;
         for i in 0..3 {
             for j in 0..3 {

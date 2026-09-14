@@ -5,6 +5,7 @@
 use core::fmt::Debug;
 use core::ops::Div;
 use deep_causality_algebra::Real;
+use deep_causality_num::{FromPrimitive, lift};
 
 use crate::{CentralBody, PhysicsError, SPEED_OF_LIGHT, SpaceTimeCoordinate};
 
@@ -159,16 +160,16 @@ pub fn solve_gm_analytical_kernel<R>(
     body: &CentralBody<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: Real + Div<Output = R> + From<f64> + Debug,
+    R: Real + Div<Output = R> + FromPrimitive + Debug,
 {
-    let c: R = R::from(SPEED_OF_LIGHT);
+    let c: R = lift::<R>(SPEED_OF_LIGHT);
     let c_sq = c * c;
 
     // Term 1: clock-drift difference (gravitational redshift contribution)
     let term_time = c_sq * (coord_b.clock_drift_rate - coord_a.clock_drift_rate);
 
     // Term 2: SR kinetic-energy difference per unit mass
-    let half: R = R::from(0.5);
+    let half: R = lift::<R>(0.5);
     let term_kinetic = half * (coord_b.v_ms * coord_b.v_ms - coord_a.v_ms * coord_a.v_ms);
 
     // Term 3: J2-corrected potential geometry
@@ -176,7 +177,7 @@ where
     let inv_r_eff_b = inv_r_effective(coord_b, body)?;
     let term_potential = inv_r_eff_a - inv_r_eff_b;
 
-    let epsilon: R = R::from(1e-20);
+    let epsilon: R = lift::<R>(1e-20);
     if term_potential.abs() < epsilon {
         return Err(PhysicsError::TopologyError(
             "Insufficient effective radial separation for GM derivation".to_string(),
@@ -194,7 +195,7 @@ fn inv_r_effective<R>(
     body: &CentralBody<R>,
 ) -> Result<R, PhysicsError>
 where
-    R: Real + Div<Output = R> + From<f64> + Debug,
+    R: Real + Div<Output = R> + FromPrimitive + Debug,
 {
     let r = coord.r_m;
     if r <= R::zero() {
@@ -204,8 +205,8 @@ where
     }
 
     let cos_theta = coord.position[2] / r;
-    let three: R = R::from(3.0);
-    let half: R = R::from(0.5);
+    let three: R = lift::<R>(3.0);
+    let half: R = lift::<R>(0.5);
     let legendre_p2 = half * (three * cos_theta * cos_theta - R::one());
 
     let r_cubed = r * r * r;

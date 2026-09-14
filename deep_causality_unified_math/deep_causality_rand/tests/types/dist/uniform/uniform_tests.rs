@@ -5,6 +5,35 @@
 use deep_causality_rand::*;
 
 // Mock Rng for integer tests
+/// A generator that hands out a fixed script of words.
+///
+/// A constant generator cannot drive a rejection sampler: if its one value is out of band the
+/// loop has nothing else to draw. That is a property of rejection sampling rather than a defect,
+/// and it is why the out-of-band case below is scripted rather than constant.
+struct ScriptedIntRng {
+    words: Vec<u64>,
+    next: usize,
+}
+
+impl RngCore for ScriptedIntRng {
+    fn next_u32(&mut self) -> u32 {
+        self.next_u64() as u32
+    }
+    fn next_u64(&mut self) -> u64 {
+        let w = *self
+            .words
+            .get(self.next)
+            .expect("the sampler drew more words than the script holds");
+        self.next += 1;
+        w
+    }
+    fn fill_bytes(&mut self, _dest: &mut [u8]) {
+        unimplemented!()
+    }
+}
+
+impl Rng for ScriptedIntRng {}
+
 struct MockIntRng {
     val: u64,
 }
@@ -30,49 +59,66 @@ macro_rules! uniform_int_tests {
 
             #[test]
             fn test_new() {
-                let uniform = Uniform::<$ty>::new(10, 20).unwrap();
+                let uniform = Uniform::<$ty, UnsignedKind>::new(10, 20).unwrap();
                 let mut rng = MockIntRng { val: 5 };
                 let sample = uniform.sample(&mut rng);
                 assert!((10..20).contains(&sample));
 
-                let res = Uniform::<$ty>::new(20, 10);
+                let res = Uniform::<$ty, UnsignedKind>::new(20, 10);
                 assert_eq!(res.unwrap_err(), UniformDistributionError::InvalidRange);
             }
 
             #[test]
             fn test_new_inclusive() {
-                let uniform = Uniform::<$ty>::new_inclusive(10, 20).unwrap();
+                let uniform = Uniform::<$ty, UnsignedKind>::new_inclusive(10, 20).unwrap();
                 let mut rng = MockIntRng { val: 10 };
                 let sample = uniform.sample(&mut rng);
                 assert!((10..=20).contains(&sample));
 
-                let res = Uniform::<$ty>::new_inclusive(21, 20);
+                let res = Uniform::<$ty, UnsignedKind>::new_inclusive(21, 20);
                 assert_eq!(res.unwrap_err(), UniformDistributionError::InvalidRange);
             }
 
             #[test]
             fn test_sample_range() {
                 let mut rng = MockIntRng { val: 0 };
-                let sample = Uniform::<$ty>::new(10, 20).unwrap().sample(&mut rng);
+                let sample = Uniform::<$ty, UnsignedKind>::new(10, 20)
+                    .unwrap()
+                    .sample(&mut rng);
                 assert_eq!(sample, 10);
 
                 let mut rng = MockIntRng { val: 9 };
-                let sample = Uniform::<$ty>::new(10, 20).unwrap().sample(&mut rng);
+                let sample = Uniform::<$ty, UnsignedKind>::new(10, 20)
+                    .unwrap()
+                    .sample(&mut rng);
                 assert_eq!(sample, 19);
 
-                let mut rng = MockIntRng { val: 10 };
-                let sample = Uniform::<$ty>::new(10, 20).unwrap().sample(&mut rng);
-                assert_eq!(sample, 10);
+                // A word landing on the span itself is out of band and must be thrown away.
+                // The old sampler folded it back with `% span`, which is what made it biased;
+                // this one redraws, so the generator has to offer a second word.
+                let mut rng = ScriptedIntRng {
+                    words: vec![10, 3],
+                    next: 0,
+                };
+                let sample = Uniform::<$ty, UnsignedKind>::new(10, 20)
+                    .unwrap()
+                    .sample(&mut rng);
+                assert_eq!(
+                    sample, 13,
+                    "the rejected word was folded back instead of redrawn"
+                );
             }
 
             #[test]
             fn test_sample_single() {
                 let mut rng = MockIntRng { val: 5 };
                 let sample =
-                    <$ty as SampleUniform>::Sampler::sample_single(10, 20, &mut rng).unwrap();
+                    <$ty as SampleUniform<UnsignedKind>>::Sampler::sample_single(10, 20, &mut rng)
+                        .unwrap();
                 assert!((10..20).contains(&sample));
 
-                let res = <$ty as SampleUniform>::Sampler::sample_single(20, 10, &mut rng);
+                let res =
+                    <$ty as SampleUniform<UnsignedKind>>::Sampler::sample_single(20, 10, &mut rng);
                 assert_eq!(res.unwrap_err(), UniformDistributionError::InvalidRange);
             }
 
@@ -80,12 +126,15 @@ macro_rules! uniform_int_tests {
             fn test_sample_single_inclusive() {
                 let mut rng = MockIntRng { val: 5 };
                 let sample =
-                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(10, 20, &mut rng)
-                        .unwrap();
+                    <$ty as SampleUniform<UnsignedKind>>::Sampler::sample_single_inclusive(
+                        10, 20, &mut rng,
+                    )
+                    .unwrap();
                 assert!((10..=20).contains(&sample));
 
-                let res =
-                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(21, 20, &mut rng);
+                let res = <$ty as SampleUniform<UnsignedKind>>::Sampler::sample_single_inclusive(
+                    21, 20, &mut rng,
+                );
                 assert_eq!(res.unwrap_err(), UniformDistributionError::InvalidRange);
             }
         }
@@ -151,14 +200,19 @@ macro_rules! uniform_float_tests {
                 let low = 10.0;
                 let high = 20.0;
                 let sample =
-                    <$ty as SampleUniform>::Sampler::sample_single(low, high, &mut rng).unwrap();
+                    <$ty as SampleUniform<FloatKind>>::Sampler::sample_single(low, high, &mut rng)
+                        .unwrap();
                 assert!((low..high).contains(&sample));
 
-                let res = <$ty as SampleUniform>::Sampler::sample_single(20.0, 10.0, &mut rng);
+                let res =
+                    <$ty as SampleUniform<FloatKind>>::Sampler::sample_single(20.0, 10.0, &mut rng);
                 assert_eq!(res.unwrap_err(), UniformDistributionError::EmptyRange);
 
-                let res =
-                    <$ty as SampleUniform>::Sampler::sample_single(10.0, <$ty>::INFINITY, &mut rng);
+                let res = <$ty as SampleUniform<FloatKind>>::Sampler::sample_single(
+                    10.0,
+                    <$ty>::INFINITY,
+                    &mut rng,
+                );
                 assert_eq!(res.unwrap_err(), UniformDistributionError::NonFinite);
             }
 
@@ -167,13 +221,15 @@ macro_rules! uniform_float_tests {
                 let mut rng = rng();
                 let low = 10.0;
                 let high = 20.0;
-                let sample =
-                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(low, high, &mut rng)
-                        .unwrap();
+                let sample = <$ty as SampleUniform<FloatKind>>::Sampler::sample_single_inclusive(
+                    low, high, &mut rng,
+                )
+                .unwrap();
                 assert!((low..=high).contains(&sample));
 
-                let res =
-                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(21.0, 20.0, &mut rng);
+                let res = <$ty as SampleUniform<FloatKind>>::Sampler::sample_single_inclusive(
+                    21.0, 20.0, &mut rng,
+                );
                 assert_eq!(res.unwrap_err(), UniformDistributionError::EmptyRange);
             }
         }

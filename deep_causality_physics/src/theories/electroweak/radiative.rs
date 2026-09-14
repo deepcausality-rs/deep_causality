@@ -6,6 +6,7 @@
 use crate::PhysicsError;
 use crate::constants::FERMI_CONSTANT;
 use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, lift};
 use std::f64::consts::PI;
 
 /// Container for computed radiative corrections
@@ -32,14 +33,14 @@ pub struct RadiativeCorrections<T> {
 /// ```
 pub fn calculate_delta_rho<T>(top_mass: T) -> T
 where
-    T: RealField + From<f64>,
+    T: RealField + FromPrimitive,
 {
-    let gf = <T as From<f64>>::from(FERMI_CONSTANT);
-    let pi = <T as From<f64>>::from(PI);
-    let sqrt2 = <T as From<f64>>::from(2.0).sqrt();
+    let gf = lift::<T>(FERMI_CONSTANT);
+    let pi = lift::<T>(PI);
+    let sqrt2 = lift::<T>(2.0).sqrt();
 
-    let numerator = <T as From<f64>>::from(3.0) * gf * top_mass * top_mass;
-    let denominator = <T as From<f64>>::from(8.0) * pi * pi * sqrt2;
+    let numerator = lift::<T>(3.0) * gf * top_mass * top_mass;
+    let denominator = lift::<T>(8.0) * pi * pi * sqrt2;
     numerator / denominator
 }
 
@@ -54,9 +55,9 @@ where
 /// ```
 pub fn calculate_delta_r_weak<T>(sin2_theta_w: T, delta_rho: T) -> T
 where
-    T: RealField + From<f64>,
+    T: RealField + FromPrimitive,
 {
-    let one = <T as From<f64>>::from(1.0);
+    let one = lift::<T>(1.0);
     let cos2_theta_w = one - sin2_theta_w;
     let cot2_theta_w = cos2_theta_w / sin2_theta_w;
     -cot2_theta_w * delta_rho
@@ -72,9 +73,9 @@ where
 /// ```
 pub fn calculate_effective_angle<T>(sin2_theta_w: T, delta_rho: T) -> T
 where
-    T: RealField + From<f64>,
+    T: RealField + FromPrimitive,
 {
-    let one = <T as From<f64>>::from(1.0);
+    let one = lift::<T>(1.0);
     let cos2 = one - sin2_theta_w;
     sin2_theta_w + cos2 * delta_rho
 }
@@ -99,24 +100,24 @@ pub fn solve_w_mass<T>(
     g_f: T,
 ) -> Result<RadiativeCorrections<T>, PhysicsError>
 where
-    T: RealField + From<f64>,
+    T: RealField + FromPrimitive,
 {
     // 1. Calculate Δρ (depends only on m_t, G_F)
     let delta_rho = calculate_delta_rho(top_mass);
 
     // 2. Initial guess
-    let mut mw = <T as From<f64>>::from(80.30);
-    let target_accuracy = <T as From<f64>>::from(1e-6);
+    let mut mw = lift::<T>(80.30);
+    let target_accuracy = lift::<T>(1e-6);
     let max_iters = 20;
 
-    let mut delta_r_weak = <T as From<f64>>::from(0.0);
-    let mut sin2_eff = <T as From<f64>>::from(0.0);
+    let mut delta_r_weak = lift::<T>(0.0);
+    let mut sin2_eff = lift::<T>(0.0);
     let mut converged = false;
     // let mut sin2_on_shell; // Removed unused variable warning if detected, but it's used in loop.
 
     for _ in 0..max_iters {
         // Calculate On-Shell sin²θ_W from current M_W
-        let sin2_on_shell = <T as From<f64>>::from(1.0) - (mw * mw) / (mz * mz);
+        let sin2_on_shell = lift::<T>(1.0) - (mw * mw) / (mz * mz);
 
         // Update Weak Correction (Δr_weak)
         delta_r_weak = calculate_delta_r_weak(sin2_on_shell, delta_rho);
@@ -126,24 +127,24 @@ where
 
         // Calculate RHS constant A using ALPHA_MZ
         // A = (π · α(M_Z)) / (√2 · G_F · (1 - Δr_weak))
-        let pi = <T as From<f64>>::from(PI);
-        let sqrt2 = <T as From<f64>>::from(2.0).sqrt();
+        let pi = lift::<T>(PI);
+        let sqrt2 = lift::<T>(2.0).sqrt();
 
         let numerator = pi * alpha_mz;
-        let denominator = sqrt2 * g_f * (<T as From<f64>>::from(1.0) - delta_r_weak);
+        let denominator = sqrt2 * g_f * (lift::<T>(1.0) - delta_r_weak);
         let a = numerator / denominator;
 
         // Solve Quadratic for M_W^2
         let mz2 = mz * mz;
-        let discriminant = mz2 * mz2 - <T as From<f64>>::from(4.0) * mz2 * a;
+        let discriminant = mz2 * mz2 - lift::<T>(4.0) * mz2 * a;
 
-        if discriminant < <T as From<f64>>::from(0.0) {
+        if discriminant < lift::<T>(0.0) {
             return Err(PhysicsError::NumericalInstability(
                 "Radiative correction solver failed: Negative discriminant".into(),
             ));
         }
 
-        let mw2_new = (mz2 + discriminant.sqrt()) / <T as From<f64>>::from(2.0);
+        let mw2_new = (mz2 + discriminant.sqrt()) / lift::<T>(2.0);
         let mw_new = mw2_new.sqrt();
 
         // Check convergence
@@ -169,8 +170,8 @@ where
     // 3. Reconstruct Standard Delta R (referenced to alpha(0)) for UI Consistency
     // The loop condition is: 1 - Δr_std = (α(0) / α(M_Z)) * (1 - Δr_weak)
     // So: Δr_std = 1 - (α(0) / α(M_Z)) * (1 - Δr_weak)
-    let term = (alpha_0 / alpha_mz) * (<T as From<f64>>::from(1.0) - delta_r_weak);
-    let delta_r_std = <T as From<f64>>::from(1.0) - term;
+    let term = (alpha_0 / alpha_mz) * (lift::<T>(1.0) - delta_r_weak);
+    let delta_r_std = lift::<T>(1.0) - term;
 
     Ok(RadiativeCorrections {
         delta_rho,

@@ -37,6 +37,38 @@
 //!
 //! Each is a short addition whenever a caller appears.
 //!
+//! # Why the distributions live here
+//!
+//! A distribution is mathematics. `Normal`, `Exponential`, `Cauchy` and the rest are defined by
+//! their densities and their moments, and every one of those is a statistic — which is what this
+//! crate is for. Putting them beside the densities is what makes importance sampling, sequential
+//! Monte Carlo and MCMC diagnostics short to write: each needs a sampler and a density in the same
+//! place, and separating them by a crate boundary is what made them long.
+//!
+//! The entropy crate below keeps what is genuinely entropy: generators, the raw machine word, the
+//! Boolean draw, the Sobol sequence and the range sampler. It makes no claim about how a number is
+//! distributed beyond "uniform over the bits", and it does not name a density anywhere. The
+//! dependency runs `stats -> rand`, downhill, so nothing circles back.
+//!
+//! # A lazy sampler is Arrow-shaped, not witness-shaped
+//!
+//! A carrier that *stores* a sampling closure — draw-on-demand rather than draw-now — cannot take
+//! the container traits in `deep_causality_haft`, and the reason is worth recording so it is not
+//! rediscovered as a gap.
+//!
+//! Those traits carry no `'static` bound: zero occurrences across `Functor`, `Pure`, `Applicative`,
+//! `Monad`, `Traversable` and `LaxMonoidal`. That absence is deliberate. A functor receives a
+//! function, applies it and drops it, so the function never outlives the call. `Profunctor`, which
+//! does store its functions, carries `'static` on every parameter.
+//!
+//! A stored closure needs bounds the container traits do not provide, and an implementation cannot
+//! add them — `error[E0276]: impl has stricter requirements than trait`. The container traits are
+//! for data. A lazy sampler is a program, and `haft`'s home for programs is the `Arrow` layer.
+//!
+//! An ensemble of *realised* draws has no such problem: it is a `Vec` with a witness, which
+//! `CausalTensor` already is, and drawing into one is an ordinary generic function needing no
+//! witness of its own.
+//!
 //! # Precision
 //!
 //! Every function is generic over its scalar under the algebra tower's bounds, and no public
@@ -60,7 +92,9 @@ extern crate core;
 
 pub mod algorithms;
 pub mod errors;
+pub mod traits;
 pub mod types;
+pub mod utils;
 // Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden because
 // they are not API.
 #[doc(hidden)]
@@ -89,3 +123,37 @@ pub use crate::types::penalisation::Penalisation;
 pub use crate::types::ridge_config::RidgeConfig;
 pub use crate::types::ridge_fit::RidgeFit;
 pub use crate::types::zero_policy::ZeroPolicy;
+
+// ---------------------------------------------------------------------------------------------
+// Distributions
+// ---------------------------------------------------------------------------------------------
+//
+// The mathematics of a random quantity, beside the densities that describe it. The machine words
+// these consume come from `deep_causality_rand`; what they mean is a statement about a real field.
+
+pub use crate::errors::bernoulli_error::BernoulliDistributionError;
+pub use crate::errors::normal_error::NormalDistributionError;
+pub use crate::types::distr::bernoulli::Bernoulli;
+pub use crate::types::distr::categorical::Categorical;
+pub use crate::types::distr::cauchy::Cauchy;
+pub use crate::types::distr::exponential::Exponential;
+pub use crate::types::distr::log_normal::LogNormal;
+pub use crate::types::distr::normal::Normal;
+pub use crate::types::distr::normal::standard_normal::StandardNormal;
+pub use crate::types::distr::poisson::{MAX_ITERATIONS, MAX_RATE, Poisson};
+pub use crate::types::distr::uniform_int::UniformInt;
+pub use crate::types::distr::unit_interval::standard_uniform::StandardUniform;
+pub use crate::types::distr::weibull::Weibull;
+pub use crate::types::range::{Open01, OpenClosed01};
+pub use crate::utils::inverse_cdf::{
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
+    uniform_inverse_cdf,
+};
+
+// The generator bridge, re-exported **by name** so a crate that wants only distributions needs no
+// second dependency to spell the bound. Named, never a glob: a `pub use` is an alias to the same
+// trait item, so a bound written against either path is satisfied by the same implementations,
+// whereas a second trait of the same shape would be a different item entirely.
+
+pub use crate::traits::random_ext::RandomExt;
+pub use deep_causality_rand::{Distribution, RandScalar, Rng, RngCore, Xoshiro256, rng};

@@ -8,7 +8,10 @@ use alloc::vec::Vec;
 
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
+use deep_causality_haft::{
+    Applicative, CoMonad, Collectable, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure,
+    Semigroupal, Traversable,
+};
 
 // ============================================================================
 // HKT Witness Implementation
@@ -62,6 +65,25 @@ impl Foldable<CausalTensorWitness> for CausalTensorWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.into_vec().into_iter().fold(init, f)
+    }
+}
+
+impl Collectable<CausalTensorWitness> for CausalTensorWitness {
+    /// Collects the values into the rank-1 tensor of that length, in iteration order.
+    ///
+    /// Rank 1 rather than the rank 0 [`Pure`] builds: a flat sequence carries no shape, and one
+    /// value collected is a run of length one rather than a scalar. A caller wanting higher rank
+    /// reshapes afterwards, where the extents are known.
+    ///
+    /// The length is taken from the collected data, so the shape and the data cannot disagree and
+    /// the fallible constructor behind `from_vec` cannot reject them.
+    fn collect<T, I>(items: I) -> CausalTensor<T>
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let data: Vec<T> = items.into_iter().collect();
+        let len = data.len();
+        CausalTensor::from_vec(data, &[len])
     }
 }
 
@@ -146,6 +168,56 @@ impl Monad<CausalTensorWitness> for CausalTensorWitness {
     }
 }
 
+impl Traversable<CausalTensorWitness> for CausalTensorWitness {
+    /// Flips `CausalTensor<M<A>>` into `M<CausalTensor<A>>`, folding an accumulator through `M`
+    /// from left to right so the effects run in index order and the result keeps that order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// index order is the one reported.
+    ///
+    /// # The input's shape survives
+    ///
+    /// A `[2, 3]` comes back `[2, 3]`, not a flat `[6]`. Unlike [`Monad::bind`] on this witness,
+    /// `sequence` has no shape to choose: `bind`'s continuation may return any number of elements,
+    /// so a one-element input leaves the two identity laws wanting different shapes, while
+    /// `sequence` is one-in-one-out by construction and the input's shape is the only defensible
+    /// answer. The `bind` corner cases documented above are therefore not an inconsistency with
+    /// this impl; they arise from a choice `sequence` never faces.
+    ///
+    /// The shape is read before `into_vec` consumes the tensor — the borrow checker enforces that
+    /// ordering rather than leaving it to a convention.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones — quadratic — for an `n`-element tensor. The clone is
+    /// forced by [`Applicative::apply`]'s `Func: FnMut` bound, not by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out,
+    /// and this witness's own cartesian `apply` does invoke it once per element. An `A: Copy`
+    /// bound would not help, because the cloned value is the accumulator `Vec`, never `Copy`.
+    fn sequence<A, M>(fa: CausalTensor<M::Type<A>>) -> M::Type<CausalTensor<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let shape = fa.shape().to_vec();
+        let mut acc: M::Type<Vec<A>> = M::pure(Vec::new());
+        for m_a in fa.into_vec() {
+            acc = M::apply(
+                M::fmap(acc, |v: Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        M::fmap(acc, move |v| CausalTensor::from_vec(v, &shape))
+    }
+}
+
 impl CoMonad<CausalTensorWitness> for CausalTensorWitness {
     fn extract<A>(fa: &CausalTensor<A>) -> A
     where
@@ -208,5 +280,50 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
             let len = data.len();
             CausalTensor::from_vec(data, &[len])
         }
+    }
+}
+
+impl DiagonalTraversable<CausalTensorWitness> for CausalTensorWitness {
+    /// Zips each cell's run into the accumulator in index order, then restores the shape.
+    ///
+    /// The accumulator carries partial fields as flat tensors while the fold runs, because their
+    /// shape is not the input's until every cell has been appended. One `fmap` at the end gives
+    /// each completed field the structure's shape — the shape is read before `into_vec` consumes
+    /// the tensor, which the borrow checker enforces rather than a convention.
+    ///
+    /// Cost is one `zip_with` per cell, each linear in the ensemble length: `O(cells × draws)`,
+    /// with no clone of the accumulator. That is the difference [`Semigroupal::zip_with`]'s
+    /// `FnMut(A, B) -> C` makes against [`Applicative::apply`]'s repeated invocation — `sequence`
+    /// on this witness clones its accumulator once per step and is quadratic.
+    fn sequence_zip<A, M>(
+        fa: CausalTensor<M::Type<A>>,
+        seed: M::Type<CausalTensor<A>>,
+    ) -> M::Type<CausalTensor<A>>
+    where
+        M: Semigroupal<M> + HKT,
+    {
+        let shape = fa.shape().to_vec();
+        let cells = fa.into_vec();
+
+        // No cells, nothing to zip. Without a `Pure` there is nothing to derive an answer from
+        // either, so the seed is the answer — returned before the reshape below, which would
+        // otherwise impose the empty structure's shape on the caller's fields.
+        if cells.is_empty() {
+            return seed;
+        }
+
+        let mut acc = seed;
+        for cell in cells {
+            acc = M::zip_with(acc, cell, |field, a| {
+                let mut values = field.into_vec();
+                values.push(a);
+                let len = values.len();
+                CausalTensor::from_vec(values, &[len])
+            });
+        }
+
+        M::fmap(acc, move |field| {
+            CausalTensor::from_vec(field.into_vec(), &shape)
+        })
     }
 }
