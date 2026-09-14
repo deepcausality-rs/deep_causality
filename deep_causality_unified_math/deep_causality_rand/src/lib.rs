@@ -39,7 +39,9 @@ pub use crate::types::Xoshiro256;
 pub use crate::types::distr::bernoulli::Bernoulli;
 pub use crate::types::distr::normal::Normal;
 pub use crate::types::distr::normal::standard_normal::StandardNormal;
-pub use crate::types::distr::uniform::standard_uniform::StandardUniform;
+pub use crate::types::distr::uniform::standard_uniform::{
+    StandardBool, StandardUniform, StandardWord,
+};
 pub use crate::types::distr::uniform::{Uniform, UniformFloat};
 pub use crate::types::iter::Iter;
 pub use crate::types::map::Map;

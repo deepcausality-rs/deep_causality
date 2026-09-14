@@ -29,9 +29,9 @@ exclude = [
 
 [features]
 default = ["std"]
-std = ["alloc", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_linear/std"]
+std = ["alloc", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_linear/std", "deep_causality_rand/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_linear/no-std"]
+no-std = ["alloc", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_linear/no-std", "deep_causality_rand/no-std"]
 
 [dependencies.deep_causality_num]
 workspace = true
@@ -40,6 +40,11 @@ workspace = true
 workspace = true
 
 [dependencies.deep_causality_linear]
+workspace = true
+
+# Entropy. `stats` owns the distributions; `rand` supplies the bits they consume.
+# Downhill: tier 4 to tier 2, so no cycle.
+[dependencies.deep_causality_rand]
 workspace = true
 
 [lints]

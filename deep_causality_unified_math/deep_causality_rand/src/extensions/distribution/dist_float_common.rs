@@ -10,7 +10,7 @@
 //! here once, generic over `deep_causality_num`'s float-bit traits. `Float106` does not use these
 //! kernels — it is not a single-word IEEE float, so it composes two `f64` samples instead.
 
-use crate::{Distribution, Rng, StandardUniform};
+use crate::{Distribution, Rng, StandardWord};
 use core::ops::{Add, Mul, Shr, Sub};
 use deep_causality_num::{FloatAsScalar, FloatFromInt, IntoFloat, One};
 
@@ -21,10 +21,10 @@ pub(crate) fn standard_unit<F, R>(rng: &mut R, scale: F, shift: u32) -> F
 where
     F: FloatFromInt + FloatAsScalar + Mul<Output = F>,
     F::UInt: Shr<u32, Output = F::UInt>,
-    StandardUniform: Distribution<F::UInt>,
+    StandardWord: Distribution<F::UInt>,
     R: Rng + ?Sized,
 {
-    let value: F::UInt = StandardUniform.sample(rng);
+    let value: F::UInt = StandardWord.sample(rng);
     let value = value >> shift;
     F::splat(scale) * F::cast_from_int(value)
 }
@@ -36,10 +36,10 @@ pub(crate) fn open_closed_unit<F, R>(rng: &mut R, scale: F, shift: u32) -> F
 where
     F: FloatFromInt + FloatAsScalar + Mul<Output = F>,
     F::UInt: Shr<u32, Output = F::UInt> + Add<Output = F::UInt> + One,
-    StandardUniform: Distribution<F::UInt>,
+    StandardWord: Distribution<F::UInt>,
     R: Rng + ?Sized,
 {
-    let value: F::UInt = StandardUniform.sample(rng);
+    let value: F::UInt = StandardWord.sample(rng);
     let value = value >> shift;
     F::splat(scale) * F::cast_from_int(value + F::UInt::one())
 }
@@ -51,10 +51,10 @@ pub(crate) fn open_unit<F, R>(rng: &mut R, shift: u32, one_minus_half_eps: F) ->
 where
     F: FloatFromInt + FloatAsScalar + Sub<Output = F>,
     F::UInt: Shr<u32, Output = F::UInt> + IntoFloat<F = F>,
-    StandardUniform: Distribution<F::UInt>,
+    StandardWord: Distribution<F::UInt>,
     R: Rng + ?Sized,
 {
-    let value: F::UInt = StandardUniform.sample(rng);
+    let value: F::UInt = StandardWord.sample(rng);
     let fraction = value >> shift;
     fraction.into_float_with_exponent(0) - F::splat(one_minus_half_eps)
 }

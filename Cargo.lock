@@ -803,6 +803,7 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_linear",
  "deep_causality_num",
+ "deep_causality_rand",
 ]
 
 [[package]]

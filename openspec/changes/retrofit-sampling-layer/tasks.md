@@ -19,22 +19,41 @@ Order: 1 → 2 → 3 → 4 → 5 → 7. Group 6 is independent and may run at an
 
 ## 1. The entropy crate: what stays
 
-- [ ] 1.1 Record the three baselines (`rand`, `stats`, `uncertain` test counts) in
-      `notes/baselines.md`. Every later group compares against these.
-- [ ] 1.2 Phase 1. In `rand`: declare `StandardWord` and `StandardBool`; remove the `u64`, `u32`
-      and `bool` impls from `StandardUniform`; split `Rng::random` into `random_word` and
-      `random_boolean`. Bodies `unimplemented!()`. Build under `cargo` and `bazel`.
-- [ ] 1.3 Phase 2. Suite: each sampler answers only for its own kind; a Boolean draw is true for
-      45–55% of 10 000 draws; `StandardUniform` offers no integer implementation. Run; record the
-      failing output and count in `notes/tdd-group-1.md`.
-- [ ] 1.4 Phase 3. Defect audit — write each, confirm the suite rejects it, record which test
-      caught it: (a) `StandardBool` as `next_u64() % 2 == 0` against a generator with a weak low
-      bit; (b) `random_word` delegating to a numerical path; (c) `StandardBool` returning a
-      constant — must fail the 45–55% band.
-- [ ] 1.5 Phase 4. Implement. Phase 5: `scripts/mutants.sh deep_causality_rand
-      src/types/distr/uniform/standard_uniform.rs`; survivors get a verdict, equivalents go to
-      `.cargo/mutants.toml` with a reason.
-- [ ] 1.6 Clippy clean (fix, never `#[allow]`). Prepare the group-1 commit message.
+- [x] 1.1 Record the baselines in `notes/baselines.md`. Every later group compares against these.
+      Measured at `eaa17aaf3`: `rand` 154, `stats` 467, `uncertain` 248, `topology` 1697, all
+      green. `topology` added to the list because 5.7 migrates it.
+- [x] 1.2 Phase 1. In `rand`: declared `StandardWord` and `StandardBool`; removed the `u64`,
+      `u32` and `bool` impls from `StandardUniform`; split `Rng::random` into `random_word` and
+      `random_boolean`. Bodies `unimplemented!()`. `cargo` and `bazel` both build; the two new
+      bodies were confirmed to panic rather than return.
+      Internal callers redirected to `StandardWord`, which is the separation doing its job:
+      `dist_float_common.rs`'s three bit kernels, `uniform_f32.rs`, `uniform_f64.rs` and
+      `Bernoulli`'s fixed-point comparison all draw a *word* to build their result, and each said
+      `StandardUniform` only because one type used to mean both.
+- [x] 1.3 Phase 2. Suite written: `tests/types/dist/uniform/standard_word_bool_tests.rs`, 7 tests,
+      covered by the existing glob. Observed failing — **103 passed, 58 failed**, and all 58 panic
+      lines name the phase-1 body, so no failure is a compile error or a panic from elsewhere.
+      Recorded in `notes/tdd-group-1.md`, including the three migrated test files and the one
+      assertion that legitimately changed (the Boolean parity rule).
+- [x] 1.4 Phase 3. Defect audit complete, all three rejected. (a) parity Boolean → caught by
+      `test_standard_bool`, 1 failure. (b) `random_word` on the numerical path → rejected by the
+      **compiler**, `error[E0277]`, since `StandardUniform` no longer implements
+      `Distribution<u64>`; the type system enforces the split, which is stronger than a test.
+      (c) constant Boolean → caught by 3 tests. Recorded in `notes/tdd-group-1.md`.
+- [x] 1.5 Phase 4. Implemented: `StandardWord` returns `next_u64`/`next_u32`, `StandardBool`
+      takes the top bit. **161 passed, 0 failed** — the 154 baseline plus exactly the 7 new tests,
+      no regression.
+- [x] 1.5b Phase 5. Mutation testing: **6 caught, 0 missed, 2 timeout**. The `>>`→`<<` mutant is
+      the phase-3 parity defect by another route and is rejected, so the top-bit choice is pinned.
+      The two timeouts mutate the `u64` arm to a constant; confirmed by hand that the suite
+      **hangs** rather than passes, because the ziggurat's two rejection loops consume words until
+      a condition changes and a constant word freezes them. Verdict: caught, not survived — not
+      added to `.cargo/mutants.toml`, since they are not equivalent to the original. Underlying
+      finding recorded: the ziggurat has no iteration cap, and group 3's Box-Muller removes the
+      loop rather than inheriting it.
+- [x] 1.6 Clippy clean, no `#[allow]` added. `cargo` 161/161, `bazel` 24/24 targets.
+      Bazel caught `os_random_rng_tests.rs`, feature-gated behind `os-random`, which `cargo test`
+      never compiled — three more word-draw sites, migrated the same way. Commit message prepared.
 
 ## 2. The move: distributions from `rand` to `stats`
 

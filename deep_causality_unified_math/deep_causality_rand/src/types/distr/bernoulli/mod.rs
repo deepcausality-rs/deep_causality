@@ -102,7 +102,7 @@ impl Distribution<bool> for Bernoulli {
         if self.p_int == ALWAYS_TRUE {
             return true;
         }
-        let v: u64 = rng.random();
+        let v: u64 = crate::StandardWord.sample(rng);
         v < self.p_int
     }
 }

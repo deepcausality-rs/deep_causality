@@ -6,6 +6,7 @@
 #[cfg(test)]
 #[cfg(not(miri))]
 mod standard_uniform_tests;
+mod standard_word_bool_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 mod uniform_tests;
