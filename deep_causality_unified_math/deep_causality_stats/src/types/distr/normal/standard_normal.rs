@@ -5,9 +5,8 @@
 
 //! The standard normal, written once and generic in the scalar.
 
-use crate::{Open01, RandWidth, StandardUniform};
-use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::FromPrimitive;
+use crate::{Open01, RandScalar, StandardUniform};
+use deep_causality_algebra::Real;
 use deep_causality_rand::{Distribution, Rng};
 
 /// The standard normal distribution `N(0, 1)`.
@@ -32,7 +31,7 @@ pub struct StandardNormal;
 /// main path.
 impl<T> Distribution<T> for StandardNormal
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     Open01: Distribution<T>,
     StandardUniform: Distribution<T>,
 {

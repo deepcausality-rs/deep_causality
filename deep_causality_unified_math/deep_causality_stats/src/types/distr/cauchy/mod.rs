@@ -5,9 +5,8 @@
 
 //! The Cauchy distribution.
 
-use crate::{RandWidth, StandardUniform, StatsError};
+use crate::{RandScalar, StandardUniform, StatsError};
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 /// The Cauchy distribution with location `x₀` and scale `γ`, supported on all of `ℝ`.
@@ -68,7 +67,7 @@ where
 /// floating point is a large finite number rather than an infinity, and `u = 1` never occurs.
 impl<T> Distribution<T> for Cauchy<T>
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     StandardUniform: Distribution<T>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {

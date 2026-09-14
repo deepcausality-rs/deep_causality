@@ -53,7 +53,7 @@ use deep_causality_algebra::{Real, RealField};
 use deep_causality_haft::{DiagonalTraversable, Foldable, Functor};
 use deep_causality_num::{Float106, FromPrimitive, ToPrimitive, lift, lift_count, lower};
 use deep_causality_rand::Xoshiro256;
-use deep_causality_stats::{Distribution, RandWidth, Rng, StandardUniform};
+use deep_causality_stats::{Distribution, RandScalar, Rng, StandardUniform};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
 
 /// `f32` is the right precision for the simulation itself.
@@ -125,7 +125,7 @@ fn main() {
 /// uniform draw at the working scalar compared against the Boltzmann factor.
 fn sweep<T, R>(spins: &mut [T], l: usize, beta: T, rng: &mut R)
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     R: Rng + ?Sized,
 {
     let two = lift::<T>(2.0);
@@ -154,7 +154,7 @@ where
 /// A thermalised lattice at temperature `t`, as a `[L, L]` tensor of spins.
 fn equilibrate<T>(t: f64, l: usize, seed: u64) -> CausalTensor<T>
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
 {
     let mut rng = Xoshiro256::from_seed(seed);
     let beta = lift::<T>(1.0 / t);

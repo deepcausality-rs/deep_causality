@@ -7,14 +7,13 @@
 //! This is the requirement the re-export exists for: a crate that wants distributions should not
 //! have to spell a bound about how those distributions are implemented, nor declare a second
 //! dependency to name the generator trait. Before the retrofit the signature below needed
-//! `where StandardUniform: Distribution<S>`; naming `RandWidth` says the same thing about the
+//! `where StandardUniform: Distribution<S>`; naming `RandScalar` says the same thing about the
 //! scalar instead, which is what the caller actually knows.
 
-use deep_causality_algebra::{RealField, Scalar};
 use deep_causality_num::{lift, lift_count};
-use deep_causality_stats::{RandWidth, RandomExt, Xoshiro256};
+use deep_causality_stats::{RandScalar, RandomExt, Xoshiro256};
 
-fn monte_carlo<S: Scalar + RealField + RandWidth>(samples: u64, seed: u64) -> (S, usize) {
+fn monte_carlo<S: RandScalar>(samples: u64, seed: u64) -> (S, usize) {
     let mut rng = Xoshiro256::from_seed(seed);
     let draws: Vec<S> = (0..samples).map(|_| rng.random::<S>()).collect();
     let bytes = core::mem::size_of_val(draws.as_slice());

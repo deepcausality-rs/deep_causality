@@ -5,9 +5,8 @@
 
 //! The exponential distribution.
 
-use crate::{Open01, RandWidth, StatsError};
+use crate::{Open01, RandScalar, StatsError};
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 /// The exponential distribution with rate `λ`, supported on `[0, ∞)`.
@@ -59,7 +58,7 @@ where
 /// enough to matter over a long run.
 impl<T> Distribution<T> for Exponential<T>
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     Open01: Distribution<T>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {

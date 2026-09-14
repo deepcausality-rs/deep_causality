@@ -4,9 +4,9 @@
  */
 
 use deep_causality_algebra::RealField;
-use deep_causality_num::{Float106, FromPrimitive};
+use deep_causality_num::Float106;
 use deep_causality_num_complex::Complex;
-use deep_causality_stats::{Distribution, RandWidth, Rng, StandardUniform};
+use deep_causality_stats::{Distribution, RandScalar, Rng, StandardUniform};
 
 /// A trait for generating random field elements uniformly.
 ///
@@ -28,7 +28,7 @@ pub trait RandomField {
 #[inline]
 fn centred_unit<T, R>(rng: &mut R) -> T
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     R: Rng + ?Sized,
 {
     let u: T = StandardUniform.sample(rng);

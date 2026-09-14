@@ -14,7 +14,7 @@
 //! unscrambled), which uses the Joe–Kuo `new-joe-kuo-6.21201` set — so the generated points
 //! match a widely used reference implementation bit-for-bit.
 
-use crate::{RandFloat, RngCore, RngError, Xoshiro256};
+use crate::{RandScalar, RngCore, RngError, Xoshiro256};
 use alloc::format;
 
 /// Maximum dimension supported by the embedded direction-number table.
@@ -88,7 +88,7 @@ impl SobolSequence {
     /// rounds away the low 8 bits of every coordinate and the sequence's low-discrepancy
     /// structure degrades with it. That is a real trade-off and the reason this returns at the
     /// caller's scalar rather than picking one.
-    pub fn coordinate<T: RandFloat>(&self, index: u64, dim_index: usize) -> T {
+    pub fn coordinate<T: RandScalar>(&self, index: u64, dim_index: usize) -> T {
         debug_assert!(dim_index < self.dim, "dimension index out of range");
         debug_assert!(index < (1u64 << BITS), "index exceeds the 2^32 period");
 
@@ -109,7 +109,7 @@ impl SobolSequence {
     }
 
     /// Fills `out[0..dim]` with the coordinates of point `index`, at the caller's scalar.
-    pub fn point<T: RandFloat>(&self, index: u64, out: &mut [T]) {
+    pub fn point<T: RandScalar>(&self, index: u64, out: &mut [T]) {
         debug_assert!(out.len() >= self.dim, "output slice shorter than dim");
         for (d, slot) in out.iter_mut().enumerate().take(self.dim) {
             *slot = self.coordinate(index, d);

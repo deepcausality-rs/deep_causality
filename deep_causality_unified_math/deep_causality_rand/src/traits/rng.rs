@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Distribution, Fill, RandFloat, RngCore, SampleRange, SampleUniform};
+use crate::{Distribution, Fill, RandScalar, RngCore, SampleRange, SampleUniform};
 use crate::{Iter, Map};
 
 impl<T: Rng> Rng for &mut T {}
@@ -39,10 +39,13 @@ pub trait Rng: RngCore {
     }
 
     #[track_caller]
-    fn random_range<T, R>(&mut self, range: R) -> T
+    /// A uniform draw from a range, at whatever scalar the range holds.
+    ///
+    /// `K` is the tower marker and is inferred from the range; no call site names it.
+    fn random_range<T, K, R>(&mut self, range: R) -> T
     where
-        T: SampleUniform,
-        R: SampleRange<T>,
+        T: SampleUniform<K>,
+        R: SampleRange<T, K>,
     {
         assert!(!range.is_empty(), "cannot sample empty range");
         range.sample_single(self).unwrap()
@@ -56,7 +59,7 @@ pub trait Rng: RngCore {
     /// zero once in every `2^64` draws.
     ///
     /// `p = 1` is special-cased rather than left to the comparison, for the reason
-    /// [`RandFloat::rand_float_gen`] documents: a narrow significand can round a draw from
+    /// [`RandScalar::rand_float_gen`] documents: a narrow significand can round a draw from
     /// `[0, 1)` onto exactly `1.0`, and `1.0 < 1.0` is false. At `f32` that happens about once in
     /// `2^25` draws, so without the case a certain event would occasionally fail to occur.
     ///
@@ -64,7 +67,7 @@ pub trait Rng: RngCore {
     /// 24 at `f32`, 53 at `f64`, 106 at `Float106`.
     #[inline]
     #[track_caller]
-    fn random_bool<T: RandFloat>(&mut self, p: T) -> bool {
+    fn random_bool<T: RandScalar>(&mut self, p: T) -> bool {
         if !(T::zero()..=T::one()).contains(&p) {
             panic!(
                 "p={} is outside range [0.0, 1.0]",

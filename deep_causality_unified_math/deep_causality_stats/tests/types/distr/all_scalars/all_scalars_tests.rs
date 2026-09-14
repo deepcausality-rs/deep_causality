@@ -13,14 +13,13 @@
 //! what this file must catch is a sampler that fails to compile, refuses, saturates or returns
 //! nonsense at a scalar other than the one it was written against.
 
-use deep_causality_algebra::RealField;
-use deep_causality_num::{Float106, FromPrimitive, ToPrimitive};
+use deep_causality_num::{Float106, ToPrimitive};
 use deep_causality_rand::{Distribution, Xoshiro256};
 use deep_causality_stats::utils_tests::sampling::{
     SUITE_SEED, assert_near, draws, expect_accepted, lift, moments, quantile, sorted_draws,
 };
 use deep_causality_stats::{
-    Categorical, Cauchy, Exponential, LogNormal, Normal, Open01, OpenClosed01, Poisson, RandWidth,
+    Categorical, Cauchy, Exponential, LogNormal, Normal, Open01, OpenClosed01, Poisson, RandScalar,
     StandardNormal, StandardUniform, UniformInt, Weibull,
 };
 
@@ -41,7 +40,7 @@ where
     // No `StandardUniform: Distribution<T>` clauses. The distributions are implemented for every
     // scalar carrying these three capabilities, so naming the capabilities is enough — which is
     // the whole point of the retrofit, and would not compile before it.
-    T: RealField + FromPrimitive + ToPrimitive + RandWidth,
+    T: RandScalar + ToPrimitive,
 {
     // --- the three unit draws, which every inverse-CDF distribution below rests on ---
     let u = draws::<T, _>(&StandardUniform, N, SUITE_SEED);

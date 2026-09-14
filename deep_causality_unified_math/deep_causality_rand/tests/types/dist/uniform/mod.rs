@@ -7,3 +7,5 @@ mod standard_word_bool_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 mod uniform_tests;
+#[cfg(test)]
+mod parity_probe_tests;

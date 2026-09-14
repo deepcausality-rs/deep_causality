@@ -5,9 +5,8 @@
 
 //! The log-normal distribution.
 
-use crate::{RandWidth, StandardNormal, StatsError};
+use crate::{RandScalar, StandardNormal, StatsError};
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 /// The log-normal distribution: `exp(X)` where `X ~ N(μ, σ²)`. Supported on `(0, ∞)`.
@@ -66,7 +65,7 @@ where
 /// `exp(μ + σ·Z)` for `Z` standard normal.
 impl<T> Distribution<T> for LogNormal<T>
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     StandardNormal: Distribution<T>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {

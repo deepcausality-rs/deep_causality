@@ -48,8 +48,8 @@ use super::{CubicalReggeGeometry, EdgeLengths, Euclidean};
 use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::{Float, FromPrimitive};
-use deep_causality_stats::{Distribution, Normal, RandWidth, Rng, StandardUniform, UniformInt};
+use deep_causality_num::Float;
+use deep_causality_stats::{Distribution, Normal, RandScalar, Rng, StandardUniform, UniformInt};
 
 /// Outcome of a single Metropolis-Hastings step.
 #[derive(Debug, Clone, PartialEq)]
@@ -84,11 +84,9 @@ pub enum RejectReason<R: RealField> {
 
 impl<const D: usize, R> CubicalReggeGeometry<D, R, Euclidean>
 where
-    // `RandWidth` rather than a pair of `StandardUniform: Distribution<R>` clauses. The two say
-    // the same thing — the distributions are implemented for every scalar that carries it — but
-    // one states a property of the scalar and the other states a property of the distribution's
-    // implementation, which is not this crate's business to know.
-    R: RealField + FromPrimitive + Float + RandWidth,
+    // One bound. `RandScalar` is blanket over the algebra, so this says "any scalar the sampling
+    // layer works at" without naming a distribution's implementation or a list of types.
+    R: RandScalar + Float,
 {
     /// One single-edge Metropolis-Hastings step on a `PerEdge` geometry.
     ///

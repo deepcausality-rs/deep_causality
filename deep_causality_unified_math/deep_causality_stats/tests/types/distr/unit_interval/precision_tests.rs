@@ -5,10 +5,10 @@
 
 //! Precision as a parameter: one body, every scalar, and the entropy each is owed.
 
-use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::{BFloat16, Float106, FromPrimitive, ToPrimitive};
+use deep_causality_algebra::Real;
+use deep_causality_num::{BFloat16, Float106, ToPrimitive};
 use deep_causality_rand::{Distribution, Xoshiro256};
-use deep_causality_stats::{Open01, OpenClosed01, RandWidth, StandardNormal, StandardUniform};
+use deep_causality_stats::{Open01, OpenClosed01, RandScalar, StandardNormal, StandardUniform};
 
 const SEED: u64 = 0x5EED_2026;
 
@@ -19,7 +19,7 @@ fn lower<T: ToPrimitive>(v: T) -> f64 {
 /// Mean and `E[x^2]` of `n` uniform draws, computed at the caller's scalar and lowered once.
 fn uniform_moments<T>(n: u64, seed: u64) -> (f64, f64)
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     StandardUniform: Distribution<T>,
 {
     let mut g = Xoshiro256::from_seed(seed);
@@ -57,7 +57,7 @@ fn uniform_moments_hold_at_every_scalar() {
 fn normal_variance_holds_at_every_scalar() {
     fn variance<T>(n: u64) -> f64
     where
-        T: RealField + FromPrimitive + RandWidth,
+        T: RandScalar,
         StandardNormal: Distribution<T>,
     {
         let mut g = Xoshiro256::from_seed(SEED);
@@ -101,15 +101,57 @@ fn a_double_double_draw_carries_its_low_limb() {
     );
 }
 
+/// A generator that counts the words drawn through it.
+struct CountingRng {
+    inner: Xoshiro256,
+    words: core::cell::Cell<u32>,
+}
+
+impl CountingRng {
+    fn new() -> Self {
+        Self {
+            inner: Xoshiro256::from_seed(0x5EED_2026),
+            words: core::cell::Cell::new(0),
+        }
+    }
+}
+
+impl deep_causality_rand::RngCore for CountingRng {
+    fn next_u32(&mut self) -> u32 {
+        self.next_u64() as u32
+    }
+    fn next_u64(&mut self) -> u64 {
+        self.words.set(self.words.get() + 1);
+        self.inner.next_u64()
+    }
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.inner.fill_bytes(dest)
+    }
+}
+
+impl deep_causality_rand::Rng for CountingRng {}
+
+/// One draw at `T`, and the number of generator words it took.
+fn words_per_draw<T: RandScalar>() -> u32 {
+    let mut rng = CountingRng::new();
+    let _: T = StandardUniform.sample(&mut rng);
+    rng.words.get()
+}
+
 #[test]
-fn the_width_constant_is_declared_per_scalar() {
-    assert_eq!(<f32 as RandWidth>::WORDS, 1);
-    assert_eq!(<f64 as RandWidth>::WORDS, 1);
-    assert_eq!(<BFloat16 as RandWidth>::WORDS, 1);
+fn each_scalar_takes_the_words_its_significand_can_hold() {
+    // The width used to be a `WORDS` constant declared once per scalar, and this test read the
+    // constant back — which proved only that the table said what the table said. Nothing declares
+    // it now: the draw stops when the next word would fall below the scalar's own `epsilon`, so
+    // the width is a consequence rather than an entry, and what is worth asserting is the
+    // consumption itself.
+    assert_eq!(words_per_draw::<f32>(), 1, "f32 holds 24 bits");
+    assert_eq!(words_per_draw::<f64>(), 1, "f64 holds 53 bits");
+    assert_eq!(words_per_draw::<BFloat16>(), 1, "BFloat16 holds 8 bits");
     assert_eq!(
-        <Float106 as RandWidth>::WORDS,
+        words_per_draw::<Float106>(),
         2,
-        "a double-double needs two"
+        "a double-double holds 106 bits and one word would leave half of it empty"
     );
 }
 
@@ -121,7 +163,7 @@ fn the_width_constant_is_declared_per_scalar() {
 fn every_uniform_draw_stays_in_the_half_open_interval() {
     fn check<T>(name: &str, n: usize)
     where
-        T: RealField + FromPrimitive + RandWidth + ToPrimitive,
+        T: RandScalar + ToPrimitive,
         StandardUniform: Distribution<T>,
     {
         let mut g = Xoshiro256::from_seed(SEED);
@@ -201,7 +243,7 @@ fn bfloat16_draws_are_correct_even_where_its_sums_are_not() {
 fn a_generic_caller_states_one_scalar_bound() {
     // The shape the retrofit exists for. Compare the README's Monte Carlo example, which needs
     // `where StandardUniform: Distribution<S>` — a clause no other unified-math crate asks for.
-    fn monte_carlo<S: RealField + FromPrimitive + RandWidth + ToPrimitive>(n: u64) -> f64 {
+    fn monte_carlo<S: RandScalar + ToPrimitive>(n: u64) -> f64 {
         let mut g = Xoshiro256::from_seed(SEED);
         let mut sum = S::zero();
         for _ in 0..n {

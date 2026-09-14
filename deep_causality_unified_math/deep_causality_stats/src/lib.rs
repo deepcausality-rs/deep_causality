@@ -154,6 +154,6 @@ pub use crate::utils::inverse_cdf::{
 // second dependency to spell the bound. Named, never a glob: a `pub use` is an alias to the same
 // trait item, so a bound written against either path is satisfied by the same implementations,
 // whereas a second trait of the same shape would be a different item entirely.
-pub use crate::traits::rand_width::RandWidth;
+
 pub use crate::traits::random_ext::RandomExt;
-pub use deep_causality_rand::{Distribution, Rng, RngCore, Xoshiro256, rng};
+pub use deep_causality_rand::{Distribution, RandScalar, Rng, RngCore, Xoshiro256, rng};

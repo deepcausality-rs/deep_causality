@@ -5,10 +5,9 @@
 
 //! The categorical distribution: weighted choice over a finite set.
 
-use crate::{RandWidth, StandardUniform, StatsError};
+use crate::{RandScalar, StandardUniform, StatsError};
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 /// Weighted choice over `0..n`, returning an index.
@@ -83,7 +82,7 @@ impl<T> Categorical<T> {
 /// A cumulative scan over the weights, against a uniform draw scaled by their total.
 impl<T> Distribution<usize> for Categorical<T>
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     StandardUniform: Distribution<T>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {

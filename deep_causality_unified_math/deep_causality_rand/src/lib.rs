@@ -32,7 +32,7 @@
 //!
 //! # Precision
 //!
-//! The float draws are generic in the scalar under [`RandFloat`], with one body and no per-type
+//! The float draws are generic in the scalar under [`RandScalar`], with one body and no per-type
 //! implementation. The exceptions are documented at the item that has them: the Sobol coordinate
 //! is fixed at `2^-32` by its direction-number table, and that is a property of the sequence rather
 //! than of the scalar holding it.
@@ -42,14 +42,12 @@
 extern crate alloc;
 
 mod errors;
-mod extensions;
 mod traits;
 pub mod types;
 
 // Errors
 pub use crate::errors::rng_error::RngError;
 pub use crate::errors::uniform_error::UniformDistributionError;
-// Extensions
 
 // Traits
 pub use crate::traits::distribution::Distribution;
@@ -58,11 +56,12 @@ pub use crate::traits::rng::Rng;
 pub use crate::traits::rng_core::RngCore;
 pub use crate::traits::sample_borrow::SampleBorrow;
 pub use crate::traits::sample_range::SampleRange;
-pub use crate::traits::sample_uniform::{SampleUniform, UniformSampler};
+pub use crate::traits::sample_uniform::{FloatKind, SampleUniform, UniformSampler, UnsignedKind};
+
 // Types
 pub use crate::types::Xoshiro256;
 pub use crate::types::distr::uniform::standard_word::{StandardBool, StandardWord};
-pub use crate::types::distr::uniform::{RandFloat, Uniform, UniformFloat};
+pub use crate::types::distr::uniform::*;
 pub use crate::types::iter::Iter;
 pub use crate::types::map::Map;
 pub use crate::types::qmc::sobol::{MAX_SOBOL_DIM, SobolSequence};

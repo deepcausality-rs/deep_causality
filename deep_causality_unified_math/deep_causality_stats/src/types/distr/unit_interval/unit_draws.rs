@@ -14,61 +14,28 @@
 //! software scalars whose layout no bit trick reaches: `Float106` is two limbs and `BFloat16` has
 //! no `from_bits` at all.
 
-use crate::{Open01, OpenClosed01, RandWidth, StandardUniform};
-use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
-use deep_causality_rand::{Distribution, Rng, StandardWord};
-
-/// `2^-53`: the weight of each further word below the one before it.
-const WORD_SCALE: f64 = 1.0 / ((1_u64 << 53) as f64);
-
-/// One 53-bit word as an `f64` in `[0, 1)`.
-///
-/// Computed in `f64` and converted once, rather than accumulated in the target scalar. A narrow
-/// significand would otherwise quantize the intermediate before the value is formed: `BFloat16`
-/// keeps 8 bits, so `(w >> 11)` would round to 8 bits before the division rather than after.
-///
-/// Measured, and worth recording because it is not what one would guess: converting once did
-/// **not** move the observed distribution for `BFloat16` — the most frequent value took 0.00429 of
-/// 200 000 draws either way. The two paths agree because the division is exact at both widths for
-/// the values involved. The `f64` form is kept because it rounds once by construction rather than
-/// by coincidence, and because it is the same shape for every scalar.
-///
-/// `f64` is wide enough for every scalar of 53 bits or fewer; the wider ones take several words.
-#[inline]
-fn word_unit_f64<R: Rng + ?Sized>(rng: &mut R) -> f64 {
-    let w: u64 = StandardWord.sample(rng);
-    (w >> 11) as f64 * WORD_SCALE
-}
+use crate::{Open01, OpenClosed01, StandardUniform};
+use deep_causality_rand::{Distribution, RandScalar, Rng};
 
 /// A value in `[0, 1)` carrying as much entropy as the scalar's significand absorbs.
 ///
-/// Each further word is placed `2^-53` below the last, so a double-double receives two independent
-/// 53-bit draws rather than one widened. See [`RandWidth`] for why the count cannot be assumed.
+/// The accumulation lives in `deep_causality_rand` as [`RandScalar::rand_float_gen`], because the
+/// range sampler there needs the same value and two copies of one loop is two things to get wrong.
+/// It reads how many words the scalar can hold from the scalar's own `epsilon`, so nothing here
+/// declares a width.
 #[inline]
 fn unit<T, R>(rng: &mut R) -> T
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     R: Rng + ?Sized,
 {
-    let word_scale = T::from_f64(WORD_SCALE).expect("2^-53 converts to every scalar");
-    let mut acc = T::from_f64(word_unit_f64(rng)).expect("a unit value converts to every scalar");
-    let mut scale = T::one();
-    for _ in 1..T::WORDS {
-        // Deepened before use rather than after. The other order leaves the final update dead —
-        // the loop runs `WORDS - 1` times and the last write is never read — which makes every
-        // mutation of it equivalent and so untestable. Mutation testing found exactly that.
-        scale *= word_scale;
-        acc +=
-            T::from_f64(word_unit_f64(rng)).expect("a unit value converts to every scalar") * scale;
-    }
-    acc
+    T::rand_float_gen(rng)
 }
 
 /// Uniform on `[0, 1)`.
 impl<T> Distribution<T> for StandardUniform
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         loop {
@@ -88,7 +55,7 @@ where
 /// Uniform on `(0, 1)`: the open interval a logarithm can be taken over.
 impl<T> Distribution<T> for Open01
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         loop {
@@ -106,7 +73,7 @@ where
 /// Uniform on `(0, 1]`.
 impl<T> Distribution<T> for OpenClosed01
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         // `1 - u` over a half-open `[0, 1)` reflects the excluded endpoint onto the included one.

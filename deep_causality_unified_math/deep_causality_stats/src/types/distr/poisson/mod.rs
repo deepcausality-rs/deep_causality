@@ -5,9 +5,9 @@
 
 //! The Poisson distribution.
 
-use crate::{RandWidth, StandardUniform, StatsError};
+use crate::{RandScalar, StandardUniform, StatsError};
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::{FromPrimitive, ToPrimitive};
+use deep_causality_num::ToPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 /// The largest rate this sampler accepts.
@@ -95,7 +95,7 @@ where
 /// Knuth's algorithm: multiply uniform draws until the product falls below `e^{-λ}`.
 impl<T> Distribution<u64> for Poisson<T>
 where
-    T: RealField + FromPrimitive + RandWidth + ToPrimitive,
+    T: RandScalar + ToPrimitive,
     StandardUniform: Distribution<T>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {

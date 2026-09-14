@@ -5,9 +5,8 @@
 
 //! The Weibull distribution.
 
-use crate::{Open01, RandWidth, StatsError};
+use crate::{Open01, RandScalar, StatsError};
 use deep_causality_algebra::{Real, RealField};
-use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 /// The Weibull distribution with shape `k` and scale `λ`, supported on `[0, ∞)`.
@@ -61,7 +60,7 @@ where
 /// second shape.
 impl<T> Distribution<T> for Weibull<T>
 where
-    T: RealField + FromPrimitive + RandWidth,
+    T: RandScalar,
     Open01: Distribution<T>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {

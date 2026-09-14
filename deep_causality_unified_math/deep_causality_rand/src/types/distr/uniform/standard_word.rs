@@ -7,8 +7,9 @@ use crate::{Distribution, Rng};
 
 /// Uniform over the machine words a generator produces.
 ///
-/// A word is not a real number and this type claims no algebra for it. Drawing an index, a seed or
-/// a raw bit pattern goes through here. The uniform on `[0, 1)` is a different object and lives in
+/// A word is not a real number. Drawing an index, a seed or
+/// a raw bit pattern goes through here.
+/// The uniform on `[0, 1)` is a different object and lives in
 /// `deep_causality_stats` with the other distributions.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct StandardWord;
