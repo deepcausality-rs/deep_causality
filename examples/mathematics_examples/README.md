@@ -76,6 +76,12 @@ That alias flows through every tensor, every multivector, every manifold, and ev
 monadic step. Change the line; the example re-runs at the new precision. Just one
 single edit needed.
 
+`make check_precision` enforces that. It flips every declared `FloatType` through
+`Float106`, `f32` and `f64` and rebuilds, because the claim had drifted: six examples
+declared the alias and could not compile at `Float106`, and every one of them built at
+`f64`, so nothing objected. A precision an example genuinely cannot reach is listed in
+`scripts/check_precision.sh` with the bound that blocks it.
+
 ### Why numerical precision is important
 
 The capstone (`capstone_spinor_minkowski`) parallel-transports a unit timelike spinor
@@ -145,4 +151,20 @@ rounding error.
    `isomorphism/` where examples are registered under their bare names.
 6. Add a row to the relevant subfolder's `README.md`.
 7. Top-of-file `main.rs` declares `pub type FloatType = f64;` (or `f32` / `Float106`)
-   and threads it through every numerical site.
+   and threads it through every numerical site. Run `make check_precision` before
+   opening the PR. Four things break the flip and none of them fails at `f64`:
+   - a `const` holding the working type. A `const` takes a primitive literal only, so
+     `const ALPHA: FloatType = 0.15;` cannot hold a software scalar. Use a function
+     returning `lift(0.15)`.
+   - an inherent `.sqrt()`, `.powi()`, `.abs()` or `.cos()`. Those come from
+     `deep_causality_algebra::Real` (and `powi` from `deep_causality_num::Float`);
+     import the trait and call `Real::sqrt(x)`.
+   - an accumulator seeded with a bare literal, which infers `f64`. Seed it with
+     `lift::<FloatType>(0.0)`.
+   - a container that pins its own coefficients, as in
+     `SimplicialManifold<f64, FloatType>`. Both parameters take the alias.
+
+   Two asymmetries are the library's, not yours. `scalar * tensor` is implemented per
+   primitive scalar, so write `&tensor * scalar`, which is generic. And a threshold
+   belongs in the working type: `lift::<FloatType>(8.0) * <FloatType as Real>::epsilon()`
+   moves with the alias where `1e-6` does not.

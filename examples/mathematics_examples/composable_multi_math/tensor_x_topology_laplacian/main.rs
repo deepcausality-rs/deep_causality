@@ -83,7 +83,7 @@ fn main() {
     println!("Neumann reflection (phi outside = phi at boundary).");
 }
 
-fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<f64, FloatType> {
+fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType, FloatType> {
     assert_eq!(vertex_values.len(), N_VERTICES);
 
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();

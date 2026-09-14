@@ -154,6 +154,27 @@ carrier type; `Map` would have to become one. `hkt_uncertain.md` resolves this r
 in `rand`: the carrier worth having is the particle type in `uncertain`, and `rand`'s work is the
 generic cleanup of its six per-type files, which breaks no call site.
 
+**Resolved, and not as written** — `retrofit-sampling-layer`, 2026-09-14.
+
+The premise that the carrier needs inventing was wrong twice over. An ensemble of realised draws is
+a `Vec` with a witness, and `CausalTensor` already is one; nothing new was written to hold it, and
+drawing into it is an ordinary generic function needing no witness of its own.
+
+A carrier that stores a sampling *closure* is the case that genuinely cannot take these traits, and
+the reason is not a gap in `haft`: the container traits carry **zero** `'static` bounds — measured
+across `Functor`, `Pure`, `Applicative`, `Monad`, `Traversable` and `LaxMonoidal` — because a
+functor applies a function and drops it. `Profunctor`, which stores its functions, carries `'static`
+on every parameter. A stored closure needs bounds the trait does not provide and an impl may not
+add: `error[E0276]: impl has stricter requirements than trait`. The container traits are for data;
+a lazy sampler is a program, and `haft`'s home for programs is `Arrow`.
+
+What the sampling layer actually needed from `haft` was a **traversal**, and it was missing for a
+different reason. Turning a field of ensembles inside out through `Traversable::sequence` uses the
+cartesian applicative: a 2x2 field of 50 draws per cell returns `50^4` results. Correlated draws
+pair by index, which is `Semigroupal::zip_with`, and the zip witnesses carry no `Pure` — so they
+could not drive `sequence` at all. `DiagonalTraversable` closes that, and the gap was never specific
+to sampling: `ZipTensorWitness` and `ZipDenseVectorWitness` were equally stranded before it.
+
 ### 3.5 Marginal: `HilbertState<R>` and `HopfState<R>`
 
 `deep_causality_multivector`. Each wraps a `CausalMultiVector<Complex<R>>` under a fixed metric.

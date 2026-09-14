@@ -48,9 +48,10 @@
 //!
 //! Every stage prints what it did so the reader can see the data flow.
 
+use deep_causality_algebra::Real;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, MultiFieldCarrier};
-use deep_causality_num::Lift;
+use deep_causality_num::{Lift, lift, lower};
 use deep_causality_tensor::CausalTensor;
 
 /// can be f32, f64, or f106;
@@ -67,7 +68,8 @@ fn main() {
     // so the underlying tensor shape is [2, 2, 2, 4, 4] = 128 elements.
     let grid_shape: [usize; 3] = [2, 2, 2];
     let metric = Metric::from_signature(2, 0, 0);
-    let dx: [FloatType; 3] = [0.1, 0.1, 0.1];
+    let d = lift::<FloatType>(0.1);
+    let dx: [FloatType; 3] = [d, d, d];
 
     // We can't pre-compute `matrix_dim` from outside the crate (the helper
     // is pub(crate)). So we materialize a known-good multifield via the
@@ -121,7 +123,7 @@ fn main() {
 
     // Element-wise scaling. Any tensor function with this signature plugs
     // straight in — that's the value of the generic helper.
-    let scaled = map_underlying_tensor(field, |t| 2.0_f32 * &t);
+    let scaled = map_underlying_tensor(field, |t| &t * lift::<FloatType>(2.0));
     println!(
         "  scaled the underlying tensor by 2.0; multifield metadata preserved: \
          metric={:?}, dx={:?}, shape={:?}",
@@ -131,7 +133,7 @@ fn main() {
     );
 
     // Chain a second transform. Same generic helper.
-    let shifted = map_underlying_tensor(scaled, |t| 0.5_f32 + &t);
+    let shifted = map_underlying_tensor(scaled, |t| &t + lift::<FloatType>(0.5));
     println!(
         "  added 0.5 element-wise; multifield metadata still preserved: \
          metric={:?}, dx={:?}, shape={:?}",
@@ -164,27 +166,43 @@ fn main() {
 
     // First element: input was 0.0, scaled by 2.0 → 0.0, plus 0.5 → 0.5.
     let first = final_tensor.data()[0];
-    let expected_first: FloatType = 0.0 * 2.0 + 0.5;
+    let expected_first: FloatType =
+        lift::<FloatType>(0.0) * lift::<FloatType>(2.0) + lift::<FloatType>(0.5);
+    // The tolerance is a multiple of the working type's epsilon, so it moves with the alias. A
+    // literal threshold is correct at one precision and arbitrary at the other three.
+    let tol: FloatType = lift::<FloatType>(8.0) * <FloatType as Real>::epsilon();
     assert!(
-        (first - expected_first).abs() < 1e-6,
+        Real::abs(first - expected_first) < tol,
         "first element drifted: {} vs {}",
-        first,
-        expected_first
+        lower(first),
+        lower(expected_first)
     );
-    println!("  first element OK: {} ≈ {}", first, expected_first);
+    println!(
+        "  first element OK: {} ≈ {}",
+        lower(first),
+        lower(expected_first)
+    );
 
     // Last element: input was (n-1)/n ≈ 0.992..., scaled by 2.0 ≈ 1.984...,
     // plus 0.5 ≈ 2.484...
     let last = final_tensor.data()[element_count - 1];
     let n = element_count.lift::<FloatType>();
-    let expected_last: FloatType = ((n - 1.0) / n) * 2.0 + 0.5;
+    let expected_last: FloatType =
+        ((n - lift::<FloatType>(1.0)) / n) * lift::<FloatType>(2.0) + lift::<FloatType>(0.5);
+    // Wider than the first check: this value went through a division as well as the scale
+    // and the shift.
+    let tol_last: FloatType = lift::<FloatType>(96.0) * <FloatType as Real>::epsilon();
     assert!(
-        (last - expected_last).abs() < 1e-5,
+        Real::abs(last - expected_last) < tol_last,
         "last element drifted: {} vs {}",
-        last,
-        expected_last
+        lower(last),
+        lower(expected_last)
     );
-    println!("  last element OK:  {} ≈ {}", last, expected_last);
+    println!(
+        "  last element OK:  {} ≈ {}",
+        lower(last),
+        lower(expected_last)
+    );
 
     // Metadata preserved through the pipeline.
     assert_eq!(out_metric, metric, "metric was not preserved");

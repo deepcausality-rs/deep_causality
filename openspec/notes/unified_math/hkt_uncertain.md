@@ -179,11 +179,17 @@ They use `Rng`, `Xoshiro256`, `Distribution::sample` and the named distributions
 | B1 | The closed `SampledValue` enum, held in place by a global static cache | uncertain | legacy decision | a node tree generic in `R`; the cache goes (B5) |
 | B2 | `haft`'s `Functor`, `Pure`, `Applicative`, `Monad` signatures cannot feed a lazy graph | uncertain, haft | structural | a strict `Particles<T>` carrier takes the witness; the lazy graph stays Arrow-shaped; `MaybeParallel` trims the bounds but `'static` and `Clone` remain |
 | B3 | Struct bound `T: ProbabilisticType` | uncertain | mechanical | drop to impls; the trait dissolves into `R: RealRng` and `bool` |
+
+**`RealRng` no longer exists** — `retrofit-sampling-layer`, 2026-09-14. It was a capability bound
+with no consumer outside its own test file, so it was removed rather than carried forward, and the
+rows above that name it should be read as naming `RealField + FromPrimitive + RandWidth` instead:
+the scalar's capabilities, stated where the draw happens.
+
 | B4 | `f64` thresholds, function nodes and probabilities | uncertain | mechanical | everything in `R`; `f64` only at the display boundary |
 | B5 | Five globals, one of them a leaking, root-only cache with an untested production branch | uncertain, rand | decision taken | remove the cache; index-addressed draws from (seed, index, leaf id); a `SampleSession` value; zero globals owned by `uncertain` |
 | B6 | QMC needs static structure, and Sobol resolves 32 bits | uncertain, rand | inherent | a structure descriptor; state the 32-bit cap as a limit `Float106` cannot lift |
-| B7 | Six per-type files in `rand` | rand | mechanical | one generic impl over `RandFloat`; normal path chosen by significand width |
-| B8 | No `BFloat16` in `rand` | rand | optional | draw `f32`, round once; note the half-open edge |
+| B7 | ~~Six per-type files in `rand`~~ | rand | **done, superseded** | the per-type files are gone, but by a crate boundary rather than a generic impl — see B7 below |
+| B8 | ~~No `BFloat16` in `rand`~~ | stats | **closed** | the unit draw is one generic body over `RandWidth`; `BFloat16` is a row, and the rejection it needs was measured rather than assumed |
 | B9 | `MaybeUncertain` as a parallel type | uncertain | design | `Uncertain<Option<R>>` and `Particles<Option<T>>` |
 | B10 | Core pins `f64` and `bool` at 79 sites; CFD is generic but inherits the `ProbabilisticType` bound | consumers | migration | keep the aliases; CFD compiles at `f32` the day B1 lands |
 
@@ -403,6 +409,22 @@ lets the session hold its generator behind one type.
 **Breaks.** None for consumers that call `sample`, `random`, `random_range` and the named
 distributions. The `RandFloat` trait becomes public, which it half is already.
 
+**Superseded** — `retrofit-sampling-layer`, 2026-09-14. The per-type files are gone, but the route
+above would not have got there.
+
+The plan was one generic `impl<T: RandFloat> Distribution<T> for StandardUniform` in `rand`. That
+impl is `error[E0119]` against the `u64`, `u32` and `bool` implementations the same crate must
+provide: coherence cannot prove `u64` will never be a real field, so the blanket overlaps them. No
+amount of tidying inside one crate removes that.
+
+What removed it was the **crate boundary**. The shaped distributions moved to
+`deep_causality_stats`, which has no reason to sample a machine word, so the overlap does not arise
+there. `rand` kept the word draw, the Boolean draw, the generators, Sobol and the range sampler —
+`Uniform<X>` stays because `SampleUniform` can only be implemented where it is defined.
+
+The `Rng` blanket in the second paragraph was **not** done, and should not be: `&mut dyn RngCore`
+is a trait object, and AGENTS.md forbids `dyn` in this workspace.
+
 ### B8. `BFloat16`
 
 Draw an `f32` and round once, which is how `BFloat16` arithmetic already computes. For the
@@ -410,6 +432,17 @@ half-open uniform, rounding can carry a sample onto the upper bound; reject and 
 is low: a two-digit scalar is not a sampling type anyone asks for, and it exists in `num` for
 accelerator buffers. Do it for completeness after B7 makes it a one-line impl, or leave it and
 say why.
+
+**Closed** — `retrofit-sampling-layer`, 2026-09-14. The unit draw in `deep_causality_stats` is one
+generic body over `RandWidth`, so `BFloat16` needs no implementation of its own, only a row saying
+how many words its significand absorbs.
+
+The half-open edge this row anticipated is real and was measured rather than argued. A draw from
+`[0, 1)` can round onto exactly `1.0` in a narrow significand — at `BFloat16`'s 8 bits, about once
+in `2^9` draws — which leaves the interval every inverse-CDF transform assumes. Rejecting and
+redrawing costs 0.00429 of the draws over 200 000; clamping instead would pile an atom of mass on
+one value, which was measured at 0.00584. Rejection is what shipped, and the note above it says
+why.
 
 ### B9. `MaybeUncertain`
 
@@ -435,7 +468,9 @@ and `lift_to_uncertain` as a conditional against a threshold in `R`. Under the c
 Three layers, each with one job.
 
 ```
-rand        primitives: RngCore, Rng, Distribution<T>, RealRng, Sobol.  Generic in R. No haft.
+rand        entropy: RngCore, Rng, Distribution<T>, StandardWord, StandardBool, Uniform,
+            Sobol. Generic in R. No haft. No density.
+stats       the distributions and their densities, generic in the scalar over RandWidth.
 uncertain   Uncertain<R>: the lazy graph. Builds distributions, draws every leaf from
             (seed, index, leaf id), drives QMC and adaptive testing, materialises
             particles. Arrow-shaped. No globals.

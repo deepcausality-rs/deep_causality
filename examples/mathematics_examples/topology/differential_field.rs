@@ -3,13 +3,19 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use core::ops::{Add, Mul};
+use deep_causality_algebra::Real;
 use deep_causality_calculus::{EndoArrow, Euler};
+use deep_causality_num::{lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 
-/// `f64` is the right precision for this diffusion demo — short stepping, small
-/// triangle. Bump to `Float106` to see higher-precision Laplacian conservation
-/// (the metric layer is generic over `R: RealField`).
+/// `f64` is the right precision for this diffusion demo: short stepping, small triangle. Switch
+/// to `Float106` for higher-precision Laplacian conservation.
+///
+/// `f32` does not compile here. `PointCloud::triangulate` bounds its scalar on `From<f64>`, and
+/// `f32` is the one shipped scalar without that impl, which is why `deep_causality_num::lift`
+/// goes through `FromPrimitive` instead. The bound is in `deep_causality_topology`, not in this
+/// example; `scripts/check_precision.sh` carries the exclusion.
 pub type FloatType = f64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -31,21 +37,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ------------------------------------------------------------------------
 
     // 1. Setup (Triangle)
+    let zero = lift::<FloatType>(0.0);
+    let one = lift::<FloatType>(1.0);
     let points = CausalTensor::new(
         vec![
-            0.0, 0.0, // v0
-            1.0, 0.0, // v1
-            0.5, 0.866, // v2 (Equilateral)
+            zero,
+            zero, // v0
+            one,
+            zero, // v1
+            lift::<FloatType>(0.5),
+            lift::<FloatType>(0.866), // v2 (Equilateral)
         ],
         vec![3, 2],
     )?;
-    let point_cloud = PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3])?, 0)?;
-    let complex = point_cloud.triangulate(1.1)?;
+    let point_cloud = PointCloud::new(points, CausalTensor::new(vec![zero; 3], vec![3])?, 0)?;
+    let complex = point_cloud.triangulate(lift::<FloatType>(1.1))?;
 
     // 2. Initial State (Hot Vertex 0)
     let num_simplices = complex.total_simplices();
-    let mut initial_data = vec![0.0; num_simplices];
-    initial_data[0] = 100.0; // Heat at v0
+    let mut initial_data = vec![zero; num_simplices];
+    initial_data[0] = lift::<FloatType>(100.0); // Heat at v0
 
     let num_edges = complex.skeletons()[1].simplices().len();
     let n_verts = complex.skeletons()[0].simplices().len();
@@ -55,12 +66,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // takes its Laplacian (with a unit-edge Regge metric — the impl reads the Hodge ⋆ from the
     // complex's cache and ignores the metric data), and returns −L u on the vertices. The
     // hand-rolled `next[v] -= dt·Δ[v]` loop is now one `Euler` endo-arrow stepped with `iterate_n`.
-    let dt = 0.005;
+    let dt = lift::<FloatType>(0.005);
     let steps = 50;
 
     let rate = move |f: &Field| -> Field {
         let metric =
-            ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+            ReggeGeometry::new(CausalTensor::new(vec![one; num_edges], vec![num_edges]).unwrap());
         let manifold = Manifold::with_metric(
             complex.clone(),
             CausalTensor::new(f.0.clone(), vec![num_simplices]).unwrap(),
@@ -70,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
         let delta = manifold.laplacian(0);
         let delta = delta.as_slice();
-        let mut out = vec![0.0; num_simplices];
+        let mut out = vec![zero; num_simplices];
         for (v, slot) in out.iter_mut().enumerate().take(n_verts) {
             *slot = -delta[v];
         }
@@ -84,9 +95,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for i in 0..=steps {
         field = stepper.iterate_n(field, 1);
         if i % 10 == 0 {
+            // The display boundary: `f64` appears here and nowhere else.
             println!(
                 "Step {:2}: [{:.2}, {:.2}, {:.2}]",
-                i, field.0[0], field.0[1], field.0[2]
+                i,
+                lower(field.0[0]),
+                lower(field.0[1]),
+                lower(field.0[2])
             );
         }
     }
@@ -97,10 +112,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let final_v: &[FloatType] = &field.0[0..3];
     println!(
         "Final:   [{:.2}, {:.2}, {:.2}]",
-        final_v[0], final_v[1], final_v[2]
+        lower(final_v[0]),
+        lower(final_v[1]),
+        lower(final_v[2])
     );
 
-    if (final_v[0] - final_v[1]).abs() < 1.0 && (final_v[0] - final_v[2]).abs() < 1.0 {
+    if Real::abs(final_v[0] - final_v[1]) < one && Real::abs(final_v[0] - final_v[2]) < one {
         println!(">> SUCCESS: Heat diffused to equilibrium.");
     } else {
         println!(">> WARNING: Non-equilibrium state.");

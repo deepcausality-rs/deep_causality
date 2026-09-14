@@ -23,9 +23,10 @@
 //! any other `RealField` implementor to re-run at a different precision without
 //! touching the algorithm.
 
+use deep_causality_algebra::Real;
 use deep_causality_calculus::Euler;
 use deep_causality_haft::Arrow;
-use deep_causality_num::{Lift, lift};
+use deep_causality_num::{Float, Lift, lift, lower, to_count};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{CubicalComplex, Manifold, Moore};
 use std::ops::{Add, Mul};
@@ -36,7 +37,12 @@ pub type FloatType = f64;
 
 const N: usize = 16; // grid side (top cubes are (N-1)×(N-1))
 const STEPS: usize = 10;
-const ALPHA: FloatType = 0.15;
+
+/// The diffusion coefficient. A function rather than a `const`, because a `const` can only hold a
+/// primitive literal and the alias may name a software scalar.
+fn alpha() -> FloatType {
+    lift(0.15)
+}
 
 fn main() {
     let complex = CubicalComplex::<2, FloatType>::open([N, N]);
@@ -46,7 +52,7 @@ fn main() {
     // Initial condition: 1.0 at the center cell, 0.0 elsewhere.
     let center = (top_n / 2) + (top_n / 2) * top_n;
     let mut data = vec![lift::<FloatType>(0.0); cell_count];
-    data[center] = 1.0;
+    data[center] = lift::<FloatType>(1.0);
 
     let manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> =
         Manifold::from_cubical(complex, CausalTensor::from_vec(data, &[cell_count]), 0);
@@ -64,7 +70,7 @@ fn main() {
     // The explicit-Euler *time* update `u' = u + α·Δu` becomes an `Euler` endo-arrow with dt = α.
     // Only the time integration is encapsulated here; the stencil is untouched. Swapping `Euler`
     // for `Rk4` raises the time order with no change to the rate field.
-    let step = Euler::new(ALPHA, move |f: &Field| {
+    let step = Euler::new(alpha(), move |f: &Field| {
         Field(
             (0..cell_count)
                 .map(|c| {
@@ -83,7 +89,10 @@ fn main() {
         print_heatmap(&field.0, top_n);
     }
 
-    println!("\nDone. {STEPS} Euler steps on {top_n}×{top_n} top cubes with α = {ALPHA}.");
+    println!(
+        "\nDone. {STEPS} Euler steps on {top_n}×{top_n} top cubes with α = {}.",
+        lower(alpha())
+    );
 }
 
 /// The scalar heat field — the integrator state. `Euler`/`Rk4` need a module-valued state
@@ -107,17 +116,17 @@ impl Mul<FloatType> for Field {
 
 fn print_heatmap(values: &[FloatType], side: usize) {
     // Map values to a small ASCII gradient.
-    let max = values
-        .iter()
-        .cloned()
-        .fold(lift(0.0), FloatType::max)
-        .max(1e-12);
+    let max = Float::max(
+        values.iter().cloned().fold(lift(0.0), Float::max),
+        lift::<FloatType>(1e-12),
+    );
     let ramp = [' ', '.', ':', '-', '+', '*', '#', '@'];
     for row in 0..side {
         let mut line = String::with_capacity(side * 2);
         for col in 0..side {
             let v = values[col + row * side];
-            let bucket = ((v / max) * (ramp.len().lift::<FloatType>() - 1.0)).round() as usize;
+            let top = ramp.len().lift::<FloatType>() - lift::<FloatType>(1.0);
+            let bucket = to_count(Real::round((v / max) * top)).unwrap_or(0) as usize;
             let bucket = bucket.min(ramp.len() - 1);
             line.push(ramp[bucket]);
             line.push(' ');
